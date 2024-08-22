@@ -5,32 +5,34 @@
 #include <SDL3/SDL_vulkan.h>
 #include <memory>
 #include "sdlWindow.h"
-#include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanSurface.h"
 
-
+// TODO:
+// when the graphics and present queue are different, wee need to use the concurrent mode:
+// createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+// createInfo.queueFamilyIndexCount = 2;
+// createInfo.pQueueFamilyIndices = { graphicsQueueIndex, presentQueueIndex };
+// additional work is needed, e.g. synchronizing the queues, etc.
 
 class VulkanSwapchain
 {
-private:
-	// external:
-	SdlWindow* window;
-	VulkanContext* context;
-	VulkanSurface* surface;
-
-public:
-	// internal:
+public: // Members:
 	VkSwapchainKHR swapchain;
 	std::vector<VkImage> images;
 	std::vector<VkImageView> imageViews;
 
-	// Constructor:
-	VulkanSwapchain(SdlWindow* window, VulkanContext* context, VulkanSurface* surface, VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain = nullptr);
+private: // Members:
+	SdlWindow* window;
+	VulkanLogicalDevice* logicalDevice;
+	VulkanSurface* surface;
 
-	// Destructor:
+public: // Methods:
+	VulkanSwapchain(SdlWindow* window, VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain = nullptr);
 	~VulkanSwapchain();
 
-private:
+
+private: // Methods:
 	void CreateSwapchain(VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain);
 	void CreateImages();
 	void CreateImageViews();

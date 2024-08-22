@@ -5,7 +5,7 @@
 
 
 // Constructor:
-SdlWindow::SdlWindow(uint16_t width, uint16_t height) : extent{ width, height }
+SdlWindow::SdlWindow(uint16_t width, uint16_t height)
 {
 	// Initialize SDL:
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -29,6 +29,7 @@ SdlWindow::~SdlWindow()
 
 
 
+// Public:
 bool SdlWindow::HandelEvents()
 {
 	while (SDL_PollEvent(&event))
@@ -37,6 +38,12 @@ bool SdlWindow::HandelEvents()
 		{
 		case SDL_EVENT_QUIT:
 			return false;
+		case SDL_EVENT_WINDOW_MINIMIZED:
+			isMinimized = true;
+			break;
+		case SDL_EVENT_WINDOW_RESTORED:
+			isMinimized = false;
+			break;
 		}
 	}
 	return true;
@@ -44,7 +51,7 @@ bool SdlWindow::HandelEvents()
 
 
 
-void SdlWindow::SdlInstanceExtensions(std::vector<const char*>& extensions)
+void SdlWindow::AddSdlInstanceExtensions(std::vector<const char*>& extensions)
 {
 	// Get instance extensions:
 	uint32_t sdlInstanceExtensionCount = 0;
@@ -57,6 +64,20 @@ void SdlWindow::SdlInstanceExtensions(std::vector<const char*>& extensions)
 
 
 int SdlWindow::Width()
-{ return extent.width; }
+{
+	int width, height;
+	SDL_GetWindowSize(window, &width, &height);
+	return width;
+}
 int SdlWindow::Height()
-{ return extent.height; }
+{
+	int width, height;
+	SDL_GetWindowSize(window, &width, &height);
+	return height;
+}
+VkExtent2D SdlWindow::Extent()
+{
+	int width, height;
+	SDL_GetWindowSize(window, &width, &height);
+	return VkExtent2D{ (uint32_t)width, (uint32_t)height };
+}

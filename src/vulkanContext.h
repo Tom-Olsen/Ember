@@ -1,37 +1,23 @@
 #ifndef __INCLUDE_GUARD_vulkanContext_h__
 #define __INCLUDE_GUARD_vulkanContext_h__
 #include <vulkan/vulkan.h>
-
-
-
-struct VulkanQueue
-{
-	VkQueue queue;
-	uint32_t familyIndex;
-};
+#include <memory>
+#include <vector>
+#include "vulkanInstance.h"
+#include "vulkanPhysicalDevice.h"
+#include "vulkanLogicalDevice.h"
 
 
 
 class VulkanContext
 {
-public:
-	VkInstance instance;
-	VkPhysicalDevice physicalDevice;
-	VkPhysicalDeviceProperties physicalDeviceProperties;
-	VkDevice device;
-	VulkanQueue graphicsQueue;
+public: // Members:
+	std::unique_ptr<VulkanInstance> instance;
+	std::unique_ptr<VulkanPhysicalDevice> physicalDevice;
+	std::unique_ptr<VulkanLogicalDevice> logicalDevice;
 
-	// Constructor:
-	VulkanContext(uint32_t instanceExtensionCount, const char* const* instanceExtensions, uint32_t deviceExtensionCount, const char** deviceExtensions);
-
-	// Destructor:
+public: // Methods:
+	VulkanContext(std::vector<const char*> instanceExtensions, std::vector<const char*> deviceExtensions);
 	~VulkanContext();
-
-private:
-	void CreateInstance(uint32_t instanceExtensionCount, const char* const* instanceExtensions);
-	void SelectPhysicalDevice();
-	uint32_t FindFirstGraphicsQueueFamilyIndex();
-	void CreateDevice(uint32_t deviceExtensionCount, const char** deviceExtensions);
-	bool IsDeviceSuitable(VkPhysicalDevice device);
 };
 #endif // __INCLUDE_GUARD_vulkanContext_h__

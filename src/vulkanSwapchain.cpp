@@ -1,15 +1,14 @@
 #include "vulkanSwapchain.h"
 #include <vector>
 #include "macros.h"
-#include "logger.h"
 
 
 
 // Constructor:
-VulkanSwapchain::VulkanSwapchain(SdlWindow* window, VulkanContext* context, VulkanSurface* surface, VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain)
+VulkanSwapchain::VulkanSwapchain(SdlWindow* window, VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain)
 {
 	this->window = window;
-	this->context = context;
+	this->logicalDevice = logicalDevice;
 	this->surface = surface;
 
 	CreateSwapchain(usage, oldSwapchain);
@@ -22,42 +21,47 @@ VulkanSwapchain::VulkanSwapchain(SdlWindow* window, VulkanContext* context, Vulk
 // Destructor:
 VulkanSwapchain::~VulkanSwapchain()
 {
-	VKA(vkDeviceWaitIdle(context->device));
+	VKA(vkDeviceWaitIdle(logicalDevice->device));
 	for (uint32_t i = 0; i < imageViews.size(); i++)
-		vkDestroyImageView(context->device, imageViews[i], nullptr);
-	vkDestroySwapchainKHR(context->device, swapchain, nullptr);
+		vkDestroyImageView(logicalDevice->device, imageViews[i], nullptr);
+	vkDestroySwapchainKHR(logicalDevice->device, swapchain, nullptr);
 }
 
 
 
-// Internal:
+// Private:
 void VulkanSwapchain::CreateSwapchain(VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain)
 {
 	if (oldSwapchain)
 		surface = oldSwapchain->surface;
 
+	uint32_t imageCount = surface->MinImageCount() + 1;
+	if (surface->MaxImageCount() > 0 && imageCount > surface->MaxImageCount())
+		imageCount = surface->MaxImageCount();
+
 	VkSwapchainCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 	createInfo.surface = surface->surface;
-	createInfo.minImageCount = 3;
+	createInfo.minImageCount = imageCount;
 	createInfo.imageFormat = surface->surfaceFormat.format;
 	createInfo.imageColorSpace = surface->surfaceFormat.colorSpace;
-	createInfo.imageExtent = window->extent;
-	createInfo.imageArrayLayers = 1;
+	createInfo.imageExtent = surface->CurrentExtent();
+	createInfo.imageArrayLayers = 1;									// always 1 unless stereoscopic 3D application.
 	createInfo.imageUsage = usage;
-	createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;			// we assume that only one queue family will access the images for now.
+	createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;	// dont rotate or flip.
+	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;		// dont blend with other windows.
+	createInfo.presentMode = surface->presentMode;
 	createInfo.oldSwapchain = oldSwapchain ? oldSwapchain->swapchain : VK_NULL_HANDLE;
-	VKA(vkCreateSwapchainKHR(context->device, &createInfo, nullptr, &swapchain));
+	createInfo.clipped = VK_TRUE;										// clip pixels that are obscured by other windows.
+	VKA(vkCreateSwapchainKHR(logicalDevice->device, &createInfo, nullptr, &swapchain));
 }
 
 void VulkanSwapchain::CreateImages()
 {
 	uint32_t imageCount;
-	VKA(vkGetSwapchainImagesKHR(context->device, swapchain, &imageCount, nullptr));
+	VKA(vkGetSwapchainImagesKHR(logicalDevice->device, swapchain, &imageCount, nullptr));
 	images.resize(imageCount);
-	VKA(vkGetSwapchainImagesKHR(context->device, swapchain, &imageCount, images.data()));
+	VKA(vkGetSwapchainImagesKHR(logicalDevice->device, swapchain, &imageCount, images.data()));
 }
 
 void VulkanSwapchain::CreateImageViews()
@@ -71,6 +75,6 @@ void VulkanSwapchain::CreateImageViews()
 		createInfo.format = surface->surfaceFormat.format;
 		createInfo.components = {};	// swizzle components (empty = 4x VK_COMPONENT_SWIZZLE_IDENTITY)
 		createInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-		VKA(vkCreateImageView(context->device, &createInfo, nullptr, &imageViews[i]))
+		VKA(vkCreateImageView(logicalDevice->device, &createInfo, nullptr, &imageViews[i]))
 	}
 }
