@@ -156,4 +156,7 @@ inline std::ostream& operator<<(std::ostream& os, const Double4x4& mat)
 	os << to_string(mat);
 	return os;
 }
+
+
+
 #endif // __INCLUDE_GUARD_doubleTypes_h__

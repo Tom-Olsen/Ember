@@ -16,4 +16,7 @@ public: // Methods:
 	VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VkFormat format);
 	~VulkanRenderpass();
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanRenderpass_h__

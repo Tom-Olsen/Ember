@@ -17,4 +17,7 @@ public: // Methods:
 	VulkanIndexBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh);
 	~VulkanIndexBuffer();
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanIndexBuffer_h__

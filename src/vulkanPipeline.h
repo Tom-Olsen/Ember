@@ -25,4 +25,7 @@ private: // Methods:
 	VkShaderModule CreateShaderModule(std::string shaderFilename);
 	void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanPipeline_h__

@@ -3,9 +3,13 @@
 #include <memory>
 #include "spdlog/spdlog.h"
 
+
+
+// Custom wrapper for spdlog:
 class Logger
 {
 public:
+	// Must be called once before using the logger:
 	static void Init();
 
 	inline static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_coreLogger; }
@@ -21,5 +25,7 @@ private:
 #define LOG_WARN(...)     ::Logger::GetCoreLogger()->warn(__VA_ARGS__)
 #define LOG_ERROR(...)    ::Logger::GetCoreLogger()->error(__VA_ARGS__)
 #define LOG_CRITICAL(...) ::Logger::GetCoreLogger()->critical(__VA_ARGS__)
+
+
 
 #endif // __INCLUDE_GUARD_Logger_h__

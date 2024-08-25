@@ -19,4 +19,7 @@ private: // Methods:
 	VkBool32 HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device);
 	VkBool32 HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface);
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanPhysicalDevice_h__

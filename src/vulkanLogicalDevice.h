@@ -9,10 +9,6 @@
 
 
 
-// TODO:
-// - Logic for 
-
-
 struct VulkanQueue
 {
 	VkQueue queue;
@@ -38,4 +34,7 @@ private: // Methods:
 	uint32_t FindPresentQueueFamilyIndex(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 	uint32_t FindPureComputeQueueFamilyIndex(VkPhysicalDevice physicalDevice);
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanLogicalDevice_h__

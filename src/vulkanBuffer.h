@@ -31,4 +31,7 @@ public: // Methods:
 private: // Methods:
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanBuffer_h__

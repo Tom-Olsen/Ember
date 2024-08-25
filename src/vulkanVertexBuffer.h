@@ -17,4 +17,7 @@ public: // Methods:
 	VulkanVertexBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh);
 	~VulkanVertexBuffer();
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanBuffer_h__

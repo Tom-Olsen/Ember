@@ -27,4 +27,7 @@ public: // Methods:
 	void Recreate(VulkanSwapchain* swapchain);
 	VkFramebuffer& operator[](size_t index);
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanFrameBuffers_h__

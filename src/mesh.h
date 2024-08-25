@@ -9,8 +9,7 @@
 // - move vertex/index buffers to mesh?
 
 /// <summary>
-/// Mesh takes ownership of arrays.
-/// Arrays must be allocated on the heap via new.
+/// Mesh takes ownership of vectors.
 /// </summary>
 class Mesh
 {

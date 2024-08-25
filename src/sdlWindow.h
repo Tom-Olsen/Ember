@@ -24,4 +24,7 @@ public: // Methods:
 	int Height();
 	VkExtent2D Extent();
 };
+
+
+
 #endif // __INCLUDE_GUARD_window_h__

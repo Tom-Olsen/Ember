@@ -9,7 +9,7 @@
 #include "vulkanSurface.h"
 
 // TODO:
-// when the graphics and present queue are different, wee need to use the concurrent mode:
+// when the graphics and present queue are different, we need to use the concurrent mode:
 // createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 // createInfo.queueFamilyIndexCount = 2;
 // createInfo.pQueueFamilyIndices = { graphicsQueueIndex, presentQueueIndex };
@@ -37,4 +37,7 @@ private: // Methods:
 	void CreateImages();
 	void CreateImageViews();
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanSwapchain_h__

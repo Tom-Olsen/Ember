@@ -15,6 +15,7 @@
 #include "mesh.h"
 
 
+
 class Application
 {
 private: // Members:
@@ -50,4 +51,7 @@ private: // Methods:
 	void DestroyFences();
 	void DestroySemaphores();
 };
+
+
+
 #endif // __INCLUDE_GUARD_application_h__

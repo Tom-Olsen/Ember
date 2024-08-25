@@ -20,4 +20,7 @@ public: // Methods:
 private: // Methods:
 	std::vector<const char*> AvailableInstanceExtensions();
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanInstance_h__

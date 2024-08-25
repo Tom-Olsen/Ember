@@ -36,4 +36,7 @@ private: // Methods:
 	VkSurfaceFormatKHR PickSurfaceFormat();
 	VkPresentModeKHR PickPresentMode();
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanSurface_h__

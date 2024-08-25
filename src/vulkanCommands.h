@@ -21,4 +21,7 @@ public: // Methods:
 	VulkanCommands(size_t size, VulkanLogicalDevice* logicalDevice);
 	~VulkanCommands();
 };
+
+
+
 #endif // __INCLUDE_GUARD_vulkanCommands_h__
