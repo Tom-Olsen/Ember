@@ -23,12 +23,11 @@ private: // Members:
 
 public: // Methods:
 	Mesh();
-	~Mesh();
-
 	Mesh(const Mesh& other) = default;
 	Mesh& operator=(const Mesh& other) = default;
 	Mesh(Mesh&& other) noexcept = default;
 	Mesh& operator=(Mesh&& other) noexcept = default;
+	~Mesh();
 	
 	// Setters:
 	void SetPositions(std::vector<Float3>&& positions);

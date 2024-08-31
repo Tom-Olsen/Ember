@@ -44,6 +44,7 @@ public: // Methods:
 	void Run();
 
 private: // Methods:
+	void PrintApplicationStatus();
 	void Render();
 	void Resize();
 	void CreateFences();

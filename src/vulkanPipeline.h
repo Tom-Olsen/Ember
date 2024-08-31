@@ -7,6 +7,12 @@
 
 
 
+/// <summary>
+/// Pipeline is immutable and must be recreated from scratch if any of its state changes.
+/// It is also expensive to create, so it is recommended to create them at initialization and not during rendering.
+/// The only exception are the dynamic states, which can be changed without recreating the pipeline.
+/// These include viewport, scissor, line width, depth bias, blend constants, and stencil compare mask.
+/// </summary>
 class VulkanPipeline
 {
 public: // Members:

@@ -6,15 +6,15 @@
 
 
 // Macro to check if a Vulkan function returns VK_SUCCESS:
-#define ASSERT_VULKAN(val) \
+#define VULKAN_ASSERT(val) \
     if (val != VK_SUCCESS) { \
         LOG_CRITICAL("File: {}, Line: {} Vulkan error: {}", __FILE__, __LINE__, std::to_string(val)); \
         std::abort(); \
     }
 
-// Quick ASSERT_VULKAN macro:
+// Shorthand for VULKAN_ASSERT which can be disabled:
 #ifndef VKA
-#define VKA(f) ASSERT_VULKAN(f)
+#define VKA(f) VULKAN_ASSERT(f)
 #endif
 
 

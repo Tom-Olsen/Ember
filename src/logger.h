@@ -19,6 +19,7 @@ private:
 };
 
 
+
 // Logging macros:
 #define LOG_TRACE(...)    ::Logger::GetCoreLogger()->trace(__VA_ARGS__)
 #define LOG_INFO(...)     ::Logger::GetCoreLogger()->info(__VA_ARGS__)

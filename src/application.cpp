@@ -1,3 +1,4 @@
+#include <iostream>
 #include "application.h"
 #include "macros.h"
 #include "logger.h"
@@ -58,6 +59,9 @@ Application::Application()
 	// Synchronization objects:
 	CreateFences();
 	CreateSemaphores();
+	
+	// Debug:
+	//PrintApplicationStatus();
 }
 
 
@@ -96,7 +100,14 @@ void Application::Run()
 
 
 
-// private:
+// Private:
+void Application::PrintApplicationStatus()
+{
+	LOG_INFO("There are multiple extensions needed for the 'GPU-Assisted Validation' to work properly. These are automatically enabled by the validation layer. Any warnings related to this can be ignored.");
+	LOG_INFO("The 'BestPractices-vkBindBufferMemory-small-dedicated-allocation' warnings can also be ignored as the current memory allocations are very small due to the nature of the tutorial this application is based on.");
+	std::cout << "Press 'Enter' to continue." << std::endl;
+	std::cin.get();
+}
 void Application::Render()
 {
 	// Frame and Semaphor index for mulitple frames in flight (gets updated at the end):
@@ -117,7 +128,7 @@ void Application::Render()
 		return;
 	}
 	else
-		ASSERT_VULKAN(result);
+		VKA(result);
 
 	// Wait for previous Queue submit to finish (fence):
 	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
@@ -196,7 +207,7 @@ void Application::Render()
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		Resize();
 	else
-		ASSERT_VULKAN(result);
+		VKA(result);
 
 	frameIndex = (frameIndex + 1) % framesInFlight;
 	semaphorIndex = (semaphorIndex + 1) % swapchain->images.size();
