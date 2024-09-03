@@ -1,5 +1,6 @@
 #include "VulkanFrameBuffers.h"
 #include <stdexcept>
+#include "macros.h"
 
 
 
@@ -22,7 +23,7 @@ VulkanFrameBuffers::VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, Vulka
 		createinfo.width = extent.width;
 		createinfo.height = extent.height;
 		createinfo.layers = 1;
-		vkCreateFramebuffer(logicalDevice->device, &createinfo, nullptr, &frameBuffers[i]);
+		VKA(vkCreateFramebuffer(logicalDevice->device, &createinfo, nullptr, &frameBuffers[i]));
 	}
 }
 

@@ -13,7 +13,7 @@ private: // Members:
 
 
 public: // Members:
-	size_t size;
+	size_t size;	// should be equal to framesInFlight
 	std::vector<VkCommandPool> pools;
 	std::vector<VkCommandBuffer> buffers;
 

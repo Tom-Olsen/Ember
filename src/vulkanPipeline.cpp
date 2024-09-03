@@ -215,20 +215,23 @@ void VulkanPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
         dynamicState.pDynamicStates = dynamicStates.data();
 
         VkGraphicsPipelineCreateInfo createInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-        createInfo.stageCount = 2;
+        createInfo.stageCount = 2;                              // vertex and fragment shaders
         createInfo.pStages = shaderStages;
         createInfo.pVertexInputState = &vertexInputState;       // Buffer format
         createInfo.pInputAssemblyState = &inputAssemblyState;   // Input assembler
         createInfo.pViewportState = &viewportState;			    // Viewport and scissor
         createInfo.pRasterizationState = &rasterizationState;   // Rasterizer
         createInfo.pMultisampleState = &multisampleState;	    // Multisampling
+        createInfo.pDepthStencilState = nullptr;			    // Depth and stencil testing (not used yet)
         createInfo.pColorBlendState = &colorBlendState;		    // Color blending
         createInfo.pDynamicState = &dynamicState;			    // Dynamic states
         createInfo.layout = pipelineLayout;
         createInfo.renderPass = renderpass->renderpass;
         createInfo.subpass = 0;
+        createInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
         createInfo.basePipelineIndex = -1;
 
-        vkCreateGraphicsPipelines(logicalDevice->device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline);
+        // Second parameter is a VkPipelineCache. It can be used to store and reuse pipelines; even across runs of the application by saving it to a file.
+        VKA(vkCreateGraphicsPipelines(logicalDevice->device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline));
     }
 }

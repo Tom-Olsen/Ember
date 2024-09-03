@@ -93,7 +93,7 @@ void Application::Run()
 		start = end;
 		time += deltaTime;
 		LOG_INFO("Frame: {}", frame);
-		LOG_INFO("FPS: {}", 1.0 / deltaTime);
+		LOG_INFO("Time: {}ms", 1000 * deltaTime);
 		frame++;
 	}
 }
@@ -108,109 +108,148 @@ void Application::PrintApplicationStatus()
 	std::cout << "Press 'Enter' to continue." << std::endl;
 	std::cin.get();
 }
+
 void Application::Render()
 {
 	// Frame and Semaphor index for mulitple frames in flight (gets updated at the end):
 	static uint32_t frameIndex = 0;
 	static uint32_t semaphorIndex = 0;
 
-	// Get image index of spwapchain:
+	uint32_t imageIndex = AquireImage(semaphorIndex);
+	if (imageIndex == -1)
+	{
+		for(int i=0; i<100; i++)
+			LOG_CRITICAL(imageIndex);
+		return;
+	}
+
+	LOG_CRITICAL("   frameIndex: {0}", frameIndex);
+	LOG_CRITICAL("semaphorIndex: {0}", semaphorIndex);
+	LOG_CRITICAL("   imageIndex: {0}", imageIndex);
+
+	// Wait for previous Queue submit to finish (fence):
+	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
+	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
+
+	RecordCommandBuffer(frameIndex, imageIndex);
+	SubmitCommandBuffer(frameIndex, semaphorIndex);
+	PresentImage(imageIndex, semaphorIndex);
+
+	frameIndex = (frameIndex + 1) % framesInFlight;
+	semaphorIndex = (semaphorIndex + 1) % swapchain->images.size();
+}
+
+uint32_t Application::AquireImage(uint32_t semaphorIndex)
+{
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(logicalDevice->device, swapchain->swapchain, UINT64_MAX, acquireSemaphores[semaphorIndex], VK_NULL_HANDLE, &imageIndex);
-	
-	// Resize image if needed:
+
+	// Resize if needed:
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
 		Resize();
 		vkDestroySemaphore(logicalDevice->device, acquireSemaphores[semaphorIndex], nullptr);
 		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 		VKA(vkCreateSemaphore(logicalDevice->device, &createInfo, nullptr, &acquireSemaphores[semaphorIndex]));
-		return;
+		return -1;
 	}
 	else
 		VKA(result);
 
-	// Wait for previous Queue submit to finish (fence):
-	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
-	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
+	return imageIndex;
+}
 
-	// Reset all command buffers in command pool and create new command buffer:
+void Application::RecordCommandBuffer(uint32_t frameIndex, uint32_t imageIndex)
+{
+	// Reset command buffers of current command pool:
+	//vkResetCommandBuffer(commands->buffers[frameIndex], 0); not sure why i reset the command pool and not just the buffer
 	vkResetCommandPool(logicalDevice->device, commands->pools[frameIndex], 0);
+
+	// Get current command buffer:
+	VkCommandBuffer commandBuffer = commands->buffers[frameIndex];
+
+	// Begin command buffer:
 	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;		// The command buffer will be rerecorded right after executing it once.
+	//beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;	// This is a secondary command buffer that will be entirely within a single render pass.
+	//beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;		// The command buffer can be resubmitted while it is also already pending execution.
+	//beginInfo.pInheritanceInfo = nullptr; // Needed for secondary command buffers.
+	VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 
-	{
-		VkCommandBuffer commandBuffer = commands->buffers[frameIndex];
-		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+	// Viewport and Scissor:
+	SetViewportAndScissor(commandBuffer);
 
-		// Resize viewport and scissor:
-		VkExtent2D extent = surface->CurrentExtent();
-		VkViewport viewport = {};
-		viewport.width = (float)extent.width;
-		viewport.height = (float)extent.height;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
+	// Begin render pass:
+	VkClearValue clearValue = { 0.0f, 0.0f, 0.0f, 1.0f };
+	VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+	renderPassBeginInfo.renderPass = renderpass->renderpass;
+	renderPassBeginInfo.framebuffer = (*frameBuffers)[imageIndex];
+	renderPassBeginInfo.renderArea.offset = {0, 0};
+	renderPassBeginInfo.renderArea.extent = surface->CurrentExtent();
+	renderPassBeginInfo.clearValueCount = 1;
+	renderPassBeginInfo.pClearValues = &clearValue;
 
-		VkRect2D scissor = {};
-		scissor.extent = extent;
+	// VK_SUBPASS_CONTENTS_INLINE = The render pass commands will be embedded in the primary command buffer itself and no secondary command buffers will be executed.
+	// VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS = The render pass commands will be executed from secondary command buffers.
+	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
 
-		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+	// Bind vertex buffer to command buffer:
+	VkDeviceSize offsets[2] = { 0, mesh->SizeOfPositions() };
+	VkBuffer buffers[2] = { vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer };
+	vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
+	vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
 
-		VkClearValue clearValue = { 1.0f, 0.0f, 1.0f, 1.0f };
-		VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassBeginInfo.renderPass = renderpass->renderpass;
-		renderPassBeginInfo.framebuffer = (*frameBuffers)[imageIndex];
-		renderPassBeginInfo.renderArea = { {0, 0}, extent };
-		renderPassBeginInfo.clearValueCount = 1;
-		renderPassBeginInfo.pClearValues = &clearValue;
-		{
-			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
+	vkCmdDrawIndexed(commandBuffer, 3 * mesh.get()->GetTriangleCount(), 1, 0, 0, 0);
+	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+	vkCmdEndRenderPass(commandBuffer);
 
-			// Bind vertex buffer to command buffer:
-			VkDeviceSize offsets[2] = { 0, mesh->SizeOfPositions()};
-			VkBuffer buffers[2] = { vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer };
-			vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
-			vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
+	VKA(vkEndCommandBuffer(commandBuffer));
+}
 
-			vkCmdDrawIndexed(commandBuffer, 3 * mesh.get()->GetTriangleCount(), 1, 0, 0, 0);
-			vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-			vkCmdEndRenderPass(commandBuffer);
-		}
-		VKA(vkEndCommandBuffer(commandBuffer));
-	}
-
-
-	// Submit command buffer:
-	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+void Application::SubmitCommandBuffer(uint32_t frameIndex, uint32_t semaphorIndex)
+{
+	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // wait at color attachment stage (fragment shader).
 	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &acquireSemaphores[semaphorIndex];
+	submitInfo.pWaitSemaphores = &acquireSemaphores[semaphorIndex];	// semaphor to wait for
 	submitInfo.pWaitDstStageMask = &waitStage;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commands->buffers[frameIndex];
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &releaseSemaphores[semaphorIndex];
-	// acquire semaphore allows for render job to start before image is ready.
-	// The GPU waits with final step (rendering to image) until the semaphore is signaled (image is ready).
-	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[frameIndex]));
+	submitInfo.pSignalSemaphores = &releaseSemaphores[semaphorIndex]; // semaphor to signal when done
+	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[frameIndex])); // fence to signal when done
+}
 
-	// Present image:
+void Application::PresentImage(uint32_t imageIndex, uint32_t semaphorIndex)
+{
 	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &releaseSemaphores[semaphorIndex];
+	presentInfo.pWaitSemaphores = &releaseSemaphores[semaphorIndex]; // semaphor to wait for
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapchain->swapchain;
 	presentInfo.pImageIndices = &imageIndex;
-	result = vkQueuePresentKHR(logicalDevice->graphicsQueue.queue, &presentInfo);
+
+	VkResult result = vkQueuePresentKHR(logicalDevice->graphicsQueue.queue, &presentInfo);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		Resize();
 	else
 		VKA(result);
+}
 
-	frameIndex = (frameIndex + 1) % framesInFlight;
-	semaphorIndex = (semaphorIndex + 1) % swapchain->images.size();
+void Application::SetViewportAndScissor(VkCommandBuffer& commandBuffer)
+{
+	VkViewport viewport = {};
+	viewport.width = (float)surface->CurrentExtent().width;
+	viewport.height = (float)surface->CurrentExtent().height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+
+	VkRect2D scissor = {};
+	scissor.extent = surface->CurrentExtent();
+
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
 void Application::Resize()
@@ -229,12 +268,13 @@ void Application::Resize()
 void Application::CreateFences()
 {
 	VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-	createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+	createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;	// Fence is created in the signaled state to prevent the first wait from blocking.
 
 	fences.resize(framesInFlight);
 	for (uint32_t i = 0; i < framesInFlight; i++)
 		VKA(vkCreateFence(logicalDevice->device, &createInfo, nullptr, &fences[i]));
 }
+
 void Application::CreateSemaphores()
 {
 	VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
@@ -255,6 +295,7 @@ void Application::DestroyFences()
 		vkDestroyFence(logicalDevice->device, fences[i], nullptr);
 	fences.clear();
 }
+
 void Application::DestroySemaphores()
 {
 	for (uint32_t i = 0; i < acquireSemaphores.size(); i++)
