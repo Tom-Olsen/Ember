@@ -111,7 +111,6 @@ void Application::PrintApplicationStatus()
 
 void Application::Render()
 {
-	// Frame and Semaphor index for mulitple frames in flight (gets updated at the end):
 	static uint32_t frameIndex = 0;
 	static uint32_t semaphorIndex = 0;
 
@@ -123,11 +122,7 @@ void Application::Render()
 		return;
 	}
 
-	LOG_CRITICAL("   frameIndex: {0}", frameIndex);
-	LOG_CRITICAL("semaphorIndex: {0}", semaphorIndex);
-	LOG_CRITICAL("   imageIndex: {0}", imageIndex);
-
-	// Wait for previous Queue submit to finish (fence):
+	// Wait for fence of previous frame with same frameIndex to finish:
 	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
 	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
 
@@ -141,6 +136,7 @@ void Application::Render()
 
 uint32_t Application::AquireImage(uint32_t semaphorIndex)
 {
+	// Signal acquireSemaphore when done:
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(logicalDevice->device, swapchain->swapchain, UINT64_MAX, acquireSemaphores[semaphorIndex], VK_NULL_HANDLE, &imageIndex);
 
@@ -148,6 +144,7 @@ uint32_t Application::AquireImage(uint32_t semaphorIndex)
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
 		Resize();
+		// reset acquire semaphor as current render pass is invalid:
 		vkDestroySemaphore(logicalDevice->device, acquireSemaphores[semaphorIndex], nullptr);
 		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 		VKA(vkCreateSemaphore(logicalDevice->device, &createInfo, nullptr, &acquireSemaphores[semaphorIndex]));
@@ -162,8 +159,8 @@ uint32_t Application::AquireImage(uint32_t semaphorIndex)
 void Application::RecordCommandBuffer(uint32_t frameIndex, uint32_t imageIndex)
 {
 	// Reset command buffers of current command pool:
-	//vkResetCommandBuffer(commands->buffers[frameIndex], 0); not sure why i reset the command pool and not just the buffer
-	vkResetCommandPool(logicalDevice->device, commands->pools[frameIndex], 0);
+	//vkResetCommandBuffer(commands->buffers[frameIndex], 0); //  requires VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag in command pool creation.
+	vkResetCommandPool(logicalDevice->device, commands->pools[frameIndex], 0); // requires VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag in command pool creation.
 
 	// Get current command buffer:
 	VkCommandBuffer commandBuffer = commands->buffers[frameIndex];
@@ -212,20 +209,20 @@ void Application::SubmitCommandBuffer(uint32_t frameIndex, uint32_t semaphorInde
 	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // wait at color attachment stage (fragment shader).
 	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &acquireSemaphores[semaphorIndex];	// semaphor to wait for
+	submitInfo.pWaitSemaphores = &acquireSemaphores[semaphorIndex];	// wait for acquireSemaphor
 	submitInfo.pWaitDstStageMask = &waitStage;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commands->buffers[frameIndex];
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &releaseSemaphores[semaphorIndex]; // semaphor to signal when done
-	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[frameIndex])); // fence to signal when done
+	submitInfo.pSignalSemaphores = &releaseSemaphores[semaphorIndex]; // signal releaseSemaphor when done
+	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[frameIndex])); // signal fence when done
 }
 
 void Application::PresentImage(uint32_t imageIndex, uint32_t semaphorIndex)
 {
 	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &releaseSemaphores[semaphorIndex]; // semaphor to wait for
+	presentInfo.pWaitSemaphores = &releaseSemaphores[semaphorIndex]; // wait for releaseSemaphor
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapchain->swapchain;
 	presentInfo.pImageIndices = &imageIndex;

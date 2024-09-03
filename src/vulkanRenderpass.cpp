@@ -26,11 +26,21 @@ VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VkFormat 
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &colorAttachmentReference;
 
+	VkSubpassDependency dependency = {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
 	VkRenderPassCreateInfo createInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 	createInfo.attachmentCount = 1;
 	createInfo.pAttachments = &colorAttachmentDescription;
 	createInfo.subpassCount = 1;
 	createInfo.pSubpasses = &subpass;
+	createInfo.dependencyCount = 1;
+	createInfo.pDependencies = &dependency;
 
 	VKA(vkCreateRenderPass(logicalDevice->device, &createInfo, nullptr, &renderpass));
 }

@@ -13,8 +13,8 @@ VulkanCommands::VulkanCommands(size_t size, VulkanLogicalDevice* logicalDevice) 
 	for (size_t i = 0; i < size; i++)
 	{
 		VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-		createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;	// Command buffers will be short-lived. 
-		//createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;	// Command buffers will be reset after each use (frame).
+		//createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;	// Command buffers will be short-lived. 
+		createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;	// Command buffers will be reset after each use (frame).
 		createInfo.queueFamilyIndex = logicalDevice->graphicsQueue.familyIndex;	// explicit command pool for graphics operations.
 		VKA(vkCreateCommandPool(logicalDevice->device, &createInfo, nullptr, &pools[i]));
 
