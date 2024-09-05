@@ -1,15 +1,15 @@
 How to compile (Windows 10):
 Clone repository with submodules: git clone --recurse-submodules <repository-url>
-Create build directory in root folder of repository.
+Create a build directory in the root folder of the repository.
 
-Start CMake and use following configuration:
+Start CMake and use the following configuration:
 Where is the source code: <full path to repository, e.g. C:/Users/.../Documents/c++/MyEngine>
 Where to build the binaries: <full path to build folder, e.g. C:/Users/.../Documents/c++/MyEngine/build>
 Press the configure button.
 
-You should now have a visual studio project in the build folder named MyEngine.sln.
-Open the .sln with visual studio 2022 or later, right click the 'MyEngine' solution and selecht 'Set as Startup Project'.
-You can now build and run the code with the play button or with 'ctrl + F5'.
+You should now have a visual studio project named MyEngine.sln in the build folder.
+Open the .sln with Visual Studio 2022 or later, right-click the 'MyEngine' solution, and select 'Set as Startup Project'.
+You can now build and run the code with the play button or 'ctrl + F5'.
 
 
 
