@@ -1,3 +1,9 @@
+Prerequisites:
+To compile this code, you need to have the Vulkan SDK 1.3.290.0 or later installed.
+All other dependencies (SDL, glm, spdlog) are submodules and will be compiled from the source.
+
+
+
 How to compile (Windows 10):
 Clone repository with submodules: git clone --recurse-submodules <repository-url>
 Create a build directory in the root folder of the repository.
@@ -7,7 +13,7 @@ Where is the source code: <full path to repository, e.g. C:/Users/.../Documents/
 Where to build the binaries: <full path to build folder, e.g. C:/Users/.../Documents/c++/MyEngine/build>
 Press the configure button.
 
-You should now have a visual studio project named MyEngine.sln in the build folder.
+You should now have a vs project named MyEngine.sln in the build folder.
 Open the .sln with Visual Studio 2022 or later, right-click the 'MyEngine' solution, and select 'Set as Startup Project'.
 You can now build and run the code with the play button or 'ctrl + F5'.
 
