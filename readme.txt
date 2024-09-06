@@ -11,7 +11,7 @@ Create a build directory in the root folder of the repository.
 Start CMake and use the following configuration:
 Where is the source code: <full path to repository, e.g. C:/Users/.../Documents/c++/MyEngine>
 Where to build the binaries: <full path to build folder, e.g. C:/Users/.../Documents/c++/MyEngine/build>
-Press the configure button.
+Press the buttons configure, then generate.
 
 You should now have a vs project named MyEngine.sln in the build folder.
 Open the .sln with Visual Studio 2022 or later, right-click the 'MyEngine' solution, and select 'Set as Startup Project'.
