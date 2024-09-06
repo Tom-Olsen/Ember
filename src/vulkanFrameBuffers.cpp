@@ -40,8 +40,10 @@ VulkanFrameBuffers::~VulkanFrameBuffers()
 
 
 // Public:
-void VulkanFrameBuffers::Recreate(VulkanSwapchain* swapchain)
+void VulkanFrameBuffers::Recreate(VulkanSwapchain* swapchain, VulkanRenderpass* renderpass)
 {
+	this->renderpass = renderpass;
+
 	for (uint32_t i = 0; i < size; i++)
 		vkDestroyFramebuffer(logicalDevice->device, frameBuffers[i], nullptr);
 	frameBuffers.clear();

@@ -15,9 +15,6 @@ VulkanSurface::VulkanSurface(VulkanInstance* instance, VulkanPhysicalDevice* phy
 	// Surface:
 	SDL_Vulkan_CreateSurface(window->window, instance->instance, nullptr, &surface);
 
-	// SurfaceCapabilities:
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
-
 	// Available surfaceFormats:
 	uint32_t formatCount;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice->device, surface, &formatCount, nullptr);
@@ -52,22 +49,27 @@ VulkanSurface::~VulkanSurface()
 // Public:
 VkExtent2D VulkanSurface::CurrentExtent()
 {
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
 	return surfaceCapabilities.currentExtent;
 }
 VkExtent2D VulkanSurface::MinImageExtent()
 {
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
 	return surfaceCapabilities.minImageExtent;
 }
 VkExtent2D VulkanSurface::MaxImageExtent()
 {
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
 	return surfaceCapabilities.maxImageExtent;
 }
 uint32_t VulkanSurface::MinImageCount()
 {
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
 	return surfaceCapabilities.minImageCount;
 }
 uint32_t VulkanSurface::MaxImageCount()
 {
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
 	return surfaceCapabilities.maxImageCount;
 }
 

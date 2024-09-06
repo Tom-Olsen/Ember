@@ -79,6 +79,7 @@ Application::~Application()
 // Main Loop:
 void Application::Run()
 {
+	frameIndex = 0;
 	int frame = 0;
 	double time = 0;
 	auto start = std::chrono::steady_clock::now();
@@ -111,43 +112,34 @@ void Application::PrintApplicationStatus()
 
 void Application::Render()
 {
-	static uint32_t frameIndex = 0;
-	static uint32_t semaphorIndex = 0;
-
-	uint32_t imageIndex = AquireImage(semaphorIndex);
-	if (imageIndex == -1)
-	{
-		for(int i=0; i<100; i++)
-			LOG_CRITICAL(imageIndex);
-		return;
-	}
-
 	// Wait for fence of previous frame with same frameIndex to finish:
 	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
+	uint32_t imageIndex = AquireImage();
+	if (imageIndex == -1)
+		return;
 	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
 
-	RecordCommandBuffer(frameIndex, imageIndex);
-	SubmitCommandBuffer(frameIndex, semaphorIndex);
-	PresentImage(imageIndex, semaphorIndex);
+	RecordCommandBuffer(imageIndex);
+	SubmitCommandBuffer();
+	PresentImage(imageIndex);
 
 	frameIndex = (frameIndex + 1) % framesInFlight;
-	semaphorIndex = (semaphorIndex + 1) % swapchain->images.size();
 }
 
-uint32_t Application::AquireImage(uint32_t semaphorIndex)
+uint32_t Application::AquireImage()
 {
 	// Signal acquireSemaphore when done:
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(logicalDevice->device, swapchain->swapchain, UINT64_MAX, acquireSemaphores[semaphorIndex], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(logicalDevice->device, swapchain->swapchain, UINT64_MAX, acquireSemaphores[frameIndex], VK_NULL_HANDLE, &imageIndex);
 
 	// Resize if needed:
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
 		Resize();
 		// reset acquire semaphor as current render pass is invalid:
-		vkDestroySemaphore(logicalDevice->device, acquireSemaphores[semaphorIndex], nullptr);
+		vkDestroySemaphore(logicalDevice->device, acquireSemaphores[frameIndex], nullptr);
 		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-		VKA(vkCreateSemaphore(logicalDevice->device, &createInfo, nullptr, &acquireSemaphores[semaphorIndex]));
+		VKA(vkCreateSemaphore(logicalDevice->device, &createInfo, nullptr, &acquireSemaphores[frameIndex]));
 		return -1;
 	}
 	else
@@ -156,7 +148,7 @@ uint32_t Application::AquireImage(uint32_t semaphorIndex)
 	return imageIndex;
 }
 
-void Application::RecordCommandBuffer(uint32_t frameIndex, uint32_t imageIndex)
+void Application::RecordCommandBuffer(uint32_t imageIndex)
 {
 	// Reset command buffers of current command pool:
 	//vkResetCommandBuffer(commands->buffers[frameIndex], 0); //  requires VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag in command pool creation.
@@ -204,25 +196,25 @@ void Application::RecordCommandBuffer(uint32_t frameIndex, uint32_t imageIndex)
 	VKA(vkEndCommandBuffer(commandBuffer));
 }
 
-void Application::SubmitCommandBuffer(uint32_t frameIndex, uint32_t semaphorIndex)
+void Application::SubmitCommandBuffer()
 {
 	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // wait at color attachment stage (fragment shader).
 	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &acquireSemaphores[semaphorIndex];	// wait for acquireSemaphor
+	submitInfo.pWaitSemaphores = &acquireSemaphores[frameIndex];	// wait for acquireSemaphor
 	submitInfo.pWaitDstStageMask = &waitStage;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commands->buffers[frameIndex];
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &releaseSemaphores[semaphorIndex]; // signal releaseSemaphor when done
+	submitInfo.pSignalSemaphores = &releaseSemaphores[frameIndex]; // signal releaseSemaphor when done
 	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[frameIndex])); // signal fence when done
 }
 
-void Application::PresentImage(uint32_t imageIndex, uint32_t semaphorIndex)
+void Application::PresentImage(uint32_t imageIndex)
 {
 	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &releaseSemaphores[semaphorIndex]; // wait for releaseSemaphor
+	presentInfo.pWaitSemaphores = &releaseSemaphores[frameIndex]; // wait for releaseSemaphor
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapchain->swapchain;
 	presentInfo.pImageIndices = &imageIndex;
@@ -253,13 +245,15 @@ void Application::Resize()
 {
 	// Wait for device to finish:
 	VKA(vkDeviceWaitIdle(logicalDevice->device));
-
+	
 	// Recreate swapchain:
 	std::unique_ptr<VulkanSwapchain> newSwapchain = std::make_unique<VulkanSwapchain>(window.get(), logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, swapchain.get());
 	swapchain.swap(newSwapchain);
 
-	// Recreate frame buffers:
-	frameBuffers->Recreate(swapchain.get());
+	// Recreate render pass and frameBuffers:
+	std::unique_ptr<VulkanRenderpass> newRenderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format);
+	renderpass.swap(newRenderpass);
+	frameBuffers->Recreate(swapchain.get(), renderpass.get());
 }
 
 void Application::CreateFences()
@@ -276,10 +270,9 @@ void Application::CreateSemaphores()
 {
 	VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
-	size_t size = swapchain->images.size();
-	acquireSemaphores.resize(size);
-	releaseSemaphores.resize(size);
-	for (uint32_t i = 0; i < size; i++)
+	acquireSemaphores.resize(framesInFlight);
+	releaseSemaphores.resize(framesInFlight);
+	for (uint32_t i = 0; i < framesInFlight; i++)
 	{
 		VKA(vkCreateSemaphore(logicalDevice->device, &createInfo, nullptr, &acquireSemaphores[i]));
 		VKA(vkCreateSemaphore(logicalDevice->device, &createInfo, nullptr, &releaseSemaphores[i]));
@@ -295,7 +288,7 @@ void Application::DestroyFences()
 
 void Application::DestroySemaphores()
 {
-	for (uint32_t i = 0; i < acquireSemaphores.size(); i++)
+	for (uint32_t i = 0; i < framesInFlight; i++)
 	{
 		vkDestroySemaphore(logicalDevice->device, acquireSemaphores[i], nullptr);
 		vkDestroySemaphore(logicalDevice->device, releaseSemaphores[i], nullptr);

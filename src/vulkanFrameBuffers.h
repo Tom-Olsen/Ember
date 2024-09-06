@@ -24,7 +24,7 @@ public: // Members:
 public: // Methods:
 	VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass);
 	~VulkanFrameBuffers();
-	void Recreate(VulkanSwapchain* swapchain);
+	void Recreate(VulkanSwapchain* swapchain, VulkanRenderpass* renderpass);
 	VkFramebuffer& operator[](size_t index);
 };
 

@@ -37,6 +37,7 @@ private: // Members:
 	std::unique_ptr<Mesh> mesh;
 	std::unique_ptr<VulkanVertexBuffer> vertexBuffer;
 	std::unique_ptr<VulkanIndexBuffer> indexBuffer;
+	uint32_t frameIndex;
 
 public: // Methods:
 	Application();
@@ -46,10 +47,10 @@ public: // Methods:
 private: // Methods:
 	void PrintApplicationStatus();
 	void Render();
-	uint32_t AquireImage(uint32_t semaphorIndex);
-	void RecordCommandBuffer(uint32_t frameIndex, uint32_t imageIndex);
-	void SubmitCommandBuffer(uint32_t frameIndex, uint32_t semaphorIndex);
-	void PresentImage(uint32_t imageIndex, uint32_t semaphorIndex);
+	uint32_t AquireImage();
+	void RecordCommandBuffer(uint32_t imageIndex);
+	void SubmitCommandBuffer();
+	void PresentImage(uint32_t imageIndex);
 	void SetViewportAndScissor(VkCommandBuffer& commandBuffer);
 	void Resize();
 	void CreateFences();
