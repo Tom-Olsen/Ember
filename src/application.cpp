@@ -93,8 +93,8 @@ void Application::Run()
 		double deltaTime = std::chrono::duration<double>(end - start).count();
 		start = end;
 		time += deltaTime;
-		LOG_INFO("Frame: {}", frame);
-		LOG_INFO("Time: {}ms", 1000 * deltaTime);
+		//LOG_INFO("Frame: {}", frame);
+		//LOG_INFO("Time: {}ms", 1000 * deltaTime);
 		frame++;
 	}
 }
@@ -135,6 +135,7 @@ uint32_t Application::AquireImage()
 	// Resize if needed:
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
+		LOG_INFO("AquireImage Resize.");
 		Resize();
 		// reset acquire semaphor as current render pass is invalid:
 		vkDestroySemaphore(logicalDevice->device, acquireSemaphores[frameIndex], nullptr);
@@ -221,7 +222,10 @@ void Application::PresentImage(uint32_t imageIndex)
 
 	VkResult result = vkQueuePresentKHR(logicalDevice->graphicsQueue.queue, &presentInfo);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	{
+		LOG_INFO("PresentImage Resize.");
 		Resize();
+	}
 	else
 		VKA(result);
 }
@@ -243,6 +247,13 @@ void Application::SetViewportAndScissor(VkCommandBuffer& commandBuffer)
 
 void Application::Resize()
 {
+	int width = 0, height = 0;
+	while (width == 0 || height == 0)
+	{
+		SDL_GetWindowSize(window.get()->window, &width, &height);
+		SDL_WaitEvent(NULL);
+	}
+
 	// Wait for device to finish:
 	VKA(vkDeviceWaitIdle(logicalDevice->device));
 	
