@@ -80,15 +80,41 @@ Application::~Application()
 void Application::Run()
 {
 	frameIndex = 0;
+	rebuildSwapchain = false;
 	int frame = 0;
 	double time = 0;
 	auto start = std::chrono::steady_clock::now();
-	while (window->HandelEvents())
+
+	bool running = true;
+	while (running)
 	{
-		if (window->isMinimized)
+		// Handle events:
+		running = window->HandelEvents();
+
+		// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
+		VkExtent2D windowExtent = window->Extent();
+		VkExtent2D surfaceExtend = surface->CurrentExtent();
+		if (window->isMinimized || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
+		{
+			SDL_Delay(10);
 			continue;
+		}
+
+		// QUESTION:
+		// -what is the exact difference between window and surface and how can it be that the surface extent differs from the window extent?
+
+		// Resize Swapchain if needed:
+		if (rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height == surfaceExtend.height)
+		{
+			rebuildSwapchain = false;
+			frameIndex = 0;
+			ResizeSwapchain();
+		}
+
+		// Render next frame:
 		Render();
 
+		// FPS calculations:
 		auto end = std::chrono::steady_clock::now();
 		double deltaTime = std::chrono::duration<double>(end - start).count();
 		start = end;
@@ -114,42 +140,37 @@ void Application::Render()
 {
 	// Wait for fence of previous frame with same frameIndex to finish:
 	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
-	uint32_t imageIndex = AquireImage();
-	if (imageIndex == -1)
+	if (!AquireImage())
 		return;
 	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
 
-	RecordCommandBuffer(imageIndex);
+	RecordCommandBuffer();
 	SubmitCommandBuffer();
-	PresentImage(imageIndex);
+	if (!PresentImage())
+		return;
 
 	frameIndex = (frameIndex + 1) % framesInFlight;
 }
 
-uint32_t Application::AquireImage()
+bool Application::AquireImage()
 {
 	// Signal acquireSemaphore when done:
-	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(logicalDevice->device, swapchain->swapchain, UINT64_MAX, acquireSemaphores[frameIndex], VK_NULL_HANDLE, &imageIndex);
 
 	// Resize if needed:
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
-		LOG_INFO("AquireImage Resize.");
-		Resize();
-		// reset acquire semaphor as current render pass is invalid:
-		vkDestroySemaphore(logicalDevice->device, acquireSemaphores[frameIndex], nullptr);
-		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-		VKA(vkCreateSemaphore(logicalDevice->device, &createInfo, nullptr, &acquireSemaphores[frameIndex]));
-		return -1;
+		rebuildSwapchain = true;
+		return false;
 	}
 	else
+	{
 		VKA(result);
-
-	return imageIndex;
+		return true;
+	}
 }
 
-void Application::RecordCommandBuffer(uint32_t imageIndex)
+void Application::RecordCommandBuffer()
 {
 	// Reset command buffers of current command pool:
 	//vkResetCommandBuffer(commands->buffers[frameIndex], 0); //  requires VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag in command pool creation.
@@ -211,7 +232,7 @@ void Application::SubmitCommandBuffer()
 	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[frameIndex])); // signal fence when done
 }
 
-void Application::PresentImage(uint32_t imageIndex)
+bool Application::PresentImage()
 {
 	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	presentInfo.waitSemaphoreCount = 1;
@@ -221,13 +242,16 @@ void Application::PresentImage(uint32_t imageIndex)
 	presentInfo.pImageIndices = &imageIndex;
 
 	VkResult result = vkQueuePresentKHR(logicalDevice->graphicsQueue.queue, &presentInfo);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.get()->framebufferResized)
 	{
-		LOG_INFO("PresentImage Resize.");
-		Resize();
+		rebuildSwapchain = true;
+		return false;
 	}
 	else
+	{
 		VKA(result);
+		return true;
+	}
 }
 
 void Application::SetViewportAndScissor(VkCommandBuffer& commandBuffer)
@@ -245,15 +269,8 @@ void Application::SetViewportAndScissor(VkCommandBuffer& commandBuffer)
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
-void Application::Resize()
+void Application::ResizeSwapchain()
 {
-	int width = 0, height = 0;
-	while (width == 0 || height == 0)
-	{
-		SDL_GetWindowSize(window.get()->window, &width, &height);
-		SDL_WaitEvent(NULL);
-	}
-
 	// Wait for device to finish:
 	VKA(vkDeviceWaitIdle(logicalDevice->device));
 	
@@ -265,6 +282,12 @@ void Application::Resize()
 	std::unique_ptr<VulkanRenderpass> newRenderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format);
 	renderpass.swap(newRenderpass);
 	frameBuffers->Recreate(swapchain.get(), renderpass.get());
+
+	// Recreate synchronization objects:
+	DestroyFences();
+	DestroySemaphores();
+	CreateFences();
+	CreateSemaphores();
 }
 
 void Application::CreateFences()

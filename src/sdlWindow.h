@@ -11,9 +11,7 @@ class SdlWindow
 public: // Members:
 	SDL_Window* window;
 	bool isMinimized = false;
-
-private: // Members:
-	SDL_Event event;
+	bool framebufferResized = false;
 
 public: // Methods:
 	SdlWindow(uint16_t width = 1280, uint16_t height = 720);

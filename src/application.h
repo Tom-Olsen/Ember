@@ -38,6 +38,8 @@ private: // Members:
 	std::unique_ptr<VulkanVertexBuffer> vertexBuffer;
 	std::unique_ptr<VulkanIndexBuffer> indexBuffer;
 	uint32_t frameIndex;
+	uint32_t imageIndex;
+	bool rebuildSwapchain;
 
 public: // Methods:
 	Application();
@@ -47,12 +49,12 @@ public: // Methods:
 private: // Methods:
 	void PrintApplicationStatus();
 	void Render();
-	uint32_t AquireImage();
-	void RecordCommandBuffer(uint32_t imageIndex);
+	bool AquireImage();
+	void RecordCommandBuffer();
 	void SubmitCommandBuffer();
-	void PresentImage(uint32_t imageIndex);
+	bool PresentImage();
 	void SetViewportAndScissor(VkCommandBuffer& commandBuffer);
-	void Resize();
+	void ResizeSwapchain();
 	void CreateFences();
 	void CreateSemaphores();
 	void DestroyFences();

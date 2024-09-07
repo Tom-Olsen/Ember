@@ -32,21 +32,32 @@ SdlWindow::~SdlWindow()
 // Public:
 bool SdlWindow::HandelEvents()
 {
-	while (SDL_PollEvent(&event))
+	SDL_Event event;
+	while (SDL_PollEvent(&event))	// poll next event
 	{
 		switch (event.type)
 		{
-		case SDL_EVENT_QUIT:
-			return false;
-		case SDL_EVENT_WINDOW_MINIMIZED:
-			isMinimized = true;
-			break;
-		case SDL_EVENT_WINDOW_RESTORED:
-			isMinimized = false;
-			break;
+			// General events:
+			case SDL_EVENT_QUIT:
+				return false;	// stop application
+
+			// Window events:
+			case SDL_EVENT_WINDOW_MINIMIZED:
+				isMinimized = true;
+				break;
+			case SDL_EVENT_WINDOW_RESTORED:
+				isMinimized = false;
+				break;
+			case SDL_EVENT_WINDOW_RESIZED:
+				framebufferResized = true;
+				break;
+			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+				if (event.window.windowID == SDL_GetWindowID(window)) // check if the event is for this window
+					return false;	// stop application
 		}
 	}
-	return true;
+
+	return true;	// application running
 }
 
 
