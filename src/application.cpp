@@ -31,7 +31,7 @@ Application::Application()
 	renderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format);
 	pipeline = std::make_unique<VulkanPipeline>(logicalDevice.get(), renderpass.get(), "../shaders/triangleVert.spv", "../shaders/triangleFrag.spv");
 	frameBuffers = std::make_unique<VulkanFrameBuffers>(logicalDevice.get(), surface.get(), swapchain.get(), renderpass.get());
-	commands = std::make_unique<VulkanCommands>(framesInFlight, logicalDevice.get());
+	commands = std::make_unique<VulkanCommands>(framesInFlight, logicalDevice.get(), logicalDevice->graphicsQueue);
 
 	// Initialize mesh:
 	mesh = std::make_unique<Mesh>();
@@ -100,12 +100,40 @@ void Application::Run()
 			continue;
 		}
 
+		//// Just for fun update mesh every frame for small animation:
+		//std::vector<Float3> positions;
+		//positions.emplace_back(-0.5f + 0.1 * sin(1.0 * time), -0.5f + 0.1 * sin(1.6 * time), 0.0f);
+		//positions.emplace_back(-0.5f + 0.1 * sin(1.2 * time), 0.5f + 0.1 * sin(1.5 * time), 0.0f);
+		//positions.emplace_back(0.5f + 0.1 * sin(1.4 * time), -0.5f + 0.1 * sin(1.2 * time), 0.0f);
+		//positions.emplace_back(0.5f + 0.1 * sin(1.6 * time), 0.5f + 0.1 * sin(1.0 * time), 0.0f);
+		//std::vector<Float4> colors;
+		//colors.emplace_back(1.0f, 0.0f, 0.0f, 1.0f);
+		//colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
+		//colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
+		//colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
+		//std::vector<Int3> triangles;
+		//if (frameIndex % 2 == 0)
+		//	triangles.emplace_back(0, 2, 1);
+		//else
+		//	triangles.emplace_back(1, 2, 3);
+		//mesh->SetPositions(std::move(positions));
+		//mesh->SetColors(std::move(colors));
+		//mesh->SetTriangles(std::move(triangles));
+		//vertexBuffer->UpdateBuffer(logicalDevice.get(), physicalDevice.get(), mesh.get());
+		//indexBuffer->UpdateBuffer(logicalDevice.get(), physicalDevice.get(), mesh.get());
+
 		// QUESTION:
 		// -what is the exact difference between window and surface and how can it be that the surface extent differs from the window extent?
 
 		// Resize Swapchain if needed:
-		if (rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height == surfaceExtend.height)
+		if (rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height != surfaceExtend.height)
 		{
+			// PROBLEM:
+			// -if first resize makes window bigger, program crashes.
+			// -if first resize makes window smaller, ererything workds, but rebuildSwapchain is always true leading to an infinite resize loop.
+			LOG_INFO("CondA: {}", rebuildSwapchain);
+			LOG_INFO("CondA: {}", windowExtent.width != surfaceExtend.width);
+			LOG_INFO("CondA: {}", windowExtent.height != surfaceExtend.height);
 			rebuildSwapchain = false;
 			frameIndex = 0;
 			ResizeSwapchain();
@@ -241,7 +269,7 @@ bool Application::PresentImage()
 	presentInfo.pSwapchains = &swapchain->swapchain;
 	presentInfo.pImageIndices = &imageIndex;
 
-	VkResult result = vkQueuePresentKHR(logicalDevice->graphicsQueue.queue, &presentInfo);
+	VkResult result = vkQueuePresentKHR(logicalDevice->presentQueue.queue, &presentInfo);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.get()->framebufferResized)
 	{
 		rebuildSwapchain = true;

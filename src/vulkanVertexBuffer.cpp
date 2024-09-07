@@ -8,19 +8,49 @@
 #ifdef RESIZEABLE_BAR // No staging buffer:
 VulkanVertexBuffer::VulkanVertexBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh)
 {
+	// Create buffer:
 	VkBufferUsageFlags usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 	VkDeviceSize bufferSize = mesh->SizeOfBuffer();
-
 	this->buffer = std::make_unique<VulkanBuffer>(logicalDevice, physicalDevice, bufferSize, usage, memoryPropertyFlags);
 
+	// Copy positions and colors:
 	void* data;
 	VKA(vkMapMemory(logicalDevice->device, buffer->memory, 0, bufferSize, 0, &data));
-
-	// Copy positions and colors:
 	memcpy(data, mesh->GetPositions().data(), mesh->SizeOfPositions());
 	memcpy(static_cast<char*>(data) + mesh->SizeOfPositions(), mesh->GetColors().data(), mesh->SizeOfColors());
 	vkUnmapMemory(logicalDevice->device, buffer->memory);
+}
+void VulkanVertexBuffer::UpdateBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh)
+{
+	VkDeviceSize bufferSize = mesh->SizeOfBuffer();
+	vkQueueWaitIdle(logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
+
+	// Old buffer is big enough:
+	if (bufferSize != buffer->size)
+	{
+		// Copy positions and colors:
+		void* data;
+		VKA(vkMapMemory(logicalDevice->device, buffer->memory, 0, bufferSize, 0, &data));
+		memcpy(data, mesh->GetPositions().data(), mesh->SizeOfPositions());
+		memcpy(static_cast<char*>(data) + mesh->SizeOfPositions(), mesh->GetColors().data(), mesh->SizeOfColors());
+		vkUnmapMemory(logicalDevice->device, buffer->memory);
+	}
+	// Old buffer is too small:
+	else
+	{
+		// Recreate buffer:
+		VkBufferUsageFlags usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+		this->buffer = std::make_unique<VulkanBuffer>(logicalDevice, physicalDevice, bufferSize, usage, memoryPropertyFlags);
+
+		// Copy positions and colors:
+		void* data;
+		VKA(vkMapMemory(logicalDevice->device, buffer->memory, 0, bufferSize, 0, &data));
+		memcpy(data, mesh->GetPositions().data(), mesh->SizeOfPositions());
+		memcpy(static_cast<char*>(data) + mesh->SizeOfPositions(), mesh->GetColors().data(), mesh->SizeOfColors());
+		vkUnmapMemory(logicalDevice->device, buffer->memory);
+	}
 }
 #else // With Staging buffer:
 VulkanVertexBuffer::VulkanVertexBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh)
@@ -29,7 +59,8 @@ VulkanVertexBuffer::VulkanVertexBuffer(VulkanLogicalDevice* logicalDevice, Vulka
 	VkBufferUsageFlags usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 	VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	VkDeviceSize bufferSize = mesh->SizeOfBuffer();
-	this->buffer = std::make_unique<VulkanBuffer>(logicalDevice, physicalDevice, bufferSize, usage, memoryPropertyFlags);
+	std::vector<uint32_t> queueFamilyIndices = { logicalDevice->graphicsQueue.familyIndex, logicalDevice->transferQueue.familyIndex };
+	this->buffer = std::make_unique<VulkanBuffer>(logicalDevice, physicalDevice, bufferSize, usage, memoryPropertyFlags, queueFamilyIndices);
 
 	// Load data into staging buffer:
 	VulkanBuffer stagingBuffer(logicalDevice, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -39,23 +70,48 @@ VulkanVertexBuffer::VulkanVertexBuffer(VulkanLogicalDevice* logicalDevice, Vulka
 	memcpy(static_cast<char*>(data) + mesh->SizeOfPositions(), mesh->GetColors().data(), mesh->SizeOfColors());
 	vkUnmapMemory(logicalDevice->device, stagingBuffer.memory);
 
-	// Generator command buffer:
-	VulkanCommands commands(1, logicalDevice);
-	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	VKA(vkBeginCommandBuffer(commands.buffers[0], &beginInfo));
+	// Copy data from staging to vertex buffer:
+	VulkanBuffer::CopyBuffer(logicalDevice, &stagingBuffer, buffer.get(), bufferSize);
+}
+void VulkanVertexBuffer::UpdateBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh)
+{
+	VkDeviceSize bufferSize = mesh->SizeOfBuffer();
+	vkQueueWaitIdle(logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
 
-	// Queue copy command:
-	VkBufferCopy copyRegion = { 0, 0, bufferSize };
-	vkCmdCopyBuffer(commands.buffers[0], stagingBuffer.buffer, buffer->buffer, 1, &copyRegion);
-	vkEndCommandBuffer(commands.buffers[0]);
+	// Old buffer is big enough:
+	if (bufferSize != buffer->size)
+	{
+		// Load data into staging buffer:
+		VulkanBuffer stagingBuffer(logicalDevice, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		void* data;
+		VKA(vkMapMemory(logicalDevice->device, stagingBuffer.memory, 0, bufferSize, 0, &data));
+		memcpy(data, mesh->GetPositions().data(), mesh->SizeOfPositions());
+		memcpy(static_cast<char*>(data) + mesh->SizeOfPositions(), mesh->GetColors().data(), mesh->SizeOfColors());
+		vkUnmapMemory(logicalDevice->device, stagingBuffer.memory);
 
-	// Submit command buffer:
-	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commands.buffers[0];
-	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, VK_NULL_HANDLE));
-	vkQueueWaitIdle(logicalDevice->graphicsQueue.queue);
+		// Copy data from staging to vertex buffer:
+		VulkanBuffer::CopyBuffer(logicalDevice, &stagingBuffer, buffer.get(), bufferSize);
+	}
+	// Old buffer is too small:
+	else
+	{
+		// Recreate buffer:
+		VkBufferUsageFlags usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		std::vector<uint32_t> queueFamilyIndices = { logicalDevice->graphicsQueue.familyIndex, logicalDevice->transferQueue.familyIndex };
+		this->buffer = std::make_unique<VulkanBuffer>(logicalDevice, physicalDevice, bufferSize, usage, memoryPropertyFlags, queueFamilyIndices);
+
+		// Load data into staging buffer:
+		VulkanBuffer stagingBuffer(logicalDevice, physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		void* data;
+		VKA(vkMapMemory(logicalDevice->device, stagingBuffer.memory, 0, bufferSize, 0, &data));
+		memcpy(data, mesh->GetPositions().data(), mesh->SizeOfPositions());
+		memcpy(static_cast<char*>(data) + mesh->SizeOfPositions(), mesh->GetColors().data(), mesh->SizeOfColors());
+		vkUnmapMemory(logicalDevice->device, stagingBuffer.memory);
+
+		// Copy data from staging to vertex buffer:
+		VulkanBuffer::CopyBuffer(logicalDevice, &stagingBuffer, buffer.get(), bufferSize);
+	}
 }
 #endif
 

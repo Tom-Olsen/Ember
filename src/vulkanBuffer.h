@@ -16,17 +16,14 @@ class VulkanBuffer
 public: // Members:
 	VulkanLogicalDevice* logicalDevice;
 	VulkanPhysicalDevice* physicalDevice;
+	uint64_t size;
 	VkBuffer buffer;
 	VkDeviceMemory memory;
 
 public: // Methods:
-	/// <param name="logicalDevice"></param>
-	/// <param name="physicalDevice"></param>
-	/// <param name="size">in bytes</param>
-	/// <param name="usage"></param>
-	/// <param name="memoryPropertyFlags"></param>
-	VulkanBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryPropertyFlags);
+	VulkanBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryPropertyFlags, std::vector<uint32_t> queueFamilyIndices = {});
 	~VulkanBuffer();
+	static void CopyBuffer(VulkanLogicalDevice* logicalDevice, VulkanBuffer* srcBuffer, VulkanBuffer* dstBuffer, VkDeviceSize size);
 
 private: // Methods:
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

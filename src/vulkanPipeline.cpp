@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "macros.h"
 #include "vulkanPipeline.h"
+#include "mesh.h"
 
 
 
@@ -98,47 +99,15 @@ void VulkanPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
 
     // Pipeline:
     {
-
-        // binding = position of data in buffer
-        // stride = number of bytes between two consecutive elements
-        VkVertexInputBindingDescription bindingDescriptions[2];
-        {
-            // position binding:
-            bindingDescriptions[0].binding = 0;
-            bindingDescriptions[0].stride = sizeof(Float3);
-            bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-            // color binding:
-            bindingDescriptions[1].binding = 1;
-            bindingDescriptions[1].stride = sizeof(Float4);
-            bindingDescriptions[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        }
-        // => x0y0z0, x1y1z1, ..., r0g0b0a0, r1g1b1a1, ...
-
-        // binding = same as above
-        // location = which input in the vertex shader to load (same as location in glsl shader)
-        // format = how to interpret the data
-        // offset = data offset
-        VkVertexInputAttributeDescription attributeDescriptions[2];
-        {
-            // position attribute:
-            attributeDescriptions[0].binding = 0;
-            attributeDescriptions[0].location = 0;
-            attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            attributeDescriptions[0].offset = 0;
-
-            // color attribute:
-            attributeDescriptions[1].binding = 1;
-            attributeDescriptions[1].location = 1;
-            attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-            attributeDescriptions[1].offset = 0;
-        }
+        // Get mesh datalayout from mesh class:
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions = Mesh::GetBindingDescription();
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions = Mesh::GetAttributeDescriptions();
 
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-        vertexInputState.vertexBindingDescriptionCount = 2;
-        vertexInputState.pVertexBindingDescriptions = bindingDescriptions;
-        vertexInputState.vertexAttributeDescriptionCount = 2;
-        vertexInputState.pVertexAttributeDescriptions = attributeDescriptions;
+        vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+        vertexInputState.pVertexBindingDescriptions = bindingDescriptions.data();
+        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputState.pVertexAttributeDescriptions = attributeDescriptions.data();
 
         // topology = how to interpret the vertices, triangle list is the most flexible
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };

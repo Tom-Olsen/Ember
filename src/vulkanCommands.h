@@ -18,7 +18,7 @@ public: // Members:
 	std::vector<VkCommandBuffer> buffers;
 
 public: // Methods:
-	VulkanCommands(size_t size, VulkanLogicalDevice* logicalDevice);
+	VulkanCommands(size_t size, VulkanLogicalDevice* logicalDevice, VulkanQueue queue);
 	~VulkanCommands();
 };
 

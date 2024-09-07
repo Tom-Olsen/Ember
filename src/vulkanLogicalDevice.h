@@ -24,6 +24,7 @@ public: // Members:
 	VulkanQueue graphicsQueue;
 	VulkanQueue presentQueue;
 	VulkanQueue computeQueue;
+	VulkanQueue transferQueue;
 
 public: // Methods:
 	VulkanLogicalDevice(VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, std::vector<const char*> deviceExtensions);
@@ -33,6 +34,7 @@ private: // Methods:
 	uint32_t FindGraphicsAndComputeQueueFamilyIndex(VkPhysicalDevice physicalDevice);
 	uint32_t FindPresentQueueFamilyIndex(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 	uint32_t FindPureComputeQueueFamilyIndex(VkPhysicalDevice physicalDevice);
+	uint32_t FindPureTransferQueueFamilyIndex(VkPhysicalDevice physicalDevice);
 };
 
 

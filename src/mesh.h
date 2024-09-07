@@ -1,5 +1,6 @@
 #ifndef __INCLUDE_GUARD_mesh_h__
 #define __INCLUDE_GUARD_mesh_h__
+#include <vulkan/vulkan.h>
 #include <vector>
 #include <string>
 #include "glmTypes.h"
@@ -46,6 +47,10 @@ public: // Methods:
 	uint32_t SizeOfPositions() const;
 	uint32_t SizeOfColors() const;
 	uint32_t SizeOfTriangles() const;
+
+	// Static methods:
+	static std::vector<VkVertexInputBindingDescription> GetBindingDescription();
+	static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
 };
 
 std::string to_string(Mesh mesh);

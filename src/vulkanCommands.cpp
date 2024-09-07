@@ -4,7 +4,7 @@
 
 
 // Constructor:
-VulkanCommands::VulkanCommands(size_t size, VulkanLogicalDevice* logicalDevice) : size(size)
+VulkanCommands::VulkanCommands(size_t size, VulkanLogicalDevice* logicalDevice, VulkanQueue queue) : size(size)
 {
 	this->logicalDevice = logicalDevice;
 	pools.resize(size);
@@ -15,7 +15,7 @@ VulkanCommands::VulkanCommands(size_t size, VulkanLogicalDevice* logicalDevice) 
 		VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 		//createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;	// Command buffers will be short-lived. 
 		createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;	// Command buffers will be reset after each use (frame).
-		createInfo.queueFamilyIndex = logicalDevice->graphicsQueue.familyIndex;	// explicit command pool for graphics operations.
+		createInfo.queueFamilyIndex = queue.familyIndex;	// bind to correct queue family.
 		VKA(vkCreateCommandPool(logicalDevice->device, &createInfo, nullptr, &pools[i]));
 
 		VkCommandBufferAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };

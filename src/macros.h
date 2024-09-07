@@ -17,6 +17,6 @@
 #define VKA(f) VULKAN_ASSERT(f)
 #endif
 
-
+#define VALIDATION_LAYERS_ACTIVE
 
 #endif // __INCLUDE_GUARD_myMacros_h__
