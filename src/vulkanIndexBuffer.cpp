@@ -4,7 +4,6 @@
 
 
 // Constructor:
-//#define RESIZEABLE_BAR
 #ifdef RESIZEABLE_BAR // No staging buffer:
 VulkanIndexBuffer::VulkanIndexBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh)
 {

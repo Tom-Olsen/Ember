@@ -8,6 +8,7 @@
 // TODO:
 // - static and dynamic meshes?
 // - move vertex/index buffers to mesh?
+// - combine vertex and index data into a single buffer and use offsets.
 
 /// <summary>
 /// Mesh takes ownership of vectors.
@@ -51,6 +52,7 @@ public: // Methods:
 	// Static methods:
 	static std::vector<VkVertexInputBindingDescription> GetBindingDescription();
 	static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
+	static VkIndexType GetIndexType();
 };
 
 std::string to_string(Mesh mesh);

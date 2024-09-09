@@ -24,7 +24,7 @@ Device Info: https://vulkan.gpuinfo.org/
 Vulkan documentation: https://vulkan.lunarg.com/doc/sdk
 
 Tutorials:
-Official Tutorial: (Drawing a triangle/Swap chain recreation)
+Official Tutorial: (Uniform buffers/Descriptor layout and buffer)
 https://docs.vulkan.org/tutorial/latest/00_Introduction.html
 German Tutorial: (Video 19)
 https://www.youtube.com/watch?v=xtR3yWY-IBs&list=PLStQc0GqppuXgs6do23v_HKRrR32gJMm3&index=38

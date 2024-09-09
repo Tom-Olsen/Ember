@@ -135,6 +135,10 @@ std::vector<VkVertexInputAttributeDescription> Mesh::GetAttributeDescriptions()
 
 	return attributeDescriptions;
 }
+VkIndexType Mesh::GetIndexType()
+{
+	return VK_INDEX_TYPE_UINT32;
+}
 
 
 

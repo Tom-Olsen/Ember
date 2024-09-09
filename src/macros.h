@@ -17,6 +17,9 @@
 #define VKA(f) VULKAN_ASSERT(f)
 #endif
 
-#define VALIDATION_LAYERS_ACTIVE
+
+// Controle flow macros:
+#define VALIDATION_LAYERS_ACTIVE    // enable/disable vulkan validation layers
+//#define RESIZEABLE_BAR    // enabled = no staging buffer, disabled = with staging buffer
 
 #endif // __INCLUDE_GUARD_myMacros_h__

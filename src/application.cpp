@@ -232,7 +232,7 @@ void Application::RecordCommandBuffer()
 	VkDeviceSize offsets[2] = { 0, mesh->SizeOfPositions() };
 	VkBuffer buffers[2] = { vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
-	vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
+	vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer->buffer, 0, Mesh::GetIndexType());
 
 	vkCmdDrawIndexed(commandBuffer, 3 * mesh.get()->GetTriangleCount(), 1, 0, 0, 0);
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
