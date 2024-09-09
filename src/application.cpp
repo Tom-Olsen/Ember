@@ -106,19 +106,19 @@ void Application::Run()
 		//positions.emplace_back(-0.5f + 0.1 * sin(1.2 * time), 0.5f + 0.1 * sin(1.5 * time), 0.0f);
 		//positions.emplace_back(0.5f + 0.1 * sin(1.4 * time), -0.5f + 0.1 * sin(1.2 * time), 0.0f);
 		//positions.emplace_back(0.5f + 0.1 * sin(1.6 * time), 0.5f + 0.1 * sin(1.0 * time), 0.0f);
+		//mesh->SetPositions(std::move(positions));
 		//std::vector<Float4> colors;
 		//colors.emplace_back(1.0f, 0.0f, 0.0f, 1.0f);
 		//colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
 		//colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
 		//colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
-		//std::vector<Int3> triangles;
-		//if (frameIndex % 2 == 0)
-		//	triangles.emplace_back(0, 2, 1);
-		//else
-		//	triangles.emplace_back(1, 2, 3);
-		//mesh->SetPositions(std::move(positions));
 		//mesh->SetColors(std::move(colors));
-		//mesh->SetTriangles(std::move(triangles));
+		////std::vector<Int3> triangles;
+		////if (frameIndex % 2 == 0)
+		////	triangles.emplace_back(0, 2, 1);
+		////else
+		////	triangles.emplace_back(1, 2, 3);
+		////mesh->SetTriangles(std::move(triangles));
 		//vertexBuffer->UpdateBuffer(logicalDevice.get(), physicalDevice.get(), mesh.get());
 		//indexBuffer->UpdateBuffer(logicalDevice.get(), physicalDevice.get(), mesh.get());
 
@@ -128,12 +128,6 @@ void Application::Run()
 		// Resize Swapchain if needed:
 		if (rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height != surfaceExtend.height)
 		{
-			// PROBLEM:
-			// -if first resize makes window bigger, program crashes.
-			// -if first resize makes window smaller, ererything workds, but rebuildSwapchain is always true leading to an infinite resize loop.
-			LOG_INFO("CondA: {}", rebuildSwapchain);
-			LOG_INFO("CondA: {}", windowExtent.width != surfaceExtend.width);
-			LOG_INFO("CondA: {}", windowExtent.height != surfaceExtend.height);
 			rebuildSwapchain = false;
 			frameIndex = 0;
 			ResizeSwapchain();
@@ -168,7 +162,7 @@ void Application::Render()
 {
 	// Wait for fence of previous frame with same frameIndex to finish:
 	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
-	if (!AquireImage())
+	if (!AcquireImage())
 		return;
 	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
 
@@ -180,14 +174,15 @@ void Application::Render()
 	frameIndex = (frameIndex + 1) % framesInFlight;
 }
 
-bool Application::AquireImage()
+bool Application::AcquireImage()
 {
 	// Signal acquireSemaphore when done:
 	VkResult result = vkAcquireNextImageKHR(logicalDevice->device, swapchain->swapchain, UINT64_MAX, acquireSemaphores[frameIndex], VK_NULL_HANDLE, &imageIndex);
 
 	// Resize if needed:
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.get()->framebufferResized)
 	{
+		window.get()->framebufferResized = false;
 		rebuildSwapchain = true;
 		return false;
 	}
@@ -270,7 +265,8 @@ bool Application::PresentImage()
 	presentInfo.pImageIndices = &imageIndex;
 
 	VkResult result = vkQueuePresentKHR(logicalDevice->presentQueue.queue, &presentInfo);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.get()->framebufferResized)
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
 		rebuildSwapchain = true;
 		return false;
@@ -299,8 +295,8 @@ void Application::SetViewportAndScissor(VkCommandBuffer& commandBuffer)
 
 void Application::ResizeSwapchain()
 {
-	// Wait for device to finish:
-	VKA(vkDeviceWaitIdle(logicalDevice->device));
+	// Wait for graphicsQueue to finish:
+	VKA(vkQueueWaitIdle(logicalDevice->graphicsQueue.queue));
 	
 	// Recreate swapchain:
 	std::unique_ptr<VulkanSwapchain> newSwapchain = std::make_unique<VulkanSwapchain>(window.get(), logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, swapchain.get());

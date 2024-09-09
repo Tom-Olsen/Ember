@@ -75,7 +75,7 @@ void VulkanBuffer::CopyBuffer(VulkanLogicalDevice* logicalDevice, VulkanBuffer* 
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commands.buffers[0];
 	VKA(vkQueueSubmit(logicalDevice->transferQueue.queue, 1, &submitInfo, VK_NULL_HANDLE));
-	vkQueueWaitIdle(logicalDevice->transferQueue.queue);
+	VKA(vkQueueWaitIdle(logicalDevice->transferQueue.queue));
 }
 
 

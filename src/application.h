@@ -25,6 +25,7 @@ private: // Members:
 	std::unique_ptr<VulkanLogicalDevice> logicalDevice;
 	std::unique_ptr<VulkanSurface> surface;
 	std::unique_ptr<VulkanSwapchain> swapchain;
+	std::unique_ptr<VulkanSwapchain> oldSwapchain;
 	std::unique_ptr<VulkanRenderpass> renderpass;
 	std::unique_ptr<VulkanPipeline> pipeline;
 	std::unique_ptr<VulkanFrameBuffers> frameBuffers;
@@ -49,7 +50,7 @@ public: // Methods:
 private: // Methods:
 	void PrintApplicationStatus();
 	void Render();
-	bool AquireImage();
+	bool AcquireImage();
 	void RecordCommandBuffer();
 	void SubmitCommandBuffer();
 	bool PresentImage();
