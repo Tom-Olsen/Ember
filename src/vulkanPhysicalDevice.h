@@ -6,6 +6,9 @@
 
 
 
+/// <summary>
+/// VulkanPhysicalDevice wrapper.
+/// </summary>
 class VulkanPhysicalDevice
 {
 public: // Members:

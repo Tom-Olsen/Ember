@@ -6,6 +6,7 @@
 
 
 
+// using aliases for glm float types
 using Float2 = glm::vec2;
 using Float3 = glm::vec3;
 using Float4 = glm::vec4;
@@ -21,6 +22,7 @@ using Float4x4 = glm::mat4x4;
 
 
 
+// to_string conversion for glm float types
 inline std::string to_string(const Float2& vec)
 {
 	return "(" + std::to_string(vec.x) + ", " + std::to_string(vec.y) + ")";
@@ -93,6 +95,7 @@ inline std::string to_string(const Float4x4& mat)
 
 
 
+// ostream operator overloads for glm float types
 inline std::ostream& operator<<(std::ostream& os, const Float2& vec)
 {
 	os << to_string(vec);

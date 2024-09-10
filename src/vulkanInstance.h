@@ -5,6 +5,9 @@
 
 
 
+/// <summary>
+/// VulkanInstance class owns the Vulkan instance and handles validation layers.
+/// </summary>
 class VulkanInstance
 {
 public: // Members:

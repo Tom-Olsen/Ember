@@ -6,6 +6,7 @@
 
 
 
+// using aliases for glm int types
 using Int2 = glm::ivec2;
 using Int3 = glm::ivec3;
 using Int4 = glm::ivec4;
@@ -21,6 +22,7 @@ using Int4x4 = glm::imat4x4;
 
 
 
+// to_string conversion for glm int types
 inline std::string to_string(const Int2& vec)
 {
 	return "(" + std::to_string(vec.x) + ", " + std::to_string(vec.y) + ")";
@@ -93,6 +95,7 @@ inline std::string to_string(const Int4x4& mat)
 
 
 
+// ostream operator overloads for glm int types
 inline std::ostream& operator<<(std::ostream& os, const Int2& vec)
 {
 	os << to_string(vec);

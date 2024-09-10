@@ -6,6 +6,9 @@
 
 
 
+/// <summary>
+/// SDL window wrapper.
+/// </summary>
 class SdlWindow
 {
 public: // Members:
@@ -16,7 +19,6 @@ public: // Members:
 public: // Methods:
 	SdlWindow(uint16_t width = 1280, uint16_t height = 720);
 	~SdlWindow();
-
 	bool HandelEvents();
 	void AddSdlInstanceExtensions(std::vector<const char*>& extensions);
 	int Width();

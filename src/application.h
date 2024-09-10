@@ -16,9 +16,21 @@
 
 
 
+/// <summary>
+/// Main application class.
+/// Contains:
+/// -Vulkan objects
+/// -Render loop
+/// -Swapchain management
+/// -Command buffer management
+/// Coming:
+/// -Game loop
+/// -Input handling
+/// </summary>
 class Application
 {
 private: // Members:
+	// Vulkan objects:
 	std::unique_ptr<SdlWindow> window;
 	std::unique_ptr<VulkanInstance> instance;
 	std::unique_ptr<VulkanPhysicalDevice> physicalDevice;
@@ -29,15 +41,18 @@ private: // Members:
 	std::unique_ptr<VulkanRenderpass> renderpass;
 	std::unique_ptr<VulkanPipeline> pipeline;
 	std::unique_ptr<VulkanFrameBuffers> frameBuffers;
-	const static size_t framesInFlight = 2;
 	std::unique_ptr<VulkanCommands> commands;
 	std::vector<VkFence> fences;
 	std::vector<VkSemaphore> acquireSemaphores;
 	std::vector<VkSemaphore> releaseSemaphores;
 
+	// Data:
 	std::unique_ptr<Mesh> mesh;
 	std::unique_ptr<VulkanVertexBuffer> vertexBuffer;
 	std::unique_ptr<VulkanIndexBuffer> indexBuffer;
+
+	// Render management:
+	const size_t framesInFlight = 2;
 	uint32_t frameIndex;
 	uint32_t imageIndex;
 	bool rebuildSwapchain;

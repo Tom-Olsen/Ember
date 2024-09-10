@@ -4,6 +4,9 @@
 
 
 
+/// <summary>
+/// VulkanRenderpass wrapper.
+/// </summary>
 class VulkanRenderpass
 {
 public: // Members:

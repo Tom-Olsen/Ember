@@ -6,6 +6,7 @@
 
 
 
+// using aliases for glm double types
 using Double2 = glm::dvec2;
 using Double3 = glm::dvec3;
 using Double4 = glm::dvec4;
@@ -21,6 +22,7 @@ using Double4x4 = glm::dmat4x4;
 
 
 
+// to_string conversion for glm double types
 inline std::string to_string(const Double2& vec)
 {
 	return "(" + std::to_string(vec.x) + ", " + std::to_string(vec.y) + ")";
@@ -93,6 +95,7 @@ inline std::string to_string(const Double4x4& mat)
 
 
 
+// ostream operator overloads for glm double types
 inline std::ostream& operator<<(std::ostream& os, const Double2& vec)
 {
 	os << to_string(vec);

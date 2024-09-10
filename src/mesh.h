@@ -5,13 +5,18 @@
 #include <string>
 #include "glmTypes.h"
 
+
+
 // TODO:
 // - static and dynamic meshes?
 // - move vertex/index buffers to mesh?
 // - combine vertex and index data into a single buffer and use offsets.
 
+
+
 /// <summary>
-/// Mesh takes ownership of vectors.
+/// Mesh class for storing vertex positions, colors and triangles.
+/// Mesh class takes ownership of vectors and takes care of cleanup.
 /// </summary>
 class Mesh
 {
@@ -43,11 +48,11 @@ public: // Methods:
 	std::vector<Float4> GetColors() const;
 	std::vector<Int3> GetTriangles() const;
 	uint32_t* GetTrianglesUnrolled();
-	uint32_t Size() const;
-	uint32_t SizeOfBuffer() const;
-	uint32_t SizeOfPositions() const;
-	uint32_t SizeOfColors() const;
-	uint32_t SizeOfTriangles() const;
+	uint32_t GetSize() const;
+	uint32_t GetSizeOfBuffer() const;
+	uint32_t GetSizeOfPositions() const;
+	uint32_t GetSizeOfColors() const;
+	uint32_t GetSizeOfTriangles() const;
 
 	// Static methods:
 	static std::vector<VkVertexInputBindingDescription> GetBindingDescription();
@@ -55,5 +60,9 @@ public: // Methods:
 	static VkIndexType GetIndexType();
 };
 
+// Methods that must be defined outside of the class:
 std::string to_string(Mesh mesh);
+
+
+
 #endif // __INCLUDE_GUARD_mesh_h__

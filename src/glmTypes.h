@@ -3,7 +3,7 @@
 
 
 
-// using statements for easier access to glm types:
+// using statements, to_string conversion, and ostream overloading for easier access to glm types:
 #include "floatTypes.h"
 #include "doubleTypes.h"
 #include "intTypes.h"

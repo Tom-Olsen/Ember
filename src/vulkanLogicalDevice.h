@@ -17,14 +17,17 @@ struct VulkanQueue
 
 
 
+/// <summary>
+/// VulkanLogicalDevice class owns logical device and queues.
+/// </summary>
 class VulkanLogicalDevice
 {
 public: // Members:
 	VkDevice device;
-	VulkanQueue graphicsQueue;
-	VulkanQueue presentQueue;
-	VulkanQueue computeQueue;
-	VulkanQueue transferQueue;
+	VulkanQueue graphicsQueue;	// graphics and sync compute queue
+	VulkanQueue presentQueue;	// present queue
+	VulkanQueue computeQueue;	// async compute queue
+	VulkanQueue transferQueue;	// async transfer queue
 
 public: // Methods:
 	VulkanLogicalDevice(VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, std::vector<const char*> deviceExtensions);

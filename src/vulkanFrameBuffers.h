@@ -9,17 +9,21 @@
 #include "vulkanRenderpass.h"
 
 
+
+/// <summary>
+/// VulkanFrameBuffer class owns framebuffers.
+/// Size = swapchain image count.
+/// </summary>
 class VulkanFrameBuffers
 {
+public: // Members:
+	size_t size;
+
 private: // Members:
 	std::vector<VkFramebuffer> frameBuffers;
 	VulkanLogicalDevice* logicalDevice;
 	VulkanSurface* surface;
 	VulkanRenderpass* renderpass;
-
-
-public: // Members:
-	size_t size;
 
 public: // Methods:
 	VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass);

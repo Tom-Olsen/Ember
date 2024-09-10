@@ -6,6 +6,7 @@
 
 
 
+// using aliases for glm unsigned int types
 using UInt2 = glm::uvec2;
 using UInt3 = glm::uvec3;
 using UInt4 = glm::uvec4;
@@ -21,6 +22,7 @@ using UInt4x4 = glm::umat4x4;
 
 
 
+// to_string conversion for glm unsigned int types
 inline std::string to_string(const UInt2& vec)
 {
 	return "(" + std::to_string(vec.x) + ", " + std::to_string(vec.y) + ")";
@@ -93,6 +95,7 @@ inline std::string to_string(const UInt4x4& mat)
 
 
 
+// ostream operator overloads for glm unsigned int types
 inline std::ostream& operator<<(std::ostream& os, const UInt2& vec)
 {
 	os << to_string(vec);

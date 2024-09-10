@@ -7,18 +7,20 @@
 
 
 /// <summary>
-/// VulkanBuffer owns memory block (gets deletet in destructor).
+/// VulkanBuffer class owns memory block (gets deletet in destructor).
 /// Note: Only 4096 memory blocks can be allocated.
-/// Multiple buffers on one memory block possible, but not implemented here.
+/// TODO: Multiple buffers on one memory block possible, but not implemented yet.
 /// </summary>
 class VulkanBuffer
 {
 public: // Members:
-	VulkanLogicalDevice* logicalDevice;
-	VulkanPhysicalDevice* physicalDevice;
 	uint64_t size;
 	VkBuffer buffer;
 	VkDeviceMemory memory;
+
+private: // Members:
+	VulkanLogicalDevice* logicalDevice;
+	VulkanPhysicalDevice* physicalDevice;
 
 public: // Methods:
 	VulkanBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryPropertyFlags, std::vector<uint32_t> queueFamilyIndices = {});

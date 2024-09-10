@@ -5,6 +5,11 @@
 
 
 
+// TODO:
+// - render image on resize
+
+
+
 // Constructor:
 Application::Application()
 {
@@ -119,8 +124,8 @@ void Application::Run()
 		////else
 		////	triangles.emplace_back(1, 2, 3);
 		////mesh->SetTriangles(std::move(triangles));
-		//vertexBuffer->UpdateBuffer(logicalDevice.get(), physicalDevice.get(), mesh.get());
-		//indexBuffer->UpdateBuffer(logicalDevice.get(), physicalDevice.get(), mesh.get());
+		//vertexBuffer->UpdateBuffer(mesh.get());
+		//indexBuffer->UpdateBuffer(mesh.get());
 
 		// QUESTION:
 		// -what is the exact difference between window and surface and how can it be that the surface extent differs from the window extent?
@@ -229,7 +234,7 @@ void Application::RecordCommandBuffer()
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
 
 	// Bind vertex buffer to command buffer:
-	VkDeviceSize offsets[2] = { 0, mesh->SizeOfPositions() };
+	VkDeviceSize offsets[2] = { 0, mesh->GetSizeOfPositions() };
 	VkBuffer buffers[2] = { vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer->buffer, 0, Mesh::GetIndexType());

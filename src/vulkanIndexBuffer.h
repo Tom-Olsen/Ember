@@ -8,16 +8,23 @@
 
 
 
+/// <summary>
+/// VulkanIndexBuffer class owns index buffer.
+/// TODO: merge index and vertex buffers into one class with shared buffer and appropriate offsets.
+/// </summary>
 class VulkanIndexBuffer
 {
+private: // Members:
+	VulkanLogicalDevice* logicalDevice;
+	VulkanPhysicalDevice* physicalDevice;
+
 public: // Members:
 	std::unique_ptr<VulkanBuffer> buffer;
 
 public: // Methods:
 	VulkanIndexBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh);
 	~VulkanIndexBuffer();
-
-	void UpdateBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh);
+	void UpdateBuffer(Mesh* mesh);
 };
 
 

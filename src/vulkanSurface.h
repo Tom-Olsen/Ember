@@ -7,6 +7,9 @@
 
 
 
+/// <summary>
+/// VulkanSurface class owns the surface and its properties.
+/// </summary>
 class VulkanSurface
 {
 public: // Members:
@@ -18,7 +21,6 @@ private: // Members:
 	VulkanInstance* instance;
 	VulkanPhysicalDevice* physicalDevice;
 	SdlWindow* window;
-
 	VkSurfaceCapabilitiesKHR surfaceCapabilities;
 	std::vector<VkSurfaceFormatKHR> availableSurfaceFormats;
 	std::vector<VkPresentModeKHR> availablePresentModes;

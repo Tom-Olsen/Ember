@@ -60,23 +60,23 @@ uint32_t* Mesh::GetTrianglesUnrolled()
 {
 	return reinterpret_cast<uint32_t*>(triangles.data());
 }
-uint32_t Mesh::Size() const
+uint32_t Mesh::GetSize() const
 {
-	return SizeOfPositions() + SizeOfColors() + SizeOfTriangles();
+	return GetSizeOfPositions() + GetSizeOfColors() + GetSizeOfTriangles();
 }
-uint32_t Mesh::SizeOfBuffer() const
+uint32_t Mesh::GetSizeOfBuffer() const
 {
-	return SizeOfPositions() + SizeOfColors();
+	return GetSizeOfPositions() + GetSizeOfColors();
 }
-uint32_t Mesh::SizeOfPositions() const
+uint32_t Mesh::GetSizeOfPositions() const
 {
 	return vertexCount * sizeof(Float3);
 }
-uint32_t Mesh::SizeOfColors() const
+uint32_t Mesh::GetSizeOfColors() const
 {
 	return vertexCount * sizeof(Float4);
 }
-uint32_t Mesh::SizeOfTriangles() const
+uint32_t Mesh::GetSizeOfTriangles() const
 {
 	return triangleCount * sizeof(Int3);
 }

@@ -8,13 +8,12 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanSurface.h"
 
-// TODO:
-// when the graphics and present queue are different, we need to use the concurrent mode:
-// createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-// createInfo.queueFamilyIndexCount = 2;
-// createInfo.pQueueFamilyIndices = { graphicsQueueIndex, presentQueueIndex };
-// additional work is needed, e.g. synchronizing the queues, etc.
 
+
+/// <summary>
+/// VulkanSwapchain class owns the swapchain and its images and image views.
+/// Allows for simple recreation of the swapchain by passing the old swapchain in the constructor.
+/// </summary>
 class VulkanSwapchain
 {
 public: // Members:
@@ -30,7 +29,6 @@ private: // Members:
 public: // Methods:
 	VulkanSwapchain(SdlWindow* window, VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain = nullptr);
 	~VulkanSwapchain();
-
 
 private: // Methods:
 	void CreateSwapchain(VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain);

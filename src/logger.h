@@ -5,16 +5,19 @@
 
 
 
-// Custom wrapper for spdlog:
+/// <summary>
+/// Custom wrapper for spdlog.
+/// Must call Init() to initialize the logger singilton before using the logger.
+/// Macros for logging are: LOG_TRACE(), LOG_INFO(), LOG_WARN(), LOG_ERROR(), LOG_CRITICAL().
+/// </summary>
 class Logger
 {
-public:
+public: // Methods:
 	// Must be called once before using the logger:
 	static void Init();
-
 	inline static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_coreLogger; }
 
-private:
+private: // Members:
 	static std::shared_ptr<spdlog::logger> s_coreLogger;
 };
 
