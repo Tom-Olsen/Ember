@@ -16,6 +16,7 @@ public: // Members:
 
 public: // Methods:
 	VulkanPhysicalDevice(VulkanInstance* instance);
+	~VulkanPhysicalDevice();
 
 private: // Methods:
 	int DeviceScore(VkPhysicalDevice device);

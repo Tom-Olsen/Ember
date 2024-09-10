@@ -39,6 +39,7 @@ private: // Members:
 	std::unique_ptr<VulkanSwapchain> swapchain;
 	std::unique_ptr<VulkanSwapchain> oldSwapchain;
 	std::unique_ptr<VulkanRenderpass> renderpass;
+	std::unique_ptr<VulkanPipelineLayout> pipelineLayout;
 	std::unique_ptr<VulkanPipeline> pipeline;
 	std::unique_ptr<VulkanFrameBuffers> frameBuffers;
 	std::unique_ptr<VulkanCommands> commands;

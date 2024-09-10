@@ -34,7 +34,8 @@ Application::Application()
 	logicalDevice = std::make_unique<VulkanLogicalDevice>(physicalDevice.get(), surface.get(), deviceExtensions);
 	swapchain = std::make_unique<VulkanSwapchain>(window.get(), logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 	renderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format);
-	pipeline = std::make_unique<VulkanPipeline>(logicalDevice.get(), renderpass.get(), "../shaders/triangleVert.spv", "../shaders/triangleFrag.spv");
+	pipelineLayout = std::make_unique<VulkanPipelineLayout>(logicalDevice.get());
+	pipeline = std::make_unique<VulkanPipeline>(logicalDevice.get(), pipelineLayout.get(), renderpass.get(), "../shaders/triangleVert.spv", "../shaders/triangleFrag.spv");
 	frameBuffers = std::make_unique<VulkanFrameBuffers>(logicalDevice.get(), surface.get(), swapchain.get(), renderpass.get());
 	commands = std::make_unique<VulkanCommands>(framesInFlight, logicalDevice.get(), logicalDevice->graphicsQueue);
 

@@ -35,6 +35,14 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanInstance* instance)
 
 
 
+// Destructor:
+VulkanPhysicalDevice::~VulkanPhysicalDevice()
+{
+
+}
+
+
+
 // Private:
 int VulkanPhysicalDevice::DeviceScore(VkPhysicalDevice dev)
 {

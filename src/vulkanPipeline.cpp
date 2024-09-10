@@ -8,9 +8,10 @@
 
 
 // Constructor:
-VulkanPipeline::VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanRenderpass* renderpass, const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
+VulkanPipeline::VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanPipelineLayout* pipelineLayout, VulkanRenderpass* renderpass, const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
 {
     this->logicalDevice = logicalDevice;
+    this->pipelineLayout = pipelineLayout;
     this->renderpass = renderpass;
 
     // Create vertex and fragment shader modules from .spv files:
@@ -30,7 +31,6 @@ VulkanPipeline::VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanRenderp
 VulkanPipeline::~VulkanPipeline()
 {
     vkDestroyPipeline(logicalDevice->device, pipeline, nullptr);
-    vkDestroyPipelineLayout(logicalDevice->device, pipelineLayout, nullptr);
 }
 
 
@@ -88,14 +88,6 @@ void VulkanPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
     fragmentShaderStageCreateInfo.pSpecializationInfo = nullptr;  // shader constants
 
     VkPipelineShaderStageCreateInfo shaderStages[2] = { vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo };
-
-    // Pipeline layout:
-    {
-        // Not really needed yet, but required for vulkan to work properly. So we leaf it empty
-        // Used for uniform buffers, push constants, etc.
-        VkPipelineLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        vkCreatePipelineLayout(logicalDevice->device, &createInfo, nullptr, &pipelineLayout);
-    }
 
     // Pipeline:
     {
@@ -194,7 +186,7 @@ void VulkanPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
         createInfo.pDepthStencilState = nullptr;			    // Depth and stencil testing (not used yet)
         createInfo.pColorBlendState = &colorBlendState;		    // Color blending
         createInfo.pDynamicState = &dynamicState;			    // Dynamic states
-        createInfo.layout = pipelineLayout;
+        createInfo.layout = pipelineLayout->pipelineLayout;
         createInfo.renderPass = renderpass->renderpass;
         createInfo.subpass = 0;
         createInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
