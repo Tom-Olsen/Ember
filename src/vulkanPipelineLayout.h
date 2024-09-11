@@ -6,12 +6,12 @@
 
 class VulkanPipelineLayout
 {
-private: // Members:
-	VulkanLogicalDevice* logicalDevice;
-	VkDescriptorSetLayout descriptorSetLayout;
-
 public: // Members:
 	VkPipelineLayout pipelineLayout;
+	VkDescriptorSetLayout descriptorSetLayout;
+
+private: // Members:
+	VulkanLogicalDevice* logicalDevice;
 
 public: // Methods:
 	VulkanPipelineLayout(VulkanLogicalDevice* logicalDevice);

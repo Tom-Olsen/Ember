@@ -1,3 +1,10 @@
+cbuffer UniformBufferObject : register(b0)
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 proj;
+};
+
 struct VertexInput
 {
     float3 position : POSITION;
@@ -13,7 +20,9 @@ struct VertexOutput
 VertexOutput main(VertexInput input)
 {
     VertexOutput output;
-    output.position = float4(input.position, 1.0);
+    float4x4 mat = mul(mul(proj, view), model);
+    output.position = mul(mat, float4(input.position, 1.0));
+    //output.position = float4(input.position, 1.0);
     output.vertexColor = input.color;
     return output;
 }

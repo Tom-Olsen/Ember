@@ -3,6 +3,9 @@
 
 
 
+// glm library:
+#include "glm/gtc/matrix_transform.hpp"
+
 // using statements, to_string conversion, and ostream overloading for easier access to glm types:
 #include "floatTypes.h"
 #include "doubleTypes.h"

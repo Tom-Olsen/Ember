@@ -19,6 +19,7 @@ VulkanPipelineLayout::VulkanPipelineLayout(VulkanLogicalDevice* logicalDevice)
     descriptorSetLayoutCreateInfo.bindingCount = 1;
     descriptorSetLayoutCreateInfo.pBindings = &descriptorSetlayoutBinding;
 
+    // VkDescriptorSetLayout describes the kind of descriptors that can be bound.
     VKA(vkCreateDescriptorSetLayout(logicalDevice->device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };

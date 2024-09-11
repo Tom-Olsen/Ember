@@ -16,12 +16,12 @@
 /// </summary>
 class VulkanVertexBuffer
 {
+public: // Members:
+	std::unique_ptr<VulkanBuffer> buffer;
+
 private: // Members:
 	VulkanLogicalDevice* logicalDevice;
 	VulkanPhysicalDevice* physicalDevice;
-
-public: // Members:
-	std::unique_ptr<VulkanBuffer> buffer;
 
 public: // Methods:
 	VulkanVertexBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, Mesh* mesh);

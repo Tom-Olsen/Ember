@@ -27,7 +27,6 @@ private: // Members:
 	std::vector<Float4> colors;
 	std::vector<Int3> triangles;
 
-
 public: // Methods:
 	Mesh();
 	Mesh(const Mesh& other) = default;

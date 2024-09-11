@@ -12,6 +12,8 @@
 #include "vulkanCommands.h"
 #include "vulkanVertexBuffer.h"
 #include "vulkanIndexBuffer.h"
+#include "vulkanUniformBuffer.h"
+#include "vulkanDescriptorPool.h"
 #include "mesh.h"
 
 
@@ -43,6 +45,7 @@ private: // Members:
 	std::unique_ptr<VulkanPipeline> pipeline;
 	std::unique_ptr<VulkanFrameBuffers> frameBuffers;
 	std::unique_ptr<VulkanCommands> commands;
+	std::unique_ptr<VulkanDescriptorPool> descriptorPool;
 	std::vector<VkFence> fences;
 	std::vector<VkSemaphore> acquireSemaphores;
 	std::vector<VkSemaphore> releaseSemaphores;
@@ -51,9 +54,12 @@ private: // Members:
 	std::unique_ptr<Mesh> mesh;
 	std::unique_ptr<VulkanVertexBuffer> vertexBuffer;
 	std::unique_ptr<VulkanIndexBuffer> indexBuffer;
+	std::vector<VulkanUniformBuffer> uniformBuffers;
+	MatrixData matrixData;
 
 	// Render management:
 	const size_t framesInFlight = 2;
+	double time;
 	uint32_t frameIndex;
 	uint32_t imageIndex;
 	bool rebuildSwapchain;

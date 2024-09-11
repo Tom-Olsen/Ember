@@ -52,8 +52,8 @@ Application::Application()
 	colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
 	colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
 	std::vector<Int3> triangles;
-	triangles.emplace_back(0, 2, 1);
-	triangles.emplace_back(1, 2, 3);
+	triangles.emplace_back(0, 1, 2);
+	triangles.emplace_back(1, 3, 2);
 	mesh->SetPositions(std::move(positions));
 	mesh->SetColors(std::move(colors));
 	mesh->SetTriangles(std::move(triangles));
@@ -61,6 +61,14 @@ Application::Application()
 	// Load mesh into vertex and index buffers:
 	vertexBuffer = std::make_unique<VulkanVertexBuffer>(logicalDevice.get(), physicalDevice.get(), mesh.get());
 	indexBuffer = std::make_unique<VulkanIndexBuffer>(logicalDevice.get(), physicalDevice.get(), mesh.get());
+
+	// Uniform data:
+	for (size_t i = 0; i < framesInFlight; i++)
+	{
+		VulkanUniformBuffer uniformBuffer(logicalDevice.get(), physicalDevice.get(), sizeof(MatrixData));
+		uniformBuffers.push_back(uniformBuffer);
+	}
+	descriptorPool = std::make_unique<VulkanDescriptorPool>(logicalDevice.get(), pipelineLayout.get(), uniformBuffers, framesInFlight);
 
 	// Synchronization objects:
 	CreateFences();
@@ -85,10 +93,9 @@ Application::~Application()
 // Main Loop:
 void Application::Run()
 {
+	time = 0;
 	frameIndex = 0;
 	rebuildSwapchain = false;
-	int frame = 0;
-	double time = 0;
 	auto start = std::chrono::steady_clock::now();
 
 	bool running = true;
@@ -147,9 +154,7 @@ void Application::Run()
 		double deltaTime = std::chrono::duration<double>(end - start).count();
 		start = end;
 		time += deltaTime;
-		//LOG_INFO("Frame: {}", frame);
 		//LOG_INFO("Time: {}ms", 1000 * deltaTime);
-		frame++;
 	}
 }
 
@@ -170,6 +175,14 @@ void Application::Render()
 	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
 	if (!AcquireImage())
 		return;
+
+	// Update uniform buffer:
+	VkExtent2D windowExtent = window->Extent();
+	matrixData.model = glm::rotate(Float4x4(1.0f), (float)time * glm::radians(90.0f), Float3(0.0f, 0.0f, 1.0f));
+	matrixData.view = glm::lookAt(Float3(2.0f, 2.0f, 2.0f), Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 1.0f));
+	matrixData.proj = glm::perspective(glm::radians(45.0f), windowExtent.width / (float)windowExtent.height, 0.1f, 10.0f);
+	matrixData.proj[1][1] *= -1; // flip y-axis as it is inverted by default
+	uniformBuffers[frameIndex].UpdateBuffer(matrixData);
 	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
 
 	RecordCommandBuffer();
@@ -240,6 +253,8 @@ void Application::RecordCommandBuffer()
 	vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer->buffer, 0, Mesh::GetIndexType());
 
+	VkDescriptorSet* descriptorSet = &descriptorPool->descriptorSets[frameIndex];
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout->pipelineLayout, 0, 1, descriptorSet, 0, nullptr);
 	vkCmdDrawIndexed(commandBuffer, 3 * mesh.get()->GetTriangleCount(), 1, 0, 0, 0);
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	vkCmdEndRenderPass(commandBuffer);
