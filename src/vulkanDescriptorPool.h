@@ -5,6 +5,7 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanPipelineLayout.h"
 #include "vulkanUniformBuffer.h"
+#include "texture2d.h"
 #include "memory"
 
 
@@ -21,13 +22,13 @@ private: // Members:
 	VulkanPipelineLayout* pipelineLayout;
 
 public: // Methods:
-	VulkanDescriptorPool(VulkanLogicalDevice* logicalDevice, VulkanPipelineLayout* pipelineLayout, const std::vector<VulkanUniformBuffer> uniformBuffers, size_t framesInFlight);
+	VulkanDescriptorPool(VulkanLogicalDevice* logicalDevice, VulkanPipelineLayout* pipelineLayout, const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d, size_t framesInFlight);
 	~VulkanDescriptorPool();
 
 private: // Methods:
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
-	void FillDescriptorSets(const std::vector<VulkanUniformBuffer> uniformBuffers);
+	void FillDescriptorSets(const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d);
 };
 
 

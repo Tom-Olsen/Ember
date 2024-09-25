@@ -63,6 +63,7 @@ int VulkanPhysicalDevice::DeviceScore(VkPhysicalDevice dev)
 	essentials &= deviceFeatures.depthBounds;
 	essentials &= deviceFeatures.shaderClipDistance;
 	essentials &= deviceFeatures.shaderCullDistance;
+	essentials &= deviceFeatures.samplerAnisotropy;
 	if (essentials == false)
 		return -1; // negative score = invalid device.
 

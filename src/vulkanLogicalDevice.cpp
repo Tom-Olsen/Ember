@@ -8,7 +8,8 @@
 VulkanLogicalDevice::VulkanLogicalDevice(VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, std::vector<const char*> deviceExtensions)
 {
 	// Choose which features to enable:
-	VkPhysicalDeviceFeatures enabledFearutes{};
+	VkPhysicalDeviceFeatures enabledFearutes = {};
+	enabledFearutes.samplerAnisotropy = VK_TRUE;
 
 	// Find queue family indices:
 	graphicsQueue.familyIndex = FindGraphicsAndComputeQueueFamilyIndex(physicalDevice->device);

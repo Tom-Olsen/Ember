@@ -25,6 +25,7 @@ private: // Members:
 	uint32_t triangleCount = 0;
 	std::vector<Float3> positions;
 	std::vector<Float4> colors;
+	std::vector<Float4> uvs;
 	std::vector<Int3> triangles;
 
 public: // Methods:
@@ -38,25 +39,32 @@ public: // Methods:
 	// Setters:
 	void SetPositions(std::vector<Float3>&& positions);
 	void SetColors(std::vector<Float4>&& colors);
+	void SetUVs(std::vector<Float4>&& uvs);
 	void SetTriangles(std::vector<Int3>&& triangles);
 
 	// Getters:
 	uint32_t GetVertexCount() const;
 	uint32_t GetTriangleCount() const;
-	std::vector<Float3> GetPositions() const;
-	std::vector<Float4> GetColors() const;
-	std::vector<Int3> GetTriangles() const;
+	std::vector<Float3>& GetPositions();
+	std::vector<Float4>& GetColors();
+	std::vector<Float4>& GetUVs();
+	std::vector<Int3>& GetTriangles();
 	uint32_t* GetTrianglesUnrolled();
 	uint32_t GetSize() const;
 	uint32_t GetSizeOfBuffer() const;
 	uint32_t GetSizeOfPositions() const;
 	uint32_t GetSizeOfColors() const;
+	uint32_t GetSizeOfUVs() const;
 	uint32_t GetSizeOfTriangles() const;
+	std::vector<uint64_t> GetBufferSizes() const;
+	std::vector<void*> GetBufferDatas();
+	std::vector<VkDeviceSize> GetOffsets();
 
 	// Static methods:
 	static std::vector<VkVertexInputBindingDescription> GetBindingDescription();
 	static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
 	static VkIndexType GetIndexType();
+	static uint32_t GetBindingCount();
 };
 
 // Methods that must be defined outside of the class:

@@ -6,6 +6,11 @@
 
 
 
+// TODO:
+// -Change to VulkanCommand and replace VulkanCommands* with std::vector<VulkanCommand>.
+
+
+
 /// <summary>
 /// VulkanCommand class owns command pools and command buffers.
 /// </summary>

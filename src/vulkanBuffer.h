@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_GUARD_vulkanBuffer_h__
 #define __INCLUDE_GUARD_vulkanBuffer_h__
 #include <vulkan/vulkan.h>
+#include <memory>
+#include <vector>
 #include "vulkanLogicalDevice.h"
 #include "vulkanPhysicalDevice.h"
 
@@ -23,12 +25,11 @@ private: // Members:
 	VulkanPhysicalDevice* physicalDevice;
 
 public: // Methods:
-	VulkanBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryPropertyFlags, std::vector<uint32_t> queueFamilyIndices = {});
+	VulkanBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryPropertyFlags, const std::vector<uint32_t>& queueFamilyIndices = {});
 	~VulkanBuffer();
-	static void CopyBuffer(VulkanLogicalDevice* logicalDevice, VulkanBuffer* srcBuffer, VulkanBuffer* dstBuffer, VkDeviceSize size);
-
-private: // Methods:
-	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	static void CopyBufferToBuffer(VulkanLogicalDevice* logicalDevice, VulkanBuffer* srcBuffer, VulkanBuffer* dstBuffer, VkDeviceSize size, const VulkanQueue& queue);
+	static VulkanBuffer StagingBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, uint64_t bufferSize, void* inputData);
+	static VulkanBuffer StagingBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, const std::vector<uint64_t>& bufferSizes, const std::vector<void*>& inputDatas);
 };
 
 

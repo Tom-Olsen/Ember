@@ -6,7 +6,7 @@
 
 
 // TODO:
-// - render image on resize
+// - render image while resizing
 
 
 
@@ -51,12 +51,22 @@ Application::Application()
 	colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
 	colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
 	colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
+	std::vector<Float4> uvs;
+	uvs.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
+	uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
+	uvs.emplace_back(1.0f, 0.0f, 0.0f, 0.0f);
+	uvs.emplace_back(1.0f, 1.0f, 0.0f, 0.0f);
 	std::vector<Int3> triangles;
 	triangles.emplace_back(0, 1, 2);
 	triangles.emplace_back(1, 3, 2);
 	mesh->SetPositions(std::move(positions));
 	mesh->SetColors(std::move(colors));
+	mesh->SetUVs(std::move(uvs));
 	mesh->SetTriangles(std::move(triangles));
+
+	// Load example texture:
+	sampler = std::make_unique<VulkanSampler>(logicalDevice.get(), physicalDevice.get());
+	texture2d = std::make_unique<Texture2d>(logicalDevice.get(), physicalDevice.get(), sampler.get(), "../textures/example.jpg");
 
 	// Load mesh into vertex and index buffers:
 	vertexBuffer = std::make_unique<VulkanVertexBuffer>(logicalDevice.get(), physicalDevice.get(), mesh.get());
@@ -64,16 +74,13 @@ Application::Application()
 
 	// Uniform data:
 	for (size_t i = 0; i < framesInFlight; i++)
-	{
-		VulkanUniformBuffer uniformBuffer(logicalDevice.get(), physicalDevice.get(), sizeof(MatrixData));
-		uniformBuffers.push_back(uniformBuffer);
-	}
-	descriptorPool = std::make_unique<VulkanDescriptorPool>(logicalDevice.get(), pipelineLayout.get(), uniformBuffers, framesInFlight);
+		uniformBuffers.emplace_back(logicalDevice.get(), physicalDevice.get(), sizeof(GlobalUniformObject));
+	descriptorPool = std::make_unique<VulkanDescriptorPool>(logicalDevice.get(), pipelineLayout.get(), uniformBuffers, texture2d.get(), framesInFlight);
 
 	// Synchronization objects:
 	CreateFences();
 	CreateSemaphores();
-	
+
 	// Debug:
 	//PrintApplicationStatus();
 }
@@ -113,28 +120,6 @@ void Application::Run()
 			continue;
 		}
 
-		//// Just for fun update mesh every frame for small animation:
-		//std::vector<Float3> positions;
-		//positions.emplace_back(-0.5f + 0.1 * sin(1.0 * time), -0.5f + 0.1 * sin(1.6 * time), 0.0f);
-		//positions.emplace_back(-0.5f + 0.1 * sin(1.2 * time), 0.5f + 0.1 * sin(1.5 * time), 0.0f);
-		//positions.emplace_back(0.5f + 0.1 * sin(1.4 * time), -0.5f + 0.1 * sin(1.2 * time), 0.0f);
-		//positions.emplace_back(0.5f + 0.1 * sin(1.6 * time), 0.5f + 0.1 * sin(1.0 * time), 0.0f);
-		//mesh->SetPositions(std::move(positions));
-		//std::vector<Float4> colors;
-		//colors.emplace_back(1.0f, 0.0f, 0.0f, 1.0f);
-		//colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
-		//colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
-		//colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
-		//mesh->SetColors(std::move(colors));
-		////std::vector<Int3> triangles;
-		////if (frameIndex % 2 == 0)
-		////	triangles.emplace_back(0, 2, 1);
-		////else
-		////	triangles.emplace_back(1, 2, 3);
-		////mesh->SetTriangles(std::move(triangles));
-		//vertexBuffer->UpdateBuffer(mesh.get());
-		//indexBuffer->UpdateBuffer(mesh.get());
-
 		// QUESTION:
 		// -what is the exact difference between window and surface and how can it be that the surface extent differs from the window extent?
 
@@ -145,6 +130,13 @@ void Application::Run()
 			frameIndex = 0;
 			ResizeSwapchain();
 		}
+
+		// Update uniform buffer:
+		gloabalUbo.model = glm::rotate(Float4x4(1.0f), (float)time * glm::radians(90.0f), Float3(0.0f, 0.0f, 1.0f));
+		gloabalUbo.view = glm::lookAt(Float3(2.0f, 2.0f, 2.0f), Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 1.0f));
+		gloabalUbo.proj = glm::perspective(glm::radians(45.0f), windowExtent.width / (float)windowExtent.height, 0.1f, 10.0f);
+		gloabalUbo.proj[1][1] *= -1; // flip y-axis as it is inverted by default
+		uniformBuffers[frameIndex].UpdateBuffer(gloabalUbo);
 
 		// Render next frame:
 		Render();
@@ -175,14 +167,6 @@ void Application::Render()
 	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
 	if (!AcquireImage())
 		return;
-
-	// Update uniform buffer:
-	VkExtent2D windowExtent = window->Extent();
-	matrixData.model = glm::rotate(Float4x4(1.0f), (float)time * glm::radians(90.0f), Float3(0.0f, 0.0f, 1.0f));
-	matrixData.view = glm::lookAt(Float3(2.0f, 2.0f, 2.0f), Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 1.0f));
-	matrixData.proj = glm::perspective(glm::radians(45.0f), windowExtent.width / (float)windowExtent.height, 0.1f, 10.0f);
-	matrixData.proj[1][1] *= -1; // flip y-axis as it is inverted by default
-	uniformBuffers[frameIndex].UpdateBuffer(matrixData);
 	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
 
 	RecordCommandBuffer();
@@ -247,10 +231,9 @@ void Application::RecordCommandBuffer()
 	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
 
-	// Bind vertex buffer to command buffer:
-	VkDeviceSize offsets[2] = { 0, mesh->GetSizeOfPositions() };
-	VkBuffer buffers[2] = { vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer };
-	vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
+	// Bind vertex buffer to command buffer (TODO: move buffers into mesh as getter):
+	VkBuffer buffers[3] = { vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer };
+	vkCmdBindVertexBuffers(commandBuffer, 0, Mesh::GetBindingCount(), buffers, mesh->GetOffsets().data());
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer->buffer, 0, Mesh::GetIndexType());
 
 	VkDescriptorSet* descriptorSet = &descriptorPool->descriptorSets[frameIndex];

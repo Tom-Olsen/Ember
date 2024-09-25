@@ -29,6 +29,10 @@ void Mesh::SetColors(std::vector<Float4>&& colors)
 {
 	this->colors = std::move(colors);
 }
+void Mesh::SetUVs(std::vector<Float4>&& uvs)
+{
+	this->uvs = std::move(uvs);
+}
 void Mesh::SetTriangles(std::vector<Int3>&& triangles)
 {
 	this->triangleCount = static_cast<uint32_t>(triangles.size());
@@ -44,15 +48,19 @@ uint32_t Mesh::GetTriangleCount() const
 {
 	return triangleCount;
 }
-std::vector<Float3> Mesh::GetPositions() const
+std::vector<Float3>& Mesh::GetPositions()
 {
 	return positions;
 }
-std::vector<Float4> Mesh::GetColors() const
+std::vector<Float4>& Mesh::GetColors()
 {
 	return colors;
 }
-std::vector<Int3> Mesh::GetTriangles() const
+std::vector<Float4>& Mesh::GetUVs()
+{
+	return uvs;
+}
+std::vector<Int3>& Mesh::GetTriangles()
 {
 	return triangles;
 }
@@ -66,7 +74,7 @@ uint32_t Mesh::GetSize() const
 }
 uint32_t Mesh::GetSizeOfBuffer() const
 {
-	return GetSizeOfPositions() + GetSizeOfColors();
+	return GetSizeOfPositions() + GetSizeOfColors() + GetSizeOfUVs();
 }
 uint32_t Mesh::GetSizeOfPositions() const
 {
@@ -76,9 +84,21 @@ uint32_t Mesh::GetSizeOfColors() const
 {
 	return vertexCount * sizeof(Float4);
 }
+uint32_t Mesh::GetSizeOfUVs() const
+{
+	return vertexCount * sizeof(Float4);
+}
 uint32_t Mesh::GetSizeOfTriangles() const
 {
 	return triangleCount * sizeof(Int3);
+}
+std::vector<uint64_t> Mesh::GetBufferSizes() const
+{
+	return std::vector<uint64_t>({ GetSizeOfPositions(), GetSizeOfColors(), GetSizeOfUVs() });
+}
+std::vector<void*> Mesh::GetBufferDatas()
+{
+	return std::vector<void*>({ static_cast<void*>(positions.data()), static_cast<void*>(colors.data()), static_cast<void*>(uvs.data()) });
 }
 
 
@@ -107,6 +127,13 @@ std::vector<VkVertexInputBindingDescription> Mesh::GetBindingDescription()
 	colorBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	bindingDescriptions.push_back(colorBindingDescription);
 
+	// uv binding:
+	VkVertexInputBindingDescription uvBindingDescription = {};
+	uvBindingDescription.binding = 2;
+	uvBindingDescription.stride = sizeof(Float4);
+	uvBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	bindingDescriptions.push_back(uvBindingDescription);
+
 	return bindingDescriptions;
 }
 std::vector<VkVertexInputAttributeDescription> Mesh::GetAttributeDescriptions()
@@ -133,11 +160,30 @@ std::vector<VkVertexInputAttributeDescription> Mesh::GetAttributeDescriptions()
 	colorAttributeDescription.offset = 0;
 	attributeDescriptions.push_back(colorAttributeDescription);
 
+	// uv attribute:
+	VkVertexInputAttributeDescription uvAttributeDescription = {};
+	uvAttributeDescription.binding = 2;
+	uvAttributeDescription.location = 2;
+	uvAttributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	uvAttributeDescription.offset = 0;
+	attributeDescriptions.push_back(uvAttributeDescription);
+
 	return attributeDescriptions;
 }
 VkIndexType Mesh::GetIndexType()
 {
 	return VK_INDEX_TYPE_UINT32;
+}
+uint32_t Mesh::GetBindingCount()
+{
+	return 3;
+}
+std::vector<VkDeviceSize> Mesh::GetOffsets()
+{
+	// Edit this when adding more buffers to the mesh.
+	// offsets = { position offset, color offset, uv offset, ... }
+	std::vector<VkDeviceSize> offsets = { 0, GetSizeOfPositions(), GetSizeOfPositions() + GetSizeOfColors() };
+	return offsets;
 }
 
 

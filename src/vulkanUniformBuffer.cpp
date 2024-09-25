@@ -31,7 +31,13 @@ VulkanUniformBuffer::~VulkanUniformBuffer()
 
 
 // Public:
-void VulkanUniformBuffer::UpdateBuffer(const MatrixData& matrixData)
+template<typename T>
+void VulkanUniformBuffer::UpdateBuffer(const T& datastruct)
 {
-	memcpy(data, &matrixData, sizeof(matrixData));
+	memcpy(data, &datastruct, sizeof(datastruct));
 }
+
+
+
+// Explicit instantiations:
+template void VulkanUniformBuffer::UpdateBuffer<GlobalUniformObject>(const GlobalUniformObject& datastruct);

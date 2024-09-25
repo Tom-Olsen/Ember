@@ -14,6 +14,8 @@
 #include "vulkanIndexBuffer.h"
 #include "vulkanUniformBuffer.h"
 #include "vulkanDescriptorPool.h"
+#include "vulkanSampler.h"
+#include "texture2d.h"
 #include "mesh.h"
 
 
@@ -55,7 +57,10 @@ private: // Members:
 	std::unique_ptr<VulkanVertexBuffer> vertexBuffer;
 	std::unique_ptr<VulkanIndexBuffer> indexBuffer;
 	std::vector<VulkanUniformBuffer> uniformBuffers;
-	MatrixData matrixData;
+	std::unique_ptr<VulkanSampler> sampler;
+	std::unique_ptr<Texture2d> texture2d;
+
+	GlobalUniformObject gloabalUbo;
 
 	// Render management:
 	const size_t framesInFlight = 2;
