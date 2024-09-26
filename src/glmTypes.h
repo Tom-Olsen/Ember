@@ -4,6 +4,8 @@
 
 
 // glm library:
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "glm/gtc/matrix_transform.hpp"
 
 // using statements, to_string conversion, and ostream overloading for easier access to glm types:

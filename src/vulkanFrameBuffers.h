@@ -7,6 +7,7 @@
 #include "vulkanSurface.h"
 #include "vulkanSwapchain.h"
 #include "vulkanRenderpass.h"
+#include "vulkanDepthImage.h"
 
 
 
@@ -26,9 +27,9 @@ private: // Members:
 	VulkanRenderpass* renderpass;
 
 public: // Methods:
-	VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass);
+	VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass, VulkanDepthImage* depthImage);
 	~VulkanFrameBuffers();
-	void Recreate(VulkanSwapchain* swapchain, VulkanRenderpass* renderpass);
+	void Recreate(VulkanSwapchain* swapchain, VulkanRenderpass* renderpass, VulkanDepthImage* depthImage);
 	VkFramebuffer& operator[](size_t index);
 };
 

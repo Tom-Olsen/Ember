@@ -133,6 +133,18 @@ void VulkanPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
         multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional
         multisampleState.alphaToOneEnable = VK_FALSE;       // Optional
 
+		// Depth and stencil testing:
+        VkPipelineDepthStencilStateCreateInfo depthStencil = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+        depthStencil.depthTestEnable = VK_TRUE;             // depth of new fragments should be compared to the depth buffer to see if they should be discarded
+		depthStencil.depthWriteEnable = VK_TRUE;            // new depth of fragments that pass the depth test should be written to the depth buffer
+		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;   // comparison that is performed to keep or discard fragments. lower = closer to camera
+		depthStencil.depthBoundsTestEnable = VK_FALSE;      // allows to keep only fragments in the below defined range
+        depthStencil.minDepthBounds = 0.0f;                 // Optional
+        depthStencil.maxDepthBounds = 1.0f;                 // Optional
+		depthStencil.stencilTestEnable = VK_FALSE;          // stencil buffer operations (not used yet)
+        depthStencil.front = {};                            // Optional
+        depthStencil.back = {};                             // Optional
+
         // Configuration per attached framebuffer:
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
         colorBlendAttachmentState.blendEnable = VK_FALSE;
@@ -183,7 +195,7 @@ void VulkanPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
         createInfo.pViewportState = &viewportState;			    // Viewport and scissor
         createInfo.pRasterizationState = &rasterizationState;   // Rasterizer
         createInfo.pMultisampleState = &multisampleState;	    // Multisampling
-        createInfo.pDepthStencilState = nullptr;			    // Depth and stencil testing (not used yet)
+        createInfo.pDepthStencilState = &depthStencil;          // Depth and stencil testing
         createInfo.pColorBlendState = &colorBlendState;		    // Color blending
         createInfo.pDynamicState = &dynamicState;			    // Dynamic states
         createInfo.layout = pipelineLayout->pipelineLayout;

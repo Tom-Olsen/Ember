@@ -37,7 +37,7 @@ Application::Application()
 	renderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format);
 	pipelineLayout = std::make_unique<VulkanPipelineLayout>(logicalDevice.get());
 	pipeline = std::make_unique<VulkanPipeline>(logicalDevice.get(), pipelineLayout.get(), renderpass.get(), "../shaders/triangleVert.spv", "../shaders/triangleFrag.spv");
-	frameBuffers = std::make_unique<VulkanFrameBuffers>(logicalDevice.get(), surface.get(), swapchain.get(), renderpass.get());
+	frameBuffers = std::make_unique<VulkanFrameBuffers>(logicalDevice.get(), surface.get(), swapchain.get(), renderpass.get(), depthImage.get());
 	commands = std::make_unique<VulkanCommands>(framesInFlight, logicalDevice.get(), logicalDevice->graphicsQueue);
 
 	// Initialize mesh:
@@ -232,14 +232,16 @@ void Application::RecordCommandBuffer()
 	SetViewportAndScissor(commandBuffer);
 
 	// Begin render pass:
-	VkClearValue clearValue = { 0.0f, 0.0f, 0.0f, 1.0f };
+	std::array<VkClearValue, 2> clearValues{};
+	clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+	clearValues[1].depthStencil = { 1.0f, 0 };
 	VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 	renderPassBeginInfo.renderPass = renderpass->renderpass;
 	renderPassBeginInfo.framebuffer = (*frameBuffers)[imageIndex];
 	renderPassBeginInfo.renderArea.offset = {0, 0};
 	renderPassBeginInfo.renderArea.extent = surface->CurrentExtent();
-	renderPassBeginInfo.clearValueCount = 1;
-	renderPassBeginInfo.pClearValues = &clearValue;
+	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	renderPassBeginInfo.pClearValues = clearValues.data();
 
 	// VK_SUBPASS_CONTENTS_INLINE = The render pass commands will be embedded in the primary command buffer itself and no secondary command buffers will be executed.
 	// VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS = The render pass commands will be executed from secondary command buffers.
@@ -324,7 +326,7 @@ void Application::ResizeSwapchain()
 	// Recreate render pass and frameBuffers:
 	std::unique_ptr<VulkanRenderpass> newRenderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format);
 	renderpass.swap(newRenderpass);
-	frameBuffers->Recreate(swapchain.get(), renderpass.get());
+	frameBuffers->Recreate(swapchain.get(), renderpass.get(), depthImage.get());
 
 	// Recreate synchronization objects:
 	DestroyFences();

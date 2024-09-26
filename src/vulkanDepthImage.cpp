@@ -4,6 +4,11 @@
 
 
 
+// static members:
+VkFormat VulkanDepthImage::format = VK_FORMAT_D32_SFLOAT_S8_UINT;
+
+
+
 // Constructor:
 VulkanDepthImage::VulkanDepthImage(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface)
 {
@@ -12,18 +17,18 @@ VulkanDepthImage::VulkanDepthImage(VulkanLogicalDevice* logicalDevice, VulkanPhy
 	this->surface = surface;
 
 	VkImageSubresourceRange subresourceRange;
-	subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+	subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 	subresourceRange.baseMipLevel = 0;
 	subresourceRange.levelCount = 1;
 	subresourceRange.baseArrayLayer = 0;
 	subresourceRange.layerCount = 1;
-	VkFormat format = VK_FORMAT_D32_SFLOAT_S8_UINT;
 	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
 	CreateImage(VK_IMAGE_TYPE_2D, format, tiling, usage, surface->CurrentExtent().width, surface->CurrentExtent().height, 1);
 	AllocateAndBindMemory();
 	CreateImageView(format, subresourceRange);
+	TransitionLayout(subresourceRange);
 }
 
 
@@ -78,4 +83,30 @@ void VulkanDepthImage::CreateImageView(VkFormat format, const VkImageSubresource
 	viewInfo.format = format;
 	viewInfo.subresourceRange = subresourceRange;
 	VKA(vkCreateImageView(logicalDevice->device, &viewInfo, nullptr, &imageView));
+}
+void VulkanDepthImage::TransitionLayout(const VkImageSubresourceRange& subresourceRange)
+{
+	VulkanCommands commands = VulkanHelper::BeginSingleTimeCommands(logicalDevice, logicalDevice->graphicsQueue);
+
+	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+	barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
+	barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;	// types of memory access allowed after the barrier
+	barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.subresourceRange = subresourceRange;
+
+	VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// Immediatly
+	VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;		// early fragment test stage
+	vkCmdPipelineBarrier(
+		commands.buffers[0],
+		srcStage, dstStage,
+		0,	// dependency flags, typically 0
+		0, nullptr,				// memory barriers
+		0, nullptr,	// buffer memory barriers
+		1, &barrier);	// image memory barriers
+
+	VulkanHelper::EndSingleTimeCommands(logicalDevice, commands, logicalDevice->graphicsQueue);
 }
