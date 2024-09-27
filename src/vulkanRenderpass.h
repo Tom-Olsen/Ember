@@ -16,7 +16,7 @@ private: // Members:
 	VulkanLogicalDevice* logicalDevice;
 
 public: // Methods:
-	VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VkFormat format);
+	VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VkFormat surfaceFormat, VkSampleCountFlagBits msaaSamples);
 	~VulkanRenderpass();
 };
 

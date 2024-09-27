@@ -31,6 +31,9 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanInstance* instance)
 	if (devices[0].second < 0)
 		throw std::runtime_error("Failed to find a suitable GPU!");
 	device = devices[0].first;
+
+	// Determine max msaa samples:
+	maxMsaaSamples = MaxUsableMsaaSampleCount();
 }
 
 
@@ -81,9 +84,6 @@ int VulkanPhysicalDevice::DeviceScore(VkPhysicalDevice dev)
 	
 	return score;
 }
-
-
-
 VkBool32 VulkanPhysicalDevice::HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device)
 {
 	// Find queue family that supports Graphics and Compute.
@@ -123,4 +123,19 @@ VkBool32 VulkanPhysicalDevice::HasPresentQueueFamily(VkPhysicalDevice device, Vk
 	throw std::runtime_error("Could not find a Family Queue that supports Presenting!");
 
 	return false;
+}
+VkSampleCountFlagBits VulkanPhysicalDevice::MaxUsableMsaaSampleCount()
+{
+	VkPhysicalDeviceProperties physicalDeviceProperties;
+	vkGetPhysicalDeviceProperties(device, &physicalDeviceProperties);
+
+	VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+	if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
+	if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
+	if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
+	if (counts & VK_SAMPLE_COUNT_8_BIT) { return VK_SAMPLE_COUNT_8_BIT; }
+	if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
+	if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
+
+	return VK_SAMPLE_COUNT_1_BIT;
 }

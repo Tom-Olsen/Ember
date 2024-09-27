@@ -8,7 +8,7 @@
 
 
 // Constructor:
-VulkanPipeline::VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanPipelineLayout* pipelineLayout, VulkanRenderpass* renderpass, const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
+VulkanPipeline::VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanPipelineLayout* pipelineLayout, VulkanRenderpass* renderpass, const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
 {
     this->logicalDevice = logicalDevice;
     this->pipelineLayout = pipelineLayout;
@@ -18,7 +18,7 @@ VulkanPipeline::VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanPipelin
     VkShaderModule vertexShaderModule = CreateShaderModule(vertexShaderFilename);
     VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentShaderFilename);
 
-    CreatePipeline(vertexShaderModule, fragmentShaderModule);
+    CreatePipeline(physicalDevice, vertexShaderModule, fragmentShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
     vkDestroyShaderModule(logicalDevice->device, vertexShaderModule, nullptr);
@@ -71,7 +71,7 @@ VkShaderModule VulkanPipeline::CreateShaderModule(std::string shaderFilename)
     return shaderModule;
 }
 
-void VulkanPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
+void VulkanPipeline::CreatePipeline(VulkanPhysicalDevice* physicalDevice, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
 {
     // Vertex shader:
     VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -123,11 +123,10 @@ void VulkanPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
         rasterizationState.depthBiasClamp = 0.0f;           // Optional
         rasterizationState.depthBiasSlopeFactor = 0.0f;     // Optional
 
-        // Allows for antialiasing along polygon edges by combining the fragment shader results of multiple polygons that rasterize to the same pixel.
-        // Requires multisampling feature. We are not using it here
+        // Multisampling:
         VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
         multisampleState.sampleShadingEnable = VK_FALSE;
-        multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        multisampleState.rasterizationSamples = physicalDevice->maxMsaaSamples;
         multisampleState.minSampleShading = 1.0f;           // Optional
         multisampleState.pSampleMask = nullptr;             // Optional
         multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional

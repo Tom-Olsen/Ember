@@ -15,6 +15,7 @@ public: // Members:
 	int depth;
 	VkImage image;
 	VkDeviceMemory memory;
+	VkImageView imageView;
 
 protected: // Members:
 	VulkanLogicalDevice* logicalDevice;
@@ -24,11 +25,14 @@ public: // Methods:
 	VulkanImage(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice);
 	~VulkanImage();
 	void TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subresourceRange);
+	void HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourceRange);
 	void TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subresourceRange);
+	void GenerateMipmaps(uint32_t mipLevels);
 
 protected: // Methods:
-	void CreateImage(VkImageType imageType, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, uint32_t width, uint32_t height, uint32_t depth);
+	void CreateImage(VkImageType imageType, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, uint32_t mipLevels, uint32_t width, uint32_t height, uint32_t depth);
 	void AllocateAndBindMemory();
+	void CreateImageView(VkImageViewType imageType, VkFormat format, VkImageSubresourceRange subresourceRange);
 };
 
 
@@ -36,7 +40,7 @@ protected: // Methods:
 class VulkanImage1d : public VulkanImage
 {
 public: // Methods:
-	VulkanImage1d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, int width);
+	VulkanImage1d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImageSubresourceRange subresourceRange, int width);
 };
 
 
@@ -44,7 +48,7 @@ public: // Methods:
 class VulkanImage2d : public VulkanImage
 {
 public: // Methods:
-	VulkanImage2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, int width, int height);
+	VulkanImage2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImageSubresourceRange subresourceRange, int width, int height);
 };
 
 
@@ -52,7 +56,7 @@ public: // Methods:
 class VulkanImage3d : public VulkanImage
 {
 public: // Methods:
-	VulkanImage3d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, int width, int height, int depth);
+	VulkanImage3d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImageSubresourceRange subresourceRange, int width, int height, int depth);
 };
 
 

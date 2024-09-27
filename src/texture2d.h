@@ -19,8 +19,8 @@ public: // Members:
 	int height;
 	int depth;
 	int channels;
+	uint32_t mipLevels;
 	std::shared_ptr<VulkanImage2d> image;
-	VkImageView imageView;
 	VulkanSampler* sampler;
 
 private: // Members:

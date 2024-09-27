@@ -30,8 +30,8 @@ VulkanSampler::VulkanSampler(VulkanLogicalDevice* logicalDevice, VulkanPhysicalD
 	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS; // comparison function to apply
 	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;	// how to handle mipmapping
 	samplerInfo.mipLodBias = 0.0f;	// level of detail bias for mipmap level
-	samplerInfo.minLod = 0.0f;	// minimum level of detail to pick
-	samplerInfo.maxLod = 0.0f;	// maximum level of detail to pick
+	samplerInfo.minLod = 0.0f;				// minimum level of detail to pick
+	samplerInfo.maxLod = VK_LOD_CLAMP_NONE;	// maximum level of detail to pick. No clamping means up to the maximum mip level supported by the image
 	VKA(vkCreateSampler(logicalDevice->device, &samplerInfo, nullptr, &sampler));
 }
 

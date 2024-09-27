@@ -17,6 +17,7 @@
 #include "vulkanSampler.h"
 #include "texture2d.h"
 #include "vulkanDepthImage.h"
+#include "vulkanMsaaImage.h"
 #include "mesh.h"
 
 
@@ -44,6 +45,7 @@ private: // Members:
 	std::unique_ptr<VulkanSwapchain> swapchain;
 	std::unique_ptr<VulkanSwapchain> oldSwapchain;
 	std::unique_ptr<VulkanDepthImage> depthImage;
+	std::unique_ptr<VulkanMsaaImage> msaaImage;
 	std::unique_ptr<VulkanRenderpass> renderpass;
 	std::unique_ptr<VulkanPipelineLayout> pipelineLayout;
 	std::unique_ptr<VulkanPipeline> pipeline;

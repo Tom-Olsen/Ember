@@ -58,7 +58,7 @@ void VulkanDepthImage::CreateImage(VkImageType imageType, VkFormat format, VkIma
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = usage;
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.samples = physicalDevice->maxMsaaSamples;
 	imageInfo.flags = 0;
 
 	VKA(vkCreateImage(logicalDevice->device, &imageInfo, nullptr, &image));

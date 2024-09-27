@@ -13,6 +13,8 @@ class VulkanPhysicalDevice
 {
 public: // Members:
 	VkPhysicalDevice device;
+	VkSampleCountFlagBits maxMsaaSamples;
+
 
 public: // Methods:
 	VulkanPhysicalDevice(VulkanInstance* instance);
@@ -22,6 +24,7 @@ private: // Methods:
 	int DeviceScore(VkPhysicalDevice device);
 	VkBool32 HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device);
 	VkBool32 HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface);
+	VkSampleCountFlagBits MaxUsableMsaaSampleCount();
 };
 
 

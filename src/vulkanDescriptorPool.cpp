@@ -68,7 +68,7 @@ void VulkanDescriptorPool::FillDescriptorSets(const std::vector<VulkanUniformBuf
 
 		VkDescriptorImageInfo imageInfo = {};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = texture2d->imageView;
+		imageInfo.imageView = texture2d->image->imageView;
 		imageInfo.sampler = texture2d->sampler->sampler;
 
 		std::array< VkWriteDescriptorSet, 2> descriptorWrites{};

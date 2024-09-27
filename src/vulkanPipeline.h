@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_vulkanPipeline_h__
 #include <string>
 #include "vulkanLogicalDevice.h"
+#include "vulkanPhysicalDevice.h"
 #include "vulkanPipelineLayout.h"
 #include "vulkanRenderpass.h"
 #include "glmTypes.h"
@@ -25,12 +26,12 @@ private: // Members:
 	VulkanRenderpass* renderpass;
 
 public: // Methods:
-	VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanPipelineLayout* pipelineLayout, VulkanRenderpass* renderpass, const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename);
+	VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanPipelineLayout* pipelineLayout, VulkanRenderpass* renderpass, const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename);
 	~VulkanPipeline();
 
 private: // Methods:
 	VkShaderModule CreateShaderModule(std::string shaderFilename);
-	void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
+	void CreatePipeline(VulkanPhysicalDevice* physicalDevice, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
 };
 
 

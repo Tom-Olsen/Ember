@@ -33,11 +33,12 @@ Application::Application()
 	surface = std::make_unique<VulkanSurface>(instance.get(), physicalDevice.get(), window.get());
 	logicalDevice = std::make_unique<VulkanLogicalDevice>(physicalDevice.get(), surface.get(), deviceExtensions);
 	swapchain = std::make_unique<VulkanSwapchain>(window.get(), logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+	msaaImage = std::make_unique<VulkanMsaaImage>(logicalDevice.get(), physicalDevice.get(), surface.get());
 	depthImage = std::make_unique<VulkanDepthImage>(logicalDevice.get(), physicalDevice.get(), surface.get());
-	renderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format);
+	renderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format, physicalDevice->maxMsaaSamples);
 	pipelineLayout = std::make_unique<VulkanPipelineLayout>(logicalDevice.get());
-	pipeline = std::make_unique<VulkanPipeline>(logicalDevice.get(), pipelineLayout.get(), renderpass.get(), "../shaders/triangleVert.spv", "../shaders/triangleFrag.spv");
-	frameBuffers = std::make_unique<VulkanFrameBuffers>(logicalDevice.get(), surface.get(), swapchain.get(), renderpass.get(), depthImage.get());
+	pipeline = std::make_unique<VulkanPipeline>(logicalDevice.get(), physicalDevice.get(), pipelineLayout.get(), renderpass.get(), "../shaders/triangleVert.spv", "../shaders/triangleFrag.spv");
+	frameBuffers = std::make_unique<VulkanFrameBuffers>(logicalDevice.get(), surface.get(), swapchain.get(), renderpass.get(), depthImage.get(), msaaImage.get());
 	commands = std::make_unique<VulkanCommands>(framesInFlight, logicalDevice.get(), logicalDevice->graphicsQueue);
 
 	// Initialize mesh:
@@ -213,6 +214,7 @@ bool Application::AcquireImage()
 
 void Application::RecordCommandBuffer()
 {
+	std::cout << commands->buffers[frameIndex] << std::endl;
 	// Reset command buffers of current command pool:
 	//vkResetCommandBuffer(commands->buffers[frameIndex], 0); //  requires VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag in command pool creation.
 	vkResetCommandPool(logicalDevice->device, commands->pools[frameIndex], 0); // requires VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag in command pool creation.
@@ -323,10 +325,21 @@ void Application::ResizeSwapchain()
 	std::unique_ptr<VulkanSwapchain> newSwapchain = std::make_unique<VulkanSwapchain>(window.get(), logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, swapchain.get());
 	swapchain.swap(newSwapchain);
 
-	// Recreate render pass and frameBuffers:
-	std::unique_ptr<VulkanRenderpass> newRenderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format);
+	// Recreate depth image:
+	std::unique_ptr<VulkanDepthImage> newDepthImage = std::make_unique<VulkanDepthImage>(logicalDevice.get(), physicalDevice.get(), surface.get());
+	depthImage.swap(newDepthImage);
+
+	// Recreate msaa image:
+	std::unique_ptr<VulkanMsaaImage> newMsaaImage = std::make_unique<VulkanMsaaImage>(logicalDevice.get(), physicalDevice.get(), surface.get());
+	msaaImage.swap(newMsaaImage);
+
+	// Recreate renderpass:
+	std::unique_ptr<VulkanRenderpass> newRenderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format, physicalDevice->maxMsaaSamples);
 	renderpass.swap(newRenderpass);
-	frameBuffers->Recreate(swapchain.get(), renderpass.get(), depthImage.get());
+
+	// Recreate frameBuffers:
+	std::unique_ptr<VulkanFrameBuffers> newFrameBuffers = std::make_unique<VulkanFrameBuffers>(logicalDevice.get(), surface.get(), swapchain.get(), renderpass.get(), depthImage.get(), msaaImage.get());
+	frameBuffers.swap(newFrameBuffers);
 
 	// Recreate synchronization objects:
 	DestroyFences();
