@@ -17,8 +17,10 @@ Application::Application()
 
 	// Get instance extensions:
 	std::vector<const char*> instanceExtensions;
+	#if defined(VALIDATION_LAYERS_ACTIVE)
 	instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
+	#endif
 	window->AddSdlInstanceExtensions(instanceExtensions);	// sdl instance extensions
 	// and more ...
 
@@ -214,7 +216,6 @@ bool Application::AcquireImage()
 
 void Application::RecordCommandBuffer()
 {
-	std::cout << commands->buffers[frameIndex] << std::endl;
 	// Reset command buffers of current command pool:
 	//vkResetCommandBuffer(commands->buffers[frameIndex], 0); //  requires VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag in command pool creation.
 	vkResetCommandPool(logicalDevice->device, commands->pools[frameIndex], 0); // requires VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag in command pool creation.

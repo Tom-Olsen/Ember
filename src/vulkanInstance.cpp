@@ -36,7 +36,7 @@ VulkanInstance::VulkanInstance(std::vector<const char*> instanceExtensions)
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
 	createInfo.ppEnabledExtensionNames = instanceExtensions.data();
 
-	#ifdef VALIDATION_LAYERS_ACTIVE
+	#if defined(VALIDATION_LAYERS_ACTIVE)
 	// Enable validation features:
 	std::vector<VkValidationFeatureEnableEXT> enabledValidationFeatures;
 	enabledValidationFeatures.push_back(VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT);
@@ -59,7 +59,7 @@ VulkanInstance::VulkanInstance(std::vector<const char*> instanceExtensions)
 		throw std::runtime_error("Failed to create instance!");
 
 	// Debug Messenger:
-	#ifdef VALIDATION_LAYERS_ACTIVE
+	#if defined(VALIDATION_LAYERS_ACTIVE)
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
 	debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 	debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
@@ -75,7 +75,7 @@ VulkanInstance::VulkanInstance(std::vector<const char*> instanceExtensions)
 // Destructor:
 VulkanInstance::~VulkanInstance()
 {
-	#ifdef VALIDATION_LAYERS_ACTIVE
+	#if defined(VALIDATION_LAYERS_ACTIVE)
 	PFN_vkDestroyDebugUtilsMessengerEXT pfnDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	pfnDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 	#endif

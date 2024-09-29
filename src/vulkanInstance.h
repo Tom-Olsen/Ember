@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_vulkanInstance_h__
 #include <vulkan/vulkan.h>
 #include <vector>
+#include "macros.h"
 
 
 
@@ -12,7 +13,7 @@ class VulkanInstance
 {
 public: // Members:
 	VkInstance instance;
-	#ifndef NDEBUG // debug mode
+	#if defined(VALIDATION_LAYERS_ACTIVE)
 	VkDebugUtilsMessengerEXT debugMessenger;
 	#endif
 
