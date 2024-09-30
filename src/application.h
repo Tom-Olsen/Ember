@@ -19,6 +19,7 @@
 #include "vulkanDepthImage.h"
 #include "vulkanMsaaImage.h"
 #include "mesh.h"
+#include "material.h"
 
 
 
@@ -58,6 +59,7 @@ private: // Members:
 
 	// Data:
 	std::unique_ptr<Mesh> mesh;
+	std::unique_ptr<Material> material;
 	std::unique_ptr<VulkanVertexBuffer> vertexBuffer;
 	std::unique_ptr<VulkanIndexBuffer> indexBuffer;
 	std::vector<VulkanUniformBuffer> uniformBuffers;

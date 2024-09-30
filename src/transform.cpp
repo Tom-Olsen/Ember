@@ -3,10 +3,10 @@
 
 
 // Constructor:
-Transform::Transform(Float3 position, Float3 rotation, Float3 scale)
+Transform::Transform(const Float3& position, const Float3& eulerAngles, const Float3& scale)
 {
 	this->position = position;
-	this->rotation = rotation;
+	this->eulerAngles = eulerAngles;
 	this->scale = scale;
 	UpdateLocalToWorldMatrix();
 }
@@ -27,9 +27,9 @@ Float3 Transform::GetPosition() const
 {
 	return position;
 }
-Float3 Transform::GetRotation() const
+Float3 Transform::GetEulerAngles() const
 {
-	return rotation;
+	return eulerAngles;
 }
 Float3 Transform::GetScale() const
 {
@@ -51,21 +51,21 @@ Float4x4 Transform::GetWorldToLocalMatrix()
 
 
 // Setters:
-void Transform::SetPosition(Float3 position)
+void Transform::SetPosition(const Float3& position)
 {
 	if (this->position == position)
 		return;
 	this->position = position;
 	updateLocalToWorldMatrix = true;
 }
-void Transform::SetRotation(Float3 rotation)
+void Transform::SetEulerAngles(const Float3& eulerAngles)
 {
-	if (this->rotation == rotation)
+	if (this->eulerAngles == eulerAngles)
 		return;
-	this->rotation = rotation;
+	this->eulerAngles = eulerAngles;
 	updateLocalToWorldMatrix = true;
 }
-void Transform::SetScale(Float3 scale)
+void Transform::SetScale(const Float3& scale)
 {
 	if (this->scale == scale)
 		return;
@@ -84,14 +84,14 @@ void Transform::UpdateLocalToWorldMatrix()
 	Float4x4 translationMatrix = glm::translate(Float4x4(1.0f), position);
 
 	// Rotation:
-	Float4x4 rotationMatrix = glm::rotate(Float4x4(1.0f), rotation.x, Float3(1.0f, 0.0f, 0.0f));
-	rotationMatrix = glm::rotate(rotationMatrix, rotation.y, Float3(0.0f, 1.0f, 0.0f));
-	rotationMatrix = glm::rotate(rotationMatrix, rotation.z, Float3(0.0f, 0.0f, 1.0f));
+	Float4x4 rotationMatrix = glm::rotate(Float4x4(1.0f), glm::radians(eulerAngles.x), Float3(1.0f, 0.0f, 0.0f));
+	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.y), Float3(0.0f, 1.0f, 0.0f));
+	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.z), Float3(0.0f, 0.0f, 1.0f));
 
 	// Scale:
 	Float4x4 scaleMatrix = glm::scale(Float4x4(1.0f), scale);
 
-	// Local to World Matrix & World to Local Matrix:
+	// localToWorldMatrix & worldToLocalMatrix:
 	localToWorldMatrix = translationMatrix * rotationMatrix * scaleMatrix;
 	worldToLocalMatrix = glm::inverse(localToWorldMatrix);
 }

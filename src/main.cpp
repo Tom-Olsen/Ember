@@ -31,5 +31,14 @@ int main()
 		LOG_CRITICAL(e.what());
 	}
 
+	//Transform transformA(Float3(1.0f, 2.0f, 3.0f), Float3(0.0f, 0.0f, 0.0f), Float3(1.0f, 1.0f, 1.0f));
+	//Transform transformB(Float3(1.0f, 2.0f, 3.0f), Float3(90.0f, 0.0f, 0.0f), Float3(1.0f, 1.0f, 1.0f));
+	//Transform transformC(Float3(1.0f, 2.0f, 3.0f), Float3(0.0f, 90.0f, 0.0f), Float3(2.0f, 2.0f, 2.0f));
+	//LOG_TRACE("Transform A:\n{}\n", to_string(transformA.GetLocalToWorldMatrix()));
+	//LOG_TRACE("Transform A inv:\n{}\n", to_string(transformA.GetWorldToLocalMatrix()));
+	//LOG_TRACE("Transform B:\n{}\n", to_string(transformB.GetLocalToWorldMatrix()));
+	//LOG_TRACE("Transform B inv:\n{}\n", to_string(transformB.GetWorldToLocalMatrix()));
+	//LOG_TRACE("Transform C:\n{}\n", to_string(transformC.GetLocalToWorldMatrix()));
+	//LOG_TRACE("Transform C inv:\n{}\n", to_string(transformC.GetWorldToLocalMatrix()));
     return 0;
 }

@@ -82,6 +82,12 @@ Application::Application()
 	mesh->SetUVs(std::move(uvs));
 	mesh->SetTriangles(std::move(triangles));
 
+	// Material:
+	material = std::make_unique<Material>("../shaders/triangleVert", "../shaders/triangleFrag");
+	material->PrintVertexShader();
+	material->PrintFragmentShader();
+
+
 	// Load example texture:
 	sampler = std::make_unique<VulkanSampler>(logicalDevice.get(), physicalDevice.get());
 	texture2d = std::make_unique<Texture2d>(logicalDevice.get(), physicalDevice.get(), sampler.get(), "../textures/example.jpg");

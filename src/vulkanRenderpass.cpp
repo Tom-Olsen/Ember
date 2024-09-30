@@ -62,6 +62,7 @@ VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VkFormat 
 	subpass.pDepthStencilAttachment = &depthAttachmentReference;
 	subpass.pResolveAttachments = &colorResolveAttachmentReference;
 
+	// Solution form tutorial which yields validation errors:
 	//VkSubpassDependency dependency = {};
 	//dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	//dependency.dstSubpass = 0;

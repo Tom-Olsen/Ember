@@ -9,27 +9,27 @@ class Transform
 {
 private: // Members:
 	Float3 position;
-	Float3 rotation;
+	Float3 eulerAngles;	// in degrees
 	Float3 scale;
 	Float4x4 localToWorldMatrix;
 	Float4x4 worldToLocalMatrix;
 	bool updateLocalToWorldMatrix;
 
 public: // Methods:
-	Transform(Float3 position, Float3 rotation, Float3 scale);
+	Transform(const Float3& position, const Float3& eulerAngles, const Float3& scale);
 	~Transform();
 
 	// Getters:
 	Float3 GetPosition() const;
-	Float3 GetRotation() const;
+	Float3 GetEulerAngles() const;
 	Float3 GetScale() const;
 	Float4x4 GetLocalToWorldMatrix();
 	Float4x4 GetWorldToLocalMatrix();
 
 	// Setters:
-	void SetPosition(Float3 position);
-	void SetRotation(Float3 rotation);
-	void SetScale(Float3 scale);
+	void SetPosition(const Float3& position);
+	void SetEulerAngles(const Float3& eulerAngles);
+	void SetScale(const Float3& scale);
 
 private: // Methods:
 	void UpdateLocalToWorldMatrix();
