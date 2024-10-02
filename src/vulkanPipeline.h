@@ -3,7 +3,6 @@
 #include <string>
 #include "vulkanLogicalDevice.h"
 #include "vulkanPhysicalDevice.h"
-#include "vulkanPipelineLayout.h"
 #include "vulkanRenderpass.h"
 #include "glmTypes.h"
 
@@ -19,18 +18,24 @@ class VulkanPipeline
 {
 public: // Members:
 	VkPipeline pipeline;
+	VkPipelineLayout pipelineLayout;
+	VkDescriptorSetLayout descriptorSetLayout;
 
 private: // Members:
 	VulkanLogicalDevice* logicalDevice;
-	VulkanPipelineLayout* pipelineLayout;
 	VulkanRenderpass* renderpass;
 
 public: // Methods:
-	VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanPipelineLayout* pipelineLayout, VulkanRenderpass* renderpass, const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename);
+	VulkanPipeline(
+		VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanRenderpass* renderpass,
+		const std::vector<char>& vertexCode,
+		const std::vector<char>& fragmentCode,
+		const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 	~VulkanPipeline();
 
 private: // Methods:
-	VkShaderModule CreateShaderModule(std::string shaderFilename);
+	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+	VkShaderModule CreateShaderModule(const std::vector<char>& code);
 	void CreatePipeline(VulkanPhysicalDevice* physicalDevice, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
 };
 

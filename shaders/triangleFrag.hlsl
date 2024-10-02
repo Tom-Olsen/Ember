@@ -1,5 +1,5 @@
 Texture2D texture : register(t1);
-SamplerState samplerState : register(s1);
+SamplerState samplerState : register(s2);
 
 
 

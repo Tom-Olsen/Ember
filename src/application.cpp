@@ -13,6 +13,7 @@
 // Constructor:
 Application::Application()
 {
+	// Window:
 	window = std::make_unique<SdlWindow>();
 
 	// Get instance extensions:
@@ -29,19 +30,24 @@ Application::Application()
 	deviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	// and more ...
 
-	// Create unique pointers:
+	// Vulkan context:
 	instance = std::make_unique<VulkanInstance>(instanceExtensions);
 	physicalDevice = std::make_unique<VulkanPhysicalDevice>(instance.get());
 	surface = std::make_unique<VulkanSurface>(instance.get(), physicalDevice.get(), window.get());
 	logicalDevice = std::make_unique<VulkanLogicalDevice>(physicalDevice.get(), surface.get(), deviceExtensions);
+	descriptorPool = std::make_unique<VulkanDescriptorPool>(framesInFlight, logicalDevice.get());
 	swapchain = std::make_unique<VulkanSwapchain>(window.get(), logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+	renderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format, physicalDevice->maxMsaaSamples);
+
+	// Render resources:
 	msaaImage = std::make_unique<VulkanMsaaImage>(logicalDevice.get(), physicalDevice.get(), surface.get());
 	depthImage = std::make_unique<VulkanDepthImage>(logicalDevice.get(), physicalDevice.get(), surface.get());
-	renderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface->surfaceFormat.format, physicalDevice->maxMsaaSamples);
-	pipelineLayout = std::make_unique<VulkanPipelineLayout>(logicalDevice.get());
-	pipeline = std::make_unique<VulkanPipeline>(logicalDevice.get(), physicalDevice.get(), pipelineLayout.get(), renderpass.get(), "../shaders/triangleVert.spv", "../shaders/triangleFrag.spv");
 	frameBuffers = std::make_unique<VulkanFrameBuffers>(logicalDevice.get(), surface.get(), swapchain.get(), renderpass.get(), depthImage.get(), msaaImage.get());
 	commands = std::make_unique<VulkanCommands>(framesInFlight, logicalDevice.get(), logicalDevice->graphicsQueue);
+
+	// Synchronization objects:
+	CreateFences();
+	CreateSemaphores();
 
 	// Initialize mesh:
 	mesh = std::make_unique<Mesh>();
@@ -81,29 +87,21 @@ Application::Application()
 	mesh->SetColors(std::move(colors));
 	mesh->SetUVs(std::move(uvs));
 	mesh->SetTriangles(std::move(triangles));
-
-	// Material:
-	material = std::make_unique<Material>("../shaders/triangleVert", "../shaders/triangleFrag");
-	material->PrintVertexShader();
-	material->PrintFragmentShader();
-
-
-	// Load example texture:
-	sampler = std::make_unique<VulkanSampler>(logicalDevice.get(), physicalDevice.get());
-	texture2d = std::make_unique<Texture2d>(logicalDevice.get(), physicalDevice.get(), sampler.get(), "../textures/example.jpg");
-
-	// Load mesh into vertex and index buffers:
 	vertexBuffer = std::make_unique<VulkanVertexBuffer>(logicalDevice.get(), physicalDevice.get(), mesh.get());
 	indexBuffer = std::make_unique<VulkanIndexBuffer>(logicalDevice.get(), physicalDevice.get(), mesh.get());
 
 	// Uniform data:
-	for (size_t i = 0; i < framesInFlight; i++)
+	for (uint32_t i = 0; i < framesInFlight; i++)
 		uniformBuffers.emplace_back(logicalDevice.get(), physicalDevice.get(), sizeof(GlobalUniformObject));
-	descriptorPool = std::make_unique<VulkanDescriptorPool>(logicalDevice.get(), pipelineLayout.get(), uniformBuffers, texture2d.get(), framesInFlight);
 
-	// Synchronization objects:
-	CreateFences();
-	CreateSemaphores();
+	// Sampler:
+	sampler = std::make_unique<VulkanSampler>(logicalDevice.get(), physicalDevice.get());
+
+	// Texture:
+	texture2d = std::make_unique<Texture2d>(logicalDevice.get(), physicalDevice.get(), sampler.get(), "../textures/example.jpg");
+
+	// Material:
+	material = std::make_unique<Material>(framesInFlight, logicalDevice.get(), physicalDevice.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/triangleVert.spv"), std::string("../shaders/triangleFrag.spv"), uniformBuffers, texture2d.get());
 
 	// Debug:
 	//PrintApplicationStatus();
@@ -255,15 +253,15 @@ void Application::RecordCommandBuffer()
 	// VK_SUBPASS_CONTENTS_INLINE = The render pass commands will be embedded in the primary command buffer itself and no secondary command buffers will be executed.
 	// VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS = The render pass commands will be executed from secondary command buffers.
 	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline->pipeline);
 
 	// Bind vertex buffer to command buffer (TODO: move buffers into mesh as getter):
 	VkBuffer buffers[3] = { vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer };
 	vkCmdBindVertexBuffers(commandBuffer, 0, Mesh::GetBindingCount(), buffers, mesh->GetOffsets().data());
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer->buffer, 0, Mesh::GetIndexType());
 
-	VkDescriptorSet* descriptorSet = &descriptorPool->descriptorSets[frameIndex];
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout->pipelineLayout, 0, 1, descriptorSet, 0, nullptr);
+	VkDescriptorSet* descriptorSet = &material->descriptorSets[frameIndex];
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline->pipelineLayout, 0, 1, descriptorSet, 0, nullptr);
 	vkCmdDrawIndexed(commandBuffer, 3 * mesh.get()->GetTriangleCount(), 1, 0, 0, 0);
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	vkCmdEndRenderPass(commandBuffer);

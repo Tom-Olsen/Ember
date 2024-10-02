@@ -8,16 +8,23 @@
 
 
 // Constructor:
-VulkanPipeline::VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanPipelineLayout* pipelineLayout, VulkanRenderpass* renderpass, const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
+VulkanPipeline::VulkanPipeline(
+    VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanRenderpass* renderpass,
+    const std::vector<char>& vertexCode,
+    const std::vector<char>& fragmentCode,
+    const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
     this->logicalDevice = logicalDevice;
-    this->pipelineLayout = pipelineLayout;
     this->renderpass = renderpass;
 
-    // Create vertex and fragment shader modules from .spv files:
-    VkShaderModule vertexShaderModule = CreateShaderModule(vertexShaderFilename);
-    VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentShaderFilename);
+    // Create pipeline Layout:
+	CreatePipelineLayout(bindings);
 
+    // Create vertex and fragment shader modules from .spv files:
+    VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
+    VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
+
+    // Create pipeline:
     CreatePipeline(physicalDevice, vertexShaderModule, fragmentShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
@@ -30,44 +37,40 @@ VulkanPipeline::VulkanPipeline(VulkanLogicalDevice* logicalDevice, VulkanPhysica
 // Destructor:
 VulkanPipeline::~VulkanPipeline()
 {
+    vkDestroyDescriptorSetLayout(logicalDevice->device, descriptorSetLayout, nullptr);
+    vkDestroyPipelineLayout(logicalDevice->device, pipelineLayout, nullptr);
     vkDestroyPipeline(logicalDevice->device, pipeline, nullptr);
 }
 
 
 
 // Private:
-
-// Create shader module (eg. vertex or fragment shader) from .spv file:
-VkShaderModule VulkanPipeline::CreateShaderModule(std::string shaderFilename)
+void VulkanPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
-    // Open shader file:
-    std::ifstream file(shaderFilename, std::ios::binary);
-    if (!file.is_open())
-        LOG_CRITICAL("Error opening shader file!");
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+    descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    descriptorSetLayoutCreateInfo.pBindings = bindings.data();
+    VKA(vkCreateDescriptorSetLayout(logicalDevice->device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
 
-    // Get file size:
-    file.seekg(0, std::ios::end);
-    size_t fileSize = static_cast<size_t>(file.tellg());
-    file.seekg(0, std::ios::beg);
-
-    // Copy data to buffer:
-    std::vector<char> buffer(fileSize);
-    file.read(buffer.data(), fileSize);
-
-    // Create shader module:
+    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+    pipelineLayoutCreateInfo.setLayoutCount = 1;
+    pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+    vkCreatePipelineLayout(logicalDevice->device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
+}
+VkShaderModule VulkanPipeline::CreateShaderModule(const std::vector<char>& code)
+{
     VkShaderModuleCreateInfo createInfo =
     {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,   // type of this struct
         .pNext = nullptr,                                       // pointer to extension-specific data
         .flags = 0,                                             // flags (none)
-        .codeSize = fileSize,                                   // size of code in bytes
-        .pCode = (uint32_t*)(buffer.data())                     // pointer to code
+        .codeSize = code.size(),                                // size of code in bytes
+        .pCode = (uint32_t*)(code.data())                       // pointer to code
     };
     VkShaderModule shaderModule;
     VKA(vkCreateShaderModule(logicalDevice->device, &createInfo, nullptr, &shaderModule));
-
-    // Close file and return:
-    file.close();
     return shaderModule;
 }
 
@@ -197,7 +200,7 @@ void VulkanPipeline::CreatePipeline(VulkanPhysicalDevice* physicalDevice, const 
         createInfo.pDepthStencilState = &depthStencil;          // Depth and stencil testing
         createInfo.pColorBlendState = &colorBlendState;		    // Color blending
         createInfo.pDynamicState = &dynamicState;			    // Dynamic states
-        createInfo.layout = pipelineLayout->pipelineLayout;
+        createInfo.layout = pipelineLayout;
         createInfo.renderPass = renderpass->renderpass;
         createInfo.subpass = 0;
         createInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one

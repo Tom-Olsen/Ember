@@ -4,21 +4,23 @@
 #include <vector>
 #include <chrono>
 #include "sdlWindow.h"
+#include "vulkanInstance.h"
+#include "vulkanPhysicalDevice.h"
 #include "vulkanSurface.h"
+#include "vulkanLogicalDevice.h"
+#include "vulkanDescriptorPool.h"
 #include "vulkanSwapchain.h"
 #include "vulkanRenderpass.h"
-#include "vulkanPipeline.h"
+#include "vulkanMsaaImage.h"
+#include "vulkanDepthImage.h"
 #include "vulkanFrameBuffers.h"
 #include "vulkanCommands.h"
+#include "mesh.h"
 #include "vulkanVertexBuffer.h"
 #include "vulkanIndexBuffer.h"
 #include "vulkanUniformBuffer.h"
-#include "vulkanDescriptorPool.h"
 #include "vulkanSampler.h"
 #include "texture2d.h"
-#include "vulkanDepthImage.h"
-#include "vulkanMsaaImage.h"
-#include "mesh.h"
 #include "material.h"
 
 
@@ -37,22 +39,23 @@
 class Application
 {
 private: // Members:
-	// Vulkan objects:
+	// Vulkan context:
 	std::unique_ptr<SdlWindow> window;
 	std::unique_ptr<VulkanInstance> instance;
 	std::unique_ptr<VulkanPhysicalDevice> physicalDevice;
-	std::unique_ptr<VulkanLogicalDevice> logicalDevice;
 	std::unique_ptr<VulkanSurface> surface;
+	std::unique_ptr<VulkanLogicalDevice> logicalDevice;
+	std::unique_ptr<VulkanDescriptorPool> descriptorPool;
 	std::unique_ptr<VulkanSwapchain> swapchain;
-	std::unique_ptr<VulkanSwapchain> oldSwapchain;
-	std::unique_ptr<VulkanDepthImage> depthImage;
-	std::unique_ptr<VulkanMsaaImage> msaaImage;
 	std::unique_ptr<VulkanRenderpass> renderpass;
-	std::unique_ptr<VulkanPipelineLayout> pipelineLayout;
-	std::unique_ptr<VulkanPipeline> pipeline;
+
+	// Render resources:
+	std::unique_ptr<VulkanMsaaImage> msaaImage;
+	std::unique_ptr<VulkanDepthImage> depthImage;
 	std::unique_ptr<VulkanFrameBuffers> frameBuffers;
 	std::unique_ptr<VulkanCommands> commands;
-	std::unique_ptr<VulkanDescriptorPool> descriptorPool;
+
+	// Sync objects:
 	std::vector<VkFence> fences;
 	std::vector<VkSemaphore> acquireSemaphores;
 	std::vector<VkSemaphore> releaseSemaphores;
@@ -65,11 +68,10 @@ private: // Members:
 	std::vector<VulkanUniformBuffer> uniformBuffers;
 	std::unique_ptr<VulkanSampler> sampler;
 	std::unique_ptr<Texture2d> texture2d;
-
 	GlobalUniformObject gloabalUbo;
 
 	// Render management:
-	const size_t framesInFlight = 2;
+	const uint32_t framesInFlight = 2;
 	double time;
 	uint32_t frameIndex;
 	uint32_t imageIndex;

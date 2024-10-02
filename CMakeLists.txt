@@ -23,11 +23,13 @@ endforeach()
 # Group shader files in Shader directioy:
 source_group("Shaders" FILES ${SHADER_FILES})
 
-# Required libraries:
-add_subdirectory(libs/SDL)      # SDL submodule
-add_subdirectory(libs/glm)      # glm submodule
-add_subdirectory(libs/spdlog)   # spdlog submodule
-find_package(Vulkan REQUIRED)   # required to be installed
+# Required libraries (location of CMakeLists.txt):
+add_subdirectory(libs/SDL)              # SDL submodule
+add_subdirectory(libs/glm)              # glm submodule
+add_subdirectory(libs/spdlog)           # spdlog submodule
+set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect
+add_subdirectory(libs/SPIRV-Reflect)    # SPIRV-Reflect submodule
+find_package(Vulkan REQUIRED)           # required to be installed
 
 # Shader Language (pick one):
 set(SHADER_LANGUAGE "HLSL") # HLSL or GLSL
@@ -51,12 +53,14 @@ endif(WIN32)
 add_executable(MyEngine ${SOURCE_FILES} ${HEADER_FILES} ${SHADER_FILES})
 add_dependencies(MyEngine build_shaders)
 
-# Add headers:
+# Add headers (location of headers to include, e.g. SDL3/SDL.h in case of SDL):
 target_include_directories(MyEngine PUBLIC libs/SDL/include)
 target_include_directories(MyEngine PUBLIC libs/glm)
 target_include_directories(MyEngine PUBLIC libs/spdlog/include)
+target_include_directories(MyEngine PUBLIC libs/SPIRV-Reflect)
 target_include_directories(MyEngine PUBLIC ${Vulkan_INCLUDE_DIRS})
 
-# Add dlls:
+# Add dlls (name of shared library in CMakeLists.txt of precombiled library):
 target_link_libraries(MyEngine PUBLIC SDL3::SDL3-shared)
 target_link_libraries(MyEngine PUBLIC ${Vulkan_LIBRARIES})
+target_link_libraries(MyEngine PUBLIC spirv-reflect-static)

@@ -4,13 +4,13 @@
 
 
 // Constructor:
-VulkanCommands::VulkanCommands(size_t size, VulkanLogicalDevice* logicalDevice, VulkanQueue queue) : size(size)
+VulkanCommands::VulkanCommands(uint32_t size, VulkanLogicalDevice* logicalDevice, VulkanQueue queue) : size(size)
 {
 	this->logicalDevice = logicalDevice;
 	pools.resize(size);
 	buffers.resize(size);
 
-	for (size_t i = 0; i < size; i++)
+	for (uint32_t i = 0; i < size; i++)
 	{
 		VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 		//createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;	// Command buffers will be short-lived. 
@@ -32,6 +32,6 @@ VulkanCommands::VulkanCommands(size_t size, VulkanLogicalDevice* logicalDevice, 
 // Destructor:
 VulkanCommands::~VulkanCommands()
 {
-	for (size_t i = 0; i < size; i++)
+	for (uint32_t i = 0; i < size; i++)
 		vkDestroyCommandPool(logicalDevice->device, pools[i], nullptr);
 }
