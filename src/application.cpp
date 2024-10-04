@@ -6,6 +6,13 @@
 
 
 // TODO:
+// - Change VulkanCommands to VulkanCommand and replace VulkanCommands* with std::vector<VulkanCommand>.
+// - move vertex and index buffer into mesh class
+// - remove sampler from texture2d
+// - in material class create and fill VkWriteDescriptorSets according to shader reflection
+// - add uniform buffer, texture and sampler vectors to material
+// - add push constants
+// - try multi mesh rendering
 // - render image while resizing
 
 
