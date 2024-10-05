@@ -6,13 +6,14 @@
 
 
 // TODO:
-// - move vertex and index buffer into mesh class
 // - buffer class that manages one big buffer and sub buffers for vertex, index, uniform, etc.
 // - in material class create and fill VkWriteDescriptorSets according to shader reflection
 // - add uniform buffer, texture and sampler vectors to material
 // - add push constants
 // - try multi mesh rendering
 // - render image while resizing
+// - integrate VMA: https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
+// - in mesh combine vertex and index data into a single buffer and use offsets?
 
 
 
@@ -58,7 +59,7 @@ Application::Application()
 	CreateSemaphores();
 
 	// Initialize mesh:
-	mesh = std::make_unique<Mesh>();
+	mesh = std::make_unique<Mesh>(logicalDevice.get(), physicalDevice.get());
 	std::vector<Float3> positions;
 	positions.emplace_back(-0.5f, -0.5f, 0.0f);
 	positions.emplace_back(-0.5f, 0.5f, 0.0f);
@@ -95,8 +96,6 @@ Application::Application()
 	mesh->SetColors(std::move(colors));
 	mesh->SetUVs(std::move(uvs));
 	mesh->SetTriangles(std::move(triangles));
-	vertexBuffer = std::make_unique<VulkanVertexBuffer>(logicalDevice.get(), physicalDevice.get(), mesh.get());
-	indexBuffer = std::make_unique<VulkanIndexBuffer>(logicalDevice.get(), physicalDevice.get(), mesh.get());
 
 	// Uniform data:
 	for (uint32_t i = 0; i < framesInFlight; i++)
@@ -264,9 +263,9 @@ void Application::RecordCommandBuffer()
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline->pipeline);
 
 	// Bind vertex buffer to command buffer (TODO: move buffers into mesh as getter):
-	VkBuffer buffers[3] = { vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer, vertexBuffer->buffer->buffer };
+	VkBuffer buffers[3] = { mesh->GetVertexBuffer()->buffer, mesh->GetVertexBuffer()->buffer, mesh->GetVertexBuffer()->buffer };
 	vkCmdBindVertexBuffers(commandBuffer, 0, Mesh::GetBindingCount(), buffers, mesh->GetOffsets().data());
-	vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer->buffer, 0, Mesh::GetIndexType());
+	vkCmdBindIndexBuffer(commandBuffer, mesh->GetIndexBuffer()->buffer, 0, Mesh::GetIndexType());
 
 	VkDescriptorSet* descriptorSet = &material->descriptorSets[frameIndex];
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline->pipelineLayout, 0, 1, descriptorSet, 0, nullptr);

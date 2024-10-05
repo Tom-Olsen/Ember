@@ -16,8 +16,6 @@
 #include "vulkanFrameBuffers.h"
 #include "vulkanCommand.h"
 #include "mesh.h"
-#include "vulkanVertexBuffer.h"
-#include "vulkanIndexBuffer.h"
 #include "vulkanUniformBuffer.h"
 #include "vulkanSampler.h"
 #include "texture2d.h"
@@ -63,8 +61,6 @@ private: // Members:
 	// Data:
 	std::unique_ptr<Mesh> mesh;
 	std::unique_ptr<Material> material;
-	std::unique_ptr<VulkanVertexBuffer> vertexBuffer;
-	std::unique_ptr<VulkanIndexBuffer> indexBuffer;
 	std::vector<VulkanUniformBuffer> uniformBuffers;
 	std::unique_ptr<VulkanSampler> sampler;
 	std::unique_ptr<Texture2d> texture2d;

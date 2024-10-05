@@ -1,11 +1,13 @@
 #include "mesh.h"
+#include "macros.h"
 
 
 
 // Constructor:
-Mesh::Mesh()
+Mesh::Mesh(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice)
 {
-
+	this->logicalDevice = logicalDevice;
+	this->physicalDevice = physicalDevice;
 }
 
 
@@ -24,19 +26,23 @@ void Mesh::SetPositions(std::vector<Float3>&& positions)
 {
 	this->vertexCount = static_cast<uint32_t>(positions.size());
 	this->positions = std::move(positions);
+	verticesUpdated = true;
 }
 void Mesh::SetColors(std::vector<Float4>&& colors)
 {
 	this->colors = std::move(colors);
+	verticesUpdated = true;
 }
 void Mesh::SetUVs(std::vector<Float4>&& uvs)
 {
 	this->uvs = std::move(uvs);
+	verticesUpdated = true;
 }
 void Mesh::SetTriangles(std::vector<Int3>&& triangles)
 {
 	this->triangleCount = static_cast<uint32_t>(triangles.size());
 	this->triangles = std::move(triangles);
+	indicesUpdated = true;
 }
 
 // Getters:
@@ -100,6 +106,25 @@ std::vector<void*> Mesh::GetBufferDatas()
 {
 	return std::vector<void*>({ static_cast<void*>(positions.data()), static_cast<void*>(colors.data()), static_cast<void*>(uvs.data()) });
 }
+VulkanBuffer* Mesh::GetVertexBuffer()
+{
+	if (verticesUpdated)
+	{
+		UpdateVertexBuffer();
+		verticesUpdated = false;
+	}
+	return vertexBuffer.get();
+}
+VulkanBuffer* Mesh::GetIndexBuffer()
+{
+	if (indicesUpdated)
+	{
+		UpdateIndexBuffer();
+		indicesUpdated = false;
+	}
+	return indexBuffer.get();
+}
+
 
 
 
@@ -206,3 +231,96 @@ std::string to_string(Mesh mesh)
 		str += to_string(triangle) + "\n";
 	return str;
 }
+
+
+
+// Private:
+#ifdef RESIZEABLE_BAR // No staging buffer:
+void Mesh::UpdateVertexBuffer()
+{
+	VkDeviceSize bufferSize = GetSizeOfBuffer();
+	vkQueueWaitIdle(logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
+
+	// Resize buffer if necessary:
+	if (vertexBuffer == nullptr || bufferSize != vertexBuffer->size)
+	{
+		VkBufferUsageFlags usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+		std::vector<uint32_t> queueFamilyIndices = { logicalDevice->graphicsQueue.familyIndex }; // for now only graphics queue has access to vertex buffer
+		vertexBuffer = std::make_unique<VulkanBuffer>(logicalDevice, physicalDevice, bufferSize, usage, memoryPropertyFlags, queueFamilyIndices);
+	}
+
+	// Copy positions, colors, uvs:
+	void* data;
+	VKA(vkMapMemory(logicalDevice->device, vertexBuffer->memory, 0, bufferSize, 0, &data));
+	memcpy(data, positions.data(), GetSizeOfPositions());
+	memcpy(static_cast<char*>(data) + GetSizeOfPositions(), colors.data(), GetSizeOfColors());
+	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfColors(), uvs.data(), GetSizeOfUVs());
+	vkUnmapMemory(logicalDevice->device, vertexBuffer->memory);
+}
+#else // With Staging buffer:
+void Mesh::UpdateVertexBuffer()
+{
+	VkDeviceSize bufferSize = GetSizeOfBuffer();
+	vkQueueWaitIdle(logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
+
+	// Resize buffer if necessary:
+	if (vertexBuffer == nullptr || bufferSize != vertexBuffer->size)
+	{
+		VkBufferUsageFlags usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		std::vector<uint32_t> queueFamilyIndices = { logicalDevice->graphicsQueue.familyIndex }; // for now only graphics queue has access to vertex buffer
+		vertexBuffer = std::make_unique<VulkanBuffer>(logicalDevice, physicalDevice, bufferSize, usage, memoryPropertyFlags, queueFamilyIndices);
+	}
+
+	// Load data into staging buffer:
+	VulkanBuffer stagingBuffer = VulkanBuffer::StagingBuffer(logicalDevice, physicalDevice, GetBufferSizes(), GetBufferDatas());
+
+	// Copy data from staging to vertex buffer:
+	VulkanBuffer::CopyBufferToBuffer(logicalDevice, &stagingBuffer, vertexBuffer.get(), bufferSize, logicalDevice->graphicsQueue);
+}
+#endif
+#ifdef RESIZEABLE_BAR // No staging buffer:}
+void Mesh::UpdateIndexBuffer()
+{
+	VkDeviceSize bufferSize = 3 * GetSizeOfTriangles();
+	vkQueueWaitIdle(logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
+
+	// Resize buffer if necessary:
+	if (indexBuffer == nullptr || bufferSize != indexBuffer->size)
+	{
+		VkBufferUsageFlags usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+		VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+		VkDeviceSize bufferSize = 3 * GetSizeOfTriangles();
+		std::vector<uint32_t> queueFamilyIndices = { logicalDevice->graphicsQueue.familyIndex }; // for now only graphics queue has access to index buffer
+		indexBuffer = std::make_unique<VulkanBuffer>(logicalDevice, physicalDevice, bufferSize, usage, memoryPropertyFlags, queueFamilyIndices);
+	}
+
+	// Copy triangle indexes:
+	void* data;
+	VKA(vkMapMemory(logicalDevice->device, indexBuffer->memory, 0, bufferSize, 0, &data));
+	memcpy(data, GetTrianglesUnrolled(), bufferSize);
+	vkUnmapMemory(logicalDevice->device, indexBuffer->memory);
+}
+#else // With Staging buffer:
+void Mesh::UpdateIndexBuffer()
+{
+	VkDeviceSize bufferSize = 3 * GetSizeOfTriangles();
+	vkQueueWaitIdle(logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
+
+	// Resize buffer if necessary:
+	if (indexBuffer == nullptr || bufferSize != indexBuffer->size)
+	{
+		VkBufferUsageFlags usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		std::vector<uint32_t> queueFamilyIndices = { logicalDevice->graphicsQueue.familyIndex }; // for now only graphics queue has access to index buffer
+		indexBuffer = std::make_unique<VulkanBuffer>(logicalDevice, physicalDevice, bufferSize, usage, memoryPropertyFlags, queueFamilyIndices);
+	}
+
+	// Load data into staging buffer:
+	VulkanBuffer stagingBuffer = VulkanBuffer::StagingBuffer(logicalDevice, physicalDevice, bufferSize, GetTrianglesUnrolled());
+
+	// Copy data from staging to vertex buffer:
+	VulkanBuffer::CopyBufferToBuffer(logicalDevice, &stagingBuffer, indexBuffer.get(), bufferSize, logicalDevice->graphicsQueue);
+}
+#endif
