@@ -55,7 +55,7 @@ VulkanImage::~VulkanImage()
 void VulkanImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subresourceRange)
 {
 	// Transition is executed on transferQueue.
-	VulkanCommands commands = VulkanHelper::BeginSingleTimeCommands(logicalDevice, logicalDevice->transferQueue);
+	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->transferQueue);
 
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
@@ -70,20 +70,20 @@ void VulkanImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange su
 	VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// Immediatly
 	VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;		// Before transfer stage
 	vkCmdPipelineBarrier(
-		commands.buffers[0],
+		command.buffer,
 		srcStage, dstStage,
 		0,	// dependency flags, typically 0
 		0, nullptr,				// memory barriers
 		0, nullptr,	// buffer memory barriers
 		1, &barrier);	// image memory barriers
 
-	VulkanHelper::EndSingleTimeCommands(logicalDevice, commands, logicalDevice->transferQueue);
+	VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->transferQueue);
 }
 void VulkanImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourceRange)
 {
 	// On transition ownership of the image is transferred from the transferQueue to the graphicsQueue.
 	{
-		VulkanCommands commands = VulkanHelper::BeginSingleTimeCommands(logicalDevice, logicalDevice->transferQueue);
+		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->transferQueue);
 
 		VkImageMemoryBarrier releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		releaseBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -98,17 +98,17 @@ void VulkanImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subreso
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;			// after transfer stage
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;	// wait for all transfers to finish
 		vkCmdPipelineBarrier(
-			commands.buffers[0],
+			command.buffer,
 			srcStage, dstStage,
 			0,	// dependency flags, typically 0
 			0, nullptr,						// memory barriers
 			0, nullptr,			// buffer memory barriers
 			1, &releaseBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommands(logicalDevice, commands, logicalDevice->transferQueue);
+		VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->transferQueue);
 	}
 	{
-		VulkanCommands commands = VulkanHelper::BeginSingleTimeCommands(logicalDevice, logicalDevice->graphicsQueue);
+		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->graphicsQueue);
 
 		VkImageMemoryBarrier acquireBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		acquireBarrier.srcAccessMask = VK_ACCESS_NONE;
@@ -123,21 +123,21 @@ void VulkanImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subreso
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// as early as possible
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;		// rdy for more transfer commands
 		vkCmdPipelineBarrier(
-			commands.buffers[0],
+			command.buffer,
 			srcStage, dstStage,
 			0,	// dependency flags, typically 0
 			0, nullptr,						// memory barriers
 			0, nullptr,			// buffer memory barriers
 			1, &acquireBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommands(logicalDevice, commands, logicalDevice->graphicsQueue);
+		VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->graphicsQueue);
 	}
 }
 void VulkanImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subresourceRange)
 {
 	// On transition ownership of the image is transferred from the transferQueue to the graphicsQueue.
 	{
-		VulkanCommands commands = VulkanHelper::BeginSingleTimeCommands(logicalDevice, logicalDevice->transferQueue);
+		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->transferQueue);
 
 		VkImageMemoryBarrier releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		releaseBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -152,17 +152,17 @@ void VulkanImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange s
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;			// after transfer stage
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;	// before final stage
 		vkCmdPipelineBarrier(
-			commands.buffers[0],
+			command.buffer,
 			srcStage, dstStage,
 			0,	// dependency flags, typically 0
 			0, nullptr,						// memory barriers
 			0, nullptr,			// buffer memory barriers
 			1, &releaseBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommands(logicalDevice, commands, logicalDevice->transferQueue);
+		VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->transferQueue);
 	}
 	{
-		VulkanCommands commands = VulkanHelper::BeginSingleTimeCommands(logicalDevice, logicalDevice->graphicsQueue);
+		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->graphicsQueue);
 
 		VkImageMemoryBarrier acquireBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		acquireBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -177,19 +177,19 @@ void VulkanImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange s
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;			// after transfer stage
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;	// before fragment shader stage
 		vkCmdPipelineBarrier(
-			commands.buffers[0],
+			command.buffer,
 			srcStage, dstStage,
 			0,	// dependency flags, typically 0
 			0, nullptr,						// memory barriers
 			0, nullptr,			// buffer memory barriers
 			1, &acquireBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommands(logicalDevice, commands, logicalDevice->graphicsQueue);
+		VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->graphicsQueue);
 	}
 }
 void VulkanImage::GenerateMipmaps(uint32_t mipLevels)
 {
-	VulkanCommands commands = VulkanHelper::BeginSingleTimeCommands(logicalDevice, logicalDevice->graphicsQueue);
+	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->graphicsQueue);
 
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	barrier.image = image;
@@ -211,7 +211,7 @@ void VulkanImage::GenerateMipmaps(uint32_t mipLevels)
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-		vkCmdPipelineBarrier(commands.buffers[0],
+		vkCmdPipelineBarrier(command.buffer,
 			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr,				// memory barriers
 			0, nullptr,	// buffer memory barrier
@@ -231,7 +231,7 @@ void VulkanImage::GenerateMipmaps(uint32_t mipLevels)
 		blit.dstSubresource.baseArrayLayer = 0;
 		blit.dstSubresource.layerCount = 1;
 
-		vkCmdBlitImage(commands.buffers[0],
+		vkCmdBlitImage(command.buffer,
 			image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 			image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1, &blit,
@@ -242,7 +242,7 @@ void VulkanImage::GenerateMipmaps(uint32_t mipLevels)
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-		vkCmdPipelineBarrier(commands.buffers[0],
+		vkCmdPipelineBarrier(command.buffer,
 			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
 			0, nullptr,
 			0, nullptr,
@@ -259,13 +259,13 @@ void VulkanImage::GenerateMipmaps(uint32_t mipLevels)
 	barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-	vkCmdPipelineBarrier(commands.buffers[0],
+	vkCmdPipelineBarrier(command.buffer,
 		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
 		0, nullptr,
 		0, nullptr,
 		1, &barrier);
 
-	VulkanHelper::EndSingleTimeCommands(logicalDevice, commands, logicalDevice->graphicsQueue);
+	VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->graphicsQueue);
 }
 
 

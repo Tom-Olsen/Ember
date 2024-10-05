@@ -14,7 +14,7 @@
 #include "vulkanMsaaImage.h"
 #include "vulkanDepthImage.h"
 #include "vulkanFrameBuffers.h"
-#include "vulkanCommands.h"
+#include "vulkanCommand.h"
 #include "mesh.h"
 #include "vulkanVertexBuffer.h"
 #include "vulkanIndexBuffer.h"
@@ -53,7 +53,7 @@ private: // Members:
 	std::unique_ptr<VulkanMsaaImage> msaaImage;
 	std::unique_ptr<VulkanDepthImage> depthImage;
 	std::unique_ptr<VulkanFrameBuffers> frameBuffers;
-	std::unique_ptr<VulkanCommands> commands;
+	std::vector<VulkanCommand> commands;
 
 	// Sync objects:
 	std::vector<VkFence> fences;

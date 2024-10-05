@@ -14,19 +14,18 @@
 /// <summary>
 /// VulkanCommand class owns command pools and command buffers.
 /// </summary>
-class VulkanCommands
+class VulkanCommand
 {
 public: // Members:
-	uint32_t size;	// should be equal to framesInFlight
-	std::vector<VkCommandPool> pools;
-	std::vector<VkCommandBuffer> buffers;
+	VkCommandPool pool;
+	VkCommandBuffer buffer;
 
 private: // Members:
 	VulkanLogicalDevice* logicalDevice;
 
 public: // Methods:
-	VulkanCommands(uint32_t size, VulkanLogicalDevice* logicalDevice, VulkanQueue queue);
-	~VulkanCommands();
+	VulkanCommand(VulkanLogicalDevice* logicalDevice, VulkanQueue queue);
+	~VulkanCommand();
 };
 
 

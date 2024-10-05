@@ -6,7 +6,6 @@
 
 
 // TODO:
-// - Change VulkanCommands to VulkanCommand and replace VulkanCommands* with std::vector<VulkanCommand>.
 // - move vertex and index buffer into mesh class
 // - remove sampler from texture2d
 // - in material class create and fill VkWriteDescriptorSets according to shader reflection
@@ -50,7 +49,9 @@ Application::Application()
 	msaaImage = std::make_unique<VulkanMsaaImage>(logicalDevice.get(), physicalDevice.get(), surface.get());
 	depthImage = std::make_unique<VulkanDepthImage>(logicalDevice.get(), physicalDevice.get(), surface.get());
 	frameBuffers = std::make_unique<VulkanFrameBuffers>(logicalDevice.get(), surface.get(), swapchain.get(), renderpass.get(), depthImage.get(), msaaImage.get());
-	commands = std::make_unique<VulkanCommands>(framesInFlight, logicalDevice.get(), logicalDevice->graphicsQueue);
+	commands.reserve(framesInFlight);
+	for (uint32_t i = 0; i < framesInFlight; i++)
+		commands.emplace_back(logicalDevice.get(), logicalDevice->graphicsQueue);
 
 	// Synchronization objects:
 	CreateFences();
@@ -228,11 +229,11 @@ bool Application::AcquireImage()
 void Application::RecordCommandBuffer()
 {
 	// Reset command buffers of current command pool:
-	//vkResetCommandBuffer(commands->buffers[frameIndex], 0); //  requires VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag in command pool creation.
-	vkResetCommandPool(logicalDevice->device, commands->pools[frameIndex], 0); // requires VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag in command pool creation.
+	//vkResetCommandBuffer(commands[frameIndex].buffer, 0); //  requires VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag in command pool creation.
+	vkResetCommandPool(logicalDevice->device, commands[frameIndex].pool, 0); // requires VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag in command pool creation.
 
 	// Get current command buffer:
-	VkCommandBuffer commandBuffer = commands->buffers[frameIndex];
+	VkCommandBuffer commandBuffer = commands[frameIndex].buffer;
 
 	// Begin command buffer:
 	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -284,7 +285,7 @@ void Application::SubmitCommandBuffer()
 	submitInfo.pWaitSemaphores = &acquireSemaphores[frameIndex];	// wait for acquireSemaphor
 	submitInfo.pWaitDstStageMask = &waitStage;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commands->buffers[frameIndex];
+	submitInfo.pCommandBuffers = &commands[frameIndex].buffer;
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &releaseSemaphores[frameIndex]; // signal releaseSemaphor when done
 	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[frameIndex])); // signal fence when done

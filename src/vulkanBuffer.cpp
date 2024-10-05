@@ -1,6 +1,6 @@
 #include <iostream>
 #include "vulkanBuffer.h"
-#include "vulkanCommands.h"
+#include "vulkanCommand.h"
 #include "vulkanHelper.h"
 #include "macros.h"
 
@@ -57,16 +57,16 @@ VulkanBuffer::~VulkanBuffer()
 // Public:
 void VulkanBuffer::CopyBufferToBuffer(VulkanLogicalDevice* logicalDevice, VulkanBuffer* srcBuffer, VulkanBuffer* dstBuffer, VkDeviceSize bufferSize, const VulkanQueue& queue)
 {
-	VulkanCommands commands = VulkanHelper::BeginSingleTimeCommands(logicalDevice, queue);
+	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, queue);
 
 	// Queue copy command:
 	VkBufferCopy copyRegion = {};
 	copyRegion.srcOffset = 0;
 	copyRegion.dstOffset = 0;
 	copyRegion.size = bufferSize;
-	vkCmdCopyBuffer(commands.buffers[0], srcBuffer->buffer, dstBuffer->buffer, 1, &copyRegion);
+	vkCmdCopyBuffer(command.buffer, srcBuffer->buffer, dstBuffer->buffer, 1, &copyRegion);
 
-	VulkanHelper::EndSingleTimeCommands(logicalDevice, commands, queue);
+	VulkanHelper::EndSingleTimeCommand(logicalDevice, command, queue);
 }
 
 

@@ -4,7 +4,7 @@
 #include <vulkan/vulkan.h>
 #include <memory>
 #include "vulkanBuffer.h"
-#include "vulkanCommands.h"
+#include "vulkanCommand.h"
 #include "glmTypes.h"
 #include "globalUniformObject.h"
 

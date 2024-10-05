@@ -86,7 +86,7 @@ void VulkanDepthImage::CreateImageView(VkFormat format, const VkImageSubresource
 }
 void VulkanDepthImage::TransitionLayout(const VkImageSubresourceRange& subresourceRange)
 {
-	VulkanCommands commands = VulkanHelper::BeginSingleTimeCommands(logicalDevice, logicalDevice->graphicsQueue);
+	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->graphicsQueue);
 
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
@@ -101,12 +101,12 @@ void VulkanDepthImage::TransitionLayout(const VkImageSubresourceRange& subresour
 	VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// Immediatly
 	VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;		// early fragment test stage
 	vkCmdPipelineBarrier(
-		commands.buffers[0],
+		command.buffer,
 		srcStage, dstStage,
 		0,	// dependency flags, typically 0
 		0, nullptr,				// memory barriers
 		0, nullptr,	// buffer memory barriers
 		1, &barrier);	// image memory barriers
 
-	VulkanHelper::EndSingleTimeCommands(logicalDevice, commands, logicalDevice->graphicsQueue);
+	VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->graphicsQueue);
 }

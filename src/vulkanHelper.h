@@ -3,7 +3,7 @@
 #include <vulkan/vulkan.h>
 #include "vulkanPhysicalDevice.h"
 #include "vulkanLogicalDevice.h"
-#include "vulkanCommands.h"
+#include "vulkanCommand.h"
 #include "vulkanBuffer.h"
 #include "vulkanImage.h"
 
@@ -15,8 +15,8 @@
 namespace VulkanHelper
 {
 	uint32_t FindMemoryType(VulkanPhysicalDevice* physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
-	VulkanCommands BeginSingleTimeCommands(VulkanLogicalDevice* logicalDevice, const VulkanQueue& queue);
-	void EndSingleTimeCommands(VulkanLogicalDevice* logicalDevice, const VulkanCommands& commands, const VulkanQueue& queue);
+	VulkanCommand BeginSingleTimeCommand(VulkanLogicalDevice* logicalDevice, const VulkanQueue& queue);
+	void EndSingleTimeCommand(VulkanLogicalDevice* logicalDevice, const VulkanCommand& command, const VulkanQueue& queue);
 	void CopyBufferToImage(VulkanLogicalDevice* logicalDevice, VulkanBuffer* buffer, VulkanImage* image, const VulkanQueue& queue);
 };
 

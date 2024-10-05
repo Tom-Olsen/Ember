@@ -28,28 +28,28 @@ namespace VulkanHelper
 		return -1;
 	}
 
-	VulkanCommands BeginSingleTimeCommands(VulkanLogicalDevice* logicalDevice, const VulkanQueue& queue)
+	VulkanCommand BeginSingleTimeCommand(VulkanLogicalDevice* logicalDevice, const VulkanQueue& queue)
 	{
-		VulkanCommands commands(1, logicalDevice, queue);
+		VulkanCommand command(logicalDevice, queue);
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		VKA(vkBeginCommandBuffer(commands.buffers[0], &beginInfo));
-		return commands;
+		VKA(vkBeginCommandBuffer(command.buffer, &beginInfo));
+		return command;
 	}
 
-	void EndSingleTimeCommands(VulkanLogicalDevice* logicalDevice, const VulkanCommands& commands, const VulkanQueue& queue)
+	void EndSingleTimeCommand(VulkanLogicalDevice* logicalDevice, const VulkanCommand& command, const VulkanQueue& queue)
 	{
-		vkEndCommandBuffer(commands.buffers[0]);
+		vkEndCommandBuffer(command.buffer);
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commands.buffers[0];
+		submitInfo.pCommandBuffers = &command.buffer;
 		VKA(vkQueueSubmit(queue.queue, 1, &submitInfo, VK_NULL_HANDLE));
 		VKA(vkQueueWaitIdle(queue.queue));
 	}
 
 	void CopyBufferToImage(VulkanLogicalDevice* logicalDevice, VulkanBuffer* buffer, VulkanImage* image, const VulkanQueue& queue)
 	{
-		VulkanCommands commands = BeginSingleTimeCommands(logicalDevice, queue);
+		VulkanCommand command = BeginSingleTimeCommand(logicalDevice, queue);
 
 		VkBufferImageCopy region = {};
 		region.bufferOffset = 0;
@@ -63,13 +63,13 @@ namespace VulkanHelper
 		region.imageExtent = { static_cast<uint32_t>(image->width) , static_cast<uint32_t>(image->height), static_cast<uint32_t>(image->depth) };
 
 		vkCmdCopyBufferToImage(
-			commands.buffers[0],
+			command.buffer,
 			buffer->buffer,
 			image->image,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1,
 			&region);
 
-		EndSingleTimeCommands(logicalDevice, commands, queue);
+		EndSingleTimeCommand(logicalDevice, command, queue);
 	}
 }
