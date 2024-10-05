@@ -6,7 +6,7 @@
 
 
 // Constructor:
-Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv, const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d)
+Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv, const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d, VulkanSampler* sampler)
 {
 	this->logicalDevice = logicalDevice;
 	this->physicalDevice = physicalDevice;
@@ -26,7 +26,7 @@ Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, 
 
 	// Create & fill descriptor sets:
 	CreateDescriptorSets(framesInFlight);
-	FillDescriptorSets(framesInFlight, uniformBuffers, texture2d);
+	FillDescriptorSets(framesInFlight, uniformBuffers, texture2d, sampler);
 }
 
 
@@ -72,7 +72,7 @@ void Material::CreateDescriptorSets(uint32_t framesInFlight)
 	descriptorSets.resize(framesInFlight);
 	VKA(vkAllocateDescriptorSets(logicalDevice->device, &allocInfo, descriptorSets.data()));
 }
-void Material::FillDescriptorSets(uint32_t framesInFlight, const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d)
+void Material::FillDescriptorSets(uint32_t framesInFlight, const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d, VulkanSampler* sampler)
 {
 	if (uniformBuffers.size() != framesInFlight)
 		throw std::runtime_error((std::string)"size of uniformBuffers (" + std::to_string(uniformBuffers.size()) + (std::string)") does not match descriptor count (" + std::to_string(framesInFlight) + (std::string)").");
@@ -90,7 +90,7 @@ void Material::FillDescriptorSets(uint32_t framesInFlight, const std::vector<Vul
 
 		VkDescriptorImageInfo samplerInfo = {};
 		samplerInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		samplerInfo.sampler = texture2d->sampler->sampler;
+		samplerInfo.sampler = sampler->sampler;
 
 		std::array<VkWriteDescriptorSet, 3> descriptorWrites;
 		descriptorWrites[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };

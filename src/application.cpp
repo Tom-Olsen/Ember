@@ -7,7 +7,7 @@
 
 // TODO:
 // - move vertex and index buffer into mesh class
-// - remove sampler from texture2d
+// - buffer class that manages one big buffer and sub buffers for vertex, index, uniform, etc.
 // - in material class create and fill VkWriteDescriptorSets according to shader reflection
 // - add uniform buffer, texture and sampler vectors to material
 // - add push constants
@@ -106,10 +106,10 @@ Application::Application()
 	sampler = std::make_unique<VulkanSampler>(logicalDevice.get(), physicalDevice.get());
 
 	// Texture:
-	texture2d = std::make_unique<Texture2d>(logicalDevice.get(), physicalDevice.get(), sampler.get(), "../textures/example.jpg");
+	texture2d = std::make_unique<Texture2d>(logicalDevice.get(), physicalDevice.get(), "../textures/example.jpg");
 
 	// Material:
-	material = std::make_unique<Material>(framesInFlight, logicalDevice.get(), physicalDevice.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/triangleVert.spv"), std::string("../shaders/triangleFrag.spv"), uniformBuffers, texture2d.get());
+	material = std::make_unique<Material>(framesInFlight, logicalDevice.get(), physicalDevice.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/triangleVert.spv"), std::string("../shaders/triangleFrag.spv"), uniformBuffers, texture2d.get(), sampler.get());
 
 	// Debug:
 	//PrintApplicationStatus();

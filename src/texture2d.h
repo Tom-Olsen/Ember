@@ -7,7 +7,6 @@
 #include "vulkanPhysicalDevice.h"
 #include "vulkanBuffer.h"
 #include "vulkanImage.h"
-#include "vulkanSampler.h"
 #include "stb_image.h"
 
 
@@ -21,7 +20,6 @@ public: // Members:
 	int channels;
 	uint32_t mipLevels;
 	std::shared_ptr<VulkanImage2d> image;
-	VulkanSampler* sampler;
 
 private: // Members:
 	VulkanLogicalDevice* logicalDevice;
@@ -29,7 +27,7 @@ private: // Members:
 	stbi_uc* pixels;
 
 public: // Methods:
-	Texture2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanSampler* sampler, char const* filename);
+	Texture2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, char const* filename);
 	~Texture2d();
 };
 

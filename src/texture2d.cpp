@@ -8,11 +8,10 @@
 
 
 // Constructor:
-Texture2d::Texture2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanSampler* sampler, char const* filename)
+Texture2d::Texture2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, char const* filename)
 {
 	this->logicalDevice = logicalDevice;
 	this->physicalDevice = physicalDevice;
-	this->sampler = sampler;
 	this->depth = 1;
 
 	// Load image:

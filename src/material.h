@@ -10,8 +10,9 @@
 #include "vulkanPipeline.h"
 #include "vulkanDescriptorPool.h"
 #include "vulkanRenderpass.h"
-#include "texture2d.h"
+#include "vulkanSampler.h"
 #include "vulkanUniformBuffer.h"
+#include "texture2d.h"
 
 
 
@@ -32,13 +33,13 @@ private: // Members:
 
 
 public: // Methods:
-	Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv, const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d);
+	Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv, const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d, VulkanSampler* sampler);
 	~Material();
 
 private: // Methods:
 	std::vector<char> ReadShaderCode(const std::string& spvFile);
 	void CreateDescriptorSets(uint32_t framesInFlight);
-	void FillDescriptorSets(uint32_t framesInFlight, const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d);
+	void FillDescriptorSets(uint32_t framesInFlight, const std::vector<VulkanUniformBuffer>& uniformBuffers, Texture2d* texture2d, VulkanSampler* sampler);
 };
 
 
