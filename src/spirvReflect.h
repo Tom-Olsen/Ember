@@ -19,15 +19,14 @@ private: // Members:
 public: // Methods:
 	SpirvReflect(std::vector<char> code);
 	~SpirvReflect();
-	void PrintInputVariablesInfo() const;
-	void PrintDescriptorSetsInfo() const;
-	std::vector<SpvReflectInterfaceVariable*> GetInputVariablesReflection() const;
 	std::vector<SpvReflectDescriptorSet*> GetDescriptorSetsReflection() const;
-	static std::vector<VkDescriptorSetLayoutBinding> GetDescriptorSetLayoutBindings(const SpirvReflect& vertexShaderReflect, const SpirvReflect& fragmentShaderFilename);
-	static std::vector<VkWriteDescriptorSet> GetWriteDescriptorSets(const SpirvReflect& vertexShaderReflect, const SpirvReflect& fragmentShaderFilename);
+	//std::vector<SpvReflectInterfaceVariable*> GetInputVariablesReflection() const;
+	
+	// Debugging:
+	void PrintDescriptorSetsInfo() const;
+	//void PrintInputVariablesInfo() const;
 
 private: // Methods:
-	static void FixFragmentShaderDescriptorSetsReflection(std::vector<SpvReflectDescriptorSet*>& fragmentDescriptorSets);
 	static std::string GetSpvReflectDescriptorTypeName(SpvReflectDescriptorType spvReflectDescriptorType);
 	static std::string GetSpvStorageClassName(SpvStorageClass spvStorageClass);
 	static std::string GetSpvBuiltInName(SpvBuiltIn spvBuiltIn);

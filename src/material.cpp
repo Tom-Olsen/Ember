@@ -12,6 +12,11 @@ Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, 
 	this->physicalDevice = physicalDevice;
 	this->descriptorPool = descriptorPool;
 
+	// Default resources:
+	defaultSampler = std::make_unique<VulkanSampler>(logicalDevice, physicalDevice);
+	defaultTexture2d = std::make_unique<Texture2d>(logicalDevice, physicalDevice, "../textures/white.png");
+	defaultUniformBuffer = std::make_unique<GlobalUniformObject>(glm::mat4x4(1.0f), glm::mat4x4(1.0f), glm::mat4x4(1.0f));
+
 	// Read .spv shader files:
 	vertexCode = ReadShaderCode(vertexSpv);
 	fragmentCode = ReadShaderCode(fragmentSpv);
@@ -20,13 +25,23 @@ Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, 
 	SpirvReflect vertexShaderReflect(vertexCode);
 	SpirvReflect fragmentShaderReflect(fragmentCode);
 
+	fragmentShaderReflect.PrintDescriptorSetsInfo();
+	vertexShaderReflect.PrintDescriptorSetsInfo();
+
 	// Create pipeline:
-	std::vector<VkDescriptorSetLayoutBinding> bindings = SpirvReflect::GetDescriptorSetLayoutBindings(vertexShaderReflect, fragmentShaderReflect);
+	std::vector<VkDescriptorSetLayoutBinding> bindings = GetDescriptorSetLayoutBindings(vertexShaderReflect, fragmentShaderReflect);
 	pipeline = std::make_unique<VulkanPipeline>(logicalDevice, physicalDevice, renderpass, vertexCode, fragmentCode, bindings);
 
 	// Create & fill descriptor sets:
 	CreateDescriptorSets(framesInFlight);
 	FillDescriptorSets(framesInFlight, uniformBuffers, texture2d, sampler);
+
+	for (const auto& pair : samplerMap)
+		LOG_INFO("Sampler: {}", pair.first);
+	for (const auto& pair : texture2dMap)
+		LOG_INFO("Texture2d: {}", pair.first);
+	for (const auto& pair : uniformBufferMap)
+		LOG_INFO("UniformBuffer: {}", pair.first);
 }
 
 
@@ -39,7 +54,64 @@ Material::~Material()
 
 
 
-// Private:
+// Public setters:
+void Material::SetUniformBuffer(const std::string& name, GlobalUniformObject* constantBuffer)
+{
+	// if key exists, replace its value
+	auto it = uniformBufferMap.find(name);
+	if (it != uniformBufferMap.end())
+		it->second = constantBuffer;
+}
+void Material::SetTexture2d(const std::string& name, Texture2d* texture)
+{
+	// if key exists, replace its value
+	auto it = texture2dMap.find(name);
+	if (it != texture2dMap.end())
+		it->second = texture;
+}
+void Material::SetSampler(const std::string& name, VulkanSampler* sampler)
+{
+	// if key exists, replace its value
+	auto it = samplerMap.find(name);
+	if (it != samplerMap.end())
+		it->second = sampler;
+}
+
+// Public getters:
+VulkanSampler* Material::GetSampler(const std::string& name)
+{
+	auto it = samplerMap.find(name);
+	if (it == samplerMap.end())
+	{
+		LOG_WARN("Sampler not found: {}", name);
+		return defaultSampler.get();
+	}
+	return it->second;
+}
+Texture2d* Material::GetTexture2d(const std::string& name)
+{
+	auto it = texture2dMap.find(name);
+	if (it == texture2dMap.end())
+	{
+		LOG_WARN("Texture2d not found: {}", name);
+		return defaultTexture2d.get();
+	}
+	return it->second;
+}
+GlobalUniformObject* Material::GetUniformBuffer(const std::string& name)
+{
+	auto it = uniformBufferMap.find(name);
+	if (it == uniformBufferMap.end())
+	{
+		LOG_WARN("Uniform buffer not found: {}", name);
+		return defaultUniformBuffer.get();
+	}
+	return it->second;
+}
+
+
+
+// Private methods:
 std::vector<char> Material::ReadShaderCode(const std::string& spvFile)
 {
     // Open shader file:
@@ -58,6 +130,91 @@ std::vector<char> Material::ReadShaderCode(const std::string& spvFile)
     file.close();
 
     return code;
+}
+
+std::vector<VkDescriptorSetLayoutBinding> Material::GetDescriptorSetLayoutBindings(const SpirvReflect& vertexShaderReflect, const SpirvReflect& fragmentShaderReflect)
+{
+	if (vertexShaderReflect.module.shader_stage != SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
+	{
+		LOG_CRITICAL("Vertex shader is not a vertex shader.");
+		std::abort();
+	}
+	if (fragmentShaderReflect.module.shader_stage != SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT)
+	{
+		LOG_CRITICAL("Fragment shader is not a fragment shader.");
+		std::abort();
+	}
+
+	std::vector<SpvReflectDescriptorSet*> vertexDescriptorSets = vertexShaderReflect.GetDescriptorSetsReflection();
+	std::vector<SpvReflectDescriptorSet*> fragmentDescriptorSets = fragmentShaderReflect.GetDescriptorSetsReflection();
+	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+
+	// Get vertex shader specific descriptor set layout bindings:
+	for (uint32_t i = 0; i < vertexDescriptorSets.size(); i++)
+	{
+		SpvReflectDescriptorSet* set = vertexDescriptorSets[i];
+		for (uint32_t j = 0; j < set->binding_count; j++)
+		{
+			SpvReflectDescriptorBinding* binding = set->bindings[j];
+			VkDescriptorSetLayoutBinding layoutBinding = {};
+			layoutBinding.binding = binding->binding;
+			layoutBinding.descriptorType = VkDescriptorType((int)binding->descriptor_type);
+			layoutBinding.descriptorCount = binding->count;
+			layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			layoutBinding.pImmutableSamplers = nullptr;
+			descriptorSetLayoutBindings.push_back(layoutBinding);
+
+			// Create resources based on descriptor type:
+			switch (layoutBinding.descriptorType)
+			{
+			case VK_DESCRIPTOR_TYPE_SAMPLER:
+				samplerMap.emplace(binding->name, defaultSampler.get());
+				break;
+			case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+				texture2dMap.emplace(binding->name, defaultTexture2d.get());
+				break;
+			case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+				uniformBufferMap.emplace(binding->name, defaultUniformBuffer.get());
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	// Get fragment shader specific descriptor set layout bindings:
+	for (uint32_t i = 0; i < fragmentDescriptorSets.size(); i++)
+	{
+		SpvReflectDescriptorSet* set = fragmentDescriptorSets[i];
+		for (uint32_t j = 0; j < set->binding_count; j++)
+		{
+			SpvReflectDescriptorBinding* binding = set->bindings[j];
+			VkDescriptorSetLayoutBinding layoutBinding = {};
+			layoutBinding.binding = binding->binding;
+			layoutBinding.descriptorType = VkDescriptorType((int)binding->descriptor_type);
+			layoutBinding.descriptorCount = binding->count;
+			layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			layoutBinding.pImmutableSamplers = nullptr;
+			descriptorSetLayoutBindings.push_back(layoutBinding);
+
+			// Create resources based on descriptor type:
+			switch (layoutBinding.descriptorType)
+			{
+			case VK_DESCRIPTOR_TYPE_SAMPLER:
+				samplerMap.emplace(binding->name, defaultSampler.get());
+				break;
+			case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+				texture2dMap.emplace(binding->name, defaultTexture2d.get());
+				break;
+			case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+				uniformBufferMap.emplace(binding->name, defaultUniformBuffer.get());
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	return descriptorSetLayoutBindings;
 }
 
 void Material::CreateDescriptorSets(uint32_t framesInFlight)
@@ -95,10 +252,10 @@ void Material::FillDescriptorSets(uint32_t framesInFlight, const std::vector<Vul
 		std::array<VkWriteDescriptorSet, 3> descriptorWrites;
 		descriptorWrites[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrites[0].dstSet = descriptorSets[i];
-		descriptorWrites[0].dstBinding = 0;			// binding point in shader
-		descriptorWrites[0].dstArrayElement = 0;	// can bind arrays, but we only bind one buffer => startIndex = 0
+		descriptorWrites[0].dstBinding = 0;				// binding point in shader
+		descriptorWrites[0].dstArrayElement = 0;		// can bind arrays, but we only bind one buffer => startIndex = 0
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = 1;	// how many array elements get updateed
+		descriptorWrites[0].descriptorCount = 1;		// how many array elements get updateed
 		descriptorWrites[0].pBufferInfo = &bufferInfo;	// used for buffer data
 		descriptorWrites[0].pImageInfo = nullptr;		// uded for image data
 		descriptorWrites[0].pTexelBufferView = nullptr; // uded for buffer views

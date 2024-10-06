@@ -34,135 +34,28 @@ SpirvReflect::~SpirvReflect()
 
 
 
-// Public:
-std::vector<SpvReflectInterfaceVariable*> SpirvReflect::GetInputVariablesReflection() const
-{
-	uint32_t inputCount = 0;
-	SPVA(spvReflectEnumerateInputVariables(&module, &inputCount, NULL));
-	std::vector<SpvReflectInterfaceVariable*> inputs(inputCount);
-	SPVA(spvReflectEnumerateInputVariables(&module, &inputCount, inputs.data()));
-	return inputs;
-}
+// Public methods:
 std::vector<SpvReflectDescriptorSet*> SpirvReflect::GetDescriptorSetsReflection() const
 {
     uint32_t setCount = 0;
     SPVA(spvReflectEnumerateDescriptorSets(&module, &setCount, nullptr));
     std::vector<SpvReflectDescriptorSet*> sets(setCount);
     SPVA(spvReflectEnumerateDescriptorSets(&module, &setCount, sets.data()));
-	//FixFragmentShaderDescriptorSetsReflection(sets);
-	return sets;
+    //FixFragmentShaderDescriptorSetsReflection(sets);
+    return sets;
 }
-std::vector<VkDescriptorSetLayoutBinding> SpirvReflect::GetDescriptorSetLayoutBindings(const SpirvReflect& vertexShaderReflect, const SpirvReflect& fragmentShaderFilename)
-{
-	if (vertexShaderReflect.module.shader_stage != SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
-	{
-		LOG_CRITICAL("Vertex shader is not a vertex shader.");
-		std::abort();
-	}
-	if (fragmentShaderFilename.module.shader_stage != SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT)
-	{
-		LOG_CRITICAL("Fragment shader is not a fragment shader.");
-		std::abort();
-	}
-
-	std::vector<SpvReflectDescriptorSet*> vertexDescriptorSets = vertexShaderReflect.GetDescriptorSetsReflection();
-    std::vector<SpvReflectDescriptorSet*> fragmentDescriptorSets = fragmentShaderFilename.GetDescriptorSetsReflection();
-	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
-
-	// Get vertex shader specific descriptor set layout bindings:
-	for (uint32_t i = 0; i < vertexDescriptorSets.size(); i++)
-	{
-		SpvReflectDescriptorSet* set = vertexDescriptorSets[i];
-		for (uint32_t j = 0; j < set->binding_count; j++)
-		{
-			SpvReflectDescriptorBinding* binding = set->bindings[j];
-			VkDescriptorSetLayoutBinding layoutBinding = {};
-			layoutBinding.binding = binding->binding;
-			layoutBinding.descriptorType = VkDescriptorType((int)binding->descriptor_type);
-			layoutBinding.descriptorCount = binding->count;
-			layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-			layoutBinding.pImmutableSamplers = nullptr;
-            descriptorSetLayoutBindings.push_back(layoutBinding);
-		}
-	}
-
-	// Get fragment shader specific descriptor set layout bindings:
-	for (uint32_t i = 0; i < fragmentDescriptorSets.size(); i++)
-	{
-		SpvReflectDescriptorSet* set = fragmentDescriptorSets[i];
-		for (uint32_t j = 0; j < set->binding_count; j++)
-		{
-			SpvReflectDescriptorBinding* binding = set->bindings[j];
-            if (binding->binding != -1)
-            {
-                VkDescriptorSetLayoutBinding layoutBinding = {};
-                layoutBinding.binding = binding->binding;
-                layoutBinding.descriptorType = VkDescriptorType((int)binding->descriptor_type);
-                layoutBinding.descriptorCount = binding->count;
-                layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                layoutBinding.pImmutableSamplers = nullptr;
-                descriptorSetLayoutBindings.push_back(layoutBinding);
-            }
-		}
-	}
-	return descriptorSetLayoutBindings;
-}
-std::vector<VkWriteDescriptorSet> SpirvReflect::GetWriteDescriptorSets(const SpirvReflect& vertexShaderReflect, const SpirvReflect& fragmentShaderFilename)
-{
-    std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings = GetDescriptorSetLayoutBindings(vertexShaderReflect, fragmentShaderFilename);
-    std::vector<VkWriteDescriptorSet> descriptorSets(descriptorSetLayoutBindings.size());
-    for (size_t i = 0; i < descriptorSetLayoutBindings.size(); i++)
-    {
-        VkWriteDescriptorSet descriptorSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-        descriptorSet.dstSet = VK_NULL_HANDLE;
-        descriptorSet.dstBinding = descriptorSetLayoutBindings[i].binding;
-        descriptorSet.dstArrayElement = 0;
-        descriptorSet.descriptorType = descriptorSetLayoutBindings[i].descriptorType;
-        descriptorSet.descriptorCount = descriptorSetLayoutBindings[i].descriptorCount;
-        descriptorSet.pBufferInfo = nullptr;
-        descriptorSet.pImageInfo = nullptr;
-        descriptorSet.pTexelBufferView = nullptr;
-        descriptorSets[i] = descriptorSet;
-    }
-    return descriptorSets;
-}
+//std::vector<SpvReflectInterfaceVariable*> SpirvReflect::GetInputVariablesReflection() const
+//{
+//    uint32_t inputCount = 0;
+//    SPVA(spvReflectEnumerateInputVariables(&module, &inputCount, NULL));
+//    std::vector<SpvReflectInterfaceVariable*> inputs(inputCount);
+//    SPVA(spvReflectEnumerateInputVariables(&module, &inputCount, inputs.data()));
+//    return inputs;
+//}
 
 
 
-void SpirvReflect::PrintInputVariablesInfo() const
-{
-    std::vector<SpvReflectInterfaceVariable*> inputs = GetInputVariablesReflection();
-    for (uint32_t i = 0; i < inputs.size(); i++)
-    {
-        SpvReflectInterfaceVariable* input = inputs[i];
-        std::cout << "id:                    " << input->spirv_id << std::endl;
-        std::cout << "name:                  " << input->name << std::endl;
-        std::cout << "location:              " << input->location << std::endl;
-        std::cout << "conmponent:            " << input->location << std::endl;
-        std::cout << "storage_class value:   " << (int)input->storage_class << std::endl;
-        std::cout << "storage_class name:    " << GetSpvStorageClassName(input->storage_class) << std::endl;
-        //std::cout << "semantic:              " << input->semantic << std::endl;
-        std::cout << "decoration_flags:      " << input->decoration_flags << std::endl;
-        std::cout << "built_in value:        " << (int)input->built_in << std::endl;
-        std::cout << "built_in name :        " << GetSpvBuiltInName(input->built_in) << std::endl;
-        std::cout << "numeric.sca.width:     " << input->numeric.scalar.width << std::endl;
-        std::cout << "numeric.sca.sign:      " << input->numeric.scalar.signedness << std::endl;
-        std::cout << "numeric.vec.count:     " << input->numeric.vector.component_count << std::endl;
-        std::cout << "numeric.mat.count:     " << input->numeric.matrix.column_count << std::endl;
-        std::cout << "numeric.mat.rows:      " << input->numeric.matrix.row_count << std::endl;
-        std::cout << "numeric.mat.sstride:   " << input->numeric.matrix.stride << std::endl;
-        std::cout << "array.dims_count:      " << input->array.dims_count << std::endl;
-        std::cout << "array.stride:          " << input->array.stride << std::endl;
-        for (uint32_t i = 0; i < input->array.dims_count; i++)
-        {
-            std::cout << "array.dims[" << i << "]: " << input->array.dims[i] << std::endl;
-            std::cout << "array.spec_const_op_id[" << i << "]: " << input->array.spec_constant_op_ids[i] << std::endl;
-        }
-        std::cout << "array.member_count:    " << input->member_count << std::endl;
-        std::cout << "array.word_offset.loc: " << input->word_offset.location << std::endl;
-        std::cout << std::endl;
-    }
-}
+// Debugging:
 void SpirvReflect::PrintDescriptorSetsInfo() const
 {
     std::vector<SpvReflectDescriptorSet*> sets = GetDescriptorSetsReflection();
@@ -174,46 +67,57 @@ void SpirvReflect::PrintDescriptorSetsInfo() const
         for (uint32_t j = 0; j < set->binding_count; j++)
         {
             SpvReflectDescriptorBinding* binding = set->bindings[j];
-            if (binding->binding != -1)
-            {
-                std::cout << "\tspirv_id:        " << binding->spirv_id << std::endl;
-                std::cout << "\tname:            " << binding->name << std::endl;
-                std::cout << "\tbinding:         " << binding->binding << std::endl;
-                std::cout << "\tdescriptor_type: " << (int)binding->descriptor_type << " = " << GetSpvReflectDescriptorTypeName(binding->descriptor_type) << std::endl;
-                std::cout << "\tdescriptorCount: " << binding->count << std::endl;
-                std::cout << "\tinput_attachment_index:" << binding->input_attachment_index << std::endl;
-                std::cout << "\tset:" << binding->set << std::endl;
-                std::cout << std::endl;
-            }
+            std::cout << "\tspirv_id:        " << binding->spirv_id << std::endl;
+            std::cout << "\tname:            " << binding->name << std::endl;
+            std::cout << "\tbinding:         " << binding->binding << std::endl;
+            std::cout << "\tdescriptor_type: " << (int)binding->descriptor_type << " = " << GetSpvReflectDescriptorTypeName(binding->descriptor_type) << std::endl;
+            std::cout << "\tdescriptorCount: " << binding->count << std::endl;
+            std::cout << "\tinput_attachment_index:" << binding->input_attachment_index << std::endl;
+            std::cout << "\tset:" << binding->set << std::endl;
+            std::cout << std::endl;
         }
         std::cout << std::endl;
         std::cout << std::endl;
     }
 }
+//void SpirvReflect::PrintInputVariablesInfo() const
+//{
+//    std::vector<SpvReflectInterfaceVariable*> inputs = GetInputVariablesReflection();
+//    for (uint32_t i = 0; i < inputs.size(); i++)
+//    {
+//        SpvReflectInterfaceVariable* input = inputs[i];
+//        std::cout << "id:                    " << input->spirv_id << std::endl;
+//        std::cout << "name:                  " << input->name << std::endl;
+//        std::cout << "location:              " << input->location << std::endl;
+//        std::cout << "conmponent:            " << input->location << std::endl;
+//        std::cout << "storage_class value:   " << (int)input->storage_class << std::endl;
+//        std::cout << "storage_class name:    " << GetSpvStorageClassName(input->storage_class) << std::endl;
+//        //std::cout << "semantic:              " << input->semantic << std::endl;
+//        std::cout << "decoration_flags:      " << input->decoration_flags << std::endl;
+//        std::cout << "built_in value:        " << (int)input->built_in << std::endl;
+//        std::cout << "built_in name :        " << GetSpvBuiltInName(input->built_in) << std::endl;
+//        std::cout << "numeric.sca.width:     " << input->numeric.scalar.width << std::endl;
+//        std::cout << "numeric.sca.sign:      " << input->numeric.scalar.signedness << std::endl;
+//        std::cout << "numeric.vec.count:     " << input->numeric.vector.component_count << std::endl;
+//        std::cout << "numeric.mat.count:     " << input->numeric.matrix.column_count << std::endl;
+//        std::cout << "numeric.mat.rows:      " << input->numeric.matrix.row_count << std::endl;
+//        std::cout << "numeric.mat.sstride:   " << input->numeric.matrix.stride << std::endl;
+//        std::cout << "array.dims_count:      " << input->array.dims_count << std::endl;
+//        std::cout << "array.stride:          " << input->array.stride << std::endl;
+//        for (uint32_t i = 0; i < input->array.dims_count; i++)
+//        {
+//            std::cout << "array.dims[" << i << "]: " << input->array.dims[i] << std::endl;
+//            std::cout << "array.spec_const_op_id[" << i << "]: " << input->array.spec_constant_op_ids[i] << std::endl;
+//        }
+//        std::cout << "array.member_count:    " << input->member_count << std::endl;
+//        std::cout << "array.word_offset.loc: " << input->word_offset.location << std::endl;
+//        std::cout << std::endl;
+//    }
+//}
 
 
 
-void SpirvReflect::FixFragmentShaderDescriptorSetsReflection(std::vector<SpvReflectDescriptorSet*>& fragmentDescriptorSets)
-{
-	int previousBinding = -1;   // force first check to miss.
-	for (uint32_t i = 0; i < fragmentDescriptorSets.size(); i++)
-	{
-		SpvReflectDescriptorSet* set = fragmentDescriptorSets[i];
-		for (uint32_t j = 0; j < set->binding_count; j++)
-		{
-            SpvReflectDescriptorBinding* binding = set->bindings[j];
-            if (previousBinding == binding->binding)
-            {
-                if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER || binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-                {
-					binding->descriptor_type = SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-					set->bindings[j - 1]->binding = -1; // invalidate previous binding
-                }
-            }
-			previousBinding = binding->binding;
-		}
-	}
-}
+// Private static methods:
 std::string SpirvReflect::GetSpvReflectDescriptorTypeName(SpvReflectDescriptorType spvReflectDescriptorType)
 {
     switch (spvReflectDescriptorType)

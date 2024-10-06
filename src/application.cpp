@@ -6,11 +6,11 @@
 
 
 // TODO:
-// - buffer class that manages one big buffer and sub buffers for vertex, index, uniform, etc.
+// - rename GlobalUniformObject to constant buffer?
 // - in material class create and fill VkWriteDescriptorSets according to shader reflection
 // - add uniform buffer, texture and sampler vectors to material
-// - add push constants
 // - try multi mesh rendering
+// - add push constants
 // - render image while resizing
 // - integrate VMA: https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
 // - in mesh combine vertex and index data into a single buffer and use offsets?

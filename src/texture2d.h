@@ -24,11 +24,14 @@ public: // Members:
 private: // Members:
 	VulkanLogicalDevice* logicalDevice;
 	VulkanPhysicalDevice* physicalDevice;
-	stbi_uc* pixels;
 
 public: // Methods:
 	Texture2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, char const* filename);
 	~Texture2d();
+
+private: // Methods:
+	void CreateImage(const VkImageSubresourceRange& subresourceRange);
+	void TransitionImageLayout(const VkImageSubresourceRange& subresourceRange, VulkanBuffer& stagingBuffer);
 };
 
 

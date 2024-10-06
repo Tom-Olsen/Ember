@@ -16,7 +16,7 @@ Texture2d::Texture2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* p
 
 	// Load image:
 	// STBI_rgb_alpha = 4 8-bit channels
-	pixels = stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
+	stbi_uc* pixels = stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
 	if (!pixels)
 		throw std::runtime_error("failed to load texture image!");
 	mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
@@ -24,29 +24,18 @@ Texture2d::Texture2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* p
 	// Create staging buffer:
 	uint64_t bufferSize = 4 * width * height;
 	VulkanBuffer stagingBuffer = VulkanBuffer::StagingBuffer(logicalDevice, physicalDevice, bufferSize, pixels);
-	
-	// Free image:
-	stbi_image_free(pixels);
 
-	// Create image:
+	// Define subresource range:
 	VkImageSubresourceRange subresourceRange;
 	subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	subresourceRange.baseMipLevel = 0;
 	subresourceRange.levelCount = mipLevels;
 	subresourceRange.baseArrayLayer = 0;
 	subresourceRange.layerCount = 1;
-	VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
-	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-	VkImageUsageFlags usage =  VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-	image = std::make_shared<VulkanImage2d>(logicalDevice, physicalDevice, format, tiling, usage, subresourceRange, width, height);
 
-	// Transition image layout and create mipLevels:
-	image->TransitionLayoutUndefinedToTransfer(subresourceRange);
-	VulkanHelper::CopyBufferToImage(logicalDevice, &stagingBuffer, image.get(), logicalDevice->transferQueue);
-	image->HandoffTransferToGraphicsQueue(subresourceRange);
-	image->GenerateMipmaps(mipLevels);
-	// old version that does final image transition and handoff between transfer and graphics queue, but no mipmapping:
-	//image->TransitionLayoutTransferToShaderRead(subresourceRange);
+	CreateImage(subresourceRange);
+	TransitionImageLayout(subresourceRange, stagingBuffer);
+	stbi_image_free(pixels);
 }
 
 
@@ -55,4 +44,25 @@ Texture2d::Texture2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* p
 Texture2d::~Texture2d()
 {
 
+}
+
+
+
+// Private methods:
+void Texture2d::CreateImage(const VkImageSubresourceRange& subresourceRange)
+{
+	VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
+	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+	VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	image = std::make_shared<VulkanImage2d>(logicalDevice, physicalDevice, format, tiling, usage, subresourceRange, width, height);
+}
+void Texture2d::TransitionImageLayout(const VkImageSubresourceRange& subresourceRange, VulkanBuffer& stagingBuffer)
+{
+	// Transition image layout and create mipLevels:
+	image->TransitionLayoutUndefinedToTransfer(subresourceRange);
+	VulkanHelper::CopyBufferToImage(logicalDevice, &stagingBuffer, image.get(), logicalDevice->transferQueue);
+	image->HandoffTransferToGraphicsQueue(subresourceRange);
+	image->GenerateMipmaps(mipLevels);
+	// old version that does final image transition and handoff between transfer and graphics queue, but no mipmapping:
+	//image->TransitionLayoutTransferToShaderRead(subresourceRange);
 }
