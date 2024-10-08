@@ -61,10 +61,11 @@ private: // Members:
 	// Data:
 	std::unique_ptr<Mesh> mesh;
 	std::unique_ptr<Material> material;
+	MaterialProperties materialProperties;
 	std::vector<VulkanUniformBuffer> uniformBuffers;
 	std::unique_ptr<VulkanSampler> sampler;
 	std::unique_ptr<Texture2d> texture2d;
-	GlobalUniformObject gloabalUbo;
+	UniformObject uniformObject;
 
 	// Render management:
 	const uint32_t framesInFlight = 2;

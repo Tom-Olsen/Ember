@@ -6,7 +6,7 @@
 
 
 // TODO:
-// - rename GlobalUniformObject to constant buffer?
+// - rename uniformObject to constant ???
 // - in material class create and fill VkWriteDescriptorSets according to shader reflection
 // - add uniform buffer, texture and sampler vectors to material
 // - try multi mesh rendering
@@ -99,7 +99,7 @@ Application::Application()
 
 	// Uniform data:
 	for (uint32_t i = 0; i < framesInFlight; i++)
-		uniformBuffers.emplace_back(logicalDevice.get(), physicalDevice.get(), sizeof(GlobalUniformObject));
+		uniformBuffers.emplace_back(logicalDevice.get(), physicalDevice.get(), sizeof(UniformObject));
 
 	// Sampler:
 	sampler = std::make_unique<VulkanSampler>(logicalDevice.get(), physicalDevice.get());
@@ -108,7 +108,8 @@ Application::Application()
 	texture2d = std::make_unique<Texture2d>(logicalDevice.get(), physicalDevice.get(), "../textures/example.jpg");
 
 	// Material:
-	material = std::make_unique<Material>(framesInFlight, logicalDevice.get(), physicalDevice.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/triangleVert.spv"), std::string("../shaders/triangleFrag.spv"), uniformBuffers, texture2d.get(), sampler.get());
+	material = std::make_unique<Material>(framesInFlight, logicalDevice.get(), physicalDevice.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/triangleVert.spv"), std::string("../shaders/triangleFrag.spv"));
+	materialProperties = material->GetEmptyMaterialProperties();
 
 	// Debug:
 	//PrintApplicationStatus();
@@ -160,13 +161,6 @@ void Application::Run()
 			ResizeSwapchain();
 		}
 
-		// Update uniform buffer:
-		gloabalUbo.model = glm::rotate(Float4x4(1.0f), (float)time * glm::radians(90.0f), Float3(0.0f, 0.0f, 1.0f));
-		gloabalUbo.view = glm::lookAt(Float3(2.0f, 2.0f, 2.0f), Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 1.0f));
-		gloabalUbo.proj = glm::perspective(glm::radians(45.0f), windowExtent.width / (float)windowExtent.height, 0.1f, 10.0f);
-		gloabalUbo.proj[1][1] *= -1; // flip y-axis as it is inverted by default
-		uniformBuffers[frameIndex].UpdateBuffer(gloabalUbo);
-
 		// Render next frame:
 		Render();
 
@@ -197,6 +191,17 @@ void Application::Render()
 	if (!AcquireImage())
 		return;
 	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
+
+	// Update uniform buffer:
+	VkExtent2D windowExtent = window->Extent();
+	uniformObject.model = glm::rotate(Float4x4(1.0f), (float)time * glm::radians(90.0f), Float3(0.0f, 0.0f, 1.0f));
+	uniformObject.view = glm::lookAt(Float3(2.0f, 2.0f, 2.0f), Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 1.0f));
+	uniformObject.proj = glm::perspective(glm::radians(45.0f), windowExtent.width / (float)windowExtent.height, 0.1f, 10.0f);
+	uniformObject.proj[1][1] *= -1; // flip y-axis as it is inverted by default
+	materialProperties.SetUniformBuffer("UniformBufferObject", uniformObject);
+	materialProperties.SetSampler("samplerState", sampler.get());
+	materialProperties.SetTexture2d("texture", texture2d.get());
+	material->SetMaterialProperties(materialProperties, frameIndex);
 
 	RecordCommandBuffer();
 	SubmitCommandBuffer();

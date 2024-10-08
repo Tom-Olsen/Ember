@@ -1,15 +1,22 @@
 #pragma once
-#ifndef __INCLUDE_GUARD_globalUniformObject_h__
-#define __INCLUDE_GUARD_globalUniformObject_h__
+#ifndef __INCLUDE_GUARD_uniformObject_h__
+#define __INCLUDE_GUARD_uniformObject_h__
 #include "glmTypes.h"
 
 
 
-struct GlobalUniformObject
+struct UniformObject
 {
 	alignas(16) Float4x4 model;
 	alignas(16) Float4x4 view;
 	alignas(16) Float4x4 proj;
+
+	UniformObject()
+	{
+		model = Float4x4(1.0f);
+		view = Float4x4(1.0f);
+		proj = Float4x4(1.0f);
+	}
 };
 // Vulkan expects the data in structures to be aligned in memory in a specific way, for example:
 // Scalars have to be aligned by N (4 bytes given 32 bit floats).
@@ -22,4 +29,4 @@ struct GlobalUniformObject
 
 
 
-#endif // __INCLUDE_GUARD_globalUniformObject_h__
+#endif // __INCLUDE_GUARD_uniformObject_h__

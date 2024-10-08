@@ -6,7 +6,7 @@
 #include "vulkanBuffer.h"
 #include "vulkanCommand.h"
 #include "glmTypes.h"
-#include "globalUniformObject.h"
+#include "uniformObject.h"
 
 
 
@@ -14,7 +14,7 @@ class VulkanUniformBuffer
 {
 public: // Members:
 	uint64_t bufferSize;	// in bytes
-	std::shared_ptr<VulkanBuffer> buffer;
+	std::shared_ptr<VulkanBuffer> buffer; // TODO: using unique ptr here causes a crash, why?
 
 private: // Members:
 	VulkanLogicalDevice* logicalDevice;
