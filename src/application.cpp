@@ -97,10 +97,6 @@ Application::Application()
 	mesh->SetUVs(std::move(uvs));
 	mesh->SetTriangles(std::move(triangles));
 
-	// Uniform data:
-	for (uint32_t i = 0; i < framesInFlight; i++)
-		uniformBuffers.emplace_back(logicalDevice.get(), physicalDevice.get(), sizeof(UniformObject));
-
 	// Sampler:
 	sampler = std::make_unique<VulkanSampler>(logicalDevice.get(), physicalDevice.get());
 
@@ -108,11 +104,8 @@ Application::Application()
 	texture2d = std::make_unique<Texture2d>(logicalDevice.get(), physicalDevice.get(), "../textures/example.jpg");
 
 	// Material:
-	material = std::make_unique<Material>(framesInFlight, logicalDevice.get(), physicalDevice.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/triangleVert.spv"), std::string("../shaders/triangleFrag.spv"));
+	material = std::make_unique<Material>(framesInFlight, logicalDevice.get(), physicalDevice.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/vert.spv"), std::string("../shaders/frag.spv"));
 	materialProperties = material->GetEmptyMaterialProperties();
-
-	// Debug:
-	//PrintApplicationStatus();
 }
 
 
@@ -176,14 +169,6 @@ void Application::Run()
 
 
 // Private:
-void Application::PrintApplicationStatus()
-{
-	LOG_INFO("There are multiple extensions needed for the 'GPU-Assisted Validation' to work properly. These are automatically enabled by the validation layer. Any warnings related to this can be ignored.");
-	LOG_INFO("The 'BestPractices-vkBindBufferMemory-small-dedicated-allocation' warnings can also be ignored as the current memory allocations are very small due to the nature of the tutorial this application is based on.");
-	std::cout << "Press 'Enter' to continue." << std::endl;
-	std::cin.get();
-}
-
 void Application::Render()
 {
 	// Wait for fence of previous frame with same frameIndex to finish:

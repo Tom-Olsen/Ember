@@ -62,7 +62,6 @@ private: // Members:
 	std::unique_ptr<Mesh> mesh;
 	std::unique_ptr<Material> material;
 	MaterialProperties materialProperties;
-	std::vector<VulkanUniformBuffer> uniformBuffers;
 	std::unique_ptr<VulkanSampler> sampler;
 	std::unique_ptr<Texture2d> texture2d;
 	UniformObject uniformObject;
@@ -80,7 +79,6 @@ public: // Methods:
 	void Run();
 
 private: // Methods:
-	void PrintApplicationStatus();
 	void Render();
 	bool AcquireImage();
 	void RecordCommandBuffer();

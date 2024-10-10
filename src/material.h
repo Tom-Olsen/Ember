@@ -21,6 +21,7 @@
 
 // TODO:
 // - logic for descriptor set recreation (only if needed) (use nextMaterialProperties object?)
+// - move render call into material class
 
 class Material
 {
