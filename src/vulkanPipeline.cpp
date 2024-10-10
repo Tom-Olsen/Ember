@@ -47,16 +47,24 @@ VulkanPipeline::~VulkanPipeline()
 // Private:
 void VulkanPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
+	// Descriptor set layout:
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     descriptorSetLayoutCreateInfo.pBindings = bindings.data();
     VKA(vkCreateDescriptorSetLayout(logicalDevice->device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
 
+	// Push constants layout:
+	VkPushConstantRange pushConstantRange = {};
+	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	pushConstantRange.offset = 0;
+	pushConstantRange.size = sizeof(PushConstantObject);
+
+	// Pipeline layout:
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
     pipelineLayoutCreateInfo.setLayoutCount = 1;
     pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+    pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
     vkCreatePipelineLayout(logicalDevice->device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
 }
 VkShaderModule VulkanPipeline::CreateShaderModule(const std::vector<char>& code)

@@ -7,6 +7,19 @@ cbuffer UniformBufferObject : register(b0)
 
 
 
+struct PushConstant
+{
+    float4x4 transform;
+    float4x4 projView;
+};
+#if defined(_DXC)
+[[vk::push_constant]] CullPushConstants pc;
+#else
+[[vk::push_constant]] ConstantBuffer<PushConstant> pc;
+#endif
+
+
+
 struct VertexInput
 {
     float3 position : POSITION;
@@ -27,6 +40,7 @@ VertexOutput main(VertexInput input)
 {
     VertexOutput output;
     float4x4 mat = mul(mul(proj, view), model);
+    //float4x4 mat = mul(pc.projView, pc.transform);
     output.position = mul(mat, float4(input.position, 1.0));
     //output.position = float4(input.position, 1.0);
     output.vertexColor = input.color;

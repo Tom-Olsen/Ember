@@ -257,6 +257,16 @@ void Application::RecordCommandBuffer()
 	vkCmdBindVertexBuffers(commandBuffer, 0, Mesh::GetBindingCount(), buffers, mesh->GetOffsets().data());
 	vkCmdBindIndexBuffer(commandBuffer, mesh->GetIndexBuffer()->buffer, 0, Mesh::GetIndexType());
 
+	// Push constants:
+	VkExtent2D windowExtent = window->Extent();
+	Float4x4 transform = glm::rotate(Float4x4(1.0f), (float)time * glm::radians(90.0f), Float3(0.0f, 0.0f, 1.0f));
+	Float4x4 view = glm::lookAt(Float3(2.0f, 2.0f, 2.0f), Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 1.0f));
+	Float4x4 proj = glm::perspective(glm::radians(45.0f), windowExtent.width / (float)windowExtent.height, 0.1f, 10.0f);
+	proj[1][1] *= -1; // flip y-axis as it is inverted by default
+	Float4x4 projView = proj * view;
+	PushConstantObject transformData(transform, projView);
+	vkCmdPushConstants(commandBuffer, material->pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantObject), &transformData);
+
 	VkDescriptorSet* descriptorSet = &material->descriptorSets[frameIndex];
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline->pipelineLayout, 0, 1, descriptorSet, 0, nullptr);
 	vkCmdDrawIndexed(commandBuffer, 3 * mesh.get()->GetTriangleCount(), 1, 0, 0, 0);

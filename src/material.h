@@ -37,6 +37,7 @@ private: // Members:
 	uint32_t framesInFlight;
 	uint32_t frameIndex;
 	std::vector<VkWriteDescriptorSet> descriptorWrites;
+	std::vector<VkDescriptorSetLayoutBinding> bindings;
 
 	// Render resources:
 	std::vector<MaterialProperties> materialProperties;
@@ -58,7 +59,7 @@ public: // Methods:
 
 private: // Methods:
 	std::vector<char> ReadShaderCode(const std::string& spvFile);
-	void GetDescriptorSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& bindings, const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage);
+	void GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage);
 	void CreateDescriptorSets();
 	void FillUniformBufferDescriptorSets(uint32_t frameIndex);
 	void FillSamplerDescriptorSets(uint32_t frameIndex);

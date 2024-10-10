@@ -34,9 +34,8 @@ Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, 
 	SpirvReflect fragmentShaderReflect(fragmentCode);
 
 	// Create pipeline:
-	std::vector<VkDescriptorSetLayoutBinding> bindings;
-	GetDescriptorSetLayoutBindings(bindings, vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
-	GetDescriptorSetLayoutBindings(bindings, fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
+	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
+	GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
 	pipeline = std::make_unique<VulkanPipeline>(logicalDevice, physicalDevice, renderpass, vertexCode, fragmentCode, bindings);
 	
 	// Set some default values:
@@ -51,10 +50,6 @@ Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, 
 		FillSamplerDescriptorSets(i);
 		FillTexture2dDescriptorSets(i);
 	}
-
-	// Debug:
-	fragmentShaderReflect.PrintDescriptorSetsInfo();
-	vertexShaderReflect.PrintDescriptorSetsInfo();
 }
 
 
@@ -104,7 +99,7 @@ std::vector<char> Material::ReadShaderCode(const std::string& spvFile)
 
     return code;
 }
-void Material::GetDescriptorSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& bindings, const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage)
+void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage)
 {
 	if (VkShaderStageFlagBits((int)shaderReflect.module.shader_stage) != shaderStage)
 	{
