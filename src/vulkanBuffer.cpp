@@ -2,6 +2,7 @@
 #include "vulkanBuffer.h"
 #include "vulkanCommand.h"
 #include "vulkanHelper.h"
+#include "vmaUsage.h"
 #include "macros.h"
 
 

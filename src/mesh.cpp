@@ -20,7 +20,7 @@ Mesh::~Mesh()
 
 
 
-// Public:
+// Public methods:
 // Setters:
 void Mesh::SetPositions(std::vector<Float3>&& positions)
 {
@@ -128,7 +128,7 @@ VulkanBuffer* Mesh::GetIndexBuffer()
 
 
 
-// Static methods:
+// Public static methods:
 std::vector<VkVertexInputBindingDescription> Mesh::GetBindingDescription()
 {
 	// binding = index of the binding in the array of bindings
