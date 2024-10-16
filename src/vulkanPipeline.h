@@ -1,8 +1,7 @@
 #ifndef __INCLUDE_GUARD_vulkanPipeline_h__
 #define __INCLUDE_GUARD_vulkanPipeline_h__
 #include <string>
-#include "vulkanLogicalDevice.h"
-#include "vulkanPhysicalDevice.h"
+#include "vulkanContext.h"
 #include "vulkanRenderpass.h"
 #include "glmTypes.h"
 #include "pushConstantObject.h"
@@ -23,12 +22,11 @@ public: // Members:
 	VkDescriptorSetLayout descriptorSetLayout;
 
 private: // Members:
-	VulkanLogicalDevice* logicalDevice;
+	VulkanContext* context;
 	VulkanRenderpass* renderpass;
 
 public: // Methods:
-	VulkanPipeline(
-		VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanRenderpass* renderpass,
+	VulkanPipeline(VulkanContext* context, VulkanRenderpass* renderpass,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
 		const std::vector<VkDescriptorSetLayoutBinding>& bindings);
@@ -37,7 +35,7 @@ public: // Methods:
 private: // Methods:
 	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 	VkShaderModule CreateShaderModule(const std::vector<char>& code);
-	void CreatePipeline(VulkanPhysicalDevice* physicalDevice, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
+	void CreatePipeline(VulkanContext* context, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
 };
 
 

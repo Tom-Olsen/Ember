@@ -6,10 +6,9 @@
 
 
 // Constructor:
-Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv)
+Material::Material(uint32_t framesInFlight, VulkanContext* context, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv)
 {
-	this->logicalDevice = logicalDevice;
-	this->physicalDevice = physicalDevice;
+	this->context = context;
 	this->descriptorPool = descriptorPool;
 	this->framesInFlight = framesInFlight;
 	this->frameIndex = 0;
@@ -22,8 +21,8 @@ Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, 
 	defaultUniformObject.view = glm::lookAt(Float3(2.0f, 2.0f, 2.0f), Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 1.0f));
 	defaultUniformObject.proj = glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 10.0f);
 	defaultUniformObject.proj[1][1] *= -1; // flip y-axis as it is inverted by default
-	defaultSampler = std::make_unique<VulkanSampler>(logicalDevice, physicalDevice);
-	defaultTexture2d = std::make_unique<Texture2d>(logicalDevice, physicalDevice, "../textures/white.png");
+	defaultSampler = std::make_unique<VulkanSampler>(context);
+	defaultTexture2d = std::make_unique<Texture2d>(context, "../textures/white.png");
 
 	// Read .spv shader files:
 	std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -36,7 +35,7 @@ Material::Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, 
 	// Create pipeline:
 	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
 	GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
-	pipeline = std::make_unique<VulkanPipeline>(logicalDevice, physicalDevice, renderpass, vertexCode, fragmentCode, bindings);
+	pipeline = std::make_unique<VulkanPipeline>(context, renderpass, vertexCode, fragmentCode, bindings);
 	
 	// Set some default values:
 	emptyMaterialProperties = materialProperties[0];
@@ -129,7 +128,7 @@ void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect,
 			{
 				if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
 				{
-					VulkanUniformBuffer uniformBuffer(logicalDevice, physicalDevice, sizeof(UniformObject));
+					VulkanUniformBuffer uniformBuffer(context, sizeof(UniformObject));
 					uniformBuffer.UpdateBuffer(defaultUniformObject);
 					materialProperties[j].InitUniformObjectResourceBinding(binding->name, ResourceBinding<VulkanUniformBuffer>(binding->binding, uniformBuffer));
 				}
@@ -152,7 +151,7 @@ void Material::CreateDescriptorSets()
 	allocInfo.pSetLayouts = layouts.data();
 
 	descriptorSets.resize(framesInFlight);
-	VKA(vkAllocateDescriptorSets(logicalDevice->device, &allocInfo, descriptorSets.data()));
+	VKA(vkAllocateDescriptorSets(context->logicalDevice->device, &allocInfo, descriptorSets.data()));
 }
 void Material::FillUniformBufferDescriptorSets(uint32_t frameIndex)
 {
@@ -162,7 +161,7 @@ void Material::FillUniformBufferDescriptorSets(uint32_t frameIndex)
 		VkDescriptorBufferInfo bufferInfo = {};
 		bufferInfo.buffer = pair.second.resource.buffer->buffer;
 		bufferInfo.offset = 0;
-		bufferInfo.range = pair.second.resource.bufferSize;
+		bufferInfo.range = pair.second.resource.size;
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = descriptorSets[frameIndex];
@@ -175,7 +174,7 @@ void Material::FillUniformBufferDescriptorSets(uint32_t frameIndex)
 		descriptorWrite.pTexelBufferView = nullptr;
 		descriptorWrites.push_back(descriptorWrite);
 	}
-	vkUpdateDescriptorSets(logicalDevice->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+	vkUpdateDescriptorSets(context->LogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
 void Material::FillSamplerDescriptorSets(uint32_t frameIndex)
 {
@@ -197,7 +196,7 @@ void Material::FillSamplerDescriptorSets(uint32_t frameIndex)
 		descriptorWrite.pTexelBufferView = nullptr;
 		descriptorWrites.push_back(descriptorWrite);
 	}
-	vkUpdateDescriptorSets(logicalDevice->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+	vkUpdateDescriptorSets(context->LogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
 void Material::FillTexture2dDescriptorSets(uint32_t frameIndex)
 {
@@ -219,5 +218,5 @@ void Material::FillTexture2dDescriptorSets(uint32_t frameIndex)
 		descriptorWrite.pTexelBufferView = nullptr;
 		descriptorWrites.push_back(descriptorWrite);
 	}
-	vkUpdateDescriptorSets(logicalDevice->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+	vkUpdateDescriptorSets(context->LogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }

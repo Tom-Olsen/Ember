@@ -8,13 +8,12 @@
 
 
 // Constructor:
-VulkanPipeline::VulkanPipeline(
-    VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanRenderpass* renderpass,
+VulkanPipeline::VulkanPipeline(VulkanContext* context, VulkanRenderpass* renderpass,
     const std::vector<char>& vertexCode,
     const std::vector<char>& fragmentCode,
     const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
-    this->logicalDevice = logicalDevice;
+    this->context = context;
     this->renderpass = renderpass;
 
     // Create pipeline Layout:
@@ -25,11 +24,11 @@ VulkanPipeline::VulkanPipeline(
     VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
 
     // Create pipeline:
-    CreatePipeline(physicalDevice, vertexShaderModule, fragmentShaderModule);
+    CreatePipeline(context, vertexShaderModule, fragmentShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
-    vkDestroyShaderModule(logicalDevice->device, vertexShaderModule, nullptr);
-    vkDestroyShaderModule(logicalDevice->device, fragmentShaderModule, nullptr);
+    vkDestroyShaderModule(context->LogicalDevice(), vertexShaderModule, nullptr);
+    vkDestroyShaderModule(context->LogicalDevice(), fragmentShaderModule, nullptr);
 }
 
 
@@ -37,9 +36,9 @@ VulkanPipeline::VulkanPipeline(
 // Destructor:
 VulkanPipeline::~VulkanPipeline()
 {
-    vkDestroyDescriptorSetLayout(logicalDevice->device, descriptorSetLayout, nullptr);
-    vkDestroyPipelineLayout(logicalDevice->device, pipelineLayout, nullptr);
-    vkDestroyPipeline(logicalDevice->device, pipeline, nullptr);
+    vkDestroyDescriptorSetLayout(context->LogicalDevice(), descriptorSetLayout, nullptr);
+    vkDestroyPipelineLayout(context->LogicalDevice(), pipelineLayout, nullptr);
+    vkDestroyPipeline(context->LogicalDevice(), pipeline, nullptr);
 }
 
 
@@ -51,7 +50,7 @@ void VulkanPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     descriptorSetLayoutCreateInfo.pBindings = bindings.data();
-    VKA(vkCreateDescriptorSetLayout(logicalDevice->device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
+    VKA(vkCreateDescriptorSetLayout(context->LogicalDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
 
 	// Push constants layout:
 	VkPushConstantRange pushConstantRange = {};
@@ -65,7 +64,7 @@ void VulkanPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-    vkCreatePipelineLayout(logicalDevice->device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
+    vkCreatePipelineLayout(context->LogicalDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
 }
 VkShaderModule VulkanPipeline::CreateShaderModule(const std::vector<char>& code)
 {
@@ -78,11 +77,11 @@ VkShaderModule VulkanPipeline::CreateShaderModule(const std::vector<char>& code)
         .pCode = (uint32_t*)(code.data())                       // pointer to code
     };
     VkShaderModule shaderModule;
-    VKA(vkCreateShaderModule(logicalDevice->device, &createInfo, nullptr, &shaderModule));
+    VKA(vkCreateShaderModule(context->LogicalDevice(), &createInfo, nullptr, &shaderModule));
     return shaderModule;
 }
 
-void VulkanPipeline::CreatePipeline(VulkanPhysicalDevice* physicalDevice, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
+void VulkanPipeline::CreatePipeline(VulkanContext* context, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
 {
     // Vertex shader:
     VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -137,7 +136,7 @@ void VulkanPipeline::CreatePipeline(VulkanPhysicalDevice* physicalDevice, const 
         // Multisampling:
         VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
         multisampleState.sampleShadingEnable = VK_FALSE;
-        multisampleState.rasterizationSamples = physicalDevice->maxMsaaSamples;
+        multisampleState.rasterizationSamples = context->physicalDevice->maxMsaaSamples;
         multisampleState.minSampleShading = 1.0f;           // Optional
         multisampleState.pSampleMask = nullptr;             // Optional
         multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional
@@ -215,6 +214,6 @@ void VulkanPipeline::CreatePipeline(VulkanPhysicalDevice* physicalDevice, const 
         createInfo.basePipelineIndex = -1;
 
         // Second parameter is a VkPipelineCache. It can be used to store and reuse pipelines; even across runs of the application by saving it to a file.
-        VKA(vkCreateGraphicsPipelines(logicalDevice->device, VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline));
+        VKA(vkCreateGraphicsPipelines(context->LogicalDevice(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline));
     }
 }

@@ -5,10 +5,9 @@
 
 
 // Constructor:
-VulkanFrameBuffers::VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass, VulkanDepthImage* depthImage, VulkanMsaaImage* msaaImage)
+VulkanFrameBuffers::VulkanFrameBuffers(VulkanContext* context, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass, VulkanDepthImage* depthImage, VulkanMsaaImage* msaaImage)
 {
-	this->logicalDevice = logicalDevice;
-	this->surface = surface;
+	this->context = context;
 	this->size = swapchain->images.size();
 	this->renderpass = renderpass;
 
@@ -16,19 +15,19 @@ VulkanFrameBuffers::VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, Vulka
 	if (frameBuffers.size() == size)
 	{
 		for (uint32_t i = 0; i < size; i++)
-			vkDestroyFramebuffer(logicalDevice->device, frameBuffers[i], nullptr);
+			vkDestroyFramebuffer(context->LogicalDevice(), frameBuffers[i], nullptr);
 		frameBuffers.clear();
 	}
 
-	VkExtent2D extent = surface->CurrentExtent();
+	VkExtent2D extent = context->surface->CurrentExtent();
 
 	frameBuffers.resize(size);
 	std::array<VkImageView, 3> attachments;
 	for (uint32_t i = 0; i < size; i++)
 	{
 		// order of attachments is important!
-		attachments[0] = msaaImage->imageView;
-		attachments[1] = depthImage->imageView;
+		attachments[0] = msaaImage->image->imageView;
+		attachments[1] = depthImage->image->imageView;
 		attachments[2] = swapchain->imageViews[i];
 
 		VkFramebufferCreateInfo createinfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
@@ -38,7 +37,7 @@ VulkanFrameBuffers::VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, Vulka
 		createinfo.width = extent.width;
 		createinfo.height = extent.height;
 		createinfo.layers = 1;
-		vkCreateFramebuffer(logicalDevice->device, &createinfo, nullptr, &frameBuffers[i]);
+		vkCreateFramebuffer(context->LogicalDevice(), &createinfo, nullptr, &frameBuffers[i]);
 	}
 }
 
@@ -48,7 +47,7 @@ VulkanFrameBuffers::VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, Vulka
 VulkanFrameBuffers::~VulkanFrameBuffers()
 {
 	for (uint32_t i = 0; i < size; i++)
-		vkDestroyFramebuffer(logicalDevice->device, frameBuffers[i], nullptr);
+		vkDestroyFramebuffer(context->LogicalDevice(), frameBuffers[i], nullptr);
 	frameBuffers.clear();
 }
 

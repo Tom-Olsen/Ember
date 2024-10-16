@@ -8,13 +8,12 @@
 
 
 // Constructor:
-VulkanSampler::VulkanSampler(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice)
+VulkanSampler::VulkanSampler(VulkanContext* context)
 {
-	this->logicalDevice = logicalDevice;
-	this->physicalDevice = physicalDevice;
+	this->context = context;
 
 	VkPhysicalDeviceProperties properties{};
-	vkGetPhysicalDeviceProperties(physicalDevice->device, &properties);
+	vkGetPhysicalDeviceProperties(context->PhysicalDevice(), &properties);
 
 	VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 	samplerInfo.magFilter = VK_FILTER_LINEAR;	// how to filter magnified texels
@@ -32,7 +31,7 @@ VulkanSampler::VulkanSampler(VulkanLogicalDevice* logicalDevice, VulkanPhysicalD
 	samplerInfo.mipLodBias = 0.0f;	// level of detail bias for mipmap level
 	samplerInfo.minLod = 0.0f;				// minimum level of detail to pick
 	samplerInfo.maxLod = VK_LOD_CLAMP_NONE;	// maximum level of detail to pick. No clamping means up to the maximum mip level supported by the image
-	VKA(vkCreateSampler(logicalDevice->device, &samplerInfo, nullptr, &sampler));
+	VKA(vkCreateSampler(context->LogicalDevice(), &samplerInfo, nullptr, &sampler));
 }
 
 
@@ -40,5 +39,5 @@ VulkanSampler::VulkanSampler(VulkanLogicalDevice* logicalDevice, VulkanPhysicalD
 // Destructor:
 VulkanSampler::~VulkanSampler()
 {
-	vkDestroySampler(logicalDevice->device, sampler, nullptr);
+	vkDestroySampler(context->LogicalDevice(), sampler, nullptr);
 }

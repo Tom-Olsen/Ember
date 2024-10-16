@@ -2,12 +2,7 @@
 #define __INCLUDE_GUARD_vulkanCommands_h__
 #include <vulkan/vulkan.h>
 #include <vector>
-#include "vulkanLogicalDevice.h"
-
-
-
-// TODO:
-// -Change to VulkanCommand and replace VulkanCommands* with std::vector<VulkanCommand>.
+#include "vulkanContext.h"
 
 
 
@@ -21,10 +16,10 @@ public: // Members:
 	VkCommandBuffer buffer;
 
 private: // Members:
-	VulkanLogicalDevice* logicalDevice;
+	VulkanContext* context;
 
 public: // Methods:
-	VulkanCommand(VulkanLogicalDevice* logicalDevice, VulkanQueue queue);
+	VulkanCommand(VulkanContext* context, VulkanQueue queue);
 	~VulkanCommand();
 };
 

@@ -1,61 +1,62 @@
 #include <algorithm>
-#include "vulkanImage.h"
+#include "vmaImage.h"
 #include "vulkanHelper.h"
 #include "macros.h"
 
 
 
 // Constructors:
-VulkanImage::VulkanImage(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice)
-	: logicalDevice(logicalDevice), physicalDevice(physicalDevice) {}
-VulkanImage1d::VulkanImage1d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImageSubresourceRange subresourceRange, int width)
-	: VulkanImage(logicalDevice, physicalDevice)
+VmaImage::VmaImage(VulkanContext* context, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, const VkImageSubresourceRange& subresourceRange)
 {
-	this->width = std::max(width, 1);
-	this->height = 1;
-	this->depth = 1;
-	CreateImage(VK_IMAGE_TYPE_1D, format, tiling, usage, subresourceRange.levelCount, this->width, 1, 1);
-	AllocateAndBindMemory();
-	CreateImageView(VK_IMAGE_VIEW_TYPE_1D, format, subresourceRange);
-}
-VulkanImage2d::VulkanImage2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImageSubresourceRange subresourceRange, int width, int height)
-	: VulkanImage(logicalDevice, physicalDevice)
-{
-	this->width = std::max(width, 1);
-	this->height = std::max(height, 1);
-	this->depth = 1;
-	CreateImage(VK_IMAGE_TYPE_2D, format, tiling, usage, subresourceRange.levelCount, this->width, this->height, 1);
-	AllocateAndBindMemory();
-	CreateImageView(VK_IMAGE_VIEW_TYPE_2D, format, subresourceRange);
-}
-VulkanImage3d::VulkanImage3d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImageSubresourceRange subresourceRange, int width, int height, int depth)
-	: VulkanImage(logicalDevice, physicalDevice)
-{
-	this->width = std::max(width, 1);
-	this->height = std::max(height, 1);
-	this->depth = std::max(depth, 1);
-	CreateImage(VK_IMAGE_TYPE_3D, format, tiling, usage, subresourceRange.levelCount, this->width, this->height, this->depth);
-	AllocateAndBindMemory();
-	CreateImageView(VK_IMAGE_VIEW_TYPE_3D, format, subresourceRange);
+	this->context = context;
+	this->imageInfo = imageInfo;
+	this->allocationInfo = allocationInfo;
+	this->subresourceRange = subresourceRange;
+
+	// Create image:
+	VKA(vmaCreateImage(context->Allocator(), &imageInfo, &allocationInfo, &image, &allocation, nullptr));
+
+	// Create image view:
+	VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+	viewInfo.image = image;
+	viewInfo.viewType = VkImageViewType((int)imageInfo.imageType);
+	viewInfo.format = imageInfo.format;
+	viewInfo.subresourceRange = subresourceRange;
+	VKA(vkCreateImageView(context->LogicalDevice(), &viewInfo, nullptr, &imageView));
 }
 
 
 
 // Destructor:
-VulkanImage::~VulkanImage()
+VmaImage::~VmaImage()
 {
-	vkDestroyImage(logicalDevice->device, image, nullptr);
-	vkFreeMemory(logicalDevice->device, memory, nullptr);
-	vkDestroyImageView(logicalDevice->device, imageView, nullptr);
+	vmaDestroyImage(context->Allocator(), image, allocation);
+	vkDestroyImageView(context->LogicalDevice(), imageView, nullptr);
 }
 
 
 
-// Public:
-void VulkanImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subresourceRange)
+// Getters:
+uint64_t VmaImage::GetWidth()
+{
+	return imageInfo.extent.width;
+}
+uint64_t VmaImage::GetHeight()
+{
+	return imageInfo.extent.height;
+}
+uint64_t VmaImage::GetDepth()
+{
+	return imageInfo.extent.depth;
+}
+
+
+
+// Advanced methods:
+void VmaImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subresourceRange)
 {
 	// Transition is executed on transferQueue.
-	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->transferQueue);
+	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
 
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
@@ -77,21 +78,21 @@ void VulkanImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange su
 		0, nullptr,	// buffer memory barriers
 		1, &barrier);	// image memory barriers
 
-	VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->transferQueue);
+	VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
 }
-void VulkanImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourceRange)
+void VmaImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourceRange)
 {
 	// On transition ownership of the image is transferred from the transferQueue to the graphicsQueue.
 	{
-		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->transferQueue);
+		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
 
 		VkImageMemoryBarrier releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		releaseBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		releaseBarrier.dstAccessMask = VK_ACCESS_NONE;
 		releaseBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		releaseBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		releaseBarrier.srcQueueFamilyIndex = logicalDevice->transferQueue.familyIndex;
-		releaseBarrier.dstQueueFamilyIndex = logicalDevice->graphicsQueue.familyIndex;
+		releaseBarrier.srcQueueFamilyIndex = context->logicalDevice->transferQueue.familyIndex;
+		releaseBarrier.dstQueueFamilyIndex = context->logicalDevice->graphicsQueue.familyIndex;
 		releaseBarrier.image = image;
 		releaseBarrier.subresourceRange = subresourceRange;
 
@@ -105,18 +106,18 @@ void VulkanImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subreso
 			0, nullptr,			// buffer memory barriers
 			1, &releaseBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->transferQueue);
+		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
 	}
 	{
-		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->graphicsQueue);
+		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
 
 		VkImageMemoryBarrier acquireBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		acquireBarrier.srcAccessMask = VK_ACCESS_NONE;
 		acquireBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;	// rdy for mipmapping
 		acquireBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		acquireBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		acquireBarrier.srcQueueFamilyIndex = logicalDevice->transferQueue.familyIndex;
-		acquireBarrier.dstQueueFamilyIndex = logicalDevice->graphicsQueue.familyIndex;
+		acquireBarrier.srcQueueFamilyIndex = context->logicalDevice->transferQueue.familyIndex;
+		acquireBarrier.dstQueueFamilyIndex = context->logicalDevice->graphicsQueue.familyIndex;
 		acquireBarrier.image = image;
 		acquireBarrier.subresourceRange = subresourceRange;
 
@@ -130,22 +131,22 @@ void VulkanImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subreso
 			0, nullptr,			// buffer memory barriers
 			1, &acquireBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->graphicsQueue);
+		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
 	}
 }
-void VulkanImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subresourceRange)
+void VmaImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subresourceRange)
 {
 	// On transition ownership of the image is transferred from the transferQueue to the graphicsQueue.
 	{
-		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->transferQueue);
+		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
 
 		VkImageMemoryBarrier releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		releaseBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		releaseBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		releaseBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		releaseBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		releaseBarrier.srcQueueFamilyIndex = logicalDevice->transferQueue.familyIndex;
-		releaseBarrier.dstQueueFamilyIndex = logicalDevice->graphicsQueue.familyIndex;
+		releaseBarrier.srcQueueFamilyIndex = context->logicalDevice->transferQueue.familyIndex;
+		releaseBarrier.dstQueueFamilyIndex = context->logicalDevice->graphicsQueue.familyIndex;
 		releaseBarrier.image = image;
 		releaseBarrier.subresourceRange = subresourceRange;
 
@@ -159,18 +160,18 @@ void VulkanImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange s
 			0, nullptr,			// buffer memory barriers
 			1, &releaseBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->transferQueue);
+		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
 	}
 	{
-		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->graphicsQueue);
+		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
 
 		VkImageMemoryBarrier acquireBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		acquireBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		acquireBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		acquireBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		acquireBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		acquireBarrier.srcQueueFamilyIndex = logicalDevice->transferQueue.familyIndex;
-		acquireBarrier.dstQueueFamilyIndex = logicalDevice->graphicsQueue.familyIndex;
+		acquireBarrier.srcQueueFamilyIndex = context->logicalDevice->transferQueue.familyIndex;
+		acquireBarrier.dstQueueFamilyIndex = context->logicalDevice->graphicsQueue.familyIndex;
 		acquireBarrier.image = image;
 		acquireBarrier.subresourceRange = subresourceRange;
 
@@ -184,12 +185,12 @@ void VulkanImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange s
 			0, nullptr,			// buffer memory barriers
 			1, &acquireBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->graphicsQueue);
+		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
 	}
 }
-void VulkanImage::GenerateMipmaps(uint32_t mipLevels)
+void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 {
-	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(logicalDevice, logicalDevice->graphicsQueue);
+	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
 
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	barrier.image = image;
@@ -200,9 +201,9 @@ void VulkanImage::GenerateMipmaps(uint32_t mipLevels)
 	barrier.subresourceRange.layerCount = 1;
 	barrier.subresourceRange.levelCount = 1;
 
-	int mipWidth = width;
-	int mipHeight = height;
-	int mipDepth = depth;
+	int mipWidth = static_cast<int>(GetWidth());
+	int mipHeight = static_cast<int>(GetHeight());
+	int mipDepth = static_cast<int>(GetDepth());
 	for (uint32_t i = 1; i < mipLevels; i++)
 	{
 		barrier.subresourceRange.baseMipLevel = i - 1;
@@ -265,49 +266,5 @@ void VulkanImage::GenerateMipmaps(uint32_t mipLevels)
 		0, nullptr,
 		1, &barrier);
 
-	VulkanHelper::EndSingleTimeCommand(logicalDevice, command, logicalDevice->graphicsQueue);
-}
-
-
-
-// Protected:
-void VulkanImage::CreateImage(VkImageType imageType, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, uint32_t mipLevels, uint32_t width, uint32_t height, uint32_t depth)
-{
-	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	imageInfo.imageType = imageType;
-	imageInfo.extent.width = width;
-	imageInfo.extent.height = height;
-	imageInfo.extent.depth = depth;
-	imageInfo.mipLevels = mipLevels;
-	imageInfo.arrayLayers = 1;
-	imageInfo.format = format; // use the same format as texture pixels, otherwise the copy operation will fail
-	imageInfo.tiling = tiling;
-	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	imageInfo.usage = usage;
-	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	imageInfo.flags = 0;
-
-	VKA(vkCreateImage(logicalDevice->device, &imageInfo, nullptr, &image));
-}
-void VulkanImage::AllocateAndBindMemory()
-{
-	VkMemoryRequirements memoryRequirements;
-	vkGetImageMemoryRequirements(logicalDevice->device, image, &memoryRequirements);
-
-	VkMemoryAllocateInfo allocationInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-	allocationInfo.allocationSize = memoryRequirements.size;
-	allocationInfo.memoryTypeIndex = VulkanHelper::FindMemoryType(physicalDevice, memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	VKA(vkAllocateMemory(logicalDevice->device, &allocationInfo, nullptr, &memory));
-	vkBindImageMemory(logicalDevice->device, image, memory, 0);
-}
-void VulkanImage::CreateImageView(VkImageViewType imageType, VkFormat format, VkImageSubresourceRange subresourceRange)
-{
-	VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-	viewInfo.image = image;
-	viewInfo.viewType = imageType;
-	viewInfo.format = format;
-	viewInfo.subresourceRange = subresourceRange;
-	VKA(vkCreateImageView(logicalDevice->device, &viewInfo, nullptr, &imageView));
+	VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
 }

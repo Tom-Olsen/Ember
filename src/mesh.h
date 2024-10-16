@@ -4,15 +4,8 @@
 #include <vector>
 #include <string>
 #include "glmTypes.h"
-#include "vulkanLogicalDevice.h"
-#include "vulkanPhysicalDevice.h"
-#include "vulkanBuffer.h"
-
-
-
-// TODO:
-// - static and dynamic meshes?
-// - move vertex/index buffers to mesh?
+#include "vulkanContext.h"
+#include "vmaBuffer.h"
 
 
 
@@ -23,21 +16,20 @@
 class Mesh
 {
 private: // Members:
-	VulkanLogicalDevice* logicalDevice;
-	VulkanPhysicalDevice* physicalDevice;
+	VulkanContext* context;
 	bool verticesUpdated = false;
 	bool indicesUpdated = false;
 	uint32_t vertexCount = 0;
 	uint32_t triangleCount = 0;
-	std::unique_ptr<VulkanBuffer> vertexBuffer;
-	std::unique_ptr<VulkanBuffer> indexBuffer;
+	std::unique_ptr<VmaBuffer> vertexBuffer;
+	std::unique_ptr<VmaBuffer> indexBuffer;
 	std::vector<Float3> positions;
 	std::vector<Float4> colors;
 	std::vector<Float4> uvs;
 	std::vector<Int3> triangles;
 
 public: // Methods:
-	Mesh(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice);
+	Mesh(VulkanContext* context);
 	Mesh(const Mesh& other) = default;
 	Mesh& operator=(const Mesh& other) = default;
 	Mesh(Mesh&& other) noexcept = default;
@@ -67,8 +59,8 @@ public: // Methods:
 	std::vector<uint64_t> GetBufferSizes() const;
 	std::vector<void*> GetBufferDatas();
 	std::vector<VkDeviceSize> GetOffsets();
-	VulkanBuffer* GetVertexBuffer();
-	VulkanBuffer* GetIndexBuffer();
+	VmaBuffer* GetVertexBuffer();
+	VmaBuffer* GetIndexBuffer();
 
 	// Static methods:
 	static std::vector<VkVertexInputBindingDescription> GetBindingDescription();

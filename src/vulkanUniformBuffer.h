@@ -3,7 +3,8 @@
 #define __INCLUDE_GUARD_vulkanUniformBuffer_h__
 #include <vulkan/vulkan.h>
 #include <memory>
-#include "vulkanBuffer.h"
+#include "vulkanContext.h"
+#include "vmaBuffer.h"
 #include "vulkanCommand.h"
 #include "glmTypes.h"
 #include "uniformObject.h"
@@ -13,16 +14,15 @@
 class VulkanUniformBuffer
 {
 public: // Members:
-	uint64_t bufferSize;	// in bytes
-	std::shared_ptr<VulkanBuffer> buffer; // TODO: using unique ptr here causes a crash, why?
+	uint64_t size;	// in bytes
+	std::shared_ptr<VmaBuffer> buffer; // TODO: using unique ptr here causes a crash, why?
 
 private: // Members:
-	VulkanLogicalDevice* logicalDevice;
-	VulkanPhysicalDevice* physicalDevice;
+	VulkanContext* context;
 	void* data;
 
 public: // Methods:
-	VulkanUniformBuffer(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, uint64_t bufferSize);
+	VulkanUniformBuffer(VulkanContext* context, uint64_t size);
 	~VulkanUniformBuffer();
 	template<typename T>
 	void UpdateBuffer(const T& datastruct);

@@ -3,8 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <memory>
 #include <vector>
-#include "vulkanLogicalDevice.h"
-#include "vulkanSurface.h"
+#include "vulkanContext.h"
 #include "vulkanSwapchain.h"
 #include "vulkanRenderpass.h"
 #include "vulkanDepthImage.h"
@@ -23,12 +22,11 @@ public: // Members:
 
 private: // Members:
 	std::vector<VkFramebuffer> frameBuffers;
-	VulkanLogicalDevice* logicalDevice;
-	VulkanSurface* surface;
+	VulkanContext* context;
 	VulkanRenderpass* renderpass;
 
 public: // Methods:
-	VulkanFrameBuffers(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass, VulkanDepthImage* depthImage, VulkanMsaaImage* msaaImage);
+	VulkanFrameBuffers(VulkanContext* context, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass, VulkanDepthImage* depthImage, VulkanMsaaImage* msaaImage);
 	~VulkanFrameBuffers();
 	VkFramebuffer& operator[](size_t index);
 };

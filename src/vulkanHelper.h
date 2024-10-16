@@ -1,11 +1,10 @@
 #ifndef __INCLUDE_GUARD_vulkanHelper_h__
 #define __INCLUDE_GUARD_vulkanHelper_h__
 #include <vulkan/vulkan.h>
-#include "vulkanPhysicalDevice.h"
-#include "vulkanLogicalDevice.h"
+#include "vulkanContext.h"
 #include "vulkanCommand.h"
-#include "vulkanBuffer.h"
-#include "vulkanImage.h"
+#include "vmaBuffer.h"
+#include "vmaImage.h"
 
 
 
@@ -14,10 +13,10 @@
 /// </summary>
 namespace VulkanHelper
 {
-	uint32_t FindMemoryType(VulkanPhysicalDevice* physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
-	VulkanCommand BeginSingleTimeCommand(VulkanLogicalDevice* logicalDevice, const VulkanQueue& queue);
-	void EndSingleTimeCommand(VulkanLogicalDevice* logicalDevice, const VulkanCommand& command, const VulkanQueue& queue);
-	void CopyBufferToImage(VulkanLogicalDevice* logicalDevice, VulkanBuffer* buffer, VulkanImage* image, const VulkanQueue& queue);
+	uint32_t FindMemoryType(VulkanContext* context, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	VulkanCommand BeginSingleTimeCommand(VulkanContext* context, const VulkanQueue& queue);
+	void EndSingleTimeCommand(VulkanContext* context, const VulkanCommand& command, const VulkanQueue& queue);
+	void CopyBufferToImage(VulkanContext* context, VmaBuffer* buffer, VmaImage* image, const VulkanQueue& queue);
 };
 
 

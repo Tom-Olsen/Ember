@@ -5,17 +5,17 @@
 
 
 
-VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VkFormat surfaceFormat, VkSampleCountFlagBits msaaSamples)
+VulkanRenderpass::VulkanRenderpass(VulkanContext* context, VkSampleCountFlagBits msaaSamples)
 {
-	this->logicalDevice = logicalDevice;
+	this->context = context;
 
 	// Define attachments:
 	std::array<VkAttachmentDescription, 3> attachments{};
 	{
 		// Multisampled color attachment description:
-		attachments[0].format = surfaceFormat;
-		attachments[0].samples = msaaSamples;					// multisampling count
-		attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;	// clear framebuffer to black before rendering
+		attachments[0].format = context->surface->surfaceFormat.format;
+		attachments[0].samples = msaaSamples;								// multisampling count
+		attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;				// clear framebuffer to black before rendering
 		attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;			// sno need to store multisampls after render
 		attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;		// do not use stencils
 		attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;	// do not use stencils
@@ -23,17 +23,17 @@ VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VkFormat 
 		attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;	// multisampled images are stored in color layout and not rdy for presenting yet
 
 		// Depth attachment description:
-		attachments[1].format = VulkanDepthImage::format;					// must be same as depth image format
+		attachments[1].format = VulkanDepthImage::depthFormat;				// must be same as depth image format
 		attachments[1].samples = msaaSamples;								// msaaSamples
 		attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;				// clear depth buffer before rendering
 		attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;			// depth content is discarded after rendering
-		attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;	// stencil part not used yet
+		attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;		// stencil part not used yet
 		attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;	// stencil part not used yet
 		attachments[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		// Color resolve attachment description: (resolve multisampled fragments)
-		attachments[2].format = surfaceFormat;
+		attachments[2].format = context->surface->surfaceFormat.format;
 		attachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
 		attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -77,9 +77,9 @@ VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VkFormat 
 	dependency.dstSubpass = 0;	// index of destination subpass, where dependency ends.  VK_SUBPASS_EXTERNAL = after renderpass
 	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;	// pipeline stages in source subpass which must complete before the dependency is resolved
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;	// pipeline stages in destination subpass which must wait for the source stages to complete
-	dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;	// types of memory accesses in the source subpass that must be completed
-	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;	// types of memory accesses in the destination subpass that must wait on the source subpass to complete
-	dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;	// specify special behaviors
+	dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;			// types of memory accesses in the source subpass that must be completed
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;			// types of memory accesses in the destination subpass that must wait on the source subpass to complete
+	dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;					// specify special behaviors
 
 	VkRenderPassCreateInfo createInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 	createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());;
@@ -89,10 +89,10 @@ VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VkFormat 
 	createInfo.dependencyCount = 1;
 	createInfo.pDependencies = &dependency;
 
-	VKA(vkCreateRenderPass(logicalDevice->device, &createInfo, nullptr, &renderpass));
+	VKA(vkCreateRenderPass(context->LogicalDevice(), &createInfo, nullptr, &renderpass));
 }
 
 VulkanRenderpass::~VulkanRenderpass()
 {
-	vkDestroyRenderPass(logicalDevice->device, renderpass, nullptr);
+	vkDestroyRenderPass(context->LogicalDevice(), renderpass, nullptr);
 }

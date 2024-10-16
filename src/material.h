@@ -6,8 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include "spirvReflect.h"
-#include "vulkanLogicalDevice.h"
-#include "vulkanPhysicalDevice.h"
+#include "vulkanContext.h"
 #include "vulkanPipeline.h"
 #include "vulkanDescriptorPool.h"
 #include "vulkanRenderpass.h"
@@ -22,6 +21,7 @@
 // TODO:
 // - logic for descriptor set recreation (only if needed) (use nextMaterialProperties object?)
 // - move render call into material class
+// - make it so descriptor sets are returned and can be stored in the mesh class
 
 class Material
 {
@@ -31,8 +31,7 @@ public: // Members:
 
 private: // Members:
 	// Internal:
-	VulkanLogicalDevice* logicalDevice;
-	VulkanPhysicalDevice* physicalDevice;
+	VulkanContext* context;
 	VulkanDescriptorPool* descriptorPool;
 	uint32_t framesInFlight;
 	uint32_t frameIndex;
@@ -50,7 +49,7 @@ private: // Members:
 	std::unique_ptr<Texture2d> defaultTexture2d;
 
 public: // Methods:
-	Material(uint32_t framesInFlight, VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv);
+	Material(uint32_t framesInFlight, VulkanContext* context, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv);
 	~Material();
 	MaterialProperties GetEmptyMaterialProperties();
 	// TODO: renderloop

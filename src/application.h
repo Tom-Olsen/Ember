@@ -8,6 +8,8 @@
 #include "vulkanPhysicalDevice.h"
 #include "vulkanSurface.h"
 #include "vulkanLogicalDevice.h"
+#include "vulkanMemoryAllocator.h"
+#include "vulkanContext.h"
 #include "vulkanDescriptorPool.h"
 #include "vulkanSwapchain.h"
 #include "vulkanRenderpass.h"
@@ -43,6 +45,10 @@ private: // Members:
 	std::unique_ptr<VulkanPhysicalDevice> physicalDevice;
 	std::unique_ptr<VulkanSurface> surface;
 	std::unique_ptr<VulkanLogicalDevice> logicalDevice;
+	std::unique_ptr<VulkanMemoryAllocator> allocator;
+	std::unique_ptr<VulkanContext> context;
+
+	// Other:
 	std::unique_ptr<VulkanDescriptorPool> descriptorPool;
 	std::unique_ptr<VulkanSwapchain> swapchain;
 	std::unique_ptr<VulkanRenderpass> renderpass;

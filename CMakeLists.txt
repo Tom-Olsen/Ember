@@ -29,7 +29,6 @@ add_subdirectory(libs/glm)              # glm submodule
 add_subdirectory(libs/spdlog)           # spdlog submodule
 set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect
 add_subdirectory(libs/SPIRV-Reflect)    # SPIRV-Reflect submodule
-add_subdirectory(libs/vma)              # Vulkan Memory Allocator
 find_package(Vulkan REQUIRED)           # required to be installed
 
 # Shader Language (pick one):
@@ -60,9 +59,9 @@ target_include_directories(MyEngine PUBLIC libs/glm)
 target_include_directories(MyEngine PUBLIC libs/spdlog/include)
 target_include_directories(MyEngine PUBLIC libs/SPIRV-Reflect)
 target_include_directories(MyEngine PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_include_directories(MyEngine PUBLIC libs/vma/include)        # header only library
 
-# Add dlls (name of shared library in CMakeLists.txt of precombiled library):
-target_link_libraries(MyEngine PUBLIC SDL3::SDL3-shared)    # SDL3
-target_link_libraries(MyEngine PUBLIC ${Vulkan_LIBRARIES})  # Vulkan
-target_link_libraries(MyEngine PUBLIC spirv-reflect-static) # SPRIV-Reflect
-target_link_libraries(MyEngine PUBLIC VulkanMemoryAllocator)       # Vulkan Memory Allocator
+# Add dynamic and static libraries (name of shared library in CMakeLists.txt of precombiled library):
+target_link_libraries(MyEngine PUBLIC SDL3::SDL3-shared)        # SDL3
+target_link_libraries(MyEngine PUBLIC spirv-reflect-static)     # SPRIV-Reflect
+target_link_libraries(MyEngine PUBLIC ${Vulkan_LIBRARIES})      # Vulkan

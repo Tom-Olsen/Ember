@@ -2,27 +2,21 @@
 #ifndef __INCLUDE_GUARD_vulkanMsaaImage_h__
 #define __INCLUDE_GUARD_vulkanMsaaImage_h__
 #include <vulkan/vulkan.h>
-#include "vulkanLogicalDevice.h"
-#include "vulkanPhysicalDevice.h"
-#include "vulkanSurface.h"
+#include "vulkanContext.h"
+#include "vmaImage.h"
 
 
 
 class VulkanMsaaImage
 {
 public: // Members:
-	int width;
-	int height;
-	VkImage image;
-	VkDeviceMemory memory;
-	VkImageView imageView;
+	std::unique_ptr<VmaImage> image;
 
 private: // Members:
-	VulkanLogicalDevice* logicalDevice;
-	VulkanPhysicalDevice* physicalDevice;
+	VulkanContext* context;
 
 public: // Methods:
-	VulkanMsaaImage(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface);
+	VulkanMsaaImage(VulkanContext* context);
 	~VulkanMsaaImage();
 };
 

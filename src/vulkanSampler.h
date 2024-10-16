@@ -2,8 +2,7 @@
 #ifndef __INCLUDE_GUARD_vulkanSampler_h__
 #define __INCLUDE_GUARD_vulkanSampler_h__
 #include <vulkan/vulkan.h>
-#include "vulkanLogicalDevice.h"
-#include "vulkanPhysicalDevice.h"
+#include "vulkanContext.h"
 
 
 
@@ -13,11 +12,10 @@ public: // Members:
 	VkSampler sampler;
 
 private: // Members:
-	VulkanLogicalDevice* logicalDevice;
-	VulkanPhysicalDevice* physicalDevice;
+	VulkanContext* context;
 
 public: // Methods:
-	VulkanSampler(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice);
+	VulkanSampler(VulkanContext* context);
 	~VulkanSampler();
 };
 

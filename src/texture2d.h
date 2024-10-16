@@ -1,12 +1,10 @@
 #pragma once
 #ifndef __INCLUDE_GUARD_texture_h__
 #define __INCLUDE_GUARD_texture_h__
-#include <vulkan/vulkan.h>
 #include <memory>
-#include "vulkanLogicalDevice.h"
-#include "vulkanPhysicalDevice.h"
-#include "vulkanBuffer.h"
-#include "vulkanImage.h"
+#include "vulkanContext.h"
+#include "vmaBuffer.h"
+#include "vmaImage.h"
 #include "stb_image.h"
 
 
@@ -16,22 +14,23 @@ class Texture2d
 public: // Members:
 	int width;
 	int height;
-	int depth;
 	int channels;
-	uint32_t mipLevels;
-	std::shared_ptr<VulkanImage2d> image;
+	std::shared_ptr<VmaImage> image;
 
 private: // Members:
-	VulkanLogicalDevice* logicalDevice;
-	VulkanPhysicalDevice* physicalDevice;
+	VulkanContext* context;
 
 public: // Methods:
-	Texture2d(VulkanLogicalDevice* logicalDevice, VulkanPhysicalDevice* physicalDevice, char const* filename);
+	Texture2d(VulkanContext* context, char const* filename);
 	~Texture2d();
 
+public: // Getters:
+	uint64_t GetWidth();
+	uint64_t GetHeight();
+
 private: // Methods:
-	void CreateImage(const VkImageSubresourceRange& subresourceRange);
-	void TransitionImageLayout(const VkImageSubresourceRange& subresourceRange, VulkanBuffer& stagingBuffer);
+	void CreateImage(const VkImageSubresourceRange& subresourceRange, uint32_t width, uint32_t height);
+	void TransitionImageLayout(const VkImageSubresourceRange& subresourceRange, VmaBuffer& stagingBuffer);
 };
 
 
