@@ -41,7 +41,6 @@ private: // Members:
 	// Render resources:
 	std::vector<MaterialProperties> materialProperties;
 	MaterialProperties emptyMaterialProperties;
-	MaterialProperties nextMaterialProperties;
 
 	// Default resources:
 	UniformObject defaultUniformObject;
@@ -49,7 +48,7 @@ private: // Members:
 	std::unique_ptr<Texture2d> defaultTexture2d;
 
 public: // Methods:
-	Material(uint32_t framesInFlight, VulkanContext* context, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv);
+	Material(VulkanContext* context, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv);
 	~Material();
 	MaterialProperties GetEmptyMaterialProperties();
 	// TODO: renderloop

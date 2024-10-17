@@ -18,7 +18,7 @@ private: // Members:
 	VulkanContext* context;
 
 public: // Methods:
-	VulkanDescriptorPool(size_t framesInFlight, VulkanContext* context);
+	VulkanDescriptorPool(VulkanContext* context);
 	~VulkanDescriptorPool();
 };
 

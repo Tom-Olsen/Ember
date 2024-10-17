@@ -18,11 +18,12 @@ public: // Members:
 	VulkanSurface* surface;
 	VulkanLogicalDevice* logicalDevice;
 	VulkanMemoryAllocator* allocator;
+	uint32_t framesInFlight;
 
 private: // Members:
 
 public: // Methods:
-	VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator);
+	VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator, uint32_t framesInFlight);
 	~VulkanContext();
 	SDL_Window* Window();
 	VkInstance& Instance();

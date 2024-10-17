@@ -5,7 +5,7 @@
 
 
 // Constructor:
-VulkanDescriptorPool::VulkanDescriptorPool(size_t framesInFlight, VulkanContext* context)
+VulkanDescriptorPool::VulkanDescriptorPool(VulkanContext* context)
 {
 	this->context = context;
 

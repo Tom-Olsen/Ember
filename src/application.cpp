@@ -42,10 +42,10 @@ Application::Application()
 	surface = std::make_unique<VulkanSurface>(instance.get(), physicalDevice.get(), window.get());
 	logicalDevice = std::make_unique<VulkanLogicalDevice>(physicalDevice.get(), surface.get(), deviceExtensions);
 	allocator = std::make_unique<VulkanMemoryAllocator>(instance.get(), logicalDevice.get(), physicalDevice.get());
-	context = std::make_unique<VulkanContext>(window.get(), instance.get(), physicalDevice.get(), surface.get(), logicalDevice.get(), allocator.get());
+	context = std::make_unique<VulkanContext>(window.get(), instance.get(), physicalDevice.get(), surface.get(), logicalDevice.get(), allocator.get(), framesInFlight);
 
 	// Other:
-	descriptorPool = std::make_unique<VulkanDescriptorPool>(framesInFlight, context.get());
+	descriptorPool = std::make_unique<VulkanDescriptorPool>(context.get());
 	swapchain = std::make_unique<VulkanSwapchain>(context.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 	renderpass = std::make_unique<VulkanRenderpass>(context.get(), physicalDevice->maxMsaaSamples);
 
@@ -107,7 +107,7 @@ Application::Application()
 	texture2d = std::make_unique<Texture2d>(context.get(), "../textures/example.jpg");
 
 	// Material:
-	material = std::make_unique<Material>(framesInFlight, context.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/vert.spv"), std::string("../shaders/frag.spv"));
+	material = std::make_unique<Material>(context.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/vert.spv"), std::string("../shaders/frag.spv"));
 	materialProperties = material->GetEmptyMaterialProperties();
 }
 

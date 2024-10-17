@@ -3,7 +3,7 @@
 
 
 // Constructor:
-VulkanContext::VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator)
+VulkanContext::VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator, uint32_t framesInFlight)
 {
 	this->window = window;
 	this->instance = instance;
@@ -11,6 +11,7 @@ VulkanContext::VulkanContext(SdlWindow* window, VulkanInstance* instance, Vulkan
 	this->surface = surface;
 	this->logicalDevice = logicalDevice;
 	this->allocator = allocator;
+	this->framesInFlight = framesInFlight;
 }
 
 

@@ -5,7 +5,11 @@
 // Consructor:
 MaterialProperties::MaterialProperties()
 {
-
+	this->context = nullptr;
+}
+MaterialProperties::MaterialProperties(VulkanContext* context)
+{
+	this->context = context;
 }
 
 
@@ -19,22 +23,37 @@ MaterialProperties::~MaterialProperties()
 
 
 // Public initializers:
-void MaterialProperties::InitUniformObjectResourceBinding(std::string name, ResourceBinding<VulkanUniformBuffer> uniformBuffer)
+void MaterialProperties::InitUniformObjectResourceBinding(std::string name, uint32_t binding, const UniformObject& uniformObject)
 {
-	uniformBufferMap.emplace(name, uniformBuffer);
+	auto it = uniformBufferMap.find(name);
+	if (it == uniformBufferMap.end())	// name does not exist yet.
+	{
+		VulkanUniformBuffer uniformBuffer(context, sizeof(UniformObject));
+		uniformBuffer.UpdateBuffer(uniformObject);
+		uniformBufferMap.emplace(name, ResourceBinding<VulkanUniformBuffer>(binding, uniformBuffer));
+	}
 }
-void MaterialProperties::InitSamplerResourceBinding(std::string name, ResourceBinding<VulkanSampler*> sampler)
+void MaterialProperties::InitSamplerResourceBinding(std::string name, uint32_t binding, VulkanSampler* sampler)
 {
-	samplerMap.emplace(name, sampler);
+	auto it = samplerMap.find(name);
+	if (it == samplerMap.end())			// name does not exist yet.
+		samplerMap.emplace(name, ResourceBinding<VulkanSampler*>(binding, sampler));
 }
-void MaterialProperties::InitTexture2dResourceBinding(std::string name, ResourceBinding<Texture2d*> texture2d)
+void MaterialProperties::InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d)
 {
-	texture2dMap.emplace(name, texture2d);
+	auto it = texture2dMap.find(name);
+	if (it == texture2dMap.end())		// name does not exist yet.
+		texture2dMap.emplace(name, ResourceBinding<Texture2d*>(binding, texture2d));
 }
 
 
 
-// Public setters:
+// Setters:
+void MaterialProperties::SetContext(VulkanContext* context)
+{
+	if (this->context == nullptr)
+		this->context = context;
+}
 void MaterialProperties::SetUniformBuffer(const std::string& name, const UniformObject& data)
 {
 	// if key exists, replace its value
@@ -55,6 +74,24 @@ void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* textur
 	auto it = texture2dMap.find(name);
 	if (it != texture2dMap.end())
 		it->second.resource = texture;
+}
+
+
+
+// Getters:
+MaterialProperties MaterialProperties::GetCopy()
+{
+	MaterialProperties copy(context);
+	for (const auto& pair : uniformBufferMap)
+	{
+		VulkanUniformBuffer uniformBuffer(context, sizeof(UniformObject));
+		copy.uniformBufferMap.emplace(pair.first, pair.second);
+	}
+	for (const auto& pair : samplerMap)
+		copy.samplerMap.emplace(pair.first, pair.second);
+	for (const auto& pair : texture2dMap)
+		copy.texture2dMap.emplace(pair.first, pair.second);
+	return copy;
 }
 
 

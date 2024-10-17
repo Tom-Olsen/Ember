@@ -6,15 +6,17 @@
 
 
 // Constructor:
-Material::Material(uint32_t framesInFlight, VulkanContext* context, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv)
+Material::Material(VulkanContext* context, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv)
 {
 	this->context = context;
 	this->descriptorPool = descriptorPool;
-	this->framesInFlight = framesInFlight;
+	this->framesInFlight = context->framesInFlight;
 	this->frameIndex = 0;
 
 	// Render resources:
 	materialProperties.resize(framesInFlight);
+	for (uint32_t i = 0; i < framesInFlight; i++)
+		materialProperties[i].SetContext(context);
 
 	// Default resources:
 	defaultUniformObject.model = glm::rotate(Float4x4(1.0f), glm::radians(90.0f), Float3(0.0f, 0.0f, 1.0f));
@@ -32,13 +34,13 @@ Material::Material(uint32_t framesInFlight, VulkanContext* context, VulkanDescri
 	SpirvReflect vertexShaderReflect(vertexCode);
 	SpirvReflect fragmentShaderReflect(fragmentCode);
 
-	// Create pipeline:
+	// Create pipeline (unique for each material):
 	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
 	GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
 	pipeline = std::make_unique<VulkanPipeline>(context, renderpass, vertexCode, fragmentCode, bindings);
 	
 	// Set some default values:
-	emptyMaterialProperties = materialProperties[0];
+	emptyMaterialProperties = materialProperties[0].GetCopy();
 	descriptorWrites.reserve(std::max({ emptyMaterialProperties.uniformBufferMap.size(), emptyMaterialProperties.samplerMap.size(), emptyMaterialProperties.texture2dMap.size() }));
 
 	// Create & fill descriptor sets:
@@ -127,15 +129,11 @@ void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect,
 			for (uint32_t j = 0; j < framesInFlight; j++)
 			{
 				if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-				{
-					VulkanUniformBuffer uniformBuffer(context, sizeof(UniformObject));
-					uniformBuffer.UpdateBuffer(defaultUniformObject);
-					materialProperties[j].InitUniformObjectResourceBinding(binding->name, ResourceBinding<VulkanUniformBuffer>(binding->binding, uniformBuffer));
-				}
+					materialProperties[j].InitUniformObjectResourceBinding(binding->name, binding->binding, defaultUniformObject);
 				if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
-					materialProperties[j].InitSamplerResourceBinding(binding->name, ResourceBinding<VulkanSampler*>(binding->binding, defaultSampler.get()));
+					materialProperties[j].InitSamplerResourceBinding(binding->name, binding->binding, defaultSampler.get());
 				if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-					materialProperties[j].InitTexture2dResourceBinding(binding->name, ResourceBinding<Texture2d*>(binding->binding, defaultTexture2d.get()));
+					materialProperties[j].InitTexture2dResourceBinding(binding->name, binding->binding, defaultTexture2d.get());
 			}
 		}
 	}
