@@ -182,7 +182,6 @@ void MaterialProperties::UpdateUniformBufferDescriptorSets(uint32_t frameIndex)
 		descriptorWrites.push_back(descriptorWrite);
 	}
 	vkUpdateDescriptorSets(context->LogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-	LOG_INFO("UpdateUniformBufferDescriptorSets");
 }
 void MaterialProperties::UpdateSamplerDescriptorSets(uint32_t frameIndex)
 {
@@ -205,7 +204,6 @@ void MaterialProperties::UpdateSamplerDescriptorSets(uint32_t frameIndex)
 		descriptorWrites.push_back(descriptorWrite);
 	}
 	vkUpdateDescriptorSets(context->LogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-	LOG_INFO("UpdateSamplerDescriptorSets");
 }
 void MaterialProperties::UpdateTexture2dDescriptorSets(uint32_t frameIndex)
 {
@@ -228,5 +226,4 @@ void MaterialProperties::UpdateTexture2dDescriptorSets(uint32_t frameIndex)
 		descriptorWrites.push_back(descriptorWrite);
 	}
 	vkUpdateDescriptorSets(context->LogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-	LOG_INFO("UpdateTexture2dDescriptorSets");
 }
