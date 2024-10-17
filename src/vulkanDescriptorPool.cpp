@@ -5,9 +5,9 @@
 
 
 // Constructor:
-VulkanDescriptorPool::VulkanDescriptorPool(VulkanContext* context)
+VulkanDescriptorPool::VulkanDescriptorPool(VulkanLogicalDevice* logicalDevice)
 {
-	this->context = context;
+	this->logicalDevice = logicalDevice;
 
 
 	uint32_t maxSets = 100;	// maximum number of descriptor sets that may be allocated
@@ -25,7 +25,7 @@ VulkanDescriptorPool::VulkanDescriptorPool(VulkanContext* context)
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = maxSets;
 
-	VKA(vkCreateDescriptorPool(context->LogicalDevice(), &poolInfo, nullptr, &descriptorPool));
+	VKA(vkCreateDescriptorPool(logicalDevice->device, &poolInfo, nullptr, &descriptorPool));
 }
 
 
@@ -33,5 +33,5 @@ VulkanDescriptorPool::VulkanDescriptorPool(VulkanContext* context)
 // Destructor:
 VulkanDescriptorPool::~VulkanDescriptorPool()
 {
-	vkDestroyDescriptorPool(context->LogicalDevice(), descriptorPool, nullptr);
+	vkDestroyDescriptorPool(logicalDevice->device, descriptorPool, nullptr);
 }

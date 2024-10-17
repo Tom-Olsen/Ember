@@ -7,12 +7,8 @@
 
 // TODO:
 // - rename uniformObject to constant ???
-// - in material class create and fill VkWriteDescriptorSets according to shader reflection
-// - add uniform buffer, texture and sampler vectors to material
 // - try multi mesh rendering
-// - add push constants
 // - render image while resizing
-// - in mesh combine vertex and index data into a single buffer and use offsets?
 
 
 
@@ -42,10 +38,10 @@ Application::Application()
 	surface = std::make_unique<VulkanSurface>(instance.get(), physicalDevice.get(), window.get());
 	logicalDevice = std::make_unique<VulkanLogicalDevice>(physicalDevice.get(), surface.get(), deviceExtensions);
 	allocator = std::make_unique<VulkanMemoryAllocator>(instance.get(), logicalDevice.get(), physicalDevice.get());
-	context = std::make_unique<VulkanContext>(window.get(), instance.get(), physicalDevice.get(), surface.get(), logicalDevice.get(), allocator.get(), framesInFlight);
+	descriptorPool = std::make_unique<VulkanDescriptorPool>(logicalDevice.get());
+	context = std::make_unique<VulkanContext>(window.get(), instance.get(), physicalDevice.get(), surface.get(), logicalDevice.get(), allocator.get(), descriptorPool.get(), framesInFlight);
 
 	// Other:
-	descriptorPool = std::make_unique<VulkanDescriptorPool>(context.get());
 	swapchain = std::make_unique<VulkanSwapchain>(context.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 	renderpass = std::make_unique<VulkanRenderpass>(context.get(), physicalDevice->maxMsaaSamples);
 
@@ -101,14 +97,14 @@ Application::Application()
 	mesh->SetTriangles(std::move(triangles));
 
 	// Sampler:
-	sampler = std::make_unique<VulkanSampler>(context.get());
+	sampler = std::make_unique<VulkanSampler>(context.get(), "defaultSampler");
 
 	// Texture:
-	texture2d = std::make_unique<Texture2d>(context.get(), "../textures/example.jpg");
+	texture2d = std::make_unique<Texture2d>(context.get(), "../textures/example.jpg", "example");
 
 	// Material:
-	material = std::make_unique<Material>(context.get(), descriptorPool.get(), renderpass.get(), std::string("../shaders/vert.spv"), std::string("../shaders/frag.spv"));
-	materialProperties = material->GetEmptyMaterialProperties();
+	material = std::make_unique<Material>(context.get(), renderpass.get(), std::string("../shaders/vert.spv"), std::string("../shaders/frag.spv"));
+	materialProperties = material->GetMaterialProperties();
 }
 
 
@@ -127,7 +123,6 @@ Application::~Application()
 void Application::Run()
 {
 	time = 0;
-	frameIndex = 0;
 	rebuildSwapchain = false;
 	auto start = std::chrono::steady_clock::now();
 
@@ -153,7 +148,7 @@ void Application::Run()
 		if (rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height != surfaceExtend.height)
 		{
 			rebuildSwapchain = false;
-			frameIndex = 0;
+			context->ResetFrameIndex();
 			ResizeSwapchain();
 		}
 
@@ -175,10 +170,10 @@ void Application::Run()
 void Application::Render()
 {
 	// Wait for fence of previous frame with same frameIndex to finish:
-	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
+	VKA(vkWaitForFences(logicalDevice->device, 1, &fences[context->frameIndex], VK_TRUE, UINT64_MAX));
 	if (!AcquireImage())
 		return;
-	VKA(vkResetFences(logicalDevice->device, 1, &fences[frameIndex]));
+	VKA(vkResetFences(logicalDevice->device, 1, &fences[context->frameIndex]));
 
 	// Update uniform buffer:
 	VkExtent2D windowExtent = window->Extent();
@@ -189,20 +184,19 @@ void Application::Render()
 	materialProperties.SetUniformBuffer("UniformBufferObject", uniformObject);
 	materialProperties.SetSampler("samplerState", sampler.get());
 	materialProperties.SetTexture2d("texture", texture2d.get());
-	material->SetMaterialProperties(materialProperties, frameIndex);
 
 	RecordCommandBuffer();
 	SubmitCommandBuffer();
 	if (!PresentImage())
 		return;
 
-	frameIndex = (frameIndex + 1) % framesInFlight;
+	context->UpdateFrameIndex();
 }
 
 bool Application::AcquireImage()
 {
 	// Signal acquireSemaphore when done:
-	VkResult result = vkAcquireNextImageKHR(logicalDevice->device, swapchain->swapchain, UINT64_MAX, acquireSemaphores[frameIndex], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(logicalDevice->device, swapchain->swapchain, UINT64_MAX, acquireSemaphores[context->frameIndex], VK_NULL_HANDLE, &imageIndex);
 
 	// Resize if needed:
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.get()->framebufferResized)
@@ -221,13 +215,13 @@ bool Application::AcquireImage()
 void Application::RecordCommandBuffer()
 {
 	// Reset command buffers of current command pool:
-	//vkResetCommandBuffer(commands[frameIndex].buffer, 0); //  requires VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag in command pool creation.
+	//vkResetCommandBuffer(commands[context->frameIndex].buffer, 0); //  requires VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag in command pool creation.
 	
 	// Reset entire command pool of current frame (more efficient):
-	vkResetCommandPool(logicalDevice->device, commands[frameIndex].pool, 0); // requires no flags in command pool creation.
+	vkResetCommandPool(logicalDevice->device, commands[context->frameIndex].pool, 0); // requires no flags in command pool creation.
 
 	// Get current command buffer:
-	VkCommandBuffer commandBuffer = commands[frameIndex].buffer;
+	VkCommandBuffer commandBuffer = commands[context->frameIndex].buffer;
 
 	// Begin command buffer:
 	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -272,7 +266,7 @@ void Application::RecordCommandBuffer()
 	PushConstantObject transformData(transform, projView);
 	vkCmdPushConstants(commandBuffer, material->pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantObject), &transformData);
 
-	VkDescriptorSet* descriptorSet = &material->descriptorSets[frameIndex];
+	VkDescriptorSet* descriptorSet = &materialProperties.descriptorSets[context->frameIndex];
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline->pipelineLayout, 0, 1, descriptorSet, 0, nullptr);
 	vkCmdDrawIndexed(commandBuffer, 3 * mesh.get()->GetTriangleCount(), 1, 0, 0, 0);
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
@@ -286,20 +280,20 @@ void Application::SubmitCommandBuffer()
 	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // wait at color attachment stage (fragment shader).
 	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &acquireSemaphores[frameIndex];	// wait for acquireSemaphor
+	submitInfo.pWaitSemaphores = &acquireSemaphores[context->frameIndex];	// wait for acquireSemaphor
 	submitInfo.pWaitDstStageMask = &waitStage;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commands[frameIndex].buffer;
+	submitInfo.pCommandBuffers = &commands[context->frameIndex].buffer;
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &releaseSemaphores[frameIndex]; // signal releaseSemaphor when done
-	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[frameIndex])); // signal fence when done
+	submitInfo.pSignalSemaphores = &releaseSemaphores[context->frameIndex]; // signal releaseSemaphor when done
+	VKA(vkQueueSubmit(logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[context->frameIndex])); // signal fence when done
 }
 
 bool Application::PresentImage()
 {
 	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &releaseSemaphores[frameIndex]; // wait for releaseSemaphor
+	presentInfo.pWaitSemaphores = &releaseSemaphores[context->frameIndex]; // wait for releaseSemaphor
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapchain->swapchain;
 	presentInfo.pImageIndices = &imageIndex;

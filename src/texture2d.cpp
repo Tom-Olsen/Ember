@@ -8,9 +8,10 @@
 
 
 // Constructor:
-Texture2d::Texture2d(VulkanContext* context, char const* filename)
+Texture2d::Texture2d(VulkanContext* context, char const* filename, std::string name)
 {
 	this->context = context;
+	this->name = name;
 
 	// Load image:
 	// STBI_rgb_alpha = 4 8-bit channels

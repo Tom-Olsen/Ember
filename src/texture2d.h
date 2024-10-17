@@ -2,6 +2,7 @@
 #ifndef __INCLUDE_GUARD_texture_h__
 #define __INCLUDE_GUARD_texture_h__
 #include <memory>
+#include <string>
 #include "vulkanContext.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
@@ -16,12 +17,13 @@ public: // Members:
 	int height;
 	int channels;
 	std::shared_ptr<VmaImage> image;
+	std::string name;
 
 private: // Members:
 	VulkanContext* context;
 
 public: // Methods:
-	Texture2d(VulkanContext* context, char const* filename);
+	Texture2d(VulkanContext* context, char const* filename, std::string name);
 	~Texture2d();
 
 public: // Getters:

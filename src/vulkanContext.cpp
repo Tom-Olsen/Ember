@@ -3,7 +3,7 @@
 
 
 // Constructor:
-VulkanContext::VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator, uint32_t framesInFlight)
+VulkanContext::VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator, VulkanDescriptorPool* descriptorPool, uint32_t framesInFlight)
 {
 	this->window = window;
 	this->instance = instance;
@@ -11,7 +11,9 @@ VulkanContext::VulkanContext(SdlWindow* window, VulkanInstance* instance, Vulkan
 	this->surface = surface;
 	this->logicalDevice = logicalDevice;
 	this->allocator = allocator;
+	this->descriptorPool = descriptorPool;
 	this->framesInFlight = framesInFlight;
+	this->frameIndex = 0;
 }
 
 
@@ -24,7 +26,7 @@ VulkanContext::~VulkanContext()
 
 
 
-// Public methods:
+// Getters:
 SDL_Window* VulkanContext::Window()
 {
 	return window->window;
@@ -48,4 +50,20 @@ VkDevice& VulkanContext::LogicalDevice()
 VmaAllocator& VulkanContext::Allocator()
 {
 	return allocator->allocator;
+}
+VkDescriptorPool& VulkanContext::DescriptorPool()
+{
+	return descriptorPool->descriptorPool;
+}
+
+
+
+// Public frame logic:
+void VulkanContext::UpdateFrameIndex()
+{
+	frameIndex = (frameIndex + 1) % framesInFlight;
+}
+void VulkanContext::ResetFrameIndex()
+{
+	frameIndex = 0;
 }

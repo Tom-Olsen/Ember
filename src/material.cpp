@@ -6,25 +6,16 @@
 
 
 // Constructor:
-Material::Material(VulkanContext* context, VulkanDescriptorPool* descriptorPool, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv)
+Material::Material(VulkanContext* context, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv)
 {
 	this->context = context;
-	this->descriptorPool = descriptorPool;
-	this->framesInFlight = context->framesInFlight;
 	this->frameIndex = 0;
-
-	// Render resources:
-	materialProperties.resize(framesInFlight);
-	for (uint32_t i = 0; i < framesInFlight; i++)
-		materialProperties[i].SetContext(context);
+	materialProperties.SetContext(context);
 
 	// Default resources:
-	defaultUniformObject.model = glm::rotate(Float4x4(1.0f), glm::radians(90.0f), Float3(0.0f, 0.0f, 1.0f));
-	defaultUniformObject.view = glm::lookAt(Float3(2.0f, 2.0f, 2.0f), Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 1.0f));
-	defaultUniformObject.proj = glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 10.0f);
-	defaultUniformObject.proj[1][1] *= -1; // flip y-axis as it is inverted by default
-	defaultSampler = std::make_unique<VulkanSampler>(context);
-	defaultTexture2d = std::make_unique<Texture2d>(context, "../textures/white.png");
+	defaultUniformObject = UniformObject();
+	defaultSampler = std::make_unique<VulkanSampler>(context, "defaultMaterialSampler");
+	defaultTexture2d = std::make_unique<Texture2d>(context, "../textures/white.png", "white");
 
 	// Read .spv shader files:
 	std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -38,19 +29,7 @@ Material::Material(VulkanContext* context, VulkanDescriptorPool* descriptorPool,
 	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
 	GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
 	pipeline = std::make_unique<VulkanPipeline>(context, renderpass, vertexCode, fragmentCode, bindings);
-	
-	// Set some default values:
-	emptyMaterialProperties = materialProperties[0].GetCopy();
-	descriptorWrites.reserve(std::max({ emptyMaterialProperties.uniformBufferMap.size(), emptyMaterialProperties.samplerMap.size(), emptyMaterialProperties.texture2dMap.size() }));
-
-	// Create & fill descriptor sets:
-	CreateDescriptorSets();
-	for (uint32_t i = 0; i < framesInFlight; i++)
-	{
-		FillUniformBufferDescriptorSets(i);
-		FillSamplerDescriptorSets(i);
-		FillTexture2dDescriptorSets(i);
-	}
+	materialProperties.SetPipeline(pipeline.get());
 }
 
 
@@ -64,18 +43,9 @@ Material::~Material()
 
 
 // Public:
-MaterialProperties Material::GetEmptyMaterialProperties()
+MaterialProperties Material::GetMaterialProperties()
 {
-	return emptyMaterialProperties;
-}
-void Material::SetMaterialProperties(const MaterialProperties& properties, uint32_t frameIndex)
-{
-	this->frameIndex = frameIndex;
-	materialProperties[frameIndex] = properties;
-
-	FillUniformBufferDescriptorSets(frameIndex);
-	FillSamplerDescriptorSets(frameIndex);
-	FillTexture2dDescriptorSets(frameIndex);
+	return materialProperties.GetCopy();
 }
 
 
@@ -126,95 +96,12 @@ void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect,
 			bindings.push_back(layoutBinding);
 
 			// Create resource based on descriptor type:
-			for (uint32_t j = 0; j < framesInFlight; j++)
-			{
-				if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-					materialProperties[j].InitUniformObjectResourceBinding(binding->name, binding->binding, defaultUniformObject);
-				if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
-					materialProperties[j].InitSamplerResourceBinding(binding->name, binding->binding, defaultSampler.get());
-				if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-					materialProperties[j].InitTexture2dResourceBinding(binding->name, binding->binding, defaultTexture2d.get());
-			}
+			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+				materialProperties.InitUniformObjectResourceBinding(binding->name, binding->binding, defaultUniformObject);
+			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
+				materialProperties.InitSamplerResourceBinding(binding->name, binding->binding, defaultSampler.get());
+			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+				materialProperties.InitTexture2dResourceBinding(binding->name, binding->binding, defaultTexture2d.get());
 		}
 	}
-}
-
-void Material::CreateDescriptorSets()
-{
-	std::vector<VkDescriptorSetLayout> layouts(framesInFlight, pipeline->descriptorSetLayout); // same layout for all frames
-
-	VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-	allocInfo.descriptorPool = descriptorPool->descriptorPool;
-	allocInfo.descriptorSetCount = framesInFlight;
-	allocInfo.pSetLayouts = layouts.data();
-
-	descriptorSets.resize(framesInFlight);
-	VKA(vkAllocateDescriptorSets(context->logicalDevice->device, &allocInfo, descriptorSets.data()));
-}
-void Material::FillUniformBufferDescriptorSets(uint32_t frameIndex)
-{
-	descriptorWrites.clear();
-	for (const auto& pair : materialProperties[frameIndex].uniformBufferMap)
-	{
-		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = pair.second.resource.buffer->buffer;
-		bufferInfo.offset = 0;
-		bufferInfo.range = pair.second.resource.size;
-
-		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-		descriptorWrite.dstSet = descriptorSets[frameIndex];
-		descriptorWrite.dstBinding = pair.second.binding;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
-		descriptorWrite.pImageInfo = nullptr;
-		descriptorWrite.pTexelBufferView = nullptr;
-		descriptorWrites.push_back(descriptorWrite);
-	}
-	vkUpdateDescriptorSets(context->LogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-}
-void Material::FillSamplerDescriptorSets(uint32_t frameIndex)
-{
-	descriptorWrites.clear();
-	for (const auto& pair : materialProperties[frameIndex].samplerMap)
-	{
-		VkDescriptorImageInfo samplerInfo = {};
-		samplerInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		samplerInfo.sampler = pair.second.resource->sampler;
-
-		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-		descriptorWrite.dstSet = descriptorSets[frameIndex];
-		descriptorWrite.dstBinding = pair.second.binding;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = nullptr;
-		descriptorWrite.pImageInfo = &samplerInfo;
-		descriptorWrite.pTexelBufferView = nullptr;
-		descriptorWrites.push_back(descriptorWrite);
-	}
-	vkUpdateDescriptorSets(context->LogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-}
-void Material::FillTexture2dDescriptorSets(uint32_t frameIndex)
-{
-	descriptorWrites.clear();
-	for (const auto& pair : materialProperties[frameIndex].texture2dMap)
-	{
-		VkDescriptorImageInfo imageInfo = {};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = pair.second.resource->image->imageView;
-
-		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-		descriptorWrite.dstSet = descriptorSets[frameIndex];
-		descriptorWrite.dstBinding = pair.second.binding;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = nullptr;
-		descriptorWrite.pImageInfo = &imageInfo;
-		descriptorWrite.pTexelBufferView = nullptr;
-		descriptorWrites.push_back(descriptorWrite);
-	}
-	vkUpdateDescriptorSets(context->LogicalDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }

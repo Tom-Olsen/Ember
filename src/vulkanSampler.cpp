@@ -8,9 +8,10 @@
 
 
 // Constructor:
-VulkanSampler::VulkanSampler(VulkanContext* context)
+VulkanSampler::VulkanSampler(VulkanContext* context, std::string name)
 {
 	this->context = context;
+	this->name = name;
 
 	VkPhysicalDeviceProperties properties{};
 	vkGetPhysicalDeviceProperties(context->PhysicalDevice(), &properties);

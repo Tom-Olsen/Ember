@@ -2,10 +2,7 @@
 #ifndef __INCLUDE_GUARD_vulkanDescriptorPool_h__
 #define __INCLUDE_GUARD_vulkanDescriptorPool_h__
 #include <vulkan/vulkan.h>
-#include "vulkanContext.h"
-#include "vulkanUniformBuffer.h"
-#include "texture2d.h"
-#include "memory"
+#include "vulkanLogicalDevice.h"
 
 
 
@@ -15,10 +12,10 @@ public: // Members:
 	VkDescriptorPool descriptorPool;
 
 private: // Members:
-	VulkanContext* context;
+	VulkanLogicalDevice* logicalDevice;
 
 public: // Methods:
-	VulkanDescriptorPool(VulkanContext* context);
+	VulkanDescriptorPool(VulkanLogicalDevice* logicalDevice);
 	~VulkanDescriptorPool();
 };
 

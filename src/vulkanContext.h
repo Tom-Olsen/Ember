@@ -6,6 +6,7 @@
 #include "vulkanSurface.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMemoryAllocator.h"
+#include "vulkanDescriptorPool.h"
 
 
 
@@ -18,19 +19,28 @@ public: // Members:
 	VulkanSurface* surface;
 	VulkanLogicalDevice* logicalDevice;
 	VulkanMemoryAllocator* allocator;
+	VulkanDescriptorPool* descriptorPool;
 	uint32_t framesInFlight;
+	uint32_t frameIndex;
 
 private: // Members:
 
 public: // Methods:
-	VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator, uint32_t framesInFlight);
+	VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator, VulkanDescriptorPool* descriptorPool, uint32_t framesInFlight);
 	~VulkanContext();
+
+	// Getters:
 	SDL_Window* Window();
 	VkInstance& Instance();
 	VkPhysicalDevice& PhysicalDevice();
 	VkSurfaceKHR& Surface();
 	VkDevice& LogicalDevice();
 	VmaAllocator& Allocator();
+	VkDescriptorPool& DescriptorPool();
+
+	// Frame logic:
+	void UpdateFrameIndex();
+	void ResetFrameIndex();
 
 
 private: // Methods:

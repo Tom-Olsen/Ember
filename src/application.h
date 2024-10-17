@@ -75,7 +75,6 @@ private: // Members:
 	// Render management:
 	const uint32_t framesInFlight = 2;
 	double time;
-	uint32_t frameIndex;
 	uint32_t imageIndex;
 	bool rebuildSwapchain;
 
