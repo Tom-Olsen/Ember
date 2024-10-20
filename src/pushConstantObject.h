@@ -5,26 +5,34 @@
 
 
 
-// Size limit for push constants is 128 bytes.
-// Should only be used for small data that is frequently updated.
-// IMO don't use it at all, use uniform buffers instead, as they are more flexible,
-// and push constants don't scale well, as they are per command buffer.
-// (e.g. agregation of multiple draw calls into one (batching) wont work!)
+/// <summary>
+/// Size limit for push constants is 128 bytes.
+/// Only used for small data that is updated every frame.
+/// </summary>
 struct PushConstantObject
 {
-	alignas(16) Float4x4 transform;	// 64 bytes
-	alignas(16) Float4x4 projView;	// 64 bytes
+public:
+	alignas(16) Float4 time;	// 16 bytes
+	alignas(16) Float4 deltaTime;	// 16 bytes
 
+private:
+	char padding[128 - 2 * sizeof(Float4)];
+
+public:
 	PushConstantObject()
 	{
-		transform = Float4x4(1.0f);
-		projView = Float4x4(1.0f);
+		time = Float4(0.0f);
+		deltaTime = Float4(0.0f);
+		for (int i = 0; i < sizeof(padding); i++)
+			padding[i] = 0;
 	}
 
-	PushConstantObject(Float4x4 transform, Float4x4 projView)
+	PushConstantObject(Float4 time, Float4 deltaTime)
 	{
-		this->transform = transform;
-		this->projView = projView;
+		this->time = time;
+		this->deltaTime = deltaTime;
+		for (int i = 0; i < sizeof(padding); i++)
+			padding[i] = 0;
 	}
 };
 

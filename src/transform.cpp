@@ -1,8 +1,16 @@
 #include "transform.h"
+#include "logger.h"
 
 
 
-// Constructor:
+// Constructors:
+Transform::Transform()
+{
+	this->position = Float3(0.0f);
+	this->eulerAngles = Float3(0.0f);
+	this->scale = Float3(1.0f);
+	UpdateLocalToWorldMatrix();
+}
 Transform::Transform(const Float3& position, const Float3& eulerAngles, const Float3& scale)
 {
 	this->position = position;
@@ -22,6 +30,35 @@ Transform::~Transform()
 
 
 // Public:
+// Setters:
+void Transform::SetPosition(const Float3& position)
+{
+	if (this->position == position)
+		return;
+	this->position = position;
+	updateLocalToWorldMatrix = true;
+}
+void Transform::SetEulerAngles(const Float3& eulerAngles)
+{
+	if (this->eulerAngles == eulerAngles)
+		return;
+	this->eulerAngles = eulerAngles;
+	updateLocalToWorldMatrix = true;
+}
+void Transform::SetScale(const Float3& scale)
+{
+	if (this->scale == scale)
+		return;
+	this->scale = scale;
+	updateLocalToWorldMatrix = true;
+}
+void Transform::SetScale(const float& scale)
+{
+	SetScale(Float3(scale));
+}
+
+
+
 // Getters:
 Float3 Transform::GetPosition() const
 {
@@ -47,31 +84,19 @@ Float4x4 Transform::GetWorldToLocalMatrix()
 		UpdateLocalToWorldMatrix();
 	return worldToLocalMatrix;
 }
-
-
-
-// Setters:
-void Transform::SetPosition(const Float3& position)
+Float3 Transform::GetForward() const
 {
-	if (this->position == position)
-		return;
-	this->position = position;
-	updateLocalToWorldMatrix = true;
+	return Float3(localToWorldMatrix[2]);
 }
-void Transform::SetEulerAngles(const Float3& eulerAngles)
+Float3 Transform::GetRight() const
 {
-	if (this->eulerAngles == eulerAngles)
-		return;
-	this->eulerAngles = eulerAngles;
-	updateLocalToWorldMatrix = true;
+	return Float3(localToWorldMatrix[0]);
 }
-void Transform::SetScale(const Float3& scale)
+Float3 Transform::GetUp() const
 {
-	if (this->scale == scale)
-		return;
-	this->scale = scale;
-	updateLocalToWorldMatrix = true;
+	return Float3(localToWorldMatrix[1]);
 }
+
 
 
 
@@ -94,4 +119,12 @@ void Transform::UpdateLocalToWorldMatrix()
 	// localToWorldMatrix & worldToLocalMatrix:
 	localToWorldMatrix = translationMatrix * rotationMatrix * scaleMatrix;
 	worldToLocalMatrix = glm::inverse(localToWorldMatrix);
+}
+
+
+
+// Overrides:
+void Transform::PrintType() const
+{
+	LOG_TRACE("Transform");
 }

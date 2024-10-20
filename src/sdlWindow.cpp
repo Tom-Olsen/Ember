@@ -54,6 +54,13 @@ bool SdlWindow::HandelEvents()
 			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 				if (event.window.windowID == SDL_GetWindowID(window)) // check if the event is for this window
 					return false;	// stop application
+				break;
+
+			// Keyboard events:
+			case SDL_EVENT_KEY_DOWN:
+				if (event.key.key == SDLK_ESCAPE)
+					return false; // stop application or trigger other behavior
+				break;
 		}
 	}
 

@@ -20,6 +20,12 @@ struct ResourceBinding
 
 
 
+/// <summary>
+/// Each MaterialProperties instance is customized for a specific material.
+/// Therefore, do not create one yourself!
+/// Always use material.GetMaterialPropertiesCopy() to optain a MaterialProperties pointer.
+/// Tipp: Use smart pointers (std::unique_ptr, std::shared_ptr) to avoid manual deletion.
+/// </summary>
 class MaterialProperties
 {
 public: // Members:
@@ -34,8 +40,8 @@ private: // Members:
 	std::vector<VkWriteDescriptorSet> descriptorWrites;
 
 public: // Methods:
-	MaterialProperties();
-	MaterialProperties(VulkanContext* context, VulkanPipeline* pipeline);
+	// Constructors/Destructor:
+	MaterialProperties(VulkanContext* context);
 	~MaterialProperties();
 
 	// Initializers:
@@ -45,14 +51,15 @@ public: // Methods:
 	void InitDescriptorSets();
 
 	// Setters:
-	void SetContext(VulkanContext* context);
 	void SetPipeline(VulkanPipeline* pipeline);
 	void SetUniformBuffer(const std::string& name, const UniformObject& data);
 	void SetSampler(const std::string& name, VulkanSampler* sampler);
+	void SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler);
 	void SetTexture2d(const std::string& name, Texture2d* texture2d);
+	void SetTexture2dForAllFrames(const std::string& name, Texture2d* texture2d);
 
 	// Getters:
-	MaterialProperties GetCopy();
+	MaterialProperties* GetCopy();
 
 private: // Methods:
 	void CreateDescriptorSets();

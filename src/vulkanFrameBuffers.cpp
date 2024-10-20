@@ -5,11 +5,10 @@
 
 
 // Constructor:
-VulkanFrameBuffers::VulkanFrameBuffers(VulkanContext* context, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass, VulkanDepthImage* depthImage, VulkanMsaaImage* msaaImage)
+VulkanFrameBuffers::VulkanFrameBuffers(VulkanContext* context, VulkanDepthImage* depthImage, VulkanMsaaImage* msaaImage)
 {
 	this->context = context;
-	this->size = swapchain->images.size();
-	this->renderpass = renderpass;
+	this->size = context->swapchain->images.size();
 
 	// Clear old frameBuffers if they exist:
 	if (frameBuffers.size() == size)
@@ -28,10 +27,10 @@ VulkanFrameBuffers::VulkanFrameBuffers(VulkanContext* context, VulkanSwapchain* 
 		// order of attachments is important!
 		attachments[0] = msaaImage->image->imageView;
 		attachments[1] = depthImage->image->imageView;
-		attachments[2] = swapchain->imageViews[i];
+		attachments[2] = context->swapchain->imageViews[i];
 
 		VkFramebufferCreateInfo createinfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-		createinfo.renderPass = renderpass->renderpass;
+		createinfo.renderPass = context->Renderpass();
 		createinfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 		createinfo.pAttachments = attachments.data();
 		createinfo.width = extent.width;

@@ -3,15 +3,10 @@
 
 
 // Consructor:
-MaterialProperties::MaterialProperties()
-{
-	this->context = nullptr;
-	this->pipeline = nullptr;
-}
-MaterialProperties::MaterialProperties(VulkanContext* context, VulkanPipeline* pipeline)
+MaterialProperties::MaterialProperties(VulkanContext* context)
 {
 	this->context = context;
-	this->pipeline = pipeline;
+	this->pipeline = nullptr;
 }
 
 
@@ -70,11 +65,6 @@ void MaterialProperties::InitDescriptorSets()
 
 
 // Setters:
-void MaterialProperties::SetContext(VulkanContext* context)
-{
-	if (this->context == nullptr)
-		this->context = context;
-}
 void MaterialProperties::SetPipeline(VulkanPipeline* pipeline)
 {
 	if (this->pipeline == nullptr)
@@ -99,6 +89,21 @@ void MaterialProperties::SetSampler(const std::string& name, VulkanSampler* samp
 			UpdateSamplerDescriptorSets(context->frameIndex);
 		}
 }
+void MaterialProperties::SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler)
+{
+	// if key exists, replace its value
+	auto it = samplerMap.find(name);
+	if (it != samplerMap.end())
+	{
+		VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+		for (uint32_t i = 0; i < context->framesInFlight; i++)
+		{
+			it->second.resource = sampler;
+			it->second.frameNames[i] = sampler->name;
+			UpdateSamplerDescriptorSets(i);
+		}
+	}
+}
 void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* texture)
 {
 	// if key exists, replace its value
@@ -111,24 +116,40 @@ void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* textur
 			UpdateTexture2dDescriptorSets(context->frameIndex);
 		}
 }
+void MaterialProperties::SetTexture2dForAllFrames(const std::string& name, Texture2d* texture)
+{
+	// if key exists, replace its value
+	auto it = texture2dMap.find(name);
+	if (it != texture2dMap.end())
+	{
+		VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+		for (uint32_t i = 0; i < context->framesInFlight; i++)
+		{
+			it->second.resource = texture;
+			it->second.frameNames[i] = texture->name;
+			UpdateTexture2dDescriptorSets(i);
+		}
+	}
+}
 
 
 
 // Getters:
-MaterialProperties MaterialProperties::GetCopy()
+MaterialProperties* MaterialProperties::GetCopy()
 {
-	MaterialProperties copy(context, pipeline);
+	MaterialProperties* copy = new MaterialProperties(context);
 
 	// Copy bindings:
 	for (const auto& pair : uniformBufferMap)
-		copy.InitUniformObjectResourceBinding(pair.first, pair.second.binding, UniformObject());
+		copy->InitUniformObjectResourceBinding(pair.first, pair.second.binding, UniformObject());
 	for (const auto& pair : samplerMap)
-		copy.InitSamplerResourceBinding(pair.first, pair.second.binding, pair.second.resource);
+		copy->InitSamplerResourceBinding(pair.first, pair.second.binding, pair.second.resource);
 	for (const auto& pair : texture2dMap)
-		copy.InitTexture2dResourceBinding(pair.first, pair.second.binding, pair.second.resource);
+		copy->InitTexture2dResourceBinding(pair.first, pair.second.binding, pair.second.resource);
 
 	// Initialize descriptor sets:
-	copy.InitDescriptorSets();
+	copy->SetPipeline(pipeline);
+	copy->InitDescriptorSets();
 
 	return copy;
 }

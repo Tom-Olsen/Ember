@@ -2,10 +2,11 @@
 #ifndef __INCLUDE_GUARD_transform_h__
 #define __INCLUDE_GUARD_transform_h__
 #include "glmTypes.h"
+#include "component.h"
 
 
 
-class Transform
+class Transform : public Component
 {
 private: // Members:
 	Float3 position;
@@ -16,8 +17,15 @@ private: // Members:
 	bool updateLocalToWorldMatrix;
 
 public: // Methods:
+	Transform();
 	Transform(const Float3& position, const Float3& eulerAngles, const Float3& scale);
 	~Transform();
+
+	// Setters:
+	void SetPosition(const Float3& position);
+	void SetEulerAngles(const Float3& eulerAngles);
+	void SetScale(const float& scale);
+	void SetScale(const Float3& scale);
 
 	// Getters:
 	Float3 GetPosition() const;
@@ -25,12 +33,12 @@ public: // Methods:
 	Float3 GetScale() const;
 	Float4x4 GetLocalToWorldMatrix();
 	Float4x4 GetWorldToLocalMatrix();
+	Float3 GetForward() const;
+	Float3 GetRight() const;
+	Float3 GetUp() const;
 
-	// Setters:
-	void SetPosition(const Float3& position);
-	void SetEulerAngles(const Float3& eulerAngles);
-	void SetScale(const Float3& scale);
-
+	// Overrides:
+	void PrintType() const override;
 private: // Methods:
 	void UpdateLocalToWorldMatrix();
 };

@@ -8,13 +8,12 @@
 
 
 // Constructor:
-VulkanPipeline::VulkanPipeline(VulkanContext* context, VulkanRenderpass* renderpass,
+VulkanPipeline::VulkanPipeline(VulkanContext* context,
     const std::vector<char>& vertexCode,
     const std::vector<char>& fragmentCode,
     const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
     this->context = context;
-    this->renderpass = renderpass;
 
     // Create pipeline Layout:
 	CreatePipelineLayout(bindings);
@@ -208,7 +207,7 @@ void VulkanPipeline::CreatePipeline(VulkanContext* context, const VkShaderModule
         createInfo.pColorBlendState = &colorBlendState;		    // Color blending
         createInfo.pDynamicState = &dynamicState;			    // Dynamic states
         createInfo.layout = pipelineLayout;
-        createInfo.renderPass = renderpass->renderpass;
+        createInfo.renderPass = context->Renderpass();
         createInfo.subpass = 0;
         createInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
         createInfo.basePipelineIndex = -1;

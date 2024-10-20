@@ -5,15 +5,16 @@
 
 
 
-VulkanRenderpass::VulkanRenderpass(VulkanContext* context, VkSampleCountFlagBits msaaSamples)
+VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VkSampleCountFlagBits msaaSamples)
 {
-	this->context = context;
+	this->logicalDevice = logicalDevice;
+	this->surface = surface;
 
 	// Define attachments:
 	std::array<VkAttachmentDescription, 3> attachments{};
 	{
 		// Multisampled color attachment description:
-		attachments[0].format = context->surface->surfaceFormat.format;
+		attachments[0].format = surface->surfaceFormat.format;
 		attachments[0].samples = msaaSamples;								// multisampling count
 		attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;				// clear framebuffer to black before rendering
 		attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;			// sno need to store multisampls after render
@@ -33,7 +34,7 @@ VulkanRenderpass::VulkanRenderpass(VulkanContext* context, VkSampleCountFlagBits
 		attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		// Color resolve attachment description: (resolve multisampled fragments)
-		attachments[2].format = context->surface->surfaceFormat.format;
+		attachments[2].format = surface->surfaceFormat.format;
 		attachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
 		attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -89,10 +90,10 @@ VulkanRenderpass::VulkanRenderpass(VulkanContext* context, VkSampleCountFlagBits
 	createInfo.dependencyCount = 1;
 	createInfo.pDependencies = &dependency;
 
-	VKA(vkCreateRenderPass(context->LogicalDevice(), &createInfo, nullptr, &renderpass));
+	VKA(vkCreateRenderPass(logicalDevice->device, &createInfo, nullptr, &renderpass));
 }
 
 VulkanRenderpass::~VulkanRenderpass()
 {
-	vkDestroyRenderPass(context->LogicalDevice(), renderpass, nullptr);
+	vkDestroyRenderPass(logicalDevice->device, renderpass, nullptr);
 }

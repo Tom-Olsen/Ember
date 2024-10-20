@@ -3,56 +3,26 @@
 #include <memory>
 #include <vector>
 #include <chrono>
-#include "sdlWindow.h"
-#include "vulkanInstance.h"
-#include "vulkanPhysicalDevice.h"
-#include "vulkanSurface.h"
-#include "vulkanLogicalDevice.h"
-#include "vulkanMemoryAllocator.h"
 #include "vulkanContext.h"
-#include "vulkanDescriptorPool.h"
-#include "vulkanSwapchain.h"
-#include "vulkanRenderpass.h"
 #include "vulkanMsaaImage.h"
 #include "vulkanDepthImage.h"
 #include "vulkanFrameBuffers.h"
 #include "vulkanCommand.h"
-#include "mesh.h"
-#include "vulkanUniformBuffer.h"
-#include "vulkanSampler.h"
-#include "texture2d.h"
-#include "material.h"
+#include "meshManager.h"
+#include "materialManager.h"
+#include "scene.h"
 
 
 
 /// <summary>
 /// Main application class.
-/// Contains:
-/// -Vulkan objects
-/// -Render loop
-/// -Swapchain management
-/// -Command buffer management
-/// Coming:
-/// -Game loop
-/// -Input handling
 /// </summary>
 class Application
 {
+public: // Members:
+	std::shared_ptr<VulkanContext> context;
+
 private: // Members:
-	// Vulkan context:
-	std::unique_ptr<SdlWindow> window;
-	std::unique_ptr<VulkanInstance> instance;
-	std::unique_ptr<VulkanPhysicalDevice> physicalDevice;
-	std::unique_ptr<VulkanSurface> surface;
-	std::unique_ptr<VulkanLogicalDevice> logicalDevice;
-	std::unique_ptr<VulkanMemoryAllocator> allocator;
-	std::unique_ptr<VulkanContext> context;
-
-	// Other:
-	std::unique_ptr<VulkanDescriptorPool> descriptorPool;
-	std::unique_ptr<VulkanSwapchain> swapchain;
-	std::unique_ptr<VulkanRenderpass> renderpass;
-
 	// Render resources:
 	std::unique_ptr<VulkanMsaaImage> msaaImage;
 	std::unique_ptr<VulkanDepthImage> depthImage;
@@ -65,23 +35,20 @@ private: // Members:
 	std::vector<VkSemaphore> releaseSemaphores;
 
 	// Data:
-	std::unique_ptr<Mesh> mesh;
-	std::unique_ptr<Material> material;
-	MaterialProperties materialProperties;
-	std::unique_ptr<VulkanSampler> sampler;
-	std::unique_ptr<Texture2d> texture2d;
+	Scene* scene;
 	UniformObject uniformObject;
 
 	// Render management:
-	const uint32_t framesInFlight = 2;
 	double time;
+	double deltaTime;
 	uint32_t imageIndex;
 	bool rebuildSwapchain;
 
 public: // Methods:
-	Application();
+	Application(std::shared_ptr<VulkanContext> context);
 	~Application();
 	void Run();
+	void SetScene(Scene* scene);
 
 private: // Methods:
 	void Render();

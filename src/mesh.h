@@ -12,11 +12,15 @@
 /// <summary>
 /// Mesh class for storing vertex positions, colors and triangles.
 /// Mesh class takes ownership of vectors and takes care of cleanup.
+/// Static meshes should be stored as pointers in the static MeshManager class.
 /// </summary>
 class Mesh
 {
+public: // Members:
+	std::string name;
+
 private: // Members:
-	VulkanContext* context;
+	bool isLoaded = false;
 	bool verticesUpdated = false;
 	bool indicesUpdated = false;
 	uint32_t vertexCount = 0;
@@ -29,18 +33,28 @@ private: // Members:
 	std::vector<Int3> triangles;
 
 public: // Methods:
-	Mesh(VulkanContext* context);
+	Mesh(std::string name = "");
 	Mesh(const Mesh& other) = default;
 	Mesh& operator=(const Mesh& other) = default;
 	Mesh(Mesh&& other) noexcept = default;
 	Mesh& operator=(Mesh&& other) noexcept = default;
 	~Mesh();
+
+	// Load/Unload:
+	void Load(VulkanContext* context);
+	void Unload();
 	
 	// Setters:
-	void SetPositions(std::vector<Float3>&& positions);
-	void SetColors(std::vector<Float4>&& colors);
-	void SetUVs(std::vector<Float4>&& uvs);
-	void SetTriangles(std::vector<Int3>&& triangles);
+	void SetPositions(std::vector<Float3>& positions);
+	void SetColors(std::vector<Float4>& colors);
+	void SetUVs(std::vector<Float4>& uvs);
+	void SetTriangles(std::vector<Int3>& triangles);
+
+	// Movers:
+	void MovePositions(std::vector<Float3>& positions);
+	void MoveColors(std::vector<Float4>& colors);
+	void MoveUVs(std::vector<Float4>& uvs);
+	void MoveTriangles(std::vector<Int3>& triangles);
 
 	// Getters:
 	uint32_t GetVertexCount() const;
@@ -59,22 +73,30 @@ public: // Methods:
 	std::vector<uint64_t> GetBufferSizes() const;
 	std::vector<void*> GetBufferDatas();
 	std::vector<VkDeviceSize> GetOffsets();
-	VmaBuffer* GetVertexBuffer();
-	VmaBuffer* GetIndexBuffer();
+	VmaBuffer* GetVertexBuffer(VulkanContext* context);
+	VmaBuffer* GetIndexBuffer(VulkanContext* context);
+	bool IsLoaded();
+	Mesh* GetCopy(std::string newName = "");
+
+	// Mesh transformation:
+	Mesh* Translate(Float3 translation);
+	Mesh* Rotate(Float3 eulerAngles);
+	Mesh* Scale(Float3 scale);
 
 	// Static methods:
 	static std::vector<VkVertexInputBindingDescription> GetBindingDescription();
 	static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
 	static VkIndexType GetIndexType();
 	static uint32_t GetBindingCount();
+	static Mesh* Merge(std::vector<Mesh*>& meshes, std::string name = "");
 
 private: // Methods:
-	void UpdateVertexBuffer();
-	void UpdateIndexBuffer();
+	void UpdateVertexBuffer(VulkanContext* context);
+	void UpdateIndexBuffer(VulkanContext* context);
 };
 
 // Methods that must be defined outside of the class:
-std::string to_string(Mesh mesh);
+std::string to_string(Mesh& mesh);
 
 
 

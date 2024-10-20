@@ -1,5 +1,5 @@
 #include "camera.h"
-#include "macros.h"
+#include "logger.h"
 
 
 
@@ -7,7 +7,10 @@
 Camera::Camera()
 {
 	this->fov = 60.0f;
-	UpdateViewMatrix();
+	this->aspectRatio = 16.0f / 9.0f;	// 1920x1080
+	this->nearClip = 0.1f;
+	this->farClip = 10.0f;
+	updateProjectionMatrix = true;
 }
 
 
@@ -20,33 +23,56 @@ Camera::~Camera()
 
 
 
-// Public:
+// Setters:
+void Camera::SetFov(const float& fov)
+{
+	this->fov = fov;
+	updateProjectionMatrix = true;
+}
+void Camera::SetAspectRatio(const float& aspectRatio)
+{
+	this->aspectRatio = aspectRatio;
+	updateProjectionMatrix = true;
+}
+void Camera::SetNearClip(const float& nearClip)
+{
+	this->nearClip = nearClip;
+	updateProjectionMatrix = true;
+}
+void Camera::SetFarClip(const float& farClip)
+{
+	this->farClip = farClip;
+	updateProjectionMatrix = true;
+}
+
+
+
+// Getters:
 Float4x4 Camera::GetViewMatrix()
 {
-	return viewMatrix;
+	return gameObject->transform->GetWorldToLocalMatrix();
 }
 Float4x4 Camera::GetProjectionMatrix()
 {
+	if (updateProjectionMatrix)
+		UpdateProjectionMatrix();
 	return projectionMatrix;
-}
-void Camera::PrintType() const
-{
-	LOG_TRACE("Camera");
 }
 
 
 
 // Private:
-void Camera::UpdateViewMatrix()
+void Camera::UpdateProjectionMatrix()
 {
-	//// Calculate the view matrix
-	//Float3 right = Float3(1.0f, 0.0f, 0.0f);
-	//Float3 up = Float3(0.0f, 1.0f, 0.0f);
-	//Float3 forward = Float3(0.0f, 0.0f, 1.0f);
-	//viewMatrix = Float4x4(
-	//	right.x, up.x, forward.x, position.x,
-	//	right.y, up.y, forward.y, position.y,
-	//	right.z, up.z, forward.z, position.z,
-	//	0.0f, 0.0f, 0.0f, 1.0f
-	//);
+	updateProjectionMatrix = false;
+	projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip);
+	projectionMatrix[1][1] *= -1;
+}
+
+
+
+// Overrides:
+void Camera::PrintType() const
+{
+	LOG_TRACE("Camera");
 }

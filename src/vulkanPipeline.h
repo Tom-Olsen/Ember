@@ -23,10 +23,9 @@ public: // Members:
 
 private: // Members:
 	VulkanContext* context;
-	VulkanRenderpass* renderpass;
 
 public: // Methods:
-	VulkanPipeline(VulkanContext* context, VulkanRenderpass* renderpass,
+	VulkanPipeline(VulkanContext* context,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
 		const std::vector<VkDescriptorSetLayoutBinding>& bindings);

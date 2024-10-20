@@ -23,10 +23,9 @@ public: // Members:
 private: // Members:
 	std::vector<VkFramebuffer> frameBuffers;
 	VulkanContext* context;
-	VulkanRenderpass* renderpass;
 
 public: // Methods:
-	VulkanFrameBuffers(VulkanContext* context, VulkanSwapchain* swapchain, VulkanRenderpass* renderpass, VulkanDepthImage* depthImage, VulkanMsaaImage* msaaImage);
+	VulkanFrameBuffers(VulkanContext* context, VulkanDepthImage* depthImage, VulkanMsaaImage* msaaImage);
 	~VulkanFrameBuffers();
 	VkFramebuffer& operator[](size_t index);
 };

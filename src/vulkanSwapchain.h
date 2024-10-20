@@ -4,7 +4,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <memory>
-#include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
+#include "vulkanSurface.h"
 
 
 
@@ -20,10 +21,11 @@ public: // Members:
 	std::vector<VkImageView> imageViews;
 
 private: // Members:
-	VulkanContext* context;
+	VulkanLogicalDevice* logicalDevice;
+	VulkanSurface* surface;
 
 public: // Methods:
-	VulkanSwapchain(VulkanContext* context, VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain = nullptr);
+	VulkanSwapchain(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain = nullptr);
 	~VulkanSwapchain();
 
 private: // Methods:

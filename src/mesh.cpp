@@ -4,9 +4,9 @@
 
 
 // Constructor:
-Mesh::Mesh(VulkanContext* context)
+Mesh::Mesh(std::string name)
 {
-	this->context = context;
+	this->name = name;
 }
 
 
@@ -20,29 +20,77 @@ Mesh::~Mesh()
 
 
 // Public methods:
+void Mesh::Load(VulkanContext* context)
+{
+	UpdateVertexBuffer(context);
+	UpdateIndexBuffer(context);
+	verticesUpdated = false;
+	indicesUpdated = false;
+	isLoaded = true;
+}
+void Mesh::Unload()
+{
+	// call destructors and set ptr to nullptrs:
+	vertexBuffer.reset();
+	indexBuffer.reset();
+	verticesUpdated = false;
+	indicesUpdated = false;
+	isLoaded = false;
+}
+ 
+
+
 // Setters:
-void Mesh::SetPositions(std::vector<Float3>&& positions)
+void Mesh::SetPositions(std::vector<Float3>& positions)
+{
+	this->vertexCount = static_cast<uint32_t>(positions.size());
+	this->positions = positions;
+	verticesUpdated = true;
+}
+void Mesh::SetColors(std::vector<Float4>& colors)
+{
+	this->colors = colors;
+	verticesUpdated = true;
+}
+void Mesh::SetUVs(std::vector<Float4>& uvs)
+{
+	this->uvs = uvs;
+	verticesUpdated = true;
+}
+void Mesh::SetTriangles(std::vector<Int3>& triangles)
+{
+	this->triangleCount = static_cast<uint32_t>(triangles.size());
+	this->triangles = triangles;
+	indicesUpdated = true;
+}
+
+
+
+// Movers:
+void Mesh::MovePositions(std::vector<Float3>& positions)
 {
 	this->vertexCount = static_cast<uint32_t>(positions.size());
 	this->positions = std::move(positions);
 	verticesUpdated = true;
 }
-void Mesh::SetColors(std::vector<Float4>&& colors)
+void Mesh::MoveColors(std::vector<Float4>& colors)
 {
 	this->colors = std::move(colors);
 	verticesUpdated = true;
 }
-void Mesh::SetUVs(std::vector<Float4>&& uvs)
+void Mesh::MoveUVs(std::vector<Float4>& uvs)
 {
 	this->uvs = std::move(uvs);
 	verticesUpdated = true;
 }
-void Mesh::SetTriangles(std::vector<Int3>&& triangles)
+void Mesh::MoveTriangles(std::vector<Int3>& triangles)
 {
 	this->triangleCount = static_cast<uint32_t>(triangles.size());
 	this->triangles = std::move(triangles);
 	indicesUpdated = true;
 }
+
+
 
 // Getters:
 uint32_t Mesh::GetVertexCount() const
@@ -105,25 +153,70 @@ std::vector<void*> Mesh::GetBufferDatas()
 {
 	return std::vector<void*>({ static_cast<void*>(positions.data()), static_cast<void*>(colors.data()), static_cast<void*>(uvs.data()) });
 }
-VmaBuffer* Mesh::GetVertexBuffer()
+VmaBuffer* Mesh::GetVertexBuffer(VulkanContext* context)
 {
-	if (verticesUpdated)
+	if (!isLoaded)
+		Load(context);
+	if (verticesUpdated && context != nullptr)
 	{
-		UpdateVertexBuffer();
+		UpdateVertexBuffer(context);
 		verticesUpdated = false;
 	}
 	return vertexBuffer.get();
 }
-VmaBuffer* Mesh::GetIndexBuffer()
+VmaBuffer* Mesh::GetIndexBuffer(VulkanContext* context)
 {
-	if (indicesUpdated)
+	if (!isLoaded)
+		Load(context);
+	if (indicesUpdated && context != nullptr)
 	{
-		UpdateIndexBuffer();
+		UpdateIndexBuffer(context);
 		indicesUpdated = false;
 	}
 	return indexBuffer.get();
 }
+bool Mesh::IsLoaded()
+{
+	return isLoaded;
+}
+Mesh* Mesh::GetCopy(std::string newName)
+{
+	Mesh* copy = new Mesh(newName);
+	copy->SetPositions(positions);
+	copy->SetColors(colors);
+	copy->SetUVs(uvs);
+	copy->SetTriangles(triangles);
+	return copy;
+}
 
+
+
+// Mesh transformation:
+Mesh* Mesh::Translate(Float3 translation)
+{
+	for (Float3& position : positions)
+		position += translation;
+	verticesUpdated = true;
+	return this;
+}
+Mesh* Mesh::Rotate(Float3 eulerAngles)
+{
+	Float3x3 rotX(1, 0, 0, 0, cos(eulerAngles.x), -sin(eulerAngles.x), 0, sin(eulerAngles.x), cos(eulerAngles.x));
+	Float3x3 rotY(cos(eulerAngles.y), 0, sin(eulerAngles.y), 0, 1, 0, -sin(eulerAngles.y), 0, cos(eulerAngles.y));
+	Float3x3 rotZ(cos(eulerAngles.z), -sin(eulerAngles.z), 0, sin(eulerAngles.z), cos(eulerAngles.z), 0, 0, 0, 1);
+	Float3x3 rotationMatrix = rotX * rotY * rotZ;
+	for (Float3& position : positions)
+		position = rotationMatrix * position;
+	verticesUpdated = true;
+	return this;
+}
+Mesh* Mesh::Scale(Float3 scale)
+{
+	for (Float3& position : positions)
+		position *= scale;
+	verticesUpdated = true;
+	return this;
+}
 
 
 
@@ -209,16 +302,81 @@ std::vector<VkDeviceSize> Mesh::GetOffsets()
 	std::vector<VkDeviceSize> offsets = { 0, GetSizeOfPositions(), GetSizeOfPositions() + GetSizeOfColors() };
 	return offsets;
 }
+Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
+{
+	// Get total vertex and triangle counts:
+	uint32_t vertexCount = 0;
+	uint32_t triangleCount = 0;
+	for (const Mesh* mesh : meshes)
+	{
+		vertexCount += mesh->GetVertexCount();
+		triangleCount += mesh->GetTriangleCount();
+	}
+
+	// Triangle reindexing:
+	uint32_t index = 0;
+	uint32_t vertCount = 0;
+
+	// Prepare merged data:
+	std::vector<Float3> mergedPositions;
+	std::vector<Float4> mergedColors;
+	std::vector<Float4> mergedUvs;
+	std::vector<Int3> mergedTriangles;
+	mergedPositions.reserve(vertexCount);
+	mergedColors.reserve(vertexCount);
+	mergedUvs.reserve(vertexCount);
+	mergedTriangles.reserve(triangleCount);
+
+	for (Mesh* mesh : meshes)
+	{
+		// Get data of current mesh:
+		std::vector<Float3> positions = mesh->GetPositions();
+		std::vector<Float4> colors = mesh->GetColors();
+		std::vector<Float4> uvs = mesh->GetUVs();
+		std::vector<Int3> triangles = mesh->GetTriangles();
+
+		// Append positions (must always be present).
+		mergedPositions.insert(mergedPositions.end(), positions.begin(), positions.end());
+
+		// Append colors (use default color if not present).
+		if (colors.size() == mesh->vertexCount)
+			mergedColors.insert(mergedColors.end(), colors.begin(), colors.end());
+		else
+			mergedColors.insert(mergedColors.end(), mesh->vertexCount, Float4());
+
+		// Append uvs (use default uv if not present).
+		if (uvs.size() == mesh->vertexCount)
+			mergedUvs.insert(mergedUvs.end(), uvs.begin(), uvs.end());
+		else
+			mergedUvs.insert(mergedUvs.end(), mesh->vertexCount, Float4());
+
+		// Handle triangles:
+		for (int i = 0; i < triangles.size(); i++)
+		{
+			mergedTriangles.push_back(triangles[i] + Int3(vertCount));
+			index++;
+		}
+		vertCount += mesh->vertexCount;
+	}
+
+	// Construct mergedMesh:
+	Mesh* mergedMesh = new Mesh(name);
+	mergedMesh->MovePositions(mergedPositions);
+	mergedMesh->MoveColors(mergedColors);
+	mergedMesh->MoveUVs(mergedUvs);
+	mergedMesh->MoveTriangles(mergedTriangles);
+	return mergedMesh;
+}
 
 
 
 // Non-member:
-std::string to_string(Mesh mesh)
+std::string to_string(Mesh& mesh)
 {
 	std::string str = "Mesh:\n";
 
 	str += "Vertices:\n";
-	for (const Float3& position : mesh.GetPositions())
+	for (const Float3& position : mesh .GetPositions())
 		str += to_string(position) + "\n";
 
 	str += "Colors:\n";
@@ -235,7 +393,7 @@ std::string to_string(Mesh mesh)
 
 // Private:
 #ifdef RESIZEABLE_BAR // No staging buffer:
-void Mesh::UpdateVertexBuffer()
+void Mesh::UpdateVertexBuffer(VulkanContext* context)
 {
 	uint64_t size = GetSizeOfBuffer();
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
@@ -266,7 +424,7 @@ void Mesh::UpdateVertexBuffer()
 	VKA(vmaUnmapMemory(context->Allocator(), vertexBuffer->allocation));
 }
 #else // With Staging buffer:
-void Mesh::UpdateVertexBuffer()
+void Mesh::UpdateVertexBuffer(VulkanContext* context)
 {
 	uint64_t size = GetSizeOfBuffer();
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
@@ -296,7 +454,7 @@ void Mesh::UpdateVertexBuffer()
 }
 #endif
 #ifdef RESIZEABLE_BAR // No staging buffer:
-void Mesh::UpdateIndexBuffer()
+void Mesh::UpdateIndexBuffer(VulkanContext* context)
 {
 	uint64_t size = 3 * GetSizeOfTriangles();
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
@@ -325,7 +483,7 @@ void Mesh::UpdateIndexBuffer()
 	VKA(vmaUnmapMemory(context->Allocator(), indexBuffer->allocation));
 }
 #else // With Staging buffer:
-void Mesh::UpdateIndexBuffer()
+void Mesh::UpdateIndexBuffer(VulkanContext* context)
 {
 	uint64_t size = 3 * GetSizeOfTriangles();
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish

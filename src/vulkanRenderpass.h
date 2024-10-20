@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_vulkanRenderpass_h__
 #define __INCLUDE_GUARD_vulkanRenderpass_h__
-#include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
+#include "vulkanSurface.h"
 
 
 
@@ -13,10 +14,11 @@ public: // Members:
 	VkRenderPass renderpass;
 
 private: // Members:
-	VulkanContext* context;
+	VulkanLogicalDevice* logicalDevice;
+	VulkanSurface* surface;
 
 public: // Methods:
-	VulkanRenderpass(VulkanContext* context, VkSampleCountFlagBits msaaSamples);
+	VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VkSampleCountFlagBits msaaSamples);
 	~VulkanRenderpass();
 };
 

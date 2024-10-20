@@ -6,11 +6,12 @@
 
 
 // Constructor:
-Material::Material(VulkanContext* context, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv)
+Material::Material(VulkanContext* context, const std::string& vertexSpv, const std::string& fragmentSpv, std::string name)
 {
 	this->context = context;
+	this->name = name;
 	this->frameIndex = 0;
-	materialProperties.SetContext(context);
+	materialProperties = std::make_unique<MaterialProperties>(context);
 
 	// Default resources:
 	defaultUniformObject = UniformObject();
@@ -28,8 +29,9 @@ Material::Material(VulkanContext* context, VulkanRenderpass* renderpass, const s
 	// Create pipeline (unique for each material):
 	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
 	GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
-	pipeline = std::make_unique<VulkanPipeline>(context, renderpass, vertexCode, fragmentCode, bindings);
-	materialProperties.SetPipeline(pipeline.get());
+	pipeline = std::make_unique<VulkanPipeline>(context, vertexCode, fragmentCode, bindings);
+	materialProperties->SetPipeline(pipeline.get());
+	materialProperties->InitDescriptorSets();
 }
 
 
@@ -43,9 +45,9 @@ Material::~Material()
 
 
 // Public:
-MaterialProperties Material::GetMaterialProperties()
+MaterialProperties* Material::GetMaterialPropertiesCopy()
 {
-	return materialProperties.GetCopy();
+	return materialProperties->GetCopy();
 }
 
 
@@ -97,11 +99,11 @@ void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect,
 
 			// Create resource based on descriptor type:
 			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-				materialProperties.InitUniformObjectResourceBinding(binding->name, binding->binding, defaultUniformObject);
+				materialProperties->InitUniformObjectResourceBinding(binding->name, binding->binding, defaultUniformObject);
 			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
-				materialProperties.InitSamplerResourceBinding(binding->name, binding->binding, defaultSampler.get());
+				materialProperties->InitSamplerResourceBinding(binding->name, binding->binding, defaultSampler.get());
 			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-				materialProperties.InitTexture2dResourceBinding(binding->name, binding->binding, defaultTexture2d.get());
+				materialProperties->InitTexture2dResourceBinding(binding->name, binding->binding, defaultTexture2d.get());
 		}
 	}
 }

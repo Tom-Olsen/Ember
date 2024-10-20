@@ -3,29 +3,41 @@
 #define __INCLUDE_GUARD_camera_h__
 #include "glmTypes.h"
 #include "component.h"
+#include "gameObject.h"
 
 
 
 class Camera : public Component
 {
 public: // Members:
+
+private: // Members:
 	float fov;
 	float aspectRatio;
 	float nearClip;
 	float farClip;
-	Float4x4 viewMatrix;
 	Float4x4 projectionMatrix;
-	bool updateCamera;
+	bool updateProjectionMatrix;
 
 public: // Methods:
 	Camera();
 	~Camera();
+
+	// Setters:
+	void SetFov(const float& fov);
+	void SetAspectRatio(const float& aspectRatio);
+	void SetNearClip(const float& nearClip);
+	void SetFarClip(const float& farClip);
+
+	// Getters:
 	Float4x4 GetViewMatrix();
 	Float4x4 GetProjectionMatrix();
-	void PrintType() const;
+
+	// Overrides:
+	void PrintType() const override;
 
 private: // Methods:
-	void UpdateViewMatrix();
+	void UpdateProjectionMatrix();
 };
 
 

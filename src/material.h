@@ -5,22 +5,22 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "spirvReflect.h"
 #include "vulkanContext.h"
 #include "vulkanPipeline.h"
-#include "vulkanDescriptorPool.h"
-#include "vulkanRenderpass.h"
-#include "vulkanSampler.h"
-#include "vulkanUniformBuffer.h"
-#include "texture2d.h"
+#include "spirvReflect.h"
 #include "materialProperties.h"
-#include "mesh.h"
 
 
 
+/// <summary>
+/// Material creation is expensive.
+/// It is recommended to create all materials at the start of the application.
+/// Create a Material pointer and store it in the static MaterialManager class, making it globally accessible.
+/// </summary>
 class Material
 {
 public: // Members:
+	std::string name;
 	std::unique_ptr<VulkanPipeline> pipeline;
 
 private: // Members:
@@ -28,7 +28,7 @@ private: // Members:
 	VulkanContext* context;
 	uint32_t frameIndex;
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
-	MaterialProperties materialProperties;
+	std::unique_ptr<MaterialProperties> materialProperties;
 
 	// Default resources:
 	UniformObject defaultUniformObject;
@@ -36,9 +36,14 @@ private: // Members:
 	std::unique_ptr<Texture2d> defaultTexture2d;
 
 public: // Methods:
-	Material(VulkanContext* context, VulkanRenderpass* renderpass, const std::string& vertexSpv, const std::string& fragmentSpv);
+	Material(VulkanContext* context, const std::string& vertexSpv, const std::string& fragmentSpv, std::string name);
+	Material(const Material& other) = default;
+	Material& operator=(const Material& other) = default;
+	Material(Material&& other) noexcept = default;
+	Material& operator=(Material&& other) noexcept = default;
 	~Material();
-	MaterialProperties GetMaterialProperties();
+
+	MaterialProperties* GetMaterialPropertiesCopy();
 
 private: // Methods:
 	std::vector<char> ReadShaderCode(const std::string& spvFile);

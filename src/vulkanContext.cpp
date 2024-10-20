@@ -3,17 +3,37 @@
 
 
 // Constructor:
-VulkanContext::VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator, VulkanDescriptorPool* descriptorPool, uint32_t framesInFlight)
+VulkanContext::VulkanContext(uint32_t framesInFlight)
 {
-	this->window = window;
-	this->instance = instance;
-	this->physicalDevice = physicalDevice;
-	this->surface = surface;
-	this->logicalDevice = logicalDevice;
-	this->allocator = allocator;
-	this->descriptorPool = descriptorPool;
 	this->framesInFlight = framesInFlight;
 	this->frameIndex = 0;
+
+	// Window:
+	window = std::make_unique<SdlWindow>();
+
+	// Get instance extensions:
+	std::vector<const char*> instanceExtensions;
+	#if defined(VALIDATION_LAYERS_ACTIVE)
+	instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+	instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
+	#endif
+	window->AddSdlInstanceExtensions(instanceExtensions);	// sdl instance extensions
+	// and more ...
+
+	// Get device extensions:
+	std::vector<const char*> deviceExtensions;
+	deviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	// and more ...
+
+	// Create vulkan context:
+	instance = std::make_unique<VulkanInstance>(instanceExtensions);
+	physicalDevice = std::make_unique<VulkanPhysicalDevice>(instance.get());
+	surface = std::make_unique<VulkanSurface>(instance.get(), physicalDevice.get(), window.get());
+	logicalDevice = std::make_unique<VulkanLogicalDevice>(physicalDevice.get(), surface.get(), deviceExtensions);
+	allocator = std::make_unique<VulkanMemoryAllocator>(instance.get(), logicalDevice.get(), physicalDevice.get());
+	descriptorPool = std::make_unique<VulkanDescriptorPool>(logicalDevice.get());
+	swapchain = std::make_unique<VulkanSwapchain>(logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+	renderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface.get(), physicalDevice->maxMsaaSamples);
 }
 
 
@@ -21,7 +41,7 @@ VulkanContext::VulkanContext(SdlWindow* window, VulkanInstance* instance, Vulkan
 // Destructor:
 VulkanContext::~VulkanContext()
 {
-
+	VKA(vkDeviceWaitIdle(logicalDevice->device));
 }
 
 
@@ -54,6 +74,14 @@ VmaAllocator& VulkanContext::Allocator()
 VkDescriptorPool& VulkanContext::DescriptorPool()
 {
 	return descriptorPool->descriptorPool;
+}
+VkSwapchainKHR& VulkanContext::Swapchain()
+{
+	return swapchain->swapchain;
+}
+VkRenderPass& VulkanContext::Renderpass()
+{
+	return renderpass->renderpass;
 }
 
 

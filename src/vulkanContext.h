@@ -1,5 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanContext_h__
 #define __INCLUDE_GUARD_vulkanContext_h__
+#include <vulkan\vulkan.h>
 #include "sdlWindow.h"
 #include "vulkanInstance.h"
 #include "vulkanPhysicalDevice.h"
@@ -7,26 +8,30 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanMemoryAllocator.h"
 #include "vulkanDescriptorPool.h"
+#include "vulkanSwapchain.h"
+#include "vulkanRenderpass.h"
 
 
 
 class VulkanContext
 {
 public: // Members:
-	SdlWindow* window;
-	VulkanInstance* instance;
-	VulkanPhysicalDevice* physicalDevice;
-	VulkanSurface* surface;
-	VulkanLogicalDevice* logicalDevice;
-	VulkanMemoryAllocator* allocator;
-	VulkanDescriptorPool* descriptorPool;
+	std::unique_ptr<SdlWindow> window;
+	std::unique_ptr<VulkanInstance> instance;
+	std::unique_ptr<VulkanPhysicalDevice> physicalDevice;
+	std::unique_ptr<VulkanSurface> surface;
+	std::unique_ptr<VulkanLogicalDevice> logicalDevice;
+	std::unique_ptr<VulkanMemoryAllocator> allocator;
+	std::unique_ptr<VulkanDescriptorPool> descriptorPool;
+	std::unique_ptr<VulkanSwapchain> swapchain;
+	std::unique_ptr<VulkanRenderpass> renderpass;
 	uint32_t framesInFlight;
 	uint32_t frameIndex;
 
 private: // Members:
 
 public: // Methods:
-	VulkanContext(SdlWindow* window, VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, VulkanLogicalDevice* logicalDevice, VulkanMemoryAllocator* allocator, VulkanDescriptorPool* descriptorPool, uint32_t framesInFlight);
+	VulkanContext(uint32_t framesInFlight);
 	~VulkanContext();
 
 	// Getters:
@@ -37,11 +42,12 @@ public: // Methods:
 	VkDevice& LogicalDevice();
 	VmaAllocator& Allocator();
 	VkDescriptorPool& DescriptorPool();
+	VkSwapchainKHR& Swapchain();
+	VkRenderPass& Renderpass();
 
 	// Frame logic:
 	void UpdateFrameIndex();
 	void ResetFrameIndex();
-
 
 private: // Methods:
 };
