@@ -16,13 +16,14 @@ class MeshManager
 public: // Members
 
 private: // Members
+	static bool isInitialized;
     static VulkanContext* context;
     static std::unordered_map<std::string, std::unique_ptr<Mesh>> meshes;
 
 public: // Methods
-    static void InitDefaultMeshes(VulkanContext* vulkanContext);
+    static void Init(VulkanContext* vulkanContext);
     static void UnloadAllMeshes();
-    static void ClearMeshMap();
+    static void Clear();
 
     static void AddMesh(const std::string name, Mesh* mesh);
     static Mesh* GetMesh(const std::string& name);

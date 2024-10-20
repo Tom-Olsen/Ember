@@ -16,12 +16,13 @@ class MaterialManager
 public: // Members
 
 private: // Members
+    static bool isInitialized;
 	static VulkanContext* context;
     static std::unordered_map<std::string, std::unique_ptr<Material>> materials;
 
 public: // Methods
-    static void InitDefaultMaterials(VulkanContext* vulkanContext);
-	static void ClearMaterialMap();
+    static void Init(VulkanContext* vulkanContext);
+	static void Clear();
 
     static void AddMaterial(const std::string name, Material* material);
     static Material* GetMaterial(const std::string& name);

@@ -4,36 +4,6 @@
 
 
 
-void Set(std::vector<int>&& in, std::vector<int>& b)
-{
-    b = in;
-}
-void Test()
-{
-    Mesh mesh("test");
-
-    std::vector<Float3> positions;
-    positions.emplace_back(-0.5f, -0.5f, 0.0f);
-    positions.emplace_back(-0.5f, 0.5f, 0.0f);
-    positions.emplace_back(0.5f, -0.5f, 0.0f);
-    positions.emplace_back(0.5f, 0.5f, 0.0f);
-    //mesh.MovePositions(positions);
-    mesh.SetPositions(positions);
-
-    LOG_INFO("positions: {}", positions.size());
-    for (Float3 i : positions)
-		LOG_INFO(to_string(i));
-
-    LOG_INFO("\nmesh.positions: {}", mesh.GetPositions().size());
-	for (Float3 i : mesh.GetPositions())
-		LOG_INFO(to_string(i));
-
-    int k;
-    std::cin >> k;
-}
-
-
-
 int main()
 {
     // VS debugging:
@@ -44,15 +14,10 @@ int main()
     uint32_t framesInFlight = 2;
 	std::shared_ptr<VulkanContext> context = std::make_shared<VulkanContext>(framesInFlight);
     Application app(context);
-    MeshManager::InitDefaultMeshes(context.get());
-    MaterialManager::InitDefaultMaterials(context.get());
-
-
-    // TODO: move these into own manager classes:
-    std::unique_ptr<VulkanSampler> sampler;
-    std::unique_ptr<Texture2d> texture2d;
-    sampler = std::make_unique<VulkanSampler>(app.context.get(), "defaultSampler");
-    texture2d = std::make_unique<Texture2d>(app.context.get(), "../textures/example.jpg", "example");
+    MeshManager::Init(context.get());
+    MaterialManager::Init(context.get());
+	TextureManager::Init(context.get());
+	SamplerManager::Init(context.get());
 
     // Build simple scene:
     Scene* scene = new Scene();
@@ -70,8 +35,8 @@ int main()
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("UnitQuad");
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->materialProperties->SetSamplerForAllFrames("samplerState", sampler.get());
-        meshRenderer->materialProperties->SetTexture2dForAllFrames("texture", texture2d.get());
+        meshRenderer->materialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
+        meshRenderer->materialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("grass"));
         floor->AddComponent<MeshRenderer>(meshRenderer);
         scene->AddGameObject(floor);
     }
@@ -82,8 +47,8 @@ int main()
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("UnitCube");
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->materialProperties->SetSamplerForAllFrames("samplerState", sampler.get());
-        meshRenderer->materialProperties->SetTexture2dForAllFrames("texture", texture2d.get());
+        meshRenderer->materialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
+        meshRenderer->materialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("brick"));
         cube->AddComponent<MeshRenderer>(meshRenderer);
         scene->AddGameObject(cube);
     }
@@ -94,8 +59,8 @@ int main()
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("UnitCube");
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->materialProperties->SetSamplerForAllFrames("samplerState", sampler.get());
-        meshRenderer->materialProperties->SetTexture2dForAllFrames("texture", texture2d.get());
+        meshRenderer->materialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
+        meshRenderer->materialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("stone"));
         cube->AddComponent<MeshRenderer>(meshRenderer);
         scene->AddGameObject(cube);
     }
@@ -124,8 +89,10 @@ int main()
 
 
     // Cleanup:
-    MaterialManager::ClearMaterialMap();
-    MeshManager::ClearMeshMap();
+	SamplerManager::Clear();
+	TextureManager::Clear();
+    MaterialManager::Clear();
+    MeshManager::Clear();
     delete scene;
 
     return 0;

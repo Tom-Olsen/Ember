@@ -6,17 +6,16 @@
 
 
 // Constructor:
-Material::Material(VulkanContext* context, const std::string& vertexSpv, const std::string& fragmentSpv, std::string name)
+Material::Material(VulkanContext* context, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name)
 {
+	// Not sure why I need to init these here (doesnt work otherwise). Init happens in main.cpp.
+	TextureManager::Init(context);
+	SamplerManager::Init(context);
+
 	this->context = context;
 	this->name = name;
 	this->frameIndex = 0;
 	materialProperties = std::make_unique<MaterialProperties>(context);
-
-	// Default resources:
-	defaultUniformObject = UniformObject();
-	defaultSampler = std::make_unique<VulkanSampler>(context, "defaultMaterialSampler");
-	defaultTexture2d = std::make_unique<Texture2d>(context, "../textures/white.png", "white");
 
 	// Read .spv shader files:
 	std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -53,12 +52,12 @@ MaterialProperties* Material::GetMaterialPropertiesCopy()
 
 
 // Private methods:
-std::vector<char> Material::ReadShaderCode(const std::string& spvFile)
+std::vector<char> Material::ReadShaderCode(const std::filesystem::path& spvFile)
 {
     // Open shader file:
     std::ifstream file(spvFile, std::ios::binary);
     if (!file.is_open())
-        LOG_CRITICAL("Error opening shader file: {}", spvFile);
+        LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
 
     // Get file size:
     file.seekg(0, std::ios::end);
@@ -99,11 +98,11 @@ void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect,
 
 			// Create resource based on descriptor type:
 			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-				materialProperties->InitUniformObjectResourceBinding(binding->name, binding->binding, defaultUniformObject);
+				materialProperties->InitUniformObjectResourceBinding(binding->name, binding->binding, UniformObject());
 			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
-				materialProperties->InitSamplerResourceBinding(binding->name, binding->binding, defaultSampler.get());
+				materialProperties->InitSamplerResourceBinding(binding->name, binding->binding, SamplerManager::GetSampler("default"));
 			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-				materialProperties->InitTexture2dResourceBinding(binding->name, binding->binding, defaultTexture2d.get());
+				materialProperties->InitTexture2dResourceBinding(binding->name, binding->binding, TextureManager::GetTexture2d("white"));
 		}
 	}
 }

@@ -10,6 +10,8 @@
 #include "vulkanCommand.h"
 #include "meshManager.h"
 #include "materialManager.h"
+#include "textureManager.h"
+#include "samplerManager.h"
 #include "scene.h"
 
 

@@ -2,13 +2,15 @@
 #ifndef __INCLUDE_GUARD_material_h__
 #define __INCLUDE_GUARD_material_h__
 #include <memory>
-#include <string>
+#include <filesystem>
 #include <vector>
 #include <unordered_map>
 #include "vulkanContext.h"
 #include "vulkanPipeline.h"
 #include "spirvReflect.h"
 #include "materialProperties.h"
+#include "samplerManager.h"
+#include "textureManager.h"
 
 
 
@@ -30,13 +32,8 @@ private: // Members:
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
 	std::unique_ptr<MaterialProperties> materialProperties;
 
-	// Default resources:
-	UniformObject defaultUniformObject;
-	std::unique_ptr<VulkanSampler> defaultSampler;
-	std::unique_ptr<Texture2d> defaultTexture2d;
-
 public: // Methods:
-	Material(VulkanContext* context, const std::string& vertexSpv, const std::string& fragmentSpv, std::string name);
+	Material(VulkanContext* context, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name);
 	Material(const Material& other) = default;
 	Material& operator=(const Material& other) = default;
 	Material(Material&& other) noexcept = default;
@@ -46,7 +43,7 @@ public: // Methods:
 	MaterialProperties* GetMaterialPropertiesCopy();
 
 private: // Methods:
-	std::vector<char> ReadShaderCode(const std::string& spvFile);
+	std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile);
 	void GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage);
 };
 

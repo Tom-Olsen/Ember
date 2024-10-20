@@ -3,6 +3,7 @@
 #define __INCLUDE_GUARD_texture_h__
 #include <memory>
 #include <string>
+#include <filesystem>
 #include "vulkanContext.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
@@ -23,7 +24,7 @@ private: // Members:
 	VulkanContext* context;
 
 public: // Methods:
-	Texture2d(VulkanContext* context, char const* filename, std::string name);
+	Texture2d(VulkanContext* context, const std::filesystem::path& filePath, std::string name);
 	~Texture2d();
 
 public: // Getters:

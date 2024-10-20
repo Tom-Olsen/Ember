@@ -8,7 +8,7 @@
 
 
 // Constructor:
-Texture2d::Texture2d(VulkanContext* context, char const* filename, std::string name)
+Texture2d::Texture2d(VulkanContext* context, const std::filesystem::path& filePath, std::string name)
 {
 	this->context = context;
 	this->name = name;
@@ -16,7 +16,7 @@ Texture2d::Texture2d(VulkanContext* context, char const* filename, std::string n
 	// Load image:
 	// STBI_rgb_alpha = 4 8-bit channels
 	int width, height, channels;
-	stbi_uc* pixels = stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
+	stbi_uc* pixels = stbi_load(filePath.string().c_str(), &width, &height, &channels, STBI_rgb_alpha);
 	if (!pixels)
 		throw std::runtime_error("failed to load texture image!");
 

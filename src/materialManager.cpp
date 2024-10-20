@@ -3,19 +3,25 @@
 
 
 // Static members:
+bool MaterialManager::isInitialized = false;
 VulkanContext* MaterialManager::context;
 std::unordered_map<std::string, std::unique_ptr<Material>> MaterialManager::materials;
 
 
 
 // Initialization and cleanup:
-void MaterialManager::InitDefaultMaterials(VulkanContext* vulkanContext)
+void MaterialManager::Init(VulkanContext* vulkanContext)
 {
+	if (isInitialized)
+		return;
+
+	isInitialized = true;
 	context = vulkanContext;
-	Material* defaultMaterial = new Material(context, std::string("../shaders/vert.spv"), std::string("../shaders/frag.spv"), "defaultMaterial");
+
+	Material* defaultMaterial = new Material(context, "../shaders/vert.spv", "../shaders/frag.spv", "defaultMaterial");
 	AddMaterial(defaultMaterial->name, defaultMaterial);
 }
-void MaterialManager::ClearMaterialMap()
+void MaterialManager::Clear()
 {
 	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
 	materials.clear();

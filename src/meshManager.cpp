@@ -4,15 +4,21 @@
 
 
 // Static members:
+bool MeshManager::isInitialized = false;
 VulkanContext* MeshManager::context;
 std::unordered_map<std::string, std::unique_ptr<Mesh>> MeshManager::meshes;
 
 
 
 // Initialization and cleanup:
-void MeshManager::InitDefaultMeshes(VulkanContext* vulkanContext)
+void MeshManager::Init(VulkanContext* vulkanContext)
 {
+	if (isInitialized)
+		return;
+
+	isInitialized = true;
 	context = vulkanContext;
+
 	Mesh* unitQuad = UnitQuad();
 	AddMesh(unitQuad->name, unitQuad);
 
@@ -25,7 +31,7 @@ void MeshManager::UnloadAllMeshes()
 	for (auto& pair : meshes)
 		pair.second->Unload();
 }
-void MeshManager::ClearMeshMap()
+void MeshManager::Clear()
 {
 	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
 	meshes.clear();
@@ -112,13 +118,14 @@ Mesh* MeshManager::UnitCube()
 	for (uint32_t i = 0; i < 6; i++)
 		faces.push_back(unitQuad->GetCopy());
 
-	float piHalf = static_cast<float>(0.5 * std::numbers::pi);
-	faces[0]->Rotate(Float3( piHalf, 0, 0))->Translate(Float3( 0.0f,  0.5f,  0.0f));
-	faces[1]->Rotate(Float3(-piHalf, 0, 0))->Translate(Float3( 0.0f, -0.5f,  0.0f));
-	faces[2]->Rotate(Float3(0,  piHalf, 0))->Translate(Float3(-0.5f,  0.0f,  0.0f));
-	faces[3]->Rotate(Float3(0, -piHalf, 0))->Translate(Float3( 0.5f,  0.0f,  0.0f));
-	faces[4]->Rotate(Float3(0, 0,  piHalf))->Translate(Float3( 0.0f,  0.0f,  0.5f));
-	faces[5]->Rotate(Float3(0, 0, -piHalf))->Translate(Float3( 0.0f,  0.0f, -0.5f));
+	float pi = static_cast<float>(std::numbers::pi);
+	float piHalf = 0.5f * pi;
+	faces[0]->Rotate(Float3( piHalf,      0,  0))->Translate(Float3( 0.0f,  0.5f,  0.0f));
+	faces[1]->Rotate(Float3(-piHalf,      0, pi))->Translate(Float3( 0.0f, -0.5f,  0.0f));
+	faces[2]->Rotate(Float3( piHalf, piHalf,  0))->Translate(Float3(-0.5f,  0.0f,  0.0f));
+	faces[3]->Rotate(Float3( piHalf,-piHalf,  0))->Translate(Float3( 0.5f,  0.0f,  0.0f));
+	faces[4]->Rotate(Float3(      0,      0,  0))->Translate(Float3( 0.0f,  0.0f,  0.5f));
+	faces[5]->Rotate(Float3(     pi,      0,  0))->Translate(Float3( 0.0f,  0.0f, -0.5f));
 
 	return Mesh::Merge(faces, "UnitCube");
 }
