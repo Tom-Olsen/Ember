@@ -7,6 +7,7 @@
 GameObject::GameObject(std::string name)
 {
 	this->name = name;
+	this->isActive = true;
  	transform = new Transform(Float3(0.0f), Float3(0.0f), Float3(1.0f));
 	AddComponent(transform);
 }

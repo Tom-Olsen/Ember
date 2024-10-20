@@ -57,7 +57,7 @@ int main()
     // Build simple scene:
     Scene* scene = new Scene();
     {// Camera:
-        GameObject* camera = new GameObject("camera");
+        GameObject* camera = new GameObject("mainCamera");
         camera->transform->SetPosition(Float3(0.0f, -2.0f, 2.0f));
         camera->transform->SetEulerAngles(Float3(45.0f, 0.0f, 0.0f));
         Camera* cameraComponent = new Camera();

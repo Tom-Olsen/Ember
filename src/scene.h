@@ -12,6 +12,7 @@
 class Scene
 {
 public: // Members:
+	Camera* activeCamera = nullptr;
 	std::unordered_map<std::string, MeshRenderer*> meshRenderers;
 
 private: // Members:

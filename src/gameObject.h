@@ -21,6 +21,7 @@ class GameObject
 {
 public: // Members:
 	std::string name;
+	bool isActive;
 	Transform* transform;
 
 private: // Members:

@@ -54,7 +54,7 @@ Float4x4 Camera::GetViewMatrix()
 }
 Float4x4 Camera::GetProjectionMatrix()
 {
-	if (updateProjectionMatrix)
+	if (updateProjectionMatrix && isActive && gameObject->isActive)
 		UpdateProjectionMatrix();
 	return projectionMatrix;
 }

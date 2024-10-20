@@ -18,10 +18,18 @@ class GameObject;
 class Component
 {
 public: // Members:
-	GameObject* gameObject = nullptr;
+	GameObject* gameObject;
+	bool isActive;
 
 public: // Methods:
-	virtual ~Component() = default;
+	Component();
+	virtual ~Component();
+
+	/// <summary>
+	/// Check if the Component and its parent GameObject is active.
+	/// </summary>
+	/// <returns></returns>
+	bool IsActive();
 
 	// Pure virtual method that must be implemented by derived classes:
     virtual void PrintType() const = 0;

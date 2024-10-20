@@ -74,15 +74,18 @@ void Application::Run()
 			ResizeSwapchain();
 		}
 
-		GameObject* cameraGO = scene->GetGameObject("camera");
+		GameObject* cameraGO = scene->GetGameObject("mainCamera");
 		Camera* camera = cameraGO->GetComponent<Camera>();
 		uniformObject.view = camera->GetViewMatrix();
 		uniformObject.proj = camera->GetProjectionMatrix();
 		for (auto& pair : scene->meshRenderers)
 		{
 			MeshRenderer* meshRenderer = pair.second;
-			uniformObject.model = meshRenderer->gameObject->transform->GetLocalToWorldMatrix();
-			meshRenderer->materialProperties->SetUniformBuffer("UniformBufferObject", uniformObject);
+			if (meshRenderer->IsActive())
+			{
+				uniformObject.model = meshRenderer->gameObject->transform->GetLocalToWorldMatrix();
+				meshRenderer->materialProperties->SetUniformBuffer("UniformBufferObject", uniformObject);
+			}
 		}
 
 		// Render next frame:
@@ -176,19 +179,21 @@ void Application::RecordCommandBuffer()
 			for (auto& pair : scene->meshRenderers)
 			{
 				MeshRenderer* meshRenderer = pair.second;
+				if (meshRenderer->IsActive())
+				{
+					// TODO: move these two outside of for loop and do them for each material only once.
+					vkCmdPushConstants(commandBuffer, meshRenderer->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantObject), &pushTime);
+					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetPipeline());
 
-				// TODO: move these two outside of for loop and do them for each material only once.
-				vkCmdPushConstants(commandBuffer, meshRenderer->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantObject), &pushTime);
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetPipeline());
+					// TODO: clean this up
+					VkBuffer buffers[3] = { meshRenderer->mesh->GetVertexBuffer(context.get())->buffer, meshRenderer->mesh->GetVertexBuffer(context.get())->buffer, meshRenderer->mesh->GetVertexBuffer(context.get())->buffer };
+					vkCmdBindVertexBuffers(commandBuffer, 0, Mesh::GetBindingCount(), buffers, meshRenderer->mesh->GetOffsets().data());
+					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context.get())->buffer, 0, Mesh::GetIndexType());
 
-				// TODO: clean this up
-				VkBuffer buffers[3] = { meshRenderer->mesh->GetVertexBuffer(context.get())->buffer, meshRenderer->mesh->GetVertexBuffer(context.get())->buffer, meshRenderer->mesh->GetVertexBuffer(context.get())->buffer };
-				vkCmdBindVertexBuffers(commandBuffer, 0, Mesh::GetBindingCount(), buffers, meshRenderer->mesh->GetOffsets().data());
-				vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context.get())->buffer, 0, Mesh::GetIndexType());
-
-				VkDescriptorSet* descriptorSet = meshRenderer->GetDescriptorSets(context->frameIndex);
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetPipelineLayout(), 0, 1, descriptorSet, 0, nullptr);
-				vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+					VkDescriptorSet* descriptorSet = meshRenderer->GetDescriptorSets(context->frameIndex);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetPipelineLayout(), 0, 1, descriptorSet, 0, nullptr);
+					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+				}
 			}
 		}
 		vkCmdEndRenderPass(commandBuffer);
