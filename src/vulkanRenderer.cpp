@@ -10,10 +10,8 @@ VulkanRenderer::VulkanRenderer(VulkanContext* context)
 	this->context = context;
 
 	// Render resources:
-	msaaImage = std::make_unique<VulkanMsaaImage>(context);
-	depthImage = std::make_unique<VulkanDepthImage>(context);
+	forwardRenderPass = std::make_unique<ForwardRenderPass>(context, context->physicalDevice->maxMsaaSamples);
 	shadowMap = std::make_unique<ShadowMap>(context);
-	frameBuffers = std::make_unique<VulkanFrameBuffers>(context, depthImage.get(), msaaImage.get());
 	shadowCommands.reserve(context->framesInFlight);
 	commands.reserve(context->framesInFlight);
 	for (uint32_t i = 0; i < context->framesInFlight; i++)
@@ -65,20 +63,8 @@ void VulkanRenderer::ResizeSwapchain()
 	context->swapchain.swap(newSwapchain);
 
 	// Recreate renderpass:
-	std::unique_ptr<VulkanRenderpass> newRenderpass = std::make_unique<VulkanRenderpass>(context->logicalDevice.get(), context->surface.get(), context->physicalDevice->maxMsaaSamples);
-	context->renderpass.swap(newRenderpass);
-
-	// Recreate msaa image:
-	std::unique_ptr<VulkanMsaaImage> newMsaaImage = std::make_unique<VulkanMsaaImage>(context);
-	msaaImage.swap(newMsaaImage);
-
-	// Recreate depth image:
-	std::unique_ptr<VulkanDepthImage> newDepthImage = std::make_unique<VulkanDepthImage>(context);
-	depthImage.swap(newDepthImage);
-
-	// Recreate frameBuffers:
-	std::unique_ptr<VulkanFrameBuffers> newFrameBuffers = std::make_unique<VulkanFrameBuffers>(context, depthImage.get(), msaaImage.get());
-	frameBuffers.swap(newFrameBuffers);
+	std::unique_ptr<ForwardRenderPass> newRenderpass = std::make_unique<ForwardRenderPass>(context, context->physicalDevice->maxMsaaSamples);
+	forwardRenderPass.swap(newRenderpass);
 
 	// Recreate synchronization objects:
 	DestroyFences();
@@ -179,8 +165,8 @@ void VulkanRenderer::RecordCommandBuffer(Scene* scene)
 		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 		clearValues[1].depthStencil = { 1.0f, 0 };
 		VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassBeginInfo.renderPass = context->Renderpass();
-		renderPassBeginInfo.framebuffer = (*frameBuffers)[imageIndex];
+		renderPassBeginInfo.renderPass = forwardRenderPass->renderPass;
+		renderPassBeginInfo.framebuffer = forwardRenderPass->framebuffers[imageIndex];
 		renderPassBeginInfo.renderArea.offset = { 0, 0 };
 		renderPassBeginInfo.renderArea.extent = context->surface->CurrentExtent();
 		renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());

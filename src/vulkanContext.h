@@ -9,7 +9,6 @@
 #include "vulkanMemoryAllocator.h"
 #include "vulkanDescriptorPool.h"
 #include "vulkanSwapchain.h"
-#include "vulkanRenderpass.h"
 
 
 
@@ -24,7 +23,6 @@ public: // Members:
 	std::unique_ptr<VulkanMemoryAllocator> allocator;
 	std::unique_ptr<VulkanDescriptorPool> descriptorPool;
 	std::unique_ptr<VulkanSwapchain> swapchain;
-	std::unique_ptr<VulkanRenderpass> renderpass;
 	uint32_t framesInFlight;
 	uint32_t frameIndex;
 
@@ -43,7 +41,6 @@ public: // Methods:
 	VmaAllocator& Allocator();
 	VkDescriptorPool& DescriptorPool();
 	VkSwapchainKHR& Swapchain();
-	VkRenderPass& Renderpass();
 	bool DepthClampEnabled();
 
 	// Frame logic:

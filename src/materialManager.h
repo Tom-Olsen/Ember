@@ -18,10 +18,11 @@ public: // Members
 private: // Members
     static bool isInitialized;
 	static VulkanContext* context;
+    static VkRenderPass* renderPass;
     static std::unordered_map<std::string, std::unique_ptr<Material>> materials;
 
 public: // Methods
-    static void Init(VulkanContext* vulkanContext);
+    static void Init(VulkanContext* vulkanContext, VkRenderPass* renderPass);
 	static void Clear();
 
     static void AddMaterial(const std::string name, Material* material);

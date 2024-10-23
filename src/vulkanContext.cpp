@@ -33,7 +33,6 @@ VulkanContext::VulkanContext(uint32_t framesInFlight)
 	allocator = std::make_unique<VulkanMemoryAllocator>(instance.get(), logicalDevice.get(), physicalDevice.get());
 	descriptorPool = std::make_unique<VulkanDescriptorPool>(logicalDevice.get());
 	swapchain = std::make_unique<VulkanSwapchain>(logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-	renderpass = std::make_unique<VulkanRenderpass>(logicalDevice.get(), surface.get(), physicalDevice->maxMsaaSamples);
 }
 
 
@@ -78,10 +77,6 @@ VkDescriptorPool& VulkanContext::DescriptorPool()
 VkSwapchainKHR& VulkanContext::Swapchain()
 {
 	return swapchain->swapchain;
-}
-VkRenderPass& VulkanContext::Renderpass()
-{
-	return renderpass->renderpass;
 }
 bool VulkanContext::DepthClampEnabled()
 {

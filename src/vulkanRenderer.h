@@ -2,13 +2,9 @@
 #define __INCLUDE_GUARD_vulkanRenderer_h__
 #include <memory>
 #include <vector>
-#include "vulkanContext.h"		// TODO: remove renderpass from this
-#include "vulkanMsaaImage.h"
-#include "vulkanDepthImage.h"
-//#include "forwardPass.h"		// TODO: default renderPass
+#include "vulkanContext.h"
+#include "forwardRenderPass.h"
 #include "shadowMap.h"			// TODO: rename to shadowPass
-
-#include "vulkanFrameBuffers.h"	// TODO: move this into renderpass?
 #include "vulkanCommand.h"
 
 // Move this in application
@@ -28,13 +24,11 @@ class VulkanRenderer
 {
 public: // Members:
 	VulkanContext* context;
+	std::unique_ptr<ForwardRenderPass> forwardRenderPass;
 
 private: // Members:
 	// Render resources:
-	std::unique_ptr<VulkanMsaaImage> msaaImage;
-	std::unique_ptr<VulkanDepthImage> depthImage;
 	std::unique_ptr<ShadowMap> shadowMap;
-	std::unique_ptr<VulkanFrameBuffers> frameBuffers;
 	std::vector<VulkanCommand> shadowCommands;
 	std::vector<VulkanCommand> commands;
 

@@ -15,7 +15,7 @@ Application::Application()
 
 	// Init static managers:
 	MeshManager::Init(context.get());
-	MaterialManager::Init(context.get());
+	MaterialManager::Init(context.get(), &renderer->forwardRenderPass->renderPass);
 	TextureManager::Init(context.get());
 	SamplerManager::Init(context.get());
 }

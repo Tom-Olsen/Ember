@@ -6,13 +6,15 @@
 
 
 // Constructor:
-Material::Material(VulkanContext* context, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name)
+Material::Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name)
 {
+	// TODO: -try removing these two
 	// Not sure why I need to init these here (doesnt work otherwise). Init happens in main.cpp.
 	TextureManager::Init(context);
 	SamplerManager::Init(context);
 
 	this->context = context;
+	this->forwardRenderPass = forwardRenderPass;
 	this->name = name;
 	this->frameIndex = 0;
 	materialProperties = std::make_unique<MaterialProperties>(context);
@@ -28,7 +30,7 @@ Material::Material(VulkanContext* context, const std::filesystem::path& vertexSp
 	// Create pipeline (unique for each material):
 	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
 	GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
-	pipeline = std::make_unique<VulkanPipeline>(context, vertexCode, fragmentCode, bindings);
+	pipeline = std::make_unique<VulkanPipeline>(context, renderPass, vertexCode, fragmentCode, bindings);
 	materialProperties->SetPipeline(pipeline.get());
 	materialProperties->InitDescriptorSets();
 }

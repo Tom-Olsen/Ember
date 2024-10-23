@@ -2,7 +2,7 @@
 #define __INCLUDE_GUARD_vulkanPipeline_h__
 #include <string>
 #include "vulkanContext.h"
-#include "vulkanRenderpass.h"
+#include "forwardRenderPass.h"
 #include "glmTypes.h"
 #include "pushConstantObject.h"
 
@@ -25,7 +25,7 @@ private: // Members:
 	VulkanContext* context;
 
 public: // Methods:
-	VulkanPipeline(VulkanContext* context,
+	VulkanPipeline(VulkanContext* context, VkRenderPass* renderPass,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
 		const std::vector<VkDescriptorSetLayoutBinding>& bindings);
@@ -34,7 +34,7 @@ public: // Methods:
 private: // Methods:
 	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 	VkShaderModule CreateShaderModule(const std::vector<char>& code);
-	void CreatePipeline(VulkanContext* context, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
+	void CreatePipeline(VkRenderPass* renderPass, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
 };
 
 

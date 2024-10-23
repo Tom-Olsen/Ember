@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "vulkanContext.h"
 #include "vulkanPipeline.h"
+#include "forwardRenderpass.h"
 #include "spirvReflect.h"
 #include "materialProperties.h"
 #include "samplerManager.h"
@@ -28,12 +29,13 @@ public: // Members:
 private: // Members:
 	// Internal:
 	VulkanContext* context;
+	ForwardRenderPass* forwardRenderPass;
 	uint32_t frameIndex;
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
 	std::unique_ptr<MaterialProperties> materialProperties;
 
 public: // Methods:
-	Material(VulkanContext* context, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name);
+	Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name);
 	Material(const Material& other) = default;
 	Material& operator=(const Material& other) = default;
 	Material(Material&& other) noexcept = default;

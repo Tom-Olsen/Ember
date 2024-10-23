@@ -7,7 +7,7 @@
 // TODO:
 // - implement camera projection matrix by my own
 // - render image while resizing
-// - implement game update loop and physics fixedUpdate loop
+// - implement game physics fixedUpdate loop
 // - camera controller script
 // - shadows
 // - post processing
@@ -16,7 +16,6 @@
 // - physics
 // - audio
 // - rename frameBuffers to framebuffers
-// - move some src files to dedicated folders: vulkan, managers, components
 // - move framebuffers into vulkanRenderpass
 // - rename vulkanRenderpass to ??? (defaultPass?) (renderPass?)
 

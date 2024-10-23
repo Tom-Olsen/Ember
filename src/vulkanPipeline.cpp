@@ -8,7 +8,7 @@
 
 
 // Constructor:
-VulkanPipeline::VulkanPipeline(VulkanContext* context,
+VulkanPipeline::VulkanPipeline(VulkanContext* context, VkRenderPass* renderPass,
     const std::vector<char>& vertexCode,
     const std::vector<char>& fragmentCode,
     const std::vector<VkDescriptorSetLayoutBinding>& bindings)
@@ -23,7 +23,7 @@ VulkanPipeline::VulkanPipeline(VulkanContext* context,
     VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
 
     // Create pipeline:
-    CreatePipeline(context, vertexShaderModule, fragmentShaderModule);
+    CreatePipeline(renderPass, vertexShaderModule, fragmentShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
     vkDestroyShaderModule(context->LogicalDevice(), vertexShaderModule, nullptr);
@@ -76,7 +76,7 @@ VkShaderModule VulkanPipeline::CreateShaderModule(const std::vector<char>& code)
     return shaderModule;
 }
 
-void VulkanPipeline::CreatePipeline(VulkanContext* context, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
+void VulkanPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
 {
     // Vertex shader:
     VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -198,7 +198,7 @@ void VulkanPipeline::CreatePipeline(VulkanContext* context, const VkShaderModule
     pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
     pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
     pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = context->Renderpass();
+    pipelineInfo.renderPass = *renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
     pipelineInfo.basePipelineIndex = -1;
