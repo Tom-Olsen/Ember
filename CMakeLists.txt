@@ -11,17 +11,51 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 
 # Source, header, shader files:
-file(GLOB SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
-file(GLOB HEADER_FILES "${PROJECT_SOURCE_DIR}/src/*.h")
-file(GLOB SHADER_FILES "${PROJECT_SOURCE_DIR}/shaders/*.glsl" "${PROJECT_SOURCE_DIR}/shaders/*.hlsl" "${PROJECT_SOURCE_DIR}/shaders/*.hlsli")
+file(GLOB ALL_SOURCE_FILES
+    "${PROJECT_SOURCE_DIR}/src/*"
+    "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"
+    "${PROJECT_SOURCE_DIR}/shaders/*.glsl")
+file(GLOB SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*")
+file(GLOB VULKAN_SOURCE_FILES
+    "${PROJECT_SOURCE_DIR}/src/vulkan*"
+    "${PROJECT_SOURCE_DIR}/src/vma*"
+    "${PROJECT_SOURCE_DIR}/src/sdl*"
+    "${PROJECT_SOURCE_DIR}/src/pushConstant*")
+file(GLOB MANAGER_SOURCE_FILES
+    "${PROJECT_SOURCE_DIR}/src/logger*"
+    "${PROJECT_SOURCE_DIR}/src/macros*"
+    "${PROJECT_SOURCE_DIR}/src/time*"
+    "${PROJECT_SOURCE_DIR}/src/*manager*"
+    "${PROJECT_SOURCE_DIR}/src/*manager*")
+file(GLOB SHADER_FILES
+    "${PROJECT_SOURCE_DIR}/shaders/*.glsl"
+    "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"
+    "${PROJECT_SOURCE_DIR}/shaders/*.hlsli")
+file(GLOB MATH_FILES "${PROJECT_SOURCE_DIR}/src/*Types.h")
+file(GLOB COMPONENTS
+    "${PROJECT_SOURCE_DIR}/src/component.*"
+    "${PROJECT_SOURCE_DIR}/src/transform.*"
+    "${PROJECT_SOURCE_DIR}/src/camera.*"
+    "${PROJECT_SOURCE_DIR}/src/meshRenderer.*"
+    "${PROJECT_SOURCE_DIR}/src/spin.*"
+    "${PROJECT_SOURCE_DIR}/src/spotLight.*")
+
+# Remove Vulkan files from the default source/header lists:
+list(REMOVE_ITEM SOURCE_FILES ${VULKAN_SOURCE_FILES} ${MANAGER_SOURCE_FILES} ${MATH_FILES} ${COMPONENTS})
+
+# Groups for IDE display:
+source_group("Components" FILES ${COMPONENTS})
+source_group("Managers" FILES ${MANAGER_SOURCE_FILES})
+source_group("Math" FILES ${MATH_FILES})
+source_group("Shaders" FILES ${SHADER_FILES})
+source_group("Source" FILES ${SOURCE_FILES})
+source_group("Vulkan Renderer" FILES ${VULKAN_SOURCE_FILES})
 
 # Mark shader files as header-only to prevent compilation
 foreach(SHADER_FILE ${SHADER_FILES})
     set_source_files_properties(${SHADER_FILE} PROPERTIES HEADER_FILE_ONLY ON)
 endforeach()
 
-# Group shader files in Shader directioy:
-source_group("Shaders" FILES ${SHADER_FILES})
 
 # Required libraries (location of CMakeLists.txt):
 add_subdirectory(libs/SDL)              # SDL submodule
@@ -50,7 +84,7 @@ if(WIN32)
 endif(WIN32)
 
 # Configure MyEngine executable:
-add_executable(MyEngine ${SOURCE_FILES} ${HEADER_FILES} ${SHADER_FILES})
+add_executable(MyEngine ${ALL_SOURCE_FILES})
 add_dependencies(MyEngine build_shaders)
 
 # Add headers (location of headers to include, e.g. SDL3/SDL.h in case of SDL):
