@@ -20,13 +20,13 @@ MaterialProperties::~MaterialProperties()
 
 
 // Public initializers:
-void MaterialProperties::InitUniformObjectResourceBinding(std::string name, uint32_t binding, const UniformObject& uniformObject)
+void MaterialProperties::InitUniformResourceBinding(std::string name, uint32_t binding, const RenderMatrizes& renderMatrizes)
 {
 	auto it = uniformBufferMap.find(name);
 	if (it == uniformBufferMap.end())
 	{
-		VulkanUniformBuffer uniformBuffer(context, sizeof(UniformObject));
-		uniformBuffer.UpdateBuffer(uniformObject);
+		VulkanUniformBuffer uniformBuffer(context, sizeof(RenderMatrizes));
+		uniformBuffer.UpdateBuffer(renderMatrizes);
 		std::vector<std::string> frameNames(context->framesInFlight);
 		for (uint32_t i = 0; i < context->framesInFlight; i++)
 			frameNames[i] = std::to_string(i);	// name for uniform buffers not needed, so just index them.
@@ -70,24 +70,30 @@ void MaterialProperties::SetPipeline(VulkanPipeline* pipeline)
 	if (this->pipeline == nullptr)
 		this->pipeline = pipeline;
 }
-void MaterialProperties::SetUniformBuffer(const std::string& name, const UniformObject& data)
+void MaterialProperties::SetUniform(const std::string& name, const RenderMatrizes& renderMatrizes)
 {
 	// if key exists, replace its value
 	auto it = uniformBufferMap.find(name);
 	if (it != uniformBufferMap.end())
-		it->second.resource.UpdateBuffer(data);
+		it->second.resource.UpdateBuffer(renderMatrizes);
+	else
+		LOG_WARN("Uniform '{}' not found in uniformBufferMap!", name);
 }
 void MaterialProperties::SetSampler(const std::string& name, VulkanSampler* sampler)
 {
 	// if key exists, replace its value
 	auto it = samplerMap.find(name);
 	if (it != samplerMap.end())
+	{
 		if (it->second.frameNames[context->frameIndex] != sampler->name)
 		{
 			it->second.resource = sampler;
 			it->second.frameNames[context->frameIndex] = sampler->name;
 			UpdateSamplerDescriptorSets(context->frameIndex);
 		}
+	}
+	else
+		LOG_WARN("Sampler '{}' not found in samplerMap!", name);
 }
 void MaterialProperties::SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler)
 {
@@ -103,18 +109,24 @@ void MaterialProperties::SetSamplerForAllFrames(const std::string& name, VulkanS
 			UpdateSamplerDescriptorSets(i);
 		}
 	}
+	else
+		LOG_WARN("Sampler '{}' not found in samplerMap!", name);
 }
 void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* texture)
 {
 	// if key exists, replace its value
 	auto it = texture2dMap.find(name);
 	if (it != texture2dMap.end())
+	{
 		if (it->second.frameNames[context->frameIndex] != texture->name)
 		{
 			it->second.resource = texture;
 			it->second.frameNames[context->frameIndex] = texture->name;
 			UpdateTexture2dDescriptorSets(context->frameIndex);
 		}
+	}
+	else
+		LOG_WARN("Texture2d '{}' not found in texture2dMap!", name);
 }
 void MaterialProperties::SetTexture2dForAllFrames(const std::string& name, Texture2d* texture)
 {
@@ -130,6 +142,8 @@ void MaterialProperties::SetTexture2dForAllFrames(const std::string& name, Textu
 			UpdateTexture2dDescriptorSets(i);
 		}
 	}
+	else
+		LOG_WARN("Texture2d '{}' not found in texture2dMap!", name);
 }
 
 
@@ -141,7 +155,7 @@ MaterialProperties* MaterialProperties::GetCopy()
 
 	// Copy bindings:
 	for (const auto& pair : uniformBufferMap)
-		copy->InitUniformObjectResourceBinding(pair.first, pair.second.binding, UniformObject());
+		copy->InitUniformResourceBinding(pair.first, pair.second.binding, RenderMatrizes());
 	for (const auto& pair : samplerMap)
 		copy->InitSamplerResourceBinding(pair.first, pair.second.binding, pair.second.resource);
 	for (const auto& pair : texture2dMap)
@@ -152,6 +166,22 @@ MaterialProperties* MaterialProperties::GetCopy()
 	copy->InitDescriptorSets();
 
 	return copy;
+}
+
+
+
+// Debugging:
+void MaterialProperties::PrintMaps() const
+{
+	LOG_TRACE("UniformBufferMap:");
+	for (const auto& pair : uniformBufferMap)
+		LOG_TRACE("name: {}", pair.first);
+	LOG_TRACE("SamplerMap:");
+	for (const auto& pair : samplerMap)
+		LOG_TRACE("name: {}", pair.first);
+	LOG_TRACE("Texture2dMap:");
+	for (const auto& pair : texture2dMap)
+		LOG_TRACE("name: {}", pair.first);
 }
 
 
@@ -177,11 +207,11 @@ void MaterialProperties::UpdateAllDescriptorSets(uint32_t frameIndex)
 	size_t count = std::max({ uniformBufferMap.size(), samplerMap.size(), texture2dMap.size() });
 	descriptorWrites.reserve(count);
 
-	UpdateUniformBufferDescriptorSets(frameIndex);
+	UpdateUniformDescriptorSets(frameIndex);
 	UpdateSamplerDescriptorSets(frameIndex);
 	UpdateTexture2dDescriptorSets(frameIndex);
 }
-void MaterialProperties::UpdateUniformBufferDescriptorSets(uint32_t frameIndex)
+void MaterialProperties::UpdateUniformDescriptorSets(uint32_t frameIndex)
 {
 	descriptorWrites.clear();
 	for (const auto& pair : uniformBufferMap)

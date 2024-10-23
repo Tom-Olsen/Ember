@@ -14,6 +14,7 @@ private: // Members:
 	Float3 scale;
 	Float4x4 localToWorldMatrix;
 	Float4x4 worldToLocalMatrix;
+	Float4x4 normalMatrix;
 	bool updateLocalToWorldMatrix;
 
 public: // Methods:
@@ -33,12 +34,13 @@ public: // Methods:
 	Float3 GetScale() const;
 	Float4x4 GetLocalToWorldMatrix();
 	Float4x4 GetWorldToLocalMatrix();
-	Float3 GetForward() const;
-	Float3 GetRight() const;
-	Float3 GetUp() const;
+	Float4x4 GetNormalMatrix();
+	Float3 GetForward();
+	Float3 GetRight();
+	Float3 GetUp();
 
 	// Overrides:
-	void PrintType() const override;
+	std::string ToString() const override;
 private: // Methods:
 	void UpdateLocalToWorldMatrix();
 };

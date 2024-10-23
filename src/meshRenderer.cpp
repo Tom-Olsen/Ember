@@ -1,4 +1,6 @@
 #include "meshRenderer.h"
+#include "logger.h"
+#include "gameObject.h"
 
 
 
@@ -41,7 +43,20 @@ VkPipelineLayout& MeshRenderer::GetPipelineLayout()
 
 
 // Overrides:
-void MeshRenderer::PrintType() const
+void MeshRenderer::Update()
 {
-	LOG_TRACE("MeshRenderer");
+	if (camera != nullptr)
+	{
+		RenderMatrizes renderMatrizes;
+		renderMatrizes.modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
+		renderMatrizes.viewMatrix = camera->GetViewMatrix();
+		renderMatrizes.projMatrix = camera->GetProjectionMatrix();
+		renderMatrizes.normalMatrix = gameObject->transform->GetLocalToWorldMatrix();
+		renderMatrizes.UpdateMvpMatrix();
+		materialProperties->SetUniform("RenderMatrizes", renderMatrizes);
+	}
+}
+std::string MeshRenderer::ToString() const
+{
+	return "MeshRenderer";
 }

@@ -34,7 +34,7 @@ VulkanUniformBuffer::VulkanUniformBuffer(VulkanContext* context, uint64_t size)
 // Destructor:
 VulkanUniformBuffer::~VulkanUniformBuffer()
 {
-
+	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
 }
 
 
@@ -49,17 +49,4 @@ void VulkanUniformBuffer::UpdateBuffer(const T& datastruct)
 
 
 // Explicit instantiations:
-template void VulkanUniformBuffer::UpdateBuffer<UniformObject>(const UniformObject& datastruct);
-template void VulkanUniformBuffer::UpdateBuffer<float>(const float& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float2>(const Float2& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float3>(const Float3& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float4>(const Float4& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float2x2>(const Float2x2& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float2x3>(const Float2x3& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float2x4>(const Float2x4& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float3x2>(const Float3x2& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float3x3>(const Float3x3& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float3x4>(const Float3x4& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float4x2>(const Float4x2& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float4x3>(const Float4x3& datastruct);
-//template void VulkanUniformBuffer::UpdateBuffer<Float4x4>(const Float4x4& datastruct);
+template void VulkanUniformBuffer::UpdateBuffer<RenderMatrizes>(const RenderMatrizes& datastruct);

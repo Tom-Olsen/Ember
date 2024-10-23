@@ -13,9 +13,8 @@ class Scene
 {
 public: // Members:
 	Camera* activeCamera = nullptr;
+	std::unordered_map<std::string, Transform*> transforms;
 	std::unordered_map<std::string, MeshRenderer*> meshRenderers;
-
-private: // Members:
 	std::unordered_map<std::string, std::unique_ptr<GameObject>> gameObjects;
 
 public: // Methods:
@@ -25,6 +24,7 @@ public: // Methods:
 	void AddGameObject(GameObject* gameObject);
 	GameObject* GetGameObject(std::string name);
 	void RemoveGameObject(std::string name);
+	void SetActiveCamera(Camera* camera);
 
 	void Load();
 	void Unload();

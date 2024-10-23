@@ -15,21 +15,21 @@ VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VulkanSur
 	{
 		// Multisampled color attachment description:
 		attachments[0].format = surface->surfaceFormat.format;
-		attachments[0].samples = msaaSamples;								// multisampling count
-		attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;				// clear framebuffer to black before rendering
-		attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;			// sno need to store multisampls after render
-		attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;		// do not use stencils
-		attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;	// do not use stencils
-		attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;			// we don't care about initial layout of the image
+		attachments[0].samples = msaaSamples;									// multisampling count
+		attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering
+		attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// no need to store multisampls after render
+		attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// do not use stencils
+		attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;		// do not use stencils
+		attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;				// we don't care about initial layout of the image
 		attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;	// multisampled images are stored in color layout and not rdy for presenting yet
 
 		// Depth attachment description:
-		attachments[1].format = VulkanDepthImage::depthFormat;				// must be same as depth image format
-		attachments[1].samples = msaaSamples;								// msaaSamples
-		attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;				// clear depth buffer before rendering
-		attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;			// depth content is discarded after rendering
-		attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;		// stencil part not used yet
-		attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;	// stencil part not used yet
+		attachments[1].format = VulkanDepthImage::depthFormat;					// must be same as depth image format
+		attachments[1].samples = msaaSamples;									// msaaSamples
+		attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear depth buffer before rendering
+		attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// depth content is discarded after rendering
+		attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// stencil part not used yet
+		attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;		// stencil part not used yet
 		attachments[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
@@ -45,14 +45,14 @@ VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VulkanSur
 	}
 
 	VkAttachmentReference colorAttachmentReference = {};
-	colorAttachmentReference.attachment = 0;	// index of the attachment in the attachment array
+	colorAttachmentReference.attachment = 0;
 	colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-	VkAttachmentReference depthAttachmentReference{};
-	depthAttachmentReference.attachment = 1;			// index of the attachment in the attachment array
+	VkAttachmentReference depthAttachmentReference = {};
+	depthAttachmentReference.attachment = 1;
 	depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-	VkAttachmentReference colorResolveAttachmentReference{};
+	VkAttachmentReference colorResolveAttachmentReference = {};
 	colorResolveAttachmentReference.attachment = 2;
 	colorResolveAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
@@ -62,15 +62,6 @@ VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VulkanSur
 	subpass.pColorAttachments = &colorAttachmentReference;
 	subpass.pDepthStencilAttachment = &depthAttachmentReference;
 	subpass.pResolveAttachments = &colorResolveAttachmentReference;
-
-	// Solution form tutorial which yields validation errors:
-	//VkSubpassDependency dependency = {};
-	//dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-	//dependency.dstSubpass = 0;
-	//dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	//dependency.srcAccessMask = 0;
-	//dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	//dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 	// Define synchronization dependencies of individual subpasses:
 	VkSubpassDependency dependency{};
@@ -83,7 +74,7 @@ VulkanRenderpass::VulkanRenderpass(VulkanLogicalDevice* logicalDevice, VulkanSur
 	dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;					// specify special behaviors
 
 	VkRenderPassCreateInfo createInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
-	createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());;
+	createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 	createInfo.pAttachments = attachments.data();
 	createInfo.subpassCount = 1;
 	createInfo.pSubpasses = &subpass;

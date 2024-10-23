@@ -1,13 +1,16 @@
 #pragma once
-#ifndef __INCLUDE_GUARD_camera_h__
-#define __INCLUDE_GUARD_camera_h__
+#ifndef __INCLUDE_GUARD_spotLight_h__
+#define __INCLUDE_GUARD_spotLight_h__
 #include "glmTypes.h"
 #include "component.h"
+#include "gameObject.h"
 
 
 
-class Camera : public Component
+class SpotLight : public Component
 {
+public: // Members:
+
 private: // Members:
 	float fov;
 	float aspectRatio;
@@ -17,14 +20,11 @@ private: // Members:
 	bool updateProjectionMatrix;
 
 public: // Methods:
-	Camera();
-	~Camera();
+	SpotLight();
+	~SpotLight();
 
 	// Setters:
 	void SetFov(const float& fov);
-	void SetAspectRatio(const float& aspectRatio);
-	void SetNearClip(const float& nearClip);
-	void SetFarClip(const float& farClip);
 
 	// Getters:
 	Float4x4 GetViewMatrix();
@@ -39,4 +39,4 @@ private: // Methods:
 
 
 
-#endif // __INCLUDE_GUARD_camera_h__
+#endif // __INCLUDE_GUARD_spotLight_h__

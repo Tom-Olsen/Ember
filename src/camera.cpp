@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "logger.h"
+#include "gameObject.h"
 
 
 
@@ -72,7 +73,7 @@ void Camera::UpdateProjectionMatrix()
 
 
 // Overrides:
-void Camera::PrintType() const
+std::string Camera::ToString() const
 {
-	LOG_TRACE("Camera");
+	return "Camera";
 }

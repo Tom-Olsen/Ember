@@ -4,6 +4,24 @@
 
 
 
+// TODO:
+// - implement camera projection matrix by my own
+// - render image while resizing
+// - implement game update loop and physics fixedUpdate loop
+// - camera controller script
+// - shadows
+// - post processing
+// - skybox
+// - particles (instancing)
+// - physics
+// - audio
+// - rename frameBuffers to framebuffers
+// - move some src files to dedicated folders: vulkan, managers, components
+// - move framebuffers into vulkanRenderpass
+// - rename vulkanRenderpass to ??? (defaultPass?) (renderPass?)
+
+
+
 int main()
 {
     // VS debugging:
@@ -11,13 +29,7 @@ int main()
 
     // Initialization:
     Logger::Init();
-    uint32_t framesInFlight = 2;
-	std::shared_ptr<VulkanContext> context = std::make_shared<VulkanContext>(framesInFlight);
-    Application app(context);
-    MeshManager::Init(context.get());
-    MaterialManager::Init(context.get());
-	TextureManager::Init(context.get());
-	SamplerManager::Init(context.get());
+    Application app;
 
     // Build simple scene:
     Scene* scene = new Scene();
@@ -28,6 +40,7 @@ int main()
         Camera* cameraComponent = new Camera();
         camera->AddComponent<Camera>(cameraComponent);
         scene->AddGameObject(camera);
+		scene->SetActiveCamera(cameraComponent);
     }
     { // Floor:
         GameObject* floor = new GameObject("floor");
@@ -50,6 +63,8 @@ int main()
         meshRenderer->materialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
         meshRenderer->materialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("brick"));
         cube->AddComponent<MeshRenderer>(meshRenderer);
+        Spin* spin = new Spin(Float3(0.0f, 0.0f, 45.0f));
+		cube->AddComponent<Spin>(spin);
         scene->AddGameObject(cube);
     }
     {// Cube2:
@@ -88,12 +103,7 @@ int main()
 
 
 
-    // Cleanup:
-	SamplerManager::Clear();
-	TextureManager::Clear();
-    MaterialManager::Clear();
-    MeshManager::Clear();
+    // Terminate:
     delete scene;
-
     return 0;
 }

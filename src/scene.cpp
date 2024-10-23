@@ -29,9 +29,15 @@ void Scene::AddGameObject(GameObject* gameObject)
 	}
 	else
 	{
+		Transform* transform = gameObject->transform;
+		if (transform != nullptr)
+			transforms.emplace(gameObject->name, transform);
 		MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
 		if (meshRenderer != nullptr)
+		{
+			meshRenderer->camera = activeCamera;
 			meshRenderers.emplace(gameObject->name, meshRenderer);
+		}
 	}
 }
 GameObject* Scene::GetGameObject(std::string name)
@@ -50,11 +56,30 @@ void Scene::RemoveGameObject(std::string name)
 	auto it = gameObjects.find(name);
 	if (it != gameObjects.end())
 	{
-		gameObjects.erase(it);
+		transforms.erase(name);
 		meshRenderers.erase(name);
+		gameObjects.erase(it);
 	}
 	else
 		LOG_WARN("GameObject '{}' not found in scene!", name);
+}
+void Scene::SetActiveCamera(Camera* camera)
+{
+	if (gameObjects.find(camera->gameObject->name) == gameObjects.end())
+	{
+		LOG_WARN("Camera '{}' not found in scene!", camera->gameObject->name);
+		activeCamera = nullptr;
+	}
+	else
+		activeCamera = camera;
+
+	// Set camera for all meshRenderers:
+	for (auto& pair : gameObjects)
+	{
+		MeshRenderer* meshRenderer = pair.second->GetComponent<MeshRenderer>();
+		if (meshRenderer != nullptr)
+			meshRenderer->camera = activeCamera;
+	}
 }
 
 

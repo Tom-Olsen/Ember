@@ -44,6 +44,7 @@ public: // Methods:
 	VkDescriptorPool& DescriptorPool();
 	VkSwapchainKHR& Swapchain();
 	VkRenderPass& Renderpass();
+	bool DepthClampEnabled();
 
 	// Frame logic:
 	void UpdateFrameIndex();

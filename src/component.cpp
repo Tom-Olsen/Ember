@@ -15,7 +15,6 @@ Component::Component()
 // Destructor:
 Component::~Component()
 {
-
 }
 
 
@@ -24,4 +23,8 @@ Component::~Component()
 bool Component::IsActive()
 {
 	return isActive && gameObject->isActive;
+}
+void Component::Update()
+{
+
 }

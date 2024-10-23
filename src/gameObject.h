@@ -5,10 +5,13 @@
 #include <string>
 #include <typeindex>
 #include <unordered_map>
-#include "component.h"
+
+// Components:
 #include "transform.h"
 #include "camera.h"
 #include "meshRenderer.h"
+#include "spin.h"
+#include "spotLight.h"
 
 
 
@@ -23,11 +26,11 @@ public: // Members:
 	std::string name;
 	bool isActive;
 	Transform* transform;
-
-private: // Members:
 	// Container for storing components, mapped by their type
 	// => each type of component can only be added once
 	std::unordered_map<std::type_index, std::unique_ptr<Component>> components;
+
+private: // Members:
 
 public: // Methods:
 	GameObject(std::string name = "");

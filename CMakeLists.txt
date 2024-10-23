@@ -13,7 +13,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 # Source, header, shader files:
 file(GLOB SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 file(GLOB HEADER_FILES "${PROJECT_SOURCE_DIR}/src/*.h")
-file(GLOB SHADER_FILES "${PROJECT_SOURCE_DIR}/shaders/*.glsl" "${PROJECT_SOURCE_DIR}/shaders/*.hlsl")
+file(GLOB SHADER_FILES "${PROJECT_SOURCE_DIR}/shaders/*.glsl" "${PROJECT_SOURCE_DIR}/shaders/*.hlsl" "${PROJECT_SOURCE_DIR}/shaders/*.hlsli")
 
 # Mark shader files as header-only to prevent compilation
 foreach(SHADER_FILE ${SHADER_FILES})

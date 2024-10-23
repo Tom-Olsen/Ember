@@ -86,6 +86,13 @@ Mesh* MeshManager::UnitQuad()
 	positions.emplace_back(0.5f, 0.5f, 0.0f);
 	mesh->MovePositions(positions);
 
+	std::vector<Float3> normals;
+	normals.emplace_back(0.0f, 0.0f, 1.0f);
+	normals.emplace_back(0.0f, 0.0f, 1.0f);
+	normals.emplace_back(0.0f, 0.0f, 1.0f);
+	normals.emplace_back(0.0f, 0.0f, 1.0f);
+	mesh->MoveNormals(normals);
+
 	std::vector<Float4> colors;
 	colors.emplace_back(1.0f, 0.0f, 0.0f, 1.0f);
 	colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
@@ -120,12 +127,12 @@ Mesh* MeshManager::UnitCube()
 
 	float pi = static_cast<float>(std::numbers::pi);
 	float piHalf = 0.5f * pi;
-	faces[0]->Rotate(Float3( piHalf,      0,  0))->Translate(Float3( 0.0f,  0.5f,  0.0f));
-	faces[1]->Rotate(Float3(-piHalf,      0, pi))->Translate(Float3( 0.0f, -0.5f,  0.0f));
-	faces[2]->Rotate(Float3( piHalf, piHalf,  0))->Translate(Float3(-0.5f,  0.0f,  0.0f));
-	faces[3]->Rotate(Float3( piHalf,-piHalf,  0))->Translate(Float3( 0.5f,  0.0f,  0.0f));
-	faces[4]->Rotate(Float3(      0,      0,  0))->Translate(Float3( 0.0f,  0.0f,  0.5f));
-	faces[5]->Rotate(Float3(     pi,      0,  0))->Translate(Float3( 0.0f,  0.0f, -0.5f));
+	faces[0]->Rotate(Float3(-90.0f,     0,      0))->Translate(Float3( 0.0f,  0.5f,  0.0f));
+	faces[1]->Rotate(Float3( 90.0f,     0, 180.0f))->Translate(Float3( 0.0f, -0.5f,  0.0f));
+	faces[2]->Rotate(Float3( 90.0f,-90.0f,      0))->Translate(Float3(-0.5f,  0.0f,  0.0f));
+	faces[3]->Rotate(Float3( 90.0f, 90.0f,      0))->Translate(Float3( 0.5f,  0.0f,  0.0f));
+	faces[4]->Rotate(Float3(     0,     0,      0))->Translate(Float3( 0.0f,  0.0f,  0.5f));
+	faces[5]->Rotate(Float3(180.0f,     0,      0))->Translate(Float3( 0.0f,  0.0f, -0.5f));
 
 	return Mesh::Merge(faces, "UnitCube");
 }

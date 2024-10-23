@@ -1,6 +1,5 @@
 #ifndef __INCLUDE_GUARD_vulkanFrameBuffers_h__
 #define __INCLUDE_GUARD_vulkanFrameBuffers_h__
-#include <vulkan/vulkan.h>
 #include <memory>
 #include <vector>
 #include "vulkanContext.h"
@@ -18,10 +17,9 @@
 class VulkanFrameBuffers
 {
 public: // Members:
-	size_t size;
 
 private: // Members:
-	std::vector<VkFramebuffer> frameBuffers;
+	std::vector<VkFramebuffer> framebuffers;
 	VulkanContext* context;
 
 public: // Methods:

@@ -10,6 +10,7 @@ VulkanLogicalDevice::VulkanLogicalDevice(VulkanPhysicalDevice* physicalDevice, V
 	// Choose which features to enable:
 	VkPhysicalDeviceFeatures enabledFearutes = {};
 	enabledFearutes.samplerAnisotropy = VK_TRUE;
+	enabledFearutes.depthClamp = physicalDevice->supportsDepthClamp ? VK_TRUE : VK_FALSE;
 
 	// Find queue family indices:
 	graphicsQueue.familyIndex = FindGraphicsAndComputeQueueFamilyIndex(physicalDevice->device);

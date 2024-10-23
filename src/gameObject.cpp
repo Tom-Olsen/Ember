@@ -60,7 +60,7 @@ void GameObject::PrintComponents() const
 {
 	LOG_TRACE("Components attached to: {}", name);
 	for (const auto& pair : components)
-		pair.second->PrintType();
+		LOG_TRACE(pair.second->ToString());
 }
 
 
@@ -69,6 +69,10 @@ void GameObject::PrintComponents() const
 template void GameObject::AddComponent(Transform* component);
 template void GameObject::AddComponent(Camera* component);
 template void GameObject::AddComponent(MeshRenderer* component);
+template void GameObject::AddComponent(Spin* component);
+template void GameObject::AddComponent(SpotLight* component);
 template Transform* GameObject::GetComponent<Transform>();
 template Camera* GameObject::GetComponent<Camera>();
 template MeshRenderer* GameObject::GetComponent<MeshRenderer>();
+template Spin* GameObject::GetComponent<Spin>();
+template SpotLight* GameObject::GetComponent<SpotLight>();

@@ -1,7 +1,6 @@
 #pragma once
 #ifndef __INCLUDE_GUARD_vulkanDepthImage_h__
 #define __INCLUDE_GUARD_vulkanDepthImage_h__
-#include <vulkan/vulkan.h>
 #include "vulkanContext.h"
 #include "vmaImage.h"
 

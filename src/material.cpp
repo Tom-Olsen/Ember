@@ -98,7 +98,7 @@ void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect,
 
 			// Create resource based on descriptor type:
 			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-				materialProperties->InitUniformObjectResourceBinding(binding->name, binding->binding, UniformObject());
+				materialProperties->InitUniformResourceBinding(binding->name, binding->binding, RenderMatrizes());
 			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
 				materialProperties->InitSamplerResourceBinding(binding->name, binding->binding, SamplerManager::GetSampler("default"));
 			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)

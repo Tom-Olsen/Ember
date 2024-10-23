@@ -83,6 +83,10 @@ VkRenderPass& VulkanContext::Renderpass()
 {
 	return renderpass->renderpass;
 }
+bool VulkanContext::DepthClampEnabled()
+{
+	return physicalDevice->supportsDepthClamp;
+}
 
 
 

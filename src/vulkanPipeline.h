@@ -17,9 +17,9 @@
 class VulkanPipeline
 {
 public: // Members:
-	VkPipeline pipeline;
-	VkPipelineLayout pipelineLayout;
 	VkDescriptorSetLayout descriptorSetLayout;
+	VkPipelineLayout pipelineLayout;
+	VkPipeline pipeline;
 
 private: // Members:
 	VulkanContext* context;

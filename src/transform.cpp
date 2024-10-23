@@ -9,14 +9,14 @@ Transform::Transform()
 	this->position = Float3(0.0f);
 	this->eulerAngles = Float3(0.0f);
 	this->scale = Float3(1.0f);
-	UpdateLocalToWorldMatrix();
+	updateLocalToWorldMatrix = true;
 }
 Transform::Transform(const Float3& position, const Float3& eulerAngles, const Float3& scale)
 {
 	this->position = position;
 	this->eulerAngles = eulerAngles;
 	this->scale = scale;
-	UpdateLocalToWorldMatrix();
+	updateLocalToWorldMatrix = true;
 }
 
 
@@ -84,16 +84,28 @@ Float4x4 Transform::GetWorldToLocalMatrix()
 		UpdateLocalToWorldMatrix();
 	return worldToLocalMatrix;
 }
-Float3 Transform::GetForward() const
+Float4x4 Transform::GetNormalMatrix()
 {
+	if (updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
+	return normalMatrix;
+}
+Float3 Transform::GetForward()
+{
+	if (updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
 	return Float3(localToWorldMatrix[2]);
 }
-Float3 Transform::GetRight() const
+Float3 Transform::GetRight()
 {
+	if (updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
 	return Float3(localToWorldMatrix[0]);
 }
-Float3 Transform::GetUp() const
+Float3 Transform::GetUp()
 {
+	if (updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
 	return Float3(localToWorldMatrix[1]);
 }
 
@@ -119,12 +131,13 @@ void Transform::UpdateLocalToWorldMatrix()
 	// localToWorldMatrix & worldToLocalMatrix:
 	localToWorldMatrix = translationMatrix * rotationMatrix * scaleMatrix;
 	worldToLocalMatrix = glm::inverse(localToWorldMatrix);
+	normalMatrix = glm::transpose(worldToLocalMatrix);
 }
 
 
 
 // Overrides:
-void Transform::PrintType() const
+std::string Transform::ToString() const
 {
-	LOG_TRACE("Transform");
+	return "Transform";
 }

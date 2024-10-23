@@ -47,14 +47,40 @@ void Mesh::SetPositions(std::vector<Float3>& positions)
 	this->positions = positions;
 	verticesUpdated = true;
 }
+void Mesh::SetNormals(std::vector<Float3>& normals)
+{
+	if (normals.size() == vertexCount)
+		this->normals = normals;
+	else
+	{
+		LOG_WARN("normals size does not match vertex count! Setting all normals to zero.");
+		this->normals.clear();
+		this->normals.resize(vertexCount, Float3());
+	}
+	verticesUpdated = true;
+}
 void Mesh::SetColors(std::vector<Float4>& colors)
 {
-	this->colors = colors;
+	if (colors.size() == vertexCount)
+		this->colors = colors;
+	else
+	{
+		LOG_WARN("colors size does not match vertex count! Setting all colors to zero.");
+		this->colors.clear();
+		this->colors.resize(vertexCount, Float4());
+	}
 	verticesUpdated = true;
 }
 void Mesh::SetUVs(std::vector<Float4>& uvs)
 {
-	this->uvs = uvs;
+	if (uvs.size() == vertexCount)
+		this->uvs = uvs;
+	else
+	{
+		LOG_WARN("uvs size does not match vertex count! Setting all uvs to zero.");
+		this->uvs.clear();
+		this->uvs.resize(vertexCount, Float4());
+	}
 	verticesUpdated = true;
 }
 void Mesh::SetTriangles(std::vector<Int3>& triangles)
@@ -73,14 +99,40 @@ void Mesh::MovePositions(std::vector<Float3>& positions)
 	this->positions = std::move(positions);
 	verticesUpdated = true;
 }
+void Mesh::MoveNormals(std::vector<Float3>& normals)
+{
+	if (normals.size() == vertexCount)
+		this->normals = std::move(normals);
+	else
+	{
+		LOG_WARN("normals size does not match vertex count! Setting all normals to zero.");
+		this->normals.clear();
+		this->normals.resize(vertexCount, Float3());
+	}
+	verticesUpdated = true;
+}
 void Mesh::MoveColors(std::vector<Float4>& colors)
 {
-	this->colors = std::move(colors);
+	if (colors.size() == vertexCount)
+		this->colors = std::move(colors);
+	else
+	{
+		LOG_WARN("colors size does not match vertex count! Setting all colors to zero.");
+		this->colors.clear();
+		this->colors.resize(vertexCount, Float4());
+	}
 	verticesUpdated = true;
 }
 void Mesh::MoveUVs(std::vector<Float4>& uvs)
 {
-	this->uvs = std::move(uvs);
+	if (uvs.size() == vertexCount)
+		this->uvs = std::move(uvs);
+	else
+	{
+		LOG_WARN("uvs size does not match vertex count! Setting all uvs to zero.");
+		this->uvs.clear();
+		this->uvs.resize(vertexCount, Float4());
+	}
 	verticesUpdated = true;
 }
 void Mesh::MoveTriangles(std::vector<Int3>& triangles)
@@ -105,6 +157,10 @@ std::vector<Float3>& Mesh::GetPositions()
 {
 	return positions;
 }
+std::vector<Float3>& Mesh::GetNormals()
+{
+	return normals;
+}
 std::vector<Float4>& Mesh::GetColors()
 {
 	return colors;
@@ -121,15 +177,11 @@ uint32_t* Mesh::GetTrianglesUnrolled()
 {
 	return reinterpret_cast<uint32_t*>(triangles.data());
 }
-uint32_t Mesh::GetSize() const
-{
-	return GetSizeOfPositions() + GetSizeOfColors() + GetSizeOfTriangles();
-}
-uint32_t Mesh::GetSizeOfBuffer() const
-{
-	return GetSizeOfPositions() + GetSizeOfColors() + GetSizeOfUVs();
-}
 uint32_t Mesh::GetSizeOfPositions() const
+{
+	return vertexCount * sizeof(Float3);
+}
+uint32_t Mesh::GetSizeOfNormals() const
 {
 	return vertexCount * sizeof(Float3);
 }
@@ -144,14 +196,6 @@ uint32_t Mesh::GetSizeOfUVs() const
 uint32_t Mesh::GetSizeOfTriangles() const
 {
 	return triangleCount * sizeof(Int3);
-}
-std::vector<uint64_t> Mesh::GetBufferSizes() const
-{
-	return std::vector<uint64_t>({ GetSizeOfPositions(), GetSizeOfColors(), GetSizeOfUVs() });
-}
-std::vector<void*> Mesh::GetBufferDatas()
-{
-	return std::vector<void*>({ static_cast<void*>(positions.data()), static_cast<void*>(colors.data()), static_cast<void*>(uvs.data()) });
 }
 VmaBuffer* Mesh::GetVertexBuffer(VulkanContext* context)
 {
@@ -183,6 +227,7 @@ Mesh* Mesh::GetCopy(std::string newName)
 {
 	Mesh* copy = new Mesh(newName);
 	copy->SetPositions(positions);
+	copy->SetNormals(normals);
 	copy->SetColors(colors);
 	copy->SetUVs(uvs);
 	copy->SetTriangles(triangles);
@@ -201,12 +246,17 @@ Mesh* Mesh::Translate(Float3 translation)
 }
 Mesh* Mesh::Rotate(Float3 eulerAngles)
 {
-	Float3x3 rotX(1, 0, 0, 0, cos(eulerAngles.x), -sin(eulerAngles.x), 0, sin(eulerAngles.x), cos(eulerAngles.x));
-	Float3x3 rotY(cos(eulerAngles.y), 0, sin(eulerAngles.y), 0, 1, 0, -sin(eulerAngles.y), 0, cos(eulerAngles.y));
-	Float3x3 rotZ(cos(eulerAngles.z), -sin(eulerAngles.z), 0, sin(eulerAngles.z), cos(eulerAngles.z), 0, 0, 0, 1);
-	Float3x3 rotationMatrix = rotX * rotY * rotZ;
-	for (Float3& position : positions)
-		position = rotationMatrix * position;
+	Float4x4 rotationMatrix = glm::rotate(Float4x4(1.0f), glm::radians(eulerAngles.x), Float3(1.0f, 0.0f, 0.0f));
+	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.y), Float3(0.0f, 1.0f, 0.0f));
+	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.z), Float3(0.0f, 0.0f, 1.0f));
+
+	for (uint32_t i = 0; i < vertexCount; i++)
+	{
+		Float4 newPosition = rotationMatrix * Float4(positions[i], 1.0f);
+		Float4 newNormal = rotationMatrix * Float4(normals[i], 0.0f);
+		positions[i] = Float3(newPosition);
+		normals[i] = Float3(newNormal);
+	}
 	verticesUpdated = true;
 	return this;
 }
@@ -229,6 +279,7 @@ std::vector<VkVertexInputBindingDescription> Mesh::GetBindingDescription()
 	//             VK_VERTEX_INPUT_RATE_INSTANCE : move to the next data entry after each instance
 	// => x0y0z0, x1y1z1, ..., r0g0b0a0, r1g1b1a1, ...
 	std::vector<VkVertexInputBindingDescription> bindingDescriptions;
+	bindingDescriptions.reserve(4);
 
 	// position binding:
 	VkVertexInputBindingDescription positionBindingDescription = {};
@@ -237,16 +288,23 @@ std::vector<VkVertexInputBindingDescription> Mesh::GetBindingDescription()
 	positionBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	bindingDescriptions.push_back(positionBindingDescription);
 
+	// normal binding:
+	VkVertexInputBindingDescription normalBindingDescription = {};
+	normalBindingDescription.binding = 1;
+	normalBindingDescription.stride = sizeof(Float3);
+	normalBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	bindingDescriptions.push_back(normalBindingDescription);
+
 	// color binding:
 	VkVertexInputBindingDescription colorBindingDescription = {};
-	colorBindingDescription.binding = 1;
+	colorBindingDescription.binding = 2;
 	colorBindingDescription.stride = sizeof(Float4);
 	colorBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	bindingDescriptions.push_back(colorBindingDescription);
 
 	// uv binding:
 	VkVertexInputBindingDescription uvBindingDescription = {};
-	uvBindingDescription.binding = 2;
+	uvBindingDescription.binding = 3;
 	uvBindingDescription.stride = sizeof(Float4);
 	uvBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	bindingDescriptions.push_back(uvBindingDescription);
@@ -269,18 +327,26 @@ std::vector<VkVertexInputAttributeDescription> Mesh::GetAttributeDescriptions()
 	positionAttributeDescription.offset = 0;
 	attributeDescriptions.push_back(positionAttributeDescription);
 
+	// normal attribute:
+	VkVertexInputAttributeDescription normalAttributeDescription = {};
+	normalAttributeDescription.binding = 1;
+	normalAttributeDescription.location = 1;
+	normalAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+	normalAttributeDescription.offset = 0;
+	attributeDescriptions.push_back(normalAttributeDescription);
+
 	// color attribute:
 	VkVertexInputAttributeDescription colorAttributeDescription = {};
-	colorAttributeDescription.binding = 1;
-	colorAttributeDescription.location = 1;
+	colorAttributeDescription.binding = 2;
+	colorAttributeDescription.location = 2;
 	colorAttributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
 	colorAttributeDescription.offset = 0;
 	attributeDescriptions.push_back(colorAttributeDescription);
 
 	// uv attribute:
 	VkVertexInputAttributeDescription uvAttributeDescription = {};
-	uvAttributeDescription.binding = 2;
-	uvAttributeDescription.location = 2;
+	uvAttributeDescription.binding = 3;
+	uvAttributeDescription.location = 3;
 	uvAttributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
 	uvAttributeDescription.offset = 0;
 	attributeDescriptions.push_back(uvAttributeDescription);
@@ -293,13 +359,13 @@ VkIndexType Mesh::GetIndexType()
 }
 uint32_t Mesh::GetBindingCount()
 {
-	return 3;
+	return 4;
 }
 std::vector<VkDeviceSize> Mesh::GetOffsets()
 {
 	// Edit this when adding more buffers to the mesh.
 	// offsets = { position offset, color offset, uv offset, ... }
-	std::vector<VkDeviceSize> offsets = { 0, GetSizeOfPositions(), GetSizeOfPositions() + GetSizeOfColors() };
+	std::vector<VkDeviceSize> offsets = { 0, GetSizeOfPositions(), GetSizeOfPositions() + GetSizeOfNormals(), GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors()};
 	return offsets;
 }
 Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
@@ -319,10 +385,12 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
 
 	// Prepare merged data:
 	std::vector<Float3> mergedPositions;
+	std::vector<Float3> mergedNormals;
 	std::vector<Float4> mergedColors;
 	std::vector<Float4> mergedUvs;
 	std::vector<Int3> mergedTriangles;
 	mergedPositions.reserve(vertexCount);
+	mergedNormals.reserve(vertexCount);
 	mergedColors.reserve(vertexCount);
 	mergedUvs.reserve(vertexCount);
 	mergedTriangles.reserve(triangleCount);
@@ -331,6 +399,7 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
 	{
 		// Get data of current mesh:
 		std::vector<Float3> positions = mesh->GetPositions();
+		std::vector<Float3> normals = mesh->GetNormals();
 		std::vector<Float4> colors = mesh->GetColors();
 		std::vector<Float4> uvs = mesh->GetUVs();
 		std::vector<Int3> triangles = mesh->GetTriangles();
@@ -338,13 +407,19 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
 		// Append positions (must always be present).
 		mergedPositions.insert(mergedPositions.end(), positions.begin(), positions.end());
 
-		// Append colors (use default color if not present).
+		// Append normals (use zero if not present).
+		if (normals.size() == mesh->vertexCount)
+			mergedNormals.insert(mergedNormals.end(), normals.begin(), normals.end());
+		else
+			mergedNormals.insert(mergedNormals.end(), mesh->vertexCount, Float3());
+
+		// Append colors (use zero if not present).
 		if (colors.size() == mesh->vertexCount)
 			mergedColors.insert(mergedColors.end(), colors.begin(), colors.end());
 		else
 			mergedColors.insert(mergedColors.end(), mesh->vertexCount, Float4());
 
-		// Append uvs (use default uv if not present).
+		// Append uvs (use zero if not present).
 		if (uvs.size() == mesh->vertexCount)
 			mergedUvs.insert(mergedUvs.end(), uvs.begin(), uvs.end());
 		else
@@ -362,6 +437,7 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
 	// Construct mergedMesh:
 	Mesh* mergedMesh = new Mesh(name);
 	mergedMesh->MovePositions(mergedPositions);
+	mergedMesh->MoveNormals(mergedNormals);
 	mergedMesh->MoveColors(mergedColors);
 	mergedMesh->MoveUVs(mergedUvs);
 	mergedMesh->MoveTriangles(mergedTriangles);
@@ -371,20 +447,24 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
 
 
 // Non-member:
-std::string to_string(Mesh& mesh)
+std::string Mesh::ToString()
 {
 	std::string str = "Mesh:\n";
 
-	str += "Vertices:\n";
-	for (const Float3& position : mesh .GetPositions())
+	str += "Positions:\n";
+	for (const Float3& position : positions)
 		str += to_string(position) + "\n";
 
+	str += "Normals:\n";
+	for (const Float3& normal : normals)
+		str += to_string(normal) + "\n";
+
 	str += "Colors:\n";
-	for (const Float4& color : mesh.GetColors())
+	for (const Float4& color : colors)
 		str += to_string(color) + "\n";
 
 	str += "Triangles:\n";
-	for (const Int3& triangle : mesh.GetTriangles())
+	for (const Int3& triangle : triangles)
 		str += to_string(triangle) + "\n";
 	return str;
 }
@@ -395,7 +475,7 @@ std::string to_string(Mesh& mesh)
 #ifdef RESIZEABLE_BAR // No staging buffer:
 void Mesh::UpdateVertexBuffer(VulkanContext* context)
 {
-	uint64_t size = GetSizeOfBuffer();
+	uint64_t size = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors() + GetSizeOfUVs();
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:
@@ -418,15 +498,16 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 	// Copy positions, colors, uvs:
 	void* data;
 	VKA(vmaMapMemory(context->Allocator(), vertexBuffer->allocation, &data));
-	memcpy(data, positions.data(), GetSizeOfPositions());
-	memcpy(static_cast<char*>(data) + GetSizeOfPositions(), colors.data(), GetSizeOfColors());
-	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfColors(), uvs.data(), GetSizeOfUVs());
+	memcpy(static_cast<char*>(data), positions.data(), GetSizeOfPositions());
+	memcpy(static_cast<char*>(data) + GetSizeOfPositions(), normals.data(), GetSizeOfNormals());
+	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals(), colors.data(), GetSizeOfColors());
+	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors(), uvs.data(), GetSizeOfUVs());
 	VKA(vmaUnmapMemory(context->Allocator(), vertexBuffer->allocation));
 }
 #else // With Staging buffer:
 void Mesh::UpdateVertexBuffer(VulkanContext* context)
 {
-	uint64_t size = GetSizeOfBuffer();
+	uint64_t size = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors() + GetSizeOfUVs();
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:
@@ -447,7 +528,9 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 	}
 
 	// Load data into staging buffer:
-	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(context, GetBufferSizes(), GetBufferDatas());
+	std::vector<void*> bufferPointers = { static_cast<void*>(positions.data()), static_cast<void*>(normals.data()), static_cast<void*>(colors.data()), static_cast<void*>(uvs.data()) };
+	std::vector<uint64_t> bufferSizes = { static_cast<uint64_t>(GetSizeOfPositions()), static_cast<uint64_t>(GetSizeOfNormals()), static_cast<uint64_t>(GetSizeOfColors()), static_cast<uint64_t>(GetSizeOfUVs()) };
+	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(context, bufferSizes, bufferPointers);
 
 	// Copy data from staging to vertex buffer:
 	VmaBuffer::CopyBufferToBuffer(context, &stagingBuffer, vertexBuffer.get(), size, context->logicalDevice->graphicsQueue);

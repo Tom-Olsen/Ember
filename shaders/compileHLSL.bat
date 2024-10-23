@@ -8,5 +8,6 @@ set DXC_PATH=%VULKAN_SDK_PATH%\Bin\dxc.exe
 REM Compile shaders
 "%DXC_PATH%" -spirv -T vs_6_0 -E main .\vert.hlsl -Fo .\vert.spv
 "%DXC_PATH%" -spirv -T ps_6_0 -E main .\frag.hlsl -Fo .\frag.spv
+"%DXC_PATH%" -spirv -T vs_6_0 -E main .\shadow.hlsl -Fo .\shadow.spv
 
 endlocal

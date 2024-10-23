@@ -8,6 +8,8 @@
 #include "vmaBuffer.h"
 
 
+// TODO:
+// - add logic to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
 
 /// <summary>
 /// Mesh class for storing vertex positions, colors and triangles.
@@ -28,6 +30,7 @@ private: // Members:
 	std::unique_ptr<VmaBuffer> vertexBuffer;
 	std::unique_ptr<VmaBuffer> indexBuffer;
 	std::vector<Float3> positions;
+	std::vector<Float3> normals;
 	std::vector<Float4> colors;
 	std::vector<Float4> uvs;
 	std::vector<Int3> triangles;
@@ -46,12 +49,14 @@ public: // Methods:
 	
 	// Setters:
 	void SetPositions(std::vector<Float3>& positions);
+	void SetNormals(std::vector<Float3>& normals);
 	void SetColors(std::vector<Float4>& colors);
 	void SetUVs(std::vector<Float4>& uvs);
 	void SetTriangles(std::vector<Int3>& triangles);
 
 	// Movers:
 	void MovePositions(std::vector<Float3>& positions);
+	void MoveNormals(std::vector<Float3>& normals);
 	void MoveColors(std::vector<Float4>& colors);
 	void MoveUVs(std::vector<Float4>& uvs);
 	void MoveTriangles(std::vector<Int3>& triangles);
@@ -60,18 +65,16 @@ public: // Methods:
 	uint32_t GetVertexCount() const;
 	uint32_t GetTriangleCount() const;
 	std::vector<Float3>& GetPositions();
+	std::vector<Float3>& GetNormals();
 	std::vector<Float4>& GetColors();
 	std::vector<Float4>& GetUVs();
 	std::vector<Int3>& GetTriangles();
 	uint32_t* GetTrianglesUnrolled();
-	uint32_t GetSize() const;
-	uint32_t GetSizeOfBuffer() const;
 	uint32_t GetSizeOfPositions() const;
+	uint32_t GetSizeOfNormals() const;
 	uint32_t GetSizeOfColors() const;
 	uint32_t GetSizeOfUVs() const;
 	uint32_t GetSizeOfTriangles() const;
-	std::vector<uint64_t> GetBufferSizes() const;
-	std::vector<void*> GetBufferDatas();
 	std::vector<VkDeviceSize> GetOffsets();
 	VmaBuffer* GetVertexBuffer(VulkanContext* context);
 	VmaBuffer* GetIndexBuffer(VulkanContext* context);
@@ -90,13 +93,13 @@ public: // Methods:
 	static uint32_t GetBindingCount();
 	static Mesh* Merge(std::vector<Mesh*>& meshes, std::string name = "");
 
+	// Debugging:
+	std::string ToString();
+
 private: // Methods:
 	void UpdateVertexBuffer(VulkanContext* context);
 	void UpdateIndexBuffer(VulkanContext* context);
 };
-
-// Methods that must be defined outside of the class:
-std::string to_string(Mesh& mesh);
 
 
 

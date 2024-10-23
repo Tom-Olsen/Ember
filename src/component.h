@@ -1,6 +1,8 @@
 #pragma once
 #ifndef __INCLUDE_GUARD_component_h__
 #define __INCLUDE_GUARD_component_h__
+#include <string>
+#include "time.h"
 
 
 
@@ -30,9 +32,10 @@ public: // Methods:
 	/// </summary>
 	/// <returns></returns>
 	bool IsActive();
+	virtual void Update();
 
 	// Pure virtual method that must be implemented by derived classes:
-    virtual void PrintType() const = 0;
+    virtual std::string ToString() const = 0;
 };
 
 
