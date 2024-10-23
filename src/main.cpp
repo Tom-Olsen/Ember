@@ -15,9 +15,6 @@
 // - particles (instancing)
 // - physics
 // - audio
-// - rename frameBuffers to framebuffers
-// - move framebuffers into vulkanRenderpass
-// - rename vulkanRenderpass to ??? (defaultPass?) (renderPass?)
 
 
 

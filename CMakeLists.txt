@@ -21,7 +21,7 @@ file(GLOB VULKAN_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/src/vma*"
     "${PROJECT_SOURCE_DIR}/src/sdl*"
     "${PROJECT_SOURCE_DIR}/src/pushConstant*"
-    "${PROJECT_SOURCE_DIR}/src/forwardRenderpass*")
+    "${PROJECT_SOURCE_DIR}/src/*RenderPass*")
 file(GLOB MANAGER_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/src/logger*"
     "${PROJECT_SOURCE_DIR}/src/macros*"

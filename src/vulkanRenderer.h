@@ -4,7 +4,7 @@
 #include <vector>
 #include "vulkanContext.h"
 #include "forwardRenderPass.h"
-#include "shadowMap.h"			// TODO: rename to shadowPass
+#include "shadowRenderPass.h"
 #include "vulkanCommand.h"
 
 // Move this in application
@@ -25,12 +25,12 @@ class VulkanRenderer
 public: // Members:
 	VulkanContext* context;
 	std::unique_ptr<ForwardRenderPass> forwardRenderPass;
+	std::unique_ptr<ShadowRenderPass> shadowRenderPass;
 
 private: // Members:
 	// Render resources:
-	std::unique_ptr<ShadowMap> shadowMap;
 	std::vector<VulkanCommand> shadowCommands;
-	std::vector<VulkanCommand> commands;
+	std::vector<VulkanCommand> forwardCommands;
 
 	// Sync objects:
 	std::vector<VkFence> fences;

@@ -17,10 +17,13 @@ ForwardRenderPass::ForwardRenderPass(VulkanContext* context, VkSampleCountFlagBi
 
 ForwardRenderPass::~ForwardRenderPass()
 {
-	vkDestroyRenderPass(context->LogicalDevice(), renderPass, nullptr);
+	// Destroy framebuffers:
 	for (uint32_t i = 0; i < context->swapchain->images.size(); i++)
 		vkDestroyFramebuffer(context->LogicalDevice(), framebuffers[i], nullptr);
 	framebuffers.clear();
+
+	// Destroy renderpass:
+	vkDestroyRenderPass(context->LogicalDevice(), renderPass, nullptr);
 }
 
 

@@ -1,5 +1,5 @@
 #include "spotLight.h"
-#include "shadowMap.h"
+#include "shadowRenderPass.h"
 #include "logger.h"
 
 
@@ -25,7 +25,7 @@ SpotLight::~SpotLight()
 void SpotLight::SetFov(const float& fov)
 {
 	this->fov = fov;
-	this->aspectRatio = (float)ShadowMap::shadowMapWidth / (float)ShadowMap::shadowMapHeight;
+	this->aspectRatio = (float)ShadowRenderPass::shadowMapWidth / (float)ShadowRenderPass::shadowMapHeight;
 	this->nearClip = 0.1f;
 	this->farClip = 10.0f;
 	updateProjectionMatrix = true;

@@ -9,15 +9,17 @@ VulkanRenderer::VulkanRenderer(VulkanContext* context)
 {
 	this->context = context;
 
-	// Render resources:
+	// Render passes:
 	forwardRenderPass = std::make_unique<ForwardRenderPass>(context, context->physicalDevice->maxMsaaSamples);
-	shadowMap = std::make_unique<ShadowMap>(context);
+	shadowRenderPass = std::make_unique<ShadowRenderPass>(context);
+
+	// Command buffers:
 	shadowCommands.reserve(context->framesInFlight);
-	commands.reserve(context->framesInFlight);
+	forwardCommands.reserve(context->framesInFlight);
 	for (uint32_t i = 0; i < context->framesInFlight; i++)
 	{
 		shadowCommands.emplace_back(context, context->logicalDevice->graphicsQueue);
-		commands.emplace_back(context, context->logicalDevice->graphicsQueue);
+		forwardCommands.emplace_back(context, context->logicalDevice->graphicsQueue);
 	}
 
 	// Synchronization objects:
@@ -110,47 +112,47 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		VkClearValue clearValues = {};
 		clearValues.depthStencil = { 1.0f, 0 };
 		VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassBeginInfo.renderPass = shadowMap->renderpass;
-		renderPassBeginInfo.framebuffer = shadowMap->framebuffers[imageIndex];
+		renderPassBeginInfo.renderPass = shadowRenderPass->renderpass;
+		renderPassBeginInfo.framebuffer = shadowRenderPass->framebuffers[imageIndex];
 		renderPassBeginInfo.renderArea.offset = { 0, 0 };
-		renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowMap::shadowMapWidth, ShadowMap::shadowMapHeight };
+		renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowRenderPass::shadowMapWidth, ShadowRenderPass::shadowMapHeight };
 		renderPassBeginInfo.clearValueCount = 1;
 		renderPassBeginInfo.pClearValues = &clearValues;
 
-		// Begin render pass:
-		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-		{
-			// Push constants:
-			PushConstantObject pushTime(Time::GetTime4(), Time::GetDeltaTime4());
-
-			// Bind pipeline and push constants:
-			vkCmdPushConstants(commandBuffer, shadowMap->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantObject), &pushTime);
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMap->pipeline);
-
-			for (auto& pair : scene->meshRenderers)
-			{
-				MeshRenderer* meshRenderer = pair.second;
-				if (meshRenderer->IsActive())
-				{
-					// TODO: clean this up
-					const VkDeviceSize offsets[1] = { 0 };
-					vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
-					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
-
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMap->pipelineLayout, 0, 1, &shadowMap->descriptorSets[context->frameIndex], 0, nullptr);
-					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
-				}
-			}
-		}
-		vkCmdEndRenderPass(commandBuffer);
+		//// Begin render pass:
+		//vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		//{
+		//	// Push constants:
+		//	PushConstantObject pushTime(Time::GetTime4(), Time::GetDeltaTime4());
+		//
+		//	// Bind pipeline and push constants:
+		//	vkCmdPushConstants(commandBuffer, shadowMap->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantObject), &pushTime);
+		//	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMap->pipeline);
+		//
+		//	for (auto& pair : scene->meshRenderers)
+		//	{
+		//		MeshRenderer* meshRenderer = pair.second;
+		//		if (meshRenderer->IsActive())
+		//		{
+		//			// TODO: clean this up
+		//			const VkDeviceSize offsets[1] = { 0 };
+		//			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
+		//			vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
+		//
+		//			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMap->pipelineLayout, 0, 1, &shadowMap->descriptorSets[context->frameIndex], 0, nullptr);
+		//			vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+		//		}
+		//	}
+		//}
+		//vkCmdEndRenderPass(commandBuffer);
 	}
 	VKA(vkEndCommandBuffer(commandBuffer));
 }
 
 void VulkanRenderer::RecordCommandBuffer(Scene* scene)
 {
-	vkResetCommandPool(context->LogicalDevice(), commands[context->frameIndex].pool, 0);
-	VkCommandBuffer commandBuffer = commands[context->frameIndex].buffer;
+	vkResetCommandPool(context->LogicalDevice(), forwardCommands[context->frameIndex].pool, 0);
+	VkCommandBuffer commandBuffer = forwardCommands[context->frameIndex].buffer;
 
 	// Begin command buffer:
 	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -210,7 +212,7 @@ void VulkanRenderer::SubmitCommandBuffer()
 	submitInfo.pWaitSemaphores = &acquireSemaphores[context->frameIndex];	// wait for acquireSemaphor
 	submitInfo.pWaitDstStageMask = &waitStage;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commands[context->frameIndex].buffer;
+	submitInfo.pCommandBuffers = &forwardCommands[context->frameIndex].buffer;
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &releaseSemaphores[context->frameIndex]; // signal releaseSemaphor when done
 	VKA(vkQueueSubmit(context->logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[context->frameIndex])); // signal fence when done

@@ -1,5 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRenderpass_h__
 #define __INCLUDE_GUARD_vulkanRenderpass_h__
+#include <vector>
 #include "vulkanContext.h"
 #include "vmaImage.h"
 
