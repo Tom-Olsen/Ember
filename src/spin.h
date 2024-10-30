@@ -10,6 +10,7 @@ class Spin : public Component
 {
 public: // Members:
 	Float3 eulerAnglesPerSecond;
+	bool logAngles = false;
 
 public: // Methods:
 	Spin(Float3 eulerAnglesPerSecond = Float3());

@@ -6,8 +6,8 @@
 #include <vector>
 #include <unordered_map>
 #include "vulkanContext.h"
-#include "vulkanPipeline.h"
-#include "forwardRenderpass.h"
+#include "forwardPipeline.h"
+#include "shadowPipeline.h"
 #include "spirvReflect.h"
 #include "materialProperties.h"
 #include "samplerManager.h"
@@ -24,17 +24,17 @@ class Material
 {
 public: // Members:
 	std::string name;
-	std::unique_ptr<VulkanPipeline> pipeline;
+	std::unique_ptr<Pipeline> pipeline;
 
 private: // Members:
 	// Internal:
 	VulkanContext* context;
-	ForwardRenderPass* forwardRenderPass;
 	uint32_t frameIndex;
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
 	std::unique_ptr<MaterialProperties> materialProperties;
 
-public: // Methods:
+public: // Methods:W
+	Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, std::string name);
 	Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name);
 	Material(const Material& other) = default;
 	Material& operator=(const Material& other) = default;

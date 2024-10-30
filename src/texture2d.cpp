@@ -7,7 +7,16 @@
 
 
 
-// Constructor:
+// Constructors:
+Texture2d::Texture2d(VulkanContext* context, VmaImage* image, std::string name)
+{
+	this->context = context;
+	this->width = static_cast<int>(image->GetWidth());
+	this->height = static_cast<int>(image->GetHeight());
+	this->channels = 4;
+	this->image = std::unique_ptr<VmaImage>(image);
+	this->name = name;
+}
 Texture2d::Texture2d(VulkanContext* context, const std::filesystem::path& filePath, std::string name)
 {
 	this->context = context;
@@ -83,7 +92,7 @@ void Texture2d::CreateImage(const VkImageSubresourceRange& subresourceRange, uin
 	allocInfo.requiredFlags = 0;
 	allocInfo.preferredFlags = 0;
 
-	image = std::make_shared<VmaImage>(context, imageInfo, allocInfo, subresourceRange);
+	image = std::make_unique<VmaImage>(context, imageInfo, allocInfo, subresourceRange);
 }
 void Texture2d::TransitionImageLayout(const VkImageSubresourceRange& subresourceRange, VmaBuffer& stagingBuffer)
 {

@@ -13,7 +13,7 @@ class Scene
 {
 public: // Members:
 	Camera* activeCamera = nullptr;
-	std::unordered_map<std::string, Transform*> transforms;
+	std::array<DirectionalLight*, 1> directionalLights;
 	std::unordered_map<std::string, MeshRenderer*> meshRenderers;
 	std::unordered_map<std::string, std::unique_ptr<GameObject>> gameObjects;
 

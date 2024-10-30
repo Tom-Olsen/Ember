@@ -21,7 +21,9 @@ file(GLOB VULKAN_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/src/vma*"
     "${PROJECT_SOURCE_DIR}/src/sdl*"
     "${PROJECT_SOURCE_DIR}/src/pushConstant*"
-    "${PROJECT_SOURCE_DIR}/src/*RenderPass*")
+    "${PROJECT_SOURCE_DIR}/src/material.*"
+    "${PROJECT_SOURCE_DIR}/src/*RenderPass*"
+    "${PROJECT_SOURCE_DIR}/src/*Pipeline*")
 file(GLOB MANAGER_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/src/logger*"
     "${PROJECT_SOURCE_DIR}/src/macros*"
@@ -29,16 +31,19 @@ file(GLOB MANAGER_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/src/*manager*"
     "${PROJECT_SOURCE_DIR}/src/*manager*")
 file(GLOB SHADER_FILES
-    "${PROJECT_SOURCE_DIR}/shaders/*.glsl"
+    #"${PROJECT_SOURCE_DIR}/shaders/*.glsl"
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsli")
-file(GLOB MATH_FILES "${PROJECT_SOURCE_DIR}/src/*Types.h")
+file(GLOB MATH_FILES
+"${PROJECT_SOURCE_DIR}/src/mathf.*"
+"${PROJECT_SOURCE_DIR}/src/*Types.h")
 file(GLOB COMPONENTS
     "${PROJECT_SOURCE_DIR}/src/component.*"
     "${PROJECT_SOURCE_DIR}/src/transform.*"
     "${PROJECT_SOURCE_DIR}/src/camera.*"
     "${PROJECT_SOURCE_DIR}/src/meshRenderer.*"
     "${PROJECT_SOURCE_DIR}/src/spin.*"
+    "${PROJECT_SOURCE_DIR}/src/directionalLight.*"
     "${PROJECT_SOURCE_DIR}/src/spotLight.*")
 
 # Remove Vulkan files from the default source/header lists:

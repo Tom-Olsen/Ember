@@ -6,13 +6,6 @@
 #include "forwardRenderPass.h"
 #include "shadowRenderPass.h"
 #include "vulkanCommand.h"
-
-// Move this in application
-#include "meshManager.h"
-#include "materialManager.h"
-#include "textureManager.h"
-#include "samplerManager.h"
-
 #include "scene.h"
 
 
@@ -35,6 +28,7 @@ private: // Members:
 	// Sync objects:
 	std::vector<VkFence> fences;
 	std::vector<VkSemaphore> acquireSemaphores;
+	std::vector<VkSemaphore> shadowToForwardSemaphores;
 	std::vector<VkSemaphore> releaseSemaphores;
 
 	// Render management:
@@ -50,8 +44,8 @@ public: // Methods:
 private: // Methods:
 	bool AcquireImage();
 	void RecordShadowCommandBuffer(Scene* scene);
-	void RecordCommandBuffer(Scene* scene);
-	void SubmitCommandBuffer();
+	void RecordForwardCommandBuffer(Scene* scene);
+	void SubmitCommandBuffers();
 	bool PresentImage();
 	void SetViewportAndScissor(VkCommandBuffer& commandBuffer);
 	void CreateFences();

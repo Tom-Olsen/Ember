@@ -8,7 +8,8 @@
 MeshRenderer::MeshRenderer()
 {
 	mesh = nullptr;
-	material = nullptr;
+	forwardMaterial = nullptr;
+	shadowMaterial = nullptr;
 }
 
 
@@ -22,40 +23,69 @@ MeshRenderer::~MeshRenderer()
 
 
 // Public methods:
-void MeshRenderer::SetMaterial(Material* material)
+// Setter:
+void MeshRenderer::SetForwardMaterial(Material* forwardMaterial)
 {
-	this->material = material;
-	materialProperties = std::unique_ptr<MaterialProperties>(material->GetMaterialPropertiesCopy());
+	this->forwardMaterial = forwardMaterial;
+	forwardMaterialProperties = std::unique_ptr<MaterialProperties>(forwardMaterial->GetMaterialPropertiesCopy());
 }
-VkDescriptorSet* MeshRenderer::GetDescriptorSets(uint32_t frameIndex)
+void MeshRenderer::SetShadowMaterial(Material* shadowMaterial)
 {
-	return &materialProperties->descriptorSets[frameIndex];
+	this->shadowMaterial = shadowMaterial;
+	shadowMaterialProperties = std::unique_ptr<MaterialProperties>(shadowMaterial->GetMaterialPropertiesCopy());
 }
-VkPipeline& MeshRenderer::GetPipeline()
+void MeshRenderer::SetForwardMatrizes(const Float4x4& cameraViewMatrix, const Float4x4& cameraProjMatrix)
 {
-	return material->pipeline->pipeline;
+	RenderMatrizes renderMatrizes;
+	renderMatrizes.modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
+	renderMatrizes.viewMatrix = cameraViewMatrix;
+	renderMatrizes.projMatrix = cameraProjMatrix;
+	renderMatrizes.normalMatrix = gameObject->transform->GetNormalMatrix();
+	renderMatrizes.UpdateMvpMatrix();
+	forwardMaterialProperties->SetUniform("RenderMatrizes", renderMatrizes);
 }
-VkPipelineLayout& MeshRenderer::GetPipelineLayout()
+void MeshRenderer::SetShadowMatrizes(const Float4x4& lightViewMatrix, const Float4x4& lightProjMatrix)
 {
-	return material->pipeline->pipelineLayout;
+	RenderMatrizes renderMatrizes;
+	renderMatrizes.modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
+	renderMatrizes.viewMatrix = lightViewMatrix;
+	renderMatrizes.projMatrix = lightProjMatrix;
+	renderMatrizes.normalMatrix = gameObject->transform->GetNormalMatrix();
+	renderMatrizes.UpdateMvpMatrix();
+	shadowMaterialProperties->SetUniform("RenderMatrizes", renderMatrizes);
+}
+
+
+
+// Getters:
+VkDescriptorSet* MeshRenderer::GetForwardDescriptorSets(uint32_t frameIndex)
+{
+	return &forwardMaterialProperties->descriptorSets[frameIndex];
+}
+VkDescriptorSet* MeshRenderer::GetShadowDescriptorSets(uint32_t frameIndex)
+{
+	return &shadowMaterialProperties->descriptorSets[frameIndex];
+}
+VkPipeline& MeshRenderer::GetForwardPipeline()
+{
+	return forwardMaterial->pipeline->pipeline;
+}
+VkPipeline& MeshRenderer::GetShadowPipeline()
+{
+	return shadowMaterial->pipeline->pipeline;
+}
+VkPipelineLayout& MeshRenderer::GetForwardPipelineLayout()
+{
+	return forwardMaterial->pipeline->pipelineLayout;
+}
+VkPipelineLayout& MeshRenderer::GetShadowPipelineLayout()
+{
+	return shadowMaterial->pipeline->pipelineLayout;
 }
 
 
 
 // Overrides:
-void MeshRenderer::Update()
-{
-	if (camera != nullptr)
-	{
-		RenderMatrizes renderMatrizes;
-		renderMatrizes.modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
-		renderMatrizes.viewMatrix = camera->GetViewMatrix();
-		renderMatrizes.projMatrix = camera->GetProjectionMatrix();
-		renderMatrizes.normalMatrix = gameObject->transform->GetLocalToWorldMatrix();
-		renderMatrizes.UpdateMvpMatrix();
-		materialProperties->SetUniform("RenderMatrizes", renderMatrizes);
-	}
-}
 std::string MeshRenderer::ToString() const
 {
 	return "MeshRenderer";

@@ -33,7 +33,7 @@ uint64_t VmaBuffer::GetSize()
 
 
 
-// Static:
+// Static methods:
 void VmaBuffer::CopyBufferToBuffer(VulkanContext* context, VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize bufferSize, const VulkanQueue& queue)
 {
 	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, queue);
@@ -102,8 +102,11 @@ VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* context, const std::vector<uin
 	uint64_t offset = 0;
 	for (uint64_t i = 0; i < inputDatas.size(); i++)
 	{
-		memcpy(static_cast<char*>(data) + offset, inputDatas[i], static_cast<size_t>(sizes[i]));
-		offset += sizes[i];
+		if (inputDatas[i] != nullptr && sizes[i] > 0)
+		{
+			memcpy(static_cast<char*>(data) + offset, inputDatas[i], static_cast<size_t>(sizes[i]));
+			offset += sizes[i];
+		}
 	}
 	vmaUnmapMemory(context->Allocator(), stagingBuffer.allocation);
 

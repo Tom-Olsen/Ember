@@ -7,6 +7,7 @@
 // Constructor:
 SpotLight::SpotLight()
 {
+	this->intensity = 1.0f;
 	this->fov = 45.0f;
 	updateProjectionMatrix = true;
 }
@@ -22,6 +23,10 @@ SpotLight::~SpotLight()
 
 
 // Setters:
+void SpotLight::SetIntensity(const float& intensity)
+{
+	this->intensity = std::clamp(intensity, 0.0f, 1.0f);
+}
 void SpotLight::SetFov(const float& fov)
 {
 	this->fov = fov;

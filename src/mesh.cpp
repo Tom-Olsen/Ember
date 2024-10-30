@@ -53,7 +53,7 @@ void Mesh::SetNormals(std::vector<Float3>& normals)
 		this->normals = normals;
 	else
 	{
-		LOG_WARN("normals size does not match vertex count! Setting all normals to zero.");
+		LOG_WARN("Mesh '{}' normals size does not match vertex count! Setting all normals to zero.", name);
 		this->normals.clear();
 		this->normals.resize(vertexCount, Float3());
 	}
@@ -65,9 +65,23 @@ void Mesh::SetColors(std::vector<Float4>& colors)
 		this->colors = colors;
 	else
 	{
-		LOG_WARN("colors size does not match vertex count! Setting all colors to zero.");
+		LOG_WARN("Mesh '{}' colors size does not match vertex count! Setting all colors to zero.", name);
 		this->colors.clear();
 		this->colors.resize(vertexCount, Float4());
+	}
+	verticesUpdated = true;
+}
+void Mesh::SetUniformColor(const Float4& color)
+{
+	if (colors.size() == vertexCount)
+	{
+		for (Float4& col : colors)
+			col = color;
+	}
+	else
+	{
+		this->colors.clear();
+		this->colors.resize(vertexCount, color);
 	}
 	verticesUpdated = true;
 }
@@ -77,7 +91,7 @@ void Mesh::SetUVs(std::vector<Float4>& uvs)
 		this->uvs = uvs;
 	else
 	{
-		LOG_WARN("uvs size does not match vertex count! Setting all uvs to zero.");
+		LOG_WARN("Mesh '{}' uvs size does not match vertex count! Setting all uvs to zero.", name);
 		this->uvs.clear();
 		this->uvs.resize(vertexCount, Float4());
 	}
@@ -105,7 +119,7 @@ void Mesh::MoveNormals(std::vector<Float3>& normals)
 		this->normals = std::move(normals);
 	else
 	{
-		LOG_WARN("normals size does not match vertex count! Setting all normals to zero.");
+		LOG_WARN("Mesh '{}' normals size does not match vertex count! Setting all normals to zero.", name);
 		this->normals.clear();
 		this->normals.resize(vertexCount, Float3());
 	}
@@ -117,7 +131,7 @@ void Mesh::MoveColors(std::vector<Float4>& colors)
 		this->colors = std::move(colors);
 	else
 	{
-		LOG_WARN("colors size does not match vertex count! Setting all colors to zero.");
+		LOG_WARN("Mesh '{}' colors size does not match vertex count! Setting all colors to zero.", name);
 		this->colors.clear();
 		this->colors.resize(vertexCount, Float4());
 	}
@@ -129,7 +143,7 @@ void Mesh::MoveUVs(std::vector<Float4>& uvs)
 		this->uvs = std::move(uvs);
 	else
 	{
-		LOG_WARN("uvs size does not match vertex count! Setting all uvs to zero.");
+		LOG_WARN("Mesh '{}' uvs size does not match vertex count! Setting all uvs to zero.", name);
 		this->uvs.clear();
 		this->uvs.resize(vertexCount, Float4());
 	}
@@ -179,23 +193,45 @@ uint32_t* Mesh::GetTrianglesUnrolled()
 }
 uint32_t Mesh::GetSizeOfPositions() const
 {
-	return vertexCount * sizeof(Float3);
+	return static_cast<uint32_t>(positions.size()) * sizeof(Float3);
 }
 uint32_t Mesh::GetSizeOfNormals() const
 {
-	return vertexCount * sizeof(Float3);
+	return static_cast<uint32_t>(normals.size()) * sizeof(Float3);
 }
 uint32_t Mesh::GetSizeOfColors() const
 {
-	return vertexCount * sizeof(Float4);
+	return static_cast<uint32_t>(colors.size()) * sizeof(Float4);
 }
 uint32_t Mesh::GetSizeOfUVs() const
 {
-	return vertexCount * sizeof(Float4);
+	return static_cast<uint32_t>(uvs.size()) * sizeof(Float4);
 }
 uint32_t Mesh::GetSizeOfTriangles() const
 {
-	return triangleCount * sizeof(Int3);
+	return static_cast<uint32_t>(triangles.size()) * sizeof(Int3);
+}
+uint32_t Mesh::GetBindingCount()
+{
+	return 4;
+}
+VkBuffer* Mesh::GetBuffers(VulkanContext* context)
+{
+	if (!isLoaded)
+		Load(context);
+	buffers[0] = vertexBuffer->buffer;
+	buffers[1] = vertexBuffer->buffer;
+	buffers[2] = vertexBuffer->buffer;
+	buffers[3] = vertexBuffer->buffer;
+	return buffers;
+}
+VkDeviceSize* Mesh::GetOffsets()
+{
+	offsets[0] = 0;
+	offsets[1] = GetSizeOfPositions();
+	offsets[2] = GetSizeOfPositions() + GetSizeOfNormals();
+	offsets[3] = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors();
+	return offsets;
 }
 VmaBuffer* Mesh::GetVertexBuffer(VulkanContext* context)
 {
@@ -223,13 +259,28 @@ bool Mesh::IsLoaded()
 {
 	return isLoaded;
 }
+bool Mesh::HasNormals()
+{
+	return normals.size() == vertexCount;
+}
+bool Mesh::HasColors()
+{
+	return colors.size() == vertexCount;
+}
+bool Mesh::HasUVs()
+{
+	return uvs.size() == vertexCount;
+}
 Mesh* Mesh::GetCopy(std::string newName)
 {
 	Mesh* copy = new Mesh(newName);
 	copy->SetPositions(positions);
-	copy->SetNormals(normals);
-	copy->SetColors(colors);
-	copy->SetUVs(uvs);
+	if (HasNormals())
+		copy->SetNormals(normals);
+	if (HasColors())
+		copy->SetColors(colors);
+	if (HasUVs())
+		copy->SetUVs(uvs);
 	copy->SetTriangles(triangles);
 	return copy;
 }
@@ -237,17 +288,17 @@ Mesh* Mesh::GetCopy(std::string newName)
 
 
 // Mesh transformation:
-Mesh* Mesh::Translate(Float3 translation)
+Mesh* Mesh::Translate(const Float3& translation)
 {
 	for (Float3& position : positions)
 		position += translation;
 	verticesUpdated = true;
 	return this;
 }
-Mesh* Mesh::Rotate(Float3 eulerAngles)
+Mesh* Mesh::Rotate(const Float3& eulerAngles)
 {
-	Float4x4 rotationMatrix = glm::rotate(Float4x4(1.0f), glm::radians(eulerAngles.x), Float3(1.0f, 0.0f, 0.0f));
-	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.y), Float3(0.0f, 1.0f, 0.0f));
+	Float4x4 rotationMatrix = glm::rotate(Float4x4(1.0f), glm::radians(eulerAngles.y), Float3(0.0f, 1.0f, 0.0f));
+	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.x), Float3(1.0f, 0.0f, 0.0f));
 	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.z), Float3(0.0f, 0.0f, 1.0f));
 
 	for (uint32_t i = 0; i < vertexCount; i++)
@@ -260,115 +311,244 @@ Mesh* Mesh::Rotate(Float3 eulerAngles)
 	verticesUpdated = true;
 	return this;
 }
-Mesh* Mesh::Scale(Float3 scale)
+Mesh* Mesh::Rotate(const Quaternion& quat)
+{
+	Float4x4 rotationMatrix = glm::toMat4(quat);
+	for (uint32_t i = 0; i < vertexCount; i++)
+	{
+		Float4 newPosition = rotationMatrix * Float4(positions[i], 1.0f);
+		Float4 newNormal = rotationMatrix * Float4(normals[i], 0.0f);
+		positions[i] = Float3(newPosition);
+		normals[i] = Float3(newNormal);
+	}
+	verticesUpdated = true;
+	return this;
+}
+Mesh* Mesh::Scale(const Float3& scale)
 {
 	for (Float3& position : positions)
 		position *= scale;
 	verticesUpdated = true;
 	return this;
 }
+Mesh* Mesh::Scale(float scale)
+{
+	return Scale(Float3(scale));
+}
+Mesh* Mesh::Subdivide()
+{
+	std::vector<Int3> newTriangles;
+	newTriangles.reserve(4 * triangleCount);
+	bool hasNormals = HasNormals();
+	bool hasColors = HasColors();
+	bool hasUVs = HasUVs();
+
+	// Subdivide each triangle:
+	uint32_t newVertexIndex = vertexCount;
+	for (uint32_t i = 0; i < triangleCount; i++)
+	{
+		Int3 triangle = triangles[i];
+
+		// Add positions:
+		Float3 positionA = 0.5f * (positions[triangle[0]] + positions[triangle[1]]);
+		Float3 positionB = 0.5f * (positions[triangle[1]] + positions[triangle[2]]);
+		Float3 positionC = 0.5f * (positions[triangle[2]] + positions[triangle[0]]);
+		positions.push_back(positionA);
+		positions.push_back(positionB);
+		positions.push_back(positionC);
+
+		// Add normals:
+		if (hasNormals)
+		{
+			Float3 normalA = glm::normalize(normals[triangle[0]] + normals[triangle[1]]);
+			Float3 normalB = glm::normalize(normals[triangle[1]] + normals[triangle[2]]);
+			Float3 normalC = glm::normalize(normals[triangle[2]] + normals[triangle[0]]);
+			normals.push_back(normalA);
+			normals.push_back(normalB);
+			normals.push_back(normalC);
+		}
+
+		// Add colors:
+		if (hasColors)
+		{
+			Float4 colorA = 0.5f * (colors[triangle[0]] + colors[triangle[1]]);
+			Float4 colorB = 0.5f * (colors[triangle[1]] + colors[triangle[2]]);
+			Float4 colorC = 0.5f * (colors[triangle[2]] + colors[triangle[0]]);
+			colors.push_back(colorA);
+			colors.push_back(colorB);
+			colors.push_back(colorC);
+		}
+
+		// Add Uvs:
+		if (hasUVs)
+		{
+			Float4 uvA = 0.5f * (uvs[triangle[0]] + uvs[triangle[1]]);
+			Float4 uvB = 0.5f * (uvs[triangle[1]] + uvs[triangle[2]]);
+			Float4 uvC = 0.5f * (uvs[triangle[2]] + uvs[triangle[0]]);
+			uvs.push_back(uvA);
+			uvs.push_back(uvB);
+			uvs.push_back(uvC);
+		}
+		
+		// Add 4 triangles:
+		Int3 newTriangleA = { triangle[0], newVertexIndex, newVertexIndex + 2 };
+		Int3 newTriangleB = { newVertexIndex, newVertexIndex + 1, newVertexIndex + 2 };
+		Int3 newTriangleC = { newVertexIndex, triangle[1], newVertexIndex + 1 };
+		Int3 newTriangleD = { newVertexIndex + 2, newVertexIndex + 1, triangle[2] };
+		newTriangles.push_back(newTriangleA);
+		newTriangles.push_back(newTriangleB);
+		newTriangles.push_back(newTriangleC);
+		newTriangles.push_back(newTriangleD);
+
+		newVertexIndex += 3;
+	}
+
+	// Update mesh data (forces bool updates and logic):
+	MovePositions(positions);
+	if (hasNormals)
+		MoveNormals(normals);
+	if (hasColors)
+		MoveColors(colors);
+	if (hasUVs)
+		MoveUVs(uvs);
+	MoveTriangles(newTriangles);
+	return this;
+}
+Mesh* Mesh::Spherify(float factor, float radius)
+{
+	factor = std::clamp(factor, 0.0f, 1.0f);
+	radius = std::max(1e-8f, radius);
+
+	for (uint32_t i = 0; i < vertexCount; i++)
+	{
+		Float3 sphereNormal = glm::normalize(positions[i]);
+		positions[i] = radius * (positions[i] + factor * (sphereNormal - positions[i]));
+		if (HasNormals())
+			normals[i] = normals[i] + factor * (sphereNormal - normals[i]);
+	}
+
+	// Update mesh data (forces bool updates and logic):
+	MovePositions(positions);
+	if (HasNormals())
+		MoveNormals(normals);
+	return this;
+}
 
 
 
-// Public static methods:
+// Static binding descriptions:
 std::vector<VkVertexInputBindingDescription> Mesh::GetBindingDescription()
 {
 	// binding = index of the binding in the array of bindings
 	// stride = number of bytes from one entry to the next
 	// inputRate = VK_VERTEX_INPUT_RATE_VERTEX : move to the next data entry after each vertex
 	//             VK_VERTEX_INPUT_RATE_INSTANCE : move to the next data entry after each instance
-	// => x0y0z0, x1y1z1, ..., r0g0b0a0, r1g1b1a1, ...
-	std::vector<VkVertexInputBindingDescription> bindingDescriptions;
-	bindingDescriptions.reserve(4);
-
-	// position binding:
-	VkVertexInputBindingDescription positionBindingDescription = {};
-	positionBindingDescription.binding = 0;
-	positionBindingDescription.stride = sizeof(Float3);
-	positionBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	bindingDescriptions.push_back(positionBindingDescription);
-
-	// normal binding:
-	VkVertexInputBindingDescription normalBindingDescription = {};
-	normalBindingDescription.binding = 1;
-	normalBindingDescription.stride = sizeof(Float3);
-	normalBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	bindingDescriptions.push_back(normalBindingDescription);
-
-	// color binding:
-	VkVertexInputBindingDescription colorBindingDescription = {};
-	colorBindingDescription.binding = 2;
-	colorBindingDescription.stride = sizeof(Float4);
-	colorBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	bindingDescriptions.push_back(colorBindingDescription);
-
-	// uv binding:
-	VkVertexInputBindingDescription uvBindingDescription = {};
-	uvBindingDescription.binding = 3;
-	uvBindingDescription.stride = sizeof(Float4);
-	uvBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	bindingDescriptions.push_back(uvBindingDescription);
-
+	// => x0y0z0, x1y1z1, ..., nxyz0, nxyz1, ..., r0g0b0a0, r1g1b1a1, ...
+	std::vector<VkVertexInputBindingDescription> bindingDescriptions =
+	{
+		GetPositionBindingDescription(),
+		GetNormalBindingDescription(),
+		GetColorBindingDescription(),
+		GetUvBindingDescription(0)
+	};
 	return bindingDescriptions;
 }
+VkVertexInputBindingDescription Mesh::GetPositionBindingDescription()
+{
+	VkVertexInputBindingDescription bindingDescription = {};
+	bindingDescription.binding = 0;
+	bindingDescription.stride = sizeof(Float3);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	return bindingDescription;
+}
+VkVertexInputBindingDescription Mesh::GetNormalBindingDescription()
+{
+	VkVertexInputBindingDescription bindingDescription = {};
+	bindingDescription.binding = 1;
+	bindingDescription.stride = sizeof(Float3);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	return bindingDescription;
+}
+VkVertexInputBindingDescription Mesh::GetColorBindingDescription()
+{
+	VkVertexInputBindingDescription bindingDescription = {};
+	bindingDescription.binding = 2;
+	bindingDescription.stride = sizeof(Float4);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	return bindingDescription;
+}
+VkVertexInputBindingDescription Mesh::GetUvBindingDescription(uint32_t channel)
+{
+	VkVertexInputBindingDescription bindingDescription = {};
+	bindingDescription.binding = 3 + channel;
+	bindingDescription.stride = sizeof(Float4);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	return bindingDescription;
+}
+
+
+
+// Static attribute descriptions:
 std::vector<VkVertexInputAttributeDescription> Mesh::GetAttributeDescriptions()
 {
 	// binding = index of the attribute in the array of attributes
 	// location = reference to the location directive of the input in the vertex shader
 	// format = how to interpret the data
 	// offset = data offset
-	std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
-
-	// position attribute:
-	VkVertexInputAttributeDescription positionAttributeDescription = {};
-	positionAttributeDescription.binding = 0;
-	positionAttributeDescription.location = 0;
-	positionAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-	positionAttributeDescription.offset = 0;
-	attributeDescriptions.push_back(positionAttributeDescription);
-
-	// normal attribute:
-	VkVertexInputAttributeDescription normalAttributeDescription = {};
-	normalAttributeDescription.binding = 1;
-	normalAttributeDescription.location = 1;
-	normalAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-	normalAttributeDescription.offset = 0;
-	attributeDescriptions.push_back(normalAttributeDescription);
-
-	// color attribute:
-	VkVertexInputAttributeDescription colorAttributeDescription = {};
-	colorAttributeDescription.binding = 2;
-	colorAttributeDescription.location = 2;
-	colorAttributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-	colorAttributeDescription.offset = 0;
-	attributeDescriptions.push_back(colorAttributeDescription);
-
-	// uv attribute:
-	VkVertexInputAttributeDescription uvAttributeDescription = {};
-	uvAttributeDescription.binding = 3;
-	uvAttributeDescription.location = 3;
-	uvAttributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-	uvAttributeDescription.offset = 0;
-	attributeDescriptions.push_back(uvAttributeDescription);
-
+	std::vector<VkVertexInputAttributeDescription> attributeDescriptions =
+	{
+		GetPositionAttributeDescription(),
+		GetNormalAttributeDescription(),
+		GetColorAttributeDescription(),
+		GetUvAttributeDescription(0)
+	};
 	return attributeDescriptions;
 }
+VkVertexInputAttributeDescription Mesh::GetPositionAttributeDescription()
+{
+	VkVertexInputAttributeDescription attributeDescription = {};
+	attributeDescription.binding = 0;
+	attributeDescription.location = 0;
+	attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescription.offset = 0;
+	return attributeDescription;
+}
+VkVertexInputAttributeDescription Mesh::GetNormalAttributeDescription()
+{
+	VkVertexInputAttributeDescription attributeDescription = {};
+	attributeDescription.binding = 1;
+	attributeDescription.location = 1;
+	attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescription.offset = 0;
+	return attributeDescription;
+}
+VkVertexInputAttributeDescription Mesh::GetColorAttributeDescription()
+{
+	VkVertexInputAttributeDescription attributeDescription = {};
+	attributeDescription.binding = 2;
+	attributeDescription.location = 2;
+	attributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	attributeDescription.offset = 0;
+	return attributeDescription;
+}
+VkVertexInputAttributeDescription Mesh::GetUvAttributeDescription(uint32_t channel)
+{
+	VkVertexInputAttributeDescription attributeDescription = {};
+	attributeDescription.binding = 3 + channel;
+	attributeDescription.location = 3 + channel;
+	attributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	attributeDescription.offset = 0;
+	return attributeDescription;
+}
+
+
+
+// Static methods:
 VkIndexType Mesh::GetIndexType()
 {
 	return VK_INDEX_TYPE_UINT32;
 }
-uint32_t Mesh::GetBindingCount()
-{
-	return 4;
-}
-std::vector<VkDeviceSize> Mesh::GetOffsets()
-{
-	// Edit this when adding more buffers to the mesh.
-	// offsets = { position offset, color offset, uv offset, ... }
-	std::vector<VkDeviceSize> offsets = { 0, GetSizeOfPositions(), GetSizeOfPositions() + GetSizeOfNormals(), GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors()};
-	return offsets;
-}
-Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
+Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, const std::string& name)
 {
 	// Get total vertex and triangle counts:
 	uint32_t vertexCount = 0;
@@ -395,37 +575,61 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
 	mergedUvs.reserve(vertexCount);
 	mergedTriangles.reserve(triangleCount);
 
+	// Check if any mesh has an optional channel:
+	bool hasNormals = false;
+	bool hasColors = false;
+	bool HasUVs = false;
+	for (Mesh* mesh : meshes)
+	{
+		if (mesh->normals.size() == mesh->vertexCount)
+			hasNormals = true;
+		if (mesh->colors.size() == mesh->vertexCount)
+			hasColors = true;
+		if (mesh->uvs.size() == mesh->vertexCount)
+			HasUVs = true;
+	}
+
+
 	for (Mesh* mesh : meshes)
 	{
 		// Get data of current mesh:
-		std::vector<Float3> positions = mesh->GetPositions();
-		std::vector<Float3> normals = mesh->GetNormals();
-		std::vector<Float4> colors = mesh->GetColors();
-		std::vector<Float4> uvs = mesh->GetUVs();
-		std::vector<Int3> triangles = mesh->GetTriangles();
 
 		// Append positions (must always be present).
+		std::vector<Float3> positions = mesh->GetPositions();
 		mergedPositions.insert(mergedPositions.end(), positions.begin(), positions.end());
 
-		// Append normals (use zero if not present).
-		if (normals.size() == mesh->vertexCount)
-			mergedNormals.insert(mergedNormals.end(), normals.begin(), normals.end());
-		else
-			mergedNormals.insert(mergedNormals.end(), mesh->vertexCount, Float3());
+		// Append normals:
+		if (hasNormals)
+		{
+			std::vector<Float3> normals = mesh->GetNormals();
+			if (normals.size() == mesh->vertexCount)
+				mergedNormals.insert(mergedNormals.end(), normals.begin(), normals.end());
+			else
+				mergedNormals.insert(mergedNormals.end(), mesh->vertexCount, Float3());
+		}
 
-		// Append colors (use zero if not present).
-		if (colors.size() == mesh->vertexCount)
-			mergedColors.insert(mergedColors.end(), colors.begin(), colors.end());
-		else
-			mergedColors.insert(mergedColors.end(), mesh->vertexCount, Float4());
+		// Append colors:
+		if (hasColors)
+		{
+			std::vector<Float4> colors = mesh->GetColors();
+			if (colors.size() == mesh->vertexCount)
+				mergedColors.insert(mergedColors.end(), colors.begin(), colors.end());
+			else
+				mergedColors.insert(mergedColors.end(), mesh->vertexCount, Float4());
+		}
 
-		// Append uvs (use zero if not present).
-		if (uvs.size() == mesh->vertexCount)
-			mergedUvs.insert(mergedUvs.end(), uvs.begin(), uvs.end());
-		else
-			mergedUvs.insert(mergedUvs.end(), mesh->vertexCount, Float4());
+		// Append uvs:
+		if (HasUVs)
+		{
+			std::vector<Float4> uvs = mesh->GetUVs();
+			if (uvs.size() == mesh->vertexCount)
+				mergedUvs.insert(mergedUvs.end(), uvs.begin(), uvs.end());
+			else
+				mergedUvs.insert(mergedUvs.end(), mesh->vertexCount, Float4());
+		}
 
 		// Handle triangles:
+		std::vector<Int3> triangles = mesh->GetTriangles();
 		for (int i = 0; i < triangles.size(); i++)
 		{
 			mergedTriangles.push_back(triangles[i] + Int3(vertCount));
@@ -437,16 +641,19 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, std::string name)
 	// Construct mergedMesh:
 	Mesh* mergedMesh = new Mesh(name);
 	mergedMesh->MovePositions(mergedPositions);
-	mergedMesh->MoveNormals(mergedNormals);
-	mergedMesh->MoveColors(mergedColors);
-	mergedMesh->MoveUVs(mergedUvs);
+	if (hasNormals)
+		mergedMesh->MoveNormals(mergedNormals);
+	if (hasColors)
+		mergedMesh->MoveColors(mergedColors);
+	if (HasUVs)
+		mergedMesh->MoveUVs(mergedUvs);
 	mergedMesh->MoveTriangles(mergedTriangles);
 	return mergedMesh;
 }
 
 
 
-// Non-member:
+// Debugging:
 std::string Mesh::ToString()
 {
 	std::string str = "Mesh:\n";
@@ -455,17 +662,41 @@ std::string Mesh::ToString()
 	for (const Float3& position : positions)
 		str += to_string(position) + "\n";
 
-	str += "Normals:\n";
-	for (const Float3& normal : normals)
-		str += to_string(normal) + "\n";
+	str += "Normals:";
+	if (HasNormals())
+	{
+		str += "\n";
+		for (const Float3& normal : normals)
+			str += to_string(normal) + "\n";
+	}
+	else
+		str += " none\n";
 
-	str += "Colors:\n";
-	for (const Float4& color : colors)
-		str += to_string(color) + "\n";
+	str += "Colors:";
+	if (HasColors())
+	{
+		str += "\n";
+		for (const Float4& color : colors)
+			str += to_string(color) + "\n";
+	}
+	else
+		str += " none\n";
+
+	str += "Uvs:";
+	if (HasUVs())
+	{
+		str += "\n";
+		for (const Float4& uv : uvs)
+			str += to_string(uv) + "\n";
+	}
+	else
+		str += " none\n";
 
 	str += "Triangles:\n";
 	for (const Int3& triangle : triangles)
 		str += to_string(triangle) + "\n";
+
+	str += "\n";
 	return str;
 }
 

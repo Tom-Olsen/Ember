@@ -3,14 +3,23 @@
 #define __INCLUDE_GUARD_transform_h__
 #include "glmTypes.h"
 #include "component.h"
+#include "mathf.h"
 
 
 
+/// <summary>
+/// Righthanded system:
+/// +X = (1,0,0) is right
+/// +Y = (0,1,0) is forward
+/// +Z = (0,0,1) is up
+/// Default rotation order is YXZ = roll, pitch, yaw.
+/// </summary>
 class Transform : public Component
 {
 private: // Members:
 	Float3 position;
 	Float3 eulerAngles;	// in degrees
+	Int3 rotationOrder;
 	Float3 scale;
 	Float4x4 localToWorldMatrix;
 	Float4x4 worldToLocalMatrix;
@@ -25,7 +34,8 @@ public: // Methods:
 	// Setters:
 	void SetPosition(const Float3& position);
 	void SetEulerAngles(const Float3& eulerAngles);
-	void SetScale(const float& scale);
+	//void SetRotation(const Quaternion& quaternion);
+	void SetScale(float scale);
 	void SetScale(const Float3& scale);
 
 	// Getters:

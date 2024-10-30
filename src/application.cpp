@@ -8,14 +8,14 @@
 // Constructor:
 Application::Application()
 {
-	scene = nullptr;
+	activeScene = nullptr;
 	uint32_t framesInFlight = 2;
 	context = std::make_unique<VulkanContext>(framesInFlight);
 	renderer = std::make_unique<VulkanRenderer>(context.get());
 
 	// Init static managers:
 	MeshManager::Init(context.get());
-	MaterialManager::Init(context.get(), &renderer->forwardRenderPass->renderPass);
+	MaterialManager::Init(context.get(), renderer.get());
 	TextureManager::Init(context.get());
 	SamplerManager::Init(context.get());
 }
@@ -66,19 +66,19 @@ void Application::Run()
 			renderer->ResizeSwapchain();
 		}
 
-		Update();
-		renderer->Render(scene);
+		Update(activeScene);
+		renderer->Render(activeScene);
 	}
 }
 void Application::SetScene(Scene* scene)
 {
-	this->scene = scene;
+	this->activeScene = scene;
 }
 
 
 
 // Private methods:
-void Application::Update()
+void Application::Update(Scene* scene)
 {
 	// Update all game objects:
 	for (auto& gameObj : scene->gameObjects)

@@ -37,10 +37,6 @@ private: // Methods
     MeshManager(const MeshManager&) = delete;
     MeshManager& operator=(const MeshManager&) = delete;
     ~MeshManager() = delete;
-
-	// Default mesh constructors:
-	static Mesh* UnitQuad();
-    static Mesh* UnitCube();
 };
 
 

@@ -12,6 +12,7 @@ class SpotLight : public Component
 public: // Members:
 
 private: // Members:
+	float intensity;
 	float fov;
 	float aspectRatio;
 	float nearClip;
@@ -24,6 +25,7 @@ public: // Methods:
 	~SpotLight();
 
 	// Setters:
+	void SetIntensity(const float& intensity);
 	void SetFov(const float& fov);
 
 	// Getters:

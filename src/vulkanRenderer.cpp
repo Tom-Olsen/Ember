@@ -44,12 +44,13 @@ void VulkanRenderer::Render(Scene* scene)
 {
 	// Wait for fence of previous frame with same frameIndex to finish:
 	VKA(vkWaitForFences(context->LogicalDevice(), 1, &fences[context->frameIndex], VK_TRUE, UINT64_MAX));
-	if (!AcquireImage())
+	if (!AcquireImage() || scene->activeCamera == nullptr)
 		return;
 	VKA(vkResetFences(context->LogicalDevice(), 1, &fences[context->frameIndex]));
 
-	RecordCommandBuffer(scene);
-	SubmitCommandBuffer();
+	RecordShadowCommandBuffer(scene);
+	RecordForwardCommandBuffer(scene);
+	SubmitCommandBuffers();
 	if (!PresentImage())
 		return;
 
@@ -78,7 +79,6 @@ void VulkanRenderer::ResizeSwapchain()
 
 
 // Private:
-
 bool VulkanRenderer::AcquireImage()
 {
 	// Signal acquireSemaphore when done:
@@ -112,44 +112,47 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		VkClearValue clearValues = {};
 		clearValues.depthStencil = { 1.0f, 0 };
 		VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassBeginInfo.renderPass = shadowRenderPass->renderpass;
+		renderPassBeginInfo.renderPass = shadowRenderPass->renderPass;
 		renderPassBeginInfo.framebuffer = shadowRenderPass->framebuffers[imageIndex];
 		renderPassBeginInfo.renderArea.offset = { 0, 0 };
 		renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowRenderPass::shadowMapWidth, ShadowRenderPass::shadowMapHeight };
 		renderPassBeginInfo.clearValueCount = 1;
 		renderPassBeginInfo.pClearValues = &clearValues;
 
-		//// Begin render pass:
-		//vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-		//{
-		//	// Push constants:
-		//	PushConstantObject pushTime(Time::GetTime4(), Time::GetDeltaTime4());
-		//
-		//	// Bind pipeline and push constants:
-		//	vkCmdPushConstants(commandBuffer, shadowMap->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantObject), &pushTime);
-		//	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMap->pipeline);
-		//
-		//	for (auto& pair : scene->meshRenderers)
-		//	{
-		//		MeshRenderer* meshRenderer = pair.second;
-		//		if (meshRenderer->IsActive())
-		//		{
-		//			// TODO: clean this up
-		//			const VkDeviceSize offsets[1] = { 0 };
-		//			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
-		//			vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
-		//
-		//			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowMap->pipelineLayout, 0, 1, &shadowMap->descriptorSets[context->frameIndex], 0, nullptr);
-		//			vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
-		//		}
-		//	}
-		//}
-		//vkCmdEndRenderPass(commandBuffer);
+		// Begin render pass:
+		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		{
+			// Push constants:
+			PushConstantObject pushTime(Time::GetTime4(), Time::GetDeltaTime4());
+		
+		
+			for (auto& pair : scene->meshRenderers)
+			{
+				MeshRenderer* meshRenderer = pair.second;
+				if (meshRenderer->IsActive())
+				{
+					meshRenderer->SetShadowMatrizes(scene->directionalLights[0]->GetViewMatrix(), scene->directionalLights[0]->GetProjectionMatrix());
+
+					// TODO: move these two outside of for loop and do them for each material only once.
+					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipeline());
+					vkCmdPushConstants(commandBuffer, meshRenderer->GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantObject), &pushTime);
+
+					// TODO: clean this up
+					const VkDeviceSize offsets[1] = { 0 };
+					vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
+					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
+		
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
+					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+				}
+			}
+		}
+		vkCmdEndRenderPass(commandBuffer);
 	}
 	VKA(vkEndCommandBuffer(commandBuffer));
 }
 
-void VulkanRenderer::RecordCommandBuffer(Scene* scene)
+void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 {
 	vkResetCommandPool(context->LogicalDevice(), forwardCommands[context->frameIndex].pool, 0);
 	VkCommandBuffer commandBuffer = forwardCommands[context->frameIndex].buffer;
@@ -185,16 +188,16 @@ void VulkanRenderer::RecordCommandBuffer(Scene* scene)
 				MeshRenderer* meshRenderer = pair.second;
 				if (meshRenderer->IsActive())
 				{
-					// TODO: move these two outside of for loop and do them for each material only once.
-					vkCmdPushConstants(commandBuffer, meshRenderer->GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantObject), &pushTime);
-					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetPipeline());
+					meshRenderer->SetForwardMatrizes(scene->activeCamera->GetViewMatrix(), scene->activeCamera->GetProjectionMatrix());
 
-					// TODO: clean this up
-					VkBuffer buffers[4] = { meshRenderer->mesh->GetVertexBuffer(context)->buffer, meshRenderer->mesh->GetVertexBuffer(context)->buffer, meshRenderer->mesh->GetVertexBuffer(context)->buffer, meshRenderer->mesh->GetVertexBuffer(context)->buffer };
-					vkCmdBindVertexBuffers(commandBuffer, 0, Mesh::GetBindingCount(), buffers, meshRenderer->mesh->GetOffsets().data());
+					// TODO: move these two outside of for loop and do them for each material only once.
+					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipeline());
+					vkCmdPushConstants(commandBuffer, meshRenderer->GetForwardPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantObject), &pushTime);
+
+					vkCmdBindVertexBuffers(commandBuffer, 0, meshRenderer->mesh->GetBindingCount(), meshRenderer->mesh->GetBuffers(context), meshRenderer->mesh->GetOffsets());
 					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
 
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetPipelineLayout(), 0, 1, meshRenderer->GetDescriptorSets(context->frameIndex), 0, nullptr);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipelineLayout(), 0, 1, meshRenderer->GetForwardDescriptorSets(context->frameIndex), 0, nullptr);
 					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
 				}
 			}
@@ -204,18 +207,35 @@ void VulkanRenderer::RecordCommandBuffer(Scene* scene)
 	VKA(vkEndCommandBuffer(commandBuffer));
 }
 
-void VulkanRenderer::SubmitCommandBuffer()
+void VulkanRenderer::SubmitCommandBuffers()
 {
-	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // wait at color attachment stage (fragment shader).
-	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &acquireSemaphores[context->frameIndex];	// wait for acquireSemaphor
-	submitInfo.pWaitDstStageMask = &waitStage;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &forwardCommands[context->frameIndex].buffer;
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &releaseSemaphores[context->frameIndex]; // signal releaseSemaphor when done
-	VKA(vkQueueSubmit(context->logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[context->frameIndex])); // signal fence when done
+	// Shadow render pass:
+	{
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // wait at color attachment stage (fragment shader).
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &acquireSemaphores[context->frameIndex];	// wait for acquireSemaphor
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &shadowCommands[context->frameIndex].buffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &shadowToForwardSemaphores[context->frameIndex]; // signal shadowToForwardSemaphore when done
+		VKA(vkQueueSubmit(context->logicalDevice->graphicsQueue.queue, 1, &submitInfo, nullptr)); // signal fence when done
+	}
+
+	// Forward render pass:
+	{
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // wait at color attachment stage (fragment shader).
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &shadowToForwardSemaphores[context->frameIndex];	// wait for shadowToForwardSemaphore
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &forwardCommands[context->frameIndex].buffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &releaseSemaphores[context->frameIndex]; // signal releaseSemaphor when done
+		VKA(vkQueueSubmit(context->logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[context->frameIndex])); // signal fence when done
+	}
 }
 
 bool VulkanRenderer::PresentImage()
@@ -271,10 +291,12 @@ void VulkanRenderer::CreateSemaphores()
 	VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
 	acquireSemaphores.resize(context->framesInFlight);
+	shadowToForwardSemaphores.resize(context->framesInFlight);
 	releaseSemaphores.resize(context->framesInFlight);
 	for (uint32_t i = 0; i < context->framesInFlight; i++)
 	{
 		VKA(vkCreateSemaphore(context->LogicalDevice(), &createInfo, nullptr, &acquireSemaphores[i]));
+		VKA(vkCreateSemaphore(context->LogicalDevice(), &createInfo, nullptr, &shadowToForwardSemaphores[i]));
 		VKA(vkCreateSemaphore(context->LogicalDevice(), &createInfo, nullptr, &releaseSemaphores[i]));
 	}
 }
@@ -291,8 +313,10 @@ void VulkanRenderer::DestroySemaphores()
 	for (uint32_t i = 0; i < context->framesInFlight; i++)
 	{
 		vkDestroySemaphore(context->LogicalDevice(), acquireSemaphores[i], nullptr);
+		vkDestroySemaphore(context->LogicalDevice(), shadowToForwardSemaphores[i], nullptr);
 		vkDestroySemaphore(context->LogicalDevice(), releaseSemaphores[i], nullptr);
 	}
 	acquireSemaphores.clear();
+	shadowToForwardSemaphores.clear();
 	releaseSemaphores.clear();
 }

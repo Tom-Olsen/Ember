@@ -2,13 +2,13 @@
 #include <vector>
 #include "logger.h"
 #include "macros.h"
-#include "vulkanPipeline.h"
+#include "forwardPipeline.h"
 #include "mesh.h"
 
 
 
 // Constructor:
-VulkanPipeline::VulkanPipeline(VulkanContext* context, VkRenderPass* renderPass,
+ForwardPipeline::ForwardPipeline(VulkanContext* context, VkRenderPass* renderPass,
     const std::vector<char>& vertexCode,
     const std::vector<char>& fragmentCode,
     const std::vector<VkDescriptorSetLayoutBinding>& bindings)
@@ -33,17 +33,15 @@ VulkanPipeline::VulkanPipeline(VulkanContext* context, VkRenderPass* renderPass,
 
 
 // Destructor:
-VulkanPipeline::~VulkanPipeline()
+ForwardPipeline::~ForwardPipeline()
 {
-    vkDestroyDescriptorSetLayout(context->LogicalDevice(), descriptorSetLayout, nullptr);
-    vkDestroyPipelineLayout(context->LogicalDevice(), pipelineLayout, nullptr);
-    vkDestroyPipeline(context->LogicalDevice(), pipeline, nullptr);
+
 }
 
 
 
 // Private:
-void VulkanPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+void ForwardPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
 	// Descriptor set layout:
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -65,7 +63,7 @@ void VulkanPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
     vkCreatePipelineLayout(context->LogicalDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
 }
-VkShaderModule VulkanPipeline::CreateShaderModule(const std::vector<char>& code)
+VkShaderModule ForwardPipeline::CreateShaderModule(const std::vector<char>& code)
 {
     VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
     createInfo.codeSize = code.size();
@@ -76,7 +74,7 @@ VkShaderModule VulkanPipeline::CreateShaderModule(const std::vector<char>& code)
     return shaderModule;
 }
 
-void VulkanPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
+void ForwardPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
 {
     // Vertex shader:
     VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -92,36 +90,37 @@ void VulkanPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModu
 
     VkPipelineShaderStageCreateInfo shaderStages[2] = { vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo };
 
-    // Get mesh datalayout from mesh class:
+    // Get mesh data layout from mesh class:
     std::vector<VkVertexInputBindingDescription> bindingDescriptions = Mesh::GetBindingDescription();
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions = Mesh::GetAttributeDescriptions();
 
+    // Vertex input:
     VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
     vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
     vertexInputState.pVertexBindingDescriptions = bindingDescriptions.data();
     vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
     vertexInputState.pVertexAttributeDescriptions = attributeDescriptions.data();
 
-    // topology = how to interpret the vertices, triangle list is the most flexible
+    // Input assembly:
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;  // how to interpret the vertices, triangle list is the most flexible
 
     // Multiple viewports and scissors can be used for multiview rendering (VR). Requires multiview feature
     VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
     viewportState.viewportCount = 1;
     viewportState.scissorCount = 1;
 
+    // Rasterization:
     VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
     rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;  // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
-    rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;    // which face to cull
+    rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT;   // which face to cull
     rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE; // which face of triangle is front: 123 or 132?
-    rasterizationState.lineWidth = 1.0f;    // width of lines. Bigger 1.0f requires wideLines feature
-    rasterizationState.depthClampEnable = VK_FALSE; // clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature
-    // Biasing depth values based on fragment's slope is useful for shadow mapping. Requires depthBias feature. We are not using it here
-    rasterizationState.depthBiasEnable = VK_FALSE;
-    rasterizationState.depthBiasConstantFactor = 0.0f;  // Optional
-    rasterizationState.depthBiasClamp = 0.0f;           // Optional
-    rasterizationState.depthBiasSlopeFactor = 0.0f;     // Optional
+    rasterizationState.lineWidth = 1.0f;                    // width of lines. Bigger 1.0f requires wideLines feature
+    rasterizationState.depthClampEnable = VK_FALSE;         // clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature.
+    rasterizationState.depthBiasEnable = VK_FALSE;          // Optional
+    rasterizationState.depthBiasConstantFactor = 0.0f;      // Optional
+    rasterizationState.depthBiasClamp = 0.0f;               // Optional
+    rasterizationState.depthBiasSlopeFactor = 0.0f;         // Optional
 
     // Multisampling:
     VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
@@ -138,11 +137,7 @@ void VulkanPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModu
 	depthState.depthWriteEnable = VK_TRUE;            // new depth of fragments that pass the depth test should be written to the depth buffer
 	depthState.depthCompareOp = VK_COMPARE_OP_LESS;   // comparison that is performed to keep or discard fragments. lower = closer to camera
 	depthState.depthBoundsTestEnable = VK_FALSE;      // allows to keep only fragments in the below defined range
-    depthState.minDepthBounds = 0.0f;                 // Optional
-    depthState.maxDepthBounds = 1.0f;                 // Optional
 	depthState.stencilTestEnable = VK_FALSE;          // stencil buffer operations (not used yet)
-    depthState.front = {};                            // Optional
-    depthState.back = {};                             // Optional
 
     // Configuration per attached framebuffer:
     VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
@@ -169,7 +164,7 @@ void VulkanPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModu
     // finalColor.rgb = (srcAlpha * newColor.rgb) + ((1 - srcAlpha) * oldColor.rgb);
     // finalColor.a = newAlpha.a;
 
-    // Global color blending settings:
+    // Color blending settings:
     VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
     colorBlendState.attachmentCount = 1;
     colorBlendState.pAttachments = &colorBlendAttachmentState;
@@ -203,6 +198,5 @@ void VulkanPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModu
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
     pipelineInfo.basePipelineIndex = -1;
 
-    // Second parameter is a VkPipelineCache. It can be used to store and reuse pipelines; even across runs of the application by saving it to a file.
     VKA(vkCreateGraphicsPipelines(context->LogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
 }

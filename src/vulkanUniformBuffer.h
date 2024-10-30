@@ -37,7 +37,7 @@ public: // Methods:
 // A mat4 matrix must have the same alignment as a vec4.
 // Full list of alignment requirements in: https://registry.khronos.org/vulkan/specs/1.3-extensions/html/chap15.html#interfaces-resources-layout
 // 15.8.4. Offset and Stride Assignment / Alignment Requirements
-struct RenderMatrizes
+struct alignas(16) RenderMatrizes
 {
 	alignas(16) Float4x4 modelMatrix;	// mesh local to world matrix
 	alignas(16) Float4x4 viewMatrix;	// camera world to local matrix
@@ -58,6 +58,47 @@ struct RenderMatrizes
 	{
 		mvpMatrix = projMatrix * viewMatrix * modelMatrix;
 	}
+};
+
+
+
+static const uint32_t MAX_D_LIGHTS = 2;
+static const uint32_t MAX_S_LIGHTS = 5;
+static const uint32_t MAX_P_LIGHTS = 10;
+struct alignas(16) DLight
+{
+	alignas(4)  float intensity;		// Intensity of the light
+	alignas(16) Float4 color;			// Color of the light
+	alignas(16) Float4x4 viewMatrix;	// Light world to local matrix
+	alignas(16) Float4x4 projMatrix;	// Light projection matrix
+};
+struct alignas(16) SLight
+{
+	alignas(4)  float intensity;		// Intensity of the light
+	alignas(4)  float innerCone;		// Inner cone angle in radians (full intensity)
+	alignas(4)  float outerCone;		// Outer cone angle in radians (fall-off)
+	alignas(16) Float4 color;			// Color of the light
+	alignas(16) Float4x4 viewMatrix;	// Light world to local matrix
+	alignas(16) Float4x4 projMatrix;	// Light projection matrix
+};
+struct alignas(16) PLight
+{
+	alignas(4)  float intensity;		// Intensity of the light
+	alignas(4)  float radius;			// Attenuation radius
+	alignas(16) Float4 color;			// Color of the light
+	alignas(16) Float4x4 viewMatrix;	// Light world to local matrix
+	alignas(16) Float4x4 projMatrix;	// Light projection matrix
+};
+struct alignas(16) LightData
+{
+	DLight dLights[MAX_D_LIGHTS];		// Array of directional lights
+	alignas(4) uint32_t dLightsCound;	// Number of active directional lights
+
+	SLight sLights[MAX_S_LIGHTS];		// Array of spot lights
+	alignas(4) uint32_t sLightsCound;	// Number of active spot lights
+
+	PLight pLights[MAX_P_LIGHTS];		// Array of point lights
+	alignas(4) uint32_t pLightsCound;	// Number of active point lights
 };
 
 

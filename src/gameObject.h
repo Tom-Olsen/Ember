@@ -12,6 +12,7 @@
 #include "meshRenderer.h"
 #include "spin.h"
 #include "spotLight.h"
+#include "directionalLight.h"
 
 
 

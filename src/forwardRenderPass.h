@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_vulkanRenderpass_h__
-#define __INCLUDE_GUARD_vulkanRenderpass_h__
+#ifndef __INCLUDE_GUARD_forwardRenderpass_h__
+#define __INCLUDE_GUARD_forwardRenderpass_h__
 #include <vector>
 #include "vulkanContext.h"
 #include "vmaImage.h"
@@ -34,4 +34,4 @@ private: // Methods:
 
 
 
-#endif // __INCLUDE_GUARD_vulkanRenderpass_h__
+#endif // __INCLUDE_GUARD_forwardRenderpass_h__

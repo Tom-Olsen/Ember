@@ -8,6 +8,7 @@ Transform::Transform()
 {
 	this->position = Float3(0.0f);
 	this->eulerAngles = Float3(0.0f);
+	this->rotationOrder = Int3(1, 0, 2);
 	this->scale = Float3(1.0f);
 	updateLocalToWorldMatrix = true;
 }
@@ -45,6 +46,12 @@ void Transform::SetEulerAngles(const Float3& eulerAngles)
 	this->eulerAngles = eulerAngles;
 	updateLocalToWorldMatrix = true;
 }
+//void Transform::SetRotation(const Quaternion& quaternion)
+//{
+//	Float3 eulerAngles = glm::degrees(glm::eulerAngles(quaternion));
+//	LOG_INFO(to_string(eulerAngles));
+//	SetEulerAngles(Float3(eulerAngles.y, eulerAngles.x, eulerAngles.z));
+//}
 void Transform::SetScale(const Float3& scale)
 {
 	if (this->scale == scale)
@@ -52,7 +59,7 @@ void Transform::SetScale(const Float3& scale)
 	this->scale = scale;
 	updateLocalToWorldMatrix = true;
 }
-void Transform::SetScale(const float& scale)
+void Transform::SetScale(float scale)
 {
 	SetScale(Float3(scale));
 }
@@ -91,24 +98,23 @@ Float4x4 Transform::GetNormalMatrix()
 	return normalMatrix;
 }
 Float3 Transform::GetForward()
-{
+{// +y direction
 	if (updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return Float3(localToWorldMatrix[2]);
+	return Float3(localToWorldMatrix[1]);
 }
 Float3 Transform::GetRight()
-{
+{// +x direction
 	if (updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
 	return Float3(localToWorldMatrix[0]);
 }
 Float3 Transform::GetUp()
-{
+{// +z direction
 	if (updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return Float3(localToWorldMatrix[1]);
+	return Float3(localToWorldMatrix[2]);
 }
-
 
 
 
@@ -121,8 +127,8 @@ void Transform::UpdateLocalToWorldMatrix()
 	Float4x4 translationMatrix = glm::translate(Float4x4(1.0f), position);
 
 	// Rotation:
-	Float4x4 rotationMatrix = glm::rotate(Float4x4(1.0f), glm::radians(eulerAngles.x), Float3(1.0f, 0.0f, 0.0f));
-	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.y), Float3(0.0f, 1.0f, 0.0f));
+	Float4x4 rotationMatrix = glm::rotate(Float4x4(1.0f), glm::radians(eulerAngles.y), Float3(0.0f, 1.0f, 0.0f));
+	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.x), Float3(1.0f, 0.0f, 0.0f));
 	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.z), Float3(0.0f, 0.0f, 1.0f));
 
 	// Scale:

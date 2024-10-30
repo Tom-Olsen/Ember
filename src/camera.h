@@ -6,9 +6,13 @@
 
 
 
+/// <summary>
+/// Default view direction is y (not the usual -z).
+/// </summary>
 class Camera : public Component
 {
 private: // Members:
+	static Float4x4 rotateToY;
 	float fov;
 	float aspectRatio;
 	float nearClip;

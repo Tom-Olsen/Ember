@@ -1,9 +1,9 @@
 #pragma once
-#ifndef __INCLUDE_GUARD_shadowMap_h__
-#define __INCLUDE_GUARD_shadowMap_h__
+#ifndef __INCLUDE_GUARD_shadowRenderPass_h__
+#define __INCLUDE_GUARD_shadowRenderPass_h__
 #include <vector>
 #include "vulkanContext.h"
-#include "vmaImage.h"
+#include "texture2d.h"
 
 
 
@@ -16,8 +16,8 @@ class ShadowRenderPass
 private: // Members:
 
 public: // Members:
-	VkRenderPass renderpass;
-	std::unique_ptr<VmaImage> shadowMap;
+	VkRenderPass renderPass;
+	std::unique_ptr<Texture2d> shadowMap;
 	std::vector<VkFramebuffer> framebuffers;
 
 	static uint32_t shadowMapWidth;
@@ -32,11 +32,11 @@ public: // Methods:
 	~ShadowRenderPass();
 
 private: // Methods:
-	void CreateShadowMapImage();
+	void CreateShadowMapTexture();
 	void CreateRenderpass();
 	void CreateFramebuffers();
 };
 
 
 
-#endif // __INCLUDE_GUARD_shadowMap_h__
+#endif // __INCLUDE_GUARD_shadowRenderPass_h__

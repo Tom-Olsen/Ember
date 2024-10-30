@@ -3,7 +3,8 @@
 #define __INCLUDE_GUARD_materialProperties_h__
 #include <string>
 #include "vulkanContext.h"
-#include "vulkanPipeline.h"
+#include "forwardPipeline.h"
+#include "shadowPipeline.h"
 #include "vulkanUniformBuffer.h"
 #include "vulkanSampler.h"
 #include "texture2d.h"
@@ -33,7 +34,7 @@ public: // Members:
 	std::unordered_map<std::string, ResourceBinding<VulkanSampler*>> samplerMap;
 	std::unordered_map<std::string, ResourceBinding<Texture2d*>> texture2dMap;
 	std::vector<VkDescriptorSet> descriptorSets;
-	VulkanPipeline* pipeline;
+	Pipeline* pipeline;
 
 private: // Members:
 	VulkanContext* context;
@@ -51,7 +52,7 @@ public: // Methods:
 	void InitDescriptorSets();
 
 	// Setters:
-	void SetPipeline(VulkanPipeline* pipeline);
+	void SetPipeline(Pipeline* pipeline);
 	void SetUniform(const std::string& name, const RenderMatrizes& renderMatrizes);
 	void SetSampler(const std::string& name, VulkanSampler* sampler);
 	void SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler);

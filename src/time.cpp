@@ -28,7 +28,7 @@ void Time::Clear()
 void Time::Update()
 {
 	end = std::chrono::steady_clock::now();
-	deltaTime = std::chrono::duration<double>(end - start).count();
+	deltaTime = std::chrono::duration<float>(end - start).count();
 	time += deltaTime;
 	start = end;
 }

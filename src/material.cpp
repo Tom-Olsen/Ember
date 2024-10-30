@@ -5,16 +5,39 @@
 
 
 
-// Constructor:
-Material::Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name)
+// Constructors:
+Material::Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, std::string name)
 {
-	// TODO: -try removing these two
+	// Shadow material (might need to differenciate with other kinds of materials later):
+
 	// Not sure why I need to init these here (doesnt work otherwise). Init happens in main.cpp.
 	TextureManager::Init(context);
 	SamplerManager::Init(context);
 
 	this->context = context;
-	this->forwardRenderPass = forwardRenderPass;
+	this->name = name;
+	this->frameIndex = 0;
+	materialProperties = std::make_unique<MaterialProperties>(context);
+
+	// Read .spv shader files:
+	std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+
+	// Create shader reflections:
+	SpirvReflect vertexShaderReflect(vertexCode);
+
+	// Create pipeline (unique for each material):
+	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
+	pipeline = std::make_unique<ShadowPipeline>(context, renderPass, vertexCode, bindings);
+	materialProperties->SetPipeline(pipeline.get());
+	materialProperties->InitDescriptorSets();
+}
+Material::Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name)
+{
+	// Not sure why I need to init these here (doesnt work otherwise). Init happens in main.cpp.
+	TextureManager::Init(context);
+	SamplerManager::Init(context);
+
+	this->context = context;
 	this->name = name;
 	this->frameIndex = 0;
 	materialProperties = std::make_unique<MaterialProperties>(context);
@@ -30,7 +53,7 @@ Material::Material(VulkanContext* context, VkRenderPass* renderPass, const std::
 	// Create pipeline (unique for each material):
 	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
 	GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
-	pipeline = std::make_unique<VulkanPipeline>(context, renderPass, vertexCode, fragmentCode, bindings);
+	pipeline = std::make_unique<ForwardPipeline>(context, renderPass, vertexCode, fragmentCode, bindings);
 	materialProperties->SetPipeline(pipeline.get());
 	materialProperties->InitDescriptorSets();
 }

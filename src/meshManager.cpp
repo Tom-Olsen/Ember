@@ -1,5 +1,5 @@
 #include "meshManager.h"
-#include <numbers>
+#include "meshGenerator.h"
 
 
 
@@ -19,11 +19,53 @@ void MeshManager::Init(VulkanContext* vulkanContext)
 	isInitialized = true;
 	context = vulkanContext;
 
-	Mesh* unitQuad = UnitQuad();
+	Mesh* unitQuad = MeshGenerator::UnitQuad();
 	AddMesh(unitQuad->name, unitQuad);
 
-	Mesh* unitCube = UnitCube();
+	Mesh* unitCube = MeshGenerator::UnitCube();
 	AddMesh(unitCube->name, unitCube);
+
+	Mesh* halfCube = MeshGenerator::HalfCube();
+	AddMesh(halfCube->name, halfCube);
+
+	Mesh* cubeSphere = MeshGenerator::CubeSphere(0.5f, 3, "cubeSphere");
+	AddMesh(cubeSphere->name, cubeSphere);
+
+	Mesh* disk = MeshGenerator::Disk(0.5f, 16, "disk");
+	AddMesh(disk->name, disk);
+
+	Mesh* arcFlatUv = MeshGenerator::ArcFlatUv(0.3f, 0.7f, 135.0f, 16, "arcFlatUv");
+	AddMesh(arcFlatUv->name, arcFlatUv);
+
+	Mesh* arcCurvedUv = MeshGenerator::ArcCurvedUv(0.3f, 0.7f, 135.0f, 16, "arcCurvedUv");
+	AddMesh(arcCurvedUv->name, arcCurvedUv);
+
+	Mesh* coneSmooth = MeshGenerator::ConeSmooth(0.5f, 1.0f, 16, "coneSmooth");
+	AddMesh(coneSmooth->name, coneSmooth);
+
+	Mesh* coneEdgy = MeshGenerator::ConeEdgy(0.5f, 1.0f, 16, "coneEdgy");
+	AddMesh(coneEdgy->name, coneEdgy);
+
+	Mesh* zylinderMantleSmooth = MeshGenerator::ZylinderMantleSmooth(0.5f, 1.0f, 16, "zylinderMantleSmooth");
+	AddMesh(zylinderMantleSmooth->name, zylinderMantleSmooth);
+
+	Mesh* zylinderMantleEdgy = MeshGenerator::ZylinderMantleEdgy(0.5f, 1.0f, 16, "zylinderMantleEdgy");
+	AddMesh(zylinderMantleEdgy->name, zylinderMantleEdgy);
+
+	Mesh* zylinderSmooth = MeshGenerator::ZylinderSmooth(0.5f, 1.0f, 16, "zylinderSmooth");
+	AddMesh(zylinderSmooth->name, zylinderSmooth);
+
+	Mesh* zylinderEdgy = MeshGenerator::ZylinderEdgy(0.5f, 1.0f, 16, "zylinderEdgy");
+	AddMesh(zylinderEdgy->name, zylinderEdgy);
+	
+	Mesh* arrowSmooth = MeshGenerator::ArrowSmooth(Float3(0.0f, 0.0f, 1.0f), 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowSmooth");
+	AddMesh(arrowSmooth->name, arrowSmooth);
+
+	Mesh* arrowEdgy = MeshGenerator::ArrowEdgy(Float3(0.0f, 0.0f, 1.0f), 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowEdgy");
+	AddMesh(arrowEdgy->name, arrowEdgy);
+
+	Mesh* threeLeg = MeshGenerator::ThreeLeg();
+	AddMesh(threeLeg->name, threeLeg);
 }
 void MeshManager::UnloadAllMeshes()
 {
@@ -70,69 +112,4 @@ void MeshManager::PrintAllMeshNames()
 	LOG_TRACE("Names of all managed meshes:");
 	for (const auto& pair : meshes)
 		LOG_TRACE(pair.first);
-}
-
-
-
-// Default mesh constructors:
-Mesh* MeshManager::UnitQuad()
-{
-	Mesh* mesh = new Mesh("UnitQuad");
-
-	std::vector<Float3> positions;
-	positions.emplace_back(-0.5f, -0.5f, 0.0f);
-	positions.emplace_back(-0.5f, 0.5f, 0.0f);
-	positions.emplace_back(0.5f, -0.5f, 0.0f);
-	positions.emplace_back(0.5f, 0.5f, 0.0f);
-	mesh->MovePositions(positions);
-
-	std::vector<Float3> normals;
-	normals.emplace_back(0.0f, 0.0f, 1.0f);
-	normals.emplace_back(0.0f, 0.0f, 1.0f);
-	normals.emplace_back(0.0f, 0.0f, 1.0f);
-	normals.emplace_back(0.0f, 0.0f, 1.0f);
-	mesh->MoveNormals(normals);
-
-	std::vector<Float4> colors;
-	colors.emplace_back(1.0f, 0.0f, 0.0f, 1.0f);
-	colors.emplace_back(0.0f, 1.0f, 0.0f, 1.0f);
-	colors.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
-	colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
-	mesh->MoveColors(colors);
-
-	std::vector<Float4> uvs;
-	uvs.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
-	uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
-	uvs.emplace_back(1.0f, 0.0f, 0.0f, 0.0f);
-	uvs.emplace_back(1.0f, 1.0f, 0.0f, 0.0f);
-	mesh->MoveUVs(uvs);
-
-	std::vector<Int3> triangles;
-	triangles.emplace_back(0, 1, 2);
-	triangles.emplace_back(1, 3, 2);
-	mesh->MoveTriangles(triangles);
-
-    return mesh;
-}
-Mesh* MeshManager::UnitCube()
-{
-	Mesh* unitQuad = GetMesh("UnitQuad");
-	if (unitQuad == nullptr)
-		unitQuad = UnitQuad();
-
-	std::vector<Mesh*> faces;
-	faces.reserve(6);
-	for (uint32_t i = 0; i < 6; i++)
-		faces.push_back(unitQuad->GetCopy());
-
-	float pi = static_cast<float>(std::numbers::pi);
-	float piHalf = 0.5f * pi;
-	faces[0]->Rotate(Float3(-90.0f,     0,      0))->Translate(Float3( 0.0f,  0.5f,  0.0f));
-	faces[1]->Rotate(Float3( 90.0f,     0, 180.0f))->Translate(Float3( 0.0f, -0.5f,  0.0f));
-	faces[2]->Rotate(Float3( 90.0f,-90.0f,      0))->Translate(Float3(-0.5f,  0.0f,  0.0f));
-	faces[3]->Rotate(Float3( 90.0f, 90.0f,      0))->Translate(Float3( 0.5f,  0.0f,  0.0f));
-	faces[4]->Rotate(Float3(     0,     0,      0))->Translate(Float3( 0.0f,  0.0f,  0.5f));
-	faces[5]->Rotate(Float3(180.0f,     0,      0))->Translate(Float3( 0.0f,  0.0f, -0.5f));
-
-	return Mesh::Merge(faces, "UnitCube");
 }

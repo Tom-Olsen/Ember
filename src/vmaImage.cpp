@@ -12,6 +12,7 @@ VmaImage::VmaImage(VulkanContext* context, const VkImageCreateInfo& imageInfo, c
 	this->imageInfo = imageInfo;
 	this->allocationInfo = allocationInfo;
 	this->subresourceRange = subresourceRange;
+	this->layout = imageInfo.initialLayout;
 
 	// Create image:
 	VKA(vmaCreateImage(context->Allocator(), &imageInfo, &allocationInfo, &image, &allocation, nullptr));
@@ -49,6 +50,27 @@ uint64_t VmaImage::GetDepth()
 {
 	return imageInfo.extent.depth;
 }
+VkExtent3D VmaImage::GetExtent()
+{
+	return imageInfo.extent;
+}
+VkImageSubresourceRange VmaImage::GetSubresourceRange()
+{
+	return subresourceRange;
+}
+VkImageSubresourceLayers VmaImage::GetSubresourceLayers()
+{
+	VkImageSubresourceLayers subresourceLayers = {};
+	subresourceLayers.aspectMask = subresourceRange.aspectMask;
+	subresourceLayers.mipLevel = subresourceRange.baseMipLevel;
+	subresourceLayers.baseArrayLayer = subresourceRange.baseArrayLayer;
+	subresourceLayers.layerCount = subresourceRange.layerCount;
+	return subresourceLayers;
+}
+VkImageLayout VmaImage::GetLayout()
+{
+	return layout;
+}
 
 
 
@@ -79,6 +101,8 @@ void VmaImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subre
 		1, &barrier);	// image memory barriers
 
 	VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
+
+	layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 }
 void VmaImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourceRange)
 {
@@ -107,6 +131,8 @@ void VmaImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourc
 			1, &releaseBarrier);	// image memory barriers
 
 		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
+
+		layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	}
 	{
 		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
@@ -132,6 +158,8 @@ void VmaImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourc
 			1, &acquireBarrier);	// image memory barriers
 
 		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+
+		layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	}
 }
 void VmaImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subresourceRange)
@@ -161,6 +189,8 @@ void VmaImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subr
 			1, &releaseBarrier);	// image memory barriers
 
 		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
+
+		layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 	{
 		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
@@ -186,6 +216,8 @@ void VmaImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subr
 			1, &acquireBarrier);	// image memory barriers
 
 		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+
+		layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 }
 void VmaImage::GenerateMipmaps(uint32_t mipLevels)
@@ -267,4 +299,25 @@ void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 		1, &barrier);
 
 	VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+
+	layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+}
+
+
+
+// Static methods:
+void CopyImageToImage(VulkanContext* context, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue)
+{
+	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, queue);;
+
+	// Queue copy command:
+	VkImageCopy copyRegion = {};
+	copyRegion.srcSubresource = srcImage->GetSubresourceLayers();
+	copyRegion.srcOffset = { 0, 0, 0 };
+	copyRegion.dstSubresource = dstImage->GetSubresourceLayers();
+	copyRegion.dstOffset = { 0, 0, 0 };
+	copyRegion.extent = srcImage->GetExtent();
+	vkCmdCopyImage(command.buffer, srcImage->image, srcImage->GetLayout(), dstImage->image, dstImage->GetLayout(), 1, &copyRegion);
+
+	VulkanHelper::EndSingleTimeCommand(context, command, queue);
 }

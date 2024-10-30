@@ -5,23 +5,30 @@
 // Static members:
 bool MaterialManager::isInitialized = false;
 VulkanContext* MaterialManager::context;
-VkRenderPass* MaterialManager::renderPass;
 std::unordered_map<std::string, std::unique_ptr<Material>> MaterialManager::materials;
 
 
 
 // Initialization and cleanup:
-void MaterialManager::Init(VulkanContext* context, VkRenderPass* renderPass)
+void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
 {
 	if (isInitialized)
 		return;
 
 	isInitialized = true;
 	MaterialManager::context = context;
-	MaterialManager::renderPass = renderPass;
 
-	Material* defaultMaterial = new Material(context, renderPass, "../shaders/vert.spv", "../shaders/frag.spv", "defaultMaterial");
+	Material* defaultMaterial = new Material(context, &renderer->forwardRenderPass->renderPass, "../shaders/vertDefault.spv", "../shaders/fragDefault.spv", "defaultMaterial");
 	AddMaterial(defaultMaterial->name, defaultMaterial);
+
+	Material* colorMaterial = new Material(context, &renderer->forwardRenderPass->renderPass, "../shaders/vertColor.spv", "../shaders/fragColor.spv", "colorMaterial");
+	AddMaterial(colorMaterial->name, colorMaterial);
+
+	Material* shadowMaterial = new Material(context, &renderer->shadowRenderPass->renderPass, "../shaders/vertShadow.spv", "shadowMaterial");
+	AddMaterial(shadowMaterial->name, shadowMaterial);
+
+	Material* shadowMapMaterial = new Material(context, &renderer->forwardRenderPass->renderPass, "../shaders/vertShadowMap.spv", "../shaders/fragShadowMap.spv", "shadowMapMaterial");
+	AddMaterial(shadowMapMaterial->name, shadowMapMaterial);
 }
 void MaterialManager::Clear()
 {

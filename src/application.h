@@ -2,6 +2,10 @@
 #define __INCLUDE_GUARD_application_h__
 #include "vulkanContext.h"
 #include "vulkanRenderer.h"
+#include "meshManager.h"
+#include "materialManager.h"
+#include "textureManager.h"
+#include "samplerManager.h"
 
 
 
@@ -15,7 +19,7 @@ public: // Members:
 	std::unique_ptr<VulkanRenderer> renderer;
 
 private: // Members:
-	Scene* scene;
+	Scene* activeScene;
 
 
 public: // Methods:
@@ -25,7 +29,7 @@ public: // Methods:
 	void SetScene(Scene* scene);
 
 private: // Methods:
-	void Update();
+	void Update(Scene* scene);
 };
 
 

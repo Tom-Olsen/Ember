@@ -17,13 +17,14 @@ public: // Members:
 	int width;
 	int height;
 	int channels;
-	std::shared_ptr<VmaImage> image;
+	std::unique_ptr<VmaImage> image;
 	std::string name;
 
 private: // Members:
 	VulkanContext* context;
 
 public: // Methods:
+	Texture2d(VulkanContext* context, VmaImage* image, std::string name);
 	Texture2d(VulkanContext* context, const std::filesystem::path& filePath, std::string name);
 	~Texture2d();
 

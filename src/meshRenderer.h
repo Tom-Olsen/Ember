@@ -12,26 +12,31 @@
 class MeshRenderer : public Component
 {
 public: // Members:
-	Camera* camera;
 	Mesh* mesh;
-	std::unique_ptr<MaterialProperties> materialProperties;
+	std::unique_ptr<MaterialProperties> forwardMaterialProperties;
+	std::unique_ptr<MaterialProperties> shadowMaterialProperties;
 
 private: // Members:
-	Material* material;
+	Material* forwardMaterial;
+	Material* shadowMaterial;
 
 public: // Methods:
 	MeshRenderer();
 	~MeshRenderer();
 
-	void SetMaterial(Material* material);
+	void SetForwardMaterial(Material* forwardMaterial);
+	void SetShadowMaterial(Material* shadowMaterial);
+	void SetForwardMatrizes(const Float4x4& cameraViewMatrix, const Float4x4& cameraProjMatrix);
+	void SetShadowMatrizes(const Float4x4& lightViewMatrix, const Float4x4& lightProjMatrix);
 
-
-	VkDescriptorSet* GetDescriptorSets(uint32_t frameIndex);
-	VkPipeline& GetPipeline();
-	VkPipelineLayout& GetPipelineLayout();
+	VkDescriptorSet* GetForwardDescriptorSets(uint32_t frameIndex);
+	VkDescriptorSet* GetShadowDescriptorSets(uint32_t frameIndex);
+	VkPipeline& GetForwardPipeline();
+	VkPipeline& GetShadowPipeline();
+	VkPipelineLayout& GetForwardPipelineLayout();
+	VkPipelineLayout& GetShadowPipelineLayout();
 
 	// Overrides:
-	void Update() override;
 	std::string ToString() const override;
 
 private: // Methods:

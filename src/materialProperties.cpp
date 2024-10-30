@@ -65,7 +65,7 @@ void MaterialProperties::InitDescriptorSets()
 
 
 // Setters:
-void MaterialProperties::SetPipeline(VulkanPipeline* pipeline)
+void MaterialProperties::SetPipeline(Pipeline* pipeline)
 {
 	if (this->pipeline == nullptr)
 		this->pipeline = pipeline;

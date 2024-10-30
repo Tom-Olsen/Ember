@@ -24,7 +24,11 @@ Spin::~Spin()
 void Spin::Update()
 {
 	Float3 eulerAngles = gameObject->transform->GetEulerAngles();
-	gameObject->transform->SetEulerAngles(eulerAngles + eulerAnglesPerSecond * Time::GetDeltaTime());
+	Float3 newEulerAngles = eulerAngles + eulerAnglesPerSecond * Time::GetDeltaTime();
+	gameObject->transform->SetEulerAngles(newEulerAngles);
+
+	if (logAngles)
+		LOG_INFO(to_string(newEulerAngles));
 }
 std::string Spin::ToString() const
 {
