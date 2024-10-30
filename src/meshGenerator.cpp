@@ -16,7 +16,7 @@ namespace MeshGenerator
 		positions.emplace_back(c);
 		mesh->MovePositions(positions);
 
-		Float3 normal = glm::normalize(glm::cross(b - a, c - a));
+		Float3 normal = Float3::Cross(b - a, c - a).Normalize();
 		std::vector<Float3> normals;
 		normals.emplace_back(normal);
 		normals.emplace_back(normal);
@@ -29,8 +29,8 @@ namespace MeshGenerator
 		uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
 		mesh->MoveUVs(uvs);
 
-		std::vector<Int3> triangles;
-		triangles.emplace_back(0, 1, 2);
+		std::vector<Uint3> triangles;
+		triangles.emplace_back(Uint3(0, 1, 2));
 		mesh->MoveTriangles(triangles);
 
 		return mesh;
@@ -61,9 +61,9 @@ namespace MeshGenerator
 		uvs.emplace_back(1.0f, 1.0f, 0.0f, 0.0f);
 		mesh->MoveUVs(uvs);
 
-		std::vector<Int3> triangles;
-		triangles.emplace_back(0, 2, 1);
-		triangles.emplace_back(1, 2, 3);
+		std::vector<Uint3> triangles;
+		triangles.emplace_back(Uint3(0, 2, 1));
+		triangles.emplace_back(Uint3(1, 2, 3));
 		mesh->MoveTriangles(triangles);
 
 		return mesh;
@@ -79,7 +79,7 @@ namespace MeshGenerator
 		positions.emplace_back(d);
 		mesh->MovePositions(positions);
 
-		Float3 normal = glm::normalize(glm::cross(c - a, b - a));
+		Float3 normal = Float3::Cross(c - a, b - a).Normalize();
 		std::vector<Float3> normals;
 		normals.emplace_back(normal);
 		normals.emplace_back(normal);
@@ -94,9 +94,9 @@ namespace MeshGenerator
 		uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
 		mesh->MoveUVs(uvs);
 
-		std::vector<Int3> triangles;
-		triangles.emplace_back(0, 3, 1);
-		triangles.emplace_back(1, 3, 2);
+		std::vector<Uint3> triangles;
+		triangles.emplace_back(Uint3(0, 3, 1));
+		triangles.emplace_back(Uint3(1, 3, 2));
 		mesh->MoveTriangles(triangles);
 
 		return mesh;
@@ -164,7 +164,7 @@ namespace MeshGenerator
 		std::vector<Float3> positions;	positions.reserve(cornerCount + 1);
 		std::vector<Float3> normals;	normals.reserve(cornerCount + 1);
 		std::vector<Float4> uvs;		uvs.reserve(cornerCount + 1);
-		std::vector<Int3> triangles;	triangles.reserve(cornerCount);
+		std::vector<Uint3> triangles;	triangles.reserve(cornerCount);
 
 		// Per vertex data:
 		float dAlpha = 2.0f * static_cast<float>(std::numbers::pi)  / cornerCount;
@@ -183,8 +183,8 @@ namespace MeshGenerator
 
 		// Triangles:
 		for (int i = 0; i < cornerCount - 1; i++)
-			triangles.push_back(Int3(i, i + 1, cornerCount));
-		triangles.push_back(Int3(0, cornerCount, cornerCount - 1));
+			triangles.push_back(Uint3(i, i + 1, cornerCount));
+		triangles.push_back(Uint3(0, cornerCount, cornerCount - 1));
 
 		Mesh* mesh = new Mesh(name);
 		mesh->MovePositions(positions);
@@ -206,10 +206,10 @@ namespace MeshGenerator
 		std::vector<Float3> positions;	positions.reserve(2 * cornerCount);
 		std::vector<Float3> normals;	normals.reserve(2 * cornerCount);
 		std::vector<Float4> uvs;		uvs.reserve(2 * cornerCount);
-		std::vector<Int3> triangles;	triangles.reserve(2 * (cornerCount - 1));
+		std::vector<Uint3> triangles;	triangles.reserve(2 * (cornerCount - 1));
 
 		// Per vertex data:
-		float dAlpha = glm::radians(degrees) / (cornerCount - 1.0f);
+		float dAlpha = mathf::ToRadians(degrees) / (cornerCount - 1.0f);
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float x = cos(i * dAlpha);
@@ -226,8 +226,8 @@ namespace MeshGenerator
 		// Triangles:
 		for (int i = 0; i < 2 * (cornerCount - 1); i += 2)
 		{
-			triangles.push_back(Int3(i, i + 1, i + 2));
-			triangles.push_back(Int3(i + 1, i + 3, i + 2));
+			triangles.push_back(Uint3(i, i + 1, i + 2));
+			triangles.push_back(Uint3(i + 1, i + 3, i + 2));
 		}
 
 		Mesh* mesh = new Mesh(name);
@@ -249,11 +249,11 @@ namespace MeshGenerator
 		std::vector<Float3> positions;	positions.reserve(2 * cornerCount);
 		std::vector<Float3> normals;	normals.reserve(2 * cornerCount);
 		std::vector<Float4> uvs;		uvs.reserve(2 * cornerCount);
-		std::vector<Int3> triangles;	triangles.reserve(2 * (cornerCount - 1));
+		std::vector<Uint3> triangles;	triangles.reserve(2 * (cornerCount - 1));
 
 		// Per vertex data:
 		float duv = 1.0f / (cornerCount - 1.0f);
-		float dAlpha = glm::radians(degrees) / (cornerCount - 1.0f);
+		float dAlpha = mathf::ToRadians(degrees) / (cornerCount - 1.0f);
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float x = cos(i * dAlpha);
@@ -270,8 +270,8 @@ namespace MeshGenerator
 		// Triangles:
 		for (int i = 0; i < 2 * (cornerCount - 1); i += 2)
 		{
-			triangles.push_back(Int3(i, i + 1, i + 2));
-			triangles.push_back(Int3(i + 1, i + 3, i + 2));
+			triangles.push_back(Uint3(i, i + 1, i + 2));
+			triangles.push_back(Uint3(i + 1, i + 3, i + 2));
 		}
 
 		Mesh* mesh = new Mesh(name);
@@ -291,7 +291,7 @@ namespace MeshGenerator
 		std::vector<Float3> positions;	positions.reserve(cornerCount + 2);
 		std::vector<Float3> normals;	normals.reserve(cornerCount + 2);
 		std::vector<Float4> uvs;		uvs.reserve(cornerCount + 2);
-		std::vector<Int3> triangles;	triangles.reserve(3 * cornerCount);
+		std::vector<Uint3> triangles;	triangles.reserve(3 * cornerCount);
 
 		float dAlpha = 2.0f * static_cast<float>(std::numbers::pi) / cornerCount;
 		for (int i = 0; i < cornerCount + 1; i++)
@@ -312,7 +312,7 @@ namespace MeshGenerator
 		uvs.push_back(Float4(0.5f, 0.5f, 0.0f, 0.0f));
 
 		for (int i = 0; i < cornerCount; i++)
-			triangles.push_back(Int3(i, i + 1, cornerCount + 1));
+			triangles.push_back(Uint3(i, i + 1, cornerCount + 1));
 
 		Mesh* mesh = new Mesh(name);
 		mesh->MovePositions(positions);
@@ -361,7 +361,7 @@ namespace MeshGenerator
 		std::vector<Float3> positions;	positions.reserve(2 * (cornerCount + 1));
 		std::vector<Float3> normals;	normals.reserve(2 * (cornerCount + 1));
 		std::vector<Float4> uvs;		uvs.reserve(2 * (cornerCount + 1));
-		std::vector<Int3> triangles;	triangles.reserve(2 * cornerCount);
+		std::vector<Uint3> triangles;	triangles.reserve(2 * cornerCount);
 
 		float dAlpha = 2.0f * static_cast<float>(std::numbers::pi) / cornerCount;
 		for (int i = 0; i < cornerCount + 1; i++)
@@ -382,8 +382,8 @@ namespace MeshGenerator
 
 		for (int i = 0; i < 2 * cornerCount; i += 2)
 		{
-			triangles.push_back(Int3(i, i + 2, i + 1));
-			triangles.push_back(Int3(i + 1, i + 2, i + 3));
+			triangles.push_back(Uint3(i, i + 2, i + 1));
+			triangles.push_back(Uint3(i + 1, i + 2, i + 3));
 		}
 
 		Mesh* mesh = new Mesh(name);
@@ -412,7 +412,8 @@ namespace MeshGenerator
 
 			Mesh* face = UnitQuad();
 			face->Scale(Float3(width, height, 1.0f));
-			face->Rotate(Float3(90.0f, 0.0f, 0.0f))->Rotate(Float3(0.0f, 0.0f, 90.0f + glm::degrees(alpha)));
+			Float3x3 rotation = Float3x3::RotateX(mathf::ToRadians(90)) * Float3x3::RotateZ(mathf::ToRadians(90) + alpha);
+			face->Rotate(rotation);
 			face->Translate(Float3(dist * cos(alpha), dist * sin(alpha), 0.0f));
 
 			uvs[0] = Float4((i + 0.0f) / cornerCount, 0.0f, 0.0f, 0.0f);
@@ -432,7 +433,7 @@ namespace MeshGenerator
 		meshes.reserve(3);
 		meshes.push_back(ZylinderMantleSmooth(radius, height, cornerCount, "zylinderSmooth0"));
 		meshes.push_back(Disk(radius, cornerCount, "zylinderSmooth1")->Translate(0.5f * height * Float3(0.0f, 0.0f, 1.0f)));
-		meshes.push_back(meshes[1]->GetCopy("zylinderSmooth2")->Rotate(Float3(180.0f, 0.0f, 0.0f)));
+		meshes.push_back(meshes[1]->GetCopy("zylinderSmooth2")->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
 		return Mesh::Merge(meshes, name);
 	}
 	Mesh* ZylinderEdgy(float radius, float height, int cornerCount, std::string name)
@@ -441,19 +442,16 @@ namespace MeshGenerator
 		meshes.reserve(3);
 		meshes.push_back(ZylinderMantleEdgy(radius, height, cornerCount, "zylinderEdgy0"));
 		meshes.push_back(Disk(radius, cornerCount, "zylinderEdgy1")->Translate(0.5f * height * Float3(0.0f, 0.0f, 1.0f)));
-		meshes.push_back(meshes[1]->GetCopy("zylinderEdgy2")->Rotate(Float3(180.0f, 0.0f, 0.0f)));
+		meshes.push_back(meshes[1]->GetCopy("zylinderEdgy2")->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
 		return Mesh::Merge(meshes, name);
 	}
 
 	Mesh* ArrowSmooth(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, std::string name)
 	{
-		Float3 up = Float3(0.0f, 0.0f, 1.0f);
 		if (direction == Float3(0.0f))
-			direction = up;
+			direction = Float3::up;
 		else
-			direction = glm::normalize(direction);
-		Quaternion quat = glm::rotation(up, direction);
-		Float3 eulerAngles = glm::eulerAngles(quat);
+			direction = direction.Normalize();
 
 		bodyHeight = std::max(1e-8f, bodyHeight);
 		bodyRadius = std::max(1e-8f, bodyRadius);
@@ -464,22 +462,20 @@ namespace MeshGenerator
 		std::vector<Mesh*> meshes;
 		meshes.reserve(4);
 
-		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowSmooth0")->Rotate(Float3(180.0f, 0.0f, 0.0f)));
-		meshes.push_back(ZylinderMantleSmooth(bodyRadius, bodyHeight, cornerCount, "arrowSmooth1")->Translate(0.5f * bodyHeight * up));
-		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowSmooth2")->Translate(-bodyHeight * up)->Rotate(Float3(180.0f, 0.0f, 0.0f)));
-		meshes.push_back(ConeSmooth(headRadius, headHeight, cornerCount, "arrowSmooth3")->Translate(bodyHeight * up));
+		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowSmooth0")->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(ZylinderMantleSmooth(bodyRadius, bodyHeight, cornerCount, "arrowSmooth1")->Translate(0.5f * bodyHeight * Float3::up));
+		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowSmooth2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(ConeSmooth(headRadius, headHeight, cornerCount, "arrowSmooth3")->Translate(bodyHeight * Float3::up));
 
-		return Mesh::Merge(meshes, name)->Rotate(glm::degrees(eulerAngles));
+		Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
+		return Mesh::Merge(meshes, name)->Rotate(rotation);
 	}
 	Mesh* ArrowEdgy(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, std::string name)
 	{
-		Float3 up = Float3(0.0f, 0.0f, 1.0f);
 		if (direction == Float3(0.0f))
-			direction = up;
+			direction = Float3::up;
 		else
-			direction = glm::normalize(direction);
-		Quaternion quat = glm::rotation(up, direction);
-		Float3 eulerAngles = glm::eulerAngles(quat);
+			direction = direction.Normalize();
 
 		bodyHeight = std::max(1e-8f, bodyHeight);
 		bodyRadius = std::max(1e-8f, bodyRadius);
@@ -490,12 +486,13 @@ namespace MeshGenerator
 		std::vector<Mesh*> meshes;
 		meshes.reserve(4);
 
-		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowEdgy0")->Rotate(Float3(180.0f, 0.0f, 0.0f)));
-		meshes.push_back(ZylinderMantleEdgy(bodyRadius, bodyHeight, cornerCount, "arrowEdgy1")->Translate(0.5f * bodyHeight * up));
-		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowEdgy2")->Translate(-bodyHeight * up)->Rotate(Float3(180.0f, 0.0f, 0.0f)));
-		meshes.push_back(ConeEdgy(headRadius, headHeight, cornerCount, "arrowEdgy3")->Translate(bodyHeight * up));
+		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowEdgy0")->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(ZylinderMantleEdgy(bodyRadius, bodyHeight, cornerCount, "arrowEdgy1")->Translate(0.5f * bodyHeight * Float3::up));
+		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowEdgy2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(ConeEdgy(headRadius, headHeight, cornerCount, "arrowEdgy3")->Translate(bodyHeight * Float3::up));
 
-		return Mesh::Merge(meshes, name)->Rotate(quat);
+		Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
+		return Mesh::Merge(meshes, name)->Rotate(rotation);
 	}
 
 	Mesh* ThreeLeg()

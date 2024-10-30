@@ -5,7 +5,7 @@
 
 
 //	Static members:
-Float4x4 DirectionalLight::rotateToY = glm::rotate(Float4x4(1.0f), glm::radians(-90.0f), Float3(1.0f, 0.0f, 0.0f));
+Float4x4 DirectionalLight::rotateToY = Float4x4::RotateFromTo(Float3::down, Float3::forward);
 
 
 
@@ -13,7 +13,7 @@ Float4x4 DirectionalLight::rotateToY = glm::rotate(Float4x4(1.0f), glm::radians(
 DirectionalLight::DirectionalLight(const Float4& color)
 {
 	this->intensity = 1.0f;
-	this->color = Float4(color.r, color.g, color.b, 1.0f);
+	this->color = Float4(color.x, color.y, color.z, 1.0f);
 	this->nearClip = 0.1f;
 	this->farClip = 100.0f;
 	this->viewWidth = 20.0f;
@@ -42,7 +42,7 @@ void DirectionalLight::SetColor(const Float3& color)
 }
 void DirectionalLight::SetColor(const Float4& color)
 {
-	this->color = Float4(color.r, color.g, color.b, 1.0f);
+	this->color = Float4(color.x, color.y, color.z, 1.0f);
 }
 void DirectionalLight::SetNearClip(const float& nearClip)
 {
@@ -93,7 +93,7 @@ void DirectionalLight::UpdateProjectionMatrix()
 	float right = viewWidth / 2.0f;
 	float bottom = -viewHeight / 2.0f;
 	float top = viewHeight / 2.0f;
-	projectionMatrix = glm::ortho(left, right, bottom, top, nearClip, farClip);
+	projectionMatrix = Float4x4::Orthographic(left, right, bottom, top, nearClip, farClip);
 }
 
 

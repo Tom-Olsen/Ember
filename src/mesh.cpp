@@ -97,7 +97,7 @@ void Mesh::SetUVs(std::vector<Float4>& uvs)
 	}
 	verticesUpdated = true;
 }
-void Mesh::SetTriangles(std::vector<Int3>& triangles)
+void Mesh::SetTriangles(std::vector<Uint3>& triangles)
 {
 	this->triangleCount = static_cast<uint32_t>(triangles.size());
 	this->triangles = triangles;
@@ -149,7 +149,7 @@ void Mesh::MoveUVs(std::vector<Float4>& uvs)
 	}
 	verticesUpdated = true;
 }
-void Mesh::MoveTriangles(std::vector<Int3>& triangles)
+void Mesh::MoveTriangles(std::vector<Uint3>& triangles)
 {
 	this->triangleCount = static_cast<uint32_t>(triangles.size());
 	this->triangles = std::move(triangles);
@@ -183,7 +183,7 @@ std::vector<Float4>& Mesh::GetUVs()
 {
 	return uvs;
 }
-std::vector<Int3>& Mesh::GetTriangles()
+std::vector<Uint3>& Mesh::GetTriangles()
 {
 	return triangles;
 }
@@ -209,7 +209,7 @@ uint32_t Mesh::GetSizeOfUVs() const
 }
 uint32_t Mesh::GetSizeOfTriangles() const
 {
-	return static_cast<uint32_t>(triangles.size()) * sizeof(Int3);
+	return static_cast<uint32_t>(triangles.size()) * sizeof(Uint3);
 }
 uint32_t Mesh::GetBindingCount()
 {
@@ -295,29 +295,24 @@ Mesh* Mesh::Translate(const Float3& translation)
 	verticesUpdated = true;
 	return this;
 }
-Mesh* Mesh::Rotate(const Float3& eulerAngles)
+Mesh* Mesh::Rotate(const Float3x3& rotation)
 {
-	Float4x4 rotationMatrix = glm::rotate(Float4x4(1.0f), glm::radians(eulerAngles.y), Float3(0.0f, 1.0f, 0.0f));
-	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.x), Float3(1.0f, 0.0f, 0.0f));
-	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(eulerAngles.z), Float3(0.0f, 0.0f, 1.0f));
-
 	for (uint32_t i = 0; i < vertexCount; i++)
 	{
-		Float4 newPosition = rotationMatrix * Float4(positions[i], 1.0f);
-		Float4 newNormal = rotationMatrix * Float4(normals[i], 0.0f);
+		Float4 newPosition = rotation * positions[i];
+		Float4 newNormal = rotation * normals[i];
 		positions[i] = Float3(newPosition);
 		normals[i] = Float3(newNormal);
 	}
 	verticesUpdated = true;
 	return this;
 }
-Mesh* Mesh::Rotate(const Quaternion& quat)
+Mesh* Mesh::Rotate(const Float4x4& rotation)
 {
-	Float4x4 rotationMatrix = glm::toMat4(quat);
 	for (uint32_t i = 0; i < vertexCount; i++)
 	{
-		Float4 newPosition = rotationMatrix * Float4(positions[i], 1.0f);
-		Float4 newNormal = rotationMatrix * Float4(normals[i], 0.0f);
+		Float4 newPosition = rotation * Float4(positions[i], 1.0f);
+		Float4 newNormal = rotation * Float4(normals[i], 0.0f);
 		positions[i] = Float3(newPosition);
 		normals[i] = Float3(newNormal);
 	}
@@ -337,7 +332,7 @@ Mesh* Mesh::Scale(float scale)
 }
 Mesh* Mesh::Subdivide()
 {
-	std::vector<Int3> newTriangles;
+	std::vector<Uint3> newTriangles;
 	newTriangles.reserve(4 * triangleCount);
 	bool hasNormals = HasNormals();
 	bool hasColors = HasColors();
@@ -347,7 +342,7 @@ Mesh* Mesh::Subdivide()
 	uint32_t newVertexIndex = vertexCount;
 	for (uint32_t i = 0; i < triangleCount; i++)
 	{
-		Int3 triangle = triangles[i];
+		Uint3 triangle = triangles[i];
 
 		// Add positions:
 		Float3 positionA = 0.5f * (positions[triangle[0]] + positions[triangle[1]]);
@@ -360,9 +355,9 @@ Mesh* Mesh::Subdivide()
 		// Add normals:
 		if (hasNormals)
 		{
-			Float3 normalA = glm::normalize(normals[triangle[0]] + normals[triangle[1]]);
-			Float3 normalB = glm::normalize(normals[triangle[1]] + normals[triangle[2]]);
-			Float3 normalC = glm::normalize(normals[triangle[2]] + normals[triangle[0]]);
+			Float3 normalA = (normals[triangle[0]] + normals[triangle[1]]).Normalize();
+			Float3 normalB = (normals[triangle[1]] + normals[triangle[2]]).Normalize();
+			Float3 normalC = (normals[triangle[2]] + normals[triangle[0]]).Normalize();
 			normals.push_back(normalA);
 			normals.push_back(normalB);
 			normals.push_back(normalC);
@@ -391,10 +386,10 @@ Mesh* Mesh::Subdivide()
 		}
 		
 		// Add 4 triangles:
-		Int3 newTriangleA = { triangle[0], newVertexIndex, newVertexIndex + 2 };
-		Int3 newTriangleB = { newVertexIndex, newVertexIndex + 1, newVertexIndex + 2 };
-		Int3 newTriangleC = { newVertexIndex, triangle[1], newVertexIndex + 1 };
-		Int3 newTriangleD = { newVertexIndex + 2, newVertexIndex + 1, triangle[2] };
+		Uint3 newTriangleA = { triangle[0], newVertexIndex, newVertexIndex + 2 };
+		Uint3 newTriangleB = { newVertexIndex, newVertexIndex + 1, newVertexIndex + 2 };
+		Uint3 newTriangleC = { newVertexIndex, triangle[1], newVertexIndex + 1 };
+		Uint3 newTriangleD = { newVertexIndex + 2, newVertexIndex + 1, triangle[2] };
 		newTriangles.push_back(newTriangleA);
 		newTriangles.push_back(newTriangleB);
 		newTriangles.push_back(newTriangleC);
@@ -421,7 +416,7 @@ Mesh* Mesh::Spherify(float factor, float radius)
 
 	for (uint32_t i = 0; i < vertexCount; i++)
 	{
-		Float3 sphereNormal = glm::normalize(positions[i]);
+		Float3 sphereNormal = positions[i].Normalize();
 		positions[i] = radius * (positions[i] + factor * (sphereNormal - positions[i]));
 		if (HasNormals())
 			normals[i] = normals[i] + factor * (sphereNormal - normals[i]);
@@ -568,7 +563,7 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, const std::string& name)
 	std::vector<Float3> mergedNormals;
 	std::vector<Float4> mergedColors;
 	std::vector<Float4> mergedUvs;
-	std::vector<Int3> mergedTriangles;
+	std::vector<Uint3> mergedTriangles;
 	mergedPositions.reserve(vertexCount);
 	mergedNormals.reserve(vertexCount);
 	mergedColors.reserve(vertexCount);
@@ -629,10 +624,10 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, const std::string& name)
 		}
 
 		// Handle triangles:
-		std::vector<Int3> triangles = mesh->GetTriangles();
+		std::vector<Uint3> triangles = mesh->GetTriangles();
 		for (int i = 0; i < triangles.size(); i++)
 		{
-			mergedTriangles.push_back(triangles[i] + Int3(vertCount));
+			mergedTriangles.push_back(triangles[i] + Uint3(vertCount));
 			index++;
 		}
 		vertCount += mesh->vertexCount;
@@ -660,14 +655,14 @@ std::string Mesh::ToString()
 
 	str += "Positions:\n";
 	for (const Float3& position : positions)
-		str += to_string(position) + "\n";
+		str += position.ToString() + "\n";
 
 	str += "Normals:";
 	if (HasNormals())
 	{
 		str += "\n";
 		for (const Float3& normal : normals)
-			str += to_string(normal) + "\n";
+			str += normal.ToString() + "\n";
 	}
 	else
 		str += " none\n";
@@ -677,7 +672,7 @@ std::string Mesh::ToString()
 	{
 		str += "\n";
 		for (const Float4& color : colors)
-			str += to_string(color) + "\n";
+			str += color.ToString() + "\n";
 	}
 	else
 		str += " none\n";
@@ -687,14 +682,14 @@ std::string Mesh::ToString()
 	{
 		str += "\n";
 		for (const Float4& uv : uvs)
-			str += to_string(uv) + "\n";
+			str += uv.ToString() + "\n";
 	}
 	else
 		str += " none\n";
 
 	str += "Triangles:\n";
-	for (const Int3& triangle : triangles)
-		str += to_string(triangle) + "\n";
+	for (const Uint3& triangle : triangles)
+		str += triangle.ToString() + "\n";
 
 	str += "\n";
 	return str;

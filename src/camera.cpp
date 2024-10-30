@@ -5,15 +5,15 @@
 
 
 //	Static members:
-Float4x4 Camera::rotateToY = glm::rotate(glm::rotate(Float4x4(1.0f), glm::radians(90.0f), Float3(1.0f, 0.0f, 0.0f)), glm::radians(180.0f), Float3(0.0f, 0.0f, 1.0f));
-//Float4x4 Camera::rotateToY = glm::rotate(glm::rotate(Float4x4(1.0f), glm::radians(0.0f), Float3(0.0f, 0.0f, 1.0f)), glm::radians(90.0f), Float3(1.0f, 0.0f, 0.0f));
+// rotation is applied after worldToLocal matrix => -90degrees instead of +90
+Float4x4 Camera::rotateToY = Float4x4::RotateX(mathf::ToRadians(-90));
 
 
 
 // Constructor:
 Camera::Camera()
 {
-	this->fov = 60.0f;
+	this->fovRadians = mathf::ToRadians(60.0f);
 	this->aspectRatio = 16.0f / 9.0f;	// 1920x1080
 	this->nearClip = 0.1f;
 	this->farClip = 100.0f;
@@ -31,9 +31,14 @@ Camera::~Camera()
 
 
 // Setters:
-void Camera::SetFov(const float& fov)
+void Camera::SetFovDegrees(const float& fovDegrees)
 {
-	this->fov = fov;
+	this->fovRadians = mathf::ToRadians(fovDegrees);
+	updateProjectionMatrix = true;
+}
+void Camera::SetFovRadians(const float& fovRadians)
+{
+	this->fovRadians = fovRadians;
 	updateProjectionMatrix = true;
 }
 void Camera::SetAspectRatio(const float& aspectRatio)
@@ -57,7 +62,7 @@ void Camera::SetFarClip(const float& farClip)
 // Getters:
 Float4x4 Camera::GetViewMatrix()
 {
-	return gameObject->transform->GetWorldToLocalMatrix() * rotateToY;
+	return rotateToY * gameObject->transform->GetWorldToLocalMatrix();
 }
 Float4x4 Camera::GetProjectionMatrix()
 {
@@ -72,8 +77,7 @@ Float4x4 Camera::GetProjectionMatrix()
 void Camera::UpdateProjectionMatrix()
 {
 	updateProjectionMatrix = false;
-	projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip);
-	projectionMatrix[1][1] *= -1;
+	projectionMatrix = Float4x4::Perspective(fovRadians, aspectRatio, nearClip, farClip);
 }
 
 

@@ -3,7 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <string>
-#include "glmTypes.h"
+#include "mathf.h"
 #include "vulkanContext.h"
 #include "vmaBuffer.h"
 
@@ -33,7 +33,7 @@ private: // Members:
 	std::vector<Float3> normals;
 	std::vector<Float4> colors;
 	std::vector<Float4> uvs;
-	std::vector<Int3> triangles;
+	std::vector<Uint3> triangles;
 	VkDeviceSize offsets[4];
 	VkBuffer buffers[4];
 
@@ -55,14 +55,14 @@ public: // Methods:
 	void SetColors(std::vector<Float4>& colors);
 	void SetUniformColor(const Float4& color);
 	void SetUVs(std::vector<Float4>& uvs);
-	void SetTriangles(std::vector<Int3>& triangles);
+	void SetTriangles(std::vector<Uint3>& triangles);
 
 	// Movers:
 	void MovePositions(std::vector<Float3>& positions);
 	void MoveNormals(std::vector<Float3>& normals);
 	void MoveColors(std::vector<Float4>& colors);
 	void MoveUVs(std::vector<Float4>& uvs);
-	void MoveTriangles(std::vector<Int3>& triangles);
+	void MoveTriangles(std::vector<Uint3>& triangles);
 
 	// Getters:
 	uint32_t GetVertexCount() const;
@@ -71,7 +71,7 @@ public: // Methods:
 	std::vector<Float3>& GetNormals();
 	std::vector<Float4>& GetColors();
 	std::vector<Float4>& GetUVs();
-	std::vector<Int3>& GetTriangles();
+	std::vector<Uint3>& GetTriangles();
 	uint32_t* GetTrianglesUnrolled();
 	uint32_t GetSizeOfPositions() const;
 	uint32_t GetSizeOfNormals() const;
@@ -91,9 +91,8 @@ public: // Methods:
 
 	// Mesh transformation (changes this instance!):
 	Mesh* Translate(const Float3& translation);
-	Mesh* Rotate(const Float3& eulerAngles);
-	Mesh* Rotate(const Quaternion& quat);
-	//Mesh* Rotate(Quaternion quaternion);
+	Mesh* Rotate(const Float3x3& rotation);
+	Mesh* Rotate(const Float4x4& rotation);
 	Mesh* Scale(const Float3& scale);
 	Mesh* Scale(float scale);
 	Mesh* Subdivide();

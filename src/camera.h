@@ -1,7 +1,7 @@
 #pragma once
 #ifndef __INCLUDE_GUARD_camera_h__
 #define __INCLUDE_GUARD_camera_h__
-#include "glmTypes.h"
+#include "mathf.h"
 #include "component.h"
 
 
@@ -13,7 +13,7 @@ class Camera : public Component
 {
 private: // Members:
 	static Float4x4 rotateToY;
-	float fov;
+	float fovRadians;
 	float aspectRatio;
 	float nearClip;
 	float farClip;
@@ -25,7 +25,8 @@ public: // Methods:
 	~Camera();
 
 	// Setters:
-	void SetFov(const float& fov);
+	void SetFovDegrees(const float& fovDegrees);
+	void SetFovRadians(const float& fovRadians);
 	void SetAspectRatio(const float& aspectRatio);
 	void SetNearClip(const float& nearClip);
 	void SetFarClip(const float& farClip);

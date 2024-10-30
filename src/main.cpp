@@ -38,13 +38,13 @@ int main()
     Scene* scene = new Scene();
     {// Camera:
         GameObject* camera = new GameObject("mainCamera");
-        camera->transform->SetPosition(Float3(0.0f, -3.0f, 3.0f));
-        camera->transform->SetEulerAngles(Float3(-0.0f, 0.0f, 0.0f));
+        camera->transform->SetPosition(Float3(0.0f, -5.0f, 5.0f));
+        camera->transform->SetEulerDegrees(Float3(-45.0f, 0.0f, 0.0f));
 
         Camera* cameraComponent = new Camera();
         camera->AddComponent<Camera>(cameraComponent);
 
-        //Spin* spin = new Spin(Float3(0.0f, 0.0f, 10.0f));
+        //Spin* spin = new Spin(Float3(20.0f, 0.0f, 0.0f));
         //spin->logAngles = true;
         //camera->AddComponent<Spin>(spin);
 
@@ -53,7 +53,7 @@ int main()
     }
     {// Sun:
         GameObject* sun = new GameObject("sun");
-        sun->transform->SetEulerAngles(Float3(-45.0f, -135.0f, 0.0f));
+        sun->transform->SetEulerDegrees(Float3(-45.0f, -135.0f, 0.0f));
 		sun->transform->SetPosition(-3.0f * sun->transform->GetForward());
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("arrowEdgy");
@@ -82,7 +82,7 @@ int main()
     {// Cube0:
         GameObject* cube = new GameObject("cube0");
         cube->transform->SetPosition(Float3(1.5f, 0.0f, 0.5f));
-        cube->transform->SetEulerAngles(Float3(0.0f, 0.0f, 45.0f));
+        cube->transform->SetEulerDegrees(Float3(0.0f, 0.0f, 45.0f));
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
         meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
@@ -90,14 +90,16 @@ int main()
         meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
         meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("brick"));
         cube->AddComponent<MeshRenderer>(meshRenderer);
-        Spin* spin = new Spin(Float3(0.0f, 0.0f, 45.0f));
+
+        Spin* spin = new Spin(Float3(0.0f, 0, 45.0f));
 		cube->AddComponent<Spin>(spin);
+
         scene->AddGameObject(cube);
     }
     {// Cube1:
         GameObject* cube = new GameObject("cube1");
         cube->transform->SetPosition(Float3(-1.75f, 1.0f, 0.5f));
-        cube->transform->SetEulerAngles(Float3(0.0f, 0.0f, 30.0f));
+        cube->transform->SetEulerDegrees(Float3(0.0f, 0.0f, 30.0f));
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
         meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
@@ -112,7 +114,7 @@ int main()
     {// Sphere:
         GameObject* sphere = new GameObject("sphere0");
         sphere->transform->SetPosition(Float3(-0.5f, -1.0f, 1.5f));
-        sphere->transform->SetEulerAngles(Float3(0.0f, 0.0f, 0.0f));
+        sphere->transform->SetEulerDegrees(Float3(0.0f, 0.0f, 0.0f));
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("cubeSphere");
         meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
@@ -137,7 +139,7 @@ int main()
     { // Quad:
         GameObject* quad = new GameObject("quad");
         quad->transform->SetPosition(Float3(1.0f, -2.0f, 1.0f));
-        quad->transform->SetEulerAngles(Float3(90.0f, 0.0f, 0.0f));
+        quad->transform->SetEulerDegrees(Float3(90.0f, 0.0f, 0.0f));
         quad->transform->SetScale(2.0f);
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitQuad");

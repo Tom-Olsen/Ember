@@ -1,7 +1,7 @@
 #pragma once
 #ifndef __INCLUDE_GUARD_spin_h__
 #define __INCLUDE_GUARD_spin_h__
-#include "glmTypes.h"
+#include "mathf.h"
 #include "component.h"
 
 
@@ -9,11 +9,11 @@
 class Spin : public Component
 {
 public: // Members:
-	Float3 eulerAnglesPerSecond;
+	Float3 eulerDegreesPerSecond;
 	bool logAngles = false;
 
 public: // Methods:
-	Spin(Float3 eulerAnglesPerSecond = Float3());
+	Spin(Float3 eulerDegreesPerSecond = Float3());
 	~Spin();
 
 	// Overrides:

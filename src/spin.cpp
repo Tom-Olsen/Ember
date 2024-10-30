@@ -5,9 +5,9 @@
 
 
 // Constructor:
-Spin::Spin(Float3 eulerAnglesPerSecond)
+Spin::Spin(Float3 eulerDegreesPerSecond)
 {
-	this->eulerAnglesPerSecond = eulerAnglesPerSecond;
+	this->eulerDegreesPerSecond = eulerDegreesPerSecond;
 }
 
 
@@ -23,12 +23,14 @@ Spin::~Spin()
 // Overrides:
 void Spin::Update()
 {
-	Float3 eulerAngles = gameObject->transform->GetEulerAngles();
-	Float3 newEulerAngles = eulerAngles + eulerAnglesPerSecond * Time::GetDeltaTime();
-	gameObject->transform->SetEulerAngles(newEulerAngles);
+	Float3 eulerDegrees = gameObject->transform->GetEulerDegrees();
+	Float3 newEulerDegrees = eulerDegrees + eulerDegreesPerSecond * Time::GetDeltaTime();
+	gameObject->transform->SetEulerDegrees(newEulerDegrees);
 
 	if (logAngles)
-		LOG_INFO(to_string(newEulerAngles));
+	{
+		LOG_INFO(newEulerDegrees.ToString());
+	}
 }
 std::string Spin::ToString() const
 {

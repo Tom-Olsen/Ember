@@ -34,9 +34,7 @@ file(GLOB SHADER_FILES
     #"${PROJECT_SOURCE_DIR}/shaders/*.glsl"
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsli")
-file(GLOB MATH_FILES
-"${PROJECT_SOURCE_DIR}/src/mathf.*"
-"${PROJECT_SOURCE_DIR}/src/*Types.h")
+file(GLOB MATH_FILES "${PROJECT_SOURCE_DIR}/src/mathf.*")
 file(GLOB COMPONENTS
     "${PROJECT_SOURCE_DIR}/src/component.*"
     "${PROJECT_SOURCE_DIR}/src/transform.*"
@@ -65,7 +63,6 @@ endforeach()
 
 # Required libraries (location of CMakeLists.txt):
 add_subdirectory(libs/SDL)              # SDL submodule
-add_subdirectory(libs/glm)              # glm submodule
 add_subdirectory(libs/spdlog)           # spdlog submodule
 set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect
 add_subdirectory(libs/SPIRV-Reflect)    # SPIRV-Reflect submodule
@@ -95,7 +92,6 @@ add_dependencies(MyEngine build_shaders)
 
 # Add headers (location of headers to include, e.g. SDL3/SDL.h in case of SDL):
 target_include_directories(MyEngine PUBLIC libs/SDL/include)
-target_include_directories(MyEngine PUBLIC libs/glm)
 target_include_directories(MyEngine PUBLIC libs/spdlog/include)
 target_include_directories(MyEngine PUBLIC libs/SPIRV-Reflect)
 target_include_directories(MyEngine PUBLIC ${Vulkan_INCLUDE_DIRS})

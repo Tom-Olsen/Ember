@@ -1,7 +1,7 @@
 #pragma once
 #ifndef __INCLUDE_GUARD_spotLight_h__
 #define __INCLUDE_GUARD_spotLight_h__
-#include "glmTypes.h"
+#include "mathf.h"
 #include "component.h"
 #include "gameObject.h"
 
@@ -12,8 +12,9 @@ class SpotLight : public Component
 public: // Members:
 
 private: // Members:
+	static Float4x4 rotateToY;
 	float intensity;
-	float fov;
+	float fovRadians;
 	float aspectRatio;
 	float nearClip;
 	float farClip;
@@ -26,7 +27,8 @@ public: // Methods:
 
 	// Setters:
 	void SetIntensity(const float& intensity);
-	void SetFov(const float& fov);
+	void SetFovDegrees(const float& fovDegrees);
+	void SetFovRadians(const float& fovRadians);
 
 	// Getters:
 	Float4x4 GetViewMatrix();

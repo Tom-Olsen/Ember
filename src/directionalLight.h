@@ -1,7 +1,7 @@
 #pragma once
 #ifndef __INCLUDE_GUARD_directionalLight_h__
 #define __INCLUDE_GUARD_directionalLight_h__
-#include "glmTypes.h"
+#include "mathf.h"
 #include "component.h"
 #include "gameObject.h"
 
