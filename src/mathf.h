@@ -24,6 +24,15 @@ struct Index3
 
 
 
+// Enums:
+enum CoordinateSystem
+{
+	local,
+	world
+};
+
+
+
 // Class/Struct independent functions:
 namespace mathf
 {
@@ -61,6 +70,7 @@ public:
 	// Substraction:
 	Int2 operator-(const Int2& other) const;
 	Int2& operator-=(const Int2& other);
+	Int2 operator-() const;
 
 	// Multiplication:
 	Int2 operator*(const Int2& other) const;
@@ -82,10 +92,10 @@ public:
 	// Static members:
 	static Int2 zero;
 	static Int2 one;
-	static Int2 right;		// +x
-	static Int2 left;		// -x
-	static Int2 forward;	// +y
-	static Int2 backward;	// -y
+	static Int2 right;	// +x
+	static Int2 left;	// -x
+	static Int2 up;		// +y
+	static Int2 down;	// -y
 };
 
 
@@ -121,6 +131,7 @@ public:
 	// Substraction:
 	Int3 operator-(const Int3& other) const;
 	Int3& operator-=(const Int3& other);
+	Int3 operator-() const;
 
 	// Multiplication:
 	Int3 operator*(const Int3& other) const;
@@ -144,10 +155,10 @@ public:
 	static Int3 one;
 	static Int3 right;		// +x
 	static Int3 left;		// -x
-	static Int3 forward;	// +y
-	static Int3 backward;	// -y
-	static Int3 up;			// +z
-	static Int3 down;		// -z
+	static Int3 up;			// +y
+	static Int3 down;		// -y
+	static Int3 forward;	// +z
+	static Int3 backward;	// -z
 };
 
 
@@ -189,8 +200,8 @@ public:
 	static Uint3 zero;
 	static Uint3 one;
 	static Uint3 right;		// +x
-	static Uint3 forward;	// +y
-	static Uint3 up;		// +z
+	static Uint3 up;		// +y
+	static Uint3 forward;	// +z
 };
 
 
@@ -223,8 +234,6 @@ public:
 	// Static math operations:
 	static float Dot(const Float2& a, const Float2& b);
 	static float Cross(const Float2& a, const Float2& b);
-	static Float2 Project(const Float2& vec, const Float2& axes);
-	static Float2 Reflect(const Float2& vec, const Float2& axes);
 	static float Distance2(const Float2& a, const Float2& b);
 	static float Distance(const Float2& a, const Float2& b);
 	static float AngleDegrees(const Float2& a, const Float2& b);
@@ -245,6 +254,7 @@ public:
 	// Substraction:
 	Float2 operator-(const Float2& other) const;
 	Float2& operator-=(const Float2& other);
+	Float2 operator-() const;
 
 	// Multiplication:
 	Float2 operator*(const Float2& other) const;
@@ -279,8 +289,8 @@ public:
 	static Float2 one;
 	static Float2 right;	// +x
 	static Float2 left;		// -x
-	static Float2 forward;	// +y
-	static Float2 backward;	// -y
+	static Float2 up;		// +y
+	static Float2 down;		// -y
 };
 
 
@@ -315,7 +325,8 @@ public:
 	// Static math operations:
 	static float Dot(const Float3& a, const Float3& b);
 	static Float3 Cross(const Float3& a, const Float3& b);
-	static Float3 Project(const Float3& vec, const Float3& planeNormal);
+	static float VectorToPlaneDistance(const Float3& vec, const Float3& planeNormal);
+	static Float3 VectorToPlaneProjection(const Float3& vec, const Float3& planeNormal);
 	static Float3 Reflect(const Float3& vec, const Float3& planeNormal);
 	static float Distance2(const Float3& a, const Float3& b);
 	static float Distance(const Float3& a, const Float3& b);
@@ -337,6 +348,7 @@ public:
 	// Substraction:
 	Float3 operator-(const Float3& other) const;
 	Float3& operator-=(const Float3& other);
+	Float3 operator-() const;
 
 	// Multiplication:
 	Float3 operator*(const Float3& other) const;
@@ -371,10 +383,10 @@ public:
 	static Float3 one;
 	static Float3 right;	// +x
 	static Float3 left;		// -x
-	static Float3 forward;	// +y
-	static Float3 backward;	// -y
-	static Float3 up;		// +z
-	static Float3 down;		// -z
+	static Float3 up;		// +y
+	static Float3 down;		// -y
+	static Float3 forward;	// +z
+	static Float3 backward;	// -z
 };
 
 
@@ -422,6 +434,7 @@ public:
 	// Substraction:
 	Float4 operator-(const Float4& other) const;
 	Float4& operator-=(const Float4& other);
+	Float4 operator-() const;
 
 	// Multiplication:
 	Float4 operator*(const Float4& other) const;
@@ -452,10 +465,10 @@ public:
 	static Float4 one;
 	static Float4 right;	// +x
 	static Float4 left;		// -x
-	static Float4 forward;	// +y
-	static Float4 backward;	// -y
-	static Float4 up;		// +z
-	static Float4 down;		// -z
+	static Float4 up;		// +y
+	static Float4 down;		// -y
+	static Float4 forward;	// +z
+	static Float4 backward;	// -z
 	static Float4 in;		// +w
 	static Float4 out;		// -w
 };
@@ -495,7 +508,7 @@ public:
 	 float column2x, float column2y, float column2z);
 
 	// Object math operations:
-	Float3x3 Transpose();
+	Float3x3 Transpose() const;
 	float Determinant() const;
 	Float3x3 Inverse() const;
 	bool IsEpsilonZero() const;
@@ -505,10 +518,13 @@ public:
 	static Float3x3 RotateY(float radians);
 	static Float3x3 RotateZ(float radians);
 	static Float3x3 Rotate(const Float3& axis, float radians);
-	static Float3x3 Rotate(const Float3& eulerRadians, const Int3& rotationOrder);
+	static Float3x3 Rotate(const Float3& eulerRadians, const Uint3& rotationOrder = Uint3(1,0,2), CoordinateSystem rotationSystem = CoordinateSystem::local);
 	static Float3x3 RotateFromTo(const Float3& from, const Float3& to);
+	static Float3x3 RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& upOld, const Float3& upNew);
 
 	// Access:
+	float& operator[](int index);
+	float operator[](int index) const;
 	float& operator[](const Index2& index);
 	float operator[](const Index2& index) const;
 	Float3 GetRow(int index) const;
@@ -525,6 +541,7 @@ public:
 	// Substraction:
 	Float3x3 operator-(const Float3x3& other) const;
 	Float3x3& operator-=(const Float3x3& other);
+	Float3x3 operator-() const;
 
 	// Multiplication:
 	Float3x3 operator*(const Float3x3& other) const;
@@ -578,6 +595,7 @@ public:
 	Float4x4();
 	Float4x4(float value);
 	Float4x4(const float* array); // Initialize from a 1D array
+	Float4x4(const Float3x3& other);
 	Float4x4(const Float4x4& other);
 
 	// Static constructors:
@@ -605,8 +623,9 @@ public:
 	static Float4x4 RotateY(float radians);
 	static Float4x4 RotateZ(float radians);
 	static Float4x4 Rotate(const Float3& axis, float radians);
-	static Float4x4 Rotate(const Float3& eulerRadians, const Int3& rotationOrder);
+	static Float4x4 Rotate(const Float3& eulerRadians, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSystem rotationSystem = CoordinateSystem::local);
 	static Float4x4 RotateFromTo(const Float3& from, const Float3& to);
+	static Float4x4 RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& upOld, const Float3& upNew);
 	static Float4x4 Translate(const Float3& translation);
 	static Float4x4 Scale(const Float3& scale);
 	static Float4x4 Scale(float scale);
@@ -614,6 +633,8 @@ public:
 	static Float4x4 Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip);
 
 	// Access:
+	float& operator[](int index);
+	float operator[](int index) const;
 	float& operator[](const Index2& index);
 	float operator[](const Index2& index) const;
 	Float4 GetRow(int index) const;
@@ -630,6 +651,7 @@ public:
 	// Substraction:
 	Float4x4 operator-(const Float4x4& other) const;
 	Float4x4& operator-=(const Float4x4& other);
+	Float4x4 operator-() const;
 
 	// Multiplication:
 	Float4x4 operator*(const Float4x4& other) const;

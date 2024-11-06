@@ -7,16 +7,14 @@
 Transform::Transform()
 {
 	this->position = Float3(0.0f);
-	this->eulerRadians = Float3(0.0f);
-	this->rotationOrder = Int3(1, 0, 2);
+	this->rotationMatrix = Float3x3::identity;
 	this->scale = Float3(1.0f);
 	updateLocalToWorldMatrix = true;
 }
-Transform::Transform(const Float3& position, const Float3& eulerDegrees, const Float3& scale)
+Transform::Transform(const Float3& position, const Float3x3& rotationMatrix, const Float3& scale)
 {
 	this->position = position;
-	this->eulerRadians = eulerDegrees.ToRadians();
-	this->rotationOrder = Int3(1, 0, 2);
+	this->rotationMatrix = rotationMatrix;
 	this->scale = scale;
 	updateLocalToWorldMatrix = true;
 }
@@ -33,6 +31,14 @@ Transform::~Transform()
 
 // Public:
 // Setters:
+void Transform::SetPosition(float x, float y, float z)
+{
+	Float3 position(x, y, z);
+	if (this->position == position)
+		return;
+	this->position = position;
+	updateLocalToWorldMatrix = true;
+}
 void Transform::SetPosition(const Float3& position)
 {
 	if (this->position == position)
@@ -40,26 +46,38 @@ void Transform::SetPosition(const Float3& position)
 	this->position = position;
 	updateLocalToWorldMatrix = true;
 }
-void Transform::SetEulerDegrees(const Float3& eulerDegrees)
+void Transform::SetRotationMatrix(const Float3x3& rotationMatrix)
 {
-	Float3 eulerRadians = eulerDegrees.ToRadians();
-	if (this->eulerRadians == eulerRadians)
+	if (this->rotationMatrix == rotationMatrix)
 		return;
-	this->eulerRadians = eulerRadians;
+	this->rotationMatrix = rotationMatrix;
 	updateLocalToWorldMatrix = true;
 }
-void Transform::SetEulerRadians(const Float3& eulerRadians)
+void Transform::SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder, CoordinateSystem system)
 {
-	if (this->eulerRadians == eulerRadians)
-		return;
-	this->eulerRadians = eulerRadians;
-	updateLocalToWorldMatrix = true;
+	Float3 eulerRadians = Float3(degreesX, degreesY, degreesZ).ToRadians();
+	SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
 }
-void Transform::SetRotationOrder(const Int3& rotationOrder)
+void Transform::SetRotationEulerRadians(float radiansX, float radiansY, float radiansZ, Uint3 rotationOrder, CoordinateSystem system)
 {
-	if (this->rotationOrder == rotationOrder)
+	Float3 eulerRadians = Float3(radiansX, radiansY, radiansZ);
+	SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
+}
+void Transform::SetRotationEulerDegrees(Float3 degrees, Uint3 rotationOrder, CoordinateSystem system)
+{
+	Float3 eulerRadians = degrees.ToRadians();
+	SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
+}
+void Transform::SetRotationEulerRadians(Float3 radians, Uint3 rotationOrder, CoordinateSystem system)
+{
+	SetRotationMatrix(Float3x3::Rotate(radians, rotationOrder, system));
+}
+void Transform::SetScale(float x, float y, float z)
+{
+	Float3 scale(x, y, z);
+	if (this->scale == scale)
 		return;
-	this->rotationOrder = rotationOrder;
+	this->scale = scale;
 	updateLocalToWorldMatrix = true;
 }
 void Transform::SetScale(const Float3& scale)
@@ -81,13 +99,13 @@ Float3 Transform::GetPosition() const
 {
 	return position;
 }
-Float3 Transform::GetEulerDegrees() const
+Float3x3 Transform::GetRotation3x3() const
 {
-	return eulerRadians.ToDegrees();
+	return rotationMatrix;
 }
-Float3 Transform::GetEulerRadians() const
+Float4x4 Transform::GetRotation4x4() const
 {
-	return eulerRadians;
+	return Float4x4(rotationMatrix);
 }
 Float3 Transform::GetScale() const
 {
@@ -112,10 +130,16 @@ Float4x4 Transform::GetNormalMatrix()
 	return normalMatrix;
 }
 Float3 Transform::GetForward()
-{// +y direction
+{// +z direction
 	if (updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return Float3(localToWorldMatrix.GetColumn(1));
+	return Float3(localToWorldMatrix.GetColumn(2));
+}
+Float3 Transform::GetBackward()
+{// -z direction
+	if (updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
+	return -Float3(localToWorldMatrix.GetColumn(2));
 }
 Float3 Transform::GetRight()
 {// +x direction
@@ -123,11 +147,23 @@ Float3 Transform::GetRight()
 		UpdateLocalToWorldMatrix();
 	return Float3(localToWorldMatrix.GetColumn(0));
 }
-Float3 Transform::GetUp()
-{// +z direction
+Float3 Transform::GetLeft()
+{// -x direction
 	if (updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return Float3(localToWorldMatrix.GetColumn(2));
+	return -Float3(localToWorldMatrix.GetColumn(0));
+}
+Float3 Transform::GetUp()
+{// +y direction
+	if (updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
+	return Float3(localToWorldMatrix.GetColumn(1));
+}
+Float3 Transform::GetDown()
+{// -y direction
+	if (updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
+	return -Float3(localToWorldMatrix.GetColumn(1));
 }
 
 
@@ -136,14 +172,7 @@ Float3 Transform::GetUp()
 void Transform::UpdateLocalToWorldMatrix()
 {
 	updateLocalToWorldMatrix = false;
-
-	// TRS matrizes:
-	Float4x4 translationMatrix = Float4x4::Translate(position);
-	Float4x4 rotationMatrix = Float4x4::Rotate(eulerRadians, rotationOrder);
-	Float4x4 scaleMatrix = Float4x4::Scale(scale);
-
-	// Final matrizes:
-	localToWorldMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+	localToWorldMatrix = Float4x4::Translate(position) * Float4x4(rotationMatrix) * Float4x4::Scale(scale);
 	worldToLocalMatrix = localToWorldMatrix.Inverse();
 	normalMatrix = worldToLocalMatrix.Transpose();
 }

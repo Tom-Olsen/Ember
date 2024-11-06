@@ -9,10 +9,6 @@ VulkanRenderer::VulkanRenderer(VulkanContext* context)
 {
 	this->context = context;
 
-	// Render passes:
-	forwardRenderPass = std::make_unique<ForwardRenderPass>(context, context->physicalDevice->maxMsaaSamples);
-	shadowRenderPass = std::make_unique<ShadowRenderPass>(context);
-
 	// Command buffers:
 	shadowCommands.reserve(context->framesInFlight);
 	forwardCommands.reserve(context->framesInFlight);
@@ -42,6 +38,16 @@ VulkanRenderer::~VulkanRenderer()
 // Public methods:
 void VulkanRenderer::Render(Scene* scene)
 {
+	// Resize Swapchain if needed:
+	VkExtent2D windowExtent = context->window->Extent();
+	VkExtent2D surfaceExtend = context->surface->CurrentExtent();
+	if (rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height != surfaceExtend.height)
+	{
+		rebuildSwapchain = false;
+		context->ResetFrameIndex();
+		ResizeSwapchain();
+	}
+
 	// Wait for fence of previous frame with same frameIndex to finish:
 	VKA(vkWaitForFences(context->LogicalDevice(), 1, &fences[context->frameIndex], VK_TRUE, UINT64_MAX));
 	if (!AcquireImage() || scene->activeCamera == nullptr)
@@ -56,6 +62,10 @@ void VulkanRenderer::Render(Scene* scene)
 
 	context->UpdateFrameIndex();
 }
+
+
+
+// Private:
 void VulkanRenderer::ResizeSwapchain()
 {
 	// Wait for graphicsQueue to finish:
@@ -65,9 +75,8 @@ void VulkanRenderer::ResizeSwapchain()
 	std::unique_ptr<VulkanSwapchain> newSwapchain = std::make_unique<VulkanSwapchain>(context->logicalDevice.get(), context->surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, context->swapchain.get());
 	context->swapchain.swap(newSwapchain);
 
-	// Recreate renderpass:
-	std::unique_ptr<ForwardRenderPass> newRenderpass = std::make_unique<ForwardRenderPass>(context, context->physicalDevice->maxMsaaSamples);
-	forwardRenderPass.swap(newRenderpass);
+	// Recreate renderpasses:
+	RenderPassManager::RecreateRenderPasses();
 
 	// Recreate synchronization objects:
 	DestroyFences();
@@ -75,10 +84,6 @@ void VulkanRenderer::ResizeSwapchain()
 	CreateFences();
 	CreateSemaphores();
 }
-
-
-
-// Private:
 bool VulkanRenderer::AcquireImage()
 {
 	// Signal acquireSemaphore when done:
@@ -109,11 +114,12 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 	VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 	{
 		// Render pass info:
+		ShadowRenderPass* renderPass = dynamic_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"));
 		VkClearValue clearValues = {};
 		clearValues.depthStencil = { 1.0f, 0 };
 		VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassBeginInfo.renderPass = shadowRenderPass->renderPass;
-		renderPassBeginInfo.framebuffer = shadowRenderPass->framebuffers[imageIndex];
+		renderPassBeginInfo.renderPass = renderPass->renderPass;
+		renderPassBeginInfo.framebuffer = renderPass->framebuffers[imageIndex];
 		renderPassBeginInfo.renderArea.offset = { 0, 0 };
 		renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowRenderPass::shadowMapWidth, ShadowRenderPass::shadowMapHeight };
 		renderPassBeginInfo.clearValueCount = 1;
@@ -129,9 +135,10 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 			for (auto& pair : scene->meshRenderers)
 			{
 				MeshRenderer* meshRenderer = pair.second;
-				if (meshRenderer->IsActive())
+				if (meshRenderer->IsActive() && meshRenderer->GetShadowMaterial() != nullptr)
 				{
-					meshRenderer->SetShadowMatrizes(scene->directionalLights[0]->GetViewMatrix(), scene->directionalLights[0]->GetProjectionMatrix());
+					if (scene->directionalLights[0] != nullptr)
+						meshRenderer->SetShadowRenderMatrizes(scene->directionalLights[0]->GetViewMatrix(), scene->directionalLights[0]->GetProjectionMatrix());
 
 					// TODO: move these two outside of for loop and do them for each material only once.
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipeline());
@@ -166,12 +173,13 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 		SetViewportAndScissor(commandBuffer);
 
 		// Render pass info:
+		ForwardRenderPass* renderPass = dynamic_cast<ForwardRenderPass*>(RenderPassManager::GetRenderPass("forwardRenderPass"));
 		std::array<VkClearValue, 2> clearValues{};
 		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 		clearValues[1].depthStencil = { 1.0f, 0 };
 		VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassBeginInfo.renderPass = forwardRenderPass->renderPass;
-		renderPassBeginInfo.framebuffer = forwardRenderPass->framebuffers[imageIndex];
+		renderPassBeginInfo.renderPass = renderPass->renderPass;
+		renderPassBeginInfo.framebuffer = renderPass->framebuffers[imageIndex];
 		renderPassBeginInfo.renderArea.offset = { 0, 0 };
 		renderPassBeginInfo.renderArea.extent = context->surface->CurrentExtent();
 		renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -188,7 +196,8 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 				MeshRenderer* meshRenderer = pair.second;
 				if (meshRenderer->IsActive())
 				{
-					meshRenderer->SetForwardMatrizes(scene->activeCamera->GetViewMatrix(), scene->activeCamera->GetProjectionMatrix());
+					meshRenderer->SetForwardRenderMatrizes(scene->activeCamera->GetViewMatrix(), scene->activeCamera->GetProjectionMatrix());
+					meshRenderer->SetForwardLightData(scene->directionalLights);
 
 					// TODO: move these two outside of for loop and do them for each material only once.
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipeline());

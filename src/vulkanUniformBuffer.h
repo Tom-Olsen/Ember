@@ -7,6 +7,7 @@
 #include "vmaBuffer.h"
 #include "vulkanCommand.h"
 #include "mathf.h"
+#include "directionalLight.h"
 
 
 
@@ -39,66 +40,40 @@ public: // Methods:
 // 15.8.4. Offset and Stride Assignment / Alignment Requirements
 struct alignas(16) RenderMatrizes
 {
-	alignas(16) Float4x4 modelMatrix;	// mesh local to world matrix
-	alignas(16) Float4x4 viewMatrix;	// camera world to local matrix
-	alignas(16) Float4x4 projMatrix;	// camera projection matrix
-	alignas(16) Float4x4 normalMatrix;	// rotation matrix for normals and directions
-	alignas(16) Float4x4 mvpMatrix;		// local to clip space matrix: (model * view * projection)
-
-	RenderMatrizes()
-	{
-		modelMatrix = Float4x4(1.0f);
-		viewMatrix = Float4x4(1.0f);
-		projMatrix = Float4x4(1.0f);
-		normalMatrix = Float4x4(1.0f);
-		mvpMatrix = Float4x4(1.0f);
-	}
-
-	void UpdateMvpMatrix()
-	{
-		mvpMatrix = projMatrix * viewMatrix * modelMatrix;
-	}
+	alignas(16) Float4x4 modelMatrix;		// mesh local to world matrix
+	alignas(16) Float4x4 viewMatrix;		// camera world to local matrix
+	alignas(16) Float4x4 projMatrix;		// camera projection matrix
+	alignas(16) Float4x4 normalMatrix;		// rotation matrix for normals and directions
+	alignas(16) Float4x4 localToClipMatrix;	// local to camera clip space matrix: (projection * view * model)
+	RenderMatrizes();
+	void UpdateLocalToClipMatrix();
 };
 
 
 
-static const uint32_t MAX_D_LIGHTS = 2;
-static const uint32_t MAX_S_LIGHTS = 5;
-static const uint32_t MAX_P_LIGHTS = 10;
-struct alignas(16) DLight
-{
-	alignas(4)  float intensity;		// Intensity of the light
-	alignas(16) Float4 color;			// Color of the light
-	alignas(16) Float4x4 viewMatrix;	// Light world to local matrix
-	alignas(16) Float4x4 projMatrix;	// Light projection matrix
-};
-struct alignas(16) SLight
-{
-	alignas(4)  float intensity;		// Intensity of the light
-	alignas(4)  float innerCone;		// Inner cone angle in radians (full intensity)
-	alignas(4)  float outerCone;		// Outer cone angle in radians (fall-off)
-	alignas(16) Float4 color;			// Color of the light
-	alignas(16) Float4x4 viewMatrix;	// Light world to local matrix
-	alignas(16) Float4x4 projMatrix;	// Light projection matrix
-};
-struct alignas(16) PLight
-{
-	alignas(4)  float intensity;		// Intensity of the light
-	alignas(4)  float radius;			// Attenuation radius
-	alignas(16) Float4 color;			// Color of the light
-	alignas(16) Float4x4 viewMatrix;	// Light world to local matrix
-	alignas(16) Float4x4 projMatrix;	// Light projection matrix
-};
+//static const uint32_t MAX_D_LIGHTS = 2;
+//static const uint32_t MAX_S_LIGHTS = 5;
+//static const uint32_t MAX_P_LIGHTS = 10;
+//struct alignas(16) DLight
+//{
+//	alignas(16) Float4x4 viewMatrix;		// light world to local matrix
+//	alignas(16) Float4x4 projMatrix;		// light projection matrix
+//	alignas(16) Float4x4 worldToClipMatrix;	// world to light clip space matrix: (projection * view)
+//	alignas(16) Float4 directionIntensity;	// direction (xyz) and intensity (w) of the light
+//	alignas(16) Float4 color;				// light color
+//};
+
 struct alignas(16) LightData
 {
-	DLight dLights[MAX_D_LIGHTS];		// Array of directional lights
-	alignas(4) uint32_t dLightsCound;	// Number of active directional lights
-
-	SLight sLights[MAX_S_LIGHTS];		// Array of spot lights
-	alignas(4) uint32_t sLightsCound;	// Number of active spot lights
-
-	PLight pLights[MAX_P_LIGHTS];		// Array of point lights
-	alignas(4) uint32_t pLightsCound;	// Number of active point lights
+	alignas(16) Float4x4 viewMatrix;		// light world to local matrix
+	alignas(16) Float4x4 projMatrix;		// light projection matrix
+	alignas(16) Float4x4 worldToClipMatrix;	// world to light clip space matrix: (projection * view)
+	alignas(16) Float4 directionIntensity;	// direction (xyz) and intensity (w) of the light
+	alignas(16) Float4 color;				// light color
+	LightData(DirectionalLight* directionalLights);
+	//alignas(16) DLight dLights[MAX_D_LIGHTS];		// Array of directional lights
+	LightData();
+	//LightData(std::array<DirectionalLight*, MAX_D_LIGHTS> directionalLights);
 };
 
 

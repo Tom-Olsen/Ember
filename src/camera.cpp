@@ -1,12 +1,6 @@
 #include "camera.h"
-#include "logger.h"
 #include "gameObject.h"
-
-
-
-//	Static members:
-// rotation is applied after worldToLocal matrix => -90degrees instead of +90
-Float4x4 Camera::rotateToY = Float4x4::RotateX(mathf::ToRadians(-90));
+#include "logger.h"
 
 
 
@@ -62,7 +56,7 @@ void Camera::SetFarClip(const float& farClip)
 // Getters:
 Float4x4 Camera::GetViewMatrix()
 {
-	return rotateToY * gameObject->transform->GetWorldToLocalMatrix();
+	return gameObject->transform->GetWorldToLocalMatrix();
 }
 Float4x4 Camera::GetProjectionMatrix()
 {

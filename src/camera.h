@@ -12,7 +12,6 @@
 class Camera : public Component
 {
 private: // Members:
-	static Float4x4 rotateToY;
 	float fovRadians;
 	float aspectRatio;
 	float nearClip;

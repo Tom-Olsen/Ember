@@ -16,7 +16,6 @@ struct ResourceBinding
 {
 	uint32_t binding;
 	T resource;
-	std::vector<std::string> frameNames;
 };
 
 
@@ -24,36 +23,29 @@ struct ResourceBinding
 /// <summary>
 /// Each MaterialProperties instance is customized for a specific material.
 /// Therefore, do not create one yourself!
-/// Always use material.GetMaterialPropertiesCopy() to optain a new MaterialProperties pointer.
+/// Either use material.GetNewMaterialProperties() or materialProperties.GetCopy() to optain a new MaterialProperties pointer.
 /// Tipp: Use smart pointers (std::unique_ptr, std::shared_ptr) to avoid manual deletion.
 /// </summary>
 class MaterialProperties
 {
 public: // Members:
-	std::unordered_map<std::string, ResourceBinding<VulkanUniformBuffer>> uniformBufferMap;
-	std::unordered_map<std::string, ResourceBinding<VulkanSampler*>> samplerMap;
-	std::unordered_map<std::string, ResourceBinding<Texture2d*>> texture2dMap;
 	std::vector<VkDescriptorSet> descriptorSets;
 	Pipeline* pipeline;
 
 private: // Members:
 	VulkanContext* context;
-	std::vector<VkWriteDescriptorSet> descriptorWrites;
+	std::vector<std::unordered_map<std::string, ResourceBinding<VulkanUniformBuffer>>> uniformBufferMaps;
+	std::vector<std::unordered_map<std::string, ResourceBinding<VulkanSampler*>>> samplerMaps;
+	std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>> texture2dMaps;
 
 public: // Methods:
 	// Constructors/Destructor:
-	MaterialProperties(VulkanContext* context);
+	MaterialProperties(VulkanContext* context, Pipeline* pipeline, std::vector<VkDescriptorSetLayoutBinding>& bindings, std::vector<std::string>& bindingNames);
 	~MaterialProperties();
 
-	// Initializers:
-	void InitUniformResourceBinding(std::string name, uint32_t binding, const RenderMatrizes& renderMatrizes);
-	void InitSamplerResourceBinding(std::string name, uint32_t binding, VulkanSampler* sampler);
-	void InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d);
-	void InitDescriptorSets();
-
 	// Setters:
-	void SetPipeline(Pipeline* pipeline);
 	void SetUniform(const std::string& name, const RenderMatrizes& renderMatrizes);
+	void SetUniform(const std::string& name, const LightData& lightData);
 	void SetSampler(const std::string& name, VulkanSampler* sampler);
 	void SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler);
 	void SetTexture2d(const std::string& name, Texture2d* texture2d);
@@ -66,11 +58,21 @@ public: // Methods:
 	void PrintMaps() const;
 
 private: // Methods:
+	// Hidden constructor:
+	MaterialProperties(VulkanContext* context, Pipeline* pipeline);
+
+	// Initializers:
+	void InitUniformBufferResourceBinding(std::string name, uint32_t binding, const RenderMatrizes& renderMatrizes, uint32_t frameIndex);
+	void InitUniformBufferResourceBinding(std::string name, uint32_t binding, const LightData& lightData, uint32_t frameIndex);
+	void InitSamplerResourceBinding(std::string name, uint32_t binding, VulkanSampler* sampler, uint32_t frameIndex);
+	void InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d, uint32_t frameIndex);
+	void InitDescriptorSets();
+
+	// Descriptor set management:
 	void CreateDescriptorSets();
-	void UpdateAllDescriptorSets(uint32_t frameIndex);
-	void UpdateUniformDescriptorSets(uint32_t frameIndex);
-	void UpdateSamplerDescriptorSets(uint32_t frameIndex);
-	void UpdateTexture2dDescriptorSets(uint32_t frameIndex);
+	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<VulkanUniformBuffer> samplerResourceBinding);
+	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<VulkanSampler*> samplerResourceBinding);
+	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Texture2d*> texture2dResourceBinding);
 };
 
 

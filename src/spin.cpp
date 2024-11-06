@@ -1,6 +1,6 @@
 #include "spin.h"
-#include "logger.h"
 #include "gameObject.h"
+#include "logger.h"
 
 
 
@@ -23,14 +23,10 @@ Spin::~Spin()
 // Overrides:
 void Spin::Update()
 {
-	Float3 eulerDegrees = gameObject->transform->GetEulerDegrees();
-	Float3 newEulerDegrees = eulerDegrees + eulerDegreesPerSecond * Time::GetDeltaTime();
-	gameObject->transform->SetEulerDegrees(newEulerDegrees);
-
-	if (logAngles)
-	{
-		LOG_INFO(newEulerDegrees.ToString());
-	}
+	Float3 addAngles = eulerDegreesPerSecond.ToRadians() * Time::GetDeltaTime();
+	Float3x3 rotationPerSecond = Float3x3::Rotate(addAngles);
+	Float3x3 rotation = gameObject->transform->GetRotation3x3();
+	gameObject->transform->SetRotationMatrix(rotation * rotationPerSecond);
 }
 std::string Spin::ToString() const
 {

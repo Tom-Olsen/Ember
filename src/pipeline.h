@@ -5,7 +5,7 @@
 
 
 /// <summary>
-/// Parent class for all pipelines.
+/// Polymorphic parent class for all pipelines.
 /// </summary>
 class Pipeline
 {
@@ -18,7 +18,7 @@ protected: // Members:
 	VulkanContext* context;
 
 public: // Methods:
-	~Pipeline();
+	virtual ~Pipeline();
 };
 
 

@@ -3,8 +3,7 @@
 #include <memory>
 #include <vector>
 #include "vulkanContext.h"
-#include "forwardRenderPass.h"
-#include "shadowRenderPass.h"
+#include "renderPassManager.h"
 #include "vulkanCommand.h"
 #include "scene.h"
 
@@ -17,14 +16,12 @@ class VulkanRenderer
 {
 public: // Members:
 	VulkanContext* context;
-	std::unique_ptr<ForwardRenderPass> forwardRenderPass;
-	std::unique_ptr<ShadowRenderPass> shadowRenderPass;
 
 private: // Members:
 	// Render resources:
 	std::vector<VulkanCommand> shadowCommands;
 	std::vector<VulkanCommand> forwardCommands;
-
+	
 	// Sync objects:
 	std::vector<VkFence> fences;
 	std::vector<VkSemaphore> acquireSemaphores;
@@ -39,9 +36,9 @@ public: // Methods:
 	VulkanRenderer(VulkanContext* context);
 	~VulkanRenderer();
 	void Render(Scene* scene);
-	void ResizeSwapchain();
 
 private: // Methods:
+	void ResizeSwapchain();
 	bool AcquireImage();
 	void RecordShadowCommandBuffer(Scene* scene);
 	void RecordForwardCommandBuffer(Scene* scene);

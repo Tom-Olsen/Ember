@@ -17,8 +17,15 @@ private: // Members:
 	VulkanContext* context;
 
 public: // Methods:
-	VulkanSampler(VulkanContext* context, std::string name);
 	~VulkanSampler();
+	VkPhysicalDeviceProperties GetDeviceProperties();
+
+	// Static specialised constructors:
+	static VulkanSampler* ColorSampler(VulkanContext* context, const std::string& name);
+	static VulkanSampler* ShadowSampler(VulkanContext* context, const std::string& name);
+
+private: // Methods:
+	VulkanSampler(VulkanContext* context, const std::string& name);
 };
 
 

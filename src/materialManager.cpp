@@ -18,17 +18,17 @@ void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
 	isInitialized = true;
 	MaterialManager::context = context;
 
-	Material* defaultMaterial = new Material(context, &renderer->forwardRenderPass->renderPass, "../shaders/vertDefault.spv", "../shaders/fragDefault.spv", "defaultMaterial");
+	Material* defaultMaterial = new Material(context, Material::Type::forward, "defaultMaterial", "../shaders/vertDefault.spv", "../shaders/fragDefault.spv");
 	AddMaterial(defaultMaterial->name, defaultMaterial);
 
-	Material* colorMaterial = new Material(context, &renderer->forwardRenderPass->renderPass, "../shaders/vertColor.spv", "../shaders/fragColor.spv", "colorMaterial");
+	Material* colorMaterial = new Material(context, Material::Type::forward, "colorMaterial", "../shaders/vertColor.spv", "../shaders/fragColor.spv");
 	AddMaterial(colorMaterial->name, colorMaterial);
 
-	Material* shadowMaterial = new Material(context, &renderer->shadowRenderPass->renderPass, "../shaders/vertShadow.spv", "shadowMaterial");
-	AddMaterial(shadowMaterial->name, shadowMaterial);
-
-	Material* shadowMapMaterial = new Material(context, &renderer->forwardRenderPass->renderPass, "../shaders/vertShadowMap.spv", "../shaders/fragShadowMap.spv", "shadowMapMaterial");
+	Material* shadowMapMaterial = new Material(context, Material::Type::forward, "shadowMapMaterial", "../shaders/vertShadowMap.spv", "../shaders/fragShadowMap.spv");
 	AddMaterial(shadowMapMaterial->name, shadowMapMaterial);
+
+	Material* shadowMaterial = new Material(context, Material::Type::shadow, "shadowMaterial", "../shaders/vertShadow.spv");
+	AddMaterial(shadowMaterial->name, shadowMaterial);
 }
 void MaterialManager::Clear()
 {

@@ -1,7 +1,16 @@
-Texture2D texture : register(t1);
-SamplerState samplerState : register(s2);
+Texture2D shadowMap : register(t1);
+SamplerState colorSampler : register(s2);
 
-
+struct PushConstant
+{
+    float4 time;
+    float4 delaTime;
+};
+#if defined(_DXC)
+[[vk::push_constant]] CullPushConstants pc;
+#else
+[[vk::push_constant]] ConstantBuffer<PushConstant> pc;
+#endif
 
 struct FragmentInput
 {
@@ -13,8 +22,7 @@ struct FragmentInput
 
 float4 main(FragmentInput input) : SV_TARGET
 {
-    float depth = texture.Sample(samplerState, input.uv.xy).r;
-    float value = (depth - 0.1f) / (100.0f - 0.1f);
-    float4 color = value * float4(1.0f, 1.0f, 1.0f, 1.0f);
+    float depth = shadowMap.Sample(colorSampler, input.uv.xy).r;
+    float4 color = depth * float4(1.0f, 1.0f, 1.0f, 1.0f);
     return color;
 }

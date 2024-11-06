@@ -1,11 +1,7 @@
 #include "directionalLight.h"
 #include "shadowRenderPass.h"
+#include "gameObject.h"
 #include "logger.h"
-
-
-
-//	Static members:
-Float4x4 DirectionalLight::rotateToY = Float4x4::RotateFromTo(Float3::down, Float3::forward);
 
 
 
@@ -14,10 +10,10 @@ DirectionalLight::DirectionalLight(const Float4& color)
 {
 	this->intensity = 1.0f;
 	this->color = Float4(color.x, color.y, color.z, 1.0f);
-	this->nearClip = 0.1f;
-	this->farClip = 100.0f;
-	this->viewWidth = 20.0f;
-	this->viewHeight = 20.0f;
+	this->nearClip = 0.01f;
+	this->farClip = 15.0f;
+	this->viewWidth = 15.0f;
+	this->viewHeight = 15.0f;
 	updateProjectionMatrix = true;
 }
 
@@ -68,13 +64,17 @@ void DirectionalLight::SetViewHeight(const float& viewHeight)
 
 
 // Getters:
+float DirectionalLight::GetIntensity() const
+{
+	return intensity;
+}
 Float4 DirectionalLight::GetColor() const
 {
 	return color;
 }
-Float4x4 DirectionalLight::GetViewMatrix()
+Float4x4 DirectionalLight::GetViewMatrix() const
 {
-	return rotateToY * gameObject->transform->GetWorldToLocalMatrix();
+	return gameObject->transform->GetWorldToLocalMatrix();
 }
 Float4x4 DirectionalLight::GetProjectionMatrix()
 {

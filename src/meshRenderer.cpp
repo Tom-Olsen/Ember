@@ -1,6 +1,7 @@
 #include "meshRenderer.h"
-#include "logger.h"
+#include "camera.h"
 #include "gameObject.h"
+#include "logger.h"
 
 
 
@@ -27,37 +28,50 @@ MeshRenderer::~MeshRenderer()
 void MeshRenderer::SetForwardMaterial(Material* forwardMaterial)
 {
 	this->forwardMaterial = forwardMaterial;
-	forwardMaterialProperties = std::unique_ptr<MaterialProperties>(forwardMaterial->GetMaterialPropertiesCopy());
+	forwardMaterialProperties = std::unique_ptr<MaterialProperties>(forwardMaterial->GetNewMaterialProperties());
 }
 void MeshRenderer::SetShadowMaterial(Material* shadowMaterial)
 {
 	this->shadowMaterial = shadowMaterial;
-	shadowMaterialProperties = std::unique_ptr<MaterialProperties>(shadowMaterial->GetMaterialPropertiesCopy());
+	shadowMaterialProperties = std::unique_ptr<MaterialProperties>(shadowMaterial->GetNewMaterialProperties());
 }
-void MeshRenderer::SetForwardMatrizes(const Float4x4& cameraViewMatrix, const Float4x4& cameraProjMatrix)
+void MeshRenderer::SetForwardRenderMatrizes(const Float4x4& cameraViewMatrix, const Float4x4& cameraProjMatrix)
 {
 	RenderMatrizes renderMatrizes;
 	renderMatrizes.modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
 	renderMatrizes.viewMatrix = cameraViewMatrix;
 	renderMatrizes.projMatrix = cameraProjMatrix;
 	renderMatrizes.normalMatrix = gameObject->transform->GetNormalMatrix();
-	renderMatrizes.UpdateMvpMatrix();
+	renderMatrizes.UpdateLocalToClipMatrix();
 	forwardMaterialProperties->SetUniform("RenderMatrizes", renderMatrizes);
 }
-void MeshRenderer::SetShadowMatrizes(const Float4x4& lightViewMatrix, const Float4x4& lightProjMatrix)
+void MeshRenderer::SetShadowRenderMatrizes(const Float4x4& lightViewMatrix, const Float4x4& lightProjMatrix)
 {
 	RenderMatrizes renderMatrizes;
 	renderMatrizes.modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
 	renderMatrizes.viewMatrix = lightViewMatrix;
 	renderMatrizes.projMatrix = lightProjMatrix;
 	renderMatrizes.normalMatrix = gameObject->transform->GetNormalMatrix();
-	renderMatrizes.UpdateMvpMatrix();
+	renderMatrizes.UpdateLocalToClipMatrix();
 	shadowMaterialProperties->SetUniform("RenderMatrizes", renderMatrizes);
+}
+void MeshRenderer::SetForwardLightData(const std::array<DirectionalLight*, 2>& directionalLights)
+{
+	LightData lightData(directionalLights[0]);
+	//lightData.dLights[0].color.x = 0.5f * sin(Time::GetTime()) + 0.5f;
+	forwardMaterialProperties->SetUniform("LightData", lightData);
 }
 
 
-
 // Getters:
+Material* MeshRenderer::GetForwardMaterial()
+{
+	return forwardMaterial;
+}
+Material* MeshRenderer::GetShadowMaterial()
+{
+	return shadowMaterial;
+}
 VkDescriptorSet* MeshRenderer::GetForwardDescriptorSets(uint32_t frameIndex)
 {
 	return &forwardMaterialProperties->descriptorSets[frameIndex];

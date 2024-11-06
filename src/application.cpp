@@ -14,10 +14,11 @@ Application::Application()
 	renderer = std::make_unique<VulkanRenderer>(context.get());
 
 	// Init static managers:
-	MeshManager::Init(context.get());
+	RenderPassManager::Init(context.get());
 	MaterialManager::Init(context.get(), renderer.get());
 	TextureManager::Init(context.get());
 	SamplerManager::Init(context.get());
+	MeshManager::Init(context.get());
 }
 
 
@@ -26,10 +27,11 @@ Application::Application()
 Application::~Application()
 {
 	// Clear static managers:
+	MeshManager::Clear();
 	SamplerManager::Clear();
 	TextureManager::Clear();
 	MaterialManager::Clear();
-	MeshManager::Clear();
+	RenderPassManager::Clear();
 }
 
 
@@ -57,14 +59,7 @@ void Application::Run()
 
 		// QUESTION:
 		// -what is the exact difference between window and surface and how can it be that the surface extent differs from the window extent?
-
-		// Resize Swapchain if needed:
-		if (rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height != surfaceExtend.height)
-		{
-			rebuildSwapchain = false;
-			context->ResetFrameIndex();
-			renderer->ResizeSwapchain();
-		}
+		// -are both extend checks in the above if condition necessary?
 
 		Update(activeScene);
 		renderer->Render(activeScene);

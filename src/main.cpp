@@ -4,13 +4,15 @@
 
 
 
-// TODO:
+// TODO now:
+// - do shadow calculations in shader! (first get light data into uniform buffer and to shader)
+// - 
+
+// TODO long term:
 // - proper quaternion support
 // - reduce normalMatrix to 3x3 matrix in transform and shader
 // - 3d ui renderpass that draws on top of everything and is not affected by the camera (constant view/projection matrix)
-// - own math lybrary (arrow rotation not working properly)
 // - input system (get inputs from SdlWindow->HandlEvents() and send them to the active scene)
-// - implement camera projection matrix by my own
 // - render image while resizing
 // - implement game physics fixedUpdate loop
 // - camera controller script
@@ -22,7 +24,7 @@
 // - audio
 // - Material parent class with inheritance: ForwardMaterial, ShadowMaterial
 // - gameobject clipping logic (requires bounding box)
-
+// - uniform buffer types hard coded via binding name. make it dynamic
 
 
 int main()
@@ -33,123 +35,162 @@ int main()
     // Initialization:
     Logger::Init();
     Application app;
+    ShadowRenderPass* shadowRenderPass = dynamic_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"));
 
     // Build simple scene:
     Scene* scene = new Scene();
     {// Camera:
         GameObject* camera = new GameObject("mainCamera");
-        camera->transform->SetPosition(Float3(0.0f, -5.0f, 5.0f));
-        camera->transform->SetEulerDegrees(Float3(-45.0f, 0.0f, 0.0f));
-
+		Float3 pos = Float3(0.0f, 3.0f, 5.0f);
+        camera->transform->SetPosition(pos);
+        camera->transform->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up));
+    
         Camera* cameraComponent = new Camera();
         camera->AddComponent<Camera>(cameraComponent);
-
-        //Spin* spin = new Spin(Float3(20.0f, 0.0f, 0.0f));
-        //spin->logAngles = true;
+    
+        //Spin* spin = new Spin(Float3(60.0f, 00.0f, 00.0f));
         //camera->AddComponent<Spin>(spin);
-
+    
         scene->AddGameObject(camera);
 		scene->SetActiveCamera(cameraComponent);
     }
     {// Sun:
         GameObject* sun = new GameObject("sun");
-        sun->transform->SetEulerDegrees(Float3(-45.0f, -135.0f, 0.0f));
-		sun->transform->SetPosition(-3.0f * sun->transform->GetForward());
-        MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("arrowEdgy");
-		meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
-		meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
-		meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("wall1"));
-		sun->AddComponent<MeshRenderer>(meshRenderer);
+        Float3 pos = Float3(6.0f, 6.0f, 3.0f);
+		sun->transform->SetPosition(pos);
+        Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
+        sun->transform->SetRotationMatrix(matrix);
+    
+        //Mesh* mesh = MeshManager::GetMesh("threeLeg");
+        //MeshRenderer* meshRenderer = new MeshRenderer();
+        //meshRenderer->mesh = mesh;
+		//meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
+		//meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
+		//sun->AddComponent<MeshRenderer>(meshRenderer);
+    
 		DirectionalLight* directionalLight = new DirectionalLight(Float4(1.0f, 1.0f, 1.0f, 1.0f));
 		sun->AddComponent<DirectionalLight>(directionalLight);
+    
+        LOG_INFO("Sun position: {}", sun->transform->GetPosition().ToString());
+		LOG_INFO("Sun view direction: {}", sun->transform->GetBackward().ToString());
+        LOG_INFO("Sun localToWorld: {}", sun->transform->GetLocalToWorldMatrix().ToString());
+        LOG_INFO("Sun worldToLocal: {}", sun->transform->GetWorldToLocalMatrix().ToString());
+		LOG_INFO("Sun projection: {}", directionalLight->GetProjectionMatrix().ToString());
+    
 		scene->AddGameObject(sun);
     }
     { // Floor:
         GameObject* floor = new GameObject("floor");
-        floor->transform->SetPosition(Float3(0.0f));
+        floor->transform->SetPosition(0.0f, -0.5f, 0.0f);
         floor->transform->SetScale(8.0f);
+        floor->transform->SetRotationEulerDegrees(-90.0f, 0.0f, 0.0f);
+
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
         meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
         meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
-        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("grass"));
+        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("grass"));
+        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("shadowMap", shadowRenderPass->shadowMap.get());
         floor->AddComponent<MeshRenderer>(meshRenderer);
+
+        //Spin* spin = new Spin(Float3(0.0f, 0.0f, 60.0f));
+        //floor->AddComponent<Spin>(spin);
+    
         scene->AddGameObject(floor);
     }
     {// Cube0:
         GameObject* cube = new GameObject("cube0");
-        cube->transform->SetPosition(Float3(1.5f, 0.0f, 0.5f));
-        cube->transform->SetEulerDegrees(Float3(0.0f, 0.0f, 45.0f));
+        cube->transform->SetPosition(-1.0f, 0.0f, -1.0f);
+        cube->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+    
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
         meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
         meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
-        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("brick"));
+        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("brick"));
+        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("shadowMap", shadowRenderPass->shadowMap.get());
         cube->AddComponent<MeshRenderer>(meshRenderer);
-
-        Spin* spin = new Spin(Float3(0.0f, 0, 45.0f));
-		cube->AddComponent<Spin>(spin);
-
+    
+        Spin* spin = new Spin(Float3(0.0f, 45.0f, 0.0f));
+        cube->AddComponent<Spin>(spin);
+    
         scene->AddGameObject(cube);
     }
     {// Cube1:
         GameObject* cube = new GameObject("cube1");
-        cube->transform->SetPosition(Float3(-1.75f, 1.0f, 0.5f));
-        cube->transform->SetEulerDegrees(Float3(0.0f, 0.0f, 30.0f));
+        cube->transform->SetPosition(2.0f, 0.0f, 0.0f);
+        cube->transform->SetRotationEulerDegrees(0.0f, 20.0f, 0.0f);
+    
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
         meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
         meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
-        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("stones"));
+        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("stones"));
+        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("shadowMap", shadowRenderPass->shadowMap.get());
         cube->AddComponent<MeshRenderer>(meshRenderer);
-        Spin* spin = new Spin(Float3(0.0f, 45.0f, 0.0f));
-        cube->AddComponent<Spin>(spin);
+    
+        //Spin* spin = new Spin(Float3(0.0f, 45.0f, 0.0f));
+        //cube->AddComponent<Spin>(spin);
+    
         scene->AddGameObject(cube);
     }
     {// Sphere:
         GameObject* sphere = new GameObject("sphere0");
-        sphere->transform->SetPosition(Float3(-0.5f, -1.0f, 1.5f));
-        sphere->transform->SetEulerDegrees(Float3(0.0f, 0.0f, 0.0f));
+        sphere->transform->SetPosition(0.5f, 0.0f, 1.5f);
+        sphere->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+    
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("cubeSphere");
         meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
         meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
-        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("texture", TextureManager::GetTexture2d("wall0"));
+        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("wall0"));
+        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("shadowMap", shadowRenderPass->shadowMap.get());
         sphere->AddComponent<MeshRenderer>(meshRenderer);
-        Spin* spin = new Spin(Float3(90.0f, 0.0f, 0.0f));
-        sphere->AddComponent<Spin>(spin);
+    
+        //Spin* spin = new Spin(Float3(90.0f, 0.0f, 0.0f));
+        //sphere->AddComponent<Spin>(spin);
+    
         scene->AddGameObject(sphere);
     }
-    {// ThreeLeg:
-        GameObject* threeLeg = new GameObject("threeLeg");
-        threeLeg->transform->SetPosition(Float3(1.5f, -1.0f, 1.5f));
-        MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
-        meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
-        threeLeg->AddComponent<MeshRenderer>(meshRenderer);
-        scene->AddGameObject(threeLeg);
-    }
-    { // Quad:
-        GameObject* quad = new GameObject("quad");
-        quad->transform->SetPosition(Float3(1.0f, -2.0f, 1.0f));
-        quad->transform->SetEulerDegrees(Float3(90.0f, 0.0f, 0.0f));
-        quad->transform->SetScale(2.0f);
-        MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
-        meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
-        meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("shadowMapMaterial"));
-        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("samplerState", SamplerManager::GetSampler("default"));
-        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("texture", app.renderer->shadowRenderPass->shadowMap.get());
-        quad->AddComponent<MeshRenderer>(meshRenderer);
-        scene->AddGameObject(quad);
-    }
+    //{// ThreeLeg:
+    //    GameObject* threeLeg = new GameObject("threeLeg");
+    //    threeLeg->transform->SetPosition(-2.0f, 0.0f, 1.0f);
+	//	threeLeg->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+    //
+    //    MeshRenderer* meshRenderer = new MeshRenderer();
+    //    meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+    //    meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
+    //    meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
+    //    threeLeg->AddComponent<MeshRenderer>(meshRenderer);
+    //
+    //    //Spin* spin = new Spin(Float3(0.0f, 0.0f, 20.0f));
+    //    //threeLeg->AddComponent<Spin>(spin);
+    //
+    //    scene->AddGameObject(threeLeg);
+    //}
+    //{ // Quad:
+    //    GameObject* quad = new GameObject("quad");
+    //    quad->transform->SetPosition(Float3(0.5f, 0.75f, 2.75f));
+    //    quad->transform->SetScale(1.0f);
+    //
+    //    MeshRenderer* meshRenderer = new MeshRenderer();
+    //    meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
+    //    meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
+    //    meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("shadowMapMaterial"));
+    //    meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
+    //    meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("shadowMap", shadowRenderPass->shadowMap.get());
+    //    quad->AddComponent<MeshRenderer>(meshRenderer);
+    //
+    //    scene->AddGameObject(quad);
+    //}
     app.SetScene(scene);
 
 

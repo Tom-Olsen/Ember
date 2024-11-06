@@ -182,7 +182,7 @@ void ForwardPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderMod
     dynamicState.pDynamicStates = dynamicStates.data();
 
     VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-    pipelineInfo.stageCount = 2;                              // vertex and fragment shaders
+    pipelineInfo.stageCount = 2;                            // vertex and fragment shaders
     pipelineInfo.pStages = shaderStages;
     pipelineInfo.pVertexInputState = &vertexInputState;     // Buffer format
     pipelineInfo.pInputAssemblyState = &inputAssemblyState; // Input assembler
@@ -196,7 +196,7 @@ void ForwardPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderMod
     pipelineInfo.renderPass = *renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
-    pipelineInfo.basePipelineIndex = -1;
+	pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline
 
     VKA(vkCreateGraphicsPipelines(context->LogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
 }

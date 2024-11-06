@@ -10,8 +10,6 @@
 #include "shadowPipeline.h"
 #include "spirvReflect.h"
 #include "materialProperties.h"
-#include "samplerManager.h"
-#include "textureManager.h"
 
 
 
@@ -22,30 +20,41 @@
 /// </summary>
 class Material
 {
+public: // Enums:
+	enum class Type
+	{
+		shadow,
+		forward
+	};
+
 public: // Members:
 	std::string name;
 	std::unique_ptr<Pipeline> pipeline;
 
 private: // Members:
-	// Internal:
 	VulkanContext* context;
 	uint32_t frameIndex;
+	Type type;
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
-	std::unique_ptr<MaterialProperties> materialProperties;
+	std::vector<std::string> bindingNames;
 
-public: // Methods:W
-	Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, std::string name);
-	Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name);
+public: // Methods:
+	// Constructors/Destructor:
+	Material(VulkanContext* context, Type type, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
 	Material(const Material& other) = default;
 	Material& operator=(const Material& other) = default;
 	Material(Material&& other) noexcept = default;
 	Material& operator=(Material&& other) noexcept = default;
 	~Material();
 
-	MaterialProperties* GetMaterialPropertiesCopy();
+	// Getters:
+	MaterialProperties* GetNewMaterialProperties();
+
+	// Debugging:
+	void PrintBindings() const;
 
 private: // Methods:
-	std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile);
+	static std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile);
 	void GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage);
 };
 

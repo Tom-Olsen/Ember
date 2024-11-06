@@ -22,14 +22,17 @@ file(GLOB VULKAN_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/src/sdl*"
     "${PROJECT_SOURCE_DIR}/src/pushConstant*"
     "${PROJECT_SOURCE_DIR}/src/material.*"
-    "${PROJECT_SOURCE_DIR}/src/*RenderPass*"
+    "${PROJECT_SOURCE_DIR}/src/renderPass.h"
+    "${PROJECT_SOURCE_DIR}/src/renderPass.cpp"
+    "${PROJECT_SOURCE_DIR}/src/forwardRenderPass*"
+    "${PROJECT_SOURCE_DIR}/src/shadowRenderPass*"
     "${PROJECT_SOURCE_DIR}/src/*Pipeline*")
 file(GLOB MANAGER_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/src/logger*"
     "${PROJECT_SOURCE_DIR}/src/macros*"
     "${PROJECT_SOURCE_DIR}/src/time*"
-    "${PROJECT_SOURCE_DIR}/src/*manager*"
-    "${PROJECT_SOURCE_DIR}/src/*manager*")
+    "${PROJECT_SOURCE_DIR}/src/*Manager*"
+    "${PROJECT_SOURCE_DIR}/src/*Manager*")
 file(GLOB SHADER_FILES
     #"${PROJECT_SOURCE_DIR}/shaders/*.glsl"
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"

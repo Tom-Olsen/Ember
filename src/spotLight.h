@@ -3,7 +3,6 @@
 #define __INCLUDE_GUARD_spotLight_h__
 #include "mathf.h"
 #include "component.h"
-#include "gameObject.h"
 
 
 

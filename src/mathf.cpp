@@ -2,6 +2,7 @@
 #include <math.h>
 #include <iostream>
 #include <sstream>
+#include "logger.h"
 constexpr float PI = 3.14159265358979323846f;
 
 
@@ -89,6 +90,10 @@ Int2& Int2::operator-=(const Int2& other)
 	this->y -= other.y;
 	return *this;
 }
+Int2 Int2::operator-() const
+{
+	return Int2(-x, -y);
+}
 
 // Multiplication:
 Int2 Int2::operator*(const Int2& other) const
@@ -146,8 +151,8 @@ Int2 Int2::zero = Int2(0);
 Int2 Int2::one = Int2(1);
 Int2 Int2::right = Int2(1, 0);
 Int2 Int2::left = Int2(-1, 0);
-Int2 Int2::forward = Int2(0, 1);
-Int2 Int2::backward = Int2(0, -1);
+Int2 Int2::up = Int2(0, 1);
+Int2 Int2::down = Int2(0, -1);
 
 
 
@@ -228,6 +233,10 @@ Int3& Int3::operator-=(const Int3& other)
 	this->z -= other.z;
 	return *this;
 }
+Int3 Int3::operator-() const
+{
+	return Int3(-x, -y, -z);
+}
 
 // Multiplication:
 Int3 Int3::operator*(const Int3& other) const
@@ -287,10 +296,10 @@ Int3 Int3::zero = Int3(0);
 Int3 Int3::one = Int3(1);
 Int3 Int3::right = Int3(1, 0, 0);
 Int3 Int3::left = Int3(-1, 0, 0);
-Int3 Int3::forward = Int3(0, 1, 0);
-Int3 Int3::backward = Int3(0, -1, 0);
-Int3 Int3::up = Int3(0, 0, 1);
-Int3 Int3::down = Int3(0, 0, -1);
+Int3 Int3::up = Int3(0, 1, 0);
+Int3 Int3::down = Int3(0, -1, 0);
+Int3 Int3::forward = Int3(0, 0, 1);
+Int3 Int3::backward = Int3(0, 0, -1);
 
 
 
@@ -396,8 +405,8 @@ std::ostream& operator<<(std::ostream& os, const Uint3& value)
 Uint3 Uint3::zero = Uint3(0);
 Uint3 Uint3::one = Uint3(1);
 Uint3 Uint3::right = Uint3(1, 0, 0);
-Uint3 Uint3::forward = Uint3(0, 1, 0);
-Uint3 Uint3::up = Uint3(0, 0, 1);
+Uint3 Uint3::up = Uint3(0, 1, 0);
+Uint3 Uint3::forward = Uint3(0, 0, 1);
 
 
 
@@ -465,14 +474,6 @@ float Float2::Dot(const Float2& a, const Float2& b)
 float Float2::Cross(const Float2& a, const Float2& b)
 {
 	return a.y * b.x - a.x * b.y;
-}
-Float2 Float2::Project(const Float2& vec, const Float2& axes)
-{
-	return axes * Dot(vec, axes) / axes.Length2();
-}
-Float2 Float2::Reflect(const Float2& vec, const Float2& axes)
-{
-	return vec - 2.0f * Project(vec, axes);
 }
 float Float2::Distance2(const Float2& a, const Float2& b)
 {
@@ -553,6 +554,10 @@ Float2& Float2::operator-=(const Float2& other)
 	this->x -= other.x;
 	this->y -= other.y;
 	return *this;
+}
+Float2 Float2::operator-() const
+{
+	return Float2(-x, -y);
 }
 
 // Multiplication:
@@ -649,8 +654,8 @@ Float2 Float2::zero = Float2(0.0f);
 Float2 Float2::one = Float2(1.0f);
 Float2 Float2::right = Float2(1.0f, 0.0f);
 Float2 Float2::left = Float2(-1.0f, 0.0f);
-Float2 Float2::forward = Float2(0.0f, 1.0f);
-Float2 Float2::backward = Float2(0.0f, -1.0f);
+Float2 Float2::up = Float2(0.0f, 1.0f);
+Float2 Float2::down = Float2(0.0f, -1.0f);
 
 
 
@@ -733,13 +738,17 @@ Float3 Float3::Cross(const Float3& a, const Float3& b)
 		a.z * b.x - a.x * b.z,
 		a.x * b.y - a.y * b.x);
 }
-Float3 Float3::Project(const Float3& vec, const Float3& planeNormal)
+float Float3::VectorToPlaneDistance(const Float3& vec, const Float3& planeNormal)
 {
-	return planeNormal * Dot(vec, planeNormal) / planeNormal.Length2();
+	return Dot(vec, planeNormal) / Dot(planeNormal, planeNormal);
+}
+Float3 Float3::VectorToPlaneProjection(const Float3& vec, const Float3& planeNormal)
+{
+	return vec - VectorToPlaneDistance(vec, planeNormal) * planeNormal;
 }
 Float3 Float3::Reflect(const Float3& vec, const Float3& planeNormal)
 {
-	return vec - 2.0f * Project(vec, planeNormal);
+	return vec - 2.0f * VectorToPlaneDistance(vec, planeNormal) * planeNormal.Normalize();
 }
 float Float3::Distance2(const Float3& a, const Float3& b)
 {
@@ -826,6 +835,10 @@ Float3& Float3::operator-=(const Float3& other)
 	this->y -= other.y;
 	this->z -= other.z;
 	return *this;
+}
+Float3 Float3::operator-() const
+{
+	return Float3(-x, -y, -z);
 }
 
 // Multiplication:
@@ -936,10 +949,10 @@ Float3 Float3::zero = Float3(0.0f);
 Float3 Float3::one = Float3(1.0f);
 Float3 Float3::right = Float3(1.0f, 0.0f, 0.0f);
 Float3 Float3::left = Float3(-1.0f, 0.0f, 0.0f);
-Float3 Float3::forward = Float3(0.0f, 1.0f, 0.0f);
-Float3 Float3::backward = Float3(0.0f, -1.0f, 0.0f);
-Float3 Float3::up = Float3(0.0f, 0.0f, 1.0f);
-Float3 Float3::down = Float3(0.0f, 0.0f, -1.0f);
+Float3 Float3::up = Float3(0.0f, 1.0f, 0.0f);
+Float3 Float3::down = Float3(0.0f, -1.0f, 0.0f);
+Float3 Float3::forward = Float3(0.0f, 0.0f, 1.0f);
+Float3 Float3::backward = Float3(0.0f, 0.0f, -1.0f);
 
 
 
@@ -1056,6 +1069,10 @@ Float4& Float4::operator-=(const Float4& other)
 	this->w -= other.w;
 	return *this;
 }
+Float4 Float4::operator-() const
+{
+	return Float4(-x, -y, -z, -w);
+}
 
 // Multiplication:
 Float4 Float4::operator*(const Float4& other) const
@@ -1149,10 +1166,10 @@ Float4 Float4::zero = Float4(0.0f);
 Float4 Float4::one = Float4(1.0f);
 Float4 Float4::right = Float4(1.0f, 0.0f, 0.0f, 0.0f);
 Float4 Float4::left = Float4(-1.0f, 0.0f, 0.0f, 0.0f);
-Float4 Float4::forward = Float4(0.0f, 1.0f, 0.0f, 0.0f);
-Float4 Float4::backward = Float4(0.0f, -1.0f, 0.0f, 0.0f);
-Float4 Float4::up = Float4(0.0f, 0.0f, 1.0f, 0.0f);
-Float4 Float4::down = Float4(0.0f, 0.0f, -1.0f, 0.0f);
+Float4 Float4::up = Float4(0.0f, 1.0f, 0.0f, 0.0f);
+Float4 Float4::down = Float4(0.0f, -1.0f, 0.0f, 0.0f);
+Float4 Float4::forward = Float4(0.0f, 0.0f, 1.0f, 0.0f);
+Float4 Float4::backward = Float4(0.0f, 0.0f, -1.0f, 0.0f);
 Float4 Float4::in = Float4(0.0f, 0.0f, 0.0f, 1.0f);
 Float4 Float4::out = Float4(0.0f, 0.0f, 0.0f, -1.0f);
 
@@ -1227,7 +1244,7 @@ Float3x3 Float3x3::Columns
 }
 
 // Object math operations:
-Float3x3 Float3x3::Transpose()
+Float3x3 Float3x3::Transpose() const
 {
 	return Float3x3
 	(data[0], data[3], data[6],
@@ -1302,27 +1319,66 @@ Float3x3 Float3x3::Rotate(const Float3& axis, float radians)
 	float c = cos(radians);
 	float s = sin(radians);
 	float t = 1.0f - c;
-	float x = axis.x;
-	float y = axis.y;
-	float z = axis.z;
+	Float3 normalizedAxis = axis.Normalize();
+	float x = normalizedAxis.x;
+	float y = normalizedAxis.y;
+	float z = normalizedAxis.z;
 	return Float3x3::Rows
 	(x * x * t +     c, x * y * t - z * s, x * z * t + y * s,
 	 y * x * t + z * s, y * y * t +     c, y * z * t - x * s,
 	 z * x * t - y * s, z * y * t + x * s, z * z * t +     c);
 }
-Float3x3 Float3x3::Rotate(const Float3& eulerRadians, const Int3& rotationOrder)
+Float3x3 Float3x3::Rotate(const Float3& eulerRadians, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
 {
 	Float3x3 rot[3] = { RotateX(eulerRadians.x), RotateY(eulerRadians.y), RotateZ(eulerRadians.z) };
-	return rot[rotationOrder.z] * rot[rotationOrder.y] * rot[rotationOrder.x];
+	if (rotationSystem == CoordinateSystem::local)
+		return rot[rotationOrder.x] * rot[rotationOrder.y] * rot[rotationOrder.z];
+	// (rotationSystem == CoordinateSystem::World)
+		return rot[rotationOrder.z] * rot[rotationOrder.y] * rot[rotationOrder.x];
 }
 Float3x3 Float3x3::RotateFromTo(const Float3& from, const Float3& to)
 {
-	Float3 axis = Float3::Cross(from, to);
-	float radians = Float3::AngleRadians(from, to);
+	Float3 f = from.Normalize();
+	Float3 t = to.Normalize();
+	Float3 axis = Float3::Cross(f, t).Normalize();
+	float radians = Float3::AngleRadians(f, t);
 	return Rotate(axis, radians);
+}
+Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& upOld, const Float3& upNew)
+{
+	// Rotate forwardOld to forwardNew:
+	Float3 axis = Float3::Cross(forwardOld, forwardNew);
+	float radians = Float3::AngleRadians(forwardOld, forwardNew);
+	Float3x3 rot0 = Rotate(axis, radians);
+
+	// Compute missalignment angle between upNew and upOld rotated by rot0:
+	Float3 upOldRotated = rot0 * upOld;
+	Float3 planeNormal = Float3::Cross(upNew, forwardNew).Normalize();
+	Float3 projection = Float3::VectorToPlaneProjection(upOldRotated, planeNormal);
+	float angle = -Float3::AngleRadians(upOldRotated, projection);
+	if (Float3::Dot(upNew, upOldRotated) < 0)
+		angle += PI;
+
+	// Rotate by angle around forwardNew:
+	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle);
+
+	// Combine rotations:
+	return rot1 * rot0;
 }
 
 // Access:
+float& Float3x3::operator[](int index)
+{
+	if (index >= 0 && index < 9)
+		return data[index];
+	throw std::out_of_range("Float4x4 index out of range.");
+}
+float Float3x3::operator[](int index) const
+{
+	if (index >= 0 && index < 9)
+		return data[index];
+	throw std::out_of_range("Float4x4 index out of range.");
+}
 float& Float3x3::operator[](const Index2& index)
 {
 	if (index.i >= 0 && index.i < 3 && index.j >= 0 && index.j < 3)
@@ -1397,6 +1453,14 @@ Float3x3& Float3x3::operator-=(const Float3x3& other)
 		data[i] -= other.data[i];
 	return *this;
 }
+Float3x3 Float3x3::operator-() const
+{
+	return Float3x3
+	(-data[0], -data[1], -data[2],
+	 -data[3], -data[4], -data[5],
+	 -data[6], -data[7], -data[8]);
+}
+
 
 // Multiplication:
 Float3x3 Float3x3::operator*(const Float3x3& other) const
@@ -1546,6 +1610,14 @@ Float4x4::Float4x4
 	data[2] = xz; data[6] = yz; data[10] = zz; data[14] = wz;
 	data[3] = xw; data[7] = yw; data[11] = zw; data[15] = ww;
 }
+Float4x4::Float4x4(const Float3x3& other)
+{
+	data[0] = other[0]; data[4] = other[3]; data[ 8] = other[6]; data[12] = 0.0f;
+	data[1] = other[1]; data[5] = other[4]; data[ 9] = other[7]; data[13] = 0.0f;
+	data[2] = other[2]; data[6] = other[5]; data[10] = other[8]; data[14] = 0.0f;
+	data[3] =     0.0f; data[7] =     0.0f; data[11] =     0.0f; data[15] = 1.0f;
+
+}
 Float4x4::Float4x4(const Float4x4& other)
 {
 	for (uint32_t i = 0; i < 16; i++)
@@ -1692,16 +1764,41 @@ Float4x4 Float4x4::Rotate(const Float3& axis, float radians)
 	 z * x * t - y * s, z * y * t + x * s, z * z * t +     c, 0.0f,
 	              0.0f,              0.0f,              0.0f, 1.0f);
 }
-Float4x4 Float4x4::Rotate(const Float3& eulerRadians, const Int3& rotationOrder)
+Float4x4 Float4x4::Rotate(const Float3& eulerRadians, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
 {
 	Float4x4 rot[3] = { RotateX(eulerRadians.x), RotateY(eulerRadians.y), RotateZ(eulerRadians.z) };
-	return rot[rotationOrder.z] * rot[rotationOrder.y] * rot[rotationOrder.x];
+	if (rotationSystem == CoordinateSystem::local)
+		return rot[rotationOrder.x] * rot[rotationOrder.y] * rot[rotationOrder.z];
+	else if (rotationSystem == CoordinateSystem::world)
+		return rot[rotationOrder.z] * rot[rotationOrder.y] * rot[rotationOrder.x];
+	return identity;
 }
 Float4x4 Float4x4::RotateFromTo(const Float3& from, const Float3& to)
 {
 	Float3 axis = Float3::Cross(from, to);
 	float radians = Float3::AngleRadians(from, to);
 	return Rotate(axis, radians);
+}
+Float4x4 Float4x4::RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& upOld, const Float3& upNew)
+{
+	// Rotate forwardOld to forwardNew:
+	Float3 axis = Float3::Cross(forwardOld, forwardNew);
+	float radians = Float3::AngleRadians(forwardOld, forwardNew);
+	Float3x3 rot0 = Float3x3::Rotate(axis, radians);
+
+	// Compute missalignment angle between upNew and upOld rotated by rot0:
+	Float3 upOldRotated = rot0 * upOld;
+	Float3 planeNormal = Float3::Cross(upNew, forwardNew).Normalize();
+	Float3 projection = Float3::VectorToPlaneProjection(upOldRotated, planeNormal);
+	float angle = -Float3::AngleRadians(upOldRotated, projection);
+	if (Float3::Dot(upNew, upOldRotated) < 0)
+		angle += PI;
+
+	// Rotate by angle around forwardNew:
+	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle);
+
+	// Combine rotations:
+	return Float4x4(rot1 * rot0);
 }
 Float4x4 Float4x4::Translate(const Float3& translation)
 {
@@ -1740,7 +1837,7 @@ Float4x4 Float4x4::Perspective(float fovRadians, float aspectRatio, float nearCl
 Float4x4 Float4x4::Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip)
 {
 	float xx = 2.0f / (right - left);
-	float yy = -2.0f / (top - bottom);
+	float yy = 2.0f / (top - bottom);
 	float zz = -2.0f / (farClip - nearClip);
 	float wx = -(right + left) / (right - left);
 	float wy = -(top + bottom) / (top - bottom);
@@ -1751,10 +1848,21 @@ Float4x4 Float4x4::Orthographic(float left, float right, float bottom, float top
 	 0.0f,   yy, 0.0f,   wy,
 	 0.0f, 0.0f,   zz,   wz,
 	 0.0f, 0.0f, 0.0f, 1.0f);
-
 }
 
 // Access:
+float& Float4x4::operator[](int index)
+{
+	if (index >= 0 && index < 16)
+		return data[index];
+	throw std::out_of_range("Float4x4 index out of range.");
+}
+float Float4x4::operator[](int index) const
+{
+	if (index >= 0 && index < 16)
+		return data[index];
+	throw std::out_of_range("Float4x4 index out of range.");
+}
 float& Float4x4::operator[](const Index2& index)
 {
 	if (index.i >= 0 && index.i < 4 && index.j >= 0 && index.j < 4)
@@ -1828,6 +1936,14 @@ Float4x4& Float4x4::operator-=(const Float4x4& other)
 	for (uint32_t i = 0; i < 16; i++)
 		data[i] -= other.data[i];
 	return *this;
+}
+Float4x4 Float4x4::operator-() const
+{
+	return Float4x4
+	(-data[ 0], -data[ 1], -data[ 2], -data[ 3],
+	 -data[ 4], -data[ 5], -data[ 6], -data[ 7],
+	 -data[ 8], -data[ 9], -data[10], -data[11],
+	 -data[12], -data[13], -data[14], -data[15]);
 }
 
 // Multiplication:

@@ -25,6 +25,7 @@ Texture2d::Texture2d(VulkanContext* context, const std::filesystem::path& filePa
 	// Load image:
 	// STBI_rgb_alpha = 4 8-bit channels
 	int width, height, channels;
+	stbi_set_flip_vertically_on_load(true);
 	stbi_uc* pixels = stbi_load(filePath.string().c_str(), &width, &height, &channels, STBI_rgb_alpha);
 	if (!pixels)
 		throw std::runtime_error("failed to load texture image!");

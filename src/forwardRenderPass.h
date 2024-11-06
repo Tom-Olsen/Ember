@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_forwardRenderpass_h__
 #define __INCLUDE_GUARD_forwardRenderpass_h__
 #include <vector>
+#include "renderPass.h"
 #include "vulkanContext.h"
 #include "vmaImage.h"
 
@@ -9,16 +10,13 @@
 /// <summary>
 /// Basic forward render pass.
 /// </summary>
-class ForwardRenderPass
+class ForwardRenderPass : public RenderPass
 {
 public: // Members:
-	VkRenderPass renderPass;
 	std::unique_ptr<VmaImage> msaaImage;
 	std::unique_ptr<VmaImage> depthImage;
-	std::vector<VkFramebuffer> framebuffers;
 
 private: // Members:
-	VulkanContext* context;
 	VkFormat depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 public: // Methods:

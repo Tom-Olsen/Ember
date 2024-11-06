@@ -1,61 +1,47 @@
 #include "material.h"
 #include <vector>
 #include <fstream>
+#include "renderPassManager.h"
 #include "macros.h"
 
 
 
 // Constructors:
-Material::Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, std::string name)
+Material::Material(VulkanContext* context, Type type, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 {
-	// Shadow material (might need to differenciate with other kinds of materials later):
-
-	// Not sure why I need to init these here (doesnt work otherwise). Init happens in main.cpp.
-	TextureManager::Init(context);
-	SamplerManager::Init(context);
-
 	this->context = context;
 	this->name = name;
 	this->frameIndex = 0;
-	materialProperties = std::make_unique<MaterialProperties>(context);
+	this->type = type;
 
-	// Read .spv shader files:
-	std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+	// Forward material creation:
+	if (type == Type::forward)
+	{
+		// Load vertex shader:
+		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+		SpirvReflect vertexShaderReflect(vertexCode);
+		GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
 
-	// Create shader reflections:
-	SpirvReflect vertexShaderReflect(vertexCode);
+		// Load fragment shader:
+		std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
+		SpirvReflect fragmentShaderReflect(fragmentCode);
+		GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
 
-	// Create pipeline (unique for each material):
-	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
-	pipeline = std::make_unique<ShadowPipeline>(context, renderPass, vertexCode, bindings);
-	materialProperties->SetPipeline(pipeline.get());
-	materialProperties->InitDescriptorSets();
-}
-Material::Material(VulkanContext* context, VkRenderPass* renderPass, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, std::string name)
-{
-	// Not sure why I need to init these here (doesnt work otherwise). Init happens in main.cpp.
-	TextureManager::Init(context);
-	SamplerManager::Init(context);
+		// Create pipeline:
+		pipeline = std::make_unique<ForwardPipeline>(context, &RenderPassManager::GetRenderPass("forwardRenderPass")->renderPass, vertexCode, fragmentCode, bindings);
+	}
 
-	this->context = context;
-	this->name = name;
-	this->frameIndex = 0;
-	materialProperties = std::make_unique<MaterialProperties>(context);
+	// Shadow material creation:
+	if (type == Type::shadow)
+	{
+		// Load vertex shader:
+		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+		SpirvReflect vertexShaderReflect(vertexCode);
+		GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
 
-	// Read .spv shader files:
-	std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
-	std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
-
-	// Create shader reflections:
-	SpirvReflect vertexShaderReflect(vertexCode);
-	SpirvReflect fragmentShaderReflect(fragmentCode);
-
-	// Create pipeline (unique for each material):
-	GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
-	GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
-	pipeline = std::make_unique<ForwardPipeline>(context, renderPass, vertexCode, fragmentCode, bindings);
-	materialProperties->SetPipeline(pipeline.get());
-	materialProperties->InitDescriptorSets();
+		// Create pipeline:
+		pipeline = std::make_unique<ShadowPipeline>(context, &RenderPassManager::GetRenderPass("shadowRenderPass")->renderPass, vertexCode, bindings);
+	}
 }
 
 
@@ -68,10 +54,42 @@ Material::~Material()
 
 
 
-// Public:
-MaterialProperties* Material::GetMaterialPropertiesCopy()
+// Public methods:
+// Getters:
+MaterialProperties* Material::GetNewMaterialProperties()
 {
-	return materialProperties->GetCopy();
+	return new MaterialProperties(context, pipeline.get(), bindings, bindingNames);
+}
+
+
+
+// Debugging:
+void Material::PrintBindings() const
+{
+	std::string output = "\nMaterial: " + name + "\n\n";
+	for (uint32_t i = 0; i < bindings.size(); i++)
+	{
+		std::string stageFlags;
+		if ((int)bindings[i].stageFlags == VK_SHADER_STAGE_VERTEX_BIT)
+			stageFlags = "VK_SHADER_STAGE_VERTEX_BIT";
+		else if ((int)bindings[i].stageFlags == VK_SHADER_STAGE_FRAGMENT_BIT)
+			stageFlags = "VK_SHADER_STAGE_FRAGMENT_BIT";
+
+		std::string descriptorType;
+		if ((int)bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+			descriptorType = "VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER";
+		else if ((int)bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+			descriptorType = "VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE";
+		else if ((int)bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
+			descriptorType = "VK_DESCRIPTOR_TYPE_SAMPLER";
+
+		output += "BindingName: " + bindingNames[i] + "\n";
+		output += "Binding: " + std::to_string(bindings[i].binding) + "\n";
+		output += "DescriptorType: " + descriptorType + "\n";
+		output += "DescriptorCount: " + std::to_string(bindings[i].descriptorCount) + "\n";
+		output += "StageFlags: " + stageFlags + "\n\n";
+	}
+	LOG_INFO(output);
 }
 
 
@@ -79,22 +97,22 @@ MaterialProperties* Material::GetMaterialPropertiesCopy()
 // Private methods:
 std::vector<char> Material::ReadShaderCode(const std::filesystem::path& spvFile)
 {
-    // Open shader file:
-    std::ifstream file(spvFile, std::ios::binary);
-    if (!file.is_open())
-        LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
+	// Open shader file:
+	std::ifstream file(spvFile, std::ios::binary);
+	if (!file.is_open())
+		LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
 
-    // Get file size:
-    file.seekg(0, std::ios::end);
-    size_t fileSize = static_cast<size_t>(file.tellg());
-    file.seekg(0, std::ios::beg);
+	// Get file size:
+	file.seekg(0, std::ios::end);
+	size_t fileSize = static_cast<size_t>(file.tellg());
+	file.seekg(0, std::ios::beg);
 
-    // Copy code:
-    std::vector<char> code(fileSize);
-    file.read(code.data(), fileSize);
-    file.close();
+	// Copy code:
+	std::vector<char> code(fileSize);
+	file.read(code.data(), fileSize);
+	file.close();
 
-    return code;
+	return code;
 }
 void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage)
 {
@@ -120,14 +138,7 @@ void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect,
 			layoutBinding.stageFlags = shaderStage;
 			layoutBinding.pImmutableSamplers = nullptr;
 			bindings.push_back(layoutBinding);
-
-			// Create resource based on descriptor type:
-			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-				materialProperties->InitUniformResourceBinding(binding->name, binding->binding, RenderMatrizes());
-			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
-				materialProperties->InitSamplerResourceBinding(binding->name, binding->binding, SamplerManager::GetSampler("default"));
-			if (layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-				materialProperties->InitTexture2dResourceBinding(binding->name, binding->binding, TextureManager::GetTexture2d("white"));
+			bindingNames.push_back(binding->name);
 		}
 	}
 }

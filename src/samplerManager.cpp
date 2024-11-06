@@ -18,8 +18,14 @@ void SamplerManager::Init(VulkanContext* vulkanContext)
 	isInitialized = true;
 	context = vulkanContext;
 
-	VulkanSampler* sampler = new VulkanSampler(context, "default");
-	AddSampler(sampler->name, sampler);
+	VulkanSampler* colorSampler = VulkanSampler::ColorSampler(context, "colorSampler");
+	AddSampler(colorSampler->name, colorSampler);
+
+	VulkanSampler* shadowSampler = VulkanSampler::ShadowSampler(context, "shadowSampler");
+	AddSampler(shadowSampler->name, shadowSampler);
+
+	VulkanSampler* colorSampler2 = VulkanSampler::ColorSampler(context, "colorSampler2");
+	AddSampler(colorSampler2->name, colorSampler2);
 }
 void SamplerManager::Clear()
 {

@@ -5,7 +5,8 @@
 // Constructor:
 Scene::Scene()
 {
-
+	directionalLights[0] = nullptr;
+	directionalLights[1] = nullptr;
 }
 
 
