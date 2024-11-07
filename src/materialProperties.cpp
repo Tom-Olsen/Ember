@@ -5,36 +5,26 @@
 
 
 // Consructor:
-MaterialProperties::MaterialProperties(VulkanContext* context, Pipeline* pipeline)
+MaterialProperties::MaterialProperties(Material* material)
 {
-	this->context = context;
-	this->pipeline = pipeline;
+	this->material = material;
+	this->context = material->context;
 
 	// Create resource bindings for each frameInFlight:
 	uniformBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<VulkanUniformBuffer>>>(context->framesInFlight);
 	samplerMaps = std::vector<std::unordered_map<std::string, ResourceBinding<VulkanSampler*>>>(context->framesInFlight);
 	texture2dMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>>(context->framesInFlight);
-}
-MaterialProperties::MaterialProperties(VulkanContext* context, Pipeline* pipeline, std::vector<VkDescriptorSetLayoutBinding>& bindings, std::vector<std::string>& bindingNames)
-	: MaterialProperties(context, pipeline)
-{
+
 	for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 	{
-		for (size_t i = 0; i < bindings.size(); i++)
+		for (uint32_t i = 0; i < material->GetBindingCount(); i++)
 		{
-			if (bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-			{
-				if (bindingNames[i] == "RenderMatrizes")
-					InitUniformBufferResourceBinding(bindingNames[i], bindings[i].binding, RenderMatrizes(), frameIndex);
-				else if (bindingNames[i] == "LightData")
-					InitUniformBufferResourceBinding(bindingNames[i], bindings[i].binding, LightData(), frameIndex);
-				else
-					LOG_WARN("Unknown uniform buffer name: {}", bindingNames[i]);
-			}
-			else if (bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
-				InitSamplerResourceBinding(bindingNames[i], bindings[i].binding, SamplerManager::GetSampler("colorSampler"), frameIndex);
-			else if (bindings[i].descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-				InitTexture2dResourceBinding(bindingNames[i], bindings[i].binding, TextureManager::GetTexture2d("white"), frameIndex);
+			if (material->GetBindingType(i) == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+				InitUniformBufferResourceBinding(material->GetBindingName(i), material->GetBindingIndex(i), frameIndex);
+			else if (material->GetBindingType(i) == VK_DESCRIPTOR_TYPE_SAMPLER)
+				InitSamplerResourceBinding(material->GetBindingName(i), material->GetBindingIndex(i), SamplerManager::GetSampler("colorSampler"), frameIndex);
+			else if (material->GetBindingType(i) == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+				InitTexture2dResourceBinding(material->GetBindingName(i), material->GetBindingIndex(i), TextureManager::GetTexture2d("white"), frameIndex);
 		}
 	}
 	InitDescriptorSets();
@@ -51,24 +41,31 @@ MaterialProperties::~MaterialProperties()
 
 
 // Public methods:
-// Setters:
-void MaterialProperties::SetUniform(const std::string& name, const RenderMatrizes& renderMatrizes)
+void MaterialProperties::UpdateUniformBuffers(uint32_t frameIndex)
 {
-	// if key exists, replace its value
-	auto it = uniformBufferMaps[context->frameIndex].find(name);
-	if (it != uniformBufferMaps[context->frameIndex].end())
-		it->second.resource.UpdateBuffer(renderMatrizes);
-	else
-		LOG_WARN("Uniform '{}' not found in uniformBufferMap!", name);
+	for (auto& [name, resourceBinding] : uniformBufferMaps[frameIndex])
+	{
+		if (updateUniformBuffer[name])
+		{
+			resourceBinding.resource.UpdateBuffer();
+			updateUniformBuffer[name] = false;
+		}
+	}
 }
-void MaterialProperties::SetUniform(const std::string& name, const LightData& lightData)
+
+
+
+
+// Setters:
+template<typename T>
+void MaterialProperties::SetValue(const std::string& blockName, const std::string& memberName, const T& value)
 {
-	// if key exists, replace its value
-	auto it = uniformBufferMaps[context->frameIndex].find(name);
+	auto it = uniformBufferMaps[context->frameIndex].find(blockName);
 	if (it != uniformBufferMaps[context->frameIndex].end())
-		it->second.resource.UpdateBuffer(lightData);
-	else
-		LOG_WARN("Uniform '{}' not found in uniformBufferMap!", name);
+	{
+		it->second.resource.SetValue(memberName, value);
+		updateUniformBuffer[blockName] = true;
+	}
 }
 void MaterialProperties::SetSampler(const std::string& name, VulkanSampler* sampler)
 {
@@ -141,37 +138,6 @@ void MaterialProperties::SetTexture2dForAllFrames(const std::string& name, Textu
 
 
 
-// Getters:
-MaterialProperties* MaterialProperties::GetCopy()
-{
-	MaterialProperties* copy = new MaterialProperties(context, pipeline);
-
-	// Copy bindings:
-	for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
-	{
-		for (const auto& [name, resourceBinding] : uniformBufferMaps[frameIndex])
-		{
-			if (name == "RenderMatrizes")
-				copy->InitUniformBufferResourceBinding(name, resourceBinding.binding, RenderMatrizes(), frameIndex);
-			else if (name == "LightData")
-				copy->InitUniformBufferResourceBinding(name, resourceBinding.binding, LightData(), frameIndex);
-			else
-				LOG_WARN("Unknown uniform buffer name: {}", name);
-		}
-		for (const auto& [name, resourceBinding] : samplerMaps[frameIndex])
-			copy->InitSamplerResourceBinding(name, resourceBinding.binding, resourceBinding.resource, frameIndex);
-		for (const auto& [name, resourceBinding] : texture2dMaps[frameIndex])
-			copy->InitTexture2dResourceBinding(name, resourceBinding.binding, resourceBinding.resource, frameIndex);
-	}
-
-	// Initialize descriptor sets:
-	copy->InitDescriptorSets();
-
-	return copy;
-}
-
-
-
 // Debugging:
 void MaterialProperties::PrintMaps() const
 {
@@ -200,37 +166,27 @@ void MaterialProperties::PrintMaps() const
 
 // Private methods:
 // Initializers:
-void MaterialProperties::InitUniformBufferResourceBinding(std::string name, uint32_t binding, const RenderMatrizes& renderMatrizes, uint32_t frameIndex)
+void MaterialProperties::InitUniformBufferResourceBinding(std::string name, uint32_t binding, uint32_t frameIndex)
 {
 	auto it = uniformBufferMaps[frameIndex].find(name);
 	if (it == uniformBufferMaps[frameIndex].end())
 	{
-		VulkanUniformBuffer uniformBuffer(context, sizeof(RenderMatrizes));
-		uniformBuffer.UpdateBuffer(renderMatrizes);
+		VulkanUniformBuffer uniformBuffer(context, material->GetUniformBufferBlock(name));
 		uniformBufferMaps[frameIndex].emplace(name, ResourceBinding<VulkanUniformBuffer>(binding, uniformBuffer));
-	}
-}
-void MaterialProperties::InitUniformBufferResourceBinding(std::string name, uint32_t binding, const LightData& lightData, uint32_t frameIndex)
-{
-	auto it = uniformBufferMaps[frameIndex].find(name);
-	if (it == uniformBufferMaps[frameIndex].end())
-	{
-		VulkanUniformBuffer uniformBuffer(context, sizeof(LightData));
-		uniformBuffer.UpdateBuffer(lightData);
-		uniformBufferMaps[frameIndex].emplace(name, ResourceBinding<VulkanUniformBuffer>(binding, uniformBuffer));
+		updateUniformBuffer.emplace(name, true);
 	}
 }
 void MaterialProperties::InitSamplerResourceBinding(std::string name, uint32_t binding, VulkanSampler* sampler, uint32_t frameIndex)
 {
 	auto it = samplerMaps[frameIndex].find(name);
 	if (it == samplerMaps[frameIndex].end())
-			samplerMaps[frameIndex].emplace(name, ResourceBinding<VulkanSampler*>(binding, sampler));
+		samplerMaps[frameIndex].emplace(name, ResourceBinding<VulkanSampler*>(binding, sampler));
 }
 void MaterialProperties::InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d, uint32_t frameIndex)
 {
 	auto it = texture2dMaps[frameIndex].find(name);
 	if (it == texture2dMaps[frameIndex].end())
-			texture2dMaps[frameIndex].emplace(name, ResourceBinding<Texture2d*>(binding, texture2d));
+		texture2dMaps[frameIndex].emplace(name, ResourceBinding<Texture2d*>(binding, texture2d));
 }
 void MaterialProperties::InitDescriptorSets()
 {
@@ -251,7 +207,7 @@ void MaterialProperties::InitDescriptorSets()
 // Descriptor set management:
 void MaterialProperties::CreateDescriptorSets()
 {
-	std::vector<VkDescriptorSetLayout> layouts(context->framesInFlight, pipeline->descriptorSetLayout);	// same layout for all frames
+	std::vector<VkDescriptorSetLayout> layouts(context->framesInFlight, material->pipeline->descriptorSetLayout);	// same layout for all frames
 
 	VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 	allocInfo.descriptorPool = context->DescriptorPool();
@@ -266,7 +222,7 @@ void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBindin
 	VkDescriptorBufferInfo bufferInfo = {};
 	bufferInfo.buffer = samplerResourceBinding.resource.buffer->buffer;
 	bufferInfo.offset = 0;
-	bufferInfo.range = samplerResourceBinding.resource.size;
+	bufferInfo.range = samplerResourceBinding.resource.GetSize();
 
 	VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 	descriptorWrite.dstSet = descriptorSets[frameIndex];
@@ -317,3 +273,12 @@ void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBindin
 
 	vkUpdateDescriptorSets(context->LogicalDevice(), 1, &descriptorWrite, 0, nullptr);
 }
+
+
+
+// Explicit template instantiation:
+template void MaterialProperties::SetValue<float>(const std::string& blockName, const std::string& memberName, const float& value);
+template void MaterialProperties::SetValue<Float2>(const std::string& blockName, const std::string& memberName, const Float2& value);
+template void MaterialProperties::SetValue<Float3>(const std::string& blockName, const std::string& memberName, const Float3& value);
+template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& memberName, const Float4& value);
+template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& memberName, const Float4x4& value);

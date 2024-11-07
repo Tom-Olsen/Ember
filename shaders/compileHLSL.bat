@@ -5,16 +5,16 @@ REM Ensure Vulkan SDK path is set
 set VULKAN_SDK_PATH=%VULKAN_SDK%
 set DXC_PATH=%VULKAN_SDK_PATH%\Bin\dxc.exe
 
-REM Compile shaders
-"%DXC_PATH%" -spirv -T vs_6_0 -E main .\vertDefault.hlsl -Fo .\vertDefault.spv
-"%DXC_PATH%" -spirv -T ps_6_0 -E main .\fragDefault.hlsl -Fo .\fragDefault.spv
+REM Compile vertex shaders (*.vert.hlsl)
+for %%f in (*.vert.hlsl) do (
+    echo Compiling vertex shader %%f
+    "%DXC_PATH%" -spirv -T vs_6_0 -E main "%%f" -Fo "%%~nf.spv"
+)
 
-"%DXC_PATH%" -spirv -T vs_6_0 -E main .\vertColor.hlsl -Fo .\vertColor.spv
-"%DXC_PATH%" -spirv -T ps_6_0 -E main .\fragColor.hlsl -Fo .\fragColor.spv
-
-"%DXC_PATH%" -spirv -T vs_6_0 -E main .\vertShadow.hlsl -Fo .\vertShadow.spv
-
-"%DXC_PATH%" -spirv -T vs_6_0 -E main .\vertShadowMap.hlsl -Fo .\vertShadowMap.spv
-"%DXC_PATH%" -spirv -T ps_6_0 -E main .\fragShadowMap.hlsl -Fo .\fragShadowMap.spv
+REM Compile fragment shaders (*.frag.hlsl)
+for %%f in (*.frag.hlsl) do (
+    echo Compiling fragment shader %%f
+    "%DXC_PATH%" -spirv -T ps_6_0 -E main "%%f" -Fo "%%~nf.spv"
+)
 
 endlocal

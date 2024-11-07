@@ -8,6 +8,7 @@
 #include "vulkanUniformBuffer.h"
 #include "vulkanSampler.h"
 #include "texture2d.h"
+#include "material.h"
 
 
 
@@ -22,48 +23,42 @@ struct ResourceBinding
 
 /// <summary>
 /// Each MaterialProperties instance is customized for a specific material.
-/// Therefore, do not create one yourself!
-/// Either use material.GetNewMaterialProperties() or materialProperties.GetCopy() to optain a new MaterialProperties pointer.
-/// Tipp: Use smart pointers (std::unique_ptr, std::shared_ptr) to avoid manual deletion.
+/// MaterialProperties construction is expensive, do not create them in an update loop.
 /// </summary>
 class MaterialProperties
 {
 public: // Members:
 	std::vector<VkDescriptorSet> descriptorSets;
-	Pipeline* pipeline;
 
 private: // Members:
+	Material* material;
 	VulkanContext* context;
 	std::vector<std::unordered_map<std::string, ResourceBinding<VulkanUniformBuffer>>> uniformBufferMaps;
 	std::vector<std::unordered_map<std::string, ResourceBinding<VulkanSampler*>>> samplerMaps;
 	std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>> texture2dMaps;
+	std::unordered_map<std::string, bool> updateUniformBuffer;
 
 public: // Methods:
 	// Constructors/Destructor:
-	MaterialProperties(VulkanContext* context, Pipeline* pipeline, std::vector<VkDescriptorSetLayoutBinding>& bindings, std::vector<std::string>& bindingNames);
+	MaterialProperties(Material* material);
 	~MaterialProperties();
 
+	void UpdateUniformBuffers(uint32_t frameIndex);
+
 	// Setters:
-	void SetUniform(const std::string& name, const RenderMatrizes& renderMatrizes);
-	void SetUniform(const std::string& name, const LightData& lightData);
+	template<typename T>
+	void SetValue(const std::string& blockName, const std::string& memberName, const T& value);
 	void SetSampler(const std::string& name, VulkanSampler* sampler);
 	void SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler);
 	void SetTexture2d(const std::string& name, Texture2d* texture2d);
 	void SetTexture2dForAllFrames(const std::string& name, Texture2d* texture2d);
 
-	// Getters:
-	MaterialProperties* GetCopy();
-
 	// Debugging:
 	void PrintMaps() const;
 
 private: // Methods:
-	// Hidden constructor:
-	MaterialProperties(VulkanContext* context, Pipeline* pipeline);
-
 	// Initializers:
-	void InitUniformBufferResourceBinding(std::string name, uint32_t binding, const RenderMatrizes& renderMatrizes, uint32_t frameIndex);
-	void InitUniformBufferResourceBinding(std::string name, uint32_t binding, const LightData& lightData, uint32_t frameIndex);
+	void InitUniformBufferResourceBinding(std::string name, uint32_t binding, uint32_t frameIndex);
 	void InitSamplerResourceBinding(std::string name, uint32_t binding, VulkanSampler* sampler, uint32_t frameIndex);
 	void InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d, uint32_t frameIndex);
 	void InitDescriptorSets();

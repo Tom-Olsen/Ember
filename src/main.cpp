@@ -5,8 +5,8 @@
 
 
 // TODO now:
-// - do shadow calculations in shader! (first get light data into uniform buffer and to shader)
-// - 
+// - refactor code and make everything cleaner!
+// - better lighting model (specular highlights etc.)
 
 // TODO long term:
 // - proper quaternion support
@@ -25,6 +25,34 @@
 // - Material parent class with inheritance: ForwardMaterial, ShadowMaterial
 // - gameobject clipping logic (requires bounding box)
 // - uniform buffer types hard coded via binding name. make it dynamic
+// - change shared ptr in VulkanUniformBuffer.buffer to unique ptr
+// - support arrays in spirv reflection
+//`- remove unnecessary includes (iostream)
+// - write own logger class
+// - better shadow mapping (PCF, soft shadows, etc.)
+
+
+#include <fstream>
+std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile)
+{
+    // Open shader file:
+    std::ifstream file(spvFile, std::ios::binary);
+    if (!file.is_open())
+        LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
+
+    // Get file size:
+    file.seekg(0, std::ios::end);
+    size_t fileSize = static_cast<size_t>(file.tellg());
+    file.seekg(0, std::ios::beg);
+
+    // Copy code:
+    std::vector<char> code(fileSize);
+    file.read(code.data(), fileSize);
+    file.close();
+
+    return code;
+}
+
 
 
 int main()
@@ -35,6 +63,9 @@ int main()
     // Initialization:
     Logger::Init();
     Application app;
+    //MaterialManager::GetMaterial("defaultMaterial")->PrintUniformBuffers();
+    //return 0;
+
     ShadowRenderPass* shadowRenderPass = dynamic_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"));
 
     // Build simple scene:
@@ -56,7 +87,7 @@ int main()
     }
     {// Sun:
         GameObject* sun = new GameObject("sun");
-        Float3 pos = Float3(6.0f, 6.0f, 3.0f);
+        Float3 pos = Float3(7.0f, 7.0f, 3.5f);
 		sun->transform->SetPosition(pos);
         Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
         sun->transform->SetRotationMatrix(matrix);
@@ -160,22 +191,22 @@ int main()
     
         scene->AddGameObject(sphere);
     }
-    //{// ThreeLeg:
-    //    GameObject* threeLeg = new GameObject("threeLeg");
-    //    threeLeg->transform->SetPosition(-2.0f, 0.0f, 1.0f);
-	//	threeLeg->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
-    //
-    //    MeshRenderer* meshRenderer = new MeshRenderer();
-    //    meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-    //    meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
-    //    meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
-    //    threeLeg->AddComponent<MeshRenderer>(meshRenderer);
-    //
-    //    //Spin* spin = new Spin(Float3(0.0f, 0.0f, 20.0f));
-    //    //threeLeg->AddComponent<Spin>(spin);
-    //
-    //    scene->AddGameObject(threeLeg);
-    //}
+    {// ThreeLeg:
+        GameObject* threeLeg = new GameObject("threeLeg");
+        threeLeg->transform->SetPosition(-2.0f, 0.0f, 1.0f);
+		threeLeg->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+    
+        MeshRenderer* meshRenderer = new MeshRenderer();
+        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+        meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
+        meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
+        threeLeg->AddComponent<MeshRenderer>(meshRenderer);
+    
+        //Spin* spin = new Spin(Float3(0.0f, 0.0f, 20.0f));
+        //threeLeg->AddComponent<Spin>(spin);
+    
+        scene->AddGameObject(threeLeg);
+    }
     //{ // Quad:
     //    GameObject* quad = new GameObject("quad");
     //    quad->transform->SetPosition(Float3(0.5f, 0.75f, 2.75f));

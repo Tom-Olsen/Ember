@@ -55,10 +55,25 @@ Material::~Material()
 
 
 // Public methods:
-// Getters:
-MaterialProperties* Material::GetNewMaterialProperties()
+uint32_t Material::GetBindingCount() const
 {
-	return new MaterialProperties(context, pipeline.get(), bindings, bindingNames);
+	return static_cast<uint32_t>(bindings.size());
+}
+uint32_t Material::GetBindingIndex(uint32_t i) const
+{
+	return bindings[i].binding;
+}
+VkDescriptorType Material::GetBindingType(uint32_t i) const
+{
+	return bindings[i].descriptorType;
+}
+std::string Material::GetBindingName(uint32_t i) const
+{
+	return bindingNames[i];
+}
+UniformBufferBlock* Material::GetUniformBufferBlock(const std::string& name) const
+{
+	return uniformBufferBlockMap.at(name);
 }
 
 
@@ -88,6 +103,16 @@ void Material::PrintBindings() const
 		output += "DescriptorType: " + descriptorType + "\n";
 		output += "DescriptorCount: " + std::to_string(bindings[i].descriptorCount) + "\n";
 		output += "StageFlags: " + stageFlags + "\n\n";
+	}
+	LOG_INFO(output);
+}
+void Material::PrintUniformBuffers() const
+{
+	std::string output = "\nMaterial: " + name + "\n\n";
+	for (const auto& [key, value] : uniformBufferBlockMap)
+	{
+		output += "UniformBufferBlock: " + key + "\n";
+		output += value->ToString() + "\n\n";
 	}
 	LOG_INFO(output);
 }
@@ -125,20 +150,30 @@ void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect,
 	// Shader descriptor set reflection:
 	std::vector<SpvReflectDescriptorSet*> shaderDescriptorSets = shaderReflect.GetDescriptorSetsReflection();
 
-	for (uint32_t i = 0; i < shaderDescriptorSets.size(); i++)
+	for (uint32_t setIndex = 0; setIndex < shaderDescriptorSets.size(); setIndex++)
 	{
-		SpvReflectDescriptorSet* set = shaderDescriptorSets[i];
-		for (uint32_t j = 0; j < set->binding_count; j++)
+		SpvReflectDescriptorSet* setReflection = shaderDescriptorSets[setIndex];
+		for (uint32_t bindingIndex = 0; bindingIndex < setReflection->binding_count; bindingIndex++)
 		{
-			SpvReflectDescriptorBinding* binding = set->bindings[j];
+			SpvReflectDescriptorBinding* bindingReflection = setReflection->bindings[bindingIndex];
 			VkDescriptorSetLayoutBinding layoutBinding = {};
-			layoutBinding.binding = binding->binding;
-			layoutBinding.descriptorType = VkDescriptorType((int)binding->descriptor_type);
-			layoutBinding.descriptorCount = binding->count;
+			layoutBinding.binding = bindingReflection->binding;
+			layoutBinding.descriptorType = VkDescriptorType((int)bindingReflection->descriptor_type);
+			layoutBinding.descriptorCount = bindingReflection->count;
 			layoutBinding.stageFlags = shaderStage;
 			layoutBinding.pImmutableSamplers = nullptr;
+
+			// Add binding and name to lists:
 			bindings.push_back(layoutBinding);
-			bindingNames.push_back(binding->name);
+			bindingNames.push_back(bindingReflection->name);
+
+			// In case of uniform buffer create UniformBufferBlock:
+			if (bindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+			{
+				SpvReflectBlockVariable& blockReflection = bindingReflection->block;
+				UniformBufferBlock* uniformBufferBlock = shaderReflect.GetUniformBufferBlock(blockReflection, setIndex, bindingIndex);
+				uniformBufferBlockMap.emplace(uniformBufferBlock->name, uniformBufferBlock);
+			}
 		}
 	}
 }

@@ -131,14 +131,16 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 			// Push constants:
 			PushConstantObject pushTime(Time::GetTime4(), Time::GetDeltaTime4());
 		
-		
 			for (auto& pair : scene->meshRenderers)
 			{
 				MeshRenderer* meshRenderer = pair.second;
 				if (meshRenderer->IsActive() && meshRenderer->GetShadowMaterial() != nullptr)
 				{
 					if (scene->directionalLights[0] != nullptr)
+					{
 						meshRenderer->SetShadowRenderMatrizes(scene->directionalLights[0]->GetViewMatrix(), scene->directionalLights[0]->GetProjectionMatrix());
+						meshRenderer->shadowMaterialProperties->UpdateUniformBuffers(context->frameIndex);
+					}
 
 					// TODO: move these two outside of for loop and do them for each material only once.
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipeline());
@@ -197,7 +199,9 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 				if (meshRenderer->IsActive())
 				{
 					meshRenderer->SetForwardRenderMatrizes(scene->activeCamera->GetViewMatrix(), scene->activeCamera->GetProjectionMatrix());
-					meshRenderer->SetForwardLightData(scene->directionalLights);
+					if (scene->directionalLights[0] != nullptr)
+						meshRenderer->SetForwardLightData(scene->directionalLights);
+					meshRenderer->forwardMaterialProperties->UpdateUniformBuffers(context->frameIndex);
 
 					// TODO: move these two outside of for loop and do them for each material only once.
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipeline());

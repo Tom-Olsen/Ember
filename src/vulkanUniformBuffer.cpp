@@ -5,14 +5,14 @@
 
 
 // Constructor:
-VulkanUniformBuffer::VulkanUniformBuffer(VulkanContext* context, uint64_t size)
+VulkanUniformBuffer::VulkanUniformBuffer(VulkanContext* context, UniformBufferBlock* uniformBufferBlock)
 {
-	this->size = size;
 	this->context = context;
+	this->uniformBufferBlock = uniformBufferBlock;
 
 	// Create buffer:
 	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	bufferInfo.size = size;
+	bufferInfo.size = uniformBufferBlock->size;
 	bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -24,10 +24,13 @@ VulkanUniformBuffer::VulkanUniformBuffer(VulkanContext* context, uint64_t size)
 
 	this->buffer = std::make_unique<VmaBuffer>(context, bufferInfo, allocInfo);
 
-	// get data pointer:
+	// Get deviceData pointer:
 	VmaAllocationInfo info;
 	vmaGetAllocationInfo(context->Allocator(), buffer->allocation, &info);
-	data = info.pMappedData;
+	deviceData = info.pMappedData;
+
+	// Allocate host data:
+	hostData.resize(uniformBufferBlock->size);
 }
 
 
@@ -41,81 +44,36 @@ VulkanUniformBuffer::~VulkanUniformBuffer()
 
 
 // Public:
+void VulkanUniformBuffer::UpdateBuffer()
+{
+	memcpy(deviceData, hostData.data(), hostData.size());
+}
+
+
+
+// Getters.
+uint32_t VulkanUniformBuffer::GetSize()
+{
+	return uniformBufferBlock->size;
+
+}
+
+
+
+// Setters:
 template<typename T>
-void VulkanUniformBuffer::UpdateBuffer(const T& datastruct)
+void VulkanUniformBuffer::SetValue(const std::string& memberName, const T& value)
 {
-	memcpy(data, &datastruct, sizeof(datastruct));
+	UniformBufferMember* member = uniformBufferBlock->GetMember(memberName);
+	if (member != nullptr)
+		memcpy(hostData.data() + member->offset, &value, member->size);
 }
 
 
 
-// Uniform buffer structs:
-RenderMatrizes::RenderMatrizes()
-{
-	modelMatrix = Float4x4(1.0f);
-	viewMatrix = Float4x4(1.0f);
-	projMatrix = Float4x4(1.0f);
-	normalMatrix = Float4x4(1.0f);
-	localToClipMatrix = Float4x4(1.0f);
-}
-void RenderMatrizes::UpdateLocalToClipMatrix()
-{
-	localToClipMatrix = projMatrix * viewMatrix * modelMatrix;
-}
-LightData::LightData()
-{
-	viewMatrix = Float4x4(1.0f);
-	projMatrix = Float4x4(1.0f);
-	worldToClipMatrix = Float4x4(1.0f);
-	directionIntensity = Float4(0.0f);
-	color = Float4(0.0f);
-}
-LightData::LightData(DirectionalLight* directionalLights)
-{
-	if (directionalLights != nullptr)
-	{
-		viewMatrix = directionalLights->GetViewMatrix();
-		projMatrix = directionalLights->GetProjectionMatrix();
-		worldToClipMatrix = projMatrix * viewMatrix;
-		directionIntensity = Float4(directionalLights->gameObject->transform->GetForward(), directionalLights->GetIntensity());
-		color = directionalLights->GetColor();
-	}
-}
-//LightData::LightData()
-//{
-//	for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
-//	{
-//		dLights[i].viewMatrix = Float4x4(1.0f);
-//		dLights[i].projMatrix = Float4x4(1.0f);
-//		dLights[i].worldToClipMatrix = Float4x4(1.0f);
-//		dLights[i].directionIntensity = Float4(0.0f);
-//		dLights[i].color = Float4(0.0f);
-//	}
-//}
-//LightData::LightData(std::array<DirectionalLight*, MAX_D_LIGHTS> directionalLights)
-//{
-//	for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
-//	{
-//		if (directionalLights[i] != nullptr)
-//		{
-//			dLights[i].viewMatrix = directionalLights[i]->GetViewMatrix();
-//			dLights[i].projMatrix = directionalLights[i]->GetProjectionMatrix();
-//			dLights[i].worldToClipMatrix = dLights[i].projMatrix * dLights[i].viewMatrix;
-//			dLights[i].directionIntensity = Float4(directionalLights[i]->gameObject->transform->GetForward(), directionalLights[i]->GetIntensity());
-//			dLights[i].color = directionalLights[i]->GetColor();
-//		}
-//		else
-//		{
-//			dLights[i].viewMatrix = Float4x4(1.0f);
-//			dLights[i].projMatrix = Float4x4(1.0f);
-//			dLights[i].worldToClipMatrix = Float4x4(1.0f);
-//			dLights[i].directionIntensity = Float4(0.0f);
-//			dLights[i].color = Float4(0.0f);
-//		}
-//	}
-//}
-
-
-// Explicit instantiations:
-template void VulkanUniformBuffer::UpdateBuffer<RenderMatrizes>(const RenderMatrizes& datastruct);
-template void VulkanUniformBuffer::UpdateBuffer<LightData>(const LightData& datastruct);
+// Explicit template instantiation:
+template void VulkanUniformBuffer::SetValue<float>(const std::string& memberName, const float& value);
+template void VulkanUniformBuffer::SetValue<Float2>(const std::string& memberName, const Float2& value);
+template void VulkanUniformBuffer::SetValue<Float3>(const std::string& memberName, const Float3& value);
+template void VulkanUniformBuffer::SetValue<Float4>(const std::string& memberName, const Float4& value);
+template void VulkanUniformBuffer::SetValue<Float4x4>(const std::string& memberName, const Float4x4& value);

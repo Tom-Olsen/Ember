@@ -35,6 +35,7 @@ file(GLOB MANAGER_SOURCE_FILES
     "${PROJECT_SOURCE_DIR}/src/*Manager*")
 file(GLOB SHADER_FILES
     #"${PROJECT_SOURCE_DIR}/shaders/*.glsl"
+    "${PROJECT_SOURCE_DIR}/shaders/spirvReflectTest.hlsl"
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsli")
 file(GLOB MATH_FILES "${PROJECT_SOURCE_DIR}/src/mathf.*")

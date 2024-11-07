@@ -28,38 +28,52 @@ MeshRenderer::~MeshRenderer()
 void MeshRenderer::SetForwardMaterial(Material* forwardMaterial)
 {
 	this->forwardMaterial = forwardMaterial;
-	forwardMaterialProperties = std::unique_ptr<MaterialProperties>(forwardMaterial->GetNewMaterialProperties());
+	forwardMaterialProperties = std::make_unique<MaterialProperties>(forwardMaterial);
 }
 void MeshRenderer::SetShadowMaterial(Material* shadowMaterial)
 {
 	this->shadowMaterial = shadowMaterial;
-	shadowMaterialProperties = std::unique_ptr<MaterialProperties>(shadowMaterial->GetNewMaterialProperties());
+	shadowMaterialProperties = std::make_unique<MaterialProperties>(shadowMaterial);
 }
 void MeshRenderer::SetForwardRenderMatrizes(const Float4x4& cameraViewMatrix, const Float4x4& cameraProjMatrix)
 {
-	RenderMatrizes renderMatrizes;
-	renderMatrizes.modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
-	renderMatrizes.viewMatrix = cameraViewMatrix;
-	renderMatrizes.projMatrix = cameraProjMatrix;
-	renderMatrizes.normalMatrix = gameObject->transform->GetNormalMatrix();
-	renderMatrizes.UpdateLocalToClipMatrix();
-	forwardMaterialProperties->SetUniform("RenderMatrizes", renderMatrizes);
+	static std::string name = "RenderMatrizes";
+
+	Float4x4 modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
+	Float4x4 localToClipMatrix = cameraProjMatrix * cameraViewMatrix * modelMatrix;
+
+	forwardMaterialProperties->SetValue(name, "modelMatrix", modelMatrix);
+	forwardMaterialProperties->SetValue(name, "viewMatrix", cameraViewMatrix);
+	forwardMaterialProperties->SetValue(name, "projMatrix", cameraProjMatrix);
+	forwardMaterialProperties->SetValue(name, "normalMatrix", gameObject->transform->GetNormalMatrix());
+	forwardMaterialProperties->SetValue(name, "localToClipMatrix", localToClipMatrix);
 }
 void MeshRenderer::SetShadowRenderMatrizes(const Float4x4& lightViewMatrix, const Float4x4& lightProjMatrix)
 {
-	RenderMatrizes renderMatrizes;
-	renderMatrizes.modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
-	renderMatrizes.viewMatrix = lightViewMatrix;
-	renderMatrizes.projMatrix = lightProjMatrix;
-	renderMatrizes.normalMatrix = gameObject->transform->GetNormalMatrix();
-	renderMatrizes.UpdateLocalToClipMatrix();
-	shadowMaterialProperties->SetUniform("RenderMatrizes", renderMatrizes);
+	static std::string name = "DirectionalLightRenderMatrizes";
+
+	Float4x4 modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
+	Float4x4 localToClipMatrix = lightProjMatrix * lightViewMatrix * modelMatrix;
+
+	shadowMaterialProperties->SetValue(name, "modelMatrix", modelMatrix);
+	shadowMaterialProperties->SetValue(name, "viewMatrix", lightViewMatrix);
+	shadowMaterialProperties->SetValue(name, "projMatrix", lightProjMatrix);
+	shadowMaterialProperties->SetValue(name, "localToClipMatrix", localToClipMatrix);
 }
 void MeshRenderer::SetForwardLightData(const std::array<DirectionalLight*, 2>& directionalLights)
 {
-	LightData lightData(directionalLights[0]);
-	//lightData.dLights[0].color.x = 0.5f * sin(Time::GetTime()) + 0.5f;
-	forwardMaterialProperties->SetUniform("LightData", lightData);
+	static std::string name = "LightData";
+
+	Float4x4 viewMatrix = directionalLights[0]->GetViewMatrix();
+	Float4x4 projMatrix = directionalLights[0]->GetProjectionMatrix();
+	Float4x4 worldToClipMatrix = projMatrix * viewMatrix;
+	Float4 directionIntensity = Float4(directionalLights[0]->gameObject->transform->GetForward(), directionalLights[0]->GetIntensity());
+
+	forwardMaterialProperties->SetValue(name, "viewMatrix", viewMatrix);
+	forwardMaterialProperties->SetValue(name, "projMatrix", projMatrix);
+	forwardMaterialProperties->SetValue(name, "worldToClipMatrix", worldToClipMatrix);
+	forwardMaterialProperties->SetValue(name, "directionIntensity", directionIntensity);
+	forwardMaterialProperties->SetValue(name, "lightColor", directionalLights[0]->GetColor());
 }
 
 
