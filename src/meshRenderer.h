@@ -5,6 +5,7 @@
 #include "mesh.h"
 #include "material.h"
 #include "materialProperties.h"
+#include "directionalLight.h"
 
 
 

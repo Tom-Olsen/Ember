@@ -5,9 +5,6 @@
 #include <memory>
 #include "vulkanContext.h"
 #include "vmaBuffer.h"
-#include "vulkanCommand.h"
-#include "mathf.h"
-#include "directionalLight.h"
 #include "spirvReflect.h"
 
 

@@ -28,3 +28,24 @@ VulkanCommand::~VulkanCommand()
 {
 	vkDestroyCommandPool(context->LogicalDevice(), pool, nullptr);
 }
+
+
+
+// Public static methods:
+VulkanCommand VulkanCommand::BeginSingleTimeCommand(VulkanContext* context, const VulkanQueue& queue)
+{
+	VulkanCommand command(context, queue);
+	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	VKA(vkBeginCommandBuffer(command.buffer, &beginInfo));
+	return command;
+}
+void VulkanCommand::EndSingleTimeCommand(VulkanContext* context, const VulkanCommand& command, const VulkanQueue& queue)
+{
+	vkEndCommandBuffer(command.buffer);
+	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &command.buffer;
+	VKA(vkQueueSubmit(queue.queue, 1, &submitInfo, VK_NULL_HANDLE));
+	VKA(vkQueueWaitIdle(queue.queue));
+}

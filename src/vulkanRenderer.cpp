@@ -1,4 +1,5 @@
-#include "application.h"
+#include "vulkanRenderer.h"
+#include "vulkanPushConstant.h"
 #include "macros.h"
 #include "logger.h"
 
@@ -129,7 +130,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
 			// Push constants:
-			PushConstantObject pushTime(Time::GetTime4(), Time::GetDeltaTime4());
+			VulkanPushConstant pushTime(Time::GetTime4(), Time::GetDeltaTime4());
 		
 			for (auto& pair : scene->meshRenderers)
 			{
@@ -144,7 +145,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 
 					// TODO: move these two outside of for loop and do them for each material only once.
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipeline());
-					vkCmdPushConstants(commandBuffer, meshRenderer->GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantObject), &pushTime);
+					vkCmdPushConstants(commandBuffer, meshRenderer->GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VulkanPushConstant), &pushTime);
 
 					// TODO: clean this up
 					const VkDeviceSize offsets[1] = { 0 };
@@ -191,7 +192,7 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
 			// Push constants:
-			PushConstantObject pushTime(Time::GetTime4(), Time::GetDeltaTime4());
+			VulkanPushConstant pushTime(Time::GetTime4(), Time::GetDeltaTime4());
 
 			for (auto& pair : scene->meshRenderers)
 			{
@@ -205,7 +206,7 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 
 					// TODO: move these two outside of for loop and do them for each material only once.
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipeline());
-					vkCmdPushConstants(commandBuffer, meshRenderer->GetForwardPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantObject), &pushTime);
+					vkCmdPushConstants(commandBuffer, meshRenderer->GetForwardPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(VulkanPushConstant), &pushTime);
 
 					vkCmdBindVertexBuffers(commandBuffer, 0, meshRenderer->mesh->GetBindingCount(), meshRenderer->mesh->GetBuffers(context), meshRenderer->mesh->GetOffsets());
 					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());

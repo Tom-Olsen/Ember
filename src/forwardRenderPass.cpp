@@ -1,7 +1,7 @@
 #include "logger.h"
 #include "macros.h"
 #include "forwardRenderPass.h"
-#include "vulkanHelper.h"
+#include "vulkanCommand.h"
 
 
 
@@ -165,7 +165,7 @@ void ForwardRenderPass::CreateDepthImage()
 	depthImage = std::make_unique<VmaImage>(context, imageInfo, allocationInfo, subresourceRange);
 
 	// Transition depth image layout:
-	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
 	{
 		VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
@@ -187,7 +187,7 @@ void ForwardRenderPass::CreateDepthImage()
 			0, nullptr,	// buffer memory barriers
 			1, &barrier);	// image memory barriers
 	}
-	VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+	VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
 }
 void ForwardRenderPass::CreateFrameBuffers()
 {

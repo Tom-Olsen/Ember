@@ -1,6 +1,6 @@
 #include <algorithm>
 #include "vmaImage.h"
-#include "vulkanHelper.h"
+#include "vulkanCommand.h"
 #include "macros.h"
 
 
@@ -78,7 +78,7 @@ VkImageLayout VmaImage::GetLayout()
 void VmaImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subresourceRange)
 {
 	// Transition is executed on transferQueue.
-	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
 
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
@@ -100,7 +100,7 @@ void VmaImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subre
 		0, nullptr,	// buffer memory barriers
 		1, &barrier);	// image memory barriers
 
-	VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
+	VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
 
 	layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 }
@@ -108,7 +108,7 @@ void VmaImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourc
 {
 	// On transition ownership of the image is transferred from the transferQueue to the graphicsQueue.
 	{
-		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
 
 		VkImageMemoryBarrier releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		releaseBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -130,12 +130,12 @@ void VmaImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourc
 			0, nullptr,			// buffer memory barriers
 			1, &releaseBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
+		VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
 
 		layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	}
 	{
-		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
 
 		VkImageMemoryBarrier acquireBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		acquireBarrier.srcAccessMask = VK_ACCESS_NONE;
@@ -157,7 +157,7 @@ void VmaImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourc
 			0, nullptr,			// buffer memory barriers
 			1, &acquireBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+		VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
 
 		layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	}
@@ -166,7 +166,7 @@ void VmaImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subr
 {
 	// On transition ownership of the image is transferred from the transferQueue to the graphicsQueue.
 	{
-		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
 
 		VkImageMemoryBarrier releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		releaseBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -188,12 +188,12 @@ void VmaImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subr
 			0, nullptr,			// buffer memory barriers
 			1, &releaseBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
+		VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
 
 		layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 	{
-		VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
 
 		VkImageMemoryBarrier acquireBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		acquireBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -215,14 +215,14 @@ void VmaImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subr
 			0, nullptr,			// buffer memory barriers
 			1, &acquireBarrier);	// image memory barriers
 
-		VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+		VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
 
 		layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 }
 void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 {
-	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
 
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	barrier.image = image;
@@ -298,7 +298,7 @@ void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 		0, nullptr,
 		1, &barrier);
 
-	VulkanHelper::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+	VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
 
 	layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
@@ -308,7 +308,7 @@ void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 // Static methods:
 void CopyImageToImage(VulkanContext* context, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue)
 {
-	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, queue);;
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, queue);;
 
 	// Queue copy command:
 	VkImageCopy copyRegion = {};
@@ -319,5 +319,5 @@ void CopyImageToImage(VulkanContext* context, VmaImage* srcImage, VmaImage* dstI
 	copyRegion.extent = srcImage->GetExtent();
 	vkCmdCopyImage(command.buffer, srcImage->image, srcImage->GetLayout(), dstImage->image, dstImage->GetLayout(), 1, &copyRegion);
 
-	VulkanHelper::EndSingleTimeCommand(context, command, queue);
+	VulkanCommand::EndSingleTimeCommand(context, command, queue);
 }

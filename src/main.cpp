@@ -32,6 +32,7 @@
 // - better shadow mapping (PCF, soft shadows, etc.)
 
 
+
 #include <fstream>
 std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile)
 {
@@ -207,30 +208,7 @@ int main()
     
         scene->AddGameObject(threeLeg);
     }
-    //{ // Quad:
-    //    GameObject* quad = new GameObject("quad");
-    //    quad->transform->SetPosition(Float3(0.5f, 0.75f, 2.75f));
-    //    quad->transform->SetScale(1.0f);
-    //
-    //    MeshRenderer* meshRenderer = new MeshRenderer();
-    //    meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
-    //    meshRenderer->SetShadowMaterial(MaterialManager::GetMaterial("shadowMaterial"));
-    //    meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("shadowMapMaterial"));
-    //    meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
-    //    meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("shadowMap", shadowRenderPass->shadowMap.get());
-    //    quad->AddComponent<MeshRenderer>(meshRenderer);
-    //
-    //    scene->AddGameObject(quad);
-    //}
     app.SetScene(scene);
-
-
-
-    // Debugging:
-    //MeshManager::PrintAllMeshNames();
-    //MaterialManager::PrintAllMaterialNames();
-    //scene->PrintAllGameObjects();
-    //scene->PrintAllMeshRenderers();
 
 
 

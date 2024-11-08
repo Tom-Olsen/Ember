@@ -2,7 +2,6 @@
 #define STB_IMAGE_IMPLEMENTATION 
 #include "texture2d.h"
 #include <iostream>
-#include "vulkanHelper.h"
 #include "macros.h"
 
 
@@ -99,7 +98,7 @@ void Texture2d::TransitionImageLayout(const VkImageSubresourceRange& subresource
 {
 	// Transition image layout and create mipLevels:
 	image->TransitionLayoutUndefinedToTransfer(subresourceRange);
-	VulkanHelper::CopyBufferToImage(context, &stagingBuffer, image.get(), context->logicalDevice->transferQueue);
+	VmaBuffer::CopyBufferToImage(context, &stagingBuffer, image.get(), context->logicalDevice->transferQueue);
 	image->HandoffTransferToGraphicsQueue(subresourceRange);
 	image->GenerateMipmaps(subresourceRange.levelCount);
 	// old version that does final image transition and handoff between transfer and graphics queue, but no mipmapping:

@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_vmaBuffer_h__
 #include <vulkan/vulkan.h>
 #include "vulkanContext.h"
+#include "vmaImage.h"
 
 
 
@@ -23,6 +24,7 @@ public: // Methods:
 
 public: // Static methods:
 	static void CopyBufferToBuffer(VulkanContext* context, VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize size, const VulkanQueue& queue);
+	static void CopyBufferToImage(VulkanContext* context, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue);
 	static VmaBuffer StagingBuffer(VulkanContext* context, uint64_t size, void* inputData);
 	static VmaBuffer StagingBuffer(VulkanContext* context, const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas);
 };

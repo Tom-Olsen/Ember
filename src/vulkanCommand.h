@@ -21,6 +21,9 @@ private: // Members:
 public: // Methods:
 	VulkanCommand(VulkanContext* context, VulkanQueue queue);
 	~VulkanCommand();
+
+	static VulkanCommand BeginSingleTimeCommand(VulkanContext* context, const VulkanQueue& queue);
+	static void EndSingleTimeCommand(VulkanContext* context, const VulkanCommand& command, const VulkanQueue& queue);
 };
 
 

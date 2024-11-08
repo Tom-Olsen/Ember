@@ -4,6 +4,7 @@
 #include "macros.h"
 #include "forwardPipeline.h"
 #include "mesh.h"
+#include "vulkanPushConstant.h"
 
 
 
@@ -53,7 +54,7 @@ void ForwardPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayo
 	VkPushConstantRange pushConstantRange = {};
 	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 	pushConstantRange.offset = 0;
-	pushConstantRange.size = sizeof(PushConstantObject);
+	pushConstantRange.size = sizeof(VulkanPushConstant);
 
 	// Pipeline layout:
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };

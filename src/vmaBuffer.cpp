@@ -1,6 +1,5 @@
 #include "vmaBuffer.h"
 #include "vulkanCommand.h"
-#include "vulkanHelper.h"
 #include "memory"
 #include "macros.h"
 
@@ -36,7 +35,7 @@ uint64_t VmaBuffer::GetSize()
 // Static methods:
 void VmaBuffer::CopyBufferToBuffer(VulkanContext* context, VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize bufferSize, const VulkanQueue& queue)
 {
-	VulkanCommand command = VulkanHelper::BeginSingleTimeCommand(context, queue);
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, queue);
 
 	// Queue copy command:
 	VkBufferCopy copyRegion = {};
@@ -45,7 +44,32 @@ void VmaBuffer::CopyBufferToBuffer(VulkanContext* context, VmaBuffer* srcBuffer,
 	copyRegion.size = bufferSize;
 	vkCmdCopyBuffer(command.buffer, srcBuffer->buffer, dstBuffer->buffer, 1, &copyRegion);
 
-	VulkanHelper::EndSingleTimeCommand(context, command, queue);
+	VulkanCommand::EndSingleTimeCommand(context, command, queue);
+}
+void VmaBuffer::CopyBufferToImage(VulkanContext* context, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue)
+{
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, queue);
+
+	VkBufferImageCopy region = {};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0;
+	region.bufferImageHeight = 0;
+	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+	region.imageOffset = { 0, 0, 0 };
+	region.imageExtent = dstImage->GetExtent();
+
+	vkCmdCopyBufferToImage(
+		command.buffer,
+		srcBuffer->buffer,
+		dstImage->image,
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		1,
+		&region);
+
+	VulkanCommand::EndSingleTimeCommand(context, command, queue);
 }
 VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* context, uint64_t size, void* inputData)
 {

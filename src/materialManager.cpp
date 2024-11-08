@@ -24,9 +24,6 @@ void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
 	Material* colorMaterial = new Material(context, Material::Type::forward, "colorMaterial", "../shaders/color.vert.spv", "../shaders/color.frag.spv");
 	AddMaterial(colorMaterial->name, colorMaterial);
 
-	Material* shadowMapMaterial = new Material(context, Material::Type::forward, "shadowMapMaterial", "../shaders/shadowMap.vert.spv", "../shaders/shadowMap.frag.spv");
-	AddMaterial(shadowMapMaterial->name, shadowMapMaterial);
-
 	Material* shadowMaterial = new Material(context, Material::Type::shadow, "shadowMaterial", "../shaders/shadow.vert.spv");
 	AddMaterial(shadowMaterial->name, shadowMaterial);
 }

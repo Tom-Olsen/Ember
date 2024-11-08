@@ -4,6 +4,7 @@
 #include "macros.h"
 #include "shadowPipeline.h"
 #include "mesh.h"
+#include "vulkanPushConstant.h"
 
 
 
@@ -50,7 +51,7 @@ void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     VkPushConstantRange pushConstantRange = {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(PushConstantObject);
+    pushConstantRange.size = sizeof(VulkanPushConstant);
 
     // Pipeline layout:
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
