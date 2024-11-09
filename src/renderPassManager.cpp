@@ -1,4 +1,6 @@
 #include "renderPassManager.h"
+#include "vulkanMacros.h"
+#include "vulkanRenderer.h"
 
 
 

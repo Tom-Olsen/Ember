@@ -1,4 +1,5 @@
 #include "materialProperties.h"
+#include "vulkanMacros.h"
 #include "samplerManager.h"
 #include "textureManager.h"
 

@@ -1,7 +1,7 @@
 // needs to be defined before including stb_image.h, but may not be in the header file!
 #define STB_IMAGE_IMPLEMENTATION 
 #include "vulkanSampler.h"
-#include "macros.h"
+#include "vulkanMacros.h"
 
 
 

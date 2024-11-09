@@ -1,16 +1,25 @@
 #include "spirvReflect.h"
-#include <iostream> // TODO: Remove this
 #include "logger.h"
-#include "macros.h"
+
+
+
+// Macro to check if a SPIRV-Reflect function returns SPV_REFLECT_RESULT_SUCCESS.
+#define SPIRV_REFLECT_ASSERT(val) \
+    if (val != SPV_REFLECT_RESULT_SUCCESS) { \
+        LOG_CRITICAL("File: {}, Line: {} SPIRV-Reflect error: {}", __FILE__, __LINE__, std::to_string(val)); \
+        std::abort(); \
+    }
+
+// Shorthand for SPIRV_REFLECT_ASSERT which can be disabled:
+#ifndef SPVA
+#define SPVA(f) SPIRV_REFLECT_ASSERT(f)
+#endif
 
 
 
 // UniformBufferMember pubic methods:
 std::string UniformBufferMember::ToString() const
 {
-    LOG_INFO("WTF?");
-    LOG_INFO(name);
-    LOG_INFO(type);
     return "Name: " + name + ", Offset: " + std::to_string(offset) + ", Size: " + std::to_string(size) + ", Type: " + type;
 }
 
@@ -122,51 +131,51 @@ UniformBufferBlock* SpirvReflect::GetUniformBufferBlock(const SpvReflectBlockVar
 // Debugging:
 void SpirvReflect::PrintDescriptorSetsInfo() const
 {
+	std::string output = "Descriptor Sets:\n";
     std::vector<SpvReflectDescriptorSet*> sets = GetDescriptorSetsReflection();
     for (uint32_t setIndex = 0; setIndex < sets.size(); setIndex++)
     {
 		SpvReflectDescriptorSet* set = sets[setIndex];
-        std::cout << "set:           " << set->set << std::endl;
-        std::cout << "binding_count: " << set->binding_count << std::endl;
+		output += "set:           " + std::to_string(set->set) + "\n";
+		output += "binding_count: " + std::to_string(set->binding_count) + "\n";
         for (uint32_t bindingIndex = 0; bindingIndex < set->binding_count; bindingIndex++)
         {
             SpvReflectDescriptorBinding* binding = set->bindings[bindingIndex];
-            std::cout << "  spirv_id:        " << binding->spirv_id << std::endl;
-            std::cout << "  name:            " << binding->name << std::endl;
-            std::cout << "  binding:         " << binding->binding << std::endl;
-            std::cout << "  descriptor_type: " << (int)binding->descriptor_type << " = " << GetSpvReflectDescriptorTypeName(binding->descriptor_type) << std::endl;
-            std::cout << "  descriptorCount: " << binding->count << std::endl;
-            std::cout << "  input_attachment_index:" << binding->input_attachment_index << std::endl;
-            std::cout << "  set:" << binding->set << std::endl;
+			output += "  spirv_id:        " + std::to_string(binding->spirv_id) + "\n";
+			output += "  name:            " + std::string(binding->name) + "\n";
+			output += "  binding:         " + std::to_string(binding->binding) + "\n";
+			output += "  descriptor_type: " + std::to_string((int)binding->descriptor_type) + " = " + GetSpvReflectDescriptorTypeName(binding->descriptor_type) + "\n";
+			output += "  descriptorCount: " + std::to_string(binding->count) + "\n";
+			output += "  input_attachment_index:" + std::to_string(binding->input_attachment_index) + "\n";
+			output += "  set:" + std::to_string(binding->set) + "\n";
 
 			// If the binding is a uniform buffer, print the layout:
             if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
             {
-                std::cout << "  Uniform Buffer Layout:" << std::endl;
+				output += "  Uniform Buffer Layout:\n";
                 SpvReflectBlockVariable& block = binding->block;
                 for (uint32_t memberIndex = 0; memberIndex < block.member_count; memberIndex++)
                 {
                     SpvReflectBlockVariable& member = block.members[memberIndex];
                     std::string type = GetMemberType(member.type_description);
-                    std::cout << "    Name: " << member.name << ", Offset: " << member.offset << ", Size: " << member.size << ", Type: " << type << std::endl;
+					output += "    Name: " + std::string(member.name) + ", Offset: " + std::to_string(member.offset) + ", Size: " + std::to_string(member.size) + ", Type: " + type + "\n";
 
                     // If the member is an array, print array details
                     if (member.array.dims_count > 0)
                     {
-                        std::cout << "    Array Dimensions: " << std::endl;
+						output += "    Array Dimensions:\n";
                         for (uint32_t dimIndex = 0; dimIndex < member.array.dims_count; dimIndex++)
-                            std::cout << "      Dim[" << dimIndex << "]: " << member.array.dims[dimIndex] << std::endl;
+							output += "      Dim[" + std::to_string(dimIndex) + "]: " + std::to_string(member.array.dims[dimIndex]) + "\n";
                     }
 
                     // Nested struct extension not supported yet.
                 }
             }
-
-            std::cout << std::endl;
+			output += "\n";
         }
-        std::cout << std::endl;
-        std::cout << std::endl;
+		output += "\n\n";
     }
+	LOG_TRACE(output);
 }
 //void SpirvReflect::PrintInputVariablesInfo() const
 //{

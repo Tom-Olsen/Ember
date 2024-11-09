@@ -3,6 +3,7 @@
 #define __INCLUDE_GUARD_scene_h__
 #include <memory>
 #include <vector>
+#include <array>
 #include <string>
 #include <unordered_map>
 #include "gameObject.h"

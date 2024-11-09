@@ -1,7 +1,5 @@
 #include "vulkanInstance.h"
-#include <iostream>
-#include "logger.h"
-#include "macros.h"
+#include "vulkanMacros.h"
 
 
 
@@ -94,9 +92,10 @@ std::vector<const char*> VulkanInstance::AvailableInstanceExtensions()
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
 	// Print all supported instance extensions:
-	std::cout << "available extensions:\n";
+	std::string output = "available extensions:\n";
 	for (const VkExtensionProperties& extension : extensions)
-		std::cout << '\t' << extension.extensionName << '\n';
+		output += "\t" + std::string(extension.extensionName) + "\n";
+	LOG_TRACE(output);
 
 	// Convert to vector of const char*:
 	std::vector<const char*> extensionNames;

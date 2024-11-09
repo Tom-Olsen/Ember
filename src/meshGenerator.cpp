@@ -197,7 +197,7 @@ namespace MeshGenerator
 	Mesh* ArcFlatUv(float radius0, float radius1, float degrees, int cornerCount, std::string name)
 	{
 		// Validate input values:
-		degrees = std::clamp(degrees, 0.0f, 360.0f);
+		degrees = mathf::Clamp(degrees, 0.0f, 360.0f);
 		cornerCount = std::max(2, cornerCount);
 		radius0 = std::max(1e-8f, radius0);
 		if (radius0 > radius1)
@@ -240,7 +240,7 @@ namespace MeshGenerator
 	Mesh* ArcCurvedUv(float radius0, float radius1, float degrees, int cornerCount, std::string name)
 	{
 		// Validate input values:
-		degrees = std::clamp(degrees, 0.0f, 360.0f);
+		degrees = mathf::Clamp(degrees, 0.0f, 360.0f);
 		cornerCount = std::max(2, cornerCount);
 		radius0 = std::max(1e-8f, radius0);
 		if (radius0 > radius1)

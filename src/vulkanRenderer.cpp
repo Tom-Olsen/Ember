@@ -1,7 +1,6 @@
 #include "vulkanRenderer.h"
+#include "vulkanMacros.h"
 #include "vulkanPushConstant.h"
-#include "macros.h"
-#include "logger.h"
 
 
 

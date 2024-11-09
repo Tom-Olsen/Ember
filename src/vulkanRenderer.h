@@ -9,9 +9,6 @@
 
 
 
-/// <summary>
-/// Main application class.
-/// </summary>
 class VulkanRenderer
 {
 public: // Members:

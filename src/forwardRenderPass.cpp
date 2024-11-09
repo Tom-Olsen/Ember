@@ -1,5 +1,4 @@
-#include "logger.h"
-#include "macros.h"
+#include "vulkanMacros.h"
 #include "forwardRenderPass.h"
 #include "vulkanCommand.h"
 

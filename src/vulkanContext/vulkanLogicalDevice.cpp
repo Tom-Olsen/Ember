@@ -1,6 +1,5 @@
 #include "vulkanLogicalDevice.h"
-#include <iostream>
-#include "macros.h"
+#include "vulkanMacros.h"
 
 
 

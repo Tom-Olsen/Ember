@@ -30,6 +30,7 @@
 //`- remove unnecessary includes (iostream)
 // - write own logger class
 // - better shadow mapping (PCF, soft shadows, etc.)
+// - replace all sin/cos/tan/asin/acos/atan/atan2 with custom float versions
 
 
 
