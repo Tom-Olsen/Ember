@@ -116,25 +116,25 @@ Float4x4 Float4x4::Inverse() const
 	float invDet = 1.0f / det;
 	return Float4x4::Columns
 	(// column 0:
-		(data[5] * (data[10] * data[15] - data[11] * data[14]) - data[6] * (data[9] * data[15] - data[11] * data[13]) + data[7] * (data[9] * data[14] - data[10] * data[13])) * invDet,
-		-(data[1] * (data[10] * data[15] - data[11] * data[14]) - data[2] * (data[9] * data[15] - data[11] * data[13]) + data[3] * (data[9] * data[14] - data[10] * data[13])) * invDet,
-		(data[1] * (data[6] * data[15] - data[7] * data[14]) - data[2] * (data[5] * data[15] - data[7] * data[13]) + data[3] * (data[5] * data[14] - data[6] * data[13])) * invDet,
-		-(data[1] * (data[6] * data[11] - data[7] * data[10]) - data[2] * (data[5] * data[11] - data[7] * data[9]) + data[3] * (data[5] * data[10] - data[6] * data[9])) * invDet,
+	 (data[5] * (data[10] * data[15] - data[11] * data[14]) - data[6] * (data[9] * data[15] - data[11] * data[13]) + data[7] * (data[9] * data[14] - data[10] * data[13])) * invDet,
+	 -(data[1] * (data[10] * data[15] - data[11] * data[14]) - data[2] * (data[9] * data[15] - data[11] * data[13]) + data[3] * (data[9] * data[14] - data[10] * data[13])) * invDet,
+	 (data[1] * (data[6] * data[15] - data[7] * data[14]) - data[2] * (data[5] * data[15] - data[7] * data[13]) + data[3] * (data[5] * data[14] - data[6] * data[13])) * invDet,
+	 -(data[1] * (data[6] * data[11] - data[7] * data[10]) - data[2] * (data[5] * data[11] - data[7] * data[9]) + data[3] * (data[5] * data[10] - data[6] * data[9])) * invDet,
 		// column 1:
-		-(data[4] * (data[10] * data[15] - data[11] * data[14]) - data[6] * (data[8] * data[15] - data[11] * data[12]) + data[7] * (data[8] * data[14] - data[10] * data[12])) * invDet,
-		(data[0] * (data[10] * data[15] - data[11] * data[14]) - data[2] * (data[8] * data[15] - data[11] * data[12]) + data[3] * (data[8] * data[14] - data[10] * data[12])) * invDet,
-		-(data[0] * (data[6] * data[15] - data[7] * data[14]) - data[2] * (data[4] * data[15] - data[7] * data[12]) + data[3] * (data[4] * data[14] - data[6] * data[12])) * invDet,
-		(data[0] * (data[6] * data[11] - data[7] * data[10]) - data[2] * (data[4] * data[11] - data[7] * data[8]) + data[3] * (data[4] * data[10] - data[6] * data[8])) * invDet,
+	 -(data[4] * (data[10] * data[15] - data[11] * data[14]) - data[6] * (data[8] * data[15] - data[11] * data[12]) + data[7] * (data[8] * data[14] - data[10] * data[12])) * invDet,
+	 (data[0] * (data[10] * data[15] - data[11] * data[14]) - data[2] * (data[8] * data[15] - data[11] * data[12]) + data[3] * (data[8] * data[14] - data[10] * data[12])) * invDet,
+	 -(data[0] * (data[6] * data[15] - data[7] * data[14]) - data[2] * (data[4] * data[15] - data[7] * data[12]) + data[3] * (data[4] * data[14] - data[6] * data[12])) * invDet,
+	 (data[0] * (data[6] * data[11] - data[7] * data[10]) - data[2] * (data[4] * data[11] - data[7] * data[8]) + data[3] * (data[4] * data[10] - data[6] * data[8])) * invDet,
 		// column 2:
-		(data[4] * (data[9] * data[15] - data[11] * data[13]) - data[5] * (data[8] * data[15] - data[11] * data[12]) + data[7] * (data[8] * data[13] - data[9] * data[12])) * invDet,
-		-(data[0] * (data[9] * data[15] - data[11] * data[13]) - data[1] * (data[8] * data[15] - data[11] * data[12]) + data[3] * (data[8] * data[13] - data[9] * data[12])) * invDet,
-		(data[0] * (data[5] * data[15] - data[7] * data[13]) - data[1] * (data[4] * data[15] - data[7] * data[12]) + data[3] * (data[4] * data[13] - data[5] * data[12])) * invDet,
-		-(data[0] * (data[5] * data[11] - data[7] * data[9]) - data[1] * (data[4] * data[11] - data[7] * data[8]) + data[3] * (data[4] * data[9] - data[5] * data[8])) * invDet,
+	 (data[4] * (data[9] * data[15] - data[11] * data[13]) - data[5] * (data[8] * data[15] - data[11] * data[12]) + data[7] * (data[8] * data[13] - data[9] * data[12])) * invDet,
+	 -(data[0] * (data[9] * data[15] - data[11] * data[13]) - data[1] * (data[8] * data[15] - data[11] * data[12]) + data[3] * (data[8] * data[13] - data[9] * data[12])) * invDet,
+	 (data[0] * (data[5] * data[15] - data[7] * data[13]) - data[1] * (data[4] * data[15] - data[7] * data[12]) + data[3] * (data[4] * data[13] - data[5] * data[12])) * invDet,
+	 -(data[0] * (data[5] * data[11] - data[7] * data[9]) - data[1] * (data[4] * data[11] - data[7] * data[8]) + data[3] * (data[4] * data[9] - data[5] * data[8])) * invDet,
 		// column 3:
-		-(data[4] * (data[9] * data[14] - data[10] * data[13]) - data[5] * (data[8] * data[14] - data[10] * data[12]) + data[6] * (data[8] * data[13] - data[9] * data[12])) * invDet,
-		(data[0] * (data[9] * data[14] - data[10] * data[13]) - data[1] * (data[8] * data[14] - data[10] * data[12]) + data[2] * (data[8] * data[13] - data[9] * data[12])) * invDet,
-		-(data[0] * (data[5] * data[14] - data[6] * data[13]) - data[1] * (data[4] * data[14] - data[6] * data[12]) + data[2] * (data[4] * data[13] - data[5] * data[12])) * invDet,
-		(data[0] * (data[5] * data[10] - data[6] * data[9]) - data[1] * (data[4] * data[10] - data[6] * data[8]) + data[2] * (data[4] * data[9] - data[5] * data[8])) * invDet
+	 -(data[4] * (data[9] * data[14] - data[10] * data[13]) - data[5] * (data[8] * data[14] - data[10] * data[12]) + data[6] * (data[8] * data[13] - data[9] * data[12])) * invDet,
+	 (data[0] * (data[9] * data[14] - data[10] * data[13]) - data[1] * (data[8] * data[14] - data[10] * data[12]) + data[2] * (data[8] * data[13] - data[9] * data[12])) * invDet,
+	 -(data[0] * (data[5] * data[14] - data[6] * data[13]) - data[1] * (data[4] * data[14] - data[6] * data[12]) + data[2] * (data[4] * data[13] - data[5] * data[12])) * invDet,
+	 (data[0] * (data[5] * data[10] - data[6] * data[9]) - data[1] * (data[4] * data[10] - data[6] * data[8]) + data[2] * (data[4] * data[9] - data[5] * data[8])) * invDet
 	);
 }
 bool Float4x4::IsEpsilonZero() const
@@ -150,47 +150,47 @@ bool Float4x4::IsEpsilonZero() const
 // Static math operations:
 Float4x4 Float4x4::RotateX(float radians)
 {
-	float c = cos(radians);
-	float s = sin(radians);
+	float c = mathf::Cos(radians);
+	float s = mathf::Sin(radians);
 	return Float4x4::Rows
 	(1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, c, -s, 0.0f,
-		0.0f, s, c, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f);
+	 0.0f, c, -s, 0.0f,
+	 0.0f, s, c, 0.0f,
+	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 Float4x4 Float4x4::RotateY(float radians)
 {
-	float c = cos(radians);
-	float s = sin(radians);
+	float c = mathf::Cos(radians);
+	float s = mathf::Sin(radians);
 	return Float4x4::Rows
 	(c, 0.0f, s, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		-s, 0.0f, c, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f);
+	 0.0f, 1.0f, 0.0f, 0.0f,
+	 -s, 0.0f, c, 0.0f,
+	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 Float4x4 Float4x4::RotateZ(float radians)
 {
-	float c = cos(radians);
-	float s = sin(radians);
+	float c = mathf::Cos(radians);
+	float s = mathf::Sin(radians);
 	return Float4x4::Rows
 	(c, -s, 0.0f, 0.0f,
-		s, c, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f);
+	 s, c, 0.0f, 0.0f,
+	 0.0f, 0.0f, 1.0f, 0.0f,
+	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 Float4x4 Float4x4::Rotate(const Float3& axis, float radians)
 {
-	float c = cos(radians);
-	float s = sin(radians);
+	float c = mathf::Cos(radians);
+	float s = mathf::Sin(radians);
 	float t = 1.0f - c;
 	float x = axis.x;
 	float y = axis.y;
 	float z = axis.z;
 	return Float4x4::Rows
 	(x * x * t + c, x * y * t - z * s, x * z * t + y * s, 0.0f,
-		y * x * t + z * s, y * y * t + c, y * z * t - x * s, 0.0f,
-		z * x * t - y * s, z * y * t + x * s, z * z * t + c, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f);
+	 y * x * t + z * s, y * y * t + c, y * z * t - x * s, 0.0f,
+	 z * x * t - y * s, z * y * t + x * s, z * z * t + c, 0.0f,
+	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 Float4x4 Float4x4::Rotate(const Float3& eulerRadians, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
 {
@@ -240,9 +240,9 @@ Float4x4 Float4x4::Scale(const Float3& scale)
 {
 	return Float4x4::Rows
 	(scale.x, 0.0f, 0.0f, 0.0f,
-		0.0f, scale.y, 0.0f, 0.0f,
-		0.0f, 0.0f, scale.z, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f);
+	 0.0f, scale.y, 0.0f, 0.0f,
+	 0.0f, 0.0f, scale.z, 0.0f,
+	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 Float4x4 Float4x4::Scale(float scale)
 {
@@ -250,7 +250,7 @@ Float4x4 Float4x4::Scale(float scale)
 }
 Float4x4 Float4x4::Perspective(float fovRadians, float aspectRatio, float nearClip, float farClip)
 {
-	float tanHalfFov = std::tan(0.5f * fovRadians);
+	float tanHalfFov = mathf::Tan(0.5f * fovRadians);
 	float xx = 1.0f / (aspectRatio * tanHalfFov);
 	float yy = -1.0f / tanHalfFov;
 	float zz = (farClip + nearClip) / (nearClip - farClip);
@@ -258,9 +258,9 @@ Float4x4 Float4x4::Perspective(float fovRadians, float aspectRatio, float nearCl
 
 	return Float4x4::Rows
 	(xx, 0.0f, 0.0f, 0.0f,
-		0.0f, yy, 0.0f, 0.0f,
-		0.0f, 0.0f, zz, wz,
-		0.0f, 0.0f, -1.0f, 0.0f);
+	 0.0f, yy, 0.0f, 0.0f,
+	 0.0f, 0.0f, zz, wz,
+	 0.0f, 0.0f, -1.0f, 0.0f);
 }
 Float4x4 Float4x4::Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip)
 {
@@ -273,9 +273,9 @@ Float4x4 Float4x4::Orthographic(float left, float right, float bottom, float top
 
 	return Float4x4::Rows
 	(xx, 0.0f, 0.0f, wx,
-		0.0f, yy, 0.0f, wy,
-		0.0f, 0.0f, zz, wz,
-		0.0f, 0.0f, 0.0f, 1.0f);
+	 0.0f, yy, 0.0f, wy,
+	 0.0f, 0.0f, zz, wz,
+	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 
@@ -377,9 +377,9 @@ Float4x4 Float4x4::operator-() const
 {
 	return Float4x4
 	(-data[0], -data[1], -data[2], -data[3],
-		-data[4], -data[5], -data[6], -data[7],
-		-data[8], -data[9], -data[10], -data[11],
-		-data[12], -data[13], -data[14], -data[15]);
+	 -data[4], -data[5], -data[6], -data[7],
+	 -data[8], -data[9], -data[10], -data[11],
+	 -data[12], -data[13], -data[14], -data[15]);
 }
 
 
@@ -421,9 +421,9 @@ Float4 Float4x4::operator*(const Float4& vector) const
 {
 	return Float4
 	(data[0] * vector.x + data[4] * vector.y + data[8] * vector.z + data[12] * vector.w,
-		data[1] * vector.x + data[5] * vector.y + data[9] * vector.z + data[13] * vector.w,
-		data[2] * vector.x + data[6] * vector.y + data[10] * vector.z + data[14] * vector.w,
-		data[3] * vector.x + data[7] * vector.y + data[11] * vector.z + data[15] * vector.w);
+	 data[1] * vector.x + data[5] * vector.y + data[9] * vector.z + data[13] * vector.w,
+	 data[2] * vector.x + data[6] * vector.y + data[10] * vector.z + data[14] * vector.w,
+	 data[3] * vector.x + data[7] * vector.y + data[11] * vector.z + data[15] * vector.w);
 }
 
 

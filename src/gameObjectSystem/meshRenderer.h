@@ -3,7 +3,6 @@
 #define __INCLUDE_GUARD_meshRenderer_h__
 #include "component.h"
 #include "mesh.h"
-#include "material.h"
 #include "materialProperties.h"
 #include "directionalLight.h"
 

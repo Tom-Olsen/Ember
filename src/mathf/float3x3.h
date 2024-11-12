@@ -3,7 +3,6 @@
 #define __INCLUDE_GUARD_float3x3_h__
 #include "uint3.h"
 #include "float3.h"
-#include "float4.h"
 #include "mathf.h"
 #include <string>
 
@@ -112,8 +111,8 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Float3x3& value);
 
 	// Static members:
-	static Float3x3 zero;
-	static Float3x3 identity;
+	static Float3x3 zero;		// zero matrix.
+	static Float3x3 identity;	// identity matrix.
 };
 
 

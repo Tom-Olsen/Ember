@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_vulkanMacros_h__
 #define __INCLUDE_GUARD_vulkanMacros_h__
 #include <string>
-#include "../logger.h"
+#include "logger.h"
 
 
 

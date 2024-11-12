@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 #include "vulkanContext.h"
-#include "renderPassManager.h"
 #include "vulkanCommand.h"
 #include "scene.h"
 

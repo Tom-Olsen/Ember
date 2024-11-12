@@ -9,6 +9,7 @@
 // Components:
 #include "transform.h"
 #include "camera.h"
+#include "cameraController.h"
 #include "meshRenderer.h"
 #include "spin.h"
 #include "spotLight.h"

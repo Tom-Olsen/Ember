@@ -7,6 +7,7 @@
 Component::Component()
 {
 	gameObject = nullptr;
+	transform = nullptr;
 	isActive = true;
 }
 

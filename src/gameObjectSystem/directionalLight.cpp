@@ -1,5 +1,4 @@
 #include "directionalLight.h"
-#include "shadowRenderPass.h"
 #include "gameObject.h"
 #include "logger.h"
 

@@ -1,6 +1,7 @@
 #include "vulkanRenderer.h"
 #include "vulkanMacros.h"
 #include "vulkanPushConstant.h"
+#include "renderPassManager.h"
 
 
 
@@ -129,7 +130,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
 			// Push constants:
-			VulkanPushConstant pushTime(Time::GetTime4(), Time::GetDeltaTime4());
+			VulkanPushConstant pushTime(Timer::GetTime4(), Timer::GetDeltaTime4());
 		
 			for (auto& pair : scene->meshRenderers)
 			{
@@ -191,7 +192,7 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
 			// Push constants:
-			VulkanPushConstant pushTime(Time::GetTime4(), Time::GetDeltaTime4());
+			VulkanPushConstant pushTime(Timer::GetTime4(), Timer::GetDeltaTime4());
 
 			for (auto& pair : scene->meshRenderers)
 			{

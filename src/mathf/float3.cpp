@@ -18,10 +18,10 @@ Float3::Float3(const Float3& xyz) : x(xyz.x), y(xyz.y), z(xyz.z) {}
 Float3::Float3(const Float4& xyz) : x(xyz.x), y(xyz.y), z(xyz.z) {}
 Float3 Float3::Direction(float theta, float phi)
 {
-	float st = sin(theta);
-	float ct = cos(theta);
-	float sp = sin(phi);
-	float cp = cos(phi);
+	float st = mathf::Sin(theta);
+	float ct = mathf::Cos(theta);
+	float sp = mathf::Sin(phi);
+	float cp = mathf::Cos(phi);
 	return Float3(st * cp, st * sp, ct);
 }
 
@@ -38,11 +38,11 @@ float Float3::Length() const
 }
 float Float3::Theta() const
 {
-	return atan2(sqrt(x * x + y * y), z);
+	return mathf::Atan2(sqrt(x * x + y * y), z);
 }
 float Float3::Phi() const
 {
-	return atan2(y, x);
+	return mathf::Atan2(y, x);
 }
 Float2 Float3::AnglesDegrees() const
 {
@@ -62,7 +62,7 @@ Float3 Float3::Normalize() const
 Float3 Float3::Rotate(float theta, float phi) const
 {
 	float length = Length();
-	phi += Phi();	// no need for clamping due to sin/cos periodicity
+	phi += Phi();	// no need for clamping due to periodicity
 	theta += Theta();
 	if (theta > PI)
 		theta = 2.0f * PI - theta;
@@ -114,14 +114,14 @@ float Float3::AngleDegrees(const Float3& a, const Float3& b)
 	float lengths = a.Length() * b.Length();
 	if (lengths <= epsilon)
 		return 0.0f;
-	return mathf::ToDegrees(acos(Dot(a, b) / lengths));
+	return mathf::ToDegrees(mathf::Acos(Dot(a, b) / lengths));
 }
 float Float3::AngleRadians(const Float3& a, const Float3& b)
 {
 	float lengths = a.Length() * b.Length();
 	if (lengths <= epsilon)
 		return 0.0f;
-	return acos(Dot(a, b) / lengths);
+	return mathf::Acos(Dot(a, b) / lengths);
 }
 
 

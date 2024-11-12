@@ -62,12 +62,12 @@ public:
 	// Static members:
 	static Int3 zero;
 	static Int3 one;
-	static Int3 right;		// +x
-	static Int3 left;		// -x
-	static Int3 up;			// +y
-	static Int3 down;		// -y
-	static Int3 forward;	// +z
-	static Int3 backward;	// -z
+	static Int3 right;		// +x = ( 1, 0, 0).
+	static Int3 left;		// -x = (-1, 0, 0).
+	static Int3 up;			// +y = ( 0, 1, 0).
+	static Int3 down;		// -y = ( 0,-1, 0).
+	static Int3 forward;	// +z = ( 0, 0, 1).
+	static Int3 backward;	// -z = ( 0, 0,-1).
 };
 
 

@@ -14,35 +14,63 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Output directory:
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 
-# Source, header, shader files:
-file(GLOB SOURCE_FILES
-    "${PROJECT_SOURCE_DIR}/src/*"
+
+   
+# ------------------- File lists --------------------
+# shaders/*:
+file(GLOB SHADER_FILES
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsli"
     "${PROJECT_SOURCE_DIR}/shaders/*.bat")
+source_group("Shaders" FILES ${SHADER_FILES})
 
-# Mathf files:
+# src/gameObjectSystem/*:
+file(GLOB GAME_OBJECT_SYSTEM_FILES "${PROJECT_SOURCE_DIR}/src/gameObjectSystem/*")
+source_group("Game Object System" FILES ${GAME_OBJECT_SYSTEM_FILES})
+
+# src/managers/*:
+file(GLOB MANAGERS_FILES "${PROJECT_SOURCE_DIR}/src/managers/*")
+source_group("Managers" FILES ${MANAGERS_FILES})
+
+# src/mathf/*:
 file(GLOB MATHF_FILES "${PROJECT_SOURCE_DIR}/src/mathf/*")
 source_group("Mathf" FILES ${MATHF_FILES})
 
-# VulkanContext files:
-file(GLOB VULKAN_CONTEXT_FILES "${PROJECT_SOURCE_DIR}/src/vulkanContext/*")
-source_group("VulkanContext" FILES ${VULKAN_CONTEXT_FILES})
+# src/renderPassesAndPipelines/*:
+file(GLOB RENDERPASSES_AND_PIPELINES_FILES "${PROJECT_SOURCE_DIR}/src/renderPassesAndPipelines/*")
+source_group("Render Passes & Pipelines" FILES ${RENDERPASSES_AND_PIPELINES_FILES})
+
+# src/renderResources/*:
+file(GLOB RENDER_RESOURCES_FILES "${PROJECT_SOURCE_DIR}/src/renderResources/*")
+source_group("Render Resources" FILES ${RENDER_RESOURCES_FILES})
+
+# src/vulkanRenderer/*:
+file(GLOB VULKAN_RENDERER_FILES "${PROJECT_SOURCE_DIR}/src/vulkanRenderer/*")
+source_group("VulkanRenderer" FILES ${VULKAN_RENDERER_FILES})
+
+# src/*
+file(GLOB OTHER_FILES "${PROJECT_SOURCE_DIR}/src/*")
+source_group("Other" FILES ${OTHER_FILES})
+# ---------------------------------------------------
+
 
 
 # Configure executables:
-add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${MATHF_FILES} ${VULKAN_CONTEXT_FILES})
+add_executable(${PROJECT_NAME}
+${SHADER_FILES}
+${GAME_OBJECT_SYSTEM_FILES}
+${MANAGERS_FILES}
+${MATHF_FILES}
+${RENDERPASSES_AND_PIPELINES_FILES}
+${RENDER_RESOURCES_FILES}
+${VULKAN_RENDERER_FILES}
+${OTHER_FILES})
 add_dependencies(${PROJECT_NAME} build_shaders)
 
 
 
-# --------------------- Shaders ---------------------
+# ---------------- Shader Compilation ---------------
 set(SHADER_LANGUAGE "HLSL") # Set shader Language (HLSL or GLSL):
-
-# Find shader files:
-file(GLOB SHADER_FILES
-    "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"
-    "${PROJECT_SOURCE_DIR}/shaders/*.hlsli")
 
 # Mark shader files as header-only to prevent compilation
 foreach(SHADER_FILE ${SHADER_FILES})
@@ -93,6 +121,12 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PUBLIC libs/vma/include)
 
 # Source subdirectories:
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src/vulkanContext)
+target_include_directories(${PROJECT_NAME}
+PRIVATE ${CMAKE_SOURCE_DIR}/src/gameobjectSystem
+PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
+PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
+PRIVATE ${CMAKE_SOURCE_DIR}/src/renderPassesAndPipelines
+PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources
+PRIVATE ${CMAKE_SOURCE_DIR}/src/vulkanRenderer
+PRIVATE ${CMAKE_SOURCE_DIR}/src)
 # ---------------------------------------------------

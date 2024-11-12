@@ -95,10 +95,10 @@ public:
 	// Static members:
 	static Float2 zero;
 	static Float2 one;
-	static Float2 right;	// +x
-	static Float2 left;		// -x
-	static Float2 up;		// +y
-	static Float2 down;		// -y
+	static Float2 right;	// +x = ( 1, 0).
+	static Float2 left;		// -x = (-1, 0).
+	static Float2 up;		// +y = ( 0, 1).
+	static Float2 down;		// -y = ( 0,-1).
 };
 
 

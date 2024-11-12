@@ -26,9 +26,9 @@ private:
 	constexpr static float epsilon = 1e-8f;
 	Float4x4
 	(float xx, float xy, float xz, float xw,	// column 0
-		float yx, float yy, float yz, float yw,	// column 1
-		float zx, float zy, float zz, float zw,	// column 2
-		float wx, float wy, float wz, float ww);	// column 3
+	 float yx, float yy, float yz, float yw,	// column 1
+	 float zx, float zy, float zz, float zw,	// column 2
+	 float wx, float wy, float wz, float ww);	// column 3
 
 public:
 	// Members:
@@ -120,8 +120,8 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Float4x4& value);
 
 	// Static members:
-	static Float4x4 zero;
-	static Float4x4 identity;
+	static Float4x4 zero;		// zero matrix.
+	static Float4x4 identity;	// identity matrix.
 };
 
 

@@ -100,12 +100,12 @@ public:
 	// Static members:
 	static Float3 zero;
 	static Float3 one;
-	static Float3 right;	// +x
-	static Float3 left;		// -x
-	static Float3 up;		// +y
-	static Float3 down;		// -y
-	static Float3 forward;	// +z
-	static Float3 backward;	// -z
+	static Float3 right;	// +x = ( 1, 0, 0).
+	static Float3 left;		// -x = (-1, 0, 0).
+	static Float3 up;		// +y = ( 0, 1, 0).
+	static Float3 down;		// -y = ( 0,-1, 0).
+	static Float3 forward;	// +z = ( 0, 0, 1).
+	static Float3 backward;	// -z = ( 0, 0,-1).
 };
 
 

@@ -9,7 +9,7 @@
 /// <summary>
 /// Purely static class that takes care of lifetime of all static Mesh objects.
 /// </summary>
-class Time
+class Timer
 {
 private: // Members
     static float time;
@@ -32,10 +32,10 @@ public: // Methods
 
 private: // Methods
     // Delete all constructors:
-    Time() = delete;
-    Time(const Time&) = delete;
-    Time& operator=(const Time&) = delete;
-    ~Time() = delete;
+    Timer() = delete;
+    Timer(const Timer&) = delete;
+    Timer& operator=(const Timer&) = delete;
+    ~Timer() = delete;
 };
 
 

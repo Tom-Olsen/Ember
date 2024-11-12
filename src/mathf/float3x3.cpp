@@ -1,5 +1,4 @@
 #include "float3x3.h"
-#include "float4x4.h"
 #include <stdexcept>
 #include <sstream>
 
@@ -124,8 +123,8 @@ bool Float3x3::IsEpsilonZero() const
 // Static math operations:
 Float3x3 Float3x3::RotateX(float radians)
 {
-	float c = cos(radians);
-	float s = sin(radians);
+	float c = mathf::Cos(radians);
+	float s = mathf::Sin(radians);
 	return Float3x3::Rows
 	(1.0f, 0.0f, 0.0f,
 		0.0f, c, -s,
@@ -133,8 +132,8 @@ Float3x3 Float3x3::RotateX(float radians)
 }
 Float3x3 Float3x3::RotateY(float radians)
 {
-	float c = cos(radians);
-	float s = sin(radians);
+	float c = mathf::Cos(radians);
+	float s = mathf::Sin(radians);
 	return Float3x3::Rows
 	(c, 0.0f, s,
 		0.0f, 1.0f, 0.0f,
@@ -142,8 +141,8 @@ Float3x3 Float3x3::RotateY(float radians)
 }
 Float3x3 Float3x3::RotateZ(float radians)
 {
-	float c = cos(radians);
-	float s = sin(radians);
+	float c = mathf::Cos(radians);
+	float s = mathf::Sin(radians);
 	return Float3x3::Rows
 	(c, -s, 0.0f,
 		s, c, 0.0f,
@@ -151,8 +150,8 @@ Float3x3 Float3x3::RotateZ(float radians)
 }
 Float3x3 Float3x3::Rotate(const Float3& axis, float radians)
 {
-	float c = cos(radians);
-	float s = sin(radians);
+	float c = mathf::Cos(radians);
+	float s = mathf::Sin(radians);
 	float t = 1.0f - c;
 	Float3 normalizedAxis = axis.Normalize();
 	float x = normalizedAxis.x;
@@ -208,13 +207,13 @@ float& Float3x3::operator[](int index)
 {
 	if (index >= 0 && index < 9)
 		return data[index];
-	throw std::out_of_range("Float4x4 index out of range.");
+	throw std::out_of_range("Float3x3 index out of range.");
 }
 float Float3x3::operator[](int index) const
 {
 	if (index >= 0 && index < 9)
 		return data[index];
-	throw std::out_of_range("Float4x4 index out of range.");
+	throw std::out_of_range("Float3x3 index out of range.");
 }
 float& Float3x3::operator[](const Index2& index)
 {

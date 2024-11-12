@@ -1,6 +1,7 @@
 #include "float4.h"
 #include "float2.h"
 #include "float3.h"
+#include "mathf.h"
 #include <stdexcept>
 #include <sstream>
 
@@ -21,10 +22,10 @@ Float4::Float4(const Float3& xyz, float w) : x(xyz.x), y(xyz.y), z(xyz.z), w(w) 
 Float4::Float4(const Float4& xyzw) : x(xyzw.x), y(xyzw.y), z(xyzw.z), w(xyzw.w) {}
 Float4 Float4::Direction(float theta, float phi)
 {
-	float st = sin(theta);
-	float ct = cos(theta);
-	float sp = sin(phi);
-	float cp = cos(phi);
+	float st = mathf::Sin(theta);
+	float ct = mathf::Cos(theta);
+	float sp = mathf::Sin(phi);
+	float cp = mathf::Cos(phi);
 	return Float4(st * cp, st * sp, ct, 0.0f);
 }
 

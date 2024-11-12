@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_application_h__
 #include "vulkanContext.h"
 #include "vulkanRenderer.h"
+#include "eventSystem.h"
 #include "renderPassManager.h"
 #include "materialManager.h"
 #include "textureManager.h"
@@ -22,7 +23,6 @@ public: // Members:
 private: // Members:
 	Scene* activeScene;
 
-
 public: // Methods:
 	Application();
 	~Application();
@@ -30,7 +30,7 @@ public: // Methods:
 	void SetScene(Scene* scene);
 
 private: // Methods:
-	void Update(Scene* scene);
+	void Update();
 };
 
 

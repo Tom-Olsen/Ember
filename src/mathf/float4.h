@@ -86,14 +86,14 @@ public:
 	// Static members:
 	static Float4 zero;
 	static Float4 one;
-	static Float4 right;	// +x
-	static Float4 left;		// -x
-	static Float4 up;		// +y
-	static Float4 down;		// -y
-	static Float4 forward;	// +z
-	static Float4 backward;	// -z
-	static Float4 in;		// +w
-	static Float4 out;		// -w
+	static Float4 right;	// +x = ( 1, 0, 0, 0).
+	static Float4 left;		// -x = (-1, 0, 0, 0).
+	static Float4 up;		// +y = ( 0, 1, 0, 0).
+	static Float4 down;		// -y = ( 0,-1, 0, 0).
+	static Float4 forward;	// +z = ( 0, 0, 1, 0).
+	static Float4 backward;	// -z = ( 0, 0,-1, 0).
+	static Float4 in;		// +w = ( 0, 0, 0, 1).
+	static Float4 out;		// -w = ( 0, 0, 0,-1).
 };
 
 

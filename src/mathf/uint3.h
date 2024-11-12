@@ -48,9 +48,9 @@ public:
 	// Static members:
 	static Uint3 zero;
 	static Uint3 one;
-	static Uint3 right;		// +x
-	static Uint3 up;		// +y
-	static Uint3 forward;	// +z
+	static Uint3 right;		// +x = ( 1, 0, 0).
+	static Uint3 up;		// +y = ( 0, 1, 0).
+	static Uint3 forward;	// +z = ( 0, 0, 1).
 };
 
 

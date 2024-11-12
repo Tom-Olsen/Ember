@@ -1,5 +1,5 @@
 #include "application.h"
-#include "time.h"
+#include "timer.h"
 #include "logger.h"
 
 
@@ -13,6 +13,7 @@ Application::Application()
 	renderer = std::make_unique<VulkanRenderer>(context.get());
 
 	// Init static managers:
+	EventSystem::Init(context->window.get());
 	RenderPassManager::Init(context.get());
 	MaterialManager::Init(context.get(), renderer.get());
 	TextureManager::Init(context.get());
@@ -31,6 +32,7 @@ Application::~Application()
 	TextureManager::Clear();
 	MaterialManager::Clear();
 	RenderPassManager::Clear();
+	EventSystem::Clear();
 }
 
 
@@ -38,14 +40,14 @@ Application::~Application()
 // Public methods:
 void Application::Run()
 {
-	Time::Reset();
+	Timer::Reset();
 	bool rebuildSwapchain = false;
 
 	bool running = true;
 	while (running)
 	{
-		Time::Update();
-		running = context->window->HandelEvents();
+		Timer::Update();
+		running = context->window->HandleEvents();
 
 		// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
 		VkExtent2D windowExtent = context->window->Extent();
@@ -60,7 +62,7 @@ void Application::Run()
 		// -what is the exact difference between window and surface and how can it be that the surface extent differs from the window extent?
 		// -are both extend checks in the above if condition necessary?
 
-		Update(activeScene);
+		Update();
 		renderer->Render(activeScene);
 	}
 }
@@ -72,10 +74,10 @@ void Application::SetScene(Scene* scene)
 
 
 // Private methods:
-void Application::Update(Scene* scene)
+void Application::Update()
 {
 	// Update all game objects:
-	for (auto& gameObj : scene->gameObjects)
+	for (auto& gameObj : activeScene->gameObjects)
 	{
 		GameObject* gameObject = gameObj.second.get();
 		if (gameObject->isActive)

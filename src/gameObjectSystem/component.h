@@ -2,12 +2,13 @@
 #ifndef __INCLUDE_GUARD_component_h__
 #define __INCLUDE_GUARD_component_h__
 #include <string>
-#include "time.h"
+#include "timer.h"
 
 
 
 // Forward declarations
 class GameObject;
+class Transform;
 
 
 
@@ -21,6 +22,7 @@ class Component
 {
 public: // Members:
 	GameObject* gameObject;
+	Transform* transform;
 	bool isActive;
 
 public: // Methods:

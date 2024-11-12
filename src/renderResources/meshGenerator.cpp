@@ -1,6 +1,6 @@
 #include "meshGenerator.h"
+#include "mathf.h"
 #include <numbers>
-#include <math.h>
 
 
 
@@ -171,8 +171,8 @@ namespace MeshGenerator
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float alpha = i * dAlpha;
-			float x = cos(alpha);
-			float y = sin(alpha);
+			float x = mathf::Cos(alpha);
+			float y = mathf::Sin(alpha);
 			positions.push_back(Float3(radius * x, radius * y, 0.0f));
 			normals.push_back(Float3(0.0f, 0.0f, 1.0f));
 			uvs.push_back(Float4(0.5f * (x + 1.0f), 0.5f * (y + 1.0f), 0.0f, 0.0f));
@@ -212,8 +212,8 @@ namespace MeshGenerator
 		float dAlpha = mathf::ToRadians(degrees) / (cornerCount - 1.0f);
 		for (int i = 0; i < cornerCount; i++)
 		{
-			float x = cos(i * dAlpha);
-			float y = sin(i * dAlpha);
+			float x = mathf::Cos(i * dAlpha);
+			float y = mathf::Sin(i * dAlpha);
 			positions.push_back(radius0 * Float3(x, y, 0.0f));
 			positions.push_back(radius1 * Float3(x, y, 0.0f));
 			normals.push_back(Float3(0.0f, 0.0f, 1.0f));
@@ -256,8 +256,8 @@ namespace MeshGenerator
 		float dAlpha = mathf::ToRadians(degrees) / (cornerCount - 1.0f);
 		for (int i = 0; i < cornerCount; i++)
 		{
-			float x = cos(i * dAlpha);
-			float y = sin(i * dAlpha);
+			float x = mathf::Cos(i * dAlpha);
+			float y = mathf::Sin(i * dAlpha);
 			positions.push_back(radius0 * Float3(x, y, 0.0f));
 			positions.push_back(radius1 * Float3(x, y, 0.0f));
 			normals.push_back(Float3(0.0f, 0.0f, 1.0f));
@@ -297,8 +297,8 @@ namespace MeshGenerator
 		for (int i = 0; i < cornerCount + 1; i++)
 		{
 			float alpha = i * dAlpha;
-			float x = cos(alpha);
-			float y = sin(alpha);
+			float x = mathf::Cos(alpha);
+			float y = mathf::Sin(alpha);
 			positions.push_back(Float3(radius * x, radius * y, 0.0f));
 
 			float normalX = 1.0f / static_cast<float>(sqrt(pow(height / radius, 2) + 1.0f));
@@ -332,10 +332,10 @@ namespace MeshGenerator
 		{
 			float alpha0 = i * dAlpha;
 			float alpha1 = (i + 1) % cornerCount * dAlpha;
-			float x0 = cos(alpha0);
-			float x1 = cos(alpha1);
-			float y0 = sin(alpha0);
-			float y1 = sin(alpha1);
+			float x0 = mathf::Cos(alpha0);
+			float x1 = mathf::Cos(alpha1);
+			float y0 = mathf::Sin(alpha0);
+			float y1 = mathf::Sin(alpha1);
 
 			Float3 a = radius * Float3(x0, y0, 0.0f);
 			Float3 b = radius * Float3(x1, y1, 0.0f);
@@ -367,8 +367,8 @@ namespace MeshGenerator
 		for (int i = 0; i < cornerCount + 1; i++)
 		{
 			float alpha = i * dAlpha;
-			float x = cos(alpha);
-			float y = sin(alpha);
+			float x = mathf::Cos(alpha);
+			float y = mathf::Sin(alpha);
 			positions.push_back(Float3(radius * x, radius * y, -0.5f * height));
 			positions.push_back(Float3(radius * x, radius * y,  0.5f * height));
 
@@ -404,8 +404,8 @@ namespace MeshGenerator
 		std::vector<Float4> uvs(4);
 		
 		float dAlpha = 2.0f * static_cast<float>(std::numbers::pi) / cornerCount;
-		float dist = radius * cos(0.5f * dAlpha);
-		float width = 2.0f * radius * sin(0.5f * dAlpha);
+		float dist = radius * mathf::Cos(0.5f * dAlpha);
+		float width = 2.0f * radius * mathf::Sin(0.5f * dAlpha);
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float alpha = (i + 0.5f) * dAlpha;
@@ -414,7 +414,7 @@ namespace MeshGenerator
 			face->Scale(Float3(width, height, 1.0f));
 			Float3x3 rotation = Float3x3::RotateZ(mathf::ToRadians(90) + alpha) * Float3x3::RotateX(mathf::ToRadians(90));
 			face->Rotate(rotation);
-			face->Translate(Float3(dist * cos(alpha), dist * sin(alpha), 0.0f));
+			face->Translate(Float3(dist * mathf::Cos(alpha), dist * mathf::Sin(alpha), 0.0f));
 
 			uvs[0] = Float4((i + 0.0f) / cornerCount, 0.0f, 0.0f, 0.0f);
 			uvs[1] = Float4((i + 0.0f) / cornerCount, 1.0f, 0.0f, 0.0f);

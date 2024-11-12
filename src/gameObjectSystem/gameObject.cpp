@@ -43,7 +43,10 @@ void GameObject::AddComponent(T* component)
 		return;
 	}
 	else
+	{
 		component->gameObject = this;
+		component->transform = transform;
+	}
 }
 
 template <typename T>
@@ -68,12 +71,14 @@ void GameObject::PrintComponents() const
 // Explicit instantiations:
 template void GameObject::AddComponent(Transform* component);
 template void GameObject::AddComponent(Camera* component);
+template void GameObject::AddComponent(CameraController* component);
 template void GameObject::AddComponent(MeshRenderer* component);
 template void GameObject::AddComponent(Spin* component);
 template void GameObject::AddComponent(SpotLight* component);
 template void GameObject::AddComponent(DirectionalLight* component);
 template Transform* GameObject::GetComponent<Transform>();
 template Camera* GameObject::GetComponent<Camera>();
+template CameraController* GameObject::GetComponent<CameraController>();
 template MeshRenderer* GameObject::GetComponent<MeshRenderer>();
 template Spin* GameObject::GetComponent<Spin>();
 template SpotLight* GameObject::GetComponent<SpotLight>();

@@ -1,38 +1,38 @@
-#include "time.h"
+#include "timer.h"
 
 
 
 // Static members:
-float Time::time = 0.0f;
-float Time::deltaTime = 0.0f;
-bool Time::isInitialized = false;
-std::chrono::steady_clock::time_point Time::start = std::chrono::steady_clock::now();
-std::chrono::steady_clock::time_point Time::end = std::chrono::steady_clock::now();
+float Timer::time = 0.0f;
+float Timer::deltaTime = 0.0f;
+bool Timer::isInitialized = false;
+std::chrono::steady_clock::time_point Timer::start = std::chrono::steady_clock::now();
+std::chrono::steady_clock::time_point Timer::end = std::chrono::steady_clock::now();
 
 
 
-// Time management:
-void Time::Init()
+// Timer management:
+void Timer::Init()
 {
 	if (isInitialized)
 		return;
 
 	isInitialized = true;
 }
-void Time::Clear()
+void Timer::Clear()
 {
 	time = 0.0f;
 	deltaTime = 0.0f;
 	isInitialized = false;
 }
-void Time::Update()
+void Timer::Update()
 {
 	end = std::chrono::steady_clock::now();
 	deltaTime = std::chrono::duration<float>(end - start).count();
 	time += deltaTime;
 	start = end;
 }
-void Time::Reset()
+void Timer::Reset()
 {
 	time = 0.0f;
 	deltaTime = 0.0f;
@@ -42,19 +42,19 @@ void Time::Reset()
 
 
 // Getters:
-float Time::GetTime()
+float Timer::GetTime()
 {
 	return time;
 }
-float Time::GetDeltaTime()
+float Timer::GetDeltaTime()
 {
 	return deltaTime;
 }
-Float4 Time::GetTime4()
+Float4 Timer::GetTime4()
 {
 	return Float4(time, 2.0f * time, 3.0f * time, 4.0f * time);
 }
-Float4 Time::GetDeltaTime4()
+Float4 Timer::GetDeltaTime4()
 {
 	return Float4(deltaTime, 2.0f * deltaTime, 3.0f * deltaTime, 4.0f * deltaTime);
 }

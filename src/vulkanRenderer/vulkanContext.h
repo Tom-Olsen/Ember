@@ -9,6 +9,7 @@
 #include "vulkanMemoryAllocator.h"
 #include "vulkanDescriptorPool.h"
 #include "vulkanSwapchain.h"
+#include "logger.h"
 
 
 
@@ -25,8 +26,6 @@ public: // Members:
 	std::unique_ptr<VulkanSwapchain> swapchain;
 	uint32_t framesInFlight;
 	uint32_t frameIndex;
-
-private: // Members:
 
 public: // Methods:
 	VulkanContext(uint32_t framesInFlight);
@@ -46,8 +45,6 @@ public: // Methods:
 	// Frame logic:
 	void UpdateFrameIndex();
 	void ResetFrameIndex();
-
-private: // Methods:
 };
 
 

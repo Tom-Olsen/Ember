@@ -1,10 +1,11 @@
 #include "sdlWindow.h"
+#include "eventSystem.h"
 #include "vulkanMacros.h"
 #include <SDL3/SDL_vulkan.h>
 
 
 
-// Constructor:
+// Constructor/Destructor:
 SdlWindow::SdlWindow(uint16_t width, uint16_t height)
 {
 	// Initialize SDL:
@@ -16,10 +17,6 @@ SdlWindow::SdlWindow(uint16_t width, uint16_t height)
 	if (!window)
 		throw std::runtime_error((std::string)"SDL_CreateWindow Error: " + (std::string)SDL_GetError());
 }
-
-
-
-// Destructor:
 SdlWindow::~SdlWindow()
 {
 	SDL_DestroyWindow(window);
@@ -28,13 +25,17 @@ SdlWindow::~SdlWindow()
 
 
 
-
 // Public:
-bool SdlWindow::HandelEvents()
+bool SdlWindow::HandleEvents()
 {
+	EventSystem::ClearEvents();
+
+	// Poll events:
 	SDL_Event event;
-	while (SDL_PollEvent(&event))	// poll next event
+	while (SDL_PollEvent(&event))
 	{
+		EventSystem::ProcessEvent(event);
+
 		switch (event.type)
 		{
 			// General events:

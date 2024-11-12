@@ -4,7 +4,7 @@
 
 
 
-// Constructor:
+// Constructor/Destructor:
 Camera::Camera()
 {
 	this->fovRadians = mathf::ToRadians(60.0f);
@@ -13,10 +13,6 @@ Camera::Camera()
 	this->farClip = 100.0f;
 	updateProjectionMatrix = true;
 }
-
-
-
-// Destructor:
 Camera::~Camera()
 {
 
@@ -67,7 +63,7 @@ Float4x4 Camera::GetProjectionMatrix()
 
 
 
-// Private:
+// Private methods:
 void Camera::UpdateProjectionMatrix()
 {
 	updateProjectionMatrix = false;

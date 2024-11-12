@@ -23,10 +23,10 @@ Spin::~Spin()
 // Overrides:
 void Spin::Update()
 {
-	Float3 addAngles = eulerDegreesPerSecond.ToRadians() * Time::GetDeltaTime();
+	Float3 addAngles = eulerDegreesPerSecond.ToRadians() * Timer::GetDeltaTime();
 	Float3x3 rotationPerSecond = Float3x3::Rotate(addAngles);
-	Float3x3 rotation = gameObject->transform->GetRotation3x3();
-	gameObject->transform->SetRotationMatrix(rotation * rotationPerSecond);
+	Float3x3 rotation = transform->GetRotation3x3();
+	transform->SetRotationMatrix(rotation * rotationPerSecond);
 }
 std::string Spin::ToString() const
 {

@@ -16,7 +16,7 @@ Float2::Float2(const Float3& xy) : x(xy.x), y(xy.y) {}
 Float2::Float2(const Float4& xy) : x(xy.x), y(xy.y) {}
 Float2 Float2::Direction(float radians)
 {
-	return Float2(cos(radians), sin(radians));
+	return Float2(mathf::Cos(radians), mathf::Sin(radians));
 }
 
 
@@ -32,11 +32,11 @@ float Float2::Length() const
 }
 float Float2::AngleDegrees() const
 {
-	return mathf::ToDegrees(atan2(y, x));
+	return mathf::ToDegrees(mathf::Atan2(y, x));
 }
 float Float2::AngleRadians() const
 {
-	return atan2(y, x);
+	return mathf::Atan2(y, x);
 }
 Float2 Float2::Normalize() const
 {
@@ -47,8 +47,8 @@ Float2 Float2::Normalize() const
 }
 Float2 Float2::Rotate(float radians) const
 {
-	float c = cos(radians);
-	float s = sin(radians);
+	float c = mathf::Cos(radians);
+	float s = mathf::Sin(radians);
 	return Float2(x * c - y * s, x * s + y * c);
 }
 Float2 Float2::Rotate90() const
@@ -88,14 +88,14 @@ float Float2::AngleDegrees(const Float2& a, const Float2& b)
 	float lengths = a.Length() * b.Length();
 	if (lengths <= epsilon)
 		return 0.0f;
-	return mathf::ToDegrees(acos(Dot(a, b) / lengths));
+	return mathf::ToDegrees(mathf::Acos(Dot(a, b) / lengths));
 }
 float Float2::AngleRadians(const Float2& a, const Float2& b)
 {
 	float lengths = a.Length() * b.Length();
 	if (lengths <= epsilon)
 		return 0.0f;
-	return acos(Dot(a, b) / lengths);
+	return mathf::Acos(Dot(a, b) / lengths);
 }
 
 

@@ -33,6 +33,18 @@ namespace mathf
 	float Clamp(float value, float min, float max);
 	float ToDegrees(float radians);
 	float ToRadians(float degrees);
+	float Sign(float value);
+	float Sin(float radiant);
+	float Cos(float radiant);
+	float Tan(float radiant);
+	float Asin(float value);
+	float Acos(float value);
+	float Atan(float z);
+	float Atan2(float y, float x);
+	template<int N>
+	float IntegerPow(float a);
+	template<int N>
+	float Factorial();
 }
 
 

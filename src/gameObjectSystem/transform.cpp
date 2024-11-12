@@ -46,6 +46,21 @@ void Transform::SetPosition(const Float3& position)
 	this->position = position;
 	updateLocalToWorldMatrix = true;
 }
+void Transform::AddToPosition(float x, float y, float z)
+{
+	Float3 position(x, y, z);
+	if (position == Float3::zero)
+		return;
+	this->position += position;
+	updateLocalToWorldMatrix = true;
+}
+void Transform::AddToPosition(const Float3& position)
+{
+	if (position == Float3::zero)
+		return;
+	this->position += position;
+	updateLocalToWorldMatrix = true;
+}
 void Transform::SetRotationMatrix(const Float3x3& rotationMatrix)
 {
 	if (this->rotationMatrix == rotationMatrix)

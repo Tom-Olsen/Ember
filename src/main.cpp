@@ -7,53 +7,29 @@
 // TODO now:
 // - refactor code and make everything cleaner!
 // - better lighting model (specular highlights etc.)
+// - add gameObject selection (need gizmos => ui renderpass)
+// - text rendering
+// - blender model import
 
 // TODO long term:
 // - proper quaternion support
-// - reduce normalMatrix to 3x3 matrix in transform and shader
 // - 3d ui renderpass that draws on top of everything and is not affected by the camera (constant view/projection matrix)
-// - input system (get inputs from SdlWindow->HandlEvents() and send them to the active scene)
 // - render image while resizing
 // - implement game physics fixedUpdate loop
-// - camera controller script
-// - shadows
 // - post processing
 // - skybox
 // - particles (instancing)
 // - physics
 // - audio
-// - Material parent class with inheritance: ForwardMaterial, ShadowMaterial
 // - gameobject clipping logic (requires bounding box)
-// - uniform buffer types hard coded via binding name. make it dynamic
 // - change shared ptr in VulkanUniformBuffer.buffer to unique ptr
 // - support arrays in spirv reflection
 //`- remove unnecessary includes (iostream)
 // - write own logger class
 // - better shadow mapping (PCF, soft shadows, etc.)
-// - replace all sin/cos/tan/asin/acos/atan/atan2 with custom float versions
-
-
-
-#include <fstream>
-std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile)
-{
-    // Open shader file:
-    std::ifstream file(spvFile, std::ios::binary);
-    if (!file.is_open())
-        LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
-
-    // Get file size:
-    file.seekg(0, std::ios::end);
-    size_t fileSize = static_cast<size_t>(file.tellg());
-    file.seekg(0, std::ios::beg);
-
-    // Copy code:
-    std::vector<char> code(fileSize);
-    file.read(code.data(), fileSize);
-    file.close();
-
-    return code;
-}
+// - engine name?
+// - compile engine as .dll and link to game/test project
+// - imgui integration
 
 
 
@@ -65,10 +41,9 @@ int main()
     // Initialization:
     Logger::Init();
     Application app;
-    //MaterialManager::GetMaterial("defaultMaterial")->PrintUniformBuffers();
-    //return 0;
-
     ShadowRenderPass* shadowRenderPass = dynamic_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"));
+
+
 
     // Build simple scene:
     Scene* scene = new Scene();
@@ -81,8 +56,8 @@ int main()
         Camera* cameraComponent = new Camera();
         camera->AddComponent<Camera>(cameraComponent);
     
-        //Spin* spin = new Spin(Float3(60.0f, 00.0f, 00.0f));
-        //camera->AddComponent<Spin>(spin);
+		CameraController* cameraController = new CameraController();
+		camera->AddComponent<CameraController>(cameraController);
     
         scene->AddGameObject(camera);
 		scene->SetActiveCamera(cameraComponent);

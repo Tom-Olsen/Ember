@@ -58,10 +58,10 @@ public:
 	// Static members:
 	static Int2 zero;
 	static Int2 one;
-	static Int2 right;	// +x
-	static Int2 left;	// -x
-	static Int2 up;		// +y
-	static Int2 down;	// -y
+	static Int2 right;	// +x = ( 1, 0).
+	static Int2 left;	// -x = (-1, 0).
+	static Int2 up;		// +y = ( 0, 1).
+	static Int2 down;	// -y = ( 0,-1).
 };
 
 

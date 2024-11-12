@@ -1,5 +1,7 @@
 #include "material.h"
 #include "renderPassManager.h"
+#include "forwardPipeline.h"
+#include "shadowPipeline.h"
 #include "logger.h"
 #include <vector>
 #include <fstream>

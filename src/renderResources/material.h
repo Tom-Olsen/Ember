@@ -6,8 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include "vulkanContext.h"
-#include "forwardPipeline.h"
-#include "shadowPipeline.h"
+#include "pipeline.h"
 #include "spirvReflect.h"
 
 

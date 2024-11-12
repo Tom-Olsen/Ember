@@ -32,6 +32,8 @@ public: // Methods:
 	// Setters:
 	void SetPosition(float x, float y, float z);
 	void SetPosition(const Float3& position);
+	void AddToPosition(float x, float y, float z);
+	void AddToPosition(const Float3& position);
 	void SetRotationMatrix(const Float3x3& rotationMatrix);
 	void SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder = Uint3(1,0,2), CoordinateSystem system = CoordinateSystem::local);
 	void SetRotationEulerRadians(float radiansX, float radiansY, float radiansZ, Uint3 rotationOrder = Uint3(1,0,2), CoordinateSystem system = CoordinateSystem::local);
