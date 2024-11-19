@@ -5,6 +5,7 @@
 #include "mesh.h"
 #include "materialProperties.h"
 #include "directionalLight.h"
+#include "camera.h"
 
 
 
@@ -14,10 +15,13 @@ public: // Members:
 	Mesh* mesh;
 	std::unique_ptr<MaterialProperties> forwardMaterialProperties;
 	std::unique_ptr<MaterialProperties> shadowMaterialProperties;
+	bool castShadows = true;
+	bool receiveShadows = true;
 
 private: // Members:
 	Material* forwardMaterial;
-	Material* shadowMaterial;
+	static Material* shadowMaterial;
+	static ShadowRenderPass* shadowRenderPass;
 
 public: // Methods:
 	MeshRenderer();
@@ -25,21 +29,21 @@ public: // Methods:
 
 	// Setter:
 	void SetForwardMaterial(Material* forwardMaterial);
-	void SetShadowMaterial(Material* shadowMaterial);
-	void SetForwardRenderMatrizes(const Float4x4& cameraViewMatrix, const Float4x4& cameraProjMatrix);
-	void SetShadowRenderMatrizes(const Float4x4& lightViewMatrix, const Float4x4& lightProjMatrix);
+	void SetForwardRenderMatrizes(Camera* camera);
+	void SetShadowRenderMatrizes(std::array<DirectionalLight*, 2> directionalLights);
 	void SetForwardLightData(const std::array<DirectionalLight*, 2>& directionalLights);
 
-	// Getters:
+	// Forward render pass getters:
 	Material* GetForwardMaterial();
-	Material* GetShadowMaterial();
 	VkDescriptorSet* GetForwardDescriptorSets(uint32_t frameIndex);
-	VkDescriptorSet* GetShadowDescriptorSets(uint32_t frameIndex);
 	VkPipeline& GetForwardPipeline();
-	VkPipeline& GetShadowPipeline();
 	VkPipelineLayout& GetForwardPipelineLayout();
-	VkPipelineLayout& GetShadowPipelineLayout();
 
+	// Shadow render pass getters:
+	static Material* GetShadowMaterial();
+	VkDescriptorSet* GetShadowDescriptorSets(uint32_t frameIndex);
+	static VkPipeline& GetShadowPipeline();
+	static VkPipelineLayout& GetShadowPipelineLayout();
 	// Overrides:
 	std::string ToString() const override;
 

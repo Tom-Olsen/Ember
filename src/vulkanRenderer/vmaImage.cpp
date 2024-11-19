@@ -306,7 +306,7 @@ void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 
 
 // Static methods:
-void CopyImageToImage(VulkanContext* context, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue)
+void VmaImage::CopyImageToImage(VulkanContext* context, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue)
 {
 	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, queue);;
 

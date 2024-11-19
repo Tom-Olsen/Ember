@@ -25,7 +25,7 @@ public: // Methods
     static void Init(VulkanContext* vulkanContext, VulkanRenderer* renderer);
 	static void Clear();
 
-    static void AddMaterial(const std::string name, Material* material);
+    static void AddMaterial(Material* material);
     static Material* GetMaterial(const std::string& name);
     static void DeleteMaterial(const std::string& name);
 

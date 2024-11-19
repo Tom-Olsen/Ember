@@ -1,9 +1,6 @@
-cbuffer DirectionalLightRenderMatrizes : register(b0)
+cbuffer LightMatrizes : register(b0)
 {
-    float4x4 modelMatrix;       // mesh local to world matrix
-    float4x4 viewMatrix;        // light world to local matrix
-    float4x4 projMatrix;        // light projection matrix
-    float4x4 localToClipMatrix; // local to camera clip space matrix: (projection * view * model)
+    float4x4 localToClipMatrixTest[2];  // local to camera clip space matrix: (projection * view * model)
 };
 
 
@@ -23,8 +20,9 @@ struct VertexOutput
 VertexOutput main(VertexInput input)
 {
     float4 pos = float4(input.position, 1.0);
+    pos.w = 1.0f;
     
     VertexOutput output;
-    output.position = mul(localToClipMatrix, pos);
+    output.position = mul(localToClipMatrixTest[0], pos);
     return output;
 }

@@ -62,8 +62,12 @@ void Application::Run()
 		// -what is the exact difference between window and surface and how can it be that the surface extent differs from the window extent?
 		// -are both extend checks in the above if condition necessary?
 
+		// Game update loop:
 		Update();
-		renderer->Render(activeScene);
+
+		// Render loop:
+		if (renderer->Render(activeScene))
+			context->UpdateFrameIndex();
 	}
 }
 void Application::SetScene(Scene* scene)
@@ -76,17 +80,13 @@ void Application::SetScene(Scene* scene)
 // Private methods:
 void Application::Update()
 {
-	// Update all game objects:
-	for (auto& gameObj : activeScene->gameObjects)
+	// Update all components of all game objects:
+	for (auto& [_, gameObject] : activeScene->gameObjects)
 	{
-		GameObject* gameObject = gameObj.second.get();
 		if (gameObject->isActive)
 		{
-			//LOG_INFO(gameObject->name);
-			for (auto& comp : gameObject->components)
+			for (auto& [_, component] : gameObject->components)
 			{
-				Component* component = comp.second.get();
-				//component->PrintType();
 				if (component->isActive)
 					component->Update();
 			}

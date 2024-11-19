@@ -2,13 +2,14 @@
 #include "vulkanMacros.h"
 #include "mesh.h"
 #include "vulkanPushConstant.h"
+#include "renderPassManager.h"
 #include <vector>
 #include <fstream>
 
 
 
 // Constructor:
-ShadowPipeline::ShadowPipeline(VulkanContext* context, VkRenderPass* renderPass,
+ShadowPipeline::ShadowPipeline(VulkanContext* context,
     const std::vector<char>& vertexCode,
     const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
@@ -21,7 +22,7 @@ ShadowPipeline::ShadowPipeline(VulkanContext* context, VkRenderPass* renderPass,
     VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
 
     // Create pipeline:
-    CreatePipeline(renderPass, vertexShaderModule);
+    CreatePipeline(vertexShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
     vkDestroyShaderModule(context->LogicalDevice(), vertexShaderModule, nullptr);
@@ -71,7 +72,7 @@ VkShaderModule ShadowPipeline::CreateShaderModule(const std::vector<char>& code)
     return shaderModule;
 }
 
-void ShadowPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModule& vertexShaderModule)
+void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
 {
     // Vertex shader:
     VkPipelineShaderStageCreateInfo vertexShaderStageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -165,7 +166,7 @@ void ShadowPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModu
     pipelineInfo.pColorBlendState = &colorBlendState;			// Color blending
     pipelineInfo.pDynamicState = nullptr;						// no dynamic states	
     pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = *renderPass;
+    pipelineInfo.renderPass = RenderPassManager::GetRenderPass("shadowRenderPass")->renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.basePipelineIndex = -1;

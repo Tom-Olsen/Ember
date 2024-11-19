@@ -14,7 +14,7 @@
 class ForwardPipeline : public Pipeline
 {
 public: // Methods:
-	ForwardPipeline(VulkanContext* context, VkRenderPass* renderPass,
+	ForwardPipeline(VulkanContext* context,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
 		const std::vector<VkDescriptorSetLayoutBinding>& bindings);
@@ -23,7 +23,7 @@ public: // Methods:
 private: // Methods:
 	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 	VkShaderModule CreateShaderModule(const std::vector<char>& code);
-	void CreatePipeline(VkRenderPass* renderPass, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
+	void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
 };
 
 

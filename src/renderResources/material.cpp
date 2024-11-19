@@ -1,5 +1,4 @@
 #include "material.h"
-#include "renderPassManager.h"
 #include "forwardPipeline.h"
 #include "shadowPipeline.h"
 #include "logger.h"
@@ -13,7 +12,6 @@ Material::Material(VulkanContext* context, Type type, const std::string& name, c
 {
 	this->context = context;
 	this->name = name;
-	this->frameIndex = 0;
 	this->type = type;
 
 	// Forward material creation:
@@ -30,7 +28,7 @@ Material::Material(VulkanContext* context, Type type, const std::string& name, c
 		GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		// Create pipeline:
-		pipeline = std::make_unique<ForwardPipeline>(context, &RenderPassManager::GetRenderPass("forwardRenderPass")->renderPass, vertexCode, fragmentCode, bindings);
+		pipeline = std::make_unique<ForwardPipeline>(context, vertexCode, fragmentCode, bindings);
 	}
 
 	// Shadow material creation:
@@ -42,7 +40,7 @@ Material::Material(VulkanContext* context, Type type, const std::string& name, c
 		GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
 
 		// Create pipeline:
-		pipeline = std::make_unique<ShadowPipeline>(context, &RenderPassManager::GetRenderPass("shadowRenderPass")->renderPass, vertexCode, bindings);
+		pipeline = std::make_unique<ShadowPipeline>(context, vertexCode, bindings);
 	}
 }
 
@@ -106,16 +104,13 @@ void Material::PrintBindings() const
 		output += "DescriptorCount: " + std::to_string(bindings[i].descriptorCount) + "\n";
 		output += "StageFlags: " + stageFlags + "\n\n";
 	}
-	LOG_INFO(output);
+	LOG_TRACE(output);
 }
 void Material::PrintUniformBuffers() const
 {
 	std::string output = "\nMaterial: " + name + "\n\n";
-	for (const auto& [key, value] : uniformBufferBlockMap)
-	{
-		output += "UniformBufferBlock: " + key + "\n";
-		output += value->ToString() + "\n\n";
-	}
+	for (const auto& [_, value] : uniformBufferBlockMap)
+		output += value->ToString() + "\n";
 	LOG_INFO(output);
 }
 
@@ -173,7 +168,7 @@ void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect,
 			if (bindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
 			{
 				SpvReflectBlockVariable& blockReflection = bindingReflection->block;
-				UniformBufferBlock* uniformBufferBlock = shaderReflect.GetUniformBufferBlock(blockReflection, setIndex, bindingIndex);
+				UniformBufferBlock* uniformBufferBlock = shaderReflect.GetUniformBufferBlock(blockReflection, setReflection->set, bindingReflection->binding);
 				uniformBufferBlockMap.emplace(uniformBufferBlock->name, uniformBufferBlock);
 			}
 		}

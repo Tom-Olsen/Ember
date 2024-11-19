@@ -31,7 +31,6 @@ public: // Members:
 	std::unique_ptr<Pipeline> pipeline;
 
 private: // Members:
-	uint32_t frameIndex;
 	Type type;
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
 	std::vector<std::string> bindingNames;

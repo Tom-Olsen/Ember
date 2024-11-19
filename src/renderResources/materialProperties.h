@@ -15,8 +15,8 @@
 template<typename T>
 struct ResourceBinding
 {
-	uint32_t binding;
 	T resource;
+	uint32_t binding;
 };
 
 
@@ -48,6 +48,8 @@ public: // Methods:
 	// Setters:
 	template<typename T>
 	void SetValue(const std::string& blockName, const std::string& memberName, const T& value);
+	template<typename T>
+	void SetValue(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const T& value);
 	void SetSampler(const std::string& name, VulkanSampler* sampler);
 	void SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler);
 	void SetTexture2d(const std::string& name, Texture2d* texture2d);

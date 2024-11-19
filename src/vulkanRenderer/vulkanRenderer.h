@@ -31,7 +31,7 @@ private: // Members:
 public: // Methods:
 	VulkanRenderer(VulkanContext* context);
 	~VulkanRenderer();
-	void Render(Scene* scene);
+	bool Render(Scene* scene);
 
 private: // Methods:
 	void ResizeSwapchain();

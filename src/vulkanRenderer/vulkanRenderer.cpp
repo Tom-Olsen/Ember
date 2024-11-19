@@ -37,7 +37,7 @@ VulkanRenderer::~VulkanRenderer()
 
 
 // Public methods:
-void VulkanRenderer::Render(Scene* scene)
+bool VulkanRenderer::Render(Scene* scene)
 {
 	// Resize Swapchain if needed:
 	VkExtent2D windowExtent = context->window->Extent();
@@ -52,16 +52,16 @@ void VulkanRenderer::Render(Scene* scene)
 	// Wait for fence of previous frame with same frameIndex to finish:
 	VKA(vkWaitForFences(context->LogicalDevice(), 1, &fences[context->frameIndex], VK_TRUE, UINT64_MAX));
 	if (!AcquireImage() || scene->activeCamera == nullptr)
-		return;
+		return 0;
 	VKA(vkResetFences(context->LogicalDevice(), 1, &fences[context->frameIndex]));
 
 	RecordShadowCommandBuffer(scene);
 	RecordForwardCommandBuffer(scene);
 	SubmitCommandBuffers();
 	if (!PresentImage())
-		return;
+		return 0;
 
-	context->UpdateFrameIndex();
+	return 1;
 }
 
 
@@ -131,23 +131,16 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		{
 			// Push constants:
 			VulkanPushConstant pushTime(Timer::GetTime4(), Timer::GetDeltaTime4());
-		
-			for (auto& pair : scene->meshRenderers)
+
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, MeshRenderer::GetShadowPipeline());
+			vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VulkanPushConstant), &pushTime);
+			for (auto& [_, meshRenderer] : scene->meshRenderers)
 			{
-				MeshRenderer* meshRenderer = pair.second;
-				if (meshRenderer->IsActive() && meshRenderer->GetShadowMaterial() != nullptr)
+				if (meshRenderer->IsActive() && meshRenderer->castShadows)
 				{
-					if (scene->directionalLights[0] != nullptr)
-					{
-						meshRenderer->SetShadowRenderMatrizes(scene->directionalLights[0]->GetViewMatrix(), scene->directionalLights[0]->GetProjectionMatrix());
-						meshRenderer->shadowMaterialProperties->UpdateUniformBuffers(context->frameIndex);
-					}
+					meshRenderer->SetShadowRenderMatrizes(scene->directionalLights);
+					meshRenderer->shadowMaterialProperties->UpdateUniformBuffers(context->frameIndex);
 
-					// TODO: move these two outside of for loop and do them for each material only once.
-					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipeline());
-					vkCmdPushConstants(commandBuffer, meshRenderer->GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VulkanPushConstant), &pushTime);
-
-					// TODO: clean this up
 					const VkDeviceSize offsets[1] = { 0 };
 					vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
 					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
@@ -161,10 +154,12 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 	}
 	VKA(vkEndCommandBuffer(commandBuffer));
 }
-
+#include <iostream>
+#include "materialManager.h"
 void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 {
 	vkResetCommandPool(context->LogicalDevice(), forwardCommands[context->frameIndex].pool, 0);
+	// vkResetCommandBuffer(forwardCommands[context->frameIndex].buffer, 0); // requires VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag in commandPool creation
 	VkCommandBuffer commandBuffer = forwardCommands[context->frameIndex].buffer;
 
 	// Begin command buffer:
@@ -194,14 +189,12 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 			// Push constants:
 			VulkanPushConstant pushTime(Timer::GetTime4(), Timer::GetDeltaTime4());
 
-			for (auto& pair : scene->meshRenderers)
+			for (auto& [_, meshRenderer] : scene->meshRenderers)
 			{
-				MeshRenderer* meshRenderer = pair.second;
 				if (meshRenderer->IsActive())
 				{
-					meshRenderer->SetForwardRenderMatrizes(scene->activeCamera->GetViewMatrix(), scene->activeCamera->GetProjectionMatrix());
-					if (scene->directionalLights[0] != nullptr)
-						meshRenderer->SetForwardLightData(scene->directionalLights);
+					meshRenderer->SetForwardRenderMatrizes(scene->activeCamera);
+					meshRenderer->SetForwardLightData(scene->directionalLights);
 					meshRenderer->forwardMaterialProperties->UpdateUniformBuffers(context->frameIndex);
 
 					// TODO: move these two outside of for loop and do them for each material only once.
@@ -225,10 +218,10 @@ void VulkanRenderer::SubmitCommandBuffers()
 {
 	// Shadow render pass:
 	{
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // wait at color attachment stage (fragment shader).
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;	// wait at depth and stencil test stage
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &acquireSemaphores[context->frameIndex];	// wait for acquireSemaphor
+		submitInfo.pWaitSemaphores = &acquireSemaphores[context->frameIndex];			// wait for acquireSemaphor
 		submitInfo.pWaitDstStageMask = &waitStage;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &shadowCommands[context->frameIndex].buffer;
@@ -239,7 +232,7 @@ void VulkanRenderer::SubmitCommandBuffers()
 
 	// Forward render pass:
 	{
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // wait at color attachment stage (fragment shader).
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;			// wait at fragment shader stage
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = &shadowToForwardSemaphores[context->frameIndex];	// wait for shadowToForwardSemaphore
@@ -247,7 +240,7 @@ void VulkanRenderer::SubmitCommandBuffers()
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &forwardCommands[context->frameIndex].buffer;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &releaseSemaphores[context->frameIndex]; // signal releaseSemaphor when done
+		submitInfo.pSignalSemaphores = &releaseSemaphores[context->frameIndex];			// signal releaseSemaphor when done
 		VKA(vkQueueSubmit(context->logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[context->frameIndex])); // signal fence when done
 	}
 }

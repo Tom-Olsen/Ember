@@ -2,13 +2,15 @@
 #include "vulkanMacros.h"
 #include "mesh.h"
 #include "vulkanPushConstant.h"
+#include "renderPassManager.h"
 #include <fstream>
 #include <vector>
+#include<iostream>
 
 
 
 // Constructor:
-ForwardPipeline::ForwardPipeline(VulkanContext* context, VkRenderPass* renderPass,
+ForwardPipeline::ForwardPipeline(VulkanContext* context,
     const std::vector<char>& vertexCode,
     const std::vector<char>& fragmentCode,
     const std::vector<VkDescriptorSetLayoutBinding>& bindings)
@@ -23,7 +25,7 @@ ForwardPipeline::ForwardPipeline(VulkanContext* context, VkRenderPass* renderPas
     VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
 
     // Create pipeline:
-    CreatePipeline(renderPass, vertexShaderModule, fragmentShaderModule);
+    CreatePipeline(vertexShaderModule, fragmentShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
     vkDestroyShaderModule(context->LogicalDevice(), vertexShaderModule, nullptr);
@@ -74,7 +76,7 @@ VkShaderModule ForwardPipeline::CreateShaderModule(const std::vector<char>& code
     return shaderModule;
 }
 
-void ForwardPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
+void ForwardPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
 {
     // Vertex shader:
     VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -139,7 +141,7 @@ void ForwardPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderMod
 	depthState.depthBoundsTestEnable = VK_FALSE;      // allows to keep only fragments in the below defined range
 	depthState.stencilTestEnable = VK_FALSE;          // stencil buffer operations (not used yet)
 
-    // Configuration per attached framebuffer:
+	// Color blending:
     VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
     colorBlendAttachmentState.blendEnable = VK_FALSE;
     colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -193,7 +195,7 @@ void ForwardPipeline::CreatePipeline(VkRenderPass* renderPass, const VkShaderMod
     pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
     pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
     pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = *renderPass;
+    pipelineInfo.renderPass = RenderPassManager::GetRenderPass("forwardRenderPass")->renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
 	pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline

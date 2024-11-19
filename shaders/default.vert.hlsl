@@ -60,7 +60,3 @@ VertexOutput main(VertexInput input)
     output.worldPos = mul(modelMatrix, pos).xyz;
     return output;
 }
-
-// Notes:
-// - SV = System Value
-// - SV_POSITION is a system value that represents the position of a vertex in clip space

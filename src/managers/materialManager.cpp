@@ -20,13 +20,13 @@ void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
 	MaterialManager::context = context;
 
 	Material* defaultMaterial = new Material(context, Material::Type::forward, "defaultMaterial", "../shaders/default.vert.spv", "../shaders/default.frag.spv");
-	AddMaterial(defaultMaterial->name, defaultMaterial);
+	AddMaterial(defaultMaterial);
 
 	Material* colorMaterial = new Material(context, Material::Type::forward, "colorMaterial", "../shaders/color.vert.spv", "../shaders/color.frag.spv");
-	AddMaterial(colorMaterial->name, colorMaterial);
+	AddMaterial(colorMaterial);
 
 	Material* shadowMaterial = new Material(context, Material::Type::shadow, "shadowMaterial", "../shaders/shadow.vert.spv");
-	AddMaterial(shadowMaterial->name, shadowMaterial);
+	AddMaterial(shadowMaterial);
 }
 void MaterialManager::Clear()
 {
@@ -37,12 +37,12 @@ void MaterialManager::Clear()
 
 
 // Add/get/delete:
-void MaterialManager::AddMaterial(const std::string name, Material* material)
+void MaterialManager::AddMaterial(Material* material)
 {
 	// If material already contained in MaterialManager, do nothing.
-	if (materials.emplace(name, std::unique_ptr<Material>(material)).second == false)
+	if (materials.emplace(material->name, std::unique_ptr<Material>(material)).second == false)
 	{
-		LOG_WARN("Material with the name: {} already exists in MaterialManager!", name);
+		LOG_WARN("Material with the name: {} already exists in MaterialManager!", material->name);
 		return;
 	}
 }

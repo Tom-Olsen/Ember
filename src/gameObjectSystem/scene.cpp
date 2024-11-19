@@ -24,19 +24,29 @@ Scene::~Scene()
 void Scene::AddGameObject(GameObject* gameObject)
 {
 	// If scene aleady contains gameObject, do nothing.
-	if (gameObjects.emplace(gameObject->name, std::unique_ptr<GameObject>(gameObject)).second == false)
+	if (gameObjects.find(gameObject->name) != gameObjects.end())
 	{
 		LOG_WARN("GameObject '{}' is already in scene!", gameObject->name);
 		return;
 	}
+	// Add gameObject and associated pointers to scene.
 	else
 	{
+		gameObjects[gameObject->name] = std::unique_ptr<GameObject>(gameObject);
+
 		MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
 		if (meshRenderer != nullptr)
 			meshRenderers.emplace(gameObject->name, meshRenderer);
 		DirectionalLight* directionalLight = gameObject->GetComponent<DirectionalLight>();
 		if (directionalLight != nullptr)
-			directionalLights[0] = directionalLight;
+		{
+			for (int i = 0; i < 2; i++)
+				if (directionalLights[i] == nullptr)
+				{
+					directionalLights[i] = directionalLight;
+					break;
+				}
+		}
 	}
 }
 GameObject* Scene::GetGameObject(std::string name)
@@ -55,6 +65,18 @@ void Scene::RemoveGameObject(std::string name)
 	auto it = gameObjects.find(name);
 	if (it != gameObjects.end())
 	{
+		GameObject* gameObject = it->second.get();
+		DirectionalLight* directionalLight = gameObject->GetComponent<DirectionalLight>();
+		if (directionalLight != nullptr)
+		{
+			for (int i = 0; i < 2; i++)
+				if (directionalLights[i] == directionalLight)
+				{
+					directionalLights[i] = nullptr;
+					break;
+				}
+		}
+
 		gameObjects.erase(it);
 		meshRenderers.erase(name);
 	}

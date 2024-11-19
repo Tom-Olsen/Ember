@@ -32,6 +32,8 @@ public: // Methods:
 	// Setters:
 	template<typename T>
 	void SetValue(const std::string& memberName, const T& value);
+	template<typename T>
+	void SetValue(const std::string& arrayName, uint32_t arrayIndex, const T& value);
 };
 
 

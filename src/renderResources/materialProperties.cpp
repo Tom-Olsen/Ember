@@ -20,11 +20,12 @@ MaterialProperties::MaterialProperties(Material* material)
 	{
 		for (uint32_t i = 0; i < material->GetBindingCount(); i++)
 		{
-			if (material->GetBindingType(i) == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+			VkDescriptorType type = material->GetBindingType(i);
+			if (type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
 				InitUniformBufferResourceBinding(material->GetBindingName(i), material->GetBindingIndex(i), frameIndex);
-			else if (material->GetBindingType(i) == VK_DESCRIPTOR_TYPE_SAMPLER)
+			else if (type == VK_DESCRIPTOR_TYPE_SAMPLER)
 				InitSamplerResourceBinding(material->GetBindingName(i), material->GetBindingIndex(i), SamplerManager::GetSampler("colorSampler"), frameIndex);
-			else if (material->GetBindingType(i) == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+			else if (type == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
 				InitTexture2dResourceBinding(material->GetBindingName(i), material->GetBindingIndex(i), TextureManager::GetTexture2d("white"), frameIndex);
 		}
 	}
@@ -61,79 +62,79 @@ void MaterialProperties::UpdateUniformBuffers(uint32_t frameIndex)
 template<typename T>
 void MaterialProperties::SetValue(const std::string& blockName, const std::string& memberName, const T& value)
 {
+	// If cbuffer with 'blockName' doesnt exist, skip:
 	auto it = uniformBufferMaps[context->frameIndex].find(blockName);
-	if (it != uniformBufferMaps[context->frameIndex].end())
-	{
+	if (it == uniformBufferMaps[context->frameIndex].end())
+		return;
+
+	// T = bool needs special handling:
+	if constexpr (std::is_same<T, bool>::value)
+		it->second.resource.SetValue(memberName, static_cast<int>(value));
+	else
 		it->second.resource.SetValue(memberName, value);
-		updateUniformBuffer[blockName] = true;
-	}
+	updateUniformBuffer[blockName] = true;
+}
+template<typename T>
+void MaterialProperties::SetValue(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const T& value)
+{
+	// If cbuffer with 'blockName' doesnt exist, skip:
+	auto it = uniformBufferMaps[context->frameIndex].find(blockName);
+	if (it == uniformBufferMaps[context->frameIndex].end())
+		return;
+
+	// check if type is bool:
+	if constexpr (std::is_same<T, bool>::value)
+		it->second.resource.SetValue(memberName, arrayindex, static_cast<int>(value));
+	else
+		it->second.resource.SetValue(memberName, arrayindex, value);
+	updateUniformBuffer[blockName] = true;
 }
 void MaterialProperties::SetSampler(const std::string& name, VulkanSampler* sampler)
 {
-	// if key exists, replace its value
+	// If sampler with 'name' doesnt exist, skip:
 	auto it = samplerMaps[context->frameIndex].find(name);
-	if (it != samplerMaps[context->frameIndex].end())
-	{
-		if (it->second.resource != sampler)
-		{
-			it->second.resource = sampler;
-			UpdateDescriptorSet(context->frameIndex, it->second);
-		}
-	}
-	else
-		LOG_WARN("Sampler '{}' not found in samplerMap!", name);
+	if (it == samplerMaps[context->frameIndex].end() || it->second.resource == sampler)
+		return;
+
+	it->second.resource = sampler;
+	UpdateDescriptorSet(context->frameIndex, it->second);
 }
 void MaterialProperties::SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler)
 {
-	// if key exists, replace its value
 	for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 	{
+		// If sampler with 'name' doesnt exist, skip:
 		auto it = samplerMaps[frameIndex].find(name);
-		if (it != samplerMaps[frameIndex].end())
-		{
-			VKA(vkDeviceWaitIdle(context->LogicalDevice()));
-			if (it->second.resource != sampler)
-			{
-				it->second.resource = sampler;
-				UpdateDescriptorSet(frameIndex, it->second);
-			}
-		}
-		else
-			LOG_WARN("Sampler '{}' not found in samplerMap!", name);
+		if (it == samplerMaps[frameIndex].end() || it->second.resource == sampler)
+			return;
+
+		it->second.resource = sampler;
+		VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+		UpdateDescriptorSet(frameIndex, it->second);
 	}
 }
 void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* texture)
 {
-	// if key exists, replace its value
+	// If texture with 'name' doesnt exist, skip:
 	auto it = texture2dMaps[context->frameIndex].find(name);
-	if (it != texture2dMaps[context->frameIndex].end())
-	{
-		if (it->second.resource != texture)
-		{
-			it->second.resource = texture;
-			UpdateDescriptorSet(context->frameIndex, it->second);
-		}
-	}
-	else
-		LOG_WARN("Texture2d '{}' not found in texture2dMap!", name);
+	if (it == texture2dMaps[context->frameIndex].end() || it->second.resource == texture)
+		return;
+
+	it->second.resource = texture;
+	UpdateDescriptorSet(context->frameIndex, it->second);
 }
 void MaterialProperties::SetTexture2dForAllFrames(const std::string& name, Texture2d* texture)
 {
-	// if key exists, replace its value
 	for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 	{
+		// If texture with 'name' doesnt exist, skip:
 		auto it = texture2dMaps[frameIndex].find(name);
-		if (it != texture2dMaps[frameIndex].end())
-		{
-			VKA(vkDeviceWaitIdle(context->LogicalDevice()));
-			if (it->second.resource != texture)
-			{
-				it->second.resource = texture;
-				UpdateDescriptorSet(frameIndex, it->second);
-			}
-		}
-		else
-			LOG_WARN("Texture2d '{}' not found in texture2dMap!", name);
+		if (it == texture2dMaps[frameIndex].end() || it->second.resource == texture)
+			return;
+
+		it->second.resource = texture;
+		VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+		UpdateDescriptorSet(frameIndex, it->second);
 	}
 }
 
@@ -146,19 +147,16 @@ void MaterialProperties::PrintMaps() const
 	{
 		LOG_INFO("UniformBufferMaps[{}]:", frameIndex);
 		for (const auto& [name, resourceBinding] : uniformBufferMaps[frameIndex])
-		{
 			LOG_TRACE("binding: {}, bindingName: {}", resourceBinding.binding, name);
-		}
+
 		LOG_INFO("SamplerMaps[{}]:", frameIndex);
 		for (const auto& [name, resourceBinding] : samplerMaps[frameIndex])
-		{
 			LOG_TRACE("binding: {}, bindingName: {}, samplerName: {}", resourceBinding.binding, name, resourceBinding.resource->name);
-		}
+
 		LOG_INFO("Texture2dMaps[{}]:", frameIndex);
 		for (const auto& [name, resourceBinding] : texture2dMaps[frameIndex])
-		{
 			LOG_TRACE("binding: {}, bindingName: {}, textureName: {}", resourceBinding.binding, name, resourceBinding.resource->name);
-		}
+
 		LOG_TRACE("\n");
 	}
 }
@@ -173,7 +171,7 @@ void MaterialProperties::InitUniformBufferResourceBinding(std::string name, uint
 	if (it == uniformBufferMaps[frameIndex].end())
 	{
 		VulkanUniformBuffer uniformBuffer(context, material->GetUniformBufferBlock(name));
-		uniformBufferMaps[frameIndex].emplace(name, ResourceBinding<VulkanUniformBuffer>(binding, uniformBuffer));
+		uniformBufferMaps[frameIndex].emplace(name, ResourceBinding<VulkanUniformBuffer>(uniformBuffer, binding));
 		updateUniformBuffer.emplace(name, true);
 	}
 }
@@ -181,13 +179,13 @@ void MaterialProperties::InitSamplerResourceBinding(std::string name, uint32_t b
 {
 	auto it = samplerMaps[frameIndex].find(name);
 	if (it == samplerMaps[frameIndex].end())
-		samplerMaps[frameIndex].emplace(name, ResourceBinding<VulkanSampler*>(binding, sampler));
+		samplerMaps[frameIndex].emplace(name, ResourceBinding<VulkanSampler*>(sampler, binding));
 }
 void MaterialProperties::InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d, uint32_t frameIndex)
 {
 	auto it = texture2dMaps[frameIndex].find(name);
 	if (it == texture2dMaps[frameIndex].end())
-		texture2dMaps[frameIndex].emplace(name, ResourceBinding<Texture2d*>(binding, texture2d));
+		texture2dMaps[frameIndex].emplace(name, ResourceBinding<Texture2d*>(texture2d, binding));
 }
 void MaterialProperties::InitDescriptorSets()
 {
@@ -278,8 +276,18 @@ void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBindin
 
 
 // Explicit template instantiation:
+template void MaterialProperties::SetValue<int>(const std::string& blockName, const std::string& memberName, const int& value);
+template void MaterialProperties::SetValue<bool>(const std::string& blockName, const std::string& memberName, const bool& value);
 template void MaterialProperties::SetValue<float>(const std::string& blockName, const std::string& memberName, const float& value);
 template void MaterialProperties::SetValue<Float2>(const std::string& blockName, const std::string& memberName, const Float2& value);
 template void MaterialProperties::SetValue<Float3>(const std::string& blockName, const std::string& memberName, const Float3& value);
 template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& memberName, const Float4& value);
 template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& memberName, const Float4x4& value);
+
+template void MaterialProperties::SetValue<int>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const int& value);
+template void MaterialProperties::SetValue<bool>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const bool& value);
+template void MaterialProperties::SetValue<float>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const float& value);
+template void MaterialProperties::SetValue<Float2>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const Float2& value);
+template void MaterialProperties::SetValue<Float3>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const Float3& value);
+template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const Float4& value);
+template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const Float4x4& value);

@@ -17,12 +17,14 @@
 
 
 
-// UniformBufferMember pubic methods:
+// UniformBufferMember public methods:
 std::string UniformBufferMember::ToString() const
 {
-    return "Name: " + name + ", Offset: " + std::to_string(offset) + ", Size: " + std::to_string(size) + ", Type: " + type;
+    std::string output = "offset=" + std::to_string(offset) + ", size=" + std::to_string(size);
+    for (const auto& [name, subMember] : subMembers)
+		output += "\n" + name + ": " + subMember->ToString();
+	return output;
 }
-
 
 
 // UniformBufferBlock Constructor/Destructor:
@@ -37,16 +39,15 @@ UniformBufferBlock::~UniformBufferBlock()
 {
 	for (auto& member : members)
 		delete member.second;
-	LOG_INFO("UniformBufferBlock '{}' destroyed.", name);
 }
 
 
 
 // UniformBufferBlock public methods:
-void UniformBufferBlock::AddMember(UniformBufferMember* member)
+void UniformBufferBlock::AddMember(std::string name, UniformBufferMember* member)
 {
     // Take ownership of UniformBufferMember pointer:
-    members.emplace(member->name, member);
+    members.emplace(name, member);
 
 	// Adjust size:
     uint32_t newSize = member->offset + member->size;
@@ -62,9 +63,9 @@ UniformBufferMember* UniformBufferBlock::GetMember(const std::string& name) cons
 }
 std::string UniformBufferBlock::ToString() const
 {
-    std::string output = "Uniform Buffer Block(binding=" + std::to_string(bindingIndex) + "):\n";
-    for (const auto& member : members)
-        output += "  " + member.second->ToString() + "\n";
+    std::string output = name + "(binding=" + std::to_string(bindingIndex) + "):\n";
+    for (const auto& [name, member] : members)
+        output += name + ": " + member->ToString() + "\n";
     return output;
 }
 
@@ -91,14 +92,6 @@ std::vector<SpvReflectDescriptorSet*> SpirvReflect::GetDescriptorSetsReflection(
     SPVA(spvReflectEnumerateDescriptorSets(&module, &setCount, sets.data()));
     return sets;
 }
-//std::vector<SpvReflectInterfaceVariable*> SpirvReflect::GetInputVariablesReflection() const
-//{
-//    uint32_t inputCount = 0;
-//    SPVA(spvReflectEnumerateInputVariables(&module, &inputCount, NULL));
-//    std::vector<SpvReflectInterfaceVariable*> inputs(inputCount);
-//    SPVA(spvReflectEnumerateInputVariables(&module, &inputCount, inputs.data()));
-//    return inputs;
-//}
 UniformBufferBlock* SpirvReflect::GetUniformBufferBlock(const SpvReflectBlockVariable& blockReflection, uint32_t setIndex, uint32_t bindingIndex) const
 {
     UniformBufferBlock* uniformBufferBlock = new UniformBufferBlock(blockReflection.name, setIndex, bindingIndex);
@@ -108,19 +101,51 @@ UniformBufferBlock* SpirvReflect::GetUniformBufferBlock(const SpvReflectBlockVar
 		// Create UniformBufferMember:
         SpvReflectBlockVariable& memberReflection = blockReflection.members[memberIndex];
         UniformBufferMember* uniformBufferMember = new UniformBufferMember();
-        uniformBufferMember->name = memberReflection.name;
-        uniformBufferMember->type = GetMemberType(memberReflection.type_description);
+
+        // Base member:
+        std::string memberName = memberReflection.name;
         uniformBufferMember->offset = memberReflection.offset;
         uniformBufferMember->size = memberReflection.size;
 
-        // Array details (not supported yet):
-        //if (member.array.dims_count > 0)
-        //{
-        //    for (uint32_t dimIndex = 0; dimIndex < member.array.dims_count; dimIndex++)
-        //        std::cout << "      Dim[" << dimIndex << "]: " << member.array.dims[dimIndex] << std::endl;
-        //}
+        // Submembers for structs:
+        if (IsStruct(memberReflection) && !IsArray(memberReflection))
+        {
+            for (uint32_t fieldIndex = 0; fieldIndex < memberReflection.member_count; fieldIndex++)
+            {
+                SpvReflectBlockVariable& fieldReflection = memberReflection.members[fieldIndex];
+                UniformBufferMember* field = new UniformBufferMember();
+                field->offset = memberReflection.offset + fieldReflection.offset;
+                field->size = fieldReflection.size;
+                uniformBufferMember->subMembers.emplace(fieldReflection.name, field);
+            }
+        }
 
-        uniformBufferBlock->AddMember(uniformBufferMember);
+        // Submembers for arrays:
+        if (IsArray(memberReflection))
+        {
+            for (uint32_t arrayIndex = 0; arrayIndex < memberReflection.array.dims[0]; arrayIndex++)
+            {
+                UniformBufferMember* element = new UniformBufferMember();
+                element->offset = memberReflection.offset + memberReflection.array.stride * arrayIndex;
+                element->size = memberReflection.array.stride;
+
+                // Subsubmembers for array of structs:
+                if (IsStruct(memberReflection))
+                {
+                    for (uint32_t fieldIndex = 0; fieldIndex < memberReflection.member_count; fieldIndex++)
+                    {
+                        SpvReflectBlockVariable& fieldReflection = memberReflection.members[fieldIndex];
+                        UniformBufferMember* field = new UniformBufferMember();
+                        field->offset = memberReflection.offset + memberReflection.array.stride * arrayIndex + fieldReflection.offset;
+                        field->size = fieldReflection.size;
+                        element->subMembers.emplace(std::string(fieldReflection.name) + "[" + std::to_string(arrayIndex) + "]", field);
+                    }
+                }
+                uniformBufferMember->subMembers.emplace(memberName + "[" + std::to_string(arrayIndex) + "]", element);
+            }
+        }
+
+        uniformBufferBlock->AddMember(memberName, uniformBufferMember);
     }
 
     return uniformBufferBlock;
@@ -128,129 +153,14 @@ UniformBufferBlock* SpirvReflect::GetUniformBufferBlock(const SpvReflectBlockVar
 
 
 
-// Debugging:
-void SpirvReflect::PrintDescriptorSetsInfo() const
-{
-	std::string output = "Descriptor Sets:\n";
-    std::vector<SpvReflectDescriptorSet*> sets = GetDescriptorSetsReflection();
-    for (uint32_t setIndex = 0; setIndex < sets.size(); setIndex++)
-    {
-		SpvReflectDescriptorSet* set = sets[setIndex];
-		output += "set:           " + std::to_string(set->set) + "\n";
-		output += "binding_count: " + std::to_string(set->binding_count) + "\n";
-        for (uint32_t bindingIndex = 0; bindingIndex < set->binding_count; bindingIndex++)
-        {
-            SpvReflectDescriptorBinding* binding = set->bindings[bindingIndex];
-			output += "  spirv_id:        " + std::to_string(binding->spirv_id) + "\n";
-			output += "  name:            " + std::string(binding->name) + "\n";
-			output += "  binding:         " + std::to_string(binding->binding) + "\n";
-			output += "  descriptor_type: " + std::to_string((int)binding->descriptor_type) + " = " + GetSpvReflectDescriptorTypeName(binding->descriptor_type) + "\n";
-			output += "  descriptorCount: " + std::to_string(binding->count) + "\n";
-			output += "  input_attachment_index:" + std::to_string(binding->input_attachment_index) + "\n";
-			output += "  set:" + std::to_string(binding->set) + "\n";
-
-			// If the binding is a uniform buffer, print the layout:
-            if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-            {
-				output += "  Uniform Buffer Layout:\n";
-                SpvReflectBlockVariable& block = binding->block;
-                for (uint32_t memberIndex = 0; memberIndex < block.member_count; memberIndex++)
-                {
-                    SpvReflectBlockVariable& member = block.members[memberIndex];
-                    std::string type = GetMemberType(member.type_description);
-					output += "    Name: " + std::string(member.name) + ", Offset: " + std::to_string(member.offset) + ", Size: " + std::to_string(member.size) + ", Type: " + type + "\n";
-
-                    // If the member is an array, print array details
-                    if (member.array.dims_count > 0)
-                    {
-						output += "    Array Dimensions:\n";
-                        for (uint32_t dimIndex = 0; dimIndex < member.array.dims_count; dimIndex++)
-							output += "      Dim[" + std::to_string(dimIndex) + "]: " + std::to_string(member.array.dims[dimIndex]) + "\n";
-                    }
-
-                    // Nested struct extension not supported yet.
-                }
-            }
-			output += "\n";
-        }
-		output += "\n\n";
-    }
-	LOG_TRACE(output);
-}
-//void SpirvReflect::PrintInputVariablesInfo() const
-//{
-//    std::vector<SpvReflectInterfaceVariable*> inputs = GetInputVariablesReflection();
-//    for (uint32_t i = 0; i < inputs.size(); i++)
-//    {
-//        SpvReflectInterfaceVariable* input = inputs[i];
-//        std::cout << "id:                    " << input->spirv_id << std::endl;
-//        std::cout << "name:                  " << input->name << std::endl;
-//        std::cout << "location:              " << input->location << std::endl;
-//        std::cout << "conmponent:            " << input->location << std::endl;
-//        std::cout << "storage_class value:   " << (int)input->storage_class << std::endl;
-//        std::cout << "storage_class name:    " << GetSpvStorageClassName(input->storage_class) << std::endl;
-//        //std::cout << "semantic:              " << input->semantic << std::endl;
-//        std::cout << "decoration_flags:      " << input->decoration_flags << std::endl;
-//        std::cout << "built_in value:        " << (int)input->built_in << std::endl;
-//        std::cout << "built_in name :        " << GetSpvBuiltInName(input->built_in) << std::endl;
-//        std::cout << "numeric.sca.width:     " << input->numeric.scalar.width << std::endl;
-//        std::cout << "numeric.sca.sign:      " << input->numeric.scalar.signedness << std::endl;
-//        std::cout << "numeric.vec.count:     " << input->numeric.vector.component_count << std::endl;
-//        std::cout << "numeric.mat.count:     " << input->numeric.matrix.column_count << std::endl;
-//        std::cout << "numeric.mat.rows:      " << input->numeric.matrix.row_count << std::endl;
-//        std::cout << "numeric.mat.sstride:   " << input->numeric.matrix.stride << std::endl;
-//        std::cout << "array.dims_count:      " << input->array.dims_count << std::endl;
-//        std::cout << "array.stride:          " << input->array.stride << std::endl;
-//        for (uint32_t i = 0; i < input->array.dims_count; i++)
-//        {
-//            std::cout << "array.dims[" << i << "]: " << input->array.dims[i] << std::endl;
-//            std::cout << "array.spec_const_op_id[" << i << "]: " << input->array.spec_constant_op_ids[i] << std::endl;
-//        }
-//        std::cout << "array.member_count:    " << input->member_count << std::endl;
-//        std::cout << "array.word_offset.loc: " << input->word_offset.location << std::endl;
-//        std::cout << std::endl;
-//    }
-//}
-
-
-
 // SpirvReflect private static methods:
-std::string SpirvReflect::GetMemberType(SpvReflectTypeDescription* typeReflection) const
+bool SpirvReflect::IsStruct(const SpvReflectBlockVariable& memberReflection) const
 {
-	std::string type = "unknown";
-
-    if (typeReflection == nullptr)
-        return type;
-
-    switch (typeReflection->op)
-    {
-    case SpvOpTypeInt:
-        type = "int";
-        break;
-    case SpvOpTypeFloat:
-        type = "float";
-        break;
-    case SpvOpTypeVector:
-        if (typeReflection->type_flags & SPV_REFLECT_TYPE_FLAG_INT)
-            type = "int" + std::to_string(typeReflection->traits.numeric.vector.component_count);
-        else if (typeReflection->type_flags & SPV_REFLECT_TYPE_FLAG_FLOAT)
-            type = "float" + std::to_string(typeReflection->traits.numeric.vector.component_count);
-        break;
-    case SpvOpTypeMatrix:
-        if (typeReflection->type_flags & SPV_REFLECT_TYPE_FLAG_INT)
-            type = "int" + std::to_string(typeReflection->traits.numeric.matrix.row_count) + "x" + std::to_string(typeReflection->traits.numeric.matrix.column_count);
-        else if (typeReflection->type_flags & SPV_REFLECT_TYPE_FLAG_FLOAT)
-            type = "float" + std::to_string(typeReflection->traits.numeric.matrix.row_count) + "x" + std::to_string(typeReflection->traits.numeric.matrix.column_count);
-        break;
-    case SpvOpTypeStruct:
-        type = "struct";
-        break;
-    default:
-        type = "unknown";
-        break;
-    }
-
-    return type;
+    return memberReflection.member_count > 0;
+}
+bool SpirvReflect::IsArray(const SpvReflectBlockVariable& memberReflection) const
+{
+	return memberReflection.array.dims_count > 0;
 }
 std::string SpirvReflect::GetSpvReflectDescriptorTypeName(SpvReflectDescriptorType spvReflectDescriptorType)
 {
