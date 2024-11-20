@@ -101,8 +101,8 @@ void ShadowRenderPass::CreateRenderpass()
 void ShadowRenderPass::CreateFramebuffers()
 {
 	// One framebuffer per swapchain image:
-	framebuffers.resize(context->swapchain->images.size());
-	for (uint32_t i = 0; i < context->swapchain->images.size(); i++)
+	framebuffers.resize(context->framesInFlight);
+	for (uint32_t i = 0; i < context->framesInFlight; i++)
 	{
 		VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 		framebufferInfo.renderPass = renderPass;

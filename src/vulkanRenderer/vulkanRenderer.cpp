@@ -120,7 +120,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		clearValues.depthStencil = { 1.0f, 0 };
 		VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 		renderPassBeginInfo.renderPass = renderPass->renderPass;
-		renderPassBeginInfo.framebuffer = renderPass->framebuffers[imageIndex];
+		renderPassBeginInfo.framebuffer = renderPass->framebuffers[context->frameIndex];
 		renderPassBeginInfo.renderArea.offset = { 0, 0 };
 		renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowRenderPass::shadowMapWidth, ShadowRenderPass::shadowMapHeight };
 		renderPassBeginInfo.clearValueCount = 1;
@@ -154,8 +154,6 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 	}
 	VKA(vkEndCommandBuffer(commandBuffer));
 }
-#include <iostream>
-#include "materialManager.h"
 void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 {
 	vkResetCommandPool(context->LogicalDevice(), forwardCommands[context->frameIndex].pool, 0);

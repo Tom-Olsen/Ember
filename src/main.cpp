@@ -79,7 +79,6 @@ int main()
 		scene->SetActiveCamera(camera);
     }
     {// Directional Light0:
-        LOG_INFO("Light Direction 0 Creation:");
         GameObject* gameObject = new GameObject("directionalLight0");
         Float3 pos = Float3(7.0f, 7.0f, 3.5f);
         Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
@@ -117,7 +116,6 @@ int main()
         scene->AddGameObject(gameObject);
     }
     { // Floor:
-        LOG_INFO("Floor Creation: defaultMaterial");
         GameObject* gameObject = new GameObject("floor");
         gameObject->transform->SetPosition(0.0f, -0.5f, 0.0f);
         gameObject->transform->SetScale(8.0f);
@@ -163,7 +161,6 @@ int main()
         scene->AddGameObject(gameObject);
     }
     {// Cube1:
-        LOG_INFO("Cube 1 Creation:");
         GameObject* gameObject = new GameObject("cube1");
         gameObject->transform->SetPosition(2.0f, 0.0f, 0.0f);
         gameObject->transform->SetRotationEulerDegrees(0.0f, 20.0f, 0.0f);
