@@ -6,6 +6,7 @@
 #include "materialProperties.h"
 #include "directionalLight.h"
 #include "camera.h"
+#include "macros.h"
 
 
 
@@ -30,8 +31,8 @@ public: // Methods:
 	// Setter:
 	void SetForwardMaterial(Material* forwardMaterial);
 	void SetForwardRenderMatrizes(Camera* camera);
-	void SetShadowRenderMatrizes(std::array<DirectionalLight*, 2> directionalLights);
-	void SetForwardLightData(const std::array<DirectionalLight*, 2>& directionalLights);
+	void SetShadowRenderMatrizes(std::array<DirectionalLight*, MAX_D_LIGHTS> directionalLights);
+	void SetForwardLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights);
 
 	// Forward render pass getters:
 	Material* GetForwardMaterial();

@@ -12,6 +12,7 @@
 #include "cameraController.h"
 #include "meshRenderer.h"
 #include "spin.h"
+#include "spinAroundOrigin.h"
 #include "spotLight.h"
 #include "directionalLight.h"
 

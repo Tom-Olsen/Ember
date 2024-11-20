@@ -1,7 +1,7 @@
 #include "shadowMapping.hlsli"
 SamplerState colorSampler : register(s10);
 SamplerComparisonState shadowSampler : register(s11);
-Texture2D colorTexture : register(t20);
+Texture2DArray<float> colorTextures : register(t24);
 Texture2DArray<float> shadowMaps : register(t21);
 
 
@@ -48,12 +48,8 @@ float4 main(FragmentInput input) : SV_TARGET
     float3 worldPos = input.worldPos;
     
     // Shading:
-    float4 color = colorTexture.Sample(colorSampler, uv);
-    
-    // Lighting:
-    float ambient = 0.1f;
-    float3 finalColor = ambient * color.xyz;
-    finalColor += Shadow(worldPos, normal, color.xyz, worldToClipMatrix, directionIntensity, lightColor, shadowMaps, shadowSampler);
-    
-    return float4(finalColor, 1.0f);
+    float index = 0.5f * (sin(pc.time.x) + 1) * (MAX_D_LIGHTS - 1.0f);
+    float4 color = colorTextures.Sample(colorSampler, float3(uv, index));
+   
+    return color;
 }

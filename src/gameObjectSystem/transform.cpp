@@ -106,6 +106,13 @@ void Transform::SetScale(float scale)
 {
 	SetScale(Float3(scale));
 }
+void Transform::SetLocalToWorldMatrix(const Float4x4& localToWorldMatrix)
+{
+	this->localToWorldMatrix = localToWorldMatrix;
+	worldToLocalMatrix = localToWorldMatrix.Inverse();
+	normalMatrix = worldToLocalMatrix.Transpose();
+	updateLocalToWorldMatrix = false;
+}
 
 
 

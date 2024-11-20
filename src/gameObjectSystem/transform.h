@@ -42,6 +42,7 @@ public: // Methods:
 	void SetScale(float scale);
 	void SetScale(float x, float y, float z);
 	void SetScale(const Float3& scale);
+	void SetLocalToWorldMatrix(const Float4x4& localToWorldMatrix);
 
 	// Getters:
 	Float3 GetPosition() const;

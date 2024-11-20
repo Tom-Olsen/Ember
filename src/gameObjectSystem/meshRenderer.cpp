@@ -49,7 +49,7 @@ void MeshRenderer::SetForwardMaterial(Material* forwardMaterial)
 	
 	// Set shadow map sampler and textures:
 	forwardMaterialProperties->SetSamplerForAllFrames("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
-	forwardMaterialProperties->SetTexture2dForAllFrames("shadowMap", shadowRenderPass->shadowMap.get());
+	forwardMaterialProperties->SetTexture2dForAllFrames("shadowMaps", shadowRenderPass->shadowMaps.get());
 }
 void MeshRenderer::SetForwardRenderMatrizes(Camera* camera)
 {
@@ -66,23 +66,23 @@ void MeshRenderer::SetForwardRenderMatrizes(Camera* camera)
 	forwardMaterialProperties->SetValue(name, "normalMatrix", gameObject->transform->GetNormalMatrix());
 	forwardMaterialProperties->SetValue(name, "localToClipMatrix", localToClipMatrix);
 }
-void MeshRenderer::SetShadowRenderMatrizes(std::array<DirectionalLight*, 2> directionalLights)
+void MeshRenderer::SetShadowRenderMatrizes(std::array<DirectionalLight*, MAX_D_LIGHTS> directionalLights)
 {
 	static std::string name = "LightMatrizes";
 	Float4x4 modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
 
-	for(uint32_t i = 0; i < 2; i++)
+	for(uint32_t i = 0; i < MAX_D_LIGHTS; i++)
 		if (directionalLights[i] != nullptr)
 		{
 			Float4x4 localToClipMatrix = directionalLights[i]->GetProjectionMatrix() * directionalLights[i]->GetViewMatrix() * modelMatrix;
 			shadowMaterialProperties->SetValue(name, "localToClipMatrixTest", i, localToClipMatrix);
 		}
 }
-void MeshRenderer::SetForwardLightData(const std::array<DirectionalLight*, 2>& directionalLights)
+void MeshRenderer::SetForwardLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights)
 {
 	static std::string name = "LightData";
 
-	for (uint32_t i = 0; i < 2; i++)
+	for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
 		if (directionalLights[i] != nullptr)
 		{
 			Float4x4 worldToClipMatrix = directionalLights[i]->GetProjectionMatrix() * directionalLights[i]->GetViewMatrix();

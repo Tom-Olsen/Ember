@@ -24,6 +24,7 @@ VulkanContext::VulkanContext(uint32_t framesInFlight)
 	// Get device extensions:
 	std::vector<const char*> deviceExtensions;
 	deviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	deviceExtensions.emplace_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
 	// and more ...
 
 	// Create vulkan context:

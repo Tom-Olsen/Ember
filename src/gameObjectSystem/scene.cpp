@@ -6,8 +6,8 @@
 // Constructor:
 Scene::Scene()
 {
-	directionalLights[0] = nullptr;
-	directionalLights[1] = nullptr;
+	for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
+		directionalLights[i] = nullptr;
 }
 
 
@@ -40,7 +40,7 @@ void Scene::AddGameObject(GameObject* gameObject)
 		DirectionalLight* directionalLight = gameObject->GetComponent<DirectionalLight>();
 		if (directionalLight != nullptr)
 		{
-			for (int i = 0; i < 2; i++)
+			for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
 				if (directionalLights[i] == nullptr)
 				{
 					directionalLights[i] = directionalLight;
@@ -69,7 +69,7 @@ void Scene::RemoveGameObject(std::string name)
 		DirectionalLight* directionalLight = gameObject->GetComponent<DirectionalLight>();
 		if (directionalLight != nullptr)
 		{
-			for (int i = 0; i < 2; i++)
+			for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
 				if (directionalLights[i] == directionalLight)
 				{
 					directionalLights[i] = nullptr;

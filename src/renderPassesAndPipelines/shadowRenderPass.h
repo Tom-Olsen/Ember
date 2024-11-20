@@ -14,9 +14,10 @@
 class ShadowRenderPass : public RenderPass
 {
 public: // Members:
-	std::unique_ptr<Texture2d> shadowMap;
+	std::unique_ptr<Texture2d> shadowMaps;
 	static uint32_t shadowMapWidth;
 	static uint32_t shadowMapHeight;
+	static uint32_t layerCount;
 
 private: // Members:
 	VkFormat shadowMapFormat = VK_FORMAT_D32_SFLOAT;

@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include "gameObject.h"
+#include "macros.h"
 
 
 
@@ -14,7 +15,7 @@ class Scene
 {
 public: // Members:
 	Camera* activeCamera = nullptr;
-	std::array<DirectionalLight*, 2> directionalLights;
+	std::array<DirectionalLight*, MAX_D_LIGHTS> directionalLights;
 	std::unordered_map<std::string, MeshRenderer*> meshRenderers;
 	std::unordered_map<std::string, std::unique_ptr<GameObject>> gameObjects;
 

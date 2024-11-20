@@ -1,5 +1,6 @@
 #include "shadowRenderPass.h"
 #include "vulkanMacros.h"
+#include "macros.h"
 #include <fstream>
 
 
@@ -7,6 +8,7 @@
 // static members:
 uint32_t ShadowRenderPass::shadowMapWidth = 2048;
 uint32_t ShadowRenderPass::shadowMapHeight = 2048;
+uint32_t ShadowRenderPass::layerCount = MAX_D_LIGHTS; // layerCount = MAX_D_LIGHTS + MAX_P_LIGHTS + MAX_S_LIGHTS;
 
 
 
@@ -39,7 +41,7 @@ void ShadowRenderPass::CreateShadowMapTexture()
 	subresourceRange.baseMipLevel = 0;
 	subresourceRange.levelCount = 1;
 	subresourceRange.baseArrayLayer = 0;
-	subresourceRange.layerCount = 1;
+	subresourceRange.layerCount = layerCount;
 
 	// Image info:
 	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
@@ -48,7 +50,7 @@ void ShadowRenderPass::CreateShadowMapTexture()
 	imageInfo.extent.height = shadowMapHeight;
 	imageInfo.extent.depth = 1;
 	imageInfo.mipLevels = 1;
-	imageInfo.arrayLayers = 1;
+	imageInfo.arrayLayers = layerCount;
 	imageInfo.format = shadowMapFormat;
 	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -65,7 +67,7 @@ void ShadowRenderPass::CreateShadowMapTexture()
 	allocationInfo.preferredFlags = 0;
 
 	VmaImage* image = new VmaImage(context, imageInfo, allocationInfo, subresourceRange);
-	shadowMap = std::make_unique<Texture2d>(context, image, "shadowMap");
+	shadowMaps = std::make_unique<Texture2d>(context, image, "shadowMaps");
 }
 void ShadowRenderPass::CreateRenderpass()
 {
@@ -107,10 +109,10 @@ void ShadowRenderPass::CreateFramebuffers()
 		VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 		framebufferInfo.renderPass = renderPass;
 		framebufferInfo.attachmentCount = 1;
-		framebufferInfo.pAttachments = &shadowMap->image->imageView;
+		framebufferInfo.pAttachments = &shadowMaps->image->imageView;
 		framebufferInfo.width = shadowMapWidth;
 		framebufferInfo.height = shadowMapHeight;
-		framebufferInfo.layers = 1;
+		framebufferInfo.layers = layerCount;
 		vkCreateFramebuffer(context->LogicalDevice(), &framebufferInfo, nullptr, &framebuffers[i]);
 	}
 }

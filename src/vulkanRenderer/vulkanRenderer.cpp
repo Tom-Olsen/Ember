@@ -2,6 +2,7 @@
 #include "vulkanMacros.h"
 #include "vulkanPushConstant.h"
 #include "renderPassManager.h"
+#include "macros.h"
 
 
 
@@ -146,7 +147,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
 		
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
-					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), MAX_D_LIGHTS, 0, 0, 0);
 				}
 			}
 		}

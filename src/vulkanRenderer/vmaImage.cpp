@@ -17,16 +17,26 @@ VmaImage::VmaImage(VulkanContext* context, const VkImageCreateInfo& imageInfo, c
 	// Create image:
 	VKA(vmaCreateImage(context->Allocator(), &imageInfo, &allocationInfo, &image, &allocation, nullptr));
 
+	// Determine view type:
+	VkImageViewType viewType = VkImageViewType((int)imageInfo.imageType);
+	if (imageInfo.arrayLayers > 1)
+	{
+		if (imageInfo.imageType == VK_IMAGE_TYPE_1D)
+			viewType = VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+        else if (imageInfo.imageType == VK_IMAGE_TYPE_2D)
+			viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+	}
+	//if (imageInfo.flags == VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT && imageInfo.imageType == VK_IMAGE_TYPE_3D)
+	//	viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+
 	// Create image view:
 	VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	viewInfo.image = image;
-	viewInfo.viewType = VkImageViewType((int)imageInfo.imageType);
+	viewInfo.viewType = viewType;
 	viewInfo.format = imageInfo.format;
 	viewInfo.subresourceRange = subresourceRange;
 	VKA(vkCreateImageView(context->LogicalDevice(), &viewInfo, nullptr, &imageView));
 }
-
-
 
 // Destructor:
 VmaImage::~VmaImage()
