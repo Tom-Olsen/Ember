@@ -5,10 +5,10 @@
 
 
 // Constructor:
-DirectionalLight::DirectionalLight(const Float3& color)
+DirectionalLight::DirectionalLight()
 {
 	this->intensity = 1.0f;
-	this->color = Float4(color.x, color.y, color.z);
+	this->color = Float3::one;
 	this->nearClip = 0.01f;
 	this->farClip = 15.0f;
 	this->viewWidth = 15.0f;
@@ -66,6 +66,26 @@ float DirectionalLight::GetIntensity() const
 Float3 DirectionalLight::GetColor() const
 {
 	return color;
+}
+Float4 DirectionalLight::GetColorIntensity() const
+{
+	return Float4(color, intensity);
+}
+float DirectionalLight::GetNearClip() const
+{
+	return nearClip;
+}
+float DirectionalLight::GetFarClip() const
+{
+	return farClip;
+}
+float DirectionalLight::GetViewWidth() const
+{
+	return viewWidth;
+}
+float DirectionalLight::GetViewHeight() const
+{
+	return viewHeight;
 }
 Float4x4 DirectionalLight::GetViewMatrix() const
 {

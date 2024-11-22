@@ -31,7 +31,12 @@ public: // Methods:
 	void SetFarClip(const float& farClip);
 
 	// Getters:
-	Float4x4 GetViewMatrix();
+	float GetFovDegrees() const;
+	float GetFovRadians() const;
+	float GetAspectRatio() const;
+	float GetNearClip() const;
+	float GetFarClip() const;
+	Float4x4 GetViewMatrix() const;
 	Float4x4 GetProjectionMatrix();
 
 	// Overrides:

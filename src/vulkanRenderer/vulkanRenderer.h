@@ -34,7 +34,7 @@ public: // Methods:
 	bool Render(Scene* scene);
 
 private: // Methods:
-	void ResizeSwapchain();
+	void RebuildSwapchain();
 	bool AcquireImage();
 	void RecordShadowCommandBuffer(Scene* scene);
 	void RecordForwardCommandBuffer(Scene* scene);

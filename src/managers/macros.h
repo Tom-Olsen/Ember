@@ -4,8 +4,8 @@
 
 
 #define MAX_D_LIGHTS 3
-#define MAX_P_LIGHTS 5
 #define MAX_S_LIGHTS 10
+#define MAX_P_LIGHTS 5
 
 
 

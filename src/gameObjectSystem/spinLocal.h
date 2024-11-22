@@ -6,14 +6,15 @@
 
 
 
-class Spin : public Component
+class SpinLocal : public Component
 {
 public: // Members:
 	Float3 eulerDegreesPerSecond;
+	Uint3 rotationOrder;
 
 public: // Methods:
-	Spin(Float3 eulerDegreesPerSecond = Float3());
-	~Spin();
+	SpinLocal(Float3 eulerDegreesPerSecond = Float3(), Uint3 rotationOrder = Uint3(1, 0, 2));
+	~SpinLocal();
 
 	// Overrides:
 	void Update() override;

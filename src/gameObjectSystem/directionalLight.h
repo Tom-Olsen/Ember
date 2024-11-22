@@ -21,7 +21,7 @@ private: // Members:
 	bool updateProjectionMatrix;
 
 public: // Methods:
-	DirectionalLight(const Float3& color = Float3(1.0f));
+	DirectionalLight();
 	~DirectionalLight();
 
 	// Setters:
@@ -35,6 +35,11 @@ public: // Methods:
 	// Getters:
 	float GetIntensity() const;
 	Float3 GetColor() const;
+	Float4 GetColorIntensity() const;
+	float GetNearClip() const;
+	float GetFarClip() const;
+	float GetViewWidth() const;
+	float GetViewHeight() const;
 	Float4x4 GetViewMatrix() const;
 	Float4x4 GetProjectionMatrix();
 

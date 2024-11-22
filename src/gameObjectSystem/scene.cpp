@@ -8,6 +8,10 @@ Scene::Scene()
 {
 	for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
 		directionalLights[i] = nullptr;
+	for (uint32_t i = 0; i < MAX_S_LIGHTS; i++)
+		spotLights[i] = nullptr;
+	//for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
+	//	pointLights[i] = nullptr;
 }
 
 
@@ -37,6 +41,7 @@ void Scene::AddGameObject(GameObject* gameObject)
 		MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
 		if (meshRenderer != nullptr)
 			meshRenderers.emplace(gameObject->name, meshRenderer);
+
 		DirectionalLight* directionalLight = gameObject->GetComponent<DirectionalLight>();
 		if (directionalLight != nullptr)
 		{
@@ -44,9 +49,32 @@ void Scene::AddGameObject(GameObject* gameObject)
 				if (directionalLights[i] == nullptr)
 				{
 					directionalLights[i] = directionalLight;
+					dLightsCount++;
 					break;
 				}
 		}
+		SpotLight* spotLight = gameObject->GetComponent<SpotLight>();
+		if (spotLight != nullptr)
+		{
+			for (uint32_t i = 0; i < MAX_S_LIGHTS; i++)
+				if (spotLights[i] == nullptr)
+				{
+					spotLights[i] = spotLight;
+					sLightsCount++;
+					break;
+				}
+		}
+		//PointLight* pointLight = gameObject->GetComponent<PointLight>();
+		//if (pointLight != nullptr)
+		//{
+		//	for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
+		//		if (pointLights[i] == nullptr)
+		//		{
+		//			pointLights[i] = pointLight;
+		//			pLightsCount++;
+		//			break;
+		//		}
+		//}
 	}
 }
 GameObject* Scene::GetGameObject(std::string name)
@@ -73,9 +101,32 @@ void Scene::RemoveGameObject(std::string name)
 				if (directionalLights[i] == directionalLight)
 				{
 					directionalLights[i] = nullptr;
+					dLightsCount--;
 					break;
 				}
 		}
+		SpotLight* spotLight = gameObject->GetComponent<SpotLight>();
+		if (spotLight != nullptr)
+		{
+			for (uint32_t i = 0; i < MAX_S_LIGHTS; i++)
+				if (spotLights[i] == spotLight)
+				{
+					spotLights[i] = nullptr;
+					sLightsCount--;
+					break;
+				}
+		}
+		//PointLight* pointLight = gameObject->GetComponent<PointLight>();
+		//if (pointLight != nullptr)
+		//{
+		//	for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
+		//		if (pointLights[i] == pointLight)
+		//		{
+		//			pointLights[i] = nullptr;
+		//			pLightsCount--;
+		// 			break;
+		//		}
+		//}
 
 		gameObjects.erase(it);
 		meshRenderers.erase(name);

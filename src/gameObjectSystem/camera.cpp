@@ -50,7 +50,27 @@ void Camera::SetFarClip(const float& farClip)
 
 
 // Getters:
-Float4x4 Camera::GetViewMatrix()
+float Camera::GetFovDegrees() const
+{
+	return mathf::ToDegrees(fovRadians);
+}
+float Camera::GetFovRadians() const
+{
+	return fovRadians;
+}
+float Camera::GetAspectRatio() const
+{
+	return aspectRatio;
+}
+float Camera::GetNearClip() const
+{
+	return nearClip;
+}
+float Camera::GetFarClip() const
+{
+	return farClip;
+}
+Float4x4 Camera::GetViewMatrix() const
 {
 	return gameObject->transform->GetWorldToLocalMatrix();
 }

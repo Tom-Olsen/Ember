@@ -47,7 +47,7 @@ bool VulkanRenderer::Render(Scene* scene)
 	{
 		rebuildSwapchain = false;
 		context->ResetFrameIndex();
-		ResizeSwapchain();
+		RebuildSwapchain();
 	}
 
 	// Wait for fence of previous frame with same frameIndex to finish:
@@ -68,7 +68,7 @@ bool VulkanRenderer::Render(Scene* scene)
 
 
 // Private:
-void VulkanRenderer::ResizeSwapchain()
+void VulkanRenderer::RebuildSwapchain()
 {
 	// Wait for graphicsQueue to finish:
 	VKA(vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue));
@@ -131,15 +131,19 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
 			// Push constants:
-			VulkanPushConstant pushTime(Timer::GetTime4(), Timer::GetDeltaTime4());
+			int dLightsCount = scene->dLightsCount;
+			int sLightsCount = scene->sLightsCount;
+			int pLightsCount = scene->pLightsCount;
+			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), dLightsCount, sLightsCount, pLightsCount);
 
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, MeshRenderer::GetShadowPipeline());
-			vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VulkanPushConstant), &pushTime);
+			vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VulkanPushConstant), &pushConstant);
 			for (auto& [_, meshRenderer] : scene->meshRenderers)
 			{
 				if (meshRenderer->IsActive() && meshRenderer->castShadows)
 				{
 					meshRenderer->SetShadowRenderMatrizes(scene->directionalLights);
+					meshRenderer->SetShadowRenderMatrizes(scene->spotLights);
 					meshRenderer->shadowMaterialProperties->UpdateUniformBuffers(context->frameIndex);
 
 					const VkDeviceSize offsets[1] = { 0 };
@@ -147,7 +151,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
 		
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
-					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), MAX_D_LIGHTS, 0, 0, 0);
+					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), dLightsCount + sLightsCount, 0, 0, 0);
 				}
 			}
 		}
@@ -186,7 +190,7 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
 			// Push constants:
-			VulkanPushConstant pushTime(Timer::GetTime4(), Timer::GetDeltaTime4());
+			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount);
 
 			for (auto& [_, meshRenderer] : scene->meshRenderers)
 			{
@@ -194,11 +198,12 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 				{
 					meshRenderer->SetForwardRenderMatrizes(scene->activeCamera);
 					meshRenderer->SetForwardLightData(scene->directionalLights);
+					meshRenderer->SetForwardLightData(scene->spotLights);
 					meshRenderer->forwardMaterialProperties->UpdateUniformBuffers(context->frameIndex);
 
 					// TODO: move these two outside of for loop and do them for each material only once.
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipeline());
-					vkCmdPushConstants(commandBuffer, meshRenderer->GetForwardPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(VulkanPushConstant), &pushTime);
+					vkCmdPushConstants(commandBuffer, meshRenderer->GetForwardPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(VulkanPushConstant), &pushConstant);
 
 					vkCmdBindVertexBuffers(commandBuffer, 0, meshRenderer->mesh->GetBindingCount(), meshRenderer->mesh->GetBuffers(context), meshRenderer->mesh->GetOffsets());
 					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());

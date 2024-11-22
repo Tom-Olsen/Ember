@@ -54,7 +54,7 @@ public: // Methods:
 
 private: // Methods:
 	static std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile);
-	void GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage);
+	//void GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage);
 };
 
 

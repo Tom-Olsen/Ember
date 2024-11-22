@@ -75,7 +75,7 @@ void MaterialProperties::SetValue(const std::string& blockName, const std::strin
 	updateUniformBuffer[blockName] = true;
 }
 template<typename T>
-void MaterialProperties::SetValue(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const T& value)
+void MaterialProperties::SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const T& value)
 {
 	// If cbuffer with 'blockName' doesnt exist, skip:
 	auto it = uniformBufferMaps[context->frameIndex].find(blockName);
@@ -84,9 +84,24 @@ void MaterialProperties::SetValue(const std::string& blockName, const std::strin
 
 	// check if type is bool:
 	if constexpr (std::is_same<T, bool>::value)
-		it->second.resource.SetValue(memberName, arrayindex, static_cast<int>(value));
+		it->second.resource.SetValue(arrayName, arrayindex, static_cast<int>(value));
 	else
-		it->second.resource.SetValue(memberName, arrayindex, value);
+		it->second.resource.SetValue(arrayName, arrayindex, value);
+	updateUniformBuffer[blockName] = true;
+}
+template<typename T>
+void MaterialProperties::SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const T& value)
+{
+	// If cbuffer with 'blockName' doesnt exist, skip:
+	auto it = uniformBufferMaps[context->frameIndex].find(blockName);
+	if (it == uniformBufferMaps[context->frameIndex].end())
+		return;
+
+	// check if type is bool:
+	if constexpr (std::is_same<T, bool>::value)
+		it->second.resource.SetValue(arrayName, arrayindex, memberName, static_cast<int>(value));
+	else
+		it->second.resource.SetValue(arrayName, arrayindex, memberName, value);
 	updateUniformBuffer[blockName] = true;
 }
 void MaterialProperties::SetSampler(const std::string& name, VulkanSampler* sampler)
@@ -284,10 +299,18 @@ template void MaterialProperties::SetValue<Float3>(const std::string& blockName,
 template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& memberName, const Float4& value);
 template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& memberName, const Float4x4& value);
 
-template void MaterialProperties::SetValue<int>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const int& value);
-template void MaterialProperties::SetValue<bool>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const bool& value);
-template void MaterialProperties::SetValue<float>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const float& value);
-template void MaterialProperties::SetValue<Float2>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const Float2& value);
-template void MaterialProperties::SetValue<Float3>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const Float3& value);
-template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const Float4& value);
-template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& memberName, uint32_t arrayindex, const Float4x4& value);
+template void MaterialProperties::SetValue<int>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const int& value);
+template void MaterialProperties::SetValue<bool>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const bool& value);
+template void MaterialProperties::SetValue<float>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const float& value);
+template void MaterialProperties::SetValue<Float2>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const Float2& value);
+template void MaterialProperties::SetValue<Float3>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const Float3& value);
+template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const Float4& value);
+template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const Float4x4& value);
+
+template void MaterialProperties::SetValue<int>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const int& value);
+template void MaterialProperties::SetValue<bool>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const bool& value);
+template void MaterialProperties::SetValue<float>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const float& value);
+template void MaterialProperties::SetValue<Float2>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float2& value);
+template void MaterialProperties::SetValue<Float3>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float3& value);
+template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float4& value);
+template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float4x4& value);

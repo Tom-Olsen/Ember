@@ -50,11 +50,3 @@ float Timer::GetDeltaTime()
 {
 	return deltaTime;
 }
-Float4 Timer::GetTime4()
-{
-	return Float4(time, 2.0f * time, 3.0f * time, 4.0f * time);
-}
-Float4 Timer::GetDeltaTime4()
-{
-	return Float4(deltaTime, 2.0f * deltaTime, 3.0f * deltaTime, 4.0f * deltaTime);
-}

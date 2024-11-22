@@ -5,6 +5,7 @@
 #include "mesh.h"
 #include "materialProperties.h"
 #include "directionalLight.h"
+#include "spotLight.h"
 #include "camera.h"
 #include "macros.h"
 
@@ -32,7 +33,11 @@ public: // Methods:
 	void SetForwardMaterial(Material* forwardMaterial);
 	void SetForwardRenderMatrizes(Camera* camera);
 	void SetShadowRenderMatrizes(std::array<DirectionalLight*, MAX_D_LIGHTS> directionalLights);
+	void SetShadowRenderMatrizes(std::array<SpotLight*, MAX_S_LIGHTS> spotLights);
+	//void SetShadowRenderMatrizes(std::array<PointLight*, MAX_P_LIGHTS> pointLights);
 	void SetForwardLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights);
+	void SetForwardLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spotLights);
+	//void SetForwardLightData(const std::array<PointLight*, MAX_P_LIGHTS>& pointLights);
 
 	// Forward render pass getters:
 	Material* GetForwardMaterial();

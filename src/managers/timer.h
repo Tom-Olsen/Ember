@@ -2,7 +2,6 @@
 #ifndef __INCLUDE_GUARD_time_h__
 #define __INCLUDE_GUARD_time_h__
 #include <chrono>
-#include "mathf.h"
 
 
 
@@ -27,8 +26,6 @@ public: // Methods
     // Getters:
     static float GetTime();
     static float GetDeltaTime();
-    static Float4 GetTime4();
-	static Float4 GetDeltaTime4();
 
 private: // Methods
     // Delete all constructors:

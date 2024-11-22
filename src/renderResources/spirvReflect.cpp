@@ -18,11 +18,12 @@
 
 
 // UniformBufferMember public methods:
-std::string UniformBufferMember::ToString() const
+std::string UniformBufferMember::ToString(const std::string& name, int indent) const
 {
-    std::string output = "offset=" + std::to_string(offset) + ", size=" + std::to_string(size);
-    for (const auto& [name, subMember] : subMembers)
-		output += "\n" + name + ": " + subMember->ToString();
+	std::string output(indent, ' ');
+    output += name + ": offset=" + std::to_string(offset) + ", size=" + std::to_string(size) + "\n";
+    for (const auto& [subName, subMember] : subMembers)
+		output += subMember->ToString(subName, indent + 2);
 	return output;
 }
 
@@ -65,7 +66,7 @@ std::string UniformBufferBlock::ToString() const
 {
     std::string output = name + "(binding=" + std::to_string(bindingIndex) + "):\n";
     for (const auto& [name, member] : members)
-        output += name + ": " + member->ToString() + "\n";
+        output += member->ToString(name, 0);
     return output;
 }
 
@@ -84,6 +85,42 @@ SpirvReflect::~SpirvReflect()
 
 
 // SpirvReflect public methods:
+void SpirvReflect::GetDescriptorSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& bindings, std::vector<std::string>& bindingNames, std::unordered_map<std::string, UniformBufferBlock*>& uniformBufferBlockMap)
+{
+    // Shader descriptor set reflection:
+    std::vector<SpvReflectDescriptorSet*> descriptorSetsReflection = GetDescriptorSetsReflection();
+
+    for (uint32_t setIndex = 0; setIndex < descriptorSetsReflection.size(); setIndex++)
+    {
+        SpvReflectDescriptorSet* setReflection = descriptorSetsReflection[setIndex];
+        for (uint32_t bindingIndex = 0; bindingIndex < setReflection->binding_count; bindingIndex++)
+        {
+            SpvReflectDescriptorBinding* bindingReflection = setReflection->bindings[bindingIndex];
+            VkDescriptorSetLayoutBinding layoutBinding = {};
+            layoutBinding.binding = bindingReflection->binding;
+            layoutBinding.descriptorType = VkDescriptorType((int)bindingReflection->descriptor_type);
+            layoutBinding.descriptorCount = bindingReflection->count;
+            layoutBinding.stageFlags = VkShaderStageFlagBits((int)module.shader_stage);
+            layoutBinding.pImmutableSamplers = nullptr;
+
+            // Add binding and name to lists:
+            bindings.push_back(layoutBinding);
+            bindingNames.push_back(bindingReflection->name);
+
+            // In case of uniform buffer create UniformBufferBlock:
+            if (bindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+            {
+                SpvReflectBlockVariable& blockReflection = bindingReflection->block;
+                UniformBufferBlock* uniformBufferBlock = GetUniformBufferBlock(blockReflection, setReflection->set, bindingReflection->binding);
+                uniformBufferBlockMap.emplace(uniformBufferBlock->name, uniformBufferBlock);
+            }
+        }
+    }
+}
+
+
+
+// SpirvReflect private static methods:
 std::vector<SpvReflectDescriptorSet*> SpirvReflect::GetDescriptorSetsReflection() const
 {
     uint32_t setCount = 0;
@@ -98,7 +135,7 @@ UniformBufferBlock* SpirvReflect::GetUniformBufferBlock(const SpvReflectBlockVar
 
     for (uint32_t memberIndex = 0; memberIndex < blockReflection.member_count; memberIndex++)
     {
-		// Create UniformBufferMember:
+        // Create UniformBufferMember:
         SpvReflectBlockVariable& memberReflection = blockReflection.members[memberIndex];
         UniformBufferMember* uniformBufferMember = new UniformBufferMember();
 
@@ -109,51 +146,17 @@ UniformBufferBlock* SpirvReflect::GetUniformBufferBlock(const SpvReflectBlockVar
 
         // Submembers for structs:
         if (IsStruct(memberReflection) && !IsArray(memberReflection))
-        {
-            for (uint32_t fieldIndex = 0; fieldIndex < memberReflection.member_count; fieldIndex++)
-            {
-                SpvReflectBlockVariable& fieldReflection = memberReflection.members[fieldIndex];
-                UniformBufferMember* field = new UniformBufferMember();
-                field->offset = memberReflection.offset + fieldReflection.offset;
-                field->size = fieldReflection.size;
-                uniformBufferMember->subMembers.emplace(fieldReflection.name, field);
-            }
-        }
+			StructReflection(memberReflection, uniformBufferMember);
 
         // Submembers for arrays:
         if (IsArray(memberReflection))
-        {
-            for (uint32_t arrayIndex = 0; arrayIndex < memberReflection.array.dims[0]; arrayIndex++)
-            {
-                UniformBufferMember* element = new UniformBufferMember();
-                element->offset = memberReflection.offset + memberReflection.array.stride * arrayIndex;
-                element->size = memberReflection.array.stride;
-
-                // Subsubmembers for array of structs:
-                if (IsStruct(memberReflection))
-                {
-                    for (uint32_t fieldIndex = 0; fieldIndex < memberReflection.member_count; fieldIndex++)
-                    {
-                        SpvReflectBlockVariable& fieldReflection = memberReflection.members[fieldIndex];
-                        UniformBufferMember* field = new UniformBufferMember();
-                        field->offset = memberReflection.offset + memberReflection.array.stride * arrayIndex + fieldReflection.offset;
-                        field->size = fieldReflection.size;
-                        element->subMembers.emplace(std::string(fieldReflection.name) + "[" + std::to_string(arrayIndex) + "]", field);
-                    }
-                }
-                uniformBufferMember->subMembers.emplace(memberName + "[" + std::to_string(arrayIndex) + "]", element);
-            }
-        }
+			ArrayReflection(memberName, memberReflection, uniformBufferMember);
 
         uniformBufferBlock->AddMember(memberName, uniformBufferMember);
     }
 
     return uniformBufferBlock;
 }
-
-
-
-// SpirvReflect private static methods:
 bool SpirvReflect::IsStruct(const SpvReflectBlockVariable& memberReflection) const
 {
     return memberReflection.member_count > 0;
@@ -161,6 +164,44 @@ bool SpirvReflect::IsStruct(const SpvReflectBlockVariable& memberReflection) con
 bool SpirvReflect::IsArray(const SpvReflectBlockVariable& memberReflection) const
 {
 	return memberReflection.array.dims_count > 0;
+}
+void SpirvReflect::StructReflection(const SpvReflectBlockVariable& blockReflection, UniformBufferMember* uniformBufferMember) const
+{
+    for (uint32_t memberIndex = 0; memberIndex < blockReflection.member_count; memberIndex++)
+    {
+        SpvReflectBlockVariable& memberReflection = blockReflection.members[memberIndex];
+        UniformBufferMember* member = new UniformBufferMember();
+
+		// Base struct:
+        std::string memberName = memberReflection.name;
+        member->offset = blockReflection.offset + memberReflection.offset;
+        member->size = memberReflection.size;
+
+        // Submembers for structs:
+        if (IsStruct(memberReflection) && !IsArray(memberReflection))
+            StructReflection(memberReflection, uniformBufferMember);
+
+        // Submembers for arrays:
+        if (IsArray(memberReflection))
+            ArrayReflection(memberName, memberReflection, member);
+
+        uniformBufferMember->subMembers.emplace(memberReflection.name, member);
+    }
+}
+void SpirvReflect::ArrayReflection(const std::string& blockName, const SpvReflectBlockVariable& blockReflection, UniformBufferMember* uniformBufferMember) const
+{
+    for (uint32_t arrayIndex = 0; arrayIndex < blockReflection.array.dims[0]; arrayIndex++)
+    {
+        UniformBufferMember* element = new UniformBufferMember();
+        element->offset = blockReflection.offset + blockReflection.array.stride * arrayIndex;
+        element->size = blockReflection.array.stride;
+
+        // Subsubmembers for array of structs:
+        if (IsStruct(blockReflection))
+            StructReflection(blockReflection, element);
+
+        uniformBufferMember->subMembers.emplace(blockName + "[" + std::to_string(arrayIndex) + "]", element);
+    }
 }
 std::string SpirvReflect::GetSpvReflectDescriptorTypeName(SpvReflectDescriptorType spvReflectDescriptorType)
 {

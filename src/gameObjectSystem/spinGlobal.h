@@ -6,14 +6,16 @@
 
 
 
-class SpinAroundOrigin : public Component
+class SpinGlobal : public Component
 {
 public: // Members:
-	float degreesPerSecond;
+	Float3 position;
+	Float3 eulerDegreesPerSecond;
+	Uint3 rotationOrder;
 
 public: // Methods:
-	SpinAroundOrigin(float degreesPerSecond = 0.0f);
-	~SpinAroundOrigin();
+	SpinGlobal(Float3 position, Float3 eulerDegreesPerSecond = Float3(), Uint3 rotationOrder = Uint3(1, 0, 2));
+	~SpinGlobal();
 
 	// Overrides:
 	void Update() override;

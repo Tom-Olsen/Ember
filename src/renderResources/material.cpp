@@ -20,12 +20,12 @@ Material::Material(VulkanContext* context, Type type, const std::string& name, c
 		// Load vertex shader:
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
 		SpirvReflect vertexShaderReflect(vertexCode);
-		GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
+		vertexShaderReflect.GetDescriptorSetLayoutBindings(bindings, bindingNames, uniformBufferBlockMap);
 
 		// Load fragment shader:
 		std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
 		SpirvReflect fragmentShaderReflect(fragmentCode);
-		GetDescriptorSetLayoutBindings(fragmentShaderReflect, VK_SHADER_STAGE_FRAGMENT_BIT);
+		fragmentShaderReflect.GetDescriptorSetLayoutBindings(bindings, bindingNames, uniformBufferBlockMap);
 
 		// Create pipeline:
 		pipeline = std::make_unique<ForwardPipeline>(context, vertexCode, fragmentCode, bindings);
@@ -37,7 +37,7 @@ Material::Material(VulkanContext* context, Type type, const std::string& name, c
 		// Load vertex shader:
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
 		SpirvReflect vertexShaderReflect(vertexCode);
-		GetDescriptorSetLayoutBindings(vertexShaderReflect, VK_SHADER_STAGE_VERTEX_BIT);
+		vertexShaderReflect.GetDescriptorSetLayoutBindings(bindings, bindingNames, uniformBufferBlockMap);
 
 		// Create pipeline:
 		pipeline = std::make_unique<ShadowPipeline>(context, vertexCode, bindings);
@@ -135,42 +135,4 @@ std::vector<char> Material::ReadShaderCode(const std::filesystem::path& spvFile)
 	file.close();
 
 	return code;
-}
-void Material::GetDescriptorSetLayoutBindings(const SpirvReflect& shaderReflect, VkShaderStageFlagBits shaderStage)
-{
-	if (VkShaderStageFlagBits((int)shaderReflect.module.shader_stage) != shaderStage)
-	{
-		LOG_CRITICAL("Shader stage does not agree with given shader.");
-		std::abort();
-	}
-
-	// Shader descriptor set reflection:
-	std::vector<SpvReflectDescriptorSet*> shaderDescriptorSets = shaderReflect.GetDescriptorSetsReflection();
-
-	for (uint32_t setIndex = 0; setIndex < shaderDescriptorSets.size(); setIndex++)
-	{
-		SpvReflectDescriptorSet* setReflection = shaderDescriptorSets[setIndex];
-		for (uint32_t bindingIndex = 0; bindingIndex < setReflection->binding_count; bindingIndex++)
-		{
-			SpvReflectDescriptorBinding* bindingReflection = setReflection->bindings[bindingIndex];
-			VkDescriptorSetLayoutBinding layoutBinding = {};
-			layoutBinding.binding = bindingReflection->binding;
-			layoutBinding.descriptorType = VkDescriptorType((int)bindingReflection->descriptor_type);
-			layoutBinding.descriptorCount = bindingReflection->count;
-			layoutBinding.stageFlags = shaderStage;
-			layoutBinding.pImmutableSamplers = nullptr;
-
-			// Add binding and name to lists:
-			bindings.push_back(layoutBinding);
-			bindingNames.push_back(bindingReflection->name);
-
-			// In case of uniform buffer create UniformBufferBlock:
-			if (bindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-			{
-				SpvReflectBlockVariable& blockReflection = bindingReflection->block;
-				UniformBufferBlock* uniformBufferBlock = shaderReflect.GetUniformBufferBlock(blockReflection, setReflection->set, bindingReflection->binding);
-				uniformBufferBlockMap.emplace(uniformBufferBlock->name, uniformBufferBlock);
-			}
-		}
-	}
 }

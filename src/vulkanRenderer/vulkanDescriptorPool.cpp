@@ -10,7 +10,7 @@ VulkanDescriptorPool::VulkanDescriptorPool(VulkanLogicalDevice* logicalDevice)
 	this->logicalDevice = logicalDevice;
 
 
-	uint32_t maxSets = 100;	// maximum number of descriptor sets that may be allocated
+	uint32_t maxSets = 1000;	// maximum number of descriptor sets that may be allocated
 	std::array<VkDescriptorPoolSize, 4> poolSizes
 	{
 		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, maxSets },

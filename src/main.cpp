@@ -6,12 +6,9 @@
 
 
 // TODO now:
-// - validation layer error when gameobject name is "direcionalLight1" wtf?
+// - validation layer errors when two shaders have the same binding number
 // - give the material a default materialProperties which is used if no materialProperties are set
-// - move Material.GetDescriptorSetLayoutBindings function to spirvReflect class
-// - rethink UniformBufferBlock submembers structure:
-//   - dont use subMembers at all and have each structmember be a member of the block?
-//   - same for array entries?
+//      - Problem: renderMatrizes is different for each object => diferent materialProperties for each object
 // - refactor code and make everything cleaner!
 // - better lighting model (specular highlights etc.)
 // - add gameObject selection (need gizmos => ui renderpass)
@@ -20,7 +17,6 @@
 // - currently one commandPool per commandBuffer, should be one commandPool per frame, shared by all commands for that frame
 
 // TODO long term:
-// - why is lightcolor a float4 and not a float3?
 // - proper quaternion support
 // - 3d ui renderpass that draws on top of everything and is not affected by the camera (constant view/projection matrix)
 // - render image while resizing
@@ -61,6 +57,8 @@ int main()
     //LOG_TRACE(material->GetUniformBufferBlock("LightMatrizes")->ToString());
     //MaterialManager::GetMaterial("defaultMaterial")->PrintBindings();
     //MaterialManager::GetMaterial("colorMaterial")->PrintBindings();
+    MaterialManager::GetMaterial("colorMaterial")->PrintUniformBuffers();
+    //return 0;
 
     // Build simple scene:
     Scene* scene = new Scene();
@@ -79,7 +77,7 @@ int main()
         scene->AddGameObject(gameObject);
 		scene->SetActiveCamera(camera);
     }
-    {// Directional Light0:
+    {// Light0:
         GameObject* gameObject = new GameObject("directionalLight0");
         Float3 pos = Float3(7.0f, 7.0f, 3.5f);
         Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
@@ -92,60 +90,92 @@ int main()
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
-        SpinAroundOrigin* spinAroundOrigin = new SpinAroundOrigin(45.0f);
-        gameObject->AddComponent<SpinAroundOrigin>(spinAroundOrigin);
+        SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, 45, 0));
+        gameObject->AddComponent<SpinGlobal>(spinGlobal);
     
-		DirectionalLight* directionalLight = new DirectionalLight(Float3(1.0f, 0.0f, 0.0f));
+		DirectionalLight* directionalLight = new DirectionalLight();
+        directionalLight->SetIntensity(1.0f);
+        directionalLight->SetColor(Float3(1.0f, 0.0f, 0.0f));
+        directionalLight->SetNearClip(0.1f);
+        directionalLight->SetFarClip(10.0f);
+        directionalLight->SetViewWidth(10.0f);
+        directionalLight->SetViewHeight(10.0f);
         gameObject->AddComponent<DirectionalLight>(directionalLight);
+
+        //SpotLight* spotLight = new SpotLight();
+		//spotLight->SetColor(Float3(1.0f, 0.0f, 0.0f));
+		//spotLight->SetIntensity(1.0f);
+		//spotLight->SetNearClip(0.1f);
+		//spotLight->SetFarClip(15.0f);
+		//spotLight->SetFovDegrees(30.0f);
+		//gameObject->AddComponent<SpotLight>(spotLight);
     
 		scene->AddGameObject(gameObject);
     }
-    {// Directional Light1:
-        GameObject* gameObject = new GameObject("directionalLight1");
-        Float3 pos = Float3(-7.0f, 7.0f, 3.5f);
-        Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
-        gameObject->transform->SetPosition(pos);
-        gameObject->transform->SetRotationMatrix(matrix);
-
-        MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
-        meshRenderer->castShadows = meshRenderer->receiveShadows = false;
-        gameObject->AddComponent<MeshRenderer>(meshRenderer);
-
-        SpinAroundOrigin* spinAroundOrigin = new SpinAroundOrigin(-60.0f);
-        gameObject->AddComponent<SpinAroundOrigin>(spinAroundOrigin);
-    
-        DirectionalLight* directionalLight = new DirectionalLight(Float3(0.0f, 1.0f, 0.0f));
-        gameObject->AddComponent<DirectionalLight>(directionalLight);
-    
-        scene->AddGameObject(gameObject);
-    }
-    {// Directional Light2:
-        GameObject* gameObject = new GameObject("directionalLight2");
-        Float3 pos = Float3(0.0f, 7.0f, -7.5f);
-        Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
-        gameObject->transform->SetPosition(pos);
-        gameObject->transform->SetRotationMatrix(matrix);
-
-        MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
-        meshRenderer->castShadows = meshRenderer->receiveShadows = false;
-        gameObject->AddComponent<MeshRenderer>(meshRenderer);
-
-		SpinAroundOrigin* spinAroundOrigin = new SpinAroundOrigin(90.0f);
-		gameObject->AddComponent<SpinAroundOrigin>(spinAroundOrigin);
-
-        DirectionalLight* directionalLight = new DirectionalLight(Float3(0.0f, 0.0f, 1.0f));
-        gameObject->AddComponent<DirectionalLight>(directionalLight);
-
-        scene->AddGameObject(gameObject);
-    }
+    //{// Light1:
+    //    GameObject* gameObject = new GameObject("directionalLight1");
+    //    Float3 pos = Float3(-7.0f, 7.0f, 3.5f);
+    //    Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
+    //    gameObject->transform->SetPosition(pos);
+    //    gameObject->transform->SetRotationMatrix(matrix);
+    //
+    //    MeshRenderer* meshRenderer = new MeshRenderer();
+    //    meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+    //    meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
+    //    meshRenderer->castShadows = meshRenderer->receiveShadows = false;
+    //    gameObject->AddComponent<MeshRenderer>(meshRenderer);
+    //
+    //    SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, -60, 0));
+    //    gameObject->AddComponent<SpinGlobal>(spinGlobal);
+    //
+    //    DirectionalLight* directionalLight = new DirectionalLight();
+    //    directionalLight->SetColor(Float3(0.0f, 1.0f, 0.0f));
+    //    gameObject->AddComponent<DirectionalLight>(directionalLight);
+    //
+    //    SpotLight* spotLight = new SpotLight();
+    //    spotLight->SetColor(Float3(0.0f, 1.0f, 0.0f));
+    //    spotLight->SetIntensity(1.0f);
+    //    spotLight->SetNearClip(0.1f);
+    //    spotLight->SetFarClip(15.0f);
+    //    spotLight->SetFovDegrees(30.0f);
+    //    gameObject->AddComponent<SpotLight>(spotLight);
+    //
+    //    scene->AddGameObject(gameObject);
+    //}
+    //{// Light2:
+    //    GameObject* gameObject = new GameObject("directionalLight2");
+    //    Float3 pos = Float3(0.0f, 7.0f, -7.5f);
+    //    Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
+    //    gameObject->transform->SetPosition(pos);
+    //    gameObject->transform->SetRotationMatrix(matrix);
+    //
+    //    MeshRenderer* meshRenderer = new MeshRenderer();
+    //    meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+    //    meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
+    //    meshRenderer->castShadows = meshRenderer->receiveShadows = false;
+    //    gameObject->AddComponent<MeshRenderer>(meshRenderer);
+    //
+    //    SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, 90, 0));
+    //    gameObject->AddComponent<SpinGlobal>(spinGlobal);
+    //
+    //    DirectionalLight* directionalLight = new DirectionalLight();
+    //    directionalLight->SetColor(Float3(0.0f, 0.0f, 1.0f));
+    //    gameObject->AddComponent<DirectionalLight>(directionalLight);
+    //
+    //    SpotLight* spotLight = new SpotLight();
+    //    spotLight->SetColor(Float3(0.0f, 0.0f, 1.0f));
+    //    spotLight->SetIntensity(1.0f);
+    //    spotLight->SetNearClip(0.1f);
+    //    spotLight->SetFarClip(15.0f);
+    //    spotLight->SetFovDegrees(30.0f);
+    //    gameObject->AddComponent<SpotLight>(spotLight);
+    //
+    //    scene->AddGameObject(gameObject);
+    //}
     { // Floor:
         GameObject* gameObject = new GameObject("floor");
         gameObject->transform->SetPosition(0.0f, -0.5f, 0.0f);
-        gameObject->transform->SetScale(8.0f);
+        gameObject->transform->SetScale(25.0f);
         gameObject->transform->SetRotationEulerDegrees(-90.0f, 0.0f, 0.0f);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
@@ -182,8 +212,8 @@ int main()
         meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("brick"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
-        Spin* spin = new Spin(Float3(0.0f, 45.0f, 0.0f));
-        gameObject->AddComponent<Spin>(spin);
+        SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
+        gameObject->AddComponent<SpinLocal>(spinLocal);
     
         scene->AddGameObject(gameObject);
     }
@@ -212,6 +242,9 @@ int main()
         meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
         meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("wall0"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
+
+        SpinGlobal* spinGlobal = new SpinGlobal(Float3(2.0f, 0.0f, 0.0f), Float3(0, 45, 0));
+        gameObject->AddComponent<SpinGlobal>(spinGlobal);
     
         scene->AddGameObject(gameObject);
     }
@@ -232,6 +265,29 @@ int main()
     //
     //    scene->AddGameObject(gameObject);
     //}
+    {// Cube Array:
+        int N = 10;
+        float dist = 20.0f;
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+            {
+                GameObject* gameObject = new GameObject("cube" + std::to_string(i) + std::to_string(j));
+				Float3 pos((i / (N - 1.0f) - 0.5f) * dist, 0.0f, (j / (N - 1.0f) - 0.5f) * dist);
+                gameObject->transform->SetPosition(pos);
+                gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+
+                MeshRenderer* meshRenderer = new MeshRenderer();
+                meshRenderer->mesh = MeshManager::GetMesh("unitCube");
+                meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+                meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
+                meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("brick"));
+                gameObject->AddComponent<MeshRenderer>(meshRenderer);
+
+                scene->AddGameObject(gameObject);
+            }
+    }
+
+
     app.SetScene(scene);
 
 

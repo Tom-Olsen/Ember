@@ -2,6 +2,22 @@
 
 
 
+struct PushConstant
+{
+    float time;
+    float delaTime;
+    int dLightsCount;
+    int sLightsCount;
+    int pLightsCount;
+};
+#if defined(_DXC)
+[[vk::push_constant]] CullPushConstants pc;
+#else
+[[vk::push_constant]] ConstantBuffer<PushConstant> pc;
+#endif
+
+
+
 cbuffer RenderMatrizes : register(b0)
 {
     float4x4 modelMatrix;       // mesh local to world matrix
@@ -10,19 +26,6 @@ cbuffer RenderMatrizes : register(b0)
     float4x4 normalMatrix;      // rotation matrix for normals and directions
     float4x4 localToClipMatrix; // local to clip space matrix: (model * view * projection)
 };
-
-
-
-struct PushConstant
-{
-    float4 time;
-    float4 delaTime;
-};
-#if defined(_DXC)
-[[vk::push_constant]] CullPushConstants pc;
-#else
-[[vk::push_constant]] ConstantBuffer<PushConstant> pc;
-#endif
 
 
 
@@ -55,7 +58,3 @@ VertexOutput main(VertexInput input)
     output.worldPos = mul(modelMatrix, pos).xyz;
     return output;
 }
-
-// Notes:
-// - SV = System Value
-// - SV_POSITION is a system value that represents the position of a vertex in clip space

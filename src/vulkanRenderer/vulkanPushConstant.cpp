@@ -1,41 +1,30 @@
-#pragma once
-#ifndef __INCLUDE_GUARD_vulkanPushConstant_h__
-#define __INCLUDE_GUARD_vulkanPushConstant_h__
-#include "mathf.h"
+#include "vulkanPushConstant.h"
+#include "macros.h"
 
 
 
-/// <summary>
-/// Size limit for push constants is 128 bytes.
-/// Only used for small data that is updated every frame.
-/// </summary>
-struct VulkanPushConstant
+// Constructor:
+VulkanPushConstant::VulkanPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount)
 {
-public:
-	alignas(16) Float4 time;	// 16 bytes
-	alignas(16) Float4 deltaTime;	// 16 bytes
-
-private:
-	char padding[128 - 2 * sizeof(Float4)];
-
-public:
-	VulkanPushConstant()
-	{
-		time = Float4(0.0f);
-		deltaTime = Float4(0.0f);
-		for (int i = 0; i < sizeof(padding); i++)
-			padding[i] = 0;
-	}
-
-	VulkanPushConstant(Float4 time, Float4 deltaTime)
-	{
-		this->time = time;
-		this->deltaTime = deltaTime;
-		for (int i = 0; i < sizeof(padding); i++)
-			padding[i] = 0;
-	}
-};
+	this->time = time;
+	this->deltaTime = deltaTime;
+	this->dLightsCount = std::min(dLightsCount, MAX_D_LIGHTS);
+	this->sLightsCount = std::min(sLightsCount, MAX_S_LIGHTS);
+	this->pLightsCount = std::min(pLightsCount, MAX_P_LIGHTS);
+	for (int i = 0; i < 128 - 5 * sizeof(float); i++)
+		padding[i] = 0;
+}
 
 
 
-#endif // __INCLUDE_GUARD_vulkanPushConstant_h__
+// Public methods:
+std::string VulkanPushConstant::ToString()
+{
+	std::string output = "VulkanPushConstant:\n";
+	output += "Time: " + std::to_string(time) + "\n";
+	output += "Delta Time: " + std::to_string(deltaTime) + "\n";
+	output += "Directional Lights Count: " + std::to_string(dLightsCount) + "\n";
+	output += "Spot Lights Count: " + std::to_string(sLightsCount) + "\n";
+	output += "Point Lights Count: " + std::to_string(pLightsCount) + "\n";
+	return output;
+}

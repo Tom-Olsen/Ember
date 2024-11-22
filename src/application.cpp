@@ -41,9 +41,8 @@ Application::~Application()
 void Application::Run()
 {
 	Timer::Reset();
-	bool rebuildSwapchain = false;
-
 	bool running = true;
+
 	while (running)
 	{
 		Timer::Update();

@@ -11,8 +11,8 @@ class SpotLight : public Component
 public: // Members:
 
 private: // Members:
-	static Float4x4 rotateToY;
 	float intensity;
+	Float3 color;
 	float fovRadians;
 	float aspectRatio;
 	float nearClip;
@@ -26,11 +26,21 @@ public: // Methods:
 
 	// Setters:
 	void SetIntensity(const float& intensity);
+	void SetColor(const Float3& color);
 	void SetFovDegrees(const float& fovDegrees);
 	void SetFovRadians(const float& fovRadians);
+	void SetNearClip(const float& nearClip);
+	void SetFarClip(const float& farClip);
 
 	// Getters:
-	Float4x4 GetViewMatrix();
+	float GetIntensity() const;
+	Float3 GetColor() const;
+	Float4 GetColorIntensity() const;
+	float GetFovDegrees() const;
+	float GetFovRadians() const;
+	float GetNearClip() const;
+	float GetFarClip() const;
+	Float4x4 GetViewMatrix() const;
 	Float4x4 GetProjectionMatrix();
 
 	// Overrides:

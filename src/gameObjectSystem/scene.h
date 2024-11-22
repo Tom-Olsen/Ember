@@ -15,7 +15,12 @@ class Scene
 {
 public: // Members:
 	Camera* activeCamera = nullptr;
+	int dLightsCount = 0;
+	int pLightsCount = 0;
+	int sLightsCount = 0;
 	std::array<DirectionalLight*, MAX_D_LIGHTS> directionalLights;
+	std::array<SpotLight*, MAX_S_LIGHTS> spotLights;
+	//std::array<DirectionalLight*, MAX_P_LIGHTS> pointLights;
 	std::unordered_map<std::string, MeshRenderer*> meshRenderers;
 	std::unordered_map<std::string, std::unique_ptr<GameObject>> gameObjects;
 

@@ -2,6 +2,7 @@
 #ifndef __INCLUDE_GUARD_vulkanPushConstant_h__
 #define __INCLUDE_GUARD_vulkanPushConstant_h__
 #include "mathf.h"
+#include <string>
 
 
 
@@ -11,29 +12,19 @@
 /// </summary>
 struct VulkanPushConstant
 {
-public:
-	alignas(16) Float4 time;	// 16 bytes
-	alignas(16) Float4 deltaTime;	// 16 bytes
+private:
+	alignas(4) float time;
+	alignas(4) float deltaTime;
+	alignas(4) int dLightsCount;
+	alignas(4) int sLightsCount;
+	alignas(4) int pLightsCount;
 
 private:
-	char padding[128 - 2 * sizeof(Float4)];
+	char padding[128 - 5 * sizeof(float)];
 
 public:
-	VulkanPushConstant()
-	{
-		time = Float4(0.0f);
-		deltaTime = Float4(0.0f);
-		for (int i = 0; i < sizeof(padding); i++)
-			padding[i] = 0;
-	}
-
-	VulkanPushConstant(Float4 time, Float4 deltaTime)
-	{
-		this->time = time;
-		this->deltaTime = deltaTime;
-		for (int i = 0; i < sizeof(padding); i++)
-			padding[i] = 0;
-	}
+	VulkanPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount);
+	std::string ToString();
 };
 
 

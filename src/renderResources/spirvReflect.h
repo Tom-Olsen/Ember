@@ -21,7 +21,7 @@ struct UniformBufferMember
 	std::unordered_map<std::string, UniformBufferMember*> subMembers;
 
 	// Debugging:
-	std::string ToString() const;
+	std::string ToString(const std::string& name, int indent) const;
 };
 
 
@@ -62,12 +62,15 @@ private: // Members:
 public: // Methods:
 	SpirvReflect(std::vector<char> code);
 	~SpirvReflect();
-	std::vector<SpvReflectDescriptorSet*> GetDescriptorSetsReflection() const;
-	UniformBufferBlock* GetUniformBufferBlock(const SpvReflectBlockVariable& typeDescription, uint32_t setIndex, uint32_t bindingIndex) const;
+	void GetDescriptorSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& bindings, std::vector<std::string>& bindingNames, std::unordered_map<std::string, UniformBufferBlock*>& uniformBufferBlockMap);
 
 private: // Methods:
+	std::vector<SpvReflectDescriptorSet*> GetDescriptorSetsReflection() const;
+	UniformBufferBlock* GetUniformBufferBlock(const SpvReflectBlockVariable& typeDescription, uint32_t setIndex, uint32_t bindingIndex) const;
 	bool IsStruct(const SpvReflectBlockVariable& memberReflection) const;
 	bool IsArray(const SpvReflectBlockVariable& memberReflection) const;
+	void StructReflection(const SpvReflectBlockVariable& blockReflection, UniformBufferMember* uniformBufferMember) const;
+	void ArrayReflection(const std::string& blockName, const SpvReflectBlockVariable& blockReflection, UniformBufferMember* uniformBufferMember) const;
 	static std::string GetSpvReflectDescriptorTypeName(SpvReflectDescriptorType spvReflectDescriptorType);
 	static std::string GetSpvStorageClassName(SpvStorageClass spvStorageClass);
 	static std::string GetSpvBuiltInName(SpvBuiltIn spvBuiltIn);

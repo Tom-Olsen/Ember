@@ -1,25 +1,18 @@
-#include "shadowMapping.hlsli"
 SamplerState colorSampler : register(s10);
 SamplerComparisonState shadowSampler : register(s11);
 Texture2D colorTexture : register(t20);
 Texture2DArray<float> shadowMaps : register(t21);
-
-
-
-cbuffer LightData : register(b1)
-{
-    float4x4 worldToClipMatrix[MAX_D_LIGHTS];   // world to light clip space matrix (projection * view)
-    float4 directionIntensity[MAX_D_LIGHTS];    // direction (xyz) and intensity (w) of the light
-    float3 lightColor[MAX_D_LIGHTS];            // light color
-    bool receiveShadows;                        // 0 = false, 1 = true
-};
+#include "shadowMapping.hlsli"
 
 
 
 struct PushConstant
 {
-    float4 time;
-    float4 delaTime;
+    float time;
+    float delaTime;
+    int dLightsCount;
+    int sLightsCount;
+    int pLightsCount;
 };
 #if defined(_DXC)
 [[vk::push_constant]] CullPushConstants pc;
@@ -53,7 +46,8 @@ float4 main(FragmentInput input) : SV_TARGET
     // Lighting:
     float ambient = 0.1f;
     float3 finalColor = ambient * color.xyz;
-    finalColor += Shadow(worldPos, normal, color.xyz, worldToClipMatrix, directionIntensity, lightColor, shadowMaps, shadowSampler);
+    finalColor += DirectionalShadows(worldPos, normal, color.xyz, directionalLightData, shadowMaps, shadowSampler);
+    finalColor += SpotShadows(worldPos, normal, color.xyz, spotLightData, shadowMaps, shadowSampler);
     
     return float4(finalColor, 1.0f);
 }
