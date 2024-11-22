@@ -57,7 +57,7 @@ VulkanSampler* VulkanSampler::ShadowSampler(VulkanContext* context, const std::s
 	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;	// texture w coordinates outside the image
 	samplerInfo.anisotropyEnable = VK_FALSE;							// no anisotropic filtering for depth mapping
 	samplerInfo.maxAnisotropy = 0.0f;									// lower values = better performance but lower quality
-	samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;		// border color for: addressModeU/V/W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE/BORDER
+	samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;	// border color for: addressModeU/V/W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE/BORDER
 	samplerInfo.unnormalizedCoordinates = VK_FALSE;						// VK_FALSE: uvw € [0,1], VK_TRUE: uvw € [0, width/height/depth]
 	samplerInfo.compareEnable = VK_TRUE;								// enable comparison against a reference value
 	samplerInfo.compareOp = VK_COMPARE_OP_LESS_OR_EQUAL;				// comparison function to apply

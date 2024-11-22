@@ -122,7 +122,7 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
     rasterizationState.depthBiasEnable = VK_TRUE;
     rasterizationState.depthBiasConstantFactor = 1.25f;		// Tweak this value based on the scene.
     rasterizationState.depthBiasClamp = 0.0f;
-    rasterizationState.depthBiasSlopeFactor = 1.75f;		// Slope scale bias to handle varying slopes in depth.
+    rasterizationState.depthBiasSlopeFactor = 2.75f;		// Slope scale bias to handle varying slopes in depth.
     rasterizationState.rasterizerDiscardEnable = VK_FALSE;	// If true, geometry never passes through rasterization stage.
     rasterizationState.lineWidth = 1.0f;
 

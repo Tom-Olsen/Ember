@@ -190,7 +190,6 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 		// Begin render pass:
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
-			// Push constants:
 			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount);
 
 			Material* previousMaterial = nullptr;

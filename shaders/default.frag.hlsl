@@ -46,8 +46,8 @@ float4 main(FragmentInput input) : SV_TARGET
     // Lighting:
     float ambient = 0.1f;
     float3 finalColor = ambient * color.xyz;
-    finalColor += DirectionalShadows(worldPos, normal, color.xyz, directionalLightData, shadowMaps, shadowSampler);
-    finalColor += SpotShadows(worldPos, normal, color.xyz, spotLightData, shadowMaps, shadowSampler);
+    finalColor += DirectionalShadows(worldPos, normal, color.xyz, pc.dLightsCount, directionalLightData, shadowMaps, shadowSampler);
+    finalColor += SpotShadows(worldPos, normal, color.xyz, pc.sLightsCount, spotLightData, shadowMaps, shadowSampler);
     
     return float4(finalColor, 1.0f);
 }

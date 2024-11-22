@@ -59,6 +59,10 @@ void DirectionalLight::SetViewHeight(const float& viewHeight)
 
 
 // Getters:
+Float3 DirectionalLight::GetDirection() const
+{
+	return gameObject->transform->GetForward();
+}
 float DirectionalLight::GetIntensity() const
 {
 	return intensity;

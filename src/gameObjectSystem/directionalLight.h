@@ -33,6 +33,7 @@ public: // Methods:
 	void SetViewHeight(const float& viewHeight);
 
 	// Getters:
+	Float3 GetDirection() const;
 	float GetIntensity() const;
 	Float3 GetColor() const;
 	Float4 GetColorIntensity() const;

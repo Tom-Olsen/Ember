@@ -199,6 +199,22 @@ void Scene::PrintSortedMeshRenderers()
 	for (const auto& meshRenderer : sortedMeshRenderers)
 		LOG_TRACE("gamObject: {}, material: {}", meshRenderer->gameObject->name, meshRenderer->GetForwardMaterial()->name);
 }
+void Scene::PrintLights() const
+{
+	LOG_TRACE("Directional lights in scene:");
+	for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
+		if (directionalLights[i] != nullptr)
+			LOG_TRACE("{}", directionalLights[i]->gameObject->name);
+	LOG_TRACE("Spot lights in scene:");
+	for (uint32_t i = 0; i < MAX_S_LIGHTS; i++)
+		if (spotLights[i] != nullptr)
+			LOG_TRACE("{}", spotLights[i]->gameObject->name);
+	//LOG_TRACE("Point lights in scene:");
+	//for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
+	//	if (pointLights[i] != nullptr)
+	//		LOG_TRACE("{}", pointLights[i]->gameObject->name);
+
+}
 
 
 

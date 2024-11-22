@@ -59,6 +59,10 @@ void SpotLight::SetFarClip(const float& farClip)
 
 
 // Getters:
+Float3 SpotLight::GetDirection() const
+{
+	return gameObject->transform->GetForward();
+}
 float SpotLight::GetIntensity() const
 {
 	return intensity;

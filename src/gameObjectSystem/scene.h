@@ -45,6 +45,7 @@ public: // Methods:
 	void PrintGameObjects() const;
 	void PrintMeshRenderers() const;
 	void PrintSortedMeshRenderers();
+	void PrintLights() const;
 
 private: // Methods:
 	void SortMeshRenderers();

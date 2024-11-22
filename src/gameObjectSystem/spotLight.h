@@ -33,6 +33,7 @@ public: // Methods:
 	void SetFarClip(const float& farClip);
 
 	// Getters:
+	Float3 GetDirection() const;
 	float GetIntensity() const;
 	Float3 GetColor() const;
 	Float4 GetColorIntensity() const;

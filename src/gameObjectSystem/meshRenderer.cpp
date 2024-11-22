@@ -99,11 +99,10 @@ void MeshRenderer::SetForwardLightData(const std::array<DirectionalLight*, MAX_D
 		if (directionalLights[i] != nullptr)
 		{
 			Float4x4 worldToClipMatrix = directionalLights[i]->GetProjectionMatrix() * directionalLights[i]->GetViewMatrix();
-			Float3 direction = directionalLights[i]->gameObject->transform->GetForward();
-
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
-			forwardMaterialProperties->SetValue(blockName, arrayName, i, "direction", direction);
+			forwardMaterialProperties->SetValue(blockName, arrayName, i, "direction", directionalLights[i]->GetDirection());
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
+			forwardMaterialProperties->SetValue(blockName, arrayName, i, "nearClip", directionalLights[i]->GetNearClip());
 		}
 	forwardMaterialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
 }
@@ -116,11 +115,10 @@ void MeshRenderer::SetForwardLightData(const std::array<SpotLight*, MAX_S_LIGHTS
 		if (spotLights[i] != nullptr)
 		{
 			Float4x4 worldToClipMatrix = spotLights[i]->GetProjectionMatrix() * spotLights[i]->GetViewMatrix();
-			Float3 direction = spotLights[i]->gameObject->transform->GetForward();
-			
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
-			forwardMaterialProperties->SetValue(blockName, arrayName, i, "direction", direction);
+			forwardMaterialProperties->SetValue(blockName, arrayName, i, "direction", spotLights[i]->GetDirection());
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
+			forwardMaterialProperties->SetValue(blockName, arrayName, i, "nearClip", spotLights[i]->GetNearClip());
 		}
 	forwardMaterialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
 }
