@@ -57,7 +57,7 @@ int main()
     //LOG_TRACE(material->GetUniformBufferBlock("LightMatrizes")->ToString());
     //MaterialManager::GetMaterial("defaultMaterial")->PrintBindings();
     //MaterialManager::GetMaterial("colorMaterial")->PrintBindings();
-    MaterialManager::GetMaterial("colorMaterial")->PrintUniformBuffers();
+    //MaterialManager::GetMaterial("colorMaterial")->PrintUniformBuffers();
     //return 0;
 
     // Build simple scene:
@@ -286,8 +286,9 @@ int main()
                 scene->AddGameObject(gameObject);
             }
     }
-
-
+    scene->PrintGameObjects();
+    scene->PrintMeshRenderers();
+    scene->PrintSortedMeshRenderers();
     app.SetScene(scene);
 
 

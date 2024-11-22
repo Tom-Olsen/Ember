@@ -18,11 +18,15 @@ public: // Members:
 	int dLightsCount = 0;
 	int pLightsCount = 0;
 	int sLightsCount = 0;
+	std::unordered_map<std::string, std::unique_ptr<GameObject>> gameObjects;
 	std::array<DirectionalLight*, MAX_D_LIGHTS> directionalLights;
 	std::array<SpotLight*, MAX_S_LIGHTS> spotLights;
-	//std::array<DirectionalLight*, MAX_P_LIGHTS> pointLights;
+	//std::array<PointLight*, MAX_P_LIGHTS> pointLights;
+
+private: // Members:
+	bool meshRenderersSortet = false;
 	std::unordered_map<std::string, MeshRenderer*> meshRenderers;
-	std::unordered_map<std::string, std::unique_ptr<GameObject>> gameObjects;
+	std::vector<MeshRenderer*> sortedMeshRenderers;
 
 public: // Methods:
 	Scene();
@@ -32,12 +36,18 @@ public: // Methods:
 	GameObject* GetGameObject(std::string name);
 	void RemoveGameObject(std::string name);
 	void SetActiveCamera(Camera* camera);
+	std::vector<MeshRenderer*>& GetSortedMeshRenderers();
 
 	void Load();
 	void Unload();
 
-	void PrintAllGameObjects() const;
-	void PrintAllMeshRenderers() const;
+	// Debugging:
+	void PrintGameObjects() const;
+	void PrintMeshRenderers() const;
+	void PrintSortedMeshRenderers();
+
+private: // Methods:
+	void SortMeshRenderers();
 };
 
 

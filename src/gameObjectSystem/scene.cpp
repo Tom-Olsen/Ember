@@ -40,7 +40,10 @@ void Scene::AddGameObject(GameObject* gameObject)
 
 		MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
 		if (meshRenderer != nullptr)
+		{
 			meshRenderers.emplace(gameObject->name, meshRenderer);
+			sortedMeshRenderers.push_back(meshRenderer);
+		}
 
 		DirectionalLight* directionalLight = gameObject->GetComponent<DirectionalLight>();
 		if (directionalLight != nullptr)
@@ -127,9 +130,13 @@ void Scene::RemoveGameObject(std::string name)
 		// 			break;
 		//		}
 		//}
-
+		MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
+		if (meshRenderer != nullptr)
+		{
+			sortedMeshRenderers.erase(std::remove(sortedMeshRenderers.begin(), sortedMeshRenderers.end(), meshRenderer), sortedMeshRenderers.end());
+			meshRenderers.erase(name);
+		}
 		gameObjects.erase(it);
-		meshRenderers.erase(name);
 	}
 	else
 		LOG_WARN("GameObject '{}' not found in scene!", name);
@@ -144,7 +151,11 @@ void Scene::SetActiveCamera(Camera* camera)
 	else
 		activeCamera = camera;
 }
-
+std::vector<MeshRenderer*>& Scene::GetSortedMeshRenderers()
+{
+	SortMeshRenderers();
+	return sortedMeshRenderers;
+}
 
 
 void Scene::Load()
@@ -168,15 +179,38 @@ void Scene::Unload()
 
 
 
-void Scene::PrintAllGameObjects() const
+// Debugging:
+void Scene::PrintGameObjects() const
 {
 	LOG_TRACE("GameObjects in scene:");
 	for (const auto& pair : gameObjects)
 		LOG_TRACE(pair.first);
 }
-void Scene::PrintAllMeshRenderers() const
+void Scene::PrintMeshRenderers() const
 {
 	LOG_TRACE("MeshRenderers in scene:");
-	for (const auto& pair : meshRenderers)
-		LOG_TRACE(pair.first);
+	for (const auto& [objName, meshRenderer] : meshRenderers)
+		LOG_TRACE("gamObject: {}, material: {}", objName, meshRenderer->GetForwardMaterial()->name);
+}
+void Scene::PrintSortedMeshRenderers()
+{
+	SortMeshRenderers();
+	LOG_TRACE("Sorted MeshRenderers in scene:");
+	for (const auto& meshRenderer : sortedMeshRenderers)
+		LOG_TRACE("gamObject: {}, material: {}", meshRenderer->gameObject->name, meshRenderer->GetForwardMaterial()->name);
+}
+
+
+
+// Private methods:
+void Scene::SortMeshRenderers()
+{
+	if (meshRenderersSortet == false)
+	{
+		std::sort(sortedMeshRenderers.begin(), sortedMeshRenderers.end(), [](MeshRenderer* a, MeshRenderer* b)
+		{
+			return a->GetForwardMaterial() < b->GetForwardMaterial();	// Sort by material pointer (memory ordering).
+		});
+		meshRenderersSortet = true;
+	}
 }
