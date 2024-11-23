@@ -19,11 +19,11 @@ void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
 	isInitialized = true;
 	MaterialManager::context = context;
 
+	//Material* testMaterial = new Material(context, Material::Type::forward, "testMaterial", "../shaders/test.vert.spv", "../shaders/test.frag.spv");
+	//AddMaterial(testMaterial);
+
 	Material* defaultMaterial = new Material(context, Material::Type::forward, "defaultMaterial", "../shaders/default.vert.spv", "../shaders/default.frag.spv");
 	AddMaterial(defaultMaterial);
-
-	Material* testMaterial = new Material(context, Material::Type::forward, "testMaterial", "../shaders/test.vert.spv", "../shaders/test.frag.spv");
-	AddMaterial(testMaterial);
 
 	Material* colorMaterial = new Material(context, Material::Type::forward, "colorMaterial", "../shaders/color.vert.spv", "../shaders/color.frag.spv");
 	AddMaterial(colorMaterial);

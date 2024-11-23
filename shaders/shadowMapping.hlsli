@@ -22,6 +22,7 @@ struct SpotLightData
     float3 direction;           // light direction
     float4 colorIntensity;      // light color (xyz) and intensity (w)
     float nearClip;
+    float2 blendStartEnd;
 };
 cbuffer LightData : register(b1)
 {
@@ -40,12 +41,16 @@ float3 DirectionalShadows(float3 worldPos, float3 normal, float3 color, int dLig
     
     for (uint i = 0; i < dLightsCount; i++)
     {
-        float4 lightSpacePos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f));
-        float3 lightUvz = lightSpacePos.xyz / (lightSpacePos.w < 1e-4 ? 1.0f : lightSpacePos.w);
-        lightUvz.xy = (lightUvz.xy + 1.0f) * 0.5f;
-        lightUvz.z = max(lightUvz.z, lightData[i].nearClip);
+        float shadow = 1.0f;
+        if (receiveShadows)
+        {
+            float4 lightSpacePos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f));
+            float3 lightUvz = lightSpacePos.xyz / (lightSpacePos.w < 1e-4 ? 1.0f : lightSpacePos.w);
+            lightUvz.xy = (lightUvz.xy + 1.0f) * 0.5f;
+            lightUvz.z = max(lightUvz.z, lightData[i].nearClip);
+            shadow = shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy, i), lightUvz.z);
+        }
         
-        float shadow = shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy, i), lightUvz.z);
         float diffuse = max(dot(normal, lightData[i].direction), 0.0) * lightData[i].colorIntensity.w;
         totalLight += shadow * diffuse * color * lightData[i].colorIntensity.xyz;
     }
@@ -60,12 +65,20 @@ float3 SpotShadows(float3 worldPos, float3 normal, float3 color, int sLightsCoun
     
     for (uint i = 0; i < sLightsCount; i++)
     {
-        float4 lightSpacePos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f));
-        float3 lightUvz = lightSpacePos.xyz / (lightSpacePos.w < 1e-4 ? 1.0f : lightSpacePos.w);
-        lightUvz.xy = (lightUvz.xy + 1.0f) * 0.5f;
-        lightUvz.z = max(lightUvz.z, lightData[i].nearClip);
+        float shadow = 1.0f;
+        if (receiveShadows)
+        {
+            float4 lightSpacePos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f));
+            float3 lightUvz = lightSpacePos.xyz / (lightSpacePos.w < 1e-4 ? 1.0f : lightSpacePos.w);
+            lightUvz.xy = (lightUvz.xy + 1.0f) * 0.5f;
+            lightUvz.z = max(lightUvz.z, lightData[i].nearClip);
         
-        float shadow = shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy, i), lightUvz.z);
+            float radius = length(2.0f * lightUvz.xy - 1.0f);
+            float falloff = saturate((radius - lightData[i].blendStartEnd.y) / (lightData[i].blendStartEnd.x - lightData[i].blendStartEnd.y));
+        
+            shadow = falloff * shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy, i), lightUvz.z);
+        }
+        
         float diffuse = max(dot(normal, lightData[i].direction), 0.0) * lightData[i].colorIntensity.w;
         totalLight += shadow * diffuse * color * lightData[i].colorIntensity.xyz;
     }

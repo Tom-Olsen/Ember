@@ -55,6 +55,14 @@ void SpotLight::SetFarClip(const float& farClip)
 	this->farClip = farClip;
 	updateProjectionMatrix = true;
 }
+void SpotLight::SetBlendStart(const float& blendStart)
+{
+	this->blendStart = mathf::Clamp(blendStart, 0.0f, 1.0f);
+}
+void SpotLight::SetBlendEnd(const float& blendEnd)
+{
+	this->blendEnd = mathf::Clamp(blendEnd, 0.0f, 1.0f);
+}
 
 
 
@@ -90,6 +98,18 @@ float SpotLight::GetNearClip() const
 float SpotLight::GetFarClip() const
 {
 	return farClip;
+}
+float SpotLight::GetBlendStart() const
+{
+	return blendStart;
+}
+float SpotLight::GetBlendEnd() const
+{
+	return blendEnd;
+}
+Float2 SpotLight::GetBlendStartEnd() const
+{
+	return Float2(blendStart, blendEnd);
 }
 Float4x4 SpotLight::GetViewMatrix() const
 {

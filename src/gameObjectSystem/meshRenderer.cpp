@@ -119,6 +119,7 @@ void MeshRenderer::SetForwardLightData(const std::array<SpotLight*, MAX_S_LIGHTS
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "direction", spotLights[i]->GetDirection());
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "nearClip", spotLights[i]->GetNearClip());
+			forwardMaterialProperties->SetValue(blockName, arrayName, i, "blendStartEnd", spotLights[i]->GetBlendStartEnd());
 		}
 	forwardMaterialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
 }

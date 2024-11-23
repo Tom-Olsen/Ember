@@ -31,6 +31,25 @@ struct FragmentInput
 };
 
 
+struct Second
+{
+    //float a[2];
+    float a;
+};
+struct First
+{
+    Second secondA;
+    Second secondB;
+};
+
+cbuffer TestBuffer : register(b123)
+{
+    First firstA;
+    //float array[2];
+    First firstB[2];
+}
+
+
 
 float4 main(FragmentInput input) : SV_TARGET
 {
@@ -41,6 +60,7 @@ float4 main(FragmentInput input) : SV_TARGET
     
     // Shading:
     float4 color = colorTextures.Sample(colorSampler, float3(uv, 0));
+    color.a *= firstA.secondA.a;
    
     return color;
 }

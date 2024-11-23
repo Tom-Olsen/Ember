@@ -17,6 +17,8 @@ private: // Members:
 	float aspectRatio;
 	float nearClip;
 	float farClip;
+	float blendStart;
+	float blendEnd;
 	Float4x4 projectionMatrix;
 	bool updateProjectionMatrix;
 
@@ -31,6 +33,8 @@ public: // Methods:
 	void SetFovRadians(const float& fovRadians);
 	void SetNearClip(const float& nearClip);
 	void SetFarClip(const float& farClip);
+	void SetBlendStart(const float& blendStart);
+	void SetBlendEnd(const float& blendEnd);
 
 	// Getters:
 	Float3 GetDirection() const;
@@ -41,6 +45,9 @@ public: // Methods:
 	float GetFovRadians() const;
 	float GetNearClip() const;
 	float GetFarClip() const;
+	float GetBlendStart() const;
+	float GetBlendEnd() const;
+	Float2 GetBlendStartEnd() const;
 	Float4x4 GetViewMatrix() const;
 	Float4x4 GetProjectionMatrix();
 

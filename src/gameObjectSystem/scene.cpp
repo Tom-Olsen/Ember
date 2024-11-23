@@ -201,11 +201,11 @@ void Scene::PrintSortedMeshRenderers()
 }
 void Scene::PrintLights() const
 {
-	LOG_TRACE("Directional lights in scene:");
+	LOG_TRACE("Directional lights in scene: {}", dLightsCount);
 	for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
 		if (directionalLights[i] != nullptr)
 			LOG_TRACE("{}", directionalLights[i]->gameObject->name);
-	LOG_TRACE("Spot lights in scene:");
+	LOG_TRACE("Spot lights in scene: {}", sLightsCount);
 	for (uint32_t i = 0; i < MAX_S_LIGHTS; i++)
 		if (spotLights[i] != nullptr)
 			LOG_TRACE("{}", spotLights[i]->gameObject->name);

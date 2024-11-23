@@ -130,12 +130,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		// Begin render pass:
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
-			// Push constants:
-			int dLightsCount = scene->dLightsCount;
-			int sLightsCount = scene->sLightsCount;
-			int pLightsCount = scene->pLightsCount;
-			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), dLightsCount, sLightsCount, pLightsCount);
-
+			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount);
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, MeshRenderer::GetShadowPipeline());
 			vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VulkanPushConstant), &pushConstant);
 			
@@ -152,7 +147,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
 		
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
-					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), dLightsCount + sLightsCount, 0, 0, 0);
+					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), scene->dLightsCount + scene->sLightsCount + scene->pLightsCount, 0, 0, 0);
 				}
 			}
 		}
@@ -163,7 +158,6 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 {
 	vkResetCommandPool(context->LogicalDevice(), forwardCommands[context->frameIndex].pool, 0);
-	// vkResetCommandBuffer(forwardCommands[context->frameIndex].buffer, 0); // requires VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag in commandPool creation
 	VkCommandBuffer commandBuffer = forwardCommands[context->frameIndex].buffer;
 
 	// Begin command buffer:

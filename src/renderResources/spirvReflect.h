@@ -33,15 +33,15 @@ struct UniformBufferBlock
 {
 public: // Members:
 	std::string name;
+	uint32_t size;			// in bytes
 	uint32_t setIndex;		// always 0 for HLSL shaders
 	uint32_t bindingIndex;
-	uint32_t size;
 
 private: // Members:
 	std::unordered_map<std::string, UniformBufferMember*> members;
 
 public: // Methods:
-	UniformBufferBlock(const std::string& name, uint32_t setIndex, uint32_t bindingIndex);
+	UniformBufferBlock(const std::string& name, uint32_t size, uint32_t setIndex, uint32_t bindingIndex);
 	~UniformBufferBlock();
 
 	void AddMember(std::string name, UniformBufferMember* member);
@@ -70,7 +70,7 @@ private: // Methods:
 	bool IsStruct(const SpvReflectBlockVariable& memberReflection) const;
 	bool IsArray(const SpvReflectBlockVariable& memberReflection) const;
 	void StructReflection(const SpvReflectBlockVariable& blockReflection, UniformBufferMember* uniformBufferMember) const;
-	void ArrayReflection(const std::string& blockName, const SpvReflectBlockVariable& blockReflection, UniformBufferMember* uniformBufferMember) const;
+	void ArrayReflection(const std::string& arrayName, const SpvReflectBlockVariable& arrayReflection, UniformBufferMember* member) const;
 	static std::string GetSpvReflectDescriptorTypeName(SpvReflectDescriptorType spvReflectDescriptorType);
 	static std::string GetSpvStorageClassName(SpvStorageClass spvStorageClass);
 	static std::string GetSpvBuiltInName(SpvBuiltIn spvBuiltIn);

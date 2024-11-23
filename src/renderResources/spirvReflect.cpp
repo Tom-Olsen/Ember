@@ -29,12 +29,12 @@ std::string UniformBufferMember::ToString(const std::string& name, int indent) c
 
 
 // UniformBufferBlock Constructor/Destructor:
-UniformBufferBlock::UniformBufferBlock(const std::string& name, uint32_t setIndex, uint32_t bindingIndex)
+UniformBufferBlock::UniformBufferBlock(const std::string& name, uint32_t size, uint32_t setIndex, uint32_t bindingIndex)
 {
 	this->name = name;
+    this->size = size;
 	this->setIndex = setIndex;
 	this->bindingIndex = bindingIndex;
-    this->size = 0;
 }
 UniformBufferBlock::~UniformBufferBlock()
 {
@@ -64,7 +64,7 @@ UniformBufferMember* UniformBufferBlock::GetMember(const std::string& name) cons
 }
 std::string UniformBufferBlock::ToString() const
 {
-    std::string output = name + "(binding=" + std::to_string(bindingIndex) + "):\n";
+    std::string output = name + "(binding=" + std::to_string(bindingIndex) + ", size=" + std::to_string(size) + "):\n";
     for (const auto& [name, member] : members)
         output += member->ToString(name, 0);
     return output;
@@ -131,31 +131,30 @@ std::vector<SpvReflectDescriptorSet*> SpirvReflect::GetDescriptorSetsReflection(
 }
 UniformBufferBlock* SpirvReflect::GetUniformBufferBlock(const SpvReflectBlockVariable& blockReflection, uint32_t setIndex, uint32_t bindingIndex) const
 {
-    UniformBufferBlock* uniformBufferBlock = new UniformBufferBlock(blockReflection.name, setIndex, bindingIndex);
+    UniformBufferBlock* block = new UniformBufferBlock(blockReflection.name, blockReflection.size, setIndex, bindingIndex);
 
     for (uint32_t memberIndex = 0; memberIndex < blockReflection.member_count; memberIndex++)
     {
         // Create UniformBufferMember:
         SpvReflectBlockVariable& memberReflection = blockReflection.members[memberIndex];
-        UniformBufferMember* uniformBufferMember = new UniformBufferMember();
+        UniformBufferMember* member = new UniformBufferMember();
 
         // Base member:
-        std::string memberName = memberReflection.name;
-        uniformBufferMember->offset = memberReflection.offset;
-        uniformBufferMember->size = memberReflection.size;
+        member->offset = memberReflection.offset;
+        member->size = memberReflection.size;
 
-        // Submembers for structs:
+        // Submember struct reflection:
         if (IsStruct(memberReflection) && !IsArray(memberReflection))
-			StructReflection(memberReflection, uniformBufferMember);
+			StructReflection(memberReflection, member);
 
-        // Submembers for arrays:
+        // Submember array reflection:
         if (IsArray(memberReflection))
-			ArrayReflection(memberName, memberReflection, uniformBufferMember);
+			ArrayReflection(memberReflection.name, memberReflection, member);
 
-        uniformBufferBlock->AddMember(memberName, uniformBufferMember);
+        block->AddMember(memberReflection.name, member);
     }
 
-    return uniformBufferBlock;
+    return block;
 }
 bool SpirvReflect::IsStruct(const SpvReflectBlockVariable& memberReflection) const
 {
@@ -165,42 +164,41 @@ bool SpirvReflect::IsArray(const SpvReflectBlockVariable& memberReflection) cons
 {
 	return memberReflection.array.dims_count > 0;
 }
-void SpirvReflect::StructReflection(const SpvReflectBlockVariable& blockReflection, UniformBufferMember* uniformBufferMember) const
+void SpirvReflect::StructReflection(const SpvReflectBlockVariable& memberReflection, UniformBufferMember* member) const
 {
-    for (uint32_t memberIndex = 0; memberIndex < blockReflection.member_count; memberIndex++)
+    for (uint32_t subMemberIndex = 0; subMemberIndex < memberReflection.member_count; subMemberIndex++)
     {
-        SpvReflectBlockVariable& memberReflection = blockReflection.members[memberIndex];
-        UniformBufferMember* member = new UniformBufferMember();
+        SpvReflectBlockVariable& subMemberReflection = memberReflection.members[subMemberIndex];
+        UniformBufferMember* subMember = new UniformBufferMember();
 
 		// Base struct:
-        std::string memberName = memberReflection.name;
-        member->offset = blockReflection.offset + memberReflection.offset;
-        member->size = memberReflection.size;
+        subMember->offset = subMemberReflection.offset + member->offset;
+        subMember->size = subMemberReflection.size;
 
-        // Submembers for structs:
-        if (IsStruct(memberReflection) && !IsArray(memberReflection))
-            StructReflection(memberReflection, uniformBufferMember);
+        // Submember struct reflection:
+        if (IsStruct(subMemberReflection) && !IsArray(subMemberReflection))
+            StructReflection(subMemberReflection, subMember);
 
-        // Submembers for arrays:
-        if (IsArray(memberReflection))
-            ArrayReflection(memberName, memberReflection, member);
+        // Submember array or arrayOfStruct reflection:
+        if (IsArray(subMemberReflection))
+            ArrayReflection(subMemberReflection.name, subMemberReflection, subMember);
 
-        uniformBufferMember->subMembers.emplace(memberReflection.name, member);
+        member->subMembers.emplace(subMemberReflection.name, subMember);
     }
 }
-void SpirvReflect::ArrayReflection(const std::string& blockName, const SpvReflectBlockVariable& blockReflection, UniformBufferMember* uniformBufferMember) const
+void SpirvReflect::ArrayReflection(const std::string& arrayName, const SpvReflectBlockVariable& arrayReflection, UniformBufferMember* member) const
 {
-    for (uint32_t arrayIndex = 0; arrayIndex < blockReflection.array.dims[0]; arrayIndex++)
+    for (uint32_t arrayIndex = 0; arrayIndex < arrayReflection.array.dims[0]; arrayIndex++)
     {
         UniformBufferMember* element = new UniformBufferMember();
-        element->offset = blockReflection.offset + blockReflection.array.stride * arrayIndex;
-        element->size = blockReflection.array.stride;
+        element->offset = member->offset + arrayReflection.array.stride * arrayIndex;
+        element->size = arrayReflection.array.stride;
 
-        // Subsubmembers for array of structs:
-        if (IsStruct(blockReflection))
-            StructReflection(blockReflection, element);
-
-        uniformBufferMember->subMembers.emplace(blockName + "[" + std::to_string(arrayIndex) + "]", element);
+        // Submember struct reflection:
+        if (IsStruct(arrayReflection))
+            StructReflection(arrayReflection, element);
+    
+        member->subMembers.emplace(arrayName + "[" + std::to_string(arrayIndex) + "]", element);
     }
 }
 std::string SpirvReflect::GetSpvReflectDescriptorTypeName(SpvReflectDescriptorType spvReflectDescriptorType)
