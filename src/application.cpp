@@ -8,8 +8,9 @@
 Application::Application()
 {
 	activeScene = nullptr;
-	uint32_t framesInFlight = 2;
-	context = std::make_unique<VulkanContext>(framesInFlight);
+	uint32_t framesInFlight = 8;
+	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_2_BIT;
+	context = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
 	renderer = std::make_unique<VulkanRenderer>(context.get());
 
 	// Init static managers:

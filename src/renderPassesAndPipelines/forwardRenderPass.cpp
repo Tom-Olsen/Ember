@@ -4,11 +4,11 @@
 
 
 
-ForwardRenderPass::ForwardRenderPass(VulkanContext* context, VkSampleCountFlagBits msaaSamples)
+ForwardRenderPass::ForwardRenderPass(VulkanContext* context)
 {
 	this->context = context;
 
-	CreateRenderPass(msaaSamples);
+	CreateRenderPass();
 	CreateMsaaImage();
 	CreateDepthImage();
 	CreateFrameBuffers();
@@ -22,14 +22,14 @@ ForwardRenderPass::~ForwardRenderPass()
 
 
 // Private methods:
-void ForwardRenderPass::CreateRenderPass(VkSampleCountFlagBits msaaSamples)
+void ForwardRenderPass::CreateRenderPass()
 {
 	// Attachments:
 	std::array<VkAttachmentDescription, 3> attachments{};
 	{
 		// Multisampled color attachment description:
 		attachments[0].format = context->surface->surfaceFormat.format;
-		attachments[0].samples = msaaSamples;									// multisampling count
+		attachments[0].samples = context->msaaSamples;							// multisampling count
 		attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering
 		attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// no need to store multisampls after render
 		attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// do not use stencils
@@ -39,7 +39,7 @@ void ForwardRenderPass::CreateRenderPass(VkSampleCountFlagBits msaaSamples)
 
 		// Depth attachment description:
 		attachments[1].format = depthFormat;									// must be same as depth image format
-		attachments[1].samples = msaaSamples;									// msaaSamples
+		attachments[1].samples = context->msaaSamples;							// msaaSamples
 		attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear depth buffer before rendering
 		attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// depth content is discarded after rendering
 		attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// stencil part not used yet
@@ -120,7 +120,7 @@ void ForwardRenderPass::CreateMsaaImage()
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = context->physicalDevice->maxMsaaSamples;
+	imageInfo.samples = context->msaaSamples;
 	imageInfo.flags = 0;
 
 	VmaAllocationCreateInfo allocationInfo = {};
@@ -152,7 +152,7 @@ void ForwardRenderPass::CreateDepthImage()
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = context->physicalDevice->maxMsaaSamples;
+	imageInfo.samples = context->msaaSamples;
 	imageInfo.flags = 0;
 
 	VmaAllocationCreateInfo allocationInfo = {};

@@ -20,11 +20,11 @@ private: // Members:
 	VkFormat depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 public: // Methods:
-	ForwardRenderPass(VulkanContext* context, VkSampleCountFlagBits msaaSamples);
+	ForwardRenderPass(VulkanContext* context);
 	~ForwardRenderPass();
 
 private: // Methods:
-	void CreateRenderPass(VkSampleCountFlagBits msaaSamples);
+	void CreateRenderPass();
 	void CreateMsaaImage();
 	void CreateDepthImage();
 	void CreateFrameBuffers();

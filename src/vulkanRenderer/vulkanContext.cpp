@@ -1,10 +1,11 @@
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include "logger.h"
 
 
 
 // Constructor:
-VulkanContext::VulkanContext(uint32_t framesInFlight)
+VulkanContext::VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaaSamples)
 {
 	this->framesInFlight = framesInFlight;
 	this->frameIndex = 0;
@@ -35,6 +36,8 @@ VulkanContext::VulkanContext(uint32_t framesInFlight)
 	allocator = std::make_unique<VulkanMemoryAllocator>(instance.get(), logicalDevice.get(), physicalDevice.get());
 	descriptorPool = std::make_unique<VulkanDescriptorPool>(logicalDevice.get());
 	swapchain = std::make_unique<VulkanSwapchain>(logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+
+	this->msaaSamples = std::min(msaaSamples, physicalDevice->maxMsaaSamples);
 }
 
 

@@ -127,7 +127,7 @@ void ForwardPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, c
     // Multisampling:
     VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
     multisampleState.sampleShadingEnable = VK_FALSE;
-    multisampleState.rasterizationSamples = context->physicalDevice->maxMsaaSamples;
+    multisampleState.rasterizationSamples = context->msaaSamples;
     multisampleState.minSampleShading = 1.0f;           // Optional
     multisampleState.pSampleMask = nullptr;             // Optional
     multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional

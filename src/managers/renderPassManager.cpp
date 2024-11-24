@@ -20,7 +20,7 @@ void RenderPassManager::Init(VulkanContext* context)
 	isInitialized = true;
 	RenderPassManager::context = context;
 
-	ForwardRenderPass* forwardRenderPass = new ForwardRenderPass(context, context->physicalDevice->maxMsaaSamples);
+	ForwardRenderPass* forwardRenderPass = new ForwardRenderPass(context);
 	AddRenderPass("forwardRenderPass", forwardRenderPass);
 
 	ShadowRenderPass* shadowRenderPass = new ShadowRenderPass(context);
@@ -33,7 +33,7 @@ void RenderPassManager::Clear()
 }
 void RenderPassManager::RecreateRenderPasses()
 {
-	RenderPass* newForwardRenderPass = new ForwardRenderPass(context, context->physicalDevice->maxMsaaSamples);
+	RenderPass* newForwardRenderPass = new ForwardRenderPass(context);
 	DeleteRenderPass("forwardRenderPass");
 	AddRenderPass("forwardRenderPass", newForwardRenderPass);
 }

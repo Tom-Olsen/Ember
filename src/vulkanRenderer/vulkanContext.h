@@ -9,7 +9,6 @@
 #include "vulkanMemoryAllocator.h"
 #include "vulkanDescriptorPool.h"
 #include "vulkanSwapchain.h"
-#include "logger.h"
 
 
 
@@ -26,9 +25,10 @@ public: // Members:
 	std::unique_ptr<VulkanSwapchain> swapchain;
 	uint32_t framesInFlight;
 	uint32_t frameIndex;
+	VkSampleCountFlagBits msaaSamples;
 
 public: // Methods:
-	VulkanContext(uint32_t framesInFlight);
+	VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaaSamples);
 	~VulkanContext();
 
 	// Getters:
