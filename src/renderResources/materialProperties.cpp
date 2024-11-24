@@ -242,16 +242,16 @@ void MaterialProperties::CreateDescriptorSets()
 	descriptorSets.resize(context->framesInFlight);
 	VKA(vkAllocateDescriptorSets(context->logicalDevice->device, &allocInfo, descriptorSets.data()));
 }
-void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<VulkanUniformBuffer> samplerResourceBinding)
+void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<VulkanUniformBuffer> uniformBufferResourceBinding)
 {
 	VkDescriptorBufferInfo bufferInfo = {};
-	bufferInfo.buffer = samplerResourceBinding.resource.buffer->buffer;
+	bufferInfo.buffer = uniformBufferResourceBinding.resource.buffer->buffer;
 	bufferInfo.offset = 0;
-	bufferInfo.range = samplerResourceBinding.resource.GetSize();
+	bufferInfo.range = uniformBufferResourceBinding.resource.GetSize();
 
 	VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 	descriptorWrite.dstSet = descriptorSets[frameIndex];
-	descriptorWrite.dstBinding = samplerResourceBinding.binding;
+	descriptorWrite.dstBinding = uniformBufferResourceBinding.binding;
 	descriptorWrite.dstArrayElement = 0;
 	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	descriptorWrite.descriptorCount = 1;

@@ -18,6 +18,7 @@ private: // Members:
 	VmaAllocationCreateInfo allocInfo;
 
 public: // Methods:
+	VmaBuffer();
 	VmaBuffer(VulkanContext* context, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo);
 	~VmaBuffer();
 	uint64_t GetSize();

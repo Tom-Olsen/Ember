@@ -6,6 +6,12 @@
 
 
 // Constructor:
+VmaBuffer::VmaBuffer()
+{
+	this->context = nullptr;
+	this->buffer = VK_NULL_HANDLE;
+	this->allocation = VK_NULL_HANDLE;
+}
 VmaBuffer::VmaBuffer(VulkanContext* context, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
 {
 	this->context = context;

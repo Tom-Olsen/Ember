@@ -8,8 +8,8 @@
 Application::Application()
 {
 	activeScene = nullptr;
-	uint32_t framesInFlight = 8;
-	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_2_BIT;
+	uint32_t framesInFlight = 2;
+	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
 	context = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
 	renderer = std::make_unique<VulkanRenderer>(context.get());
 

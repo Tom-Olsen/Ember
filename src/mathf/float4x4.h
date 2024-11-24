@@ -82,6 +82,14 @@ public:
 	float operator[](const Index2& index) const;
 	Float4 GetRow(int index) const;
 	Float4 GetColumn(int index) const;
+	Float3 GetTranslation() const;
+	Float3 GetScale() const;
+	Float3x3 GetRotation3x3() const;
+	Float4x4 GetRotation4x4() const;
+	Float3x3 GetRotation3x3(Float3 scale) const;
+	Float4x4 GetRotation4x4(Float3 scale) const;
+	Float3x3 GetRotation3x3(float scale) const;
+	Float4x4 GetRotation4x4(float scale) const;
 
 	// Assignment:
 	Float4x4& operator=(const Float4x4& other);

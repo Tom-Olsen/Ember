@@ -22,7 +22,7 @@ VulkanUniformBuffer::VulkanUniformBuffer(VulkanContext* context, UniformBufferBl
 	allocInfo.requiredFlags = 0; 
 	allocInfo.preferredFlags = 0;
 
-	this->buffer = std::make_unique<VmaBuffer>(context, bufferInfo, allocInfo);
+	this->buffer = std::make_shared<VmaBuffer>(context, bufferInfo, allocInfo);
 
 	// Get deviceData pointer:
 	VmaAllocationInfo info;

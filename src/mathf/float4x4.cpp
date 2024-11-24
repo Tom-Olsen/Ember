@@ -97,9 +97,9 @@ Float4x4 Float4x4::Transpose()
 {
 	return Float4x4
 	(data[0], data[4], data[8], data[12],
-		data[1], data[5], data[9], data[13],
-		data[2], data[6], data[10], data[14],
-		data[3], data[7], data[11], data[15]);
+	 data[1], data[5], data[9], data[13],
+	 data[2], data[6], data[10], data[14],
+	 data[3], data[7], data[11], data[15]);
 }
 float Float4x4::Determinant() const
 {
@@ -316,6 +316,45 @@ Float4 Float4x4::GetColumn(int index) const
 	if (index >= 0 && index < 4)
 		return Float4(data[4 * index], data[4 * index + 1], data[4 * index + 2], data[4 * index + 3]);
 	throw std::out_of_range("Float4x4 column index out of range.");
+}
+Float3 Float4x4::GetTranslation() const
+{
+	return Float3(data[12], data[13], data[14]);
+}
+Float3 Float4x4::GetScale() const
+{
+	return Float3(GetColumn(0).Length(), GetColumn(1).Length(), GetColumn(2).Length());
+}
+Float3x3 Float4x4::GetRotation3x3() const
+{
+	return GetRotation3x3(GetScale());
+}
+Float4x4 Float4x4::GetRotation4x4() const
+{
+	return GetRotation4x4(GetScale());
+}
+Float3x3 Float4x4::GetRotation3x3(float scale) const
+{
+	return GetRotation3x3(Float3(scale));
+}
+Float4x4 Float4x4::GetRotation4x4(float scale) const
+{
+	return GetRotation4x4(Float3(scale));
+}
+Float3x3 Float4x4::GetRotation3x3(Float3 scale) const
+{
+	return Float3x3::Rows
+	(data[0] / scale.x, data[1] / scale.y, data[2] / scale.z,
+	 data[4] / scale.x, data[5] / scale.y, data[6] / scale.z,
+	 data[8] / scale.x, data[9] / scale.y, data[10] / scale.z);
+}
+Float4x4 Float4x4::GetRotation4x4(Float3 scale) const
+{
+	return Float4x4::Columns
+	(data[0] / scale.x, data[1] / scale.y, data[2] / scale.z, 0.0f,
+	 data[4] / scale.x, data[5] / scale.y, data[6] / scale.z, 0.0f,
+	 data[8] / scale.x, data[9] / scale.y, data[10] / scale.z, 0.0f,
+	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 

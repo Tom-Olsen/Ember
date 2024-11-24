@@ -12,7 +12,7 @@
 class VulkanUniformBuffer
 {
 public: // Members:
-	std::shared_ptr<VmaBuffer> buffer; // TODO: using unique ptr here causes a crash, why?
+	std::shared_ptr<VmaBuffer> buffer;
 
 private: // Members:
 	VulkanContext* context;
