@@ -37,7 +37,7 @@ public: // Methods:
 	void SetBlendEnd(const float& blendEnd);
 
 	// Getters:
-	Float3 GetDirection() const;
+	Float3 GetPosition() const;
 	float GetIntensity() const;
 	Float3 GetColor() const;
 	Float4 GetColorIntensity() const;

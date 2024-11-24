@@ -29,7 +29,7 @@ SpotLight::~SpotLight()
 // Setters:
 void SpotLight::SetIntensity(const float& intensity)
 {
-	this->intensity = std::clamp(intensity, 0.0f, 1.0f);
+	this->intensity = intensity;
 }
 void SpotLight::SetColor(const Float3& color)
 {
@@ -67,9 +67,9 @@ void SpotLight::SetBlendEnd(const float& blendEnd)
 
 
 // Getters:
-Float3 SpotLight::GetDirection() const
+Float3 SpotLight::GetPosition() const
 {
-	return gameObject->transform->GetForward();
+	return gameObject->transform->GetPosition();
 }
 float SpotLight::GetIntensity() const
 {

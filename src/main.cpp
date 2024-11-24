@@ -6,14 +6,14 @@
 
 
 // TODO now:
+// - directional lights: shadow cascades, one frustrum seems weird
+// - point lights (cube map shadow mapping)
 // - validation layer errors when two shaders have the same binding number
 // - give the material a default materialProperties which is used if no materialProperties are set
 //      - Problem: renderMatrizes is different for each object => diferent materialProperties for each object
 // - refactor code and make everything cleaner!
 // - better lighting model (specular highlights etc.)
 // - add gameObject selection (need gizmos => ui renderpass)
-// - text rendering
-// - blender model import
 // - currently one commandPool per commandBuffer, should be one commandPool per frame, shared by all commands for that frame
 
 // TODO long term:
@@ -37,11 +37,9 @@
 // - imgui integration
 // - render into custom image with higher precision (16-bit floats for color instead of 8-bit) and push final image to swapchain.
 //   This allows for HDR rendering and post processing effects.
-
-// FIXME:
-// - in materialProperties the unordered map updateUniformBuffer needs to track the frame index for each uniform buffer
-//   and update the uniform buffer continuously until all frames have the correct data.
-//   Similar thing would be useful for texture and sampler maps. This would allow to remove the SetTexture2d/SamplerForAllFrames functions.
+//    - look into colorspace sRGB vs linear.
+// - blender model import
+// - text rendering
 
 
 
@@ -59,10 +57,9 @@ int main()
     //MaterialManager::GetMaterial("colorMaterial")->PrintBindings();
     //MaterialManager::GetMaterial("colorMaterial")->PrintUniformBuffers();
     //MaterialManager::GetMaterial("testMaterial")->PrintUniformBuffers();
-    //return 0;
 
-    bool directionalLightsActive = 1;
-    bool spotLightsActive = 0;
+    bool directionalLightsActive = 0;
+    bool spotLightsActive = 1;
 
     // Build simple scene:
     Scene* scene = new Scene();
@@ -94,8 +91,8 @@ int main()
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
-        SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, 45, 0));
-        gameObject->AddComponent<SpinGlobal>(spinGlobal);
+        //SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, 45, 0));
+        //gameObject->AddComponent<SpinGlobal>(spinGlobal);
     
         if (directionalLightsActive)
         {
@@ -113,7 +110,7 @@ int main()
         {
             SpotLight* spotLight = new SpotLight();
             spotLight->SetColor(Float3(1.0f, 0.0f, 0.0f));
-            spotLight->SetIntensity(1.0f);
+            spotLight->SetIntensity(100.0f);
             spotLight->SetNearClip(0.1f);
             spotLight->SetFarClip(20.0f);
             spotLight->SetFovDegrees(30.0f);
@@ -124,92 +121,92 @@ int main()
     
 		scene->AddGameObject(gameObject);
     }
-    {// Light1:
-        GameObject* gameObject = new GameObject("light1");
-        Float3 pos = Float3(-7.0f, 7.0f, 3.5f);
-        Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
-        gameObject->transform->SetPosition(pos);
-        gameObject->transform->SetRotationMatrix(matrix);
-    
-        MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
-        meshRenderer->castShadows = meshRenderer->receiveShadows = false;
-        gameObject->AddComponent<MeshRenderer>(meshRenderer);
-    
-        SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, -60, 0));
-        gameObject->AddComponent<SpinGlobal>(spinGlobal);
-
-        if (directionalLightsActive)
-        {
-            DirectionalLight* directionalLight = new DirectionalLight();
-            directionalLight->SetIntensity(1.0f);
-            directionalLight->SetColor(Float3(0.0f, 1.0f, 0.0f));
-            directionalLight->SetNearClip(0.1f);
-            directionalLight->SetFarClip(10.0f);
-            directionalLight->SetViewWidth(10.0f);
-            directionalLight->SetViewHeight(10.0f);
-            gameObject->AddComponent<DirectionalLight>(directionalLight);
-        }
-
-        if (spotLightsActive)
-        {
-            SpotLight* spotLight = new SpotLight();
-            spotLight->SetColor(Float3(0.0f, 1.0f, 0.0f));
-            spotLight->SetIntensity(1.0f);
-            spotLight->SetNearClip(0.1f);
-            spotLight->SetFarClip(20.0f);
-            spotLight->SetFovDegrees(30.0f);
-            spotLight->SetBlendStart(0.7f);
-            spotLight->SetBlendEnd(0.9f);
-            gameObject->AddComponent<SpotLight>(spotLight);
-        }
-    
-        scene->AddGameObject(gameObject);
-    }
-    {// Light2:
-        GameObject* gameObject = new GameObject("light2");
-        Float3 pos = Float3(0.0f, 7.0f, -7.5f);
-        Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
-        gameObject->transform->SetPosition(pos);
-        gameObject->transform->SetRotationMatrix(matrix);
-    
-        MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
-        meshRenderer->castShadows = meshRenderer->receiveShadows = false;
-        gameObject->AddComponent<MeshRenderer>(meshRenderer);
-    
-        SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, 90, 0));
-        gameObject->AddComponent<SpinGlobal>(spinGlobal);
-
-        if (directionalLightsActive)
-        {
-            DirectionalLight* directionalLight = new DirectionalLight();
-            directionalLight->SetIntensity(1.0f);
-            directionalLight->SetColor(Float3(0.0f, 0.0f, 1.0f));
-            directionalLight->SetNearClip(0.1f);
-            directionalLight->SetFarClip(15.0f);
-            directionalLight->SetViewWidth(10.0f);
-            directionalLight->SetViewHeight(10.0f);
-            gameObject->AddComponent<DirectionalLight>(directionalLight);
-        }
-
-        if (spotLightsActive)
-        {
-            SpotLight* spotLight = new SpotLight();
-            spotLight->SetColor(Float3(0.0f, 0.0f, 1.0f));
-            spotLight->SetIntensity(1.0f);
-            spotLight->SetNearClip(0.1f);
-            spotLight->SetFarClip(20.0f);
-            spotLight->SetFovDegrees(30.0f);
-            spotLight->SetBlendStart(0.7f);
-            spotLight->SetBlendEnd(0.9f);
-            gameObject->AddComponent<SpotLight>(spotLight);
-        }
-    
-        scene->AddGameObject(gameObject);
-    }
+    //{// Light1:
+    //    GameObject* gameObject = new GameObject("light1");
+    //    Float3 pos = Float3(-7.0f, 7.0f, 3.5f);
+    //    Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
+    //    gameObject->transform->SetPosition(pos);
+    //    gameObject->transform->SetRotationMatrix(matrix);
+    //
+    //    MeshRenderer* meshRenderer = new MeshRenderer();
+    //    meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+    //    meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
+    //    meshRenderer->castShadows = meshRenderer->receiveShadows = false;
+    //    gameObject->AddComponent<MeshRenderer>(meshRenderer);
+    //
+    //    SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, -60, 0));
+    //    gameObject->AddComponent<SpinGlobal>(spinGlobal);
+    //
+    //    if (directionalLightsActive)
+    //    {
+    //        DirectionalLight* directionalLight = new DirectionalLight();
+    //        directionalLight->SetIntensity(1.0f);
+    //        directionalLight->SetColor(Float3(0.0f, 1.0f, 0.0f));
+    //        directionalLight->SetNearClip(0.1f);
+    //        directionalLight->SetFarClip(10.0f);
+    //        directionalLight->SetViewWidth(10.0f);
+    //        directionalLight->SetViewHeight(10.0f);
+    //        gameObject->AddComponent<DirectionalLight>(directionalLight);
+    //    }
+    //
+    //    if (spotLightsActive)
+    //    {
+    //        SpotLight* spotLight = new SpotLight();
+    //        spotLight->SetColor(Float3(0.0f, 1.0f, 0.0f));
+    //        spotLight->SetIntensity(100.0f);
+    //        spotLight->SetNearClip(0.1f);
+    //        spotLight->SetFarClip(20.0f);
+    //        spotLight->SetFovDegrees(30.0f);
+    //        spotLight->SetBlendStart(0.7f);
+    //        spotLight->SetBlendEnd(0.9f);
+    //        gameObject->AddComponent<SpotLight>(spotLight);
+    //    }
+    //
+    //    scene->AddGameObject(gameObject);
+    //}
+    //{// Light2:
+    //    GameObject* gameObject = new GameObject("light2");
+    //    Float3 pos = Float3(0.0f, 7.0f, -7.5f);
+    //    Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
+    //    gameObject->transform->SetPosition(pos);
+    //    gameObject->transform->SetRotationMatrix(matrix);
+    //
+    //    MeshRenderer* meshRenderer = new MeshRenderer();
+    //    meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+    //    meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("colorMaterial"));
+    //    meshRenderer->castShadows = meshRenderer->receiveShadows = false;
+    //    gameObject->AddComponent<MeshRenderer>(meshRenderer);
+    //
+    //    SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, 90, 0));
+    //    gameObject->AddComponent<SpinGlobal>(spinGlobal);
+    //
+    //    if (directionalLightsActive)
+    //    {
+    //        DirectionalLight* directionalLight = new DirectionalLight();
+    //        directionalLight->SetIntensity(1.0f);
+    //        directionalLight->SetColor(Float3(0.0f, 0.0f, 1.0f));
+    //        directionalLight->SetNearClip(0.1f);
+    //        directionalLight->SetFarClip(15.0f);
+    //        directionalLight->SetViewWidth(10.0f);
+    //        directionalLight->SetViewHeight(10.0f);
+    //        gameObject->AddComponent<DirectionalLight>(directionalLight);
+    //    }
+    //
+    //    if (spotLightsActive)
+    //    {
+    //        SpotLight* spotLight = new SpotLight();
+    //        spotLight->SetColor(Float3(0.0f, 0.0f, 1.0f));
+    //        spotLight->SetIntensity(100.0f);
+    //        spotLight->SetNearClip(0.1f);
+    //        spotLight->SetFarClip(20.0f);
+    //        spotLight->SetFovDegrees(30.0f);
+    //        spotLight->SetBlendStart(0.7f);
+    //        spotLight->SetBlendEnd(0.9f);
+    //        gameObject->AddComponent<SpotLight>(spotLight);
+    //    }
+    //
+    //    scene->AddGameObject(gameObject);
+    //}
     { // Floor:
         GameObject* gameObject = new GameObject("floor");
         gameObject->transform->SetPosition(0.0f, -0.5f, 0.0f);
@@ -219,8 +216,8 @@ int main()
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
         meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("white"));
+        meshRenderer->forwardMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("white"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         scene->AddGameObject(gameObject);
@@ -246,8 +243,8 @@ int main()
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
         meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("brick"));
+        meshRenderer->forwardMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("brick"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
@@ -263,13 +260,13 @@ int main()
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
         meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("stones"));
+        meshRenderer->forwardMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("stones"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         scene->AddGameObject(gameObject);
     }
-    {// Sphere:
+    {// Sphere 0:
         GameObject* gameObject = new GameObject("sphere0");
         gameObject->transform->SetPosition(0.5f, 0.0f, 0.0f);
         gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
@@ -277,32 +274,34 @@ int main()
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("cubeSphere");
         meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("wall0"));
+        meshRenderer->forwardMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("wall0"));
+        meshRenderer->forwardMaterialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
-        SpinGlobal* spinGlobal = new SpinGlobal(Float3(2.0f, 0.0f, 0.0f), Float3(0, 45, 0));
-        gameObject->AddComponent<SpinGlobal>(spinGlobal);
+        //SpinGlobal* spinGlobal = new SpinGlobal(Float3(2.0f, 0.0f, 0.0f), Float3(0, 45, 0));
+        //gameObject->AddComponent<SpinGlobal>(spinGlobal);
     
         scene->AddGameObject(gameObject);
     }
-    //{// ShadowMap Quad:
-    //    GameObject* gameObject = new GameObject("quad");
-    //    gameObject->transform->SetPosition(1.0f, 0.25f, 3.0f);
-    //    gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
-    //    gameObject->transform->SetScale(1.5f);
-    //
-    //    Texture2d* shadowMaps = static_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"))->shadowMaps.get();
-    //
-    //    MeshRenderer* meshRenderer = new MeshRenderer();
-    //    meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
-    //    meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("testMaterial"));
-    //    meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
-    //    meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTextures", shadowMaps);
-    //    gameObject->AddComponent<MeshRenderer>(meshRenderer);
-    //
-    //    scene->AddGameObject(gameObject);
-    //}
+    {// Sphere 1:
+        GameObject* gameObject = new GameObject("sphere1");
+        gameObject->transform->SetPosition(-0.5f, 0.0f, 1.0f);
+        gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+
+        MeshRenderer* meshRenderer = new MeshRenderer();
+        meshRenderer->mesh = MeshManager::GetMesh("cubeSphere");
+        meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+        meshRenderer->forwardMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("wood0"));
+        meshRenderer->forwardMaterialProperties->SetValue("SurfaceProperties", "roughness", 0.5f);
+        gameObject->AddComponent<MeshRenderer>(meshRenderer);
+
+        SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 30.0f, 0.0f));
+        gameObject->AddComponent<SpinLocal>(spinLocal);
+
+        scene->AddGameObject(gameObject);
+    }
     //{// Cube Array:
     //    int N = 10;
     //    float dist = 20.0f;
@@ -317,8 +316,8 @@ int main()
     //            MeshRenderer* meshRenderer = new MeshRenderer();
     //            meshRenderer->mesh = MeshManager::GetMesh("unitCube");
     //            meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-    //            meshRenderer->forwardMaterialProperties->SetSamplerForAllFrames("colorSampler", SamplerManager::GetSampler("colorSampler"));
-    //            meshRenderer->forwardMaterialProperties->SetTexture2dForAllFrames("colorTexture", TextureManager::GetTexture2d("brick"));
+    //            meshRenderer->forwardMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+    //            meshRenderer->forwardMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("brick"));
     //            gameObject->AddComponent<MeshRenderer>(meshRenderer);
     //
     //            scene->AddGameObject(gameObject);

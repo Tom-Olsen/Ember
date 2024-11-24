@@ -130,7 +130,8 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		// Begin render pass:
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
-			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount);
+			Float3 cameraPosition = scene->activeCamera->transform->GetPosition();
+			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount, cameraPosition);
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, MeshRenderer::GetShadowPipeline());
 			vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VulkanPushConstant), &pushConstant);
 			
@@ -140,7 +141,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 				{
 					meshRenderer->SetShadowRenderMatrizes(scene->directionalLights);
 					meshRenderer->SetShadowRenderMatrizes(scene->spotLights);
-					meshRenderer->shadowMaterialProperties->UpdateUniformBuffers(context->frameIndex);
+					meshRenderer->shadowMaterialProperties->UpdateShaderData();
 
 					const VkDeviceSize offsets[1] = { 0 };
 					vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
@@ -184,7 +185,8 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 		// Begin render pass:
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
-			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount);
+			Float3 cameraPosition = scene->activeCamera->transform->GetPosition();
+			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount, cameraPosition);
 
 			Material* previousMaterial = nullptr;
 			for (auto& meshRenderer : scene->GetSortedMeshRenderers())
@@ -194,7 +196,7 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 					meshRenderer->SetForwardRenderMatrizes(scene->activeCamera);
 					meshRenderer->SetForwardLightData(scene->directionalLights);
 					meshRenderer->SetForwardLightData(scene->spotLights);
-					meshRenderer->forwardMaterialProperties->UpdateUniformBuffers(context->frameIndex);
+					meshRenderer->forwardMaterialProperties->UpdateShaderData();
 
 					if (previousMaterial != meshRenderer->GetForwardMaterial())
 					{

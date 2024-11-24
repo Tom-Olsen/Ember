@@ -1,20 +1,5 @@
 #include "linearAlgebra.hlsli"
-
-
-
-struct PushConstant
-{
-    float time;
-    float delaTime;
-    int dLightsCount;
-    int sLightsCount;
-    int pLightsCount;
-};
-#if defined(_DXC)
-[[vk::push_constant]] CullPushConstants pc;
-#else
-[[vk::push_constant]] ConstantBuffer<PushConstant> pc;
-#endif
+#include "pushConstant.hlsli"
 
 
 

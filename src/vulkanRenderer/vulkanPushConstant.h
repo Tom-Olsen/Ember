@@ -18,12 +18,14 @@ private:
 	alignas(4) int dLightsCount;
 	alignas(4) int sLightsCount;
 	alignas(4) int pLightsCount;
+	alignas(16) Float4 cameraPosition;
 
 private:
-	char padding[128 - 5 * sizeof(float)];
+	int paddingSize = 128 - 5 * 4 - 1 * 16;
+	char padding[128 - 5 * 4 - 1 * 16];
 
 public:
-	VulkanPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount);
+	VulkanPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount, Float3 cameraPosition);
 	std::string ToString();
 };
 

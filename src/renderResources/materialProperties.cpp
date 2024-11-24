@@ -15,6 +15,7 @@ MaterialProperties::MaterialProperties(Material* material)
 	uniformBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<VulkanUniformBuffer>>>(context->framesInFlight);
 	samplerMaps = std::vector<std::unordered_map<std::string, ResourceBinding<VulkanSampler*>>>(context->framesInFlight);
 	texture2dMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>>(context->framesInFlight);
+	updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(context->framesInFlight);
 
 	for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 	{
@@ -29,7 +30,14 @@ MaterialProperties::MaterialProperties(Material* material)
 				InitTexture2dResourceBinding(material->GetBindingName(i), material->GetBindingIndex(i), TextureManager::GetTexture2d("white"), frameIndex);
 		}
 	}
+	InitStagingMaps();
 	InitDescriptorSets();
+
+	// Set default values:
+	SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 1.0f, 1.0f, 1.0f));
+	SetValue("SurfaceProperties", "roughness", 0.5f);
+	SetValue("SurfaceProperties", "reflectivity", Float3(0.4f));
+	SetValue("SurfaceProperties", "metallic", 0);
 }
 
 
@@ -43,14 +51,36 @@ MaterialProperties::~MaterialProperties()
 
 
 // Public methods:
-void MaterialProperties::UpdateUniformBuffers(uint32_t frameIndex)
+void MaterialProperties::UpdateShaderData()
 {
-	for (auto& [name, resourceBinding] : uniformBufferMaps[frameIndex])
+	// Stream uniform buffer data from host memory to GPU only for current frameIndex:
+	for (auto& [name, resourceBinding] : uniformBufferMaps[context->frameIndex])
 	{
-		if (updateUniformBuffer[name])
+		if (updateUniformBuffer[context->frameIndex].at(name))
 		{
 			resourceBinding.resource.UpdateBuffer();
-			updateUniformBuffer[name] = false;
+			updateUniformBuffer[context->frameIndex].at(name) = false;
+		}
+	}
+
+	// Change the pointer the descriptor set points at to the new sampler:
+	for (auto& [name, resourceBinding] : samplerMaps[context->frameIndex])
+	{
+		if (resourceBinding.resource != samplerStagingMap.at(name))
+		{
+			resourceBinding.resource = samplerStagingMap.at(name);
+			UpdateDescriptorSet(context->frameIndex, resourceBinding);
+		}
+	}
+
+
+	// Change the pointer the descriptor set points at to the new texture2d:
+	for (auto& [name, resourceBinding] : texture2dMaps[context->frameIndex])
+	{
+		if (resourceBinding.resource != texture2dStagingMap.at(name))
+		{
+			resourceBinding.resource = texture2dStagingMap.at(name);
+			UpdateDescriptorSet(context->frameIndex, resourceBinding);
 		}
 	}
 }
@@ -58,99 +88,71 @@ void MaterialProperties::UpdateUniformBuffers(uint32_t frameIndex)
 
 
 
-// Setters:
+// Uniform buffer setters:
 template<typename T>
 void MaterialProperties::SetValue(const std::string& blockName, const std::string& memberName, const T& value)
 {
-	// If cbuffer with 'blockName' doesnt exist, skip:
-	auto it = uniformBufferMaps[context->frameIndex].find(blockName);
-	if (it == uniformBufferMaps[context->frameIndex].end())
-		return;
-
-	// T = bool needs special handling:
-	if constexpr (std::is_same<T, bool>::value)
-		it->second.resource.SetValue(memberName, static_cast<int>(value));
-	else
-		it->second.resource.SetValue(memberName, value);
-	updateUniformBuffer[blockName] = true;
+	auto it = uniformBufferMaps[0].find(blockName);
+	if (it != uniformBufferMaps[0].end())
+	{// blockname exists => set value for all frames:
+		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
+		{
+			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(memberName, value);
+			updateUniformBuffer[frameIndex].at(blockName) = true;
+		}
+	}
 }
 template<typename T>
 void MaterialProperties::SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const T& value)
 {
-	// If cbuffer with 'blockName' doesnt exist, skip:
-	auto it = uniformBufferMaps[context->frameIndex].find(blockName);
-	if (it == uniformBufferMaps[context->frameIndex].end())
-		return;
-
-	// check if type is bool:
-	if constexpr (std::is_same<T, bool>::value)
-		it->second.resource.SetValue(arrayName, arrayindex, static_cast<int>(value));
-	else
-		it->second.resource.SetValue(arrayName, arrayindex, value);
-	updateUniformBuffer[blockName] = true;
+	auto it = uniformBufferMaps[0].find(blockName);
+	if (it != uniformBufferMaps[0].end())
+	{// blockname exists => set value for all frames:
+		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
+		{
+			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayindex, value);
+			updateUniformBuffer[frameIndex].at(blockName) = true;
+		}
+	}
 }
 template<typename T>
 void MaterialProperties::SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const T& value)
 {
-	// If cbuffer with 'blockName' doesnt exist, skip:
-	auto it = uniformBufferMaps[context->frameIndex].find(blockName);
-	if (it == uniformBufferMaps[context->frameIndex].end())
-		return;
-
-	// check if type is bool:
-	if constexpr (std::is_same<T, bool>::value)
-		it->second.resource.SetValue(arrayName, arrayindex, memberName, static_cast<int>(value));
-	else
-		it->second.resource.SetValue(arrayName, arrayindex, memberName, value);
-	updateUniformBuffer[blockName] = true;
+	auto it = uniformBufferMaps[0].find(blockName);
+	if (it != uniformBufferMaps[0].end())
+	{// blockname exists => set value for all frames:
+		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
+		{
+			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayindex, memberName, value);
+			updateUniformBuffer[frameIndex].at(blockName) = true;
+		}
+	}
 }
+
+
+
+// Sampler setters:
 void MaterialProperties::SetSampler(const std::string& name, VulkanSampler* sampler)
 {
 	// If sampler with 'name' doesnt exist, skip:
-	auto it = samplerMaps[context->frameIndex].find(name);
-	if (it == samplerMaps[context->frameIndex].end() || it->second.resource == sampler)
+	auto it = samplerStagingMap.find(name);
+	if (it == samplerStagingMap.end() || it->second == sampler)
 		return;
 
-	it->second.resource = sampler;
-	UpdateDescriptorSet(context->frameIndex, it->second);
+	it->second = sampler;
 }
-void MaterialProperties::SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler)
-{
-	for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
-	{
-		// If sampler with 'name' doesnt exist, skip:
-		auto it = samplerMaps[frameIndex].find(name);
-		if (it == samplerMaps[frameIndex].end() || it->second.resource == sampler)
-			return;
 
-		it->second.resource = sampler;
-		VKA(vkDeviceWaitIdle(context->LogicalDevice()));
-		UpdateDescriptorSet(frameIndex, it->second);
-	}
-}
+
+
+// Texture2d setters:
 void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* texture)
 {
 	// If texture with 'name' doesnt exist, skip:
-	auto it = texture2dMaps[context->frameIndex].find(name);
-	if (it == texture2dMaps[context->frameIndex].end() || it->second.resource == texture)
+	auto it = texture2dStagingMap.find(name);
+	if (it == texture2dStagingMap.end() || it->second == texture)
 		return;
 
-	it->second.resource = texture;
-	UpdateDescriptorSet(context->frameIndex, it->second);
-}
-void MaterialProperties::SetTexture2dForAllFrames(const std::string& name, Texture2d* texture)
-{
-	for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
-	{
-		// If texture with 'name' doesnt exist, skip:
-		auto it = texture2dMaps[frameIndex].find(name);
-		if (it == texture2dMaps[frameIndex].end() || it->second.resource == texture)
-			return;
-
-		it->second.resource = texture;
-		VKA(vkDeviceWaitIdle(context->LogicalDevice()));
-		UpdateDescriptorSet(frameIndex, it->second);
-	}
+	it->second = texture;
 }
 
 
@@ -187,7 +189,9 @@ void MaterialProperties::InitUniformBufferResourceBinding(std::string name, uint
 	{
 		VulkanUniformBuffer uniformBuffer(context, material->GetUniformBufferBlock(name));
 		uniformBufferMaps[frameIndex].emplace(name, ResourceBinding<VulkanUniformBuffer>(uniformBuffer, binding));
-		updateUniformBuffer.emplace(name, true);
+
+		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
+			updateUniformBuffer[frameIndex].emplace(name, true);
 	}
 }
 void MaterialProperties::InitSamplerResourceBinding(std::string name, uint32_t binding, VulkanSampler* sampler, uint32_t frameIndex)
@@ -201,6 +205,13 @@ void MaterialProperties::InitTexture2dResourceBinding(std::string name, uint32_t
 	auto it = texture2dMaps[frameIndex].find(name);
 	if (it == texture2dMaps[frameIndex].end())
 		texture2dMaps[frameIndex].emplace(name, ResourceBinding<Texture2d*>(texture2d, binding));
+}
+void MaterialProperties::InitStagingMaps()
+{
+	for (auto& [name, resourceBinding] : samplerMaps[0])
+		samplerStagingMap.emplace(name, resourceBinding.resource);
+	for (auto& [name, resourceBinding] : texture2dMaps[0])
+		texture2dStagingMap.emplace(name, resourceBinding.resource);
 }
 void MaterialProperties::InitDescriptorSets()
 {

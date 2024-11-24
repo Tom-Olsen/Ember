@@ -2,22 +2,7 @@ SamplerState colorSampler : register(s10);
 SamplerComparisonState shadowSampler : register(s11);
 Texture2DArray<float> colorTextures : register(t24);
 Texture2DArray<float> shadowMaps : register(t21);
-
-
-
-struct PushConstant
-{
-    float time;
-    float delaTime;
-    int dLightsCount;
-    int sLightsCount;
-    int pLightsCount;
-};
-#if defined(_DXC)
-[[vk::push_constant]] CullPushConstants pc;
-#else
-[[vk::push_constant]] ConstantBuffer<PushConstant> pc;
-#endif
+#include "pushConstant.hlsli"
 
 
 

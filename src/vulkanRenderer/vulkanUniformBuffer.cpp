@@ -66,7 +66,15 @@ void VulkanUniformBuffer::SetValue(const std::string& memberName, const T& value
 {
 	UniformBufferMember* member = uniformBufferBlock->GetMember(memberName);
 	if (member != nullptr)
-		memcpy(hostData.data() + member->offset, &value, member->size);
+	{
+		if constexpr (std::is_same<T, bool>::value)
+		{
+			int intValue = static_cast<int>(value);
+			memcpy(hostData.data() + member->offset, &intValue, std::min(member->size, static_cast <uint32_t>(sizeof(intValue))));
+		}
+		else
+			memcpy(hostData.data() + member->offset, &value, std::min(member->size, static_cast <uint32_t>(sizeof(value))));
+	}
 }
 template<typename T>
 void VulkanUniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const T& value)
@@ -76,7 +84,15 @@ void VulkanUniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayI
 	{
 		UniformBufferMember* subMember = member->subMembers.at(arrayName + "[" + std::to_string(arrayIndex) + "]");
 		if (subMember != nullptr)
-			memcpy(hostData.data() + subMember->offset, &value, subMember->size);
+		{
+			if constexpr (std::is_same<T, bool>::value)
+			{
+				int intValue = static_cast<int>(value);
+				memcpy(hostData.data() + subMember->offset, &intValue, std::min(subMember->size, static_cast <uint32_t>(sizeof(intValue))));
+			}
+			else
+				memcpy(hostData.data() + subMember->offset, &value, std::min(subMember->size, static_cast <uint32_t>(sizeof(value))));
+		}
 	}
 }
 template<typename T>
@@ -89,7 +105,13 @@ void VulkanUniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayI
 		if (subMember != nullptr)
 		{
 			UniformBufferMember* subSubMember = subMember->subMembers.at(memberName);
-			memcpy(hostData.data() + subSubMember->offset, &value, subSubMember->size);
+			if constexpr (std::is_same<T, bool>::value)
+			{
+				int intValue = static_cast<int>(value);
+				memcpy(hostData.data() + subSubMember->offset, &intValue, std::min(subSubMember->size, static_cast <uint32_t>(sizeof(intValue))));
+			}
+			else
+				memcpy(hostData.data() + subSubMember->offset, &value, std::min(subSubMember->size, static_cast <uint32_t>(sizeof(value))));
 		}
 	}
 }

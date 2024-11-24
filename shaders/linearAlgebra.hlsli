@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_LinearAlgebra_hlsli__
-#define __INCLUDE_GUARD_LinearAlgebra_hlsli__
+#ifndef __INCLUDE_GUARD_linearAlgebra_hlsli__
+#define __INCLUDE_GUARD_linearAlgebra_hlsli__
 
 
 
@@ -33,4 +33,4 @@ float4x4 LinAlg_Invert(float4x4 input)
 
 
 
-#endif //__INCLUDE_GUARD_LinearAlgebra_hlsli__
+#endif //__INCLUDE_GUARD_linearAlgebra_hlsli__

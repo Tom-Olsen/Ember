@@ -36,14 +36,16 @@ private: // Members:
 	std::vector<std::unordered_map<std::string, ResourceBinding<VulkanUniformBuffer>>> uniformBufferMaps;
 	std::vector<std::unordered_map<std::string, ResourceBinding<VulkanSampler*>>> samplerMaps;
 	std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>> texture2dMaps;
-	std::unordered_map<std::string, bool> updateUniformBuffer;
+	std::unordered_map<std::string, VulkanSampler*> samplerStagingMap;
+	std::unordered_map<std::string, Texture2d*> texture2dStagingMap;
+	std::vector<std::unordered_map<std::string, bool>> updateUniformBuffer;
 
 public: // Methods:
 	// Constructors/Destructor:
 	MaterialProperties(Material* material);
 	~MaterialProperties();
 
-	void UpdateUniformBuffers(uint32_t frameIndex);
+	void UpdateShaderData();
 
 	// Setters:
 	template<typename T>
@@ -53,9 +55,7 @@ public: // Methods:
 	template<typename T>
 	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const T& value);
 	void SetSampler(const std::string& name, VulkanSampler* sampler);
-	void SetSamplerForAllFrames(const std::string& name, VulkanSampler* sampler);
 	void SetTexture2d(const std::string& name, Texture2d* texture2d);
-	void SetTexture2dForAllFrames(const std::string& name, Texture2d* texture2d);
 
 	// Debugging:
 	void PrintMaps() const;
@@ -65,6 +65,7 @@ private: // Methods:
 	void InitUniformBufferResourceBinding(std::string name, uint32_t binding, uint32_t frameIndex);
 	void InitSamplerResourceBinding(std::string name, uint32_t binding, VulkanSampler* sampler, uint32_t frameIndex);
 	void InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d, uint32_t frameIndex);
+	void InitStagingMaps();
 	void InitDescriptorSets();
 
 	// Descriptor set management:

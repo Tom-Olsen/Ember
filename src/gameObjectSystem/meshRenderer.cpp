@@ -41,15 +41,14 @@ MeshRenderer::~MeshRenderer()
 
 // Public methods:
 // Setter:
-#include <iostream>
 void MeshRenderer::SetForwardMaterial(Material* forwardMaterial)
 {
 	this->forwardMaterial = forwardMaterial;
 	forwardMaterialProperties = std::make_unique<MaterialProperties>(forwardMaterial);
 	
 	// Set shadow map sampler and textures:
-	forwardMaterialProperties->SetSamplerForAllFrames("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
-	forwardMaterialProperties->SetTexture2dForAllFrames("shadowMaps", shadowRenderPass->shadowMaps.get());
+	forwardMaterialProperties->SetSampler("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
+	forwardMaterialProperties->SetTexture2d("shadowMaps", shadowRenderPass->shadowMaps.get());
 }
 void MeshRenderer::SetForwardRenderMatrizes(Camera* camera)
 {
@@ -116,7 +115,7 @@ void MeshRenderer::SetForwardLightData(const std::array<SpotLight*, MAX_S_LIGHTS
 		{
 			Float4x4 worldToClipMatrix = spotLights[i]->GetProjectionMatrix() * spotLights[i]->GetViewMatrix();
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
-			forwardMaterialProperties->SetValue(blockName, arrayName, i, "direction", spotLights[i]->GetDirection());
+			forwardMaterialProperties->SetValue(blockName, arrayName, i, "position", spotLights[i]->GetPosition());
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "nearClip", spotLights[i]->GetNearClip());
 			forwardMaterialProperties->SetValue(blockName, arrayName, i, "blendStartEnd", spotLights[i]->GetBlendStartEnd());
