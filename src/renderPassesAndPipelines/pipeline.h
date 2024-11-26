@@ -19,6 +19,10 @@ protected: // Members:
 
 public: // Methods:
 	virtual ~Pipeline();
+
+protected: // Methods:
+	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings, VkShaderStageFlags flags);
+	VkShaderModule CreateShaderModule(const std::vector<char>& code);
 };
 
 

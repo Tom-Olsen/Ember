@@ -189,7 +189,8 @@ Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwar
 	Float3 upOldRotated = rot0 * upOld;
 	Float3 planeNormal = Float3::Cross(upNew, forwardNew).Normalize();
 	Float3 projection = Float3::VectorToPlaneProjection(upOldRotated, planeNormal);
-	float angle = -Float3::AngleRadians(upOldRotated, projection);
+	float sign = mathf::Sign(Float3::Dot(Float3::Cross(upOldRotated, projection), forwardNew));
+	float angle = sign * Float3::AngleRadians(upOldRotated, projection);
 	if (Float3::Dot(upNew, upOldRotated) < 0)
 		angle += PI;
 
@@ -197,6 +198,7 @@ Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwar
 	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle);
 
 	// Combine rotations:
+	//return rot0;
 	return rot1 * rot0;
 }
 

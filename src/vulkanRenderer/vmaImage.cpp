@@ -19,7 +19,9 @@ VmaImage::VmaImage(VulkanContext* context, const VkImageCreateInfo& imageInfo, c
 
 	// Determine view type:
 	VkImageViewType viewType = VkImageViewType((int)imageInfo.imageType);
-	if (imageInfo.arrayLayers > 1)
+	if (imageInfo.flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT)
+		viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+	else if (imageInfo.arrayLayers > 1)
 	{
 		if (imageInfo.imageType == VK_IMAGE_TYPE_1D)
 			viewType = VK_IMAGE_VIEW_TYPE_1D_ARRAY;

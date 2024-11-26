@@ -18,18 +18,27 @@ void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
 
 	isInitialized = true;
 	MaterialManager::context = context;
+	Material::RenderQueue opaqueQueue = Material::RenderQueue::opaque;
+	Material::RenderQueue transparentQueue = Material::RenderQueue::transparent;
+	Material::RenderQueue skyboxQueue = Material::RenderQueue::skybox;
+	Material::Type forwardType = Material::Type::forward;
+	Material::Type shadowType = Material::Type::shadow;
+	Material::Type skyboxType = Material::Type::skybox;
 
 	//Material* testMaterial = new Material(context, Material::Type::forward, "testMaterial", "../shaders/test.vert.spv", "../shaders/test.frag.spv");
 	//AddMaterial(testMaterial);
 
-	Material* defaultMaterial = new Material(context, Material::Type::forward, "defaultMaterial", "../shaders/default.vert.spv", "../shaders/default.frag.spv");
+	Material* defaultMaterial = new Material(context, forwardType, "defaultMaterial", opaqueQueue, "../shaders/default.vert.spv", "../shaders/default.frag.spv");
 	AddMaterial(defaultMaterial);
 
-	Material* colorMaterial = new Material(context, Material::Type::forward, "colorMaterial", "../shaders/color.vert.spv", "../shaders/color.frag.spv");
+	Material* colorMaterial = new Material(context, forwardType, "colorMaterial", opaqueQueue, "../shaders/color.vert.spv", "../shaders/color.frag.spv");
 	AddMaterial(colorMaterial);
 
-	Material* shadowMaterial = new Material(context, Material::Type::shadow, "shadowMaterial", "../shaders/shadow.vert.spv");
+	Material* shadowMaterial = new Material(context, shadowType, "shadowMaterial", opaqueQueue, "../shaders/shadow.vert.spv");
 	AddMaterial(shadowMaterial);
+
+	Material* skyBoxMaterial = new Material(context, skyboxType, "skyboxMaterial", skyboxQueue, "../shaders/skybox.vert.spv", "../shaders/skybox.frag.spv");
+	AddMaterial(skyBoxMaterial);
 }
 void MaterialManager::Clear()
 {

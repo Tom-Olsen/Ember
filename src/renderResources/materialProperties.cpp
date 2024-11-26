@@ -9,7 +9,7 @@
 MaterialProperties::MaterialProperties(Material* material)
 {
 	this->material = material;
-	this->context = material->context;
+	this->context = material->GetContext();
 
 	// Create resource bindings for each frameInFlight:
 	uniformBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<VulkanUniformBuffer>>>(context->framesInFlight);

@@ -79,7 +79,7 @@ float3 PhysicalDirectionalLights
         
         // Light:
         float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w;
-        float3 L = -normalize(lightData[i].direction);
+        float3 L = normalize(lightData[i].direction);
         float3 N = normal;
         float3 V = normalize(cameraPos - worldPos);
         float3 H = normalize(L + V);

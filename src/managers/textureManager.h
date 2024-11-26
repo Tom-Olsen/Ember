@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include "texture2d.h"
+#include "textureCube.h"
 
 
 
@@ -19,14 +20,18 @@ private: // Members
     static bool isInitialized;
     static VulkanContext* context;
     static std::unordered_map<std::string, std::unique_ptr<Texture2d>> texture2ds;
+    static std::unordered_map<std::string, std::unique_ptr<TextureCube>> textureCubes;
 
 public: // Methods
     static void Init(VulkanContext* vulkanContext);
     static void Clear();
 
-    static void AddTexture2d(const std::string name, Texture2d* material);
+    static void AddTexture2d(Texture2d* texture);
+    static void AddTextureCube(TextureCube* texture);
     static Texture2d* GetTexture2d(const std::string& name);
+    static TextureCube* GetTextureCube(const std::string& name);
     static void DeleteTexture2d(const std::string& name);
+    static void DeleteTextureCube(const std::string& name);
 
     static void PrintAllTextureNames();
 

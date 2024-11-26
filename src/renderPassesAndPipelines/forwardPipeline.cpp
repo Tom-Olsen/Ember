@@ -18,7 +18,7 @@ ForwardPipeline::ForwardPipeline(VulkanContext* context,
     this->context = context;
 
     // Create pipeline Layout:
-	CreatePipelineLayout(bindings);
+	CreatePipelineLayout(bindings, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
 
     // Create vertex and fragment shader modules from .spv files:
     VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
@@ -43,39 +43,6 @@ ForwardPipeline::~ForwardPipeline()
 
 
 // Private:
-void ForwardPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
-{
-	// Descriptor set layout:
-    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-    descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    descriptorSetLayoutCreateInfo.pBindings = bindings.data();
-    VKA(vkCreateDescriptorSetLayout(context->LogicalDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
-
-	// Push constants layout:
-	VkPushConstantRange pushConstantRange = {};
-	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-	pushConstantRange.offset = 0;
-	pushConstantRange.size = sizeof(VulkanPushConstant);
-
-	// Pipeline layout:
-    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-    pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-    pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-    vkCreatePipelineLayout(context->LogicalDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
-}
-VkShaderModule ForwardPipeline::CreateShaderModule(const std::vector<char>& code)
-{
-    VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-    createInfo.codeSize = code.size();
-    createInfo.pCode = (uint32_t*)(code.data());
-
-    VkShaderModule shaderModule;
-    VKA(vkCreateShaderModule(context->LogicalDevice(), &createInfo, nullptr, &shaderModule));
-    return shaderModule;
-}
-
 void ForwardPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
 {
     // Vertex shader:

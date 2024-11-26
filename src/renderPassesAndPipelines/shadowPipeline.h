@@ -9,7 +9,7 @@
 
 
 /// <summary>
-/// Pipeline associated with the ShadowRenderPass.
+/// Pipeline associated with the ShadowRenderPass materials.
 /// </summary>
 class ShadowPipeline : public Pipeline
 {
@@ -20,8 +20,6 @@ public: // Methods:
 	~ShadowPipeline();
 
 private: // Methods:
-	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-	VkShaderModule CreateShaderModule(const std::vector<char>& code);
 	void CreatePipeline(const VkShaderModule& vertexShaderModule);
 };
 

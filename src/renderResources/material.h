@@ -22,26 +22,36 @@ public: // Enums:
 	enum class Type
 	{
 		shadow,
-		forward
+		forward,
+		skybox
+	};
+	enum class RenderQueue
+	{
+		shadow = 0,
+		opaque = 1000,
+		transparent = 2000,
+		skybox = 3000
 	};
 
 public: // Members:
 	std::string name;
-	VulkanContext* context;
+	RenderQueue renderQueue;
 	std::unique_ptr<Pipeline> pipeline;
 
 private: // Members:
 	Type type;
+	VulkanContext* context;
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
 	std::vector<std::string> bindingNames;
 	std::unordered_map<std::string, UniformBufferBlock*> uniformBufferBlockMap;
 
 public: // Methods:
 	// Constructors/Destructor:
-	Material(VulkanContext* context, Type type, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+	Material(VulkanContext* context, Type type, const std::string& name, RenderQueue renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
 	~Material();
 
 	// Getters:
+	VulkanContext* GetContext();
 	uint32_t GetBindingCount() const;
 	uint32_t GetBindingIndex(uint32_t i) const;
 	VkDescriptorType GetBindingType(uint32_t i) const;

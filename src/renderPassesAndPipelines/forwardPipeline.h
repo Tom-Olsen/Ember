@@ -9,7 +9,7 @@
 
 
 /// <summary>
-/// Pipeline associated with the ForwardRenderPass.
+/// Pipeline associated with the ForwardRenderPass materials.
 /// </summary>
 class ForwardPipeline : public Pipeline
 {
@@ -21,8 +21,6 @@ public: // Methods:
 	~ForwardPipeline();
 
 private: // Methods:
-	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-	VkShaderModule CreateShaderModule(const std::vector<char>& code);
 	void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
 };
 

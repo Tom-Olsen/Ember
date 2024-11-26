@@ -1,6 +1,7 @@
 #include "material.h"
 #include "forwardPipeline.h"
 #include "shadowPipeline.h"
+#include "skyboxPipeline.h"
 #include "logger.h"
 #include <vector>
 #include <fstream>
@@ -8,11 +9,12 @@
 
 
 // Constructors:
-Material::Material(VulkanContext* context, Type type, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+Material::Material(VulkanContext* context, Type type, const std::string& name, RenderQueue renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 {
+	this->type = type;
 	this->context = context;
 	this->name = name;
-	this->type = type;
+	this->renderQueue = renderQueue;
 
 	// Forward material creation:
 	if (type == Type::forward)
@@ -32,7 +34,7 @@ Material::Material(VulkanContext* context, Type type, const std::string& name, c
 	}
 
 	// Shadow material creation:
-	if (type == Type::shadow)
+	else if (type == Type::shadow)
 	{
 		// Load vertex shader:
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -41,6 +43,23 @@ Material::Material(VulkanContext* context, Type type, const std::string& name, c
 
 		// Create pipeline:
 		pipeline = std::make_unique<ShadowPipeline>(context, vertexCode, bindings);
+	}
+
+	// Skybox material creation:
+	else if (type == Type::skybox)
+	{
+		// Load vertex shader:
+		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+		SpirvReflect vertexShaderReflect(vertexCode);
+		vertexShaderReflect.GetDescriptorSetLayoutBindings(bindings, bindingNames, uniformBufferBlockMap);
+
+		// Load fragment shader:
+		std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
+		SpirvReflect fragmentShaderReflect(fragmentCode);
+		fragmentShaderReflect.GetDescriptorSetLayoutBindings(bindings, bindingNames, uniformBufferBlockMap);
+
+		// Create pipeline:
+		pipeline = std::make_unique<SkyboxPipeline>(context, vertexCode, fragmentCode, bindings);
 	}
 }
 
@@ -55,6 +74,10 @@ Material::~Material()
 
 
 // Public methods:
+VulkanContext* Material::GetContext()
+{
+	return context;
+}
 uint32_t Material::GetBindingCount() const
 {
 	return static_cast<uint32_t>(bindings.size());

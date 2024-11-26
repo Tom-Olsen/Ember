@@ -52,7 +52,7 @@ void VmaBuffer::CopyBufferToBuffer(VulkanContext* context, VmaBuffer* srcBuffer,
 
 	VulkanCommand::EndSingleTimeCommand(context, command, queue);
 }
-void VmaBuffer::CopyBufferToImage(VulkanContext* context, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue)
+void VmaBuffer::CopyBufferToImage(VulkanContext* context, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount)
 {
 	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, queue);
 
@@ -63,7 +63,7 @@ void VmaBuffer::CopyBufferToImage(VulkanContext* context, VmaBuffer* srcBuffer, 
 	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	region.imageSubresource.mipLevel = 0;
 	region.imageSubresource.baseArrayLayer = 0;
-	region.imageSubresource.layerCount = 1;
+	region.imageSubresource.layerCount = layerCount;
 	region.imageOffset = { 0, 0, 0 };
 	region.imageExtent = dstImage->GetExtent();
 

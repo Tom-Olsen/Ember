@@ -225,7 +225,9 @@ void Scene::SortMeshRenderers()
 	{
 		std::sort(sortedMeshRenderers.begin(), sortedMeshRenderers.end(), [](MeshRenderer* a, MeshRenderer* b)
 		{
-			return a->GetForwardMaterial() < b->GetForwardMaterial();	// Sort by material pointer (memory ordering).
+			uint32_t renderQueueA = static_cast<uint32_t>(a->GetForwardMaterial()->renderQueue);
+			uint32_t renderQueueB = static_cast<uint32_t>(b->GetForwardMaterial()->renderQueue);
+			return renderQueueA < renderQueueB;
 		});
 		meshRenderersSortet = true;
 	}

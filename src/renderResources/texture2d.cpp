@@ -5,6 +5,15 @@
 
 
 // Constructors:
+Texture2d::Texture2d()
+{
+	this->context = nullptr;
+	this->width = 0;
+	this->height = 0;
+	this->channels = 0;
+	this->image = nullptr;
+	this->name = "";
+}
 Texture2d::Texture2d(VulkanContext* context, VmaImage* image, std::string name)
 {
 	this->context = context;
@@ -25,7 +34,7 @@ Texture2d::Texture2d(VulkanContext* context, const std::filesystem::path& filePa
 	stbi_set_flip_vertically_on_load(true);
 	stbi_uc* pixels = stbi_load(filePath.string().c_str(), &width, &height, &channels, STBI_rgb_alpha);
 	if (!pixels)
-		throw std::runtime_error("failed to load texture image!");
+		throw std::runtime_error("Failed to load texture image!");
 
 	// Create staging buffer:
 	uint64_t bufferSize = 4 * width * height;
@@ -39,7 +48,7 @@ Texture2d::Texture2d(VulkanContext* context, const std::filesystem::path& filePa
 	subresourceRange.baseArrayLayer = 0;
 	subresourceRange.layerCount = 1;
 
-	CreateImage(subresourceRange, width, height);
+	CreateImage(subresourceRange, width, height, (VkImageCreateFlagBits)0);
 	TransitionImageLayout(subresourceRange, stagingBuffer);
 	stbi_image_free(pixels);
 }
@@ -67,7 +76,7 @@ uint64_t Texture2d::GetHeight()
 
 
 // Private methods:
-void Texture2d::CreateImage(const VkImageSubresourceRange& subresourceRange, uint32_t width, uint32_t height)
+void Texture2d::CreateImage(const VkImageSubresourceRange& subresourceRange, uint32_t width, uint32_t height, VkImageCreateFlagBits imageFlags)
 {
 	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -75,14 +84,14 @@ void Texture2d::CreateImage(const VkImageSubresourceRange& subresourceRange, uin
 	imageInfo.extent.height = height;
 	imageInfo.extent.depth = 1;
 	imageInfo.mipLevels = subresourceRange.levelCount;
-	imageInfo.arrayLayers = 1;
+	imageInfo.arrayLayers = subresourceRange.layerCount;
 	imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
 	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	imageInfo.flags = 0;
+	imageInfo.flags = imageFlags;
 
 	VmaAllocationCreateInfo allocInfo = {};
 	allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
@@ -96,7 +105,7 @@ void Texture2d::TransitionImageLayout(const VkImageSubresourceRange& subresource
 {
 	// Transition image layout and create mipLevels:
 	image->TransitionLayoutUndefinedToTransfer(subresourceRange);
-	VmaBuffer::CopyBufferToImage(context, &stagingBuffer, image.get(), context->logicalDevice->transferQueue);
+	VmaBuffer::CopyBufferToImage(context, &stagingBuffer, image.get(), context->logicalDevice->transferQueue, subresourceRange.layerCount);
 	image->HandoffTransferToGraphicsQueue(subresourceRange);
 	image->GenerateMipmaps(subresourceRange.levelCount);
 	// old version that does final image transition and handoff between transfer and graphics queue, but no mipmapping:

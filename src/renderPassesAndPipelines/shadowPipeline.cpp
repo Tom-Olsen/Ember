@@ -16,7 +16,7 @@ ShadowPipeline::ShadowPipeline(VulkanContext* context,
     this->context = context;
 
     // Create pipeline Layout:
-    CreatePipelineLayout(bindings);
+    CreatePipelineLayout(bindings, VK_SHADER_STAGE_VERTEX_BIT);
 
     // Create vertex and fragment shader modules from .spv files:
     VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
@@ -39,39 +39,6 @@ ShadowPipeline::~ShadowPipeline()
 
 
 // Private:
-void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
-{
-    // Descriptor set layout:
-    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-    descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    descriptorSetLayoutCreateInfo.pBindings = bindings.data();
-    VKA(vkCreateDescriptorSetLayout(context->LogicalDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
-
-    // Push constants layout:
-    VkPushConstantRange pushConstantRange = {};
-    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(VulkanPushConstant);
-
-    // Pipeline layout:
-    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-    pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-    pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-    vkCreatePipelineLayout(context->LogicalDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
-}
-VkShaderModule ShadowPipeline::CreateShaderModule(const std::vector<char>& code)
-{
-    VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-    createInfo.codeSize = code.size();
-    createInfo.pCode = (uint32_t*)(code.data());
-
-    VkShaderModule shaderModule;
-    VKA(vkCreateShaderModule(context->LogicalDevice(), &createInfo, nullptr, &shaderModule));
-    return shaderModule;
-}
-
 void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
 {
     // Vertex shader:
@@ -115,16 +82,15 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
     // Rasterization:
     VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
     rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;  // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
-    //rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT;   // which face to cull
     rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;    // which face to cull
     rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE; // which face of triangle is front: 123 or 132?
+    rasterizationState.lineWidth = 1.0f;
     rasterizationState.depthClampEnable = context->DepthClampEnabled() ? VK_TRUE : VK_FALSE; // clamp fragments outside near/far planes
     rasterizationState.depthBiasEnable = VK_TRUE;
-    rasterizationState.depthBiasConstantFactor = 1.25f;		// Tweak this value based on the scene.
+    rasterizationState.depthBiasConstantFactor = 0.0f;		// Tweak this value based on the scene.
     rasterizationState.depthBiasClamp = 0.0f;
-    rasterizationState.depthBiasSlopeFactor = 2.75f;		// Slope scale bias to handle varying slopes in depth.
+    rasterizationState.depthBiasSlopeFactor = -1.0f;		// Slope scale bias to handle varying slopes in depth.
     rasterizationState.rasterizerDiscardEnable = VK_FALSE;	// If true, geometry never passes through rasterization stage.
-    rasterizationState.lineWidth = 1.0f;
 
     // Multisampling:
     VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };

@@ -1,12 +1,13 @@
 #define SDL_MAIN_HANDLED
 #include "application.h"
 #include "logger.h"
-#include<iostream>
+#include <iostream>
+#include "textureCube.h"
 
 
 
 // TODO now:
-// - directional lights: shadow cascades, one frustrum seems weird
+// - directional lights: shadow cascades
 // - point lights (cube map shadow mapping)
 // - validation layer errors when two shaders have the same binding number
 // - give the material a default materialProperties which is used if no materialProperties are set
@@ -15,8 +16,12 @@
 //        when doing this, remove the view and proj matrices to save memory in pc.
 // - add gameObject selection (need gizmos => ui renderpass)
 // - currently one commandPool per commandBuffer, should be one commandPool per frame, shared by all commands for that frame
+// - uniform buffer (cbuffer) data that is the same for all draw calls (e.g. light data) should be stored in a single cbuffer
+//   that is bound to a single descriptorSet that is bound to all draw calls that need that data.
+//   => make this descriptorset a "global" object in the materialProperties class.
 
 // TODO long term:
+// - change image loading library, stb_image sucks.
 // - proper quaternion support
 // - ui renderpass that draws on top of everything and is not affected by the camera (constant view/projection matrix)
 // - render image while resizing
@@ -53,12 +58,12 @@ int main()
 
     //LOG_TRACE(material->GetUniformBufferBlock("LightMatrizes")->ToString());
     //MaterialManager::GetMaterial("defaultMaterial")->PrintBindings();
-    //MaterialManager::GetMaterial("colorMaterial")->PrintBindings();
+    //MaterialManager::GetMaterial("skyboxMaterial")->PrintBindings();
     //MaterialManager::GetMaterial("colorMaterial")->PrintUniformBuffers();
     //MaterialManager::GetMaterial("testMaterial")->PrintUniformBuffers();
 
     bool directionalLightsActive = 0;
-    bool spotLightsActive = 1;
+    bool spotLightsActive = !directionalLightsActive;
 
     // Build simple scene:
     Scene* scene = new Scene();
@@ -133,8 +138,8 @@ int main()
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
-        SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, -60, 0));
-        gameObject->AddComponent<SpinGlobal>(spinGlobal);
+        //SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, -60, 0));
+        //gameObject->AddComponent<SpinGlobal>(spinGlobal);
     
         if (directionalLightsActive)
         {
@@ -176,8 +181,8 @@ int main()
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
-        SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, 90, 0));
-        gameObject->AddComponent<SpinGlobal>(spinGlobal);
+        //SpinGlobal* spinGlobal = new SpinGlobal(Float3::zero, Float3(0, 90, 0));
+        //gameObject->AddComponent<SpinGlobal>(spinGlobal);
     
         if (directionalLightsActive)
         {
@@ -204,6 +209,19 @@ int main()
             gameObject->AddComponent<SpotLight>(spotLight);
         }
     
+        scene->AddGameObject(gameObject);
+    }
+    {// Skybox:
+        GameObject* gameObject = new GameObject("skybox");
+
+        MeshRenderer* meshRenderer = new MeshRenderer();
+        meshRenderer->mesh = MeshManager::GetMesh("unitCube");
+        meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
+        meshRenderer->forwardMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->forwardMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTextureCube("skyboxClouds"));
+        meshRenderer->receiveShadows = meshRenderer->castShadows = false;
+        gameObject->AddComponent<MeshRenderer>(meshRenderer);
+
         scene->AddGameObject(gameObject);
     }
     { // Floor:
@@ -254,7 +272,7 @@ int main()
     {// Cube1:
         GameObject* gameObject = new GameObject("cube1");
         gameObject->transform->SetPosition(2.0f, 0.0f, 0.0f);
-        gameObject->transform->SetRotationEulerDegrees(0.0f, 20.0f, 0.0f);
+        gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
