@@ -39,13 +39,15 @@ void TextureManager::Init(VulkanContext* vulkanContext)
 	}
 
 	// Manual adding:
-	TextureCube* texCube = new TextureCube(context, "../textures/skyboxClouds/", "skyboxClouds");
+	TextureCube* texCube = new TextureCube(context, "../textures/skyboxClouds1/", "skyboxClouds0");
+	//TextureCube* texCube = new TextureCube(context, "../textures/skyboxNebula0/", "skyboxClouds0");
 	AddTextureCube(texCube);
 }
 void TextureManager::Clear()
 {
 	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
 	texture2ds.clear();
+	textureCubes.clear();
 }
 
 

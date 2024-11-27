@@ -14,7 +14,7 @@ TextureCube::TextureCube(VulkanContext* context, const std::filesystem::path& fo
 		throw std::runtime_error("Given path '" + folderPath.string() + "' does not exist");
 
 	// Get paths to the 6 images:
-	const std::array<std::string, 6> directions = { "front", "back", "top", "bottom", "right", "left" };
+	const std::array<std::string, 6> directions = { "px", "nx", "py", "ny", "pz", "nz" };
 	std::array<std::filesystem::path, 6> filePaths;
 	for (uint32_t i = 0; i < 6; i ++)
 		for (const auto& entry : std::filesystem::directory_iterator(folderPath))
@@ -57,7 +57,7 @@ TextureCube::TextureCube(VulkanContext* context, const std::filesystem::path& fo
 	
 	CreateImage(subresourceRange, width, height, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
 	TransitionImageLayout(subresourceRange, stagingBuffer);
-	stbi_image_free(facePixels);
+	delete[] facePixels;
 }
 TextureCube::~TextureCube()
 {

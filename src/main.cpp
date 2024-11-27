@@ -218,7 +218,7 @@ int main()
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
         meshRenderer->SetForwardMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
         meshRenderer->forwardMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->forwardMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTextureCube("skyboxClouds"));
+        meshRenderer->forwardMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTextureCube("skyboxClouds0"));
         meshRenderer->receiveShadows = meshRenderer->castShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
