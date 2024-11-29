@@ -74,7 +74,6 @@ void MaterialProperties::UpdateShaderData()
 		}
 	}
 
-
 	// Change the pointer the descriptor set points at to the new texture2d:
 	for (auto& [name, resourceBinding] : texture2dMaps[context->frameIndex])
 	{
@@ -98,8 +97,8 @@ void MaterialProperties::SetValue(const std::string& blockName, const std::strin
 	{// blockname exists => set value for all frames:
 		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 		{
-			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(memberName, value);
-			updateUniformBuffer[frameIndex].at(blockName) = true;
+			if (uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(memberName, value))
+				updateUniformBuffer[frameIndex].at(blockName) = true;
 		}
 	}
 }
@@ -111,8 +110,8 @@ void MaterialProperties::SetValue(const std::string& blockName, const std::strin
 	{// blockname exists => set value for all frames:
 		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 		{
-			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayIndex, value);
-			updateUniformBuffer[frameIndex].at(blockName) = true;
+			if (uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayIndex, value))
+				updateUniformBuffer[frameIndex].at(blockName) = true;
 		}
 	}
 }
@@ -124,8 +123,8 @@ void MaterialProperties::SetValue(const std::string& blockName, const std::strin
 	{// blockname exists => set value for all frames:
 		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 		{
-			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayIndex, memberName, value);
-			updateUniformBuffer[frameIndex].at(blockName) = true;
+			if (uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayIndex, memberName, value))
+				updateUniformBuffer[frameIndex].at(blockName) = true;
 		}
 	}
 }
@@ -137,8 +136,8 @@ void MaterialProperties::SetValue(const std::string& blockName, const std::strin
 	{// blockname exists => set value for all frames:
 		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 		{
-			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
-			updateUniformBuffer[frameIndex].at(blockName) = true;
+			if (uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value))
+				updateUniformBuffer[frameIndex].at(blockName) = true;
 		}
 	}
 }

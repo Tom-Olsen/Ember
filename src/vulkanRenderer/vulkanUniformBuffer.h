@@ -31,13 +31,17 @@ public: // Methods:
 
 	// Setters:
 	template<typename T>
-	void SetValue(const std::string& memberName, const T& value);
+	bool SetValue(const std::string& memberName, const T& value);
 	template<typename T>
-	void SetValue(const std::string& arrayName, uint32_t arrayIndex, const T& value);
+	bool SetValue(const std::string& arrayName, uint32_t arrayIndex, const T& value);
 	template<typename T>
-	void SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
+	bool SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
 	template<typename T>
-	void SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
+	bool SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
+
+private: // Methods:
+	template<typename T>
+	bool CheckAndUpdateData(const T& value, uint32_t offset, uint32_t size);
 };
 
 

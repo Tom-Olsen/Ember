@@ -5,6 +5,7 @@
 
 
 // TODO now:
+// - refactor code with proper coding style!
 // - directional lights: shadow cascades
 // - validation layer errors when two shaders have the same binding number
 // - add gameObject selection (need gizmos => ui renderpass)
