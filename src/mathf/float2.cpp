@@ -243,13 +243,11 @@ Float2 operator*(float a, const Float2& b)
 // Conversion:
 Float2 Float2::ToDegrees() const
 {
-	float a = PI / 180.0f;
-	return a * (*this);
+	return mathf::RAD2DEG * (*this);
 }
 Float2 Float2::ToRadians() const
 {
-	float a = 180.0f / PI;
-	return a * (*this);
+	return mathf::DEG2RAD * (*this);
 }
 
 

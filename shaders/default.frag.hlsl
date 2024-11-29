@@ -3,7 +3,7 @@ SamplerComparisonState shadowSampler : register(s11);
 Texture2D colorTexture : register(t20);
 Texture2DArray<float> shadowMaps : register(t21);
 #include "shadowMapping.hlsli"
-#include "pushConstant.hlsli"
+#include "shadingPushConstant.hlsli"
 
 
 
@@ -41,7 +41,7 @@ float4 main(FragmentInput input) : SV_TARGET
     // Lighting:
     float ambient = 0.1f;
     float3 finalColor = ambient * color.xyz;
-    finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, normal, color.xyz, roughness, reflectivity, metallic, pc.dLightsCount, pc.sLightsCount, directionalLightData, spotLightData, shadowMaps, shadowSampler);
+    finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, normal, color.xyz, roughness, reflectivity, metallic, pc.dLightsCount, pc.sLightsCount, pc.pLightsCount, directionalLightData, spotLightData, pointLightData, shadowMaps, shadowSampler);
     
     return float4(finalColor, 1.0f);
 }

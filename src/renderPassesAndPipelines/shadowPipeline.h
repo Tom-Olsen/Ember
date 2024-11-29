@@ -20,6 +20,7 @@ public: // Methods:
 	~ShadowPipeline();
 
 private: // Methods:
+	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 	void CreatePipeline(const VkShaderModule& vertexShaderModule);
 };
 

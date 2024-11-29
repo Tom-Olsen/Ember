@@ -36,6 +36,8 @@ public: // Methods:
 	void SetValue(const std::string& arrayName, uint32_t arrayIndex, const T& value);
 	template<typename T>
 	void SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
+	template<typename T>
+	void SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
 };
 
 

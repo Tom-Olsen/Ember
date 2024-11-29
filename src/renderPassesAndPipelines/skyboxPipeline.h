@@ -3,7 +3,7 @@
 #include <string>
 #include "pipeline.h"
 #include "vulkanContext.h"
-#include "forwardRenderPass.h"
+#include "shadingRenderPass.h"
 #include "mathf.h"
 
 
@@ -21,6 +21,7 @@ public: // Methods:
 	~SkyboxPipeline();
 
 private: // Methods:
+	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 	void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
 };
 

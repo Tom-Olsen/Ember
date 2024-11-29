@@ -1,7 +1,7 @@
 #include "skyboxPipeline.h"
 #include "vulkanMacros.h"
 #include "mesh.h"
-#include "vulkanPushConstant.h"
+#include "shadingPushConstant.h"
 #include "renderPassManager.h"
 #include <fstream>
 #include <vector>
@@ -18,7 +18,7 @@ SkyboxPipeline::SkyboxPipeline(VulkanContext* context,
     this->context = context;
 
     // Create pipeline Layout:
-	CreatePipelineLayout(bindings, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+	CreatePipelineLayout(bindings);
 
     // Create vertex and fragment shader modules from .spv files:
     VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
@@ -43,6 +43,28 @@ SkyboxPipeline::~SkyboxPipeline()
 
 
 // Private:
+void SkyboxPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+{
+    // Descriptor set layout:
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+    descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    descriptorSetLayoutCreateInfo.pBindings = bindings.data();
+    VKA(vkCreateDescriptorSetLayout(context->LogicalDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
+
+    // Push constants layout:
+    VkPushConstantRange pushConstantRange = {};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(ShadingPushConstant);
+
+    // Pipeline layout:
+    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+    pipelineLayoutCreateInfo.setLayoutCount = 1;
+    pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+    pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+    vkCreatePipelineLayout(context->LogicalDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
+}
 void SkyboxPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
 {
     // Vertex shader:
@@ -162,7 +184,7 @@ void SkyboxPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
     pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
     pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
     pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = RenderPassManager::GetRenderPass("forwardRenderPass")->renderPass;
+    pipelineInfo.renderPass = RenderPassManager::GetRenderPass("shadingRenderPass")->renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
 	pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline

@@ -16,12 +16,12 @@ namespace mathf
 
 	float ToDegrees(float radians)
 	{
-		return radians * 180.0f / PI;
+		return mathf::RAD2DEG * radians;
 	}
 
 	float ToRadians(float degrees)
 	{
-		return degrees * PI / 180.0f;
+		return mathf::DEG2RAD * degrees;
 	}
 
 	float Sign(float value)

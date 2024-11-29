@@ -16,12 +16,12 @@ public: // Members:
 private: // Members:
 	// Render resources:
 	std::vector<VulkanCommand> shadowCommands;
-	std::vector<VulkanCommand> forwardCommands;
+	std::vector<VulkanCommand> shadingCommands;
 	
 	// Sync objects:
 	std::vector<VkFence> fences;
 	std::vector<VkSemaphore> acquireSemaphores;
-	std::vector<VkSemaphore> shadowToForwardSemaphores;
+	std::vector<VkSemaphore> shadowToShadingSemaphores;
 	std::vector<VkSemaphore> releaseSemaphores;
 
 	// Render management:
@@ -37,7 +37,7 @@ private: // Methods:
 	void RebuildSwapchain();
 	bool AcquireImage();
 	void RecordShadowCommandBuffer(Scene* scene);
-	void RecordForwardCommandBuffer(Scene* scene);
+	void RecordShadingCommandBuffer(Scene* scene);
 	void SubmitCommandBuffers();
 	bool PresentImage();
 	void SetViewportAndScissor(VkCommandBuffer& commandBuffer);

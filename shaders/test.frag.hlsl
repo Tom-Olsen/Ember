@@ -2,7 +2,7 @@ SamplerState colorSampler : register(s10);
 SamplerComparisonState shadowSampler : register(s11);
 Texture2DArray<float> colorTextures : register(t24);
 Texture2DArray<float> shadowMaps : register(t21);
-#include "pushConstant.hlsli"
+#include "shadingPushConstant.hlsli"
 
 
 

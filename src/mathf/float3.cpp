@@ -64,8 +64,8 @@ Float3 Float3::Rotate(float theta, float phi) const
 	float length = Length();
 	phi += Phi();	// no need for clamping due to periodicity
 	theta += Theta();
-	if (theta > PI)
-		theta = 2.0f * PI - theta;
+	if (theta > mathf::PI)
+		theta = 2.0f * mathf::PI - theta;
 	else if (theta < 0.0f)
 		theta = -theta;
 	return length * Float3::Direction(theta, phi);
@@ -289,13 +289,11 @@ Float3 operator/(const Float3& a, float b)
 // Conversion:
 Float3 Float3::ToDegrees() const
 {
-	float a = 180.0f / PI;
-	return a * (*this);
+	return mathf::RAD2DEG * (*this);
 }
 Float3 Float3::ToRadians() const
 {
-	float a = PI / 180.0f;
-	return a * (*this);
+	return mathf::DEG2RAD * (*this);
 }
 
 

@@ -71,8 +71,9 @@ int VulkanPhysicalDevice::DeviceScore(VkPhysicalDevice dev)
 
 	// Check optional features:
 	int score = 0;
-	score += 10 * deviceFeatures.depthClamp; supportsDepthClamp = true;
-	score += 10 * deviceFeatures.multiViewport; supportsMultiViewport = true;
+	score += 10 * deviceFeatures.depthClamp; supportsDepthClamp = deviceFeatures.depthClamp;
+	score += 10 * deviceFeatures.depthBiasClamp; supportsDepthBias = deviceFeatures.depthBiasClamp;
+	score += 10 * deviceFeatures.multiViewport; supportsMultiViewport = deviceFeatures.multiViewport;
 	// score +=  5 * deviceFeatures.fillModeNonSolid;
 	// score +=  1 * deviceFeatures.shaderFloat64;
 	// score +=  1 * deviceFeatures.shaderInt64;

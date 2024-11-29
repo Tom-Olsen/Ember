@@ -20,8 +20,8 @@ void RenderPassManager::Init(VulkanContext* context)
 	isInitialized = true;
 	RenderPassManager::context = context;
 
-	ForwardRenderPass* forwardRenderPass = new ForwardRenderPass(context);
-	AddRenderPass("forwardRenderPass", forwardRenderPass);
+	ShadingRenderPass* shadingRenderPass = new ShadingRenderPass(context);
+	AddRenderPass("shadingRenderPass", shadingRenderPass);
 
 	ShadowRenderPass* shadowRenderPass = new ShadowRenderPass(context);
 	AddRenderPass("shadowRenderPass", shadowRenderPass);
@@ -33,9 +33,9 @@ void RenderPassManager::Clear()
 }
 void RenderPassManager::RecreateRenderPasses()
 {
-	RenderPass* newForwardRenderPass = new ForwardRenderPass(context);
-	DeleteRenderPass("forwardRenderPass");
-	AddRenderPass("forwardRenderPass", newForwardRenderPass);
+	RenderPass* newShadingRenderPass = new ShadingRenderPass(context);
+	DeleteRenderPass("shadingRenderPass");
+	AddRenderPass("shadingRenderPass", newShadingRenderPass);
 }
 
 

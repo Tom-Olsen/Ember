@@ -14,8 +14,9 @@ class VulkanPhysicalDevice
 public: // Members:
 	VkPhysicalDevice device;
 	VkSampleCountFlagBits maxMsaaSamples;
-	bool supportsDepthClamp = false;
-	bool supportsMultiViewport = false;
+	VkBool32 supportsDepthClamp = false;
+	VkBool32 supportsDepthBias = false;
+	VkBool32 supportsMultiViewport = false;
 
 
 public: // Methods:

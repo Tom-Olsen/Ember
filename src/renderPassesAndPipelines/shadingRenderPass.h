@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_forwardRenderpass_h__
-#define __INCLUDE_GUARD_forwardRenderpass_h__
+#ifndef __INCLUDE_GUARD_shadingRenderpass_h__
+#define __INCLUDE_GUARD_shadingRenderpass_h__
 #include <vector>
 #include "renderPass.h"
 #include "vulkanContext.h"
@@ -8,9 +8,9 @@
 
 
 /// <summary>
-/// Basic forward render pass.
+/// Basic shading render pass.
 /// </summary>
-class ForwardRenderPass : public RenderPass
+class ShadingRenderPass : public RenderPass
 {
 public: // Members:
 	std::unique_ptr<VmaImage> msaaImage;
@@ -20,8 +20,8 @@ private: // Members:
 	VkFormat depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 public: // Methods:
-	ForwardRenderPass(VulkanContext* context);
-	~ForwardRenderPass();
+	ShadingRenderPass(VulkanContext* context);
+	~ShadingRenderPass();
 
 private: // Methods:
 	void CreateRenderPass();
@@ -32,4 +32,4 @@ private: // Methods:
 
 
 
-#endif // __INCLUDE_GUARD_forwardRenderpass_h__
+#endif // __INCLUDE_GUARD_shadingRenderpass_h__

@@ -1,6 +1,5 @@
 #include "meshGenerator.h"
 #include "mathf.h"
-#include <numbers>
 
 
 
@@ -167,7 +166,7 @@ namespace MeshGenerator
 		std::vector<Uint3> triangles;	triangles.reserve(cornerCount);
 
 		// Per vertex data:
-		float dAlpha = 2.0f * static_cast<float>(std::numbers::pi)  / cornerCount;
+		float dAlpha = 2.0f * mathf::PI  / cornerCount;
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float alpha = i * dAlpha;
@@ -293,7 +292,7 @@ namespace MeshGenerator
 		std::vector<Float4> uvs;		uvs.reserve(cornerCount + 2);
 		std::vector<Uint3> triangles;	triangles.reserve(3 * cornerCount);
 
-		float dAlpha = 2.0f * static_cast<float>(std::numbers::pi) / cornerCount;
+		float dAlpha = 2.0f * mathf::PI / cornerCount;
 		for (int i = 0; i < cornerCount + 1; i++)
 		{
 			float alpha = i * dAlpha;
@@ -327,7 +326,7 @@ namespace MeshGenerator
 		faces.reserve(cornerCount);
 		std::vector<Float4> uvs(3);
 
-		float dAlpha = 2.0f * static_cast<float>(std::numbers::pi) / cornerCount;
+		float dAlpha = 2.0f * mathf::PI / cornerCount;
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float alpha0 = i * dAlpha;
@@ -363,7 +362,7 @@ namespace MeshGenerator
 		std::vector<Float4> uvs;		uvs.reserve(2 * (cornerCount + 1));
 		std::vector<Uint3> triangles;	triangles.reserve(2 * cornerCount);
 
-		float dAlpha = 2.0f * static_cast<float>(std::numbers::pi) / cornerCount;
+		float dAlpha = 2.0f * mathf::PI / cornerCount;
 		for (int i = 0; i < cornerCount + 1; i++)
 		{
 			float alpha = i * dAlpha;
@@ -403,7 +402,7 @@ namespace MeshGenerator
 		faces.reserve(2 * cornerCount);
 		std::vector<Float4> uvs(4);
 		
-		float dAlpha = 2.0f * static_cast<float>(std::numbers::pi) / cornerCount;
+		float dAlpha = 2.0f * mathf::PI / cornerCount;
 		float dist = radius * mathf::Cos(0.5f * dAlpha);
 		float width = 2.0f * radius * mathf::Sin(0.5f * dAlpha);
 		for (int i = 0; i < cornerCount; i++)

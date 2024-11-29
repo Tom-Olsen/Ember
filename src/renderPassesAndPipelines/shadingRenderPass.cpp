@@ -1,10 +1,10 @@
 #include "vulkanMacros.h"
-#include "forwardRenderPass.h"
+#include "shadingRenderPass.h"
 #include "vulkanCommand.h"
 
 
 
-ForwardRenderPass::ForwardRenderPass(VulkanContext* context)
+ShadingRenderPass::ShadingRenderPass(VulkanContext* context)
 {
 	this->context = context;
 
@@ -14,7 +14,7 @@ ForwardRenderPass::ForwardRenderPass(VulkanContext* context)
 	CreateFrameBuffers();
 }
 
-ForwardRenderPass::~ForwardRenderPass()
+ShadingRenderPass::~ShadingRenderPass()
 {
 
 }
@@ -22,7 +22,7 @@ ForwardRenderPass::~ForwardRenderPass()
 
 
 // Private methods:
-void ForwardRenderPass::CreateRenderPass()
+void ShadingRenderPass::CreateRenderPass()
 {
 	// Attachments:
 	std::array<VkAttachmentDescription, 3> attachments{};
@@ -99,7 +99,7 @@ void ForwardRenderPass::CreateRenderPass()
 
 	VKA(vkCreateRenderPass(context->LogicalDevice(), &renderPassInfo, nullptr, &renderPass));
 }
-void ForwardRenderPass::CreateMsaaImage()
+void ShadingRenderPass::CreateMsaaImage()
 {
 	VkImageSubresourceRange subresourceRange;
 	subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -131,7 +131,7 @@ void ForwardRenderPass::CreateMsaaImage()
 
 	msaaImage = std::make_unique<VmaImage>(context, imageInfo, allocationInfo, subresourceRange);
 }
-void ForwardRenderPass::CreateDepthImage()
+void ShadingRenderPass::CreateDepthImage()
 {
 	VkImageSubresourceRange subresourceRange;
 	subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
@@ -188,7 +188,7 @@ void ForwardRenderPass::CreateDepthImage()
 	}
 	VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
 }
-void ForwardRenderPass::CreateFrameBuffers()
+void ShadingRenderPass::CreateFrameBuffers()
 {
 	size_t size = context->swapchain->images.size();
 	VkExtent2D extent = context->surface->CurrentExtent();

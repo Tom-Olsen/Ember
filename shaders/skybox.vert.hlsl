@@ -1,3 +1,7 @@
+#include "shadingPushConstant.hlsli"
+
+
+
 cbuffer RenderMatrizes : register(b0)
 {
     float4x4 modelMatrix; // mesh local to world matrix

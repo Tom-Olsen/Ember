@@ -13,6 +13,8 @@ SpotLight::SpotLight()
 	this->aspectRatio = (float)ShadowRenderPass::shadowMapWidth / (float)ShadowRenderPass::shadowMapHeight;
 	this->nearClip = 0.1f;
 	this->farClip = 15.0f;
+	this->blendStart = 0.8f;
+	this->blendEnd = 1.0f;
 	updateProjectionMatrix = true;
 }
 

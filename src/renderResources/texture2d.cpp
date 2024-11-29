@@ -49,7 +49,7 @@ Texture2d::Texture2d(VulkanContext* context, const std::filesystem::path& filePa
 	subresourceRange.layerCount = 1;
 
 	CreateImage(subresourceRange, width, height, (VkImageCreateFlagBits)0);
-	TransitionImageLayout(subresourceRange, stagingBuffer);
+	TransitionImageLayoutWithMipMapping(subresourceRange, stagingBuffer);
 	stbi_image_free(pixels);
 }
 
@@ -103,11 +103,14 @@ void Texture2d::CreateImage(const VkImageSubresourceRange& subresourceRange, uin
 }
 void Texture2d::TransitionImageLayout(const VkImageSubresourceRange& subresourceRange, VmaBuffer& stagingBuffer)
 {
-	// Transition image layout and create mipLevels:
+	image->TransitionLayoutUndefinedToTransfer(subresourceRange);
+	VmaBuffer::CopyBufferToImage(context, &stagingBuffer, image.get(), context->logicalDevice->transferQueue, subresourceRange.layerCount);
+	image->TransitionLayoutTransferToShaderRead(subresourceRange);
+}
+void Texture2d::TransitionImageLayoutWithMipMapping(const VkImageSubresourceRange& subresourceRange, VmaBuffer& stagingBuffer)
+{
 	image->TransitionLayoutUndefinedToTransfer(subresourceRange);
 	VmaBuffer::CopyBufferToImage(context, &stagingBuffer, image.get(), context->logicalDevice->transferQueue, subresourceRange.layerCount);
 	image->HandoffTransferToGraphicsQueue(subresourceRange);
 	image->GenerateMipmaps(subresourceRange.levelCount);
-	// old version that does final image transition and handoff between transfer and graphics queue, but no mipmapping:
-	//image->TransitionLayoutTransferToShaderRead(subresourceRange);
 }

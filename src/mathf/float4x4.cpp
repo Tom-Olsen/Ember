@@ -53,35 +53,35 @@ Float4x4 Float4x4::Rows(const Float4& row0, const Float4& row1, const Float4& ro
 {
 	return Float4x4
 	(row0.x, row1.x, row2.x, row3.x,
-		row0.y, row1.y, row2.y, row3.y,
-		row0.z, row1.z, row2.z, row3.z,
-		row0.w, row1.w, row2.w, row3.w);
+	 row0.y, row1.y, row2.y, row3.y,
+	 row0.z, row1.z, row2.z, row3.z,
+	 row0.w, row1.w, row2.w, row3.w);
 }
 Float4x4 Float4x4::Rows
 (float row0x, float row0y, float row0z, float row0w,
-	float row1x, float row1y, float row1z, float row1w,
-	float row2x, float row2y, float row2z, float row2w,
-	float row3x, float row3y, float row3z, float row3w)
+ float row1x, float row1y, float row1z, float row1w,
+ float row2x, float row2y, float row2z, float row2w,
+ float row3x, float row3y, float row3z, float row3w)
 {
 	return Float4x4
 	(row0x, row1x, row2x, row3x,
-		row0y, row1y, row2y, row3y,
-		row0z, row1z, row2z, row3z,
-		row0w, row1w, row2w, row3w);
+	 row0y, row1y, row2y, row3y,
+	 row0z, row1z, row2z, row3z,
+	 row0w, row1w, row2w, row3w);
 }
 Float4x4 Float4x4::Columns(const Float4& column0, const Float4& column1, const Float4& column2, const Float4& column3)
 {
 	return Float4x4
 	(column0.x, column0.y, column0.z, column0.w,
-		column1.x, column1.y, column1.z, column1.w,
-		column2.x, column2.y, column2.z, column2.w,
-		column3.x, column3.y, column3.z, column3.w);
+	 column1.x, column1.y, column1.z, column1.w,
+	 column2.x, column2.y, column2.z, column2.w,
+	 column3.x, column3.y, column3.z, column3.w);
 }
 Float4x4 Float4x4::Columns
 (float column0x, float column0y, float column0z, float column0w,
-	float column1x, float column1y, float column1z, float column1w,
-	float column2x, float column2y, float column2z, float column2w,
-	float column3x, float column3y, float column3z, float column3w)
+ float column1x, float column1y, float column1z, float column1w,
+ float column2x, float column2y, float column2z, float column2w,
+ float column3x, float column3y, float column3z, float column3w)
 {
 	return Float4x4
 	(column0x, column0y, column0z, column0w,
@@ -218,9 +218,10 @@ Float4x4 Float4x4::RotateThreeLeg(const Float3& forwardOld, const Float3& forwar
 	Float3 upOldRotated = rot0 * upOld;
 	Float3 planeNormal = Float3::Cross(upNew, forwardNew).Normalize();
 	Float3 projection = Float3::VectorToPlaneProjection(upOldRotated, planeNormal);
-	float angle = -Float3::AngleRadians(upOldRotated, projection);
+	float sign = mathf::Sign(Float3::Dot(Float3::Cross(upOldRotated, projection), forwardNew));
+	float angle = sign * Float3::AngleRadians(upOldRotated, projection);
 	if (Float3::Dot(upNew, upOldRotated) < 0)
-		angle += PI;
+		angle += mathf::PI;
 
 	// Rotate by angle around forwardNew:
 	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle);
@@ -521,9 +522,9 @@ Float4x4 operator*(float a, const Float4x4& b)
 std::string Float4x4::ToString() const
 {
 	std::ostringstream oss;
-	oss << "(" << data[0] << ", " << data[4] << ", " << data[8] << ", " << data[12];
-	oss << " | " << data[1] << ", " << data[5] << ", " << data[9] << ", " << data[13];
-	oss << " | " << data[1] << ", " << data[6] << ", " << data[10] << ", " << data[14];
+	oss << "("   << data[0] << ", " << data[4] << ", " << data[ 8] << ", " << data[12];
+	oss << " | " << data[1] << ", " << data[5] << ", " << data[ 9] << ", " << data[13];
+	oss << " | " << data[2] << ", " << data[6] << ", " << data[10] << ", " << data[14];
 	oss << " | " << data[3] << ", " << data[7] << ", " << data[11] << ", " << data[15] << ")";
 	return oss.str();
 }

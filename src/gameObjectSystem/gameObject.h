@@ -13,8 +13,9 @@
 #include "meshRenderer.h"
 #include "spinLocal.h"
 #include "spinGlobal.h"
-#include "spotLight.h"
 #include "directionalLight.h"
+#include "spotLight.h"
+#include "pointLight.h"
 
 
 

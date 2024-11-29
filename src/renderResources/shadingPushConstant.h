@@ -1,6 +1,6 @@
 #pragma once
-#ifndef __INCLUDE_GUARD_vulkanPushConstant_h__
-#define __INCLUDE_GUARD_vulkanPushConstant_h__
+#ifndef __INCLUDE_GUARD_shadingPushConstant_h__
+#define __INCLUDE_GUARD_shadingPushConstant_h__
 #include "mathf.h"
 #include <string>
 
@@ -10,7 +10,7 @@
 /// Size limit for push constants is 128 bytes.
 /// Only used for small data that is updated every frame.
 /// </summary>
-struct VulkanPushConstant
+struct ShadingPushConstant
 {
 private:
 	alignas(4) float time;
@@ -20,15 +20,11 @@ private:
 	alignas(4) int pLightsCount;
 	alignas(16) Float4 cameraPosition;
 
-private:
-	int paddingSize = 128 - 5 * 4 - 1 * 16;
-	char padding[128 - 5 * 4 - 1 * 16];
-
 public:
-	VulkanPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount, Float3 cameraPosition);
+	ShadingPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount, const Float3& cameraPosition);
 	std::string ToString();
 };
 
 
 
-#endif // __INCLUDE_GUARD_vulkanPushConstant_h__
+#endif // __INCLUDE_GUARD_shadingPushConstant_h__

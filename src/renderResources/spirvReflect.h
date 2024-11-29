@@ -16,9 +16,16 @@
 /// </summary>
 struct UniformBufferMember
 {
+public: // Members:
 	uint32_t offset;
 	uint32_t size;
+
+private: // Members:
 	std::unordered_map<std::string, UniformBufferMember*> subMembers;
+
+public: // Methods:
+	void AddSubMember(std::string name, UniformBufferMember* subMember);
+	UniformBufferMember* GetSubMember(const std::string& name) const;
 
 	// Debugging:
 	std::string ToString(const std::string& name, int indent) const;

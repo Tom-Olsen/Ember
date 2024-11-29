@@ -1,29 +1,30 @@
-#ifndef __INCLUDE_GUARD_forwardPipeline_h__
-#define __INCLUDE_GUARD_forwardPipeline_h__
+#ifndef __INCLUDE_GUARD_shadingPipeline_h__
+#define __INCLUDE_GUARD_shadingPipeline_h__
 #include <string>
 #include "pipeline.h"
 #include "vulkanContext.h"
-#include "forwardRenderPass.h"
+#include "shadingRenderPass.h"
 #include "mathf.h"
 
 
 
 /// <summary>
-/// Pipeline associated with the ForwardRenderPass materials.
+/// Pipeline associated with the ShadingRenderPass materials.
 /// </summary>
-class ForwardPipeline : public Pipeline
+class ShadingPipeline : public Pipeline
 {
 public: // Methods:
-	ForwardPipeline(VulkanContext* context,
+	ShadingPipeline(VulkanContext* context,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
 		const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-	~ForwardPipeline();
+	~ShadingPipeline();
 
 private: // Methods:
+	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 	void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule);
 };
 
 
 
-#endif // __INCLUDE_GUARD_forwardPipeline_h__
+#endif // __INCLUDE_GUARD_shadingPipeline_h__

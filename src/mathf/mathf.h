@@ -6,7 +6,7 @@
 
 
 // Constants:
-constexpr float PI = 3.14159265358979323846f;
+
 
 
 
@@ -30,6 +30,19 @@ struct Index2
 // Class/Struct independent functions:
 namespace mathf
 {
+	// Constants:
+	constexpr float PI = 3.14159265358979323846f;
+	constexpr float PI_2 = 0.50f * PI;
+	constexpr float PI_4 = 0.25f * PI;
+	constexpr float PI_INV = 1.0f / PI;
+	constexpr float RAD2DEG = 180.0f / PI;
+	constexpr float DEG2RAD = PI / 180.0f;
+	constexpr float E = 2.71828182845904523536f;
+	constexpr float SQRT2 = 1.41421356237309504880f;
+	constexpr float SQRT2_INV = 0.70710678118654752440f;
+	constexpr float SQRT3 = 1.73205080756887729353f;
+	constexpr float SQRT3_INV = 0.57735026918962576451f;
+
 	float Clamp(float value, float min, float max);
 	float ToDegrees(float radians);
 	float ToRadians(float degrees);

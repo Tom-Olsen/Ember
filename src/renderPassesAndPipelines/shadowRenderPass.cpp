@@ -8,7 +8,7 @@
 // static members:
 uint32_t ShadowRenderPass::shadowMapWidth = 1024;
 uint32_t ShadowRenderPass::shadowMapHeight = 1024;
-uint32_t ShadowRenderPass::layerCount = MAX_D_LIGHTS + MAX_S_LIGHTS;
+uint32_t ShadowRenderPass::layerCount = MAX_D_LIGHTS + MAX_S_LIGHTS + 6 * MAX_P_LIGHTS;
 
 
 

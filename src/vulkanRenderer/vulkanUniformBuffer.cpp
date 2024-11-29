@@ -1,6 +1,7 @@
 #include "vulkanUniformBuffer.h"
 #include "vulkanMacros.h"
 #include "gameobject.h"
+#include "logger.h"
 
 
 
@@ -82,7 +83,7 @@ void VulkanUniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayI
 	UniformBufferMember* member = uniformBufferBlock->GetMember(arrayName);
 	if (member != nullptr)
 	{
-		UniformBufferMember* subMember = member->subMembers.at(arrayName + "[" + std::to_string(arrayIndex) + "]");
+		UniformBufferMember* subMember = member->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
 		if (subMember != nullptr)
 		{
 			if constexpr (std::is_same<T, bool>::value)
@@ -101,17 +102,47 @@ void VulkanUniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayI
 	UniformBufferMember* member = uniformBufferBlock->GetMember(arrayName);
 	if (member != nullptr)
 	{
-		UniformBufferMember* subMember = member->subMembers.at(arrayName + "[" + std::to_string(arrayIndex) + "]");
+		UniformBufferMember* subMember = member->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
 		if (subMember != nullptr)
 		{
-			UniformBufferMember* subSubMember = subMember->subMembers.at(memberName);
-			if constexpr (std::is_same<T, bool>::value)
+			UniformBufferMember* subSubMember = subMember->GetSubMember(memberName);
+			if (subSubMember != nullptr)
 			{
-				int intValue = static_cast<int>(value);
-				memcpy(hostData.data() + subSubMember->offset, &intValue, std::min(subSubMember->size, static_cast <uint32_t>(sizeof(intValue))));
+				if constexpr (std::is_same<T, bool>::value)
+				{
+					int intValue = static_cast<int>(value);
+					memcpy(hostData.data() + subSubMember->offset, &intValue, std::min(subSubMember->size, static_cast <uint32_t>(sizeof(intValue))));
+				}
+				else
+					memcpy(hostData.data() + subSubMember->offset, &value, std::min(subSubMember->size, static_cast <uint32_t>(sizeof(value))));
 			}
-			else
-				memcpy(hostData.data() + subSubMember->offset, &value, std::min(subSubMember->size, static_cast <uint32_t>(sizeof(value))));
+		}
+	}
+}
+template<typename T>
+void VulkanUniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
+{
+	UniformBufferMember* member = uniformBufferBlock->GetMember(arrayName);
+	if (member != nullptr)
+	{
+		UniformBufferMember* subMember = member->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+		if (subMember != nullptr)
+		{
+			UniformBufferMember* subSubMember = subMember->GetSubMember(subArrayName);
+			if (subSubMember != nullptr)
+			{
+				UniformBufferMember* subSubSubMember = subSubMember->GetSubMember(subArrayName + "[" + std::to_string(subArrayIndex) + "]");
+				if (subSubSubMember != nullptr)
+				{
+					if constexpr (std::is_same<T, bool>::value)
+					{
+						int intValue = static_cast<int>(value);
+						memcpy(hostData.data() + subSubSubMember->offset, &intValue, std::min(subSubSubMember->size, static_cast <uint32_t>(sizeof(intValue))));
+					}
+					else
+						memcpy(hostData.data() + subSubSubMember->offset, &value, std::min(subSubSubMember->size, static_cast <uint32_t>(sizeof(value))));
+				}
+			}
 		}
 	}
 }
@@ -142,3 +173,11 @@ template void VulkanUniformBuffer::SetValue<Float2>(const std::string& arrayName
 template void VulkanUniformBuffer::SetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value);
 template void VulkanUniformBuffer::SetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value);
 template void VulkanUniformBuffer::SetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value);
+
+template void VulkanUniformBuffer::SetValue<int>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const int& value);
+template void VulkanUniformBuffer::SetValue<bool>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const bool& value);
+template void VulkanUniformBuffer::SetValue<float>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const float& value);
+template void VulkanUniformBuffer::SetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value);
+template void VulkanUniformBuffer::SetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
+template void VulkanUniformBuffer::SetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
+template void VulkanUniformBuffer::SetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);

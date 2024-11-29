@@ -18,6 +18,18 @@
 
 
 // UniformBufferMember public methods:
+void UniformBufferMember::AddSubMember(std::string name, UniformBufferMember * subMember)
+{
+    // Take ownership of UniformBufferMember pointer:
+    subMembers.emplace(name, subMember);
+}
+UniformBufferMember* UniformBufferMember::GetSubMember(const std::string & name) const
+{
+    auto it = subMembers.find(name);
+    if (it != subMembers.end())
+        return it->second;
+    return nullptr;
+}
 std::string UniformBufferMember::ToString(const std::string& name, int indent) const
 {
 	std::string output(indent, ' ');
@@ -183,7 +195,7 @@ void SpirvReflect::StructReflection(const SpvReflectBlockVariable& memberReflect
         if (IsArray(subMemberReflection))
             ArrayReflection(subMemberReflection.name, subMemberReflection, subMember);
 
-        member->subMembers.emplace(subMemberReflection.name, subMember);
+        member->AddSubMember(subMemberReflection.name, subMember);
     }
 }
 void SpirvReflect::ArrayReflection(const std::string& arrayName, const SpvReflectBlockVariable& arrayReflection, UniformBufferMember* member) const
@@ -198,7 +210,7 @@ void SpirvReflect::ArrayReflection(const std::string& arrayName, const SpvReflec
         if (IsStruct(arrayReflection))
             StructReflection(arrayReflection, element);
     
-        member->subMembers.emplace(arrayName + "[" + std::to_string(arrayIndex) + "]", element);
+        member->AddSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]", element);
     }
 }
 std::string SpirvReflect::GetSpvReflectDescriptorTypeName(SpvReflectDescriptorType spvReflectDescriptorType)

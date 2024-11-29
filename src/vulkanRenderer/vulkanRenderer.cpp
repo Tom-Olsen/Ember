@@ -1,6 +1,7 @@
 #include "vulkanRenderer.h"
 #include "vulkanMacros.h"
-#include "vulkanPushConstant.h"
+#include "shadingPushConstant.h"
+#include "shadowPushConstant.h"
 #include "renderPassManager.h"
 #include "macros.h"
 
@@ -13,11 +14,11 @@ VulkanRenderer::VulkanRenderer(VulkanContext* context)
 
 	// Command buffers:
 	shadowCommands.reserve(context->framesInFlight);
-	forwardCommands.reserve(context->framesInFlight);
+	shadingCommands.reserve(context->framesInFlight);
 	for (uint32_t i = 0; i < context->framesInFlight; i++)
 	{
 		shadowCommands.emplace_back(context, context->logicalDevice->graphicsQueue);
-		forwardCommands.emplace_back(context, context->logicalDevice->graphicsQueue);
+		shadingCommands.emplace_back(context, context->logicalDevice->graphicsQueue);
 	}
 
 	// Synchronization objects:
@@ -57,7 +58,7 @@ bool VulkanRenderer::Render(Scene* scene)
 	VKA(vkResetFences(context->LogicalDevice(), 1, &fences[context->frameIndex]));
 
 	RecordShadowCommandBuffer(scene);
-	RecordForwardCommandBuffer(scene);
+	RecordShadingCommandBuffer(scene);
 	SubmitCommandBuffers();
 	if (!PresentImage())
 		return 0;
@@ -130,25 +131,90 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 		// Begin render pass:
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
-			Float3 cameraPosition = scene->activeCamera->transform->GetPosition();
-			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount, cameraPosition);
+			int shadowMapIndex = 0;
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, MeshRenderer::GetShadowPipeline());
-			vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VulkanPushConstant), &pushConstant);
 			
-			for (auto& meshRenderer : scene->GetSortedMeshRenderers())
+			// Directional Lights:
+			for (auto& light : scene->directionalLights)
 			{
-				if (meshRenderer->IsActive() && meshRenderer->castShadows)
-				{
-					meshRenderer->SetShadowRenderMatrizes(scene->directionalLights);
-					meshRenderer->SetShadowRenderMatrizes(scene->spotLights);
-					meshRenderer->shadowMaterialProperties->UpdateShaderData();
+				if (light == nullptr)
+					continue;
 
-					const VkDeviceSize offsets[1] = { 0 };
-					vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
-					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
-		
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
-					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), scene->dLightsCount + scene->sLightsCount + scene->pLightsCount, 0, 0, 0);
+				for (auto& meshRenderer : scene->GetSortedMeshRenderers())
+				{
+					if (meshRenderer->IsActive() && meshRenderer->castShadows)
+					{
+						// Update shader specific data (push constants and uniform buffers):
+						Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->transform->GetLocalToWorldMatrix();
+						ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
+						vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+						meshRenderer->shadowMaterialProperties->UpdateShaderData();
+
+						const VkDeviceSize offsets[1] = { 0 };
+						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
+						vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
+
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
+						vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+					}
+				}
+				shadowMapIndex++;
+			}
+
+			// Spot Lights:
+			for (auto& light : scene->spotLights)
+			{
+				if (light == nullptr)
+					continue;
+
+				for (auto& meshRenderer : scene->GetSortedMeshRenderers())
+				{
+					if (meshRenderer->IsActive() && meshRenderer->castShadows)
+					{
+						// Update shader specific data (push constants and uniform buffers):
+						Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->transform->GetLocalToWorldMatrix();
+						ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
+						vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+						meshRenderer->shadowMaterialProperties->UpdateShaderData();
+
+						const VkDeviceSize offsets[1] = { 0 };
+						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
+						vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
+
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
+						vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+					}
+				}
+				shadowMapIndex++;
+			}
+
+			// Point Lights:
+			for (auto& light : scene->pointLights)
+			{
+				if (light == nullptr)
+					continue;
+
+				for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
+				{
+					for (auto& meshRenderer : scene->GetSortedMeshRenderers())
+					{
+						if (meshRenderer->IsActive() && meshRenderer->castShadows)
+						{
+							// Update shader specific data (push constants and uniform buffers):
+							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex) * meshRenderer->transform->GetLocalToWorldMatrix();
+							ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
+							vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+							meshRenderer->shadowMaterialProperties->UpdateShaderData();
+
+							const VkDeviceSize offsets[1] = { 0 };
+							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
+							vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
+
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
+							vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+						}
+					}
+					shadowMapIndex++;
 				}
 			}
 		}
@@ -156,10 +222,10 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 	}
 	VKA(vkEndCommandBuffer(commandBuffer));
 }
-void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
+void VulkanRenderer::RecordShadingCommandBuffer(Scene* scene)
 {
-	vkResetCommandPool(context->LogicalDevice(), forwardCommands[context->frameIndex].pool, 0);
-	VkCommandBuffer commandBuffer = forwardCommands[context->frameIndex].buffer;
+	vkResetCommandPool(context->LogicalDevice(), shadingCommands[context->frameIndex].pool, 0);
+	VkCommandBuffer commandBuffer = shadingCommands[context->frameIndex].buffer;
 
 	// Begin command buffer:
 	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -170,7 +236,7 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 		SetViewportAndScissor(commandBuffer);
 
 		// Render pass info:
-		ForwardRenderPass* renderPass = dynamic_cast<ForwardRenderPass*>(RenderPassManager::GetRenderPass("forwardRenderPass"));
+		ShadingRenderPass* renderPass = dynamic_cast<ShadingRenderPass*>(RenderPassManager::GetRenderPass("shadingRenderPass"));
 		std::array<VkClearValue, 2> clearValues{};
 		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 		clearValues[1].depthStencil = { 1.0f, 0 };
@@ -186,29 +252,30 @@ void VulkanRenderer::RecordForwardCommandBuffer(Scene* scene)
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
 			Float3 cameraPosition = scene->activeCamera->transform->GetPosition();
-			VulkanPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount, cameraPosition);
+			ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount, cameraPosition);
 
 			Material* previousMaterial = nullptr;
 			for (auto& meshRenderer : scene->GetSortedMeshRenderers())
 			{
 				if (meshRenderer->IsActive())
 				{
-					meshRenderer->SetForwardRenderMatrizes(scene->activeCamera);
-					meshRenderer->SetForwardLightData(scene->directionalLights);
-					meshRenderer->SetForwardLightData(scene->spotLights);
-					meshRenderer->forwardMaterialProperties->UpdateShaderData();
+					meshRenderer->SetShadingRenderMatrizes(scene->activeCamera);
+					meshRenderer->SetShadingLightData(scene->directionalLights);
+					meshRenderer->SetShadingLightData(scene->spotLights);
+					meshRenderer->SetShadingLightData(scene->pointLights);
+					meshRenderer->shadingMaterialProperties->UpdateShaderData();
 
-					if (previousMaterial != meshRenderer->GetForwardMaterial())
+					if (previousMaterial != meshRenderer->GetShadingMaterial())
 					{
-						previousMaterial = meshRenderer->GetForwardMaterial();
-						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipeline());
-						vkCmdPushConstants(commandBuffer, meshRenderer->GetForwardPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(VulkanPushConstant), &pushConstant);
+						previousMaterial = meshRenderer->GetShadingMaterial();
+						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipeline());
+						vkCmdPushConstants(commandBuffer, meshRenderer->GetShadingPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
 					}
 
 					vkCmdBindVertexBuffers(commandBuffer, 0, meshRenderer->mesh->GetBindingCount(), meshRenderer->mesh->GetBuffers(context), meshRenderer->mesh->GetOffsets());
 					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
 
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipelineLayout(), 0, 1, meshRenderer->GetForwardDescriptorSets(context->frameIndex), 0, nullptr);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipelineLayout(), 0, 1, meshRenderer->GetShadingDescriptorSets(context->frameIndex), 0, nullptr);
 					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
 				}
 			}
@@ -230,19 +297,19 @@ void VulkanRenderer::SubmitCommandBuffers()
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &shadowCommands[context->frameIndex].buffer;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &shadowToForwardSemaphores[context->frameIndex]; // signal shadowToForwardSemaphore when done
+		submitInfo.pSignalSemaphores = &shadowToShadingSemaphores[context->frameIndex]; // signal shadowToShadingSemaphore when done
 		VKA(vkQueueSubmit(context->logicalDevice->graphicsQueue.queue, 1, &submitInfo, nullptr)); // signal fence when done
 	}
 
-	// Forward render pass:
+	// Shading render pass:
 	{
 		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;			// wait at fragment shader stage
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &shadowToForwardSemaphores[context->frameIndex];	// wait for shadowToForwardSemaphore
+		submitInfo.pWaitSemaphores = &shadowToShadingSemaphores[context->frameIndex];	// wait for shadowToShadingSemaphore
 		submitInfo.pWaitDstStageMask = &waitStage;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &forwardCommands[context->frameIndex].buffer;
+		submitInfo.pCommandBuffers = &shadingCommands[context->frameIndex].buffer;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &releaseSemaphores[context->frameIndex];			// signal releaseSemaphor when done
 		VKA(vkQueueSubmit(context->logicalDevice->graphicsQueue.queue, 1, &submitInfo, fences[context->frameIndex])); // signal fence when done
@@ -302,12 +369,12 @@ void VulkanRenderer::CreateSemaphores()
 	VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
 	acquireSemaphores.resize(context->framesInFlight);
-	shadowToForwardSemaphores.resize(context->framesInFlight);
+	shadowToShadingSemaphores.resize(context->framesInFlight);
 	releaseSemaphores.resize(context->framesInFlight);
 	for (uint32_t i = 0; i < context->framesInFlight; i++)
 	{
 		VKA(vkCreateSemaphore(context->LogicalDevice(), &createInfo, nullptr, &acquireSemaphores[i]));
-		VKA(vkCreateSemaphore(context->LogicalDevice(), &createInfo, nullptr, &shadowToForwardSemaphores[i]));
+		VKA(vkCreateSemaphore(context->LogicalDevice(), &createInfo, nullptr, &shadowToShadingSemaphores[i]));
 		VKA(vkCreateSemaphore(context->LogicalDevice(), &createInfo, nullptr, &releaseSemaphores[i]));
 	}
 }
@@ -324,10 +391,10 @@ void VulkanRenderer::DestroySemaphores()
 	for (uint32_t i = 0; i < context->framesInFlight; i++)
 	{
 		vkDestroySemaphore(context->LogicalDevice(), acquireSemaphores[i], nullptr);
-		vkDestroySemaphore(context->LogicalDevice(), shadowToForwardSemaphores[i], nullptr);
+		vkDestroySemaphore(context->LogicalDevice(), shadowToShadingSemaphores[i], nullptr);
 		vkDestroySemaphore(context->LogicalDevice(), releaseSemaphores[i], nullptr);
 	}
 	acquireSemaphores.clear();
-	shadowToForwardSemaphores.clear();
+	shadowToShadingSemaphores.clear();
 	releaseSemaphores.clear();
 }

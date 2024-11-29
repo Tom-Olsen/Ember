@@ -21,7 +21,7 @@ public: // Members:
 	std::unordered_map<std::string, std::unique_ptr<GameObject>> gameObjects;
 	std::array<DirectionalLight*, MAX_D_LIGHTS> directionalLights;
 	std::array<SpotLight*, MAX_S_LIGHTS> spotLights;
-	//std::array<PointLight*, MAX_P_LIGHTS> pointLights;
+	std::array<PointLight*, MAX_P_LIGHTS> pointLights;
 
 private: // Members:
 	bool meshRenderersSortet = false;

@@ -192,7 +192,7 @@ Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwar
 	float sign = mathf::Sign(Float3::Dot(Float3::Cross(upOldRotated, projection), forwardNew));
 	float angle = sign * Float3::AngleRadians(upOldRotated, projection);
 	if (Float3::Dot(upNew, upOldRotated) < 0)
-		angle += PI;
+		angle += mathf::PI;
 
 	// Rotate by angle around forwardNew:
 	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle);

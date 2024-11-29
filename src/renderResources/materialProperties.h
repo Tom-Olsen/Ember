@@ -3,7 +3,7 @@
 #define __INCLUDE_GUARD_materialProperties_h__
 #include <string>
 #include "vulkanContext.h"
-#include "forwardPipeline.h"
+#include "shadingPipeline.h"
 #include "shadowPipeline.h"
 #include "vulkanUniformBuffer.h"
 #include "vulkanSampler.h"
@@ -51,9 +51,11 @@ public: // Methods:
 	template<typename T>
 	void SetValue(const std::string& blockName, const std::string& memberName, const T& value);
 	template<typename T>
-	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const T& value);
+	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const T& value);
 	template<typename T>
-	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const T& value);
+	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
+	template<typename T>
+	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
 	void SetSampler(const std::string& name, VulkanSampler* sampler);
 	void SetTexture2d(const std::string& name, Texture2d* texture2d);
 

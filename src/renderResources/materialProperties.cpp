@@ -2,6 +2,7 @@
 #include "vulkanMacros.h"
 #include "samplerManager.h"
 #include "textureManager.h"
+#include "logger.h"
 
 
 
@@ -103,32 +104,44 @@ void MaterialProperties::SetValue(const std::string& blockName, const std::strin
 	}
 }
 template<typename T>
-void MaterialProperties::SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const T& value)
+void MaterialProperties::SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const T& value)
 {
 	auto it = uniformBufferMaps[0].find(blockName);
 	if (it != uniformBufferMaps[0].end())
 	{// blockname exists => set value for all frames:
 		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 		{
-			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayindex, value);
+			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayIndex, value);
 			updateUniformBuffer[frameIndex].at(blockName) = true;
 		}
 	}
 }
 template<typename T>
-void MaterialProperties::SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const T& value)
+void MaterialProperties::SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value)
 {
 	auto it = uniformBufferMaps[0].find(blockName);
 	if (it != uniformBufferMaps[0].end())
 	{// blockname exists => set value for all frames:
 		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 		{
-			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayindex, memberName, value);
+			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayIndex, memberName, value);
 			updateUniformBuffer[frameIndex].at(blockName) = true;
 		}
 	}
 }
-
+template<typename T>
+void MaterialProperties::SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
+{
+	auto it = uniformBufferMaps[0].find(blockName);
+	if (it != uniformBufferMaps[0].end())
+	{// blockname exists => set value for all frames:
+		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
+		{
+			uniformBufferMaps[frameIndex].at(blockName).resource.SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+			updateUniformBuffer[frameIndex].at(blockName) = true;
+		}
+	}
+}
 
 
 // Sampler setters:
@@ -325,3 +338,11 @@ template void MaterialProperties::SetValue<Float2>(const std::string& blockName,
 template void MaterialProperties::SetValue<Float3>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float3& value);
 template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float4& value);
 template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float4x4& value);
+
+template void MaterialProperties::SetValue<int>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const int& value);
+template void MaterialProperties::SetValue<bool>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const bool& value);
+template void MaterialProperties::SetValue<float>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const float& value);
+template void MaterialProperties::SetValue<Float2>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value);
+template void MaterialProperties::SetValue<Float3>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
+template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
+template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);

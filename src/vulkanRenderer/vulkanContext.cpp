@@ -87,6 +87,10 @@ bool VulkanContext::DepthClampEnabled()
 {
 	return physicalDevice->supportsDepthClamp;
 }
+bool VulkanContext::DepthBiasEnabled()
+{
+	return physicalDevice->supportsDepthBias;
+}
 
 
 

@@ -10,8 +10,8 @@ Scene::Scene()
 		directionalLights[i] = nullptr;
 	for (uint32_t i = 0; i < MAX_S_LIGHTS; i++)
 		spotLights[i] = nullptr;
-	//for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
-	//	pointLights[i] = nullptr;
+	for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
+		pointLights[i] = nullptr;
 }
 
 
@@ -67,17 +67,17 @@ void Scene::AddGameObject(GameObject* gameObject)
 					break;
 				}
 		}
-		//PointLight* pointLight = gameObject->GetComponent<PointLight>();
-		//if (pointLight != nullptr)
-		//{
-		//	for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
-		//		if (pointLights[i] == nullptr)
-		//		{
-		//			pointLights[i] = pointLight;
-		//			pLightsCount++;
-		//			break;
-		//		}
-		//}
+		PointLight* pointLight = gameObject->GetComponent<PointLight>();
+		if (pointLight != nullptr)
+		{
+			for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
+				if (pointLights[i] == nullptr)
+				{
+					pointLights[i] = pointLight;
+					pLightsCount++;
+					break;
+				}
+		}
 	}
 }
 GameObject* Scene::GetGameObject(std::string name)
@@ -119,17 +119,17 @@ void Scene::RemoveGameObject(std::string name)
 					break;
 				}
 		}
-		//PointLight* pointLight = gameObject->GetComponent<PointLight>();
-		//if (pointLight != nullptr)
-		//{
-		//	for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
-		//		if (pointLights[i] == pointLight)
-		//		{
-		//			pointLights[i] = nullptr;
-		//			pLightsCount--;
-		// 			break;
-		//		}
-		//}
+		PointLight* pointLight = gameObject->GetComponent<PointLight>();
+		if (pointLight != nullptr)
+		{
+			for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
+				if (pointLights[i] == pointLight)
+				{
+					pointLights[i] = nullptr;
+					pLightsCount--;
+		 			break;
+				}
+		}
 		MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
 		if (meshRenderer != nullptr)
 		{
@@ -190,14 +190,14 @@ void Scene::PrintMeshRenderers() const
 {
 	LOG_TRACE("MeshRenderers in scene:");
 	for (const auto& [objName, meshRenderer] : meshRenderers)
-		LOG_TRACE("gamObject: {}, material: {}", objName, meshRenderer->GetForwardMaterial()->name);
+		LOG_TRACE("gamObject: {}, material: {}", objName, meshRenderer->GetShadingMaterial()->name);
 }
 void Scene::PrintSortedMeshRenderers()
 {
 	SortMeshRenderers();
 	LOG_TRACE("Sorted MeshRenderers in scene:");
 	for (const auto& meshRenderer : sortedMeshRenderers)
-		LOG_TRACE("gamObject: {}, material: {}", meshRenderer->gameObject->name, meshRenderer->GetForwardMaterial()->name);
+		LOG_TRACE("gamObject: {}, material: {}", meshRenderer->gameObject->name, meshRenderer->GetShadingMaterial()->name);
 }
 void Scene::PrintLights() const
 {
@@ -205,15 +205,16 @@ void Scene::PrintLights() const
 	for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
 		if (directionalLights[i] != nullptr)
 			LOG_TRACE("{}", directionalLights[i]->gameObject->name);
+
 	LOG_TRACE("Spot lights in scene: {}", sLightsCount);
 	for (uint32_t i = 0; i < MAX_S_LIGHTS; i++)
 		if (spotLights[i] != nullptr)
 			LOG_TRACE("{}", spotLights[i]->gameObject->name);
-	//LOG_TRACE("Point lights in scene:");
-	//for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
-	//	if (pointLights[i] != nullptr)
-	//		LOG_TRACE("{}", pointLights[i]->gameObject->name);
 
+	LOG_TRACE("Point lights in scene: {}", pLightsCount);
+	for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
+		if (pointLights[i] != nullptr)
+			LOG_TRACE("{}", pointLights[i]->gameObject->name);
 }
 
 
@@ -225,8 +226,8 @@ void Scene::SortMeshRenderers()
 	{
 		std::sort(sortedMeshRenderers.begin(), sortedMeshRenderers.end(), [](MeshRenderer* a, MeshRenderer* b)
 		{
-			uint32_t renderQueueA = static_cast<uint32_t>(a->GetForwardMaterial()->renderQueue);
-			uint32_t renderQueueB = static_cast<uint32_t>(b->GetForwardMaterial()->renderQueue);
+			uint32_t renderQueueA = static_cast<uint32_t>(a->GetShadingMaterial()->renderQueue);
+			uint32_t renderQueueB = static_cast<uint32_t>(b->GetShadingMaterial()->renderQueue);
 			return renderQueueA < renderQueueB;
 		});
 		meshRenderersSortet = true;

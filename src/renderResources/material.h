@@ -22,7 +22,7 @@ public: // Enums:
 	enum class Type
 	{
 		shadow,
-		forward,
+		shading,
 		skybox
 	};
 	enum class RenderQueue

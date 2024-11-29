@@ -1,5 +1,5 @@
 #include "material.h"
-#include "forwardPipeline.h"
+#include "shadingPipeline.h"
 #include "shadowPipeline.h"
 #include "skyboxPipeline.h"
 #include "logger.h"
@@ -16,8 +16,8 @@ Material::Material(VulkanContext* context, Type type, const std::string& name, R
 	this->name = name;
 	this->renderQueue = renderQueue;
 
-	// Forward material creation:
-	if (type == Type::forward)
+	// Shading material creation:
+	if (type == Type::shading)
 	{
 		// Load vertex shader:
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -30,7 +30,7 @@ Material::Material(VulkanContext* context, Type type, const std::string& name, R
 		fragmentShaderReflect.GetDescriptorSetLayoutBindings(bindings, bindingNames, uniformBufferBlockMap);
 
 		// Create pipeline:
-		pipeline = std::make_unique<ForwardPipeline>(context, vertexCode, fragmentCode, bindings);
+		pipeline = std::make_unique<ShadingPipeline>(context, vertexCode, fragmentCode, bindings);
 	}
 
 	// Shadow material creation:
