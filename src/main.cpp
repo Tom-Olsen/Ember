@@ -5,14 +5,8 @@
 
 
 // TODO now:
-// - texture scaling and offset (use push constants for this?)
-// - one shadow material(+materialPropeties) that is used for all meshes and light sources!
 // - directional lights: shadow cascades
 // - validation layer errors when two shaders have the same binding number
-// - give the material a default materialProperties which is used if no materialProperties are set
-//      - Problem: renderMatrizes is different for each object => diferent materialProperties for each object
-//      - could be solved by using push constants for modelMatrix, localToClipMatrix, and normalMatrix (48Bytes combined)
-//        when doing this, remove the view and proj matrices to save memory in pc.
 // - add gameObject selection (need gizmos => ui renderpass)
 // - currently one commandPool per commandBuffer, should be one commandPool per frame, shared by all commands for that frame
 // - uniform buffer (cbuffer) data that is the same for all draw calls (e.g. light data) should be stored in a single cbuffer
@@ -30,7 +24,7 @@
 // - particles (instancing)
 // - physics
 // - audio
-// - gameobject clipping logic (requires bounding box)
+// - gameobject clipping logic for camera and lights (requires bounding box)
 // - change shared ptr in VulkanUniformBuffer.buffer to unique ptr
 // - support arrays in spirv reflection
 // - write own logger class
@@ -91,9 +85,9 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("colorMaterial"));
-        meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("white"));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("colorMaterial"));
+        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("white"));
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
@@ -118,7 +112,7 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("colorMaterial"));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("colorMaterial"));
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
@@ -161,7 +155,7 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("colorMaterial"));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("colorMaterial"));
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
@@ -204,7 +198,7 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("colorMaterial"));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("colorMaterial"));
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
@@ -243,9 +237,9 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
-        meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTextureCube("skyboxClouds0"));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
+        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTextureCube("skyboxClouds0"));
         meshRenderer->receiveShadows = meshRenderer->castShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
@@ -259,9 +253,9 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("white"));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("white"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         scene->AddGameObject(gameObject);
@@ -273,11 +267,11 @@ int main()
 
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("brick"));
-        meshRenderer->shadingMaterialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
-        meshRenderer->shadingMaterialProperties->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 2, 1, 1));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("brick"));
+        meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
+        meshRenderer->materialProperties->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 2, 1, 1));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
         scene->AddGameObject(gameObject);
@@ -289,7 +283,7 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("colorMaterial"));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("colorMaterial"));
         //meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
@@ -302,9 +296,9 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("brick"));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("brick"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
@@ -319,9 +313,9 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("unitCube");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("stones"));
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("stones"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         scene->AddGameObject(gameObject);
@@ -333,10 +327,10 @@ int main()
     
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("cubeSphere");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("wall0"));
-        meshRenderer->shadingMaterialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("wall0"));
+        meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
         //SpinGlobal* spinGlobal = new SpinGlobal(Float3(2.0f, 0.0f, 0.0f), Float3(0, 45, 0));
@@ -351,10 +345,10 @@ int main()
 
         MeshRenderer* meshRenderer = new MeshRenderer();
         meshRenderer->mesh = MeshManager::GetMesh("cubeSphere");
-        meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-        meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("wood0"));
-        meshRenderer->shadingMaterialProperties->SetValue("SurfaceProperties", "roughness", 0.5f);
+        meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("wood0"));
+        meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 0.5f);
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
         SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 30.0f, 0.0f));
@@ -375,10 +369,10 @@ int main()
     
                 MeshRenderer* meshRenderer = new MeshRenderer();
                 meshRenderer->mesh = MeshManager::GetMesh("unitCube");
-                meshRenderer->SetShadingMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-                meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-                meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("stones"));
-                meshRenderer->shadingMaterialProperties->SetValue("SurfaceProperties", "roughness", 0.8f);
+                meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+                meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+                meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("stones"));
+                meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 0.8f);
                 gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
                 scene->AddGameObject(gameObject);

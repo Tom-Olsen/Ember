@@ -148,7 +148,6 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 						Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->transform->GetLocalToWorldMatrix();
 						ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 						vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-						meshRenderer->shadowMaterialProperties->UpdateShaderData();
 
 						const VkDeviceSize offsets[1] = { 0 };
 						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
@@ -175,7 +174,6 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 						Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->transform->GetLocalToWorldMatrix();
 						ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 						vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-						meshRenderer->shadowMaterialProperties->UpdateShaderData();
 
 						const VkDeviceSize offsets[1] = { 0 };
 						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
@@ -204,7 +202,6 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex) * meshRenderer->transform->GetLocalToWorldMatrix();
 							ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 							vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-							meshRenderer->shadowMaterialProperties->UpdateShaderData();
 
 							const VkDeviceSize offsets[1] = { 0 };
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
@@ -259,15 +256,15 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* scene)
 			{
 				if (meshRenderer->IsActive())
 				{
-					meshRenderer->SetShadingRenderMatrizes(scene->activeCamera);
-					meshRenderer->SetShadingLightData(scene->directionalLights);
-					meshRenderer->SetShadingLightData(scene->spotLights);
-					meshRenderer->SetShadingLightData(scene->pointLights);
-					meshRenderer->shadingMaterialProperties->UpdateShaderData();
+					meshRenderer->SetRenderMatrizes(scene->activeCamera);
+					meshRenderer->SetLightData(scene->directionalLights);
+					meshRenderer->SetLightData(scene->spotLights);
+					meshRenderer->SetLightData(scene->pointLights);
+					meshRenderer->materialProperties->UpdateShaderData();
 
-					if (previousMaterial != meshRenderer->GetShadingMaterial())
+					if (previousMaterial != meshRenderer->GetMaterial())
 					{
-						previousMaterial = meshRenderer->GetShadingMaterial();
+						previousMaterial = meshRenderer->GetMaterial();
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipeline());
 						vkCmdPushConstants(commandBuffer, meshRenderer->GetShadingPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
 					}

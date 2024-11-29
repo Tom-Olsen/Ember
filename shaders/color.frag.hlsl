@@ -11,7 +11,7 @@ cbuffer SurfaceProperties : register(b1)
     float roughness;        // 0.5
     float3 reflectivity;    // 0.4
     bool metallic;
-    float4 scaleOffset; // .xy = scale, .zw = offset
+    float4 scaleOffset;     // .xy = scale, .zw = offset
 };
 
 
