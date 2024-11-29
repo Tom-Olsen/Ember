@@ -13,6 +13,7 @@ cbuffer SurfaceProperties : register(b1)
     float roughness;        // 0.5
     float3 reflectivity;    // 0.4
     bool metallic;
+    float4 scaleOffset;     // .xy = scale, .zw = offset
 };
 
 
@@ -36,7 +37,7 @@ float4 main(FragmentInput input) : SV_TARGET
     float3 worldPos = input.worldPos;
     
     // Shading:
-    float4 color = diffuseColor * colorTexture.Sample(colorSampler, uv);
+    float4 color = diffuseColor * colorTexture.Sample(colorSampler, uv * scaleOffset.xy + scaleOffset.zw);
     
     // Lighting:
     float ambient = 0.1f;

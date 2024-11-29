@@ -277,6 +277,7 @@ int main()
         meshRenderer->shadingMaterialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
         meshRenderer->shadingMaterialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("brick"));
         meshRenderer->shadingMaterialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
+        meshRenderer->shadingMaterialProperties->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 2, 1, 1));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
         scene->AddGameObject(gameObject);
