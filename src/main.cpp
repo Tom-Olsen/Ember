@@ -5,7 +5,6 @@
 
 
 // TODO now:
-// - simplify shadowMapping.hlsli lighting code by adding more functions and reducing repitition.
 // - texture scaling and offset (use push constants for this?)
 // - one shadow material(+materialPropeties) that is used for all meshes and light sources!
 // - directional lights: shadow cascades

@@ -62,6 +62,32 @@ float3 FresnelDistribution(float3 F0, float dot)
 
 
 
+float3 PhysicalLight
+(float3 lightIntensity, float3 lightDir, float3 normal, float3 viewDir,
+ float3 color, float roughness, float3 reflectivity, bool metallic)
+{
+    float3 L = lightDir;
+    float3 N = normal;
+    float3 V = viewDir;
+    float3 H = normalize(L + V);
+        
+    float nDotH = saturate(dot(N, H));
+    float vDotH = saturate(dot(V, H));
+    float nDotL = saturate(dot(N, L));
+    float nDotV = saturate(dot(N, V));
+        
+    float D = NormalDistribution(nDotH, roughness);
+    float G = GeometryDistribution(nDotL, nDotV, roughness);
+    float3 F = FresnelDistribution(reflectivity, vDotH);
+        
+    float3 specularBRDF = (D * G * F) / (4.0f * nDotL * nDotV + 0.001f);
+    float3 diffuseBRDF = metallic ? 0 : (1.0f - F) * color * mathf_PI_INV;
+        
+    return (diffuseBRDF + specularBRDF) * lightIntensity * nDotL;
+}
+
+
+
 float3 PhysicalDirectionalLights
 (float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, bool metallic,
  int dLightsCount, int shadowMapOffset, DirectionalLightData lightData[MAX_D_LIGHTS],
@@ -86,24 +112,11 @@ float3 PhysicalDirectionalLights
         
         // Light:
         float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w;
-        float3 L = normalize(lightData[i].direction);
-        float3 N = normal;
-        float3 V = normalize(cameraPos - worldPos);
-        float3 H = normalize(L + V);
+        float3 lightDir = normalize(lightData[i].direction);
+        float3 viewDir = normalize(cameraPos - worldPos);
+        float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallic);
         
-        float nDotH = saturate(dot(N, H));
-        float vDotH = saturate(dot(V, H));
-        float nDotL = saturate(dot(N, L));
-        float nDotV = saturate(dot(N, V));
-        
-        float D = NormalDistribution(nDotH, roughness);
-        float G = GeometryDistribution(nDotL, nDotV, roughness);
-        float3 F = FresnelDistribution(reflectivity, vDotH);
-        
-        float3 specularBRDF = (D * G * F) / (4.0f * nDotL * nDotV + 0.001f);
-        float3 diffuseBRDF = metallic ? 0 : (1.0f - F) * color * mathf_PI_INV;
-        
-        totalLight += shadow * (diffuseBRDF + specularBRDF) * lightIntensity * nDotL;
+        totalLight += shadow * light;
     }
     return totalLight;
 }
@@ -136,24 +149,11 @@ float3 PhysicalSpotLights
         // Light:
         float distSq = dot(lightData[i].position - worldPos, lightData[i].position - worldPos);
         float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w / distSq;
-        float3 L = normalize(lightData[i].position - worldPos);
-        float3 N = normal;
-        float3 V = normalize(cameraPos - worldPos);
-        float3 H = normalize(L + V);
+        float3 lightDir = normalize(lightData[i].position - worldPos);
+        float3 viewDir = normalize(cameraPos - worldPos);
+        float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallic);
         
-        float nDotH = saturate(dot(N, H));
-        float vDotH = saturate(dot(V, H));
-        float nDotL = saturate(dot(N, L));
-        float nDotV = saturate(dot(N, V));
-        
-        float D = NormalDistribution(nDotH, roughness);
-        float G = GeometryDistribution(nDotL, nDotV, roughness);
-        float3 F = FresnelDistribution(reflectivity, vDotH);
-        
-        float3 specularBRDF = (D * G * F) / (4.0f * nDotL * nDotV + 0.001f);
-        float3 diffuseBRDF = metallic ? 0 : (1.0f - F) * color * mathf_PI_INV;
-        
-        totalLight += shadow * (diffuseBRDF + specularBRDF) * lightIntensity * nDotL;
+        totalLight += shadow * light;
     }
     return totalLight;
 }
@@ -184,24 +184,11 @@ float3 PhysicalPointLights
             // Light:
             float distSq = dot(lightData[i].position - worldPos, lightData[i].position - worldPos);
             float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w / distSq;
-            float3 L = normalize(lightData[i].position - worldPos);
-            float3 N = normal;
-            float3 V = normalize(cameraPos - worldPos);
-            float3 H = normalize(L + V);
+            float3 lightDir = normalize(lightData[i].position - worldPos);
+            float3 viewDir = normalize(cameraPos - worldPos);
+            float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallic);
         
-            float nDotH = saturate(dot(N, H));
-            float vDotH = saturate(dot(V, H));
-            float nDotL = saturate(dot(N, L));
-            float nDotV = saturate(dot(N, V));
-        
-            float D = NormalDistribution(nDotH, roughness);
-            float G = GeometryDistribution(nDotL, nDotV, roughness);
-            float3 F = FresnelDistribution(reflectivity, vDotH);
-        
-            float3 specularBRDF = (D * G * F) / (4.0f * nDotL * nDotV + 0.001f);
-            float3 diffuseBRDF = metallic ? 0 : (1.0f - F) * color * mathf_PI_INV;
-        
-            totalLight += shadow * (diffuseBRDF + specularBRDF) * lightIntensity * nDotL;
+            totalLight += shadow * light;
         }
     }
     return totalLight;
