@@ -36,6 +36,7 @@ public:
 	Float3x3(float value);
 	Float3x3(const float* array); // Initialize from a 1D array
 	Float3x3(const Float3x3& other);
+	Float3x3(const Float4x4& other);
 
 	// Static constructors:
 	static Float3x3 Rows(const Float3& row0, const Float3& row1, const Float3& row2);

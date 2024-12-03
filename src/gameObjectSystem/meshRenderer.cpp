@@ -3,6 +3,7 @@
 #include "gameObject.h"
 #include "materialManager.h"
 #include "samplerManager.h"
+#include "textureManager.h"
 #include "renderPassManager.h"
 #include "logger.h"
 
@@ -50,6 +51,7 @@ void MeshRenderer::SetMaterial(Material* material)
 	materialProperties->SetSampler("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
 	materialProperties->SetTexture2d("shadowMaps", shadowRenderPass->shadowMaps.get());
 	materialProperties->SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 1, 1));
+	materialProperties->SetTexture2d("normalMap", TextureManager::GetTexture2d("blue"));
 }
 void MeshRenderer::SetRenderMatrizes(Camera* camera)
 {

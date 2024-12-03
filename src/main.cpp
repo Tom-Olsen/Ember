@@ -14,6 +14,7 @@
 //   that is bound to a single descriptorSet that is bound to all draw calls that need that data.
 //   => make this descriptorset a "global" object in the materialProperties class.
 // - shadowMapping.hlsli: PhysicalDirectionalLights(...) has depth bias added manually. Should be done via pipeline rasterization state.
+// - add geometry shader stage => wireframe rendering
 
 // TODO long term:
 // - change image loading library, stb_image sucks.
@@ -55,6 +56,7 @@ int main()
     //MaterialManager::GetMaterial("skyboxMaterial")->PrintBindings();
     //MaterialManager::GetMaterial("colorMaterial")->PrintUniformBuffers();
     //MaterialManager::GetMaterial("defaultMaterial")->PrintUniformBuffers();
+    //TextureManager::PrintAllTextureNames();
     // return 0;
 
     bool directionalLightsActive = 0;
@@ -256,7 +258,14 @@ int main()
         meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
         meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("white"));
+        meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("ground0_height"));
+        meshRenderer->materialProperties->SetTexture2d("heightMap", TextureManager::GetTexture2d("ground0_height"));
+        meshRenderer->materialProperties->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));
+        meshRenderer->materialProperties->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_opengl"));
+        //meshRenderer->materialProperties->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_directx"));
+		Float4 scaleOffset = Float4(10, 10, 1, 1);
+        meshRenderer->materialProperties->SetValue("SurfaceProperties", "scaleOffset", scaleOffset);
+        meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         scene->AddGameObject(gameObject);

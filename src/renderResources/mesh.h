@@ -12,8 +12,9 @@
 // - add logic to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
 
 /// <summary>
-/// Mesh class for storing vertex positions, colors and triangles.
+/// Mesh class for storing vertex positions, colors, triangles, etc.
 /// Mesh class takes ownership of vectors and takes care of cleanup.
+/// Normalization of normals and tangets must be done manually.
 /// Static meshes should be stored as pointers in the static MeshManager class.
 /// </summary>
 class Mesh
@@ -31,11 +32,12 @@ private: // Members:
 	std::unique_ptr<VmaBuffer> indexBuffer;
 	std::vector<Float3> positions;
 	std::vector<Float3> normals;
+	std::vector<Float3> tangents;
 	std::vector<Float4> colors;
 	std::vector<Float4> uvs;
 	std::vector<Uint3> triangles;
-	VkDeviceSize offsets[4];
-	VkBuffer buffers[4];
+	VkDeviceSize offsets[5];
+	VkBuffer buffers[5];
 
 public: // Methods:
 	Mesh(std::string name = "");
@@ -52,6 +54,7 @@ public: // Methods:
 	// Setters:
 	void SetPositions(std::vector<Float3>& positions);
 	void SetNormals(std::vector<Float3>& normals);
+	void SetTangents(std::vector<Float3>& tangents);
 	void SetColors(std::vector<Float4>& colors);
 	void SetUniformColor(const Float4& color);
 	void SetUVs(std::vector<Float4>& uvs);
@@ -60,6 +63,7 @@ public: // Methods:
 	// Movers:
 	void MovePositions(std::vector<Float3>& positions);
 	void MoveNormals(std::vector<Float3>& normals);
+	void MoveTangents(std::vector<Float3>& tangents);
 	void MoveColors(std::vector<Float4>& colors);
 	void MoveUVs(std::vector<Float4>& uvs);
 	void MoveTriangles(std::vector<Uint3>& triangles);
@@ -69,12 +73,14 @@ public: // Methods:
 	uint32_t GetTriangleCount() const;
 	std::vector<Float3>& GetPositions();
 	std::vector<Float3>& GetNormals();
+	std::vector<Float3>& GetTangents();
 	std::vector<Float4>& GetColors();
 	std::vector<Float4>& GetUVs();
 	std::vector<Uint3>& GetTriangles();
 	uint32_t* GetTrianglesUnrolled();
 	uint32_t GetSizeOfPositions() const;
 	uint32_t GetSizeOfNormals() const;
+	uint32_t GetSizeOfTangents() const;
 	uint32_t GetSizeOfColors() const;
 	uint32_t GetSizeOfUVs() const;
 	uint32_t GetSizeOfTriangles() const;
@@ -85,11 +91,12 @@ public: // Methods:
 	VmaBuffer* GetIndexBuffer(VulkanContext* context);
 	bool IsLoaded();
 	bool HasNormals();
+	bool HasTangents();
 	bool HasColors();
 	bool HasUVs();
 	Mesh* GetCopy(std::string newName = "");
 
-	// Mesh transformation (changes this instance!):
+	// Mesh transformation (changes *this!):
 	Mesh* Translate(const Float3& translation);
 	Mesh* Rotate(const Float3x3& rotation);
 	Mesh* Rotate(const Float4x4& rotation);
@@ -97,11 +104,14 @@ public: // Methods:
 	Mesh* Scale(float scale);
 	Mesh* Subdivide();
 	Mesh* Spherify(float factor, float radius);
+	void ComputeNormals();
+	void ComputeTangents();
 
 	// Static binding descriptions:
 	static std::vector<VkVertexInputBindingDescription> GetBindingDescription();
 	static VkVertexInputBindingDescription GetPositionBindingDescription();
 	static VkVertexInputBindingDescription GetNormalBindingDescription();
+	static VkVertexInputBindingDescription GetTangentBindingDescription();
 	static VkVertexInputBindingDescription GetColorBindingDescription();
 	static VkVertexInputBindingDescription GetUvBindingDescription(uint32_t channel);
 
@@ -109,6 +119,7 @@ public: // Methods:
 	static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
 	static VkVertexInputAttributeDescription GetPositionAttributeDescription();
 	static VkVertexInputAttributeDescription GetNormalAttributeDescription();
+	static VkVertexInputAttributeDescription GetTangentAttributeDescription();
 	static VkVertexInputAttributeDescription GetColorAttributeDescription();
 	static VkVertexInputAttributeDescription GetUvAttributeDescription(uint32_t channel);
 

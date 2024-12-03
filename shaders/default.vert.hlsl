@@ -18,6 +18,7 @@ struct VertexInput
 {
     float3 position : POSITION;
     float3 normal : NORMAL;
+    float3 tangent : TANGENT;
     float4 color : COLOR;
     float4 uv : TEXCOORD0;
 };
@@ -26,6 +27,8 @@ struct VertexOutput
 {
     float4 position : SV_POSITION;
     float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+    float3 binormal : BINORMAL;
     float4 vertexColor : COLOR;
     float4 uv : TEXCOORD0;
     float3 worldPos : TEXCOORD1;
@@ -35,12 +38,15 @@ struct VertexOutput
 
 VertexOutput main(VertexInput input)
 {
-    float4 pos = float4(input.position, 1.0);
-    float4 normal = float4(input.normal, 0.0);
+    float4 pos = float4(input.position, 1.0f);
+    float4 normal = float4(input.normal, 0.0f);
+    float4 tangent = float4(input.tangent, 0.0f);
     
     VertexOutput output;
     output.position = mul(localToClipMatrix, pos);
     output.normal = mul(normalMatrix, normal).xyz;
+    output.tangent = mul(normalMatrix, tangent).xyz;
+    output.binormal = cross(output.normal, output.tangent);
     output.vertexColor = input.color;
     output.uv = input.uv;
     output.worldPos = mul(modelMatrix, pos).xyz;

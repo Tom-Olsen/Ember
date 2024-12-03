@@ -67,6 +67,9 @@ void MeshManager::Init(VulkanContext* vulkanContext)
 
 	Mesh* threeLeg = MeshGenerator::ThreeLeg();
 	AddMesh(threeLeg->name, threeLeg);
+
+	Mesh* mesh = MeshGenerator::Grid(100, 100, "grid100x100");
+	AddMesh(mesh->name, mesh);
 }
 void MeshManager::UnloadAllMeshes()
 {

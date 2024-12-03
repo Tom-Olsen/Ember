@@ -1,11 +1,12 @@
 #include "meshGenerator.h"
 #include "mathf.h"
+#include "logger.h"
 
 
 
 namespace MeshGenerator
 {
-	Mesh* Triangle(Float3 a, Float3 b, Float3 c, std::string name)
+	Mesh* Triangle(Float3 a, Float3 b, Float3 c, const std::string& name)
 	{
 		Mesh* mesh = new Mesh(name);
 
@@ -13,25 +14,26 @@ namespace MeshGenerator
 		positions.emplace_back(a);
 		positions.emplace_back(b);
 		positions.emplace_back(c);
-		mesh->MovePositions(positions);
 
 		Float3 normal = Float3::Cross(b - a, c - a).Normalize();
 		std::vector<Float3> normals;
 		normals.emplace_back(normal);
 		normals.emplace_back(normal);
 		normals.emplace_back(normal);
-		mesh->MoveNormals(normals);
 
 		std::vector<Float4> uvs;
 		uvs.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
 		uvs.emplace_back(1.0f, 0.0f, 0.0f, 0.0f);
 		uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
-		mesh->MoveUVs(uvs);
 
 		std::vector<Uint3> triangles;
 		triangles.emplace_back(Uint3(0, 1, 2));
-		mesh->MoveTriangles(triangles);
 
+		mesh->MovePositions(positions);
+		mesh->MoveNormals(normals);
+		mesh->MoveUVs(uvs);
+		mesh->MoveTriangles(triangles);
+		mesh->ComputeTangents();
 		return mesh;
 	}
 
@@ -44,30 +46,31 @@ namespace MeshGenerator
 		positions.emplace_back(-0.5f, 0.5f, 0.0f);
 		positions.emplace_back(0.5f, -0.5f, 0.0f);
 		positions.emplace_back(0.5f, 0.5f, 0.0f);
-		mesh->MovePositions(positions);
 
 		std::vector<Float3> normals;
 		normals.emplace_back(0.0f, 0.0f, 1.0f);
 		normals.emplace_back(0.0f, 0.0f, 1.0f);
 		normals.emplace_back(0.0f, 0.0f, 1.0f);
 		normals.emplace_back(0.0f, 0.0f, 1.0f);
-		mesh->MoveNormals(normals);
 
 		std::vector<Float4> uvs;
 		uvs.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
 		uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
 		uvs.emplace_back(1.0f, 0.0f, 0.0f, 0.0f);
 		uvs.emplace_back(1.0f, 1.0f, 0.0f, 0.0f);
-		mesh->MoveUVs(uvs);
 
 		std::vector<Uint3> triangles;
 		triangles.emplace_back(Uint3(0, 2, 1));
 		triangles.emplace_back(Uint3(1, 2, 3));
-		mesh->MoveTriangles(triangles);
 
+		mesh->MovePositions(positions);
+		mesh->MoveNormals(normals);
+		mesh->MoveUVs(uvs);
+		mesh->MoveTriangles(triangles);
+		mesh->ComputeTangents();
 		return mesh;
 	}
-	Mesh* ClockwiseQuad(Float3 a, Float3 b, Float3 c, Float3 d, std::string name)
+	Mesh* ClockwiseQuad(Float3 a, Float3 b, Float3 c, Float3 d, const std::string& name)
 	{
 		Mesh* mesh = new Mesh(name);
 
@@ -76,7 +79,6 @@ namespace MeshGenerator
 		positions.emplace_back(b);
 		positions.emplace_back(c);
 		positions.emplace_back(d);
-		mesh->MovePositions(positions);
 
 		Float3 normal = Float3::Cross(c - a, b - a).Normalize();
 		std::vector<Float3> normals;
@@ -84,20 +86,65 @@ namespace MeshGenerator
 		normals.emplace_back(normal);
 		normals.emplace_back(normal);
 		normals.emplace_back(normal);
-		mesh->MoveNormals(normals);
 
 		std::vector<Float4> uvs;
 		uvs.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
 		uvs.emplace_back(1.0f, 0.0f, 0.0f, 0.0f);
 		uvs.emplace_back(1.0f, 1.0f, 0.0f, 0.0f);
 		uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
-		mesh->MoveUVs(uvs);
 
 		std::vector<Uint3> triangles;
 		triangles.emplace_back(Uint3(0, 3, 1));
 		triangles.emplace_back(Uint3(1, 3, 2));
-		mesh->MoveTriangles(triangles);
 
+		mesh->MovePositions(positions);
+		mesh->MoveNormals(normals);
+		mesh->MoveUVs(uvs);
+		mesh->MoveTriangles(triangles);
+		mesh->ComputeTangents();
+		return mesh;
+	}
+	Mesh* Grid(int resolutionX, int resolutionY, const std::string& name)
+	{
+		Mesh* mesh = new Mesh(name);
+
+		std::vector<Float3> positions;
+		std::vector<Float3> normals;
+		std::vector<Float4> uvs;
+		std::vector<Uint3> triangles;
+
+		for (int j = 0; j < resolutionY; j++)
+		{
+			float v = j / (resolutionY - 1.0f);
+			float y = v - 0.5f;
+			for (int i = 0; i < resolutionX; i++)
+			{
+				float u = i / (resolutionX - 1.0f);
+				float x = u - 0.5f;
+				positions.emplace_back(x, y, 0.0f);
+				normals.emplace_back(0.0f, 0.0f, 1.0f);
+				uvs.emplace_back(u, v, 0.0f, 0.0f);
+			}
+		}
+
+		for (int i = 0; i < resolutionX - 1; i++)
+		{
+			for (int j = 0; j < resolutionY - 1; j++)
+			{
+				int t0 = i + j * resolutionX;
+				int t1 = i + (j + 1) * resolutionX;
+				int t2 = i + 1 + j * resolutionX;
+				int t3 = i + 1 + (j + 1) * resolutionX;
+				triangles.emplace_back(Uint3(t0, t2, t1));
+				triangles.emplace_back(Uint3(t2, t3, t1));
+			}
+		}
+
+		mesh->MovePositions(positions);
+		mesh->MoveNormals(normals);
+		mesh->MoveUVs(uvs);
+		mesh->MoveTriangles(triangles);
+		mesh->ComputeTangents();
 		return mesh;
 	}
 
@@ -145,7 +192,7 @@ namespace MeshGenerator
 		return Mesh::Merge(faces, "halfCube");
 	}
 
-	Mesh* CubeSphere(float radius, int subdivisions, std::string name)
+	Mesh* CubeSphere(float radius, int subdivisions, const std::string& name)
 	{
 		radius = std::max(1e-8f, radius);
 		Mesh* mesh = UnitCube();
@@ -154,10 +201,11 @@ namespace MeshGenerator
 
 		mesh->name = name;
 		mesh->Spherify(1.0f, radius);
+		mesh->ComputeTangents();
 		return mesh;
 	}
 
-	Mesh* Disk(float radius, int cornerCount, std::string name)
+	Mesh* Disk(float radius, int cornerCount, const std::string& name)
 	{
 		cornerCount = std::max(3, cornerCount);
 		std::vector<Float3> positions;	positions.reserve(cornerCount + 1);
@@ -190,10 +238,11 @@ namespace MeshGenerator
 		mesh->MoveNormals(normals);
 		mesh->MoveUVs(uvs);
 		mesh->MoveTriangles(triangles);
+		mesh->ComputeTangents();
 		return mesh;
 	}
 	
-	Mesh* ArcFlatUv(float radius0, float radius1, float degrees, int cornerCount, std::string name)
+	Mesh* ArcFlatUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
 	{
 		// Validate input values:
 		degrees = mathf::Clamp(degrees, 0.0f, 360.0f);
@@ -234,9 +283,10 @@ namespace MeshGenerator
 		mesh->MoveNormals(normals);
 		mesh->MoveUVs(uvs);
 		mesh->MoveTriangles(triangles);
+		mesh->ComputeTangents();
 		return mesh;
 	}
-	Mesh* ArcCurvedUv(float radius0, float radius1, float degrees, int cornerCount, std::string name)
+	Mesh* ArcCurvedUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
 	{
 		// Validate input values:
 		degrees = mathf::Clamp(degrees, 0.0f, 360.0f);
@@ -278,10 +328,11 @@ namespace MeshGenerator
 		mesh->MoveNormals(normals);
 		mesh->MoveUVs(uvs);
 		mesh->MoveTriangles(triangles);
+		mesh->ComputeTangents();
 		return mesh;
 	}
 
-	Mesh* ConeSmooth(float radius, float height, int cornerCount, std::string name)
+	Mesh* ConeSmooth(float radius, float height, int cornerCount, const std::string& name)
 	{
 		radius = std::max(1e-8f, radius);
 		height = std::max(1e-8f, height);
@@ -318,9 +369,10 @@ namespace MeshGenerator
 		mesh->MoveNormals(normals);
 		mesh->MoveUVs(uvs);
 		mesh->MoveTriangles(triangles);
+		mesh->ComputeTangents();
 		return mesh;
 	}
-	Mesh* ConeEdgy(float radius, float height, int cornerCount, std::string name)
+	Mesh* ConeEdgy(float radius, float height, int cornerCount, const std::string& name)
 	{
 		std::vector<Mesh*> faces;
 		faces.reserve(cornerCount);
@@ -351,7 +403,7 @@ namespace MeshGenerator
 		return Mesh::Merge(faces, name);
 	}
 
-	Mesh* ZylinderMantleSmooth(float radius, float height, int cornerCount, std::string name)
+	Mesh* ZylinderMantleSmooth(float radius, float height, int cornerCount, const std::string& name)
 	{
 		radius = std::max(1e-8f, radius);
 		height = std::max(1e-8f, height);
@@ -390,9 +442,10 @@ namespace MeshGenerator
 		mesh->MoveNormals(normals);
 		mesh->MoveUVs(uvs);
 		mesh->MoveTriangles(triangles);
+		mesh->ComputeTangents();
 		return mesh;
 	}
-	Mesh* ZylinderMantleEdgy(float radius, float height, int cornerCount, std::string name)
+	Mesh* ZylinderMantleEdgy(float radius, float height, int cornerCount, const std::string& name)
 	{
 		radius = std::max(1e-8f, radius);
 		height = std::max(1e-8f, height);
@@ -426,7 +479,7 @@ namespace MeshGenerator
 		
 		return Mesh::Merge(faces, name);
 	}
-	Mesh* ZylinderSmooth(float radius, float height, int cornerCount, std::string name)
+	Mesh* ZylinderSmooth(float radius, float height, int cornerCount, const std::string& name)
 	{
 		std::vector<Mesh*> meshes;
 		meshes.reserve(3);
@@ -435,7 +488,7 @@ namespace MeshGenerator
 		meshes.push_back(meshes[1]->GetCopy("zylinderSmooth2")->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
 		return Mesh::Merge(meshes, name);
 	}
-	Mesh* ZylinderEdgy(float radius, float height, int cornerCount, std::string name)
+	Mesh* ZylinderEdgy(float radius, float height, int cornerCount, const std::string& name)
 	{
 		std::vector<Mesh*> meshes;
 		meshes.reserve(3);
@@ -445,7 +498,7 @@ namespace MeshGenerator
 		return Mesh::Merge(meshes, name);
 	}
 
-	Mesh* ArrowSmooth(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, std::string name)
+	Mesh* ArrowSmooth(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
 	{
 		if (direction == Float3(0.0f))
 			direction = Float3::up;
@@ -469,7 +522,7 @@ namespace MeshGenerator
 		Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
 		return Mesh::Merge(meshes, name)->Rotate(rotation);
 	}
-	Mesh* ArrowEdgy(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, std::string name)
+	Mesh* ArrowEdgy(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
 	{
 		if (direction == Float3(0.0f))
 			direction = Float3::up;

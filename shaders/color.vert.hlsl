@@ -18,7 +18,9 @@ struct VertexInput
 {
     float3 position : POSITION;
     float3 normal : NORMAL;
+    float3 tangent : TANGENT;
     float4 color : COLOR;
+    float4 uv : TEXCOORD0;
 };
 
 struct VertexOutput

@@ -59,6 +59,18 @@ void Mesh::SetNormals(std::vector<Float3>& normals)
 	}
 	verticesUpdated = true;
 }
+void Mesh::SetTangents(std::vector<Float3>& tangents)
+{
+	if (tangents.size() == vertexCount)
+		this->tangents = tangents;
+	else
+	{
+		LOG_WARN("Mesh '{}' tangents size does not match vertex count! Setting all tangents to zero.", name);
+		this->tangents.clear();
+		this->tangents.resize(vertexCount, Float3());
+	}
+	verticesUpdated = true;
+}
 void Mesh::SetColors(std::vector<Float4>& colors)
 {
 	if (colors.size() == vertexCount)
@@ -125,6 +137,18 @@ void Mesh::MoveNormals(std::vector<Float3>& normals)
 	}
 	verticesUpdated = true;
 }
+void Mesh::MoveTangents(std::vector<Float3>& tangents)
+{
+	if (tangents.size() == vertexCount)
+		this->tangents = std::move(tangents);
+	else
+	{
+		LOG_WARN("Mesh '{}' tangents size does not match vertex count! Setting all tangents to zero.", name);
+		this->tangents.clear();
+		this->tangents.resize(vertexCount, Float3());
+	}
+	verticesUpdated = true;
+}
 void Mesh::MoveColors(std::vector<Float4>& colors)
 {
 	if (colors.size() == vertexCount)
@@ -175,6 +199,10 @@ std::vector<Float3>& Mesh::GetNormals()
 {
 	return normals;
 }
+std::vector<Float3>& Mesh::GetTangents()
+{
+	return tangents;
+}
 std::vector<Float4>& Mesh::GetColors()
 {
 	return colors;
@@ -199,6 +227,10 @@ uint32_t Mesh::GetSizeOfNormals() const
 {
 	return static_cast<uint32_t>(normals.size()) * sizeof(Float3);
 }
+uint32_t Mesh::GetSizeOfTangents() const
+{
+	return static_cast<uint32_t>(tangents.size()) * sizeof(Float3);
+}
 uint32_t Mesh::GetSizeOfColors() const
 {
 	return static_cast<uint32_t>(colors.size()) * sizeof(Float4);
@@ -213,7 +245,7 @@ uint32_t Mesh::GetSizeOfTriangles() const
 }
 uint32_t Mesh::GetBindingCount()
 {
-	return 4;
+	return 5;
 }
 VkBuffer* Mesh::GetBuffers(VulkanContext* context)
 {
@@ -223,6 +255,7 @@ VkBuffer* Mesh::GetBuffers(VulkanContext* context)
 	buffers[1] = vertexBuffer->buffer;
 	buffers[2] = vertexBuffer->buffer;
 	buffers[3] = vertexBuffer->buffer;
+	buffers[4] = vertexBuffer->buffer;
 	return buffers;
 }
 VkDeviceSize* Mesh::GetOffsets()
@@ -230,7 +263,8 @@ VkDeviceSize* Mesh::GetOffsets()
 	offsets[0] = 0;
 	offsets[1] = GetSizeOfPositions();
 	offsets[2] = GetSizeOfPositions() + GetSizeOfNormals();
-	offsets[3] = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors();
+	offsets[3] = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents();
+	offsets[4] = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors();
 	return offsets;
 }
 VmaBuffer* Mesh::GetVertexBuffer(VulkanContext* context)
@@ -263,6 +297,10 @@ bool Mesh::HasNormals()
 {
 	return normals.size() == vertexCount;
 }
+bool Mesh::HasTangents()
+{
+	return tangents.size() == vertexCount;
+}
 bool Mesh::HasColors()
 {
 	return colors.size() == vertexCount;
@@ -277,6 +315,8 @@ Mesh* Mesh::GetCopy(std::string newName)
 	copy->SetPositions(positions);
 	if (HasNormals())
 		copy->SetNormals(normals);
+	if (HasTangents())
+		copy->SetTangents(tangents);
 	if (HasColors())
 		copy->SetColors(colors);
 	if (HasUVs())
@@ -297,24 +337,31 @@ Mesh* Mesh::Translate(const Float3& translation)
 }
 Mesh* Mesh::Rotate(const Float3x3& rotation)
 {
+	bool hasNormals = HasNormals();
+	bool hasTangents = HasTangents();
 	for (uint32_t i = 0; i < vertexCount; i++)
 	{
-		Float4 newPosition = rotation * positions[i];
-		Float4 newNormal = rotation * normals[i];
-		positions[i] = Float3(newPosition);
-		normals[i] = Float3(newNormal);
+		positions[i] = rotation * positions[i];
+		if (hasNormals)
+			normals[i] = rotation * normals[i];
+		if (hasTangents)
+			tangents[i] = rotation * tangents[i];
 	}
 	verticesUpdated = true;
 	return this;
 }
 Mesh* Mesh::Rotate(const Float4x4& rotation)
 {
+	Float3x3 rotation3x3 = Float3x3(rotation);
+	bool hasNormals = HasNormals();
+	bool hasTangents = HasTangents();
 	for (uint32_t i = 0; i < vertexCount; i++)
 	{
-		Float4 newPosition = rotation * Float4(positions[i], 1.0f);
-		Float4 newNormal = rotation * Float4(normals[i], 0.0f);
-		positions[i] = Float3(newPosition);
-		normals[i] = Float3(newNormal);
+		positions[i] = rotation3x3 * positions[i];
+		if (hasNormals)
+			normals[i] = rotation3x3 * normals[i];
+		if (hasTangents)
+			tangents[i] = rotation3x3 * tangents[i];
 	}
 	verticesUpdated = true;
 	return this;
@@ -335,6 +382,7 @@ Mesh* Mesh::Subdivide()
 	std::vector<Uint3> newTriangles;
 	newTriangles.reserve(4 * triangleCount);
 	bool hasNormals = HasNormals();
+	bool hasTangents = HasTangents();
 	bool hasColors = HasColors();
 	bool hasUVs = HasUVs();
 
@@ -361,6 +409,17 @@ Mesh* Mesh::Subdivide()
 			normals.push_back(normalA);
 			normals.push_back(normalB);
 			normals.push_back(normalC);
+		}
+
+		// Add tangents:
+		if (hasTangents)
+		{
+			Float3 tangentA = (tangents[triangle[0]] + tangents[triangle[1]]).Normalize();
+			Float3 tangentB = (tangents[triangle[1]] + tangents[triangle[2]]).Normalize();
+			Float3 tangentC = (tangents[triangle[2]] + tangents[triangle[0]]).Normalize();
+			tangents.push_back(tangentA);
+			tangents.push_back(tangentB);
+			tangents.push_back(tangentC);
 		}
 
 		// Add colors:
@@ -402,6 +461,8 @@ Mesh* Mesh::Subdivide()
 	MovePositions(positions);
 	if (hasNormals)
 		MoveNormals(normals);
+	if (hasTangents)
+		MoveTangents(tangents);
 	if (hasColors)
 		MoveColors(colors);
 	if (hasUVs)
@@ -419,7 +480,12 @@ Mesh* Mesh::Spherify(float factor, float radius)
 		Float3 sphereNormal = positions[i].Normalize();
 		positions[i] = radius * (positions[i] + factor * (sphereNormal - positions[i]));
 		if (HasNormals())
-			normals[i] = normals[i] + factor * (sphereNormal - normals[i]);
+			normals[i] = (normals[i] + factor * (sphereNormal - normals[i])).Normalize();
+		if (HasTangents())
+		{
+			LOG_WARN("Mesh::Spherify(float,float), tangents transformation needs testing!");
+			tangents[i] = Float3::VectorToPlaneProjection(tangents[i], normals[i]).Normalize();
+		}
 	}
 
 	// Update mesh data (forces bool updates and logic):
@@ -427,6 +493,56 @@ Mesh* Mesh::Spherify(float factor, float radius)
 	if (HasNormals())
 		MoveNormals(normals);
 	return this;
+}
+void Mesh::ComputeNormals()
+{
+	normals.resize(vertexCount, Float3::zero);
+	for (auto& triangle : triangles)
+	{
+		Float3 p0 = positions[triangle[0]];
+		Float3 p1 = positions[triangle[1]];
+		Float3 p2 = positions[triangle[2]];
+		Float3 edge10 = p1 - p0;
+		Float3 edge20 = p2 - p0;
+		Float3 normal = Float3::Cross(edge10, edge20).Normalize();
+
+		normals[triangle[0]] += normal;
+		normals[triangle[1]] += normal;
+		normals[triangle[2]] += normal;
+	}
+	for (uint32_t i = 0; i < vertexCount; i++)
+		normals[i].Normalize();
+}
+void Mesh::ComputeTangents()
+{
+	if (!HasNormals())
+		ComputeNormals();
+
+	tangents.resize(vertexCount, Float3::zero);
+	for (auto& triangle : triangles)
+	{
+		Float3 p0 = positions[triangle[0]];
+		Float3 p1 = positions[triangle[1]];
+		Float3 p2 = positions[triangle[2]];
+		Float3 edge10 = p1 - p0;
+		Float3 edge20 = p2 - p0;
+		Float2 uv0 = Float2(uvs[triangle[0]]);
+		Float2 uv1 = Float2(uvs[triangle[1]]);
+		Float2 uv2 = Float2(uvs[triangle[2]]);
+		Float2 deltaUv10 = uv1 - uv0;
+		Float2 deltaUv20 = uv2 - uv0;
+
+		float denom = (deltaUv10.x * deltaUv20.y - deltaUv20.x * deltaUv10.y);
+		float det = std::abs(denom) < 1e-6f ? 1.0f : 1.0f / denom;
+		Float3 tangent = det * (deltaUv20.y * edge10 - deltaUv10.y * edge20);
+		tangent.Normalize();
+
+		tangents[triangle[0]] += tangent;
+		tangents[triangle[1]] += tangent;
+		tangents[triangle[2]] += tangent;
+	}
+	for (uint32_t i = 0; i < vertexCount; i++)
+		tangents[i] = Float3::VectorToPlaneProjection(tangents[i], normals[i]).Normalize();
 }
 
 
@@ -443,6 +559,7 @@ std::vector<VkVertexInputBindingDescription> Mesh::GetBindingDescription()
 	{
 		GetPositionBindingDescription(),
 		GetNormalBindingDescription(),
+		GetTangentBindingDescription(),
 		GetColorBindingDescription(),
 		GetUvBindingDescription(0)
 	};
@@ -464,10 +581,18 @@ VkVertexInputBindingDescription Mesh::GetNormalBindingDescription()
 	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	return bindingDescription;
 }
-VkVertexInputBindingDescription Mesh::GetColorBindingDescription()
+VkVertexInputBindingDescription Mesh::GetTangentBindingDescription()
 {
 	VkVertexInputBindingDescription bindingDescription = {};
 	bindingDescription.binding = 2;
+	bindingDescription.stride = sizeof(Float3);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	return bindingDescription;
+}
+VkVertexInputBindingDescription Mesh::GetColorBindingDescription()
+{
+	VkVertexInputBindingDescription bindingDescription = {};
+	bindingDescription.binding = 3;
 	bindingDescription.stride = sizeof(Float4);
 	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	return bindingDescription;
@@ -475,7 +600,7 @@ VkVertexInputBindingDescription Mesh::GetColorBindingDescription()
 VkVertexInputBindingDescription Mesh::GetUvBindingDescription(uint32_t channel)
 {
 	VkVertexInputBindingDescription bindingDescription = {};
-	bindingDescription.binding = 3 + channel;
+	bindingDescription.binding = 4 + channel;
 	bindingDescription.stride = sizeof(Float4);
 	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	return bindingDescription;
@@ -494,6 +619,7 @@ std::vector<VkVertexInputAttributeDescription> Mesh::GetAttributeDescriptions()
 	{
 		GetPositionAttributeDescription(),
 		GetNormalAttributeDescription(),
+		GetTangentAttributeDescription(),
 		GetColorAttributeDescription(),
 		GetUvAttributeDescription(0)
 	};
@@ -517,11 +643,20 @@ VkVertexInputAttributeDescription Mesh::GetNormalAttributeDescription()
 	attributeDescription.offset = 0;
 	return attributeDescription;
 }
-VkVertexInputAttributeDescription Mesh::GetColorAttributeDescription()
+VkVertexInputAttributeDescription Mesh::GetTangentAttributeDescription()
 {
 	VkVertexInputAttributeDescription attributeDescription = {};
 	attributeDescription.binding = 2;
 	attributeDescription.location = 2;
+	attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescription.offset = 0;
+	return attributeDescription;
+}
+VkVertexInputAttributeDescription Mesh::GetColorAttributeDescription()
+{
+	VkVertexInputAttributeDescription attributeDescription = {};
+	attributeDescription.binding = 3;
+	attributeDescription.location = 3;
 	attributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
 	attributeDescription.offset = 0;
 	return attributeDescription;
@@ -529,8 +664,8 @@ VkVertexInputAttributeDescription Mesh::GetColorAttributeDescription()
 VkVertexInputAttributeDescription Mesh::GetUvAttributeDescription(uint32_t channel)
 {
 	VkVertexInputAttributeDescription attributeDescription = {};
-	attributeDescription.binding = 3 + channel;
-	attributeDescription.location = 3 + channel;
+	attributeDescription.binding = 4 + channel;
+	attributeDescription.location = 4 + channel;
 	attributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
 	attributeDescription.offset = 0;
 	return attributeDescription;
@@ -561,26 +696,31 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, const std::string& name)
 	// Prepare merged data:
 	std::vector<Float3> mergedPositions;
 	std::vector<Float3> mergedNormals;
+	std::vector<Float3> mergedTangents;
 	std::vector<Float4> mergedColors;
 	std::vector<Float4> mergedUvs;
 	std::vector<Uint3> mergedTriangles;
 	mergedPositions.reserve(vertexCount);
 	mergedNormals.reserve(vertexCount);
+	mergedTangents.reserve(vertexCount);
 	mergedColors.reserve(vertexCount);
 	mergedUvs.reserve(vertexCount);
 	mergedTriangles.reserve(triangleCount);
 
 	// Check if any mesh has an optional channel:
 	bool hasNormals = false;
+	bool hasTangents = false;
 	bool hasColors = false;
 	bool HasUVs = false;
 	for (Mesh* mesh : meshes)
 	{
-		if (mesh->normals.size() == mesh->vertexCount)
+		if (mesh->HasNormals())
 			hasNormals = true;
-		if (mesh->colors.size() == mesh->vertexCount)
+		if (mesh->HasTangents())
+			hasTangents = true;
+		if (mesh->HasColors())
 			hasColors = true;
-		if (mesh->uvs.size() == mesh->vertexCount)
+		if (mesh->HasUVs())
 			HasUVs = true;
 	}
 
@@ -597,30 +737,28 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, const std::string& name)
 		if (hasNormals)
 		{
 			std::vector<Float3> normals = mesh->GetNormals();
-			if (normals.size() == mesh->vertexCount)
-				mergedNormals.insert(mergedNormals.end(), normals.begin(), normals.end());
-			else
-				mergedNormals.insert(mergedNormals.end(), mesh->vertexCount, Float3());
+			mergedNormals.insert(mergedNormals.end(), normals.begin(), normals.end());
+		}
+
+		// Append tangents:
+		if (hasTangents)
+		{
+			std::vector<Float3> tangents = mesh->GetTangents();
+			mergedTangents.insert(mergedTangents.end(), tangents.begin(), tangents.end());
 		}
 
 		// Append colors:
 		if (hasColors)
 		{
 			std::vector<Float4> colors = mesh->GetColors();
-			if (colors.size() == mesh->vertexCount)
-				mergedColors.insert(mergedColors.end(), colors.begin(), colors.end());
-			else
-				mergedColors.insert(mergedColors.end(), mesh->vertexCount, Float4());
+			mergedColors.insert(mergedColors.end(), colors.begin(), colors.end());
 		}
 
 		// Append uvs:
 		if (HasUVs)
 		{
 			std::vector<Float4> uvs = mesh->GetUVs();
-			if (uvs.size() == mesh->vertexCount)
-				mergedUvs.insert(mergedUvs.end(), uvs.begin(), uvs.end());
-			else
-				mergedUvs.insert(mergedUvs.end(), mesh->vertexCount, Float4());
+			mergedUvs.insert(mergedUvs.end(), uvs.begin(), uvs.end());
 		}
 
 		// Handle triangles:
@@ -638,6 +776,8 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, const std::string& name)
 	mergedMesh->MovePositions(mergedPositions);
 	if (hasNormals)
 		mergedMesh->MoveNormals(mergedNormals);
+	if (hasTangents)
+		mergedMesh->MoveTangents(mergedTangents);
 	if (hasColors)
 		mergedMesh->MoveColors(mergedColors);
 	if (HasUVs)
@@ -663,6 +803,16 @@ std::string Mesh::ToString()
 		str += "\n";
 		for (const Float3& normal : normals)
 			str += normal.ToString() + "\n";
+	}
+	else
+		str += " none\n";
+
+	str += "Tangents:";
+	if (HasTangents())
+	{
+		str += "\n";
+		for (const Float3& tangent : tangents)
+			str += tangent.ToString() + "\n";
 	}
 	else
 		str += " none\n";
@@ -701,7 +851,7 @@ std::string Mesh::ToString()
 #ifdef RESIZEABLE_BAR // No staging buffer:
 void Mesh::UpdateVertexBuffer(VulkanContext* context)
 {
-	uint64_t size = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors() + GetSizeOfUVs();
+	uint64_t size = static_cast<uint64_t>(GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors() + GetSizeOfUVs());
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:
@@ -726,14 +876,15 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 	VKA(vmaMapMemory(context->Allocator(), vertexBuffer->allocation, &data));
 	memcpy(static_cast<char*>(data), positions.data(), GetSizeOfPositions());
 	memcpy(static_cast<char*>(data) + GetSizeOfPositions(), normals.data(), GetSizeOfNormals());
-	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals(), colors.data(), GetSizeOfColors());
-	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors(), uvs.data(), GetSizeOfUVs());
+	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals(), tangents.data(), GetSizeOfTangents());
+	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents(), colors.data(), GetSizeOfColors());
+	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors(), uvs.data(), GetSizeOfUVs());
 	VKA(vmaUnmapMemory(context->Allocator(), vertexBuffer->allocation));
 }
 #else // With Staging buffer:
 void Mesh::UpdateVertexBuffer(VulkanContext* context)
 {
-	uint64_t size = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfColors() + GetSizeOfUVs();
+	uint64_t size = static_cast<uint64_t>(GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors() + GetSizeOfUVs());
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:
@@ -754,8 +905,18 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 	}
 
 	// Load data into staging buffer:
-	std::vector<void*> bufferPointers = { static_cast<void*>(positions.data()), static_cast<void*>(normals.data()), static_cast<void*>(colors.data()), static_cast<void*>(uvs.data()) };
-	std::vector<uint64_t> bufferSizes = { static_cast<uint64_t>(GetSizeOfPositions()), static_cast<uint64_t>(GetSizeOfNormals()), static_cast<uint64_t>(GetSizeOfColors()), static_cast<uint64_t>(GetSizeOfUVs()) };
+	std::vector<void*> bufferPointers =
+	{ static_cast<void*>(positions.data()),
+	  static_cast<void*>(normals.data()),
+	  static_cast<void*>(tangents.data()),
+	  static_cast<void*>(colors.data()),
+	  static_cast<void*>(uvs.data())};
+	std::vector<uint64_t> bufferSizes =
+	{ static_cast<uint64_t>(GetSizeOfPositions()),
+	  static_cast<uint64_t>(GetSizeOfNormals()),
+	  static_cast<uint64_t>(GetSizeOfTangents()),
+	  static_cast<uint64_t>(GetSizeOfColors()),
+	  static_cast<uint64_t>(GetSizeOfUVs())};
 	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(context, bufferSizes, bufferPointers);
 
 	// Copy data from staging to vertex buffer:
@@ -765,7 +926,7 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 #ifdef RESIZEABLE_BAR // No staging buffer:
 void Mesh::UpdateIndexBuffer(VulkanContext* context)
 {
-	uint64_t size = 3 * GetSizeOfTriangles();
+	uint64_t size = static_cast<uint64_t>(GetSizeOfTriangles());
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:
@@ -794,7 +955,7 @@ void Mesh::UpdateIndexBuffer(VulkanContext* context)
 #else // With Staging buffer:
 void Mesh::UpdateIndexBuffer(VulkanContext* context)
 {
-	uint64_t size = 3 * GetSizeOfTriangles();
+	uint64_t size = static_cast<uint64_t>(GetSizeOfTriangles());
 	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:

@@ -34,6 +34,12 @@ Float3x3::Float3x3(const Float3x3& other)
 	for (uint32_t i = 0; i < 9; i++)
 		data[i] = other.data[i];
 }
+Float3x3::Float3x3(const Float4x4& other)
+{
+	data[0] = other.data[0]; data[3] = other.data[4]; data[6] = other.data[8];
+	data[1] = other.data[1]; data[4] = other.data[5]; data[7] = other.data[9];
+	data[2] = other.data[2]; data[5] = other.data[6]; data[8] = other.data[10];
+}
 
 
 

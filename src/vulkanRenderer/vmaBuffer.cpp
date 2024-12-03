@@ -2,6 +2,7 @@
 #include "vulkanMacros.h"
 #include "vulkanCommand.h"
 #include "memory"
+#include "logger.h"
 
 
 
