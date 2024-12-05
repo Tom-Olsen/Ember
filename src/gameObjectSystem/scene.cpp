@@ -36,6 +36,7 @@ void Scene::AddGameObject(GameObject* gameObject)
 	// Add gameObject and associated pointers to scene.
 	else
 	{
+		gameObject->SetScene(this);
 		gameObjects[gameObject->name] = std::unique_ptr<GameObject>(gameObject);
 
 		MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
@@ -136,6 +137,7 @@ void Scene::RemoveGameObject(std::string name)
 			sortedMeshRenderers.erase(std::remove(sortedMeshRenderers.begin(), sortedMeshRenderers.end(), meshRenderer), sortedMeshRenderers.end());
 			meshRenderers.erase(name);
 		}
+		gameObject->SetScene(nullptr);
 		gameObjects.erase(it);
 	}
 	else
@@ -151,10 +153,10 @@ void Scene::SetActiveCamera(Camera* camera)
 	else
 		activeCamera = camera;
 }
-std::vector<MeshRenderer*>& Scene::GetSortedMeshRenderers()
+std::vector<MeshRenderer*>* Scene::GetSortedMeshRenderers()
 {
 	SortMeshRenderers();
-	return sortedMeshRenderers;
+	return &sortedMeshRenderers;
 }
 
 
@@ -222,7 +224,7 @@ void Scene::PrintLights() const
 // Private methods:
 void Scene::SortMeshRenderers()
 {
-	if (meshRenderersSortet == false)
+	if (!meshRenderersSorted)
 	{
 		std::sort(sortedMeshRenderers.begin(), sortedMeshRenderers.end(), [](MeshRenderer* a, MeshRenderer* b)
 		{
@@ -230,6 +232,6 @@ void Scene::SortMeshRenderers()
 			uint32_t renderQueueB = static_cast<uint32_t>(b->GetMaterial()->renderQueue);
 			return renderQueueA < renderQueueB;
 		});
-		meshRenderersSortet = true;
+		meshRenderersSorted = true;
 	}
 }

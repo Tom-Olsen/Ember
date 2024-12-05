@@ -8,6 +8,7 @@ Component::Component()
 {
 	gameObject = nullptr;
 	transform = nullptr;
+	scene = nullptr;
 	isActive = true;
 }
 
@@ -23,7 +24,8 @@ Component::~Component()
 // Public:
 bool Component::IsActive()
 {
-	return isActive && gameObject->isActive;
+	// Components can exist without a GameObject, so check if gameObject is nullptr:
+	return isActive && (gameObject != nullptr ? gameObject->isActive : true);
 }
 void Component::Update()
 {

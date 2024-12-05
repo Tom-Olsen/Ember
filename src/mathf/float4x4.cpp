@@ -38,7 +38,6 @@ Float4x4::Float4x4(const Float3x3& other)
 	data[1] = other[1]; data[5] = other[4]; data[9] = other[7]; data[13] = 0.0f;
 	data[2] = other[2]; data[6] = other[5]; data[10] = other[8]; data[14] = 0.0f;
 	data[3] = 0.0f; data[7] = 0.0f; data[11] = 0.0f; data[15] = 1.0f;
-
 }
 Float4x4::Float4x4(const Float4x4& other)
 {

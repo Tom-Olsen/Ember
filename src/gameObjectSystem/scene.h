@@ -24,7 +24,7 @@ public: // Members:
 	std::array<PointLight*, MAX_P_LIGHTS> pointLights;
 
 private: // Members:
-	bool meshRenderersSortet = false;
+	bool meshRenderersSorted = false;
 	std::unordered_map<std::string, MeshRenderer*> meshRenderers;
 	std::vector<MeshRenderer*> sortedMeshRenderers;
 
@@ -36,7 +36,7 @@ public: // Methods:
 	GameObject* GetGameObject(std::string name);
 	void RemoveGameObject(std::string name);
 	void SetActiveCamera(Camera* camera);
-	std::vector<MeshRenderer*>& GetSortedMeshRenderers();
+	std::vector<MeshRenderer*>* GetSortedMeshRenderers();
 
 	void Load();
 	void Unload();

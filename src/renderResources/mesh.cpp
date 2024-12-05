@@ -482,10 +482,7 @@ Mesh* Mesh::Spherify(float factor, float radius)
 		if (HasNormals())
 			normals[i] = (normals[i] + factor * (sphereNormal - normals[i])).Normalize();
 		if (HasTangents())
-		{
-			LOG_WARN("Mesh::Spherify(float,float), tangents transformation needs testing!");
 			tangents[i] = Float3::VectorToPlaneProjection(tangents[i], normals[i]).Normalize();
-		}
 	}
 
 	// Update mesh data (forces bool updates and logic):

@@ -1,4 +1,5 @@
 #include "gameObject.h"
+#include "scene.h"
 #include "logger.h"
 
 
@@ -23,6 +24,12 @@ GameObject::~GameObject()
 
 
 // Public:
+void GameObject::SetScene(Scene* scene)
+{
+	this->scene = scene;
+	for (auto& [_, component] : components)
+		component->scene = scene;
+}
 template <typename T>
 void GameObject::AddComponent(T* component)
 {
@@ -78,12 +85,14 @@ template void GameObject::AddComponent(SpinGlobal* component);
 template void GameObject::AddComponent(DirectionalLight* component);
 template void GameObject::AddComponent(SpotLight* component);
 template void GameObject::AddComponent(PointLight* component);
+template void GameObject::AddComponent(DrawMeshData* component);
 template Transform* GameObject::GetComponent<Transform>();
 template Camera* GameObject::GetComponent<Camera>();
 template CameraController* GameObject::GetComponent<CameraController>();
 template MeshRenderer* GameObject::GetComponent<MeshRenderer>();
 template SpinLocal* GameObject::GetComponent<SpinLocal>();
 template SpinGlobal* GameObject::GetComponent<SpinGlobal>();
+template DirectionalLight* GameObject::GetComponent<DirectionalLight>();
 template SpotLight* GameObject::GetComponent<SpotLight>();
 template PointLight* GameObject::GetComponent<PointLight>();
-template DirectionalLight* GameObject::GetComponent<DirectionalLight>();
+template DrawMeshData* GameObject::GetComponent<DrawMeshData>();

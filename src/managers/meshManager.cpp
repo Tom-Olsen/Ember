@@ -59,17 +59,20 @@ void MeshManager::Init(VulkanContext* vulkanContext)
 	Mesh* zylinderEdgy = MeshGenerator::ZylinderEdgy(0.5f, 1.0f, 16, "zylinderEdgy");
 	AddMesh(zylinderEdgy->name, zylinderEdgy);
 	
-	Mesh* arrowSmooth = MeshGenerator::ArrowSmooth(Float3(0.0f, 0.0f, 1.0f), 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowSmooth");
+	Mesh* arrowSmooth = MeshGenerator::ArrowSmooth(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowSmooth");
 	AddMesh(arrowSmooth->name, arrowSmooth);
 
-	Mesh* arrowEdgy = MeshGenerator::ArrowEdgy(Float3(0.0f, 0.0f, 1.0f), 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowEdgy");
+	Mesh* arrowEdgy = MeshGenerator::ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowEdgy");
 	AddMesh(arrowEdgy->name, arrowEdgy);
 
 	Mesh* threeLeg = MeshGenerator::ThreeLeg();
 	AddMesh(threeLeg->name, threeLeg);
 
-	Mesh* mesh = MeshGenerator::Grid(100, 100, "grid100x100");
-	AddMesh(mesh->name, mesh);
+	Mesh* grid20x20 = MeshGenerator::Grid(20, 20, "grid20x20");
+	AddMesh(grid20x20->name, grid20x20);
+
+	Mesh* grid100x100 = MeshGenerator::Grid(100, 100, "grid100x100");
+	AddMesh(grid100x100->name, grid100x100);
 }
 void MeshManager::UnloadAllMeshes()
 {

@@ -9,6 +9,7 @@
 // Forward declarations
 class GameObject;
 class Transform;
+class Scene;
 
 
 
@@ -23,6 +24,7 @@ class Component
 public: // Members:
 	GameObject* gameObject;
 	Transform* transform;
+	Scene* scene;
 	bool isActive;
 
 public: // Methods:

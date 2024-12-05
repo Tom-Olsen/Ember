@@ -16,11 +16,13 @@
 #include "directionalLight.h"
 #include "spotLight.h"
 #include "pointLight.h"
+#include "drawMeshData.h"
 
 
 
 // Forward declarations
 class Component;
+class Scene;
 
 
 
@@ -30,6 +32,7 @@ public: // Members:
 	std::string name;
 	bool isActive;
 	Transform* transform;
+	Scene* scene;
 	// Container for storing components, mapped by their type
 	// => each type of component can only be added once
 	std::unordered_map<std::type_index, std::unique_ptr<Component>> components;
@@ -40,6 +43,7 @@ public: // Methods:
 	GameObject(std::string name = "");
 	~GameObject();
 
+	void SetScene(Scene* scene);
 	template <typename T>
 	void AddComponent(T* component);
 	template <typename T>

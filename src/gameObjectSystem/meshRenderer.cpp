@@ -19,7 +19,7 @@ std::unique_ptr<MaterialProperties> MeshRenderer::shadowMaterialProperties = nul
 MeshRenderer::MeshRenderer()
 {
 	if (shadowMaterial == nullptr)
-		shadowMaterial = MaterialManager::GetMaterial("shadowMaterial");
+		shadowMaterial = MaterialManager::GetMaterial("shadow");
 	if (shadowMaterialProperties == nullptr)
 		shadowMaterialProperties = std::make_unique<MaterialProperties>(shadowMaterial);
 
@@ -57,7 +57,7 @@ void MeshRenderer::SetRenderMatrizes(Camera* camera)
 {
 	static std::string name = "RenderMatrizes";
 
-	Float4x4 modelMatrix = gameObject->transform->GetLocalToWorldMatrix();
+	Float4x4 modelMatrix = transform->GetLocalToWorldMatrix();
 	Float4x4 cameraViewMatrix = camera->GetViewMatrix();
 	Float4x4 cameraProjMatrix = camera->GetProjectionMatrix();
 	Float4x4 localToClipMatrix = cameraProjMatrix * cameraViewMatrix * modelMatrix;
@@ -65,7 +65,7 @@ void MeshRenderer::SetRenderMatrizes(Camera* camera)
 	materialProperties->SetValue(name, "modelMatrix", modelMatrix);
 	materialProperties->SetValue(name, "viewMatrix", cameraViewMatrix);
 	materialProperties->SetValue(name, "projMatrix", cameraProjMatrix);
-	materialProperties->SetValue(name, "normalMatrix", gameObject->transform->GetNormalMatrix());
+	materialProperties->SetValue(name, "normalMatrix", transform->GetNormalMatrix());
 	materialProperties->SetValue(name, "localToClipMatrix", localToClipMatrix);
 }
 void MeshRenderer::SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights)

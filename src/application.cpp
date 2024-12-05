@@ -1,7 +1,4 @@
 #include "application.h"
-#include "timer.h"
-#include "logger.h"
-
 
 
 // Constructor:
@@ -20,6 +17,7 @@ Application::Application()
 	TextureManager::Init(context.get());
 	SamplerManager::Init(context.get());
 	MeshManager::Init(context.get());
+	Graphics::Init(context.get());
 }
 
 
@@ -34,6 +32,7 @@ Application::~Application()
 	MaterialManager::Clear();
 	RenderPassManager::Clear();
 	EventSystem::Clear();
+	Graphics::Clear();
 }
 
 
@@ -57,10 +56,6 @@ void Application::Run()
 			SDL_Delay(10);
 			continue;
 		}
-
-		// QUESTION:
-		// -what is the exact difference between window and surface and how can it be that the surface extent differs from the window extent?
-		// -are both extend checks in the above if condition necessary?
 
 		// Game update loop:
 		Update();

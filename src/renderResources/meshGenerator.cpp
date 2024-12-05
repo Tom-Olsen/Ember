@@ -150,14 +150,14 @@ namespace MeshGenerator
 
 	Mesh* UnitCube()
 	{
-		Float3 p000 = 0.5f * Float3(-1, -1, -1);
-		Float3 p001 = 0.5f * Float3(-1, -1,  1);
-		Float3 p010 = 0.5f * Float3(-1,  1, -1);
-		Float3 p011 = 0.5f * Float3(-1,  1,  1);
-		Float3 p100 = 0.5f * Float3( 1, -1, -1);
-		Float3 p101 = 0.5f * Float3( 1, -1,  1);
-		Float3 p110 = 0.5f * Float3( 1,  1, -1);
-		Float3 p111 = 0.5f * Float3( 1,  1,  1);
+		Float3 p000 = 0.5f * Float3(-1.0f, -1.0f, -1.0f);
+		Float3 p001 = 0.5f * Float3(-1.0f, -1.0f,  1.0f);
+		Float3 p010 = 0.5f * Float3(-1.0f,  1.0f, -1.0f);
+		Float3 p011 = 0.5f * Float3(-1.0f,  1.0f,  1.0f);
+		Float3 p100 = 0.5f * Float3( 1.0f, -1.0f, -1.0f);
+		Float3 p101 = 0.5f * Float3( 1.0f, -1.0f,  1.0f);
+		Float3 p110 = 0.5f * Float3( 1.0f,  1.0f, -1.0f);
+		Float3 p111 = 0.5f * Float3( 1.0f,  1.0f,  1.0f);
 
 		std::vector<Mesh*> faces;
 		faces.reserve(6);
@@ -167,6 +167,12 @@ namespace MeshGenerator
 		faces.push_back(ClockwiseQuad(p001, p101, p100, p000, "-y"));
 		faces.push_back(ClockwiseQuad(p101, p001, p011, p111, "+z"));
 		faces.push_back(ClockwiseQuad(p000, p100, p110, p010, "-z"));
+		//faces.push_back(ClockwiseQuad(p100 + 0.1f * Float3::right, p101 + 0.1f * Float3::right, p111 + 0.1f * Float3::right, p110 + 0.1f * Float3::right, "+x"));
+		//faces.push_back(ClockwiseQuad(p001 + 0.1f * Float3::left, p000 + 0.1f * Float3::left, p010 + 0.1f * Float3::left, p011 + 0.1f * Float3::left, "-x"));
+		//faces.push_back(ClockwiseQuad(p111 + 0.1f * Float3::up, p011 + 0.1f * Float3::up, p010 + 0.1f * Float3::up, p110 + 0.1f * Float3::up, "+y"));
+		//faces.push_back(ClockwiseQuad(p001 + 0.1f * Float3::down, p101 + 0.1f * Float3::down, p100 + 0.1f * Float3::down, p000 + 0.1f * Float3::down, "-y"));
+		//faces.push_back(ClockwiseQuad(p101 + 0.1f * Float3::forward, p001 + 0.1f * Float3::forward, p011 + 0.1f * Float3::forward, p111 + 0.1f * Float3::forward, "+z"));
+		//faces.push_back(ClockwiseQuad(p000 + 0.1f * Float3::backward, p100 + 0.1f * Float3::backward, p110 + 0.1f * Float3::backward, p010 + 0.1f * Float3::backward, "-z"));
 
 		return Mesh::Merge(faces, "unitCube");
 	}

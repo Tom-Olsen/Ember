@@ -27,6 +27,7 @@ private: // Members:
 	// Render management:
 	uint32_t imageIndex;
 	bool rebuildSwapchain;
+	std::array<std::vector<MeshRenderer*>*, 2> meshRendererGroups;
 
 public: // Methods:
 	VulkanRenderer(VulkanContext* context);
@@ -36,6 +37,7 @@ public: // Methods:
 private: // Methods:
 	void RebuildSwapchain();
 	bool AcquireImage();
+	void SetMeshRendererGroups(Scene* scene);
 	void RecordShadowCommandBuffer(Scene* scene);
 	void RecordShadingCommandBuffer(Scene* scene);
 	void SubmitCommandBuffers();

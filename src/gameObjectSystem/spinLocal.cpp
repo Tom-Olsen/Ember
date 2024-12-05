@@ -4,16 +4,12 @@
 
 
 
-// Constructor:
+// Constructor/Destructor:
 SpinLocal::SpinLocal(Float3 eulerDegreesPerSecond, Uint3 rotationOrder)
 {
 	this->eulerDegreesPerSecond = eulerDegreesPerSecond;
 	this->rotationOrder = rotationOrder;
 }
-
-
-
-// Destructor:
 SpinLocal::~SpinLocal()
 {
 

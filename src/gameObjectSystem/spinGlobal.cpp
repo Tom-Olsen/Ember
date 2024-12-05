@@ -4,17 +4,13 @@
 
 
 
-// Constructor:
+// Constructor/Destructor:
 SpinGlobal::SpinGlobal(Float3 position, Float3 eulerDegreesPerSecond, Uint3 rotationOrder)
 {
 	this->position = position;
 	this->eulerDegreesPerSecond = eulerDegreesPerSecond;
 	this->rotationOrder = rotationOrder;
 }
-
-
-
-// Destructor:
 SpinGlobal::~SpinGlobal()
 {
 

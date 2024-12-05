@@ -3,6 +3,7 @@
 #include "shadingPushConstant.h"
 #include "shadowPushConstant.h"
 #include "renderPassManager.h"
+#include "graphics.h"
 #include "macros.h"
 
 
@@ -57,8 +58,10 @@ bool VulkanRenderer::Render(Scene* scene)
 		return 0;
 	VKA(vkResetFences(context->LogicalDevice(), 1, &fences[context->frameIndex]));
 
+	SetMeshRendererGroups(scene);
 	RecordShadowCommandBuffer(scene);
 	RecordShadingCommandBuffer(scene);
+	Graphics::ResetDrawCalls();
 	SubmitCommandBuffers();
 	if (!PresentImage())
 		return 0;
@@ -106,6 +109,12 @@ bool VulkanRenderer::AcquireImage()
 	}
 }
 
+void VulkanRenderer::SetMeshRendererGroups(Scene* scene)
+{
+	meshRendererGroups[0] = scene->GetSortedMeshRenderers();
+	meshRendererGroups[1] = Graphics::GetSortedMeshRenderers();
+}
+
 void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 {
 	vkResetCommandPool(context->LogicalDevice(), shadowCommands[context->frameIndex].pool, 0);
@@ -140,66 +149,13 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 				if (light == nullptr)
 					continue;
 
-				for (auto& meshRenderer : scene->GetSortedMeshRenderers())
-				{
-					if (meshRenderer->IsActive() && meshRenderer->castShadows)
-					{
-						// Update shader specific data (push constants and uniform buffers):
-						Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->transform->GetLocalToWorldMatrix();
-						ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
-						vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-
-						const VkDeviceSize offsets[1] = { 0 };
-						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
-						vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
-
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
-						vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
-					}
-				}
-				shadowMapIndex++;
-			}
-
-			// Spot Lights:
-			for (auto& light : scene->spotLights)
-			{
-				if (light == nullptr)
-					continue;
-
-				for (auto& meshRenderer : scene->GetSortedMeshRenderers())
-				{
-					if (meshRenderer->IsActive() && meshRenderer->castShadows)
-					{
-						// Update shader specific data (push constants and uniform buffers):
-						Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->transform->GetLocalToWorldMatrix();
-						ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
-						vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-
-						const VkDeviceSize offsets[1] = { 0 };
-						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
-						vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
-
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
-						vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
-					}
-				}
-				shadowMapIndex++;
-			}
-
-			// Point Lights:
-			for (auto& light : scene->pointLights)
-			{
-				if (light == nullptr)
-					continue;
-
-				for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
-				{
-					for (auto& meshRenderer : scene->GetSortedMeshRenderers())
+				for (auto group : meshRendererGroups)
+					for (MeshRenderer* meshRenderer : *group)
 					{
 						if (meshRenderer->IsActive() && meshRenderer->castShadows)
 						{
 							// Update shader specific data (push constants and uniform buffers):
-							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex) * meshRenderer->transform->GetLocalToWorldMatrix();
+							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->transform->GetLocalToWorldMatrix();
 							ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 							vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
@@ -211,6 +167,62 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* scene)
 							vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
 						}
 					}
+				shadowMapIndex++;
+			}
+
+			// Spot Lights:
+			for (auto& light : scene->spotLights)
+			{
+				if (light == nullptr)
+					continue;
+
+				for (auto group : meshRendererGroups)
+					for (MeshRenderer* meshRenderer : *group)
+					{
+						if (meshRenderer->IsActive() && meshRenderer->castShadows)
+						{
+							// Update shader specific data (push constants and uniform buffers):
+							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->transform->GetLocalToWorldMatrix();
+							ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
+							vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+
+							const VkDeviceSize offsets[1] = { 0 };
+							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
+							vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
+
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
+							vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+						}
+					}
+				shadowMapIndex++;
+			}
+
+			// Point Lights:
+			for (auto& light : scene->pointLights)
+			{
+				if (light == nullptr)
+					continue;
+
+				for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
+				{
+					for (auto group : meshRendererGroups)
+						for (MeshRenderer* meshRenderer : *group)
+						{
+							if (meshRenderer->IsActive() && meshRenderer->castShadows)
+							{
+								// Update shader specific data (push constants and uniform buffers):
+								Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex) * meshRenderer->transform->GetLocalToWorldMatrix();
+								ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
+								vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+
+								const VkDeviceSize offsets[1] = { 0 };
+								vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshRenderer->mesh->GetVertexBuffer(context)->buffer, offsets);
+								vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
+
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(context->frameIndex), 0, nullptr);
+								vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
+							}
+						}
 					shadowMapIndex++;
 				}
 			}
@@ -252,30 +264,31 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* scene)
 			ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), scene->dLightsCount, scene->sLightsCount, scene->pLightsCount, cameraPosition);
 
 			Material* previousMaterial = nullptr;
-			for (auto& meshRenderer : scene->GetSortedMeshRenderers())
-			{
-				if (meshRenderer->IsActive())
+			for (auto group : meshRendererGroups)
+				for (MeshRenderer* meshRenderer : *group)
 				{
-					meshRenderer->SetRenderMatrizes(scene->activeCamera);
-					meshRenderer->SetLightData(scene->directionalLights);
-					meshRenderer->SetLightData(scene->spotLights);
-					meshRenderer->SetLightData(scene->pointLights);
-					meshRenderer->materialProperties->UpdateShaderData();
-
-					if (previousMaterial != meshRenderer->GetMaterial())
+					if (meshRenderer->IsActive())
 					{
-						previousMaterial = meshRenderer->GetMaterial();
-						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipeline());
-						vkCmdPushConstants(commandBuffer, meshRenderer->GetShadingPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
+						meshRenderer->SetRenderMatrizes(scene->activeCamera);
+						meshRenderer->SetLightData(scene->directionalLights);
+						meshRenderer->SetLightData(scene->spotLights);
+						meshRenderer->SetLightData(scene->pointLights);
+						meshRenderer->materialProperties->UpdateShaderData();
+
+						if (previousMaterial != meshRenderer->GetMaterial())
+						{
+							previousMaterial = meshRenderer->GetMaterial();
+							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipeline());
+							vkCmdPushConstants(commandBuffer, meshRenderer->GetShadingPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
+						}
+
+						vkCmdBindVertexBuffers(commandBuffer, 0, meshRenderer->mesh->GetBindingCount(), meshRenderer->mesh->GetBuffers(context), meshRenderer->mesh->GetOffsets());
+						vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
+
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipelineLayout(), 0, 1, meshRenderer->GetShadingDescriptorSets(context->frameIndex), 0, nullptr);
+						vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
 					}
-
-					vkCmdBindVertexBuffers(commandBuffer, 0, meshRenderer->mesh->GetBindingCount(), meshRenderer->mesh->GetBuffers(context), meshRenderer->mesh->GetOffsets());
-					vkCmdBindIndexBuffer(commandBuffer, meshRenderer->mesh->GetIndexBuffer(context)->buffer, 0, Mesh::GetIndexType());
-
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipelineLayout(), 0, 1, meshRenderer->GetShadingDescriptorSets(context->frameIndex), 0, nullptr);
-					vkCmdDrawIndexed(commandBuffer, 3 * meshRenderer->mesh->GetTriangleCount(), 1, 0, 0, 0);
 				}
-			}
 		}
 		vkCmdEndRenderPass(commandBuffer);
 	}
