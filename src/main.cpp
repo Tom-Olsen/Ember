@@ -277,6 +277,7 @@ int main()
         meshRenderer->materialProperties->SetTexture2d("heightMap", TextureManager::GetTexture2d("ground0_height"));
         meshRenderer->materialProperties->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));
         meshRenderer->materialProperties->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_opengl"));
+        //meshRenderer->materialProperties->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_directx"));
 		Float4 scaleOffset = Float4(10, 10, 1, 1);
         meshRenderer->materialProperties->SetValue("SurfaceProperties", "scaleOffset", scaleOffset);
         meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
@@ -350,18 +351,18 @@ int main()
     {// Sphere 0:
         GameObject* gameObject = new GameObject("sphere0");
         gameObject->transform->SetPosition(0.5f, 0.0f, 0.0f);
-        gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+        gameObject->transform->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("cubeSphere");
+        meshRenderer->mesh = MeshManager::GetMesh("zylinderSmooth");
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
         meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
         meshRenderer->materialProperties->SetTexture2d("colorTexture", TextureManager::GetTexture2d("wall0"));
         meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
-        //SpinGlobal* spinGlobal = new SpinGlobal(Float3(2.0f, 0.0f, 0.0f), Float3(0, 45, 0));
-        //gameObject->AddComponent<SpinGlobal>(spinGlobal);
+        SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 0.0f, 45.0f));
+        gameObject->AddComponent<SpinLocal>(spinLocal);
     
         scene->AddGameObject(gameObject);
     }
@@ -378,8 +379,11 @@ int main()
         meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 0.5f);
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
-        SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 30.0f, 0.0f));
+        SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
         gameObject->AddComponent<SpinLocal>(spinLocal);
+
+        //DrawMeshData* drawMeshData = new DrawMeshData();
+        //gameObject->AddComponent<DrawMeshData>(drawMeshData);
 
         scene->AddGameObject(gameObject);
     }

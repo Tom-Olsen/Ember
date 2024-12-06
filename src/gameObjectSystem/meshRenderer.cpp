@@ -45,13 +45,6 @@ void MeshRenderer::SetMaterial(Material* material)
 {
 	this->material = material;
 	materialProperties = std::make_unique<MaterialProperties>(material);
-
-	// Set shadow map sampler and textures:
-	ShadowRenderPass* shadowRenderPass = dynamic_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"));
-	materialProperties->SetSampler("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
-	materialProperties->SetTexture2d("shadowMaps", shadowRenderPass->shadowMaps.get());
-	materialProperties->SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 1, 1));
-	materialProperties->SetTexture2d("normalMap", TextureManager::GetTexture2d("blue"));
 }
 void MeshRenderer::SetRenderMatrizes(Camera* camera)
 {

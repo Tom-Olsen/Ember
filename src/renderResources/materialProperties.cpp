@@ -2,6 +2,7 @@
 #include "vulkanMacros.h"
 #include "samplerManager.h"
 #include "textureManager.h"
+#include "RenderPassManager.h"
 #include "logger.h"
 
 
@@ -35,6 +36,11 @@ MaterialProperties::MaterialProperties(Material* material)
 	InitDescriptorSets();
 
 	// Set default values:
+	ShadowRenderPass* shadowRenderPass = dynamic_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"));
+	SetSampler("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
+	SetTexture2d("shadowMaps", shadowRenderPass->shadowMaps.get());
+	SetTexture2d("normalMap", TextureManager::GetTexture2d("blue"));
+	SetValue("SurfaceProperties", "scaleOffset", Float4(1.0f, 1.0f, 1.0f, 1.0f));
 	SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 1.0f, 1.0f, 1.0f));
 	SetValue("SurfaceProperties", "roughness", 0.5f);
 	SetValue("SurfaceProperties", "reflectivity", Float3(0.4f));

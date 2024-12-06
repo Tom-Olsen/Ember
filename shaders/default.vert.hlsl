@@ -8,7 +8,7 @@ cbuffer RenderMatrizes : register(b0)
     float4x4 modelMatrix;       // mesh local to world matrix
     float4x4 viewMatrix;        // camera world to local matrix
     float4x4 projMatrix;        // camera projection matrix
-    float4x4 normalMatrix;      // rotation matrix for normals and directions
+    float4x4 normalMatrix;      // rotation matrix for normals and directions: (model^-1)^T
     float4x4 localToClipMatrix; // local to camera clip space matrix: (projection * view * model)
 };
 
@@ -28,7 +28,7 @@ struct VertexOutput
     float4 position : SV_POSITION;
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
-    float3 binormal : BINORMAL;
+    float3 bitangent : BITANGENT;
     float4 vertexColor : COLOR;
     float4 uv : TEXCOORD0;
     float3 worldPos : TEXCOORD1;
@@ -46,7 +46,7 @@ VertexOutput main(VertexInput input)
     output.position = mul(localToClipMatrix, pos);
     output.normal = mul(normalMatrix, normal).xyz;
     output.tangent = mul(normalMatrix, tangent).xyz;
-    output.binormal = cross(output.normal, output.tangent);
+    output.bitangent = cross(output.normal, output.tangent);
     output.vertexColor = input.color;
     output.uv = input.uv;
     output.worldPos = mul(modelMatrix, pos).xyz;

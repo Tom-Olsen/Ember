@@ -30,6 +30,9 @@ DrawMeshData::~DrawMeshData()
 // Overrides:
 void DrawMeshData::Update()
 {
+	bool receiveShadows = false;
+	bool castShadows = false;
+
 	if (sphereMesh == nullptr)
 		sphereMesh = MeshManager::GetMesh("cubeSphere");
 	if (arrowMesh == nullptr)
@@ -56,13 +59,13 @@ void DrawMeshData::Update()
 		Float3 worldTangent = Float3(normalMatrix * Float4(localTangent, 0.0f));
 		
 		// Draw calls:
-		materialProperties = Graphics::Draw(sphereMesh, material, Float3(worldPosition), Float3x3::identity, 0.1f);
+		materialProperties = Graphics::Draw(sphereMesh, material, Float3(worldPosition), Float3x3::identity, 0.1f, receiveShadows, castShadows);
 		materialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.66f, 0.33f, 0.0f, 1.0f));
 
-		materialProperties = Graphics::Draw(arrowMesh, material, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f);
+		materialProperties = Graphics::Draw(arrowMesh, material, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f, receiveShadows, castShadows);
 		materialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.0f, 0.0f, 1.0f, 1.0f));
 
-		materialProperties = Graphics::Draw(arrowMesh, material, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f);
+		materialProperties = Graphics::Draw(arrowMesh, material, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f, receiveShadows, castShadows);
 		materialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
 	}
 }
