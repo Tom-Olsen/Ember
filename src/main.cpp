@@ -6,6 +6,7 @@
 
 // TODO now:
 // - refactor code with proper coding style! (see KeenGames coding style guide)
+// - change referenced to pointers in vmaImage and vmaBuffer
 // - optimizations: multi threaded render loop, culling, etc.
 // - Graphics::Draw(...) has issue with frameIndex. This leads to the transform of the draw calls to lack behind.
 // - directional lights: shadow cascades

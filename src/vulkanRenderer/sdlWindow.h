@@ -6,24 +6,30 @@
 
 
 
-/// <summary>
-/// SDL window wrapper.
-/// </summary>
 class SdlWindow
 {
-public: // Members:
-	SDL_Window* window;
-	bool isMinimized = false;
-	bool framebufferResized = false;
+private: // Members:
+	SDL_Window* m_pWindow;
+	bool m_isMinimized = false;
+	bool m_framebufferResized = false;
 
 public: // Methods:
 	SdlWindow(uint16_t width = 1280, uint16_t height = 720);
 	~SdlWindow();
+
 	bool HandleEvents();
-	void AddSdlInstanceExtensions(std::vector<const char*>& extensions);
-	int Width();
-	int Height();
-	VkExtent2D Extent();
+	void AddSdlInstanceExtensions(std::vector<const char*>& extensions) const;
+
+	// Getters:
+	SDL_Window* const GetSDL_Window() const;
+	bool GetIsMinimized() const;
+	bool GetFramebufferResized() const;
+	int GetWidth() const;
+	int GetHeight() const;
+	VkExtent2D GetExtent() const;
+
+	// Setters:
+	void SetFramebufferResized(bool value);
 };
 
 

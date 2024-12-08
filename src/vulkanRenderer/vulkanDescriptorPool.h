@@ -1,22 +1,23 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_vulkanDescriptorPool_h__
 #define __INCLUDE_GUARD_vulkanDescriptorPool_h__
 #include <vulkan/vulkan.h>
-#include "vulkanLogicalDevice.h"
+
+
+
+class VulkanLogicalDevice;
 
 
 
 class VulkanDescriptorPool
 {
-public: // Members:
-	VkDescriptorPool descriptorPool;
-
 private: // Members:
-	VulkanLogicalDevice* logicalDevice;
+	VkDescriptorPool m_descriptorPool;
+	VulkanLogicalDevice* m_pLogicalDevice;
 
 public: // Methods:
-	VulkanDescriptorPool(VulkanLogicalDevice* logicalDevice);
+	VulkanDescriptorPool(VulkanLogicalDevice* pLogicalDevice);
 	~VulkanDescriptorPool();
+	const VkDescriptorPool& GetVkDescriptorPool() const;
 };
 
 

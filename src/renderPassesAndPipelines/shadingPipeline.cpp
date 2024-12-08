@@ -27,8 +27,8 @@ ShadingPipeline::ShadingPipeline(VulkanContext* context,
     CreatePipeline(vertexShaderModule, fragmentShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
-    vkDestroyShaderModule(context->LogicalDevice(), vertexShaderModule, nullptr);
-    vkDestroyShaderModule(context->LogicalDevice(), fragmentShaderModule, nullptr);
+    vkDestroyShaderModule(context->GetVkDevice(), vertexShaderModule, nullptr);
+    vkDestroyShaderModule(context->GetVkDevice(), fragmentShaderModule, nullptr);
 }
 
 
@@ -48,7 +48,7 @@ void ShadingPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayo
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     descriptorSetLayoutCreateInfo.pBindings = bindings.data();
-    VKA(vkCreateDescriptorSetLayout(context->LogicalDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
+    VKA(vkCreateDescriptorSetLayout(context->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
 
     // Push constants layout:
     VkPushConstantRange pushConstantRange = {};
@@ -62,7 +62,7 @@ void ShadingPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayo
     pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-    vkCreatePipelineLayout(context->LogicalDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
+    vkCreatePipelineLayout(context->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
 }
 void ShadingPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
 {
@@ -188,5 +188,5 @@ void ShadingPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, c
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
 	pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline
 
-    VKA(vkCreateGraphicsPipelines(context->LogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
+    VKA(vkCreateGraphicsPipelines(context->GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
 }

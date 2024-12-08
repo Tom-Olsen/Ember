@@ -1,15 +1,20 @@
-#pragma once
-#ifndef __INCLUDE_GUARD_vulkanUniformBuffer_h__
-#define __INCLUDE_GUARD_vulkanUniformBuffer_h__
+#ifndef __INCLUDE_GUARD_uniformBuffer_h__
+#define __INCLUDE_GUARD_uniformBuffer_h__
+#include "vk_mem_alloc.h"
 #include <vulkan/vulkan.h>
 #include <memory>
-#include "vulkanContext.h"
-#include "vmaBuffer.h"
-#include "spirvReflect.h"
+#include <string>
+#include <vector>
 
 
 
-class VulkanUniformBuffer
+struct UniformBufferBlock;
+class VmaBuffer;
+struct VulkanContext;
+
+
+
+class UniformBuffer
 {
 public: // Members:
 	std::shared_ptr<VmaBuffer> buffer;
@@ -21,8 +26,8 @@ private: // Members:
 	UniformBufferBlock* uniformBufferBlock;
 
 public: // Methods:
-	VulkanUniformBuffer(VulkanContext* context, UniformBufferBlock* uniformBufferBlock);
-	~VulkanUniformBuffer();
+	UniformBuffer(VulkanContext* context, UniformBufferBlock* uniformBufferBlock);
+	~UniformBuffer();
 
 	void UpdateBuffer();
 
@@ -46,4 +51,4 @@ private: // Methods:
 
 
 
-#endif // __INCLUDE_GUARD_vulkanUniformBuffer_h__
+#endif // __INCLUDE_GUARD_uniformBuffer_h__

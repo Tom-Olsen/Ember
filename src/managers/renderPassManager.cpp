@@ -1,6 +1,9 @@
 #include "renderPassManager.h"
+#include "renderPass.h"
+#include "shadingRenderPass.h"
+#include "shadowRenderPass.h"
+#include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include "vulkanRenderer.h"
 
 
 
@@ -28,7 +31,7 @@ void RenderPassManager::Init(VulkanContext* context)
 }
 void RenderPassManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	renderPasses.clear();
 }
 void RenderPassManager::RecreateRenderPasses()
@@ -60,7 +63,7 @@ RenderPass* RenderPassManager::GetRenderPass(const std::string& name)
 }
 void RenderPassManager::DeleteRenderPass(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	renderPasses.erase(name);
 }
 

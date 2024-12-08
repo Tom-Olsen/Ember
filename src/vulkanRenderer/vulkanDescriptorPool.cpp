@@ -1,22 +1,22 @@
 #include "vulkanDescriptorPool.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
-#include <iostream>
 
 
 
-// Constructor:
-VulkanDescriptorPool::VulkanDescriptorPool(VulkanLogicalDevice* logicalDevice)
+// Constructor/Destructor:
+VulkanDescriptorPool::VulkanDescriptorPool(VulkanLogicalDevice* pLogicalDevice)
 {
-	this->logicalDevice = logicalDevice;
+	m_pLogicalDevice = pLogicalDevice;
 
 
-	uint32_t maxSets = 20;	// maximum number of descriptor sets that may be allocated
+	uint32_t descriptorCount = 20;	// maximum number of descriptor of each type in the associated pool
 	std::array<VkDescriptorPoolSize, 4> poolSizes
 	{
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, maxSets },
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxSets },
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER, maxSets },
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, maxSets }
+		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptorCount },
+		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, descriptorCount },
+		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER, descriptorCount },
+		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorCount }
 		// Add more descriptor types as needed
 	};
 
@@ -25,13 +25,17 @@ VulkanDescriptorPool::VulkanDescriptorPool(VulkanLogicalDevice* logicalDevice)
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = 10000;
 
-	VKA(vkCreateDescriptorPool(logicalDevice->device, &poolInfo, nullptr, &descriptorPool));
+	VKA(vkCreateDescriptorPool(m_pLogicalDevice->GetVkDevice(), &poolInfo, nullptr, &m_descriptorPool));
+}
+VulkanDescriptorPool::~VulkanDescriptorPool()
+{
+	vkDestroyDescriptorPool(m_pLogicalDevice->GetVkDevice(), m_descriptorPool, nullptr);
 }
 
 
 
-// Destructor:
-VulkanDescriptorPool::~VulkanDescriptorPool()
+// Public methods:
+const VkDescriptorPool& VulkanDescriptorPool::GetVkDescriptorPool() const
 {
-	vkDestroyDescriptorPool(logicalDevice->device, descriptorPool, nullptr);
+	return m_descriptorPool;
 }

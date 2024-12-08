@@ -1,6 +1,7 @@
 #include "application.h"
 
 
+
 // Constructor:
 Application::Application()
 {
@@ -11,7 +12,7 @@ Application::Application()
 	renderer = std::make_unique<VulkanRenderer>(context.get());
 
 	// Init static managers:
-	EventSystem::Init(context->window.get());
+	EventSystem::Init(context.get());
 	RenderPassManager::Init(context.get());
 	MaterialManager::Init(context.get(), renderer.get());
 	TextureManager::Init(context.get());
@@ -46,12 +47,12 @@ void Application::Run()
 	while (running)
 	{
 		Timer::Update();
-		running = context->window->HandleEvents();
+		running = context->pWindow->HandleEvents();
 
 		// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
-		VkExtent2D windowExtent = context->window->Extent();
-		VkExtent2D surfaceExtend = context->surface->CurrentExtent();
-		if (context->window->isMinimized || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
+		VkExtent2D windowExtent = context->pWindow->GetExtent();
+		VkExtent2D surfaceExtend = context->pSurface->GetCurrentExtent();
+		if (context->pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
 		{
 			SDL_Delay(10);
 			continue;

@@ -1,11 +1,13 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_samplerManager_h__
 #define __INCLUDE_GUARD_samplerManager_h__
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
 #include <string>
-#include "vulkanSampler.h"
 
+
+
+class Sampler;
+struct VulkanContext;
 
 
 /// <summary>
@@ -18,14 +20,14 @@ public: // Members
 private: // Members
     static bool isInitialized;
     static VulkanContext* context;
-    static std::unordered_map<std::string, std::unique_ptr<VulkanSampler>> samplers;
+    static std::unordered_map<std::string, std::unique_ptr<Sampler>> samplers;
 
 public: // Methods
     static void Init(VulkanContext* vulkanContext);
     static void Clear();
 
-    static void AddSampler(const std::string name, VulkanSampler* sampler);
-    static VulkanSampler* GetSampler(const std::string& name);
+    static void AddSampler(const std::string name, Sampler* sampler);
+    static Sampler* GetSampler(const std::string& name);
     static void DeleteSampler(const std::string& name);
 
     static void PrintAllSamplerNames();

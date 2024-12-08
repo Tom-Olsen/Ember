@@ -14,8 +14,8 @@ MaterialProperties::MaterialProperties(Material* material)
 	this->context = material->GetContext();
 
 	// Create resource bindings for each frameInFlight:
-	uniformBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<VulkanUniformBuffer>>>(context->framesInFlight);
-	samplerMaps = std::vector<std::unordered_map<std::string, ResourceBinding<VulkanSampler*>>>(context->framesInFlight);
+	uniformBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<UniformBuffer>>>(context->framesInFlight);
+	samplerMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>>(context->framesInFlight);
 	texture2dMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>>(context->framesInFlight);
 	updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(context->framesInFlight);
 
@@ -150,7 +150,7 @@ void MaterialProperties::SetValue(const std::string& blockName, const std::strin
 
 
 // Sampler setters:
-void MaterialProperties::SetSampler(const std::string& name, VulkanSampler* sampler)
+void MaterialProperties::SetSampler(const std::string& name, Sampler* sampler)
 {
 	// If sampler with 'name' doesnt exist, skip:
 	auto it = samplerStagingMap.find(name);
@@ -205,18 +205,18 @@ void MaterialProperties::InitUniformBufferResourceBinding(std::string name, uint
 	auto it = uniformBufferMaps[frameIndex].find(name);
 	if (it == uniformBufferMaps[frameIndex].end())
 	{
-		VulkanUniformBuffer uniformBuffer(context, material->GetUniformBufferBlock(name));
-		uniformBufferMaps[frameIndex].emplace(name, ResourceBinding<VulkanUniformBuffer>(uniformBuffer, binding));
+		UniformBuffer uniformBuffer(context, material->GetUniformBufferBlock(name));
+		uniformBufferMaps[frameIndex].emplace(name, ResourceBinding<UniformBuffer>(uniformBuffer, binding));
 
 		for (uint32_t frameIndex = 0; frameIndex < context->framesInFlight; frameIndex++)
 			updateUniformBuffer[frameIndex].emplace(name, true);
 	}
 }
-void MaterialProperties::InitSamplerResourceBinding(std::string name, uint32_t binding, VulkanSampler* sampler, uint32_t frameIndex)
+void MaterialProperties::InitSamplerResourceBinding(std::string name, uint32_t binding, Sampler* sampler, uint32_t frameIndex)
 {
 	auto it = samplerMaps[frameIndex].find(name);
 	if (it == samplerMaps[frameIndex].end())
-		samplerMaps[frameIndex].emplace(name, ResourceBinding<VulkanSampler*>(sampler, binding));
+		samplerMaps[frameIndex].emplace(name, ResourceBinding<Sampler*>(sampler, binding));
 }
 void MaterialProperties::InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d, uint32_t frameIndex)
 {
@@ -253,17 +253,17 @@ void MaterialProperties::CreateDescriptorSets()
 	std::vector<VkDescriptorSetLayout> layouts(context->framesInFlight, material->pipeline->descriptorSetLayout);	// same layout for all frames
 
 	VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-	allocInfo.descriptorPool = context->DescriptorPool();
+	allocInfo.descriptorPool = context->GetVkDescriptorPool();
 	allocInfo.descriptorSetCount = context->framesInFlight;
 	allocInfo.pSetLayouts = layouts.data();
 
 	descriptorSets.resize(context->framesInFlight);
-	VKA(vkAllocateDescriptorSets(context->logicalDevice->device, &allocInfo, descriptorSets.data()));
+	VKA(vkAllocateDescriptorSets(context->pLogicalDevice->GetVkDevice(), &allocInfo, descriptorSets.data()));
 }
-void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<VulkanUniformBuffer> uniformBufferResourceBinding)
+void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<UniformBuffer> uniformBufferResourceBinding)
 {
 	VkDescriptorBufferInfo bufferInfo = {};
-	bufferInfo.buffer = uniformBufferResourceBinding.resource.buffer->buffer;
+	bufferInfo.buffer = uniformBufferResourceBinding.resource.buffer->GetVkBuffer();
 	bufferInfo.offset = 0;
 	bufferInfo.range = uniformBufferResourceBinding.resource.GetSize();
 
@@ -277,9 +277,9 @@ void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBindin
 	descriptorWrite.pImageInfo = nullptr;
 	descriptorWrite.pTexelBufferView = nullptr;
 
-	vkUpdateDescriptorSets(context->LogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+	vkUpdateDescriptorSets(context->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 }
-void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<VulkanSampler*> samplerResourceBinding)
+void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Sampler*> samplerResourceBinding)
 {
 	VkDescriptorImageInfo samplerInfo = {};
 	samplerInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -295,14 +295,14 @@ void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBindin
 	descriptorWrite.pImageInfo = &samplerInfo;
 	descriptorWrite.pTexelBufferView = nullptr;
 
-	vkUpdateDescriptorSets(context->LogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+	vkUpdateDescriptorSets(context->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 }
 void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Texture2d*> texture2dResourceBinding)
 {
 	VkDescriptorImageInfo imageInfo = {};
 	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	//imageInfo.imageLayout = texture2dResourceBinding.resource->image->GetLayout();	// maybe use this? currently throws validation errors.
-	imageInfo.imageView = texture2dResourceBinding.resource->image->imageView;
+	imageInfo.imageView = texture2dResourceBinding.resource->image->GetVkImageView();
 
 	VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 	descriptorWrite.dstSet = descriptorSets[frameIndex];
@@ -314,7 +314,7 @@ void MaterialProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBindin
 	descriptorWrite.pImageInfo = &imageInfo;
 	descriptorWrite.pTexelBufferView = nullptr;
 
-	vkUpdateDescriptorSets(context->LogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+	vkUpdateDescriptorSets(context->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 }
 
 

@@ -1,44 +1,53 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_vulkanImage_h__
 #define __INCLUDE_GUARD_vulkanImage_h__
-#include "vulkanContext.h"
+#include "vk_mem_alloc.h"
+#include <vulkan/vulkan.h>
+
+
+
+struct VulkanContext;
+struct VulkanQueue;
 
 
 
 class VmaImage
 {
-public: // Members:
-	VkImage image;
-	VmaAllocation allocation;
-	VkImageView imageView;
-
 private: // Members:
-	VulkanContext* context;
-	VkImageCreateInfo imageInfo;
-	VmaAllocationCreateInfo allocationInfo;
-	VkImageSubresourceRange subresourceRange;
-	VkImageLayout layout;
+	VkImage m_image;
+	VmaAllocation m_allocation;
+	VkImageView m_imageView;
+	VkImageCreateInfo m_imageInfo;
+	VmaAllocationCreateInfo m_allocationInfo;
+	VkImageSubresourceRange m_subresourceRange;
+	VkImageLayout m_layout;
+	VulkanContext* m_pContext;
 
-public: // Constructor/Destructor:
-	VmaImage(VulkanContext* context, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, const VkImageSubresourceRange& subresourceRange);
+public: // Methods:
+	VmaImage(VulkanContext* pContext, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, const VkImageSubresourceRange& subresourceRange);
 	~VmaImage();
 
-public: // Getters:
-	uint64_t GetWidth();
-	uint64_t GetHeight();
-	uint64_t GetDepth();
-	VkExtent3D GetExtent();
-	VkImageSubresourceRange GetSubresourceRange();
-	VkImageSubresourceLayers GetSubresourceLayers();
-	VkImageLayout GetLayout();
+	// Getters:
+	const VkImage& GetVkImage() const;
+	const VmaAllocation& GetVmaAllocation() const;
+	const VkImageView& GetVkImageView() const;
+	const VkImageCreateInfo& GetVkImageCreateInfo() const;
+	const VmaAllocationCreateInfo& GetVmaAllocationCreateInfo() const;
+	const VkImageSubresourceRange& GetSubresourceRange() const;
+	const VkImageLayout& GetLayout() const;
+	uint64_t GetWidth() const;
+	uint64_t GetHeight() const;
+	uint64_t GetDepth() const;
+	const VkExtent3D& GetExtent() const;
+	VkImageSubresourceLayers GetSubresourceLayers() const;
 
-public: // Advanced methods:
-	void TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subresourceRange);
-	void HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourceRange);
-	void TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subresourceRange);
+	// Transitions etc.:
+	// TODO: remove the subresourceRange parameter from all of these functions
+	void TransitionLayoutUndefinedToTransfer();
+	void HandoffTransferToGraphicsQueue();
+	void TransitionLayoutTransferToShaderRead();
 	void GenerateMipmaps(uint32_t mipLevels);
 
-public: // Static methods:
+	// Static methods:
 	static void CopyImageToImage(VulkanContext* context, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue);
 };
 

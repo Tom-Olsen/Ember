@@ -5,21 +5,18 @@
 
 
 
-/// <summary>
-/// VulkanInstance class owns the Vulkan instance and handles validation layers.
-/// </summary>
 class VulkanInstance
 {
-public: // Members:
-	VkInstance instance;
-	VkDebugUtilsMessengerEXT debugMessenger;
+private: // Members:
+	VkInstance m_instance;
+	VkDebugUtilsMessengerEXT m_debugMessenger;
 
 public: // Methods:
 	VulkanInstance(std::vector<const char*> instanceExtensions);
 	~VulkanInstance();
 
-private: // Methods:
-	std::vector<const char*> AvailableInstanceExtensions();
+	const VkInstance& GetVkInstance() const;
+	std::vector<const char*> AvailableInstanceExtensions() const;
 };
 
 

@@ -2,28 +2,32 @@
 #define __INCLUDE_GUARD_vulkanCommands_h__
 #include <vulkan/vulkan.h>
 #include <vector>
-#include "vulkanContext.h"
 
 
 
-/// <summary>
-/// VulkanCommand class owns command pools and command buffers.
-/// </summary>
+struct VulkanContext;
+struct VulkanQueue;
+
+
+
 class VulkanCommand
 {
-public: // Members:
-	VkCommandPool pool;
-	VkCommandBuffer buffer;
-
 private: // Members:
-	VulkanContext* context;
+	VkCommandPool m_pool;
+	VkCommandBuffer m_buffer;
+	VulkanContext* m_pContext;
 
 public: // Methods:
-	VulkanCommand(VulkanContext* context, VulkanQueue queue);
+	VulkanCommand(VulkanContext* pContext, VulkanQueue queue);
 	~VulkanCommand();
 
-	static VulkanCommand BeginSingleTimeCommand(VulkanContext* context, const VulkanQueue& queue);
-	static void EndSingleTimeCommand(VulkanContext* context, const VulkanCommand& command, const VulkanQueue& queue);
+	// Getters:
+	const VkCommandPool& GetVkCommandPool() const;
+	const VkCommandBuffer& GetVkCommandBuffer() const;
+
+	// Static methods:
+	static VulkanCommand BeginSingleTimeCommand(VulkanContext* pContext, const VulkanQueue& queue);
+	static void EndSingleTimeCommand(VulkanContext* pContext, const VulkanCommand& command, const VulkanQueue& queue);
 };
 
 

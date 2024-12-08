@@ -1,4 +1,6 @@
 #include "SamplerManager.h"
+#include "sampler.h"
+#include "vulkanContext.h"
 #include "vulkanMacros.h"
 
 
@@ -6,7 +8,7 @@
 // Static members:
 bool SamplerManager::isInitialized = false;
 VulkanContext* SamplerManager::context;
-std::unordered_map<std::string, std::unique_ptr<VulkanSampler>> SamplerManager::samplers;
+std::unordered_map<std::string, std::unique_ptr<Sampler>> SamplerManager::samplers;
 
 
 
@@ -19,44 +21,44 @@ void SamplerManager::Init(VulkanContext* vulkanContext)
 	isInitialized = true;
 	context = vulkanContext;
 
-	VulkanSampler* colorSampler = VulkanSampler::ColorSampler(context, "colorSampler");
+	Sampler* colorSampler = Sampler::ColorSampler(context, "colorSampler");
 	AddSampler(colorSampler->name, colorSampler);
 
-	VulkanSampler* shadowSampler = VulkanSampler::ShadowSampler(context, "shadowSampler");
+	Sampler* shadowSampler = Sampler::ShadowSampler(context, "shadowSampler");
 	AddSampler(shadowSampler->name, shadowSampler);
 
-	VulkanSampler* colorSampler2 = VulkanSampler::ColorSampler(context, "colorSampler2");
+	Sampler* colorSampler2 = Sampler::ColorSampler(context, "colorSampler2");
 	AddSampler(colorSampler2->name, colorSampler2);
 }
 void SamplerManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	samplers.clear();
 }
 
 
 
 // Add/get/delete:
-void SamplerManager::AddSampler(const std::string name, VulkanSampler* sampler)
+void SamplerManager::AddSampler(const std::string name, Sampler* sampler)
 {
 	// If sampler already contained in SamplerManager, do nothing.
-	if (samplers.emplace(name, std::unique_ptr<VulkanSampler>(sampler)).second == false)
+	if (samplers.emplace(name, std::unique_ptr<Sampler>(sampler)).second == false)
 	{
-		LOG_WARN("VulkanSampler with the name: {} already exists in SamplerManager!", name);
+		LOG_WARN("Sampler with the name: {} already exists in SamplerManager!", name);
 		return;
 	}
 }
-VulkanSampler* SamplerManager::GetSampler(const std::string& name)
+Sampler* SamplerManager::GetSampler(const std::string& name)
 {
 	auto it = samplers.find(name);
 	if (it != samplers.end())
 		return it->second.get();
-	LOG_WARN("VulkanSampler '{}' not found!", name);
+	LOG_WARN("Sampler '{}' not found!", name);
 	return nullptr;
 }
 void SamplerManager::DeleteSampler(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	samplers.erase(name);
 }
 

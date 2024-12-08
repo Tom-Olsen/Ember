@@ -7,6 +7,7 @@
 #include "materialManager.h"
 #include "meshGenerator.h"
 #include "logger.h"
+#include "gameObject.h"
 
 
 

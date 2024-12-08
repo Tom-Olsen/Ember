@@ -251,11 +251,11 @@ VkBuffer* Mesh::GetBuffers(VulkanContext* context)
 {
 	if (!isLoaded)
 		Load(context);
-	buffers[0] = vertexBuffer->buffer;
-	buffers[1] = vertexBuffer->buffer;
-	buffers[2] = vertexBuffer->buffer;
-	buffers[3] = vertexBuffer->buffer;
-	buffers[4] = vertexBuffer->buffer;
+	buffers[0] = vertexBuffer->GetVkBuffer();
+	buffers[1] = vertexBuffer->GetVkBuffer();
+	buffers[2] = vertexBuffer->GetVkBuffer();
+	buffers[3] = vertexBuffer->GetVkBuffer();
+	buffers[4] = vertexBuffer->GetVkBuffer();
 	return buffers;
 }
 VkDeviceSize* Mesh::GetOffsets()
@@ -849,7 +849,7 @@ std::string Mesh::ToString()
 void Mesh::UpdateVertexBuffer(VulkanContext* context)
 {
 	uint64_t size = static_cast<uint64_t>(GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors() + GetSizeOfUVs());
-	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
+	vkQueueWaitIdle(context->pLogicalDevice->GetGraphicsQueue().queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:
 	if (vertexBuffer == nullptr || size != vertexBuffer->size)
@@ -870,19 +870,19 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 
 	// Copy positions, colors, uvs:
 	void* data;
-	VKA(vmaMapMemory(context->Allocator(), vertexBuffer->allocation, &data));
+	VKA(vmaMapMemory(context->GetVmaAllocator(), vertexBuffer->allocation, &data));
 	memcpy(static_cast<char*>(data), positions.data(), GetSizeOfPositions());
 	memcpy(static_cast<char*>(data) + GetSizeOfPositions(), normals.data(), GetSizeOfNormals());
 	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals(), tangents.data(), GetSizeOfTangents());
 	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents(), colors.data(), GetSizeOfColors());
 	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors(), uvs.data(), GetSizeOfUVs());
-	VKA(vmaUnmapMemory(context->Allocator(), vertexBuffer->allocation));
+	VKA(vmaUnmapMemory(context->GetVmaAllocator(), vertexBuffer->allocation));
 }
 #else // With Staging buffer:
 void Mesh::UpdateVertexBuffer(VulkanContext* context)
 {
 	uint64_t size = static_cast<uint64_t>(GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors() + GetSizeOfUVs());
-	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
+	vkQueueWaitIdle(context->pLogicalDevice->GetGraphicsQueue().queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:
 	if (vertexBuffer == nullptr || size != vertexBuffer->GetSize())
@@ -917,14 +917,14 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(context, bufferSizes, bufferPointers);
 
 	// Copy data from staging to vertex buffer:
-	VmaBuffer::CopyBufferToBuffer(context, &stagingBuffer, vertexBuffer.get(), size, context->logicalDevice->graphicsQueue);
+	VmaBuffer::CopyBufferToBuffer(context, &stagingBuffer, vertexBuffer.get(), size, context->pLogicalDevice->GetGraphicsQueue());
 }
 #endif
 #ifdef RESIZEABLE_BAR // No staging buffer:
 void Mesh::UpdateIndexBuffer(VulkanContext* context)
 {
 	uint64_t size = static_cast<uint64_t>(GetSizeOfTriangles());
-	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
+	vkQueueWaitIdle(context->pLogicalDevice->GetGraphicsQueue().queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:
 	if (indexBuffer == nullptr || size != indexBuffer->size)
@@ -945,15 +945,15 @@ void Mesh::UpdateIndexBuffer(VulkanContext* context)
 
 	// Copy triangle indexes:
 	void* data;
-	VKA(vmaMapMemory(context->Allocator(), indexBuffer->allocation, &data));
+	VKA(vmaMapMemory(context->GetVmaAllocator(), indexBuffer->allocation, &data));
 	memcpy(data, GetTrianglesUnrolled(), size);
-	VKA(vmaUnmapMemory(context->Allocator(), indexBuffer->allocation));
+	VKA(vmaUnmapMemory(context->GetVmaAllocator(), indexBuffer->allocation));
 }
 #else // With Staging buffer:
 void Mesh::UpdateIndexBuffer(VulkanContext* context)
 {
 	uint64_t size = static_cast<uint64_t>(GetSizeOfTriangles());
-	vkQueueWaitIdle(context->logicalDevice->graphicsQueue.queue);	// wait for previous render calls to finish
+	vkQueueWaitIdle(context->pLogicalDevice->GetGraphicsQueue().queue);	// wait for previous render calls to finish
 
 	// Resize buffer if necessary:
 	if (indexBuffer == nullptr || size != indexBuffer->GetSize())
@@ -976,6 +976,6 @@ void Mesh::UpdateIndexBuffer(VulkanContext* context)
 	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(context, size, GetTrianglesUnrolled());
 
 	// Copy data from staging to vertex buffer:
-	VmaBuffer::CopyBufferToBuffer(context, &stagingBuffer, indexBuffer.get(), size, context->logicalDevice->graphicsQueue);
+	VmaBuffer::CopyBufferToBuffer(context, &stagingBuffer, indexBuffer.get(), size, context->pLogicalDevice->GetGraphicsQueue());
 }
 #endif

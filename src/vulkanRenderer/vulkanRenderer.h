@@ -1,45 +1,50 @@
 #ifndef __INCLUDE_GUARD_vulkanRenderer_h__
 #define __INCLUDE_GUARD_vulkanRenderer_h__
-#include <memory>
+#include <vulkan/vulkan.h>
+#include <array>
 #include <vector>
-#include "vulkanContext.h"
-#include "vulkanCommand.h"
-#include "scene.h"
+
+
+
+class MeshRenderer;
+class Scene;
+struct VulkanContext;
+class VulkanCommand;
 
 
 
 class VulkanRenderer
 {
-public: // Members:
-	VulkanContext* context;
-
 private: // Members:
+	VulkanContext* m_pContext;
+
 	// Render resources:
-	std::vector<VulkanCommand> shadowCommands;
-	std::vector<VulkanCommand> shadingCommands;
+	std::vector<VulkanCommand> m_shadowCommands;
+	std::vector<VulkanCommand> m_shadingCommands;
 	
 	// Sync objects:
-	std::vector<VkFence> fences;
-	std::vector<VkSemaphore> acquireSemaphores;
-	std::vector<VkSemaphore> shadowToShadingSemaphores;
-	std::vector<VkSemaphore> releaseSemaphores;
+	std::vector<VkFence> m_fences;
+	std::vector<VkSemaphore> m_acquireSemaphores;
+	std::vector<VkSemaphore> m_shadowToShadingSemaphores;
+	std::vector<VkSemaphore> m_releaseSemaphores;
 
 	// Render management:
-	uint32_t imageIndex;
-	bool rebuildSwapchain;
-	std::array<std::vector<MeshRenderer*>*, 2> meshRendererGroups;
+	uint32_t m_imageIndex;
+	bool m_rebuildSwapchain;
+	std::array<std::vector<MeshRenderer*>*, 2> m_pMeshRendererGroups;
 
 public: // Methods:
-	VulkanRenderer(VulkanContext* context);
+	VulkanRenderer(VulkanContext* pContext);
 	~VulkanRenderer();
-	bool Render(Scene* scene);
+	bool Render(Scene* pScene);
+	const VulkanContext* const GetContext() const;
 
 private: // Methods:
 	void RebuildSwapchain();
 	bool AcquireImage();
-	void SetMeshRendererGroups(Scene* scene);
-	void RecordShadowCommandBuffer(Scene* scene);
-	void RecordShadingCommandBuffer(Scene* scene);
+	void SetMeshRendererGroups(Scene* pScene);
+	void RecordShadowCommandBuffer(Scene* pScene);
+	void RecordShadingCommandBuffer(Scene* pScene);
 	void SubmitCommandBuffers();
 	bool PresentImage();
 	void SetViewportAndScissor(VkCommandBuffer& commandBuffer);

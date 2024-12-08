@@ -1,18 +1,19 @@
 #include "vulkanPhysicalDevice.h"
+#include "vulkanInstance.h"
 #include "vulkanMacros.h"
 
 
 
-// Constructor:
-VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanInstance* instance)
+// Constructor/Destructor:
+VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanInstance* pInstance)
 {
 	uint32_t numPhysicalDevices = 0;
-	VKA(vkEnumeratePhysicalDevices(instance->instance, &numPhysicalDevices, nullptr));
+	VKA(vkEnumeratePhysicalDevices(pInstance->GetVkInstance(), &numPhysicalDevices, nullptr));
 	if (numPhysicalDevices == 0)
 		throw std::runtime_error("Failed to find GPUs with Vulkan support!");
 
 	std::vector<VkPhysicalDevice> physicalDevices(numPhysicalDevices);
-	VKA(vkEnumeratePhysicalDevices(instance->instance, &numPhysicalDevices, physicalDevices.data()));
+	VKA(vkEnumeratePhysicalDevices(pInstance->GetVkInstance(), &numPhysicalDevices, physicalDevices.data()));
 
 	// Score each device:
 	std::vector<std::pair<VkPhysicalDevice, int>> devices;
@@ -29,18 +30,38 @@ VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanInstance* instance)
 	// Pick best device:
 	if (devices[0].second < 0)
 		throw std::runtime_error("Failed to find a suitable GPU!");
-	device = devices[0].first;
+	m_physicalDevice = devices[0].first;
 
 	// Determine max msaa samples:
-	maxMsaaSamples = MaxUsableMsaaSampleCount();
+	m_maxMsaaSamples = MaxUsableMsaaSampleCount();
+}
+VulkanPhysicalDevice::~VulkanPhysicalDevice()
+{
+
 }
 
 
 
-// Destructor:
-VulkanPhysicalDevice::~VulkanPhysicalDevice()
+// Public methdos:
+const VkPhysicalDevice& VulkanPhysicalDevice::GetVkPhysicalDevice() const
 {
-
+	return m_physicalDevice;
+}
+VkSampleCountFlagBits VulkanPhysicalDevice::GetMaxMsaaSamples() const
+{
+	return m_maxMsaaSamples;
+}
+VkBool32 VulkanPhysicalDevice::SupportsDepthClamp() const
+{
+	return m_supportsDepthClamp;
+}
+VkBool32 VulkanPhysicalDevice::SupportsDepthBias() const
+{
+	return m_supportsDepthBias;
+}
+VkBool32 VulkanPhysicalDevice::SupportsMultiViewport() const
+{
+	return m_supportsMultiViewport;
 }
 
 
@@ -71,9 +92,9 @@ int VulkanPhysicalDevice::DeviceScore(VkPhysicalDevice dev)
 
 	// Check optional features:
 	int score = 0;
-	score += 10 * deviceFeatures.depthClamp; supportsDepthClamp = deviceFeatures.depthClamp;
-	score += 10 * deviceFeatures.depthBiasClamp; supportsDepthBias = deviceFeatures.depthBiasClamp;
-	score += 10 * deviceFeatures.multiViewport; supportsMultiViewport = deviceFeatures.multiViewport;
+	score += 10 * deviceFeatures.depthClamp; m_supportsDepthClamp = deviceFeatures.depthClamp;
+	score += 10 * deviceFeatures.depthBiasClamp; m_supportsDepthBias = deviceFeatures.depthBiasClamp;
+	score += 10 * deviceFeatures.multiViewport; m_supportsMultiViewport = deviceFeatures.multiViewport;
 	// score +=  5 * deviceFeatures.fillModeNonSolid;
 	// score +=  1 * deviceFeatures.shaderFloat64;
 	// score +=  1 * deviceFeatures.shaderInt64;
@@ -85,7 +106,7 @@ int VulkanPhysicalDevice::DeviceScore(VkPhysicalDevice dev)
 	
 	return score;
 }
-VkBool32 VulkanPhysicalDevice::HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device)
+VkBool32 VulkanPhysicalDevice::HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const
 {
 	// Find queue family that supports Graphics and Compute.
 	// This is needed for tightly integrating graphics shaders that rely on output data of compute shaders, e.g. LineRendererPro.
@@ -106,7 +127,7 @@ VkBool32 VulkanPhysicalDevice::HasGraphicsAndComputeQueueFamily(VkPhysicalDevice
 
 	return false;
 }
-VkBool32 VulkanPhysicalDevice::HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface)
+VkBool32 VulkanPhysicalDevice::HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const
 {
 	// Find queue family that supports presenting to the surface.
 	uint32_t queueFamilyCount = 0;
@@ -125,10 +146,10 @@ VkBool32 VulkanPhysicalDevice::HasPresentQueueFamily(VkPhysicalDevice device, Vk
 
 	return false;
 }
-VkSampleCountFlagBits VulkanPhysicalDevice::MaxUsableMsaaSampleCount()
+VkSampleCountFlagBits VulkanPhysicalDevice::MaxUsableMsaaSampleCount() const
 {
 	VkPhysicalDeviceProperties physicalDeviceProperties;
-	vkGetPhysicalDeviceProperties(device, &physicalDeviceProperties);
+	vkGetPhysicalDeviceProperties(m_physicalDevice, &physicalDeviceProperties);
 
 	VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
 	if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }

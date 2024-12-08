@@ -1,10 +1,13 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_renderPassManager_h__
 #define __INCLUDE_GUARD_renderPassManager_h__
-#include <unordered_map>
 #include <memory>
 #include <string>
-#include "renderPass.h"
+#include <unordered_map>
+
+
+
+struct VulkanContext;
+class RenderPass;
 
 
 

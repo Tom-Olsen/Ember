@@ -9,6 +9,9 @@
 #include "samplerManager.h"
 #include "meshManager.h"
 #include "graphics.h"
+#include "timer.h"
+#include "gameObject.h"
+#include "scene.h"
 
 
 

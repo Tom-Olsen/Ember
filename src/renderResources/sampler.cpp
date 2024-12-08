@@ -1,12 +1,11 @@
-// needs to be defined before including stb_image.h, but may not be in the header file!
-#define STB_IMAGE_IMPLEMENTATION 
-#include "vulkanSampler.h"
+#include "sampler.h"
+#include "vulkanContext.h"
 #include "vulkanMacros.h"
 
 
 
 // Constructor:
-VulkanSampler::VulkanSampler(VulkanContext* context, const std::string& name)
+Sampler::Sampler(VulkanContext* context, const std::string& name)
 {
 	this->context = context;
 	this->name = name;
@@ -15,13 +14,13 @@ VulkanSampler::VulkanSampler(VulkanContext* context, const std::string& name)
 
 
 // Destructors:
-VulkanSampler::~VulkanSampler()
+Sampler::~Sampler()
 {
-	vkDestroySampler(context->LogicalDevice(), sampler, nullptr);
+	vkDestroySampler(context->GetVkDevice(), sampler, nullptr);
 }
-VulkanSampler* VulkanSampler::ColorSampler(VulkanContext* context, const std::string& name)
+Sampler* Sampler::ColorSampler(VulkanContext* context, const std::string& name)
 {
-	VulkanSampler* sampler = new VulkanSampler(context, name);
+	Sampler* sampler = new Sampler(context, name);
 	VkPhysicalDeviceProperties properties = sampler->GetDeviceProperties();
 
 	VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
@@ -40,13 +39,13 @@ VulkanSampler* VulkanSampler::ColorSampler(VulkanContext* context, const std::st
 	samplerInfo.mipLodBias = 0.0f;										// level of detail bias for mipmap level
 	samplerInfo.minLod = 0.0f;											// minimum level of detail to pick
 	samplerInfo.maxLod = VK_LOD_CLAMP_NONE;								// maximum level of detail to pick. No clamping = maximum mip level supported by the image
-	VKA(vkCreateSampler(context->LogicalDevice(), &samplerInfo, nullptr, &sampler->sampler));
+	VKA(vkCreateSampler(context->GetVkDevice(), &samplerInfo, nullptr, &sampler->sampler));
 
 	return sampler;
 }
-VulkanSampler* VulkanSampler::ShadowSampler(VulkanContext* context, const std::string& name)
+Sampler* Sampler::ShadowSampler(VulkanContext* context, const std::string& name)
 {
-	VulkanSampler* sampler = new VulkanSampler(context, name);
+	Sampler* sampler = new Sampler(context, name);
 	VkPhysicalDeviceProperties properties = sampler->GetDeviceProperties();
 
 	VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
@@ -65,7 +64,7 @@ VulkanSampler* VulkanSampler::ShadowSampler(VulkanContext* context, const std::s
 	samplerInfo.mipLodBias = 0.0f;										// level of detail bias for mipmap level
 	samplerInfo.minLod = 0.0f;											// minimum level of detail to pick
 	samplerInfo.maxLod = VK_LOD_CLAMP_NONE;								// maximum level of detail to pick. No clamping = maximum mip level supported by the image
-	VKA(vkCreateSampler(context->LogicalDevice(), &samplerInfo, nullptr, &sampler->sampler));
+	VKA(vkCreateSampler(context->GetVkDevice(), &samplerInfo, nullptr, &sampler->sampler));
 
 	return sampler;
 }
@@ -73,9 +72,9 @@ VulkanSampler* VulkanSampler::ShadowSampler(VulkanContext* context, const std::s
 
 
 // Public methods:
-VkPhysicalDeviceProperties VulkanSampler::GetDeviceProperties()
+VkPhysicalDeviceProperties Sampler::GetDeviceProperties()
 {
 	VkPhysicalDeviceProperties properties{};
-	vkGetPhysicalDeviceProperties(context->PhysicalDevice(), &properties);
+	vkGetPhysicalDeviceProperties(context->GetVkPhysicalDevice(), &properties);
 	return properties;
 }

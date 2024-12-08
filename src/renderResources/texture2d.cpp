@@ -103,14 +103,14 @@ void Texture2d::CreateImage(const VkImageSubresourceRange& subresourceRange, uin
 }
 void Texture2d::TransitionImageLayout(const VkImageSubresourceRange& subresourceRange, VmaBuffer& stagingBuffer)
 {
-	image->TransitionLayoutUndefinedToTransfer(subresourceRange);
-	VmaBuffer::CopyBufferToImage(context, &stagingBuffer, image.get(), context->logicalDevice->transferQueue, subresourceRange.layerCount);
-	image->TransitionLayoutTransferToShaderRead(subresourceRange);
+	image->TransitionLayoutUndefinedToTransfer();
+	VmaBuffer::CopyBufferToImage(context, &stagingBuffer, image.get(), context->pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
+	image->TransitionLayoutTransferToShaderRead();
 }
 void Texture2d::TransitionImageLayoutWithMipMapping(const VkImageSubresourceRange& subresourceRange, VmaBuffer& stagingBuffer)
 {
-	image->TransitionLayoutUndefinedToTransfer(subresourceRange);
-	VmaBuffer::CopyBufferToImage(context, &stagingBuffer, image.get(), context->logicalDevice->transferQueue, subresourceRange.layerCount);
-	image->HandoffTransferToGraphicsQueue(subresourceRange);
+	image->TransitionLayoutUndefinedToTransfer();
+	VmaBuffer::CopyBufferToImage(context, &stagingBuffer, image.get(), context->pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
+	image->HandoffTransferToGraphicsQueue();
 	image->GenerateMipmaps(subresourceRange.levelCount);
 }

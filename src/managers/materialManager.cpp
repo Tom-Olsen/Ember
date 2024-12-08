@@ -42,7 +42,7 @@ void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
 }
 void MaterialManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	materials.clear();
 }
 
@@ -68,7 +68,7 @@ Material* MaterialManager::GetMaterial(const std::string& name)
 }
 void MaterialManager::DeleteMaterial(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	materials.erase(name);
 }
 

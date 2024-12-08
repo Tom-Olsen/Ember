@@ -98,7 +98,7 @@ void ShadowRenderPass::CreateRenderpass()
 	createInfo.pAttachments = &attachment;
 	createInfo.subpassCount = 1;
 	createInfo.pSubpasses = &subpass;
-	VKA(vkCreateRenderPass(context->LogicalDevice(), &createInfo, nullptr, &renderPass));
+	VKA(vkCreateRenderPass(context->GetVkDevice(), &createInfo, nullptr, &renderPass));
 }
 void ShadowRenderPass::CreateFramebuffers()
 {
@@ -109,10 +109,10 @@ void ShadowRenderPass::CreateFramebuffers()
 		VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 		framebufferInfo.renderPass = renderPass;
 		framebufferInfo.attachmentCount = 1;
-		framebufferInfo.pAttachments = &shadowMaps->image->imageView;
+		framebufferInfo.pAttachments = &shadowMaps->image->GetVkImageView();
 		framebufferInfo.width = shadowMapWidth;
 		framebufferInfo.height = shadowMapHeight;
 		framebufferInfo.layers = layerCount;
-		vkCreateFramebuffer(context->LogicalDevice(), &framebufferInfo, nullptr, &framebuffers[i]);
+		vkCreateFramebuffer(context->GetVkDevice(), &framebufferInfo, nullptr, &framebuffers[i]);
 	}
 }

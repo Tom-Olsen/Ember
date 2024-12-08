@@ -45,7 +45,7 @@ void TextureManager::Init(VulkanContext* vulkanContext)
 }
 void TextureManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	texture2ds.clear();
 	textureCubes.clear();
 }
@@ -89,12 +89,12 @@ TextureCube* TextureManager::GetTextureCube(const std::string& name)
 }
 void TextureManager::DeleteTexture2d(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	texture2ds.erase(name);
 }
 void TextureManager::DeleteTextureCube(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	textureCubes.erase(name);
 }
 

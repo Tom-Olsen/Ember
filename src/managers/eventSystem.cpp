@@ -4,7 +4,7 @@
 
 
 // Static members:
-SdlWindow* EventSystem::window = nullptr;
+VulkanContext* EventSystem::context = nullptr;
 bool EventSystem::isInitialized = false;
 std::unordered_map<SDL_Keycode, EventSystem::KeyState> EventSystem::keyStates;
 std::unordered_map<Uint8, EventSystem::MouseState> EventSystem::mouseButtonStates;
@@ -18,11 +18,11 @@ bool EventSystem::quit;
 
 
 // Initialization and cleanup:
-void EventSystem::Init(SdlWindow* window)
+void EventSystem::Init(VulkanContext* context)
 {
     if (isInitialized)
         return;
-    EventSystem::window = window;
+    EventSystem::context = context;
     EventSystem::isInitialized = true;
 
 	EventSystem::keyStates = std::unordered_map<SDL_Keycode, KeyState>();
@@ -172,15 +172,16 @@ Float2 EventSystem::MousePos()
 }
 float EventSystem::MouseX01()
 {
-	return mouseX / window->Width();
+	return mouseX / context->pWindow->GetWidth();
 }
 float EventSystem::MouseY01()
 {
-	return mouseY / window->Height();
+	return mouseY / context->pWindow->GetHeight();
 }
 Float2 EventSystem::MousePos01()
 {
-	return Float2(mouseX / window->Width(), mouseY / window->Height());
+	VkExtent2D extend = context->pWindow->GetExtent();
+	return Float2(mouseX / extend.width, mouseY / extend.height);
 }
 float EventSystem::MouseScrollX()
 {

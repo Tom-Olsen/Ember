@@ -1,42 +1,46 @@
 #ifndef __INCLUDE_GUARD_vulkanSurface_h__
 #define __INCLUDE_GUARD_vulkanSurface_h__
-#include <SDL3/SDL.h>
-#include "sdlWindow.h"
-#include "vulkanInstance.h"
-#include "vulkanPhysicalDevice.h"
+#include <vulkan/vulkan.h>
+#include <vector>
 
 
 
-/// <summary>
-/// VulkanSurface class owns the surface and its properties.
-/// </summary>
+class VulkanInstance;
+class VulkanPhysicalDevice;
+class SdlWindow;
+
+
+
 class VulkanSurface
 {
-public: // Members:
-	VkSurfaceKHR surface;
-	VkSurfaceFormatKHR surfaceFormat;
-	VkPresentModeKHR presentMode;
-
 private: // Members:
-	VulkanInstance* instance;
-	VulkanPhysicalDevice* physicalDevice;
-	SdlWindow* window;
-	VkSurfaceCapabilitiesKHR surfaceCapabilities;
-	std::vector<VkSurfaceFormatKHR> availableSurfaceFormats;
-	std::vector<VkPresentModeKHR> availablePresentModes;
+	VkSurfaceKHR m_surface;
+	VkSurfaceFormatKHR m_surfaceFormat;
+	VkPresentModeKHR m_presentMode;
+	VkSurfaceCapabilitiesKHR m_surfaceCapabilities;
+	std::vector<VkSurfaceFormatKHR> m_availableSurfaceFormats;
+	std::vector<VkPresentModeKHR> m_availablePresentModes;
+	VulkanInstance* m_pInstance;
+	VulkanPhysicalDevice* m_pPhysicalDevice;
+	SdlWindow* m_pWindow;
 
 public: // Methods:
-	VulkanSurface(VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, SdlWindow* window);
+	VulkanSurface(VulkanInstance* pInstance, VulkanPhysicalDevice* pPhysicalDevice, SdlWindow* pWindow);
 	~VulkanSurface();
-	VkExtent2D CurrentExtent();
-	VkExtent2D MinImageExtent();
-	VkExtent2D MaxImageExtent();
-	uint32_t MinImageCount();
-	uint32_t MaxImageCount();
+
+	// Getters:
+	const VkSurfaceKHR& GetVkSurfaceKHR() const;
+	const VkSurfaceFormatKHR& GetVkSurfaceFormatKHR() const;
+	const VkPresentModeKHR& GetVkPresentModeKHR() const;
+	VkExtent2D GetCurrentExtent();
+	VkExtent2D GetMinImageExtent();
+	VkExtent2D GetMaxImageExtent();
+	uint32_t GetMinImageCount();
+	uint32_t GetMaxImageCount();
 
 private: // Methods:
-	VkSurfaceFormatKHR PickSurfaceFormat();
-	VkPresentModeKHR PickPresentMode();
+	VkSurfaceFormatKHR PickSurfaceFormat() const;
+	VkPresentModeKHR PickPresentMode() const;
 };
 
 

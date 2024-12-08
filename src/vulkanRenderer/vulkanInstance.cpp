@@ -19,7 +19,7 @@ VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT message
 
 
 
-// Constructor:
+// Constructor/Destructor:
 VulkanInstance::VulkanInstance(std::vector<const char*> instanceExtensions)
 {
 	VkApplicationInfo applicationInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
@@ -53,7 +53,7 @@ VulkanInstance::VulkanInstance(std::vector<const char*> instanceExtensions)
 	#endif
 
 	// Create the Vulkan instance:
-	if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
+	if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS)
 		throw std::runtime_error("Failed to create instance!");
 
 	// Debug Messenger:
@@ -63,27 +63,27 @@ VulkanInstance::VulkanInstance(std::vector<const char*> instanceExtensions)
 	debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	debugCreateInfo.pfnUserCallback = DebugCallback;
 
-	PFN_vkCreateDebugUtilsMessengerEXT pfnCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-	VKA(pfnCreateDebugUtilsMessengerEXT(instance, &debugCreateInfo, nullptr, &debugMessenger));
+	PFN_vkCreateDebugUtilsMessengerEXT pfnCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_instance, "vkCreateDebugUtilsMessengerEXT");
+	VKA(pfnCreateDebugUtilsMessengerEXT(m_instance, &debugCreateInfo, nullptr, &m_debugMessenger));
 	#endif
 }
-
-
-
-// Destructor:
 VulkanInstance::~VulkanInstance()
 {
 	#if defined(VALIDATION_LAYERS_ACTIVE)
-	PFN_vkDestroyDebugUtilsMessengerEXT pfnDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-	pfnDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+	PFN_vkDestroyDebugUtilsMessengerEXT pfnDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_instance, "vkDestroyDebugUtilsMessengerEXT");
+	pfnDestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
 	#endif
-	vkDestroyInstance(instance, nullptr);
+	vkDestroyInstance(m_instance, nullptr);
 }
 
 
 
-// Private:
-std::vector<const char*> VulkanInstance::AvailableInstanceExtensions()
+// Public methods:
+const VkInstance& VulkanInstance::GetVkInstance() const
+{
+	return m_instance;
+}
+std::vector<const char*> VulkanInstance::AvailableInstanceExtensions() const
 {
 	// Get all supported instance extensions:
 	uint32_t extensionCount = 0;
@@ -98,10 +98,9 @@ std::vector<const char*> VulkanInstance::AvailableInstanceExtensions()
 	LOG_TRACE(output);
 
 	// Convert to vector of const char*:
-	std::vector<const char*> extensionNames;
+	std::vector<const char*> extensionNames(extensionCount);
 	for (const VkExtensionProperties& extension : extensions)
 		extensionNames.push_back(extension.extensionName);
 
 	return extensionNames;
-	// should be followed by selection logic.
 }

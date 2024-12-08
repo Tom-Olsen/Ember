@@ -11,7 +11,7 @@ VulkanContext::VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaa
 	this->frameIndex = 0;
 
 	// Window:
-	window = std::make_unique<SdlWindow>();
+	pWindow = std::make_unique<SdlWindow>();
 
 	// Get instance extensions:
 	std::vector<const char*> instanceExtensions;
@@ -19,7 +19,7 @@ VulkanContext::VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaa
 	instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 	#endif
-	window->AddSdlInstanceExtensions(instanceExtensions);	// sdl instance extensions
+	pWindow->AddSdlInstanceExtensions(instanceExtensions);	// sdl instance extensions
 	// and more ...
 
 	// Get device extensions:
@@ -29,15 +29,15 @@ VulkanContext::VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaa
 	// and more ...
 
 	// Create vulkan context:
-	instance = std::make_unique<VulkanInstance>(instanceExtensions);
-	physicalDevice = std::make_unique<VulkanPhysicalDevice>(instance.get());
-	surface = std::make_unique<VulkanSurface>(instance.get(), physicalDevice.get(), window.get());
-	logicalDevice = std::make_unique<VulkanLogicalDevice>(physicalDevice.get(), surface.get(), deviceExtensions);
-	allocator = std::make_unique<VulkanMemoryAllocator>(instance.get(), logicalDevice.get(), physicalDevice.get());
-	descriptorPool = std::make_unique<VulkanDescriptorPool>(logicalDevice.get());
-	swapchain = std::make_unique<VulkanSwapchain>(logicalDevice.get(), surface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+	pInstance = std::make_unique<VulkanInstance>(instanceExtensions);
+	pPhysicalDevice = std::make_unique<VulkanPhysicalDevice>(pInstance.get());
+	pSurface = std::make_unique<VulkanSurface>(pInstance.get(), pPhysicalDevice.get(), pWindow.get());
+	pLogicalDevice = std::make_unique<VulkanLogicalDevice>(pPhysicalDevice.get(), pSurface.get(), deviceExtensions);
+	pAllocator = std::make_unique<VulkanMemoryAllocator>(pInstance.get(), pLogicalDevice.get(), pPhysicalDevice.get());
+	pDescriptorPool = std::make_unique<VulkanDescriptorPool>(pLogicalDevice.get());
+	pSwapchain = std::make_unique<VulkanSwapchain>(pLogicalDevice.get(), pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
-	this->msaaSamples = std::min(msaaSamples, physicalDevice->maxMsaaSamples);
+	this->msaaSamples = std::min(msaaSamples, pPhysicalDevice->GetMaxMsaaSamples());
 }
 
 
@@ -45,51 +45,51 @@ VulkanContext::VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaa
 // Destructor:
 VulkanContext::~VulkanContext()
 {
-	VKA(vkDeviceWaitIdle(logicalDevice->device));
+	VKA(vkDeviceWaitIdle(pLogicalDevice->GetVkDevice()));
 }
 
 
 
 // Getters:
-SDL_Window* VulkanContext::Window()
+SDL_Window* const VulkanContext::GetSDL_Window() const
 {
-	return window->window;
+	return pWindow->GetSDL_Window();
 }
-VkInstance& VulkanContext::Instance()
+const VkInstance& VulkanContext::GetVkInstance() const
 {
-	return instance->instance;
+	return pInstance->GetVkInstance();
 }
-VkPhysicalDevice& VulkanContext::PhysicalDevice()
+const VkPhysicalDevice& VulkanContext::GetVkPhysicalDevice() const
 {
-	return physicalDevice->device;
+	return pPhysicalDevice->GetVkPhysicalDevice();
 }
-VkSurfaceKHR& VulkanContext::Surface()
+const VkSurfaceKHR& VulkanContext::GetVkSurfaceKHR() const
 {
-	return surface->surface;
+	return pSurface->GetVkSurfaceKHR();
 }
-VkDevice& VulkanContext::LogicalDevice()
+const VkDevice& VulkanContext::GetVkDevice() const
 {
-	return logicalDevice->device;
+	return pLogicalDevice->GetVkDevice();
 }
-VmaAllocator& VulkanContext::Allocator()
+const VmaAllocator& VulkanContext::GetVmaAllocator() const
 {
-	return allocator->allocator;
+	return pAllocator->GetVmaAllocator();
 }
-VkDescriptorPool& VulkanContext::DescriptorPool()
+const VkDescriptorPool& VulkanContext::GetVkDescriptorPool() const
 {
-	return descriptorPool->descriptorPool;
+	return pDescriptorPool->GetVkDescriptorPool();
 }
-VkSwapchainKHR& VulkanContext::Swapchain()
+const VkSwapchainKHR& VulkanContext::GetVkSwapchainKHR() const
 {
-	return swapchain->swapchain;
+	return pSwapchain->GetVkSwapchainKHR();
 }
-bool VulkanContext::DepthClampEnabled()
+bool VulkanContext::DepthClampEnabled() const
 {
-	return physicalDevice->supportsDepthClamp;
+	return pPhysicalDevice->SupportsDepthClamp();
 }
-bool VulkanContext::DepthBiasEnabled()
+bool VulkanContext::DepthBiasEnabled() const
 {
-	return physicalDevice->supportsDepthBias;
+	return pPhysicalDevice->SupportsDepthBias();
 }
 
 

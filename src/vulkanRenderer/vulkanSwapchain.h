@@ -1,35 +1,35 @@
 #ifndef __INCLUDE_GUARD_vulkanSwapchain_h__
 #define __INCLUDE_GUARD_vulkanSwapchain_h__
+#include <vulkan/vulkan.h>
 #include <vector>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_vulkan.h>
-#include <memory>
-#include "vulkanLogicalDevice.h"
-#include "vulkanSurface.h"
 
 
 
-/// <summary>
-/// VulkanSwapchain class owns the swapchain and its images and image views.
-/// Allows for simple recreation of the swapchain by passing the old swapchain in the constructor.
-/// </summary>
+class VulkanLogicalDevice;
+class VulkanSurface;
+
+
+
 class VulkanSwapchain
 {
-public: // Members:
-	VkSwapchainKHR swapchain;
-	std::vector<VkImage> images;
-	std::vector<VkImageView> imageViews;
-
 private: // Members:
-	VulkanLogicalDevice* logicalDevice;
-	VulkanSurface* surface;
+	VkSwapchainKHR m_swapchain;
+	std::vector<VkImage> m_images;
+	std::vector<VkImageView> m_imageViews;
+	VulkanLogicalDevice* m_pLogicalDevice;
+	VulkanSurface* m_pSurface;
 
 public: // Methods:
-	VulkanSwapchain(VulkanLogicalDevice* logicalDevice, VulkanSurface* surface, VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain = nullptr);
+	VulkanSwapchain(VulkanLogicalDevice* pLogicalDevice, VulkanSurface* pSurface, VkImageUsageFlags usage, VulkanSwapchain* pOldSwapchain = nullptr);
 	~VulkanSwapchain();
 
+	// Getters:
+	const VkSwapchainKHR& GetVkSwapchainKHR() const;
+	const std::vector<VkImage>& GetImages() const;
+	const std::vector<VkImageView>& GetImageViews() const;
+
 private: // Methods:
-	void CreateSwapchain(VkImageUsageFlags usage, VulkanSwapchain* oldSwapchain);
+	void CreateSwapchain(VkImageUsageFlags usage, VulkanSwapchain* pOldSwapchain);
 	void CreateImages();
 	void CreateImageViews();
 };

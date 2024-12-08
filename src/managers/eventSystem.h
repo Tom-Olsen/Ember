@@ -2,7 +2,7 @@
 #define __INCLUDE_GUARD_eventSystem_h__
 #include <SDL3/SDL.h>
 #include <unordered_map>
-#include "sdlWindow.h"
+#include "vulkanContext.h"
 #include "mathf.h"
 
 
@@ -15,7 +15,7 @@ public: // Enums:
     enum class MouseButton { left = 1, middle = 2, right = 3};
 
 private: // Members
-    static SdlWindow* window;
+    static VulkanContext* context;
     static bool isInitialized;
     static std::unordered_map<SDL_Keycode, KeyState> keyStates;
     static std::unordered_map<Uint8, MouseState> mouseButtonStates;
@@ -27,7 +27,7 @@ private: // Members
     static bool quit;
 
 public: // Methods:
-    static void Init(SdlWindow* window);
+    static void Init(VulkanContext* context);
     static void Clear();
 
 	// Event handling:

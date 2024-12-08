@@ -25,7 +25,7 @@ ShadowPipeline::ShadowPipeline(VulkanContext* context,
     CreatePipeline(vertexShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
-    vkDestroyShaderModule(context->LogicalDevice(), vertexShaderModule, nullptr);
+    vkDestroyShaderModule(context->GetVkDevice(), vertexShaderModule, nullptr);
 }
 
 
@@ -45,7 +45,7 @@ void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     descriptorSetLayoutCreateInfo.pBindings = bindings.data();
-    VKA(vkCreateDescriptorSetLayout(context->LogicalDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
+    VKA(vkCreateDescriptorSetLayout(context->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
 
     // Push constants layout:
     VkPushConstantRange pushConstantRange = {};
@@ -59,7 +59,7 @@ void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-    vkCreatePipelineLayout(context->LogicalDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
+    vkCreatePipelineLayout(context->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
 }
 void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
 {
@@ -159,5 +159,5 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.basePipelineIndex = -1;
 
-    VKA(vkCreateGraphicsPipelines(context->LogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
+    VKA(vkCreateGraphicsPipelines(context->GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
 }

@@ -5,7 +5,7 @@
 
 
 
-class VulkanContext;
+struct VulkanContext;
 class Mesh;
 class Material;
 class MaterialProperties;

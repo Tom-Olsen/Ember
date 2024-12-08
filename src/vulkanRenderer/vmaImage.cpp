@@ -1,96 +1,115 @@
 #include "vmaImage.h"
-#include "vulkanMacros.h"
 #include "vulkanCommand.h"
-#include <algorithm>
+#include "vulkanContext.h"
+#include "vulkanMacros.h"
 
 
 
-// Constructors:
-VmaImage::VmaImage(VulkanContext* context, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, const VkImageSubresourceRange& subresourceRange)
+// Constructors/Destructor:
+VmaImage::VmaImage(VulkanContext* pContext, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, const VkImageSubresourceRange& subresourceRange)
 {
-	this->context = context;
-	this->imageInfo = imageInfo;
-	this->allocationInfo = allocationInfo;
-	this->subresourceRange = subresourceRange;
-	this->layout = imageInfo.initialLayout;
+	m_pContext = pContext;
+	m_imageInfo = imageInfo;
+	m_allocationInfo = allocationInfo;
+	m_subresourceRange = subresourceRange;
+	m_layout = imageInfo.initialLayout;
 
 	// Create image:
-	VKA(vmaCreateImage(context->Allocator(), &imageInfo, &allocationInfo, &image, &allocation, nullptr));
+	VKA(vmaCreateImage(m_pContext->GetVmaAllocator(), &m_imageInfo, &m_allocationInfo, &m_image, &m_allocation, nullptr));
 
 	// Determine view type:
-	VkImageViewType viewType = VkImageViewType((int)imageInfo.imageType);
-	if (imageInfo.flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT)
+	VkImageViewType viewType = VkImageViewType((int)m_imageInfo.imageType);
+	if (m_imageInfo.flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT)
 		viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-	else if (imageInfo.arrayLayers > 1)
+	else if (m_imageInfo.arrayLayers > 1)
 	{
-		if (imageInfo.imageType == VK_IMAGE_TYPE_1D)
+		if (m_imageInfo.imageType == VK_IMAGE_TYPE_1D)
 			viewType = VK_IMAGE_VIEW_TYPE_1D_ARRAY;
-        else if (imageInfo.imageType == VK_IMAGE_TYPE_2D)
+        else if (m_imageInfo.imageType == VK_IMAGE_TYPE_2D)
 			viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 	}
-	//if (imageInfo.flags == VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT && imageInfo.imageType == VK_IMAGE_TYPE_3D)
+	//if (m_imageInfo.flags == VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT && m_imageInfo.imageType == VK_IMAGE_TYPE_3D)
 	//	viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 
 	// Create image view:
 	VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-	viewInfo.image = image;
+	viewInfo.image = m_image;
 	viewInfo.viewType = viewType;
-	viewInfo.format = imageInfo.format;
-	viewInfo.subresourceRange = subresourceRange;
-	VKA(vkCreateImageView(context->LogicalDevice(), &viewInfo, nullptr, &imageView));
+	viewInfo.format = m_imageInfo.format;
+	viewInfo.subresourceRange = m_subresourceRange;
+	VKA(vkCreateImageView(m_pContext->GetVkDevice(), &viewInfo, nullptr, &m_imageView));
 }
-
-// Destructor:
 VmaImage::~VmaImage()
 {
-	vmaDestroyImage(context->Allocator(), image, allocation);
-	vkDestroyImageView(context->LogicalDevice(), imageView, nullptr);
+	vmaDestroyImage(m_pContext->GetVmaAllocator(), m_image, m_allocation);
+	vkDestroyImageView(m_pContext->GetVkDevice(), m_imageView, nullptr);
 }
 
 
 
+// Public methods:
 // Getters:
-uint64_t VmaImage::GetWidth()
+const VkImage& VmaImage::GetVkImage() const
 {
-	return imageInfo.extent.width;
+	return m_image;
 }
-uint64_t VmaImage::GetHeight()
+const VmaAllocation& VmaImage::GetVmaAllocation() const
 {
-	return imageInfo.extent.height;
+	return m_allocation;
 }
-uint64_t VmaImage::GetDepth()
+const VkImageView& VmaImage::GetVkImageView() const
 {
-	return imageInfo.extent.depth;
+	return m_imageView;
 }
-VkExtent3D VmaImage::GetExtent()
+const VkImageCreateInfo& VmaImage::GetVkImageCreateInfo() const
 {
-	return imageInfo.extent;
+	return m_imageInfo;
 }
-VkImageSubresourceRange VmaImage::GetSubresourceRange()
+const VmaAllocationCreateInfo& VmaImage::GetVmaAllocationCreateInfo() const
 {
-	return subresourceRange;
+	return m_allocationInfo;
 }
-VkImageSubresourceLayers VmaImage::GetSubresourceLayers()
+const VkImageSubresourceRange& VmaImage::GetSubresourceRange() const
+{
+	return m_subresourceRange;
+}
+const VkImageLayout& VmaImage::GetLayout() const
+{
+	return m_layout;
+}
+uint64_t VmaImage::GetWidth() const
+{
+	return m_imageInfo.extent.width;
+}
+uint64_t VmaImage::GetHeight() const
+{
+	return m_imageInfo.extent.height;
+}
+uint64_t VmaImage::GetDepth() const
+{
+	return m_imageInfo.extent.depth;
+}
+const VkExtent3D& VmaImage::GetExtent() const
+{
+	return m_imageInfo.extent;
+}
+VkImageSubresourceLayers VmaImage::GetSubresourceLayers() const
 {
 	VkImageSubresourceLayers subresourceLayers = {};
-	subresourceLayers.aspectMask = subresourceRange.aspectMask;
-	subresourceLayers.mipLevel = subresourceRange.baseMipLevel;
-	subresourceLayers.baseArrayLayer = subresourceRange.baseArrayLayer;
-	subresourceLayers.layerCount = subresourceRange.layerCount;
+	subresourceLayers.aspectMask = m_subresourceRange.aspectMask;
+	subresourceLayers.mipLevel = m_subresourceRange.baseMipLevel;
+	subresourceLayers.baseArrayLayer = m_subresourceRange.baseArrayLayer;
+	subresourceLayers.layerCount = m_subresourceRange.layerCount;
 	return subresourceLayers;
 }
-VkImageLayout VmaImage::GetLayout()
-{
-	return layout;
-}
 
 
 
-// Advanced methods:
-void VmaImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subresourceRange)
+// Transitions etc.:
+void VmaImage::TransitionLayoutUndefinedToTransfer()
 {
 	// Transition is executed on transferQueue.
-	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetTransferQueue());
 
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
@@ -99,145 +118,145 @@ void VmaImage::TransitionLayoutUndefinedToTransfer(VkImageSubresourceRange subre
 	barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.image = image;
-	barrier.subresourceRange = subresourceRange;
+	barrier.image = m_image;
+	barrier.subresourceRange = m_subresourceRange;
 
 	VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// Immediatly
 	VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;		// Before transfer stage
 	vkCmdPipelineBarrier(
-		command.buffer,
+		command.GetVkCommandBuffer(),
 		srcStage, dstStage,
 		0,	// dependency flags, typically 0
 		0, nullptr,				// memory barriers
 		0, nullptr,	// buffer memory barriers
 		1, &barrier);	// image memory barriers
 
-	VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
+	VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_pContext->pLogicalDevice->GetTransferQueue());
 
-	layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	m_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 }
-void VmaImage::HandoffTransferToGraphicsQueue(VkImageSubresourceRange subresourceRange)
+void VmaImage::HandoffTransferToGraphicsQueue()
 {
 	// On transition ownership of the image is transferred from the transferQueue to the graphicsQueue.
 	{
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetTransferQueue());
 
 		VkImageMemoryBarrier releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		releaseBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		releaseBarrier.dstAccessMask = VK_ACCESS_NONE;
 		releaseBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		releaseBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		releaseBarrier.srcQueueFamilyIndex = context->logicalDevice->transferQueue.familyIndex;
-		releaseBarrier.dstQueueFamilyIndex = context->logicalDevice->graphicsQueue.familyIndex;
-		releaseBarrier.image = image;
-		releaseBarrier.subresourceRange = subresourceRange;
+		releaseBarrier.srcQueueFamilyIndex = m_pContext->pLogicalDevice->GetTransferQueue().familyIndex;
+		releaseBarrier.dstQueueFamilyIndex = m_pContext->pLogicalDevice->GetGraphicsQueue().familyIndex;
+		releaseBarrier.image = m_image;
+		releaseBarrier.subresourceRange = m_subresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;			// after transfer stage
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;	// wait for all transfers to finish
 		vkCmdPipelineBarrier(
-			command.buffer,
+			command.GetVkCommandBuffer(),
 			srcStage, dstStage,
 			0,	// dependency flags, typically 0
 			0, nullptr,						// memory barriers
 			0, nullptr,			// buffer memory barriers
 			1, &releaseBarrier);	// image memory barriers
 
-		VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
+		VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_pContext->pLogicalDevice->GetTransferQueue());
 
-		layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		m_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	}
 	{
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
 
 		VkImageMemoryBarrier acquireBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		acquireBarrier.srcAccessMask = VK_ACCESS_NONE;
 		acquireBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;	// rdy for mipmapping
 		acquireBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		acquireBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		acquireBarrier.srcQueueFamilyIndex = context->logicalDevice->transferQueue.familyIndex;
-		acquireBarrier.dstQueueFamilyIndex = context->logicalDevice->graphicsQueue.familyIndex;
-		acquireBarrier.image = image;
-		acquireBarrier.subresourceRange = subresourceRange;
+		acquireBarrier.srcQueueFamilyIndex = m_pContext->pLogicalDevice->GetTransferQueue().familyIndex;
+		acquireBarrier.dstQueueFamilyIndex = m_pContext->pLogicalDevice->GetGraphicsQueue().familyIndex;
+		acquireBarrier.image = m_image;
+		acquireBarrier.subresourceRange = m_subresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// as early as possible
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;		// rdy for more transfer commands
 		vkCmdPipelineBarrier(
-			command.buffer,
+			command.GetVkCommandBuffer(),
 			srcStage, dstStage,
 			0,	// dependency flags, typically 0
 			0, nullptr,						// memory barriers
 			0, nullptr,			// buffer memory barriers
 			1, &acquireBarrier);	// image memory barriers
 
-		VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+		VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_pContext->pLogicalDevice->GetGraphicsQueue());
 
-		layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		m_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	}
 }
-void VmaImage::TransitionLayoutTransferToShaderRead(VkImageSubresourceRange subresourceRange)
+void VmaImage::TransitionLayoutTransferToShaderRead()
 {
 	// On transition ownership of the image is transferred from the transferQueue to the graphicsQueue.
 	{
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->transferQueue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetTransferQueue());
 
 		VkImageMemoryBarrier releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		releaseBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		releaseBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		releaseBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		releaseBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		releaseBarrier.srcQueueFamilyIndex = context->logicalDevice->transferQueue.familyIndex;
-		releaseBarrier.dstQueueFamilyIndex = context->logicalDevice->graphicsQueue.familyIndex;
-		releaseBarrier.image = image;
-		releaseBarrier.subresourceRange = subresourceRange;
+		releaseBarrier.srcQueueFamilyIndex = m_pContext->pLogicalDevice->GetTransferQueue().familyIndex;
+		releaseBarrier.dstQueueFamilyIndex = m_pContext->pLogicalDevice->GetGraphicsQueue().familyIndex;
+		releaseBarrier.image = m_image;
+		releaseBarrier.subresourceRange = m_subresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;			// after transfer stage
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;	// before final stage
 		vkCmdPipelineBarrier(
-			command.buffer,
+			command.GetVkCommandBuffer(),
 			srcStage, dstStage,
 			0,	// dependency flags, typically 0
 			0, nullptr,						// memory barriers
 			0, nullptr,			// buffer memory barriers
 			1, &releaseBarrier);	// image memory barriers
 
-		VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->transferQueue);
+		VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_pContext->pLogicalDevice->GetTransferQueue());
 
-		layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		m_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 	{
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
 
 		VkImageMemoryBarrier acquireBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		acquireBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		acquireBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		acquireBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		acquireBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		acquireBarrier.srcQueueFamilyIndex = context->logicalDevice->transferQueue.familyIndex;
-		acquireBarrier.dstQueueFamilyIndex = context->logicalDevice->graphicsQueue.familyIndex;
-		acquireBarrier.image = image;
-		acquireBarrier.subresourceRange = subresourceRange;
+		acquireBarrier.srcQueueFamilyIndex = m_pContext->pLogicalDevice->GetTransferQueue().familyIndex;
+		acquireBarrier.dstQueueFamilyIndex = m_pContext->pLogicalDevice->GetGraphicsQueue().familyIndex;
+		acquireBarrier.image = m_image;
+		acquireBarrier.subresourceRange = m_subresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;			// after transfer stage
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;	// before fragment shader stage
 		vkCmdPipelineBarrier(
-			command.buffer,
+			command.GetVkCommandBuffer(),
 			srcStage, dstStage,
 			0,	// dependency flags, typically 0
 			0, nullptr,						// memory barriers
 			0, nullptr,			// buffer memory barriers
 			1, &acquireBarrier);	// image memory barriers
 
-		VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+		VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_pContext->pLogicalDevice->GetGraphicsQueue());
 
-		layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		m_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 }
 void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 {
-	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
 
 	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-	barrier.image = image;
+	barrier.image = m_image;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -256,7 +275,7 @@ void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-		vkCmdPipelineBarrier(command.buffer,
+		vkCmdPipelineBarrier(command.GetVkCommandBuffer(),
 			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr,				// memory barriers
 			0, nullptr,	// buffer memory barrier
@@ -276,9 +295,9 @@ void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 		blit.dstSubresource.baseArrayLayer = 0;
 		blit.dstSubresource.layerCount = 1;
 
-		vkCmdBlitImage(command.buffer,
-			image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		vkCmdBlitImage(command.GetVkCommandBuffer(),
+			m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1, &blit,
 			VK_FILTER_LINEAR);
 
@@ -287,7 +306,7 @@ void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-		vkCmdPipelineBarrier(command.buffer,
+		vkCmdPipelineBarrier(command.GetVkCommandBuffer(),
 			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
 			0, nullptr,
 			0, nullptr,
@@ -304,23 +323,23 @@ void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 	barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-	vkCmdPipelineBarrier(command.buffer,
+	vkCmdPipelineBarrier(command.GetVkCommandBuffer(),
 		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
 		0, nullptr,
 		0, nullptr,
 		1, &barrier);
 
-	VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+	VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_pContext->pLogicalDevice->GetGraphicsQueue());
 
-	layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	m_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
 
 
 // Static methods:
-void VmaImage::CopyImageToImage(VulkanContext* context, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue)
+void VmaImage::CopyImageToImage(VulkanContext* m_pContext, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue)
 {
-	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, queue);;
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, queue);;
 
 	// Queue copy command:
 	VkImageCopy copyRegion = {};
@@ -329,7 +348,7 @@ void VmaImage::CopyImageToImage(VulkanContext* context, VmaImage* srcImage, VmaI
 	copyRegion.dstSubresource = dstImage->GetSubresourceLayers();
 	copyRegion.dstOffset = { 0, 0, 0 };
 	copyRegion.extent = srcImage->GetExtent();
-	vkCmdCopyImage(command.buffer, srcImage->image, srcImage->GetLayout(), dstImage->image, dstImage->GetLayout(), 1, &copyRegion);
+	vkCmdCopyImage(command.GetVkCommandBuffer(), srcImage->GetVkImage(), srcImage->GetLayout(), dstImage->GetVkImage(), dstImage->GetLayout(), 1, &copyRegion);
 
-	VulkanCommand::EndSingleTimeCommand(context, command, queue);
+	VulkanCommand::EndSingleTimeCommand(m_pContext, command, queue);
 }

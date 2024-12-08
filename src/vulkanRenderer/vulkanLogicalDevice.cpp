@@ -1,34 +1,38 @@
 #include "vulkanLogicalDevice.h"
+#include "vulkanInstance.h"
 #include "vulkanMacros.h"
+#include "vulkanPhysicalDevice.h"
+#include "vulkanSurface.h"
+#include <set>
 
 
 
-// Constructor:
-VulkanLogicalDevice::VulkanLogicalDevice(VulkanPhysicalDevice* physicalDevice, VulkanSurface* surface, std::vector<const char*> deviceExtensions)
+// Constructor/Destructor:
+VulkanLogicalDevice::VulkanLogicalDevice(VulkanPhysicalDevice* pPhysicalDevice, VulkanSurface* pSurface, std::vector<const char*> deviceExtensions)
 {
 	// Choose which features to enable:
 	VkPhysicalDeviceFeatures enabledFearutes = {};
 	enabledFearutes.samplerAnisotropy = VK_TRUE;
-	enabledFearutes.depthClamp = physicalDevice->supportsDepthClamp ? VK_TRUE : VK_FALSE;
+	enabledFearutes.depthClamp = pPhysicalDevice->SupportsDepthClamp();
 
 	// Find queue family indices:
-	graphicsQueue.familyIndex = FindGraphicsAndComputeQueueFamilyIndex(physicalDevice->device);
-	presentQueue.familyIndex = FindPresentQueueFamilyIndex(physicalDevice->device, surface->surface);
-	computeQueue.familyIndex = FindPureComputeQueueFamilyIndex(physicalDevice->device);
-	transferQueue.familyIndex = FindPureTransferQueueFamilyIndex(physicalDevice->device);
+	m_graphicsQueue.familyIndex = FindGraphicsAndComputeQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice());
+	m_presentQueue.familyIndex = FindPresentQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice(), pSurface->GetVkSurfaceKHR());
+	m_computeQueue.familyIndex = FindPureComputeQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice());
+	m_transferQueue.familyIndex = FindPureTransferQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice());
 
 	// Fallbacks:
-	if (presentQueue.familyIndex == -1)
-		presentQueue.familyIndex = graphicsQueue.familyIndex;
-	if (computeQueue.familyIndex == -1)
-		computeQueue.familyIndex = graphicsQueue.familyIndex;
-	if (transferQueue.familyIndex == -1)
-		transferQueue.familyIndex = graphicsQueue.familyIndex;
+	if (m_presentQueue.familyIndex == -1)
+		m_presentQueue.familyIndex = m_graphicsQueue.familyIndex;
+	if (m_computeQueue.familyIndex == -1)
+		m_computeQueue.familyIndex = m_graphicsQueue.familyIndex;
+	if (m_transferQueue.familyIndex == -1)
+		m_transferQueue.familyIndex = m_graphicsQueue.familyIndex;
 
 	// Vector of queue create infos:
 	float queuePriority = 1.0f;
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-	std::set<uint32_t> uniqueQueueFamilies = { graphicsQueue.familyIndex, presentQueue.familyIndex, computeQueue.familyIndex, transferQueue.familyIndex };
+	std::set<uint32_t> uniqueQueueFamilies = { m_graphicsQueue.familyIndex, m_presentQueue.familyIndex, m_computeQueue.familyIndex, m_transferQueue.familyIndex };
 	for (uint32_t queueFamily : uniqueQueueFamilies) {
 		VkDeviceQueueCreateInfo queueCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
 		queueCreateInfo.queueFamilyIndex = queueFamily;
@@ -44,33 +48,53 @@ VulkanLogicalDevice::VulkanLogicalDevice(VulkanPhysicalDevice* physicalDevice, V
 	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 	deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 	deviceCreateInfo.pEnabledFeatures = &enabledFearutes;
-	VKA(vkCreateDevice(physicalDevice->device, &deviceCreateInfo, nullptr, &device));
+	VKA(vkCreateDevice(pPhysicalDevice->GetVkPhysicalDevice(), &deviceCreateInfo, nullptr, &m_device));
 
 	// Aquire queues:
-	vkGetDeviceQueue(device, graphicsQueue.familyIndex, 0, &graphicsQueue.queue);
-	vkGetDeviceQueue(device, presentQueue.familyIndex, 0, &presentQueue.queue);
-	vkGetDeviceQueue(device, computeQueue.familyIndex, 0, &computeQueue.queue);
-	vkGetDeviceQueue(device, transferQueue.familyIndex, 0, &transferQueue.queue);
+	vkGetDeviceQueue(m_device, m_graphicsQueue.familyIndex, 0, &m_graphicsQueue.queue);
+	vkGetDeviceQueue(m_device, m_presentQueue.familyIndex, 0, &m_presentQueue.queue);
+	vkGetDeviceQueue(m_device, m_computeQueue.familyIndex, 0, &m_computeQueue.queue);
+	vkGetDeviceQueue(m_device, m_transferQueue.familyIndex, 0, &m_transferQueue.queue);
 }
-
-
-
-// Destructor:
 VulkanLogicalDevice::~VulkanLogicalDevice()
 {
-	VKA(vkDeviceWaitIdle(device));
-	vkDestroyDevice(device, nullptr);
+	VKA(vkDeviceWaitIdle(m_device));
+	vkDestroyDevice(m_device, nullptr);
 }
 
 
 
-// Private:
-uint32_t VulkanLogicalDevice::FindGraphicsAndComputeQueueFamilyIndex(VkPhysicalDevice physicalDevice)
+// Public methods:
+const VkDevice& VulkanLogicalDevice::GetVkDevice() const
+{
+	return m_device;
+}
+const VulkanQueue& VulkanLogicalDevice::GetGraphicsQueue() const
+{
+	return m_graphicsQueue;
+}
+const VulkanQueue& VulkanLogicalDevice::GetPresentQueue() const
+{
+	return m_presentQueue;
+}
+const VulkanQueue& VulkanLogicalDevice::GetComputeQueue() const
+{
+	return m_computeQueue;
+}
+const VulkanQueue& VulkanLogicalDevice::GetTransferQueue() const
+{
+	return m_transferQueue;
+}
+
+
+
+// Private methods:
+uint32_t VulkanLogicalDevice::FindGraphicsAndComputeQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice) const
 {
 	uint32_t queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, nullptr);
 	std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, queueFamilyProperties.data());
 
 	for (uint32_t i = 0; i < queueFamilyCount; i++)
 	{
@@ -84,18 +108,18 @@ uint32_t VulkanLogicalDevice::FindGraphicsAndComputeQueueFamilyIndex(VkPhysicalD
 	return -1;
 }
 
-uint32_t VulkanLogicalDevice::FindPresentQueueFamilyIndex(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+uint32_t VulkanLogicalDevice::FindPresentQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR) const
 {
 	uint32_t queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, nullptr);
 	std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, queueFamilyProperties.data());
 
 	uint32_t presentQueueFamilyIndex = -1;
 	for (uint32_t i = 0; i < queueFamilyCount; i++)
 	{
 		VkBool32 presentSupport = false;
-		VKA(vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport));
+		VKA(vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, i, vkSurfaceKHR, &presentSupport));
 		if (queueFamilyProperties[i].queueCount > 0 && presentSupport)
 			return i;
 	}
@@ -103,12 +127,12 @@ uint32_t VulkanLogicalDevice::FindPresentQueueFamilyIndex(VkPhysicalDevice physi
 	return -1;
 }
 
-uint32_t VulkanLogicalDevice::FindPureComputeQueueFamilyIndex(VkPhysicalDevice physicalDevice)
+uint32_t VulkanLogicalDevice::FindPureComputeQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice) const
 {
 	uint32_t queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, nullptr);
 	std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, queueFamilyProperties.data());
 
 	for (uint32_t i = 0; i < queueFamilyCount; i++)
 	{
@@ -122,7 +146,7 @@ uint32_t VulkanLogicalDevice::FindPureComputeQueueFamilyIndex(VkPhysicalDevice p
 	return -1;
 }
 
-uint32_t VulkanLogicalDevice::FindPureTransferQueueFamilyIndex(VkPhysicalDevice physicalDevice)
+uint32_t VulkanLogicalDevice::FindPureTransferQueueFamilyIndex(VkPhysicalDevice physicalDevice) const
 {
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);

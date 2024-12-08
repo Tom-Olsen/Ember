@@ -28,7 +28,7 @@ void ShadingRenderPass::CreateRenderPass()
 	std::array<VkAttachmentDescription, 3> attachments{};
 	{
 		// Multisampled color attachment description:
-		attachments[0].format = context->surface->surfaceFormat.format;
+		attachments[0].format = context->pSurface->GetVkSurfaceFormatKHR().format;
 		attachments[0].samples = context->msaaSamples;							// multisampling count
 		attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering
 		attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// no need to store multisampls after render
@@ -48,7 +48,7 @@ void ShadingRenderPass::CreateRenderPass()
 		attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		// Color resolve attachment description: (resolve multisampled fragments)
-		attachments[2].format = context->surface->surfaceFormat.format;
+		attachments[2].format = context->pSurface->GetVkSurfaceFormatKHR().format;
 		attachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
 		attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -97,7 +97,7 @@ void ShadingRenderPass::CreateRenderPass()
 	renderPassInfo.dependencyCount = 1;
 	renderPassInfo.pDependencies = &dependency;
 
-	VKA(vkCreateRenderPass(context->LogicalDevice(), &renderPassInfo, nullptr, &renderPass));
+	VKA(vkCreateRenderPass(context->GetVkDevice(), &renderPassInfo, nullptr, &renderPass));
 }
 void ShadingRenderPass::CreateMsaaImage()
 {
@@ -110,12 +110,12 @@ void ShadingRenderPass::CreateMsaaImage()
 
 	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent.width = context->surface->CurrentExtent().width;
-	imageInfo.extent.height = context->surface->CurrentExtent().height;
+	imageInfo.extent.width = context->pSurface->GetCurrentExtent().width;
+	imageInfo.extent.height = context->pSurface->GetCurrentExtent().height;
 	imageInfo.extent.depth = 1;
 	imageInfo.mipLevels = 1;
 	imageInfo.arrayLayers = 1;
-	imageInfo.format = context->surface->surfaceFormat.format;
+	imageInfo.format = context->pSurface->GetVkSurfaceFormatKHR().format;
 	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -142,8 +142,8 @@ void ShadingRenderPass::CreateDepthImage()
 
 	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent.width = context->surface->CurrentExtent().width;
-	imageInfo.extent.height = context->surface->CurrentExtent().height;
+	imageInfo.extent.width = context->pSurface->GetCurrentExtent().width;
+	imageInfo.extent.height = context->pSurface->GetCurrentExtent().height;
 	imageInfo.extent.depth = 1;
 	imageInfo.mipLevels = 1;
 	imageInfo.arrayLayers = 1;
@@ -164,7 +164,7 @@ void ShadingRenderPass::CreateDepthImage()
 	depthImage = std::make_unique<VmaImage>(context, imageInfo, allocationInfo, subresourceRange);
 
 	// Transition depth image layout:
-	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->logicalDevice->graphicsQueue);
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->pLogicalDevice->GetGraphicsQueue());
 	{
 		VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
@@ -173,34 +173,34 @@ void ShadingRenderPass::CreateDepthImage()
 		barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.image = depthImage->image;
+		barrier.image = depthImage->GetVkImage();
 		barrier.subresourceRange = subresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// Immediatly
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;		// early fragment test stage
 		vkCmdPipelineBarrier(
-			command.buffer,
+			command.GetVkCommandBuffer(),
 			srcStage, dstStage,
 			0,	// dependency flags, typically 0
 			0, nullptr,				// memory barriers
 			0, nullptr,	// buffer memory barriers
 			1, &barrier);	// image memory barriers
 	}
-	VulkanCommand::EndSingleTimeCommand(context, command, context->logicalDevice->graphicsQueue);
+	VulkanCommand::EndSingleTimeCommand(context, command, context->pLogicalDevice->GetGraphicsQueue());
 }
 void ShadingRenderPass::CreateFrameBuffers()
 {
-	size_t size = context->swapchain->images.size();
-	VkExtent2D extent = context->surface->CurrentExtent();
+	size_t size = context->pSwapchain->GetImages().size();
+	VkExtent2D extent = context->pSurface->GetCurrentExtent();
 	framebuffers.resize(size);
 	std::array<VkImageView, 3> attachments;
 
 	for (size_t i = 0; i < size; i++)
 	{
 		// order of attachments is important!
-		attachments[0] = msaaImage->imageView;
-		attachments[1] = depthImage->imageView;
-		attachments[2] = context->swapchain->imageViews[i];
+		attachments[0] = msaaImage->GetVkImageView();
+		attachments[1] = depthImage->GetVkImageView();
+		attachments[2] = context->pSwapchain->GetImageViews()[i];
 
 		VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 		framebufferInfo.renderPass = renderPass;
@@ -209,6 +209,6 @@ void ShadingRenderPass::CreateFrameBuffers()
 		framebufferInfo.width = extent.width;
 		framebufferInfo.height = extent.height;
 		framebufferInfo.layers = 1;
-		vkCreateFramebuffer(context->LogicalDevice(), &framebufferInfo, nullptr, &framebuffers[i]);
+		vkCreateFramebuffer(context->GetVkDevice(), &framebufferInfo, nullptr, &framebuffers[i]);
 	}
 }

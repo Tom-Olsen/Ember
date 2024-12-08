@@ -5,8 +5,8 @@
 #include "vulkanContext.h"
 #include "shadingPipeline.h"
 #include "shadowPipeline.h"
-#include "vulkanUniformBuffer.h"
-#include "vulkanSampler.h"
+#include "uniformBuffer.h"
+#include "sampler.h"
 #include "texture2d.h"
 #include "material.h"
 
@@ -33,10 +33,10 @@ public: // Members:
 private: // Members:
 	Material* material;
 	VulkanContext* context;
-	std::vector<std::unordered_map<std::string, ResourceBinding<VulkanUniformBuffer>>> uniformBufferMaps;
-	std::vector<std::unordered_map<std::string, ResourceBinding<VulkanSampler*>>> samplerMaps;
+	std::vector<std::unordered_map<std::string, ResourceBinding<UniformBuffer>>> uniformBufferMaps;
+	std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>> samplerMaps;
 	std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>> texture2dMaps;
-	std::unordered_map<std::string, VulkanSampler*> samplerStagingMap;
+	std::unordered_map<std::string, Sampler*> samplerStagingMap;
 	std::unordered_map<std::string, Texture2d*> texture2dStagingMap;
 	std::vector<std::unordered_map<std::string, bool>> updateUniformBuffer;
 
@@ -56,7 +56,7 @@ public: // Methods:
 	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
 	template<typename T>
 	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
-	void SetSampler(const std::string& name, VulkanSampler* sampler);
+	void SetSampler(const std::string& name, Sampler* sampler);
 	void SetTexture2d(const std::string& name, Texture2d* texture2d);
 
 	// Debugging:
@@ -65,15 +65,15 @@ public: // Methods:
 private: // Methods:
 	// Initializers:
 	void InitUniformBufferResourceBinding(std::string name, uint32_t binding, uint32_t frameIndex);
-	void InitSamplerResourceBinding(std::string name, uint32_t binding, VulkanSampler* sampler, uint32_t frameIndex);
+	void InitSamplerResourceBinding(std::string name, uint32_t binding, Sampler* sampler, uint32_t frameIndex);
 	void InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d, uint32_t frameIndex);
 	void InitStagingMaps();
 	void InitDescriptorSets();
 
 	// Descriptor set management:
 	void CreateDescriptorSets();
-	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<VulkanUniformBuffer> samplerResourceBinding);
-	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<VulkanSampler*> samplerResourceBinding);
+	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<UniformBuffer> samplerResourceBinding);
+	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Sampler*> samplerResourceBinding);
 	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Texture2d*> texture2dResourceBinding);
 };
 

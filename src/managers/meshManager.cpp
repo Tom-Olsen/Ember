@@ -76,13 +76,13 @@ void MeshManager::Init(VulkanContext* vulkanContext)
 }
 void MeshManager::UnloadAllMeshes()
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	for (auto& pair : meshes)
 		pair.second->Unload();
 }
 void MeshManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->LogicalDevice()));
+	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
 	meshes.clear();
 }
 

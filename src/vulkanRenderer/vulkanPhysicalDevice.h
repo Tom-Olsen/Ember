@@ -1,33 +1,37 @@
 #ifndef __INCLUDE_GUARD_vulkanPhysicalDevice_h__
 #define __INCLUDE_GUARD_vulkanPhysicalDevice_h__
 #include <vulkan/vulkan.h>
-#include <vector>
-#include "vulkanInstance.h"
 
 
 
-/// <summary>
-/// VulkanPhysicalDevice wrapper.
-/// </summary>
+class VulkanInstance;
+
+
+
 class VulkanPhysicalDevice
 {
-public: // Members:
-	VkPhysicalDevice device;
-	VkSampleCountFlagBits maxMsaaSamples;
-	VkBool32 supportsDepthClamp = false;
-	VkBool32 supportsDepthBias = false;
-	VkBool32 supportsMultiViewport = false;
-
+private: // Members:
+	VkPhysicalDevice m_physicalDevice;
+	VkSampleCountFlagBits m_maxMsaaSamples;
+	VkBool32 m_supportsDepthClamp = false;
+	VkBool32 m_supportsDepthBias = false;
+	VkBool32 m_supportsMultiViewport = false;
 
 public: // Methods:
-	VulkanPhysicalDevice(VulkanInstance* instance);
+	VulkanPhysicalDevice(VulkanInstance* pInstance);
 	~VulkanPhysicalDevice();
+
+	const VkPhysicalDevice& GetVkPhysicalDevice() const;
+	VkSampleCountFlagBits GetMaxMsaaSamples() const;
+	VkBool32 SupportsDepthClamp() const;
+	VkBool32 SupportsDepthBias() const;
+	VkBool32 SupportsMultiViewport() const;
 
 private: // Methods:
 	int DeviceScore(VkPhysicalDevice device);
-	VkBool32 HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device);
-	VkBool32 HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface);
-	VkSampleCountFlagBits MaxUsableMsaaSampleCount();
+	VkBool32 HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const;
+	VkBool32 HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const;
+	VkSampleCountFlagBits MaxUsableMsaaSampleCount() const;
 };
 
 

@@ -1,93 +1,103 @@
 #include "vulkanSurface.h"
+#include "sdlWindow.h"
+#include "vulkanInstance.h"
 #include "vulkanMacros.h"
+#include "vulkanPhysicalDevice.h"
 #include <SDL3/SDL_vulkan.h>
-#include <stdexcept>
 
 
 
-// Constructor:
-VulkanSurface::VulkanSurface(VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice, SdlWindow* window)
+// Constructor/Destructor:
+VulkanSurface::VulkanSurface(VulkanInstance* pInstance, VulkanPhysicalDevice* pPhysicalDevice, SdlWindow* pWindow)
 {
-	this->instance = instance;
-	this->physicalDevice = physicalDevice;
-	this->window = window;
+	m_pInstance = pInstance;
+	m_pPhysicalDevice = pPhysicalDevice;
+	m_pWindow = pWindow;
 
 	// Surface:
-	SDL_Vulkan_CreateSurface(window->window, instance->instance, nullptr, &surface);
+	SDL_Vulkan_CreateSurface(m_pWindow->GetSDL_Window(), m_pInstance->GetVkInstance(), nullptr, &m_surface);
 
 	// Available surfaceFormats:
 	uint32_t formatCount;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice->device, surface, &formatCount, nullptr);
-	availableSurfaceFormats.resize(formatCount);
-	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice->device, surface, &formatCount, availableSurfaceFormats.data());
-	if (availableSurfaceFormats.empty())
+	vkGetPhysicalDeviceSurfaceFormatsKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &formatCount, nullptr);
+	m_availableSurfaceFormats.resize(formatCount);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &formatCount, m_availableSurfaceFormats.data());
+	if (m_availableSurfaceFormats.empty())
 		throw std::runtime_error("No surface formats found!");
 
 	// Available presentModes:
 	uint32_t presentModeCount;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice->device, surface, &presentModeCount, nullptr);
-	availablePresentModes.resize(presentModeCount);
-	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice->device, surface, &presentModeCount, availablePresentModes.data());
-	if (availablePresentModes.empty())
+	vkGetPhysicalDeviceSurfacePresentModesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &presentModeCount, nullptr);
+	m_availablePresentModes.resize(presentModeCount);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &presentModeCount, m_availablePresentModes.data());
+	if (m_availablePresentModes.empty())
 		throw std::runtime_error("No present modes found!");
 	
 	// Pick surfaceFormat and presentMode:
-	surfaceFormat = PickSurfaceFormat();
-	presentMode = PickPresentMode();
+	m_surfaceFormat = PickSurfaceFormat();
+	m_presentMode = PickPresentMode();
 }
-
-
-
-// Destructor:
 VulkanSurface::~VulkanSurface()
 {
-	vkDestroySurfaceKHR(instance->instance, surface, nullptr);
+	vkDestroySurfaceKHR(m_pInstance->GetVkInstance(), m_surface, nullptr);
 }
 
 
 
-// Public:
-VkExtent2D VulkanSurface::CurrentExtent()
+// Public methods:
+const VkSurfaceKHR& VulkanSurface::GetVkSurfaceKHR() const
 {
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
-	return surfaceCapabilities.currentExtent;
+	return m_surface;
 }
-VkExtent2D VulkanSurface::MinImageExtent()
+const VkSurfaceFormatKHR& VulkanSurface::GetVkSurfaceFormatKHR() const
 {
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
-	return surfaceCapabilities.minImageExtent;
+	return m_surfaceFormat;
 }
-VkExtent2D VulkanSurface::MaxImageExtent()
+const VkPresentModeKHR& VulkanSurface::GetVkPresentModeKHR() const
 {
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
-	return surfaceCapabilities.maxImageExtent;
+	return m_presentMode;
 }
-uint32_t VulkanSurface::MinImageCount()
+VkExtent2D VulkanSurface::GetCurrentExtent()
 {
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
-	return surfaceCapabilities.minImageCount;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &m_surfaceCapabilities);
+	return m_surfaceCapabilities.currentExtent;
 }
-uint32_t VulkanSurface::MaxImageCount()
+VkExtent2D VulkanSurface::GetMinImageExtent()
 {
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice->device, surface, &surfaceCapabilities);
-	return surfaceCapabilities.maxImageCount;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &m_surfaceCapabilities);
+	return m_surfaceCapabilities.minImageExtent;
+}
+VkExtent2D VulkanSurface::GetMaxImageExtent()
+{
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &m_surfaceCapabilities);
+	return m_surfaceCapabilities.maxImageExtent;
+}
+uint32_t VulkanSurface::GetMinImageCount()
+{
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &m_surfaceCapabilities);
+	return m_surfaceCapabilities.minImageCount;
+}
+uint32_t VulkanSurface::GetMaxImageCount()
+{
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &m_surfaceCapabilities);
+	return m_surfaceCapabilities.maxImageCount;
 }
 
 
 
 // Private:
-VkSurfaceFormatKHR VulkanSurface::PickSurfaceFormat()
+VkSurfaceFormatKHR VulkanSurface::PickSurfaceFormat() const
 {
-	for (const auto& format : availableSurfaceFormats)
+	for (const auto& format : m_availableSurfaceFormats)
 		if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 			return format;
 
 	// First is always the best if desired not available.
-	return availableSurfaceFormats[0];
+	return m_availableSurfaceFormats[0];
 }
-VkPresentModeKHR VulkanSurface::PickPresentMode()
+VkPresentModeKHR VulkanSurface::PickPresentMode() const
 {
-	for (const VkPresentModeKHR& mode : availablePresentModes)
+	for (const VkPresentModeKHR& mode : m_availablePresentModes)
 		if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
 			return mode;
 
