@@ -1,15 +1,14 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_float3x3_h__
 #define __INCLUDE_GUARD_float3x3_h__
-#include "uint3.h"
-#include "float3.h"
 #include "mathf.h"
 #include <string>
 
 
 
-// Forward declarations:
+struct Float3;
 struct Float4x4;
+struct Index2;
+struct Uint3;
 
 
 

@@ -1,12 +1,6 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_mathf_h__
 #define __INCLUDE_GUARD_mathf_h__
 #include <stdint.h>
-
-
-
-// Constants:
-
 
 
 

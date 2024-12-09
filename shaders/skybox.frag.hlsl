@@ -1,5 +1,5 @@
 SamplerState colorSampler : register(s10);
-TextureCube colorTexture : register(t28);
+TextureCube colorMap : register(t28);
 #include "shadingPushConstant.hlsli"
 
 
@@ -26,7 +26,7 @@ FragmentOutput main(FragmentInput input)
     float3 direction = normalize(input.localPos.xyz);
     
     FragmentOutput output;
-    output.color = colorTexture.Sample(colorSampler, direction);
+    output.color = colorMap.Sample(colorSampler, direction);
     output.depth = 1.0f;
     return output;
 }

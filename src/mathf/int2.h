@@ -1,4 +1,3 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_int2_h__
 #define __INCLUDE_GUARD_int2_h__
 #include <string>

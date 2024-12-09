@@ -1,7 +1,7 @@
 SamplerState colorSampler : register(s10);
 SamplerComparisonState shadowSampler : register(s11);
 Texture2DArray<float> shadowMaps : register(t20);
-Texture2D colorTexture : register(t21);
+Texture2D colorMap : register(t21);
 Texture2D roughnessMap : register(t22);
 Texture2D normalMap : register(t23);
 #include "shadowMapping.hlsli"
@@ -46,13 +46,14 @@ float4 main(FragmentInput input) : SV_TARGET
     // Shading:
     float3 tangentNormal = normalize(normalMap.Sample(colorSampler, uv).xyz * 2.0 - 1.0);   
     float3 worldNormal = normalize(mul(TBN, tangentNormal));
-    float4 color = diffuseColor * colorTexture.Sample(colorSampler, uv);
+    float4 color = diffuseColor * colorMap.Sample(colorSampler, uv);
     float finalRoughness = roughness * roughnessMap.Sample(colorSampler, uv).r;
     
     // Lighting:
     float ambient = 0.1f;
     float3 finalColor = ambient * color.xyz;
     finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, worldNormal, color.xyz, finalRoughness, reflectivity, metallic, pc.dLightsCount, pc.sLightsCount, pc.pLightsCount, directionalLightData, spotLightData, pointLightData, shadowMaps, shadowSampler);
+    //finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, normal, color.xyz, finalRoughness, reflectivity, metallic, pc.dLightsCount, pc.sLightsCount, pc.pLightsCount, directionalLightData, spotLightData, pointLightData, shadowMaps, shadowSampler);
     
     //return float4(tangentNormal.xyz, 1.0f);
     //return float4(normal.xyz, 1.0f);

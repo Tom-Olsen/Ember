@@ -1,11 +1,9 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_float4_h__
 #define __INCLUDE_GUARD_float4_h__
 #include <string>
 
 
 
-// Forward declarations:
 struct Float2;
 struct Float3;
 

@@ -18,6 +18,7 @@ public: // Methods:
 	inline static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_coreLogger; }
 
 private: // Members:
+	static bool s_initialized;
 	static std::shared_ptr<spdlog::logger> s_coreLogger;
 };
 

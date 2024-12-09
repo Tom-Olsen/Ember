@@ -1,4 +1,5 @@
 #include "int3.h"
+#include "int2.h"
 #include <stdexcept>
 #include <sstream>
 

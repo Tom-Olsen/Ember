@@ -1,8 +1,10 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_int3_h__
 #define __INCLUDE_GUARD_int3_h__
-#include "int2.h"
 #include <string>
+
+
+
+struct Int2;
 
 
 

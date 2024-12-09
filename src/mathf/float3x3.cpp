@@ -1,4 +1,7 @@
 #include "float3x3.h"
+#include "float3.h"
+#include "float4x4.h"
+#include "uint3.h"
 #include <stdexcept>
 #include <sstream>
 
