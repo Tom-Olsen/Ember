@@ -1,6 +1,8 @@
 #include "meshManager.h"
 #include "vulkanMacros.h"
 #include "meshGenerator.h"
+#include "vulkanContext.h"
+#include "vmaBuffer.h"
 
 
 
@@ -21,68 +23,68 @@ void MeshManager::Init(VulkanContext* vulkanContext)
 	context = vulkanContext;
 
 	Mesh* unitQuad = MeshGenerator::UnitQuad();
-	AddMesh(unitQuad->name, unitQuad);
+	AddMesh(unitQuad->GetName(), unitQuad);
 
 	Mesh* unitCube = MeshGenerator::UnitCube();
-	AddMesh(unitCube->name, unitCube);
+	AddMesh(unitCube->GetName(), unitCube);
 
 	Mesh* halfCube = MeshGenerator::HalfCube();
-	AddMesh(halfCube->name, halfCube);
+	AddMesh(halfCube->GetName(), halfCube);
 
 	Mesh* cubeSphere = MeshGenerator::CubeSphere(0.5f, 3, "cubeSphere");
-	AddMesh(cubeSphere->name, cubeSphere);
+	AddMesh(cubeSphere->GetName(), cubeSphere);
 
 	Mesh* disk = MeshGenerator::Disk(0.5f, 16, "disk");
-	AddMesh(disk->name, disk);
+	AddMesh(disk->GetName(), disk);
 
 	Mesh* arcFlatUv = MeshGenerator::ArcFlatUv(0.3f, 0.7f, 135.0f, 16, "arcFlatUv");
-	AddMesh(arcFlatUv->name, arcFlatUv);
+	AddMesh(arcFlatUv->GetName(), arcFlatUv);
 
 	Mesh* arcCurvedUv = MeshGenerator::ArcCurvedUv(0.3f, 0.7f, 135.0f, 16, "arcCurvedUv");
-	AddMesh(arcCurvedUv->name, arcCurvedUv);
+	AddMesh(arcCurvedUv->GetName(), arcCurvedUv);
 
 	Mesh* coneSmooth = MeshGenerator::ConeSmooth(0.5f, 1.0f, 16, "coneSmooth");
-	AddMesh(coneSmooth->name, coneSmooth);
+	AddMesh(coneSmooth->GetName(), coneSmooth);
 
 	Mesh* coneEdgy = MeshGenerator::ConeEdgy(0.5f, 1.0f, 16, "coneEdgy");
-	AddMesh(coneEdgy->name, coneEdgy);
+	AddMesh(coneEdgy->GetName(), coneEdgy);
 
 	Mesh* zylinderMantleSmooth = MeshGenerator::ZylinderMantleSmooth(0.5f, 1.0f, 16, "zylinderMantleSmooth");
-	AddMesh(zylinderMantleSmooth->name, zylinderMantleSmooth);
+	AddMesh(zylinderMantleSmooth->GetName(), zylinderMantleSmooth);
 
 	Mesh* zylinderMantleEdgy = MeshGenerator::ZylinderMantleEdgy(0.5f, 1.0f, 16, "zylinderMantleEdgy");
-	AddMesh(zylinderMantleEdgy->name, zylinderMantleEdgy);
+	AddMesh(zylinderMantleEdgy->GetName(), zylinderMantleEdgy);
 
 	Mesh* zylinderSmooth = MeshGenerator::ZylinderSmooth(0.5f, 1.0f, 16, "zylinderSmooth");
-	AddMesh(zylinderSmooth->name, zylinderSmooth);
+	AddMesh(zylinderSmooth->GetName(), zylinderSmooth);
 
 	Mesh* zylinderEdgy = MeshGenerator::ZylinderEdgy(0.5f, 1.0f, 16, "zylinderEdgy");
-	AddMesh(zylinderEdgy->name, zylinderEdgy);
+	AddMesh(zylinderEdgy->GetName(), zylinderEdgy);
 	
 	Mesh* arrowSmooth = MeshGenerator::ArrowSmooth(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowSmooth");
-	AddMesh(arrowSmooth->name, arrowSmooth);
+	AddMesh(arrowSmooth->GetName(), arrowSmooth);
 
 	Mesh* arrowEdgy = MeshGenerator::ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowEdgy");
-	AddMesh(arrowEdgy->name, arrowEdgy);
+	AddMesh(arrowEdgy->GetName(), arrowEdgy);
 
 	Mesh* threeLeg = MeshGenerator::ThreeLeg();
-	AddMesh(threeLeg->name, threeLeg);
+	AddMesh(threeLeg->GetName(), threeLeg);
 
 	Mesh* grid20x20 = MeshGenerator::Grid(20, 20, "grid20x20");
-	AddMesh(grid20x20->name, grid20x20);
+	AddMesh(grid20x20->GetName(), grid20x20);
 
 	Mesh* grid100x100 = MeshGenerator::Grid(100, 100, "grid100x100");
-	AddMesh(grid100x100->name, grid100x100);
+	AddMesh(grid100x100->GetName(), grid100x100);
 }
 void MeshManager::UnloadAllMeshes()
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	for (auto& pair : meshes)
 		pair.second->Unload();
 }
 void MeshManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	meshes.clear();
 }
 

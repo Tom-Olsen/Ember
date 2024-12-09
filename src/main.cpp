@@ -20,6 +20,11 @@
 // - add geometry shader stage => wireframe rendering
 // - gameobject parent system (GameObject € GameObject => transform hierarchy)
 // - GameObject::Start/OnDestroy/OnCreate/OnEnable/OnDisable etc. methods
+// - in macros.h reduce MAX_D_LIGHTS, MAX_S_LIGHTS, MAX_P_LIGHTS to a single MAX_SHADOW_MAPS
+//   and make shadowmap indexing more dynamic to work with e.g. only point lights or only spot lights.
+// - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
+// - mesh->Sclae(a,b,c) needs to scale normals and tangents correctly
+// - in mesh.GetOffset and GetBuffers dont reset the arrays
 
 // TODO long term:
 // - change image loading library, stb_image sucks.

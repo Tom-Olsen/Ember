@@ -108,8 +108,8 @@ std::vector<MeshRenderer*>* Graphics::GetSortedMeshRenderers()
 		const Material* materialB = b ? b->GetMaterial() : nullptr;
 
 		// Default high value for nullptr:
-		uint32_t renderQueueA = materialA ? static_cast<uint32_t>(materialA->renderQueue) : UINT32_MAX; 
-		uint32_t renderQueueB = materialB ? static_cast<uint32_t>(materialB->renderQueue) : UINT32_MAX;
+		uint32_t renderQueueA = materialA ? static_cast<uint32_t>(materialA->GetRenderQueue()) : UINT32_MAX; 
+		uint32_t renderQueueB = materialB ? static_cast<uint32_t>(materialB->GetRenderQueue()) : UINT32_MAX;
 
 		return renderQueueA < renderQueueB;
 	});

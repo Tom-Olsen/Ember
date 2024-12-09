@@ -4,24 +4,42 @@
 
 
 
-// Constructor:
-Sampler::Sampler(VulkanContext* context, const std::string& name)
+// Constructor/Destructors:
+Sampler::Sampler(VulkanContext* pContext, const std::string& name)
 {
-	this->context = context;
-	this->name = name;
+	m_pContext = pContext;
+	m_name = name;
 }
-
-
-
-// Destructors:
 Sampler::~Sampler()
 {
-	vkDestroySampler(context->GetVkDevice(), sampler, nullptr);
+	vkDestroySampler(m_pContext->GetVkDevice(), m_sampler, nullptr);
 }
-Sampler* Sampler::ColorSampler(VulkanContext* context, const std::string& name)
+
+
+
+// Public methods:
+VkSampler& Sampler::GetVkSampler()
 {
-	Sampler* sampler = new Sampler(context, name);
-	VkPhysicalDeviceProperties properties = sampler->GetDeviceProperties();
+	return m_sampler;
+}
+const std::string& Sampler::GetName() const
+{
+	return m_name;
+}
+VkPhysicalDeviceProperties Sampler::GetVkPhysicalDeviceProperties() const
+{
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties(m_pContext->GetVkPhysicalDevice(), &properties);
+	return properties;
+}
+
+
+
+// Static specialised constructors:
+Sampler* Sampler::ColorSampler(VulkanContext* pContext, const std::string& name)
+{
+	Sampler* pSampler = new Sampler(pContext, name);
+	VkPhysicalDeviceProperties properties = pSampler->GetVkPhysicalDeviceProperties();
 
 	VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 	samplerInfo.magFilter = VK_FILTER_LINEAR;							// magnified texels filter
@@ -39,14 +57,14 @@ Sampler* Sampler::ColorSampler(VulkanContext* context, const std::string& name)
 	samplerInfo.mipLodBias = 0.0f;										// level of detail bias for mipmap level
 	samplerInfo.minLod = 0.0f;											// minimum level of detail to pick
 	samplerInfo.maxLod = VK_LOD_CLAMP_NONE;								// maximum level of detail to pick. No clamping = maximum mip level supported by the image
-	VKA(vkCreateSampler(context->GetVkDevice(), &samplerInfo, nullptr, &sampler->sampler));
+	VKA(vkCreateSampler(pContext->GetVkDevice(), &samplerInfo, nullptr, &pSampler->GetVkSampler()));
 
-	return sampler;
+	return pSampler;
 }
-Sampler* Sampler::ShadowSampler(VulkanContext* context, const std::string& name)
+Sampler* Sampler::ShadowSampler(VulkanContext* pContext, const std::string& name)
 {
-	Sampler* sampler = new Sampler(context, name);
-	VkPhysicalDeviceProperties properties = sampler->GetDeviceProperties();
+	Sampler* pSampler = new Sampler(pContext, name);
+	VkPhysicalDeviceProperties properties = pSampler->GetVkPhysicalDeviceProperties();
 
 	VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 	samplerInfo.magFilter = VK_FILTER_LINEAR;							// magnified texels filter
@@ -64,17 +82,7 @@ Sampler* Sampler::ShadowSampler(VulkanContext* context, const std::string& name)
 	samplerInfo.mipLodBias = 0.0f;										// level of detail bias for mipmap level
 	samplerInfo.minLod = 0.0f;											// minimum level of detail to pick
 	samplerInfo.maxLod = VK_LOD_CLAMP_NONE;								// maximum level of detail to pick. No clamping = maximum mip level supported by the image
-	VKA(vkCreateSampler(context->GetVkDevice(), &samplerInfo, nullptr, &sampler->sampler));
+	VKA(vkCreateSampler(pContext->GetVkDevice(), &samplerInfo, nullptr, &pSampler->GetVkSampler()));
 
-	return sampler;
-}
-
-
-
-// Public methods:
-VkPhysicalDeviceProperties Sampler::GetDeviceProperties()
-{
-	VkPhysicalDeviceProperties properties{};
-	vkGetPhysicalDeviceProperties(context->GetVkPhysicalDevice(), &properties);
-	return properties;
+	return pSampler;
 }

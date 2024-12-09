@@ -1,5 +1,6 @@
 #include "scene.h"
 #include "logger.h"
+#include "material.h"
 
 
 
@@ -192,14 +193,14 @@ void Scene::PrintMeshRenderers() const
 {
 	LOG_TRACE("MeshRenderers in scene:");
 	for (const auto& [objName, meshRenderer] : meshRenderers)
-		LOG_TRACE("gamObject: {}, material: {}", objName, meshRenderer->GetMaterial()->name);
+		LOG_TRACE("gamObject: {}, material: {}", objName, meshRenderer->GetMaterial()->GetName());
 }
 void Scene::PrintSortedMeshRenderers()
 {
 	SortMeshRenderers();
 	LOG_TRACE("Sorted MeshRenderers in scene:");
 	for (const auto& meshRenderer : sortedMeshRenderers)
-		LOG_TRACE("gamObject: {}, material: {}", meshRenderer->gameObject->name, meshRenderer->GetMaterial()->name);
+		LOG_TRACE("gamObject: {}, material: {}", meshRenderer->gameObject->name, meshRenderer->GetMaterial()->GetName());
 }
 void Scene::PrintLights() const
 {
@@ -228,8 +229,8 @@ void Scene::SortMeshRenderers()
 	{
 		std::sort(sortedMeshRenderers.begin(), sortedMeshRenderers.end(), [](MeshRenderer* a, MeshRenderer* b)
 		{
-			uint32_t renderQueueA = static_cast<uint32_t>(a->GetMaterial()->renderQueue);
-			uint32_t renderQueueB = static_cast<uint32_t>(b->GetMaterial()->renderQueue);
+			uint32_t renderQueueA = static_cast<uint32_t>(a->GetMaterial()->GetRenderQueue());
+			uint32_t renderQueueB = static_cast<uint32_t>(b->GetMaterial()->GetRenderQueue());
 			return renderQueueA < renderQueueB;
 		});
 		meshRenderersSorted = true;

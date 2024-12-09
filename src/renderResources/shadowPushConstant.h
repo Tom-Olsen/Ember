@@ -1,4 +1,3 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_shadowPushConstant_h__
 #define __INCLUDE_GUARD_shadowPushConstant_h__
 #include "mathf.h"
@@ -12,11 +11,11 @@
 /// </summary>
 struct ShadowPushConstant
 {
-private:
+public: // Members:
 	alignas(4) int shadowMapIndex;
 	alignas(16) Float4x4 localToClipMatrix;
 
-public:
+public: // Methods:
 	ShadowPushConstant(int shadowMapIndex, const Float4x4& localToClipMatrix);
 	std::string ToString();
 };

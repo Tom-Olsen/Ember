@@ -31,7 +31,7 @@ void RenderPassManager::Init(VulkanContext* context)
 }
 void RenderPassManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	renderPasses.clear();
 }
 void RenderPassManager::RecreateRenderPasses()
@@ -63,7 +63,7 @@ RenderPass* RenderPassManager::GetRenderPass(const std::string& name)
 }
 void RenderPassManager::DeleteRenderPass(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	renderPasses.erase(name);
 }
 

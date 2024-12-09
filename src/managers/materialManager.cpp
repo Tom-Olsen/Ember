@@ -1,4 +1,5 @@
 #include "materialManager.h"
+#include "vulkanContext.h"
 #include "vulkanMacros.h"
 
 
@@ -42,7 +43,7 @@ void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
 }
 void MaterialManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	materials.clear();
 }
 
@@ -52,9 +53,9 @@ void MaterialManager::Clear()
 void MaterialManager::AddMaterial(Material* material)
 {
 	// If material already contained in MaterialManager, do nothing.
-	if (materials.emplace(material->name, std::unique_ptr<Material>(material)).second == false)
+	if (materials.emplace(material->GetName(), std::unique_ptr<Material>(material)).second == false)
 	{
-		LOG_WARN("Material with the name: {} already exists in MaterialManager!", material->name);
+		LOG_WARN("Material with the name: {} already exists in MaterialManager!", material->GetName());
 		return;
 	}
 }
@@ -68,7 +69,7 @@ Material* MaterialManager::GetMaterial(const std::string& name)
 }
 void MaterialManager::DeleteMaterial(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	materials.erase(name);
 }
 

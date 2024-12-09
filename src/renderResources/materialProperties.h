@@ -1,14 +1,18 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_materialProperties_h__
 #define __INCLUDE_GUARD_materialProperties_h__
+#include <memory>
 #include <string>
-#include "vulkanContext.h"
-#include "shadingPipeline.h"
-#include "shadowPipeline.h"
-#include "uniformBuffer.h"
-#include "sampler.h"
-#include "texture2d.h"
-#include "material.h"
+#include <unordered_map>
+#include <vector>
+#include <vulkan/vulkan.h>
+
+
+
+class Material;
+class Sampler;
+class Texture2d;
+class UniformBuffer;
+struct VulkanContext;
 
 
 
@@ -22,32 +26,32 @@ struct ResourceBinding
 
 
 /// <summary>
-/// Each MaterialProperties instance is customized for a specific material.
+/// Each MaterialProperties instance is customized for a specific Material.
 /// MaterialProperties construction is expensive, do not create them in an update loop.
+/// MaterialProperties own UniformBuffer pointers, Sampler and Texture2d pointers are owned associated Managers.
 /// </summary>
 class MaterialProperties
 {
-public: // Members:
-	std::vector<VkDescriptorSet> descriptorSets;
-
 private: // Members:
-	Material* material;
-	VulkanContext* context;
-	std::vector<std::unordered_map<std::string, ResourceBinding<UniformBuffer>>> uniformBufferMaps;
-	std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>> samplerMaps;
-	std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>> texture2dMaps;
-	std::unordered_map<std::string, Sampler*> samplerStagingMap;
-	std::unordered_map<std::string, Texture2d*> texture2dStagingMap;
-	std::vector<std::unordered_map<std::string, bool>> updateUniformBuffer;
+	Material* m_pMaterial;
+	VulkanContext* m_pContext;
+	std::vector<VkDescriptorSet> m_descriptorSets;
+	std::vector<std::unordered_map<std::string, ResourceBinding<std::shared_ptr<UniformBuffer>>>> m_uniformBufferMaps;
+	std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>> m_samplerMaps;
+	std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>> m_texture2dMaps;
+	std::unordered_map<std::string, Sampler*> m_samplerStagingMap;
+	std::unordered_map<std::string, Texture2d*> m_texture2dStagingMap;
+	std::vector<std::unordered_map<std::string, bool>> m_updateUniformBuffer;
 
 public: // Methods:
 	// Constructors/Destructor:
-	MaterialProperties(Material* material);
+	MaterialProperties(Material* pMaterial);
 	~MaterialProperties();
 
 	void UpdateShaderData();
+	const std::vector<VkDescriptorSet>& GetDescriptorSets() const;
 
-	// Setters:
+	// Uniform Buffer Setters:
 	template<typename T>
 	void SetValue(const std::string& blockName, const std::string& memberName, const T& value);
 	template<typename T>
@@ -56,8 +60,8 @@ public: // Methods:
 	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
 	template<typename T>
 	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
-	void SetSampler(const std::string& name, Sampler* sampler);
-	void SetTexture2d(const std::string& name, Texture2d* texture2d);
+	void SetSampler(const std::string& name, Sampler* pSampler);
+	void SetTexture2d(const std::string& name, Texture2d* pTexture2d);
 
 	// Debugging:
 	void PrintMaps() const;
@@ -65,14 +69,14 @@ public: // Methods:
 private: // Methods:
 	// Initializers:
 	void InitUniformBufferResourceBinding(std::string name, uint32_t binding, uint32_t frameIndex);
-	void InitSamplerResourceBinding(std::string name, uint32_t binding, Sampler* sampler, uint32_t frameIndex);
-	void InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* texture2d, uint32_t frameIndex);
+	void InitSamplerResourceBinding(std::string name, uint32_t binding, Sampler* pSampler, uint32_t frameIndex);
+	void InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* pTexture2d, uint32_t frameIndex);
 	void InitStagingMaps();
 	void InitDescriptorSets();
 
-	// Descriptor set management:
+	// Descriptor Set management:
 	void CreateDescriptorSets();
-	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<UniformBuffer> samplerResourceBinding);
+	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<std::shared_ptr<UniformBuffer>> samplerResourceBinding);
 	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Sampler*> samplerResourceBinding);
 	void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Texture2d*> texture2dResourceBinding);
 };

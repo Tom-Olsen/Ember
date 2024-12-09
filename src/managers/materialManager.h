@@ -9,6 +9,10 @@
 
 
 
+struct VulkanContext;
+
+
+
 /// <summary>
 /// Purely static class that takes care of lifetime of all Material objects.
 /// </summary>

@@ -1,6 +1,5 @@
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include "logger.h"
 
 
 
@@ -45,7 +44,7 @@ VulkanContext::VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaa
 // Destructor:
 VulkanContext::~VulkanContext()
 {
-	VKA(vkDeviceWaitIdle(pLogicalDevice->GetVkDevice()));
+	WaitDeviceIdle();
 }
 
 
@@ -102,4 +101,8 @@ void VulkanContext::UpdateFrameIndex()
 void VulkanContext::ResetFrameIndex()
 {
 	frameIndex = 0;
+}
+void VulkanContext::WaitDeviceIdle()
+{
+	VKA(vkDeviceWaitIdle(pLogicalDevice->GetVkDevice()));
 }

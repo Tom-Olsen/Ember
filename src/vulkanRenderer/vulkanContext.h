@@ -65,6 +65,7 @@ public: // Methods:
 	// Frame logic:
 	void UpdateFrameIndex();
 	void ResetFrameIndex();
+	void WaitDeviceIdle();
 };
 
 

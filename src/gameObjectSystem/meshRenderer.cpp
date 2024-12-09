@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "gameObject.h"
 #include "materialManager.h"
+#include "pipeline.h"
 #include "samplerManager.h"
 #include "textureManager.h"
 #include "renderPassManager.h"
@@ -118,31 +119,31 @@ Material* MeshRenderer::GetMaterial()
 {
 	return material;
 }
-VkDescriptorSet* MeshRenderer::GetShadingDescriptorSets(uint32_t frameIndex)
+const VkDescriptorSet* const MeshRenderer::GetShadingDescriptorSets(uint32_t frameIndex) const
 {
-	return &materialProperties->descriptorSets[frameIndex];
+	return &materialProperties->GetDescriptorSets()[frameIndex];
 }
-VkPipeline& MeshRenderer::GetShadingPipeline()
+const VkPipeline& MeshRenderer::GetShadingPipeline() const
 {
-	return material->pipeline->pipeline;
+	return material->GetPipeline()->pipeline;
 }
-VkPipelineLayout& MeshRenderer::GetShadingPipelineLayout()
+const VkPipelineLayout& MeshRenderer::GetShadingPipelineLayout() const
 {
-	return material->pipeline->pipelineLayout;
+	return material->GetPipeline()->pipelineLayout;
 }
 
 // Shadow render pass getters:
-VkDescriptorSet* MeshRenderer::GetShadowDescriptorSets(uint32_t frameIndex)
+const VkDescriptorSet* const MeshRenderer::GetShadowDescriptorSets(uint32_t frameIndex)
 {
-	return &shadowMaterialProperties->descriptorSets[frameIndex];
+	return &shadowMaterialProperties->GetDescriptorSets()[frameIndex];
 }
-VkPipeline& MeshRenderer::GetShadowPipeline()
+const VkPipeline& MeshRenderer::GetShadowPipeline()
 {
-	return shadowMaterial->pipeline->pipeline;
+	return shadowMaterial->GetPipeline()->pipeline;
 }
-VkPipelineLayout& MeshRenderer::GetShadowPipelineLayout()
+const VkPipelineLayout& MeshRenderer::GetShadowPipelineLayout()
 {
-	return shadowMaterial->pipeline->pipelineLayout;
+	return shadowMaterial->GetPipeline()->pipelineLayout;
 }
 
 

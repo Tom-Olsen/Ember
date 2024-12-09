@@ -1,4 +1,3 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_shadingPushConstant_h__
 #define __INCLUDE_GUARD_shadingPushConstant_h__
 #include "mathf.h"
@@ -12,7 +11,7 @@
 /// </summary>
 struct ShadingPushConstant
 {
-private:
+public:
 	alignas(4) float time;
 	alignas(4) float deltaTime;
 	alignas(4) int dLightsCount;

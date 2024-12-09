@@ -2,20 +2,18 @@
 #include "vulkanContext.h"
 #include "vmaBuffer.h"
 #include "spirvReflect.h"
-#include "vulkanMacros.h"
-#include "gameobject.h"
 
 
 
-// Constructor:
-UniformBuffer::UniformBuffer(VulkanContext* context, UniformBufferBlock* uniformBufferBlock)
+// Constructor/Destructor:
+UniformBuffer::UniformBuffer(VulkanContext* pContext, UniformBufferBlock* pUniformBufferBlock)
 {
-	this->context = context;
-	this->uniformBufferBlock = uniformBufferBlock;
+	m_pContext = pContext;
+	m_pUniformBufferBlock = pUniformBufferBlock;
 
 	// Create buffer:
 	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	bufferInfo.size = uniformBufferBlock->size;
+	bufferInfo.size = m_pUniformBufferBlock->size;
 	bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -25,40 +23,39 @@ UniformBuffer::UniformBuffer(VulkanContext* context, UniformBufferBlock* uniform
 	allocInfo.requiredFlags = 0; 
 	allocInfo.preferredFlags = 0;
 
-	this->buffer = std::make_shared<VmaBuffer>(context, bufferInfo, allocInfo);
+	m_buffer = std::make_shared<VmaBuffer>(m_pContext, bufferInfo, allocInfo);
 
 	// Get deviceData pointer:
 	VmaAllocationInfo info;
-	vmaGetAllocationInfo(context->GetVmaAllocator(), buffer->GetVmaAllocation(), &info);
-	deviceData = info.pMappedData;
+	vmaGetAllocationInfo(m_pContext->GetVmaAllocator(), m_buffer->GetVmaAllocation(), &info);
+	m_pDeviceData = info.pMappedData;
 
 	// Allocate host data:
-	hostData.resize(uniformBufferBlock->size);
+	m_hostData.resize(m_pUniformBufferBlock->size);
 }
-
-
-
-// Destructor:
 UniformBuffer::~UniformBuffer()
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	m_pContext->WaitDeviceIdle();
 }
 
 
 
-// Public:
+// Public methods:
 void UniformBuffer::UpdateBuffer()
 {
-	memcpy(deviceData, hostData.data(), hostData.size());
+	memcpy(m_pDeviceData, m_hostData.data(), m_hostData.size());
 }
 
 
 
-// Getters.
-uint32_t UniformBuffer::GetSize()
+// Getters:
+uint32_t UniformBuffer::GetSize() const
 {
-	return uniformBufferBlock->size;
-
+	return m_pUniformBufferBlock->size;
+}
+const std::shared_ptr<VmaBuffer>& UniformBuffer::GetVmaBuffer() const
+{
+	return m_buffer;
 }
 
 
@@ -74,9 +71,9 @@ bool UniformBuffer::SetValue(const std::string& memberName, const T& value)
 		return SetValue<int>(memberName, intValue);
 	}
 
-	UniformBufferMember* member = uniformBufferBlock->GetMember(memberName);
-	if (member != nullptr)
-		return CheckAndUpdateData(value, member->offset, member->size);
+	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(memberName);
+	if (pMember != nullptr)
+		return CheckAndUpdateData(value, pMember->offset, pMember->size);
 
 	// value not found:
 	return false;
@@ -91,12 +88,12 @@ bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, 
 		return SetValue<int>(arrayName, arrayIndex, intValue);
 	}
 
-	UniformBufferMember* member = uniformBufferBlock->GetMember(arrayName);
-	if (member != nullptr)
+	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+	if (pMember != nullptr)
 	{
-		UniformBufferMember* subMember = member->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
-		if (subMember != nullptr)
-			return CheckAndUpdateData(value, subMember->offset, subMember->size);
+		UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+		if (pSubMember != nullptr)
+			return CheckAndUpdateData(value, pSubMember->offset, pSubMember->size);
 	}
 
 	// value not found:
@@ -112,15 +109,15 @@ bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, 
 		return SetValue<int>(arrayName, arrayIndex, memberName, intValue);
 	}
 
-	UniformBufferMember* member = uniformBufferBlock->GetMember(arrayName);
-	if (member != nullptr)
+	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+	if (pMember != nullptr)
 	{
-		UniformBufferMember* subMember = member->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
-		if (subMember != nullptr)
+		UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+		if (pSubMember != nullptr)
 		{
-			UniformBufferMember* subSubMember = subMember->GetSubMember(memberName);
-			if (subSubMember != nullptr)
-				return CheckAndUpdateData(value, subSubMember->offset, subSubMember->size);
+			UniformBufferMember* pSubSubMember = pSubMember->GetSubMember(memberName);
+			if (pSubSubMember != nullptr)
+				return CheckAndUpdateData(value, pSubSubMember->offset, pSubSubMember->size);
 		}
 	}
 
@@ -137,18 +134,18 @@ bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, 
 		return SetValue<int>(arrayName, arrayIndex, subArrayName, subArrayIndex, intValue);
 	}
 
-	UniformBufferMember* member = uniformBufferBlock->GetMember(arrayName);
-	if (member != nullptr)
+	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+	if (pMember != nullptr)
 	{
-		UniformBufferMember* subMember = member->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
-		if (subMember != nullptr)
+		UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+		if (pSubMember != nullptr)
 		{
-			UniformBufferMember* subSubMember = subMember->GetSubMember(subArrayName);
-			if (subSubMember != nullptr)
+			UniformBufferMember* pSubSubMember = pSubMember->GetSubMember(subArrayName);
+			if (pSubSubMember != nullptr)
 			{
-				UniformBufferMember* subSubSubMember = subSubMember->GetSubMember(subArrayName + "[" + std::to_string(subArrayIndex) + "]");
-				if (subSubSubMember != nullptr)
-					return CheckAndUpdateData(value, subSubSubMember->offset, subSubSubMember->size);
+				UniformBufferMember* pSubSubSubMember = pSubSubMember->GetSubMember(subArrayName + "[" + std::to_string(subArrayIndex) + "]");
+				if (pSubSubSubMember != nullptr)
+					return CheckAndUpdateData(value, pSubSubSubMember->offset, pSubSubSubMember->size);
 			}
 		}
 	}
@@ -163,7 +160,7 @@ bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, 
 template<typename T>
 bool UniformBuffer::CheckAndUpdateData(const T& value, uint32_t offset, uint32_t size)
 {
-	const void* oldData = hostData.data() + offset;
+	const void* oldData = m_hostData.data() + offset;
 	const void* newData = &value;
 	size_t dataSize = std::min(static_cast<size_t>(size), (sizeof(value)));
 
@@ -172,7 +169,7 @@ bool UniformBuffer::CheckAndUpdateData(const T& value, uint32_t offset, uint32_t
 		return false;
 
 	// Update hostData:
-	std::memcpy(hostData.data() + offset, newData, dataSize);
+	std::memcpy(m_hostData.data() + offset, newData, dataSize);
 	return true;
 }
 

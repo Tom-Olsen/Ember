@@ -1,13 +1,18 @@
+// needs to be defined before including stb_image.h, but may not be in the header file!
 #include "textureCube.h"
-#include "logger.h"
+#include "stb_image.h"
+#include "vmaBuffer.h"
+#include "vmaImage.h"
+#include "vulkanContext.h"
+#include <array>
 
 
 
 // Constructor/Destructor:
-TextureCube::TextureCube(VulkanContext* context, const std::filesystem::path& folderPath, std::string name)
+TextureCube::TextureCube(VulkanContext* pContext, const std::filesystem::path& folderPath, const std::string& name)
 {
-	this->context = context;
-	this->name = name;
+	m_pContext = pContext;
+	m_name = name;
 
 	// Check if folder exists:
 	if(!std::filesystem::exists(folderPath) || !std::filesystem::is_directory(folderPath))
@@ -30,22 +35,22 @@ TextureCube::TextureCube(VulkanContext* context, const std::filesystem::path& fo
 	// Load all 6 faces into continous memory:
 	stbi_set_flip_vertically_on_load(false);
 	uint64_t bufferSize = 6 * targetChannels * width * height;
-	stbi_uc* facePixels = new stbi_uc[bufferSize];
+	stbi_uc* pFacePixels = new stbi_uc[bufferSize];
 	for (int i = 0; i < 6; i++)
 	{
-		stbi_uc* pixels = stbi_load(filePaths[i].string().c_str(), &width, &height, &channels, targetChannels);
-		if (!pixels)
+		stbi_uc* pPixels = stbi_load(filePaths[i].string().c_str(), &width, &height, &channels, targetChannels);
+		if (!pPixels)
 		{
-			delete[] facePixels;
-			stbi_image_free(pixels);
+			delete[] pFacePixels;
+			stbi_image_free(pPixels);
 			throw std::runtime_error("Failed to load cube texture face: " + filePaths[i].string());
 		}
-		memcpy(&facePixels[i * targetChannels * width * height], pixels, targetChannels * width * height);
-		stbi_image_free(pixels);
+		memcpy(&pFacePixels[i * targetChannels * width * height], pPixels, targetChannels * width * height);
+		stbi_image_free(pPixels);
 	}
 	
 	// Create staging buffer:
-	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(context, bufferSize, facePixels);
+	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(m_pContext, bufferSize, pFacePixels);
 	
 	// Define subresource range:
 	VkImageSubresourceRange subresourceRange;
@@ -57,7 +62,7 @@ TextureCube::TextureCube(VulkanContext* context, const std::filesystem::path& fo
 	
 	CreateImage(subresourceRange, width, height, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
 	TransitionImageLayout(subresourceRange, stagingBuffer);
-	delete[] facePixels;
+	delete[] pFacePixels;
 }
 TextureCube::~TextureCube()
 {

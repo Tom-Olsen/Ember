@@ -1,5 +1,6 @@
 #include "shadowRenderPass.h"
 #include "vulkanMacros.h"
+#include "vmaImage.h"
 #include "macros.h"
 #include <fstream>
 
@@ -109,7 +110,7 @@ void ShadowRenderPass::CreateFramebuffers()
 		VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 		framebufferInfo.renderPass = renderPass;
 		framebufferInfo.attachmentCount = 1;
-		framebufferInfo.pAttachments = &shadowMaps->image->GetVkImageView();
+		framebufferInfo.pAttachments = &shadowMaps->GetVmaImage()->GetVkImageView();
 		framebufferInfo.width = shadowMapWidth;
 		framebufferInfo.height = shadowMapHeight;
 		framebufferInfo.layers = layerCount;

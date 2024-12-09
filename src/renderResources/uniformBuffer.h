@@ -16,23 +16,22 @@ struct VulkanContext;
 
 class UniformBuffer
 {
-public: // Members:
-	std::shared_ptr<VmaBuffer> buffer;
-
 private: // Members:
-	VulkanContext* context;
-	void* deviceData;
-	std::vector<char> hostData;
-	UniformBufferBlock* uniformBufferBlock;
+	std::shared_ptr<VmaBuffer> m_buffer;
+	void* m_pDeviceData;
+	std::vector<char> m_hostData;
+	UniformBufferBlock* m_pUniformBufferBlock;
+	VulkanContext* m_pContext;
 
 public: // Methods:
-	UniformBuffer(VulkanContext* context, UniformBufferBlock* uniformBufferBlock);
+	UniformBuffer(VulkanContext* pContext, UniformBufferBlock* pUniformBufferBlock);
 	~UniformBuffer();
 
 	void UpdateBuffer();
 
 	// Getters:
-	uint32_t GetSize();
+	uint32_t GetSize() const;
+	const std::shared_ptr<VmaBuffer>& GetVmaBuffer() const;
 
 	// Setters:
 	template<typename T>

@@ -22,17 +22,17 @@ void SamplerManager::Init(VulkanContext* vulkanContext)
 	context = vulkanContext;
 
 	Sampler* colorSampler = Sampler::ColorSampler(context, "colorSampler");
-	AddSampler(colorSampler->name, colorSampler);
+	AddSampler(colorSampler->GetName(), colorSampler);
 
 	Sampler* shadowSampler = Sampler::ShadowSampler(context, "shadowSampler");
-	AddSampler(shadowSampler->name, shadowSampler);
+	AddSampler(shadowSampler->GetName(), shadowSampler);
 
 	Sampler* colorSampler2 = Sampler::ColorSampler(context, "colorSampler2");
-	AddSampler(colorSampler2->name, colorSampler2);
+	AddSampler(colorSampler2->GetName(), colorSampler2);
 }
 void SamplerManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	samplers.clear();
 }
 
@@ -58,7 +58,7 @@ Sampler* SamplerManager::GetSampler(const std::string& name)
 }
 void SamplerManager::DeleteSampler(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	samplers.erase(name);
 }
 

@@ -38,14 +38,14 @@ public: // Methods:
 
 	// Shading render pass getters:
 	Material* GetMaterial();
-	VkDescriptorSet* GetShadingDescriptorSets(uint32_t frameIndex);
-	VkPipeline& GetShadingPipeline();
-	VkPipelineLayout& GetShadingPipelineLayout();
+	const VkDescriptorSet* const GetShadingDescriptorSets(uint32_t frameIndex) const;
+	const VkPipeline& GetShadingPipeline() const;
+	const VkPipelineLayout& GetShadingPipelineLayout() const;
 
 	// Shadow render pass getters:
-	static VkDescriptorSet* GetShadowDescriptorSets(uint32_t frameIndex);
-	static VkPipeline& GetShadowPipeline();
-	static VkPipelineLayout& GetShadowPipelineLayout();
+	static const VkDescriptorSet* const GetShadowDescriptorSets(uint32_t frameIndex);
+	static const VkPipeline& GetShadowPipeline();
+	static const VkPipelineLayout& GetShadowPipelineLayout();
 
 	// Overrides:
 	std::string ToString() const override;

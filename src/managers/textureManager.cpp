@@ -1,5 +1,6 @@
 #include "textureManager.h"
 #include "vulkanMacros.h"
+#include "vulkanContext.h"
 #include <unordered_set>
 
 
@@ -45,7 +46,7 @@ void TextureManager::Init(VulkanContext* vulkanContext)
 }
 void TextureManager::Clear()
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	texture2ds.clear();
 	textureCubes.clear();
 }
@@ -56,18 +57,18 @@ void TextureManager::Clear()
 void TextureManager::AddTexture2d(Texture2d* texture)
 {
 	// If texture already contained in TextureManager, do nothing.
-	if (texture2ds.emplace(texture->name, std::unique_ptr<Texture2d>(texture)).second == false)
+	if (texture2ds.emplace(texture->GetName(), std::unique_ptr<Texture2d>(texture)).second == false)
 	{
-		LOG_WARN("Texture2d with the name: {} already exists in TextureManager!", texture->name);
+		LOG_WARN("Texture2d with the name: {} already exists in TextureManager!", texture->GetName());
 		return;
 	}
 }
 void TextureManager::AddTextureCube(TextureCube* texture)
 {
 	// If texture already contained in TextureManager, do nothing.
-	if (textureCubes.emplace(texture->name, std::unique_ptr<TextureCube>(texture)).second == false)
+	if (textureCubes.emplace(texture->GetName(), std::unique_ptr<TextureCube>(texture)).second == false)
 	{
-		LOG_WARN("TextureCube with the name: {} already exists in TextureManager!", texture->name);
+		LOG_WARN("TextureCube with the name: {} already exists in TextureManager!", texture->GetName());
 		return;
 	}
 }
@@ -89,12 +90,12 @@ TextureCube* TextureManager::GetTextureCube(const std::string& name)
 }
 void TextureManager::DeleteTexture2d(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	texture2ds.erase(name);
 }
 void TextureManager::DeleteTextureCube(const std::string& name)
 {
-	VKA(vkDeviceWaitIdle(context->GetVkDevice()));
+	context->WaitDeviceIdle();
 	textureCubes.erase(name);
 }
 

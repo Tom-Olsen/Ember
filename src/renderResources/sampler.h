@@ -11,23 +11,25 @@ struct VulkanContext;
 
 class Sampler
 {
-public: // Members:
-	VkSampler sampler;
-	std::string name;
-
 private: // Members:
-	VulkanContext* context;
-
-public: // Methods:
-	~Sampler();
-	VkPhysicalDeviceProperties GetDeviceProperties();
-
-	// Static specialised constructors:
-	static Sampler* ColorSampler(VulkanContext* context, const std::string& name);
-	static Sampler* ShadowSampler(VulkanContext* context, const std::string& name);
+	VkSampler m_sampler;
+	std::string m_name;
+	VulkanContext* m_pContext;
 
 private: // Methods:
-	Sampler(VulkanContext* context, const std::string& name);
+	Sampler(VulkanContext* pContext, const std::string& name);
+public: // Methods:
+	~Sampler();
+
+	// Getters:
+	VkSampler& GetVkSampler();
+	const std::string& GetName() const;
+
+	VkPhysicalDeviceProperties GetVkPhysicalDeviceProperties() const;
+
+	// Static specialised constructors:
+	static Sampler* ColorSampler(VulkanContext* pContext, const std::string& name);
+	static Sampler* ShadowSampler(VulkanContext* pContext, const std::string& name);
 };
 
 
