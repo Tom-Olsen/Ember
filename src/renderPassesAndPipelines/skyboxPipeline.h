@@ -1,10 +1,12 @@
 #ifndef __INCLUDE_GUARD_skyboxPipeline_h__
 #define __INCLUDE_GUARD_skyboxPipeline_h__
-#include <string>
 #include "pipeline.h"
-#include "vulkanContext.h"
-#include "shadingRenderPass.h"
-#include "mathf.h"
+#include <vector>
+#include <vulkan/vulkan.h>
+
+
+
+struct VulkanContext;
 
 
 
@@ -14,7 +16,7 @@
 class SkyboxPipeline : public Pipeline
 {
 public: // Methods:
-	SkyboxPipeline(VulkanContext* context,
+	SkyboxPipeline(VulkanContext* pContext,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
 		const std::vector<VkDescriptorSetLayoutBinding>& bindings);

@@ -125,11 +125,11 @@ const VkDescriptorSet* const MeshRenderer::GetShadingDescriptorSets(uint32_t fra
 }
 const VkPipeline& MeshRenderer::GetShadingPipeline() const
 {
-	return material->GetPipeline()->pipeline;
+	return material->GetPipeline()->GetVkPipeline();
 }
 const VkPipelineLayout& MeshRenderer::GetShadingPipelineLayout() const
 {
-	return material->GetPipeline()->pipelineLayout;
+	return material->GetPipeline()->GetVkPipelineLayout();
 }
 
 // Shadow render pass getters:
@@ -139,11 +139,11 @@ const VkDescriptorSet* const MeshRenderer::GetShadowDescriptorSets(uint32_t fram
 }
 const VkPipeline& MeshRenderer::GetShadowPipeline()
 {
-	return shadowMaterial->GetPipeline()->pipeline;
+	return shadowMaterial->GetPipeline()->GetVkPipeline();
 }
 const VkPipelineLayout& MeshRenderer::GetShadowPipelineLayout()
 {
-	return shadowMaterial->GetPipeline()->pipelineLayout;
+	return shadowMaterial->GetPipeline()->GetVkPipelineLayout();
 }
 
 

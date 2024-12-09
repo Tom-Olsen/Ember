@@ -48,7 +48,7 @@ MaterialProperties::MaterialProperties(Material* pMaterial)
 	// Set default values:
 	ShadowRenderPass* pShadowRenderPass = dynamic_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"));
 	SetSampler("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
-	SetTexture2d("shadowMaps", pShadowRenderPass->shadowMaps.get());
+	SetTexture2d("shadowMaps", pShadowRenderPass->GetShadowMaps());
 	SetTexture2d("normalMap", TextureManager::GetTexture2d("blue"));
 	SetValue("SurfaceProperties", "scaleOffset", Float4(1.0f, 1.0f, 1.0f, 1.0f));
 	SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -173,7 +173,7 @@ void MaterialProperties::SetSampler(const std::string& name, Sampler* pSampler)
 
 
 // Texture2d setters:
-void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* pTexture2d)
+void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* const pTexture2d)
 {
 	// If texture with 'name' doesnt exist, skip:
 	auto it = m_texture2dStagingMap.find(name);
@@ -260,7 +260,7 @@ void MaterialProperties::InitDescriptorSets()
 // Descriptor Set management:
 void MaterialProperties::CreateDescriptorSets()
 {
-	std::vector<VkDescriptorSetLayout> layouts(m_pContext->framesInFlight, m_pMaterial->GetPipeline()->descriptorSetLayout);	// same layout for all frames
+	std::vector<VkDescriptorSetLayout> layouts(m_pContext->framesInFlight, m_pMaterial->GetPipeline()->GetVkDescriptorSetLayout());	// same layout for all frames
 
 	VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 	allocInfo.descriptorPool = m_pContext->GetVkDescriptorPool();

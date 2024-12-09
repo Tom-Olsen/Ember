@@ -1,22 +1,36 @@
-#include "vulkanMacros.h"
 #include "shadingRenderPass.h"
+#include "vmaImage.h"
 #include "vulkanCommand.h"
+#include "vulkanContext.h"
+#include "vulkanMacros.h"
 
 
 
-ShadingRenderPass::ShadingRenderPass(VulkanContext* context)
+// Constructor/Destructor:
+ShadingRenderPass::ShadingRenderPass(VulkanContext* pContext)
 {
-	this->context = context;
+	m_pContext = pContext;
 
 	CreateRenderPass();
 	CreateMsaaImage();
 	CreateDepthImage();
 	CreateFrameBuffers();
 }
-
 ShadingRenderPass::~ShadingRenderPass()
 {
 
+}
+
+
+
+// Public methods:
+const VmaImage* const ShadingRenderPass::GetMsaaVmaImage() const
+{
+	return m_msaaImage.get();
+}
+const VmaImage* const ShadingRenderPass::GetDepthVmaImage() const
+{
+	return m_depthImage.get();
 }
 
 
@@ -28,8 +42,8 @@ void ShadingRenderPass::CreateRenderPass()
 	std::array<VkAttachmentDescription, 3> attachments{};
 	{
 		// Multisampled color attachment description:
-		attachments[0].format = context->pSurface->GetVkSurfaceFormatKHR().format;
-		attachments[0].samples = context->msaaSamples;							// multisampling count
+		attachments[0].format = m_pContext->pSurface->GetVkSurfaceFormatKHR().format;
+		attachments[0].samples = m_pContext->msaaSamples;							// multisampling count
 		attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering
 		attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// no need to store multisampls after render
 		attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// do not use stencils
@@ -38,8 +52,8 @@ void ShadingRenderPass::CreateRenderPass()
 		attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;	// multisampled images are stored in color layout and not rdy for presenting yet
 
 		// Depth attachment description:
-		attachments[1].format = depthFormat;									// must be same as depth image format
-		attachments[1].samples = context->msaaSamples;							// msaaSamples
+		attachments[1].format = m_depthFormat;									// must be same as depth image format
+		attachments[1].samples = m_pContext->msaaSamples;							// msaaSamples
 		attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear depth buffer before rendering
 		attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// depth content is discarded after rendering
 		attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// stencil part not used yet
@@ -48,7 +62,7 @@ void ShadingRenderPass::CreateRenderPass()
 		attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		// Color resolve attachment description: (resolve multisampled fragments)
-		attachments[2].format = context->pSurface->GetVkSurfaceFormatKHR().format;
+		attachments[2].format = m_pContext->pSurface->GetVkSurfaceFormatKHR().format;
 		attachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
 		attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -97,7 +111,7 @@ void ShadingRenderPass::CreateRenderPass()
 	renderPassInfo.dependencyCount = 1;
 	renderPassInfo.pDependencies = &dependency;
 
-	VKA(vkCreateRenderPass(context->GetVkDevice(), &renderPassInfo, nullptr, &renderPass));
+	VKA(vkCreateRenderPass(m_pContext->GetVkDevice(), &renderPassInfo, nullptr, &m_renderPass));
 }
 void ShadingRenderPass::CreateMsaaImage()
 {
@@ -110,17 +124,17 @@ void ShadingRenderPass::CreateMsaaImage()
 
 	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent.width = context->pSurface->GetCurrentExtent().width;
-	imageInfo.extent.height = context->pSurface->GetCurrentExtent().height;
+	imageInfo.extent.width = m_pContext->pSurface->GetCurrentExtent().width;
+	imageInfo.extent.height = m_pContext->pSurface->GetCurrentExtent().height;
 	imageInfo.extent.depth = 1;
 	imageInfo.mipLevels = 1;
 	imageInfo.arrayLayers = 1;
-	imageInfo.format = context->pSurface->GetVkSurfaceFormatKHR().format;
+	imageInfo.format = m_pContext->pSurface->GetVkSurfaceFormatKHR().format;
 	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = context->msaaSamples;
+	imageInfo.samples = m_pContext->msaaSamples;
 	imageInfo.flags = 0;
 
 	VmaAllocationCreateInfo allocationInfo = {};
@@ -129,7 +143,7 @@ void ShadingRenderPass::CreateMsaaImage()
 	allocationInfo.requiredFlags = 0;
 	allocationInfo.preferredFlags = 0;
 
-	msaaImage = std::make_unique<VmaImage>(context, imageInfo, allocationInfo, subresourceRange);
+	m_msaaImage = std::make_unique<VmaImage>(m_pContext, imageInfo, allocationInfo, subresourceRange);
 }
 void ShadingRenderPass::CreateDepthImage()
 {
@@ -142,17 +156,17 @@ void ShadingRenderPass::CreateDepthImage()
 
 	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent.width = context->pSurface->GetCurrentExtent().width;
-	imageInfo.extent.height = context->pSurface->GetCurrentExtent().height;
+	imageInfo.extent.width = m_pContext->pSurface->GetCurrentExtent().width;
+	imageInfo.extent.height = m_pContext->pSurface->GetCurrentExtent().height;
 	imageInfo.extent.depth = 1;
 	imageInfo.mipLevels = 1;
 	imageInfo.arrayLayers = 1;
-	imageInfo.format = depthFormat;
+	imageInfo.format = m_depthFormat;
 	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = context->msaaSamples;
+	imageInfo.samples = m_pContext->msaaSamples;
 	imageInfo.flags = 0;
 
 	VmaAllocationCreateInfo allocationInfo = {};
@@ -161,10 +175,10 @@ void ShadingRenderPass::CreateDepthImage()
 	allocationInfo.requiredFlags = 0;
 	allocationInfo.preferredFlags = 0;
 
-	depthImage = std::make_unique<VmaImage>(context, imageInfo, allocationInfo, subresourceRange);
+	m_depthImage = std::make_unique<VmaImage>(m_pContext, imageInfo, allocationInfo, subresourceRange);
 
 	// Transition depth image layout:
-	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(context, context->pLogicalDevice->GetGraphicsQueue());
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
 	{
 		VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
@@ -173,7 +187,7 @@ void ShadingRenderPass::CreateDepthImage()
 		barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.image = depthImage->GetVkImage();
+		barrier.image = m_depthImage->GetVkImage();
 		barrier.subresourceRange = subresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// Immediatly
@@ -186,29 +200,29 @@ void ShadingRenderPass::CreateDepthImage()
 			0, nullptr,	// buffer memory barriers
 			1, &barrier);	// image memory barriers
 	}
-	VulkanCommand::EndSingleTimeCommand(context, command, context->pLogicalDevice->GetGraphicsQueue());
+	VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_pContext->pLogicalDevice->GetGraphicsQueue());
 }
 void ShadingRenderPass::CreateFrameBuffers()
 {
-	size_t size = context->pSwapchain->GetImages().size();
-	VkExtent2D extent = context->pSurface->GetCurrentExtent();
-	framebuffers.resize(size);
+	size_t size = m_pContext->pSwapchain->GetImages().size();
+	VkExtent2D extent = m_pContext->pSurface->GetCurrentExtent();
+	m_framebuffers.resize(size);
 	std::array<VkImageView, 3> attachments;
 
 	for (size_t i = 0; i < size; i++)
 	{
 		// order of attachments is important!
-		attachments[0] = msaaImage->GetVkImageView();
-		attachments[1] = depthImage->GetVkImageView();
-		attachments[2] = context->pSwapchain->GetImageViews()[i];
+		attachments[0] = m_msaaImage->GetVkImageView();
+		attachments[1] = m_depthImage->GetVkImageView();
+		attachments[2] = m_pContext->pSwapchain->GetImageViews()[i];
 
 		VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-		framebufferInfo.renderPass = renderPass;
+		framebufferInfo.renderPass = m_renderPass;
 		framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 		framebufferInfo.pAttachments = attachments.data();
 		framebufferInfo.width = extent.width;
 		framebufferInfo.height = extent.height;
 		framebufferInfo.layers = 1;
-		vkCreateFramebuffer(context->GetVkDevice(), &framebufferInfo, nullptr, &framebuffers[i]);
+		vkCreateFramebuffer(m_pContext->GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
 	}
 }

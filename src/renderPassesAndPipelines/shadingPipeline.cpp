@@ -1,20 +1,20 @@
 #include "shadingPipeline.h"
-#include "vulkanMacros.h"
 #include "mesh.h"
-#include "shadingPushConstant.h"
+#include "renderPass.h"
 #include "renderPassManager.h"
-#include <fstream>
-#include <vector>
+#include "shadingPushConstant.h"
+#include "vulkanContext.h"
+#include "vulkanMacros.h"
 
 
 
-// Constructor:
-ShadingPipeline::ShadingPipeline(VulkanContext* context,
+// Constructor/Destructor:
+ShadingPipeline::ShadingPipeline(VulkanContext* pContext,
     const std::vector<char>& vertexCode,
     const std::vector<char>& fragmentCode,
     const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
-    this->context = context;
+    m_pContext = pContext;
 
     // Create pipeline Layout:
     CreatePipelineLayout(bindings);
@@ -27,13 +27,9 @@ ShadingPipeline::ShadingPipeline(VulkanContext* context,
     CreatePipeline(vertexShaderModule, fragmentShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
-    vkDestroyShaderModule(context->GetVkDevice(), vertexShaderModule, nullptr);
-    vkDestroyShaderModule(context->GetVkDevice(), fragmentShaderModule, nullptr);
+    vkDestroyShaderModule(m_pContext->GetVkDevice(), vertexShaderModule, nullptr);
+    vkDestroyShaderModule(m_pContext->GetVkDevice(), fragmentShaderModule, nullptr);
 }
-
-
-
-// Destructor:
 ShadingPipeline::~ShadingPipeline()
 {
 
@@ -48,7 +44,7 @@ void ShadingPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayo
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     descriptorSetLayoutCreateInfo.pBindings = bindings.data();
-    VKA(vkCreateDescriptorSetLayout(context->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
+    VKA(vkCreateDescriptorSetLayout(m_pContext->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
 
     // Push constants layout:
     VkPushConstantRange pushConstantRange = {};
@@ -59,10 +55,10 @@ void ShadingPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayo
     // Pipeline layout:
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
     pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-    vkCreatePipelineLayout(context->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
+    vkCreatePipelineLayout(m_pContext->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
 }
 void ShadingPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
 {
@@ -115,7 +111,7 @@ void ShadingPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, c
     // Multisampling:
     VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
     multisampleState.sampleShadingEnable = VK_FALSE;
-    multisampleState.rasterizationSamples = context->msaaSamples;
+    multisampleState.rasterizationSamples = m_pContext->msaaSamples;
     multisampleState.minSampleShading = 1.0f;           // Optional
     multisampleState.pSampleMask = nullptr;             // Optional
     multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional
@@ -182,11 +178,11 @@ void ShadingPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, c
     pipelineInfo.pDepthStencilState = &depthState;          // Depth and stencil testing
     pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
     pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
-    pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = RenderPassManager::GetRenderPass("shadingRenderPass")->renderPass;
+    pipelineInfo.layout = m_pipelineLayout;
+    pipelineInfo.renderPass = RenderPassManager::GetRenderPass("shadingRenderPass")->GetVkRenderPass();
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
 	pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline
 
-    VKA(vkCreateGraphicsPipelines(context->GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
+    VKA(vkCreateGraphicsPipelines(m_pContext->GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
 }

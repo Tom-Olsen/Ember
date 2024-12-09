@@ -1,9 +1,13 @@
 #ifndef __INCLUDE_GUARD_shadingRenderpass_h__
 #define __INCLUDE_GUARD_shadingRenderpass_h__
-#include <vector>
 #include "renderPass.h"
-#include "vulkanContext.h"
-#include "vmaImage.h"
+#include <memory>
+#include <vulkan/vulkan.h>
+
+
+
+class VmaImage;
+struct VulkanContext;
 
 
 
@@ -12,16 +16,16 @@
 /// </summary>
 class ShadingRenderPass : public RenderPass
 {
-public: // Members:
-	std::unique_ptr<VmaImage> msaaImage;
-	std::unique_ptr<VmaImage> depthImage;
-
 private: // Members:
-	VkFormat depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
+	std::unique_ptr<VmaImage> m_msaaImage;
+	std::unique_ptr<VmaImage> m_depthImage;
+	VkFormat m_depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 public: // Methods:
-	ShadingRenderPass(VulkanContext* context);
+	ShadingRenderPass(VulkanContext* pContext);
 	~ShadingRenderPass();
+	const VmaImage* const GetMsaaVmaImage() const;
+	const VmaImage* const GetDepthVmaImage() const;
 
 private: // Methods:
 	void CreateRenderPass();

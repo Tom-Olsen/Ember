@@ -1,6 +1,11 @@
 #ifndef __INCLUDE_GUARD_renderPass_h__
 #define __INCLUDE_GUARD_renderPass_h__
-#include "vulkanContext.h"
+#include <vector>
+#include <vulkan/vulkan.h>
+
+
+
+struct VulkanContext;
 
 
 
@@ -9,15 +14,15 @@
 /// </summary>
 class RenderPass
 {
-public: // Members:
-	VkRenderPass renderPass;
-	std::vector<VkFramebuffer> framebuffers;
-
 protected: // Members:
-	VulkanContext* context;
+	VkRenderPass m_renderPass;
+	std::vector<VkFramebuffer> m_framebuffers;
+	VulkanContext* m_pContext;
 
 public: // Methods:
 	virtual ~RenderPass();
+	const VkRenderPass& GetVkRenderPass() const;
+	const std::vector<VkFramebuffer>& GetFramebuffers() const;
 };
 
 

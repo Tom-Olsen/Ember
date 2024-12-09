@@ -1,19 +1,20 @@
 #include "shadowPipeline.h"
-#include "vulkanMacros.h"
 #include "mesh.h"
-#include "shadowPushConstant.h"
+#include "renderPass.h"
 #include "renderPassManager.h"
-#include <vector>
-#include <fstream>
+#include "shadowPushConstant.h"
+#include "shadowRenderPass.h"
+#include "vulkanContext.h"
+#include "vulkanMacros.h"
 
 
 
-// Constructor:
-ShadowPipeline::ShadowPipeline(VulkanContext* context,
+// Constructor/Destructor:
+ShadowPipeline::ShadowPipeline(VulkanContext* pContext,
     const std::vector<char>& vertexCode,
     const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
-    this->context = context;
+    m_pContext = pContext;
 
     // Create pipeline Layout:
     CreatePipelineLayout(bindings);
@@ -25,12 +26,8 @@ ShadowPipeline::ShadowPipeline(VulkanContext* context,
     CreatePipeline(vertexShaderModule);
 
     // Destroy shader modules (only needed for pipeline creation):
-    vkDestroyShaderModule(context->GetVkDevice(), vertexShaderModule, nullptr);
+    vkDestroyShaderModule(m_pContext->GetVkDevice(), vertexShaderModule, nullptr);
 }
-
-
-
-// Destructor:
 ShadowPipeline::~ShadowPipeline()
 {
 
@@ -45,7 +42,7 @@ void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     descriptorSetLayoutCreateInfo.pBindings = bindings.data();
-    VKA(vkCreateDescriptorSetLayout(context->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
+    VKA(vkCreateDescriptorSetLayout(m_pContext->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
 
     // Push constants layout:
     VkPushConstantRange pushConstantRange = {};
@@ -56,10 +53,10 @@ void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     // Pipeline layout:
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
     pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-    vkCreatePipelineLayout(context->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout);
+    vkCreatePipelineLayout(m_pContext->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
 }
 void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
 {
@@ -88,13 +85,13 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
     VkViewport viewport = {};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(ShadowRenderPass::shadowMapWidth);
-    viewport.height = static_cast<float>(ShadowRenderPass::shadowMapHeight);
+    viewport.width = static_cast<float>(ShadowRenderPass::s_shadowMapWidth);
+    viewport.height = static_cast<float>(ShadowRenderPass::s_shadowMapHeight);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     VkRect2D scissor = {};
     scissor.offset = { 0, 0 };
-    scissor.extent = VkExtent2D{ ShadowRenderPass::shadowMapWidth, ShadowRenderPass::shadowMapHeight };
+    scissor.extent = VkExtent2D{ ShadowRenderPass::s_shadowMapWidth, ShadowRenderPass::s_shadowMapHeight };
     VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
     viewportState.viewportCount = 1;
     viewportState.pViewports = &viewport;
@@ -107,8 +104,8 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
     rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;    // which face to cull
     rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE; // which face of triangle is front: 123 or 132?
     rasterizationState.lineWidth = 1.0f;
-    rasterizationState.depthClampEnable = context->DepthClampEnabled();
-    rasterizationState.depthBiasEnable = context->DepthBiasEnabled();
+    rasterizationState.depthClampEnable = m_pContext->DepthClampEnabled();
+    rasterizationState.depthBiasEnable = m_pContext->DepthBiasEnabled();
     rasterizationState.depthBiasConstantFactor = 0.0f;		// Tweak this value based on the scene.
     rasterizationState.depthBiasClamp = 0.0f;
     rasterizationState.depthBiasSlopeFactor = -1.0f;		// Slope scale bias to handle varying slopes in depth.
@@ -153,11 +150,11 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
     pipelineInfo.pDepthStencilState = &depthState;			// Depth and stencil testing
     pipelineInfo.pColorBlendState = &colorBlendState;			// Color blending
     pipelineInfo.pDynamicState = nullptr;						// no dynamic states	
-    pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = RenderPassManager::GetRenderPass("shadowRenderPass")->renderPass;
+    pipelineInfo.layout = m_pipelineLayout;
+    pipelineInfo.renderPass = RenderPassManager::GetRenderPass("shadowRenderPass")->GetVkRenderPass();
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.basePipelineIndex = -1;
 
-    VKA(vkCreateGraphicsPipelines(context->GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
+    VKA(vkCreateGraphicsPipelines(m_pContext->GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
 }

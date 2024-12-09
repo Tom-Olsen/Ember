@@ -140,10 +140,10 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 		VkClearValue clearValues = {};
 		clearValues.depthStencil = { 1.0f, 0 };
 		VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassBeginInfo.renderPass = renderPass->renderPass;
-		renderPassBeginInfo.framebuffer = renderPass->framebuffers[m_pContext->frameIndex];
+		renderPassBeginInfo.renderPass = renderPass->GetVkRenderPass();
+		renderPassBeginInfo.framebuffer = renderPass->GetFramebuffers()[m_pContext->frameIndex];
 		renderPassBeginInfo.renderArea.offset = { 0, 0 };
-		renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowRenderPass::shadowMapWidth, ShadowRenderPass::shadowMapHeight };
+		renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowRenderPass::s_shadowMapWidth, ShadowRenderPass::s_shadowMapHeight };
 		renderPassBeginInfo.clearValueCount = 1;
 		renderPassBeginInfo.pClearValues = &clearValues;
 
@@ -260,8 +260,8 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 		clearValues[1].depthStencil = { 1.0f, 0 };
 		VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassBeginInfo.renderPass = renderPass->renderPass;
-		renderPassBeginInfo.framebuffer = renderPass->framebuffers[m_imageIndex];
+		renderPassBeginInfo.renderPass = renderPass->GetVkRenderPass();
+		renderPassBeginInfo.framebuffer = renderPass->GetFramebuffers()[m_imageIndex];
 		renderPassBeginInfo.renderArea.offset = { 0, 0 };
 		renderPassBeginInfo.renderArea.extent = m_pContext->pSurface->GetCurrentExtent();
 		renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());

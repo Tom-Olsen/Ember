@@ -1,10 +1,12 @@
 #ifndef __INCLUDE_GUARD_shadowPipeline_h__
 #define __INCLUDE_GUARD_shadowPipeline_h__
-#include <string>
 #include "pipeline.h"
-#include "vulkanContext.h"
-#include "shadowRenderPass.h"
-#include "mathf.h"
+#include <vector>
+#include <vulkan/vulkan.h>
+
+
+
+struct VulkanContext;
 
 
 
@@ -14,7 +16,7 @@
 class ShadowPipeline : public Pipeline
 {
 public: // Methods:
-	ShadowPipeline(VulkanContext* context,
+	ShadowPipeline(VulkanContext* pContext,
 		const std::vector<char>& vertexCode,
 		const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 	~ShadowPipeline();

@@ -10,7 +10,7 @@ SpotLight::SpotLight()
 {
 	this->intensity = 1.0f;
 	this->fovRadians = mathf::ToRadians(45.0f);
-	this->aspectRatio = (float)ShadowRenderPass::shadowMapWidth / (float)ShadowRenderPass::shadowMapHeight;
+	this->aspectRatio = (float)ShadowRenderPass::s_shadowMapWidth / (float)ShadowRenderPass::s_shadowMapHeight;
 	this->nearClip = 0.1f;
 	this->farClip = 15.0f;
 	this->blendStart = 0.8f;

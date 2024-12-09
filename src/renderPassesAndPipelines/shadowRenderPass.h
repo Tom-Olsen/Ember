@@ -1,9 +1,14 @@
 #ifndef __INCLUDE_GUARD_shadowRenderPass_h__
 #define __INCLUDE_GUARD_shadowRenderPass_h__
-#include <vector>
 #include "renderPass.h"
-#include "vulkanContext.h"
-#include "texture2d.h"
+#include <memory>
+#include <vulkan/vulkan.h>
+
+
+
+class Texture2d;
+class VmaImage;
+struct VulkanContext;
 
 
 
@@ -13,18 +18,19 @@
 /// </summary>
 class ShadowRenderPass : public RenderPass
 {
-public: // Members:
-	std::unique_ptr<Texture2d> shadowMaps;
-	static uint32_t shadowMapWidth;
-	static uint32_t shadowMapHeight;
-	static uint32_t layerCount;
-
 private: // Members:
-	VkFormat shadowMapFormat = VK_FORMAT_D32_SFLOAT;
+	std::unique_ptr<Texture2d> m_shadowMaps;
+	VkFormat m_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
+
+public: // Members:
+	static uint32_t s_shadowMapWidth;
+	static uint32_t s_shadowMapHeight;
+	static uint32_t s_layerCount;
 
 public: // Methods:
-	ShadowRenderPass(VulkanContext* context);
+	ShadowRenderPass(VulkanContext* pContext);
 	~ShadowRenderPass();
+	Texture2d* const GetShadowMaps() const;
 
 private: // Methods:
 	void CreateShadowMapTexture();

@@ -1,31 +1,28 @@
 #include "shadowRenderPass.h"
-#include "vulkanMacros.h"
-#include "vmaImage.h"
 #include "macros.h"
-#include <fstream>
+#include "texture2d.h"
+#include "vmaImage.h"
+#include "vulkanContext.h"
+#include "vulkanMacros.h"
 
 
 
 // static members:
-uint32_t ShadowRenderPass::shadowMapWidth = 1024;
-uint32_t ShadowRenderPass::shadowMapHeight = 1024;
-uint32_t ShadowRenderPass::layerCount = MAX_D_LIGHTS + MAX_S_LIGHTS + 6 * MAX_P_LIGHTS;
+uint32_t ShadowRenderPass::s_shadowMapWidth = 1024;
+uint32_t ShadowRenderPass::s_shadowMapHeight = 1024;
+uint32_t ShadowRenderPass::s_layerCount = MAX_D_LIGHTS + MAX_S_LIGHTS + 6 * MAX_P_LIGHTS;
 
 
 
-// Constructor:
-ShadowRenderPass::ShadowRenderPass(VulkanContext* context)
+// Constructor/Destructor:
+ShadowRenderPass::ShadowRenderPass(VulkanContext* pContext)
 {
-	this->context = context;
+	m_pContext = pContext;
 
 	CreateShadowMapTexture();
 	CreateRenderpass();
 	CreateFramebuffers();
 }
-
-
-
-// Destructor:
 ShadowRenderPass::~ShadowRenderPass()
 {
 
@@ -33,7 +30,15 @@ ShadowRenderPass::~ShadowRenderPass()
 
 
 
-// Private:
+// Public methods:
+Texture2d* const ShadowRenderPass::GetShadowMaps() const
+{
+	return m_shadowMaps.get();
+}
+
+
+
+// Private methods:
 void ShadowRenderPass::CreateShadowMapTexture()
 {
 	// Subresource range:
@@ -42,17 +47,17 @@ void ShadowRenderPass::CreateShadowMapTexture()
 	subresourceRange.baseMipLevel = 0;
 	subresourceRange.levelCount = 1;
 	subresourceRange.baseArrayLayer = 0;
-	subresourceRange.layerCount = layerCount;
+	subresourceRange.layerCount = s_layerCount;
 
 	// Image info:
 	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent.width = shadowMapWidth;
-	imageInfo.extent.height = shadowMapHeight;
+	imageInfo.extent.width = s_shadowMapWidth;
+	imageInfo.extent.height = s_shadowMapHeight;
 	imageInfo.extent.depth = 1;
 	imageInfo.mipLevels = 1;
-	imageInfo.arrayLayers = layerCount;
-	imageInfo.format = shadowMapFormat;
+	imageInfo.arrayLayers = s_layerCount;
+	imageInfo.format = m_shadowMapFormat;
 	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -67,14 +72,14 @@ void ShadowRenderPass::CreateShadowMapTexture()
 	allocationInfo.requiredFlags = 0;
 	allocationInfo.preferredFlags = 0;
 
-	VmaImage* image = new VmaImage(context, imageInfo, allocationInfo, subresourceRange);
-	shadowMaps = std::make_unique<Texture2d>(context, image, "shadowMaps");
+	VmaImage* image = new VmaImage(m_pContext, imageInfo, allocationInfo, subresourceRange);
+	m_shadowMaps = std::make_unique<Texture2d>(m_pContext, image, "shadowMaps");
 }
 void ShadowRenderPass::CreateRenderpass()
 {
 	// Attachment description:
 	VkAttachmentDescription attachment = {};
-	attachment.format = shadowMapFormat;
+	attachment.format = m_shadowMapFormat;
 	attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering
 	attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store for later render passes
@@ -99,21 +104,21 @@ void ShadowRenderPass::CreateRenderpass()
 	createInfo.pAttachments = &attachment;
 	createInfo.subpassCount = 1;
 	createInfo.pSubpasses = &subpass;
-	VKA(vkCreateRenderPass(context->GetVkDevice(), &createInfo, nullptr, &renderPass));
+	VKA(vkCreateRenderPass(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_renderPass));
 }
 void ShadowRenderPass::CreateFramebuffers()
 {
 	// One framebuffer per swapchain image:
-	framebuffers.resize(context->framesInFlight);
-	for (uint32_t i = 0; i < context->framesInFlight; i++)
+	m_framebuffers.resize(m_pContext->framesInFlight);
+	for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
 	{
 		VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-		framebufferInfo.renderPass = renderPass;
+		framebufferInfo.renderPass = m_renderPass;
 		framebufferInfo.attachmentCount = 1;
-		framebufferInfo.pAttachments = &shadowMaps->GetVmaImage()->GetVkImageView();
-		framebufferInfo.width = shadowMapWidth;
-		framebufferInfo.height = shadowMapHeight;
-		framebufferInfo.layers = layerCount;
-		vkCreateFramebuffer(context->GetVkDevice(), &framebufferInfo, nullptr, &framebuffers[i]);
+		framebufferInfo.pAttachments = &m_shadowMaps->GetVmaImage()->GetVkImageView();
+		framebufferInfo.width = s_shadowMapWidth;
+		framebufferInfo.height = s_shadowMapHeight;
+		framebufferInfo.layers = s_layerCount;
+		vkCreateFramebuffer(m_pContext->GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
 	}
 }

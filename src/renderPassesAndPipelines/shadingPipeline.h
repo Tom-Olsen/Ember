@@ -1,10 +1,12 @@
 #ifndef __INCLUDE_GUARD_shadingPipeline_h__
 #define __INCLUDE_GUARD_shadingPipeline_h__
-#include <string>
 #include "pipeline.h"
-#include "vulkanContext.h"
-#include "shadingRenderPass.h"
-#include "mathf.h"
+#include <vector>
+#include <vulkan/vulkan.h>
+
+
+
+struct VulkanContext;
 
 
 
@@ -14,7 +16,7 @@
 class ShadingPipeline : public Pipeline
 {
 public: // Methods:
-	ShadingPipeline(VulkanContext* context,
+	ShadingPipeline(VulkanContext* pContext,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
 		const std::vector<VkDescriptorSetLayoutBinding>& bindings);
