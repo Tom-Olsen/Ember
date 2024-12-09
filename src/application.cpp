@@ -14,11 +14,11 @@ Application::Application()
 	// Init static managers:
 	EventSystem::Init(context.get());
 	RenderPassManager::Init(context.get());
-	MaterialManager::Init(context.get(), renderer.get());
+	MaterialManager::Init(context.get());
 	TextureManager::Init(context.get());
 	SamplerManager::Init(context.get());
 	MeshManager::Init(context.get());
-	Graphics::Init(context.get());
+	Graphics::Init();
 }
 
 
@@ -27,13 +27,13 @@ Application::Application()
 Application::~Application()
 {
 	// Clear static managers:
+	Graphics::Clear();
 	MeshManager::Clear();
 	SamplerManager::Clear();
 	TextureManager::Clear();
 	MaterialManager::Clear();
 	RenderPassManager::Clear();
 	EventSystem::Clear();
-	Graphics::Clear();
 }
 
 

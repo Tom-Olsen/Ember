@@ -173,7 +173,7 @@ void MaterialProperties::SetSampler(const std::string& name, Sampler* pSampler)
 
 
 // Texture2d setters:
-void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* const pTexture2d)
+void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* pTexture2d)
 {
 	// If texture with 'name' doesnt exist, skip:
 	auto it = m_texture2dStagingMap.find(name);

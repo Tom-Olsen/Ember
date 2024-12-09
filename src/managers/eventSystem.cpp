@@ -1,36 +1,36 @@
 #include "eventSystem.h"
-#include "logger.h"
+#include "vulkanContext.h"
 
 
 
 // Static members:
-VulkanContext* EventSystem::context = nullptr;
-bool EventSystem::isInitialized = false;
-std::unordered_map<SDL_Keycode, EventSystem::KeyState> EventSystem::keyStates;
-std::unordered_map<Uint8, EventSystem::MouseState> EventSystem::mouseButtonStates;
-float EventSystem::mouseX;
-float EventSystem::mouseY;
-float EventSystem::mouseScrollX;
-float EventSystem::mouseScrollY;
-bool EventSystem::windowResized;
-bool EventSystem::quit;
+VulkanContext* EventSystem::s_pContext = nullptr;
+bool EventSystem::s_isInitialized = false;
+std::unordered_map<SDL_Keycode, EventSystem::KeyState> EventSystem::s_keyStates;
+std::unordered_map<Uint8, EventSystem::MouseState> EventSystem::s_mouseButtonStates;
+float EventSystem::s_mouseX;
+float EventSystem::s_mouseY;
+float EventSystem::s_mouseScrollX;
+float EventSystem::s_mouseScrollY;
+bool EventSystem::s_windowResized;
+bool EventSystem::s_quit;
 
 
 
 // Initialization and cleanup:
-void EventSystem::Init(VulkanContext* context)
+void EventSystem::Init(VulkanContext* pContext)
 {
-    if (isInitialized)
+    if (s_isInitialized)
         return;
-    EventSystem::context = context;
-    EventSystem::isInitialized = true;
+    s_pContext = pContext;
+    s_isInitialized = true;
 
-	EventSystem::keyStates = std::unordered_map<SDL_Keycode, KeyState>();
-	EventSystem::mouseButtonStates = std::unordered_map<Uint8, MouseState>();
-	EventSystem::mouseX = 0;
-	EventSystem::mouseY = 0;
-	EventSystem::windowResized = false;
-	EventSystem::quit = false;
+	s_keyStates = std::unordered_map<SDL_Keycode, KeyState>();
+	s_mouseButtonStates = std::unordered_map<Uint8, MouseState>();
+	s_mouseX = 0;
+	s_mouseY = 0;
+	s_windowResized = false;
+	s_quit = false;
 }
 void EventSystem::Clear()
 {
@@ -43,7 +43,7 @@ void EventSystem::Clear()
 void EventSystem::ClearEvents()
 {
 	// Reset released keys and transition pressed keys to held:
-    for (auto& [key, state] : keyStates)
+    for (auto& [key, state] : s_keyStates)
     {
         if (state == KeyState::down)
             state = KeyState::held;
@@ -52,7 +52,7 @@ void EventSystem::ClearEvents()
     }
 
 	// Reset released mouse button and transition pressed button to held:
-    for (auto& [button, state] : mouseButtonStates)
+    for (auto& [button, state] : s_mouseButtonStates)
     {
         if (state == MouseState::down)
             state = MouseState::held;
@@ -61,12 +61,12 @@ void EventSystem::ClearEvents()
     }
 
     // Reset mouse scroll:
-	mouseScrollX = 0;
-	mouseScrollY = 0;
+	s_mouseScrollX = 0;
+	s_mouseScrollY = 0;
 
 	// Reset event flags:
-    windowResized= false;
-    quit = false;
+    s_windowResized= false;
+    s_quit = false;
 }
 
 
@@ -76,30 +76,30 @@ void EventSystem::ProcessEvent(const SDL_Event& event)
     switch (event.type)
     {
     case SDL_EVENT_KEY_DOWN:
-        keyStates[event.key.key] = KeyState::down;
+        s_keyStates[event.key.key] = KeyState::down;
         break;
     case SDL_EVENT_KEY_UP:
-        keyStates[event.key.key] = KeyState::up;
+        s_keyStates[event.key.key] = KeyState::up;
         break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        mouseButtonStates[event.button.button] = MouseState::down;
+        s_mouseButtonStates[event.button.button] = MouseState::down;
         break;
     case SDL_EVENT_MOUSE_BUTTON_UP:
-        mouseButtonStates[event.button.button] = MouseState::up;
+        s_mouseButtonStates[event.button.button] = MouseState::up;
         break;
     case SDL_EVENT_MOUSE_MOTION:
-        mouseX = event.motion.x;
-        mouseY = event.motion.y;
+        s_mouseX = event.motion.x;
+        s_mouseY = event.motion.y;
         break;
 	case SDL_EVENT_MOUSE_WHEEL:
-		mouseScrollX = event.wheel.x;
-		mouseScrollY = event.wheel.y;
+		s_mouseScrollX = event.wheel.x;
+		s_mouseScrollY = event.wheel.y;
 		break;
     case SDL_EVENT_WINDOW_RESIZED:
-        windowResized = true;
+        s_windowResized = true;
         break;
     case SDL_EVENT_QUIT:
-        quit = true;
+        s_quit = true;
         break;
     default:
         break;
@@ -110,92 +110,92 @@ void EventSystem::ProcessEvent(const SDL_Event& event)
 
 bool EventSystem::KeyDown(SDL_Keycode key)
 {
-    auto it = keyStates.find(key);
-    return it != keyStates.end() && it->second == KeyState::down;
+    auto it = s_keyStates.find(key);
+    return it != s_keyStates.end() && it->second == KeyState::down;
 }
 bool EventSystem::KeyUp(SDL_Keycode key)
 {
-    auto it = keyStates.find(key);
-    return it != keyStates.end() && it->second == KeyState::up;
+    auto it = s_keyStates.find(key);
+    return it != s_keyStates.end() && it->second == KeyState::up;
 }
 bool EventSystem::KeyHeld(SDL_Keycode key)
 {
-    auto it = keyStates.find(key);
-    return it != keyStates.end() && it->second == KeyState::held;
+    auto it = s_keyStates.find(key);
+    return it != s_keyStates.end() && it->second == KeyState::held;
 }
 bool EventSystem::KeyDownOrHeld(SDL_Keycode key)
 {
-	auto it = keyStates.find(key);
-	return it != keyStates.end() && (it->second == KeyState::down || it->second == KeyState::held);
+	auto it = s_keyStates.find(key);
+	return it != s_keyStates.end() && (it->second == KeyState::down || it->second == KeyState::held);
 }
 bool EventSystem::MouseDown(MouseButton button)
 {
-    auto it = mouseButtonStates.find(static_cast<uint8_t>(button));
-    return it != mouseButtonStates.end() && it->second == MouseState::down;
+    auto it = s_mouseButtonStates.find(static_cast<uint8_t>(button));
+    return it != s_mouseButtonStates.end() && it->second == MouseState::down;
 }
 bool EventSystem::MouseUp(MouseButton button)
 {
-    auto it = mouseButtonStates.find(static_cast<uint8_t>(button));
-    return it != mouseButtonStates.end() && it->second == MouseState::up;
+    auto it = s_mouseButtonStates.find(static_cast<uint8_t>(button));
+    return it != s_mouseButtonStates.end() && it->second == MouseState::up;
 }
 bool EventSystem::MouseHeld(MouseButton button)
 {
-    auto it = mouseButtonStates.find(static_cast<uint8_t>(button));
-    return it != mouseButtonStates.end() && it->second == MouseState::held;
+    auto it = s_mouseButtonStates.find(static_cast<uint8_t>(button));
+    return it != s_mouseButtonStates.end() && it->second == MouseState::held;
 }
 bool EventSystem::MouseDown(uint8_t button)
 {
-    auto it = mouseButtonStates.find(button);
-    return it != mouseButtonStates.end() && it->second == MouseState::down;
+    auto it = s_mouseButtonStates.find(button);
+    return it != s_mouseButtonStates.end() && it->second == MouseState::down;
 }
 bool EventSystem::MouseUp(uint8_t button)
 {
-    auto it = mouseButtonStates.find(button);
-    return it != mouseButtonStates.end() && it->second == MouseState::up;
+    auto it = s_mouseButtonStates.find(button);
+    return it != s_mouseButtonStates.end() && it->second == MouseState::up;
 }
 bool EventSystem::MouseHeld(uint8_t button)
 {
-	auto it = mouseButtonStates.find(button);
-	return it != mouseButtonStates.end() && it->second == MouseState::held;
+	auto it = s_mouseButtonStates.find(button);
+	return it != s_mouseButtonStates.end() && it->second == MouseState::held;
 }
 float EventSystem::MouseX()
 {
-	return mouseX;
+	return s_mouseX;
 }
 float EventSystem::MouseY()
 {
-	return mouseY;
+	return s_mouseY;
 }
 Float2 EventSystem::MousePos()
 {
-	return Float2(mouseX, mouseY);
+	return Float2(s_mouseX, s_mouseY);
 }
 float EventSystem::MouseX01()
 {
-	return mouseX / context->pWindow->GetWidth();
+	return s_mouseX / s_pContext->pWindow->GetWidth();
 }
 float EventSystem::MouseY01()
 {
-	return mouseY / context->pWindow->GetHeight();
+	return s_mouseY / s_pContext->pWindow->GetHeight();
 }
 Float2 EventSystem::MousePos01()
 {
-	VkExtent2D extend = context->pWindow->GetExtent();
-	return Float2(mouseX / extend.width, mouseY / extend.height);
+	VkExtent2D extend = s_pContext->pWindow->GetExtent();
+	return Float2(s_mouseX / extend.width, s_mouseY / extend.height);
 }
 float EventSystem::MouseScrollX()
 {
-	return mouseScrollX;
+	return s_mouseScrollX;
 }
 float EventSystem::MouseScrollY()
 {
-	return mouseScrollY;
+	return s_mouseScrollY;
 }
 bool EventSystem::WindowResized()
 {
-    return windowResized;
+    return s_windowResized;
 }
 bool EventSystem::Quit()
 {
-    return quit;
+    return s_quit;
 }

@@ -5,6 +5,9 @@
 
 bool Logger::s_initialized = false;
 std::shared_ptr<spdlog::logger> Logger::s_coreLogger;
+
+
+
 void Logger::Init()
 {
 	if (s_initialized)

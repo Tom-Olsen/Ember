@@ -61,7 +61,7 @@ public: // Methods:
 	template<typename T>
 	void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
 	void SetSampler(const std::string& name, Sampler* pSampler);
-	void SetTexture2d(const std::string& name, Texture2d* const pTexture2d);
+	void SetTexture2d(const std::string& name, Texture2d* pTexture2d);
 
 	// Debugging:
 	void PrintMaps() const;

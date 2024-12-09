@@ -1,24 +1,26 @@
 #include "materialManager.h"
+#include "material.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include "vulkanRenderer.h"
 
 
 
 // Static members:
-bool MaterialManager::isInitialized = false;
-VulkanContext* MaterialManager::context;
-std::unordered_map<std::string, std::unique_ptr<Material>> MaterialManager::materials;
+bool MaterialManager::s_isInitialized = false;
+VulkanContext* MaterialManager::s_pContext;
+std::unordered_map<std::string, std::unique_ptr<Material>> MaterialManager::s_materials;
 
 
 
 // Initialization and cleanup:
-void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
+void MaterialManager::Init(VulkanContext* pContext)
 {
-	if (isInitialized)
+	if (s_isInitialized)
 		return;
 
-	isInitialized = true;
-	MaterialManager::context = context;
+	s_isInitialized = true;
+	s_pContext = pContext;
 	Material::RenderQueue opaqueQueue = Material::RenderQueue::opaque;
 	Material::RenderQueue transparentQueue = Material::RenderQueue::transparent;
 	Material::RenderQueue skyboxQueue = Material::RenderQueue::skybox;
@@ -26,51 +28,51 @@ void MaterialManager::Init(VulkanContext* context, VulkanRenderer* renderer)
 	Material::Type shadowType = Material::Type::shadow;
 	Material::Type skyboxType = Material::Type::skybox;
 
-	//Material* testMaterial = new Material(context, Material::Type::shading, "testMaterial", "../shaders/test.vert.spv", "../shaders/test.frag.spv");
+	//Material* testMaterial = new Material(s_pContext, Material::Type::shading, "testMaterial", "../shaders/test.vert.spv", "../shaders/test.frag.spv");
 	//AddMaterial(testMaterial);
 
-	Material* defaultMaterial = new Material(context, shadingType, "default", opaqueQueue, "../shaders/default.vert.spv", "../shaders/default.frag.spv");
-	AddMaterial(defaultMaterial);
+	Material* pDefaultMaterial = new Material(s_pContext, shadingType, "default", opaqueQueue, "../shaders/default.vert.spv", "../shaders/default.frag.spv");
+	AddMaterial(pDefaultMaterial);
 
-	Material* colorMaterial = new Material(context, shadingType, "color", opaqueQueue, "../shaders/color.vert.spv", "../shaders/color.frag.spv");
-	AddMaterial(colorMaterial);
+	Material* pColorMaterial = new Material(s_pContext, shadingType, "color", opaqueQueue, "../shaders/color.vert.spv", "../shaders/color.frag.spv");
+	AddMaterial(pColorMaterial);
 
-	Material* shadowMaterial = new Material(context, shadowType, "shadow", opaqueQueue, "../shaders/shadow.vert.spv");
-	AddMaterial(shadowMaterial);
+	Material* pShadowMaterial = new Material(s_pContext, shadowType, "shadow", opaqueQueue, "../shaders/shadow.vert.spv");
+	AddMaterial(pShadowMaterial);
 
-	Material* skyBoxMaterial = new Material(context, skyboxType, "skybox", skyboxQueue, "../shaders/skybox.vert.spv", "../shaders/skybox.frag.spv");
-	AddMaterial(skyBoxMaterial);
+	Material* pSkyBoxMaterial = new Material(s_pContext, skyboxType, "skybox", skyboxQueue, "../shaders/skybox.vert.spv", "../shaders/skybox.frag.spv");
+	AddMaterial(pSkyBoxMaterial);
 }
 void MaterialManager::Clear()
 {
-	context->WaitDeviceIdle();
-	materials.clear();
+	s_pContext->WaitDeviceIdle();
+	s_materials.clear();
 }
 
 
 
 // Add/get/delete:
-void MaterialManager::AddMaterial(Material* material)
+void MaterialManager::AddMaterial(Material* pMaterial)
 {
 	// If material already contained in MaterialManager, do nothing.
-	if (materials.emplace(material->GetName(), std::unique_ptr<Material>(material)).second == false)
+	if (s_materials.emplace(pMaterial->GetName(), std::unique_ptr<Material>(pMaterial)).second == false)
 	{
-		LOG_WARN("Material with the name: {} already exists in MaterialManager!", material->GetName());
+		LOG_WARN("Material with the name: {} already exists in MaterialManager!", pMaterial->GetName());
 		return;
 	}
 }
 Material* MaterialManager::GetMaterial(const std::string& name)
 {
-	auto it = materials.find(name);
-	if (it != materials.end())
+	auto it = s_materials.find(name);
+	if (it != s_materials.end())
 		return it->second.get();
 	LOG_WARN("Material '{}' not found!", name);
 	return nullptr;
 }
 void MaterialManager::DeleteMaterial(const std::string& name)
 {
-	context->WaitDeviceIdle();
-	materials.erase(name);
+	s_pContext->WaitDeviceIdle();
+	s_materials.erase(name);
 }
 
 
@@ -78,7 +80,7 @@ void MaterialManager::DeleteMaterial(const std::string& name)
 // Debugging:
 void MaterialManager::PrintAllMaterialNames()
 {
-	LOG_TRACE("Names of all managed materials:");
-	for (const auto& pair : materials)
+	LOG_TRACE("Names of all managed s_materials:");
+	for (const auto& pair : s_materials)
 		LOG_TRACE(pair.first);
 }

@@ -1,48 +1,43 @@
 #include "graphics.h"
-#include "vulkanContext.h"
-#include "vulkanRenderer.h"
-#include "mesh.h"
 #include "material.h"
 #include "materialProperties.h"
+#include "mesh.h"
 #include "meshRenderer.h"
 #include "transform.h"
-#include "logger.h"
 
 
 
 // Static members:
-uint32_t Graphics::drawIndex = 0;
-bool Graphics::isInitialized = false;
-VulkanContext* Graphics::m_pContext = nullptr;
-std::vector<MeshRenderer*> Graphics::m_meshRenderers;
+uint32_t Graphics::s_drawIndex = 0;
+bool Graphics::s_isInitialized = false;
+std::vector<MeshRenderer*> Graphics::s_meshRenderers;
 
 
 
-// Initialization and cleanup:
-void Graphics::Init(VulkanContext* pContext)
+// Initialization/Cleanup:
+void Graphics::Init()
 {
-	if (isInitialized)
+	if (s_isInitialized)
 		return;
 
-	isInitialized = true;
-	m_pContext = pContext;
+	s_isInitialized = true;
 
-	m_meshRenderers.resize(100);
+	s_meshRenderers.resize(100);
 	for (uint32_t i = 0; i < 100; i++)
 	{
-		m_meshRenderers[i] = new MeshRenderer();
-		m_meshRenderers[i]->transform = new Transform();
-		m_meshRenderers[i]->isActive = false;
+		s_meshRenderers[i] = new MeshRenderer();
+		s_meshRenderers[i]->transform = new Transform();
+		s_meshRenderers[i]->isActive = false;
 	}
 }
 void Graphics::Clear()
 {
-	for (MeshRenderer* pMeshRenderer : m_meshRenderers)
+	for (MeshRenderer* pMeshRenderer : s_meshRenderers)
 	{
 		delete pMeshRenderer->transform;
 		delete pMeshRenderer;
 	}
-	m_meshRenderers.clear();
+	s_meshRenderers.clear();
 }
 
 
@@ -63,20 +58,20 @@ MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float3 posi
 MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows, bool castShadows)
 {
 	// Double size of the meshRenderers vector if it is full:
-	if (drawIndex >= static_cast<uint32_t>(m_meshRenderers.size()))
+	if (s_drawIndex >= static_cast<uint32_t>(s_meshRenderers.size()))
 	{
-		uint32_t oldSize = static_cast<uint32_t>(m_meshRenderers.size());
-		m_meshRenderers.resize(2 * m_meshRenderers.size());
-		for (uint32_t i = oldSize; i < m_meshRenderers.size(); i++)
+		uint32_t oldSize = static_cast<uint32_t>(s_meshRenderers.size());
+		s_meshRenderers.resize(2 * s_meshRenderers.size());
+		for (uint32_t i = oldSize; i < s_meshRenderers.size(); i++)
 		{
-			m_meshRenderers[i] = new MeshRenderer();
-			m_meshRenderers[i]->transform = new Transform();
-			m_meshRenderers[i]->isActive = false;
+			s_meshRenderers[i] = new MeshRenderer();
+			s_meshRenderers[i]->transform = new Transform();
+			s_meshRenderers[i]->isActive = false;
 		}
 	}
 
 	// Setup current draw call:
-	MeshRenderer* pMeshRenderer = m_meshRenderers[drawIndex];
+	MeshRenderer* pMeshRenderer = s_meshRenderers[s_drawIndex];
 	pMeshRenderer->isActive = true;
 	pMeshRenderer->mesh = pMesh;
 	if (pMeshRenderer->GetMaterial() != pMaterial)
@@ -86,22 +81,22 @@ MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 lo
 	pMeshRenderer->transform->SetLocalToWorldMatrix(localToWorldMatrix);
 
 	// By returning the meshRenderers materialProperties, we allow user to change the material properties of this draw call:
-	MaterialProperties* pMaterialProperties = m_meshRenderers[drawIndex]->materialProperties.get();
-	drawIndex++;
+	MaterialProperties* pMaterialProperties = s_meshRenderers[s_drawIndex]->materialProperties.get();
+	s_drawIndex++;
 	return pMaterialProperties;
 }
 void Graphics::ResetDrawCalls()
 {
-	for (MeshRenderer* pMeshRenderer : m_meshRenderers)
+	for (MeshRenderer* pMeshRenderer : s_meshRenderers)
 		pMeshRenderer->isActive = false;
-	drawIndex = 0;
+	s_drawIndex = 0;
 }
 
 // Getters:
 std::vector<MeshRenderer*>* Graphics::GetSortedMeshRenderers()
 {
 	// Sort meshRenders according to material renderQueue:
-	std::sort(m_meshRenderers.begin(), m_meshRenderers.end(), [](MeshRenderer* a, MeshRenderer* b)
+	std::sort(s_meshRenderers.begin(), s_meshRenderers.end(), [](MeshRenderer* a, MeshRenderer* b)
 	{
 		// Handle nullptr cases for materials (MeshRenderer* not in use):
 		const Material* materialA = a ? a->GetMaterial() : nullptr;
@@ -113,5 +108,5 @@ std::vector<MeshRenderer*>* Graphics::GetSortedMeshRenderers()
 
 		return renderQueueA < renderQueueB;
 	});
-	return &m_meshRenderers;
+	return &s_meshRenderers;
 }

@@ -3,40 +3,40 @@
 
 
 // Static members:
-float Timer::time = 0.0f;
-float Timer::deltaTime = 0.0f;
-bool Timer::isInitialized = false;
-std::chrono::steady_clock::time_point Timer::start = std::chrono::steady_clock::now();
-std::chrono::steady_clock::time_point Timer::end = std::chrono::steady_clock::now();
+float Timer::s_time = 0.0f;
+float Timer::s_deltaTime = 0.0f;
+bool Timer::s_isInitialized = false;
+std::chrono::steady_clock::time_point Timer::s_start = std::chrono::steady_clock::now();
+std::chrono::steady_clock::time_point Timer::s_end = std::chrono::steady_clock::now();
 
 
 
 // Timer management:
 void Timer::Init()
 {
-	if (isInitialized)
+	if (s_isInitialized)
 		return;
 
-	isInitialized = true;
+	s_isInitialized = true;
 }
 void Timer::Clear()
 {
-	time = 0.0f;
-	deltaTime = 0.0f;
-	isInitialized = false;
+	s_time = 0.0f;
+	s_deltaTime = 0.0f;
+	s_isInitialized = false;
 }
 void Timer::Update()
 {
-	end = std::chrono::steady_clock::now();
-	deltaTime = std::chrono::duration<float>(end - start).count();
-	time += deltaTime;
-	start = end;
+	s_end = std::chrono::steady_clock::now();
+	s_deltaTime = std::chrono::duration<float>(s_end - s_start).count();
+	s_time += s_deltaTime;
+	s_start = s_end;
 }
 void Timer::Reset()
 {
-	time = 0.0f;
-	deltaTime = 0.0f;
-	auto start = std::chrono::steady_clock::now();
+	s_time = 0.0f;
+	s_deltaTime = 0.0f;
+	auto s_start = std::chrono::steady_clock::now();
 }
 
 
@@ -44,9 +44,9 @@ void Timer::Reset()
 // Getters:
 float Timer::GetTime()
 {
-	return time;
+	return s_time;
 }
 float Timer::GetDeltaTime()
 {
-	return deltaTime;
+	return s_deltaTime;
 }

@@ -7,7 +7,7 @@
 
 /// <summary>
 /// Custom wrapper for spdlog.
-/// Must call Init() to initialize the logger singilton before using the logger.
+/// Must call Init() to initialize the static class before using the logger.
 /// Macros for logging are: LOG_TRACE(), LOG_INFO(), LOG_WARN(), LOG_ERROR(), LOG_CRITICAL().
 /// </summary>
 class Logger

@@ -1,6 +1,7 @@
 #include "meshRenderer.h"
 #include "camera.h"
 #include "gameObject.h"
+#include "material.h"
 #include "materialManager.h"
 #include "pipeline.h"
 #include "samplerManager.h"

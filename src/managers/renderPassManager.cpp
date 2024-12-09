@@ -1,42 +1,42 @@
 #include "renderPassManager.h"
+#include "logger.h"
 #include "renderPass.h"
 #include "shadingRenderPass.h"
 #include "shadowRenderPass.h"
 #include "vulkanContext.h"
-#include "vulkanMacros.h"
 
 
 
 // Static members:
-bool RenderPassManager::isInitialized = false;
-VulkanContext* RenderPassManager::context;
-std::unordered_map<std::string, std::unique_ptr<RenderPass>> RenderPassManager::renderPasses;
+bool RenderPassManager::s_isInitialized = false;
+VulkanContext* RenderPassManager::s_pContext;
+std::unordered_map<std::string, std::unique_ptr<RenderPass>> RenderPassManager::s_renderPasses;
 
 
 
 // Initialization and cleanup:
-void RenderPassManager::Init(VulkanContext* context)
+void RenderPassManager::Init(VulkanContext* pContext)
 {
-	if (isInitialized)
+	if (s_isInitialized)
 		return;
 
-	isInitialized = true;
-	RenderPassManager::context = context;
+	s_isInitialized = true;
+	RenderPassManager::s_pContext = pContext;
 
-	ShadingRenderPass* shadingRenderPass = new ShadingRenderPass(context);
+	ShadingRenderPass* shadingRenderPass = new ShadingRenderPass(s_pContext);
 	AddRenderPass("shadingRenderPass", shadingRenderPass);
 
-	ShadowRenderPass* shadowRenderPass = new ShadowRenderPass(context);
+	ShadowRenderPass* shadowRenderPass = new ShadowRenderPass(s_pContext);
 	AddRenderPass("shadowRenderPass", shadowRenderPass);
 }
 void RenderPassManager::Clear()
 {
-	context->WaitDeviceIdle();
-	renderPasses.clear();
+	s_pContext->WaitDeviceIdle();
+	s_renderPasses.clear();
 }
 void RenderPassManager::RecreateRenderPasses()
 {
-	RenderPass* newShadingRenderPass = new ShadingRenderPass(context);
+	RenderPass* newShadingRenderPass = new ShadingRenderPass(s_pContext);
 	DeleteRenderPass("shadingRenderPass");
 	AddRenderPass("shadingRenderPass", newShadingRenderPass);
 }
@@ -44,10 +44,10 @@ void RenderPassManager::RecreateRenderPasses()
 
 
 // Add/get/delete:
-void RenderPassManager::AddRenderPass(const std::string name, RenderPass* renderPass)
+void RenderPassManager::AddRenderPass(const std::string name, RenderPass* pRenderPass)
 {
 	// If renderPass already contained in RenderPassManager, do nothing.
-	if (renderPasses.emplace(name, std::unique_ptr<RenderPass>(renderPass)).second == false)
+	if (s_renderPasses.emplace(name, std::unique_ptr<RenderPass>(pRenderPass)).second == false)
 	{
 		LOG_WARN("RenderPass with the name: {} already exists in RenderPassManager!", name);
 		return;
@@ -55,16 +55,16 @@ void RenderPassManager::AddRenderPass(const std::string name, RenderPass* render
 }
 RenderPass* RenderPassManager::GetRenderPass(const std::string& name)
 {
-	auto it = renderPasses.find(name);
-	if (it != renderPasses.end())
+	auto it = s_renderPasses.find(name);
+	if (it != s_renderPasses.end())
 		return it->second.get();
 	LOG_WARN("RenderPass '{}' not found!", name);
 	return nullptr;
 }
 void RenderPassManager::DeleteRenderPass(const std::string& name)
 {
-	context->WaitDeviceIdle();
-	renderPasses.erase(name);
+	s_pContext->WaitDeviceIdle();
+	s_renderPasses.erase(name);
 }
 
 
@@ -73,6 +73,6 @@ void RenderPassManager::DeleteRenderPass(const std::string& name)
 void RenderPassManager::PrintAllRenderPassNames()
 {
 	LOG_TRACE("Names of all managed renderPasses:");
-	for (const auto& pair : renderPasses)
+	for (const auto& pair : s_renderPasses)
 		LOG_TRACE(pair.first);
 }

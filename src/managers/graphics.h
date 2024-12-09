@@ -18,13 +18,12 @@ class Graphics
 public: // Members
 
 private: // Members
-    static uint32_t drawIndex;
-    static bool isInitialized;
-    static VulkanContext* m_pContext;
-    static std::vector<MeshRenderer*> m_meshRenderers;
+    static uint32_t s_drawIndex;
+    static bool s_isInitialized;
+    static std::vector<MeshRenderer*> s_meshRenderers;
 
 public: // Methods
-    static void Init(VulkanContext* pContext);
+    static void Init();
     static void Clear();
 
     // Draw calls:
@@ -36,7 +35,7 @@ public: // Methods
     // Getters:
     static std::vector<MeshRenderer*>* GetSortedMeshRenderers();
 
-private: // Methods
+private: //const Methods
     // Delete all constructors:
     Graphics() = delete;
     Graphics(const Graphics&) = delete;

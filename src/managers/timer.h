@@ -1,21 +1,17 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_time_h__
 #define __INCLUDE_GUARD_time_h__
 #include <chrono>
 
 
 
-/// <summary>
-/// Purely static class that takes care of lifetime of all static Mesh objects.
-/// </summary>
 class Timer
 {
 private: // Members
-    static float time;
-    static float deltaTime;
-    static bool isInitialized;
-	static std::chrono::steady_clock::time_point start;
-	static std::chrono::steady_clock::time_point end;
+    static float s_time;
+    static float s_deltaTime;
+    static bool s_isInitialized;
+	static std::chrono::steady_clock::time_point s_start;
+	static std::chrono::steady_clock::time_point s_end;
 
 public: // Methods
     static void Init();

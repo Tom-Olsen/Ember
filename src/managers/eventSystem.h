@@ -1,9 +1,12 @@
 #ifndef __INCLUDE_GUARD_eventSystem_h__
 #define __INCLUDE_GUARD_eventSystem_h__
+#include "mathf.h"
 #include <SDL3/SDL.h>
 #include <unordered_map>
-#include "vulkanContext.h"
-#include "mathf.h"
+
+
+
+struct VulkanContext;
 
 
 
@@ -15,19 +18,19 @@ public: // Enums:
     enum class MouseButton { left = 1, middle = 2, right = 3};
 
 private: // Members
-    static VulkanContext* context;
-    static bool isInitialized;
-    static std::unordered_map<SDL_Keycode, KeyState> keyStates;
-    static std::unordered_map<Uint8, MouseState> mouseButtonStates;
-    static float mouseX;
-    static float mouseY;
-	static float mouseScrollX;
-	static float mouseScrollY;
-    static bool windowResized;
-    static bool quit;
+    static VulkanContext* s_pContext;
+    static bool s_isInitialized;
+    static std::unordered_map<SDL_Keycode, KeyState> s_keyStates;
+    static std::unordered_map<Uint8, MouseState> s_mouseButtonStates;
+    static float s_mouseX;
+    static float s_mouseY;
+	static float s_mouseScrollX;
+	static float s_mouseScrollY;
+    static bool s_windowResized;
+    static bool s_quit;
 
 public: // Methods:
-    static void Init(VulkanContext* context);
+    static void Init(VulkanContext* pContext);
     static void Clear();
 
 	// Event handling:

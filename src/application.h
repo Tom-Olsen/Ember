@@ -6,6 +6,7 @@
 #include "renderPassManager.h"
 #include "materialManager.h"
 #include "textureManager.h"
+#include "textureCube.h"
 #include "samplerManager.h"
 #include "meshManager.h"
 #include "graphics.h"

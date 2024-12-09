@@ -6,60 +6,60 @@
 
 
 // Static members:
-bool SamplerManager::isInitialized = false;
-VulkanContext* SamplerManager::context;
-std::unordered_map<std::string, std::unique_ptr<Sampler>> SamplerManager::samplers;
+bool SamplerManager::s_isInitialized = false;
+VulkanContext* SamplerManager::s_pContext;
+std::unordered_map<std::string, std::unique_ptr<Sampler>> SamplerManager::s_samplers;
 
 
 
 // Initialization and cleanup:
-void SamplerManager::Init(VulkanContext* vulkanContext)
+void SamplerManager::Init(VulkanContext* pContext)
 {
-	if (isInitialized)
+	if (s_isInitialized)
 		return;
 
-	isInitialized = true;
-	context = vulkanContext;
+	s_isInitialized = true;
+	s_pContext = pContext;
 
-	Sampler* colorSampler = Sampler::ColorSampler(context, "colorSampler");
-	AddSampler(colorSampler->GetName(), colorSampler);
+	Sampler* colorSampler = Sampler::ColorSampler(s_pContext, "colorSampler");
+	AddSampler(colorSampler);
 
-	Sampler* shadowSampler = Sampler::ShadowSampler(context, "shadowSampler");
-	AddSampler(shadowSampler->GetName(), shadowSampler);
+	Sampler* shadowSampler = Sampler::ShadowSampler(s_pContext, "shadowSampler");
+	AddSampler(shadowSampler);
 
-	Sampler* colorSampler2 = Sampler::ColorSampler(context, "colorSampler2");
-	AddSampler(colorSampler2->GetName(), colorSampler2);
+	Sampler* colorSampler2 = Sampler::ColorSampler(s_pContext, "colorSampler2");
+	AddSampler(colorSampler2);
 }
 void SamplerManager::Clear()
 {
-	context->WaitDeviceIdle();
-	samplers.clear();
+	s_pContext->WaitDeviceIdle();
+	s_samplers.clear();
 }
 
 
 
 // Add/get/delete:
-void SamplerManager::AddSampler(const std::string name, Sampler* sampler)
+void SamplerManager::AddSampler(Sampler* pSampler)
 {
 	// If sampler already contained in SamplerManager, do nothing.
-	if (samplers.emplace(name, std::unique_ptr<Sampler>(sampler)).second == false)
+	if (s_samplers.emplace(pSampler->GetName(), std::unique_ptr<Sampler>(pSampler)).second == false)
 	{
-		LOG_WARN("Sampler with the name: {} already exists in SamplerManager!", name);
+		LOG_WARN("Sampler with the name: {} already exists in SamplerManager!", pSampler->GetName());
 		return;
 	}
 }
 Sampler* SamplerManager::GetSampler(const std::string& name)
 {
-	auto it = samplers.find(name);
-	if (it != samplers.end())
+	auto it = s_samplers.find(name);
+	if (it != s_samplers.end())
 		return it->second.get();
 	LOG_WARN("Sampler '{}' not found!", name);
 	return nullptr;
 }
 void SamplerManager::DeleteSampler(const std::string& name)
 {
-	context->WaitDeviceIdle();
-	samplers.erase(name);
+	s_pContext->WaitDeviceIdle();
+	s_samplers.erase(name);
 }
 
 
@@ -67,7 +67,7 @@ void SamplerManager::DeleteSampler(const std::string& name)
 // Debugging:
 void SamplerManager::PrintAllSamplerNames()
 {
-	LOG_TRACE("Names of all managed samplers:");
-	for (const auto& pair : samplers)
+	LOG_TRACE("Names of all managed s_samplers:");
+	for (const auto& pair : s_samplers)
 		LOG_TRACE(pair.first);
 }

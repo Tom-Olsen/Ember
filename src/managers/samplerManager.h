@@ -10,23 +10,24 @@ class Sampler;
 struct VulkanContext;
 
 
+
 /// <summary>
-/// Purely static class that takes care of lifetime of all Material objects.
+/// Purely static class that takes care of lifetime of all Sampler objects.
 /// </summary>
 class SamplerManager
 {
 public: // Members
 
 private: // Members
-    static bool isInitialized;
-    static VulkanContext* context;
-    static std::unordered_map<std::string, std::unique_ptr<Sampler>> samplers;
+    static bool s_isInitialized;
+    static VulkanContext* s_pContext;
+    static std::unordered_map<std::string, std::unique_ptr<Sampler>> s_samplers;
 
 public: // Methods
-    static void Init(VulkanContext* vulkanContext);
+    static void Init(VulkanContext* pContext);
     static void Clear();
 
-    static void AddSampler(const std::string name, Sampler* sampler);
+    static void AddSampler(Sampler* pSampler);
     static Sampler* GetSampler(const std::string& name);
     static void DeleteSampler(const std::string& name);
 
