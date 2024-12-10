@@ -11,7 +11,23 @@
 #include "eventSystem.h"
 #include "logger.h"
 #include "mathf.h"
+#include "meshGenerator.h"
 #include "timer.h"
+
+// Rendering backend:
+#include "graphics.h"
+#include "mesh.h"
+#include "material.h"
+#include "materialProperties.h"
+#include "sampler.h"
+#include "texture2d.h"
+#include "textureCube.h"
+
+// Managers:
+#include "materialManager.h"
+#include "meshManager.h"
+#include "samplerManager.h"
+#include "textureManager.h"
 
 // GameObject system:
 #include "component.h"

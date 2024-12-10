@@ -53,7 +53,7 @@ VulkanRenderer::~VulkanRenderer()
 
 
 // Public methods:
-bool VulkanRenderer::Render(Scene* pScene)
+bool VulkanRenderer::RenderFrame(Scene* pScene)
 {
 	// Resize Swapchain if needed:
 	VkExtent2D windowExtent = m_pContext->pWindow->GetExtent();

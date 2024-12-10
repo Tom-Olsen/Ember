@@ -4,12 +4,6 @@
 
 
 
-class Mesh;
-class Material;
-class MaterialProperties;
-
-
-
 class DrawMeshData : public Component
 {
 private: // Members:

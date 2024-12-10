@@ -44,6 +44,10 @@ source_group("Render Passes & Pipelines" FILES ${RENDERPASSES_AND_PIPELINES_FILE
 file(GLOB RENDER_RESOURCES_FILES "${PROJECT_SOURCE_DIR}/src/renderResources/*")
 source_group("Render Resources" FILES ${RENDER_RESOURCES_FILES})
 
+# src/utility/*:
+file(GLOB UTILITY_FILES "${PROJECT_SOURCE_DIR}/src/utility/*")
+source_group("Utility" FILES ${UTILITY_FILES})
+
 # src/vulkanRenderer/*:
 file(GLOB VULKAN_RENDERER_FILES "${PROJECT_SOURCE_DIR}/src/vulkanRenderer/*")
 source_group("VulkanRenderer" FILES ${VULKAN_RENDERER_FILES})
@@ -63,6 +67,7 @@ ${MANAGERS_FILES}
 ${MATHF_FILES}
 ${RENDERPASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
+${UTILITY_FILES}
 ${VULKAN_RENDERER_FILES}
 ${OTHER_FILES})
 add_dependencies(${PROJECT_NAME} build_shaders)
@@ -127,6 +132,7 @@ PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
 PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderPassesAndPipelines
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources
+PRIVATE ${CMAKE_SOURCE_DIR}/src/utility
 PRIVATE ${CMAKE_SOURCE_DIR}/src/vulkanRenderer
 PRIVATE ${CMAKE_SOURCE_DIR}/src)
 # ---------------------------------------------------

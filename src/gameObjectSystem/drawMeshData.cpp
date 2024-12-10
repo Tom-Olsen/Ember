@@ -1,11 +1,4 @@
 #include "drawMeshData.h"
-#include "graphics.h"
-#include "mesh.h"
-#include "material.h"
-#include "meshManager.h"
-#include "materialManager.h"
-#include "materialProperties.h"
-#include "meshGenerator.h"
 
 
 

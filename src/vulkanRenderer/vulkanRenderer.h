@@ -37,7 +37,7 @@ private: // Members:
 public: // Methods:
 	VulkanRenderer(VulkanContext* pContext);
 	~VulkanRenderer();
-	bool Render(Scene* pScene);
+	bool RenderFrame(Scene* pScene);
 	const VulkanContext* const GetContext() const;
 
 private: // Methods:

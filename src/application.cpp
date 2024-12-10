@@ -1,23 +1,36 @@
 #include "application.h"
+#include "component.h"
+#include "eventSystem.h"
+#include "gameObject.h"
+#include "graphics.h"
+#include "materialManager.h"
+#include "meshManager.h"
+#include "renderPassManager.h"
+#include "samplerManager.h"
+#include "scene.h"
+#include "textureManager.h"
+#include "timer.h"
+#include "vulkanContext.h"
+#include "vulkanRenderer.h"
 
 
 
 // Constructor:
 Application::Application()
 {
-	activeScene = nullptr;
+	m_pActiveScene = nullptr;
 	uint32_t framesInFlight = 2;
 	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-	context = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
-	renderer = std::make_unique<VulkanRenderer>(context.get());
+	m_pContext = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
+	m_pRenderer = std::make_unique<VulkanRenderer>(m_pContext.get());
 
 	// Init static managers:
-	EventSystem::Init(context.get());
-	RenderPassManager::Init(context.get());
-	MaterialManager::Init(context.get());
-	TextureManager::Init(context.get());
-	SamplerManager::Init(context.get());
-	MeshManager::Init(context.get());
+	EventSystem::Init(m_pContext.get());
+	RenderPassManager::Init(m_pContext.get());
+	MaterialManager::Init(m_pContext.get());
+	TextureManager::Init(m_pContext.get());
+	SamplerManager::Init(m_pContext.get());
+	MeshManager::Init(m_pContext.get());
 	Graphics::Init();
 }
 
@@ -47,12 +60,12 @@ void Application::Run()
 	while (running)
 	{
 		Timer::Update();
-		running = context->pWindow->HandleEvents();
+		running = m_pContext->pWindow->HandleEvents();
 
 		// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
-		VkExtent2D windowExtent = context->pWindow->GetExtent();
-		VkExtent2D surfaceExtend = context->pSurface->GetCurrentExtent();
-		if (context->pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
+		VkExtent2D windowExtent = m_pContext->pWindow->GetExtent();
+		VkExtent2D surfaceExtend = m_pContext->pSurface->GetCurrentExtent();
+		if (m_pContext->pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
 		{
 			SDL_Delay(10);
 			continue;
@@ -62,13 +75,13 @@ void Application::Run()
 		Update();
 
 		// Render loop:
-		if (renderer->Render(activeScene))
-			context->UpdateFrameIndex();
+		if (m_pRenderer->RenderFrame(m_pActiveScene))
+			m_pContext->UpdateFrameIndex();
 	}
 }
-void Application::SetScene(Scene* scene)
+void Application::SetScene(Scene* pScene)
 {
-	this->activeScene = scene;
+	this->m_pActiveScene = pScene;
 }
 
 
@@ -77,7 +90,7 @@ void Application::SetScene(Scene* scene)
 void Application::Update()
 {
 	// Update all components of all game objects:
-	for (auto& [_, gameObject] : activeScene->GetGameObjects())
+	for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
 	{
 		if (gameObject->isActive)
 		{

@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_graphics_h__
 #define __INCLUDE_GUARD_graphics_h__
-#include <vector>
 #include "mathf.h"
+#include <vector>
 
 
 
