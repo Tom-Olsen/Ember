@@ -77,11 +77,11 @@ void Application::SetScene(Scene* scene)
 void Application::Update()
 {
 	// Update all components of all game objects:
-	for (auto& [_, gameObject] : activeScene->gameObjects)
+	for (auto& [_, gameObject] : activeScene->GetGameObjects())
 	{
 		if (gameObject->isActive)
 		{
-			for (auto& [_, component] : gameObject->components)
+			for (auto& [_, component] : gameObject->GetComponents())
 			{
 				if (component->isActive)
 					component->Update();

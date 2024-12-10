@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_time_h__
-#define __INCLUDE_GUARD_time_h__
+#ifndef __INCLUDE_GUARD_timer_h__
+#define __INCLUDE_GUARD_timer_h__
 #include <chrono>
 
 
@@ -33,4 +33,4 @@ private: // Methods
 
 
 
-#endif // __INCLUDE_GUARD_time_h__
+#endif // __INCLUDE_GUARD_timer_h__

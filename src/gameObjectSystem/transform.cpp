@@ -1,27 +1,22 @@
 #include "transform.h"
-#include "logger.h"
 
 
 
-// Constructors:
+// Constructors/Destructor:
 Transform::Transform()
 {
-	this->position = Float3(0.0f);
-	this->rotationMatrix = Float3x3::identity;
-	this->scale = Float3(1.0f);
-	updateLocalToWorldMatrix = true;
+	m_position = Float3(0.0f);
+	m_rotationMatrix = Float3x3::identity;
+	m_scale = Float3(1.0f);
+	m_updateLocalToWorldMatrix = true;
 }
 Transform::Transform(const Float3& position, const Float3x3& rotationMatrix, const Float3& scale)
 {
-	this->position = position;
-	this->rotationMatrix = rotationMatrix;
-	this->scale = scale;
-	updateLocalToWorldMatrix = true;
+	m_position = position;
+	m_rotationMatrix = rotationMatrix;
+	m_scale = scale;
+	m_updateLocalToWorldMatrix = true;
 }
-
-
-
-// Destructor:
 Transform::~Transform()
 {
 
@@ -29,44 +24,44 @@ Transform::~Transform()
 
 
 
-// Public:
+// Public methods:
 // Setters:
 void Transform::SetPosition(float x, float y, float z)
 {
 	Float3 position(x, y, z);
-	if (this->position == position)
+	if (m_position == position)
 		return;
-	this->position = position;
-	updateLocalToWorldMatrix = true;
+	m_position = position;
+	m_updateLocalToWorldMatrix = true;
 }
 void Transform::SetPosition(const Float3& position)
 {
-	if (this->position == position)
+	if (m_position == position)
 		return;
-	this->position = position;
-	updateLocalToWorldMatrix = true;
+	m_position = position;
+	m_updateLocalToWorldMatrix = true;
 }
 void Transform::AddToPosition(float x, float y, float z)
 {
-	Float3 position(x, y, z);
-	if (position == Float3::zero)
+	Float3 translation(x, y, z);
+	if (translation == Float3::zero)
 		return;
-	this->position += position;
-	updateLocalToWorldMatrix = true;
+	m_position += translation;
+	m_updateLocalToWorldMatrix = true;
 }
-void Transform::AddToPosition(const Float3& position)
+void Transform::AddToPosition(const Float3& translation)
 {
-	if (position == Float3::zero)
+	if (translation == Float3::zero)
 		return;
-	this->position += position;
-	updateLocalToWorldMatrix = true;
+	m_position += translation;
+	m_updateLocalToWorldMatrix = true;
 }
 void Transform::SetRotationMatrix(const Float3x3& rotationMatrix)
 {
-	if (this->rotationMatrix == rotationMatrix)
+	if (m_rotationMatrix == rotationMatrix)
 		return;
-	this->rotationMatrix = rotationMatrix;
-	updateLocalToWorldMatrix = true;
+	m_rotationMatrix = rotationMatrix;
+	m_updateLocalToWorldMatrix = true;
 }
 void Transform::SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder, CoordinateSystem system)
 {
@@ -90,17 +85,17 @@ void Transform::SetRotationEulerRadians(Float3 radians, Uint3 rotationOrder, Coo
 void Transform::SetScale(float x, float y, float z)
 {
 	Float3 scale(x, y, z);
-	if (this->scale == scale)
+	if (m_scale == scale)
 		return;
-	this->scale = scale;
-	updateLocalToWorldMatrix = true;
+	m_scale = scale;
+	m_updateLocalToWorldMatrix = true;
 }
 void Transform::SetScale(const Float3& scale)
 {
-	if (this->scale == scale)
+	if (m_scale == scale)
 		return;
-	this->scale = scale;
-	updateLocalToWorldMatrix = true;
+	m_scale = scale;
+	m_updateLocalToWorldMatrix = true;
 }
 void Transform::SetScale(float scale)
 {
@@ -108,13 +103,13 @@ void Transform::SetScale(float scale)
 }
 void Transform::SetLocalToWorldMatrix(const Float4x4& localToWorldMatrix)
 {
-	this->localToWorldMatrix = localToWorldMatrix;
-	position = localToWorldMatrix.GetTranslation();
-	scale = localToWorldMatrix.GetScale();
-	rotationMatrix = localToWorldMatrix.GetRotation3x3(scale);
-	worldToLocalMatrix = localToWorldMatrix.Inverse();
-	normalMatrix = worldToLocalMatrix.Transpose();
-	updateLocalToWorldMatrix = false;
+	m_localToWorldMatrix = localToWorldMatrix;
+	m_position = localToWorldMatrix.GetTranslation();
+	m_scale = localToWorldMatrix.GetScale();
+	m_rotationMatrix = localToWorldMatrix.GetRotation3x3(m_scale);
+	m_worldToLocalMatrix = localToWorldMatrix.Inverse();
+	m_normalMatrix = m_worldToLocalMatrix.Transpose();
+	m_updateLocalToWorldMatrix = false;
 }
 
 
@@ -122,90 +117,90 @@ void Transform::SetLocalToWorldMatrix(const Float4x4& localToWorldMatrix)
 // Getters:
 Float3 Transform::GetPosition() const
 {
-	return position;
+	return m_position;
 }
 Float3x3 Transform::GetRotation3x3() const
 {
-	return rotationMatrix;
+	return m_rotationMatrix;
 }
 Float4x4 Transform::GetRotation4x4() const
 {
-	return Float4x4(rotationMatrix);
+	return Float4x4(m_rotationMatrix);
 }
 Float3 Transform::GetScale() const
 {
-	return scale;
+	return m_scale;
 }
 Float4x4 Transform::GetLocalToWorldMatrix()
 {
-	if (updateLocalToWorldMatrix)
+	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return localToWorldMatrix;
+	return m_localToWorldMatrix;
 }
 Float4x4 Transform::GetWorldToLocalMatrix()
 {
-	if (updateLocalToWorldMatrix)
+	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return worldToLocalMatrix;
+	return m_worldToLocalMatrix;
 }
 Float4x4 Transform::GetNormalMatrix()
 {
-	if (updateLocalToWorldMatrix)
+	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return normalMatrix;
+	return m_normalMatrix;
 }
 Float3 Transform::GetForward()
 {// +z direction
-	if (updateLocalToWorldMatrix)
+	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return Float3(localToWorldMatrix.GetColumn(2));
+	return Float3(m_localToWorldMatrix.GetColumn(2));
 }
 Float3 Transform::GetBackward()
 {// -z direction
-	if (updateLocalToWorldMatrix)
+	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return -Float3(localToWorldMatrix.GetColumn(2));
+	return -Float3(m_localToWorldMatrix.GetColumn(2));
 }
 Float3 Transform::GetRight()
 {// +x direction
-	if (updateLocalToWorldMatrix)
+	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return Float3(localToWorldMatrix.GetColumn(0));
+	return Float3(m_localToWorldMatrix.GetColumn(0));
 }
 Float3 Transform::GetLeft()
 {// -x direction
-	if (updateLocalToWorldMatrix)
+	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return -Float3(localToWorldMatrix.GetColumn(0));
+	return -Float3(m_localToWorldMatrix.GetColumn(0));
 }
 Float3 Transform::GetUp()
 {// +y direction
-	if (updateLocalToWorldMatrix)
+	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return Float3(localToWorldMatrix.GetColumn(1));
+	return Float3(m_localToWorldMatrix.GetColumn(1));
 }
 Float3 Transform::GetDown()
 {// -y direction
-	if (updateLocalToWorldMatrix)
+	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return -Float3(localToWorldMatrix.GetColumn(1));
+	return -Float3(m_localToWorldMatrix.GetColumn(1));
 }
 
 
 
-// Private:
+// Private methods:
 void Transform::UpdateLocalToWorldMatrix()
 {
-	updateLocalToWorldMatrix = false;
-	localToWorldMatrix = Float4x4::Translate(position) * Float4x4(rotationMatrix) * Float4x4::Scale(scale);
-	worldToLocalMatrix = localToWorldMatrix.Inverse();
-	normalMatrix = worldToLocalMatrix.Transpose();
+	m_updateLocalToWorldMatrix = false;
+	m_localToWorldMatrix = Float4x4::Translate(m_position) * Float4x4(m_rotationMatrix) * Float4x4::Scale(m_scale);
+	m_worldToLocalMatrix = m_localToWorldMatrix.Inverse();
+	m_normalMatrix = m_worldToLocalMatrix.Transpose();
 }
 
 
 
 // Overrides:
-std::string Transform::ToString() const
+const std::string Transform::ToString() const
 {
 	return "Transform";
 }

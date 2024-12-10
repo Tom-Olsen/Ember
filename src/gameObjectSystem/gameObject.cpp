@@ -1,21 +1,17 @@
 #include "gameObject.h"
-#include "scene.h"
-#include "logger.h"
+#include "emberEngine.h"
 
 
 
-// Constructors:
-GameObject::GameObject(std::string name)
+// Constructors/Destructor:
+GameObject::GameObject(const std::string& name)
 {
-	this->name = name;
-	this->isActive = true;
- 	transform = new Transform(Float3(0.0f), Float3x3::identity, Float3(1.0f));
-	AddComponent(transform);
+	m_name = name;
+	isActive = true;
+	m_pTransform = new Transform(Float3(0.0f), Float3x3::identity, Float3(1.0f));
+	this->m_pScene = nullptr;
+	AddComponent(m_pTransform);
 }
-
-
-
-// Destructor:
 GameObject::~GameObject()
 {
 
@@ -23,53 +19,70 @@ GameObject::~GameObject()
 
 
 
-// Public:
-void GameObject::SetScene(Scene* scene)
+// Public methods:
+// Setters:
+void GameObject::SetScene(Scene* pScene)
 {
-	this->scene = scene;
-	for (auto& [_, component] : components)
-		component->scene = scene;
+	m_pScene = pScene;
+	for (auto& [_, component] : m_components)
+		component->SetScene(pScene);
 }
 template <typename T>
-void GameObject::AddComponent(T* component)
+void GameObject::AddComponent(T* pComponent)
 {
 	// Check if T is a Component:
     static_assert(std::is_base_of<Component, T>::value, "T is not a Component.");
 
 	// Check if component is already attached to a gameObject:
-	if (component->gameObject != nullptr)
+	if (pComponent->GetGameObject() != nullptr)
 	{
 		LOG_WARN("Component '{}' is already attached to a gameObject!", std::string(typeid(T).name()));
 		return;
 	}
 
-	// If gameObject aleady owns a component of type T, do nothing.
-	if (components.emplace(typeid(T), std::unique_ptr<T>(component)).second == false)
+	// Add component to gameObject if not already attached:
+	if (m_components.find(typeid(T)) == m_components.end())
 	{
-		LOG_WARN("GameObject '{}' already owns a '{}' component!", name, std::string(typeid(T).name()));
-		return;
+		m_components.emplace(typeid(T), std::unique_ptr<T>(pComponent));
+		pComponent->SetGameObject(this);
+		pComponent->SetTransform(m_pTransform);
 	}
 	else
-	{
-		component->gameObject = this;
-		component->transform = transform;
-	}
+		LOG_WARN("GameObject '{}' already owns a '{}' component!", m_name, std::string(typeid(T).name()));
 }
 
+// Getters:
+const std::string& GameObject::GetName() const
+{
+	return m_name;
+}
+Transform* const GameObject::GetTransform() const
+{
+	return m_pTransform;
+}
+Scene* const GameObject::GetScene() const
+{
+	return m_pScene;
+}
 template <typename T>
 T* GameObject::GetComponent()
 {
 	static_assert(std::is_base_of<Component, T>::value, "T is not a Component.");
-	auto it = components.find(typeid(T));
-	if (it != components.end())
+	auto it = m_components.find(typeid(T));
+	if (it != m_components.end())
 		return dynamic_cast<T*>(it->second.get());
 	return nullptr;
 }
+const std::unordered_map<std::type_index, std::unique_ptr<Component>>& GameObject::GetComponents() const
+{
+	return m_components;
+}
 
+// Debugging:
 void GameObject::PrintComponents() const
 {
-	LOG_TRACE("Components attached to: {}", name);
-	for (const auto& pair : components)
+	LOG_TRACE("Components attached to: {}", m_name);
+	for (const auto& pair : m_components)
 		LOG_TRACE(pair.second->ToString());
 }
 

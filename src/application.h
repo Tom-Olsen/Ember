@@ -2,6 +2,8 @@
 #define __INCLUDE_GUARD_application_h__
 #include "vulkanContext.h"
 #include "vulkanRenderer.h"
+#include "materialProperties.h"
+#include "component.h"
 #include "eventSystem.h"
 #include "renderPassManager.h"
 #include "materialManager.h"

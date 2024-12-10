@@ -1,29 +1,27 @@
 #include "drawMeshData.h"
 #include "graphics.h"
 #include "mesh.h"
-#include "mathf.h"
 #include "material.h"
 #include "meshManager.h"
 #include "materialManager.h"
+#include "materialProperties.h"
 #include "meshGenerator.h"
-#include "logger.h"
-#include "gameObject.h"
 
 
 
 // Constructor/Destructor:
 DrawMeshData::DrawMeshData()
 {
-	sphereMesh = MeshGenerator::CubeSphere(0.5f, 1, "cubeSphere");
-	arrowMesh = MeshGenerator::ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 4, "arrowEdgy");
-	mesh = nullptr;
-	material = nullptr;
-	materialProperties = nullptr;
+	m_pSphereMesh = MeshGenerator::CubeSphere(0.5f, 1, "cubeSphere");
+	m_pArrowMesh = MeshGenerator::ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 4, "arrowEdgy");
+	m_pMesh = nullptr;
+	m_pMaterial = nullptr;
+	m_pMaterialProperties = nullptr;
 }
 DrawMeshData::~DrawMeshData()
 {
-	delete sphereMesh;
-	delete arrowMesh;
+	delete m_pSphereMesh;
+	delete m_pArrowMesh;
 }
 
 
@@ -34,25 +32,25 @@ void DrawMeshData::Update()
 	bool receiveShadows = false;
 	bool castShadows = false;
 
-	if (sphereMesh == nullptr)
-		sphereMesh = MeshManager::GetMesh("cubeSphere");
-	if (arrowMesh == nullptr)
-		arrowMesh = MeshManager::GetMesh("arrowEdgy");
-	if (material == nullptr)
-		material = MaterialManager::GetMaterial("default");
-	if (mesh == nullptr)
-		mesh = gameObject->GetComponent<MeshRenderer>()->mesh;
+	if (m_pSphereMesh == nullptr)
+		m_pSphereMesh = MeshManager::GetMesh("cubeSphere");
+	if (m_pArrowMesh == nullptr)
+		m_pArrowMesh = MeshManager::GetMesh("arrowEdgy");
+	if (m_pMaterial == nullptr)
+		m_pMaterial = MaterialManager::GetMaterial("default");
+	if (m_pMesh == nullptr)
+		m_pMesh = GetGameObject()->GetComponent<MeshRenderer>()->GetMesh();
 
 	// Transformation matrices:
-	Float4x4 localToWorld = transform->GetLocalToWorldMatrix();
-	Float4x4 normalMatrix = transform->GetNormalMatrix();
+	Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
+	Float4x4 normalMatrix = GetTransform()->GetNormalMatrix();
 
-	for (uint32_t i = 0; i < mesh->GetVertexCount(); i++)
+	for (uint32_t i = 0; i < m_pMesh->GetVertexCount(); i++)
 	{
 		// Local space data:
-		Float3 localPosition = mesh->GetPositions()[i] + 0.05f * mesh->GetNormals()[i];
-		Float3 localNormal = mesh->GetNormals()[i];
-		Float3 localTangent = mesh->GetTangents()[i];
+		Float3 localPosition = m_pMesh->GetPositions()[i] + 0.05f * m_pMesh->GetNormals()[i];
+		Float3 localNormal = m_pMesh->GetNormals()[i];
+		Float3 localTangent = m_pMesh->GetTangents()[i];
 
 		// World space data:
 		Float3 worldPosition = Float3(localToWorld * Float4(localPosition, 1.0f));
@@ -60,17 +58,17 @@ void DrawMeshData::Update()
 		Float3 worldTangent = Float3(normalMatrix * Float4(localTangent, 0.0f));
 		
 		// Draw calls:
-		materialProperties = Graphics::Draw(sphereMesh, material, Float3(worldPosition), Float3x3::identity, 0.1f, receiveShadows, castShadows);
-		materialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.66f, 0.33f, 0.0f, 1.0f));
+		m_pMaterialProperties = Graphics::Draw(m_pSphereMesh, m_pMaterial, Float3(worldPosition), Float3x3::identity, 0.1f, receiveShadows, castShadows);
+		m_pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.66f, 0.33f, 0.0f, 1.0f));
 
-		materialProperties = Graphics::Draw(arrowMesh, material, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f, receiveShadows, castShadows);
-		materialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.0f, 0.0f, 1.0f, 1.0f));
+		m_pMaterialProperties = Graphics::Draw(m_pArrowMesh, m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f, receiveShadows, castShadows);
+		m_pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.0f, 0.0f, 1.0f, 1.0f));
 
-		materialProperties = Graphics::Draw(arrowMesh, material, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f, receiveShadows, castShadows);
-		materialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
+		m_pMaterialProperties = Graphics::Draw(m_pArrowMesh, m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f, receiveShadows, castShadows);
+		m_pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
 	}
 }
-std::string DrawMeshData::ToString() const
+const std::string DrawMeshData::ToString() const
 {
 	return "DrawMeshData";
 }

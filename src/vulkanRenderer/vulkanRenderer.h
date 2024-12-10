@@ -6,6 +6,7 @@
 
 
 
+class Mesh;
 class MeshRenderer;
 class Scene;
 struct VulkanContext;

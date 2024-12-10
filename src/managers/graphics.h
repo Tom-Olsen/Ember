@@ -10,6 +10,7 @@ class Mesh;
 class Material;
 class MaterialProperties;
 class MeshRenderer;
+class Transform;
 
 
 
@@ -20,6 +21,7 @@ public: // Members
 private: // Members
     static uint32_t s_drawIndex;
     static bool s_isInitialized;
+    static std::vector<Transform*> s_transforms;
     static std::vector<MeshRenderer*> s_meshRenderers;
 
 public: // Methods

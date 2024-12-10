@@ -1,8 +1,6 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_transform_h__
 #define __INCLUDE_GUARD_transform_h__
-#include "mathf.h"
-#include "component.h"
+#include "emberEngine.h"
 
 
 
@@ -16,13 +14,13 @@
 class Transform : public Component
 {
 private: // Members:
-	Float3 position;
-	Float3x3 rotationMatrix;
-	Float3 scale;
-	Float4x4 localToWorldMatrix;
-	Float4x4 worldToLocalMatrix;
-	Float4x4 normalMatrix;
-	bool updateLocalToWorldMatrix;
+	Float3 m_position;
+	Float3x3 m_rotationMatrix;
+	Float3 m_scale;
+	Float4x4 m_localToWorldMatrix;
+	Float4x4 m_worldToLocalMatrix;
+	Float4x4 m_normalMatrix;
+	bool m_updateLocalToWorldMatrix;
 
 public: // Methods:
 	Transform();
@@ -33,7 +31,7 @@ public: // Methods:
 	void SetPosition(float x, float y, float z);
 	void SetPosition(const Float3& position);
 	void AddToPosition(float x, float y, float z);
-	void AddToPosition(const Float3& position);
+	void AddToPosition(const Float3& translation);
 	void SetRotationMatrix(const Float3x3& rotationMatrix);
 	void SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder = Uint3(1,0,2), CoordinateSystem system = CoordinateSystem::local);
 	void SetRotationEulerRadians(float radiansX, float radiansY, float radiansZ, Uint3 rotationOrder = Uint3(1,0,2), CoordinateSystem system = CoordinateSystem::local);
@@ -60,7 +58,7 @@ public: // Methods:
 	Float3 GetDown();
 
 	// Overrides:
-	std::string ToString() const override;
+	const std::string ToString() const override;
 private: // Methods:
 	void UpdateLocalToWorldMatrix();
 };

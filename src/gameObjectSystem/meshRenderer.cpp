@@ -1,39 +1,38 @@
 #include "meshRenderer.h"
 #include "camera.h"
-#include "gameObject.h"
+#include "directionalLight.h"
 #include "material.h"
 #include "materialManager.h"
+#include "materialProperties.h"
 #include "pipeline.h"
+#include "pointLight.h"
 #include "samplerManager.h"
+#include "spotLight.h"
 #include "textureManager.h"
 #include "renderPassManager.h"
-#include "logger.h"
 
 
 
 // Static members:
-Material* MeshRenderer::shadowMaterial = nullptr;
-std::unique_ptr<MaterialProperties> MeshRenderer::shadowMaterialProperties = nullptr;
+Material* MeshRenderer::m_pShadowMaterial = nullptr;
+std::unique_ptr<MaterialProperties> MeshRenderer::m_pShadowMaterialProperties = nullptr;
 
 
 
-// Constructor:
+// Constructor/Destructor:
 MeshRenderer::MeshRenderer()
 {
-	if (shadowMaterial == nullptr)
-		shadowMaterial = MaterialManager::GetMaterial("shadow");
-	if (shadowMaterialProperties == nullptr)
-		shadowMaterialProperties = std::make_unique<MaterialProperties>(shadowMaterial);
-
-	mesh = nullptr;
-	material = nullptr;
 	castShadows = true;
 	receiveShadows = true;
+
+	m_pMesh = nullptr;
+	m_pMaterial = nullptr;
+
+	if (m_pShadowMaterial == nullptr)
+		m_pShadowMaterial = MaterialManager::GetMaterial("shadow");
+	if (m_pShadowMaterialProperties == nullptr)
+		m_pShadowMaterialProperties = std::make_unique<MaterialProperties>(m_pShadowMaterial);
 }
-
-
-
-// Destructor:
 MeshRenderer::~MeshRenderer()
 {
 
@@ -43,25 +42,29 @@ MeshRenderer::~MeshRenderer()
 
 // Public methods:
 // Setter:
-void MeshRenderer::SetMaterial(Material* material)
+void MeshRenderer::SetMesh(Mesh* pMesh)
 {
-	this->material = material;
-	materialProperties = std::make_unique<MaterialProperties>(material);
+	m_pMesh = pMesh;
 }
-void MeshRenderer::SetRenderMatrizes(Camera* camera)
+void MeshRenderer::SetMaterial(Material* pMaterial)
+{
+	m_pMaterial = pMaterial;
+	m_pMaterialProperties = std::make_unique<MaterialProperties>(m_pMaterial);
+}
+void MeshRenderer::SetRenderMatrizes(Camera* const pCamera)
 {
 	static std::string name = "RenderMatrizes";
 
-	Float4x4 modelMatrix = transform->GetLocalToWorldMatrix();
-	Float4x4 cameraViewMatrix = camera->GetViewMatrix();
-	Float4x4 cameraProjMatrix = camera->GetProjectionMatrix();
+	Float4x4 modelMatrix = GetTransform()->GetLocalToWorldMatrix();
+	Float4x4 cameraViewMatrix = pCamera->GetViewMatrix();
+	Float4x4 cameraProjMatrix = pCamera->GetProjectionMatrix();
 	Float4x4 localToClipMatrix = cameraProjMatrix * cameraViewMatrix * modelMatrix;
 
-	materialProperties->SetValue(name, "modelMatrix", modelMatrix);
-	materialProperties->SetValue(name, "viewMatrix", cameraViewMatrix);
-	materialProperties->SetValue(name, "projMatrix", cameraProjMatrix);
-	materialProperties->SetValue(name, "normalMatrix", transform->GetNormalMatrix());
-	materialProperties->SetValue(name, "localToClipMatrix", localToClipMatrix);
+	m_pMaterialProperties->SetValue(name, "modelMatrix", modelMatrix);
+	m_pMaterialProperties->SetValue(name, "viewMatrix", cameraViewMatrix);
+	m_pMaterialProperties->SetValue(name, "projMatrix", cameraProjMatrix);
+	m_pMaterialProperties->SetValue(name, "normalMatrix", GetTransform()->GetNormalMatrix());
+	m_pMaterialProperties->SetValue(name, "localToClipMatrix", localToClipMatrix);
 }
 void MeshRenderer::SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights)
 {
@@ -72,11 +75,11 @@ void MeshRenderer::SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS
 		if (directionalLights[i] != nullptr)
 		{
 			Float4x4 worldToClipMatrix = directionalLights[i]->GetProjectionMatrix() * directionalLights[i]->GetViewMatrix();
-			materialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
-			materialProperties->SetValue(blockName, arrayName, i, "direction", directionalLights[i]->GetDirection());
-			materialProperties->SetValue(blockName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "direction", directionalLights[i]->GetDirection());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
 		}
-	materialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
+	m_pMaterialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
 }
 void MeshRenderer::SetLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spotLights)
 {
@@ -87,12 +90,12 @@ void MeshRenderer::SetLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spot
 		if (spotLights[i] != nullptr)
 		{
 			Float4x4 worldToClipMatrix = spotLights[i]->GetProjectionMatrix() * spotLights[i]->GetViewMatrix();
-			materialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
-			materialProperties->SetValue(blockName, arrayName, i, "position", spotLights[i]->GetPosition());
-			materialProperties->SetValue(blockName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
-			materialProperties->SetValue(blockName, arrayName, i, "blendStartEnd", spotLights[i]->GetBlendStartEnd());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "position", spotLights[i]->GetPosition());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "blendStartEnd", spotLights[i]->GetBlendStartEnd());
 		}
-	materialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
+	m_pMaterialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
 }
 void MeshRenderer::SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& pointLights)
 {
@@ -105,52 +108,60 @@ void MeshRenderer::SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& poi
 			for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
 			{
 				Float4x4 worldToClipMatrix = pointLights[i]->GetProjectionMatrix() * pointLights[i]->GetViewMatrix(faceIndex);
-				materialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", faceIndex, worldToClipMatrix);
+				m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", faceIndex, worldToClipMatrix);
 			}
-			materialProperties->SetValue(blockName, arrayName, i, "position", pointLights[i]->GetPosition());
-			materialProperties->SetValue(blockName, arrayName, i, "colorIntensity", pointLights[i]->GetColorIntensity());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "position", pointLights[i]->GetPosition());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", pointLights[i]->GetColorIntensity());
 		}
-	materialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
+	m_pMaterialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
 }
 
 
 
 // Shading render pass getters:
+Mesh* MeshRenderer::GetMesh()
+{
+	return m_pMesh;
+}
 Material* MeshRenderer::GetMaterial()
 {
-	return material;
+	return m_pMaterial;
+}
+MaterialProperties* MeshRenderer::GetMaterialProperties()
+{
+	return m_pMaterialProperties.get();
 }
 const VkDescriptorSet* const MeshRenderer::GetShadingDescriptorSets(uint32_t frameIndex) const
 {
-	return &materialProperties->GetDescriptorSets()[frameIndex];
+	return &m_pMaterialProperties->GetDescriptorSets()[frameIndex];
 }
 const VkPipeline& MeshRenderer::GetShadingPipeline() const
 {
-	return material->GetPipeline()->GetVkPipeline();
+	return m_pMaterial->GetPipeline()->GetVkPipeline();
 }
 const VkPipelineLayout& MeshRenderer::GetShadingPipelineLayout() const
 {
-	return material->GetPipeline()->GetVkPipelineLayout();
+	return m_pMaterial->GetPipeline()->GetVkPipelineLayout();
 }
 
 // Shadow render pass getters:
 const VkDescriptorSet* const MeshRenderer::GetShadowDescriptorSets(uint32_t frameIndex)
 {
-	return &shadowMaterialProperties->GetDescriptorSets()[frameIndex];
+	return &m_pShadowMaterialProperties->GetDescriptorSets()[frameIndex];
 }
 const VkPipeline& MeshRenderer::GetShadowPipeline()
 {
-	return shadowMaterial->GetPipeline()->GetVkPipeline();
+	return m_pShadowMaterial->GetPipeline()->GetVkPipeline();
 }
 const VkPipelineLayout& MeshRenderer::GetShadowPipelineLayout()
 {
-	return shadowMaterial->GetPipeline()->GetVkPipelineLayout();
+	return m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
 }
 
 
 
 // Overrides:
-std::string MeshRenderer::ToString() const
+const std::string MeshRenderer::ToString() const
 {
 	return "MeshRenderer";
 }

@@ -10,6 +10,7 @@
 // Static members:
 uint32_t Graphics::s_drawIndex = 0;
 bool Graphics::s_isInitialized = false;
+std::vector<Transform*> Graphics::s_transforms;
 std::vector<MeshRenderer*> Graphics::s_meshRenderers;
 
 
@@ -22,21 +23,24 @@ void Graphics::Init()
 
 	s_isInitialized = true;
 
+	s_transforms.resize(100);
 	s_meshRenderers.resize(100);
 	for (uint32_t i = 0; i < 100; i++)
 	{
+		s_transforms[i] = new Transform();
 		s_meshRenderers[i] = new MeshRenderer();
-		s_meshRenderers[i]->transform = new Transform();
+		s_meshRenderers[i]->SetTransform(s_transforms[i]);
 		s_meshRenderers[i]->isActive = false;
 	}
 }
 void Graphics::Clear()
 {
-	for (MeshRenderer* pMeshRenderer : s_meshRenderers)
+	for (uint32_t i = 0; i < s_transforms.size(); i++)
 	{
-		delete pMeshRenderer->transform;
-		delete pMeshRenderer;
+		delete s_transforms[i];
+		delete s_meshRenderers[i];
 	}
+	s_transforms.clear();
 	s_meshRenderers.clear();
 }
 
@@ -61,11 +65,14 @@ MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 lo
 	if (s_drawIndex >= static_cast<uint32_t>(s_meshRenderers.size()))
 	{
 		uint32_t oldSize = static_cast<uint32_t>(s_meshRenderers.size());
-		s_meshRenderers.resize(2 * s_meshRenderers.size());
-		for (uint32_t i = oldSize; i < s_meshRenderers.size(); i++)
+		uint32_t newSize = 2 * oldSize;
+		s_transforms.resize(newSize);
+		s_meshRenderers.resize(newSize);
+		for (uint32_t i = oldSize; i < newSize; i++)
 		{
+			s_transforms[i] = new Transform();
 			s_meshRenderers[i] = new MeshRenderer();
-			s_meshRenderers[i]->transform = new Transform();
+			s_meshRenderers[i]->SetTransform(s_transforms[i]);
 			s_meshRenderers[i]->isActive = false;
 		}
 	}
@@ -73,15 +80,15 @@ MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 lo
 	// Setup current draw call:
 	MeshRenderer* pMeshRenderer = s_meshRenderers[s_drawIndex];
 	pMeshRenderer->isActive = true;
-	pMeshRenderer->mesh = pMesh;
+	pMeshRenderer->SetMesh(pMesh);
 	if (pMeshRenderer->GetMaterial() != pMaterial)
 		pMeshRenderer->SetMaterial(pMaterial);
 	pMeshRenderer->castShadows = castShadows;
 	pMeshRenderer->receiveShadows = receiveShadows;
-	pMeshRenderer->transform->SetLocalToWorldMatrix(localToWorldMatrix);
+	pMeshRenderer->GetTransform()->SetLocalToWorldMatrix(localToWorldMatrix);
 
 	// By returning the meshRenderers materialProperties, we allow user to change the material properties of this draw call:
-	MaterialProperties* pMaterialProperties = s_meshRenderers[s_drawIndex]->materialProperties.get();
+	MaterialProperties* pMaterialProperties = s_meshRenderers[s_drawIndex]->GetMaterialProperties();
 	s_drawIndex++;
 	return pMaterialProperties;
 }

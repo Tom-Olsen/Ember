@@ -1,4 +1,3 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_gameObject_h__
 #define __INCLUDE_GUARD_gameObject_h__
 #include <memory>
@@ -6,48 +5,49 @@
 #include <typeindex>
 #include <unordered_map>
 
-// Components:
-#include "transform.h"
-#include "camera.h"
-#include "cameraController.h"
-#include "meshRenderer.h"
-#include "spinLocal.h"
-#include "spinGlobal.h"
-#include "directionalLight.h"
-#include "spotLight.h"
-#include "pointLight.h"
-#include "drawMeshData.h"
 
 
-
-// Forward declarations
 class Component;
 class Scene;
+class Transform;
 
 
 
+/// <summary>
+/// GameObject owns all Components that are attached to it.
+/// For now every type of Component can only ever be attached once to a GameObject.
+/// </summary>
 class GameObject
 {
 public: // Members:
-	std::string name;
 	bool isActive;
-	Transform* transform;
-	Scene* scene;
-	// Container for storing components, mapped by their type
-	// => each type of component can only be added once
-	std::unordered_map<std::type_index, std::unique_ptr<Component>> components;
 
 private: // Members:
+	std::string m_name;
+	Transform* m_pTransform;
+	Scene* m_pScene;
+	// Container for storing components, mapped by their type
+	// => each type of component can only be added once
+	std::unordered_map<std::type_index, std::unique_ptr<Component>> m_components;
 
 public: // Methods:
-	GameObject(std::string name = "");
+	GameObject(const std::string& name = "");
 	~GameObject();
 
-	void SetScene(Scene* scene);
+	// Setters:
+	void SetScene(Scene* pScene);
 	template <typename T>
-	void AddComponent(T* component);
+	void AddComponent(T* pComponent);
+
+	// Getters:
+	const std::string& GetName() const;
+	Transform* const GetTransform() const;
+	Scene* const GetScene() const;
 	template <typename T>
 	T* GetComponent();
+	const std::unordered_map<std::type_index, std::unique_ptr<Component>>& GetComponents() const;
+
+	// Debugging:
 	void PrintComponents() const;
 };
 

@@ -1,6 +1,6 @@
 #define SDL_MAIN_HANDLED
 #include "application.h"
-#include "logger.h"
+#include "emberEngine.h"
 
 
 
@@ -88,8 +88,8 @@ int main()
     {// Camera:
         GameObject* gameObject = new GameObject("mainCamera");
 		Float3 pos = Float3(0.0f, 3.0f, 5.0f);
-        gameObject->transform->SetPosition(pos);
-        gameObject->transform->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up));
+        gameObject->GetTransform()->SetPosition(pos);
+        gameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up));
     
         Camera* camera = new Camera();
         gameObject->AddComponent<Camera>(camera);
@@ -104,14 +104,14 @@ int main()
         GameObject* gameObject = new GameObject("pointLight");
         Float3 pos = Float3(1.0f, 2.0f, 0.0f);
         Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
-        gameObject->transform->SetPosition(pos);
-        gameObject->transform->SetRotationMatrix(matrix);
+        gameObject->GetTransform()->SetPosition(pos);
+        gameObject->GetTransform()->SetRotationMatrix(matrix);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+        meshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
-        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->materialProperties->SetTexture2d("colorMap", TextureManager::GetTexture2d("white"));
+        meshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("white"));
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
@@ -131,11 +131,11 @@ int main()
         GameObject* gameObject = new GameObject("light0");
         Float3 pos = Float3(7.0f, 7.0f, 3.5f);
         Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
-        gameObject->transform->SetPosition(pos);
-        gameObject->transform->SetRotationMatrix(matrix);
+        gameObject->GetTransform()->SetPosition(pos);
+        gameObject->GetTransform()->SetRotationMatrix(matrix);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+        meshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
@@ -174,11 +174,11 @@ int main()
         GameObject* gameObject = new GameObject("light1");
         Float3 pos = Float3(-7.0f, 7.0f, 3.5f);
         Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
-        gameObject->transform->SetPosition(pos);
-        gameObject->transform->SetRotationMatrix(matrix);
+        gameObject->GetTransform()->SetPosition(pos);
+        gameObject->GetTransform()->SetRotationMatrix(matrix);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+        meshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
@@ -217,11 +217,11 @@ int main()
         GameObject* gameObject = new GameObject("light2");
         Float3 pos = Float3(0.0f, 7.0f, -7.5f);
         Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
-        gameObject->transform->SetPosition(pos);
-        gameObject->transform->SetRotationMatrix(matrix);
+        gameObject->GetTransform()->SetPosition(pos);
+        gameObject->GetTransform()->SetRotationMatrix(matrix);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+        meshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
         meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
@@ -260,10 +260,10 @@ int main()
         GameObject* gameObject = new GameObject("skybox");
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("unitCube");
+        meshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("skybox"));
-        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->materialProperties->SetTexture2d("colorMap", TextureManager::GetTextureCube("skyboxClouds0"));
+        meshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTextureCube("skyboxClouds0"));
         meshRenderer->receiveShadows = meshRenderer->castShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
@@ -271,48 +271,48 @@ int main()
     }
     { // Floor:
         GameObject* gameObject = new GameObject("floor");
-        gameObject->transform->SetPosition(0.0f, -0.5f, 0.0f);
-        gameObject->transform->SetScale(30.0f);
-        gameObject->transform->SetRotationEulerDegrees(-90.0f, 0.0f, 0.0f);
+        gameObject->GetTransform()->SetPosition(0.0f, -0.5f, 0.0f);
+        gameObject->GetTransform()->SetScale(30.0f);
+        gameObject->GetTransform()->SetRotationEulerDegrees(-90.0f, 0.0f, 0.0f);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
+        meshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
-        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->materialProperties->SetTexture2d("colorMap", TextureManager::GetTexture2d("ground0_color"));
-        meshRenderer->materialProperties->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));
-        meshRenderer->materialProperties->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_opengl"));
-        //meshRenderer->materialProperties->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_directx"));
+        meshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("ground0_color"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_opengl"));
+        //meshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_directx"));
 		Float4 scaleOffset = Float4(10, 10, 1, 1);
-        meshRenderer->materialProperties->SetValue("SurfaceProperties", "scaleOffset", scaleOffset);
-        meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
+        meshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "scaleOffset", scaleOffset);
+        meshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         scene->AddGameObject(gameObject);
     }
     { // Wall:
         GameObject* gameObject = new GameObject("wall");
-        gameObject->transform->SetPosition(0.0f, 2.5f, -10.0f);
-        gameObject->transform->SetScale(Float3(30.0f, 6.0f, 1.0f));
+        gameObject->GetTransform()->SetPosition(0.0f, 2.5f, -10.0f);
+        gameObject->GetTransform()->SetScale(Float3(30.0f, 6.0f, 1.0f));
 
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("unitQuad");
+        meshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
-        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->materialProperties->SetTexture2d("colorMap", TextureManager::GetTexture2d("brick"));
-        meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
-        meshRenderer->materialProperties->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 2, 1, 1));
+        meshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("brick"));
+        meshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+        meshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 2, 1, 1));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
         scene->AddGameObject(gameObject);
     }
     {// ThreeLeg:
         GameObject* gameObject = new GameObject("threeLeg");
-        gameObject->transform->SetPosition(-2.0f, 0.0f, 1.0f);
-        gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+        gameObject->GetTransform()->SetPosition(-2.0f, 0.0f, 1.0f);
+        gameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("threeLeg");
+        meshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
         //meshRenderer->castShadows = meshRenderer->receiveShadows = false;
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
@@ -321,14 +321,14 @@ int main()
     }
     {// Cube0:
         GameObject* gameObject = new GameObject("cube0");
-        gameObject->transform->SetPosition(-1.0f, 0.0f, -1.0f);
-        gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+        gameObject->GetTransform()->SetPosition(-1.0f, 0.0f, -1.0f);
+        gameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("unitCube");
+        meshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
-        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->materialProperties->SetTexture2d("colorMap", TextureManager::GetTexture2d("brick"));
+        meshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("brick"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
@@ -341,29 +341,29 @@ int main()
     }
     {// Cube1:
         GameObject* gameObject = new GameObject("cube1");
-        gameObject->transform->SetPosition(2.0f, 0.0f, 0.0f);
-        gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+        gameObject->GetTransform()->SetPosition(2.0f, 0.0f, 0.0f);
+        gameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("unitCube");
+        meshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
-        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->materialProperties->SetTexture2d("colorMap", TextureManager::GetTexture2d("stones"));
+        meshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("stones"));
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
         scene->AddGameObject(gameObject);
     }
     {// Sphere 0:
         GameObject* gameObject = new GameObject("sphere0");
-        gameObject->transform->SetPosition(0.5f, 0.0f, 0.0f);
-        gameObject->transform->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
+        gameObject->GetTransform()->SetPosition(0.5f, 0.0f, 0.0f);
+        gameObject->GetTransform()->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
     
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("zylinderSmooth");
+        meshRenderer->SetMesh(MeshManager::GetMesh("zylinderSmooth"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
-        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->materialProperties->SetTexture2d("colorMap", TextureManager::GetTexture2d("wall0"));
-        meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 1.0f);
+        meshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("wall0"));
+        meshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
         SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 0.0f, 45.0f));
@@ -373,15 +373,15 @@ int main()
     }
     {// Sphere 1:
         GameObject* gameObject = new GameObject("sphere1");
-        gameObject->transform->SetPosition(-0.5f, 0.0f, 1.0f);
-        gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+        gameObject->GetTransform()->SetPosition(-0.5f, 0.0f, 1.0f);
+        gameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
 
         MeshRenderer* meshRenderer = new MeshRenderer();
-        meshRenderer->mesh = MeshManager::GetMesh("cubeSphere");
+        meshRenderer->SetMesh(MeshManager::GetMesh("cubeSphere"));
         meshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
-        meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        meshRenderer->materialProperties->SetTexture2d("colorMap", TextureManager::GetTexture2d("wood0"));
-        meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 0.5f);
+        meshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+        meshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("wood0"));
+        meshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 0.5f);
         gameObject->AddComponent<MeshRenderer>(meshRenderer);
 
         SpinLocal* spinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
@@ -400,15 +400,15 @@ int main()
             {
                 GameObject* gameObject = new GameObject("cube" + std::to_string(i) + std::to_string(j));
 				Float3 pos((i / (N - 1.0f) - 0.5f) * dist, (j / (N - 1.0f) - 0.5f) * dist + 0.5f * dist, -8.0f);
-                gameObject->transform->SetPosition(pos);
-                gameObject->transform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+                gameObject->GetTransform()->SetPosition(pos);
+                gameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
     
                 MeshRenderer* meshRenderer = new MeshRenderer();
-                meshRenderer->mesh = MeshManager::GetMesh("unitCube");
+                meshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
                 meshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
-                meshRenderer->materialProperties->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-                meshRenderer->materialProperties->SetTexture2d("colorMap", TextureManager::GetTexture2d("stones"));
-                meshRenderer->materialProperties->SetValue("SurfaceProperties", "roughness", 0.8f);
+                meshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+                meshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("stones"));
+                meshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 0.8f);
                 gameObject->AddComponent<MeshRenderer>(meshRenderer);
     
                 scene->AddGameObject(gameObject);

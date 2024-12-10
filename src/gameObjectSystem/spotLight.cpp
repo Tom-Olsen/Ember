@@ -1,26 +1,20 @@
 #include "spotLight.h"
 #include "shadowRenderPass.h"
-#include "gameObject.h"
-#include "logger.h"
 
 
 
-// Constructor:
+// Constructor/Destructor:
 SpotLight::SpotLight()
 {
-	this->intensity = 1.0f;
-	this->fovRadians = mathf::ToRadians(45.0f);
-	this->aspectRatio = (float)ShadowRenderPass::s_shadowMapWidth / (float)ShadowRenderPass::s_shadowMapHeight;
-	this->nearClip = 0.1f;
-	this->farClip = 15.0f;
-	this->blendStart = 0.8f;
-	this->blendEnd = 1.0f;
-	updateProjectionMatrix = true;
+	m_intensity = 1.0f;
+	m_fovRadians = mathf::ToRadians(45.0f);
+	m_aspectRatio = (float)ShadowRenderPass::s_shadowMapWidth / (float)ShadowRenderPass::s_shadowMapHeight;
+	m_nearClip = 0.1f;
+	m_farClip = 15.0f;
+	m_blendStart = 0.8f;
+	m_blendEnd = 1.0f;
+	m_updateProjectionMatrix = true;
 }
-
-
-
-// Destructor:
 SpotLight::~SpotLight()
 {
 
@@ -31,39 +25,39 @@ SpotLight::~SpotLight()
 // Setters:
 void SpotLight::SetIntensity(const float& intensity)
 {
-	this->intensity = intensity;
+	m_intensity = intensity;
 }
 void SpotLight::SetColor(const Float3& color)
 {
-	this->color = color;
+	m_color = color;
 }
 void SpotLight::SetFovDegrees(const float& fovDegrees)
 {
-	this->fovRadians = mathf::ToRadians(fovDegrees);
-	updateProjectionMatrix = true;
+	m_fovRadians = mathf::ToRadians(fovDegrees);
+	m_updateProjectionMatrix = true;
 }
 void SpotLight::SetFovRadians(const float& fovRadians)
 {
-	this->fovRadians = fovRadians;
-	updateProjectionMatrix = true;
+	m_fovRadians = fovRadians;
+	m_updateProjectionMatrix = true;
 }
 void SpotLight::SetNearClip(const float& nearClip)
 {
-	this->nearClip = nearClip;
-	updateProjectionMatrix = true;
+	m_nearClip = nearClip;
+	m_updateProjectionMatrix = true;
 }
 void SpotLight::SetFarClip(const float& farClip)
 {
-	this->farClip = farClip;
-	updateProjectionMatrix = true;
+	m_farClip = farClip;
+	m_updateProjectionMatrix = true;
 }
 void SpotLight::SetBlendStart(const float& blendStart)
 {
-	this->blendStart = mathf::Clamp(blendStart, 0.0f, 1.0f);
+	m_blendStart = mathf::Clamp(blendStart, 0.0f, 1.0f);
 }
 void SpotLight::SetBlendEnd(const float& blendEnd)
 {
-	this->blendEnd = mathf::Clamp(blendEnd, 0.0f, 1.0f);
+	m_blendEnd = mathf::Clamp(blendEnd, 0.0f, 1.0f);
 }
 
 
@@ -71,57 +65,57 @@ void SpotLight::SetBlendEnd(const float& blendEnd)
 // Getters:
 Float3 SpotLight::GetPosition() const
 {
-	return gameObject->transform->GetPosition();
+	return GetTransform()->GetPosition();
 }
 float SpotLight::GetIntensity() const
 {
-	return intensity;
+	return m_intensity;
 }
 Float3 SpotLight::GetColor() const
 {
-	return color;
+	return m_color;
 }
 Float4 SpotLight::GetColorIntensity() const
 {
-	return Float4(color, intensity);
+	return Float4(m_color, m_intensity);
 }
 float SpotLight::GetFovDegrees() const
 {
-	return mathf::ToDegrees(fovRadians);
+	return mathf::ToDegrees(m_fovRadians);
 }
 float SpotLight::GetFovRadians() const
 {
-	return fovRadians;
+	return m_fovRadians;
 }
 float SpotLight::GetNearClip() const
 {
-	return nearClip;
+	return m_nearClip;
 }
 float SpotLight::GetFarClip() const
 {
-	return farClip;
+	return m_farClip;
 }
 float SpotLight::GetBlendStart() const
 {
-	return blendStart;
+	return m_blendStart;
 }
 float SpotLight::GetBlendEnd() const
 {
-	return blendEnd;
+	return m_blendEnd;
 }
 Float2 SpotLight::GetBlendStartEnd() const
 {
-	return Float2(blendStart, blendEnd);
+	return Float2(m_blendStart, m_blendEnd);
 }
 Float4x4 SpotLight::GetViewMatrix() const
 {
-	return gameObject->transform->GetWorldToLocalMatrix();
+	return GetTransform()->GetWorldToLocalMatrix();
 }
 Float4x4 SpotLight::GetProjectionMatrix()
 {
-	if (updateProjectionMatrix && isActive && gameObject->isActive)
+	if (m_updateProjectionMatrix && isActive && GetGameObject()->isActive)
 		UpdateProjectionMatrix();
-	return projectionMatrix;
+	return m_projectionMatrix;
 }
 
 
@@ -129,14 +123,14 @@ Float4x4 SpotLight::GetProjectionMatrix()
 // Private:
 void SpotLight::UpdateProjectionMatrix()
 {
-	updateProjectionMatrix = false;
-	projectionMatrix = Float4x4::Perspective(fovRadians, aspectRatio, nearClip, farClip);
+	m_updateProjectionMatrix = false;
+	m_projectionMatrix = Float4x4::Perspective(m_fovRadians, m_aspectRatio, m_nearClip, m_farClip);
 }
 
 
 
 // Overrides:
-std::string SpotLight::ToString() const
+const std::string SpotLight::ToString() const
 {
 	return "SpotLight";
 }

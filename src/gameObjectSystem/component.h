@@ -1,15 +1,12 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_component_h__
 #define __INCLUDE_GUARD_component_h__
 #include <string>
-#include "timer.h"
 
 
 
-// Forward declarations
 class GameObject;
-class Transform;
 class Scene;
+class Transform;
 
 
 
@@ -22,25 +19,35 @@ class Scene;
 class Component
 {
 public: // Members:
-	GameObject* gameObject;
-	Transform* transform;
-	Scene* scene;
 	bool isActive;
+
+private: // Members:
+	GameObject* m_pGameObject;
+	Transform* m_pTransform;
+	Scene* m_pScene;
 
 public: // Methods:
 	Component();
 	virtual ~Component();
 
-	/// <summary>
-	/// Check if the Component and its parent GameObject is active.
-	/// </summary>
-	/// <returns></returns>
+	// Getters:
+	GameObject* const GetGameObject() const;
+	Transform* const GetTransform() const;
+	Scene* const GetScene() const;
+
+	// Setters:
+	void SetGameObject(GameObject* pGameObject);
+	void SetTransform(Transform* pTransform);
+	void SetScene(Scene* pScene);
+
+	// Check if the Component and its parent GameObject is active.
 	bool IsActive();
 	virtual void Update();
 
 	// Pure virtual method that must be implemented by derived classes:
-    virtual std::string ToString() const = 0;
+    virtual const std::string ToString() const = 0;
 };
+
 
 
 #endif // __INCLUDE_GUARD_component_h__

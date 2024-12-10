@@ -1,8 +1,6 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_cameraController_h__
 #define __INCLUDE_GUARD_cameraController_h__
-#include "mathf.h"
-#include "component.h"
+#include "emberEngine.h"
 
 
 
@@ -11,15 +9,14 @@
 /// </summary>
 class CameraController : public Component
 {
-public: // Members:
-	float moveSpeed;
-	float fastMoveMultiplier;
-	float rotationSpeed;
-	float zoomSpeed;
+private: // Members:
+	float m_moveSpeed;
+	float m_fastMoveMultiplier;
+	float m_rotationSpeed;
+	float m_zoomSpeed;
 
-	Float3 currentRotation;
-	Float2 mousePosOnDown;
-	Float3x3 rotationMatrixOnDown;
+	Float2 m_mousePosOnDown;
+	Float3x3 m_rotationMatrixOnDown;
 
 
 public: // Methods:
@@ -28,7 +25,7 @@ public: // Methods:
 
 	// Overrides:
 	void Update() override;
-	std::string ToString() const override;
+	const std::string ToString() const override;
 
 private: // Methods:
 	void Translation();

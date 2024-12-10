@@ -1,24 +1,18 @@
 #include "directionalLight.h"
-#include "gameObject.h"
-#include "logger.h"
 
 
 
-// Constructor:
+// Constructor/Destructor:
 DirectionalLight::DirectionalLight()
 {
-	this->intensity = 1.0f;
-	this->color = Float3::one;
-	this->nearClip = 0.01f;
-	this->farClip = 15.0f;
-	this->viewWidth = 15.0f;
-	this->viewHeight = 15.0f;
-	updateProjectionMatrix = true;
+	m_intensity = 1.0f;
+	m_color = Float3::one;
+	m_nearClip = 0.01f;
+	m_farClip = 15.0f;
+	m_viewWidth = 15.0f;
+	m_viewHeight = 15.0f;
+	m_updateProjectionMatrix = true;
 }
-
-
-
-// Destructor:
 DirectionalLight::~DirectionalLight()
 {
 
@@ -27,33 +21,33 @@ DirectionalLight::~DirectionalLight()
 
 
 // Setters:
-void DirectionalLight::SetIntensity(const float& intensity)
+void DirectionalLight::SetIntensity(float intensity)
 {
-	this->intensity = std::clamp(intensity, 0.0f, 1.0f);
+	m_intensity = std::clamp(intensity, 0.0f, 1.0f);
 }
 void DirectionalLight::SetColor(const Float3& color)
 {
-	this->color = color;
+	m_color = color;
 }
-void DirectionalLight::SetNearClip(const float& nearClip)
+void DirectionalLight::SetNearClip(float nearClip)
 {
-	this->nearClip = nearClip;
-	updateProjectionMatrix = true;
+	m_nearClip = nearClip;
+	m_updateProjectionMatrix = true;
 }
-void DirectionalLight::SetFarClip(const float& farClip)
+void DirectionalLight::SetFarClip(float farClip)
 {
-	this->farClip = farClip;
-	updateProjectionMatrix = true;
+	m_farClip = farClip;
+	m_updateProjectionMatrix = true;
 }
-void DirectionalLight::SetViewWidth(const float& viewWidth)
+void DirectionalLight::SetViewWidth(float viewWidth)
 {
-	this->viewWidth = viewWidth;
-	updateProjectionMatrix = true;
+	m_viewWidth = viewWidth;
+	m_updateProjectionMatrix = true;
 }
-void DirectionalLight::SetViewHeight(const float& viewHeight)
+void DirectionalLight::SetViewHeight(float viewHeight)
 {
-	this->viewHeight = viewHeight;
-	updateProjectionMatrix = true;
+	m_viewHeight = viewHeight;
+	m_updateProjectionMatrix = true;
 }
 
 
@@ -61,45 +55,45 @@ void DirectionalLight::SetViewHeight(const float& viewHeight)
 // Getters:
 Float3 DirectionalLight::GetDirection() const
 {
-	return gameObject->transform->GetForward();
+	return GetTransform()->GetForward();
 }
 float DirectionalLight::GetIntensity() const
 {
-	return intensity;
+	return m_intensity;
 }
 Float3 DirectionalLight::GetColor() const
 {
-	return color;
+	return m_color;
 }
 Float4 DirectionalLight::GetColorIntensity() const
 {
-	return Float4(color, intensity);
+	return Float4(m_color, m_intensity);
 }
 float DirectionalLight::GetNearClip() const
 {
-	return nearClip;
+	return m_nearClip;
 }
 float DirectionalLight::GetFarClip() const
 {
-	return farClip;
+	return m_farClip;
 }
 float DirectionalLight::GetViewWidth() const
 {
-	return viewWidth;
+	return m_viewWidth;
 }
 float DirectionalLight::GetViewHeight() const
 {
-	return viewHeight;
+	return m_viewHeight;
 }
 Float4x4 DirectionalLight::GetViewMatrix() const
 {
-	return gameObject->transform->GetWorldToLocalMatrix();
+	return GetTransform()->GetWorldToLocalMatrix();
 }
 Float4x4 DirectionalLight::GetProjectionMatrix()
 {
-	if (updateProjectionMatrix && isActive && gameObject->isActive)
+	if (m_updateProjectionMatrix && isActive && GetGameObject()->isActive)
 		UpdateProjectionMatrix();
-	return projectionMatrix;
+	return m_projectionMatrix;
 }
 
 
@@ -107,18 +101,18 @@ Float4x4 DirectionalLight::GetProjectionMatrix()
 // Private:
 void DirectionalLight::UpdateProjectionMatrix()
 {
-	updateProjectionMatrix = false;
-	float left = -viewWidth / 2.0f;
-	float right = viewWidth / 2.0f;
-	float bottom = -viewHeight / 2.0f;
-	float top = viewHeight / 2.0f;
-	projectionMatrix = Float4x4::Orthographic(left, right, bottom, top, nearClip, farClip);
+	m_updateProjectionMatrix = false;
+	float left = -m_viewWidth / 2.0f;
+	float right = m_viewWidth / 2.0f;
+	float bottom = -m_viewHeight / 2.0f;
+	float top = m_viewHeight / 2.0f;
+	m_projectionMatrix = Float4x4::Orthographic(left, right, bottom, top, m_nearClip, m_farClip);
 }
 
 
 
 // Overrides:
-std::string DirectionalLight::ToString() const
+const std::string DirectionalLight::ToString() const
 {
 	return "DirectionalLight";
 }

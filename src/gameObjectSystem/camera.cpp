@@ -1,17 +1,15 @@
 #include "camera.h"
-#include "gameObject.h"
-#include "logger.h"
 
 
 
 // Constructor/Destructor:
 Camera::Camera()
 {
-	this->fovRadians = mathf::ToRadians(60.0f);
-	this->aspectRatio = 16.0f / 9.0f;	// 1920x1080
-	this->nearClip = 0.1f;
-	this->farClip = 100.0f;
-	updateProjectionMatrix = true;
+	m_fovRadians = mathf::ToRadians(60.0f);
+	m_aspectRatio = 16.0f / 9.0f;	// 1920x1080
+	m_nearClip = 0.1f;
+	m_farClip = 100.0f;
+	m_updateProjectionMatrix = true;
 }
 Camera::~Camera()
 {
@@ -21,30 +19,30 @@ Camera::~Camera()
 
 
 // Setters:
-void Camera::SetFovDegrees(const float& fovDegrees)
+void Camera::SetFovDegrees(float fovDegrees)
 {
-	this->fovRadians = mathf::ToRadians(fovDegrees);
-	updateProjectionMatrix = true;
+	m_fovRadians = mathf::ToRadians(fovDegrees);
+	m_updateProjectionMatrix = true;
 }
-void Camera::SetFovRadians(const float& fovRadians)
+void Camera::SetFovRadians(float fovRadians)
 {
-	this->fovRadians = fovRadians;
-	updateProjectionMatrix = true;
+	m_fovRadians = fovRadians;
+	m_updateProjectionMatrix = true;
 }
-void Camera::SetAspectRatio(const float& aspectRatio)
+void Camera::SetAspectRatio(float aspectRatio)
 {
-	this->aspectRatio = aspectRatio;
-	updateProjectionMatrix = true;
+	m_aspectRatio = aspectRatio;
+	m_updateProjectionMatrix = true;
 }
-void Camera::SetNearClip(const float& nearClip)
+void Camera::SetNearClip(float nearClip)
 {
-	this->nearClip = nearClip;
-	updateProjectionMatrix = true;
+	m_nearClip = nearClip;
+	m_updateProjectionMatrix = true;
 }
-void Camera::SetFarClip(const float& farClip)
+void Camera::SetFarClip(float farClip)
 {
-	this->farClip = farClip;
-	updateProjectionMatrix = true;
+	m_farClip = farClip;
+	m_updateProjectionMatrix = true;
 }
 
 
@@ -52,33 +50,33 @@ void Camera::SetFarClip(const float& farClip)
 // Getters:
 float Camera::GetFovDegrees() const
 {
-	return mathf::ToDegrees(fovRadians);
+	return mathf::ToDegrees(m_fovRadians);
 }
 float Camera::GetFovRadians() const
 {
-	return fovRadians;
+	return m_fovRadians;
 }
 float Camera::GetAspectRatio() const
 {
-	return aspectRatio;
+	return m_aspectRatio;
 }
 float Camera::GetNearClip() const
 {
-	return nearClip;
+	return m_nearClip;
 }
 float Camera::GetFarClip() const
 {
-	return farClip;
+	return m_farClip;
 }
 Float4x4 Camera::GetViewMatrix() const
 {
-	return gameObject->transform->GetWorldToLocalMatrix();
+	return GetTransform()->GetWorldToLocalMatrix();
 }
 Float4x4 Camera::GetProjectionMatrix()
 {
-	if (updateProjectionMatrix && isActive && gameObject->isActive)
+	if (m_updateProjectionMatrix && isActive && GetGameObject()->isActive)
 		UpdateProjectionMatrix();
-	return projectionMatrix;
+	return m_projectionMatrix;
 }
 
 
@@ -86,14 +84,14 @@ Float4x4 Camera::GetProjectionMatrix()
 // Private methods:
 void Camera::UpdateProjectionMatrix()
 {
-	updateProjectionMatrix = false;
-	projectionMatrix = Float4x4::Perspective(fovRadians, aspectRatio, nearClip, farClip);
+	m_updateProjectionMatrix = false;
+	m_projectionMatrix = Float4x4::Perspective(m_fovRadians, m_aspectRatio, m_nearClip, m_farClip);
 }
 
 
 
 // Overrides:
-std::string Camera::ToString() const
+const std::string Camera::ToString() const
 {
 	return "Camera";
 }

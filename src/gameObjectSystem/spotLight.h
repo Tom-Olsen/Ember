@@ -1,26 +1,22 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_spotLight_h__
 #define __INCLUDE_GUARD_spotLight_h__
-#include "mathf.h"
-#include "component.h"
+#include "emberEngine.h"
 
 
 
 class SpotLight : public Component
 {
-public: // Members:
-
 private: // Members:
-	float intensity;
-	Float3 color;
-	float fovRadians;
-	float aspectRatio;
-	float nearClip;
-	float farClip;
-	float blendStart;
-	float blendEnd;
-	Float4x4 projectionMatrix;
-	bool updateProjectionMatrix;
+	float m_intensity;
+	Float3 m_color;
+	float m_fovRadians;
+	float m_aspectRatio;
+	float m_nearClip;
+	float m_farClip;
+	float m_blendStart;
+	float m_blendEnd;
+	Float4x4 m_projectionMatrix;
+	bool m_updateProjectionMatrix;
 
 public: // Methods:
 	SpotLight();
@@ -52,7 +48,7 @@ public: // Methods:
 	Float4x4 GetProjectionMatrix();
 
 	// Overrides:
-	std::string ToString() const override;
+	const std::string ToString() const override;
 
 private: // Methods:
 	void UpdateProjectionMatrix();

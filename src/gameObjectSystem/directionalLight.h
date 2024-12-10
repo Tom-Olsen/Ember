@@ -1,8 +1,6 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_directionalLight_h__
 #define __INCLUDE_GUARD_directionalLight_h__
-#include "mathf.h"
-#include "component.h"
+#include "emberEngine.h"
 
 
 
@@ -11,26 +9,26 @@ class DirectionalLight : public Component
 public: // Members:
 
 private: // Members:
-	float intensity;
-	Float3 color;
-	float nearClip;
-	float farClip;
-	float viewWidth;
-	float viewHeight;
-	Float4x4 projectionMatrix;
-	bool updateProjectionMatrix;
+	float m_intensity;
+	Float3 m_color;
+	float m_nearClip;
+	float m_farClip;
+	float m_viewWidth;
+	float m_viewHeight;
+	Float4x4 m_projectionMatrix;
+	bool m_updateProjectionMatrix;
 
 public: // Methods:
 	DirectionalLight();
 	~DirectionalLight();
 
 	// Setters:
-	void SetIntensity(const float& intensity);
+	void SetIntensity(float intensity);
 	void SetColor(const Float3& color);
-	void SetNearClip(const float& nearClip);
-	void SetFarClip(const float& farClip);
-	void SetViewWidth(const float& viewWidth);
-	void SetViewHeight(const float& viewHeight);
+	void SetNearClip(float nearClip);
+	void SetFarClip(float farClip);
+	void SetViewWidth(float viewWidth);
+	void SetViewHeight(float viewHeight);
 
 	// Getters:
 	Float3 GetDirection() const;
@@ -45,7 +43,7 @@ public: // Methods:
 	Float4x4 GetProjectionMatrix();
 
 	// Overrides:
-	std::string ToString() const override;
+	const std::string ToString() const override;
 
 private: // Methods:
 	void UpdateProjectionMatrix();

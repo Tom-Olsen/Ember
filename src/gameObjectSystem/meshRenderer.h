@@ -1,43 +1,53 @@
-#pragma once
 #ifndef __INCLUDE_GUARD_meshRenderer_h__
 #define __INCLUDE_GUARD_meshRenderer_h__
 #include "component.h"
-#include "mesh.h"
-#include "materialProperties.h"
-#include "directionalLight.h"
-#include "spotLight.h"
-#include "pointLight.h"
-#include "camera.h"
 #include "macros.h"
+#include <array>
+#include <memory>
+#include <string>
+#include <vulkan/vulkan.h>
+
+
+
+class Camera;
+class DirectionalLight;
+class Mesh;
+class Material;
+class MaterialProperties;
+class PointLight;
+class SpotLight;
 
 
 
 class MeshRenderer : public Component
 {
 public: // Members:
-	Mesh* mesh;
-	std::unique_ptr<MaterialProperties> materialProperties;
 	bool castShadows = true;
 	bool receiveShadows = true;
 
 private: // Members:
-	Material* material;
-	static Material* shadowMaterial;
-	static std::unique_ptr<MaterialProperties> shadowMaterialProperties;
+	Mesh* m_pMesh;
+	Material* m_pMaterial;
+	std::unique_ptr<MaterialProperties> m_pMaterialProperties;
+	static Material* m_pShadowMaterial;
+	static std::unique_ptr<MaterialProperties> m_pShadowMaterialProperties;
 
 public: // Methods:
 	MeshRenderer();
 	~MeshRenderer();
 
 	// Setter:
-	void SetMaterial(Material* material);
-	void SetRenderMatrizes(Camera* camera);
+	void SetMesh(Mesh* pMesh);
+	void SetMaterial(Material* pMaterial);
+	void SetRenderMatrizes(Camera* const pCamera);
 	void SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights);
 	void SetLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spotLights);
 	void SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& pointLights);
 
 	// Shading render pass getters:
+	Mesh* GetMesh();
 	Material* GetMaterial();
+	MaterialProperties* GetMaterialProperties();
 	const VkDescriptorSet* const GetShadingDescriptorSets(uint32_t frameIndex) const;
 	const VkPipeline& GetShadingPipeline() const;
 	const VkPipelineLayout& GetShadingPipelineLayout() const;
@@ -48,7 +58,7 @@ public: // Methods:
 	static const VkPipelineLayout& GetShadowPipelineLayout();
 
 	// Overrides:
-	std::string ToString() const override;
+	const std::string ToString() const override;
 
 private: // Methods:
 };
