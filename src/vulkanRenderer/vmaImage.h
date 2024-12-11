@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_vulkanImage_h__
 #define __INCLUDE_GUARD_vulkanImage_h__
 #include "vk_mem_alloc.h"
+#include <memory>
 #include <vulkan/vulkan.h>
 
 
@@ -16,23 +17,23 @@ private: // Members:
 	VkImage m_image;
 	VmaAllocation m_allocation;
 	VkImageView m_imageView;
-	VkImageCreateInfo m_imageInfo;
-	VmaAllocationCreateInfo m_allocationInfo;
-	VkImageSubresourceRange m_subresourceRange;
+	std::unique_ptr<VkImageCreateInfo> m_pImageInfo;
+	std::unique_ptr<VmaAllocationCreateInfo> m_pAllocationInfo;
+	std::unique_ptr<VkImageSubresourceRange> m_pSubresourceRange;
 	VkImageLayout m_layout;
 	VulkanContext* m_pContext;
 
 public: // Methods:
-	VmaImage(VulkanContext* pContext, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, const VkImageSubresourceRange& subresourceRange);
+	VmaImage(VulkanContext* pContext, VkImageCreateInfo* pImageInfo, VmaAllocationCreateInfo* pAllocationInfo, VkImageSubresourceRange* pSubresourceRange);
 	~VmaImage();
 
 	// Getters:
 	const VkImage& GetVkImage() const;
 	const VmaAllocation& GetVmaAllocation() const;
 	const VkImageView& GetVkImageView() const;
-	const VkImageCreateInfo& GetVkImageCreateInfo() const;
-	const VmaAllocationCreateInfo& GetVmaAllocationCreateInfo() const;
-	const VkImageSubresourceRange& GetSubresourceRange() const;
+	const VkImageCreateInfo* const GetVkImageCreateInfo() const;
+	const VmaAllocationCreateInfo* const GetVmaAllocationCreateInfo() const;
+	const VkImageSubresourceRange* const GetSubresourceRange() const;
 	const VkImageLayout& GetLayout() const;
 	uint64_t GetWidth() const;
 	uint64_t GetHeight() const;
@@ -41,7 +42,6 @@ public: // Methods:
 	VkImageSubresourceLayers GetSubresourceLayers() const;
 
 	// Transitions etc.:
-	// TODO: remove the subresourceRange parameter from all of these functions
 	void TransitionLayoutUndefinedToTransfer();
 	void HandoffTransferToGraphicsQueue();
 	void TransitionLayoutTransferToShaderRead();

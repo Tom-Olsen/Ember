@@ -42,37 +42,38 @@ Texture2d* const ShadowRenderPass::GetShadowMaps() const
 void ShadowRenderPass::CreateShadowMapTexture()
 {
 	// Subresource range:
-	VkImageSubresourceRange subresourceRange;
-	subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-	subresourceRange.baseMipLevel = 0;
-	subresourceRange.levelCount = 1;
-	subresourceRange.baseArrayLayer = 0;
-	subresourceRange.layerCount = s_layerCount;
+	VkImageSubresourceRange* pSubresourceRange = new VkImageSubresourceRange();
+	pSubresourceRange->aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+	pSubresourceRange->baseMipLevel = 0;
+	pSubresourceRange->levelCount = 1;
+	pSubresourceRange->baseArrayLayer = 0;
+	pSubresourceRange->layerCount = s_layerCount;
 
 	// Image info:
-	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent.width = s_shadowMapWidth;
-	imageInfo.extent.height = s_shadowMapHeight;
-	imageInfo.extent.depth = 1;
-	imageInfo.mipLevels = 1;
-	imageInfo.arrayLayers = s_layerCount;
-	imageInfo.format = m_shadowMapFormat;
-	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	imageInfo.flags = 0;
+	VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
+	pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	pImageInfo->imageType = VK_IMAGE_TYPE_2D;
+	pImageInfo->extent.width = s_shadowMapWidth;
+	pImageInfo->extent.height = s_shadowMapHeight;
+	pImageInfo->extent.depth = 1;
+	pImageInfo->mipLevels = 1;
+	pImageInfo->arrayLayers = s_layerCount;
+	pImageInfo->format = m_shadowMapFormat;
+	pImageInfo->tiling = VK_IMAGE_TILING_OPTIMAL;
+	pImageInfo->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	pImageInfo->usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	pImageInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	pImageInfo->samples = VK_SAMPLE_COUNT_1_BIT;
+	pImageInfo->flags = 0;
 
 	// Allocation info:
-	VmaAllocationCreateInfo allocationInfo = {};
-	allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-	allocationInfo.flags = 0;
-	allocationInfo.requiredFlags = 0;
-	allocationInfo.preferredFlags = 0;
+	VmaAllocationCreateInfo* pAllocationInfo = new VmaAllocationCreateInfo();
+	pAllocationInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+	pAllocationInfo->flags = 0;
+	pAllocationInfo->requiredFlags = 0;
+	pAllocationInfo->preferredFlags = 0;
 
-	VmaImage* image = new VmaImage(m_pContext, imageInfo, allocationInfo, subresourceRange);
+	VmaImage* image = new VmaImage(m_pContext, pImageInfo, pAllocationInfo, pSubresourceRange);
 	m_shadowMaps = std::make_unique<Texture2d>(m_pContext, image, "shadowMaps");
 }
 void ShadowRenderPass::CreateRenderpass()

@@ -12,18 +12,19 @@ UniformBuffer::UniformBuffer(VulkanContext* pContext, UniformBufferBlock* pUnifo
 	m_pUniformBufferBlock = pUniformBufferBlock;
 
 	// Create buffer:
-	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	bufferInfo.size = m_pUniformBufferBlock->size;
-	bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
+	pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	pBufferInfo->size = m_pUniformBufferBlock->size;
+	pBufferInfo->usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VmaAllocationCreateInfo allocInfo = {};
-	allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-	allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-	allocInfo.requiredFlags = 0; 
-	allocInfo.preferredFlags = 0;
+	VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
+	pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+	pAllocInfo->flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+	pAllocInfo->requiredFlags = 0; 
+	pAllocInfo->preferredFlags = 0;
 
-	m_buffer = std::make_shared<VmaBuffer>(m_pContext, bufferInfo, allocInfo);
+	m_buffer = std::make_shared<VmaBuffer>(m_pContext, pBufferInfo, pAllocInfo);
 
 	// Get deviceData pointer:
 	VmaAllocationInfo info;

@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_vmaBuffer_h__
 #define __INCLUDE_GUARD_vmaBuffer_h__
 #include "vk_mem_alloc.h"
+#include <memory>
 #include <vulkan/vulkan.h>
 #include <vector>
 
@@ -17,20 +18,26 @@ class VmaBuffer
 private: // Members:
 	VkBuffer m_buffer;
 	VmaAllocation m_allocation;
-	VkBufferCreateInfo m_bufferInfo;
-	VmaAllocationCreateInfo m_allocInfo;
+	std::unique_ptr<VkBufferCreateInfo> m_pBufferInfo;
+	std::unique_ptr<VmaAllocationCreateInfo> m_pAllocInfo;
 	VulkanContext* m_pContext;
 
 public: // Methods:
 	VmaBuffer();
-	VmaBuffer(VulkanContext* pContext, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo);
+	VmaBuffer(VulkanContext* pContext, VkBufferCreateInfo* pBufferInfo, VmaAllocationCreateInfo* pAllocInfo);
+	VmaBuffer(VmaBuffer&& other) noexcept;				// move constructor
+	VmaBuffer& operator=(VmaBuffer&& other) noexcept;	// move assignment
 	~VmaBuffer();
+
+	// No copying of VmaBuffers allowed:
+	VmaBuffer(const VmaBuffer&) = delete;
+	VmaBuffer& operator=(const VmaBuffer&) = delete;
 
 	// Getters:
 	const VkBuffer& GetVkBuffer() const;
 	const VmaAllocation& GetVmaAllocation() const;
-	const VkBufferCreateInfo& GetVkBufferCreateInfo() const;
-	const VmaAllocationCreateInfo& GetVmaAllocationCreateInfo() const;
+	const VkBufferCreateInfo* const GetVkBufferCreateInfo() const;
+	const VmaAllocationCreateInfo* const GetVmaAllocationCreateInfo() const;
 	uint64_t GetSize();
 
 	// Static methods:

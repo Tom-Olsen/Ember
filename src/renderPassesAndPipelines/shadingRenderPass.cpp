@@ -115,67 +115,69 @@ void ShadingRenderPass::CreateRenderPass()
 }
 void ShadingRenderPass::CreateMsaaImage()
 {
-	VkImageSubresourceRange subresourceRange;
-	subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	subresourceRange.baseMipLevel = 0;
-	subresourceRange.levelCount = 1;
-	subresourceRange.baseArrayLayer = 0;
-	subresourceRange.layerCount = 1;
+	VkImageSubresourceRange* pSubresourceRange = new VkImageSubresourceRange();
+	pSubresourceRange->aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	pSubresourceRange->baseMipLevel = 0;
+	pSubresourceRange->levelCount = 1;
+	pSubresourceRange->baseArrayLayer = 0;
+	pSubresourceRange->layerCount = 1;
 
-	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent.width = m_pContext->pSurface->GetCurrentExtent().width;
-	imageInfo.extent.height = m_pContext->pSurface->GetCurrentExtent().height;
-	imageInfo.extent.depth = 1;
-	imageInfo.mipLevels = 1;
-	imageInfo.arrayLayers = 1;
-	imageInfo.format = m_pContext->pSurface->GetVkSurfaceFormatKHR().format;
-	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	imageInfo.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = m_pContext->msaaSamples;
-	imageInfo.flags = 0;
+	VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
+	pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	pImageInfo->imageType = VK_IMAGE_TYPE_2D;
+	pImageInfo->extent.width = m_pContext->pSurface->GetCurrentExtent().width;
+	pImageInfo->extent.height = m_pContext->pSurface->GetCurrentExtent().height;
+	pImageInfo->extent.depth = 1;
+	pImageInfo->mipLevels = 1;
+	pImageInfo->arrayLayers = 1;
+	pImageInfo->format = m_pContext->pSurface->GetVkSurfaceFormatKHR().format;
+	pImageInfo->tiling = VK_IMAGE_TILING_OPTIMAL;
+	pImageInfo->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	pImageInfo->usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	pImageInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	pImageInfo->samples = m_pContext->msaaSamples;
+	pImageInfo->flags = 0;
 
-	VmaAllocationCreateInfo allocationInfo = {};
-	allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-	allocationInfo.flags = 0;
-	allocationInfo.requiredFlags = 0;
-	allocationInfo.preferredFlags = 0;
+	VmaAllocationCreateInfo* pAllocationInfo = new VmaAllocationCreateInfo();
+	pAllocationInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+	pAllocationInfo->flags = 0;
+	pAllocationInfo->requiredFlags = 0;
+	pAllocationInfo->preferredFlags = 0;
 
-	m_msaaImage = std::make_unique<VmaImage>(m_pContext, imageInfo, allocationInfo, subresourceRange);
+	m_msaaImage = std::make_unique<VmaImage>(m_pContext, pImageInfo, pAllocationInfo, pSubresourceRange);
 }
 void ShadingRenderPass::CreateDepthImage()
 {
-	VkImageSubresourceRange subresourceRange;
-	subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-	subresourceRange.baseMipLevel = 0;
-	subresourceRange.levelCount = 1;
-	subresourceRange.baseArrayLayer = 0;
-	subresourceRange.layerCount = 1;
+	VkImageSubresourceRange* pSubresourceRange = new VkImageSubresourceRange();
+	pSubresourceRange->aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+	pSubresourceRange->baseMipLevel = 0;
+	pSubresourceRange->levelCount = 1;
+	pSubresourceRange->baseArrayLayer = 0;
+	pSubresourceRange->layerCount = 1;
 
-	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent.width = m_pContext->pSurface->GetCurrentExtent().width;
-	imageInfo.extent.height = m_pContext->pSurface->GetCurrentExtent().height;
-	imageInfo.extent.depth = 1;
-	imageInfo.mipLevels = 1;
-	imageInfo.arrayLayers = 1;
-	imageInfo.format = m_depthFormat;
-	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = m_pContext->msaaSamples;
-	imageInfo.flags = 0;
+	VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
+	pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	pImageInfo->imageType = VK_IMAGE_TYPE_2D;
+	pImageInfo->extent.width = m_pContext->pSurface->GetCurrentExtent().width;
+	pImageInfo->extent.height = m_pContext->pSurface->GetCurrentExtent().height;
+	pImageInfo->extent.depth = 1;
+	pImageInfo->mipLevels = 1;
+	pImageInfo->arrayLayers = 1;
+	pImageInfo->format = m_depthFormat;
+	pImageInfo->tiling = VK_IMAGE_TILING_OPTIMAL;
+	pImageInfo->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	pImageInfo->usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	pImageInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	pImageInfo->samples = m_pContext->msaaSamples;
+	pImageInfo->flags = 0;
 
-	VmaAllocationCreateInfo allocationInfo = {};
-	allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-	allocationInfo.flags = 0;
-	allocationInfo.requiredFlags = 0;
-	allocationInfo.preferredFlags = 0;
+	VmaAllocationCreateInfo* pAllocationInfo = new VmaAllocationCreateInfo();
+	pAllocationInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+	pAllocationInfo->flags = 0;
+	pAllocationInfo->requiredFlags = 0;
+	pAllocationInfo->preferredFlags = 0;
 
-	m_depthImage = std::make_unique<VmaImage>(m_pContext, imageInfo, allocationInfo, subresourceRange);
+	m_depthImage = std::make_unique<VmaImage>(m_pContext, pImageInfo, pAllocationInfo, pSubresourceRange);
 
 	// Transition depth image layout:
 	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
@@ -188,7 +190,7 @@ void ShadingRenderPass::CreateDepthImage()
 		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.image = m_depthImage->GetVkImage();
-		barrier.subresourceRange = subresourceRange;
+		barrier.subresourceRange = *pSubresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// Immediatly
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;		// early fragment test stage

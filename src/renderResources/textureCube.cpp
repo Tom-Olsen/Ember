@@ -53,15 +53,15 @@ TextureCube::TextureCube(VulkanContext* pContext, const std::filesystem::path& f
 	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(m_pContext, bufferSize, pFacePixels);
 	
 	// Define subresource range:
-	VkImageSubresourceRange subresourceRange;
-	subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	subresourceRange.baseMipLevel = 0;
-	subresourceRange.levelCount = 1;	// mipmapping makes no sense for skyboxes
-	subresourceRange.baseArrayLayer = 0;
-	subresourceRange.layerCount = 6;
+	VkImageSubresourceRange* pSubresourceRange = new VkImageSubresourceRange();
+	pSubresourceRange->aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	pSubresourceRange->baseMipLevel = 0;
+	pSubresourceRange->levelCount = 1;	// mipmapping makes no sense for skyboxes
+	pSubresourceRange->baseArrayLayer = 0;
+	pSubresourceRange->layerCount = 6;
 	
-	CreateImage(subresourceRange, width, height, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
-	TransitionImageLayout(subresourceRange, stagingBuffer);
+	CreateImage(pSubresourceRange, width, height, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
+	TransitionImageLayout(pSubresourceRange, stagingBuffer);
 	delete[] pFacePixels;
 }
 TextureCube::~TextureCube()

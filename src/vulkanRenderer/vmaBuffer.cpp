@@ -9,16 +9,51 @@
 // Constructors/Destructor:
 VmaBuffer::VmaBuffer()
 {
-	m_pContext = nullptr;
 	m_buffer = VK_NULL_HANDLE;
 	m_allocation = VK_NULL_HANDLE;
+	m_pBufferInfo = nullptr;
+	m_pAllocInfo = nullptr;
+	m_pContext = nullptr;
 }
-VmaBuffer::VmaBuffer(VulkanContext* pContext, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
+VmaBuffer::VmaBuffer(VulkanContext* pContext, VkBufferCreateInfo* pBufferInfo, VmaAllocationCreateInfo* pAllocInfo)
 {
 	m_pContext = pContext;
-	m_bufferInfo = bufferInfo;
-	m_allocInfo = allocInfo;
-	VKA(vmaCreateBuffer(m_pContext->GetVmaAllocator(), &m_bufferInfo, &m_allocInfo, &m_buffer, &m_allocation, nullptr));
+	m_pBufferInfo = std::unique_ptr<VkBufferCreateInfo>(pBufferInfo);
+	m_pAllocInfo = std::unique_ptr<VmaAllocationCreateInfo>(pAllocInfo);
+	VKA(vmaCreateBuffer(m_pContext->GetVmaAllocator(), m_pBufferInfo.get(), m_pAllocInfo.get(), &m_buffer, &m_allocation, nullptr));
+}
+VmaBuffer::VmaBuffer(VmaBuffer&& other) noexcept
+	: m_buffer(other.m_buffer),
+	m_allocation(other.m_allocation),
+	m_pBufferInfo(std::move(other.m_pBufferInfo)),
+	m_pAllocInfo(std::move(other.m_pAllocInfo)),
+	m_pContext(other.m_pContext)
+{
+	other.m_buffer = VK_NULL_HANDLE;
+	other.m_allocation = nullptr;
+	other.m_pContext = nullptr;
+}
+VmaBuffer& VmaBuffer::operator=(VmaBuffer&& other) noexcept
+{
+	if (this != &other)
+	{
+		// Free current resources
+		m_buffer = VK_NULL_HANDLE;
+		m_allocation = nullptr;
+
+		// Move data from other
+		m_buffer = other.m_buffer;
+		m_allocation = other.m_allocation;
+		m_pBufferInfo = std::move(other.m_pBufferInfo);
+		m_pAllocInfo = std::move(other.m_pAllocInfo);
+		m_pContext = other.m_pContext;
+
+		// Reset other
+		other.m_buffer = VK_NULL_HANDLE;
+		other.m_allocation = nullptr;
+		other.m_pContext = nullptr;
+	}
+	return *this;
 }
 VmaBuffer::~VmaBuffer()
 {
@@ -37,17 +72,17 @@ const VmaAllocation& VmaBuffer::GetVmaAllocation() const
 {
 	return m_allocation;
 }
-const VkBufferCreateInfo& VmaBuffer::GetVkBufferCreateInfo() const
+const VkBufferCreateInfo* const VmaBuffer::GetVkBufferCreateInfo() const
 {
-	return m_bufferInfo;
+	return m_pBufferInfo.get();
 }
-const VmaAllocationCreateInfo& VmaBuffer::GetVmaAllocationCreateInfo() const
+const VmaAllocationCreateInfo* const VmaBuffer::GetVmaAllocationCreateInfo() const
 {
-	return m_allocInfo;
+	return m_pAllocInfo.get();
 }
 uint64_t VmaBuffer::GetSize()
 {
-	return m_bufferInfo.size;
+	return m_pBufferInfo->size;
 }
 
 
@@ -94,18 +129,19 @@ void VmaBuffer::CopyBufferToImage(VulkanContext* m_pContext, VmaBuffer* srcBuffe
 VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* m_pContext, uint64_t size, void* inputData)
 {
 	// Create buffer:
-	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	bufferInfo.size = size;
-	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
+	pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	pBufferInfo->size = size;
+	pBufferInfo->usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VmaAllocationCreateInfo allocInfo = {};
-	allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY; // no need for CPU-GPU synchronization
-	allocInfo.flags = 0;
-	allocInfo.requiredFlags = 0;
-	allocInfo.preferredFlags = 0;
+	VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
+	pAllocInfo->usage = VMA_MEMORY_USAGE_CPU_ONLY; // no need for CPU-GPU synchronization
+	pAllocInfo->flags = 0;
+	pAllocInfo->requiredFlags = 0;
+	pAllocInfo->preferredFlags = 0;
 
-	VmaBuffer stagingBuffer = VmaBuffer(m_pContext, bufferInfo, allocInfo);
+	VmaBuffer stagingBuffer = VmaBuffer(m_pContext, pBufferInfo, pAllocInfo);
 
 	// Load data into buffer:
 	void* data;
@@ -127,18 +163,19 @@ VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* m_pContext, const std::vector<
 		totalSize += size;
 
 	// Create buffer:
-	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	bufferInfo.size = totalSize;
-	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
+	pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	pBufferInfo->size = totalSize;
+	pBufferInfo->usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VmaAllocationCreateInfo allocInfo = {};
-	allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY; // no need for CPU-GPU synchronization
-	allocInfo.flags = 0;
-	allocInfo.requiredFlags = 0;
-	allocInfo.preferredFlags = 0;
+	VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
+	pAllocInfo->usage = VMA_MEMORY_USAGE_CPU_ONLY; // no need for CPU-GPU synchronization
+	pAllocInfo->flags = 0;
+	pAllocInfo->requiredFlags = 0;
+	pAllocInfo->preferredFlags = 0;
 
-	VmaBuffer stagingBuffer = VmaBuffer(m_pContext, bufferInfo, allocInfo);
+	VmaBuffer stagingBuffer = VmaBuffer(m_pContext, pBufferInfo, pAllocInfo);
 
 	// Load data into buffer:
 	void* data;

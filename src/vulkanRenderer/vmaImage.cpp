@@ -6,37 +6,35 @@
 
 
 // Constructors/Destructor:
-VmaImage::VmaImage(VulkanContext* pContext, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, const VkImageSubresourceRange& subresourceRange)
+VmaImage::VmaImage(VulkanContext* pContext, VkImageCreateInfo* pImageInfo, VmaAllocationCreateInfo* pAllocationInfo, VkImageSubresourceRange* pSubresourceRange)
 {
 	m_pContext = pContext;
-	m_imageInfo = imageInfo;
-	m_allocationInfo = allocationInfo;
-	m_subresourceRange = subresourceRange;
-	m_layout = imageInfo.initialLayout;
+	m_pImageInfo = std::unique_ptr<VkImageCreateInfo>(pImageInfo);
+	m_pAllocationInfo = std::unique_ptr<VmaAllocationCreateInfo>(pAllocationInfo);
+	m_pSubresourceRange = std::unique_ptr<VkImageSubresourceRange>(pSubresourceRange);
+	m_layout = pImageInfo->initialLayout;
 
 	// Create image:
-	VKA(vmaCreateImage(m_pContext->GetVmaAllocator(), &m_imageInfo, &m_allocationInfo, &m_image, &m_allocation, nullptr));
+	VKA(vmaCreateImage(m_pContext->GetVmaAllocator(), m_pImageInfo.get(), m_pAllocationInfo.get(), &m_image, &m_allocation, nullptr));
 
 	// Determine view type:
-	VkImageViewType viewType = VkImageViewType((int)m_imageInfo.imageType);
-	if (m_imageInfo.flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT)
+	VkImageViewType viewType = VkImageViewType((int)m_pImageInfo->imageType);
+	if (m_pImageInfo->flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT)
 		viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-	else if (m_imageInfo.arrayLayers > 1)
+	else if (m_pImageInfo->arrayLayers > 1)
 	{
-		if (m_imageInfo.imageType == VK_IMAGE_TYPE_1D)
+		if (m_pImageInfo->imageType == VK_IMAGE_TYPE_1D)
 			viewType = VK_IMAGE_VIEW_TYPE_1D_ARRAY;
-        else if (m_imageInfo.imageType == VK_IMAGE_TYPE_2D)
+        else if (m_pImageInfo->imageType == VK_IMAGE_TYPE_2D)
 			viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 	}
-	//if (m_imageInfo.flags == VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT && m_imageInfo.imageType == VK_IMAGE_TYPE_3D)
-	//	viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 
 	// Create image view:
 	VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	viewInfo.image = m_image;
 	viewInfo.viewType = viewType;
-	viewInfo.format = m_imageInfo.format;
-	viewInfo.subresourceRange = m_subresourceRange;
+	viewInfo.format = m_pImageInfo->format;
+	viewInfo.subresourceRange = *m_pSubresourceRange;
 	VKA(vkCreateImageView(m_pContext->GetVkDevice(), &viewInfo, nullptr, &m_imageView));
 }
 VmaImage::~VmaImage()
@@ -61,17 +59,17 @@ const VkImageView& VmaImage::GetVkImageView() const
 {
 	return m_imageView;
 }
-const VkImageCreateInfo& VmaImage::GetVkImageCreateInfo() const
+const VkImageCreateInfo* const VmaImage::GetVkImageCreateInfo() const
 {
-	return m_imageInfo;
+	return m_pImageInfo.get();
 }
-const VmaAllocationCreateInfo& VmaImage::GetVmaAllocationCreateInfo() const
+const VmaAllocationCreateInfo* const VmaImage::GetVmaAllocationCreateInfo() const
 {
-	return m_allocationInfo;
+	return m_pAllocationInfo.get();
 }
-const VkImageSubresourceRange& VmaImage::GetSubresourceRange() const
+const VkImageSubresourceRange* const VmaImage::GetSubresourceRange() const
 {
-	return m_subresourceRange;
+	return m_pSubresourceRange.get();
 }
 const VkImageLayout& VmaImage::GetLayout() const
 {
@@ -79,27 +77,27 @@ const VkImageLayout& VmaImage::GetLayout() const
 }
 uint64_t VmaImage::GetWidth() const
 {
-	return m_imageInfo.extent.width;
+	return m_pImageInfo->extent.width;
 }
 uint64_t VmaImage::GetHeight() const
 {
-	return m_imageInfo.extent.height;
+	return m_pImageInfo->extent.height;
 }
 uint64_t VmaImage::GetDepth() const
 {
-	return m_imageInfo.extent.depth;
+	return m_pImageInfo->extent.depth;
 }
 const VkExtent3D& VmaImage::GetExtent() const
 {
-	return m_imageInfo.extent;
+	return m_pImageInfo->extent;
 }
 VkImageSubresourceLayers VmaImage::GetSubresourceLayers() const
 {
 	VkImageSubresourceLayers subresourceLayers = {};
-	subresourceLayers.aspectMask = m_subresourceRange.aspectMask;
-	subresourceLayers.mipLevel = m_subresourceRange.baseMipLevel;
-	subresourceLayers.baseArrayLayer = m_subresourceRange.baseArrayLayer;
-	subresourceLayers.layerCount = m_subresourceRange.layerCount;
+	subresourceLayers.aspectMask = m_pSubresourceRange->aspectMask;
+	subresourceLayers.mipLevel = m_pSubresourceRange->baseMipLevel;
+	subresourceLayers.baseArrayLayer = m_pSubresourceRange->baseArrayLayer;
+	subresourceLayers.layerCount = m_pSubresourceRange->layerCount;
 	return subresourceLayers;
 }
 
@@ -119,7 +117,7 @@ void VmaImage::TransitionLayoutUndefinedToTransfer()
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = m_image;
-	barrier.subresourceRange = m_subresourceRange;
+	barrier.subresourceRange = *m_pSubresourceRange;
 
 	VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// Immediatly
 	VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;		// Before transfer stage
@@ -149,7 +147,7 @@ void VmaImage::HandoffTransferToGraphicsQueue()
 		releaseBarrier.srcQueueFamilyIndex = m_pContext->pLogicalDevice->GetTransferQueue().familyIndex;
 		releaseBarrier.dstQueueFamilyIndex = m_pContext->pLogicalDevice->GetGraphicsQueue().familyIndex;
 		releaseBarrier.image = m_image;
-		releaseBarrier.subresourceRange = m_subresourceRange;
+		releaseBarrier.subresourceRange = *m_pSubresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;			// after transfer stage
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;	// wait for all transfers to finish
@@ -176,7 +174,7 @@ void VmaImage::HandoffTransferToGraphicsQueue()
 		acquireBarrier.srcQueueFamilyIndex = m_pContext->pLogicalDevice->GetTransferQueue().familyIndex;
 		acquireBarrier.dstQueueFamilyIndex = m_pContext->pLogicalDevice->GetGraphicsQueue().familyIndex;
 		acquireBarrier.image = m_image;
-		acquireBarrier.subresourceRange = m_subresourceRange;
+		acquireBarrier.subresourceRange = *m_pSubresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// as early as possible
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;		// rdy for more transfer commands
@@ -207,7 +205,7 @@ void VmaImage::TransitionLayoutTransferToShaderRead()
 		releaseBarrier.srcQueueFamilyIndex = m_pContext->pLogicalDevice->GetTransferQueue().familyIndex;
 		releaseBarrier.dstQueueFamilyIndex = m_pContext->pLogicalDevice->GetGraphicsQueue().familyIndex;
 		releaseBarrier.image = m_image;
-		releaseBarrier.subresourceRange = m_subresourceRange;
+		releaseBarrier.subresourceRange = *m_pSubresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;			// after transfer stage
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;	// before final stage
@@ -234,7 +232,7 @@ void VmaImage::TransitionLayoutTransferToShaderRead()
 		acquireBarrier.srcQueueFamilyIndex = m_pContext->pLogicalDevice->GetTransferQueue().familyIndex;
 		acquireBarrier.dstQueueFamilyIndex = m_pContext->pLogicalDevice->GetGraphicsQueue().familyIndex;
 		acquireBarrier.image = m_image;
-		acquireBarrier.subresourceRange = m_subresourceRange;
+		acquireBarrier.subresourceRange = *m_pSubresourceRange;
 
 		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;			// after transfer stage
 		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;	// before fragment shader stage

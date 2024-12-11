@@ -5,8 +5,6 @@
 
 
 // TODO now:
-// - refactor code with proper coding style! (see KeenGames coding style guide)
-// - change referenced to pointers in vmaImage and vmaBuffer
 // - optimizations: multi threaded render loop, culling, etc.
 // - Graphics::Draw(...) has issue with frameIndex. This leads to the transform of the draw calls to lack behind.
 // - directional lights: shadow cascades
@@ -23,7 +21,7 @@
 // - in macros.h reduce MAX_D_LIGHTS, MAX_S_LIGHTS, MAX_P_LIGHTS to a single MAX_SHADOW_MAPS
 //   and make shadowmap indexing more dynamic to work with e.g. only point lights or only spot lights.
 // - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
-// - mesh->Sclae(a,b,c) needs to scale normals and tangents correctly
+// - mesh->Scale(a,b,c) needs to scale normals and tangents correctly
 // - in mesh.GetOffset and GetBuffers dont reset the arrays
 
 // TODO long term:
@@ -40,7 +38,6 @@
 // - change shared ptr in VulkanUniformBuffer.buffer to unique ptr
 // - write own logger class
 // - better shadow mapping (PCF, soft shadows, etc.)
-// - engine name?
 // - compile engine as .dll and link to game/test project
 // - imgui integration
 // - render into custom image with higher precision (16-bit floats for color instead of 8-bit) and push final image to swapchain.

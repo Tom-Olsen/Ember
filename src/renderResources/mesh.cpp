@@ -860,18 +860,19 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 	// Resize buffer if necessary:
 	if (m_vertexBuffer == nullptr || size != m_vertexBuffer->size)
 	{
-		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufferInfo.size = size;
-		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
+		pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		pBufferInfo->size = size;
+		pBufferInfo->usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-		allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-		allocInfo.requiredFlags = 0;
-		allocInfo.preferredFlags = 0;
+		VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
+		pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+		pAllocInfo->flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+		pAllocInfo->requiredFlags = 0;
+		pAllocInfo->preferredFlags = 0;
 
-		m_vertexBuffer = std::make_unique<VmaBuffer>(context, bufferInfo, allocInfo);
+		m_vertexBuffer = std::make_unique<VmaBuffer>(context, pBufferInfo, pAllocInfo);
 	}
 
 	// Copy positions, colors, uvs:
@@ -893,18 +894,19 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 	// Resize buffer if necessary:
 	if (m_vertexBuffer == nullptr || size != m_vertexBuffer->GetSize())
 	{
-		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufferInfo.size = size;
-		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
+		pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		pBufferInfo->size = size;
+		pBufferInfo->usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-		allocInfo.flags = 0;
-		allocInfo.requiredFlags = 0;
-		allocInfo.preferredFlags = 0;
+		VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
+		pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+		pAllocInfo->flags = 0;
+		pAllocInfo->requiredFlags = 0;
+		pAllocInfo->preferredFlags = 0;
 
-		m_vertexBuffer = std::make_unique<VmaBuffer>(context, bufferInfo, allocInfo);
+		m_vertexBuffer = std::make_unique<VmaBuffer>(context, pBufferInfo, pAllocInfo);
 	}
 
 	// Load data into staging buffer:
@@ -935,18 +937,19 @@ void Mesh::UpdateIndexBuffer(VulkanContext* context)
 	// Resize buffer if necessary:
 	if (m_indexBuffer == nullptr || size != m_indexBuffer->size)
 	{
-		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufferInfo.size = size;
-		bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
+		pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		pBufferInfo->size = size;
+		pBufferInfo->usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-		allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-		allocInfo.requiredFlags = 0;
-		allocInfo.preferredFlags = 0;
+		VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
+		pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+		pAllocInfo->flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+		pAllocInfo->requiredFlags = 0;
+		pAllocInfo->preferredFlags = 0;
 
-		m_indexBuffer = std::make_unique<VmaBuffer>(context, bufferInfo, allocInfo);
+		m_indexBuffer = std::make_unique<VmaBuffer>(context, pBufferInfo, pAllocInfo);
 	}
 
 	// Copy triangle indexes:
@@ -964,18 +967,19 @@ void Mesh::UpdateIndexBuffer(VulkanContext* context)
 	// Resize buffer if necessary:
 	if (m_indexBuffer == nullptr || size != m_indexBuffer->GetSize())
 	{
-		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufferInfo.size = size;
-		bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
+		pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		pBufferInfo->size = size;
+		pBufferInfo->usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-		allocInfo.flags = 0;
-		allocInfo.requiredFlags = 0;
-		allocInfo.preferredFlags = 0;
+		VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
+		pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+		pAllocInfo->flags = 0;
+		pAllocInfo->requiredFlags = 0;
+		pAllocInfo->preferredFlags = 0;
 
-		m_indexBuffer = std::make_unique<VmaBuffer>(context, bufferInfo, allocInfo);
+		m_indexBuffer = std::make_unique<VmaBuffer>(context, pBufferInfo, pAllocInfo);
 	}
 
 	// Load data into staging buffer:

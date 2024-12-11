@@ -5,7 +5,7 @@ set(PROJECT_TYPE STATIC)
 
 # Minimum version requirement and project name
 cmake_minimum_required(VERSION 3.31)
-project(MyEngine)
+project(Ember)
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
