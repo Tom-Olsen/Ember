@@ -25,7 +25,7 @@ protected: // Members:
 
 public: // Methods:
 	Texture2d(VulkanContext* pContext, VmaImage* pImage, const std::string& name);
-	Texture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name);
+	Texture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name, VkFormat format);
 	~Texture2d();
 
 	// Getters:
@@ -37,7 +37,7 @@ public: // Methods:
 
 protected: // Methods:
 	Texture2d();
-	void CreateImage(VkImageSubresourceRange* pSubresourceRange, uint32_t width, uint32_t height, VkImageCreateFlagBits imageFlags);
+	void CreateImage(VkImageSubresourceRange* pSubresourceRange, uint32_t width, uint32_t height, VkFormat format, VkImageCreateFlagBits imageFlags);
 	void TransitionImageLayout(VkImageSubresourceRange* pSubresourceRange, VmaBuffer& stagingBuffer);
 	void TransitionImageLayoutWithMipMapping(VkImageSubresourceRange* pSubresourceRange, VmaBuffer& stagingBuffer);
 };

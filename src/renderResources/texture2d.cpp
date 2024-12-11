@@ -1,5 +1,6 @@
 // needs to be defined before including stb_image.h, but may not be in the header file!
-#define STB_IMAGE_IMPLEMENTATION 
+#define STB_IMAGE_IMPLEMENTATION
+#include "logger.h"
 #include "texture2d.h"
 #include "stb_image.h"
 #include "vmaBuffer.h"
@@ -27,7 +28,7 @@ Texture2d::Texture2d(VulkanContext* pContext, VmaImage* pImage, const std::strin
 	m_pImage = std::unique_ptr<VmaImage>(pImage);
 	m_name = name;
 }
-Texture2d::Texture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name)
+Texture2d::Texture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name, VkFormat format)
 {
 	m_pContext = pContext;
 	m_name = name;
@@ -51,7 +52,7 @@ Texture2d::Texture2d(VulkanContext* pContext, const std::filesystem::path& fileP
 	pSubresourceRange->baseArrayLayer = 0;
 	pSubresourceRange->layerCount = 1;
 
-	CreateImage(pSubresourceRange, m_width, m_height, (VkImageCreateFlagBits)0);
+	CreateImage(pSubresourceRange, m_width, m_height, format, (VkImageCreateFlagBits)0);
 	TransitionImageLayoutWithMipMapping(pSubresourceRange, stagingBuffer);
 	stbi_image_free(pPixels);
 }
@@ -88,7 +89,7 @@ const std::string& Texture2d::GetName() const
 
 
 // Protected methods:
-void Texture2d::CreateImage(VkImageSubresourceRange* pSubresourceRange, uint32_t width, uint32_t height, VkImageCreateFlagBits imageFlags)
+void Texture2d::CreateImage(VkImageSubresourceRange* pSubresourceRange, uint32_t width, uint32_t height, VkFormat format, VkImageCreateFlagBits imageFlags)
 {
 	VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
 	pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -98,7 +99,7 @@ void Texture2d::CreateImage(VkImageSubresourceRange* pSubresourceRange, uint32_t
 	pImageInfo->extent.depth = 1;
 	pImageInfo->mipLevels = pSubresourceRange->levelCount;
 	pImageInfo->arrayLayers = pSubresourceRange->layerCount;
-	pImageInfo->format = VK_FORMAT_R8G8B8A8_SRGB;
+	pImageInfo->format = format;
 	pImageInfo->tiling = VK_IMAGE_TILING_OPTIMAL;
 	pImageInfo->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	pImageInfo->usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;

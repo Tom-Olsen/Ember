@@ -7,7 +7,7 @@
 class TextureCube : public Texture2d
 {
 public: // Methods:
-	TextureCube(VulkanContext* pContext, const std::filesystem::path& folderPath, const std::string& name);
+	TextureCube(VulkanContext* pContext, const std::filesystem::path& folderPath, const std::string& name, VkFormat format);
 	~TextureCube();
 };
 

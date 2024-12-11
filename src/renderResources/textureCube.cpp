@@ -9,7 +9,7 @@
 
 
 // Constructor/Destructor:
-TextureCube::TextureCube(VulkanContext* pContext, const std::filesystem::path& folderPath, const std::string& name)
+TextureCube::TextureCube(VulkanContext* pContext, const std::filesystem::path& folderPath, const std::string& name, VkFormat format)
 {
 	m_pContext = pContext;
 	m_name = name;
@@ -60,7 +60,7 @@ TextureCube::TextureCube(VulkanContext* pContext, const std::filesystem::path& f
 	pSubresourceRange->baseArrayLayer = 0;
 	pSubresourceRange->layerCount = 6;
 	
-	CreateImage(pSubresourceRange, width, height, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
+	CreateImage(pSubresourceRange, width, height, format, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
 	TransitionImageLayout(pSubresourceRange, stagingBuffer);
 	delete[] pFacePixels;
 }

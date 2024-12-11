@@ -3,6 +3,17 @@
 
 
 
+// Vector operations:
+float LinAlg_VectorToPlaneDistance(float3 vec, float3 planeNormal)
+{
+    return dot(vec, planeNormal) / dot(planeNormal, planeNormal);
+}
+float3 LinAlg_VectorToPlaneProjection(float3 vec, float3 planeNormal)
+{
+    return vec - LinAlg_VectorToPlaneDistance(vec, planeNormal) * planeNormal;
+}
+
+
 // Matrix inversion:
 float4x4 LinAlg_Invert(float4x4 input)
 {

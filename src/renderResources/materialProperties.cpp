@@ -49,7 +49,7 @@ MaterialProperties::MaterialProperties(Material* pMaterial)
 	ShadowRenderPass* pShadowRenderPass = dynamic_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"));
 	SetSampler("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
 	SetTexture2d("shadowMaps", pShadowRenderPass->GetShadowMaps());
-	SetTexture2d("normalMap", TextureManager::GetTexture2d("blue"));
+	SetTexture2d("normalMap", TextureManager::GetTexture2d("defaultNormalMap"));
 	SetValue("SurfaceProperties", "scaleOffset", Float4(1.0f, 1.0f, 1.0f, 1.0f));
 	SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 1.0f, 1.0f, 1.0f));
 	SetValue("SurfaceProperties", "roughness", 0.5f);

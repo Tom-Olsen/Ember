@@ -206,7 +206,7 @@ namespace MeshGenerator
 
 		pMesh->SetName(name);
 		pMesh->Spherify(1.0f, radius);
-		pMesh->ComputeTangents();
+		//pMesh->ComputeTangents();
 		return pMesh;
 	}
 

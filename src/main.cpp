@@ -23,6 +23,8 @@
 // - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
 // - mesh->Scale(a,b,c) needs to scale normals and tangents correctly
 // - in mesh.GetOffset and GetBuffers dont reset the arrays
+// - add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
+//   remove normalization of any input vector that is namen 'normal' or 'tangent' in mathf library (same for linearAlgebra.hlsli).
 
 // TODO long term:
 // - change image loading library, stb_image sucks.
@@ -278,10 +280,8 @@ int main()
         pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
         pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("ground0_color"));
         pMeshRenderer->GetMaterialProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));
-        pMeshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_opengl"));
-        //pMeshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal_directx"));
-		Float4 scaleOffset = Float4(10, 10, 1, 1);
-        pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "scaleOffset", scaleOffset);
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal"));
+        pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 10, 1, 1));
         pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
@@ -296,7 +296,9 @@ int main()
         pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
         pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("brick"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks0_color"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks0_roughness"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks0_normal"));
         pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
         pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 2, 1, 1));
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
@@ -325,7 +327,11 @@ int main()
         pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
         pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("brick"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("wood1_color"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("wood1_roughness"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("wood1_normal"));
+        pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+        pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 1, 1));
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
         SpinLocal* pSpinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
@@ -345,12 +351,16 @@ int main()
         pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
         pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("stones"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks1_color"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks1_roughness"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks1_normal"));
+        pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+        pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 1, 1));
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
         pScene->AddGameObject(pGameObject);
     }
-    {// Sphere 0:
+    {// Zylinder 0:
         GameObject* pGameObject = new GameObject("sphere0");
         pGameObject->GetTransform()->SetPosition(0.5f, 0.0f, 0.0f);
         pGameObject->GetTransform()->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
@@ -359,7 +369,9 @@ int main()
         pMeshRenderer->SetMesh(MeshManager::GetMesh("zylinderSmooth"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
         pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("wall0"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks2_color"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks2_roughness"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks2_normal"));
         pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
@@ -368,7 +380,7 @@ int main()
     
         pScene->AddGameObject(pGameObject);
     }
-    {// Sphere 1:
+    {// Sphere 0:
         GameObject* pGameObject = new GameObject("sphere1");
         pGameObject->GetTransform()->SetPosition(-0.5f, 0.0f, 1.0f);
         pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
@@ -377,8 +389,11 @@ int main()
         pMeshRenderer->SetMesh(MeshManager::GetMesh("cubeSphere"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
         pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("wood0"));
-        pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 0.5f);
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("wood0_color"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("wood0_roughness"));
+        pMeshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("wood0_normal"));
+        pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+        pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 1, 1));
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
         SpinLocal* pSpinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
@@ -389,28 +404,30 @@ int main()
 
         pScene->AddGameObject(pGameObject);
     }
-    {// Cube Array:
-        int N = 3;
-        float dist = 4.0f;
-        for (int i = 0; i < N; i++)
-            for (int j = 0; j < N; j++)
-            {
-                GameObject* pGameObject = new GameObject("cube" + std::to_string(i) + std::to_string(j));
-				Float3 pos((i / (N - 1.0f) - 0.5f) * dist, (j / (N - 1.0f) - 0.5f) * dist + 0.5f * dist, -8.0f);
-                pGameObject->GetTransform()->SetPosition(pos);
-                pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
-    
-                MeshRenderer* pMeshRenderer = new MeshRenderer();
-                pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
-                pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
-                pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-                pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("stones"));
-                pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 0.8f);
-                pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
-    
-                pScene->AddGameObject(pGameObject);
-            }
-    }
+    //{// Cube Array:
+    //    int N = 3;
+    //    float dist = 4.0f;
+    //    for (int i = 0; i < N; i++)
+    //        for (int j = 0; j < N; j++)
+    //        {
+    //            GameObject* pGameObject = new GameObject("cube" + std::to_string(i) + std::to_string(j));
+	//			Float3 pos((i / (N - 1.0f) - 0.5f) * dist, (j / (N - 1.0f) - 0.5f) * dist + 0.5f * dist, -8.0f);
+    //            pGameObject->GetTransform()->SetPosition(pos);
+    //            pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+    //
+    //            MeshRenderer* pMeshRenderer = new MeshRenderer();
+    //            pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+    //            pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
+    //            pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+    //            pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("concrete0_color"));
+    //            pMeshRenderer->GetMaterialProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("concrete0_roughness"));
+    //            pMeshRenderer->GetMaterialProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("concrete0_normal"));
+    //            pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+    //            pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
+    //
+    //            pScene->AddGameObject(pGameObject);
+    //        }
+    //}
     //pScene->PrintGameObjects();
     //pScene->PrintMeshRenderers();
     //pScene->PrintSortedMeshRenderers();

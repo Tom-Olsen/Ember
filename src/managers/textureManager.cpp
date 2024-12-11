@@ -35,15 +35,21 @@ void TextureManager::Init(VulkanContext* pContext)
 			std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);	// convert to lower case (safer)
 			if (validExtensions.find(extension) != validExtensions.end())
 			{
-				Texture2d* texture = new Texture2d(s_pContext, entry.path(), entry.path().stem().string());
+				std::string name = entry.path().stem().string();
+				VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
+				if (name.find("normal"))
+					format = VK_FORMAT_R8G8B8A8_UNORM;
+				else if (name.find("roughness"))
+					format = VK_FORMAT_R8_UNORM;
+				Texture2d* texture = new Texture2d(s_pContext, entry.path(), name, format);
 				AddTexture2d(texture);
 			}
 		}
 	}
 
 	// Manual adding:
-	TextureCube* texCube = new TextureCube(s_pContext, "../textures/skyboxClouds1/", "skyboxClouds0");
-	//TextureCube* texCube = new TextureCube(s_pContext, "../textures/skyboxNebula0/", "skyboxClouds0");
+	TextureCube* texCube = new TextureCube(s_pContext, "../textures/skyboxClouds1/", "skyboxClouds0", VK_FORMAT_R8G8B8A8_SRGB);
+	//TextureCube* texCube = new TextureCube(s_pContext, "../textures/skyboxNebula0/", "skyboxClouds0", VK_FORMAT_R8G8B8A8_SRGB);
 	AddTextureCube(texCube);
 }
 void TextureManager::Clear()

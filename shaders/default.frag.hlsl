@@ -1,9 +1,10 @@
 SamplerState colorSampler : register(s10);
 SamplerComparisonState shadowSampler : register(s11);
 Texture2DArray<float> shadowMaps : register(t20);
-Texture2D colorMap : register(t21);
-Texture2D roughnessMap : register(t22);
-Texture2D normalMap : register(t23);
+Texture2D colorMap : register(t21);     // format = VK_FORMAT_R8G8B8A8_SRGB,
+Texture2D roughnessMap : register(t22); // format = VK_FORMAT_R8_UNORM,         single channel unorm roughness map
+Texture2D normalMap : register(t23);    // format = VK_FORMAT_R8G8B8A8_UNORM,   opengl style unorm normal map
+#include "linearAlgebra.hlsli"
 #include "shadowMapping.hlsli"
 #include "shadingPushConstant.hlsli"
 
@@ -22,13 +23,12 @@ cbuffer SurfaceProperties : register(b1)
 
 struct FragmentInput
 {
-    float4 position : SV_POSITION;
-    float3 normal : NORMAL;
-    float3 tangent : TANGENT;
-    float3 bitangent : BITANGENT;
-    float4 vertexColor : COLOR;
-    float4 uv : TEXCOORD0;
-    float3 worldPos : TEXCOORD1;
+    float4 clipPosition : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float3 worldNormal : NORMAL;        // normal in world space
+    float3 worldTangent : TANGENT;      // tangent in world space
+    float4 vertexColor : COLOR;         // vertex color
+    float4 uv : TEXCOORD0;              // texture coordinates
+    float3 worldPosition : TEXCOORD1;   // position in world space
 };
 
 
@@ -37,29 +37,22 @@ float4 main(FragmentInput input) : SV_TARGET
 {
     // Mesh data:
     float2 uv = input.uv.xy * scaleOffset.xy + scaleOffset.zw;
-    float3 normal = normalize(input.normal);
-    float3 tangent = normalize(input.tangent);
-    float3 bitangent = normalize(input.bitangent);
-    float3x3 TBN = transpose(float3x3(tangent, bitangent, normal));
-    float3 worldPos = input.worldPos;
+    float3 surfaceNormal = normalize(input.worldNormal);
+    float3 surfaceTangent = normalize(LinAlg_VectorToPlaneProjection(input.worldTangent, surfaceNormal));
+    float3 surfaceBitangent = cross(surfaceNormal, surfaceTangent);
+    float3x3 TBN = transpose(float3x3(surfaceTangent, surfaceBitangent, surfaceNormal));
+    float3 worldPos = input.worldPosition;
     
     // Shading:
-    float3 tangentNormal = normalize(normalMap.Sample(colorSampler, uv).xyz * 2.0 - 1.0);   
-    float3 worldNormal = normalize(mul(TBN, tangentNormal));
+    float3 localNormal = 2.0 * normalMap.Sample(colorSampler, uv).xyz - 1.0;
+    float3 worldNormal = normalize(mul(TBN, localNormal));
     float4 color = diffuseColor * colorMap.Sample(colorSampler, uv);
-    float finalRoughness = roughness * roughnessMap.Sample(colorSampler, uv).r;
+    float finalRoughness = roughness * roughnessMap.Sample(colorSampler, uv).x;
     
     // Lighting:
     float ambient = 0.1f;
     float3 finalColor = ambient * color.xyz;
     finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, worldNormal, color.xyz, finalRoughness, reflectivity, metallic, pc.dLightsCount, pc.sLightsCount, pc.pLightsCount, directionalLightData, spotLightData, pointLightData, shadowMaps, shadowSampler);
-    //finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, normal, color.xyz, finalRoughness, reflectivity, metallic, pc.dLightsCount, pc.sLightsCount, pc.pLightsCount, directionalLightData, spotLightData, pointLightData, shadowMaps, shadowSampler);
     
-    //return float4(tangentNormal.xyz, 1.0f);
-    //return float4(normal.xyz, 1.0f);
-    //return float4(-bitangent.xyz, 1.0f);
-    //return float4(tangent.xyz, 1.0f);
-    //return float4(mul(TBN, float3(0, 0, 1)), 1);
-    //return float4(worldNormal.xyz, 1.0f);
     return float4(finalColor, 1.0f);
 }
