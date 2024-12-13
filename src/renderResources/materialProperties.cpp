@@ -158,7 +158,6 @@ void MaterialProperties::SetValue(const std::string& blockName, const std::strin
 	}
 }
 
-
 // Sampler setters:
 void MaterialProperties::SetSampler(const std::string& name, Sampler* pSampler)
 {
@@ -170,8 +169,6 @@ void MaterialProperties::SetSampler(const std::string& name, Sampler* pSampler)
 	it->second = pSampler;
 }
 
-
-
 // Texture2d setters:
 void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* pTexture2d)
 {
@@ -181,6 +178,42 @@ void MaterialProperties::SetTexture2d(const std::string& name, Texture2d* pTextu
 		return;
 
 	it->second = pTexture2d;
+}
+
+
+
+// Uniform Buffer Getters:
+template<typename T>
+T MaterialProperties::GetValue(const std::string& blockName, const std::string& memberName) const
+{
+	auto it = m_uniformBufferMaps[0].find(blockName);
+	if (it != m_uniformBufferMaps[0].end())
+		return it->second.resource->GetValue<T>(memberName);
+	return T();
+}
+template<typename T>
+T MaterialProperties::GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const
+{
+	auto it = m_uniformBufferMaps[0].find(blockName);
+	if (it != m_uniformBufferMaps[0].end())
+		return it->second.resource->GetValue<T>(arrayName, arrayIndex);
+	return T();
+}
+template<typename T>
+T MaterialProperties::GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+{
+	auto it = m_uniformBufferMaps[0].find(blockName);
+	if (it != m_uniformBufferMaps[0].end())
+		return it->second.resource->GetValue<T>(arrayName, arrayIndex, memberName);
+	return T();
+}
+template<typename T>
+T MaterialProperties::GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+{
+	auto it = m_uniformBufferMaps[0].find(blockName);
+	if (it != m_uniformBufferMaps[0].end())
+		return it->second.resource->GetValue<T>(arrayName, arrayIndex, subArrayName, subArrayIndex);
+	return T();
 }
 
 
@@ -361,3 +394,35 @@ template void MaterialProperties::SetValue<Float2>(const std::string& blockName,
 template void MaterialProperties::SetValue<Float3>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
 template void MaterialProperties::SetValue<Float4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
 template void MaterialProperties::SetValue<Float4x4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
+
+template int MaterialProperties::GetValue<int>(const std::string& blockName, const std::string& memberName) const;
+template bool MaterialProperties::GetValue<bool>(const std::string& blockName, const std::string& memberName) const;
+template float MaterialProperties::GetValue<float>(const std::string& blockName, const std::string& memberName) const;
+template Float2 MaterialProperties::GetValue<Float2>(const std::string& blockName, const std::string& memberName) const;
+template Float3 MaterialProperties::GetValue<Float3>(const std::string& blockName, const std::string& memberName) const;
+template Float4 MaterialProperties::GetValue<Float4>(const std::string& blockName, const std::string& memberName) const;
+template Float4x4 MaterialProperties::GetValue<Float4x4>(const std::string& blockName, const std::string& memberName) const;
+
+template int MaterialProperties::GetValue<int>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const;
+template bool MaterialProperties::GetValue<bool>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const;
+template float MaterialProperties::GetValue<float>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const;
+template Float2 MaterialProperties::GetValue<Float2>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const;
+template Float3 MaterialProperties::GetValue<Float3>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const;
+template Float4 MaterialProperties::GetValue<Float4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const;
+template Float4x4 MaterialProperties::GetValue<Float4x4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const;
+
+template int MaterialProperties::GetValue<int>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template bool MaterialProperties::GetValue<bool>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template float MaterialProperties::GetValue<float>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template Float2 MaterialProperties::GetValue<Float2>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template Float3 MaterialProperties::GetValue<Float3>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template Float4 MaterialProperties::GetValue<Float4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template Float4x4 MaterialProperties::GetValue<Float4x4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+
+template int MaterialProperties::GetValue<int>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template bool MaterialProperties::GetValue<bool>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template float MaterialProperties::GetValue<float>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template Float2 MaterialProperties::GetValue<Float2>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template Float3 MaterialProperties::GetValue<Float3>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template Float4 MaterialProperties::GetValue<Float4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template Float4x4 MaterialProperties::GetValue<Float4x4>(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;

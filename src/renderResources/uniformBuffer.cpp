@@ -58,6 +58,70 @@ const std::shared_ptr<VmaBuffer>& UniformBuffer::GetVmaBuffer() const
 {
 	return m_buffer;
 }
+template<typename T>
+T UniformBuffer::GetValue(const std::string& memberName) const
+{
+	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(memberName);
+	if (pMember != nullptr)
+		return GetData<T>(pMember->offset, pMember->size);
+
+	// could not find requested entry:
+	return T();
+}
+template<typename T>
+T UniformBuffer::GetValue(const std::string& arrayName, uint32_t arrayIndex) const
+{
+	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+	if (pMember != nullptr)
+	{
+		UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+		if (pSubMember != nullptr)
+			return GetData<T>(pSubMember->offset, pSubMember->size);
+	}
+
+	// could not find requested entry:
+	return T();
+}
+template<typename T>
+T UniformBuffer::GetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+{
+	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+	if (pMember != nullptr)
+	{
+		UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+		if (pSubMember != nullptr)
+		{
+			UniformBufferMember* pSubSubMember = pSubMember->GetSubMember(memberName);
+			if (pSubSubMember != nullptr)
+				return GetData<T>(pSubSubMember->offset, pSubSubMember->size);
+		}
+	}
+
+	// could not find requested entry:
+	return T();
+}
+template<typename T>
+T UniformBuffer::GetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+{
+	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+	if (pMember != nullptr)
+	{
+		UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+		if (pSubMember != nullptr)
+		{
+			UniformBufferMember* pSubSubMember = pSubMember->GetSubMember(subArrayName);
+			if (pSubSubMember != nullptr)
+			{
+				UniformBufferMember* pSubSubSubMember = pSubSubMember->GetSubMember(subArrayName + "[" + std::to_string(subArrayIndex) + "]");
+				if (pSubSubSubMember != nullptr)
+					return GetData<T>(pSubSubSubMember->offset, pSubSubSubMember->size);
+			}
+		}
+	}
+
+	// could not find requested entry:
+	return T();
+}
 
 
 
@@ -65,13 +129,6 @@ const std::shared_ptr<VmaBuffer>& UniformBuffer::GetVmaBuffer() const
 template<typename T>
 bool UniformBuffer::SetValue(const std::string& memberName, const T& value)
 {
-	// redirect bool to int:
-	if constexpr (std::is_same<T, bool>::value)
-	{
-		int intValue = static_cast<int>(value);
-		return SetValue<int>(memberName, intValue);
-	}
-
 	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(memberName);
 	if (pMember != nullptr)
 		return CheckAndUpdateData(value, pMember->offset, pMember->size);
@@ -82,13 +139,6 @@ bool UniformBuffer::SetValue(const std::string& memberName, const T& value)
 template<typename T>
 bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const T& value)
 {
-	// redirect bool to int:
-	if constexpr (std::is_same<T, bool>::value)
-	{
-		int intValue = static_cast<int>(value);
-		return SetValue<int>(arrayName, arrayIndex, intValue);
-	}
-
 	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
 	if (pMember != nullptr)
 	{
@@ -103,13 +153,6 @@ bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, 
 template<typename T>
 bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value)
 {
-	// redirect bool to int:
-	if constexpr (std::is_same<T, bool>::value)
-	{
-		int intValue = static_cast<int>(value);
-		return SetValue<int>(arrayName, arrayIndex, memberName, intValue);
-	}
-
 	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
 	if (pMember != nullptr)
 	{
@@ -128,13 +171,6 @@ bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, 
 template<typename T>
 bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
 {
-	// redirect bool to int:
-	if constexpr (std::is_same<T, bool>::value)
-	{
-		int intValue = static_cast<int>(value);
-		return SetValue<int>(arrayName, arrayIndex, subArrayName, subArrayIndex, intValue);
-	}
-
 	UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
 	if (pMember != nullptr)
 	{
@@ -161,6 +197,13 @@ bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, 
 template<typename T>
 bool UniformBuffer::CheckAndUpdateData(const T& value, uint32_t offset, uint32_t size)
 {
+	// redirect bool to int:
+	if constexpr (std::is_same<T, bool>::value)
+	{
+		int intValue = static_cast<int>(value);
+		return CheckAndUpdateData<int>(intValue, offset, size);
+	}
+
 	const void* oldData = m_hostData.data() + offset;
 	const void* newData = &value;
 	size_t dataSize = std::min(static_cast<size_t>(size), (sizeof(value)));
@@ -173,6 +216,21 @@ bool UniformBuffer::CheckAndUpdateData(const T& value, uint32_t offset, uint32_t
 	std::memcpy(m_hostData.data() + offset, newData, dataSize);
 	return true;
 }
+template<typename T>
+T UniformBuffer::GetData(uint32_t offset, uint32_t size) const
+{
+	// redirect bool to int:
+	if constexpr (std::is_same<T, bool>::value)
+	{
+		int intValue = GetData<int>(offset, size);
+		return static_cast<bool>(intValue);
+	}
+
+	T value;
+	size_t dataSize = std::min(static_cast<size_t>(size), (sizeof(value)));
+	std::memcpy(&value, m_hostData.data() + offset, dataSize);
+	return value;
+}
 
 
 
@@ -184,6 +242,14 @@ template bool UniformBuffer::CheckAndUpdateData<Float2>(const Float2& value, uin
 template bool UniformBuffer::CheckAndUpdateData<Float3>(const Float3& value, uint32_t offset, uint32_t size);
 template bool UniformBuffer::CheckAndUpdateData<Float4>(const Float4& value, uint32_t offset, uint32_t size);
 template bool UniformBuffer::CheckAndUpdateData<Float4x4>(const Float4x4& value, uint32_t offset, uint32_t size);
+
+template int UniformBuffer::GetData<int>(uint32_t offset, uint32_t size) const;
+template bool UniformBuffer::GetData<bool>(uint32_t offset, uint32_t size) const;
+template float UniformBuffer::GetData<float>(uint32_t offset, uint32_t size) const;
+template Float2 UniformBuffer::GetData<Float2>(uint32_t offset, uint32_t size) const;
+template Float3 UniformBuffer::GetData<Float3>(uint32_t offset, uint32_t size) const;
+template Float4 UniformBuffer::GetData<Float4>(uint32_t offset, uint32_t size) const;
+template Float4x4 UniformBuffer::GetData<Float4x4>(uint32_t offset, uint32_t size) const;
 
 template bool UniformBuffer::SetValue<int>(const std::string& memberName, const int& value);
 template bool UniformBuffer::SetValue<bool>(const std::string& memberName, const bool& value);
@@ -216,3 +282,35 @@ template bool UniformBuffer::SetValue<Float2>(const std::string& arrayName, uint
 template bool UniformBuffer::SetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
 template bool UniformBuffer::SetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
 template bool UniformBuffer::SetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
+
+template int UniformBuffer::GetValue<int>(const std::string& memberName) const;
+template bool UniformBuffer::GetValue<bool>(const std::string& memberName) const;
+template float UniformBuffer::GetValue<float>(const std::string& memberName) const;
+template Float2 UniformBuffer::GetValue<Float2>(const std::string& memberName) const;
+template Float3 UniformBuffer::GetValue<Float3>(const std::string& memberName) const;
+template Float4 UniformBuffer::GetValue<Float4>(const std::string& memberName) const;
+template Float4x4 UniformBuffer::GetValue<Float4x4>(const std::string& memberName) const;
+
+template int UniformBuffer::GetValue<int>(const std::string& arrayName, uint32_t arrayIndex) const;
+template bool UniformBuffer::GetValue<bool>(const std::string& arrayName, uint32_t arrayIndex) const;
+template float UniformBuffer::GetValue<float>(const std::string& arrayName, uint32_t arrayIndex) const;
+template Float2 UniformBuffer::GetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex) const;
+template Float3 UniformBuffer::GetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex) const;
+template Float4 UniformBuffer::GetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex) const;
+template Float4x4 UniformBuffer::GetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex) const;
+
+template int UniformBuffer::GetValue<int>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template bool UniformBuffer::GetValue<bool>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template float UniformBuffer::GetValue<float>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template Float2 UniformBuffer::GetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template Float3 UniformBuffer::GetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template Float4 UniformBuffer::GetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+template Float4x4 UniformBuffer::GetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+
+template int UniformBuffer::GetValue<int>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template bool UniformBuffer::GetValue<bool>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template float UniformBuffer::GetValue<float>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template Float2 UniformBuffer::GetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template Float3 UniformBuffer::GetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template Float4 UniformBuffer::GetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+template Float4x4 UniformBuffer::GetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;

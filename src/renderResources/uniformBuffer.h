@@ -32,6 +32,14 @@ public: // Methods:
 	// Getters:
 	uint32_t GetSize() const;
 	const std::shared_ptr<VmaBuffer>& GetVmaBuffer() const;
+	template<typename T>
+	T GetValue(const std::string& memberName) const;
+	template<typename T>
+	T GetValue(const std::string& arrayName, uint32_t arrayIndex) const;
+	template<typename T>
+	T GetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+	template<typename T>
+	T GetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 
 	// Setters:
 	template<typename T>
@@ -46,6 +54,8 @@ public: // Methods:
 private: // Methods:
 	template<typename T>
 	bool CheckAndUpdateData(const T& value, uint32_t offset, uint32_t size);
+	template<typename T>
+	T GetData(uint32_t offset, uint32_t size) const;
 };
 
 

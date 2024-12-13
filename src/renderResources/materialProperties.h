@@ -63,6 +63,16 @@ public: // Methods:
 	void SetSampler(const std::string& name, Sampler* pSampler);
 	void SetTexture2d(const std::string& name, Texture2d* pTexture2d);
 
+	// Uniform Buffer Getters:
+	template<typename T>
+	T GetValue(const std::string& blockName, const std::string& memberName) const;
+	template<typename T>
+	T GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const;
+	template<typename T>
+	T GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+	template<typename T>
+	T GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+
 	// Debugging:
 	void PrintMaps() const;
 
