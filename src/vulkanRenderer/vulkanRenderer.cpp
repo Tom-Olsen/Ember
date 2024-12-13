@@ -169,7 +169,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 				for (auto group : m_pMeshRendererGroups)
 					for (MeshRenderer* meshRenderer : *group)
 					{
-						if (meshRenderer->IsActive() && meshRenderer->castShadows)
+						if (meshRenderer->IsActive() && meshRenderer->GetCastShadows())
 						{
 							// Update shader specific data (push constants and uniform buffers):
 							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
@@ -196,7 +196,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 				for (auto group : m_pMeshRendererGroups)
 					for (MeshRenderer* meshRenderer : *group)
 					{
-						if (meshRenderer->IsActive() && meshRenderer->castShadows)
+						if (meshRenderer->IsActive() && meshRenderer->GetCastShadows())
 						{
 							// Update shader specific data (push constants and uniform buffers):
 							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
@@ -225,7 +225,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 					for (auto group : m_pMeshRendererGroups)
 						for (MeshRenderer* meshRenderer : *group)
 						{
-							if (meshRenderer->IsActive() && meshRenderer->castShadows)
+							if (meshRenderer->IsActive() && meshRenderer->GetCastShadows())
 							{
 								// Update shader specific data (push constants and uniform buffers):
 								Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex) * meshRenderer->GetTransform()->GetLocalToWorldMatrix();

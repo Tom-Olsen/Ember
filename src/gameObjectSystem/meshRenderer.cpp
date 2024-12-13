@@ -22,11 +22,12 @@ std::unique_ptr<MaterialProperties> MeshRenderer::m_pShadowMaterialProperties = 
 // Constructor/Destructor:
 MeshRenderer::MeshRenderer()
 {
-	castShadows = true;
-	receiveShadows = true;
+	m_castShadows = true;
+	m_receiveShadows = true;
+	m_hasErrorMaterial = true;
 
 	m_pMesh = nullptr;
-	m_pMaterial = nullptr;
+	m_pMaterial = MaterialManager::GetMaterial("error");
 
 	if (m_pShadowMaterial == nullptr)
 		m_pShadowMaterial = MaterialManager::GetMaterial("shadow");
@@ -42,14 +43,35 @@ MeshRenderer::~MeshRenderer()
 
 // Public methods:
 // Setter:
+void MeshRenderer::SetCastShadows(bool castShadows)
+{
+	m_castShadows = castShadows;
+}
+void MeshRenderer::SetReceiveShadows(bool receiveShadows)
+{
+	m_receiveShadows = receiveShadows;
+}
 void MeshRenderer::SetMesh(Mesh* pMesh)
 {
 	m_pMesh = pMesh;
 }
 void MeshRenderer::SetMaterial(Material* pMaterial)
 {
-	m_pMaterial = pMaterial;
-	m_pMaterialProperties = std::make_unique<MaterialProperties>(m_pMaterial);
+	if (pMaterial == nullptr)
+	{
+		m_hasErrorMaterial = true;
+		if (m_pMaterial != MaterialManager::GetMaterial("error"))
+		{
+			m_pMaterial = MaterialManager::GetMaterial("error");
+			m_pMaterialProperties = std::make_unique<MaterialProperties>(m_pMaterial);
+		}
+	}
+	else if(m_pMaterial != pMaterial)
+	{
+		m_hasErrorMaterial = false;
+		m_pMaterial = pMaterial;
+		m_pMaterialProperties = std::make_unique<MaterialProperties>(m_pMaterial);
+	}
 }
 void MeshRenderer::SetRenderMatrizes(Camera* const pCamera)
 {
@@ -79,7 +101,7 @@ void MeshRenderer::SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "direction", directionalLights[i]->GetDirection());
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
 		}
-	m_pMaterialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
+	m_pMaterialProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
 }
 void MeshRenderer::SetLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spotLights)
 {
@@ -95,7 +117,7 @@ void MeshRenderer::SetLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spot
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "blendStartEnd", spotLights[i]->GetBlendStartEnd());
 		}
-	m_pMaterialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
+	m_pMaterialProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
 }
 void MeshRenderer::SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& pointLights)
 {
@@ -113,12 +135,22 @@ void MeshRenderer::SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& poi
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "position", pointLights[i]->GetPosition());
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", pointLights[i]->GetColorIntensity());
 		}
-	m_pMaterialProperties->SetValue(blockName, "receiveShadows", receiveShadows);
+	m_pMaterialProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
 }
 
 
 
 // Shading render pass getters:
+bool MeshRenderer::GetCastShadows() const
+{
+	// Always return false if error material is in use:
+	return !m_hasErrorMaterial && m_castShadows;
+}
+bool MeshRenderer::GetReceiveShadows() const
+{
+	// Always return false if error material is in use:
+	return !m_hasErrorMaterial && m_receiveShadows;
+}
 Mesh* MeshRenderer::GetMesh()
 {
 	return m_pMesh;

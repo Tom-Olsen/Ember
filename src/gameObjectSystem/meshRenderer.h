@@ -22,10 +22,11 @@ class SpotLight;
 class MeshRenderer : public Component
 {
 public: // Members:
-	bool castShadows = true;
-	bool receiveShadows = true;
 
 private: // Members:
+	bool m_castShadows;
+	bool m_receiveShadows;
+	bool m_hasErrorMaterial;
 	Mesh* m_pMesh;
 	Material* m_pMaterial;
 	std::unique_ptr<MaterialProperties> m_pMaterialProperties;
@@ -37,6 +38,8 @@ public: // Methods:
 	~MeshRenderer();
 
 	// Setter:
+	void SetCastShadows(bool castShadows);
+	void SetReceiveShadows(bool receiveShadows);
 	void SetMesh(Mesh* pMesh);
 	void SetMaterial(Material* pMaterial);
 	void SetRenderMatrizes(Camera* const pCamera);
@@ -45,6 +48,8 @@ public: // Methods:
 	void SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& pointLights);
 
 	// Shading render pass getters:
+	bool GetCastShadows() const;
+	bool GetReceiveShadows() const;
 	Mesh* GetMesh();
 	Material* GetMaterial();
 	MaterialProperties* GetMaterialProperties();

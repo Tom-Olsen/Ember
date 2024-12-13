@@ -31,6 +31,9 @@ void MaterialManager::Init(VulkanContext* pContext)
 	//Material* testMaterial = new Material(s_pContext, Material::Type::shading, "testMaterial", "../shaders/test.vert.spv", "../shaders/test.frag.spv");
 	//AddMaterial(testMaterial);
 
+	Material* pErrorMaterial = new Material(s_pContext, shadingType, "error", opaqueQueue, "../shaders/error.vert.spv", "../shaders/error.frag.spv");
+	AddMaterial(pErrorMaterial);
+
 	Material* pDefaultMaterial = new Material(s_pContext, shadingType, "default", opaqueQueue, "../shaders/default.vert.spv", "../shaders/default.frag.spv");
 	AddMaterial(pDefaultMaterial);
 

@@ -20,7 +20,6 @@ void Graphics::Init()
 {
 	if (s_isInitialized)
 		return;
-
 	s_isInitialized = true;
 
 	s_transforms.resize(100);
@@ -61,10 +60,21 @@ MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float3 posi
 }
 MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows, bool castShadows)
 {
-	// Double size of the meshRenderers vector if it is full:
-	if (s_drawIndex >= static_cast<uint32_t>(s_meshRenderers.size()))
+	if (!pMesh)
 	{
-		uint32_t oldSize = static_cast<uint32_t>(s_meshRenderers.size());
+		LOG_ERROR("Graphics::Draw() failed. pMesh is nullptr.");
+		return nullptr;
+	}
+	if (!pMaterial)
+	{
+		LOG_ERROR("Graphics::Draw() failed. pMaterial is nullptr.");
+		return nullptr;
+	}
+
+	// Double size of the meshRenderers vector if it is full:
+	uint32_t oldSize = static_cast<uint32_t>(s_transforms.size());
+	if (s_drawIndex >= oldSize)
+	{
 		uint32_t newSize = 2 * oldSize;
 		s_transforms.resize(newSize);
 		s_meshRenderers.resize(newSize);
@@ -81,10 +91,9 @@ MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 lo
 	MeshRenderer* pMeshRenderer = s_meshRenderers[s_drawIndex];
 	pMeshRenderer->isActive = true;
 	pMeshRenderer->SetMesh(pMesh);
-	if (pMeshRenderer->GetMaterial() != pMaterial)
-		pMeshRenderer->SetMaterial(pMaterial);
-	pMeshRenderer->castShadows = castShadows;
-	pMeshRenderer->receiveShadows = receiveShadows;
+	pMeshRenderer->SetMaterial(pMaterial);
+	pMeshRenderer->SetCastShadows(castShadows);
+	pMeshRenderer->SetReceiveShadows(receiveShadows);
 	pMeshRenderer->GetTransform()->SetLocalToWorldMatrix(localToWorldMatrix);
 
 	// By returning the meshRenderers materialProperties, we allow user to change the material properties of this draw call:

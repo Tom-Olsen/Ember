@@ -51,7 +51,7 @@
 // Implemented Features:
 // - Forward renderpipeline.
 // - Multi lightsoure shadow mapping (directional-, point-, spotlights).
-// - Physical based lighting (roughnessMap, normalMap (in progress), metallicity, reflectivity).
+// - Physical based lighting (roughnessMap, normalMap, metallicity, reflectivity).
 // - CubeMap (TextureCube) skybox.
 // - Automated descriptorSet system for materialProperties (see spirvReflect.h/cpp).
 // - Component € GameObject € Scene system with game update loop.
@@ -111,7 +111,8 @@ int main()
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
         pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
         pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("white"));
-        pMeshRenderer->castShadows = pMeshRenderer->receiveShadows = false;
+        pMeshRenderer->SetCastShadows(false);
+        pMeshRenderer->SetReceiveShadows(false);
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
         PointLight* pPointLight = new PointLight();
@@ -136,7 +137,8 @@ int main()
         MeshRenderer* pMeshRenderer = new MeshRenderer();
         pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
-        pMeshRenderer->castShadows = pMeshRenderer->receiveShadows = false;
+        pMeshRenderer->SetCastShadows(false);
+        pMeshRenderer->SetReceiveShadows(false);
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
         //SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 45, 0));
@@ -179,7 +181,8 @@ int main()
         MeshRenderer* pMeshRenderer = new MeshRenderer();
         pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
-        pMeshRenderer->castShadows = pMeshRenderer->receiveShadows = false;
+        pMeshRenderer->SetCastShadows(false);
+        pMeshRenderer->SetReceiveShadows(false);
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
         //SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, -60, 0));
@@ -222,7 +225,8 @@ int main()
         MeshRenderer* pMeshRenderer = new MeshRenderer();
         pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
-        pMeshRenderer->castShadows = pMeshRenderer->receiveShadows = false;
+        pMeshRenderer->SetCastShadows(false);
+        pMeshRenderer->SetReceiveShadows(false);
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
         //SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 90, 0));
@@ -263,7 +267,8 @@ int main()
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skybox"));
         pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
         pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTextureCube("skyboxClouds0"));
-        pMeshRenderer->receiveShadows = pMeshRenderer->castShadows = false;
+        pMeshRenderer->SetCastShadows(false);
+        pMeshRenderer->SetReceiveShadows(false);
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
         pScene->AddGameObject(pGameObject);
@@ -313,7 +318,8 @@ int main()
         MeshRenderer* pMeshRenderer = new MeshRenderer();
         pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
-        //pMeshRenderer->castShadows = pMeshRenderer->receiveShadows = false;
+        pMeshRenderer->SetCastShadows(false);
+        pMeshRenderer->SetReceiveShadows(false);
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
         pScene->AddGameObject(pGameObject);
