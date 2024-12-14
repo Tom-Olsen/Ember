@@ -64,9 +64,17 @@ private: // Members:
 public: // Methods:
 	SpirvReflect(const std::vector<char>& code);
 	~SpirvReflect();
-	void GetDescriptorSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& bindings, std::vector<std::string>& bindingNames, std::unordered_map<std::string, UniformBufferBlock*>& uniformBufferBlockMap);
+	void GetInputBindingAndAttributeDescriptions(
+		std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
+		std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
+		std::vector<std::string>& vertexInputNames) const;
+	void GetDescriptorSetLayoutBindings(
+		std::vector<VkDescriptorSetLayoutBinding>& bindings,
+		std::vector<std::string>& bindingNames,
+		std::unordered_map<std::string, UniformBufferBlock*>& uniformBufferBlockMap);
 
 private: // Methods:
+	std::vector<SpvReflectInterfaceVariable*> GetInputVariablesReflection() const;
 	std::vector<SpvReflectDescriptorSet*> GetDescriptorSetsReflection() const;
 	UniformBufferBlock* GetUniformBufferBlock(const SpvReflectBlockVariable& typeDescription, uint32_t setIndex, uint32_t bindingIndex) const;
 	bool IsStruct(const SpvReflectBlockVariable& memberReflection) const;

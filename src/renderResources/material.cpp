@@ -1,9 +1,11 @@
 #include "material.h"
 #include "logger.h"
+#include "mesh.h"
 #include "shadingPipeline.h"
 #include "shadowPipeline.h"
 #include "skyboxPipeline.h"
 #include "spirvReflect.h"
+#include "vmaBuffer.h"
 #include "vulkanContext.h"
 #include <fstream>
 
@@ -24,6 +26,9 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
 		SpirvReflect vertexShaderReflect(vertexCode);
 		vertexShaderReflect.GetDescriptorSetLayoutBindings(m_bindings, m_bindingNames, m_uniformBufferBlockMap);
+		vertexShaderReflect.GetInputBindingAndAttributeDescriptions(m_bindingDescriptions, m_attributeDescriptions, m_vertexInputNames);
+		m_meshBuffers.resize(m_vertexInputNames.size(), VK_NULL_HANDLE);
+		m_meshOffsets.resize(m_vertexInputNames.size(), 0);
 
 		// Load fragment shader:
 		std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
@@ -31,7 +36,7 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 		fragmentShaderReflect.GetDescriptorSetLayoutBindings(m_bindings, m_bindingNames, m_uniformBufferBlockMap);
 
 		// Create pipeline:
-		m_pPipeline = std::make_unique<ShadingPipeline>(m_pContext, vertexCode, fragmentCode, m_bindings);
+		m_pPipeline = std::make_unique<ShadingPipeline>(m_pContext, vertexCode, fragmentCode, m_bindings, m_bindingDescriptions, m_attributeDescriptions);
 	}
 
 	// Shadow material creation:
@@ -41,9 +46,12 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
 		SpirvReflect vertexShaderReflect(vertexCode);
 		vertexShaderReflect.GetDescriptorSetLayoutBindings(m_bindings, m_bindingNames, m_uniformBufferBlockMap);
+		vertexShaderReflect.GetInputBindingAndAttributeDescriptions(m_bindingDescriptions, m_attributeDescriptions, m_vertexInputNames);
+		m_meshBuffers.resize(m_vertexInputNames.size(), VK_NULL_HANDLE);
+		m_meshOffsets.resize(m_vertexInputNames.size(), 0);
 
 		// Create pipeline:
-		m_pPipeline = std::make_unique<ShadowPipeline>(m_pContext, vertexCode, m_bindings);
+		m_pPipeline = std::make_unique<ShadowPipeline>(m_pContext, vertexCode, m_bindings, m_bindingDescriptions, m_attributeDescriptions);
 	}
 
 	// Skybox material creation:
@@ -53,6 +61,9 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
 		SpirvReflect vertexShaderReflect(vertexCode);
 		vertexShaderReflect.GetDescriptorSetLayoutBindings(m_bindings, m_bindingNames, m_uniformBufferBlockMap);
+		vertexShaderReflect.GetInputBindingAndAttributeDescriptions(m_bindingDescriptions, m_attributeDescriptions, m_vertexInputNames);
+		m_meshBuffers.resize(m_vertexInputNames.size(), VK_NULL_HANDLE);
+		m_meshOffsets.resize(m_vertexInputNames.size(), 0);
 
 		// Load fragment shader:
 		std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
@@ -60,7 +71,7 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 		fragmentShaderReflect.GetDescriptorSetLayoutBindings(m_bindings, m_bindingNames, m_uniformBufferBlockMap);
 
 		// Create pipeline:
-		m_pPipeline = std::make_unique<SkyboxPipeline>(m_pContext, vertexCode, fragmentCode, m_bindings);
+		m_pPipeline = std::make_unique<SkyboxPipeline>(m_pContext, vertexCode, fragmentCode, m_bindings, m_bindingDescriptions, m_attributeDescriptions);
 	}
 }
 Material::~Material()
@@ -92,6 +103,14 @@ const std::vector<VkDescriptorSetLayoutBinding>& Material::GetBindings() const
 {
 	return m_bindings;
 }
+const std::vector<VkVertexInputBindingDescription>& Material::GetBindingDescriptions() const
+{
+	return m_bindingDescriptions;
+}
+const std::vector<VkVertexInputAttributeDescription>& Material::GetAttributeDescriptions() const
+{
+	return m_attributeDescriptions;
+}
 const std::vector<std::string>& Material::GetBindingNames() const
 {
 	return m_bindingNames;
@@ -100,23 +119,51 @@ const std::unordered_map<std::string, UniformBufferBlock*>& Material::GetUniform
 {
 	return m_uniformBufferBlockMap;
 }
+const uint32_t Material::GetInputBindingCount() const
+{
+	return static_cast<uint32_t>(m_vertexInputNames.size());
+}
+const VkBuffer* const Material::GetMeshBuffers(Mesh* pMesh)
+{
+	// All entries are stored in the same buffer:
+	for (uint32_t i = 0; i < m_meshBuffers.size(); i++)
+		m_meshBuffers[i] = pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer();
+	return m_meshBuffers.data();
+}
+const VkDeviceSize* const Material::GetMeshOffsets(Mesh* pMesh)
+{
+	for (uint32_t i = 0; i < m_vertexInputNames.size(); i++)
+	{
+		if (m_vertexInputNames[i] == "in.var.POSITION")
+			m_meshOffsets[i] = pMesh->GetPositionsOffset();
+		else if (m_vertexInputNames[i] == "in.var.NORMAL")
+			m_meshOffsets[i] = pMesh->GetNormalsOffset();
+		else if (m_vertexInputNames[i] == "in.var.TANGENT")
+			m_meshOffsets[i] = pMesh->GetTangentsOffset();
+		else if (m_vertexInputNames[i] == "in.var.COLOR")
+			m_meshOffsets[i] = pMesh->GetColorsOffset();
+		else if (m_vertexInputNames[i] == "in.var.TEXCOORD0")
+			m_meshOffsets[i] = pMesh->GetUVsOffset();
+	}
+	return m_meshOffsets.data();
+}
 VulkanContext* const Material::GetContext() const
 {
 	return m_pContext;
 }
-uint32_t Material::GetBindingCount() const
+uint32_t Material::GetDescriptorBindingCount() const
 {
 	return static_cast<uint32_t>(m_bindings.size());
 }
-uint32_t Material::GetBindingIndex(uint32_t i) const
+uint32_t Material::GetDescriptorBindingIndex(uint32_t i) const
 {
 	return m_bindings[i].binding;
 }
-VkDescriptorType Material::GetBindingType(uint32_t i) const
+VkDescriptorType Material::GetDescriptorBindingType(uint32_t i) const
 {
 	return m_bindings[i].descriptorType;
 }
-const std::string& Material::GetBindingName(uint32_t i) const
+const std::string& Material::GetDescriptorBindingName(uint32_t i) const
 {
 	return m_bindingNames[i];
 }

@@ -12,7 +12,9 @@
 // Constructor/Destructor:
 ShadowPipeline::ShadowPipeline(VulkanContext* pContext,
     const std::vector<char>& vertexCode,
-    const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+    const std::vector<VkDescriptorSetLayoutBinding>& bindings,
+    const std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
+    const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions)
 {
     m_pContext = pContext;
 
@@ -23,7 +25,7 @@ ShadowPipeline::ShadowPipeline(VulkanContext* pContext,
     VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
 
     // Create pipeline:
-    CreatePipeline(vertexShaderModule);
+    CreatePipeline(vertexShaderModule, bindingDescriptions, attributeDescriptions);
 
     // Destroy shader modules (only needed for pipeline creation):
     vkDestroyShaderModule(m_pContext->GetVkDevice(), vertexShaderModule, nullptr);
@@ -58,7 +60,9 @@ void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
     vkCreatePipelineLayout(m_pContext->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
 }
-void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
+void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule,
+    const std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
+    const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions)
 {
     // Vertex shader:
     VkPipelineShaderStageCreateInfo vertexShaderStageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -66,20 +70,16 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule)
     vertexShaderStageInfo.module = vertexShaderModule;
     vertexShaderStageInfo.pName = "main";
 
-    // Get mesh position data layout from mesh class:
-    VkVertexInputBindingDescription bindingDescriptions = Mesh::GetPositionBindingDescription();
-    VkVertexInputAttributeDescription attributeDescriptions = Mesh::GetPositionAttributeDescription();
-
     // Vertex input:
     VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-    vertexInputState.vertexBindingDescriptionCount = 1;
-    vertexInputState.pVertexBindingDescriptions = &bindingDescriptions;
-    vertexInputState.vertexAttributeDescriptionCount = 1;
-    vertexInputState.pVertexAttributeDescriptions = &attributeDescriptions;
+    vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+    vertexInputState.pVertexBindingDescriptions = bindingDescriptions.data();
+    vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputState.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     // Input assembly:
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // how to interpret the vertices, triangle list is the most flexible
+    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
     // Viewports and scissors:
     VkViewport viewport = {};

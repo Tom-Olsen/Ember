@@ -18,12 +18,16 @@ class ShadowPipeline : public Pipeline
 public: // Methods:
 	ShadowPipeline(VulkanContext* pContext,
 		const std::vector<char>& vertexCode,
-		const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+		const std::vector<VkDescriptorSetLayoutBinding>& bindings,
+		const std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
+		const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions);
 	~ShadowPipeline();
 
 private: // Methods:
 	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-	void CreatePipeline(const VkShaderModule& vertexShaderModule);
+	void CreatePipeline(const VkShaderModule& vertexShaderModule,
+		const std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
+		const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions);
 };
 
 

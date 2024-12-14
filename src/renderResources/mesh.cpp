@@ -18,17 +18,17 @@ Mesh::~Mesh()
 
 
 // Public methods:
-void Mesh::Load(VulkanContext* context)
+void Mesh::Load(VulkanContext* pContext)
 {
-	UpdateVertexBuffer(context);
-	UpdateIndexBuffer(context);
+	UpdateVertexBuffer(pContext);
+	UpdateIndexBuffer(pContext);
 	m_verticesUpdated = false;
 	m_indicesUpdated = false;
 	m_isLoaded = true;
 }
 void Mesh::Unload()
 {
-	// call destructors and set ptr to nullptrs:
+	// Call destructors and set ptr to nullptrs:
 	m_vertexBuffer.reset();
 	m_indexBuffer.reset();
 	m_verticesUpdated = false;
@@ -55,9 +55,8 @@ void Mesh::SetNormals(const std::vector<Float3>& normals)
 		m_normals = normals;
 	else
 	{
-		LOG_WARN("Mesh '{}' normals size does not match vertex count! Setting all normals to zero.", m_name);
-		m_normals.clear();
-		m_normals.resize(m_vertexCount, Float3());
+		m_normals = normals;
+		m_normals.resize(m_vertexCount, Float3::zero);
 	}
 	m_verticesUpdated = true;
 }
@@ -67,9 +66,8 @@ void Mesh::SetTangents(const std::vector<Float3>& tangents)
 		m_tangents = tangents;
 	else
 	{
-		LOG_WARN("Mesh '{}' tangents size does not match vertex count! Setting all tangents to zero.", m_name);
-		m_tangents.clear();
-		m_tangents.resize(m_vertexCount, Float3());
+		m_tangents = tangents;
+		m_tangents.resize(m_vertexCount, Float3::zero);
 	}
 	m_verticesUpdated = true;
 }
@@ -79,24 +77,17 @@ void Mesh::SetColors(const std::vector<Float4>& colors)
 		m_colors = colors;
 	else
 	{
-		LOG_WARN("Mesh '{}' colors size does not match vertex count! Setting all colors to zero.", m_name);
-		m_colors.clear();
-		m_colors.resize(m_vertexCount, Float4());
+		m_colors = colors;
+		m_colors.resize(m_vertexCount, Float4::zero);
 	}
 	m_verticesUpdated = true;
 }
 void Mesh::SetUniformColor(const Float4& color)
 {
-	if (m_colors.size() == m_vertexCount)
-	{
-		for (Float4& col : m_colors)
-			col = color;
-	}
-	else
-	{
-		m_colors.clear();
-		m_colors.resize(m_vertexCount, color);
-	}
+	if (m_colors.size() != m_vertexCount)
+		m_colors.resize(m_vertexCount);
+	for (Float4& col : m_colors)
+		col = color;
 	m_verticesUpdated = true;
 }
 void Mesh::SetUVs(const std::vector<Float4>& uvs)
@@ -105,9 +96,8 @@ void Mesh::SetUVs(const std::vector<Float4>& uvs)
 		m_uvs = uvs;
 	else
 	{
-		LOG_WARN("Mesh '{}' uvs size does not match vertex count! Setting all uvs to zero.", m_name);
 		m_uvs.clear();
-		m_uvs.resize(m_vertexCount, Float4());
+		m_uvs.resize(m_vertexCount, Float4::zero);
 	}
 	m_verticesUpdated = true;
 }
@@ -133,9 +123,8 @@ void Mesh::MoveNormals(std::vector<Float3>& normals)
 		m_normals = std::move(normals);
 	else
 	{
-		LOG_WARN("Mesh '{}' normals size does not match vertex count! Setting all normals to zero.", m_name);
-		m_normals.clear();
-		m_normals.resize(m_vertexCount, Float3());
+		m_normals = std::move(normals);
+		m_normals.resize(m_vertexCount, Float3::zero);
 	}
 	m_verticesUpdated = true;
 }
@@ -145,8 +134,7 @@ void Mesh::MoveTangents(std::vector<Float3>& tangents)
 		m_tangents = std::move(tangents);
 	else
 	{
-		LOG_WARN("Mesh '{}' tangents size does not match vertex count! Setting all tangents to zero.", m_name);
-		m_tangents.clear();
+		m_tangents = std::move(tangents);
 		m_tangents.resize(m_vertexCount, Float3());
 	}
 	m_verticesUpdated = true;
@@ -157,8 +145,7 @@ void Mesh::MoveColors(std::vector<Float4>& colors)
 		m_colors = std::move(colors);
 	else
 	{
-		LOG_WARN("Mesh '{}' colors size does not match vertex count! Setting all colors to zero.", m_name);
-		m_colors.clear();
+		m_colors = std::move(colors);
 		m_colors.resize(m_vertexCount, Float4());
 	}
 	m_verticesUpdated = true;
@@ -169,8 +156,7 @@ void Mesh::MoveUVs(std::vector<Float4>& uvs)
 		m_uvs = std::move(uvs);
 	else
 	{
-		LOG_WARN("Mesh '{}' uvs size does not match vertex count! Setting all uvs to zero.", m_name);
-		m_uvs.clear();
+		m_uvs = std::move(uvs);
 		m_uvs.resize(m_vertexCount, Float4());
 	}
 	m_verticesUpdated = true;
@@ -199,22 +185,32 @@ uint32_t Mesh::GetTriangleCount() const
 }
 std::vector<Float3>& Mesh::GetPositions()
 {
+	if (m_positions.size() != m_vertexCount)
+		m_positions.resize(m_vertexCount, Float3::zero);
 	return m_positions;
 }
 std::vector<Float3>& Mesh::GetNormals()
 {
+	if (m_normals.size() != m_vertexCount)
+		m_normals.resize(m_vertexCount, Float3::zero);
 	return m_normals;
 }
 std::vector<Float3>& Mesh::GetTangents()
 {
+	if (m_tangents.size() != m_vertexCount)
+		m_tangents.resize(m_vertexCount, Float3::zero);
 	return m_tangents;
 }
 std::vector<Float4>& Mesh::GetColors()
 {
+	if (m_colors.size() != m_vertexCount)
+		m_colors.resize(m_vertexCount, Float4::zero);
 	return m_colors;
 }
 std::vector<Float4>& Mesh::GetUVs()
 {
+	if (m_uvs.size() != m_vertexCount)
+		m_uvs.resize(m_vertexCount, Float4::zero);
 	return m_uvs;
 }
 std::vector<Uint3>& Mesh::GetTriangles()
@@ -227,70 +223,70 @@ uint32_t* Mesh::GetTrianglesUnrolled()
 }
 uint32_t Mesh::GetSizeOfPositions() const
 {
-	return static_cast<uint32_t>(m_positions.size()) * sizeof(Float3);
+	return m_vertexCount * sizeof(Float3);
 }
 uint32_t Mesh::GetSizeOfNormals() const
 {
-	return static_cast<uint32_t>(m_normals.size()) * sizeof(Float3);
+	return m_vertexCount * sizeof(Float3);
 }
 uint32_t Mesh::GetSizeOfTangents() const
 {
-	return static_cast<uint32_t>(m_tangents.size()) * sizeof(Float3);
+	return m_vertexCount * sizeof(Float3);
 }
 uint32_t Mesh::GetSizeOfColors() const
 {
-	return static_cast<uint32_t>(m_colors.size()) * sizeof(Float4);
+	return m_vertexCount * sizeof(Float4);
 }
 uint32_t Mesh::GetSizeOfUVs() const
 {
-	return static_cast<uint32_t>(m_uvs.size()) * sizeof(Float4);
+	return m_vertexCount * sizeof(Float4);
 }
-uint32_t Mesh::GetSizeOfTriangles() const
+uint64_t Mesh::GetVertexBufferSize() const
 {
-	return static_cast<uint32_t>(m_triangles.size()) * sizeof(Uint3);
+	return static_cast<uint64_t>(GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors() + GetSizeOfUVs());
 }
-uint32_t Mesh::GetBindingCount()
+uint64_t Mesh::GetSizeOfTriangles() const
 {
-	return 5;
+	return static_cast<uint64_t>(m_triangles.size() * sizeof(Uint3));
 }
-VkBuffer* Mesh::GetBuffers(VulkanContext* context)
+VkDeviceSize Mesh::GetPositionsOffset() const
+{
+	return 0;
+}
+VkDeviceSize Mesh::GetNormalsOffset() const
+{
+	return GetSizeOfPositions();
+}
+VkDeviceSize Mesh::GetTangentsOffset() const
+{
+	return GetSizeOfPositions() + GetSizeOfNormals();
+}
+VkDeviceSize Mesh::GetColorsOffset() const
+{
+	return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents();
+}
+VkDeviceSize Mesh::GetUVsOffset() const
+{
+	return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors();
+}
+VmaBuffer* Mesh::GetVertexBuffer(VulkanContext* pContext)
 {
 	if (!m_isLoaded)
-		Load(context);
-	m_buffers[0] = m_vertexBuffer->GetVkBuffer();
-	m_buffers[1] = m_vertexBuffer->GetVkBuffer();
-	m_buffers[2] = m_vertexBuffer->GetVkBuffer();
-	m_buffers[3] = m_vertexBuffer->GetVkBuffer();
-	m_buffers[4] = m_vertexBuffer->GetVkBuffer();
-	return m_buffers;
-}
-VkDeviceSize* Mesh::GetOffsets()
-{
-	m_offsets[0] = 0;
-	m_offsets[1] = GetSizeOfPositions();
-	m_offsets[2] = GetSizeOfPositions() + GetSizeOfNormals();
-	m_offsets[3] = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents();
-	m_offsets[4] = GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors();
-	return m_offsets;
-}
-VmaBuffer* Mesh::GetVertexBuffer(VulkanContext* context)
-{
-	if (!m_isLoaded)
-		Load(context);
-	if (m_verticesUpdated && context != nullptr)
+		Load(pContext);
+	if (m_verticesUpdated)
 	{
-		UpdateVertexBuffer(context);
+		UpdateVertexBuffer(pContext);
 		m_verticesUpdated = false;
 	}
 	return m_vertexBuffer.get();
 }
-VmaBuffer* Mesh::GetIndexBuffer(VulkanContext* context)
+VmaBuffer* Mesh::GetIndexBuffer(VulkanContext* pContext)
 {
 	if (!m_isLoaded)
-		Load(context);
-	if (m_indicesUpdated && context != nullptr)
+		Load(pContext);
+	if (m_indicesUpdated && pContext != nullptr)
 	{
-		UpdateIndexBuffer(context);
+		UpdateIndexBuffer(pContext);
 		m_indicesUpdated = false;
 	}
 	return m_indexBuffer.get();
@@ -299,34 +295,14 @@ bool Mesh::IsLoaded()
 {
 	return m_isLoaded;
 }
-bool Mesh::HasNormals()
-{
-	return m_normals.size() == m_vertexCount;
-}
-bool Mesh::HasTangents()
-{
-	return m_tangents.size() == m_vertexCount;
-}
-bool Mesh::HasColors()
-{
-	return m_colors.size() == m_vertexCount;
-}
-bool Mesh::HasUVs()
-{
-	return m_uvs.size() == m_vertexCount;
-}
 Mesh* Mesh::GetCopy(const std::string& newName)
 {
 	Mesh* copy = new Mesh(newName);
 	copy->SetPositions(m_positions);
-	if (HasNormals())
-		copy->SetNormals(m_normals);
-	if (HasTangents())
-		copy->SetTangents(m_tangents);
-	if (HasColors())
-		copy->SetColors(m_colors);
-	if (HasUVs())
-		copy->SetUVs(m_uvs);
+	copy->SetNormals(m_normals);
+	copy->SetTangents(m_tangents);
+	copy->SetColors(m_colors);
+	copy->SetUVs(m_uvs);
 	copy->SetTriangles(m_triangles);
 	return copy;
 }
@@ -343,8 +319,9 @@ Mesh* Mesh::Translate(const Float3& translation)
 }
 Mesh* Mesh::Rotate(const Float3x3& rotation)
 {
-	bool hasNormals = HasNormals();
-	bool hasTangents = HasTangents();
+	bool hasNormals = m_normals.size() == m_vertexCount;
+	bool hasTangents = m_tangents.size() == m_vertexCount;
+
 	for (uint32_t i = 0; i < m_vertexCount; i++)
 	{
 		m_positions[i] = rotation * m_positions[i];
@@ -359,8 +336,9 @@ Mesh* Mesh::Rotate(const Float3x3& rotation)
 Mesh* Mesh::Rotate(const Float4x4& rotation)
 {
 	Float3x3 rotation3x3 = Float3x3(rotation);
-	bool hasNormals = HasNormals();
-	bool hasTangents = HasTangents();
+	bool hasNormals = m_normals.size() == m_vertexCount;
+	bool hasTangents = m_tangents.size() == m_vertexCount;
+
 	for (uint32_t i = 0; i < m_vertexCount; i++)
 	{
 		m_positions[i] = rotation3x3 * m_positions[i];
@@ -374,8 +352,18 @@ Mesh* Mesh::Rotate(const Float4x4& rotation)
 }
 Mesh* Mesh::Scale(const Float3& scale)
 {
-	for (Float3& position : m_positions)
-		position *= scale;
+	Float3 invScale = 1.0 / scale;
+	bool hasNormals = m_normals.size() == m_vertexCount;
+	bool hasTangents = m_tangents.size() == m_vertexCount;
+
+	for (uint32_t i = 0; i < m_vertexCount; i++)
+	{
+		m_positions[i] = scale * m_positions[i];
+		if (hasNormals)
+			m_normals[i] = (invScale * m_normals[i]).Normalize();
+		if (hasTangents)
+			m_tangents[i] = (invScale * m_tangents[i]).Normalize();
+	}
 	m_verticesUpdated = true;
 	return this;
 }
@@ -387,10 +375,10 @@ Mesh* Mesh::Subdivide()
 {
 	std::vector<Uint3> newTriangles;
 	newTriangles.reserve(4 * m_triangleCount);
-	bool hasNormals = HasNormals();
-	bool hasTangents = HasTangents();
-	bool hasColors = HasColors();
-	bool hasUVs = HasUVs();
+	bool hasNormals = m_normals.size() == m_vertexCount;
+	bool hasTangents = m_tangents.size() == m_vertexCount;
+	bool hasColors = m_colors.size() == m_vertexCount;
+	bool hasUVs = m_uvs.size() == m_vertexCount;
 
 	// Subdivide each triangle:
 	uint32_t newVertexIndex = m_vertexCount;
@@ -480,21 +468,25 @@ Mesh* Mesh::Spherify(float factor, float radius)
 {
 	factor = std::clamp(factor, 0.0f, 1.0f);
 	radius = std::max(1e-8f, radius);
+	bool hasNormals = m_normals.size() == m_vertexCount;
+	bool hasTangents = m_tangents.size() == m_vertexCount;
 
 	for (uint32_t i = 0; i < m_vertexCount; i++)
 	{
 		Float3 sphereNormal = m_positions[i].Normalize();
 		m_positions[i] = radius * (m_positions[i] + factor * (sphereNormal - m_positions[i]));
-		if (HasNormals())
+		if (hasNormals)
 			m_normals[i] = (m_normals[i] + factor * (sphereNormal - m_normals[i])).Normalize();
-		if (HasTangents())
+		if (hasTangents)
 			m_tangents[i] = Float3::VectorToPlaneProjection(m_tangents[i], m_normals[i]).Normalize();
 	}
 
 	// Update mesh data (forces bool updates and logic):
 	MovePositions(m_positions);
-	if (HasNormals())
+	if (hasNormals)
 		MoveNormals(m_normals);
+	if (hasTangents)
+		MoveTangents(m_tangents);
 	return this;
 }
 void Mesh::ComputeNormals()
@@ -518,7 +510,12 @@ void Mesh::ComputeNormals()
 }
 void Mesh::ComputeTangents()
 {
-	if (!HasNormals())
+	if (m_uvs.size() != m_vertexCount)
+	{
+		LOG_WARN("Mesh '{}' has no uvs! Cannot compute tangents.", m_name);
+		return;
+	}
+	if (m_normals.size() != m_vertexCount)
 		ComputeNormals();
 
 	m_tangents.resize(m_vertexCount, Float3::zero);
@@ -546,132 +543,6 @@ void Mesh::ComputeTangents()
 	}
 	for (uint32_t i = 0; i < m_vertexCount; i++)
 		m_tangents[i] = Float3::VectorToPlaneProjection(m_tangents[i], m_normals[i]).Normalize();
-}
-
-
-
-// Static binding descriptions:
-std::vector<VkVertexInputBindingDescription> Mesh::GetBindingDescription()
-{
-	// binding = index of the binding in the array of bindings
-	// stride = number of bytes from one entry to the next
-	// inputRate = VK_VERTEX_INPUT_RATE_VERTEX : move to the next data entry after each vertex
-	//             VK_VERTEX_INPUT_RATE_INSTANCE : move to the next data entry after each instance
-	// => x0y0z0, x1y1z1, ..., nxyz0, nxyz1, ..., r0g0b0a0, r1g1b1a1, ...
-	std::vector<VkVertexInputBindingDescription> bindingDescriptions =
-	{
-		GetPositionBindingDescription(),
-		GetNormalBindingDescription(),
-		GetTangentBindingDescription(),
-		GetColorBindingDescription(),
-		GetUvBindingDescription(0)
-	};
-	return bindingDescriptions;
-}
-VkVertexInputBindingDescription Mesh::GetPositionBindingDescription()
-{
-	VkVertexInputBindingDescription bindingDescription = {};
-	bindingDescription.binding = 0;
-	bindingDescription.stride = sizeof(Float3);
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	return bindingDescription;
-}
-VkVertexInputBindingDescription Mesh::GetNormalBindingDescription()
-{
-	VkVertexInputBindingDescription bindingDescription = {};
-	bindingDescription.binding = 1;
-	bindingDescription.stride = sizeof(Float3);
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	return bindingDescription;
-}
-VkVertexInputBindingDescription Mesh::GetTangentBindingDescription()
-{
-	VkVertexInputBindingDescription bindingDescription = {};
-	bindingDescription.binding = 2;
-	bindingDescription.stride = sizeof(Float3);
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	return bindingDescription;
-}
-VkVertexInputBindingDescription Mesh::GetColorBindingDescription()
-{
-	VkVertexInputBindingDescription bindingDescription = {};
-	bindingDescription.binding = 3;
-	bindingDescription.stride = sizeof(Float4);
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	return bindingDescription;
-}
-VkVertexInputBindingDescription Mesh::GetUvBindingDescription(uint32_t channel)
-{
-	VkVertexInputBindingDescription bindingDescription = {};
-	bindingDescription.binding = 4 + channel;
-	bindingDescription.stride = sizeof(Float4);
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	return bindingDescription;
-}
-
-
-
-// Static attribute descriptions:
-std::vector<VkVertexInputAttributeDescription> Mesh::GetAttributeDescriptions()
-{
-	// binding = index of the attribute in the array of attributes
-	// location = reference to the location directive of the input in the vertex shader
-	// format = how to interpret the data
-	// offset = data offset
-	std::vector<VkVertexInputAttributeDescription> attributeDescriptions =
-	{
-		GetPositionAttributeDescription(),
-		GetNormalAttributeDescription(),
-		GetTangentAttributeDescription(),
-		GetColorAttributeDescription(),
-		GetUvAttributeDescription(0)
-	};
-	return attributeDescriptions;
-}
-VkVertexInputAttributeDescription Mesh::GetPositionAttributeDescription()
-{
-	VkVertexInputAttributeDescription attributeDescription = {};
-	attributeDescription.binding = 0;
-	attributeDescription.location = 0;
-	attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescription.offset = 0;
-	return attributeDescription;
-}
-VkVertexInputAttributeDescription Mesh::GetNormalAttributeDescription()
-{
-	VkVertexInputAttributeDescription attributeDescription = {};
-	attributeDescription.binding = 1;
-	attributeDescription.location = 1;
-	attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescription.offset = 0;
-	return attributeDescription;
-}
-VkVertexInputAttributeDescription Mesh::GetTangentAttributeDescription()
-{
-	VkVertexInputAttributeDescription attributeDescription = {};
-	attributeDescription.binding = 2;
-	attributeDescription.location = 2;
-	attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescription.offset = 0;
-	return attributeDescription;
-}
-VkVertexInputAttributeDescription Mesh::GetColorAttributeDescription()
-{
-	VkVertexInputAttributeDescription attributeDescription = {};
-	attributeDescription.binding = 3;
-	attributeDescription.location = 3;
-	attributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-	attributeDescription.offset = 0;
-	return attributeDescription;
-}
-VkVertexInputAttributeDescription Mesh::GetUvAttributeDescription(uint32_t channel)
-{
-	VkVertexInputAttributeDescription attributeDescription = {};
-	attributeDescription.binding = 4 + channel;
-	attributeDescription.location = 4 + channel;
-	attributeDescription.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-	attributeDescription.offset = 0;
-	return attributeDescription;
 }
 
 
@@ -710,24 +581,6 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, const std::string& name)
 	mergedUvs.reserve(vertexCount);
 	mergedTriangles.reserve(triangleCount);
 
-	// Check if any mesh has an optional channel:
-	bool hasNormals = false;
-	bool hasTangents = false;
-	bool hasColors = false;
-	bool HasUVs = false;
-	for (Mesh* mesh : meshes)
-	{
-		if (mesh->HasNormals())
-			hasNormals = true;
-		if (mesh->HasTangents())
-			hasTangents = true;
-		if (mesh->HasColors())
-			hasColors = true;
-		if (mesh->HasUVs())
-			HasUVs = true;
-	}
-
-
 	for (Mesh* mesh : meshes)
 	{
 		// Get data of current mesh:
@@ -737,32 +590,21 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, const std::string& name)
 		mergedPositions.insert(mergedPositions.end(), positions.begin(), positions.end());
 
 		// Append normals:
-		if (hasNormals)
-		{
-			std::vector<Float3> normals = mesh->GetNormals();
-			mergedNormals.insert(mergedNormals.end(), normals.begin(), normals.end());
-		}
+		std::vector<Float3> normals = mesh->GetNormals();
+		mergedNormals.insert(mergedNormals.end(), normals.begin(), normals.end());
+
 
 		// Append tangents:
-		if (hasTangents)
-		{
-			std::vector<Float3> m_tangents = mesh->GetTangents();
-			mergedTangents.insert(mergedTangents.end(), m_tangents.begin(), m_tangents.end());
-		}
+		std::vector<Float3> m_tangents = mesh->GetTangents();
+		mergedTangents.insert(mergedTangents.end(), m_tangents.begin(), m_tangents.end());
 
 		// Append colors:
-		if (hasColors)
-		{
-			std::vector<Float4> colors = mesh->GetColors();
-			mergedColors.insert(mergedColors.end(), colors.begin(), colors.end());
-		}
+		std::vector<Float4> colors = mesh->GetColors();
+		mergedColors.insert(mergedColors.end(), colors.begin(), colors.end());
 
 		// Append uvs:
-		if (HasUVs)
-		{
-			std::vector<Float4> uvs = mesh->GetUVs();
-			mergedUvs.insert(mergedUvs.end(), uvs.begin(), uvs.end());
-		}
+		std::vector<Float4> uvs = mesh->GetUVs();
+		mergedUvs.insert(mergedUvs.end(), uvs.begin(), uvs.end());
 
 		// Handle triangles:
 		std::vector<Uint3> triangles = mesh->GetTriangles();
@@ -777,14 +619,10 @@ Mesh* Mesh::Merge(std::vector<Mesh*>& meshes, const std::string& name)
 	// Construct mergedMesh:
 	Mesh* mergedMesh = new Mesh(name);
 	mergedMesh->MovePositions(mergedPositions);
-	if (hasNormals)
-		mergedMesh->MoveNormals(mergedNormals);
-	if (hasTangents)
-		mergedMesh->MoveTangents(mergedTangents);
-	if (hasColors)
-		mergedMesh->MoveColors(mergedColors);
-	if (HasUVs)
-		mergedMesh->MoveUVs(mergedUvs);
+	mergedMesh->MoveNormals(mergedNormals);
+	mergedMesh->MoveTangents(mergedTangents);
+	mergedMesh->MoveColors(mergedColors);
+	mergedMesh->MoveUVs(mergedUvs);
 	mergedMesh->MoveTriangles(mergedTriangles);
 	return mergedMesh;
 }
@@ -801,44 +639,44 @@ std::string Mesh::ToString()
 		str += position.ToString() + "\n";
 
 	str += "Normals:";
-	if (HasNormals())
+	if (m_normals.size() != m_vertexCount)
+		str += " invalid\n";
+	else
 	{
 		str += "\n";
 		for (const Float3& normal : m_normals)
 			str += normal.ToString() + "\n";
 	}
-	else
-		str += " none\n";
 
 	str += "Tangents:";
-	if (HasTangents())
+	if (m_tangents.size() != m_vertexCount)
+		str += " invalid\n";
+	else
 	{
 		str += "\n";
 		for (const Float3& tangent : m_tangents)
 			str += tangent.ToString() + "\n";
 	}
-	else
-		str += " none\n";
 
 	str += "Colors:";
-	if (HasColors())
+	if (m_colors.size() != m_vertexCount)
+		str += " invalid\n";
+	else
 	{
 		str += "\n";
 		for (const Float4& color : m_colors)
 			str += color.ToString() + "\n";
 	}
-	else
-		str += " none\n";
 
 	str += "Uvs:";
-	if (HasUVs())
+	if (m_uvs.size() != m_vertexCount)
+		str += " invalid\n";
+	else
 	{
 		str += "\n";
 		for (const Float4& uv : m_uvs)
 			str += uv.ToString() + "\n";
 	}
-	else
-		str += " none\n";
 
 	str += "Triangles:\n";
 	for (const Uint3& triangle : m_triangles)
@@ -852,13 +690,24 @@ std::string Mesh::ToString()
 
 // Private:
 #ifdef RESIZEABLE_BAR // No staging buffer:
-void Mesh::UpdateVertexBuffer(VulkanContext* context)
+void Mesh::UpdateVertexBuffer(VulkanContext* pContext)
 {
-	uint64_t size = static_cast<uint64_t>(GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors() + GetSizeOfUVs());
-	vkQueueWaitIdle(context->pLogicalDevice->GetGraphicsQueue().queue);	// wait for previous render calls to finish
+	// Set zero values if vectors not set:
+	if (m_normals.size() != m_vertexCount)
+		m_normals.resize(m_vertexCount, Float3::zero);
+	if (m_tangents.size() != m_vertexCount)
+		m_tangents.resize(m_vertexCount, Float3::zero);
+	if (m_colors.size() != m_vertexCount)
+		m_colors.resize(m_vertexCount, Float4::zero);
+	if (m_uvs.size() != m_vertexCount)
+		m_uvs.resize(m_vertexCount, Float4::zero);
+
+	uint64_t size = GetVertexBufferSize();
+	if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
+		vkQueueWaitIdle(pContext->pLogicalDevice->GetGraphicsQueue().queue);
 
 	// Resize buffer if necessary:
-	if (m_vertexBuffer == nullptr || size != m_vertexBuffer->size)
+	if (m_vertexBuffer == nullptr || size != m_vertexBuffer->GetSize())
 	{
 		VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
 		pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -872,24 +721,35 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 		pAllocInfo->requiredFlags = 0;
 		pAllocInfo->preferredFlags = 0;
 
-		m_vertexBuffer = std::make_unique<VmaBuffer>(context, pBufferInfo, pAllocInfo);
+		m_vertexBuffer = std::make_unique<VmaBuffer>(pContext, pBufferInfo, pAllocInfo);
 	}
 
 	// Copy positions, colors, uvs:
 	void* data;
-	VKA(vmaMapMemory(context->GetVmaAllocator(), m_vertexBuffer->allocation, &data));
+	VKA(vmaMapMemory(pContext->GetVmaAllocator(), m_vertexBuffer->allocation, &data));
 	memcpy(static_cast<char*>(data), m_positions.data(), GetSizeOfPositions());
 	memcpy(static_cast<char*>(data) + GetSizeOfPositions(), m_normals.data(), GetSizeOfNormals());
 	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals(), m_tangents.data(), GetSizeOfTangents());
 	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents(), m_colors.data(), GetSizeOfColors());
 	memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors(), m_uvs.data(), GetSizeOfUVs());
-	VKA(vmaUnmapMemory(context->GetVmaAllocator(), m_vertexBuffer->allocation));
+	VKA(vmaUnmapMemory(pContext->GetVmaAllocator(), m_vertexBuffer->allocation));
 }
 #else // With Staging buffer:
-void Mesh::UpdateVertexBuffer(VulkanContext* context)
+void Mesh::UpdateVertexBuffer(VulkanContext* pContext)
 {
-	uint64_t size = static_cast<uint64_t>(GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors() + GetSizeOfUVs());
-	vkQueueWaitIdle(context->pLogicalDevice->GetGraphicsQueue().queue);	// wait for previous render calls to finish
+	// Set zero values if vectors not set:
+	if (m_normals.size() != m_vertexCount)
+		m_normals.resize(m_vertexCount, Float3::zero);
+	if (m_tangents.size() != m_vertexCount)
+		m_tangents.resize(m_vertexCount, Float3::zero);
+	if (m_colors.size() != m_vertexCount)
+		m_colors.resize(m_vertexCount, Float4::zero);
+	if (m_uvs.size() != m_vertexCount)
+		m_uvs.resize(m_vertexCount, Float4::zero);
+
+	uint64_t size = GetVertexBufferSize();
+	if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
+		vkQueueWaitIdle(pContext->pLogicalDevice->GetGraphicsQueue().queue);
 
 	// Resize buffer if necessary:
 	if (m_vertexBuffer == nullptr || size != m_vertexBuffer->GetSize())
@@ -906,7 +766,7 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 		pAllocInfo->requiredFlags = 0;
 		pAllocInfo->preferredFlags = 0;
 
-		m_vertexBuffer = std::make_unique<VmaBuffer>(context, pBufferInfo, pAllocInfo);
+		m_vertexBuffer = std::make_unique<VmaBuffer>(pContext, pBufferInfo, pAllocInfo);
 	}
 
 	// Load data into staging buffer:
@@ -922,20 +782,21 @@ void Mesh::UpdateVertexBuffer(VulkanContext* context)
 	  static_cast<uint64_t>(GetSizeOfTangents()),
 	  static_cast<uint64_t>(GetSizeOfColors()),
 	  static_cast<uint64_t>(GetSizeOfUVs())};
-	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(context, bufferSizes, bufferPointers);
+	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(pContext, bufferSizes, bufferPointers);
 
 	// Copy data from staging to vertex buffer:
-	VmaBuffer::CopyBufferToBuffer(context, &stagingBuffer, m_vertexBuffer.get(), size, context->pLogicalDevice->GetGraphicsQueue());
+	VmaBuffer::CopyBufferToBuffer(pContext, &stagingBuffer, m_vertexBuffer.get(), size, pContext->pLogicalDevice->GetGraphicsQueue());
 }
 #endif
 #ifdef RESIZEABLE_BAR // No staging buffer:
-void Mesh::UpdateIndexBuffer(VulkanContext* context)
+void Mesh::UpdateIndexBuffer(VulkanContext* pContext)
 {
-	uint64_t size = static_cast<uint64_t>(GetSizeOfTriangles());
-	vkQueueWaitIdle(context->pLogicalDevice->GetGraphicsQueue().queue);	// wait for previous render calls to finish
+	uint64_t size = GetSizeOfTriangles();
+	if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
+		vkQueueWaitIdle(pContext->pLogicalDevice->GetGraphicsQueue().queue);
 
 	// Resize buffer if necessary:
-	if (m_indexBuffer == nullptr || size != m_indexBuffer->size)
+	if (m_indexBuffer == nullptr || size != m_indexBuffer->GetSize())
 	{
 		VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
 		pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -949,20 +810,21 @@ void Mesh::UpdateIndexBuffer(VulkanContext* context)
 		pAllocInfo->requiredFlags = 0;
 		pAllocInfo->preferredFlags = 0;
 
-		m_indexBuffer = std::make_unique<VmaBuffer>(context, pBufferInfo, pAllocInfo);
+		m_indexBuffer = std::make_unique<VmaBuffer>(pContext, pBufferInfo, pAllocInfo);
 	}
 
 	// Copy triangle indexes:
 	void* data;
-	VKA(vmaMapMemory(context->GetVmaAllocator(), m_indexBuffer->allocation, &data));
+	VKA(vmaMapMemory(pContext->GetVmaAllocator(), m_indexBuffer->allocation, &data));
 	memcpy(data, GetTrianglesUnrolled(), size);
-	VKA(vmaUnmapMemory(context->GetVmaAllocator(), m_indexBuffer->allocation));
+	VKA(vmaUnmapMemory(pContext->GetVmaAllocator(), m_indexBuffer->allocation));
 }
 #else // With Staging buffer:
-void Mesh::UpdateIndexBuffer(VulkanContext* context)
+void Mesh::UpdateIndexBuffer(VulkanContext* pContext)
 {
-	uint64_t size = static_cast<uint64_t>(GetSizeOfTriangles());
-	vkQueueWaitIdle(context->pLogicalDevice->GetGraphicsQueue().queue);	// wait for previous render calls to finish
+	uint64_t size = GetSizeOfTriangles();
+	if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
+		vkQueueWaitIdle(pContext->pLogicalDevice->GetGraphicsQueue().queue);
 
 	// Resize buffer if necessary:
 	if (m_indexBuffer == nullptr || size != m_indexBuffer->GetSize())
@@ -979,13 +841,13 @@ void Mesh::UpdateIndexBuffer(VulkanContext* context)
 		pAllocInfo->requiredFlags = 0;
 		pAllocInfo->preferredFlags = 0;
 
-		m_indexBuffer = std::make_unique<VmaBuffer>(context, pBufferInfo, pAllocInfo);
+		m_indexBuffer = std::make_unique<VmaBuffer>(pContext, pBufferInfo, pAllocInfo);
 	}
 
 	// Load data into staging buffer:
-	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(context, size, GetTrianglesUnrolled());
+	VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(pContext, size, GetTrianglesUnrolled());
 
 	// Copy data from staging to vertex buffer:
-	VmaBuffer::CopyBufferToBuffer(context, &stagingBuffer, m_indexBuffer.get(), size, context->pLogicalDevice->GetGraphicsQueue());
+	VmaBuffer::CopyBufferToBuffer(pContext, &stagingBuffer, m_indexBuffer.get(), size, pContext->pLogicalDevice->GetGraphicsQueue());
 }
 #endif

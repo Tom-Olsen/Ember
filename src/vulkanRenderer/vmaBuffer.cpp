@@ -88,9 +88,9 @@ uint64_t VmaBuffer::GetSize()
 
 
 // Static methods:
-void VmaBuffer::CopyBufferToBuffer(VulkanContext* m_pContext, VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize bufferSize, const VulkanQueue& queue)
+void VmaBuffer::CopyBufferToBuffer(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize bufferSize, const VulkanQueue& queue)
 {
-	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, queue);
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(pContext, queue);
 
 	// Queue copy command:
 	VkBufferCopy copyRegion = {};
@@ -99,11 +99,11 @@ void VmaBuffer::CopyBufferToBuffer(VulkanContext* m_pContext, VmaBuffer* srcBuff
 	copyRegion.size = bufferSize;
 	vkCmdCopyBuffer(command.GetVkCommandBuffer(), srcBuffer->GetVkBuffer(), dstBuffer->GetVkBuffer(), 1, &copyRegion);
 
-	VulkanCommand::EndSingleTimeCommand(m_pContext, command, queue);
+	VulkanCommand::EndSingleTimeCommand(pContext, command, queue);
 }
-void VmaBuffer::CopyBufferToImage(VulkanContext* m_pContext, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount)
+void VmaBuffer::CopyBufferToImage(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount)
 {
-	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, queue);
+	VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(pContext, queue);
 
 	VkBufferImageCopy region = {};
 	region.bufferOffset = 0;
@@ -124,9 +124,9 @@ void VmaBuffer::CopyBufferToImage(VulkanContext* m_pContext, VmaBuffer* srcBuffe
 		1,
 		&region);
 
-	VulkanCommand::EndSingleTimeCommand(m_pContext, command, queue);
+	VulkanCommand::EndSingleTimeCommand(pContext, command, queue);
 }
-VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* m_pContext, uint64_t size, void* inputData)
+VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* pContext, uint64_t size, void* inputData)
 {
 	// Create buffer:
 	VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
@@ -141,17 +141,17 @@ VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* m_pContext, uint64_t size, voi
 	pAllocInfo->requiredFlags = 0;
 	pAllocInfo->preferredFlags = 0;
 
-	VmaBuffer stagingBuffer = VmaBuffer(m_pContext, pBufferInfo, pAllocInfo);
+	VmaBuffer stagingBuffer = VmaBuffer(pContext, pBufferInfo, pAllocInfo);
 
 	// Load data into buffer:
 	void* data;
-	VKA(vmaMapMemory(m_pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation(), &data));
+	VKA(vmaMapMemory(pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation(), &data));
 	memcpy(data, inputData, static_cast<size_t>(size));
-	vmaUnmapMemory(m_pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation());
+	vmaUnmapMemory(pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation());
 
 	return stagingBuffer;
 }
-VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* m_pContext, const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas)
+VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* pContext, const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas)
 {
 	// Check if sizes and inputDatas have the same size:
 	if (sizes.size() != inputDatas.size())
@@ -175,11 +175,11 @@ VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* m_pContext, const std::vector<
 	pAllocInfo->requiredFlags = 0;
 	pAllocInfo->preferredFlags = 0;
 
-	VmaBuffer stagingBuffer = VmaBuffer(m_pContext, pBufferInfo, pAllocInfo);
+	VmaBuffer stagingBuffer = VmaBuffer(pContext, pBufferInfo, pAllocInfo);
 
 	// Load data into buffer:
 	void* data;
-	VKA(vmaMapMemory(m_pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation(), &data));
+	VKA(vmaMapMemory(pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation(), &data));
 	uint64_t offset = 0;
 	for (uint64_t i = 0; i < inputDatas.size(); i++)
 	{
@@ -189,7 +189,7 @@ VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* m_pContext, const std::vector<
 			offset += sizes[i];
 		}
 	}
-	vmaUnmapMemory(m_pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation());
+	vmaUnmapMemory(pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation());
 
 	return stagingBuffer;
 }

@@ -31,15 +31,15 @@ MaterialProperties::MaterialProperties(Material* pMaterial)
 
 	for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
 	{
-		for (uint32_t i = 0; i < m_pMaterial->GetBindingCount(); i++)
+		for (uint32_t i = 0; i < m_pMaterial->GetDescriptorBindingCount(); i++)
 		{
-			VkDescriptorType type = m_pMaterial->GetBindingType(i);
+			VkDescriptorType type = m_pMaterial->GetDescriptorBindingType(i);
 			if (type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-				InitUniformBufferResourceBinding(m_pMaterial->GetBindingName(i), m_pMaterial->GetBindingIndex(i), frameIndex);
+				InitUniformBufferResourceBinding(m_pMaterial->GetDescriptorBindingName(i), m_pMaterial->GetDescriptorBindingIndex(i), frameIndex);
 			else if (type == VK_DESCRIPTOR_TYPE_SAMPLER)
-				InitSamplerResourceBinding(m_pMaterial->GetBindingName(i), m_pMaterial->GetBindingIndex(i), SamplerManager::GetSampler("colorSampler"), frameIndex);
+				InitSamplerResourceBinding(m_pMaterial->GetDescriptorBindingName(i), m_pMaterial->GetDescriptorBindingIndex(i), SamplerManager::GetSampler("colorSampler"), frameIndex);
 			else if (type == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-				InitTexture2dResourceBinding(m_pMaterial->GetBindingName(i), m_pMaterial->GetBindingIndex(i), TextureManager::GetTexture2d("white"), frameIndex);
+				InitTexture2dResourceBinding(m_pMaterial->GetDescriptorBindingName(i), m_pMaterial->GetDescriptorBindingIndex(i), TextureManager::GetTexture2d("white"), frameIndex);
 		}
 	}
 	InitStagingMaps();

@@ -2,12 +2,14 @@
 #define __INCLUDE_GUARD_material_h__
 #include <filesystem>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
 
 
 
+class Mesh;
 class Pipeline;
 struct VulkanContext;
 struct UniformBufferBlock;
@@ -44,7 +46,12 @@ private: // Members:
 	std::unique_ptr<Pipeline> m_pPipeline;
 	std::vector<VkDescriptorSetLayoutBinding> m_bindings;
 	std::vector<std::string> m_bindingNames;
+	std::vector<VkVertexInputBindingDescription> m_bindingDescriptions;
+	std::vector<VkVertexInputAttributeDescription> m_attributeDescriptions;
+	std::vector<std::string> m_vertexInputNames;
 	std::unordered_map<std::string, UniformBufferBlock*> m_uniformBufferBlockMap;
+	std::vector<VkBuffer> m_meshBuffers;
+	std::vector<VkDeviceSize> m_meshOffsets;
 	VulkanContext* m_pContext;
 
 public: // Methods:
@@ -58,13 +65,18 @@ public: // Methods:
 	RenderQueue GetRenderQueue() const;
 	const Pipeline* const GetPipeline() const;
 	const std::vector<VkDescriptorSetLayoutBinding>& GetBindings() const;
+	const std::vector<VkVertexInputBindingDescription>& GetBindingDescriptions() const;
+	const std::vector<VkVertexInputAttributeDescription>& GetAttributeDescriptions() const;
 	const std::vector<std::string>& GetBindingNames() const;
 	const std::unordered_map<std::string, UniformBufferBlock*>& GetUniformBufferBlockMap() const;
+	const uint32_t GetInputBindingCount() const;
+	const VkBuffer* const GetMeshBuffers(Mesh* pMesh);
+	const VkDeviceSize* const GetMeshOffsets(Mesh* pMesh);
 	VulkanContext* const GetContext() const;
-	uint32_t GetBindingCount() const;
-	uint32_t GetBindingIndex(uint32_t i) const;
-	VkDescriptorType GetBindingType(uint32_t i) const;
-	const std::string& GetBindingName(uint32_t i) const;
+	uint32_t GetDescriptorBindingCount() const;
+	uint32_t GetDescriptorBindingIndex(uint32_t i) const;
+	VkDescriptorType GetDescriptorBindingType(uint32_t i) const;
+	const std::string& GetDescriptorBindingName(uint32_t i) const;
 	UniformBufferBlock* GetUniformBufferBlock(const std::string& name) const;
 
 	// Debugging:

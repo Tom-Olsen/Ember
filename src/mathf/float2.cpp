@@ -215,6 +215,10 @@ Float2& Float2::operator/=(float scalar)
 	y /= scalar;
 	return *this;
 }
+Float2 operator/(float scalar, const Float2& vector)
+{
+	return Float2(scalar / vector.x, scalar / vector.y);
+}
 
 
 

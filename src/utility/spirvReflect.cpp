@@ -97,7 +97,65 @@ SpirvReflect::~SpirvReflect()
 
 
 // SpirvReflect public methods:
-void SpirvReflect::GetDescriptorSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& bindings, std::vector<std::string>& bindingNames, std::unordered_map<std::string, UniformBufferBlock*>& uniformBufferBlockMap)
+void SpirvReflect::GetInputBindingAndAttributeDescriptions(
+    std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
+    std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
+    std::vector<std::string>& vertexInputNames) const
+{
+    std::vector<SpvReflectInterfaceVariable*> inputs = GetInputVariablesReflection();
+	for (uint32_t i = 0; i < inputs.size(); i++)
+	{
+		SpvReflectInterfaceVariable* pInput = inputs[i];
+		uint32_t typeSize = pInput->type_description->traits.numeric.scalar.width / 8;
+		uint32_t vectorSize = pInput->type_description->traits.numeric.vector.component_count;
+        uint32_t size = typeSize * vectorSize;
+
+		VkVertexInputBindingDescription bindingDescription = {};
+        bindingDescription.binding = pInput->location;
+        bindingDescription.stride = size;
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        bindingDescriptions.push_back(bindingDescription);
+		vertexInputNames.push_back(pInput->name);
+
+        VkFormat format;
+        switch (typeSize)
+        {
+        case 4: // 4 bytes per component (e.g., float, int)
+            switch (vectorSize)
+            {
+            case 1: format = VK_FORMAT_R32_SFLOAT; break;
+            case 2: format = VK_FORMAT_R32G32_SFLOAT; break;
+            case 3: format = VK_FORMAT_R32G32B32_SFLOAT; break;
+            case 4: format = VK_FORMAT_R32G32B32A32_SFLOAT; break;
+            default: throw std::runtime_error("Unsupported vector size");
+            }
+            break;
+        case 8: // 8 bytes per component (e.g., double)
+            switch (vectorSize)
+            {
+            case 1: format = VK_FORMAT_R64_SFLOAT; break;
+            case 2: format = VK_FORMAT_R64G64_SFLOAT; break;
+            case 3: format = VK_FORMAT_R64G64B64_SFLOAT; break;
+            case 4: format = VK_FORMAT_R64G64B64A64_SFLOAT; break;
+            default: throw std::runtime_error("Unsupported vector size");
+            }
+            break;
+        default:
+            throw std::runtime_error("Unsupported scalar width");
+        }
+
+        VkVertexInputAttributeDescription attributeDescription = {};
+        attributeDescription.binding = pInput->location;
+        attributeDescription.location = pInput->location;
+        attributeDescription.format = format;
+        attributeDescription.offset = 0;
+        attributeDescriptions.push_back(attributeDescription);
+	}
+}
+void SpirvReflect::GetDescriptorSetLayoutBindings(
+    std::vector<VkDescriptorSetLayoutBinding>& bindings,
+    std::vector<std::string>& bindingNames,
+    std::unordered_map<std::string, UniformBufferBlock*>& uniformBufferBlockMap)
 {
     // Shader descriptor set reflection:
     std::vector<SpvReflectDescriptorSet*> descriptorSetsReflection = GetDescriptorSetsReflection();
@@ -133,6 +191,14 @@ void SpirvReflect::GetDescriptorSetLayoutBindings(std::vector<VkDescriptorSetLay
 
 
 // SpirvReflect private static methods:
+std::vector<SpvReflectInterfaceVariable*> SpirvReflect::GetInputVariablesReflection() const
+{
+	uint32_t inputCount = 0;
+	SPVA(spvReflectEnumerateInputVariables(&m_module, &inputCount, nullptr));
+	std::vector<SpvReflectInterfaceVariable*> inputs(inputCount);
+	SPVA(spvReflectEnumerateInputVariables(&m_module, &inputCount, inputs.data()));
+	return inputs;
+}
 std::vector<SpvReflectDescriptorSet*> SpirvReflect::GetDescriptorSetsReflection() const
 {
     uint32_t setCount = 0;

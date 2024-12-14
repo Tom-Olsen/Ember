@@ -14,9 +14,10 @@ struct VulkanContext;
 
 
 /// <summary>
-/// Mesh class for storing vertex positions, colors, triangles, etc.
+/// Mesh class for storing vertex positions, normals, tangents, colors, uvs, and triangles.
 /// Mesh class takes ownership of vectors and takes care of cleanup.
-/// Normalization of normals and tangets must be done manually if they are not computed with ComputeNormals/Tangents.
+/// Normalization of normals and tangets must be done manually if they are not computed with ComputeNormals()/ComputeTangents().
+/// Mesh class does not guarantee validity of the mesh data.
 /// Static meshes should be stored as pointers in the static MeshManager class.
 /// </summary>
 class Mesh
@@ -36,8 +37,6 @@ private: // Members:
 	std::vector<Float4> m_colors;
 	std::vector<Float4> m_uvs;
 	std::vector<Uint3> m_triangles;
-	VkDeviceSize m_offsets[5];
-	VkBuffer m_buffers[5];
 
 public: // Methods:
 	Mesh(const std::string& name = "");
@@ -48,7 +47,7 @@ public: // Methods:
 	~Mesh();
 
 	// Load/Unload:
-	void Load(VulkanContext* context);
+	void Load(VulkanContext* pContext);
 	void Unload();
 	
 	// Setters:
@@ -85,17 +84,16 @@ public: // Methods:
 	uint32_t GetSizeOfTangents() const;
 	uint32_t GetSizeOfColors() const;
 	uint32_t GetSizeOfUVs() const;
-	uint32_t GetSizeOfTriangles() const;
-	uint32_t GetBindingCount();
-	VkBuffer* GetBuffers(VulkanContext* context);
-	VkDeviceSize* GetOffsets();
-	VmaBuffer* GetVertexBuffer(VulkanContext* context);
-	VmaBuffer* GetIndexBuffer(VulkanContext* context);
+	uint64_t GetVertexBufferSize() const;
+	uint64_t GetSizeOfTriangles() const;
+	VkDeviceSize GetPositionsOffset() const;
+	VkDeviceSize GetNormalsOffset() const;
+	VkDeviceSize GetTangentsOffset() const;
+	VkDeviceSize GetColorsOffset() const;
+	VkDeviceSize GetUVsOffset() const;
+	VmaBuffer* GetVertexBuffer(VulkanContext* pContext);
+	VmaBuffer* GetIndexBuffer(VulkanContext* pContext);
 	bool IsLoaded();
-	bool HasNormals();
-	bool HasTangents();
-	bool HasColors();
-	bool HasUVs();
 	Mesh* GetCopy(const std::string& newName = "");
 
 	// Mesh transformations (changes *this!):
@@ -109,22 +107,6 @@ public: // Methods:
 	void ComputeNormals();
 	void ComputeTangents();
 
-	// Static binding descriptions:
-	static std::vector<VkVertexInputBindingDescription> GetBindingDescription();
-	static VkVertexInputBindingDescription GetPositionBindingDescription();
-	static VkVertexInputBindingDescription GetNormalBindingDescription();
-	static VkVertexInputBindingDescription GetTangentBindingDescription();
-	static VkVertexInputBindingDescription GetColorBindingDescription();
-	static VkVertexInputBindingDescription GetUvBindingDescription(uint32_t channel);
-
-	// Static attribute descriptions:
-	static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
-	static VkVertexInputAttributeDescription GetPositionAttributeDescription();
-	static VkVertexInputAttributeDescription GetNormalAttributeDescription();
-	static VkVertexInputAttributeDescription GetTangentAttributeDescription();
-	static VkVertexInputAttributeDescription GetColorAttributeDescription();
-	static VkVertexInputAttributeDescription GetUvAttributeDescription(uint32_t channel);
-
 	// Static methods:
 	static VkIndexType GetIndexType();
 	static Mesh* Merge(std::vector<Mesh*>& meshes, const std::string& name = "");
@@ -133,8 +115,8 @@ public: // Methods:
 	std::string ToString();
 
 private: // Methods:
-	void UpdateVertexBuffer(VulkanContext* context);
-	void UpdateIndexBuffer(VulkanContext* context);
+	void UpdateVertexBuffer(VulkanContext* pContext);
+	void UpdateIndexBuffer(VulkanContext* pContext);
 };
 
 

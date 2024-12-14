@@ -99,6 +99,9 @@ public:
 	static Float2 down;		// -y = ( 0,-1).
 };
 
+// Friend functions:
+Float2 operator/(float scalar, const Float2& vector);
+
 
 
 #endif // __INCLUDE_GUARD_float2_h__

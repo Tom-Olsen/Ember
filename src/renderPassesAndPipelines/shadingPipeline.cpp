@@ -12,7 +12,9 @@
 ShadingPipeline::ShadingPipeline(VulkanContext* pContext,
     const std::vector<char>& vertexCode,
     const std::vector<char>& fragmentCode,
-    const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+    const std::vector<VkDescriptorSetLayoutBinding>& bindings,
+    const std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
+    const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions)
 {
     m_pContext = pContext;
 
@@ -24,7 +26,7 @@ ShadingPipeline::ShadingPipeline(VulkanContext* pContext,
     VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
 
     // Create pipeline:
-    CreatePipeline(vertexShaderModule, fragmentShaderModule);
+    CreatePipeline(vertexShaderModule, fragmentShaderModule, bindingDescriptions, attributeDescriptions);
 
     // Destroy shader modules (only needed for pipeline creation):
     vkDestroyShaderModule(m_pContext->GetVkDevice(), vertexShaderModule, nullptr);
@@ -60,7 +62,9 @@ void ShadingPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayo
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
     vkCreatePipelineLayout(m_pContext->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
 }
-void ShadingPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule)
+void ShadingPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule,
+    const std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
+    const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions)
 {
     // Vertex shader:
     VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -75,10 +79,6 @@ void ShadingPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, c
     fragmentShaderStageCreateInfo.pName = "main";
 
     VkPipelineShaderStageCreateInfo shaderStages[2] = { vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo };
-
-    // Get mesh data layout from mesh class:
-    std::vector<VkVertexInputBindingDescription> bindingDescriptions = Mesh::GetBindingDescription();
-    std::vector<VkVertexInputAttributeDescription> attributeDescriptions = Mesh::GetAttributeDescriptions();
 
     // Vertex input:
     VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };

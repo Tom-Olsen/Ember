@@ -94,6 +94,9 @@ public:
 	static Float4 out;		// -w = ( 0, 0, 0,-1).
 };
 
+// Friend functions:
+Float4 operator/(float scalar, const Float4& vector);
+
 
 
 #endif // __INCLUDE_GUARD_float4_h__

@@ -65,11 +65,6 @@ MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 lo
 		LOG_ERROR("Graphics::Draw() failed. pMesh is nullptr.");
 		return nullptr;
 	}
-	if (!pMaterial)
-	{
-		LOG_ERROR("Graphics::Draw() failed. pMaterial is nullptr.");
-		return nullptr;
-	}
 
 	// Double size of the meshRenderers vector if it is full:
 	uint32_t oldSize = static_cast<uint32_t>(s_transforms.size());

@@ -21,10 +21,13 @@
 // - in macros.h reduce MAX_D_LIGHTS, MAX_S_LIGHTS, MAX_P_LIGHTS to a single MAX_SHADOW_MAPS
 //   and make shadowmap indexing more dynamic to work with e.g. only point lights or only spot lights.
 // - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
+//   => might fix validation layer warnings: 
+//      vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location X not consumed by vertex shader.
 // - mesh->Scale(a,b,c) needs to scale normals and tangents correctly
 // - in mesh.GetOffset and GetBuffers dont reset the arrays
 // - add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
 //   remove normalization of any input vector that is namen 'normal' or 'tangent' in mathf library (same for linearAlgebra.hlsli).
+// - Proper documentation for materialProperties, uniformBuffers, spirvReflect classes
 
 // TODO long term:
 // - change image loading library, stb_image sucks.
@@ -318,8 +321,8 @@ int main()
         MeshRenderer* pMeshRenderer = new MeshRenderer();
         pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("color"));
-        pMeshRenderer->SetCastShadows(false);
-        pMeshRenderer->SetReceiveShadows(false);
+        pMeshRenderer->SetCastShadows(true);
+        pMeshRenderer->SetReceiveShadows(true);
         pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
     
         pScene->AddGameObject(pGameObject);
@@ -356,6 +359,7 @@ int main()
         MeshRenderer* pMeshRenderer = new MeshRenderer();
         pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
         pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("default"));
+        pMeshRenderer->SetMaterial(nullptr);
         pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
         pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks1_color"));
         pMeshRenderer->GetMaterialProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks1_roughness"));

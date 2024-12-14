@@ -251,6 +251,10 @@ Float3& Float3::operator/=(float scalar)
 	z /= scalar;
 	return *this;
 }
+Float3 operator/(float scalar, const Float3& vector)
+{
+	return Float3(scalar / vector.x, scalar / vector.y, scalar / vector.z);
+}
 
 
 

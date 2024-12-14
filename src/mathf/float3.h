@@ -37,6 +37,7 @@ public:
 	Float2 AnglesRadians() const;
 	Float3 Normalize() const;
 	Float3 Rotate(float theta, float phi) const;
+	Float3 Inverse() const;
 	bool IsEpsilonZero() const;
 
 	// Static math operations:
@@ -105,6 +106,9 @@ public:
 	static Float3 forward;	// +z = ( 0, 0, 1).
 	static Float3 backward;	// -z = ( 0, 0,-1).
 };
+
+// Friend functions:
+Float3 operator/(float scalar, const Float3& vector);
 
 
 

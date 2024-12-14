@@ -190,6 +190,10 @@ Float4& Float4::operator/=(float scalar)
 	w /= scalar;
 	return *this;
 }
+Float4 operator/(float scalar, const Float4& vector)
+{
+	return Float4(scalar / vector.x, scalar / vector.y, scalar / vector.z, scalar / vector.w);
+}
 
 
 
