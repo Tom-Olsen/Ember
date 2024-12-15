@@ -98,9 +98,9 @@ SpirvReflect::~SpirvReflect()
 
 // SpirvReflect public methods:
 void SpirvReflect::GetInputBindingAndAttributeDescriptions(
-    std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
-    std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
-    std::vector<std::string>& vertexInputNames) const
+    std::vector<VkVertexInputBindingDescription>& inputBindingDescriptions,
+    std::vector<VkVertexInputAttributeDescription>& inputAttributeDescriptions,
+    std::vector<std::string>& inputSemantics) const
 {
     std::vector<SpvReflectInterfaceVariable*> inputs = GetInputVariablesReflection();
 	for (uint32_t i = 0; i < inputs.size(); i++)
@@ -114,8 +114,15 @@ void SpirvReflect::GetInputBindingAndAttributeDescriptions(
         bindingDescription.binding = pInput->location;
         bindingDescription.stride = size;
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        bindingDescriptions.push_back(bindingDescription);
-		vertexInputNames.push_back(pInput->name);
+        inputBindingDescriptions.push_back(bindingDescription);
+
+		std::string semantic = std::string(pInput->name);
+        size_t pos = semantic.rfind('.');
+		if (pos != std::string::npos)
+			semantic = semantic.substr(pos + 1);
+        else
+			throw std::runtime_error("Semantic not found");
+        inputSemantics.push_back(semantic);
 
         VkFormat format;
         switch (typeSize)
@@ -149,12 +156,12 @@ void SpirvReflect::GetInputBindingAndAttributeDescriptions(
         attributeDescription.location = pInput->location;
         attributeDescription.format = format;
         attributeDescription.offset = 0;
-        attributeDescriptions.push_back(attributeDescription);
+        inputAttributeDescriptions.push_back(attributeDescription);
 	}
 }
 void SpirvReflect::GetDescriptorSetLayoutBindings(
-    std::vector<VkDescriptorSetLayoutBinding>& bindings,
-    std::vector<std::string>& bindingNames,
+    std::vector<VkDescriptorSetLayoutBinding>& descriptorSetBindings,
+    std::vector<std::string>& descriptorSetBindingNames,
     std::unordered_map<std::string, UniformBufferBlock*>& uniformBufferBlockMap)
 {
     // Shader descriptor set reflection:
@@ -174,8 +181,8 @@ void SpirvReflect::GetDescriptorSetLayoutBindings(
             layoutBinding.pImmutableSamplers = nullptr;
 
             // Add binding and name to lists:
-            bindings.push_back(layoutBinding);
-            bindingNames.push_back(pBindingReflection->name);
+            descriptorSetBindings.push_back(layoutBinding);
+            descriptorSetBindingNames.push_back(pBindingReflection->name);
 
             // In case of uniform buffer create UniformBufferBlock:
             if (pBindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)

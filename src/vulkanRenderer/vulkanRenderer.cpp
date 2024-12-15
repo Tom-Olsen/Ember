@@ -312,7 +312,7 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 							vkCmdPushConstants(commandBuffer, meshRenderer->GetShadingPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
 						}
 
-						vkCmdBindVertexBuffers(commandBuffer, 0, pMaterial->GetInputBindingCount(), pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
+						vkCmdBindVertexBuffers(commandBuffer, 0, pMaterial->GetVertexInputBindingDescriptionCount(), pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
 						//vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetBindingCount(), pMesh->GetBuffers(m_pContext), pMesh->GetOffsets());
 						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 

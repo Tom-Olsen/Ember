@@ -65,12 +65,12 @@ public: // Methods:
 	SpirvReflect(const std::vector<char>& code);
 	~SpirvReflect();
 	void GetInputBindingAndAttributeDescriptions(
-		std::vector<VkVertexInputBindingDescription>& bindingDescriptions,
-		std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
-		std::vector<std::string>& vertexInputNames) const;
+		std::vector<VkVertexInputBindingDescription>& inputBindingDescriptions,
+		std::vector<VkVertexInputAttributeDescription>& inputAttributeDescriptions,
+		std::vector<std::string>& inputSemantics) const;
 	void GetDescriptorSetLayoutBindings(
-		std::vector<VkDescriptorSetLayoutBinding>& bindings,
-		std::vector<std::string>& bindingNames,
+		std::vector<VkDescriptorSetLayoutBinding>& descriptorSetBindings,
+		std::vector<std::string>& descriptorSetBindingNames,
 		std::unordered_map<std::string, UniformBufferBlock*>& uniformBufferBlockMap);
 
 private: // Methods:

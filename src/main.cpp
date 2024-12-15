@@ -4,11 +4,13 @@
 
 
 
-// TODO now:
-// - optimizations: multi threaded render loop, culling, etc.
+// TODO now!
 // - Graphics::Draw(...) has issue with frameIndex. This leads to the transform of the draw calls to lack behind.
-// - directional lights: shadow cascades
 // - validation layer errors when two shaders have the same binding number
+
+// TODO:
+// - directional lights: shadow cascades
+// - optimizations: multi threaded render loop, culling, etc.
 // - add pGameObject selection (need gizmos => ui renderpass)
 // - currently one commandPool per commandBuffer, should be one commandPool per frame, shared by all commands for that frame?
 // - uniform buffer (cbuffer) data that is the same for all draw calls (e.g. light data) should be stored in a single cbuffer
@@ -21,10 +23,6 @@
 // - in macros.h reduce MAX_D_LIGHTS, MAX_S_LIGHTS, MAX_P_LIGHTS to a single MAX_SHADOW_MAPS
 //   and make shadowmap indexing more dynamic to work with e.g. only point lights or only spot lights.
 // - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
-//   => might fix validation layer warnings: 
-//      vkCreateGraphicsPipelines(): pCreateInfos[0].pVertexInputState Vertex attribute at location X not consumed by vertex shader.
-// - mesh->Scale(a,b,c) needs to scale normals and tangents correctly
-// - in mesh.GetOffset and GetBuffers dont reset the arrays
 // - add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
 //   remove normalization of any input vector that is namen 'normal' or 'tangent' in mathf library (same for linearAlgebra.hlsli).
 // - Proper documentation for materialProperties, uniformBuffers, spirvReflect classes

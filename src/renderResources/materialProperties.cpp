@@ -31,9 +31,9 @@ MaterialProperties::MaterialProperties(Material* pMaterial)
 
 	for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
 	{
-		for (uint32_t i = 0; i < m_pMaterial->GetDescriptorBindingCount(); i++)
+		for (uint32_t i = 0; i < m_pMaterial->GetDescriptorSetLayoutBindingCount(); i++)
 		{
-			VkDescriptorType type = m_pMaterial->GetDescriptorBindingType(i);
+			VkDescriptorType type = m_pMaterial->GetVkDescriptorType(i);
 			if (type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
 				InitUniformBufferResourceBinding(m_pMaterial->GetDescriptorBindingName(i), m_pMaterial->GetDescriptorBindingIndex(i), frameIndex);
 			else if (type == VK_DESCRIPTOR_TYPE_SAMPLER)
