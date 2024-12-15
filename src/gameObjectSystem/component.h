@@ -43,6 +43,7 @@ public: // Methods:
 	// Check if the Component and its parent GameObject is active.
 	bool IsActive();
 	virtual void Update();
+	virtual void LateUpdate();
 
 	// Pure virtual method that must be implemented by derived classes:
     virtual const std::string ToString() const = 0;

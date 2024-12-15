@@ -18,7 +18,7 @@ public: // Methods:
 	~DrawMeshData();
 
 	// Overrides:
-	void Update() override;
+	void LateUpdate() override;
 	const std::string ToString() const override;
 };
 

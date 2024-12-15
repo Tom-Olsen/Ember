@@ -21,8 +21,6 @@ class SpotLight;
 
 class MeshRenderer : public Component
 {
-public: // Members:
-
 private: // Members:
 	bool m_castShadows;
 	bool m_receiveShadows;

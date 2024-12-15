@@ -108,6 +108,7 @@ public:
 
 	// Logging:
 	std::string ToString() const;
+	std::string ToStringMatrixForm() const;
 	friend std::ostream& operator<<(std::ostream& os, const Float3x3& value);
 
 	// Static members:

@@ -37,7 +37,10 @@ public: // Methods
 	// Getters:
 	static std::vector<MeshRenderer*>* GetSortedMeshRenderers();
 
-private: //const Methods
+private: // Methods
+	static void DoubleCapacityIfNeeded();
+	static void ReduceCapacity();
+
 	// Delete all constructors:
 	Graphics() = delete;
 	Graphics(const Graphics&) = delete;

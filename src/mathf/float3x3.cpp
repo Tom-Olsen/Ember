@@ -432,6 +432,15 @@ std::string Float3x3::ToString() const
 	oss << " | " << data[2] << ", " << data[5] << ", " << data[8] << ")";
 	return oss.str();
 }
+std::string Float3x3::ToStringMatrixForm() const
+{
+	std::ostringstream oss;
+	oss << "\n";
+	oss << "(" << data[0] << ", " << data[3] << ", " << data[6] << ")\n";
+	oss << "(" << data[1] << ", " << data[4] << ", " << data[7] << ")\n";
+	oss << "(" << data[2] << ", " << data[5] << ", " << data[8] << ")";
+	return oss.str();
+}
 std::ostream& operator<<(std::ostream& os, const Float3x3& value)
 {
 	os << value.ToString();

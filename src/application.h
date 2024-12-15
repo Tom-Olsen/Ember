@@ -27,6 +27,7 @@ public: // Methods:
 
 private: // Methods:
 	void Update();
+	void LateUpdate();
 };
 
 

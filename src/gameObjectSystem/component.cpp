@@ -59,3 +59,7 @@ void Component::Update()
 {
 
 }
+void Component::LateUpdate()
+{
+
+}

@@ -73,6 +73,7 @@ void Application::Run()
 
 		// Game update loop:
 		Update();
+		LateUpdate();
 
 		// Render loop:
 		if (m_pRenderer->RenderFrame(m_pActiveScene))
@@ -98,6 +99,21 @@ void Application::Update()
 			{
 				if (component->isActive)
 					component->Update();
+			}
+		}
+	}
+}
+void Application::LateUpdate()
+{
+	// Late update all components of all game objects:
+	for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
+	{
+		if (gameObject->isActive)
+		{
+			for (auto& [_, component] : gameObject->GetComponents())
+			{
+				if (component->isActive)
+					component->LateUpdate();
 			}
 		}
 	}

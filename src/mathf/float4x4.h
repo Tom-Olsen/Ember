@@ -124,6 +124,7 @@ public:
 
 	// Logging:
 	std::string ToString() const;
+	std::string ToStringMatrixForm() const;
 	friend std::ostream& operator<<(std::ostream& os, const Float4x4& value);
 
 	// Static members:

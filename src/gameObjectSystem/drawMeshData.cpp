@@ -20,7 +20,7 @@ DrawMeshData::~DrawMeshData()
 
 
 // Overrides:
-void DrawMeshData::Update()
+void DrawMeshData::LateUpdate()
 {
 	bool receiveShadows = false;
 	bool castShadows = false;

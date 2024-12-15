@@ -345,18 +345,17 @@ Float4x4 Float4x4::GetRotation4x4(float scale) const
 }
 Float3x3 Float4x4::GetRotation3x3(Float3 scale) const
 {
-	return Float3x3::Rows
-	(data[0] / scale.x, data[1] / scale.y, data[2] / scale.z,
-	 data[4] / scale.x, data[5] / scale.y, data[6] / scale.z,
-	 data[8] / scale.x, data[9] / scale.y, data[10] / scale.z);
+	Float3 column0 = Float3(data[0] / scale.x, data[1] / scale.y, data[ 2] / scale.z).Normalize();
+	Float3 column1 = Float3(data[4] / scale.x, data[5] / scale.y, data[ 6] / scale.z).Normalize();
+	Float3 column2 = Float3(data[8] / scale.x, data[9] / scale.y, data[10] / scale.z).Normalize();
+	return Float3x3::Columns
+	(column0.x, column0.y, column0.z,
+	 column1.x, column1.y, column1.z,
+	 column2.x, column2.y, column2.z);
 }
 Float4x4 Float4x4::GetRotation4x4(Float3 scale) const
 {
-	return Float4x4::Columns
-	(data[0] / scale.x, data[1] / scale.y, data[2] / scale.z, 0.0f,
-	 data[4] / scale.x, data[5] / scale.y, data[6] / scale.z, 0.0f,
-	 data[8] / scale.x, data[9] / scale.y, data[10] / scale.z, 0.0f,
-	 0.0f, 0.0f, 0.0f, 1.0f);
+	return Float4x4(GetRotation3x3(scale));
 }
 
 
@@ -527,6 +526,16 @@ std::string Float4x4::ToString() const
 	oss << " | " << data[1] << ", " << data[5] << ", " << data[ 9] << ", " << data[13];
 	oss << " | " << data[2] << ", " << data[6] << ", " << data[10] << ", " << data[14];
 	oss << " | " << data[3] << ", " << data[7] << ", " << data[11] << ", " << data[15] << ")";
+	return oss.str();
+}
+std::string Float4x4::ToStringMatrixForm() const
+{
+	std::ostringstream oss;
+	oss << "\n";
+	oss << "(" << data[0] << ", " << data[4] << ", " << data[ 8] << ", " << data[12] << ")\n";
+	oss << "(" << data[1] << ", " << data[5] << ", " << data[ 9] << ", " << data[13] << ")\n";
+	oss << "(" << data[2] << ", " << data[6] << ", " << data[10] << ", " << data[14] << ")\n";
+	oss << "(" << data[3] << ", " << data[7] << ", " << data[11] << ", " << data[15] << ")";
 	return oss.str();
 }
 std::ostream& operator<<(std::ostream& os, const Float4x4& value)

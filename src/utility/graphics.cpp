@@ -66,21 +66,7 @@ MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 lo
 		return nullptr;
 	}
 
-	// Double size of the meshRenderers vector if it is full:
-	uint32_t oldSize = static_cast<uint32_t>(s_transforms.size());
-	if (s_drawIndex >= oldSize)
-	{
-		uint32_t newSize = 2 * oldSize;
-		s_transforms.resize(newSize);
-		s_meshRenderers.resize(newSize);
-		for (uint32_t i = oldSize; i < newSize; i++)
-		{
-			s_transforms[i] = new Transform();
-			s_meshRenderers[i] = new MeshRenderer();
-			s_meshRenderers[i]->SetTransform(s_transforms[i]);
-			s_meshRenderers[i]->isActive = false;
-		}
-	}
+	DoubleCapacityIfNeeded();
 
 	// Setup current draw call:
 	MeshRenderer* pMeshRenderer = s_meshRenderers[s_drawIndex];
@@ -100,6 +86,7 @@ void Graphics::ResetDrawCalls()
 {
 	for (MeshRenderer* pMeshRenderer : s_meshRenderers)
 		pMeshRenderer->isActive = false;
+	ReduceCapacity();
 	s_drawIndex = 0;
 }
 
@@ -120,4 +107,40 @@ std::vector<MeshRenderer*>* Graphics::GetSortedMeshRenderers()
 		return renderQueueA < renderQueueB;
 	});
 	return &s_meshRenderers;
+}
+
+
+
+// Private methods:
+void Graphics::DoubleCapacityIfNeeded()
+{
+	uint32_t oldSize = static_cast<uint32_t>(s_transforms.size());
+	if (s_drawIndex >= oldSize)
+	{
+		uint32_t newSize = 2 * oldSize;
+		s_transforms.resize(newSize);
+		s_meshRenderers.resize(newSize);
+		for (uint32_t i = oldSize; i < newSize; i++)
+		{
+			s_transforms[i] = new Transform();
+			s_meshRenderers[i] = new MeshRenderer();
+			s_meshRenderers[i]->SetTransform(s_transforms[i]);
+			s_meshRenderers[i]->isActive = false;
+		}
+	}
+}
+void Graphics::ReduceCapacity()
+{
+	uint32_t oldSize = static_cast<uint32_t>(s_transforms.size());
+	uint32_t newSize = s_drawIndex; // drawIndex is one past the last active element, so no +1 needed.
+	if (oldSize > newSize)
+	{
+		for (uint32_t i = newSize; i < oldSize; i++)
+		{
+			delete s_transforms[i];
+			delete s_meshRenderers[i];
+		}
+		s_transforms.resize(newSize);
+		s_meshRenderers.resize(newSize);
+	}
 }

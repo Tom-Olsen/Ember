@@ -25,7 +25,8 @@ void SpinGlobal::Update()
 	Float4x4 translateInverse = Float4x4::Translate(-m_position);
 
 	Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
-	GetTransform()->SetLocalToWorldMatrix(translate * rotation * translateInverse * localToWorldMatrix);
+	Float4x4 newLocalToWorldMatrix = translate * rotation * translateInverse * localToWorldMatrix;
+	GetTransform()->SetLocalToWorldMatrix(newLocalToWorldMatrix);
 }
 const std::string SpinGlobal::ToString() const
 {

@@ -153,6 +153,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 		renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowRenderPass::s_shadowMapWidth, ShadowRenderPass::s_shadowMapHeight };
 		renderPassBeginInfo.clearValueCount = 1;
 		renderPassBeginInfo.pClearValues = &clearValues;
+		const VkDeviceSize offsets[1] = { 0 };
 
 		// Begin render pass:
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -179,7 +180,6 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 							ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 							vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-							const VkDeviceSize offsets[1] = { 0 };
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
@@ -208,7 +208,6 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 							ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 							vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-							const VkDeviceSize offsets[1] = { 0 };
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
@@ -239,7 +238,6 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 								ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 								vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-								const VkDeviceSize offsets[1] = { 0 };
 								vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
 								vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
@@ -285,6 +283,7 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		{
 			Mesh* pMesh = nullptr;
+			Material* pMaterial = nullptr;
 			Material* pPreviousMaterial = nullptr;
 			Float3 cameraPosition = pScene->GetActiveCamera()->GetTransform()->GetPosition();
 			ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
@@ -304,7 +303,7 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 						meshRenderer->GetMaterialProperties()->UpdateShaderData();
 
 						// Change pipeline if material has changed:
-						Material* pMaterial = meshRenderer->GetMaterial();
+						pMaterial = meshRenderer->GetMaterial();
 						if (pPreviousMaterial != pMaterial)
 						{
 							pPreviousMaterial = pMaterial;
@@ -313,7 +312,6 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 						}
 
 						vkCmdBindVertexBuffers(commandBuffer, 0, pMaterial->GetVertexInputBindingDescriptionCount(), pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
-						//vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetBindingCount(), pMesh->GetBuffers(m_pContext), pMesh->GetOffsets());
 						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipelineLayout(), 0, 1, meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex), 0, nullptr);

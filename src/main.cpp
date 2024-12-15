@@ -5,8 +5,8 @@
 
 
 // TODO now!
-// - Graphics::Draw(...) has issue with frameIndex. This leads to the transform of the draw calls to lack behind.
 // - validation layer errors when two shaders have the same binding number
+// - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 
 // TODO:
 // - directional lights: shadow cascades
