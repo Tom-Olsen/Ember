@@ -42,6 +42,7 @@ public: // Methods:
 
 	// Check if the Component and its parent GameObject is active.
 	bool IsActive();
+	virtual void Start();
 	virtual void Update();
 	virtual void LateUpdate();
 

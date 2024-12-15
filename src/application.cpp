@@ -56,6 +56,7 @@ void Application::Run()
 {
 	Timer::Reset();
 	bool running = true;
+	Start();
 
 	while (running)
 	{
@@ -88,6 +89,21 @@ void Application::SetScene(Scene* pScene)
 
 
 // Private methods:
+void Application::Start()
+{
+	// Start all components of all game objects:
+	for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
+	{
+		if (gameObject->isActive)
+		{
+			for (auto& [_, component] : gameObject->GetComponents())
+			{
+				if (component->isActive)
+					component->Start();
+			}
+		}
+	}
+}
 void Application::Update()
 {
 	// Update all components of all game objects:

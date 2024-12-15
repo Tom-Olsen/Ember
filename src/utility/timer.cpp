@@ -5,26 +5,12 @@
 // Static members:
 float Timer::s_time = 0.0f;
 float Timer::s_deltaTime = 0.0f;
-bool Timer::s_isInitialized = false;
 std::chrono::steady_clock::time_point Timer::s_start = std::chrono::steady_clock::now();
 std::chrono::steady_clock::time_point Timer::s_end = std::chrono::steady_clock::now();
 
 
 
 // Timer management:
-void Timer::Init()
-{
-	if (s_isInitialized)
-		return;
-
-	s_isInitialized = true;
-}
-void Timer::Clear()
-{
-	s_time = 0.0f;
-	s_deltaTime = 0.0f;
-	s_isInitialized = false;
-}
 void Timer::Update()
 {
 	s_end = std::chrono::steady_clock::now();

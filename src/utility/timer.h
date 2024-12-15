@@ -9,13 +9,10 @@ class Timer
 private: // Members
     static float s_time;
     static float s_deltaTime;
-    static bool s_isInitialized;
 	static std::chrono::steady_clock::time_point s_start;
 	static std::chrono::steady_clock::time_point s_end;
 
 public: // Methods
-    static void Init();
-    static void Clear();
     static void Reset();
     static void Update();
 

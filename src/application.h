@@ -26,6 +26,7 @@ public: // Methods:
 	void SetScene(Scene* pScene);
 
 private: // Methods:
+	void Start();
 	void Update();
 	void LateUpdate();
 };

@@ -55,6 +55,10 @@ bool Component::IsActive()
 	// Components can exist without a GameObject, so check if gameObject is nullptr:
 	return isActive && (m_pGameObject == nullptr ? true : m_pGameObject->isActive);
 }
+void Component::Start()
+{
+
+}
 void Component::Update()
 {
 
