@@ -7,6 +7,7 @@
 #include "sampler.h"
 #include "samplerManager.h"
 #include "shadowRenderPass.h"
+#include "spirvReflect.h"
 #include "texture2d.h"
 #include "textureManager.h"
 #include "uniformBuffer.h"
@@ -23,7 +24,7 @@ MaterialProperties::MaterialProperties(Material* pMaterial)
 	m_pMaterial = pMaterial;
 	m_pContext = pMaterial->GetContext();
 
-	// Create resource bindings for each frameInFlight:
+	// Create resource bindings and uniform buffer update logic for each frameInFlight:
 	m_uniformBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<std::shared_ptr<UniformBuffer>>>>(m_pContext->framesInFlight);
 	m_samplerMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>>(m_pContext->framesInFlight);
 	m_texture2dMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>>(m_pContext->framesInFlight);
@@ -31,15 +32,20 @@ MaterialProperties::MaterialProperties(Material* pMaterial)
 
 	for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
 	{
-		for (uint32_t i = 0; i < m_pMaterial->GetDescriptorSetLayoutBindingCount(); i++)
+		const DescriptorBoundResources* const descriptorBoundResources = m_pMaterial->GetDescriptorBoundResources();
+		for (uint32_t i = 0; i < descriptorBoundResources->size; i++)
 		{
-			VkDescriptorType type = m_pMaterial->GetVkDescriptorType(i);
+			VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = descriptorBoundResources->descriptorSetLayoutBindings[i];
+			VkDescriptorType type = descriptorSetLayoutBinding.descriptorType;
+			uint32_t binding = descriptorSetLayoutBinding.binding;
+			const std::string& name = descriptorBoundResources->descriptorSetBindingNames[i];
+
 			if (type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-				InitUniformBufferResourceBinding(m_pMaterial->GetDescriptorBindingName(i), m_pMaterial->GetDescriptorBindingIndex(i), frameIndex);
+				InitUniformBufferResourceBinding(name, binding, frameIndex);
 			else if (type == VK_DESCRIPTOR_TYPE_SAMPLER)
-				InitSamplerResourceBinding(m_pMaterial->GetDescriptorBindingName(i), m_pMaterial->GetDescriptorBindingIndex(i), SamplerManager::GetSampler("colorSampler"), frameIndex);
+				InitSamplerResourceBinding(name, binding, SamplerManager::GetSampler("colorSampler"), frameIndex);
 			else if (type == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-				InitTexture2dResourceBinding(m_pMaterial->GetDescriptorBindingName(i), m_pMaterial->GetDescriptorBindingIndex(i), TextureManager::GetTexture2d("white"), frameIndex);
+				InitTexture2dResourceBinding(name, binding, TextureManager::GetTexture2d("white"), frameIndex);
 		}
 	}
 	InitStagingMaps();
@@ -243,25 +249,28 @@ void MaterialProperties::PrintMaps() const
 
 // Private methods:
 // Initializers:
-void MaterialProperties::InitUniformBufferResourceBinding(std::string name, uint32_t binding, uint32_t frameIndex)
+void MaterialProperties::InitUniformBufferResourceBinding(const std::string& name, uint32_t binding, uint32_t frameIndex)
 {
 	auto it = m_uniformBufferMaps[frameIndex].find(name);
 	if (it == m_uniformBufferMaps[frameIndex].end())
 	{
-		std::shared_ptr<UniformBuffer> uniformBuffer = std::make_shared<UniformBuffer>(m_pContext, m_pMaterial->GetUniformBufferBlock(name));
+		const DescriptorBoundResources* const descriptorBoundResources = m_pMaterial->GetDescriptorBoundResources();
+		UniformBufferBlock* pUniformBufferBlock = descriptorBoundResources->uniformBufferBlockMap.at(name);
+
+		std::shared_ptr<UniformBuffer> uniformBuffer = std::make_shared<UniformBuffer>(m_pContext, pUniformBufferBlock);
 		m_uniformBufferMaps[frameIndex].emplace(name, ResourceBinding<std::shared_ptr<UniformBuffer>>(uniformBuffer, binding));
 
 		for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
 			m_updateUniformBuffer[frameIndex].emplace(name, true);
 	}
 }
-void MaterialProperties::InitSamplerResourceBinding(std::string name, uint32_t binding, Sampler* pSampler, uint32_t frameIndex)
+void MaterialProperties::InitSamplerResourceBinding(const std::string& name, uint32_t binding, Sampler* pSampler, uint32_t frameIndex)
 {
 	auto it = m_samplerMaps[frameIndex].find(name);
 	if (it == m_samplerMaps[frameIndex].end())
 		m_samplerMaps[frameIndex].emplace(name, ResourceBinding<Sampler*>(pSampler, binding));
 }
-void MaterialProperties::InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* pTexture2d, uint32_t frameIndex)
+void MaterialProperties::InitTexture2dResourceBinding(const std::string& name, uint32_t binding, Texture2d* pTexture2d, uint32_t frameIndex)
 {
 	auto it = m_texture2dMaps[frameIndex].find(name);
 	if (it == m_texture2dMaps[frameIndex].end())

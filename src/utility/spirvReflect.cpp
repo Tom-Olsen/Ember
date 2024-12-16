@@ -97,32 +97,35 @@ SpirvReflect::~SpirvReflect()
 
 
 // SpirvReflect public methods:
-void SpirvReflect::GetInputBindingAndAttributeDescriptions(
-    std::vector<VkVertexInputBindingDescription>& inputBindingDescriptions,
-    std::vector<VkVertexInputAttributeDescription>& inputAttributeDescriptions,
-    std::vector<std::string>& inputSemantics) const
+VertexInputDescriptions* SpirvReflect::GetVertexInputDescriptions() const
 {
     std::vector<SpvReflectInterfaceVariable*> inputs = GetInputVariablesReflection();
-	for (uint32_t i = 0; i < inputs.size(); i++)
-	{
-		SpvReflectInterfaceVariable* pInput = inputs[i];
-		uint32_t typeSize = pInput->type_description->traits.numeric.scalar.width / 8;
-		uint32_t vectorSize = pInput->type_description->traits.numeric.vector.component_count;
+    VertexInputDescriptions* vertexInputDescriptions = new VertexInputDescriptions();
+    vertexInputDescriptions->semantics.reserve(inputs.size());
+    vertexInputDescriptions->bindings.reserve(inputs.size());
+    vertexInputDescriptions->attributes.reserve(inputs.size());
+    vertexInputDescriptions->size = inputs.size();
+
+    for (uint32_t i = 0; i < inputs.size(); i++)
+    {
+        SpvReflectInterfaceVariable* pInput = inputs[i];
+        uint32_t typeSize = pInput->type_description->traits.numeric.scalar.width / 8;
+        uint32_t vectorSize = pInput->type_description->traits.numeric.vector.component_count;
         uint32_t size = typeSize * vectorSize;
 
-		VkVertexInputBindingDescription bindingDescription = {};
+        VkVertexInputBindingDescription bindingDescription = {};
         bindingDescription.binding = pInput->location;
         bindingDescription.stride = size;
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        inputBindingDescriptions.push_back(bindingDescription);
+        vertexInputDescriptions->bindings.push_back(bindingDescription);
 
-		std::string semantic = std::string(pInput->name);
+        std::string semantic = std::string(pInput->name);
         size_t pos = semantic.rfind('.');
-		if (pos != std::string::npos)
-			semantic = semantic.substr(pos + 1);
+        if (pos != std::string::npos)
+            semantic = semantic.substr(pos + 1);
         else
-			throw std::runtime_error("Semantic not found");
-        inputSemantics.push_back(semantic);
+            throw std::runtime_error("Semantic not found");
+        vertexInputDescriptions->semantics.push_back(semantic);
 
         VkFormat format;
         switch (typeSize)
@@ -156,20 +159,19 @@ void SpirvReflect::GetInputBindingAndAttributeDescriptions(
         attributeDescription.location = pInput->location;
         attributeDescription.format = format;
         attributeDescription.offset = 0;
-        inputAttributeDescriptions.push_back(attributeDescription);
-	}
+        vertexInputDescriptions->attributes.push_back(attributeDescription);
+    }
+
+	return vertexInputDescriptions;
 }
-void SpirvReflect::GetDescriptorSetLayoutBindings(
-    std::vector<VkDescriptorSetLayoutBinding>& descriptorSetBindings,
-    std::vector<std::string>& descriptorSetBindingNames,
-    std::unordered_map<std::string, UniformBufferBlock*>& uniformBufferBlockMap)
+void SpirvReflect::AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources) const
 {
-    // Shader descriptor set reflection:
     std::vector<SpvReflectDescriptorSet*> descriptorSetsReflection = GetDescriptorSetsReflection();
 
     for (uint32_t setIndex = 0; setIndex < descriptorSetsReflection.size(); setIndex++)
     {
         SpvReflectDescriptorSet* pSetReflection = descriptorSetsReflection[setIndex];
+		descriptorBoundResources->size += pSetReflection->binding_count;
         for (uint32_t bindingIndex = 0; bindingIndex < pSetReflection->binding_count; bindingIndex++)
         {
             SpvReflectDescriptorBinding* pBindingReflection = pSetReflection->bindings[bindingIndex];
@@ -181,15 +183,15 @@ void SpirvReflect::GetDescriptorSetLayoutBindings(
             layoutBinding.pImmutableSamplers = nullptr;
 
             // Add binding and name to lists:
-            descriptorSetBindings.push_back(layoutBinding);
-            descriptorSetBindingNames.push_back(pBindingReflection->name);
+			descriptorBoundResources->descriptorSetBindingNames.push_back(pBindingReflection->name);
+			descriptorBoundResources->descriptorSetLayoutBindings.push_back(layoutBinding);
 
             // In case of uniform buffer create UniformBufferBlock:
             if (pBindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
             {
                 SpvReflectBlockVariable& blockReflection = pBindingReflection->block;
                 UniformBufferBlock* pUniformBufferBlock = GetUniformBufferBlock(blockReflection, pSetReflection->set, pBindingReflection->binding);
-                uniformBufferBlockMap.emplace(pUniformBufferBlock->name, pUniformBufferBlock);
+				descriptorBoundResources->uniformBufferBlockMap.emplace(pUniformBufferBlock->name, pUniformBufferBlock);
             }
         }
     }

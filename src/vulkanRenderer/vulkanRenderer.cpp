@@ -12,6 +12,7 @@
 #include "shadingRenderPass.h"
 #include "shadowPushConstant.h"
 #include "shadowRenderPass.h"
+#include "spirvReflect.h"
 #include "spotLight.h"
 #include "transform.h"
 #include "vmaBuffer.h"
@@ -284,6 +285,7 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 		{
 			Mesh* pMesh = nullptr;
 			Material* pMaterial = nullptr;
+			uint32_t bindingCount = 0;
 			Material* pPreviousMaterial = nullptr;
 			Float3 cameraPosition = pScene->GetActiveCamera()->GetTransform()->GetPosition();
 			ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
@@ -307,11 +309,12 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 						if (pPreviousMaterial != pMaterial)
 						{
 							pPreviousMaterial = pMaterial;
+							bindingCount = pMaterial->GetVertexInputDescriptions()->size;
 							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipeline());
 							vkCmdPushConstants(commandBuffer, meshRenderer->GetShadingPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
 						}
-
-						vkCmdBindVertexBuffers(commandBuffer, 0, pMaterial->GetVertexInputBindingDescriptionCount(), pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
+						
+						vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
 						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipelineLayout(), 0, 1, meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex), 0, nullptr);
@@ -331,7 +334,7 @@ void VulkanRenderer::SubmitCommandBuffers()
 		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;	// wait at depth and stencil test stage
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_acquireSemaphores[m_pContext->frameIndex];			// wait for acquireSemaphor
+		submitInfo.pWaitSemaphores = &m_acquireSemaphores[m_pContext->frameIndex];		// wait for acquireSemaphor
 		submitInfo.pWaitDstStageMask = &waitStage;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_shadowCommands[m_pContext->frameIndex].GetVkCommandBuffer();
@@ -342,7 +345,7 @@ void VulkanRenderer::SubmitCommandBuffers()
 
 	// Shading render pass:
 	{
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;			// wait at fragment shader stage
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;				// wait at fragment shader stage
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = &m_shadowToShadingSemaphores[m_pContext->frameIndex];	// wait for shadowToShadingSemaphore

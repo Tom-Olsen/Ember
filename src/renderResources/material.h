@@ -9,10 +9,12 @@
 
 
 
+struct DescriptorBoundResources;
 class Mesh;
 class Pipeline;
-struct VulkanContext;
 struct UniformBufferBlock;
+struct VertexInputDescriptions;
+struct VulkanContext;
 
 
 
@@ -44,12 +46,8 @@ private: // Members:
 	std::string m_name;
 	RenderQueue m_renderQueue;
 	std::unique_ptr<Pipeline> m_pPipeline;
-	std::vector<VkDescriptorSetLayoutBinding> m_descriptorSetBindings;
-	std::vector<std::string> m_descriptorSetBindingNames;
-	std::vector<VkVertexInputBindingDescription> m_inputBindingDescriptions;
-	std::vector<VkVertexInputAttributeDescription> m_inputAttributeDescriptions;
-	std::vector<std::string> m_inputSemantics;
-	std::unordered_map<std::string, UniformBufferBlock*> m_uniformBufferBlockMap;
+	std::unique_ptr<DescriptorBoundResources> m_pDescriptorBoundResources;
+	std::unique_ptr<VertexInputDescriptions> m_pVertexInputDescriptions;
 	std::vector<VkBuffer> m_meshBuffers;
 	std::vector<VkDeviceSize> m_meshOffsets;
 	VulkanContext* m_pContext;
@@ -64,20 +62,11 @@ public: // Methods:
 	const std::string& GetName() const;
 	RenderQueue GetRenderQueue() const;
 	const Pipeline* const GetPipeline() const;
-	const std::vector<VkDescriptorSetLayoutBinding>& GetDescriptorSetLayoutBindings() const;
-	const std::vector<VkVertexInputBindingDescription>& GetVertexInputBindingDescriptions() const;
-	const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDescriptions() const;
-	const std::vector<std::string>& GetDescriptorSetBindingNames() const;
-	const std::unordered_map<std::string, UniformBufferBlock*>& GetUniformBufferBlockMap() const;
-	const uint32_t GetVertexInputBindingDescriptionCount() const;
+	const DescriptorBoundResources* const GetDescriptorBoundResources() const;
+	const VertexInputDescriptions* const GetVertexInputDescriptions() const;
 	const VkBuffer* const GetMeshBuffers(Mesh* pMesh);
 	const VkDeviceSize* const GetMeshOffsets(Mesh* pMesh);
 	VulkanContext* const GetContext() const;
-	uint32_t GetDescriptorSetLayoutBindingCount() const;
-	uint32_t GetDescriptorBindingIndex(uint32_t i) const;
-	VkDescriptorType GetVkDescriptorType(uint32_t i) const;
-	const std::string& GetDescriptorBindingName(uint32_t i) const;
-	UniformBufferBlock* GetUniformBufferBlock(const std::string& name) const;
 
 	// Debugging:
 	void PrintBindings() const;

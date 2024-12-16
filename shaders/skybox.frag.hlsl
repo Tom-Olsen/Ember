@@ -1,13 +1,13 @@
 SamplerState colorSampler : register(s10);
-TextureCube colorMap : register(t28);
+TextureCube colorMap : register(t20);
 #include "shadingPushConstant.hlsli"
 
 
 
 struct FragmentInput
 {
-    float4 position : SV_POSITION;
-    float3 localPos : TEXCOORD1;
+    float4 position : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float3 localPos : TEXCOORD1;    // position in local space
 };
 
 

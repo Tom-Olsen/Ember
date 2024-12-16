@@ -28,7 +28,7 @@ struct ResourceBinding
 /// <summary>
 /// Each MaterialProperties instance is customized for a specific Material.
 /// MaterialProperties construction is expensive, do not create them in an update loop.
-/// MaterialProperties own UniformBuffer pointers, Sampler and Texture2d pointers are owned associated Managers.
+/// MaterialProperties own UniformBuffer pointers, Sampler and Texture2d pointers are owned by associated Managers.
 /// </summary>
 class MaterialProperties
 {
@@ -78,9 +78,9 @@ public: // Methods:
 
 private: // Methods:
 	// Initializers:
-	void InitUniformBufferResourceBinding(std::string name, uint32_t binding, uint32_t frameIndex);
-	void InitSamplerResourceBinding(std::string name, uint32_t binding, Sampler* pSampler, uint32_t frameIndex);
-	void InitTexture2dResourceBinding(std::string name, uint32_t binding, Texture2d* pTexture2d, uint32_t frameIndex);
+	void InitUniformBufferResourceBinding(const std::string& name, uint32_t binding, uint32_t frameIndex);
+	void InitSamplerResourceBinding(const std::string& name, uint32_t binding, Sampler* pSampler, uint32_t frameIndex);
+	void InitTexture2dResourceBinding(const std::string& name, uint32_t binding, Texture2d* pTexture2d, uint32_t frameIndex);
 	void InitStagingMaps();
 	void InitDescriptorSets();
 

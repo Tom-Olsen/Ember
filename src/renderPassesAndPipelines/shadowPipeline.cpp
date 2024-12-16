@@ -4,6 +4,7 @@
 #include "renderPassManager.h"
 #include "shadowPushConstant.h"
 #include "shadowRenderPass.h"
+#include "spirvReflect.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
 
@@ -12,20 +13,19 @@
 // Constructor/Destructor:
 ShadowPipeline::ShadowPipeline(VulkanContext* pContext,
     const std::vector<char>& vertexCode,
-    const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetBindings,
-    const std::vector<VkVertexInputBindingDescription>& inputBindingDescriptions,
-    const std::vector<VkVertexInputAttributeDescription>& inputAttributeDescriptions)
+    const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
+    const VertexInputDescriptions* const pVertexInputDescriptions)
 {
     m_pContext = pContext;
 
     // Create pipeline Layout:
-    CreatePipelineLayout(descriptorSetBindings);
+    CreatePipelineLayout(vkDescriptorSetLayoutBindings);
 
     // Create vertex and fragment shader modules from .spv files:
     VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
 
     // Create pipeline:
-    CreatePipeline(vertexShaderModule, inputBindingDescriptions, inputAttributeDescriptions);
+    CreatePipeline(vertexShaderModule, pVertexInputDescriptions);
 
     // Destroy shader modules (only needed for pipeline creation):
     vkDestroyShaderModule(m_pContext->GetVkDevice(), vertexShaderModule, nullptr);
@@ -38,12 +38,12 @@ ShadowPipeline::~ShadowPipeline()
 
 
 // Private:
-void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetBindings)
+void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
 {
     // Descriptor set layout:
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-    descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(descriptorSetBindings.size());
-    descriptorSetLayoutCreateInfo.pBindings = descriptorSetBindings.data();
+    descriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.size();
+    descriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.data();
     VKA(vkCreateDescriptorSetLayout(m_pContext->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
 
     // Push constants layout:
@@ -60,9 +60,7 @@ void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayou
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
     vkCreatePipelineLayout(m_pContext->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
 }
-void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule,
-    const std::vector<VkVertexInputBindingDescription>& inputBindingDescriptions,
-    const std::vector<VkVertexInputAttributeDescription>& inputAttributeDescriptions)
+void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
 {
     // Vertex shader:
     VkPipelineShaderStageCreateInfo vertexShaderStageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -72,10 +70,10 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule,
 
     // Vertex input:
     VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-    vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(inputBindingDescriptions.size());
-    vertexInputState.pVertexBindingDescriptions = inputBindingDescriptions.data();
-    vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(inputAttributeDescriptions.size());
-    vertexInputState.pVertexAttributeDescriptions = inputAttributeDescriptions.data();
+	vertexInputState.vertexBindingDescriptionCount = pVertexInputDescriptions->size;
+	vertexInputState.pVertexBindingDescriptions = pVertexInputDescriptions->bindings.data();
+	vertexInputState.vertexAttributeDescriptionCount = pVertexInputDescriptions->size;
+	vertexInputState.pVertexAttributeDescriptions = pVertexInputDescriptions->attributes.data();
 
     // Input assembly:
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };

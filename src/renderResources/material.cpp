@@ -18,6 +18,7 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 	m_pContext = pContext;
 	m_name = name;
 	m_renderQueue = renderQueue;
+	m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
 
 	// Shading material creation:
 	if (m_type == Type::shading)
@@ -25,18 +26,18 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 		// Load vertex shader:
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
 		SpirvReflect vertexShaderReflect(vertexCode);
-		vertexShaderReflect.GetDescriptorSetLayoutBindings(m_descriptorSetBindings, m_descriptorSetBindingNames, m_uniformBufferBlockMap);
-		vertexShaderReflect.GetInputBindingAndAttributeDescriptions(m_inputBindingDescriptions, m_inputAttributeDescriptions, m_inputSemantics);
-		m_meshBuffers.resize(m_inputBindingDescriptions.size(), VK_NULL_HANDLE);
-		m_meshOffsets.resize(m_inputBindingDescriptions.size(), 0);
+		vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
+		m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
+		m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
+		m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 		// Load fragment shader:
 		std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
 		SpirvReflect fragmentShaderReflect(fragmentCode);
-		fragmentShaderReflect.GetDescriptorSetLayoutBindings(m_descriptorSetBindings, m_descriptorSetBindingNames, m_uniformBufferBlockMap);
+		fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 		// Create pipeline:
-		m_pPipeline = std::make_unique<ShadingPipeline>(m_pContext, vertexCode, fragmentCode, m_descriptorSetBindings, m_inputBindingDescriptions, m_inputAttributeDescriptions);
+		m_pPipeline = std::make_unique<ShadingPipeline>(m_pContext, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 	}
 
 	// Shadow material creation:
@@ -45,13 +46,13 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 		// Load vertex shader:
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
 		SpirvReflect vertexShaderReflect(vertexCode);
-		vertexShaderReflect.GetDescriptorSetLayoutBindings(m_descriptorSetBindings, m_descriptorSetBindingNames, m_uniformBufferBlockMap);
-		vertexShaderReflect.GetInputBindingAndAttributeDescriptions(m_inputBindingDescriptions, m_inputAttributeDescriptions, m_inputSemantics);
-		m_meshBuffers.resize(m_inputBindingDescriptions.size(), VK_NULL_HANDLE);
-		m_meshOffsets.resize(m_inputBindingDescriptions.size(), 0);
+		vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
+		m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
+		m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
+		m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 		// Create pipeline:
-		m_pPipeline = std::make_unique<ShadowPipeline>(m_pContext, vertexCode, m_descriptorSetBindings, m_inputBindingDescriptions, m_inputAttributeDescriptions);
+		m_pPipeline = std::make_unique<ShadowPipeline>(m_pContext, vertexCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 	}
 
 	// Skybox material creation:
@@ -60,19 +61,21 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 		// Load vertex shader:
 		std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
 		SpirvReflect vertexShaderReflect(vertexCode);
-		vertexShaderReflect.GetDescriptorSetLayoutBindings(m_descriptorSetBindings, m_descriptorSetBindingNames, m_uniformBufferBlockMap);
-		vertexShaderReflect.GetInputBindingAndAttributeDescriptions(m_inputBindingDescriptions, m_inputAttributeDescriptions, m_inputSemantics);
-		m_meshBuffers.resize(m_inputBindingDescriptions.size(), VK_NULL_HANDLE);
-		m_meshOffsets.resize(m_inputBindingDescriptions.size(), 0);
+		vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
+		m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
+		m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
+		m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 		// Load fragment shader:
 		std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
 		SpirvReflect fragmentShaderReflect(fragmentCode);
-		fragmentShaderReflect.GetDescriptorSetLayoutBindings(m_descriptorSetBindings, m_descriptorSetBindingNames, m_uniformBufferBlockMap);
+		fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 		// Create pipeline:
-		m_pPipeline = std::make_unique<SkyboxPipeline>(m_pContext, vertexCode, fragmentCode, m_descriptorSetBindings, m_inputBindingDescriptions, m_inputAttributeDescriptions);
+		m_pPipeline = std::make_unique<SkyboxPipeline>(m_pContext, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 	}
+
+	PrintBindings();
 }
 Material::~Material()
 {
@@ -99,29 +102,13 @@ const Pipeline* const Material::GetPipeline() const
 {
 	return m_pPipeline.get();
 }
-const std::vector<VkDescriptorSetLayoutBinding>& Material::GetDescriptorSetLayoutBindings() const
+const DescriptorBoundResources* const Material::GetDescriptorBoundResources() const
 {
-	return m_descriptorSetBindings;
+	return m_pDescriptorBoundResources.get();
 }
-const std::vector<VkVertexInputBindingDescription>& Material::GetVertexInputBindingDescriptions() const
+const VertexInputDescriptions* const Material::GetVertexInputDescriptions() const
 {
-	return m_inputBindingDescriptions;
-}
-const std::vector<VkVertexInputAttributeDescription>& Material::GetVertexInputAttributeDescriptions() const
-{
-	return m_inputAttributeDescriptions;
-}
-const std::vector<std::string>& Material::GetDescriptorSetBindingNames() const
-{
-	return m_descriptorSetBindingNames;
-}
-const std::unordered_map<std::string, UniformBufferBlock*>& Material::GetUniformBufferBlockMap() const
-{
-	return m_uniformBufferBlockMap;
-}
-const uint32_t Material::GetVertexInputBindingDescriptionCount() const
-{
-	return static_cast<uint32_t>(m_inputBindingDescriptions.size());
+	return m_pVertexInputDescriptions.get();
 }
 const VkBuffer* const Material::GetMeshBuffers(Mesh* pMesh)
 {
@@ -132,17 +119,18 @@ const VkBuffer* const Material::GetMeshBuffers(Mesh* pMesh)
 }
 const VkDeviceSize* const Material::GetMeshOffsets(Mesh* pMesh)
 {
-	for (uint32_t i = 0; i < m_inputSemantics.size(); i++)
+	for(uint32_t i = 0; i < m_pVertexInputDescriptions->size; i++)
 	{
-		if (m_inputSemantics[i] == "POSITION")
+		const std::string& semantic = m_pVertexInputDescriptions->semantics[i];
+		if (semantic == "POSITION")
 			m_meshOffsets[i] = pMesh->GetPositionsOffset();
-		else if (m_inputSemantics[i] == "NORMAL")
+		else if (semantic == "NORMAL")
 			m_meshOffsets[i] = pMesh->GetNormalsOffset();
-		else if (m_inputSemantics[i] == "TANGENT")
+		else if (semantic == "TANGENT")
 			m_meshOffsets[i] = pMesh->GetTangentsOffset();
-		else if (m_inputSemantics[i] == "COLOR")
+		else if (semantic == "COLOR")
 			m_meshOffsets[i] = pMesh->GetColorsOffset();
-		else if (m_inputSemantics[i] == "TEXCOORD0")
+		else if (semantic == "TEXCOORD0")
 			m_meshOffsets[i] = pMesh->GetUVsOffset();
 	}
 	return m_meshOffsets.data();
@@ -151,26 +139,6 @@ VulkanContext* const Material::GetContext() const
 {
 	return m_pContext;
 }
-uint32_t Material::GetDescriptorSetLayoutBindingCount() const
-{
-	return static_cast<uint32_t>(m_descriptorSetBindings.size());
-}
-uint32_t Material::GetDescriptorBindingIndex(uint32_t i) const
-{
-	return m_descriptorSetBindings[i].binding;
-}
-VkDescriptorType Material::GetVkDescriptorType(uint32_t i) const
-{
-	return m_descriptorSetBindings[i].descriptorType;
-}
-const std::string& Material::GetDescriptorBindingName(uint32_t i) const
-{
-	return m_descriptorSetBindingNames[i];
-}
-UniformBufferBlock* Material::GetUniformBufferBlock(const std::string& name) const
-{
-	return m_uniformBufferBlockMap.at(name);
-}
 
 
 
@@ -178,26 +146,29 @@ UniformBufferBlock* Material::GetUniformBufferBlock(const std::string& name) con
 void Material::PrintBindings() const
 {
 	std::string output = "\nMaterial: " + m_name + "\n\n";
-	for (uint32_t i = 0; i < m_descriptorSetBindings.size(); i++)
+
+	for (uint32_t i = 0; i < m_pDescriptorBoundResources->size; i++)
 	{
+		const VkDescriptorSetLayoutBinding& descriptorSetLayoutBinding = m_pDescriptorBoundResources->descriptorSetLayoutBindings[i];
+
 		std::string stageFlags;
-		if ((int)m_descriptorSetBindings[i].stageFlags == VK_SHADER_STAGE_VERTEX_BIT)
+		if ((int)descriptorSetLayoutBinding.stageFlags == VK_SHADER_STAGE_VERTEX_BIT)
 			stageFlags = "VK_SHADER_STAGE_VERTEX_BIT";
-		else if ((int)m_descriptorSetBindings[i].stageFlags == VK_SHADER_STAGE_FRAGMENT_BIT)
+		else if ((int)descriptorSetLayoutBinding.stageFlags == VK_SHADER_STAGE_FRAGMENT_BIT)
 			stageFlags = "VK_SHADER_STAGE_FRAGMENT_BIT";
 
 		std::string descriptorType;
-		if ((int)m_descriptorSetBindings[i].descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+		if ((int)descriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
 			descriptorType = "VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER";
-		else if ((int)m_descriptorSetBindings[i].descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+		else if ((int)descriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
 			descriptorType = "VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE";
-		else if ((int)m_descriptorSetBindings[i].descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
+		else if ((int)descriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
 			descriptorType = "VK_DESCRIPTOR_TYPE_SAMPLER";
 
-		output += "BindingName: " + m_descriptorSetBindingNames[i] + "\n";
-		output += "Binding: " + std::to_string(m_descriptorSetBindings[i].binding) + "\n";
+		output += "BindingName: " + m_pDescriptorBoundResources->descriptorSetBindingNames[i] + "\n";
+		output += "Binding: " + std::to_string(descriptorSetLayoutBinding.binding) + "\n";
 		output += "DescriptorType: " + descriptorType + "\n";
-		output += "DescriptorCount: " + std::to_string(m_descriptorSetBindings[i].descriptorCount) + "\n";
+		output += "DescriptorCount: " + std::to_string(descriptorSetLayoutBinding.descriptorCount) + "\n";
 		output += "StageFlags: " + stageFlags + "\n\n";
 	}
 	LOG_TRACE(output);
@@ -205,7 +176,7 @@ void Material::PrintBindings() const
 void Material::PrintUniformBuffers() const
 {
 	std::string output = "\nMaterial: " + m_name + "\n\n";
-	for (const auto& [_, value] : m_uniformBufferBlockMap)
+	for (const auto& [_, value] : m_pDescriptorBoundResources->uniformBufferBlockMap)
 		output += value->ToString() + "\n";
 	LOG_INFO(output);
 }

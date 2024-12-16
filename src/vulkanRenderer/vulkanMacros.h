@@ -21,7 +21,7 @@
 
 
 // Feature toggle macros:
-//#define VALIDATION_LAYERS_ACTIVE    // enable/disable vulkan validation layers
+#define VALIDATION_LAYERS_ACTIVE    // enable/disable vulkan validation layers
 //#define RESIZEABLE_BAR    // enabled = no staging buffer, disabled = with staging buffer
 
 

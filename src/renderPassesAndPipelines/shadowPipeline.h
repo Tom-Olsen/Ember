@@ -6,6 +6,7 @@
 
 
 
+struct VertexInputDescriptions;
 struct VulkanContext;
 
 
@@ -18,16 +19,13 @@ class ShadowPipeline : public Pipeline
 public: // Methods:
 	ShadowPipeline(VulkanContext* pContext,
 		const std::vector<char>& vertexCode,
-		const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetBindings,
-		const std::vector<VkVertexInputBindingDescription>& inputBindingDescriptions,
-		const std::vector<VkVertexInputAttributeDescription>& inputAttributeDescriptions);
+		const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
+		const VertexInputDescriptions* const pVertexInputDescriptions);
 	~ShadowPipeline();
 
 private: // Methods:
-	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetBindings);
-	void CreatePipeline(const VkShaderModule& vertexShaderModule,
-		const std::vector<VkVertexInputBindingDescription>& inputBindingDescriptions,
-		const std::vector<VkVertexInputAttributeDescription>& inputAttributeDescriptions);
+	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings);
+	void CreatePipeline(const VkShaderModule& vertexShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions);
 };
 
 
