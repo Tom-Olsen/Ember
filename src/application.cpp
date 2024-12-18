@@ -3,6 +3,7 @@
 #include "eventSystem.h"
 #include "gameObject.h"
 #include "graphics.h"
+#include "logger.h"
 #include "materialManager.h"
 #include "meshManager.h"
 #include "renderPassManager.h"
@@ -21,6 +22,7 @@ Application::Application()
 	m_pActiveScene = nullptr;
 	uint32_t framesInFlight = 2;
 	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+	Logger::Init();
 	m_pContext = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
 	m_pRenderer = std::make_unique<VulkanRenderer>(m_pContext.get());
 

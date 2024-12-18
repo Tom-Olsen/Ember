@@ -176,7 +176,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 						{
 							pMesh = meshRenderer->GetMesh();
 
-							// Update shader specific data (push constants and uniform buffers):
+							// Update shader specific data (push constants):
 							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
 							ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 							vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
@@ -204,7 +204,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 						{
 							pMesh = meshRenderer->GetMesh();
 
-							// Update shader specific data (push constants and uniform buffers):
+							// Update shader specific data (push constants):
 							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
 							ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 							vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
@@ -234,7 +234,7 @@ void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 							{
 								pMesh = meshRenderer->GetMesh();
 
-								// Update shader specific data (push constants and uniform buffers):
+								// Update shader specific data (push constants):
 								Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex) * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
 								ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
 								vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
@@ -297,7 +297,7 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 					{
 						pMesh = meshRenderer->GetMesh();
 
-						// Update shader specific data (push constants and uniform buffers):
+						// Update shader specific data (uniform buffers):
 						meshRenderer->SetRenderMatrizes(pScene->GetActiveCamera());
 						meshRenderer->SetLightData(pScene->GetDirectionalLights());
 						meshRenderer->SetLightData(pScene->GetSpotLights());
@@ -316,6 +316,18 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 						
 						vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
 						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+
+						// For debugging binding missmatch error:
+						//std::cout << "GameObject:     " << meshRenderer->GetGameObject()->GetName() << std::endl;
+						//std::cout << "descriptorSet:  " << *meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex) << std::endl;
+						//std::cout << "Pipeline:       " << meshRenderer->GetShadingPipeline() << std::endl;
+						//std::cout << "PipelineLayout: " << meshRenderer->GetShadingPipelineLayout() << std::endl;
+						//Texture2d* texture = meshRenderer->GetMaterialProperties()->GetTexture2d("colorMap");
+						//if (texture != nullptr)
+						//	std::cout << "texture:        " << texture->GetName() << std::endl;
+						//texture = meshRenderer->GetMaterialProperties()->GetTexture2d("cubeMap");
+						//if (texture != nullptr)
+						//	std::cout << "texture:        " << texture->GetName() << std::endl;
 
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipelineLayout(), 0, 1, meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex), 0, nullptr);
 						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);

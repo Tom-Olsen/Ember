@@ -29,9 +29,12 @@ public: // Methods
 	static void Clear();
 
 	// Draw calls:
-	static MaterialProperties* Draw(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix = Float3x3::identity, float scale = 1.0f, bool receiveShadows = true, bool castShadows = true);
-	static MaterialProperties* Draw(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix = Float3x3::identity, Float3 scale = Float3::one, bool receiveShadows = true, bool castShadows = true);
-	static MaterialProperties* Draw(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+	static MaterialProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix = Float3x3::identity, float scale = 1.0f, bool receiveShadows = true, bool castShadows = true);
+	static MaterialProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix = Float3x3::identity, Float3 scale = Float3::one, bool receiveShadows = true, bool castShadows = true);
+	static MaterialProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+	static void DrawLineSegment(Float3 start, Float3 end, float width, Float4 color = Float4::one, bool receiveShadows = true, bool castShadows = true);
+	static MaterialProperties* DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows = true, bool castShadows = true);
+	
 	static void ResetDrawCalls();
 
 	// Getters:

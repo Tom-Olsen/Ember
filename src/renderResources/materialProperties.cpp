@@ -15,6 +15,7 @@
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include <iostream>
 
 
 
@@ -222,9 +223,30 @@ T MaterialProperties::GetValue(const std::string& blockName, const std::string& 
 	return T();
 }
 
+// Sampler and Texture2d getters:
+Sampler* MaterialProperties::GetSampler(const std::string& name) const
+{
+	auto it = m_samplerMaps[m_pContext->frameIndex].find(name);
+	if (it != m_samplerMaps[m_pContext->frameIndex].end())
+		return it->second.resource;
+	return nullptr;
+}
+Texture2d* MaterialProperties::GetTexture2d(const std::string& name) const
+{
+	auto it = m_texture2dMaps[m_pContext->frameIndex].find(name);
+	if (it != m_texture2dMaps[m_pContext->frameIndex].end())
+		return it->second.resource;
+	return nullptr;
+}
+
 
 
 // Debugging:
+void MaterialProperties::Print(const std::string& name) const
+{
+	std::cout << "MaterialProperties: " << name << "\n";
+	std::cout << "DescriptorSets: " << m_descriptorSets[0] << ", " << m_descriptorSets[1] << "\n";
+}
 void MaterialProperties::PrintMaps() const
 {
 	for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)

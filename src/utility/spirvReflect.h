@@ -26,7 +26,7 @@ public: // Methods:
 	UniformBufferMember* GetSubMember(const std::string& name) const;
 
 	// Debugging:
-	std::string ToString(const std::string& name, int indent) const;
+	std::string ToString(const std::string& name, int indent = 0) const;
 };
 
 
@@ -51,7 +51,7 @@ public: // Methods:
 
 	void AddMember(std::string name, UniformBufferMember* pMember);
 	UniformBufferMember* GetMember(const std::string& name) const;
-	std::string ToString() const;
+	std::string ToString(int indent = 0) const;
 };
 
 

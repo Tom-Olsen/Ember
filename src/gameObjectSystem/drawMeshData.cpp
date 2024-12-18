@@ -51,13 +51,13 @@ void DrawMeshData::LateUpdate()
 		Float3 worldTangent = Float3(normalMatrix * Float4(localTangent, 0.0f));
 		
 		// Draw calls:
-		m_pMaterialProperties = Graphics::Draw(m_pSphereMesh, m_pMaterial, Float3(worldPosition), Float3x3::identity, 0.1f, receiveShadows, castShadows);
+		m_pMaterialProperties = Graphics::DrawMesh(m_pSphereMesh, m_pMaterial, Float3(worldPosition), Float3x3::identity, 0.1f, receiveShadows, castShadows);
 		m_pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.66f, 0.33f, 0.0f, 1.0f));
 
-		m_pMaterialProperties = Graphics::Draw(m_pArrowMesh, m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f, receiveShadows, castShadows);
+		m_pMaterialProperties = Graphics::DrawMesh(m_pArrowMesh, m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f, receiveShadows, castShadows);
 		m_pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.0f, 0.0f, 1.0f, 1.0f));
 
-		m_pMaterialProperties = Graphics::Draw(m_pArrowMesh, m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f, receiveShadows, castShadows);
+		m_pMaterialProperties = Graphics::DrawMesh(m_pArrowMesh, m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f, receiveShadows, castShadows);
 		m_pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
 	}
 }

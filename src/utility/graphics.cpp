@@ -1,5 +1,6 @@
 #include "graphics.h"
 #include "material.h"
+#include "materialManager.h"
 #include "materialProperties.h"
 #include "mesh.h"
 #include "meshRenderer.h"
@@ -46,19 +47,19 @@ void Graphics::Clear()
 
 
 // Public methods:
-// Draw calls:
-MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, float scale, bool receiveShadows, bool castShadows)
+// DrawMesh:
+MaterialProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, float scale, bool receiveShadows, bool castShadows)
 {
-	return Draw(pMesh, pMaterial, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
+	return DrawMesh(pMesh, pMaterial, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
 }
-MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, Float3 scale, bool receiveShadows, bool castShadows)
+MaterialProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, Float3 scale, bool receiveShadows, bool castShadows)
 {
 	Float4x4 translationMatrix = Float4x4::Translate(position);
 	Float4x4 scaleMatrix = Float4x4::Scale(scale);
 	Float4x4 localToWorldMatrix = translationMatrix * Float4x4(rotationMatrix) * scaleMatrix;
-	return Draw(pMesh, pMaterial, localToWorldMatrix, receiveShadows, castShadows);
+	return DrawMesh(pMesh, pMaterial, localToWorldMatrix, receiveShadows, castShadows);
 }
-MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows, bool castShadows)
+MaterialProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows, bool castShadows)
 {
 	if (!pMesh)
 	{
@@ -82,6 +83,21 @@ MaterialProperties* Graphics::Draw(Mesh* pMesh, Material* pMaterial, Float4x4 lo
 	s_drawIndex++;
 	return pMaterialProperties;
 }
+
+// DrawLineSegment:
+void Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Float4 color, bool receiveShadows, bool castShadows)
+{
+	Material* pMaterial = MaterialManager::GetMaterial("simpleLit");
+	DrawLineSegment(start, end, width, pMaterial, receiveShadows, castShadows);
+}
+MaterialProperties* Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows, bool castShadows)
+{
+	Mesh* pMesh = nullptr;
+	MaterialProperties* pMaterialProperties = nullptr;
+	return pMaterialProperties;
+}
+
+// ResetDrawCalls:
 void Graphics::ResetDrawCalls()
 {
 	for (MeshRenderer* pMeshRenderer : s_meshRenderers)
@@ -89,6 +105,7 @@ void Graphics::ResetDrawCalls()
 	ReduceCapacity();
 	s_drawIndex = 0;
 }
+
 
 // Getters:
 std::vector<MeshRenderer*>* Graphics::GetSortedMeshRenderers()

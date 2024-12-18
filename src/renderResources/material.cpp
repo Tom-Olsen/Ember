@@ -74,8 +74,6 @@ Material::Material(VulkanContext* pContext, Type type, const std::string& name, 
 		// Create pipeline:
 		m_pPipeline = std::make_unique<SkyboxPipeline>(m_pContext, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 	}
-
-	PrintBindings();
 }
 Material::~Material()
 {
@@ -145,7 +143,7 @@ VulkanContext* const Material::GetContext() const
 // Debugging:
 void Material::PrintBindings() const
 {
-	std::string output = "\nMaterial: " + m_name + "\n\n";
+	std::string output = "\nMaterial: " + m_name + "\n";
 
 	for (uint32_t i = 0; i < m_pDescriptorBoundResources->size; i++)
 	{
@@ -165,20 +163,20 @@ void Material::PrintBindings() const
 		else if ((int)descriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
 			descriptorType = "VK_DESCRIPTOR_TYPE_SAMPLER";
 
-		output += "BindingName: " + m_pDescriptorBoundResources->descriptorSetBindingNames[i] + "\n";
-		output += "Binding: " + std::to_string(descriptorSetLayoutBinding.binding) + "\n";
-		output += "DescriptorType: " + descriptorType + "\n";
-		output += "DescriptorCount: " + std::to_string(descriptorSetLayoutBinding.descriptorCount) + "\n";
-		output += "StageFlags: " + stageFlags + "\n\n";
+		output += "  BindingName: " + m_pDescriptorBoundResources->descriptorSetBindingNames[i] + "\n";
+		output += "  Binding: " + std::to_string(descriptorSetLayoutBinding.binding) + "\n";
+		output += "  DescriptorType: " + descriptorType + "\n";
+		output += "  DescriptorCount: " + std::to_string(descriptorSetLayoutBinding.descriptorCount) + "\n";
+		output += "  StageFlags: " + stageFlags + "\n\n";
 	}
 	LOG_TRACE(output);
 }
 void Material::PrintUniformBuffers() const
 {
-	std::string output = "\nMaterial: " + m_name + "\n\n";
+	std::string output = "\nMaterial: " + m_name + "\n";
 	for (const auto& [_, value] : m_pDescriptorBoundResources->uniformBufferBlockMap)
-		output += value->ToString() + "\n";
-	LOG_INFO(output);
+		output += value->ToString(2) + "\n";
+	LOG_TRACE(output);
 }
 
 

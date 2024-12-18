@@ -39,6 +39,7 @@ private: // Members:
 	std::vector<std::unordered_map<std::string, ResourceBinding<std::shared_ptr<UniformBuffer>>>> m_uniformBufferMaps;
 	std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>> m_samplerMaps;
 	std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>> m_texture2dMaps;
+	// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer is the staging buffer.
 	std::unordered_map<std::string, Sampler*> m_samplerStagingMap;
 	std::unordered_map<std::string, Texture2d*> m_texture2dStagingMap;
 	std::vector<std::unordered_map<std::string, bool>> m_updateUniformBuffer;
@@ -73,7 +74,12 @@ public: // Methods:
 	template<typename T>
 	T GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 
+	// Sampler and Texture2d Getters:
+	Sampler* GetSampler(const std::string& name) const;
+	Texture2d* GetTexture2d(const std::string& name) const;
+
 	// Debugging:
+	void Print(const std::string& name) const;
 	void PrintMaps() const;
 
 private: // Methods:

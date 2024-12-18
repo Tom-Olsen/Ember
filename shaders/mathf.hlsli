@@ -3,6 +3,11 @@
 
 
 
+// Sub libraries:
+#include "linearAlgebra.hlsli"
+
+
+
 // Constants:
 static const float mathf_PI = 3.14159265358979323846f;
 static const float mathf_PI_2 = 0.50f * mathf_PI;

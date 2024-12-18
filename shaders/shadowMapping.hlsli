@@ -197,13 +197,13 @@ float3 PhysicalPointLights
 
 
 float3 PhysicalLighting
-(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, bool metallic,
+(float3 worldPos, float3 cameraPos, float3 worldNormal, float3 color, float roughness, float3 reflectivity, bool metallic,
  int dLightsCount, int sLightsCount, int pLightsCount, DirectionalLightData directionalLightData[MAX_D_LIGHTS], SpotLightData spotLightData[MAX_S_LIGHTS], PointLightData pointLightData[MAX_P_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
-    float3 directionalLight = PhysicalDirectionalLights(worldPos, cameraPos, normal, color, roughness, reflectivity, metallic, dLightsCount, 0                          , directionalLightData, shadowMaps, shadowSampler);
-    float3 spotLight        = PhysicalSpotLights       (worldPos, cameraPos, normal, color, roughness, reflectivity, metallic, sLightsCount, dLightsCount               , spotLightData       , shadowMaps, shadowSampler);
-    float3 pointLight       = PhysicalPointLights      (worldPos, cameraPos, normal, color, roughness, reflectivity, metallic, pLightsCount, dLightsCount + sLightsCount, pointLightData      , shadowMaps, shadowSampler);
+    float3 directionalLight = PhysicalDirectionalLights(worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallic, dLightsCount, 0, directionalLightData, shadowMaps, shadowSampler);
+    float3 spotLight        = PhysicalSpotLights       (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallic, sLightsCount, dLightsCount               , spotLightData       , shadowMaps, shadowSampler);
+    float3 pointLight       = PhysicalPointLights      (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallic, pLightsCount, dLightsCount + sLightsCount, pointLightData      , shadowMaps, shadowSampler);
     return directionalLight + spotLight + pointLight;
 }
 

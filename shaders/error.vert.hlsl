@@ -1,4 +1,3 @@
-#include "linearAlgebra.hlsli"
 #include "shadingPushConstant.hlsli"
 
 

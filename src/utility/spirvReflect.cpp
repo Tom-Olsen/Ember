@@ -74,11 +74,12 @@ UniformBufferMember* UniformBufferBlock::GetMember(const std::string& name) cons
         return it->second;
     return nullptr;
 }
-std::string UniformBufferBlock::ToString() const
+std::string UniformBufferBlock::ToString(int indent) const
 {
-    std::string output = name + "(binding=" + std::to_string(bindingIndex) + ", size=" + std::to_string(size) + "):\n";
+    std::string output(indent, ' ');
+    output += name + "(binding=" + std::to_string(bindingIndex) + ", size=" + std::to_string(size) + "):\n";
     for (const auto& [name, member] : members)
-        output += member->ToString(name, 0);
+        output += member->ToString(name, indent + 2);
     return output;
 }
 

@@ -4,7 +4,6 @@ Texture2DArray<float> shadowMaps : register(t20);
 Texture2D colorMap : register(t21);     // format = VK_FORMAT_R8G8B8A8_SRGB,
 Texture2D roughnessMap : register(t22); // format = VK_FORMAT_R8_UNORM,         single channel unorm roughness map
 Texture2D normalMap : register(t23);    // format = VK_FORMAT_R8G8B8A8_UNORM,   opengl style unorm normal map
-#include "linearAlgebra.hlsli"
 #include "shadowMapping.hlsli"
 #include "shadingPushConstant.hlsli"
 
@@ -37,16 +36,16 @@ float4 main(FragmentInput input) : SV_TARGET
 {
     // Mesh data:
     float2 uv = input.uv.xy * scaleOffset.xy + scaleOffset.zw;
-    float3 surfaceNormal = normalize(input.worldNormal);
-    float3 surfaceTangent = normalize(LinAlg_VectorToPlaneProjection(input.worldTangent, surfaceNormal));
-    float3 surfaceBitangent = cross(surfaceNormal, surfaceTangent);
-    float3x3 TBN = transpose(float3x3(surfaceTangent, surfaceBitangent, surfaceNormal));
+    float3 tangentSpaceNormal = normalize(input.worldNormal);
+    float3 tangentSpaceTangent = normalize(LinAlg_VectorToPlaneProjection(input.worldTangent, tangentSpaceNormal));
+    float3 tangentSpaceBitangent = cross(tangentSpaceNormal, tangentSpaceTangent);
+    float3x3 TBN = transpose(float3x3(tangentSpaceTangent, tangentSpaceBitangent, tangentSpaceNormal));
     float3 worldPos = input.worldPosition;
     
     // Shading:
+    float4 color = diffuseColor * colorMap.Sample(colorSampler, uv);
     float3 localNormal = 2.0 * normalMap.Sample(colorSampler, uv).xyz - 1.0;
     float3 worldNormal = normalize(mul(TBN, localNormal));
-    float4 color = diffuseColor * colorMap.Sample(colorSampler, uv);
     float finalRoughness = roughness * roughnessMap.Sample(colorSampler, uv).x;
     
     // Lighting:

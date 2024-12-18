@@ -1,4 +1,3 @@
-#include "linearAlgebra.hlsli"
 #include "shadingPushConstant.hlsli"
 
 
@@ -16,17 +15,17 @@ cbuffer RenderMatrizes : register(b0)
 
 struct VertexInput
 {
-    float3 position : POSITION;
-    float3 normal : NORMAL;
-    float4 color : COLOR;
+    float3 position : POSITION; // position in local/model sapce
+    float3 normal : NORMAL;     // normal in local/model space
+    float4 vertexColor : COLOR; // vertex color
 };
 
 struct VertexOutput
 {
-    float4 position : SV_POSITION;
-    float3 normal : NORMAL;
-    float4 vertexColor : COLOR;
-    float3 worldPos : TEXCOORD0;
+    float4 clipPosition : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float3 worldNormal : NORMAL;        // normal in world space
+    float4 vertexColor : COLOR;         // vertex color
+    float3 worldPos : TEXCOORD0;        // position in world space
 };
 
 
@@ -37,9 +36,9 @@ VertexOutput main(VertexInput input)
     float4 normal = float4(input.normal, 0.0);
     
     VertexOutput output;
-    output.position = mul(localToClipMatrix, pos);
-    output.normal = mul(normalMatrix, normal).xyz;
-    output.vertexColor = input.color;
+    output.clipPosition = mul(localToClipMatrix, pos);
+    output.worldNormal = mul(normalMatrix, normal).xyz;
+    output.vertexColor = input.vertexColor;
     output.worldPos = mul(modelMatrix, pos).xyz;
     return output;
 }

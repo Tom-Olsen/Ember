@@ -37,14 +37,23 @@ void MaterialManager::Init(VulkanContext* pContext)
 	Material* pDefaultMaterial = new Material(s_pContext, shadingType, "default", opaqueQueue, "../shaders/default.vert.spv", "../shaders/default.frag.spv");
 	AddMaterial(pDefaultMaterial);
 
-	Material* pColorMaterial = new Material(s_pContext, shadingType, "color", opaqueQueue, "../shaders/color.vert.spv", "../shaders/color.frag.spv");
-	AddMaterial(pColorMaterial);
+	Material* pVertexColorLitMaterial = new Material(s_pContext, shadingType, "vertexColorLit", opaqueQueue, "../shaders/vertexColorLit.vert.spv", "../shaders/vertexColorLit.frag.spv");
+	AddMaterial(pVertexColorLitMaterial);
 
 	Material* pShadowMaterial = new Material(s_pContext, shadowType, "shadow", opaqueQueue, "../shaders/shadow.vert.spv");
 	AddMaterial(pShadowMaterial);
 
 	Material* pSkyBoxMaterial = new Material(s_pContext, skyboxType, "skybox", skyboxQueue, "../shaders/skybox.vert.spv", "../shaders/skybox.frag.spv");
 	AddMaterial(pSkyBoxMaterial);
+
+	Material* pSimpleLitMaterial = new Material(s_pContext, shadingType, "simpleLit", opaqueQueue, "../shaders/simpleLit.vert.spv", "../shaders/simpleLit.frag.spv");
+	AddMaterial(pSimpleLitMaterial);
+
+	// For testing the binding missmatch error:
+	Material* pTestA = new Material(s_pContext, shadingType, "testA", opaqueQueue, "../shaders/testA.vert.spv", "../shaders/testA.frag.spv");
+	AddMaterial(pTestA);
+	Material* pTestB = new Material(s_pContext, shadingType, "testB", opaqueQueue, "../shaders/testB.vert.spv", "../shaders/testB.frag.spv");
+	AddMaterial(pTestB);
 }
 void MaterialManager::Clear()
 {
@@ -83,7 +92,7 @@ void MaterialManager::DeleteMaterial(const std::string& name)
 // Debugging:
 void MaterialManager::PrintAllMaterialNames()
 {
-	LOG_TRACE("Names of all managed s_materials:");
+	LOG_TRACE("Names of all managed materials:");
 	for (const auto& pair : s_materials)
 		LOG_TRACE(pair.first);
 }
