@@ -3,6 +3,7 @@
 #include "materialManager.h"
 #include "materialProperties.h"
 #include "mesh.h"
+#include "meshManager.h"
 #include "meshRenderer.h"
 #include "transform.h"
 
@@ -13,6 +14,8 @@ uint32_t Graphics::s_drawIndex = 0;
 bool Graphics::s_isInitialized = false;
 std::vector<Transform*> Graphics::s_transforms;
 std::vector<MeshRenderer*> Graphics::s_meshRenderers;
+Mesh* Graphics::s_pLineSegmentMesh;
+Material* Graphics::s_pLineSegmentMaterial;
 
 
 
@@ -32,6 +35,8 @@ void Graphics::Init()
 		s_meshRenderers[i]->SetTransform(s_transforms[i]);
 		s_meshRenderers[i]->isActive = false;
 	}
+	s_pLineSegmentMesh = MeshManager::GetMesh("zylinderEdgy");
+	s_pLineSegmentMaterial = MaterialManager::GetMaterial("simpleLit");
 }
 void Graphics::Clear()
 {
@@ -43,11 +48,16 @@ void Graphics::Clear()
 	s_transforms.clear();
 	s_meshRenderers.clear();
 }
+void Graphics::SetLineSegmentMesh(Mesh* pMesh)
+{
+	if (pMesh != nullptr)
+		s_pLineSegmentMesh = pMesh;
+}
 
 
 
 // Public methods:
-// DrawMesh:
+// Draw mesh:
 MaterialProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, float scale, bool receiveShadows, bool castShadows)
 {
 	return DrawMesh(pMesh, pMaterial, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
@@ -84,18 +94,81 @@ MaterialProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float4x
 	return pMaterialProperties;
 }
 
-// DrawLineSegment:
+// Draw line segment:
 void Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Float4 color, bool receiveShadows, bool castShadows)
 {
-	Material* pMaterial = MaterialManager::GetMaterial("simpleLit");
-	DrawLineSegment(start, end, width, pMaterial, receiveShadows, castShadows);
+	MaterialProperties* pMaterialProperties = DrawLineSegment(start, end, width, s_pLineSegmentMaterial, receiveShadows, castShadows);
+	pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 }
 MaterialProperties* Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows, bool castShadows)
 {
-	Mesh* pMesh = nullptr;
-	MaterialProperties* pMaterialProperties = nullptr;
-	return pMaterialProperties;
+	Float3 direction = end - start;
+	float length = direction.Length();
+	Float3 position = start + 0.5f * direction;
+	Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
+	Float3 scale = Float3(width, width, length);
+	return DrawMesh(s_pLineSegmentMesh, pMaterial, position, rotationMatrix, scale, receiveShadows, castShadows);
 }
+
+// Speciaized draw calls:
+void Graphics::DrawFrustum(Transform* pTransform, const Float4x4& projectionMatrix, const Float4& color , float width, bool receiveShadows, bool castShadows)
+{
+	// Corner positions in normalized device coordinates:
+	Float4 cornerPositions[8] =
+	{
+		Float4(-1, -1, -1, 1),
+		Float4(-1, -1,  1, 1),
+		Float4(-1,  1, -1, 1),
+		Float4(-1,  1,  1, 1),
+		Float4( 1, -1, -1, 1),
+		Float4( 1, -1,  1, 1),
+		Float4( 1,  1, -1, 1),
+		Float4( 1,  1,  1, 1)
+	};
+
+	float det = projectionMatrix.Determinant();
+	if (det == 0)
+		return;
+
+	Float4x4 invPerspectiveMatrix = projectionMatrix.Inverse(det);
+	Float4x4 localToWorldMatrix = pTransform->GetLocalToWorldMatrix();
+
+	for (uint32_t i = 0; i < 8; i++)
+	{
+		// Corner positions in camera/local space:
+		cornerPositions[i] = invPerspectiveMatrix * cornerPositions[i];
+		cornerPositions[i] /= cornerPositions[i].w;
+
+		// Corner positions in world space:
+		cornerPositions[i] = localToWorldMatrix * cornerPositions[i];
+	}
+
+	for (uint32_t i = 0; i < 8; i++)
+	{
+		MaterialProperties* pMaterialProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), MaterialManager::GetMaterial("simpleLit"), Float3(cornerPositions[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+		pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", color);
+	}
+
+	// Horizontal lines:
+	DrawLineSegment(Float3(cornerPositions[0]), Float3(cornerPositions[4]), width, 0.8f * color, receiveShadows, castShadows);
+	DrawLineSegment(Float3(cornerPositions[1]), Float3(cornerPositions[5]), width, 0.8f * color, receiveShadows, castShadows);
+	DrawLineSegment(Float3(cornerPositions[2]), Float3(cornerPositions[6]), width, 0.8f * color, receiveShadows, castShadows);
+	DrawLineSegment(Float3(cornerPositions[3]), Float3(cornerPositions[7]), width, 0.8f * color, receiveShadows, castShadows);
+
+	// Vertical lines:
+	DrawLineSegment(Float3(cornerPositions[0]), Float3(cornerPositions[2]), width, 0.8f * color, receiveShadows, castShadows);
+	DrawLineSegment(Float3(cornerPositions[1]), Float3(cornerPositions[3]), width, 0.8f * color, receiveShadows, castShadows);
+	DrawLineSegment(Float3(cornerPositions[4]), Float3(cornerPositions[6]), width, 0.8f * color, receiveShadows, castShadows);
+	DrawLineSegment(Float3(cornerPositions[5]), Float3(cornerPositions[7]), width, 0.8f * color, receiveShadows, castShadows);
+
+	// Depth lines:
+	DrawLineSegment(Float3(cornerPositions[0]), Float3(cornerPositions[1]), width, 0.8f * color, receiveShadows, castShadows);
+	DrawLineSegment(Float3(cornerPositions[2]), Float3(cornerPositions[3]), width, 0.8f * color, receiveShadows, castShadows);
+	DrawLineSegment(Float3(cornerPositions[4]), Float3(cornerPositions[5]), width, 0.8f * color, receiveShadows, castShadows);
+	DrawLineSegment(Float3(cornerPositions[6]), Float3(cornerPositions[7]), width, 0.8f * color, receiveShadows, castShadows);
+}
+
+
 
 // ResetDrawCalls:
 void Graphics::ResetDrawCalls()
@@ -105,6 +178,7 @@ void Graphics::ResetDrawCalls()
 	ReduceCapacity();
 	s_drawIndex = 0;
 }
+
 
 
 // Getters:

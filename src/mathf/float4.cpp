@@ -237,13 +237,27 @@ std::ostream& operator<<(std::ostream& os, const Float4& value)
 
 
 // Static members:
-Float4 Float4::zero = Float4(0.0f);
-Float4 Float4::one = Float4(1.0f);
-Float4 Float4::right = Float4(1.0f, 0.0f, 0.0f, 0.0f);
-Float4 Float4::left = Float4(-1.0f, 0.0f, 0.0f, 0.0f);
-Float4 Float4::up = Float4(0.0f, 1.0f, 0.0f, 0.0f);
-Float4 Float4::down = Float4(0.0f, -1.0f, 0.0f, 0.0f);
-Float4 Float4::forward = Float4(0.0f, 0.0f, 1.0f, 0.0f);
-Float4 Float4::backward = Float4(0.0f, 0.0f, -1.0f, 0.0f);
-Float4 Float4::in = Float4(0.0f, 0.0f, 0.0f, 1.0f);
-Float4 Float4::out = Float4(0.0f, 0.0f, 0.0f, -1.0f);
+// Numbers;
+Float4 Float4::zero		= Float4(0.0f);
+Float4 Float4::one		= Float4(1.0f);
+
+// Directions:
+Float4 Float4::right	= Float4(1.0f, 0.0f, 0.0f, 0.0f);
+Float4 Float4::left		= Float4(-1.0f, 0.0f, 0.0f, 0.0f);
+Float4 Float4::up		= Float4(0.0f, 1.0f, 0.0f, 0.0f);
+Float4 Float4::down		= Float4(0.0f, -1.0f, 0.0f, 0.0f);
+Float4 Float4::forward	= Float4(0.0f, 0.0f, 1.0f, 0.0f);
+Float4 Float4::backward	= Float4(0.0f, 0.0f, -1.0f, 0.0f);
+Float4 Float4::in		= Float4(0.0f, 0.0f, 0.0f, 1.0f);
+Float4 Float4::out		= Float4(0.0f, 0.0f, 0.0f, -1.0f);
+
+// Colors:
+Float4 Float4::white	= Float4(1.0f, 1.0f, 1.0f, 1.0f);
+Float4 Float4::gray		= Float4(0.5f, 0.5f, 0.5f, 1.0f);
+Float4 Float4::black	= Float4(0.0f, 0.0f, 0.0f, 1.0f);
+Float4 Float4::red		= Float4(1.0f, 0.0f, 0.0f, 1.0f);
+Float4 Float4::green	= Float4(0.0f, 1.0f, 0.0f, 1.0f);
+Float4 Float4::blue		= Float4(0.0f, 0.0f, 1.0f, 1.0f);
+Float4 Float4::yellow	= Float4(1.0f, 1.0f, 0.0f, 1.0f);
+Float4 Float4::cyan		= Float4(0.0f, 1.0f, 1.0f, 1.0f);
+Float4 Float4::magenta	= Float4(1.0f, 0.0f, 1.0f, 1.0f);

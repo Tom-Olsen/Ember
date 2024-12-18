@@ -17,6 +17,7 @@ private: // Members:
 	float m_viewHeight;
 	Float4x4 m_projectionMatrix;
 	bool m_updateProjectionMatrix;
+	bool m_drawFrustum;
 
 public: // Methods:
 	DirectionalLight();
@@ -29,6 +30,7 @@ public: // Methods:
 	void SetFarClip(float farClip);
 	void SetViewWidth(float viewWidth);
 	void SetViewHeight(float viewHeight);
+	void SetDrawFrustum(bool drawFrustum);
 
 	// Getters:
 	Float3 GetDirection() const;
@@ -43,6 +45,7 @@ public: // Methods:
 	Float4x4 GetProjectionMatrix();
 
 	// Overrides:
+	void LateUpdate() override;
 	const std::string ToString() const override;
 
 private: // Methods:

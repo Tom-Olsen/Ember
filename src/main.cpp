@@ -48,6 +48,7 @@
 //    - look into colorspace sRGB vs linear.
 // - blender model import
 // - text rendering
+// - only load textures that are used. parallel loading of textures.
 
 // Implemented Features:
 // - Forward renderpipeline.
@@ -94,11 +95,19 @@ Scene* TestScene()
 		pScene->SetActiveCamera(pCamera);
 	}
 	{// PointLight:
-		GameObject* pGameObject = new GameObject("pPointLight");
+		GameObject* pGameObject = new GameObject("pointLight");
 		Float3 pos = Float3(1.0f, 2.0f, 0.0f);
 		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
+
+		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlit"));
+		pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4::white);
+		pMeshRenderer->SetCastShadows(false);
+		pMeshRenderer->SetReceiveShadows(false);
+		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		PointLight* pPointLight = new PointLight();
 		pPointLight->SetIntensity(10.0f);
@@ -150,8 +159,9 @@ Scene* TestScene()
 }
 Scene* DefaultScene()
 {
-	bool directionalLightsActive = 0;
+	bool directionalLightsActive = false;
 	bool spotLightsActive = !directionalLightsActive;
+	bool showLightFrustums = true;
 
 	Scene* pScene = new Scene();
 	{// Camera:
@@ -170,17 +180,16 @@ Scene* DefaultScene()
 		pScene->SetActiveCamera(pCamera);
 	}
 	{// PointLight:
-		GameObject* pGameObject = new GameObject("pPointLight");
+		GameObject* pGameObject = new GameObject("pointLight");
 		Float3 pos = Float3(1.0f, 2.0f, 0.0f);
 		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up);
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
-		pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("white"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlit"));
+		pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
@@ -188,8 +197,9 @@ Scene* DefaultScene()
 		PointLight* pPointLight = new PointLight();
 		pPointLight->SetIntensity(10.0f);
 		pPointLight->SetColor(Float3(1.0f, 1.0f, 1.0f));
-		pPointLight->SetNearClip(0.1f);
+		pPointLight->SetNearClip(0.5f);
 		pPointLight->SetFarClip(20.0f);
+		pPointLight->SetDrawFrustum(showLightFrustums);
 		pGameObject->AddComponent<PointLight>(pPointLight);
 
 		SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 45, 0));
@@ -219,10 +229,11 @@ Scene* DefaultScene()
 			DirectionalLight* pDirectionalLight = new DirectionalLight();
 			pDirectionalLight->SetIntensity(1.0f);
 			pDirectionalLight->SetColor(Float3(1.0f, 0.0f, 0.0f));
-			pDirectionalLight->SetNearClip(0.1f);
+			pDirectionalLight->SetNearClip(1.1f);
 			pDirectionalLight->SetFarClip(15.0f);
 			pDirectionalLight->SetViewWidth(10.0f);
 			pDirectionalLight->SetViewHeight(10.0f);
+			pDirectionalLight->SetDrawFrustum(showLightFrustums);
 			pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
 		}
 
@@ -231,11 +242,12 @@ Scene* DefaultScene()
 			SpotLight* pSpotLight = new SpotLight();
 			pSpotLight->SetColor(Float3(1.0f, 0.0f, 0.0f));
 			pSpotLight->SetIntensity(100.0f);
-			pSpotLight->SetNearClip(0.1f);
+			pSpotLight->SetNearClip(1.1f);
 			pSpotLight->SetFarClip(20.0f);
 			pSpotLight->SetFovDegrees(30.0f);
 			pSpotLight->SetBlendStart(0.7f);
 			pSpotLight->SetBlendEnd(0.9f);
+			pSpotLight->SetDrawFrustum(showLightFrustums);
 			pGameObject->AddComponent<SpotLight>(pSpotLight);
 		}
 
@@ -263,10 +275,11 @@ Scene* DefaultScene()
 			DirectionalLight* pDirectionalLight = new DirectionalLight();
 			pDirectionalLight->SetIntensity(1.0f);
 			pDirectionalLight->SetColor(Float3(0.0f, 1.0f, 0.0f));
-			pDirectionalLight->SetNearClip(0.1f);
+			pDirectionalLight->SetNearClip(1.1f);
 			pDirectionalLight->SetFarClip(15.0f);
 			pDirectionalLight->SetViewWidth(10.0f);
 			pDirectionalLight->SetViewHeight(10.0f);
+			pDirectionalLight->SetDrawFrustum(showLightFrustums);
 			pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
 		}
 
@@ -275,11 +288,12 @@ Scene* DefaultScene()
 			SpotLight* pSpotLight = new SpotLight();
 			pSpotLight->SetColor(Float3(0.0f, 1.0f, 0.0f));
 			pSpotLight->SetIntensity(100.0f);
-			pSpotLight->SetNearClip(0.1f);
+			pSpotLight->SetNearClip(1.1f);
 			pSpotLight->SetFarClip(20.0f);
 			pSpotLight->SetFovDegrees(30.0f);
 			pSpotLight->SetBlendStart(0.7f);
 			pSpotLight->SetBlendEnd(0.9f);
+			pSpotLight->SetDrawFrustum(showLightFrustums);
 			pGameObject->AddComponent<SpotLight>(pSpotLight);
 		}
 
@@ -307,10 +321,11 @@ Scene* DefaultScene()
 			DirectionalLight* pDirectionalLight = new DirectionalLight();
 			pDirectionalLight->SetIntensity(1.0f);
 			pDirectionalLight->SetColor(Float3(0.0f, 0.0f, 1.0f));
-			pDirectionalLight->SetNearClip(0.1f);
+			pDirectionalLight->SetNearClip(1.1f);
 			pDirectionalLight->SetFarClip(15.0f);
 			pDirectionalLight->SetViewWidth(10.0f);
 			pDirectionalLight->SetViewHeight(10.0f);
+			pDirectionalLight->SetDrawFrustum(showLightFrustums);
 			pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
 		}
 
@@ -319,11 +334,12 @@ Scene* DefaultScene()
 			SpotLight* pSpotLight = new SpotLight();
 			pSpotLight->SetColor(Float3(0.0f, 0.0f, 1.0f));
 			pSpotLight->SetIntensity(100.0f);
-			pSpotLight->SetNearClip(0.1f);
+			pSpotLight->SetNearClip(1.1f);
 			pSpotLight->SetFarClip(20.0f);
 			pSpotLight->SetFovDegrees(30.0f);
 			pSpotLight->SetBlendStart(0.7f);
 			pSpotLight->SetBlendEnd(0.9f);
+			pSpotLight->SetDrawFrustum(showLightFrustums);
 			pGameObject->AddComponent<SpotLight>(pSpotLight);
 		}
 
@@ -413,8 +429,8 @@ Scene* DefaultScene()
 		SpinLocal* pSpinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
 
-		DrawMeshData* pDrawMeshData = new DrawMeshData();
-		pGameObject->AddComponent<DrawMeshData>(pDrawMeshData);
+		//DrawMeshData* pDrawMeshData = new DrawMeshData();
+		//pGameObject->AddComponent<DrawMeshData>(pDrawMeshData);
 
 		pScene->AddGameObject(pGameObject);
 	}

@@ -17,6 +17,7 @@ private: // Members:
 	Float4x4 m_projectionMatrix;
 	static bool s_rotationMatricesInitialized;
 	static Float4x4 s_rotationMatrices[6];
+	bool m_drawFrustum;
 
 public: // Methods:
 	PointLight();
@@ -27,6 +28,7 @@ public: // Methods:
 	void SetColor(const Float3& color = Float3::one);
 	void SetNearClip(const float& nearClip);
 	void SetFarClip(const float& farClip);
+	void SetDrawFrustum(bool drawFrustum);
 
 	// Getters:
 	Float3 GetPosition() const;
@@ -39,6 +41,7 @@ public: // Methods:
 	Float4x4 GetProjectionMatrix();
 
 	// Overrides:
+	void LateUpdate() override;
 	const std::string ToString() const override;
 
 private: // Methods:

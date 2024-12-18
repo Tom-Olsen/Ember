@@ -13,10 +13,11 @@ Float4x4 PointLight::s_rotationMatrices[6];
 PointLight::PointLight()
 {
 	m_intensity = 1.0f;
-	m_color = Float3::one;
+	m_color = Float3::white;
 	m_nearClip = 0.1f;
 	m_farClip = 15.0f;
 	m_updateProjectionMatrix = true;
+	m_drawFrustum = false;
 
 	if (!s_rotationMatricesInitialized)
 	{
@@ -55,6 +56,10 @@ void PointLight::SetFarClip(const float& farClip)
 	m_farClip = farClip;
 	m_updateProjectionMatrix = true;
 }
+void PointLight::SetDrawFrustum(bool drawFrustum)
+{
+	m_drawFrustum = drawFrustum;
+}
 
 
 
@@ -91,25 +96,31 @@ Float4x4 PointLight::GetViewMatrix(uint32_t faceIndex) const
 }
 Float4x4 PointLight::GetProjectionMatrix()
 {
-	if (m_updateProjectionMatrix && isActive && GetGameObject()->isActive)
+	if (m_updateProjectionMatrix)
 		UpdateProjectionMatrix();
 	return m_projectionMatrix;
 }
 
 
 
-// Private:
+// Private methods:
 void PointLight::UpdateProjectionMatrix()
 {
 	m_updateProjectionMatrix = false;
 	constexpr float fovRadians = mathf::PI_2;
 	constexpr float aspectRatio = 1.0f;
-	m_projectionMatrix = Float4x4::Perspective(fovRadians, aspectRatio, m_nearClip, m_farClip);
+		m_projectionMatrix = Float4x4::Perspective(fovRadians, aspectRatio, m_nearClip, m_farClip);
 }
 
 
 
 // Overrides:
+void PointLight::LateUpdate()
+{
+	if (m_drawFrustum)
+		for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
+			Graphics::DrawFrustum(m_pTransform, GetProjectionMatrix() * s_rotationMatrices[faceIndex], m_color);
+}
 const std::string PointLight::ToString() const
 {
 	return "PointLight";

@@ -17,6 +17,7 @@ private: // Members:
 	float m_blendEnd;
 	Float4x4 m_projectionMatrix;
 	bool m_updateProjectionMatrix;
+	bool m_drawFrustum;
 
 public: // Methods:
 	SpotLight();
@@ -31,6 +32,7 @@ public: // Methods:
 	void SetFarClip(const float& farClip);
 	void SetBlendStart(const float& blendStart);
 	void SetBlendEnd(const float& blendEnd);
+	void SetDrawFrustum(bool drawFrustum);
 
 	// Getters:
 	Float3 GetPosition() const;
@@ -48,6 +50,7 @@ public: // Methods:
 	Float4x4 GetProjectionMatrix();
 
 	// Overrides:
+	void LateUpdate() override;
 	const std::string ToString() const override;
 
 private: // Methods:

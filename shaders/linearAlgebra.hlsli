@@ -1,5 +1,6 @@
 #ifndef __INCLUDE_GUARD_linearAlgebra_hlsli__
 #define __INCLUDE_GUARD_linearAlgebra_hlsli__
+#include "mathConstants.hlsli"
 
 
 

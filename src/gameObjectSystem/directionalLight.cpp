@@ -6,12 +6,13 @@
 DirectionalLight::DirectionalLight()
 {
 	m_intensity = 1.0f;
-	m_color = Float3::one;
+	m_color = Float3::white;
 	m_nearClip = 0.01f;
 	m_farClip = 15.0f;
 	m_viewWidth = 15.0f;
 	m_viewHeight = 15.0f;
 	m_updateProjectionMatrix = true;
+	m_drawFrustum = false;
 }
 DirectionalLight::~DirectionalLight()
 {
@@ -48,6 +49,10 @@ void DirectionalLight::SetViewHeight(float viewHeight)
 {
 	m_viewHeight = viewHeight;
 	m_updateProjectionMatrix = true;
+}
+void DirectionalLight::SetDrawFrustum(bool drawFrustum)
+{
+	m_drawFrustum = drawFrustum;
 }
 
 
@@ -91,14 +96,14 @@ Float4x4 DirectionalLight::GetViewMatrix() const
 }
 Float4x4 DirectionalLight::GetProjectionMatrix()
 {
-	if (m_updateProjectionMatrix && isActive && GetGameObject()->isActive)
+	if (m_updateProjectionMatrix)
 		UpdateProjectionMatrix();
 	return m_projectionMatrix;
 }
 
 
 
-// Private:
+// Private methods:
 void DirectionalLight::UpdateProjectionMatrix()
 {
 	m_updateProjectionMatrix = false;
@@ -112,6 +117,11 @@ void DirectionalLight::UpdateProjectionMatrix()
 
 
 // Overrides:
+void DirectionalLight::LateUpdate()
+{
+	if (m_drawFrustum)
+		Graphics::DrawFrustum(m_pTransform, GetProjectionMatrix(), m_color);
+}
 const std::string DirectionalLight::ToString() const
 {
 	return "DirectionalLight";

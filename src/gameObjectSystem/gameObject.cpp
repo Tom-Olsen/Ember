@@ -89,23 +89,23 @@ void GameObject::PrintComponents() const
 
 
 // Explicit instantiations:
-template void GameObject::AddComponent(Transform* component);
 template void GameObject::AddComponent(Camera* component);
 template void GameObject::AddComponent(CameraController* component);
-template void GameObject::AddComponent(MeshRenderer* component);
-template void GameObject::AddComponent(SpinLocal* component);
-template void GameObject::AddComponent(SpinGlobal* component);
 template void GameObject::AddComponent(DirectionalLight* component);
-template void GameObject::AddComponent(SpotLight* component);
-template void GameObject::AddComponent(PointLight* component);
 template void GameObject::AddComponent(DrawMeshData* component);
-template Transform* GameObject::GetComponent<Transform>();
-template Camera* GameObject::GetComponent<Camera>();
-template CameraController* GameObject::GetComponent<CameraController>();
-template MeshRenderer* GameObject::GetComponent<MeshRenderer>();
-template SpinLocal* GameObject::GetComponent<SpinLocal>();
-template SpinGlobal* GameObject::GetComponent<SpinGlobal>();
-template DirectionalLight* GameObject::GetComponent<DirectionalLight>();
-template SpotLight* GameObject::GetComponent<SpotLight>();
-template PointLight* GameObject::GetComponent<PointLight>();
-template DrawMeshData* GameObject::GetComponent<DrawMeshData>();
+template void GameObject::AddComponent(MeshRenderer* component);
+template void GameObject::AddComponent(PointLight* component);
+template void GameObject::AddComponent(SpinGlobal* component);
+template void GameObject::AddComponent(SpinLocal* component);
+template void GameObject::AddComponent(SpotLight* component);
+template void GameObject::AddComponent(Transform* component);
+template Camera*			GameObject::GetComponent<Camera>();
+template CameraController*	GameObject::GetComponent<CameraController>();
+template DirectionalLight*	GameObject::GetComponent<DirectionalLight>();
+template DrawMeshData*		GameObject::GetComponent<DrawMeshData>();
+template MeshRenderer*		GameObject::GetComponent<MeshRenderer>();
+template PointLight*		GameObject::GetComponent<PointLight>();
+template SpinGlobal*		GameObject::GetComponent<SpinGlobal>();
+template SpinLocal*			GameObject::GetComponent<SpinLocal>();
+template SpotLight*			GameObject::GetComponent<SpotLight>();
+template Transform*			GameObject::GetComponent<Transform>();

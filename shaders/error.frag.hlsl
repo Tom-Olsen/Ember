@@ -7,5 +7,5 @@ struct FragmentInput
 
 float4 main(FragmentInput input) : SV_TARGET
 {
-    return float4(1.0f, 0.0f, 1.0f, 1.0f); // error pink
+    return float4(1.0f, 0.0f, 1.0f, 1.0f); // error magenta
 }

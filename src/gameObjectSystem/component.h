@@ -21,7 +21,7 @@ class Component
 public: // Members:
 	bool isActive;
 
-private: // Members:
+protected: // Members:
 	GameObject* m_pGameObject;
 	Transform* m_pTransform;
 	Scene* m_pScene;

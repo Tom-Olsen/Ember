@@ -97,14 +97,28 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Float3& value);
 
 	// Static members:
+	// Numbers:
 	static Float3 zero;
 	static Float3 one;
+
+	// Directions:
 	static Float3 right;	// +x = ( 1, 0, 0).
 	static Float3 left;		// -x = (-1, 0, 0).
 	static Float3 up;		// +y = ( 0, 1, 0).
 	static Float3 down;		// -y = ( 0,-1, 0).
 	static Float3 forward;	// +z = ( 0, 0, 1).
 	static Float3 backward;	// -z = ( 0, 0,-1).
+
+	// Colors:
+	static Float3 white;	// ( 1, 1, 1).
+	static Float3 gray;		// ( 0.5, 0.5, 0.5).
+	static Float3 black;	// ( 0, 0, 0).
+	static Float3 red;		// ( 1, 0, 0).
+	static Float3 green;	// ( 0, 1, 0).
+	static Float3 blue;		// ( 0, 0, 1).
+	static Float3 yellow;	// ( 1, 1, 0).
+	static Float3 cyan;		// ( 0, 1, 1).
+	static Float3 magenta;	// ( 1, 0, 1).
 };
 
 // Friend functions:

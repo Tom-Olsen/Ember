@@ -1,6 +1,7 @@
 #include "float3x3.h"
 #include "float3.h"
 #include "float4x4.h"
+#include "logger.h"
 #include "uint3.h"
 #include <stdexcept>
 #include <sstream>
@@ -101,8 +102,15 @@ float Float3x3::Determinant() const
 Float3x3 Float3x3::Inverse() const
 {
 	float det = Determinant();
+	return Inverse(det);
+}
+Float3x3 Float3x3::Inverse(float det) const
+{
 	if (det == 0.0f)
-		return Float3x3::zero;
+	{
+		LOG_WARN("Float3x3::Inverse(), determinant is zero.");
+			return Float3x3::zero;
+	}
 	float invDet = 1.0f / det;
 	return Float3x3::Columns
 	(
@@ -168,8 +176,8 @@ Float3x3 Float3x3::Rotate(const Float3& axis, float radians)
 	float z = normalizedAxis.z;
 	return Float3x3::Rows
 	(x * x * t + c, x * y * t - z * s, x * z * t + y * s,
-		y * x * t + z * s, y * y * t + c, y * z * t - x * s,
-		z * x * t - y * s, z * y * t + x * s, z * z * t + c);
+	 y * x * t + z * s, y * y * t + c, y * z * t - x * s,
+	 z * x * t - y * s, z * y * t + x * s, z * z * t + c);
 }
 Float3x3 Float3x3::Rotate(const Float3& eulerRadians, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
 {
@@ -207,7 +215,6 @@ Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwar
 	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle);
 
 	// Combine rotations:
-	//return rot0;
 	return rot1 * rot0;
 }
 

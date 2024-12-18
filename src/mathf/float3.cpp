@@ -318,11 +318,25 @@ std::ostream& operator<<(std::ostream& os, const Float3& value)
 
 
 // Static members:
-Float3 Float3::zero = Float3(0.0f);
-Float3 Float3::one = Float3(1.0f);
-Float3 Float3::right = Float3(1.0f, 0.0f, 0.0f);
-Float3 Float3::left = Float3(-1.0f, 0.0f, 0.0f);
-Float3 Float3::up = Float3(0.0f, 1.0f, 0.0f);
-Float3 Float3::down = Float3(0.0f, -1.0f, 0.0f);
-Float3 Float3::forward = Float3(0.0f, 0.0f, 1.0f);
-Float3 Float3::backward = Float3(0.0f, 0.0f, -1.0f);
+// Numbers;
+Float3 Float3::zero		= Float3(0.0f);
+Float3 Float3::one		= Float3(1.0f);
+
+// Directions:
+Float3 Float3::right	= Float3(1.0f, 0.0f, 0.0f);
+Float3 Float3::left		= Float3(-1.0f, 0.0f, 0.0f);
+Float3 Float3::up		= Float3(0.0f, 1.0f, 0.0f);
+Float3 Float3::down		= Float3(0.0f, -1.0f, 0.0f);
+Float3 Float3::forward	= Float3(0.0f, 0.0f, 1.0f);
+Float3 Float3::backward	= Float3(0.0f, 0.0f, -1.0f);
+
+// Colors:
+Float3 Float3::white	= Float3(1.0f, 1.0f, 1.0f);
+Float3 Float3::gray		= Float3(0.5f, 0.5f, 0.5f);
+Float3 Float3::black	= Float3(0.0f, 0.0f, 0.0f);
+Float3 Float3::red		= Float3(1.0f, 0.0f, 0.0f);
+Float3 Float3::green	= Float3(0.0f, 1.0f, 0.0f);
+Float3 Float3::blue		= Float3(0.0f, 0.0f, 1.0f);
+Float3 Float3::yellow	= Float3(1.0f, 1.0f, 0.0f);
+Float3 Float3::cyan		= Float3(0.0f, 1.0f, 1.0f);
+Float3 Float3::magenta	= Float3(1.0f, 0.0f, 1.0f);

@@ -20,19 +20,17 @@ DrawMeshData::~DrawMeshData()
 
 
 // Overrides:
+void DrawMeshData::Start()
+{
+	m_pSphereMesh = MeshManager::GetMesh("cubeSphere");
+	m_pArrowMesh = MeshManager::GetMesh("arrowEdgy");
+	m_pMaterial = MaterialManager::GetMaterial("default");
+	m_pMesh = GetGameObject()->GetComponent<MeshRenderer>()->GetMesh();
+}
 void DrawMeshData::LateUpdate()
 {
 	bool receiveShadows = false;
 	bool castShadows = false;
-
-	if (m_pSphereMesh == nullptr)
-		m_pSphereMesh = MeshManager::GetMesh("cubeSphere");
-	if (m_pArrowMesh == nullptr)
-		m_pArrowMesh = MeshManager::GetMesh("arrowEdgy");
-	if (m_pMaterial == nullptr)
-		m_pMaterial = MaterialManager::GetMaterial("default");
-	if (m_pMesh == nullptr)
-		m_pMesh = GetGameObject()->GetComponent<MeshRenderer>()->GetMesh();
 
 	// Transformation matrices:
 	Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();

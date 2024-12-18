@@ -82,8 +82,11 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Float4& value);
 
 	// Static members:
+	// Numbers:
 	static Float4 zero;
 	static Float4 one;
+
+	// Directions:
 	static Float4 right;	// +x = ( 1, 0, 0, 0).
 	static Float4 left;		// -x = (-1, 0, 0, 0).
 	static Float4 up;		// +y = ( 0, 1, 0, 0).
@@ -92,6 +95,17 @@ public:
 	static Float4 backward;	// -z = ( 0, 0,-1, 0).
 	static Float4 in;		// +w = ( 0, 0, 0, 1).
 	static Float4 out;		// -w = ( 0, 0, 0,-1).
+
+	// Colors:
+	static Float4 white;	// ( 1, 1, 1, 1).
+	static Float4 gray;		// ( 0.5, 0.5, 0.5, 1).
+	static Float4 black;	// ( 0, 0, 0, 1).
+	static Float4 red;		// ( 1, 0, 0, 1).
+	static Float4 green;	// ( 0, 1, 0, 1).
+	static Float4 blue;		// ( 0, 0, 1, 1).
+	static Float4 yellow;	// ( 1, 1, 0, 1).
+	static Float4 cyan;		// ( 0, 1, 1, 1).
+	static Float4 magenta;	// ( 1, 0, 1, 1).
 };
 
 // Friend functions:

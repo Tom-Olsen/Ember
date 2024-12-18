@@ -17,8 +17,6 @@ struct VulkanContext;
 /// </summary>
 class TextureManager
 {
-public: // Members
-
 private: // Members
     static bool s_isInitialized;
     static VulkanContext* s_pContext;

@@ -58,6 +58,7 @@ public:
 	Float4x4 Transpose();
 	float Determinant() const;
 	Float4x4 Inverse() const;
+	Float4x4 Inverse(float det) const;
 	bool IsEpsilonZero() const;
 
 	// Static math operations:

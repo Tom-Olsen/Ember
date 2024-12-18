@@ -7,6 +7,7 @@
 SpotLight::SpotLight()
 {
 	m_intensity = 1.0f;
+	m_color = Float3::white;
 	m_fovRadians = mathf::ToRadians(45.0f);
 	m_aspectRatio = (float)ShadowRenderPass::s_shadowMapWidth / (float)ShadowRenderPass::s_shadowMapHeight;
 	m_nearClip = 0.1f;
@@ -14,6 +15,7 @@ SpotLight::SpotLight()
 	m_blendStart = 0.8f;
 	m_blendEnd = 1.0f;
 	m_updateProjectionMatrix = true;
+	m_drawFrustum = false;
 }
 SpotLight::~SpotLight()
 {
@@ -58,6 +60,10 @@ void SpotLight::SetBlendStart(const float& blendStart)
 void SpotLight::SetBlendEnd(const float& blendEnd)
 {
 	m_blendEnd = mathf::Clamp(blendEnd, 0.0f, 1.0f);
+}
+void SpotLight::SetDrawFrustum(bool drawFrustum)
+{
+	m_drawFrustum = drawFrustum;
 }
 
 
@@ -113,14 +119,14 @@ Float4x4 SpotLight::GetViewMatrix() const
 }
 Float4x4 SpotLight::GetProjectionMatrix()
 {
-	if (m_updateProjectionMatrix && isActive && GetGameObject()->isActive)
+	if (m_updateProjectionMatrix)
 		UpdateProjectionMatrix();
 	return m_projectionMatrix;
 }
 
 
 
-// Private:
+// Private methods:
 void SpotLight::UpdateProjectionMatrix()
 {
 	m_updateProjectionMatrix = false;
@@ -130,6 +136,11 @@ void SpotLight::UpdateProjectionMatrix()
 
 
 // Overrides:
+void SpotLight::LateUpdate()
+{
+	if (m_drawFrustum)
+		Graphics::DrawFrustum(m_pTransform, GetProjectionMatrix(), m_color);
+}
 const std::string SpotLight::ToString() const
 {
 	return "SpotLight";

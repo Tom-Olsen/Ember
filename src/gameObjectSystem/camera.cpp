@@ -10,6 +10,7 @@ Camera::Camera()
 	m_nearClip = 0.1f;
 	m_farClip = 100.0f;
 	m_updateProjectionMatrix = true;
+	m_drawFrustum = false;
 }
 Camera::~Camera()
 {
@@ -43,6 +44,10 @@ void Camera::SetFarClip(float farClip)
 {
 	m_farClip = farClip;
 	m_updateProjectionMatrix = true;
+}
+void Camera::SetDrawFrustum(bool drawFrustum)
+{
+	m_drawFrustum = drawFrustum;
 }
 
 
@@ -91,6 +96,11 @@ void Camera::UpdateProjectionMatrix()
 
 
 // Overrides:
+void Camera::LateUpdate()
+{
+	if (m_drawFrustum)
+		Graphics::DrawFrustum(m_pTransform, GetProjectionMatrix());
+}
 const std::string Camera::ToString() const
 {
 	return "Camera";

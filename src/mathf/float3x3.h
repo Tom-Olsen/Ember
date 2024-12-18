@@ -53,6 +53,7 @@ public:
 	Float3x3 Transpose() const;
 	float Determinant() const;
 	Float3x3 Inverse() const;
+	Float3x3 Inverse(float det) const;
 	bool IsEpsilonZero() const;
 
 	// Static math operations:

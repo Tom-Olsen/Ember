@@ -49,6 +49,9 @@ void MaterialManager::Init(VulkanContext* pContext)
 	Material* pSimpleLitMaterial = new Material(s_pContext, shadingType, "simpleLit", opaqueQueue, "../shaders/simpleLit.vert.spv", "../shaders/simpleLit.frag.spv");
 	AddMaterial(pSimpleLitMaterial);
 
+	Material* pSimpleUnlitMaterial = new Material(s_pContext, shadingType, "simpleUnlit", opaqueQueue, "../shaders/simpleUnlit.vert.spv", "../shaders/simpleUnlit.frag.spv");
+	AddMaterial(pSimpleUnlitMaterial);
+
 	// For testing the binding missmatch error:
 	Material* pTestA = new Material(s_pContext, shadingType, "testA", opaqueQueue, "../shaders/testA.vert.spv", "../shaders/testA.frag.spv");
 	AddMaterial(pTestA);

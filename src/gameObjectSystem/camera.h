@@ -16,6 +16,7 @@ private: // Members:
 	float m_farClip;
 	Float4x4 m_projectionMatrix;
 	bool m_updateProjectionMatrix;
+	bool m_drawFrustum;
 
 public: // Methods:
 	Camera();
@@ -27,6 +28,7 @@ public: // Methods:
 	void SetAspectRatio(float aspectRatio);
 	void SetNearClip(float nearClip);
 	void SetFarClip(float farClip);
+	void SetDrawFrustum(bool drawFrustum);
 
 	// Getters:
 	float GetFovDegrees() const;
@@ -38,6 +40,7 @@ public: // Methods:
 	Float4x4 GetProjectionMatrix();
 
 	// Overrides:
+	void LateUpdate() override;
 	const std::string ToString() const override;
 
 private: // Methods:
