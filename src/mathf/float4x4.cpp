@@ -149,7 +149,7 @@ Float4x4 Float4x4::Inverse(float det) const
 bool Float4x4::IsEpsilonZero() const
 {
 	for (uint32_t i = 0; i < 16; i++)
-		if (std::fabs(data[i]) > epsilon)
+		if (std::fabs(data[i]) > s_epsilon)
 			return false;
 	return true;
 }
@@ -212,6 +212,18 @@ Float4x4 Float4x4::Rotate(const Float3& eulerRadians, const Uint3& rotationOrder
 }
 Float4x4 Float4x4::RotateFromTo(const Float3& from, const Float3& to)
 {
+	if (from.IsEpsilonEqual(-to))
+	{
+		// Find orthogonal vector to from:
+		Float3 ortho = Float3::Cross(from, Float3::right);
+		if (ortho.IsEpsilonZero())
+			ortho = Float3::Cross(from, Float3::up);
+		ortho.Normalize();
+
+		// Find rotation axis:
+		Float3 axis = Float3::Cross(from, ortho);
+		return Rotate(axis, mathf::PI);
+	}
 	Float3 axis = Float3::Cross(from, to);
 	float radians = Float3::AngleRadians(from, to);
 	return Rotate(axis, radians);
@@ -258,13 +270,25 @@ Float4x4 Float4x4::Scale(float scale)
 {
 	return Scale(Float3(scale));
 }
+Float4x4 Float4x4::TRS(const Float3& position, const Float3x3& rotationMatrix, const Float3& scale)
+{
+	Float4x4 T = Translate(position);
+	Float4x4 S = Scale(scale);
+	return T * Float4x4(rotationMatrix) * S;
+}
+Float4x4 Float4x4::TRS(const Float3& position, const Float4x4& rotationMatrix, const Float3& scale)
+{
+	Float4x4 T = Translate(position);
+	Float4x4 S = Scale(scale);
+	return T * rotationMatrix * S;
+}
 Float4x4 Float4x4::Perspective(float fovRadians, float aspectRatio, float nearClip, float farClip)
 {
 	float tanHalfFov = mathf::Tan(0.5f * fovRadians);
 	float xx = 1.0f / (aspectRatio * tanHalfFov);
 	float yy = -1.0f / tanHalfFov;
-	float zz = (farClip + nearClip) / (nearClip - farClip);
-	float wz = 2.0f * farClip * nearClip / (nearClip - farClip);
+	float zz = (nearClip + farClip) / (nearClip - farClip);
+	float wz = 2.0f * nearClip * farClip / (nearClip - farClip);
 
 	return Float4x4::Rows
 	(xx, 0.0f, 0.0f, 0.0f,
@@ -497,7 +521,7 @@ Float4x4& Float4x4::operator/=(float scalar)
 bool Float4x4::IsEpsilonEqual(const Float4x4& other) const
 {
 	for (uint32_t i = 0; i < 16; i++)
-		if (std::fabs(data[i] - other.data[i]) > epsilon)
+		if (std::fabs(data[i] - other.data[i]) > s_epsilon)
 			return false;
 	return true;
 }

@@ -41,7 +41,7 @@ float Float2::AngleRadians() const
 Float2 Float2::Normalize() const
 {
 	float length = Length();
-	if (length <= epsilon)
+	if (length <= s_epsilon)
 		return Float2(0.0f);
 	return Float2(x / length, y / length);
 }
@@ -61,7 +61,7 @@ Float2 Float2::Rotate270() const
 }
 bool Float2::IsEpsilonZero() const
 {
-	return Length2() <= epsilon * epsilon;
+	return Length2() <= s_epsilon * s_epsilon;
 }
 
 
@@ -86,14 +86,14 @@ float Float2::Distance(const Float2& a, const Float2& b)
 float Float2::AngleDegrees(const Float2& a, const Float2& b)
 {
 	float lengths = a.Length() * b.Length();
-	if (lengths <= epsilon)
+	if (lengths <= s_epsilon)
 		return 0.0f;
 	return mathf::ToDegrees(mathf::Acos(Dot(a, b) / lengths));
 }
 float Float2::AngleRadians(const Float2& a, const Float2& b)
 {
 	float lengths = a.Length() * b.Length();
-	if (lengths <= epsilon)
+	if (lengths <= s_epsilon)
 		return 0.0f;
 	return mathf::Acos(Dot(a, b) / lengths);
 }
@@ -225,7 +225,7 @@ Float2 operator/(float scalar, const Float2& vector)
 // Comparison:
 bool Float2::IsEpsilonEqual(const Float2& other) const
 {
-	return std::fabs(x - other.x) < epsilon && std::fabs(y - other.y) < epsilon;
+	return std::fabs(x - other.x) < s_epsilon && std::fabs(y - other.y) < s_epsilon;
 }
 bool Float2::operator==(const Float2& other) const
 {

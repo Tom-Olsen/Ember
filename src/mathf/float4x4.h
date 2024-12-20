@@ -22,7 +22,7 @@ struct Float4x4
 	// xw yw zw ww   3  7  11 15   [0,3] [1,3] [2,3] [3,3]
 
 private:
-	constexpr static float epsilon = 1e-8f;
+	constexpr static float s_epsilon = 1e-8f;
 	Float4x4
 	(float xx, float xy, float xz, float xw,	// column 0
 	 float yx, float yy, float yz, float yw,	// column 1
@@ -72,6 +72,8 @@ public:
 	static Float4x4 Translate(const Float3& translation);
 	static Float4x4 Scale(const Float3& scale);
 	static Float4x4 Scale(float scale);
+	static Float4x4 TRS(const Float3& position, const Float3x3& rotationMatrix, const Float3& scale);
+	static Float4x4 TRS(const Float3& position, const Float4x4& rotationMatrix, const Float3& scale);
 	static Float4x4 Perspective(float fovRadians, float aspectRatio, float nearClip, float farClip);
 	static Float4x4 Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip);
 

@@ -42,7 +42,7 @@ float Float4::Length() const
 }
 bool Float4::IsEpsilonZero() const
 {
-	return Length2() <= epsilon * epsilon;
+	return Length2() <= s_epsilon * s_epsilon;
 }
 
 
@@ -200,7 +200,7 @@ Float4 operator/(float scalar, const Float4& vector)
 // Comparison:
 bool Float4::IsEpsilonEqual(const Float4& other) const
 {
-	return std::fabs(x - other.x) < epsilon && std::fabs(y - other.y) < epsilon && std::fabs(z - other.z) < epsilon && std::fabs(w - other.w) < epsilon;
+	return std::fabs(x - other.x) < s_epsilon && std::fabs(y - other.y) < s_epsilon && std::fabs(z - other.z) < s_epsilon && std::fabs(w - other.w) < s_epsilon;
 }
 bool Float4::operator==(const Float4& other) const
 {

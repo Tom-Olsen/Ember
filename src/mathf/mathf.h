@@ -37,6 +37,7 @@ namespace mathf
 	constexpr float SQRT3 = 1.73205080756887729353f;
 	constexpr float SQRT3_INV = 0.57735026918962576451f;
 
+	float Abs(float value);
 	float Clamp(float value, float min, float max);
 	float ToDegrees(float radians);
 	float ToRadians(float degrees);

@@ -55,7 +55,7 @@ Float2 Float3::AnglesRadians() const
 Float3 Float3::Normalize() const
 {
 	float length = Length();
-	if (length <= epsilon)
+	if (length <= s_epsilon)
 		return Float3(0.0f);
 	return Float3(x / length, y / length, z / length);
 }
@@ -72,7 +72,7 @@ Float3 Float3::Rotate(float theta, float phi) const
 }
 bool Float3::IsEpsilonZero() const
 {
-	return Length2() <= epsilon * epsilon;
+	return Length2() <= s_epsilon * s_epsilon;
 }
 
 
@@ -112,14 +112,14 @@ float Float3::Distance(const Float3& a, const Float3& b)
 float Float3::AngleDegrees(const Float3& a, const Float3& b)
 {
 	float lengths = a.Length() * b.Length();
-	if (lengths <= epsilon)
+	if (lengths <= s_epsilon)
 		return 0.0f;
 	return mathf::ToDegrees(mathf::Acos(Dot(a, b) / lengths));
 }
 float Float3::AngleRadians(const Float3& a, const Float3& b)
 {
 	float lengths = a.Length() * b.Length();
-	if (lengths <= epsilon)
+	if (lengths <= s_epsilon)
 		return 0.0f;
 	return mathf::Acos(Dot(a, b) / lengths);
 }
@@ -261,7 +261,7 @@ Float3 operator/(float scalar, const Float3& vector)
 // Comparison:
 bool Float3::IsEpsilonEqual(const Float3& other) const
 {
-	return std::fabs(x - other.x) < epsilon && std::fabs(y - other.y) < epsilon && std::fabs(z - other.z) < epsilon;
+	return std::fabs(x - other.x) < s_epsilon && std::fabs(y - other.y) < s_epsilon && std::fabs(z - other.z) < s_epsilon;
 }
 bool Float3::operator==(const Float3& other) const
 {

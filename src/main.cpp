@@ -5,11 +5,12 @@
 
 
 // TODO now!
-// - validation layer errors when two shaders have the same binding number (binding missmatch error)
+// - directional lights: shadow cascades
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
+// - imgui integration
+// - validation layer errors when two shaders have the same binding number (binding missmatch error)
 
 // TODO:
-// - directional lights: shadow cascades
 // - optimizations: multi threaded render loop, culling, etc.
 // - add pGameObject selection (need gizmos => ui renderpass)
 // - currently one commandPool per commandBuffer, should be one commandPool per frame, shared by all commands for that frame?
@@ -42,7 +43,6 @@
 // - write own logger class
 // - better shadow mapping (PCF, soft shadows, etc.)
 // - compile engine as .dll and link to game/test project
-// - imgui integration
 // - render into custom image with higher precision (16-bit floats for color instead of 8-bit) and push final image to swapchain.
 //   This allows for HDR rendering and post processing effects.
 //    - look into colorspace sRGB vs linear.
@@ -63,7 +63,107 @@
 // - Own mathf library, see mathf.h/cpp.
 
 
+Scene* ShadowCascadeScene()
+{
+	Scene* pScene = new Scene();
+	{// Camera:
+		GameObject* pGameObject = new GameObject("mainCamera");
+		Float3 pos = Float3(0.0f, 3.0f, 5.0f);
+		pGameObject->GetTransform()->SetPosition(pos);
+		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up));
 
+		Camera* pCamera = new Camera();
+		pCamera->SetFarClip(1000.0f);
+		pGameObject->AddComponent<Camera>(pCamera);
+
+		CameraController* cameraController = new CameraController();
+		pGameObject->AddComponent<CameraController>(cameraController);
+
+		pScene->AddGameObject(pGameObject);
+		pScene->SetActiveCamera(pCamera);
+	}
+	{// Skybox:
+		GameObject* pGameObject = new GameObject("skybox");
+
+		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skybox"));
+		pMeshRenderer->GetMaterialProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+		pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTextureCube("skyboxClouds0"));
+		pMeshRenderer->SetCastShadows(false);
+		pMeshRenderer->SetReceiveShadows(false);
+		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
+
+		pScene->AddGameObject(pGameObject);
+	}
+	{// ThreeLeg:
+		GameObject* pGameObject = new GameObject("threeLeg");
+		pGameObject->GetTransform()->SetPosition(-2.0f, 0.0f, 1.0f);
+		pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+
+		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlit"));
+		pMeshRenderer->SetCastShadows(true);
+		pMeshRenderer->SetReceiveShadows(true);
+		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
+
+		pScene->AddGameObject(pGameObject);
+	}
+	Camera* pCamera = new Camera();
+	{// TestCamera:
+		GameObject* pGameObject = new GameObject("testCamera");
+		Float3 pos = Float3(5.0f, 3.0f, -2.0f);
+		pGameObject->GetTransform()->SetPosition(pos);
+		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up));
+
+		pCamera->SetNearClip(0.5f);
+		pCamera->SetFarClip(100.0f);
+		pCamera->SetDrawFrustum(true);
+		pGameObject->AddComponent<Camera>(pCamera);
+
+		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
+		pMeshRenderer->SetCastShadows(false);
+		pMeshRenderer->SetReceiveShadows(false);
+		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
+
+		pScene->AddGameObject(pGameObject);
+	}
+	{// Test Light:
+		GameObject* pGameObject = new GameObject("testLight");
+		Float3 direction = Float3(-0.4f, -1.0f, -0.4f).Normalize();
+		Float3x3 rotation = Float3x3::RotateFromTo(Float3::backward, direction);
+		pGameObject->GetTransform()->SetPosition(Float3(0.0f, 3.0f, 0.0f));
+		pGameObject->GetTransform()->SetRotationMatrix(rotation);
+
+		DirectionalLight* pDirectionalLight = new DirectionalLight();
+		pDirectionalLight->SetIntensity(1.0f);
+		pDirectionalLight->SetColor(Float3(1.0f, 0.0f, 0.0f));
+		pDirectionalLight->SetNearClip(1.1f);
+		pDirectionalLight->SetFarClip(15.0f);
+		pDirectionalLight->SetViewWidth(10.0f);
+		pDirectionalLight->SetViewHeight(10.0f);
+		pDirectionalLight->SetActiveCamera(pCamera, true);
+		pDirectionalLight->SetDrawFrustum(false);
+		pDirectionalLight->SetShowShadowCascades(true);
+		pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
+
+		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
+		pMeshRenderer->SetCastShadows(true);
+		pMeshRenderer->SetReceiveShadows(true);
+		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
+
+		SpinLocal* pSpinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
+		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
+
+		pScene->AddGameObject(pGameObject);
+	}
+	return pScene;
+}
 Scene* TestScene()
 {
 	// This scene replicated the binding missmatch error.
@@ -112,8 +212,9 @@ Scene* TestScene()
 		PointLight* pPointLight = new PointLight();
 		pPointLight->SetIntensity(10.0f);
 		pPointLight->SetColor(Float3(1.0f, 1.0f, 1.0f));
-		pPointLight->SetNearClip(0.1f);
+		pPointLight->SetNearClip(0.5f);
 		pPointLight->SetFarClip(20.0f);
+		pPointLight->SetDrawFrustum(false);
 		pGameObject->AddComponent<PointLight>(pPointLight);
 
 		SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 45, 0));
@@ -134,8 +235,6 @@ Scene* TestScene()
 		pMeshRenderer->GetMaterialProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("grass"));
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
-		//pMeshRenderer->GetMaterialProperties()->Print("Floor");
-
 		pScene->AddGameObject(pGameObject);
 	}
 	{// Cube:
@@ -151,8 +250,6 @@ Scene* TestScene()
 		pMeshRenderer->GetMaterialProperties()->SetTexture2d("cubeMap", TextureManager::GetTextureCube("skyboxClouds0"));
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
-		//pMeshRenderer->GetMaterialProperties()->Print("Cube");
-
 		pScene->AddGameObject(pGameObject);
 	}
 	return pScene;
@@ -161,7 +258,7 @@ Scene* DefaultScene()
 {
 	bool directionalLightsActive = false;
 	bool spotLightsActive = !directionalLightsActive;
-	bool showLightFrustums = true;
+	bool showLightFrustums = false;
 
 	Scene* pScene = new Scene();
 	{// Camera:
@@ -171,6 +268,7 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up));
 
 		Camera* pCamera = new Camera();
+		pCamera->SetFarClip(1000.0f);
 		pGameObject->AddComponent<Camera>(pCamera);
 
 		CameraController* cameraController = new CameraController();
@@ -215,7 +313,7 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
@@ -261,7 +359,7 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
@@ -307,7 +405,7 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
@@ -533,8 +631,9 @@ int main()
 
 	// Initialization:
 	Application app;
+	Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
-	Scene* pScene = DefaultScene();
+	//Scene* pScene = DefaultScene();
 	app.SetScene(pScene);
 
 	// Debugging:

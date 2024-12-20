@@ -565,4 +565,21 @@ namespace MeshGenerator
 
 		return Mesh::Merge(meshes, "threeLeg");
 	}
+
+	Mesh* FourLeg()
+	{
+		std::vector<Mesh*> meshes;
+		meshes.reserve(4);
+
+		meshes.push_back(ArrowEdgy(Float3(1.0f, 0.0f,  0.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg0"));
+		meshes.push_back(ArrowEdgy(Float3(0.0f, 1.0f,  0.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg1"));
+		meshes.push_back(ArrowEdgy(Float3(0.0f, 0.0f,  1.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg2"));
+		meshes.push_back(ArrowEdgy(Float3(0.0f, 0.0f, -1.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg3"));
+		meshes[0]->SetUniformColor(Float4(1.0f, 0.0f, 0.0f, 1.0f));
+		meshes[1]->SetUniformColor(Float4(0.0f, 1.0f, 0.0f, 1.0f));
+		meshes[2]->SetUniformColor(Float4(0.0f, 0.0f, 1.0f, 1.0f));
+		meshes[3]->SetUniformColor(Float4(1.0f, 1.0f, 1.0f, 1.0f));
+
+		return Mesh::Merge(meshes, "fourLeg");
+	}
 }

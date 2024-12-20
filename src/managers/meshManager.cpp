@@ -70,6 +70,9 @@ void MeshManager::Init(VulkanContext* pContext)
 	Mesh* pThreeLeg = MeshGenerator::ThreeLeg();
 	AddMesh(pThreeLeg);
 
+	Mesh* pFourLeg = MeshGenerator::FourLeg();
+	AddMesh(pFourLeg);
+
 	Mesh* pGrid20x20 = MeshGenerator::Grid(20, 20, "grid20x20");
 	AddMesh(pGrid20x20);
 

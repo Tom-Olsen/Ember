@@ -12,7 +12,7 @@ struct Float3;
 struct Float4
 {
 private:
-	constexpr static float epsilon = 1e-8f;
+	constexpr static float s_epsilon = 1e-8f;
 public:
 	// Members:
 	float x, y, z, w;

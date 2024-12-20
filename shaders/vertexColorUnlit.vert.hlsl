@@ -1,3 +1,7 @@
+#include "shadingPushConstant.hlsli"
+
+
+
 cbuffer RenderMatrizes : register(b0)
 {
     float4x4 modelMatrix;       // mesh local to world matrix
@@ -11,22 +15,25 @@ cbuffer RenderMatrizes : register(b0)
 
 struct VertexInput
 {
-    float3 position : POSITION;
-    float4 uv : TEXCOORD0;
+    float3 position : POSITION; // position in local/model sapce
+    float3 normal : NORMAL;     // normal in local/model space
+    float4 vertexColor : COLOR; // vertex color
 };
 
 struct VertexOutput
 {
-    float4 position : SV_POSITION;
-    float4 uv : TEXCOORD0;
+    float4 clipPosition : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float4 vertexColor : COLOR;         // vertex color
 };
 
 
 
 VertexOutput main(VertexInput input)
 {
+    float4 pos = float4(input.position, 1.0);
+    
     VertexOutput output;
-    output.position = mul(localToClipMatrix, float4(input.position, 1.0));
-    output.uv = input.uv;
+    output.clipPosition = mul(localToClipMatrix, pos);
+    output.vertexColor = input.vertexColor;
     return output;
 }

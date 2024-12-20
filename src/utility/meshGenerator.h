@@ -39,6 +39,7 @@ namespace MeshGenerator
 	Mesh* ArrowEdgy(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name);
 
 	Mesh* ThreeLeg();
+	Mesh* FourLeg();
 };
 
 

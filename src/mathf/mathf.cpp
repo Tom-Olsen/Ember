@@ -5,6 +5,11 @@
 
 namespace mathf
 {
+	float Abs(float value)
+	{
+		return fabsf(value);
+	}
+
 	float Clamp(float value, float min, float max)
 	{
 		if (value < min)

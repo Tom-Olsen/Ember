@@ -8,7 +8,7 @@ Camera::Camera()
 	m_fovRadians = mathf::ToRadians(60.0f);
 	m_aspectRatio = 16.0f / 9.0f;	// 1920x1080
 	m_nearClip = 0.1f;
-	m_farClip = 100.0f;
+	m_farClip = 1000.0f;
 	m_updateProjectionMatrix = true;
 	m_drawFrustum = false;
 }
@@ -99,7 +99,7 @@ void Camera::UpdateProjectionMatrix()
 void Camera::LateUpdate()
 {
 	if (m_drawFrustum)
-		Graphics::DrawFrustum(m_pTransform, GetProjectionMatrix());
+		Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix());
 }
 const std::string Camera::ToString() const
 {

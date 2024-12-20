@@ -1,12 +1,11 @@
 cbuffer RenderMatrizes : register(b0)
 {
-    float4x4 modelMatrix; // mesh local to world matrix
-    float4x4 viewMatrix; // camera world to local matrix
-    float4x4 projMatrix; // camera projection matrix
-    float4x4 normalMatrix; // rotation matrix for normals and directions
-    float4x4 localToClipMatrix; // local to clip space matrix: (model * view * projection)
+    float4x4 modelMatrix;       // mesh local to world matrix
+    float4x4 viewMatrix;        // camera world to local matrix
+    float4x4 projMatrix;        // camera projection matrix
+    float4x4 normalMatrix;      // rotation matrix for directions: (model^-1)^T
+    float4x4 localToClipMatrix; // local to camera clip space matrix: (projection * view * model)
 };
-
 
 
 struct VertexInput

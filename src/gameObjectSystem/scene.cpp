@@ -151,7 +151,12 @@ void Scene::SetActiveCamera(Camera* camera)
 		m_pActiveCamera = nullptr;
 	}
 	else
+	{
 		m_pActiveCamera = camera;
+		for (DirectionalLight* pDirectionalLight : m_directionalLights)
+			if (pDirectionalLight != nullptr)
+				pDirectionalLight->SetActiveCamera(camera);
+	}
 }
 
 void Scene::RemoveGameObject(std::string name)
