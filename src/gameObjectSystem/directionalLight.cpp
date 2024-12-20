@@ -194,7 +194,7 @@ void DirectionalLight::Start()
 void DirectionalLight::LateUpdate()
 {
 	if (m_drawFrustum)
-		Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix(), m_color);
+		Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, m_color);
 
 	if (m_showShaowCascades)
 	{
@@ -313,15 +313,15 @@ void DirectionalLight::LateUpdate()
 			Float4x4 model1 = localToWorldMatrix * Float4x4::TRS(lightPos1, rotation, Float3::one);
 			Float4x4 model2 = localToWorldMatrix * Float4x4::TRS(lightPos2, rotation, Float3::one);
 			Float4x4 model3 = localToWorldMatrix * Float4x4::TRS(lightPos3, rotation, Float3::one);
-			Graphics::DrawFrustum(model0, GetProjectionMatrix(), Float4::white, 0.1f);
-			Graphics::DrawFrustum(model1, GetProjectionMatrix(), Float4::white, 0.1f);
-			Graphics::DrawFrustum(model2, GetProjectionMatrix(), Float4::white, 0.1f);
-			Graphics::DrawFrustum(model3, GetProjectionMatrix(), Float4::white, 0.1f);
+			Graphics::DrawFrustum(model0, GetProjectionMatrix());
+			Graphics::DrawFrustum(model1, GetProjectionMatrix());
+			Graphics::DrawFrustum(model2, GetProjectionMatrix());
+			Graphics::DrawFrustum(model3, GetProjectionMatrix());
 		}
+
+		Bounds bounds(Float3(0, 5, 0), Float3(1, 2, 3));
+		Graphics::DrawBounds(Float4x4::identity, bounds);
 	}
-
-
-	//Graphics::DrawFrustum()
 }
 const std::string DirectionalLight::ToString() const
 {

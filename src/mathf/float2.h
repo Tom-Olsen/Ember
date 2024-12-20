@@ -27,6 +27,7 @@ public:
 	static Float2 Direction(float radians);
 
 	// Math operations:
+	Float2 Abs() const;
 	float Length2() const;
 	float Length() const;
 	float AngleDegrees() const;
@@ -44,6 +45,9 @@ public:
 	static float Distance(const Float2& a, const Float2& b);
 	static float AngleDegrees(const Float2& a, const Float2& b);
 	static float AngleRadians(const Float2& a, const Float2& b);
+	static Float2 Min(const Float2& a, const Float2& b);
+	static Float2 Max(const Float2& a, const Float2& b);
+	static Float2 Clamp(const Float2& value, const Float2& min, const Float2& max);
 
 	// Access:
 	float& operator[](int index);

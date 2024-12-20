@@ -9,7 +9,6 @@ namespace mathf
 	{
 		return fabsf(value);
 	}
-
 	float Clamp(float value, float min, float max)
 	{
 		if (value < min)
@@ -18,17 +17,14 @@ namespace mathf
 			return max;
 		return value;
 	}
-
-	float ToDegrees(float radians)
+	float Max(float a, float b)
 	{
-		return mathf::RAD2DEG * radians;
+		return a > b ? a : b;
 	}
-
-	float ToRadians(float degrees)
+	float Min(float a, float b)
 	{
-		return mathf::DEG2RAD * degrees;
+		return a < b ? a : b;
 	}
-
 	float Sign(float value)
 	{
 		if (value > 0.0f)
@@ -37,7 +33,16 @@ namespace mathf
 			return -1.0f;
 		return 0.0f;
 	}
+	float ToDegrees(float radians)
+	{
+		return mathf::RAD2DEG * radians;
+	}
+	float ToRadians(float degrees)
+	{
+		return mathf::DEG2RAD * degrees;
+	}
 
+	// Trigonometry:
 	float Sin(float radiant)
 	{
 		return sinf(radiant);
@@ -67,6 +72,7 @@ namespace mathf
 		return atan2f(y, x);
 	}
 
+	// Tempated:
 	template<int N>
 	float IntegerPow(float a)
 	{

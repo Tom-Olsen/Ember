@@ -29,6 +29,7 @@ public:
 	static Float3 Direction(float theta, float phi);
 
 	// Math operations:
+	Float3 Abs() const;
 	float Length2() const;
 	float Length() const;
 	float Theta() const;
@@ -37,7 +38,6 @@ public:
 	Float2 AnglesRadians() const;
 	Float3 Normalize() const;
 	Float3 Rotate(float theta, float phi) const;
-	Float3 Inverse() const;
 	bool IsEpsilonZero() const;
 
 	// Static math operations:
@@ -50,6 +50,9 @@ public:
 	static float Distance(const Float3& a, const Float3& b);
 	static float AngleDegrees(const Float3& a, const Float3& b);
 	static float AngleRadians(const Float3& a, const Float3& b);
+	static Float3 Min(const Float3& a, const Float3& b);
+	static Float3 Max(const Float3& a, const Float3& b);
+	static Float3 Clamp(const Float3& value, const Float3& min, const Float3& max);
 
 	// Access:
 	float& operator[](int index);

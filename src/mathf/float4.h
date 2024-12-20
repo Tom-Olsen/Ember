@@ -33,11 +33,15 @@ public:
 	static Float4 Direction(float theta, float phi);
 
 	// Math operations:
+	Float4 Abs() const;
 	float Length2() const;
 	float Length() const;
 	bool IsEpsilonZero() const;
 
 	// Static math operations:
+	static Float4 Min(const Float4& a, const Float4& b);
+	static Float4 Max(const Float4& a, const Float4& b);
+	static Float4 Clamp(const Float4& value, const Float4& min, const Float4& max);
 
 	// Access:
 	float& operator[](int index);

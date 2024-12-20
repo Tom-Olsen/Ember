@@ -22,6 +22,10 @@ Float2 Float2::Direction(float radians)
 
 
 // Math operations:
+Float2 Float2::Abs() const
+{
+	return Float2(std::fabs(x), std::fabs(y));
+}
 float Float2::Length2() const
 {
 	return x * x + y * y;
@@ -96,6 +100,18 @@ float Float2::AngleRadians(const Float2& a, const Float2& b)
 	if (lengths <= s_epsilon)
 		return 0.0f;
 	return mathf::Acos(Dot(a, b) / lengths);
+}
+Float2 Float2::Min(const Float2& a, const Float2& b)
+{
+	return Float2(mathf::Min(a.x, b.x), mathf::Min(a.y, b.y));
+}
+Float2 Float2::Max(const Float2& a, const Float2& b)
+{
+	return Float2(mathf::Max(a.x, b.x), mathf::Max(a.y, b.y));
+}
+Float2 Float2::Clamp(const Float2& value, const Float2& min, const Float2& max)
+{
+	return Float2(mathf::Clamp(value.x, min.x, max.x), mathf::Clamp(value.y, min.y, max.y));
 }
 
 

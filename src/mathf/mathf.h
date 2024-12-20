@@ -39,9 +39,13 @@ namespace mathf
 
 	float Abs(float value);
 	float Clamp(float value, float min, float max);
+	float Max(float a, float b);
+	float Min(float a, float b);
+	float Sign(float value);
 	float ToDegrees(float radians);
 	float ToRadians(float degrees);
-	float Sign(float value);
+
+	// Trigonometry:
 	float Sin(float radiant);
 	float Cos(float radiant);
 	float Tan(float radiant);
@@ -49,6 +53,8 @@ namespace mathf
 	float Acos(float value);
 	float Atan(float z);
 	float Atan2(float y, float x);
+
+	// Tempated:
 	template<int N>
 	float IntegerPow(float a);
 	template<int N>
@@ -58,6 +64,7 @@ namespace mathf
 
 
 // Include all mathf headers:
+#include "bounds.h"
 #include "int2.h"
 #include "int3.h"
 #include "uint3.h"

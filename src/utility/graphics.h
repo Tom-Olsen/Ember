@@ -5,12 +5,12 @@
 
 
 
-struct VulkanContext;
-class Mesh;
 class Material;
 class MaterialProperties;
+class Mesh;
 class MeshRenderer;
 class Transform;
+struct VulkanContext;
 
 
 
@@ -42,7 +42,8 @@ public: // Methods
 	static MaterialProperties* DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows = true, bool castShadows = true);
 	
 	// Speciaized draw calls:
-	static void DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projectionMatrix, const Float4& color = Float4::white, float width = 0.1f, bool receiveShadows = false, bool castShadows = false);
+	static void DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projectionMatrix, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
+	static void DrawBounds(Float4x4 localToWorldMatrix, const Bounds& bounds, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 
 	static void ResetDrawCalls();
 

@@ -28,6 +28,10 @@ Float3 Float3::Direction(float theta, float phi)
 
 
 // Math operations:
+Float3 Float3::Abs() const
+{
+	return Float3(std::fabs(x), std::fabs(y), std::fabs(z));
+}
 float Float3::Length2() const
 {
 	return x * x + y * y + z * z;
@@ -122,6 +126,18 @@ float Float3::AngleRadians(const Float3& a, const Float3& b)
 	if (lengths <= s_epsilon)
 		return 0.0f;
 	return mathf::Acos(Dot(a, b) / lengths);
+}
+Float3 Float3::Min(const Float3& a, const Float3& b)
+{
+	return Float3(mathf::Min(a.x, b.x), mathf::Min(a.y, b.y), mathf::Min(a.z, b.z));
+}
+Float3 Float3::Max(const Float3& a, const Float3& b)
+{
+	return Float3(mathf::Max(a.x, b.x), mathf::Max(a.y, b.y), mathf::Max(a.z, b.z));
+}
+Float3 Float3::Clamp(const Float3& value, const Float3& min, const Float3& max)
+{
+	return Float3(mathf::Clamp(value.x, min.x, max.x), mathf::Clamp(value.y, min.y, max.y), mathf::Clamp(value.z, min.z, max.z));
 }
 
 
