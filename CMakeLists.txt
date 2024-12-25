@@ -52,15 +52,18 @@ source_group("Utility" FILES ${UTILITY_FILES})
 file(GLOB VULKAN_RENDERER_FILES "${PROJECT_SOURCE_DIR}/src/vulkanRenderer/*")
 source_group("VulkanRenderer" FILES ${VULKAN_RENDERER_FILES})
 
-# src/*
-file(GLOB OTHER_FILES "${PROJECT_SOURCE_DIR}/src/*")
-source_group("Other" FILES ${OTHER_FILES})
+# src/engine/*:
+file(GLOB ENGINE_FILES "${PROJECT_SOURCE_DIR}/src/engine/*")
+source_group("Engine" FILES ${ENGINE_FILES})
+
+# src/main.cpp:
+source_group("" FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
 # ---------------------------------------------------
 
 
 
 # Configure executables:
-add_executable(${PROJECT_NAME}
+add_executable(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/src/main.cpp
 ${SHADER_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
 ${MANAGERS_FILES}
@@ -69,7 +72,7 @@ ${RENDERPASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
 ${UTILITY_FILES}
 ${VULKAN_RENDERER_FILES}
-${OTHER_FILES})
+${ENGINE_FILES})
 add_dependencies(${PROJECT_NAME} build_shaders)
 
 
@@ -127,6 +130,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC libs/vma/include)
 
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME}
+PRIVATE ${CMAKE_SOURCE_DIR}/src/engine
 PRIVATE ${CMAKE_SOURCE_DIR}/src/gameobjectSystem
 PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
 PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
@@ -135,4 +139,57 @@ PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources
 PRIVATE ${CMAKE_SOURCE_DIR}/src/utility
 PRIVATE ${CMAKE_SOURCE_DIR}/src/vulkanRenderer
 PRIVATE ${CMAKE_SOURCE_DIR}/src)
+# ---------------------------------------------------
+
+
+
+# -------------------- Unit Tests -------------------
+# Google Test (cMakeList target):
+add_subdirectory(libs/googletest)
+enable_testing()
+
+# File List:
+file(GLOB UNITTEST_FILES "${PROJECT_SOURCE_DIR}/unitTests/*.h")
+source_group("Unit Tests" FILES ${UNITTEST_FILES})
+source_group("" FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
+
+# Link test executable:
+source_group("" FILES unitTests/main.cpp)
+add_executable(UnitTests unitTests/main.cpp
+${SHADER_FILES}
+${GAME_OBJECT_SYSTEM_FILES}
+${MANAGERS_FILES}
+${MATHF_FILES}
+${RENDERPASSES_AND_PIPELINES_FILES}
+${RENDER_RESOURCES_FILES}
+${UTILITY_FILES}
+${VULKAN_RENDERER_FILES}
+${ENGINE_FILES}
+${UNITTEST_FILES})
+
+# Link test executable with all libraries:
+target_link_libraries(UnitTests
+PRIVATE gtest gtest_main
+PUBLIC SDL3::SDL3-shared
+PUBLIC spirv-reflect-static
+PUBLIC ${Vulkan_LIBRARIES})
+
+target_include_directories(UnitTests
+PRIVATE libs/googletest/include
+PUBLIC libs/SDL/include
+PUBLIC libs/spdlog/include
+PUBLIC libs/SPIRV-Reflect
+PUBLIC ${Vulkan_INCLUDE_DIRS}
+PUBLIC libs/vma/include
+PRIVATE ${CMAKE_SOURCE_DIR}/src/engine
+PRIVATE ${CMAKE_SOURCE_DIR}/src/gameobjectSystem
+PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
+PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
+PRIVATE ${CMAKE_SOURCE_DIR}/src/renderPassesAndPipelines
+PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources
+PRIVATE ${CMAKE_SOURCE_DIR}/src/utility
+PRIVATE ${CMAKE_SOURCE_DIR}/src/vulkanRenderer
+PRIVATE ${CMAKE_SOURCE_DIR}/unitTests)
+
+add_test(NAME UnitTests COMMAND UnitTests)
 # ---------------------------------------------------

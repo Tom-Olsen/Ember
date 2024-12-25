@@ -1,4 +1,3 @@
-
 #ifndef __INCLUDE_GUARD_bounds_h__
 #define __INCLUDE_GUARD_bounds_h__
 #include "float3.h"
