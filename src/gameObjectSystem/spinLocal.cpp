@@ -22,13 +22,13 @@ void SpinLocal::Update()
 	{
 		Float3 eulerRadians = -m_eulerDegreesPerSecond.ToRadians() * Timer::GetDeltaTime();
 		Float3x3 rotation = Float3x3::Rotate(eulerRadians, m_rotationOrder);
-		GetTransform()->SetRotationMatrix(GetTransform()->GetRotation3x3() * rotation);
+		m_pTransform->SetRotationMatrix(m_pTransform->GetRotation3x3() * rotation);
 	}
 	if (EventSystem::KeyDownOrHeld(SDLK_RIGHT))
 	{
 		Float3 eulerRadians = m_eulerDegreesPerSecond.ToRadians() * Timer::GetDeltaTime();
 		Float3x3 rotation = Float3x3::Rotate(eulerRadians, m_rotationOrder);
-		GetTransform()->SetRotationMatrix(GetTransform()->GetRotation3x3() * rotation);
+		m_pTransform->SetRotationMatrix(m_pTransform->GetRotation3x3() * rotation);
 	}
 }
 const std::string SpinLocal::ToString() const

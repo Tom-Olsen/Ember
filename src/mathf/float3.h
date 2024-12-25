@@ -22,15 +22,14 @@ public:
 	Float3(float xyz);
 	Float3(float x, float y);
 	Float3(float x, float y, float z);
-	Float3(const Float2& xy);
-	Float3(const Float2& xy, float z);
+	explicit Float3(const Float2& xy);
+	explicit Float3(const Float2& xy, float z);
 	Float3(const Float3& xyz);
-	Float3(const Float4& xyz);
+	explicit Float3(const Float4& xyz);
 	static Float3 Direction(float theta, float phi);
 
 	// Math operations:
-	Float3 Abs() const;
-	float Length2() const;
+	float LengthSq() const;
 	float Length() const;
 	float Theta() const;
 	float Phi() const;
@@ -41,12 +40,10 @@ public:
 	bool IsEpsilonZero() const;
 
 	// Static math operations:
+	static Float3 Abs(const Float3& a);
 	static float Dot(const Float3& a, const Float3& b);
 	static Float3 Cross(const Float3& a, const Float3& b);
-	static float VectorToPlaneDistance(const Float3& vec, const Float3& planeNormal);
-	static Float3 VectorToPlaneProjection(const Float3& vec, const Float3& planeNormal);
-	static Float3 Reflect(const Float3& vec, const Float3& planeNormal);
-	static float Distance2(const Float3& a, const Float3& b);
+	static float DistanceSq(const Float3& a, const Float3& b);
 	static float Distance(const Float3& a, const Float3& b);
 	static float AngleDegrees(const Float3& a, const Float3& b);
 	static float AngleRadians(const Float3& a, const Float3& b);

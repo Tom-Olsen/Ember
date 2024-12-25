@@ -26,7 +26,7 @@ Bounds::Bounds(const std::vector<Float3>& points)
 
 
 
-// Methods:
+// Public methods:
 Float3 Bounds::GetMin() const
 {
 	return center - extents;
@@ -58,7 +58,7 @@ void Bounds::Encapsulate(const Float3& point)
 	Float3 min = Float3::Min(point, GetMin());
 	Float3 max = Float3::Max(point, GetMax());
 	center = 0.5f * (max + min);
-	extents = (max - min).Abs();
+	extents = 0.5f * (max - min);
 }
 void Bounds::Expand(float amount)
 {
@@ -66,7 +66,7 @@ void Bounds::Expand(float amount)
 }
 void Bounds::Expand(const Float3& amount)
 {
-	extents += amount.Abs();
+	extents += Float3::Abs(amount);
 }
 //bool Bounds::IntersectRay(const Ray& ray)
 //{

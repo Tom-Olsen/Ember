@@ -85,7 +85,7 @@ void MeshRenderer::SetRenderMatrizes(Camera* const pCamera)
 	m_pMaterialProperties->SetValue(name, "modelMatrix", modelMatrix);
 	m_pMaterialProperties->SetValue(name, "viewMatrix", cameraViewMatrix);
 	m_pMaterialProperties->SetValue(name, "projMatrix", cameraProjMatrix);
-	m_pMaterialProperties->SetValue(name, "normalMatrix", GetTransform()->GetNormalMatrix());
+	m_pMaterialProperties->SetValue(name, "normalMatrix", GetTransform()->GetLocalToWorldNormalMatrix());
 	m_pMaterialProperties->SetValue(name, "localToClipMatrix", localToClipMatrix);
 }
 void MeshRenderer::SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights)

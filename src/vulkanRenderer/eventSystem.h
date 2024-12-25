@@ -38,6 +38,12 @@ public: // Methods:
     static void ProcessEvent(const SDL_Event& event);
 
 	// Event queries:
+    static bool AnyKeyDown();
+	static bool AnyKeyUp();
+	static bool AnyKeyHeld();
+	static bool AnyMouseDown();
+	static bool AnyMouseUp();
+	static bool AnyMouseHeld();
     static bool KeyDown(SDL_Keycode key);
     static bool KeyUp(SDL_Keycode key);
     static bool KeyHeld(SDL_Keycode key);

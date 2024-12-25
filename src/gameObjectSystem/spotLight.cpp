@@ -139,7 +139,7 @@ void SpotLight::UpdateProjectionMatrix()
 void SpotLight::LateUpdate()
 {
 	if (m_drawFrustum)
-		Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, m_color);
+		Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, Float4(m_color, 1.0f));
 }
 const std::string SpotLight::ToString() const
 {

@@ -119,7 +119,7 @@ void PointLight::LateUpdate()
 {
 	if (m_drawFrustum)
 		for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
-			Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix() * s_rotationMatrices[faceIndex], 0.1f, m_color);
+			Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix() * s_rotationMatrices[faceIndex], 0.1f, Float4(m_color, 1.0f));
 }
 const std::string PointLight::ToString() const
 {

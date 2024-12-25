@@ -19,7 +19,8 @@ private: // Members:
 	Float3 m_scale;
 	Float4x4 m_localToWorldMatrix;
 	Float4x4 m_worldToLocalMatrix;
-	Float4x4 m_normalMatrix;
+	Float4x4 m_localToWorldNormalMatrix;
+	Float4x4 m_worldToLocalNormalMatrix;
 	bool m_updateLocalToWorldMatrix;
 
 public: // Methods:
@@ -49,7 +50,8 @@ public: // Methods:
 	Float3 GetScale() const;
 	Float4x4 GetLocalToWorldMatrix();
 	Float4x4 GetWorldToLocalMatrix();
-	Float4x4 GetNormalMatrix();
+	Float4x4 GetLocalToWorldNormalMatrix();
+	Float4x4 GetWorldToLocalNormalMatrix();
 	Float3 GetForward();
 	Float3 GetBackward();
 	Float3 GetRight();

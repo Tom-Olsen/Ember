@@ -24,6 +24,7 @@ private: // Members
 	static std::vector<Transform*> s_transforms;
 	static std::vector<MeshRenderer*> s_meshRenderers;
 	static Mesh* s_pLineSegmentMesh;
+	static Mesh* s_pSphereMesh;
 	static Material* s_pLineSegmentMaterial;
 
 public: // Methods
@@ -40,6 +41,9 @@ public: // Methods
 	// Draw line segment:
 	static void DrawLineSegment(Float3 start, Float3 end, float width, Float4 color = Float4::one, bool receiveShadows = true, bool castShadows = true);
 	static MaterialProperties* DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows = true, bool castShadows = true);
+
+	// Draw Sphere:
+	static void DrawSphere(Float3 position, float radius, Float4 color = Float4::white, bool receiveShadows = true, bool castShadows = true);
 	
 	// Speciaized draw calls:
 	static void DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projectionMatrix, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);

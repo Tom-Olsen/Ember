@@ -15,6 +15,7 @@ bool Graphics::s_isInitialized = false;
 std::vector<Transform*> Graphics::s_transforms;
 std::vector<MeshRenderer*> Graphics::s_meshRenderers;
 Mesh* Graphics::s_pLineSegmentMesh;
+Mesh* Graphics::s_pSphereMesh;
 Material* Graphics::s_pLineSegmentMaterial;
 
 
@@ -36,6 +37,7 @@ void Graphics::Init()
 		s_meshRenderers[i]->isActive = false;
 	}
 	s_pLineSegmentMesh = MeshManager::GetMesh("zylinderEdgy");
+	s_pSphereMesh = MeshManager::GetMesh("cubeSphere");
 	s_pLineSegmentMaterial = MaterialManager::GetMaterial("simpleUnlit");
 }
 void Graphics::Clear()
@@ -106,6 +108,13 @@ MaterialProperties* Graphics::DrawLineSegment(Float3 start, Float3 end, float wi
 	Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
 	Float3 scale = Float3(width, width, length);
 	return DrawMesh(s_pLineSegmentMesh, pMaterial, position, rotationMatrix, scale, receiveShadows, castShadows);
+}
+
+// Draw Sphere:
+void Graphics::DrawSphere(Float3 position, float radius, Float4 color, bool receiveShadows, bool castShadows)
+{
+	MaterialProperties* pMaterialProperties = DrawMesh(s_pSphereMesh, MaterialManager::GetMaterial("simpleUnlit"), position, Float3x3::identity, Float3(radius), receiveShadows, castShadows);
+	pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 }
 
 // Speciaized draw calls:

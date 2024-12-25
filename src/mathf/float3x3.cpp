@@ -1,7 +1,9 @@
 #include "float3x3.h"
 #include "float3.h"
 #include "float4x4.h"
+#include "geometry3d.h"
 #include "logger.h"
+#include "mathf.h"
 #include "uint3.h"
 #include <stdexcept>
 #include <sstream>
@@ -9,6 +11,15 @@
 
 
 // Constructors:
+Float3x3::Float3x3
+(float xx, float xy, float xz,	// column 0
+ float yx, float yy, float yz,	// column 1
+ float zx, float zy, float zz)	// column 2
+{
+	data[0] = xx; data[3] = yx; data[6] = zx;
+	data[1] = xy; data[4] = yy; data[7] = zy;
+	data[2] = xz; data[5] = yz; data[8] = zz;
+}
 Float3x3::Float3x3()
 {
 	for (uint32_t i = 0; i < 9; i++)
@@ -19,30 +30,21 @@ Float3x3::Float3x3(float value)
 	for (uint32_t i = 0; i < 9; i++)
 		data[i] = value;
 }
-Float3x3::Float3x3(const float* array)
+Float3x3::Float3x3(const float* const array)
 {
 	for (uint32_t i = 0; i < 9; i++)
 		data[i] = array[i];
 }
-Float3x3::Float3x3
-(float xx, float xy, float xz,	// column 0
-	float yx, float yy, float yz,	// column 1
-	float zx, float zy, float zz)	// column 2
-{
-	data[0] = xx; data[3] = yx; data[6] = zx;
-	data[1] = xy; data[4] = yy; data[7] = zy;
-	data[2] = xz; data[5] = yz; data[8] = zz;
-}
 Float3x3::Float3x3(const Float3x3& other)
 {
 	for (uint32_t i = 0; i < 9; i++)
-		data[i] = other.data[i];
+		data[i] = other[i];
 }
 Float3x3::Float3x3(const Float4x4& other)
 {
-	data[0] = other.data[0]; data[3] = other.data[4]; data[6] = other.data[8];
-	data[1] = other.data[1]; data[4] = other.data[5]; data[7] = other.data[9];
-	data[2] = other.data[2]; data[5] = other.data[6]; data[8] = other.data[10];
+	data[0] = other[0]; data[3] = other[4]; data[6] = other[8];
+	data[1] = other[1]; data[4] = other[5]; data[7] = other[9];
+	data[2] = other[2]; data[5] = other[6]; data[8] = other[10];
 }
 
 
@@ -52,35 +54,35 @@ Float3x3 Float3x3::Rows(const Float3& row0, const Float3& row1, const Float3& ro
 {
 	return Float3x3
 	(row0.x, row1.x, row2.x,
-		row0.y, row1.y, row2.y,
-		row0.z, row1.z, row2.z);
+	 row0.y, row1.y, row2.y,
+	 row0.z, row1.z, row2.z);
 }
 Float3x3 Float3x3::Rows
 (float row0x, float row0y, float row0z,
-	float row1x, float row1y, float row1z,
-	float row2x, float row2y, float row2z)
+ float row1x, float row1y, float row1z,
+ float row2x, float row2y, float row2z)
 {
 	return Float3x3
 	(row0x, row1x, row2x,
-		row0y, row1y, row2y,
-		row0z, row1z, row2z);
+	 row0y, row1y, row2y,
+	 row0z, row1z, row2z);
 }
 Float3x3 Float3x3::Columns(const Float3& column0, const Float3& column1, const Float3& column2)
 {
 	return Float3x3
 	(column0.x, column0.y, column0.z,
-		column1.x, column1.y, column1.z,
-		column2.x, column2.y, column2.z);
+	 column1.x, column1.y, column1.z,
+	 column2.x, column2.y, column2.z);
 }
 Float3x3 Float3x3::Columns
 (float column0x, float column0y, float column0z,
-	float column1x, float column1y, float column1z,
-	float column2x, float column2y, float column2z)
+ float column1x, float column1y, float column1z,
+ float column2x, float column2y, float column2z)
 {
 	return Float3x3
 	(column0x, column0y, column0z,
-		column1x, column1y, column1z,
-		column2x, column2y, column2z);
+	 column1x, column1y, column1z,
+	 column2x, column2y, column2z);
 }
 
 
@@ -90,8 +92,8 @@ Float3x3 Float3x3::Transpose() const
 {
 	return Float3x3
 	(data[0], data[3], data[6],
-		data[1], data[4], data[7],
-		data[2], data[5], data[8]);
+	 data[1], data[4], data[7],
+	 data[2], data[5], data[8]);
 }
 float Float3x3::Determinant() const
 {
@@ -130,7 +132,7 @@ Float3x3 Float3x3::Inverse(float det) const
 bool Float3x3::IsEpsilonZero() const
 {
 	for (uint32_t i = 0; i < 9; i++)
-		if (std::fabs(data[i]) > epsilon)
+		if (mathf::Abs(data[i]) > epsilon)
 			return false;
 	return true;
 }
@@ -144,8 +146,8 @@ Float3x3 Float3x3::RotateX(float radians)
 	float s = mathf::Sin(radians);
 	return Float3x3::Rows
 	(1.0f, 0.0f, 0.0f,
-		0.0f, c, -s,
-		0.0f, s, c);
+	 0.0f, c, -s,
+	 0.0f, s, c);
 }
 Float3x3 Float3x3::RotateY(float radians)
 {
@@ -153,8 +155,8 @@ Float3x3 Float3x3::RotateY(float radians)
 	float s = mathf::Sin(radians);
 	return Float3x3::Rows
 	(c, 0.0f, s,
-		0.0f, 1.0f, 0.0f,
-		-s, 0.0f, c);
+	 0.0f, 1.0f, 0.0f,
+	 -s, 0.0f, c);
 }
 Float3x3 Float3x3::RotateZ(float radians)
 {
@@ -162,8 +164,8 @@ Float3x3 Float3x3::RotateZ(float radians)
 	float s = mathf::Sin(radians);
 	return Float3x3::Rows
 	(c, -s, 0.0f,
-		s, c, 0.0f,
-		0.0f, 0.0f, 1.0f);
+	 s, c, 0.0f,
+	 0.0f, 0.0f, 1.0f);
 }
 Float3x3 Float3x3::Rotate(const Float3& axis, float radians)
 {
@@ -205,7 +207,7 @@ Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwar
 	// Compute missalignment angle between upNew and upOld rotated by rot0:
 	Float3 upOldRotated = rot0 * upOld;
 	Float3 planeNormal = Float3::Cross(upNew, forwardNew).Normalize();
-	Float3 projection = Float3::VectorToPlaneProjection(upOldRotated, planeNormal);
+	Float3 projection = geometry3d::PointToPlaneProjection(upOldRotated, planeNormal);
 	float sign = mathf::Sign(Float3::Dot(Float3::Cross(upOldRotated, projection), forwardNew));
 	float angle = sign * Float3::AngleRadians(upOldRotated, projection);
 	if (Float3::Dot(upNew, upOldRotated) < 0)
@@ -266,7 +268,7 @@ Float3x3& Float3x3::operator=(const Float3x3& other)
 	if (this != &other)
 	{
 		for (uint32_t i = 0; i < 9; i++)
-			data[i] = other.data[i];
+			data[i] = other[i];
 	}
 	return *this;
 }
@@ -275,7 +277,7 @@ Float3x3& Float3x3::operator=(Float3x3&& other) noexcept
 	if (this != &other)
 	{
 		for (uint32_t i = 0; i < 9; i++)
-			data[i] = other.data[i];
+			data[i] = other[i];
 	}
 	return *this;
 }
@@ -287,13 +289,13 @@ Float3x3 Float3x3::operator+(const Float3x3& other) const
 {
 	Float3x3 result;
 	for (uint32_t i = 0; i < 9; i++)
-		result.data[i] = data[i] + other.data[i];
+		result[i] = data[i] + other[i];
 	return result;
 }
 Float3x3& Float3x3::operator+=(const Float3x3& other)
 {
 	for (uint32_t i = 0; i < 9; i++)
-		data[i] += other.data[i];
+		data[i] += other[i];
 	return *this;
 }
 
@@ -304,21 +306,21 @@ Float3x3 Float3x3::operator-(const Float3x3& other) const
 {
 	Float3x3 result;
 	for (uint32_t i = 0; i < 9; i++)
-		result.data[i] = data[i] - other.data[i];
+		result[i] = data[i] - other[i];
 	return result;
 }
 Float3x3& Float3x3::operator-=(const Float3x3& other)
 {
 	for (uint32_t i = 0; i < 9; i++)
-		data[i] -= other.data[i];
+		data[i] -= other[i];
 	return *this;
 }
 Float3x3 Float3x3::operator-() const
 {
 	return Float3x3
 	(-data[0], -data[1], -data[2],
-		-data[3], -data[4], -data[5],
-		-data[6], -data[7], -data[8]);
+	 -data[3], -data[4], -data[5],
+	 -data[6], -data[7], -data[8]);
 }
 
 
@@ -335,33 +337,15 @@ Float3x3 Float3x3::operator*(const Float3x3& other) const
 }
 Float3x3& Float3x3::operator*=(const Float3x3& other)
 {
-	Float3x3 result;
-	for (uint32_t i = 0; i < 3; i++)
-		for (uint32_t j = 0; j < 3; j++)
-			for (uint32_t k = 0; k < 3; k++)
-				result[{i, j}] += (*this)[{i, k}] * other[{k, j}];
+	Float3x3 result = (*this) * other;
 	*this = result;
 	return *this;
-}
-Float3x3 Float3x3::operator*(float scalar) const
-{
-	Float3x3 result;
-	for (uint32_t i = 0; i < 9; i++)
-		result.data[i] = data[i] * scalar;
-	return result;
 }
 Float3x3& Float3x3::operator*=(float scalar)
 {
 	for (uint32_t i = 0; i < 9; i++)
 		data[i] *= scalar;
 	return *this;
-}
-Float3 Float3x3::operator*(const Float3& vector) const
-{
-	return Float3
-	(data[0] * vector.x + data[3] * vector.y + data[6] * vector.z,
-		data[1] * vector.x + data[4] * vector.y + data[7] * vector.z,
-		data[2] * vector.x + data[5] * vector.y + data[8] * vector.z);
 }
 
 
@@ -371,7 +355,7 @@ Float3x3 Float3x3::operator/(float scalar) const
 {
 	Float3x3 result;
 	for (uint32_t i = 0; i < 9; i++)
-		result.data[i] = data[i] / scalar;
+		result[i] = data[i] / scalar;
 	return result;
 }
 Float3x3& Float3x3::operator/=(float scalar)
@@ -387,14 +371,14 @@ Float3x3& Float3x3::operator/=(float scalar)
 bool Float3x3::IsEpsilonEqual(const Float3x3& other) const
 {
 	for (uint32_t i = 0; i < 9; i++)
-		if (std::fabs(data[i] - other.data[i]) > epsilon)
+		if (mathf::Abs(data[i] - other[i]) > epsilon)
 			return false;
 	return true;
 }
 bool Float3x3::operator==(const Float3x3& other) const
 {
 	for (uint32_t i = 0; i < 9; i++)
-		if (data[i] != other.data[i])
+		if (data[i] != other[i])
 			return false;
 	return true;
 }
@@ -410,21 +394,35 @@ Float3x3 operator*(const Float3x3& a, float b)
 {
 	Float3x3 result;
 	for (uint32_t i = 0; i < 9; i++)
-		result.data[i] = a.data[i] * b;
+		result[i] = a[i] * b;
 	return result;
 }
 Float3x3 operator*(float a, const Float3x3& b)
 {
 	Float3x3 result;
 	for (uint32_t i = 0; i < 9; i++)
-		result.data[i] = a * b.data[i];
+		result[i] = a * b[i];
 	return result;
+}
+Float3 operator*(const Float3x3& a, const Float3& b)
+{
+	return Float3
+	(a[0] * b.x + a[3] * b.y + a[6] * b.z,
+	 a[1] * b.x + a[4] * b.y + a[7] * b.z,
+	 a[2] * b.x + a[5] * b.y + a[8] * b.z);
+}
+Float3 operator*(const Float3& a, const Float3x3& b)
+{
+	return Float3
+	(a.x * b[0] + a.y * b[1] + a.z * b[2],
+	 a.x * b[3] + a.y * b[4] + a.z * b[5],
+	 a.x * b[6] + a.y * b[7] + a.z * b[8]);
 }
 Float3x3 operator/(const Float3x3& a, float b)
 {
 	Float3x3 result;
 	for (uint32_t i = 0; i < 9; i++)
-		result.data[i] = a.data[i] / b;
+		result[i] = a[i] / b;
 	return result;
 }
 
@@ -434,9 +432,9 @@ Float3x3 operator/(const Float3x3& a, float b)
 std::string Float3x3::ToString() const
 {
 	std::ostringstream oss;
-	oss << "(" << data[0] << ", " << data[3] << ", " << data[6];
-	oss << " | " << data[1] << ", " << data[4] << ", " << data[7];
-	oss << " | " << data[2] << ", " << data[5] << ", " << data[8] << ")";
+	oss << "("   << data[0] << ", " << data[1] << ", " << data[2];
+	oss << " | " << data[3] << ", " << data[4] << ", " << data[5];
+	oss << " | " << data[6] << ", " << data[7] << ", " << data[8] << ")";
 	return oss.str();
 }
 std::string Float3x3::ToStringMatrixForm() const

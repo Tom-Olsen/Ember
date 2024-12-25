@@ -63,12 +63,13 @@
 // - Own mathf library, see mathf.h/cpp.
 
 
+
 Scene* ShadowCascadeScene()
 {
 	Scene* pScene = new Scene();
 	{// Camera:
 		GameObject* pGameObject = new GameObject("mainCamera");
-		Float3 pos = Float3(0.0f, 3.0f, 5.0f);
+		Float3 pos = Float3(30.0f, 20.0f, 50.0f);
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up));
 
@@ -113,9 +114,9 @@ Scene* ShadowCascadeScene()
 	Camera* pCamera = new Camera();
 	{// TestCamera:
 		GameObject* pGameObject = new GameObject("testCamera");
-		Float3 pos = Float3(5.0f, 3.0f, -2.0f);
+		Float3 pos = Float3(-20.0f, -20.0f, 0.0f);
 		pGameObject->GetTransform()->SetPosition(pos);
-		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::backward, -pos, Float3::up, Float3::up));
+		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateFromTo(Float3::forward, Float3::right));
 
 		pCamera->SetNearClip(0.5f);
 		pCamera->SetFarClip(100.0f);
@@ -128,6 +129,9 @@ Scene* ShadowCascadeScene()
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
+
+		RotationController* pRotationController = new RotationController(45.0f);
+		pGameObject->AddComponent<RotationController>(pRotationController);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -156,9 +160,6 @@ Scene* ShadowCascadeScene()
 		pMeshRenderer->SetCastShadows(true);
 		pMeshRenderer->SetReceiveShadows(true);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
-
-		SpinLocal* pSpinLocal = new SpinLocal(Float3(0.0f, 45.0f, 0.0f));
-		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -629,11 +630,26 @@ int main()
 	// VS debugging:
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
+	Logger::Init();
+	Float2x2 A = Float2x2::Rows(1, 2, 3, 4);
+	Float2x2 B = Float2x2::Rows(1, 1, 2, 2);
+	Float2x2 C = A * B;
+	Float2x2 D = A.Inverse();
+	LOG_TRACE("A: {}", A.ToString());
+	LOG_TRACE("B: {}", B.ToString());
+	LOG_TRACE("C: {}", C.ToString());
+	LOG_TRACE("D: {}", D.ToString());
+	LOG_TRACE("A: {}", A.ToStringMatrixForm());
+	LOG_TRACE("B: {}", B.ToStringMatrixForm());
+	LOG_TRACE("C: {}", C.ToStringMatrixForm());
+	LOG_TRACE("D: {}", D.ToStringMatrixForm());
+
+
 	// Initialization:
 	Application app;
-	Scene* pScene = ShadowCascadeScene();
+	//Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
-	//Scene* pScene = DefaultScene();
+	Scene* pScene = DefaultScene();
 	app.SetScene(pScene);
 
 	// Debugging:

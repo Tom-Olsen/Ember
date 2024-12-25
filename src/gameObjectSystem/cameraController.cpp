@@ -33,21 +33,21 @@ void CameraController::Translation()
 	float currentSpeed = EventSystem::KeyDownOrHeld(SDLK_LSHIFT) ? m_moveSpeed * m_fastMoveMultiplier : m_moveSpeed;
 
 	Float3 direction = Float3::zero;
-	if (EventSystem::KeyDownOrHeld(SDLK_W)) direction -= GetTransform()->GetForward();
-	if (EventSystem::KeyDownOrHeld(SDLK_S)) direction += GetTransform()->GetForward();
-	if (EventSystem::KeyDownOrHeld(SDLK_A)) direction -= GetTransform()->GetRight();
-	if (EventSystem::KeyDownOrHeld(SDLK_D)) direction += GetTransform()->GetRight();
-	if (EventSystem::KeyDownOrHeld(SDLK_Q)) direction -= GetTransform()->GetUp();
-	if (EventSystem::KeyDownOrHeld(SDLK_E)) direction += GetTransform()->GetUp();
+	if (EventSystem::KeyDownOrHeld(SDLK_W)) direction -= m_pTransform->GetForward();
+	if (EventSystem::KeyDownOrHeld(SDLK_S)) direction += m_pTransform->GetForward();
+	if (EventSystem::KeyDownOrHeld(SDLK_A)) direction -= m_pTransform->GetRight();
+	if (EventSystem::KeyDownOrHeld(SDLK_D)) direction += m_pTransform->GetRight();
+	if (EventSystem::KeyDownOrHeld(SDLK_Q)) direction -= m_pTransform->GetUp();
+	if (EventSystem::KeyDownOrHeld(SDLK_E)) direction += m_pTransform->GetUp();
 
-	GetTransform()->AddToPosition(direction * currentSpeed * Timer::GetDeltaTime());
+	m_pTransform->AddToPosition(direction * currentSpeed * Timer::GetDeltaTime());
 }
 void CameraController::Rotation()
 {
 	if (EventSystem::MouseDown(EventSystem::MouseButton::right))
 	{
 		m_mousePosOnDown = EventSystem::MousePos();
-		m_rotationMatrixOnDown = GetTransform()->GetRotation3x3();
+		m_rotationMatrixOnDown = m_pTransform->GetRotation3x3();
 	}
 
 	if (EventSystem::MouseHeld(EventSystem::MouseButton::right))
@@ -58,7 +58,7 @@ void CameraController::Rotation()
 		// Rotate around global Y-axis and local X-axis (note matrix multiplication order):
 		Float3x3 rotY = Float3x3::RotateY(-delta.x);
 		Float3x3 rotX = Float3x3::RotateX(-delta.y);
-		GetTransform()->SetRotationMatrix(rotY * m_rotationMatrixOnDown * rotX);
+		m_pTransform->SetRotationMatrix(rotY * m_rotationMatrixOnDown * rotX);
 	}
 }
 void CameraController::Zoom()
@@ -67,7 +67,7 @@ void CameraController::Zoom()
 	if (mouseScroll != 0)
 	{
 		float currentSpeed = EventSystem::KeyDownOrHeld(SDLK_LSHIFT) ? m_zoomSpeed * m_fastMoveMultiplier : m_zoomSpeed;
-		GetTransform()->AddToPosition(mouseScroll * currentSpeed * GetTransform()->GetBackward());
+		m_pTransform->AddToPosition(mouseScroll * currentSpeed * m_pTransform->GetBackward());
 	}
 }
 

@@ -4,9 +4,6 @@
 
 
 
-/// <summary>
-/// Default view direction is -z = transform->backward
-/// </summary>
 class CameraController : public Component
 {
 private: // Members:

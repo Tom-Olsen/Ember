@@ -12,6 +12,7 @@ void Logger::Init()
 {
 	if (s_initialized)
 		return;
+	s_initialized = true;
 
 	//spdlog::set_pattern("%^[%s:%#] [%T] %n: %v%$"); // this needs some extra stuff to work
 	spdlog::set_pattern("%^[%T] %n: %v%$");

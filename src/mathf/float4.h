@@ -23,22 +23,22 @@ public:
 	Float4(float x, float y);
 	Float4(float x, float y, float z);
 	Float4(float x, float y, float z, float w);
-	Float4(const Float2& xy);
-	Float4(const Float2& xy, float z);
-	Float4(const Float2& xy, float z, float w);
-	Float4(const Float2& xy, Float2 zw);
-	Float4(const Float3& xyz);
-	Float4(const Float3& xyz, float w);
+	explicit Float4(const Float2& xy);
+	explicit Float4(const Float2& xy, float z);
+	explicit Float4(const Float2& xy, float z, float w);
+	explicit Float4(const Float2& xy, Float2 zw);
+	explicit Float4(const Float3& xyz);
+	explicit Float4(const Float3& xyz, float w);
 	Float4(const Float4& xyzw);
 	static Float4 Direction(float theta, float phi);
 
 	// Math operations:
-	Float4 Abs() const;
-	float Length2() const;
+	float LengthSq() const;
 	float Length() const;
 	bool IsEpsilonZero() const;
 
 	// Static math operations:
+	static Float4 Abs(const Float4& a);
 	static Float4 Min(const Float4& a, const Float4& b);
 	static Float4 Max(const Float4& a, const Float4& b);
 	static Float4 Clamp(const Float4& value, const Float4& min, const Float4& max);

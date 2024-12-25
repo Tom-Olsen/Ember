@@ -1,4 +1,5 @@
 #include "directionalLight.h"
+#include "shadowCascade.h"
 
 
 
@@ -194,7 +195,7 @@ void DirectionalLight::Start()
 void DirectionalLight::LateUpdate()
 {
 	if (m_drawFrustum)
-		Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, m_color);
+		Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, Float4(m_color,1.0f));
 
 	if (m_showShaowCascades)
 	{
@@ -208,7 +209,7 @@ void DirectionalLight::LateUpdate()
 		Float4x4 directionWorldToLocalMatrix = localToWorldMatrix.Transpose();
 
 		// Light direction in local space of camera:
-		Float3 localDirection = directionWorldToLocalMatrix * GetDirection();
+		Float3 localDirection = Float3x3(directionWorldToLocalMatrix) * GetDirection();
 
 		// Center points of near/far planes in local space of camera:
 		Float4 centerNear = invProjectionMatrix * Float4(0, 0, -1, 1);
@@ -218,10 +219,10 @@ void DirectionalLight::LateUpdate()
 
 		// Center positions of shadow cascade regions in local space of camera:
 		Float3 dir = Float3(centerFar - centerNear);
-		Float3 center0 = centerNear + dir * 0.5f * m_shadowCascadeSplits[0];
-		Float3 center1 = centerNear + dir * (m_shadowCascadeSplits[0] + 0.5f * (m_shadowCascadeSplits[1] - m_shadowCascadeSplits[0]));
-		Float3 center2 = centerNear + dir * (m_shadowCascadeSplits[1] + 0.5f * (m_shadowCascadeSplits[2] - m_shadowCascadeSplits[1]));
-		Float3 center3 = centerNear + dir * (m_shadowCascadeSplits[2] + 0.5f * (1.0f - m_shadowCascadeSplits[2]));
+		Float3 center0 = Float3(centerNear) + dir * 0.5f * m_shadowCascadeSplits[0];
+		Float3 center1 = Float3(centerNear) + dir * (m_shadowCascadeSplits[0] + 0.5f * (m_shadowCascadeSplits[1] - m_shadowCascadeSplits[0]));
+		Float3 center2 = Float3(centerNear) + dir * (m_shadowCascadeSplits[1] + 0.5f * (m_shadowCascadeSplits[2] - m_shadowCascadeSplits[1]));
+		Float3 center3 = Float3(centerNear) + dir * (m_shadowCascadeSplits[2] + 0.5f * (1.0f - m_shadowCascadeSplits[2]));
 
 		// Corner points of near/far planes in local space of camera:
 		Float4 cornerNear = invProjectionMatrix * Float4(-1, -1, -1, 1);
@@ -231,10 +232,10 @@ void DirectionalLight::LateUpdate()
 
 		// Corner points of shadow cascade regions in local space of camera:
 		dir = Float3(cornerFar - cornerNear);
-		Float3 corner0 = cornerNear + dir * m_shadowCascadeSplits[0];
-		Float3 corner1 = cornerNear + dir * m_shadowCascadeSplits[1];
-		Float3 corner2 = cornerNear + dir * m_shadowCascadeSplits[2];
-		Float3 corner3 = cornerFar;
+		Float3 corner0 = Float3(cornerNear) + dir * m_shadowCascadeSplits[0];
+		Float3 corner1 = Float3(cornerNear) + dir * m_shadowCascadeSplits[1];
+		Float3 corner2 = Float3(cornerNear) + dir * m_shadowCascadeSplits[2];
+		Float3 corner3 = Float3(cornerFar);
 
 		// Draw calls:
 		Material* pUnlitMaterial = MaterialManager::GetMaterial("simpleUnlit");
@@ -256,20 +257,20 @@ void DirectionalLight::LateUpdate()
 			pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model3, false, false);
 			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
 		}
-		{// Draw shadow cascade corner points:
-			Float4x4 model0 = localToWorldMatrix * Float4x4::TRS(corner0, Float4x4::identity, Float3::one);
-			Float4x4 model1 = localToWorldMatrix * Float4x4::TRS(corner1, Float4x4::identity, Float3::one);
-			Float4x4 model2 = localToWorldMatrix * Float4x4::TRS(corner2, Float4x4::identity, Float3::one);
-			Float4x4 model3 = localToWorldMatrix * Float4x4::TRS(corner3, Float4x4::identity, Float3::one);
-			pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model0, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::blue);
-			pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model1, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::blue);
-			pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model2, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::blue);
-			pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model3, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::blue);
-		}
+		//{// Draw shadow cascade corner points:
+		//	Float4x4 model0 = localToWorldMatrix * Float4x4::TRS(corner0, Float4x4::identity, Float3::one);
+		//	Float4x4 model1 = localToWorldMatrix * Float4x4::TRS(corner1, Float4x4::identity, Float3::one);
+		//	Float4x4 model2 = localToWorldMatrix * Float4x4::TRS(corner2, Float4x4::identity, Float3::one);
+		//	Float4x4 model3 = localToWorldMatrix * Float4x4::TRS(corner3, Float4x4::identity, Float3::one);
+		//	pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model0, false, false);
+		//	pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::blue);
+		//	pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model1, false, false);
+		//	pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::blue);
+		//	pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model2, false, false);
+		//	pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::blue);
+		//	pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model3, false, false);
+		//	pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::blue);
+		//}
 		{// Draw shadow cascade areas:
 			Float3 scale0 = Float3(2.0f * mathf::Abs(corner0.x - center0.x), 1.0f, 2.0f * mathf::Abs(corner0.z - center0.z));
 			Float3 scale1 = Float3(2.0f * mathf::Abs(corner1.x - center1.x), 1.0f, 2.0f * mathf::Abs(corner1.z - center1.z));
@@ -288,39 +289,28 @@ void DirectionalLight::LateUpdate()
 			pMaterialProperties = Graphics::DrawMesh(pQuad.get(), pUnlitMaterial, model3, false, false);
 			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.1f, 0.0f, 0.0f, 1.0f));
 		}
-		{// Draw light fourLeg:
-			Float3 lightPos0 = center0 - 10.0f * localDirection;
-			Float3 lightPos1 = center1 - 10.0f * localDirection;
-			Float3 lightPos2 = center2 - 10.0f * localDirection;
-			Float3 lightPos3 = center3 - 10.0f * localDirection;
-			Float4x4 rotation = Float4x4::RotateThreeLeg(Float3::backward, localDirection, Float3::right, Float3::right);
-			Float4x4 model0 = localToWorldMatrix * Float4x4::TRS(lightPos0, rotation, Float3::one);
-			Float4x4 model1 = localToWorldMatrix * Float4x4::TRS(lightPos1, rotation, Float3::one);
-			Float4x4 model2 = localToWorldMatrix * Float4x4::TRS(lightPos2, rotation, Float3::one);
-			Float4x4 model3 = localToWorldMatrix * Float4x4::TRS(lightPos3, rotation, Float3::one);
+		{
+			ShadowCascade shadowCascade0(m_pActiveCamera, GetDirection(), 0, m_shadowCascadeSplits[0], 10.0f);
+			//ShadowCascade shadowCascade1(m_pActiveCamera, GetDirection(), m_shadowCascadeSplits[0], m_shadowCascadeSplits[1], 10.0f);
+			//ShadowCascade shadowCascade2(m_pActiveCamera, GetDirection(), m_shadowCascadeSplits[1], m_shadowCascadeSplits[2], 10.0f);
+			//ShadowCascade shadowCascade3(m_pActiveCamera, GetDirection(), m_shadowCascadeSplits[2], 1, 10.0f);
+			Float4x4 model0 = shadowCascade0.GetLightLocalToWorldMatrix();
+			//Float4x4 model1 = shadowCascade1.GetLightLocalToWorldMatrix();
+			//Float4x4 model2 = shadowCascade2.GetLightLocalToWorldMatrix();
+			//Float4x4 model3 = shadowCascade3.GetLightLocalToWorldMatrix();
+			
+			// Draw light fourLeg:
 			Graphics::DrawMesh(fourLeg, pVertexUnlit, model0, false, false);
-			Graphics::DrawMesh(fourLeg, pVertexUnlit, model1, false, false);
-			Graphics::DrawMesh(fourLeg, pVertexUnlit, model2, false, false);
-			Graphics::DrawMesh(fourLeg, pVertexUnlit, model3, false, false);
+			//Graphics::DrawMesh(fourLeg, pVertexUnlit, model1, false, false);
+			//Graphics::DrawMesh(fourLeg, pVertexUnlit, model2, false, false);
+			//Graphics::DrawMesh(fourLeg, pVertexUnlit, model3, false, false);
+			
+			// Draw light frustums:
+			Graphics::DrawFrustum(model0, shadowCascade0.GetProjectionMatrix());
+			//Graphics::DrawFrustum(model1, shadowCascade1.GetProjectionMatrix());
+			//Graphics::DrawFrustum(model2, shadowCascade2.GetProjectionMatrix());
+			//Graphics::DrawFrustum(model3, shadowCascade3.GetProjectionMatrix());
 		}
-		{// Draw light frustums:
-			Float3 lightPos0 = center0 - 10.0f * localDirection;
-			Float3 lightPos1 = center1 - 10.0f * localDirection;
-			Float3 lightPos2 = center2 - 10.0f * localDirection;
-			Float3 lightPos3 = center3 - 10.0f * localDirection;
-			Float4x4 rotation = Float4x4::RotateThreeLeg(Float3::forward, -localDirection, Float3::right, Float3::right);
-			Float4x4 model0 = localToWorldMatrix * Float4x4::TRS(lightPos0, rotation, Float3::one);
-			Float4x4 model1 = localToWorldMatrix * Float4x4::TRS(lightPos1, rotation, Float3::one);
-			Float4x4 model2 = localToWorldMatrix * Float4x4::TRS(lightPos2, rotation, Float3::one);
-			Float4x4 model3 = localToWorldMatrix * Float4x4::TRS(lightPos3, rotation, Float3::one);
-			Graphics::DrawFrustum(model0, GetProjectionMatrix());
-			Graphics::DrawFrustum(model1, GetProjectionMatrix());
-			Graphics::DrawFrustum(model2, GetProjectionMatrix());
-			Graphics::DrawFrustum(model3, GetProjectionMatrix());
-		}
-
-		Bounds bounds(Float3(0, 5, 0), Float3(1, 2, 3));
-		Graphics::DrawBounds(Float4x4::identity, bounds);
 	}
 }
 const std::string DirectionalLight::ToString() const

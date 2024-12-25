@@ -9,6 +9,17 @@
 
 
 // Constructors:
+Float4x4::Float4x4
+(float xx, float xy, float xz, float xw,	// column 0
+ float yx, float yy, float yz, float yw,	// column 1
+ float zx, float zy, float zz, float zw,	// column 2
+ float wx, float wy, float wz, float ww)	// column 3
+{
+	data[0] = xx; data[4] = yx; data[ 8] = zx; data[12] = wx;
+	data[1] = xy; data[5] = yy; data[ 9] = zy; data[13] = wy;
+	data[2] = xz; data[6] = yz; data[10] = zz; data[14] = wz;
+	data[3] = xw; data[7] = yw; data[11] = zw; data[15] = ww;
+}
 Float4x4::Float4x4()
 {
 	for (uint32_t i = 0; i < 16; i++)
@@ -19,33 +30,22 @@ Float4x4::Float4x4(float value)
 	for (uint32_t i = 0; i < 16; i++)
 		data[i] = value;
 }
-Float4x4::Float4x4(const float* array)
+Float4x4::Float4x4(const float* const array)
 {
 	for (uint32_t i = 0; i < 16; i++)
 		data[i] = array[i];
 }
-Float4x4::Float4x4
-(float xx, float xy, float xz, float xw,	// column 0
-	float yx, float yy, float yz, float yw,	// column 1
-	float zx, float zy, float zz, float zw,	// column 2
-	float wx, float wy, float wz, float ww)	// column 3
-{
-	data[0] = xx; data[4] = yx; data[8] = zx; data[12] = wx;
-	data[1] = xy; data[5] = yy; data[9] = zy; data[13] = wy;
-	data[2] = xz; data[6] = yz; data[10] = zz; data[14] = wz;
-	data[3] = xw; data[7] = yw; data[11] = zw; data[15] = ww;
-}
 Float4x4::Float4x4(const Float3x3& other)
 {
-	data[0] = other[0]; data[4] = other[3]; data[8] = other[6]; data[12] = 0.0f;
-	data[1] = other[1]; data[5] = other[4]; data[9] = other[7]; data[13] = 0.0f;
+	data[0] = other[0]; data[4] = other[3]; data[ 8] = other[6]; data[12] = 0.0f;
+	data[1] = other[1]; data[5] = other[4]; data[ 9] = other[7]; data[13] = 0.0f;
 	data[2] = other[2]; data[6] = other[5]; data[10] = other[8]; data[14] = 0.0f;
-	data[3] = 0.0f; data[7] = 0.0f; data[11] = 0.0f; data[15] = 1.0f;
+	data[3] =     0.0f; data[7] =     0.0f; data[11] =     0.0f; data[15] = 1.0f;
 }
 Float4x4::Float4x4(const Float4x4& other)
 {
 	for (uint32_t i = 0; i < 16; i++)
-		data[i] = other.data[i];
+		data[i] = other[i];
 }
 
 
@@ -87,9 +87,9 @@ Float4x4 Float4x4::Columns
 {
 	return Float4x4
 	(column0x, column0y, column0z, column0w,
-		column1x, column1y, column1z, column1w,
-		column2x, column2y, column2z, column2w,
-		column3x, column3y, column3z, column3w);
+	 column1x, column1y, column1z, column1w,
+	 column2x, column2y, column2z, column2w,
+	 column3x, column3y, column3z, column3w);
 }
 
 
@@ -163,8 +163,8 @@ Float4x4 Float4x4::RotateX(float radians)
 	float s = mathf::Sin(radians);
 	return Float4x4::Rows
 	(1.0f, 0.0f, 0.0f, 0.0f,
-	 0.0f, c, -s, 0.0f,
-	 0.0f, s, c, 0.0f,
+	 0.0f,    c,   -s, 0.0f,
+	 0.0f,    s,    c, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 Float4x4 Float4x4::RotateY(float radians)
@@ -172,9 +172,9 @@ Float4x4 Float4x4::RotateY(float radians)
 	float c = mathf::Cos(radians);
 	float s = mathf::Sin(radians);
 	return Float4x4::Rows
-	(c, 0.0f, s, 0.0f,
+	(   c, 0.0f,    s, 0.0f,
 	 0.0f, 1.0f, 0.0f, 0.0f,
-	 -s, 0.0f, c, 0.0f,
+	   -s, 0.0f,    c, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 Float4x4 Float4x4::RotateZ(float radians)
@@ -182,8 +182,8 @@ Float4x4 Float4x4::RotateZ(float radians)
 	float c = mathf::Cos(radians);
 	float s = mathf::Sin(radians);
 	return Float4x4::Rows
-	(c, -s, 0.0f, 0.0f,
-	 s, c, 0.0f, 0.0f,
+	(   c,   -s, 0.0f, 0.0f,
+	    s,    c, 0.0f, 0.0f,
 	 0.0f, 0.0f, 1.0f, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -196,10 +196,10 @@ Float4x4 Float4x4::Rotate(const Float3& axis, float radians)
 	float y = axis.y;
 	float z = axis.z;
 	return Float4x4::Rows
-	(x * x * t + c, x * y * t - z * s, x * z * t + y * s, 0.0f,
-	 y * x * t + z * s, y * y * t + c, y * z * t - x * s, 0.0f,
-	 z * x * t - y * s, z * y * t + x * s, z * z * t + c, 0.0f,
-	 0.0f, 0.0f, 0.0f, 1.0f);
+	(    x * x * t + c, x * y * t - z * s, x * z * t + y * s, 0.0f,
+	 y * x * t + z * s,     y * y * t + c, y * z * t - x * s, 0.0f,
+	 z * x * t - y * s, z * y * t + x * s,     z * z * t + c, 0.0f,
+	              0.0f,              0.0f,              0.0f, 1.0f);
 }
 Float4x4 Float4x4::Rotate(const Float3& eulerRadians, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
 {
@@ -238,7 +238,7 @@ Float4x4 Float4x4::RotateThreeLeg(const Float3& forwardOld, const Float3& forwar
 	// Compute missalignment angle between upNew and upOld rotated by rot0:
 	Float3 upOldRotated = rot0 * upOld;
 	Float3 planeNormal = Float3::Cross(upNew, forwardNew).Normalize();
-	Float3 projection = Float3::VectorToPlaneProjection(upOldRotated, planeNormal);
+	Float3 projection = geometry3d::PointToPlaneProjection(upOldRotated, planeNormal);
 	float sign = mathf::Sign(Float3::Dot(Float3::Cross(upOldRotated, projection), forwardNew));
 	float angle = sign * Float3::AngleRadians(upOldRotated, projection);
 	if (Float3::Dot(upNew, upOldRotated) < 0)
@@ -254,9 +254,9 @@ Float4x4 Float4x4::Translate(const Float3& translation)
 {
 	return Float4x4::Rows
 	(1.0f, 0.0f, 0.0f, translation.x,
-		0.0f, 1.0f, 0.0f, translation.y,
-		0.0f, 0.0f, 1.0f, translation.z,
-		0.0f, 0.0f, 0.0f, 1.0f);
+	 0.0f, 1.0f, 0.0f, translation.y,
+	 0.0f, 0.0f, 1.0f, translation.z,
+	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 Float4x4 Float4x4::Scale(const Float3& scale)
 {
@@ -306,9 +306,9 @@ Float4x4 Float4x4::Orthographic(float left, float right, float bottom, float top
 	float wz = -(farClip + nearClip) / (farClip - nearClip);
 
 	return Float4x4::Rows
-	(xx, 0.0f, 0.0f, wx,
-	 0.0f, yy, 0.0f, wy,
-	 0.0f, 0.0f, zz, wz,
+	(  xx, 0.0f, 0.0f,   wx,
+	 0.0f,   yy, 0.0f,   wy,
+	 0.0f, 0.0f,   zz,   wz,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
@@ -398,7 +398,7 @@ Float4x4& Float4x4::operator=(const Float4x4& other)
 	if (this != &other)
 	{
 		for (uint32_t i = 0; i < 16; i++)
-			data[i] = other.data[i];
+			data[i] = other[i];
 	}
 	return *this;
 }
@@ -407,7 +407,7 @@ Float4x4& Float4x4::operator=(Float4x4&& other) noexcept
 	if (this != &other)
 	{
 		for (uint32_t i = 0; i < 16; i++)
-			data[i] = other.data[i];
+			data[i] = other[i];
 	}
 	return *this;
 }
@@ -419,13 +419,13 @@ Float4x4 Float4x4::operator+(const Float4x4& other) const
 {
 	Float4x4 result;
 	for (uint32_t i = 0; i < 16; i++)
-		result.data[i] = data[i] + other.data[i];
+		result[i] = data[i] + other[i];
 	return result;
 }
 Float4x4& Float4x4::operator+=(const Float4x4& other)
 {
 	for (uint32_t i = 0; i < 16; i++)
-		data[i] += other.data[i];
+		data[i] += other[i];
 	return *this;
 }
 
@@ -436,21 +436,21 @@ Float4x4 Float4x4::operator-(const Float4x4& other) const
 {
 	Float4x4 result;
 	for (uint32_t i = 0; i < 16; i++)
-		result.data[i] = data[i] - other.data[i];
+		result[i] = data[i] - other[i];
 	return result;
 }
 Float4x4& Float4x4::operator-=(const Float4x4& other)
 {
 	for (uint32_t i = 0; i < 16; i++)
-		data[i] -= other.data[i];
+		data[i] -= other[i];
 	return *this;
 }
 Float4x4 Float4x4::operator-() const
 {
 	return Float4x4
-	(-data[0], -data[1], -data[2], -data[3],
-	 -data[4], -data[5], -data[6], -data[7],
-	 -data[8], -data[9], -data[10], -data[11],
+	(-data[ 0], -data[ 1], -data[ 2], -data[ 3],
+	 -data[ 4], -data[ 5], -data[ 6], -data[ 7],
+	 -data[ 8], -data[ 9], -data[10], -data[11],
 	 -data[12], -data[13], -data[14], -data[15]);
 }
 
@@ -468,34 +468,15 @@ Float4x4 Float4x4::operator*(const Float4x4& other) const
 }
 Float4x4& Float4x4::operator*=(const Float4x4& other)
 {
-	Float4x4 result;
-	for (uint32_t i = 0; i < 4; i++)
-		for (uint32_t j = 0; j < 4; j++)
-			for (uint32_t k = 0; k < 4; k++)
-				result[{i, j}] += (*this)[{i, k}] * other[{k, j}];
+	Float4x4 result = (*this) * other;
 	*this = result;
 	return *this;
-}
-Float4x4 Float4x4::operator*(float scalar) const
-{
-	Float4x4 result;
-	for (uint32_t i = 0; i < 16; i++)
-		result.data[i] = data[i] * scalar;
-	return result;
 }
 Float4x4& Float4x4::operator*=(float scalar)
 {
 	for (uint32_t i = 0; i < 16; i++)
 		data[i] *= scalar;
 	return *this;
-}
-Float4 Float4x4::operator*(const Float4& vector) const
-{
-	return Float4
-	(data[0] * vector.x + data[4] * vector.y + data[8] * vector.z + data[12] * vector.w,
-	 data[1] * vector.x + data[5] * vector.y + data[9] * vector.z + data[13] * vector.w,
-	 data[2] * vector.x + data[6] * vector.y + data[10] * vector.z + data[14] * vector.w,
-	 data[3] * vector.x + data[7] * vector.y + data[11] * vector.z + data[15] * vector.w);
 }
 
 
@@ -505,7 +486,7 @@ Float4x4 Float4x4::operator/(float scalar) const
 {
 	Float4x4 result;
 	for (uint32_t i = 0; i < 16; i++)
-		result.data[i] = data[i] / scalar;
+		result[i] = data[i] / scalar;
 	return result;
 }
 Float4x4& Float4x4::operator/=(float scalar)
@@ -521,14 +502,14 @@ Float4x4& Float4x4::operator/=(float scalar)
 bool Float4x4::IsEpsilonEqual(const Float4x4& other) const
 {
 	for (uint32_t i = 0; i < 16; i++)
-		if (std::fabs(data[i] - other.data[i]) > s_epsilon)
+		if (std::fabs(data[i] - other[i]) > s_epsilon)
 			return false;
 	return true;
 }
 bool Float4x4::operator==(const Float4x4& other) const
 {
 	for (uint32_t i = 0; i < 16; i++)
-		if (data[i] != other.data[i])
+		if (data[i] != other[i])
 			return false;
 	return true;
 }
@@ -540,11 +521,41 @@ bool Float4x4::operator!=(const Float4x4& other) const
 
 
 // Friend functions:
+Float4x4 operator*(const Float4x4& a, float b)
+{
+	Float4x4 result;
+	for (uint32_t i = 0; i < 16; i++)
+		result[i] = a[i] * b;
+	return result;
+}
 Float4x4 operator*(float a, const Float4x4& b)
 {
 	Float4x4 result;
 	for (uint32_t i = 0; i < 16; i++)
-		result.data[i] = a * b.data[i];
+		result[i] = a * b[i];
+	return result;
+}
+Float4 operator*(const Float4x4& a, const Float4& b)
+{
+	return Float4
+	(a[0] * b.x + a[4] * b.y + a[ 8] * b.z + a[12] * b.w,
+	 a[1] * b.x + a[5] * b.y + a[ 9] * b.z + a[13] * b.w,
+	 a[2] * b.x + a[6] * b.y + a[10] * b.z + a[14] * b.w,
+	 a[3] * b.x + a[7] * b.y + a[11] * b.z + a[15] * b.w);
+}
+Float4 operator*(const Float4& a, const Float4x4& b)
+{
+	return Float4
+	(a.x * b[ 0] + a.y * b[ 1] + a.z * b[ 2] + a.w * b[ 3],
+	 a.x * b[ 4] + a.y * b[ 5] + a.z * b[ 6] + a.w * b[ 7],
+	 a.x * b[ 8] + a.y * b[ 9] + a.z * b[10] + a.w * b[11],
+	 a.x * b[12] + a.y * b[13] + a.z * b[14] + a.w * b[15]);
+}
+Float4x4 operator/(const Float4x4& a, float b)
+{
+	Float4x4 result;
+	for (uint32_t i = 0; i < 16; i++)
+		result[i] = a[i] / b;
 	return result;
 }
 
@@ -554,10 +565,10 @@ Float4x4 operator*(float a, const Float4x4& b)
 std::string Float4x4::ToString() const
 {
 	std::ostringstream oss;
-	oss << "("   << data[0] << ", " << data[4] << ", " << data[ 8] << ", " << data[12];
-	oss << " | " << data[1] << ", " << data[5] << ", " << data[ 9] << ", " << data[13];
-	oss << " | " << data[2] << ", " << data[6] << ", " << data[10] << ", " << data[14];
-	oss << " | " << data[3] << ", " << data[7] << ", " << data[11] << ", " << data[15] << ")";
+	oss << "("   << data[ 0] << ", " << data[ 1] << ", " << data[ 2] << ", " << data[ 3];
+	oss << " | " << data[ 4] << ", " << data[ 5] << ", " << data[ 6] << ", " << data[ 7];
+	oss << " | " << data[ 8] << ", " << data[ 9] << ", " << data[10] << ", " << data[11];
+	oss << " | " << data[12] << ", " << data[13] << ", " << data[14] << ", " << data[15] << ")";
 	return oss.str();
 }
 std::string Float4x4::ToStringMatrixForm() const

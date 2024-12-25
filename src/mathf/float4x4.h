@@ -15,11 +15,11 @@ struct Uint3;
 
 struct Float4x4
 {
-	// Computer science convention (transposed to proper math convention):
-	// xx yx zx wx   0  4   8 12   [0,0] [1,0] [2,0] [3,0]
-	// xy yy zy wy = 1  5   9 13 = [0,1] [1,1] [2,1] [3,1]
-	// xz yz zz wz   2  6  10 14   [0,2] [1,2] [2,2] [3,2]
-	// xw yw zw ww   3  7  11 15   [0,3] [1,3] [2,3] [3,3]
+	// 4 rows 4 columns matrix with column major order:
+	// xx yx zx wx   0  4   8 12   [0,0] [0,1] [0,2] [0,3]
+	// xy yy zy wy = 1  5   9 13 = [1,0] [1,1] [1,2] [1,3]
+	// xz yz zz wz   2  6  10 14   [2,0] [2,1] [2,2] [2,3]
+	// xw yw zw ww   3  7  11 15   [3,0] [3,1] [3,2] [3,3]
 
 private:
 	constexpr static float s_epsilon = 1e-8f;
@@ -36,8 +36,8 @@ public:
 	// Constructors:
 	Float4x4();
 	Float4x4(float value);
-	Float4x4(const float* array); // Initialize from a 1D array
-	Float4x4(const Float3x3& other);
+	Float4x4(const float* const array);
+	explicit Float4x4(const Float3x3& other);
 	Float4x4(const Float4x4& other);
 
 	// Static constructors:
@@ -109,9 +109,7 @@ public:
 	// Multiplication:
 	Float4x4 operator*(const Float4x4& other) const;
 	Float4x4& operator*=(const Float4x4& other);
-	Float4x4 operator*(float scalar) const;
 	Float4x4& operator*=(float scalar);
-	Float4 operator*(const Float4& vector) const;
 
 	// Division:
 	Float4x4 operator/(float scalar) const;
@@ -123,7 +121,11 @@ public:
 	bool operator!=(const Float4x4& other) const;
 
 	// Friend functions:
+	friend Float4x4 operator*(const Float4x4& a, float b);
 	friend Float4x4 operator*(float a, const Float4x4& b);
+	friend Float4 operator*(const Float4x4& a, const Float4& b);
+	friend Float4 operator*(const Float4& a, const Float4x4& b);
+	friend Float4x4 operator/(const Float4x4& a, float b);
 
 	// Logging:
 	std::string ToString() const;

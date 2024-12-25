@@ -14,10 +14,10 @@ struct Uint3;
 
 struct Float3x3
 {
-	// Computer science convention (transposed to proper math convention):
-	// xx yx zx   0  3  6   [0,0] [1,0] [2,0]
-	// xy yy zy = 1  4  7 = [0,1] [1,1] [2,1]
-	// xz yz zz   2  5  8   [0,2] [1,2] [2,2]
+	// 3 rows 3 columns matrix with column major order:
+	// xx yx zx   0  3  6   [0,0] [0,1] [0,2]
+	// xy yy zy = 1  4  7 = [1,0] [1,1] [1,2]
+	// xz yz zz   2  5  8   [2,0] [2,1] [2,2]
 
 private:
 	constexpr static float epsilon = 1e-8f;
@@ -33,9 +33,9 @@ public:
 	// Constructors:
 	Float3x3();
 	Float3x3(float value);
-	Float3x3(const float* array); // Initialize from a 1D array
+	Float3x3(const float* const array);
 	Float3x3(const Float3x3& other);
-	Float3x3(const Float4x4& other);
+	explicit Float3x3(const Float4x4& other);
 
 	// Static constructors:
 	static Float3x3 Rows(const Float3& row0, const Float3& row1, const Float3& row2);
@@ -89,9 +89,7 @@ public:
 	// Multiplication:
 	Float3x3 operator*(const Float3x3& other) const;
 	Float3x3& operator*=(const Float3x3& other);
-	Float3x3 operator*(float scalar) const;
 	Float3x3& operator*=(float scalar);
-	Float3 operator*(const Float3& vector) const;
 
 	// Division:
 	Float3x3 operator/(float scalar) const;
@@ -105,6 +103,8 @@ public:
 	// Friend functions:
 	friend Float3x3 operator*(const Float3x3& a, float b);
 	friend Float3x3 operator*(float a, const Float3x3& b);
+	friend Float3 operator*(const Float3x3& a, const Float3& b);
+	friend Float3 operator*(const Float3& a, const Float3x3& b);
 	friend Float3x3 operator/(const Float3x3& a, float b);
 
 	// Logging:

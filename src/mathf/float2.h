@@ -22,13 +22,12 @@ public:
 	Float2(float xy);
 	Float2(float x, float y);
 	Float2(const Float2& xy);
-	Float2(const Float3& xy);
-	Float2(const Float4& xy);
+	explicit Float2(const Float3& xy);
+	explicit Float2(const Float4& xy);
 	static Float2 Direction(float radians);
 
 	// Math operations:
-	Float2 Abs() const;
-	float Length2() const;
+	float LengthSq() const;
 	float Length() const;
 	float AngleDegrees() const;
 	float AngleRadians() const;
@@ -39,9 +38,10 @@ public:
 	bool IsEpsilonZero() const;
 
 	// Static math operations:
+	static Float2 Abs(const Float2& a);
 	static float Dot(const Float2& a, const Float2& b);
 	static float Cross(const Float2& a, const Float2& b);
-	static float Distance2(const Float2& a, const Float2& b);
+	static float DistanceSq(const Float2& a, const Float2& b);
 	static float Distance(const Float2& a, const Float2& b);
 	static float AngleDegrees(const Float2& a, const Float2& b);
 	static float AngleRadians(const Float2& a, const Float2& b);

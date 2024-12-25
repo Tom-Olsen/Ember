@@ -478,7 +478,7 @@ Mesh* Mesh::Spherify(float factor, float radius)
 		if (hasNormals)
 			m_normals[i] = (m_normals[i] + factor * (sphereNormal - m_normals[i])).Normalize();
 		if (hasTangents)
-			m_tangents[i] = Float3::VectorToPlaneProjection(m_tangents[i], m_normals[i]).Normalize();
+			m_tangents[i] = geometry3d::PointToPlaneProjection(m_tangents[i], m_normals[i]).Normalize();
 	}
 
 	// Update mesh data (forces bool updates and logic):
@@ -542,7 +542,7 @@ void Mesh::ComputeTangents()
 		m_tangents[triangle[2]] += tangent;
 	}
 	for (uint32_t i = 0; i < m_vertexCount; i++)
-		m_tangents[i] = Float3::VectorToPlaneProjection(m_tangents[i], m_normals[i]).Normalize();
+		m_tangents[i] = geometry3d::PointToPlaneProjection(m_tangents[i], m_normals[i]).Normalize();
 }
 
 

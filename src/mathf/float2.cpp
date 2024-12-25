@@ -22,17 +22,13 @@ Float2 Float2::Direction(float radians)
 
 
 // Math operations:
-Float2 Float2::Abs() const
-{
-	return Float2(std::fabs(x), std::fabs(y));
-}
-float Float2::Length2() const
+float Float2::LengthSq() const
 {
 	return x * x + y * y;
 }
 float Float2::Length() const
 {
-	return sqrt(Length2());
+	return sqrt(LengthSq());
 }
 float Float2::AngleDegrees() const
 {
@@ -65,12 +61,16 @@ Float2 Float2::Rotate270() const
 }
 bool Float2::IsEpsilonZero() const
 {
-	return Length2() <= s_epsilon * s_epsilon;
+	return LengthSq() <= s_epsilon * s_epsilon;
 }
 
 
 
 // Static math operations:
+Float2 Float2::Abs(const Float2& a)
+{
+	return Float2(mathf::Abs(a.x), mathf::Abs(a.y));
+}
 float Float2::Dot(const Float2& a, const Float2& b)
 {
 	return a.x * b.x + a.y * b.y;
@@ -79,9 +79,9 @@ float Float2::Cross(const Float2& a, const Float2& b)
 {
 	return a.y * b.x - a.x * b.y;
 }
-float Float2::Distance2(const Float2& a, const Float2& b)
+float Float2::DistanceSq(const Float2& a, const Float2& b)
 {
-	return (a - b).Length2();
+	return (a - b).LengthSq();
 }
 float Float2::Distance(const Float2& a, const Float2& b)
 {

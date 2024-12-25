@@ -32,26 +32,26 @@ Float4 Float4::Direction(float theta, float phi)
 
 
 // Math operations:
-Float4 Float4::Abs() const
-{
-	return Float4(std::fabs(x), std::fabs(y), std::fabs(z), std::fabs(w));
-}
-float Float4::Length2() const
+float Float4::LengthSq() const
 {
 	return x * x + y * y + z * z + w * w;
 }
 float Float4::Length() const
 {
-	return sqrt(Length2());
+	return sqrt(LengthSq());
 }
 bool Float4::IsEpsilonZero() const
 {
-	return Length2() <= s_epsilon * s_epsilon;
+	return LengthSq() <= s_epsilon * s_epsilon;
 }
 
 
 
 // Static math operations:
+Float4 Float4::Abs(const Float4& a)
+{
+	return Float4(mathf::Abs(a.x), mathf::Abs(a.y), mathf::Abs(a.z), mathf::Abs(a.w));
+}
 Float4 Float4::Min(const Float4& a, const Float4& b)
 {
 	return Float4(mathf::Min(a.x, b.x), mathf::Min(a.y, b.y), mathf::Min(a.z, b.z), mathf::Min(a.w, b.w));

@@ -108,6 +108,48 @@ void EventSystem::ProcessEvent(const SDL_Event& event)
 
 
 
+bool EventSystem::AnyKeyDown()
+{
+	for (auto& [key, state] : s_keyStates)
+		if (state == KeyState::down)
+			return true;
+	return false;
+}
+bool EventSystem::AnyKeyUp()
+{
+	for (auto& [key, state] : s_keyStates)
+		if (state == KeyState::up)
+			return true;
+	return false;
+}
+bool EventSystem::AnyKeyHeld()
+{
+	for (auto& [key, state] : s_keyStates)
+		if (state == KeyState::held)
+			return true;
+	return false;
+}
+bool EventSystem::AnyMouseDown()
+{
+	for (auto& [button, state] : s_mouseButtonStates)
+		if (state == MouseState::down)
+			return true;
+	return false;
+}
+bool EventSystem::AnyMouseUp()
+{
+	for (auto& [button, state] : s_mouseButtonStates)
+		if (state == MouseState::up)
+			return true;
+	return false;
+}
+bool EventSystem::AnyMouseHeld()
+{
+	for (auto& [button, state] : s_mouseButtonStates)
+		if (state == MouseState::held)
+			return true;
+	return false;
+}
 bool EventSystem::KeyDown(SDL_Keycode key)
 {
     auto it = s_keyStates.find(key);

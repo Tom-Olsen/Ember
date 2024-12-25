@@ -28,17 +28,13 @@ Float3 Float3::Direction(float theta, float phi)
 
 
 // Math operations:
-Float3 Float3::Abs() const
-{
-	return Float3(std::fabs(x), std::fabs(y), std::fabs(z));
-}
-float Float3::Length2() const
+float Float3::LengthSq() const
 {
 	return x * x + y * y + z * z;
 }
 float Float3::Length() const
 {
-	return sqrt(Length2());
+	return sqrt(LengthSq());
 }
 float Float3::Theta() const
 {
@@ -76,12 +72,16 @@ Float3 Float3::Rotate(float theta, float phi) const
 }
 bool Float3::IsEpsilonZero() const
 {
-	return Length2() <= s_epsilon * s_epsilon;
+	return LengthSq() <= s_epsilon * s_epsilon;
 }
 
 
 
 // Static math operations:
+Float3 Float3::Abs(const Float3& a)
+{
+	return Float3(mathf::Abs(a.x), mathf::Abs(a.y), mathf::Abs(a.z));
+}
 float Float3::Dot(const Float3& a, const Float3& b)
 {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
@@ -93,21 +93,9 @@ Float3 Float3::Cross(const Float3& a, const Float3& b)
 		a.z * b.x - a.x * b.z,
 		a.x * b.y - a.y * b.x);
 }
-float Float3::VectorToPlaneDistance(const Float3& vec, const Float3& planeNormal)
+float Float3::DistanceSq(const Float3& a, const Float3& b)
 {
-	return Dot(vec, planeNormal) / Dot(planeNormal, planeNormal);
-}
-Float3 Float3::VectorToPlaneProjection(const Float3& vec, const Float3& planeNormal)
-{
-	return vec - VectorToPlaneDistance(vec, planeNormal) * planeNormal;
-}
-Float3 Float3::Reflect(const Float3& vec, const Float3& planeNormal)
-{
-	return vec - 2.0f * VectorToPlaneDistance(vec, planeNormal) * planeNormal.Normalize();
-}
-float Float3::Distance2(const Float3& a, const Float3& b)
-{
-	return (a - b).Length2();
+	return (a - b).LengthSq();
 }
 float Float3::Distance(const Float3& a, const Float3& b)
 {

@@ -9,19 +9,17 @@
 
 struct Bounds
 {
-public:
-	// Members:
+public: // Members:
 	Float3 center;
 	Float3 extents;
 
-	// Constructors:
+public: // Methods:
 	Bounds();
 	Bounds(const Float3& center, const Float3& extents);
 	Bounds(const Bounds& bounds);
 	Bounds(const Float3* const points);
 	Bounds(const std::vector<Float3>& points);
 
-	// Methods:
 	Float3 GetMin() const;
 	Float3 GetMax() const;
 	Float3 GetSize() const;

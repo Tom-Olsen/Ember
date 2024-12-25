@@ -108,7 +108,8 @@ void Transform::SetLocalToWorldMatrix(const Float4x4& localToWorldMatrix)
 	m_scale = localToWorldMatrix.GetScale();
 	m_rotationMatrix = localToWorldMatrix.GetRotation3x3(m_scale);
 	m_worldToLocalMatrix = localToWorldMatrix.Inverse();
-	m_normalMatrix = m_worldToLocalMatrix.Transpose();
+	m_localToWorldNormalMatrix = m_worldToLocalMatrix.Transpose();
+	m_worldToLocalNormalMatrix = m_localToWorldMatrix.Transpose();
 	m_updateLocalToWorldMatrix = false;
 }
 
@@ -143,11 +144,17 @@ Float4x4 Transform::GetWorldToLocalMatrix()
 		UpdateLocalToWorldMatrix();
 	return m_worldToLocalMatrix;
 }
-Float4x4 Transform::GetNormalMatrix()
+Float4x4 Transform::GetLocalToWorldNormalMatrix()
 {
 	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
-	return m_normalMatrix;
+	return m_localToWorldNormalMatrix;
+}
+Float4x4 Transform::GetWorldToLocalNormalMatrix()
+{
+	if (m_updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
+	return m_worldToLocalNormalMatrix;
 }
 Float3 Transform::GetForward()
 {// +z direction
@@ -194,7 +201,8 @@ void Transform::UpdateLocalToWorldMatrix()
 	m_updateLocalToWorldMatrix = false;
 	m_localToWorldMatrix = Float4x4::Translate(m_position) * Float4x4(m_rotationMatrix) * Float4x4::Scale(m_scale);
 	m_worldToLocalMatrix = m_localToWorldMatrix.Inverse();
-	m_normalMatrix = m_worldToLocalMatrix.Transpose();
+	m_localToWorldNormalMatrix = m_worldToLocalMatrix.Transpose();
+	m_worldToLocalNormalMatrix = m_localToWorldMatrix.Transpose();
 }
 
 

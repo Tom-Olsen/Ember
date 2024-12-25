@@ -34,7 +34,7 @@ void DrawMeshData::LateUpdate()
 
 	// Transformation matrices:
 	Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
-	Float4x4 normalMatrix = GetTransform()->GetNormalMatrix();
+	Float4x4 normalMatrix = GetTransform()->GetLocalToWorldNormalMatrix();
 
 	for (uint32_t i = 0; i < m_pMesh->GetVertexCount(); i++)
 	{

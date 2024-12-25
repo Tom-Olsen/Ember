@@ -41,6 +41,7 @@
 #include "drawMeshData.h"
 #include "meshRenderer.h"
 #include "pointLight.h"
+#include "rotationController.h"
 #include "spinGlobal.h"
 #include "spotLight.h"
 #include "spinLocal.h"
