@@ -10,7 +10,7 @@
 class Camera : public Component
 {
 private: // Members:
-	float m_fovRadians;
+	float m_fov;
 	float m_aspectRatio;
 	float m_nearClip;
 	float m_farClip;
@@ -23,16 +23,14 @@ public: // Methods:
 	~Camera();
 
 	// Setters:
-	void SetFovDegrees(float fovDegrees);
-	void SetFovRadians(float fovRadians);
+	void SetFov(float fov);
 	void SetAspectRatio(float aspectRatio);
 	void SetNearClip(float nearClip);
 	void SetFarClip(float farClip);
 	void SetDrawFrustum(bool drawFrustum);
 
 	// Getters:
-	float GetFovDegrees() const;
-	float GetFovRadians() const;
+	float GetFov() const;
 	float GetAspectRatio() const;
 	float GetNearClip() const;
 	float GetFarClip() const;

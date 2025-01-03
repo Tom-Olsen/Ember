@@ -98,8 +98,8 @@ Float3x3 Float3x3::Transpose() const
 float Float3x3::Determinant() const
 {
 	return data[0] * (data[4] * data[8] - data[5] * data[7])
-		- data[1] * (data[3] * data[8] - data[5] * data[6])
-		+ data[2] * (data[3] * data[7] - data[4] * data[6]);
+	 	 - data[1] * (data[3] * data[8] - data[5] * data[6])
+	 	 + data[2] * (data[3] * data[7] - data[4] * data[6]);
 }
 Float3x3 Float3x3::Inverse() const
 {
@@ -131,46 +131,43 @@ Float3x3 Float3x3::Inverse(float det) const
 }
 bool Float3x3::IsEpsilonZero() const
 {
-	for (uint32_t i = 0; i < 9; i++)
-		if (mathf::Abs(data[i]) > epsilon)
-			return false;
-	return true;
+	return IsEpsilonEqual(Float3x3::zero);
 }
 
 
 
 // Static math operations:
-Float3x3 Float3x3::RotateX(float radians)
+Float3x3 Float3x3::RotateX(float angle)
 {
-	float c = mathf::Cos(radians);
-	float s = mathf::Sin(radians);
+	float c = mathf::Cos(angle);
+	float s = mathf::Sin(angle);
 	return Float3x3::Rows
 	(1.0f, 0.0f, 0.0f,
 	 0.0f, c, -s,
 	 0.0f, s, c);
 }
-Float3x3 Float3x3::RotateY(float radians)
+Float3x3 Float3x3::RotateY(float angle)
 {
-	float c = mathf::Cos(radians);
-	float s = mathf::Sin(radians);
+	float c = mathf::Cos(angle);
+	float s = mathf::Sin(angle);
 	return Float3x3::Rows
 	(c, 0.0f, s,
 	 0.0f, 1.0f, 0.0f,
 	 -s, 0.0f, c);
 }
-Float3x3 Float3x3::RotateZ(float radians)
+Float3x3 Float3x3::RotateZ(float angle)
 {
-	float c = mathf::Cos(radians);
-	float s = mathf::Sin(radians);
+	float c = mathf::Cos(angle);
+	float s = mathf::Sin(angle);
 	return Float3x3::Rows
 	(c, -s, 0.0f,
 	 s, c, 0.0f,
 	 0.0f, 0.0f, 1.0f);
 }
-Float3x3 Float3x3::Rotate(const Float3& axis, float radians)
+Float3x3 Float3x3::Rotate(const Float3& axis, float angle)
 {
-	float c = mathf::Cos(radians);
-	float s = mathf::Sin(radians);
+	float c = mathf::Cos(angle);
+	float s = mathf::Sin(angle);
 	float t = 1.0f - c;
 	Float3 normalizedAxis = axis.Normalize();
 	float x = normalizedAxis.x;
@@ -181,9 +178,9 @@ Float3x3 Float3x3::Rotate(const Float3& axis, float radians)
 	 y * x * t + z * s, y * y * t + c, y * z * t - x * s,
 	 z * x * t - y * s, z * y * t + x * s, z * z * t + c);
 }
-Float3x3 Float3x3::Rotate(const Float3& eulerRadians, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
+Float3x3 Float3x3::Rotate(const Float3& angles, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
 {
-	Float3x3 rot[3] = { RotateX(eulerRadians.x), RotateY(eulerRadians.y), RotateZ(eulerRadians.z) };
+	Float3x3 rot[3] = { RotateX(angles.x), RotateY(angles.y), RotateZ(angles.z) };
 	if (rotationSystem == CoordinateSystem::local)
 		return rot[rotationOrder.x] * rot[rotationOrder.y] * rot[rotationOrder.z];
 	// (rotationSystem == CoordinateSystem::World)
@@ -194,27 +191,27 @@ Float3x3 Float3x3::RotateFromTo(const Float3& from, const Float3& to)
 	Float3 f = from.Normalize();
 	Float3 t = to.Normalize();
 	Float3 axis = Float3::Cross(f, t).Normalize();
-	float radians = Float3::AngleRadians(f, t);
-	return Rotate(axis, radians);
+	float angle = Float3::Angle(f, t);
+	return Rotate(axis, angle);
 }
-Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& upOld, const Float3& upNew)
+Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& otherOld, const Float3& otherNew)
 {
 	// Rotate forwardOld to forwardNew:
 	Float3 axis = Float3::Cross(forwardOld, forwardNew);
-	float radians = Float3::AngleRadians(forwardOld, forwardNew);
-	Float3x3 rot0 = Rotate(axis, radians);
+	float angle0 = Float3::Angle(forwardOld, forwardNew);
+	Float3x3 rot0 = Rotate(axis, angle0);
 
-	// Compute missalignment angle between upNew and upOld rotated by rot0:
-	Float3 upOldRotated = rot0 * upOld;
-	Float3 planeNormal = Float3::Cross(upNew, forwardNew).Normalize();
-	Float3 projection = geometry3d::PointToPlaneProjection(upOldRotated, planeNormal);
-	float sign = mathf::Sign(Float3::Dot(Float3::Cross(upOldRotated, projection), forwardNew));
-	float angle = sign * Float3::AngleRadians(upOldRotated, projection);
-	if (Float3::Dot(upNew, upOldRotated) < 0)
-		angle += mathf::PI;
+	// Compute missalignment angle between otherNew and otherOld rotated by rot0:
+	Float3 otherOldRotated = rot0 * otherOld;
+	Float3 planeNormal = Float3::Cross(otherNew, forwardNew).Normalize();
+	Float3 projection = geometry3d::PointToPlaneProjection(otherOldRotated, Float3::zero, planeNormal);
+	float sign = mathf::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection), forwardNew));
+	float angle1 = sign * Float3::Angle(otherOldRotated, projection);
+	if (Float3::Dot(otherNew, otherOldRotated) < 0)
+		angle1 += mathf::PI;
 
 	// Rotate by angle around forwardNew:
-	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle);
+	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle1);
 
 	// Combine rotations:
 	return rot1 * rot0;
@@ -371,7 +368,7 @@ Float3x3& Float3x3::operator/=(float scalar)
 bool Float3x3::IsEpsilonEqual(const Float3x3& other) const
 {
 	for (uint32_t i = 0; i < 9; i++)
-		if (mathf::Abs(data[i] - other[i]) > epsilon)
+		if (mathf::Abs(data[i] - other[i]) > mathf::EPSILON)
 			return false;
 	return true;
 }
@@ -417,13 +414,6 @@ Float3 operator*(const Float3& a, const Float3x3& b)
 	(a.x * b[0] + a.y * b[1] + a.z * b[2],
 	 a.x * b[3] + a.y * b[4] + a.z * b[5],
 	 a.x * b[6] + a.y * b[7] + a.z * b[8]);
-}
-Float3x3 operator/(const Float3x3& a, float b)
-{
-	Float3x3 result;
-	for (uint32_t i = 0; i < 9; i++)
-		result[i] = a[i] / b;
-	return result;
 }
 
 

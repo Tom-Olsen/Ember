@@ -5,12 +5,14 @@
 
 
 // TODO now!
+// - change coordinate system to: x right, y forward, z up
 // - directional lights: shadow cascades
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - imgui integration
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
 
 // TODO:
+// - adjust shadow config in shadowPipeline.cpp (bias values) for better shadow quality
 // - optimizations: multi threaded render loop, culling, etc.
 // - add pGameObject selection (need gizmos => ui renderpass)
 // - currently one commandPool per commandBuffer, should be one commandPool per frame, shared by all commands for that frame?
@@ -343,7 +345,7 @@ Scene* DefaultScene()
 			pSpotLight->SetIntensity(100.0f);
 			pSpotLight->SetNearClip(1.1f);
 			pSpotLight->SetFarClip(20.0f);
-			pSpotLight->SetFovDegrees(30.0f);
+			pSpotLight->SetFov(mathf::DEG2RAD * 30.0f);
 			pSpotLight->SetBlendStart(0.7f);
 			pSpotLight->SetBlendEnd(0.9f);
 			pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -389,7 +391,7 @@ Scene* DefaultScene()
 			pSpotLight->SetIntensity(100.0f);
 			pSpotLight->SetNearClip(1.1f);
 			pSpotLight->SetFarClip(20.0f);
-			pSpotLight->SetFovDegrees(30.0f);
+			pSpotLight->SetFov(mathf::DEG2RAD * 30.0f);
 			pSpotLight->SetBlendStart(0.7f);
 			pSpotLight->SetBlendEnd(0.9f);
 			pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -435,7 +437,7 @@ Scene* DefaultScene()
 			pSpotLight->SetIntensity(100.0f);
 			pSpotLight->SetNearClip(1.1f);
 			pSpotLight->SetFarClip(20.0f);
-			pSpotLight->SetFovDegrees(30.0f);
+			pSpotLight->SetFov(mathf::DEG2RAD * 30.0f);
 			pSpotLight->SetBlendStart(0.7f);
 			pSpotLight->SetBlendEnd(0.9f);
 			pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -567,6 +569,9 @@ Scene* DefaultScene()
 		pMeshRenderer->GetMaterialProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
+		//DrawMeshData* drawMeshData = new DrawMeshData();
+		//pGameObject->AddComponent<DrawMeshData>(drawMeshData);
+
 		SpinLocal* pSpinLocal = new SpinLocal(Float3(0.0f, 0.0f, 45.0f));
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
 
@@ -629,21 +634,6 @@ int main()
 {
 	// VS debugging:
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-	Logger::Init();
-	Float2x2 A = Float2x2::Rows(1, 2, 3, 4);
-	Float2x2 B = Float2x2::Rows(1, 1, 2, 2);
-	Float2x2 C = A * B;
-	Float2x2 D = A.Inverse();
-	LOG_TRACE("A: {}", A.ToString());
-	LOG_TRACE("B: {}", B.ToString());
-	LOG_TRACE("C: {}", C.ToString());
-	LOG_TRACE("D: {}", D.ToString());
-	LOG_TRACE("A: {}", A.ToStringMatrixForm());
-	LOG_TRACE("B: {}", B.ToStringMatrixForm());
-	LOG_TRACE("C: {}", C.ToStringMatrixForm());
-	LOG_TRACE("D: {}", D.ToStringMatrixForm());
-
 
 	// Initialization:
 	Application app;

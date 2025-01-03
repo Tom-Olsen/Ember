@@ -5,7 +5,7 @@
 // Constructor/Destructor:
 Camera::Camera()
 {
-	m_fovRadians = mathf::ToRadians(60.0f);
+	m_fov = mathf::DEG2RAD * 60.0f;
 	m_aspectRatio = 16.0f / 9.0f;	// 1920x1080
 	m_nearClip = 0.1f;
 	m_farClip = 1000.0f;
@@ -20,14 +20,9 @@ Camera::~Camera()
 
 
 // Setters:
-void Camera::SetFovDegrees(float fovDegrees)
+void Camera::SetFov(float fov)
 {
-	m_fovRadians = mathf::ToRadians(fovDegrees);
-	m_updateProjectionMatrix = true;
-}
-void Camera::SetFovRadians(float fovRadians)
-{
-	m_fovRadians = fovRadians;
+	m_fov = fov;
 	m_updateProjectionMatrix = true;
 }
 void Camera::SetAspectRatio(float aspectRatio)
@@ -53,13 +48,9 @@ void Camera::SetDrawFrustum(bool drawFrustum)
 
 
 // Getters:
-float Camera::GetFovDegrees() const
+float Camera::GetFov() const
 {
-	return mathf::ToDegrees(m_fovRadians);
-}
-float Camera::GetFovRadians() const
-{
-	return m_fovRadians;
+	return m_fov;
 }
 float Camera::GetAspectRatio() const
 {
@@ -90,7 +81,7 @@ Float4x4 Camera::GetProjectionMatrix()
 void Camera::UpdateProjectionMatrix()
 {
 	m_updateProjectionMatrix = false;
-	m_projectionMatrix = Float4x4::Perspective(m_fovRadians, m_aspectRatio, m_nearClip, m_farClip);
+	m_projectionMatrix = Float4x4::Perspective(m_fov, m_aspectRatio, m_nearClip, m_farClip);
 }
 
 

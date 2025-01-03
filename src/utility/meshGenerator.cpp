@@ -261,7 +261,7 @@ namespace MeshGenerator
 		std::vector<Uint3> triangles;	triangles.reserve(2 * (cornerCount - 1));
 
 		// Per vertex data:
-		float dAlpha = mathf::ToRadians(degrees) / (cornerCount - 1.0f);
+		float dAlpha = mathf::DEG2RAD * degrees / (cornerCount - 1.0f);
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float x = mathf::Cos(i * dAlpha);
@@ -306,7 +306,7 @@ namespace MeshGenerator
 
 		// Per vertex data:
 		float duv = 1.0f / (cornerCount - 1.0f);
-		float dAlpha = mathf::ToRadians(degrees) / (cornerCount - 1.0f);
+		float dAlpha = mathf::DEG2RAD * degrees / (cornerCount - 1.0f);
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float x = mathf::Cos(i * dAlpha);
@@ -468,7 +468,7 @@ namespace MeshGenerator
 
 			Mesh* face = UnitQuad();
 			face->Scale(Float3(width, height, 1.0f));
-			Float3x3 rotation = Float3x3::RotateZ(mathf::ToRadians(90) + alpha) * Float3x3::RotateX(mathf::ToRadians(90));
+			Float3x3 rotation = Float3x3::RotateZ(mathf::PI_2 + alpha) * Float3x3::RotateX(mathf::PI_2);
 			face->Rotate(rotation);
 			face->Translate(Float3(dist * mathf::Cos(alpha), dist * mathf::Sin(alpha), 0.0f));
 
@@ -489,7 +489,7 @@ namespace MeshGenerator
 		meshes.reserve(3);
 		meshes.push_back(ZylinderMantleSmooth(radius, height, cornerCount, "zylinderSmooth0"));
 		meshes.push_back(Disk(radius, cornerCount, "zylinderSmooth1")->Translate(0.5f * height * Float3(0.0f, 0.0f, 1.0f)));
-		meshes.push_back(meshes[1]->GetCopy("zylinderSmooth2")->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(meshes[1]->GetCopy("zylinderSmooth2")->Rotate(Float3x3::RotateX(mathf::PI)));
 		return Mesh::Merge(meshes, name);
 	}
 	Mesh* ZylinderEdgy(float radius, float height, int cornerCount, const std::string& name)
@@ -498,7 +498,7 @@ namespace MeshGenerator
 		meshes.reserve(3);
 		meshes.push_back(ZylinderMantleEdgy(radius, height, cornerCount, "zylinderEdgy0"));
 		meshes.push_back(Disk(radius, cornerCount, "zylinderEdgy1")->Translate(0.5f * height * Float3(0.0f, 0.0f, 1.0f)));
-		meshes.push_back(meshes[1]->GetCopy("zylinderEdgy2")->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(meshes[1]->GetCopy("zylinderEdgy2")->Rotate(Float3x3::RotateX(mathf::PI)));
 		return Mesh::Merge(meshes, name);
 	}
 
@@ -518,9 +518,9 @@ namespace MeshGenerator
 		std::vector<Mesh*> meshes;
 		meshes.reserve(4);
 
-		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowSmooth0")->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowSmooth0")->Rotate(Float3x3::RotateX(mathf::PI)));
 		meshes.push_back(ZylinderMantleSmooth(bodyRadius, bodyHeight, cornerCount, "arrowSmooth1")->Translate(0.5f * bodyHeight * Float3::up));
-		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowSmooth2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowSmooth2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::RotateX(mathf::PI)));
 		meshes.push_back(ConeSmooth(headRadius, headHeight, cornerCount, "arrowSmooth3")->Translate(bodyHeight * Float3::up));
 
 		Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
@@ -542,9 +542,9 @@ namespace MeshGenerator
 		std::vector<Mesh*> meshes;
 		meshes.reserve(4);
 
-		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowEdgy0")->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowEdgy0")->Rotate(Float3x3::RotateX(mathf::PI)));
 		meshes.push_back(ZylinderMantleEdgy(bodyRadius, bodyHeight, cornerCount, "arrowEdgy1")->Translate(0.5f * bodyHeight * Float3::forward));
-		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowEdgy2")->Translate(-bodyHeight * Float3::forward)->Rotate(Float3x3::RotateX(mathf::ToRadians(180))));
+		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowEdgy2")->Translate(-bodyHeight * Float3::forward)->Rotate(Float3x3::RotateX(mathf::PI)));
 		meshes.push_back(ConeEdgy(headRadius, headHeight, cornerCount, "arrowEdgy3")->Translate(bodyHeight * Float3::forward));
 
 		Float4x4 rotation = Float4x4::RotateFromTo(Float3::forward, direction);

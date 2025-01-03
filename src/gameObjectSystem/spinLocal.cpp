@@ -20,13 +20,13 @@ void SpinLocal::Update()
 {
 	if (EventSystem::KeyDownOrHeld(SDLK_LEFT))
 	{
-		Float3 eulerRadians = -m_eulerDegreesPerSecond.ToRadians() * Timer::GetDeltaTime();
+		Float3 eulerRadians = -mathf::DEG2RAD * m_eulerDegreesPerSecond * Timer::GetDeltaTime();
 		Float3x3 rotation = Float3x3::Rotate(eulerRadians, m_rotationOrder);
 		m_pTransform->SetRotationMatrix(m_pTransform->GetRotation3x3() * rotation);
 	}
 	if (EventSystem::KeyDownOrHeld(SDLK_RIGHT))
 	{
-		Float3 eulerRadians = m_eulerDegreesPerSecond.ToRadians() * Timer::GetDeltaTime();
+		Float3 eulerRadians = mathf::DEG2RAD * m_eulerDegreesPerSecond * Timer::GetDeltaTime();
 		Float3x3 rotation = Float3x3::Rotate(eulerRadians, m_rotationOrder);
 		m_pTransform->SetRotationMatrix(m_pTransform->GetRotation3x3() * rotation);
 	}

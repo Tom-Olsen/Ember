@@ -14,9 +14,9 @@ Float2::Float2(float x, float y) : x(x), y(y) {}
 Float2::Float2(const Float2& xy) : x(xy.x), y(xy.y) {}
 Float2::Float2(const Float3& xy) : x(xy.x), y(xy.y) {}
 Float2::Float2(const Float4& xy) : x(xy.x), y(xy.y) {}
-Float2 Float2::Direction(float radians)
+Float2 Float2::Direction(float angle)
 {
-	return Float2(mathf::Cos(radians), mathf::Sin(radians));
+	return Float2(mathf::Cos(angle), mathf::Sin(angle));
 }
 
 
@@ -30,38 +30,26 @@ float Float2::Length() const
 {
 	return sqrt(LengthSq());
 }
-float Float2::AngleDegrees() const
-{
-	return mathf::ToDegrees(mathf::Atan2(y, x));
-}
-float Float2::AngleRadians() const
+float Float2::Angle() const
 {
 	return mathf::Atan2(y, x);
 }
 Float2 Float2::Normalize() const
 {
 	float length = Length();
-	if (length <= s_epsilon)
+	if (length <= mathf::EPSILON)
 		return Float2(0.0f);
 	return Float2(x / length, y / length);
 }
-Float2 Float2::Rotate(float radians) const
+Float2 Float2::Rotate(float angle) const
 {
-	float c = mathf::Cos(radians);
-	float s = mathf::Sin(radians);
+	float c = mathf::Cos(angle);
+	float s = mathf::Sin(angle);
 	return Float2(x * c - y * s, x * s + y * c);
-}
-Float2 Float2::Rotate90() const
-{
-	return Float2(-y, x);
-}
-Float2 Float2::Rotate270() const
-{
-	return Float2(y, -x);
 }
 bool Float2::IsEpsilonZero() const
 {
-	return LengthSq() <= s_epsilon * s_epsilon;
+	return IsEpsilonEqual(Float2::zero);
 }
 
 
@@ -87,19 +75,14 @@ float Float2::Distance(const Float2& a, const Float2& b)
 {
 	return (a - b).Length();
 }
-float Float2::AngleDegrees(const Float2& a, const Float2& b)
+float Float2::Angle(const Float2& a, const Float2& b)
 {
+	float lengthA = a.Length();
+	float lengthB = b.Length();
 	float lengths = a.Length() * b.Length();
-	if (lengths <= s_epsilon)
+	if (lengthA <= mathf::EPSILON || lengthB <= mathf::EPSILON)
 		return 0.0f;
-	return mathf::ToDegrees(mathf::Acos(Dot(a, b) / lengths));
-}
-float Float2::AngleRadians(const Float2& a, const Float2& b)
-{
-	float lengths = a.Length() * b.Length();
-	if (lengths <= s_epsilon)
-		return 0.0f;
-	return mathf::Acos(Dot(a, b) / lengths);
+	return mathf::Acos(Dot(a, b) / lengthA * lengthB);
 }
 Float2 Float2::Min(const Float2& a, const Float2& b)
 {
@@ -197,10 +180,6 @@ Float2& Float2::operator*=(const Float2& other)
 	this->y *= other.y;
 	return *this;
 }
-Float2 Float2::operator*(float scalar) const
-{
-	return Float2(x * scalar, y * scalar);
-}
 Float2& Float2::operator*=(float scalar)
 {
 	x *= scalar;
@@ -241,7 +220,7 @@ Float2 operator/(float scalar, const Float2& vector)
 // Comparison:
 bool Float2::IsEpsilonEqual(const Float2& other) const
 {
-	return std::fabs(x - other.x) < s_epsilon && std::fabs(y - other.y) < s_epsilon;
+	return std::fabs(x - other.x) < mathf::EPSILON && std::fabs(y - other.y) < mathf::EPSILON;
 }
 bool Float2::operator==(const Float2& other) const
 {
@@ -259,15 +238,9 @@ Float2 operator*(float a, const Float2& b)
 {
 	return Float2(a * b.x, a * b.y);
 }
-
-// Conversion:
-Float2 Float2::ToDegrees() const
+Float2 operator*(const Float2& a, float b)
 {
-	return mathf::RAD2DEG * (*this);
-}
-Float2 Float2::ToRadians() const
-{
-	return mathf::DEG2RAD * (*this);
+	return Float2(a.x * b, a.y * b);
 }
 
 

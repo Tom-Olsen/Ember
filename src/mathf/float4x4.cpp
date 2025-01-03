@@ -148,62 +148,60 @@ Float4x4 Float4x4::Inverse(float det) const
 }
 bool Float4x4::IsEpsilonZero() const
 {
-	for (uint32_t i = 0; i < 16; i++)
-		if (std::fabs(data[i]) > s_epsilon)
-			return false;
-	return true;
+	return IsEpsilonEqual(Float4x4::zero);
 }
 
 
 
 // Static math operations:
-Float4x4 Float4x4::RotateX(float radians)
+Float4x4 Float4x4::RotateX(float angle)
 {
-	float c = mathf::Cos(radians);
-	float s = mathf::Sin(radians);
+	float c = mathf::Cos(angle);
+	float s = mathf::Sin(angle);
 	return Float4x4::Rows
 	(1.0f, 0.0f, 0.0f, 0.0f,
 	 0.0f,    c,   -s, 0.0f,
 	 0.0f,    s,    c, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
-Float4x4 Float4x4::RotateY(float radians)
+Float4x4 Float4x4::RotateY(float angle)
 {
-	float c = mathf::Cos(radians);
-	float s = mathf::Sin(radians);
+	float c = mathf::Cos(angle);
+	float s = mathf::Sin(angle);
 	return Float4x4::Rows
 	(   c, 0.0f,    s, 0.0f,
 	 0.0f, 1.0f, 0.0f, 0.0f,
 	   -s, 0.0f,    c, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
-Float4x4 Float4x4::RotateZ(float radians)
+Float4x4 Float4x4::RotateZ(float angle)
 {
-	float c = mathf::Cos(radians);
-	float s = mathf::Sin(radians);
+	float c = mathf::Cos(angle);
+	float s = mathf::Sin(angle);
 	return Float4x4::Rows
 	(   c,   -s, 0.0f, 0.0f,
 	    s,    c, 0.0f, 0.0f,
 	 0.0f, 0.0f, 1.0f, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
-Float4x4 Float4x4::Rotate(const Float3& axis, float radians)
+Float4x4 Float4x4::Rotate(const Float3& axis, float angle)
 {
-	float c = mathf::Cos(radians);
-	float s = mathf::Sin(radians);
+	float c = mathf::Cos(angle);
+	float s = mathf::Sin(angle);
 	float t = 1.0f - c;
-	float x = axis.x;
-	float y = axis.y;
-	float z = axis.z;
+	Float3 normalizedAxis = axis.Normalize();
+	float x = normalizedAxis.x;
+	float y = normalizedAxis.y;
+	float z = normalizedAxis.z;
 	return Float4x4::Rows
 	(    x * x * t + c, x * y * t - z * s, x * z * t + y * s, 0.0f,
 	 y * x * t + z * s,     y * y * t + c, y * z * t - x * s, 0.0f,
 	 z * x * t - y * s, z * y * t + x * s,     z * z * t + c, 0.0f,
 	              0.0f,              0.0f,              0.0f, 1.0f);
 }
-Float4x4 Float4x4::Rotate(const Float3& eulerRadians, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
+Float4x4 Float4x4::Rotate(const Float3& eulerAngles, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
 {
-	Float4x4 rot[3] = { RotateX(eulerRadians.x), RotateY(eulerRadians.y), RotateZ(eulerRadians.z) };
+	Float4x4 rot[3] = { RotateX(eulerAngles.x), RotateY(eulerAngles.y), RotateZ(eulerAngles.z) };
 	if (rotationSystem == CoordinateSystem::local)
 		return rot[rotationOrder.x] * rot[rotationOrder.y] * rot[rotationOrder.z];
 	else if (rotationSystem == CoordinateSystem::world)
@@ -225,27 +223,27 @@ Float4x4 Float4x4::RotateFromTo(const Float3& from, const Float3& to)
 		return Rotate(axis, mathf::PI);
 	}
 	Float3 axis = Float3::Cross(from, to);
-	float radians = Float3::AngleRadians(from, to);
-	return Rotate(axis, radians);
+	float angle = Float3::Angle(from, to);
+	return Rotate(axis, angle);
 }
-Float4x4 Float4x4::RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& upOld, const Float3& upNew)
+Float4x4 Float4x4::RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& otherOld, const Float3& otherNew)
 {
 	// Rotate forwardOld to forwardNew:
 	Float3 axis = Float3::Cross(forwardOld, forwardNew);
-	float radians = Float3::AngleRadians(forwardOld, forwardNew);
-	Float3x3 rot0 = Float3x3::Rotate(axis, radians);
+	float angle0 = Float3::Angle(forwardOld, forwardNew);
+	Float3x3 rot0 = Float3x3::Rotate(axis, angle0);
 
-	// Compute missalignment angle between upNew and upOld rotated by rot0:
-	Float3 upOldRotated = rot0 * upOld;
-	Float3 planeNormal = Float3::Cross(upNew, forwardNew).Normalize();
-	Float3 projection = geometry3d::PointToPlaneProjection(upOldRotated, planeNormal);
-	float sign = mathf::Sign(Float3::Dot(Float3::Cross(upOldRotated, projection), forwardNew));
-	float angle = sign * Float3::AngleRadians(upOldRotated, projection);
-	if (Float3::Dot(upNew, upOldRotated) < 0)
-		angle += mathf::PI;
+	// Compute missalignment angle between otherNew and otherOld rotated by rot0:
+	Float3 otherOldRotated = rot0 * otherOld;
+	Float3 planeNormal = Float3::Cross(otherNew, forwardNew).Normalize();
+	Float3 projection = geometry3d::PointToPlaneProjection(otherOldRotated, Float3::zero, planeNormal);
+	float sign = mathf::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection), forwardNew));
+	float angle1 = sign * Float3::Angle(otherOldRotated, projection);
+	if (Float3::Dot(otherNew, otherOldRotated) < 0)
+		angle1 += mathf::PI;
 
 	// Rotate by angle around forwardNew:
-	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle);
+	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle1);
 
 	// Combine rotations:
 	return Float4x4(rot1 * rot0);
@@ -282,9 +280,9 @@ Float4x4 Float4x4::TRS(const Float3& position, const Float4x4& rotationMatrix, c
 	Float4x4 S = Scale(scale);
 	return T * rotationMatrix * S;
 }
-Float4x4 Float4x4::Perspective(float fovRadians, float aspectRatio, float nearClip, float farClip)
+Float4x4 Float4x4::Perspective(float fov, float aspectRatio, float nearClip, float farClip)
 {
-	float tanHalfFov = mathf::Tan(0.5f * fovRadians);
+	float tanHalfFov = mathf::Tan(0.5f * fov);
 	float xx = 1.0f / (aspectRatio * tanHalfFov);
 	float yy = -1.0f / tanHalfFov;
 	float zz = (nearClip + farClip) / (nearClip - farClip);
@@ -502,7 +500,7 @@ Float4x4& Float4x4::operator/=(float scalar)
 bool Float4x4::IsEpsilonEqual(const Float4x4& other) const
 {
 	for (uint32_t i = 0; i < 16; i++)
-		if (std::fabs(data[i] - other[i]) > s_epsilon)
+		if (std::fabs(data[i] - other[i]) > mathf::EPSILON)
 			return false;
 	return true;
 }
@@ -550,13 +548,6 @@ Float4 operator*(const Float4& a, const Float4x4& b)
 	 a.x * b[ 4] + a.y * b[ 5] + a.z * b[ 6] + a.w * b[ 7],
 	 a.x * b[ 8] + a.y * b[ 9] + a.z * b[10] + a.w * b[11],
 	 a.x * b[12] + a.y * b[13] + a.z * b[14] + a.w * b[15]);
-}
-Float4x4 operator/(const Float4x4& a, float b)
-{
-	Float4x4 result;
-	for (uint32_t i = 0; i < 16; i++)
-		result[i] = a[i] / b;
-	return result;
 }
 
 

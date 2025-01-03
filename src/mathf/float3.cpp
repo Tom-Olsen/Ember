@@ -44,18 +44,14 @@ float Float3::Phi() const
 {
 	return mathf::Atan2(y, x);
 }
-Float2 Float3::AnglesDegrees() const
-{
-	return Float2(Theta(), Phi()).ToDegrees();
-}
-Float2 Float3::AnglesRadians() const
+Float2 Float3::Angles() const
 {
 	return Float2(Theta(), Phi());
 }
 Float3 Float3::Normalize() const
 {
 	float length = Length();
-	if (length <= s_epsilon)
+	if (length <= mathf::EPSILON)
 		return Float3(0.0f);
 	return Float3(x / length, y / length, z / length);
 }
@@ -72,7 +68,7 @@ Float3 Float3::Rotate(float theta, float phi) const
 }
 bool Float3::IsEpsilonZero() const
 {
-	return LengthSq() <= s_epsilon * s_epsilon;
+	return IsEpsilonEqual(Float3::zero);
 }
 
 
@@ -101,17 +97,10 @@ float Float3::Distance(const Float3& a, const Float3& b)
 {
 	return (a - b).Length();
 }
-float Float3::AngleDegrees(const Float3& a, const Float3& b)
+float Float3::Angle(const Float3& a, const Float3& b)
 {
 	float lengths = a.Length() * b.Length();
-	if (lengths <= s_epsilon)
-		return 0.0f;
-	return mathf::ToDegrees(mathf::Acos(Dot(a, b) / lengths));
-}
-float Float3::AngleRadians(const Float3& a, const Float3& b)
-{
-	float lengths = a.Length() * b.Length();
-	if (lengths <= s_epsilon)
+	if (lengths <= mathf::EPSILON)
 		return 0.0f;
 	return mathf::Acos(Dot(a, b) / lengths);
 }
@@ -265,7 +254,7 @@ Float3 operator/(float scalar, const Float3& vector)
 // Comparison:
 bool Float3::IsEpsilonEqual(const Float3& other) const
 {
-	return std::fabs(x - other.x) < s_epsilon && std::fabs(y - other.y) < s_epsilon && std::fabs(z - other.z) < s_epsilon;
+	return std::fabs(x - other.x) < mathf::EPSILON && std::fabs(y - other.y) < mathf::EPSILON && std::fabs(z - other.z) < mathf::EPSILON;
 }
 bool Float3::operator==(const Float3& other) const
 {
@@ -290,18 +279,6 @@ Float3 operator*(float a, const Float3& b)
 Float3 operator/(const Float3& a, float b)
 {
 	return Float3(a.x / b, a.y / b, a.z / b);
-}
-
-
-
-// Conversion:
-Float3 Float3::ToDegrees() const
-{
-	return mathf::RAD2DEG * (*this);
-}
-Float3 Float3::ToRadians() const
-{
-	return mathf::DEG2RAD * (*this);
 }
 
 

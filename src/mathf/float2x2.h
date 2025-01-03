@@ -17,7 +17,6 @@ struct Float2x2
 	// xy yy   1  3    [1,0] [1,1]
 
 private:
-	constexpr static float epsilon = 1e-8f;
 	Float2x2
 	(float xx, float xy,	// column 0
 	 float yx, float yy);	// column 1
@@ -92,7 +91,6 @@ public:
 	friend Float2x2 operator*(float a, const Float2x2& b);
 	friend Float2 operator*(const Float2x2& a, const Float2& b);
 	friend Float2 operator*(const Float2& a, const Float2x2& b);
-	friend Float2x2 operator/(const Float2x2& a, float b);
 
 	// Logging:
 	std::string ToString() const;

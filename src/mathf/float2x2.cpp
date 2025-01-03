@@ -102,10 +102,7 @@ Float2x2 Float2x2::Inverse(float det) const
 }
 bool Float2x2::IsEpsilonZero() const
 {
-	for (uint32_t i = 0; i < 4; i++)
-		if (mathf::Abs(data[i]) > epsilon)
-			return false;
-	return true;
+	return IsEpsilonEqual(Float2x2::zero);
 }
 
 
@@ -270,7 +267,7 @@ Float2x2& Float2x2::operator/=(float scalar)
 bool Float2x2::IsEpsilonEqual(const Float2x2& other) const
 {
 	for (uint32_t i = 0; i < 4; i++)
-		if (mathf::Abs(data[i] - other[i]) > epsilon)
+		if (mathf::Abs(data[i] - other[i]) > mathf::EPSILON)
 			return false;
 	return true;
 }
@@ -314,13 +311,6 @@ Float2 operator*(const Float2& a, const Float2x2& b)
 	return Float2
 	(a.x * b[0] + a.y * b[1],
 	 a.x * b[2] + a.y * b[3]);
-}
-Float2x2 operator/(const Float2x2& a, float b)
-{
-	Float2x2 result;
-	for (uint32_t i = 0; i < 4; i++)
-		result[i] = a[i] / b;
-	return result;
 }
 
 

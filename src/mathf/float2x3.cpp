@@ -87,22 +87,14 @@ Float3x2 Float2x3::Transpose() const
 	 data[2], data[3],
 	 data[4], data[5]);
 }
-Float3x2 Float2x3::LeftInverse() const
+Float3x2 Float2x3::RightInverse() const
 {
 	Float3x2 aT = this->Transpose();
 	return aT * ((*this) * aT).Inverse();
 }
-Float3x2 Float2x3::RightInverse() const
-{
-	Float3x2 aT = this->Transpose();
-	return (aT * (*this)).Inverse() * aT;
-}
 bool Float2x3::IsEpsilonZero() const
 {
-	for (uint32_t i = 0; i < 6; i++)
-		if (mathf::Abs(data[i]) > epsilon)
-			return false;
-	return true;
+	return IsEpsilonEqual(Float2x3::zero);
 }
 
 
@@ -241,7 +233,7 @@ Float2x3& Float2x3::operator/=(float scalar)
 bool Float2x3::IsEpsilonEqual(const Float2x3& other) const
 {
 	for (uint32_t i = 0; i < 6; i++)
-		if (mathf::Abs(data[i] - other[i]) > epsilon)
+		if (mathf::Abs(data[i] - other[i]) > mathf::EPSILON)
 			return false;
 	return true;
 }
@@ -321,13 +313,6 @@ Float3x3 operator*(const Float3x2& a, const Float2x3& b)
 		for (uint32_t j = 0; j < 3; j++)
 			for (uint32_t k = 0; k < 2; k++)
 				result[{i, j}] += a[{i, k}] * b[{k, j}];
-	return result;
-}
-Float2x3 operator/(const Float2x3& a, float b)
-{
-	Float2x3 result;
-	for (uint32_t i = 0; i < 6; i++)
-		result[i] = a[i] / b;
 	return result;
 }
 

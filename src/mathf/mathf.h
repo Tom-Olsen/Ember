@@ -25,6 +25,7 @@ struct Index2
 namespace mathf
 {
 	// Constants:
+	constexpr float EPSILON = 1e-4f;
 	constexpr float PI = 3.14159265358979323846f;
 	constexpr float PI_2 = 0.50f * PI;
 	constexpr float PI_4 = 0.25f * PI;
@@ -37,13 +38,14 @@ namespace mathf
 	constexpr float SQRT3 = 1.73205080756887729353f;
 	constexpr float SQRT3_INV = 0.57735026918962576451f;
 
+	// Basic math:
 	float Abs(float value);
 	float Clamp(float value, float min, float max);
 	float Max(float a, float b);
 	float Min(float a, float b);
 	float Sign(float value);
-	float ToDegrees(float radians);
-	float ToRadians(float degrees);
+	float Sqrt(float value);
+	float Factorial(int n);
 
 	// Trigonometry:
 	float Sin(float radiant);
@@ -53,12 +55,6 @@ namespace mathf
 	float Acos(float value);
 	float Atan(float z);
 	float Atan2(float y, float x);
-
-	// Tempated:
-	template<int N>
-	float IntegerPow(float a);
-	template<int N>
-	float Factorial();
 }
 
 
@@ -80,4 +76,7 @@ namespace mathf
 // Geometry:
 #include "bounds.h"
 #include "geometry3d.h"
+
+// Random:
+#include "emberRandom.h"
 #endif // __INCLUDE_GUARD_mathf_h__

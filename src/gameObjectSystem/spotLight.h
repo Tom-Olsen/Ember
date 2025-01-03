@@ -9,7 +9,7 @@ class SpotLight : public Component
 private: // Members:
 	float m_intensity;
 	Float3 m_color;
-	float m_fovRadians;
+	float m_fov;
 	float m_aspectRatio;
 	float m_nearClip;
 	float m_farClip;
@@ -26,8 +26,7 @@ public: // Methods:
 	// Setters:
 	void SetIntensity(const float& intensity);
 	void SetColor(const Float3& color);
-	void SetFovDegrees(const float& fovDegrees);
-	void SetFovRadians(const float& fovRadians);
+	void SetFov(const float& fov);
 	void SetNearClip(const float& nearClip);
 	void SetFarClip(const float& farClip);
 	void SetBlendStart(const float& blendStart);
@@ -39,8 +38,7 @@ public: // Methods:
 	float GetIntensity() const;
 	Float3 GetColor() const;
 	Float4 GetColorIntensity() const;
-	float GetFovDegrees() const;
-	float GetFovRadians() const;
+	float GetFov() const;
 	float GetNearClip() const;
 	float GetFarClip() const;
 	float GetBlendStart() const;

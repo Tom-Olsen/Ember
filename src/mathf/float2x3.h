@@ -20,7 +20,6 @@ struct Float2x3
 	// xy yy zy   1  3  5   [1,0] [1,1] [1,2]
 
 private:
-	constexpr static float epsilon = 1e-8f;
 	Float2x3
 	(float xx, float xy,	// column 0
 	 float yx, float yy,	// column 1
@@ -49,7 +48,6 @@ public:
 
 	// Math operations:
 	Float3x2 Transpose() const;
-	Float3x2 LeftInverse() const;
 	Float3x2 RightInverse() const;
 	bool IsEpsilonZero() const;
 
@@ -95,7 +93,6 @@ public:
 	friend Float2x3 operator*(const Float2x3& a, const Float3x3& b);
 	friend Float2x3 operator*(const Float2x2& a, const Float2x3& b);
 	friend Float3x3 operator*(const Float3x2& a, const Float2x3& b);
-	friend Float2x3 operator/(const Float2x3& a, float b);
 	
 	// Logging:
 	std::string ToString() const;

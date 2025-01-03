@@ -11,8 +11,6 @@ struct Float4;
 
 struct Float2
 {
-private:
-	constexpr static float s_epsilon = 1e-8f;
 public:
 	// Members:
 	float x, y;
@@ -24,17 +22,14 @@ public:
 	Float2(const Float2& xy);
 	explicit Float2(const Float3& xy);
 	explicit Float2(const Float4& xy);
-	static Float2 Direction(float radians);
+	static Float2 Direction(float angle);
 
 	// Math operations:
 	float LengthSq() const;
 	float Length() const;
-	float AngleDegrees() const;
-	float AngleRadians() const;
+	float Angle() const;
 	Float2 Normalize() const;
-	Float2 Rotate(float radians) const;
-	Float2 Rotate90() const;
-	Float2 Rotate270() const;
+	Float2 Rotate(float angle) const;
 	bool IsEpsilonZero() const;
 
 	// Static math operations:
@@ -43,8 +38,7 @@ public:
 	static float Cross(const Float2& a, const Float2& b);
 	static float DistanceSq(const Float2& a, const Float2& b);
 	static float Distance(const Float2& a, const Float2& b);
-	static float AngleDegrees(const Float2& a, const Float2& b);
-	static float AngleRadians(const Float2& a, const Float2& b);
+	static float Angle(const Float2& a, const Float2& b);
 	static Float2 Min(const Float2& a, const Float2& b);
 	static Float2 Max(const Float2& a, const Float2& b);
 	static Float2 Clamp(const Float2& value, const Float2& min, const Float2& max);
@@ -69,7 +63,6 @@ public:
 	// Multiplication:
 	Float2 operator*(const Float2& other) const;
 	Float2& operator*=(const Float2& other);
-	Float2 operator*(float scalar) const;
 	Float2& operator*=(float scalar);
 
 	// Division:
@@ -85,10 +78,7 @@ public:
 
 	// Friend functions:
 	friend Float2 operator*(float a, const Float2& b);
-
-	// Conversion:
-	Float2 ToDegrees() const;
-	Float2 ToRadians() const;
+	friend Float2 operator*(const Float2& a, float b);
 
 	// Logging:
 	std::string ToString() const;

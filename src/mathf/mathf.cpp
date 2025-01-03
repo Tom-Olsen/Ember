@@ -5,6 +5,7 @@
 
 namespace mathf
 {
+	// Basic math:
 	float Abs(float value)
 	{
 		return fabsf(value);
@@ -26,21 +27,40 @@ namespace mathf
 		return a < b ? a : b;
 	}
 	float Sign(float value)
-	{
-		if (value > 0.0f)
-			return 1.0f;
-		if (value < 0.0f)
-			return -1.0f;
-		return 0.0f;
+	{// value > 0.0f -> 1.0f, value < 0.0f -> -1.0f, value == 0.0f -> 0.0f
+		return (0.0f < value) - (value < 0.0f);
 	}
-	float ToDegrees(float radians)
+	float Sqrt(float vlaue)
 	{
-		return mathf::RAD2DEG * radians;
+		return sqrtf(vlaue);
 	}
-	float ToRadians(float degrees)
+	template<int N>
+	float Factorial()
 	{
-		return mathf::DEG2RAD * degrees;
+		if constexpr (N > 1)
+			return N * Factorial<N - 1>();
+		else if (N == 1)
+			return 1;
+		else if (N == 0)
+			return 1;
 	}
+	float Factorial(int n)
+	{
+		if (n < 2) return 1;
+		else if (n == 2) return Factorial<2>();
+		else if (n == 3) return Factorial<3>();
+		else if (n == 4) return Factorial<4>();
+		else if (n == 5) return Factorial<5>();
+		else if (n == 6) return Factorial<6>();
+		else if (n == 7) return Factorial<7>();
+		else if (n == 8) return Factorial<8>();
+		else if (n == 9) return Factorial<9>();
+		else
+			throw std::runtime_error("Factorials higher 9 not supported yet!");
+		return -1;
+	}
+
+
 
 	// Trigonometry:
 	float Sin(float radiant)
@@ -71,58 +91,4 @@ namespace mathf
 	{
 		return atan2f(y, x);
 	}
-
-	// Tempated:
-	template<int N>
-	float IntegerPow(float a)
-	{
-		if constexpr (N > 1)
-			return a * IntegerPow<N - 1>(a);
-		else if (N == 1)
-			return a;
-		else if (N == 0)
-			return 1.0f;
-		else if (N < 0)
-			return 1.0f / IntegerPow<-N>(a);
-	}
-	template float IntegerPow<-9>(float a);
-	template float IntegerPow<-8>(float a);
-	template float IntegerPow<-7>(float a);
-	template float IntegerPow<-6>(float a);
-	template float IntegerPow<-5>(float a);
-	template float IntegerPow<-4>(float a);
-	template float IntegerPow<-3>(float a);
-	template float IntegerPow<-2>(float a);
-	template float IntegerPow<-1>(float a);
-	template float IntegerPow< 0>(float a);
-	template float IntegerPow< 1>(float a);
-	template float IntegerPow< 2>(float a);
-	template float IntegerPow< 3>(float a);
-	template float IntegerPow< 4>(float a);
-	template float IntegerPow< 5>(float a);
-	template float IntegerPow< 6>(float a);
-	template float IntegerPow< 7>(float a);
-	template float IntegerPow< 8>(float a);
-	template float IntegerPow< 9>(float a);
-
-	template<int N>
-	float Factorial()
-	{
-		if constexpr (N > 1)
-			return N * Factorial<N - 1>();
-		else if (N == 1)
-			return 1;
-		else if (N == 0)
-			return 1;
-	}
-	template float Factorial<0>();
-	template float Factorial<1>();
-	template float Factorial<2>();
-	template float Factorial<3>();
-	template float Factorial<4>();
-	template float Factorial<5>();
-	template float Factorial<6>();
-	template float Factorial<7>();
-	template float Factorial<8>();
-	template float Factorial<9>();
 }

@@ -20,7 +20,6 @@ struct Float3x3
 	// xz yz zz   2  5  8   [2,0] [2,1] [2,2]
 
 private:
-	constexpr static float epsilon = 1e-8f;
 	Float3x3
 	(float xx, float xy, float xz,	// column 0
 	 float yx, float yy, float yz,	// column 1
@@ -57,13 +56,13 @@ public:
 	bool IsEpsilonZero() const;
 
 	// Static math operations:
-	static Float3x3 RotateX(float radians);
-	static Float3x3 RotateY(float radians);
-	static Float3x3 RotateZ(float radians);
-	static Float3x3 Rotate(const Float3& axis, float radians);
-	static Float3x3 Rotate(const Float3& eulerRadians, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSystem rotationSystem = CoordinateSystem::local);
+	static Float3x3 RotateX(float angle);
+	static Float3x3 RotateY(float angle);
+	static Float3x3 RotateZ(float angle);
+	static Float3x3 Rotate(const Float3& axis, float angle);
+	static Float3x3 Rotate(const Float3& angles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSystem rotationSystem = CoordinateSystem::local);
 	static Float3x3 RotateFromTo(const Float3& from, const Float3& to);
-	static Float3x3 RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& upOld, const Float3& upNew);
+	static Float3x3 RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& otherOld, const Float3& otherNew);
 
 	// Access:
 	float& operator[](int index);
@@ -105,7 +104,6 @@ public:
 	friend Float3x3 operator*(float a, const Float3x3& b);
 	friend Float3 operator*(const Float3x3& a, const Float3& b);
 	friend Float3 operator*(const Float3& a, const Float3x3& b);
-	friend Float3x3 operator/(const Float3x3& a, float b);
 
 	// Logging:
 	std::string ToString() const;

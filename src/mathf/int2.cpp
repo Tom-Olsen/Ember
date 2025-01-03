@@ -101,10 +101,6 @@ Int2& Int2::operator*=(const Int2& other)
 	this->y *= other.y;
 	return *this;
 }
-Int2 Int2::operator*(int scalar) const
-{
-	return Int2(x * scalar, y * scalar);
-}
 Int2& Int2::operator*=(int scalar)
 {
 	x *= scalar;
@@ -130,6 +126,10 @@ bool Int2::operator!=(const Int2& other) const
 Int2 operator*(int a, const Int2& b)
 {
 	return Int2(a * b.x, a * b.y);
+}
+Int2 operator*(const Int2& a, int b)
+{
+	return Int2(a.x * b, a.y * b);
 }
 
 

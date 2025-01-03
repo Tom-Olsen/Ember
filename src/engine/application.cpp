@@ -27,6 +27,7 @@ Application::Application()
 	m_pRenderer = std::make_unique<VulkanRenderer>(m_pContext.get());
 
 	// Init static managers:
+	mathf::Random::Init();
 	EventSystem::Init(m_pContext.get());
 	RenderPassManager::Init(m_pContext.get());
 	MaterialManager::Init(m_pContext.get());

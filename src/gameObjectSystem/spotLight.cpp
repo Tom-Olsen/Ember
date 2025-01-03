@@ -8,7 +8,7 @@ SpotLight::SpotLight()
 {
 	m_intensity = 1.0f;
 	m_color = Float3::white;
-	m_fovRadians = mathf::ToRadians(45.0f);
+	m_fov = mathf::DEG2RAD * 45.0f;
 	m_aspectRatio = (float)ShadowRenderPass::s_shadowMapWidth / (float)ShadowRenderPass::s_shadowMapHeight;
 	m_nearClip = 0.1f;
 	m_farClip = 15.0f;
@@ -33,14 +33,9 @@ void SpotLight::SetColor(const Float3& color)
 {
 	m_color = color;
 }
-void SpotLight::SetFovDegrees(const float& fovDegrees)
+void SpotLight::SetFov(const float& fov)
 {
-	m_fovRadians = mathf::ToRadians(fovDegrees);
-	m_updateProjectionMatrix = true;
-}
-void SpotLight::SetFovRadians(const float& fovRadians)
-{
-	m_fovRadians = fovRadians;
+	m_fov = fov;
 	m_updateProjectionMatrix = true;
 }
 void SpotLight::SetNearClip(const float& nearClip)
@@ -85,13 +80,9 @@ Float4 SpotLight::GetColorIntensity() const
 {
 	return Float4(m_color, m_intensity);
 }
-float SpotLight::GetFovDegrees() const
+float SpotLight::GetFov() const
 {
-	return mathf::ToDegrees(m_fovRadians);
-}
-float SpotLight::GetFovRadians() const
-{
-	return m_fovRadians;
+	return m_fov;
 }
 float SpotLight::GetNearClip() const
 {
@@ -130,7 +121,7 @@ Float4x4 SpotLight::GetProjectionMatrix()
 void SpotLight::UpdateProjectionMatrix()
 {
 	m_updateProjectionMatrix = false;
-	m_projectionMatrix = Float4x4::Perspective(m_fovRadians, m_aspectRatio, m_nearClip, m_farClip);
+	m_projectionMatrix = Float4x4::Perspective(m_fov, m_aspectRatio, m_nearClip, m_farClip);
 }
 
 

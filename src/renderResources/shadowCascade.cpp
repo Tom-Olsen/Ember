@@ -119,7 +119,7 @@ Float3 ShadowCascade::ComputeLightPosition_World(float worldHeight) const
 	// -This is the light position.
 	Float3 centerProjection = Float3::zero;
 	for (uint32_t i = 0; i < 8; i++)
-		centerProjection += geometry3d::PointToPlaneProjection(m_subFrustumCorners_World[i], -m_direction_World);
+		centerProjection += geometry3d::PointToPlaneProjection(m_subFrustumCorners_World[i], Float3::zero, -m_direction_World);
 	centerProjection /= 8.0f;
 
 	Float3 planeNormal = Float3::up;

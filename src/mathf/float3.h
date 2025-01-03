@@ -11,8 +11,6 @@ struct Float4;
 
 struct Float3
 {
-private:
-	constexpr static float s_epsilon = 1e-8f;
 public:
 	// Members:
 	float x, y, z;
@@ -33,8 +31,7 @@ public:
 	float Length() const;
 	float Theta() const;
 	float Phi() const;
-	Float2 AnglesDegrees() const;
-	Float2 AnglesRadians() const;
+	Float2 Angles() const;
 	Float3 Normalize() const;
 	Float3 Rotate(float theta, float phi) const;
 	bool IsEpsilonZero() const;
@@ -45,8 +42,7 @@ public:
 	static Float3 Cross(const Float3& a, const Float3& b);
 	static float DistanceSq(const Float3& a, const Float3& b);
 	static float Distance(const Float3& a, const Float3& b);
-	static float AngleDegrees(const Float3& a, const Float3& b);
-	static float AngleRadians(const Float3& a, const Float3& b);
+	static float Angle(const Float3& a, const Float3& b);
 	static Float3 Min(const Float3& a, const Float3& b);
 	static Float3 Max(const Float3& a, const Float3& b);
 	static Float3 Clamp(const Float3& value, const Float3& min, const Float3& max);
@@ -87,10 +83,6 @@ public:
 
 	// Friend functions:
 	friend Float3 operator*(float a, const Float3& b);
-
-	// Conversion:
-	Float3 ToDegrees() const;
-	Float3 ToRadians() const;
 
 	// Logging:
 	std::string ToString() const;

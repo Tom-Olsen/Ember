@@ -22,7 +22,6 @@ struct Float4x4
 	// xw yw zw ww   3  7  11 15   [3,0] [3,1] [3,2] [3,3]
 
 private:
-	constexpr static float s_epsilon = 1e-8f;
 	Float4x4
 	(float xx, float xy, float xz, float xw,	// column 0
 	 float yx, float yy, float yz, float yw,	// column 1
@@ -62,19 +61,19 @@ public:
 	bool IsEpsilonZero() const;
 
 	// Static math operations:
-	static Float4x4 RotateX(float radians);
-	static Float4x4 RotateY(float radians);
-	static Float4x4 RotateZ(float radians);
-	static Float4x4 Rotate(const Float3& axis, float radians);
-	static Float4x4 Rotate(const Float3& eulerRadians, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSystem rotationSystem = CoordinateSystem::local);
+	static Float4x4 RotateX(float angle);
+	static Float4x4 RotateY(float angle);
+	static Float4x4 RotateZ(float angle);
+	static Float4x4 Rotate(const Float3& axis, float angle);
+	static Float4x4 Rotate(const Float3& eulerAngles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSystem rotationSystem = CoordinateSystem::local);
 	static Float4x4 RotateFromTo(const Float3& from, const Float3& to);
-	static Float4x4 RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& upOld, const Float3& upNew);
+	static Float4x4 RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& otherOld, const Float3& otherNew);
 	static Float4x4 Translate(const Float3& translation);
 	static Float4x4 Scale(const Float3& scale);
 	static Float4x4 Scale(float scale);
 	static Float4x4 TRS(const Float3& position, const Float3x3& rotationMatrix, const Float3& scale);
 	static Float4x4 TRS(const Float3& position, const Float4x4& rotationMatrix, const Float3& scale);
-	static Float4x4 Perspective(float fovRadians, float aspectRatio, float nearClip, float farClip);
+	static Float4x4 Perspective(float fov, float aspectRatio, float nearClip, float farClip);
 	static Float4x4 Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip);
 
 	// Access:
@@ -125,7 +124,6 @@ public:
 	friend Float4x4 operator*(float a, const Float4x4& b);
 	friend Float4 operator*(const Float4x4& a, const Float4& b);
 	friend Float4 operator*(const Float4& a, const Float4x4& b);
-	friend Float4x4 operator/(const Float4x4& a, float b);
 
 	// Logging:
 	std::string ToString() const;

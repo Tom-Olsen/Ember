@@ -21,7 +21,6 @@ struct Float3x2
 	// xz yz   2  5   [2,0] [2,1]
 
 private:
-	constexpr static float epsilon = 1e-8f;
 	Float3x2
 	(float xx, float xy, float xz,	// column 0
 	 float yx, float yy, float yz);	// column 1
@@ -39,18 +38,17 @@ public:
 	// Static constructors:
 	static Float3x2 Rows(const Float2& row0, const Float2& row1, const Float2& row2);
 	static Float3x2 Rows
-	(float row0x, float row0y, float row0z,
-	 float row1x, float row1y, float row1z);
+	(float row0x, float row0y,
+	 float row1x, float row1y,
+	 float row2x, float row2y);
 	static Float3x2 Columns(const Float3& column0, const Float3& column1);
 	static Float3x2 Columns
-	(float column0x, float column0y,
-	 float column1x, float column1y,
-	 float column2x, float column2y);
+	(float column0x, float column0y, float column0z,
+	 float column1x, float column1y, float column1z);
 
 	// Math operations:
 	Float2x3 Transpose() const;
 	Float2x3 LeftInverse() const;
-	Float2x3 RightInverse() const;
 	bool IsEpsilonZero() const;
 	
 	// Access:
@@ -93,7 +91,6 @@ public:
 	friend Float2 operator*(const Float3& a, const Float3x2& b);
 	friend Float3x2 operator*(const Float3x2& a, const Float2x2& b);
 	friend Float3x2 operator*(const Float3x3& a, const Float3x2& b);
-	friend Float3x2 operator/(const Float3x2& a, float b);
 	
 	// Logging:
 	std::string ToString() const;

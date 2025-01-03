@@ -40,7 +40,6 @@ public:
 	// Multiplication:
 	Int2 operator*(const Int2& other) const;
 	Int2& operator*=(const Int2& other);
-	Int2 operator*(int scalar) const;
 	Int2& operator*=(int scalar);
 
 	// Comparison:
@@ -49,6 +48,7 @@ public:
 
 	// Friend functions:
 	friend Int2 operator*(int a, const Int2& b);
+	friend Int2 operator*(const Int2& a, int b);
 
 	// Logging:
 	std::string ToString() const;

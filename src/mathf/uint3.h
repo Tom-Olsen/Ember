@@ -4,6 +4,7 @@
 
 
 
+// Mainly used for vulkan triangle indices.
 struct Uint3
 {
 public:
