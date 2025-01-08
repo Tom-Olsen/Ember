@@ -40,6 +40,7 @@
 #include "directionalLight.h"
 #include "drawMeshData.h"
 #include "meshRenderer.h"
+#include "meshTester.h"
 #include "pointLight.h"
 #include "rotationController.h"
 #include "spinGlobal.h"

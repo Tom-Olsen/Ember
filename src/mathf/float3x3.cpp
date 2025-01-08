@@ -450,3 +450,12 @@ Float3x3 Float3x3::identity = Float3x3
 (1.0f, 0.0f, 0.0f,
  0.0f, 1.0f, 0.0f,
  0.0f, 0.0f, 1.0f);
+Float3x3 Float3x3::rot90x = Float3x3::RotateX(mathf::PI_2);
+Float3x3 Float3x3::rot90y = Float3x3::RotateY(mathf::PI_2);
+Float3x3 Float3x3::rot90z = Float3x3::RotateZ(mathf::PI_2);
+Float3x3 Float3x3::rot180x = Float3x3::RotateX(mathf::PI);
+Float3x3 Float3x3::rot180y = Float3x3::RotateY(mathf::PI);
+Float3x3 Float3x3::rot180z = Float3x3::RotateZ(mathf::PI);
+Float3x3 Float3x3::rot270x = Float3x3::RotateX(-mathf::PI_2);
+Float3x3 Float3x3::rot270y = Float3x3::RotateY(-mathf::PI_2);
+Float3x3 Float3x3::rot270z = Float3x3::RotateZ(-mathf::PI_2);

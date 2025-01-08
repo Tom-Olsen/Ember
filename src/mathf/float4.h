@@ -91,10 +91,10 @@ public:
 	// Directions:
 	static Float4 right;	// +x = ( 1, 0, 0, 0).
 	static Float4 left;		// -x = (-1, 0, 0, 0).
-	static Float4 up;		// +y = ( 0, 1, 0, 0).
-	static Float4 down;		// -y = ( 0,-1, 0, 0).
-	static Float4 forward;	// +z = ( 0, 0, 1, 0).
-	static Float4 backward;	// -z = ( 0, 0,-1, 0).
+	static Float4 forward;	// +y = ( 0, 1, 0, 0).
+	static Float4 back;		// -y = ( 0,-1, 0, 0).
+	static Float4 up;		// +z = ( 0, 0, 1, 0).
+	static Float4 down;		// -z = ( 0, 0,-1, 0).
 	static Float4 in;		// +w = ( 0, 0, 0, 1).
 	static Float4 out;		// -w = ( 0, 0, 0,-1).
 

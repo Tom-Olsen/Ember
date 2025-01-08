@@ -45,4 +45,27 @@ float4x4 LinAlg_Invert(float4x4 input)
 
 
 
+// Rotation matrices:
+float3x3 LinAlg_RotateX3x3(float angle)
+{
+    float s, c;
+    sincos(angle, s, c);
+    return float3x3
+	(1.0f, 0.0f, 0.0f,
+	 0.0f,    c,   -s,
+	 0.0f,    s,    c);
+}
+float4x4 LinAlg_RotateX4x4(float angle)
+{
+    float s, c;
+    sincos(angle, s, c);
+    return float4x4
+	(1.0f, 0.0f, 0.0f, 0.0f,
+	 0.0f,    c,   -s, 0.0f,
+	 0.0f,    s,    c, 0.0f,
+	 0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+
+
 #endif //__INCLUDE_GUARD_linearAlgebra_hlsli__

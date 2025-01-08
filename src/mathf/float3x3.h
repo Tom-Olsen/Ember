@@ -113,6 +113,15 @@ public:
 	// Static members:
 	static Float3x3 zero;		// zero matrix.
 	static Float3x3 identity;	// identity matrix.
+	static Float3x3 rot90x;		// 90 degrees rotation around x-axis.
+	static Float3x3 rot90y;		// 90 degrees rotation around y-axis.
+	static Float3x3 rot90z;		// 90 degrees rotation around z-axis.
+	static Float3x3 rot180x;	// 180 degrees rotation around x-axis.
+	static Float3x3 rot180y;	// 180 degrees rotation around y-axis.
+	static Float3x3 rot180z;	// 180 degrees rotation around z-axis.
+	static Float3x3 rot270x;	// 270 degrees rotation around x-axis.
+	static Float3x3 rot270y;	// 270 degrees rotation around y-axis.
+	static Float3x3 rot270z;	// 270 degrees rotation around z-axis.
 };
 
 

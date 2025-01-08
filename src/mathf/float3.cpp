@@ -102,7 +102,7 @@ float Float3::Angle(const Float3& a, const Float3& b)
 	float lengths = a.Length() * b.Length();
 	if (lengths <= mathf::EPSILON)
 		return 0.0f;
-	return mathf::Acos(Dot(a, b) / lengths);
+	return mathf::Acos(mathf::Clamp(Dot(a, b) / lengths, -1.0f, 1.0f));
 }
 Float3 Float3::Min(const Float3& a, const Float3& b)
 {
@@ -304,12 +304,12 @@ Float3 Float3::zero		= Float3(0.0f);
 Float3 Float3::one		= Float3(1.0f);
 
 // Directions:
-Float3 Float3::right	= Float3(1.0f, 0.0f, 0.0f);
+Float3 Float3::right	= Float3( 1.0f, 0.0f, 0.0f);
 Float3 Float3::left		= Float3(-1.0f, 0.0f, 0.0f);
-Float3 Float3::up		= Float3(0.0f, 1.0f, 0.0f);
-Float3 Float3::down		= Float3(0.0f, -1.0f, 0.0f);
-Float3 Float3::forward	= Float3(0.0f, 0.0f, 1.0f);
-Float3 Float3::backward	= Float3(0.0f, 0.0f, -1.0f);
+Float3 Float3::forward	= Float3( 0.0f, 1.0f, 0.0f);
+Float3 Float3::back	    = Float3( 0.0f,-1.0f, 0.0f);
+Float3 Float3::up		= Float3( 0.0f, 0.0f, 1.0f);
+Float3 Float3::down		= Float3( 0.0f, 0.0f,-1.0f);
 
 // Colors:
 Float3 Float3::white	= Float3(1.0f, 1.0f, 1.0f);

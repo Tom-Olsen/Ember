@@ -49,12 +49,6 @@ void MeshManager::Init(VulkanContext* pContext)
 	Mesh* pConeEdgy = MeshGenerator::ConeEdgy(0.5f, 1.0f, 16, "coneEdgy");
 	AddMesh(pConeEdgy);
 
-	Mesh* pZylinderMantleSmooth = MeshGenerator::ZylinderMantleSmooth(0.5f, 1.0f, 16, "zylinderMantleSmooth");
-	AddMesh(pZylinderMantleSmooth);
-
-	Mesh* pZylinderMantleEdgy = MeshGenerator::ZylinderMantleEdgy(0.5f, 1.0f, 16, "zylinderMantleEdgy");
-	AddMesh(pZylinderMantleEdgy);
-
 	Mesh* pZylinderSmooth = MeshGenerator::ZylinderSmooth(0.5f, 1.0f, 16, "zylinderSmooth");
 	AddMesh(pZylinderSmooth);
 

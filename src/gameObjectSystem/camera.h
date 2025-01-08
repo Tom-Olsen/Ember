@@ -5,7 +5,7 @@
 
 
 /// <summary>
-/// Default view direction is -z = transform->backward
+/// View direction is down = (0,0,-1).
 /// </summary>
 class Camera : public Component
 {

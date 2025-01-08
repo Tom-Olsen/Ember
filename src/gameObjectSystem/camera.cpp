@@ -67,6 +67,8 @@ float Camera::GetFarClip() const
 Float4x4 Camera::GetViewMatrix() const
 {
 	return GetTransform()->GetWorldToLocalMatrix();
+	//return GetTransform()->GetWorldToLocalMatrix() * Float4x4::rot90x;
+	//return Float4x4::rot270x * GetTransform()->GetWorldToLocalMatrix();
 }
 Float4x4 Camera::GetProjectionMatrix()
 {
@@ -91,6 +93,10 @@ void Camera::LateUpdate()
 {
 	if (m_drawFrustum)
 		Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix());
+
+	// Draw camera orientation at center of world:
+	//Float4x4 matrix = Float4x4::TRS(Float3::zero, m_pTransform->GetRotation4x4(), Float3::one);
+	//Graphics::DrawMesh(MeshManager::GetMesh("fourLeg"), MaterialManager::GetMaterial("vertexColorLit"), matrix);
 }
 const std::string Camera::ToString() const
 {

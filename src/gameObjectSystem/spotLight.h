@@ -4,6 +4,9 @@
 
 
 
+/// <summary>
+/// View direction is down = (0,0,-1).
+/// </summary>
 class SpotLight : public Component
 {
 private: // Members:

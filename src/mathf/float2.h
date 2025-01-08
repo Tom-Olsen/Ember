@@ -89,8 +89,8 @@ public:
 	static Float2 one;
 	static Float2 right;	// +x = ( 1, 0).
 	static Float2 left;		// -x = (-1, 0).
-	static Float2 up;		// +y = ( 0, 1).
-	static Float2 down;		// -y = ( 0,-1).
+	static Float2 forward;	// +y = ( 0, 1).
+	static Float2 back;		// -y = ( 0,-1).
 };
 
 // Friend functions:

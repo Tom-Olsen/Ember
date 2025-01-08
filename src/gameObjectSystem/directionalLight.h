@@ -3,7 +3,9 @@
 #include "emberEngine.h"
 
 
-
+/// <summary>
+/// View direction is down = (0,0,-1).
+/// </summary>
 class DirectionalLight : public Component
 {
 public: // Enums:

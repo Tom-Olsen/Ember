@@ -96,10 +96,10 @@ public:
 	// Directions:
 	static Float3 right;	// +x = ( 1, 0, 0).
 	static Float3 left;		// -x = (-1, 0, 0).
-	static Float3 up;		// +y = ( 0, 1, 0).
-	static Float3 down;		// -y = ( 0,-1, 0).
-	static Float3 forward;	// +z = ( 0, 0, 1).
-	static Float3 backward;	// -z = ( 0, 0,-1).
+	static Float3 forward;	// +y = ( 0, 1, 0).
+	static Float3 back;		// -y = ( 0,-1, 0).
+	static Float3 up;		// +z = ( 0, 0, 1).
+	static Float3 down;		// -z = ( 0, 0,-1).
 
 	// Colors:
 	static Float3 white;	// ( 1, 1, 1).

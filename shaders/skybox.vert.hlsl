@@ -1,4 +1,5 @@
 #include "shadingPushConstant.hlsli"
+#include "mathf.hlsli"
 
 
 
@@ -15,13 +16,13 @@ cbuffer RenderMatrizes : register(b0)
 
 struct VertexInput
 {
-    float3 position : POSITION;
+    float3 position : POSITION; // position in local/model sapce
 };
 
 struct VertexOutput
 {
-    float4 position : SV_POSITION;
-    float3 localPos : TEXCOORD1;
+    float4 clipPosition : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float3 localPos : TEXCOORD1;        // position in local space
 };
 
 
@@ -34,7 +35,7 @@ VertexOutput main(VertexInput input)
     float4x4 mat = mul(projMatrix, fakeView);
     
     VertexOutput output;
-    output.position = mul(mat, pos);
-    output.localPos = input.position;
+    output.clipPosition = mul(mat, pos);
+    output.localPos = mul(LinAlg_RotateX3x3(-mathf_PI_2), input.position);
     return output;
 }

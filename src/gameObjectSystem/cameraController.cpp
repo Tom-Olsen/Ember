@@ -55,10 +55,10 @@ void CameraController::Rotation()
 		Float2 mousePos = EventSystem::MousePos();
 		Float2 delta = 0.001f * m_rotationSpeed * (mousePos - m_mousePosOnDown);
 
-		// Rotate around global Y-axis and local X-axis (note matrix multiplication order):
-		Float3x3 rotY = Float3x3::RotateY(-delta.x);
+		// Rotate around global Z-axis and local X-axis (note matrix multiplication order):
+		Float3x3 rotZ = Float3x3::RotateZ(-delta.x);
 		Float3x3 rotX = Float3x3::RotateX(-delta.y);
-		m_pTransform->SetRotationMatrix(rotY * m_rotationMatrixOnDown * rotX);
+		m_pTransform->SetRotationMatrix(rotZ * m_rotationMatrixOnDown * rotX);
 	}
 }
 void CameraController::Zoom()
@@ -67,7 +67,7 @@ void CameraController::Zoom()
 	if (mouseScroll != 0)
 	{
 		float currentSpeed = EventSystem::KeyDownOrHeld(SDLK_LSHIFT) ? m_zoomSpeed * m_fastMoveMultiplier : m_zoomSpeed;
-		m_pTransform->AddToPosition(mouseScroll * currentSpeed * m_pTransform->GetBackward());
+		m_pTransform->AddToPosition(mouseScroll * currentSpeed * m_pTransform->GetDown());
 	}
 }
 

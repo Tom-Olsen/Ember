@@ -16,6 +16,8 @@ class Transform;
 /// <summary>
 /// GameObject owns all Components that are attached to it.
 /// For now every type of Component can only ever be attached once to a GameObject.
+/// Every Component script need explicit instantiation of AddComponent and GetComponent at the end of the gameObject.cpp file.
+/// Every Component script must be included in the emberEngine.h file.
 /// </summary>
 class GameObject
 {

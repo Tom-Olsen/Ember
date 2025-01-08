@@ -587,3 +587,12 @@ Float4x4 Float4x4::identity = Float4x4
  0.0f, 1.0f, 0.0f, 0.0f,
  0.0f, 0.0f, 1.0f, 0.0f,
  0.0f, 0.0f, 0.0f, 1.0f);
+Float4x4 Float4x4::rot90x = Float4x4::RotateX(mathf::PI_2);
+Float4x4 Float4x4::rot90y = Float4x4::RotateY(mathf::PI_2);
+Float4x4 Float4x4::rot90z = Float4x4::RotateZ(mathf::PI_2);
+Float4x4 Float4x4::rot180x = Float4x4::RotateX(mathf::PI);
+Float4x4 Float4x4::rot180y = Float4x4::RotateY(mathf::PI);
+Float4x4 Float4x4::rot180z = Float4x4::RotateZ(mathf::PI);
+Float4x4 Float4x4::rot270x = Float4x4::RotateX(-mathf::PI_2);
+Float4x4 Float4x4::rot270y = Float4x4::RotateY(-mathf::PI_2);
+Float4x4 Float4x4::rot270z = Float4x4::RotateZ(-mathf::PI_2);

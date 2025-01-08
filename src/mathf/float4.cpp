@@ -258,14 +258,14 @@ Float4 Float4::zero		= Float4(0.0f);
 Float4 Float4::one		= Float4(1.0f);
 
 // Directions:
-Float4 Float4::right	= Float4(1.0f, 0.0f, 0.0f, 0.0f);
+Float4 Float4::right	= Float4( 1.0f, 0.0f, 0.0f, 0.0f);
 Float4 Float4::left		= Float4(-1.0f, 0.0f, 0.0f, 0.0f);
-Float4 Float4::up		= Float4(0.0f, 1.0f, 0.0f, 0.0f);
-Float4 Float4::down		= Float4(0.0f, -1.0f, 0.0f, 0.0f);
-Float4 Float4::forward	= Float4(0.0f, 0.0f, 1.0f, 0.0f);
-Float4 Float4::backward	= Float4(0.0f, 0.0f, -1.0f, 0.0f);
-Float4 Float4::in		= Float4(0.0f, 0.0f, 0.0f, 1.0f);
-Float4 Float4::out		= Float4(0.0f, 0.0f, 0.0f, -1.0f);
+Float4 Float4::forward	= Float4( 0.0f, 1.0f, 0.0f, 0.0f);
+Float4 Float4::back		= Float4( 0.0f,-1.0f, 0.0f, 0.0f);
+Float4 Float4::up		= Float4( 0.0f, 0.0f, 1.0f, 0.0f);
+Float4 Float4::down		= Float4( 0.0f, 0.0f,-1.0f, 0.0f);
+Float4 Float4::in		= Float4( 0.0f, 0.0f, 0.0f, 1.0f);
+Float4 Float4::out		= Float4( 0.0f, 0.0f, 0.0f,-1.0f);
 
 // Colors:
 Float4 Float4::white	= Float4(1.0f, 1.0f, 1.0f, 1.0f);

@@ -133,6 +133,15 @@ public:
 	// Static members:
 	static Float4x4 zero;		// zero matrix.
 	static Float4x4 identity;	// identity matrix.
+	static Float4x4 rot90x;		// 90 degrees rotation around x-axis.
+	static Float4x4 rot90y;		// 90 degrees rotation around y-axis.
+	static Float4x4 rot90z;		// 90 degrees rotation around z-axis.
+	static Float4x4 rot180x;	// 180 degrees rotation around x-axis.
+	static Float4x4 rot180y;	// 180 degrees rotation around y-axis.
+	static Float4x4 rot180z;	// 180 degrees rotation around z-axis.
+	static Float4x4 rot270x;	// 270 degrees rotation around x-axis.
+	static Float4x4 rot270y;	// 270 degrees rotation around y-axis.
+	static Float4x4 rot270z;	// 270 degrees rotation around z-axis.
 };
 
 

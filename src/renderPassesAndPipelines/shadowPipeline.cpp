@@ -99,14 +99,14 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
     // Rasterization:
     VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
     rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;  // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
-    rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;    // which face to cull
+    rasterizationState.cullMode = VK_CULL_MODE_NONE;        // render both sides to fix shadow issue with one sides meshes.
     rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE; // which face of triangle is front: 123 or 132?
     rasterizationState.lineWidth = 1.0f;
     rasterizationState.depthClampEnable = m_pContext->DepthClampEnabled();
     rasterizationState.depthBiasEnable = m_pContext->DepthBiasEnabled();
-    rasterizationState.depthBiasConstantFactor = 1.0f;		// Tweak this value based on the scene.
+    rasterizationState.depthBiasConstantFactor = 1.25f;     // Tweak this value based on the scene.
     rasterizationState.depthBiasClamp = 0.0f;
-    rasterizationState.depthBiasSlopeFactor = 0.5f;		    // Slope scale bias to handle varying slopes in depth.
+    rasterizationState.depthBiasSlopeFactor = 1.75f;        // Slope scale bias to handle varying slopes in depth.
     rasterizationState.rasterizerDiscardEnable = VK_FALSE;	// If true, geometry never passes through rasterization stage.
 
     // Multisampling:

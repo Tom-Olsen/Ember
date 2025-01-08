@@ -82,7 +82,7 @@ float Float2::Angle(const Float2& a, const Float2& b)
 	float lengths = a.Length() * b.Length();
 	if (lengthA <= mathf::EPSILON || lengthB <= mathf::EPSILON)
 		return 0.0f;
-	return mathf::Acos(Dot(a, b) / lengthA * lengthB);
+	return mathf::Acos(mathf::Clamp(Dot(a, b) / lengthA * lengthB, -1.0f, 1.0f));
 }
 Float2 Float2::Min(const Float2& a, const Float2& b)
 {
@@ -261,9 +261,9 @@ std::ostream& operator<<(std::ostream& os, const Float2& value)
 
 
 // Static members:
-Float2 Float2::zero = Float2(0.0f);
-Float2 Float2::one = Float2(1.0f);
-Float2 Float2::right = Float2(1.0f, 0.0f);
-Float2 Float2::left = Float2(-1.0f, 0.0f);
-Float2 Float2::up = Float2(0.0f, 1.0f);
-Float2 Float2::down = Float2(0.0f, -1.0f);
+Float2 Float2::zero		= Float2(0.0f);
+Float2 Float2::one		= Float2(1.0f);
+Float2 Float2::right	= Float2( 1.0f, 0.0f);
+Float2 Float2::left		= Float2(-1.0f, 0.0f);
+Float2 Float2::forward	= Float2( 0.0f, 1.0f);
+Float2 Float2::back		= Float2( 0.0f,-1.0f);

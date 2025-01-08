@@ -160,18 +160,12 @@ namespace MeshGenerator
 
 		std::vector<Mesh*> faces;
 		faces.reserve(6);
-		faces.push_back(ClockwiseQuad(p100, p101, p111, p110, "+x"));
-		faces.push_back(ClockwiseQuad(p001, p000, p010, p011, "-x"));
-		faces.push_back(ClockwiseQuad(p111, p011, p010, p110, "+y"));
-		faces.push_back(ClockwiseQuad(p001, p101, p100, p000, "-y"));
+		faces.push_back(ClockwiseQuad(p110, p100, p101, p111, "+x"));
+		faces.push_back(ClockwiseQuad(p000, p010, p011, p001, "-x"));
+		faces.push_back(ClockwiseQuad(p010, p110, p111, p011, "+y"));
+		faces.push_back(ClockwiseQuad(p100, p000, p001, p101, "-y"));
 		faces.push_back(ClockwiseQuad(p101, p001, p011, p111, "+z"));
 		faces.push_back(ClockwiseQuad(p000, p100, p110, p010, "-z"));
-		//faces.push_back(ClockwiseQuad(p100 + 0.1f * Float3::right, p101 + 0.1f * Float3::right, p111 + 0.1f * Float3::right, p110 + 0.1f * Float3::right, "+x"));
-		//faces.push_back(ClockwiseQuad(p001 + 0.1f * Float3::left, p000 + 0.1f * Float3::left, p010 + 0.1f * Float3::left, p011 + 0.1f * Float3::left, "-x"));
-		//faces.push_back(ClockwiseQuad(p111 + 0.1f * Float3::up, p011 + 0.1f * Float3::up, p010 + 0.1f * Float3::up, p110 + 0.1f * Float3::up, "+y"));
-		//faces.push_back(ClockwiseQuad(p001 + 0.1f * Float3::down, p101 + 0.1f * Float3::down, p100 + 0.1f * Float3::down, p000 + 0.1f * Float3::down, "-y"));
-		//faces.push_back(ClockwiseQuad(p101 + 0.1f * Float3::forward, p001 + 0.1f * Float3::forward, p011 + 0.1f * Float3::forward, p111 + 0.1f * Float3::forward, "+z"));
-		//faces.push_back(ClockwiseQuad(p000 + 0.1f * Float3::backward, p100 + 0.1f * Float3::backward, p110 + 0.1f * Float3::backward, p010 + 0.1f * Float3::backward, "-z"));
 
 		return Mesh::Merge(faces, "unitCube");
 	}
@@ -189,8 +183,8 @@ namespace MeshGenerator
 		std::vector<Mesh*> faces;
 		faces.reserve(5);
 		faces.push_back(ClockwiseQuad(p110, p100, p101, p111, "+x"));
-		faces.push_back(ClockwiseQuad(p011, p001, p000, p010, "-x"));
-		faces.push_back(ClockwiseQuad(p111, p011, p010, p110, "+y"));
+		faces.push_back(ClockwiseQuad(p000, p010, p011, p001, "-x"));
+		faces.push_back(ClockwiseQuad(p010, p110, p111, p011, "+y"));
 		faces.push_back(ClockwiseQuad(p100, p000, p001, p101, "-y"));
 		faces.push_back(ClockwiseQuad(p101, p001, p011, p111, "+z"));
 
@@ -336,7 +330,7 @@ namespace MeshGenerator
 		return pMesh;
 	}
 
-	Mesh* ConeSmooth(float radius, float height, int cornerCount, const std::string& name)
+	Mesh* ConeMantleSmooth(float radius, float height, int cornerCount, const std::string& name)
 	{
 		radius = std::max(1e-8f, radius);
 		height = std::max(1e-8f, height);
@@ -376,7 +370,7 @@ namespace MeshGenerator
 		pMesh->ComputeTangents();
 		return pMesh;
 	}
-	Mesh* ConeEdgy(float radius, float height, int cornerCount, const std::string& name)
+	Mesh* ConeMantleEdgy(float radius, float height, int cornerCount, const std::string& name)
 	{
 		std::vector<Mesh*> faces;
 		faces.reserve(cornerCount);
@@ -405,6 +399,22 @@ namespace MeshGenerator
 		}
 
 		return Mesh::Merge(faces, name);
+	}
+	Mesh* ConeSmooth(float radius, float height, int cornerCount, const std::string& name)
+	{
+		std::vector<Mesh*> meshes;
+		meshes.reserve(2);
+		meshes.push_back(ConeMantleSmooth(radius, height, cornerCount, "coneSmooth0"));
+		meshes.push_back(Disk(radius, cornerCount, "coneSmooth1")->Rotate(Float3x3::rot180x));
+		return Mesh::Merge(meshes, name);
+	}
+	Mesh* ConeEdgy(float radius, float height, int cornerCount, const std::string& name)
+	{
+		std::vector<Mesh*> meshes;
+		meshes.reserve(2);
+		meshes.push_back(ConeMantleEdgy(radius, height, cornerCount, "coneEdgy0"));
+		meshes.push_back(Disk(radius, cornerCount, "coneEdgy1")->Rotate(Float3x3::rot180x));
+		return Mesh::Merge(meshes, name);
 	}
 
 	Mesh* ZylinderMantleSmooth(float radius, float height, int cornerCount, const std::string& name)
@@ -468,7 +478,7 @@ namespace MeshGenerator
 
 			Mesh* face = UnitQuad();
 			face->Scale(Float3(width, height, 1.0f));
-			Float3x3 rotation = Float3x3::RotateZ(mathf::PI_2 + alpha) * Float3x3::RotateX(mathf::PI_2);
+			Float3x3 rotation = Float3x3::RotateZ(mathf::PI_2 + alpha) * Float3x3::rot90x;
 			face->Rotate(rotation);
 			face->Translate(Float3(dist * mathf::Cos(alpha), dist * mathf::Sin(alpha), 0.0f));
 
@@ -488,8 +498,8 @@ namespace MeshGenerator
 		std::vector<Mesh*> meshes;
 		meshes.reserve(3);
 		meshes.push_back(ZylinderMantleSmooth(radius, height, cornerCount, "zylinderSmooth0"));
-		meshes.push_back(Disk(radius, cornerCount, "zylinderSmooth1")->Translate(0.5f * height * Float3(0.0f, 0.0f, 1.0f)));
-		meshes.push_back(meshes[1]->GetCopy("zylinderSmooth2")->Rotate(Float3x3::RotateX(mathf::PI)));
+		meshes.push_back(Disk(radius, cornerCount, "zylinderSmooth1")->Translate(0.5f * height * Float3::up));
+		meshes.push_back(meshes[1]->GetCopy("zylinderSmooth2")->Rotate(Float3x3::rot180x));
 		return Mesh::Merge(meshes, name);
 	}
 	Mesh* ZylinderEdgy(float radius, float height, int cornerCount, const std::string& name)
@@ -497,8 +507,8 @@ namespace MeshGenerator
 		std::vector<Mesh*> meshes;
 		meshes.reserve(3);
 		meshes.push_back(ZylinderMantleEdgy(radius, height, cornerCount, "zylinderEdgy0"));
-		meshes.push_back(Disk(radius, cornerCount, "zylinderEdgy1")->Translate(0.5f * height * Float3(0.0f, 0.0f, 1.0f)));
-		meshes.push_back(meshes[1]->GetCopy("zylinderEdgy2")->Rotate(Float3x3::RotateX(mathf::PI)));
+		meshes.push_back(Disk(radius, cornerCount, "zylinderEdgy1")->Translate(0.5f * height * Float3::up));
+		meshes.push_back(meshes[1]->GetCopy("zylinderEdgy2")->Rotate(Float3x3::rot180x));
 		return Mesh::Merge(meshes, name);
 	}
 
@@ -518,10 +528,10 @@ namespace MeshGenerator
 		std::vector<Mesh*> meshes;
 		meshes.reserve(4);
 
-		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowSmooth0")->Rotate(Float3x3::RotateX(mathf::PI)));
+		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowSmooth0")->Rotate(Float3x3::rot180x));
 		meshes.push_back(ZylinderMantleSmooth(bodyRadius, bodyHeight, cornerCount, "arrowSmooth1")->Translate(0.5f * bodyHeight * Float3::up));
-		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowSmooth2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::RotateX(mathf::PI)));
-		meshes.push_back(ConeSmooth(headRadius, headHeight, cornerCount, "arrowSmooth3")->Translate(bodyHeight * Float3::up));
+		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowSmooth2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::rot180x));
+		meshes.push_back(ConeMantleSmooth(headRadius, headHeight, cornerCount, "arrowSmooth3")->Translate(bodyHeight * Float3::up));
 
 		Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
 		return Mesh::Merge(meshes, name)->Rotate(rotation);
@@ -542,12 +552,12 @@ namespace MeshGenerator
 		std::vector<Mesh*> meshes;
 		meshes.reserve(4);
 
-		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowEdgy0")->Rotate(Float3x3::RotateX(mathf::PI)));
-		meshes.push_back(ZylinderMantleEdgy(bodyRadius, bodyHeight, cornerCount, "arrowEdgy1")->Translate(0.5f * bodyHeight * Float3::forward));
-		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowEdgy2")->Translate(-bodyHeight * Float3::forward)->Rotate(Float3x3::RotateX(mathf::PI)));
-		meshes.push_back(ConeEdgy(headRadius, headHeight, cornerCount, "arrowEdgy3")->Translate(bodyHeight * Float3::forward));
+		meshes.push_back(Disk(bodyRadius, cornerCount, "arrowEdgy0")->Rotate(Float3x3::rot180x));
+		meshes.push_back(ZylinderMantleEdgy(bodyRadius, bodyHeight, cornerCount, "arrowEdgy1")->Translate(0.5f * bodyHeight * Float3::up));
+		meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowEdgy2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::rot180x));
+		meshes.push_back(ConeMantleEdgy(headRadius, headHeight, cornerCount, "arrowEdgy3")->Translate(bodyHeight * Float3::up));
 
-		Float4x4 rotation = Float4x4::RotateFromTo(Float3::forward, direction);
+		Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
 		return Mesh::Merge(meshes, name)->Rotate(rotation);
 	}
 
@@ -556,29 +566,28 @@ namespace MeshGenerator
 		std::vector<Mesh*> meshes;
 		meshes.reserve(3);
 
-		meshes.push_back(ArrowEdgy(Float3(1.0f, 0.0f, 0.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg0"));
-		meshes.push_back(ArrowEdgy(Float3(0.0f, 1.0f, 0.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg1"));
-		meshes.push_back(ArrowEdgy(Float3(0.0f, 0.0f, 1.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg2"));
-		meshes[0]->SetUniformColor(Float4(1.0f, 0.0f, 0.0f, 1.0f));
-		meshes[1]->SetUniformColor(Float4(0.0f, 1.0f, 0.0f, 1.0f));
-		meshes[2]->SetUniformColor(Float4(0.0f, 0.0f, 1.0f, 1.0f));
+		meshes.push_back(ArrowEdgy(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg0"));
+		meshes.push_back(ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg1"));
+		meshes.push_back(ArrowEdgy(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg2"));
+		meshes[0]->SetUniformColor(Float4::red);
+		meshes[1]->SetUniformColor(Float4::green);
+		meshes[2]->SetUniformColor(Float4::blue);
 
 		return Mesh::Merge(meshes, "threeLeg");
 	}
-
 	Mesh* FourLeg()
 	{
 		std::vector<Mesh*> meshes;
 		meshes.reserve(4);
 
-		meshes.push_back(ArrowEdgy(Float3(1.0f, 0.0f,  0.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg0"));
-		meshes.push_back(ArrowEdgy(Float3(0.0f, 1.0f,  0.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg1"));
-		meshes.push_back(ArrowEdgy(Float3(0.0f, 0.0f,  1.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg2"));
-		meshes.push_back(ArrowEdgy(Float3(0.0f, 0.0f, -1.0f), 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg3"));
-		meshes[0]->SetUniformColor(Float4(1.0f, 0.0f, 0.0f, 1.0f));
-		meshes[1]->SetUniformColor(Float4(0.0f, 1.0f, 0.0f, 1.0f));
-		meshes[2]->SetUniformColor(Float4(0.0f, 0.0f, 1.0f, 1.0f));
-		meshes[3]->SetUniformColor(Float4(1.0f, 1.0f, 1.0f, 1.0f));
+		meshes.push_back(ArrowEdgy(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg0"));
+		meshes.push_back(ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg1"));
+		meshes.push_back(ArrowEdgy(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg2"));
+		meshes.push_back(ArrowEdgy(Float3::down, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg3"));
+		meshes[0]->SetUniformColor(Float4::red);
+		meshes[1]->SetUniformColor(Float4::green);
+		meshes[2]->SetUniformColor(Float4::blue);
+		meshes[3]->SetUniformColor(Float4::white);
 
 		return Mesh::Merge(meshes, "fourLeg");
 	}
