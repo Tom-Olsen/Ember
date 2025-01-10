@@ -71,9 +71,9 @@ Scene* ShadowCascadeScene()
 	Scene* pScene = new Scene();
 	{// Camera:
 		GameObject* pGameObject = new GameObject("mainCamera");
-		Float3 pos = Float3(30.0f, 20.0f, 50.0f);
+		Float3 pos = Float3(30.0f, -50.0f, 20.0f);
 		pGameObject->GetTransform()->SetPosition(pos);
-		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::back, -pos, Float3::up, Float3::up));
+		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
 
 		Camera* pCamera = new Camera();
 		pCamera->SetFarClip(1000.0f);
@@ -101,7 +101,7 @@ Scene* ShadowCascadeScene()
 	}
 	{// ThreeLeg:
 		GameObject* pGameObject = new GameObject("threeLeg");
-		pGameObject->GetTransform()->SetPosition(-2.0f, 0.0f, 1.0f);
+		pGameObject->GetTransform()->SetPosition(-5.0f, 0.0f, 0.0f);
 		pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
 
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
@@ -116,9 +116,9 @@ Scene* ShadowCascadeScene()
 	Camera* pCamera = new Camera();
 	{// TestCamera:
 		GameObject* pGameObject = new GameObject("testCamera");
-		Float3 pos = Float3(-20.0f, -20.0f, 0.0f);
+		Float3 pos = Float3(20.0f, 0.0f, 0.0f);
 		pGameObject->GetTransform()->SetPosition(pos);
-		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateFromTo(Float3::forward, Float3::right));
+		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::rot90z * Float3x3::rot90x);
 
 		pCamera->SetNearClip(0.5f);
 		pCamera->SetFarClip(100.0f);
@@ -127,7 +127,7 @@ Scene* ShadowCascadeScene()
 
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlit"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
@@ -139,14 +139,14 @@ Scene* ShadowCascadeScene()
 	}
 	{// Test Light:
 		GameObject* pGameObject = new GameObject("testLight");
-		Float3 direction = Float3(-0.4f, -1.0f, -0.4f).Normalize();
-		Float3x3 rotation = Float3x3::RotateFromTo(Float3::back, direction);
+		Float3 direction = Float3(-0.4f, 0.4f, -1.0f).Normalize();
+		Float3x3 rotation = Float3x3::RotateFromTo(Float3::down, direction);
 		pGameObject->GetTransform()->SetPosition(Float3(0.0f, 3.0f, 0.0f));
 		pGameObject->GetTransform()->SetRotationMatrix(rotation);
-
+	
 		DirectionalLight* pDirectionalLight = new DirectionalLight();
 		pDirectionalLight->SetIntensity(1.0f);
-		pDirectionalLight->SetColor(Float3(1.0f, 0.0f, 0.0f));
+		pDirectionalLight->SetColor(Float3::red);
 		pDirectionalLight->SetNearClip(1.1f);
 		pDirectionalLight->SetFarClip(15.0f);
 		pDirectionalLight->SetViewWidth(10.0f);
@@ -155,14 +155,14 @@ Scene* ShadowCascadeScene()
 		pDirectionalLight->SetDrawFrustum(false);
 		pDirectionalLight->SetShowShadowCascades(true);
 		pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
-
+	
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlit"));
 		pMeshRenderer->SetCastShadows(true);
 		pMeshRenderer->SetReceiveShadows(true);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
-
+	
 		pScene->AddGameObject(pGameObject);
 	}
 	return pScene;
@@ -268,7 +268,7 @@ Scene* DefaultScene()
 		GameObject* pGameObject = new GameObject("mainCamera");
 		Float3 pos = Float3(0.0f, -8.0f, 3.0f);
 		pGameObject->GetTransform()->SetPosition(pos);
-		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::up, Float3::up));
+		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
 
 		Camera* pCamera = new Camera();
 		pCamera->SetFarClip(1000.0f);
@@ -283,7 +283,7 @@ Scene* DefaultScene()
 	{// PointLight:
 		GameObject* pGameObject = new GameObject("pointLight");
 		Float3 pos = Float3(1.0f, 0.0f, 2.0f);
-		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::back, -pos, Float3::up, Float3::up);
+		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::back, -pos, Float3::forward, Float3::up);
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
@@ -311,13 +311,13 @@ Scene* DefaultScene()
 	{// Light0:
 		GameObject* pGameObject = new GameObject("light0");
 		Float3 pos = Float3(7.0f, 3.5f, 7.0f);
-		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::up, Float3::up);
+		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up);
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlit"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
@@ -345,7 +345,7 @@ Scene* DefaultScene()
 			pSpotLight->SetIntensity(100.0f);
 			pSpotLight->SetNearClip(1.1f);
 			pSpotLight->SetFarClip(20.0f);
-			pSpotLight->SetFov(mathf::DEG2RAD * 30.0f);
+			pSpotLight->SetFov(mathf::deg2rad * 30.0f);
 			pSpotLight->SetBlendStart(0.7f);
 			pSpotLight->SetBlendEnd(0.9f);
 			pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -357,13 +357,13 @@ Scene* DefaultScene()
 	{// Light1:
 		GameObject* pGameObject = new GameObject("light1");
 		Float3 pos = Float3(-7.0f, 3.5f, 7.0f);
-		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::up, Float3::up);
+		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up);
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlit"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
@@ -391,7 +391,7 @@ Scene* DefaultScene()
 			pSpotLight->SetIntensity(100.0f);
 			pSpotLight->SetNearClip(1.1f);
 			pSpotLight->SetFarClip(20.0f);
-			pSpotLight->SetFov(mathf::DEG2RAD * 30.0f);
+			pSpotLight->SetFov(mathf::deg2rad * 30.0f);
 			pSpotLight->SetBlendStart(0.7f);
 			pSpotLight->SetBlendEnd(0.9f);
 			pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -403,13 +403,13 @@ Scene* DefaultScene()
 	{// Light2:
 		GameObject* pGameObject = new GameObject("light2");
 		Float3 pos = Float3(0.0f, -7.5f, 7.0f);
-		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::up, Float3::up);
+		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up);
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
 		MeshRenderer* pMeshRenderer = new MeshRenderer();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLit"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlit"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
@@ -437,7 +437,7 @@ Scene* DefaultScene()
 			pSpotLight->SetIntensity(100.0f);
 			pSpotLight->SetNearClip(1.1f);
 			pSpotLight->SetFarClip(20.0f);
-			pSpotLight->SetFov(mathf::DEG2RAD * 30.0f);
+			pSpotLight->SetFov(mathf::deg2rad * 30.0f);
 			pSpotLight->SetBlendStart(0.7f);
 			pSpotLight->SetBlendEnd(0.9f);
 			pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -652,9 +652,9 @@ int main()
 
 	// Initialization:
 	Application app;
-	//Scene* pScene = ShadowCascadeScene();
+	Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
-	Scene* pScene = DefaultScene();
+	//Scene* pScene = DefaultScene();
 	app.SetScene(pScene);
 
 	// Debugging:

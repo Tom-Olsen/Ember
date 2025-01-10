@@ -99,6 +99,8 @@ public:
 
 	// Static members:
 	static Float3x2 zero;		// zero matrix.
+	static Float3x2 max;		// all entries are mathf::max.
+	static Float3x2 min;		// all entries are mathf::min.
 };
 
 

@@ -1,6 +1,3 @@
-SamplerComparisonState shadowSampler : register(s11);
-Texture2DArray<float> shadowMaps : register(t20);
-#include "shadowMapping.hlsli"
 #include "shadingPushConstant.hlsli"
 
 

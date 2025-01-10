@@ -6,8 +6,8 @@
 // Constructors:
 TEST(Float4, DirectionConstructor)
 {
-	Float4 direction = Float4::Direction(mathf::PI_4, mathf::PI_4);
-	EXPECT_NEAR4(direction, Float4(0.5f, 0.5f, mathf::SQRT2_INV, 0.0f), epsilon);
+	Float4 direction = Float4::Direction(mathf::pi4, mathf::pi4);
+	EXPECT_NEAR4(direction, Float4(0.5f, 0.5f, mathf::sqrt2Inv, 0.0f), epsilon);
 }
 
 // Math operations:
@@ -25,7 +25,7 @@ TEST(Float4, Length)
 }
 TEST(Float4, IsEpsilonZero)
 {
-	Float4 a = Float4(0.9f * mathf::EPSILON, -0.9f * mathf::EPSILON, 0.9f * mathf::EPSILON, -0.9f * mathf::EPSILON);
+	Float4 a = Float4(0.9f * mathf::epsilon, -0.9f * mathf::epsilon, 0.9f * mathf::epsilon, -0.9f * mathf::epsilon);
 	EXPECT_TRUE(a.IsEpsilonZero());
 }
 

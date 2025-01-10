@@ -267,7 +267,7 @@ Float2x2& Float2x2::operator/=(float scalar)
 bool Float2x2::IsEpsilonEqual(const Float2x2& other) const
 {
 	for (uint32_t i = 0; i < 4; i++)
-		if (mathf::Abs(data[i] - other[i]) > mathf::EPSILON)
+		if (mathf::Abs(data[i] - other[i]) > mathf::epsilon)
 			return false;
 	return true;
 }
@@ -344,3 +344,5 @@ Float2x2 Float2x2::zero = Float2x2(0.0f);
 Float2x2 Float2x2::identity = Float2x2
 (1.0f, 0.0f,
  0.0f, 1.0f);
+Float2x2 Float2x2::max = Float2x2(mathf::max);
+Float2x2 Float2x2::min = Float2x2(mathf::min);

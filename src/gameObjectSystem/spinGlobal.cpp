@@ -19,7 +19,7 @@ SpinGlobal::~SpinGlobal()
 // Overrides:
 void SpinGlobal::Update()
 {
-	Float3 eulerRadians = mathf::DEG2RAD * m_eulerDegreesPerSecond * Timer::GetDeltaTime();
+	Float3 eulerRadians = mathf::deg2rad * m_eulerDegreesPerSecond * Timer::GetDeltaTime();
 	Float4x4 rotation = Float4x4::Rotate(eulerRadians, m_rotationOrder);
 	Float4x4 translate = Float4x4::Translate(m_position);
 	Float4x4 translateInverse = Float4x4::Translate(-m_position);

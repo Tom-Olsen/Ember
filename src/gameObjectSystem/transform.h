@@ -52,10 +52,10 @@ public: // Methods:
 	Float4x4 GetWorldToLocalMatrix();
 	Float4x4 GetLocalToWorldNormalMatrix();
 	Float4x4 GetWorldToLocalNormalMatrix();
-	Float3 GetForward();
-	Float3 GetBackward();
 	Float3 GetRight();
 	Float3 GetLeft();
+	Float3 GetForward();
+	Float3 GetBack();
 	Float3 GetUp();
 	Float3 GetDown();
 

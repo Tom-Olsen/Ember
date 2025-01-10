@@ -6,8 +6,8 @@
 // Constructors:
 TEST(Float3, DirectionConstructor)
 {
-	Float3 direction = Float3::Direction(mathf::PI_4, mathf::PI_4);
-	EXPECT_NEAR3(direction, Float3(0.5f, 0.5f, mathf::SQRT2_INV), epsilon);
+	Float3 direction = Float3::Direction(mathf::pi4, mathf::pi4);
+	EXPECT_NEAR3(direction, Float3(0.5f, 0.5f, mathf::sqrt2Inv), epsilon);
 }
 
 // Math operations:
@@ -25,21 +25,21 @@ TEST(Float3, Length)
 }
 TEST(Float3, Theta)
 {
-	Float3 a(1.0f, 1.0f, mathf::SQRT2);
+	Float3 a(1.0f, 1.0f, mathf::sqrt2);
 	float theta = a.Theta();
-	EXPECT_NEAR(theta, mathf::PI_4, epsilon);
+	EXPECT_NEAR(theta, mathf::pi4, epsilon);
 }
 TEST(Float3, Phi)
 {
 	Float3 a = Float3::one;
 	float phi = a.Phi();
-	EXPECT_NEAR(phi, mathf::PI_4, epsilon);
+	EXPECT_NEAR(phi, mathf::pi4, epsilon);
 }
 TEST(Float3, Angles)
 {
-	Float3 a(1.0f, 1.0f, mathf::SQRT2);
+	Float3 a(1.0f, 1.0f, mathf::sqrt2);
 	Float2 angles = a.Angles();
-	EXPECT_NEAR2(angles, mathf::PI_4 * Float2::one, epsilon);
+	EXPECT_NEAR2(angles, mathf::pi4 * Float2::one, epsilon);
 }
 TEST(Float3, Normalize)
 {
@@ -49,13 +49,13 @@ TEST(Float3, Normalize)
 }
 TEST(Float3, Rotate)
 {
-	Float3 a(1.0f, 1.0f, mathf::SQRT2);
-	Float3 rotated = a.Rotate(mathf::PI_4, mathf::PI_4);
+	Float3 a(1.0f, 1.0f, mathf::sqrt2);
+	Float3 rotated = a.Rotate(mathf::pi4, mathf::pi4);
 	EXPECT_NEAR3(rotated, Float3(0.0f, 2.0f, 0.0f), epsilon);
 }
 TEST(Float3, IsEpsilonZero)
 {
-	Float3 a = Float3(0.9f * mathf::EPSILON, -0.9f * mathf::EPSILON, 0.0f);
+	Float3 a = Float3(0.9f * mathf::epsilon, -0.9f * mathf::epsilon, 0.0f);
 	EXPECT_TRUE(a.IsEpsilonZero());
 }
 
@@ -99,7 +99,7 @@ TEST(Float3, static_Angle)
 	Float3 a(2.0f, 0.0f, 0.0f);
 	Float3 b(-2.0f, 2.0f, 0.0f);
 	float angle = Float3::Angle(a, b);
-	EXPECT_NEAR(angle, mathf::DEG2RAD * 135.0f, epsilon);
+	EXPECT_NEAR(angle, mathf::deg2rad * 135.0f, epsilon);
 }
 TEST(Float3, Min)
 {

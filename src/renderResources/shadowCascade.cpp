@@ -23,7 +23,7 @@ Float4 ShadowCascade::s_frustumCorners_Clip[8] =
 ShadowCascade::ShadowCascade(Camera* const pCamera, const Float3& direction_World, float nearDepth, float farDepth, float worldHeight)
 {
 	m_pCamera = pCamera;
-	m_direction_World = direction_World;
+	m_direction_World = direction_World; // should already be normalized.
 
 	ComputeSubFrustumCorners_World(nearDepth, farDepth);
 	Float3 subFrustumCenter_World = SubFrustumCenter_World();
@@ -37,13 +37,7 @@ ShadowCascade::ShadowCascade(Camera* const pCamera, const Float3& direction_Worl
 	m_width = bounds.GetSize().x;
 	m_height = bounds.GetSize().y;
 	m_farClip = bounds.GetSize().z;
-
-	Graphics::DrawBounds(Float4x4::identity, bounds);
-	Graphics::DrawSphere(Float3::zero, 0.5f, Float4::green);
-	for (int i = 0; i < 8; i++)
-		Graphics::DrawSphere(m_subFrustumCorners_LightLocal[i], 0.5f, Float4::red);
 }
-
 
 
 // Public methods:
@@ -93,9 +87,6 @@ void ShadowCascade::ComputeSubFrustumCorners_World(float nearDepth, float farDep
 	m_subFrustumCorners_World[5] = frustumCorners_World[4] + farDepth  * (frustumCorners_World[5] - frustumCorners_World[4]);
 	m_subFrustumCorners_World[6] = frustumCorners_World[6] + nearDepth * (frustumCorners_World[7] - frustumCorners_World[6]);
 	m_subFrustumCorners_World[7] = frustumCorners_World[6] + farDepth  * (frustumCorners_World[7] - frustumCorners_World[6]);
-
-	for (uint32_t i = 0; i < 8; i++)
-		Graphics::DrawSphere(m_subFrustumCorners_World[i], 0.5f, Float4::blue);
 }
 Float3 ShadowCascade::SubFrustumCenter_World() const
 {
@@ -106,32 +97,37 @@ Float3 ShadowCascade::SubFrustumCenter_World() const
 }
 Float3 ShadowCascade::ComputeLightPosition_World(float worldHeight) const
 {
-	// This is wrong!
-	// Correct way: (needs Float2x3/Float3x2 (?) implementation)
-	// -Project all 8 sub frumstum corners to a plane that is perpendicular to the light direction.
-	// -Compute xy-Coordinates of all 8 projected points in coordinate system of the plane.
-	//  right = (1,0) is given by m_pCamera->GetTransform()->GetRight()
-	//  up = (0,1) is given by the cross product of the light direction and the right vector.
-	// -Compute min and max of the xy points.
-	// -Compute center of the min-max rectangle.
-	// -Transform this center point back to 3d space.
-	// -Compute LinePlaneIntersection from this point to the plane with normal (0,0,1) and support (0,0,worldHeight).
-	// -This is the light position.
-	Float3 centerProjection = Float3::zero;
+	// Plane direction vectors e1=(1,0) and e2=(0,1) in world space:
+	Float3 e1 = geometry3d::PointToPlaneProjection(m_pCamera->GetTransform()->GetRight(), Float3::zero, m_direction_World).Normalize();
+	Float3 e2 = Float3::Cross(m_direction_World, e1).Normalize();
+
+	// Projection matrices:
+	Float3x2 planeToWorld = Float3x2::Columns(e1, e2);
+	Float2x3 worldToPlane = planeToWorld.LeftInverse();
+
+	// Project sub frustum corners to plane and determine 2d bounding box on the plane (min/max):
+	Float2 centerPlane = Float2::zero;
+	Float2 min = Float2::max;
+	Float2 max = Float2::min;
 	for (uint32_t i = 0; i < 8; i++)
-		centerProjection += geometry3d::PointToPlaneProjection(m_subFrustumCorners_World[i], Float3::zero, -m_direction_World);
-	centerProjection /= 8.0f;
+	{
+		Float2 subFrustumCorner_Projection = worldToPlane * m_subFrustumCorners_World[i];
+		min = Float2::Min(min, subFrustumCorner_Projection);
+		max = Float2::Max(max, subFrustumCorner_Projection);
+	}
+	// Center of bounding box in world space is the point at which the light source must be aimed.
+	Float3 centerWorld = planeToWorld * (min + max) / 2.0f;
 
 	Float3 planeNormal = Float3::up;
 	Float3 planeSupport = worldHeight * Float3::up;
-	return geometry3d::LinePlaneIntersection(centerProjection, m_direction_World, planeSupport, planeNormal);
+	return geometry3d::LinePlaneIntersection(centerWorld, m_direction_World, planeSupport, planeNormal);
 }
 void ShadowCascade::ComputeSubFrustumCorners_LightLocal(const Float3& position_World, const Float3& direction_World)
 {
 	// Transform sub frustum corners to local space of shadow cascade light source:
 	Float3 cameraRight = m_pCamera->GetTransform()->GetRight();
 	Float4x4 posMatrix = Float4x4::Translate(position_World);
-	Float4x4 rotMatrix = Float4x4::RotateThreeLeg(Float3::forward, -direction_World, Float3::right, cameraRight);
+	Float4x4 rotMatrix = Float4x4::RotateThreeLeg(Float3::up, -direction_World, Float3::right, cameraRight);
 	m_lightLocalToWorldMatrix = posMatrix * rotMatrix;
 	Float4x4 worldToLightLocalMatrix = m_lightLocalToWorldMatrix.Inverse();
 	for (uint32_t i = 0; i < 8; i++)

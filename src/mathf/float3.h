@@ -90,8 +90,10 @@ public:
 
 	// Static members:
 	// Numbers:
-	static Float3 zero;
-	static Float3 one;
+	static Float3 zero;		// (0, 0, 0).
+	static Float3 one;		// (1, 1, 1).
+	static Float3 max;		// mathf::max * (1, 1, 1).
+	static Float3 min;		// mathf::min * (1, 1, 1).
 
 	// Directions:
 	static Float3 right;	// +x = ( 1, 0, 0).

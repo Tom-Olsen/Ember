@@ -16,7 +16,6 @@ cbuffer RenderMatrizes : register(b0)
 struct VertexInput
 {
     float3 position : POSITION; // position in local/model sapce
-    float3 normal : NORMAL;     // normal in local/model space
     float4 vertexColor : COLOR; // vertex color
 };
 

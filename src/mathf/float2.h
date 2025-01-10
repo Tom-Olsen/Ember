@@ -85,8 +85,13 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Float2& value);
 
 	// Static members:
-	static Float2 zero;
-	static Float2 one;
+	// Numbers:
+	static Float2 zero;		// (0, 0).
+	static Float2 one;		// (1, 1).
+	static Float2 max;		// mathf::max * (1, 1).
+	static Float2 min;		// mathf::min * (1, 1).
+
+	// Directions:
 	static Float2 right;	// +x = ( 1, 0).
 	static Float2 left;		// -x = (-1, 0).
 	static Float2 forward;	// +y = ( 0, 1).

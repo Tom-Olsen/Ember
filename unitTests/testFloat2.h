@@ -6,8 +6,8 @@
 // Constructors:
 TEST(Float2, DirectionConstructor)
 {
-	Float2 direction = Float2::Direction(mathf::PI_4);
-	EXPECT_NEAR2(direction, mathf::SQRT2_INV * Float2::one, epsilon);
+	Float2 direction = Float2::Direction(mathf::pi4);
+	EXPECT_NEAR2(direction, mathf::sqrt2Inv * Float2::one, epsilon);
 }
 
 // Math operations:
@@ -27,7 +27,7 @@ TEST(Float2, Angle)
 {
 	Float2 a(-5.0f, -5.0f);
 	float angle = a.Angle();
-	EXPECT_NEAR(angle, -3.0f / 4.0f * mathf::PI, epsilon);
+	EXPECT_NEAR(angle, -3.0f / 4.0f * mathf::pi, epsilon);
 }
 TEST(Float2, Normalize)
 {
@@ -38,12 +38,12 @@ TEST(Float2, Normalize)
 TEST(Float2, Rotate)
 {
 	Float2 a(1.0f, 0.0f);
-	Float2 rotated = a.Rotate(mathf::PI_4);
-	EXPECT_NEAR2(rotated, Float2(mathf::SQRT2_INV, mathf::SQRT2_INV), epsilon);
+	Float2 rotated = a.Rotate(mathf::pi4);
+	EXPECT_NEAR2(rotated, Float2(mathf::sqrt2Inv, mathf::sqrt2Inv), epsilon);
 }
 TEST(Float2, IsEpsilonZero)
 {
-	Float2 a(0.9f * mathf::EPSILON, -0.9f * mathf::EPSILON);
+	Float2 a(0.9f * mathf::epsilon, -0.9f * mathf::epsilon);
 	EXPECT_TRUE(a.IsEpsilonZero());
 }
 
@@ -87,7 +87,7 @@ TEST(Float2, static_Angle)
 	Float2 a(2.0f, 1.0f);
 	Float2 b(-2.0f, 4.0f);
 	float angle = Float2::Angle(a, b);
-	EXPECT_NEAR(angle, mathf::PI_2, epsilon);
+	EXPECT_NEAR(angle, mathf::pi2, epsilon);
 }
 TEST(Float2, Min)
 {

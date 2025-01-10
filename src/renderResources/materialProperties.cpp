@@ -57,11 +57,11 @@ MaterialProperties::MaterialProperties(Material* pMaterial)
 	SetSampler("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
 	SetTexture2d("shadowMaps", pShadowRenderPass->GetShadowMaps());
 	SetTexture2d("normalMap", TextureManager::GetTexture2d("defaultNormalMap"));
-	SetValue("SurfaceProperties", "scaleOffset", Float4(1.0f, 1.0f, 1.0f, 1.0f));
-	SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 1.0f, 1.0f, 1.0f));
+	SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 	SetValue("SurfaceProperties", "roughness", 0.5f);
 	SetValue("SurfaceProperties", "reflectivity", Float3(0.4f));
 	SetValue("SurfaceProperties", "metallic", 0);
+	SetValue("SurfaceProperties", "scaleOffset", Float4::one);
 }
 MaterialProperties::~MaterialProperties()
 {

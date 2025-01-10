@@ -212,7 +212,7 @@ namespace MeshGenerator
 		std::vector<Uint3> triangles;	triangles.reserve(cornerCount);
 
 		// Per vertex data:
-		float dAlpha = 2.0f * mathf::PI  / cornerCount;
+		float dAlpha = 2.0f * mathf::pi  / cornerCount;
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float alpha = i * dAlpha;
@@ -255,7 +255,7 @@ namespace MeshGenerator
 		std::vector<Uint3> triangles;	triangles.reserve(2 * (cornerCount - 1));
 
 		// Per vertex data:
-		float dAlpha = mathf::DEG2RAD * degrees / (cornerCount - 1.0f);
+		float dAlpha = mathf::deg2rad * degrees / (cornerCount - 1.0f);
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float x = mathf::Cos(i * dAlpha);
@@ -300,7 +300,7 @@ namespace MeshGenerator
 
 		// Per vertex data:
 		float duv = 1.0f / (cornerCount - 1.0f);
-		float dAlpha = mathf::DEG2RAD * degrees / (cornerCount - 1.0f);
+		float dAlpha = mathf::deg2rad * degrees / (cornerCount - 1.0f);
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float x = mathf::Cos(i * dAlpha);
@@ -341,7 +341,7 @@ namespace MeshGenerator
 		std::vector<Float4> uvs;		uvs.reserve(cornerCount + 2);
 		std::vector<Uint3> triangles;	triangles.reserve(3 * cornerCount);
 
-		float dAlpha = 2.0f * mathf::PI / cornerCount;
+		float dAlpha = 2.0f * mathf::pi / cornerCount;
 		for (int i = 0; i < cornerCount + 1; i++)
 		{
 			float alpha = i * dAlpha;
@@ -376,7 +376,7 @@ namespace MeshGenerator
 		faces.reserve(cornerCount);
 		std::vector<Float4> uvs(3);
 
-		float dAlpha = 2.0f * mathf::PI / cornerCount;
+		float dAlpha = 2.0f * mathf::pi / cornerCount;
 		for (int i = 0; i < cornerCount; i++)
 		{
 			float alpha0 = i * dAlpha;
@@ -428,7 +428,7 @@ namespace MeshGenerator
 		std::vector<Float4> uvs;		uvs.reserve(2 * (cornerCount + 1));
 		std::vector<Uint3> triangles;	triangles.reserve(2 * cornerCount);
 
-		float dAlpha = 2.0f * mathf::PI / cornerCount;
+		float dAlpha = 2.0f * mathf::pi / cornerCount;
 		for (int i = 0; i < cornerCount + 1; i++)
 		{
 			float alpha = i * dAlpha;
@@ -469,7 +469,7 @@ namespace MeshGenerator
 		faces.reserve(2 * cornerCount);
 		std::vector<Float4> uvs(4);
 		
-		float dAlpha = 2.0f * mathf::PI / cornerCount;
+		float dAlpha = 2.0f * mathf::pi / cornerCount;
 		float dist = radius * mathf::Cos(0.5f * dAlpha);
 		float width = 2.0f * radius * mathf::Sin(0.5f * dAlpha);
 		for (int i = 0; i < cornerCount; i++)
@@ -478,7 +478,7 @@ namespace MeshGenerator
 
 			Mesh* face = UnitQuad();
 			face->Scale(Float3(width, height, 1.0f));
-			Float3x3 rotation = Float3x3::RotateZ(mathf::PI_2 + alpha) * Float3x3::rot90x;
+			Float3x3 rotation = Float3x3::RotateZ(mathf::pi2 + alpha) * Float3x3::rot90x;
 			face->Rotate(rotation);
 			face->Translate(Float3(dist * mathf::Cos(alpha), dist * mathf::Sin(alpha), 0.0f));
 

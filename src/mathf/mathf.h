@@ -25,18 +25,20 @@ struct Index2
 namespace mathf
 {
 	// Constants:
-	constexpr float EPSILON = 1e-4f;
-	constexpr float PI = 3.14159265358979323846f;
-	constexpr float PI_2 = 0.50f * PI;
-	constexpr float PI_4 = 0.25f * PI;
-	constexpr float PI_INV = 1.0f / PI;
-	constexpr float RAD2DEG = 180.0f / PI;
-	constexpr float DEG2RAD = PI / 180.0f;
-	constexpr float E = 2.71828182845904523536f;
-	constexpr float SQRT2 = 1.41421356237309504880f;
-	constexpr float SQRT2_INV = 0.70710678118654752440f;
-	constexpr float SQRT3 = 1.73205080756887729353f;
-	constexpr float SQRT3_INV = 0.57735026918962576451f;
+	constexpr float epsilon = 1e-4f;
+	constexpr float pi = 3.14159265358979323846f;
+	constexpr float pi2 = 0.50f * pi;
+	constexpr float pi4 = 0.25f * pi;
+	constexpr float piInv = 1.0f / pi;
+	constexpr float rad2deg = 180.0f / pi;
+	constexpr float deg2rad = pi / 180.0f;
+	constexpr float e = 2.71828182845904523536f;
+	constexpr float sqrt2 = 1.41421356237309504880f;
+	constexpr float sqrt2Inv = 0.70710678118654752440f;
+	constexpr float sqrt3 = 1.73205080756887729353f;
+	constexpr float sqrt3Inv = 0.57735026918962576451f;
+	constexpr float max = 3.402823466e+38f;
+	constexpr float min = -3.402823466e+38f;
 
 	// Basic math:
 	float Abs(float value);

@@ -47,7 +47,7 @@ TEST(geometry3d, PointToPlaneDistance)
 			point += planeNormal.Normalize() * distance;
 
 			float distanceToPlane = geometry3d::PointToPlaneDistance(point, planeSupport, planeNormal);
-			allGood = allGood && (mathf::Abs(distanceToPlane - distance) < mathf::EPSILON);
+			allGood = allGood && (mathf::Abs(distanceToPlane - distance) < mathf::epsilon);
 		}
 	EXPECT_TRUE(allGood);
 }

@@ -65,7 +65,7 @@ void Transform::SetRotationMatrix(const Float3x3& rotationMatrix)
 }
 void Transform::SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder, CoordinateSystem system)
 {
-	Float3 eulerRadians = mathf::DEG2RAD * Float3(degreesX, degreesY, degreesZ);
+	Float3 eulerRadians = mathf::deg2rad * Float3(degreesX, degreesY, degreesZ);
 	SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
 }
 void Transform::SetRotationEulerRadians(float radiansX, float radiansY, float radiansZ, Uint3 rotationOrder, CoordinateSystem system)
@@ -75,7 +75,7 @@ void Transform::SetRotationEulerRadians(float radiansX, float radiansY, float ra
 }
 void Transform::SetRotationEulerDegrees(Float3 degrees, Uint3 rotationOrder, CoordinateSystem system)
 {
-	Float3 eulerRadians = mathf::DEG2RAD * degrees;
+	Float3 eulerRadians = mathf::deg2rad * degrees;
 	SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
 }
 void Transform::SetRotationEulerRadians(Float3 radians, Uint3 rotationOrder, CoordinateSystem system)
@@ -156,18 +156,6 @@ Float4x4 Transform::GetWorldToLocalNormalMatrix()
 		UpdateLocalToWorldMatrix();
 	return m_worldToLocalNormalMatrix;
 }
-Float3 Transform::GetForward()
-{// +z direction
-	if (m_updateLocalToWorldMatrix)
-		UpdateLocalToWorldMatrix();
-	return Float3(m_localToWorldMatrix.GetColumn(2));
-}
-Float3 Transform::GetBackward()
-{// -z direction
-	if (m_updateLocalToWorldMatrix)
-		UpdateLocalToWorldMatrix();
-	return -Float3(m_localToWorldMatrix.GetColumn(2));
-}
 Float3 Transform::GetRight()
 {// +x direction
 	if (m_updateLocalToWorldMatrix)
@@ -180,17 +168,29 @@ Float3 Transform::GetLeft()
 		UpdateLocalToWorldMatrix();
 	return -Float3(m_localToWorldMatrix.GetColumn(0));
 }
-Float3 Transform::GetUp()
+Float3 Transform::GetForward()
 {// +y direction
 	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
 	return Float3(m_localToWorldMatrix.GetColumn(1));
 }
-Float3 Transform::GetDown()
+Float3 Transform::GetBack()
 {// -y direction
 	if (m_updateLocalToWorldMatrix)
 		UpdateLocalToWorldMatrix();
 	return -Float3(m_localToWorldMatrix.GetColumn(1));
+}
+Float3 Transform::GetUp()
+{// +z direction
+	if (m_updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
+	return Float3(m_localToWorldMatrix.GetColumn(2));
+}
+Float3 Transform::GetDown()
+{// -z direction
+	if (m_updateLocalToWorldMatrix)
+		UpdateLocalToWorldMatrix();
+	return -Float3(m_localToWorldMatrix.GetColumn(2));
 }
 
 

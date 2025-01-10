@@ -220,7 +220,7 @@ Float4x4 Float4x4::RotateFromTo(const Float3& from, const Float3& to)
 
 		// Find rotation axis:
 		Float3 axis = Float3::Cross(from, ortho);
-		return Rotate(axis, mathf::PI);
+		return Rotate(axis, mathf::pi);
 	}
 	Float3 axis = Float3::Cross(from, to);
 	float angle = Float3::Angle(from, to);
@@ -240,7 +240,7 @@ Float4x4 Float4x4::RotateThreeLeg(const Float3& forwardOld, const Float3& forwar
 	float sign = mathf::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection), forwardNew));
 	float angle1 = sign * Float3::Angle(otherOldRotated, projection);
 	if (Float3::Dot(otherNew, otherOldRotated) < 0)
-		angle1 += mathf::PI;
+		angle1 += mathf::pi;
 
 	// Rotate by angle around forwardNew:
 	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle1);
@@ -500,7 +500,7 @@ Float4x4& Float4x4::operator/=(float scalar)
 bool Float4x4::IsEpsilonEqual(const Float4x4& other) const
 {
 	for (uint32_t i = 0; i < 16; i++)
-		if (std::fabs(data[i] - other[i]) > mathf::EPSILON)
+		if (std::fabs(data[i] - other[i]) > mathf::epsilon)
 			return false;
 	return true;
 }
@@ -581,18 +581,23 @@ std::ostream& operator<<(std::ostream& os, const Float4x4& value)
 
 
 // Static members:
+// Numbers:
 Float4x4 Float4x4::zero = Float4x4(0.0f);
 Float4x4 Float4x4::identity = Float4x4
 (1.0f, 0.0f, 0.0f, 0.0f,
  0.0f, 1.0f, 0.0f, 0.0f,
  0.0f, 0.0f, 1.0f, 0.0f,
  0.0f, 0.0f, 0.0f, 1.0f);
-Float4x4 Float4x4::rot90x = Float4x4::RotateX(mathf::PI_2);
-Float4x4 Float4x4::rot90y = Float4x4::RotateY(mathf::PI_2);
-Float4x4 Float4x4::rot90z = Float4x4::RotateZ(mathf::PI_2);
-Float4x4 Float4x4::rot180x = Float4x4::RotateX(mathf::PI);
-Float4x4 Float4x4::rot180y = Float4x4::RotateY(mathf::PI);
-Float4x4 Float4x4::rot180z = Float4x4::RotateZ(mathf::PI);
-Float4x4 Float4x4::rot270x = Float4x4::RotateX(-mathf::PI_2);
-Float4x4 Float4x4::rot270y = Float4x4::RotateY(-mathf::PI_2);
-Float4x4 Float4x4::rot270z = Float4x4::RotateZ(-mathf::PI_2);
+Float4x4 Float4x4::max = Float4x4(mathf::max);
+Float4x4 Float4x4::min = Float4x4(mathf::min);
+
+// Rotations:
+Float4x4 Float4x4::rot90x = Float4x4::RotateX(mathf::pi2);
+Float4x4 Float4x4::rot90y = Float4x4::RotateY(mathf::pi2);
+Float4x4 Float4x4::rot90z = Float4x4::RotateZ(mathf::pi2);
+Float4x4 Float4x4::rot180x = Float4x4::RotateX(mathf::pi);
+Float4x4 Float4x4::rot180y = Float4x4::RotateY(mathf::pi);
+Float4x4 Float4x4::rot180z = Float4x4::RotateZ(mathf::pi);
+Float4x4 Float4x4::rot270x = Float4x4::RotateX(-mathf::pi2);
+Float4x4 Float4x4::rot270y = Float4x4::RotateY(-mathf::pi2);
+Float4x4 Float4x4::rot270z = Float4x4::RotateZ(-mathf::pi2);

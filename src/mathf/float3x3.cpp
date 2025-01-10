@@ -208,7 +208,7 @@ Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwar
 	float sign = mathf::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection), forwardNew));
 	float angle1 = sign * Float3::Angle(otherOldRotated, projection);
 	if (Float3::Dot(otherNew, otherOldRotated) < 0)
-		angle1 += mathf::PI;
+		angle1 += mathf::pi;
 
 	// Rotate by angle around forwardNew:
 	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle1);
@@ -368,7 +368,7 @@ Float3x3& Float3x3::operator/=(float scalar)
 bool Float3x3::IsEpsilonEqual(const Float3x3& other) const
 {
 	for (uint32_t i = 0; i < 9; i++)
-		if (mathf::Abs(data[i] - other[i]) > mathf::EPSILON)
+		if (mathf::Abs(data[i] - other[i]) > mathf::epsilon)
 			return false;
 	return true;
 }
@@ -445,17 +445,22 @@ std::ostream& operator<<(std::ostream& os, const Float3x3& value)
 
 
 // Static members:
+// Numbers:
 Float3x3 Float3x3::zero = Float3x3(0.0f);
 Float3x3 Float3x3::identity = Float3x3
 (1.0f, 0.0f, 0.0f,
  0.0f, 1.0f, 0.0f,
  0.0f, 0.0f, 1.0f);
-Float3x3 Float3x3::rot90x = Float3x3::RotateX(mathf::PI_2);
-Float3x3 Float3x3::rot90y = Float3x3::RotateY(mathf::PI_2);
-Float3x3 Float3x3::rot90z = Float3x3::RotateZ(mathf::PI_2);
-Float3x3 Float3x3::rot180x = Float3x3::RotateX(mathf::PI);
-Float3x3 Float3x3::rot180y = Float3x3::RotateY(mathf::PI);
-Float3x3 Float3x3::rot180z = Float3x3::RotateZ(mathf::PI);
-Float3x3 Float3x3::rot270x = Float3x3::RotateX(-mathf::PI_2);
-Float3x3 Float3x3::rot270y = Float3x3::RotateY(-mathf::PI_2);
-Float3x3 Float3x3::rot270z = Float3x3::RotateZ(-mathf::PI_2);
+Float3x3 Float3x3::max = Float3x3(mathf::max);
+Float3x3 Float3x3::min = Float3x3(mathf::min);
+
+// Rotations:
+Float3x3 Float3x3::rot90x = Float3x3::RotateX(mathf::pi2);
+Float3x3 Float3x3::rot90y = Float3x3::RotateY(mathf::pi2);
+Float3x3 Float3x3::rot90z = Float3x3::RotateZ(mathf::pi2);
+Float3x3 Float3x3::rot180x = Float3x3::RotateX(mathf::pi);
+Float3x3 Float3x3::rot180y = Float3x3::RotateY(mathf::pi);
+Float3x3 Float3x3::rot180z = Float3x3::RotateZ(mathf::pi);
+Float3x3 Float3x3::rot270x = Float3x3::RotateX(-mathf::pi2);
+Float3x3 Float3x3::rot270y = Float3x3::RotateY(-mathf::pi2);
+Float3x3 Float3x3::rot270z = Float3x3::RotateZ(-mathf::pi2);

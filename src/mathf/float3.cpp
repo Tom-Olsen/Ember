@@ -51,7 +51,7 @@ Float2 Float3::Angles() const
 Float3 Float3::Normalize() const
 {
 	float length = Length();
-	if (length <= mathf::EPSILON)
+	if (length <= mathf::epsilon)
 		return Float3(0.0f);
 	return Float3(x / length, y / length, z / length);
 }
@@ -60,8 +60,8 @@ Float3 Float3::Rotate(float theta, float phi) const
 	float length = Length();
 	phi += Phi();	// no need for clamping due to periodicity
 	theta += Theta();
-	if (theta > mathf::PI)
-		theta = 2.0f * mathf::PI - theta;
+	if (theta > mathf::pi)
+		theta = 2.0f * mathf::pi - theta;
 	else if (theta < 0.0f)
 		theta = -theta;
 	return length * Float3::Direction(theta, phi);
@@ -100,7 +100,7 @@ float Float3::Distance(const Float3& a, const Float3& b)
 float Float3::Angle(const Float3& a, const Float3& b)
 {
 	float lengths = a.Length() * b.Length();
-	if (lengths <= mathf::EPSILON)
+	if (lengths <= mathf::epsilon)
 		return 0.0f;
 	return mathf::Acos(mathf::Clamp(Dot(a, b) / lengths, -1.0f, 1.0f));
 }
@@ -254,7 +254,7 @@ Float3 operator/(float scalar, const Float3& vector)
 // Comparison:
 bool Float3::IsEpsilonEqual(const Float3& other) const
 {
-	return std::fabs(x - other.x) < mathf::EPSILON && std::fabs(y - other.y) < mathf::EPSILON && std::fabs(z - other.z) < mathf::EPSILON;
+	return std::fabs(x - other.x) < mathf::epsilon && std::fabs(y - other.y) < mathf::epsilon && std::fabs(z - other.z) < mathf::epsilon;
 }
 bool Float3::operator==(const Float3& other) const
 {
@@ -300,8 +300,10 @@ std::ostream& operator<<(std::ostream& os, const Float3& value)
 
 // Static members:
 // Numbers;
-Float3 Float3::zero		= Float3(0.0f);
-Float3 Float3::one		= Float3(1.0f);
+Float3 Float3::zero	= Float3(0.0f);
+Float3 Float3::one	= Float3(1.0f);
+Float3 Float3::max	= Float3(mathf::max);
+Float3 Float3::min	= Float3(mathf::min);
 
 // Directions:
 Float3 Float3::right	= Float3( 1.0f, 0.0f, 0.0f);

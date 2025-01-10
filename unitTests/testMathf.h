@@ -59,56 +59,56 @@ TEST(Mathf, Factorial)
 TEST(Mathf, Sin)
 {
 	EXPECT_NEAR(mathf::Sin(0.0f), 0.0f, epsilon);
-	EXPECT_NEAR(mathf::Sin(mathf::PI_2), 1.0f, epsilon);
-	EXPECT_NEAR(mathf::Sin(mathf::PI), 0.0f, epsilon);
-	EXPECT_NEAR(mathf::Sin(3.0f * mathf::PI_2), -1.0f, epsilon);
-	EXPECT_NEAR(mathf::Sin(2.0f * mathf::PI), 0.0f, epsilon);
+	EXPECT_NEAR(mathf::Sin(mathf::pi2), 1.0f, epsilon);
+	EXPECT_NEAR(mathf::Sin(mathf::pi), 0.0f, epsilon);
+	EXPECT_NEAR(mathf::Sin(3.0f * mathf::pi2), -1.0f, epsilon);
+	EXPECT_NEAR(mathf::Sin(2.0f * mathf::pi), 0.0f, epsilon);
 }
 TEST(Mathf, Cos)
 {
 	EXPECT_NEAR(mathf::Cos(0.0f), 1.0f, epsilon);
-	EXPECT_NEAR(mathf::Cos(mathf::PI_2), 0.0f, epsilon);
-	EXPECT_NEAR(mathf::Cos(mathf::PI), -1.0f, epsilon);
-	EXPECT_NEAR(mathf::Cos(3.0f * mathf::PI_2), 0.0f, epsilon);
-	EXPECT_NEAR(mathf::Cos(2.0f * mathf::PI), 1.0f, epsilon);
+	EXPECT_NEAR(mathf::Cos(mathf::pi2), 0.0f, epsilon);
+	EXPECT_NEAR(mathf::Cos(mathf::pi), -1.0f, epsilon);
+	EXPECT_NEAR(mathf::Cos(3.0f * mathf::pi2), 0.0f, epsilon);
+	EXPECT_NEAR(mathf::Cos(2.0f * mathf::pi), 1.0f, epsilon);
 }
 TEST(Mathf, Tan)
 {
 	EXPECT_NEAR(mathf::Tan(0.0f), 0.0f, epsilon);
-	EXPECT_NEAR(mathf::Tan(mathf::PI_4), 1.0f, epsilon);
-	EXPECT_NEAR(mathf::Tan(-mathf::PI_4), -1.0f, epsilon);
-	EXPECT_NEAR(mathf::Tan(3.0f * mathf::PI_4), -1.0f, epsilon);
-	EXPECT_NEAR(mathf::Tan(-3.0f * mathf::PI_4), 1.0f, epsilon);
+	EXPECT_NEAR(mathf::Tan(mathf::pi4), 1.0f, epsilon);
+	EXPECT_NEAR(mathf::Tan(-mathf::pi4), -1.0f, epsilon);
+	EXPECT_NEAR(mathf::Tan(3.0f * mathf::pi4), -1.0f, epsilon);
+	EXPECT_NEAR(mathf::Tan(-3.0f * mathf::pi4), 1.0f, epsilon);
 }
 TEST(Mathf, Asin)
 {
 	EXPECT_NEAR(mathf::Asin(0.0f), 0.0f, epsilon);
-	EXPECT_NEAR(mathf::Asin(1.0f), mathf::PI_2, epsilon);
-	EXPECT_NEAR(mathf::Asin(-1.0f), -mathf::PI_2, epsilon);
+	EXPECT_NEAR(mathf::Asin(1.0f), mathf::pi2, epsilon);
+	EXPECT_NEAR(mathf::Asin(-1.0f), -mathf::pi2, epsilon);
 }
 TEST(Mathf, Acos)
 {
 	EXPECT_NEAR(mathf::Acos(1.0f), 0.0f, epsilon);
-	EXPECT_NEAR(mathf::Acos(0.0f), mathf::PI_2, epsilon);
-	EXPECT_NEAR(mathf::Acos(-1.0f), mathf::PI, epsilon);
+	EXPECT_NEAR(mathf::Acos(0.0f), mathf::pi2, epsilon);
+	EXPECT_NEAR(mathf::Acos(-1.0f), mathf::pi, epsilon);
 }
 TEST(Mathf, Atan)
 {
 	EXPECT_NEAR(mathf::Atan(0.0f), 0.0f, epsilon);
-	EXPECT_NEAR(mathf::Atan(1.0f), mathf::PI_4, epsilon);
-	EXPECT_NEAR(mathf::Atan(-1.0f), -mathf::PI_4, epsilon);
+	EXPECT_NEAR(mathf::Atan(1.0f), mathf::pi4, epsilon);
+	EXPECT_NEAR(mathf::Atan(-1.0f), -mathf::pi4, epsilon);
 }
 TEST(Mathf, Atan2)
 {
 	EXPECT_NEAR(mathf::Atan2(0.0f, 0.0f), 0.0f, epsilon);
 	EXPECT_NEAR(mathf::Atan2(0.0f, 1.0f), 0.0f, epsilon);
-	EXPECT_NEAR(mathf::Atan2(1.0f, 1.0f), mathf::PI_4, epsilon);
-	EXPECT_NEAR(mathf::Atan2(1.0f, 0.0f), mathf::PI_2, epsilon);
-	EXPECT_NEAR(mathf::Atan2(1.0f, -1.0f), 3.0f * mathf::PI_4, epsilon);
-	EXPECT_NEAR(mathf::Atan2(0.0f, -1.0f), mathf::PI, epsilon);
-	EXPECT_NEAR(mathf::Atan2(-1.0f, -1.0f), -3.0f * mathf::PI_4, epsilon);
-	EXPECT_NEAR(mathf::Atan2(-1.0f, 0.0f), -mathf::PI_2, epsilon);
-	EXPECT_NEAR(mathf::Atan2(-1.0f, 1.0f), -mathf::PI_4, epsilon);
+	EXPECT_NEAR(mathf::Atan2(1.0f, 1.0f), mathf::pi4, epsilon);
+	EXPECT_NEAR(mathf::Atan2(1.0f, 0.0f), mathf::pi2, epsilon);
+	EXPECT_NEAR(mathf::Atan2(1.0f, -1.0f), 3.0f * mathf::pi4, epsilon);
+	EXPECT_NEAR(mathf::Atan2(0.0f, -1.0f), mathf::pi, epsilon);
+	EXPECT_NEAR(mathf::Atan2(-1.0f, -1.0f), -3.0f * mathf::pi4, epsilon);
+	EXPECT_NEAR(mathf::Atan2(-1.0f, 0.0f), -mathf::pi2, epsilon);
+	EXPECT_NEAR(mathf::Atan2(-1.0f, 1.0f), -mathf::pi4, epsilon);
 }
 
 

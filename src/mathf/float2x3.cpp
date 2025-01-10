@@ -233,7 +233,7 @@ Float2x3& Float2x3::operator/=(float scalar)
 bool Float2x3::IsEpsilonEqual(const Float2x3& other) const
 {
 	for (uint32_t i = 0; i < 6; i++)
-		if (mathf::Abs(data[i] - other[i]) > mathf::EPSILON)
+		if (mathf::Abs(data[i] - other[i]) > mathf::epsilon)
 			return false;
 	return true;
 }
@@ -345,3 +345,5 @@ std::ostream& operator<<(std::ostream& os, const Float2x3& value)
 
 // Static members:
 Float2x3 Float2x3::zero = Float2x3(0.0f);
+Float2x3 Float2x3::max = Float2x3(mathf::max);
+Float2x3 Float2x3::min = Float2x3(mathf::min);

@@ -8,10 +8,10 @@ namespace geometry3d
 	Float3 GetOrhtogonalVector(const Float3& v)
 	{
 		Float3 result = Float3::Cross(v, Float3(1.0f, 0.0f, 0.0f));
-		if (result.Length() < mathf::EPSILON)
+		if (result.Length() < mathf::epsilon)
 		{
 			result = Float3::Cross(v, Float3(0.0f, 1.0f, 0.0f));
-			if (result.Length() < mathf::EPSILON)
+			if (result.Length() < mathf::epsilon)
 				result = Float3::Cross(v, Float3(0.0f, 0.0f, 1.0f));
 		}
 		return result;
@@ -19,7 +19,7 @@ namespace geometry3d
 	bool IsInsidePlane(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
 	{
 		float d = Float3::Dot(planeSupport, planeNormal); // plane parameter
-		return mathf::Abs(Float3::Dot(point, planeNormal) - d) < mathf::EPSILON;
+		return mathf::Abs(Float3::Dot(point, planeNormal) - d) < mathf::epsilon;
 	}
 	float PointToPlaneDistance(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
 	{

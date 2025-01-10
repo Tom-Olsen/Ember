@@ -96,21 +96,21 @@ TEST(Float3x3, IsEpsilonZero)
 // Static math operations:
 TEST(Float3x3, RotateX)
 {
-	Float3x3 rotMatrix = Float3x3::RotateX(mathf::PI_2);
+	Float3x3 rotMatrix = Float3x3::RotateX(mathf::pi2);
 	Float3 v0 = Float3(0.0f, 1.0f, 0.0f);
 	Float3 v1 = rotMatrix * v0;
 	EXPECT_NEAR3(v1, Float3(0.0f, 0.0f, 1.0f), epsilon);
 }
 TEST(Float3x3, RotateY)
 {
-	Float3x3 rotMatrix = Float3x3::RotateY(mathf::PI_2);
+	Float3x3 rotMatrix = Float3x3::RotateY(mathf::pi2);
 	Float3 v0 = Float3(1.0f, 0.0f, 0.0f);
 	Float3 v1 = rotMatrix * v0;
 	EXPECT_NEAR3(v1, Float3(0.0f, 0.0f, -1.0f), epsilon);
 }
 TEST(Float3x3, RotateZ)
 {
-	Float3x3 rotMatrix = Float3x3::RotateX(mathf::PI_2);
+	Float3x3 rotMatrix = Float3x3::RotateX(mathf::pi2);
 	Float3 v0 = Float3(0.0f, 0.0f, 1.0f);
 	Float3 v1 = rotMatrix * v0;
 	EXPECT_NEAR3(v1, Float3(0.0f, -1.0f, 0.0f), epsilon);
@@ -118,7 +118,7 @@ TEST(Float3x3, RotateZ)
 TEST(Float3x3, RotateAroundAxis)
 {
 	Float3 axis = Float3(1.0f, 1.0f, 0.0f);
-	Float3x3 rotMatrix = Float3x3::Rotate(axis, mathf::PI);
+	Float3x3 rotMatrix = Float3x3::Rotate(axis, mathf::pi);
 	Float3 v0 = Float3::right;
 	Float3 v1 = rotMatrix * v0;
 	EXPECT_NEAR3(v1, Float3::up, epsilon);

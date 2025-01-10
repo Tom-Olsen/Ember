@@ -85,8 +85,10 @@ public:
 
 	// Static members:
 	// Numbers:
-	static Float4 zero;
-	static Float4 one;
+	static Float4 zero;		// (0, 0, 0, 0).
+	static Float4 one;		// (1, 1, 1, 1).
+	static Float4 max;		// mathf::max * (1, 1, 1, 1).
+	static Float4 min;		// mathf::min * (1, 1, 1, 1).
 
 	// Directions:
 	static Float4 right;	// +x = ( 1, 0, 0, 0).

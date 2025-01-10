@@ -84,7 +84,7 @@ TEST(Float2x2, IsEpsilonZero)
 // Static math operations:
 TEST(Float2x2, Rotate)
 {
-	Float2x2 rotMatrix = Float2x2::Rotate(mathf::PI_2);
+	Float2x2 rotMatrix = Float2x2::Rotate(mathf::pi2);
 	Float2 v0 = Float2(1.0f, 0.0f);
 	Float2 v1 = rotMatrix * v0;
 	EXPECT_NEAR2(v1, Float2(0.0f, 1.0f), epsilon);

@@ -8,7 +8,7 @@ SpotLight::SpotLight()
 {
 	m_intensity = 1.0f;
 	m_color = Float3::white;
-	m_fov = mathf::DEG2RAD * 45.0f;
+	m_fov = mathf::deg2rad * 45.0f;
 	m_aspectRatio = (float)ShadowRenderPass::s_shadowMapWidth / (float)ShadowRenderPass::s_shadowMapHeight;
 	m_nearClip = 0.1f;
 	m_farClip = 15.0f;

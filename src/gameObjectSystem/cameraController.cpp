@@ -33,12 +33,12 @@ void CameraController::Translation()
 	float currentSpeed = EventSystem::KeyDownOrHeld(SDLK_LSHIFT) ? m_moveSpeed * m_fastMoveMultiplier : m_moveSpeed;
 
 	Float3 direction = Float3::zero;
-	if (EventSystem::KeyDownOrHeld(SDLK_W)) direction -= m_pTransform->GetForward();
-	if (EventSystem::KeyDownOrHeld(SDLK_S)) direction += m_pTransform->GetForward();
+	if (EventSystem::KeyDownOrHeld(SDLK_W)) direction -= m_pTransform->GetUp();
+	if (EventSystem::KeyDownOrHeld(SDLK_S)) direction += m_pTransform->GetUp();
 	if (EventSystem::KeyDownOrHeld(SDLK_A)) direction -= m_pTransform->GetRight();
 	if (EventSystem::KeyDownOrHeld(SDLK_D)) direction += m_pTransform->GetRight();
-	if (EventSystem::KeyDownOrHeld(SDLK_Q)) direction -= m_pTransform->GetUp();
-	if (EventSystem::KeyDownOrHeld(SDLK_E)) direction += m_pTransform->GetUp();
+	if (EventSystem::KeyDownOrHeld(SDLK_Q)) direction -= m_pTransform->GetForward();
+	if (EventSystem::KeyDownOrHeld(SDLK_E)) direction += m_pTransform->GetForward();
 
 	m_pTransform->AddToPosition(direction * currentSpeed * Timer::GetDeltaTime());
 }

@@ -216,7 +216,7 @@ Float4 operator/(float scalar, const Float4& vector)
 // Comparison:
 bool Float4::IsEpsilonEqual(const Float4& other) const
 {
-	return std::fabs(x - other.x) < mathf::EPSILON && std::fabs(y - other.y) < mathf::EPSILON && std::fabs(z - other.z) < mathf::EPSILON && std::fabs(w - other.w) < mathf::EPSILON;
+	return std::fabs(x - other.x) < mathf::epsilon && std::fabs(y - other.y) < mathf::epsilon && std::fabs(z - other.z) < mathf::epsilon && std::fabs(w - other.w) < mathf::epsilon;
 }
 bool Float4::operator==(const Float4& other) const
 {
@@ -254,8 +254,10 @@ std::ostream& operator<<(std::ostream& os, const Float4& value)
 
 // Static members:
 // Numbers;
-Float4 Float4::zero		= Float4(0.0f);
-Float4 Float4::one		= Float4(1.0f);
+Float4 Float4::zero	= Float4(0.0f);
+Float4 Float4::one	= Float4(1.0f);
+Float4 Float4::max	= Float4(mathf::max);
+Float4 Float4::min	= Float4(mathf::min);
 
 // Directions:
 Float4 Float4::right	= Float4( 1.0f, 0.0f, 0.0f, 0.0f);

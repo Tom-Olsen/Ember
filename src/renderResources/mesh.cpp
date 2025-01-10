@@ -752,7 +752,7 @@ void Mesh::UpdateVertexBuffer(VulkanContext* pContext)
 		vkQueueWaitIdle(pContext->pLogicalDevice->GetGraphicsQueue().queue);
 
 	// Resize buffer if necessary:
-	if (m_vertexBuffer == nullptr || size != m_vertexBuffer->GetSize())
+	if (m_vertexBuffer == nullptr || m_vertexBuffer->GetSize() != size)
 	{
 		VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
 		pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

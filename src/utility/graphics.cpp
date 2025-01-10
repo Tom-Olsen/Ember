@@ -105,7 +105,7 @@ MaterialProperties* Graphics::DrawLineSegment(Float3 start, Float3 end, float wi
 	Float3 direction = end - start;
 	float length = direction.Length();
 	Float3 position = start + 0.5f * direction;
-	Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
+	Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::up, direction);
 	Float3 scale = Float3(width, width, length);
 	return DrawMesh(s_pLineSegmentMesh, pMaterial, position, rotationMatrix, scale, receiveShadows, castShadows);
 }
@@ -151,8 +151,8 @@ void Graphics::DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projecti
 	// Draw corner points:
 	for (uint32_t i = 0; i < 8; i++)
 	{
-		MaterialProperties* pMaterialProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), MaterialManager::GetMaterial("simpleLit"), Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
-		pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
+		MaterialProperties* pMaterialProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), MaterialManager::GetMaterial("simpleUnlit"), Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+		pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::gray);
 	}
 
 	// Draw horizontal lines:
@@ -160,13 +160,11 @@ void Graphics::DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projecti
 	DrawLineSegment(Float3(cornerPoints[1]), Float3(cornerPoints[5]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[2]), Float3(cornerPoints[6]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[3]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
-
 	// Draw vertical lines:
 	DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[2]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[1]), Float3(cornerPoints[3]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[4]), Float3(cornerPoints[6]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[5]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
-
 	// Draw depth lines:
 	DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[1]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[2]), Float3(cornerPoints[3]), width, color, receiveShadows, castShadows);

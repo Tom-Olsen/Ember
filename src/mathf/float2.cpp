@@ -37,7 +37,7 @@ float Float2::Angle() const
 Float2 Float2::Normalize() const
 {
 	float length = Length();
-	if (length <= mathf::EPSILON)
+	if (length <= mathf::epsilon)
 		return Float2(0.0f);
 	return Float2(x / length, y / length);
 }
@@ -80,7 +80,7 @@ float Float2::Angle(const Float2& a, const Float2& b)
 	float lengthA = a.Length();
 	float lengthB = b.Length();
 	float lengths = a.Length() * b.Length();
-	if (lengthA <= mathf::EPSILON || lengthB <= mathf::EPSILON)
+	if (lengthA <= mathf::epsilon || lengthB <= mathf::epsilon)
 		return 0.0f;
 	return mathf::Acos(mathf::Clamp(Dot(a, b) / lengthA * lengthB, -1.0f, 1.0f));
 }
@@ -220,7 +220,7 @@ Float2 operator/(float scalar, const Float2& vector)
 // Comparison:
 bool Float2::IsEpsilonEqual(const Float2& other) const
 {
-	return std::fabs(x - other.x) < mathf::EPSILON && std::fabs(y - other.y) < mathf::EPSILON;
+	return std::fabs(x - other.x) < mathf::epsilon && std::fabs(y - other.y) < mathf::epsilon;
 }
 bool Float2::operator==(const Float2& other) const
 {
@@ -261,8 +261,13 @@ std::ostream& operator<<(std::ostream& os, const Float2& value)
 
 
 // Static members:
-Float2 Float2::zero		= Float2(0.0f);
-Float2 Float2::one		= Float2(1.0f);
+// Numbers:
+Float2 Float2::zero	= Float2(0.0f);
+Float2 Float2::one	= Float2(1.0f);
+Float2 Float2::max	= Float2(mathf::max);
+Float2 Float2::min	= Float2(mathf::min);
+
+// Directions:
 Float2 Float2::right	= Float2( 1.0f, 0.0f);
 Float2 Float2::left		= Float2(-1.0f, 0.0f);
 Float2 Float2::forward	= Float2( 0.0f, 1.0f);

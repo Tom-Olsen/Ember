@@ -23,11 +23,11 @@ PointLight::PointLight()
 	{
 		s_rotationMatricesInitialized = true;
 		s_rotationMatrices[0] = Float4x4::identity;						// look backward
-		s_rotationMatrices[1] = Float4x4::RotateY(mathf::PI_2);	// look right
-		s_rotationMatrices[2] = Float4x4::RotateY(mathf::PI);	// look forward
-		s_rotationMatrices[3] = Float4x4::RotateY(-mathf::PI_2);	// look left
-		s_rotationMatrices[4] = Float4x4::RotateX(mathf::PI_2);	// look down
-		s_rotationMatrices[5] = Float4x4::RotateX(-mathf::PI_2);	// look up
+		s_rotationMatrices[1] = Float4x4::RotateY(mathf::pi2);	// look right
+		s_rotationMatrices[2] = Float4x4::RotateY(mathf::pi);	// look forward
+		s_rotationMatrices[3] = Float4x4::RotateY(-mathf::pi2);	// look left
+		s_rotationMatrices[4] = Float4x4::RotateX(mathf::pi2);	// look down
+		s_rotationMatrices[5] = Float4x4::RotateX(-mathf::pi2);	// look up
 	}
 }
 PointLight::~PointLight()
@@ -107,7 +107,7 @@ Float4x4 PointLight::GetProjectionMatrix()
 void PointLight::UpdateProjectionMatrix()
 {
 	m_updateProjectionMatrix = false;
-	constexpr float fovRadians = mathf::PI_2;
+	constexpr float fovRadians = mathf::pi2;
 	constexpr float aspectRatio = 1.0f;
 		m_projectionMatrix = Float4x4::Perspective(fovRadians, aspectRatio, m_nearClip, m_farClip);
 }
