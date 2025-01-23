@@ -96,10 +96,16 @@ void MeshRenderer::SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS
 	for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
 		if (directionalLights[i] != nullptr)
 		{
-			Float4x4 worldToClipMatrix = directionalLights[i]->GetProjectionMatrix() * directionalLights[i]->GetViewMatrix();
-			m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
+			int shadowCascadeCount = (int)directionalLights[i]->GetShadowCascadeCount();
+			for (int shadowCascadeIndex = 0; shadowCascadeIndex < shadowCascadeCount; shadowCascadeIndex++)
+			{
+				Float4x4 worldToClipMatrix = directionalLights[i]->GetProjectionMatrix(shadowCascadeIndex) * directionalLights[i]->GetViewMatrix(shadowCascadeIndex);
+				m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", shadowCascadeIndex, worldToClipMatrix);
+			}
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "direction", directionalLights[i]->GetDirection());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "softShadows", (int)directionalLights[i]->GetShadowType());
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "shadowCascadeCount", shadowCascadeCount);
 		}
 	m_pMaterialProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
 }
@@ -114,6 +120,7 @@ void MeshRenderer::SetLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spot
 			Float4x4 worldToClipMatrix = spotLights[i]->GetProjectionMatrix() * spotLights[i]->GetViewMatrix();
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "position", spotLights[i]->GetPosition());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "softShadows", (int)spotLights[i]->GetShadowType());
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "blendStartEnd", spotLights[i]->GetBlendStartEnd());
 		}
@@ -133,6 +140,7 @@ void MeshRenderer::SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& poi
 				m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", faceIndex, worldToClipMatrix);
 			}
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "position", pointLights[i]->GetPosition());
+			m_pMaterialProperties->SetValue(blockName, arrayName, i, "softShadows", (int)pointLights[i]->GetShadowType());
 			m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", pointLights[i]->GetColorIntensity());
 		}
 	m_pMaterialProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);

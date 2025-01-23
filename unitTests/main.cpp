@@ -36,6 +36,7 @@ constexpr float epsilon = 1e-6f;
 // mathf testing:
 #include "mathf.h"
 #include "testBounds.h"
+#include "testBounds2d.h"
 #include "testEmberRandom.h"
 #include "testFloat2.h"
 #include "testFloat2x2.h"
@@ -56,6 +57,6 @@ constexpr float epsilon = 1e-6f;
 int main(int argc, char** argv)
 {
 	mathf::Random::Init();
-    ::testing::InitGoogleTest(&argc, argv);
+    testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

@@ -14,6 +14,8 @@ private: // Members:
 	float m_aspectRatio;
 	float m_nearClip;
 	float m_farClip;
+	float m_orthographicSize;
+	ProjectionType m_projectionType;
 	Float4x4 m_projectionMatrix;
 	bool m_updateProjectionMatrix;
 	bool m_drawFrustum;
@@ -27,6 +29,8 @@ public: // Methods:
 	void SetAspectRatio(float aspectRatio);
 	void SetNearClip(float nearClip);
 	void SetFarClip(float farClip);
+	void SetOrthographicSize(float orthographicSize);
+	void SetProjectionType(ProjectionType projectionType);
 	void SetDrawFrustum(bool drawFrustum);
 
 	// Getters:
@@ -34,6 +38,8 @@ public: // Methods:
 	float GetAspectRatio() const;
 	float GetNearClip() const;
 	float GetFarClip() const;
+	float GetOrthographicSize() const;
+	ProjectionType GetProjectionType() const;
 	Float4x4 GetViewMatrix() const;
 	Float4x4 GetProjectionMatrix();
 

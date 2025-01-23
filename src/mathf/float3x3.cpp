@@ -190,28 +190,32 @@ Float3x3 Float3x3::RotateFromTo(const Float3& from, const Float3& to)
 {
 	Float3 f = from.Normalize();
 	Float3 t = to.Normalize();
-	Float3 axis = Float3::Cross(f, t).Normalize();
+	if (f.IsEpsilonEqual(t))
+		return Float3x3::identity;
+	if (f.IsEpsilonEqual(-t))
+		return Float3x3::Rotate(geometry3d::GetOrhtogonalVector(f), mathf::pi);
+	Float3 axis = Float3::Cross(f, t); // normalization not needed, as Rotate(...) will normalize it
 	float angle = Float3::Angle(f, t);
 	return Rotate(axis, angle);
 }
-Float3x3 Float3x3::RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& otherOld, const Float3& otherNew)
+Float3x3 Float3x3::RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New)
 {
-	// Rotate forwardOld to forwardNew:
-	Float3 axis = Float3::Cross(forwardOld, forwardNew);
-	float angle0 = Float3::Angle(forwardOld, forwardNew);
+	// Rotate direction0Old to direction0New:
+	Float3 axis = Float3::Cross(direction0Old, direction0New);
+	float angle0 = Float3::Angle(direction0Old, direction0New);
 	Float3x3 rot0 = Rotate(axis, angle0);
 
-	// Compute missalignment angle between otherNew and otherOld rotated by rot0:
-	Float3 otherOldRotated = rot0 * otherOld;
-	Float3 planeNormal = Float3::Cross(otherNew, forwardNew).Normalize();
+	// Compute missalignment angle between direction1New and direction1Old rotated by rot0:
+	Float3 otherOldRotated = rot0 * direction1Old;
+	Float3 planeNormal = Float3::Cross(direction1New, direction0New).Normalize();
 	Float3 projection = geometry3d::PointToPlaneProjection(otherOldRotated, Float3::zero, planeNormal);
-	float sign = mathf::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection), forwardNew));
+	float sign = mathf::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection), direction0New));
 	float angle1 = sign * Float3::Angle(otherOldRotated, projection);
-	if (Float3::Dot(otherNew, otherOldRotated) < 0)
+	if (Float3::Dot(direction1New, otherOldRotated) < 0)
 		angle1 += mathf::pi;
 
-	// Rotate by angle around forwardNew:
-	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle1);
+	// Rotate by angle around direction0New:
+	Float3x3 rot1 = Float3x3::Rotate(direction0New, angle1);
 
 	// Combine rotations:
 	return rot1 * rot0;
@@ -455,12 +459,24 @@ Float3x3 Float3x3::max = Float3x3(mathf::max);
 Float3x3 Float3x3::min = Float3x3(mathf::min);
 
 // Rotations:
+Float3x3 Float3x3::rot45x = Float3x3::RotateX(mathf::pi4);
+Float3x3 Float3x3::rot45y = Float3x3::RotateY(mathf::pi4);
+Float3x3 Float3x3::rot45z = Float3x3::RotateZ(mathf::pi4);
 Float3x3 Float3x3::rot90x = Float3x3::RotateX(mathf::pi2);
 Float3x3 Float3x3::rot90y = Float3x3::RotateY(mathf::pi2);
 Float3x3 Float3x3::rot90z = Float3x3::RotateZ(mathf::pi2);
+Float3x3 Float3x3::rot135x = Float3x3::RotateX(3.0f * mathf::pi4);
+Float3x3 Float3x3::rot135y = Float3x3::RotateY(3.0f * mathf::pi4);
+Float3x3 Float3x3::rot135z = Float3x3::RotateZ(3.0f * mathf::pi4);
 Float3x3 Float3x3::rot180x = Float3x3::RotateX(mathf::pi);
 Float3x3 Float3x3::rot180y = Float3x3::RotateY(mathf::pi);
 Float3x3 Float3x3::rot180z = Float3x3::RotateZ(mathf::pi);
+Float3x3 Float3x3::rot225x = Float3x3::RotateX(5.0f * mathf::pi4);
+Float3x3 Float3x3::rot225y = Float3x3::RotateY(5.0f * mathf::pi4);
+Float3x3 Float3x3::rot225z = Float3x3::RotateZ(5.0f * mathf::pi4);
 Float3x3 Float3x3::rot270x = Float3x3::RotateX(-mathf::pi2);
 Float3x3 Float3x3::rot270y = Float3x3::RotateY(-mathf::pi2);
 Float3x3 Float3x3::rot270z = Float3x3::RotateZ(-mathf::pi2);
+Float3x3 Float3x3::rot315x = Float3x3::RotateX(-mathf::pi4);
+Float3x3 Float3x3::rot315y = Float3x3::RotateY(-mathf::pi4);
+Float3x3 Float3x3::rot315z = Float3x3::RotateZ(-mathf::pi4);

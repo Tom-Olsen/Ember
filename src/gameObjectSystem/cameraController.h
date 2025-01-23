@@ -28,6 +28,7 @@ private: // Methods:
 	void Translation();
 	void Rotation();
 	void Zoom();
+	void TogglePerspectiveType();
 };
 
 

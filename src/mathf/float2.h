@@ -34,6 +34,7 @@ public:
 
 	// Static math operations:
 	static Float2 Abs(const Float2& a);
+	static Float2 Round(const Float2& value, int decimals = 0);
 	static float Dot(const Float2& a, const Float2& b);
 	static float Cross(const Float2& a, const Float2& b);
 	static float DistanceSq(const Float2& a, const Float2& b);

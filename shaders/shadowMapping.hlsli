@@ -4,30 +4,42 @@
 
 
 
-static const uint MAX_D_LIGHTS = 3;     // directional lights: sun, moon, etc.
-static const uint MAX_S_LIGHTS = 10;    // spot lights: car headlights, etc.
-static const uint MAX_P_LIGHTS = 5;     // point lights: candles, etc.
+// When changing these also change the corresponding CPU values in utility/macros.h.
+static const uint MAX_D_LIGHTS = 3;         // directional lights: sun, moon, etc.
+static const uint MAX_S_LIGHTS = 5;         // spot lights: car headlights, etc.
+static const uint MAX_P_LIGHTS = 3;         // point lights: candles, etc.
+//static const uint SHADOW_MAP_WIDTH = 1024;  // shadow map width in pixels
+//static const uint SHADOW_MAP_HEIGHT = 1024; // shadow map height in pixels
+static const uint SHADOW_MAP_WIDTH = 2048; // shadow map width in pixels
+static const uint SHADOW_MAP_HEIGHT = 2048; // shadow map height in pixels
+static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_WIDTH, 1.0f / SHADOW_MAP_HEIGHT); // shadow map texel size
 
 
 
 struct DirectionalLightData
 {
-    float4x4 worldToClipMatrix; // world to light clip space matrix (projection * view)
-    float3 direction;           // light direction
-    float4 colorIntensity;      // light color (xyz) and intensity (w)
+    // one for each shadow cascade
+    float4x4 worldToClipMatrix[4];  // world to light clip space matrix (projection * view)
+    float3 direction;               // light direction
+    int softShadows;                // 0 = PCF shadows, 1 = pixel shadows
+    float4 colorIntensity;          // light color (xyz) and intensity (w)
+    int shadowCascadeCount;         // number of cascades (max 4)
 };
 struct SpotLightData
 {
     float4x4 worldToClipMatrix; // world to light clip space matrix (projection * view)
     float3 position;            // light position
+    int softShadows;            // 0 = PCF shadows, 1 = pixel shadows
     float4 colorIntensity;      // light color (xyz) and intensity (w)
     float2 blendStartEnd;
 };
 struct PointLightData
 {
-    float4x4 worldToClipMatrix[6]; // world to light clip space matrix (projection * view)
-    float3 position; // light position
-    float4 colorIntensity; // light color (xyz) and intensity (w)
+    // one for each face of the cube map
+    float4x4 worldToClipMatrix[6];  // world to light clip space matrix (projection * view)
+    float3 position;                // light position
+    int softShadows;                // 0 = PCF shadows, 1 = pixel shadows
+    float4 colorIntensity;          // light color (xyz) and intensity (w)
 };
 cbuffer LightData : register(b9)
 {
@@ -64,7 +76,7 @@ float3 FresnelDistribution(float3 F0, float dot)
 
 float3 PhysicalLight
 (float3 lightIntensity, float3 lightDir, float3 normal, float3 viewDir,
- float3 color, float roughness, float3 reflectivity, bool metallic)
+ float3 color, float roughness, float3 reflectivity, float metallicity)
 {
     float3 L = lightDir;
     float3 N = normal;
@@ -81,84 +93,130 @@ float3 PhysicalLight
     float3 F = FresnelDistribution(reflectivity, vDotH);
         
     float3 specularBRDF = (D * G * F) / (4.0f * nDotL * nDotV + 0.001f);
-    float3 diffuseBRDF = metallic ? 0 : (1.0f - F) * color * mathf_PI_INV;
+    float3 diffuseBRDF = (1.0f - metallicity) * (1.0f - F) * color * mathf_PI_INV;
         
     return (diffuseBRDF + specularBRDF) * lightIntensity * nDotL;
+}
+
+float NoFileredShadow(SamplerComparisonState shadowSampler, Texture2DArray <float>shadowMaps, int arrayIndex, float3 lightUvz)
+{
+    return shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy, arrayIndex), lightUvz.z);
+}
+float PercentageCloserFilteredShadow(SamplerComparisonState shadowSampler, Texture2DArray<float> shadowMaps, int arrayIndex, float3 lightUvz)
+{
+    const int pcfSamples = 16;
+    float2 pcfOffsets[16] =
+    {
+        float2(-1.5, -1.5), float2(-1.5, -0.5), float2(-1.5, 1), float2(-1.5, 1.5),
+        float2(-0.5, -1.5), float2(-0.5, -0.5), float2(-0.5, 1), float2(-0.5, 1.5),
+        float2( 0.5, -1.5), float2( 0.5, -0.5), float2( 0.5, 1), float2( 0.5, 1.5),
+        float2( 1.5, -1.5), float2( 1.5, -0.5), float2( 1.5, 1), float2( 1.5, 1.5)
+    };
+                
+    float shadow = 0.0f;
+    for (int j = 0; j < pcfSamples; ++j)
+    {
+        float2 offset = pcfOffsets[j] * SHADOW_MAP_TEXEL_SIZE;
+        shadow += shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy + offset, arrayIndex), lightUvz.z);
+    }
+    return shadow / pcfSamples;
 }
 
 
 
 float3 PhysicalDirectionalLights
-(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, bool metallic,
+(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
  int dLightsCount, int shadowMapOffset, DirectionalLightData lightData[MAX_D_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
     float3 totalLight = 0;
     for (uint i = 0; i < dLightsCount; i++)
     {
-        // Shadow:
-        float shadow = 0.0f;
-        if (receiveShadows)
+        int shadowCascadeCount = lightData[i].shadowCascadeCount;
+        for (uint shadowCascadeIndex = 0; shadowCascadeIndex < shadowCascadeCount; shadowCascadeIndex++)
         {
-            float4 lightSpacePos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f));
-            if (lightSpacePos.w > 1e-4f)
+            // Check if the pixel is inside the shadow map:
+            float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix[shadowCascadeIndex], float4(worldPos, 1.0f)); // €[-w,w]
+            float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
+            float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy€[-1,1] z€[0,1]
+            lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0,1]
+            if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
+             && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
+             && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
             {
-                float3 lightUvz = lightSpacePos.xyz / lightSpacePos.w;
-                lightUvz.xy = (lightUvz.xy + 1.0f) * 0.5f; // scale to [0, 1]
-                if (0.0f <= lightUvz.z && lightUvz.z <= 1.0f && 0.0 <= lightUvz.x && lightUvz.x <= 1.0 && 0.0 <= lightUvz.y && lightUvz.y <= 1.0)
-                    shadow = shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy, i + shadowMapOffset), lightUvz.z - 0.01f);
+                // Shadow:
+                float shadow = 1.0f;
+                if (receiveShadows)
+                {
+                    if (lightData[i].softShadows == 0)
+                        shadow = NoFileredShadow(shadowSampler, shadowMaps, shadowCascadeCount * i + shadowCascadeIndex + shadowMapOffset, lightUvz);
+                    else if (lightData[i].softShadows == 1)
+                        shadow = PercentageCloserFilteredShadow(shadowSampler, shadowMaps, shadowCascadeCount * i + shadowCascadeIndex + shadowMapOffset, lightUvz);
+                }
+                
+                // Light:
+                float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w;
+                float3 lightDir = normalize(-lightData[i].direction);
+                float3 viewDir = normalize(cameraPos - worldPos);
+                float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
+        
+                //totalLight += shadow * light;
+                float3 cascadeShading = float3
+                (0.5f + 0.5f * (shadowCascadeIndex == 0 || shadowCascadeIndex == 3),
+                 0.5f + 0.5f * (shadowCascadeIndex == 1 || shadowCascadeIndex == 3),
+                 0.5f + 0.5f * (shadowCascadeIndex == 2));
+                //float intensityScaling = 0.33f + 0.33f * ((round(SHADOW_MAP_WIDTH * lightUvz.x)) % 2) + ((round(SHADOW_MAP_HEIGHT * lightUvz.y)) % 2);
+                totalLight += shadow * light * cascadeShading;
+                break; // no need to test further shadow maps of this point light as any pixel can only be inside one of the shadow maps
             }
         }
-        
-        // Light:
-        float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w;
-        float3 lightDir = normalize(-lightData[i].direction);
-        float3 viewDir = normalize(cameraPos - worldPos);
-        float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallic);
-        
-        totalLight += shadow * light;
     }
     return totalLight;
 }
 float3 PhysicalSpotLights
-(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, bool metallic,
+(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
  int sLightsCount, int shadowMapOffset, SpotLightData lightData[MAX_S_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
     float3 totalLight = 0;
     for (uint i = 0; i < sLightsCount; i++)
     {
-        // Shadow:
-        float shadow = 0.0f;
-        if (receiveShadows)
+        // Check if the pixel is inside the shadow map:
+        float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f)); // €[-w,w]
+        float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
+        float3 lightUvz = lightSpaceClipPos.xyz / w; // ndc: xy€[-1,1] z€[0,1]
+        lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f); // remap xy to [0,1]
+        if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
+         && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
+         && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
         {
-            float4 lightSpacePos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f));
-            if (lightSpacePos.w > 1e-4f)
+            // Shadow:
+            float shadow = 1.0f;
+            if (receiveShadows)
             {
-                float3 lightUvz = lightSpacePos.xyz / lightSpacePos.w;
-                lightUvz.xy = (lightUvz.xy + 1.0f) * 0.5f; // scale to [0, 1]
-                
                 float radius = length(2.0f * lightUvz.xy - 1.0f);
                 float falloff = saturate((radius - lightData[i].blendStartEnd.y) / (lightData[i].blendStartEnd.x - lightData[i].blendStartEnd.y));
                 
-                if (0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
-                    shadow = falloff * shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy, i + shadowMapOffset), lightUvz.z);
+                if (lightData[i].softShadows == 0)
+                    shadow = falloff * NoFileredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
+                else if (lightData[i].softShadows == 1)
+                    shadow = falloff * PercentageCloserFilteredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
             }
+            
+            // Light:
+            float distSq = dot(lightData[i].position - worldPos, lightData[i].position - worldPos);
+            float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w / distSq;
+            float3 lightDir = normalize(lightData[i].position - worldPos);
+            float3 viewDir = normalize(cameraPos - worldPos);
+            float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
+        
+            totalLight += shadow * light;
         }
-        
-        // Light:
-        float distSq = dot(lightData[i].position - worldPos, lightData[i].position - worldPos);
-        float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w / distSq;
-        float3 lightDir = normalize(lightData[i].position - worldPos);
-        float3 viewDir = normalize(cameraPos - worldPos);
-        float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallic);
-        
-        totalLight += shadow * light;
     }
     return totalLight;
 }
 float3 PhysicalPointLights
-(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, bool metallic,
+(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
  int pLightsCount, int shadowMapOffset, PointLightData lightData[MAX_P_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
@@ -167,28 +225,41 @@ float3 PhysicalPointLights
     {
         for (uint faceIndex = 0; faceIndex < 6; faceIndex++)
         {
-            // Shadow:
-            float shadow = 0.0f;
-            if (receiveShadows)
+            // Check if the pixel is inside the shadow map:
+            float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix[faceIndex], float4(worldPos, 1.0f)); // €[-w,w]
+            float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
+            float3 lightUvz = lightSpaceClipPos.xyz / w; // ndc: xy€[-1,1] z€[0,1]
+            lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f); // remap xy to [0,1]
+            if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
+             && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
+             && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
             {
-                float4 lightSpacePos = mul(lightData[i].worldToClipMatrix[faceIndex], float4(worldPos, 1.0f));
-                if (lightSpacePos.w > 1e-4f)
+                // Shadow:
+                float shadow = 1.0f;
+                if (receiveShadows)
                 {
-                    float3 lightUvz = lightSpacePos.xyz / lightSpacePos.w;
-                    lightUvz.xy = (lightUvz.xy + 1.0f) * 0.5f; // scale to [0, 1]
-                    if (0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
-                        shadow = shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy, 6 * i + faceIndex + shadowMapOffset), lightUvz.z);
+                    if (lightData[i].softShadows == 0)
+                        shadow = NoFileredShadow(shadowSampler, shadowMaps, 6 * i + faceIndex + shadowMapOffset, lightUvz);
+                    // with PCF one of the shadow cube map faces disappears occasionally
+                    else if (lightData[i].softShadows == 1)
+                        shadow = PercentageCloserFilteredShadow(shadowSampler, shadowMaps, 6 * i + faceIndex + shadowMapOffset, lightUvz);
                 }
+                
+                // Light:
+                float distSq = dot(lightData[i].position - worldPos, lightData[i].position - worldPos);
+                float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w / distSq;
+                float3 lightDir = normalize(lightData[i].position - worldPos);
+                float3 viewDir = normalize(cameraPos - worldPos);
+                float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
+        
+                totalLight += shadow * light;
+                //float3 faceShading = float3
+                //(0.0f + 1.0f * (faceIndex == 0 || faceIndex == 3 || faceIndex == 5),
+                // 0.0f + 1.0f * (faceIndex == 1 || faceIndex == 4 || faceIndex == 3),
+                // 0.0f + 1.0f * (faceIndex == 2 || faceIndex == 5 || faceIndex == 4));
+                //totalLight += shadow * light * faceShading;
+                // skipping the other faces of the shadow cube map leads to artifacts
             }
-        
-            // Light:
-            float distSq = dot(lightData[i].position - worldPos, lightData[i].position - worldPos);
-            float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w / distSq;
-            float3 lightDir = normalize(lightData[i].position - worldPos);
-            float3 viewDir = normalize(cameraPos - worldPos);
-            float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallic);
-        
-            totalLight += shadow * light;
         }
     }
     return totalLight;
@@ -197,13 +268,13 @@ float3 PhysicalPointLights
 
 
 float3 PhysicalLighting
-(float3 worldPos, float3 cameraPos, float3 worldNormal, float3 color, float roughness, float3 reflectivity, bool metallic,
+(float3 worldPos, float3 cameraPos, float3 worldNormal, float3 color, float roughness, float3 reflectivity, float metallicity,
  int dLightsCount, int sLightsCount, int pLightsCount, DirectionalLightData directionalLightData[MAX_D_LIGHTS], SpotLightData spotLightData[MAX_S_LIGHTS], PointLightData pointLightData[MAX_P_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
-    float3 directionalLight = PhysicalDirectionalLights(worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallic, dLightsCount, 0, directionalLightData, shadowMaps, shadowSampler);
-    float3 spotLight        = PhysicalSpotLights       (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallic, sLightsCount, dLightsCount               , spotLightData       , shadowMaps, shadowSampler);
-    float3 pointLight       = PhysicalPointLights      (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallic, pLightsCount, dLightsCount + sLightsCount, pointLightData      , shadowMaps, shadowSampler);
+    float3 directionalLight = PhysicalDirectionalLights(worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, dLightsCount, 0                          , directionalLightData, shadowMaps, shadowSampler);
+    float3 spotLight        = PhysicalSpotLights       (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, sLightsCount, dLightsCount               , spotLightData       , shadowMaps, shadowSampler);
+    float3 pointLight       = PhysicalPointLights      (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, pLightsCount, dLightsCount + sLightsCount, pointLightData      , shadowMaps, shadowSampler);
     return directionalLight + spotLight + pointLight;
 }
 

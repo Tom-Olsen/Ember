@@ -3,6 +3,11 @@
 #include "emberEngine.h"
 
 
+
+class ShadowCascade;
+
+
+
 /// <summary>
 /// View direction is down = (0,0,-1).
 /// </summary>
@@ -14,48 +19,38 @@ public: // Enums:
 private: // Members:
 	float m_intensity;
 	Float3 m_color;
-	float m_nearClip;
-	float m_farClip;
-	float m_viewWidth;
-	float m_viewHeight;
-	Float4x4 m_projectionMatrix;
-	bool m_updateProjectionMatrix;
+	ShadowType m_shadowType;
 
 	// Shadow cascade settings:
+	std::array<ShadowCascade*, 4> m_shadowCascades;
 	Camera* m_pActiveCamera;
-	float m_maxShadowDistance;	// Distance from camera to last shadow cascade.
+	float m_distributionFactor; // 0 = linear, 1 = logarithmic
 	ShadowCascadeCount m_shadowCascadeCount;
-	float m_shadowCascadeSplits[3];	// Percentile splits for each shadow cascade € [0,1].
+	float m_shadowCascadeSplits[5];			// Percentile splits for each shadow cascade € [0,1].
 
 	// Visualization:
 	bool m_drawFrustum;
-	bool m_showShaowCascades;
 	bool m_overwriteSceneActiveCamera;
-	std::unique_ptr<Mesh> pQuad;
 
 public: // Methods:
 	DirectionalLight();
 	~DirectionalLight();
+	void UpdateShadowCascades(float sceneHeight);
 
 	// Setters:
 	// Light properties:
 	void SetIntensity(float intensity);
 	void SetColor(const Float3& color);
-	void SetNearClip(float nearClip);
-	void SetFarClip(float farClip);
-	void SetViewWidth(float viewWidth);
-	void SetViewHeight(float viewHeight);
+	void SetShadowType(ShadowType shadowType);
 
 	// Shadow cascade properties:
 	void SetActiveCamera(Camera* pCamera);
-	void SetActiveCamera(Camera* pCamera, bool overwriteSceneActiveCamera);
-	void SetMaxShadowDistance(float maxShadowDistance);
+	void OverwriteActiveCamera(Camera* pCamera, bool overwriteSceneActiveCamera);
 	void SetShadowCascadeCount(ShadowCascadeCount shadowCascadeCount);
-	void SetShadowCascadeSplits(float value01, uint32_t index);
+	void SetDistributionFactor(float value01);
 
 	// Visualization bools:
 	void SetDrawFrustum(bool drawFrustum);
-	void SetShowShadowCascades(bool showShadowCascades);
 
 	// Getters:
 	// Light properties:
@@ -63,25 +58,19 @@ public: // Methods:
 	float GetIntensity() const;
 	Float3 GetColor() const;
 	Float4 GetColorIntensity() const;
-	float GetNearClip() const;
-	float GetFarClip() const;
-	float GetViewWidth() const;
-	float GetViewHeight() const;
-	Float4x4 GetViewMatrix() const;
-	Float4x4 GetProjectionMatrix();
+	ShadowType GetShadowType() const;
+	Float4x4 GetViewMatrix(uint32_t shadowCascadeIndex) const;
+	Float4x4 GetProjectionMatrix(uint32_t shadowCascadeIndex);
 
 	// Shadow cascade properties:
-	float GetMaxShadowDistance() const;
 	ShadowCascadeCount GetShadowCascadeCount() const;
-	const float* const GetShadowCascadeSplits() const;
+	float GetDistributionFactor() const;
+	float GetShadowCascadeSplit(uint32_t index) const;
 
 	// Overrides:
 	void Start() override;
 	void LateUpdate() override;
 	const std::string ToString() const override;
-
-private: // Methods:
-	void UpdateProjectionMatrix();
 };
 
 

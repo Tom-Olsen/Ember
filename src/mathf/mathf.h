@@ -42,17 +42,21 @@ namespace mathf
 
 	// Basic math:
 	float Abs(float value);
+	float Round(float value, int decimals = 0);
+	float Floor(float value, int decimals = 0);
+	float Ceil(float value, int decimals = 0);
 	float Clamp(float value, float min, float max);
-	float Max(float a, float b);
 	float Min(float a, float b);
+	float Max(float a, float b);
 	float Sign(float value);
 	float Sqrt(float value);
+	float Pow(float value, float exponent);
 	float Factorial(int n);
 
 	// Trigonometry:
-	float Sin(float radiant);
-	float Cos(float radiant);
-	float Tan(float radiant);
+	float Sin(float angle);
+	float Cos(float angle);
+	float Tan(float angle);
 	float Asin(float value);
 	float Acos(float value);
 	float Atan(float z);
@@ -77,6 +81,7 @@ namespace mathf
 
 // Geometry:
 #include "bounds.h"
+#include "bounds2d.h"
 #include "geometry3d.h"
 
 // Random:

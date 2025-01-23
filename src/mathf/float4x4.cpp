@@ -210,40 +210,34 @@ Float4x4 Float4x4::Rotate(const Float3& eulerAngles, const Uint3& rotationOrder,
 }
 Float4x4 Float4x4::RotateFromTo(const Float3& from, const Float3& to)
 {
-	if (from.IsEpsilonEqual(-to))
-	{
-		// Find orthogonal vector to from:
-		Float3 ortho = Float3::Cross(from, Float3::right);
-		if (ortho.IsEpsilonZero())
-			ortho = Float3::Cross(from, Float3::up);
-		ortho.Normalize();
-
-		// Find rotation axis:
-		Float3 axis = Float3::Cross(from, ortho);
-		return Rotate(axis, mathf::pi);
-	}
-	Float3 axis = Float3::Cross(from, to);
+	Float3 f = from.Normalize();
+	Float3 t = to.Normalize();
+	if (f.IsEpsilonEqual(t))
+		return Float4x4::identity;
+	if (f.IsEpsilonEqual(-t))
+		return Float4x4::Rotate(geometry3d::GetOrhtogonalVector(f), mathf::pi);
+	Float3 axis = Float3::Cross(from, to); // normalization not needed, as Rotate(...) will normalize it
 	float angle = Float3::Angle(from, to);
 	return Rotate(axis, angle);
 }
-Float4x4 Float4x4::RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& otherOld, const Float3& otherNew)
+Float4x4 Float4x4::RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New)
 {
-	// Rotate forwardOld to forwardNew:
-	Float3 axis = Float3::Cross(forwardOld, forwardNew);
-	float angle0 = Float3::Angle(forwardOld, forwardNew);
+	// Rotate direction0Old to direction0New:
+	Float3 axis = Float3::Cross(direction0Old, direction0New);
+	float angle0 = Float3::Angle(direction0Old, direction0New);
 	Float3x3 rot0 = Float3x3::Rotate(axis, angle0);
 
-	// Compute missalignment angle between otherNew and otherOld rotated by rot0:
-	Float3 otherOldRotated = rot0 * otherOld;
-	Float3 planeNormal = Float3::Cross(otherNew, forwardNew).Normalize();
+	// Compute missalignment angle between direction1New and direction1Old rotated by rot0:
+	Float3 otherOldRotated = rot0 * direction1Old;
+	Float3 planeNormal = Float3::Cross(direction1New, direction0New).Normalize();
 	Float3 projection = geometry3d::PointToPlaneProjection(otherOldRotated, Float3::zero, planeNormal);
-	float sign = mathf::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection), forwardNew));
+	float sign = mathf::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection), direction0New));
 	float angle1 = sign * Float3::Angle(otherOldRotated, projection);
-	if (Float3::Dot(otherNew, otherOldRotated) < 0)
+	if (Float3::Dot(direction1New, otherOldRotated) < 0)
 		angle1 += mathf::pi;
 
-	// Rotate by angle around forwardNew:
-	Float3x3 rot1 = Float3x3::Rotate(forwardNew, angle1);
+	// Rotate by angle around direction0New:
+	Float3x3 rot1 = Float3x3::Rotate(direction0New, angle1);
 
 	// Combine rotations:
 	return Float4x4(rot1 * rot0);
@@ -282,31 +276,60 @@ Float4x4 Float4x4::TRS(const Float3& position, const Float4x4& rotationMatrix, c
 }
 Float4x4 Float4x4::Perspective(float fov, float aspectRatio, float nearClip, float farClip)
 {
+	//// OpenGL:
+	//float tanHalfFov = mathf::Tan(0.5f * fov);
+	//float xx = 1.0f / (aspectRatio * tanHalfFov);
+	//float yy = -1.0f / tanHalfFov;
+	//float zz = (nearClip + farClip) / (nearClip - farClip);
+	//float zw = 2.0f * nearClip * farClip / (nearClip - farClip);
+	//
+	//return Float4x4::Rows
+	//(xx,   0.0f,  0.0f, 0.0f,
+	// 0.0f,   yy,  0.0f, 0.0f,
+	// 0.0f, 0.0f,    zz,   zw,
+	// 0.0f, 0.0f, -1.0f, 0.0f);
+
+	// Vulkan:
 	float tanHalfFov = mathf::Tan(0.5f * fov);
 	float xx = 1.0f / (aspectRatio * tanHalfFov);
 	float yy = -1.0f / tanHalfFov;
-	float zz = (nearClip + farClip) / (nearClip - farClip);
-	float wz = 2.0f * nearClip * farClip / (nearClip - farClip);
+	float zz = -farClip / (farClip - nearClip);
+	float zw = -farClip * nearClip / (farClip - nearClip);
 
 	return Float4x4::Rows
-	(xx, 0.0f, 0.0f, 0.0f,
-	 0.0f, yy, 0.0f, 0.0f,
-	 0.0f, 0.0f, zz, wz,
+	(xx,   0.0f, 0.0f, 0.0f,
+	 0.0f,   yy, 0.0f, 0.0f,
+	 0.0f, 0.0f,   zz,   zw,
 	 0.0f, 0.0f, -1.0f, 0.0f);
 }
 Float4x4 Float4x4::Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip)
 {
+	//// OpenGL:
+	//float xx = 2.0f / (right - left);
+	//float yy = 2.0f / (top - bottom);
+	//float zz = -2.0f / (farClip - nearClip);
+	//float xw = -(right + left) / (right - left);
+	//float yw = -(top + bottom) / (top - bottom);
+	//float zw = -(farClip + nearClip) / (farClip - nearClip);
+	//
+	//return Float4x4::Rows
+	//(xx, 0.0f,   0.0f,   xw,
+	// 0.0f, yy,   0.0f,   yw,
+	// 0.0f, 0.0f,   zz,   zw,
+	// 0.0f, 0.0f, 0.0f, 1.0f);
+
+	// Vulkan:
 	float xx = 2.0f / (right - left);
-	float yy = 2.0f / (top - bottom);
-	float zz = -2.0f / (farClip - nearClip);
-	float wx = -(right + left) / (right - left);
-	float wy = -(top + bottom) / (top - bottom);
-	float wz = -(farClip + nearClip) / (farClip - nearClip);
+	float yy = 2.0f / (bottom - top);
+	float zz = 1.0f / (nearClip - farClip);
+	float xw = -(right + left) / (right - left);
+	float yw = -(bottom + top) / (bottom - top);
+	float zw = nearClip / (nearClip - farClip);
 
 	return Float4x4::Rows
-	(  xx, 0.0f, 0.0f,   wx,
-	 0.0f,   yy, 0.0f,   wy,
-	 0.0f, 0.0f,   zz,   wz,
+	(  xx, 0.0f, 0.0f,   xw,
+	 0.0f,   yy, 0.0f,   yw,
+	 0.0f, 0.0f,   zz,   zw,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
@@ -592,12 +615,24 @@ Float4x4 Float4x4::max = Float4x4(mathf::max);
 Float4x4 Float4x4::min = Float4x4(mathf::min);
 
 // Rotations:
+Float4x4 Float4x4::rot45x = Float4x4::RotateX(mathf::pi4);
+Float4x4 Float4x4::rot45y = Float4x4::RotateY(mathf::pi4);
+Float4x4 Float4x4::rot45z = Float4x4::RotateZ(mathf::pi4);
 Float4x4 Float4x4::rot90x = Float4x4::RotateX(mathf::pi2);
 Float4x4 Float4x4::rot90y = Float4x4::RotateY(mathf::pi2);
 Float4x4 Float4x4::rot90z = Float4x4::RotateZ(mathf::pi2);
+Float4x4 Float4x4::rot135x = Float4x4::RotateX(3.0f * mathf::pi4);
+Float4x4 Float4x4::rot135y = Float4x4::RotateY(3.0f * mathf::pi4);
+Float4x4 Float4x4::rot135z = Float4x4::RotateZ(3.0f * mathf::pi4);
 Float4x4 Float4x4::rot180x = Float4x4::RotateX(mathf::pi);
 Float4x4 Float4x4::rot180y = Float4x4::RotateY(mathf::pi);
 Float4x4 Float4x4::rot180z = Float4x4::RotateZ(mathf::pi);
+Float4x4 Float4x4::rot225x = Float4x4::RotateX(5.0f * mathf::pi4);
+Float4x4 Float4x4::rot225y = Float4x4::RotateY(5.0f * mathf::pi4);
+Float4x4 Float4x4::rot225z = Float4x4::RotateZ(5.0f * mathf::pi4);
 Float4x4 Float4x4::rot270x = Float4x4::RotateX(-mathf::pi2);
 Float4x4 Float4x4::rot270y = Float4x4::RotateY(-mathf::pi2);
 Float4x4 Float4x4::rot270z = Float4x4::RotateZ(-mathf::pi2);
+Float4x4 Float4x4::rot315x = Float4x4::RotateX(-mathf::pi4);
+Float4x4 Float4x4::rot315y = Float4x4::RotateY(-mathf::pi4);
+Float4x4 Float4x4::rot315z = Float4x4::RotateZ(-mathf::pi4);

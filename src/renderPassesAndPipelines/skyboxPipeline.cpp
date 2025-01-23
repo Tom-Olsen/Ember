@@ -117,11 +117,11 @@ void SkyboxPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
 
 	// Depth and stencil testing:
     VkPipelineDepthStencilStateCreateInfo depthState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-    depthState.depthTestEnable = VK_TRUE;           // depth of new fragments should be compared to the depth buffer to see if they should be discarded
-	depthState.depthWriteEnable = VK_FALSE;         // new depth of fragments that pass the depth test should be written to the depth buffer
-	depthState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL; // comparison that is performed to keep or discard fragments. lower = closer to camera
-	depthState.depthBoundsTestEnable = VK_FALSE;    // allows to keep only fragments in the below defined range
-	depthState.stencilTestEnable = VK_FALSE;        // stencil buffer operations (not used yet)
+    depthState.depthTestEnable = VK_TRUE;                       // depth of new fragments should be compared to the depth buffer to see if they should be discarded
+	depthState.depthWriteEnable = VK_FALSE;                     // new depth of fragments that pass the depth test should be written to the depth buffer
+	depthState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;    // comparison that is performed to keep or discard fragments. lower = closer to camera
+	depthState.depthBoundsTestEnable = VK_FALSE;                // allows to keep only fragments in the below defined range
+	depthState.stencilTestEnable = VK_FALSE;                    // stencil buffer operations (not used yet)
 
 	// Color blending:
     VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};

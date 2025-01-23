@@ -52,6 +52,10 @@ Float4 Float4::Abs(const Float4& a)
 {
 	return Float4(mathf::Abs(a.x), mathf::Abs(a.y), mathf::Abs(a.z), mathf::Abs(a.w));
 }
+Float4 Float4::Round(const Float4& value, int decimals)
+{
+	return Float4(mathf::Round(value.x, decimals), mathf::Round(value.y, decimals), mathf::Round(value.z, decimals), mathf::Round(value.w, decimals));
+}
 Float4 Float4::Min(const Float4& a, const Float4& b)
 {
 	return Float4(mathf::Min(a.x, b.x), mathf::Min(a.y, b.y), mathf::Min(a.z, b.z), mathf::Min(a.w, b.w));

@@ -141,7 +141,7 @@ TEST(Float4x4, RotateAroundAxis)
 	Float4x4 rotMatrix = Float4x4::Rotate(axis, mathf::pi);
 	Float4 v0 = Float4::right;
 	Float4 v1 = rotMatrix * v0;
-	EXPECT_NEAR4(v1, Float4::up, epsilon);
+	EXPECT_NEAR4(v1, Float4::forward, epsilon);
 }
 //TEST(Float4x4, RotateByEulerAngles)
 //{
@@ -214,18 +214,46 @@ TEST(Float4x4, TRSFloat4x4)
 TEST(Float4x4, Perspective)
 {
 	float fov = mathf::pi2;
-	float aspectRatio = 1.0f;
+	float aspectRatio = 1920.0f / 1080.0f;
 	float nearClip = 1.0f;
 	float farClip = 10.0f;
-	Float4x4 perspectiveMatrix = Float4x4::Perspective(fov, aspectRatio, nearClip, farClip);
-	Float4 centerNear = Float4(0.0f, 0.0f, -nearClip, 1.0f);
-	Float4 centerNearClip = perspectiveMatrix * centerNear;
-	centerNearClip /= centerNearClip.w;
-	Float4 centerFar = Float4(0.0f, 0.0f, -farClip, 1.0f);
-	Float4 centerFarClip = perspectiveMatrix * centerFar;
-	centerFarClip /= centerFarClip.w;
-	EXPECT_NEAR4(centerNearClip, Float4(0.0f, 0.0f, -1.0f, 1.0f), epsilon);
-	EXPECT_NEAR4(centerFarClip, Float4(0.0f, 0.0f, 1.0f, 1.0f), epsilon);
+	Float4x4 projectionMatrix = Float4x4::Perspective(fov, aspectRatio, nearClip, farClip);
+
+	float xNear = aspectRatio * nearClip * mathf::Tan(fov / 2.0f);
+	float yNear = xNear / aspectRatio;
+	float xFar = aspectRatio * farClip * mathf::Tan(fov / 2.0f);
+	float yFar = xFar / aspectRatio;
+
+	Float3 cornersWorld[8] =
+	{
+		Float3(-xNear,  yNear, -nearClip),
+		Float3( xNear,  yNear, -nearClip),
+		Float3(-xNear, -yNear, -nearClip),
+		Float3( xNear, -yNear, -nearClip),
+		Float3( -xFar,   yFar, -farClip ),
+		Float3(  xFar,   yFar, -farClip ),
+		Float3( -xFar,  -yFar, -farClip ),
+		Float3(  xFar,  -yFar, -farClip )
+	};
+	Float3 ndc[8] =
+	{
+		Float3(-1.0f, -1.0f, 0.0f),
+		Float3( 1.0f, -1.0f, 0.0f),
+		Float3(-1.0f,  1.0f, 0.0f),
+		Float3( 1.0f,  1.0f, 0.0f),
+		Float3(-1.0f, -1.0f, 1.0f),
+		Float3( 1.0f, -1.0f, 1.0f),
+		Float3(-1.0f,  1.0f, 1.0f),
+		Float3( 1.0f,  1.0f, 1.0f)
+	};
+
+	for (int i = 0; i < 8; i++)
+	{
+		Float4 cornerClip = projectionMatrix * Float4(cornersWorld[i], 1.0f);
+		cornerClip /= cornerClip.w;
+		EXPECT_NEAR3(Float3(cornerClip), ndc[i], epsilon);
+		//std::cout << cornersWorld[i].ToString() << " -> " << Float3(cornerClip).ToString() << " ?= " << ndc[i].ToString() << std::endl;
+	}
 }
 TEST(Float4x4, Orthographic)
 {
@@ -235,15 +263,38 @@ TEST(Float4x4, Orthographic)
 	float top = 1.0f;
 	float nearClip = 1.0f;
 	float farClip = 10.0f;
-	Float4x4 orthographicMatrix = Float4x4::Orthographic(left, right, bottom, top, nearClip, farClip);
-	Float4 centerNear = Float4(0.0f, 0.0f, -nearClip, 1.0f);
-	Float4 centerNearClip = orthographicMatrix * centerNear;
-	centerNearClip /= centerNearClip.w;
-	Float4 centerFar = Float4(0.0f, 0.0f, -farClip, 1.0f);
-	Float4 centerFarClip = orthographicMatrix * centerFar;
-	centerFarClip /= centerFarClip.w;
-	EXPECT_NEAR4(centerNearClip, Float4(0.0f, 0.0f, -1.0f, 1.0f), epsilon);
-	EXPECT_NEAR4(centerFarClip, Float4(0.0f, 0.0f, 1.0f, 1.0f), epsilon);
+	Float4x4 projectionMatrix = Float4x4::Orthographic(left, right, bottom, top, nearClip, farClip);
+
+	Float3 cornersWorld[8] =
+	{
+		Float3( left,    top, -nearClip),
+		Float3(right,    top, -nearClip),
+		Float3( left, bottom, -nearClip),
+		Float3(right, bottom, -nearClip),
+		Float3( left,    top, -farClip),
+		Float3(right,    top, -farClip),
+		Float3( left, bottom, -farClip),
+		Float3(right, bottom, -farClip)
+	};
+	Float3 ndc[8] =
+	{
+		Float3(-1.0f, -1.0f, 0.0f),
+		Float3( 1.0f, -1.0f, 0.0f),
+		Float3(-1.0f,  1.0f, 0.0f),
+		Float3( 1.0f,  1.0f, 0.0f),
+		Float3(-1.0f, -1.0f, 1.0f),
+		Float3( 1.0f, -1.0f, 1.0f),
+		Float3(-1.0f,  1.0f, 1.0f),
+		Float3( 1.0f,  1.0f, 1.0f)
+	};
+
+	for (int i = 0; i < 8; i++)
+	{
+		Float4 cornerClip = projectionMatrix * Float4(cornersWorld[i], 1.0f);
+		cornerClip /= cornerClip.w;
+		EXPECT_NEAR3(Float3(cornerClip), ndc[i], epsilon);
+		//std::cout << cornersWorld[i].ToString() << " -> " << Float3(cornerClip).ToString() << " ?= " << ndc[i].ToString() << std::endl;
+	}
 }
 
 

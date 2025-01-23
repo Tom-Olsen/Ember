@@ -28,6 +28,10 @@ void MeshManager::Init(VulkanContext* pContext)
 	Mesh* pUnitCube = MeshGenerator::UnitCube();
 	AddMesh(pUnitCube);
 
+	Mesh* pUnitCubeInverse = MeshGenerator::UnitCube()->InvertFaces();
+	pUnitCubeInverse->SetName("unitCubeInverse");
+	AddMesh(pUnitCubeInverse);
+
 	Mesh* pHalfCube = MeshGenerator::HalfCube();
 	AddMesh(pHalfCube);
 
@@ -67,11 +71,11 @@ void MeshManager::Init(VulkanContext* pContext)
 	Mesh* pFourLeg = MeshGenerator::FourLeg();
 	AddMesh(pFourLeg);
 
-	Mesh* pGrid20x20 = MeshGenerator::Grid(20, 20, "grid20x20");
-	AddMesh(pGrid20x20);
+	Mesh* pCamera = MeshGenerator::Camera();
+	AddMesh(pCamera);
 
-	Mesh* pGrid100x100 = MeshGenerator::Grid(100, 100, "grid100x100");
-	AddMesh(pGrid100x100);
+	Mesh* pFrame = MeshGenerator::Frame(0.15f, 2.0f);
+	AddMesh(pFrame);
 }
 void MeshManager::UnloadAllMeshes()
 {

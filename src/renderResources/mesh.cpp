@@ -319,57 +319,89 @@ Mesh* Mesh::Translate(const Float3& translation)
 }
 Mesh* Mesh::Rotate(const Float3x3& rotation)
 {
-	bool hasNormals = m_normals.size() == m_vertexCount;
-	bool hasTangents = m_tangents.size() == m_vertexCount;
-
+	// Positions:
 	for (uint32_t i = 0; i < m_vertexCount; i++)
-	{
 		m_positions[i] = rotation * m_positions[i];
-		if (hasNormals)
+
+	// Normals:
+	if (m_normals.size() == m_vertexCount)
+		for (uint32_t i = 0; i < m_vertexCount; i++)
 			m_normals[i] = rotation * m_normals[i];
-		if (hasTangents)
+
+	// Tangents:
+	if (m_tangents.size() == m_vertexCount)
+		for (uint32_t i = 0; i < m_vertexCount; i++)
 			m_tangents[i] = rotation * m_tangents[i];
-	}
+
 	m_verticesUpdated = true;
 	return this;
 }
 Mesh* Mesh::Rotate(const Float4x4& rotation)
 {
 	Float3x3 rotation3x3 = Float3x3(rotation);
-	bool hasNormals = m_normals.size() == m_vertexCount;
-	bool hasTangents = m_tangents.size() == m_vertexCount;
 
+	// Positions:
 	for (uint32_t i = 0; i < m_vertexCount; i++)
-	{
 		m_positions[i] = rotation3x3 * m_positions[i];
-		if (hasNormals)
+
+	// Normals:
+	if (m_normals.size() == m_vertexCount)
+		for (uint32_t i = 0; i < m_vertexCount; i++)
 			m_normals[i] = rotation3x3 * m_normals[i];
-		if (hasTangents)
+
+	// Tangents:
+	if (m_tangents.size() == m_vertexCount)
+		for (uint32_t i = 0; i < m_vertexCount; i++)
 			m_tangents[i] = rotation3x3 * m_tangents[i];
-	}
+
 	m_verticesUpdated = true;
 	return this;
 }
 Mesh* Mesh::Scale(const Float3& scale)
 {
 	Float3 invScale = 1.0 / scale;
-	bool hasNormals = m_normals.size() == m_vertexCount;
-	bool hasTangents = m_tangents.size() == m_vertexCount;
 
+	// Positions:
 	for (uint32_t i = 0; i < m_vertexCount; i++)
-	{
 		m_positions[i] = scale * m_positions[i];
-		if (hasNormals)
+
+	// Normals:
+	if (m_normals.size() == m_vertexCount)
+		for (uint32_t i = 0; i < m_vertexCount; i++)
 			m_normals[i] = (invScale * m_normals[i]).Normalize();
-		if (hasTangents)
+
+	// Tangents:
+	if (m_tangents.size() == m_vertexCount)
+		for (uint32_t i = 0; i < m_vertexCount; i++)
 			m_tangents[i] = (invScale * m_tangents[i]).Normalize();
-	}
+
 	m_verticesUpdated = true;
 	return this;
 }
 Mesh* Mesh::Scale(float scale)
 {
 	return Scale(Float3(scale));
+}
+Mesh* Mesh::Transform(const Float4x4& transformationMatrix)
+{
+	Float4x4 normalMatrix = transformationMatrix.Inverse().Transpose();
+
+	// Positions:
+	for (uint32_t i = 0; i < m_vertexCount; i++)
+		m_positions[i] = Float3(transformationMatrix * Float4(m_positions[i], 1.0f));
+
+	// Normals:
+	if (m_normals.size() == m_vertexCount)
+		for (uint32_t i = 0; i < m_vertexCount; i++)
+			m_normals[i] = Float3(normalMatrix * Float4(m_normals[i], 0.0f)).Normalize();
+
+	// Tangents:
+	if (m_tangents.size() == m_vertexCount)
+		for (uint32_t i = 0; i < m_vertexCount; i++)
+			m_tangents[i] = Float3(normalMatrix * Float4(m_tangents[i], 0.0f)).Normalize();
+
+	m_verticesUpdated = true;
+	return this;
 }
 Mesh* Mesh::Subdivide()
 {
@@ -487,6 +519,30 @@ Mesh* Mesh::Spherify(float factor, float radius)
 		MoveNormals(m_normals);
 	if (hasTangents)
 		MoveTangents(m_tangents);
+	return this;
+}
+Mesh* Mesh::InvertFaces()
+{
+	// Positions:
+	for (Uint3& triangle : m_triangles)
+		std::swap(triangle[1], triangle[2]);
+
+	// Normals:
+	if (m_normals.size() == m_vertexCount)
+		for (Float3& normal : m_normals)
+			normal = -normal;
+
+	// Tangents:
+	if (m_tangents.size() == m_vertexCount)
+		for (Float3& tangent : m_tangents)
+			tangent = -tangent;
+
+	return this;
+}
+Mesh* Mesh::RescaleUVs(const Float4& scale, const Float4& offset)
+{
+	for (Float4& uv : m_uvs)
+		uv = scale * uv + offset;
 	return this;
 }
 void Mesh::ComputeNormals()

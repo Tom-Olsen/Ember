@@ -3,7 +3,8 @@
 
 
 // Constructors/Destructor:
-RotationController::RotationController(float degreesPerSecond) : m_degreesPerSecond(degreesPerSecond) {}
+RotationController::RotationController(float degreesPerSecond, float translationSpeed)
+	: m_degreesPerSecond(degreesPerSecond), m_translationSpeed (translationSpeed) {}
 RotationController::~RotationController()
 {
 
@@ -15,28 +16,28 @@ RotationController::~RotationController()
 void RotationController::Update()
 {
 	int movementX = 0;
-	int movementZ = 0;
+	int movementY = 0;
 
 	if (EventSystem::KeyDownOrHeld(SDLK_UP))
 		movementX += 1;
 	if (EventSystem::KeyDownOrHeld(SDLK_DOWN))
 		movementX -= 1;
 	if (EventSystem::KeyDownOrHeld(SDLK_RIGHT))
-		movementZ += 1;
+		movementY += 1;
 	if (EventSystem::KeyDownOrHeld(SDLK_LEFT))
-		movementZ -= 1;
+		movementY -= 1;
 
 	if (EventSystem::KeyDownOrHeld(SDLK_LSHIFT))
 	{
-		Float3 direction = 10.0f * Float3(movementZ, 0.0f, -movementX) * Timer::GetDeltaTime();
+		Float3 direction = m_translationSpeed * Float3(movementY, movementX, 0.0f) * Timer::GetDeltaTime();
 		m_pTransform->AddToPosition(direction);
 	}
 	else
 	{
-		if (movementX != 0.0f || movementZ != 0.0f)
+		if (movementX != 0.0f || movementY != 0.0f)
 		{
 			float angleX = movementX * m_degreesPerSecond * mathf::deg2rad * Timer::GetDeltaTime();
-			float angleZ = -movementZ * m_degreesPerSecond * mathf::deg2rad * Timer::GetDeltaTime();
+			float angleZ = -movementY * m_degreesPerSecond * mathf::deg2rad * Timer::GetDeltaTime();
 			Float3x3 rotX = Float3x3::RotateX(angleX);
 			Float3x3 rotZ = Float3x3::RotateZ(angleZ);
 			m_pTransform->SetRotationMatrix(rotZ * m_pTransform->GetRotation3x3() * rotX);

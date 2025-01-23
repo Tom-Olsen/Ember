@@ -102,8 +102,11 @@ public: // Methods:
 	Mesh* Rotate(const Float4x4& rotation);
 	Mesh* Scale(const Float3& scale);
 	Mesh* Scale(float scale);
+	Mesh* Transform(const Float4x4& transformationMatrix);
 	Mesh* Subdivide();
 	Mesh* Spherify(float factor, float radius);
+	Mesh* InvertFaces();
+	Mesh* RescaleUVs(const Float4& scale, const Float4& offset);
 	void ComputeNormals();
 	void ComputeTangents();
 

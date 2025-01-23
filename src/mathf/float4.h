@@ -37,6 +37,7 @@ public:
 
 	// Static math operations:
 	static Float4 Abs(const Float4& a);
+	static Float4 Round(const Float4& value, int decimals = 0);
 	static Float4 Min(const Float4& a, const Float4& b);
 	static Float4 Max(const Float4& a, const Float4& b);
 	static Float4 Clamp(const Float4& value, const Float4& min, const Float4& max);

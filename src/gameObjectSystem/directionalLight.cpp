@@ -8,29 +8,31 @@ DirectionalLight::DirectionalLight()
 {
 	m_intensity = 1.0f;
 	m_color = Float3::white;
-	m_nearClip = 0.01f;
-	m_farClip = 15.0f;
-	m_viewWidth = 15.0f;
-	m_viewHeight = 15.0f;
-	m_updateProjectionMatrix = true;
-	m_maxShadowDistance = 100.0f;
+	m_shadowType = ShadowType::hard;
 
 	// Shadow cascade settings:
+	for (uint32_t i = 0; i < 4; i++)
+		m_shadowCascades[i] = new ShadowCascade();
 	m_pActiveCamera = nullptr;
+	m_distributionFactor = 0.5f;
 	m_shadowCascadeCount = ShadowCascadeCount::four;
-	m_shadowCascadeSplits[0] = 0.1;
-	m_shadowCascadeSplits[1] = 0.3;
-	m_shadowCascadeSplits[2] = 0.6;
 
 	// Visualization:
 	m_drawFrustum = false;
-	m_showShaowCascades = false;
 	m_overwriteSceneActiveCamera = false;
-	pQuad = nullptr;
 }
 DirectionalLight::~DirectionalLight()
 {
 
+}
+
+
+
+// Public methods:
+void DirectionalLight::UpdateShadowCascades(float sceneHeight)
+{
+	for (uint32_t i = 0; i < (uint32_t)m_shadowCascadeCount; i++)
+		m_shadowCascades[i]->Update(m_pActiveCamera, GetDirection(), m_shadowCascadeSplits[i], m_shadowCascadeSplits[i + 1], sceneHeight);
 }
 
 
@@ -45,34 +47,22 @@ void DirectionalLight::SetColor(const Float3& color)
 {
 	m_color = color;
 }
-void DirectionalLight::SetNearClip(float nearClip)
+void DirectionalLight::SetShadowType(ShadowType shadowType)
 {
-	m_nearClip = nearClip;
-	m_updateProjectionMatrix = true;
-}
-void DirectionalLight::SetFarClip(float farClip)
-{
-	m_farClip = farClip;
-	m_updateProjectionMatrix = true;
-}
-void DirectionalLight::SetViewWidth(float viewWidth)
-{
-	m_viewWidth = viewWidth;
-	m_updateProjectionMatrix = true;
-}
-void DirectionalLight::SetViewHeight(float viewHeight)
-{
-	m_viewHeight = viewHeight;
-	m_updateProjectionMatrix = true;
+	m_shadowType = shadowType;
 }
 
 // Shadow cascade properties:
 void DirectionalLight::SetActiveCamera(Camera* pCamera)
 {
 	if (!m_overwriteSceneActiveCamera)
+	{
 		m_pActiveCamera = pCamera;
+		m_distributionFactor = -m_distributionFactor;
+		SetDistributionFactor(-m_distributionFactor);
+	}
 }
-void DirectionalLight::SetActiveCamera(Camera* pCamera, bool overwriteSceneActiveCamera)
+void DirectionalLight::OverwriteActiveCamera(Camera* pCamera, bool overwriteSceneActiveCamera)
 {
 	if (pCamera == nullptr || !overwriteSceneActiveCamera)
 	{
@@ -84,19 +74,31 @@ void DirectionalLight::SetActiveCamera(Camera* pCamera, bool overwriteSceneActiv
 		m_overwriteSceneActiveCamera = overwriteSceneActiveCamera;
 		m_pActiveCamera = pCamera;
 	}
-}
-void DirectionalLight::SetMaxShadowDistance(float maxShadowDistance)
-{
-	m_maxShadowDistance = maxShadowDistance;
+	m_distributionFactor = -m_distributionFactor;
+	SetDistributionFactor(-m_distributionFactor);
 }
 void DirectionalLight::SetShadowCascadeCount(ShadowCascadeCount shadowCascadeCount)
 {
 	m_shadowCascadeCount = shadowCascadeCount;
+	// Force recalculation of shadow cascade splits:
+	m_distributionFactor = -m_distributionFactor;
+	SetDistributionFactor(-m_distributionFactor);
 }
-void DirectionalLight::SetShadowCascadeSplits(float value01, uint32_t index)
+void DirectionalLight::SetDistributionFactor(float value01)
 {
-	if (index < 3)
-		m_shadowCascadeSplits[index] = std::clamp(value01, 0.0f, 1.0f);
+	if (m_distributionFactor != value01)
+	{
+		m_distributionFactor = value01;
+		float n = m_pActiveCamera->GetNearClip();
+		float f = m_pActiveCamera->GetFarClip();
+		uint32_t count = (uint32_t)m_shadowCascadeCount;
+		for (uint32_t i = 0; i < count + 1; i++)
+		{
+			float linear = (float)i / (float)count;
+			float logarithmic = (n * mathf::Pow(((f + n) / n), (i / (float)count)) - n) / f;
+			m_shadowCascadeSplits[i] = (1.0f - m_distributionFactor) * linear + m_distributionFactor * logarithmic;
+		}
+	}
 }
 
 // Visualization bools:
@@ -104,11 +106,6 @@ void DirectionalLight::SetDrawFrustum(bool drawFrustum)
 {
 	m_drawFrustum = drawFrustum;
 }
-void DirectionalLight::SetShowShadowCascades(bool showShadowCascades)
-{
-	m_showShaowCascades = showShadowCascades;
-}
-
 
 // Getters:
 // Light properties:
@@ -131,60 +128,32 @@ Float4 DirectionalLight::GetColorIntensity() const
 {
 	return Float4(m_color, m_intensity);
 }
-float DirectionalLight::GetNearClip() const
+ShadowType DirectionalLight::GetShadowType() const
 {
-	return m_nearClip;
+	return m_shadowType;
 }
-float DirectionalLight::GetFarClip() const
+Float4x4 DirectionalLight::GetViewMatrix(uint32_t shadowCascadeIndex) const
 {
-	return m_farClip;
+	return m_shadowCascades[shadowCascadeIndex]->GetViewMatrix();
 }
-float DirectionalLight::GetViewWidth() const
+Float4x4 DirectionalLight::GetProjectionMatrix(uint32_t shadowCascadeIndex)
 {
-	return m_viewWidth;
-}
-float DirectionalLight::GetViewHeight() const
-{
-	return m_viewHeight;
-}
-Float4x4 DirectionalLight::GetViewMatrix() const
-{
-	return GetTransform()->GetWorldToLocalMatrix();
-}
-Float4x4 DirectionalLight::GetProjectionMatrix()
-{
-	if (m_updateProjectionMatrix)
-		UpdateProjectionMatrix();
-	return m_projectionMatrix;
+	return m_shadowCascades[shadowCascadeIndex]->GetProjectionMatrix();
 }
 
 // Shadow cascade properties:
-float DirectionalLight::GetMaxShadowDistance() const
-{
-	return m_maxShadowDistance;
-}
 DirectionalLight::ShadowCascadeCount DirectionalLight::GetShadowCascadeCount() const
 {
 	return m_shadowCascadeCount;
 }
-const float* const DirectionalLight::GetShadowCascadeSplits() const
+float DirectionalLight::GetDistributionFactor() const
 {
-	return m_shadowCascadeSplits;
+	return m_distributionFactor;
 }
-
-
-
-// Private methods:
-void DirectionalLight::UpdateProjectionMatrix()
+float DirectionalLight::GetShadowCascadeSplit(uint32_t index) const
 {
-	m_updateProjectionMatrix = false;
-	float left = -m_viewWidth / 2.0f;
-	float right = m_viewWidth / 2.0f;
-	float bottom = -m_viewHeight / 2.0f;
-	float top = m_viewHeight / 2.0f;
-	m_projectionMatrix = Float4x4::Orthographic(left, right, bottom, top, m_nearClip, m_farClip);
+	return m_shadowCascadeSplits[index];
 }
-
 
 
 // Overrides:
@@ -195,107 +164,19 @@ void DirectionalLight::Start()
 void DirectionalLight::LateUpdate()
 {
 	if (m_drawFrustum)
-		Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, Float4(m_color,1.0f));
-
-	if (m_showShaowCascades)
 	{
-		if (pQuad == nullptr)
-			pQuad = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Rotate(Float4x4::rot270x));
-
-		// Camera transformation matrices:
-		Float4x4 projectionMatrix = m_pActiveCamera->GetProjectionMatrix();
-		Float4x4 invProjectionMatrix = projectionMatrix.Inverse();
-		Float4x4 localToWorldMatrix = m_pActiveCamera->GetTransform()->GetLocalToWorldMatrix();
-		Float4x4 directionWorldToLocalMatrix = localToWorldMatrix.Transpose();
-
-		// Light direction in local space of camera:
-		Float3 localDirection = Float3x3(directionWorldToLocalMatrix) * GetDirection();
-
-		// Center points of near/far planes in local space of camera:
-		Float4 centerNear = invProjectionMatrix * Float4(0, 0, -1, 1);
-		Float4 centerFar = invProjectionMatrix * Float4(0, 0, 1, 1);
-		centerNear /= centerNear.w;
-		centerFar /= centerFar.w;
-
-		// Center positions of shadow cascade regions in local space of camera:
-		Float3 dir = Float3(centerFar - centerNear);
-		Float3 center0 = Float3(centerNear) + dir * 0.5f * m_shadowCascadeSplits[0];
-		Float3 center1 = Float3(centerNear) + dir * (m_shadowCascadeSplits[0] + 0.5f * (m_shadowCascadeSplits[1] - m_shadowCascadeSplits[0]));
-		Float3 center2 = Float3(centerNear) + dir * (m_shadowCascadeSplits[1] + 0.5f * (m_shadowCascadeSplits[2] - m_shadowCascadeSplits[1]));
-		Float3 center3 = Float3(centerNear) + dir * (m_shadowCascadeSplits[2] + 0.5f * (1.0f - m_shadowCascadeSplits[2]));
-
-		// Corner points of near/far planes in local space of camera:
-		Float4 cornerNear = invProjectionMatrix * Float4(-1, -1, -1, 1);
-		Float4 cornerFar = invProjectionMatrix * Float4(-1, -1, 1, 1);
-		cornerNear /= cornerNear.w;
-		cornerFar /= cornerFar.w;
-
-		// Corner points of shadow cascade regions in local space of camera:
-		dir = Float3(cornerFar - cornerNear);
-		Float3 corner0 = Float3(cornerNear) + dir * m_shadowCascadeSplits[0];
-		Float3 corner1 = Float3(cornerNear) + dir * m_shadowCascadeSplits[1];
-		Float3 corner2 = Float3(cornerNear) + dir * m_shadowCascadeSplits[2];
-		Float3 corner3 = Float3(cornerFar);
-
-		// Draw calls:
 		Material* pUnlitMaterial = MaterialManager::GetMaterial("simpleUnlit");
 		Material* pVertexUnlit = MaterialManager::GetMaterial("vertexColorUnlit");
 		Mesh* pSphere = MeshManager::GetMesh("cubeSphere");
 		Mesh* fourLeg = MeshManager::GetMesh("fourLeg");
 		MaterialProperties* pMaterialProperties = nullptr;
-		{// Draw shadow cascade center points:
-			Float4x4 model0 = localToWorldMatrix * Float4x4::TRS(center0, Float4x4::identity, Float3::one);
-			Float4x4 model1 = localToWorldMatrix * Float4x4::TRS(center1, Float4x4::identity, Float3::one);
-			Float4x4 model2 = localToWorldMatrix * Float4x4::TRS(center2, Float4x4::identity, Float3::one);
-			Float4x4 model3 = localToWorldMatrix * Float4x4::TRS(center3, Float4x4::identity, Float3::one);
-			pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model0, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
-			pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model1, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
-			pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model2, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
-			pMaterialProperties = Graphics::DrawMesh(pSphere, pUnlitMaterial, model3, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
-		}
-		{// Draw shadow cascade areas:
-			Float3 scale0 = Float3(2.0f * mathf::Abs(corner0.x - center0.x), 1.0f, 2.0f * mathf::Abs(corner0.z - center0.z));
-			Float3 scale1 = Float3(2.0f * mathf::Abs(corner1.x - center1.x), 1.0f, 2.0f * mathf::Abs(corner1.z - center1.z));
-			Float3 scale2 = Float3(2.0f * mathf::Abs(corner2.x - center2.x), 1.0f, 2.0f * mathf::Abs(corner2.z - center2.z));
-			Float3 scale3 = Float3(2.0f * mathf::Abs(corner3.x - center3.x), 1.0f, 2.0f * mathf::Abs(corner3.z - center3.z));
-			Float4x4 model0 = localToWorldMatrix * Float4x4::TRS(center0, Float4x4::identity, scale0);
-			Float4x4 model1 = localToWorldMatrix * Float4x4::TRS(center1, Float4x4::identity, scale1);
-			Float4x4 model2 = localToWorldMatrix * Float4x4::TRS(center2, Float4x4::identity, scale2);
-			Float4x4 model3 = localToWorldMatrix * Float4x4::TRS(center3, Float4x4::identity, scale3);
-			pMaterialProperties = Graphics::DrawMesh(pQuad.get(), pUnlitMaterial, model0, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
-			pMaterialProperties = Graphics::DrawMesh(pQuad.get(), pUnlitMaterial, model1, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.7f, 0.0f, 0.0f, 1.0f));
-			pMaterialProperties = Graphics::DrawMesh(pQuad.get(), pUnlitMaterial, model2, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.4f, 0.0f, 0.0f, 1.0f));
-			pMaterialProperties = Graphics::DrawMesh(pQuad.get(), pUnlitMaterial, model3, false, false);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.1f, 0.0f, 0.0f, 1.0f));
-		}
+
+		Float4 colors[4] = { Float4::red, Float4::green, Float4::blue, Float4::yellow };
+		for (uint32_t i = 0; i < (int)m_shadowCascadeCount; i++)
 		{
-			ShadowCascade shadowCascade0(m_pActiveCamera, GetDirection(), 0, m_shadowCascadeSplits[0], 100.0f);
-			ShadowCascade shadowCascade1(m_pActiveCamera, GetDirection(), m_shadowCascadeSplits[0], m_shadowCascadeSplits[1], 100.0f);
-			ShadowCascade shadowCascade2(m_pActiveCamera, GetDirection(), m_shadowCascadeSplits[1], m_shadowCascadeSplits[2], 100.0f);
-			ShadowCascade shadowCascade3(m_pActiveCamera, GetDirection(), m_shadowCascadeSplits[2], 1, 100.0f);
-			Float4x4 model0 = shadowCascade0.GetLightLocalToWorldMatrix();
-			Float4x4 model1 = shadowCascade1.GetLightLocalToWorldMatrix();
-			Float4x4 model2 = shadowCascade2.GetLightLocalToWorldMatrix();
-			Float4x4 model3 = shadowCascade3.GetLightLocalToWorldMatrix();
-			
-			// Draw light fourLeg:
-			Graphics::DrawMesh(fourLeg, pVertexUnlit, model0, false, false);
-			Graphics::DrawMesh(fourLeg, pVertexUnlit, model1, false, false);
-			Graphics::DrawMesh(fourLeg, pVertexUnlit, model2, false, false);
-			Graphics::DrawMesh(fourLeg, pVertexUnlit, model3, false, false);
-			
-			// Draw light frustums:
-			Graphics::DrawFrustum(model0, shadowCascade0.GetProjectionMatrix());
-			Graphics::DrawFrustum(model1, shadowCascade1.GetProjectionMatrix());
-			Graphics::DrawFrustum(model2, shadowCascade2.GetProjectionMatrix());
-			Graphics::DrawFrustum(model3, shadowCascade3.GetProjectionMatrix());
+			Float4x4 localToWorldMatrix = m_shadowCascades[i]->GetViewMatrix().Inverse();
+			Graphics::DrawMesh(fourLeg, pVertexUnlit, localToWorldMatrix, false, false);
+			Graphics::DrawFrustum(localToWorldMatrix, m_shadowCascades[i]->GetProjectionMatrix(), 0.1f, colors[i]);
 		}
 	}
 }

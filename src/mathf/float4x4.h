@@ -67,7 +67,7 @@ public:
 	static Float4x4 Rotate(const Float3& axis, float angle);
 	static Float4x4 Rotate(const Float3& eulerAngles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSystem rotationSystem = CoordinateSystem::local);
 	static Float4x4 RotateFromTo(const Float3& from, const Float3& to);
-	static Float4x4 RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& otherOld, const Float3& otherNew);
+	static Float4x4 RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New);
 	static Float4x4 Translate(const Float3& translation);
 	static Float4x4 Scale(const Float3& scale);
 	static Float4x4 Scale(float scale);
@@ -137,15 +137,27 @@ public:
 	static Float4x4 min;		// all entries are mathf::min.
 
 	// Rotations:
+	static Float4x4 rot45x;		// 45 degrees rotation around x-axis.
+	static Float4x4 rot45y;		// 45 degrees rotation around y-axis.
+	static Float4x4 rot45z;		// 45 degrees rotation around z-axis.
 	static Float4x4 rot90x;		// 90 degrees rotation around x-axis.
 	static Float4x4 rot90y;		// 90 degrees rotation around y-axis.
 	static Float4x4 rot90z;		// 90 degrees rotation around z-axis.
+	static Float4x4 rot135x;	// 135 degrees rotation around x-axis.
+	static Float4x4 rot135y;	// 135 degrees rotation around y-axis.
+	static Float4x4 rot135z;	// 135 degrees rotation around z-axis.
 	static Float4x4 rot180x;	// 180 degrees rotation around x-axis.
 	static Float4x4 rot180y;	// 180 degrees rotation around y-axis.
 	static Float4x4 rot180z;	// 180 degrees rotation around z-axis.
+	static Float4x4 rot225x;	// 225 degrees rotation around x-axis.
+	static Float4x4 rot225y;	// 225 degrees rotation around y-axis.
+	static Float4x4 rot225z;	// 225 degrees rotation around z-axis.
 	static Float4x4 rot270x;	// 270 degrees rotation around x-axis.
 	static Float4x4 rot270y;	// 270 degrees rotation around y-axis.
 	static Float4x4 rot270z;	// 270 degrees rotation around z-axis.
+	static Float4x4 rot315x;	// 315 degrees rotation around x-axis.
+	static Float4x4 rot315y;	// 315 degrees rotation around y-axis.
+	static Float4x4 rot315z;	// 315 degrees rotation around z-axis.
 };
 
 

@@ -123,14 +123,14 @@ void Graphics::DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projecti
 	// Corner positions in normalized device coordinates:
 	Float4 cornerPoints[8] =
 	{
-		Float4(-1, -1, -1, 1),
-		Float4(-1, -1,  1, 1),
-		Float4(-1,  1, -1, 1),
-		Float4(-1,  1,  1, 1),
-		Float4( 1, -1, -1, 1),
-		Float4( 1, -1,  1, 1),
-		Float4( 1,  1, -1, 1),
-		Float4( 1,  1,  1, 1)
+		Float4(-1, -1, 0, 1),
+		Float4(-1, -1, 1, 1),
+		Float4(-1,  1, 0, 1),
+		Float4(-1,  1, 1, 1),
+		Float4( 1, -1, 0, 1),
+		Float4( 1, -1, 1, 1),
+		Float4( 1,  1, 0, 1),
+		Float4( 1,  1, 1, 1)
 	};
 
 	float det = projectionMatrix.Determinant();
@@ -173,20 +173,7 @@ void Graphics::DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projecti
 }
 void Graphics::DrawBounds(Float4x4 localToWorldMatrix, const Bounds& bounds, float width, const Float4& color, bool receiveShadows, bool castShadows)
 {
-	Float3 min = bounds.GetMin();
-	Float3 size = bounds.GetSize();
-
-	Float3 cornerPoints[8] =
-	{
-		min,
-		min + Float3(0, 0, size.z),
-		min + Float3(0, size.y, 0),
-		min + Float3(0, size.y, size.z),
-		min + Float3(size.x, 0, 0),
-		min + Float3(size.x, 0, size.z),
-		min + Float3(size.x, size.y, 0),
-		min + Float3(size.x, size.y, size.z)
-	};
+	std::array<Float3, 8> cornerPoints = bounds.GetCorners();
 
 	// Draw corner points:
 	for (uint32_t i = 0; i < 8; i++)
@@ -200,13 +187,11 @@ void Graphics::DrawBounds(Float4x4 localToWorldMatrix, const Bounds& bounds, flo
 	DrawLineSegment(Float3(cornerPoints[1]), Float3(cornerPoints[5]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[2]), Float3(cornerPoints[6]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[3]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
-
 	// Draw vertical lines:
 	DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[2]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[1]), Float3(cornerPoints[3]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[4]), Float3(cornerPoints[6]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[5]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
-
 	// Draw depth lines:
 	DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[1]), width, color, receiveShadows, castShadows);
 	DrawLineSegment(Float3(cornerPoints[2]), Float3(cornerPoints[3]), width, color, receiveShadows, castShadows);

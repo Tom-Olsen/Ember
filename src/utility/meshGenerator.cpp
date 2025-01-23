@@ -591,4 +591,73 @@ namespace MeshGenerator
 
 		return Mesh::Merge(meshes, "fourLeg");
 	}
+
+	Mesh* Camera()
+	{
+		std::vector<Mesh*> meshes;
+		meshes.reserve(2);
+		meshes.push_back(ZylinderSmooth(0.1f, 0.05f, 16, "Roll0"));
+		meshes[0]->Rotate(Float3x3::rot90y)->Translate(0.2f * Float3::forward + 0.1f * Float3::down);
+		meshes[0]->SetUniformColor(Float4::gray);
+		meshes.push_back(ZylinderSmooth(0.1f, 0.05f, 16, "Roll1"));
+		meshes[1]->Rotate(Float3x3::rot90y)->Translate(0.2f * Float3::forward + 0.1f * Float3::up);
+		meshes[1]->SetUniformColor(Float4::gray);
+		meshes.push_back(UnitCube());
+		meshes[2]->Scale(Float3(0.15f, 0.2f, 0.5f));
+		meshes[2]->SetUniformColor(Float4(1.0f, 0.4f, 0.4f));
+		meshes.push_back(ConeEdgy(0.15f, 0.15f, 4, "CameraHead"));
+		meshes[3]->Rotate(Float3x3::rot45z)->Translate(0.35f * Float3::down);
+		meshes[3]->SetUniformColor(Float4::gray);
+
+		return Mesh::Merge(meshes, "camera");
+	}
+	Mesh* Frame(float radius, const Float3& lengths)
+	{
+		std::vector<Mesh*> meshes;
+		meshes.reserve(20);
+		float dir0[4] = {1, -1,  1, -1};
+		float dir1[4] = {1,  1, -1, -1};
+
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			Mesh* pMesh = ZylinderMantleEdgy(radius / mathf::sqrt2, lengths.x - radius, 4, "");
+			pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(1, 0, 0)) * Float4x4::rot45z);
+			pMesh->Translate(Float3(0.0f, dir0[i] * 0.5f * lengths.y, dir1[i] * 0.5f * lengths.y));
+			meshes.push_back(pMesh);
+		}
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			Mesh* pMesh = ZylinderMantleEdgy(radius / mathf::sqrt2, lengths.y - radius, 4, "");
+			pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 1, 0)) * Float4x4::rot45z);
+			pMesh->Translate(Float3(dir0[i] * 0.5f * lengths.x, 0.0f, dir1[i] * 0.5f * lengths.y));
+			meshes.push_back(pMesh);
+		}
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			Mesh* pMesh = ZylinderMantleEdgy(radius / mathf::sqrt2, lengths.z - radius, 4, "");
+			pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 0, 1)) * Float4x4::rot45z);
+			pMesh->Translate(Float3(dir0[i] * 0.5f * lengths.x, dir1[i] * 0.5f * lengths.y, 0.0f));
+			meshes.push_back(pMesh);
+		}
+
+		for (uint32_t i = 0; i < 2 ; i++)
+			for (uint32_t j = 0; j < 2 ; j++)
+				for (uint32_t k = 0; k < 2; k++)
+				{
+					Float3 sign = Float3((i == 0) ? -1.0f : 1.0f, (j == 0) ? -1.0f : 1.0f, (k == 0) ? -1.0f : 1.0f);
+					Float3 pos = 0.5f * sign * Float3(lengths.x, lengths.y, lengths.z);
+					Mesh* pMesh = UnitCube()->Transform(Float4x4::TRS(pos, Float4x4::identity, radius * Float3::one));
+					pMesh->RescaleUVs(Float4(2 * radius, 0.5f * radius, 1.0f, 1.0f), Float4::zero);
+					meshes.push_back(pMesh);
+				}
+		//Mesh* pMesh = UnitCube()->Transform(Float4x4::TRS(0.5f * Float3(lengths.x, lengths.y, lengths.z), Float4x4::identity, radius * Float3::one));
+		//pMesh->RescaleUVs(Float4(2 * radius, 0.5f * radius, 1.0f, 1.0f), Float4::zero);
+		//meshes.push_back(pMesh);
+
+		//meshes.push_back(UnitCube()->Transform(Float4x4::TRS(0.5f * Float3(lengths.x,  lengths.y, -lengths.z), Float4x4::identity, radius * Float3::one)));
+		//meshes.push_back(UnitCube()->Transform(Float4x4::TRS(0.5f * Float3(lengths.x, -lengths.y,  lengths.z), Float4x4::identity, radius * Float3::one)));
+		//meshes.push_back(UnitCube()->Transform(Float4x4::TRS(0.5f * Float3(lengths.x, -lengths.y, -lengths.z), Float4x4::identity, radius * Float3::one)));
+
+		return Mesh::Merge(meshes, "frame");
+	}
 }

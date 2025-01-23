@@ -121,7 +121,7 @@ TEST(Float3x3, RotateAroundAxis)
 	Float3x3 rotMatrix = Float3x3::Rotate(axis, mathf::pi);
 	Float3 v0 = Float3::right;
 	Float3 v1 = rotMatrix * v0;
-	EXPECT_NEAR3(v1, Float3::up, epsilon);
+	EXPECT_NEAR3(v1, Float3::forward, epsilon);
 }
 
 //TEST(Float3x3, RotateByEulerAngles)

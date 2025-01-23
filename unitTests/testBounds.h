@@ -21,6 +21,12 @@ TEST(Bounds, GetSize)
 	Float3 size = bounds.GetSize();
 	EXPECT_FLOAT3_EQ(size, Float3(4.0f, 6.0f, 8.0f));
 }
+TEST(Bounds, GetDiagonal)
+{
+	Bounds bounds(Float3(1.0f, 2.0f, 3.0f), Float3(2.0f, 3.0f, 4.0f));
+	float diagonal = (bounds.GetMax() - bounds.GetMin()).Length();
+	EXPECT_NEAR(bounds.GetDiagonal(), diagonal, epsilon);
+}
 TEST(Bounds, ClosestPoint)
 {
 	Bounds bounds(Float3(1.0f, 2.0f, 3.0f), Float3(2.0f, 3.0f, 4.0f));

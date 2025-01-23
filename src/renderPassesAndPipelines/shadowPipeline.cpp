@@ -105,9 +105,12 @@ void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, co
     rasterizationState.depthClampEnable = m_pContext->DepthClampEnabled();
     rasterizationState.depthBiasEnable = m_pContext->DepthBiasEnabled();
     rasterizationState.depthBiasConstantFactor = 1.25f;     // Tweak this value based on the scene.
-    rasterizationState.depthBiasClamp = 0.0f;
+    rasterizationState.depthBiasClamp = 0.0001f;              // clamp value for equation below.
     rasterizationState.depthBiasSlopeFactor = 1.75f;        // Slope scale bias to handle varying slopes in depth.
     rasterizationState.rasterizerDiscardEnable = VK_FALSE;	// If true, geometry never passes through rasterization stage.
+    // Bias = (float) depthBiasConstantFactor * pow(exp(max_z_in_primitive) - r, 2) + depthBiasSlopeFactor * MaxDepthSlope;
+    // r is the number of mantissa bits in the floating point representation (excluding the hidden bit); for example, 23 for float32.
+    // MaxDepthSlope is approximately: max(abs(dz / dx), abs(dz / dy))
 
     // Multisampling:
     VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };

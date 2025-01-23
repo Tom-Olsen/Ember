@@ -43,6 +43,9 @@ namespace MeshGenerator
 
 	Mesh* ThreeLeg();
 	Mesh* FourLeg();
+
+	Mesh* Camera();
+	Mesh* Frame(float radius, const Float3& lengths);
 };
 
 

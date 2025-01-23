@@ -14,6 +14,7 @@ PointLight::PointLight()
 {
 	m_intensity = 1.0f;
 	m_color = Float3::white;
+	m_shadowType = ShadowType::hard;
 	m_nearClip = 0.1f;
 	m_farClip = 15.0f;
 	m_updateProjectionMatrix = true;
@@ -45,6 +46,10 @@ void PointLight::SetIntensity(const float& intensity)
 void PointLight::SetColor(const Float3& color)
 {
 	m_color = color;
+}
+void PointLight::SetShadowType(ShadowType shadowType)
+{
+	m_shadowType = shadowType;
 }
 void PointLight::SetNearClip(const float& nearClip)
 {
@@ -80,6 +85,10 @@ Float4 PointLight::GetColorIntensity() const
 {
 	return Float4(m_color, m_intensity);
 }
+ShadowType PointLight::GetShadowType() const
+{
+	return m_shadowType;
+}
 float PointLight::GetNearClip() const
 {
 	return m_nearClip;
@@ -109,7 +118,7 @@ void PointLight::UpdateProjectionMatrix()
 	m_updateProjectionMatrix = false;
 	constexpr float fovRadians = mathf::pi2;
 	constexpr float aspectRatio = 1.0f;
-		m_projectionMatrix = Float4x4::Perspective(fovRadians, aspectRatio, m_nearClip, m_farClip);
+	m_projectionMatrix = Float4x4::Perspective(fovRadians, aspectRatio, m_nearClip, m_farClip);
 }
 
 

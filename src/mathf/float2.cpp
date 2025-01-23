@@ -59,6 +59,10 @@ Float2 Float2::Abs(const Float2& a)
 {
 	return Float2(mathf::Abs(a.x), mathf::Abs(a.y));
 }
+Float2 Float2::Round(const Float2& value, int decimals)
+{
+	return Float2(mathf::Round(value.x, decimals), mathf::Round(value.y, decimals));
+}
 float Float2::Dot(const Float2& a, const Float2& b)
 {
 	return a.x * b.x + a.y * b.y;

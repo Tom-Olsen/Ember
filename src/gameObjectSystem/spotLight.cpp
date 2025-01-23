@@ -8,6 +8,7 @@ SpotLight::SpotLight()
 {
 	m_intensity = 1.0f;
 	m_color = Float3::white;
+	m_shadowType = ShadowType::hard;
 	m_fov = mathf::deg2rad * 45.0f;
 	m_aspectRatio = (float)ShadowRenderPass::s_shadowMapWidth / (float)ShadowRenderPass::s_shadowMapHeight;
 	m_nearClip = 0.1f;
@@ -32,6 +33,10 @@ void SpotLight::SetIntensity(const float& intensity)
 void SpotLight::SetColor(const Float3& color)
 {
 	m_color = color;
+}
+void SpotLight::SetShadowType(ShadowType shadowType)
+{
+	m_shadowType = shadowType;
 }
 void SpotLight::SetFov(const float& fov)
 {
@@ -79,6 +84,10 @@ Float3 SpotLight::GetColor() const
 Float4 SpotLight::GetColorIntensity() const
 {
 	return Float4(m_color, m_intensity);
+}
+ShadowType SpotLight::GetShadowType() const
+{
+	return m_shadowType;
 }
 float SpotLight::GetFov() const
 {

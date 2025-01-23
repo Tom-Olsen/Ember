@@ -8,10 +8,10 @@ class RotationController : public Component
 {
 private: // Members:
 	float m_degreesPerSecond;
-
+	float m_translationSpeed;
 
 public: // Methods:
-	RotationController(float degreesPerSecond);
+	RotationController(float degreesPerSecond, float translationSpeed = 1.0f);
 	~RotationController();
 
 	// Overrides:

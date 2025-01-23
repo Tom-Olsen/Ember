@@ -10,7 +10,7 @@ cbuffer SurfaceProperties : register(b1)
     float4 diffuseColor;    // (1.0, 1.0, 1.0)
     float roughness;        // 0.5
     float3 reflectivity;    // 0.4
-    bool metallic;
+    float metallicity;      // 0 = dielectric, 1 = metal
     float4 scaleOffset;     // .xy = scale, .zw = offset
 };
 
@@ -36,7 +36,7 @@ float4 main(FragmentInput input) : SV_TARGET
     // Lighting:
     float ambient = 0.1f;
     float3 finalColor = ambient * color.xyz;
-    finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, worldNormal, color.xyz, roughness, reflectivity, metallic, pc.dLightsCount, pc.sLightsCount, pc.pLightsCount, directionalLightData, spotLightData, pointLightData, shadowMaps, shadowSampler);
+    finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, worldNormal, color.xyz, roughness, reflectivity, metallicity, pc.dLightsCount, pc.sLightsCount, pc.pLightsCount, directionalLightData, spotLightData, pointLightData, shadowMaps, shadowSampler);
     
     return float4(finalColor, 1.0f);
 }

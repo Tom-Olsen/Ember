@@ -13,7 +13,7 @@ SdlWindow::SdlWindow(uint16_t width, uint16_t height)
 		throw std::runtime_error((std::string)"SDL_Init: " + (std::string)SDL_GetError());
 
 	// Create a window pointer:
-	m_pWindow = SDL_CreateWindow("My Engine", width, height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+	m_pWindow = SDL_CreateWindow("Ember", width, height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 	if (!m_pWindow)
 		throw std::runtime_error((std::string)"SDL_CreateWindow Error: " + (std::string)SDL_GetError());
 }

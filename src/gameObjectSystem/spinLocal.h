@@ -7,12 +7,13 @@
 class SpinLocal : public Component
 {
 private: // Members:
-	Float3 m_eulerDegreesPerSecond;
-	Uint3 m_rotationOrder;
+	float m_speed;
 
 public: // Methods:
-	SpinLocal(Float3 eulerDegreesPerSecond = Float3(), Uint3 rotationOrder = Uint3(1, 0, 2));
+	SpinLocal(float speed = 45.0f);
 	~SpinLocal();
+	void SetSpeed(float speed);
+	float GetSpeed() const;
 
 	// Overrides:
 	void Update() override;

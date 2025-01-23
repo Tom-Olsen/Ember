@@ -78,6 +78,10 @@ Float3 Float3::Abs(const Float3& a)
 {
 	return Float3(mathf::Abs(a.x), mathf::Abs(a.y), mathf::Abs(a.z));
 }
+Float3 Float3::Round(const Float3& value, int decimals)
+{
+	return Float3(mathf::Round(value.x, decimals), mathf::Round(value.y, decimals), mathf::Round(value.z, decimals));
+}
 float Float3::Dot(const Float3& a, const Float3& b)
 {
 	return a.x * b.x + a.y * b.y + a.z * b.z;

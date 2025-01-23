@@ -62,7 +62,7 @@ public:
 	static Float3x3 Rotate(const Float3& axis, float angle);
 	static Float3x3 Rotate(const Float3& angles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSystem rotationSystem = CoordinateSystem::local);
 	static Float3x3 RotateFromTo(const Float3& from, const Float3& to);
-	static Float3x3 RotateThreeLeg(const Float3& forwardOld, const Float3& forwardNew, const Float3& otherOld, const Float3& otherNew);
+	static Float3x3 RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New);
 
 	// Access:
 	float& operator[](int index);
@@ -117,15 +117,27 @@ public:
 	static Float3x3 min;		// all entries are mathf::min.
 
 	// Rotations:
+	static Float3x3 rot45x;		// 45 degrees rotation around x-axis.
+	static Float3x3 rot45y;		// 45 degrees rotation around y-axis.
+	static Float3x3 rot45z;		// 45 degrees rotation around z-axis.
 	static Float3x3 rot90x;		// 90 degrees rotation around x-axis.
 	static Float3x3 rot90y;		// 90 degrees rotation around y-axis.
 	static Float3x3 rot90z;		// 90 degrees rotation around z-axis.
+	static Float3x3 rot135x;	// 135 degrees rotation around x-axis.
+	static Float3x3 rot135y;	// 135 degrees rotation around y-axis.
+	static Float3x3 rot135z;	// 135 degrees rotation around z-axis.
 	static Float3x3 rot180x;	// 180 degrees rotation around x-axis.
 	static Float3x3 rot180y;	// 180 degrees rotation around y-axis.
 	static Float3x3 rot180z;	// 180 degrees rotation around z-axis.
+	static Float3x3 rot225x;	// 225 degrees rotation around x-axis.
+	static Float3x3 rot225y;	// 225 degrees rotation around y-axis.
+	static Float3x3 rot225z;	// 225 degrees rotation around z-axis.
 	static Float3x3 rot270x;	// 270 degrees rotation around x-axis.
 	static Float3x3 rot270y;	// 270 degrees rotation around y-axis.
 	static Float3x3 rot270z;	// 270 degrees rotation around z-axis.
+	static Float3x3 rot315x;	// 315 degrees rotation around x-axis.
+	static Float3x3 rot315y;	// 315 degrees rotation around y-axis.
+	static Float3x3 rot315z;	// 315 degrees rotation around z-axis.
 };
 
 

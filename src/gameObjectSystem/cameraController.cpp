@@ -23,6 +23,7 @@ void CameraController::Update()
 	Translation();
 	Rotation();
 	Zoom();
+	TogglePerspectiveType();
 }
 
 
@@ -68,6 +69,21 @@ void CameraController::Zoom()
 	{
 		float currentSpeed = EventSystem::KeyDownOrHeld(SDLK_LSHIFT) ? m_zoomSpeed * m_fastMoveMultiplier : m_zoomSpeed;
 		m_pTransform->AddToPosition(mouseScroll * currentSpeed * m_pTransform->GetDown());
+	}
+}
+void CameraController::TogglePerspectiveType()
+{
+	if (EventSystem::KeyDown(SDLK_P))
+	{
+		Camera* pCamera = GetGameObject()->GetComponent<Camera>();
+		if (pCamera == nullptr)
+			return;
+
+		ProjectionType currentType = pCamera->GetProjectionType();
+		if (currentType == ProjectionType::perspective)
+			pCamera->SetProjectionType(ProjectionType::orthographic);
+		else if (currentType == ProjectionType::orthographic)
+			pCamera->SetProjectionType(ProjectionType::perspective);
 	}
 }
 

@@ -39,7 +39,7 @@ void TextureManager::Init(VulkanContext* pContext)
 				VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
 				if (name.find("normal"))
 					format = VK_FORMAT_R8G8B8A8_UNORM;
-				else if (name.find("roughness"))
+				else if (name.find("roughness") || name.find("metallic"))
 					format = VK_FORMAT_R8_UNORM;
 				Texture2d* texture = new Texture2d(s_pContext, entry.path(), name, format);
 				AddTexture2d(texture);

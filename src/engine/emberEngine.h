@@ -7,6 +7,12 @@
 // It includes all headers that are necessary to use the engine.
 // It must be included in every Component scripts header fie.
 
+
+
+// Enums: (move somewher else?)
+enum class ShadowType { hard, soft };
+enum class ProjectionType { perspective, orthographic};
+
 // Basic functionality:
 #include "eventSystem.h"
 #include "logger.h"

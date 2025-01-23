@@ -10,6 +10,21 @@ namespace mathf
 	{
 		return fabsf(value);
 	}
+	float Round(float value, int decimals)
+	{
+		float factor = powf(10.0f, decimals);
+		return roundf(value * factor) / factor;
+	}
+	float Floor(float value, int decimals)
+	{
+		float factor = powf(10.0f, decimals);
+		return floorf(value * factor) / factor;
+	}
+	float Ceil(float value, int decimals)
+	{
+		float factor = powf(10.0f, decimals);
+		return ceilf(value * factor) / factor;
+	}
 	float Clamp(float value, float min, float max)
 	{
 		if (value < min)
@@ -18,13 +33,13 @@ namespace mathf
 			return max;
 		return value;
 	}
-	float Max(float a, float b)
-	{
-		return a > b ? a : b;
-	}
 	float Min(float a, float b)
 	{
 		return a < b ? a : b;
+	}
+	float Max(float a, float b)
+	{
+		return a > b ? a : b;
 	}
 	float Sign(float value)
 	{// value > 0.0f -> 1.0f, value < 0.0f -> -1.0f, value == 0.0f -> 0.0f
@@ -33,6 +48,10 @@ namespace mathf
 	float Sqrt(float vlaue)
 	{
 		return sqrtf(vlaue);
+	}
+	float Pow(float value, float exponent)
+	{
+		return powf(value, exponent);
 	}
 	template<int N>
 	float Factorial()
@@ -63,17 +82,17 @@ namespace mathf
 
 
 	// Trigonometry:
-	float Sin(float radiant)
+	float Sin(float angle)
 	{
-		return sinf(radiant);
+		return sinf(angle);
 	}
-	float Cos(float radiant)
+	float Cos(float angle)
 	{
-		return cosf(radiant);
+		return cosf(angle);
 	}
-	float Tan(float radiant)
+	float Tan(float angle)
 	{
-		return tanf(radiant);
+		return tanf(angle);
 	}
 	float Asin(float value)
 	{
