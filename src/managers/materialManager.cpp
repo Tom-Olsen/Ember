@@ -43,6 +43,9 @@ void MaterialManager::Init(VulkanContext* pContext)
 	Material* pVertexColorUnlitMaterial = new Material(s_pContext, shadingType, "vertexColorUnlit", opaqueQueue, "../shaders/vertexColorUnlit.vert.spv", "../shaders/vertexColorUnlit.frag.spv");
 	AddMaterial(pVertexColorUnlitMaterial);
 
+	Material* pNormalsMaterial = new Material(s_pContext, shadingType, "normals", opaqueQueue, "../shaders/normals.vert.spv", "../shaders/normals.frag.spv");
+	AddMaterial(pNormalsMaterial);
+
 	Material* pShadowMaterial = new Material(s_pContext, shadowType, "shadow", opaqueQueue, "../shaders/shadow.vert.spv");
 	AddMaterial(pShadowMaterial);
 

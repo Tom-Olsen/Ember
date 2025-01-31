@@ -20,6 +20,18 @@ Mesh::~Mesh()
 // Public methods:
 void Mesh::Load(VulkanContext* pContext)
 {
+	// Set brocken vectors to zero:
+	if (m_positions.size() != m_vertexCount)
+		m_positions.resize(m_vertexCount, Float3::zero);
+	if (m_normals.size() != m_vertexCount)
+		m_normals.resize(m_vertexCount, Float3::zero);
+	if (m_tangents.size() != m_vertexCount)
+		m_tangents.resize(m_vertexCount, Float3::up);
+	if (m_colors.size() != m_vertexCount)
+		m_colors.resize(m_vertexCount, Float4::zero);
+	if (m_uvs.size() != m_vertexCount)
+		m_uvs.resize(m_vertexCount, Float4::zero);
+
 	UpdateVertexBuffer(pContext);
 	UpdateIndexBuffer(pContext);
 	m_verticesUpdated = false;
@@ -198,7 +210,7 @@ std::vector<Float3>& Mesh::GetNormals()
 std::vector<Float3>& Mesh::GetTangents()
 {
 	if (m_tangents.size() != m_vertexCount)
-		m_tangents.resize(m_vertexCount, Float3::zero);
+		m_tangents.resize(m_vertexCount, Float3::up);
 	return m_tangents;
 }
 std::vector<Float4>& Mesh::GetColors()

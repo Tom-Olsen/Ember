@@ -39,6 +39,7 @@ public: // Methods:
 	float GetNearClip() const;
 	float GetFarClip() const;
 	float GetOrthographicSize() const;
+	Float3 GetViewDirection() const;
 	ProjectionType GetProjectionType() const;
 	Float4x4 GetViewMatrix() const;
 	Float4x4 GetProjectionMatrix();

@@ -345,5 +345,5 @@ std::ostream& operator<<(std::ostream& os, const Float2x3& value)
 
 // Static members:
 Float2x3 Float2x3::zero = Float2x3(0.0f);
-Float2x3 Float2x3::max = Float2x3(mathf::max);
-Float2x3 Float2x3::min = Float2x3(mathf::min);
+Float2x3 Float2x3::maxValue = Float2x3(mathf::maxValue);
+Float2x3 Float2x3::minValue = Float2x3(mathf::minValue);

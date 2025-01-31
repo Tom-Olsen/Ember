@@ -32,6 +32,7 @@ public: // Methods:
 
 	// Methods:
 	Float2 ClosestPoint(const Float2& point) const;
+	Float2 ClosestPointOnSurface(const Float2& point) const; // TODO: needs unit test
 	bool Contains(const Float2& point) const;
 	void Encapsulate(const Float2& point);
 	void Expand(float amount);

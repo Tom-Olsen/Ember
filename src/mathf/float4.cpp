@@ -170,10 +170,6 @@ Float4& Float4::operator*=(const Float4& other)
 	this->w *= other.w;
 	return *this;
 }
-Float4 Float4::operator*(float scalar) const
-{
-	return Float4(x * scalar, y * scalar, z * scalar, w * scalar);
-}
 Float4& Float4::operator*=(float scalar)
 {
 	x *= scalar;
@@ -198,10 +194,6 @@ Float4& Float4::operator/=(const Float4& other)
 	this->w /= other.w;
 	return *this;
 }
-Float4 Float4::operator/(float scalar) const
-{
-	return Float4(x / scalar, y / scalar, z / scalar, w / scalar);
-}
 Float4& Float4::operator/=(float scalar)
 {
 	x /= scalar;
@@ -209,10 +201,6 @@ Float4& Float4::operator/=(float scalar)
 	z /= scalar;
 	w /= scalar;
 	return *this;
-}
-Float4 operator/(float scalar, const Float4& vector)
-{
-	return Float4(scalar / vector.x, scalar / vector.y, scalar / vector.z, scalar / vector.w);
 }
 
 
@@ -234,9 +222,21 @@ bool Float4::operator!=(const Float4& other) const
 
 
 // Friend functions:
+Float4 operator*(const Float4& a, float b)
+{
+	return Float4(a.x * b, a.y * b, a.z * b, a.w * b);
+}
 Float4 operator*(float a, const Float4& b)
 {
 	return Float4(a * b.x, a * b.y, a * b.z, a * b.w);
+}
+Float4 operator/(const Float4& a, float b)
+{
+	return Float4(a.x / b, a.y / b, a.z / b, a.w / b);
+}
+Float4 operator/(float a, const Float4& b)
+{
+	return Float4(a / b.x, a / b.y, a / b.z, a / b.w);
 }
 
 
@@ -260,8 +260,8 @@ std::ostream& operator<<(std::ostream& os, const Float4& value)
 // Numbers;
 Float4 Float4::zero	= Float4(0.0f);
 Float4 Float4::one	= Float4(1.0f);
-Float4 Float4::max	= Float4(mathf::max);
-Float4 Float4::min	= Float4(mathf::min);
+Float4 Float4::maxValue	= Float4(mathf::maxValue);
+Float4 Float4::minValue	= Float4(mathf::minValue);
 
 // Directions:
 Float4 Float4::right	= Float4( 1.0f, 0.0f, 0.0f, 0.0f);

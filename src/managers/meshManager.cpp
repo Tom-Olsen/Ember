@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "mesh.h"
 #include "meshGenerator.h"
+#include "meshReader.h"
 #include "vulkanContext.h"
 
 
@@ -76,6 +77,10 @@ void MeshManager::Init(VulkanContext* pContext)
 
 	Mesh* pFrame = MeshGenerator::Frame(0.15f, 2.0f);
 	AddMesh(pFrame);
+
+	std::filesystem::path pathToFile = "meshes/Leb9.csv";
+	Mesh* pLeb9 = MeshReader::ReadCsvFile(pathToFile);
+	AddMesh(pLeb9);
 }
 void MeshManager::UnloadAllMeshes()
 {

@@ -611,8 +611,8 @@ Float4x4 Float4x4::identity = Float4x4
  0.0f, 1.0f, 0.0f, 0.0f,
  0.0f, 0.0f, 1.0f, 0.0f,
  0.0f, 0.0f, 0.0f, 1.0f);
-Float4x4 Float4x4::max = Float4x4(mathf::max);
-Float4x4 Float4x4::min = Float4x4(mathf::min);
+Float4x4 Float4x4::maxValue = Float4x4(mathf::maxValue);
+Float4x4 Float4x4::minValue = Float4x4(mathf::minValue);
 
 // Rotations:
 Float4x4 Float4x4::rot45x = Float4x4::RotateX(mathf::pi4);

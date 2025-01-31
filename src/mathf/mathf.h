@@ -37,8 +37,8 @@ namespace mathf
 	constexpr float sqrt2Inv = 0.70710678118654752440f;
 	constexpr float sqrt3 = 1.73205080756887729353f;
 	constexpr float sqrt3Inv = 0.57735026918962576451f;
-	constexpr float max = 3.402823466e+38f;
-	constexpr float min = -3.402823466e+38f;
+	constexpr float maxValue = 3.402823466e+38f;
+	constexpr float minValue = -3.402823466e+38f;
 
 	// Basic math:
 	float Abs(float value);
@@ -83,6 +83,7 @@ namespace mathf
 #include "bounds.h"
 #include "bounds2d.h"
 #include "geometry3d.h"
+#include "ray.h"
 
 // Random:
 #include "emberRandom.h"

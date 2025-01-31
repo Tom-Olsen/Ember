@@ -344,5 +344,5 @@ Float2x2 Float2x2::zero = Float2x2(0.0f);
 Float2x2 Float2x2::identity = Float2x2
 (1.0f, 0.0f,
  0.0f, 1.0f);
-Float2x2 Float2x2::max = Float2x2(mathf::max);
-Float2x2 Float2x2::min = Float2x2(mathf::min);
+Float2x2 Float2x2::maxValue = Float2x2(mathf::maxValue);
+Float2x2 Float2x2::minValue = Float2x2(mathf::minValue);

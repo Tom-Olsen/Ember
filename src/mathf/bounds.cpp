@@ -108,6 +108,111 @@ void Bounds::Expand(const Float3& amount)
 {
 	extents += Float3::Abs(amount);
 }
+std::optional<Float3> Bounds::IntersectRay(const Ray& ray) const
+{
+	Float3 min = GetMin();
+	Float3 max = GetMax();
+	Float3 invDir = 1.0f / ray.direction;
+
+	// Ray originates from inside the bounding box:
+	if (Contains(ray.origin))
+	{
+		// Check right/left plane depending on ray direction:
+		float minDist = mathf::maxValue;
+		if (ray.direction.x > 0)
+		{
+			float dist = (max.x - ray.origin.x) * invDir.x;
+			minDist = mathf::Min(minDist, dist);
+		}
+		else if (ray.direction.x < 0)
+		{
+			float dist = (min.x - ray.origin.x) * invDir.x;
+			minDist = mathf::Min(minDist, dist);
+		}
+
+		// Check front/back plane depending on ray direction:
+		if (ray.direction.y > 0)
+		{
+			float dist = (max.y - ray.origin.y) * invDir.y;
+			minDist = mathf::Min(minDist, dist);
+		}
+		else if (ray.direction.y < 0)
+		{
+			float dist = (min.y - ray.origin.y) * invDir.y;
+			minDist = mathf::Min(minDist, dist);
+		}
+
+		// Check up/down plane depending on ray direction:
+		if (ray.direction.z > 0)
+		{
+			float dist = (max.z - ray.origin.z) * invDir.z;
+			minDist = mathf::Min(minDist, dist);
+		}
+		else if (ray.direction.z < 0)
+		{
+			float dist = (min.z - ray.origin.z) * invDir.z;
+			minDist = mathf::Min(minDist, dist);
+		}
+
+		// Definitiv hit:
+		return ray.GetPoint(minDist);
+	}
+	// Ray originates from outside the bounding box:
+	else
+	{
+		static constexpr float epsilon = 1e-5f;
+		// Check left/right plane depending on ray direction:
+		if (ray.direction.x > 0)
+		{
+			float dist = (min.x - ray.origin.x) * invDir.x;
+			Float3 hit = ray.GetPoint(dist + epsilon);
+			if (Contains(hit))
+				return hit;
+		}
+		else if (ray.direction.x < 0)
+		{
+			float dist = (max.x - ray.origin.x) * invDir.x;
+			Float3 hit = ray.GetPoint(dist + epsilon);
+			if (Contains(hit))
+				return hit;
+		}
+
+		// Check back/front plane depending on ray direction:
+		if (ray.direction.y > 0)
+		{
+			float dist = (min.y - ray.origin.y) * invDir.y;
+			Float3 hit = ray.GetPoint(dist + epsilon);
+			if (Contains(hit))
+				return hit;
+		}
+		else if (ray.direction.y < 0)
+		{
+			float dist = (max.y - ray.origin.y) * invDir.y;
+			Float3 hit = ray.GetPoint(dist + epsilon);
+			if (Contains(hit))
+				return hit;
+		}
+
+		// Check down/up plane depending on ray direction:
+		if (ray.direction.z > 0)
+		{
+			float dist = (min.z - ray.origin.z) * invDir.z;
+			Float3 hit = ray.GetPoint(dist + epsilon);
+			if (Contains(hit))
+				return hit;
+		}
+		else if (ray.direction.z < 0)
+		{
+			float dist = (max.z - ray.origin.z) * invDir.z;
+			Float3 hit = ray.GetPoint(dist + epsilon);
+			if (Contains(hit))
+				return hit;
+		}
+
+		// Ray misses bounding box:
+		return std::nullopt;
+	}
+}
 
 // Logging:
 std::string Bounds::ToString() const

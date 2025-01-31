@@ -81,6 +81,41 @@ Float2 Bounds2d::ClosestPoint(const Float2& point) const
 	Float2 max = GetMax();
 	return Float2::Clamp(point, min, max);
 }
+Float2 Bounds2d::ClosestPointOnSurface(const Float2& point) const
+{
+	Float2 min = GetMin();
+	Float2 max = GetMax();
+
+	// If the point is outside the bounds, clamp it:
+	if (point.x < min.x || point.x > max.x || point.y < min.y || point.y > max.y)
+		return Float2::Clamp(point, min, max);
+
+	// Compute distances to each edge:
+	float distLeft = point.x - min.x;
+	float distRight = max.x - point.x;
+	float distBottom = point.y - min.y;
+	float distTop = max.y - point.y;
+
+	// Find the minimum distance and snap closestPoint to it:
+	float minDist = distLeft;
+	Float2 closestPoint = Float2(min.x, point.y);
+	if (distRight < minDist)
+	{
+		minDist = distRight;
+		closestPoint = Float2(max.x, point.y);
+	}
+	if (distBottom < minDist)
+	{
+		minDist = distBottom;
+		closestPoint = Float2(point.x, min.y);
+	}
+	if (distTop < minDist)
+	{
+		minDist = distTop;
+		closestPoint = Float2(point.x, max.y);
+	}
+	return closestPoint;
+}
 bool Bounds2d::Contains(const Float2& point) const
 {
 	Float2 min = GetMin();

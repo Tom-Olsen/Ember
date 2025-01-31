@@ -127,6 +127,7 @@ Scene* ShadowCascadeScene()
 
 		pCamera->SetNearClip(0.5f);
 		pCamera->SetFarClip(40.0f);
+		pCamera->SetFov(30.0f * mathf::deg2rad);
 		pCamera->SetDrawFrustum(true);
 		pGameObject->AddComponent<Camera>(pCamera);
 
@@ -137,8 +138,9 @@ Scene* ShadowCascadeScene()
 		pMeshRenderer->SetReceiveShadows(false);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
-		RotationController* pRotationController = new RotationController(15.0f);
-		pGameObject->AddComponent<RotationController>(pRotationController);
+		CameraController* cameraController = new CameraController();
+		cameraController->SetIsActive(false);
+		pGameObject->AddComponent<CameraController>(cameraController);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -152,10 +154,10 @@ Scene* ShadowCascadeScene()
 		DirectionalLight* pDirectionalLight = new DirectionalLight();
 		pDirectionalLight->SetIntensity(1.0f);
 		pDirectionalLight->SetColor(Float3::white);
-		pDirectionalLight->OverwriteActiveCamera(pCamera, true);
-		pDirectionalLight->SetDrawFrustum(true);
+		//pDirectionalLight->OverwriteActiveCamera(pCamera, true);
+		//pDirectionalLight->SetDrawFrustum(true);
 		pDirectionalLight->SetShadowType(ShadowType::hard);
-		pDirectionalLight->SetDistributionFactor(0.75f);
+		pDirectionalLight->SetDistributionFactor(1.00f);
 		//pDirectionalLight->SetShadowCascadeCount(DirectionalLight::ShadowCascadeCount::one);
 		pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
 

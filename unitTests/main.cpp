@@ -50,6 +50,7 @@ constexpr float epsilon = 1e-6f;
 #include "testInt2.h"
 #include "testInt3.h"
 #include "testMathf.h"
+#include "testRay.h"
 #include "testUint3.h"
 
 

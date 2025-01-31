@@ -89,18 +89,18 @@ void GameObject::PrintComponents() const
 
 
 // Explicit instantiations:
-template void GameObject::AddComponent(Camera* component);
-template void GameObject::AddComponent(CameraController* component);
-template void GameObject::AddComponent(DirectionalLight* component);
-template void GameObject::AddComponent(DrawMeshData* component);
-template void GameObject::AddComponent(MeshRenderer* component);
-template void GameObject::AddComponent(MeshTester* component);
-template void GameObject::AddComponent(PointLight* component);
-template void GameObject::AddComponent(RotationController* component);
-template void GameObject::AddComponent(SpinGlobal* component);
-template void GameObject::AddComponent(SpinLocal* component);
-template void GameObject::AddComponent(SpotLight* component);
-template void GameObject::AddComponent(Transform* component);
+template void GameObject::AddComponent(Camera*);
+template void GameObject::AddComponent(CameraController*);
+template void GameObject::AddComponent(DirectionalLight*);
+template void GameObject::AddComponent(DrawMeshData*);
+template void GameObject::AddComponent(MeshRenderer*);
+template void GameObject::AddComponent(MeshTester*);
+template void GameObject::AddComponent(PointLight*);
+template void GameObject::AddComponent(RotationController*);
+template void GameObject::AddComponent(SpinGlobal*);
+template void GameObject::AddComponent(SpinLocal*);
+template void GameObject::AddComponent(SpotLight*);
+template void GameObject::AddComponent(Transform*);
 template Camera*				GameObject::GetComponent<Camera>();
 template CameraController*		GameObject::GetComponent<CameraController>();
 template DirectionalLight*		GameObject::GetComponent<DirectionalLight>();

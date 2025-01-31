@@ -101,8 +101,8 @@ public:
 	
 	// Static members:
 	static Float2x3 zero;		// zero matrix.
-	static Float2x3 max;		// all entries are mathf::max.
-	static Float2x3 min;		// all entries are mathf::min.
+	static Float2x3 maxValue;	// all entries are mathf::maxValue.
+	static Float2x3 minValue;	// all entries are mathf::minValue.
 };
 
 

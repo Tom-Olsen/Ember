@@ -204,19 +204,11 @@ Float2& Float2::operator/=(const Float2& other)
 	this->y /= other.y;
 	return *this;
 }
-Float2 Float2::operator/(float scalar) const
-{
-	return Float2(x / scalar, y / scalar);
-}
 Float2& Float2::operator/=(float scalar)
 {
 	x /= scalar;
 	y /= scalar;
 	return *this;
-}
-Float2 operator/(float scalar, const Float2& vector)
-{
-	return Float2(scalar / vector.x, scalar / vector.y);
 }
 
 
@@ -246,6 +238,14 @@ Float2 operator*(const Float2& a, float b)
 {
 	return Float2(a.x * b, a.y * b);
 }
+Float2 operator/(float a, const Float2& b)
+{
+	return Float2(a / b.x, a / b.y);
+}
+Float2 operator/(const Float2& a, float b)
+{
+	return Float2(a.x / b, a.y / b);
+}
 
 
 
@@ -268,8 +268,8 @@ std::ostream& operator<<(std::ostream& os, const Float2& value)
 // Numbers:
 Float2 Float2::zero	= Float2(0.0f);
 Float2 Float2::one	= Float2(1.0f);
-Float2 Float2::max	= Float2(mathf::max);
-Float2 Float2::min	= Float2(mathf::min);
+Float2 Float2::maxValue	= Float2(mathf::maxValue);
+Float2 Float2::minValue	= Float2(mathf::minValue);
 
 // Directions:
 Float2 Float2::right	= Float2( 1.0f, 0.0f);

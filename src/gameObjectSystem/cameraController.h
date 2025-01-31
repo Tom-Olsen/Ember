@@ -7,6 +7,7 @@
 class CameraController : public Component
 {
 private: // Members:
+	bool m_isActive;
 	float m_moveSpeed;
 	float m_fastMoveMultiplier;
 	float m_rotationSpeed;
@@ -19,6 +20,7 @@ private: // Members:
 public: // Methods:
 	CameraController();
 	~CameraController();
+	void SetIsActive(bool isActive);
 
 	// Overrides:
 	void Update() override;

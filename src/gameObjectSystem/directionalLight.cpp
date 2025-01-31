@@ -89,14 +89,17 @@ void DirectionalLight::SetDistributionFactor(float value01)
 	if (m_distributionFactor != value01)
 	{
 		m_distributionFactor = value01;
-		float n = m_pActiveCamera->GetNearClip();
-		float f = m_pActiveCamera->GetFarClip();
-		uint32_t count = (uint32_t)m_shadowCascadeCount;
-		for (uint32_t i = 0; i < count + 1; i++)
+		if (m_pActiveCamera != nullptr)
 		{
-			float linear = (float)i / (float)count;
-			float logarithmic = (n * mathf::Pow(((f + n) / n), (i / (float)count)) - n) / f;
-			m_shadowCascadeSplits[i] = (1.0f - m_distributionFactor) * linear + m_distributionFactor * logarithmic;
+			float n = m_pActiveCamera->GetNearClip();
+			float f = m_pActiveCamera->GetFarClip();
+			uint32_t count = (uint32_t)m_shadowCascadeCount;
+			for (uint32_t i = 0; i < count + 1; i++)
+			{
+				float linear = (float)i / (float)count;
+				float logarithmic = (n * mathf::Pow(((f + n) / n), (i / (float)count)) - n) / f;
+				m_shadowCascadeSplits[i] = (1.0f - m_distributionFactor) * linear + m_distributionFactor * logarithmic;
+			}
 		}
 	}
 }

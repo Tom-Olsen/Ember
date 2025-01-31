@@ -3,6 +3,7 @@
 #include "textureCube.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include <filesystem>
 #include <unordered_set>
 
 
@@ -61,7 +62,7 @@ void TextureManager::Clear()
 
 
 
-// Add/get/delete:
+// Add/Get/Delete:
 void TextureManager::AddTexture2d(Texture2d* pTexture)
 {
 	// If texture already contained in TextureManager, do nothing.

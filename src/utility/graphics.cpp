@@ -16,7 +16,9 @@ std::vector<Transform*> Graphics::s_transforms;
 std::vector<MeshRenderer*> Graphics::s_meshRenderers;
 Mesh* Graphics::s_pLineSegmentMesh;
 Mesh* Graphics::s_pSphereMesh;
-Material* Graphics::s_pLineSegmentMaterial;
+Mesh* Graphics::s_pArrowMesh;
+Material* Graphics::s_pSimpleLit;
+Material* Graphics::s_pSimpleUnlit;
 
 
 
@@ -38,7 +40,9 @@ void Graphics::Init()
 	}
 	s_pLineSegmentMesh = MeshManager::GetMesh("zylinderEdgy");
 	s_pSphereMesh = MeshManager::GetMesh("cubeSphere");
-	s_pLineSegmentMaterial = MaterialManager::GetMaterial("simpleUnlit");
+	s_pArrowMesh = MeshManager::GetMesh("arrowEdgy");
+	s_pSimpleLit = MaterialManager::GetMaterial("simpleLit");
+	s_pSimpleUnlit = MaterialManager::GetMaterial("simpleUnlit");
 }
 void Graphics::Clear()
 {
@@ -97,7 +101,7 @@ MaterialProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float4x
 // Draw line segment:
 void Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Float4 color, bool receiveShadows, bool castShadows)
 {
-	MaterialProperties* pMaterialProperties = DrawLineSegment(start, end, width, s_pLineSegmentMaterial, receiveShadows, castShadows);
+	MaterialProperties* pMaterialProperties = DrawLineSegment(start, end, width, s_pSimpleUnlit, receiveShadows, castShadows);
 	pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 }
 MaterialProperties* Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows, bool castShadows)
@@ -110,14 +114,18 @@ MaterialProperties* Graphics::DrawLineSegment(Float3 start, Float3 end, float wi
 	return DrawMesh(s_pLineSegmentMesh, pMaterial, position, rotationMatrix, scale, receiveShadows, castShadows);
 }
 
-// Draw Sphere:
+// Speciaized draw calls:
 void Graphics::DrawSphere(Float3 position, float radius, Float4 color, bool receiveShadows, bool castShadows)
 {
-	MaterialProperties* pMaterialProperties = DrawMesh(s_pSphereMesh, MaterialManager::GetMaterial("simpleUnlit"), position, Float3x3::identity, Float3(radius), receiveShadows, castShadows);
+	MaterialProperties* pMaterialProperties = DrawMesh(s_pSphereMesh, s_pSimpleUnlit, position, Float3x3::identity, Float3(radius), receiveShadows, castShadows);
 	pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 }
-
-// Speciaized draw calls:
+void Graphics::DrawArrow(Float3 position, Float3 direction, float size, Float4 color, bool receiveShadows, bool castShadows)
+{
+	Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
+	MaterialProperties* pMaterialProperties = DrawMesh(s_pArrowMesh, s_pSimpleUnlit, position, rotationMatrix, Float3(size), receiveShadows, castShadows);
+	pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", color);
+}
 void Graphics::DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Float4& color, bool receiveShadows, bool castShadows)
 {
 	// Corner positions in normalized device coordinates:
@@ -151,7 +159,7 @@ void Graphics::DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projecti
 	// Draw corner points:
 	for (uint32_t i = 0; i < 8; i++)
 	{
-		MaterialProperties* pMaterialProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), MaterialManager::GetMaterial("simpleUnlit"), Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+		MaterialProperties* pMaterialProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlit, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
 		pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::gray);
 	}
 
@@ -178,7 +186,7 @@ void Graphics::DrawBounds(Float4x4 localToWorldMatrix, const Bounds& bounds, flo
 	// Draw corner points:
 	for (uint32_t i = 0; i < 8; i++)
 	{
-		MaterialProperties* pMaterialProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), MaterialManager::GetMaterial("simpleLit"), Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+		MaterialProperties* pMaterialProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlit, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
 		pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
 	}
 

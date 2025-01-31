@@ -25,7 +25,9 @@ private: // Members
 	static std::vector<MeshRenderer*> s_meshRenderers;
 	static Mesh* s_pLineSegmentMesh;
 	static Mesh* s_pSphereMesh;
-	static Material* s_pLineSegmentMaterial;
+	static Mesh* s_pArrowMesh;
+	static Material* s_pSimpleLit;
+	static Material* s_pSimpleUnlit;
 
 public: // Methods
 	static void Init();
@@ -42,10 +44,10 @@ public: // Methods
 	static void DrawLineSegment(Float3 start, Float3 end, float width, Float4 color = Float4::one, bool receiveShadows = true, bool castShadows = true);
 	static MaterialProperties* DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows = true, bool castShadows = true);
 
-	// Draw Sphere:
-	static void DrawSphere(Float3 position, float radius, Float4 color = Float4::white, bool receiveShadows = true, bool castShadows = true);
 	
 	// Speciaized draw calls:
+	static void DrawSphere(Float3 position, float radius, Float4 color = Float4::white, bool receiveShadows = true, bool castShadows = true);
+	static void DrawArrow(Float3 position, Float3 direction, float size = 1.0f, Float4 color = Float4::white, bool receiveShadows = true, bool castShadows = true);
 	static void DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projectionMatrix, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 	static void DrawBounds(Float4x4 localToWorldMatrix, const Bounds& bounds, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 

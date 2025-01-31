@@ -68,13 +68,11 @@ public:
 	// Multiplication:
 	Float3 operator*(const Float3& other) const;
 	Float3& operator*=(const Float3& other);
-	Float3 operator*(float scalar) const;
 	Float3& operator*=(float scalar);
 
 	// Division:
 	Float3 operator/(const Float3& other) const;
 	Float3& operator/=(const Float3& other);
-	Float3 operator/(float scalar) const;
 	Float3& operator/=(float scalar);
 
 	// Comparison:
@@ -83,7 +81,10 @@ public:
 	bool operator!=(const Float3& other) const;
 
 	// Friend functions:
+	friend Float3 operator*(const Float3& a, float b);
 	friend Float3 operator*(float a, const Float3& b);
+	friend Float3 operator/(const Float3& a, float b);
+	friend Float3 operator/(float a, const Float3& b);
 
 	// Logging:
 	std::string ToString() const;
@@ -93,8 +94,8 @@ public:
 	// Numbers:
 	static Float3 zero;		// (0, 0, 0).
 	static Float3 one;		// (1, 1, 1).
-	static Float3 max;		// mathf::max * (1, 1, 1).
-	static Float3 min;		// mathf::min * (1, 1, 1).
+	static Float3 maxValue;	// mathf::maxValue * (1, 1, 1).
+	static Float3 minValue;	// mathf::minValue * (1, 1, 1).
 
 	// Directions:
 	static Float3 right;	// +x = ( 1, 0, 0).

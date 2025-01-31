@@ -69,7 +69,6 @@ public:
 	// Division:
 	Float2 operator/(const Float2& other) const;
 	Float2& operator/=(const Float2& other);
-	Float2 operator/(float scalar) const;
 	Float2& operator/=(float scalar);
 
 	// Comparison:
@@ -80,6 +79,8 @@ public:
 	// Friend functions:
 	friend Float2 operator*(float a, const Float2& b);
 	friend Float2 operator*(const Float2& a, float b);
+	friend Float2 operator/(float a, const Float2& b);
+	friend Float2 operator/(const Float2& a, float b);
 
 	// Logging:
 	std::string ToString() const;
@@ -89,8 +90,8 @@ public:
 	// Numbers:
 	static Float2 zero;		// (0, 0).
 	static Float2 one;		// (1, 1).
-	static Float2 max;		// mathf::max * (1, 1).
-	static Float2 min;		// mathf::min * (1, 1).
+	static Float2 maxValue;	// mathf::maxValue * (1, 1).
+	static Float2 minValue;	// mathf::minValue * (1, 1).
 
 	// Directions:
 	static Float2 right;	// +x = ( 1, 0).

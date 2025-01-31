@@ -133,8 +133,8 @@ public:
 	// Static members:
 	static Float4x4 zero;		// zero matrix.
 	static Float4x4 identity;	// identity matrix.
-	static Float4x4 max;		// all entries are mathf::max.
-	static Float4x4 min;		// all entries are mathf::min.
+	static Float4x4 maxValue;	// all entries are mathf::maxValue.
+	static Float4x4 minValue;	// all entries are mathf::minValue.
 
 	// Rotations:
 	static Float4x4 rot45x;		// 45 degrees rotation around x-axis.

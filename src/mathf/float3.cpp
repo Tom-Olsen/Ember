@@ -211,10 +211,6 @@ Float3& Float3::operator*=(const Float3& other)
 	this->z *= other.z;
 	return *this;
 }
-Float3 Float3::operator*(float scalar) const
-{
-	return Float3(x * scalar, y * scalar, z * scalar);
-}
 Float3& Float3::operator*=(float scalar)
 {
 	x *= scalar;
@@ -237,20 +233,12 @@ Float3& Float3::operator/=(const Float3& other)
 	this->z /= other.z;
 	return *this;
 }
-Float3 Float3::operator/(float scalar) const
-{
-	return Float3(x / scalar, y / scalar, z / scalar);
-}
 Float3& Float3::operator/=(float scalar)
 {
 	x /= scalar;
 	y /= scalar;
 	z /= scalar;
 	return *this;
-}
-Float3 operator/(float scalar, const Float3& vector)
-{
-	return Float3(scalar / vector.x, scalar / vector.y, scalar / vector.z);
 }
 
 
@@ -284,6 +272,10 @@ Float3 operator/(const Float3& a, float b)
 {
 	return Float3(a.x / b, a.y / b, a.z / b);
 }
+Float3 operator/(float a, const Float3& b)
+{
+	return Float3(a / b.x, a / b.y, a / b.z);
+}
 
 
 
@@ -306,8 +298,8 @@ std::ostream& operator<<(std::ostream& os, const Float3& value)
 // Numbers;
 Float3 Float3::zero	= Float3(0.0f);
 Float3 Float3::one	= Float3(1.0f);
-Float3 Float3::max	= Float3(mathf::max);
-Float3 Float3::min	= Float3(mathf::min);
+Float3 Float3::maxValue = Float3(mathf::maxValue);
+Float3 Float3::minValue = Float3(mathf::minValue);
 
 // Directions:
 Float3 Float3::right	= Float3( 1.0f, 0.0f, 0.0f);

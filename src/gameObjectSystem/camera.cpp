@@ -98,6 +98,10 @@ float Camera::GetOrthographicSize() const
 {
 	return m_orthographicSize;
 }
+Float3 Camera::GetViewDirection() const
+{
+	return m_pTransform->GetDown();
+}
 ProjectionType Camera::GetProjectionType() const
 {
 	return m_projectionType;

@@ -5,6 +5,7 @@
 // Constructors/Destructor:
 CameraController::CameraController()
 {
+	m_isActive = true;
 	m_moveSpeed = 6.5f;
 	m_fastMoveMultiplier = 2.0f;
 	m_rotationSpeed = 1.5f;
@@ -18,14 +19,10 @@ CameraController::~CameraController()
 
 
 // Public methods:
-void CameraController::Update()
+void CameraController::SetIsActive(bool isActive)
 {
-	Translation();
-	Rotation();
-	Zoom();
-	TogglePerspectiveType();
+	m_isActive = isActive;
 }
-
 
 
 // Private methods:
@@ -87,7 +84,23 @@ void CameraController::TogglePerspectiveType()
 	}
 }
 
+
+
 // Overrides:
+void CameraController::Update()
+{
+	if (m_isActive)
+	{
+		Translation();
+		Rotation();
+		Zoom();
+		TogglePerspectiveType();
+	}
+
+	// Toggle isActive:
+	if (EventSystem::KeyDown(SDLK_TAB))
+		m_isActive = !m_isActive;
+}
 const std::string CameraController::ToString() const
 {
 	return "CameraController";

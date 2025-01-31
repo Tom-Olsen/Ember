@@ -168,13 +168,6 @@ TEST(Float4, OperatorDivisionAssignment)
 	div /= b;
 	EXPECT_NEAR4(div, Float4(1.0f / 5.0f, 2.0f / 6.0f, 3.0f / 7.0f, 4.0f / 8.0f), epsilon);
 }
-TEST(Float4, OperatorDivisionScalar)
-{
-	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
-	float b = 4.0f;
-	Float4 div = a / b;
-	EXPECT_NEAR4(div, Float4(1.0f / 4.0f, 2.0f / 4.0f, 3.0f / 4.0f, 1.0f), epsilon);
-}
 TEST(Float4, OperatorDivisionScalarAssignment)
 {
 	Float4 div(1.0f, 2.0f, 3.0f, 4.0f);
@@ -217,6 +210,20 @@ TEST(Float4, OperatorMultiplicationScalarRight)
 	float b = 3.0f;
 	Float4 mult = a * b;
 	EXPECT_NEAR4(mult, Float4(3.0f, 6.0f, 9.0f, 12.0f), epsilon);
+}
+TEST(Float4, OperatorDivisionScalarLeft)
+{
+	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
+	float b = 4.0f;
+	Float4 div = b / a;
+	EXPECT_NEAR4(div, Float4(4.0f / 1.0f, 4.0f / 2.0f, 4.0f / 3.0f, 4.0f / 4.0f), epsilon);
+}
+TEST(Float4, OperatorDivisionScalarRight)
+{
+	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
+	float b = 4.0f;
+	Float4 div = a / b;
+	EXPECT_NEAR4(div, Float4(1.0f / 4.0f, 2.0f / 4.0f, 3.0f / 4.0f, 4.0f / 4.0f), epsilon);
 }
 
 

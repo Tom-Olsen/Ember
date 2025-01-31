@@ -11,8 +11,9 @@ class Camera;
 class ShadowCascade
 {
 private: // Members:
-	static Float4 s_frustumCorners_Clip[8];
-	Float3 m_subFrustumCorners_CameraLocal[8];
+	static Float4 s_frustum_Clip[8];
+	Float3 m_subFrustum_CameraLocal[8];
+	Float3 m_subFrustum_World[8];
 	Float3 m_position;	// in world space
 	Float3 m_direction;	// in world space
 	Float4x4 m_viewMatrix;
@@ -29,6 +30,7 @@ public: // Methods:
 
 private: // Methods:
 	void ComputeCascadePositionAndSize(Camera* const pCamera, float nearDepth, float farDepth, float sceneHeight);
+	void ComputeSubFrustum(Camera* const pCamera, float nearDepth, float farDepth, const Float4x4& clipToCameraLocalMatrix, const Float4x4& cameraLocalToWorldMatrix);
 	float ComputeFarClip(Camera* const pCamera, const Float4x4& lightLocalToWorldMatrix);
 };
 

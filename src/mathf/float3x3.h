@@ -113,8 +113,8 @@ public:
 	// Static members:
 	static Float3x3 zero;		// zero matrix.
 	static Float3x3 identity;	// identity matrix.
-	static Float3x3 max;		// all entries are mathf::max.
-	static Float3x3 min;		// all entries are mathf::min.
+	static Float3x3 maxValue;	// all entries are mathf::maxValue.
+	static Float3x3 minValue;	// all entries are mathf::minValue.
 
 	// Rotations:
 	static Float3x3 rot45x;		// 45 degrees rotation around x-axis.

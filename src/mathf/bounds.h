@@ -1,7 +1,9 @@
 #ifndef __INCLUDE_GUARD_bounds_h__
 #define __INCLUDE_GUARD_bounds_h__
 #include "float3.h"
+#include "ray.h"
 #include <array>
+#include <optional>
 #include <vector>
 #include <string>
 
@@ -36,6 +38,7 @@ public: // Methods:
 	void Encapsulate(const Float3& point);
 	void Expand(float amount);
 	void Expand(const Float3& amount);
+	std::optional<Float3> IntersectRay(const Ray& ray) const;// TODO: needs unit test
 
 	// Logging:
 	std::string ToString() const;

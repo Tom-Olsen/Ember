@@ -5,16 +5,17 @@
 
 
 // static members:
-Float4 ShadowCascade::s_frustumCorners_Clip[8] =
+Float4 ShadowCascade::s_frustum_Clip[8] =
 {
-	Float4(-1, -1, 0, 1),
-	Float4(-1, -1, 1, 1),
-	Float4(-1,  1, 0, 1),
-	Float4(-1,  1, 1, 1),
-	Float4( 1, -1, 0, 1),
-	Float4( 1, -1, 1, 1),
-	Float4( 1,  1, 0, 1),
-	Float4( 1,  1, 1, 1)
+	// Note: In vulkan y axes is flippes => -1 = top, 1 = bottom
+	Float4(-1, -1, 0, 1),	// left top near
+	Float4(-1, -1, 1, 1),	// left top far
+	Float4(-1,  1, 0, 1),	// left bottom near
+	Float4(-1,  1, 1, 1),	// left bottom far
+	Float4( 1, -1, 0, 1),	// right top near
+	Float4( 1, -1, 1, 1),	// right top far
+	Float4( 1,  1, 0, 1),	// right bottom near
+	Float4( 1,  1, 1, 1)	// right bottom far
 };
 
 
@@ -72,108 +73,83 @@ Float4x4 ShadowCascade::GetProjectionMatrix() const
 // Private methods:
 void ShadowCascade::ComputeCascadePositionAndSize(Camera* const pCamera, float nearDepth, float farDepth, float sceneHeight)
 {
+	// Transformation matrizes:
 	Float4x4 clipToCameraLocalMatrix = pCamera->GetProjectionMatrix().Inverse();
 	Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
 
-	Float3 frustumCorners_CameraLocal[8];
-	for (uint32_t i = 0; i < 8; i++)
-	{
-		Float4 temp = clipToCameraLocalMatrix * s_frustumCorners_Clip[i];
-		frustumCorners_CameraLocal[i] = Float3(temp) / temp.w;
-	}
-
-	// Sub frustum corners in camera space:
-	// nearDepth, farDepth € [0,1] are the percentile splits of the camera frustum.
-	m_subFrustumCorners_CameraLocal[0] = frustumCorners_CameraLocal[0] + nearDepth * (frustumCorners_CameraLocal[1] - frustumCorners_CameraLocal[0]);
-	m_subFrustumCorners_CameraLocal[1] = frustumCorners_CameraLocal[0] + farDepth  * (frustumCorners_CameraLocal[1] - frustumCorners_CameraLocal[0]);
-	m_subFrustumCorners_CameraLocal[2] = frustumCorners_CameraLocal[2] + nearDepth * (frustumCorners_CameraLocal[3] - frustumCorners_CameraLocal[2]);
-	m_subFrustumCorners_CameraLocal[3] = frustumCorners_CameraLocal[2] + farDepth  * (frustumCorners_CameraLocal[3] - frustumCorners_CameraLocal[2]);
-	m_subFrustumCorners_CameraLocal[4] = frustumCorners_CameraLocal[4] + nearDepth * (frustumCorners_CameraLocal[5] - frustumCorners_CameraLocal[4]);
-	m_subFrustumCorners_CameraLocal[5] = frustumCorners_CameraLocal[4] + farDepth  * (frustumCorners_CameraLocal[5] - frustumCorners_CameraLocal[4]);
-	m_subFrustumCorners_CameraLocal[6] = frustumCorners_CameraLocal[6] + nearDepth * (frustumCorners_CameraLocal[7] - frustumCorners_CameraLocal[6]);
-	m_subFrustumCorners_CameraLocal[7] = frustumCorners_CameraLocal[6] + farDepth  * (frustumCorners_CameraLocal[7] - frustumCorners_CameraLocal[6]);
-
-
-	for (uint32_t i = 0; i < 8; i++)
-	{
-		Float3 subFrustumCorner_World = Float3(cameraLocalToWorldMatrix * Float4(m_subFrustumCorners_CameraLocal[i], 1.0f));
-		Graphics::DrawSphere(subFrustumCorner_World, 0.2f, Float4::black);
-	}
-
-	// Compute orthographic projection size so that the sub frustum always fits:
-	Bounds bounds = Bounds(m_subFrustumCorners_CameraLocal);
-	m_size = bounds.GetDiagonal();
-
-	// Compute sub frustum center:
-	float texelSize = m_size / SHADOW_MAP_WIDTH;
-	Float3 center_CameraLocal = bounds.center;	// works because in camera space the frustum is axis aligned.
-	Float3 center_World = Float3(cameraLocalToWorldMatrix * Float4(center_CameraLocal, 1.0f));
-
 	// Construct 2d plane orhtogonal to light direction, with coordinate system alignes with light local space:
 	Float4x4 rotMatrix = Float4x4::RotateThreeLeg(Float3::down, m_direction, Float3::right, Float3::right);
-	Float3 e1 = Float3(rotMatrix * Float4::right);
-	Float3 e2 = Float3::Cross(m_direction, e1).Normalize();
+	Float3 e1 = Float3(rotMatrix * Float4::right).Normalize();
+	Float3 e2 = Float3::Cross(-m_direction, e1).Normalize();
 	Float3x2 planeToWorld = Float3x2::Columns(e1, e2);
 	Float2x3 worldToPlane = planeToWorld.LeftInverse();
-	Float2 center_Plane = worldToPlane * center_World;
-	center_Plane.x = mathf::Round(center_Plane.x / texelSize) * texelSize;
-	center_Plane.y = mathf::Round(center_Plane.y / texelSize) * texelSize;
-	center_World = planeToWorld * center_Plane;
 
-	// Compute light position:
+	// Compute camera sub frustum in camera space and world space:
+	ComputeSubFrustum(pCamera, nearDepth, farDepth, clipToCameraLocalMatrix, cameraLocalToWorldMatrix);
+
+	// Compute orthographic projection size:
+	float diagFar = (m_subFrustum_CameraLocal[7] - m_subFrustum_CameraLocal[1]).Length();
+	float diagNearToFar = (m_subFrustum_CameraLocal[7] - m_subFrustum_CameraLocal[0]).Length();
+	m_size = mathf::Max(diagNearToFar, diagFar);
+	float texelSize = m_size / SHADOW_MAP_WIDTH;
+
+	// Find center of sub frustum on orthographic projection plane:
+	Bounds2d lightBounds(worldToPlane * m_subFrustum_World[0], Float2::zero);
+	for (uint32_t i = 1; i < 8; i++)
+	{
+		Float2 projection = worldToPlane * m_subFrustum_World[i];
+		lightBounds.Encapsulate(projection);
+	}
+	Float2 projectionCenter_Plane = lightBounds.center;
+
+	// Optional: move projectionCenter_Plane to fit sub frustum better
+
+	// Round projection center in plane coordinates and transform to world space:
+	projectionCenter_Plane.x = mathf::Round(projectionCenter_Plane.x / texelSize) * texelSize;
+	projectionCenter_Plane.y = mathf::Round(projectionCenter_Plane.y / texelSize) * texelSize;
+	Float3 projectionCenter_World = planeToWorld * projectionCenter_Plane;
+
+	// Compute light position by intersecting line from camera sub frustum center to scene ceiling plane along light direction:
 	Float3 planeNormal = Float3::up;
 	Float3 planeSupport = sceneHeight * Float3::up;
-	m_position = geometry3d::LinePlaneIntersection(center_World, m_direction, planeSupport, planeNormal);
+	m_position = geometry3d::LinePlaneIntersection(projectionCenter_World, m_direction, planeSupport, planeNormal);
+}
+void ShadowCascade::ComputeSubFrustum(Camera* const pCamera, float nearDepth, float farDepth, const Float4x4& clipToCameraLocalMatrix, const Float4x4& cameraLocalToWorldMatrix)
+{
+	// Camera frustum in camera space:
+	Float3 frustum_CameraLocal[8];
+	for (uint32_t i = 0; i < 8; i++)
+	{
+		Float4 temp = clipToCameraLocalMatrix * s_frustum_Clip[i];
+		frustum_CameraLocal[i] = Float3(temp) / temp.w;
+	}
+
+	// Camera sub frustum in camera space:
+	// nearDepth, farDepth € [0,1] are the percentile splits of the camera frustum.
+	m_subFrustum_CameraLocal[0] = frustum_CameraLocal[0] + nearDepth * (frustum_CameraLocal[1] - frustum_CameraLocal[0]);
+	m_subFrustum_CameraLocal[1] = frustum_CameraLocal[0] + farDepth  * (frustum_CameraLocal[1] - frustum_CameraLocal[0]);
+	m_subFrustum_CameraLocal[2] = frustum_CameraLocal[2] + nearDepth * (frustum_CameraLocal[3] - frustum_CameraLocal[2]);
+	m_subFrustum_CameraLocal[3] = frustum_CameraLocal[2] + farDepth  * (frustum_CameraLocal[3] - frustum_CameraLocal[2]);
+	m_subFrustum_CameraLocal[4] = frustum_CameraLocal[4] + nearDepth * (frustum_CameraLocal[5] - frustum_CameraLocal[4]);
+	m_subFrustum_CameraLocal[5] = frustum_CameraLocal[4] + farDepth  * (frustum_CameraLocal[5] - frustum_CameraLocal[4]);
+	m_subFrustum_CameraLocal[6] = frustum_CameraLocal[6] + nearDepth * (frustum_CameraLocal[7] - frustum_CameraLocal[6]);
+	m_subFrustum_CameraLocal[7] = frustum_CameraLocal[6] + farDepth  * (frustum_CameraLocal[7] - frustum_CameraLocal[6]);
+
+	// Camera sub frustum in world space:
+	for (uint32_t i = 0; i < 8; i++)
+		m_subFrustum_World[i] = Float3(cameraLocalToWorldMatrix * Float4(m_subFrustum_CameraLocal[i], 1.0f));
 }
 float ShadowCascade::ComputeFarClip(Camera* const pCamera, const Float4x4& lightLocalToWorldMatrix)
 {
-	// Construct bounding box that encapsulates the sub frustum corners and the light source in light space:
-	Bounds bounds = Bounds(Float3::zero, Float3::zero);	// bounds only contains light source
+	// Construct bounding box that encapsulates the sub frustum and the light source in light space:
+	Bounds bounds = Bounds(Float3::zero, Float3::zero);	// lights source located at zero.
 	Float4x4 cameraLocalToLightLocalMatrix = m_viewMatrix * pCamera->GetTransform()->GetLocalToWorldMatrix();
+	Float3 subFrustum_LightLocal[8];
 	for (uint32_t i = 0; i < 8; i++)
 	{
-		Float3 corner = Float3(cameraLocalToLightLocalMatrix * Float4(m_subFrustumCorners_CameraLocal[i], 1.0f));
-		bounds.Encapsulate(corner);
+		subFrustum_LightLocal[i] = Float3(cameraLocalToLightLocalMatrix * Float4(m_subFrustum_CameraLocal[i], 1.0f));
+		bounds.Encapsulate(subFrustum_LightLocal[i]);
 	}
-	return bounds.GetSize().z;
-
-	// TODO:
-	// - find 3 lowest points of camera frustum
-	// - construct plane from these points (as below)
-	// - find intersection of all four bounding light lines with this plane (as below)
-	// - find furthest intersection point as seen from support point (sure this is correct? the four points may have vastly different start heights) (as below?)
-	// - ignore points that are behind the camera
-	//Float4x4 clipToCameraLocalMatrix = pCamera->GetProjectionMatrix().Inverse();
-	//Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
-	//Float3 corners[3] = { Float3(-1, -1, 0), Float3(1, -1, 0), Float3(1, 1, 1)};
-	//for (uint32_t i = 0; i < 3; i++)
-	//{
-	//	Float4 temp = clipToCameraLocalMatrix * Float4(corners[i], 1);
-	//	corners[i] = Float3(temp) / temp.w;
-	//	corners[i] = Float3(cameraLocalToWorldMatrix * Float4(corners[i], 1));
-	//}
-	//Float3& planeSupport = corners[0];
-	//Float3 planeNormal = Float3::Cross(corners[2] - corners[0], corners[1] - corners[0]).Normalize();
-	//
-	//
-	//Float3 lineSupports[4] =
-	//{
-	//	Float3(lightLocalToWorldMatrix * Float4(-0.5f * m_size, -0.5f * m_size, 0, 1)),
-	//	Float3(lightLocalToWorldMatrix * Float4(-0.5f * m_size,  0.5f * m_size, 0, 1)),
-	//	Float3(lightLocalToWorldMatrix * Float4( 0.5f * m_size, -0.5f * m_size, 0, 1)),
-	//	Float3(lightLocalToWorldMatrix * Float4( 0.5f * m_size,  0.5f * m_size, 0, 1))
-	//};
-	//
-	//float maxDistance = mathf::min;
-	//for (uint32_t i = 0; i < 4; i++)
-	//{
-	//	Float3 lineSupport = lineSupports[i];
-	//	Float3 lineDirection = m_direction;
-	//	Float3 intersection = geometry3d::LinePlaneIntersection(lineSupport, lineDirection, planeSupport, planeNormal);
-	//	float distance = (intersection - lineSupport).Length();
-	//	maxDistance = mathf::Max(maxDistance, distance);
-	//	Graphics::DrawSphere(intersection, 0.3f, Float4::red);
-	//	Graphics::DrawSphere(lineSupport, 0.3f, Float4::blue);
-	//}
-	//return maxDistance;
+	// Add a little extra (4 * frustum height) to prevent light clipping at some camera angles. Could need some improvement. 
+	return bounds.GetSize().z + 4.0f * mathf::Abs(m_subFrustum_CameraLocal[5].y - m_subFrustum_CameraLocal[7].y);
 }

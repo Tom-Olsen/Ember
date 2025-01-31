@@ -63,13 +63,11 @@ public:
 	// Multiplication:
 	Float4 operator*(const Float4& other) const;
 	Float4& operator*=(const Float4& other);
-	Float4 operator*(float scalar) const;
 	Float4& operator*=(float scalar);
 
 	// Division:
 	Float4 operator/(const Float4& other) const;
 	Float4& operator/=(const Float4& other);
-	Float4 operator/(float scalar) const;
 	Float4& operator/=(float scalar);
 
 	// Comparison:
@@ -78,7 +76,10 @@ public:
 	bool operator!=(const Float4& other) const;
 
 	// Friend functions:
+	friend Float4 operator*(const Float4& a, float b);
 	friend Float4 operator*(float a, const Float4& b);
+	friend Float4 operator/(const Float4& a, float b);
+	friend Float4 operator/(float a, const Float4& b);
 
 	// Logging:
 	std::string ToString() const;
@@ -88,8 +89,8 @@ public:
 	// Numbers:
 	static Float4 zero;		// (0, 0, 0, 0).
 	static Float4 one;		// (1, 1, 1, 1).
-	static Float4 max;		// mathf::max * (1, 1, 1, 1).
-	static Float4 min;		// mathf::min * (1, 1, 1, 1).
+	static Float4 maxValue;	// mathf::maxValue * (1, 1, 1, 1).
+	static Float4 minValue;	// mathf::minValue * (1, 1, 1, 1).
 
 	// Directions:
 	static Float4 right;	// +x = ( 1, 0, 0, 0).

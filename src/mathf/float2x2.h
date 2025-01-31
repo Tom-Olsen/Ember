@@ -100,8 +100,8 @@ public:
 	// Static members:
 	static Float2x2 zero;		// zero matrix.
 	static Float2x2 identity;	// identity matrix.
-	static Float2x2 max;		// all entries are mathf::max.
-	static Float2x2 min;		// all entries are mathf::min.
+	static Float2x2 maxValue;	// all entries are mathf::maxValue.
+	static Float2x2 minValue;	// all entries are mathf::minValue.
 };
 
 

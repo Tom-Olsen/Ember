@@ -455,8 +455,8 @@ Float3x3 Float3x3::identity = Float3x3
 (1.0f, 0.0f, 0.0f,
  0.0f, 1.0f, 0.0f,
  0.0f, 0.0f, 1.0f);
-Float3x3 Float3x3::max = Float3x3(mathf::max);
-Float3x3 Float3x3::min = Float3x3(mathf::min);
+Float3x3 Float3x3::maxValue = Float3x3(mathf::maxValue);
+Float3x3 Float3x3::minValue = Float3x3(mathf::minValue);
 
 // Rotations:
 Float3x3 Float3x3::rot45x = Float3x3::RotateX(mathf::pi4);
