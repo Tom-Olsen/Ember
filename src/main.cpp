@@ -5,8 +5,9 @@
 
 
 // TODO now!
-// - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - imgui integration
+// - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
+// - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
 
 // TODO:
@@ -154,9 +155,9 @@ Scene* ShadowCascadeScene()
 		DirectionalLight* pDirectionalLight = new DirectionalLight();
 		pDirectionalLight->SetIntensity(1.0f);
 		pDirectionalLight->SetColor(Float3::white);
-		//pDirectionalLight->OverwriteActiveCamera(pCamera, true);
+		pDirectionalLight->OverwriteActiveCamera(pCamera, true);
 		//pDirectionalLight->SetDrawFrustum(true);
-		pDirectionalLight->SetShadowType(ShadowType::hard);
+		pDirectionalLight->SetShadowType(ShadowType::soft);
 		pDirectionalLight->SetDistributionFactor(1.00f);
 		//pDirectionalLight->SetShadowCascadeCount(DirectionalLight::ShadowCascadeCount::one);
 		pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);

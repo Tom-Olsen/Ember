@@ -12,7 +12,8 @@ static const uint MAX_P_LIGHTS = 3;         // point lights: candles, etc.
 //static const uint SHADOW_MAP_HEIGHT = 1024; // shadow map height in pixels
 static const uint SHADOW_MAP_WIDTH = 2048; // shadow map width in pixels
 static const uint SHADOW_MAP_HEIGHT = 2048; // shadow map height in pixels
-static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_WIDTH, 1.0f / SHADOW_MAP_HEIGHT); // shadow map texel size
+static const float2 SHADOW_MAP_SIZE = float2(SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT);                      // shadow map size
+static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_WIDTH, 1.0f / SHADOW_MAP_HEIGHT);  // shadow map texel size
 
 
 
@@ -104,22 +105,67 @@ float NoFileredShadow(SamplerComparisonState shadowSampler, Texture2DArray <floa
 }
 float PercentageCloserFilteredShadow(SamplerComparisonState shadowSampler, Texture2DArray<float> shadowMaps, int arrayIndex, float3 lightUvz)
 {
-    const int pcfSamples = 16;
-    float2 pcfOffsets[16] =
-    {
-        float2(-1.5, -1.5), float2(-1.5, -0.5), float2(-1.5, 1), float2(-1.5, 1.5),
-        float2(-0.5, -1.5), float2(-0.5, -0.5), float2(-0.5, 1), float2(-0.5, 1.5),
-        float2( 0.5, -1.5), float2( 0.5, -0.5), float2( 0.5, 1), float2( 0.5, 1.5),
-        float2( 1.5, -1.5), float2( 1.5, -0.5), float2( 1.5, 1), float2( 1.5, 1.5)
-    };
-                
-    float shadow = 0.0f;
-    for (int j = 0; j < pcfSamples; ++j)
-    {
-        float2 offset = pcfOffsets[j] * SHADOW_MAP_TEXEL_SIZE;
-        shadow += shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy + offset, arrayIndex), lightUvz.z);
-    }
-    return shadow / pcfSamples;
+    //// Average:
+    //const int pcfSamples = 16;
+    //float2 pcfOffsets[16] =
+    //{
+    //    float2(-1.5, -1.5), float2(-1.5, -0.5), float2(-1.5, 1), float2(-1.5, 1.5),
+    //    float2(-0.5, -1.5), float2(-0.5, -0.5), float2(-0.5, 1), float2(-0.5, 1.5),
+    //    float2( 0.5, -1.5), float2( 0.5, -0.5), float2( 0.5, 1), float2( 0.5, 1.5),
+    //    float2( 1.5, -1.5), float2( 1.5, -0.5), float2( 1.5, 1), float2( 1.5, 1.5)
+    //};
+    //            
+    //float shadow = 0.0f;
+    //for (int j = 0; j < pcfSamples; j++)
+    //{
+    //    float2 offset = pcfOffsets[j] * SHADOW_MAP_TEXEL_SIZE;
+    //    shadow += shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy + offset, arrayIndex), lightUvz.z);
+    //}
+    //return shadow / pcfSamples;
+    
+    //// Bilinear:
+    //float2 texelPos = SHADOW_MAP_SIZE * lightUvz.xy;
+    //float2 texelFloor = floor(texelPos);
+    //float2 texelFraction = texelPos - texelFloor;
+    //
+    //// Sample the four closest texels with PCF
+    //float shadow00 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(0, 0)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    //float shadow10 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(1, 0)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    //float shadow01 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(0, 1)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    //float shadow11 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(1, 1)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    //
+    //// Perform bilinear interpolation
+    //return Interpolation_Bilinear(texelFraction, shadow00, shadow01, shadow10, shadow11);
+    
+    // Bicubic:
+    float2 texelPos = SHADOW_MAP_SIZE * lightUvz.xy;
+    float2 texelFloor = floor(texelPos);
+    float2 texelFraction = texelPos - texelFloor;
+    
+    // Sample the four closest texels with PCF
+    float shadow_m1m1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(-1, 0)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_m1p0 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(-1, 1)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_m1p1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(-1, 2)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_m1p2 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(-1, 3)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p0m1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 0, 0)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p0p0 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 0, 1)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p0p1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 0, 2)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p0p2 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 0, 3)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p1m1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 1, 0)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p1p0 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 1, 1)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p1p1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 1, 2)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p1p2 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 1, 3)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p2m1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 2, 0)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p2p0 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 2, 1)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p2p1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 2, 2)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    float shadow_p2p2 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 2, 3)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
+    
+    // Perform bilinear interpolation
+    return Interpolation_Bicubic(texelFraction,
+    shadow_m1m1, shadow_m1p0, shadow_m1p1, shadow_m1p2,
+    shadow_p0m1, shadow_p0p0, shadow_p0p1, shadow_p0p2,
+    shadow_p1m1, shadow_p1p0, shadow_p1p1, shadow_p1p2,
+    shadow_p2m1, shadow_p2p0, shadow_p2p1, shadow_p2p2);
 }
 
 
@@ -138,7 +184,7 @@ float3 PhysicalDirectionalLights
             // Check if the pixel is inside the shadow map:
             float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix[shadowCascadeIndex], float4(worldPos, 1.0f)); // €[-w,w]
             float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
-            float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy€[-1,1] z€[0,1]
+            float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy€[-1,1] z€[0,1] (vulkan)
             lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0,1]
             if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
              && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
@@ -165,9 +211,8 @@ float3 PhysicalDirectionalLights
                 (0.5f + 0.5f * (shadowCascadeIndex == 0 || shadowCascadeIndex == 3),
                  0.5f + 0.5f * (shadowCascadeIndex == 1 || shadowCascadeIndex == 3),
                  0.5f + 0.5f * (shadowCascadeIndex == 2));
-                //float intensityScaling = 0.33f + 0.33f * ((round(SHADOW_MAP_WIDTH * lightUvz.x)) % 2) + ((round(SHADOW_MAP_HEIGHT * lightUvz.y)) % 2);
-                totalLight += shadow * light * cascadeShading;
-                break; // no need to test further shadow maps of this point light as any pixel can only be inside one of the shadow maps
+                totalLight += shadow * light;
+                break; // no need to test further shadow maps of this directional light as cascades are sorted from closest to farthest
             }
         }
     }
@@ -184,7 +229,7 @@ float3 PhysicalSpotLights
         // Check if the pixel is inside the shadow map:
         float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f)); // €[-w,w]
         float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
-        float3 lightUvz = lightSpaceClipPos.xyz / w; // ndc: xy€[-1,1] z€[0,1]
+        float3 lightUvz = lightSpaceClipPos.xyz / w; // ndc: xy€[-1,1] z€[0,1] (vulkan)
         lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f); // remap xy to [0,1]
         if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
          && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
@@ -228,7 +273,7 @@ float3 PhysicalPointLights
             // Check if the pixel is inside the shadow map:
             float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix[faceIndex], float4(worldPos, 1.0f)); // €[-w,w]
             float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
-            float3 lightUvz = lightSpaceClipPos.xyz / w; // ndc: xy€[-1,1] z€[0,1]
+            float3 lightUvz = lightSpaceClipPos.xyz / w; // ndc: xy€[-1,1] z€[0,1] (vulkan)
             lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f); // remap xy to [0,1]
             if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
              && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f

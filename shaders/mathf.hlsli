@@ -6,6 +6,7 @@
 // Sub libraries:
 #include "mathConstants.hlsli"
 #include "linearAlgebra.hlsli"
+#include "interpolation.hlsli"
 
 
 
