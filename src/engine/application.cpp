@@ -1,5 +1,6 @@
 #include "application.h"
 #include "component.h"
+#include "dearImGui.h"
 #include "eventSystem.h"
 #include "gameObject.h"
 #include "graphics.h"
@@ -35,6 +36,7 @@ Application::Application()
 	SamplerManager::Init(m_pContext.get());
 	MeshManager::Init(m_pContext.get());
 	Graphics::Init();
+	DearImGui::Init(m_pContext.get());
 }
 
 
@@ -43,6 +45,7 @@ Application::Application()
 Application::~Application()
 {
 	// Clear static managers:
+	DearImGui::Clear();
 	Graphics::Clear();
 	MeshManager::Clear();
 	SamplerManager::Clear();
@@ -64,6 +67,7 @@ void Application::Run()
 	while (running)
 	{
 		Timer::Update();
+		DearImGui::Update();
 		running = m_pContext->pWindow->HandleEvents();
 
 		// If window is minimized or width/height is zero, delay loop to reduce CPU usage:

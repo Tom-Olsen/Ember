@@ -17,6 +17,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 
    
 # ------------------- File lists --------------------
+# Imgui files:
+set(IMGUI_FILES
+    libs/imgui/imgui.cpp
+    libs/imgui/imgui_demo.cpp
+    libs/imgui/imgui_draw.cpp
+    libs/imgui/imgui_tables.cpp
+    libs/imgui/imgui_widgets.cpp
+    libs/imgui/backends/imgui_impl_sdl3.cpp
+    libs/imgui/backends/imgui_impl_vulkan.cpp)
+set(IMGUI_EXAMPLE libs/imgui/examples/example_sdl3_vulkan/main.cpp)
+source_group("ImGui" FILES ${IMGUI_FILES} ${IMGUI_EXAMPLE})
+
 # shaders/*:
 file(GLOB SHADER_FILES
     "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"
@@ -64,6 +76,8 @@ source_group("" FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
 
 # Configure executables:
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/src/main.cpp
+${IMGUI_FILES}
+${IMGUI_EXAMPLE}   # add the example as a source to make it show up in the IDE, but mark it as header only, to prevent compilation (see below)
 ${SHADER_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
 ${MANAGERS_FILES}
@@ -73,7 +87,12 @@ ${RENDER_RESOURCES_FILES}
 ${UTILITY_FILES}
 ${VULKAN_RENDERER_FILES}
 ${ENGINE_FILES})
+set_source_files_properties(${IMGUI_EXAMPLE} PROPERTIES HEADER_FILE_ONLY ON)
 add_dependencies(${PROJECT_NAME} build_shaders)
+# Enable utf-8 encoding for microsoft visual studio:
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
+endif()
 
 
 
@@ -105,6 +124,9 @@ endif(WIN32)
 
 
 # -------------------- Libraries --------------------
+# Imgui:
+target_include_directories(${PROJECT_NAME} PUBLIC libs/imgui)
+
 # SDL (cMakeList target):
 add_subdirectory(libs/SDL)
 target_include_directories(${PROJECT_NAME} PUBLIC libs/SDL/include)
@@ -166,6 +188,10 @@ ${UTILITY_FILES}
 ${VULKAN_RENDERER_FILES}
 ${ENGINE_FILES}
 ${UNITTEST_FILES})
+# Enable utf-8 encoding for microsoft visual studio:
+if (MSVC)
+    target_compile_options(UnitTests PRIVATE /utf-8)
+endif()
 
 # Link test executable with all libraries:
 target_link_libraries(UnitTests

@@ -1,4 +1,5 @@
 #include "vulkanRenderer.h"
+#include "dearImGui.h"
 #include "directionalLight.h"
 #include "graphics.h"
 #include "macros.h"
@@ -344,6 +345,7 @@ void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
 					}
 				}
 		}
+		DearImGui::Render(commandBuffer);
 		vkCmdEndRenderPass(commandBuffer);
 	}
 	VKA(vkEndCommandBuffer(commandBuffer));

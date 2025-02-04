@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_window_h__
-#define __INCLUDE_GUARD_window_h__
+#ifndef __INCLUDE_GUARD_sdlWindow_h__
+#define __INCLUDE_GUARD_sdlWindow_h__
 #include <SDL3/SDL.h>
 #include <vulkan/vulkan.h>
 #include <vector>
@@ -34,4 +34,4 @@ public: // Methods:
 
 
 
-#endif // __INCLUDE_GUARD_window_h__
+#endif // __INCLUDE_GUARD_sdlWindow_h__

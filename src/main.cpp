@@ -9,6 +9,8 @@
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
+// - use one constants.h file both for c++ and hlsl constants that are identical, e.g. #define SHADOW_MAP_RESOLUTION 4096
+// - refactor RenderPassManager to contain hard coded getters for each RenderPass, instead of access via strings.
 
 // TODO:
 // - optimize eventsystem::AnyKey etc.

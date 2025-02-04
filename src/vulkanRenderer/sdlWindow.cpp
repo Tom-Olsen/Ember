@@ -2,14 +2,14 @@
 #include "eventSystem.h"
 #include "vulkanMacros.h"
 #include <SDL3/SDL_vulkan.h>
-
+#include <iostream>
 
 
 // Constructor/Destructor:
 SdlWindow::SdlWindow(uint16_t width, uint16_t height)
 {
 	// Initialize SDL:
-	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	if (SDL_Init(SDL_INIT_VIDEO) == false)	// crashes after pulling latest version of sdl3
 		throw std::runtime_error((std::string)"SDL_Init: " + (std::string)SDL_GetError());
 
 	// Create a window pointer:

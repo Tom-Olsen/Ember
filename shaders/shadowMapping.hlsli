@@ -8,10 +8,8 @@
 static const uint MAX_D_LIGHTS = 3;         // directional lights: sun, moon, etc.
 static const uint MAX_S_LIGHTS = 5;         // spot lights: car headlights, etc.
 static const uint MAX_P_LIGHTS = 3;         // point lights: candles, etc.
-//static const uint SHADOW_MAP_WIDTH = 1024;  // shadow map width in pixels
-//static const uint SHADOW_MAP_HEIGHT = 1024; // shadow map height in pixels
-static const uint SHADOW_MAP_WIDTH = 2048; // shadow map width in pixels
-static const uint SHADOW_MAP_HEIGHT = 2048; // shadow map height in pixels
+static const uint SHADOW_MAP_WIDTH = 4096; // shadow map width in pixels
+static const uint SHADOW_MAP_HEIGHT = 4096; // shadow map height in pixels
 static const float2 SHADOW_MAP_SIZE = float2(SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT);                      // shadow map size
 static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_WIDTH, 1.0f / SHADOW_MAP_HEIGHT);  // shadow map texel size
 

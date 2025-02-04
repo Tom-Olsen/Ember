@@ -1,4 +1,5 @@
 #include "eventSystem.h"
+#include "dearImGui.h"
 #include "vulkanContext.h"
 
 
@@ -73,28 +74,47 @@ void EventSystem::ClearEvents()
 
 void EventSystem::ProcessEvent(const SDL_Event& event)
 {
+    DearImGui::ProcessEvent(event);
+
+    // Keayboard events:
+    if (!DearImGui::WantCaptureKeyboard())
+        switch (event.type)
+        {
+        case SDL_EVENT_KEY_DOWN:
+            s_keyStates[event.key.key] = KeyState::down;
+            break;
+        case SDL_EVENT_KEY_UP:
+            s_keyStates[event.key.key] = KeyState::up;
+            break;
+        default:
+            break;
+        }
+
+    // Mouse events:
+    if (!DearImGui::WantCaptureMouse())
+        switch (event.type)
+        {
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            s_mouseButtonStates[event.button.button] = MouseState::down;
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            s_mouseButtonStates[event.button.button] = MouseState::up;
+            break;
+        case SDL_EVENT_MOUSE_MOTION:    // need DearImGui exclusion for this case?
+            s_mouseX = event.motion.x;
+            s_mouseY = event.motion.y;
+            break;
+        case SDL_EVENT_MOUSE_WHEEL:    // need DearImGui exclusion for this case?
+            s_mouseScrollX = event.wheel.x;
+            s_mouseScrollY = event.wheel.y;
+            break;
+        default:
+            break;
+        }
+
+    // Other events:
     switch (event.type)
     {
-    case SDL_EVENT_KEY_DOWN:
-        s_keyStates[event.key.key] = KeyState::down;
-        break;
-    case SDL_EVENT_KEY_UP:
-        s_keyStates[event.key.key] = KeyState::up;
-        break;
-    case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        s_mouseButtonStates[event.button.button] = MouseState::down;
-        break;
-    case SDL_EVENT_MOUSE_BUTTON_UP:
-        s_mouseButtonStates[event.button.button] = MouseState::up;
-        break;
-    case SDL_EVENT_MOUSE_MOTION:
-        s_mouseX = event.motion.x;
-        s_mouseY = event.motion.y;
-        break;
-	case SDL_EVENT_MOUSE_WHEEL:
-		s_mouseScrollX = event.wheel.x;
-		s_mouseScrollY = event.wheel.y;
-		break;
     case SDL_EVENT_WINDOW_RESIZED:
         s_windowResized = true;
         break;
