@@ -18,7 +18,7 @@ public: // Methods:
 	~SdlWindow();
 
 	bool HandleEvents();
-	void AddSdlInstanceExtensions(std::vector<const char*>& extensions) const;
+	void AddSdlInstanceExtensions(std::vector<const char*>& instanceExtensions) const;
 
 	// Getters:
 	SDL_Window* const GetSDL_Window() const;

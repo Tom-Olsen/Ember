@@ -34,6 +34,10 @@ VulkanInstance::VulkanInstance(std::vector<const char*> instanceExtensions)
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
 	createInfo.ppEnabledExtensionNames = instanceExtensions.data();
 
+	// Add instance create enumerate portability bit flag if dear imgui docking is active:
+	if (std::find(instanceExtensions.begin(), instanceExtensions.end(),	VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) != instanceExtensions.end())
+		createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+
 	#if defined(VALIDATION_LAYERS_ACTIVE)
 	// Enable validation features:
 	std::vector<VkValidationFeatureEnableEXT> enabledValidationFeatures;

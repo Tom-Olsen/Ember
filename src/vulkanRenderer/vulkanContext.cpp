@@ -1,4 +1,5 @@
 #include "vulkanContext.h"
+#include "dearImGui.h"
 #include "vulkanMacros.h"
 
 
@@ -18,7 +19,9 @@ VulkanContext::VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaa
 	instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 	#endif
-	pWindow->AddSdlInstanceExtensions(instanceExtensions);	// sdl instance extensions
+	pWindow->AddSdlInstanceExtensions(instanceExtensions);		// sdl instance extensions
+	DearImGui::AddImGuiInstanceExtensions(instanceExtensions);	// add instance extensions for docking feature
+
 	// and more ...
 
 	// Get device extensions:

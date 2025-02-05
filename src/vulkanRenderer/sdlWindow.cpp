@@ -13,7 +13,8 @@ SdlWindow::SdlWindow(uint16_t width, uint16_t height)
 		throw std::runtime_error((std::string)"SDL_Init: " + (std::string)SDL_GetError());
 
 	// Create a window pointer:
-	m_pWindow = SDL_CreateWindow("Ember", width, height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+	SDL_WindowFlags windowFlags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+	m_pWindow = SDL_CreateWindow("Ember", width, height, windowFlags);
 	if (!m_pWindow)
 		throw std::runtime_error((std::string)"SDL_CreateWindow Error: " + (std::string)SDL_GetError());
 }
@@ -69,14 +70,14 @@ bool SdlWindow::HandleEvents()
 
 	return true;	// application running
 }
-void SdlWindow::AddSdlInstanceExtensions(std::vector<const char*>& extensions) const
+void SdlWindow::AddSdlInstanceExtensions(std::vector<const char*>& instanceExtensions) const
 {
 	// Get instance extensions:
 	uint32_t sdlInstanceExtensionCount = 0;
 	const char* const* sdlInstanceExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlInstanceExtensionCount);
 
 	// Insert array at the end of the vector:
-	extensions.insert(extensions.end(), sdlInstanceExtensions, sdlInstanceExtensions + sdlInstanceExtensionCount);
+	instanceExtensions.insert(instanceExtensions.end(), sdlInstanceExtensions, sdlInstanceExtensions + sdlInstanceExtensionCount);
 }
 
 // Getters:

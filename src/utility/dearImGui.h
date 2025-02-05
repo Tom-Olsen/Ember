@@ -1,12 +1,14 @@
 #ifndef __INCLUDE_GUARD_dearImGui_h__
 #define __INCLUDE_GUARD_dearImGui_h__
 #include <memory>
+#include <vector>
 #include <SDL3/SDL.h>
 #include <vulkan/vulkan.h>
 
 
 
 class VulkanContext;
+struct ImGuiIO;
 
 
 
@@ -15,10 +17,10 @@ class DearImGui
 public: // Members
 
 private: // Members
-	static bool s_isEnabled;
 	static bool s_showDemoWindow;
 	static bool s_wantCaptureKeyboard;
 	static bool s_wantCaptureMouse;
+	static ImGuiIO* s_io;
 
 public: // Methods
 	static void Init(VulkanContext* pContext);
@@ -28,6 +30,7 @@ public: // Methods
 	static void Render(VkCommandBuffer& commandBuffer);
 	static bool WantCaptureKeyboard();
 	static bool WantCaptureMouse();
+	static void AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
 
 private: // Methods
 	// Delete all constructors:
