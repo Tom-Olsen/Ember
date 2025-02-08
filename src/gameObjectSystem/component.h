@@ -4,51 +4,55 @@
 
 
 
-class GameObject;
-class Scene;
-class Transform;
-
-
-
-/// <summary>
-/// Components must be attached to GameObjects.
-/// Each component can only be attached to one GameObject.
-/// Each GameObject can have multiple components.
-/// Each GameObject can only have one component of each type.
-/// </summary>
-class Component
+namespace emberEngine
 {
-public: // Members:
-	bool isActive;
+	// Forward declarations:
+	class GameObject;
+	class Scene;
+	class Transform;
 
-protected: // Members:
-	GameObject* m_pGameObject;
-	Transform* m_pTransform;
-	Scene* m_pScene;
 
-public: // Methods:
-	Component();
-	virtual ~Component();
 
-	// Getters:
-	GameObject* const GetGameObject() const;
-	Transform* const GetTransform() const;
-	Scene* const GetScene() const;
+	/// <summary>
+	/// Components must be attached to GameObjects.
+	/// Each component can only be attached to one GameObject.
+	/// Each GameObject can have multiple components.
+	/// Each GameObject can only have one component of each type.
+	/// </summary>
+	class Component
+	{
+	public: // Members:
+		bool isActive;
 
-	// Setters:
-	void SetGameObject(GameObject* pGameObject);
-	void SetTransform(Transform* pTransform);
-	void SetScene(Scene* pScene);
+	protected: // Members:
+		GameObject* m_pGameObject;
+		Transform* m_pTransform;
+		Scene* m_pScene;
 
-	// Check if the Component and its parent GameObject is active.
-	bool IsActive();
-	virtual void Start();
-	virtual void Update();
-	virtual void LateUpdate();
+	public: // Methods:
+		Component();
+		virtual ~Component();
 
-	// Pure virtual method that must be implemented by derived classes:
-    virtual const std::string ToString() const = 0;
-};
+		// Getters:
+		GameObject* const GetGameObject() const;
+		Transform* const GetTransform() const;
+		Scene* const GetScene() const;
+
+		// Setters:
+		void SetGameObject(GameObject* pGameObject);
+		void SetTransform(Transform* pTransform);
+		void SetScene(Scene* pScene);
+
+		// Check if the Component and its parent GameObject is active.
+		bool IsActive();
+		virtual void Start();
+		virtual void Update();
+		virtual void LateUpdate();
+
+		// Pure virtual method that must be implemented by derived classes:
+		virtual const std::string ToString() const = 0;
+	};
+}
 
 
 

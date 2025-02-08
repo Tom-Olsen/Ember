@@ -7,45 +7,49 @@
 
 
 
-struct VulkanContext;
-struct VulkanQueue;
-class VmaImage;
-
-
-
-class VmaBuffer
+namespace emberEngine
 {
-private: // Members:
-	VkBuffer m_buffer;
-	VmaAllocation m_allocation;
-	std::unique_ptr<VkBufferCreateInfo> m_pBufferInfo;
-	std::unique_ptr<VmaAllocationCreateInfo> m_pAllocInfo;
-	VulkanContext* m_pContext;
+	// Forward declarations:
+	struct VulkanContext;
+	struct VulkanQueue;
+	class VmaImage;
 
-public: // Methods:
-	VmaBuffer();
-	VmaBuffer(VulkanContext* pContext, VkBufferCreateInfo* pBufferInfo, VmaAllocationCreateInfo* pAllocInfo);
-	VmaBuffer(VmaBuffer&& other) noexcept;				// move constructor
-	VmaBuffer& operator=(VmaBuffer&& other) noexcept;	// move assignment
-	~VmaBuffer();
 
-	// No copying of VmaBuffers allowed:
-	VmaBuffer(const VmaBuffer&) = delete;
-	VmaBuffer& operator=(const VmaBuffer&) = delete;
 
-	// Getters:
-	const VkBuffer& GetVkBuffer() const;
-	const VmaAllocation& GetVmaAllocation() const;
-	const VkBufferCreateInfo* const GetVkBufferCreateInfo() const;
-	const VmaAllocationCreateInfo* const GetVmaAllocationCreateInfo() const;
-	uint64_t GetSize();
+	class VmaBuffer
+	{
+	private: // Members:
+		VkBuffer m_buffer;
+		VmaAllocation m_allocation;
+		std::unique_ptr<VkBufferCreateInfo> m_pBufferInfo;
+		std::unique_ptr<VmaAllocationCreateInfo> m_pAllocInfo;
+		VulkanContext* m_pContext;
 
-	// Static methods:
-	static void CopyBufferToBuffer(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize size, const VulkanQueue& queue);
-	static void CopyBufferToImage(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount);
-	static VmaBuffer StagingBuffer(VulkanContext* pContext, uint64_t size, void* inputData);
-	static VmaBuffer StagingBuffer(VulkanContext* pContext, const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas);
-};
+	public: // Methods:
+		VmaBuffer();
+		VmaBuffer(VulkanContext* pContext, VkBufferCreateInfo* pBufferInfo, VmaAllocationCreateInfo* pAllocInfo);
+		VmaBuffer(VmaBuffer&& other) noexcept;				// move constructor
+		VmaBuffer& operator=(VmaBuffer&& other) noexcept;	// move assignment
+		~VmaBuffer();
+
+		// No copying of VmaBuffers allowed:
+		VmaBuffer(const VmaBuffer&) = delete;
+		VmaBuffer& operator=(const VmaBuffer&) = delete;
+
+		// Getters:
+		const VkBuffer& GetVkBuffer() const;
+		const VmaAllocation& GetVmaAllocation() const;
+		const VkBufferCreateInfo* const GetVkBufferCreateInfo() const;
+		const VmaAllocationCreateInfo* const GetVmaAllocationCreateInfo() const;
+		uint64_t GetSize();
+
+		// Static methods:
+		static void CopyBufferToBuffer(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize size, const VulkanQueue& queue);
+		static void CopyBufferToImage(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount);
+		static VmaBuffer StagingBuffer(VulkanContext* pContext, uint64_t size, void* inputData);
+		static VmaBuffer StagingBuffer(VulkanContext* pContext, const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas);
+	};
+}
 
 
 

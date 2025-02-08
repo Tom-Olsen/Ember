@@ -1,16 +1,19 @@
 #define SDL_MAIN_HANDLED
 #include "application.h"
 #include "emberEngine.h"
-
+using namespace emberEngine;
 
 
 // TODO now!
-// - imgui integration
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
 // - use one constants.h file both for c++ and hlsl constants that are identical, e.g. #define SHADOW_MAP_RESOLUTION 4096
 // - refactor RenderPassManager to contain hard coded getters for each RenderPass, instead of access via strings.
+// - rename shadingRenderPass etc to forwardRenderPass.
+// - SceneView gui 
+// - Ember namespace
+// - cleanup project. e.g. renderpasses & pipelines => multiple folders e.g shadow/forward/skybox/...
 
 // TODO:
 // - optimize eventsystem::AnyKey etc.
@@ -32,13 +35,11 @@
 //   and make shadowmap indexing more dynamic to work with e.g. only point lights or only spot lights.
 // - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
 // - add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
-//   remove normalization of any input vector that is namen 'normal' or 'tangent' in mathf library (same for linearAlgebra.hlsli).
+//   remove normalization of any input vector that is namen 'normal' or 'tangent' or 'direction' in mathf library (same for linearAlgebra.hlsli).
 // - Proper documentation for materialProperties, uniformBuffers, spirvReflect classes
 
 // TODO long term:
 // - dimm line between shadow cascades.
-// - snap shadow cascade positions to grid with same stepsize as shadow maps texels. This should remove/reduce shadow edge flickering on camera movement.
-//   Keyword: "shadow snapping"
 // - change image loading library, stb_image sucks.
 // - proper quaternion support
 // - ui renderpass that draws on top of everything and is not affected by the pCamera (constant view/projection matrix)
@@ -64,6 +65,7 @@
 // - Forward renderpipeline.
 // - Multi lightsoure shadow mapping (directional-, point-, spotlights).
 // - Physical based lighting (roughnessMap, normalMap, metallicity, reflectivity).
+// - Shadow cascades with shadow snapping.
 // - CubeMap (TextureCube) skybox.
 // - Automated descriptorSet system for materialProperties (see spirvReflect.h/cpp).
 // - Component € GameObject € Scene system with game update loop.
@@ -71,6 +73,7 @@
 // - EventSystem that catches SDL events and makes them visible to all GameObjects/Components.
 // - CameraController that is identical to unities editor pCamera.
 // - Own mathf library, see mathf.h/cpp.
+// - Dear ImGui integration with docking feature.
 
 
 Scene* ShadowCascadeScene()
@@ -163,9 +166,6 @@ Scene* ShadowCascadeScene()
 		pDirectionalLight->SetDistributionFactor(1.00f);
 		//pDirectionalLight->SetShadowCascadeCount(DirectionalLight::ShadowCascadeCount::one);
 		pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
-
-		//RotationController* pRotationController = new RotationController(15.0f);
-		//pGameObject->AddComponent<RotationController>(pRotationController);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -773,7 +773,7 @@ int main()
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	// Initialization:
-	Application app;
+	emberEngine::Application app;
 	Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
 	//Scene* pScene = DefaultScene();

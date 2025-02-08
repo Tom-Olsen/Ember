@@ -10,8 +10,11 @@
 
 
 // Enums: (move somewher else?)
-enum class ShadowType { hard, soft };
-enum class ProjectionType { perspective, orthographic};
+namespace emberEngine
+{
+	enum class ShadowType { hard, soft };
+	enum class ProjectionType { perspective, orthographic};
+}
 
 // Basic functionality:
 #include "eventSystem.h"
@@ -48,7 +51,6 @@ enum class ProjectionType { perspective, orthographic};
 #include "meshRenderer.h"
 #include "meshTester.h"
 #include "pointLight.h"
-#include "rotationController.h"
 #include "spinGlobal.h"
 #include "spotLight.h"
 #include "spinLocal.h"

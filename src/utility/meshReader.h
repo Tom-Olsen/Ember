@@ -4,28 +4,32 @@
 
 
 
-class Mesh;
-
-
-
-struct MeshReader
+namespace emberEngine
 {
-private:
-    static bool s_isInitialized;
-    static std::filesystem::path s_rootPath;
+    // Forward declarations:
+    class Mesh;
 
-public: // Methods:
-    static Mesh* ReadCsvFile(const std::filesystem::path& relativePath);
 
-private: // Methods
-    static void Init();
 
-    // Delete all constructors:
-    MeshReader() = delete;
-    MeshReader(const MeshReader&) = delete;
-    MeshReader& operator=(const MeshReader&) = delete;
-    ~MeshReader() = delete;
-};
+    struct MeshReader
+    {
+    private:
+        static bool s_isInitialized;
+        static std::filesystem::path s_rootPath;
+
+    public: // Methods:
+        static Mesh* ReadCsvFile(const std::filesystem::path& relativePath);
+
+    private: // Methods
+        static void Init();
+
+        // Delete all constructors:
+        MeshReader() = delete;
+        MeshReader(const MeshReader&) = delete;
+        MeshReader& operator=(const MeshReader&) = delete;
+        ~MeshReader() = delete;
+    };
+}
 
 
 

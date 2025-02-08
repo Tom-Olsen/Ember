@@ -4,28 +4,32 @@
 
 
 
-class MeshRenderer;
-
-
-
-class MeshTester : public Component
+namespace emberEngine
 {
-private: // Members:
-	std::vector<Mesh*> m_meshes;
-	MeshRenderer* m_pMeshRenderer;
-	int index;
+	// Forward declarations:
+	class MeshRenderer;
 
-public: // Methods:
-	MeshTester(MeshRenderer* pMeshRenderer);
-	~MeshTester();
 
-	void AddMesh(Mesh* pMesh);
 
-	// Overrides:
-	void Start() override;
-	void Update() override;
-	const std::string ToString() const override;
-};
+	class MeshTester : public Component
+	{
+	private: // Members:
+		std::vector<Mesh*> m_meshes;
+		MeshRenderer* m_pMeshRenderer;
+		int index;
+
+	public: // Methods:
+		MeshTester(MeshRenderer* pMeshRenderer);
+		~MeshTester();
+
+		void AddMesh(Mesh* pMesh);
+
+		// Overrides:
+		void Start() override;
+		void Update() override;
+		const std::string ToString() const override;
+	};
+}
 
 
 

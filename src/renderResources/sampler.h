@@ -5,32 +5,36 @@
 
 
 
-struct VulkanContext;
-
-
-
-class Sampler
+namespace emberEngine
 {
-private: // Members:
-	VkSampler m_sampler;
-	std::string m_name;
-	VulkanContext* m_pContext;
+	// Forward declarations:
+	struct VulkanContext;
 
-private: // Methods:
-	Sampler(VulkanContext* pContext, const std::string& name);
-public: // Methods:
-	~Sampler();
 
-	// Getters:
-	VkSampler& GetVkSampler();
-	const std::string& GetName() const;
 
-	VkPhysicalDeviceProperties GetVkPhysicalDeviceProperties() const;
+	class Sampler
+	{
+	private: // Members:
+		VkSampler m_sampler;
+		std::string m_name;
+		VulkanContext* m_pContext;
 
-	// Static specialised constructors:
-	static Sampler* ColorSampler(VulkanContext* pContext, const std::string& name);
-	static Sampler* ShadowSampler(VulkanContext* pContext, const std::string& name);
-};
+	private: // Methods:
+		Sampler(VulkanContext* pContext, const std::string& name);
+	public: // Methods:
+		~Sampler();
+
+		// Getters:
+		VkSampler& GetVkSampler();
+		const std::string& GetName() const;
+
+		VkPhysicalDeviceProperties GetVkPhysicalDeviceProperties() const;
+
+		// Static specialised constructors:
+		static Sampler* ColorSampler(VulkanContext* pContext, const std::string& name);
+		static Sampler* ShadowSampler(VulkanContext* pContext, const std::string& name);
+	};
+}
 
 
 

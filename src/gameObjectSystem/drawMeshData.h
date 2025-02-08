@@ -4,24 +4,27 @@
 
 
 
-class DrawMeshData : public Component
+namespace emberEngine
 {
-private: // Members:
-	Mesh* m_pSphereMesh;
-	Mesh* m_pArrowMesh;
-	Material* m_pMaterial;
-	Mesh* m_pMesh;
-	MaterialProperties* m_pMaterialProperties;
+	class DrawMeshData : public Component
+	{
+	private: // Members:
+		Mesh* m_pSphereMesh;
+		Mesh* m_pArrowMesh;
+		Material* m_pMaterial;
+		Mesh* m_pMesh;
+		MaterialProperties* m_pMaterialProperties;
 
-public: // Methods:
-	DrawMeshData();
-	~DrawMeshData();
+	public: // Methods:
+		DrawMeshData();
+		~DrawMeshData();
 
-	// Overrides:
-	void Start() override;
-	void LateUpdate() override;
-	const std::string ToString() const override;
-};
+		// Overrides:
+		void Start() override;
+		void LateUpdate() override;
+		const std::string ToString() const override;
+	};
+}
 
 
 

@@ -17,126 +17,129 @@
 
 
 
-// Constructor:
-Application::Application()
+namespace emberEngine
 {
-	m_pActiveScene = nullptr;
-	uint32_t framesInFlight = 2;
-	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-	Logger::Init();
-	m_pContext = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
-	m_pRenderer = std::make_unique<VulkanRenderer>(m_pContext.get());
-
-	// Init static managers:
-	mathf::Random::Init();
-	EventSystem::Init(m_pContext.get());
-	RenderPassManager::Init(m_pContext.get());
-	MaterialManager::Init(m_pContext.get());
-	TextureManager::Init(m_pContext.get());
-	SamplerManager::Init(m_pContext.get());
-	MeshManager::Init(m_pContext.get());
-	Graphics::Init();
-	DearImGui::Init(m_pContext.get());
-}
-
-
-
-// Destructor:
-Application::~Application()
-{
-	// Clear static managers:
-	DearImGui::Clear();
-	Graphics::Clear();
-	MeshManager::Clear();
-	SamplerManager::Clear();
-	TextureManager::Clear();
-	MaterialManager::Clear();
-	RenderPassManager::Clear();
-	EventSystem::Clear();
-}
-
-
-
-// Public methods:
-void Application::Run()
-{
-	Timer::Reset();
-	bool running = true;
-	Start();
-
-	while (running)
+	// Constructor:
+	Application::Application()
 	{
-		Timer::Update();
-		DearImGui::Update();
-		running = m_pContext->pWindow->HandleEvents();
+		m_pActiveScene = nullptr;
+		uint32_t framesInFlight = 2;
+		VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+		Logger::Init();
+		m_pContext = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
+		m_pRenderer = std::make_unique<VulkanRenderer>(m_pContext.get());
 
-		// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
-		VkExtent2D windowExtent = m_pContext->pWindow->GetExtent();
-		VkExtent2D surfaceExtend = m_pContext->pSurface->GetCurrentExtent();
-		if (m_pContext->pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
-		{
-			SDL_Delay(10);
-			continue;
-		}
-
-		// Game update loop:
-		Update();
-		LateUpdate();
-
-		// Render loop:
-		if (m_pRenderer->RenderFrame(m_pActiveScene))
-			m_pContext->UpdateFrameIndex();
+		// Init static managers:
+		mathf::Random::Init();
+		EventSystem::Init(m_pContext.get());
+		RenderPassManager::Init(m_pContext.get());
+		MaterialManager::Init(m_pContext.get());
+		TextureManager::Init(m_pContext.get());
+		SamplerManager::Init(m_pContext.get());
+		MeshManager::Init(m_pContext.get());
+		Graphics::Init();
+		DearImGui::Init(m_pContext.get());
 	}
-}
-void Application::SetScene(Scene* pScene)
-{
-	this->m_pActiveScene = pScene;
-}
 
 
 
-// Private methods:
-void Application::Start()
-{
-	// Start all components of all game objects:
-	for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
+	// Destructor:
+	Application::~Application()
 	{
-		if (gameObject->isActive)
+		// Clear static managers:
+		DearImGui::Clear();
+		Graphics::Clear();
+		MeshManager::Clear();
+		SamplerManager::Clear();
+		TextureManager::Clear();
+		MaterialManager::Clear();
+		RenderPassManager::Clear();
+		EventSystem::Clear();
+	}
+
+
+
+	// Public methods:
+	void Application::Run()
+	{
+		Timer::Reset();
+		bool running = true;
+		Start();
+
+		while (running)
 		{
-			for (auto& [_, component] : gameObject->GetComponents())
+			Timer::Update();
+			DearImGui::Update();
+			running = m_pContext->pWindow->HandleEvents();
+
+			// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
+			VkExtent2D windowExtent = m_pContext->pWindow->GetExtent();
+			VkExtent2D surfaceExtend = m_pContext->pSurface->GetCurrentExtent();
+			if (m_pContext->pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
 			{
-				if (component->isActive)
-					component->Start();
+				SDL_Delay(10);
+				continue;
+			}
+
+			// Game update loop:
+			Update();
+			LateUpdate();
+
+			// Render loop:
+			if (m_pRenderer->RenderFrame(m_pActiveScene))
+				m_pContext->UpdateFrameIndex();
+		}
+	}
+	void Application::SetScene(Scene* pScene)
+	{
+		this->m_pActiveScene = pScene;
+	}
+
+
+
+	// Private methods:
+	void Application::Start()
+	{
+		// Start all components of all game objects:
+		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
+		{
+			if (gameObject->isActive)
+			{
+				for (auto& [_, component] : gameObject->GetComponents())
+				{
+					if (component->isActive)
+						component->Start();
+				}
 			}
 		}
 	}
-}
-void Application::Update()
-{
-	// Update all components of all game objects:
-	for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
+	void Application::Update()
 	{
-		if (gameObject->isActive)
+		// Update all components of all game objects:
+		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
 		{
-			for (auto& [_, component] : gameObject->GetComponents())
+			if (gameObject->isActive)
 			{
-				if (component->isActive)
-					component->Update();
+				for (auto& [_, component] : gameObject->GetComponents())
+				{
+					if (component->isActive)
+						component->Update();
+				}
 			}
 		}
 	}
-}
-void Application::LateUpdate()
-{
-	// Late update all components of all game objects:
-	for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
+	void Application::LateUpdate()
 	{
-		if (gameObject->isActive)
+		// Late update all components of all game objects:
+		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
 		{
-			for (auto& [_, component] : gameObject->GetComponents())
+			if (gameObject->isActive)
 			{
-				if (component->isActive)
-					component->LateUpdate();
+				for (auto& [_, component] : gameObject->GetComponents())
+				{
+					if (component->isActive)
+						component->LateUpdate();
+				}
 			}
 		}
 	}

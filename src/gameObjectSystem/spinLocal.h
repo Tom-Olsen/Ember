@@ -4,21 +4,24 @@
 
 
 
-class SpinLocal : public Component
+namespace emberEngine
 {
-private: // Members:
-	float m_speed;
+	class SpinLocal : public Component
+	{
+	private: // Members:
+		float m_speed;
 
-public: // Methods:
-	SpinLocal(float speed = 45.0f);
-	~SpinLocal();
-	void SetSpeed(float speed);
-	float GetSpeed() const;
+	public: // Methods:
+		SpinLocal(float speed = 45.0f);
+		~SpinLocal();
+		void SetSpeed(float speed);
+		float GetSpeed() const;
 
-	// Overrides:
-	void Update() override;
-	const std::string ToString() const override;
-};
+		// Overrides:
+		void Update() override;
+		const std::string ToString() const override;
+	};
+}
 
 
 

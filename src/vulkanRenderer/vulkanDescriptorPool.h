@@ -4,21 +4,25 @@
 
 
 
-class VulkanLogicalDevice;
-
-
-
-class VulkanDescriptorPool
+namespace emberEngine
 {
-private: // Members:
-	VkDescriptorPool m_descriptorPool;
-	VulkanLogicalDevice* m_pLogicalDevice;
+	// Forward declarations:
+	class VulkanLogicalDevice;
 
-public: // Methods:
-	VulkanDescriptorPool(VulkanLogicalDevice* pLogicalDevice);
-	~VulkanDescriptorPool();
-	const VkDescriptorPool& GetVkDescriptorPool() const;
-};
+
+
+	class VulkanDescriptorPool
+	{
+	private: // Members:
+		VkDescriptorPool m_descriptorPool;
+		VulkanLogicalDevice* m_pLogicalDevice;
+
+	public: // Methods:
+		VulkanDescriptorPool(VulkanLogicalDevice* pLogicalDevice);
+		~VulkanDescriptorPool();
+		const VkDescriptorPool& GetVkDescriptorPool() const;
+	};
+}
 
 
 

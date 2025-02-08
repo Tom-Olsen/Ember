@@ -5,20 +5,23 @@
 
 
 
-/// <summary>
-/// Size limit for push constants is 128 bytes.
-/// Only used for small data that is updated every frame.
-/// </summary>
-struct ShadowPushConstant
+namespace emberEngine
 {
-public: // Members:
-	alignas(4) int shadowMapIndex;
-	alignas(16) Float4x4 localToClipMatrix;
+	/// <summary>
+	/// Size limit for push constants is 128 bytes.
+	/// Only used for small data that is updated every frame.
+	/// </summary>
+	struct ShadowPushConstant
+	{
+	public: // Members:
+		alignas(4) int shadowMapIndex;
+		alignas(16) Float4x4 localToClipMatrix;
 
-public: // Methods:
-	ShadowPushConstant(int shadowMapIndex, const Float4x4& localToClipMatrix);
-	std::string ToString();
-};
+	public: // Methods:
+		ShadowPushConstant(int shadowMapIndex, const Float4x4& localToClipMatrix);
+		std::string ToString();
+	};
+}
 
 
 

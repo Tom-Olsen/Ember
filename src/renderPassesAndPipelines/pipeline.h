@@ -5,30 +5,34 @@
 
 
 
-struct VulkanContext;
-
-
-
-/// <summary>
-/// Polymorphic parent class for all pipelines.
-/// </summary>
-class Pipeline
+namespace emberEngine
 {
-protected: // Members:
-	VkDescriptorSetLayout m_descriptorSetLayout;
-	VkPipelineLayout m_pipelineLayout;
-	VkPipeline m_pipeline;
-	VulkanContext* m_pContext;
+	// Forward declarations:
+	struct VulkanContext;
 
-public: // Methods:
-	virtual ~Pipeline();
-	const VkDescriptorSetLayout& GetVkDescriptorSetLayout() const;
-	const VkPipelineLayout& GetVkPipelineLayout() const;
-	const VkPipeline& GetVkPipeline() const;
 
-protected: // Methods:
-	VkShaderModule CreateShaderModule(const std::vector<char>& code);
-};
+
+	/// <summary>
+	/// Polymorphic parent class for all pipelines.
+	/// </summary>
+	class Pipeline
+	{
+	protected: // Members:
+		VkDescriptorSetLayout m_descriptorSetLayout;
+		VkPipelineLayout m_pipelineLayout;
+		VkPipeline m_pipeline;
+		VulkanContext* m_pContext;
+
+	public: // Methods:
+		virtual ~Pipeline();
+		const VkDescriptorSetLayout& GetVkDescriptorSetLayout() const;
+		const VkPipelineLayout& GetVkPipelineLayout() const;
+		const VkPipeline& GetVkPipeline() const;
+
+	protected: // Methods:
+		VkShaderModule CreateShaderModule(const std::vector<char>& code);
+	};
+}
 
 
 

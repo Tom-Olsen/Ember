@@ -6,27 +6,31 @@
 
 
 
-struct VertexInputDescriptions;
-struct VulkanContext;
-
-
-
-/// <summary>
-/// Pipeline associated with the ShadowRenderPass materials.
-/// </summary>
-class ShadowPipeline : public Pipeline
+namespace emberEngine
 {
-public: // Methods:
-	ShadowPipeline(VulkanContext* pContext,
-		const std::vector<char>& vertexCode,
-		const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
-		const VertexInputDescriptions* const pVertexInputDescriptions);
-	~ShadowPipeline();
+	// Forward declarations:
+	struct VertexInputDescriptions;
+	struct VulkanContext;
 
-private: // Methods:
-	void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings);
-	void CreatePipeline(const VkShaderModule& vertexShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions);
-};
+
+
+	/// <summary>
+	/// Pipeline associated with the ShadowRenderPass materials.
+	/// </summary>
+	class ShadowPipeline : public Pipeline
+	{
+	public: // Methods:
+		ShadowPipeline(VulkanContext* pContext,
+			const std::vector<char>& vertexCode,
+			const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
+			const VertexInputDescriptions* const pVertexInputDescriptions);
+		~ShadowPipeline();
+
+	private: // Methods:
+		void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings);
+		void CreatePipeline(const VkShaderModule& vertexShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions);
+	};
+}
 
 
 

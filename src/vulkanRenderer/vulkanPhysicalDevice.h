@@ -4,35 +4,39 @@
 
 
 
-class VulkanInstance;
-
-
-
-class VulkanPhysicalDevice
+namespace emberEngine
 {
-private: // Members:
-	VkPhysicalDevice m_physicalDevice;
-	VkSampleCountFlagBits m_maxMsaaSamples;
-	VkBool32 m_supportsDepthClamp = false;
-	VkBool32 m_supportsDepthBias = false;
-	VkBool32 m_supportsMultiViewport = false;
+	// Forward declarations:
+	class VulkanInstance;
 
-public: // Methods:
-	VulkanPhysicalDevice(VulkanInstance* pInstance);
-	~VulkanPhysicalDevice();
 
-	const VkPhysicalDevice& GetVkPhysicalDevice() const;
-	VkSampleCountFlagBits GetMaxMsaaSamples() const;
-	VkBool32 SupportsDepthClamp() const;
-	VkBool32 SupportsDepthBias() const;
-	VkBool32 SupportsMultiViewport() const;
 
-private: // Methods:
-	int DeviceScore(VkPhysicalDevice device);
-	VkBool32 HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const;
-	VkBool32 HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const;
-	VkSampleCountFlagBits MaxUsableMsaaSampleCount() const;
-};
+	class VulkanPhysicalDevice
+	{
+	private: // Members:
+		VkPhysicalDevice m_physicalDevice;
+		VkSampleCountFlagBits m_maxMsaaSamples;
+		VkBool32 m_supportsDepthClamp = false;
+		VkBool32 m_supportsDepthBias = false;
+		VkBool32 m_supportsMultiViewport = false;
+
+	public: // Methods:
+		VulkanPhysicalDevice(VulkanInstance* pInstance);
+		~VulkanPhysicalDevice();
+
+		const VkPhysicalDevice& GetVkPhysicalDevice() const;
+		VkSampleCountFlagBits GetMaxMsaaSamples() const;
+		VkBool32 SupportsDepthClamp() const;
+		VkBool32 SupportsDepthBias() const;
+		VkBool32 SupportsMultiViewport() const;
+
+	private: // Methods:
+		int DeviceScore(VkPhysicalDevice device);
+		VkBool32 HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const;
+		VkBool32 HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const;
+		VkSampleCountFlagBits MaxUsableMsaaSampleCount() const;
+	};
+}
 
 
 

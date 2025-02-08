@@ -5,25 +5,29 @@
 
 
 
-struct VulkanContext;
-
-
-
-/// <summary>
-/// Polymorphic parent class for all renderPasses.
-/// </summary>
-class RenderPass
+namespace emberEngine
 {
-protected: // Members:
-	VkRenderPass m_renderPass;
-	std::vector<VkFramebuffer> m_framebuffers;
-	VulkanContext* m_pContext;
+	// Forward declarations:
+	struct VulkanContext;
+	
 
-public: // Methods:
-	virtual ~RenderPass();
-	const VkRenderPass& GetVkRenderPass() const;
-	const std::vector<VkFramebuffer>& GetFramebuffers() const;
-};
+
+	/// <summary>
+	/// Polymorphic parent class for all renderPasses.
+	/// </summary>
+	class RenderPass
+	{
+	protected: // Members:
+		VkRenderPass m_renderPass;
+		std::vector<VkFramebuffer> m_framebuffers;
+		VulkanContext* m_pContext;
+
+	public: // Methods:
+		virtual ~RenderPass();
+		const VkRenderPass& GetVkRenderPass() const;
+		const std::vector<VkFramebuffer>& GetFramebuffers() const;
+	};
+}
 
 
 

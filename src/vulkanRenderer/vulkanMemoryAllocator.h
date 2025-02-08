@@ -4,22 +4,26 @@
 
 
 
-class VulkanInstance;
-class VulkanLogicalDevice;
-class VulkanPhysicalDevice;
-
-
-
-class VulkanMemoryAllocator
+namespace emberEngine
 {
-private: // Members:
-	VmaAllocator m_pAllocator;
+	// Forward declarations:
+	class VulkanInstance;
+	class VulkanLogicalDevice;
+	class VulkanPhysicalDevice;
 
-public: // Methods:
-	VulkanMemoryAllocator(VulkanInstance* pInstance, VulkanLogicalDevice* pLogicalDevice, VulkanPhysicalDevice* pPhysicalDevice);
-	~VulkanMemoryAllocator();
-	const VmaAllocator& GetVmaAllocator() const;
-};
+
+
+	class VulkanMemoryAllocator
+	{
+	private: // Members:
+		VmaAllocator m_pAllocator;
+
+	public: // Methods:
+		VulkanMemoryAllocator(VulkanInstance* pInstance, VulkanLogicalDevice* pLogicalDevice, VulkanPhysicalDevice* pPhysicalDevice);
+		~VulkanMemoryAllocator();
+		const VmaAllocator& GetVmaAllocator() const;
+	};
+}
 
 
 

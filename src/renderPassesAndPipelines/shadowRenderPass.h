@@ -6,37 +6,41 @@
 
 
 
-class Texture2d;
-class VmaImage;
-struct VulkanContext;
-
-
-
-/// <summary>
-/// Shadow render pass.
-/// Executed once for every light source.
-/// </summary>
-class ShadowRenderPass : public RenderPass
+namespace emberEngine
 {
-private: // Members:
-	std::unique_ptr<Texture2d> m_shadowMaps;
-	VkFormat m_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
+	// Forward declarations:
+	class Texture2d;
+	class VmaImage;
+	struct VulkanContext;
 
-public: // Members:
-	static uint32_t s_shadowMapWidth;
-	static uint32_t s_shadowMapHeight;
-	static uint32_t s_layerCount;
 
-public: // Methods:
-	ShadowRenderPass(VulkanContext* pContext);
-	~ShadowRenderPass();
-	Texture2d* const GetShadowMaps() const;
 
-private: // Methods:
-	void CreateShadowMapTexture();
-	void CreateRenderpass();
-	void CreateFramebuffers();
-};
+	/// <summary>
+	/// Shadow render pass.
+	/// Executed once for every light source.
+	/// </summary>
+	class ShadowRenderPass : public RenderPass
+	{
+	private: // Members:
+		std::unique_ptr<Texture2d> m_shadowMaps;
+		VkFormat m_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
+
+	public: // Members:
+		static uint32_t s_shadowMapWidth;
+		static uint32_t s_shadowMapHeight;
+		static uint32_t s_layerCount;
+
+	public: // Methods:
+		ShadowRenderPass(VulkanContext* pContext);
+		~ShadowRenderPass();
+		Texture2d* const GetShadowMaps() const;
+
+	private: // Methods:
+		void CreateShadowMapTexture();
+		void CreateRenderpass();
+		void CreateFramebuffers();
+	};
+}
 
 
 

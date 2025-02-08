@@ -7,39 +7,49 @@
 
 
 
-class VulkanContext;
+// Forward declarations:
 struct ImGuiIO;
 
 
 
-class DearImGui
+namespace emberEngine
 {
-public: // Members
+	// Forward declarations:
+	class VulkanContext;
 
-private: // Members
-	static bool s_showDemoWindow;
-	static bool s_wantCaptureKeyboard;
-	static bool s_wantCaptureMouse;
-	static ImGuiIO* s_io;
 
-public: // Methods
-	static void Init(VulkanContext* pContext);
-	static void Clear();
-	static void Update();
-	static void ProcessEvent(const SDL_Event& event);
-	static void Render(VkCommandBuffer& commandBuffer);
-	static bool WantCaptureKeyboard();
-	static bool WantCaptureMouse();
-	static void AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
 
-private: // Methods
-	// Delete all constructors:
-	DearImGui() = delete;
-	DearImGui(const DearImGui&) = delete;
-	DearImGui& operator=(const DearImGui&) = delete;
-	~DearImGui() = delete;
-};
+	class DearImGui
+	{
+	public: // Members
 
+	private: // Members
+		static bool s_showDemoWindow;
+		static bool s_wantCaptureKeyboard;
+		static bool s_wantCaptureMouse;
+		static ImGuiIO* s_io;
+
+	public: // Methods
+		static void Init(VulkanContext* pContext);
+		static void Clear();
+		static void Update();
+		static void ProcessEvent(const SDL_Event& event);
+		static void Render(VkCommandBuffer& commandBuffer);
+
+		// Getters:
+		static bool WantCaptureKeyboard();
+		static bool WantCaptureMouse();
+
+		static void AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
+
+	private: // Methods
+		// Delete all constructors:
+		DearImGui() = delete;
+		DearImGui(const DearImGui&) = delete;
+		DearImGui& operator=(const DearImGui&) = delete;
+		~DearImGui() = delete;
+	};
+}
 
 
 

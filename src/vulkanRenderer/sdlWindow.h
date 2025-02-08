@@ -6,31 +6,34 @@
 
 
 
-class SdlWindow
+namespace emberEngine
 {
-private: // Members:
-	SDL_Window* m_pWindow;
-	bool m_isMinimized = false;
-	bool m_framebufferResized = false;
+	class SdlWindow
+	{
+	private: // Members:
+		SDL_Window* m_pWindow;
+		bool m_isMinimized = false;
+		bool m_framebufferResized = false;
 
-public: // Methods:
-	SdlWindow(uint16_t width = 1280, uint16_t height = 720);
-	~SdlWindow();
+	public: // Methods:
+		SdlWindow(uint16_t width = 1280, uint16_t height = 720);
+		~SdlWindow();
 
-	bool HandleEvents();
-	void AddSdlInstanceExtensions(std::vector<const char*>& instanceExtensions) const;
+		bool HandleEvents();
+		void AddSdlInstanceExtensions(std::vector<const char*>& instanceExtensions) const;
 
-	// Getters:
-	SDL_Window* const GetSDL_Window() const;
-	bool GetIsMinimized() const;
-	bool GetFramebufferResized() const;
-	int GetWidth() const;
-	int GetHeight() const;
-	VkExtent2D GetExtent() const;
+		// Getters:
+		SDL_Window* const GetSDL_Window() const;
+		bool GetIsMinimized() const;
+		bool GetFramebufferResized() const;
+		int GetWidth() const;
+		int GetHeight() const;
+		VkExtent2D GetExtent() const;
 
-	// Setters:
-	void SetFramebufferResized(bool value);
-};
+		// Setters:
+		void SetFramebufferResized(bool value);
+	};
+}
 
 
 

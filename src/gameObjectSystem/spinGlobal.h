@@ -4,21 +4,24 @@
 
 
 
-class SpinGlobal : public Component
+namespace emberEngine
 {
-private: // Members:
-	Float3 m_position;
-	Float3 m_eulerDegreesPerSecond;
-	Uint3 m_rotationOrder;
+	class SpinGlobal : public Component
+	{
+	private: // Members:
+		Float3 m_position;
+		Float3 m_eulerDegreesPerSecond;
+		Uint3 m_rotationOrder;
 
-public: // Methods:
-	SpinGlobal(Float3 position, Float3 eulerDegreesPerSecond = Float3(), Uint3 rotationOrder = Uint3(1, 0, 2));
-	~SpinGlobal();
+	public: // Methods:
+		SpinGlobal(Float3 position, Float3 eulerDegreesPerSecond = Float3(), Uint3 rotationOrder = Uint3(1, 0, 2));
+		~SpinGlobal();
 
-	// Overrides:
-	void Update() override;
-	const std::string ToString() const override;
-};
+		// Overrides:
+		void Update() override;
+		const std::string ToString() const override;
+	};
+}
 
 
 

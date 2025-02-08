@@ -5,19 +5,22 @@
 
 
 
-class VulkanInstance
+namespace emberEngine
 {
-private: // Members:
-	VkInstance m_instance;
-	VkDebugUtilsMessengerEXT m_debugMessenger;
+	class VulkanInstance
+	{
+	private: // Members:
+		VkInstance m_instance;
+		VkDebugUtilsMessengerEXT m_debugMessenger;
 
-public: // Methods:
-	VulkanInstance(std::vector<const char*> instanceExtensions);
-	~VulkanInstance();
+	public: // Methods:
+		VulkanInstance(std::vector<const char*> instanceExtensions);
+		~VulkanInstance();
 
-	const VkInstance& GetVkInstance() const;
-	std::vector<const char*> AvailableInstanceExtensions() const;
-};
+		const VkInstance& GetVkInstance() const;
+		std::vector<const char*> AvailableInstanceExtensions() const;
+	};
+}
 
 
 

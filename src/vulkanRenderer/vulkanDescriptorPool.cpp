@@ -4,37 +4,40 @@
 
 
 
-// Constructor/Destructor:
-VulkanDescriptorPool::VulkanDescriptorPool(VulkanLogicalDevice* pLogicalDevice)
+namespace emberEngine
 {
-	m_pLogicalDevice = pLogicalDevice;
-
-	uint32_t descriptorCount = 1000;	// maximum number of descriptor of each type in the associated pool
-	std::array<VkDescriptorPoolSize, 4> poolSizes
+	// Constructor/Destructor:
+	VulkanDescriptorPool::VulkanDescriptorPool(VulkanLogicalDevice* pLogicalDevice)
 	{
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptorCount },
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, descriptorCount },
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER, descriptorCount },
-		VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorCount }
-		// Add more descriptor types as needed
-	};
+		m_pLogicalDevice = pLogicalDevice;
 
-	VkDescriptorPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
-	poolInfo.maxSets = 1000 * poolSizes.size();
-	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes = poolSizes.data();
+		uint32_t descriptorCount = 1000;	// maximum number of descriptor of each type in the associated pool
+		std::array<VkDescriptorPoolSize, 4> poolSizes
+		{
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptorCount },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, descriptorCount },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER, descriptorCount },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorCount }
+			// Add more descriptor types as needed
+		};
 
-	VKA(vkCreateDescriptorPool(m_pLogicalDevice->GetVkDevice(), &poolInfo, nullptr, &m_descriptorPool));
-}
-VulkanDescriptorPool::~VulkanDescriptorPool()
-{
-	vkDestroyDescriptorPool(m_pLogicalDevice->GetVkDevice(), m_descriptorPool, nullptr);
-}
+		VkDescriptorPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+		poolInfo.maxSets = 1000 * poolSizes.size();
+		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		poolInfo.pPoolSizes = poolSizes.data();
+
+		VKA(vkCreateDescriptorPool(m_pLogicalDevice->GetVkDevice(), &poolInfo, nullptr, &m_descriptorPool));
+	}
+	VulkanDescriptorPool::~VulkanDescriptorPool()
+	{
+		vkDestroyDescriptorPool(m_pLogicalDevice->GetVkDevice(), m_descriptorPool, nullptr);
+	}
 
 
 
-// Public methods:
-const VkDescriptorPool& VulkanDescriptorPool::GetVkDescriptorPool() const
-{
-	return m_descriptorPool;
+	// Public methods:
+	const VkDescriptorPool& VulkanDescriptorPool::GetVkDescriptorPool() const
+	{
+		return m_descriptorPool;
+	}
 }
