@@ -4,73 +4,77 @@
 
 
 
-struct Int2;
-
-
-
-struct Int3
+namespace emberEngine
 {
-public:
-	// Members:
-	int x, y, z;
+	// Forward declerations:
+	struct Int2;
 
-	// Constructors:
-	Int3();
-	Int3(int xyz);
-	Int3(int x, int y);
-	Int3(int x, int y, int z);
-	Int3(const Int2& xy);
-	Int3(const Int2& xy, int z);
-	Int3(const Int3& xyz);
 
-	// Math operations:
 
-	// Static math operations:
+	struct Int3
+	{
+	public:
+		// Members:
+		int x, y, z;
 
-	// Access:
-	int& operator[](int index);
-	int operator[](int index) const;
+		// Constructors:
+		Int3();
+		Int3(int xyz);
+		Int3(int x, int y);
+		Int3(int x, int y, int z);
+		Int3(const Int2& xy);
+		Int3(const Int2& xy, int z);
+		Int3(const Int3& xyz);
 
-	// Assignment:
-	Int3& operator=(const Int3& other);
-	Int3& operator=(Int3&& other) noexcept;
+		// Math operations:
 
-	// Addition:
-	Int3 operator+(const Int3& other) const;
-	Int3& operator+=(const Int3& other);
+		// Static math operations:
 
-	// Substraction:
-	Int3 operator-(const Int3& other) const;
-	Int3& operator-=(const Int3& other);
-	Int3 operator-() const;
+		// Access:
+		int& operator[](int index);
+		int operator[](int index) const;
 
-	// Multiplication:
-	Int3 operator*(const Int3& other) const;
-	Int3& operator*=(const Int3& other);
-	Int3 operator*(int scalar) const;
-	Int3& operator*=(int scalar);
+		// Assignment:
+		Int3& operator=(const Int3& other);
+		Int3& operator=(Int3&& other) noexcept;
 
-	// Comparison:
-	bool operator==(const Int3& other) const;
-	bool operator!=(const Int3& other) const;
+		// Addition:
+		Int3 operator+(const Int3& other) const;
+		Int3& operator+=(const Int3& other);
 
-	// Friend functions:
-	friend Int3 operator*(int a, const Int3& b);
+		// Substraction:
+		Int3 operator-(const Int3& other) const;
+		Int3& operator-=(const Int3& other);
+		Int3 operator-() const;
 
-	// Logging:
-	std::string ToString() const;
-	friend std::ostream& operator<<(std::ostream& os, const Int3& value);
+		// Multiplication:
+		Int3 operator*(const Int3& other) const;
+		Int3& operator*=(const Int3& other);
+		Int3 operator*(int scalar) const;
+		Int3& operator*=(int scalar);
 
-	// Static members:
-	static Int3 zero;
-	static Int3 one;
-	static Int3 right;		// +x = ( 1, 0, 0).
-	static Int3 left;		// -x = (-1, 0, 0).
-	static Int3 up;			// +y = ( 0, 1, 0).
-	static Int3 down;		// -y = ( 0,-1, 0).
-	static Int3 forward;	// +z = ( 0, 0, 1).
-	static Int3 backward;	// -z = ( 0, 0,-1).
-};
+		// Comparison:
+		bool operator==(const Int3& other) const;
+		bool operator!=(const Int3& other) const;
+
+		// Friend functions:
+		friend Int3 operator*(int a, const Int3& b);
+
+		// Logging:
+		std::string ToString() const;
+		friend std::ostream& operator<<(std::ostream& os, const Int3& value);
+
+		// Static members:
+		static Int3 zero;
+		static Int3 one;
+		static Int3 right;		// +x = ( 1, 0, 0).
+		static Int3 left;		// -x = (-1, 0, 0).
+		static Int3 up;			// +y = ( 0, 1, 0).
+		static Int3 down;		// -y = ( 0,-1, 0).
+		static Int3 forward;	// +z = ( 0, 0, 1).
+		static Int3 backward;	// -z = ( 0, 0,-1).
+	};
+}
 
 
 

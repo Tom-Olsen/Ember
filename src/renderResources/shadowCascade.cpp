@@ -1,4 +1,4 @@
-#include "shadowCascade.h"
+﻿#include "shadowCascade.h"
 #include "camera.h"
 #include "emberEngine.h"
 
@@ -127,7 +127,7 @@ namespace emberEngine
 		}
 
 		// Camera sub frustum in camera space:
-		// nearDepth, farDepth � [0,1] are the percentile splits of the camera frustum.
+		// nearDepth, farDepth € [0,1] are the percentile splits of the camera frustum.
 		m_subFrustum_CameraLocal[0] = frustum_CameraLocal[0] + nearDepth * (frustum_CameraLocal[1] - frustum_CameraLocal[0]);
 		m_subFrustum_CameraLocal[1] = frustum_CameraLocal[0] + farDepth * (frustum_CameraLocal[1] - frustum_CameraLocal[0]);
 		m_subFrustum_CameraLocal[2] = frustum_CameraLocal[2] + nearDepth * (frustum_CameraLocal[3] - frustum_CameraLocal[2]);

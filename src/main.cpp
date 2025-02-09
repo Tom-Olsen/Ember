@@ -1,4 +1,4 @@
-#define SDL_MAIN_HANDLED
+ï»¿#define SDL_MAIN_HANDLED
 #include "application.h"
 #include "emberEngine.h"
 using namespace emberEngine;
@@ -29,7 +29,7 @@ using namespace emberEngine;
 //   that is bound to a single descriptorSet that is bound to all draw calls that need that data.
 //   => make this descriptorset a "global" object in the materialProperties class.
 // - add geometry shader stage => wireframe rendering
-// - gameobject parent system (GameObject € GameObject => transform hierarchy)
+// - gameobject parent system (GameObject â‚¬ GameObject => transform hierarchy)
 // - GameObject::Start/OnDestroy/OnCreate/OnEnable/OnDisable etc. methods
 // - in macros.h reduce MAX_D_LIGHTS, MAX_S_LIGHTS, MAX_P_LIGHTS to a single MAX_SHADOW_MAPS
 //   and make shadowmap indexing more dynamic to work with e.g. only point lights or only spot lights.
@@ -68,7 +68,7 @@ using namespace emberEngine;
 // - Shadow cascades with shadow snapping.
 // - CubeMap (TextureCube) skybox.
 // - Automated descriptorSet system for materialProperties (see spirvReflect.h/cpp).
-// - Component € GameObject € Scene system with game update loop.
+// - Component â‚¬ GameObject â‚¬ Scene system with game update loop.
 // - Graphics::Draw(...) allows for drawCall injection into render pipeline from GameObject Components.
 // - EventSystem that catches SDL events and makes them visible to all GameObjects/Components.
 // - CameraController that is identical to unities editor pCamera.

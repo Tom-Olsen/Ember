@@ -34,6 +34,7 @@ namespace emberEngine
 		s_io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		s_io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
 		s_io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+		s_io->FontGlobalScale = 2.0f;
 
 		ImGui::StyleColorsDark();
 		ImGui_ImplSDL3_InitForVulkan(pContext->GetSDL_Window());
@@ -53,7 +54,6 @@ namespace emberEngine
 
 		// Upload fonts:
 		ImGui_ImplVulkan_CreateFontsTexture();
-
 	}
 	void DearImGui::Clear()
 	{

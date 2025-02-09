@@ -1,4 +1,4 @@
-#ifndef __INCLUDE_GUARD_directionalLight_h__
+﻿#ifndef __INCLUDE_GUARD_directionalLight_h__
 #define __INCLUDE_GUARD_directionalLight_h__
 #include "emberEngine.h"
 
@@ -29,7 +29,7 @@ namespace emberEngine
 		Camera* m_pActiveCamera;
 		float m_distributionFactor; // 0 = linear, 1 = logarithmic
 		ShadowCascadeCount m_shadowCascadeCount;
-		float m_shadowCascadeSplits[5];			// Percentile splits for each shadow cascade � [0,1].
+		float m_shadowCascadeSplits[5];			// Percentile splits for each shadow cascade € [0,1].
 
 		// Visualization:
 		bool m_drawFrustum;
