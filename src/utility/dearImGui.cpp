@@ -7,9 +7,6 @@
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 
-// remove this:
-#include "sceneView.h"
-
 
 
 namespace emberEngine
@@ -76,13 +73,9 @@ namespace emberEngine
 		if (s_showDemoWindow)
 			ImGui::ShowDemoWindow(&s_showDemoWindow);
 
-		emberEditor::SceneView sceneView;
-		bool show = true;
-		sceneView.DrawWindow(&show);
-
 		ImGui::EndFrame();
 
-		// Update additional Platform Windows (needed for docking feature)
+		// Update additional platform windows:
 		if (s_io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 			ImGui::UpdatePlatformWindows();
 	}
@@ -101,7 +94,7 @@ namespace emberEngine
 		ImDrawData* drawData = ImGui::GetDrawData();
 		ImGui_ImplVulkan_RenderDrawData(drawData, commandBuffer);
 
-		// Render additional Platform Windows (needed for docking feature)
+		// Render additional platform windows:
 		if (s_io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 			ImGui::RenderPlatformWindowsDefault();
 	}

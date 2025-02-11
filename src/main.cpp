@@ -5,6 +5,7 @@ using namespace emberEngine;
 
 
 // TODO now!
+// - compute shaders!
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
@@ -16,6 +17,7 @@ using namespace emberEngine;
 // - cleanup project. e.g. renderpasses & pipelines => multiple folders e.g shadow/forward/skybox/...
 
 // TODO:
+// - render engine into texture instead of directly to the swapchain => post processing effects + ImGui docking support
 // - optimize eventsystem::AnyKey etc.
 // - Replace the structs Directional/Spot/Point-LightData in shadowMapping.hlsli with a single LightData struct.
 //   This will allor me to utilize evry shadow mapping layer for any type of lightsource.
