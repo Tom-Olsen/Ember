@@ -1,7 +1,7 @@
 #include "graphics.h"
 #include "material.h"
 #include "materialManager.h"
-#include "materialProperties.h"
+#include "shaderProperties.h"
 #include "mesh.h"
 #include "meshManager.h"
 #include "meshRenderer.h"
@@ -66,20 +66,20 @@ namespace emberEngine
 
 	// Public methods:
 	// Draw mesh:
-	MaterialProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, float scale, bool receiveShadows, bool castShadows)
+	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, float scale, bool receiveShadows, bool castShadows)
 	{
 		return DrawMesh(pMesh, pMaterial, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
 	}
-	MaterialProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, Float3 scale, bool receiveShadows, bool castShadows)
+	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, Float3 scale, bool receiveShadows, bool castShadows)
 	{
 		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 		return DrawMesh(pMesh, pMaterial, localToWorldMatrix, receiveShadows, castShadows);
 	}
-	MaterialProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows, bool castShadows)
+	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (!pMesh)
 		{
-			LOG_ERROR("Graphics::Draw() failed. pMesh is nullptr.");
+			LOG_ERROR("Graphics::Draw(...) failed. pMesh is nullptr.");
 			return nullptr;
 		}
 
@@ -94,19 +94,19 @@ namespace emberEngine
 		pMeshRenderer->SetReceiveShadows(receiveShadows);
 		pMeshRenderer->GetTransform()->SetLocalToWorldMatrix(localToWorldMatrix);
 
-		// By returning the meshRenderers materialProperties, we allow user to change the material properties of this draw call:
-		MaterialProperties* pMaterialProperties = s_meshRenderers[s_drawIndex]->GetMaterialProperties();
+		// By returning the meshRenderers shaderProperties, we allow user to change the shader properties of this draw call:
+		ShaderProperties* pShaderProperties = s_meshRenderers[s_drawIndex]->GetShaderProperties();
 		s_drawIndex++;
-		return pMaterialProperties;
+		return pShaderProperties;
 	}
 
 	// Draw line segment:
 	void Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Float4 color, bool receiveShadows, bool castShadows)
 	{
-		MaterialProperties* pMaterialProperties = DrawLineSegment(start, end, width, s_pSimpleUnlit, receiveShadows, castShadows);
-		pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", color);
+		ShaderProperties* pShaderProperties = DrawLineSegment(start, end, width, s_pSimpleUnlit, receiveShadows, castShadows);
+		pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 	}
-	MaterialProperties* Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows, bool castShadows)
+	ShaderProperties* Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows, bool castShadows)
 	{
 		Float3 direction = end - start;
 		float length = direction.Length();
@@ -119,14 +119,14 @@ namespace emberEngine
 	// Speciaized draw calls:
 	void Graphics::DrawSphere(Float3 position, float radius, Float4 color, bool receiveShadows, bool castShadows)
 	{
-		MaterialProperties* pMaterialProperties = DrawMesh(s_pSphereMesh, s_pSimpleUnlit, position, Float3x3::identity, Float3(radius), receiveShadows, castShadows);
-		pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", color);
+		ShaderProperties* pShaderProperties = DrawMesh(s_pSphereMesh, s_pSimpleUnlit, position, Float3x3::identity, Float3(radius), receiveShadows, castShadows);
+		pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 	}
 	void Graphics::DrawArrow(Float3 position, Float3 direction, float size, Float4 color, bool receiveShadows, bool castShadows)
 	{
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
-		MaterialProperties* pMaterialProperties = DrawMesh(s_pArrowMesh, s_pSimpleUnlit, position, rotationMatrix, Float3(size), receiveShadows, castShadows);
-		pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", color);
+		ShaderProperties* pShaderProperties = DrawMesh(s_pArrowMesh, s_pSimpleUnlit, position, rotationMatrix, Float3(size), receiveShadows, castShadows);
+		pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 	}
 	void Graphics::DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Float4& color, bool receiveShadows, bool castShadows)
 	{
@@ -161,8 +161,8 @@ namespace emberEngine
 		// Draw corner points:
 		for (uint32_t i = 0; i < 8; i++)
 		{
-			MaterialProperties* pMaterialProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlit, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::gray);
+			ShaderProperties* pShaderProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlit, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+			pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::gray);
 		}
 
 		// Draw horizontal lines:
@@ -188,8 +188,8 @@ namespace emberEngine
 		// Draw corner points:
 		for (uint32_t i = 0; i < 8; i++)
 		{
-			MaterialProperties* pMaterialProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlit, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
-			pMaterialProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
+			ShaderProperties* pShaderProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlit, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+			pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
 		}
 
 		// Draw horizontal lines:

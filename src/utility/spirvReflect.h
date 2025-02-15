@@ -12,18 +12,25 @@
 namespace emberEngine
 {
 	/// <summary>
-	/// Single member variable reconstruction of shader uniform buffer block via spirv-reflect.
+	/// Member variable spirv-reflection of shader uniform buffer (cbuffer) entry. <para/>
+	/// If the member is a struct the subMembers are the fields of the struct. <para/>
+	/// If the member is an array the subMembers are the entries of the array. <para/>
+	/// Recusive nesting of structs/arrays is possible. <para/>
+	/// Names of the member variables are not saved as they are implicitly stored as keys in the unordered map. <para/>
+	/// For example see UniformBufferBlock.
 	/// </summary>
 	struct UniformBufferMember
 	{
 	public: // Members:
-		uint32_t offset;
-		uint32_t size;
+		uint32_t offset;	// in bytes.
+		uint32_t size;		// in bytes.
 
 	private: // Members:
 		std::unordered_map<std::string, UniformBufferMember*> m_subMembers;
 
 	public: // Methods:
+		UniformBufferMember();
+		~UniformBufferMember();
 		void AddSubMember(std::string name, UniformBufferMember* pSubMember);
 		UniformBufferMember* GetSubMember(const std::string& name) const;
 
@@ -34,15 +41,23 @@ namespace emberEngine
 
 
 	/// <summary>
-	/// Reconstruction of shader uniform buffer block via spirv-reflect.
+	/// Shader uniform buffer (cbuffer) spirv-reflection. <para/>
+	/// Names of the member variables are implicitly stored as the keys of the unordered map. <para/>
+	/// Example: <para/>
+	/// cbuffer Foo : register(b1) <para/>
+	/// { float2 values[2]; } <para/>
+	/// => name = Foo, size = 32, setIndex = 0, bindingIndex = 1, members: <para/>
+	/// values: offset=0, size=32 <para/>
+	/// values[0]: offset = 0, size = 16 <para/>
+	/// values[1] : offset = 16, size = 16
 	/// </summary>
 	struct UniformBufferBlock
 	{
 	public: // Members:
 		std::string name;
-		uint32_t size;			// in bytes
-		uint32_t setIndex;		// always 0 for HLSL shaders
-		uint32_t bindingIndex;
+		uint32_t size;			// in bytes.
+		uint32_t setIndex;		// always 0 for HLSL shaders.
+		uint32_t bindingIndex;	// bX, where X is the index. 
 
 	private: // Members:
 		std::unordered_map<std::string, UniformBufferMember*> members;
@@ -76,6 +91,7 @@ namespace emberEngine
 		std::vector<std::string> semantics;
 		std::vector<VkVertexInputBindingDescription> bindings;
 		std::vector<VkVertexInputAttributeDescription> attributes;
+		std::string ToString() const;
 	};
 
 
@@ -87,10 +103,11 @@ namespace emberEngine
 	/// </summary>
 	struct DescriptorBoundResources
 	{
-		uint32_t size = 0;
+		uint32_t bindingCount = 0;
 		std::vector<std::string> descriptorSetBindingNames;
 		std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
 		std::unordered_map<std::string, UniformBufferBlock*> uniformBufferBlockMap;
+		std::string ToString() const;
 	};
 
 
@@ -104,6 +121,7 @@ namespace emberEngine
 		SpirvReflect(const std::vector<char>& code);
 		~SpirvReflect();
 		VertexInputDescriptions* GetVertexInputDescriptions() const;
+		// TODO: make this function return a pointer instead of taking in a pointer and writing to it.
 		void AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources) const;
 
 	private: // Methods:

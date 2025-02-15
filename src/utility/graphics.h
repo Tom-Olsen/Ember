@@ -9,11 +9,10 @@ namespace emberEngine
 {
 	// Forward declarations:
 	class Material;
-	class MaterialProperties;
+	class ShaderProperties;
 	class Mesh;
 	class MeshRenderer;
 	class Transform;
-	struct VulkanContext;
 
 
 
@@ -39,13 +38,13 @@ namespace emberEngine
 
 		// Draw calls:
 		// Draw mesh:
-		static MaterialProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix = Float3x3::identity, float scale = 1.0f, bool receiveShadows = true, bool castShadows = true);
-		static MaterialProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix = Float3x3::identity, Float3 scale = Float3::one, bool receiveShadows = true, bool castShadows = true);
-		static MaterialProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix = Float3x3::identity, float scale = 1.0f, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix = Float3x3::identity, Float3 scale = Float3::one, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
 
 		// Draw line segment:
 		static void DrawLineSegment(Float3 start, Float3 end, float width, Float4 color = Float4::one, bool receiveShadows = true, bool castShadows = true);
-		static MaterialProperties* DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties* DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows = true, bool castShadows = true);
 
 
 		// Speciaized draw calls:

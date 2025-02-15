@@ -7,7 +7,6 @@
 #include "spirvReflect.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
-#include <fstream>
 
 
 
@@ -90,21 +89,9 @@ namespace emberEngine
 	{
 		return m_type;
 	}
-	const std::string& Material::GetName() const
-	{
-		return m_name;
-	}
 	Material::RenderQueue Material::GetRenderQueue() const
 	{
 		return m_renderQueue;
-	}
-	const Pipeline* const Material::GetPipeline() const
-	{
-		return m_pPipeline.get();
-	}
-	const DescriptorBoundResources* const Material::GetDescriptorBoundResources() const
-	{
-		return m_pDescriptorBoundResources.get();
 	}
 	const VertexInputDescriptions* const Material::GetVertexInputDescriptions() const
 	{
@@ -134,73 +121,5 @@ namespace emberEngine
 				m_meshOffsets[i] = pMesh->GetUVsOffset();
 		}
 		return m_meshOffsets.data();
-	}
-	VulkanContext* const Material::GetContext() const
-	{
-		return m_pContext;
-	}
-
-
-
-	// Debugging:
-	void Material::PrintBindings() const
-	{
-		std::string output = "\nMaterial: " + m_name + "\n";
-
-		for (uint32_t i = 0; i < m_pDescriptorBoundResources->size; i++)
-		{
-			const VkDescriptorSetLayoutBinding& descriptorSetLayoutBinding = m_pDescriptorBoundResources->descriptorSetLayoutBindings[i];
-
-			std::string stageFlags;
-			if ((int)descriptorSetLayoutBinding.stageFlags == VK_SHADER_STAGE_VERTEX_BIT)
-				stageFlags = "VK_SHADER_STAGE_VERTEX_BIT";
-			else if ((int)descriptorSetLayoutBinding.stageFlags == VK_SHADER_STAGE_FRAGMENT_BIT)
-				stageFlags = "VK_SHADER_STAGE_FRAGMENT_BIT";
-
-			std::string descriptorType;
-			if ((int)descriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-				descriptorType = "VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER";
-			else if ((int)descriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-				descriptorType = "VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE";
-			else if ((int)descriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
-				descriptorType = "VK_DESCRIPTOR_TYPE_SAMPLER";
-
-			output += "  BindingName: " + m_pDescriptorBoundResources->descriptorSetBindingNames[i] + "\n";
-			output += "  Binding: " + std::to_string(descriptorSetLayoutBinding.binding) + "\n";
-			output += "  DescriptorType: " + descriptorType + "\n";
-			output += "  DescriptorCount: " + std::to_string(descriptorSetLayoutBinding.descriptorCount) + "\n";
-			output += "  StageFlags: " + stageFlags + "\n\n";
-		}
-		LOG_TRACE(output);
-	}
-	void Material::PrintUniformBuffers() const
-	{
-		std::string output = "\nMaterial: " + m_name + "\n";
-		for (const auto& [_, value] : m_pDescriptorBoundResources->uniformBufferBlockMap)
-			output += value->ToString(2) + "\n";
-		LOG_TRACE(output);
-	}
-
-
-
-	// Private methods:
-	std::vector<char> Material::ReadShaderCode(const std::filesystem::path& spvFile)
-	{
-		// Open shader file:
-		std::ifstream file(spvFile, std::ios::binary);
-		if (!file.is_open())
-			LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
-
-		// Get file size:
-		file.seekg(0, std::ios::end);
-		size_t fileSize = static_cast<size_t>(file.tellg());
-		file.seekg(0, std::ios::beg);
-
-		// Copy code:
-		std::vector<char> code(fileSize);
-		file.read(code.data(), fileSize);
-		file.close();
-
-		return code;
 	}
 }

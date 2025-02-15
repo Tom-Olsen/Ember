@@ -12,12 +12,13 @@ namespace emberEngine
 		m_pLogicalDevice = pLogicalDevice;
 
 		uint32_t descriptorCount = 1000;	// maximum number of descriptor of each type in the associated pool
-		std::array<VkDescriptorPoolSize, 4> poolSizes
+		std::array<VkDescriptorPoolSize, 5> poolSizes
 		{
 			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptorCount },
 			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, descriptorCount },
 			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER, descriptorCount },
-			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorCount }
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorCount },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descriptorCount }
 			// Add more descriptor types as needed
 		};
 

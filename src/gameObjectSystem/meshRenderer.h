@@ -16,7 +16,7 @@ namespace emberEngine
 	class DirectionalLight;
 	class Mesh;
 	class Material;
-	class MaterialProperties;
+	class ShaderProperties;
 	class PointLight;
 	class SpotLight;
 
@@ -30,9 +30,9 @@ namespace emberEngine
 		bool m_hasErrorMaterial;
 		Mesh* m_pMesh;
 		Material* m_pMaterial;
-		std::unique_ptr<MaterialProperties> m_pMaterialProperties;
-		static Material* m_pShadowMaterial;
-		static std::unique_ptr<MaterialProperties> m_pShadowMaterialProperties;
+		std::unique_ptr<ShaderProperties> m_pShaderProperties;
+		static Material* m_pShadowMaterial;	// TODO: make this static?
+		static std::unique_ptr<ShaderProperties> m_pShadowShaderProperties;
 
 	public: // Methods:
 		MeshRenderer();
@@ -53,7 +53,7 @@ namespace emberEngine
 		bool GetReceiveShadows() const;
 		Mesh* GetMesh();
 		Material* GetMaterial();
-		MaterialProperties* GetMaterialProperties();
+		ShaderProperties* GetShaderProperties();
 		const VkDescriptorSet* const GetShadingDescriptorSets(uint32_t frameIndex) const;
 		const VkPipeline& GetShadingPipeline() const;
 		const VkPipelineLayout& GetShadingPipelineLayout() const;

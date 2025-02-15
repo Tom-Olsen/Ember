@@ -57,11 +57,11 @@ source_group("Render Passes & Pipelines" FILES ${RENDERPASSES_AND_PIPELINES_FILE
 file(GLOB RENDER_RESOURCES_FILES "${PROJECT_SOURCE_DIR}/src/renderResources/*")
 source_group("Render Resources" FILES ${RENDER_RESOURCES_FILES})
 
-# shaders/*:
+# src/shaders/*:
 file(GLOB SHADER_FILES
-    "${PROJECT_SOURCE_DIR}/shaders/*.hlsl"
-    "${PROJECT_SOURCE_DIR}/shaders/*.hlsli"
-    "${PROJECT_SOURCE_DIR}/shaders/*.bat")
+    "${PROJECT_SOURCE_DIR}/src/shaders/*.hlsl"
+    "${PROJECT_SOURCE_DIR}/src/shaders/*.hlsli"
+    "${PROJECT_SOURCE_DIR}/src/shaders/*.bat")
 source_group("Shaders" FILES ${SHADER_FILES})
 
 # src/utility/*:
@@ -120,8 +120,8 @@ endif(UNIX)
 # Windows compilation script:
 if(WIN32)
     add_custom_target(build_shaders ALL
-        COMMAND "${PROJECT_SOURCE_DIR}/shaders/compile${SHADER_LANGUAGE}.bat"
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/shaders"
+        COMMAND "${PROJECT_SOURCE_DIR}/src/shaders/compile${SHADER_LANGUAGE}.bat"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/shaders"
         BYPRODUCTS ${PROJECT_SOURCE_DIR}/shaders/*.spv)
 endif(WIN32)
 # ---------------------------------------------------

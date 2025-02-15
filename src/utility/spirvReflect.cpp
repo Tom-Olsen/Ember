@@ -1,5 +1,6 @@
 #include "spirvReflect.h"
 #include "logger.h"
+#include "vulkanEnumToString.h"
 
 
 
@@ -12,14 +13,25 @@ namespace emberEngine
         std::abort(); \
     }
 
-// Shorthand for SPIRV_REFLECT_ASSERT which can be disabled:
+    // Shorthand for SPIRV_REFLECT_ASSERT which can be disabled:
     #ifndef SPVA
     #define SPVA(f) SPIRV_REFLECT_ASSERT(f)
     #endif
 
 
 
-    // UniformBufferMember public methods:
+    // -------------------- UniformBufferMember --------------------
+    // Constructor/Destructor:
+    UniformBufferMember::UniformBufferMember()
+    {
+
+    }
+    UniformBufferMember::~UniformBufferMember()
+    {
+
+    }
+
+    // Public methods:
     void UniformBufferMember::AddSubMember(std::string name, UniformBufferMember* pSubMember)
     {
         // Take ownership of UniformBufferMember pointer:
@@ -40,9 +52,12 @@ namespace emberEngine
             output += pSubMember->ToString(subMemberName, indent + 2);
         return output;
     }
+    // -------------------------------------------------------------
 
 
-    // UniformBufferBlock Constructor/Destructor:
+
+    // -------------------- UniformBufferBlock ---------------------
+    // Constructor/Destructor:
     UniformBufferBlock::UniformBufferBlock(const std::string& name, uint32_t size, uint32_t setIndex, uint32_t bindingIndex)
     {
         this->name = name;
@@ -56,9 +71,7 @@ namespace emberEngine
             delete member.second;
     }
 
-
-
-    // UniformBufferBlock public methods:
+    // Public methods:
     void UniformBufferBlock::AddMember(std::string name, UniformBufferMember* pMember)
     {
         // Take ownership of UniformBufferMember pointer:
@@ -84,10 +97,48 @@ namespace emberEngine
             output += member->ToString(name, indent + 2);
         return output;
     }
+    // -------------------------------------------------------------
 
 
 
-    // SpirvReflect Constructor/Destructor:
+    // ------------------ VertexInputDescriptions ------------------
+    // Public methods:
+    std::string VertexInputDescriptions::ToString() const
+    {
+        std::string output = "";
+        for (int i = 0; i < size; i++)
+        {
+            output += semantics[i] + ":\n";
+            output += "  BindingDescription:   binding=" + std::to_string(bindings[i].binding) + ", stride=" + std::to_string(bindings[i].stride) + ", inputRate=" + vulkanEnumToString::VkVertexInputRateToString(bindings[i].inputRate) + "\n";
+            output += "  AttributeDescription: binding=" + std::to_string(attributes[i].binding) + ", format=" + vulkanEnumToString::VkFormatToString(attributes[i].format) + ", location=" + std::to_string(attributes[i].location) + ", offset=" + std::to_string(attributes[i].offset) + "\n";
+        }
+        return output;
+    }
+    // -------------------------------------------------------------
+     
+     
+     
+    // ------------------ DescriptorBoundResources -----------------
+    std::string DescriptorBoundResources::ToString() const
+    {
+        std::string output = "descriptorSetBindingNames:(" + std::to_string(bindingCount) + ")\n";
+
+        output += "\ndescriptorSetLayoutBindings:\n";
+        for (int i = 0; i < bindingCount; i++)
+            output += "  " + descriptorSetBindingNames[i] + ": binding=" + std::to_string(descriptorSetLayoutBindings[i].binding) + ", count=" + std::to_string(descriptorSetLayoutBindings[i].descriptorCount) + ", type=" + vulkanEnumToString::VkDescriptorTypeToString(descriptorSetLayoutBindings[i].descriptorType) + ", stage=" + vulkanEnumToString::VkShaderStageFlagsToString(descriptorSetLayoutBindings[i].stageFlags) + "\n";
+
+        output += "\nuniformBufferBlockMap:\n";
+        for (const auto& [name, uniformBufferBlock] : uniformBufferBlockMap)
+            output += "  " + name + ":\n" + uniformBufferBlock->ToString(4);
+
+        return output;
+    }
+    // -------------------------------------------------------------
+
+
+
+    // ----------------------- SpirvReflect ------------------------
+    // Constructor/Destructor:
     SpirvReflect::SpirvReflect(const std::vector<char>& code)
     {
         SPVA(spvReflectCreateShaderModule(code.size(), code.data(), &m_module));
@@ -97,9 +148,7 @@ namespace emberEngine
         spvReflectDestroyShaderModule(&m_module);
     }
 
-
-
-    // SpirvReflect public methods:
+    // Public methods:
     VertexInputDescriptions* SpirvReflect::GetVertexInputDescriptions() const
     {
         std::vector<SpvReflectInterfaceVariable*> inputs = GetInputVariablesReflection();
@@ -174,7 +223,7 @@ namespace emberEngine
         for (uint32_t setIndex = 0; setIndex < descriptorSetsReflection.size(); setIndex++)
         {
             SpvReflectDescriptorSet* pSetReflection = descriptorSetsReflection[setIndex];
-            descriptorBoundResources->size += pSetReflection->binding_count;
+            descriptorBoundResources->bindingCount += pSetReflection->binding_count;
             for (uint32_t bindingIndex = 0; bindingIndex < pSetReflection->binding_count; bindingIndex++)
             {
                 SpvReflectDescriptorBinding* pBindingReflection = pSetReflection->bindings[bindingIndex];
@@ -200,9 +249,7 @@ namespace emberEngine
         }
     }
 
-
-
-    // SpirvReflect private static methods:
+    // Private methods:
     std::vector<SpvReflectInterfaceVariable*> SpirvReflect::GetInputVariablesReflection() const
     {
         uint32_t inputCount = 0;
@@ -291,4 +338,5 @@ namespace emberEngine
             pMember->AddSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]", pElement);
         }
     }
+    // -------------------------------------------------------------
 }

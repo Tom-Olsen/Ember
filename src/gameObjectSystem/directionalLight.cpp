@@ -175,7 +175,7 @@ namespace emberEngine
 			Material* pVertexUnlit = MaterialManager::GetMaterial("vertexColorUnlit");
 			Mesh* pSphere = MeshManager::GetMesh("cubeSphere");
 			Mesh* fourLeg = MeshManager::GetMesh("fourLeg");
-			MaterialProperties* pMaterialProperties = nullptr;
+			ShaderProperties* pShaderProperties = nullptr;
 
 			Float4 colors[4] = { Float4::red, Float4::green, Float4::blue, Float4::yellow };
 			for (uint32_t i = 0; i < (int)m_shadowCascadeCount; i++)

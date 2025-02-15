@@ -23,6 +23,7 @@ namespace emberEngine
 		VulkanContext* m_pContext;
 
 		// Render resources:
+		std::vector<VulkanCommand> m_computeCommands;
 		std::vector<VulkanCommand> m_shadowCommands;
 		std::vector<VulkanCommand> m_shadingCommands;
 
@@ -47,6 +48,7 @@ namespace emberEngine
 		void RebuildSwapchain();
 		bool AcquireImage();
 		void SetMeshRendererGroups(Scene* pScene);
+		void RecordComputeShaders(Scene* pScene);
 		void RecordShadowCommandBuffer(Scene* pScene);
 		void RecordShadingCommandBuffer(Scene* pScene);
 		void SubmitCommandBuffers();

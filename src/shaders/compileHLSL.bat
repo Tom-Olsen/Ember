@@ -17,4 +17,10 @@ for %%f in (*.frag.hlsl) do (
     "%DXC_PATH%" -spirv -T ps_6_0 -E main "%%f" -Fo "%%~nf.spv"
 )
 
+REM Compile compute shaders (*.comp.hlsl)
+for %%f in (*.comp.hlsl) do (
+    echo Compiling compute shader %%f
+    "%DXC_PATH%" -spirv -T cs_6_0 -E main "%%f" -Fo "%%~nf.spv"
+)
+
 endlocal

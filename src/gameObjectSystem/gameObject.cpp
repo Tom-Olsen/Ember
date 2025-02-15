@@ -93,6 +93,7 @@ namespace emberEngine
 	// Explicit instantiations:
 	template void GameObject::AddComponent(Camera*);
 	template void GameObject::AddComponent(CameraController*);
+	template void GameObject::AddComponent(ComputeUnit*);
 	template void GameObject::AddComponent(DirectionalLight*);
 	template void GameObject::AddComponent(DrawMeshData*);
 	template void GameObject::AddComponent(MeshRenderer*);
@@ -104,6 +105,7 @@ namespace emberEngine
 	template void GameObject::AddComponent(Transform*);
 	template Camera* GameObject::GetComponent<Camera>();
 	template CameraController* GameObject::GetComponent<CameraController>();
+	template ComputeUnit* GameObject::GetComponent<ComputeUnit>();
 	template DirectionalLight* GameObject::GetComponent<DirectionalLight>();
 	template DrawMeshData* GameObject::GetComponent<DrawMeshData>();
 	template MeshRenderer* GameObject::GetComponent<MeshRenderer>();

@@ -1,9 +1,8 @@
 #ifndef __INCLUDE_GUARD_material_h__
 #define __INCLUDE_GUARD_material_h__
-#include <filesystem>
+#include "shader.h"
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -12,10 +11,7 @@
 namespace emberEngine
 {
 	// Forward declarations:
-	struct DescriptorBoundResources;
 	class Mesh;
-	class Pipeline;
-	struct UniformBufferBlock;
 	struct VertexInputDescriptions;
 	struct VulkanContext;
 
@@ -25,9 +21,9 @@ namespace emberEngine
 	/// Material creation is expensive.
 	/// It is recommended to create all materials at the start of the application.
 	/// Create a Material pointer and store it in the static MaterialManager class, making it globally accessible.
-	/// Each material must be used with a MaterialProperties which is customized for the Material.
+	/// Each Material must be used with a ShaderProperties which is customized for the Material.
 	/// </summary>
-	class Material
+	class Material : public Shader
 	{
 	public: // Enums:
 		enum class Type
@@ -46,14 +42,10 @@ namespace emberEngine
 
 	private: // Members:
 		Type m_type;
-		std::string m_name;
 		RenderQueue m_renderQueue;
-		std::unique_ptr<Pipeline> m_pPipeline;
-		std::unique_ptr<DescriptorBoundResources> m_pDescriptorBoundResources;
 		std::unique_ptr<VertexInputDescriptions> m_pVertexInputDescriptions;
 		std::vector<VkBuffer> m_meshBuffers;
 		std::vector<VkDeviceSize> m_meshOffsets;
-		VulkanContext* m_pContext;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -62,21 +54,10 @@ namespace emberEngine
 
 		// Getters:
 		Type GetType() const;
-		const std::string& GetName() const;
 		RenderQueue GetRenderQueue() const;
-		const Pipeline* const GetPipeline() const;
-		const DescriptorBoundResources* const GetDescriptorBoundResources() const;
 		const VertexInputDescriptions* const GetVertexInputDescriptions() const;
 		const VkBuffer* const GetMeshBuffers(Mesh* pMesh);
 		const VkDeviceSize* const GetMeshOffsets(Mesh* pMesh);
-		VulkanContext* const GetContext() const;
-
-		// Debugging:
-		void PrintBindings() const;
-		void PrintUniformBuffers() const;
-
-	private: // Methods:
-		static std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile);
 	};
 }
 

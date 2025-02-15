@@ -23,16 +23,18 @@ namespace emberEngine
 #include "meshGenerator.h"
 #include "timer.h"
 
-// Rendering backend:
+// Rendering/Compute backend:
+#include "computeShader.h"
 #include "graphics.h"
 #include "mesh.h"
 #include "material.h"
-#include "materialProperties.h"
+#include "shaderProperties.h"
 #include "sampler.h"
 #include "texture2d.h"
 #include "textureCube.h"
 
 // Managers:
+#include "computeShaderManager.h"
 #include "materialManager.h"
 #include "meshManager.h"
 #include "samplerManager.h"
@@ -46,6 +48,7 @@ namespace emberEngine
 // GameObject Components:
 #include "camera.h"
 #include "cameraController.h"
+#include "computeUnit.h"
 #include "directionalLight.h"
 #include "drawMeshData.h"
 #include "meshRenderer.h"

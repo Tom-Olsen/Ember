@@ -13,7 +13,7 @@ namespace emberEngine
 		Mesh* m_pArrowMesh;
 		Material* m_pMaterial;
 		Mesh* m_pMesh;
-		MaterialProperties* m_pMaterialProperties;
+		ShaderProperties* m_pShaderProperties;
 
 	public: // Methods:
 		DrawMeshData();

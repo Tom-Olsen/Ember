@@ -50,10 +50,14 @@ namespace emberEngine
 			}
 		}
 
-		// Manual adding:
+		// Manual adding TextureCubes:
 		TextureCube* texCube = new TextureCube(s_pContext, "../textures/skyboxClouds1/", "skyboxClouds0", VK_FORMAT_R8G8B8A8_SRGB);
 		//TextureCube* texCube = new TextureCube(s_pContext, "../textures/skyboxNebula0/", "skyboxClouds0", VK_FORMAT_R8G8B8A8_SRGB);
 		AddTextureCube(texCube);
+
+		// Manual adding storage Texture2ds:
+		Texture2d* storageTexture8x8 = Texture2d::StorageTexture2d(s_pContext, 8,8, VK_FORMAT_R8G8B8A8_SRGB, "storageTexture8x8");
+		AddTexture2d(storageTexture8x8);
 	}
 	void TextureManager::Clear()
 	{

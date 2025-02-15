@@ -1,8 +1,7 @@
 #include "materialManager.h"
+#include "logger.h"
 #include "material.h"
 #include "vulkanContext.h"
-#include "vulkanMacros.h"
-#include "vulkanRenderer.h"
 
 
 
@@ -30,40 +29,40 @@ namespace emberEngine
 		Material::Type shadowType = Material::Type::shadow;
 		Material::Type skyboxType = Material::Type::skybox;
 
-		//Material* testMaterial = new Material(s_pContext, Material::Type::shading, "testMaterial", "../shaders/test.vert.spv", "../shaders/test.frag.spv");
+		//Material* testMaterial = new Material(s_pContext, Material::Type::shading, "testMaterial", "../src/shaders/test.vert.spv", "../src/shaders/test.frag.spv");
 		//AddMaterial(testMaterial);
 
-		Material* pErrorMaterial = new Material(s_pContext, shadingType, "error", opaqueQueue, "../shaders/error.vert.spv", "../shaders/error.frag.spv");
+		Material* pErrorMaterial = new Material(s_pContext, shadingType, "error", opaqueQueue, "../src/shaders/error.vert.spv", "../src/shaders/error.frag.spv");
 		AddMaterial(pErrorMaterial);
 
-		Material* pDefaultMaterial = new Material(s_pContext, shadingType, "default", opaqueQueue, "../shaders/default.vert.spv", "../shaders/default.frag.spv");
+		Material* pDefaultMaterial = new Material(s_pContext, shadingType, "default", opaqueQueue, "../src/shaders/default.vert.spv", "../src/shaders/default.frag.spv");
 		AddMaterial(pDefaultMaterial);
 
-		Material* pVertexColorLitMaterial = new Material(s_pContext, shadingType, "vertexColorLit", opaqueQueue, "../shaders/vertexColorLit.vert.spv", "../shaders/vertexColorLit.frag.spv");
+		Material* pVertexColorLitMaterial = new Material(s_pContext, shadingType, "vertexColorLit", opaqueQueue, "../src/shaders/vertexColorLit.vert.spv", "../src/shaders/vertexColorLit.frag.spv");
 		AddMaterial(pVertexColorLitMaterial);
 
-		Material* pVertexColorUnlitMaterial = new Material(s_pContext, shadingType, "vertexColorUnlit", opaqueQueue, "../shaders/vertexColorUnlit.vert.spv", "../shaders/vertexColorUnlit.frag.spv");
+		Material* pVertexColorUnlitMaterial = new Material(s_pContext, shadingType, "vertexColorUnlit", opaqueQueue, "../src/shaders/vertexColorUnlit.vert.spv", "../src/shaders/vertexColorUnlit.frag.spv");
 		AddMaterial(pVertexColorUnlitMaterial);
 
-		Material* pNormalsMaterial = new Material(s_pContext, shadingType, "normals", opaqueQueue, "../shaders/normals.vert.spv", "../shaders/normals.frag.spv");
+		Material* pNormalsMaterial = new Material(s_pContext, shadingType, "normals", opaqueQueue, "../src/shaders/normals.vert.spv", "../src/shaders/normals.frag.spv");
 		AddMaterial(pNormalsMaterial);
 
-		Material* pShadowMaterial = new Material(s_pContext, shadowType, "shadow", opaqueQueue, "../shaders/shadow.vert.spv");
+		Material* pShadowMaterial = new Material(s_pContext, shadowType, "shadow", opaqueQueue, "../src/shaders/shadow.vert.spv");
 		AddMaterial(pShadowMaterial);
 
-		Material* pSkyBoxMaterial = new Material(s_pContext, skyboxType, "skybox", skyboxQueue, "../shaders/skybox.vert.spv", "../shaders/skybox.frag.spv");
+		Material* pSkyBoxMaterial = new Material(s_pContext, skyboxType, "skybox", skyboxQueue, "../src/shaders/skybox.vert.spv", "../src/shaders/skybox.frag.spv");
 		AddMaterial(pSkyBoxMaterial);
 
-		Material* pSimpleLitMaterial = new Material(s_pContext, shadingType, "simpleLit", opaqueQueue, "../shaders/simpleLit.vert.spv", "../shaders/simpleLit.frag.spv");
+		Material* pSimpleLitMaterial = new Material(s_pContext, shadingType, "simpleLit", opaqueQueue, "../src/shaders/simpleLit.vert.spv", "../src/shaders/simpleLit.frag.spv");
 		AddMaterial(pSimpleLitMaterial);
 
-		Material* pSimpleUnlitMaterial = new Material(s_pContext, shadingType, "simpleUnlit", opaqueQueue, "../shaders/simpleUnlit.vert.spv", "../shaders/simpleUnlit.frag.spv");
+		Material* pSimpleUnlitMaterial = new Material(s_pContext, shadingType, "simpleUnlit", opaqueQueue, "../src/shaders/simpleUnlit.vert.spv", "../src/shaders/simpleUnlit.frag.spv");
 		AddMaterial(pSimpleUnlitMaterial);
 
 		// For testing the binding missmatch error:
-		Material* pTestA = new Material(s_pContext, shadingType, "testA", opaqueQueue, "../shaders/testA.vert.spv", "../shaders/testA.frag.spv");
+		Material* pTestA = new Material(s_pContext, shadingType, "testA", opaqueQueue, "../src/shaders/testA.vert.spv", "../src/shaders/testA.frag.spv");
 		AddMaterial(pTestA);
-		Material* pTestB = new Material(s_pContext, shadingType, "testB", opaqueQueue, "../shaders/testB.vert.spv", "../shaders/testB.frag.spv");
+		Material* pTestB = new Material(s_pContext, shadingType, "testB", opaqueQueue, "../src/shaders/testB.vert.spv", "../src/shaders/testB.frag.spv");
 		AddMaterial(pTestB);
 	}
 	void MaterialManager::Clear()

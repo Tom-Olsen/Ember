@@ -18,6 +18,7 @@ namespace emberEngine
 		m_width = 0;
 		m_height = 0;
 		m_channels = 0;
+		m_isStorageImage = false;
 		m_pImage = nullptr;
 		m_name = "";
 	}
@@ -27,12 +28,14 @@ namespace emberEngine
 		m_width = static_cast<int>(pImage->GetWidth());
 		m_height = static_cast<int>(pImage->GetHeight());
 		m_channels = 4;
+		m_isStorageImage = (pImage->GetVkImageCreateInfo()->usage & VK_IMAGE_USAGE_STORAGE_BIT);
 		m_pImage = std::unique_ptr<VmaImage>(pImage);
 		m_name = name;
 	}
-	Texture2d::Texture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name, VkFormat format)
+	Texture2d::Texture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name, VkFormat format, bool isStorageImage)
 	{
 		m_pContext = pContext;
+		m_isStorageImage = isStorageImage;
 		m_name = name;
 
 		// Load image:
@@ -54,7 +57,7 @@ namespace emberEngine
 		pSubresourceRange->baseArrayLayer = 0;
 		pSubresourceRange->layerCount = 1;
 
-		CreateImage(pSubresourceRange, m_width, m_height, format, (VkImageCreateFlagBits)0);
+		m_pImage = std::unique_ptr<VmaImage>(CreateImage(m_pContext, pSubresourceRange, m_width, m_height, format, (VkImageCreateFlagBits)0, m_isStorageImage));
 		TransitionImageLayoutWithMipMapping(pSubresourceRange, stagingBuffer);
 		stbi_image_free(pPixels);
 	}
@@ -79,6 +82,10 @@ namespace emberEngine
 	{
 		return static_cast<uint64_t>(m_channels);
 	}
+	bool Texture2d::GetIsStorageImage() const
+	{
+		return m_isStorageImage;
+	}
 	const VmaImage* const Texture2d::GetVmaImage() const
 	{
 		return m_pImage.get();
@@ -88,10 +95,29 @@ namespace emberEngine
 		return m_name;
 	}
 
+	// Static spezialised Constructors:
+	Texture2d* Texture2d::StorageTexture2d(VulkanContext* pContext, int width, int height, VkFormat format, const std::string& name)
+	{ 
+		// Define subresource range:
+		VkImageSubresourceRange* pSubresourceRange = new VkImageSubresourceRange();
+		pSubresourceRange->aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		pSubresourceRange->baseMipLevel = 0;
+		pSubresourceRange->levelCount = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;	// mip levels
+		pSubresourceRange->baseArrayLayer = 0;
+		pSubresourceRange->layerCount = 1;
+
+		// Create storage image:
+		VmaImage* pImage = CreateImage(pContext, pSubresourceRange, width, height, format, (VkImageCreateFlagBits)0, true);
+
+		// Create Texture2d* and return it:
+		return new Texture2d(pContext, pImage, "storageTexture8x8");
+	}
+
+
 
 
 	// Protected methods:
-	void Texture2d::CreateImage(VkImageSubresourceRange* pSubresourceRange, uint32_t width, uint32_t height, VkFormat format, VkImageCreateFlagBits imageFlags)
+	VmaImage* Texture2d::CreateImage(VulkanContext* pContext, VkImageSubresourceRange* pSubresourceRange, uint32_t width, uint32_t height, VkFormat format, VkImageCreateFlagBits imageFlags, bool isStorageImage)
 	{
 		VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
 		pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -103,8 +129,9 @@ namespace emberEngine
 		pImageInfo->arrayLayers = pSubresourceRange->layerCount;
 		pImageInfo->format = format;
 		pImageInfo->tiling = VK_IMAGE_TILING_OPTIMAL;
-		pImageInfo->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		pImageInfo->usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		pImageInfo->initialLayout = isStorageImage ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_UNDEFINED;
+		pImageInfo->usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		pImageInfo->usage |= (isStorageImage ? VK_IMAGE_USAGE_STORAGE_BIT : VK_IMAGE_USAGE_SAMPLED_BIT);
 		pImageInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		pImageInfo->samples = VK_SAMPLE_COUNT_1_BIT;
 		pImageInfo->flags = imageFlags;
@@ -115,7 +142,7 @@ namespace emberEngine
 		pAllocInfo->requiredFlags = 0;
 		pAllocInfo->preferredFlags = 0;
 
-		m_pImage = std::make_unique<VmaImage>(m_pContext, pImageInfo, pAllocInfo, pSubresourceRange);
+		return new VmaImage(pContext, pImageInfo, pAllocInfo, pSubresourceRange);
 	}
 	void Texture2d::TransitionImageLayout(VkImageSubresourceRange* pSubresourceRange, VmaBuffer& stagingBuffer)
 	{

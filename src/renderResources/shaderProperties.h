@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_materialProperties_h__
-#define __INCLUDE_GUARD_materialProperties_h__
+#ifndef __INCLUDE_GUARD_shaderProperties_h__
+#define __INCLUDE_GUARD_shaderProperties_h__
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -11,7 +11,7 @@
 namespace emberEngine
 {
 	// Forward declarations:
-	class Material;
+	class Shader;
 	class Sampler;
 	class Texture2d;
 	class UniformBuffer;
@@ -29,19 +29,22 @@ namespace emberEngine
 
 
 	/// <summary>
-	/// Each MaterialProperties instance is customized for a specific Material.
-	/// MaterialProperties construction is expensive, do not create them in an update loop.
-	/// MaterialProperties own UniformBuffer pointers, Sampler and Texture2d pointers are owned by associated Managers.
+	/// Each ShaderProperties instance is customized for a specific Material/ComputeShader.
+	/// ShaderProperties construction is expensive, do not create them in an update loop.
+	/// ShaderProperties own UniformBuffer pointers, Sampler and Texture2d pointers are owned by associated Managers.
 	/// </summary>
-	class MaterialProperties
+	class ShaderProperties
 	{
 	private: // Members:
-		Material* m_pMaterial;
+		Shader* m_pShader;
 		VulkanContext* m_pContext;
+
+		// All these vectors contain one item for each frame in flight:
 		std::vector<VkDescriptorSet> m_descriptorSets;
 		std::vector<std::unordered_map<std::string, ResourceBinding<std::shared_ptr<UniformBuffer>>>> m_uniformBufferMaps;
 		std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>> m_samplerMaps;
 		std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>> m_texture2dMaps;
+
 		// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer is the staging buffer.
 		std::unordered_map<std::string, Sampler*> m_samplerStagingMap;
 		std::unordered_map<std::string, Texture2d*> m_texture2dStagingMap;
@@ -49,33 +52,33 @@ namespace emberEngine
 
 	public: // Methods:
 		// Constructors/Destructor:
-		MaterialProperties(Material* pMaterial);
-		~MaterialProperties();
+		ShaderProperties(Shader* pShader);
+		~ShaderProperties();
 
 		void UpdateShaderData();
 		const std::vector<VkDescriptorSet>& GetDescriptorSets() const;
 
 		// Uniform Buffer Setters:
 		template<typename T>
-		void SetValue(const std::string& blockName, const std::string& memberName, const T& value);
+		void SetValue(const std::string& bufferName, const std::string& memberName, const T& value);
 		template<typename T>
-		void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const T& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const T& value);
 		template<typename T>
-		void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
 		template<typename T>
-		void SetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
 		void SetSampler(const std::string& name, Sampler* pSampler);
 		void SetTexture2d(const std::string& name, Texture2d* pTexture2d);
 
 		// Uniform Buffer Getters:
 		template<typename T>
-		T GetValue(const std::string& blockName, const std::string& memberName) const;
+		T GetValue(const std::string& bufferName, const std::string& memberName) const;
 		template<typename T>
-		T GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex) const;
+		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
 		template<typename T>
-		T GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
 		template<typename T>
-		T GetValue(const std::string& blockName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 
 		// Sampler and Texture2d Getters:
 		Sampler* GetSampler(const std::string& name) const;
@@ -103,4 +106,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_materialProperties_h__
+#endif // __INCLUDE_GUARD_shaderProperties_h__

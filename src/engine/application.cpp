@@ -1,5 +1,6 @@
 #include "application.h"
 #include "component.h"
+#include "computeShaderManager.h"
 #include "dearImGui.h"
 #include "eventSystem.h"
 #include "gameObject.h"
@@ -33,6 +34,7 @@ namespace emberEngine
 		mathf::Random::Init();
 		EventSystem::Init(m_pContext.get());
 		RenderPassManager::Init(m_pContext.get());
+		ComputeShaderManager::Init(m_pContext.get());
 		MaterialManager::Init(m_pContext.get());
 		TextureManager::Init(m_pContext.get());
 		SamplerManager::Init(m_pContext.get());
@@ -53,6 +55,7 @@ namespace emberEngine
 		SamplerManager::Clear();
 		TextureManager::Clear();
 		MaterialManager::Clear();
+		ComputeShaderManager::Clear();
 		RenderPassManager::Clear();
 		EventSystem::Clear();
 	}

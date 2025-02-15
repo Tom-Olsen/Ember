@@ -3,7 +3,7 @@
 #include "directionalLight.h"
 #include "material.h"
 #include "materialManager.h"
-#include "materialProperties.h"
+#include "shaderProperties.h"
 #include "pipeline.h"
 #include "pointLight.h"
 #include "samplerManager.h"
@@ -17,7 +17,7 @@ namespace emberEngine
 {
 	// Static members:
 	Material* MeshRenderer::m_pShadowMaterial = nullptr;
-	std::unique_ptr<MaterialProperties> MeshRenderer::m_pShadowMaterialProperties = nullptr;
+	std::unique_ptr<ShaderProperties> MeshRenderer::m_pShadowShaderProperties = nullptr;
 
 
 
@@ -33,8 +33,8 @@ namespace emberEngine
 
 		if (m_pShadowMaterial == nullptr)
 			m_pShadowMaterial = MaterialManager::GetMaterial("shadow");
-		if (m_pShadowMaterialProperties == nullptr)
-			m_pShadowMaterialProperties = std::make_unique<MaterialProperties>(m_pShadowMaterial);
+		if (m_pShadowShaderProperties == nullptr)
+			m_pShadowShaderProperties = std::make_unique<ShaderProperties>(m_pShadowMaterial);
 	}
 	MeshRenderer::~MeshRenderer()
 	{
@@ -65,14 +65,14 @@ namespace emberEngine
 			if (m_pMaterial != MaterialManager::GetMaterial("error"))
 			{
 				m_pMaterial = MaterialManager::GetMaterial("error");
-				m_pMaterialProperties = std::make_unique<MaterialProperties>(m_pMaterial);
+				m_pShaderProperties = std::make_unique<ShaderProperties>(m_pMaterial);
 			}
 		}
 		else if (m_pMaterial != pMaterial)
 		{
 			m_hasErrorMaterial = false;
 			m_pMaterial = pMaterial;
-			m_pMaterialProperties = std::make_unique<MaterialProperties>(m_pMaterial);
+			m_pShaderProperties = std::make_unique<ShaderProperties>(m_pMaterial);
 		}
 	}
 	void MeshRenderer::SetRenderMatrizes(Camera* const pCamera)
@@ -84,11 +84,11 @@ namespace emberEngine
 		Float4x4 cameraProjMatrix = pCamera->GetProjectionMatrix();
 		Float4x4 localToClipMatrix = cameraProjMatrix * cameraViewMatrix * modelMatrix;
 
-		m_pMaterialProperties->SetValue(name, "modelMatrix", modelMatrix);
-		m_pMaterialProperties->SetValue(name, "viewMatrix", cameraViewMatrix);
-		m_pMaterialProperties->SetValue(name, "projMatrix", cameraProjMatrix);
-		m_pMaterialProperties->SetValue(name, "normalMatrix", GetTransform()->GetLocalToWorldNormalMatrix());
-		m_pMaterialProperties->SetValue(name, "localToClipMatrix", localToClipMatrix);
+		m_pShaderProperties->SetValue(name, "modelMatrix", modelMatrix);
+		m_pShaderProperties->SetValue(name, "viewMatrix", cameraViewMatrix);
+		m_pShaderProperties->SetValue(name, "projMatrix", cameraProjMatrix);
+		m_pShaderProperties->SetValue(name, "normalMatrix", GetTransform()->GetLocalToWorldNormalMatrix());
+		m_pShaderProperties->SetValue(name, "localToClipMatrix", localToClipMatrix);
 	}
 	void MeshRenderer::SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights)
 	{
@@ -102,14 +102,14 @@ namespace emberEngine
 				for (int shadowCascadeIndex = 0; shadowCascadeIndex < shadowCascadeCount; shadowCascadeIndex++)
 				{
 					Float4x4 worldToClipMatrix = directionalLights[i]->GetProjectionMatrix(shadowCascadeIndex) * directionalLights[i]->GetViewMatrix(shadowCascadeIndex);
-					m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", shadowCascadeIndex, worldToClipMatrix);
+					m_pShaderProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", shadowCascadeIndex, worldToClipMatrix);
 				}
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "direction", directionalLights[i]->GetDirection());
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "softShadows", (int)directionalLights[i]->GetShadowType());
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "shadowCascadeCount", shadowCascadeCount);
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "direction", directionalLights[i]->GetDirection());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "softShadows", (int)directionalLights[i]->GetShadowType());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "shadowCascadeCount", shadowCascadeCount);
 			}
-		m_pMaterialProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
+		m_pShaderProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
 	}
 	void MeshRenderer::SetLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spotLights)
 	{
@@ -120,13 +120,13 @@ namespace emberEngine
 			if (spotLights[i] != nullptr)
 			{
 				Float4x4 worldToClipMatrix = spotLights[i]->GetProjectionMatrix() * spotLights[i]->GetViewMatrix();
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "position", spotLights[i]->GetPosition());
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "softShadows", (int)spotLights[i]->GetShadowType());
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "blendStartEnd", spotLights[i]->GetBlendStartEnd());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "position", spotLights[i]->GetPosition());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "softShadows", (int)spotLights[i]->GetShadowType());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "blendStartEnd", spotLights[i]->GetBlendStartEnd());
 			}
-		m_pMaterialProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
+		m_pShaderProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
 	}
 	void MeshRenderer::SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& pointLights)
 	{
@@ -139,13 +139,13 @@ namespace emberEngine
 				for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
 				{
 					Float4x4 worldToClipMatrix = pointLights[i]->GetProjectionMatrix() * pointLights[i]->GetViewMatrix(faceIndex);
-					m_pMaterialProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", faceIndex, worldToClipMatrix);
+					m_pShaderProperties->SetValue(blockName, arrayName, i, "worldToClipMatrix", faceIndex, worldToClipMatrix);
 				}
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "position", pointLights[i]->GetPosition());
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "softShadows", (int)pointLights[i]->GetShadowType());
-				m_pMaterialProperties->SetValue(blockName, arrayName, i, "colorIntensity", pointLights[i]->GetColorIntensity());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "position", pointLights[i]->GetPosition());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "softShadows", (int)pointLights[i]->GetShadowType());
+				m_pShaderProperties->SetValue(blockName, arrayName, i, "colorIntensity", pointLights[i]->GetColorIntensity());
 			}
-		m_pMaterialProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
+		m_pShaderProperties->SetValue(blockName, "receiveShadows", m_receiveShadows);
 	}
 
 
@@ -169,13 +169,13 @@ namespace emberEngine
 	{
 		return m_pMaterial;
 	}
-	MaterialProperties* MeshRenderer::GetMaterialProperties()
+	ShaderProperties* MeshRenderer::GetShaderProperties()
 	{
-		return m_pMaterialProperties.get();
+		return m_pShaderProperties.get();
 	}
 	const VkDescriptorSet* const MeshRenderer::GetShadingDescriptorSets(uint32_t frameIndex) const
 	{
-		return &m_pMaterialProperties->GetDescriptorSets()[frameIndex];
+		return &m_pShaderProperties->GetDescriptorSets()[frameIndex];
 	}
 	const VkPipeline& MeshRenderer::GetShadingPipeline() const
 	{
@@ -189,7 +189,7 @@ namespace emberEngine
 	// Shadow render pass getters:
 	const VkDescriptorSet* const MeshRenderer::GetShadowDescriptorSets(uint32_t frameIndex)
 	{
-		return &m_pShadowMaterialProperties->GetDescriptorSets()[frameIndex];
+		return &m_pShadowShaderProperties->GetDescriptorSets()[frameIndex];
 	}
 	const VkPipeline& MeshRenderer::GetShadowPipeline()
 	{

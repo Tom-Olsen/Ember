@@ -61,7 +61,7 @@ namespace emberEngine
 		pSubresourceRange->baseArrayLayer = 0;
 		pSubresourceRange->layerCount = 6;
 
-		CreateImage(pSubresourceRange, width, height, format, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
+		m_pImage = std::unique_ptr<VmaImage>(CreateImage(m_pContext, pSubresourceRange, width, height, format, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, false));
 		TransitionImageLayout(pSubresourceRange, stagingBuffer);
 		delete[] pFacePixels;
 	}

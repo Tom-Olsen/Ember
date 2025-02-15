@@ -1,11 +1,12 @@
 #include "vulkanRenderer.h"
+#include "computeShader.h"
 #include "dearImGui.h"
 #include "directionalLight.h"
 #include "graphics.h"
 #include "macros.h"
 #include "mesh.h"
 #include "meshRenderer.h"
-#include "materialProperties.h"
+#include "shaderProperties.h"
 #include "pointLight.h"
 #include "renderPassManager.h"
 #include "scene.h"
@@ -31,10 +32,12 @@ namespace emberEngine
 		m_pContext = pContext;
 
 		// Command buffers:
+		m_computeCommands.reserve(m_pContext->framesInFlight);
 		m_shadowCommands.reserve(m_pContext->framesInFlight);
 		m_shadingCommands.reserve(m_pContext->framesInFlight);
 		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
 		{
+			m_computeCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetComputeQueue());
 			m_shadowCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
 			m_shadingCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
 		}
@@ -136,6 +139,36 @@ namespace emberEngine
 		m_pMeshRendererGroups[1] = Graphics::GetSortedMeshRenderers();
 	}
 
+	void VulkanRenderer::RecordComputeShaders(Scene* pScene)
+	{
+		// Add pipeline barrier for synchronyzation (36:00 in tutorial).
+
+		//vkResetCommandPool(m_pContext->GetVkDevice(), m_computeCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
+		//VkCommandBuffer commandBuffer = m_computeCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+		//
+		//Float3 cameraPosition = pCamera->GetTransform()->GetPosition();
+		//ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
+		//
+		//// Begin command buffer:
+		//VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		//beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		//VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		//{
+		//	for (ComputeShader* computeShader : computeShaders)
+		//	{
+		//		// From somewhere I need to get shaderProperties and do: (to update the descriptorsets)
+		//		...->GetShaderProperties()->UpdateShaderData();
+		//
+		//		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computeShader->GetPipeline()->GetVkPipeline());
+		//		vkCmdPushConstants(commandBuffer, computeShader->GetPipeline()->GetVkPipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
+		//		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computeShader->GetPipeline()->GetVkPipelineLayout(), 0, 1, ...->GetShaderProperties()->GetDescriptorSets()[m_pContext->frameIndex], 0, nullptr);
+		//
+		//		// Dispatch compute shader:
+		//		vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+		//	}
+		//}
+		//VKA(vkEndCommandBuffer(commandBuffer));
+	}
 	void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 	{
 		vkResetCommandPool(m_pContext->GetVkDevice(), m_shadowCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
@@ -315,7 +348,7 @@ namespace emberEngine
 							meshRenderer->SetLightData(pScene->GetDirectionalLights());
 							meshRenderer->SetLightData(pScene->GetSpotLights());
 							meshRenderer->SetLightData(pScene->GetPointLights());
-							meshRenderer->GetMaterialProperties()->UpdateShaderData();
+							meshRenderer->GetShaderProperties()->UpdateShaderData();
 
 							// Change pipeline if material has changed:
 							pMaterial = meshRenderer->GetMaterial();
@@ -335,10 +368,10 @@ namespace emberEngine
 							//std::cout << "descriptorSet:  " << *meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex) << std::endl;
 							//std::cout << "Pipeline:       " << meshRenderer->GetShadingPipeline() << std::endl;
 							//std::cout << "PipelineLayout: " << meshRenderer->GetShadingPipelineLayout() << std::endl;
-							//Texture2d* texture = meshRenderer->GetMaterialProperties()->GetTexture2d("colorMap");
+							//Texture2d* texture = meshRenderer->GetShaderProperties()->GetTexture2d("colorMap");
 							//if (texture != nullptr)
 							//	std::cout << "texture:        " << texture->GetName() << std::endl;
-							//texture = meshRenderer->GetMaterialProperties()->GetTexture2d("cubeMap");
+							//texture = meshRenderer->GetShaderProperties()->GetTexture2d("cubeMap");
 							//if (texture != nullptr)
 							//	std::cout << "texture:        " << texture->GetName() << std::endl;
 
