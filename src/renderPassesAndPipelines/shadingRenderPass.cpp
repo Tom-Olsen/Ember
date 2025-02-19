@@ -117,12 +117,12 @@ namespace emberEngine
 	}
 	void ShadingRenderPass::CreateMsaaImage()
 	{
-		VkImageSubresourceRange* pSubresourceRange = new VkImageSubresourceRange();
-		pSubresourceRange->aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		pSubresourceRange->baseMipLevel = 0;
-		pSubresourceRange->levelCount = 1;
-		pSubresourceRange->baseArrayLayer = 0;
-		pSubresourceRange->layerCount = 1;
+		VkImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		subresourceRange.baseMipLevel = 0;
+		subresourceRange.levelCount = 1;
+		subresourceRange.baseArrayLayer = 0;
+		subresourceRange.layerCount = 1;
 
 		VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
 		pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -146,16 +146,18 @@ namespace emberEngine
 		pAllocationInfo->requiredFlags = 0;
 		pAllocationInfo->preferredFlags = 0;
 
-		m_msaaImage = std::make_unique<VmaImage>(m_pContext, pImageInfo, pAllocationInfo, pSubresourceRange);
+		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
+		VulkanQueue queue = m_pContext->pLogicalDevice->GetGraphicsQueue();
+		m_msaaImage = std::make_unique<VmaImage>(m_pContext, pImageInfo, pAllocationInfo, subresourceRange, viewType, queue);
 	}
 	void ShadingRenderPass::CreateDepthImage()
 	{
-		VkImageSubresourceRange* pSubresourceRange = new VkImageSubresourceRange();
-		pSubresourceRange->aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-		pSubresourceRange->baseMipLevel = 0;
-		pSubresourceRange->levelCount = 1;
-		pSubresourceRange->baseArrayLayer = 0;
-		pSubresourceRange->layerCount = 1;
+		VkImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+		subresourceRange.baseMipLevel = 0;
+		subresourceRange.levelCount = 1;
+		subresourceRange.baseArrayLayer = 0;
+		subresourceRange.layerCount = 1;
 
 		VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
 		pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -179,32 +181,17 @@ namespace emberEngine
 		pAllocationInfo->requiredFlags = 0;
 		pAllocationInfo->preferredFlags = 0;
 
-		m_depthImage = std::make_unique<VmaImage>(m_pContext, pImageInfo, pAllocationInfo, pSubresourceRange);
+		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
+		VulkanQueue queue = m_pContext->pLogicalDevice->GetGraphicsQueue();
+		m_depthImage = std::make_unique<VmaImage>(m_pContext, pImageInfo, pAllocationInfo, subresourceRange, viewType, queue);
 
-		// Transition depth image layout:
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
-		{
-			VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-			barrier.srcAccessMask = VK_ACCESS_NONE;					// types of memory access allowed before the barrier
-			barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;	// types of memory access allowed after the barrier
-			barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.image = m_depthImage->GetVkImage();
-			barrier.subresourceRange = *pSubresourceRange;
-
-			VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;	// Immediatly
-			VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;		// early fragment test stage
-			vkCmdPipelineBarrier(
-				command.GetVkCommandBuffer(),
-				srcStage, dstStage,
-				0,	// dependency flags, typically 0
-				0, nullptr,				// memory barriers
-				0, nullptr,	// buffer memory barriers
-				1, &barrier);	// image memory barriers
-		}
-		VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_pContext->pLogicalDevice->GetGraphicsQueue());
+		// Transition: Layout: undefined->depth attachment, Queue: graphics
+		VkImageLayout newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+		VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT;
+		VkAccessFlags2 srcAccessMask = VK_ACCESS_2_NONE;
+		VkAccessFlags2 dstAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+		m_depthImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 	}
 	void ShadingRenderPass::CreateFrameBuffers()
 	{

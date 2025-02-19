@@ -17,10 +17,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 
    
 # ------------------- File lists --------------------
-# src/editor/*:
-file(GLOB EDITOR_FILES "${PROJECT_SOURCE_DIR}/src/editor/*")
-source_group("Editor" FILES ${EDITOR_FILES})
-
 # src/engine/*:
 file(GLOB ENGINE_FILES "${PROJECT_SOURCE_DIR}/src/engine/*")
 source_group("Engine" FILES ${ENGINE_FILES})
@@ -64,6 +60,10 @@ file(GLOB SHADER_FILES
     "${PROJECT_SOURCE_DIR}/src/shaders/*.bat")
 source_group("Shaders" FILES ${SHADER_FILES})
 
+# src/textures/*:
+file(GLOB TEXTURES_FILES "${PROJECT_SOURCE_DIR}/src/textures/*")
+source_group("Textures" FILES ${TEXTURES_FILES})
+
 # src/utility/*:
 file(GLOB UTILITY_FILES "${PROJECT_SOURCE_DIR}/src/utility/*")
 source_group("Utility" FILES ${UTILITY_FILES})
@@ -80,7 +80,6 @@ source_group("" FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
 
 # Configure executables:
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/src/main.cpp
-${EDITOR_FILES}
 ${ENGINE_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
 ${IMGUI_FILES}
@@ -90,6 +89,7 @@ ${MATHF_FILES}
 ${RENDERPASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
 ${SHADER_FILES}
+${TEXTURES_FILES}
 ${UTILITY_FILES}
 ${VULKAN_RENDERER_FILES})
 set_source_files_properties(${IMGUI_EXAMPLE} PROPERTIES HEADER_FILE_ONLY ON)
@@ -157,13 +157,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC libs/vma/include)
 
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME}
-PRIVATE ${CMAKE_SOURCE_DIR}/src/editor
 PRIVATE ${CMAKE_SOURCE_DIR}/src/engine
 PRIVATE ${CMAKE_SOURCE_DIR}/src/gameobjectSystem
 PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
 PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderPassesAndPipelines
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources
+PRIVATE ${CMAKE_SOURCE_DIR}/src/shaders
+PRIVATE ${CMAKE_SOURCE_DIR}/src/textures
 PRIVATE ${CMAKE_SOURCE_DIR}/src/utility
 PRIVATE ${CMAKE_SOURCE_DIR}/src/vulkanRenderer
 PRIVATE ${CMAKE_SOURCE_DIR}/src)
@@ -184,7 +185,6 @@ source_group("" FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
 # Link test executable:
 source_group("" FILES unitTests/main.cpp)
 add_executable(UnitTests unitTests/main.cpp
-${EDITOR_FILES}
 ${ENGINE_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
 ${IMGUI_FILES}
@@ -194,6 +194,7 @@ ${MATHF_FILES}
 ${RENDERPASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
 ${SHADER_FILES}
+${TEXTURES_FILES}
 ${UTILITY_FILES}
 ${VULKAN_RENDERER_FILES}
 ${UNITTEST_FILES})
@@ -217,13 +218,14 @@ PUBLIC libs/spdlog/include
 PUBLIC libs/SPIRV-Reflect
 PUBLIC ${Vulkan_INCLUDE_DIRS}
 PUBLIC libs/vma/include
-PRIVATE ${CMAKE_SOURCE_DIR}/src/editor
 PRIVATE ${CMAKE_SOURCE_DIR}/src/engine
 PRIVATE ${CMAKE_SOURCE_DIR}/src/gameobjectSystem
 PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
 PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderPassesAndPipelines
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources
+PRIVATE ${CMAKE_SOURCE_DIR}/src/shaders
+PRIVATE ${CMAKE_SOURCE_DIR}/src/textures
 PRIVATE ${CMAKE_SOURCE_DIR}/src/utility
 PRIVATE ${CMAKE_SOURCE_DIR}/src/vulkanRenderer
 PRIVATE ${CMAKE_SOURCE_DIR}/unitTests)

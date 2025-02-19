@@ -63,7 +63,7 @@ namespace emberEngine
 		const VkDescriptorPool& GetVkDescriptorPool() const;
 		const VkSwapchainKHR& GetVkSwapchainKHR() const;
 		bool DepthClampEnabled() const;
-		bool DepthBiasEnabled() const;
+		bool DepthBiasClampEnabled() const;
 
 		// Frame logic:
 		void UpdateFrameIndex();

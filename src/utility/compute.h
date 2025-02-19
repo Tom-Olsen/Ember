@@ -1,5 +1,6 @@
 #ifndef __INCLUDE_GUARD_compute_h__
 #define __INCLUDE_GUARD_compute_h__
+#include "mathf.h"
 #include <vector>
 
 
@@ -26,12 +27,12 @@ namespace emberEngine
 		static void Clear();
 
 		// Dispatch calls:
+		static ShaderProperties* Dispatch(ComputeShader* pComputeShader, Uint3 groupCount);
 		static ShaderProperties* Dispatch(ComputeShader* pComputeShader, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
-
 		static void ResetDispatchCalls();
 
 		// Getters:
-		static std::vector<ComputeUnit*>* GetComputeUnits();
+		static std::vector<ComputeUnit*>& GetComputeUnits();
 
 	private: // Methods
 		static void DoubleCapacityIfNeeded();

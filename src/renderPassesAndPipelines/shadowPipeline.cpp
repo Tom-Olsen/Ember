@@ -105,7 +105,7 @@ namespace emberEngine
         rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE; // which face of triangle is front: 123 or 132?
         rasterizationState.lineWidth = 1.0f;
         rasterizationState.depthClampEnable = m_pContext->DepthClampEnabled();
-        rasterizationState.depthBiasEnable = m_pContext->DepthBiasEnabled();
+        rasterizationState.depthBiasEnable = m_pContext->DepthBiasClampEnabled();
         rasterizationState.depthBiasConstantFactor = 1.25f;     // Tweak this value based on the scene.
         rasterizationState.depthBiasClamp = 0.0001f;              // clamp value for equation below.
         rasterizationState.depthBiasSlopeFactor = 1.75f;        // Slope scale bias to handle varying slopes in depth.

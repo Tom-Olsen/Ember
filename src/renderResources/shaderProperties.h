@@ -56,7 +56,7 @@ namespace emberEngine
 		~ShaderProperties();
 
 		void UpdateShaderData();
-		const std::vector<VkDescriptorSet>& GetDescriptorSets() const;
+		std::vector<VkDescriptorSet>& GetDescriptorSets();
 
 		// Uniform Buffer Setters:
 		template<typename T>

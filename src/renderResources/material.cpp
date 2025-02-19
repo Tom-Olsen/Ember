@@ -109,6 +109,7 @@ namespace emberEngine
 		for (uint32_t i = 0; i < m_pVertexInputDescriptions->size; i++)
 		{
 			const std::string& semantic = m_pVertexInputDescriptions->semantics[i];
+
 			if (semantic == "POSITION")
 				m_meshOffsets[i] = pMesh->GetPositionsOffset();
 			else if (semantic == "NORMAL")
@@ -119,6 +120,8 @@ namespace emberEngine
 				m_meshOffsets[i] = pMesh->GetColorsOffset();
 			else if (semantic == "TEXCOORD0")
 				m_meshOffsets[i] = pMesh->GetUVsOffset();
+			else
+				LOG_WARN("Material system does not support the VertexInputDescription semantix '{}' yet. Material::GetMeshOffsets(Mesh*) must be updated,", semantic);
 		}
 		return m_meshOffsets.data();
 	}

@@ -1,4 +1,5 @@
 #include "vulkanRenderer.h"
+#include "compute.h"
 #include "computeShader.h"
 #include "dearImGui.h"
 #include "directionalLight.h"
@@ -6,6 +7,7 @@
 #include "macros.h"
 #include "mesh.h"
 #include "meshRenderer.h"
+#include "pipeline.h"
 #include "shaderProperties.h"
 #include "pointLight.h"
 #include "renderPassManager.h"
@@ -79,6 +81,7 @@ namespace emberEngine
 		VKA(vkResetFences(m_pContext->GetVkDevice(), 1, &m_fences[m_pContext->frameIndex]));
 
 		SetMeshRendererGroups(pScene);
+		RecordComputeShaders(pScene);
 		RecordShadowCommandBuffer(pScene);
 		RecordShadingCommandBuffer(pScene);
 		Graphics::ResetDrawCalls();
@@ -141,33 +144,51 @@ namespace emberEngine
 
 	void VulkanRenderer::RecordComputeShaders(Scene* pScene)
 	{
-		// Add pipeline barrier for synchronyzation (36:00 in tutorial).
+		vkResetCommandPool(m_pContext->GetVkDevice(), m_computeCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
+		VkCommandBuffer commandBuffer = m_computeCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+		Camera* pCamera = pScene->GetActiveCamera();
+		if (pCamera == nullptr)
+			return;
 
-		//vkResetCommandPool(m_pContext->GetVkDevice(), m_computeCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
-		//VkCommandBuffer commandBuffer = m_computeCommands[m_pContext->frameIndex].GetVkCommandBuffer();
-		//
-		//Float3 cameraPosition = pCamera->GetTransform()->GetPosition();
-		//ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
-		//
-		//// Begin command buffer:
-		//VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-		//beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		//VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-		//{
-		//	for (ComputeShader* computeShader : computeShaders)
-		//	{
-		//		// From somewhere I need to get shaderProperties and do: (to update the descriptorsets)
-		//		...->GetShaderProperties()->UpdateShaderData();
-		//
-		//		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computeShader->GetPipeline()->GetVkPipeline());
-		//		vkCmdPushConstants(commandBuffer, computeShader->GetPipeline()->GetVkPipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
-		//		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computeShader->GetPipeline()->GetVkPipelineLayout(), 0, 1, ...->GetShaderProperties()->GetDescriptorSets()[m_pContext->frameIndex], 0, nullptr);
-		//
-		//		// Dispatch compute shader:
-		//		vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-		//	}
-		//}
-		//VKA(vkEndCommandBuffer(commandBuffer));
+		// Begin command buffer:
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		{
+			ComputeShader* pComputeShader = nullptr;
+			ComputeShader* pPreviousComputeShader = nullptr;
+			Float3 cameraPosition = pCamera->GetTransform()->GetPosition();
+			ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
+
+			std::vector<ComputeUnit*> computeUnits = Compute::GetComputeUnits();
+			for (ComputeUnit* computeUnit : computeUnits)
+			{
+				if (!computeUnit->IsActive())
+					continue;
+
+				// Update descriptor sets:
+				computeUnit->GetShaderProperties()->UpdateShaderData();
+
+				// Change pipeline if compute shader has changed:
+				pComputeShader = computeUnit->GetComputeShader();
+				if (pPreviousComputeShader != pComputeShader)
+				{
+					pPreviousComputeShader = pComputeShader;
+					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pComputeShader->GetPipeline()->GetVkPipeline());
+					vkCmdPushConstants(commandBuffer, pComputeShader->GetPipeline()->GetVkPipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
+				}
+				
+				// Bind descriptor sets:
+				ShaderProperties* pShaderProperties = computeUnit->GetShaderProperties();
+				VkDescriptorSet* pDescriptorSet = &pShaderProperties->GetDescriptorSets()[m_pContext->frameIndex];
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pComputeShader->GetPipeline()->GetVkPipelineLayout(), 0, 1, pDescriptorSet, 0, nullptr);
+		
+				// Dispatch compute shader:
+				Uint3 groupCount = computeUnit->GetGroupCount();
+				vkCmdDispatch(commandBuffer, groupCount.x, groupCount.y, groupCount.z);
+			}
+		}
+		VKA(vkEndCommandBuffer(commandBuffer));
 	}
 	void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 	{
@@ -214,21 +235,21 @@ namespace emberEngine
 						for (auto group : m_pMeshRendererGroups)
 							for (MeshRenderer* meshRenderer : *group)
 							{
-								if (meshRenderer->IsActive() && meshRenderer->GetCastShadows())
-								{
-									pMesh = meshRenderer->GetMesh();
+								if (!(meshRenderer->IsActive() && meshRenderer->GetCastShadows()))
+									continue;
 
-									// Update shader specific data (push constants):
-									Float4x4 localToClipMatrix = light->GetProjectionMatrix(shadowCascadeIndex) * light->GetViewMatrix(shadowCascadeIndex) * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
-									ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
-									vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+								pMesh = meshRenderer->GetMesh();
 
-									vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
-									vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+								// Update shader specific data (push constants):
+								Float4x4 localToClipMatrix = light->GetProjectionMatrix(shadowCascadeIndex) * light->GetViewMatrix(shadowCascadeIndex) * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
+								ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
+								vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-									vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(m_pContext->frameIndex), 0, nullptr);
-									vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
-								}
+								vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
+								vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(m_pContext->frameIndex), 0, nullptr);
+								vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
 							}
 						shadowMapIndex++;
 					}
@@ -243,21 +264,21 @@ namespace emberEngine
 					for (auto group : m_pMeshRendererGroups)
 						for (MeshRenderer* meshRenderer : *group)
 						{
-							if (meshRenderer->IsActive() && meshRenderer->GetCastShadows())
-							{
-								pMesh = meshRenderer->GetMesh();
+							if (!(meshRenderer->IsActive() && meshRenderer->GetCastShadows()))
+								continue;
 
-								// Update shader specific data (push constants):
-								Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
-								ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
-								vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+							pMesh = meshRenderer->GetMesh();
 
-								vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
-								vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+							// Update shader specific data (push constants):
+							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
+							ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
+							vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(m_pContext->frameIndex), 0, nullptr);
-								vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
-							}
+							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
+							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(m_pContext->frameIndex), 0, nullptr);
+							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
 						}
 					shadowMapIndex++;
 				}
@@ -273,21 +294,21 @@ namespace emberEngine
 						for (auto group : m_pMeshRendererGroups)
 							for (MeshRenderer* meshRenderer : *group)
 							{
-								if (meshRenderer->IsActive() && meshRenderer->GetCastShadows())
-								{
-									pMesh = meshRenderer->GetMesh();
+								if (!(meshRenderer->IsActive() && meshRenderer->GetCastShadows()))
+									continue;
 
-									// Update shader specific data (push constants):
-									Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex) * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
-									ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
-									vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+								pMesh = meshRenderer->GetMesh();
 
-									vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
-									vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+								// Update shader specific data (push constants):
+								Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex) * meshRenderer->GetTransform()->GetLocalToWorldMatrix();
+								ShadowPushConstant pushConstant(shadowMapIndex, localToClipMatrix);
+								vkCmdPushConstants(commandBuffer, MeshRenderer::GetShadowPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-									vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(m_pContext->frameIndex), 0, nullptr);
-									vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
-								}
+								vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
+								vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadowPipelineLayout(), 0, 1, meshRenderer->GetShadowDescriptorSets(m_pContext->frameIndex), 0, nullptr);
+								vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
 							}
 						shadowMapIndex++;
 					}
@@ -329,9 +350,9 @@ namespace emberEngine
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
+				uint32_t bindingCount = 0;
 				Mesh* pMesh = nullptr;
 				Material* pMaterial = nullptr;
-				uint32_t bindingCount = 0;
 				Material* pPreviousMaterial = nullptr;
 				Float3 cameraPosition = pCamera->GetTransform()->GetPosition();
 				ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
@@ -339,45 +360,45 @@ namespace emberEngine
 				for (auto group : m_pMeshRendererGroups)
 					for (MeshRenderer* meshRenderer : *group)
 					{
-						if (meshRenderer->IsActive())
+						if (!meshRenderer->IsActive())
+							continue;
+
+						pMesh = meshRenderer->GetMesh();
+
+						// Update shader specific data (uniform buffers):
+						meshRenderer->SetRenderMatrizes(pScene->GetActiveCamera());
+						meshRenderer->SetLightData(pScene->GetDirectionalLights());
+						meshRenderer->SetLightData(pScene->GetSpotLights());
+						meshRenderer->SetLightData(pScene->GetPointLights());
+						meshRenderer->GetShaderProperties()->UpdateShaderData();
+
+						// Change pipeline if material has changed:
+						pMaterial = meshRenderer->GetMaterial();
+						if (pPreviousMaterial != pMaterial)
 						{
-							pMesh = meshRenderer->GetMesh();
-
-							// Update shader specific data (uniform buffers):
-							meshRenderer->SetRenderMatrizes(pScene->GetActiveCamera());
-							meshRenderer->SetLightData(pScene->GetDirectionalLights());
-							meshRenderer->SetLightData(pScene->GetSpotLights());
-							meshRenderer->SetLightData(pScene->GetPointLights());
-							meshRenderer->GetShaderProperties()->UpdateShaderData();
-
-							// Change pipeline if material has changed:
-							pMaterial = meshRenderer->GetMaterial();
-							if (pPreviousMaterial != pMaterial)
-							{
-								pPreviousMaterial = pMaterial;
-								bindingCount = pMaterial->GetVertexInputDescriptions()->size;
-								vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipeline());
-								vkCmdPushConstants(commandBuffer, meshRenderer->GetShadingPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
-							}
-
-							vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
-							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
-
-							// For debugging binding missmatch error:
-							//std::cout << "GameObject:     " << meshRenderer->GetGameObject()->GetName() << std::endl;
-							//std::cout << "descriptorSet:  " << *meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex) << std::endl;
-							//std::cout << "Pipeline:       " << meshRenderer->GetShadingPipeline() << std::endl;
-							//std::cout << "PipelineLayout: " << meshRenderer->GetShadingPipelineLayout() << std::endl;
-							//Texture2d* texture = meshRenderer->GetShaderProperties()->GetTexture2d("colorMap");
-							//if (texture != nullptr)
-							//	std::cout << "texture:        " << texture->GetName() << std::endl;
-							//texture = meshRenderer->GetShaderProperties()->GetTexture2d("cubeMap");
-							//if (texture != nullptr)
-							//	std::cout << "texture:        " << texture->GetName() << std::endl;
-
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipelineLayout(), 0, 1, meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex), 0, nullptr);
-							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
+							pPreviousMaterial = pMaterial;
+							bindingCount = pMaterial->GetVertexInputDescriptions()->size;
+							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipeline());
+							vkCmdPushConstants(commandBuffer, meshRenderer->GetShadingPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
 						}
+
+						vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
+						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+
+						// For debugging binding missmatch error:
+						//std::cout << "GameObject:     " << meshRenderer->GetGameObject()->GetName() << std::endl;
+						//std::cout << "descriptorSet:  " << *meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex) << std::endl;
+						//std::cout << "Pipeline:       " << meshRenderer->GetShadingPipeline() << std::endl;
+						//std::cout << "PipelineLayout: " << meshRenderer->GetShadingPipelineLayout() << std::endl;
+						//Texture2d* texture = meshRenderer->GetShaderProperties()->GetTexture2d("colorMap");
+						//if (texture != nullptr)
+						//	std::cout << "texture:        " << texture->GetName() << std::endl;
+						//texture = meshRenderer->GetShaderProperties()->GetTexture2d("cubeMap");
+						//if (texture != nullptr)
+						//	std::cout << "texture:        " << texture->GetName() << std::endl;
+
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipelineLayout(), 0, 1, meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex), 0, nullptr);
+						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
 					}
 			}
 			DearImGui::Render(commandBuffer);
@@ -388,23 +409,37 @@ namespace emberEngine
 
 	void VulkanRenderer::SubmitCommandBuffers()
 	{
-		// Shadow render pass:
+		// Synced compute submission:
 		{
-			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;	// wait at depth and stencil test stage
+			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;				// wait at compute stage until semaphores are signaled
 			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_acquireSemaphores[m_pContext->frameIndex];		// wait for acquireSemaphor
+			submitInfo.pWaitSemaphores = &m_acquireSemaphores[m_pContext->frameIndex];			// wait for acquireSemaphor as these compute commands are synced with rendering
+			submitInfo.pWaitDstStageMask = &waitStage;
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &m_computeCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+			submitInfo.signalSemaphoreCount = 1;
+			submitInfo.pSignalSemaphores = &m_computeToShadowSemaphores[m_pContext->frameIndex]; // signal m_computeToShadowSemaphores when done
+			VKA(vkQueueSubmit(m_pContext->pLogicalDevice->GetComputeQueue().queue, 1, &submitInfo, nullptr)); // no fence needed (sync by semaphore)
+		}
+
+		// Shadow render pass submission:
+		{
+			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;		// wait at depth and stencil test stage until semaphores are signaled
+			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+			submitInfo.waitSemaphoreCount = 1;
+			submitInfo.pWaitSemaphores = &m_computeToShadowSemaphores[m_pContext->frameIndex];	// wait for synced compute commands to finish
 			submitInfo.pWaitDstStageMask = &waitStage;
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &m_shadowCommands[m_pContext->frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &m_shadowToShadingSemaphores[m_pContext->frameIndex]; // signal shadowToShadingSemaphore when done
-			VKA(vkQueueSubmit(m_pContext->pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr)); // signal fence when done
+			VKA(vkQueueSubmit(m_pContext->pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr)); // no fence needed (sync by semaphore)
 		}
 
-		// Shading render pass:
+		// Shading render pass submission:
 		{
-			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;				// wait at fragment shader stage
+			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;				// wait at fragment shader stage until semaphores are signaled
 			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 			submitInfo.waitSemaphoreCount = 1;
 			submitInfo.pWaitSemaphores = &m_shadowToShadingSemaphores[m_pContext->frameIndex];	// wait for shadowToShadingSemaphore
@@ -470,11 +505,13 @@ namespace emberEngine
 		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
 		m_acquireSemaphores.resize(m_pContext->framesInFlight);
+		m_computeToShadowSemaphores.resize(m_pContext->framesInFlight);
 		m_shadowToShadingSemaphores.resize(m_pContext->framesInFlight);
 		m_releaseSemaphores.resize(m_pContext->framesInFlight);
 		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
 		{
 			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
+			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_computeToShadowSemaphores[i]));
 			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_shadowToShadingSemaphores[i]));
 			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
 		}
@@ -492,10 +529,12 @@ namespace emberEngine
 		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
 		{
 			vkDestroySemaphore(m_pContext->GetVkDevice(), m_acquireSemaphores[i], nullptr);
+			vkDestroySemaphore(m_pContext->GetVkDevice(), m_computeToShadowSemaphores[i], nullptr);
 			vkDestroySemaphore(m_pContext->GetVkDevice(), m_shadowToShadingSemaphores[i], nullptr);
 			vkDestroySemaphore(m_pContext->GetVkDevice(), m_releaseSemaphores[i], nullptr);
 		}
 		m_acquireSemaphores.clear();
+		m_computeToShadowSemaphores.clear();
 		m_shadowToShadingSemaphores.clear();
 		m_releaseSemaphores.clear();
 	}

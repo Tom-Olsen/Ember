@@ -59,6 +59,10 @@ namespace emberEngine
 		Material* pSimpleUnlitMaterial = new Material(s_pContext, shadingType, "simpleUnlit", opaqueQueue, "../src/shaders/simpleUnlit.vert.spv", "../src/shaders/simpleUnlit.frag.spv");
 		AddMaterial(pSimpleUnlitMaterial);
 
+		// For testing spirv reflect:
+		Material* pTest = new Material(s_pContext, shadingType, "test", opaqueQueue, "../src/shaders/test.vert.spv", "../src/shaders/test.frag.spv");
+		AddMaterial(pTest);
+
 		// For testing the binding missmatch error:
 		Material* pTestA = new Material(s_pContext, shadingType, "testA", opaqueQueue, "../src/shaders/testA.vert.spv", "../src/shaders/testA.frag.spv");
 		AddMaterial(pTestA);

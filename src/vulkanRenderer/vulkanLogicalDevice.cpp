@@ -12,11 +12,6 @@ namespace emberEngine
 	// Constructor/Destructor:
 	VulkanLogicalDevice::VulkanLogicalDevice(VulkanPhysicalDevice* pPhysicalDevice, VulkanSurface* pSurface, std::vector<const char*> deviceExtensions)
 	{
-		// Choose which features to enable:
-		VkPhysicalDeviceFeatures enabledFearutes = {};
-		enabledFearutes.samplerAnisotropy = VK_TRUE;
-		enabledFearutes.depthClamp = pPhysicalDevice->SupportsDepthClamp();
-
 		// Find queue family indices:
 		m_graphicsQueue.familyIndex = FindGraphicsAndComputeQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice());
 		m_presentQueue.familyIndex = FindPresentQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice(), pSurface->GetVkSurfaceKHR());
@@ -43,13 +38,24 @@ namespace emberEngine
 			queueCreateInfos.push_back(queueCreateInfo);
 		}
 
-		// Create device create info:
-		VkDeviceCreateInfo deviceCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+		// Sync2 feature. Allows for src/dst stage to be 0 (VK_PIPELINE_STAGE_NONE).
+		VkPhysicalDeviceSynchronization2FeaturesKHR sync2Features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR };
+		sync2Features.synchronization2 = VK_TRUE;
+
+		// Choose which features to enable:
+		VkPhysicalDeviceFeatures2 deviceFeatures2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+		deviceFeatures2.pNext = &sync2Features;
+		deviceFeatures2.features.samplerAnisotropy = VK_TRUE;
+		deviceFeatures2.features.depthClamp = pPhysicalDevice->SupportsDepthClamp();
+		deviceFeatures2.features.depthBiasClamp = pPhysicalDevice->SupportsDepthBiasClamp();
+
+		// Device create info:
+		VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
 		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
 		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
-		deviceCreateInfo.pEnabledFeatures = &enabledFearutes;
+		deviceCreateInfo.pNext = &deviceFeatures2;
 		VKA(vkCreateDevice(pPhysicalDevice->GetVkPhysicalDevice(), &deviceCreateInfo, nullptr, &m_device));
 
 		// Aquire queues:
@@ -71,19 +77,19 @@ namespace emberEngine
 	{
 		return m_device;
 	}
-	const VulkanQueue& VulkanLogicalDevice::GetGraphicsQueue() const
+	const VulkanQueue VulkanLogicalDevice::GetGraphicsQueue() const
 	{
 		return m_graphicsQueue;
 	}
-	const VulkanQueue& VulkanLogicalDevice::GetPresentQueue() const
+	const VulkanQueue VulkanLogicalDevice::GetPresentQueue() const
 	{
 		return m_presentQueue;
 	}
-	const VulkanQueue& VulkanLogicalDevice::GetComputeQueue() const
+	const VulkanQueue VulkanLogicalDevice::GetComputeQueue() const
 	{
 		return m_computeQueue;
 	}
-	const VulkanQueue& VulkanLogicalDevice::GetTransferQueue() const
+	const VulkanQueue VulkanLogicalDevice::GetTransferQueue() const
 	{
 		return m_transferQueue;
 	}

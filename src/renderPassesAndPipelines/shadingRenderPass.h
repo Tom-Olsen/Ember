@@ -20,6 +20,8 @@ namespace emberEngine
 	class ShadingRenderPass : public RenderPass
 	{
 	private: // Members:
+		// These images are transiant (only needed temporary in between pipeline stages).
+		// Thus creating texture wrappers for them makes no sense, as they have a fixed place and functionality.
 		std::unique_ptr<VmaImage> m_msaaImage;
 		std::unique_ptr<VmaImage> m_depthImage;
 		VkFormat m_depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;

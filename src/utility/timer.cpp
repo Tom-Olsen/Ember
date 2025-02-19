@@ -1,4 +1,5 @@
 #include "timer.h"
+#include <thread>
 
 
 
@@ -13,6 +14,12 @@ namespace emberEngine
 
 
 	// Timer management:
+	void Timer::Reset()
+	{
+		s_time = 0.0f;
+		s_deltaTime = 0.0f;
+		auto s_start = std::chrono::steady_clock::now();
+	}
 	void Timer::Update()
 	{
 		s_end = std::chrono::steady_clock::now();
@@ -20,11 +27,9 @@ namespace emberEngine
 		s_time += s_deltaTime;
 		s_start = s_end;
 	}
-	void Timer::Reset()
+	void Timer::Sleep(int milliseconds)
 	{
-		s_time = 0.0f;
-		s_deltaTime = 0.0f;
-		auto s_start = std::chrono::steady_clock::now();
+		std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 	}
 
 

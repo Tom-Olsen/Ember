@@ -16,7 +16,7 @@
 namespace emberEngine
 {
 	// Static members:
-	Material* MeshRenderer::m_pShadowMaterial = nullptr;
+	Material* MeshRenderer::s_pShadowMaterial = nullptr;
 	std::unique_ptr<ShaderProperties> MeshRenderer::m_pShadowShaderProperties = nullptr;
 
 
@@ -31,10 +31,10 @@ namespace emberEngine
 		m_pMesh = nullptr;
 		m_pMaterial = MaterialManager::GetMaterial("error");
 
-		if (m_pShadowMaterial == nullptr)
-			m_pShadowMaterial = MaterialManager::GetMaterial("shadow");
+		if (s_pShadowMaterial == nullptr)
+			s_pShadowMaterial = MaterialManager::GetMaterial("shadow");
 		if (m_pShadowShaderProperties == nullptr)
-			m_pShadowShaderProperties = std::make_unique<ShaderProperties>(m_pShadowMaterial);
+			m_pShadowShaderProperties = std::make_unique<ShaderProperties>(s_pShadowMaterial);
 	}
 	MeshRenderer::~MeshRenderer()
 	{
@@ -193,11 +193,11 @@ namespace emberEngine
 	}
 	const VkPipeline& MeshRenderer::GetShadowPipeline()
 	{
-		return m_pShadowMaterial->GetPipeline()->GetVkPipeline();
+		return s_pShadowMaterial->GetPipeline()->GetVkPipeline();
 	}
 	const VkPipelineLayout& MeshRenderer::GetShadowPipelineLayout()
 	{
-		return m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
+		return s_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
 	}
 
 

@@ -57,9 +57,9 @@ namespace emberEngine
 	{
 		return m_supportsDepthClamp;
 	}
-	VkBool32 VulkanPhysicalDevice::SupportsDepthBias() const
+	VkBool32 VulkanPhysicalDevice::SupportsDepthBiasClamp() const
 	{
-		return m_supportsDepthBias;
+		return m_supportsDepthBiasClamp;
 	}
 	VkBool32 VulkanPhysicalDevice::SupportsMultiViewport() const
 	{
@@ -95,7 +95,7 @@ namespace emberEngine
 		// Check optional features:
 		int score = 0;
 		score += 10 * deviceFeatures.depthClamp; m_supportsDepthClamp = deviceFeatures.depthClamp;
-		score += 10 * deviceFeatures.depthBiasClamp; m_supportsDepthBias = deviceFeatures.depthBiasClamp;
+		score += 10 * deviceFeatures.depthBiasClamp; m_supportsDepthBiasClamp = deviceFeatures.depthBiasClamp;
 		score += 10 * deviceFeatures.multiViewport; m_supportsMultiViewport = deviceFeatures.multiViewport;
 		// score +=  5 * deviceFeatures.fillModeNonSolid;
 		// score +=  1 * deviceFeatures.shaderFloat64;

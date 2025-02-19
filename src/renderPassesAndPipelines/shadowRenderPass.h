@@ -9,7 +9,7 @@
 namespace emberEngine
 {
 	// Forward declarations:
-	class Texture2d;
+	class DepthTexture2dArray;
 	class VmaImage;
 	struct VulkanContext;
 
@@ -22,10 +22,10 @@ namespace emberEngine
 	class ShadowRenderPass : public RenderPass
 	{
 	private: // Members:
-		std::unique_ptr<Texture2d> m_shadowMaps;
-		VkFormat m_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
+		std::unique_ptr<DepthTexture2dArray> m_shadowMaps;
 
 	public: // Members:
+		static VkFormat s_shadowMapFormat;
 		static uint32_t s_shadowMapWidth;
 		static uint32_t s_shadowMapHeight;
 		static uint32_t s_layerCount;
@@ -33,10 +33,9 @@ namespace emberEngine
 	public: // Methods:
 		ShadowRenderPass(VulkanContext* pContext);
 		~ShadowRenderPass();
-		Texture2d* const GetShadowMaps() const;
+		DepthTexture2dArray* const GetShadowMaps() const;
 
 	private: // Methods:
-		void CreateShadowMapTexture();
 		void CreateRenderpass();
 		void CreateFramebuffers();
 	};

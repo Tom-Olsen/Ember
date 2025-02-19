@@ -1,5 +1,7 @@
 #include "textureManager.h"
-#include "texture2d.h"
+#include "depthTexture2dArray.h"
+#include "sampleTexture2d.h"
+#include "storageTexture2d.h"
 #include "textureCube.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -14,7 +16,6 @@ namespace emberEngine
 	bool TextureManager::s_isInitialized = false;
 	VulkanContext* TextureManager::s_pContext;
 	std::unordered_map<std::string, std::unique_ptr<Texture2d>> TextureManager::s_texture2ds;
-	std::unordered_map<std::string, std::unique_ptr<TextureCube>> TextureManager::s_textureCubes;
 
 
 
@@ -44,26 +45,33 @@ namespace emberEngine
 						format = VK_FORMAT_R8G8B8A8_UNORM;
 					else if (name.find("roughness") || name.find("metallic"))
 						format = VK_FORMAT_R8_UNORM;
-					Texture2d* texture = new Texture2d(s_pContext, entry.path(), name, format);
+					SampleTexture2d* texture = new SampleTexture2d(s_pContext, entry.path(), name, format);
 					AddTexture2d(texture);
 				}
 			}
 		}
 
 		// Manual adding TextureCubes:
-		TextureCube* texCube = new TextureCube(s_pContext, "../textures/skyboxClouds1/", "skyboxClouds0", VK_FORMAT_R8G8B8A8_SRGB);
-		//TextureCube* texCube = new TextureCube(s_pContext, "../textures/skyboxNebula0/", "skyboxClouds0", VK_FORMAT_R8G8B8A8_SRGB);
-		AddTextureCube(texCube);
+		TextureCube* skyBoxWhite = new TextureCube(s_pContext, "../textures/white/", "skyBoxWhite", VK_FORMAT_R8G8B8A8_SRGB);
+		AddTexture2d(skyBoxWhite);
+		TextureCube* skyBox0 = new TextureCube(s_pContext, "../textures/skyboxClouds1/", "skyBox0", VK_FORMAT_R8G8B8A8_SRGB);
+		AddTexture2d(skyBox0);
+		//TextureCube* skyBox01 = new TextureCube(s_pContext, "../textures/skyboxNebula0/", "skyBox1", VK_FORMAT_R8G8B8A8_SRGB);
+		//AddTexture2d(skyBox1);
+
+
+		// Manual adding storage Textire2dArrays:
+		DepthTexture2dArray* blackArray = new DepthTexture2dArray(s_pContext, "blackArray", VK_FORMAT_D32_SFLOAT, 2, 2, 2);
+		AddTexture2d(blackArray);
 
 		// Manual adding storage Texture2ds:
-		Texture2d* storageTexture8x8 = Texture2d::StorageTexture2d(s_pContext, 8,8, VK_FORMAT_R8G8B8A8_SRGB, "storageTexture8x8");
+		StorageTexture2d* storageTexture8x8 = new StorageTexture2d(s_pContext, "storageTexture8x8", VK_FORMAT_R32G32B32A32_SFLOAT, 8, 8);
 		AddTexture2d(storageTexture8x8);
 	}
 	void TextureManager::Clear()
 	{
 		s_pContext->WaitDeviceIdle();
 		s_texture2ds.clear();
-		s_textureCubes.clear();
 	}
 
 
@@ -78,15 +86,6 @@ namespace emberEngine
 			return;
 		}
 	}
-	void TextureManager::AddTextureCube(TextureCube* pTexture)
-	{
-		// If texture already contained in TextureManager, do nothing.
-		if (s_textureCubes.emplace(pTexture->GetName(), std::unique_ptr<TextureCube>(pTexture)).second == false)
-		{
-			LOG_WARN("TextureCube with the name: {} already exists in TextureManager!", pTexture->GetName());
-			return;
-		}
-	}
 	Texture2d* TextureManager::GetTexture2d(const std::string& name)
 	{
 		auto it = s_texture2ds.find(name);
@@ -95,23 +94,10 @@ namespace emberEngine
 		LOG_WARN("Texture2d '{}' not found!", name);
 		return nullptr;
 	}
-	TextureCube* TextureManager::GetTextureCube(const std::string& name)
-	{
-		auto it = s_textureCubes.find(name);
-		if (it != s_textureCubes.end())
-			return it->second.get();
-		LOG_WARN("TextureCube '{}' not found!", name);
-		return nullptr;
-	}
 	void TextureManager::DeleteTexture2d(const std::string& name)
 	{
 		s_pContext->WaitDeviceIdle();
 		s_texture2ds.erase(name);
-	}
-	void TextureManager::DeleteTextureCube(const std::string& name)
-	{
-		s_pContext->WaitDeviceIdle();
-		s_textureCubes.erase(name);
 	}
 
 
@@ -119,12 +105,8 @@ namespace emberEngine
 	// Debugging:
 	void TextureManager::PrintAllTextureNames()
 	{
-		LOG_TRACE("Names of all managed textures:");
-		LOG_TRACE("  s_texture2ds:");
+		LOG_TRACE("Names of all managed texture2ds:");
 		for (const auto& [name, _] : s_texture2ds)
-			LOG_TRACE("    " + name);
-		LOG_TRACE("  s_textureCubes:");
-		for (const auto& [name, _] : s_textureCubes)
-			LOG_TRACE("    " + name);
+			LOG_TRACE("  " + name);
 	}
 }

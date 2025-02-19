@@ -7,6 +7,7 @@ using namespace emberEngine;
 // TODO now!
 // - compute shaders!
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
+// - test SDL_WaitEvent in sdlWindow
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
 // - use one constants.h file both for c++ and hlsl constants that are identical, e.g. #define SHADOW_MAP_RESOLUTION 4096
@@ -17,6 +18,8 @@ using namespace emberEngine;
 // - cleanup project. e.g. renderpasses & pipelines => multiple folders e.g shadow/forward/skybox/...
 
 // TODO:
+// - batch image transitions and copying (e.g. texture2d creation)
+// - remove camera/directionalLight/meshRenderer/etc. dependency from vulkanRenderer and instead use another abstraction layer that linkes these GamaObject Components to the render system.
 // - render engine into texture instead of directly to the swapchain => post processing effects + ImGui docking support
 // - optimize eventsystem::AnyKey etc.
 // - Replace the structs Directional/Spot/Point-LightData in shadowMapping.hlsli with a single LightData struct.
@@ -105,7 +108,7 @@ Scene* ShadowCascadeScene()
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skybox"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTextureCube("skyboxClouds0"));
+		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skyBox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
@@ -290,7 +293,7 @@ Scene* TestScene()
 		pMeshRenderer->SetMaterial(materialB);
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("brick"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("cubeMap", TextureManager::GetTextureCube("skyboxClouds0"));
+		pMeshRenderer->GetShaderProperties()->SetTexture2d("cubeMap", TextureManager::GetTexture2d("skyBox0"));
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		pScene->AddGameObject(pGameObject);
@@ -470,7 +473,7 @@ Scene* DefaultScene()
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skybox"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTextureCube("skyboxClouds0"));
+		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skyBox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
@@ -580,8 +583,6 @@ Scene* DefaultScene()
 		pMeshTester->AddMesh(MeshManager::GetMesh("arrowEdgy"));
 		pMeshTester->AddMesh(MeshManager::GetMesh("threeLeg"));
 		pMeshTester->AddMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("grid20x20"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("grid100x100"));
 		pGameObject->AddComponent<MeshTester>(pMeshTester);
 	
 		pScene->AddGameObject(pGameObject);
@@ -703,27 +704,6 @@ Scene* PointLightScene()
 	
 		pScene->AddGameObject(pGameObject);
 	}
-	//Float3 directions[6] = { Float3::right, Float3::left, Float3::up, Float3::down, Float3::forward, Float3::back };
-	//for (int i = 0; i < 6; i++)
-	//{// SpotLights:
-	//	GameObject* pGameObject = new GameObject("spotLight" + std::to_string(i));
-	//	Float3 pos = Float3(0.0f, 0.0f, 0.0f);
-	//	Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, directions[i]);
-	//	pGameObject->GetTransform()->SetPosition(pos);
-	//	pGameObject->GetTransform()->SetRotationMatrix(matrix);
-	//
-	//	SpotLight* pSpotLight = new SpotLight();
-	//	pSpotLight->SetIntensity(10.0f);
-	//	pSpotLight->SetColor(Float3(1.0f, 1.0f, 1.0f));
-	//	pSpotLight->SetNearClip(0.1f);
-	//	pSpotLight->SetFarClip(8.0f);
-	//	pSpotLight->SetFov(mathf::pi2);
-	//	pSpotLight->SetShadowType(ShadowType::hard);
-	//	pSpotLight->SetDrawFrustum(true);
-	//	pGameObject->AddComponent<SpotLight>(pSpotLight);
-	//
-	//	pScene->AddGameObject(pGameObject);
-	//}
 	{// Room:
 		GameObject* pGameObject = new GameObject("room");
 		pGameObject->GetTransform()->SetPosition(0.0f, 0.0f, 0.0f);
@@ -776,20 +756,20 @@ int main()
 
 	// Initialization:
 	emberEngine::Application app;
-	Scene* pScene = ShadowCascadeScene();
+	//Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
 	//Scene* pScene = DefaultScene();
-	//Scene* pScene = PointLightScene();
+	Scene* pScene = PointLightScene();
 	app.SetScene(pScene);
 
 	// Debugging:
-	ComputeShader* csTest =  ComputeShaderManager::GetComputeShader("test");
-	csTest->PrintShaderInfo();
-	ShaderProperties* csProperties = new ShaderProperties(csTest);
-	csProperties->Print("test");
-	csProperties->PrintMaps();
-	csProperties->SetTexture2d("image", TextureManager::GetTexture2d("storageTexture8x8"));
-	delete csProperties;
+	//ComputeShader* csTest =  ComputeShaderManager::GetComputeShader("test");
+	//csTest->PrintShaderInfo();
+	//ShaderProperties* csProperties = new ShaderProperties(csTest);
+	//csProperties->Print("test");
+	//csProperties->PrintMaps();
+	//csProperties->SetTexture2d("image", TextureManager::GetTexture2d("storageTexture8x8"));
+	//delete csProperties;
 	//TextureManager::PrintAllTextureNames();
 	//pScene->PrintGameObjects();
 	//pScene->PrintMeshRenderers();

@@ -7,7 +7,8 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-
+// TODO:
+// - In UniformBufferMember use values in the map instead of pointers?
 
 namespace emberEngine
 {
@@ -103,10 +104,15 @@ namespace emberEngine
 	/// </summary>
 	struct DescriptorBoundResources
 	{
-		uint32_t bindingCount = 0;
+		uint32_t bindingCount = 0; // number of descriptorSetBindingNames and descriptorSetLayoutBindings
 		std::vector<std::string> descriptorSetBindingNames;
 		std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+		// One UniformBufferBlock* for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER.
 		std::unordered_map<std::string, UniformBufferBlock*> uniformBufferBlockMap;
+		// One VkImageViewType for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+		std::unordered_map<std::string, VkImageViewType> sampleViewTypeMap;
+		// One VkImageViewType for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_STORAGE_IMAGE.
+		std::unordered_map<std::string, VkImageViewType> storageViewTypeMap;
 		std::string ToString() const;
 	};
 

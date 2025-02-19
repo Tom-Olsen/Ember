@@ -1,6 +1,6 @@
 #include "shadowRenderPass.h"
+#include "depthTexture2dArray.h"
 #include "macros.h"
-#include "texture2d.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -10,6 +10,7 @@
 namespace emberEngine
 {
 	// static members:
+	VkFormat ShadowRenderPass::s_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
 	uint32_t ShadowRenderPass::s_shadowMapWidth = SHADOW_MAP_WIDTH;
 	uint32_t ShadowRenderPass::s_shadowMapHeight = SHADOW_MAP_HEIGHT;
 	uint32_t ShadowRenderPass::s_layerCount = 4 * MAX_D_LIGHTS + MAX_S_LIGHTS + 6 * MAX_P_LIGHTS;
@@ -21,7 +22,8 @@ namespace emberEngine
 	{
 		m_pContext = pContext;
 
-		CreateShadowMapTexture();
+		// Create shadow map texture:
+		m_shadowMaps = std::make_unique<DepthTexture2dArray>(m_pContext, "shadowMaps", s_shadowMapFormat, s_shadowMapWidth, s_shadowMapHeight, s_layerCount);
 		CreateRenderpass();
 		CreateFramebuffers();
 	}
@@ -33,7 +35,7 @@ namespace emberEngine
 
 
 	// Public methods:
-	Texture2d* const ShadowRenderPass::GetShadowMaps() const
+	DepthTexture2dArray* const ShadowRenderPass::GetShadowMaps() const
 	{
 		return m_shadowMaps.get();
 	}
@@ -41,48 +43,11 @@ namespace emberEngine
 
 
 	// Private methods:
-	void ShadowRenderPass::CreateShadowMapTexture()
-	{
-		// Subresource range:
-		VkImageSubresourceRange* pSubresourceRange = new VkImageSubresourceRange();
-		pSubresourceRange->aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-		pSubresourceRange->baseMipLevel = 0;
-		pSubresourceRange->levelCount = 1;
-		pSubresourceRange->baseArrayLayer = 0;
-		pSubresourceRange->layerCount = s_layerCount;
-
-		// Image info:
-		VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
-		pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		pImageInfo->imageType = VK_IMAGE_TYPE_2D;
-		pImageInfo->extent.width = s_shadowMapWidth;
-		pImageInfo->extent.height = s_shadowMapHeight;
-		pImageInfo->extent.depth = 1;
-		pImageInfo->mipLevels = 1;
-		pImageInfo->arrayLayers = s_layerCount;
-		pImageInfo->format = m_shadowMapFormat;
-		pImageInfo->tiling = VK_IMAGE_TILING_OPTIMAL;
-		pImageInfo->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		pImageInfo->usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		pImageInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		pImageInfo->samples = VK_SAMPLE_COUNT_1_BIT;
-		pImageInfo->flags = 0;
-
-		// Allocation info:
-		VmaAllocationCreateInfo* pAllocationInfo = new VmaAllocationCreateInfo();
-		pAllocationInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-		pAllocationInfo->flags = 0;
-		pAllocationInfo->requiredFlags = 0;
-		pAllocationInfo->preferredFlags = 0;
-
-		VmaImage* image = new VmaImage(m_pContext, pImageInfo, pAllocationInfo, pSubresourceRange);
-		m_shadowMaps = std::make_unique<Texture2d>(m_pContext, image, "shadowMaps");
-	}
 	void ShadowRenderPass::CreateRenderpass()
 	{
 		// Attachment description:
 		VkAttachmentDescription attachment = {};
-		attachment.format = m_shadowMapFormat;
+		attachment.format = s_shadowMapFormat;
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering
 		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store for later render passes

@@ -21,6 +21,7 @@ namespace emberEngine
 
 
 	// Public methods:
+	// Setters:
 	void ComputeUnit::SetComputeShader(ComputeShader* pComputeShader)
 	{
 		if (pComputeShader != nullptr && pComputeShader != m_pComputeShader)
@@ -29,6 +30,16 @@ namespace emberEngine
 			m_pShaderProperties = std::make_unique<ShaderProperties>(m_pComputeShader);
 		}
 	}
+	void ComputeUnit::SetComputeCount(Uint3 groupCount)
+	{
+		m_groupCount = groupCount;
+	}
+	void ComputeUnit::SetComputeCount(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+	{
+		m_groupCount = Uint3(groupCountX, groupCountY, groupCountZ);
+	}
+
+	// Getters:
 	ComputeShader* ComputeUnit::GetComputeShader()
 	{
 		return m_pComputeShader;
@@ -36,6 +47,10 @@ namespace emberEngine
 	ShaderProperties* ComputeUnit::GetShaderProperties()
 	{
 		return m_pShaderProperties.get();
+	}
+	Uint3 ComputeUnit::GetGroupCount()
+	{
+		return m_groupCount;
 	}
 	const VkDescriptorSet* const ComputeUnit::GetDescriptorSets(uint32_t frameIndex) const
 	{

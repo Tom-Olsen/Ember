@@ -30,6 +30,7 @@ namespace emberEngine
 		// Sync objects:
 		std::vector<VkFence> m_fences;
 		std::vector<VkSemaphore> m_acquireSemaphores;
+		std::vector<VkSemaphore> m_computeToShadowSemaphores;
 		std::vector<VkSemaphore> m_shadowToShadingSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
 

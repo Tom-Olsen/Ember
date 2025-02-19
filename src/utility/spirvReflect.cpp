@@ -24,7 +24,7 @@ namespace emberEngine
     // Constructor/Destructor:
     UniformBufferMember::UniformBufferMember()
     {
-
+        offset = size = 0;
     }
     UniformBufferMember::~UniformBufferMember()
     {
@@ -125,11 +125,32 @@ namespace emberEngine
 
         output += "\ndescriptorSetLayoutBindings:\n";
         for (int i = 0; i < bindingCount; i++)
-            output += "  " + descriptorSetBindingNames[i] + ": binding=" + std::to_string(descriptorSetLayoutBindings[i].binding) + ", count=" + std::to_string(descriptorSetLayoutBindings[i].descriptorCount) + ", type=" + vulkanEnumToString::VkDescriptorTypeToString(descriptorSetLayoutBindings[i].descriptorType) + ", stage=" + vulkanEnumToString::VkShaderStageFlagsToString(descriptorSetLayoutBindings[i].stageFlags) + "\n";
+        {
+            output += "  " + descriptorSetBindingNames[i] + ": binding=" + std::to_string(descriptorSetLayoutBindings[i].binding) + ", count=" + std::to_string(descriptorSetLayoutBindings[i].descriptorCount) + ", type=" + vulkanEnumToString::VkDescriptorTypeToString(descriptorSetLayoutBindings[i].descriptorType) + ", stage=" + vulkanEnumToString::VkShaderStageFlagsToString(descriptorSetLayoutBindings[i].stageFlags);
 
-        output += "\nuniformBufferBlockMap:\n";
-        for (const auto& [name, uniformBufferBlock] : uniformBufferBlockMap)
-            output += "  " + name + ":\n" + uniformBufferBlock->ToString(4);
+            auto it = uniformBufferBlockMap.find(descriptorSetBindingNames[i]);
+            if (it != uniformBufferBlockMap.end())
+            {
+                output += "\n" + it->second->ToString(4);
+                continue;
+            }
+
+            auto itt = sampleViewTypeMap.find(descriptorSetBindingNames[i]);
+            if (itt != sampleViewTypeMap.end())
+            {
+                output += ", viewType=" + vulkanEnumToString::VkImageViewTypeToString(itt->second) + "\n";
+                continue;
+            }
+
+            auto ittt = storageViewTypeMap.find(descriptorSetBindingNames[i]);
+            if (ittt != storageViewTypeMap.end())
+            {
+                output += ", viewType=" + vulkanEnumToString::VkImageViewTypeToString(ittt->second) + "\n";
+                continue;
+            }
+
+            output += "\n"; // extra new line in case of samplers as they do not have their own extra output which already adds the new line.
+        }
 
         return output;
     }
@@ -237,6 +258,41 @@ namespace emberEngine
                 // Add binding and name to lists:
                 descriptorBoundResources->descriptorSetBindingNames.push_back(pBindingReflection->name);
                 descriptorBoundResources->descriptorSetLayoutBindings.push_back(layoutBinding);
+
+                // In case sample texture retrieve view type:
+                if (pBindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+                {
+                    if (pBindingReflection->image.dim == SpvDim1D && !pBindingReflection->image.arrayed)
+                        descriptorBoundResources->sampleViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_1D);
+                    else if (pBindingReflection->image.dim == SpvDim1D && pBindingReflection->image.arrayed)
+                        descriptorBoundResources->sampleViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_1D_ARRAY);
+                    if (pBindingReflection->image.dim == SpvDim2D && !pBindingReflection->image.arrayed)
+                        descriptorBoundResources->sampleViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_2D);
+                    else if (pBindingReflection->image.dim == SpvDim2D && pBindingReflection->image.arrayed)
+                        descriptorBoundResources->sampleViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_2D_ARRAY);
+                    if (pBindingReflection->image.dim == SpvDim3D && !pBindingReflection->image.arrayed)
+                        descriptorBoundResources->sampleViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_3D);
+                    // VK_IMAGE_VIEW_TYPE_3D_ARRAY does not exist in HLSL.
+                    if (pBindingReflection->image.dim == SpvDimCube)
+                        descriptorBoundResources->sampleViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_CUBE_ARRAY);
+                }
+                // In case storage texture retrieve view type:
+                if (pBindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE)
+                {
+                    if (pBindingReflection->image.dim == SpvDim1D && !pBindingReflection->image.arrayed)
+                        descriptorBoundResources->storageViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_1D);
+                    else if (pBindingReflection->image.dim == SpvDim1D && pBindingReflection->image.arrayed)
+                        descriptorBoundResources->storageViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_1D_ARRAY);
+                    if (pBindingReflection->image.dim == SpvDim2D && !pBindingReflection->image.arrayed)
+                        descriptorBoundResources->storageViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_2D);
+                    else if (pBindingReflection->image.dim == SpvDim2D && pBindingReflection->image.arrayed)
+                        descriptorBoundResources->storageViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_2D_ARRAY);
+                    if (pBindingReflection->image.dim == SpvDim3D && !pBindingReflection->image.arrayed)
+                        descriptorBoundResources->storageViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_3D);
+                    // VK_IMAGE_VIEW_TYPE_3D_ARRAY does not exist in HLSL.
+                    if (pBindingReflection->image.dim == SpvDimCube)
+                        descriptorBoundResources->storageViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_CUBE_ARRAY);
+                }
 
                 // In case of uniform buffer create UniformBufferBlock:
                 if (pBindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)

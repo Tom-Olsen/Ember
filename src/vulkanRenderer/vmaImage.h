@@ -1,6 +1,7 @@
-#ifndef __INCLUDE_GUARD_vulkanImage_h__
-#define __INCLUDE_GUARD_vulkanImage_h__
+#ifndef __INCLUDE_GUARD_vmaImage_h__
+#define __INCLUDE_GUARD_vmaImage_h__
 #include "vk_mem_alloc.h"
+#include "vulkanQueue.h"
 #include <memory>
 #include <vulkan/vulkan.h>
 
@@ -10,10 +11,14 @@ namespace emberEngine
 {
 	// Forward declarations:
 	struct VulkanContext;
-	struct VulkanQueue;
 
 
-
+	/// <summary>
+	/// Manages VkImage and VkImageView resource: creation, allocation, destruction, queue ownership, layout.
+	/// Usually further abstracted by texture class which wraps around it.
+	/// Sometimes used stand alone when the image is strictly used for a specific usecase,
+	/// e.g. msaa color and depth attachment images of forward renderpass.
+	/// </summary>
 	class VmaImage
 	{
 	private: // Members:
@@ -22,13 +27,15 @@ namespace emberEngine
 		VkImageView m_imageView;
 		std::unique_ptr<VkImageCreateInfo> m_pImageInfo;
 		std::unique_ptr<VmaAllocationCreateInfo> m_pAllocationInfo;
-		std::unique_ptr<VkImageSubresourceRange> m_pSubresourceRange;
+		VkImageSubresourceRange m_subresourceRange;
+		VulkanQueue m_queue;
 		VkImageLayout m_layout;
 		VulkanContext* m_pContext;
 
 	public: // Methods:
-		VmaImage(VulkanContext* pContext, VkImageCreateInfo* pImageInfo, VmaAllocationCreateInfo* pAllocationInfo, VkImageSubresourceRange* pSubresourceRange);
+		VmaImage(VulkanContext* pContext, VkImageCreateInfo* pImageInfo, VmaAllocationCreateInfo* pAllocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue);
 		~VmaImage();
+
 
 		// Getters:
 		const VkImage& GetVkImage() const;
@@ -36,7 +43,7 @@ namespace emberEngine
 		const VkImageView& GetVkImageView() const;
 		const VkImageCreateInfo* const GetVkImageCreateInfo() const;
 		const VmaAllocationCreateInfo* const GetVmaAllocationCreateInfo() const;
-		const VkImageSubresourceRange* const GetSubresourceRange() const;
+		const VkImageSubresourceRange& GetSubresourceRange() const;
 		const VkImageLayout& GetLayout() const;
 		uint64_t GetWidth() const;
 		uint64_t GetHeight() const;
@@ -44,10 +51,14 @@ namespace emberEngine
 		const VkExtent3D& GetExtent() const;
 		VkImageSubresourceLayers GetSubresourceLayers() const;
 
-		// Transitions etc.:
-		void TransitionLayoutUndefinedToTransfer();
-		void HandoffTransferToGraphicsQueue();
-		void TransitionLayoutTransferToShaderRead();
+		// Setters:
+		// Only changes the m_layout member without doing an image layout transition.
+		void SetLayout(VkImageLayout imageLayout);
+		
+		// Transitions:
+		void TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
+		void TransitionQueue(const VulkanQueue& newQueue, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
+		void TransitionLayoutAndQueue(VkImageLayout newLayout, const VulkanQueue& newQueue, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
 		void GenerateMipmaps(uint32_t mipLevels);
 
 		// Static methods:
@@ -57,4 +68,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_vulkanImage_h__
+#endif // __INCLUDE_GUARD_vmaImage_h__

@@ -31,7 +31,7 @@ namespace emberEngine
 		Mesh* m_pMesh;
 		Material* m_pMaterial;
 		std::unique_ptr<ShaderProperties> m_pShaderProperties;
-		static Material* m_pShadowMaterial;	// TODO: make this static?
+		static Material* s_pShadowMaterial;
 		static std::unique_ptr<ShaderProperties> m_pShadowShaderProperties;
 
 	public: // Methods:

@@ -29,7 +29,9 @@ namespace emberEngine
 		// Get device extensions:
 		std::vector<const char*> deviceExtensions;
 		deviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-		deviceExtensions.emplace_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
+		// These extensions are integrated in Vulkan 1.2 as features, but ImGui relies on them as an extensions => Validation Layer warnings.
+		deviceExtensions.emplace_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);	
+		deviceExtensions.emplace_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);	
 		// and more ...
 
 		// Create vulkan context:
@@ -91,9 +93,9 @@ namespace emberEngine
 	{
 		return pPhysicalDevice->SupportsDepthClamp();
 	}
-	bool VulkanContext::DepthBiasEnabled() const
+	bool VulkanContext::DepthBiasClampEnabled() const
 	{
-		return pPhysicalDevice->SupportsDepthBias();
+		return pPhysicalDevice->SupportsDepthBiasClamp();
 	}
 
 

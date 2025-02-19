@@ -16,6 +16,6 @@ Texture2D colorMap : register(t21); // format = VK_FORMAT_R8G8B8A8_SRGB,
 void main(uint3 threadID : SV_DispatchThreadID)
 {
     float2 uv = threadID.xy / 100.0f;
-    float4 color = diffuseColor * colorMap.Sample(colorSampler, uv);
+    float4 color = diffuseColor * colorMap.SampleLevel(colorSampler, uv, 0.0);
     image[threadID.xy] = float4(1.0, 0.0, 1.0, 1.0) * diffuseColor * color;
 }

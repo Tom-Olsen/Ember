@@ -6,6 +6,12 @@
 
 namespace emberEngine
 {
+	/// <summary>
+	/// Texture2d specialization: <para/>
+	/// -VkImageUsageFlags		= transfer src/dst, sample
+	/// -VkImageCreateFlagBits	= cube compatible
+	/// -VkImageViewType		= cube
+	/// </summary>
 	class TextureCube : public Texture2d
 	{
 	public: // Methods:

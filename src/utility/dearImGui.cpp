@@ -9,6 +9,18 @@
 
 
 
+// Macro to disable Dear ImGui:
+#define DISABLE_DEAR_IMGUI
+#ifdef DISABLE_DEAR_IMGUI
+	#define RETURN_DISABLED() return
+	#define RETURN_FALSE_DISABLED() return false
+#else
+	#define RETURN_DISABLED()
+	#define RETURN_FALSE_DISABLED()
+#endif
+
+
+
 namespace emberEngine
 {
 	// Static members:
@@ -22,6 +34,7 @@ namespace emberEngine
 	// Constructor/Destructor:
 	void DearImGui::Init(VulkanContext* pContext)
 	{
+		RETURN_DISABLED();
 		RenderPassManager::Init(pContext);
 
 		IMGUI_CHECKVERSION();
@@ -54,6 +67,7 @@ namespace emberEngine
 	}
 	void DearImGui::Clear()
 	{
+		RETURN_DISABLED();
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
 		ImGui::DestroyContext();
@@ -66,6 +80,7 @@ namespace emberEngine
 	// Must be called in main update loop of the engine.
 	void DearImGui::Update()
 	{
+		RETURN_DISABLED();
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
@@ -82,6 +97,7 @@ namespace emberEngine
 	// Must be called in SdlWindow::HandleEvents() before handing event over to event system.
 	void DearImGui::ProcessEvent(const SDL_Event& event)
 	{
+		RETURN_DISABLED();
 		ImGui_ImplSDL3_ProcessEvent(&event);
 		s_wantCaptureKeyboard = s_io->WantCaptureKeyboard;
 		s_wantCaptureMouse = s_io->WantCaptureMouse;
@@ -89,6 +105,7 @@ namespace emberEngine
 	// Must be called in main render loop before vkCmdEndRenderPass(...).
 	void DearImGui::Render(VkCommandBuffer& commandBuffer)
 	{
+		RETURN_DISABLED();
 		ImGui::Render();
 
 		ImDrawData* drawData = ImGui::GetDrawData();
@@ -104,10 +121,12 @@ namespace emberEngine
 	// Getters:
 	bool DearImGui::WantCaptureKeyboard()
 	{
+		RETURN_FALSE_DISABLED();
 		return s_wantCaptureKeyboard;
 	}
 	bool DearImGui::WantCaptureMouse()
 	{
+		RETURN_FALSE_DISABLED();
 		return s_wantCaptureMouse;
 	}
 
@@ -122,6 +141,7 @@ namespace emberEngine
 	}
 	void DearImGui::AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions)
 	{
+		RETURN_DISABLED();
 		// Enumerate available extensions:
 		uint32_t propertiesCount;
 		std::vector<VkExtensionProperties> properties;

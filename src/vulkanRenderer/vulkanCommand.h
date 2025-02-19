@@ -30,7 +30,7 @@ namespace emberEngine
 
 		// Static methods:
 		static VulkanCommand BeginSingleTimeCommand(VulkanContext* pContext, const VulkanQueue& queue);
-		static void EndSingleTimeCommand(VulkanContext* pContext, const VulkanCommand& command, const VulkanQueue& queue);
+		static void EndSingleTimeCommand(VulkanContext* pContext, const VulkanCommand& command, const VulkanQueue& queue, bool waitQueueIdle = true);
 	};
 }
 

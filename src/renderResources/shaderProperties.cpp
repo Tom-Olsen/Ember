@@ -1,6 +1,6 @@
 #include "shaderProperties.h"
-#include "logger.h"
 #include "computeShader.h"
+#include "logger.h"
 #include "material.h"
 #include "mathf.h"
 #include "pipeline.h"
@@ -15,12 +15,12 @@
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
+#include "vulkanEnumToString.h"
 #include "vulkanMacros.h"
 #include <iostream>
 
 
-// TODO:
-// - Similar to Texture2d getters and setters add support for RWTexture2D (type=VK_DESCRIPTOR_TYPE_STORAGE_IMAGE).
+
 namespace emberEngine
 {
 	// Consructor/Destructor:
@@ -34,6 +34,7 @@ namespace emberEngine
 		m_samplerMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>>(m_pContext->framesInFlight);
 		m_texture2dMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>>(m_pContext->framesInFlight);
 		m_updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(m_pContext->framesInFlight);
+
 
 		for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
 		{
@@ -50,24 +51,49 @@ namespace emberEngine
 				else if (type == VK_DESCRIPTOR_TYPE_SAMPLER)
 					InitSamplerResourceBinding(name, binding, SamplerManager::GetSampler("colorSampler"), frameIndex);
 				else if (type == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-					InitTexture2dResourceBinding(name, binding, TextureManager::GetTexture2d("white"), frameIndex);
+				{
+					VkImageViewType viewType = descriptorBoundResources->sampleViewTypeMap.at(name);
+					switch (viewType)
+					{
+						case VK_IMAGE_VIEW_TYPE_1D: throw std::runtime_error("Initialization for sampling Texture1D descriptorSet not implemented yet!"); break;
+						case VK_IMAGE_VIEW_TYPE_2D: InitTexture2dResourceBinding(name, binding, TextureManager::GetTexture2d("white"), frameIndex); break;
+						case VK_IMAGE_VIEW_TYPE_3D: throw std::runtime_error("Initialization for sampling Texture3D descriptorSet not implemented yet!"); break;
+						case VK_IMAGE_VIEW_TYPE_CUBE: InitTexture2dResourceBinding(name, binding, TextureManager::GetTexture2d("skyBoxWhite"), frameIndex); break;
+						case VK_IMAGE_VIEW_TYPE_1D_ARRAY: throw std::runtime_error("Initialization for sampling Texture1DArray descriptorSet not implemented yet!"); break;
+						case VK_IMAGE_VIEW_TYPE_2D_ARRAY: InitTexture2dResourceBinding(name, binding, TextureManager::GetTexture2d("blackArray"), frameIndex); break;
+						case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY: throw std::runtime_error("Initialization for sampling CubeTextureArray descriptorSet not implemented yet!"); break;
+					}
+				}
 				else if (type == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
-					InitTexture2dResourceBinding(name, binding, TextureManager::GetTexture2d("storageTexture8x8"), frameIndex);
+				{
+					VkImageViewType viewType = descriptorBoundResources->storageViewTypeMap.at(name);
+					switch (viewType)
+					{
+						case VK_IMAGE_VIEW_TYPE_1D: throw std::runtime_error("Initialization for storage Texture1D descriptorSet not implemented yet!"); break;
+						case VK_IMAGE_VIEW_TYPE_2D: InitTexture2dResourceBinding(name, binding, TextureManager::GetTexture2d("storageTexture8x8"), frameIndex); break;
+						case VK_IMAGE_VIEW_TYPE_3D: throw std::runtime_error("Initialization for storage Texture3D descriptorSet not implemented yet!"); break;
+						case VK_IMAGE_VIEW_TYPE_CUBE: throw std::runtime_error("Initialization for storage CubeTexture descriptorSet not implemented yet!"); break;
+						case VK_IMAGE_VIEW_TYPE_1D_ARRAY: throw std::runtime_error("Initialization storage for Texture1DArray descriptorSet not implemented yet!"); break;
+						case VK_IMAGE_VIEW_TYPE_2D_ARRAY: throw std::runtime_error("Initialization storage for Texture2DArray descriptorSet not implemented yet!"); break;
+						case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY: throw std::runtime_error("Initialization storage for CubeTextureArray descriptorSet not implemented yet!"); break;
+					}
+					
+				}
 			}
 		}
 		InitStagingMaps();
 		InitDescriptorSets();
 
 		// Set default values:
-		ShadowRenderPass* pShadowRenderPass = dynamic_cast<ShadowRenderPass*>(RenderPassManager::GetRenderPass("shadowRenderPass"));
+		ShadowRenderPass* pShadowRenderPass = (ShadowRenderPass*)RenderPassManager::GetRenderPass("shadowRenderPass");
 		SetSampler("shadowSampler", SamplerManager::GetSampler("shadowSampler"));
-		SetTexture2d("shadowMaps", pShadowRenderPass->GetShadowMaps());
+		SetTexture2d("shadowMaps", (Texture2d*)pShadowRenderPass->GetShadowMaps());
 		SetTexture2d("normalMap", TextureManager::GetTexture2d("defaultNormalMap"));
 		SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		SetValue("SurfaceProperties", "roughness", 0.5f);
 		SetValue("SurfaceProperties", "reflectivity", Float3(0.4f));
 		SetValue("SurfaceProperties", "metallicity", 0);
-		SetValue("SurfaceProperties", "scaleOffset", Float4::one);
+		SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
 	}
 	ShaderProperties::~ShaderProperties()
 	{
@@ -109,7 +135,7 @@ namespace emberEngine
 			}
 		}
 	}
-	const std::vector<VkDescriptorSet>& ShaderProperties::GetDescriptorSets() const
+	std::vector<VkDescriptorSet>& ShaderProperties::GetDescriptorSets()
 	{
 		return m_descriptorSets;
 	}
@@ -191,12 +217,9 @@ namespace emberEngine
 			return;
 
 		// Check of storage/sampler mode of the imput Texture2d matched with the descriptorSet:
-		if (it->second->GetIsStorageImage() != pTexture2d->GetIsStorageImage())
+		if (it->second->GetType() != pTexture2d->GetType())
 		{
-			if (pTexture2d->GetIsStorageImage() == true)
-				LOG_WARN("You are trying to set the storage Texture2d '{}' to the sampler Texture2d '{}'.", pTexture2d->GetName(), name);
-			else
-				LOG_WARN("You are trying to set the sampler Texture2d '{}' to the storage Texture2d '{}'.", pTexture2d->GetName(), name);
+			LOG_WARN("Trying to asign wrong texture type to descriptor set. Expected type: '{}', given type: '{}'", it->second->GetTypeName(), pTexture2d->GetTypeName());
 			return;
 		}
 
@@ -387,21 +410,18 @@ namespace emberEngine
 
 		vkUpdateDescriptorSets(m_pContext->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
+	#include <iostream>
 	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Texture2d*> texture2dResourceBinding)
 	{
 		VkDescriptorImageInfo imageInfo = {};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		//imageInfo.imageLayout = texture2dResourceBinding.resource->GetVmaImage()->GetLayout();	// maybe use this? currently throws validation errors.
+		imageInfo.imageLayout = texture2dResourceBinding.resource->GetVmaImage()->GetLayout();
 		imageInfo.imageView = texture2dResourceBinding.resource->GetVmaImage()->GetVkImageView();
-
-		// VmaImage in Texture2d can either be storage or sampled image:
-		bool isSotrageImage = texture2dResourceBinding.resource->GetIsStorageImage();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
 		descriptorWrite.dstBinding = texture2dResourceBinding.binding;
 		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = isSotrageImage ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		descriptorWrite.descriptorType = texture2dResourceBinding.resource->GetVkDescriptorType();
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = nullptr;
 		descriptorWrite.pImageInfo = &imageInfo;

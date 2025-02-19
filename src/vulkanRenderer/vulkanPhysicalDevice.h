@@ -17,7 +17,7 @@ namespace emberEngine
 		VkPhysicalDevice m_physicalDevice;
 		VkSampleCountFlagBits m_maxMsaaSamples;
 		VkBool32 m_supportsDepthClamp = false;
-		VkBool32 m_supportsDepthBias = false;
+		VkBool32 m_supportsDepthBiasClamp = false;
 		VkBool32 m_supportsMultiViewport = false;
 
 	public: // Methods:
@@ -27,7 +27,7 @@ namespace emberEngine
 		const VkPhysicalDevice& GetVkPhysicalDevice() const;
 		VkSampleCountFlagBits GetMaxMsaaSamples() const;
 		VkBool32 SupportsDepthClamp() const;
-		VkBool32 SupportsDepthBias() const;
+		VkBool32 SupportsDepthBiasClamp() const;
 		VkBool32 SupportsMultiViewport() const;
 
 	private: // Methods:

@@ -1,5 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanLogicalDevice_h__
 #define __INCLUDE_GUARD_vulkanLogicalDevice_h__
+#include "vulkanQueue.h"
 #include <vulkan/vulkan.h>
 #include <vector>
 
@@ -10,14 +11,6 @@ namespace emberEngine
 	// Forward declarations:
 	class VulkanPhysicalDevice;
 	class VulkanSurface;
-
-
-
-	struct VulkanQueue
-	{
-		VkQueue queue;
-		uint32_t familyIndex;
-	};
 
 
 
@@ -36,10 +29,10 @@ namespace emberEngine
 
 		// Getters:
 		const VkDevice& GetVkDevice() const;
-		const VulkanQueue& GetGraphicsQueue() const;
-		const VulkanQueue& GetPresentQueue() const;
-		const VulkanQueue& GetComputeQueue() const;
-		const VulkanQueue& GetTransferQueue() const;
+		const VulkanQueue GetGraphicsQueue() const;
+		const VulkanQueue GetPresentQueue() const;
+		const VulkanQueue GetComputeQueue() const;
+		const VulkanQueue GetTransferQueue() const;
 
 	private: // Methods:
 		uint32_t FindGraphicsAndComputeQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice) const;

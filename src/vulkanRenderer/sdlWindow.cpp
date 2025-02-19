@@ -38,7 +38,7 @@ namespace emberEngine
 
 		// Poll events:
 		SDL_Event event;
-		while (SDL_PollEvent(&event))
+		while (SDL_PollEvent(&event)) // use SDL_WaitEvent?
 		{
 			// Forward event to ImGui and event system:
 			DearImGui::ProcessEvent(event);

@@ -52,13 +52,14 @@ namespace emberEngine
 		VKA(vkBeginCommandBuffer(command.GetVkCommandBuffer(), &beginInfo));
 		return command;
 	}
-	void VulkanCommand::EndSingleTimeCommand(VulkanContext* m_pContext, const VulkanCommand& command, const VulkanQueue& queue)
+	void VulkanCommand::EndSingleTimeCommand(VulkanContext* m_pContext, const VulkanCommand& command, const VulkanQueue& queue, bool waitQueueIdle)
 	{
 		vkEndCommandBuffer(command.GetVkCommandBuffer());
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &command.GetVkCommandBuffer();
 		VKA(vkQueueSubmit(queue.queue, 1, &submitInfo, VK_NULL_HANDLE));
-		VKA(vkQueueWaitIdle(queue.queue));
+		if (waitQueueIdle)
+			VKA(vkQueueWaitIdle(queue.queue));
 	}
 }

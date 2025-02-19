@@ -25,7 +25,10 @@ namespace emberEngine
 
 		s_computeUnit.resize(10);
 		for (uint32_t i = 0; i < 10; i++)
+		{
 			s_computeUnit[i] = new ComputeUnit();
+			s_computeUnit[i]->isActive = false;
+		}
 	}
 	void Compute::Clear()
 	{
@@ -38,6 +41,10 @@ namespace emberEngine
 
 	// Public methods:
 	// Dispatch calls:
+	ShaderProperties* Compute::Dispatch(ComputeShader* pComputeShader, Uint3 groupCount)
+	{
+		return Dispatch(pComputeShader, groupCount.x, groupCount.y, groupCount.z);
+	}
 	ShaderProperties* Compute::Dispatch(ComputeShader* pComputeShader, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 	{
 		if (!pComputeShader)
@@ -50,12 +57,28 @@ namespace emberEngine
 
 		// Setup current dispatch call:
 		ComputeUnit* pComputeUnit = s_computeUnit[s_dispatchIndex];
+		pComputeUnit->isActive = true;
 		pComputeUnit->SetComputeShader(pComputeShader);
+		pComputeUnit->SetComputeCount(groupCountX, groupCountY, groupCountZ);
 
 		// By returning the computeShaders shaderProperties, we allow user to change the shader properties of this dispatch call:
 		ShaderProperties* pShaderProperties = s_computeUnit[s_dispatchIndex]->GetShaderProperties();
 		s_dispatchIndex++;
 		return pShaderProperties;
+	}
+	void Compute::ResetDispatchCalls()
+	{
+		for (ComputeUnit* pComputeUnit : s_computeUnit)
+			pComputeUnit->isActive = false;
+		ReduceCapacity();
+		s_dispatchIndex = 0;
+	}
+
+
+	// Getters:
+	std::vector<ComputeUnit*>& Compute::GetComputeUnits()
+	{
+		return s_computeUnit;
 	}
 
 

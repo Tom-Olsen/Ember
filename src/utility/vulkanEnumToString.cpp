@@ -7,6 +7,58 @@ namespace emberEngine
 {
 	namespace vulkanEnumToString
 	{
+        std::string VkImageViewTypeToString(VkImageViewType vkImageViewType)
+        {
+            switch (vkImageViewType)
+            {
+                case VK_IMAGE_VIEW_TYPE_1D: return std::string("VK_IMAGE_VIEW_TYPE_1D");
+                case VK_IMAGE_VIEW_TYPE_2D: return std::string("VK_IMAGE_VIEW_TYPE_2D");
+                case VK_IMAGE_VIEW_TYPE_3D: return std::string("VK_IMAGE_VIEW_TYPE_3D");
+                case VK_IMAGE_VIEW_TYPE_CUBE: return std::string("VK_IMAGE_VIEW_TYPE_CUBE");
+                case VK_IMAGE_VIEW_TYPE_1D_ARRAY: return std::string("VK_IMAGE_VIEW_TYPE_1D_ARRAY");
+                case VK_IMAGE_VIEW_TYPE_2D_ARRAY: return std::string("VK_IMAGE_VIEW_TYPE_2D_ARRAY");
+                case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY: return std::string("VK_IMAGE_VIEW_TYPE_CUBE_ARRAY");
+                case VK_IMAGE_VIEW_TYPE_MAX_ENUM: return std::string("VK_IMAGE_VIEW_TYPE_MAX_ENUM");
+                default: return "UNKNOWN_VK_IMAGE_VIEW_TYPE (maybe vulkan backend has been updated)";
+            }
+        }
+        std::string VkImageLayoutToString(VkImageLayout vkImageView)
+        {
+            switch (vkImageView)
+            {
+                case VK_IMAGE_LAYOUT_UNDEFINED: return std::string("VK_IMAGE_LAYOUT_UNDEFINED");
+                case VK_IMAGE_LAYOUT_GENERAL: return std::string("VK_IMAGE_LAYOUT_GENERAL");
+                case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL");
+                case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL");
+                case VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL");
+                case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL");
+                case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL");
+                case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL");
+                case VK_IMAGE_LAYOUT_PREINITIALIZED: return std::string("VK_IMAGE_LAYOUT_PREINITIALIZED");
+                case VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL");
+                case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL");
+                case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL");
+                case VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL");
+                case VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL");
+                case VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL");
+                case VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL");
+                case VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL");
+                case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR: return std::string("VK_IMAGE_LAYOUT_PRESENT_SRC_KHR");
+                case VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR");
+                case VK_IMAGE_LAYOUT_VIDEO_DECODE_SRC_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_DECODE_SRC_KHR");
+                case VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR");
+                case VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR: return std::string("VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR");
+                case VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT: return std::string("VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT");
+                case VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR: return std::string("VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR");
+                case VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ_KHR: return std::string("VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ_KHR");
+                case VK_IMAGE_LAYOUT_VIDEO_ENCODE_DST_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_ENCODE_DST_KHR");
+                case VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR");
+                case VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR");
+                case VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT: return std::string("VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT");
+                case VK_IMAGE_LAYOUT_MAX_ENUM: return std::string("VK_IMAGE_LAYOUT_MAX_ENUM");
+                default: return "UNKNOWN_VK_IMAGE_LAYOUT (maybe vulkan backend has been updated)";
+            }
+        }
         std::string VkVertexInputRateToString(VkVertexInputRate vkVertexInputRate)
         {
             switch (vkVertexInputRate)

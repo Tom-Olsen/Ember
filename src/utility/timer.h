@@ -17,6 +17,7 @@ namespace emberEngine
     public: // Methods
         static void Reset();
         static void Update();
+        static void Sleep(int milliseconds);
 
         // Getters:
         static float GetTime();
