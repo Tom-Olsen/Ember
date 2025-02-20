@@ -1,8 +1,8 @@
-#include "shadingPipeline.h"
+#include "forwardPipeline.h"
 #include "mesh.h"
 #include "renderPass.h"
 #include "renderPassManager.h"
-#include "shadingPushConstant.h"
+#include "basicPushConstant.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -12,7 +12,7 @@
 namespace emberEngine
 {
     // Constructor/Destructor:
-    ShadingPipeline::ShadingPipeline(VulkanContext* pContext,
+    ForwardPipeline::ForwardPipeline(VulkanContext* pContext,
         const std::vector<char>& vertexCode,
         const std::vector<char>& fragmentCode,
         const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
@@ -34,7 +34,7 @@ namespace emberEngine
         vkDestroyShaderModule(m_pContext->GetVkDevice(), vertexShaderModule, nullptr);
         vkDestroyShaderModule(m_pContext->GetVkDevice(), fragmentShaderModule, nullptr);
     }
-    ShadingPipeline::~ShadingPipeline()
+    ForwardPipeline::~ForwardPipeline()
     {
 
     }
@@ -42,7 +42,7 @@ namespace emberEngine
 
 
     // Private:
-    void ShadingPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
+    void ForwardPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
     {
         // Descriptor set layout:
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -54,7 +54,7 @@ namespace emberEngine
         VkPushConstantRange pushConstantRange = {};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(ShadingPushConstant);
+        pushConstantRange.size = sizeof(BasicPushConstant);
 
         // Pipeline layout:
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -64,7 +64,7 @@ namespace emberEngine
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(m_pContext->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
     }
-    void ShadingPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
+    void ForwardPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -179,7 +179,7 @@ namespace emberEngine
         pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
         pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
         pipelineInfo.layout = m_pipelineLayout;
-        pipelineInfo.renderPass = RenderPassManager::GetRenderPass("shadingRenderPass")->GetVkRenderPass();
+        pipelineInfo.renderPass = RenderPassManager::GetRenderPass("forwardRenderPass")->GetVkRenderPass();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
         pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline

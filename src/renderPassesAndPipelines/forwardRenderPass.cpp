@@ -1,4 +1,4 @@
-#include "shadingRenderPass.h"
+#include "forwardRenderPass.h"
 #include "vmaImage.h"
 #include "vulkanCommand.h"
 #include "vulkanContext.h"
@@ -9,7 +9,7 @@
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	ShadingRenderPass::ShadingRenderPass(VulkanContext* pContext)
+	ForwardRenderPass::ForwardRenderPass(VulkanContext* pContext)
 	{
 		m_pContext = pContext;
 
@@ -18,7 +18,7 @@ namespace emberEngine
 		CreateDepthImage();
 		CreateFrameBuffers();
 	}
-	ShadingRenderPass::~ShadingRenderPass()
+	ForwardRenderPass::~ForwardRenderPass()
 	{
 
 	}
@@ -26,11 +26,11 @@ namespace emberEngine
 
 
 	// Public methods:
-	const VmaImage* const ShadingRenderPass::GetMsaaVmaImage() const
+	const VmaImage* const ForwardRenderPass::GetMsaaVmaImage() const
 	{
 		return m_msaaImage.get();
 	}
-	const VmaImage* const ShadingRenderPass::GetDepthVmaImage() const
+	const VmaImage* const ForwardRenderPass::GetDepthVmaImage() const
 	{
 		return m_depthImage.get();
 	}
@@ -38,7 +38,7 @@ namespace emberEngine
 
 
 	// Private methods:
-	void ShadingRenderPass::CreateRenderPass()
+	void ForwardRenderPass::CreateRenderPass()
 	{
 		// Attachments:
 		std::array<VkAttachmentDescription, 3> attachments{};
@@ -115,7 +115,7 @@ namespace emberEngine
 
 		VKA(vkCreateRenderPass(m_pContext->GetVkDevice(), &renderPassInfo, nullptr, &m_renderPass));
 	}
-	void ShadingRenderPass::CreateMsaaImage()
+	void ForwardRenderPass::CreateMsaaImage()
 	{
 		VkImageSubresourceRange subresourceRange;
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -150,7 +150,7 @@ namespace emberEngine
 		VulkanQueue queue = m_pContext->pLogicalDevice->GetGraphicsQueue();
 		m_msaaImage = std::make_unique<VmaImage>(m_pContext, pImageInfo, pAllocationInfo, subresourceRange, viewType, queue);
 	}
-	void ShadingRenderPass::CreateDepthImage()
+	void ForwardRenderPass::CreateDepthImage()
 	{
 		VkImageSubresourceRange subresourceRange;
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
@@ -193,7 +193,7 @@ namespace emberEngine
 		VkAccessFlags2 dstAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
 		m_depthImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 	}
-	void ShadingRenderPass::CreateFrameBuffers()
+	void ForwardRenderPass::CreateFrameBuffers()
 	{
 		size_t size = m_pContext->pSwapchain->GetImages().size();
 		VkExtent2D extent = m_pContext->pSurface->GetCurrentExtent();

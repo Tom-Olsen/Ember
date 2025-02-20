@@ -25,13 +25,13 @@ namespace emberEngine
 		// Render resources:
 		std::vector<VulkanCommand> m_computeCommands;
 		std::vector<VulkanCommand> m_shadowCommands;
-		std::vector<VulkanCommand> m_shadingCommands;
+		std::vector<VulkanCommand> m_forwardCommands;
 
 		// Sync objects:
 		std::vector<VkFence> m_fences;
 		std::vector<VkSemaphore> m_acquireSemaphores;
 		std::vector<VkSemaphore> m_computeToShadowSemaphores;
-		std::vector<VkSemaphore> m_shadowToShadingSemaphores;
+		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
 
 		// Render management:
@@ -51,7 +51,7 @@ namespace emberEngine
 		void SetMeshRendererGroups(Scene* pScene);
 		void RecordComputeShaders(Scene* pScene);
 		void RecordShadowCommandBuffer(Scene* pScene);
-		void RecordShadingCommandBuffer(Scene* pScene);
+		void RecordForwardCommandBuffer(Scene* pScene);
 		void SubmitCommandBuffers();
 		bool PresentImage();
 		void SetViewportAndScissor(VkCommandBuffer& commandBuffer);

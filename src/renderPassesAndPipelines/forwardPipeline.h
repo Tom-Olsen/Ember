@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_shadingPipeline_h__
-#define __INCLUDE_GUARD_shadingPipeline_h__
+#ifndef __INCLUDE_GUARD_forwardPipeline_h__
+#define __INCLUDE_GUARD_forwardPipeline_h__
 #include "pipeline.h"
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -15,17 +15,17 @@ namespace emberEngine
 
 
 	/// <summary>
-	/// Pipeline associated with the ShadingRenderPass materials.
+	/// Pipeline associated with the ForwardRenderPass materials.
 	/// </summary>
-	class ShadingPipeline : public Pipeline
+	class ForwardPipeline : public Pipeline
 	{
 	public: // Methods:
-		ShadingPipeline(VulkanContext* pContext,
+		ForwardPipeline(VulkanContext* pContext,
 			const std::vector<char>& vertexCode,
 			const std::vector<char>& fragmentCode,
 			const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
 			const VertexInputDescriptions* const pVertexInputDescriptions);
-		~ShadingPipeline();
+		~ForwardPipeline();
 
 	private: // Methods:
 		void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings);
@@ -35,4 +35,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_shadingPipeline_h__
+#endif // __INCLUDE_GUARD_forwardPipeline_h__

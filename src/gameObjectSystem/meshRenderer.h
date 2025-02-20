@@ -48,15 +48,15 @@ namespace emberEngine
 		void SetLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spotLights);
 		void SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& pointLights);
 
-		// Shading render pass getters:
+		// Forward render pass getters:
 		bool GetCastShadows() const;
 		bool GetReceiveShadows() const;
 		Mesh* GetMesh();
 		Material* GetMaterial();
 		ShaderProperties* GetShaderProperties();
-		const VkDescriptorSet* const GetShadingDescriptorSets(uint32_t frameIndex) const;
-		const VkPipeline& GetShadingPipeline() const;
-		const VkPipelineLayout& GetShadingPipelineLayout() const;
+		const VkDescriptorSet* const GetForwardDescriptorSets(uint32_t frameIndex) const;
+		const VkPipeline& GetForwardPipeline() const;
+		const VkPipelineLayout& GetForwardPipelineLayout() const;
 
 		// Shadow render pass getters:
 		static const VkDescriptorSet* const GetShadowDescriptorSets(uint32_t frameIndex);

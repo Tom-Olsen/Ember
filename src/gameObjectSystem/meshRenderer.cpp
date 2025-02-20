@@ -150,7 +150,7 @@ namespace emberEngine
 
 
 
-	// Shading render pass getters:
+	// Forward render pass getters:
 	bool MeshRenderer::GetCastShadows() const
 	{
 		// Always return false if error material is in use:
@@ -173,15 +173,15 @@ namespace emberEngine
 	{
 		return m_pShaderProperties.get();
 	}
-	const VkDescriptorSet* const MeshRenderer::GetShadingDescriptorSets(uint32_t frameIndex) const
+	const VkDescriptorSet* const MeshRenderer::GetForwardDescriptorSets(uint32_t frameIndex) const
 	{
 		return &m_pShaderProperties->GetDescriptorSets()[frameIndex];
 	}
-	const VkPipeline& MeshRenderer::GetShadingPipeline() const
+	const VkPipeline& MeshRenderer::GetForwardPipeline() const
 	{
 		return m_pMaterial->GetPipeline()->GetVkPipeline();
 	}
-	const VkPipelineLayout& MeshRenderer::GetShadingPipelineLayout() const
+	const VkPipelineLayout& MeshRenderer::GetForwardPipelineLayout() const
 	{
 		return m_pMaterial->GetPipeline()->GetVkPipelineLayout();
 	}

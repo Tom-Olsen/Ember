@@ -1,7 +1,7 @@
 #include "material.h"
 #include "logger.h"
 #include "mesh.h"
-#include "shadingPipeline.h"
+#include "forwardPipeline.h"
 #include "shadowPipeline.h"
 #include "skyboxPipeline.h"
 #include "spirvReflect.h"
@@ -21,8 +21,8 @@ namespace emberEngine
 		m_renderQueue = renderQueue;
 		m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
 
-		// Shading material creation:
-		if (m_type == Type::shading)
+		// Forward material creation:
+		if (m_type == Type::forward)
 		{
 			// Load vertex shader:
 			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -38,7 +38,7 @@ namespace emberEngine
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 			// Create pipeline:
-			m_pPipeline = std::make_unique<ShadingPipeline>(m_pContext, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+			m_pPipeline = std::make_unique<ForwardPipeline>(m_pContext, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 
 		// Shadow material creation:

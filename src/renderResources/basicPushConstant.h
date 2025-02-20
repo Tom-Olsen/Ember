@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_shadingPushConstant_h__
-#define __INCLUDE_GUARD_shadingPushConstant_h__
+#ifndef __INCLUDE_GUARD_basicPushConstant_h__
+#define __INCLUDE_GUARD_basicPushConstant_h__
 #include "mathf.h"
 #include <string>
 
@@ -11,7 +11,7 @@ namespace emberEngine
 	/// Size limit for push constants is 128 bytes.
 	/// Only used for small data that is updated every frame.
 	/// </summary>
-	struct ShadingPushConstant
+	struct BasicPushConstant
 	{
 	public:
 		alignas(4) float time;
@@ -22,11 +22,11 @@ namespace emberEngine
 		alignas(16) Float4 cameraPosition;
 
 	public:
-		ShadingPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount, const Float3& cameraPosition);
+		BasicPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount, const Float3& cameraPosition);
 		std::string ToString();
 	};
 }
 
 
 
-#endif // __INCLUDE_GUARD_shadingPushConstant_h__
+#endif // __INCLUDE_GUARD_basicPushConstant_h__

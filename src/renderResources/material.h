@@ -28,8 +28,8 @@ namespace emberEngine
 	public: // Enums:
 		enum class Type
 		{
+			forward,
 			shadow,
-			shading,
 			skybox
 		};
 		enum class RenderQueue

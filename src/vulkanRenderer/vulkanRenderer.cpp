@@ -12,8 +12,8 @@
 #include "pointLight.h"
 #include "renderPassManager.h"
 #include "scene.h"
-#include "shadingPushConstant.h"
-#include "shadingRenderPass.h"
+#include "basicPushConstant.h"
+#include "forwardRenderPass.h"
 #include "shadowPushConstant.h"
 #include "shadowRenderPass.h"
 #include "spirvReflect.h"
@@ -36,12 +36,12 @@ namespace emberEngine
 		// Command buffers:
 		m_computeCommands.reserve(m_pContext->framesInFlight);
 		m_shadowCommands.reserve(m_pContext->framesInFlight);
-		m_shadingCommands.reserve(m_pContext->framesInFlight);
+		m_forwardCommands.reserve(m_pContext->framesInFlight);
 		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
 		{
 			m_computeCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetComputeQueue());
 			m_shadowCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
-			m_shadingCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
+			m_forwardCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
 		}
 
 		// Synchronization objects:
@@ -83,7 +83,7 @@ namespace emberEngine
 		SetMeshRendererGroups(pScene);
 		RecordComputeShaders(pScene);
 		RecordShadowCommandBuffer(pScene);
-		RecordShadingCommandBuffer(pScene);
+		RecordForwardCommandBuffer(pScene);
 		Graphics::ResetDrawCalls();
 		SubmitCommandBuffers();
 		if (!PresentImage())
@@ -158,7 +158,7 @@ namespace emberEngine
 			ComputeShader* pComputeShader = nullptr;
 			ComputeShader* pPreviousComputeShader = nullptr;
 			Float3 cameraPosition = pCamera->GetTransform()->GetPosition();
-			ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
+			BasicPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
 
 			std::vector<ComputeUnit*> computeUnits = Compute::GetComputeUnits();
 			for (ComputeUnit* computeUnit : computeUnits)
@@ -175,7 +175,7 @@ namespace emberEngine
 				{
 					pPreviousComputeShader = pComputeShader;
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pComputeShader->GetPipeline()->GetVkPipeline());
-					vkCmdPushConstants(commandBuffer, pComputeShader->GetPipeline()->GetVkPipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
+					vkCmdPushConstants(commandBuffer, pComputeShader->GetPipeline()->GetVkPipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BasicPushConstant), &pushConstant);
 				}
 				
 				// Bind descriptor sets:
@@ -318,10 +318,10 @@ namespace emberEngine
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
-	void VulkanRenderer::RecordShadingCommandBuffer(Scene* pScene)
+	void VulkanRenderer::RecordForwardCommandBuffer(Scene* pScene)
 	{
-		vkResetCommandPool(m_pContext->GetVkDevice(), m_shadingCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
-		VkCommandBuffer commandBuffer = m_shadingCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+		vkResetCommandPool(m_pContext->GetVkDevice(), m_forwardCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
+		VkCommandBuffer commandBuffer = m_forwardCommands[m_pContext->frameIndex].GetVkCommandBuffer();
 		Camera* pCamera = pScene->GetActiveCamera();
 		if (pCamera == nullptr)
 			return;
@@ -335,7 +335,7 @@ namespace emberEngine
 			SetViewportAndScissor(commandBuffer);
 
 			// Render pass info:
-			ShadingRenderPass* renderPass = dynamic_cast<ShadingRenderPass*>(RenderPassManager::GetRenderPass("shadingRenderPass"));
+			ForwardRenderPass* renderPass = dynamic_cast<ForwardRenderPass*>(RenderPassManager::GetRenderPass("forwardRenderPass"));
 			std::array<VkClearValue, 2> clearValues{};
 			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 			clearValues[1].depthStencil = { 1.0f, 0 };
@@ -355,7 +355,7 @@ namespace emberEngine
 				Material* pMaterial = nullptr;
 				Material* pPreviousMaterial = nullptr;
 				Float3 cameraPosition = pCamera->GetTransform()->GetPosition();
-				ShadingPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
+				BasicPushConstant pushConstant(Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
 
 				for (auto group : m_pMeshRendererGroups)
 					for (MeshRenderer* meshRenderer : *group)
@@ -378,8 +378,8 @@ namespace emberEngine
 						{
 							pPreviousMaterial = pMaterial;
 							bindingCount = pMaterial->GetVertexInputDescriptions()->size;
-							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipeline());
-							vkCmdPushConstants(commandBuffer, meshRenderer->GetShadingPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ShadingPushConstant), &pushConstant);
+							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipeline());
+							vkCmdPushConstants(commandBuffer, meshRenderer->GetForwardPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(BasicPushConstant), &pushConstant);
 						}
 
 						vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
@@ -387,9 +387,9 @@ namespace emberEngine
 
 						// For debugging binding missmatch error:
 						//std::cout << "GameObject:     " << meshRenderer->GetGameObject()->GetName() << std::endl;
-						//std::cout << "descriptorSet:  " << *meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex) << std::endl;
-						//std::cout << "Pipeline:       " << meshRenderer->GetShadingPipeline() << std::endl;
-						//std::cout << "PipelineLayout: " << meshRenderer->GetShadingPipelineLayout() << std::endl;
+						//std::cout << "descriptorSet:  " << *meshRenderer->GetForwardDescriptorSets(m_pContext->frameIndex) << std::endl;
+						//std::cout << "Pipeline:       " << meshRenderer->GetForwardPipeline() << std::endl;
+						//std::cout << "PipelineLayout: " << meshRenderer->GetForwardPipelineLayout() << std::endl;
 						//Texture2d* texture = meshRenderer->GetShaderProperties()->GetTexture2d("colorMap");
 						//if (texture != nullptr)
 						//	std::cout << "texture:        " << texture->GetName() << std::endl;
@@ -397,7 +397,7 @@ namespace emberEngine
 						//if (texture != nullptr)
 						//	std::cout << "texture:        " << texture->GetName() << std::endl;
 
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetShadingPipelineLayout(), 0, 1, meshRenderer->GetShadingDescriptorSets(m_pContext->frameIndex), 0, nullptr);
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, meshRenderer->GetForwardPipelineLayout(), 0, 1, meshRenderer->GetForwardDescriptorSets(m_pContext->frameIndex), 0, nullptr);
 						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
 					}
 			}
@@ -433,19 +433,19 @@ namespace emberEngine
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &m_shadowCommands[m_pContext->frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_shadowToShadingSemaphores[m_pContext->frameIndex]; // signal shadowToShadingSemaphore when done
+			submitInfo.pSignalSemaphores = &m_shadowToForwardSemaphores[m_pContext->frameIndex]; // signal shadowToForwardSemaphore when done
 			VKA(vkQueueSubmit(m_pContext->pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr)); // no fence needed (sync by semaphore)
 		}
 
-		// Shading render pass submission:
+		// Forward render pass submission:
 		{
 			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;				// wait at fragment shader stage until semaphores are signaled
 			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_shadowToShadingSemaphores[m_pContext->frameIndex];	// wait for shadowToShadingSemaphore
+			submitInfo.pWaitSemaphores = &m_shadowToForwardSemaphores[m_pContext->frameIndex];	// wait for shadowToForwardSemaphore
 			submitInfo.pWaitDstStageMask = &waitStage;
 			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_shadingCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+			submitInfo.pCommandBuffers = &m_forwardCommands[m_pContext->frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &m_releaseSemaphores[m_pContext->frameIndex];			// signal releaseSemaphor when done
 			VKA(vkQueueSubmit(m_pContext->pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, m_fences[m_pContext->frameIndex])); // signal fence when done
@@ -506,13 +506,13 @@ namespace emberEngine
 
 		m_acquireSemaphores.resize(m_pContext->framesInFlight);
 		m_computeToShadowSemaphores.resize(m_pContext->framesInFlight);
-		m_shadowToShadingSemaphores.resize(m_pContext->framesInFlight);
+		m_shadowToForwardSemaphores.resize(m_pContext->framesInFlight);
 		m_releaseSemaphores.resize(m_pContext->framesInFlight);
 		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
 		{
 			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
 			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_computeToShadowSemaphores[i]));
-			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_shadowToShadingSemaphores[i]));
+			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_shadowToForwardSemaphores[i]));
 			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
 		}
 	}
@@ -530,12 +530,12 @@ namespace emberEngine
 		{
 			vkDestroySemaphore(m_pContext->GetVkDevice(), m_acquireSemaphores[i], nullptr);
 			vkDestroySemaphore(m_pContext->GetVkDevice(), m_computeToShadowSemaphores[i], nullptr);
-			vkDestroySemaphore(m_pContext->GetVkDevice(), m_shadowToShadingSemaphores[i], nullptr);
+			vkDestroySemaphore(m_pContext->GetVkDevice(), m_shadowToForwardSemaphores[i], nullptr);
 			vkDestroySemaphore(m_pContext->GetVkDevice(), m_releaseSemaphores[i], nullptr);
 		}
 		m_acquireSemaphores.clear();
 		m_computeToShadowSemaphores.clear();
-		m_shadowToShadingSemaphores.clear();
+		m_shadowToForwardSemaphores.clear();
 		m_releaseSemaphores.clear();
 	}
 }

@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_shadingRenderpass_h__
-#define __INCLUDE_GUARD_shadingRenderpass_h__
+#ifndef __INCLUDE_GUARD_forwardRenderpass_h__
+#define __INCLUDE_GUARD_forwardRenderpass_h__
 #include "renderPass.h"
 #include <memory>
 #include <vulkan/vulkan.h>
@@ -15,9 +15,9 @@ namespace emberEngine
 
 
 	/// <summary>
-	/// Basic shading render pass.
+	/// Basic forward render pass.
 	/// </summary>
-	class ShadingRenderPass : public RenderPass
+	class ForwardRenderPass : public RenderPass
 	{
 	private: // Members:
 		// These images are transiant (only needed temporary in between pipeline stages).
@@ -27,8 +27,8 @@ namespace emberEngine
 		VkFormat m_depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 	public: // Methods:
-		ShadingRenderPass(VulkanContext* pContext);
-		~ShadingRenderPass();
+		ForwardRenderPass(VulkanContext* pContext);
+		~ForwardRenderPass();
 		const VmaImage* const GetMsaaVmaImage() const;
 		const VmaImage* const GetDepthVmaImage() const;
 
@@ -42,4 +42,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_shadingRenderpass_h__
+#endif // __INCLUDE_GUARD_forwardRenderpass_h__

@@ -1,4 +1,4 @@
-#include "shadingPushConstant.h"
+#include "basicPushConstant.h"
 #include "macros.h"
 
 
@@ -6,7 +6,7 @@
 namespace emberEngine
 {
 	// Constructor:
-	ShadingPushConstant::ShadingPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount, const Float3& cameraPosition)
+	BasicPushConstant::BasicPushConstant(float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount, const Float3& cameraPosition)
 	{
 		this->time = time;
 		this->deltaTime = deltaTime;
@@ -19,9 +19,9 @@ namespace emberEngine
 
 
 	// Public methods:
-	std::string ShadingPushConstant::ToString()
+	std::string BasicPushConstant::ToString()
 	{
-		std::string output = "ShadingPushConstant:\n";
+		std::string output = "BasicPushConstant:\n";
 		output += "Time: " + std::to_string(time) + "\n";
 		output += "Delta Time: " + std::to_string(deltaTime) + "\n";
 		output += "Directional Lights Count: " + std::to_string(dLightsCount) + "\n";

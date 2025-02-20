@@ -1,7 +1,7 @@
 #include "renderPassManager.h"
 #include "logger.h"
 #include "renderPass.h"
-#include "shadingRenderPass.h"
+#include "forwardRenderPass.h"
 #include "shadowRenderPass.h"
 #include "vulkanContext.h"
 
@@ -25,8 +25,8 @@ namespace emberEngine
 		s_isInitialized = true;
 		RenderPassManager::s_pContext = pContext;
 
-		ShadingRenderPass* shadingRenderPass = new ShadingRenderPass(s_pContext);
-		AddRenderPass("shadingRenderPass", shadingRenderPass);
+		ForwardRenderPass* forwardRenderPass = new ForwardRenderPass(s_pContext);
+		AddRenderPass("forwardRenderPass", forwardRenderPass);
 
 		ShadowRenderPass* shadowRenderPass = new ShadowRenderPass(s_pContext);
 		AddRenderPass("shadowRenderPass", shadowRenderPass);
@@ -38,9 +38,9 @@ namespace emberEngine
 	}
 	void RenderPassManager::RecreateRenderPasses()
 	{
-		RenderPass* newShadingRenderPass = new ShadingRenderPass(s_pContext);
-		DeleteRenderPass("shadingRenderPass");
-		AddRenderPass("shadingRenderPass", newShadingRenderPass);
+		RenderPass* newForwardRenderPass = new ForwardRenderPass(s_pContext);
+		DeleteRenderPass("forwardRenderPass");
+		AddRenderPass("forwardRenderPass", newForwardRenderPass);
 	}
 
 

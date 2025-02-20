@@ -8,7 +8,7 @@ namespace emberEngine
 {
 	/// <summary>
 	/// Texture2d specialization: <para/>
-	/// -VkImageUsageFlags		= transfer src/dst, storage
+	/// -VkImageUsageFlags		= transfer dst, storage
 	/// -VkImageCreateFlagBits	= 0
 	/// -VkImageViewType		= 2d
 	/// </summary>

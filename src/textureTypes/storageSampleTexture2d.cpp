@@ -1,4 +1,4 @@
-#include "storageTexture2d.h"
+#include "storageSampleTexture2d.h"
 #include "logger.h"
 #include "stb_image.h"
 #include "vmaBuffer.h"
@@ -10,7 +10,7 @@
 namespace emberEngine
 {
 	// Constructor/Desctructor:
-	StorageTexture2d::StorageTexture2d(VulkanContext* pContext, const std::string& name, VkFormat format, int width, int height)
+	StorageSampleTexture2d::StorageSampleTexture2d(VulkanContext* pContext, const std::string& name, VkFormat format, int width, int height)
 	{
 		m_pContext = pContext;
 		m_type = Type::storage;
@@ -38,7 +38,7 @@ namespace emberEngine
 		subresourceRange.layerCount = 1;
 
 		// Create image:
-		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		VkImageCreateFlagBits imageFlags = (VkImageCreateFlagBits)0;
 		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -67,7 +67,7 @@ namespace emberEngine
 		// Free memory:
 		delete[] pPixels;
 	}
-	StorageTexture2d::StorageTexture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name, VkFormat format)
+	StorageSampleTexture2d::StorageSampleTexture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name, VkFormat format)
 	{
 		m_pContext = pContext;
 		m_type = Type::storage;
@@ -93,12 +93,12 @@ namespace emberEngine
 		subresourceRange.layerCount = 1;
 
 		// Create image:
-		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		VkImageCreateFlagBits imageFlags = (VkImageCreateFlagBits)0;
 		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, viewType, queue));
-		
+
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		VkImageLayout newLayout0 = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		VkPipelineStageFlags2 srcStage0 = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
@@ -108,7 +108,7 @@ namespace emberEngine
 		m_pImage->TransitionLayout(newLayout0, srcStage0, dstStage0, srcAccessMask0, dstAccessMask0);
 
 		VmaBuffer::CopyBufferToImage(m_pContext, &stagingBuffer, m_pImage.get(), m_pContext->pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
-		
+
 		// Transition 1: Layout: transfer->general, Queue: transfer->compute
 		VkImageLayout newLayout1 = VK_IMAGE_LAYOUT_GENERAL;
 		VulkanQueue newQueue1 = m_pContext->pLogicalDevice->GetComputeQueue();
@@ -121,7 +121,7 @@ namespace emberEngine
 		// Free memory:
 		stbi_image_free(pPixels);
 	}
-	StorageTexture2d::~StorageTexture2d()
+	StorageSampleTexture2d::~StorageSampleTexture2d()
 	{
 
 	}

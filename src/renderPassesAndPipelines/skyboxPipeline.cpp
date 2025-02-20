@@ -2,7 +2,7 @@
 #include "mesh.h"
 #include "renderPass.h"
 #include "renderPassManager.h"
-#include "shadingPushConstant.h"
+#include "basicPushConstant.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -54,7 +54,7 @@ namespace emberEngine
         VkPushConstantRange pushConstantRange = {};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(ShadingPushConstant);
+        pushConstantRange.size = sizeof(BasicPushConstant);
 
         // Pipeline layout:
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -179,7 +179,7 @@ namespace emberEngine
         pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
         pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
         pipelineInfo.layout = m_pipelineLayout;
-        pipelineInfo.renderPass = RenderPassManager::GetRenderPass("shadingRenderPass")->GetVkRenderPass();
+        pipelineInfo.renderPass = RenderPassManager::GetRenderPass("forwardRenderPass")->GetVkRenderPass();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
         pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline
