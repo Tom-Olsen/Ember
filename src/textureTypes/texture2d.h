@@ -60,7 +60,7 @@ namespace emberEngine
 
 	protected: // Methods:
 		uint32_t BytesPerChannel(VkFormat format);
-		VmaImage* CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlagBits imageFlags, VkImageViewType viewType, const VulkanQueue& queue);
+		VmaImage* CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const VulkanQueue& queue);
 	};
 }
 

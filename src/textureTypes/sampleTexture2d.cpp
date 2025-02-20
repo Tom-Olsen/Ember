@@ -15,7 +15,7 @@ namespace emberEngine
 		m_pContext = pContext;
 		m_type = Type::sample;
 		m_name = name;
-		m_channels = STBI_rgb_alpha;	// 4 8-bit channels
+		m_channels = STBI_rgb_alpha;	// 4 channels
 		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 
 		// Load image:
@@ -37,11 +37,12 @@ namespace emberEngine
 		subresourceRange.layerCount = 1;
 
 		// Create image:
-		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		VkImageCreateFlagBits imageFlags = (VkImageCreateFlagBits)0;
-		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
+		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		VkImageCreateFlags imageFlags = 0;
+		VkMemoryPropertyFlags memoryFlags = 0;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, viewType, queue));
+		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
+		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		VkImageLayout newLayout0 = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;

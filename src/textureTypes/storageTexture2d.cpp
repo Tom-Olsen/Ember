@@ -17,7 +17,7 @@ namespace emberEngine
 		m_name = name;
 		m_width = width;
 		m_height = height;
-		m_channels = STBI_rgb_alpha;	// 4 8-bit channels
+		m_channels = STBI_rgb_alpha;	// 4 channels
 		m_descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 
 		// Create zero initialized pixels:
@@ -33,16 +33,17 @@ namespace emberEngine
 		VkImageSubresourceRange subresourceRange;
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresourceRange.baseMipLevel = 0;
-		subresourceRange.levelCount = 1; // no mipmapping for storage textures.
+		subresourceRange.levelCount = 1;
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.layerCount = 1;
 
 		// Create image:
 		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
-		VkImageCreateFlagBits imageFlags = (VkImageCreateFlagBits)0;
-		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
+		VkImageCreateFlags imageFlags = 0;
+		VkMemoryPropertyFlags memoryFlags = 0;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, viewType, queue));
+		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
+		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 
 
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
@@ -72,7 +73,7 @@ namespace emberEngine
 		m_pContext = pContext;
 		m_type = Type::storage;
 		m_name = name;
-		m_channels = STBI_rgb_alpha;	// 4 8-bit channels
+		m_channels = STBI_rgb_alpha;	// 4 channels
 
 		// Load image:
 		stbi_set_flip_vertically_on_load(true);
@@ -88,16 +89,17 @@ namespace emberEngine
 		VkImageSubresourceRange subresourceRange;
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresourceRange.baseMipLevel = 0;
-		subresourceRange.levelCount = 1; // no mipmapping for storage textures.
+		subresourceRange.levelCount = 1;
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.layerCount = 1;
 
 		// Create image:
 		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
-		VkImageCreateFlagBits imageFlags = (VkImageCreateFlagBits)0;
-		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
+		VkImageCreateFlags imageFlags = 0;
+		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, viewType, queue));
+		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
+		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 		
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		VkImageLayout newLayout0 = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;

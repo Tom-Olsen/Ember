@@ -7,8 +7,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-// TODO:
-// - In UniformBufferMember use values in the map instead of pointers?
+
 
 namespace emberEngine
 {
@@ -127,7 +126,7 @@ namespace emberEngine
 		SpirvReflect(const std::vector<char>& code);
 		~SpirvReflect();
 		VertexInputDescriptions* GetVertexInputDescriptions() const;
-		// TODO: make this function return a pointer instead of taking in a pointer and writing to it.
+		// Instead of returning pointer, this function adds to one, as it is used for multiple pipeline stages, e.g. vertex + fragment.
 		void AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources) const;
 
 	private: // Methods:

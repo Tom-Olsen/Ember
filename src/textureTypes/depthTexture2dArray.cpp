@@ -30,10 +30,11 @@ namespace emberEngine
 
 		// Create image:
 		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		VkImageCreateFlagBits imageFlags = (VkImageCreateFlagBits)0;
-		VulkanQueue queue = m_pContext->pLogicalDevice->GetGraphicsQueue();
+		VkImageCreateFlags imageFlags = 0;
+		VkMemoryPropertyFlags memoryFlags = 0;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, viewType, queue));
+		VulkanQueue queue = m_pContext->pLogicalDevice->GetGraphicsQueue();
+		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 
 		// Although the image is in the layout undefined, the shadow renderpass automatically transitions it to shader read after rendering the shadow maps into it.
 		// The descriptorSet that binds the shadowMap to the fragment shaders of the forward renderpass needs to read the correct VkImageLayout.

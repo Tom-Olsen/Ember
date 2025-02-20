@@ -6,6 +6,7 @@ using namespace emberEngine;
 
 // TODO now!
 // - compute shaders!
+// - change how draw calls are issued from meshRenderers. Instead let meshRenderes queue their drawCalls in class Graphics similar to normal draw calls.
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - test SDL_WaitEvent in sdlWindow
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)

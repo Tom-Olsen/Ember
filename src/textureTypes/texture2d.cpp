@@ -77,7 +77,7 @@ namespace emberEngine
 				return -1;
 		}
 	}
-	VmaImage* Texture2d::CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlagBits imageFlags, VkImageViewType viewType, const VulkanQueue& queue)
+	VmaImage* Texture2d::CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const VulkanQueue& queue)
 	{
 		VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
 		pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -88,7 +88,7 @@ namespace emberEngine
 		pImageInfo->mipLevels = subresourceRange.levelCount;
 		pImageInfo->arrayLayers = subresourceRange.layerCount;
 		pImageInfo->format = format;
-		pImageInfo->tiling = VK_IMAGE_TILING_OPTIMAL;
+		pImageInfo->tiling = VK_IMAGE_TILING_OPTIMAL;	// optimal for GPU. use linear for CPU readback.
 		pImageInfo->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		pImageInfo->usage = usageFlags;
 		pImageInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -98,7 +98,7 @@ namespace emberEngine
 		VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
 		pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 		pAllocInfo->flags = 0;
-		pAllocInfo->requiredFlags = 0;
+		pAllocInfo->requiredFlags = memoryFlags;
 		pAllocInfo->preferredFlags = 0;
 
 		// Always use transfer queue by default and do queue transition later when needed.
