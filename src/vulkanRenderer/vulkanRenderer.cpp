@@ -11,6 +11,7 @@
 #include "shaderProperties.h"
 #include "pointLight.h"
 #include "renderPassManager.h"
+#include "renderTexture2d.h"
 #include "scene.h"
 #include "basicPushConstant.h"
 #include "forwardRenderPass.h"
@@ -32,6 +33,12 @@ namespace emberEngine
 	VulkanRenderer::VulkanRenderer(VulkanContext* pContext)
 	{
 		m_pContext = pContext;
+
+		// Create render texture:
+		VkFormat format = VK_FORMAT_R16G16B16A16_SFLOAT;
+		int width = m_pContext->pWindow->GetWidth();
+		int height = m_pContext->pWindow->GetHeight();
+		m_renderTexture = std::make_unique<RenderTexture2d>(m_pContext, "mainRenderTexture2d", format, width, height);
 
 		// Command buffers:
 		m_computeCommands.reserve(m_pContext->framesInFlight);

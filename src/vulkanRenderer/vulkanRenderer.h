@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_vulkanRenderer_h__
 #include <vulkan/vulkan.h>
 #include <array>
+#include <memory>
 #include <vector>
 
 
@@ -14,6 +15,7 @@ namespace emberEngine
 	class Scene;
 	struct VulkanContext;
 	class VulkanCommand;
+	class RenderTexture2d;
 
 
 
@@ -23,6 +25,7 @@ namespace emberEngine
 		VulkanContext* m_pContext;
 
 		// Render resources:
+		std::unique_ptr<RenderTexture2d> m_renderTexture;	// maybe move somewhere else?
 		std::vector<VulkanCommand> m_computeCommands;
 		std::vector<VulkanCommand> m_shadowCommands;
 		std::vector<VulkanCommand> m_forwardCommands;

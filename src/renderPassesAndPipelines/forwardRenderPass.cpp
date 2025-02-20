@@ -45,7 +45,7 @@ namespace emberEngine
 		{
 			// Multisampled color attachment description:
 			attachments[0].format = m_pContext->pSurface->GetVkSurfaceFormatKHR().format;
-			attachments[0].samples = m_pContext->msaaSamples;							// multisampling count
+			attachments[0].samples = m_pContext->msaaSamples;						// multisampling count
 			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// no need to store multisampls after render
 			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// do not use stencils
@@ -55,7 +55,7 @@ namespace emberEngine
 
 			// Depth attachment description:
 			attachments[1].format = m_depthFormat;									// must be same as depth image format
-			attachments[1].samples = m_pContext->msaaSamples;							// msaaSamples
+			attachments[1].samples = m_pContext->msaaSamples;						// msaaSamples
 			attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear depth buffer before rendering
 			attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// depth content is discarded after rendering
 			attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// stencil part not used yet
