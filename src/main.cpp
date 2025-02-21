@@ -5,6 +5,7 @@ using namespace emberEngine;
 
 
 // TODO now!
+// - instancing to test compute shaders.
 // - compute shaders!
 // - change how draw calls are issued from meshRenderers. Instead let meshRenderes queue their drawCalls in class Graphics similar to normal draw calls.
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.

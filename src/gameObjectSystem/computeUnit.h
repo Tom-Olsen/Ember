@@ -20,8 +20,6 @@ namespace emberEngine
 	{
 	private: // Members:
 		Uint3 m_groupCount;
-		uint32_t m_groupCountY;
-		uint32_t m_groupCountZ;
 		ComputeShader* m_pComputeShader;
 		std::unique_ptr<ShaderProperties> m_pShaderProperties;
 

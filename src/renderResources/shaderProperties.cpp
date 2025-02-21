@@ -262,7 +262,11 @@ namespace emberEngine
 		return T();
 	}
 
-	// Sampler and Texture2d getters:
+	// Getters:
+	Shader* ShaderProperties::GetShader() const
+	{
+		return m_pShader;
+	}
 	Sampler* ShaderProperties::GetSampler(const std::string& name) const
 	{
 		auto it = m_samplerMaps[m_pContext->frameIndex].find(name);

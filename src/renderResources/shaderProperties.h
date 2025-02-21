@@ -80,7 +80,8 @@ namespace emberEngine
 		template<typename T>
 		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 
-		// Sampler and Texture2d Getters:
+		// Getters:
+		Shader* GetShader() const;
 		Sampler* GetSampler(const std::string& name) const;
 		Texture2d* GetTexture2d(const std::string& name) const;
 

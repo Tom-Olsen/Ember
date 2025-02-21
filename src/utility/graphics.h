@@ -16,6 +16,16 @@ namespace emberEngine
 
 
 
+	struct DrawCall
+	{
+		Material* pMaterial;
+		ShaderProperties* pShaderProperties;
+		Mesh* pMesh;
+		Transform* pTransform;
+	};
+
+
+
 	class Graphics
 	{
 	public: // Members
