@@ -48,8 +48,6 @@ namespace emberEngine
 		float Floor(float value, int decimals = 0);
 		float Ceil(float value, int decimals = 0);
 		float Clamp(float value, float min, float max);
-		float Min(float a, float b);
-		float Max(float a, float b);
 		float Sign(float value);
 		float Sqrt(float value);
 		float Pow(float value, float exponent);
@@ -63,6 +61,12 @@ namespace emberEngine
 		float Acos(float value);
 		float Atan(float z);
 		float Atan2(float y, float x);
+
+		// Templates:
+		template<typename T>
+		T Min(T a, T b);
+		template<typename T>
+		T Max(T a, T b);
 	}
 }
 

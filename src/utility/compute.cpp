@@ -1,51 +1,42 @@
 #include "compute.h"
 #include "computeShader.h"
-#include "computeUnit.h"
 #include "logger.h"
 #include "shaderProperties.h"
-#include "vulkanContext.h"
 
 
 
 namespace emberEngine
 {
 	// Static members:
-	uint32_t Compute::s_dispatchIndex = 0;
 	bool Compute::s_isInitialized = false;
-	std::vector<ComputeUnit*> Compute::s_computeUnit;
+	std::vector<ComputeCall> Compute::s_computeCalls;
+	std::vector<ComputeCall*> Compute::s_computeCallPointers;
+	std::unordered_map<ComputeShader*, ResourcePool<ShaderProperties, 10>> Compute::s_shaderPropertiesPoolMap;
 
 
 
 	// Initialization/Cleanup:
-	void Compute::Init(VulkanContext* pContext)
+	void Compute::Init()
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
-
-		s_computeUnit.resize(10);
-		for (uint32_t i = 0; i < 10; i++)
-		{
-			s_computeUnit[i] = new ComputeUnit();
-			s_computeUnit[i]->isActive = false;
-		}
 	}
 	void Compute::Clear()
 	{
-		for (uint32_t i = 0; i < s_computeUnit.size(); i++)
-			delete s_computeUnit[i];
-		s_computeUnit.clear();
+		ResetComputeCalls();
+		s_shaderPropertiesPoolMap.clear();
 	}
 
 
 
 	// Public methods:
 	// Dispatch calls:
-	ShaderProperties* Compute::Dispatch(ComputeShader* pComputeShader, Uint3 groupCount)
+	ShaderProperties* Compute::Dispatch(ComputeShader* pComputeShader, uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ)
 	{
-		return Dispatch(pComputeShader, groupCount.x, groupCount.y, groupCount.z);
+		return Dispatch(pComputeShader, Uint3(threadCountX, threadCountY, threadCountZ));
 	}
-	ShaderProperties* Compute::Dispatch(ComputeShader* pComputeShader, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+	ShaderProperties* Compute::Dispatch(ComputeShader* pComputeShader, Uint3 threadCount)
 	{
 		if (!pComputeShader)
 		{
@@ -53,57 +44,43 @@ namespace emberEngine
 			return nullptr;
 		}
 
-		DoubleCapacityIfNeeded();
+		// Setup compute call:
+		threadCount = Uint3::Max(Uint3::one, threadCount);
+		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[pComputeShader].Acquire((Shader*)pComputeShader);
+		ComputeCall computeCall = { threadCount, pComputeShader, pShaderProperties };
+		s_computeCalls.push_back(computeCall);
 
-		// Setup current dispatch call:
-		ComputeUnit* pComputeUnit = s_computeUnit[s_dispatchIndex];
-		pComputeUnit->isActive = true;
-		pComputeUnit->SetComputeShader(pComputeShader);
-		pComputeUnit->SetComputeCount(groupCountX, groupCountY, groupCountZ);
-
-		// By returning the computeShaders shaderProperties, we allow user to change the shader properties of this dispatch call:
-		ShaderProperties* pShaderProperties = s_computeUnit[s_dispatchIndex]->GetShaderProperties();
-		s_dispatchIndex++;
+		// By returning pShaderProperties, we allow user to change the shader properties of the compute call:
 		return pShaderProperties;
 	}
-	void Compute::ResetDispatchCalls()
+	void Compute::ResetComputeCalls()
 	{
-		for (ComputeUnit* pComputeUnit : s_computeUnit)
-			pComputeUnit->isActive = false;
-		ReduceCapacity();
-		s_dispatchIndex = 0;
+		// Return all pShaderProperties of compute calls back to the corresponding pool:
+		for (ComputeCall& computeCall : s_computeCalls)
+			s_shaderPropertiesPoolMap[computeCall.pComputeShader].Release(computeCall.pShaderProperties);
+
+		// Shrink all pools back to max number of computeCalls of last frame:
+		for (auto& [_, pool] : s_shaderPropertiesPoolMap)
+			pool.ShrinkToFit();
+
+		// Remove all computeCalls so next frame can start fresh:
+		s_computeCalls.clear();
 	}
 
 
 	// Getters:
-	std::vector<ComputeUnit*>& Compute::GetComputeUnits()
+	std::vector<ComputeCall*>* Compute::GetComputeCallPointers()
 	{
-		return s_computeUnit;
-	}
+		// By returning a vector of pointers this allows us to do sorting first if needed.
 
+		// Populate sorted draw call pointers vector:
+		s_computeCallPointers.clear();
+		s_computeCallPointers.reserve(s_computeCalls.size());
+		for (auto& computeCall : s_computeCalls)
+			s_computeCallPointers.push_back(&computeCall);
 
+		// Soirt compute call pointers here if needed.
 
-	// Private methods:
-	void Compute::DoubleCapacityIfNeeded()
-	{
-		uint32_t oldSize = static_cast<uint32_t>(s_computeUnit.size());
-		if (s_dispatchIndex >= oldSize)
-		{
-			uint32_t newSize = 2 * oldSize;
-			s_computeUnit.resize(newSize);
-			for (uint32_t i = oldSize; i < newSize; i++)
-				s_computeUnit[i] = new ComputeUnit();
-		}
-	}
-	void Compute::ReduceCapacity()
-	{
-		uint32_t oldSize = static_cast<uint32_t>(s_computeUnit.size());
-		uint32_t newSize = s_dispatchIndex; // dispatchIndex is one past the last active element, so no +1 needed.
-		if (oldSize > newSize)
-		{
-			for (uint32_t i = newSize; i < oldSize; i++)
-				delete s_computeUnit[i];
-			s_computeUnit.resize(newSize);
-		}
+		return &s_computeCallPointers;
 	}
 }

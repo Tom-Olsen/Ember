@@ -4,7 +4,6 @@
 #include "gameObject.h"
 #include "logger.h"
 #include "material.h"
-#include "meshRenderer.h"
 #include "pointLight.h"
 #include "spotLight.h"
 
@@ -80,12 +79,6 @@ namespace emberEngine
 	{
 		return m_pointLights;
 	}
-	std::vector<MeshRenderer*>* const Scene::GetSortedMeshRenderers()
-	{
-		if (!m_meshRenderersSorted)
-			SortMeshRenderers();
-		return &m_sortedMeshRenderers;
-	}
 
 	// Setters:
 	void Scene::AddGameObject(GameObject* pGameObject)
@@ -101,14 +94,6 @@ namespace emberEngine
 		{
 			pGameObject->SetScene(this);
 			m_gameObjects[pGameObject->GetName()] = std::unique_ptr<GameObject>(pGameObject);
-
-			MeshRenderer* pMeshRenderer = pGameObject->GetComponent<MeshRenderer>();
-			if (pMeshRenderer != nullptr)
-			{
-				m_meshRenderers.emplace(pGameObject->GetName(), pMeshRenderer);
-				m_sortedMeshRenderers.push_back(pMeshRenderer);
-				m_meshRenderersSorted = false;
-			}
 
 			DirectionalLight* pDirectionalLight = pGameObject->GetComponent<DirectionalLight>();
 			if (pDirectionalLight != nullptr)
@@ -200,13 +185,6 @@ namespace emberEngine
 						break;
 					}
 			}
-			MeshRenderer* pMeshRenderer = pGameObject->GetComponent<MeshRenderer>();
-			if (pMeshRenderer != nullptr)
-			{
-				m_sortedMeshRenderers.erase(std::remove(m_sortedMeshRenderers.begin(), m_sortedMeshRenderers.end(), pMeshRenderer), m_sortedMeshRenderers.end());
-				m_meshRenderers.erase(name);
-				m_meshRenderersSorted = false;
-			}
 			pGameObject->SetScene(nullptr);
 			m_gameObjects.erase(it);
 		}
@@ -219,21 +197,11 @@ namespace emberEngine
 	// Load and unload the scene:
 	void Scene::Load()
 	{
-		//for (uint32_t i = 0; i < m_gameObjects.size(); i++)
-		//{
-		//	MeshRenderer* pMeshRenderer = m_gameObjects[i].GetComponent<MeshRenderer>();
-		//	if (pMeshRenderer != nullptr)
-		//		pMeshRenderer->mesh->Load();
-		//}
+
 	}
 	void Scene::Unload()
 	{
-		//for (uint32_t i = 0; i < m_gameObjects.size(); i++)
-		//{
-		//	MeshRenderer* pMeshRenderer = m_gameObjects[i].GetComponent<MeshRenderer>();
-		//	if (pMeshRenderer != nullptr)
-		//		pMeshRenderer->mesh->Unload();
-		//}
+
 	}
 
 
@@ -244,20 +212,6 @@ namespace emberEngine
 		LOG_TRACE("GameObjects in scene:");
 		for (const auto& pair : m_gameObjects)
 			LOG_TRACE(pair.first);
-	}
-	void Scene::PrintMeshRenderers() const
-	{
-		LOG_TRACE("MeshRenderers in scene:");
-		for (const auto& [objName, pMeshRenderer] : m_meshRenderers)
-			LOG_TRACE("gamObject: {}, material: {}", objName, pMeshRenderer->GetMaterial()->GetName());
-	}
-	void Scene::PrintSortedMeshRenderers()
-	{
-		if (!m_meshRenderersSorted)
-			SortMeshRenderers();
-		LOG_TRACE("Sorted MeshRenderers in scene:");
-		for (const auto& pMeshRenderer : m_sortedMeshRenderers)
-			LOG_TRACE("gamObject: {}, material: {}", pMeshRenderer->GetGameObject()->GetName(), pMeshRenderer->GetMaterial()->GetName());
 	}
 	void Scene::PrintLights() const
 	{
@@ -275,19 +229,5 @@ namespace emberEngine
 		for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
 			if (m_pointLights[i] != nullptr)
 				LOG_TRACE("{}", m_pointLights[i]->GetGameObject()->GetName());
-	}
-
-
-
-	// Private methods:
-	void Scene::SortMeshRenderers()
-	{
-		m_meshRenderersSorted = true;
-		std::sort(m_sortedMeshRenderers.begin(), m_sortedMeshRenderers.end(), [](MeshRenderer* a, MeshRenderer* b)
-		{
-			uint32_t renderQueueA = static_cast<uint32_t>(a->GetMaterial()->GetRenderQueue());
-			uint32_t renderQueueB = static_cast<uint32_t>(b->GetMaterial()->GetRenderQueue());
-			return renderQueueA < renderQueueB;
-		});
 	}
 }

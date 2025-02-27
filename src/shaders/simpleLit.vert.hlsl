@@ -1,14 +1,15 @@
-#include "shadingPushConstant.hlsli"
+#include "defaultPushConstant.hlsli"
+#include "mathf.hlsli"
 
 
 
 cbuffer RenderMatrizes : register(b0)
 {
-    float4x4 modelMatrix;       // mesh local to world matrix
-    float4x4 viewMatrix;        // camera world to local matrix
-    float4x4 projMatrix;        // camera projection matrix
-    float4x4 normalMatrix;      // rotation matrix for directions: (model^-1)^T
-    float4x4 localToClipMatrix; // local to camera clip space matrix: (projection * view * model)
+    float4x4 cb_localToWorldMatrix;    // local to world matrix (also known as model matrix).
+    float4x4 cb_viewMatrix;            // world to camera matrix.
+    float4x4 cb_projMatrix;            // camera projection matrix (HDC => NDC after w division, which happens automatically).
+    float4x4 cb_worldToClipMatrix;     // world to camera clip space matrix: (projection * view)
+    float4x4 cb_localToClipMatrix;     // local to camera clip space matrix: (projection * view * localToWorldMatrix)
 };
 
 
@@ -32,10 +33,12 @@ VertexOutput main(VertexInput input)
 {
     float4 pos = float4(input.position, 1.0f);
     float4 normal = float4(input.normal, 0.0f);
+    float4x4 localToClipMatrix = mul(cb_worldToClipMatrix, cb_localToWorldMatrix);
+    float4x4 normalMatrix = LinAlg_NormalMatrix(cb_localToWorldMatrix);
     
     VertexOutput output;
     output.clipPosition = mul(localToClipMatrix, pos);
     output.worldNormal = mul(normalMatrix, normal).xyz;
-    output.worldPosition = mul(modelMatrix, pos).xyz;
+    output.worldPosition = mul(cb_localToWorldMatrix, pos).xyz;
     return output;
 }

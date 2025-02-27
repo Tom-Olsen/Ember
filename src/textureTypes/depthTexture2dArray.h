@@ -8,8 +8,8 @@ namespace emberEngine
 {
 	/// <summary>
 	/// Texture2d specialization: <para/>
-	/// -VkImageUsageFlags		= depth, sample
-	/// -VkImageCreateFlagBits	= 0
+	/// -VkImageUsageFlags		= depth, sample <para/>
+	/// -VkImageCreateFlagBits	= 0 <para/>
 	/// -VkImageViewType		= 2d array
 	/// </summary>
 	class DepthTexture2dArray : public Texture2d

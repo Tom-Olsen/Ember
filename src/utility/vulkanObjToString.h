@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_vulkanEnumToString_h__
-#define __INCLUDE_GUARD_vulkanEnumToString_h__
+#ifndef __INCLUDE_GUARD_vulkanObjToString_h__
+#define __INCLUDE_GUARD_vulkanObjToString_h__
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -7,8 +7,9 @@
 
 namespace emberEngine
 {
-	namespace vulkanEnumToString
+	namespace vulkanObjToString
 	{
+		std::string VkVertexInputAttributeDescriptionToString(VkVertexInputAttributeDescription vkVertexInputAttributeDescription);
 		std::string VkImageViewTypeToString(VkImageViewType vkImageViewType);
 		std::string VkImageLayoutToString(VkImageLayout vkImageView);
 		std::string VkVertexInputRateToString(VkVertexInputRate vkVertexInputRate);
@@ -20,4 +21,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_vulkanEnumToString_h__
+#endif // __INCLUDE_GUARD_vulkanObjToString_h__

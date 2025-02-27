@@ -1,24 +1,34 @@
-#include "shadingPushConstant.hlsli"
+#include "defaultPushConstant.hlsli"
+#include "mathf.hlsli"
 
 
 
-cbuffer RenderMatrizes : register(b0)
+struct InstanceData
 {
-    float4x4 modelMatrix;       // mesh local to world matrix
-    float4x4 viewMatrix;        // camera world to local matrix
-    float4x4 projMatrix;        // camera projection matrix
-    float4x4 normalMatrix;      // rotation matrix for directions: (model^-1)^T
-    float4x4 localToClipMatrix; // local to camera clip space matrix: (projection * view * model)
+    float4x4 localToWorldMatrix;
+};
+StructuredBuffer<InstanceData> instanceBuffer : register(t0);
+
+
+
+cbuffer RenderMatrizes : register(b1)
+{
+    float4x4 cb_localToWorldMatrix;    // local to world matrix (also known as model matrix).
+    float4x4 cb_viewMatrix;            // world to camera matrix.
+    float4x4 cb_projMatrix;            // camera projection matrix (HDC => NDC after w division, which happens automatically).
+    float4x4 cb_worldToClipMatrix;     // world to camera clip space matrix: (projection * view)
+    float4x4 cb_localToClipMatrix;     // local to camera clip space matrix: (projection * view * localToWorldMatrix)
 };
 
 
 
 struct VertexInput
 {
-    float3 position : POSITION; // position in local/model sapce
-    float3 normal : NORMAL;     // normal in local/model space
-    float3 tangent : TANGENT;   // tangent in local/model space
-    float4 vertexColor : COLOR; // vertex color
+    uint instanceID : SV_InstanceID;    // Instance ID: System value => built in variable
+    float3 position : POSITION;         // position in local/model sapce
+    float3 normal : NORMAL;             // normal in local/model space
+    float3 tangent : TANGENT;           // tangent in local/model space
+    float4 vertexColor : COLOR;         // vertex color
     float4 uv : TEXCOORD0;
 };
 
@@ -39,6 +49,11 @@ VertexOutput main(VertexInput input)
     float4 pos = float4(input.position, 1.0f);
     float4 normal = float4(input.normal, 0.0f);
     float4 tangent = float4(input.tangent, 0.0f);
+    float4x4 localToWorldMatrix = cb_localToWorldMatrix;
+    if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+        localToWorldMatrix = mul(cb_localToWorldMatrix, instanceBuffer[input.instanceID].localToWorldMatrix);
+    float4x4 localToClipMatrix = mul(cb_worldToClipMatrix, localToWorldMatrix);
+    float4x4 normalMatrix = LinAlg_NormalMatrix(localToWorldMatrix);
     
     VertexOutput output;
     output.clipPosition = mul(localToClipMatrix, pos);
@@ -46,6 +61,6 @@ VertexOutput main(VertexInput input)
     output.worldTangent = mul(normalMatrix, tangent).xyz;
     output.vertexColor = input.vertexColor;
     output.uv = input.uv;
-    output.worldPosition = mul(modelMatrix, pos).xyz;
+    output.worldPosition = mul(localToWorldMatrix, pos).xyz;
     return output;
 }

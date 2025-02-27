@@ -1,6 +1,6 @@
 #include "spirvReflect.h"
 #include "logger.h"
-#include "vulkanEnumToString.h"
+#include "vulkanObjToString.h"
 
 
 
@@ -109,8 +109,8 @@ namespace emberEngine
         for (int i = 0; i < size; i++)
         {
             output += semantics[i] + ":\n";
-            output += "  BindingDescription:   binding=" + std::to_string(bindings[i].binding) + ", stride=" + std::to_string(bindings[i].stride) + ", inputRate=" + vulkanEnumToString::VkVertexInputRateToString(bindings[i].inputRate) + "\n";
-            output += "  AttributeDescription: binding=" + std::to_string(attributes[i].binding) + ", format=" + vulkanEnumToString::VkFormatToString(attributes[i].format) + ", location=" + std::to_string(attributes[i].location) + ", offset=" + std::to_string(attributes[i].offset) + "\n";
+            output += "  BindingDescription:   binding=" + std::to_string(bindings[i].binding) + ", stride=" + std::to_string(bindings[i].stride) + ", inputRate=" + vulkanObjToString::VkVertexInputRateToString(bindings[i].inputRate) + "\n";
+            output += "  AttributeDescription: binding=" + std::to_string(attributes[i].binding) + ", format=" + vulkanObjToString::VkFormatToString(attributes[i].format) + ", location=" + std::to_string(attributes[i].location) + ", offset=" + std::to_string(attributes[i].offset) + "\n";
         }
         return output;
     }
@@ -126,7 +126,7 @@ namespace emberEngine
         output += "\ndescriptorSetLayoutBindings:\n";
         for (int i = 0; i < bindingCount; i++)
         {
-            output += "  " + descriptorSetBindingNames[i] + ": binding=" + std::to_string(descriptorSetLayoutBindings[i].binding) + ", count=" + std::to_string(descriptorSetLayoutBindings[i].descriptorCount) + ", type=" + vulkanEnumToString::VkDescriptorTypeToString(descriptorSetLayoutBindings[i].descriptorType) + ", stage=" + vulkanEnumToString::VkShaderStageFlagsToString(descriptorSetLayoutBindings[i].stageFlags);
+            output += "  " + descriptorSetBindingNames[i] + ": binding=" + std::to_string(descriptorSetLayoutBindings[i].binding) + ", count=" + std::to_string(descriptorSetLayoutBindings[i].descriptorCount) + ", type=" + vulkanObjToString::VkDescriptorTypeToString(descriptorSetLayoutBindings[i].descriptorType) + ", stage=" + vulkanObjToString::VkShaderStageFlagsToString(descriptorSetLayoutBindings[i].stageFlags);
 
             auto it = uniformBufferBlockMap.find(descriptorSetBindingNames[i]);
             if (it != uniformBufferBlockMap.end())
@@ -138,14 +138,14 @@ namespace emberEngine
             auto itt = sampleViewTypeMap.find(descriptorSetBindingNames[i]);
             if (itt != sampleViewTypeMap.end())
             {
-                output += ", viewType=" + vulkanEnumToString::VkImageViewTypeToString(itt->second) + "\n";
+                output += ", viewType=" + vulkanObjToString::VkImageViewTypeToString(itt->second) + "\n";
                 continue;
             }
 
             auto ittt = storageViewTypeMap.find(descriptorSetBindingNames[i]);
             if (ittt != storageViewTypeMap.end())
             {
-                output += ", viewType=" + vulkanEnumToString::VkImageViewTypeToString(ittt->second) + "\n";
+                output += ", viewType=" + vulkanObjToString::VkImageViewTypeToString(ittt->second) + "\n";
                 continue;
             }
 
@@ -177,11 +177,13 @@ namespace emberEngine
         vertexInputDescriptions->semantics.reserve(inputs.size());
         vertexInputDescriptions->bindings.reserve(inputs.size());
         vertexInputDescriptions->attributes.reserve(inputs.size());
-        vertexInputDescriptions->size = inputs.size();
 
         for (uint32_t i = 0; i < inputs.size(); i++)
         {
             SpvReflectInterfaceVariable* pInput = inputs[i];
+            if (pInput->built_in != -1) // Built in system values (e.g. SV_InstanceID) are handles automatically by vulkan.
+                continue;
+
             uint32_t typeSize = pInput->type_description->traits.numeric.scalar.width / 8;
             uint32_t vectorSize = pInput->type_description->traits.numeric.vector.component_count;
             uint32_t size = typeSize * vectorSize;
@@ -196,44 +198,23 @@ namespace emberEngine
             size_t pos = semantic.rfind('.');
             if (pos != std::string::npos)
                 semantic = semantic.substr(pos + 1);
-            else
-                throw std::runtime_error("Semantic not found");
+            else    // shader semantic somehow broken.
+                vertexInputDescriptions->semantics.push_back("unknown");
             vertexInputDescriptions->semantics.push_back(semantic);
-
-            VkFormat format;
-            switch (typeSize)
-            {
-            case 4: // 4 bytes per component (e.g., float, int)
-                switch (vectorSize)
-                {
-                case 1: format = VK_FORMAT_R32_SFLOAT; break;
-                case 2: format = VK_FORMAT_R32G32_SFLOAT; break;
-                case 3: format = VK_FORMAT_R32G32B32_SFLOAT; break;
-                case 4: format = VK_FORMAT_R32G32B32A32_SFLOAT; break;
-                default: throw std::runtime_error("Unsupported vector size");
-                }
-                break;
-            case 8: // 8 bytes per component (e.g., double)
-                switch (vectorSize)
-                {
-                case 1: format = VK_FORMAT_R64_SFLOAT; break;
-                case 2: format = VK_FORMAT_R64G64_SFLOAT; break;
-                case 3: format = VK_FORMAT_R64G64B64_SFLOAT; break;
-                case 4: format = VK_FORMAT_R64G64B64A64_SFLOAT; break;
-                default: throw std::runtime_error("Unsupported vector size");
-                }
-                break;
-            default:
-                throw std::runtime_error("Unsupported scalar width");
-            }
 
             VkVertexInputAttributeDescription attributeDescription = {};
             attributeDescription.binding = pInput->location;
             attributeDescription.location = pInput->location;
-            attributeDescription.format = format;
+            attributeDescription.format = (VkFormat)pInput->format;
             attributeDescription.offset = 0;
             vertexInputDescriptions->attributes.push_back(attributeDescription);
         }
+
+        // Shrink to fitt, as due to built in system values original reserve might have been to big:
+        vertexInputDescriptions->semantics.shrink_to_fit();
+        vertexInputDescriptions->bindings.shrink_to_fit();
+        vertexInputDescriptions->attributes.shrink_to_fit();
+        vertexInputDescriptions->size = vertexInputDescriptions->semantics.size();
 
         return vertexInputDescriptions;
     }
@@ -273,7 +254,9 @@ namespace emberEngine
                     if (pBindingReflection->image.dim == SpvDim3D && !pBindingReflection->image.arrayed)
                         descriptorBoundResources->sampleViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_3D);
                     // VK_IMAGE_VIEW_TYPE_3D_ARRAY does not exist in HLSL.
-                    if (pBindingReflection->image.dim == SpvDimCube)
+                    if (pBindingReflection->image.dim == SpvDimCube && !pBindingReflection->image.arrayed)
+                        descriptorBoundResources->sampleViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_CUBE);
+                    if (pBindingReflection->image.dim == SpvDimCube && pBindingReflection->image.arrayed)
                         descriptorBoundResources->sampleViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_CUBE_ARRAY);
                 }
                 // In case storage texture retrieve view type:
@@ -290,7 +273,9 @@ namespace emberEngine
                     if (pBindingReflection->image.dim == SpvDim3D && !pBindingReflection->image.arrayed)
                         descriptorBoundResources->storageViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_3D);
                     // VK_IMAGE_VIEW_TYPE_3D_ARRAY does not exist in HLSL.
-                    if (pBindingReflection->image.dim == SpvDimCube)
+                    if (pBindingReflection->image.dim == SpvDimCube && !pBindingReflection->image.arrayed)
+                        descriptorBoundResources->storageViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_CUBE);
+                    if (pBindingReflection->image.dim == SpvDimCube && pBindingReflection->image.arrayed)
                         descriptorBoundResources->storageViewTypeMap.emplace(pBindingReflection->name, VK_IMAGE_VIEW_TYPE_CUBE_ARRAY);
                 }
 

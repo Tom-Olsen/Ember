@@ -1,12 +1,21 @@
-#include "vulkanEnumToString.h"
+#include "vulkanObjToString.h"
 #include <vector>
 
 
 
 namespace emberEngine
 {
-	namespace vulkanEnumToString
+	namespace vulkanObjToString
 	{
+        std::string VkVertexInputAttributeDescriptionToString(VkVertexInputAttributeDescription vkVertexInputAttributeDescription)
+        {
+            std::string output = "";
+            output += "location: " + std::to_string(vkVertexInputAttributeDescription.location);
+            output += ", binding: " + std::to_string(vkVertexInputAttributeDescription.binding);
+            output += ", format: " + VkFormatToString(vkVertexInputAttributeDescription.format);
+            output += ", offset: " + std::to_string(vkVertexInputAttributeDescription.offset);
+            return output;
+        }
         std::string VkImageViewTypeToString(VkImageViewType vkImageViewType)
         {
             switch (vkImageViewType)

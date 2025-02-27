@@ -79,29 +79,28 @@ namespace emberEngine
 	}
 	VmaImage* Texture2d::CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const VulkanQueue& queue)
 	{
-		VkImageCreateInfo* pImageInfo = new VkImageCreateInfo();
-		pImageInfo->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		pImageInfo->imageType = VK_IMAGE_TYPE_2D;
-		pImageInfo->extent.width = m_width;
-		pImageInfo->extent.height = m_height;
-		pImageInfo->extent.depth = 1;
-		pImageInfo->mipLevels = subresourceRange.levelCount;
-		pImageInfo->arrayLayers = subresourceRange.layerCount;
-		pImageInfo->format = format;
-		pImageInfo->tiling = VK_IMAGE_TILING_OPTIMAL;	// optimal for GPU. use linear for CPU readback.
-		pImageInfo->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		pImageInfo->usage = usageFlags;
-		pImageInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		pImageInfo->samples = VK_SAMPLE_COUNT_1_BIT;
-		pImageInfo->flags = imageFlags;
+		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+		imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageInfo.extent.width = m_width;
+		imageInfo.extent.height = m_height;
+		imageInfo.extent.depth = 1;
+		imageInfo.mipLevels = subresourceRange.levelCount;
+		imageInfo.arrayLayers = subresourceRange.layerCount;
+		imageInfo.format = format;
+		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;	// optimal for GPU. use linear for CPU readback.
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		imageInfo.usage = usageFlags;
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.flags = imageFlags;
 
-		VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
-		pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-		pAllocInfo->flags = 0;
-		pAllocInfo->requiredFlags = memoryFlags;
-		pAllocInfo->preferredFlags = 0;
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+		allocInfo.flags = 0;
+		allocInfo.requiredFlags = memoryFlags;
+		allocInfo.preferredFlags = 0;
 
 		// Always use transfer queue by default and do queue transition later when needed.
-		return new VmaImage(m_pContext, pImageInfo, pAllocInfo, subresourceRange, viewType, queue);
+		return new VmaImage(m_pContext, imageInfo, allocInfo, subresourceRange, viewType, queue);
 	}
 }

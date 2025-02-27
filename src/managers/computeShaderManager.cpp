@@ -1,6 +1,7 @@
 #include "computeShaderManager.h"
 #include "computeShader.h"
 #include "logger.h"
+#include "mathf.h"
 #include "vulkanContext.h"
 
 
@@ -23,8 +24,14 @@ namespace emberEngine
 		s_isInitialized = true;
 		s_pContext = pContext;
 
-		ComputeShader* test = new ComputeShader(s_pContext, "test", "../src/shaders/helloWorld.comp.spv");
+		ComputeShader* test = new ComputeShader(s_pContext, "testComputeShader", "../src/shaders/helloWorld.comp.spv", Uint3(8, 8, 1));
 		AddComputeShader(test);
+
+		ComputeShader* initialPositions = new ComputeShader(s_pContext, "initialPositionsComputeShader", "../src/shaders/initialPositions.comp.spv", Uint3(64, 1, 1));
+		AddComputeShader(initialPositions);
+
+		ComputeShader* updatePositions = new ComputeShader(s_pContext, "updatePositionsComputeShader", "../src/shaders/updatePositions.comp.spv", Uint3(64, 1, 1));
+		AddComputeShader(updatePositions);
 	}
 	void ComputeShaderManager::Clear()
 	{

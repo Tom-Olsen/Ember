@@ -23,9 +23,8 @@ namespace emberEngine
 
 	/// <summary>
 	/// The scene owns all gameObjects and keeps track of important components:
-	/// - The active camera
-	/// - Directional, Spot, and Point lights
-	/// - MeshRenderers
+	/// - Active camera
+	/// - Directional lights, spot light, and Point lights
 	/// When Drawing anything with VulkanRenderer->Render(pScene) a scene pointer is required.
 	/// </summary>
 	class Scene
@@ -39,9 +38,6 @@ namespace emberEngine
 		std::array<DirectionalLight*, MAX_D_LIGHTS> m_directionalLights;
 		std::array<SpotLight*, MAX_S_LIGHTS> m_spotLights;
 		std::array<PointLight*, MAX_P_LIGHTS> m_pointLights;
-		bool m_meshRenderersSorted = false;
-		std::unordered_map<std::string, MeshRenderer*> m_meshRenderers;
-		std::vector<MeshRenderer*> m_sortedMeshRenderers;
 
 	public: // Methods:
 		Scene();
@@ -57,7 +53,6 @@ namespace emberEngine
 		const std::array<DirectionalLight*, MAX_D_LIGHTS>& GetDirectionalLights() const;
 		const std::array<SpotLight*, MAX_S_LIGHTS>& GetSpotLights() const;
 		const std::array<PointLight*, MAX_P_LIGHTS>& GetPointLights() const;
-		std::vector<MeshRenderer*>* const GetSortedMeshRenderers();
 
 		// Setters:
 		void AddGameObject(GameObject* pGameObject);
@@ -71,12 +66,7 @@ namespace emberEngine
 
 		// Debugging:
 		void PrintGameObjects() const;
-		void PrintMeshRenderers() const;
-		void PrintSortedMeshRenderers();
 		void PrintLights() const;
-
-	private: // Methods:
-		void SortMeshRenderers();
 	};
 }
 

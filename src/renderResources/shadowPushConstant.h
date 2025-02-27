@@ -13,12 +13,11 @@ namespace emberEngine
 	/// </summary>
 	struct ShadowPushConstant
 	{
-	public: // Members:
+		alignas(4) uint32_t instanceCount;
 		alignas(4) int shadowMapIndex;
 		alignas(16) Float4x4 localToClipMatrix;
 
-	public: // Methods:
-		ShadowPushConstant(int shadowMapIndex, const Float4x4& localToClipMatrix);
+		ShadowPushConstant(uint32_t instanceCount, int shadowMapIndex, const Float4x4& localToClipMatrix);
 		std::string ToString();
 	};
 }

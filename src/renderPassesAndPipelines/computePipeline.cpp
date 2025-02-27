@@ -1,5 +1,5 @@
 #include "computePipeline.h"
-#include "basicPushConstant.h"
+#include "computePushConstant.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -45,9 +45,9 @@ namespace emberEngine
         
         // Push constants layout:
         VkPushConstantRange pushConstantRange = {};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(BasicPushConstant);
+        pushConstantRange.size = sizeof(ComputePushConstant);
     
         // Pipeline layout:
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };

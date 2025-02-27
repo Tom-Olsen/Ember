@@ -171,8 +171,8 @@ namespace emberEngine
 	{
 		if (m_drawFrustum)
 		{
-			Material* pUnlitMaterial = MaterialManager::GetMaterial("simpleUnlit");
-			Material* pVertexUnlit = MaterialManager::GetMaterial("vertexColorUnlit");
+			Material* pUnlitMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
+			Material* pVertexUnlit = MaterialManager::GetMaterial("vertexColorUnlitMaterial");
 			Mesh* pSphere = MeshManager::GetMesh("cubeSphere");
 			Mesh* fourLeg = MeshManager::GetMesh("fourLeg");
 			ShaderProperties* pShaderProperties = nullptr;

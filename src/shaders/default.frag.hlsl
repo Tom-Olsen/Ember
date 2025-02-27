@@ -6,11 +6,11 @@ Texture2D normalMap : register(t22);        // format = VK_FORMAT_R8G8B8A8_UNORM
 Texture2D metallicityMap : register(t23);   // format = VK_FORMAT_R8_UNORM,         single channel unorm metallicity map
 Texture2D roughnessMap : register(t24);     // format = VK_FORMAT_R8_UNORM,         single channel unorm roughness map
 #include "shadowMapping.hlsli"
-#include "shadingPushConstant.hlsli"
+#include "defaultPushConstant.hlsli"
 
 
 
-cbuffer SurfaceProperties : register(b1)
+cbuffer SurfaceProperties : register(b2)
 {
     float4 diffuseColor;    // (1.0, 1.0, 1.0)
     float roughness;        // 0.5

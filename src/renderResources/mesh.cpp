@@ -824,19 +824,19 @@ namespace emberEngine
 		// Resize buffer if necessary:
 		if (m_vertexBuffer == nullptr || m_vertexBuffer->GetSize() != size)
 		{
-			VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
-			pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			pBufferInfo->size = size;
-			pBufferInfo->usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-			pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			VkBufferCreateInfo bufferInfo = {};
+			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			bufferInfo.size = size;
+			bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+			bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-			VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
-			pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-			pAllocInfo->flags = 0;
-			pAllocInfo->requiredFlags = 0;
-			pAllocInfo->preferredFlags = 0;
+			VmaAllocationCreateInfo allocInfo = {};
+			allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+			allocInfo.flags = 0;
+			allocInfo.requiredFlags = 0;
+			allocInfo.preferredFlags = 0;
 
-			m_vertexBuffer = std::make_unique<VmaBuffer>(pContext, pBufferInfo, pAllocInfo);
+			m_vertexBuffer = std::make_unique<VmaBuffer>(pContext, bufferInfo, allocInfo);
 		}
 
 		// Load data into staging buffer:
@@ -899,19 +899,19 @@ namespace emberEngine
 		// Resize buffer if necessary:
 		if (m_indexBuffer == nullptr || size != m_indexBuffer->GetSize())
 		{
-			VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
-			pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			pBufferInfo->size = size;
-			pBufferInfo->usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-			pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			VkBufferCreateInfo bufferInfo = {};
+			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			bufferInfo.size = size;
+			bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+			bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-			VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
-			pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-			pAllocInfo->flags = 0;
-			pAllocInfo->requiredFlags = 0;
-			pAllocInfo->preferredFlags = 0;
+			VmaAllocationCreateInfo allocInfo = {};
+			allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+			allocInfo.flags = 0;
+			allocInfo.requiredFlags = 0;
+			allocInfo.preferredFlags = 0;
 
-			m_indexBuffer = std::make_unique<VmaBuffer>(pContext, pBufferInfo, pAllocInfo);
+			m_indexBuffer = std::make_unique<VmaBuffer>(pContext, bufferInfo, allocInfo);
 		}
 
 		// Load data into staging buffer:

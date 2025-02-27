@@ -1,4 +1,5 @@
 #include "shaderProperties.h"
+#include "bufferManager.h"
 #include "computeShader.h"
 #include "logger.h"
 #include "material.h"
@@ -9,15 +10,15 @@
 #include "samplerManager.h"
 #include "shadowRenderPass.h"
 #include "spirvReflect.h"
+#include "storageBuffer.h"
 #include "texture2d.h"
 #include "textureManager.h"
 #include "uniformBuffer.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
-#include "vulkanEnumToString.h"
+#include "vulkanObjToString.h"
 #include "vulkanMacros.h"
-#include <iostream>
 
 
 
@@ -33,8 +34,8 @@ namespace emberEngine
 		m_uniformBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<std::shared_ptr<UniformBuffer>>>>(m_pContext->framesInFlight);
 		m_samplerMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>>(m_pContext->framesInFlight);
 		m_texture2dMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>>(m_pContext->framesInFlight);
+		m_storageBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<StorageBuffer*>>>(m_pContext->framesInFlight);
 		m_updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(m_pContext->framesInFlight);
-
 
 		for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
 		{
@@ -79,6 +80,8 @@ namespace emberEngine
 					}
 					
 				}
+				else if (type == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
+					InitStorageBufferResourceBinding(name, binding, (StorageBuffer*)BufferManager::GetBuffer("dummyStorageBuffer"), frameIndex);
 			}
 		}
 		InitStagingMaps();
@@ -134,6 +137,20 @@ namespace emberEngine
 				UpdateDescriptorSet(m_pContext->frameIndex, resourceBinding);
 			}
 		}
+
+		// Change the pointer the descriptor set points at to the new storageBuffer:
+		for (auto& [name, resourceBinding] : m_storageBufferMaps[m_pContext->frameIndex])
+		{
+			if (resourceBinding.resource != m_storageBufferStagingMap.at(name))
+			{
+				resourceBinding.resource = m_storageBufferStagingMap.at(name);
+				UpdateDescriptorSet(m_pContext->frameIndex, resourceBinding);
+			}
+		}
+	}
+	const VkDescriptorSet& ShaderProperties::GetDescriptorSet(uint32_t frameIndex)
+	{
+		return m_descriptorSets[frameIndex];
 	}
 	std::vector<VkDescriptorSet>& ShaderProperties::GetDescriptorSets()
 	{
@@ -143,6 +160,40 @@ namespace emberEngine
 
 
 
+	// Setters:
+	void ShaderProperties::SetSampler(const std::string& name, Sampler* pSampler)
+	{
+		// If sampler with 'name' doesnt exist, skip:
+		auto it = m_samplerStagingMap.find(name);
+		if (it == m_samplerStagingMap.end())
+			return;
+
+		it->second = pSampler;
+	}
+	void ShaderProperties::SetTexture2d(const std::string& name, Texture2d* pTexture2d)
+	{
+		// If texture with 'name' doesnt exist, skip:
+		auto it = m_texture2dStagingMap.find(name);
+		if (it == m_texture2dStagingMap.end())
+			return;
+
+		// Check of storage/sampler mode of the imput Texture2d matched with the descriptorSet:
+		if (it->second->GetType() != pTexture2d->GetType())
+		{
+			LOG_WARN("Trying to asign wrong texture type to descriptor set. Expected type: '{}', given type: '{}'", it->second->GetTypeName(), pTexture2d->GetTypeName());
+			return;
+		}
+
+		it->second = pTexture2d;
+	}
+	void ShaderProperties::SetStorageBuffer(const std::string& name, StorageBuffer* pStorageBuffer)
+	{
+		// If storageBuffer with 'name' doesnt exist, skip:
+		auto it = m_storageBufferStagingMap.find(name);
+		if (it == m_storageBufferStagingMap.end())
+			return;
+		it->second = pStorageBuffer;
+	}
 	// Uniform Buffer Setters:
 	template<typename T>
 	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, const T& value)
@@ -197,37 +248,27 @@ namespace emberEngine
 		}
 	}
 
-	// Sampler setters:
-	void ShaderProperties::SetSampler(const std::string& name, Sampler* pSampler)
+
+
+	// Getters:
+	Shader* ShaderProperties::GetShader() const
 	{
-		// If sampler with 'name' doesnt exist, skip:
-		auto it = m_samplerStagingMap.find(name);
-		if (it == m_samplerStagingMap.end() || it->second == pSampler)
-			return;
-
-		it->second = pSampler;
+		return m_pShader;
 	}
-
-	// Texture2d setters:
-	void ShaderProperties::SetTexture2d(const std::string& name, Texture2d* pTexture2d)
+	Sampler* ShaderProperties::GetSampler(const std::string& name) const
 	{
-		// If texture with 'name' doesnt exist, skip:
-		auto it = m_texture2dStagingMap.find(name);
-		if (it == m_texture2dStagingMap.end() || it->second == pTexture2d)
-			return;
-
-		// Check of storage/sampler mode of the imput Texture2d matched with the descriptorSet:
-		if (it->second->GetType() != pTexture2d->GetType())
-		{
-			LOG_WARN("Trying to asign wrong texture type to descriptor set. Expected type: '{}', given type: '{}'", it->second->GetTypeName(), pTexture2d->GetTypeName());
-			return;
-		}
-
-		it->second = pTexture2d;
+		auto it = m_samplerMaps[m_pContext->frameIndex].find(name);
+		if (it != m_samplerMaps[m_pContext->frameIndex].end())
+			return it->second.resource;
+		return nullptr;
 	}
-
-
-
+	Texture2d* ShaderProperties::GetTexture2d(const std::string& name) const
+	{
+		auto it = m_texture2dMaps[m_pContext->frameIndex].find(name);
+		if (it != m_texture2dMaps[m_pContext->frameIndex].end())
+			return it->second.resource;
+		return nullptr;
+	}
 	// Uniform Buffer Getters:
 	template<typename T>
 	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& memberName) const
@@ -262,33 +303,14 @@ namespace emberEngine
 		return T();
 	}
 
-	// Getters:
-	Shader* ShaderProperties::GetShader() const
-	{
-		return m_pShader;
-	}
-	Sampler* ShaderProperties::GetSampler(const std::string& name) const
-	{
-		auto it = m_samplerMaps[m_pContext->frameIndex].find(name);
-		if (it != m_samplerMaps[m_pContext->frameIndex].end())
-			return it->second.resource;
-		return nullptr;
-	}
-	Texture2d* ShaderProperties::GetTexture2d(const std::string& name) const
-	{
-		auto it = m_texture2dMaps[m_pContext->frameIndex].find(name);
-		if (it != m_texture2dMaps[m_pContext->frameIndex].end())
-			return it->second.resource;
-		return nullptr;
-	}
 
 
 
 	// Debugging:
 	void ShaderProperties::Print(const std::string& name) const
 	{
-		std::cout << "ShaderProperties: " << name << "\n";
-		std::cout << "DescriptorSets: " << m_descriptorSets[0] << ", " << m_descriptorSets[1] << "\n";
+		LOG_INFO("ShaderProperties: {}, {}", name, fmt::ptr(this));
+		LOG_INFO("DescriptorSets: {}, {}", fmt::ptr(m_descriptorSets[0]), fmt::ptr(m_descriptorSets[1]));
 	}
 	void ShaderProperties::PrintMaps() const
 	{
@@ -341,12 +363,20 @@ namespace emberEngine
 		if (it == m_texture2dMaps[frameIndex].end())
 			m_texture2dMaps[frameIndex].emplace(name, ResourceBinding<Texture2d*>(pTexture2d, binding));
 	}
+	void ShaderProperties::InitStorageBufferResourceBinding(const std::string& name, uint32_t binding, StorageBuffer* pStorageBuffer, uint32_t frameIndex)
+	{
+		auto it = m_storageBufferMaps[frameIndex].find(name);
+		if (it == m_storageBufferMaps[frameIndex].end())
+			m_storageBufferMaps[frameIndex].emplace(name, ResourceBinding<StorageBuffer*>(pStorageBuffer, binding));
+	}
 	void ShaderProperties::InitStagingMaps()
 	{
 		for (auto& [name, resourceBinding] : m_samplerMaps[0])
 			m_samplerStagingMap.emplace(name, resourceBinding.resource);
 		for (auto& [name, resourceBinding] : m_texture2dMaps[0])
 			m_texture2dStagingMap.emplace(name, resourceBinding.resource);
+		for (auto& [name, resourceBinding] : m_storageBufferMaps[0])
+			m_storageBufferStagingMap.emplace(name, resourceBinding.resource);
 	}
 	void ShaderProperties::InitDescriptorSets()
 	{
@@ -358,6 +388,8 @@ namespace emberEngine
 			for (auto& [_, resourceBinding] : m_samplerMaps[frameIndex])
 				UpdateDescriptorSet(frameIndex, resourceBinding);
 			for (auto& [_, resourceBinding] : m_texture2dMaps[frameIndex])
+				UpdateDescriptorSet(frameIndex, resourceBinding);
+			for (auto& [_, resourceBinding] : m_storageBufferMaps[frameIndex])
 				UpdateDescriptorSet(frameIndex, resourceBinding);
 		}
 	}
@@ -414,7 +446,6 @@ namespace emberEngine
 
 		vkUpdateDescriptorSets(m_pContext->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
-	#include <iostream>
 	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Texture2d*> texture2dResourceBinding)
 	{
 		VkDescriptorImageInfo imageInfo = {};
@@ -429,6 +460,25 @@ namespace emberEngine
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = nullptr;
 		descriptorWrite.pImageInfo = &imageInfo;
+		descriptorWrite.pTexelBufferView = nullptr;
+
+		vkUpdateDescriptorSets(m_pContext->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
+	}
+	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<StorageBuffer*> storageBufferResourceBinding)
+	{
+		VkDescriptorBufferInfo bufferInfo = {};
+		bufferInfo.buffer = storageBufferResourceBinding.resource->GetVmaBuffer()->GetVkBuffer();
+		bufferInfo.offset = 0;
+		bufferInfo.range = storageBufferResourceBinding.resource->GetSize();
+
+		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
+		descriptorWrite.dstBinding = storageBufferResourceBinding.binding;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+		descriptorWrite.pImageInfo = nullptr;
 		descriptorWrite.pTexelBufferView = nullptr;
 
 		vkUpdateDescriptorSets(m_pContext->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);

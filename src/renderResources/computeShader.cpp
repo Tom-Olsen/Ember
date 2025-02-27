@@ -9,8 +9,9 @@
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	ComputeShader::ComputeShader(VulkanContext* pContext, const std::string& name, const std::filesystem::path& computeSpv)
+	ComputeShader::ComputeShader(VulkanContext* pContext, const std::string& name, const std::filesystem::path& computeSpv, Uint3 blockSize)
 	{
+		m_blockSize = blockSize;
 		m_name = name;
 		m_pContext = pContext;
 		m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
@@ -25,5 +26,13 @@ namespace emberEngine
 	ComputeShader::~ComputeShader()
 	{
 
+	}
+
+
+
+	// Public methods:
+	Uint3 ComputeShader::GetBlockSize() const
+	{
+		return m_blockSize;
 	}
 }

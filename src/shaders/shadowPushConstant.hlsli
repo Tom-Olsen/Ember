@@ -5,6 +5,7 @@
 
 struct ShadowPushConstant
 {
+    uint instanceCount; // 0 implies no instanced rendering.
     int shadowMapIndex;
     float4x4 localToClipMatrix;
 };

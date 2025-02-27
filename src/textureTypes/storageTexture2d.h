@@ -8,8 +8,8 @@ namespace emberEngine
 {
 	/// <summary>
 	/// Texture2d specialization: <para/>
-	/// -VkImageUsageFlags		= transfer dst, storage
-	/// -VkImageCreateFlagBits	= 0
+	/// -VkImageUsageFlags		= transfer dst, storage <para/>
+	/// -VkImageCreateFlagBits	= 0 <para/>
 	/// -VkImageViewType		= 2d
 	/// </summary>
 	class StorageTexture2d : public Texture2d

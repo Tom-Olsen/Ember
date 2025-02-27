@@ -1,4 +1,5 @@
 #include "application.h"
+#include "bufferManager.h"
 #include "component.h"
 #include "computeShaderManager.h"
 #include "dearImGui.h"
@@ -23,12 +24,15 @@ namespace emberEngine
 	// Constructor:
 	Application::Application()
 	{
+		Logger::Init();
+
+		// Default options:
 		m_pActiveScene = nullptr;
 		uint32_t framesInFlight = 2;
 		VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-		Logger::Init();
+
+		// Create vulkan context:
 		m_pContext = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
-		m_pRenderer = std::make_unique<VulkanRenderer>(m_pContext.get());
 
 		// Init static managers:
 		mathf::Random::Init();
@@ -36,11 +40,15 @@ namespace emberEngine
 		RenderPassManager::Init(m_pContext.get());
 		ComputeShaderManager::Init(m_pContext.get());
 		MaterialManager::Init(m_pContext.get());
+		BufferManager::Init(m_pContext.get());
 		TextureManager::Init(m_pContext.get());
 		SamplerManager::Init(m_pContext.get());
 		MeshManager::Init(m_pContext.get());
 		Graphics::Init();
 		DearImGui::Init(m_pContext.get());
+
+		// Create renderer:
+		m_pRenderer = std::make_unique<VulkanRenderer>(m_pContext.get());
 	}
 
 
@@ -48,12 +56,14 @@ namespace emberEngine
 	// Destructor:
 	Application::~Application()
 	{
+		m_pContext->WaitDeviceIdle();
 		// Clear static managers:
 		DearImGui::Clear();
 		Graphics::Clear();
 		MeshManager::Clear();
 		SamplerManager::Clear();
 		TextureManager::Clear();
+		BufferManager::Clear();
 		MaterialManager::Clear();
 		ComputeShaderManager::Clear();
 		RenderPassManager::Clear();
@@ -96,6 +106,10 @@ namespace emberEngine
 	void Application::SetScene(Scene* pScene)
 	{
 		this->m_pActiveScene = pScene;
+	}
+	VulkanContext* Application::GetVulkanContext()
+	{
+		return m_pContext.get();
 	}
 
 

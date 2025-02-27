@@ -13,7 +13,7 @@
 namespace emberEngine
 {
 	// Constructors/Destructor:
-	Material::Material(VulkanContext* pContext, Type type, const std::string& name, RenderQueue renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material::Material(VulkanContext* pContext, Type type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		m_type = type;
 		m_pContext = pContext;
@@ -89,7 +89,7 @@ namespace emberEngine
 	{
 		return m_type;
 	}
-	Material::RenderQueue Material::GetRenderQueue() const
+	uint32_t Material::GetRenderQueue() const
 	{
 		return m_renderQueue;
 	}
@@ -121,7 +121,7 @@ namespace emberEngine
 			else if (semantic == "TEXCOORD0")
 				m_meshOffsets[i] = pMesh->GetUVsOffset();
 			else
-				LOG_WARN("Material system does not support the VertexInputDescription semantix '{}' yet. Material::GetMeshOffsets(Mesh*) must be updated,", semantic);
+				LOG_WARN("Material system does not support the VertexInputDescription semantic '{}' yet. Material::GetMeshOffsets(Mesh*) must be updated,", semantic);
 		}
 		return m_meshOffsets.data();
 	}

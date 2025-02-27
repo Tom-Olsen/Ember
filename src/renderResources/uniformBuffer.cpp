@@ -2,6 +2,7 @@
 #include "vulkanContext.h"
 #include "vmaBuffer.h"
 #include "spirvReflect.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -10,23 +11,23 @@ namespace emberEngine
 	// Constructor/Destructor:
 	UniformBuffer::UniformBuffer(VulkanContext* pContext, UniformBufferBlock* pUniformBufferBlock)
 	{
-		m_pContext = pContext;
 		m_pUniformBufferBlock = pUniformBufferBlock;
+		m_size = m_pUniformBufferBlock->size;
+		m_pContext = pContext;
 
 		// Create buffer:
-		VkBufferCreateInfo* pBufferInfo = new VkBufferCreateInfo();
-		pBufferInfo->sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		pBufferInfo->size = m_pUniformBufferBlock->size;
-		pBufferInfo->usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-		pBufferInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		bufferInfo.size = m_size;
+		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VmaAllocationCreateInfo* pAllocInfo = new VmaAllocationCreateInfo();
-		pAllocInfo->usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-		pAllocInfo->flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-		pAllocInfo->requiredFlags = 0;
-		pAllocInfo->preferredFlags = 0;
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+		allocInfo.requiredFlags = 0;
+		allocInfo.preferredFlags = 0;
 
-		m_buffer = std::make_shared<VmaBuffer>(m_pContext, pBufferInfo, pAllocInfo);
+		m_buffer = std::make_unique<VmaBuffer>(m_pContext, bufferInfo, allocInfo);
 
 		// Get deviceData pointer:
 		VmaAllocationInfo info;
@@ -34,11 +35,11 @@ namespace emberEngine
 		m_pDeviceData = info.pMappedData;
 
 		// Allocate host data:
-		m_hostData.resize(m_pUniformBufferBlock->size);
+		m_hostData.resize(m_size);
 	}
 	UniformBuffer::~UniformBuffer()
 	{
-		m_pContext->WaitDeviceIdle();
+
 	}
 
 
@@ -52,14 +53,6 @@ namespace emberEngine
 
 
 	// Getters:
-	uint32_t UniformBuffer::GetSize() const
-	{
-		return m_pUniformBufferBlock->size;
-	}
-	const std::shared_ptr<VmaBuffer>& UniformBuffer::GetVmaBuffer() const
-	{
-		return m_buffer;
-	}
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& memberName) const
 	{

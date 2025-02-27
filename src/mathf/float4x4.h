@@ -27,9 +27,9 @@ namespace emberEngine
 	private:
 		Float4x4
 		(float xx, float xy, float xz, float xw,	// column 0
-			float yx, float yy, float yz, float yw,	// column 1
-			float zx, float zy, float zz, float zw,	// column 2
-			float wx, float wy, float wz, float ww);	// column 3
+		 float yx, float yy, float yz, float yw,	// column 1
+		 float zx, float zy, float zz, float zw,	// column 2
+		 float wx, float wy, float wz, float ww);	// column 3
 
 	public:
 		// Members:
@@ -46,15 +46,15 @@ namespace emberEngine
 		static Float4x4 Rows(const Float4& row0, const Float4& row1, const Float4& row2, const Float4& row3);
 		static Float4x4 Rows
 		(float row0x, float row0y, float row0z, float row0w,
-			float row1x, float row1y, float row1z, float row1w,
-			float row2x, float row2y, float row2z, float row2w,
-			float row3x, float row3y, float row3z, float row3w);
+		 float row1x, float row1y, float row1z, float row1w,
+		 float row2x, float row2y, float row2z, float row2w,
+		 float row3x, float row3y, float row3z, float row3w);
 		static Float4x4 Columns(const Float4& column0, const Float4& column1, const Float4& column2, const Float4& column3);
 		static Float4x4 Columns
 		(float column0x, float column0y, float column0z, float column0w,
-			float column1x, float column1y, float column1z, float column1w,
-			float column2x, float column2y, float column2z, float column2w,
-			float column3x, float column3y, float column3z, float column3w);
+		 float column1x, float column1y, float column1z, float column1w,
+		 float column2x, float column2y, float column2z, float column2w,
+		 float column3x, float column3y, float column3z, float column3w);
 
 		// Math operations:
 		Float4x4 Transpose();

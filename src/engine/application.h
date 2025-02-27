@@ -25,6 +25,7 @@ namespace emberEngine
 		~Application();
 		void Run();
 		void SetScene(Scene* pScene);
+		VulkanContext* GetVulkanContext();
 
 	private: // Methods:
 		void Start();

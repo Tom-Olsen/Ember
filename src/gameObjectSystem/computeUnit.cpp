@@ -10,6 +10,7 @@ namespace emberEngine
 	// Constructor/Destructor:
 	ComputeUnit::ComputeUnit()
 	{
+		m_groupCount = Uint3(0);
 		m_pComputeShader = nullptr;
 		m_pShaderProperties = nullptr;
 	}
@@ -22,14 +23,6 @@ namespace emberEngine
 
 	// Public methods:
 	// Setters:
-	void ComputeUnit::SetComputeShader(ComputeShader* pComputeShader)
-	{
-		if (pComputeShader != nullptr && pComputeShader != m_pComputeShader)
-		{
-			m_pComputeShader = pComputeShader;
-			m_pShaderProperties = std::make_unique<ShaderProperties>(m_pComputeShader);
-		}
-	}
 	void ComputeUnit::SetComputeCount(Uint3 groupCount)
 	{
 		m_groupCount = groupCount;
@@ -38,8 +31,20 @@ namespace emberEngine
 	{
 		m_groupCount = Uint3(groupCountX, groupCountY, groupCountZ);
 	}
+	void ComputeUnit::SetComputeShader(ComputeShader* pComputeShader)
+	{
+		if (pComputeShader != nullptr && pComputeShader != m_pComputeShader)
+		{
+			m_pComputeShader = pComputeShader;
+			m_pShaderProperties = std::make_unique<ShaderProperties>(m_pComputeShader);
+		}
+	}
 
 	// Getters:
+	Uint3 ComputeUnit::GetGroupCount()
+	{
+		return m_groupCount;
+	}
 	ComputeShader* ComputeUnit::GetComputeShader()
 	{
 		return m_pComputeShader;
@@ -47,22 +52,6 @@ namespace emberEngine
 	ShaderProperties* ComputeUnit::GetShaderProperties()
 	{
 		return m_pShaderProperties.get();
-	}
-	Uint3 ComputeUnit::GetGroupCount()
-	{
-		return m_groupCount;
-	}
-	const VkDescriptorSet* const ComputeUnit::GetDescriptorSets(uint32_t frameIndex) const
-	{
-		return &m_pShaderProperties->GetDescriptorSets()[frameIndex];
-	}
-	const VkPipeline& ComputeUnit::GetPipeline() const
-	{
-		return m_pComputeShader->GetPipeline()->GetVkPipeline();
-	}
-	const VkPipelineLayout& ComputeUnit::GetPipelineLayout() const
-	{
-		return m_pComputeShader->GetPipeline()->GetVkPipelineLayout();
 	}
 
 

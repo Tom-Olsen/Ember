@@ -25,15 +25,15 @@ namespace emberEngine
 		VkImage m_image;
 		VmaAllocation m_allocation;
 		VkImageView m_imageView;
-		std::unique_ptr<VkImageCreateInfo> m_pImageInfo;
-		std::unique_ptr<VmaAllocationCreateInfo> m_pAllocationInfo;
+		VkImageCreateInfo m_imageInfo;
+		VmaAllocationCreateInfo m_allocationInfo;
 		VkImageSubresourceRange m_subresourceRange;
 		VulkanQueue m_queue;
 		VkImageLayout m_layout;
 		VulkanContext* m_pContext;
 
 	public: // Methods:
-		VmaImage(VulkanContext* pContext, VkImageCreateInfo* pImageInfo, VmaAllocationCreateInfo* pAllocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue);
+		VmaImage(VulkanContext* pContext, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue);
 		~VmaImage();
 
 
@@ -41,8 +41,8 @@ namespace emberEngine
 		const VkImage& GetVkImage() const;
 		const VmaAllocation& GetVmaAllocation() const;
 		const VkImageView& GetVkImageView() const;
-		const VkImageCreateInfo* const GetVkImageCreateInfo() const;
-		const VmaAllocationCreateInfo* const GetVmaAllocationCreateInfo() const;
+		const VkImageCreateInfo& GetVkImageCreateInfo() const;
+		const VmaAllocationCreateInfo& GetVmaAllocationCreateInfo() const;
 		const VkImageSubresourceRange& GetSubresourceRange() const;
 		const VkImageLayout& GetLayout() const;
 		uint64_t GetWidth() const;

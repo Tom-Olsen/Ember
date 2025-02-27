@@ -8,8 +8,8 @@ namespace emberEngine
 {
 	/// <summary>
 	/// Texture2d specialization: <para/>
-	/// -VkImageUsageFlags		= transfer src (for mipmap creation), transfer dst, storage, sample
-	/// -VkImageCreateFlagBits	= 0
+	/// -VkImageUsageFlags		= transfer src (for mipmap creation), transfer dst, storage, sample <para/>
+	/// -VkImageCreateFlagBits	= 0 <para/>
 	/// -VkImageViewType		= 2d
 	/// </summary>
 	class SampleTexture2d : public Texture2d

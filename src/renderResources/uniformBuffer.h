@@ -1,8 +1,6 @@
 #ifndef __INCLUDE_GUARD_uniformBuffer_h__
 #define __INCLUDE_GUARD_uniformBuffer_h__
-#include "vk_mem_alloc.h"
-#include <vulkan/vulkan.h>
-#include <memory>
+#include "buffer.h"
 #include <string>
 #include <vector>
 
@@ -12,19 +10,21 @@ namespace emberEngine
 {
 	// Forward declarations:
 	struct UniformBufferBlock;
-	class VmaBuffer;
-	struct VulkanContext;
 
 
 
-	class UniformBuffer
+	/// <summary>
+	/// Buffer specialization: <para/>
+	/// -VkBufferUsageFlags			= uniform <para/>
+	/// -VmaMemoryUsage				= prefer host <para/>
+	/// -VmaAllocationCreateFlags	= mapped, host access
+	/// </summary>
+	class UniformBuffer : public Buffer
 	{
 	private: // Members:
-		std::shared_ptr<VmaBuffer> m_buffer;
 		void* m_pDeviceData;
 		std::vector<char> m_hostData;
 		UniformBufferBlock* m_pUniformBufferBlock;
-		VulkanContext* m_pContext;
 
 	public: // Methods:
 		UniformBuffer(VulkanContext* pContext, UniformBufferBlock* pUniformBufferBlock);
@@ -33,8 +33,6 @@ namespace emberEngine
 		void UpdateBuffer();
 
 		// Getters:
-		uint32_t GetSize() const;
-		const std::shared_ptr<VmaBuffer>& GetVmaBuffer() const;
 		template<typename T>
 		T GetValue(const std::string& memberName) const;
 		template<typename T>

@@ -9,23 +9,23 @@
 namespace emberEngine
 {
 	// Constructors/Destructor:
-	VmaImage::VmaImage(VulkanContext* pContext, VkImageCreateInfo* pImageInfo, VmaAllocationCreateInfo* pAllocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue)
+	VmaImage::VmaImage(VulkanContext* pContext, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue)
 	{
 		m_pContext = pContext;
-		m_pImageInfo = std::unique_ptr<VkImageCreateInfo>(pImageInfo);
-		m_pAllocationInfo = std::unique_ptr<VmaAllocationCreateInfo>(pAllocationInfo);
+		m_imageInfo = imageInfo;
+		m_allocationInfo = allocationInfo;
 		m_subresourceRange = subresourceRange;
 		m_queue = queue;
-		m_layout = pImageInfo->initialLayout;
+		m_layout = m_imageInfo.initialLayout;
 
 		// Create image:
-		VKA(vmaCreateImage(m_pContext->GetVmaAllocator(), m_pImageInfo.get(), m_pAllocationInfo.get(), &m_image, &m_allocation, nullptr));
+		VKA(vmaCreateImage(m_pContext->GetVmaAllocator(), &m_imageInfo, &m_allocationInfo, &m_image, &m_allocation, nullptr));
 
 		// Create image view:
 		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 		viewInfo.image = m_image;
 		viewInfo.viewType = viewType;
-		viewInfo.format = m_pImageInfo->format;
+		viewInfo.format = m_imageInfo.format;
 		viewInfo.subresourceRange = m_subresourceRange;
 		VKA(vkCreateImageView(m_pContext->GetVkDevice(), &viewInfo, nullptr, &m_imageView));
 	}
@@ -51,13 +51,13 @@ namespace emberEngine
 	{
 		return m_imageView;
 	}
-	const VkImageCreateInfo* const VmaImage::GetVkImageCreateInfo() const
+	const VkImageCreateInfo& VmaImage::GetVkImageCreateInfo() const
 	{
-		return m_pImageInfo.get();
+		return m_imageInfo;
 	}
-	const VmaAllocationCreateInfo* const VmaImage::GetVmaAllocationCreateInfo() const
+	const VmaAllocationCreateInfo& VmaImage::GetVmaAllocationCreateInfo() const
 	{
-		return m_pAllocationInfo.get();
+		return m_allocationInfo;
 	}
 	const VkImageSubresourceRange& VmaImage::GetSubresourceRange() const
 	{
@@ -69,19 +69,19 @@ namespace emberEngine
 	}
 	uint64_t VmaImage::GetWidth() const
 	{
-		return m_pImageInfo->extent.width;
+		return m_imageInfo.extent.width;
 	}
 	uint64_t VmaImage::GetHeight() const
 	{
-		return m_pImageInfo->extent.height;
+		return m_imageInfo.extent.height;
 	}
 	uint64_t VmaImage::GetDepth() const
 	{
-		return m_pImageInfo->extent.depth;
+		return m_imageInfo.extent.depth;
 	}
 	const VkExtent3D& VmaImage::GetExtent() const
 	{
-		return m_pImageInfo->extent;
+		return m_imageInfo.extent;
 	}
 	VkImageSubresourceLayers VmaImage::GetSubresourceLayers() const
 	{

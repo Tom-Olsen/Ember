@@ -1,26 +1,27 @@
 #include "graphics.h"
+#include "logger.h"
 #include "material.h"
 #include "materialManager.h"
 #include "shaderProperties.h"
 #include "mesh.h"
 #include "meshManager.h"
-#include "meshRenderer.h"
-#include "transform.h"
 
 
 
 namespace emberEngine
 {
 	// Static members:
-	uint32_t Graphics::s_drawIndex = 0;
 	bool Graphics::s_isInitialized = false;
-	std::vector<Transform*> Graphics::s_transforms;
-	std::vector<MeshRenderer*> Graphics::s_meshRenderers;
+	std::vector<DrawCall> Graphics::s_staticDrawCalls;
+	std::vector<DrawCall> Graphics::s_dynamicDrawCalls;
+	std::vector<DrawCall*> Graphics::s_sortedDrawCallPointers;
+	std::unordered_map<Material*, ResourcePool<ShaderProperties, 20>> Graphics::s_shaderPropertiesPoolMap;
 	Mesh* Graphics::s_pLineSegmentMesh;
 	Mesh* Graphics::s_pSphereMesh;
 	Mesh* Graphics::s_pArrowMesh;
-	Material* Graphics::s_pSimpleLit;
-	Material* Graphics::s_pSimpleUnlit;
+	Material* Graphics::s_pSimpleLitMaterial;
+	Material* Graphics::s_pSimpleUnlitMaterial;
+	Material* Graphics::s_errorMaterial;
 
 
 
@@ -31,30 +32,17 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		s_transforms.resize(100);
-		s_meshRenderers.resize(100);
-		for (uint32_t i = 0; i < 100; i++)
-		{
-			s_transforms[i] = new Transform();
-			s_meshRenderers[i] = new MeshRenderer();
-			s_meshRenderers[i]->SetTransform(s_transforms[i]);
-			s_meshRenderers[i]->isActive = false;
-		}
 		s_pLineSegmentMesh = MeshManager::GetMesh("zylinderEdgy");
 		s_pSphereMesh = MeshManager::GetMesh("cubeSphere");
 		s_pArrowMesh = MeshManager::GetMesh("arrowEdgy");
-		s_pSimpleLit = MaterialManager::GetMaterial("simpleLit");
-		s_pSimpleUnlit = MaterialManager::GetMaterial("simpleUnlit");
+		s_pSimpleLitMaterial = MaterialManager::GetMaterial("simpleLitMaterial");
+		s_pSimpleUnlitMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
+		s_errorMaterial = MaterialManager::GetMaterial("errorMaterial");
 	}
 	void Graphics::Clear()
 	{
-		for (uint32_t i = 0; i < s_transforms.size(); i++)
-		{
-			delete s_transforms[i];
-			delete s_meshRenderers[i];
-		}
-		s_transforms.clear();
-		s_meshRenderers.clear();
+		ResetDrawCalls();
+		s_shaderPropertiesPoolMap.clear();
 	}
 	void Graphics::SetLineSegmentMesh(Mesh* pMesh)
 	{
@@ -66,47 +54,139 @@ namespace emberEngine
 
 	// Public methods:
 	// Draw mesh:
-	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, float scale, bool receiveShadows, bool castShadows)
+	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
 	{
 		return DrawMesh(pMesh, pMaterial, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
 	}
-	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float3 position, Float3x3 rotationMatrix, Float3 scale, bool receiveShadows, bool castShadows)
+	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
 	{
 		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 		return DrawMesh(pMesh, pMaterial, localToWorldMatrix, receiveShadows, castShadows);
 	}
-	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, Float4x4 localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (!pMesh)
 		{
-			LOG_ERROR("Graphics::Draw(...) failed. pMesh is nullptr.");
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMesh is nullptr.");
+			return;
+		}
+		if (!pMaterial)
+		{
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMaterial is nullptr.");
+			return;
+		}
+
+		// No shadow interaction for the error material:
+		if (pMaterial == s_errorMaterial)
+		{
+			receiveShadows = false;
+			castShadows = false;
+		}
+
+		// Setup draw call:
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pMesh, 0, nullptr };
+		s_staticDrawCalls.push_back(drawCall);
+	}
+	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	{
+		if (!pMesh)
+		{
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMesh is nullptr.");
+			return nullptr;
+		}
+		if (!pMaterial)
+		{
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMaterial is nullptr.");
 			return nullptr;
 		}
 
-		DoubleCapacityIfNeeded();
+		// No shadow interaction for the error material:
+		if (pMaterial == s_errorMaterial)
+		{
+			receiveShadows = false;
+			castShadows = false;
+		}
 
-		// Setup current draw call:
-		MeshRenderer* pMeshRenderer = s_meshRenderers[s_drawIndex];
-		pMeshRenderer->isActive = true;
-		pMeshRenderer->SetMesh(pMesh);
-		pMeshRenderer->SetMaterial(pMaterial);
-		pMeshRenderer->SetCastShadows(castShadows);
-		pMeshRenderer->SetReceiveShadows(receiveShadows);
-		pMeshRenderer->GetTransform()->SetLocalToWorldMatrix(localToWorldMatrix);
+		// Setup draw call:
+		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[pMaterial].Acquire((Shader*)pMaterial);
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pMesh, 0, nullptr };
+		s_dynamicDrawCalls.push_back(drawCall);
 
-		// By returning the meshRenderers shaderProperties, we allow user to change the shader properties of this draw call:
-		ShaderProperties* pShaderProperties = s_meshRenderers[s_drawIndex]->GetShaderProperties();
-		s_drawIndex++;
+		// By returning pShaderProperties, we allow user to change the shader properties of the draw call:
+		return pShaderProperties;
+	}
+
+	// Draw instanced:
+	void Graphics::DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	{
+		if (!pInstanceBuffer)
+		{
+			LOG_ERROR("Graphics::DrawInstanced(...) failed. pInstanceBuffer is nullptr.");
+			return;
+		}
+		if (!pMesh)
+		{
+			LOG_ERROR("Graphics::DrawInstanced(...) failed. pMesh is nullptr.");
+			return;
+		}
+		if (!pMaterial)
+		{
+			LOG_ERROR("Graphics::DrawInstanced(...) failed. pMaterial is nullptr.");
+			return;
+		}
+
+		// No shadow interaction for the error material:
+		if (pMaterial == s_errorMaterial)
+		{
+			receiveShadows = false;
+			castShadows = false;
+		}
+
+		// Setup draw call:
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pMesh, instanceCount, pInstanceBuffer };
+		s_staticDrawCalls.push_back(drawCall);
+	}
+	ShaderProperties* Graphics::DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	{
+		if (!pInstanceBuffer)
+		{
+			LOG_ERROR("Graphics::DrawInstanced(...) failed. pInstanceBuffer is nullptr.");
+			return nullptr;
+		}
+		if (!pMesh)
+		{
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMesh is nullptr.");
+			return nullptr;
+		}
+		if (!pMaterial)
+		{
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMaterial is nullptr.");
+			return nullptr;
+		}
+
+		// No shadow interaction for the error material:
+		if (pMaterial == s_errorMaterial)
+		{
+			receiveShadows = false;
+			castShadows = false;
+		}
+
+		// Setup draw call:
+		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[pMaterial].Acquire((Shader*)pMaterial);
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pMesh, instanceCount, pInstanceBuffer };
+		s_dynamicDrawCalls.push_back(drawCall);
+
+		// By returning pShaderProperties, we allow user to change the shader properties of the draw call:
 		return pShaderProperties;
 	}
 
 	// Draw line segment:
-	void Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Float4 color, bool receiveShadows, bool castShadows)
+	void Graphics::DrawLineSegment(const Float3& start, const Float3& end, float width, const Float4& color, bool receiveShadows, bool castShadows)
 	{
-		ShaderProperties* pShaderProperties = DrawLineSegment(start, end, width, s_pSimpleUnlit, receiveShadows, castShadows);
+		ShaderProperties* pShaderProperties = DrawLineSegment(start, end, width, s_pSimpleUnlitMaterial, receiveShadows, castShadows);
 		pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 	}
-	ShaderProperties* Graphics::DrawLineSegment(Float3 start, Float3 end, float width, Material* pMaterial, bool receiveShadows, bool castShadows)
+	ShaderProperties* Graphics::DrawLineSegment(const Float3& start, const Float3& end, float width, Material* pMaterial, bool receiveShadows, bool castShadows)
 	{
 		Float3 direction = end - start;
 		float length = direction.Length();
@@ -117,18 +197,18 @@ namespace emberEngine
 	}
 
 	// Speciaized draw calls:
-	void Graphics::DrawSphere(Float3 position, float radius, Float4 color, bool receiveShadows, bool castShadows)
+	void Graphics::DrawSphere(const Float3& position, float radius, const Float4& color, bool receiveShadows, bool castShadows)
 	{
-		ShaderProperties* pShaderProperties = DrawMesh(s_pSphereMesh, s_pSimpleUnlit, position, Float3x3::identity, Float3(radius), receiveShadows, castShadows);
+		ShaderProperties* pShaderProperties = DrawMesh(s_pSphereMesh, s_pSimpleUnlitMaterial, position, Float3x3::identity, Float3(radius), receiveShadows, castShadows);
 		pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 	}
-	void Graphics::DrawArrow(Float3 position, Float3 direction, float size, Float4 color, bool receiveShadows, bool castShadows)
+	void Graphics::DrawArrow(const Float3& position, const Float3& direction, float size, const Float4& color, bool receiveShadows, bool castShadows)
 	{
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
-		ShaderProperties* pShaderProperties = DrawMesh(s_pArrowMesh, s_pSimpleUnlit, position, rotationMatrix, Float3(size), receiveShadows, castShadows);
+		ShaderProperties* pShaderProperties = DrawMesh(s_pArrowMesh, s_pSimpleUnlitMaterial, position, rotationMatrix, Float3(size), receiveShadows, castShadows);
 		pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 	}
-	void Graphics::DrawFrustum(Float4x4 localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Float4& color, bool receiveShadows, bool castShadows)
+	void Graphics::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Float4& color, bool receiveShadows, bool castShadows)
 	{
 		// Corner positions in normalized device coordinates:
 		Float4 cornerPoints[8] =
@@ -161,7 +241,7 @@ namespace emberEngine
 		// Draw corner points:
 		for (uint32_t i = 0; i < 8; i++)
 		{
-			ShaderProperties* pShaderProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlit, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+			ShaderProperties* pShaderProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlitMaterial, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
 			pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::gray);
 		}
 
@@ -181,14 +261,14 @@ namespace emberEngine
 		DrawLineSegment(Float3(cornerPoints[4]), Float3(cornerPoints[5]), width, color, receiveShadows, castShadows);
 		DrawLineSegment(Float3(cornerPoints[6]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
 	}
-	void Graphics::DrawBounds(Float4x4 localToWorldMatrix, const Bounds& bounds, float width, const Float4& color, bool receiveShadows, bool castShadows)
+	void Graphics::DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width, const Float4& color, bool receiveShadows, bool castShadows)
 	{
 		std::array<Float3, 8> cornerPoints = bounds.GetCorners();
 
 		// Draw corner points:
 		for (uint32_t i = 0; i < 8; i++)
 		{
-			ShaderProperties* pShaderProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlit, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+			ShaderProperties* pShaderProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlitMaterial, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
 			pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
 		}
 
@@ -214,66 +294,37 @@ namespace emberEngine
 	// ResetDrawCalls:
 	void Graphics::ResetDrawCalls()
 	{
-		for (MeshRenderer* pMeshRenderer : s_meshRenderers)
-			pMeshRenderer->isActive = false;
-		ReduceCapacity();
-		s_drawIndex = 0;
+		// Return all pShaderProperties of dynamic draw calls back to the corresponding pool:
+		for (DrawCall& drawCall : s_dynamicDrawCalls)
+			s_shaderPropertiesPoolMap[drawCall.pMaterial].Release(drawCall.pShaderProperties);
+
+		// Shrink all pools back to max number of drawCalls of last frame:
+		for (auto& [_, pool] : s_shaderPropertiesPoolMap)
+			pool.ShrinkToFit();
+
+		// Remove all drawCalls so next frame can start fresh:
+		s_staticDrawCalls.clear();
+		s_dynamicDrawCalls.clear();
 	}
 
 
 
 	// Getters:
-	std::vector<MeshRenderer*>* Graphics::GetSortedMeshRenderers()
+	std::vector<DrawCall*>* Graphics::GetSortedDrawCallPointers()
 	{
-		// Sort meshRenders according to material renderQueue:
-		std::sort(s_meshRenderers.begin(), s_meshRenderers.end(), [](MeshRenderer* a, MeshRenderer* b)
+		// Populate sorted draw call pointers vector:
+		s_sortedDrawCallPointers.clear();
+		s_sortedDrawCallPointers.reserve(s_staticDrawCalls.size() + s_dynamicDrawCalls.size());
+		for (auto& drawCall : s_staticDrawCalls)
+			s_sortedDrawCallPointers.push_back(&drawCall);
+		for (auto& drawCall : s_dynamicDrawCalls)
+			s_sortedDrawCallPointers.push_back(&drawCall);
+
+		// Sort draw call pointers according to material renderQueue:
+		std::sort(s_sortedDrawCallPointers.begin(), s_sortedDrawCallPointers.end(), [](DrawCall* a, DrawCall* b)
 		{
-			// Handle nullptr cases for materials (MeshRenderer* not in use):
-			const Material* materialA = a ? a->GetMaterial() : nullptr;
-			const Material* materialB = b ? b->GetMaterial() : nullptr;
-
-			// Default high value for nullptr:
-			uint32_t renderQueueA = materialA ? static_cast<uint32_t>(materialA->GetRenderQueue()) : UINT32_MAX;
-			uint32_t renderQueueB = materialB ? static_cast<uint32_t>(materialB->GetRenderQueue()) : UINT32_MAX;
-
-			return renderQueueA < renderQueueB;
+			return a->pMaterial->GetRenderQueue() < b->pMaterial->GetRenderQueue();
 		});
-		return &s_meshRenderers;
-	}
-
-
-
-	// Private methods:
-	void Graphics::DoubleCapacityIfNeeded()
-	{
-		uint32_t oldSize = static_cast<uint32_t>(s_transforms.size());
-		if (s_drawIndex >= oldSize)
-		{
-			uint32_t newSize = 2 * oldSize;
-			s_transforms.resize(newSize);
-			s_meshRenderers.resize(newSize);
-			for (uint32_t i = oldSize; i < newSize; i++)
-			{
-				s_transforms[i] = new Transform();
-				s_meshRenderers[i] = new MeshRenderer();
-				s_meshRenderers[i]->SetTransform(s_transforms[i]);
-				s_meshRenderers[i]->isActive = false;
-			}
-		}
-	}
-	void Graphics::ReduceCapacity()
-	{
-		uint32_t oldSize = static_cast<uint32_t>(s_transforms.size());
-		uint32_t newSize = s_drawIndex; // drawIndex is one past the last active element, so no +1 needed.
-		if (oldSize > newSize)
-		{
-			for (uint32_t i = newSize; i < oldSize; i++)
-			{
-				delete s_transforms[i];
-				delete s_meshRenderers[i];
-			}
-			s_transforms.resize(newSize);
-			s_meshRenderers.resize(newSize);
-		}
+		return &s_sortedDrawCallPointers;
 	}
 }

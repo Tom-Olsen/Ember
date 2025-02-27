@@ -13,9 +13,9 @@ namespace emberEngine
 	// Constructors:
 	Float4x4::Float4x4
 	(float xx, float xy, float xz, float xw,	// column 0
-		float yx, float yy, float yz, float yw,	// column 1
-		float zx, float zy, float zz, float zw,	// column 2
-		float wx, float wy, float wz, float ww)	// column 3
+	 float yx, float yy, float yz, float yw,	// column 1
+	 float zx, float zy, float zz, float zw,	// column 2
+	 float wx, float wy, float wz, float ww)	// column 3
 	{
 		data[0] = xx; data[4] = yx; data[8] = zx; data[12] = wx;
 		data[1] = xy; data[5] = yy; data[9] = zy; data[13] = wy;
@@ -57,41 +57,41 @@ namespace emberEngine
 	{
 		return Float4x4
 		(row0.x, row1.x, row2.x, row3.x,
-			row0.y, row1.y, row2.y, row3.y,
-			row0.z, row1.z, row2.z, row3.z,
-			row0.w, row1.w, row2.w, row3.w);
+		 row0.y, row1.y, row2.y, row3.y,
+		 row0.z, row1.z, row2.z, row3.z,
+		 row0.w, row1.w, row2.w, row3.w);
 	}
 	Float4x4 Float4x4::Rows
 	(float row0x, float row0y, float row0z, float row0w,
-		float row1x, float row1y, float row1z, float row1w,
-		float row2x, float row2y, float row2z, float row2w,
-		float row3x, float row3y, float row3z, float row3w)
+	 float row1x, float row1y, float row1z, float row1w,
+	 float row2x, float row2y, float row2z, float row2w,
+	 float row3x, float row3y, float row3z, float row3w)
 	{
 		return Float4x4
 		(row0x, row1x, row2x, row3x,
-			row0y, row1y, row2y, row3y,
-			row0z, row1z, row2z, row3z,
-			row0w, row1w, row2w, row3w);
+		 row0y, row1y, row2y, row3y,
+		 row0z, row1z, row2z, row3z,
+		 row0w, row1w, row2w, row3w);
 	}
 	Float4x4 Float4x4::Columns(const Float4& column0, const Float4& column1, const Float4& column2, const Float4& column3)
 	{
 		return Float4x4
 		(column0.x, column0.y, column0.z, column0.w,
-			column1.x, column1.y, column1.z, column1.w,
-			column2.x, column2.y, column2.z, column2.w,
-			column3.x, column3.y, column3.z, column3.w);
+		 column1.x, column1.y, column1.z, column1.w,
+		 column2.x, column2.y, column2.z, column2.w,
+		 column3.x, column3.y, column3.z, column3.w);
 	}
 	Float4x4 Float4x4::Columns
 	(float column0x, float column0y, float column0z, float column0w,
-		float column1x, float column1y, float column1z, float column1w,
-		float column2x, float column2y, float column2z, float column2w,
-		float column3x, float column3y, float column3z, float column3w)
+	 float column1x, float column1y, float column1z, float column1w,
+	 float column2x, float column2y, float column2z, float column2w,
+	 float column3x, float column3y, float column3z, float column3w)
 	{
 		return Float4x4
 		(column0x, column0y, column0z, column0w,
-			column1x, column1y, column1z, column1w,
-			column2x, column2y, column2z, column2w,
-			column3x, column3y, column3z, column3w);
+		 column1x, column1y, column1z, column1w,
+		 column2x, column2y, column2z, column2w,
+		 column3x, column3y, column3z, column3w);
 	}
 
 
@@ -101,9 +101,9 @@ namespace emberEngine
 	{
 		return Float4x4
 		(data[0], data[4], data[8], data[12],
-			data[1], data[5], data[9], data[13],
-			data[2], data[6], data[10], data[14],
-			data[3], data[7], data[11], data[15]);
+		 data[1], data[5], data[9], data[13],
+		 data[2], data[6], data[10], data[14],
+		 data[3], data[7], data[11], data[15]);
 	}
 	float Float4x4::Determinant() const
 	{
@@ -162,9 +162,9 @@ namespace emberEngine
 		float s = mathf::Sin(angle);
 		return Float4x4::Rows
 		(1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, c, -s, 0.0f,
-			0.0f, s, c, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f);
+		 0.0f, c, -s, 0.0f,
+		 0.0f, s, c, 0.0f,
+		 0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	Float4x4 Float4x4::RotateY(float angle)
 	{
@@ -172,9 +172,9 @@ namespace emberEngine
 		float s = mathf::Sin(angle);
 		return Float4x4::Rows
 		(c, 0.0f, s, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			-s, 0.0f, c, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f);
+		 0.0f, 1.0f, 0.0f, 0.0f,
+		 -s, 0.0f, c, 0.0f,
+		 0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	Float4x4 Float4x4::RotateZ(float angle)
 	{
@@ -182,9 +182,9 @@ namespace emberEngine
 		float s = mathf::Sin(angle);
 		return Float4x4::Rows
 		(c, -s, 0.0f, 0.0f,
-			s, c, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f);
+		 s, c, 0.0f, 0.0f,
+		 0.0f, 0.0f, 1.0f, 0.0f,
+		 0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	Float4x4 Float4x4::Rotate(const Float3& axis, float angle)
 	{
@@ -197,9 +197,9 @@ namespace emberEngine
 		float z = normalizedAxis.z;
 		return Float4x4::Rows
 		(x * x * t + c, x * y * t - z * s, x * z * t + y * s, 0.0f,
-			y * x * t + z * s, y * y * t + c, y * z * t - x * s, 0.0f,
-			z * x * t - y * s, z * y * t + x * s, z * z * t + c, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f);
+		 y * x * t + z * s, y * y * t + c, y * z * t - x * s, 0.0f,
+		 z * x * t - y * s, z * y * t + x * s, z * z * t + c, 0.0f,
+		 0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	Float4x4 Float4x4::Rotate(const Float3& eulerAngles, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
 	{
@@ -248,17 +248,17 @@ namespace emberEngine
 	{
 		return Float4x4::Rows
 		(1.0f, 0.0f, 0.0f, translation.x,
-			0.0f, 1.0f, 0.0f, translation.y,
-			0.0f, 0.0f, 1.0f, translation.z,
-			0.0f, 0.0f, 0.0f, 1.0f);
+		 0.0f, 1.0f, 0.0f, translation.y,
+		 0.0f, 0.0f, 1.0f, translation.z,
+		 0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	Float4x4 Float4x4::Scale(const Float3& scale)
 	{
 		return Float4x4::Rows
 		(scale.x, 0.0f, 0.0f, 0.0f,
-			0.0f, scale.y, 0.0f, 0.0f,
-			0.0f, 0.0f, scale.z, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f);
+		 0.0f, scale.y, 0.0f, 0.0f,
+		 0.0f, 0.0f, scale.z, 0.0f,
+		 0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	Float4x4 Float4x4::Scale(float scale)
 	{
@@ -300,9 +300,9 @@ namespace emberEngine
 
 		return Float4x4::Rows
 		(xx, 0.0f, 0.0f, 0.0f,
-			0.0f, yy, 0.0f, 0.0f,
-			0.0f, 0.0f, zz, zw,
-			0.0f, 0.0f, -1.0f, 0.0f);
+		 0.0f, yy, 0.0f, 0.0f,
+		 0.0f, 0.0f, zz, zw,
+		 0.0f, 0.0f, -1.0f, 0.0f);
 	}
 	Float4x4 Float4x4::Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip)
 	{
@@ -330,9 +330,9 @@ namespace emberEngine
 
 		return Float4x4::Rows
 		(xx, 0.0f, 0.0f, xw,
-			0.0f, yy, 0.0f, yw,
-			0.0f, 0.0f, zz, zw,
-			0.0f, 0.0f, 0.0f, 1.0f);
+		 0.0f, yy, 0.0f, yw,
+		 0.0f, 0.0f, zz, zw,
+		 0.0f, 0.0f, 0.0f, 1.0f);
 	}
 
 
@@ -405,8 +405,8 @@ namespace emberEngine
 		Float3 column2 = Float3(data[8] / scale.x, data[9] / scale.y, data[10] / scale.z).Normalize();
 		return Float3x3::Columns
 		(column0.x, column0.y, column0.z,
-			column1.x, column1.y, column1.z,
-			column2.x, column2.y, column2.z);
+		 column1.x, column1.y, column1.z,
+		 column2.x, column2.y, column2.z);
 	}
 	Float4x4 Float4x4::GetRotation4x4(Float3 scale) const
 	{
@@ -472,9 +472,9 @@ namespace emberEngine
 	{
 		return Float4x4
 		(-data[0], -data[1], -data[2], -data[3],
-			-data[4], -data[5], -data[6], -data[7],
-			-data[8], -data[9], -data[10], -data[11],
-			-data[12], -data[13], -data[14], -data[15]);
+		 -data[4], -data[5], -data[6], -data[7],
+		 -data[8], -data[9], -data[10], -data[11],
+		 -data[12], -data[13], -data[14], -data[15]);
 	}
 
 
@@ -562,17 +562,17 @@ namespace emberEngine
 	{
 		return Float4
 		(a[0] * b.x + a[4] * b.y + a[8] * b.z + a[12] * b.w,
-			a[1] * b.x + a[5] * b.y + a[9] * b.z + a[13] * b.w,
-			a[2] * b.x + a[6] * b.y + a[10] * b.z + a[14] * b.w,
-			a[3] * b.x + a[7] * b.y + a[11] * b.z + a[15] * b.w);
+		 a[1] * b.x + a[5] * b.y + a[9] * b.z + a[13] * b.w,
+		 a[2] * b.x + a[6] * b.y + a[10] * b.z + a[14] * b.w,
+		 a[3] * b.x + a[7] * b.y + a[11] * b.z + a[15] * b.w);
 	}
 	Float4 operator*(const Float4& a, const Float4x4& b)
 	{
 		return Float4
 		(a.x * b[0] + a.y * b[1] + a.z * b[2] + a.w * b[3],
-			a.x * b[4] + a.y * b[5] + a.z * b[6] + a.w * b[7],
-			a.x * b[8] + a.y * b[9] + a.z * b[10] + a.w * b[11],
-			a.x * b[12] + a.y * b[13] + a.z * b[14] + a.w * b[15]);
+		 a.x * b[4] + a.y * b[5] + a.z * b[6] + a.w * b[7],
+		 a.x * b[8] + a.y * b[9] + a.z * b[10] + a.w * b[11],
+		 a.x * b[12] + a.y * b[13] + a.z * b[14] + a.w * b[15]);
 	}
 
 
@@ -610,9 +610,9 @@ namespace emberEngine
 	Float4x4 Float4x4::zero = Float4x4(0.0f);
 	Float4x4 Float4x4::identity = Float4x4
 	(1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f);
+	 0.0f, 1.0f, 0.0f, 0.0f,
+	 0.0f, 0.0f, 1.0f, 0.0f,
+	 0.0f, 0.0f, 0.0f, 1.0f);
 	Float4x4 Float4x4::maxValue = Float4x4(mathf::maxValue);
 	Float4x4 Float4x4::minValue = Float4x4(mathf::minValue);
 

@@ -1,6 +1,6 @@
 SamplerState colorSampler : register(s10);
 TextureCube colorMap : register(t28);
-#include "shadingPushConstant.hlsli"
+#include "defaultPushConstant.hlsli"
 
 
 

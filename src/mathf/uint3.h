@@ -22,6 +22,8 @@ namespace emberEngine
 		// Math operations:
 
 		// Static math operations:
+		static Uint3 Min(const Uint3& a, const Uint3& b);
+		static Uint3 Max(const Uint3& a, const Uint3& b);
 
 		// Access:
 		uint32_t& operator[](int index);

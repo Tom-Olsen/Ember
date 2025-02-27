@@ -1,4 +1,5 @@
 #include "uint3.h"
+#include "mathf.h"
 #include <stdexcept>
 #include <sstream>
 
@@ -19,6 +20,14 @@ namespace emberEngine
 
 
 	// Static math operations:
+	Uint3 Uint3::Min(const Uint3& a, const Uint3& b)
+	{
+		return Uint3(mathf::Min(a.x, b.x), mathf::Min(a.y, b.y), mathf::Min(a.z, b.z));
+	}
+	Uint3 Uint3::Max(const Uint3& a, const Uint3& b)
+	{
+		return Uint3(mathf::Max(a.x, b.x), mathf::Max(a.y, b.y), mathf::Max(a.z, b.z));
+	}
 
 
 
@@ -122,9 +131,9 @@ namespace emberEngine
 
 
 	// Static members:
-	Uint3 Uint3::zero = Uint3(0);
-	Uint3 Uint3::one = Uint3(1);
-	Uint3 Uint3::right = Uint3(1, 0, 0);
-	Uint3 Uint3::up = Uint3(0, 1, 0);
-	Uint3 Uint3::forward = Uint3(0, 0, 1);
+	Uint3 Uint3::zero = Uint3(0);			// zero = Uint3(0,0,0).
+	Uint3 Uint3::one = Uint3(1);			// one = Uint3(1,1,1).
+	Uint3 Uint3::right = Uint3(1, 0, 0);	// right = Uint3(1,0,0).
+	Uint3 Uint3::up = Uint3(0, 1, 0);		// up = Uint3(0,1,0).
+	Uint3 Uint3::forward = Uint3(0, 0, 1);	// forward = Uint3(0,0,1).
 }

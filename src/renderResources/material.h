@@ -19,7 +19,7 @@ namespace emberEngine
 
 	/// <summary>
 	/// Material creation is expensive.
-	/// It is recommended to create all materials at the start of the application.
+	/// It is recommended to create all Materials at the start of the application.
 	/// Create a Material pointer and store it in the static MaterialManager class, making it globally accessible.
 	/// Each Material must be used with a ShaderProperties which is customized for the Material.
 	/// </summary>
@@ -32,29 +32,22 @@ namespace emberEngine
 			shadow,
 			skybox
 		};
-		enum class RenderQueue
-		{
-			shadow = 0,
-			opaque = 1000,
-			transparent = 2000,
-			skybox = 3000
-		};
 
 	private: // Members:
 		Type m_type;
-		RenderQueue m_renderQueue;
+		uint32_t m_renderQueue;	// shadow=0, opaque=1000, transparent=2000, skybox=3000
 		std::unique_ptr<VertexInputDescriptions> m_pVertexInputDescriptions;
 		std::vector<VkBuffer> m_meshBuffers;
 		std::vector<VkDeviceSize> m_meshOffsets;
 
 	public: // Methods:
 		// Constructors/Destructor:
-		Material(VulkanContext* pContext, Type type, const std::string& name, RenderQueue renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		Material(VulkanContext* pContext, Type type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
 		~Material();
 
 		// Getters:
 		Type GetType() const;
-		RenderQueue GetRenderQueue() const;
+		uint32_t GetRenderQueue() const;
 		const VertexInputDescriptions* const GetVertexInputDescriptions() const;
 		const VkBuffer* const GetMeshBuffers(Mesh* pMesh);
 		const VkDeviceSize* const GetMeshOffsets(Mesh* pMesh);

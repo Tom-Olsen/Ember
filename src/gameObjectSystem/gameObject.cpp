@@ -96,23 +96,28 @@ namespace emberEngine
 	template void GameObject::AddComponent(ComputeUnit*);
 	template void GameObject::AddComponent(DirectionalLight*);
 	template void GameObject::AddComponent(DrawMeshData*);
+	template void GameObject::AddComponent(InstancedRenderer*);
 	template void GameObject::AddComponent(MeshRenderer*);
 	template void GameObject::AddComponent(MeshTester*);
 	template void GameObject::AddComponent(PointLight*);
 	template void GameObject::AddComponent(SpinGlobal*);
 	template void GameObject::AddComponent(SpinLocal*);
 	template void GameObject::AddComponent(SpotLight*);
+	template void GameObject::AddComponent(TestInstancedRendering*);
 	template void GameObject::AddComponent(Transform*);
 	template Camera* GameObject::GetComponent<Camera>();
 	template CameraController* GameObject::GetComponent<CameraController>();
 	template ComputeUnit* GameObject::GetComponent<ComputeUnit>();
 	template DirectionalLight* GameObject::GetComponent<DirectionalLight>();
 	template DrawMeshData* GameObject::GetComponent<DrawMeshData>();
+	template InstancedRenderer* GameObject::GetComponent<InstancedRenderer>();
 	template MeshRenderer* GameObject::GetComponent<MeshRenderer>();
 	template MeshTester* GameObject::GetComponent<MeshTester>();
 	template PointLight* GameObject::GetComponent<PointLight>();
 	template SpinGlobal* GameObject::GetComponent<SpinGlobal>();
 	template SpinLocal* GameObject::GetComponent<SpinLocal>();
 	template SpotLight* GameObject::GetComponent<SpotLight>();
+	template SpotLight* GameObject::GetComponent<SpotLight>();
+	template TestInstancedRendering* GameObject::GetComponent<TestInstancedRendering>();
 	template Transform* GameObject::GetComponent<Transform>();
 }

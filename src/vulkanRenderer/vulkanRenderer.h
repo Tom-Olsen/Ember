@@ -10,12 +10,14 @@
 namespace emberEngine
 {
 	// Forward declarations:
-	class Mesh;
-	class MeshRenderer;
+	struct ComputeCall;
+	struct DrawCall;
+	class Material;
 	class Scene;
 	struct VulkanContext;
 	class VulkanCommand;
 	class RenderTexture2d;
+	class ShaderProperties;
 
 
 
@@ -24,23 +26,28 @@ namespace emberEngine
 	private: // Members:
 		VulkanContext* m_pContext;
 
+		// Shadow Material and ShaderProperties:
+		Material* m_pShadowMaterial;
+		std::unique_ptr<ShaderProperties> m_pShadowShaderProperties;
+
 		// Render resources:
-		std::unique_ptr<RenderTexture2d> m_renderTexture;	// maybe move somewhere else?
-		std::vector<VulkanCommand> m_computeCommands;
+		std::unique_ptr<RenderTexture2d> m_renderTexture;	// maybe move somewhere else? Maybe as input to the renderer?
+		std::vector<VulkanCommand> m_syncComputeCommands;	// synced to run before any graphics commands, runs on graphics queue.
 		std::vector<VulkanCommand> m_shadowCommands;
 		std::vector<VulkanCommand> m_forwardCommands;
 
 		// Sync objects:
 		std::vector<VkFence> m_fences;
 		std::vector<VkSemaphore> m_acquireSemaphores;
-		std::vector<VkSemaphore> m_computeToShadowSemaphores;
+		std::vector<VkSemaphore> m_syncComputeToShadowSemaphores;
 		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
 
 		// Render management:
 		uint32_t m_imageIndex;
 		bool m_rebuildSwapchain;
-		std::array<std::vector<MeshRenderer*>*, 2> m_pMeshRendererGroups;
+		std::vector<DrawCall*>* m_pDrawCalls;
+		std::vector<ComputeCall*>* m_pSyncComputeCalls;
 
 	public: // Methods:
 		VulkanRenderer(VulkanContext* pContext);
@@ -51,7 +58,6 @@ namespace emberEngine
 	private: // Methods:
 		void RebuildSwapchain();
 		bool AcquireImage();
-		void SetMeshRendererGroups(Scene* pScene);
 		void RecordComputeShaders(Scene* pScene);
 		void RecordShadowCommandBuffer(Scene* pScene);
 		void RecordForwardCommandBuffer(Scene* pScene);

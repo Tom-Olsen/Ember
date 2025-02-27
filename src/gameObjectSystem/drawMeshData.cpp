@@ -27,7 +27,7 @@ namespace emberEngine
 	{
 		m_pSphereMesh = MeshManager::GetMesh("cubeSphere");
 		m_pArrowMesh = MeshManager::GetMesh("arrowEdgy");
-		m_pMaterial = MaterialManager::GetMaterial("default");
+		m_pMaterial = MaterialManager::GetMaterial("defaultMaterial");
 		m_pMesh = GetGameObject()->GetComponent<MeshRenderer>()->GetMesh();
 	}
 	void DrawMeshData::LateUpdate()

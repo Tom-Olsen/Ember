@@ -35,14 +35,6 @@ namespace emberEngine
 				return max;
 			return value;
 		}
-		float Min(float a, float b)
-		{
-			return a < b ? a : b;
-		}
-		float Max(float a, float b)
-		{
-			return a > b ? a : b;
-		}
 		float Sign(float value)
 		{// value > 0.0f -> 1.0f, value < 0.0f -> -1.0f, value == 0.0f -> 0.0f
 			return (0.0f < value) - (value < 0.0f);
@@ -112,5 +104,29 @@ namespace emberEngine
 		{
 			return atan2f(y, x);
 		}
+
+
+
+		// Templates:
+		template<typename T>
+		T Min(T a, T b)
+		{
+			return a < b ? a : b;
+		}
+		template<typename T>
+		T Max(T a, T b)
+		{
+			return a > b ? a : b;
+		}
+		template float mathf::Max(float, float);
+		template float mathf::Min(float, float);
+		template int mathf::Max(int, int);
+		template int mathf::Min(int, int);
+		template uint16_t mathf::Max(uint16_t, uint16_t);
+		template uint16_t mathf::Min(uint16_t, uint16_t);
+		template uint32_t mathf::Max(uint32_t, uint32_t);
+		template uint32_t mathf::Min(uint32_t, uint32_t);
+		template uint64_t mathf::Max(uint64_t, uint64_t);
+		template uint64_t mathf::Min(uint64_t, uint64_t);
 	}
 }
