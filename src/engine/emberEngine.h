@@ -63,7 +63,6 @@ namespace emberEngine
 // GameObject Components:
 #include "camera.h"
 #include "cameraController.h"
-#include "computeUnit.h"
 #include "directionalLight.h"
 #include "drawMeshData.h"
 #include "instancedRenderer.h"

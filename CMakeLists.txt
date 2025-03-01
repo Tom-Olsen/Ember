@@ -17,6 +17,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 
    
 # ------------------- File lists --------------------
+# src/components/*:
+file(GLOB COMPONENTS_FILES "${PROJECT_SOURCE_DIR}/src/components/*")
+source_group("Components" FILES ${COMPONENTS_FILES})
+
 # src/engine/*:
 file(GLOB ENGINE_FILES "${PROJECT_SOURCE_DIR}/src/engine/*")
 source_group("Engine" FILES ${ENGINE_FILES})
@@ -45,9 +49,13 @@ source_group("Managers" FILES ${MANAGERS_FILES})
 file(GLOB MATHF_FILES "${PROJECT_SOURCE_DIR}/src/mathf/*")
 source_group("Mathf" FILES ${MATHF_FILES})
 
+# src/pushConstants/*:
+file(GLOB PUSH_CONSTANTS_FILES "${PROJECT_SOURCE_DIR}/src/pushConstants/*")
+source_group("Push Constants" FILES ${PUSH_CONSTANTS_FILES})
+
 # src/renderPassesAndPipelines/*:
-file(GLOB RENDERPASSES_AND_PIPELINES_FILES "${PROJECT_SOURCE_DIR}/src/renderPassesAndPipelines/*")
-source_group("Render Passes & Pipelines" FILES ${RENDERPASSES_AND_PIPELINES_FILES})
+file(GLOB RENDER_PASSES_AND_PIPELINES_FILES "${PROJECT_SOURCE_DIR}/src/renderPassesAndPipelines/*")
+source_group("Render Passes & Pipelines" FILES ${RENDER_PASSES_AND_PIPELINES_FILES})
 
 # src/renderResources/*:
 file(GLOB RENDER_RESOURCES_FILES "${PROJECT_SOURCE_DIR}/src/renderResources/*")
@@ -80,13 +88,15 @@ source_group("" FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
 
 # Configure executables:
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/src/main.cpp
+${COMPONENTS_FILES}
 ${ENGINE_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
 ${IMGUI_FILES}
 ${IMGUI_EXAMPLE}   # add the example as a source to make it show up in the IDE, but mark it as header only, to prevent compilation (see below)
 ${MANAGERS_FILES}
 ${MATHF_FILES}
-${RENDERPASSES_AND_PIPELINES_FILES}
+${PUSH_CONSTANTS_FILES}
+${RENDER_PASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
 ${SHADER_FILES}
 ${TEXTURE_TYPES_FILES}
@@ -157,10 +167,12 @@ target_include_directories(${PROJECT_NAME} PUBLIC libs/vma/include)
 
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME}
+PRIVATE ${CMAKE_SOURCE_DIR}/src/components
 PRIVATE ${CMAKE_SOURCE_DIR}/src/engine
 PRIVATE ${CMAKE_SOURCE_DIR}/src/gameobjectSystem
 PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
 PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
+PRIVATE ${CMAKE_SOURCE_DIR}/src/pushConstants
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderPassesAndPipelines
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources
 PRIVATE ${CMAKE_SOURCE_DIR}/src/shaders
@@ -185,13 +197,15 @@ source_group("" FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
 # Link test executable:
 source_group("" FILES unitTests/main.cpp)
 add_executable(UnitTests unitTests/main.cpp
+${COMPONENTS_FILES}
 ${ENGINE_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
 ${IMGUI_FILES}
 ${IMGUI_EXAMPLE}   # add the example as a source to make it show up in the IDE, but mark it as header only, to prevent compilation (see below)
 ${MANAGERS_FILES}
 ${MATHF_FILES}
-${RENDERPASSES_AND_PIPELINES_FILES}
+${PUSH_CONSTANTS_FILES}
+${RENDER_PASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
 ${SHADER_FILES}
 ${TEXTURE_TYPES_FILES}
@@ -218,10 +232,12 @@ PUBLIC libs/spdlog/include
 PUBLIC libs/SPIRV-Reflect
 PUBLIC ${Vulkan_INCLUDE_DIRS}
 PUBLIC libs/vma/include
+PRIVATE ${CMAKE_SOURCE_DIR}/src/components
 PRIVATE ${CMAKE_SOURCE_DIR}/src/engine
 PRIVATE ${CMAKE_SOURCE_DIR}/src/gameobjectSystem
 PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
 PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
+PRIVATE ${CMAKE_SOURCE_DIR}/src/pushConstants
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderPassesAndPipelines
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources
 PRIVATE ${CMAKE_SOURCE_DIR}/src/shaders

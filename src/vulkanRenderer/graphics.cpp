@@ -148,6 +148,7 @@ namespace emberEngine
 		}
 
 		// Setup draw call:
+		pShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
 		ShaderProperties* pShadowShaderProperties = s_shadowShaderPropertiesPool.Acquire((Shader*)s_pShadowMaterial);
 		pShadowShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, instanceCount };
@@ -181,6 +182,7 @@ namespace emberEngine
 		// Setup draw call:
 		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[pMaterial].Acquire((Shader*)pMaterial);
 		ShaderProperties* pShadowShaderProperties = s_shadowShaderPropertiesPool.Acquire((Shader*)s_pShadowMaterial);
+		pShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
 		pShadowShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, instanceCount };
 		s_dynamicDrawCalls.push_back(drawCall);

@@ -650,7 +650,6 @@ Scene* DefaultScene(VulkanContext* pContext)
 		pInstancedRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pInstancedRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pInstancedRenderer->SetInstanceBuffer(testInstancedRendering->GetInstanceBuffer());
-		pInstancedRenderer->GetShaderProperties()->SetStorageBuffer("instanceBuffer", testInstancedRendering->GetInstanceBuffer());
 		pInstancedRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
 		pInstancedRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("concrete0_color"));
 		pInstancedRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("concrete0_roughness"));

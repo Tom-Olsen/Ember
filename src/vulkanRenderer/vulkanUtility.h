@@ -37,6 +37,7 @@ namespace emberEngine
 		{
 			constexpr VkAccessFlagBits2 vertexAttributeRead = VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT;
 		}
+
 		namespace VertexInput
 		{
 			constexpr VkAccessFlagBits2 indexRead = VK_ACCESS_2_INDEX_READ_BIT;
