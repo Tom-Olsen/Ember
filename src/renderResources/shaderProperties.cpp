@@ -17,7 +17,7 @@
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
-#include "vulkanObjToString.h"
+#include "vulkanUtility.h"
 #include "vulkanMacros.h"
 
 

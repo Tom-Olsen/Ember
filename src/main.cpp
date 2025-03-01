@@ -4,11 +4,10 @@
 using namespace emberEngine;
 
 
+
 // TODO now!
-// - instancing shadow shader => split desciptorSet into two, one for instaneBuffer, on for everything else.
 // - similar to how I removed the meshRenderer dependency from the VulkanRenderer, also remove Dir/Spot/Point light dependency.
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
-// - test SDL_WaitEvent in sdlWindow
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
 // - use one constants.h file both for c++ and hlsl constants that are identical, e.g. #define SHADOW_MAP_RESOLUTION 4096
@@ -82,6 +81,7 @@ using namespace emberEngine;
 // - CameraController that is identical to unities editor pCamera.
 // - Own mathf library, see mathf.h/cpp.
 // - Dear ImGui integration with docking feature.
+
 
 
 Scene* ShadowCascadeScene()

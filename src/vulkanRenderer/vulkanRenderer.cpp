@@ -34,10 +34,7 @@ namespace emberEngine
 	VulkanRenderer::VulkanRenderer(VulkanContext* pContext)
 	{
 		m_pContext = pContext;
-
-		// Shadow Material and ShaderProperties:
 		m_pShadowMaterial = MaterialManager::GetMaterial("shadowMaterial");
-		m_pShadowShaderProperties = std::make_unique<ShaderProperties>(m_pShadowMaterial);
 
 		// Create render texture:
 		VkFormat format = VK_FORMAT_R16G16B16A16_SFLOAT;
@@ -187,7 +184,7 @@ namespace emberEngine
 				// Compute call is dispatch call:
 				else
 				{
-					// Update shader specific data (uniform buffers):
+					// Update shader specific data:
 					computeCall->pShaderProperties->UpdateShaderData();
 
 					// Change pipeline if compute shader has changed:
@@ -267,9 +264,12 @@ namespace emberEngine
 				Mesh* pMesh = nullptr;
 				const VkPipeline& shadowPipeline = m_pShadowMaterial->GetPipeline()->GetVkPipeline();
 				const VkPipelineLayout& shadowPipelineLayout = m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
-				const VkDescriptorSet* descriptorSet = &m_pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex);
 				int shadowMapIndex = 0;
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
+
+				// Update shader specific data:
+				for (DrawCall* drawCall : *m_pDrawCalls)
+					drawCall->pShadowShaderProperties->UpdateShaderData();
 
 				// Directional Lights:
 				for (DirectionalLight* light : pScene->GetDirectionalLights())
@@ -295,7 +295,7 @@ namespace emberEngine
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, descriptorSet, 0, nullptr);
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), mathf::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 						}
 						shadowMapIndex++;
@@ -323,7 +323,7 @@ namespace emberEngine
 						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
 						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, descriptorSet, 0, nullptr);
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
 						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), mathf::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					}
 					shadowMapIndex++;
@@ -352,7 +352,7 @@ namespace emberEngine
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, descriptorSet, 0, nullptr);
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), mathf::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 						}
 						shadowMapIndex++;
@@ -409,7 +409,7 @@ namespace emberEngine
 				{
 					pMesh = drawCall->pMesh;
 
-					// Update shader specific data (uniform buffers):
+					// Update shader specific data:
 					drawCall->SetRenderMatrizes(pCamera);
 					drawCall->SetLightData(pScene->GetDirectionalLights());
 					drawCall->SetLightData(pScene->GetSpotLights());

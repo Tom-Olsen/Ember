@@ -1,5 +1,6 @@
 #include "testInstancedRendering.h"
 #include "vulkanContext.h"
+#include "vulkanUtility.h"
 
 
 
@@ -39,7 +40,7 @@ namespace emberEngine
 			Uint3 threadCount = Uint3(m_pStorageBuffer->GetCount(), 1, 1);
 			m_pStartProperties->SetStorageBuffer("instanceBuffer", m_pStorageBuffer.get());
 			Compute::Dispatch(m_pStartCS, m_pStartProperties.get(), threadCount);
-			Compute::Barrier(ComputeStageAccessMask::shaderWrite, ComputeStageAccessMask::shaderRead);
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 		}
 	}
 	void TestInstancedRendering::Update()

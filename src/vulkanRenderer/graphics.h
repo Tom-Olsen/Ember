@@ -22,10 +22,12 @@ namespace emberEngine
 	{
 	private: // Members
 		static bool s_isInitialized;
+		static Material* s_pShadowMaterial;
 		static std::vector<DrawCall> s_staticDrawCalls;
 		static std::vector<DrawCall> s_dynamicDrawCalls;
 		static std::vector<DrawCall*> s_sortedDrawCallPointers;
 		static std::unordered_map<Material*, ResourcePool<ShaderProperties, 20>> s_shaderPropertiesPoolMap;
+		static ResourcePool<ShaderProperties, 200> s_shadowShaderPropertiesPool;	// Seperate pool for shadow material, as it is the same for all draw calls and benefits from larger pool blockSize.
 		static Mesh* s_pLineSegmentMesh;
 		static Mesh* s_pSphereMesh;
 		static Mesh* s_pArrowMesh;

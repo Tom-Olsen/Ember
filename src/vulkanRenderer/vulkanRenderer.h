@@ -25,10 +25,7 @@ namespace emberEngine
 	{
 	private: // Members:
 		VulkanContext* m_pContext;
-
-		// Shadow Material and ShaderProperties:
 		Material* m_pShadowMaterial;
-		std::unique_ptr<ShaderProperties> m_pShadowShaderProperties;
 
 		// Render resources:
 		std::unique_ptr<RenderTexture2d> m_renderTexture;	// maybe move somewhere else? Maybe as input to the renderer?

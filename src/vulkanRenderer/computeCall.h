@@ -13,18 +13,6 @@ namespace emberEngine
 	class ComputeShader;
 	class ShaderProperties;
 
-	namespace ComputeStageAccessMask
-	{
-		constexpr VkAccessFlagBits2 uniformRead      = VK_ACCESS_2_UNIFORM_READ_BIT;
-		constexpr VkAccessFlagBits2 shaderRead       = VK_ACCESS_2_SHADER_READ_BIT;		// includes all read operations!
-		constexpr VkAccessFlagBits2 shaderWrite      = VK_ACCESS_2_SHADER_WRITE_BIT;	// includes all write operations!
-		constexpr VkAccessFlagBits2 sampleRead       = VK_ACCESS_2_SHADER_SAMPLED_READ_BIT;
-		constexpr VkAccessFlagBits2 storageRead      = VK_ACCESS_2_SHADER_STORAGE_READ_BIT;
-		constexpr VkAccessFlagBits2 storageWrite     = VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT;
-		constexpr VkAccessFlagBits2 accelerationRead = VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR;
-		constexpr VkAccessFlagBits2 descrBufferRead  = VK_ACCESS_2_DESCRIPTOR_BUFFER_READ_BIT_EXT;
-	}
-
 	struct ComputeCall
 	{
 		uint32_t callIndex;	// Tracks execution order.

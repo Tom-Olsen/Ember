@@ -25,9 +25,9 @@ namespace emberEngine
 		bool castShadows;
 		Material* pMaterial;
 		ShaderProperties* pShaderProperties;
+		ShaderProperties* pShadowShaderProperties;
 		Mesh* pMesh;
 		uint32_t instanceCount;	// 0 implies no instanced rendering.
-		StorageBuffer* pInstanceBuffer;	// TODO: remove this, or use it for shadow descriptorSet?
 
 		void SetRenderMatrizes(Camera* const pCamera);
 		void SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights);
