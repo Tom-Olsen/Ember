@@ -15,9 +15,10 @@ namespace emberEngine
 	{
 		alignas(4) uint32_t instanceCount;
 		alignas(4) int shadowMapIndex;
-		alignas(16) Float4x4 localToClipMatrix;
+		alignas(16) Float4x4 localToWorldMatrix;
+		alignas(16) Float4x4 worldToClipMatrix;
 
-		ShadowPushConstant(uint32_t instanceCount, int shadowMapIndex, const Float4x4& localToClipMatrix);
+		ShadowPushConstant(uint32_t instanceCount, int shadowMapIndex, const Float4x4& localToWorldMatrix, const Float4x4& worldToClipMatrix);
 		std::string ToString();
 	};
 }

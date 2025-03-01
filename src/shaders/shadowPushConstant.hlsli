@@ -7,7 +7,8 @@ struct ShadowPushConstant
 {
     uint instanceCount; // 0 implies no instanced rendering.
     int shadowMapIndex;
-    float4x4 localToClipMatrix;
+    float4x4 localToWorldMatrix;
+    float4x4 worldToClipMatrix;
 };
 #if defined(_DXC)
 [[vk::push_constant]] ShadowPushConstant pc;

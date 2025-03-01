@@ -6,6 +6,7 @@
 struct InstanceData
 {
     float4x4 localToWorldMatrix;
+    float4 color;
 };
 StructuredBuffer<InstanceData> instanceBuffer : register(t0);
 
@@ -13,11 +14,11 @@ StructuredBuffer<InstanceData> instanceBuffer : register(t0);
 
 cbuffer RenderMatrizes : register(b1)
 {
-    float4x4 cb_localToWorldMatrix;    // local to world matrix (also known as model matrix).
-    float4x4 cb_viewMatrix;            // world to camera matrix.
-    float4x4 cb_projMatrix;            // camera projection matrix (HDC => NDC after w division, which happens automatically).
-    float4x4 cb_worldToClipMatrix;     // world to camera clip space matrix: (projection * view)
-    float4x4 cb_localToClipMatrix;     // local to camera clip space matrix: (projection * view * localToWorldMatrix)
+    float4x4 cb_localToWorldMatrix; // local to world matrix (also known as model matrix).
+    float4x4 cb_viewMatrix;         // world to camera matrix.
+    float4x4 cb_projMatrix;         // camera projection matrix (HDC => NDC after w division, which happens automatically).
+    float4x4 cb_worldToClipMatrix;  // world to camera clip space matrix: (projection * view)
+    float4x4 cb_localToClipMatrix;  // local to camera clip space matrix: (projection * view * localToWorldMatrix)
 };
 
 
@@ -60,6 +61,8 @@ VertexOutput main(VertexInput input)
     output.worldNormal = mul(normalMatrix, normal).xyz;
     output.worldTangent = mul(normalMatrix, tangent).xyz;
     output.vertexColor = input.vertexColor;
+    if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+        output.vertexColor *= instanceBuffer[input.instanceID].color;
     output.uv = input.uv;
     output.worldPosition = mul(localToWorldMatrix, pos).xyz;
     return output;

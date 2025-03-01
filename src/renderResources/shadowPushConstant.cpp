@@ -5,11 +5,12 @@
 namespace emberEngine
 {
 	// Constructor:
-	ShadowPushConstant::ShadowPushConstant(uint32_t instanceCount, int shadowMapIndex, const Float4x4& localToClipMatrix)
+	ShadowPushConstant::ShadowPushConstant(uint32_t instanceCount, int shadowMapIndex, const Float4x4& localToWorldMatrix, const Float4x4& worldToClipMatrix)
 	{
 		this->instanceCount = instanceCount;
-		this->localToClipMatrix = localToClipMatrix;
 		this->shadowMapIndex = shadowMapIndex;
+		this->localToWorldMatrix = localToWorldMatrix;
+		this->worldToClipMatrix = worldToClipMatrix;
 	}
 
 
@@ -20,7 +21,8 @@ namespace emberEngine
 		std::string output = "ShadowPushConstant:\n";
 		output += "Instance Count: " + std::to_string(instanceCount) + "\n";
 		output += "Shadow Map Index: " + std::to_string(shadowMapIndex) + "\n";
-		output += "Local To Clip Matrix: " + localToClipMatrix.ToString() + "\n";
+		output += "Local To World Matrix: " + localToWorldMatrix.ToString() + "\n";
+		output += "World To Clip Matrix: " + worldToClipMatrix.ToString() + "\n";
 		return output;
 	}
 }

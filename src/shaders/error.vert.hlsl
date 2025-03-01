@@ -1,21 +1,32 @@
 #include "defaultPushConstant.hlsli"
+#include "mathf.hlsli"
 
 
 
-cbuffer RenderMatrizes : register(b0)
+struct InstanceData
 {
-    float4x4 cb_localToWorldMatrix;    // local to world matrix (also known as model matrix).
-    float4x4 cb_viewMatrix;            // world to camera matrix.
-    float4x4 cb_projMatrix;            // camera projection matrix (HDC => NDC after w division, which happens automatically).
-    float4x4 cb_worldToClipMatrix;     // world to camera clip space matrix: (projection * view)
-    float4x4 cb_localToClipMatrix;     // local to camera clip space matrix: (projection * view * localToWorldMatrix)
+    float4x4 localToWorldMatrix;
+    float4 color;
+};
+StructuredBuffer<InstanceData> instanceBuffer : register(t0);
+
+
+
+cbuffer RenderMatrizes : register(b1)
+{
+    float4x4 cb_localToWorldMatrix; // local to world matrix (also known as model matrix).
+    float4x4 cb_viewMatrix;         // world to camera matrix.
+    float4x4 cb_projMatrix;         // camera projection matrix (HDC => NDC after w division, which happens automatically).
+    float4x4 cb_worldToClipMatrix;  // world to camera clip space matrix: (projection * view)
+    float4x4 cb_localToClipMatrix;  // local to camera clip space matrix: (projection * view * localToWorldMatrix)
 };
 
 
 
 struct VertexInput
 {
-    float3 position : POSITION; // position in local/model sapce
+    uint instanceID : SV_InstanceID;    // Instance ID: System value => built in variable
+    float3 position : POSITION;         // position in local/model sapce
 };
 
 struct VertexOutput
@@ -26,8 +37,14 @@ struct VertexOutput
 
 
 VertexOutput main(VertexInput input)
-{ 
+{
+    float4 pos = float4(input.position, 1.0);
+    float4x4 localToWorldMatrix = cb_localToWorldMatrix;
+    if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+        localToWorldMatrix = mul(cb_localToWorldMatrix, instanceBuffer[input.instanceID].localToWorldMatrix);
+    float4x4 localToClipMatrix = mul(cb_worldToClipMatrix, localToWorldMatrix);
+    
     VertexOutput output;
-    output.clipPosition = mul(cb_localToClipMatrix, float4(input.position, 1.0f));
+    output.clipPosition = mul(localToClipMatrix, pos);
     return output;
 }

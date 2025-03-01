@@ -9,9 +9,12 @@ namespace emberEngine
 	TestInstancedRendering::TestInstancedRendering(VulkanContext* pVulkanContext, uint32_t instanceCount)
 	{
 		m_pVulkanContext = pVulkanContext;
-		m_pStorageBuffer = std::make_unique<StorageBuffer>(m_pVulkanContext, instanceCount, sizeof(Float4x4));
+		uint32_t elementSize = sizeof(Float4x4) + sizeof(Float4);
+		m_pStorageBuffer = std::make_unique<StorageBuffer>(m_pVulkanContext, instanceCount, elementSize);
 		m_pStartCS = ComputeShaderManager::GetComputeShader("initialPositionsComputeShader");
 		m_pUpdateCS = ComputeShaderManager::GetComputeShader("updatePositionsComputeShader");
+		m_pStartProperties = std::make_unique<ShaderProperties>((Shader*)m_pStartCS);
+		m_pUpdateProperties = std::make_unique<ShaderProperties>((Shader*)m_pUpdateCS);
 	}
 	TestInstancedRendering::~TestInstancedRendering()
 	{
@@ -34,8 +37,9 @@ namespace emberEngine
 		if (m_pStartCS != nullptr)
 		{
 			Uint3 threadCount = Uint3(m_pStorageBuffer->GetCount(), 1, 1);
-			ShaderProperties* shaderProperties = Compute::Dispatch(m_pStartCS, threadCount);
-			shaderProperties->SetStorageBuffer("instanceBuffer", m_pStorageBuffer.get());
+			m_pStartProperties->SetStorageBuffer("instanceBuffer", m_pStorageBuffer.get());
+			Compute::Dispatch(m_pStartCS, m_pStartProperties.get(), threadCount);
+			Compute::Barrier(ComputeStageAccessMask::shaderWrite, ComputeStageAccessMask::shaderRead);
 		}
 	}
 	void TestInstancedRendering::Update()
@@ -43,8 +47,8 @@ namespace emberEngine
 		if (m_pUpdateCS != nullptr)
 		{
 			Uint3 threadCount = Uint3(m_pStorageBuffer->GetCount(), 1, 1);
-			ShaderProperties* shaderProperties = Compute::Dispatch(m_pUpdateCS, threadCount);
-			shaderProperties->SetStorageBuffer("instanceBuffer", m_pStorageBuffer.get());
+			m_pUpdateProperties->SetStorageBuffer("instanceBuffer", m_pStorageBuffer.get());
+			Compute::Dispatch(m_pUpdateCS, m_pUpdateProperties.get(), threadCount);
 		}
 	}
 	const std::string TestInstancedRendering::ToString() const

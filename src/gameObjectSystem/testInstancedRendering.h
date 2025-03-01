@@ -18,6 +18,8 @@ namespace emberEngine
 		ComputeShader* m_pStartCS;
 		ComputeShader* m_pUpdateCS;
 		std::unique_ptr<StorageBuffer> m_pStorageBuffer;
+		std::unique_ptr<ShaderProperties> m_pStartProperties;
+		std::unique_ptr<ShaderProperties> m_pUpdateProperties;
 
 	public: // Methods:
 		TestInstancedRendering(VulkanContext* pVulkanContext, uint32_t instanceCount);

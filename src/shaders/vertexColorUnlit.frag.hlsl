@@ -2,7 +2,7 @@
 
 
 
-cbuffer SurfaceProperties : register(b1)
+cbuffer SurfaceProperties : register(b2)
 {
     float4 diffuseColor;    // (1.0, 1.0, 1.0)
     float roughness;        // 0.5

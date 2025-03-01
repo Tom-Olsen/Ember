@@ -26,11 +26,11 @@ namespace emberEngine
 		if (m_positions.size() != m_vertexCount)
 			m_positions.resize(m_vertexCount, Float3::zero);
 		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, Float3::zero);
+			m_normals.resize(m_vertexCount, Float3::up);
 		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, Float3::up);
+			m_tangents.resize(m_vertexCount, Float3::right);
 		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, Float4::zero);
+			m_colors.resize(m_vertexCount, Float4::one);
 		if (m_uvs.size() != m_vertexCount)
 			m_uvs.resize(m_vertexCount, Float4::zero);
 
@@ -70,7 +70,7 @@ namespace emberEngine
 		else
 		{
 			m_normals = normals;
-			m_normals.resize(m_vertexCount, Float3::zero);
+			m_normals.resize(m_vertexCount, Float3::up);
 		}
 		m_verticesUpdated = true;
 	}
@@ -81,7 +81,7 @@ namespace emberEngine
 		else
 		{
 			m_tangents = tangents;
-			m_tangents.resize(m_vertexCount, Float3::zero);
+			m_tangents.resize(m_vertexCount, Float3::right);
 		}
 		m_verticesUpdated = true;
 	}
@@ -92,7 +92,7 @@ namespace emberEngine
 		else
 		{
 			m_colors = colors;
-			m_colors.resize(m_vertexCount, Float4::zero);
+			m_colors.resize(m_vertexCount, Float4::one);
 		}
 		m_verticesUpdated = true;
 	}
@@ -138,7 +138,7 @@ namespace emberEngine
 		else
 		{
 			m_normals = std::move(normals);
-			m_normals.resize(m_vertexCount, Float3::zero);
+			m_normals.resize(m_vertexCount, Float3::up);
 		}
 		m_verticesUpdated = true;
 	}
@@ -149,7 +149,7 @@ namespace emberEngine
 		else
 		{
 			m_tangents = std::move(tangents);
-			m_tangents.resize(m_vertexCount, Float3());
+			m_tangents.resize(m_vertexCount, Float3::right);
 		}
 		m_verticesUpdated = true;
 	}
@@ -160,7 +160,7 @@ namespace emberEngine
 		else
 		{
 			m_colors = std::move(colors);
-			m_colors.resize(m_vertexCount, Float4());
+			m_colors.resize(m_vertexCount, Float4::one);
 		}
 		m_verticesUpdated = true;
 	}
@@ -171,7 +171,7 @@ namespace emberEngine
 		else
 		{
 			m_uvs = std::move(uvs);
-			m_uvs.resize(m_vertexCount, Float4());
+			m_uvs.resize(m_vertexCount, Float4::zero);
 		}
 		m_verticesUpdated = true;
 	}
@@ -206,19 +206,19 @@ namespace emberEngine
 	std::vector<Float3>& Mesh::GetNormals()
 	{
 		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, Float3::zero);
+			m_normals.resize(m_vertexCount, Float3::up);
 		return m_normals;
 	}
 	std::vector<Float3>& Mesh::GetTangents()
 	{
 		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, Float3::up);
+			m_tangents.resize(m_vertexCount, Float3::right);
 		return m_tangents;
 	}
 	std::vector<Float4>& Mesh::GetColors()
 	{
 		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, Float4::zero);
+			m_colors.resize(m_vertexCount, Float4::one);
 		return m_colors;
 	}
 	std::vector<Float4>& Mesh::GetUVs()
@@ -809,11 +809,11 @@ namespace emberEngine
 	{
 		// Set zero values if vectors not set:
 		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, Float3::zero);
+			m_normals.resize(m_vertexCount, Float3::up);
 		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, Float3::zero);
+			m_tangents.resize(m_vertexCount, Float3::right);
 		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, Float4::zero);
+			m_colors.resize(m_vertexCount, Float4::one);
 		if (m_uvs.size() != m_vertexCount)
 			m_uvs.resize(m_vertexCount, Float4::zero);
 

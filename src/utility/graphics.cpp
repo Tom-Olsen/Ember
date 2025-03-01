@@ -291,25 +291,7 @@ namespace emberEngine
 
 
 
-	// ResetDrawCalls:
-	void Graphics::ResetDrawCalls()
-	{
-		// Return all pShaderProperties of dynamic draw calls back to the corresponding pool:
-		for (DrawCall& drawCall : s_dynamicDrawCalls)
-			s_shaderPropertiesPoolMap[drawCall.pMaterial].Release(drawCall.pShaderProperties);
-
-		// Shrink all pools back to max number of drawCalls of last frame:
-		for (auto& [_, pool] : s_shaderPropertiesPoolMap)
-			pool.ShrinkToFit();
-
-		// Remove all drawCalls so next frame can start fresh:
-		s_staticDrawCalls.clear();
-		s_dynamicDrawCalls.clear();
-	}
-
-
-
-	// Getters:
+	// Management:
 	std::vector<DrawCall*>* Graphics::GetSortedDrawCallPointers()
 	{
 		// Populate sorted draw call pointers vector:
@@ -326,5 +308,19 @@ namespace emberEngine
 			return a->pMaterial->GetRenderQueue() < b->pMaterial->GetRenderQueue();
 		});
 		return &s_sortedDrawCallPointers;
+	}
+	void Graphics::ResetDrawCalls()
+	{
+		// Return all pShaderProperties of dynamic draw calls back to the corresponding pool:
+		for (DrawCall& drawCall : s_dynamicDrawCalls)
+			s_shaderPropertiesPoolMap[drawCall.pMaterial].Release(drawCall.pShaderProperties);
+
+		// Shrink all pools back to max number of drawCalls of last frame:
+		for (auto& [_, pool] : s_shaderPropertiesPoolMap)
+			pool.ShrinkToFit();
+
+		// Remove all drawCalls so next frame can start fresh:
+		s_staticDrawCalls.clear();
+		s_dynamicDrawCalls.clear();
 	}
 }

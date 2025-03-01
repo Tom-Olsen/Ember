@@ -41,10 +41,11 @@ float4 main(FragmentInput input) : SV_TARGET
     float3 tangentSpaceTangent = normalize(LinAlg_VectorToPlaneProjection(input.worldTangent, tangentSpaceNormal));
     float3 tangentSpaceBitangent = cross(tangentSpaceNormal, tangentSpaceTangent);
     float3x3 TBN = transpose(float3x3(tangentSpaceTangent, tangentSpaceBitangent, tangentSpaceNormal));
+    float4 col = input.vertexColor;
     float3 worldPos = input.worldPosition;
     
     // Shading:
-    float4 color = diffuseColor * colorMap.Sample(colorSampler, uv);
+    float4 color = col * diffuseColor * colorMap.Sample(colorSampler, uv);
     float3 localNormal = 2.0 * normalMap.Sample(colorSampler, uv).xyz - 1.0;
     float3 worldNormal = normalize(mul(TBN, localNormal));
     float finalRoughness = roughness * roughnessMap.Sample(colorSampler, uv).x;

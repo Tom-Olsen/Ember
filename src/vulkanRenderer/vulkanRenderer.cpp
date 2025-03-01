@@ -155,9 +155,6 @@ namespace emberEngine
 	{
 		vkResetCommandPool(m_pContext->GetVkDevice(), m_syncComputeCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
 		VkCommandBuffer commandBuffer = m_syncComputeCommands[m_pContext->frameIndex].GetVkCommandBuffer();
-		Camera* pCamera = pScene->GetActiveCamera();
-		if (pCamera == nullptr)
-			return;
 
 		// Begin command buffer:
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -168,49 +165,73 @@ namespace emberEngine
 			ComputeShader* pPreviousComputeShader = nullptr;
 			VkPipeline pipeline = VK_NULL_HANDLE;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-			Float3 cameraPosition = pCamera->GetTransform()->GetPosition();
+			ComputePushConstant pushConstant(Uint3::one, Timer::GetTime(), Timer::GetDeltaTime());
 
 			for (ComputeCall* computeCall : *m_pSyncComputeCalls)
 			{
-				// Update shader specific data (uniform buffers):
-				computeCall->pShaderProperties->UpdateShaderData();
-
-				// Change pipeline if compute shader has changed:
-				pComputeShader = computeCall->pComputeShader;
-				if (pPreviousComputeShader != pComputeShader)
+				// Compute call is a barrier:
+				if (computeCall->pComputeShader == nullptr)
 				{
-					pPreviousComputeShader = pComputeShader;
-					pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
-					pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
-					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-					ComputePushConstant pushConstant(computeCall->threadCount, Timer::GetTime(), Timer::GetDeltaTime());
-					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
+					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+					memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+					memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+					memoryBarrier.srcAccessMask = computeCall->srcAccessMask;
+					memoryBarrier.dstAccessMask = computeCall->dstAccessMask;
+
+					VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+					dependencyInfo.memoryBarrierCount = 1;
+					dependencyInfo.pMemoryBarriers = &memoryBarrier;
+
+					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
 				}
+				// Compute call is dispatch call:
+				else
+				{
+					// Update shader specific data (uniform buffers):
+					computeCall->pShaderProperties->UpdateShaderData();
 
-				Uint3 blockSize = pComputeShader->GetBlockSize();
-				Uint3 threadCount = computeCall->threadCount;
-				uint32_t groupCountX = (threadCount.x + blockSize.x - 1) / blockSize.x;
-				uint32_t groupCountY = (threadCount.y + blockSize.y - 1) / blockSize.y;
-				uint32_t groupCountZ = (threadCount.z + blockSize.z - 1) / blockSize.z;
+					// Change pipeline if compute shader has changed:
+					pComputeShader = computeCall->pComputeShader;
+					if (pPreviousComputeShader != pComputeShader)
+					{
+						pPreviousComputeShader = pComputeShader;
+						pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
+						pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
+						pushConstant.threadCount = computeCall->threadCount;
+						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+						ComputePushConstant pushConstant(computeCall->threadCount, Timer::GetTime(), Timer::GetDeltaTime());
+						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
+					}
 
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
-				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+					// Same compute shader but different thread Count => update push constants:
+					if (pushConstant.threadCount != computeCall->threadCount)
+					{
+						pushConstant.threadCount = computeCall->threadCount;
+						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
+					}
+
+					Uint3 blockSize = pComputeShader->GetBlockSize();
+					uint32_t groupCountX = (computeCall->threadCount.x + blockSize.x - 1) / blockSize.x;
+					uint32_t groupCountY = (computeCall->threadCount.y + blockSize.y - 1) / blockSize.y;
+					uint32_t groupCountZ = (computeCall->threadCount.z + blockSize.z - 1) / blockSize.z;
+
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
+					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+				}
 			}
 
-			// Release memory:
-			{
-				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-				memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-				memoryBarrier.srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT;
-				memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
-				memoryBarrier.dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT;
+			// Release memory barrier:
+			VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+			memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+			memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
+			memoryBarrier.srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT;
+			memoryBarrier.dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT;
 
-				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-				dependencyInfo.memoryBarrierCount = 1;
-				dependencyInfo.pMemoryBarriers = &memoryBarrier;
+			VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+			dependencyInfo.memoryBarrierCount = 1;
+			dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
-				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-			}
+			vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
@@ -267,8 +288,8 @@ namespace emberEngine
 							pMesh = drawCall->pMesh;
 
 							// Update shader specific data (push constants):
-							Float4x4 localToClipMatrix = light->GetProjectionMatrix(shadowCascadeIndex) * light->GetViewMatrix(shadowCascadeIndex) * drawCall->localToWorldMatrix;
-							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, localToClipMatrix);
+							Float4x4 worldToClipMatrix = light->GetProjectionMatrix(shadowCascadeIndex) * light->GetViewMatrix(shadowCascadeIndex);
+							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
 							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
@@ -295,8 +316,8 @@ namespace emberEngine
 						pMesh = drawCall->pMesh;
 
 						// Update shader specific data (push constants):
-						Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix() * drawCall->localToWorldMatrix;
-						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, localToClipMatrix);
+						Float4x4 worldToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix();
+						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
 						vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
 						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
@@ -324,8 +345,8 @@ namespace emberEngine
 							pMesh = drawCall->pMesh;
 
 							// Update shader specific data (push constants):
-							Float4x4 localToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex) * drawCall->localToWorldMatrix;
-							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, localToClipMatrix);
+							Float4x4 worldToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex);
+							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
 							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
@@ -403,8 +424,8 @@ namespace emberEngine
 						pipeline = pMaterial->GetPipeline()->GetVkPipeline();
 						pipelineLayout = pMaterial->GetPipeline()->GetVkPipelineLayout();
 						bindingCount = pMaterial->GetVertexInputDescriptions()->size;
-						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 						pushConstant.instanceCount = drawCall->instanceCount;
+						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 

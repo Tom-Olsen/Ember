@@ -1,9 +1,9 @@
 #ifndef __INCLUDE_GUARD_vulkanRenderer_h__
 #define __INCLUDE_GUARD_vulkanRenderer_h__
-#include <vulkan/vulkan.h>
 #include <array>
 #include <memory>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 

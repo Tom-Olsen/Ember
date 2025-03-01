@@ -5,8 +5,7 @@ using namespace emberEngine;
 
 
 // TODO now!
-// - instancing to test compute shaders.
-// - compute shaders!
+// - instancing shadow shader => split desciptorSet into two, one for instaneBuffer, on for everything else.
 // - similar to how I removed the meshRenderer dependency from the VulkanRenderer, also remove Dir/Spot/Point light dependency.
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - test SDL_WaitEvent in sdlWindow
@@ -20,6 +19,8 @@ using namespace emberEngine;
 // - cleanup project. e.g. renderpasses & pipelines => multiple folders e.g shadow/forward/skybox/...
 
 // TODO:
+// - when not using input.vertexColor in the vertex shader, spirv optimizes the input binding away, which leads to incorrect bindings in
+//   my spirv reflection => other bindings are wrong, and textures are not displayed at all.
 // - batch image transitions and copying (e.g. texture2d creation)
 // - remove camera/directionalLight/etc. dependency from vulkanRenderer and instead use another abstraction layer that links these GamaObject Components to the render system.
 // - render engine into texture instead of directly to the swapchain => post processing effects + ImGui docking support

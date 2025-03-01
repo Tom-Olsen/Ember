@@ -5,11 +5,11 @@
 
 cbuffer RenderMatrizes : register(b0)
 {
-    float4x4 cb_localToWorldMatrix;    // local to world matrix (also known as model matrix).
-    float4x4 cb_viewMatrix;            // world to camera matrix.
-    float4x4 cb_projMatrix;            // camera projection matrix (HDC => NDC after w division, which happens automatically).
-    float4x4 cb_worldToClipMatrix;     // world to camera clip space matrix: (projection * view)
-    float4x4 cb_localToClipMatrix;     // local to camera clip space matrix: (projection * view * localToWorldMatrix)
+    float4x4 cb_localToWorldMatrix; // local to world matrix (also known as model matrix).
+    float4x4 cb_viewMatrix;         // world to camera matrix.
+    float4x4 cb_projMatrix;         // camera projection matrix (HDC => NDC after w division, which happens automatically).
+    float4x4 cb_worldToClipMatrix;  // world to camera clip space matrix: (projection * view)
+    float4x4 cb_localToClipMatrix;  // local to camera clip space matrix: (projection * view * localToWorldMatrix)
 };
 
 
