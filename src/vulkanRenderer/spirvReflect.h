@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_spirvReflect_h__
 #define __INCLUDE_GUARD_spirvReflect_h__
-#include "mathf.h"
+#include "emberMath.h"
 #include <spirv_reflect.h>
 #include <string>
 #include <unordered_map>

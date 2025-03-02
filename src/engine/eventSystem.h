@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_eventSystem_h__
 #define __INCLUDE_GUARD_eventSystem_h__
-#include "mathf.h"
+#include "emberMath.h"
 #include <SDL3/SDL.h>
 #include <unordered_map>
 

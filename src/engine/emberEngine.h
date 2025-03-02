@@ -9,7 +9,7 @@
 
 
 
-// Enums: (move somewher else?)
+// Enums: (move somewhere else?)
 namespace emberEngine
 {
 	enum class ShadowType { hard, soft };
@@ -25,7 +25,7 @@ namespace emberEngine
 // Basic functionality:
 #include "eventSystem.h"
 #include "logger.h"
-#include "mathf.h"
+#include "emberMath.h"
 #include "meshGenerator.h"
 #include "timer.h"
 

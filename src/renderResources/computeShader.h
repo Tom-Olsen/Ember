@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_computeShader_h__
 #define __INCLUDE_GUARD_computeShader_h__
-#include "mathf.h"
+#include "emberMath.h"
 #include "shader.h"
 #include <memory>
 #include <string>

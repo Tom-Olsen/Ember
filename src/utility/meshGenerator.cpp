@@ -214,12 +214,12 @@ namespace emberEngine
 			std::vector<Uint3> triangles;	triangles.reserve(cornerCount);
 
 			// Per vertex data:
-			float dAlpha = 2.0f * mathf::pi / cornerCount;
+			float dAlpha = 2.0f * math::pi / cornerCount;
 			for (int i = 0; i < cornerCount; i++)
 			{
 				float alpha = i * dAlpha;
-				float x = mathf::Cos(alpha);
-				float y = mathf::Sin(alpha);
+				float x = math::Cos(alpha);
+				float y = math::Sin(alpha);
 				positions.push_back(Float3(radius * x, radius * y, 0.0f));
 				normals.push_back(Float3(0.0f, 0.0f, 1.0f));
 				uvs.push_back(Float4(0.5f * (x + 1.0f), 0.5f * (y + 1.0f), 0.0f, 0.0f));
@@ -245,7 +245,7 @@ namespace emberEngine
 		Mesh* ArcFlatUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
 		{
 			// Validate input values:
-			degrees = mathf::Clamp(degrees, 0.0f, 360.0f);
+			degrees = math::Clamp(degrees, 0.0f, 360.0f);
 			cornerCount = std::max(2, cornerCount);
 			radius0 = std::max(1e-8f, radius0);
 			if (radius0 > radius1)
@@ -257,11 +257,11 @@ namespace emberEngine
 			std::vector<Uint3> triangles;	triangles.reserve(2 * (cornerCount - 1));
 
 			// Per vertex data:
-			float dAlpha = mathf::deg2rad * degrees / (cornerCount - 1.0f);
+			float dAlpha = math::deg2rad * degrees / (cornerCount - 1.0f);
 			for (int i = 0; i < cornerCount; i++)
 			{
-				float x = mathf::Cos(i * dAlpha);
-				float y = mathf::Sin(i * dAlpha);
+				float x = math::Cos(i * dAlpha);
+				float y = math::Sin(i * dAlpha);
 				positions.push_back(radius0 * Float3(x, y, 0.0f));
 				positions.push_back(radius1 * Float3(x, y, 0.0f));
 				normals.push_back(Float3(0.0f, 0.0f, 1.0f));
@@ -289,7 +289,7 @@ namespace emberEngine
 		Mesh* ArcCurvedUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
 		{
 			// Validate input values:
-			degrees = mathf::Clamp(degrees, 0.0f, 360.0f);
+			degrees = math::Clamp(degrees, 0.0f, 360.0f);
 			cornerCount = std::max(2, cornerCount);
 			radius0 = std::max(1e-8f, radius0);
 			if (radius0 > radius1)
@@ -302,11 +302,11 @@ namespace emberEngine
 
 			// Per vertex data:
 			float duv = 1.0f / (cornerCount - 1.0f);
-			float dAlpha = mathf::deg2rad * degrees / (cornerCount - 1.0f);
+			float dAlpha = math::deg2rad * degrees / (cornerCount - 1.0f);
 			for (int i = 0; i < cornerCount; i++)
 			{
-				float x = mathf::Cos(i * dAlpha);
-				float y = mathf::Sin(i * dAlpha);
+				float x = math::Cos(i * dAlpha);
+				float y = math::Sin(i * dAlpha);
 				positions.push_back(radius0 * Float3(x, y, 0.0f));
 				positions.push_back(radius1 * Float3(x, y, 0.0f));
 				normals.push_back(Float3(0.0f, 0.0f, 1.0f));
@@ -343,12 +343,12 @@ namespace emberEngine
 			std::vector<Float4> uvs;		uvs.reserve(cornerCount + 2);
 			std::vector<Uint3> triangles;	triangles.reserve(3 * cornerCount);
 
-			float dAlpha = 2.0f * mathf::pi / cornerCount;
+			float dAlpha = 2.0f * math::pi / cornerCount;
 			for (int i = 0; i < cornerCount + 1; i++)
 			{
 				float alpha = i * dAlpha;
-				float x = mathf::Cos(alpha);
-				float y = mathf::Sin(alpha);
+				float x = math::Cos(alpha);
+				float y = math::Sin(alpha);
 				positions.push_back(Float3(radius * x, radius * y, 0.0f));
 
 				float normalX = 1.0f / static_cast<float>(sqrt(pow(height / radius, 2) + 1.0f));
@@ -378,15 +378,15 @@ namespace emberEngine
 			faces.reserve(cornerCount);
 			std::vector<Float4> uvs(3);
 
-			float dAlpha = 2.0f * mathf::pi / cornerCount;
+			float dAlpha = 2.0f * math::pi / cornerCount;
 			for (int i = 0; i < cornerCount; i++)
 			{
 				float alpha0 = i * dAlpha;
 				float alpha1 = (i + 1) % cornerCount * dAlpha;
-				float x0 = mathf::Cos(alpha0);
-				float x1 = mathf::Cos(alpha1);
-				float y0 = mathf::Sin(alpha0);
-				float y1 = mathf::Sin(alpha1);
+				float x0 = math::Cos(alpha0);
+				float x1 = math::Cos(alpha1);
+				float y0 = math::Sin(alpha0);
+				float y1 = math::Sin(alpha1);
 
 				Float3 a = radius * Float3(x0, y0, 0.0f);
 				Float3 b = radius * Float3(x1, y1, 0.0f);
@@ -430,12 +430,12 @@ namespace emberEngine
 			std::vector<Float4> uvs;		uvs.reserve(2 * (cornerCount + 1));
 			std::vector<Uint3> triangles;	triangles.reserve(2 * cornerCount);
 
-			float dAlpha = 2.0f * mathf::pi / cornerCount;
+			float dAlpha = 2.0f * math::pi / cornerCount;
 			for (int i = 0; i < cornerCount + 1; i++)
 			{
 				float alpha = i * dAlpha;
-				float x = mathf::Cos(alpha);
-				float y = mathf::Sin(alpha);
+				float x = math::Cos(alpha);
+				float y = math::Sin(alpha);
 				positions.push_back(Float3(radius * x, radius * y, -0.5f * height));
 				positions.push_back(Float3(radius * x, radius * y, 0.5f * height));
 
@@ -471,18 +471,18 @@ namespace emberEngine
 			faces.reserve(2 * cornerCount);
 			std::vector<Float4> uvs(4);
 
-			float dAlpha = 2.0f * mathf::pi / cornerCount;
-			float dist = radius * mathf::Cos(0.5f * dAlpha);
-			float width = 2.0f * radius * mathf::Sin(0.5f * dAlpha);
+			float dAlpha = 2.0f * math::pi / cornerCount;
+			float dist = radius * math::Cos(0.5f * dAlpha);
+			float width = 2.0f * radius * math::Sin(0.5f * dAlpha);
 			for (int i = 0; i < cornerCount; i++)
 			{
 				float alpha = (i + 0.5f) * dAlpha;
 
 				Mesh* face = UnitQuad();
 				face->Scale(Float3(width, height, 1.0f));
-				Float3x3 rotation = Float3x3::RotateZ(mathf::pi2 + alpha) * Float3x3::rot90x;
+				Float3x3 rotation = Float3x3::RotateZ(math::pi2 + alpha) * Float3x3::rot90x;
 				face->Rotate(rotation);
-				face->Translate(Float3(dist * mathf::Cos(alpha), dist * mathf::Sin(alpha), 0.0f));
+				face->Translate(Float3(dist * math::Cos(alpha), dist * math::Sin(alpha), 0.0f));
 
 				uvs[0] = Float4((i + 0.0f) / cornerCount, 0.0f, 0.0f, 0.0f);
 				uvs[1] = Float4((i + 0.0f) / cornerCount, 1.0f, 0.0f, 0.0f);
@@ -622,21 +622,21 @@ namespace emberEngine
 
 			for (uint32_t i = 0; i < 4; i++)
 			{
-				Mesh* pMesh = ZylinderMantleEdgy(radius / mathf::sqrt2, lengths.x - radius, 4, "");
+				Mesh* pMesh = ZylinderMantleEdgy(radius / math::sqrt2, lengths.x - radius, 4, "");
 				pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(1, 0, 0)) * Float4x4::rot45z);
 				pMesh->Translate(Float3(0.0f, dir0[i] * 0.5f * lengths.y, dir1[i] * 0.5f * lengths.y));
 				meshes.push_back(pMesh);
 			}
 			for (uint32_t i = 0; i < 4; i++)
 			{
-				Mesh* pMesh = ZylinderMantleEdgy(radius / mathf::sqrt2, lengths.y - radius, 4, "");
+				Mesh* pMesh = ZylinderMantleEdgy(radius / math::sqrt2, lengths.y - radius, 4, "");
 				pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 1, 0)) * Float4x4::rot45z);
 				pMesh->Translate(Float3(dir0[i] * 0.5f * lengths.x, 0.0f, dir1[i] * 0.5f * lengths.y));
 				meshes.push_back(pMesh);
 			}
 			for (uint32_t i = 0; i < 4; i++)
 			{
-				Mesh* pMesh = ZylinderMantleEdgy(radius / mathf::sqrt2, lengths.z - radius, 4, "");
+				Mesh* pMesh = ZylinderMantleEdgy(radius / math::sqrt2, lengths.z - radius, 4, "");
 				pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 0, 1)) * Float4x4::rot45z);
 				pMesh->Translate(Float3(dir0[i] * 0.5f * lengths.x, dir1[i] * 0.5f * lengths.y, 0.0f));
 				meshes.push_back(pMesh);

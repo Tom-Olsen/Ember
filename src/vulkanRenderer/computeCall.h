@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_computeCall_h__
 #define __INCLUDE_GUARD_computeCall_h__
 #include "macros.h"
-#include "mathf.h"
+#include "emberMath.h"
 #include <array>
 #include <vulkan/vulkan.h>
 

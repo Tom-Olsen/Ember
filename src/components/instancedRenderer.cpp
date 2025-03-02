@@ -65,7 +65,7 @@ namespace emberEngine
 	// Getters:
 	uint32_t InstancedRenderer::GetInstanceCount() const
 	{
-		return mathf::Min(m_instanceCount, m_pInstanceBuffer->GetCount());
+		return math::Min(m_instanceCount, m_pInstanceBuffer->GetCount());
 	}
 	bool InstancedRenderer::GetCastShadows() const
 	{
@@ -97,7 +97,7 @@ namespace emberEngine
 	// Overrides:
 	void InstancedRenderer::Update()
 	{
-		uint32_t instanceCount = mathf::Min(m_instanceCount, m_pInstanceBuffer->GetCount());
+		uint32_t instanceCount = math::Min(m_instanceCount, m_pInstanceBuffer->GetCount());
 		Float4x4 localToWorldMatrix = m_pTransform->GetLocalToWorldMatrix();
 		Graphics::DrawInstanced(instanceCount, m_pInstanceBuffer, m_pMesh, m_pMaterial, m_pShaderProperties.get(), localToWorldMatrix, m_receiveShadows, m_castShadows);
 	}

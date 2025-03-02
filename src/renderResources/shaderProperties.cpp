@@ -3,7 +3,7 @@
 #include "computeShader.h"
 #include "logger.h"
 #include "material.h"
-#include "mathf.h"
+#include "emberMath.h"
 #include "pipeline.h"
 #include "renderPassManager.h"
 #include "sampler.h"

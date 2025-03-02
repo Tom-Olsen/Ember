@@ -27,9 +27,9 @@ namespace emberEngine
 		// Shadow cascade settings:
 		std::array<ShadowCascade*, 4> m_shadowCascades;
 		Camera* m_pActiveCamera;
-		float m_distributionFactor; // 0 = linear, 1 = logarithmic
+		float m_distributionFactor;		// 0 = linear, 1 = logarithmic
 		ShadowCascadeCount m_shadowCascadeCount;
-		float m_shadowCascadeSplits[5];			// Percentile splits for each shadow cascade € [0,1].
+		float m_shadowCascadeSplits[5];	// Percentile splits for each shadow cascade € [0,1].
 
 		// Visualization:
 		bool m_drawFrustum;

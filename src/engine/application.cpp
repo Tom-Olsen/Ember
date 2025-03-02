@@ -35,7 +35,7 @@ namespace emberEngine
 		m_pContext = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
 
 		// Init static managers:
-		mathf::Random::Init();
+		math::Random::Init();
 		EventSystem::Init(m_pContext.get());
 		RenderPassManager::Init(m_pContext.get());
 		ComputeShaderManager::Init(m_pContext.get());

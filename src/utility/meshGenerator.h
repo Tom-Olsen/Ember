@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_meshGenerator_h__
 #define __INCLUDE_GUARD_meshGenerator_h__
-#include "mathf.h"
+#include "emberMath.h"
 #include <string>
 
 

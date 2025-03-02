@@ -92,7 +92,7 @@ namespace emberEngine
 		// Compute orthographic projection size:
 		float diagFar = (m_subFrustum_CameraLocal[7] - m_subFrustum_CameraLocal[1]).Length();
 		float diagNearToFar = (m_subFrustum_CameraLocal[7] - m_subFrustum_CameraLocal[0]).Length();
-		m_size = mathf::Max(diagNearToFar, diagFar);
+		m_size = math::Max(diagNearToFar, diagFar);
 		float texelSize = m_size / SHADOW_MAP_WIDTH;
 
 		// Find center of sub frustum on orthographic projection plane:
@@ -107,8 +107,8 @@ namespace emberEngine
 		// Optional: move projectionCenter_Plane to fit sub frustum better
 
 		// Round projection center in plane coordinates and transform to world space:
-		projectionCenter_Plane.x = mathf::Round(projectionCenter_Plane.x / texelSize) * texelSize;
-		projectionCenter_Plane.y = mathf::Round(projectionCenter_Plane.y / texelSize) * texelSize;
+		projectionCenter_Plane.x = math::Round(projectionCenter_Plane.x / texelSize) * texelSize;
+		projectionCenter_Plane.y = math::Round(projectionCenter_Plane.y / texelSize) * texelSize;
 		Float3 projectionCenter_World = planeToWorld * projectionCenter_Plane;
 
 		// Compute light position by intersecting line from camera sub frustum center to scene ceiling plane along light direction:
@@ -153,6 +153,6 @@ namespace emberEngine
 			bounds.Encapsulate(subFrustum_LightLocal[i]);
 		}
 		// Add a little extra (4 * frustum height) to prevent light clipping at some camera angles. Could need some improvement. 
-		return bounds.GetSize().z + 4.0f * mathf::Abs(m_subFrustum_CameraLocal[5].y - m_subFrustum_CameraLocal[7].y);
+		return bounds.GetSize().z + 4.0f * math::Abs(m_subFrustum_CameraLocal[5].y - m_subFrustum_CameraLocal[7].y);
 	}
 }

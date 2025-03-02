@@ -45,9 +45,9 @@ source_group("ImGui" FILES ${IMGUI_FILES} ${IMGUI_EXAMPLE})
 file(GLOB MANAGERS_FILES "${PROJECT_SOURCE_DIR}/src/managers/*")
 source_group("Managers" FILES ${MANAGERS_FILES})
 
-# src/mathf/*:
-file(GLOB MATHF_FILES "${PROJECT_SOURCE_DIR}/src/mathf/*")
-source_group("Mathf" FILES ${MATHF_FILES})
+# src/math/*:
+file(GLOB MATH_FILES "${PROJECT_SOURCE_DIR}/src/math/*")
+source_group("Math" FILES ${MATH_FILES})
 
 # src/pushConstants/*:
 file(GLOB PUSH_CONSTANTS_FILES "${PROJECT_SOURCE_DIR}/src/pushConstants/*")
@@ -94,7 +94,7 @@ ${GAME_OBJECT_SYSTEM_FILES}
 ${IMGUI_FILES}
 ${IMGUI_EXAMPLE}   # add the example as a source to make it show up in the IDE, but mark it as header only, to prevent compilation (see below)
 ${MANAGERS_FILES}
-${MATHF_FILES}
+${MATH_FILES}
 ${PUSH_CONSTANTS_FILES}
 ${RENDER_PASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
@@ -171,7 +171,7 @@ PRIVATE ${CMAKE_SOURCE_DIR}/src/components
 PRIVATE ${CMAKE_SOURCE_DIR}/src/engine
 PRIVATE ${CMAKE_SOURCE_DIR}/src/gameobjectSystem
 PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
-PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
+PRIVATE ${CMAKE_SOURCE_DIR}/src/math
 PRIVATE ${CMAKE_SOURCE_DIR}/src/pushConstants
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderPassesAndPipelines
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources
@@ -203,7 +203,7 @@ ${GAME_OBJECT_SYSTEM_FILES}
 ${IMGUI_FILES}
 ${IMGUI_EXAMPLE}   # add the example as a source to make it show up in the IDE, but mark it as header only, to prevent compilation (see below)
 ${MANAGERS_FILES}
-${MATHF_FILES}
+${MATH_FILES}
 ${PUSH_CONSTANTS_FILES}
 ${RENDER_PASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
@@ -236,7 +236,7 @@ PRIVATE ${CMAKE_SOURCE_DIR}/src/components
 PRIVATE ${CMAKE_SOURCE_DIR}/src/engine
 PRIVATE ${CMAKE_SOURCE_DIR}/src/gameobjectSystem
 PRIVATE ${CMAKE_SOURCE_DIR}/src/managers
-PRIVATE ${CMAKE_SOURCE_DIR}/src/mathf
+PRIVATE ${CMAKE_SOURCE_DIR}/src/math
 PRIVATE ${CMAKE_SOURCE_DIR}/src/pushConstants
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderPassesAndPipelines
 PRIVATE ${CMAKE_SOURCE_DIR}/src/renderResources

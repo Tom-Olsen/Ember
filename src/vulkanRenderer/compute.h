@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_compute_h__
 #define __INCLUDE_GUARD_compute_h__
 #include "computeCall.h"
-#include "mathf.h"
+#include "emberMath.h"
 #include "resourcePool.h"
 #include <unordered_map>
 #include <vector>

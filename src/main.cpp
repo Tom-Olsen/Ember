@@ -141,7 +141,7 @@ Scene* ShadowCascadeScene()
 
 		pCamera->SetNearClip(0.5f);
 		pCamera->SetFarClip(40.0f);
-		pCamera->SetFov(30.0f * mathf::deg2rad);
+		pCamera->SetFov(30.0f * math::deg2rad);
 		pCamera->SetDrawFrustum(true);
 		pGameObject->AddComponent<Camera>(pCamera);
 
@@ -397,7 +397,7 @@ Scene* DefaultScene(VulkanContext* pContext)
 		pSpotLight->SetIntensity(100.0f);
 		pSpotLight->SetNearClip(1.1f);
 		pSpotLight->SetFarClip(20.0f);
-		pSpotLight->SetFov(mathf::deg2rad * 30.0f);
+		pSpotLight->SetFov(math::deg2rad * 30.0f);
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -428,7 +428,7 @@ Scene* DefaultScene(VulkanContext* pContext)
 		pSpotLight->SetIntensity(100.0f);
 		pSpotLight->SetNearClip(1.1f);
 		pSpotLight->SetFarClip(20.0f);
-		pSpotLight->SetFov(mathf::deg2rad * 30.0f);
+		pSpotLight->SetFov(math::deg2rad * 30.0f);
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -459,7 +459,7 @@ Scene* DefaultScene(VulkanContext* pContext)
 		pSpotLight->SetIntensity(100.0f);
 		pSpotLight->SetNearClip(1.1f);
 		pSpotLight->SetFarClip(20.0f);
-		pSpotLight->SetFov(mathf::deg2rad * 30.0f);
+		pSpotLight->SetFov(math::deg2rad * 30.0f);
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);

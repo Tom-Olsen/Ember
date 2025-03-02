@@ -11,7 +11,7 @@ namespace emberEngine
 		m_intensity = 1.0f;
 		m_color = Float3::white;
 		m_shadowType = ShadowType::hard;
-		m_fov = mathf::deg2rad * 45.0f;
+		m_fov = math::deg2rad * 45.0f;
 		m_aspectRatio = (float)ShadowRenderPass::s_shadowMapWidth / (float)ShadowRenderPass::s_shadowMapHeight;
 		m_nearClip = 0.1f;
 		m_farClip = 15.0f;
@@ -57,11 +57,11 @@ namespace emberEngine
 	}
 	void SpotLight::SetBlendStart(const float& blendStart)
 	{
-		m_blendStart = mathf::Clamp(blendStart, 0.0f, 1.0f);
+		m_blendStart = math::Clamp(blendStart, 0.0f, 1.0f);
 	}
 	void SpotLight::SetBlendEnd(const float& blendEnd)
 	{
-		m_blendEnd = mathf::Clamp(blendEnd, 0.0f, 1.0f);
+		m_blendEnd = math::Clamp(blendEnd, 0.0f, 1.0f);
 	}
 	void SpotLight::SetDrawFrustum(bool drawFrustum)
 	{

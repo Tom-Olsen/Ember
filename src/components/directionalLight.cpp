@@ -100,7 +100,7 @@ namespace emberEngine
 				for (uint32_t i = 0; i < count + 1; i++)
 				{
 					float linear = (float)i / (float)count;
-					float logarithmic = (n * mathf::Pow(((f + n) / n), (i / (float)count)) - n) / f;
+					float logarithmic = (n * math::Pow(((f + n) / n), (i / (float)count)) - n) / f;
 					m_shadowCascadeSplits[i] = (1.0f - m_distributionFactor) * linear + m_distributionFactor * logarithmic;
 				}
 			}

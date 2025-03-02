@@ -1,7 +1,7 @@
 #include "computeShaderManager.h"
 #include "computeShader.h"
 #include "logger.h"
-#include "mathf.h"
+#include "emberMath.h"
 #include "vulkanContext.h"
 
 

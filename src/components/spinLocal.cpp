@@ -31,13 +31,13 @@ namespace emberEngine
 		Float3x3 rotZ = Float3x3::identity;
 
 		if (EventSystem::KeyDownOrHeld(SDLK_RIGHT))
-			rotZ *= Float3x3::RotateZ(-m_speed * mathf::deg2rad * Timer::GetDeltaTime());
+			rotZ *= Float3x3::RotateZ(-m_speed * math::deg2rad * Timer::GetDeltaTime());
 		if (EventSystem::KeyDownOrHeld(SDLK_LEFT))
-			rotZ *= Float3x3::RotateZ(m_speed * mathf::deg2rad * Timer::GetDeltaTime());
+			rotZ *= Float3x3::RotateZ(m_speed * math::deg2rad * Timer::GetDeltaTime());
 		if (EventSystem::KeyDownOrHeld(SDLK_DOWN))
-			rotX *= Float3x3::RotateX(-m_speed * mathf::deg2rad * Timer::GetDeltaTime());
+			rotX *= Float3x3::RotateX(-m_speed * math::deg2rad * Timer::GetDeltaTime());
 		if (EventSystem::KeyDownOrHeld(SDLK_UP))
-			rotX *= Float3x3::RotateX(m_speed * mathf::deg2rad * Timer::GetDeltaTime());
+			rotX *= Float3x3::RotateX(m_speed * math::deg2rad * Timer::GetDeltaTime());
 
 		m_pTransform->SetRotationMatrix(rotZ * m_pTransform->GetRotation3x3() * rotX);
 	}

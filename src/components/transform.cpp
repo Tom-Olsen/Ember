@@ -67,7 +67,7 @@ namespace emberEngine
 	}
 	void Transform::SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder, CoordinateSystem system)
 	{
-		Float3 eulerRadians = mathf::deg2rad * Float3(degreesX, degreesY, degreesZ);
+		Float3 eulerRadians = math::deg2rad * Float3(degreesX, degreesY, degreesZ);
 		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
 	}
 	void Transform::SetRotationEulerRadians(float radiansX, float radiansY, float radiansZ, Uint3 rotationOrder, CoordinateSystem system)
@@ -77,7 +77,7 @@ namespace emberEngine
 	}
 	void Transform::SetRotationEulerDegrees(Float3 degrees, Uint3 rotationOrder, CoordinateSystem system)
 	{
-		Float3 eulerRadians = mathf::deg2rad * degrees;
+		Float3 eulerRadians = math::deg2rad * degrees;
 		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
 	}
 	void Transform::SetRotationEulerRadians(Float3 radians, Uint3 rotationOrder, CoordinateSystem system)

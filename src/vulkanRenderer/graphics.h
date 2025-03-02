@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_graphics_h__
 #define __INCLUDE_GUARD_graphics_h__
 #include "drawCall.h"	// needed for s_drawCalls, as we don't save pointers.
-#include "mathf.h"
+#include "emberMath.h"
 #include "resourcePool.h"
 #include <unordered_map>
 #include <vector>

@@ -295,7 +295,7 @@ namespace emberEngine
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
-							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), mathf::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 						}
 						shadowMapIndex++;
 					}
@@ -323,7 +323,7 @@ namespace emberEngine
 						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
-						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), mathf::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					}
 					shadowMapIndex++;
 				}
@@ -352,7 +352,7 @@ namespace emberEngine
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
-							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), mathf::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 						}
 						shadowMapIndex++;
 					}
@@ -439,7 +439,7 @@ namespace emberEngine
 					vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
 
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
-					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), mathf::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 				}
 			}
 			DearImGui::Render(commandBuffer);

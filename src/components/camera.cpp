@@ -7,7 +7,7 @@ namespace emberEngine
 	// Constructor/Destructor:
 	Camera::Camera()
 	{
-		m_fov = mathf::deg2rad * 60.0f;
+		m_fov = math::deg2rad * 60.0f;
 		m_aspectRatio = 16.0f / 9.0f;	// 1920x1080
 		m_nearClip = 0.1f;
 		m_farClip = 1000.0f;
