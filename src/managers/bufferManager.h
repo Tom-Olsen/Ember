@@ -10,7 +10,6 @@ namespace emberEngine
 {
     // Forward declarations:
     class Buffer;
-    struct VulkanContext;
 
     
 
@@ -21,11 +20,10 @@ namespace emberEngine
     {
     private: // Members
         static bool s_isInitialized;
-        static VulkanContext* s_pContext;
         static std::unordered_map<std::string, std::unique_ptr<Buffer>> s_buffers;
 
     public: // Methods
-        static void Init(VulkanContext* pContext);
+        static void Init();
         static void Clear();
 
         static void AddBuffer(Buffer* pBuffer, const std::string& name);

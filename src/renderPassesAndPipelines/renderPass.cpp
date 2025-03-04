@@ -10,11 +10,11 @@ namespace emberEngine
 	{
 		// Destroy framebuffers:
 		for (uint32_t i = 0; i < m_framebuffers.size(); i++)
-			vkDestroyFramebuffer(m_pContext->GetVkDevice(), m_framebuffers[i], nullptr);
+			vkDestroyFramebuffer(VulkanContext::GetVkDevice(), m_framebuffers[i], nullptr);
 		m_framebuffers.clear();
 
 		// Destroy renderpass:
-		vkDestroyRenderPass(m_pContext->GetVkDevice(), m_renderPass, nullptr);
+		vkDestroyRenderPass(VulkanContext::GetVkDevice(), m_renderPass, nullptr);
 	}
 
 

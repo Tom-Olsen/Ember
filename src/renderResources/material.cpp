@@ -6,17 +6,15 @@
 #include "skyboxPipeline.h"
 #include "spirvReflect.h"
 #include "vmaBuffer.h"
-#include "vulkanContext.h"
 
 
 
 namespace emberEngine
 {
 	// Constructors/Destructor:
-	Material::Material(VulkanContext* pContext, Type type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material::Material(Type type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		m_type = type;
-		m_pContext = pContext;
 		m_name = name;
 		m_renderQueue = renderQueue;
 		m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
@@ -38,7 +36,7 @@ namespace emberEngine
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 			// Create pipeline:
-			m_pPipeline = std::make_unique<ForwardPipeline>(m_pContext, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+			m_pPipeline = std::make_unique<ForwardPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 
 		// Shadow material creation:
@@ -53,7 +51,7 @@ namespace emberEngine
 			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 			// Create pipeline:
-			m_pPipeline = std::make_unique<ShadowPipeline>(m_pContext, vertexCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+			m_pPipeline = std::make_unique<ShadowPipeline>(vertexCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 
 		// Skybox material creation:
@@ -73,7 +71,7 @@ namespace emberEngine
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 			// Create pipeline:
-			m_pPipeline = std::make_unique<SkyboxPipeline>(m_pContext, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+			m_pPipeline = std::make_unique<SkyboxPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 	}
 	Material::~Material()
@@ -101,7 +99,7 @@ namespace emberEngine
 	{
 		// All entries are stored in the same buffer:
 		for (uint32_t i = 0; i < m_meshBuffers.size(); i++)
-			m_meshBuffers[i] = pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer();
+			m_meshBuffers[i] = pMesh->GetVertexBuffer()->GetVkBuffer();
 		return m_meshBuffers.data();
 	}
 	const VkDeviceSize* const Material::GetMeshOffsets(Mesh* pMesh)

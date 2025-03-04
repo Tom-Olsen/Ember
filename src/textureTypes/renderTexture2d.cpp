@@ -10,9 +10,8 @@
 namespace emberEngine
 {
 	// Constructor/Desctructor:
-	RenderTexture2d::RenderTexture2d(VulkanContext* pContext, const std::string& name, VkFormat format, int width, int height)
+	RenderTexture2d::RenderTexture2d(const std::string& name, VkFormat format, int width, int height)
 	{
-		m_pContext = pContext;
 		m_type = Type::sample;
 		m_name = name;
 		m_width = width;
@@ -33,7 +32,7 @@ namespace emberEngine
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
+		VulkanQueue queue = VulkanContext::pLogicalDevice->GetTransferQueue();
 		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 
 		//// Transition: Layout: undefined->transfer, Queue: transfer

@@ -30,26 +30,25 @@
 namespace emberEngine
 {
 	// Constructor:
-	VulkanRenderer::VulkanRenderer(VulkanContext* pContext)
+	VulkanRenderer::VulkanRenderer()
 	{
-		m_pContext = pContext;
 		m_pShadowMaterial = MaterialManager::GetMaterial("shadowMaterial");
 
 		// Create render texture:
 		VkFormat format = VK_FORMAT_R16G16B16A16_SFLOAT;
-		int width = m_pContext->pWindow->GetWidth();
-		int height = m_pContext->pWindow->GetHeight();
-		m_renderTexture = std::make_unique<RenderTexture2d>(m_pContext, "mainRenderTexture2d", format, width, height);
+		int width = VulkanContext::pWindow->GetWidth();
+		int height = VulkanContext::pWindow->GetHeight();
+		m_renderTexture = std::make_unique<RenderTexture2d>("mainRenderTexture2d", format, width, height);
 
 		// Command buffers:
-		m_syncComputeCommands.reserve(m_pContext->framesInFlight);
-		m_shadowCommands.reserve(m_pContext->framesInFlight);
-		m_forwardCommands.reserve(m_pContext->framesInFlight);
-		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
+		m_syncComputeCommands.reserve(VulkanContext::framesInFlight);
+		m_shadowCommands.reserve(VulkanContext::framesInFlight);
+		m_forwardCommands.reserve(VulkanContext::framesInFlight);
+		for (uint32_t i = 0; i < VulkanContext::framesInFlight; i++)
 		{
-			m_syncComputeCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
-			m_shadowCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
-			m_forwardCommands.emplace_back(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
+			m_syncComputeCommands.emplace_back(VulkanContext::pLogicalDevice->GetGraphicsQueue());
+			m_shadowCommands.emplace_back(VulkanContext::pLogicalDevice->GetGraphicsQueue());
+			m_forwardCommands.emplace_back(VulkanContext::pLogicalDevice->GetGraphicsQueue());
 		}
 
 		// Synchronization objects:
@@ -62,7 +61,7 @@ namespace emberEngine
 	// Destructor:
 	VulkanRenderer::~VulkanRenderer()
 	{
-		VKA(vkDeviceWaitIdle(m_pContext->GetVkDevice()));
+		VKA(vkDeviceWaitIdle(VulkanContext::GetVkDevice()));
 		DestroyFences();
 		DestroySemaphores();
 	}
@@ -73,20 +72,20 @@ namespace emberEngine
 	bool VulkanRenderer::RenderFrame(Scene* pScene)
 	{
 		// Resize Swapchain if needed:
-		VkExtent2D windowExtent = m_pContext->pWindow->GetExtent();
-		VkExtent2D surfaceExtend = m_pContext->pSurface->GetCurrentExtent();
+		VkExtent2D windowExtent = VulkanContext::pWindow->GetExtent();
+		VkExtent2D surfaceExtend = VulkanContext::pSurface->GetCurrentExtent();
 		if (m_rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height != surfaceExtend.height)
 		{
 			m_rebuildSwapchain = false;
-			m_pContext->ResetFrameIndex();
+			VulkanContext::ResetFrameIndex();
 			RebuildSwapchain();
 		}
 
 		// Wait for fence of previous frame with same frameIndex to finish:
-		VKA(vkWaitForFences(m_pContext->GetVkDevice(), 1, &m_fences[m_pContext->frameIndex], VK_TRUE, UINT64_MAX));
+		VKA(vkWaitForFences(VulkanContext::GetVkDevice(), 1, &m_fences[VulkanContext::frameIndex], VK_TRUE, UINT64_MAX));
 		if (!AcquireImage() || pScene->GetActiveCamera() == nullptr)
 			return 0;
-		VKA(vkResetFences(m_pContext->GetVkDevice(), 1, &m_fences[m_pContext->frameIndex]));
+		VKA(vkResetFences(VulkanContext::GetVkDevice(), 1, &m_fences[VulkanContext::frameIndex]));
 
 		m_pSyncComputeCalls = Compute::GetComputeCallPointers();
 		m_pDrawCalls = Graphics::GetSortedDrawCallPointers();
@@ -101,10 +100,6 @@ namespace emberEngine
 
 		return 1;
 	}
-	const VulkanContext* const VulkanRenderer::GetContext() const
-	{
-		return m_pContext;
-	}
 
 
 
@@ -112,11 +107,11 @@ namespace emberEngine
 	void VulkanRenderer::RebuildSwapchain()
 	{
 		// Wait for graphicsQueue to finish:
-		VKA(vkQueueWaitIdle(m_pContext->pLogicalDevice->GetGraphicsQueue().queue));
+		VKA(vkQueueWaitIdle(VulkanContext::pLogicalDevice->GetGraphicsQueue().queue));
 
 		// Recreate swapchain:
-		std::unique_ptr<VulkanSwapchain> newSwapchain = std::make_unique<VulkanSwapchain>(m_pContext->pLogicalDevice.get(), m_pContext->pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, m_pContext->pSwapchain.get());
-		m_pContext->pSwapchain.swap(newSwapchain);
+		std::unique_ptr<VulkanSwapchain> newSwapchain = std::make_unique<VulkanSwapchain>(VulkanContext::pLogicalDevice.get(), VulkanContext::pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VulkanContext::pSwapchain.get());
+		VulkanContext::pSwapchain.swap(newSwapchain);
 
 		// Recreate renderpasses:
 		RenderPassManager::RecreateRenderPasses();
@@ -131,12 +126,12 @@ namespace emberEngine
 	bool VulkanRenderer::AcquireImage()
 	{
 		// Signal acquireSemaphore when done:
-		VkResult result = vkAcquireNextImageKHR(m_pContext->GetVkDevice(), m_pContext->GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[m_pContext->frameIndex], VK_NULL_HANDLE, &m_imageIndex);
+		VkResult result = vkAcquireNextImageKHR(VulkanContext::GetVkDevice(), VulkanContext::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[VulkanContext::frameIndex], VK_NULL_HANDLE, &m_imageIndex);
 
 		// Resize if needed:
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_pContext->pWindow->GetFramebufferResized())
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || VulkanContext::pWindow->GetFramebufferResized())
 		{
-			m_pContext->pWindow->SetFramebufferResized(false);
+			VulkanContext::pWindow->SetFramebufferResized(false);
 			m_rebuildSwapchain = true;
 			return false;
 		}
@@ -149,8 +144,8 @@ namespace emberEngine
 	
 	void VulkanRenderer::RecordComputeShaders(Scene* pScene)
 	{
-		vkResetCommandPool(m_pContext->GetVkDevice(), m_syncComputeCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
-		VkCommandBuffer commandBuffer = m_syncComputeCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+		vkResetCommandPool(VulkanContext::GetVkDevice(), m_syncComputeCommands[VulkanContext::frameIndex].GetVkCommandPool(), 0);
+		VkCommandBuffer commandBuffer = m_syncComputeCommands[VulkanContext::frameIndex].GetVkCommandBuffer();
 
 		// Begin command buffer:
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -211,7 +206,7 @@ namespace emberEngine
 					uint32_t groupCountY = (computeCall->threadCount.y + blockSize.y - 1) / blockSize.y;
 					uint32_t groupCountZ = (computeCall->threadCount.z + blockSize.z - 1) / blockSize.z;
 
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 				}
 			}
@@ -233,8 +228,8 @@ namespace emberEngine
 	}
 	void VulkanRenderer::RecordShadowCommandBuffer(Scene* pScene)
 	{
-		vkResetCommandPool(m_pContext->GetVkDevice(), m_shadowCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
-		VkCommandBuffer commandBuffer = m_shadowCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+		vkResetCommandPool(VulkanContext::GetVkDevice(), m_shadowCommands[VulkanContext::frameIndex].GetVkCommandPool(), 0);
+		VkCommandBuffer commandBuffer = m_shadowCommands[VulkanContext::frameIndex].GetVkCommandBuffer();
 		Camera* pCamera = pScene->GetActiveCamera();
 		if (pCamera == nullptr)
 			return;
@@ -250,7 +245,7 @@ namespace emberEngine
 			clearValues.depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = renderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = renderPass->GetFramebuffers()[m_pContext->frameIndex];
+			renderPassBeginInfo.framebuffer = renderPass->GetFramebuffers()[VulkanContext::frameIndex];
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowRenderPass::s_shadowMapWidth, ShadowRenderPass::s_shadowMapHeight };
 			renderPassBeginInfo.clearValueCount = 1;
@@ -291,10 +286,10 @@ namespace emberEngine
 							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
 							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
-							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
+							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 						}
 						shadowMapIndex++;
@@ -319,10 +314,10 @@ namespace emberEngine
 						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
 						vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
-						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
+						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
 						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					}
 					shadowMapIndex++;
@@ -348,10 +343,10 @@ namespace emberEngine
 							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
 							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer(m_pContext)->GetVkBuffer(), offsets);
-							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
+							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 						}
 						shadowMapIndex++;
@@ -364,8 +359,8 @@ namespace emberEngine
 	}
 	void VulkanRenderer::RecordForwardCommandBuffer(Scene* pScene)
 	{
-		vkResetCommandPool(m_pContext->GetVkDevice(), m_forwardCommands[m_pContext->frameIndex].GetVkCommandPool(), 0);
-		VkCommandBuffer commandBuffer = m_forwardCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+		vkResetCommandPool(VulkanContext::GetVkDevice(), m_forwardCommands[VulkanContext::frameIndex].GetVkCommandPool(), 0);
+		VkCommandBuffer commandBuffer = m_forwardCommands[VulkanContext::frameIndex].GetVkCommandBuffer();
 		Camera* pCamera = pScene->GetActiveCamera();
 		if (pCamera == nullptr)
 			return;
@@ -387,7 +382,7 @@ namespace emberEngine
 			renderPassBeginInfo.renderPass = renderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = renderPass->GetFramebuffers()[m_imageIndex];
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = m_pContext->pSurface->GetCurrentExtent();
+			renderPassBeginInfo.renderArea.extent = VulkanContext::pSurface->GetCurrentExtent();
 			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 			renderPassBeginInfo.pClearValues = clearValues.data();
 
@@ -436,9 +431,9 @@ namespace emberEngine
 					}
 
 					vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
-					vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer(m_pContext)->GetVkBuffer(), 0, Mesh::GetIndexType());
+					vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(m_pContext->frameIndex), 0, nullptr);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
 					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 				}
 			}
@@ -470,13 +465,13 @@ namespace emberEngine
 			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;					// wait at compute stage until semaphores are signaled
 			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_acquireSemaphores[m_pContext->frameIndex];				// wait for acquireSemaphor as these compute commands are synced with rendering
+			submitInfo.pWaitSemaphores = &m_acquireSemaphores[VulkanContext::frameIndex];				// wait for acquireSemaphor as these compute commands are synced with rendering
 			submitInfo.pWaitDstStageMask = &waitStage;
 			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_syncComputeCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+			submitInfo.pCommandBuffers = &m_syncComputeCommands[VulkanContext::frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_syncComputeToShadowSemaphores[m_pContext->frameIndex];// signal m_syncComputeToShadowSemaphores when done
-			VKA(vkQueueSubmit(m_pContext->pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr)); // no fence needed (sync by semaphore)
+			submitInfo.pSignalSemaphores = &m_syncComputeToShadowSemaphores[VulkanContext::frameIndex];// signal m_syncComputeToShadowSemaphores when done
+			VKA(vkQueueSubmit(VulkanContext::pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr)); // no fence needed (sync by semaphore)
 		}
 
 		// Shadow render pass submission:
@@ -484,13 +479,13 @@ namespace emberEngine
 			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;			// wait at depth and stencil test stage until semaphores are signaled
 			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_syncComputeToShadowSemaphores[m_pContext->frameIndex];	// wait for synchronized compute commands to finish
+			submitInfo.pWaitSemaphores = &m_syncComputeToShadowSemaphores[VulkanContext::frameIndex];	// wait for synchronized compute commands to finish
 			submitInfo.pWaitDstStageMask = &waitStage;
 			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_shadowCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+			submitInfo.pCommandBuffers = &m_shadowCommands[VulkanContext::frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_shadowToForwardSemaphores[m_pContext->frameIndex];	// signal shadowToForwardSemaphore when done
-			VKA(vkQueueSubmit(m_pContext->pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr)); // no fence needed (sync by semaphore)
+			submitInfo.pSignalSemaphores = &m_shadowToForwardSemaphores[VulkanContext::frameIndex];	// signal shadowToForwardSemaphore when done
+			VKA(vkQueueSubmit(VulkanContext::pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr)); // no fence needed (sync by semaphore)
 		}
 
 		// Forward render pass submission:
@@ -498,13 +493,13 @@ namespace emberEngine
 			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;					// wait at fragment shader stage until semaphores are signaled
 			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_shadowToForwardSemaphores[m_pContext->frameIndex];		// wait for shadowToForwardSemaphore
+			submitInfo.pWaitSemaphores = &m_shadowToForwardSemaphores[VulkanContext::frameIndex];		// wait for shadowToForwardSemaphore
 			submitInfo.pWaitDstStageMask = &waitStage;
 			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_forwardCommands[m_pContext->frameIndex].GetVkCommandBuffer();
+			submitInfo.pCommandBuffers = &m_forwardCommands[VulkanContext::frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_releaseSemaphores[m_pContext->frameIndex];			// signal releaseSemaphor when done
-			VKA(vkQueueSubmit(m_pContext->pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, m_fences[m_pContext->frameIndex])); // signal fence when done
+			submitInfo.pSignalSemaphores = &m_releaseSemaphores[VulkanContext::frameIndex];			// signal releaseSemaphor when done
+			VKA(vkQueueSubmit(VulkanContext::pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, m_fences[VulkanContext::frameIndex])); // signal fence when done
 		}
 	}
 
@@ -512,12 +507,12 @@ namespace emberEngine
 	{
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_releaseSemaphores[m_pContext->frameIndex]; // wait for releaseSemaphor
+		presentInfo.pWaitSemaphores = &m_releaseSemaphores[VulkanContext::frameIndex]; // wait for releaseSemaphor
 		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = &m_pContext->GetVkSwapchainKHR();
+		presentInfo.pSwapchains = &VulkanContext::GetVkSwapchainKHR();
 		presentInfo.pImageIndices = &m_imageIndex;
 
-		VkResult result = vkQueuePresentKHR(m_pContext->pLogicalDevice->GetPresentQueue().queue, &presentInfo);
+		VkResult result = vkQueuePresentKHR(VulkanContext::pLogicalDevice->GetPresentQueue().queue, &presentInfo);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		{
@@ -534,13 +529,13 @@ namespace emberEngine
 	void VulkanRenderer::SetViewportAndScissor(VkCommandBuffer& commandBuffer)
 	{
 		VkViewport viewport = {};
-		viewport.width = (float)m_pContext->pSurface->GetCurrentExtent().width;
-		viewport.height = (float)m_pContext->pSurface->GetCurrentExtent().height;
+		viewport.width = (float)VulkanContext::pSurface->GetCurrentExtent().width;
+		viewport.height = (float)VulkanContext::pSurface->GetCurrentExtent().height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor = {};
-		scissor.extent = m_pContext->pSurface->GetCurrentExtent();
+		scissor.extent = VulkanContext::pSurface->GetCurrentExtent();
 
 		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
@@ -551,43 +546,43 @@ namespace emberEngine
 		VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 		createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;	// Fence is created in the signaled state to prevent the first wait from blocking.
 
-		m_fences.resize(m_pContext->framesInFlight);
-		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
-			VKA(vkCreateFence(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_fences[i]));
+		m_fences.resize(VulkanContext::framesInFlight);
+		for (uint32_t i = 0; i < VulkanContext::framesInFlight; i++)
+			VKA(vkCreateFence(VulkanContext::GetVkDevice(), &createInfo, nullptr, &m_fences[i]));
 	}
 
 	void VulkanRenderer::CreateSemaphores()
 	{
 		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
-		m_acquireSemaphores.resize(m_pContext->framesInFlight);
-		m_syncComputeToShadowSemaphores.resize(m_pContext->framesInFlight);
-		m_shadowToForwardSemaphores.resize(m_pContext->framesInFlight);
-		m_releaseSemaphores.resize(m_pContext->framesInFlight);
-		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
+		m_acquireSemaphores.resize(VulkanContext::framesInFlight);
+		m_syncComputeToShadowSemaphores.resize(VulkanContext::framesInFlight);
+		m_shadowToForwardSemaphores.resize(VulkanContext::framesInFlight);
+		m_releaseSemaphores.resize(VulkanContext::framesInFlight);
+		for (uint32_t i = 0; i < VulkanContext::framesInFlight; i++)
 		{
-			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
-			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_syncComputeToShadowSemaphores[i]));
-			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_shadowToForwardSemaphores[i]));
-			VKA(vkCreateSemaphore(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
+			VKA(vkCreateSemaphore(VulkanContext::GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
+			VKA(vkCreateSemaphore(VulkanContext::GetVkDevice(), &createInfo, nullptr, &m_syncComputeToShadowSemaphores[i]));
+			VKA(vkCreateSemaphore(VulkanContext::GetVkDevice(), &createInfo, nullptr, &m_shadowToForwardSemaphores[i]));
+			VKA(vkCreateSemaphore(VulkanContext::GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
 		}
 	}
 
 	void VulkanRenderer::DestroyFences()
 	{
-		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
-			vkDestroyFence(m_pContext->GetVkDevice(), m_fences[i], nullptr);
+		for (uint32_t i = 0; i < VulkanContext::framesInFlight; i++)
+			vkDestroyFence(VulkanContext::GetVkDevice(), m_fences[i], nullptr);
 		m_fences.clear();
 	}
 
 	void VulkanRenderer::DestroySemaphores()
 	{
-		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
+		for (uint32_t i = 0; i < VulkanContext::framesInFlight; i++)
 		{
-			vkDestroySemaphore(m_pContext->GetVkDevice(), m_acquireSemaphores[i], nullptr);
-			vkDestroySemaphore(m_pContext->GetVkDevice(), m_syncComputeToShadowSemaphores[i], nullptr);
-			vkDestroySemaphore(m_pContext->GetVkDevice(), m_shadowToForwardSemaphores[i], nullptr);
-			vkDestroySemaphore(m_pContext->GetVkDevice(), m_releaseSemaphores[i], nullptr);
+			vkDestroySemaphore(VulkanContext::GetVkDevice(), m_acquireSemaphores[i], nullptr);
+			vkDestroySemaphore(VulkanContext::GetVkDevice(), m_syncComputeToShadowSemaphores[i], nullptr);
+			vkDestroySemaphore(VulkanContext::GetVkDevice(), m_shadowToForwardSemaphores[i], nullptr);
+			vkDestroySemaphore(VulkanContext::GetVkDevice(), m_releaseSemaphores[i], nullptr);
 		}
 		m_acquireSemaphores.clear();
 		m_syncComputeToShadowSemaphores.clear();

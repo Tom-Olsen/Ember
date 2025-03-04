@@ -5,7 +5,6 @@
 #include "stb_image.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
-#include "vulkanContext.h"
 
 
 
@@ -101,6 +100,6 @@ namespace emberEngine
 		allocInfo.preferredFlags = 0;
 
 		// Always use transfer queue by default and do queue transition later when needed.
-		return new VmaImage(m_pContext, imageInfo, allocInfo, subresourceRange, viewType, queue);
+		return new VmaImage(imageInfo, allocInfo, subresourceRange, viewType, queue);
 	}
 }

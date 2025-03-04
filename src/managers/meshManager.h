@@ -10,7 +10,6 @@ namespace emberEngine
 {
     // Forward declarations:
     class Mesh;
-    struct VulkanContext;
 
 
 
@@ -23,11 +22,10 @@ namespace emberEngine
 
     private: // Members
         static bool s_isInitialized;
-        static VulkanContext* s_pContext;
         static std::unordered_map<std::string, std::unique_ptr<Mesh>> s_meshes;
 
     public: // Methods
-        static void Init(VulkanContext* pContext);
+        static void Init();
         static void UnloadAllMeshes();
         static void Clear();
 

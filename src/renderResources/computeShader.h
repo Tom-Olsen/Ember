@@ -11,11 +11,6 @@
 
 namespace emberEngine
 {
-	// Forward declarations:
-	struct VulkanContext;
-
-
-
 	class ComputeShader : public Shader
 	{
 	private: // Members:
@@ -23,7 +18,7 @@ namespace emberEngine
 
 	public: // Methods:
 		// Constructors/Destructor:
-		ComputeShader(VulkanContext* pContext, const std::string& name, const std::filesystem::path& computeSpv, Uint3 blockSize);
+		ComputeShader(const std::string& name, const std::filesystem::path& computeSpv, Uint3 blockSize);
 		~ComputeShader();
 
 		Uint3 GetBlockSize() const;

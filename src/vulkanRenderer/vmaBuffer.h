@@ -10,7 +10,6 @@
 namespace emberEngine
 {
 	// Forward declarations:
-	struct VulkanContext;
 	struct VulkanQueue;
 	class VmaImage;
 
@@ -23,11 +22,10 @@ namespace emberEngine
 		VmaAllocation m_allocation;
 		VkBufferCreateInfo m_bufferInfo;
 		VmaAllocationCreateInfo m_allocInfo;
-		VulkanContext* m_pContext;
 
 	public: // Methods:
 		VmaBuffer();
-		VmaBuffer(VulkanContext* pContext, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo);
+		VmaBuffer(const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo);
 		VmaBuffer(VmaBuffer&& other) noexcept;				// move constructor
 		VmaBuffer& operator=(VmaBuffer&& other) noexcept;	// move assignment
 		~VmaBuffer();
@@ -44,10 +42,10 @@ namespace emberEngine
 		uint64_t GetSize();
 
 		// Static methods:
-		static void CopyBufferToBuffer(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize size, const VulkanQueue& queue);
-		static void CopyBufferToImage(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount);
-		static VmaBuffer StagingBuffer(VulkanContext* pContext, uint64_t size, void* inputData);
-		static VmaBuffer StagingBuffer(VulkanContext* pContext, const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas);
+		static void CopyBufferToBuffer(VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize size, const VulkanQueue& queue);
+		static void CopyBufferToImage(VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount);
+		static VmaBuffer StagingBuffer(uint64_t size, void* inputData);
+		static VmaBuffer StagingBuffer(const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas);
 	};
 }
 

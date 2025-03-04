@@ -7,7 +7,6 @@
 namespace emberEngine
 {
     // Static members:
-    VulkanContext* EventSystem::s_pContext = nullptr;
     bool EventSystem::s_isInitialized = false;
     std::unordered_map<SDL_Keycode, EventSystem::KeyState> EventSystem::s_keyStates;
     std::unordered_map<Uint8, EventSystem::MouseState> EventSystem::s_mouseButtonStates;
@@ -21,11 +20,10 @@ namespace emberEngine
 
 
     // Initialization and cleanup:
-    void EventSystem::Init(VulkanContext* pContext)
+    void EventSystem::Init()
     {
         if (s_isInitialized)
             return;
-        s_pContext = pContext;
         s_isInitialized = true;
 
         s_keyStates = std::unordered_map<SDL_Keycode, KeyState>();
@@ -234,15 +232,15 @@ namespace emberEngine
     }
     float EventSystem::MouseX01()
     {
-        return s_mouseX / s_pContext->pWindow->GetWidth();
+        return s_mouseX / VulkanContext::pWindow->GetWidth();
     }
     float EventSystem::MouseY01()
     {
-        return s_mouseY / s_pContext->pWindow->GetHeight();
+        return s_mouseY / VulkanContext::pWindow->GetHeight();
     }
     Float2 EventSystem::MousePos01()
     {
-        VkExtent2D extend = s_pContext->pWindow->GetExtent();
+        VkExtent2D extend = VulkanContext::pWindow->GetExtent();
         return Float2(s_mouseX / extend.width, s_mouseY / extend.height);
     }
     float EventSystem::MouseScrollX()

@@ -32,10 +32,9 @@ namespace emberEngine
 
 
 	// Constructor/Destructor:
-	void DearImGui::Init(VulkanContext* pContext)
+	void DearImGui::Init()
 	{
 		RETURN_DISABLED();
-		RenderPassManager::Init(pContext);
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -47,19 +46,19 @@ namespace emberEngine
 		s_io->FontGlobalScale = 2.0f;
 
 		ImGui::StyleColorsDark();
-		ImGui_ImplSDL3_InitForVulkan(pContext->GetSDL_Window());
+		ImGui_ImplSDL3_InitForVulkan(VulkanContext::GetSDL_Window());
 
 		ImGui_ImplVulkan_InitInfo initInfo = {};
-		initInfo.Instance = pContext->GetVkInstance();
-		initInfo.PhysicalDevice = pContext->GetVkPhysicalDevice();
-		initInfo.Device = pContext->GetVkDevice();
-		initInfo.QueueFamily = pContext->pLogicalDevice->GetGraphicsQueue().familyIndex;
-		initInfo.Queue = pContext->pLogicalDevice->GetGraphicsQueue().queue;
+		initInfo.Instance = VulkanContext::GetVkInstance();
+		initInfo.PhysicalDevice = VulkanContext::GetVkPhysicalDevice();
+		initInfo.Device = VulkanContext::GetVkDevice();
+		initInfo.QueueFamily = VulkanContext::pLogicalDevice->GetGraphicsQueue().familyIndex;
+		initInfo.Queue = VulkanContext::pLogicalDevice->GetGraphicsQueue().queue;
 		initInfo.RenderPass = RenderPassManager::GetRenderPass("shadingRenderPass")->GetVkRenderPass();
 		initInfo.DescriptorPoolSize = 2;	// DescriptorPoolSize > 0 means Imgui backend creates its own VkDescriptorPool. Need at least 1 + as many as additional calls done to ImGui_ImplVulkan_AddTexture()
 		initInfo.MinImageCount = 2;
-		initInfo.ImageCount = pContext->pSwapchain->GetImages().size();
-		initInfo.MSAASamples = pContext->msaaSamples;
+		initInfo.ImageCount = VulkanContext::pSwapchain->GetImages().size();
+		initInfo.MSAASamples = VulkanContext::msaaSamples;
 		ImGui_ImplVulkan_Init(&initInfo);
 
 		// Upload fonts:

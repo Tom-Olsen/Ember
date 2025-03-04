@@ -11,7 +11,6 @@
 namespace emberEngine
 {
 	// Forward declarations:
-	struct VulkanContext;
 	class VmaBuffer;
 	class VmaImage;
 
@@ -43,7 +42,6 @@ namespace emberEngine
 		std::string m_name;
 		std::unique_ptr<VmaImage> m_pImage;
 		VkDescriptorType m_descriptorType;
-		VulkanContext* m_pContext;
 
 	public: // Methods:
 		virtual ~Texture2d();

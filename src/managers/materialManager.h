@@ -10,7 +10,6 @@ namespace emberEngine
 {
     // Forward declarations:
     class Material;
-    struct VulkanContext;
 
 
 
@@ -21,11 +20,10 @@ namespace emberEngine
     {
     private: // Members
         static bool s_isInitialized;
-        static VulkanContext* s_pContext;
         static std::unordered_map<std::string, std::unique_ptr<Material>> s_materials;
 
     public: // Methods
-        static void Init(VulkanContext* pContext);
+        static void Init();
         static void Clear();
 
         static void AddMaterial(Material* pMaterial);

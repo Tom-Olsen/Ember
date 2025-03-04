@@ -14,19 +14,16 @@ namespace emberEngine
 {
 	// Static members:
 	bool TextureManager::s_isInitialized = false;
-	VulkanContext* TextureManager::s_pContext;
 	std::unordered_map<std::string, std::unique_ptr<Texture2d>> TextureManager::s_texture2ds;
 
 
 
 	// Initialization and cleanup:
-	void TextureManager::Init(VulkanContext* pContext)
+	void TextureManager::Init()
 	{
 		if (s_isInitialized)
 			return;
-
 		s_isInitialized = true;
-		s_pContext = pContext;
 
 		// Iterate through the texture directory:
 		std::filesystem::path directoryPath = "../textures";
@@ -45,32 +42,32 @@ namespace emberEngine
 						format = VK_FORMAT_R8G8B8A8_UNORM;
 					else if (name.find("roughness") || name.find("metallic"))
 						format = VK_FORMAT_R8_UNORM;
-					SampleTexture2d* texture = new SampleTexture2d(s_pContext, entry.path(), name, format);
+					SampleTexture2d* texture = new SampleTexture2d(entry.path(), name, format);
 					AddTexture2d(texture);
 				}
 			}
 		}
 
 		// Manual adding TextureCubes:
-		TextureCube* skyBoxWhite = new TextureCube(s_pContext, "../textures/white/", "skyBoxWhite", VK_FORMAT_R8G8B8A8_SRGB);
+		TextureCube* skyBoxWhite = new TextureCube("../textures/white/", "skyBoxWhite", VK_FORMAT_R8G8B8A8_SRGB);
 		AddTexture2d(skyBoxWhite);
-		TextureCube* skyBox0 = new TextureCube(s_pContext, "../textures/skyboxClouds1/", "skyBox0", VK_FORMAT_R8G8B8A8_SRGB);
+		TextureCube* skyBox0 = new TextureCube("../textures/skyboxClouds1/", "skyBox0", VK_FORMAT_R8G8B8A8_SRGB);
 		AddTexture2d(skyBox0);
-		//TextureCube* skyBox01 = new TextureCube(s_pContext, "../textures/skyboxNebula0/", "skyBox1", VK_FORMAT_R8G8B8A8_SRGB);
+		//TextureCube* skyBox01 = new TextureCube("../textures/skyboxNebula0/", "skyBox1", VK_FORMAT_R8G8B8A8_SRGB);
 		//AddTexture2d(skyBox1);
 
 
 		// Manual adding storage Textire2dArrays:
-		DepthTexture2dArray* blackArray = new DepthTexture2dArray(s_pContext, "blackArray", VK_FORMAT_D32_SFLOAT, 2, 2, 2);
+		DepthTexture2dArray* blackArray = new DepthTexture2dArray("blackArray", VK_FORMAT_D32_SFLOAT, 2, 2, 2);
 		AddTexture2d(blackArray);
 
 		// Manual adding storage Texture2ds:
-		StorageTexture2d* storageTexture8x8 = new StorageTexture2d(s_pContext, "storageTexture8x8", VK_FORMAT_R32G32B32A32_SFLOAT, 8, 8);
+		StorageTexture2d* storageTexture8x8 = new StorageTexture2d("storageTexture8x8", VK_FORMAT_R32G32B32A32_SFLOAT, 8, 8);
 		AddTexture2d(storageTexture8x8);
 	}
 	void TextureManager::Clear()
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_texture2ds.clear();
 	}
 
@@ -96,7 +93,7 @@ namespace emberEngine
 	}
 	void TextureManager::DeleteTexture2d(const std::string& name)
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_texture2ds.erase(name);
 	}
 

@@ -28,16 +28,15 @@ namespace emberEngine
 	ShaderProperties::ShaderProperties(Shader* pShader)
 	{
 		m_pShader = pShader;
-		m_pContext = pShader->GetContext();
 
 		// Create resource bindings and uniform buffer update logic for each frameInFlight:
-		m_uniformBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<std::shared_ptr<UniformBuffer>>>>(m_pContext->framesInFlight);
-		m_samplerMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>>(m_pContext->framesInFlight);
-		m_texture2dMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>>(m_pContext->framesInFlight);
-		m_storageBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<StorageBuffer*>>>(m_pContext->framesInFlight);
-		m_updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(m_pContext->framesInFlight);
+		m_uniformBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<std::shared_ptr<UniformBuffer>>>>(VulkanContext::framesInFlight);
+		m_samplerMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>>(VulkanContext::framesInFlight);
+		m_texture2dMaps = std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>>(VulkanContext::framesInFlight);
+		m_storageBufferMaps = std::vector<std::unordered_map<std::string, ResourceBinding<StorageBuffer*>>>(VulkanContext::framesInFlight);
+		m_updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(VulkanContext::framesInFlight);
 
-		for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
+		for (uint32_t frameIndex = 0; frameIndex < VulkanContext::framesInFlight; frameIndex++)
 		{
 			const DescriptorBoundResources* const descriptorBoundResources = m_pShader->GetDescriptorBoundResources();
 			for (uint32_t i = 0; i < descriptorBoundResources->bindingCount; i++)
@@ -109,42 +108,42 @@ namespace emberEngine
 	void ShaderProperties::UpdateShaderData()
 	{
 		// Stream uniform buffer data from host memory to GPU only for current frameIndex:
-		for (auto& [name, resourceBinding] : m_uniformBufferMaps[m_pContext->frameIndex])
+		for (auto& [name, resourceBinding] : m_uniformBufferMaps[VulkanContext::frameIndex])
 		{
-			if (m_updateUniformBuffer[m_pContext->frameIndex].at(name))
+			if (m_updateUniformBuffer[VulkanContext::frameIndex].at(name))
 			{
 				resourceBinding.resource->UpdateBuffer();
-				m_updateUniformBuffer[m_pContext->frameIndex].at(name) = false;
+				m_updateUniformBuffer[VulkanContext::frameIndex].at(name) = false;
 			}
 		}
 
 		// Change the pointer the descriptor set points at to the new sampler:
-		for (auto& [name, resourceBinding] : m_samplerMaps[m_pContext->frameIndex])
+		for (auto& [name, resourceBinding] : m_samplerMaps[VulkanContext::frameIndex])
 		{
 			if (resourceBinding.resource != m_samplerStagingMap.at(name))
 			{
 				resourceBinding.resource = m_samplerStagingMap.at(name);
-				UpdateDescriptorSet(m_pContext->frameIndex, resourceBinding);
+				UpdateDescriptorSet(VulkanContext::frameIndex, resourceBinding);
 			}
 		}
 
 		// Change the pointer the descriptor set points at to the new texture2d:
-		for (auto& [name, resourceBinding] : m_texture2dMaps[m_pContext->frameIndex])
+		for (auto& [name, resourceBinding] : m_texture2dMaps[VulkanContext::frameIndex])
 		{
 			if (resourceBinding.resource != m_texture2dStagingMap.at(name))
 			{
 				resourceBinding.resource = m_texture2dStagingMap.at(name);
-				UpdateDescriptorSet(m_pContext->frameIndex, resourceBinding);
+				UpdateDescriptorSet(VulkanContext::frameIndex, resourceBinding);
 			}
 		}
 
 		// Change the pointer the descriptor set points at to the new storageBuffer:
-		for (auto& [name, resourceBinding] : m_storageBufferMaps[m_pContext->frameIndex])
+		for (auto& [name, resourceBinding] : m_storageBufferMaps[VulkanContext::frameIndex])
 		{
 			if (resourceBinding.resource != m_storageBufferStagingMap.at(name))
 			{
 				resourceBinding.resource = m_storageBufferStagingMap.at(name);
-				UpdateDescriptorSet(m_pContext->frameIndex, resourceBinding);
+				UpdateDescriptorSet(VulkanContext::frameIndex, resourceBinding);
 			}
 		}
 	}
@@ -201,7 +200,7 @@ namespace emberEngine
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
 		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < VulkanContext::framesInFlight; frameIndex++)
 			{
 				if (m_uniformBufferMaps[frameIndex].at(bufferName).resource->SetValue(memberName, value))
 					m_updateUniformBuffer[frameIndex].at(bufferName) = true;
@@ -214,7 +213,7 @@ namespace emberEngine
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
 		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < VulkanContext::framesInFlight; frameIndex++)
 			{
 				if (m_uniformBufferMaps[frameIndex].at(bufferName).resource->SetValue(arrayName, arrayIndex, value))
 					m_updateUniformBuffer[frameIndex].at(bufferName) = true;
@@ -227,7 +226,7 @@ namespace emberEngine
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
 		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < VulkanContext::framesInFlight; frameIndex++)
 			{
 				if (m_uniformBufferMaps[frameIndex].at(bufferName).resource->SetValue(arrayName, arrayIndex, memberName, value))
 					m_updateUniformBuffer[frameIndex].at(bufferName) = true;
@@ -240,7 +239,7 @@ namespace emberEngine
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
 		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < VulkanContext::framesInFlight; frameIndex++)
 			{
 				if (m_uniformBufferMaps[frameIndex].at(bufferName).resource->SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value))
 					m_updateUniformBuffer[frameIndex].at(bufferName) = true;
@@ -257,15 +256,15 @@ namespace emberEngine
 	}
 	Sampler* ShaderProperties::GetSampler(const std::string& name) const
 	{
-		auto it = m_samplerMaps[m_pContext->frameIndex].find(name);
-		if (it != m_samplerMaps[m_pContext->frameIndex].end())
+		auto it = m_samplerMaps[VulkanContext::frameIndex].find(name);
+		if (it != m_samplerMaps[VulkanContext::frameIndex].end())
 			return it->second.resource;
 		return nullptr;
 	}
 	Texture2d* ShaderProperties::GetTexture2d(const std::string& name) const
 	{
-		auto it = m_texture2dMaps[m_pContext->frameIndex].find(name);
-		if (it != m_texture2dMaps[m_pContext->frameIndex].end())
+		auto it = m_texture2dMaps[VulkanContext::frameIndex].find(name);
+		if (it != m_texture2dMaps[VulkanContext::frameIndex].end())
 			return it->second.resource;
 		return nullptr;
 	}
@@ -314,7 +313,7 @@ namespace emberEngine
 	}
 	void ShaderProperties::PrintMaps() const
 	{
-		for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
+		for (uint32_t frameIndex = 0; frameIndex < VulkanContext::framesInFlight; frameIndex++)
 		{
 			LOG_INFO("UniformBufferMaps[{}]:", frameIndex);
 			for (const auto& [name, resourceBinding] : m_uniformBufferMaps[frameIndex])
@@ -344,10 +343,10 @@ namespace emberEngine
 			const DescriptorBoundResources* const descriptorBoundResources = m_pShader->GetDescriptorBoundResources();
 			UniformBufferBlock* pUniformBufferBlock = descriptorBoundResources->uniformBufferBlockMap.at(name);
 
-			std::shared_ptr<UniformBuffer> uniformBuffer = std::make_shared<UniformBuffer>(m_pContext, pUniformBufferBlock);
+			std::shared_ptr<UniformBuffer> uniformBuffer = std::make_shared<UniformBuffer>(pUniformBufferBlock);
 			m_uniformBufferMaps[frameIndex].emplace(name, ResourceBinding<std::shared_ptr<UniformBuffer>>(uniformBuffer, binding));
 
-			for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < VulkanContext::framesInFlight; frameIndex++)
 				m_updateUniformBuffer[frameIndex].emplace(name, true);
 		}
 	}
@@ -381,7 +380,7 @@ namespace emberEngine
 	void ShaderProperties::InitDescriptorSets()
 	{
 		CreateDescriptorSets();
-		for (uint32_t frameIndex = 0; frameIndex < m_pContext->framesInFlight; frameIndex++)
+		for (uint32_t frameIndex = 0; frameIndex < VulkanContext::framesInFlight; frameIndex++)
 		{
 			for (auto& [_, resourceBinding] : m_uniformBufferMaps[frameIndex])
 				UpdateDescriptorSet(frameIndex, resourceBinding);
@@ -399,15 +398,15 @@ namespace emberEngine
 	// Descriptor Set management:
 	void ShaderProperties::CreateDescriptorSets()
 	{
-		std::vector<VkDescriptorSetLayout> layouts(m_pContext->framesInFlight, m_pShader->GetPipeline()->GetVkDescriptorSetLayout());	// same layout for all frames
+		std::vector<VkDescriptorSetLayout> layouts(VulkanContext::framesInFlight, m_pShader->GetPipeline()->GetVkDescriptorSetLayout());	// same layout for all frames
 
 		VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-		allocInfo.descriptorPool = m_pContext->GetVkDescriptorPool();
-		allocInfo.descriptorSetCount = m_pContext->framesInFlight;
+		allocInfo.descriptorPool = VulkanContext::GetVkDescriptorPool();
+		allocInfo.descriptorSetCount = VulkanContext::framesInFlight;
 		allocInfo.pSetLayouts = layouts.data();
 
-		m_descriptorSets.resize(m_pContext->framesInFlight);
-		VKA(vkAllocateDescriptorSets(m_pContext->pLogicalDevice->GetVkDevice(), &allocInfo, m_descriptorSets.data()));
+		m_descriptorSets.resize(VulkanContext::framesInFlight);
+		VKA(vkAllocateDescriptorSets(VulkanContext::pLogicalDevice->GetVkDevice(), &allocInfo, m_descriptorSets.data()));
 	}
 	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<std::shared_ptr<UniformBuffer>> uniformBufferResourceBinding)
 	{
@@ -426,7 +425,7 @@ namespace emberEngine
 		descriptorWrite.pImageInfo = nullptr;
 		descriptorWrite.pTexelBufferView = nullptr;
 
-		vkUpdateDescriptorSets(m_pContext->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
+		vkUpdateDescriptorSets(VulkanContext::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
 	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Sampler*> samplerResourceBinding)
 	{
@@ -444,7 +443,7 @@ namespace emberEngine
 		descriptorWrite.pImageInfo = &samplerInfo;
 		descriptorWrite.pTexelBufferView = nullptr;
 
-		vkUpdateDescriptorSets(m_pContext->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
+		vkUpdateDescriptorSets(VulkanContext::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
 	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Texture2d*> texture2dResourceBinding)
 	{
@@ -462,7 +461,7 @@ namespace emberEngine
 		descriptorWrite.pImageInfo = &imageInfo;
 		descriptorWrite.pTexelBufferView = nullptr;
 
-		vkUpdateDescriptorSets(m_pContext->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
+		vkUpdateDescriptorSets(VulkanContext::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
 	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<StorageBuffer*> storageBufferResourceBinding)
 	{
@@ -481,7 +480,7 @@ namespace emberEngine
 		descriptorWrite.pImageInfo = nullptr;
 		descriptorWrite.pTexelBufferView = nullptr;
 
-		vkUpdateDescriptorSets(m_pContext->GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
+		vkUpdateDescriptorSets(VulkanContext::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
 
 

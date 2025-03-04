@@ -20,7 +20,7 @@ namespace emberEngine
 
 
 	// Public methods:
-	void Mesh::Load(VulkanContext* pContext)
+	void Mesh::Load()
 	{
 		// Set brocken vectors to zero:
 		if (m_positions.size() != m_vertexCount)
@@ -34,8 +34,8 @@ namespace emberEngine
 		if (m_uvs.size() != m_vertexCount)
 			m_uvs.resize(m_vertexCount, Float4::zero);
 
-		UpdateVertexBuffer(pContext);
-		UpdateIndexBuffer(pContext);
+		UpdateVertexBuffer();
+		UpdateIndexBuffer();
 		m_verticesUpdated = false;
 		m_indicesUpdated = false;
 		m_isLoaded = true;
@@ -283,24 +283,24 @@ namespace emberEngine
 	{
 		return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors();
 	}
-	VmaBuffer* Mesh::GetVertexBuffer(VulkanContext* pContext)
+	VmaBuffer* Mesh::GetVertexBuffer()
 	{
 		if (!m_isLoaded)
-			Load(pContext);
+			Load();
 		if (m_verticesUpdated)
 		{
-			UpdateVertexBuffer(pContext);
+			UpdateVertexBuffer();
 			m_verticesUpdated = false;
 		}
 		return m_vertexBuffer.get();
 	}
-	VmaBuffer* Mesh::GetIndexBuffer(VulkanContext* pContext)
+	VmaBuffer* Mesh::GetIndexBuffer()
 	{
 		if (!m_isLoaded)
-			Load(pContext);
-		if (m_indicesUpdated && pContext != nullptr)
+			Load();
+		if (m_indicesUpdated)
 		{
-			UpdateIndexBuffer(pContext);
+			UpdateIndexBuffer();
 			m_indicesUpdated = false;
 		}
 		return m_indexBuffer.get();
@@ -760,7 +760,7 @@ namespace emberEngine
 
 	// Private:
 	#ifdef RESIZEABLE_BAR // No staging buffer:
-	void Mesh::UpdateVertexBuffer(VulkanContext* pContext)
+	void Mesh::UpdateVertexBuffer()
 	{
 		// Set zero values if vectors not set:
 		if (m_normals.size() != m_vertexCount)
@@ -774,7 +774,7 @@ namespace emberEngine
 
 		uint64_t size = GetVertexBufferSize();
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(pContext->pLogicalDevice->GetGraphicsQueue().queue);
+			vkQueueWaitIdle(VulkanContext::pLogicalDevice->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_vertexBuffer == nullptr || size != m_vertexBuffer->GetSize())
@@ -791,21 +791,21 @@ namespace emberEngine
 			pAllocInfo->requiredFlags = 0;
 			pAllocInfo->preferredFlags = 0;
 
-			m_vertexBuffer = std::make_unique<VmaBuffer>(pContext, pBufferInfo, pAllocInfo);
+			m_vertexBuffer = std::make_unique<VmaBuffer>(pBufferInfo, pAllocInfo);
 		}
 
 		// Copy positions, colors, uvs:
 		void* data;
-		VKA(vmaMapMemory(pContext->GetVmaAllocator(), m_vertexBuffer->allocation, &data));
+		VKA(vmaMapMemory(VulkanContext::GetVmaAllocator(), m_vertexBuffer->allocation, &data));
 		memcpy(static_cast<char*>(data), m_positions.data(), GetSizeOfPositions());
 		memcpy(static_cast<char*>(data) + GetSizeOfPositions(), m_normals.data(), GetSizeOfNormals());
 		memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals(), m_tangents.data(), GetSizeOfTangents());
 		memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents(), m_colors.data(), GetSizeOfColors());
 		memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors(), m_uvs.data(), GetSizeOfUVs());
-		VKA(vmaUnmapMemory(pContext->GetVmaAllocator(), m_vertexBuffer->allocation));
+		VKA(vmaUnmapMemory(VulkanContext::GetVmaAllocator(), m_vertexBuffer->allocation));
 	}
 	#else // With Staging buffer:
-	void Mesh::UpdateVertexBuffer(VulkanContext* pContext)
+	void Mesh::UpdateVertexBuffer()
 	{
 		// Set zero values if vectors not set:
 		if (m_normals.size() != m_vertexCount)
@@ -819,7 +819,7 @@ namespace emberEngine
 
 		uint64_t size = GetVertexBufferSize();
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(pContext->pLogicalDevice->GetGraphicsQueue().queue);
+			vkQueueWaitIdle(VulkanContext::pLogicalDevice->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_vertexBuffer == nullptr || m_vertexBuffer->GetSize() != size)
@@ -836,7 +836,7 @@ namespace emberEngine
 			allocInfo.requiredFlags = 0;
 			allocInfo.preferredFlags = 0;
 
-			m_vertexBuffer = std::make_unique<VmaBuffer>(pContext, bufferInfo, allocInfo);
+			m_vertexBuffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
 		}
 
 		// Load data into staging buffer:
@@ -852,18 +852,18 @@ namespace emberEngine
 		  static_cast<uint64_t>(GetSizeOfTangents()),
 		  static_cast<uint64_t>(GetSizeOfColors()),
 		  static_cast<uint64_t>(GetSizeOfUVs()) };
-		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(pContext, bufferSizes, bufferPointers);
+		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(bufferSizes, bufferPointers);
 
 		// Copy data from staging to vertex buffer:
-		VmaBuffer::CopyBufferToBuffer(pContext, &stagingBuffer, m_vertexBuffer.get(), size, pContext->pLogicalDevice->GetGraphicsQueue());
+		VmaBuffer::CopyBufferToBuffer(&stagingBuffer, m_vertexBuffer.get(), size, VulkanContext::pLogicalDevice->GetGraphicsQueue());
 	}
 	#endif
 	#ifdef RESIZEABLE_BAR // No staging buffer:
-	void Mesh::UpdateIndexBuffer(VulkanContext* pContext)
+	void Mesh::UpdateIndexBuffer()
 	{
 		uint64_t size = GetSizeOfTriangles();
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(pContext->pLogicalDevice->GetGraphicsQueue().queue);
+			vkQueueWaitIdle(VulkanContext::pLogicalDevice->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_indexBuffer == nullptr || size != m_indexBuffer->GetSize())
@@ -880,21 +880,21 @@ namespace emberEngine
 			pAllocInfo->requiredFlags = 0;
 			pAllocInfo->preferredFlags = 0;
 
-			m_indexBuffer = std::make_unique<VmaBuffer>(pContext, pBufferInfo, pAllocInfo);
+			m_indexBuffer = std::make_unique<VmaBuffer>(pBufferInfo, pAllocInfo);
 		}
 
 		// Copy triangle indexes:
 		void* data;
-		VKA(vmaMapMemory(pContext->GetVmaAllocator(), m_indexBuffer->allocation, &data));
+		VKA(vmaMapMemory(VulkanContext::GetVmaAllocator(), m_indexBuffer->allocation, &data));
 		memcpy(data, GetTrianglesUnrolled(), size);
-		VKA(vmaUnmapMemory(pContext->GetVmaAllocator(), m_indexBuffer->allocation));
+		VKA(vmaUnmapMemory(VulkanContext::GetVmaAllocator(), m_indexBuffer->allocation));
 	}
 	#else // With Staging buffer:
-	void Mesh::UpdateIndexBuffer(VulkanContext* pContext)
+	void Mesh::UpdateIndexBuffer()
 	{
 		uint64_t size = GetSizeOfTriangles();
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(pContext->pLogicalDevice->GetGraphicsQueue().queue);
+			vkQueueWaitIdle(VulkanContext::pLogicalDevice->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_indexBuffer == nullptr || size != m_indexBuffer->GetSize())
@@ -911,14 +911,14 @@ namespace emberEngine
 			allocInfo.requiredFlags = 0;
 			allocInfo.preferredFlags = 0;
 
-			m_indexBuffer = std::make_unique<VmaBuffer>(pContext, bufferInfo, allocInfo);
+			m_indexBuffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
 		}
 
 		// Load data into staging buffer:
-		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(pContext, size, GetTrianglesUnrolled());
+		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(size, GetTrianglesUnrolled());
 
 		// Copy data from staging to vertex buffer:
-		VmaBuffer::CopyBufferToBuffer(pContext, &stagingBuffer, m_indexBuffer.get(), size, pContext->pLogicalDevice->GetGraphicsQueue());
+		VmaBuffer::CopyBufferToBuffer(&stagingBuffer, m_indexBuffer.get(), size, VulkanContext::pLogicalDevice->GetGraphicsQueue());
 	}
 	#endif
 }

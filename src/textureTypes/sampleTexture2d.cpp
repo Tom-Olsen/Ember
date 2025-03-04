@@ -10,9 +10,8 @@
 namespace emberEngine
 {
 	// Constructor/Desctructor:
-	SampleTexture2d::SampleTexture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name, VkFormat format)
+	SampleTexture2d::SampleTexture2d(const std::filesystem::path& filePath, const std::string& name, VkFormat format)
 	{
-		m_pContext = pContext;
 		m_type = Type::sample;
 		m_name = name;
 		m_channels = STBI_rgb_alpha;	// 4 channels
@@ -26,7 +25,7 @@ namespace emberEngine
 
 		// Create staging buffer:
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(format);
-		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(m_pContext, bufferSize, pPixels);
+		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(bufferSize, pPixels);
 
 		// Define subresource range:
 		VkImageSubresourceRange subresourceRange;
@@ -41,7 +40,7 @@ namespace emberEngine
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = 0;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
+		VulkanQueue queue = VulkanContext::pLogicalDevice->GetTransferQueue();
 		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
@@ -53,10 +52,10 @@ namespace emberEngine
 		m_pImage->TransitionLayout(newLayout0, srcStage0, dstStage0, srcAccessMask0, dstAccessMask0);
 
 		// Copy pixel data:
-		VmaBuffer::CopyBufferToImage(m_pContext, &stagingBuffer, m_pImage.get(), m_pContext->pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
+		VmaBuffer::CopyBufferToImage(&stagingBuffer, m_pImage.get(), VulkanContext::pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
 
 		// Transition 1: Layout: transfer, Queue: transfer->graphics
-		VulkanQueue newQueue1 = m_pContext->pLogicalDevice->GetGraphicsQueue();
+		VulkanQueue newQueue1 = VulkanContext::pLogicalDevice->GetGraphicsQueue();
 		VkPipelineStageFlags2 srcStage1 = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 		VkPipelineStageFlags2 dstStage1 = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 		VkAccessFlags2 srcAccessMask1 = VK_ACCESS_2_TRANSFER_WRITE_BIT;

@@ -1,16 +1,37 @@
 #include "vulkanContext.h"
 #include "dearImGui.h"
+#include "logger.h"
 #include "vulkanMacros.h"
 
 
 
 namespace emberEngine
 {
-	// Constructor:
-	VulkanContext::VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaaSamples)
+	// Static members:
+	bool VulkanContext::s_isInitialized = false;
+	std::unique_ptr<SdlWindow> VulkanContext::pWindow = nullptr;
+	std::unique_ptr<VulkanInstance> VulkanContext::pInstance = nullptr;
+	std::unique_ptr<VulkanPhysicalDevice> VulkanContext::pPhysicalDevice = nullptr;
+	std::unique_ptr<VulkanSurface> VulkanContext::pSurface = nullptr;
+	std::unique_ptr<VulkanLogicalDevice> VulkanContext::pLogicalDevice = nullptr;
+	std::unique_ptr<VulkanMemoryAllocator> VulkanContext::pAllocator = nullptr;
+	std::unique_ptr<VulkanDescriptorPool> VulkanContext::pDescriptorPool = nullptr;
+	std::unique_ptr<VulkanSwapchain> VulkanContext::pSwapchain = nullptr;
+	uint32_t VulkanContext::framesInFlight;
+	uint32_t VulkanContext::frameIndex;
+	VkSampleCountFlagBits VulkanContext::msaaSamples;
+
+
+
+	// Initialization and cleanup:
+	void VulkanContext::Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue)
 	{
-		this->framesInFlight = framesInFlight;
-		this->frameIndex = 0;
+		if (s_isInitialized)
+			return;
+		s_isInitialized = true;
+
+		framesInFlight = framesInFlightValue;
+		frameIndex = 0;
 
 		// Window:
 		pWindow = std::make_unique<SdlWindow>();
@@ -43,13 +64,9 @@ namespace emberEngine
 		pDescriptorPool = std::make_unique<VulkanDescriptorPool>(pLogicalDevice.get());
 		pSwapchain = std::make_unique<VulkanSwapchain>(pLogicalDevice.get(), pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
-		this->msaaSamples = std::min(msaaSamples, pPhysicalDevice->GetMaxMsaaSamples());
+		msaaSamples = std::min(msaaSamplesValue, pPhysicalDevice->GetMaxMsaaSamples());
 	}
-
-
-
-	// Destructor:
-	VulkanContext::~VulkanContext()
+	void VulkanContext::Clear()
 	{
 		WaitDeviceIdle();
 	}
@@ -57,43 +74,43 @@ namespace emberEngine
 
 
 	// Getters:
-	SDL_Window* const VulkanContext::GetSDL_Window() const
+	SDL_Window* const VulkanContext::GetSDL_Window()
 	{
 		return pWindow->GetSDL_Window();
 	}
-	const VkInstance& VulkanContext::GetVkInstance() const
+	const VkInstance& VulkanContext::GetVkInstance()
 	{
 		return pInstance->GetVkInstance();
 	}
-	const VkPhysicalDevice& VulkanContext::GetVkPhysicalDevice() const
+	const VkPhysicalDevice& VulkanContext::GetVkPhysicalDevice()
 	{
 		return pPhysicalDevice->GetVkPhysicalDevice();
 	}
-	const VkSurfaceKHR& VulkanContext::GetVkSurfaceKHR() const
+	const VkSurfaceKHR& VulkanContext::GetVkSurfaceKHR()
 	{
 		return pSurface->GetVkSurfaceKHR();
 	}
-	const VkDevice& VulkanContext::GetVkDevice() const
+	const VkDevice& VulkanContext::GetVkDevice()
 	{
 		return pLogicalDevice->GetVkDevice();
 	}
-	const VmaAllocator& VulkanContext::GetVmaAllocator() const
+	const VmaAllocator& VulkanContext::GetVmaAllocator()
 	{
 		return pAllocator->GetVmaAllocator();
 	}
-	const VkDescriptorPool& VulkanContext::GetVkDescriptorPool() const
+	const VkDescriptorPool& VulkanContext::GetVkDescriptorPool()
 	{
 		return pDescriptorPool->GetVkDescriptorPool();
 	}
-	const VkSwapchainKHR& VulkanContext::GetVkSwapchainKHR() const
+	const VkSwapchainKHR& VulkanContext::GetVkSwapchainKHR()
 	{
 		return pSwapchain->GetVkSwapchainKHR();
 	}
-	bool VulkanContext::DepthClampEnabled() const
+	bool VulkanContext::DepthClampEnabled()
 	{
 		return pPhysicalDevice->SupportsDepthClamp();
 	}
-	bool VulkanContext::DepthBiasClampEnabled() const
+	bool VulkanContext::DepthBiasClampEnabled()
 	{
 		return pPhysicalDevice->SupportsDepthBiasClamp();
 	}

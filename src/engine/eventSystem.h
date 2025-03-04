@@ -8,11 +8,6 @@
 
 namespace emberEngine
 {
-    // Forward declarations:
-    struct VulkanContext;
-
-
-
     class EventSystem
     {
     public: // Enums:
@@ -21,7 +16,6 @@ namespace emberEngine
         enum class MouseButton { left = 1, middle = 2, right = 3 };
 
     private: // Members
-        static VulkanContext* s_pContext;
         static bool s_isInitialized;
         static std::unordered_map<SDL_Keycode, KeyState> s_keyStates;
         static std::unordered_map<Uint8, MouseState> s_mouseButtonStates;
@@ -33,7 +27,7 @@ namespace emberEngine
         static bool s_quit;
 
     public: // Methods:
-        static void Init(VulkanContext* pContext);
+        static void Init();
         static void Clear();
 
         // Event handling:

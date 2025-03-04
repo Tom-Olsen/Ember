@@ -11,19 +11,16 @@ namespace emberEngine
 {
 	// Static members:
 	bool MeshManager::s_isInitialized = false;
-	VulkanContext* MeshManager::s_pContext;
 	std::unordered_map<std::string, std::unique_ptr<Mesh>> MeshManager::s_meshes;
 
 
 
 	// Initialization and cleanup:
-	void MeshManager::Init(VulkanContext* pContext)
+	void MeshManager::Init()
 	{
 		if (s_isInitialized)
 			return;
-
 		s_isInitialized = true;
-		s_pContext = pContext;
 
 		Mesh* pUnitQuad = MeshGenerator::UnitQuad();
 		AddMesh(pUnitQuad);
@@ -86,13 +83,13 @@ namespace emberEngine
 	}
 	void MeshManager::UnloadAllMeshes()
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		for (auto& pair : s_meshes)
 			pair.second->Unload();
 	}
 	void MeshManager::Clear()
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_meshes.clear();
 	}
 

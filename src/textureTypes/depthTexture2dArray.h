@@ -15,7 +15,7 @@ namespace emberEngine
 	class DepthTexture2dArray : public Texture2d
 	{
 	public: // Methods:
-		DepthTexture2dArray(VulkanContext* pContext, const std::string& name, VkFormat format, int width, int height, uint32_t layerCount);
+		DepthTexture2dArray(const std::string& name, VkFormat format, int width, int height, uint32_t layerCount);
 		~DepthTexture2dArray();
 	};
 }

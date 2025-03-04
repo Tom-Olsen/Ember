@@ -14,7 +14,6 @@ namespace emberEngine
 	class TestInstancedRendering : public Component
 	{
 	private: // Members:
-		VulkanContext* m_pVulkanContext;
 		ComputeShader* m_pStartCS;
 		ComputeShader* m_pUpdateCS;
 		std::unique_ptr<StorageBuffer> m_pStorageBuffer;
@@ -22,7 +21,7 @@ namespace emberEngine
 		std::unique_ptr<ShaderProperties> m_pUpdateProperties;
 
 	public: // Methods:
-		TestInstancedRendering(VulkanContext* pVulkanContext, uint32_t instanceCount);
+		TestInstancedRendering(uint32_t instanceCount);
 		~TestInstancedRendering();
 
 		StorageBuffer* GetInstanceBuffer() const;

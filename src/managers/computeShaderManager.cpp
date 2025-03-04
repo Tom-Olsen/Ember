@@ -10,32 +10,29 @@ namespace emberEngine
 {
 	// Static members:
 	bool ComputeShaderManager::s_isInitialized = false;
-	VulkanContext* ComputeShaderManager::s_pContext;
 	std::unordered_map<std::string, std::unique_ptr<ComputeShader>> ComputeShaderManager::s_computeShaders;
 
 
 
 	// Initialization and cleanup:
-	void ComputeShaderManager::Init(VulkanContext* pContext)
+	void ComputeShaderManager::Init()
 	{
 		if (s_isInitialized)
 			return;
-
 		s_isInitialized = true;
-		s_pContext = pContext;
 
-		ComputeShader* test = new ComputeShader(s_pContext, "testComputeShader", "../src/shaders/helloWorld.comp.spv", Uint3(8, 8, 1));
+		ComputeShader* test = new ComputeShader("testComputeShader", "../src/shaders/helloWorld.comp.spv", Uint3(8, 8, 1));
 		AddComputeShader(test);
 
-		ComputeShader* initialPositions = new ComputeShader(s_pContext, "initialPositionsComputeShader", "../src/shaders/initialPositions.comp.spv", Uint3(64, 1, 1));
+		ComputeShader* initialPositions = new ComputeShader("initialPositionsComputeShader", "../src/shaders/initialPositions.comp.spv", Uint3(64, 1, 1));
 		AddComputeShader(initialPositions);
 
-		ComputeShader* updatePositions = new ComputeShader(s_pContext, "updatePositionsComputeShader", "../src/shaders/updatePositions.comp.spv", Uint3(64, 1, 1));
+		ComputeShader* updatePositions = new ComputeShader("updatePositionsComputeShader", "../src/shaders/updatePositions.comp.spv", Uint3(64, 1, 1));
 		AddComputeShader(updatePositions);
 	}
 	void ComputeShaderManager::Clear()
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_computeShaders.clear();
 	}
 
@@ -61,7 +58,7 @@ namespace emberEngine
 	}
 	void ComputeShaderManager::DeleteComputeShader(const std::string& name)
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_computeShaders.erase(name);
 	}
 

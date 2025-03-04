@@ -7,11 +7,6 @@
 
 namespace emberEngine
 {
-	// Forward declarations:
-	struct VulkanContext;
-
-
-
 	/// <summary>
 	/// Polymorphic parent class for all pipelines.
 	/// </summary>
@@ -21,7 +16,6 @@ namespace emberEngine
 		VkDescriptorSetLayout m_descriptorSetLayout;
 		VkPipelineLayout m_pipelineLayout;
 		VkPipeline m_pipeline;
-		VulkanContext* m_pContext;
 
 	public: // Methods:
 		virtual ~Pipeline();

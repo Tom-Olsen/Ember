@@ -10,7 +10,6 @@ namespace emberEngine
 {
 	// Forward declarations:
 	struct VertexInputDescriptions;
-	struct VulkanContext;
 
 
 
@@ -20,9 +19,7 @@ namespace emberEngine
 	class ComputePipeline : public Pipeline
 	{
 	public: // Methods:
-		ComputePipeline(VulkanContext* pContext,
-			const std::vector<char>& computeCode,
-			const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings);
+		ComputePipeline(const std::vector<char>& computeCode, const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings);
 		~ComputePipeline();
 
 	private: // Methods:

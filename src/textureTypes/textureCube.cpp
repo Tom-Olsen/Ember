@@ -11,9 +11,8 @@
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	TextureCube::TextureCube(VulkanContext* pContext, const std::filesystem::path& folderPath, const std::string& name, VkFormat format)
+	TextureCube::TextureCube(const std::filesystem::path& folderPath, const std::string& name, VkFormat format)
 	{
-		m_pContext = pContext;
 		m_type = Type::cube;
 		m_name = name;
 		m_channels = STBI_rgb_alpha;	// 4 8-bit channels
@@ -54,7 +53,7 @@ namespace emberEngine
 		}
 
 		// Create staging buffer:
-		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(m_pContext, bufferSize, pFacePixels);
+		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(bufferSize, pFacePixels);
 
 		// Define subresource range:
 		VkImageSubresourceRange subresourceRange;
@@ -69,10 +68,10 @@ namespace emberEngine
 		VkImageCreateFlags imageFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-		VulkanQueue queue = m_pContext->pLogicalDevice->GetTransferQueue();
+		VulkanQueue queue = VulkanContext::pLogicalDevice->GetTransferQueue();
 		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
-		
-		
+
+
 		// Transition0: Layout: undefined->transfer, Queue: transfer
 		VkImageLayout newLayout0 = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		VkPipelineStageFlags2 srcStage0 = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
@@ -81,11 +80,11 @@ namespace emberEngine
 		VkAccessFlags2 dstAccessMask0 = VK_ACCESS_2_TRANSFER_WRITE_BIT;
 		m_pImage->TransitionLayout(newLayout0, srcStage0, dstStage0, srcAccessMask0, dstAccessMask0);
 
-		VmaBuffer::CopyBufferToImage(m_pContext, &stagingBuffer, m_pImage.get(), m_pContext->pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
+		VmaBuffer::CopyBufferToImage(&stagingBuffer, m_pImage.get(), VulkanContext::pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
 
 		// Transition1: Layout: transfer->shader read, Queue: transfer->graphics
 		VkImageLayout newLayout1 = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		VulkanQueue newQueue1 = m_pContext->pLogicalDevice->GetGraphicsQueue();
+		VulkanQueue newQueue1 = VulkanContext::pLogicalDevice->GetGraphicsQueue();
 		VkPipelineStageFlags2 srcStage1 = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 		VkPipelineStageFlags2 dstStage1 = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
 		VkAccessFlags2 srcAccessMask1 = VK_ACCESS_2_TRANSFER_WRITE_BIT;

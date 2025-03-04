@@ -1,7 +1,7 @@
 #include "uniformBuffer.h"
-#include "vulkanContext.h"
 #include "vmaBuffer.h"
 #include "spirvReflect.h"
+#include "vulkanContext.h"
 #include <vulkan/vulkan.h>
 
 
@@ -9,11 +9,10 @@
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	UniformBuffer::UniformBuffer(VulkanContext* pContext, UniformBufferBlock* pUniformBufferBlock)
+	UniformBuffer::UniformBuffer(UniformBufferBlock* pUniformBufferBlock)
 	{
 		m_pUniformBufferBlock = pUniformBufferBlock;
 		m_size = m_pUniformBufferBlock->size;
-		m_pContext = pContext;
 
 		// Create buffer:
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -27,11 +26,11 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_buffer = std::make_unique<VmaBuffer>(m_pContext, bufferInfo, allocInfo);
+		m_buffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
 
 		// Get deviceData pointer:
 		VmaAllocationInfo info;
-		vmaGetAllocationInfo(m_pContext->GetVmaAllocator(), m_buffer->GetVmaAllocation(), &info);
+		vmaGetAllocationInfo(VulkanContext::GetVmaAllocator(), m_buffer->GetVmaAllocation(), &info);
 		m_pDeviceData = info.pMappedData;
 
 		// Allocate host data:

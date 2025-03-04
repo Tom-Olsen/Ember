@@ -12,14 +12,12 @@
 namespace emberEngine
 {
     // Constructor/Destructor:
-    SkyboxPipeline::SkyboxPipeline(VulkanContext* pContext,
-        const std::vector<char>& vertexCode,
-        const std::vector<char>& fragmentCode,
-        const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
-        const VertexInputDescriptions* const pVertexInputDescriptions)
+    SkyboxPipeline::SkyboxPipeline
+    (const std::vector<char>& vertexCode,
+     const std::vector<char>& fragmentCode,
+     const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
+     const VertexInputDescriptions* const pVertexInputDescriptions)
     {
-        m_pContext = pContext;
-
         // Create pipeline Layout:
         CreatePipelineLayout(vkDescriptorSetLayoutBindings);
 
@@ -31,8 +29,8 @@ namespace emberEngine
         CreatePipeline(vertexShaderModule, fragmentShaderModule, pVertexInputDescriptions);
 
         // Destroy shader modules (only needed for pipeline creation):
-        vkDestroyShaderModule(m_pContext->GetVkDevice(), vertexShaderModule, nullptr);
-        vkDestroyShaderModule(m_pContext->GetVkDevice(), fragmentShaderModule, nullptr);
+        vkDestroyShaderModule(VulkanContext::GetVkDevice(), vertexShaderModule, nullptr);
+        vkDestroyShaderModule(VulkanContext::GetVkDevice(), fragmentShaderModule, nullptr);
     }
     SkyboxPipeline::~SkyboxPipeline()
     {
@@ -48,7 +46,7 @@ namespace emberEngine
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
         descriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.size();
         descriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.data();
-        VKA(vkCreateDescriptorSetLayout(m_pContext->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
+        VKA(vkCreateDescriptorSetLayout(VulkanContext::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
 
         // Push constants layout:
         VkPushConstantRange pushConstantRange = {};
@@ -62,7 +60,7 @@ namespace emberEngine
         pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-        vkCreatePipelineLayout(m_pContext->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
+        vkCreatePipelineLayout(VulkanContext::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
     }
     void SkyboxPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
     {
@@ -111,7 +109,7 @@ namespace emberEngine
         // Multisampling:
         VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
         multisampleState.sampleShadingEnable = VK_FALSE;
-        multisampleState.rasterizationSamples = m_pContext->msaaSamples;
+        multisampleState.rasterizationSamples = VulkanContext::msaaSamples;
         multisampleState.minSampleShading = 1.0f;           // Optional
         multisampleState.pSampleMask = nullptr;             // Optional
         multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional
@@ -184,6 +182,6 @@ namespace emberEngine
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
         pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline
 
-        VKA(vkCreateGraphicsPipelines(m_pContext->GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
+        VKA(vkCreateGraphicsPipelines(VulkanContext::GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
     }
 }

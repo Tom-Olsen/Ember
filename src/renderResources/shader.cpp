@@ -2,7 +2,6 @@
 #include "logger.h"
 #include "pipeline.h"
 #include "spirvReflect.h"
-#include "vulkanContext.h"
 #include <fstream>
 
 
@@ -19,10 +18,6 @@ namespace emberEngine
 	const std::string& Shader::GetName() const
 	{
 		return m_name;
-	}
-	VulkanContext* const Shader::GetContext() const
-	{
-		return m_pContext;
 	}
 	const Pipeline* const Shader::GetPipeline() const
 	{

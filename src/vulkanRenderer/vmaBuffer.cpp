@@ -15,25 +15,21 @@ namespace emberEngine
 		m_allocation = VK_NULL_HANDLE;
 		m_bufferInfo = {};
 		m_allocInfo = {};
-		m_pContext = nullptr;
 	}
-	VmaBuffer::VmaBuffer(VulkanContext* pContext, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
+	VmaBuffer::VmaBuffer(const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
 	{
-		m_pContext = pContext;
 		m_bufferInfo = bufferInfo;
 		m_allocInfo = allocInfo;
-		VKA(vmaCreateBuffer(m_pContext->GetVmaAllocator(), &m_bufferInfo, &m_allocInfo, &m_buffer, &m_allocation, nullptr));
+		VKA(vmaCreateBuffer(VulkanContext::GetVmaAllocator(), &m_bufferInfo, &m_allocInfo, &m_buffer, &m_allocation, nullptr));
 	}
 	VmaBuffer::VmaBuffer(VmaBuffer&& other) noexcept
 		: m_buffer(other.m_buffer),
 		m_allocation(other.m_allocation),
 		m_bufferInfo(other.m_bufferInfo),
-		m_allocInfo(other.m_allocInfo),
-		m_pContext(other.m_pContext)
+		m_allocInfo(other.m_allocInfo)
 	{
 		other.m_buffer = VK_NULL_HANDLE;
 		other.m_allocation = nullptr;
-		other.m_pContext = nullptr;
 	}
 	VmaBuffer& VmaBuffer::operator=(VmaBuffer&& other) noexcept
 	{
@@ -48,18 +44,16 @@ namespace emberEngine
 			m_allocation = other.m_allocation;
 			m_bufferInfo = other.m_bufferInfo;
 			m_allocInfo = other.m_allocInfo;
-			m_pContext = other.m_pContext;
 
 			// Reset other
 			other.m_buffer = VK_NULL_HANDLE;
 			other.m_allocation = nullptr;
-			other.m_pContext = nullptr;
 		}
 		return *this;
 	}
 	VmaBuffer::~VmaBuffer()
 	{
-		vmaDestroyBuffer(m_pContext->GetVmaAllocator(), m_buffer, m_allocation);
+		vmaDestroyBuffer(VulkanContext::GetVmaAllocator(), m_buffer, m_allocation);
 	}
 
 
@@ -90,9 +84,9 @@ namespace emberEngine
 
 
 	// Static methods:
-	void VmaBuffer::CopyBufferToBuffer(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize bufferSize, const VulkanQueue& queue)
+	void VmaBuffer::CopyBufferToBuffer(VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize bufferSize, const VulkanQueue& queue)
 	{
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(pContext, queue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(queue);
 
 		// Queue copy command:
 		VkBufferCopy copyRegion = {};
@@ -101,11 +95,11 @@ namespace emberEngine
 		copyRegion.size = bufferSize;
 		vkCmdCopyBuffer(command.GetVkCommandBuffer(), srcBuffer->GetVkBuffer(), dstBuffer->GetVkBuffer(), 1, &copyRegion);
 
-		VulkanCommand::EndSingleTimeCommand(pContext, command, queue);
+		VulkanCommand::EndSingleTimeCommand(command, queue);
 	}
-	void VmaBuffer::CopyBufferToImage(VulkanContext* pContext, VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount)
+	void VmaBuffer::CopyBufferToImage(VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount)
 	{
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(pContext, queue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(queue);
 
 		VkBufferImageCopy region = {};
 		region.bufferOffset = 0;
@@ -126,9 +120,9 @@ namespace emberEngine
 			1,
 			&region);
 
-		VulkanCommand::EndSingleTimeCommand(pContext, command, queue);
+		VulkanCommand::EndSingleTimeCommand(command, queue);
 	}
-	VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* pContext, uint64_t size, void* inputData)
+	VmaBuffer VmaBuffer::StagingBuffer(uint64_t size, void* inputData)
 	{
 		// Create buffer:
 		VkBufferCreateInfo bufferInfo = {};
@@ -143,17 +137,17 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		VmaBuffer stagingBuffer = VmaBuffer(pContext, bufferInfo, allocInfo);
+		VmaBuffer stagingBuffer = VmaBuffer(bufferInfo, allocInfo);
 
 		// Load data into buffer:
 		void* data;
-		VKA(vmaMapMemory(pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation(), &data));
+		VKA(vmaMapMemory(VulkanContext::GetVmaAllocator(), stagingBuffer.GetVmaAllocation(), &data));
 		memcpy(data, inputData, static_cast<size_t>(size));
-		vmaUnmapMemory(pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation());
+		vmaUnmapMemory(VulkanContext::GetVmaAllocator(), stagingBuffer.GetVmaAllocation());
 
 		return stagingBuffer;
 	}
-	VmaBuffer VmaBuffer::StagingBuffer(VulkanContext* pContext, const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas)
+	VmaBuffer VmaBuffer::StagingBuffer(const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas)
 	{
 		// Check if sizes and inputDatas have the same size:
 		if (sizes.size() != inputDatas.size())
@@ -177,11 +171,11 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		VmaBuffer stagingBuffer = VmaBuffer(pContext, bufferInfo, allocInfo);
+		VmaBuffer stagingBuffer = VmaBuffer(bufferInfo, allocInfo);
 
 		// Load data into buffer:
 		void* data;
-		VKA(vmaMapMemory(pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation(), &data));
+		VKA(vmaMapMemory(VulkanContext::GetVmaAllocator(), stagingBuffer.GetVmaAllocation(), &data));
 		uint64_t offset = 0;
 		for (uint64_t i = 0; i < inputDatas.size(); i++)
 		{
@@ -191,7 +185,7 @@ namespace emberEngine
 				offset += sizes[i];
 			}
 		}
-		vmaUnmapMemory(pContext->GetVmaAllocator(), stagingBuffer.GetVmaAllocation());
+		vmaUnmapMemory(VulkanContext::GetVmaAllocator(), stagingBuffer.GetVmaAllocation());
 
 		return stagingBuffer;
 	}

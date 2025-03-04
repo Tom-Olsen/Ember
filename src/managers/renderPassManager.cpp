@@ -11,34 +11,31 @@ namespace emberEngine
 {
 	// Static members:
 	bool RenderPassManager::s_isInitialized = false;
-	VulkanContext* RenderPassManager::s_pContext;
 	std::unordered_map<std::string, std::unique_ptr<RenderPass>> RenderPassManager::s_renderPasses;
 
 
 
 	// Initialization and cleanup:
-	void RenderPassManager::Init(VulkanContext* pContext)
+	void RenderPassManager::Init()
 	{
 		if (s_isInitialized)
 			return;
-
 		s_isInitialized = true;
-		RenderPassManager::s_pContext = pContext;
 
-		ForwardRenderPass* forwardRenderPass = new ForwardRenderPass(s_pContext);
+		ForwardRenderPass* forwardRenderPass = new ForwardRenderPass();
 		AddRenderPass("forwardRenderPass", forwardRenderPass);
 
-		ShadowRenderPass* shadowRenderPass = new ShadowRenderPass(s_pContext);
+		ShadowRenderPass* shadowRenderPass = new ShadowRenderPass();
 		AddRenderPass("shadowRenderPass", shadowRenderPass);
 	}
 	void RenderPassManager::Clear()
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_renderPasses.clear();
 	}
 	void RenderPassManager::RecreateRenderPasses()
 	{
-		RenderPass* newForwardRenderPass = new ForwardRenderPass(s_pContext);
+		RenderPass* newForwardRenderPass = new ForwardRenderPass();
 		DeleteRenderPass("forwardRenderPass");
 		AddRenderPass("forwardRenderPass", newForwardRenderPass);
 	}
@@ -65,7 +62,7 @@ namespace emberEngine
 	}
 	void RenderPassManager::DeleteRenderPass(const std::string& name)
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_renderPasses.erase(name);
 	}
 

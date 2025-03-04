@@ -9,7 +9,6 @@
 namespace emberEngine
 {
     // Forward declarations:
-    struct VulkanContext;
     class RenderPass;
 
 
@@ -21,11 +20,10 @@ namespace emberEngine
     {
     private: // Members
         static bool s_isInitialized;
-        static VulkanContext* s_pContext;
         static std::unordered_map<std::string, std::unique_ptr<RenderPass>> s_renderPasses;
 
     public: // Methods
-        static void Init(VulkanContext* pContext);
+        static void Init();
         static void Clear();
         static void RecreateRenderPasses();
 

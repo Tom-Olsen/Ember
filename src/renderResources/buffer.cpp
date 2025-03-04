@@ -10,7 +10,7 @@ namespace emberEngine
 	// Virtual Destructor:
 	Buffer::~Buffer()
 	{
-		m_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 	}
 
 	// Public Methods:

@@ -15,7 +15,7 @@ namespace emberEngine
 	class RenderTexture2d : public Texture2d
 	{
 	public: // Methods:
-		RenderTexture2d(VulkanContext* pContext, const std::string& name, VkFormat format, int width, int height);
+		RenderTexture2d(const std::string& name, VkFormat format, int width, int height);
 		~RenderTexture2d();
 	};
 }

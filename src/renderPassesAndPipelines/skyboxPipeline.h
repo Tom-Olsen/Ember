@@ -10,7 +10,6 @@ namespace emberEngine
 {
 	// Forward declarations:
 	struct VertexInputDescriptions;
-	struct VulkanContext;
 
 
 
@@ -20,11 +19,11 @@ namespace emberEngine
 	class SkyboxPipeline : public Pipeline
 	{
 	public: // Methods:
-		SkyboxPipeline(VulkanContext* pContext,
-			const std::vector<char>& vertexCode,
-			const std::vector<char>& fragmentCode,
-			const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
-			const VertexInputDescriptions* const pVertexInputDescriptions);
+		SkyboxPipeline
+		(const std::vector<char>& vertexCode,
+		 const std::vector<char>& fragmentCode,
+		 const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
+		 const VertexInputDescriptions* const pVertexInputDescriptions);
 		~SkyboxPipeline();
 
 	private: // Methods:

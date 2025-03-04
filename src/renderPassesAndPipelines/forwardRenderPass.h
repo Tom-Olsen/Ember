@@ -10,7 +10,6 @@ namespace emberEngine
 {
 	// Forward declarations:
 	class VmaImage;
-	struct VulkanContext;
 
 
 
@@ -27,7 +26,7 @@ namespace emberEngine
 		VkFormat m_depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 	public: // Methods:
-		ForwardRenderPass(VulkanContext* pContext);
+		ForwardRenderPass();
 		~ForwardRenderPass();
 		const VmaImage* const GetMsaaVmaImage() const;
 		const VmaImage* const GetDepthVmaImage() const;

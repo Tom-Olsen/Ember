@@ -14,7 +14,6 @@ namespace emberEngine
 	struct DrawCall;
 	class Material;
 	class Scene;
-	struct VulkanContext;
 	class VulkanCommand;
 	class RenderTexture2d;
 	class ShaderProperties;
@@ -24,7 +23,6 @@ namespace emberEngine
 	class VulkanRenderer
 	{
 	private: // Members:
-		VulkanContext* m_pContext;
 		Material* m_pShadowMaterial;
 
 		// Render resources:
@@ -47,10 +45,9 @@ namespace emberEngine
 		std::vector<ComputeCall*>* m_pSyncComputeCalls;
 
 	public: // Methods:
-		VulkanRenderer(VulkanContext* pContext);
+		VulkanRenderer();
 		~VulkanRenderer();
 		bool RenderFrame(Scene* pScene);
-		const VulkanContext* const GetContext() const;
 
 	private: // Methods:
 		void RebuildSwapchain();

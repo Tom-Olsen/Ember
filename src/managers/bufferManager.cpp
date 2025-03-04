@@ -10,26 +10,23 @@ namespace emberEngine
 {
 	// Static members:
 	bool BufferManager::s_isInitialized = false;
-	VulkanContext* BufferManager::s_pContext;
 	std::unordered_map<std::string, std::unique_ptr<Buffer>> BufferManager::s_buffers;
 
 
 
 	// Initialization and cleanup:
-	void BufferManager::Init(VulkanContext* pContext)
+	void BufferManager::Init()
 	{
 		if (s_isInitialized)
 			return;
-
 		s_isInitialized = true;
-		s_pContext = pContext;
 
-		StorageBuffer* dummyStorageBuffer = new StorageBuffer(s_pContext, 1, 1);
+		StorageBuffer* dummyStorageBuffer = new StorageBuffer(1, 1);
 		AddBuffer(dummyStorageBuffer, "dummyStorageBuffer");
 	}
 	void BufferManager::Clear()
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_buffers.clear();
 	}
 
@@ -55,7 +52,7 @@ namespace emberEngine
 	}
 	void BufferManager::DeleteBuffer(const std::string& name)
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_buffers.erase(name);
 	}
 }

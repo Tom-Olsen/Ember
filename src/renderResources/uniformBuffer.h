@@ -27,7 +27,7 @@ namespace emberEngine
 		UniformBufferBlock* m_pUniformBufferBlock;
 
 	public: // Methods:
-		UniformBuffer(VulkanContext* pContext, UniformBufferBlock* pUniformBufferBlock);
+		UniformBuffer(UniformBufferBlock* pUniformBufferBlock);
 		~UniformBuffer();
 
 		void UpdateBuffer();

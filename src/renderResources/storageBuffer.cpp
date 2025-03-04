@@ -1,5 +1,4 @@
 #include "storageBuffer.h"
-#include "vulkanContext.h"
 #include "vmaBuffer.h"
 #include <vulkan/vulkan.h>
 
@@ -8,12 +7,11 @@
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	StorageBuffer::StorageBuffer(VulkanContext* pContext, uint32_t count, uint32_t elementSize)
+	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize)
 	{
 		m_count = count;
 		m_elementSize = elementSize;
 		m_size = m_count * m_elementSize;
-		m_pContext = pContext;
 
 		// Create buffer:
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -27,7 +25,7 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_buffer = std::make_unique<VmaBuffer>(m_pContext, bufferInfo, allocInfo);
+		m_buffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
 	}
 	StorageBuffer::~StorageBuffer()
 	{

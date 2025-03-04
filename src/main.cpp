@@ -12,9 +12,7 @@ using namespace emberEngine;
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
 // - use one constants.h file both for c++ and hlsl constants that are identical, e.g. #define SHADOW_MAP_RESOLUTION 4096
 // - refactor RenderPassManager to contain hard coded getters for each RenderPass, instead of access via strings.
-// - rename shadingRenderPass etc to forwardRenderPass.
 // - SceneView gui 
-// - Ember namespace
 // - cleanup project. e.g. renderpasses & pipelines => multiple folders e.g shadow/forward/skybox/...
 
 // TODO:
@@ -303,7 +301,7 @@ Scene* TestScene()
 	}
 	return pScene;
 }
-Scene* DefaultScene(VulkanContext* pContext)
+Scene* DefaultScene()
 {
 	bool directionalLightsActive = false;
 	bool showLightFrustums = false;
@@ -642,7 +640,7 @@ Scene* DefaultScene(VulkanContext* pContext)
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
 		
-		TestInstancedRendering* testInstancedRendering = new TestInstancedRendering(pContext, 16);
+		TestInstancedRendering* testInstancedRendering = new TestInstancedRendering(16);
 		pGameObject->AddComponent<TestInstancedRendering>(testInstancedRendering);
 
 		InstancedRenderer* pInstancedRenderer = new InstancedRenderer();
@@ -758,10 +756,9 @@ int main()
 
 	// Initialization:
 	Application app;
-	VulkanContext* pContext = app.GetVulkanContext();
 	//Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
-	Scene* pScene = DefaultScene(pContext);
+	Scene* pScene = DefaultScene();
 	//Scene* pScene = PointLightScene();
 	app.SetScene(pScene);
 

@@ -13,7 +13,6 @@ namespace emberEngine
 	// Forward declarations:
 	class Mesh;
 	struct VertexInputDescriptions;
-	struct VulkanContext;
 
 
 
@@ -42,7 +41,7 @@ namespace emberEngine
 
 	public: // Methods:
 		// Constructors/Destructor:
-		Material(VulkanContext* pContext, Type type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		Material(Type type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
 		~Material();
 
 		// Getters:

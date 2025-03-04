@@ -31,24 +31,22 @@ namespace emberEngine
 		uint32_t framesInFlight = 2;
 		VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
 
-		// Create vulkan context:
-		m_pContext = std::make_unique<VulkanContext>(framesInFlight, msaaSamples);
-
 		// Init static managers:
+		VulkanContext::Init(framesInFlight, msaaSamples);
 		math::Random::Init();
-		EventSystem::Init(m_pContext.get());
-		RenderPassManager::Init(m_pContext.get());
-		ComputeShaderManager::Init(m_pContext.get());
-		MaterialManager::Init(m_pContext.get());
-		BufferManager::Init(m_pContext.get());
-		TextureManager::Init(m_pContext.get());
-		SamplerManager::Init(m_pContext.get());
-		MeshManager::Init(m_pContext.get());
+		EventSystem::Init();
+		RenderPassManager::Init();
+		ComputeShaderManager::Init();
+		MaterialManager::Init();
+		BufferManager::Init();
+		TextureManager::Init();
+		SamplerManager::Init();
+		MeshManager::Init();
 		Graphics::Init();
-		DearImGui::Init(m_pContext.get());
+		DearImGui::Init();
 
 		// Create renderer:
-		m_pRenderer = std::make_unique<VulkanRenderer>(m_pContext.get());
+		m_pRenderer = std::make_unique<VulkanRenderer>();
 	}
 
 
@@ -56,7 +54,7 @@ namespace emberEngine
 	// Destructor:
 	Application::~Application()
 	{
-		m_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		// Clear static managers:
 		DearImGui::Clear();
 		Graphics::Clear();
@@ -68,6 +66,7 @@ namespace emberEngine
 		ComputeShaderManager::Clear();
 		RenderPassManager::Clear();
 		EventSystem::Clear();
+		VulkanContext::Clear();
 	}
 
 
@@ -83,12 +82,12 @@ namespace emberEngine
 		{
 			Timer::Update();
 			DearImGui::Update();
-			running = m_pContext->pWindow->HandleEvents();
+			running = VulkanContext::pWindow->HandleEvents();
 
 			// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
-			VkExtent2D windowExtent = m_pContext->pWindow->GetExtent();
-			VkExtent2D surfaceExtend = m_pContext->pSurface->GetCurrentExtent();
-			if (m_pContext->pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
+			VkExtent2D windowExtent = VulkanContext::pWindow->GetExtent();
+			VkExtent2D surfaceExtend = VulkanContext::pSurface->GetCurrentExtent();
+			if (VulkanContext::pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
 			{
 				SDL_Delay(10);
 				continue;
@@ -100,16 +99,12 @@ namespace emberEngine
 
 			// Render loop:
 			if (m_pRenderer->RenderFrame(m_pActiveScene))
-				m_pContext->UpdateFrameIndex();
+				VulkanContext::UpdateFrameIndex();
 		}
 	}
 	void Application::SetScene(Scene* pScene)
 	{
 		this->m_pActiveScene = pScene;
-	}
-	VulkanContext* Application::GetVulkanContext()
-	{
-		return m_pContext.get();
 	}
 
 

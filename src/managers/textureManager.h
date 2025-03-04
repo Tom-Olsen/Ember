@@ -10,7 +10,6 @@ namespace emberEngine
 {
     // Forward declarations:
     class Texture2d;
-    struct VulkanContext;
 
 
 
@@ -21,11 +20,10 @@ namespace emberEngine
     {
     private: // Members
         static bool s_isInitialized;
-        static VulkanContext* s_pContext;
         static std::unordered_map<std::string, std::unique_ptr<Texture2d>> s_texture2ds;
 
     public: // Methods
-        static void Init(VulkanContext* pContext);
+        static void Init();
         static void Clear();
 
         static void AddTexture2d(Texture2d* pTexture);

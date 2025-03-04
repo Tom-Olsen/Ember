@@ -10,7 +10,6 @@ namespace emberEngine
 {
     // Forward declarations:
     class Sampler;
-    struct VulkanContext;
 
 
 
@@ -23,11 +22,10 @@ namespace emberEngine
 
     private: // Members
         static bool s_isInitialized;
-        static VulkanContext* s_pContext;
         static std::unordered_map<std::string, std::unique_ptr<Sampler>> s_samplers;
 
     public: // Methods
-        static void Init(VulkanContext* pContext);
+        static void Init();
         static void Clear();
 
         static void AddSampler(Sampler* pSampler);

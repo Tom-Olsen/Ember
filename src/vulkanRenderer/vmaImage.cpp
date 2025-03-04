@@ -9,9 +9,8 @@
 namespace emberEngine
 {
 	// Constructors/Destructor:
-	VmaImage::VmaImage(VulkanContext* pContext, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue)
+	VmaImage::VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue)
 	{
-		m_pContext = pContext;
 		m_imageInfo = imageInfo;
 		m_allocationInfo = allocationInfo;
 		m_subresourceRange = subresourceRange;
@@ -19,7 +18,7 @@ namespace emberEngine
 		m_layout = m_imageInfo.initialLayout;
 
 		// Create image:
-		VKA(vmaCreateImage(m_pContext->GetVmaAllocator(), &m_imageInfo, &m_allocationInfo, &m_image, &m_allocation, nullptr));
+		VKA(vmaCreateImage(VulkanContext::GetVmaAllocator(), &m_imageInfo, &m_allocationInfo, &m_image, &m_allocation, nullptr));
 
 		// Create image view:
 		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
@@ -27,12 +26,12 @@ namespace emberEngine
 		viewInfo.viewType = viewType;
 		viewInfo.format = m_imageInfo.format;
 		viewInfo.subresourceRange = m_subresourceRange;
-		VKA(vkCreateImageView(m_pContext->GetVkDevice(), &viewInfo, nullptr, &m_imageView));
+		VKA(vkCreateImageView(VulkanContext::GetVkDevice(), &viewInfo, nullptr, &m_imageView));
 	}
 	VmaImage::~VmaImage()
 	{
-		vmaDestroyImage(m_pContext->GetVmaAllocator(), m_image, m_allocation);
-		vkDestroyImageView(m_pContext->GetVkDevice(), m_imageView, nullptr);
+		vmaDestroyImage(VulkanContext::GetVmaAllocator(), m_image, m_allocation);
+		vkDestroyImageView(VulkanContext::GetVkDevice(), m_imageView, nullptr);
 	}
 
 
@@ -112,7 +111,7 @@ namespace emberEngine
 	void VmaImage::TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
 	{
 		// Only transition layout. Queue remains unchanged.
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_queue);
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_queue);
 
 		VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 		barrier.srcStageMask = srcStage;
@@ -132,7 +131,7 @@ namespace emberEngine
 
 		vkCmdPipelineBarrier2(command.GetVkCommandBuffer(), &dependencyInfo);
 
-		VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_queue);
+		VulkanCommand::EndSingleTimeCommand(command, m_queue);
 
 		m_layout = newLayout;
 	}
@@ -144,7 +143,7 @@ namespace emberEngine
 	void VmaImage::TransitionLayoutAndQueue(VkImageLayout newLayout, const VulkanQueue& newQueue, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
 	{
 		// Barrier on release queue:
-		VulkanCommand releaseCommand = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_queue);
+		VulkanCommand releaseCommand = VulkanCommand::BeginSingleTimeCommand(m_queue);
 
 		VkImageMemoryBarrier2 releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 		releaseBarrier.srcStageMask = srcStage;
@@ -163,11 +162,11 @@ namespace emberEngine
 		releaseDependencyInfo.pImageMemoryBarriers = &releaseBarrier;
 
 		vkCmdPipelineBarrier2(releaseCommand.GetVkCommandBuffer(), &releaseDependencyInfo);
-		VulkanCommand::EndSingleTimeCommand(m_pContext, releaseCommand, m_queue);
+		VulkanCommand::EndSingleTimeCommand(releaseCommand, m_queue);
 
 
 		// Barrier on receiving queue:
-		VulkanCommand receiveCommand = VulkanCommand::BeginSingleTimeCommand(m_pContext, newQueue);
+		VulkanCommand receiveCommand = VulkanCommand::BeginSingleTimeCommand(newQueue);
 
 		VkImageMemoryBarrier2 receiveBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 		receiveBarrier.srcStageMask = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
@@ -186,14 +185,14 @@ namespace emberEngine
 		receiveDependencyInfo.pImageMemoryBarriers = &receiveBarrier;
 
 		vkCmdPipelineBarrier2(receiveCommand.GetVkCommandBuffer(), &receiveDependencyInfo);
-		VulkanCommand::EndSingleTimeCommand(m_pContext, receiveCommand, newQueue);
+		VulkanCommand::EndSingleTimeCommand(receiveCommand, newQueue);
 
 		m_layout = newLayout;
 		m_queue = newQueue;
 	}
 	void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 	{
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, m_pContext->pLogicalDevice->GetGraphicsQueue());
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(VulkanContext::pLogicalDevice->GetGraphicsQueue());
 
 		VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		barrier.image = m_image;
@@ -270,7 +269,7 @@ namespace emberEngine
 			0, nullptr,
 			1, &barrier);
 
-		VulkanCommand::EndSingleTimeCommand(m_pContext, command, m_pContext->pLogicalDevice->GetGraphicsQueue());
+		VulkanCommand::EndSingleTimeCommand(command, VulkanContext::pLogicalDevice->GetGraphicsQueue());
 
 		m_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
@@ -278,9 +277,9 @@ namespace emberEngine
 
 
 	// Static methods:
-	void VmaImage::CopyImageToImage(VulkanContext* m_pContext, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue)
+	void VmaImage::CopyImageToImage(VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue)
 	{
-		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(m_pContext, queue);;
+		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(queue);;
 
 		// Queue copy command:
 		VkImageCopy copyRegion = {};
@@ -291,6 +290,6 @@ namespace emberEngine
 		copyRegion.extent = srcImage->GetExtent();
 		vkCmdCopyImage(command.GetVkCommandBuffer(), srcImage->GetVkImage(), srcImage->GetLayout(), dstImage->GetVkImage(), dstImage->GetLayout(), 1, &copyRegion);
 
-		VulkanCommand::EndSingleTimeCommand(m_pContext, command, queue);
+		VulkanCommand::EndSingleTimeCommand(command, queue);
 	}
 }

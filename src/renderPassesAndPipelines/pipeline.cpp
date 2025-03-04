@@ -9,9 +9,9 @@ namespace emberEngine
 	// Virtual Destructor:
 	Pipeline::~Pipeline()
 	{
-		vkDestroyDescriptorSetLayout(m_pContext->GetVkDevice(), m_descriptorSetLayout, nullptr);
-		vkDestroyPipelineLayout(m_pContext->GetVkDevice(), m_pipelineLayout, nullptr);
-		vkDestroyPipeline(m_pContext->GetVkDevice(), m_pipeline, nullptr);
+		vkDestroyDescriptorSetLayout(VulkanContext::GetVkDevice(), m_descriptorSetLayout, nullptr);
+		vkDestroyPipelineLayout(VulkanContext::GetVkDevice(), m_pipelineLayout, nullptr);
+		vkDestroyPipeline(VulkanContext::GetVkDevice(), m_pipeline, nullptr);
 	}
 
 
@@ -40,7 +40,7 @@ namespace emberEngine
 		createInfo.pCode = (uint32_t*)(code.data());
 
 		VkShaderModule shaderModule;
-		VKA(vkCreateShaderModule(m_pContext->GetVkDevice(), &createInfo, nullptr, &shaderModule));
+		VKA(vkCreateShaderModule(VulkanContext::GetVkDevice(), &createInfo, nullptr, &shaderModule));
 		return shaderModule;
 	}
 }

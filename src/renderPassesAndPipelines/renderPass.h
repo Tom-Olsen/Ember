@@ -7,11 +7,6 @@
 
 namespace emberEngine
 {
-	// Forward declarations:
-	struct VulkanContext;
-	
-
-
 	/// <summary>
 	/// Polymorphic parent class for all renderPasses.
 	/// </summary>
@@ -20,7 +15,6 @@ namespace emberEngine
 	protected: // Members:
 		VkRenderPass m_renderPass;
 		std::vector<VkFramebuffer> m_framebuffers;
-		VulkanContext* m_pContext;
 
 	public: // Methods:
 		virtual ~RenderPass();

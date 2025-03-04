@@ -8,7 +8,6 @@ namespace emberEngine
 {
 	// Forward declarations:
 	class Scene;
-	struct VulkanContext;
 	class VulkanRenderer;
 
 
@@ -16,7 +15,6 @@ namespace emberEngine
 	class Application
 	{
 	private: // Members:
-		std::unique_ptr<VulkanContext> m_pContext;
 		std::unique_ptr<VulkanRenderer> m_pRenderer;
 		Scene* m_pActiveScene;
 
@@ -25,7 +23,6 @@ namespace emberEngine
 		~Application();
 		void Run();
 		void SetScene(Scene* pScene);
-		VulkanContext* GetVulkanContext();
 
 	private: // Methods:
 		void Start();

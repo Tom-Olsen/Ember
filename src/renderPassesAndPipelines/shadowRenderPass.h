@@ -11,7 +11,6 @@ namespace emberEngine
 	// Forward declarations:
 	class DepthTexture2dArray;
 	class VmaImage;
-	struct VulkanContext;
 
 
 
@@ -31,7 +30,7 @@ namespace emberEngine
 		static uint32_t s_layerCount;
 
 	public: // Methods:
-		ShadowRenderPass(VulkanContext* pContext);
+		ShadowRenderPass();
 		~ShadowRenderPass();
 		DepthTexture2dArray* const GetShadowMaps() const;
 

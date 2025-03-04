@@ -12,7 +12,6 @@ namespace emberEngine
 {
 	// Forward declarations:
 	class VmaBuffer;
-	struct VulkanContext;
 
 
 
@@ -50,7 +49,7 @@ namespace emberEngine
 		~Mesh();
 
 		// Load/Unload:
-		void Load(VulkanContext* pContext);
+		void Load();
 		void Unload();
 
 		// Setters:
@@ -94,8 +93,8 @@ namespace emberEngine
 		VkDeviceSize GetTangentsOffset() const;
 		VkDeviceSize GetColorsOffset() const;
 		VkDeviceSize GetUVsOffset() const;
-		VmaBuffer* GetVertexBuffer(VulkanContext* pContext);
-		VmaBuffer* GetIndexBuffer(VulkanContext* pContext);
+		VmaBuffer* GetVertexBuffer();
+		VmaBuffer* GetIndexBuffer();
 		bool IsLoaded();
 		Mesh* GetCopy(const std::string& newName = "");
 
@@ -121,8 +120,8 @@ namespace emberEngine
 		std::string ToString();
 
 	private: // Methods:
-		void UpdateVertexBuffer(VulkanContext* pContext);
-		void UpdateIndexBuffer(VulkanContext* pContext);
+		void UpdateVertexBuffer();
+		void UpdateIndexBuffer();
 	};
 }
 

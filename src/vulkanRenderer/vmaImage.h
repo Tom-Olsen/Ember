@@ -9,10 +9,6 @@
 
 namespace emberEngine
 {
-	// Forward declarations:
-	struct VulkanContext;
-
-
 	/// <summary>
 	/// Manages VkImage and VkImageView resource: creation, allocation, destruction, queue ownership, layout.
 	/// Usually further abstracted by texture class which wraps around it.
@@ -30,10 +26,9 @@ namespace emberEngine
 		VkImageSubresourceRange m_subresourceRange;
 		VulkanQueue m_queue;
 		VkImageLayout m_layout;
-		VulkanContext* m_pContext;
 
 	public: // Methods:
-		VmaImage(VulkanContext* pContext, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue);
+		VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue);
 		~VmaImage();
 
 
@@ -62,7 +57,7 @@ namespace emberEngine
 		void GenerateMipmaps(uint32_t mipLevels);
 
 		// Static methods:
-		static void CopyImageToImage(VulkanContext* context, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue);
+		static void CopyImageToImage(VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue);
 	};
 }
 

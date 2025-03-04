@@ -16,7 +16,6 @@ namespace emberEngine
 	class StorageBuffer;
 	class Texture2d;
 	class UniformBuffer;
-	struct VulkanContext;
 
 
 
@@ -38,7 +37,6 @@ namespace emberEngine
 	{
 	private: // Members:
 		Shader* m_pShader;
-		VulkanContext* m_pContext;
 
 		// All these vectors contain one item for each frame in flight:
 		std::vector<VkDescriptorSet> m_descriptorSets;

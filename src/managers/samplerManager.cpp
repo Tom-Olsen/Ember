@@ -9,32 +9,29 @@ namespace emberEngine
 {
 	// Static members:
 	bool SamplerManager::s_isInitialized = false;
-	VulkanContext* SamplerManager::s_pContext;
 	std::unordered_map<std::string, std::unique_ptr<Sampler>> SamplerManager::s_samplers;
 
 
 
 	// Initialization and cleanup:
-	void SamplerManager::Init(VulkanContext* pContext)
+	void SamplerManager::Init()
 	{
 		if (s_isInitialized)
 			return;
-
 		s_isInitialized = true;
-		s_pContext = pContext;
 
-		Sampler* colorSampler = Sampler::ColorSampler(s_pContext, "colorSampler");
+		Sampler* colorSampler = Sampler::ColorSampler("colorSampler");
 		AddSampler(colorSampler);
 
-		Sampler* shadowSampler = Sampler::ShadowSampler(s_pContext, "shadowSampler");
+		Sampler* shadowSampler = Sampler::ShadowSampler("shadowSampler");
 		AddSampler(shadowSampler);
 
-		Sampler* colorSampler2 = Sampler::ColorSampler(s_pContext, "colorSampler2");
+		Sampler* colorSampler2 = Sampler::ColorSampler("colorSampler2");
 		AddSampler(colorSampler2);
 	}
 	void SamplerManager::Clear()
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_samplers.clear();
 	}
 
@@ -60,7 +57,7 @@ namespace emberEngine
 	}
 	void SamplerManager::DeleteSampler(const std::string& name)
 	{
-		s_pContext->WaitDeviceIdle();
+		VulkanContext::WaitDeviceIdle();
 		s_samplers.erase(name);
 	}
 

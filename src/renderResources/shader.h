@@ -13,7 +13,6 @@ namespace emberEngine
 	// Forward declarations:
 	class Pipeline;
 	struct DescriptorBoundResources;
-	struct VulkanContext;
 
 
 
@@ -24,7 +23,6 @@ namespace emberEngine
 	{
 	protected: // Members:
 		std::string m_name;
-		VulkanContext* m_pContext;
 		std::unique_ptr<Pipeline> m_pPipeline;
 		std::unique_ptr<DescriptorBoundResources> m_pDescriptorBoundResources;
 
@@ -33,7 +31,6 @@ namespace emberEngine
 
 		// Getters:
 		const std::string& GetName() const;
-		VulkanContext* const GetContext() const;
 		const Pipeline* const GetPipeline() const;
 		const DescriptorBoundResources* const GetDescriptorBoundResources() const;
 

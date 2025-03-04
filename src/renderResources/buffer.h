@@ -9,7 +9,6 @@ namespace emberEngine
 {
 	// Forward declarations:
 	class VmaBuffer;
-	struct VulkanContext;
 
 
 
@@ -26,7 +25,6 @@ namespace emberEngine
 	protected: // Members:
 		uint32_t m_size;	// in bytes: m_size = count * sizeof(type).
 		std::unique_ptr<VmaBuffer> m_buffer;
-		VulkanContext* m_pContext;
 
 	public: // Methods:
 		 virtual ~Buffer();

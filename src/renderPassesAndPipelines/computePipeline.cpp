@@ -9,12 +9,8 @@
 namespace emberEngine
 {
     // Constructor/Destructor:
-    ComputePipeline::ComputePipeline(VulkanContext* pContext,
-        const std::vector<char>& computeCode,
-        const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
+    ComputePipeline::ComputePipeline(const std::vector<char>& computeCode, const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
     {
-        m_pContext = pContext;
-
         // Create pipeline Layout:
         CreatePipelineLayout(vkDescriptorSetLayoutBindings);
 
@@ -25,7 +21,7 @@ namespace emberEngine
         CreatePipeline(computeShaderModule);
 
         // Destroy shader module (only needed for pipeline creation):
-        vkDestroyShaderModule(m_pContext->GetVkDevice(), computeShaderModule, nullptr);
+        vkDestroyShaderModule(VulkanContext::GetVkDevice(), computeShaderModule, nullptr);
     }
     ComputePipeline::~ComputePipeline()
     {
@@ -41,7 +37,7 @@ namespace emberEngine
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
         descriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.size();
         descriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.data();
-        VKA(vkCreateDescriptorSetLayout(m_pContext->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
+        VKA(vkCreateDescriptorSetLayout(VulkanContext::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
         
         // Push constants layout:
         VkPushConstantRange pushConstantRange = {};
@@ -55,7 +51,7 @@ namespace emberEngine
         pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-        vkCreatePipelineLayout(m_pContext->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
+        vkCreatePipelineLayout(VulkanContext::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
     }
     void ComputePipeline::CreatePipeline(const VkShaderModule& computeShaderModule)
     {
@@ -68,6 +64,6 @@ namespace emberEngine
         pipelineInfo.stage = computeShaderStageCreateInfo;
         pipelineInfo.layout = m_pipelineLayout;
         
-        VKA(vkCreateComputePipelines(m_pContext->GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline))
+        VKA(vkCreateComputePipelines(VulkanContext::GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline))
     }
 }

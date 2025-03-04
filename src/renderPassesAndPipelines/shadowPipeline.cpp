@@ -13,12 +13,11 @@
 namespace emberEngine
 {
     // Constructor/Destructor:
-    ShadowPipeline::ShadowPipeline(VulkanContext* pContext,
-        const std::vector<char>& vertexCode,
-        const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
-        const VertexInputDescriptions* const pVertexInputDescriptions)
+    ShadowPipeline::ShadowPipeline
+    (const std::vector<char>& vertexCode,
+     const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
+     const VertexInputDescriptions* const pVertexInputDescriptions)
     {
-        m_pContext = pContext;
 
         // Create pipeline Layout:
         CreatePipelineLayout(vkDescriptorSetLayoutBindings);
@@ -30,7 +29,7 @@ namespace emberEngine
         CreatePipeline(vertexShaderModule, pVertexInputDescriptions);
 
         // Destroy shader modules (only needed for pipeline creation):
-        vkDestroyShaderModule(m_pContext->GetVkDevice(), vertexShaderModule, nullptr);
+        vkDestroyShaderModule(VulkanContext::GetVkDevice(), vertexShaderModule, nullptr);
     }
     ShadowPipeline::~ShadowPipeline()
     {
@@ -46,7 +45,7 @@ namespace emberEngine
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
         descriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.size();
         descriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.data();
-        VKA(vkCreateDescriptorSetLayout(m_pContext->GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
+        VKA(vkCreateDescriptorSetLayout(VulkanContext::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
 
         // Push constants layout:
         VkPushConstantRange pushConstantRange = {};
@@ -60,7 +59,7 @@ namespace emberEngine
         pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-        vkCreatePipelineLayout(m_pContext->GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
+        vkCreatePipelineLayout(VulkanContext::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
     }
     void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
     {
@@ -104,8 +103,8 @@ namespace emberEngine
         rasterizationState.cullMode = VK_CULL_MODE_NONE;        // render both sides to fix shadow issue with one sides meshes.
         rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE; // which face of triangle is front: 123 or 132?
         rasterizationState.lineWidth = 1.0f;
-        rasterizationState.depthClampEnable = m_pContext->DepthClampEnabled();
-        rasterizationState.depthBiasEnable = m_pContext->DepthBiasClampEnabled();
+        rasterizationState.depthClampEnable = VulkanContext::DepthClampEnabled();
+        rasterizationState.depthBiasEnable = VulkanContext::DepthBiasClampEnabled();
         rasterizationState.depthBiasConstantFactor = 1.25f;     // Tweak this value based on the scene.
         rasterizationState.depthBiasClamp = 0.0001f;              // clamp value for equation below.
         rasterizationState.depthBiasSlopeFactor = 1.75f;        // Slope scale bias to handle varying slopes in depth.
@@ -159,6 +158,6 @@ namespace emberEngine
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
 
-        VKA(vkCreateGraphicsPipelines(m_pContext->GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
+        VKA(vkCreateGraphicsPipelines(VulkanContext::GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
     }
 }

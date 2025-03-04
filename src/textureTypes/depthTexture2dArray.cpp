@@ -10,9 +10,8 @@
 namespace emberEngine
 {
 	// Constructor/Desctructor:
-	DepthTexture2dArray::DepthTexture2dArray(VulkanContext* pContext, const std::string& name, VkFormat format, int width, int height, uint32_t layerCount)
+	DepthTexture2dArray::DepthTexture2dArray(const std::string& name, VkFormat format, int width, int height, uint32_t layerCount)
 	{
-		m_pContext = pContext;
 		m_type = Type::storage;
 		m_name = name;
 		m_width = width;
@@ -33,7 +32,7 @@ namespace emberEngine
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = 0;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-		VulkanQueue queue = m_pContext->pLogicalDevice->GetGraphicsQueue();
+		VulkanQueue queue = VulkanContext::pLogicalDevice->GetGraphicsQueue();
 		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 
 		// Although the image is in the layout undefined, the shadow renderpass automatically transitions it to shader read after rendering the shadow maps into it.

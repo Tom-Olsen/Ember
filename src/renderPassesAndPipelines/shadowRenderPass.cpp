@@ -18,12 +18,10 @@ namespace emberEngine
 
 
 	// Constructor/Destructor:
-	ShadowRenderPass::ShadowRenderPass(VulkanContext* pContext)
+	ShadowRenderPass::ShadowRenderPass()
 	{
-		m_pContext = pContext;
-
 		// Create shadow map texture:
-		m_shadowMaps = std::make_unique<DepthTexture2dArray>(m_pContext, "shadowMaps", s_shadowMapFormat, s_shadowMapWidth, s_shadowMapHeight, s_layerCount);
+		m_shadowMaps = std::make_unique<DepthTexture2dArray>("shadowMaps", s_shadowMapFormat, s_shadowMapWidth, s_shadowMapHeight, s_layerCount);
 		CreateRenderpass();
 		CreateFramebuffers();
 	}
@@ -72,13 +70,13 @@ namespace emberEngine
 		createInfo.pAttachments = &attachment;
 		createInfo.subpassCount = 1;
 		createInfo.pSubpasses = &subpass;
-		VKA(vkCreateRenderPass(m_pContext->GetVkDevice(), &createInfo, nullptr, &m_renderPass));
+		VKA(vkCreateRenderPass(VulkanContext::GetVkDevice(), &createInfo, nullptr, &m_renderPass));
 	}
 	void ShadowRenderPass::CreateFramebuffers()
 	{
 		// One framebuffer per swapchain image:
-		m_framebuffers.resize(m_pContext->framesInFlight);
-		for (uint32_t i = 0; i < m_pContext->framesInFlight; i++)
+		m_framebuffers.resize(VulkanContext::framesInFlight);
+		for (uint32_t i = 0; i < VulkanContext::framesInFlight; i++)
 		{
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;
@@ -87,7 +85,7 @@ namespace emberEngine
 			framebufferInfo.width = s_shadowMapWidth;
 			framebufferInfo.height = s_shadowMapHeight;
 			framebufferInfo.layers = s_layerCount;
-			vkCreateFramebuffer(m_pContext->GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
+			vkCreateFramebuffer(VulkanContext::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
 		}
 	}
 }

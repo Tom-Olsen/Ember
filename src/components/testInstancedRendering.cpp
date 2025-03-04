@@ -1,5 +1,4 @@
 #include "testInstancedRendering.h"
-#include "vulkanContext.h"
 #include "vulkanUtility.h"
 
 
@@ -7,11 +6,10 @@
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	TestInstancedRendering::TestInstancedRendering(VulkanContext* pVulkanContext, uint32_t instanceCount)
+	TestInstancedRendering::TestInstancedRendering(uint32_t instanceCount)
 	{
-		m_pVulkanContext = pVulkanContext;
 		uint32_t elementSize = sizeof(Float4x4) + sizeof(Float4);
-		m_pStorageBuffer = std::make_unique<StorageBuffer>(m_pVulkanContext, instanceCount, elementSize);
+		m_pStorageBuffer = std::make_unique<StorageBuffer>(instanceCount, elementSize);
 		m_pStartCS = ComputeShaderManager::GetComputeShader("initialPositionsComputeShader");
 		m_pUpdateCS = ComputeShaderManager::GetComputeShader("updatePositionsComputeShader");
 		m_pStartProperties = std::make_unique<ShaderProperties>((Shader*)m_pStartCS);

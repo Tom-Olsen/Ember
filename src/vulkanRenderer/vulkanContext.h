@@ -17,7 +17,6 @@
 
 namespace emberEngine
 {
-
 	/// <summary>
 	/// VulkanContext is a utility structure designed to encapsulate and manage
 	/// all components required for a Vulkan-based rendering application.
@@ -36,39 +35,42 @@ namespace emberEngine
 	/// </summary>
 	struct VulkanContext
 	{
+	private: // Members:
+		static bool s_isInitialized;
+
 	public: // Members:
-		std::unique_ptr<SdlWindow> pWindow;
-		std::unique_ptr<VulkanInstance> pInstance;
-		std::unique_ptr<VulkanPhysicalDevice> pPhysicalDevice;
-		std::unique_ptr<VulkanSurface> pSurface;
-		std::unique_ptr<VulkanLogicalDevice> pLogicalDevice;
-		std::unique_ptr<VulkanMemoryAllocator> pAllocator;
-		std::unique_ptr<VulkanDescriptorPool> pDescriptorPool;
-		std::unique_ptr<VulkanSwapchain> pSwapchain;
-		uint32_t framesInFlight;
-		uint32_t frameIndex;
-		VkSampleCountFlagBits msaaSamples;
+		static std::unique_ptr<SdlWindow> pWindow;
+		static std::unique_ptr<VulkanInstance> pInstance;
+		static std::unique_ptr<VulkanPhysicalDevice> pPhysicalDevice;
+		static std::unique_ptr<VulkanSurface> pSurface;
+		static std::unique_ptr<VulkanLogicalDevice> pLogicalDevice;
+		static std::unique_ptr<VulkanMemoryAllocator> pAllocator;
+		static std::unique_ptr<VulkanDescriptorPool> pDescriptorPool;
+		static std::unique_ptr<VulkanSwapchain> pSwapchain;
+		static uint32_t framesInFlight;
+		static uint32_t frameIndex;
+		static VkSampleCountFlagBits msaaSamples;
 
 	public: // Methods:
-		VulkanContext(uint32_t framesInFlight, VkSampleCountFlagBits msaaSamples);
-		~VulkanContext();
+		static void Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue);
+		static void Clear();
 
 		// Getters:
-		SDL_Window* const GetSDL_Window() const;
-		const VkInstance& GetVkInstance() const;
-		const VkPhysicalDevice& GetVkPhysicalDevice() const;
-		const VkSurfaceKHR& GetVkSurfaceKHR() const;
-		const VkDevice& GetVkDevice() const;
-		const VmaAllocator& GetVmaAllocator() const;
-		const VkDescriptorPool& GetVkDescriptorPool() const;
-		const VkSwapchainKHR& GetVkSwapchainKHR() const;
-		bool DepthClampEnabled() const;
-		bool DepthBiasClampEnabled() const;
+		static SDL_Window* const GetSDL_Window();
+		static const VkInstance& GetVkInstance();
+		static const VkPhysicalDevice& GetVkPhysicalDevice();
+		static const VkSurfaceKHR& GetVkSurfaceKHR();
+		static const VkDevice& GetVkDevice();
+		static const VmaAllocator& GetVmaAllocator();
+		static const VkDescriptorPool& GetVkDescriptorPool();
+		static const VkSwapchainKHR& GetVkSwapchainKHR();
+		static bool DepthClampEnabled();
+		static bool DepthBiasClampEnabled();
 
 		// Frame logic:
-		void UpdateFrameIndex();
-		void ResetFrameIndex();
-		void WaitDeviceIdle();
+		static void UpdateFrameIndex();
+		static void ResetFrameIndex();
+		static void WaitDeviceIdle();
 	};
 }
 

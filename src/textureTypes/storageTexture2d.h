@@ -15,8 +15,8 @@ namespace emberEngine
 	class StorageTexture2d : public Texture2d
 	{
 	public: // Methods:
-		StorageTexture2d(VulkanContext* pContext, const std::string& name, VkFormat format, int width, int height);
-		StorageTexture2d(VulkanContext* pContext, const std::filesystem::path& filePath, const std::string& name, VkFormat format);
+		StorageTexture2d(const std::string& name, VkFormat format, int width, int height);
+		StorageTexture2d(const std::filesystem::path& filePath, const std::string& name, VkFormat format);
 		~StorageTexture2d();
 	};
 }

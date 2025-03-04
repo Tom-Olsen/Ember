@@ -7,14 +7,13 @@
 namespace emberEngine
 {
 	// Constructor/Destructors:
-	Sampler::Sampler(VulkanContext* pContext, const std::string& name)
+	Sampler::Sampler(const std::string& name)
 	{
-		m_pContext = pContext;
 		m_name = name;
 	}
 	Sampler::~Sampler()
 	{
-		vkDestroySampler(m_pContext->GetVkDevice(), m_sampler, nullptr);
+		vkDestroySampler(VulkanContext::GetVkDevice(), m_sampler, nullptr);
 	}
 
 
@@ -31,16 +30,16 @@ namespace emberEngine
 	VkPhysicalDeviceProperties Sampler::GetVkPhysicalDeviceProperties() const
 	{
 		VkPhysicalDeviceProperties properties{};
-		vkGetPhysicalDeviceProperties(m_pContext->GetVkPhysicalDevice(), &properties);
+		vkGetPhysicalDeviceProperties(VulkanContext::GetVkPhysicalDevice(), &properties);
 		return properties;
 	}
 
 
 
 	// Static specialised constructors:
-	Sampler* Sampler::ColorSampler(VulkanContext* pContext, const std::string& name)
+	Sampler* Sampler::ColorSampler(const std::string& name)
 	{
-		Sampler* pSampler = new Sampler(pContext, name);
+		Sampler* pSampler = new Sampler(name);
 		VkPhysicalDeviceProperties properties = pSampler->GetVkPhysicalDeviceProperties();
 
 		VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
@@ -59,13 +58,13 @@ namespace emberEngine
 		samplerInfo.mipLodBias = 0.0f;										// level of detail bias for mipmap level
 		samplerInfo.minLod = 0.0f;											// minimum level of detail to pick
 		samplerInfo.maxLod = VK_LOD_CLAMP_NONE;								// maximum level of detail to pick. No clamping = maximum mip level supported by the image
-		VKA(vkCreateSampler(pContext->GetVkDevice(), &samplerInfo, nullptr, &pSampler->GetVkSampler()));
+		VKA(vkCreateSampler(VulkanContext::GetVkDevice(), &samplerInfo, nullptr, &pSampler->GetVkSampler()));
 
 		return pSampler;
 	}
-	Sampler* Sampler::ShadowSampler(VulkanContext* pContext, const std::string& name)
+	Sampler* Sampler::ShadowSampler(const std::string& name)
 	{
-		Sampler* pSampler = new Sampler(pContext, name);
+		Sampler* pSampler = new Sampler(name);
 		VkPhysicalDeviceProperties properties = pSampler->GetVkPhysicalDeviceProperties();
 
 		VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
@@ -84,7 +83,7 @@ namespace emberEngine
 		samplerInfo.mipLodBias = 0.0f;										// level of detail bias for mipmap level
 		samplerInfo.minLod = 0.0f;											// minimum level of detail to pick
 		samplerInfo.maxLod = VK_LOD_CLAMP_NONE;								// maximum level of detail to pick. No clamping = maximum mip level supported by the image
-		VKA(vkCreateSampler(pContext->GetVkDevice(), &samplerInfo, nullptr, &pSampler->GetVkSampler()));
+		VKA(vkCreateSampler(VulkanContext::GetVkDevice(), &samplerInfo, nullptr, &pSampler->GetVkSampler()));
 
 		return pSampler;
 	}

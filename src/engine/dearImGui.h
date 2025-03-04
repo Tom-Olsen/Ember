@@ -14,11 +14,6 @@ struct ImGuiIO;
 
 namespace emberEngine
 {
-	// Forward declarations:
-	class VulkanContext;
-
-
-
 	class DearImGui
 	{
 	public: // Members
@@ -30,7 +25,7 @@ namespace emberEngine
 		static ImGuiIO* s_io;
 
 	public: // Methods
-		static void Init(VulkanContext* pContext);
+		static void Init();
 		static void Clear();
 		static void Update();
 		static void ProcessEvent(const SDL_Event& event);
