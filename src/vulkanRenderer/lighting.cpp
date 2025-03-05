@@ -7,11 +7,9 @@ namespace emberEngine
 	// Static private members:
 	bool Lighting::s_isInitialized = false;
 	uint32_t Lighting::s_directionalLightsCount;
-	uint32_t Lighting::s_pointLightsCount;
-	uint32_t Lighting::s_spotLightsCount;
+	uint32_t Lighting::s_positionalLightsCount;
 	std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights> Lighting::s_directionalLights;
-	std::array<Lighting::PointLight, Lighting::maxPointLights> Lighting::s_pointLights;
-	std::array<Lighting::SpotLight, Lighting::maxSpotLights> Lighting::s_spotLights;
+	std::array<Lighting::PositionalLight, Lighting::maxPositionalLights> Lighting::s_positionalLights;
 	Float4x4 Lighting::s_pointLightRotationMatrices[6];
 
 
@@ -23,8 +21,7 @@ namespace emberEngine
 		s_isInitialized = true;
 
 		s_directionalLightsCount = 0;
-		s_pointLightsCount = 0;
-		s_spotLightsCount = 0;
+		s_positionalLightsCount = 0;
 
 		s_pointLightRotationMatrices[0] = Float4x4::identity;
 		s_pointLightRotationMatrices[1] = Float4x4::RotateY(math::pi2);
@@ -46,54 +43,33 @@ namespace emberEngine
 
 	}
 	// Public methods:
-	void Lighting::AddPointLight
-	(float intensity, const Float3& color, ShadowType shadowType, Float3 position,
-	 float nearClip, float farClip, const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
-	{
-		if (s_pointLightsCount == maxPointLights)
-			return;
-
-		s_pointLights[s_pointLightsCount].intensity = intensity;
-		s_pointLights[s_pointLightsCount].color = color;
-		s_pointLights[s_pointLightsCount].shadowType = shadowType;
-		s_pointLights[s_pointLightsCount].position = position;
-
-		s_pointLights[s_pointLightsCount].nearClip = nearClip;
-		s_pointLights[s_pointLightsCount].farClip = farClip;
-		for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
-			s_pointLights[s_pointLightsCount].viewMatrix[faceIndex] = s_pointLightRotationMatrices[faceIndex] * viewMatrix;
-		s_pointLights[s_pointLightsCount].projectionMatrix = projectionMatrix;
-
-		s_pointLightsCount++;
-	}
-	void Lighting::AddSpotLight
-	(float intensity, const Float3& color, ShadowType shadowType, Float3 position,
+	void Lighting::AddPositionalLight
+	(Float3 position, float intensity, const Float3& color, ShadowType shadowType,
 	 float fov, float nearClip, float farClip, float blendStart, float blendEnd,
 	 const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
 	{
-		if (s_spotLightsCount == maxSpotLights)
+		if (s_positionalLightsCount == maxPositionalLights)
 			return;
 
-		s_spotLights[s_spotLightsCount].intensity = intensity;
-		s_spotLights[s_spotLightsCount].color = color;
-		s_spotLights[s_spotLightsCount].shadowType = shadowType;
-		s_spotLights[s_spotLightsCount].position = position;
+		s_positionalLights[s_positionalLightsCount].position = position;
+		s_positionalLights[s_positionalLightsCount].intensity = intensity;
+		s_positionalLights[s_positionalLightsCount].color = color;
+		s_positionalLights[s_positionalLightsCount].shadowType = shadowType;
 
-		s_spotLights[s_spotLightsCount].fov = fov;
-		s_spotLights[s_spotLightsCount].nearClip = nearClip;
-		s_spotLights[s_spotLightsCount].farClip = farClip;
-		s_spotLights[s_spotLightsCount].blendStart = blendStart;
-		s_spotLights[s_spotLightsCount].blendEnd = blendEnd;
-		s_spotLights[s_spotLightsCount].viewMatrix = viewMatrix;
-		s_spotLights[s_spotLightsCount].projectionMatrix = projectionMatrix;
+		s_positionalLights[s_positionalLightsCount].fov = fov;
+		s_positionalLights[s_positionalLightsCount].nearClip = nearClip;
+		s_positionalLights[s_positionalLightsCount].farClip = farClip;
+		s_positionalLights[s_positionalLightsCount].blendStart = blendStart;
+		s_positionalLights[s_positionalLightsCount].blendEnd = blendEnd;
+		s_positionalLights[s_positionalLightsCount].viewMatrix = viewMatrix;
+		s_positionalLights[s_positionalLightsCount].projectionMatrix = projectionMatrix;
 
-		s_spotLightsCount++;
+		s_positionalLightsCount++;
 	}
 	void Lighting::ResetLights()
 	{
 		s_directionalLightsCount = 0;
-		s_pointLightsCount = 0;
-		s_spotLightsCount = 0;
+		s_positionalLightsCount = 0;
 	}
 
 
@@ -103,25 +79,17 @@ namespace emberEngine
 	{
 		return s_directionalLightsCount;
 	}
-	uint32_t Lighting::GetPointLightsCount()
+	uint32_t Lighting::GetPositionalLightsCount()
 	{
-		return s_pointLightsCount;
-	}
-	uint32_t Lighting::GetSpotLightsCount()
-	{
-		return s_spotLightsCount;
+		return s_positionalLightsCount;
 	}
 	std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& Lighting::GetDirectionalLights()
 	{
 		return s_directionalLights;
 	}
-	std::array<Lighting::PointLight, Lighting::maxPointLights>& Lighting::GetPointLights()
+	std::array<Lighting::PositionalLight, Lighting::maxPositionalLights>& Lighting::GetPositionalLights()
 	{
-		return s_pointLights;
-	}
-	std::array<Lighting::SpotLight, Lighting::maxSpotLights>& Lighting::GetSpotLights()
-	{
-		return s_spotLights;
+		return s_positionalLights;
 	}
 	Float4x4 Lighting::GetPointLightRotationMatrix(uint32_t faceIndex)
 	{

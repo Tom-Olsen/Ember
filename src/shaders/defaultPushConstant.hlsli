@@ -9,7 +9,6 @@ struct DefaultPushConstant
     float time;
     float deltaTime;
     int dLightsCount;
-    int pLightsCount;
     int sLightsCount;
     float4 cameraPosition;
 };

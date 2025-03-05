@@ -34,7 +34,7 @@ float4 main(FragmentInput input) : SV_TARGET
     // Lighting:
     float ambient = 0.1f;
     float3 finalColor = ambient * diffuseColor.xyz;
-    finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, worldNormal, diffuseColor.xyz, roughness, reflectivity, metallicity, pc.dLightsCount, pc.pLightsCount, pc.sLightsCount, directionalLightData, pointLightData, spotLightData, shadowMaps, shadowSampler);
+    finalColor += PhysicalLighting(worldPos, pc.cameraPosition.xyz, worldNormal, diffuseColor.xyz, roughness, reflectivity, metallicity, pc.dLightsCount, pc.sLightsCount, directionalLightData, positionalLightData, shadowMaps, shadowSampler);
     
     return float4(finalColor, 1.0f);
 }

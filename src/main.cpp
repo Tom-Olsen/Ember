@@ -6,7 +6,10 @@ using namespace emberEngine;
 
 
 // TODO now!
-// - similar to how I removed the meshRenderer dependency from the VulkanRenderer, also remove Dir/Spot/Point light dependency.
+// - get directional lights to work with new lighting system
+// - Remove camera dependency from vulkanRenderer, similar to lighting and drawCall system
+// - render engine into texture instead of directly to the swapchain => post processing effects + ImGui docking support
+// - build engine into cmakelists library which can be included in other projets and seperate the scenes below into test projects.
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
@@ -20,9 +23,8 @@ using namespace emberEngine;
 //   my spirv reflection => other bindings are wrong, and textures are not displayed at all.
 // - batch image transitions and copying (e.g. texture2d creation)
 // - remove camera/directionalLight/etc. dependency from vulkanRenderer and instead use another abstraction layer that links these GamaObject Components to the render system.
-// - render engine into texture instead of directly to the swapchain => post processing effects + ImGui docking support
 // - optimize eventsystem::AnyKey etc.
-// - Replace the structs Directional/Spot/Point-LightData in shadowMapping.hlsli with a single LightData struct.
+// - Replace the structs Directional/Positional-LightData in shadowMapping.hlsli with a single LightData struct.
 //   This will allor me to utilize evry shadow mapping layer for any type of lightsource.
 //   This will allow me to replace the MAX_D/S/P_LIGHTS values with a single MAX_LIGHTS value.
 // - remove scaling from view matrizes of lights and cameras?
@@ -36,8 +38,8 @@ using namespace emberEngine;
 // - add geometry shader stage => wireframe rendering
 // - gameobject parent system (GameObject € GameObject => transform hierarchy)
 // - GameObject::Start/OnDestroy/OnCreate/OnEnable/OnDisable etc. methods
-// - reduce maxDirectionalLights, maxPointLights, maxSpotLights to a single maxShadowMaps
-//   and make shadowmap indexing more dynamic to work with e.g. only point lights or only spot lights?
+// - reduce maxDirectionalLights, maxPositionalLights to a single maxShadowMaps
+//   and make shadowmap indexing more dynamic to work with e.g. only directional lights or only positional lights?
 // - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
 // - add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
 //   remove normalization of any input vector that is namen 'normal' or 'tangent' or 'direction' in mathf library (same for linearAlgebra.hlsli).
@@ -68,7 +70,7 @@ using namespace emberEngine;
 
 // Implemented Features:
 // - Forward renderpipeline.
-// - Multi lightsoure shadow mapping (directional-, point-, spotlights).
+// - Multi lightsoure shadow mapping (directionallights, positionallights).
 // - Physical based lighting (roughnessMap, normalMap, metallicity, reflectivity).
 // - Shadow cascades with shadow snapping.
 // - CubeMap (TextureCube) skybox.

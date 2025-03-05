@@ -6,8 +6,7 @@
 
 // When changing these also change the corresponding CPU values in src/VulkanRenderer/lighting.cpp.
 static const uint MAX_D_LIGHTS = 3;         // directional lights: sun, moon, etc.
-static const uint MAX_P_LIGHTS = 3;         // point lights: candles, etc.
-static const uint MAX_S_LIGHTS = 5;         // spot lights: car headlights, etc.
+static const uint MAX_S_LIGHTS = 30;        // positional lights: spot light and point lights
 static const uint SHADOW_MAP_RESOLUTION = 4096; // x,y shadow map resolution in pixels => square shadow map
 static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_RESOLUTION, 1.0f / SHADOW_MAP_RESOLUTION); // shadow map texel size
 
@@ -22,7 +21,7 @@ struct DirectionalLightData
     float4 colorIntensity;          // light color (xyz) and intensity (w)
     int shadowCascadeCount;         // number of cascades (max 4)
 };
-struct SpotLightData
+struct PositionalLightData
 {
     float4x4 worldToClipMatrix; // world to light clip space matrix (projection * view)
     float3 position;            // light position
@@ -30,19 +29,10 @@ struct SpotLightData
     float4 colorIntensity;      // light color (xyz) and intensity (w)
     float2 blendStartEnd;
 };
-struct PointLightData
-{
-    // one for each face of the cube map
-    float4x4 worldToClipMatrix[6];  // world to light clip space matrix (projection * view)
-    float3 position;                // light position
-    int softShadows;                // 0 = PCF shadows, 1 = pixel shadows
-    float4 colorIntensity;          // light color (xyz) and intensity (w)
-};
 cbuffer LightData : register(b9)
 {
     DirectionalLightData directionalLightData[MAX_D_LIGHTS];
-    SpotLightData spotLightData[MAX_S_LIGHTS];
-    PointLightData pointLightData[MAX_P_LIGHTS];
+    PositionalLightData positionalLightData[MAX_S_LIGHTS];
     bool receiveShadows; // 0 = false, 1 = true
 }
 
@@ -214,58 +204,9 @@ float3 PhysicalDirectionalLights
     }
     return totalLight;
 }
-float3 PhysicalPointLights
+float3 PhysicalPositionalLights
 (float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
- int pLightsCount, int shadowMapOffset, PointLightData lightData[MAX_P_LIGHTS],
- Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
-{
-    float3 totalLight = 0;
-    for (uint i = 0; i < pLightsCount; i++)
-    {
-        for (uint faceIndex = 0; faceIndex < 6; faceIndex++)
-        {
-            // Check if the pixel is inside the shadow map:
-            float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix[faceIndex], float4(worldPos, 1.0f)); // €[-w,w]
-            float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
-            float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy€[-1,1] z€[0,1] (vulkan)
-            lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0,1]
-            if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
-             && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
-             && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
-            {
-                // Shadow:
-                float shadow = 1.0f;
-                if (receiveShadows)
-                {
-                    if (lightData[i].softShadows == 0)
-                        shadow = NoFileredShadow(shadowSampler, shadowMaps, 6 * i + faceIndex + shadowMapOffset, lightUvz);
-                    // with PCF one of the shadow cube map faces disappears occasionally
-                    else if (lightData[i].softShadows == 1)
-                        shadow = PercentageCloserFilteredShadow(shadowSampler, shadowMaps, 6 * i + faceIndex + shadowMapOffset, lightUvz);
-                }
-                
-                // Light:
-                float distSq = dot(lightData[i].position - worldPos, lightData[i].position - worldPos);
-                float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w / distSq;
-                float3 lightDir = normalize(lightData[i].position - worldPos);
-                float3 viewDir = normalize(cameraPos - worldPos);
-                float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
-        
-                totalLight += shadow * light;
-                //float3 faceShading = float3
-                //(0.0f + 1.0f * (faceIndex == 0 || faceIndex == 3 || faceIndex == 5),
-                // 0.0f + 1.0f * (faceIndex == 1 || faceIndex == 4 || faceIndex == 3),
-                // 0.0f + 1.0f * (faceIndex == 2 || faceIndex == 5 || faceIndex == 4));
-                //totalLight += shadow * light * faceShading;
-                // skipping the other faces of the shadow cube map leads to artifacts
-            }
-        }
-    }
-    return totalLight;
-}
-float3 PhysicalSpotLights
-(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
- int sLightsCount, int shadowMapOffset, SpotLightData lightData[MAX_S_LIGHTS],
+ int sLightsCount, int shadowMapOffset, PositionalLightData lightData[MAX_S_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
     float3 totalLight = 0;
@@ -310,13 +251,12 @@ float3 PhysicalSpotLights
 
 float3 PhysicalLighting
 (float3 worldPos, float3 cameraPos, float3 worldNormal, float3 color, float roughness, float3 reflectivity, float metallicity,
- int dLightsCount, int pLightsCount, int sLightsCount, DirectionalLightData directionalLightData[MAX_D_LIGHTS], PointLightData pointLightData[MAX_P_LIGHTS], SpotLightData spotLightData[MAX_S_LIGHTS],
+ int dLightsCount, int sLightsCount, DirectionalLightData directionalLightData[MAX_D_LIGHTS], PositionalLightData positionalLightData[MAX_S_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
-    float3 directionalLight = PhysicalDirectionalLights(worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, dLightsCount, 0                              , directionalLightData, shadowMaps, shadowSampler);
-    float3 pointLight       = PhysicalPointLights      (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, pLightsCount, dLightsCount                   , pointLightData      , shadowMaps, shadowSampler);
-    float3 spotLight        = PhysicalSpotLights       (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, sLightsCount, dLightsCount + 6 * pLightsCount, spotLightData       , shadowMaps, shadowSampler);
-    return directionalLight + pointLight + spotLight;
+    float3 directionalLight = PhysicalDirectionalLights(worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, dLightsCount, 0           , directionalLightData, shadowMaps, shadowSampler);
+    float3 positionalLight  = PhysicalPositionalLights (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, sLightsCount, dLightsCount, positionalLightData, shadowMaps, shadowSampler);
+    return directionalLight + positionalLight;
 }
 
 // Look up tables for physically based lighting:

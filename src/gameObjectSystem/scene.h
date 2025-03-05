@@ -19,7 +19,6 @@ namespace emberEngine
 	/// <summary>
 	/// The scene owns all gameObjects and keeps track of important components:
 	/// - Active camera
-	/// - Directional lights, spot light, and Point lights
 	/// When Drawing anything with VulkanRenderer->Render(pScene) a scene pointer is required.
 	/// </summary>
 	class Scene

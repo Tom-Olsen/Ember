@@ -1,11 +1,8 @@
 #include "scene.h"
 #include "camera.h"
-#include "directionalLight.h"
 #include "gameObject.h"
 #include "logger.h"
 #include "material.h"
-#include "pointLight.h"
-#include "spotLight.h"
 
 
 

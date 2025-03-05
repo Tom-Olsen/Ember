@@ -29,8 +29,7 @@ namespace emberEngine
 
 	private:
 		void SetDirectionalLightData();
-		void SetPointLightData();
-		void SetSpotLightData();
+		void SetPositionalLightData();
 	};
 }
 

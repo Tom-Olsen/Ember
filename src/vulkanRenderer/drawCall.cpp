@@ -22,8 +22,7 @@ namespace emberEngine
 	void DrawCall::SetLightData()
 	{
 		SetDirectionalLightData();
-		SetPointLightData();
-		SetSpotLightData();
+		SetPositionalLightData();
 	}
 	void DrawCall::SetDirectionalLightData()
 	{
@@ -46,39 +45,20 @@ namespace emberEngine
 		//}
 		//pShaderProperties->SetValue("LightData", "receiveShadows", receiveShadows);
 	}
-	void DrawCall::SetPointLightData()
+	void DrawCall::SetPositionalLightData()
 	{
-		std::array<Lighting::PointLight, Lighting::maxPointLights>& pointLights = Lighting::GetPointLights();
+		std::array<Lighting::PositionalLight, Lighting::maxPositionalLights>& positionalLights = Lighting::GetPositionalLights();
 		static std::string bufferName = "LightData";
-		static std::string arrayName = "pointLightData";
+		static std::string arrayName = "positionalLightData";
 
-		for (uint32_t i = 0; i < Lighting::GetPointLightsCount(); i++)
+		for (uint32_t i = 0; i < Lighting::GetPositionalLightsCount(); i++)
 		{
-			for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
-			{
-				Float4x4 worldToClipMatrix = pointLights[i].projectionMatrix * pointLights[i].viewMatrix[faceIndex];
-				pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", faceIndex, worldToClipMatrix);
-			}
-			pShaderProperties->SetValue(bufferName, arrayName, i, "position", pointLights[i].position);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)pointLights[i].shadowType);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(pointLights[i].color, pointLights[i].intensity));
-		}
-		pShaderProperties->SetValue(bufferName, "receiveShadows", receiveShadows);
-	}
-	void DrawCall::SetSpotLightData()
-	{
-		std::array<Lighting::SpotLight, Lighting::maxSpotLights>& spotLights = Lighting::GetSpotLights();
-		static std::string bufferName = "LightData";
-		static std::string arrayName = "spotLightData";
-
-		for (uint32_t i = 0; i < Lighting::GetSpotLightsCount(); i++)
-		{
-			Float4x4 worldToClipMatrix = spotLights[i].projectionMatrix * spotLights[i].viewMatrix;
+			Float4x4 worldToClipMatrix = positionalLights[i].projectionMatrix * positionalLights[i].viewMatrix;
 			pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "position", spotLights[i].position);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)spotLights[i].shadowType);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(spotLights[i].color, spotLights[i].intensity));
-			pShaderProperties->SetValue(bufferName, arrayName, i, "blendStartEnd", Float2(spotLights[i].blendStart, spotLights[i].blendEnd));
+			pShaderProperties->SetValue(bufferName, arrayName, i, "position", positionalLights[i].position);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)positionalLights[i].shadowType);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(positionalLights[i].color, positionalLights[i].intensity));
+			pShaderProperties->SetValue(bufferName, arrayName, i, "blendStartEnd", Float2(positionalLights[i].blendStart, positionalLights[i].blendEnd));
 		}
 		pShaderProperties->SetValue(bufferName, "receiveShadows", receiveShadows);
 	}

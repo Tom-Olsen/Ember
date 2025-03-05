@@ -1,17 +1,18 @@
 #include "vulkanRenderer.h"
+#include "camera.h"
 #include "compute.h"
 #include "computePushConstant.h"
 #include "computeShader.h"
 #include "dearImGui.h"
 #include "defaultPushConstant.h"
-#include "directionalLight.h"
 #include "drawCall.h"
 #include "forwardRenderPass.h"
 #include "graphics.h"
 #include "lighting.h"
+#include "material.h"
+#include "materialManager.h"
 #include "mesh.h"
 #include "pipeline.h"
-#include "pointLight.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "scene.h"
@@ -19,7 +20,7 @@
 #include "shadowPushConstant.h"
 #include "shadowRenderPass.h"
 #include "spirvReflect.h"
-#include "spotLight.h"
+#include "timer.h"
 #include "vmaBuffer.h"
 #include "vulkanCommand.h"
 #include "vulkanContext.h"
@@ -312,39 +313,11 @@ namespace emberEngine
 				//	}
 				//}
 
-				// Point Lights:
-				std::array<Lighting::PointLight, Lighting::maxPointLights>& pointLights = Lighting::GetPointLights();
-				for (int i = 0; i < Lighting::GetPointLightsCount(); i++)
+				// Positional Lights:
+				std::array<Lighting::PositionalLight, Lighting::maxPositionalLights>& positionalLights = Lighting::GetPositionalLights();
+				for (int i = 0; i < Lighting::GetPositionalLightsCount(); i++)
 				{
-					Lighting::PointLight& light = pointLights[i];
-					for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
-					{
-						for (DrawCall* drawCall : *m_pDrawCalls)
-						{
-							if (drawCall->castShadows == false)
-								continue;
-
-							pMesh = drawCall->pMesh;
-
-							// Update shader specific data (push constants):
-							Float4x4 worldToClipMatrix = light.projectionMatrix * light.viewMatrix[faceIndex];
-							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
-							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-
-							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
-							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
-
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
-							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-						}
-						shadowMapIndex++;
-					}
-				}
-				// Spot Lights:
-				std::array<Lighting::SpotLight, Lighting::maxSpotLights>& spotLights = Lighting::GetSpotLights();
-				for (int i = 0; i < Lighting::GetSpotLightsCount(); i++)
-				{
-					Lighting::SpotLight& light = spotLights[i];
+					Lighting::PositionalLight& light = positionalLights[i];
 					for (DrawCall* drawCall : *m_pDrawCalls)
 					{
 						if (drawCall->castShadows == false)
@@ -409,7 +382,7 @@ namespace emberEngine
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 				Float3 cameraPosition = pCamera->GetTransform()->GetPosition();
-				DefaultPushConstant pushConstant(0, Timer::GetTime(), Timer::GetDeltaTime(), Lighting::GetDirectionalLightsCount(), Lighting::GetPointLightsCount(), Lighting::GetSpotLightsCount(), cameraPosition);
+				DefaultPushConstant pushConstant(0, Timer::GetTime(), Timer::GetDeltaTime(), Lighting::GetDirectionalLightsCount(), Lighting::GetPositionalLightsCount(), cameraPosition);
 
 				// Normal draw calls:
 				for (DrawCall* drawCall : *m_pDrawCalls)

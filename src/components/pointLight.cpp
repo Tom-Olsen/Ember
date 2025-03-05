@@ -91,9 +91,9 @@ namespace emberEngine
 	void PointLight::UpdateProjectionMatrix()
 	{
 		m_updateProjectionMatrix = false;
-		constexpr float fovRadians = math::pi2;
+		constexpr float fov = math::pi2;
 		constexpr float aspectRatio = 1.0f;
-		m_projectionMatrix = Float4x4::Perspective(fovRadians, aspectRatio, m_nearClip, m_farClip);
+		m_projectionMatrix = Float4x4::Perspective(fov, aspectRatio, m_nearClip, m_farClip);
 	}
 
 
@@ -101,7 +101,14 @@ namespace emberEngine
 	// Overrides:
 	void PointLight::LateUpdate()
 	{
-		Lighting::AddPointLight(m_intensity, m_color, m_shadowType, m_pTransform->GetPosition(), m_nearClip, m_farClip, GetViewMatrix(), GetProjectionMatrix());
+		constexpr float fov = math::pi2;
+		constexpr float blendStard = 2.0f;
+		constexpr float blendEnd = 3.0f;
+		for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
+		{
+			Float4x4 viewMatrix = Lighting::GetPointLightRotationMatrix(faceIndex) * GetViewMatrix();
+			Lighting::AddPositionalLight(m_pTransform->GetPosition(), m_intensity, m_color, m_shadowType, fov, m_nearClip, m_farClip, blendStard, blendEnd, viewMatrix, GetProjectionMatrix());
+		}
 
 		if (m_drawFrustum)
 			for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
