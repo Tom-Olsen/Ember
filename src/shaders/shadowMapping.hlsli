@@ -4,14 +4,12 @@
 
 
 
-// When changing these also change the corresponding CPU values in utility/macros.h.
+// When changing these also change the corresponding CPU values in src/VulkanRenderer/lighting.cpp.
 static const uint MAX_D_LIGHTS = 3;         // directional lights: sun, moon, etc.
-static const uint MAX_S_LIGHTS = 5;         // spot lights: car headlights, etc.
 static const uint MAX_P_LIGHTS = 3;         // point lights: candles, etc.
-static const uint SHADOW_MAP_WIDTH = 4096; // shadow map width in pixels
-static const uint SHADOW_MAP_HEIGHT = 4096; // shadow map height in pixels
-static const float2 SHADOW_MAP_SIZE = float2(SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT);                      // shadow map size
-static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_WIDTH, 1.0f / SHADOW_MAP_HEIGHT);  // shadow map texel size
+static const uint MAX_S_LIGHTS = 5;         // spot lights: car headlights, etc.
+static const uint SHADOW_MAP_RESOLUTION = 4096; // x,y shadow map resolution in pixels => square shadow map
+static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_RESOLUTION, 1.0f / SHADOW_MAP_RESOLUTION); // shadow map texel size
 
 
 
@@ -122,11 +120,11 @@ float PercentageCloserFilteredShadow(SamplerComparisonState shadowSampler, Textu
     //return shadow / pcfSamples;
     
     //// Bilinear:
-    //float2 texelPos = SHADOW_MAP_SIZE * lightUvz.xy;
+    //float2 texelPos = float2(SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION) * lightUvz.xy;
     //float2 texelFloor = floor(texelPos);
     //float2 texelFraction = texelPos - texelFloor;
     //
-    //// Sample the four closest texels with PCF
+    //// Sample the 4 closest texels with PCF
     //float shadow00 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(0, 0)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
     //float shadow10 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(1, 0)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
     //float shadow01 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(0, 1)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
@@ -136,11 +134,11 @@ float PercentageCloserFilteredShadow(SamplerComparisonState shadowSampler, Textu
     //return Interpolation_Bilinear(texelFraction, shadow00, shadow01, shadow10, shadow11);
     
     // Bicubic:
-    float2 texelPos = SHADOW_MAP_SIZE * lightUvz.xy;
+    float2 texelPos = float2(SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION) * lightUvz.xy;
     float2 texelFloor = floor(texelPos);
     float2 texelFraction = texelPos - texelFloor;
     
-    // Sample the four closest texels with PCF
+    // Sample the 16 closest texels with PCF
     float shadow_m1m1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(-1, 0)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
     float shadow_m1p0 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(-1, 1)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
     float shadow_m1p1 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(-1, 2)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
@@ -216,48 +214,6 @@ float3 PhysicalDirectionalLights
     }
     return totalLight;
 }
-float3 PhysicalSpotLights
-(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
- int sLightsCount, int shadowMapOffset, SpotLightData lightData[MAX_S_LIGHTS],
- Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
-{
-    float3 totalLight = 0;
-    for (uint i = 0; i < sLightsCount; i++)
-    {
-        // Check if the pixel is inside the shadow map:
-        float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f)); // €[-w,w]
-        float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
-        float3 lightUvz = lightSpaceClipPos.xyz / w; // ndc: xy€[-1,1] z€[0,1] (vulkan)
-        lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f); // remap xy to [0,1]
-        if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
-         && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
-         && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
-        {
-            // Shadow:
-            float shadow = 1.0f;
-            if (receiveShadows)
-            {
-                float radius = length(2.0f * lightUvz.xy - 1.0f);
-                float falloff = saturate((radius - lightData[i].blendStartEnd.y) / (lightData[i].blendStartEnd.x - lightData[i].blendStartEnd.y));
-                
-                if (lightData[i].softShadows == 0)
-                    shadow = falloff * NoFileredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
-                else if (lightData[i].softShadows == 1)
-                    shadow = falloff * PercentageCloserFilteredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
-            }
-            
-            // Light:
-            float distSq = dot(lightData[i].position - worldPos, lightData[i].position - worldPos);
-            float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w / distSq;
-            float3 lightDir = normalize(lightData[i].position - worldPos);
-            float3 viewDir = normalize(cameraPos - worldPos);
-            float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
-        
-            totalLight += shadow * light;
-        }
-    }
-    return totalLight;
-}
 float3 PhysicalPointLights
 (float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
  int pLightsCount, int shadowMapOffset, PointLightData lightData[MAX_P_LIGHTS],
@@ -271,8 +227,8 @@ float3 PhysicalPointLights
             // Check if the pixel is inside the shadow map:
             float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix[faceIndex], float4(worldPos, 1.0f)); // €[-w,w]
             float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
-            float3 lightUvz = lightSpaceClipPos.xyz / w; // ndc: xy€[-1,1] z€[0,1] (vulkan)
-            lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f); // remap xy to [0,1]
+            float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy€[-1,1] z€[0,1] (vulkan)
+            lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0,1]
             if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
              && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
              && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
@@ -307,18 +263,60 @@ float3 PhysicalPointLights
     }
     return totalLight;
 }
+float3 PhysicalSpotLights
+(float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
+ int sLightsCount, int shadowMapOffset, SpotLightData lightData[MAX_S_LIGHTS],
+ Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
+{
+    float3 totalLight = 0;
+    for (uint i = 0; i < sLightsCount; i++)
+    {
+        // Check if the pixel is inside the shadow map:
+        float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f)); // €[-w,w]
+        float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
+        float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy€[-1,1] z€[0,1] (vulkan)
+        lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0,1]
+        if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
+         && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
+         && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
+        {
+            // Shadow:
+            float shadow = 1.0f;
+            if (receiveShadows)
+            {
+                float radius = length(2.0f * lightUvz.xy - 1.0f);
+                float falloff = saturate((radius - lightData[i].blendStartEnd.y) / (lightData[i].blendStartEnd.x - lightData[i].blendStartEnd.y));
+                
+                if (lightData[i].softShadows == 0)
+                    shadow = falloff * NoFileredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
+                else if (lightData[i].softShadows == 1)
+                    shadow = falloff * PercentageCloserFilteredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
+            }
+            
+            // Light:
+            float distSq = dot(lightData[i].position - worldPos, lightData[i].position - worldPos);
+            float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w / distSq;
+            float3 lightDir = normalize(lightData[i].position - worldPos);
+            float3 viewDir = normalize(cameraPos - worldPos);
+            float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
+        
+            totalLight += shadow * light;
+        }
+    }
+    return totalLight;
+}
 
 
 
 float3 PhysicalLighting
 (float3 worldPos, float3 cameraPos, float3 worldNormal, float3 color, float roughness, float3 reflectivity, float metallicity,
- int dLightsCount, int sLightsCount, int pLightsCount, DirectionalLightData directionalLightData[MAX_D_LIGHTS], SpotLightData spotLightData[MAX_S_LIGHTS], PointLightData pointLightData[MAX_P_LIGHTS],
+ int dLightsCount, int pLightsCount, int sLightsCount, DirectionalLightData directionalLightData[MAX_D_LIGHTS], PointLightData pointLightData[MAX_P_LIGHTS], SpotLightData spotLightData[MAX_S_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
-    float3 directionalLight = PhysicalDirectionalLights(worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, dLightsCount, 0                          , directionalLightData, shadowMaps, shadowSampler);
-    float3 spotLight        = PhysicalSpotLights       (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, sLightsCount, dLightsCount               , spotLightData       , shadowMaps, shadowSampler);
-    float3 pointLight       = PhysicalPointLights      (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, pLightsCount, dLightsCount + sLightsCount, pointLightData      , shadowMaps, shadowSampler);
-    return directionalLight + spotLight + pointLight;
+    float3 directionalLight = PhysicalDirectionalLights(worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, dLightsCount, 0                              , directionalLightData, shadowMaps, shadowSampler);
+    float3 pointLight       = PhysicalPointLights      (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, pLightsCount, dLightsCount                   , pointLightData      , shadowMaps, shadowSampler);
+    float3 spotLight        = PhysicalSpotLights       (worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, sLightsCount, dLightsCount + 6 * pLightsCount, spotLightData       , shadowMaps, shadowSampler);
+    return directionalLight + pointLight + spotLight;
 }
 
 // Look up tables for physically based lighting:

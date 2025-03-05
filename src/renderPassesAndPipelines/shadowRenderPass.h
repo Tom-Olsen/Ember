@@ -25,8 +25,6 @@ namespace emberEngine
 
 	public: // Members:
 		static VkFormat s_shadowMapFormat;
-		static uint32_t s_shadowMapWidth;
-		static uint32_t s_shadowMapHeight;
 		static uint32_t s_layerCount;
 
 	public: // Methods:

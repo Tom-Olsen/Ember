@@ -13,7 +13,7 @@ namespace emberMath
 		float Round(float value, int decimals = 0);
 		float Floor(float value, int decimals = 0);
 		float Ceil(float value, int decimals = 0);
-		float Clamp(float value, float min, float max);
+		//float Clamp(float value, float min, float max);
 		float Sign(float value);
 		float Sqrt(float value);
 		float Pow(float value, float exponent);
@@ -33,6 +33,8 @@ namespace emberMath
 		T Min(T a, T b);
 		template<typename T>
 		T Max(T a, T b);
+		template<typename T>
+		T Clamp(T value, T min, T max);
 	}
 }
 #endif // __INCLUDE_GUARD_mathFunctions_h__

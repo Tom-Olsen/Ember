@@ -11,14 +11,14 @@ namespace emberEngine
 	{
 		m_intensity = 1.0f;
 		m_color = Float3::white;
-		m_shadowType = ShadowType::hard;
+		m_shadowType = Lighting::ShadowType::hard;
 
 		// Shadow cascade settings:
 		for (uint32_t i = 0; i < 4; i++)
 			m_shadowCascades[i] = new ShadowCascade();
 		m_pActiveCamera = nullptr;
 		m_distributionFactor = 0.5f;
-		m_shadowCascadeCount = ShadowCascadeCount::four;
+		m_shadowCascadeCount = 4;
 
 		// Visualization:
 		m_drawFrustum = false;
@@ -34,7 +34,7 @@ namespace emberEngine
 	// Public methods:
 	void DirectionalLight::UpdateShadowCascades(float sceneHeight)
 	{
-		for (uint32_t i = 0; i < (uint32_t)m_shadowCascadeCount; i++)
+		for (uint8_t i = 0; i < m_shadowCascadeCount; i++)
 			m_shadowCascades[i]->Update(m_pActiveCamera, GetDirection(), m_shadowCascadeSplits[i], m_shadowCascadeSplits[i + 1], sceneHeight);
 	}
 
@@ -50,7 +50,7 @@ namespace emberEngine
 	{
 		m_color = color;
 	}
-	void DirectionalLight::SetShadowType(ShadowType shadowType)
+	void DirectionalLight::SetShadowType(Lighting::ShadowType shadowType)
 	{
 		m_shadowType = shadowType;
 	}
@@ -80,8 +80,18 @@ namespace emberEngine
 		m_distributionFactor = -m_distributionFactor;
 		SetDistributionFactor(-m_distributionFactor);
 	}
-	void DirectionalLight::SetShadowCascadeCount(ShadowCascadeCount shadowCascadeCount)
+	void DirectionalLight::SetShadowCascadeCount(uint8_t shadowCascadeCount)
 	{
+		if (m_shadowCascadeCount < 0)
+		{
+			LOG_WARN("Directional Light Shadow Cascade Count '{}' invalid. Setting it to min value, 1.", shadowCascadeCount);
+			shadowCascadeCount = 1;
+		}
+		if (m_shadowCascadeCount > 4)
+		{
+			LOG_WARN("Directional Light Shadow Cascade Count '{}' invalid. Setting it to max value, 4.", shadowCascadeCount);
+			shadowCascadeCount = 4;
+		}
 		m_shadowCascadeCount = shadowCascadeCount;
 		// Force recalculation of shadow cascade splits:
 		m_distributionFactor = -m_distributionFactor;
@@ -134,7 +144,7 @@ namespace emberEngine
 	{
 		return Float4(m_color, m_intensity);
 	}
-	ShadowType DirectionalLight::GetShadowType() const
+	Lighting::ShadowType DirectionalLight::GetShadowType() const
 	{
 		return m_shadowType;
 	}
@@ -148,7 +158,7 @@ namespace emberEngine
 	}
 
 	// Shadow cascade properties:
-	DirectionalLight::ShadowCascadeCount DirectionalLight::GetShadowCascadeCount() const
+	uint8_t DirectionalLight::GetShadowCascadeCount() const
 	{
 		return m_shadowCascadeCount;
 	}

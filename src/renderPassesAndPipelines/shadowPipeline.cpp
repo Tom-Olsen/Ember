@@ -1,9 +1,9 @@
 #include "shadowPipeline.h"
+#include "lighting.h"
 #include "mesh.h"
 #include "renderPass.h"
 #include "renderPassManager.h"
 #include "shadowPushConstant.h"
-#include "shadowRenderPass.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -84,13 +84,13 @@ namespace emberEngine
         VkViewport viewport = {};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(ShadowRenderPass::s_shadowMapWidth);
-        viewport.height = static_cast<float>(ShadowRenderPass::s_shadowMapHeight);
+        viewport.width = (float)Lighting::shadowMapResolution;
+        viewport.height = (float)Lighting::shadowMapResolution;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         VkRect2D scissor = {};
         scissor.offset = { 0, 0 };
-        scissor.extent = VkExtent2D{ ShadowRenderPass::s_shadowMapWidth, ShadowRenderPass::s_shadowMapHeight };
+        scissor.extent = VkExtent2D{ Lighting::shadowMapResolution, Lighting::shadowMapResolution };
         VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
         viewportState.viewportCount = 1;
         viewportState.pViewports = &viewport;
@@ -149,7 +149,7 @@ namespace emberEngine
         pipelineInfo.pViewportState = &viewportState;				// Viewport and scissor
         pipelineInfo.pRasterizationState = &rasterizationState;		// Rasterizer
         pipelineInfo.pMultisampleState = &multisampleState;			// Multisampling
-        pipelineInfo.pDepthStencilState = &depthState;			// Depth and stencil testing
+        pipelineInfo.pDepthStencilState = &depthState;			    // Depth and stencil testing
         pipelineInfo.pColorBlendState = &colorBlendState;			// Color blending
         pipelineInfo.pDynamicState = nullptr;						// no dynamic states	
         pipelineInfo.layout = m_pipelineLayout;

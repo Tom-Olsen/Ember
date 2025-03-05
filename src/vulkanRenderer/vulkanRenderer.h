@@ -16,7 +16,6 @@ namespace emberEngine
 	class Scene;
 	class VulkanCommand;
 	class RenderTexture2d;
-	class ShaderProperties;
 
 
 
@@ -41,8 +40,10 @@ namespace emberEngine
 		// Render management:
 		uint32_t m_imageIndex;
 		bool m_rebuildSwapchain;
-		std::vector<DrawCall*>* m_pDrawCalls;
+
+		// Game engine data injection:
 		std::vector<ComputeCall*>* m_pSyncComputeCalls;
+		std::vector<DrawCall*>* m_pDrawCalls;
 
 	public: // Methods:
 		VulkanRenderer();

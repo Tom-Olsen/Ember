@@ -1,8 +1,5 @@
 #include "drawCall.h"
 #include "camera.h"
-#include "directionalLight.h"
-#include "pointLight.h"
-#include "spotLight.h"
 
 
 
@@ -22,61 +19,67 @@ namespace emberEngine
 		pShaderProperties->SetValue(bufferName, "cb_worldToClipMatrix", worldToClipMatrix);
 		pShaderProperties->SetValue(bufferName, "cb_localToClipMatrix", localToClipMatrix);
 	}
-	void DrawCall::SetLightData(const std::array<DirectionalLight*, MAX_D_LIGHTS>& directionalLights)
+	void DrawCall::SetLightData()
 	{
-		static std::string bufferName = "LightData";
-		static std::string arrayName = "directionalLightData";
-
-		for (uint32_t i = 0; i < MAX_D_LIGHTS; i++)
-			if (directionalLights[i] != nullptr)
-			{
-				int shadowCascadeCount = (int)directionalLights[i]->GetShadowCascadeCount();
-				for (int shadowCascadeIndex = 0; shadowCascadeIndex < shadowCascadeCount; shadowCascadeIndex++)
-				{
-					Float4x4 worldToClipMatrix = directionalLights[i]->GetProjectionMatrix(shadowCascadeIndex) * directionalLights[i]->GetViewMatrix(shadowCascadeIndex);
-					pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", shadowCascadeIndex, worldToClipMatrix);
-				}
-				pShaderProperties->SetValue(bufferName, arrayName, i, "direction", directionalLights[i]->GetDirection());
-				pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)directionalLights[i]->GetShadowType());
-				pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
-				pShaderProperties->SetValue(bufferName, arrayName, i, "shadowCascadeCount", shadowCascadeCount);
-			}
-		pShaderProperties->SetValue("LightData", "receiveShadows", receiveShadows);
+		SetDirectionalLightData();
+		SetPointLightData();
+		SetSpotLightData();
 	}
-	void DrawCall::SetLightData(const std::array<SpotLight*, MAX_S_LIGHTS>& spotLights)
+	void DrawCall::SetDirectionalLightData()
 	{
-		static std::string bufferName = "LightData";
-		static std::string arrayName = "spotLightData";
-
-		for (uint32_t i = 0; i < MAX_S_LIGHTS; i++)
-			if (spotLights[i] != nullptr)
-			{
-				Float4x4 worldToClipMatrix = spotLights[i]->GetProjectionMatrix() * spotLights[i]->GetViewMatrix();
-				pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
-				pShaderProperties->SetValue(bufferName, arrayName, i, "position", spotLights[i]->GetPosition());
-				pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)spotLights[i]->GetShadowType());
-				pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", spotLights[i]->GetColorIntensity());
-				pShaderProperties->SetValue(bufferName, arrayName, i, "blendStartEnd", spotLights[i]->GetBlendStartEnd());
-			}
-		pShaderProperties->SetValue(bufferName, "receiveShadows", receiveShadows);
+		//std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
+		//static std::string bufferName = "LightData";
+		//static std::string arrayName = "directionalLightData";
+		//
+		//for (uint32_t i = 0; i < Lighting::maxDirectionalLights; i++)
+		//{
+		//	int shadowCascadeCount = (int)directionalLights[i]->GetShadowCascadeCount();
+		//	for (int shadowCascadeIndex = 0; shadowCascadeIndex < shadowCascadeCount; shadowCascadeIndex++)
+		//	{
+		//		Float4x4 worldToClipMatrix = directionalLights[i]->GetProjectionMatrix(shadowCascadeIndex) * directionalLights[i]->GetViewMatrix(shadowCascadeIndex);
+		//		pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", shadowCascadeIndex, worldToClipMatrix);
+		//	}
+		//	pShaderProperties->SetValue(bufferName, arrayName, i, "direction", directionalLights[i]->GetDirection());
+		//	pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)directionalLights[i]->GetShadowType());
+		//	pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
+		//	pShaderProperties->SetValue(bufferName, arrayName, i, "shadowCascadeCount", shadowCascadeCount);
+		//}
+		//pShaderProperties->SetValue("LightData", "receiveShadows", receiveShadows);
 	}
-	void DrawCall::SetLightData(const std::array<PointLight*, MAX_P_LIGHTS>& pointLights)
+	void DrawCall::SetPointLightData()
 	{
+		std::array<Lighting::PointLight, Lighting::maxPointLights>& pointLights = Lighting::GetPointLights();
 		static std::string bufferName = "LightData";
 		static std::string arrayName = "pointLightData";
 
-		for (uint32_t i = 0; i < MAX_P_LIGHTS; i++)
-			if (pointLights[i] != nullptr)
+		for (uint32_t i = 0; i < Lighting::GetPointLightsCount(); i++)
+		{
+			for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
 			{
-				for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
-				{
-					Float4x4 worldToClipMatrix = pointLights[i]->GetProjectionMatrix() * pointLights[i]->GetViewMatrix(faceIndex);
-					pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", faceIndex, worldToClipMatrix);
-				}
-				pShaderProperties->SetValue(bufferName, arrayName, i, "position", pointLights[i]->GetPosition());
-				pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)pointLights[i]->GetShadowType());
-				pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", pointLights[i]->GetColorIntensity());
+				Float4x4 worldToClipMatrix = pointLights[i].projectionMatrix * pointLights[i].viewMatrix[faceIndex];
+				pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", faceIndex, worldToClipMatrix);
 			}
+			pShaderProperties->SetValue(bufferName, arrayName, i, "position", pointLights[i].position);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)pointLights[i].shadowType);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(pointLights[i].color, pointLights[i].intensity));
+		}
+		pShaderProperties->SetValue(bufferName, "receiveShadows", receiveShadows);
+	}
+	void DrawCall::SetSpotLightData()
+	{
+		std::array<Lighting::SpotLight, Lighting::maxSpotLights>& spotLights = Lighting::GetSpotLights();
+		static std::string bufferName = "LightData";
+		static std::string arrayName = "spotLightData";
+
+		for (uint32_t i = 0; i < Lighting::GetSpotLightsCount(); i++)
+		{
+			Float4x4 worldToClipMatrix = spotLights[i].projectionMatrix * spotLights[i].viewMatrix;
+			pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "position", spotLights[i].position);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)spotLights[i].shadowType);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(spotLights[i].color, spotLights[i].intensity));
+			pShaderProperties->SetValue(bufferName, arrayName, i, "blendStartEnd", Float2(spotLights[i].blendStart, spotLights[i].blendEnd));
+		}
 		pShaderProperties->SetValue(bufferName, "receiveShadows", receiveShadows);
 	}
 }

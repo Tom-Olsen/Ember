@@ -1,6 +1,6 @@
 #include "shadowRenderPass.h"
 #include "depthTexture2dArray.h"
-#include "macros.h"
+#include "lighting.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -11,9 +11,7 @@ namespace emberEngine
 {
 	// static members:
 	VkFormat ShadowRenderPass::s_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
-	uint32_t ShadowRenderPass::s_shadowMapWidth = SHADOW_MAP_WIDTH;
-	uint32_t ShadowRenderPass::s_shadowMapHeight = SHADOW_MAP_HEIGHT;
-	uint32_t ShadowRenderPass::s_layerCount = 4 * MAX_D_LIGHTS + MAX_S_LIGHTS + 6 * MAX_P_LIGHTS;
+	uint32_t ShadowRenderPass::s_layerCount = 4 * Lighting::maxDirectionalLights + 6 * Lighting::maxPointLights + Lighting::maxSpotLights;
 
 
 
@@ -21,7 +19,7 @@ namespace emberEngine
 	ShadowRenderPass::ShadowRenderPass()
 	{
 		// Create shadow map texture:
-		m_shadowMaps = std::make_unique<DepthTexture2dArray>("shadowMaps", s_shadowMapFormat, s_shadowMapWidth, s_shadowMapHeight, s_layerCount);
+		m_shadowMaps = std::make_unique<DepthTexture2dArray>("shadowMaps", s_shadowMapFormat, Lighting::shadowMapResolution, Lighting::shadowMapResolution, s_layerCount);
 		CreateRenderpass();
 		CreateFramebuffers();
 	}
@@ -82,8 +80,8 @@ namespace emberEngine
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = 1;
 			framebufferInfo.pAttachments = &m_shadowMaps->GetVmaImage()->GetVkImageView();
-			framebufferInfo.width = s_shadowMapWidth;
-			framebufferInfo.height = s_shadowMapHeight;
+			framebufferInfo.width = Lighting::shadowMapResolution;
+			framebufferInfo.height = Lighting::shadowMapResolution;
 			framebufferInfo.layers = s_layerCount;
 			vkCreateFramebuffer(VulkanContext::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
 		}

@@ -22,7 +22,7 @@ namespace emberEngine
 		output += "Instance Count: " + std::to_string(instanceCount) + "\n";
 		output += "Shadow Map Index: " + std::to_string(shadowMapIndex) + "\n";
 		output += "Local To World Matrix: " + localToWorldMatrix.ToString() + "\n";
-		output += "World To Clip Matrix: " + worldToClipMatrix.ToString() + "\n";
+		output += "World To Clip Matrix: " + worldToClipMatrix.ToString();
 		return output;
 	}
 }

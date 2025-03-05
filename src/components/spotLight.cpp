@@ -1,4 +1,5 @@
 #include "spotLight.h"
+#include "lighting.h"
 #include "shadowRenderPass.h"
 
 
@@ -10,9 +11,8 @@ namespace emberEngine
 	{
 		m_intensity = 1.0f;
 		m_color = Float3::white;
-		m_shadowType = ShadowType::hard;
+		m_shadowType = Lighting::ShadowType::hard;
 		m_fov = math::deg2rad * 45.0f;
-		m_aspectRatio = (float)ShadowRenderPass::s_shadowMapWidth / (float)ShadowRenderPass::s_shadowMapHeight;
 		m_nearClip = 0.1f;
 		m_farClip = 15.0f;
 		m_blendStart = 0.8f;
@@ -36,7 +36,7 @@ namespace emberEngine
 	{
 		m_color = color;
 	}
-	void SpotLight::SetShadowType(ShadowType shadowType)
+	void SpotLight::SetShadowType(Lighting::ShadowType shadowType)
 	{
 		m_shadowType = shadowType;
 	}
@@ -71,10 +71,6 @@ namespace emberEngine
 
 
 	// Getters:
-	Float3 SpotLight::GetPosition() const
-	{
-		return GetTransform()->GetPosition();
-	}
 	float SpotLight::GetIntensity() const
 	{
 		return m_intensity;
@@ -83,11 +79,7 @@ namespace emberEngine
 	{
 		return m_color;
 	}
-	Float4 SpotLight::GetColorIntensity() const
-	{
-		return Float4(m_color, m_intensity);
-	}
-	ShadowType SpotLight::GetShadowType() const
+	Lighting::ShadowType SpotLight::GetShadowType() const
 	{
 		return m_shadowType;
 	}
@@ -111,10 +103,6 @@ namespace emberEngine
 	{
 		return m_blendEnd;
 	}
-	Float2 SpotLight::GetBlendStartEnd() const
-	{
-		return Float2(m_blendStart, m_blendEnd);
-	}
 	Float4x4 SpotLight::GetViewMatrix() const
 	{
 		return GetTransform()->GetWorldToLocalMatrix();
@@ -132,7 +120,8 @@ namespace emberEngine
 	void SpotLight::UpdateProjectionMatrix()
 	{
 		m_updateProjectionMatrix = false;
-		m_projectionMatrix = Float4x4::Perspective(m_fov, m_aspectRatio, m_nearClip, m_farClip);
+		constexpr float aspectRatio = 1.0f;
+		m_projectionMatrix = Float4x4::Perspective(m_fov, aspectRatio, m_nearClip, m_farClip);
 	}
 
 
@@ -140,6 +129,8 @@ namespace emberEngine
 	// Overrides:
 	void SpotLight::LateUpdate()
 	{
+		Lighting::AddSpotLight(m_intensity, m_color, m_shadowType, m_pTransform->GetPosition(), m_fov, m_nearClip, m_farClip, m_blendStart, m_blendEnd, GetViewMatrix(), GetProjectionMatrix());
+
 		if (m_drawFrustum)
 			Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, Float4(m_color, 1.0f));
 	}

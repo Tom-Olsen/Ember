@@ -21,6 +21,12 @@ namespace emberEngine
 	// Overrides:
 	void SpinGlobal::Update()
 	{
+		if (EventSystem::KeyDown(SDLK_RETURN))
+			m_spin = !m_spin;
+
+		if (m_spin == false)
+			return;
+
 		Float3 eulerRadians = math::deg2rad * m_eulerDegreesPerSecond * Timer::GetDeltaTime();
 		Float4x4 rotation = Float4x4::Rotate(eulerRadians, m_rotationOrder);
 		Float4x4 translate = Float4x4::Translate(m_position);

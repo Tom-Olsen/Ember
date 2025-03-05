@@ -1,6 +1,7 @@
 ﻿#include "shadowCascade.h"
 #include "camera.h"
 #include "emberEngine.h"
+#include "lighting.h"
 
 
 
@@ -93,7 +94,7 @@ namespace emberEngine
 		float diagFar = (m_subFrustum_CameraLocal[7] - m_subFrustum_CameraLocal[1]).Length();
 		float diagNearToFar = (m_subFrustum_CameraLocal[7] - m_subFrustum_CameraLocal[0]).Length();
 		m_size = math::Max(diagNearToFar, diagFar);
-		float texelSize = m_size / SHADOW_MAP_WIDTH;
+		float texelSize = m_size / Lighting::shadowMapResolution;
 
 		// Find center of sub frustum on orthographic projection plane:
 		Bounds2d lightBounds(worldToPlane * m_subFrustum_World[0], Float2::zero);

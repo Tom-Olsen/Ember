@@ -1,5 +1,4 @@
 #include "computePushConstant.h"
-#include "macros.h"
 
 
 
@@ -19,7 +18,7 @@ namespace emberEngine
 		std::string output = "ComputePushConstant:\n";
 		output += "ThreadCount: " + threadCount.ToString() + "\n";
 		output += "Time: " + std::to_string(time) + "\n";
-		output += "Delta Time: " + std::to_string(deltaTime) + "\n";
+		output += "Delta Time: " + std::to_string(deltaTime);
 		return output;
 	}
 }

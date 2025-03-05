@@ -8,7 +8,7 @@
 #include "drawCall.h"
 #include "forwardRenderPass.h"
 #include "graphics.h"
-#include "macros.h"
+#include "lighting.h"
 #include "mesh.h"
 #include "pipeline.h"
 #include "pointLight.h"
@@ -54,6 +54,11 @@ namespace emberEngine
 		// Synchronization objects:
 		CreateFences();
 		CreateSemaphores();
+
+		// Injection systems initilization:
+		Compute::Init();
+		Lighting::Init();
+		Graphics::Init();
 	}
 
 
@@ -62,8 +67,11 @@ namespace emberEngine
 	VulkanRenderer::~VulkanRenderer()
 	{
 		VKA(vkDeviceWaitIdle(VulkanContext::GetVkDevice()));
-		DestroyFences();
+		Graphics::Clear();
+		Lighting::Clear();
+		Compute::Clear();
 		DestroySemaphores();
+		DestroyFences();
 	}
 
 
@@ -87,14 +95,21 @@ namespace emberEngine
 			return 0;
 		VKA(vkResetFences(VulkanContext::GetVkDevice(), 1, &m_fences[VulkanContext::frameIndex]));
 
+		// Get compute and draw calls:
 		m_pSyncComputeCalls = Compute::GetComputeCallPointers();
 		m_pDrawCalls = Graphics::GetSortedDrawCallPointers();
+
+		// Record and submit frame:
 		RecordComputeShaders(pScene);
 		RecordShadowCommandBuffer(pScene);
 		RecordForwardCommandBuffer(pScene);
-		Compute::ResetComputeCalls();
-		Graphics::ResetDrawCalls();
 		SubmitCommandBuffers();
+
+		// Reset engine data for next frame:
+		Compute::ResetComputeCalls();
+		Lighting::ResetLights();
+		Graphics::ResetDrawCalls();
+
 		if (!PresentImage())
 			return 0;
 
@@ -211,18 +226,20 @@ namespace emberEngine
 				}
 			}
 
-			// Release memory barrier:
-			VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-			memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-			memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
-			memoryBarrier.srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT;
-			memoryBarrier.dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT;
+			// Release memory from compute shaders to vertex shaders:
+			{
+				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+				memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+				memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
+				memoryBarrier.srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT;
+				memoryBarrier.dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT;
 
-			VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-			dependencyInfo.memoryBarrierCount = 1;
-			dependencyInfo.pMemoryBarriers = &memoryBarrier;
+				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+				dependencyInfo.memoryBarrierCount = 1;
+				dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
-			vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
@@ -247,7 +264,7 @@ namespace emberEngine
 			renderPassBeginInfo.renderPass = renderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = renderPass->GetFramebuffers()[VulkanContext::frameIndex];
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = VkExtent2D{ ShadowRenderPass::s_shadowMapWidth, ShadowRenderPass::s_shadowMapHeight };
+			renderPassBeginInfo.renderArea.extent = VkExtent2D{ Lighting::shadowMapResolution, Lighting::shadowMapResolution };
 			renderPassBeginInfo.clearValueCount = 1;
 			renderPassBeginInfo.pClearValues = &clearValues;
 			const VkDeviceSize offsets[1] = { 0 };
@@ -265,70 +282,41 @@ namespace emberEngine
 				for (DrawCall* drawCall : *m_pDrawCalls)
 					drawCall->pShadowShaderProperties->UpdateShaderData();
 
-				// Directional Lights:
-				for (DirectionalLight* light : pScene->GetDirectionalLights())
-				{
-					if (light == nullptr)
-						continue;
-					light->UpdateShadowCascades(30.0f);
-
-					for (uint32_t shadowCascadeIndex = 0; shadowCascadeIndex < (uint32_t)light->GetShadowCascadeCount(); shadowCascadeIndex++)
-					{
-						for (DrawCall* drawCall : *m_pDrawCalls)
-						{
-							if (drawCall->castShadows == false)
-								continue;
-
-							pMesh = drawCall->pMesh;
-
-							// Update shader specific data (push constants):
-							Float4x4 worldToClipMatrix = light->GetProjectionMatrix(shadowCascadeIndex) * light->GetViewMatrix(shadowCascadeIndex);
-							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
-							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-
-							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
-							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
-
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
-							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-						}
-						shadowMapIndex++;
-					}
-				}
-
-				// Spot Lights:
-				for (SpotLight* light : pScene->GetSpotLights())
-				{
-					if (light == nullptr)
-						continue;
-
-					for (DrawCall* drawCall : *m_pDrawCalls)
-					{
-						if (drawCall->castShadows == false)
-							continue;
-
-						pMesh = drawCall->pMesh;
-
-						// Update shader specific data (push constants):
-						Float4x4 worldToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix();
-						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
-						vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-
-						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
-						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
-
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
-						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					}
-					shadowMapIndex++;
-				}
+				//// Directional Lights:
+				//std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
+				//for (int i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
+				//{
+				//	light->UpdateShadowCascades(30.0f);
+				//
+				//	for (uint32_t shadowCascadeIndex = 0; shadowCascadeIndex < (uint32_t)light->GetShadowCascadeCount(); shadowCascadeIndex++)
+				//	{
+				//		for (DrawCall* drawCall : *m_pDrawCalls)
+				//		{
+				//			if (drawCall->castShadows == false)
+				//				continue;
+				//
+				//			pMesh = drawCall->pMesh;
+				//
+				//			// Update shader specific data (push constants):
+				//			Float4x4 worldToClipMatrix = light->GetProjectionMatrix(shadowCascadeIndex) * light->GetViewMatrix(shadowCascadeIndex);
+				//			ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
+				//			vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+				//
+				//			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
+				//			vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+				//
+				//			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
+				//			vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+				//		}
+				//		shadowMapIndex++;
+				//	}
+				//}
 
 				// Point Lights:
-				for (PointLight* light : pScene->GetPointLights())
+				std::array<Lighting::PointLight, Lighting::maxPointLights>& pointLights = Lighting::GetPointLights();
+				for (int i = 0; i < Lighting::GetPointLightsCount(); i++)
 				{
-					if (light == nullptr)
-						continue;
-
+					Lighting::PointLight& light = pointLights[i];
 					for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
 					{
 						for (DrawCall* drawCall : *m_pDrawCalls)
@@ -339,7 +327,7 @@ namespace emberEngine
 							pMesh = drawCall->pMesh;
 
 							// Update shader specific data (push constants):
-							Float4x4 worldToClipMatrix = light->GetProjectionMatrix() * light->GetViewMatrix(faceIndex);
+							Float4x4 worldToClipMatrix = light.projectionMatrix * light.viewMatrix[faceIndex];
 							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
 							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
@@ -351,6 +339,31 @@ namespace emberEngine
 						}
 						shadowMapIndex++;
 					}
+				}
+				// Spot Lights:
+				std::array<Lighting::SpotLight, Lighting::maxSpotLights>& spotLights = Lighting::GetSpotLights();
+				for (int i = 0; i < Lighting::GetSpotLightsCount(); i++)
+				{
+					Lighting::SpotLight& light = spotLights[i];
+					for (DrawCall* drawCall : *m_pDrawCalls)
+					{
+						if (drawCall->castShadows == false)
+							continue;
+
+						pMesh = drawCall->pMesh;
+
+						// Update shader specific data (push constants):
+						Float4x4 worldToClipMatrix = light.projectionMatrix * light.viewMatrix;
+						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
+						vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+
+						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
+						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
+						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+					}
+					shadowMapIndex++;
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);
@@ -396,7 +409,7 @@ namespace emberEngine
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 				Float3 cameraPosition = pCamera->GetTransform()->GetPosition();
-				DefaultPushConstant pushConstant(0, Timer::GetTime(), Timer::GetDeltaTime(), pScene->GetDirectionalLightsCount(), pScene->GetSpotLightsCount(), pScene->GetPointLightsCount(), cameraPosition);
+				DefaultPushConstant pushConstant(0, Timer::GetTime(), Timer::GetDeltaTime(), Lighting::GetDirectionalLightsCount(), Lighting::GetPointLightsCount(), Lighting::GetSpotLightsCount(), cameraPosition);
 
 				// Normal draw calls:
 				for (DrawCall* drawCall : *m_pDrawCalls)
@@ -405,9 +418,7 @@ namespace emberEngine
 
 					// Update shader specific data:
 					drawCall->SetRenderMatrizes(pCamera);
-					drawCall->SetLightData(pScene->GetDirectionalLights());
-					drawCall->SetLightData(pScene->GetSpotLights());
-					drawCall->SetLightData(pScene->GetPointLights());
+					drawCall->SetLightData();
 					drawCall->pShaderProperties->UpdateShaderData();
 
 					// Change pipeline if material has changed:
@@ -440,7 +451,7 @@ namespace emberEngine
 			DearImGui::Render(commandBuffer);
 			vkCmdEndRenderPass(commandBuffer);
 
-			// Release memory:
+			// Release memory from vertex shaders to compute shaders:
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
 				memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;

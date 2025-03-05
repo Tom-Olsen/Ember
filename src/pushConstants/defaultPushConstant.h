@@ -17,11 +17,11 @@ namespace emberEngine
 		alignas(4) float time;
 		alignas(4) float deltaTime;
 		alignas(4) int dLightsCount;
-		alignas(4) int sLightsCount;
 		alignas(4) int pLightsCount;
+		alignas(4) int sLightsCount;
 		alignas(16) Float4 cameraPosition;
 
-		DefaultPushConstant(uint32_t instanceCount, float time, float deltaTime, int dLightsCount, int sLightsCount, int pLightsCount, const Float3& cameraPosition);
+		DefaultPushConstant(uint32_t instanceCount, float time, float deltaTime, int dLightsCount, int pLightsCount, int sLightsCount, const Float3& cameraPosition);
 		std::string ToString();
 	};
 }

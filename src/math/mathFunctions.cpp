@@ -28,14 +28,6 @@ namespace emberMath
 			float factor = powf(10.0f, decimals);
 			return ceilf(value * factor) / factor;
 		}
-		float Clamp(float value, float min, float max)
-		{
-			if (value < min)
-				return min;
-			if (value > max)
-				return max;
-			return value;
-		}
 		float Sign(float value)
 		{// value > 0.0f -> 1.0f, value < 0.0f -> -1.0f, value == 0.0f -> 0.0f
 			return (0.0f < value) - (value < 0.0f);
@@ -114,20 +106,36 @@ namespace emberMath
 		{
 			return a < b ? a : b;
 		}
+		template float math::Min(float, float);
+		template int math::Min(int, int);
+		template uint16_t math::Min(uint16_t, uint16_t);
+		template uint32_t math::Min(uint32_t, uint32_t);
+		template uint64_t math::Min(uint64_t, uint64_t);
 		template<typename T>
+
 		T Max(T a, T b)
 		{
 			return a > b ? a : b;
 		}
 		template float math::Max(float, float);
-		template float math::Min(float, float);
 		template int math::Max(int, int);
-		template int math::Min(int, int);
 		template uint16_t math::Max(uint16_t, uint16_t);
-		template uint16_t math::Min(uint16_t, uint16_t);
 		template uint32_t math::Max(uint32_t, uint32_t);
-		template uint32_t math::Min(uint32_t, uint32_t);
 		template uint64_t math::Max(uint64_t, uint64_t);
-		template uint64_t math::Min(uint64_t, uint64_t);
+
+		template<typename T>
+		T Clamp(T value, T min, T max)
+		{
+			if (value < min)
+				return min;
+			if (value > max)
+				return max;
+			return value;
+		}
+		template float math::Clamp(float, float, float);
+		template int math::Clamp(int, int, int);
+		template uint16_t math::Clamp(uint16_t, uint16_t, uint16_t);
+		template uint32_t math::Clamp(uint32_t, uint32_t, uint32_t);
+		template uint64_t math::Clamp(uint64_t, uint64_t, uint64_t);
 	}
 }

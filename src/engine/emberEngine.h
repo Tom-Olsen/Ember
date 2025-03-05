@@ -12,7 +12,6 @@
 // Enums: (move somewhere else?)
 namespace emberEngine
 {
-	enum class ShadowType { hard, soft };
 	enum class ProjectionType { perspective, orthographic};
 }
 
@@ -33,6 +32,7 @@ namespace emberEngine
 #include "computeShader.h"
 #include "compute.h"
 #include "graphics.h"
+#include "lighting.h"
 #include "mesh.h"
 #include "material.h"
 #include "shaderProperties.h"
