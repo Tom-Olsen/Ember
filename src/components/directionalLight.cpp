@@ -1,7 +1,6 @@
 ﻿#include "directionalLight.h"
 #include "shadowCascade.h"
 #include "logger.h"
-using namespace emberEngine;
 
 
 

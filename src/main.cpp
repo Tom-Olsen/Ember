@@ -6,8 +6,8 @@ using namespace emberEngine;
 
 
 // TODO now!
-// - Remove camera dependency from vulkanRenderer, similar to lighting and drawCall system
 // - render engine into texture instead of directly to the swapchain => post processing effects + ImGui docking support
+// - Remove camera dependency from vulkanRenderer, similar to lighting and drawCall system
 // - build engine into cmakelists library which can be included in other projets and seperate the scenes below into test projects.
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
