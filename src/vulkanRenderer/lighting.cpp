@@ -37,16 +37,22 @@ namespace emberEngine
 
 
 
-	// Setters/Adders:
-	void Lighting::SetActiveCamera()
-	{
-
-	}
 	// Public methods:
-	void Lighting::AddPositionalLight
-	(Float3 position, float intensity, const Float3& color, ShadowType shadowType,
-	 float fov, float nearClip, float farClip, float blendStart, float blendEnd,
-	 const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
+	// Adders:
+	void Lighting::AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, ShadowType shadowType, const Float4x4& worldToClipMatrix)
+	{
+		if (s_directionalLightsCount == maxDirectionalLights)
+			return;
+
+		s_directionalLights[s_directionalLightsCount].direction = direction;
+		s_directionalLights[s_directionalLightsCount].intensity = intensity;
+		s_directionalLights[s_directionalLightsCount].color = color;
+		s_directionalLights[s_directionalLightsCount].shadowType = shadowType;
+		s_directionalLights[s_directionalLightsCount].worldToClipMatrix = worldToClipMatrix;
+
+		s_directionalLightsCount++;
+	}
+	void Lighting::AddPositionalLight(const Float3& position, float intensity, const Float3& color, ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix)
 	{
 		if (s_positionalLightsCount == maxPositionalLights)
 			return;
@@ -55,14 +61,9 @@ namespace emberEngine
 		s_positionalLights[s_positionalLightsCount].intensity = intensity;
 		s_positionalLights[s_positionalLightsCount].color = color;
 		s_positionalLights[s_positionalLightsCount].shadowType = shadowType;
-
-		s_positionalLights[s_positionalLightsCount].fov = fov;
-		s_positionalLights[s_positionalLightsCount].nearClip = nearClip;
-		s_positionalLights[s_positionalLightsCount].farClip = farClip;
 		s_positionalLights[s_positionalLightsCount].blendStart = blendStart;
 		s_positionalLights[s_positionalLightsCount].blendEnd = blendEnd;
-		s_positionalLights[s_positionalLightsCount].viewMatrix = viewMatrix;
-		s_positionalLights[s_positionalLightsCount].projectionMatrix = projectionMatrix;
+		s_positionalLights[s_positionalLightsCount].worldToClipMatrix = worldToClipMatrix;
 
 		s_positionalLightsCount++;
 	}
@@ -95,5 +96,37 @@ namespace emberEngine
 	{
 		int index = math::Clamp((int)faceIndex, 0, 5);
 		return s_pointLightRotationMatrices[faceIndex];
+	}
+
+
+
+	// Debugging:
+	std::string Lighting::DirectionalLight::ToString()
+	{
+		std::string output = "";
+		output += "direction: " + direction.ToString() + "\n";
+		output += "intensity: " + std::to_string(intensity) + "\n";
+		output += "color: " + color.ToString() + "\n";
+		if (shadowType == Lighting::ShadowType::hard)
+			output += "shadowType: hard\n";
+		else if (shadowType == Lighting::ShadowType::soft)
+			output += "shadowType: soft\n";
+		output += "worldToClipMatrix: " + worldToClipMatrix.ToString() + "\n";
+		return output;
+	}
+	std::string Lighting::PositionalLight::ToString()
+	{
+		std::string output = "";
+		output += "position: " + position.ToString() + "\n";
+		output += "intensity: " + std::to_string(intensity) + "\n";
+		output += "color: " + color.ToString() + "\n";
+		if (shadowType == Lighting::ShadowType::hard)
+			output += "shadowType: hard\n";
+		else if (shadowType == Lighting::ShadowType::soft)
+			output += "shadowType: soft\n";
+		output += "blendStart: " + std::to_string(blendStart) + "\n";
+		output += "blendEnd: " + std::to_string(blendEnd) + "\n";
+		output += "worldToClipMatrix: " + worldToClipMatrix.ToString() + "\n";
+		return output;
 	}
 }

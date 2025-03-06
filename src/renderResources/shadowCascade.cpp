@@ -18,7 +18,7 @@ namespace emberEngine
 		Float4(1, -1, 0, 1),	// right top near
 		Float4(1, -1, 1, 1),	// right top far
 		Float4(1,  1, 0, 1),	// right bottom near
-		Float4(1,  1, 1, 1)	// right bottom far
+		Float4(1,  1, 1, 1)		// right bottom far
 	};
 
 

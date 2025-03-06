@@ -283,35 +283,30 @@ namespace emberEngine
 				for (DrawCall* drawCall : *m_pDrawCalls)
 					drawCall->pShadowShaderProperties->UpdateShaderData();
 
-				//// Directional Lights:
-				//std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
-				//for (int i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
-				//{
-				//	light->UpdateShadowCascades(30.0f);
-				//
-				//	for (uint32_t shadowCascadeIndex = 0; shadowCascadeIndex < (uint32_t)light->GetShadowCascadeCount(); shadowCascadeIndex++)
-				//	{
-				//		for (DrawCall* drawCall : *m_pDrawCalls)
-				//		{
-				//			if (drawCall->castShadows == false)
-				//				continue;
-				//
-				//			pMesh = drawCall->pMesh;
-				//
-				//			// Update shader specific data (push constants):
-				//			Float4x4 worldToClipMatrix = light->GetProjectionMatrix(shadowCascadeIndex) * light->GetViewMatrix(shadowCascadeIndex);
-				//			ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
-				//			vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-				//
-				//			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
-				//			vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
-				//
-				//			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
-				//			vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-				//		}
-				//		shadowMapIndex++;
-				//	}
-				//}
+				// Directional Lights:
+				std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
+				for (int i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
+				{
+					Lighting::DirectionalLight& light = directionalLights[i];
+					for (DrawCall* drawCall : *m_pDrawCalls)
+					{
+						if (drawCall->castShadows == false)
+							continue;
+				
+						pMesh = drawCall->pMesh;
+				
+						// Update shader specific data (push constants):
+						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, light.worldToClipMatrix);
+						vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+				
+						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
+						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+				
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
+						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+					}
+					shadowMapIndex++;
+				}
 
 				// Positional Lights:
 				std::array<Lighting::PositionalLight, Lighting::maxPositionalLights>& positionalLights = Lighting::GetPositionalLights();
@@ -326,8 +321,7 @@ namespace emberEngine
 						pMesh = drawCall->pMesh;
 
 						// Update shader specific data (push constants):
-						Float4x4 worldToClipMatrix = light.projectionMatrix * light.viewMatrix;
-						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, worldToClipMatrix);
+						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, light.worldToClipMatrix);
 						vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
 						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);

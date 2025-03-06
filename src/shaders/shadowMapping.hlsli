@@ -5,8 +5,8 @@
 
 
 // When changing these also change the corresponding CPU values in src/VulkanRenderer/lighting.cpp.
-static const uint MAX_D_LIGHTS = 3;         // directional lights: sun, moon, etc.
-static const uint MAX_S_LIGHTS = 30;        // positional lights: spot light and point lights
+static const uint MAX_DIR_LIGHTS = 8;         // directional lights: sun, moon, etc.
+static const uint MAX_POS_LIGHTS = 30;        // positional lights: spot light and point lights
 static const uint SHADOW_MAP_RESOLUTION = 4096; // x,y shadow map resolution in pixels => square shadow map
 static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_RESOLUTION, 1.0f / SHADOW_MAP_RESOLUTION); // shadow map texel size
 
@@ -15,24 +15,23 @@ static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_RESOLUTION,
 struct DirectionalLightData
 {
     // one for each shadow cascade
-    float4x4 worldToClipMatrix[4];  // world to light clip space matrix (projection * view)
-    float3 direction;               // light direction
-    int softShadows;                // 0 = PCF shadows, 1 = pixel shadows
-    float4 colorIntensity;          // light color (xyz) and intensity (w)
-    int shadowCascadeCount;         // number of cascades (max 4)
+    float4x4 worldToClipMatrix;     // world to light clip space matrix (projection * view).
+    float3 direction;               // light direction.
+    int shadowType;                 // 0 = PCF shadows, 1 = pixel shadows.
+    float4 colorIntensity;          // light color (xyz) and intensity (w).
 };
 struct PositionalLightData
 {
-    float4x4 worldToClipMatrix; // world to light clip space matrix (projection * view)
-    float3 position;            // light position
-    int softShadows;            // 0 = PCF shadows, 1 = pixel shadows
-    float4 colorIntensity;      // light color (xyz) and intensity (w)
-    float2 blendStartEnd;
+    float4x4 worldToClipMatrix; // world to light clip space matrix (projection * view).
+    float3 position;            // light position.
+    int shadowType;             // 0 = PCF shadows, 1 = pixel shadows.
+    float4 colorIntensity;      // light color (xyz) and intensity (w).
+    float2 blendStartEnd;       // start and end of fallOff in radial direction €[0,1].
 };
 cbuffer LightData : register(b9)
 {
-    DirectionalLightData directionalLightData[MAX_D_LIGHTS];
-    PositionalLightData positionalLightData[MAX_S_LIGHTS];
+    DirectionalLightData directionalLightData[MAX_DIR_LIGHTS];
+    PositionalLightData positionalLightData[MAX_POS_LIGHTS];
     bool receiveShadows; // 0 = false, 1 = true
 }
 
@@ -158,55 +157,46 @@ float PercentageCloserFilteredShadow(SamplerComparisonState shadowSampler, Textu
 
 float3 PhysicalDirectionalLights
 (float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
- int dLightsCount, int shadowMapOffset, DirectionalLightData lightData[MAX_D_LIGHTS],
+ int dLightsCount, int shadowMapOffset, DirectionalLightData lightData[MAX_DIR_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
     float3 totalLight = 0;
     for (uint i = 0; i < dLightsCount; i++)
     {
-        int shadowCascadeCount = lightData[i].shadowCascadeCount;
-        for (uint shadowCascadeIndex = 0; shadowCascadeIndex < shadowCascadeCount; shadowCascadeIndex++)
+        // Check if the pixel is inside the shadow map:
+        float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix, float4(worldPos, 1.0f)); // €[-w,w]
+        float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
+        float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy€[-1,1] z€[0,1] (vulkan)
+        lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0,1]
+        if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
+         && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
+         && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
         {
-            // Check if the pixel is inside the shadow map:
-            float4 lightSpaceClipPos = mul(lightData[i].worldToClipMatrix[shadowCascadeIndex], float4(worldPos, 1.0f)); // €[-w,w]
-            float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
-            float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy€[-1,1] z€[0,1] (vulkan)
-            lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0,1]
-            if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
-             && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
-             && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
+            // Shadow:
+            float shadow = 1.0f;
+            if (receiveShadows)
             {
-                // Shadow:
-                float shadow = 1.0f;
-                if (receiveShadows)
-                {
-                    if (lightData[i].softShadows == 0)
-                        shadow = NoFileredShadow(shadowSampler, shadowMaps, shadowCascadeCount * i + shadowCascadeIndex + shadowMapOffset, lightUvz);
-                    else if (lightData[i].softShadows == 1)
-                        shadow = PercentageCloserFilteredShadow(shadowSampler, shadowMaps, shadowCascadeCount * i + shadowCascadeIndex + shadowMapOffset, lightUvz);
-                }
-                
-                // Light:
-                float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w;
-                float3 lightDir = normalize(-lightData[i].direction);
-                float3 viewDir = normalize(cameraPos - worldPos);
-                float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
-        
-                //totalLight += shadow * light;
-                float3 cascadeShading = float3
-                (0.5f + 0.5f * (shadowCascadeIndex == 0 || shadowCascadeIndex == 3),
-                 0.5f + 0.5f * (shadowCascadeIndex == 1 || shadowCascadeIndex == 3),
-                 0.5f + 0.5f * (shadowCascadeIndex == 2));
-                totalLight += shadow * light;
-                break; // no need to test further shadow maps of this directional light as cascades are sorted from closest to farthest
+                if (lightData[i].shadowType == 0)
+                    shadow = NoFileredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
+                else if (lightData[i].shadowType == 1)
+                    shadow = PercentageCloserFilteredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
             }
+            
+            // Light:
+            float3 lightIntensity = lightData[i].colorIntensity.xyz * lightData[i].colorIntensity.w;
+            float3 lightDir = normalize(-lightData[i].direction);
+            float3 viewDir = normalize(cameraPos - worldPos);
+            float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
+        
+            totalLight += shadow * light;
+            break; // no need to test further shadow maps of this directional light as cascades are sorted from closest to farthest
         }
     }
     return totalLight;
 }
 float3 PhysicalPositionalLights
 (float3 worldPos, float3 cameraPos, float3 normal, float3 color, float roughness, float3 reflectivity, float metallicity,
- int sLightsCount, int shadowMapOffset, PositionalLightData lightData[MAX_S_LIGHTS],
+ int sLightsCount, int shadowMapOffset, PositionalLightData lightData[MAX_POS_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
     float3 totalLight = 0;
@@ -228,9 +218,9 @@ float3 PhysicalPositionalLights
                 float radius = length(2.0f * lightUvz.xy - 1.0f);
                 float falloff = saturate((radius - lightData[i].blendStartEnd.y) / (lightData[i].blendStartEnd.x - lightData[i].blendStartEnd.y));
                 
-                if (lightData[i].softShadows == 0)
+                if (lightData[i].shadowType == 0)
                     shadow = falloff * NoFileredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
-                else if (lightData[i].softShadows == 1)
+                else if (lightData[i].shadowType == 1)
                     shadow = falloff * PercentageCloserFilteredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
             }
             
@@ -251,7 +241,7 @@ float3 PhysicalPositionalLights
 
 float3 PhysicalLighting
 (float3 worldPos, float3 cameraPos, float3 worldNormal, float3 color, float roughness, float3 reflectivity, float metallicity,
- int dLightsCount, int sLightsCount, DirectionalLightData directionalLightData[MAX_D_LIGHTS], PositionalLightData positionalLightData[MAX_S_LIGHTS],
+ int dLightsCount, int sLightsCount, DirectionalLightData directionalLightData[MAX_DIR_LIGHTS], PositionalLightData positionalLightData[MAX_POS_LIGHTS],
  Texture2DArray<float> shadowMaps, SamplerComparisonState shadowSampler)
 {
     float3 directionalLight = PhysicalDirectionalLights(worldPos, cameraPos, worldNormal, color, roughness, reflectivity, metallicity, dLightsCount, 0           , directionalLightData, shadowMaps, shadowSampler);

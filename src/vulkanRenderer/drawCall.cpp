@@ -23,27 +23,21 @@ namespace emberEngine
 	{
 		SetDirectionalLightData();
 		SetPositionalLightData();
+		pShaderProperties->SetValue("LightData", "receiveShadows", receiveShadows);
 	}
 	void DrawCall::SetDirectionalLightData()
 	{
-		//std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
-		//static std::string bufferName = "LightData";
-		//static std::string arrayName = "directionalLightData";
-		//
-		//for (uint32_t i = 0; i < Lighting::maxDirectionalLights; i++)
-		//{
-		//	int shadowCascadeCount = (int)directionalLights[i]->GetShadowCascadeCount();
-		//	for (int shadowCascadeIndex = 0; shadowCascadeIndex < shadowCascadeCount; shadowCascadeIndex++)
-		//	{
-		//		Float4x4 worldToClipMatrix = directionalLights[i]->GetProjectionMatrix(shadowCascadeIndex) * directionalLights[i]->GetViewMatrix(shadowCascadeIndex);
-		//		pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", shadowCascadeIndex, worldToClipMatrix);
-		//	}
-		//	pShaderProperties->SetValue(bufferName, arrayName, i, "direction", directionalLights[i]->GetDirection());
-		//	pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)directionalLights[i]->GetShadowType());
-		//	pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", directionalLights[i]->GetColorIntensity());
-		//	pShaderProperties->SetValue(bufferName, arrayName, i, "shadowCascadeCount", shadowCascadeCount);
-		//}
-		//pShaderProperties->SetValue("LightData", "receiveShadows", receiveShadows);
+		std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
+		static std::string bufferName = "LightData";
+		static std::string arrayName = "directionalLightData";
+		
+		for (uint32_t i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
+		{
+			pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "direction", directionalLights[i].direction);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "shadowType", (int)directionalLights[i].shadowType);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
+		}
 	}
 	void DrawCall::SetPositionalLightData()
 	{
@@ -53,13 +47,11 @@ namespace emberEngine
 
 		for (uint32_t i = 0; i < Lighting::GetPositionalLightsCount(); i++)
 		{
-			Float4x4 worldToClipMatrix = positionalLights[i].projectionMatrix * positionalLights[i].viewMatrix;
-			pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", worldToClipMatrix);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
 			pShaderProperties->SetValue(bufferName, arrayName, i, "position", positionalLights[i].position);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "softShadows", (int)positionalLights[i].shadowType);
+			pShaderProperties->SetValue(bufferName, arrayName, i, "shadowType", (int)positionalLights[i].shadowType);
 			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(positionalLights[i].color, positionalLights[i].intensity));
 			pShaderProperties->SetValue(bufferName, arrayName, i, "blendStartEnd", Float2(positionalLights[i].blendStart, positionalLights[i].blendEnd));
 		}
-		pShaderProperties->SetValue(bufferName, "receiveShadows", receiveShadows);
 	}
 }

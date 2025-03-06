@@ -1,12 +1,12 @@
 ﻿#ifndef __INCLUDE_GUARD_lighting_h__
 #define __INCLUDE_GUARD_lighting_h__
 #include "emberMath.h"
+#include <string>
 
 
 
 namespace emberEngine
 {
-	class ShadowCascade;
 	class Lighting
 	{
 	public: // Enums and light types:
@@ -17,12 +17,8 @@ namespace emberEngine
 			float intensity;
 			Float3 color;
 			ShadowType shadowType;
-
-			// Shadow cascade settings:
-			std::array<ShadowCascade*, 4> shadowCascades;
-			float distributionFactor;		// 0 = linear, 1 = logarithmic
-			uint8_t shadowCascadeCount;
-			float shadowCascadeSplits[5];	// Percentile splits for each shadow cascade € [0,1].
+			Float4x4 worldToClipMatrix;
+			std::string ToString();
 		};
 		struct PositionalLight
 		{
@@ -30,19 +26,15 @@ namespace emberEngine
 			float intensity;
 			Float3 color;
 			ShadowType shadowType;
-
-			float fov;
-			float nearClip;
-			float farClip;
 			float blendStart;
 			float blendEnd;
-			Float4x4 viewMatrix;
-			Float4x4 projectionMatrix;
+			Float4x4 worldToClipMatrix;
+			std::string ToString();
 		};
 
 	public:	// Constexpr members:
 		// When changing these also change the corresponding GPU values in shaders/shadowMapping.hlsli.
-		static constexpr uint32_t maxDirectionalLights = 3;
+		static constexpr uint32_t maxDirectionalLights = 8;
 		static constexpr uint32_t maxPositionalLights = 30;
 		static constexpr uint32_t shadowMapResolution = 4096;
 
@@ -59,13 +51,8 @@ namespace emberEngine
 		static void Clear();
 
 		// Setters/Adders:
-		static void SetActiveCamera();
-		//static void AddDirectionalLight(float intensity, const Float3& color, ShadowType shadowType, );
-		static void AddPositionalLight
-		(Float3 position, float intensity, const Float3& color, ShadowType shadowType,
-		 float fov, float newClip, float farClip, float blendStart, float blendEnd,
-		 const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
-		static void ResetLights();
+		static void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, ShadowType shadowType, const Float4x4& worldToClipMatrix);
+		static void AddPositionalLight(const Float3& position, float intensity, const Float3& color, ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix);
 
 		// Getters:
 		static uint32_t GetDirectionalLightsCount();
@@ -73,6 +60,9 @@ namespace emberEngine
 		static std::array<DirectionalLight, maxDirectionalLights>& GetDirectionalLights();
 		static std::array<PositionalLight, maxPositionalLights>& GetPositionalLights();
 		static Float4x4 GetPointLightRotationMatrix(uint32_t faceIndex);
+
+		// Management:
+		static void ResetLights();
 
 	private: // Methods:
 		// Delete all constructors:

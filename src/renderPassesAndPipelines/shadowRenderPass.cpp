@@ -11,7 +11,7 @@ namespace emberEngine
 {
 	// static members:
 	VkFormat ShadowRenderPass::s_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
-	uint32_t ShadowRenderPass::s_layerCount = 4 * Lighting::maxDirectionalLights + Lighting::maxPositionalLights;
+	uint32_t ShadowRenderPass::s_layerCount = Lighting::maxDirectionalLights + Lighting::maxPositionalLights;
 
 
 

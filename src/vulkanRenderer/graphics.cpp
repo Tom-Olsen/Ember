@@ -302,7 +302,7 @@ namespace emberEngine
 
 
 
-	// Management:
+	// Getters:
 	std::vector<DrawCall*>* Graphics::GetSortedDrawCallPointers()
 	{
 		// Populate sorted draw call pointers vector:
@@ -320,6 +320,10 @@ namespace emberEngine
 		});
 		return &s_sortedDrawCallPointers;
 	}
+
+
+
+	// Management:
 	void Graphics::ResetDrawCalls()
 	{
 		// Return all p(Shadow)ShaderProperties of dynamic draw calls back to the corresponding pool:

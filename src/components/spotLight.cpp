@@ -129,10 +129,11 @@ namespace emberEngine
 	// Overrides:
 	void SpotLight::LateUpdate()
 	{
-		Lighting::AddPositionalLight(m_pTransform->GetPosition(), m_intensity, m_color, m_shadowType, m_fov, m_nearClip, m_farClip, m_blendStart, m_blendEnd, GetViewMatrix(), GetProjectionMatrix());
+		Float4x4 worldToClipMatrix = GetProjectionMatrix() * GetViewMatrix();
+		Lighting::AddPositionalLight(GetTransform()->GetPosition(), m_intensity, m_color, m_shadowType, m_blendStart, m_blendEnd, worldToClipMatrix);
 
 		if (m_drawFrustum)
-			Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, Float4(m_color, 1.0f));
+			Graphics::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, Float4(m_color, 1.0f));
 	}
 	const std::string SpotLight::ToString() const
 	{

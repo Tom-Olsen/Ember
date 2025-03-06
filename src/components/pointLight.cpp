@@ -101,18 +101,19 @@ namespace emberEngine
 	// Overrides:
 	void PointLight::LateUpdate()
 	{
-		constexpr float fov = math::pi2;
+		// These blend values lead to oversaturation, which willbe clamped back to 1.0 by the saturation functino in the shader, leading to no blending at all:
 		constexpr float blendStard = 2.0f;
 		constexpr float blendEnd = 3.0f;
 		for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
 		{
 			Float4x4 viewMatrix = Lighting::GetPointLightRotationMatrix(faceIndex) * GetViewMatrix();
-			Lighting::AddPositionalLight(m_pTransform->GetPosition(), m_intensity, m_color, m_shadowType, fov, m_nearClip, m_farClip, blendStard, blendEnd, viewMatrix, GetProjectionMatrix());
+			Float4x4 worldToClipMatrix = GetProjectionMatrix() * viewMatrix;
+			Lighting::AddPositionalLight(GetTransform()->GetPosition(), m_intensity, m_color, m_shadowType, blendStard, blendEnd, worldToClipMatrix);
 		}
 
 		if (m_drawFrustum)
 			for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
-				Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix() * Lighting::GetPointLightRotationMatrix(faceIndex), 0.1f, Float4(m_color, 1.0f));
+				Graphics::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix() * Lighting::GetPointLightRotationMatrix(faceIndex), 0.1f, Float4(m_color, 1.0f));
 	}
 	const std::string PointLight::ToString() const
 	{

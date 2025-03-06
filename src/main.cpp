@@ -6,7 +6,6 @@ using namespace emberEngine;
 
 
 // TODO now!
-// - get directional lights to work with new lighting system
 // - Remove camera dependency from vulkanRenderer, similar to lighting and drawCall system
 // - render engine into texture instead of directly to the swapchain => post processing effects + ImGui docking support
 // - build engine into cmakelists library which can be included in other projets and seperate the scenes below into test projects.
@@ -168,10 +167,10 @@ Scene* ShadowCascadeScene()
 		DirectionalLight* pDirectionalLight = new DirectionalLight();
 		pDirectionalLight->SetIntensity(1.0f);
 		pDirectionalLight->SetColor(Float3::white);
-		pDirectionalLight->OverwriteActiveCamera(pCamera, true);
+		pDirectionalLight->SetActiveCamera(pCamera);
 		//pDirectionalLight->SetDrawFrustum(true);
 		pDirectionalLight->SetShadowType(Lighting::ShadowType::soft);
-		pDirectionalLight->SetDistributionFactor(1.00f);
+		pDirectionalLight->SetDistributionFactor(0.5f);
 		//pDirectionalLight->SetShadowCascadeCount(1);
 		pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
 
@@ -758,9 +757,9 @@ int main()
 
 	// Initialization:
 	Application app;
-	//Scene* pScene = ShadowCascadeScene();
+	Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
-	Scene* pScene = DefaultScene();
+	//Scene* pScene = DefaultScene();
 	//Scene* pScene = PointLightScene();
 	app.SetScene(pScene);
 

@@ -60,8 +60,10 @@ namespace emberEngine
 		static void DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 
-		// Management:
+		// Getters:
 		static std::vector<DrawCall*>* GetSortedDrawCallPointers();
+
+		// Management:
 		static void ResetDrawCalls();
 
 	private: // Methods:
