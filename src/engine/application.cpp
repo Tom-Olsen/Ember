@@ -20,7 +20,7 @@
 
 namespace emberEngine
 {
-	// Constructor:
+	// Constructor/Destructor:
 	Application::Application()
 	{
 		Logger::Init();
@@ -29,12 +29,16 @@ namespace emberEngine
 		m_pActiveScene = nullptr;
 		uint32_t framesInFlight = 2;
 		VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+		uint32_t windowWidth = 1920;
+		uint32_t windowHeight = 1080;
+		uint32_t renderWidth = 1280;
+		uint32_t renderheight = 720;
 
 		// Init static managers:
-		VulkanContext::Init(framesInFlight, msaaSamples);
+		VulkanContext::Init(framesInFlight, msaaSamples, windowWidth, windowHeight);
 		math::Random::Init();
 		EventSystem::Init();
-		RenderPassManager::Init();
+		RenderPassManager::Init(renderWidth, renderheight);
 		ComputeShaderManager::Init();
 		MaterialManager::Init();
 		BufferManager::Init();
@@ -46,10 +50,6 @@ namespace emberEngine
 		// Create renderer:
 		m_pRenderer = std::make_unique<VulkanRenderer>();
 	}
-
-
-
-	// Destructor:
 	Application::~Application()
 	{
 		VulkanContext::WaitDeviceIdle();
@@ -95,7 +95,7 @@ namespace emberEngine
 			LateUpdate();
 
 			// Render loop:
-			if (m_pRenderer->RenderFrame(m_pActiveScene))
+			if (m_pRenderer->RenderFrame())
 				VulkanContext::UpdateFrameIndex();
 		}
 	}

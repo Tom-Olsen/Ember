@@ -1,8 +1,7 @@
-#include "skyboxPipeline.h"
-#include "forwardRenderPass.h"
+#include "presentPipeline.h"
+#include "presentRenderPass.h"
 #include "mesh.h"
 #include "renderPassManager.h"
-#include "defaultPushConstant.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -12,11 +11,11 @@
 namespace emberEngine
 {
     // Constructor/Destructor:
-    SkyboxPipeline::SkyboxPipeline
+    PresentPipeline::PresentPipeline
     (const std::vector<char>& vertexCode,
-     const std::vector<char>& fragmentCode,
-     const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
-     const VertexInputDescriptions* const pVertexInputDescriptions)
+        const std::vector<char>& fragmentCode,
+        const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
+        const VertexInputDescriptions* const pVertexInputDescriptions)
     {
         // Create pipeline Layout:
         CreatePipelineLayout(vkDescriptorSetLayoutBindings);
@@ -32,7 +31,7 @@ namespace emberEngine
         vkDestroyShaderModule(VulkanContext::GetVkDevice(), vertexShaderModule, nullptr);
         vkDestroyShaderModule(VulkanContext::GetVkDevice(), fragmentShaderModule, nullptr);
     }
-    SkyboxPipeline::~SkyboxPipeline()
+    PresentPipeline::~PresentPipeline()
     {
 
     }
@@ -40,7 +39,7 @@ namespace emberEngine
 
 
     // Private:
-    void SkyboxPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
+    void PresentPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
     {
         // Descriptor set layout:
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -48,21 +47,13 @@ namespace emberEngine
         descriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.data();
         VKA(vkCreateDescriptorSetLayout(VulkanContext::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
 
-        // Push constants layout:
-        VkPushConstantRange pushConstantRange = {};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(DefaultPushConstant);
-
         // Pipeline layout:
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
         pipelineLayoutCreateInfo.setLayoutCount = 1;
         pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
-        pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-        pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(VulkanContext::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
     }
-    void SkyboxPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
+    void PresentPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -96,32 +87,24 @@ namespace emberEngine
 
         // Rasterization:
         VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-        rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;  // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
-        rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;    // which face to cull
-        rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE; // which face of triangle is front: 123 or 132?
-        rasterizationState.lineWidth = 1.0f;                    // width of lines. Bigger 1.0f requires wideLines feature
-        rasterizationState.depthClampEnable = VK_FALSE;         // clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature.
-        rasterizationState.depthBiasEnable = VK_FALSE;          // Optional
-        rasterizationState.depthBiasConstantFactor = 0.0f;      // Optional
-        rasterizationState.depthBiasClamp = 0.0f;               // Optional
-        rasterizationState.depthBiasSlopeFactor = 0.0f;         // Optional
+        rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;          // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
+        rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT;           // which face to cull
+        rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // which face of triangle is front: 123 or 132?
+        rasterizationState.lineWidth = 1.0f;                            // width of lines. Bigger 1.0f requires wideLines feature
+        rasterizationState.depthClampEnable = VK_FALSE;                 // clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature.
+        rasterizationState.depthBiasEnable = VK_FALSE;                  // Optional
+        rasterizationState.depthBiasConstantFactor = 0.0f;              // Optional
+        rasterizationState.depthBiasClamp = 0.0f;                       // Optional
+        rasterizationState.depthBiasSlopeFactor = 0.0f;                 // Optional
 
         // Multisampling:
         VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
         multisampleState.sampleShadingEnable = VK_FALSE;
-        multisampleState.rasterizationSamples = VulkanContext::msaaSamples;
+        multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
         multisampleState.minSampleShading = 1.0f;           // Optional
         multisampleState.pSampleMask = nullptr;             // Optional
         multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional
         multisampleState.alphaToOneEnable = VK_FALSE;       // Optional
-
-        // Depth and stencil testing:
-        VkPipelineDepthStencilStateCreateInfo depthState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-        depthState.depthTestEnable = VK_TRUE;                       // depth of new fragments should be compared to the depth buffer to see if they should be discarded
-        depthState.depthWriteEnable = VK_FALSE;                     // new depth of fragments that pass the depth test should be written to the depth buffer
-        depthState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;    // comparison that is performed to keep or discard fragments. lower = closer to camera
-        depthState.depthBoundsTestEnable = VK_FALSE;                // allows to keep only fragments in the below defined range
-        depthState.stencilTestEnable = VK_FALSE;                    // stencil buffer operations (not used yet)
 
         // Color blending:
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
@@ -173,11 +156,10 @@ namespace emberEngine
         pipelineInfo.pViewportState = &viewportState;           // Viewport and scissor
         pipelineInfo.pRasterizationState = &rasterizationState; // Rasterizer
         pipelineInfo.pMultisampleState = &multisampleState;     // Multisampling
-        pipelineInfo.pDepthStencilState = &depthState;          // Depth and stencil testing
         pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
         pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
         pipelineInfo.layout = m_pipelineLayout;
-        pipelineInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
+        pipelineInfo.renderPass = RenderPassManager::GetPresentRenderPass()->GetVkRenderPass();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
         pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline

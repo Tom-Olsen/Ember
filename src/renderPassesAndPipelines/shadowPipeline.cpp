@@ -1,9 +1,9 @@
 #include "shadowPipeline.h"
 #include "lighting.h"
 #include "mesh.h"
-#include "renderPass.h"
 #include "renderPassManager.h"
 #include "shadowPushConstant.h"
+#include "shadowRenderPass.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -153,7 +153,7 @@ namespace emberEngine
         pipelineInfo.pColorBlendState = &colorBlendState;			// Color blending
         pipelineInfo.pDynamicState = nullptr;						// no dynamic states	
         pipelineInfo.layout = m_pipelineLayout;
-        pipelineInfo.renderPass = RenderPassManager::GetRenderPass("shadowRenderPass")->GetVkRenderPass();
+        pipelineInfo.renderPass = RenderPassManager::GetShadowRenderPass()->GetVkRenderPass();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;

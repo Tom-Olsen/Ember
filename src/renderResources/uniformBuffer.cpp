@@ -26,7 +26,7 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_buffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
+		m_buffer = std::make_unique<VmaBuffer>("uniformBuffer", bufferInfo, allocInfo);
 
 		// Get deviceData pointer:
 		VmaAllocationInfo info;

@@ -5,19 +5,19 @@ using namespace emberEngine;
 
 
 
-// TODO now!
-// - render engine into texture instead of directly to the swapchain => post processing effects + ImGui docking support
-// - Remove camera dependency from vulkanRenderer, similar to lighting and drawCall system
+// Ember::TODO now!
+// - fix dear imgui
+// - replace all direct usages of VK_PIPELINE_STAGE_2_... and VK_ACCESS_2_... with constexpr values from vulkanUtility.h
 // - build engine into cmakelists library which can be included in other projets and seperate the scenes below into test projects.
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
 // - use one constants.h file both for c++ and hlsl constants that are identical, e.g. #define SHADOW_MAP_RESOLUTION 4096
-// - refactor RenderPassManager to contain hard coded getters for each RenderPass, instead of access via strings.
 // - SceneView gui 
 // - cleanup project. e.g. renderpasses & pipelines => multiple folders e.g shadow/forward/skybox/...
 
-// TODO:
+// Ember::TODO:
+// - think about different texture2d specializations. Are they all needed? Can they be simplified? How would I remove the m_layout tracking on CPU side?
 // - when not using input.vertexColor in the vertex shader, spirv optimizes the input binding away, which leads to incorrect bindings in
 //   my spirv reflection => other bindings are wrong, and textures are not displayed at all.
 // - batch image transitions and copying (e.g. texture2d creation)
@@ -44,7 +44,7 @@ using namespace emberEngine;
 //   remove normalization of any input vector that is namen 'normal' or 'tangent' or 'direction' in mathf library (same for linearAlgebra.hlsli).
 // - Proper documentation for shaderProperties, uniformBuffers, spirvReflect classes
 
-// TODO long term:
+// Ember::TODO long term:
 // - dimm line between shadow cascades.
 // - change image loading library, stb_image sucks.
 // - proper quaternion support
@@ -317,6 +317,9 @@ Scene* DefaultScene()
 		Camera* pCamera = new Camera();
 		pCamera->SetFarClip(1000.0f);
 		pGameObject->AddComponent<Camera>(pCamera);
+
+		PostProcessEffects* pPostProcessEffects = new PostProcessEffects();
+		pGameObject->AddComponent<PostProcessEffects>(pPostProcessEffects);
 
 		CameraController* cameraController = new CameraController();
 		pGameObject->AddComponent<CameraController>(cameraController);
@@ -757,9 +760,9 @@ int main()
 
 	// Initialization:
 	Application app;
-	Scene* pScene = ShadowCascadeScene();
+	//Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
-	//Scene* pScene = DefaultScene();
+	Scene* pScene = DefaultScene();
 	//Scene* pScene = PointLightScene();
 	app.SetScene(pScene);
 

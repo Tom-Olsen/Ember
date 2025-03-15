@@ -23,16 +23,23 @@ namespace emberEngine
 		s_isInitialized = true;
 
 		Mesh* pUnitQuad = MeshGenerator::UnitQuad();
+		pUnitQuad->SetName("unitQuad");
 		AddMesh(pUnitQuad);
 
 		Mesh* pUnitCube = MeshGenerator::UnitCube();
+		pUnitCube->SetName("unitCube");
 		AddMesh(pUnitCube);
+
+		Mesh* pFullScreenRenderQuad = MeshGenerator::FullScreenRenderQuad();
+		pFullScreenRenderQuad->SetName("fullScreenRenderQuad");
+		AddMesh(pFullScreenRenderQuad);
 
 		Mesh* pUnitCubeInverse = MeshGenerator::UnitCube()->InvertFaces();
 		pUnitCubeInverse->SetName("unitCubeInverse");
 		AddMesh(pUnitCubeInverse);
 
 		Mesh* pHalfCube = MeshGenerator::HalfCube();
+		pHalfCube->SetName("halfCube");
 		AddMesh(pHalfCube);
 
 		Mesh* pCubeSphere = MeshGenerator::CubeSphere(0.5f, 3, "cubeSphere");
@@ -66,19 +73,24 @@ namespace emberEngine
 		AddMesh(pArrowEdgy);
 
 		Mesh* pThreeLeg = MeshGenerator::ThreeLeg();
+		pThreeLeg->SetName("threeLeg");
 		AddMesh(pThreeLeg);
 
 		Mesh* pFourLeg = MeshGenerator::FourLeg();
+		pFourLeg->SetName("fourLeg");
 		AddMesh(pFourLeg);
 
 		Mesh* pCamera = MeshGenerator::Camera();
+		pCamera->SetName("camera");
 		AddMesh(pCamera);
 
 		Mesh* pFrame = MeshGenerator::Frame(0.15f, 2.0f);
+		pFrame->SetName("frame");
 		AddMesh(pFrame);
 
 		std::filesystem::path pathToFile = "meshes/Leb9.csv";
 		Mesh* pLeb9 = MeshReader::ReadCsvFile(pathToFile);
+		pLeb9->SetName("Leb9");
 		AddMesh(pLeb9);
 	}
 	void MeshManager::UnloadAllMeshes()

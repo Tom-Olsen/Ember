@@ -25,17 +25,7 @@ namespace emberEngine
 	/// </summary>
 	class Texture2d
 	{
-	public: // Enums:
-		enum class Type
-		{
-			cube,
-			sample,
-			shadow,
-			storage
-		};
-
 	protected: // Members:
-		Type m_type;
 		int m_width;
 		int m_height;
 		int m_channels;
@@ -47,13 +37,11 @@ namespace emberEngine
 		virtual ~Texture2d();
 
 		// Getters:
-		Type GetType() const;
-		std::string GetTypeName() const;
 		uint64_t GetWidth() const;
 		uint64_t GetHeight() const;
 		uint64_t GetChannels() const;
 		const std::string& GetName() const;
-		const VmaImage* const GetVmaImage() const;
+		VmaImage* const GetVmaImage() const;
 		VkDescriptorType GetVkDescriptorType() const;
 
 	protected: // Methods:

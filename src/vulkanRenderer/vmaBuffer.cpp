@@ -1,4 +1,5 @@
 #include "vmaBuffer.h"
+#include "logger.h"
 #include "vmaImage.h"
 #include "vulkanCommand.h"
 #include "vulkanContext.h"
@@ -8,19 +9,23 @@
 
 namespace emberEngine
 {
+	// Static private members:
+	uint32_t VmaBuffer::s_index = 0;
+
+
+
 	// Constructors/Destructor:
-	VmaBuffer::VmaBuffer()
+	VmaBuffer::VmaBuffer(const std::string& name, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
 	{
-		m_buffer = VK_NULL_HANDLE;
-		m_allocation = VK_NULL_HANDLE;
-		m_bufferInfo = {};
-		m_allocInfo = {};
-	}
-	VmaBuffer::VmaBuffer(const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
-	{
+		m_name = name + std::to_string(s_index);
+		s_index++;
 		m_bufferInfo = bufferInfo;
 		m_allocInfo = allocInfo;
 		VKA(vmaCreateBuffer(VulkanContext::GetVmaAllocator(), &m_bufferInfo, &m_allocInfo, &m_buffer, &m_allocation, nullptr));
+
+		#ifdef VALIDATION_LAYERS_ACTIVE
+		VulkanContext::pAllocationTracker->AddVmaBuffer(this);
+		#endif
 	}
 	VmaBuffer::VmaBuffer(VmaBuffer&& other) noexcept
 		: m_buffer(other.m_buffer),
@@ -40,6 +45,7 @@ namespace emberEngine
 			m_allocation = nullptr;
 
 			// Move data from other
+			m_name = other.m_name;
 			m_buffer = other.m_buffer;
 			m_allocation = other.m_allocation;
 			m_bufferInfo = other.m_bufferInfo;
@@ -54,12 +60,20 @@ namespace emberEngine
 	VmaBuffer::~VmaBuffer()
 	{
 		vmaDestroyBuffer(VulkanContext::GetVmaAllocator(), m_buffer, m_allocation);
+
+		#ifdef VALIDATION_LAYERS_ACTIVE
+		VulkanContext::pAllocationTracker->RemoveVmaBuffer(this);
+		#endif
 	}
 
 
 
 	// Public methods:
 	// Getters:
+	const std::string& VmaBuffer::GetName() const
+	{
+		return m_name;
+	}
 	const VkBuffer& VmaBuffer::GetVkBuffer() const
 	{
 		return m_buffer;
@@ -137,7 +151,7 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		VmaBuffer stagingBuffer = VmaBuffer(bufferInfo, allocInfo);
+		VmaBuffer stagingBuffer = VmaBuffer("stagingBuffer", bufferInfo, allocInfo);
 
 		// Load data into buffer:
 		void* data;
@@ -171,7 +185,7 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		VmaBuffer stagingBuffer = VmaBuffer(bufferInfo, allocInfo);
+		VmaBuffer stagingBuffer = VmaBuffer("stagingBuffer", bufferInfo, allocInfo);
 
 		// Load data into buffer:
 		void* data;

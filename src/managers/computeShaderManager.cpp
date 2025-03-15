@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "emberMath.h"
 #include "vulkanContext.h"
+#include <filesystem>
 
 
 
@@ -21,14 +22,20 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		ComputeShader* test = new ComputeShader("testComputeShader", "../src/shaders/helloWorld.comp.spv", Uint3(8, 8, 1));
-		AddComputeShader(test);
-
-		ComputeShader* initialPositions = new ComputeShader("initialPositionsComputeShader", "../src/shaders/initialPositions.comp.spv", Uint3(64, 1, 1));
-		AddComputeShader(initialPositions);
-
-		ComputeShader* updatePositions = new ComputeShader("updatePositionsComputeShader", "../src/shaders/updatePositions.comp.spv", Uint3(64, 1, 1));
-		AddComputeShader(updatePositions);
+		std::filesystem::path directoryPath = "../src/shaders";
+		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
+		{
+			if (entry.is_regular_file())
+			{
+				std::string filename = entry.path().filename().string();
+				if (filename.size() > 9 && filename.substr(filename.size() - 9) == ".comp.spv")
+				{
+					std::string name = filename.substr(0, filename.size() - 9);
+					ComputeShader* pComputeShader = new ComputeShader(name, entry.path());
+					AddComputeShader(pComputeShader);
+				}
+			}
+		}
 	}
 	void ComputeShaderManager::Clear()
 	{

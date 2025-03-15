@@ -836,7 +836,7 @@ namespace emberEngine
 			allocInfo.requiredFlags = 0;
 			allocInfo.preferredFlags = 0;
 
-			m_vertexBuffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
+			m_vertexBuffer = std::make_unique<VmaBuffer>("vertexBuffer", bufferInfo, allocInfo);
 		}
 
 		// Load data into staging buffer:
@@ -911,7 +911,7 @@ namespace emberEngine
 			allocInfo.requiredFlags = 0;
 			allocInfo.preferredFlags = 0;
 
-			m_indexBuffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
+			m_indexBuffer = std::make_unique<VmaBuffer>("indexBuffer", bufferInfo, allocInfo);
 		}
 
 		// Load data into staging buffer:

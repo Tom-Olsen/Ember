@@ -51,7 +51,6 @@ namespace emberEngine
 #include "computeShaderManager.h"
 #include "materialManager.h"
 #include "meshManager.h"
-//#include "renderPassManager.h"	// only needed in backend, not on engine level.
 #include "samplerManager.h"
 #include "textureManager.h"
 
@@ -69,6 +68,7 @@ namespace emberEngine
 #include "meshRenderer.h"
 #include "meshTester.h"
 #include "pointLight.h"
+#include "postProcessEffects.h"
 #include "spinGlobal.h"
 #include "spinLocal.h"
 #include "spotLight.h"

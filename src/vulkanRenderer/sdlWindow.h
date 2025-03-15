@@ -16,7 +16,7 @@ namespace emberEngine
 		bool m_framebufferResized = false;
 
 	public: // Methods:
-		SdlWindow(uint16_t width = 2560, uint16_t height = 1440);
+		SdlWindow(uint16_t width, uint16_t height);
 		~SdlWindow();
 
 		bool HandleEvents();

@@ -16,7 +16,7 @@ namespace emberEngine
 	{
 	public: // Methods:
 		StorageSampleTexture2d(const std::string& name, VkFormat format, int width, int height);
-		StorageSampleTexture2d(const std::filesystem::path& filePath, const std::string& name, VkFormat format);
+		StorageSampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath);
 		~StorageSampleTexture2d();
 	};
 }

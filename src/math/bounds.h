@@ -40,7 +40,7 @@ namespace emberMath
 		void Encapsulate(const Float3& point);
 		void Expand(float amount);
 		void Expand(const Float3& amount);
-		std::optional<Float3> IntersectRay(const Ray& ray) const;// TODO: needs unit test
+		std::optional<Float3> IntersectRay(const Ray& ray) const;// Math::TODO: needs unit test
 
 		// Logging:
 		std::string ToString() const;

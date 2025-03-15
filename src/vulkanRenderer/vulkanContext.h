@@ -3,6 +3,7 @@
 // Direct include instead of forward declaration,
 // as this is the main header file that includes all other Vulkan-related headers.
 #include "sdlWindow.h"
+#include "vulkanAllocationTracker.h"
 #include "vulkanDescriptorPool.h"
 #include "vulkanInstance.h"
 #include "vulkanLogicalDevice.h"
@@ -45,6 +46,7 @@ namespace emberEngine
 		static std::unique_ptr<VulkanSurface> pSurface;
 		static std::unique_ptr<VulkanLogicalDevice> pLogicalDevice;
 		static std::unique_ptr<VulkanMemoryAllocator> pAllocator;
+		static std::unique_ptr<VulkanAllocationTracker> pAllocationTracker;
 		static std::unique_ptr<VulkanDescriptorPool> pDescriptorPool;
 		static std::unique_ptr<VulkanSwapchain> pSwapchain;
 		static uint32_t framesInFlight;
@@ -52,7 +54,7 @@ namespace emberEngine
 		static VkSampleCountFlagBits msaaSamples;
 
 	public: // Methods:
-		static void Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue);
+		static void Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight);
 		static void Clear();
 
 		// Getters:

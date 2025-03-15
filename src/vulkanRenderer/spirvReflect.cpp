@@ -289,6 +289,17 @@ namespace emberEngine
             }
         }
     }
+    Uint3 SpirvReflect::GetBlockSize() const
+    {
+        const SpvReflectEntryPoint* entryPoint = spvReflectGetEntryPoint(&m_module, "main");
+        if (entryPoint)
+            return Uint3(entryPoint->local_size.x, entryPoint->local_size.y, entryPoint->local_size.z);
+        else
+        {
+            LOG_WARN("Given shader does not contain the entry point 'main' or is not a compute shader!");
+            return Uint3::zero;
+        }
+    }
 
     // Private methods:
     std::vector<SpvReflectInterfaceVariable*> SpirvReflect::GetInputVariablesReflection() const

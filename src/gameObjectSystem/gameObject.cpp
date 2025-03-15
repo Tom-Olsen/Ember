@@ -99,6 +99,7 @@ namespace emberEngine
 	template void GameObject::AddComponent(MeshRenderer*);
 	template void GameObject::AddComponent(MeshTester*);
 	template void GameObject::AddComponent(PointLight*);
+	template void GameObject::AddComponent(PostProcessEffects*);
 	template void GameObject::AddComponent(SpinGlobal*);
 	template void GameObject::AddComponent(SpinLocal*);
 	template void GameObject::AddComponent(SpotLight*);
@@ -112,6 +113,7 @@ namespace emberEngine
 	template MeshRenderer* GameObject::GetComponent<MeshRenderer>();
 	template MeshTester* GameObject::GetComponent<MeshTester>();
 	template PointLight* GameObject::GetComponent<PointLight>();
+	template PostProcessEffects* GameObject::GetComponent<PostProcessEffects>();
 	template SpinGlobal* GameObject::GetComponent<SpinGlobal>();
 	template SpinLocal* GameObject::GetComponent<SpinLocal>();
 	template SpotLight* GameObject::GetComponent<SpotLight>();

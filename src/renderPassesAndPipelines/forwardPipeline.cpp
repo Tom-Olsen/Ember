@@ -1,6 +1,6 @@
 #include "forwardPipeline.h"
+#include "forwardRenderPass.h"
 #include "mesh.h"
-#include "renderPass.h"
 #include "renderPassManager.h"
 #include "defaultPushConstant.h"
 #include "spirvReflect.h"
@@ -177,7 +177,7 @@ namespace emberEngine
         pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
         pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
         pipelineInfo.layout = m_pipelineLayout;
-        pipelineInfo.renderPass = RenderPassManager::GetRenderPass("forwardRenderPass")->GetVkRenderPass();
+        pipelineInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
         pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline

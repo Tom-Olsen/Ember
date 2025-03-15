@@ -1,7 +1,8 @@
 #include "renderPassManager.h"
-#include "logger.h"
-#include "renderPass.h"
 #include "forwardRenderPass.h"
+#include "logger.h"
+#include "presentRenderPass.h"
+#include "renderPass.h"
 #include "shadowRenderPass.h"
 #include "vulkanContext.h"
 
@@ -11,68 +12,54 @@ namespace emberEngine
 {
 	// Static members:
 	bool RenderPassManager::s_isInitialized = false;
-	std::unordered_map<std::string, std::unique_ptr<RenderPass>> RenderPassManager::s_renderPasses;
+	uint32_t RenderPassManager::s_renderWidth = 0;
+	uint32_t RenderPassManager::s_renderHeight = 0;
+	std::unique_ptr<ShadowRenderPass> RenderPassManager::s_pShadowRenderPass = nullptr;
+	std::unique_ptr<ForwardRenderPass> RenderPassManager::s_pForwardRenderPass = nullptr;
+	std::unique_ptr<PresentRenderPass> RenderPassManager::s_pPresentRenderPass = nullptr;
 
 
 
 	// Initialization and cleanup:
-	void RenderPassManager::Init()
+	void RenderPassManager::Init(uint32_t renderWidth, uint32_t renderHeight)
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
 
-		ForwardRenderPass* forwardRenderPass = new ForwardRenderPass();
-		AddRenderPass("forwardRenderPass", forwardRenderPass);
-
-		ShadowRenderPass* shadowRenderPass = new ShadowRenderPass();
-		AddRenderPass("shadowRenderPass", shadowRenderPass);
+		s_renderWidth = renderWidth;
+		s_renderHeight = renderHeight;
+		s_pShadowRenderPass = std::make_unique<ShadowRenderPass>();
+		s_pForwardRenderPass = std::make_unique<ForwardRenderPass>(s_renderWidth, s_renderHeight);
+		s_pPresentRenderPass = std::make_unique<PresentRenderPass>();
 	}
 	void RenderPassManager::Clear()
 	{
 		VulkanContext::WaitDeviceIdle();
-		s_renderPasses.clear();
+		s_pPresentRenderPass.reset();
+		s_pForwardRenderPass.reset();
+		s_pShadowRenderPass.reset();
 	}
 	void RenderPassManager::RecreateRenderPasses()
 	{
-		RenderPass* newForwardRenderPass = new ForwardRenderPass();
-		DeleteRenderPass("forwardRenderPass");
-		AddRenderPass("forwardRenderPass", newForwardRenderPass);
-	}
-
-
-
-	// Add/get/delete:
-	void RenderPassManager::AddRenderPass(const std::string name, RenderPass* pRenderPass)
-	{
-		// If renderPass already contained in RenderPassManager, do nothing.
-		if (s_renderPasses.emplace(name, std::unique_ptr<RenderPass>(pRenderPass)).second == false)
-		{
-			LOG_WARN("RenderPass with the name: {} already exists in RenderPassManager!", name);
-			return;
-		}
-	}
-	RenderPass* RenderPassManager::GetRenderPass(const std::string& name)
-	{
-		auto it = s_renderPasses.find(name);
-		if (it != s_renderPasses.end())
-			return it->second.get();
-		LOG_WARN("RenderPass '{}' not found!", name);
-		return nullptr;
-	}
-	void RenderPassManager::DeleteRenderPass(const std::string& name)
-	{
 		VulkanContext::WaitDeviceIdle();
-		s_renderPasses.erase(name);
+		std::unique_ptr<PresentRenderPass> pNewPresentRenderPass = std::make_unique<PresentRenderPass>();
+		std::swap(s_pPresentRenderPass, pNewPresentRenderPass);
 	}
 
 
 
-	// Debugging:
-	void RenderPassManager::PrintAllRenderPassNames()
+	// Getters:
+	ShadowRenderPass* RenderPassManager::GetShadowRenderPass()
 	{
-		LOG_TRACE("Names of all managed renderPasses:");
-		for (const auto& pair : s_renderPasses)
-			LOG_TRACE(pair.first);
+		return s_pShadowRenderPass.get();
+	}
+	ForwardRenderPass* RenderPassManager::GetForwardRenderPass()
+	{
+		return s_pForwardRenderPass.get();
+	}
+	PresentRenderPass* RenderPassManager::GetPresentRenderPass()
+	{
+		return s_pPresentRenderPass.get();
 	}
 }

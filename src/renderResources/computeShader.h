@@ -18,7 +18,7 @@ namespace emberEngine
 
 	public: // Methods:
 		// Constructors/Destructor:
-		ComputeShader(const std::string& name, const std::filesystem::path& computeSpv, Uint3 blockSize);
+		ComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
 		~ComputeShader();
 
 		Uint3 GetBlockSize() const;

@@ -3,6 +3,7 @@
 #include "vk_mem_alloc.h"
 #include "vulkanQueue.h"
 #include <memory>
+#include <string>
 #include <vulkan/vulkan.h>
 
 
@@ -18,6 +19,8 @@ namespace emberEngine
 	class VmaImage
 	{
 	private: // Members:
+		static uint32_t s_index;
+		std::string m_name;
 		VkImage m_image;
 		VmaAllocation m_allocation;
 		VkImageView m_imageView;
@@ -28,11 +31,12 @@ namespace emberEngine
 		VkImageLayout m_layout;
 
 	public: // Methods:
-		VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue);
+		VmaImage(const std::string name, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue);
 		~VmaImage();
 
 
 		// Getters:
+		const std::string& GetName() const;
 		const VkImage& GetVkImage() const;
 		const VmaAllocation& GetVmaAllocation() const;
 		const VkImageView& GetVkImageView() const;
@@ -44,6 +48,7 @@ namespace emberEngine
 		uint64_t GetHeight() const;
 		uint64_t GetDepth() const;
 		const VkExtent3D& GetExtent() const;
+		VkFormat GetFormat() const;
 		VkImageSubresourceLayers GetSubresourceLayers() const;
 
 		// Setters:
@@ -51,6 +56,7 @@ namespace emberEngine
 		void SetLayout(VkImageLayout imageLayout);
 		
 		// Transitions:
+		void TransitionLayout(VkCommandBuffer vkCommandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
 		void TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
 		void TransitionQueue(const VulkanQueue& newQueue, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
 		void TransitionLayoutAndQueue(VkImageLayout newLayout, const VulkanQueue& newQueue, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
@@ -58,6 +64,7 @@ namespace emberEngine
 
 		// Static methods:
 		static void CopyImageToImage(VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue);
+		static void CopyImageToImage(VkCommandBuffer commandBuffer, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue);
 	};
 }
 

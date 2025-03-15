@@ -5,17 +5,15 @@
 
 namespace emberEngine
 {
-	void DrawCall::SetRenderMatrizes(Camera* const pCamera)
+	void DrawCall::SetRenderMatrizes(const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
 	{
 		static std::string bufferName = "RenderMatrizes";
-		Float4x4 cameraViewMatrix = pCamera->GetViewMatrix();
-		Float4x4 cameraProjMatrix = pCamera->GetProjectionMatrix();
-		Float4x4 worldToClipMatrix = cameraProjMatrix * cameraViewMatrix;
+		Float4x4 worldToClipMatrix = projectionMatrix * viewMatrix;
 		Float4x4 localToClipMatrix = worldToClipMatrix * localToWorldMatrix;
 
 		pShaderProperties->SetValue(bufferName, "cb_localToWorldMatrix", localToWorldMatrix);
-		pShaderProperties->SetValue(bufferName, "cb_viewMatrix", cameraViewMatrix);
-		pShaderProperties->SetValue(bufferName, "cb_projMatrix", cameraProjMatrix);
+		pShaderProperties->SetValue(bufferName, "cb_viewMatrix", viewMatrix);
+		pShaderProperties->SetValue(bufferName, "cb_projMatrix", projectionMatrix);
 		pShaderProperties->SetValue(bufferName, "cb_worldToClipMatrix", worldToClipMatrix);
 		pShaderProperties->SetValue(bufferName, "cb_localToClipMatrix", localToClipMatrix);
 	}

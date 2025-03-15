@@ -13,7 +13,6 @@ namespace emberEngine
 	// Constructor/Destructor:
 	TextureCube::TextureCube(const std::filesystem::path& folderPath, const std::string& name, VkFormat format)
 	{
-		m_type = Type::cube;
 		m_name = name;
 		m_channels = STBI_rgb_alpha;	// 4 8-bit channels
 		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;

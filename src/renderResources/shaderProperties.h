@@ -19,14 +19,30 @@ namespace emberEngine
 
 
 
-	template<typename T>
-	struct ResourceBinding
+	// Resource bindings:
+	struct UniformBufferBinding
 	{
-		T resource;
 		uint32_t binding;
+		std::shared_ptr<UniformBuffer> pUniformBuffer;
+	};
+	struct SamplerBinding
+	{
+		uint32_t binding;
+		Sampler* pSampler;
+	};
+	struct TextureBinding
+	{
+		uint32_t binding;
+		Texture2d* pTexture2d;
+		VkDescriptorType descriptorType;
+	};
+	struct StorageBufferBinding
+	{
+		uint32_t binding;
+		StorageBuffer* pStorageBuffer;
 	};
 
-
+	
 
 	/// <summary>
 	/// Each ShaderProperties instance is customized for a specific Material/ComputeShader.
@@ -40,10 +56,10 @@ namespace emberEngine
 
 		// All these vectors contain one item for each frame in flight:
 		std::vector<VkDescriptorSet> m_descriptorSets;
-		std::vector<std::unordered_map<std::string, ResourceBinding<std::shared_ptr<UniformBuffer>>>> m_uniformBufferMaps;
-		std::vector<std::unordered_map<std::string, ResourceBinding<Sampler*>>> m_samplerMaps;
-		std::vector<std::unordered_map<std::string, ResourceBinding<Texture2d*>>> m_texture2dMaps;
-		std::vector<std::unordered_map<std::string, ResourceBinding<StorageBuffer*>>> m_storageBufferMaps;
+		std::vector<std::unordered_map<std::string, UniformBufferBinding>> m_uniformBufferMaps;
+		std::vector<std::unordered_map<std::string, SamplerBinding>> m_samplerMaps;
+		std::vector<std::unordered_map<std::string, TextureBinding>> m_texture2dMaps;
+		std::vector<std::unordered_map<std::string, StorageBufferBinding>> m_storageBufferMaps;
 
 		// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer is the staging buffer:
 		std::unordered_map<std::string, Sampler*> m_samplerStagingMap;
@@ -80,6 +96,7 @@ namespace emberEngine
 		Shader* GetShader() const;
 		Sampler* GetSampler(const std::string& name) const;
 		Texture2d* GetTexture2d(const std::string& name) const;
+
 		// Uniform Buffer Getters:
 		template<typename T>
 		T GetValue(const std::string& bufferName, const std::string& memberName) const;
@@ -96,19 +113,19 @@ namespace emberEngine
 
 	private: // Methods:
 		// Initializers:
-		void InitUniformBufferResourceBinding(const std::string& name, uint32_t binding, uint32_t frameIndex);
-		void InitSamplerResourceBinding(const std::string& name, uint32_t binding, Sampler* pSampler, uint32_t frameIndex);
-		void InitTexture2dResourceBinding(const std::string& name, uint32_t binding, Texture2d* pTexture2d, uint32_t frameIndex);
-		void InitStorageBufferResourceBinding(const std::string& name, uint32_t binding, StorageBuffer* pStorageBuffer, uint32_t frameIndex);
+		void InitUniformBufferResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding);
+		void InitSamplerResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Sampler* pSampler);
+		void InitTexture2dResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture2d* pTexture2d, VkDescriptorType descriptorType);
+		void InitStorageBufferResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, StorageBuffer* pStorageBuffer);
 		void InitStagingMaps();
 		void InitDescriptorSets();
 
 		// Descriptor Set management:
 		void CreateDescriptorSets();
-		void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<std::shared_ptr<UniformBuffer>> samplerResourceBinding);
-		void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Sampler*> samplerResourceBinding);
-		void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<Texture2d*> texture2dResourceBinding);
-		void UpdateDescriptorSet(uint32_t frameIndex, ResourceBinding<StorageBuffer*> storageBufferResourceBinding);
+		void UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding samplerResourceBinding);
+		void UpdateDescriptorSet(uint32_t frameIndex, SamplerBinding samplerResourceBinding);
+		void UpdateDescriptorSet(uint32_t frameIndex, TextureBinding texture2dResourceBinding);
+		void UpdateDescriptorSet(uint32_t frameIndex, StorageBufferBinding storageBufferResourceBinding);
 	};
 }
 

@@ -10,31 +10,28 @@
 namespace emberEngine
 {
 	// Forward declarations:
-	struct ComputeCall;
 	struct DrawCall;
-	class Material;
-	class Scene;
 	class VulkanCommand;
-	class RenderTexture2d;
 
 
 
 	class VulkanRenderer
 	{
 	private: // Members:
-		Material* m_pShadowMaterial;
-
 		// Render resources:
-		std::unique_ptr<RenderTexture2d> m_renderTexture;	// maybe move somewhere else? Maybe as input to the renderer?
-		std::vector<VulkanCommand> m_syncComputeCommands;	// synced to run before any graphics commands, runs on graphics queue.
+		std::vector<VulkanCommand> m_syncComputeCommands;			// executes before any graphics commands, runs on graphics queue.
 		std::vector<VulkanCommand> m_shadowCommands;
 		std::vector<VulkanCommand> m_forwardCommands;
+		std::vector<VulkanCommand> m_postProcessComputeCommands;	// executes after all graphics commands, runs on graphics queue.
+		std::vector<VulkanCommand> m_presentCommands;
 
 		// Sync objects:
 		std::vector<VkFence> m_fences;
 		std::vector<VkSemaphore> m_acquireSemaphores;
 		std::vector<VkSemaphore> m_syncComputeToShadowSemaphores;
 		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
+		std::vector<VkSemaphore> m_forwardToPostProcessSemaphores;
+		std::vector<VkSemaphore> m_postProcessToPresentSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
 
 		// Render management:
@@ -42,23 +39,26 @@ namespace emberEngine
 		bool m_rebuildSwapchain;
 
 		// Game engine data injection:
-		std::vector<ComputeCall*>* m_pSyncComputeCalls;
 		std::vector<DrawCall*>* m_pDrawCalls;
 
 	public: // Methods:
 		VulkanRenderer();
 		~VulkanRenderer();
-		bool RenderFrame(Scene* pScene);
+		bool RenderFrame();
 
 	private: // Methods:
 		void RebuildSwapchain();
 		bool AcquireImage();
-		void RecordComputeShaders(Scene* pScene);
-		void RecordShadowCommandBuffer(Scene* pScene);
-		void RecordForwardCommandBuffer(Scene* pScene);
+		
+		void RecordComputeCommandBuffer();
+		void RecordShadowCommandBuffer();
+		void RecordForwardCommandBuffer();
+		void RecordPostProcessComputeCommandBuffer();
+		void RecordPresentCommandBuffer();
+
 		void SubmitCommandBuffers();
 		bool PresentImage();
-		void SetViewportAndScissor(VkCommandBuffer& commandBuffer);
+
 		void CreateFences();
 		void CreateSemaphores();
 		void DestroyFences();

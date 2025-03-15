@@ -12,7 +12,6 @@ namespace emberEngine
 	// Constructor/Desctructor:
 	StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, VkFormat format, int width, int height)
 	{
-		m_type = Type::storage;
 		m_name = name;
 		m_width = width;
 		m_height = height;
@@ -67,9 +66,8 @@ namespace emberEngine
 		// Free memory:
 		delete[] pPixels;
 	}
-	StorageSampleTexture2d::StorageSampleTexture2d(const std::filesystem::path& filePath, const std::string& name, VkFormat format)
+	StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath)
 	{
-		m_type = Type::storage;
 		m_name = name;
 		m_channels = STBI_rgb_alpha;	// 4 8-bit channels
 

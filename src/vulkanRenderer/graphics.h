@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_graphics_h__
 #define __INCLUDE_GUARD_graphics_h__
-#include "drawCall.h"	// needed for s_drawCalls, as we don't save pointers.
+#include "drawCall.h"		// needed, as we don't save pointers.
+#include "computeCall.h"	// needed, as we don't save pointers.
 #include "emberMath.h"
 #include "resourcePool.h"
 #include <unordered_map>
@@ -11,22 +12,34 @@
 namespace emberEngine
 {
 	// Forward declarations:
+	class ComputeShader;
 	class Material;
 	class ShaderProperties;
 	class Mesh;
+	class Shader;
 	class StorageBuffer;
 
 
 
 	class Graphics
 	{
+	public: // Structs:
+		struct Camera
+		{
+			Float3 position;
+			Float4x4 viewMatrix;
+			Float4x4 projectionMatrix;
+		};
+
 	private: // Members
 		static bool s_isInitialized;
+		static Camera s_activeCamera;
 		static Material* s_pShadowMaterial;
 		static std::vector<DrawCall> s_staticDrawCalls;
 		static std::vector<DrawCall> s_dynamicDrawCalls;
 		static std::vector<DrawCall*> s_sortedDrawCallPointers;
-		static std::unordered_map<Material*, ResourcePool<ShaderProperties, 20>> s_shaderPropertiesPoolMap;
+		static std::vector<ComputeCall> s_dynamicComputeCalls;
+		static std::unordered_map<Shader*, ResourcePool<ShaderProperties, 20>> s_shaderPropertiesPoolMap;
 		static ResourcePool<ShaderProperties, 200> s_shadowShaderPropertiesPool;	// Seperate pool for shadow material, as it is the same for all draw calls and benefits from larger pool blockSize.
 		static Mesh* s_pLineSegmentMesh;
 		static Mesh* s_pSphereMesh;
@@ -38,6 +51,9 @@ namespace emberEngine
 	public: // Methods:
 		static void Init();
 		static void Clear();
+
+		// Setters:
+		static void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
 		static void SetLineSegmentMesh(Mesh* pMesh);
 		
 		// Draw mesh:
@@ -60,11 +76,16 @@ namespace emberEngine
 		static void DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 
+		// Post process:
+		static ShaderProperties* PostProcess(ComputeShader* pComputeShader);
+
 		// Getters:
+		static Camera GetActiveCamera();
 		static std::vector<DrawCall*>* GetSortedDrawCallPointers();
+		static std::vector<ComputeCall>& GetPostProcessComputeCalls();
 
 		// Management:
-		static void ResetDrawCalls();
+		static void ResetDrawAndComputeCalls();
 
 	private: // Methods:
 		// Delete all constructors:

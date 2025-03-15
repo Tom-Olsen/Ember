@@ -8,9 +8,16 @@
 
 namespace emberEngine
 {
+	// Static private members:
+	uint32_t VmaImage::s_index = 0;
+
+
+
 	// Constructors/Destructor:
-	VmaImage::VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue)
+	VmaImage::VmaImage(const std::string name, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const VulkanQueue& queue)
 	{
+		m_name = name + std::to_string(s_index);
+		s_index++;
 		m_imageInfo = imageInfo;
 		m_allocationInfo = allocationInfo;
 		m_subresourceRange = subresourceRange;
@@ -27,17 +34,29 @@ namespace emberEngine
 		viewInfo.format = m_imageInfo.format;
 		viewInfo.subresourceRange = m_subresourceRange;
 		VKA(vkCreateImageView(VulkanContext::GetVkDevice(), &viewInfo, nullptr, &m_imageView));
+
+		#ifdef VALIDATION_LAYERS_ACTIVE
+		VulkanContext::pAllocationTracker->AddVmaImage(this);
+		#endif
 	}
 	VmaImage::~VmaImage()
 	{
 		vmaDestroyImage(VulkanContext::GetVmaAllocator(), m_image, m_allocation);
 		vkDestroyImageView(VulkanContext::GetVkDevice(), m_imageView, nullptr);
+
+		#ifdef VALIDATION_LAYERS_ACTIVE
+		VulkanContext::pAllocationTracker->RemoveVmaImage(this);
+		#endif
 	}
 
 
 
 	// Public methods:
 	// Getters:
+	const std::string& VmaImage::GetName() const
+	{
+		return m_name;
+	}
 	const VkImage& VmaImage::GetVkImage() const
 	{
 		return m_image;
@@ -82,6 +101,10 @@ namespace emberEngine
 	{
 		return m_imageInfo.extent;
 	}
+	VkFormat VmaImage::GetFormat() const
+	{
+		return m_imageInfo.format;
+	}
 	VkImageSubresourceLayers VmaImage::GetSubresourceLayers() const
 	{
 		VkImageSubresourceLayers subresourceLayers = {};
@@ -108,6 +131,28 @@ namespace emberEngine
 	// - dstStage = flag							<->		this stage must wait for the barrier to release.
 	// - barrier.srcAccessMask = multiple flags		<->		these memory accesses must be flushed to L2 cache before barrier blocks.
 	// - barrier.dstAccessMask = multiple flags		<->		these memory accesses must wait for the barrier before accessing L2 cache.
+	void VmaImage::TransitionLayout(VkCommandBuffer vkCommandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
+	{
+		VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+		barrier.srcStageMask = srcStage;
+		barrier.srcAccessMask = srcAccessMask;
+		barrier.dstStageMask = dstStage;
+		barrier.dstAccessMask = dstAccessMask;
+		barrier.oldLayout = m_layout;
+		barrier.newLayout = newLayout;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = m_image;
+		barrier.subresourceRange = m_subresourceRange;
+
+		VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+		dependencyInfo.imageMemoryBarrierCount = 1;
+		dependencyInfo.pImageMemoryBarriers = &barrier;
+
+		vkCmdPipelineBarrier2(vkCommandBuffer, &dependencyInfo);
+
+		m_layout = newLayout;
+	}
 	void VmaImage::TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
 	{
 		// Only transition layout. Queue remains unchanged.
@@ -281,7 +326,6 @@ namespace emberEngine
 	{
 		VulkanCommand command = VulkanCommand::BeginSingleTimeCommand(queue);;
 
-		// Queue copy command:
 		VkImageCopy copyRegion = {};
 		copyRegion.srcSubresource = srcImage->GetSubresourceLayers();
 		copyRegion.srcOffset = { 0, 0, 0 };
@@ -291,5 +335,15 @@ namespace emberEngine
 		vkCmdCopyImage(command.GetVkCommandBuffer(), srcImage->GetVkImage(), srcImage->GetLayout(), dstImage->GetVkImage(), dstImage->GetLayout(), 1, &copyRegion);
 
 		VulkanCommand::EndSingleTimeCommand(command, queue);
+	}
+	void VmaImage::CopyImageToImage(VkCommandBuffer commandBuffer, VmaImage* srcImage, VmaImage* dstImage, const VulkanQueue& queue)
+	{
+		VkImageCopy copyRegion = {};
+		copyRegion.srcSubresource = srcImage->GetSubresourceLayers();
+		copyRegion.srcOffset = { 0, 0, 0 };
+		copyRegion.dstSubresource = dstImage->GetSubresourceLayers();
+		copyRegion.dstOffset = { 0, 0, 0 };
+		copyRegion.extent = srcImage->GetExtent();
+		vkCmdCopyImage(commandBuffer, srcImage->GetVkImage(), srcImage->GetLayout(), dstImage->GetVkImage(), dstImage->GetLayout(), 1, &copyRegion);
 	}
 }

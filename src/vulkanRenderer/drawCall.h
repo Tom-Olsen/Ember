@@ -1,7 +1,6 @@
 #ifndef __INCLUDE_GUARD_drawCall_h__
 #define __INCLUDE_GUARD_drawCall_h__
 #include "emberMath.h"
-#include <array>
 
 
 
@@ -24,7 +23,7 @@ namespace emberEngine
 		Mesh* pMesh;
 		uint32_t instanceCount;	// 0 implies no instanced rendering.
 
-		void SetRenderMatrizes(Camera* const pCamera);
+		void SetRenderMatrizes(const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
 		void SetLightData();
 
 	private:

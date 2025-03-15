@@ -14,6 +14,11 @@ struct ImGuiIO;
 
 namespace emberEngine
 {
+	// Forward declarations:
+	class RenderTexture2d;
+
+
+
 	class DearImGui
 	{
 	public: // Members
@@ -22,19 +27,30 @@ namespace emberEngine
 		static bool s_showDemoWindow;
 		static bool s_wantCaptureKeyboard;
 		static bool s_wantCaptureMouse;
-		static ImGuiIO* s_io;
+		static ImGuiIO* s_pIo;
+		static RenderTexture2d* s_pRenderTexture;
+		static VkDescriptorSetLayout s_descriptorSetLayout;
+		static VkDescriptorSet s_descriptorSet;
 
 	public: // Methods
 		static void Init();
 		static void Clear();
-		static void Update();
-		static void ProcessEvent(const SDL_Event& event);
-		static void Render(VkCommandBuffer& commandBuffer);
+
+		// Render Logic:
+		static void Update();								// Must be called in main update loop of the engine.
+		static void ProcessEvent(const SDL_Event& event);	// Must be called in SdlWindow::HandleEvents() before handing event over to event system.
+		static void Render(VkCommandBuffer& commandBuffer);	// Must be called in main render loop before vkCmdEndRenderPass(...).
 
 		// Getters:
 		static bool WantCaptureKeyboard();
 		static bool WantCaptureMouse();
 
+		// DescriptorSet logic:
+		static void CreateDescriptorSetLayout();
+		static void CreateDescriptorSets();
+		static void UpdateDescriptor(VkSampler sampler, VkImageView imageView);
+
+		// Helper functions:
 		static void AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
 
 	private: // Methods

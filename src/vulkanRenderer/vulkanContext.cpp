@@ -15,6 +15,7 @@ namespace emberEngine
 	std::unique_ptr<VulkanSurface> VulkanContext::pSurface = nullptr;
 	std::unique_ptr<VulkanLogicalDevice> VulkanContext::pLogicalDevice = nullptr;
 	std::unique_ptr<VulkanMemoryAllocator> VulkanContext::pAllocator = nullptr;
+	std::unique_ptr< VulkanAllocationTracker> VulkanContext::pAllocationTracker = nullptr;
 	std::unique_ptr<VulkanDescriptorPool> VulkanContext::pDescriptorPool = nullptr;
 	std::unique_ptr<VulkanSwapchain> VulkanContext::pSwapchain = nullptr;
 	uint32_t VulkanContext::framesInFlight;
@@ -24,7 +25,7 @@ namespace emberEngine
 
 
 	// Initialization and cleanup:
-	void VulkanContext::Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue)
+	void VulkanContext::Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight)
 	{
 		if (s_isInitialized)
 			return;
@@ -34,7 +35,7 @@ namespace emberEngine
 		frameIndex = 0;
 
 		// Window:
-		pWindow = std::make_unique<SdlWindow>();
+		pWindow = std::make_unique<SdlWindow>(windowWidth, windowHeight);
 
 		// Get instance extensions:
 		std::vector<const char*> instanceExtensions;
@@ -61,6 +62,7 @@ namespace emberEngine
 		pSurface = std::make_unique<VulkanSurface>(pInstance.get(), pPhysicalDevice.get(), pWindow.get());
 		pLogicalDevice = std::make_unique<VulkanLogicalDevice>(pPhysicalDevice.get(), pSurface.get(), deviceExtensions);
 		pAllocator = std::make_unique<VulkanMemoryAllocator>(pInstance.get(), pLogicalDevice.get(), pPhysicalDevice.get());
+		pAllocationTracker = std::make_unique< VulkanAllocationTracker>();
 		pDescriptorPool = std::make_unique<VulkanDescriptorPool>(pLogicalDevice.get());
 		pSwapchain = std::make_unique<VulkanSwapchain>(pLogicalDevice.get(), pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 

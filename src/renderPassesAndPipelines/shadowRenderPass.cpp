@@ -72,9 +72,9 @@ namespace emberEngine
 	}
 	void ShadowRenderPass::CreateFramebuffers()
 	{
-		// One framebuffer per swapchain image:
-		m_framebuffers.resize(VulkanContext::framesInFlight);
-		for (uint32_t i = 0; i < VulkanContext::framesInFlight; i++)
+		size_t imageCount = 1;
+		m_framebuffers.resize(imageCount);
+		for (uint32_t i = 0; i < 1; i++)
 		{
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;

@@ -25,7 +25,7 @@ namespace emberEngine
 		allocatorInfo.instance = pInstance->GetVkInstance();
 		allocatorInfo.device = pLogicalDevice->GetVkDevice();
 		allocatorInfo.physicalDevice = pPhysicalDevice->GetVkPhysicalDevice();
-		allocatorInfo.flags = 0; // enable extensions. Must be supported by Vulkan device, see https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/quick_start.html
+		allocatorInfo.flags = 0;								// enable extensions. Must be supported by Vulkan device, see https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/quick_start.html
 		allocatorInfo.preferredLargeHeapBlockSize = 0;			// 0 = default size = 256 MiB
 		allocatorInfo.pAllocationCallbacks = nullptr;			// optional: custom CPU memory allocation callbacks
 		allocatorInfo.pDeviceMemoryCallbacks = nullptr;			// optional: informative callbacks for `vkAllocateMemory`, `vkFreeMemory`

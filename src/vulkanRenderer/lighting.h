@@ -9,7 +9,7 @@ namespace emberEngine
 {
 	class Lighting
 	{
-	public: // Enums and light types:
+	public: // Enums and light structs:
 		enum class ShadowType { hard, soft };
 		struct DirectionalLight
 		{

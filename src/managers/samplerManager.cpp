@@ -25,9 +25,6 @@ namespace emberEngine
 
 		Sampler* shadowSampler = Sampler::ShadowSampler("shadowSampler");
 		AddSampler(shadowSampler);
-
-		Sampler* colorSampler2 = Sampler::ColorSampler("colorSampler2");
-		AddSampler(colorSampler2);
 	}
 	void SamplerManager::Clear()
 	{

@@ -1,10 +1,16 @@
 #include "graphics.h"
+#include "computeShader.h"
+#include "computeShaderManager.h"
+#include "forwardRenderPass.h"
 #include "logger.h"
 #include "material.h"
 #include "materialManager.h"
-#include "shaderProperties.h"
 #include "mesh.h"
 #include "meshManager.h"
+#include "renderPassManager.h"
+#include "renderTexture2d.h"
+#include "shader.h"
+#include "shaderProperties.h"
 
 
 
@@ -12,11 +18,13 @@ namespace emberEngine
 {
 	// Static members:
 	bool Graphics::s_isInitialized = false;
+	Graphics::Camera Graphics::s_activeCamera;
 	Material* Graphics::s_pShadowMaterial;
 	std::vector<DrawCall> Graphics::s_staticDrawCalls;
 	std::vector<DrawCall> Graphics::s_dynamicDrawCalls;
 	std::vector<DrawCall*> Graphics::s_sortedDrawCallPointers;
-	std::unordered_map<Material*, ResourcePool<ShaderProperties, 20>> Graphics::s_shaderPropertiesPoolMap;
+	std::vector<ComputeCall> Graphics::s_dynamicComputeCalls;
+	std::unordered_map<Shader*, ResourcePool<ShaderProperties, 20>> Graphics::s_shaderPropertiesPoolMap;
 	ResourcePool<ShaderProperties, 200> Graphics::s_shadowShaderPropertiesPool;
 	Mesh* Graphics::s_pLineSegmentMesh;
 	Mesh* Graphics::s_pSphereMesh;
@@ -44,8 +52,18 @@ namespace emberEngine
 	}
 	void Graphics::Clear()
 	{
-		ResetDrawCalls();
+		ResetDrawAndComputeCalls();
 		s_shaderPropertiesPoolMap.clear();
+	}
+
+
+
+	// Setters:
+	void Graphics::SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
+	{
+		s_activeCamera.position = position;
+		s_activeCamera.viewMatrix = viewMatrix;
+		s_activeCamera.projectionMatrix = projectionMatrix;
 	}
 	void Graphics::SetLineSegmentMesh(Mesh* pMesh)
 	{
@@ -112,7 +130,7 @@ namespace emberEngine
 		}
 
 		// Setup draw call:
-		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[pMaterial].Acquire((Shader*)pMaterial);
+		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[(Shader*)pMaterial].Acquire((Shader*)pMaterial);
 		ShaderProperties* pShadowShaderProperties = s_shadowShaderPropertiesPool.Acquire((Shader*)s_pShadowMaterial);
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, 0 };
 		s_dynamicDrawCalls.push_back(drawCall);
@@ -180,7 +198,7 @@ namespace emberEngine
 		}
 
 		// Setup draw call:
-		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[pMaterial].Acquire((Shader*)pMaterial);
+		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[(Shader*)pMaterial].Acquire((Shader*)pMaterial);
 		ShaderProperties* pShadowShaderProperties = s_shadowShaderPropertiesPool.Acquire((Shader*)s_pShadowMaterial);
 		pShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
 		pShadowShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
@@ -302,7 +320,33 @@ namespace emberEngine
 
 
 
+	// Post process:
+	ShaderProperties* Graphics::PostProcess(ComputeShader* pComputeShader)
+	{
+		if (!pComputeShader)
+		{
+			LOG_ERROR("Graphics::PostProcess(...) failed. pComputeShader is nullptr.");
+			return nullptr;
+		}
+
+		// Setup post process call:
+		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
+		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
+		Uint3 threadCount(width, height, 1);
+		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[(Shader*)pComputeShader].Acquire((Shader*)pComputeShader);
+		ComputeCall computeCall = { 0, threadCount, pComputeShader, pShaderProperties, 0, 0 };
+		s_dynamicComputeCalls.push_back(computeCall);
+
+		// By returning pShaderProperties, we allow user to change the shader properties of the compute call:
+		return pShaderProperties;
+	}
+
+
 	// Getters:
+	Graphics::Camera Graphics::GetActiveCamera()
+	{
+		return s_activeCamera;
+	}
 	std::vector<DrawCall*>* Graphics::GetSortedDrawCallPointers()
 	{
 		// Populate sorted draw call pointers vector:
@@ -320,29 +364,40 @@ namespace emberEngine
 		});
 		return &s_sortedDrawCallPointers;
 	}
+	std::vector<ComputeCall>& Graphics::GetPostProcessComputeCalls()
+	{
+		// If odd number of post process compute calls, add inOut.comp.hlsl, as it simply copies the input to the output texture:
+		if (s_dynamicComputeCalls.size() % 2 == 1)
+			PostProcess(ComputeShaderManager::GetComputeShader("inOut"));
+		return s_dynamicComputeCalls;
+	}
 
 
 
 	// Management:
-	void Graphics::ResetDrawCalls()
+	void Graphics::ResetDrawAndComputeCalls()
 	{
 		// Return all p(Shadow)ShaderProperties of dynamic draw calls back to the corresponding pool:
 		for (DrawCall& drawCall : s_dynamicDrawCalls)
 		{
-			s_shaderPropertiesPoolMap[drawCall.pMaterial].Release(drawCall.pShaderProperties);
+			s_shaderPropertiesPoolMap[(Shader*)drawCall.pMaterial].Release(drawCall.pShaderProperties);
 			s_shadowShaderPropertiesPool.Release(drawCall.pShadowShaderProperties);
 		}
 		// Return all pShadowShaderProperties of static draw calls back to the pool:
 		for (DrawCall& drawCall : s_staticDrawCalls)
 			s_shadowShaderPropertiesPool.Release(drawCall.pShadowShaderProperties);
+		// Return all pShaderProperties of post process compute calls back to the pool:
+		for (ComputeCall& computeCall : s_dynamicComputeCalls)
+			s_shaderPropertiesPoolMap[(Shader*)computeCall.pComputeShader].Release(computeCall.pShaderProperties);
 
 		// Shrink all pools back to max number of drawCalls of last frame:
 		for (auto& [_, pool] : s_shaderPropertiesPoolMap)
 			pool.ShrinkToFit();
 		s_shadowShaderPropertiesPool.ShrinkToFit();
 
-		// Remove all drawCalls so next frame can start fresh:
+		// Remove all draw/compute calls so next frame can start fresh:
 		s_staticDrawCalls.clear();
 		s_dynamicDrawCalls.clear();
+		s_dynamicComputeCalls.clear();
 	}
 }

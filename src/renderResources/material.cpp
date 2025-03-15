@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "mesh.h"
 #include "forwardPipeline.h"
+#include "presentPipeline.h"
 #include "shadowPipeline.h"
 #include "skyboxPipeline.h"
 #include "spirvReflect.h"
@@ -72,6 +73,26 @@ namespace emberEngine
 
 			// Create pipeline:
 			m_pPipeline = std::make_unique<SkyboxPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+		}
+
+		// Present material creation:
+		else if (m_type == Type::present)
+		{
+			// Load vertex shader:
+			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+			SpirvReflect vertexShaderReflect(vertexCode);
+			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
+			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
+			m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
+			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
+
+			// Load fragment shader:
+			std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
+			SpirvReflect fragmentShaderReflect(fragmentCode);
+			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
+
+			// Create pipeline:
+			m_pPipeline = std::make_unique<PresentPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 	}
 	Material::~Material()

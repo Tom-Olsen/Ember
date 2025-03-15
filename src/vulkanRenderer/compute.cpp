@@ -84,7 +84,7 @@ namespace emberEngine
 
 
 	// Management:
-	std::vector<ComputeCall*>* Compute::GetComputeCallPointers()
+	std::vector<ComputeCall*>& Compute::GetComputeCallPointers()
 	{
 		// Populate draw call pointers vector according to callIndex:
 		s_computeCallPointers.clear();
@@ -94,7 +94,7 @@ namespace emberEngine
 		for (auto& computeCall : s_dynamicComputeCalls)
 			s_computeCallPointers[computeCall.callIndex] = &computeCall;
 
-		return &s_computeCallPointers;
+		return s_computeCallPointers;
 	}
 	void Compute::ResetComputeCalls()
 	{

@@ -15,7 +15,7 @@ namespace emberEngine
 	class SampleTexture2d : public Texture2d
 	{
 	public: // Methods:
-		SampleTexture2d(const std::filesystem::path& filePath, const std::string& name, VkFormat format);
+		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath);
 		~SampleTexture2d();
 	};
 }

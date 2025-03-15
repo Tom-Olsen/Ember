@@ -10,9 +10,8 @@
 namespace emberEngine
 {
 	// Constructor/Desctructor:
-	SampleTexture2d::SampleTexture2d(const std::filesystem::path& filePath, const std::string& name, VkFormat format)
+	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath)
 	{
-		m_type = Type::sample;
 		m_name = name;
 		m_channels = STBI_rgb_alpha;	// 4 channels
 		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;

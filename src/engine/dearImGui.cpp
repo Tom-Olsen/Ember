@@ -1,6 +1,10 @@
 #include "dearImGui.h"
-#include "renderPass.h"
+#include "forwardRenderPass.h"
 #include "renderPassManager.h"
+#include "renderTexture2d.h"
+#include "sampler.h"
+#include "samplerManager.h"
+#include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
 #include <imgui.h>
@@ -10,7 +14,7 @@
 
 
 // Macro to disable Dear ImGui:
-#define DISABLE_DEAR_IMGUI
+//#define DISABLE_DEAR_IMGUI
 #ifdef DISABLE_DEAR_IMGUI
 	#define RETURN_DISABLED() return
 	#define RETURN_FALSE_DISABLED() return false
@@ -27,23 +31,26 @@ namespace emberEngine
 	bool DearImGui::s_showDemoWindow = true;
 	bool DearImGui::s_wantCaptureKeyboard = false;
 	bool DearImGui::s_wantCaptureMouse = false;
-	ImGuiIO* DearImGui::s_io = nullptr;
+	ImGuiIO* DearImGui::s_pIo = nullptr;
+	RenderTexture2d* DearImGui::s_pRenderTexture = nullptr;
+	VkDescriptorSetLayout DearImGui::s_descriptorSetLayout;
+	VkDescriptorSet DearImGui::s_descriptorSet;
 
 
 
-	// Constructor/Destructor:
+	// Initialization and cleanup:
 	void DearImGui::Init()
 	{
 		RETURN_DISABLED();
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
-		s_io = &ImGui::GetIO();
-		s_io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-		s_io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-		s_io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-		s_io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-		s_io->FontGlobalScale = 2.0f;
+		s_pIo = &ImGui::GetIO();
+		s_pIo->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+		s_pIo->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+		s_pIo->ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+		s_pIo->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+		s_pIo->FontGlobalScale = 2.0f;
 
 		ImGui::StyleColorsDark();
 		ImGui_ImplSDL3_InitForVulkan(VulkanContext::GetSDL_Window());
@@ -54,7 +61,7 @@ namespace emberEngine
 		initInfo.Device = VulkanContext::GetVkDevice();
 		initInfo.QueueFamily = VulkanContext::pLogicalDevice->GetGraphicsQueue().familyIndex;
 		initInfo.Queue = VulkanContext::pLogicalDevice->GetGraphicsQueue().queue;
-		initInfo.RenderPass = RenderPassManager::GetRenderPass("shadingRenderPass")->GetVkRenderPass();
+		initInfo.RenderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
 		initInfo.DescriptorPoolSize = 2;	// DescriptorPoolSize > 0 means Imgui backend creates its own VkDescriptorPool. Need at least 1 + as many as additional calls done to ImGui_ImplVulkan_AddTexture()
 		initInfo.MinImageCount = 2;
 		initInfo.ImageCount = VulkanContext::pSwapchain->GetImages().size();
@@ -63,6 +70,16 @@ namespace emberEngine
 
 		// Upload fonts:
 		ImGui_ImplVulkan_CreateFontsTexture();
+
+		// Get render texture:
+		s_pRenderTexture = RenderPassManager::GetForwardRenderPass()->GetRenderTexture();
+		VkSampler sampler = SamplerManager::GetSampler("colorSampler")->GetVkSampler();
+		VkImageView imageView = s_pRenderTexture->GetVmaImage()->GetVkImageView();
+
+		// Setup descriptorSet:
+		CreateDescriptorSetLayout();
+		CreateDescriptorSets();
+		UpdateDescriptor(sampler, imageView);
 	}
 	void DearImGui::Clear()
 	{
@@ -75,33 +92,37 @@ namespace emberEngine
 
 
 	// Public methods:
-
-	// Must be called in main update loop of the engine.
+	// Render Logic:
 	void DearImGui::Update()
 	{
 		RETURN_DISABLED();
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
+		{
+			// Demo window:
+			if (s_showDemoWindow)
+				ImGui::ShowDemoWindow(&s_showDemoWindow);
 
-		if (s_showDemoWindow)
-			ImGui::ShowDemoWindow(&s_showDemoWindow);
-
+			// Render vulkanRenderer output into ImGui window:
+			//ImGui::Begin("Render Texture Viewport", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+			//ImTextureID textureID = (ImTextureID)s_descriptorSet;
+			//ImGui::Image(textureID, ImVec2((float)s_pRenderTexture->GetWidth(), (float)s_pRenderTexture->GetHeight()));
+			//ImGui::End();
+		}
 		ImGui::EndFrame();
 
 		// Update additional platform windows:
-		if (s_io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		if (s_pIo->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 			ImGui::UpdatePlatformWindows();
 	}
-	// Must be called in SdlWindow::HandleEvents() before handing event over to event system.
 	void DearImGui::ProcessEvent(const SDL_Event& event)
 	{
 		RETURN_DISABLED();
 		ImGui_ImplSDL3_ProcessEvent(&event);
-		s_wantCaptureKeyboard = s_io->WantCaptureKeyboard;
-		s_wantCaptureMouse = s_io->WantCaptureMouse;
+		s_wantCaptureKeyboard = s_pIo->WantCaptureKeyboard;
+		s_wantCaptureMouse = s_pIo->WantCaptureMouse;
 	}
-	// Must be called in main render loop before vkCmdEndRenderPass(...).
 	void DearImGui::Render(VkCommandBuffer& commandBuffer)
 	{
 		RETURN_DISABLED();
@@ -111,7 +132,7 @@ namespace emberEngine
 		ImGui_ImplVulkan_RenderDrawData(drawData, commandBuffer);
 
 		// Render additional platform windows:
-		if (s_io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		if (s_pIo->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 			ImGui::RenderPlatformWindowsDefault();
 	}
 
@@ -130,7 +151,52 @@ namespace emberEngine
 	}
 
 
-	// Helper function:
+
+	// DescriptorSet logic:
+	void DearImGui::CreateDescriptorSetLayout()
+	{
+		VkDescriptorSetLayoutBinding binding = {};
+		binding.binding = 0;
+		binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		binding.descriptorCount = 1;
+		binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+		layoutInfo.bindingCount = 1;
+		layoutInfo.pBindings = &binding;
+
+		VKA(vkCreateDescriptorSetLayout(VulkanContext::GetVkDevice(), &layoutInfo, nullptr, &s_descriptorSetLayout));
+	}
+	void DearImGui::CreateDescriptorSets()
+	{
+		VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+		allocInfo.descriptorPool = VulkanContext::GetVkDescriptorPool();
+		allocInfo.descriptorSetCount = 1;
+		allocInfo.pSetLayouts = &s_descriptorSetLayout;
+
+		VKA(vkAllocateDescriptorSets(VulkanContext::GetVkDevice(), &allocInfo, &s_descriptorSet));
+	}
+	void DearImGui::UpdateDescriptor(VkSampler sampler, VkImageView imageView)
+	{
+		VkDescriptorImageInfo imageInfo = {};
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfo.imageView = imageView;
+		imageInfo.sampler = sampler;
+
+		VkWriteDescriptorSet writeDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+		writeDescriptor.dstSet = s_descriptorSet;
+		writeDescriptor.dstBinding = 0;
+		writeDescriptor.dstArrayElement = 0;
+		writeDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		writeDescriptor.descriptorCount = 1;
+		writeDescriptor.pImageInfo = &imageInfo;
+
+		vkUpdateDescriptorSets(VulkanContext::pLogicalDevice->GetVkDevice(), 1, &writeDescriptor, 0, nullptr);
+	}
+
+
+
+	// Helper functions:
 	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
 	{
 		for (const VkExtensionProperties& p : properties)

@@ -128,6 +128,7 @@ namespace emberEngine
 		VertexInputDescriptions* GetVertexInputDescriptions() const;
 		// Instead of returning pointer, this function adds to one, as it is used for multiple pipeline stages, e.g. vertex + fragment.
 		void AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources) const;
+		Uint3 GetBlockSize() const;
 
 	private: // Methods:
 		std::vector<SpvReflectInterfaceVariable*> GetInputVariablesReflection() const;

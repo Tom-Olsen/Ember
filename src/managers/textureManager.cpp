@@ -42,13 +42,13 @@ namespace emberEngine
 						format = VK_FORMAT_R8G8B8A8_UNORM;
 					else if (name.find("roughness") || name.find("metallic"))
 						format = VK_FORMAT_R8_UNORM;
-					SampleTexture2d* texture = new SampleTexture2d(entry.path(), name, format);
-					AddTexture2d(texture);
+					SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path());
+					AddTexture2d(pTexture);
 				}
 			}
 		}
 
-		// Manual adding TextureCubes:
+		// TextureCubes:
 		TextureCube* skyBoxWhite = new TextureCube("../textures/white/", "skyBoxWhite", VK_FORMAT_R8G8B8A8_SRGB);
 		AddTexture2d(skyBoxWhite);
 		TextureCube* skyBox0 = new TextureCube("../textures/skyboxClouds1/", "skyBox0", VK_FORMAT_R8G8B8A8_SRGB);
@@ -57,12 +57,12 @@ namespace emberEngine
 		//AddTexture2d(skyBox1);
 
 
-		// Manual adding storage Textire2dArrays:
-		DepthTexture2dArray* blackArray = new DepthTexture2dArray("blackArray", VK_FORMAT_D32_SFLOAT, 2, 2, 2);
+		// Default storage Texture2dArray:
+		DepthTexture2dArray* blackArray = new DepthTexture2dArray("defaultArrayTexture2d", VK_FORMAT_D32_SFLOAT, 2, 2, 2);
 		AddTexture2d(blackArray);
 
-		// Manual adding storage Texture2ds:
-		StorageTexture2d* storageTexture8x8 = new StorageTexture2d("storageTexture8x8", VK_FORMAT_R32G32B32A32_SFLOAT, 8, 8);
+		// Default storage Texture2d:
+		StorageTexture2d* storageTexture8x8 = new StorageTexture2d("defaultStorageTexture2d", VK_FORMAT_R32G32B32A32_SFLOAT, 8, 8);
 		AddTexture2d(storageTexture8x8);
 	}
 	void TextureManager::Clear()

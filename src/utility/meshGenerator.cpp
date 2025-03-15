@@ -71,6 +71,39 @@ namespace emberEngine
 			pMesh->ComputeTangents();
 			return pMesh;
 		}
+		Mesh* FullScreenRenderQuad()
+		{
+			Mesh* pMesh = new Mesh("fullScreenRenderQuad");
+
+			std::vector<Float3> positions;
+			positions.emplace_back(-1, -1, 0);
+			positions.emplace_back(-1,  1, 0);
+			positions.emplace_back( 1, -1, 0);
+			positions.emplace_back( 1,  1, 0);
+
+			std::vector<Float3> normals;
+			normals.emplace_back(0.0f, 0.0f, 1.0f);
+			normals.emplace_back(0.0f, 0.0f, 1.0f);
+			normals.emplace_back(0.0f, 0.0f, 1.0f);
+			normals.emplace_back(0.0f, 0.0f, 1.0f);
+
+			std::vector<Float4> uvs;
+			uvs.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
+			uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
+			uvs.emplace_back(1.0f, 0.0f, 0.0f, 0.0f);
+			uvs.emplace_back(1.0f, 1.0f, 0.0f, 0.0f);
+
+			std::vector<Uint3> triangles;
+			triangles.emplace_back(Uint3(0, 2, 1));
+			triangles.emplace_back(Uint3(1, 2, 3));
+
+			pMesh->MovePositions(positions);
+			pMesh->MoveNormals(normals);
+			pMesh->MoveUVs(uvs);
+			pMesh->MoveTriangles(triangles);
+			pMesh->ComputeTangents();
+			return pMesh;
+		}
 		Mesh* ClockwiseQuad(Float3 a, Float3 b, Float3 c, Float3 d, const std::string& name)
 		{
 			Mesh* pMesh = new Mesh(name);

@@ -1,16 +1,34 @@
 #include "forwardRenderPass.h"
+#include "renderTexture2d.h"
 #include "vmaImage.h"
 #include "vulkanCommand.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include "vulkanUtility.h"
 
 
 
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	ForwardRenderPass::ForwardRenderPass()
+	ForwardRenderPass::ForwardRenderPass(uint32_t renderWidth, uint32_t renderHeight)
 	{
+		m_depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
+
+		// Create render textures:
+		VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+		m_pRenderTexture = std::make_unique<RenderTexture2d>("forwardRenderPassRenderTexture", format, renderWidth, renderHeight);
+		m_pSecondaryRenderTexture = std::make_unique<RenderTexture2d>("forwardRenderPassRenderTexture", format, renderWidth, renderHeight);
+
+		// Primary render texture will be transitioned to VK_IMAGE_LAYOUT_GENERAL by renderPass.
+		// Secondary render texture must be transitioned manually:
+		VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
+		VkPipelineStageFlags2 srcStage = PipelineStage::topOfPipe;
+		VkPipelineStageFlags2 dstStage = PipelineStage::bottomOfPipe;
+		VkAccessFlags2 srcAccessMask = AccessMask::TopOfPipe::none;
+		VkAccessFlags2 dstAccessMask = AccessMask::BottomOfPipe::none;
+		m_pSecondaryRenderTexture->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		
 		CreateRenderPass();
 		CreateMsaaImage();
 		CreateDepthImage();
@@ -26,11 +44,19 @@ namespace emberEngine
 	// Public methods:
 	const VmaImage* const ForwardRenderPass::GetMsaaVmaImage() const
 	{
-		return m_msaaImage.get();
+		return m_pMsaaImage.get();
 	}
 	const VmaImage* const ForwardRenderPass::GetDepthVmaImage() const
 	{
-		return m_depthImage.get();
+		return m_pDepthImage.get();
+	}
+	RenderTexture2d* ForwardRenderPass::GetRenderTexture() const
+	{
+		return m_pRenderTexture.get();
+	}
+	RenderTexture2d* ForwardRenderPass::GetSecondaryRenderTexture() const
+	{
+		return m_pSecondaryRenderTexture.get();
 	}
 
 
@@ -42,7 +68,7 @@ namespace emberEngine
 		std::array<VkAttachmentDescription, 3> attachments{};
 		{
 			// Multisampled color attachment description:
-			attachments[0].format = VulkanContext::pSurface->GetVkSurfaceFormatKHR().format;
+			attachments[0].format = m_pRenderTexture->GetVmaImage()->GetFormat();
 			attachments[0].samples = VulkanContext::msaaSamples;					// multisampling count
 			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;				// no need to store multisampls after render
@@ -62,14 +88,14 @@ namespace emberEngine
 			attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 			// Color resolve attachment description: (resolve multisampled fragments)
-			attachments[2].format = VulkanContext::pSurface->GetVkSurfaceFormatKHR().format;
+			attachments[2].format = m_pRenderTexture->GetVmaImage()->GetFormat();
 			attachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			attachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			attachments[2].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			attachments[2].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;	// rdy for presenting
+			attachments[2].finalLayout = VK_IMAGE_LAYOUT_GENERAL;					// rdy for post processing
 		}
 
 		// Attachment references:
@@ -94,14 +120,14 @@ namespace emberEngine
 		subpass.pResolveAttachments = &colorResolveAttachmentReference;
 
 		// Synchronization dependencies of individual subpasses:
-		VkSubpassDependency dependency{};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;	// index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass
-		dependency.dstSubpass = 0;	// index of destination subpass, where dependency ends.  VK_SUBPASS_EXTERNAL = after renderpass
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;	// pipeline stages in source subpass which must complete before the dependency is resolved
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;	// pipeline stages in destination subpass which must wait for the source stages to complete
-		dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;			// types of memory accesses in the source subpass that must be completed
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;			// types of memory accesses in the destination subpass that must wait on the source subpass to complete
-		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;					// specify special behaviors
+		VkSubpassDependency dependency = {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;										// index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass
+		dependency.dstSubpass = 0;															// index of destination subpass, where dependency ends.  VK_SUBPASS_EXTERNAL = after renderpass
+		dependency.srcStageMask = PipelineStage::colorAttachmentOutput;						// pipeline stages in source subpass which must complete before the dependency is resolved
+		dependency.dstStageMask = PipelineStage::colorAttachmentOutput;						// pipeline stages in destination subpass which must wait for the source stages to complete
+		dependency.srcAccessMask = AccessMask::ColorAttachmentOutput::colorAttachmentWrite;	// types of memory accesses in the source subpass that must be completed
+		dependency.dstAccessMask = AccessMask::ColorAttachmentOutput::colorAttachmentWrite;	// types of memory accesses in the destination subpass that must wait on the source subpass to complete
+		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;							// specify special behaviors
 
 		VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -124,12 +150,12 @@ namespace emberEngine
 
 		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.extent.width = VulkanContext::pSurface->GetCurrentExtent().width;
-		imageInfo.extent.height = VulkanContext::pSurface->GetCurrentExtent().height;
+		imageInfo.extent.width = m_pRenderTexture->GetWidth();
+		imageInfo.extent.height = m_pRenderTexture->GetHeight();
 		imageInfo.extent.depth = 1;
 		imageInfo.mipLevels = 1;
 		imageInfo.arrayLayers = 1;
-		imageInfo.format = VulkanContext::pSurface->GetVkSurfaceFormatKHR().format;
+		imageInfo.format = m_pRenderTexture->GetVmaImage()->GetFormat();
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageInfo.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -145,7 +171,7 @@ namespace emberEngine
 
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 		VulkanQueue queue = VulkanContext::pLogicalDevice->GetGraphicsQueue();
-		m_msaaImage = std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue);
+		m_pMsaaImage = std::make_unique<VmaImage>("msaaImage", imageInfo, allocationInfo, subresourceRange, viewType, queue);
 	}
 	void ForwardRenderPass::CreateDepthImage()
 	{
@@ -158,8 +184,8 @@ namespace emberEngine
 
 		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.extent.width = VulkanContext::pSurface->GetCurrentExtent().width;
-		imageInfo.extent.height = VulkanContext::pSurface->GetCurrentExtent().height;
+		imageInfo.extent.width = m_pRenderTexture->GetWidth();
+		imageInfo.extent.height = m_pRenderTexture->GetHeight();
 		imageInfo.extent.depth = 1;
 		imageInfo.mipLevels = 1;
 		imageInfo.arrayLayers = 1;
@@ -179,36 +205,35 @@ namespace emberEngine
 
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 		VulkanQueue queue = VulkanContext::pLogicalDevice->GetGraphicsQueue();
-		m_depthImage = std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue);
+		m_pDepthImage = std::make_unique<VmaImage>("depthImage", imageInfo, allocationInfo, subresourceRange, viewType, queue);
 
 		// Transition: Layout: undefined->depth attachment, Queue: graphics
 		VkImageLayout newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-		VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT;
-		VkAccessFlags2 srcAccessMask = VK_ACCESS_2_NONE;
-		VkAccessFlags2 dstAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-		m_depthImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		VkPipelineStageFlags2 srcStage = PipelineStage::topOfPipe;;
+		VkPipelineStageFlags2 dstStage = PipelineStage::earlyFragmentTest;
+		VkAccessFlags2 srcAccessMask = AccessMask::TopOfPipe::none;
+		VkAccessFlags2 dstAccessMask = AccessMask::EarlyFragmentTest::depthStencilAttachmentRead;
+		m_pDepthImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 	}
 	void ForwardRenderPass::CreateFrameBuffers()
 	{
-		size_t size = VulkanContext::pSwapchain->GetImages().size();
-		VkExtent2D extent = VulkanContext::pSurface->GetCurrentExtent();
-		m_framebuffers.resize(size);
+		size_t imageCount = 1;
+		m_framebuffers.resize(imageCount);
 		std::array<VkImageView, 3> attachments;
 
-		for (size_t i = 0; i < size; i++)
+		for (size_t i = 0; i < imageCount; i++)
 		{
 			// order of attachments is important!
-			attachments[0] = m_msaaImage->GetVkImageView();
-			attachments[1] = m_depthImage->GetVkImageView();
-			attachments[2] = VulkanContext::pSwapchain->GetImageViews()[i];
+			attachments[0] = m_pMsaaImage->GetVkImageView();
+			attachments[1] = m_pDepthImage->GetVkImageView();
+			attachments[2] = m_pRenderTexture->GetVmaImage()->GetVkImageView();
 
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = extent.width;
-			framebufferInfo.height = extent.height;
+			framebufferInfo.width = m_pRenderTexture->GetWidth();
+			framebufferInfo.height = m_pRenderTexture->GetHeight();
 			framebufferInfo.layers = 1;
 			vkCreateFramebuffer(VulkanContext::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
 		}

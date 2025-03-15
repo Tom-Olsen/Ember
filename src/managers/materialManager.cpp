@@ -26,6 +26,7 @@ namespace emberEngine
 		Material::Type forwardType = Material::Type::forward;
 		Material::Type shadowType = Material::Type::shadow;
 		Material::Type skyboxType = Material::Type::skybox;
+		Material::Type presentType = Material::Type::present;
 
 		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", "../src/shaders/test.vert.spv", "../src/shaders/test.frag.spv");
 		//AddMaterial(testMaterial);
@@ -35,6 +36,9 @@ namespace emberEngine
 
 		Material* pDefaultMaterial = new Material(forwardType, "defaultMaterial", opaqueQueue, "../src/shaders/default.vert.spv", "../src/shaders/default.frag.spv");
 		AddMaterial(pDefaultMaterial);
+
+		Material* pPresentMaterial = new Material(presentType, "presentMaterial", opaqueQueue, "../src/shaders/present.vert.spv", "../src/shaders/present.frag.spv");
+		AddMaterial(pPresentMaterial);
 
 		Material* pVertexColorLitMaterial = new Material(forwardType, "vertexColorLitMaterial", opaqueQueue, "../src/shaders/vertexColorLit.vert.spv", "../src/shaders/vertexColorLit.frag.spv");
 		AddMaterial(pVertexColorLitMaterial);

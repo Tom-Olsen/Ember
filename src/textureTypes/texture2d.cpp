@@ -19,22 +19,6 @@ namespace emberEngine
 
 
 	// Public methods:
-	// Getters:
-	Texture2d::Type Texture2d::GetType() const
-	{
-		return m_type;
-	}
-	std::string Texture2d::GetTypeName() const
-	{
-		switch (m_type)
-		{
-			case Type::cube: return "TextureCube"; break;
-			case Type::sample: return "SampleTexture2d"; break;
-			case Type::shadow: return "ShadowTexture2d"; break;
-			case Type::storage: return "StorageTexture2d"; break;
-			default: return "Texture type could not be identified.";
-		}
-	}
 	uint64_t Texture2d::GetWidth() const
 	{
 		return static_cast<uint64_t>(m_width);
@@ -51,7 +35,7 @@ namespace emberEngine
 	{
 		return m_name;
 	}
-	const VmaImage* const Texture2d::GetVmaImage() const
+	VmaImage* const Texture2d::GetVmaImage() const
 	{
 		return m_pImage.get();
 	}
@@ -100,6 +84,6 @@ namespace emberEngine
 		allocInfo.preferredFlags = 0;
 
 		// Always use transfer queue by default and do queue transition later when needed.
-		return new VmaImage(imageInfo, allocInfo, subresourceRange, viewType, queue);
+		return new VmaImage(m_name, imageInfo, allocInfo, subresourceRange, viewType, queue);
 	}
 }

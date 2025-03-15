@@ -12,7 +12,6 @@ namespace emberEngine
 	// Constructor/Desctructor:
 	DepthTexture2dArray::DepthTexture2dArray(const std::string& name, VkFormat format, int width, int height, uint32_t layerCount)
 	{
-		m_type = Type::storage;
 		m_name = name;
 		m_width = width;
 		m_height = height;

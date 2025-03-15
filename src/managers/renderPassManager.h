@@ -9,7 +9,9 @@
 namespace emberEngine
 {
     // Forward declarations:
-    class RenderPass;
+    class ShadowRenderPass;
+    class ForwardRenderPass;
+    class PresentRenderPass;
 
 
 
@@ -20,18 +22,21 @@ namespace emberEngine
     {
     private: // Members
         static bool s_isInitialized;
-        static std::unordered_map<std::string, std::unique_ptr<RenderPass>> s_renderPasses;
+        static uint32_t s_renderWidth;
+        static uint32_t s_renderHeight;
+        static std::unique_ptr<ShadowRenderPass> s_pShadowRenderPass;
+        static std::unique_ptr<ForwardRenderPass> s_pForwardRenderPass;
+        static std::unique_ptr<PresentRenderPass> s_pPresentRenderPass;
 
     public: // Methods
-        static void Init();
+        static void Init(uint32_t renderWidth, uint32_t renderHeight);
         static void Clear();
         static void RecreateRenderPasses();
 
-        static void AddRenderPass(const std::string name, RenderPass* pRenderPass);
-        static RenderPass* GetRenderPass(const std::string& name);
-        static void DeleteRenderPass(const std::string& name);
-
-        static void PrintAllRenderPassNames();
+        // Getters:
+        static ShadowRenderPass* GetShadowRenderPass();
+        static ForwardRenderPass* GetForwardRenderPass();
+        static PresentRenderPass* GetPresentRenderPass();
 
     private: // Methods
         // Delete all constructors:

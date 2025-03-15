@@ -29,7 +29,8 @@ namespace emberEngine
 		{
 			forward,
 			shadow,
-			skybox
+			skybox,
+			present
 		};
 
 	private: // Members:
