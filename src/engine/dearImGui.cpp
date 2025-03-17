@@ -1,5 +1,7 @@
 #include "dearImGui.h"
 #include "forwardRenderPass.h"
+#include "logger.h"
+#include "presentRenderPass.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "sampler.h"
@@ -61,11 +63,11 @@ namespace emberEngine
 		initInfo.Device = VulkanContext::GetVkDevice();
 		initInfo.QueueFamily = VulkanContext::pLogicalDevice->GetGraphicsQueue().familyIndex;
 		initInfo.Queue = VulkanContext::pLogicalDevice->GetGraphicsQueue().queue;
-		initInfo.RenderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
+		initInfo.RenderPass = RenderPassManager::GetPresentRenderPass()->GetVkRenderPass();
 		initInfo.DescriptorPoolSize = 2;	// DescriptorPoolSize > 0 means Imgui backend creates its own VkDescriptorPool. Need at least 1 + as many as additional calls done to ImGui_ImplVulkan_AddTexture()
 		initInfo.MinImageCount = 2;
 		initInfo.ImageCount = VulkanContext::pSwapchain->GetImages().size();
-		initInfo.MSAASamples = VulkanContext::msaaSamples;
+		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		ImGui_ImplVulkan_Init(&initInfo);
 
 		// Upload fonts:
@@ -86,6 +88,7 @@ namespace emberEngine
 		RETURN_DISABLED();
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
+		vkDestroyDescriptorSetLayout(VulkanContext::GetVkDevice(), s_descriptorSetLayout, nullptr);
 		ImGui::DestroyContext();
 	}
 
@@ -100,6 +103,8 @@ namespace emberEngine
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
 		{
+			//ShowDockSpace();
+
 			// Demo window:
 			if (s_showDemoWindow)
 				ImGui::ShowDemoWindow(&s_showDemoWindow);
@@ -152,7 +157,58 @@ namespace emberEngine
 
 
 
-	// DescriptorSet logic:
+	// Helper functions:
+	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
+	{
+		for (const VkExtensionProperties& p : properties)
+			if (strcmp(p.extensionName, extension) == 0)
+				return true;
+		return false;
+	}
+	void DearImGui::AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions)
+	{
+		RETURN_DISABLED();
+		// Enumerate available extensions:
+		uint32_t propertiesCount;
+		std::vector<VkExtensionProperties> properties;
+		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, nullptr));
+		properties.resize(propertiesCount);
+		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()));
+
+		// Enable required extensions:
+		if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+			instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+		#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+		if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
+			instanceExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+		#endif
+	}
+
+
+
+	// Private methods:
+	void DearImGui::ShowDockSpace()
+	{
+		static bool dockspaceOpen = true;
+		static bool opt_fullscreen = true;
+		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+		if (opt_fullscreen)
+		{
+			ImGuiViewport* viewport = ImGui::GetMainViewport();
+			ImGui::SetNextWindowPos(viewport->Pos);
+			ImGui::SetNextWindowSize(viewport->Size);
+			ImGui::SetNextWindowViewport(viewport->ID);
+			window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+		}
+
+		// Set up the dockspace
+		ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
+		ImGui::DockSpace(ImGui::GetID("MyDockspace"), ImVec2(0.0f, 0.0f), dockspace_flags);
+		ImGui::End();
+	}
 	void DearImGui::CreateDescriptorSetLayout()
 	{
 		VkDescriptorSetLayoutBinding binding = {};
@@ -192,34 +248,5 @@ namespace emberEngine
 		writeDescriptor.pImageInfo = &imageInfo;
 
 		vkUpdateDescriptorSets(VulkanContext::pLogicalDevice->GetVkDevice(), 1, &writeDescriptor, 0, nullptr);
-	}
-
-
-
-	// Helper functions:
-	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
-	{
-		for (const VkExtensionProperties& p : properties)
-			if (strcmp(p.extensionName, extension) == 0)
-				return true;
-		return false;
-	}
-	void DearImGui::AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions)
-	{
-		RETURN_DISABLED();
-		// Enumerate available extensions:
-		uint32_t propertiesCount;
-		std::vector<VkExtensionProperties> properties;
-		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, nullptr));
-		properties.resize(propertiesCount);
-		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()));
-
-		// Enable required extensions:
-		if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
-			instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-		#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
-		if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
-			instanceExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-		#endif
 	}
 }

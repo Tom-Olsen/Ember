@@ -45,15 +45,15 @@ namespace emberEngine
 		static bool WantCaptureKeyboard();
 		static bool WantCaptureMouse();
 
-		// DescriptorSet logic:
-		static void CreateDescriptorSetLayout();
-		static void CreateDescriptorSets();
-		static void UpdateDescriptor(VkSampler sampler, VkImageView imageView);
-
 		// Helper functions:
 		static void AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
 
 	private: // Methods
+		static void ShowDockSpace();
+		static void CreateDescriptorSetLayout();
+		static void CreateDescriptorSets();
+		static void UpdateDescriptor(VkSampler sampler, VkImageView imageView);
+
 		// Delete all constructors:
 		DearImGui() = delete;
 		DearImGui(const DearImGui&) = delete;

@@ -418,7 +418,6 @@ namespace emberEngine
 					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 				}
 			}
-			DearImGui::Render(commandBuffer);
 			vkCmdEndRenderPass(commandBuffer);
 
 			// Release memory from vertex shaders to compute shaders:
@@ -594,6 +593,7 @@ namespace emberEngine
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &pShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
 				vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
 			}
+			DearImGui::Render(commandBuffer);
 			vkCmdEndRenderPass(commandBuffer);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));

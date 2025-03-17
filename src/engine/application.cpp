@@ -33,6 +33,8 @@ namespace emberEngine
 		uint32_t windowHeight = 1080;
 		uint32_t renderWidth = 1280;
 		uint32_t renderheight = 720;
+		//uint32_t renderWidth = 1920;
+		//uint32_t renderheight = 1080;
 
 		// Init static managers:
 		VulkanContext::Init(framesInFlight, msaaSamples, windowWidth, windowHeight);
@@ -78,7 +80,6 @@ namespace emberEngine
 		while (running)
 		{
 			Timer::Update();
-			DearImGui::Update();
 			running = VulkanContext::pWindow->HandleEvents();
 
 			// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
@@ -91,6 +92,7 @@ namespace emberEngine
 			}
 
 			// Game update loop:
+			DearImGui::Update();
 			Update();
 			LateUpdate();
 
