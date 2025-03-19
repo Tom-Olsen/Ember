@@ -10,7 +10,3 @@
 [submodule "Engine/libs/vma"]
 	path = Engine/libs/vma
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-[submodule "libs/imgui"]
-	path = libs/imgui
-	url = https://github.com/ocornut/imgui.git
-	branch = docking
