@@ -28,49 +28,51 @@ namespace emberEngine
 		Material::Type skyboxType = Material::Type::skybox;
 		Material::Type presentType = Material::Type::present;
 
-		std::string engineRootPath = ENGINE_ROOT_PATH;
-		std::filesystem::path directoryPath = engineRootPath + "/src/shaders/";
-		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", engineRootPath + "/src/shaders/test.vert.spv", engineRootPath + "/src/shaders/test.frag.spv");
+		std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/src/shaders/bin";
+		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
 		//AddMaterial(testMaterial);
 
-		Material* pErrorMaterial = new Material(forwardType, "errorMaterial", opaqueQueue, engineRootPath + "/src/shaders/error.vert.spv", engineRootPath + "/src/shaders/error.frag.spv");
+		Material* pErrorMaterial = new Material(forwardType, "errorMaterial", opaqueQueue, directoryPath + "/error.vert.spv", directoryPath + "/error.frag.spv");
 		AddMaterial(pErrorMaterial);
 
-		Material* pDefaultMaterial = new Material(forwardType, "defaultMaterial", opaqueQueue, engineRootPath + "/src/shaders/default.vert.spv", engineRootPath + "/src/shaders/default.frag.spv");
+		Material* pDefaultMaterial = new Material(forwardType, "defaultMaterial", opaqueQueue, directoryPath + "/default.vert.spv", directoryPath + "/default.frag.spv");
 		AddMaterial(pDefaultMaterial);
 
-		Material* pPresentMaterial = new Material(presentType, "presentMaterial", opaqueQueue, engineRootPath + "/src/shaders/present.vert.spv", engineRootPath + "/src/shaders/present.frag.spv");
+		Material* pPresentMaterial = new Material(presentType, "presentMaterial", opaqueQueue, directoryPath + "/present.vert.spv", directoryPath + "/present.frag.spv");
 		AddMaterial(pPresentMaterial);
 
-		Material* pVertexColorLitMaterial = new Material(forwardType, "vertexColorLitMaterial", opaqueQueue, engineRootPath + "/src/shaders/vertexColorLit.vert.spv", engineRootPath + "/src/shaders/vertexColorLit.frag.spv");
+		Material* pVertexColorLitMaterial = new Material(forwardType, "vertexColorLitMaterial", opaqueQueue, directoryPath + "/vertexColorLit.vert.spv", directoryPath + "/vertexColorLit.frag.spv");
 		AddMaterial(pVertexColorLitMaterial);
 
-		Material* pVertexColorUnlitMaterial = new Material(forwardType, "vertexColorUnlitMaterial", opaqueQueue, engineRootPath + "/src/shaders/vertexColorUnlit.vert.spv", engineRootPath + "/src/shaders/vertexColorUnlit.frag.spv");
+		Material* pVertexColorUnlitMaterial = new Material(forwardType, "vertexColorUnlitMaterial", opaqueQueue, directoryPath + "/vertexColorUnlit.vert.spv", directoryPath + "/vertexColorUnlit.frag.spv");
 		AddMaterial(pVertexColorUnlitMaterial);
 
-		Material* pNormalsMaterial = new Material(forwardType, "normalMaterial", opaqueQueue, engineRootPath + "/src/shaders/normals.vert.spv", engineRootPath + "/src/shaders/normals.frag.spv");
+		Material* pNormalsMaterial = new Material(forwardType, "normalMaterial", opaqueQueue, directoryPath + "/normals.vert.spv", directoryPath + "/normals.frag.spv");
 		AddMaterial(pNormalsMaterial);
 
-		Material* pShadowMaterial = new Material(shadowType, "shadowMaterial", opaqueQueue, engineRootPath + "/src/shaders/shadow.vert.spv");
+		Material* pShadowMaterial = new Material(shadowType, "shadowMaterial", opaqueQueue, directoryPath + "/shadow.vert.spv");
 		AddMaterial(pShadowMaterial);
 
-		Material* pSkyBoxMaterial = new Material(skyboxType, "skyboxMaterial", skyboxQueue, engineRootPath + "/src/shaders/skybox.vert.spv", engineRootPath + "/src/shaders/skybox.frag.spv");
+		Material* pSkyBoxMaterial = new Material(skyboxType, "skyboxMaterial", skyboxQueue, directoryPath + "/skybox.vert.spv", directoryPath + "/skybox.frag.spv");
 		AddMaterial(pSkyBoxMaterial);
 
-		Material* pSimpleLitMaterial = new Material(forwardType, "simpleLitMaterial", opaqueQueue, engineRootPath + "/src/shaders/simpleLit.vert.spv", engineRootPath + "/src/shaders/simpleLit.frag.spv");
+		Material* pSimpleLitMaterial = new Material(forwardType, "simpleLitMaterial", opaqueQueue, directoryPath + "/simpleLit.vert.spv", directoryPath + "/simpleLit.frag.spv");
 		AddMaterial(pSimpleLitMaterial);
 
-		Material* pSimpleUnlitMaterial = new Material(forwardType, "simpleUnlitMaterial", opaqueQueue, engineRootPath + "/src/shaders/simpleUnlit.vert.spv", engineRootPath + "/src/shaders/simpleUnlit.frag.spv");
+		Material* pSimpleUnlitMaterial = new Material(forwardType, "simpleUnlitMaterial", opaqueQueue, directoryPath + "/simpleUnlit.vert.spv", directoryPath + "/simpleUnlit.frag.spv");
 		AddMaterial(pSimpleUnlitMaterial);
 
+		Material* pParticleMaterial = new Material(forwardType, "particleMaterial", opaqueQueue, directoryPath + "/particle.vert.spv", directoryPath + "/particle.frag.spv");
+		AddMaterial(pParticleMaterial);
+
 		// For testing spirv reflect:
-		Material* pTest = new Material(forwardType, "testMaterial", opaqueQueue, engineRootPath + "/src/shaders/test.vert.spv", engineRootPath + "/src/shaders/test.frag.spv");
+		Material* pTest = new Material(forwardType, "testMaterial", opaqueQueue, directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
 		AddMaterial(pTest);
 
 		// For testing the binding missmatch error:
-		Material* pTestA = new Material(forwardType, "testAMaterial", opaqueQueue, engineRootPath + "/src/shaders/testA.vert.spv", engineRootPath + "/src/shaders/testA.frag.spv");
+		Material* pTestA = new Material(forwardType, "testAMaterial", opaqueQueue, directoryPath + "/testA.vert.spv", directoryPath + "/testA.frag.spv");
 		AddMaterial(pTestA);
-		Material* pTestB = new Material(forwardType, "testBMaterial", opaqueQueue, engineRootPath + "/src/shaders/testB.vert.spv", engineRootPath + "/src/shaders/testB.frag.spv");
+		Material* pTestB = new Material(forwardType, "testBMaterial", opaqueQueue, directoryPath + "/testB.vert.spv", directoryPath + "/testB.frag.spv");
 		AddMaterial(pTestB);
 	}
 	void MaterialManager::Clear()

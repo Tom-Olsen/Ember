@@ -74,6 +74,7 @@ namespace emberEngine
 		static void DrawSphere(const Float3& position, float radius, const Float4& color = Float4::white, bool receiveShadows = true, bool castShadows = true);
 		static void DrawArrow(const Float3& position, const Float3& direction, float size = 1.0f, const Float4& color = Float4::white, bool receiveShadows = true, bool castShadows = true);
 		static void DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
+		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 
 		// Post process:

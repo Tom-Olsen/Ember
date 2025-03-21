@@ -290,6 +290,24 @@ namespace emberEngine
 		DrawLineSegment(Float3(cornerPoints[4]), Float3(cornerPoints[5]), width, color, receiveShadows, castShadows);
 		DrawLineSegment(Float3(cornerPoints[6]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
 	}
+	void Graphics::DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width, const Float4& color, bool receiveShadows, bool castShadows)
+	{
+		std::array<Float2, 4> cornerPoints = bounds.GetCorners();
+
+		// Draw corner points:
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			Float3 pos = Float3(localToWorldMatrix * Float4(cornerPoints[i], 0.0f, 1.0f));
+			ShaderProperties* pShaderProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlitMaterial, pos, Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+			pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
+		}
+
+		// Draw lines:
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[0], 0.0f, 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[1], 0.0f, 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[1], 0.0f, 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[3], 0.0f, 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[3], 0.0f, 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[2], 0.0f, 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[2], 0.0f, 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[0], 0.0f, 1.0f)), width, color, receiveShadows, castShadows);
+	}
 	void Graphics::DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width, const Float4& color, bool receiveShadows, bool castShadows)
 	{
 		std::array<Float3, 8> cornerPoints = bounds.GetCorners();
@@ -297,25 +315,26 @@ namespace emberEngine
 		// Draw corner points:
 		for (uint32_t i = 0; i < 8; i++)
 		{
-			ShaderProperties* pShaderProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlitMaterial, Float3(cornerPoints[i]), Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
+			Float3 pos = Float3(localToWorldMatrix * Float4(cornerPoints[i], 1.0f));
+			ShaderProperties* pShaderProperties = Graphics::DrawMesh(MeshManager::GetMesh("cubeSphere"), s_pSimpleUnlitMaterial, pos, Float3x3::identity, Float3(2.0f * width), receiveShadows, castShadows);
 			pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::black);
 		}
 
 		// Draw horizontal lines:
-		DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[4]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[1]), Float3(cornerPoints[5]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[2]), Float3(cornerPoints[6]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[3]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[0], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[4], 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[1], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[5], 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[2], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[6], 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[3], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[7], 1.0f)), width, color, receiveShadows, castShadows);
 		// Draw vertical lines:
-		DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[2]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[1]), Float3(cornerPoints[3]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[4]), Float3(cornerPoints[6]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[5]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[0], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[2], 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[1], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[3], 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[4], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[6], 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[5], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[7], 1.0f)), width, color, receiveShadows, castShadows);
 		// Draw depth lines:
-		DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[1]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[2]), Float3(cornerPoints[3]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[4]), Float3(cornerPoints[5]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[6]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[0], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[1], 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[2], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[3], 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[4], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[5], 1.0f)), width, color, receiveShadows, castShadows);
+		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[6], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[7], 1.0f)), width, color, receiveShadows, castShadows);
 	}
 
 

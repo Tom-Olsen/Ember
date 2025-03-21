@@ -1,4 +1,4 @@
-# Engine/CMakeLists.txt
+# Ember/Engine/CMakeLists.txt
 
 # Choose SHARED (.dll) or STATIC (.lib) library (currently only static supported):
 set(PROJECT_TYPE STATIC)
@@ -62,13 +62,6 @@ source_group("Render Passes & Pipelines" FILES ${RENDER_PASSES_AND_PIPELINES_FIL
 file(GLOB RENDER_RESOURCES_FILES "${PROJECT_SOURCE_DIR}/src/renderResources/*")
 source_group("Render Resources" FILES ${RENDER_RESOURCES_FILES})
 
-# src/shaders/*:
-file(GLOB SHADER_FILES
-    "${PROJECT_SOURCE_DIR}/src/shaders/*.hlsl"
-    "${PROJECT_SOURCE_DIR}/src/shaders/*.hlsli"
-    "${PROJECT_SOURCE_DIR}/src/shaders/*.bat")
-source_group("Shaders" FILES ${SHADER_FILES})
-
 # src/texture types/*:
 file(GLOB TEXTURE_TYPES_FILES "${PROJECT_SOURCE_DIR}/src/textureTypes/*")
 source_group("Texture Types" FILES ${TEXTURE_TYPES_FILES})
@@ -80,9 +73,6 @@ source_group("Utility" FILES ${UTILITY_FILES})
 # src/vulkanRenderer/*:
 file(GLOB VULKAN_RENDERER_FILES "${PROJECT_SOURCE_DIR}/src/vulkanRenderer/*")
 source_group("VulkanRenderer" FILES ${VULKAN_RENDERER_FILES})
-
-# src/main.cpp:
-# source_group("" FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
 # ---------------------------------------------------
 
 
@@ -99,7 +89,6 @@ ${MATH_FILES}
 ${PUSH_CONSTANTS_FILES}
 ${RENDER_PASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
-${SHADER_FILES}
 ${TEXTURE_TYPES_FILES}
 ${UTILITY_FILES}
 ${VULKAN_RENDERER_FILES})
@@ -116,34 +105,11 @@ endif()
 
 
 
-# ---------------- Shader Compilation ---------------
-set(SHADER_LANGUAGE "HLSL") # Set shader Language (HLSL or GLSL):
-
-# Mark shader files as header-only to prevent compilation
-foreach(SHADER_FILE ${SHADER_FILES})
-    set_source_files_properties(${SHADER_FILE} PROPERTIES HEADER_FILE_ONLY ON)
-endforeach()
-
-# Unix compilation script:
-if(UNIX)
-    add_custom_target(build_shaders ALL
-        COMMAND "{PROJECT_SOURCE_DIR}/shaders/compile${SHADER_LANGUAGE}.sh"
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/shaders"
-        BYPRODUCTS ${PROJECT_SOURCE_DIR}/shaders/*.spv)
-endif(UNIX)
-
-# Windows compilation script:
-if(WIN32)
-    add_custom_target(build_shaders ALL
-        COMMAND "${PROJECT_SOURCE_DIR}/src/shaders/compile${SHADER_LANGUAGE}.bat"
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/shaders"
-        BYPRODUCTS ${PROJECT_SOURCE_DIR}/shaders/*.spv)
-endif(WIN32)
-# ---------------------------------------------------
-
-
-
 # -------------------- Libraries --------------------
+# Shadesr:
+add_subdirectory("src/shaders")
+add_dependencies(${PROJECT_NAME} CompileShaders)
+
 # Imgui:
 target_include_directories(${PROJECT_NAME} PUBLIC libs/imgui libs/imgui/backends)
 
@@ -187,7 +153,7 @@ PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/math
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPassesAndPipelines
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/renderResources
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
+#PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/textureTypes
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanRenderer
