@@ -274,61 +274,67 @@ namespace emberEngine
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				const VkPipeline& shadowPipeline = pShadowMaterial->GetPipeline()->GetVkPipeline();
-				const VkPipelineLayout& shadowPipelineLayout = pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
-				int shadowMapIndex = 0;
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
-
-				// Update shader specific data:
-				for (DrawCall* drawCall : *m_pDrawCalls)
-					drawCall->pShadowShaderProperties->UpdateShaderData();
-
-				// Directional Lights:
-				std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
-				for (int i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
+				// BestPractices validation layer warning occur when binding a pipeline with vertex input data, but not binding any vertex buffer.
+				if (Lighting::GetDirectionalLightsCount() > 0 || Lighting::GetPositionalLightsCount() > 0)
 				{
-					Lighting::DirectionalLight& light = directionalLights[i];
+					const VkPipeline& shadowPipeline = pShadowMaterial->GetPipeline()->GetVkPipeline();
+					const VkPipelineLayout& shadowPipelineLayout = pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
+					int shadowMapIndex = 0;
+					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
+
+					// Update shader specific data:
 					for (DrawCall* drawCall : *m_pDrawCalls)
+						drawCall->pShadowShaderProperties->UpdateShaderData();
+
+					// Directional Lights:
+					std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
+					for (int i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
 					{
-						if (drawCall->castShadows == false)
-							continue;
-				
-						Mesh* pMesh = drawCall->pMesh;
-				
-						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, light.worldToClipMatrix);
-						vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-				
-						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
-						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
-				
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
-						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					}
-					shadowMapIndex++;
-				}
+						LOG_TRACE("Recording Direcitonal Light!");
+						Lighting::DirectionalLight& light = directionalLights[i];
+						for (DrawCall* drawCall : *m_pDrawCalls)
+						{
+							if (drawCall->castShadows == false)
+								continue;
 
-				// Positional Lights:
-				std::array<Lighting::PositionalLight, Lighting::maxPositionalLights>& positionalLights = Lighting::GetPositionalLights();
-				for (int i = 0; i < Lighting::GetPositionalLightsCount(); i++)
-				{
-					Lighting::PositionalLight& light = positionalLights[i];
-					for (DrawCall* drawCall : *m_pDrawCalls)
+							Mesh* pMesh = drawCall->pMesh;
+
+							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, light.worldToClipMatrix);
+							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+
+							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
+							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
+							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+						}
+						shadowMapIndex++;
+					}
+
+					// Positional Lights:
+					std::array<Lighting::PositionalLight, Lighting::maxPositionalLights>& positionalLights = Lighting::GetPositionalLights();
+					for (int i = 0; i < Lighting::GetPositionalLightsCount(); i++)
 					{
-						if (drawCall->castShadows == false)
-							continue;
+						LOG_TRACE("Recording Positional Light!");
+						Lighting::PositionalLight& light = positionalLights[i];
+						for (DrawCall* drawCall : *m_pDrawCalls)
+						{
+							if (drawCall->castShadows == false)
+								continue;
 
-						Mesh* pMesh = drawCall->pMesh;
+							Mesh* pMesh = drawCall->pMesh;
 
-						ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, light.worldToClipMatrix);
-						vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, light.worldToClipMatrix);
+							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
-						vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
-						vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVkBuffer(), offsets);
+							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
-						vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(VulkanContext::frameIndex), 0, nullptr);
+							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+						}
+						shadowMapIndex++;
 					}
-					shadowMapIndex++;
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);

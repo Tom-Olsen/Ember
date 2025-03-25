@@ -17,8 +17,9 @@
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
-#include "vulkanUtility.h"
+#include "vulkanGarbageCollector.h"
 #include "vulkanMacros.h"
+#include "vulkanUtility.h"
 
 
 
@@ -99,7 +100,13 @@ namespace emberEngine
 	}
 	ShaderProperties::~ShaderProperties()
 	{
-
+		// Queue the destruction of each descriptor set for later collection.
+		for (uint32_t i = 0; i < VulkanContext::framesInFlight; ++i)
+		{
+			VkDescriptorSet descriptorSet = m_descriptorSets[i];
+			VulkanGarbageCollector::Destroy([descriptorSet]()
+			{ vkFreeDescriptorSets(VulkanContext::GetVkDevice(), VulkanContext::GetVkDescriptorPool(),1, &descriptorSet);});
+		}
 	}
 
 

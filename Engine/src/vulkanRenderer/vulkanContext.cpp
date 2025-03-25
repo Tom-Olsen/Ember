@@ -20,6 +20,7 @@ namespace emberEngine
 	std::unique_ptr<VulkanSwapchain> VulkanContext::pSwapchain = nullptr;
 	uint32_t VulkanContext::framesInFlight;
 	uint32_t VulkanContext::frameIndex;
+	uint64_t VulkanContext::absoluteFrameIndex;
 	VkSampleCountFlagBits VulkanContext::msaaSamples;
 
 
@@ -33,6 +34,7 @@ namespace emberEngine
 
 		framesInFlight = framesInFlightValue;
 		frameIndex = 0;
+		absoluteFrameIndex = 0;
 
 		// Window:
 		pWindow = std::make_unique<SdlWindow>(windowWidth, windowHeight);
@@ -123,6 +125,7 @@ namespace emberEngine
 	void VulkanContext::UpdateFrameIndex()
 	{
 		frameIndex = (frameIndex + 1) % framesInFlight;
+		absoluteFrameIndex++;
 	}
 	void VulkanContext::ResetFrameIndex()
 	{

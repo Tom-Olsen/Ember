@@ -410,7 +410,7 @@ namespace emberEngine
 			s_shaderPropertiesPoolMap[(Shader*)computeCall.pComputeShader].Release(computeCall.pShaderProperties);
 
 		// Shrink all pools back to max number of drawCalls of last frame:
-		for (auto& [_, pool] : s_shaderPropertiesPoolMap)
+		for (auto& [shader, pool] : s_shaderPropertiesPoolMap)
 			pool.ShrinkToFit();
 		s_shadowShaderPropertiesPool.ShrinkToFit();
 

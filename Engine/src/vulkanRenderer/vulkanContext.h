@@ -51,6 +51,7 @@ namespace emberEngine
 		static std::unique_ptr<VulkanSwapchain> pSwapchain;
 		static uint32_t framesInFlight;
 		static uint32_t frameIndex;
+		static uint64_t absoluteFrameIndex;
 		static VkSampleCountFlagBits msaaSamples;
 
 	public: // Methods:

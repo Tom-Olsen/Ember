@@ -14,6 +14,7 @@
 #include "textureManager.h"
 #include "timer.h"
 #include "vulkanContext.h"
+#include "vulkanGarbageCollector.h"
 #include "vulkanRenderer.h"
 
 
@@ -38,6 +39,7 @@ namespace emberEngine
 
 		// Init static managers:
 		VulkanContext::Init(framesInFlight, msaaSamples, windowWidth, windowHeight);
+		VulkanGarbageCollector::Init();
 		math::Random::Init();
 		EventSystem::Init();
 		RenderPassManager::Init(renderWidth, renderheight);
@@ -65,6 +67,7 @@ namespace emberEngine
 		ComputeShaderManager::Clear();
 		RenderPassManager::Clear();
 		EventSystem::Clear();
+		VulkanGarbageCollector::Clear();
 		VulkanContext::Clear();
 	}
 
@@ -80,6 +83,7 @@ namespace emberEngine
 		while (running)
 		{
 			Timer::Update();
+			VulkanGarbageCollector::CollectGarbage();
 			running = VulkanContext::pWindow->HandleEvents();
 
 			// If window is minimized or width/height is zero, delay loop to reduce CPU usage:

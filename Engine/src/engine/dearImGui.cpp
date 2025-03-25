@@ -114,6 +114,11 @@ namespace emberEngine
 			//ImTextureID textureID = (ImTextureID)s_descriptorSet;
 			//ImGui::Image(textureID, ImVec2((float)s_pRenderTexture->GetWidth(), (float)s_pRenderTexture->GetHeight()));
 			//ImGui::End();
+
+			// Fps display:
+			ImGui::Begin("Performance");
+			ImGui::Text("FPS: %.1f", s_pIo->Framerate);
+			ImGui::End();
 		}
 		ImGui::EndFrame();
 
