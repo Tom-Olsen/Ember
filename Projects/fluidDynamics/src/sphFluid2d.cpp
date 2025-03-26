@@ -12,7 +12,7 @@ namespace emberEngine
 		m_fluidBounds = Bounds2d(Float2::zero, Float2(16.0f / 9.0f, 1.0f));
 		m_particleRadius = 0.05f;
 		pQuad = MeshManager::GetMesh("unitQuad");
-		pParticleMaterial = MaterialManager::GetMaterial("defaultMaterial");
+		pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
 	}
 	SphFluid2d::~SphFluid2d()
 	{

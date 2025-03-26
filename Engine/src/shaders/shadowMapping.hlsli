@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_shadowMapping_hlsli__
 #define __INCLUDE_GUARD_shadowMapping_hlsli__
-#include "mathf.hlsli"
+#include "math.hlsli"
 
 
 
@@ -44,7 +44,7 @@ float NormalDistribution(float nDotH, float roughness)
     float a2 = a * a;
     float nDotH2 = nDotH * nDotH;
     float denom = nDotH2 * (a2 - 1.0f) + 1.0f;
-    return a2 / (mathf_PI * denom * denom);
+    return a2 / (math_PI * denom * denom);
 }
 float GeometryDistribution(float nDotL, float nDotV, float roughness)
 {
@@ -79,7 +79,7 @@ float3 PhysicalLight
     float3 F = FresnelDistribution(reflectivity, vDotH);
         
     float3 specularBRDF = (D * G * F) / (4.0f * nDotL * nDotV + 0.001f);
-    float3 diffuseBRDF = (1.0f - metallicity) * (1.0f - F) * color * mathf_PI_INV;
+    float3 diffuseBRDF = (1.0f - metallicity) * (1.0f - F) * color * math_PI_INV;
         
     return (diffuseBRDF + specularBRDF) * lightIntensity * nDotL;
 }

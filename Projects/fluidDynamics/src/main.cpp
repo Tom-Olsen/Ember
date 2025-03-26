@@ -49,6 +49,16 @@ Scene* InitScene()
 
 		pScene->AddGameObject(pGameObject);
 	}
+	//{
+	//	GameObject* pGameObject = new GameObject("cube");
+	//	pGameObject->GetTransform()->SetScale(0.2f);
+	//
+	//	MeshRenderer* meshRenderer = pGameObject->AddComponent<MeshRenderer>();
+	//	meshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+	//	meshRenderer->SetMaterial(MaterialManager::GetMaterial("normalMaterial"));
+	//
+	//	pScene->AddGameObject(pGameObject);
+	//}
 	return pScene;
 }
 

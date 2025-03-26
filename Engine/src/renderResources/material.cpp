@@ -1,7 +1,8 @@
 #include "material.h"
 #include "logger.h"
 #include "mesh.h"
-#include "forwardPipeline.h"
+#include "forwardOpaquePipeline.h"
+#include "forwardTransparentPipeline.h"
 #include "presentPipeline.h"
 #include "shadowPipeline.h"
 #include "skyboxPipeline.h"
@@ -20,8 +21,8 @@ namespace emberEngine
 		m_renderQueue = renderQueue;
 		m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
 
-		// Forward material creation:
-		if (m_type == Type::forward)
+		// Opaque forward material creation:
+		if (m_type == Type::forwardOpaque)
 		{
 			// Load vertex shader:
 			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -37,7 +38,27 @@ namespace emberEngine
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 			// Create pipeline:
-			m_pPipeline = std::make_unique<ForwardPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+			m_pPipeline = std::make_unique<ForwardOpaquePipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+		}
+
+		// Transparent forward material creation:
+		if (m_type == Type::forwardTransparent)
+		{
+			// Load vertex shader:
+			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+			SpirvReflect vertexShaderReflect(vertexCode);
+			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
+			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
+			m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
+			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
+
+			// Load fragment shader:
+			std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
+			SpirvReflect fragmentShaderReflect(fragmentCode);
+			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
+
+			// Create pipeline:
+			m_pPipeline = std::make_unique<ForwardTransparentPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 
 		// Shadow material creation:

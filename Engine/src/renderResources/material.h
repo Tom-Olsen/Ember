@@ -27,7 +27,8 @@ namespace emberEngine
 	public: // Enums:
 		enum class Type
 		{
-			forward,
+			forwardOpaque,
+			forwardTransparent,
 			shadow,
 			skybox,
 			present

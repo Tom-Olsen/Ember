@@ -1,4 +1,4 @@
-#include "forwardPipeline.h"
+#include "forwardTransparentPipeline.h"
 #include "forwardRenderPass.h"
 #include "mesh.h"
 #include "renderPassManager.h"
@@ -12,7 +12,7 @@
 namespace emberEngine
 {
     // Constructor/Destructor:
-    ForwardPipeline::ForwardPipeline
+    ForwardTransparentPipeline::ForwardTransparentPipeline
     (const std::vector<char>& vertexCode,
      const std::vector<char>& fragmentCode,
      const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
@@ -32,7 +32,7 @@ namespace emberEngine
         vkDestroyShaderModule(VulkanContext::GetVkDevice(), vertexShaderModule, nullptr);
         vkDestroyShaderModule(VulkanContext::GetVkDevice(), fragmentShaderModule, nullptr);
     }
-    ForwardPipeline::~ForwardPipeline()
+    ForwardTransparentPipeline::~ForwardTransparentPipeline()
     {
 
     }
@@ -40,7 +40,7 @@ namespace emberEngine
 
 
     // Private:
-    void ForwardPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
+    void ForwardTransparentPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
     {
         // Descriptor set layout:
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -62,7 +62,7 @@ namespace emberEngine
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(VulkanContext::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
     }
-    void ForwardPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
+    void ForwardTransparentPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -97,7 +97,7 @@ namespace emberEngine
         // Rasterization:
         VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
         rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;          // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
-        rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;            // which face to cull
+        rasterizationState.cullMode = VK_CULL_MODE_NONE;                // no culling, so transparent objects are seen from both sides
         rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // which face of triangle is front: 123 or 132?
         rasterizationState.lineWidth = 1.0f;                            // width of lines. Bigger 1.0f requires wideLines feature
         rasterizationState.depthClampEnable = VK_FALSE;                 // clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature.
@@ -118,14 +118,14 @@ namespace emberEngine
         // Depth and stencil testing:
         VkPipelineDepthStencilStateCreateInfo depthState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
         depthState.depthTestEnable = VK_TRUE;             // depth of new fragments should be compared to the depth buffer to see if they should be discarded
-        depthState.depthWriteEnable = VK_TRUE;            // new depth of fragments that pass the depth test should be written to the depth buffer
+        depthState.depthWriteEnable = VK_FALSE;           // don't write to depth attachment due to transparency.
         depthState.depthCompareOp = VK_COMPARE_OP_LESS;   // comparison that is performed to keep or discard fragments. lower = closer to camera
         depthState.depthBoundsTestEnable = VK_FALSE;      // allows to keep only fragments in the below defined range
         depthState.stencilTestEnable = VK_FALSE;          // stencil buffer operations (not used yet)
 
         // Color blending:
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
-        colorBlendAttachmentState.blendEnable = VK_FALSE;
+        colorBlendAttachmentState.blendEnable = VK_TRUE;
         colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
         colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;

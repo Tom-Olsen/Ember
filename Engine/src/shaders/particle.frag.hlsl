@@ -1,3 +1,6 @@
+SamplerComparisonState shadowSampler : register(s11);
+Texture2DArray<float> shadowMaps : register(t20);
+#include "shadowMapping.hlsli"
 #include "defaultPushConstant.hlsli"
 
 
@@ -16,17 +19,22 @@ cbuffer SurfaceProperties : register(b2)
 struct FragmentInput
 {
     float4 clipPosition : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float3 worldNormal : NORMAL;        // normal in world space
+    float3 worldTangent : TANGENT;      // tangent in world space
     float4 vertexColor : COLOR;         // vertex color
+    float4 uv : TEXCOORD0;              // texture coordinates
 };
 
 
 
 float4 main(FragmentInput input) : SV_TARGET
 {
-    // Mesh data:
-    float4 col = input.vertexColor;
+    float2 uv = input.uv.xy;
+    float r = length(2 * uv - math_one2);
+    float alpha = (1 - r) * math_one4;
     
-    // Shading:
-    float4 color = col * diffuseColor;
+    float4 color = input.vertexColor * diffuseColor;
+    color.a = alpha;
+    
     return color;
 }
