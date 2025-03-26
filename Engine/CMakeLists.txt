@@ -39,6 +39,7 @@ set(IMGUI_FILES
     libs/imgui/imgui_widgets.cpp
     libs/imgui/backends/imgui_impl_sdl3.cpp
     libs/imgui/backends/imgui_impl_vulkan.cpp)
+source_group("ImGui" FILES ${IMGUI_FILES})
 set(IMGUI_EXAMPLE libs/imgui/examples/example_sdl3_vulkan/main.cpp)
 source_group("ImGui Demo" FILES ${IMGUI_EXAMPLE})
 
@@ -92,7 +93,7 @@ ${RENDER_RESOURCES_FILES}
 ${TEXTURE_TYPES_FILES}
 ${UTILITY_FILES}
 ${VULKAN_RENDERER_FILES})
-set_source_files_properties(${IMGUI_EXAMPLE} PROPERTIES HEADER_FILE_ONLY ON)
+set_source_files_properties(${IMGUI_EXAMPLE} PROPERTIES HEADER_FILE_ONLY ON)    # don't compile these files
 
 # Add engine root path as a compile definition
 get_filename_component(ENGINE_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)

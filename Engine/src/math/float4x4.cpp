@@ -42,15 +42,15 @@ namespace emberMath
 	}
 	Float4x4::Float4x4(const Float3x3& other)
 	{
-		data[0] = other[0]; data[4] = other[3]; data[8] = other[6]; data[12] = 0.0f;
-		data[1] = other[1]; data[5] = other[4]; data[9] = other[7]; data[13] = 0.0f;
-		data[2] = other[2]; data[6] = other[5]; data[10] = other[8]; data[14] = 0.0f;
+		data[0] = other.data[0]; data[4] = other.data[3]; data[ 8] = other.data[6]; data[12] = 0.0f;
+		data[1] = other.data[1]; data[5] = other.data[4]; data[ 9] = other.data[7]; data[13] = 0.0f;
+		data[2] = other.data[2]; data[6] = other.data[5]; data[10] = other.data[8]; data[14] = 0.0f;
 		data[3] = 0.0f; data[7] = 0.0f; data[11] = 0.0f; data[15] = 1.0f;
 	}
 	Float4x4::Float4x4(const Float4x4& other)
 	{
 		for (uint32_t i = 0; i < 16; i++)
-			data[i] = other[i];
+			data[i] = other.data[i];
 	}
 
 
@@ -341,18 +341,6 @@ namespace emberMath
 
 
 	// Access:
-	float& Float4x4::operator[](int index)
-	{
-		if (index >= 0 && index < 16)
-			return data[index];
-		throw std::out_of_range("Float4x4 index out of range.");
-	}
-	float Float4x4::operator[](int index) const
-	{
-		if (index >= 0 && index < 16)
-			return data[index];
-		throw std::out_of_range("Float4x4 index out of range.");
-	}
 	float& Float4x4::operator[](const Index2& index)
 	{
 		if (index.i >= 0 && index.i < 4 && index.j >= 0 && index.j < 4)
@@ -424,7 +412,7 @@ namespace emberMath
 		if (this != &other)
 		{
 			for (uint32_t i = 0; i < 16; i++)
-				data[i] = other[i];
+				data[i] = other.data[i];
 		}
 		return *this;
 	}
@@ -433,7 +421,7 @@ namespace emberMath
 		if (this != &other)
 		{
 			for (uint32_t i = 0; i < 16; i++)
-				data[i] = other[i];
+				data[i] = other.data[i];
 		}
 		return *this;
 	}
@@ -445,13 +433,13 @@ namespace emberMath
 	{
 		Float4x4 result;
 		for (uint32_t i = 0; i < 16; i++)
-			result[i] = data[i] + other[i];
+			result.data[i] = data[i] + other.data[i];
 		return result;
 	}
 	Float4x4& Float4x4::operator+=(const Float4x4& other)
 	{
 		for (uint32_t i = 0; i < 16; i++)
-			data[i] += other[i];
+			data[i] += other.data[i];
 		return *this;
 	}
 
@@ -462,13 +450,13 @@ namespace emberMath
 	{
 		Float4x4 result;
 		for (uint32_t i = 0; i < 16; i++)
-			result[i] = data[i] - other[i];
+			result.data[i] = data[i] - other.data[i];
 		return result;
 	}
 	Float4x4& Float4x4::operator-=(const Float4x4& other)
 	{
 		for (uint32_t i = 0; i < 16; i++)
-			data[i] -= other[i];
+			data[i] -= other.data[i];
 		return *this;
 	}
 	Float4x4 Float4x4::operator-() const
@@ -512,7 +500,7 @@ namespace emberMath
 	{
 		Float4x4 result;
 		for (uint32_t i = 0; i < 16; i++)
-			result[i] = data[i] / scalar;
+			result.data[i] = data[i] / scalar;
 		return result;
 	}
 	Float4x4& Float4x4::operator/=(float scalar)
@@ -528,14 +516,14 @@ namespace emberMath
 	bool Float4x4::IsEpsilonEqual(const Float4x4& other) const
 	{
 		for (uint32_t i = 0; i < 16; i++)
-			if (std::fabs(data[i] - other[i]) > math::epsilon)
+			if (std::fabs(data[i] - other.data[i]) > math::epsilon)
 				return false;
 		return true;
 	}
 	bool Float4x4::operator==(const Float4x4& other) const
 	{
 		for (uint32_t i = 0; i < 16; i++)
-			if (data[i] != other[i])
+			if (data[i] != other.data[i])
 				return false;
 		return true;
 	}
@@ -551,31 +539,31 @@ namespace emberMath
 	{
 		Float4x4 result;
 		for (uint32_t i = 0; i < 16; i++)
-			result[i] = a[i] * b;
+			result.data[i] = a.data[i] * b;
 		return result;
 	}
 	Float4x4 operator*(float a, const Float4x4& b)
 	{
 		Float4x4 result;
 		for (uint32_t i = 0; i < 16; i++)
-			result[i] = a * b[i];
+			result.data[i] = a * b.data[i];
 		return result;
 	}
 	Float4 operator*(const Float4x4& a, const Float4& b)
 	{
 		return Float4
-		(a[0] * b.x + a[4] * b.y + a[8] * b.z + a[12] * b.w,
-		 a[1] * b.x + a[5] * b.y + a[9] * b.z + a[13] * b.w,
-		 a[2] * b.x + a[6] * b.y + a[10] * b.z + a[14] * b.w,
-		 a[3] * b.x + a[7] * b.y + a[11] * b.z + a[15] * b.w);
+		(a.data[0] * b.x + a.data[4] * b.y + a.data[ 8] * b.z + a.data[12] * b.w,
+		 a.data[1] * b.x + a.data[5] * b.y + a.data[ 9] * b.z + a.data[13] * b.w,
+		 a.data[2] * b.x + a.data[6] * b.y + a.data[10] * b.z + a.data[14] * b.w,
+		 a.data[3] * b.x + a.data[7] * b.y + a.data[11] * b.z + a.data[15] * b.w);
 	}
 	Float4 operator*(const Float4& a, const Float4x4& b)
 	{
 		return Float4
-		(a.x * b[0] + a.y * b[1] + a.z * b[2] + a.w * b[3],
-		 a.x * b[4] + a.y * b[5] + a.z * b[6] + a.w * b[7],
-		 a.x * b[8] + a.y * b[9] + a.z * b[10] + a.w * b[11],
-		 a.x * b[12] + a.y * b[13] + a.z * b[14] + a.w * b[15]);
+		(a.x * b.data[ 0] + a.y * b.data[ 1] + a.z * b.data[ 2] + a.w * b.data[ 3],
+		 a.x * b.data[ 4] + a.y * b.data[ 5] + a.z * b.data[ 6] + a.w * b.data[ 7],
+		 a.x * b.data[ 8] + a.y * b.data[ 9] + a.z * b.data[10] + a.w * b.data[11],
+		 a.x * b.data[12] + a.y * b.data[13] + a.z * b.data[14] + a.w * b.data[15]);
 	}
 
 
@@ -584,9 +572,9 @@ namespace emberMath
 	std::string Float4x4::ToString() const
 	{
 		std::ostringstream oss;
-		oss << "(" << data[0] << ", " << data[1] << ", " << data[2] << ", " << data[3];
-		oss << " | " << data[4] << ", " << data[5] << ", " << data[6] << ", " << data[7];
-		oss << " | " << data[8] << ", " << data[9] << ", " << data[10] << ", " << data[11];
+		oss <<   "(" << data[ 0] << ", " << data[ 1] << ", " << data[ 2] << ", " << data[ 3];
+		oss << " | " << data[ 4] << ", " << data[ 5] << ", " << data[ 6] << ", " << data[ 7];
+		oss << " | " << data[ 8] << ", " << data[ 9] << ", " << data[10] << ", " << data[11];
 		oss << " | " << data[12] << ", " << data[13] << ", " << data[14] << ", " << data[15] << ")";
 		return oss.str();
 	}
@@ -594,8 +582,8 @@ namespace emberMath
 	{
 		std::ostringstream oss;
 		oss << "\n";
-		oss << "(" << data[0] << ", " << data[4] << ", " << data[8] << ", " << data[12] << ")\n";
-		oss << "(" << data[1] << ", " << data[5] << ", " << data[9] << ", " << data[13] << ")\n";
+		oss << "(" << data[0] << ", " << data[4] << ", " << data[ 8] << ", " << data[12] << ")\n";
+		oss << "(" << data[1] << ", " << data[5] << ", " << data[ 9] << ", " << data[13] << ")\n";
 		oss << "(" << data[2] << ", " << data[6] << ", " << data[10] << ", " << data[14] << ")\n";
 		oss << "(" << data[3] << ", " << data[7] << ", " << data[11] << ", " << data[15] << ")";
 		return oss.str();

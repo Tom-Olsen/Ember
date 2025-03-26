@@ -27,14 +27,20 @@ struct VertexOutput
 
 VertexOutput main(VertexInput input)
 {
+    // Extract data from 
+    int instanceCount = int(pc.instanceCountAndShadowMapIndexAndLocalToWorldMatrix._41);
+    int shadowMapIndex = int(pc.instanceCountAndShadowMapIndexAndLocalToWorldMatrix._42);
+    float4x4 localToWorldMatrix = pc.instanceCountAndShadowMapIndexAndLocalToWorldMatrix;
+    localToWorldMatrix._41 = 0;
+    localToWorldMatrix._42 = 0;
+    
     float4 pos = float4(input.position, 1.0);
-    float4x4 localToWorldMatrix = pc.localToWorldMatrix;
-    if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
-        localToWorldMatrix = mul(pc.localToWorldMatrix, instanceBuffer[input.instanceID].localToWorldMatrix);
+    if (instanceCount != 0 && input.instanceID < instanceCount)
+        localToWorldMatrix = mul(localToWorldMatrix, instanceBuffer[input.instanceID].localToWorldMatrix);
     float4x4 localToClipMatrix = mul(pc.worldToClipMatrix, localToWorldMatrix);
     
     VertexOutput output;
     output.position = mul(localToClipMatrix, pos);
-    output.layer = pc.shadowMapIndex;
+    output.layer = shadowMapIndex;
     return output;
 }

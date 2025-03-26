@@ -39,7 +39,7 @@ namespace emberMath
 	Float3x2::Float3x2(const Float3x2& other)
 	{
 		for (uint32_t i = 0; i < 6; i++)
-			data[i] = other[i];
+			data[i] = other.data[i];
 	}
 
 
@@ -82,7 +82,7 @@ namespace emberMath
 	{
 		return Float2x3::Rows
 		(data[0], data[1], data[2],
-			data[3], data[4], data[5]);
+		 data[3], data[4], data[5]);
 	}
 	Float2x3 Float3x2::LeftInverse() const
 	{
@@ -97,18 +97,6 @@ namespace emberMath
 
 
 	// Access:
-	float& Float3x2::operator[](int index)
-	{
-		if (index >= 0 && index < 6)
-			return data[index];
-		throw std::out_of_range("Float3x2 index out of range.");
-	}
-	float Float3x2::operator[](int index) const
-	{
-		if (index >= 0 && index < 6)
-			return data[index];
-		throw std::out_of_range("Float3x2 index out of range.");
-	}
 	float& Float3x2::operator[](const Index2& index)
 	{
 		if (index.i >= 0 && index.i < 3 && index.j >= 0 && index.j < 2)
@@ -142,7 +130,7 @@ namespace emberMath
 		if (this != &other)
 		{
 			for (uint32_t i = 0; i < 6; i++)
-				data[i] = other[i];
+				data[i] = other.data[i];
 		}
 		return *this;
 	}
@@ -151,7 +139,7 @@ namespace emberMath
 		if (this != &other)
 		{
 			for (uint32_t i = 0; i < 6; i++)
-				data[i] = other[i];
+				data[i] = other.data[i];
 		}
 		return *this;
 	}
@@ -163,13 +151,13 @@ namespace emberMath
 	{
 		Float3x2 result;
 		for (uint32_t i = 0; i < 6; i++)
-			result[i] = data[i] + other[i];
+			result.data[i] = data[i] + other.data[i];
 		return result;
 	}
 	Float3x2& Float3x2::operator+=(const Float3x2& other)
 	{
 		for (uint32_t i = 0; i < 6; i++)
-			data[i] += other[i];
+			data[i] += other.data[i];
 		return *this;
 	}
 
@@ -180,20 +168,20 @@ namespace emberMath
 	{
 		Float3x2 result;
 		for (uint32_t i = 0; i < 6; i++)
-			result[i] = data[i] - other[i];
+			result.data[i] = data[i] - other.data[i];
 		return result;
 	}
 	Float3x2& Float3x2::operator-=(const Float3x2& other)
 	{
 		for (uint32_t i = 0; i < 6; i++)
-			data[i] -= other[i];
+			data[i] -= other.data[i];
 		return *this;
 	}
 	Float3x2 Float3x2::operator-() const
 	{
 		return Float3x2
 		(-data[0], -data[1], -data[2],
-			-data[3], -data[4], -data[5]);
+		 -data[3], -data[4], -data[5]);
 	}
 
 
@@ -213,7 +201,7 @@ namespace emberMath
 	{
 		Float3x2 result;
 		for (uint32_t i = 0; i < 6; i++)
-			result[i] = data[i] / scalar;
+			result.data[i] = data[i] / scalar;
 		return result;
 	}
 	Float3x2& Float3x2::operator/=(float scalar)
@@ -229,14 +217,14 @@ namespace emberMath
 	bool Float3x2::IsEpsilonEqual(const Float3x2& other) const
 	{
 		for (uint32_t i = 0; i < 6; i++)
-			if (math::Abs(data[i] - other[i]) > math::epsilon)
+			if (math::Abs(data[i] - other.data[i]) > math::epsilon)
 				return false;
 		return true;
 	}
 	bool Float3x2::operator==(const Float3x2& other) const
 	{
 		for (uint32_t i = 0; i < 6; i++)
-			if (data[i] != other[i])
+			if (data[i] != other.data[i])
 				return false;
 		return true;
 	}
@@ -252,28 +240,28 @@ namespace emberMath
 	{
 		Float3x2 result;
 		for (uint32_t i = 0; i < 6; i++)
-			result[i] = a[i] * b;
+			result.data[i] = a.data[i] * b;
 		return result;
 	}
 	Float3x2 operator*(float a, const Float3x2& b)
 	{
 		Float3x2 result;
 		for (uint32_t i = 0; i < 6; i++)
-			result[i] = a * b[i];
+			result.data[i] = a * b.data[i];
 		return result;
 	}
 	Float3 operator*(const Float3x2& a, const Float2& b)
 	{
 		return Float3
-		(a[0] * b.x + a[3] * b.y,
-			a[1] * b.x + a[4] * b.y,
-			a[2] * b.x + a[5] * b.y);
+		(a.data[0] * b.x + a.data[3] * b.y,
+		 a.data[1] * b.x + a.data[4] * b.y,
+		 a.data[2] * b.x + a.data[5] * b.y);
 	}
 	Float2 operator*(const Float3& a, const Float3x2& b)
 	{
 		return Float2
-		(a.x * b[0] + a.y * b[1] + a.z * b[2],
-			a.x * b[3] + a.y * b[4] + a.z * b[5]);
+		(a.x * b.data[0] + a.y * b.data[1] + a.z * b.data[2],
+		 a.x * b.data[3] + a.y * b.data[4] + a.z * b.data[5]);
 	}
 	Float3x2 operator*(const Float3x2& a, const Float2x2& b)
 	{
@@ -300,7 +288,7 @@ namespace emberMath
 	std::string Float3x2::ToString() const
 	{
 		std::ostringstream oss;
-		oss << "(" << data[0] << ", " << data[1] << ", " << data[2];
+		oss <<   "(" << data[0] << ", " << data[1] << ", " << data[2];
 		oss << " | " << data[3] << ", " << data[4] << ", " << data[5] << ")";
 		return oss.str();
 	}

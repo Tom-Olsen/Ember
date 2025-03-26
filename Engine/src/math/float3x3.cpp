@@ -40,13 +40,13 @@ namespace emberMath
 	Float3x3::Float3x3(const Float3x3& other)
 	{
 		for (uint32_t i = 0; i < 9; i++)
-			data[i] = other[i];
+			data[i] = other.data[i];
 	}
 	Float3x3::Float3x3(const Float4x4& other)
 	{
-		data[0] = other[0]; data[3] = other[4]; data[6] = other[8];
-		data[1] = other[1]; data[4] = other[5]; data[7] = other[9];
-		data[2] = other[2]; data[5] = other[6]; data[8] = other[10];
+		data[0] = other.data[0]; data[3] = other.data[4]; data[6] = other.data[8];
+		data[1] = other.data[1]; data[4] = other.data[5]; data[7] = other.data[9];
+		data[2] = other.data[2]; data[5] = other.data[6]; data[8] = other.data[10];
 	}
 
 
@@ -94,14 +94,14 @@ namespace emberMath
 	{
 		return Float3x3
 		(data[0], data[3], data[6],
-			data[1], data[4], data[7],
-			data[2], data[5], data[8]);
+		 data[1], data[4], data[7],
+		 data[2], data[5], data[8]);
 	}
 	float Float3x3::Determinant() const
 	{
 		return data[0] * (data[4] * data[8] - data[5] * data[7])
-			- data[1] * (data[3] * data[8] - data[5] * data[6])
-			+ data[2] * (data[3] * data[7] - data[4] * data[6]);
+			 - data[1] * (data[3] * data[8] - data[5] * data[6])
+			 + data[2] * (data[3] * data[7] - data[4] * data[6]);
 	}
 	Float3x3 Float3x3::Inverse() const
 	{
@@ -145,8 +145,8 @@ namespace emberMath
 		float s = math::Sin(angle);
 		return Float3x3::Rows
 		(1.0f, 0.0f, 0.0f,
-			0.0f, c, -s,
-			0.0f, s, c);
+		 0.0f, c, -s,
+		 0.0f, s, c);
 	}
 	Float3x3 Float3x3::RotateY(float angle)
 	{
@@ -154,8 +154,8 @@ namespace emberMath
 		float s = math::Sin(angle);
 		return Float3x3::Rows
 		(c, 0.0f, s,
-			0.0f, 1.0f, 0.0f,
-			-s, 0.0f, c);
+		 0.0f, 1.0f, 0.0f,
+		 -s, 0.0f, c);
 	}
 	Float3x3 Float3x3::RotateZ(float angle)
 	{
@@ -163,8 +163,8 @@ namespace emberMath
 		float s = math::Sin(angle);
 		return Float3x3::Rows
 		(c, -s, 0.0f,
-			s, c, 0.0f,
-			0.0f, 0.0f, 1.0f);
+		 s, c, 0.0f,
+		 0.0f, 0.0f, 1.0f);
 	}
 	Float3x3 Float3x3::Rotate(const Float3& axis, float angle)
 	{
@@ -177,8 +177,8 @@ namespace emberMath
 		float z = normalizedAxis.z;
 		return Float3x3::Rows
 		(x * x * t + c, x * y * t - z * s, x * z * t + y * s,
-			y * x * t + z * s, y * y * t + c, y * z * t - x * s,
-			z * x * t - y * s, z * y * t + x * s, z * z * t + c);
+		 y * x * t + z * s, y * y * t + c, y * z * t - x * s,
+		 z * x * t - y * s, z * y * t + x * s, z * z * t + c);
 	}
 	Float3x3 Float3x3::Rotate(const Float3& angles, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
 	{
@@ -226,18 +226,6 @@ namespace emberMath
 
 
 	// Access:
-	float& Float3x3::operator[](int index)
-	{
-		if (index >= 0 && index < 9)
-			return data[index];
-		throw std::out_of_range("Float3x3 index out of range.");
-	}
-	float Float3x3::operator[](int index) const
-	{
-		if (index >= 0 && index < 9)
-			return data[index];
-		throw std::out_of_range("Float3x3 index out of range.");
-	}
 	float& Float3x3::operator[](const Index2& index)
 	{
 		if (index.i >= 0 && index.i < 3 && index.j >= 0 && index.j < 3)
@@ -271,7 +259,7 @@ namespace emberMath
 		if (this != &other)
 		{
 			for (uint32_t i = 0; i < 9; i++)
-				data[i] = other[i];
+				data[i] = other.data[i];
 		}
 		return *this;
 	}
@@ -280,7 +268,7 @@ namespace emberMath
 		if (this != &other)
 		{
 			for (uint32_t i = 0; i < 9; i++)
-				data[i] = other[i];
+				data[i] = other.data[i];
 		}
 		return *this;
 	}
@@ -292,13 +280,13 @@ namespace emberMath
 	{
 		Float3x3 result;
 		for (uint32_t i = 0; i < 9; i++)
-			result[i] = data[i] + other[i];
+			result.data[i] = data[i] + other.data[i];
 		return result;
 	}
 	Float3x3& Float3x3::operator+=(const Float3x3& other)
 	{
 		for (uint32_t i = 0; i < 9; i++)
-			data[i] += other[i];
+			data[i] += other.data[i];
 		return *this;
 	}
 
@@ -309,21 +297,21 @@ namespace emberMath
 	{
 		Float3x3 result;
 		for (uint32_t i = 0; i < 9; i++)
-			result[i] = data[i] - other[i];
+			result.data[i] = data[i] - other.data[i];
 		return result;
 	}
 	Float3x3& Float3x3::operator-=(const Float3x3& other)
 	{
 		for (uint32_t i = 0; i < 9; i++)
-			data[i] -= other[i];
+			data[i] -= other.data[i];
 		return *this;
 	}
 	Float3x3 Float3x3::operator-() const
 	{
 		return Float3x3
 		(-data[0], -data[1], -data[2],
-			-data[3], -data[4], -data[5],
-			-data[6], -data[7], -data[8]);
+		 -data[3], -data[4], -data[5],
+		 -data[6], -data[7], -data[8]);
 	}
 
 
@@ -358,7 +346,7 @@ namespace emberMath
 	{
 		Float3x3 result;
 		for (uint32_t i = 0; i < 9; i++)
-			result[i] = data[i] / scalar;
+			result.data[i] = data[i] / scalar;
 		return result;
 	}
 	Float3x3& Float3x3::operator/=(float scalar)
@@ -374,14 +362,14 @@ namespace emberMath
 	bool Float3x3::IsEpsilonEqual(const Float3x3& other) const
 	{
 		for (uint32_t i = 0; i < 9; i++)
-			if (math::Abs(data[i] - other[i]) > math::epsilon)
+			if (math::Abs(data[i] - other.data[i]) > math::epsilon)
 				return false;
 		return true;
 	}
 	bool Float3x3::operator==(const Float3x3& other) const
 	{
 		for (uint32_t i = 0; i < 9; i++)
-			if (data[i] != other[i])
+			if (data[i] != other.data[i])
 				return false;
 		return true;
 	}
@@ -397,29 +385,29 @@ namespace emberMath
 	{
 		Float3x3 result;
 		for (uint32_t i = 0; i < 9; i++)
-			result[i] = a[i] * b;
+			result.data[i] = a.data[i] * b;
 		return result;
 	}
 	Float3x3 operator*(float a, const Float3x3& b)
 	{
 		Float3x3 result;
 		for (uint32_t i = 0; i < 9; i++)
-			result[i] = a * b[i];
+			result.data[i] = a * b.data[i];
 		return result;
 	}
 	Float3 operator*(const Float3x3& a, const Float3& b)
 	{
 		return Float3
-		(a[0] * b.x + a[3] * b.y + a[6] * b.z,
-			a[1] * b.x + a[4] * b.y + a[7] * b.z,
-			a[2] * b.x + a[5] * b.y + a[8] * b.z);
+		(a.data[0] * b.x + a.data[3] * b.y + a.data[6] * b.z,
+		 a.data[1] * b.x + a.data[4] * b.y + a.data[7] * b.z,
+		 a.data[2] * b.x + a.data[5] * b.y + a.data[8] * b.z);
 	}
 	Float3 operator*(const Float3& a, const Float3x3& b)
 	{
 		return Float3
-		(a.x * b[0] + a.y * b[1] + a.z * b[2],
-			a.x * b[3] + a.y * b[4] + a.z * b[5],
-			a.x * b[6] + a.y * b[7] + a.z * b[8]);
+		(a.x * b.data[0] + a.y * b.data[1] + a.z * b.data[2],
+		 a.x * b.data[3] + a.y * b.data[4] + a.z * b.data[5],
+		 a.x * b.data[6] + a.y * b.data[7] + a.z * b.data[8]);
 	}
 
 
@@ -428,7 +416,7 @@ namespace emberMath
 	std::string Float3x3::ToString() const
 	{
 		std::ostringstream oss;
-		oss << "(" << data[0] << ", " << data[1] << ", " << data[2];
+		oss <<   "(" << data[0] << ", " << data[1] << ", " << data[2];
 		oss << " | " << data[3] << ", " << data[4] << ", " << data[5];
 		oss << " | " << data[6] << ", " << data[7] << ", " << data[8] << ")";
 		return oss.str();
@@ -455,8 +443,8 @@ namespace emberMath
 	Float3x3 Float3x3::zero = Float3x3(0.0f);
 	Float3x3 Float3x3::identity = Float3x3
 	(1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f);
+	 0.0f, 1.0f, 0.0f,
+	 0.0f, 0.0f, 1.0f);
 	Float3x3 Float3x3::maxValue = Float3x3(math::maxValue);
 	Float3x3 Float3x3::minValue = Float3x3(math::minValue);
 

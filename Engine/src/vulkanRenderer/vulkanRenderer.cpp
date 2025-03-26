@@ -290,7 +290,6 @@ namespace emberEngine
 					std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
 					for (int i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
 					{
-						LOG_TRACE("Recording Direcitonal Light!");
 						Lighting::DirectionalLight& light = directionalLights[i];
 						for (DrawCall* drawCall : *m_pDrawCalls)
 						{
@@ -315,7 +314,6 @@ namespace emberEngine
 					std::array<Lighting::PositionalLight, Lighting::maxPositionalLights>& positionalLights = Lighting::GetPositionalLights();
 					for (int i = 0; i < Lighting::GetPositionalLightsCount(); i++)
 					{
-						LOG_TRACE("Recording Positional Light!");
 						Lighting::PositionalLight& light = positionalLights[i];
 						for (DrawCall* drawCall : *m_pDrawCalls)
 						{

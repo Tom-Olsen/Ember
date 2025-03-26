@@ -8,17 +8,18 @@
 namespace emberEngine
 {
 	/// <summary>
-	/// Size limit for push constants is 128 bytes.
-	/// Only used for small data that is updated every frame.
+	/// instanceCount encoded in localToWorldMatrix entry [3,0].
+	/// shadowMapIndex encoded in localToWorldMatrix entry [3,1].
+	/// when extracting data in shader don't forget to reset these values to 0 in the localToWorldMatrix.
 	/// </summary>
 	struct ShadowPushConstant
 	{
-		alignas(4) uint32_t instanceCount;
-		alignas(4) int shadowMapIndex;
+	private:
 		alignas(16) Float4x4 localToWorldMatrix;
 		alignas(16) Float4x4 worldToClipMatrix;
 
-		ShadowPushConstant(uint32_t instanceCount, int shadowMapIndex, const Float4x4& localToWorldMatrix, const Float4x4& worldToClipMatrix);
+	public:
+		ShadowPushConstant(int instanceCount, int shadowMapIndex, const Float4x4& localToWorldMatrix, const Float4x4& worldToClipMatrix);
 		std::string ToString();
 	};
 }

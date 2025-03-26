@@ -79,8 +79,6 @@ namespace emberMath
 		static Float4x4 Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip);
 
 		// Access:
-		float& operator[](int index);
-		float operator[](int index) const;
 		float& operator[](const Index2& index);
 		float operator[](const Index2& index) const;
 		Float4 GetRow(int index) const;

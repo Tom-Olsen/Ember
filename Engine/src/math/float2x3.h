@@ -55,8 +55,6 @@ namespace emberMath
 		bool IsEpsilonZero() const;
 
 		// Access:
-		float& operator[](int index);
-		float operator[](int index) const;
 		float& operator[](const Index2& index);
 		float operator[](const Index2& index) const;
 		Float3 GetRow(int index) const;

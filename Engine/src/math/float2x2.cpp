@@ -35,7 +35,7 @@ namespace emberMath
 	Float2x2::Float2x2(const Float2x2& other)
 	{
 		for (uint32_t i = 0; i < 4; i++)
-			data[i] = other[i];
+			data[i] = other.data[i];
 	}
 
 
@@ -77,7 +77,7 @@ namespace emberMath
 	{
 		return Float2x2
 		(data[0], data[2],
-			data[1], data[3]);
+		 data[1], data[3]);
 	}
 	float Float2x2::Determinant() const
 	{
@@ -122,18 +122,6 @@ namespace emberMath
 
 
 	// Access:
-	float& Float2x2::operator[](int index)
-	{
-		if (index >= 0 && index < 4)
-			return data[index];
-		throw std::out_of_range("Float2x2 index out of range.");
-	}
-	float Float2x2::operator[](int index) const
-	{
-		if (index >= 0 && index < 4)
-			return data[index];
-		throw std::out_of_range("Float2x2 index out of range.");
-	}
 	float& Float2x2::operator[](const Index2& index)
 	{
 		if (index.i >= 0 && index.i < 2 && index.j >= 0 && index.j < 2)
@@ -167,7 +155,7 @@ namespace emberMath
 		if (this != &other)
 		{
 			for (uint32_t i = 0; i < 4; i++)
-				data[i] = other[i];
+				data[i] = other.data[i];
 		}
 		return *this;
 	}
@@ -176,7 +164,7 @@ namespace emberMath
 		if (this != &other)
 		{
 			for (uint32_t i = 0; i < 4; i++)
-				data[i] = other[i];
+				data[i] = other.data[i];
 		}
 		return *this;
 	}
@@ -188,13 +176,13 @@ namespace emberMath
 	{
 		Float2x2 result;
 		for (uint32_t i = 0; i < 4; i++)
-			result[i] = data[i] + other[i];
+			result.data[i] = data[i] + other.data[i];
 		return result;
 	}
 	Float2x2& Float2x2::operator+=(const Float2x2& other)
 	{
 		for (uint32_t i = 0; i < 4; i++)
-			data[i] += other[i];
+			data[i] += other.data[i];
 		return *this;
 	}
 
@@ -205,13 +193,13 @@ namespace emberMath
 	{
 		Float2x2 result;
 		for (uint32_t i = 0; i < 4; i++)
-			result[i] = data[i] - other[i];
+			result.data[i] = data[i] - other.data[i];
 		return result;
 	}
 	Float2x2& Float2x2::operator-=(const Float2x2& other)
 	{
 		for (uint32_t i = 0; i < 4; i++)
-			data[i] -= other[i];
+			data[i] -= other.data[i];
 		return *this;
 	}
 	Float2x2 Float2x2::operator-() const
@@ -253,7 +241,7 @@ namespace emberMath
 	{
 		Float2x2 result;
 		for (uint32_t i = 0; i < 4; i++)
-			result[i] = data[i] / scalar;
+			result.data[i] = data[i] / scalar;
 		return result;
 	}
 	Float2x2& Float2x2::operator/=(float scalar)
@@ -269,14 +257,14 @@ namespace emberMath
 	bool Float2x2::IsEpsilonEqual(const Float2x2& other) const
 	{
 		for (uint32_t i = 0; i < 4; i++)
-			if (math::Abs(data[i] - other[i]) > math::epsilon)
+			if (math::Abs(data[i] - other.data[i]) > math::epsilon)
 				return false;
 		return true;
 	}
 	bool Float2x2::operator==(const Float2x2& other) const
 	{
 		for (uint32_t i = 0; i < 4; i++)
-			if (data[i] != other[i])
+			if (data[i] != other.data[i])
 				return false;
 		return true;
 	}
@@ -292,27 +280,27 @@ namespace emberMath
 	{
 		Float2x2 result;
 		for (uint32_t i = 0; i < 4; i++)
-			result[i] = a[i] * b;
+			result.data[i] = a.data[i] * b;
 		return result;
 	}
 	Float2x2 operator*(float a, const Float2x2& b)
 	{
 		Float2x2 result;
 		for (uint32_t i = 0; i < 4; i++)
-			result[i] = a * b[i];
+			result.data[i] = a * b.data[i];
 		return result;
 	}
 	Float2 operator*(const Float2x2& a, const Float2& b)
 	{
 		return Float2
-		(a[0] * b.x + a[2] * b.y,
-			a[1] * b.x + a[3] * b.y);
+		(a.data[0] * b.x + a.data[2] * b.y,
+			a.data[1] * b.x + a.data[3] * b.y);
 	}
 	Float2 operator*(const Float2& a, const Float2x2& b)
 	{
 		return Float2
-		(a.x * b[0] + a.y * b[1],
-			a.x * b[2] + a.y * b[3]);
+		(a.x * b.data[0] + a.y * b.data[1],
+			a.x * b.data[2] + a.y * b.data[3]);
 	}
 
 

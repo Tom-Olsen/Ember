@@ -14,3 +14,6 @@
 	path = Engine/libs/imgui
 	url = https://github.com/ocornut/imgui.git
 	branch = docking
+[submodule "Projects/unitTests/libs/googletest"]
+	path = Projects/unitTests/libs/googletest
+	url = https://github.com/google/googletest.git
