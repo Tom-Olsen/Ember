@@ -10,7 +10,7 @@
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	VulkanSurface::VulkanSurface(VulkanInstance* pInstance, VulkanPhysicalDevice* pPhysicalDevice, SdlWindow* pWindow)
+	VulkanSurface::VulkanSurface(VulkanInstance* pInstance, VulkanPhysicalDevice* pPhysicalDevice, SdlWindow* pWindow, bool vSyncEnabled)
 	{
 		m_pInstance = pInstance;
 		m_pPhysicalDevice = pPhysicalDevice;
@@ -37,7 +37,7 @@ namespace emberEngine
 
 		// Pick surfaceFormat and presentMode:
 		m_surfaceFormat = PickSurfaceFormat();
-		m_presentMode = PickPresentMode();
+		m_presentMode = PickPresentMode(vSyncEnabled);
 	}
 	VulkanSurface::~VulkanSurface()
 	{
@@ -97,13 +97,21 @@ namespace emberEngine
 		// First is always the best if desired not available.
 		return m_availableSurfaceFormats[0];
 	}
-	VkPresentModeKHR VulkanSurface::PickPresentMode() const
+	VkPresentModeKHR VulkanSurface::PickPresentMode(bool vSyncEnabled) const
 	{
 		for (const VkPresentModeKHR& mode : m_availablePresentModes)
-			if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+		{
+			if (vSyncEnabled == true && mode == VK_PRESENT_MODE_MAILBOX_KHR)
 				return mode;
+			if (vSyncEnabled == false && mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+				return mode;
+		}
 
 		// Always available.
+		if (vSyncEnabled == true)
+			LOG_WARN("vSync=enabled present mode VK_PRESENT_MODE_MAILBOX_KHR not available. Using fallback mode VK_PRESENT_MODE_FIFO_KHR.");
+		if (vSyncEnabled == false)
+			LOG_WARN("vSync=disabled present mode VK_PRESENT_MODE_IMMEDIATE_KHR not available. Using fallback mode VK_PRESENT_MODE_FIFO_KHR.");
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 
@@ -125,7 +133,7 @@ namespace emberEngine
 	// when it finally arrives.This may result in visible tearing.
 
 	// VK_PRESENT_MODE_MAILBOX_KHR:
-	// This is another variation of the second mode.Instead of blocking the application when the queue is full,
+	// This is another variation of the second mode. Instead of blocking the application when the queue is full,
 	// the images that are already queued are simply replaced with the newer ones.This mode can be used to render
 	// frames as fast as possible while still avoiding tearing, resulting in fewer latency issues than standard
 	// vertical sync.This is commonly known as "triple buffering", although the existence of three buffers alone

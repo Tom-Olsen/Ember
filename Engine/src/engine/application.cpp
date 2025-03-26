@@ -28,6 +28,7 @@ namespace emberEngine
 
 		// Default options:
 		m_pActiveScene = nullptr;
+		bool vSyncEnabled = true;
 		uint32_t framesInFlight = 2;
 		VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
 		uint32_t windowWidth = 1920;
@@ -38,7 +39,7 @@ namespace emberEngine
 		//uint32_t renderheight = 1080;
 
 		// Init static managers:
-		VulkanContext::Init(framesInFlight, msaaSamples, windowWidth, windowHeight);
+		VulkanContext::Init(framesInFlight, msaaSamples, windowWidth, windowHeight, vSyncEnabled);
 		VulkanGarbageCollector::Init();
 		math::Random::Init();
 		EventSystem::Init();

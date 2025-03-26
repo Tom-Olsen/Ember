@@ -55,7 +55,7 @@ namespace emberEngine
 		static VkSampleCountFlagBits msaaSamples;
 
 	public: // Methods:
-		static void Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight);
+		static void Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight, bool vSyncEnabled);
 		static void Clear();
 
 		// Getters:

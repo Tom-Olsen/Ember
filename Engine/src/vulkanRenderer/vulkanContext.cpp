@@ -26,7 +26,7 @@ namespace emberEngine
 
 
 	// Initialization and cleanup:
-	void VulkanContext::Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight)
+	void VulkanContext::Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight, bool vSyncEnabled)
 	{
 		if (s_isInitialized)
 			return;
@@ -61,7 +61,7 @@ namespace emberEngine
 		// Create vulkan context:
 		pInstance = std::make_unique<VulkanInstance>(instanceExtensions);
 		pPhysicalDevice = std::make_unique<VulkanPhysicalDevice>(pInstance.get());
-		pSurface = std::make_unique<VulkanSurface>(pInstance.get(), pPhysicalDevice.get(), pWindow.get());
+		pSurface = std::make_unique<VulkanSurface>(pInstance.get(), pPhysicalDevice.get(), pWindow.get(), vSyncEnabled);
 		pLogicalDevice = std::make_unique<VulkanLogicalDevice>(pPhysicalDevice.get(), pSurface.get(), deviceExtensions);
 		pAllocator = std::make_unique<VulkanMemoryAllocator>(pInstance.get(), pLogicalDevice.get(), pPhysicalDevice.get());
 		pAllocationTracker = std::make_unique< VulkanAllocationTracker>();

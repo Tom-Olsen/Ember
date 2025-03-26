@@ -28,7 +28,7 @@ namespace emberEngine
 		SdlWindow* m_pWindow;
 
 	public: // Methods:
-		VulkanSurface(VulkanInstance* pInstance, VulkanPhysicalDevice* pPhysicalDevice, SdlWindow* pWindow);
+		VulkanSurface(VulkanInstance* pInstance, VulkanPhysicalDevice* pPhysicalDevice, SdlWindow* pWindow, bool vSyncEnabled);
 		~VulkanSurface();
 
 		// Getters:
@@ -43,7 +43,7 @@ namespace emberEngine
 
 	private: // Methods:
 		VkSurfaceFormatKHR PickSurfaceFormat() const;
-		VkPresentModeKHR PickPresentMode() const;
+		VkPresentModeKHR PickPresentMode(bool vSyncEnabled) const;
 	};
 }
 
