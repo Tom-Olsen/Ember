@@ -1,4 +1,5 @@
 #include "sphFluid2d.h"
+#include "sphFluid2dEditorWindow.h"
 #include "smoothingKernals.h"
 
 
@@ -10,24 +11,48 @@ namespace emberEngine
 	{
 		m_isRunning = false;
 		m_timeStep = 0;
-		m_particleCount = 400;
+		m_particleCount = 200;
 
-		m_effectRadius = 1.2f;
+		m_effectRadius = 1.0f;
 		m_visualRadius = 0.05f;
 		m_mass = 1.0f;
-		m_restitution = 0.5f;
-		m_targetDensity = 0.3f;
-		m_pressureMultiplyer = 7.0f;
+		m_collisionDampening = 0.95f;
+		m_targetDensity = 10.0f;
+		m_pressureMultiplier = 0.1f;
 		m_gravity = 0.0f;
 
 		m_fluidBounds = Bounds2d(Float2::zero, Float2(16.0f / 9.0f, 1.0f));
 		m_pQuad = MeshManager::GetMesh("unitQuad");
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
 		Reset();
+
+		editorWindow = std::make_unique<SphFluid2dEditorWindow>(this);
 	}
 	SphFluid2d::~SphFluid2d()
 	{
 
+	}
+	void SphFluid2d::Reset()
+	{
+		m_timeStep = 0;
+		m_positions.resize(m_particleCount);
+		m_velocities.resize(m_particleCount);
+		m_densities.resize(m_particleCount);
+		m_forceDensities.resize(m_particleCount);
+
+		Float2 min = m_fluidBounds.GetMin();
+		Float2 max = m_fluidBounds.GetMax();
+		float border = 0.05f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
+		for (uint32_t i = 0; i < m_particleCount; i++)
+		{
+			m_positions[i].x = math::Random::Uniform(min.x + border, max.x - border);
+			m_positions[i].y = math::Random::Uniform(min.y + border, max.y - border);
+			m_velocities[i].x = math::Random::Uniform01() - 0.5f;
+			m_velocities[i].y = math::Random::Uniform01() - 0.5f;
+			m_forceDensities[i] = 0;
+		}
+		for (uint32_t i = 0; i < m_particleCount; i++)
+			m_densities[i] = Density(i);
 	}
 
 
@@ -74,10 +99,17 @@ namespace emberEngine
 
 
 	// Setters:
+	void SphFluid2d::SetIsRunning(bool isRunning)
+	{
+		m_isRunning = isRunning;
+	}
 	void SphFluid2d::SetParticleCount(uint32_t particleCount)
 	{
-		m_particleCount = particleCount;
-		Reset();
+		if (m_particleCount != particleCount)
+		{
+			m_particleCount = particleCount;
+			Reset();
+		}
 	}
 	void SphFluid2d::SetFluidBounds(const Bounds2d& bounds)
 	{
@@ -91,10 +123,38 @@ namespace emberEngine
 	{
 		m_visualRadius = visualRadius;
 	}
+	void SphFluid2d::SetMass(float mass)
+	{
+		m_mass = mass;
+	}
+	void SphFluid2d::SetCollisionDampening(float collisionDampening)
+	{
+		m_collisionDampening = collisionDampening;
+	}
+	void SphFluid2d::SetTargetDensity(float targetDensity)
+	{
+		m_targetDensity = targetDensity;
+	}
+	void SphFluid2d::SetPressureMultiplier(float pressureMultiplier)
+	{
+		m_pressureMultiplier = pressureMultiplier;
+	}
+	void SphFluid2d::SetGravity(float gravity)
+	{
+		m_gravity = gravity;
+	}
 
 
 
 	// Getters:
+	bool SphFluid2d::GetIsRunning() const
+	{
+		return m_isRunning;
+	}
+	uint32_t SphFluid2d::GetTimeStep() const
+	{
+		return m_timeStep;
+	}
 	uint32_t SphFluid2d::GetParticleCount() const
 	{
 		return m_particleCount;
@@ -110,6 +170,26 @@ namespace emberEngine
 	float SphFluid2d::GetVisualRadius() const
 	{
 		return m_visualRadius;
+	}
+	float SphFluid2d::GetMass() const
+	{
+		return m_mass;
+	}
+	float SphFluid2d::GetCollisionDampening() const
+	{
+		return m_collisionDampening;
+	}
+	float SphFluid2d::GetTargetDensity() const
+	{
+		return m_targetDensity;
+	}
+	float SphFluid2d::GetPressureMultiplier() const
+	{
+		return m_pressureMultiplier;
+	}
+	float SphFluid2d::GetGravity() const
+	{
+		return m_gravity;
 	}
 
 
@@ -153,30 +233,6 @@ namespace emberEngine
 
 
 	// Private methods:
-	// Management:
-	void SphFluid2d::Reset()
-	{
-		m_timeStep = 0;
-		m_positions.resize(m_particleCount);
-		m_velocities.resize(m_particleCount);
-		m_densities.resize(m_particleCount);
-		m_forceDensities.resize(m_particleCount);
-
-		Float2 min = m_fluidBounds.GetMin();
-		Float2 max = m_fluidBounds.GetMax();
-		float border = 0.05f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
-		for (uint32_t i = 0; i < m_particleCount; i++)
-		{
-			m_positions[i].x = math::Random::Uniform(min.x + border, max.x - border);
-			m_positions[i].y = math::Random::Uniform(min.y + border, max.y - border);
-			m_velocities[i].x = math::Random::Uniform01() - 0.5f;
-			m_velocities[i].y = math::Random::Uniform01() - 0.5f;
-			m_forceDensities[i] = 0;
-		}
-		for (uint32_t i = 0; i < m_particleCount; i++)
-			m_densities[i] = Density(i);
-	}
-
 	// Physics:
 	float SphFluid2d::Density(int particleIndex)
 	{
@@ -190,15 +246,15 @@ namespace emberEngine
 		}
 		return density;
 	}
-	float Pressure(float density, float targetDensity, float pressureMultiplyer)
+	float Pressure(float density, float targetDensity, float pressureMultiplier)
 	{
 		float densityError = density - targetDensity;
-		return densityError * pressureMultiplyer;
+		return densityError * pressureMultiplier;
 	}
 	Float2 SphFluid2d::PressureForceDensity(int particleIndex)
 	{
 		Float2 pressureForce = Float2::zero;
-		float particlePressure = Pressure(m_densities[particleIndex], m_targetDensity, m_pressureMultiplyer);
+		float particlePressure = Pressure(m_densities[particleIndex], m_targetDensity, m_pressureMultiplier);
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			if (i == particleIndex)
@@ -209,7 +265,7 @@ namespace emberEngine
 			if (r < m_effectRadius)
 			{
 				Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
-				float otherParticlePressure = Pressure(m_densities[i], m_targetDensity, m_pressureMultiplyer);
+				float otherParticlePressure = Pressure(m_densities[i], m_targetDensity, m_pressureMultiplier);
 				float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
 				pressureForce += -m_mass * sharedPressure * smoothingKernals::DSpiky(r, dir, m_effectRadius) / m_densities[i];
 			}
@@ -225,22 +281,22 @@ namespace emberEngine
 		if (position.x < min.x)
 		{
 			position.x = min.x + epsilon;
-			velocity.x *= -m_restitution;
+			velocity.x *= -m_collisionDampening;
 		}
 		if (position.x > max.x)
 		{
 			position.x = max.x - epsilon;
-			velocity.x *= -m_restitution;
+			velocity.x *= -m_collisionDampening;
 		}
 		if (position.y < min.y)
 		{
 			position.y = min.y + epsilon;
-			velocity.y *= -m_restitution;
+			velocity.y *= -m_collisionDampening;
 		}
 		if (position.y > max.y)
 		{
 			position.y = max.y - epsilon;
-			velocity.y *= -m_restitution;
+			velocity.y *= -m_collisionDampening;
 		}
 	}
 }

@@ -30,7 +30,6 @@ namespace emberEngine
 			else
 				fps = 60.0f / deltaTimeSum;
 
-
 			ImGui::Begin("Performance");
 			ImGui::Text("FPS: %.1f", fps);
 			ImGui::End();

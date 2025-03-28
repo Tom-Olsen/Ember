@@ -6,6 +6,11 @@
 
 namespace emberEngine
 {
+	// Forward decleration:
+	struct SphFluid2dEditorWindow;
+
+
+
 	class SphFluid2d : public Component
 	{
 	private: // Members:
@@ -21,30 +26,46 @@ namespace emberEngine
 		float m_effectRadius;
 		float m_visualRadius;
 		float m_mass;
-		float m_restitution;
+		float m_collisionDampening;
 		float m_targetDensity;
-		float m_pressureMultiplyer;
+		float m_pressureMultiplier;
 		float m_gravity;
 
 		Bounds2d m_fluidBounds;
 		Mesh* m_pQuad;
 		Material* m_pParticleMaterial;
 
+		std::unique_ptr<SphFluid2dEditorWindow> editorWindow;
+
 	public: // Methods:
 		SphFluid2d();
 		~SphFluid2d();
+		void Reset();
 
 		// Setters:
+		void SetIsRunning(bool isRunning);
 		void SetParticleCount(uint32_t particleCount);
 		void SetFluidBounds(const Bounds2d& bounds);
 		void SetEffectRadius(float effectRadius);
 		void SetVisualRadius(float visualRadius);
+		void SetMass(float mass);
+		void SetCollisionDampening(float mass);
+		void SetTargetDensity(float targetDensity);
+		void SetPressureMultiplier(float pressureMultiplier);
+		void SetGravity(float gravity);
 
 		// Getters:
+		bool GetIsRunning() const;
+		uint32_t GetTimeStep() const;
 		uint32_t GetParticleCount() const;
 		Bounds2d GetFluidBounds() const;
 		float GetEffectRadius() const;
 		float GetVisualRadius() const;
+		float GetMass() const;
+		float GetCollisionDampening() const;
+		float GetTargetDensity() const;
+		float GetPressureMultiplier() const;
+		float GetGravity() const;
 
 		// Overrides:
 		void Start() override;
@@ -53,9 +74,6 @@ namespace emberEngine
 		const std::string ToString() const override;
 
 	private:
-		// Management:
-		void Reset();
-
 		// Physics:
 		float Density(int particleIndex);
 		Float2 PressureForceDensity(int particleIndex);
