@@ -40,6 +40,7 @@ namespace emberEngine
 		void Start();
 		void Update();
 		void LateUpdate();
+		void FixedUpdate();
 	};
 }
 

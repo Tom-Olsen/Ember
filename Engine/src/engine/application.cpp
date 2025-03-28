@@ -66,13 +66,14 @@ namespace emberEngine
 	// Public methods:
 	void Application::Run()
 	{
-		Time::Reset();
 		bool running = true;
+		Time::Init();
 		Start();
 
 		while (running)
 		{
 			Time::Update();
+
 			VulkanGarbageCollector::CollectGarbage();
 			running = VulkanContext::pWindow->HandleEvents();
 
@@ -84,6 +85,10 @@ namespace emberEngine
 				SDL_Delay(10);
 				continue;
 			}
+
+			// Physics Update Loop:
+			while (Time::UpdatePhysics())
+				FixedUpdate();
 
 			// Game update loop:
 			DearImGui::Update();
@@ -144,6 +149,21 @@ namespace emberEngine
 				{
 					if (component->isActive)
 						component->LateUpdate();
+				}
+			}
+		}
+	}
+	void Application::FixedUpdate()
+	{
+		// Fixed update all components of all game objects:
+		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
+		{
+			if (gameObject->isActive)
+			{
+				for (auto& [_, component] : gameObject->GetComponents())
+				{
+					if (component->isActive)
+						component->FixedUpdate();
 				}
 			}
 		}

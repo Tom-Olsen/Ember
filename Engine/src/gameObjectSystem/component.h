@@ -45,6 +45,7 @@ namespace emberEngine
 		virtual void Start();
 		virtual void Update();
 		virtual void LateUpdate();
+		virtual void FixedUpdate();
 
 		// Pure virtual method that must be implemented by derived classes:
 		virtual const std::string ToString() const = 0;

@@ -59,4 +59,8 @@ namespace emberEngine
 	{
 
 	}
+	void Component::FixedUpdate()
+	{
+
+	}
 }

@@ -11,17 +11,22 @@ namespace emberEngine
     private: // Members
         static float s_time;
         static float s_deltaTime;
+        static float s_fixedDeltaTime;
+        static float s_fixedTimeAccumulator;
         static std::chrono::steady_clock::time_point s_start;
         static std::chrono::steady_clock::time_point s_end;
 
     public: // Methods
-        static void Reset();
+        static void Init();
         static void Update();
-        static void Sleep(int milliseconds);
-
+        static void SleepS(int milliseconds);
+        static void SleepMs(int milliseconds);
+        
         // Getters:
         static float GetTime();
         static float GetDeltaTime();
+        static float GetFixedDeltaTime();
+        static bool UpdatePhysics();
 
     private: // Methods
         // Delete all constructors:
