@@ -6,17 +6,13 @@
 namespace emberEngine
 {
 	/// <summary>
-	/// Polymorphic parent class for all editor windows.
+	/// Polymorphic parent struct for all editor windows.
 	/// </summary>
-	class EditorWindow
+	struct EditorWindow
 	{
-	private: // Members:
-
-	public: // Methods:
 		EditorWindow();
 		virtual ~EditorWindow();
-
-		virtual void Render() const;
+		virtual void Render();
 	};
 }
 

@@ -26,7 +26,7 @@ namespace emberEngine
 	// Render all editorWindows:
 	void Editor::Render()
 	{
-		for (const EditorWindow* editorWindow : s_editorWindows)
+		for (EditorWindow* editorWindow : s_editorWindows)
 			editorWindow->Render();
 	}
 

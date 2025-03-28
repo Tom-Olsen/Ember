@@ -17,7 +17,7 @@ namespace emberEngine
 		Editor::DeleteEditorWindow(this);
 	}
 
-	void EditorWindow::Render() const
+	void EditorWindow::Render()
 	{
 		LOG_WARN("EditorWindow::Render override missing.");
 	}
