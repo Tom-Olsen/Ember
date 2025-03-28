@@ -23,7 +23,7 @@ Scene* InitScene()
 	Scene* pScene = new Scene();
 	{// Camera:
 		GameObject* pGameObject = new GameObject("mainCamera");
-		Float3 pos = Float3(0.0f, -3.0f, 0.0f);
+		Float3 pos = Float3(0.0f, -1.8f, 0.0f);
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
 
@@ -70,7 +70,16 @@ int main()
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	// Initialization:
-	Application app;
+	Application::Settings appSettings = {};
+	appSettings.vSyncEnabled = true;
+	appSettings.framesInFlight = 2;
+	appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+	appSettings.windowWidth = 1920;
+	appSettings.windowHeight = 1080;
+	appSettings.renderWidth = 1280;
+	appSettings.renderheight = 720;
+
+	Application app(appSettings);
 	Scene* pScene = InitScene();
 	app.SetScene(pScene);
 

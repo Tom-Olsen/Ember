@@ -51,7 +51,17 @@ namespace emberMath
 			std::uniform_int_distribution<int> distribution(min, max - 1);
 			return distribution(s_mersenneTwister);
 		}
-		Float3 Random::UniformDirection()
+		Float2 Random::UniformDirection2()
+		{
+			Float2 direction = Float2::zero;
+			while (direction.IsEpsilonZero())
+			{
+				direction.x = Uniform(-1.0f, 1.0f);
+				direction.y = Uniform(-1.0f, 1.0f);
+			}
+			return direction.Normalize();
+		}
+		Float3 Random::UniformDirection3()
 		{
 			Float3 direction = Float3::zero;
 			while (direction.IsEpsilonZero())

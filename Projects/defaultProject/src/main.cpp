@@ -772,7 +772,16 @@ int main()
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	// Initialization:
-	Application app;
+	Application::Settings appSettings = {};
+	appSettings.vSyncEnabled = false;
+	appSettings.framesInFlight = 2;
+	appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+	appSettings.windowWidth = 1920;
+	appSettings.windowHeight = 1080;
+	appSettings.renderWidth = 1280;
+	appSettings.renderheight = 720;
+
+	Application app(appSettings);
 	//Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
 	Scene* pScene = DefaultScene();

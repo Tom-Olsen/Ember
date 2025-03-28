@@ -22,28 +22,17 @@
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	Application::Application()
+	Application::Application(Settings settings)
 	{
 		Logger::Init();
-
-		// Default options:
 		m_pActiveScene = nullptr;
-		bool vSyncEnabled = true;
-		uint32_t framesInFlight = 2;
-		VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-		uint32_t windowWidth = 1920;
-		uint32_t windowHeight = 1080;
-		uint32_t renderWidth = 1280;
-		uint32_t renderheight = 720;
-		//uint32_t renderWidth = 1920;
-		//uint32_t renderheight = 1080;
 
 		// Init static managers:
-		VulkanContext::Init(framesInFlight, msaaSamples, windowWidth, windowHeight, vSyncEnabled);
+		VulkanContext::Init(settings.framesInFlight, settings.msaaSamples, settings.windowWidth, settings.windowHeight, settings.vSyncEnabled);
 		VulkanGarbageCollector::Init();
 		math::Random::Init();
 		EventSystem::Init();
-		RenderPassManager::Init(renderWidth, renderheight);
+		RenderPassManager::Init(settings.renderWidth, settings.renderheight);
 		ComputeShaderManager::Init();
 		MaterialManager::Init();
 		BufferManager::Init();

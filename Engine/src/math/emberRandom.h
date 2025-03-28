@@ -1,5 +1,6 @@
 #ifndef __INCLUDE_GUARD_emberRandom_h__
 #define __INCLUDE_GUARD_emberRandom_h__
+#include "float2.h"
 #include "float3.h"
 #include <random>
 
@@ -27,7 +28,8 @@ namespace emberMath
 			static float Uniform01();
 			static float Uniform(float min, float max);
 			static int Uniform(int min, int max);
-			static Float3 UniformDirection();
+			static Float2 UniformDirection2();
+			static Float3 UniformDirection3();
 		};
 	}
 }

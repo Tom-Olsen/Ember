@@ -7,6 +7,7 @@ namespace emberEngine
 	// Constructor/Destructor:
 	InstancedRenderer::InstancedRenderer()
 	{
+		m_instanceCount = 1;
 		m_castShadows = true;
 		m_receiveShadows = true;
 

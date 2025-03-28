@@ -9,13 +9,22 @@ namespace emberEngine
 	class SphFluid2d : public Component
 	{
 	private: // Members:
+		bool m_isRunning;
+
 		uint32_t m_particleCount;
 		std::vector<Float2> m_positions;
-		bool m_isRunning;
-		Bounds2d m_fluidBounds;
+		std::vector<Float2> m_velocities;
+		std::vector<float> m_densities;
+
 		float m_particleRadius;
-		Mesh* pQuad;
-		Material* pParticleMaterial;
+		float m_mass;
+		float m_targetDensity;
+		float m_pressureMultiplyer;
+		float m_gravity;
+
+		Bounds2d m_fluidBounds;
+		Mesh* m_pQuad;
+		Material* m_pParticleMaterial;
 
 	public: // Methods:
 		SphFluid2d();
@@ -37,7 +46,13 @@ namespace emberEngine
 		const std::string ToString() const override;
 
 	private:
+		void SimulationStep();
 		void Reset();
+		float SmoothingKernel(float distance);
+		float SmoothingKernelGradient(float distance);
+		float Pressure(float density);
+		float Density(int particleIndex);
+		Float2 ComputePressureForce(int particleIndex);
 	};
 }
 
