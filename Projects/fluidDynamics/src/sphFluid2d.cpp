@@ -94,12 +94,12 @@ namespace emberEngine
 			m_densities[i] = Density(i);
 			Float2 pressureForce = ComputePressureForce(i);
 			Float2 acceleration = pressureForce / m_densities[i];
-			m_velocities[i] += acceleration * Timer::GetDeltaTime() + Float2::back * m_gravity;
+			m_velocities[i] += acceleration * Time::GetDeltaTime() + Float2::back * m_gravity;
 		}
 
 		for (int i = 0; i < m_particleCount; i++)
 		{
-			m_positions[i] += m_velocities[i] * Timer::GetDeltaTime();
+			m_positions[i] += m_velocities[i] * Time::GetDeltaTime();
 			//ResolveCollisions(m_positions[i], m_velocities[i]);
 		}
 	}

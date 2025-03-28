@@ -20,7 +20,7 @@
 #include "shadowPushConstant.h"
 #include "shadowRenderPass.h"
 #include "spirvReflect.h"
-#include "timer.h"
+#include "emberTime.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanCommand.h"
@@ -166,7 +166,7 @@ namespace emberEngine
 			ComputeShader* pPreviousComputeShader = nullptr;
 			VkPipeline pipeline = VK_NULL_HANDLE;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-			ComputePushConstant pushConstant(Uint3::one, Timer::GetTime(), Timer::GetDeltaTime());
+			ComputePushConstant pushConstant(Uint3::one, Time::GetTime(), Time::GetDeltaTime());
 
 			for (ComputeCall* computeCall : Compute::GetComputeCallPointers())
 			{
@@ -200,7 +200,7 @@ namespace emberEngine
 						pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
 						pushConstant.threadCount = computeCall->threadCount;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-						ComputePushConstant pushConstant(computeCall->threadCount, Timer::GetTime(), Timer::GetDeltaTime());
+						ComputePushConstant pushConstant(computeCall->threadCount, Time::GetTime(), Time::GetDeltaTime());
 						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 					}
 
@@ -383,7 +383,7 @@ namespace emberEngine
 				Material* pPreviousMaterial = nullptr;
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-				DefaultPushConstant pushConstant(0, Timer::GetTime(), Timer::GetDeltaTime(), Lighting::GetDirectionalLightsCount(), Lighting::GetPositionalLightsCount(), Graphics::GetActiveCamera().position);
+				DefaultPushConstant pushConstant(0, Time::GetTime(), Time::GetDeltaTime(), Lighting::GetDirectionalLightsCount(), Lighting::GetPositionalLightsCount(), Graphics::GetActiveCamera().position);
 
 				// Normal draw calls:
 				for (DrawCall* drawCall : *m_pDrawCalls)
@@ -459,7 +459,7 @@ namespace emberEngine
 			ComputeShader* pPreviousComputeShader = nullptr;
 			VkPipeline pipeline = VK_NULL_HANDLE;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-			ComputePushConstant pushConstant(Uint3::one, Timer::GetTime(), Timer::GetDeltaTime());
+			ComputePushConstant pushConstant(Uint3::one, Time::GetTime(), Time::GetDeltaTime());
 
 			uint32_t callIndex = 0;
 			for (ComputeCall& computeCall : Graphics::GetPostProcessComputeCalls())
@@ -487,7 +487,7 @@ namespace emberEngine
 					pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
 					pushConstant.threadCount = computeCall.threadCount;
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-					ComputePushConstant pushConstant(computeCall.threadCount, Timer::GetTime(), Timer::GetDeltaTime());
+					ComputePushConstant pushConstant(computeCall.threadCount, Time::GetTime(), Time::GetDeltaTime());
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 				}
 

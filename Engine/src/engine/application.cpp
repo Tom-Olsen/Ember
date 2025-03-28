@@ -12,7 +12,7 @@
 #include "samplerManager.h"
 #include "scene.h"
 #include "textureManager.h"
-#include "timer.h"
+#include "emberTime.h"
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanRenderer.h"
@@ -66,13 +66,13 @@ namespace emberEngine
 	// Public methods:
 	void Application::Run()
 	{
-		Timer::Reset();
+		Time::Reset();
 		bool running = true;
 		Start();
 
 		while (running)
 		{
-			Timer::Update();
+			Time::Update();
 			VulkanGarbageCollector::CollectGarbage();
 			running = VulkanContext::pWindow->HandleEvents();
 

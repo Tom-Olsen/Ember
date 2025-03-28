@@ -41,7 +41,7 @@ namespace emberEngine
 		if (EventSystem::KeyDownOrHeld(SDLK_Q)) direction -= m_pTransform->GetForward();
 		if (EventSystem::KeyDownOrHeld(SDLK_E)) direction += m_pTransform->GetForward();
 
-		m_pTransform->AddToPosition(direction * currentSpeed * Timer::GetDeltaTime());
+		m_pTransform->AddToPosition(direction * currentSpeed * Time::GetDeltaTime());
 	}
 	void CameraController::Rotation()
 	{

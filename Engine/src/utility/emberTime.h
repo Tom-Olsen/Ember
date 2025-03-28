@@ -6,7 +6,7 @@
 
 namespace emberEngine
 {
-    class Timer
+    class Time
     {
     private: // Members
         static float s_time;
@@ -25,10 +25,10 @@ namespace emberEngine
 
     private: // Methods
         // Delete all constructors:
-        Timer() = delete;
-        Timer(const Timer&) = delete;
-        Timer& operator=(const Timer&) = delete;
-        ~Timer() = delete;
+        Time() = delete;
+        Time(const Time&) = delete;
+        Time& operator=(const Time&) = delete;
+        ~Time() = delete;
     };
 }
 

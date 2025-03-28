@@ -26,7 +26,7 @@ namespace emberEngine
 #include "logger.h"
 #include "emberMath.h"
 #include "meshGenerator.h"
-#include "timer.h"
+#include "emberTime.h"
 
 // Rendering/Compute backend:
 #include "computeShader.h"
