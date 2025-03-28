@@ -45,7 +45,6 @@ Scene* InitScene()
 		pGameObject->GetTransform()->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
 
 		SphFluid2d* sphFluid2d = pGameObject->AddComponent<SphFluid2d>();
-		sphFluid2d->SetParticleCount(500);
 
 		pScene->AddGameObject(pGameObject);
 	}

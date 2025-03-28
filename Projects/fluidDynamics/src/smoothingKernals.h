@@ -5,7 +5,8 @@
 
 namespace smoothingKernals
 {
-    float Poly6(float r, const Float2& dir, float h)
+    // Used for almost all calculations.
+    float Poly6(float r, float h)
     {
         constexpr float c0 = 315.0f / (64.0f * math::pi);
         float c = c0 / math::Pow(h, 9.0f);
@@ -17,7 +18,7 @@ namespace smoothingKernals
         float c = c0 / math::Pow(h, 9.0f);
         return (r < h) ? -6.0f * c * math::Pow(h * h - r * r, 2.0f) * dir : 0.0f;
     }
-    float DDPoly6(float r, const Float2& dir, float h)
+    float DDPoly6(float r, float h)
     {
         constexpr float c0 = 315.0f / (64.0f * math::pi);
         float c = c0 / math::Pow(h, 9.0f);
@@ -26,7 +27,8 @@ namespace smoothingKernals
         return (r < h) ? 6.0f * h2r2 * c * (4.0f * r2 - 2.0f * h2r2) : 0.0f;
     }
 
-    float Spiky(float r, const Float2& dir, float h)
+    // Used for pressure calculations.
+    float Spiky(float r, float h)
     {
         constexpr float c0 = 15.0f / math::pi;
         float c = c0 / math::Pow(h, 6.0f);
@@ -38,7 +40,7 @@ namespace smoothingKernals
         float c = c0 / math::Pow(h, 6.0f);
         return (r < h) ? -3.0f * c * math::Pow(h - r, 2.0f) * dir : 0.0f;
     }
-    float DDSpiky(float r, const Float2& dir, float h)
+    float DDSpiky(float r, float h)
     {
         constexpr float c0 = 15.0f / math::pi;
         float c = c0 / math::Pow(h, 6.0f);
@@ -46,7 +48,8 @@ namespace smoothingKernals
         return (r < h) ? 3.0 * c * hr * (2.0f - hr / r): 0.0f;
     }
     
-    float Viscos(float r, const Float2& dir, float h)
+    // Used for viscosity calculations:
+    float Viscos(float r, float h)
     {
         constexpr float c0 = 15.0f / (2.0f * math::pi);
         float c = c0 / math::Pow(h, 3.0f);
@@ -60,7 +63,7 @@ namespace smoothingKernals
         float h2 = h * h;
         return (r < h) ? c * (-1.5f * r2 / (h2 * h) + 2.0f * r / h2 - 0.5f * h / r2) * dir: 0.0f;
     }
-    float DDViscos(float r, const Float2& dir, float h)
+    float DDViscos(float r, float h)
     {
         constexpr float c0 = 15.0f / (2.0f * math::pi);
         float c = c0 / math::Pow(h, 3.0f);

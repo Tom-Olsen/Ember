@@ -10,14 +10,18 @@ namespace emberEngine
 	{
 	private: // Members:
 		bool m_isRunning;
+		uint32_t m_timeStep;
 
 		uint32_t m_particleCount;
 		std::vector<Float2> m_positions;
 		std::vector<Float2> m_velocities;
 		std::vector<float> m_densities;
+		std::vector<Float2> m_forceDensities;
 
-		float m_particleRadius;
+		float m_effectRadius;
+		float m_visualRadius;
 		float m_mass;
+		float m_restitution;
 		float m_targetDensity;
 		float m_pressureMultiplyer;
 		float m_gravity;
@@ -33,26 +37,29 @@ namespace emberEngine
 		// Setters:
 		void SetParticleCount(uint32_t particleCount);
 		void SetFluidBounds(const Bounds2d& bounds);
-		void SetParticleRadius(float radius);
+		void SetEffectRadius(float effectRadius);
+		void SetVisualRadius(float visualRadius);
 
 		// Getters:
 		uint32_t GetParticleCount() const;
 		Bounds2d GetFluidBounds() const;
-		float GetParticleRadius() const;
+		float GetEffectRadius() const;
+		float GetVisualRadius() const;
 
 		// Overrides:
 		void Start() override;
 		void Update() override;
+		void FixedUpdate() override;
 		const std::string ToString() const override;
 
 	private:
-		void SimulationStep();
+		// Management:
 		void Reset();
-		float SmoothingKernel(float distance);
-		float SmoothingKernelGradient(float distance);
-		float Pressure(float density);
+
+		// Physics:
 		float Density(int particleIndex);
-		Float2 ComputePressureForce(int particleIndex);
+		Float2 PressureForceDensity(int particleIndex);
+		void BoundaryCollisions(Float2& position, Float2& velocity);
 	};
 }
 
