@@ -6,6 +6,9 @@
 
 namespace emberEngine
 {
+	// Forward declarations:
+	class FpsEditorWindow;
+
 	/// <summary>
 	/// View direction is down = (0,0,-1).
 	/// </summary>
@@ -21,6 +24,7 @@ namespace emberEngine
 		Float4x4 m_projectionMatrix;
 		bool m_updateProjectionMatrix;
 		bool m_drawFrustum;
+		std::unique_ptr<FpsEditorWindow> fpsEditorWindow;
 
 	public: // Methods:
 		Camera();

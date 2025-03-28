@@ -1,4 +1,5 @@
 #include "dearImGui.h"
+#include "editor.h"
 #include "forwardRenderPass.h"
 #include "logger.h"
 #include "presentRenderPass.h"
@@ -115,10 +116,8 @@ namespace emberEngine
 			//ImGui::Image(textureID, ImVec2((float)s_pRenderTexture->GetWidth(), (float)s_pRenderTexture->GetHeight()));
 			//ImGui::End();
 
-			// Fps display:
-			ImGui::Begin("Performance");
-			ImGui::Text("FPS: %.1f", s_pIo->Framerate);
-			ImGui::End();
+			// Render all editorWindows:
+			Editor::Render();
 		}
 		ImGui::EndFrame();
 

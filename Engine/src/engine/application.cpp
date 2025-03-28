@@ -3,6 +3,7 @@
 #include "component.h"
 #include "computeShaderManager.h"
 #include "dearImGui.h"
+#include "editor.h"
 #include "eventSystem.h"
 #include "gameObject.h"
 #include "logger.h"
@@ -39,6 +40,7 @@ namespace emberEngine
 		TextureManager::Init();
 		SamplerManager::Init();
 		MeshManager::Init();
+		Editor::Init();
 		DearImGui::Init();
 
 		// Create renderer:
@@ -49,6 +51,7 @@ namespace emberEngine
 		VulkanContext::WaitDeviceIdle();
 		// Clear static managers:
 		DearImGui::Clear();
+		Editor::Clear();
 		MeshManager::Clear();
 		SamplerManager::Clear();
 		TextureManager::Clear();

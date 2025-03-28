@@ -58,6 +58,9 @@ Scene* InitScene()
 	//
 	//	pScene->AddGameObject(pGameObject);
 	//}
+	{ // FPS editorWindow:
+
+	}
 	return pScene;
 }
 

@@ -22,6 +22,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 file(GLOB COMPONENTS_FILES "${PROJECT_SOURCE_DIR}/src/components/*")
 source_group("Components" FILES ${COMPONENTS_FILES})
 
+# src/editor/*:
+file(GLOB EDITOR_FILES "${PROJECT_SOURCE_DIR}/src/editor/*")
+source_group("Editor" FILES ${EDITOR_FILES})
+
 # src/engine/*:
 file(GLOB ENGINE_FILES "${PROJECT_SOURCE_DIR}/src/engine/*")
 source_group("Engine" FILES ${ENGINE_FILES})
@@ -81,6 +85,7 @@ source_group("VulkanRenderer" FILES ${VULKAN_RENDERER_FILES})
 # Configure library:
 add_library(${PROJECT_NAME} STATIC
 ${COMPONENTS_FILES}
+${EDITOR_FILES}
 ${ENGINE_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
 ${IMGUI_FILES}
@@ -147,6 +152,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC libs/vma/include)
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME}
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/components
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/editor
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gameobjectSystem
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/managers
@@ -154,7 +160,6 @@ PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/math
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPassesAndPipelines
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/renderResources
-#PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/textureTypes
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanRenderer
