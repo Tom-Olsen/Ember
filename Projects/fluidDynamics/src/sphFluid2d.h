@@ -26,6 +26,7 @@ namespace emberEngine
 		float m_effectRadius;
 		float m_visualRadius;
 		float m_mass;
+		float m_viscosity;
 		float m_collisionDampening;
 		float m_targetDensity;
 		float m_pressureMultiplier;
@@ -49,6 +50,7 @@ namespace emberEngine
 		void SetEffectRadius(float effectRadius);
 		void SetVisualRadius(float visualRadius);
 		void SetMass(float mass);
+		void SetViscosity(float viscosity);
 		void SetCollisionDampening(float mass);
 		void SetTargetDensity(float targetDensity);
 		void SetPressureMultiplier(float pressureMultiplier);
@@ -62,6 +64,7 @@ namespace emberEngine
 		float GetEffectRadius() const;
 		float GetVisualRadius() const;
 		float GetMass() const;
+		float GetViscosity() const;
 		float GetCollisionDampening() const;
 		float GetTargetDensity() const;
 		float GetPressureMultiplier() const;
@@ -77,6 +80,8 @@ namespace emberEngine
 		// Physics:
 		float Density(int particleIndex);
 		Float2 PressureForceDensity(int particleIndex);
+		Float2 ViscosityForceDensity(int particleIndex);
+		Float2 GravityForceDensity(int particleIndex);
 		void BoundaryCollisions(Float2& position, Float2& velocity);
 	};
 }

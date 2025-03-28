@@ -16,10 +16,11 @@ namespace emberEngine
 		m_effectRadius = 1.0f;
 		m_visualRadius = 0.05f;
 		m_mass = 1.0f;
+		m_viscosity = 0.0001f;
 		m_collisionDampening = 0.95f;
 		m_targetDensity = 10.0f;
 		m_pressureMultiplier = 0.1f;
-		m_gravity = 0.0f;
+		m_gravity = 1.0f;
 
 		m_fluidBounds = Bounds2d(Float2::zero, Float2(16.0f / 9.0f, 1.0f));
 		m_pQuad = MeshManager::GetMesh("unitQuad");
@@ -71,8 +72,8 @@ namespace emberEngine
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			m_forceDensities[i] = PressureForceDensity(i);
-			//m_forceDensities[i] += ViscosityForceDensity(i);
-			//m_forceDensities[i] += GravityForceDensity(i);
+			m_forceDensities[i] += ViscosityForceDensity(i);
+			m_forceDensities[i] += GravityForceDensity(i);
 			//m_forceDensities[i] += SurfaceTensionForceDensity(i);
 			//m_forceDensities[i] += ExternalForceDensity(i);
 		}
@@ -127,6 +128,10 @@ namespace emberEngine
 	{
 		m_mass = mass;
 	}
+	void SphFluid2d::SetViscosity(float viscosity)
+	{
+		m_viscosity = viscosity;
+	}
 	void SphFluid2d::SetCollisionDampening(float collisionDampening)
 	{
 		m_collisionDampening = collisionDampening;
@@ -174,6 +179,10 @@ namespace emberEngine
 	float SphFluid2d::GetMass() const
 	{
 		return m_mass;
+	}
+	float SphFluid2d::GetViscosity() const
+	{
+		return m_viscosity;
 	}
 	float SphFluid2d::GetCollisionDampening() const
 	{
@@ -271,6 +280,28 @@ namespace emberEngine
 			}
 		}
 		return pressureForce;
+	}
+	Float2 SphFluid2d::ViscosityForceDensity(int particleIndex)
+	{
+		Float2 viscosityForce = Float2::zero;
+		for (int i = 0; i < m_particleCount; i++)
+		{
+			if (i == particleIndex)
+				continue;
+
+			Float2 offset = m_positions[i] - m_positions[particleIndex];
+			float r = offset.Length();
+			if (r < m_effectRadius)
+			{
+				Float2 velocityDiff = m_velocities[i] - m_velocities[particleIndex];
+				viscosityForce += (m_mass * smoothingKernals::DDViscos(r, m_effectRadius) / m_densities[i]) * velocityDiff;
+			}
+		}
+		return m_viscosity * viscosityForce;
+	}
+	Float2 SphFluid2d::GravityForceDensity(int particleIndex)
+	{
+		return m_densities[particleIndex] * Float2(0.0f, -m_gravity);
 	}
 	void SphFluid2d::BoundaryCollisions(Float2& position, Float2& velocity)
 	{

@@ -107,8 +107,8 @@ namespace emberEngine
 			//ShowDockSpace();
 
 			// Demo window:
-			if (s_showDemoWindow)
-				ImGui::ShowDemoWindow(&s_showDemoWindow);
+			//if (s_showDemoWindow)
+			//	ImGui::ShowDemoWindow(&s_showDemoWindow);
 
 			// Render vulkanRenderer output into ImGui window:
 			//ImGui::Begin("Render Texture Viewport", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
