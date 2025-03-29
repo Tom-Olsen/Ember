@@ -13,16 +13,16 @@ namespace emberEngine
 		m_timeStep = 0;
 		m_particleCount = 200;
 
-		m_effectRadius = 1.0f;
+		m_effectRadius = 0.5f;
 		m_visualRadius = 0.05f;
 		m_mass = 1.0f;
-		m_viscosity = 0.0001f;
+		m_viscosity = 0.0f;
 		m_collisionDampening = 0.95f;
-		m_targetDensity = 10.0f;
-		m_pressureMultiplier = 0.1f;
-		m_gravity = 1.0f;
+		m_targetDensity = 180.0f;
+		m_pressureMultiplier = 50.0f;
+		m_gravity = 0.0f;
 
-		m_fluidBounds = Bounds2d(Float2::zero, Float2(16.0f / 9.0f, 1.0f));
+		m_fluidBounds = Bounds2d(Float2::zero, 0.5f * Float2(16.0f / 9.0f, 1.0f));
 		m_pQuad = MeshManager::GetMesh("unitQuad");
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
 		Reset();
@@ -84,14 +84,14 @@ namespace emberEngine
 			for (int i = 0; i < m_particleCount; i++)
 			{
 				Float2 acceleration = m_forceDensities[i] / m_densities[i];
-				m_velocities[i] += 0.5f * acceleration * Time::GetFixedDeltaTime();
+				m_velocities[i] += 0.5f * acceleration * Time::GetFixedDeltaTime() / 10.0f;
 			}
 		}
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			Float2 acceleration = m_forceDensities[i] / m_densities[i];
-			m_positions[i] += m_velocities[i] * Time::GetFixedDeltaTime();
-			m_velocities[i] += acceleration * Time::GetFixedDeltaTime();
+			m_positions[i] += m_velocities[i] * Time::GetFixedDeltaTime() / 10.0f;
+			m_velocities[i] += acceleration * Time::GetFixedDeltaTime() / 10.0f;
 			BoundaryCollisions(m_positions[i], m_velocities[i]);
 		}
 
@@ -231,7 +231,13 @@ namespace emberEngine
 		{
 			Float4x4 matrix = localToWorld * Float4x4::Translate(Float3(m_positions[i], 0)) * Float4x4::Scale(m_visualRadius);
 			ShaderProperties* pShaderProperties = Graphics::DrawMesh(m_pQuad, m_pParticleMaterial, matrix, false, false);
-			pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::blue);
+			float t = (m_densities[i] - m_targetDensity) / m_targetDensity;
+			float t0 = math::Clamp(t, 0.0f, 1.0f);
+			float t1 = math::Clamp(t - 1.0f, 0.0f, 1.0f);
+			Float4 colorA = t0 * Float4::white + (1.0f - t0) * Float4::blue;
+			Float4 colorB = t0 * Float4::red + (1.0f - t0) * Float4::white;
+			Float4 color = (t < 1.0f) ? colorA : colorB;
+			pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 		}
 	}
 	const std::string SphFluid2d::ToString() const
@@ -248,7 +254,7 @@ namespace emberEngine
 		float density = 0;
 		for (int i = 0; i < m_particleCount; i++)
 		{
-			Float2 offset = m_positions[i] - m_positions[particleIndex];
+			Float2 offset = m_positions[particleIndex] - m_positions[i];
 			float r = offset.Length();
 			if (r < m_effectRadius)
 				density += m_mass * smoothingKernals::Poly6(r, m_effectRadius);
@@ -269,7 +275,7 @@ namespace emberEngine
 			if (i == particleIndex)
 				continue;
 
-			Float2 offset = m_positions[i] - m_positions[particleIndex];
+			Float2 offset = m_positions[particleIndex] - m_positions[i];
 			float r = offset.Length();
 			if (r < m_effectRadius)
 			{
@@ -289,7 +295,7 @@ namespace emberEngine
 			if (i == particleIndex)
 				continue;
 
-			Float2 offset = m_positions[i] - m_positions[particleIndex];
+			Float2 offset = m_positions[particleIndex] - m_positions[i];
 			float r = offset.Length();
 			if (r < m_effectRadius)
 			{
