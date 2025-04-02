@@ -42,6 +42,8 @@ namespace emberMath
 		// Static math operations:
 		static Float3 Abs(const Float3& a);
 		static Float3 Round(const Float3& value, int decimals = 0);
+		static Float3 Ceil(const Float3& value, int decimals = 0);
+		static Float3 Floor(const Float3& value, int decimals = 0);
 		static float Dot(const Float3& a, const Float3& b);
 		static Float3 Cross(const Float3& a, const Float3& b);
 		static float DistanceSq(const Float3& a, const Float3& b);

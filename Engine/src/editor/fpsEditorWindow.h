@@ -12,6 +12,7 @@ namespace emberEngine
 	{
 		float frameTimes[60] = {};
 		int index = 0;
+		float frameTime;
 		float fps;
 		float deltaTimeSum = 0.0f;
 		int rampUpIndex = 1;
@@ -25,13 +26,18 @@ namespace emberEngine
 			if (rampUpIndex < 60)
 			{
 				fps = rampUpIndex / deltaTimeSum;
+				frameTime = 1.0f / fps;
 				rampUpIndex++;
 			}
 			else
+			{
 				fps = 60.0f / deltaTimeSum;
+				frameTime = 1.0f / fps;
+			}
 
 			ImGui::Begin("Performance");
 			ImGui::Text("FPS: %.1f", fps);
+			ImGui::Text("Frame Time: %.0fms", 1000 * frameTime);
 			ImGui::End();
 		}
 	};

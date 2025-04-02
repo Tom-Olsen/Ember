@@ -59,6 +59,14 @@ namespace emberMath
 	{
 		return Float4(math::Round(value.x, decimals), math::Round(value.y, decimals), math::Round(value.z, decimals), math::Round(value.w, decimals));
 	}
+	Float4 Float4::Ceil(const Float4& value, int decimals)
+	{
+		return Float4(math::Ceil(value.x), math::Ceil(value.y), math::Ceil(value.z), math::Ceil(value.w));
+	}
+	Float4 Float4::Floor(const Float4& value, int decimals)
+	{
+		return Float4(math::Floor(value.x), math::Floor(value.y), math::Floor(value.z), math::Floor(value.w));
+	}
 	Float4 Float4::Min(const Float4& a, const Float4& b)
 	{
 		return Float4(math::Min(a.x, b.x), math::Min(a.y, b.y), math::Min(a.z, b.z), math::Min(a.w, b.w));

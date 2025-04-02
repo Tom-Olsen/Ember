@@ -1,4 +1,5 @@
 #include "int2.h"
+#include "float2.h"
 #include <stdexcept>
 #include <sstream>
 
@@ -11,6 +12,7 @@ namespace emberMath
 	Int2::Int2(int xy) : x(xy), y(xy) {}
 	Int2::Int2(int x, int y) : x(x), y(y) {}
 	Int2::Int2(const Int2& xy) : x(xy.x), y(xy.y) {}
+	Int2::Int2(const Float2& xy) : x(xy.x), y(xy.y) {}
 
 
 

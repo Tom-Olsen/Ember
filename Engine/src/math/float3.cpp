@@ -85,6 +85,14 @@ namespace emberMath
 	{
 		return Float3(math::Round(value.x, decimals), math::Round(value.y, decimals), math::Round(value.z, decimals));
 	}
+	Float3 Float3::Ceil(const Float3& value, int decimals)
+	{
+		return Float3(math::Ceil(value.x), math::Ceil(value.y), math::Ceil(value.z));
+	}
+	Float3 Float3::Floor(const Float3& value, int decimals)
+	{
+		return Float3(math::Floor(value.x), math::Floor(value.y), math::Floor(value.z));
+	}
 	float Float3::Dot(const Float3& a, const Float3& b)
 	{
 		return a.x * b.x + a.y * b.y + a.z * b.z;

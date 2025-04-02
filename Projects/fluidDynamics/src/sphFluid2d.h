@@ -30,7 +30,12 @@ namespace emberEngine
 		float m_collisionDampening;
 		float m_targetDensity;
 		float m_pressureMultiplier;
+		float m_nearPressureMultiplier;
 		float m_gravity;
+
+		// User Interaction:
+		float m_attractorRadius;
+		float m_attractorStrength;
 
 		Bounds2d m_fluidBounds;
 		Mesh* m_pQuad;

@@ -1,4 +1,5 @@
 #include "sphFluid2d.h"
+#include "infinitGrid2d.h"
 #include "sphFluid2dEditorWindow.h"
 #include "smoothingKernals.h"
 
@@ -13,16 +14,21 @@ namespace emberEngine
 		m_timeStep = 0;
 		m_particleCount = 200;
 
-		m_effectRadius = 0.5f;
-		m_visualRadius = 0.05f;
+		m_effectRadius = 0.35f;
+		m_visualRadius = 0.08f;
 		m_mass = 1.0f;
-		m_viscosity = 0.0f;
+		m_viscosity = 0.03f;
 		m_collisionDampening = 0.95f;
-		m_targetDensity = 180.0f;
-		m_pressureMultiplier = 50.0f;
+		m_targetDensity = 55.0f;
+		m_pressureMultiplier = 500.0f;
+		m_nearPressureMultiplier = 5.0f; // new
 		m_gravity = 0.0f;
 
-		m_fluidBounds = Bounds2d(Float2::zero, 0.5f * Float2(16.0f / 9.0f, 1.0f));
+		// User Interaction:
+		m_attractorRadius = 2.0f;
+		m_attractorStrength = 90.0f;
+
+		m_fluidBounds = Bounds2d(Float2::zero, Float2(16.0f, 9.0f));
 		m_pQuad = MeshManager::GetMesh("unitQuad");
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
 		Reset();
@@ -84,14 +90,14 @@ namespace emberEngine
 			for (int i = 0; i < m_particleCount; i++)
 			{
 				Float2 acceleration = m_forceDensities[i] / m_densities[i];
-				m_velocities[i] += 0.5f * acceleration * Time::GetFixedDeltaTime() / 10.0f;
+				m_velocities[i] += 0.5f * acceleration * Time::GetFixedDeltaTime();
 			}
 		}
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			Float2 acceleration = m_forceDensities[i] / m_densities[i];
-			m_positions[i] += m_velocities[i] * Time::GetFixedDeltaTime() / 10.0f;
-			m_velocities[i] += acceleration * Time::GetFixedDeltaTime() / 10.0f;
+			m_positions[i] += m_velocities[i] * Time::GetFixedDeltaTime();
+			m_velocities[i] += acceleration * Time::GetFixedDeltaTime();
 			BoundaryCollisions(m_positions[i], m_velocities[i]);
 		}
 
@@ -235,7 +241,7 @@ namespace emberEngine
 			float t0 = math::Clamp(t, 0.0f, 1.0f);
 			float t1 = math::Clamp(t - 1.0f, 0.0f, 1.0f);
 			Float4 colorA = t0 * Float4::white + (1.0f - t0) * Float4::blue;
-			Float4 colorB = t0 * Float4::red + (1.0f - t0) * Float4::white;
+			Float4 colorB = t1 * Float4::red + (1.0f - t1) * Float4::white;
 			Float4 color = (t < 1.0f) ? colorA : colorB;
 			pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 		}
