@@ -14,6 +14,7 @@ namespace emberEngine
 	private:
 		SphFluid2d* m_pSphFluid2d;
 		bool m_isRunning;
+		bool m_useGridOptimization;
 		int m_particleCount;
 		float m_effectRadius;
 		float m_visualRadius;
@@ -28,10 +29,32 @@ namespace emberEngine
 		SphFluid2dEditorWindow(SphFluid2d* pSphFluid2d)
 		{
 			m_pSphFluid2d = pSphFluid2d;
+
+			// No serialised data available: get member values from script:
+			//if (...)
+			{
+				m_isRunning = m_pSphFluid2d->GetIsRunning();
+				m_useGridOptimization = m_pSphFluid2d->GetUseGridOptimization();
+				m_particleCount = m_pSphFluid2d->GetParticleCount();
+				m_effectRadius = m_pSphFluid2d->GetEffectRadius();
+				m_visualRadius = m_pSphFluid2d->GetVisualRadius();
+				m_mass = m_pSphFluid2d->GetMass();
+				m_viscosity = m_pSphFluid2d->GetViscosity();
+				m_collisionDampening = m_pSphFluid2d->GetCollisionDampening();
+				m_targetDensity = m_pSphFluid2d->GetTargetDensity();
+				m_pressureMultiplier = m_pSphFluid2d->GetPressureMultiplier();
+				m_gravity = m_pSphFluid2d->GetGravity();
+			}
+			// Get member values from data serialization:
+			//else
+			{
+				// Set m_... values and do m_script->Set...() for all members.
+			}
 		}
 		void Render() override
 		{
 			m_isRunning = m_pSphFluid2d->GetIsRunning();
+			m_useGridOptimization = m_pSphFluid2d->GetUseGridOptimization();
 			m_particleCount = m_pSphFluid2d->GetParticleCount();
 			m_effectRadius = m_pSphFluid2d->GetEffectRadius();
 			m_visualRadius = m_pSphFluid2d->GetVisualRadius();
@@ -45,6 +68,7 @@ namespace emberEngine
 			ImGui::Begin("Sph Fluid 2d Editor Window");
 			{
 				Editor::Checkbox("Is Running:", &m_isRunning);
+				Editor::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
 				Editor::Text(("Time Step:" + std::to_string(m_pSphFluid2d->GetTimeStep())).c_str());
 				Editor::InputInt("Particle Count:", &m_particleCount);
 				Editor::InputFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
@@ -62,6 +86,7 @@ namespace emberEngine
 			ImGui::End();
 
 			m_pSphFluid2d->SetIsRunning(m_isRunning);
+			m_pSphFluid2d->SetUseGridOptimization(m_useGridOptimization);
 			m_pSphFluid2d->SetParticleCount(m_particleCount);
 			m_pSphFluid2d->SetEffectRadius(m_effectRadius);
 			m_pSphFluid2d->SetVisualRadius(m_visualRadius);

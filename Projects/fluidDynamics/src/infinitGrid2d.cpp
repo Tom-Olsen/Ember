@@ -1,4 +1,5 @@
 #include "infinitGrid2d.h"
+#include "logger.h"
 #include "vectorSort.h"
 
 
@@ -8,7 +9,7 @@ namespace emberEngine
 	// Constructor/Destructor:
 	InfinitGrid2d::InfinitGrid2d(int particleCount) : m_particleCount(particleCount)
 	{
-		m_particleLookup.resize(m_particleCount);
+		m_cellKeys.resize(m_particleCount);
 		m_startIndices.resize(m_particleCount);
 	}
 	InfinitGrid2d::~InfinitGrid2d()
@@ -32,37 +33,43 @@ namespace emberEngine
 	{
 		return cellHash % m_particleCount;
 	}
+	uint32_t InfinitGrid2d::GetCellKey(int particleIndex)
+	{
+		return m_cellKeys[particleIndex];
+	}
+	uint32_t InfinitGrid2d::GetStartIndex(int cellKey)
+	{
+		return m_startIndices[cellKey];
+	}
 
 
 
 	void InfinitGrid2d::UpdateGrid(std::vector<Float2>& positions, std::vector<Float2>& velocities, float radius)
 	{
+		// Fill cellKeys vector:
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			Int2 cell = Cell(positions[i], radius);
 			uint32_t cellHash = CellHash(cell);
-			uint32_t cellKey = CellKey(cellHash);
-			m_particleLookup[i] = cellKey;
+			m_cellKeys[i] = CellKey(cellHash);
 		}
 
 		// Sort vectors:
-		std::vector<std::size_t> permutation = SortPermutation(m_particleLookup, [](uint32_t const& a, uint32_t const& b) { return a < b; });
-		m_particleLookup = ApplyPermutation(m_particleLookup, permutation);
+		std::vector<std::size_t> permutation = SortPermutation(m_cellKeys, [](uint32_t const& a, uint32_t const& b) { return a < b; });
+		m_cellKeys = ApplyPermutation(m_cellKeys, permutation);
 		positions = ApplyPermutation(positions, permutation);
 		velocities = ApplyPermutation(velocities, permutation);
 
-		m_startIndices[m_particleLookup[0]] = 0;
-		uint32_t previousValue = m_particleLookup[0];
+		// Reset start indices to invalid state:
+		for (int i = 0; i < m_particleCount; i++)
+			m_startIndices[i] = -1;
+
+		// Fill start indices vector:
+		m_startIndices[m_cellKeys[0]] = 0;
 		for (int i = 1; i < m_particleCount; i++)
 		{
-			if (previousValue != m_particleLookup[i])
-			{
-				m_startIndices[m_particleLookup[i]] = i;
-				previousValue = m_particleLookup[i];
-			}
-			else
-				m_startIndices[m_particleLookup[i]] = -1;
+			if (m_cellKeys[i] != m_cellKeys[i - 1])
+				m_startIndices[m_cellKeys[i]] = i;
 		}
 	}
-
 }

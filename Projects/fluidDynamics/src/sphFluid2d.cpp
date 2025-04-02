@@ -1,36 +1,45 @@
 #include "sphFluid2d.h"
 #include "infinitGrid2d.h"
-#include "sphFluid2dEditorWindow.h"
 #include "smoothingKernals.h"
+#include "sphFluid2dEditorWindow.h"
 
 
 
 namespace emberEngine
 {
+	const std::array<Int2, 9> SphFluid2d::s_offsets = {
+	Int2(-1, -1), Int2(-1, 0), Int2(-1, 1),
+	Int2( 0, -1), Int2( 0, 0), Int2( 0, 1),
+	Int2( 1, -1), Int2( 1, 0), Int2( 1, 1) };
+
 	// Constructor/Destructor:
 	SphFluid2d::SphFluid2d()
 	{
+		// Management:
 		m_isRunning = false;
 		m_timeStep = 0;
-		m_particleCount = 200;
+		m_particleCount = 400;
+		m_useGridOptimization = true;
 
-		m_effectRadius = 0.35f;
-		m_visualRadius = 0.08f;
+		// Physics:
+		m_effectRadius = 1.0f;
 		m_mass = 1.0f;
 		m_viscosity = 0.03f;
 		m_collisionDampening = 0.95f;
-		m_targetDensity = 55.0f;
-		m_pressureMultiplier = 500.0f;
-		m_nearPressureMultiplier = 5.0f; // new
+		m_targetDensity = 1.0f;
+		m_pressureMultiplier = 1.0f;
 		m_gravity = 0.0f;
 
-		// User Interaction:
+		// User Interaction/Boundaries:
 		m_attractorRadius = 2.0f;
 		m_attractorStrength = 90.0f;
-
 		m_fluidBounds = Bounds2d(Float2::zero, Float2(16.0f, 9.0f));
+
+		// Visuals:
+		m_visualRadius = 0.5f;
 		m_pQuad = MeshManager::GetMesh("unitQuad");
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
+
 		Reset();
 
 		editorWindow = std::make_unique<SphFluid2dEditorWindow>(this);
@@ -46,6 +55,7 @@ namespace emberEngine
 		m_velocities.resize(m_particleCount);
 		m_densities.resize(m_particleCount);
 		m_forceDensities.resize(m_particleCount);
+		m_pGrid = std::make_unique<InfinitGrid2d>(m_particleCount);
 
 		Float2 min = m_fluidBounds.GetMin();
 		Float2 max = m_fluidBounds.GetMax();
@@ -58,8 +68,6 @@ namespace emberEngine
 			m_velocities[i].y = math::Random::Uniform01() - 0.5f;
 			m_forceDensities[i] = 0;
 		}
-		for (uint32_t i = 0; i < m_particleCount; i++)
-			m_densities[i] = Density(i);
 	}
 
 
@@ -69,6 +77,9 @@ namespace emberEngine
 	{
 		if (!m_isRunning)
 			return;
+
+		// Update grid for fast near particle look up:
+		m_pGrid->UpdateGrid(m_positions, m_velocities, m_effectRadius);
 
 		// Compute density:
 		for (int i = 0; i < m_particleCount; i++)
@@ -109,6 +120,10 @@ namespace emberEngine
 	void SphFluid2d::SetIsRunning(bool isRunning)
 	{
 		m_isRunning = isRunning;
+	}
+	void SphFluid2d::SetUseGridOptimization(bool useGridOptimization)
+	{
+		m_useGridOptimization = useGridOptimization;
 	}
 	void SphFluid2d::SetParticleCount(uint32_t particleCount)
 	{
@@ -161,6 +176,10 @@ namespace emberEngine
 	bool SphFluid2d::GetIsRunning() const
 	{
 		return m_isRunning;
+	}
+	bool SphFluid2d::GetUseGridOptimization() const
+	{
+		return m_useGridOptimization;
 	}
 	uint32_t SphFluid2d::GetTimeStep() const
 	{
@@ -257,15 +276,47 @@ namespace emberEngine
 	// Physics:
 	float SphFluid2d::Density(int particleIndex)
 	{
-		float density = 0;
-		for (int i = 0; i < m_particleCount; i++)
+		if (m_useGridOptimization)
 		{
-			Float2 offset = m_positions[particleIndex] - m_positions[i];
-			float r = offset.Length();
-			if (r < m_effectRadius)
-				density += m_mass * smoothingKernals::Poly6(r, m_effectRadius);
+			Float2 particlePos = m_positions[particleIndex];
+			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
+
+			float density = 0;
+			for (int i = 0; i < 9; i++)
+			{
+				uint32_t neighbourCellHash = m_pGrid->CellHash(particleCell + s_offsets[i]);
+				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
+				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
+
+				while (otherIndex < m_particleCount) // at most as many iterations as there are particles.
+				{
+					uint32_t otherCellKey = m_pGrid->GetCellKey(otherIndex);
+					if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
+						break;
+
+					Float2 otherPos = m_positions[otherIndex];
+					Float2 offset = particlePos - otherPos;
+					float r = offset.Length();
+					if (r < m_effectRadius)
+						density += m_mass * smoothingKernals::Poly6(r, m_effectRadius);
+
+					otherIndex++;
+				}
+			}
+			return density;
 		}
-		return density;
+		else
+		{
+			float density = 0;
+			for (int i = 0; i < m_particleCount; i++)
+			{
+				Float2 offset = m_positions[particleIndex] - m_positions[i];
+				float r = offset.Length();
+				if (r < m_effectRadius)
+					density += m_mass * smoothingKernals::Poly6(r, m_effectRadius);
+			}
+			return density;
+		}
 	}
 	float Pressure(float density, float targetDensity, float pressureMultiplier)
 	{
@@ -274,42 +325,129 @@ namespace emberEngine
 	}
 	Float2 SphFluid2d::PressureForceDensity(int particleIndex)
 	{
-		Float2 pressureForce = Float2::zero;
-		float particlePressure = Pressure(m_densities[particleIndex], m_targetDensity, m_pressureMultiplier);
-		for (int i = 0; i < m_particleCount; i++)
+		if (m_useGridOptimization)
 		{
-			if (i == particleIndex)
-				continue;
+			float particlePressure = Pressure(m_densities[particleIndex], m_targetDensity, m_pressureMultiplier);
+			Float2 particlePos = m_positions[particleIndex];
+			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
 
-			Float2 offset = m_positions[particleIndex] - m_positions[i];
-			float r = offset.Length();
-			if (r < m_effectRadius)
+			Float2 pressureForce = Float2::zero;
+			for (int i = 0; i < 9; i++)
 			{
-				Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
-				float otherParticlePressure = Pressure(m_densities[i], m_targetDensity, m_pressureMultiplier);
-				float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-				pressureForce += -m_mass * sharedPressure * smoothingKernals::DSpiky(r, dir, m_effectRadius) / m_densities[i];
+				uint32_t neighbourCellHash = m_pGrid->CellHash(particleCell + s_offsets[i]);
+				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
+				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
+
+				while (otherIndex < m_particleCount) // at most as many iterations as there are particles.
+				{
+					if (otherIndex == particleIndex)
+					{
+						otherIndex++;
+						continue;
+					}
+
+					uint32_t otherCellKey = m_pGrid->GetCellKey(otherIndex);
+					if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
+						break;
+
+					Float2 otherPos = m_positions[otherIndex];
+					Float2 offset = particlePos - otherPos;
+					float r = offset.Length();
+					if (r < m_effectRadius)
+					{
+						Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
+						float otherParticlePressure = Pressure(m_densities[otherIndex], m_targetDensity, m_pressureMultiplier);
+						float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
+						pressureForce += -m_mass * sharedPressure * smoothingKernals::DSpiky(r, dir, m_effectRadius) / m_densities[otherIndex];
+					}
+
+					otherIndex++;
+				}
 			}
+			return pressureForce;
 		}
-		return pressureForce;
+		else
+		{
+			Float2 pressureForce = Float2::zero;
+			float particlePressure = Pressure(m_densities[particleIndex], m_targetDensity, m_pressureMultiplier);
+			for (int i = 0; i < m_particleCount; i++)
+			{
+				if (i == particleIndex)
+					continue;
+			
+				Float2 offset = m_positions[particleIndex] - m_positions[i];
+				float r = offset.Length();
+				if (r < m_effectRadius)
+				{
+					Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
+					float otherParticlePressure = Pressure(m_densities[i], m_targetDensity, m_pressureMultiplier);
+					float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
+					pressureForce += -m_mass * sharedPressure * smoothingKernals::DSpiky(r, dir, m_effectRadius) / m_densities[i];
+				}
+			}
+			return pressureForce;
+		}
 	}
 	Float2 SphFluid2d::ViscosityForceDensity(int particleIndex)
 	{
-		Float2 viscosityForce = Float2::zero;
-		for (int i = 0; i < m_particleCount; i++)
+		if (m_useGridOptimization)
 		{
-			if (i == particleIndex)
-				continue;
+			Float2 particlePos = m_positions[particleIndex];
+			Float2 particleVel = m_velocities[particleIndex];
+			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
 
-			Float2 offset = m_positions[particleIndex] - m_positions[i];
-			float r = offset.Length();
-			if (r < m_effectRadius)
+			Float2 viscosityForce = Float2::zero;
+			for (int i = 0; i < 9; i++)
 			{
-				Float2 velocityDiff = m_velocities[i] - m_velocities[particleIndex];
-				viscosityForce += (m_mass * smoothingKernals::DDViscos(r, m_effectRadius) / m_densities[i]) * velocityDiff;
+				uint32_t neighbourCellHash = m_pGrid->CellHash(particleCell + s_offsets[i]);
+				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
+				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
+
+				while (otherIndex < m_particleCount) // at most as many iterations as there are particles.
+				{
+					if (otherIndex == particleIndex)
+					{
+						otherIndex++;
+						continue;
+					}
+
+					uint32_t otherCellKey = m_pGrid->GetCellKey(otherIndex);
+					if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
+						break;
+
+					Float2 otherPos = m_positions[otherIndex];
+					Float2 otherVel = m_velocities[otherIndex];
+					Float2 offset = particlePos - otherPos;
+					float r = offset.Length();
+					if (r < m_effectRadius)
+					{
+						Float2 velocityDiff = otherVel - particleVel;
+						viscosityForce += (m_mass * smoothingKernals::DDViscos(r, m_effectRadius) / m_densities[otherIndex]) * velocityDiff;
+					}
+
+					otherIndex++;
+				}
 			}
+			return m_viscosity * viscosityForce;
 		}
-		return m_viscosity * viscosityForce;
+		else
+		{
+			Float2 viscosityForce = Float2::zero;
+			for (int i = 0; i < m_particleCount; i++)
+			{
+				if (i == particleIndex)
+					continue;
+			
+				Float2 offset = m_positions[particleIndex] - m_positions[i];
+				float r = offset.Length();
+				if (r < m_effectRadius)
+				{
+					Float2 velocityDiff = m_velocities[i] - m_velocities[particleIndex];
+					viscosityForce += (m_mass * smoothingKernals::DDViscos(r, m_effectRadius) / m_densities[i]) * velocityDiff;
+				}
+			}
+			return m_viscosity * viscosityForce;
+		}
 	}
 	Float2 SphFluid2d::GravityForceDensity(int particleIndex)
 	{
@@ -340,6 +478,15 @@ namespace emberEngine
 		{
 			position.y = max.y - epsilon;
 			velocity.y *= -m_collisionDampening;
+		}
+		if ((position - m_fluidBounds.center).Length() > m_fluidBounds.GetDiagonal())
+		{
+			LOG_WARN("Particle way out of bounds. Resetting it to random location and velocity in bounds.");
+			float border = 0.05f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
+			position.x = math::Random::Uniform(min.x + border, max.x - border);
+			position.y = math::Random::Uniform(min.y + border, max.y - border);
+			velocity.x = math::Random::Uniform01() - 0.5f;
+			velocity.y = math::Random::Uniform01() - 0.5f;
 		}
 	}
 }
