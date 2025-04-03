@@ -111,7 +111,9 @@ namespace emberEngine
 		void Start() override;
 		void Update() override;
 		void FixedUpdate() override;
-		void TimeStep(float deltaT);
+		void TimeStepLeapFrog(float deltaT);
+		void TimeStepVelocityVerlet(float deltaT);
+		void TimeStepRungeKutta2(float deltaT);
 		const std::string ToString() const override;
 
 	private:

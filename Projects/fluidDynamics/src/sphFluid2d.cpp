@@ -93,11 +93,9 @@ namespace emberEngine
 		m_pGrid->ApplySort(m_velocities);
 		for (uint32_t i = 0; i < m_particleCount; i++)
 			m_densities[i] = Density(i, m_positions);
-
 		//// Compute normals:
 		//for (uint32_t i = 0; i < m_particleCount; i++)
 		//	m_normals[i] = Normal(i, m_positions, m_densities);
-
 		//// Compute curvature:
 		//for (uint32_t i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
@@ -118,11 +116,12 @@ namespace emberEngine
 		while (restTime > 0.0f)
 		{
 			float deltaT = math::Min(dt, restTime);
-			TimeStep(deltaT);
+			TimeStepRungeKutta2(deltaT);
 			restTime -= deltaT;
 		}
+		m_timeStep++;
 	}
-	void SphFluid2d::TimeStep(float deltaT)
+	void SphFluid2d::TimeStepLeapFrog(float deltaT)
 	{
 		// Update grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
@@ -131,11 +130,9 @@ namespace emberEngine
 		// Compute densities:
 		for (int i = 0; i < m_particleCount; i++)
 			m_densities[i] = Density(i, m_positions);
-
 		//// Compute normals:
 		//for (int i = 0; i < m_particleCount; i++)
 		//	m_normals[i] = Normal(i, m_positions, m_densities);
-
 		//// Compute curvature:
 		//for (uint32_t i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
@@ -150,93 +147,138 @@ namespace emberEngine
 			//m_forceDensities[i] += ExternalForceDensity(i);
 		}
 
-		//// Leapfrog solver:
-		//if (m_timeStep == 0)
-		//{
-		//	for (int i = 0; i < m_particleCount; i++)
-		//	{
-		//		Float2 acceleration = m_forceDensities[i] / m_densities[i];
-		//		m_velocities[i] += 0.5f * acceleration * deltaT;
-		//	}
-		//}
-		//for (int i = 0; i < m_particleCount; i++)
-		//{
-		//	Float2 acceleration = m_forceDensities[i] / m_densities[i];
-		//	m_positions[i] += m_velocities[i] * deltaT;
-		//	m_velocities[i] += acceleration * deltaT;
-		//	BoundaryCollisions(m_positions[i], m_velocities[i]);
-		//}
-
-		//// Velocity-Verlet solver:
-		//for (int i = 0; i < m_particleCount; i++)
-		//{
-		//	Float2 acceleration = m_forceDensities[i] / m_densities[i];
-		//	Float2 velocityHalfStep = m_velocities[i] + 0.5f * acceleration * deltaT;
-		//	m_positions[i] += velocityHalfStep * deltaT;
-		//	m_velocities[i] = velocityHalfStep + 0.5f * acceleration * deltaT;
-		//	BoundaryCollisions(m_positions[i], m_velocities[i]);
-		//}
-
-		// Runge-Kutta 2:
+		// Step:
+		if (m_timeStep == 0)
 		{
-			// First Runte-Kutta step:
 			for (int i = 0; i < m_particleCount; i++)
 			{
 				Float2 acceleration = m_forceDensities[i] / m_densities[i];
-				m_kp1[i] = m_velocities[i] * deltaT;
-				m_kv1[i] = acceleration * deltaT;
-				m_tempPositions[i] = m_positions[i] + 0.5f * m_kp1[i];
-				m_tempVelocities[i] = m_velocities[i] + 0.5f * m_kv1[i];
-				float speed = m_tempVelocities[i].Length();
-				if (speed > m_maxVelocity)
-					m_tempVelocities[i] *= (m_maxVelocity / speed);
-			}
-
-			// Update grid for fast nearest neighbor particle look up:
-			m_pGrid->UpdateGrid(m_tempPositions, m_effectRadius);
-			m_pGrid->ApplySort(m_tempVelocities);
-			m_pGrid->ApplySort(m_positions);
-			m_pGrid->ApplySort(m_velocities);
-			m_pGrid->ApplySort(m_kv1);
-
-			// Compute intermediate densities:
-			for (int i = 0; i < m_particleCount; i++)
-				m_densities[i] = Density(i, m_tempPositions);
-
-			//// Compute intermediate normals:
-			//for (int i = 0; i < m_particleCount; i++)
-			//	m_normals[i] = Normal(i, m_tempPositions, m_densities);
-
-			//// Compute intermediate curvature:
-			//for (uint32_t i = 0; i < m_particleCount; i++)
-			//	m_curvatures[i] = Curvature(i, m_tempPositions, m_normals, m_densities);
-
-			// Compute intermediate force densities:
-			for (int i = 0; i < m_particleCount; i++)
-			{
-				m_forceDensities[i] = PressureForceDensity(i, m_tempPositions, m_densities);
-				m_forceDensities[i] += ViscosityForceDensity(i, m_tempPositions, m_tempVelocities, m_densities);
-				m_forceDensities[i] += GravityForceDensity(i, m_densities);
-				//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-				//m_forceDensities[i] += ExternalForceDensity(i);
-			}
-
-			// Second Runge-Kutta step:
-			for (int i = 0; i < m_particleCount; i++)
-			{
-				Float2 acceleration = m_forceDensities[i] / m_densities[i];
-				m_kp2[i] = (m_velocities[i] + 0.5f * m_kv1[i]) * deltaT;
-				m_kv2[i] = acceleration * deltaT;
-				m_positions[i] += m_kp2[i];
-				m_velocities[i] += m_kv2[i];
-				float speed = m_velocities[i].Length();
-				if (speed > m_maxVelocity)
-					m_velocities[i] *= (m_maxVelocity / speed);
-				BoundaryCollisions(m_positions[i], m_velocities[i]);
+				m_velocities[i] += 0.5f * acceleration * deltaT;
 			}
 		}
+		for (int i = 0; i < m_particleCount; i++)
+		{
+			Float2 acceleration = m_forceDensities[i] / m_densities[i];
+			m_positions[i] += m_velocities[i] * deltaT;
+			m_velocities[i] += acceleration * deltaT;
+			BoundaryCollisions(m_positions[i], m_velocities[i]);
+		}
+	}
+	void SphFluid2d::TimeStepVelocityVerlet(float deltaT)
+	{
+		// Update grid for fast nearest neighbor particle look up:
+		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
+		m_pGrid->ApplySort(m_velocities);
 
-		m_timeStep++;
+		// Compute densities:
+		for (int i = 0; i < m_particleCount; i++)
+			m_densities[i] = Density(i, m_positions);
+		//// Compute normals:
+		//for (int i = 0; i < m_particleCount; i++)
+		//	m_normals[i] = Normal(i, m_positions, m_densities);
+		//// Compute curvature:
+		//for (uint32_t i = 0; i < m_particleCount; i++)
+		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
+
+		// Compute force densities:
+		for (int i = 0; i < m_particleCount; i++)
+		{
+			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
+			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
+			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
+			//m_forceDensities[i] += ExternalForceDensity(i);
+		}
+
+		// Step:
+		for (int i = 0; i < m_particleCount; i++)
+		{
+			Float2 acceleration = m_forceDensities[i] / m_densities[i];
+			Float2 velocityHalfStep = m_velocities[i] + 0.5f * acceleration * deltaT;
+			m_positions[i] += velocityHalfStep * deltaT;
+			m_velocities[i] = velocityHalfStep + 0.5f * acceleration * deltaT;
+			BoundaryCollisions(m_positions[i], m_velocities[i]);
+		}
+	}
+	void SphFluid2d::TimeStepRungeKutta2(float deltaT)
+	{
+		// Update grid for fast nearest neighbor particle look up:
+		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
+		m_pGrid->ApplySort(m_velocities);
+
+		// Compute densities:
+		for (int i = 0; i < m_particleCount; i++)
+			m_densities[i] = Density(i, m_positions);
+		//// Compute normals:
+		//for (int i = 0; i < m_particleCount; i++)
+		//	m_normals[i] = Normal(i, m_positions, m_densities);
+		//// Compute curvature:
+		//for (uint32_t i = 0; i < m_particleCount; i++)
+		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
+
+		// Compute force densities:
+		for (int i = 0; i < m_particleCount; i++)
+		{
+			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
+			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
+			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
+			//m_forceDensities[i] += ExternalForceDensity(i);
+		}
+
+		// First Runte-Kutta step:
+		for (int i = 0; i < m_particleCount; i++)
+		{
+			Float2 acceleration = m_forceDensities[i] / m_densities[i];
+			m_kp1[i] = m_velocities[i] * deltaT;
+			m_kv1[i] = acceleration * deltaT;
+			m_tempPositions[i] = m_positions[i] + 0.5f * m_kp1[i];
+			m_tempVelocities[i] = m_velocities[i] + 0.5f * m_kv1[i];
+			float speed = m_tempVelocities[i].Length();
+			if (speed > m_maxVelocity)
+				m_tempVelocities[i] *= (m_maxVelocity / speed);
+		}
+
+		// Update grid for fast nearest neighbor particle look up:
+		m_pGrid->UpdateGrid(m_tempPositions, m_effectRadius);
+		m_pGrid->ApplySort(m_tempVelocities);
+		m_pGrid->ApplySort(m_positions);
+		m_pGrid->ApplySort(m_velocities);
+		m_pGrid->ApplySort(m_kv1);
+
+		// Compute intermediate densities:
+		for (int i = 0; i < m_particleCount; i++)
+			m_densities[i] = Density(i, m_tempPositions);
+		//// Compute intermediate normals:
+		//for (int i = 0; i < m_particleCount; i++)
+		//	m_normals[i] = Normal(i, m_tempPositions, m_densities);
+		//// Compute intermediate curvature:
+		//for (uint32_t i = 0; i < m_particleCount; i++)
+		//	m_curvatures[i] = Curvature(i, m_tempPositions, m_normals, m_densities);
+
+		// Compute intermediate force densities:
+		for (int i = 0; i < m_particleCount; i++)
+		{
+			m_forceDensities[i] = PressureForceDensity(i, m_tempPositions, m_densities);
+			m_forceDensities[i] += ViscosityForceDensity(i, m_tempPositions, m_tempVelocities, m_densities);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
+			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
+			//m_forceDensities[i] += ExternalForceDensity(i);
+		}
+
+		// Second Runge-Kutta step:
+		for (int i = 0; i < m_particleCount; i++)
+		{
+			Float2 acceleration = m_forceDensities[i] / m_densities[i];
+			m_kp2[i] = (m_velocities[i] + 0.5f * m_kv1[i]) * deltaT;
+			m_kv2[i] = acceleration * deltaT;
+			m_positions[i] += m_kp2[i];
+			m_velocities[i] += m_kv2[i];
+			float speed = m_velocities[i].Length();
+			if (speed > m_maxVelocity)
+				m_velocities[i] *= (m_maxVelocity / speed);
+			BoundaryCollisions(m_positions[i], m_velocities[i]);
+		}
 	}
 
 	// Setters:
