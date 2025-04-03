@@ -44,7 +44,7 @@ namespace emberEngine
 
 
 
-	void InfinitGrid2d::UpdateGrid(std::vector<Float2>& positions, std::vector<Float2>& velocities, float radius)
+	void InfinitGrid2d::UpdateGrid(std::vector<Float2>& positions, float radius)
 	{
 		// Fill cellKeys vector:
 		for (int i = 0; i < m_particleCount; i++)
@@ -55,10 +55,9 @@ namespace emberEngine
 		}
 
 		// Sort vectors:
-		std::vector<std::size_t> permutation = SortPermutation(m_cellKeys, [](uint32_t const& a, uint32_t const& b) { return a < b; });
-		m_cellKeys = ApplyPermutation(m_cellKeys, permutation);
-		positions = ApplyPermutation(positions, permutation);
-		velocities = ApplyPermutation(velocities, permutation);
+		m_permutation = SortPermutation(m_cellKeys, [](uint32_t const& a, uint32_t const& b) { return a < b; });
+		m_cellKeys = ApplyPermutation(m_cellKeys, m_permutation);
+		positions = ApplyPermutation(positions, m_permutation);
 
 		// Reset start indices to invalid state:
 		for (int i = 0; i < m_particleCount; i++)
@@ -71,5 +70,9 @@ namespace emberEngine
 			if (m_cellKeys[i] != m_cellKeys[i - 1])
 				m_startIndices[m_cellKeys[i]] = i;
 		}
+	}
+	void InfinitGrid2d::ApplySort(std::vector<Float2>& data)
+	{
+		data = ApplyPermutation(data, m_permutation);
 	}
 }
