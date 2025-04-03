@@ -20,9 +20,9 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		uint32_t opaqueQueue = 1000;
-		uint32_t transparentQueue = 2000;
-		uint32_t skyboxQueue = 3000;
+		uint32_t opaqueQueue = (uint32_t)Material::Queue::opaque;
+		uint32_t transparentQueue = (uint32_t)Material::Queue::transparent;
+		uint32_t skyboxQueue = (uint32_t)Material::Queue::skybox;
 		Material::Type forwardOpaqueType = Material::Type::forwardOpaque;
 		Material::Type forwardTransparentType = Material::Type::forwardTransparent;
 		Material::Type shadowType = Material::Type::shadow;
@@ -62,9 +62,6 @@ namespace emberEngine
 
 		Material* pSimpleUnlitMaterial = new Material(forwardOpaqueType, "simpleUnlitMaterial", opaqueQueue, directoryPath + "/simpleUnlit.vert.spv", directoryPath + "/simpleUnlit.frag.spv");
 		AddMaterial(pSimpleUnlitMaterial);
-
-		Material* pParticleMaterial = new Material(forwardTransparentType, "particleMaterial", transparentQueue, directoryPath + "/particle.vert.spv", directoryPath + "/particle.frag.spv");
-		AddMaterial(pParticleMaterial);
 
 		// For testing spirv reflect:
 		Material* pTest = new Material(forwardOpaqueType, "testMaterial", opaqueQueue, directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");

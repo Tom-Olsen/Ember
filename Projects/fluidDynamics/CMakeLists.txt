@@ -21,3 +21,14 @@ source_group("Source Files" FILES ${SOURCE_FILES})
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberEngine)
+
+
+
+# Shaders:
+add_subdirectory("src/shaders")
+add_dependencies(${PROJECT_NAME} CompileFluidDynamicsShaders)
+
+
+# Add project root path as a compile definition
+get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
+target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_ROOT_PATH}")

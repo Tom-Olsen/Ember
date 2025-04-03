@@ -1,4 +1,4 @@
-# Ember/Engine/src/shaders/CMakeLists.txt
+# Ember/Projects/fluidDynamics/src/shaders/CMakeLists.txt
 
 
 
@@ -45,9 +45,12 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
     set(OUTPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/bin/${FILE_NAME}${EXT_TRIMMED}.spv")
     list(APPEND SPIRV_OUTPUTS ${OUTPUT_FILE})
 
+    set(REL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../../Engine/src/shaders")
+    file(REAL_PATH "${REL_PATH}" ABS_PATH BASE_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
-        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE}
+        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE} -I ${ABS_PATH}
         DEPENDS ${SHADER_FILE}
         COMMENT "Compiling shader: ${SHADER_FILE}"
         VERBATIM
@@ -55,7 +58,7 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
 endforeach()
 
 # Shader compile target:
-add_custom_target(CompileShaders ALL DEPENDS ${SPIRV_OUTPUTS})
+add_custom_target(CompileFluidDynamicsShaders ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # Shader sources added as dummy targets to make them show up in the IDE.
-add_custom_target(Shaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES})
+add_custom_target(FluidDynamicsShaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES})

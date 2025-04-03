@@ -112,7 +112,7 @@ endif()
 
 
 # -------------------- Libraries --------------------
-# Shadesr:
+# Shaders:
 add_subdirectory("src/shaders")
 add_dependencies(${PROJECT_NAME} CompileShaders)
 

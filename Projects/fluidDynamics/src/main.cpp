@@ -82,8 +82,15 @@ int main()
 	appSettings.renderheight = 720;
 
 	Application app(appSettings);
+
+	// Add project specific shaders:
+	std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/src/shaders/bin";
+	Material* pParticleMaterial = new Material(Material::Type::forwardTransparent, "particleMaterial", (uint32_t)Material::Queue::transparent, directoryPath + "/particle.vert.spv", directoryPath + "/particle.frag.spv");
+	MaterialManager::AddMaterial(pParticleMaterial);
+
 	Scene* pScene = InitScene();
 	app.SetScene(pScene);
+
 
 	// Run application:
 	try

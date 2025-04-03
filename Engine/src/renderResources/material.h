@@ -33,6 +33,12 @@ namespace emberEngine
 			skybox,
 			present
 		};
+		enum class Queue
+		{
+			opaque = 1000,
+			transparent = 2000,
+			skybox = 3000
+		};
 
 	private: // Members:
 		Type m_type;
