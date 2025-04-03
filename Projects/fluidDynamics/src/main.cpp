@@ -48,19 +48,6 @@ Scene* InitScene()
 
 		pScene->AddGameObject(pGameObject);
 	}
-	//{
-	//	GameObject* pGameObject = new GameObject("cube");
-	//	pGameObject->GetTransform()->SetScale(0.2f);
-	//
-	//	MeshRenderer* meshRenderer = pGameObject->AddComponent<MeshRenderer>();
-	//	meshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
-	//	meshRenderer->SetMaterial(MaterialManager::GetMaterial("normalMaterial"));
-	//
-	//	pScene->AddGameObject(pGameObject);
-	//}
-	{ // FPS editorWindow:
-
-	}
 	return pScene;
 }
 
@@ -88,9 +75,9 @@ int main()
 	Material* pParticleMaterial = new Material(Material::Type::forwardTransparent, "particleMaterial", (uint32_t)Material::Queue::transparent, directoryPath + "/particle.vert.spv", directoryPath + "/particle.frag.spv");
 	MaterialManager::AddMaterial(pParticleMaterial);
 
+	// Create scene:
 	Scene* pScene = InitScene();
 	app.SetScene(pScene);
-
 
 	// Run application:
 	try

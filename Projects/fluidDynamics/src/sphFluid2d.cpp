@@ -478,6 +478,12 @@ namespace emberEngine
 			//	pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
 			//}
 		}
+
+		// Mouse interaction:
+		if (EventSystem::MouseDown(0))
+		{
+
+		}
 	}
 	const std::string SphFluid2d::ToString() const
 	{
