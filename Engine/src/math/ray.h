@@ -16,7 +16,8 @@ namespace emberMath
 		Float3 direction;
 
 		// Constructor:
-		Ray(Float3 origin, Float3 direction);
+		Ray(const Float3& origin, const Float3& direction);
+		static Ray CameraRay(const Float2& mousePos01);
 
 		// Methods:
 		Float3 GetPoint(float distance) const;

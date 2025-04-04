@@ -34,8 +34,8 @@ namespace emberEngine
 		m_maxVelocity = 5.0f;
 
 		// User Interaction/Boundaries:
-		SetAttractorRadius(0.5f);
-		m_attractorStrength = 90.0f;
+		SetAttractorRadius(2.0f);
+		m_attractorStrength = 30.0f;
 		m_fluidBounds = Bounds(Float3::zero, Float3(16.0f, 0.01f, 9.0f));
 
 		// Visuals:
@@ -141,9 +141,9 @@ namespace emberEngine
 		{
 			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
 			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			//m_forceDensities[i] += ExternalForceDensity(i);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
+			m_forceDensities[i] += ExternalForceDensity(i, m_positions, m_densities);
 		}
 
 		// Step:
@@ -184,9 +184,9 @@ namespace emberEngine
 		{
 			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
 			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			//m_forceDensities[i] += ExternalForceDensity(i);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
+			m_forceDensities[i] += ExternalForceDensity(i, m_positions, m_densities);
 		}
 
 		// Step:
@@ -220,9 +220,9 @@ namespace emberEngine
 		{
 			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
 			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			//m_forceDensities[i] += ExternalForceDensity(i);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
+			m_forceDensities[i] += ExternalForceDensity(i, m_positions, m_densities);
 		}
 
 		// First Runte-Kutta step:
@@ -260,9 +260,9 @@ namespace emberEngine
 		{
 			m_forceDensities[i] = PressureForceDensity(i, m_tempPositions, m_densities);
 			m_forceDensities[i] += ViscosityForceDensity(i, m_tempPositions, m_tempVelocities, m_densities);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			//m_forceDensities[i] += ExternalForceDensity(i);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
+			m_forceDensities[i] += ExternalForceDensity(i, m_tempPositions, m_densities);
 		}
 
 		// Second Runge-Kutta step:
@@ -515,40 +515,26 @@ namespace emberEngine
 				SetAttractorRadius(zoomFactor * m_attractorRadius);
 			}
 		}
-		if (EventSystem::MouseHeld(EventSystem::MouseButton::left))
+		
+		if (EventSystem::MouseHeld(EventSystem::MouseButton::left) ^ EventSystem::MouseHeld(EventSystem::MouseButton::right)) // exlusive or
 		{
-			// Get camera inverse matrices:
-			const Graphics::Camera& camera = Graphics::GetActiveCamera();
-			Float4x4 projectionInv = camera.projectionMatrix.Inverse();
-			Float4x4 viewInv = camera.viewMatrix.Inverse();
-
-			// Get mouse position and convert to screen position:
-			Float2 mousePos = EventSystem::MousePos01();
-			Float2 screenPos = 2.0f * mousePos - Float2::one;
-
-			// Convert screenPos to NDC pos on near and far plane:
-			Float4 nearPlaneNDC = Float4(screenPos, 0.0f, 1.0f);
-			Float4 farPlaneNDC = Float4(screenPos, 1.0f, 1.0f);
-
-			// Unproject NDC to camera space coordinates:
-			Float4 nearCamera = projectionInv * nearPlaneNDC;
-			Float4 farCamera = projectionInv * farPlaneNDC;
-			nearCamera /= nearCamera.w;
-			farCamera /= farCamera.w;
-
-			// Convert camera space to world space coordinates:
-			Float3 nearWorld = Float3(viewInv * nearCamera);
-			Float3 farWorld = Float3(viewInv * farCamera);
-
-			// Cast ray and draw circle if it hits:
-			Ray ray(nearWorld, (farWorld - nearWorld).Normalize());
+			Ray ray = Ray::CameraRay(EventSystem::MousePos01());
 			std::optional<Float3> hit = m_fluidBounds.IntersectRay(ray);
 			if (hit.has_value())
 			{
-				ShaderProperties* shaderProperties = Graphics::DrawMesh(m_pRingMesh.get(), MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity,  1.0f, false, false);
+				m_attractorPoint = Float2(hit.value().x, hit.value().z);
+				ShaderProperties* shaderProperties = Graphics::DrawMesh(m_pRingMesh.get(), MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
 				shaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::red);
+				if (EventSystem::MouseHeld(EventSystem::MouseButton::left))
+					m_attractorState = 1;
+				if (EventSystem::MouseHeld(EventSystem::MouseButton::right))
+					m_attractorState = -1;
 			}
+			else
+				m_attractorState = 0;
 		}
+		else
+			m_attractorState = 0;
 	}
 	const std::string SphFluid2d::ToString() const
 	{
@@ -857,6 +843,20 @@ namespace emberEngine
 	Float2 SphFluid2d::GravityForceDensity(int particleIndex, const std::vector<float>& densities)
 	{
 		return densities[particleIndex] * Float2(0.0f, -m_gravity);
+	}
+	Float2 SphFluid2d::ExternalForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
+	{
+		if (m_attractorState != 0)
+		{
+			Float2 offset = m_attractorPoint - positions[particleIndex];
+			float r = offset.Length();
+			if (r < m_attractorRadius && r > 1e-8f)
+			{
+				Float2 dir = offset / r;
+				return m_attractorState * m_attractorStrength * densities[particleIndex] * dir;
+			}
+		}
+		return 0.0f;
 	}
 	void SphFluid2d::BoundaryCollisions(Float2& position, Float2& velocity)
 	{
