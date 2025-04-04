@@ -851,10 +851,7 @@ namespace emberEngine
 			Float2 offset = m_attractorPoint - positions[particleIndex];
 			float r = offset.Length();
 			if (r < m_attractorRadius && r > 1e-8f)
-			{
-				Float2 dir = offset / r;
-				return m_attractorState * m_attractorStrength * densities[particleIndex] * dir;
-			}
+				return m_attractorState * m_attractorStrength * densities[particleIndex] * offset;
 		}
 		return 0.0f;
 	}
