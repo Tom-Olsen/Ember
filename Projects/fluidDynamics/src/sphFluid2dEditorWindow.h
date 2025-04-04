@@ -27,6 +27,8 @@ namespace emberEngine
 		float m_pressureMultiplier;
 		float m_gravity;
 		float m_maxVelocity;
+		float m_attractorRadius;
+		float m_attractorStrength;
 
 	public:
 		SphFluid2dEditorWindow(SphFluid2d* pSphFluid2d)
@@ -50,6 +52,8 @@ namespace emberEngine
 				m_pressureMultiplier = m_pSphFluid2d->GetPressureMultiplier();
 				m_gravity = m_pSphFluid2d->GetGravity();
 				m_maxVelocity = m_pSphFluid2d->GetMaxVelocity();
+				m_attractorRadius = m_pSphFluid2d->GetAttractorRadius();
+				m_attractorStrength = m_pSphFluid2d->GetAttractorStrength();
 			}
 			// Get member values from data serialization:
 			//else
@@ -73,6 +77,8 @@ namespace emberEngine
 			m_pressureMultiplier = m_pSphFluid2d->GetPressureMultiplier();
 			m_gravity = m_pSphFluid2d->GetGravity();
 			m_maxVelocity = m_pSphFluid2d->GetMaxVelocity();
+			m_attractorRadius = m_pSphFluid2d->GetAttractorRadius();
+			m_attractorStrength = m_pSphFluid2d->GetAttractorStrength();
 
 			ImGui::Begin("Sph Fluid 2d Editor Window");
 			{
@@ -91,6 +97,8 @@ namespace emberEngine
 				Editor::InputFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f, "%.8f");
 				Editor::InputFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
 				Editor::InputFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
+				Editor::InputFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
+				Editor::InputFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
 
 				if (ImGui::Button("Reset Simulation"))
 					m_pSphFluid2d->Reset();
@@ -111,6 +119,8 @@ namespace emberEngine
 			m_pSphFluid2d->SetPressureMultiplier(m_pressureMultiplier);
 			m_pSphFluid2d->SetGravity(m_gravity);
 			m_pSphFluid2d->SetMaxVelocity(m_maxVelocity);
+			m_pSphFluid2d->SetAttractorRadius(m_attractorRadius);
+			m_pSphFluid2d->SetAttractorStrength(m_attractorStrength);
 		}
 	};
 }

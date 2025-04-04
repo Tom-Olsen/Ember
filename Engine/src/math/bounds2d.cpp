@@ -7,10 +7,10 @@
 namespace emberMath
 {
 	// Constructors:
-	Bounds2d::Bounds2d() : center(0.0f), extents(0.0f) {}
-	Bounds2d::Bounds2d(const Float2& center, const Float2& extents) : center(center), extents(extents) {}
-	Bounds2d::Bounds2d(const Bounds2d& bounds) : center(bounds.center), extents(bounds.extents) {}
-	Bounds2d::Bounds2d(const Float2* const corners)
+	Bounds2d::Bounds2d() : center(0.0f), extents(0.0f), depth(0.0f) {}
+	Bounds2d::Bounds2d(const Float2& center, const Float2& extents, float depth) : center(center), extents(extents), depth(depth) {}
+	Bounds2d::Bounds2d(const Bounds2d& bounds) : center(bounds.center), extents(bounds.extents), depth(bounds.depth) {}
+	Bounds2d::Bounds2d(const Float2* const corners, float depth) : depth(depth)
 	{
 		Float2 min = corners[0];
 		Float2 max = corners[0];
@@ -22,7 +22,7 @@ namespace emberMath
 		center = 0.5f * (max + min);
 		extents = 0.5f * (max - min);
 	}
-	Bounds2d::Bounds2d(const std::vector<Float2>& points)
+	Bounds2d::Bounds2d(const std::vector<Float2>& points, float depth) : depth(depth)
 	{
 		Float2 min = points[0];
 		Float2 max = points[0];
@@ -51,6 +51,10 @@ namespace emberMath
 	{
 		return 2.0f * extents;
 	}
+	Float3 Bounds2d::GetCenter3D() const
+	{
+		return Float3(center, depth);
+	}
 	float Bounds2d::GetDiagonal() const
 	{
 		return 2.0f * extents.Length();
@@ -63,9 +67,9 @@ namespace emberMath
 		return std::array<Float2, 4>
 		{
 			Float2(min.x, min.y),
-				Float2(min.x, max.y),
-				Float2(max.x, min.y),
-				Float2(max.x, max.y)
+			Float2(min.x, max.y),
+			Float2(max.x, min.y),
+			Float2(max.x, max.y)
 		};
 	}
 

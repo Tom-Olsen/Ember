@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_bounds2d_h__
 #define __INCLUDE_GUARD_bounds2d_h__
 #include "float2.h"
+#include "float3.h"
 #include <array>
 #include <vector>
 #include <string>
@@ -14,18 +15,20 @@ namespace emberMath
 	public: // Members:
 		Float2 center;
 		Float2 extents;
+		float depth;
 
 	public: // Methods:
 		Bounds2d();
-		Bounds2d(const Float2& center, const Float2& extents);
+		Bounds2d(const Float2& center, const Float2& extents, float depth = 0.0f);
 		Bounds2d(const Bounds2d& bounds);
-		Bounds2d(const Float2* const corners);
-		Bounds2d(const std::vector<Float2>& points);
+		Bounds2d(const Float2* const corners, float depth = 0.0f);
+		Bounds2d(const std::vector<Float2>& points, float depth = 0.0f);
 
 		// Getters:
 		Float2 GetMin() const;
 		Float2 GetMax() const;
 		Float2 GetSize() const;
+		Float3 GetCenter3D() const;
 		float GetDiagonal() const;
 		std::array<Float2, 4> GetCorners() const;
 

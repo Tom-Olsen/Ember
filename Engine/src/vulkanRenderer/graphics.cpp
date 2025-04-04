@@ -362,7 +362,7 @@ namespace emberEngine
 
 
 	// Getters:
-	Graphics::Camera Graphics::GetActiveCamera()
+	const Graphics::Camera& Graphics::GetActiveCamera()
 	{
 		return s_activeCamera;
 	}

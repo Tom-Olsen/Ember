@@ -28,21 +28,20 @@ Scene* InitScene()
 		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
 
 		Camera* pCamera = new Camera();
-		pCamera->SetFarClip(1000.0f);
+		pCamera->SetFarClip(100.0f);
 		pGameObject->AddComponent<Camera>(pCamera);
 
 		PostProcessEffects* pPostProcessEffects = new PostProcessEffects();
 		pGameObject->AddComponent<PostProcessEffects>(pPostProcessEffects);
 
-		CameraController* cameraController = new CameraController();
-		pGameObject->AddComponent<CameraController>(cameraController);
+		//CameraController* cameraController = new CameraController();
+		//pGameObject->AddComponent<CameraController>(cameraController);
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
 	}
 	{ // Sph Fluid 2d:
 		GameObject* pGameObject = new GameObject("sphFluid2d");
-		pGameObject->GetTransform()->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
 
 		SphFluid2d* sphFluid2d = pGameObject->AddComponent<SphFluid2d>();
 

@@ -55,6 +55,10 @@ source_group("Managers" FILES ${MANAGERS_FILES})
 file(GLOB MATH_FILES "${PROJECT_SOURCE_DIR}/src/math/*")
 source_group("Math" FILES ${MATH_FILES})
 
+# src/math/*:
+file(GLOB PHYSICS_FILES "${PROJECT_SOURCE_DIR}/src/physics/*")
+source_group("Physics" FILES ${PHYSICS_FILES})
+
 # src/pushConstants/*:
 file(GLOB PUSH_CONSTANTS_FILES "${PROJECT_SOURCE_DIR}/src/pushConstants/*")
 source_group("Push Constants" FILES ${PUSH_CONSTANTS_FILES})
@@ -92,6 +96,7 @@ ${IMGUI_FILES}
 ${IMGUI_EXAMPLE}   # add the example as a source to make it show up in the IDE, but mark it as header only, to prevent compilation (see below)
 ${MANAGERS_FILES}
 ${MATH_FILES}
+${PHYSICS_FILES}
 ${PUSH_CONSTANTS_FILES}
 ${RENDER_PASSES_AND_PIPELINES_FILES}
 ${RENDER_RESOURCES_FILES}
@@ -157,6 +162,7 @@ PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gameobjectSystem
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/managers
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/math
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/physics
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPassesAndPipelines
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/renderResources

@@ -81,7 +81,7 @@ namespace emberEngine
 		static ShaderProperties* PostProcess(ComputeShader* pComputeShader);
 
 		// Getters:
-		static Camera GetActiveCamera();
+		static const Camera& GetActiveCamera();
 		static std::vector<DrawCall*>* GetSortedDrawCallPointers();
 		static std::vector<ComputeCall>& GetPostProcessComputeCalls();
 

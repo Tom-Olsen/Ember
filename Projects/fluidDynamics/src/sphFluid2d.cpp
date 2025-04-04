@@ -19,7 +19,7 @@ namespace emberEngine
 		m_isRunning = false;
 		m_timeScale = 1.0f;
 		m_timeStep = 0;
-		m_particleCount = 2000;
+		m_particleCount = 400;
 		m_useGridOptimization = true;
 
 		// Physics:
@@ -34,14 +34,13 @@ namespace emberEngine
 		m_maxVelocity = 5.0f;
 
 		// User Interaction/Boundaries:
-		m_attractorRadius = 2.0f;
+		SetAttractorRadius(0.5f);
 		m_attractorStrength = 90.0f;
-		m_fluidBounds = Bounds2d(Float2::zero, Float2(16.0f, 9.0f));
+		m_fluidBounds = Bounds(Float3::zero, Float3(16.0f, 0.01f, 9.0f));
 
 		// Visuals:
 		m_visualRadius = 0.25f;
-		m_pQuad = MeshManager::GetMesh("unitQuad");
-		//m_pQuad = MeshManager::GetMesh("arrowEdgy");
+		m_pParticleMesh = MeshManager::GetMesh("unitQuad")->Rotate(Float4x4::RotateX(math::pi2));
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
 
 		Reset();
@@ -70,7 +69,7 @@ namespace emberEngine
 		m_pGrid = std::make_unique<InfinitGrid2d>(m_particleCount);
 
 		float phi = math::pi *(math::Sqrt(5.0f) - 1.0f);
-		float radius = 0.5f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
+		float radius = 0.5f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().z);
 		for (uint32_t i = 0; i < m_particleCount; i++)
 		{
 			float r = i / (m_particleCount - 1.0f) * radius;
@@ -302,7 +301,7 @@ namespace emberEngine
 			Reset();
 		}
 	}
-	void SphFluid2d::SetFluidBounds(const Bounds2d& bounds)
+	void SphFluid2d::SetFluidBounds(const Bounds& bounds)
 	{
 		m_fluidBounds = bounds;
 	}
@@ -346,7 +345,22 @@ namespace emberEngine
 	{
 		m_maxVelocity = maxVelocity;
 	}
-
+	void SphFluid2d::SetAttractorRadius(float attractorRadius)
+	{
+		attractorRadius = math::Max(0.01f, attractorRadius);
+		if (m_attractorRadius != attractorRadius)
+		{
+			std::unique_ptr<Mesh> pNewRingMesh = std::unique_ptr<Mesh>(MeshGenerator::ArcFlatUv(attractorRadius - 0.1f, attractorRadius + 0.1f, 360.0f, 100, "attractorRing"));
+			pNewRingMesh->Rotate(Float4x4::RotateX(math::pi2));
+			std::swap(m_pRingMesh, pNewRingMesh);
+			m_attractorRadius = attractorRadius;
+		}
+	}
+	void SphFluid2d::SetAttractorStrength(float attractorStrength)
+	{
+		attractorStrength = math::Max(0.01f, attractorStrength);
+		m_attractorStrength = attractorStrength;
+	}
 
 
 	// Getters:
@@ -370,7 +384,7 @@ namespace emberEngine
 	{
 		return m_particleCount;
 	}
-	Bounds2d SphFluid2d::GetFluidBounds() const
+	Bounds SphFluid2d::GetFluidBounds() const
 	{
 		return m_fluidBounds;
 	}
@@ -414,7 +428,14 @@ namespace emberEngine
 	{
 		return m_maxVelocity;
 	}
-
+	float SphFluid2d::GetAttractorRadius() const
+	{
+		return m_attractorRadius;
+	}
+	float SphFluid2d::GetAttractorStrength() const
+	{
+		return m_attractorStrength;
+	}
 
 
 	// Overrides:
@@ -444,10 +465,10 @@ namespace emberEngine
 		for (uint32_t i = 0; i < m_particleCount; i++)
 		{
 			Float4x4 scale = Float4x4::Scale(m_visualRadius);
-			Float4x4 translation = Float4x4::Translate(Float3(m_positions[i], 0));
+			Float4x4 translation = Float4x4::Translate(Float3(m_positions[i].x, 0, m_positions[i].y));
 			Float4x4 rotation = (m_normals[i].Length() > 0.1f) ? Float4x4::RotateFromTo(Float3::forward, Float3(m_normals[i])) : Float4x4::identity;
 			Float4x4 matrix = localToWorld * translation * rotation * scale;
-			ShaderProperties* pShaderProperties = Graphics::DrawMesh(m_pQuad, m_pParticleMaterial, matrix, false, false);
+			ShaderProperties* pShaderProperties = Graphics::DrawMesh(m_pParticleMesh, m_pParticleMaterial, matrix, false, false);
 
 			// Color by density:
 			{
@@ -480,9 +501,53 @@ namespace emberEngine
 		}
 
 		// Mouse interaction:
-		if (EventSystem::MouseDown(0))
+		float mouseScroll = EventSystem::MouseScrollY();
+		if (mouseScroll != 0)
 		{
+			if (EventSystem::KeyDownOrHeld(SDLK_LSHIFT))
+			{
+				float zoomFactor = 1.0f + 0.1f * mouseScroll;
+				SetAttractorStrength(zoomFactor * m_attractorStrength);
+			}
+			else
+			{
+				float zoomFactor = 1.0f + 0.1f * mouseScroll;
+				SetAttractorRadius(zoomFactor * m_attractorRadius);
+			}
+		}
+		if (EventSystem::MouseHeld(EventSystem::MouseButton::left))
+		{
+			// Get camera inverse matrices:
+			const Graphics::Camera& camera = Graphics::GetActiveCamera();
+			Float4x4 projectionInv = camera.projectionMatrix.Inverse();
+			Float4x4 viewInv = camera.viewMatrix.Inverse();
 
+			// Get mouse position and convert to screen position:
+			Float2 mousePos = EventSystem::MousePos01();
+			Float2 screenPos = 2.0f * mousePos - Float2::one;
+
+			// Convert screenPos to NDC pos on near and far plane:
+			Float4 nearPlaneNDC = Float4(screenPos, 0.0f, 1.0f);
+			Float4 farPlaneNDC = Float4(screenPos, 1.0f, 1.0f);
+
+			// Unproject NDC to camera space coordinates:
+			Float4 nearCamera = projectionInv * nearPlaneNDC;
+			Float4 farCamera = projectionInv * farPlaneNDC;
+			nearCamera /= nearCamera.w;
+			farCamera /= farCamera.w;
+
+			// Convert camera space to world space coordinates:
+			Float3 nearWorld = Float3(viewInv * nearCamera);
+			Float3 farWorld = Float3(viewInv * farCamera);
+
+			// Cast ray and draw circle if it hits:
+			Ray ray(nearWorld, (farWorld - nearWorld).Normalize());
+			std::optional<Float3> hit = m_fluidBounds.IntersectRay(ray);
+			if (hit.has_value())
+			{
+				ShaderProperties* shaderProperties = Graphics::DrawMesh(m_pRingMesh.get(), MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity,  1.0f, false, false);
+				shaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::red);
+			}
 		}
 	}
 	const std::string SphFluid2d::ToString() const
@@ -796,8 +861,8 @@ namespace emberEngine
 	void SphFluid2d::BoundaryCollisions(Float2& position, Float2& velocity)
 	{
 		float epsilon = 1e-4f;
-		Float2 min = m_fluidBounds.GetMin();
-		Float2 max = m_fluidBounds.GetMax();
+		Float3 min = m_fluidBounds.GetMin();
+		Float3 max = m_fluidBounds.GetMax();
 
 		if (position.x < min.x)
 		{
@@ -809,33 +874,15 @@ namespace emberEngine
 			position.x = max.x - epsilon;
 			velocity.x *= -m_collisionDampening;
 		}
-		if (position.y < min.y)
+		if (position.y < min.z)
 		{
-			position.y = min.y + epsilon;
+			position.y = min.z + epsilon;
 			velocity.y *= -m_collisionDampening;
 		}
-		if (position.y > max.y)
+		if (position.y > max.z)
 		{
-			position.y = max.y - epsilon;
+			position.y = max.z - epsilon;
 			velocity.y *= -m_collisionDampening;
-		}
-		if ((position - m_fluidBounds.center).Length() > m_fluidBounds.GetDiagonal())
-		{
-			LOG_WARN("Particle way out of bounds. Resetting it to random location and velocity in bounds.");
-			float border = 0.05f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
-			position.x = math::Random::Uniform(min.x + border, max.x - border);
-			position.y = math::Random::Uniform(min.y + border, max.y - border);
-			velocity.x =  0.0f;
-			velocity.y =  0.0f;
-		}
-		if (!std::isfinite(position.x) || !std::isfinite(position.y))
-		{
-			//LOG_WARN("Infinit or nan position. Resetting it to random location and velocity in bounds.");
-			float border = 0.05f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
-			position.x = math::Random::Uniform(min.x + border, max.x - border);
-			position.y = math::Random::Uniform(min.y + border, max.y - border);
-			velocity.x = 0.0f;
-			velocity.y = 0.0f;
 		}
 	}
 }
