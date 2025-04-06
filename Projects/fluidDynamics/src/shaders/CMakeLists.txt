@@ -45,12 +45,12 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
     set(OUTPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/bin/${FILE_NAME}${EXT_TRIMMED}.spv")
     list(APPEND SPIRV_OUTPUTS ${OUTPUT_FILE})
 
-    set(REL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../../Engine/src/shaders")
-    file(REAL_PATH "${REL_PATH}" ABS_PATH BASE_DIRECTORY "${CMAKE_SOURCE_DIR}")
+    set(REL_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../../Engine/src/shaders")
+    file(REAL_PATH "${REL_INCLUDE_PATH}" ABS_INCLUDE_PATH BASE_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
-        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE} -I ${ABS_PATH}
+        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE} -I ${ABS_INCLUDE_PATH}
         DEPENDS ${SHADER_FILE}
         COMMENT "Compiling shader: ${SHADER_FILE}"
         VERBATIM

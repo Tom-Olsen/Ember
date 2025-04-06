@@ -3,12 +3,8 @@
 
 
 
-struct InstanceData
-{
-    float4x4 localToWorldMatrix;
-    float4 color;
-};
-StructuredBuffer<InstanceData> instanceBuffer : register(t0);
+StructuredBuffer<float2> b_positions : register(t0);
+//StructuredBuffer<float3> b_colors : register(t1);
 
 
 
@@ -51,7 +47,10 @@ VertexOutput main(VertexInput input)
     float4 tangent = float4(input.tangent, 0.0f);
     float4x4 localToWorldMatrix = cb_localToWorldMatrix;
     if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
-        localToWorldMatrix = mul(cb_localToWorldMatrix, instanceBuffer[input.instanceID].localToWorldMatrix);
+    {
+        float4x4 positionMatrix = LinAlg_Translate(float3(b_positions[input.instanceID].xy, 0));
+        localToWorldMatrix = mul(cb_localToWorldMatrix, positionMatrix);
+    }
     float4x4 localToClipMatrix = mul(cb_worldToClipMatrix, localToWorldMatrix);
     float4x4 normalMatrix = LinAlg_NormalMatrix(localToWorldMatrix);
     
@@ -60,8 +59,8 @@ VertexOutput main(VertexInput input)
     output.worldNormal = mul(normalMatrix, normal).xyz;
     output.worldTangent = mul(normalMatrix, tangent).xyz;
     output.vertexColor = input.vertexColor;
-    if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
-        output.vertexColor *= instanceBuffer[input.instanceID].color;
+    //if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+    //    output.vertexColor *= instanceBuffer[input.instanceID].color;
     output.uv = input.uv;
     return output;
 }

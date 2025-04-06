@@ -7,6 +7,11 @@ namespace emberEngine
 {// Constructor/Destructor:
 	SphFluid2dGpu::SphFluid2dGpu()
 	{
+		// Load compute shaders:
+		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/src/shaders/bin";
+		cs_pReset = std::make_unique<ComputeShader>("reset", directoryPath + "/reset.comp.spv");
+		m_pResetProperties = std::make_unique<ShaderProperties>((Shader*)cs_pReset.get());
+
 		// Management:
 		m_isRunning = false;
 		m_timeScale = 2.0f;
@@ -31,10 +36,13 @@ namespace emberEngine
 		m_fluidBounds = Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f));
 
 		// Visuals:
+		SetInitialDistributionRadius(6.0f);
 		m_visualRadius = 0.25f;
-		m_pParticleMesh = MeshManager::GetMesh("unitQuad");
+		m_pParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(m_visualRadius));
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
+		m_pShaderProperties = std::make_unique<ShaderProperties>((Shader*)m_pParticleMaterial);
 
+		// Editor window:
 		editorWindow = std::make_unique<SphFluid2dGpuEditorWindow>(this);
 	}
 	SphFluid2dGpu::~SphFluid2dGpu()
@@ -48,7 +56,12 @@ namespace emberEngine
 	void SphFluid2dGpu::Reset()
 	{
 		m_timeStep = 0;
-		// ...
+		m_pPositionBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+
+
+		Uint3 threadCount = Uint3(m_particleCount, 1, 1);
+		m_pResetProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
+		Compute::Dispatch(cs_pReset.get(), m_pResetProperties.get(), threadCount);
 	}
 	void SphFluid2dGpu::FixedUpdate()
 	{
@@ -91,17 +104,9 @@ namespace emberEngine
 			Reset();
 		}
 	}
-	void SphFluid2dGpu::SetFluidBounds(const Bounds& bounds)
-	{
-		m_fluidBounds = bounds;
-	}
 	void SphFluid2dGpu::SetEffectRadius(float effectRadius)
 	{
 		m_effectRadius = effectRadius;
-	}
-	void SphFluid2dGpu::SetVisualRadius(float visualRadius)
-	{
-		m_visualRadius = visualRadius;
 	}
 	void SphFluid2dGpu::SetMass(float mass)
 	{
@@ -150,6 +155,29 @@ namespace emberEngine
 		attractorStrength = math::Max(0.01f, attractorStrength);
 		m_attractorStrength = attractorStrength;
 	}
+	void SphFluid2dGpu::SetFluidBounds(const Bounds& bounds)
+	{
+		m_fluidBounds = bounds;
+	}
+	void SphFluid2dGpu::SetInitialDistributionRadius(float initialDistributionRadius)
+	{
+		if (m_initialDistributionRadius != initialDistributionRadius)
+		{
+			m_pResetProperties->SetValue("Values", "cb_initialDistributionRadius", initialDistributionRadius);
+			m_initialDistributionRadius = initialDistributionRadius;
+			Reset();
+		}
+	}
+	void SphFluid2dGpu::SetVisualRadius(float visualRadius)
+	{
+		visualRadius = math::Max(0.01f, visualRadius);
+		if (m_visualRadius != visualRadius)
+		{
+			std::unique_ptr<Mesh> pNewParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(visualRadius));
+			std::swap(m_pParticleMesh, pNewParticleMesh);
+			m_visualRadius = visualRadius;
+		}
+	}
 
 
 
@@ -174,17 +202,9 @@ namespace emberEngine
 	{
 		return m_particleCount;
 	}
-	Bounds SphFluid2dGpu::GetFluidBounds() const
-	{
-		return m_fluidBounds;
-	}
 	float SphFluid2dGpu::GetEffectRadius() const
 	{
 		return m_effectRadius;
-	}
-	float SphFluid2dGpu::GetVisualRadius() const
-	{
-		return m_visualRadius;
 	}
 	float SphFluid2dGpu::GetMass() const
 	{
@@ -226,6 +246,19 @@ namespace emberEngine
 	{
 		return m_attractorStrength;
 	}
+	Bounds SphFluid2dGpu::GetFluidBounds() const
+	{
+		return m_fluidBounds;
+	}
+	float SphFluid2dGpu::GetInitialDistributionRadius() const
+	{
+		return m_initialDistributionRadius;
+	}
+	float SphFluid2dGpu::GetVisualRadius() const
+	{
+		return m_visualRadius;
+	}
+
 
 
 	// Overrides:
@@ -235,6 +268,7 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::Update()
 	{
+		// Keyboard interactions:
 		if (EventSystem::KeyDown(SDLK_SPACE))
 		{
 			m_isRunning = !m_isRunning;
@@ -250,7 +284,7 @@ namespace emberEngine
 			LOG_TRACE("Simulation stopped and reset.");
 		}
 
-		// Mouse interaction:
+		// Mouse scrolling:
 		float mouseScroll = EventSystem::MouseScrollY();
 		if (mouseScroll != 0)
 		{
@@ -266,6 +300,7 @@ namespace emberEngine
 			}
 		}
 
+		// Mouse left and right click:
 		if (EventSystem::MouseHeld(EventSystem::MouseButton::left) ^ EventSystem::MouseHeld(EventSystem::MouseButton::right)) // exlusive or
 		{
 			Ray ray = Ray::CameraRay(EventSystem::MousePos01());
@@ -285,6 +320,11 @@ namespace emberEngine
 		}
 		else
 			m_attractorState = 0;
+
+		// Instanced rendering:
+		Float4x4 localToWorldMatrix = m_pTransform->GetLocalToWorldMatrix();
+		m_pShaderProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
+		Graphics::DrawInstanced(m_particleCount, m_pPositionBuffer.get(), m_pParticleMesh.get(), m_pParticleMaterial, m_pShaderProperties.get(), localToWorldMatrix, false, false);
 	}
 	const std::string SphFluid2dGpu::ToString() const
 	{

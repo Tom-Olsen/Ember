@@ -61,8 +61,9 @@ namespace emberEngine
 		Bounds m_fluidBounds;
 
 		// Visuals:
+		float m_initialDistributionRadius;
 		float m_visualRadius;
-		Mesh* m_pParticleMesh;
+		std::unique_ptr<Mesh> m_pParticleMesh;
 		std::unique_ptr<Mesh> m_pRingMesh;
 		Material* m_pParticleMaterial;
 		std::unique_ptr<SphFluid2dCpuEditorWindow> editorWindow;
@@ -83,19 +84,20 @@ namespace emberEngine
 		void SetTimeScale(float timeScale);
 		void SetUseGridOptimization(bool useGridOptimization);
 		void SetParticleCount(uint32_t particleCount);
-		void SetFluidBounds(const Bounds& bounds);
 		void SetEffectRadius(float effectRadius);
-		void SetVisualRadius(float visualRadius);
 		void SetMass(float mass);
 		void SetViscosity(float viscosity);
 		void SetSurfaceTension(float surfaceTension);
-		void SetCollisionDampening(float mass);
+		void SetCollisionDampening(float collisionDampening);
 		void SetTargetDensity(float targetDensity);
 		void SetPressureMultiplier(float pressureMultiplier);
 		void SetGravity(float gravity);
 		void SetMaxVelocity(float maxVelocity);
 		void SetAttractorRadius(float attractorRadius);
 		void SetAttractorStrength(float attractorStrength);
+		void SetFluidBounds(const Bounds& bounds);
+		void SetInitialDistributionRadius(float initialDistributionRadius);
+		void SetVisualRadius(float visualRadius);
 		
 		// Getters:
 		bool GetIsRunning() const;
@@ -103,9 +105,7 @@ namespace emberEngine
 		bool GetUseGridOptimization() const;
 		uint32_t GetTimeStep() const;
 		uint32_t GetParticleCount() const;
-		Bounds GetFluidBounds() const;
 		float GetEffectRadius() const;
-		float GetVisualRadius() const;
 		float GetMass() const;
 		float GetViscosity() const;
 		float GetSurfaceTension() const;
@@ -116,6 +116,9 @@ namespace emberEngine
 		float GetMaxVelocity() const;
 		float GetAttractorRadius() const;
 		float GetAttractorStrength() const;
+		Bounds GetFluidBounds() const;
+		float GetInitialDistributionRadius() const;
+		float GetVisualRadius() const;
 
 		// Overrides:
 		void Start() override;

@@ -18,7 +18,6 @@ namespace emberEngine
 		bool m_useGridOptimization;
 		int m_particleCount;
 		float m_effectRadius;
-		float m_visualRadius;
 		float m_mass;
 		float m_viscosity;
 		float m_surfaceTension;
@@ -29,6 +28,8 @@ namespace emberEngine
 		float m_maxVelocity;
 		float m_attractorRadius;
 		float m_attractorStrength;
+		float m_initialDistributionRadius;
+		float m_visualRadius;
 
 	public:
 		SphFluid2dGpuEditorWindow(SphFluid2dGpu* pSphFluid2dGpu)
@@ -43,7 +44,6 @@ namespace emberEngine
 				m_useGridOptimization = m_pSphFluid2dGpu->GetUseGridOptimization();
 				m_particleCount = m_pSphFluid2dGpu->GetParticleCount();
 				m_effectRadius = m_pSphFluid2dGpu->GetEffectRadius();
-				m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
 				m_mass = m_pSphFluid2dGpu->GetMass();
 				m_viscosity = m_pSphFluid2dGpu->GetViscosity();
 				m_surfaceTension = m_pSphFluid2dGpu->GetSurfaceTension();
@@ -54,6 +54,8 @@ namespace emberEngine
 				m_maxVelocity = m_pSphFluid2dGpu->GetMaxVelocity();
 				m_attractorRadius = m_pSphFluid2dGpu->GetAttractorRadius();
 				m_attractorStrength = m_pSphFluid2dGpu->GetAttractorStrength();
+				m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
+				m_initialDistributionRadius = m_pSphFluid2dGpu->GetInitialDistributionRadius();
 			}
 			// Get member values from data serialization:
 			//else
@@ -68,7 +70,6 @@ namespace emberEngine
 			m_useGridOptimization = m_pSphFluid2dGpu->GetUseGridOptimization();
 			m_particleCount = m_pSphFluid2dGpu->GetParticleCount();
 			m_effectRadius = m_pSphFluid2dGpu->GetEffectRadius();
-			m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
 			m_mass = m_pSphFluid2dGpu->GetMass();
 			m_viscosity = m_pSphFluid2dGpu->GetViscosity();
 			m_surfaceTension = m_pSphFluid2dGpu->GetSurfaceTension();
@@ -79,6 +80,8 @@ namespace emberEngine
 			m_maxVelocity = m_pSphFluid2dGpu->GetMaxVelocity();
 			m_attractorRadius = m_pSphFluid2dGpu->GetAttractorRadius();
 			m_attractorStrength = m_pSphFluid2dGpu->GetAttractorStrength();
+			m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
+			m_initialDistributionRadius = m_pSphFluid2dGpu->GetInitialDistributionRadius();
 
 			ImGui::Begin("Sph Fluid 2d Editor Window");
 			{
@@ -88,7 +91,6 @@ namespace emberEngine
 				Editor::Text(("Time Step:" + std::to_string(m_pSphFluid2dGpu->GetTimeStep())).c_str());
 				Editor::InputInt("Particle Count:", &m_particleCount);
 				Editor::InputFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
-				Editor::InputFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
 				Editor::InputFloat("Mass:", &m_mass, 0.1f, 1.0f, "%.8f");
 				Editor::InputFloat("Viscosity:", &m_viscosity, 0.1f, 1.0f, "%.8f");
 				Editor::InputFloat("Surface Tension:", &m_surfaceTension, 0.1f, 1.0f, "%.8f");
@@ -99,6 +101,8 @@ namespace emberEngine
 				Editor::InputFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
 				Editor::InputFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
 				Editor::InputFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
+				Editor::InputFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
+				Editor::InputFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
 
 				if (ImGui::Button("Reset Simulation"))
 					m_pSphFluid2dGpu->Reset();
@@ -110,7 +114,6 @@ namespace emberEngine
 			m_pSphFluid2dGpu->SetUseGridOptimization(m_useGridOptimization);
 			m_pSphFluid2dGpu->SetParticleCount(m_particleCount);
 			m_pSphFluid2dGpu->SetEffectRadius(m_effectRadius);
-			m_pSphFluid2dGpu->SetVisualRadius(m_visualRadius);
 			m_pSphFluid2dGpu->SetMass(m_mass);
 			m_pSphFluid2dGpu->SetViscosity(m_viscosity);
 			m_pSphFluid2dGpu->SetSurfaceTension(m_surfaceTension);
@@ -121,6 +124,8 @@ namespace emberEngine
 			m_pSphFluid2dGpu->SetMaxVelocity(m_maxVelocity);
 			m_pSphFluid2dGpu->SetAttractorRadius(m_attractorRadius);
 			m_pSphFluid2dGpu->SetAttractorStrength(m_attractorStrength);
+			m_pSphFluid2dGpu->SetVisualRadius(m_visualRadius);
+			m_pSphFluid2dGpu->SetInitialDistributionRadius(m_initialDistributionRadius);
 		}
 	};
 }
