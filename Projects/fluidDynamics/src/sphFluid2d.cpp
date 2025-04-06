@@ -1,5 +1,5 @@
 #include "sphFluid2d.h"
-#include "infinitGrid2d.h"
+#include "hashGrid2d.h"
 #include "smoothingKernals.h"
 #include "sphFluid2dEditorWindow.h"
 
@@ -17,9 +17,9 @@ namespace emberEngine
 	{
 		// Management:
 		m_isRunning = false;
-		m_timeScale = 1.0f;
+		m_timeScale = 2.0f;
 		m_timeStep = 0;
-		m_particleCount = 400;
+		m_particleCount = 1500;
 		m_useGridOptimization = true;
 
 		// Physics:
@@ -34,8 +34,8 @@ namespace emberEngine
 		m_maxVelocity = 5.0f;
 
 		// User Interaction/Boundaries:
-		SetAttractorRadius(2.0f);
-		m_attractorStrength = 30.0f;
+		SetAttractorRadius(3.0f);
+		m_attractorStrength = 2.0f;
 		m_fluidBounds = Bounds(Float3::zero, Float3(16.0f, 0.01f, 9.0f));
 
 		// Visuals:
@@ -66,10 +66,10 @@ namespace emberEngine
 		m_kv2.resize(m_particleCount);
 		m_tempPositions.resize(m_particleCount);
 		m_tempVelocities.resize(m_particleCount);
-		m_pGrid = std::make_unique<InfinitGrid2d>(m_particleCount);
+		m_pGrid = std::make_unique<HashGrid2d>(m_particleCount);
 
-		float phi = math::pi *(math::Sqrt(5.0f) - 1.0f);
-		float radius = 0.5f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().z);
+		float phi = math::pi * (math::Sqrt(5.0f) - 1.0f);
+		float radius = 0.4f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().z);
 		for (uint32_t i = 0; i < m_particleCount; i++)
 		{
 			float r = i / (m_particleCount - 1.0f) * radius;
@@ -851,7 +851,7 @@ namespace emberEngine
 			Float2 offset = m_attractorPoint - positions[particleIndex];
 			float r = offset.Length();
 			if (r < m_attractorRadius && r > 1e-8f)
-				return m_attractorState * m_attractorStrength * densities[particleIndex] * offset;
+				return m_attractorState * m_attractorStrength * densities[particleIndex] * offset * r * r;
 		}
 		return 0.0f;
 	}

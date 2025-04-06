@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_infinitGrid2d_h__
-#define __INCLUDE_GUARD_infinitGrid2d_h__
+#ifndef __INCLUDE_GUARD_hashGrid2d_h__
+#define __INCLUDE_GUARD_hashGrid2d_h__
 #include "emberMath.h"
 #include <vector>
 
@@ -7,7 +7,7 @@
 
 namespace emberEngine
 {
-	class InfinitGrid2d
+	class HashGrid2d
 	{
 	private: // Members:
 		uint32_t m_particleCount;
@@ -18,8 +18,8 @@ namespace emberEngine
 		std::vector<std::size_t> m_permutation;	// permutations for sorting.
 
 	public: // Methods:
-		InfinitGrid2d(int particleCount);
-		~InfinitGrid2d();
+		HashGrid2d(int particleCount);
+		~HashGrid2d();
 
 		Int2 Cell(Float2 position, float radius);
 		uint32_t CellHash(Int2 cell);
@@ -33,4 +33,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_infinitGrid2d_h__
+#endif // __INCLUDE_GUARD_hashGrid2d_h__

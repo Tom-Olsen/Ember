@@ -1,4 +1,4 @@
-#include "infinitGrid2d.h"
+#include "hashGrid2d.h"
 #include "logger.h"
 #include "vectorSort.h"
 
@@ -7,44 +7,44 @@
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	InfinitGrid2d::InfinitGrid2d(int particleCount) : m_particleCount(particleCount)
+	HashGrid2d::HashGrid2d(int particleCount) : m_particleCount(particleCount)
 	{
 		m_cellKeys.resize(m_particleCount);
 		m_startIndices.resize(m_particleCount);
 	}
-	InfinitGrid2d::~InfinitGrid2d()
+	HashGrid2d::~HashGrid2d()
 	{
 
 	}
 
 
 
-	Int2 InfinitGrid2d::Cell(Float2 position, float radius)
+	Int2 HashGrid2d::Cell(Float2 position, float radius)
 	{
 		return Int2(Float2::Floor((position / radius)));
 	}
-	uint32_t InfinitGrid2d::CellHash(Int2 cell)
+	uint32_t HashGrid2d::CellHash(Int2 cell)
 	{
 		uint32_t a = (uint32_t)cell.x * m_prime0;
 		uint32_t b = (uint32_t)cell.y * m_prime1;
 		return (a + b);
 	}
-	uint32_t InfinitGrid2d::CellKey(uint32_t cellHash)
+	uint32_t HashGrid2d::CellKey(uint32_t cellHash)
 	{
 		return cellHash % m_particleCount;
 	}
-	uint32_t InfinitGrid2d::GetCellKey(int particleIndex)
+	uint32_t HashGrid2d::GetCellKey(int particleIndex)
 	{
 		return m_cellKeys[particleIndex];
 	}
-	uint32_t InfinitGrid2d::GetStartIndex(int cellKey)
+	uint32_t HashGrid2d::GetStartIndex(int cellKey)
 	{
 		return m_startIndices[cellKey];
 	}
 
 
 
-	void InfinitGrid2d::UpdateGrid(std::vector<Float2>& positions, float radius)
+	void HashGrid2d::UpdateGrid(std::vector<Float2>& positions, float radius)
 	{
 		// Fill cellKeys vector:
 		for (int i = 0; i < m_particleCount; i++)
@@ -71,7 +71,7 @@ namespace emberEngine
 				m_startIndices[m_cellKeys[i]] = i;
 		}
 	}
-	void InfinitGrid2d::ApplySort(std::vector<Float2>& data)
+	void HashGrid2d::ApplySort(std::vector<Float2>& data)
 	{
 		data = ApplyPermutation(data, m_permutation);
 	}

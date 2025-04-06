@@ -10,7 +10,7 @@ namespace emberEngine
 {
 	// Forward decleration:
 	struct SphFluid2dEditorWindow;
-	struct InfinitGrid2d;
+	struct HashGrid2d;
 
 
 
@@ -22,7 +22,7 @@ namespace emberEngine
 		float m_timeScale;
 		bool m_useGridOptimization;
 		uint32_t m_timeStep;
-		std::unique_ptr<InfinitGrid2d> m_pGrid;
+		std::unique_ptr<HashGrid2d> m_pGrid;
 		static const std::array<Int2, 9> s_offsets;
 
 		// Data:
