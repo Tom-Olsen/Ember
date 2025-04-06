@@ -36,11 +36,11 @@ namespace emberEngine
 		// User Interaction/Boundaries:
 		SetAttractorRadius(3.0f);
 		m_attractorStrength = 2.0f;
-		m_fluidBounds = Bounds(Float3::zero, Float3(16.0f, 0.01f, 9.0f));
+		m_fluidBounds = Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f));
 
 		// Visuals:
 		m_visualRadius = 0.25f;
-		m_pParticleMesh = MeshManager::GetMesh("unitQuad")->Rotate(Float4x4::RotateX(math::pi2));
+		m_pParticleMesh = MeshManager::GetMesh("unitQuad");
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
 
 		Reset();
@@ -69,7 +69,7 @@ namespace emberEngine
 		m_pGrid = std::make_unique<HashGrid2d>(m_particleCount);
 
 		float phi = math::pi * (math::Sqrt(5.0f) - 1.0f);
-		float radius = 0.4f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().z);
+		float radius = 0.4f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
 		for (uint32_t i = 0; i < m_particleCount; i++)
 		{
 			float r = i / (m_particleCount - 1.0f) * radius;
@@ -351,7 +351,6 @@ namespace emberEngine
 		if (m_attractorRadius != attractorRadius)
 		{
 			std::unique_ptr<Mesh> pNewRingMesh = std::unique_ptr<Mesh>(MeshGenerator::ArcFlatUv(attractorRadius - 0.1f, attractorRadius + 0.1f, 360.0f, 100, "attractorRing"));
-			pNewRingMesh->Rotate(Float4x4::RotateX(math::pi2));
 			std::swap(m_pRingMesh, pNewRingMesh);
 			m_attractorRadius = attractorRadius;
 		}
@@ -465,7 +464,7 @@ namespace emberEngine
 		for (uint32_t i = 0; i < m_particleCount; i++)
 		{
 			Float4x4 scale = Float4x4::Scale(m_visualRadius);
-			Float4x4 translation = Float4x4::Translate(Float3(m_positions[i].x, 0, m_positions[i].y));
+			Float4x4 translation = Float4x4::Translate(Float3(m_positions[i]));
 			Float4x4 rotation = (m_normals[i].Length() > 0.1f) ? Float4x4::RotateFromTo(Float3::forward, Float3(m_normals[i])) : Float4x4::identity;
 			Float4x4 matrix = localToWorld * translation * rotation * scale;
 			ShaderProperties* pShaderProperties = Graphics::DrawMesh(m_pParticleMesh, m_pParticleMaterial, matrix, false, false);
@@ -522,7 +521,7 @@ namespace emberEngine
 			std::optional<Float3> hit = m_fluidBounds.IntersectRay(ray);
 			if (hit.has_value())
 			{
-				m_attractorPoint = Float2(hit.value().x, hit.value().z);
+				m_attractorPoint = Float2(hit.value());
 				ShaderProperties* shaderProperties = Graphics::DrawMesh(m_pRingMesh.get(), MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
 				shaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(EventSystem::MouseButton::left))
@@ -871,14 +870,14 @@ namespace emberEngine
 			position.x = max.x - epsilon;
 			velocity.x *= -m_collisionDampening;
 		}
-		if (position.y < min.z)
+		if (position.y < min.y)
 		{
-			position.y = min.z + epsilon;
+			position.y = min.y + epsilon;
 			velocity.y *= -m_collisionDampening;
 		}
-		if (position.y > max.z)
+		if (position.y > max.y)
 		{
-			position.y = max.z - epsilon;
+			position.y = max.y - epsilon;
 			velocity.y *= -m_collisionDampening;
 		}
 	}

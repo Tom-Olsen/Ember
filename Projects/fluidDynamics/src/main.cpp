@@ -23,9 +23,9 @@ Scene* InitScene()
 	Scene* pScene = new Scene();
 	{// Camera:
 		GameObject* pGameObject = new GameObject("mainCamera");
-		Float3 pos = Float3(0.0f, -17.0f, 0.0f);
+		Float3 pos = Float3(0.0f, 0.0f, 17.0f);
 		pGameObject->GetTransform()->SetPosition(pos);
-		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
+		//pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
 
 		Camera* pCamera = new Camera();
 		pCamera->SetFarClip(100.0f);
