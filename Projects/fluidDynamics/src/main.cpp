@@ -10,7 +10,8 @@
 #include "postProcessEffects.h"
 #include "spotLight.h"
 #include "transform.h"
-#include "sphFluid2d.h"
+#include "sphFluid2dCpu.h"
+#include "sphFluid2dGpu.h"
 using namespace emberEngine;
 
 
@@ -40,13 +41,20 @@ Scene* InitScene()
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
 	}
-	{ // Sph Fluid 2d:
-		GameObject* pGameObject = new GameObject("sphFluid2d");
+	{ // Sph Fluid 2d Cpu:
+		GameObject* pGameObject = new GameObject("sphFluid2dCpu");
 
-		SphFluid2d* sphFluid2d = pGameObject->AddComponent<SphFluid2d>();
+		SphFluid2dCpu* sphFluid2dCpu = pGameObject->AddComponent<SphFluid2dCpu>();
 
 		pScene->AddGameObject(pGameObject);
 	}
+	//{ // Sph Fluid 2d Gpu:
+	//	GameObject* pGameObject = new GameObject("sphFluid2dGpu");
+	//
+	//	SphFluid2dGpu* sphFluid2dGpu = pGameObject->AddComponent<SphFluid2dCpu>();
+	//
+	//	pScene->AddGameObject(pGameObject);
+	//}
 	return pScene;
 }
 

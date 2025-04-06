@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_sphFluid2d_h__
-#define __INCLUDE_GUARD_sphFluid2d_h__
+#ifndef __INCLUDE_GUARD_sphFluid2dCpu_h__
+#define __INCLUDE_GUARD_sphFluid2dCpu_h__
 #include "emberEngine.h"
 #include <array>
 #include <memory>
@@ -9,12 +9,12 @@
 namespace emberEngine
 {
 	// Forward decleration:
-	struct SphFluid2dEditorWindow;
+	struct SphFluid2dCpuEditorWindow;
 	struct HashGrid2d;
 
 
 
-	class SphFluid2d : public Component
+	class SphFluid2dCpu : public Component
 	{
 	private: // Members:
 		// Management:
@@ -65,12 +65,18 @@ namespace emberEngine
 		Mesh* m_pParticleMesh;
 		std::unique_ptr<Mesh> m_pRingMesh;
 		Material* m_pParticleMaterial;
-		std::unique_ptr<SphFluid2dEditorWindow> editorWindow;
+		std::unique_ptr<SphFluid2dCpuEditorWindow> editorWindow;
 
 	public: // Methods:
-		SphFluid2d();
-		~SphFluid2d();
+		SphFluid2dCpu();
+		~SphFluid2dCpu();
+
+		// Physics update:
 		void Reset();
+		void FixedUpdate() override;
+		void TimeStepLeapFrog(float deltaT);
+		void TimeStepVelocityVerlet(float deltaT);
+		void TimeStepRungeKutta2(float deltaT);
 
 		// Setters:
 		void SetIsRunning(bool isRunning);
@@ -114,10 +120,6 @@ namespace emberEngine
 		// Overrides:
 		void Start() override;
 		void Update() override;
-		void FixedUpdate() override;
-		void TimeStepLeapFrog(float deltaT);
-		void TimeStepVelocityVerlet(float deltaT);
-		void TimeStepRungeKutta2(float deltaT);
 		const std::string ToString() const override;
 
 	private:
@@ -136,4 +138,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_sphFluid2d_h__
+#endif // __INCLUDE_GUARD_sphFluid2dCpu_h__

@@ -1,19 +1,21 @@
-#include "sphFluid2d.h"
+#include "sphFluid2dCpu.h"
 #include "hashGrid2d.h"
 #include "smoothingKernals.h"
-#include "sphFluid2dEditorWindow.h"
+#include "sphFluid2dCpuEditorWindow.h"
 
 
 
 namespace emberEngine
 {
-	const std::array<Int2, 9> SphFluid2d::s_offsets = {
+	const std::array<Int2, 9> SphFluid2dCpu::s_offsets = {
 	Int2(-1, -1), Int2(-1, 0), Int2(-1, 1),
 	Int2( 0, -1), Int2( 0, 0), Int2( 0, 1),
 	Int2( 1, -1), Int2( 1, 0), Int2( 1, 1) };
 
+
+
 	// Constructor/Destructor:
-	SphFluid2d::SphFluid2d()
+	SphFluid2dCpu::SphFluid2dCpu()
 	{
 		// Management:
 		m_isRunning = false;
@@ -43,15 +45,17 @@ namespace emberEngine
 		m_pParticleMesh = MeshManager::GetMesh("unitQuad");
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
 
-		Reset();
-
-		editorWindow = std::make_unique<SphFluid2dEditorWindow>(this);
+		editorWindow = std::make_unique<SphFluid2dCpuEditorWindow>(this);
 	}
-	SphFluid2d::~SphFluid2d()
+	SphFluid2dCpu::~SphFluid2dCpu()
 	{
 
 	}
-	void SphFluid2d::Reset()
+
+
+
+	// Physics update:
+	void SphFluid2dCpu::Reset()
 	{
 		m_timeStep = 0;
 		m_positions.resize(m_particleCount);
@@ -99,11 +103,7 @@ namespace emberEngine
 		//for (uint32_t i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
 	}
-
-
-
-	// Physics update:
-	void SphFluid2d::FixedUpdate()
+	void SphFluid2dCpu::FixedUpdate()
 	{
 		if (!m_isRunning)
 			return;
@@ -120,7 +120,7 @@ namespace emberEngine
 		}
 		m_timeStep++;
 	}
-	void SphFluid2d::TimeStepLeapFrog(float deltaT)
+	void SphFluid2dCpu::TimeStepLeapFrog(float deltaT)
 	{
 		// Update grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
@@ -163,7 +163,7 @@ namespace emberEngine
 			BoundaryCollisions(m_positions[i], m_velocities[i]);
 		}
 	}
-	void SphFluid2d::TimeStepVelocityVerlet(float deltaT)
+	void SphFluid2dCpu::TimeStepVelocityVerlet(float deltaT)
 	{
 		// Update grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
@@ -199,7 +199,7 @@ namespace emberEngine
 			BoundaryCollisions(m_positions[i], m_velocities[i]);
 		}
 	}
-	void SphFluid2d::TimeStepRungeKutta2(float deltaT)
+	void SphFluid2dCpu::TimeStepRungeKutta2(float deltaT)
 	{
 		// Update grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
@@ -280,20 +280,22 @@ namespace emberEngine
 		}
 	}
 
+
+
 	// Setters:
-	void SphFluid2d::SetIsRunning(bool isRunning)
+	void SphFluid2dCpu::SetIsRunning(bool isRunning)
 	{
 		m_isRunning = isRunning;
 	}
-	void SphFluid2d::SetTimeScale(float timeScale)
+	void SphFluid2dCpu::SetTimeScale(float timeScale)
 	{
 		m_timeScale = timeScale;
 	}
-	void SphFluid2d::SetUseGridOptimization(bool useGridOptimization)
+	void SphFluid2dCpu::SetUseGridOptimization(bool useGridOptimization)
 	{
 		m_useGridOptimization = useGridOptimization;
 	}
-	void SphFluid2d::SetParticleCount(uint32_t particleCount)
+	void SphFluid2dCpu::SetParticleCount(uint32_t particleCount)
 	{
 		if (m_particleCount != particleCount)
 		{
@@ -301,51 +303,51 @@ namespace emberEngine
 			Reset();
 		}
 	}
-	void SphFluid2d::SetFluidBounds(const Bounds& bounds)
+	void SphFluid2dCpu::SetFluidBounds(const Bounds& bounds)
 	{
 		m_fluidBounds = bounds;
 	}
-	void SphFluid2d::SetEffectRadius(float effectRadius)
+	void SphFluid2dCpu::SetEffectRadius(float effectRadius)
 	{
 		m_effectRadius = effectRadius;
 	}
-	void SphFluid2d::SetVisualRadius(float visualRadius)
+	void SphFluid2dCpu::SetVisualRadius(float visualRadius)
 	{
 		m_visualRadius = visualRadius;
 	}
-	void SphFluid2d::SetMass(float mass)
+	void SphFluid2dCpu::SetMass(float mass)
 	{
 		m_mass = mass;
 	}
-	void SphFluid2d::SetViscosity(float viscosity)
+	void SphFluid2dCpu::SetViscosity(float viscosity)
 	{
 		m_viscosity = viscosity;
 	}
-	void SphFluid2d::SetSurfaceTension(float surfaceTension)
+	void SphFluid2dCpu::SetSurfaceTension(float surfaceTension)
 	{
 		m_surfaceTension = surfaceTension;
 	}
-	void SphFluid2d::SetCollisionDampening(float collisionDampening)
+	void SphFluid2dCpu::SetCollisionDampening(float collisionDampening)
 	{
 		m_collisionDampening = collisionDampening;
 	}
-	void SphFluid2d::SetTargetDensity(float targetDensity)
+	void SphFluid2dCpu::SetTargetDensity(float targetDensity)
 	{
 		m_targetDensity = targetDensity;
 	}
-	void SphFluid2d::SetPressureMultiplier(float pressureMultiplier)
+	void SphFluid2dCpu::SetPressureMultiplier(float pressureMultiplier)
 	{
 		m_pressureMultiplier = pressureMultiplier;
 	}
-	void SphFluid2d::SetGravity(float gravity)
+	void SphFluid2dCpu::SetGravity(float gravity)
 	{
 		m_gravity = gravity;
 	}
-	void SphFluid2d::SetMaxVelocity(float maxVelocity)
+	void SphFluid2dCpu::SetMaxVelocity(float maxVelocity)
 	{
 		m_maxVelocity = maxVelocity;
 	}
-	void SphFluid2d::SetAttractorRadius(float attractorRadius)
+	void SphFluid2dCpu::SetAttractorRadius(float attractorRadius)
 	{
 		attractorRadius = math::Max(0.01f, attractorRadius);
 		if (m_attractorRadius != attractorRadius)
@@ -355,94 +357,96 @@ namespace emberEngine
 			m_attractorRadius = attractorRadius;
 		}
 	}
-	void SphFluid2d::SetAttractorStrength(float attractorStrength)
+	void SphFluid2dCpu::SetAttractorStrength(float attractorStrength)
 	{
 		attractorStrength = math::Max(0.01f, attractorStrength);
 		m_attractorStrength = attractorStrength;
 	}
 
 
+
 	// Getters:
-	bool SphFluid2d::GetIsRunning() const
+	bool SphFluid2dCpu::GetIsRunning() const
 	{
 		return m_isRunning;
 	}
-	float SphFluid2d::GetTimeScale() const
+	float SphFluid2dCpu::GetTimeScale() const
 	{
 		return m_timeScale;
 	}
-	bool SphFluid2d::GetUseGridOptimization() const
+	bool SphFluid2dCpu::GetUseGridOptimization() const
 	{
 		return m_useGridOptimization;
 	}
-	uint32_t SphFluid2d::GetTimeStep() const
+	uint32_t SphFluid2dCpu::GetTimeStep() const
 	{
 		return m_timeStep;
 	}
-	uint32_t SphFluid2d::GetParticleCount() const
+	uint32_t SphFluid2dCpu::GetParticleCount() const
 	{
 		return m_particleCount;
 	}
-	Bounds SphFluid2d::GetFluidBounds() const
+	Bounds SphFluid2dCpu::GetFluidBounds() const
 	{
 		return m_fluidBounds;
 	}
-	float SphFluid2d::GetEffectRadius() const
+	float SphFluid2dCpu::GetEffectRadius() const
 	{
 		return m_effectRadius;
 	}
-	float SphFluid2d::GetVisualRadius() const
+	float SphFluid2dCpu::GetVisualRadius() const
 	{
 		return m_visualRadius;
 	}
-	float SphFluid2d::GetMass() const
+	float SphFluid2dCpu::GetMass() const
 	{
 		return m_mass;
 	}
-	float SphFluid2d::GetViscosity() const
+	float SphFluid2dCpu::GetViscosity() const
 	{
 		return m_viscosity;
 	}
-	float SphFluid2d::GetSurfaceTension() const
+	float SphFluid2dCpu::GetSurfaceTension() const
 	{
 		return m_surfaceTension;
 	}
-	float SphFluid2d::GetCollisionDampening() const
+	float SphFluid2dCpu::GetCollisionDampening() const
 	{
 		return m_collisionDampening;
 	}
-	float SphFluid2d::GetTargetDensity() const
+	float SphFluid2dCpu::GetTargetDensity() const
 	{
 		return m_targetDensity;
 	}
-	float SphFluid2d::GetPressureMultiplier() const
+	float SphFluid2dCpu::GetPressureMultiplier() const
 	{
 		return m_pressureMultiplier;
 	}
-	float SphFluid2d::GetGravity() const
+	float SphFluid2dCpu::GetGravity() const
 	{
 		return m_gravity;
 	}
-	float SphFluid2d::GetMaxVelocity() const
+	float SphFluid2dCpu::GetMaxVelocity() const
 	{
 		return m_maxVelocity;
 	}
-	float SphFluid2d::GetAttractorRadius() const
+	float SphFluid2dCpu::GetAttractorRadius() const
 	{
 		return m_attractorRadius;
 	}
-	float SphFluid2d::GetAttractorStrength() const
+	float SphFluid2dCpu::GetAttractorStrength() const
 	{
 		return m_attractorStrength;
 	}
 
 
-	// Overrides:
-	void SphFluid2d::Start()
-	{
 
+	// Overrides:
+	void SphFluid2dCpu::Start()
+	{
+		Reset();
 	}
-	void SphFluid2d::Update()
+	void SphFluid2dCpu::Update()
 	{
 		if (EventSystem::KeyDown(SDLK_SPACE))
 		{
@@ -456,7 +460,7 @@ namespace emberEngine
 		{
 			m_isRunning = false;
 			Reset();
-			LOG_TRACE("Simulation stopped.");
+			LOG_TRACE("Simulation stopped and reset.");
 		}
 
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
@@ -535,16 +539,16 @@ namespace emberEngine
 		else
 			m_attractorState = 0;
 	}
-	const std::string SphFluid2d::ToString() const
+	const std::string SphFluid2dCpu::ToString() const
 	{
-		return "SphFluid2d";
+		return "SphFluid2dCpu";
 	}
 
 
 
 	// Private methods:
 	// Physics:
-	float SphFluid2d::Density(int particleIndex, const std::vector<Float2>& positions)
+	float SphFluid2dCpu::Density(int particleIndex, const std::vector<Float2>& positions)
 	{
 		if (m_useGridOptimization)
 		{
@@ -588,7 +592,7 @@ namespace emberEngine
 			return density;
 		}
 	}
-	Float2 SphFluid2d::Normal(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
+	Float2 SphFluid2dCpu::Normal(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
 	{
 		if (m_useGridOptimization)
 		{
@@ -647,7 +651,7 @@ namespace emberEngine
 			return normal;
 		}
 	}
-	float SphFluid2d::Curvature(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& normals, const std::vector<float>& densities)
+	float SphFluid2dCpu::Curvature(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& normals, const std::vector<float>& densities)
 	{
 		if (m_useGridOptimization)
 		{
@@ -706,7 +710,7 @@ namespace emberEngine
 		return densityError * pressureMultiplier;
 		//return pressureMultiplier * (math::Pow(density / targetDensity, 7.0f) - 1.0f);
 	}
-	Float2 SphFluid2d::PressureForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
+	Float2 SphFluid2dCpu::PressureForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
 	{
 		if (m_useGridOptimization)
 		{
@@ -771,7 +775,7 @@ namespace emberEngine
 			return pressureForce;
 		}
 	}
-	Float2 SphFluid2d::ViscosityForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& velocities, const std::vector<float>& densities)
+	Float2 SphFluid2dCpu::ViscosityForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& velocities, const std::vector<float>& densities)
 	{
 		if (m_useGridOptimization)
 		{
@@ -832,18 +836,18 @@ namespace emberEngine
 			return m_viscosity * viscosityForce;
 		}
 	}
-	Float2 SphFluid2d::SurfaceTensionForceDensity(int particleIndex, const std::vector<Float2>& normals, const std::vector<float>& curvatures)
+	Float2 SphFluid2dCpu::SurfaceTensionForceDensity(int particleIndex, const std::vector<Float2>& normals, const std::vector<float>& curvatures)
 	{
 		Float2 normal = normals[particleIndex];
 		float normalLength = normal.Length();
 		//return (normalLength > 0.1f) ? -m_surfaceTension * normal / normalLength : Float2::zero;
 		return (normalLength > 0.1f) ? m_surfaceTension * curvatures[particleIndex] * normal / normalLength : Float2::zero;
 	}
-	Float2 SphFluid2d::GravityForceDensity(int particleIndex, const std::vector<float>& densities)
+	Float2 SphFluid2dCpu::GravityForceDensity(int particleIndex, const std::vector<float>& densities)
 	{
 		return densities[particleIndex] * Float2(0.0f, -m_gravity);
 	}
-	Float2 SphFluid2d::ExternalForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
+	Float2 SphFluid2dCpu::ExternalForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
 	{
 		if (m_attractorState != 0)
 		{
@@ -854,7 +858,7 @@ namespace emberEngine
 		}
 		return 0.0f;
 	}
-	void SphFluid2d::BoundaryCollisions(Float2& position, Float2& velocity)
+	void SphFluid2dCpu::BoundaryCollisions(Float2& position, Float2& velocity)
 	{
 		float epsilon = 1e-4f;
 		Float3 min = m_fluidBounds.GetMin();
