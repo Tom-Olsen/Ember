@@ -3,11 +3,12 @@
 
 
 
-RWStructuredBuffer<float2> b_positions : register(u0);
-cbuffer Values : register(b1)
+cbuffer Values : register(b0)
 {
     float cb_initialDistributionRadius;
 };
+RWStructuredBuffer<float2> b_positions : register(u1);
+RWStructuredBuffer<float2> b_velocities : register(u2);
 
 
 
@@ -23,5 +24,6 @@ void main(uint3 threadID : SV_DispatchThreadID)
         float theta = phi * index;
         b_positions[index].x = cos(theta) * r;
         b_positions[index].y = sin(theta) * r;
+        b_velocities[index] = float2(0, 0);
     }
 }

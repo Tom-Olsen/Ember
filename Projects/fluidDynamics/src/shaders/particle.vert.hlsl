@@ -3,11 +3,6 @@
 
 
 
-StructuredBuffer<float2> b_positions : register(t0);
-//StructuredBuffer<float3> b_colors : register(t1);
-
-
-
 cbuffer RenderMatrizes : register(b1)
 {
     float4x4 cb_localToWorldMatrix; // local to world matrix (also known as model matrix).
@@ -16,6 +11,15 @@ cbuffer RenderMatrizes : register(b1)
     float4x4 cb_worldToClipMatrix;  // world to camera clip space matrix: (projection * view)
     float4x4 cb_localToClipMatrix;  // local to camera clip space matrix: (projection * view * localToWorldMatrix)
 };
+cbuffer Values : register(b2)
+{
+    float cb_targetDensity;
+};
+
+
+
+StructuredBuffer<float2> b_positions : register(t3);
+StructuredBuffer<float> b_densities : register(t4);
 
 
 
@@ -59,8 +63,23 @@ VertexOutput main(VertexInput input)
     output.worldNormal = mul(normalMatrix, normal).xyz;
     output.worldTangent = mul(normalMatrix, tangent).xyz;
     output.vertexColor = input.vertexColor;
-    //if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
-    //    output.vertexColor *= instanceBuffer[input.instanceID].color;
+    if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+    {
+        //float r = length(b_positions[input.instanceID]) / 6.0f;
+        //float x = b_positions[input.instanceID].x;
+        //float y = b_positions[input.instanceID].y;
+        //output.vertexColor = r * r * r * r * float4(1, 0, 0, 1);
+        //output.vertexColor = r * r * r * r *float4(x, y, 0, 1) / 6.0f;
+        
+        float t = (b_densities[input.instanceID] - cb_targetDensity) / cb_targetDensity;
+        float t0 = clamp(t, 0.0f, 1.0f);
+        float t1 = clamp(t - 1.0f, 0.0f, 1.0f);
+        float4 colorA = t0 * float4(1, 1, 1, 1) + (1.0f - t0) * float4(0, 0, 1, 1);
+        float4 colorB = t1 * float4(1, 0, 0, 1) + (1.0f - t1) * float4(1, 1, 1, 1);
+        float4 color = (t < 1.0f) ? colorA : colorB;
+        //output.vertexColor = color;
+        output.vertexColor = b_densities[input.instanceID] * float4(1, 0, 0, 1);
+    }
     output.uv = input.uv;
     return output;
 }

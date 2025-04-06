@@ -17,8 +17,11 @@ namespace emberEngine
 	{
 	private: // Members:
 		// Compute shaders:
+		Uint3 m_threadCount;
 		std::unique_ptr<ComputeShader> cs_pReset;
+		std::unique_ptr<ComputeShader> cs_pDensity;
 		std::unique_ptr<ShaderProperties> m_pResetProperties;
+		std::unique_ptr<ShaderProperties> m_pDensityProperties;
 
 		// Management:
 		bool m_isRunning;
@@ -29,9 +32,8 @@ namespace emberEngine
 		// Data:
 		uint32_t m_particleCount;
 		std::unique_ptr<StorageBuffer> m_pPositionBuffer;
-		//std::vector<Float2> m_positions;
-		//std::vector<Float2> m_velocities;
-		//std::vector<float> m_densities;
+		std::unique_ptr<StorageBuffer> m_pVelocityBuffer;
+		std::unique_ptr<StorageBuffer> m_pDensityBuffer;
 		//std::vector<Float2> m_normals;
 		//std::vector<float> m_curvatures;
 		//std::vector<Float2> m_forceDensities;
@@ -127,7 +129,8 @@ namespace emberEngine
 		
 	private:
 		// Physics:
-		void Density();
+		void DispatchResetKernal();
+		void DispatchDensityKernal();
 		void Normal();
 		void Curvature();
 		void PressureForceDensity();

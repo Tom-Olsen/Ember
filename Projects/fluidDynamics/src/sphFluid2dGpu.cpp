@@ -7,25 +7,29 @@ namespace emberEngine
 {// Constructor/Destructor:
 	SphFluid2dGpu::SphFluid2dGpu()
 	{
-		// Load compute shaders:
+		// Load compute shaders and materials:
 		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/src/shaders/bin";
 		cs_pReset = std::make_unique<ComputeShader>("reset", directoryPath + "/reset.comp.spv");
+		cs_pDensity = std::make_unique<ComputeShader>("density", directoryPath + "/density.comp.spv");
 		m_pResetProperties = std::make_unique<ShaderProperties>((Shader*)cs_pReset.get());
+		m_pDensityProperties = std::make_unique<ShaderProperties>((Shader*)cs_pDensity.get());
+		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
+		m_pShaderProperties = std::make_unique<ShaderProperties>((Shader*)m_pParticleMaterial);
 
 		// Management:
 		m_isRunning = false;
 		m_timeScale = 2.0f;
 		m_timeStep = 0;
-		m_particleCount = 1500;
+		SetParticleCount(1500);
 		m_useGridOptimization = true;
 
 		// Physics:
-		m_effectRadius = 0.5f;
-		m_mass = 1.0f;
+		SetEffectRadius(0.5f);
+		SetMass(1.0f);
 		m_viscosity = 0.5f;
 		m_surfaceTension = 0.07f;
 		m_collisionDampening = 0.95f;
-		m_targetDensity = 15.0f;
+		SetTargetDensity(15.0f);
 		m_pressureMultiplier = 20.0f;
 		m_gravity = 0.5f;
 		m_maxVelocity = 5.0f;
@@ -39,8 +43,6 @@ namespace emberEngine
 		SetInitialDistributionRadius(6.0f);
 		m_visualRadius = 0.25f;
 		m_pParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(m_visualRadius));
-		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
-		m_pShaderProperties = std::make_unique<ShaderProperties>((Shader*)m_pParticleMaterial);
 
 		// Editor window:
 		editorWindow = std::make_unique<SphFluid2dGpuEditorWindow>(this);
@@ -56,12 +58,15 @@ namespace emberEngine
 	void SphFluid2dGpu::Reset()
 	{
 		m_timeStep = 0;
-		m_pPositionBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+		std::unique_ptr<StorageBuffer> pNewPositionBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+		std::swap(m_pPositionBuffer, pNewPositionBuffer);
+		std::unique_ptr<StorageBuffer> pNewVelocityBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+		std::swap(m_pVelocityBuffer, pNewVelocityBuffer);
+		std::unique_ptr<StorageBuffer> pNewDensityBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(float));
+		std::swap(m_pDensityBuffer, pNewDensityBuffer);
 
-
-		Uint3 threadCount = Uint3(m_particleCount, 1, 1);
-		m_pResetProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
-		Compute::Dispatch(cs_pReset.get(), m_pResetProperties.get(), threadCount);
+		DispatchResetKernal();
+		DispatchDensityKernal();
 	}
 	void SphFluid2dGpu::FixedUpdate()
 	{
@@ -75,7 +80,7 @@ namespace emberEngine
 		while (restTime > 0.0f)
 		{
 			float deltaT = math::Min(dt, restTime);
-			// ...
+			//...
 			restTime -= deltaT;
 		}
 		m_timeStep++;
@@ -101,16 +106,26 @@ namespace emberEngine
 		if (m_particleCount != particleCount)
 		{
 			m_particleCount = particleCount;
+			m_threadCount = Uint3(m_particleCount, 1, 1);
+			m_pDensityProperties->SetValue("Values", "cb_particleCount", (int)m_particleCount);
 			Reset();
 		}
 	}
 	void SphFluid2dGpu::SetEffectRadius(float effectRadius)
 	{
-		m_effectRadius = effectRadius;
+		if (m_effectRadius != effectRadius)
+		{
+			m_effectRadius = effectRadius;
+			m_pDensityProperties->SetValue("Values", "cb_effectRadius", m_effectRadius);
+		}
 	}
 	void SphFluid2dGpu::SetMass(float mass)
 	{
-		m_mass = mass;
+		if (m_mass != mass)
+		{
+			m_mass = mass;
+			m_pDensityProperties->SetValue("Values", "cb_mass", m_mass);
+		}
 	}
 	void SphFluid2dGpu::SetViscosity(float viscosity)
 	{
@@ -126,7 +141,11 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::SetTargetDensity(float targetDensity)
 	{
-		m_targetDensity = targetDensity;
+		if (m_targetDensity != targetDensity)
+		{
+			m_targetDensity = targetDensity;
+			m_pShaderProperties->SetValue("Values", "cb_targetDensity", m_targetDensity);
+		}
 	}
 	void SphFluid2dGpu::SetPressureMultiplier(float pressureMultiplier)
 	{
@@ -163,8 +182,8 @@ namespace emberEngine
 	{
 		if (m_initialDistributionRadius != initialDistributionRadius)
 		{
-			m_pResetProperties->SetValue("Values", "cb_initialDistributionRadius", initialDistributionRadius);
 			m_initialDistributionRadius = initialDistributionRadius;
+			m_pResetProperties->SetValue("Values", "cb_initialDistributionRadius", m_initialDistributionRadius);
 			Reset();
 		}
 	}
@@ -324,6 +343,7 @@ namespace emberEngine
 		// Instanced rendering:
 		Float4x4 localToWorldMatrix = m_pTransform->GetLocalToWorldMatrix();
 		m_pShaderProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
+		m_pShaderProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
 		Graphics::DrawInstanced(m_particleCount, m_pPositionBuffer.get(), m_pParticleMesh.get(), m_pParticleMaterial, m_pShaderProperties.get(), localToWorldMatrix, false, false);
 	}
 	const std::string SphFluid2dGpu::ToString() const
@@ -335,9 +355,17 @@ namespace emberEngine
 
 	// Private methods:
 	// Physics:
-	void SphFluid2dGpu::Density()
+	void SphFluid2dGpu::DispatchResetKernal()
 	{
-
+		m_pResetProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
+		m_pResetProperties->SetStorageBuffer("b_velocities", m_pVelocityBuffer.get());
+		Compute::Dispatch(cs_pReset.get(), m_pResetProperties.get(), m_threadCount);
+	}
+	void SphFluid2dGpu::DispatchDensityKernal()
+	{
+		m_pDensityProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
+		m_pDensityProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
+		Compute::Dispatch(cs_pDensity.get(), m_pDensityProperties.get(), m_threadCount);
 	}
 	void SphFluid2dGpu::Normal()
 	{
