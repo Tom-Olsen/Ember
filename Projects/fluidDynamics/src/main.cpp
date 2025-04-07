@@ -41,16 +41,16 @@ Scene* InitScene()
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
 	}
-	//{ // Sph Fluid 2d Cpu:
-	//	GameObject* pGameObject = new GameObject("sphFluid2dCpu");
-	//	SphFluid2dCpu* sphFluid2dCpu = pGameObject->AddComponent<SphFluid2dCpu>();
-	//	pScene->AddGameObject(pGameObject);
-	//}
-	{ // Sph Fluid 2d Gpu:
-		GameObject* pGameObject = new GameObject("sphFluid2dGpu");
-		SphFluid2dGpu* sphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
+	{ // Sph Fluid 2d Cpu:
+		GameObject* pGameObject = new GameObject("sphFluid2dCpu");
+		SphFluid2dCpu* sphFluid2dCpu = pGameObject->AddComponent<SphFluid2dCpu>();
 		pScene->AddGameObject(pGameObject);
 	}
+	//{ // Sph Fluid 2d Gpu:
+	//	GameObject* pGameObject = new GameObject("sphFluid2dGpu");
+	//	SphFluid2dGpu* sphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
+	//	pScene->AddGameObject(pGameObject);
+	//}
 	return pScene;
 }
 

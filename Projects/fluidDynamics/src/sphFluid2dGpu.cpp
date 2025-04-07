@@ -1,5 +1,6 @@
 #include "sphFluid2dGpu.h"
 #include "sphFluid2dGpuEditorWindow.h"
+#include "vulkanUtility.h"
 
 
 
@@ -20,7 +21,7 @@ namespace emberEngine
 		m_isRunning = false;
 		m_timeScale = 2.0f;
 		m_timeStep = 0;
-		SetParticleCount(1500);
+		SetParticleCount(400);
 		m_useGridOptimization = true;
 
 		// Physics:
@@ -66,6 +67,7 @@ namespace emberEngine
 		std::swap(m_pDensityBuffer, pNewDensityBuffer);
 
 		DispatchResetKernal();
+		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 		DispatchDensityKernal();
 	}
 	void SphFluid2dGpu::FixedUpdate()
@@ -101,13 +103,13 @@ namespace emberEngine
 	{
 		m_useGridOptimization = useGridOptimization;
 	}
-	void SphFluid2dGpu::SetParticleCount(uint32_t particleCount)
+	void SphFluid2dGpu::SetParticleCount(int particleCount)
 	{
 		if (m_particleCount != particleCount)
 		{
 			m_particleCount = particleCount;
 			m_threadCount = Uint3(m_particleCount, 1, 1);
-			m_pDensityProperties->SetValue("Values", "cb_particleCount", (int)m_particleCount);
+			m_pDensityProperties->SetValue("Values", "cb_particleCount", m_particleCount);
 			Reset();
 		}
 	}
@@ -217,7 +219,7 @@ namespace emberEngine
 	{
 		return m_timeStep;
 	}
-	uint32_t SphFluid2dGpu::GetParticleCount() const
+	int SphFluid2dGpu::GetParticleCount() const
 	{
 		return m_particleCount;
 	}
@@ -340,11 +342,13 @@ namespace emberEngine
 		else
 			m_attractorState = 0;
 
-		// Instanced rendering:
-		Float4x4 localToWorldMatrix = m_pTransform->GetLocalToWorldMatrix();
+		// Rendering:
+		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
+		Graphics::DrawBounds(localToWorld, m_fluidBounds, 0.01f, Float4::white, false, false);
+
 		m_pShaderProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
 		m_pShaderProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
-		Graphics::DrawInstanced(m_particleCount, m_pPositionBuffer.get(), m_pParticleMesh.get(), m_pParticleMaterial, m_pShaderProperties.get(), localToWorldMatrix, false, false);
+		Graphics::DrawInstanced(m_particleCount, m_pPositionBuffer.get(), m_pParticleMesh.get(), m_pParticleMaterial, m_pShaderProperties.get(), localToWorld, false, false);
 	}
 	const std::string SphFluid2dGpu::ToString() const
 	{

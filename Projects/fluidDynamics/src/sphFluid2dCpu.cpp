@@ -21,7 +21,7 @@ namespace emberEngine
 		m_isRunning = false;
 		m_timeScale = 2.0f;
 		m_timeStep = 0;
-		m_particleCount = 1500;
+		m_particleCount = 400;
 		m_useGridOptimization = true;
 
 		// Physics:
@@ -76,7 +76,7 @@ namespace emberEngine
 
 		float phi = math::pi * (math::Sqrt(5.0f) - 1.0f);
 		float radius = 0.4f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
-		for (uint32_t i = 0; i < m_particleCount; i++)
+		for (int i = 0; i < m_particleCount; i++)
 		{
 			float r = i / (m_particleCount - 1.0f) * radius;
 			float theta = phi * i;
@@ -96,13 +96,13 @@ namespace emberEngine
 		// Compute densities:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
 		m_pGrid->ApplySort(m_velocities);
-		for (uint32_t i = 0; i < m_particleCount; i++)
+		for (int i = 0; i < m_particleCount; i++)
 			m_densities[i] = Density(i, m_positions);
 		//// Compute normals:
-		//for (uint32_t i = 0; i < m_particleCount; i++)
+		//for (int i = 0; i < m_particleCount; i++)
 		//	m_normals[i] = Normal(i, m_positions, m_densities);
 		//// Compute curvature:
-		//for (uint32_t i = 0; i < m_particleCount; i++)
+		//for (int i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
 	}
 	void SphFluid2dCpu::FixedUpdate()
@@ -135,7 +135,7 @@ namespace emberEngine
 		//for (int i = 0; i < m_particleCount; i++)
 		//	m_normals[i] = Normal(i, m_positions, m_densities);
 		//// Compute curvature:
-		//for (uint32_t i = 0; i < m_particleCount; i++)
+		//for (int i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
 
 		// Compute force densities:
@@ -178,7 +178,7 @@ namespace emberEngine
 		//for (int i = 0; i < m_particleCount; i++)
 		//	m_normals[i] = Normal(i, m_positions, m_densities);
 		//// Compute curvature:
-		//for (uint32_t i = 0; i < m_particleCount; i++)
+		//for (int i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
 
 		// Compute force densities:
@@ -214,7 +214,7 @@ namespace emberEngine
 		//for (int i = 0; i < m_particleCount; i++)
 		//	m_normals[i] = Normal(i, m_positions, m_densities);
 		//// Compute curvature:
-		//for (uint32_t i = 0; i < m_particleCount; i++)
+		//for (int i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
 
 		// Compute force densities:
@@ -254,7 +254,7 @@ namespace emberEngine
 		//for (int i = 0; i < m_particleCount; i++)
 		//	m_normals[i] = Normal(i, m_tempPositions, m_densities);
 		//// Compute intermediate curvature:
-		//for (uint32_t i = 0; i < m_particleCount; i++)
+		//for (int i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_tempPositions, m_normals, m_densities);
 
 		// Compute intermediate force densities:
@@ -297,7 +297,7 @@ namespace emberEngine
 	{
 		m_useGridOptimization = useGridOptimization;
 	}
-	void SphFluid2dCpu::SetParticleCount(uint32_t particleCount)
+	void SphFluid2dCpu::SetParticleCount(int particleCount)
 	{
 		if (m_particleCount != particleCount)
 		{
@@ -398,7 +398,7 @@ namespace emberEngine
 	{
 		return m_timeStep;
 	}
-	uint32_t SphFluid2dCpu::GetParticleCount() const
+	int SphFluid2dCpu::GetParticleCount() const
 	{
 		return m_particleCount;
 	}
@@ -524,11 +524,9 @@ namespace emberEngine
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
 		Graphics::DrawBounds(localToWorld, m_fluidBounds, 0.01f, Float4::white, false, false);
-		for (uint32_t i = 0; i < m_particleCount; i++)
+		for (int i = 0; i < m_particleCount; i++)
 		{
-			Float4x4 scale = Float4x4::Scale(m_visualRadius);
-			Float4x4 translation = Float4x4::Translate(Float3(m_positions[i]));
-			Float4x4 matrix = localToWorld * translation * scale;
+			Float4x4 matrix = localToWorld * Float4x4::Translate(Float3(m_positions[i]));
 			ShaderProperties* pShaderProperties = Graphics::DrawMesh(m_pParticleMesh.get(), m_pParticleMaterial, matrix, false, false);
 
 			// Color by density:

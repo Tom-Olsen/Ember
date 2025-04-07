@@ -6,10 +6,11 @@
 
 cbuffer Values : register(b0)
 {
-    float cb_particleCount;
-    float cb_effectiveRadius;
+    int cb_particleCount;
+    float cb_effectRadius;
     float cb_mass;
 };
+// change to positions buffer to StructuredBuffer as it is read only.
 RWStructuredBuffer<float2> b_positions : register(u1);
 RWStructuredBuffer<float> b_densities : register(u2);
 
@@ -26,8 +27,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
         {
             float2 offset = b_positions[index] - b_positions[i];
             float r = length(offset);
-            if (r < cb_effectiveRadius)
-                b_densities[index] += cb_mass * SmoothingKernal_Poly6(r, cb_effectiveRadius);
-        }
+            if (r < cb_effectRadius)
+                b_densities[index] += cb_mass * SmoothingKernal_Poly6(r, cb_effectRadius);
+        };
     }
 }

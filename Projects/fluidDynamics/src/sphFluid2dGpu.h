@@ -30,7 +30,7 @@ namespace emberEngine
 		uint32_t m_timeStep;
 
 		// Data:
-		uint32_t m_particleCount;
+		int m_particleCount;
 		std::unique_ptr<StorageBuffer> m_pPositionBuffer;
 		std::unique_ptr<StorageBuffer> m_pVelocityBuffer;
 		std::unique_ptr<StorageBuffer> m_pDensityBuffer;
@@ -85,7 +85,7 @@ namespace emberEngine
 		void SetIsRunning(bool isRunning);
 		void SetTimeScale(float timeScale);
 		void SetUseGridOptimization(bool useGridOptimization);
-		void SetParticleCount(uint32_t particleCount);
+		void SetParticleCount(int particleCount);
 		void SetEffectRadius(float effectRadius);
 		void SetMass(float mass);
 		void SetViscosity(float viscosity);
@@ -106,7 +106,7 @@ namespace emberEngine
 		float GetTimeScale() const;
 		bool GetUseGridOptimization() const;
 		uint32_t GetTimeStep() const;
-		uint32_t GetParticleCount() const;
+		int GetParticleCount() const;
 		float GetEffectRadius() const;
 		float GetMass() const;
 		float GetViscosity() const;
