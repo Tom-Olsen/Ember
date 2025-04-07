@@ -58,11 +58,7 @@ VertexOutput main(VertexInput input)
     float4x4 localToClipMatrix = mul(cb_worldToClipMatrix, localToWorldMatrix);
     float4x4 normalMatrix = LinAlg_NormalMatrix(localToWorldMatrix);
     
-    VertexOutput output;
-    output.clipPosition = mul(localToClipMatrix, pos);
-    output.worldNormal = mul(normalMatrix, normal).xyz;
-    output.worldTangent = mul(normalMatrix, tangent).xyz;
-    output.vertexColor = input.vertexColor;
+    float4 color = input.vertexColor;
     if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
     {
         float t = (b_densities[input.instanceID] - cb_targetDensity) / cb_targetDensity;
@@ -70,9 +66,14 @@ VertexOutput main(VertexInput input)
         float t1 = clamp(t - 1.0f, 0.0f, 1.0f);
         float4 colorA = t0 * float4(1, 1, 1, 1) + (1.0f - t0) * float4(0, 0, 1, 1);
         float4 colorB = t1 * float4(1, 0, 0, 1) + (1.0f - t1) * float4(1, 1, 1, 1);
-        float4 color = (t < 1.0f) ? colorA : colorB;
-        output.vertexColor *= color;
+        color *= (t < 1.0f) ? colorA : colorB;
     }
+    
+    VertexOutput output;
+    output.clipPosition = mul(localToClipMatrix, pos);
+    output.worldNormal = mul(normalMatrix, normal).xyz;
+    output.worldTangent = mul(normalMatrix, tangent).xyz;
+    output.vertexColor = color;
     output.uv = input.uv;
     return output;
 }

@@ -20,8 +20,12 @@ namespace emberEngine
 		Uint3 m_threadCount;
 		std::unique_ptr<ComputeShader> cs_pReset;
 		std::unique_ptr<ComputeShader> cs_pDensity;
+		std::unique_ptr<ComputeShader> cs_pPressureForceDensity;
+		std::unique_ptr<ComputeShader> cs_pBoundaryCollisions;
 		std::unique_ptr<ShaderProperties> m_pResetProperties;
 		std::unique_ptr<ShaderProperties> m_pDensityProperties;
+		std::unique_ptr<ShaderProperties> m_pPressureForceDensityProperties;
+		std::unique_ptr<ShaderProperties> m_pBoundaryCollisionsProperties;
 
 		// Management:
 		bool m_isRunning;
@@ -36,15 +40,15 @@ namespace emberEngine
 		std::unique_ptr<StorageBuffer> m_pDensityBuffer;
 		//std::vector<Float2> m_normals;
 		//std::vector<float> m_curvatures;
-		//std::vector<Float2> m_forceDensities;
+		std::unique_ptr<StorageBuffer> m_pForceDensityBuffer;
 
 		// Runge Kutta fields:
-		//std::vector<Float2> m_kp1;
-		//std::vector<Float2> m_kp2;
-		//std::vector<Float2> m_kv1;
-		//std::vector<Float2> m_kv2;
-		//std::vector<Float2> m_tempPositions;
-		//std::vector<Float2> m_tempVelocities;
+		std::unique_ptr<StorageBuffer> m_pKp1Buffer;
+		std::unique_ptr<StorageBuffer> m_pKp2Buffer;
+		std::unique_ptr<StorageBuffer> m_pKv1Buffer;
+		std::unique_ptr<StorageBuffer> m_pKv2Buffer;
+		std::unique_ptr<StorageBuffer> m_pTempPositionBuffer;
+		std::unique_ptr<StorageBuffer> m_pTempVelocityBuffer;
 
 		// Physics:
 		float m_effectRadius;
@@ -80,6 +84,9 @@ namespace emberEngine
 		// Physics update:
 		void Reset();
 		void FixedUpdate() override;
+		void TimeStepLeapFrog(float deltaT);
+		void TimeStepVelocityVerlet(float deltaT);
+		void TimeStepRungeKutta2(float deltaT);
 
 		// Setters:
 		void SetIsRunning(bool isRunning);
@@ -130,15 +137,17 @@ namespace emberEngine
 	private:
 		// Physics:
 		void DispatchResetKernal();
-		void DispatchDensityKernal();
-		void Normal();
-		void Curvature();
-		void PressureForceDensity();
-		void ViscosityForceDensity();
-		void SurfaceTensionForceDensity();
-		void GravityForceDensity();
-		void ExternalForceDensity();
-		void BoundaryCollisions();
+		void DispatchDensityKernal(StorageBuffer* positionsBuffer);
+		void DispatchNormalKernal();
+		void DispatchCurvatureKernal();
+		void DispatchPressureForceDensityKernal(StorageBuffer* positionsBuffer);
+		void DispatchViscosityForceDensityKernal();
+		void DispatchSurfaceTensionForceDensityKernal();
+		void DispatchGravityForceDensityKernal();
+		void DispatchExternalForceDensityKernal();
+		void DispatchRungeKutta2Step1Kernal();
+		void DispatchRungeKutta2Step2Kernal();
+		void DispatchBoundaryCollisionsKernal();
 	};
 }
 

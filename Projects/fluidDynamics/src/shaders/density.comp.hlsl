@@ -10,8 +10,7 @@ cbuffer Values : register(b0)
     float cb_effectRadius;
     float cb_mass;
 };
-// change to positions buffer to StructuredBuffer as it is read only.
-RWStructuredBuffer<float2> b_positions : register(u1);
+StructuredBuffer<float2> b_positions : register(t1);
 RWStructuredBuffer<float> b_densities : register(u2);
 
 

@@ -217,6 +217,16 @@ namespace emberMath
 		}
 	}
 
+	// Equality:
+	bool Bounds::operator == (const Bounds & other)
+	{
+		return center == other.center && extents == other.extents;
+	}
+	bool Bounds::operator!=(const Bounds& other)
+	{
+		return !((*this) == other);
+	}
+
 	// Logging:
 	std::string Bounds::ToString() const
 	{

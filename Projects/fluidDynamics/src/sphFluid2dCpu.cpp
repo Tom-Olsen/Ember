@@ -60,19 +60,22 @@ namespace emberEngine
 	void SphFluid2dCpu::Reset()
 	{
 		m_timeStep = 0;
-		m_positions.resize(m_particleCount);
-		m_velocities.resize(m_particleCount);
-		m_densities.resize(m_particleCount);
-		m_normals.resize(m_particleCount);
-		m_curvatures.resize(m_particleCount);
-		m_forceDensities.resize(m_particleCount);
-		m_kp1.resize(m_particleCount);
-		m_kp2.resize(m_particleCount);
-		m_kv1.resize(m_particleCount);
-		m_kv2.resize(m_particleCount);
-		m_tempPositions.resize(m_particleCount);
-		m_tempVelocities.resize(m_particleCount);
-		m_pGrid = std::make_unique<HashGrid2d>(m_particleCount);
+
+		// Reallocate vectors:
+		if (m_positions.size() != m_particleCount)
+		{
+			m_positions.resize(m_particleCount);
+			m_velocities.resize(m_particleCount);
+			m_densities.resize(m_particleCount);
+			m_normals.resize(m_particleCount);
+			m_curvatures.resize(m_particleCount);
+			m_forceDensities.resize(m_particleCount);
+			m_kp1.resize(m_particleCount);
+			m_kv1.resize(m_particleCount);
+			m_tempPositions.resize(m_particleCount);
+			m_tempVelocities.resize(m_particleCount);
+			m_pGrid = std::make_unique<HashGrid2d>(m_particleCount);
+		}
 
 		float phi = math::pi * (math::Sqrt(5.0f) - 1.0f);
 		float radius = 0.4f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
@@ -86,22 +89,18 @@ namespace emberEngine
 			m_velocities[i].y = 0;
 			m_forceDensities[i] = 0;
 			m_kp1[i] = 0;
-			m_kp2[i] = 0;
 			m_kv1[i] = 0;
-			m_kv2[i] = 0;
 			m_tempPositions[i] = 0;
 			m_tempVelocities[i] = 0;
 		}
 
-		// Compute densities:
+		// Reset fluid to initial data:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
 		m_pGrid->ApplySort(m_velocities);
 		for (int i = 0; i < m_particleCount; i++)
 			m_densities[i] = Density(i, m_positions);
-		//// Compute normals:
 		//for (int i = 0; i < m_particleCount; i++)
 		//	m_normals[i] = Normal(i, m_positions, m_densities);
-		//// Compute curvature:
 		//for (int i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
 	}
@@ -271,10 +270,8 @@ namespace emberEngine
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			Float2 acceleration = m_forceDensities[i] / m_densities[i];
-			m_kp2[i] = (m_velocities[i] + 0.5f * m_kv1[i]) * deltaT;
-			m_kv2[i] = acceleration * deltaT;
-			m_positions[i] += m_kp2[i];
-			m_velocities[i] += m_kv2[i];
+			m_positions[i] += (m_velocities[i] + 0.5f * m_kv1[i]) * deltaT;
+			m_velocities[i] += acceleration * deltaT;
 			float speed = m_velocities[i].Length();
 			if (speed > m_maxVelocity)
 				m_velocities[i] *= (m_maxVelocity / speed);
@@ -458,6 +455,7 @@ namespace emberEngine
 	{
 		return m_visualRadius;
 	}
+
 
 
 	// Overrides:
