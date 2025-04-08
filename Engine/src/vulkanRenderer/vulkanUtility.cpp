@@ -7,75 +7,54 @@ namespace emberEngine
 {
     namespace vulkanObjToString
     {
-        std::string VkVertexInputAttributeDescriptionToString(VkVertexInputAttributeDescription vkVertexInputAttributeDescription)
+        std::string VkAccessFlagBits2ToString(VkAccessFlagBits2 vkAccessFlagBits2)
         {
-            std::string output = "";
-            output += "location: " + std::to_string(vkVertexInputAttributeDescription.location);
-            output += ", binding: " + std::to_string(vkVertexInputAttributeDescription.binding);
-            output += ", format: " + VkFormatToString(vkVertexInputAttributeDescription.format);
-            output += ", offset: " + std::to_string(vkVertexInputAttributeDescription.offset);
-            return output;
-        }
-        std::string VkImageViewTypeToString(VkImageViewType vkImageViewType)
-        {
-            switch (vkImageViewType)
+            switch (vkAccessFlagBits2)
             {
-            case VK_IMAGE_VIEW_TYPE_1D: return std::string("VK_IMAGE_VIEW_TYPE_1D");
-            case VK_IMAGE_VIEW_TYPE_2D: return std::string("VK_IMAGE_VIEW_TYPE_2D");
-            case VK_IMAGE_VIEW_TYPE_3D: return std::string("VK_IMAGE_VIEW_TYPE_3D");
-            case VK_IMAGE_VIEW_TYPE_CUBE: return std::string("VK_IMAGE_VIEW_TYPE_CUBE");
-            case VK_IMAGE_VIEW_TYPE_1D_ARRAY: return std::string("VK_IMAGE_VIEW_TYPE_1D_ARRAY");
-            case VK_IMAGE_VIEW_TYPE_2D_ARRAY: return std::string("VK_IMAGE_VIEW_TYPE_2D_ARRAY");
-            case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY: return std::string("VK_IMAGE_VIEW_TYPE_CUBE_ARRAY");
-            case VK_IMAGE_VIEW_TYPE_MAX_ENUM: return std::string("VK_IMAGE_VIEW_TYPE_MAX_ENUM");
-            default: return "UNKNOWN_VK_IMAGE_VIEW_TYPE (maybe vulkan backend has been updated)";
-            }
-        }
-        std::string VkImageLayoutToString(VkImageLayout vkImageView)
-        {
-            switch (vkImageView)
-            {
-            case VK_IMAGE_LAYOUT_UNDEFINED: return std::string("VK_IMAGE_LAYOUT_UNDEFINED");
-            case VK_IMAGE_LAYOUT_GENERAL: return std::string("VK_IMAGE_LAYOUT_GENERAL");
-            case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL");
-            case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL");
-            case VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL");
-            case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL");
-            case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL");
-            case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL");
-            case VK_IMAGE_LAYOUT_PREINITIALIZED: return std::string("VK_IMAGE_LAYOUT_PREINITIALIZED");
-            case VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL");
-            case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL");
-            case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL");
-            case VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL");
-            case VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL");
-            case VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL");
-            case VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL");
-            case VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL");
-            case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR: return std::string("VK_IMAGE_LAYOUT_PRESENT_SRC_KHR");
-            case VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR");
-            case VK_IMAGE_LAYOUT_VIDEO_DECODE_SRC_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_DECODE_SRC_KHR");
-            case VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR");
-            case VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR: return std::string("VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR");
-            case VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT: return std::string("VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT");
-            case VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR: return std::string("VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR");
-            case VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ_KHR: return std::string("VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ_KHR");
-            case VK_IMAGE_LAYOUT_VIDEO_ENCODE_DST_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_ENCODE_DST_KHR");
-            case VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR");
-            case VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR");
-            case VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT: return std::string("VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT");
-            case VK_IMAGE_LAYOUT_MAX_ENUM: return std::string("VK_IMAGE_LAYOUT_MAX_ENUM");
-            default: return "UNKNOWN_VK_IMAGE_LAYOUT (maybe vulkan backend has been updated)";
-            }
-        }
-        std::string VkVertexInputRateToString(VkVertexInputRate vkVertexInputRate)
-        {
-            switch (vkVertexInputRate)
-            {
-            case VK_VERTEX_INPUT_RATE_VERTEX: return std::string("VK_VERTEX_INPUT_RATE_VERTEX");
-            case VK_VERTEX_INPUT_RATE_INSTANCE: return std::string("VK_VERTEX_INPUT_RATE_INSTANCE");
-            case VK_VERTEX_INPUT_RATE_MAX_ENUM: return std::string("VK_VERTEX_INPUT_RATE_MAX_ENUM");
-            default: return "UNKNOWN_VK_VERTEX_INPUT_RATE (maybe vulkan backend has been updated)";
+            case VK_ACCESS_2_NONE: return "VK_ACCESS_2_NONE";
+            case VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT: return "VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT";
+            case VK_ACCESS_2_INDEX_READ_BIT: return "VK_ACCESS_2_INDEX_READ_BIT";
+            case VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT: return "VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT";
+            case VK_ACCESS_2_UNIFORM_READ_BIT: return "VK_ACCESS_2_UNIFORM_READ_BIT";
+            case VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT: return "VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT";
+            case VK_ACCESS_2_SHADER_READ_BIT: return "VK_ACCESS_2_SHADER_READ_BIT";
+            case VK_ACCESS_2_SHADER_WRITE_BIT: return "VK_ACCESS_2_SHADER_WRITE_BIT";
+            case VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT: return "VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT";
+            case VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT: return "VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT";
+            case VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT: return "VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT";
+            case VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT: return "VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT";
+            case VK_ACCESS_2_TRANSFER_READ_BIT: return "VK_ACCESS_2_TRANSFER_READ_BIT";
+            case VK_ACCESS_2_TRANSFER_WRITE_BIT: return "VK_ACCESS_2_TRANSFER_WRITE_BIT";
+            case VK_ACCESS_2_HOST_READ_BIT: return "VK_ACCESS_2_HOST_READ_BIT";
+            case VK_ACCESS_2_HOST_WRITE_BIT: return "VK_ACCESS_2_HOST_WRITE_BIT";
+            case VK_ACCESS_2_MEMORY_READ_BIT: return "VK_ACCESS_2_MEMORY_READ_BIT";
+            case VK_ACCESS_2_MEMORY_WRITE_BIT: return "VK_ACCESS_2_MEMORY_WRITE_BIT";
+            case VK_ACCESS_2_SHADER_SAMPLED_READ_BIT: return "VK_ACCESS_2_SHADER_SAMPLED_READ_BIT";
+            case VK_ACCESS_2_SHADER_STORAGE_READ_BIT: return "VK_ACCESS_2_SHADER_STORAGE_READ_BIT";
+            case VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT: return "VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT";
+            case VK_ACCESS_2_VIDEO_DECODE_READ_BIT_KHR: return "VK_ACCESS_2_VIDEO_DECODE_READ_BIT_KHR";
+            case VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR: return "VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR";
+            case VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR: return "VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR";
+            case VK_ACCESS_2_VIDEO_ENCODE_WRITE_BIT_KHR: return "VK_ACCESS_2_VIDEO_ENCODE_WRITE_BIT_KHR";
+            case VK_ACCESS_2_TRANSFORM_FEEDBACK_WRITE_BIT_EXT: return "VK_ACCESS_2_TRANSFORM_FEEDBACK_WRITE_BIT_EXT";
+            case VK_ACCESS_2_TRANSFORM_FEEDBACK_COUNTER_READ_BIT_EXT: return "VK_ACCESS_2_TRANSFORM_FEEDBACK_COUNTER_READ_BIT_EXT";
+            case VK_ACCESS_2_TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT_EXT: return "VK_ACCESS_2_TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT_EXT";
+            case VK_ACCESS_2_CONDITIONAL_RENDERING_READ_BIT_EXT: return "VK_ACCESS_2_CONDITIONAL_RENDERING_READ_BIT_EXT";
+            case VK_ACCESS_2_COMMAND_PREPROCESS_READ_BIT_NV: return "VK_ACCESS_2_COMMAND_PREPROCESS_READ_BIT_NV";
+            case VK_ACCESS_2_COMMAND_PREPROCESS_WRITE_BIT_NV: return "VK_ACCESS_2_COMMAND_PREPROCESS_WRITE_BIT_NV";
+            case VK_ACCESS_2_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR: return "VK_ACCESS_2_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR";
+            case VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR: return "VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR";
+            case VK_ACCESS_2_ACCELERATION_STRUCTURE_WRITE_BIT_KHR: return "VK_ACCESS_2_ACCELERATION_STRUCTURE_WRITE_BIT_KHR";
+            case VK_ACCESS_2_FRAGMENT_DENSITY_MAP_READ_BIT_EXT: return "VK_ACCESS_2_FRAGMENT_DENSITY_MAP_READ_BIT_EXT";
+            case VK_ACCESS_2_COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT: return "VK_ACCESS_2_COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT";
+            case VK_ACCESS_2_DESCRIPTOR_BUFFER_READ_BIT_EXT: return "VK_ACCESS_2_DESCRIPTOR_BUFFER_READ_BIT_EXT";
+            case VK_ACCESS_2_INVOCATION_MASK_READ_BIT_HUAWEI: return "VK_ACCESS_2_INVOCATION_MASK_READ_BIT_HUAWEI";
+            case VK_ACCESS_2_SHADER_BINDING_TABLE_READ_BIT_KHR: return "VK_ACCESS_2_SHADER_BINDING_TABLE_READ_BIT_KHR";
+            case VK_ACCESS_2_MICROMAP_READ_BIT_EXT: return "VK_ACCESS_2_MICROMAP_READ_BIT_EXT";
+            case VK_ACCESS_2_MICROMAP_WRITE_BIT_EXT: return "VK_ACCESS_2_MICROMAP_WRITE_BIT_EXT";
+            case VK_ACCESS_2_OPTICAL_FLOW_READ_BIT_NV: return "VK_ACCESS_2_OPTICAL_FLOW_READ_BIT_NV";
+            case VK_ACCESS_2_OPTICAL_FLOW_WRITE_BIT_NV: return "VK_ACCESS_2_OPTICAL_FLOW_WRITE_BIT_NV";
+            default: return "UNKNOWN_VK_ACCESS_FLAG_BITS_2 (maybe vulkan backend has been updated)";
             }
         }
         std::string VkDescriptorTypeToString(VkDescriptorType vkDescriptorType)
@@ -361,7 +340,58 @@ namespace emberEngine
             default: return "UNKOWN_VK_FORMAT (maybe vulkan backend has been updated)";
             }
         }
-
+        std::string VkImageLayoutToString(VkImageLayout vkImageView)
+        {
+            switch (vkImageView)
+            {
+            case VK_IMAGE_LAYOUT_UNDEFINED: return std::string("VK_IMAGE_LAYOUT_UNDEFINED");
+            case VK_IMAGE_LAYOUT_GENERAL: return std::string("VK_IMAGE_LAYOUT_GENERAL");
+            case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL");
+            case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL");
+            case VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL");
+            case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL");
+            case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL");
+            case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL");
+            case VK_IMAGE_LAYOUT_PREINITIALIZED: return std::string("VK_IMAGE_LAYOUT_PREINITIALIZED");
+            case VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL");
+            case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL");
+            case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL");
+            case VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL");
+            case VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL");
+            case VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL");
+            case VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL");
+            case VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL: return std::string("VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL");
+            case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR: return std::string("VK_IMAGE_LAYOUT_PRESENT_SRC_KHR");
+            case VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR");
+            case VK_IMAGE_LAYOUT_VIDEO_DECODE_SRC_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_DECODE_SRC_KHR");
+            case VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR");
+            case VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR: return std::string("VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR");
+            case VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT: return std::string("VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT");
+            case VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR: return std::string("VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR");
+            case VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ_KHR: return std::string("VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ_KHR");
+            case VK_IMAGE_LAYOUT_VIDEO_ENCODE_DST_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_ENCODE_DST_KHR");
+            case VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR");
+            case VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR: return std::string("VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR");
+            case VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT: return std::string("VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT");
+            case VK_IMAGE_LAYOUT_MAX_ENUM: return std::string("VK_IMAGE_LAYOUT_MAX_ENUM");
+            default: return "UNKNOWN_VK_IMAGE_LAYOUT (maybe vulkan backend has been updated)";
+            }
+        }
+        std::string VkImageViewTypeToString(VkImageViewType vkImageViewType)
+        {
+            switch (vkImageViewType)
+            {
+            case VK_IMAGE_VIEW_TYPE_1D: return std::string("VK_IMAGE_VIEW_TYPE_1D");
+            case VK_IMAGE_VIEW_TYPE_2D: return std::string("VK_IMAGE_VIEW_TYPE_2D");
+            case VK_IMAGE_VIEW_TYPE_3D: return std::string("VK_IMAGE_VIEW_TYPE_3D");
+            case VK_IMAGE_VIEW_TYPE_CUBE: return std::string("VK_IMAGE_VIEW_TYPE_CUBE");
+            case VK_IMAGE_VIEW_TYPE_1D_ARRAY: return std::string("VK_IMAGE_VIEW_TYPE_1D_ARRAY");
+            case VK_IMAGE_VIEW_TYPE_2D_ARRAY: return std::string("VK_IMAGE_VIEW_TYPE_2D_ARRAY");
+            case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY: return std::string("VK_IMAGE_VIEW_TYPE_CUBE_ARRAY");
+            case VK_IMAGE_VIEW_TYPE_MAX_ENUM: return std::string("VK_IMAGE_VIEW_TYPE_MAX_ENUM");
+            default: return "UNKNOWN_VK_IMAGE_VIEW_TYPE (maybe vulkan backend has been updated)";
+            }
+        }
         std::string VkShaderStageFlagsToString(VkShaderStageFlags vkShaderStageFlags)
         {
             if (vkShaderStageFlags == 0)
@@ -427,5 +457,25 @@ namespace emberEngine
 
             return result;
         }
+        std::string VkVertexInputAttributeDescriptionToString(VkVertexInputAttributeDescription vkVertexInputAttributeDescription)
+        {
+            std::string output = "";
+            output += "location: " + std::to_string(vkVertexInputAttributeDescription.location);
+            output += ", binding: " + std::to_string(vkVertexInputAttributeDescription.binding);
+            output += ", format: " + VkFormatToString(vkVertexInputAttributeDescription.format);
+            output += ", offset: " + std::to_string(vkVertexInputAttributeDescription.offset);
+            return output;
+        }
+        std::string VkVertexInputRateToString(VkVertexInputRate vkVertexInputRate)
+        {
+            switch (vkVertexInputRate)
+            {
+            case VK_VERTEX_INPUT_RATE_VERTEX: return std::string("VK_VERTEX_INPUT_RATE_VERTEX");
+            case VK_VERTEX_INPUT_RATE_INSTANCE: return std::string("VK_VERTEX_INPUT_RATE_INSTANCE");
+            case VK_VERTEX_INPUT_RATE_MAX_ENUM: return std::string("VK_VERTEX_INPUT_RATE_MAX_ENUM");
+            default: return "UNKNOWN_VK_VERTEX_INPUT_RATE (maybe vulkan backend has been updated)";
+            }
+        }
+
     }
 }

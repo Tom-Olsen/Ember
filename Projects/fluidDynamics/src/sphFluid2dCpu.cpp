@@ -42,8 +42,7 @@ namespace emberEngine
 
 		// Visuals:
 		SetInitialDistributionRadius(6.0f);
-		m_visualRadius = 0.25f;
-		m_pParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(m_visualRadius));
+		SetVisualRadius(0.25f);
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
 
 		// Editor Window:
@@ -72,6 +71,8 @@ namespace emberEngine
 			m_forceDensities.resize(m_particleCount);
 			m_kp1.resize(m_particleCount);
 			m_kv1.resize(m_particleCount);
+			m_kp2.resize(m_particleCount);
+			m_kv2.resize(m_particleCount);
 			m_tempPositions.resize(m_particleCount);
 			m_tempVelocities.resize(m_particleCount);
 			m_pGrid = std::make_unique<HashGrid2d>(m_particleCount);
@@ -90,6 +91,8 @@ namespace emberEngine
 			m_forceDensities[i] = 0;
 			m_kp1[i] = 0;
 			m_kv1[i] = 0;
+			m_kp2[i] = 0;
+			m_kv2[i] = 0;
 			m_tempPositions[i] = 0;
 			m_tempVelocities[i] = 0;
 		}
@@ -109,8 +112,8 @@ namespace emberEngine
 		if (!m_isRunning)
 			return;
 
-		// Do multiple iterations of deltaT<=Time::GetFixedDeltaTime() if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
-		float dt = Time::GetFixedDeltaTime();
+		// Do multiple iterations of deltaT<=dt if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
+		float dt = 2.0f * Time::GetFixedDeltaTime();
 		float timeStep = m_timeScale * dt;
 		float restTime = timeStep;
 		while (restTime > 0.0f)
@@ -202,6 +205,10 @@ namespace emberEngine
 	}
 	void SphFluid2dCpu::TimeStepRungeKutta2(float deltaT)
 	{
+		constexpr float a1 = 1.0f / 3.0f;
+		constexpr float a2 = 2.0f / 3.0f;
+		constexpr float q  = 3.0f / 4.0f;
+
 		// Update grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
 		m_pGrid->ApplySort(m_velocities);
@@ -230,10 +237,10 @@ namespace emberEngine
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			Float2 acceleration = m_forceDensities[i] / m_densities[i];
-			m_kp1[i] = m_velocities[i] * deltaT;
-			m_kv1[i] = acceleration * deltaT;
-			m_tempPositions[i] = m_positions[i] + 0.5f * m_kp1[i];
-			m_tempVelocities[i] = m_velocities[i] + 0.5f * m_kv1[i];
+			m_kp1[i] = m_velocities[i];
+			m_kv1[i] = acceleration;
+			m_tempPositions[i] = m_positions[i] + q * m_kp1[i] * deltaT;
+			m_tempVelocities[i] = m_velocities[i] + q * m_kv1[i] * deltaT;
 			float speed = m_tempVelocities[i].Length();
 			if (speed > m_maxVelocity)
 				m_tempVelocities[i] *= (m_maxVelocity / speed);
@@ -269,9 +276,11 @@ namespace emberEngine
 		// Second Runge-Kutta step:
 		for (int i = 0; i < m_particleCount; i++)
 		{
-			Float2 acceleration = m_forceDensities[i] / m_densities[i];
-			m_positions[i] += (m_velocities[i] + 0.5f * m_kv1[i]) * deltaT;
-			m_velocities[i] += acceleration * deltaT;
+			Float2 acceleration = m_forceDensities[i] / m_densities[i];		// a(tempPos, tempVel)
+			m_kp2[i] = m_tempVelocities[i];
+			m_kv2[i] = acceleration;
+			m_positions[i] += (a1 * m_kp1[i] + a2 * m_kp2[i]) * deltaT;
+			m_velocities[i] += (a1 * m_kv1[i] + a2 * m_kv2[i]) * deltaT;
 			float speed = m_velocities[i].Length();
 			if (speed > m_maxVelocity)
 				m_velocities[i] *= (m_maxVelocity / speed);
@@ -370,9 +379,9 @@ namespace emberEngine
 		visualRadius = math::Max(0.01f, visualRadius);
 		if (m_visualRadius != visualRadius)
 		{
-			std::unique_ptr<Mesh> pNewParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(visualRadius));
-			std::swap(m_pParticleMesh, pNewParticleMesh);
 			m_visualRadius = visualRadius;
+			std::unique_ptr<Mesh> pNewParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(m_visualRadius));
+			std::swap(m_pParticleMesh, pNewParticleMesh);
 		}
 	}
 

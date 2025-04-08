@@ -36,8 +36,8 @@ namespace emberEngine
 
 		// Runge Kutta fields:
 		std::vector<Float2> m_kp1;
-		std::vector<Float2> m_kp2;
 		std::vector<Float2> m_kv1;
+		std::vector<Float2> m_kp2;
 		std::vector<Float2> m_kv2;
 		std::vector<Float2> m_tempPositions;
 		std::vector<Float2> m_tempVelocities;

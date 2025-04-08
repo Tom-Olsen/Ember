@@ -21,14 +21,21 @@ namespace emberEngine
 		std::unique_ptr<ComputeShader> cs_pReset;
 		std::unique_ptr<ComputeShader> cs_pDensity;
 		std::unique_ptr<ComputeShader> cs_pPressureForceDensity;
+		std::unique_ptr<ComputeShader> cs_pGravityForceDensity;
+		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step1;
+		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step2;
 		std::unique_ptr<ComputeShader> cs_pBoundaryCollisions;
 		std::unique_ptr<ShaderProperties> m_pResetProperties;
 		std::unique_ptr<ShaderProperties> m_pDensityProperties;
 		std::unique_ptr<ShaderProperties> m_pPressureForceDensityProperties;
+		std::unique_ptr<ShaderProperties> m_pGravityForceDensityProperties;
+		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step1Properties;
+		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step2Properties;
 		std::unique_ptr<ShaderProperties> m_pBoundaryCollisionsProperties;
 
 		// Management:
 		bool m_isRunning;
+		bool m_reset;
 		float m_timeScale;
 		bool m_useGridOptimization;
 		uint32_t m_timeStep;
@@ -44,8 +51,8 @@ namespace emberEngine
 
 		// Runge Kutta fields:
 		std::unique_ptr<StorageBuffer> m_pKp1Buffer;
-		std::unique_ptr<StorageBuffer> m_pKp2Buffer;
 		std::unique_ptr<StorageBuffer> m_pKv1Buffer;
+		std::unique_ptr<StorageBuffer> m_pKp2Buffer;
 		std::unique_ptr<StorageBuffer> m_pKv2Buffer;
 		std::unique_ptr<StorageBuffer> m_pTempPositionBuffer;
 		std::unique_ptr<StorageBuffer> m_pTempVelocityBuffer;
@@ -130,17 +137,16 @@ namespace emberEngine
 		float GetVisualRadius() const;
 
 		// Overrides:
-		void Start() override;
 		void Update() override;
 		const std::string ToString() const override;
 		
 	private:
 		// Physics:
 		void DispatchResetKernal();
-		void DispatchDensityKernal(StorageBuffer* positionsBuffer);
+		void DispatchDensityKernal(StorageBuffer* positionBuffer);
 		void DispatchNormalKernal();
 		void DispatchCurvatureKernal();
-		void DispatchPressureForceDensityKernal(StorageBuffer* positionsBuffer);
+		void DispatchPressureForceDensityKernal(StorageBuffer* positionBuffer);
 		void DispatchViscosityForceDensityKernal();
 		void DispatchSurfaceTensionForceDensityKernal();
 		void DispatchGravityForceDensityKernal();

@@ -15,7 +15,7 @@ float2 SmoothingKernal_DPoly6(float r, float2 dir, float h)
 {
     float c0 = 315.0f / (64.0f * math_PI);
     float c = c0 / pow(h, 9.0f);
-    return (r < h) ? -6.0f * c * pow(h * h - r * r, 2.0f) * dir : 0.0f;
+    return (r < h) ? -6.0f * c * pow(h * h - r * r, 2.0f) * dir : float2(0, 0);
 }
 float SmoothingKernal_DDPoly6(float r, float h)
 {
@@ -37,7 +37,7 @@ float2 SmoothingKernal_DSpiky(float r, float2 dir, float h)
 {
     const float c0 = 15.0f / math_PI;
     float c = c0 / pow(h, 6.0f);
-    return (r < h) ? -3.0f * c * pow(h - r, 2.0f) * dir : 0.0f;
+    return (r < h) ? -3.0f * c * pow(h - r, 2.0f) * dir : float2(0, 0);
 }
 float SmoothingKernal_DDSpiky(float r, float h)
 {
@@ -60,7 +60,7 @@ float2 SmoothingKernal_DViscos(float r, float2 dir, float h)
     float c = c0 / pow(h, 3.0f);
     float r2 = r * r;
     float h2 = h * h;
-    return (r < h) ? c * (-1.5f * r2 / (h2 * h) + 2.0f * r / h2 - 0.5f * h / r2) * dir : 0.0f;
+    return (r < h) ? c * (-1.5f * r2 / (h2 * h) + 2.0f * r / h2 - 0.5f * h / r2) * dir : float2(0, 0);
 }
 float SmoothingKernal_DDViscos(float r, float h)
 {

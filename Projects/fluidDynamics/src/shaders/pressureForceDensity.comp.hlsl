@@ -29,7 +29,7 @@ float Pressure(float density, float targetDensity, float pressureMultiplier)
 [numthreads(64, 1, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
-    uint index = threadID.x;
+    int index = int(threadID.x);
     if (index < pc.threadCount.x)
     {
         b_forceDensities[index] = float2(0, 0);
@@ -43,7 +43,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
             float r = length(offset);
             if (r < cb_effectRadius)
             {
-                float2 dir = (r < 1e-8f) ? float2(cos(Random_FromTime(pc.time)), sin(Random_FromTime(pc.time))) : offset / r;
+                float phi = 2.0f * math_PI * Random_FromTime(pc.time);
+                float2 dir = (r < 1e-8f) ? float2(cos(phi), sin(phi)) : offset / r;
                 float otherParticlePressure = Pressure(b_densities[i], cb_targetDensity, cb_pressureMultiplier);
                 float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
                 b_forceDensities[index] += -cb_mass * sharedPressure * SmoothingKernal_DSpiky(r, dir, cb_effectRadius) / b_densities[i];

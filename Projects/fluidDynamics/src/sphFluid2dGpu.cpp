@@ -13,17 +13,24 @@ namespace emberEngine
 		cs_pReset = std::make_unique<ComputeShader>("reset", directoryPath + "/reset.comp.spv");
 		cs_pDensity = std::make_unique<ComputeShader>("density", directoryPath + "/density.comp.spv");
 		cs_pPressureForceDensity = std::make_unique<ComputeShader>("pressureForceDensity", directoryPath + "/pressureForceDensity.comp.spv");
+		cs_pGravityForceDensity = std::make_unique<ComputeShader>("gravityForceDensity", directoryPath + "/gravityForceDensity.comp.spv");
+		cs_pRungeKutta2Step1 = std::make_unique<ComputeShader>("rungeKutta2Step1", directoryPath + "/rungeKutta2Step1.comp.spv");
+		cs_pRungeKutta2Step2 = std::make_unique<ComputeShader>("rungeKutta2Step1", directoryPath + "/rungeKutta2Step2.comp.spv");
 		cs_pBoundaryCollisions = std::make_unique<ComputeShader>("boundaryCollisions", directoryPath + "/boundaryCollisions.comp.spv");
 		m_pResetProperties = std::make_unique<ShaderProperties>((Shader*)cs_pReset.get());
 		m_pDensityProperties = std::make_unique<ShaderProperties>((Shader*)cs_pDensity.get());
 		m_pPressureForceDensityProperties = std::make_unique<ShaderProperties>((Shader*)cs_pPressureForceDensity.get());
+		m_pGravityForceDensityProperties = std::make_unique<ShaderProperties>((Shader*)cs_pGravityForceDensity.get());
+		m_pRungeKutta2Step1Properties = std::make_unique<ShaderProperties>((Shader*)cs_pRungeKutta2Step1.get());
+		m_pRungeKutta2Step2Properties = std::make_unique<ShaderProperties>((Shader*)cs_pRungeKutta2Step2.get());
 		m_pBoundaryCollisionsProperties = std::make_unique<ShaderProperties>((Shader*)cs_pBoundaryCollisions.get());
 		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
 		m_pShaderProperties = std::make_unique<ShaderProperties>((Shader*)m_pParticleMaterial);
 
 		// Management:
 		m_isRunning = false;
-		m_timeScale = 2.0f;
+		m_reset = true;
+		m_timeScale = 0.5f;
 		m_timeStep = 0;
 		SetParticleCount(400);
 		m_useGridOptimization = true;
@@ -35,9 +42,9 @@ namespace emberEngine
 		m_surfaceTension = 0.07f;
 		SetCollisionDampening(0.95f);
 		SetTargetDensity(15.0f);
-		m_pressureMultiplier = 20.0f;
-		m_gravity = 0.5f;
-		m_maxVelocity = 5.0f;
+		SetPressureMultiplier(20.0f);
+		SetGravity(0.5f);
+		SetMaxVelocity(5.0f);
 
 		// User Interaction/Boundaries:
 		SetAttractorRadius(3.0f);
@@ -46,8 +53,7 @@ namespace emberEngine
 
 		// Visuals:
 		SetInitialDistributionRadius(6.0f);
-		m_visualRadius = 0.25f;
-		m_pParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(m_visualRadius));
+		SetVisualRadius(0.25f);
 
 		// Editor window:
 		editorWindow = std::make_unique<SphFluid2dGpuEditorWindow>(this);
@@ -67,25 +73,25 @@ namespace emberEngine
 		// Reallocate buffers:
 		if (m_pPositionBuffer == nullptr || m_pPositionBuffer->GetCount() != m_particleCount)
 		{
-			std::unique_ptr<StorageBuffer> pNewPositionBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
 			std::swap(m_pPositionBuffer, pNewPositionBuffer);
-			std::unique_ptr<StorageBuffer> pNewVelocityBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
 			std::swap(m_pVelocityBuffer, pNewVelocityBuffer);
-			std::unique_ptr<StorageBuffer> pNewDensityBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(float));
+			std::unique_ptr<StorageBuffer> pNewDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float));
 			std::swap(m_pDensityBuffer, pNewDensityBuffer);
-			std::unique_ptr<StorageBuffer> pNewForceDensityBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewForceDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
 			std::swap(m_pForceDensityBuffer, pNewForceDensityBuffer);
-			std::unique_ptr<StorageBuffer> pNewKp1Buffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewKp1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
 			std::swap(m_pKp1Buffer, pNewKp1Buffer);
-			std::unique_ptr<StorageBuffer> pNewKp2Buffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
-			std::swap(m_pKp2Buffer, pNewKp2Buffer);
-			std::unique_ptr<StorageBuffer> pNewKv1Buffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewKv1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
 			std::swap(m_pKv1Buffer, pNewKv1Buffer);
-			std::unique_ptr<StorageBuffer> pNewKv2Buffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewKp2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::swap(m_pKp2Buffer, pNewKp2Buffer);
+			std::unique_ptr<StorageBuffer> pNewKv2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
 			std::swap(m_pKv2Buffer, pNewKv2Buffer);
-			std::unique_ptr<StorageBuffer> pNewTempPositionBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewTempPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
 			std::swap(m_pTempPositionBuffer, pNewTempPositionBuffer);
-			std::unique_ptr<StorageBuffer> pNewTempVelocityBuffer = std::make_unique<StorageBuffer>(m_particleCount, sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewTempVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
 			std::swap(m_pTempVelocityBuffer, pNewTempVelocityBuffer);
 		}
 
@@ -93,14 +99,15 @@ namespace emberEngine
 		DispatchResetKernal();
 		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 		DispatchDensityKernal(m_pPositionBuffer.get());
+		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::FixedUpdate()
 	{
-		if (!m_isRunning)
+		if (!m_isRunning || m_reset)
 			return;
 
-		// Do multiple iterations of deltaT<=Time::GetFixedDeltaTime() if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
-		float dt = Time::GetFixedDeltaTime();
+		// Do multiple iterations of deltaT<=dt if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
+		float dt = 2.0f * Time::GetFixedDeltaTime();
 		float timeStep = m_timeScale * dt;
 		float restTime = timeStep;
 		while (restTime > 0.0f)
@@ -108,6 +115,7 @@ namespace emberEngine
 			float deltaT = math::Min(dt, restTime);
 			TimeStepRungeKutta2(deltaT);
 			restTime -= deltaT;
+			Compute::PrintComputeCalls();
 		}
 		m_timeStep++;
 	}
@@ -121,9 +129,11 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::TimeStepRungeKutta2(float deltaT)
 	{
+		m_pRungeKutta2Step1Properties->SetValue("Values", "cb_deltaT", deltaT);
+		m_pRungeKutta2Step2Properties->SetValue("Values", "cb_deltaT", deltaT);
+
 		// Update grid for fast nearest neighbor particle look up:
-		//m_pGrid->UpdateGrid(m_positions, m_effectRadius);
-		//m_pGrid->ApplySort(m_velocities);
+		// ...
 
 		// Compute densities:
 		DispatchDensityKernal(m_pPositionBuffer.get());
@@ -132,48 +142,27 @@ namespace emberEngine
 		// Compute forces:
 		DispatchPressureForceDensityKernal(m_pPositionBuffer.get());
 		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
-
-		//// First Runte-Kutta step:
-		//for (int i = 0; i < m_particleCount; i++)
-		//{
-		//	Float2 acceleration = m_forceDensities[i] / m_densities[i];
-		//	m_kp1[i] = m_velocities[i] * deltaT;
-		//	m_kv1[i] = acceleration * deltaT;
-		//	m_tempPositions[i] = m_positions[i] + 0.5f * m_kp1[i];
-		//	m_tempVelocities[i] = m_velocities[i] + 0.5f * m_kv1[i];
-		//	float speed = m_tempVelocities[i].Length();
-		//	if (speed > m_maxVelocity)
-		//		m_tempVelocities[i] *= (m_maxVelocity / speed);
-		//}
+		//DispatchGravityForceDensityKernal();
+		//Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		
+		// First Runte-Kutta step:
 		DispatchRungeKutta2Step1Kernal();
 		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
-
-		//// Update grid for fast nearest neighbor particle look up:
-		//m_pGrid->UpdateGrid(m_tempPositions, m_effectRadius);
-		//m_pGrid->ApplySort(m_tempVelocities);
-		//m_pGrid->ApplySort(m_positions);
-		//m_pGrid->ApplySort(m_velocities);
-		//m_pGrid->ApplySort(m_kv1);
-
+		
+		// Update grid for fast nearest neighbor particle look up:
+		// ...
+		
 		// Compute intermediate densities:
 		DispatchDensityKernal(m_pTempPositionBuffer.get());
 		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
-
+		
 		// Compute intermediate force densities:
 		DispatchPressureForceDensityKernal(m_pTempPositionBuffer.get());
 		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
-
-		//// Second Runge-Kutta step:
-		//for (int i = 0; i < m_particleCount; i++)
-		//{
-		//	Float2 acceleration = m_forceDensities[i] / m_densities[i];
-		//	m_positions[i] += (m_velocities[i] + 0.5f * m_kv1[i]) * deltaT;
-		//	m_velocities[i] += acceleration * deltaT;
-		//	float speed = m_velocities[i].Length();
-		//	if (speed > m_maxVelocity)
-		//		m_velocities[i] *= (m_maxVelocity / speed);
-		//	BoundaryCollisions(m_positions[i], m_velocities[i]);
-		//}
+		//DispatchGravityForceDensityKernal();
+		//Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		
+		// Second Runge-Kutta step:
 		DispatchRungeKutta2Step2Kernal();
 		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 
@@ -197,17 +186,19 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::SetParticleCount(int particleCount)
 	{
+		particleCount = math::Max(1, particleCount);
 		if (m_particleCount != particleCount)
 		{
 			m_particleCount = particleCount;
 			m_threadCount = Uint3(m_particleCount, 1, 1);
 			m_pDensityProperties->SetValue("Values", "cb_particleCount", m_particleCount);
 			m_pPressureForceDensityProperties->SetValue("Values", "cb_particleCount", m_particleCount);
-			Reset();
+			m_reset = true;
 		}
 	}
 	void SphFluid2dGpu::SetEffectRadius(float effectRadius)
 	{
+		effectRadius = math::Max(1e-4f, effectRadius);
 		if (m_effectRadius != effectRadius)
 		{
 			m_effectRadius = effectRadius;
@@ -217,6 +208,7 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::SetMass(float mass)
 	{
+		mass = math::Max(1e-4f, mass);
 		if (m_mass != mass)
 		{
 			m_mass = mass;
@@ -242,6 +234,7 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::SetTargetDensity(float targetDensity)
 	{
+		targetDensity = math::Max(1e-4f, targetDensity);
 		if (m_targetDensity != targetDensity)
 		{
 			m_targetDensity = targetDensity;
@@ -251,20 +244,34 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::SetPressureMultiplier(float pressureMultiplier)
 	{
-		m_pressureMultiplier = pressureMultiplier;
-		m_pPressureForceDensityProperties->SetValue("Values", "cb_pressureMultiplier", m_pressureMultiplier);
+		if (m_pressureMultiplier != pressureMultiplier)
+		{
+			m_pressureMultiplier = pressureMultiplier;
+			m_pPressureForceDensityProperties->SetValue("Values", "cb_pressureMultiplier", m_pressureMultiplier);
+		}
 	}
 	void SphFluid2dGpu::SetGravity(float gravity)
 	{
-		m_gravity = gravity;
+		if (m_gravity != gravity)
+		{
+			m_gravity = gravity;
+			m_pGravityForceDensityProperties->SetValue("Values", "cb_gravity", m_gravity);
+		}
 	}
 	void SphFluid2dGpu::SetMaxVelocity(float maxVelocity)
 	{
-		m_maxVelocity = maxVelocity;
+		maxVelocity = math::Max(1e-4f, maxVelocity);
+		if (m_maxVelocity != maxVelocity)
+		{
+			m_maxVelocity = maxVelocity;
+			m_pRungeKutta2Step1Properties->SetValue("Values", "cb_maxVelocity", m_maxVelocity);
+			m_pRungeKutta2Step2Properties->SetValue("Values", "cb_maxVelocity", m_maxVelocity);
+			m_pShaderProperties->SetValue("Values", "cb_maxVelocity", m_maxVelocity);
+		}
 	}
 	void SphFluid2dGpu::SetAttractorRadius(float attractorRadius)
 	{
-		attractorRadius = math::Max(0.01f, attractorRadius);
+		attractorRadius = math::Max(1e-4f, attractorRadius);
 		if (m_attractorRadius != attractorRadius)
 		{
 			std::unique_ptr<Mesh> pNewRingMesh = std::unique_ptr<Mesh>(MeshGenerator::ArcFlatUv(attractorRadius - 0.1f, attractorRadius + 0.1f, 360.0f, 100, "attractorRing"));
@@ -274,7 +281,7 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::SetAttractorStrength(float attractorStrength)
 	{
-		attractorStrength = math::Max(0.01f, attractorStrength);
+		attractorStrength = math::Max(1e-4f, attractorStrength);
 		m_attractorStrength = attractorStrength;
 	}
 	void SphFluid2dGpu::SetFluidBounds(const Bounds& bounds)
@@ -288,11 +295,12 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::SetInitialDistributionRadius(float initialDistributionRadius)
 	{
+		initialDistributionRadius = math::Max(1e-4f, initialDistributionRadius);
 		if (m_initialDistributionRadius != initialDistributionRadius)
 		{
 			m_initialDistributionRadius = initialDistributionRadius;
 			m_pResetProperties->SetValue("Values", "cb_initialDistributionRadius", m_initialDistributionRadius);
-			Reset();
+			m_reset = true;
 		}
 	}
 	void SphFluid2dGpu::SetVisualRadius(float visualRadius)
@@ -300,9 +308,9 @@ namespace emberEngine
 		visualRadius = math::Max(0.01f, visualRadius);
 		if (m_visualRadius != visualRadius)
 		{
-			std::unique_ptr<Mesh> pNewParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(visualRadius));
-			std::swap(m_pParticleMesh, pNewParticleMesh);
 			m_visualRadius = visualRadius;
+			std::unique_ptr<Mesh> pNewParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(m_visualRadius));
+			std::swap(m_pParticleMesh, pNewParticleMesh);
 		}
 	}
 
@@ -389,10 +397,6 @@ namespace emberEngine
 
 
 	// Overrides:
-	void SphFluid2dGpu::Start()
-	{
-		Reset();
-	}
 	void SphFluid2dGpu::Update()
 	{
 		// Keyboard interactions:
@@ -407,8 +411,15 @@ namespace emberEngine
 		if (EventSystem::KeyDown(SDLK_DELETE))
 		{
 			m_isRunning = false;
-			Reset();
+			m_reset = true;
 			LOG_TRACE("Simulation stopped and reset.");
+		}
+
+		// Reset:
+		if (m_reset)
+		{
+			m_reset = false;
+			Reset();
 		}
 
 		// Mouse scrolling:
@@ -453,6 +464,7 @@ namespace emberEngine
 		Graphics::DrawBounds(localToWorld, m_fluidBounds, 0.01f, Float4::white, false, false);
 
 		m_pShaderProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
+		m_pShaderProperties->SetStorageBuffer("b_velocities", m_pVelocityBuffer.get());
 		m_pShaderProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
 		Graphics::DrawInstanced(m_particleCount, m_pPositionBuffer.get(), m_pParticleMesh.get(), m_pParticleMaterial, m_pShaderProperties.get(), localToWorld, false, false);
 	}
@@ -469,11 +481,19 @@ namespace emberEngine
 	{
 		m_pResetProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
 		m_pResetProperties->SetStorageBuffer("b_velocities", m_pVelocityBuffer.get());
+		m_pResetProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
+		m_pResetProperties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
+		m_pResetProperties->SetStorageBuffer("b_kp1", m_pKp1Buffer.get());
+		m_pResetProperties->SetStorageBuffer("b_kv1", m_pKv1Buffer.get());
+		m_pResetProperties->SetStorageBuffer("b_kp2", m_pKp2Buffer.get());
+		m_pResetProperties->SetStorageBuffer("b_kv2", m_pKv2Buffer.get());
+		m_pResetProperties->SetStorageBuffer("b_tempPositions", m_pTempPositionBuffer.get());
+		m_pResetProperties->SetStorageBuffer("b_tempVelocities", m_pTempVelocityBuffer.get());
 		Compute::Dispatch(cs_pReset.get(), m_pResetProperties.get(), m_threadCount);
 	}
-	void SphFluid2dGpu::DispatchDensityKernal(StorageBuffer* positionsBuffer)
+	void SphFluid2dGpu::DispatchDensityKernal(StorageBuffer* positionBuffer)
 	{
-		m_pDensityProperties->SetStorageBuffer("b_positions", positionsBuffer);
+		m_pDensityProperties->SetStorageBuffer("b_positions", positionBuffer);
 		m_pDensityProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
 		Compute::Dispatch(cs_pDensity.get(), m_pDensityProperties.get(), m_threadCount);
 	}
@@ -485,9 +505,9 @@ namespace emberEngine
 	{
 
 	}
-	void SphFluid2dGpu::DispatchPressureForceDensityKernal(StorageBuffer* positionsBuffer)
+	void SphFluid2dGpu::DispatchPressureForceDensityKernal(StorageBuffer* positionBuffer)
 	{
-		m_pPressureForceDensityProperties->SetStorageBuffer("b_positions", positionsBuffer);
+		m_pPressureForceDensityProperties->SetStorageBuffer("b_positions", positionBuffer);
 		m_pPressureForceDensityProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
 		m_pPressureForceDensityProperties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
 		Compute::Dispatch(cs_pPressureForceDensity.get(), m_pPressureForceDensityProperties.get(), m_threadCount);
@@ -502,7 +522,9 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::DispatchGravityForceDensityKernal()
 	{
-
+		m_pGravityForceDensityProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
+		m_pGravityForceDensityProperties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
+		Compute::Dispatch(cs_pGravityForceDensity.get(), m_pGravityForceDensityProperties.get(), m_threadCount);
 	}
 	void SphFluid2dGpu::DispatchExternalForceDensityKernal()
 	{
@@ -510,11 +532,29 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::DispatchRungeKutta2Step1Kernal()
 	{
-
+		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
+		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
+		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
+		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_velocities", m_pVelocityBuffer.get());
+		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_kp1", m_pKp1Buffer.get());
+		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_kv1", m_pKv1Buffer.get());
+		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_tempPositions", m_pTempPositionBuffer.get());
+		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_tempVelocities", m_pTempVelocityBuffer.get());
+		Compute::Dispatch(cs_pRungeKutta2Step1.get(), m_pRungeKutta2Step1Properties.get(), m_threadCount);
 	}
 	void SphFluid2dGpu::DispatchRungeKutta2Step2Kernal()
 	{
-
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_kp1", m_pKp1Buffer.get());
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_kv1", m_pKv1Buffer.get());
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_tempPositions", m_pTempPositionBuffer.get());
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_tempVelocities", m_pTempVelocityBuffer.get());
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_kp2", m_pKp2Buffer.get());
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_kv2", m_pKv2Buffer.get());
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
+		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_velocities", m_pVelocityBuffer.get());
+		Compute::Dispatch(cs_pRungeKutta2Step2.get(), m_pRungeKutta2Step2Properties.get(), m_threadCount);
 	}
 	void SphFluid2dGpu::DispatchBoundaryCollisionsKernal()
 	{

@@ -2,6 +2,7 @@
 #include "computeShader.h"
 #include "logger.h"
 #include "shaderProperties.h"
+#include "vulkanUtility.h"
 #include <vulkan/vulkan.h>
 
 
@@ -110,5 +111,22 @@ namespace emberEngine
 		s_staticComputeCalls.clear();
 		s_dynamicComputeCalls.clear();
 		s_callIndex = 0;
+	}
+	void Compute::PrintComputeCalls()
+	{
+		for (int i = 0; i < s_computeCallPointers.size(); i++)
+		{
+			if (s_computeCallPointers[i] == nullptr)
+				break;
+			ComputeShader* pComputeShader = s_computeCallPointers[i]->pComputeShader;
+			if (pComputeShader == nullptr)
+			{
+				std::string dstAccessMask = vulkanObjToString::VkAccessFlagBits2ToString(s_computeCallPointers[i]->dstAccessMask);
+				std::string srcAccessMask = vulkanObjToString::VkAccessFlagBits2ToString(s_computeCallPointers[i]->srcAccessMask);
+				LOG_TRACE("ComputeBarrier: dstAccessMask={}, srcAccessMask={}", dstAccessMask, srcAccessMask);
+			}
+			else
+				LOG_TRACE("ComputeShader: {}", pComputeShader->GetName());
+		}
 	}
 }

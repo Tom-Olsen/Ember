@@ -41,6 +41,7 @@ namespace emberEngine
 		// Management:
 		static std::vector<ComputeCall*>& GetComputeCallPointers();
 		static void ResetComputeCalls();
+		static void PrintComputeCalls();
 
 	private: // Methods
 		// Delete all constructors:
