@@ -15,6 +15,7 @@ cbuffer Values : register(b3)
 {
     float cb_targetDensity;
     float cb_maxVelocity;
+    int cb_colorMode;
 };
 
 
@@ -62,17 +63,17 @@ VertexOutput main(VertexInput input)
     
     float4 color = input.vertexColor;
     // Color by density:
-    //if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
-    //{
-    //    float t = (b_densities[input.instanceID] - cb_targetDensity) / cb_targetDensity;
-    //    float t0 = clamp(t, 0.0f, 1.0f);
-    //    float t1 = clamp(t - 1.0f, 0.0f, 1.0f);
-    //    float4 colorA = t0 * float4(1, 1, 1, 1) + (1.0f - t0) * float4(0, 0, 1, 1);
-    //    float4 colorB = t1 * float4(1, 0, 0, 1) + (1.0f - t1) * float4(1, 1, 1, 1);
-    //    color *= (t < 1.0f) ? colorA : colorB;
-    //}
+    if (cb_colorMode == 0 && pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+    {
+        float t = (b_densities[input.instanceID] - cb_targetDensity) / cb_targetDensity;
+        float t0 = clamp(t, 0.0f, 1.0f);
+        float t1 = clamp(t - 1.0f, 0.0f, 1.0f);
+        float4 colorA = t0 * float4(1, 1, 1, 1) + (1.0f - t0) * float4(0, 0, 1, 1);
+        float4 colorB = t1 * float4(1, 0, 0, 1) + (1.0f - t1) * float4(1, 1, 1, 1);
+        color *= (t < 1.0f) ? colorA : colorB;
+    }
     // Color by velocity:
-    if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+    if (cb_colorMode == 1 && pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
     {
         float t = length(b_velocities[input.instanceID]) / cb_maxVelocity;
         float t0 = 2.0f * t;

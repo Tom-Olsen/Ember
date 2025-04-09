@@ -20,9 +20,9 @@ namespace emberEngine
 		// Management:
 		m_isRunning = false;
 		m_timeScale = 2.0f;
+		m_useGridOptimization = true;
 		m_timeStep = 0;
 		m_particleCount = 400;
-		m_useGridOptimization = true;
 
 		// Physics:
 		m_effectRadius = 0.5f;

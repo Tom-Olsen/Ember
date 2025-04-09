@@ -28,6 +28,7 @@ namespace emberEngine
 		float m_maxVelocity;
 		float m_attractorRadius;
 		float m_attractorStrength;
+		int m_colorMode;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
 
@@ -54,8 +55,9 @@ namespace emberEngine
 				m_maxVelocity = m_pSphFluid2dGpu->GetMaxVelocity();
 				m_attractorRadius = m_pSphFluid2dGpu->GetAttractorRadius();
 				m_attractorStrength = m_pSphFluid2dGpu->GetAttractorStrength();
-				m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
+				m_colorMode = m_pSphFluid2dGpu->GetColorMode();
 				m_initialDistributionRadius = m_pSphFluid2dGpu->GetInitialDistributionRadius();
+				m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
 			}
 			// Get member values from data serialization:
 			//else
@@ -80,8 +82,9 @@ namespace emberEngine
 			m_maxVelocity = m_pSphFluid2dGpu->GetMaxVelocity();
 			m_attractorRadius = m_pSphFluid2dGpu->GetAttractorRadius();
 			m_attractorStrength = m_pSphFluid2dGpu->GetAttractorStrength();
-			m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
+			m_colorMode = m_pSphFluid2dGpu->GetColorMode();
 			m_initialDistributionRadius = m_pSphFluid2dGpu->GetInitialDistributionRadius();
+			m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
 
 			ImGui::Begin("Sph Fluid 2d Editor Window");
 			{
@@ -101,8 +104,9 @@ namespace emberEngine
 				Editor::InputFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
 				Editor::InputFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
 				Editor::InputFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
-				Editor::InputFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
+				Editor::InputInt("Color Mode:", &m_colorMode);
 				Editor::InputFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
+				Editor::InputFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
 
 				if (ImGui::Button("Reset Simulation"))
 					m_pSphFluid2dGpu->Reset();
@@ -124,8 +128,9 @@ namespace emberEngine
 			m_pSphFluid2dGpu->SetMaxVelocity(m_maxVelocity);
 			m_pSphFluid2dGpu->SetAttractorRadius(m_attractorRadius);
 			m_pSphFluid2dGpu->SetAttractorStrength(m_attractorStrength);
-			m_pSphFluid2dGpu->SetVisualRadius(m_visualRadius);
+			m_pSphFluid2dGpu->SetColorMode(m_colorMode);
 			m_pSphFluid2dGpu->SetInitialDistributionRadius(m_initialDistributionRadius);
+			m_pSphFluid2dGpu->SetVisualRadius(m_visualRadius);
 		}
 	};
 }

@@ -3,6 +3,7 @@
 #include "emberEngine.h"
 #include <array>
 #include <memory>
+#include <vector>
 
 
 
@@ -23,6 +24,7 @@ namespace emberEngine
 		std::unique_ptr<ComputeShader> cs_pPressureForceDensity;
 		std::unique_ptr<ComputeShader> cs_pViscosityForceDensity;
 		std::unique_ptr<ComputeShader> cs_pGravityForceDensity;
+		std::unique_ptr<ComputeShader> cs_pExternalForceDensity;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step1;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step2;
 		std::unique_ptr<ComputeShader> cs_pBoundaryCollisions;
@@ -34,6 +36,8 @@ namespace emberEngine
 		std::unique_ptr<ShaderProperties> m_pViscosityForceDensityPropertiesStep1;
 		std::unique_ptr<ShaderProperties> m_pViscosityForceDensityPropertiesStep2;
 		std::unique_ptr<ShaderProperties> m_pGravityForceDensityProperties;
+		std::vector<std::unique_ptr<ShaderProperties>> m_externalForceDensityProperties;
+		std::unique_ptr<ShaderProperties> m_pExternalForceDensityPropertiesStep2;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step1Properties;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step2Properties;
 		std::unique_ptr<ShaderProperties> m_pBoundaryCollisionsProperties;
@@ -81,6 +85,7 @@ namespace emberEngine
 		Bounds m_fluidBounds;
 
 		// Visuals:
+		int m_colorMode;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
 		std::unique_ptr<Mesh> m_pParticleMesh;
@@ -116,7 +121,10 @@ namespace emberEngine
 		void SetMaxVelocity(float maxVelocity);
 		void SetAttractorRadius(float attractorRadius);
 		void SetAttractorStrength(float attractorStrength);
+		void SetAttractorState(int attractorState);
+		void SetAttractorPoint(const Float2& attractorPoint);
 		void SetFluidBounds(const Bounds& bounds);
+		void SetColorMode(int colorMode);
 		void SetInitialDistributionRadius(float initialDistributionRadius);
 		void SetVisualRadius(float visualRadius);
 
@@ -138,6 +146,7 @@ namespace emberEngine
 		float GetAttractorRadius() const;
 		float GetAttractorStrength() const;
 		Bounds GetFluidBounds() const;
+		int GetColorMode() const;
 		float GetInitialDistributionRadius() const;
 		float GetVisualRadius() const;
 
@@ -155,7 +164,7 @@ namespace emberEngine
 		void DispatchViscosityForceDensityKernal(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties);
 		void DispatchSurfaceTensionForceDensityKernal();
 		void DispatchGravityForceDensityKernal();
-		void DispatchExternalForceDensityKernal();
+		void DispatchExternalForceDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
 		void DispatchRungeKutta2Step1Kernal();
 		void DispatchRungeKutta2Step2Kernal();
 		void DispatchBoundaryCollisionsKernal();

@@ -15,6 +15,7 @@ namespace emberEngine
 		cs_pPressureForceDensity = std::make_unique<ComputeShader>("pressureForceDensity", directoryPath + "/pressureForceDensity.comp.spv");
 		cs_pViscosityForceDensity = std::make_unique<ComputeShader>("viscosityForceDensity", directoryPath + "/viscosityForceDensity.comp.spv");
 		cs_pGravityForceDensity = std::make_unique<ComputeShader>("gravityForceDensity", directoryPath + "/gravityForceDensity.comp.spv");
+		cs_pExternalForceDensity = std::make_unique<ComputeShader>("externalForceDensity", directoryPath + "/externalForceDensity.comp.spv");
 		cs_pRungeKutta2Step1 = std::make_unique<ComputeShader>("rungeKutta2Step1", directoryPath + "/rungeKutta2Step1.comp.spv");
 		cs_pRungeKutta2Step2 = std::make_unique<ComputeShader>("rungeKutta2Step1", directoryPath + "/rungeKutta2Step2.comp.spv");
 		cs_pBoundaryCollisions = std::make_unique<ComputeShader>("boundaryCollisions", directoryPath + "/boundaryCollisions.comp.spv");
@@ -26,6 +27,8 @@ namespace emberEngine
 		m_pViscosityForceDensityPropertiesStep1 = std::make_unique<ShaderProperties>((Shader*)cs_pViscosityForceDensity.get());
 		m_pViscosityForceDensityPropertiesStep2 = std::make_unique<ShaderProperties>((Shader*)cs_pViscosityForceDensity.get());
 		m_pGravityForceDensityProperties = std::make_unique<ShaderProperties>((Shader*)cs_pGravityForceDensity.get());
+		m_externalForceDensityProperties.push_back(std::make_unique<ShaderProperties>((Shader*)cs_pExternalForceDensity.get()));
+		m_externalForceDensityProperties.push_back(std::make_unique<ShaderProperties>((Shader*)cs_pExternalForceDensity.get()));
 		m_pRungeKutta2Step1Properties = std::make_unique<ShaderProperties>((Shader*)cs_pRungeKutta2Step1.get());
 		m_pRungeKutta2Step2Properties = std::make_unique<ShaderProperties>((Shader*)cs_pRungeKutta2Step2.get());
 		m_pBoundaryCollisionsProperties = std::make_unique<ShaderProperties>((Shader*)cs_pBoundaryCollisions.get());
@@ -36,27 +39,28 @@ namespace emberEngine
 		m_isRunning = false;
 		m_reset = true;
 		m_timeScale = 2.0f;
-		m_timeStep = 0;
-		SetParticleCount(400);
 		m_useGridOptimization = true;
+		m_timeStep = 0;
+		SetParticleCount(2000);
 
 		// Physics:
 		SetEffectRadius(0.5f);
 		SetMass(1.0f);
-		m_viscosity = 0.5f;
+		SetViscosity(0.5f);
 		m_surfaceTension = 0.07f;
 		SetCollisionDampening(0.95f);
 		SetTargetDensity(15.0f);
-		SetPressureMultiplier(20.0f);
+		SetPressureMultiplier(5.0f);
 		SetGravity(0.5f);
 		SetMaxVelocity(5.0f);
 
 		// User Interaction/Boundaries:
 		SetAttractorRadius(3.0f);
-		m_attractorStrength = 2.0f;
+		SetAttractorStrength(0.25f);
 		SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
 
 		// Visuals:
+		SetColorMode(1);
 		SetInitialDistributionRadius(6.0f);
 		SetVisualRadius(0.25f);
 
@@ -147,6 +151,7 @@ namespace emberEngine
 		DispatchPressureForceDensityKernal(m_pPositionBuffer.get(), m_pPressureForceDensityPropertiesStep1.get());
 		DispatchViscosityForceDensityKernal(m_pPositionBuffer.get(), m_pVelocityBuffer.get(), m_pViscosityForceDensityPropertiesStep1.get());
 		DispatchGravityForceDensityKernal();
+		DispatchExternalForceDensityKernal(m_pPositionBuffer.get(), m_externalForceDensityProperties[0].get());
 
 		// First Runte-Kutta step:
 		DispatchRungeKutta2Step1Kernal();
@@ -161,6 +166,7 @@ namespace emberEngine
 		DispatchPressureForceDensityKernal(m_pTempPositionBuffer.get(), m_pPressureForceDensityPropertiesStep2.get());
 		DispatchViscosityForceDensityKernal(m_pTempPositionBuffer.get(), m_pTempVelocityBuffer.get(), m_pViscosityForceDensityPropertiesStep2.get());
 		DispatchGravityForceDensityKernal();
+		DispatchExternalForceDensityKernal(m_pTempPositionBuffer.get(), m_externalForceDensityProperties[1].get());
 		
 		// Second Runge-Kutta step:
 		DispatchRungeKutta2Step2Kernal();
@@ -197,6 +203,8 @@ namespace emberEngine
 			m_pPressureForceDensityPropertiesStep2->SetValue("Values", "cb_particleCount", m_particleCount);
 			m_pViscosityForceDensityPropertiesStep1->SetValue("Values", "cb_particleCount", m_particleCount);
 			m_pViscosityForceDensityPropertiesStep2->SetValue("Values", "cb_particleCount", m_particleCount);
+			m_externalForceDensityProperties[0]->SetValue("Values", "cb_particleCount", m_particleCount);
+			m_externalForceDensityProperties[1]->SetValue("Values", "cb_particleCount", m_particleCount);
 			m_reset = true;
 		}
 	}
@@ -230,7 +238,12 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::SetViscosity(float viscosity)
 	{
-		m_viscosity = viscosity;
+		if (m_viscosity != viscosity)
+		{
+			m_viscosity = viscosity;
+			m_pViscosityForceDensityPropertiesStep1->SetValue("Values", "cb_viscosity", m_viscosity);
+			m_pViscosityForceDensityPropertiesStep2->SetValue("Values", "cb_viscosity", m_viscosity);
+		}
 	}
 	void SphFluid2dGpu::SetSurfaceTension(float surfaceTension)
 	{
@@ -295,12 +308,37 @@ namespace emberEngine
 			std::unique_ptr<Mesh> pNewRingMesh = std::unique_ptr<Mesh>(MeshGenerator::ArcFlatUv(attractorRadius - 0.1f, attractorRadius + 0.1f, 360.0f, 100, "attractorRing"));
 			std::swap(m_pRingMesh, pNewRingMesh);
 			m_attractorRadius = attractorRadius;
+			m_externalForceDensityProperties[0]->SetValue("Values", "cb_attractorRadius", m_attractorRadius);
+			m_externalForceDensityProperties[1]->SetValue("Values", "cb_attractorRadius", m_attractorRadius);
 		}
 	}
 	void SphFluid2dGpu::SetAttractorStrength(float attractorStrength)
 	{
 		attractorStrength = math::Max(1e-4f, attractorStrength);
-		m_attractorStrength = attractorStrength;
+		if (m_attractorStrength != attractorStrength)
+		{
+			m_attractorStrength = attractorStrength;
+			m_externalForceDensityProperties[0]->SetValue("Values", "cb_attractorStrength", m_attractorStrength);
+			m_externalForceDensityProperties[1]->SetValue("Values", "cb_attractorStrength", m_attractorStrength);
+		}
+	}
+	void SphFluid2dGpu::SetAttractorState(int attractorState)
+	{
+		if (m_attractorState != attractorState)
+		{
+			m_attractorState = attractorState;
+			m_externalForceDensityProperties[0]->SetValue("Values", "cb_attractorState", m_attractorState);
+			m_externalForceDensityProperties[1]->SetValue("Values", "cb_attractorState", m_attractorState);
+		}
+	}
+	void SphFluid2dGpu::SetAttractorPoint(const Float2& attractorPoint)
+	{
+		if (m_attractorPoint != attractorPoint)
+		{
+			m_attractorPoint = attractorPoint;
+			m_externalForceDensityProperties[0]->SetValue("Values", "cb_attractorPoint", m_attractorPoint);
+			m_externalForceDensityProperties[1]->SetValue("Values", "cb_attractorPoint", m_attractorPoint);
+		}
 	}
 	void SphFluid2dGpu::SetFluidBounds(const Bounds& bounds)
 	{
@@ -309,6 +347,15 @@ namespace emberEngine
 			m_fluidBounds = bounds;
 			m_pBoundaryCollisionsProperties->SetValue("Values", "cb_min", m_fluidBounds.GetMin());
 			m_pBoundaryCollisionsProperties->SetValue("Values", "cb_max", m_fluidBounds.GetMax());
+		}
+	}
+	void SphFluid2dGpu::SetColorMode(int colorMode)
+	{
+		colorMode = math::Clamp(colorMode, 0, 1);
+		if (m_colorMode != colorMode)
+		{
+			m_colorMode = colorMode;
+			m_pShaderProperties->SetValue("Values", "cb_colorMode", m_colorMode);
 		}
 	}
 	void SphFluid2dGpu::SetInitialDistributionRadius(float initialDistributionRadius)
@@ -403,6 +450,10 @@ namespace emberEngine
 	{
 		return m_fluidBounds;
 	}
+	int SphFluid2dGpu::GetColorMode() const
+	{
+		return m_colorMode;
+	}
 	float SphFluid2dGpu::GetInitialDistributionRadius() const
 	{
 		return m_initialDistributionRadius;
@@ -463,19 +514,19 @@ namespace emberEngine
 			std::optional<Float3> hit = m_fluidBounds.IntersectRay(ray);
 			if (hit.has_value())
 			{
-				m_attractorPoint = Float2(hit.value());
+				SetAttractorPoint(Float2(hit.value()));
 				ShaderProperties* shaderProperties = Graphics::DrawMesh(m_pRingMesh.get(), MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
 				shaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(EventSystem::MouseButton::left))
-					m_attractorState = 1;
+					SetAttractorState(1);
 				if (EventSystem::MouseHeld(EventSystem::MouseButton::right))
-					m_attractorState = -1;
+					SetAttractorState(-1);
 			}
 			else
-				m_attractorState = 0;
+				SetAttractorState(0);
 		}
 		else
-			m_attractorState = 0;
+			SetAttractorState(0);
 
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
@@ -553,9 +604,13 @@ namespace emberEngine
 		Compute::Dispatch(cs_pGravityForceDensity.get(), m_pGravityForceDensityProperties.get(), m_threadCount);
 		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
-	void SphFluid2dGpu::DispatchExternalForceDensityKernal()
+	void SphFluid2dGpu::DispatchExternalForceDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties)
 	{
-
+		pShaderProperties->SetStorageBuffer("b_positions", positionBuffer);
+		pShaderProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
+		pShaderProperties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
+		Compute::Dispatch(cs_pExternalForceDensity.get(), pShaderProperties, m_threadCount);
+		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::DispatchRungeKutta2Step1Kernal()
 	{

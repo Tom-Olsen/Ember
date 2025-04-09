@@ -7,6 +7,7 @@
 cbuffer Values : register(b0)
 {
     int cb_particleCount;
+    float cb_viscosity;
     float cb_effectRadius;
     float cb_mass;
     float cb_targetDensity;
@@ -35,7 +36,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
             if (r < cb_effectRadius)
             {
                 float2 velocityDiff = b_velocities[i] - b_velocities[index];
-                b_forceDensities[index] += (cb_mass * SmoothingKernal_DDViscos(r, cb_effectRadius) / b_densities[i]) * velocityDiff;
+                b_forceDensities[index] += cb_viscosity * (cb_mass * SmoothingKernal_DDViscos(r, cb_effectRadius) / b_densities[i]) * velocityDiff;
             }
         };
     }
