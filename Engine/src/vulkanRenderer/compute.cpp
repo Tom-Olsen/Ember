@@ -118,15 +118,8 @@ namespace emberEngine
 		{
 			if (s_computeCallPointers[i] == nullptr)
 				break;
-			ComputeShader* pComputeShader = s_computeCallPointers[i]->pComputeShader;
-			if (pComputeShader == nullptr)
-			{
-				std::string dstAccessMask = vulkanObjToString::VkAccessFlagBits2ToString(s_computeCallPointers[i]->dstAccessMask);
-				std::string srcAccessMask = vulkanObjToString::VkAccessFlagBits2ToString(s_computeCallPointers[i]->srcAccessMask);
-				LOG_TRACE("ComputeBarrier: dstAccessMask={}, srcAccessMask={}", dstAccessMask, srcAccessMask);
-			}
-			else
-				LOG_TRACE("ComputeShader: {}", pComputeShader->GetName());
+
+			LOG_TRACE(s_computeCallPointers[i]->ToString());
 		}
 	}
 }

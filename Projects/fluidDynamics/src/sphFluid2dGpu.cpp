@@ -115,7 +115,6 @@ namespace emberEngine
 			float deltaT = math::Min(dt, restTime);
 			TimeStepRungeKutta2(deltaT);
 			restTime -= deltaT;
-			Compute::PrintComputeCalls();
 		}
 		m_timeStep++;
 	}
@@ -129,6 +128,8 @@ namespace emberEngine
 	}
 	void SphFluid2dGpu::TimeStepRungeKutta2(float deltaT)
 	{
+		bool hardSyncOff = true;
+		static int frame = 0;
 		m_pRungeKutta2Step1Properties->SetValue("Values", "cb_deltaT", deltaT);
 		m_pRungeKutta2Step2Properties->SetValue("Values", "cb_deltaT", deltaT);
 
@@ -136,37 +137,67 @@ namespace emberEngine
 		// ...
 
 		// Compute densities:
-		DispatchDensityKernal(m_pPositionBuffer.get());
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		if (frame == 0 || hardSyncOff)
+		{
+			DispatchDensityKernal(m_pPositionBuffer.get());
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		}
 
 		// Compute forces:
-		DispatchPressureForceDensityKernal(m_pPositionBuffer.get());
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
-		//DispatchGravityForceDensityKernal();
-		//Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		if (frame == 1 || hardSyncOff)
+		{
+			DispatchPressureForceDensityKernal(m_pPositionBuffer.get());
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		}
+		if (frame == 2 || hardSyncOff)
+		{
+			DispatchGravityForceDensityKernal();
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		}
 		
 		// First Runte-Kutta step:
-		DispatchRungeKutta2Step1Kernal();
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		if (frame == 3 || hardSyncOff)
+		{
+			DispatchRungeKutta2Step1Kernal();
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		}
 		
 		// Update grid for fast nearest neighbor particle look up:
 		// ...
 		
 		// Compute intermediate densities:
-		DispatchDensityKernal(m_pTempPositionBuffer.get());
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		if (frame == 4 || hardSyncOff)
+		{
+			DispatchDensityKernal(m_pTempPositionBuffer.get());
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		}
 		
 		// Compute intermediate force densities:
-		DispatchPressureForceDensityKernal(m_pTempPositionBuffer.get());
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
-		//DispatchGravityForceDensityKernal();
-		//Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		if (frame == 5 || hardSyncOff)
+		{
+			DispatchPressureForceDensityKernal(m_pTempPositionBuffer.get());
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		}
+		if (frame == 6 || hardSyncOff)
+		{
+			DispatchGravityForceDensityKernal();
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		}
 		
 		// Second Runge-Kutta step:
-		DispatchRungeKutta2Step2Kernal();
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		if (frame == 7 || hardSyncOff)
+		{
+			DispatchRungeKutta2Step2Kernal();
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		}
 
-		DispatchBoundaryCollisionsKernal();
+		if (frame == 8 || hardSyncOff)
+		{
+			DispatchBoundaryCollisionsKernal();
+			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		}
+
+		frame = (frame + 1) % 9;
 	}
 
 

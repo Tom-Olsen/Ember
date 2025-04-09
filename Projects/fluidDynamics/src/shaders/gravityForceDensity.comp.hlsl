@@ -4,18 +4,10 @@
 
 cbuffer Values : register(b0)
 {
-    int cb_gravity;
+    float cb_gravity;
 };
 StructuredBuffer<float> b_densities : register(t1);
 RWStructuredBuffer<float2> b_forceDensities : register(u2);
-
-
-
-float Pressure(float density, float targetDensity, float pressureMultiplier)
-{
-    float densityError = density - targetDensity;
-    return densityError * pressureMultiplier;
-}
 
 
 
