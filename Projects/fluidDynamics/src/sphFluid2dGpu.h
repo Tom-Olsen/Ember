@@ -3,7 +3,6 @@
 #include "emberEngine.h"
 #include <array>
 #include <memory>
-#include <vector>
 
 
 
@@ -23,21 +22,17 @@ namespace emberEngine
 		std::unique_ptr<ComputeShader> cs_pDensity;
 		std::unique_ptr<ComputeShader> cs_pPressureForceDensity;
 		std::unique_ptr<ComputeShader> cs_pViscosityForceDensity;
-		std::unique_ptr<ComputeShader> cs_pGravityForceDensity;
 		std::unique_ptr<ComputeShader> cs_pExternalForceDensity;
+		std::unique_ptr<ComputeShader> cs_pGravityForceDensity;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step1;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step2;
 		std::unique_ptr<ComputeShader> cs_pBoundaryCollisions;
 		std::unique_ptr<ShaderProperties> m_pResetProperties;
-		std::unique_ptr<ShaderProperties> m_pDensityPropertiesStep1;
-		std::unique_ptr<ShaderProperties> m_pDensityPropertiesStep2;
-		std::unique_ptr<ShaderProperties> m_pPressureForceDensityPropertiesStep1;
-		std::unique_ptr<ShaderProperties> m_pPressureForceDensityPropertiesStep2;
-		std::unique_ptr<ShaderProperties> m_pViscosityForceDensityPropertiesStep1;
-		std::unique_ptr<ShaderProperties> m_pViscosityForceDensityPropertiesStep2;
+		std::array<std::unique_ptr<ShaderProperties>, 2> m_densityProperties;
+		std::array<std::unique_ptr<ShaderProperties>, 2> m_pressureForceDensityProperties;
+		std::array<std::unique_ptr<ShaderProperties>, 2> m_viscosityForceDensityProperties;
+		std::array<std::unique_ptr<ShaderProperties>, 2> m_externalForceDensityProperties;
 		std::unique_ptr<ShaderProperties> m_pGravityForceDensityProperties;
-		std::vector<std::unique_ptr<ShaderProperties>> m_externalForceDensityProperties;
-		std::unique_ptr<ShaderProperties> m_pExternalForceDensityPropertiesStep2;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step1Properties;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step2Properties;
 		std::unique_ptr<ShaderProperties> m_pBoundaryCollisionsProperties;
@@ -163,8 +158,8 @@ namespace emberEngine
 		void DispatchPressureForceDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
 		void DispatchViscosityForceDensityKernal(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties);
 		void DispatchSurfaceTensionForceDensityKernal();
-		void DispatchGravityForceDensityKernal();
 		void DispatchExternalForceDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
+		void DispatchGravityForceDensityKernal();
 		void DispatchRungeKutta2Step1Kernal();
 		void DispatchRungeKutta2Step2Kernal();
 		void DispatchBoundaryCollisionsKernal();

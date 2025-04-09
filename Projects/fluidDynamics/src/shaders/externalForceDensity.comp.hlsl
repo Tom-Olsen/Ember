@@ -24,12 +24,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
     int index = int(threadID.x);
     if (index < pc.threadCount.x)
     {
-        for (int i = 0; i < cb_particleCount; i++)
+        float2 offset = cb_attractorPoint - b_positions[index];
+        float r = length(offset);
+        if (r < cb_attractorRadius && r > 1e-8f)
         {
-            float2 offset = cb_attractorPoint - b_positions[index];
-            float r = length(offset);
-            if (r < cb_attractorRadius)
-                b_forceDensities[index] += cb_attractorState * cb_attractorStrength * b_densities[index] * offset * r * r;
-        };
+            r /= cb_attractorRadius;
+            b_forceDensities[index] += cb_attractorState * cb_attractorStrength * b_densities[index] * offset * r * r;
+        }
     }
 }

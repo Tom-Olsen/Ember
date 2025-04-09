@@ -146,8 +146,8 @@ namespace emberEngine
 			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
 			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
 			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 			m_forceDensities[i] += ExternalForceDensity(i, m_positions, m_densities);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 		}
 
 		// Step:
@@ -189,8 +189,8 @@ namespace emberEngine
 			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
 			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
 			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 			m_forceDensities[i] += ExternalForceDensity(i, m_positions, m_densities);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 		}
 
 		// Step:
@@ -229,8 +229,8 @@ namespace emberEngine
 			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
 			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
 			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 			m_forceDensities[i] += ExternalForceDensity(i, m_positions, m_densities);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 		}
 
 		// First Runte-Kutta step:
@@ -269,8 +269,8 @@ namespace emberEngine
 			m_forceDensities[i] = PressureForceDensity(i, m_tempPositions, m_densities);
 			m_forceDensities[i] += ViscosityForceDensity(i, m_tempPositions, m_tempVelocities, m_densities);
 			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 			m_forceDensities[i] += ExternalForceDensity(i, m_tempPositions, m_densities);
+			m_forceDensities[i] += GravityForceDensity(i, m_densities);
 		}
 
 		// Second Runge-Kutta step:
@@ -870,10 +870,6 @@ namespace emberEngine
 		//return (normalLength > 0.1f) ? -m_surfaceTension * normal / normalLength : Float2::zero;
 		return (normalLength > 0.1f) ? m_surfaceTension * curvatures[particleIndex] * normal / normalLength : Float2::zero;
 	}
-	Float2 SphFluid2dCpu::GravityForceDensity(int particleIndex, const std::vector<float>& densities)
-	{
-		return densities[particleIndex] * Float2(0.0f, -m_gravity);
-	}
 	Float2 SphFluid2dCpu::ExternalForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
 	{
 		if (m_attractorState != 0)
@@ -881,9 +877,16 @@ namespace emberEngine
 			Float2 offset = m_attractorPoint - positions[particleIndex];
 			float r = offset.Length();
 			if (r < m_attractorRadius && r > 1e-8f)
+			{
+				r /= m_attractorRadius;
 				return m_attractorState * m_attractorStrength * densities[particleIndex] * offset * r * r;
+			}
 		}
 		return 0.0f;
+	}
+	Float2 SphFluid2dCpu::GravityForceDensity(int particleIndex, const std::vector<float>& densities)
+	{
+		return densities[particleIndex] * Float2(0.0f, -m_gravity);
 	}
 	void SphFluid2dCpu::BoundaryCollisions(Float2& position, Float2& velocity)
 	{
