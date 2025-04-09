@@ -21,13 +21,18 @@ namespace emberEngine
 		std::unique_ptr<ComputeShader> cs_pReset;
 		std::unique_ptr<ComputeShader> cs_pDensity;
 		std::unique_ptr<ComputeShader> cs_pPressureForceDensity;
+		std::unique_ptr<ComputeShader> cs_pViscosityForceDensity;
 		std::unique_ptr<ComputeShader> cs_pGravityForceDensity;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step1;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step2;
 		std::unique_ptr<ComputeShader> cs_pBoundaryCollisions;
 		std::unique_ptr<ShaderProperties> m_pResetProperties;
-		std::unique_ptr<ShaderProperties> m_pDensityProperties;
-		std::unique_ptr<ShaderProperties> m_pPressureForceDensityProperties;
+		std::unique_ptr<ShaderProperties> m_pDensityPropertiesStep1;
+		std::unique_ptr<ShaderProperties> m_pDensityPropertiesStep2;
+		std::unique_ptr<ShaderProperties> m_pPressureForceDensityPropertiesStep1;
+		std::unique_ptr<ShaderProperties> m_pPressureForceDensityPropertiesStep2;
+		std::unique_ptr<ShaderProperties> m_pViscosityForceDensityPropertiesStep1;
+		std::unique_ptr<ShaderProperties> m_pViscosityForceDensityPropertiesStep2;
 		std::unique_ptr<ShaderProperties> m_pGravityForceDensityProperties;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step1Properties;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step2Properties;
@@ -143,11 +148,11 @@ namespace emberEngine
 	private:
 		// Physics:
 		void DispatchResetKernal();
-		void DispatchDensityKernal(StorageBuffer* positionBuffer);
+		void DispatchDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
 		void DispatchNormalKernal();
 		void DispatchCurvatureKernal();
-		void DispatchPressureForceDensityKernal(StorageBuffer* positionBuffer);
-		void DispatchViscosityForceDensityKernal();
+		void DispatchPressureForceDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
+		void DispatchViscosityForceDensityKernal(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties);
 		void DispatchSurfaceTensionForceDensityKernal();
 		void DispatchGravityForceDensityKernal();
 		void DispatchExternalForceDensityKernal();
