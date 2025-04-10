@@ -36,56 +36,18 @@ namespace emberEngine
 		SphFluid2dGpuEditorWindow(SphFluid2dGpu* pSphFluid2dGpu)
 		{
 			m_pSphFluid2dGpu = pSphFluid2dGpu;
+			GetData();
 
 			// No serialised data available: get member values from script:
 			//if (...)
-			{
-				m_isRunning = m_pSphFluid2dGpu->GetIsRunning();
-				m_timeScale = m_pSphFluid2dGpu->GetTimeScale();
-				m_useGridOptimization = m_pSphFluid2dGpu->GetUseGridOptimization();
-				m_particleCount = m_pSphFluid2dGpu->GetParticleCount();
-				m_effectRadius = m_pSphFluid2dGpu->GetEffectRadius();
-				m_mass = m_pSphFluid2dGpu->GetMass();
-				m_viscosity = m_pSphFluid2dGpu->GetViscosity();
-				m_surfaceTension = m_pSphFluid2dGpu->GetSurfaceTension();
-				m_collisionDampening = m_pSphFluid2dGpu->GetCollisionDampening();
-				m_targetDensity = m_pSphFluid2dGpu->GetTargetDensity();
-				m_pressureMultiplier = m_pSphFluid2dGpu->GetPressureMultiplier();
-				m_gravity = m_pSphFluid2dGpu->GetGravity();
-				m_maxVelocity = m_pSphFluid2dGpu->GetMaxVelocity();
-				m_attractorRadius = m_pSphFluid2dGpu->GetAttractorRadius();
-				m_attractorStrength = m_pSphFluid2dGpu->GetAttractorStrength();
-				m_colorMode = m_pSphFluid2dGpu->GetColorMode();
-				m_initialDistributionRadius = m_pSphFluid2dGpu->GetInitialDistributionRadius();
-				m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
-			}
+				// GetData();
 			// Get member values from data serialization:
 			//else
-			{
 				// Set m_... values and do m_script->Set...() for all members.
-			}
 		}
 		void Render() override
 		{
-			m_isRunning = m_pSphFluid2dGpu->GetIsRunning();
-			m_timeScale = m_pSphFluid2dGpu->GetTimeScale();
-			m_useGridOptimization = m_pSphFluid2dGpu->GetUseGridOptimization();
-			m_particleCount = m_pSphFluid2dGpu->GetParticleCount();
-			m_effectRadius = m_pSphFluid2dGpu->GetEffectRadius();
-			m_mass = m_pSphFluid2dGpu->GetMass();
-			m_viscosity = m_pSphFluid2dGpu->GetViscosity();
-			m_surfaceTension = m_pSphFluid2dGpu->GetSurfaceTension();
-			m_collisionDampening = m_pSphFluid2dGpu->GetCollisionDampening();
-			m_targetDensity = m_pSphFluid2dGpu->GetTargetDensity();
-			m_pressureMultiplier = m_pSphFluid2dGpu->GetPressureMultiplier();
-			m_gravity = m_pSphFluid2dGpu->GetGravity();
-			m_maxVelocity = m_pSphFluid2dGpu->GetMaxVelocity();
-			m_attractorRadius = m_pSphFluid2dGpu->GetAttractorRadius();
-			m_attractorStrength = m_pSphFluid2dGpu->GetAttractorStrength();
-			m_colorMode = m_pSphFluid2dGpu->GetColorMode();
-			m_initialDistributionRadius = m_pSphFluid2dGpu->GetInitialDistributionRadius();
-			m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
-
+			GetData();
 			ImGui::Begin("Sph Fluid 2d Editor Window");
 			{
 				Editor::Checkbox("Is Running:", &m_isRunning);
@@ -112,7 +74,33 @@ namespace emberEngine
 					m_pSphFluid2dGpu->Reset();
 			}
 			ImGui::End();
+			SetData();
+		}
 
+	private:
+		void GetData()
+		{
+			m_isRunning = m_pSphFluid2dGpu->GetIsRunning();
+			m_timeScale = m_pSphFluid2dGpu->GetTimeScale();
+			m_useGridOptimization = m_pSphFluid2dGpu->GetUseGridOptimization();
+			m_particleCount = m_pSphFluid2dGpu->GetParticleCount();
+			m_effectRadius = m_pSphFluid2dGpu->GetEffectRadius();
+			m_mass = m_pSphFluid2dGpu->GetMass();
+			m_viscosity = m_pSphFluid2dGpu->GetViscosity();
+			m_surfaceTension = m_pSphFluid2dGpu->GetSurfaceTension();
+			m_collisionDampening = m_pSphFluid2dGpu->GetCollisionDampening();
+			m_targetDensity = m_pSphFluid2dGpu->GetTargetDensity();
+			m_pressureMultiplier = m_pSphFluid2dGpu->GetPressureMultiplier();
+			m_gravity = m_pSphFluid2dGpu->GetGravity();
+			m_maxVelocity = m_pSphFluid2dGpu->GetMaxVelocity();
+			m_attractorRadius = m_pSphFluid2dGpu->GetAttractorRadius();
+			m_attractorStrength = m_pSphFluid2dGpu->GetAttractorStrength();
+			m_colorMode = m_pSphFluid2dGpu->GetColorMode();
+			m_initialDistributionRadius = m_pSphFluid2dGpu->GetInitialDistributionRadius();
+			m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
+		}
+		void SetData()
+		{
 			m_pSphFluid2dGpu->SetIsRunning(m_isRunning);
 			m_pSphFluid2dGpu->SetTimeScale(m_timeScale);
 			m_pSphFluid2dGpu->SetUseGridOptimization(m_useGridOptimization);

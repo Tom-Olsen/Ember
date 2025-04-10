@@ -43,12 +43,6 @@ namespace emberEngine
 		const VkBufferCreateInfo& GetVkBufferCreateInfo() const;
 		const VmaAllocationCreateInfo& GetVmaAllocationCreateInfo() const;
 		uint64_t GetSize();
-
-		// Static methods:
-		static void CopyBufferToBuffer(VmaBuffer* srcBuffer, VmaBuffer* dstBuffer, VkDeviceSize size, const VulkanQueue& queue);
-		static void CopyBufferToImage(VmaBuffer* srcBuffer, VmaImage* dstImage, const VulkanQueue& queue, uint32_t layerCount);
-		static VmaBuffer StagingBuffer(uint64_t size, void* inputData);
-		static VmaBuffer StagingBuffer(const std::vector<uint64_t>& sizes, const std::vector<void*>& inputDatas);
 	};
 }
 

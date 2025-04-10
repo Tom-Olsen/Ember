@@ -1,7 +1,13 @@
 #include "compute.h"
+#include "computePushConstant.h"
 #include "computeShader.h"
+#include "emberTime.h"
 #include "logger.h"
+#include "pipeline.h"
 #include "shaderProperties.h"
+#include "vulkanCommand.h"
+#include "vulkanContext.h"
+#include "vulkanMacros.h"
 #include "vulkanUtility.h"
 #include <vulkan/vulkan.h>
 
@@ -16,6 +22,8 @@ namespace emberEngine
 	std::vector<ComputeCall> Compute::s_dynamicComputeCalls;
 	std::vector<ComputeCall*> Compute::s_computeCallPointers;
 	std::unordered_map<ComputeShader*, ResourcePool<ShaderProperties, 10>> Compute::s_shaderPropertiesPoolMap;
+	VulkanCommand* Compute::s_pAsyncCommand;
+	VkFence Compute::s_asyncFence;
 
 
 
@@ -25,17 +33,21 @@ namespace emberEngine
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
+		s_pAsyncCommand = new VulkanCommand(VulkanContext::pLogicalDevice->GetComputeQueue());
+		VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+		VKA(vkCreateFence(VulkanContext::GetVkDevice(), &createInfo, nullptr, &s_asyncFence));
 	}
 	void Compute::Clear()
 	{
 		ResetComputeCalls();
 		s_shaderPropertiesPoolMap.clear();
+		vkDestroyFence(VulkanContext::GetVkDevice(), s_asyncFence, nullptr);
 	}
 
 
 
 	// Public methods:
-	// Dispatch calls:
+	// Graphics synced dispatch calls:
 	ShaderProperties* Compute::Dispatch(ComputeShader* pComputeShader, uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ)
 	{
 		return Dispatch(pComputeShader, Uint3(threadCountX, threadCountY, threadCountZ));
@@ -65,13 +77,83 @@ namespace emberEngine
 	void Compute::Dispatch(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount)
 	{
 		if (!pComputeShader)
+		{
 			LOG_ERROR("Compute::Dispatch(...) failed. pComputeShader is nullptr.");
+			return;
+		}
+		if (!pShaderProperties)
+		{
+			LOG_ERROR("Compute::Dispatch(...) failed. pShaderProperties is nullptr.");
+			return;
+		}
 
 		// Setup compute call:
 		threadCount = Uint3::Max(Uint3::one, threadCount);
 		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, VK_ACCESS_2_NONE, VK_ACCESS_2_NONE };
 		s_staticComputeCalls.push_back(computeCall);
 		s_callIndex++;
+	}
+
+	// Async dispatch calls:
+	void Compute::DispatchImmediatly(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount)
+	{
+		if (!pComputeShader)
+		{
+			LOG_ERROR("Compute::DispatchImmediatly(...) failed. pComputeShader is nullptr.");
+			return;
+		}
+		if (!pShaderProperties)
+		{
+			LOG_ERROR("Compute::DispatchImmediatly(...) failed. pShaderProperties is nullptr.");
+			return;
+		}
+
+		// Reset comand pool:
+		vkResetCommandPool(VulkanContext::GetVkDevice(), s_pAsyncCommand->GetVkCommandPool(), 0);
+		VkCommandBuffer commandBuffer = s_pAsyncCommand->GetVkCommandBuffer();
+
+		// Update shader specific data:
+		uint32_t frameIndex = 0;	// immediate calls don't need multiple descriptorSets. Thus use 0th descriptorSet by default.
+		threadCount = Uint3::Max(Uint3::one, threadCount);
+		pShaderProperties->UpdateShaderData(frameIndex);
+
+		// Record command buffer:
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		{
+			// Set pipeline:
+			VkPipeline pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
+			VkPipelineLayout pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+			ComputePushConstant pushConstant(threadCount, Time::GetTime(), Time::GetDeltaTime());
+			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
+
+			// Compute group count:
+			Uint3 blockSize = pComputeShader->GetBlockSize();
+			uint32_t groupCountX = (threadCount.x + blockSize.x - 1) / blockSize.x;
+			uint32_t groupCountY = (threadCount.y + blockSize.y - 1) / blockSize.y;
+			uint32_t groupCountZ = (threadCount.z + blockSize.z - 1) / blockSize.z;
+
+			// Dispatch compute shader:
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &pShaderProperties->GetDescriptorSet(frameIndex), 0, nullptr);
+			vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+		}
+		VKA(vkEndCommandBuffer(commandBuffer));
+		
+
+		// Submit command buffer:
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 0;
+		submitInfo.pWaitSemaphores = VK_NULL_HANDLE;
+		submitInfo.pWaitDstStageMask = nullptr;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.signalSemaphoreCount = 0;
+		submitInfo.pSignalSemaphores = nullptr;
+		VKA(vkResetFences(VulkanContext::GetVkDevice(), 1, &s_asyncFence));
+		VKA(vkQueueSubmit(VulkanContext::pLogicalDevice->GetComputeQueue().queue, 1, &submitInfo, s_asyncFence));
+		VKA(vkWaitForFences(VulkanContext::GetVkDevice(), 1, &s_asyncFence, VK_TRUE, UINT64_MAX));
 	}
 
 	// Barriers:

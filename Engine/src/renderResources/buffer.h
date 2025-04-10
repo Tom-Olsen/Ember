@@ -23,14 +23,14 @@ namespace emberEngine
 	class Buffer
 	{
 	protected: // Members:
-		uint32_t m_size;	// in bytes: m_size = count * sizeof(type).
+		uint64_t m_size;	// in bytes: m_size = count * sizeof(type).
 		std::unique_ptr<VmaBuffer> m_buffer;
 
 	public: // Methods:
-		 virtual ~Buffer();
+		virtual ~Buffer();
 
-		uint32_t GetSize() const;
-		const VmaBuffer* const GetVmaBuffer() const;
+		uint64_t GetSize() const;
+		VmaBuffer* const GetVmaBuffer() const;
 	};
 }
 

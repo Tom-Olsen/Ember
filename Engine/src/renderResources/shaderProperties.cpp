@@ -112,45 +112,49 @@ namespace emberEngine
 
 
 	// Public methods:
-	void ShaderProperties::UpdateShaderData()
+	void ShaderProperties::UpdateShaderData(uint32_t frameIndex)
 	{
+		// invalid frameIndex (-1 or >= framesInFlight) => use current frameIndex. frameIndex = -1 is default behaviour.
+		if (frameIndex == -1 || frameIndex >= VulkanContext::framesInFlight)
+			frameIndex = VulkanContext::frameIndex;
+
 		// Stream uniform buffer data from host memory to GPU only for current frameIndex:
-		for (auto& [name, uniformBufferBinding] : m_uniformBufferMaps[VulkanContext::frameIndex])
+		for (auto& [name, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
 		{
-			if (m_updateUniformBuffer[VulkanContext::frameIndex].at(name))
+			if (m_updateUniformBuffer[frameIndex].at(name))
 			{
 				uniformBufferBinding.pUniformBuffer->UpdateBuffer();
-				m_updateUniformBuffer[VulkanContext::frameIndex].at(name) = false;
+				m_updateUniformBuffer[frameIndex].at(name) = false;
 			}
 		}
 
 		// Change the pointer the descriptor set points at to the new sampler:
-		for (auto& [name, samplerBinding] : m_samplerMaps[VulkanContext::frameIndex])
+		for (auto& [name, samplerBinding] : m_samplerMaps[frameIndex])
 		{
 			if (samplerBinding.pSampler != m_samplerStagingMap.at(name))
 			{
 				samplerBinding.pSampler = m_samplerStagingMap.at(name);
-				UpdateDescriptorSet(VulkanContext::frameIndex, samplerBinding);
+				UpdateDescriptorSet(frameIndex, samplerBinding);
 			}
 		}
 
 		// Change the pointer the descriptor set points at to the new texture2d:
-		for (auto& [name, texture2dBinding] : m_texture2dMaps[VulkanContext::frameIndex])
+		for (auto& [name, texture2dBinding] : m_texture2dMaps[frameIndex])
 		{
 			if (texture2dBinding.pTexture2d != m_texture2dStagingMap.at(name))
 			{
 				texture2dBinding.pTexture2d = m_texture2dStagingMap.at(name);
-				UpdateDescriptorSet(VulkanContext::frameIndex, texture2dBinding);
+				UpdateDescriptorSet(frameIndex, texture2dBinding);
 			}
 		}
 
 		// Change the pointer the descriptor set points at to the new storageBuffer:
-		for (auto& [name, storageBufferBinding] : m_storageBufferMaps[VulkanContext::frameIndex])
+		for (auto& [name, storageBufferBinding] : m_storageBufferMaps[frameIndex])
 		{
 			if (storageBufferBinding.pStorageBuffer != m_storageBufferStagingMap.at(name))
 			{
 				storageBufferBinding.pStorageBuffer = m_storageBufferStagingMap.at(name);
-				UpdateDescriptorSet(VulkanContext::frameIndex, storageBufferBinding);
+				UpdateDescriptorSet(frameIndex, storageBufferBinding);
 			}
 		}
 	}

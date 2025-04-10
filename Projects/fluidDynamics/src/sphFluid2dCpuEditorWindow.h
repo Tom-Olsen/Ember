@@ -35,54 +35,18 @@ namespace emberEngine
 		SphFluid2dCpuEditorWindow(SphFluid2dCpu* pSphFluid2dCpu)
 		{
 			m_pSphFluid2dCpu = pSphFluid2dCpu;
+			GetData();
 
 			// No serialised data available: get member values from script:
 			//if (...)
-			{
-				m_isRunning = m_pSphFluid2dCpu->GetIsRunning();
-				m_timeScale = m_pSphFluid2dCpu->GetTimeScale();
-				m_useGridOptimization = m_pSphFluid2dCpu->GetUseGridOptimization();
-				m_particleCount = m_pSphFluid2dCpu->GetParticleCount();
-				m_effectRadius = m_pSphFluid2dCpu->GetEffectRadius();
-				m_mass = m_pSphFluid2dCpu->GetMass();
-				m_viscosity = m_pSphFluid2dCpu->GetViscosity();
-				m_surfaceTension = m_pSphFluid2dCpu->GetSurfaceTension();
-				m_collisionDampening = m_pSphFluid2dCpu->GetCollisionDampening();
-				m_targetDensity = m_pSphFluid2dCpu->GetTargetDensity();
-				m_pressureMultiplier = m_pSphFluid2dCpu->GetPressureMultiplier();
-				m_gravity = m_pSphFluid2dCpu->GetGravity();
-				m_maxVelocity = m_pSphFluid2dCpu->GetMaxVelocity();
-				m_attractorRadius = m_pSphFluid2dCpu->GetAttractorRadius();
-				m_attractorStrength = m_pSphFluid2dCpu->GetAttractorStrength();
-				m_visualRadius = m_pSphFluid2dCpu->GetVisualRadius();
-				m_initialDistributionRadius = m_pSphFluid2dCpu->GetInitialDistributionRadius();
-			}
+				// GetData();
 			// Get member values from data serialization:
 			//else
-			{
 				// Set m_... values and do m_script->Set...() for all members.
-			}
 		}
 		void Render() override
 		{
-			m_isRunning = m_pSphFluid2dCpu->GetIsRunning();
-			m_timeScale = m_pSphFluid2dCpu->GetTimeScale();
-			m_useGridOptimization = m_pSphFluid2dCpu->GetUseGridOptimization();
-			m_particleCount = m_pSphFluid2dCpu->GetParticleCount();
-			m_effectRadius = m_pSphFluid2dCpu->GetEffectRadius();
-			m_mass = m_pSphFluid2dCpu->GetMass();
-			m_viscosity = m_pSphFluid2dCpu->GetViscosity();
-			m_surfaceTension = m_pSphFluid2dCpu->GetSurfaceTension();
-			m_collisionDampening = m_pSphFluid2dCpu->GetCollisionDampening();
-			m_targetDensity = m_pSphFluid2dCpu->GetTargetDensity();
-			m_pressureMultiplier = m_pSphFluid2dCpu->GetPressureMultiplier();
-			m_gravity = m_pSphFluid2dCpu->GetGravity();
-			m_maxVelocity = m_pSphFluid2dCpu->GetMaxVelocity();
-			m_attractorRadius = m_pSphFluid2dCpu->GetAttractorRadius();
-			m_attractorStrength = m_pSphFluid2dCpu->GetAttractorStrength();
-			m_visualRadius = m_pSphFluid2dCpu->GetVisualRadius();
-			m_initialDistributionRadius = m_pSphFluid2dCpu->GetInitialDistributionRadius();
-
+			GetData();
 			ImGui::Begin("Sph Fluid 2d Editor Window");
 			{
 				Editor::Checkbox("Is Running:", &m_isRunning);
@@ -108,7 +72,32 @@ namespace emberEngine
 					m_pSphFluid2dCpu->Reset();
 			}
 			ImGui::End();
+			SetData();
+		}
 
+	private:
+		void GetData()
+		{
+			m_isRunning = m_pSphFluid2dCpu->GetIsRunning();
+			m_timeScale = m_pSphFluid2dCpu->GetTimeScale();
+			m_useGridOptimization = m_pSphFluid2dCpu->GetUseGridOptimization();
+			m_particleCount = m_pSphFluid2dCpu->GetParticleCount();
+			m_effectRadius = m_pSphFluid2dCpu->GetEffectRadius();
+			m_mass = m_pSphFluid2dCpu->GetMass();
+			m_viscosity = m_pSphFluid2dCpu->GetViscosity();
+			m_surfaceTension = m_pSphFluid2dCpu->GetSurfaceTension();
+			m_collisionDampening = m_pSphFluid2dCpu->GetCollisionDampening();
+			m_targetDensity = m_pSphFluid2dCpu->GetTargetDensity();
+			m_pressureMultiplier = m_pSphFluid2dCpu->GetPressureMultiplier();
+			m_gravity = m_pSphFluid2dCpu->GetGravity();
+			m_maxVelocity = m_pSphFluid2dCpu->GetMaxVelocity();
+			m_attractorRadius = m_pSphFluid2dCpu->GetAttractorRadius();
+			m_attractorStrength = m_pSphFluid2dCpu->GetAttractorStrength();
+			m_visualRadius = m_pSphFluid2dCpu->GetVisualRadius();
+			m_initialDistributionRadius = m_pSphFluid2dCpu->GetInitialDistributionRadius();
+		}
+		void SetData()
+		{
 			m_pSphFluid2dCpu->SetIsRunning(m_isRunning);
 			m_pSphFluid2dCpu->SetTimeScale(m_timeScale);
 			m_pSphFluid2dCpu->SetUseGridOptimization(m_useGridOptimization);

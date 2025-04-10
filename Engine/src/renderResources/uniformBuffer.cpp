@@ -28,7 +28,7 @@ namespace emberEngine
 
 		m_buffer = std::make_unique<VmaBuffer>("uniformBuffer", bufferInfo, allocInfo);
 
-		// Get deviceData pointer:
+		// Get mapped deviceData pointer:
 		VmaAllocationInfo info;
 		vmaGetAllocationInfo(VulkanContext::GetVmaAllocator(), m_buffer->GetVmaAllocation(), &info);
 		m_pDeviceData = info.pMappedData;

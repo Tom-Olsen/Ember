@@ -1,5 +1,6 @@
 #include "mesh.h"
 #include "logger.h"
+#include "stagingBuffer.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
 
@@ -839,23 +840,14 @@ namespace emberEngine
 			m_vertexBuffer = std::make_unique<VmaBuffer>("vertexBuffer", bufferInfo, allocInfo);
 		}
 
-		// Load data into staging buffer:
-		std::vector<void*> bufferPointers =
-		{ static_cast<void*>(m_positions.data()),
-		  static_cast<void*>(m_normals.data()),
-		  static_cast<void*>(m_tangents.data()),
-		  static_cast<void*>(m_colors.data()),
-		  static_cast<void*>(m_uvs.data()) };
-		std::vector<uint64_t> bufferSizes =
-		{ static_cast<uint64_t>(GetSizeOfPositions()),
-		  static_cast<uint64_t>(GetSizeOfNormals()),
-		  static_cast<uint64_t>(GetSizeOfTangents()),
-		  static_cast<uint64_t>(GetSizeOfColors()),
-		  static_cast<uint64_t>(GetSizeOfUVs()) };
-		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(bufferSizes, bufferPointers);
-
-		// Copy data from staging to vertex buffer:
-		VmaBuffer::CopyBufferToBuffer(&stagingBuffer, m_vertexBuffer.get(), size, VulkanContext::pLogicalDevice->GetGraphicsQueue());
+		// Copy: meshData -> stagingBuffer -> vertexBuffer
+		StagingBuffer stagingBuffer(size);
+		stagingBuffer.SetData(m_positions.data(), GetSizeOfPositions(), GetPositionsOffset());
+		stagingBuffer.SetData(m_normals.data(), GetSizeOfNormals(), GetNormalsOffset());
+		stagingBuffer.SetData(m_tangents.data(), GetSizeOfTangents(), GetTangentsOffset());
+		stagingBuffer.SetData(m_colors.data(), GetSizeOfColors(), GetColorsOffset());
+		stagingBuffer.SetData(m_uvs.data(), GetSizeOfUVs(), GetUVsOffset());
+		stagingBuffer.UploadToBuffer(m_vertexBuffer.get(), VulkanContext::pLogicalDevice->GetGraphicsQueue());
 	}
 	#endif
 	#ifdef RESIZEABLE_BAR // No staging buffer:
@@ -914,11 +906,10 @@ namespace emberEngine
 			m_indexBuffer = std::make_unique<VmaBuffer>("indexBuffer", bufferInfo, allocInfo);
 		}
 
-		// Load data into staging buffer:
-		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(size, GetTrianglesUnrolled());
-
-		// Copy data from staging to vertex buffer:
-		VmaBuffer::CopyBufferToBuffer(&stagingBuffer, m_indexBuffer.get(), size, VulkanContext::pLogicalDevice->GetGraphicsQueue());
+		// Copy: triangles -> stagingBuffer -> indexBuffer
+		StagingBuffer stagingBuffer(size);
+		stagingBuffer.SetData(GetTrianglesUnrolled(), size);
+		stagingBuffer.UploadToBuffer(m_indexBuffer.get(), VulkanContext::pLogicalDevice->GetGraphicsQueue());
 	}
 	#endif
 }

@@ -1,5 +1,6 @@
 #include "textureCube.h"
 #include "logger.h"
+#include "stagingBuffer.h"
 #include "stb_image.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
@@ -51,9 +52,6 @@ namespace emberEngine
 			stbi_image_free(pPixels);
 		}
 
-		// Create staging buffer:
-		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(bufferSize, pFacePixels);
-
 		// Define subresource range:
 		VkImageSubresourceRange subresourceRange;
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -70,7 +68,6 @@ namespace emberEngine
 		VulkanQueue queue = VulkanContext::pLogicalDevice->GetTransferQueue();
 		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 
-
 		// Transition0: Layout: undefined->transfer, Queue: transfer
 		VkImageLayout newLayout0 = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		VkPipelineStageFlags2 srcStage0 = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
@@ -79,7 +76,10 @@ namespace emberEngine
 		VkAccessFlags2 dstAccessMask0 = VK_ACCESS_2_TRANSFER_WRITE_BIT;
 		m_pImage->TransitionLayout(newLayout0, srcStage0, dstStage0, srcAccessMask0, dstAccessMask0);
 
-		VmaBuffer::CopyBufferToImage(&stagingBuffer, m_pImage.get(), VulkanContext::pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
+		// Copy: pixelData -> stagingBuffer -> image
+		StagingBuffer stagingBuffer(bufferSize);
+		stagingBuffer.SetData(pFacePixels, bufferSize);
+		stagingBuffer.UploadToImage(m_pImage.get(), VulkanContext::pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
 
 		// Transition1: Layout: transfer->shader read, Queue: transfer->graphics
 		VkImageLayout newLayout1 = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

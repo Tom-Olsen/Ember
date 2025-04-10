@@ -74,7 +74,7 @@ namespace emberEngine
 		ShaderProperties(Shader* pShader);
 		~ShaderProperties();
 
-		void UpdateShaderData();
+		void UpdateShaderData(uint32_t frameIndex = -1); // -1 = current frame index.
 		const VkDescriptorSet& GetDescriptorSet(uint32_t frameIndex);
 		std::vector<VkDescriptorSet>& GetDescriptorSets();
 

@@ -14,11 +14,11 @@ namespace emberEngine
 	}
 
 	// Public Methods:
-	uint32_t Buffer::GetSize() const
+	uint64_t Buffer::GetSize() const
 	{
 		return m_size;
 	}
-	const VmaBuffer* const Buffer::GetVmaBuffer() const
+	VmaBuffer* const Buffer::GetVmaBuffer() const
 	{
 		return m_buffer.get();
 	}

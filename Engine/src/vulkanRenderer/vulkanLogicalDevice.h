@@ -19,8 +19,8 @@ namespace emberEngine
 	private: // Members:
 		VkDevice m_device;
 		VulkanQueue m_graphicsQueue;	// graphics and sync compute queue
-		VulkanQueue m_presentQueue;	// present queue
-		VulkanQueue m_computeQueue;	// async compute queue
+		VulkanQueue m_presentQueue;		// present queue
+		VulkanQueue m_computeQueue;		// async compute queue
 		VulkanQueue m_transferQueue;	// async transfer queue
 
 	public: // Methods:

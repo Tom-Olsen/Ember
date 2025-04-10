@@ -13,6 +13,7 @@ namespace emberEngine
 	// Forward declarations:
 	class ComputeShader;
 	class ShaderProperties;
+	class VulkanCommand;
 
 	class Compute
 	{
@@ -23,20 +24,24 @@ namespace emberEngine
 		static std::vector<ComputeCall> s_dynamicComputeCalls;
 		static std::vector<ComputeCall*> s_computeCallPointers;
 		static std::unordered_map<ComputeShader*, ResourcePool<ShaderProperties, 10>> s_shaderPropertiesPoolMap;
+		static VulkanCommand* s_pAsyncCommand;
+		static VkFence s_asyncFence;
 
 	public: // Methods
 		static void Init();
 		static void Clear();
 
-		// Dispatch calls:
+		// Graphics synced dispatch calls:
 		static ShaderProperties* Dispatch(ComputeShader* pComputeShader, Uint3 threadCount);
 		static ShaderProperties* Dispatch(ComputeShader* pComputeShadr, uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ);
 		static void Dispatch(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount);
 		static void Dispatch(ComputeShader* pComputeShadr, ShaderProperties* pShaderProperties, uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ);
 		
+		// Async dispatch calls:
+		static void DispatchImmediatly(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount);
+
 		// Barriers:
 		static void Barrier(VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
-
 
 		// Management:
 		static std::vector<ComputeCall*>& GetComputeCallPointers();

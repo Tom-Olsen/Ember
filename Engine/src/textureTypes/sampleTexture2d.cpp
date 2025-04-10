@@ -1,5 +1,6 @@
 #include "sampleTexture2d.h"
 #include "logger.h"
+#include "stagingBuffer.h"
 #include "stb_image.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
@@ -21,10 +22,6 @@ namespace emberEngine
 		stbi_uc* pPixels = stbi_load(filePath.string().c_str(), &m_width, &m_height, nullptr, m_channels);
 		if (!pPixels)
 			throw std::runtime_error("Failed to load texture image!");
-
-		// Create staging buffer:
-		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(format);
-		VmaBuffer stagingBuffer = VmaBuffer::StagingBuffer(bufferSize, pPixels);
 
 		// Define subresource range:
 		VkImageSubresourceRange subresourceRange;
@@ -50,8 +47,11 @@ namespace emberEngine
 		VkAccessFlags2 dstAccessMask0 = VK_ACCESS_2_TRANSFER_WRITE_BIT;
 		m_pImage->TransitionLayout(newLayout0, srcStage0, dstStage0, srcAccessMask0, dstAccessMask0);
 
-		// Copy pixel data:
-		VmaBuffer::CopyBufferToImage(&stagingBuffer, m_pImage.get(), VulkanContext::pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
+		// Copy: pixelData -> stagingBuffer -> image
+		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(format);
+		StagingBuffer stagingBuffer(bufferSize);
+		stagingBuffer.SetData(pPixels, bufferSize);
+		stagingBuffer.UploadToImage(m_pImage.get(), VulkanContext::pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
 
 		// Transition 1: Layout: transfer, Queue: transfer->graphics
 		VulkanQueue newQueue1 = VulkanContext::pLogicalDevice->GetGraphicsQueue();

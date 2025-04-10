@@ -21,6 +21,7 @@ using namespace emberEngine;
 
 
 // Ember::TODO now!
+// - use transfer queue in mesh class instead of graphics queue for index and vertes data transfer?
 // - replace all direct usages of VK_PIPELINE_STAGE_2_... and VK_ACCESS_2_... with constexpr values from vulkanUtility.h
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)

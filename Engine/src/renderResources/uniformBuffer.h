@@ -17,7 +17,7 @@ namespace emberEngine
 	/// Buffer specialization: <para/>
 	/// -VkBufferUsageFlags			= uniform <para/>
 	/// -VmaMemoryUsage				= prefer host <para/>
-	/// -VmaAllocationCreateFlags	= mapped, host access
+	/// -VmaAllocationCreateFlags	= mapped, host access sequential write
 	/// </summary>
 	class UniformBuffer : public Buffer
 	{
