@@ -55,9 +55,9 @@ namespace emberEngine
 		}
 
 		// Sort vectors:
-		m_permutation = SortPermutation(m_cellKeys, [](uint32_t const& a, uint32_t const& b) { return a < b; });
-		m_cellKeys = ApplyPermutation(m_cellKeys, m_permutation);
-		positions = ApplyPermutation(positions, m_permutation);
+		m_permutation = math::SortPermutation(m_cellKeys, [](uint32_t const& a, uint32_t const& b) { return a < b; });
+		m_cellKeys = math::ApplyPermutation(m_cellKeys, m_permutation);
+		positions = math::ApplyPermutation(positions, m_permutation);
 
 		// Reset start indices to invalid state:
 		for (int i = 0; i < m_particleCount; i++)
@@ -73,6 +73,6 @@ namespace emberEngine
 	}
 	void HashGrid2d::ApplySort(std::vector<Float2>& data)
 	{
-		data = ApplyPermutation(data, m_permutation);
+		data = math::ApplyPermutation(data, m_permutation);
 	}
 }

@@ -29,6 +29,8 @@
 #include "mathFunctions.h"
 #include "emberRandom.h"
 
+// Sort:
+#include "vectorSort.h"
 
 
 // Force emberMath namespace everywhere:

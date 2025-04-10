@@ -48,7 +48,7 @@ namespace emberMath
 		}
 		int Random::Uniform(int min, int max)
 		{
-			std::uniform_int_distribution<int> distribution(min, max - 1);
+			std::uniform_int_distribution<int> distribution(min, max);
 			return distribution(s_mersenneTwister);
 		}
 		Float2 Random::UniformDirection2()

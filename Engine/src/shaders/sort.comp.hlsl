@@ -2,7 +2,7 @@
 
 
 
-RWStructuredBuffer<float> b_data : register(u0);
+RWStructuredBuffer<int> b_data : register(u0);
 
 
 
@@ -12,6 +12,6 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
-        b_data[index] = float(index);
+        b_data[index] = int(index);
     }
 }

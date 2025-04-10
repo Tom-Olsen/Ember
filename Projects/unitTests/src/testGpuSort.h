@@ -3,6 +3,7 @@
 #include "application.h"
 #include "compute.h"
 #include "computeShader.h"
+#include "emberMath.h"
 #include "shaderProperties.h"
 #include "stagingBuffer.h"
 #include "storageBuffer.h"
@@ -70,7 +71,7 @@ namespace emberEngine
 		{
 			allGood = (downloadData[i] == uploadData[i]);
 			if (allGood == false)
-				return;
+				break;
 		}
 		EXPECT_TRUE(allGood);
 	}
@@ -80,41 +81,49 @@ namespace emberEngine
 	TEST_F(GpuSort, Sort)
 	{
 		// Create storage buffer:
-		int count = 50;
-		StorageBuffer buffer = StorageBuffer((uint32_t)count, (uint32_t)sizeof(float));
+		int count = 64;
+		StorageBuffer buffer = StorageBuffer((uint32_t)count, (uint32_t)sizeof(int));
 
-		// Load compute shader:
+		// Create unsorted array:
+		std::vector<int> unsortedData;
+		unsortedData.resize(count);
+		for (int i = 0; i < count; i++)
+			unsortedData[i] = math::Random::Uniform(1, count);
+
+		// Sort array on CPU:
+		std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
+
+		// Load compute shader and set shaderProperties:
 		std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/src/shaders/bin";
 		ComputeShader sortCS = ComputeShader("sort", directoryPath + "/sort.comp.spv");
-
-		// Perpare shader Properties:
 		ShaderProperties shaderProperties = ShaderProperties((Shader*)&sortCS);
 		shaderProperties.SetStorageBuffer("b_data", &buffer);
-	
+		
 		// Dispatch compute shader:
 		Uint3 threadCount(count, 1, 1);
 		Compute::DispatchImmediatly(&sortCS, &shaderProperties, threadCount);
 
-		// Create CPU pointer for the data:
-		std::vector<float> data;
-		data.resize(count);
-
-		// Create Staging buffer:
-		uint32_t size = count * sizeof(float);
-		StagingBuffer stagingBuffer(size);
-
 		// Download data from GPU:
+		std::vector<int> sortedDataGpu;
+		sortedDataGpu.resize(count);
+		uint32_t size = count * sizeof(int);
+		StagingBuffer stagingBuffer(size);
 		stagingBuffer.DownloadFromBuffer(buffer.GetVmaBuffer(), VulkanContext::pLogicalDevice->GetTransferQueue());
-		stagingBuffer.GetData(data.data(), size);
-		
+		stagingBuffer.GetData(sortedDataGpu.data(), size);
+
+		// Print data:
+		for (int i = 0; i < count; i++)
+			LOG_TRACE("CPU:{}, GPU:{}", sortedDataCpu[i], sortedDataGpu[i]);
+
 		// Check if data is correct:
 		bool allGood = true;
 		for (int i = 0; i < count; i++)
 		{
-			allGood = (data[i] == i);
+			allGood = (sortedDataGpu[i] == sortedDataCpu[i]);
 			if (allGood == false)
-				return;
+				break;
 		}
+		LOG_WARN(allGood);
 		EXPECT_TRUE(allGood);
 	}
 }

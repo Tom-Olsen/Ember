@@ -76,10 +76,10 @@ namespace emberEngine
 			Mesh* pMesh = new Mesh("fullScreenRenderQuad");
 
 			std::vector<Float3> positions;
-			positions.emplace_back(-1, -1, 0);
-			positions.emplace_back(-1,  1, 0);
-			positions.emplace_back( 1, -1, 0);
-			positions.emplace_back( 1,  1, 0);
+			positions.emplace_back(-1.0f, -1.0f, 0.0f);
+			positions.emplace_back(-1.0f,  1.0f, 0.0f);
+			positions.emplace_back( 1.0f, -1.0f, 0.0f);
+			positions.emplace_back( 1.0f,  1.0f, 0.0f);
 
 			std::vector<Float3> normals;
 			normals.emplace_back(0.0f, 0.0f, 1.0f);
@@ -185,13 +185,13 @@ namespace emberEngine
 		Mesh* UnitCube()
 		{
 			Float3 p000 = 0.5f * Float3(-1.0f, -1.0f, -1.0f);
-			Float3 p001 = 0.5f * Float3(-1.0f, -1.0f, 1.0f);
-			Float3 p010 = 0.5f * Float3(-1.0f, 1.0f, -1.0f);
-			Float3 p011 = 0.5f * Float3(-1.0f, 1.0f, 1.0f);
-			Float3 p100 = 0.5f * Float3(1.0f, -1.0f, -1.0f);
-			Float3 p101 = 0.5f * Float3(1.0f, -1.0f, 1.0f);
-			Float3 p110 = 0.5f * Float3(1.0f, 1.0f, -1.0f);
-			Float3 p111 = 0.5f * Float3(1.0f, 1.0f, 1.0f);
+			Float3 p001 = 0.5f * Float3(-1.0f, -1.0f,  1.0f);
+			Float3 p010 = 0.5f * Float3(-1.0f,  1.0f, -1.0f);
+			Float3 p011 = 0.5f * Float3(-1.0f,  1.0f,  1.0f);
+			Float3 p100 = 0.5f * Float3( 1.0f, -1.0f, -1.0f);
+			Float3 p101 = 0.5f * Float3( 1.0f, -1.0f,  1.0f);
+			Float3 p110 = 0.5f * Float3( 1.0f,  1.0f, -1.0f);
+			Float3 p111 = 0.5f * Float3( 1.0f,  1.0f,  1.0f);
 
 			std::vector<Mesh*> faces;
 			faces.reserve(6);
@@ -208,12 +208,12 @@ namespace emberEngine
 		{
 			Float3 p000 = 0.5f * Float3(-1, -1, 0);
 			Float3 p001 = 0.5f * Float3(-1, -1, 1);
-			Float3 p010 = 0.5f * Float3(-1, 1, 0);
-			Float3 p011 = 0.5f * Float3(-1, 1, 1);
-			Float3 p100 = 0.5f * Float3(1, -1, 0);
-			Float3 p101 = 0.5f * Float3(1, -1, 1);
-			Float3 p110 = 0.5f * Float3(1, 1, 0);
-			Float3 p111 = 0.5f * Float3(1, 1, 1);
+			Float3 p010 = 0.5f * Float3(-1,  1, 0);
+			Float3 p011 = 0.5f * Float3(-1,  1, 1);
+			Float3 p100 = 0.5f * Float3( 1, -1, 0);
+			Float3 p101 = 0.5f * Float3( 1, -1, 1);
+			Float3 p110 = 0.5f * Float3( 1,  1, 0);
+			Float3 p111 = 0.5f * Float3( 1,  1, 1);
 
 			std::vector<Mesh*> faces;
 			faces.reserve(5);
