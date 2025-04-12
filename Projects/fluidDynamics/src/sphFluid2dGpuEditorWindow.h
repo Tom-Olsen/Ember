@@ -12,7 +12,7 @@ namespace emberEngine
 	struct SphFluid2dGpuEditorWindow : EditorWindow
 	{
 	private:
-		SphFluid2dGpu* m_pSphFluid2dGpu;
+		SphFluid2dGpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
 		bool m_useGridOptimization;
@@ -33,9 +33,9 @@ namespace emberEngine
 		float m_visualRadius;
 
 	public:
-		SphFluid2dGpuEditorWindow(SphFluid2dGpu* pSphFluid2dGpu)
+		SphFluid2dGpuEditorWindow(SphFluid2dGpu* pScript)
 		{
-			m_pSphFluid2dGpu = pSphFluid2dGpu;
+			m_pScript = pScript;
 			GetData();
 
 			// No serialised data available: get member values from script:
@@ -43,7 +43,7 @@ namespace emberEngine
 				// GetData();
 			// Get member values from data serialization:
 			//else
-				// Set m_... values and do m_script->Set...() for all members.
+				// Set m_... values and do m_pScript->Set...() for all members.
 		}
 		void Render() override
 		{
@@ -53,7 +53,7 @@ namespace emberEngine
 				Editor::Checkbox("Is Running:", &m_isRunning);
 				Editor::InputFloat("Time Scale:", &m_timeScale);
 				Editor::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
-				Editor::Text(("Time Step:" + std::to_string(m_pSphFluid2dGpu->GetTimeStep())).c_str());
+				Editor::Text(("Time Step:" + std::to_string(m_pScript->GetTimeStep())).c_str());
 				Editor::InputInt("Particle Count:", &m_particleCount);
 				Editor::InputFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
 				Editor::InputFloat("Mass:", &m_mass, 0.1f, 1.0f, "%.8f");
@@ -71,7 +71,7 @@ namespace emberEngine
 				Editor::InputFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
 
 				if (ImGui::Button("Reset Simulation"))
-					m_pSphFluid2dGpu->Reset();
+					m_pScript->Reset();
 			}
 			ImGui::End();
 			SetData();
@@ -80,45 +80,45 @@ namespace emberEngine
 	private:
 		void GetData()
 		{
-			m_isRunning = m_pSphFluid2dGpu->GetIsRunning();
-			m_timeScale = m_pSphFluid2dGpu->GetTimeScale();
-			m_useGridOptimization = m_pSphFluid2dGpu->GetUseGridOptimization();
-			m_particleCount = m_pSphFluid2dGpu->GetParticleCount();
-			m_effectRadius = m_pSphFluid2dGpu->GetEffectRadius();
-			m_mass = m_pSphFluid2dGpu->GetMass();
-			m_viscosity = m_pSphFluid2dGpu->GetViscosity();
-			m_surfaceTension = m_pSphFluid2dGpu->GetSurfaceTension();
-			m_collisionDampening = m_pSphFluid2dGpu->GetCollisionDampening();
-			m_targetDensity = m_pSphFluid2dGpu->GetTargetDensity();
-			m_pressureMultiplier = m_pSphFluid2dGpu->GetPressureMultiplier();
-			m_gravity = m_pSphFluid2dGpu->GetGravity();
-			m_maxVelocity = m_pSphFluid2dGpu->GetMaxVelocity();
-			m_attractorRadius = m_pSphFluid2dGpu->GetAttractorRadius();
-			m_attractorStrength = m_pSphFluid2dGpu->GetAttractorStrength();
-			m_colorMode = m_pSphFluid2dGpu->GetColorMode();
-			m_initialDistributionRadius = m_pSphFluid2dGpu->GetInitialDistributionRadius();
-			m_visualRadius = m_pSphFluid2dGpu->GetVisualRadius();
+			m_isRunning = m_pScript->GetIsRunning();
+			m_timeScale = m_pScript->GetTimeScale();
+			m_useGridOptimization = m_pScript->GetUseGridOptimization();
+			m_particleCount = m_pScript->GetParticleCount();
+			m_effectRadius = m_pScript->GetEffectRadius();
+			m_mass = m_pScript->GetMass();
+			m_viscosity = m_pScript->GetViscosity();
+			m_surfaceTension = m_pScript->GetSurfaceTension();
+			m_collisionDampening = m_pScript->GetCollisionDampening();
+			m_targetDensity = m_pScript->GetTargetDensity();
+			m_pressureMultiplier = m_pScript->GetPressureMultiplier();
+			m_gravity = m_pScript->GetGravity();
+			m_maxVelocity = m_pScript->GetMaxVelocity();
+			m_attractorRadius = m_pScript->GetAttractorRadius();
+			m_attractorStrength = m_pScript->GetAttractorStrength();
+			m_colorMode = m_pScript->GetColorMode();
+			m_initialDistributionRadius = m_pScript->GetInitialDistributionRadius();
+			m_visualRadius = m_pScript->GetVisualRadius();
 		}
 		void SetData()
 		{
-			m_pSphFluid2dGpu->SetIsRunning(m_isRunning);
-			m_pSphFluid2dGpu->SetTimeScale(m_timeScale);
-			m_pSphFluid2dGpu->SetUseGridOptimization(m_useGridOptimization);
-			m_pSphFluid2dGpu->SetParticleCount(m_particleCount);
-			m_pSphFluid2dGpu->SetEffectRadius(m_effectRadius);
-			m_pSphFluid2dGpu->SetMass(m_mass);
-			m_pSphFluid2dGpu->SetViscosity(m_viscosity);
-			m_pSphFluid2dGpu->SetSurfaceTension(m_surfaceTension);
-			m_pSphFluid2dGpu->SetCollisionDampening(m_collisionDampening);
-			m_pSphFluid2dGpu->SetTargetDensity(m_targetDensity);
-			m_pSphFluid2dGpu->SetPressureMultiplier(m_pressureMultiplier);
-			m_pSphFluid2dGpu->SetGravity(m_gravity);
-			m_pSphFluid2dGpu->SetMaxVelocity(m_maxVelocity);
-			m_pSphFluid2dGpu->SetAttractorRadius(m_attractorRadius);
-			m_pSphFluid2dGpu->SetAttractorStrength(m_attractorStrength);
-			m_pSphFluid2dGpu->SetColorMode(m_colorMode);
-			m_pSphFluid2dGpu->SetInitialDistributionRadius(m_initialDistributionRadius);
-			m_pSphFluid2dGpu->SetVisualRadius(m_visualRadius);
+			m_pScript->SetIsRunning(m_isRunning);
+			m_pScript->SetTimeScale(m_timeScale);
+			m_pScript->SetUseGridOptimization(m_useGridOptimization);
+			m_pScript->SetParticleCount(m_particleCount);
+			m_pScript->SetEffectRadius(m_effectRadius);
+			m_pScript->SetMass(m_mass);
+			m_pScript->SetViscosity(m_viscosity);
+			m_pScript->SetSurfaceTension(m_surfaceTension);
+			m_pScript->SetCollisionDampening(m_collisionDampening);
+			m_pScript->SetTargetDensity(m_targetDensity);
+			m_pScript->SetPressureMultiplier(m_pressureMultiplier);
+			m_pScript->SetGravity(m_gravity);
+			m_pScript->SetMaxVelocity(m_maxVelocity);
+			m_pScript->SetAttractorRadius(m_attractorRadius);
+			m_pScript->SetAttractorStrength(m_attractorStrength);
+			m_pScript->SetColorMode(m_colorMode);
+			m_pScript->SetInitialDistributionRadius(m_initialDistributionRadius);
+			m_pScript->SetVisualRadius(m_visualRadius);
 		}
 	};
 }

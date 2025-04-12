@@ -18,9 +18,6 @@ using namespace emberEngine;
 
 Scene* InitScene()
 {
-	bool directionalLightsActive = false;
-	bool showLightFrustums = false;
-
 	Scene* pScene = new Scene();
 	{// Camera:
 		GameObject* pGameObject = new GameObject("mainCamera");
@@ -28,27 +25,21 @@ Scene* InitScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		//pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
 
-		Camera* pCamera = new Camera();
+		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
-		pGameObject->AddComponent<Camera>(pCamera);
-
-		PostProcessEffects* pPostProcessEffects = new PostProcessEffects();
-		pGameObject->AddComponent<PostProcessEffects>(pPostProcessEffects);
-
-		//CameraController* cameraController = new CameraController();
-		//pGameObject->AddComponent<CameraController>(cameraController);
+		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
 	}
 	//{ // Sph Fluid 2d Cpu:
 	//	GameObject* pGameObject = new GameObject("sphFluid2dCpu");
-	//	SphFluid2dCpu* sphFluid2dCpu = pGameObject->AddComponent<SphFluid2dCpu>();
+	//	SphFluid2dCpu* pSphFluid2dCpu = pGameObject->AddComponent<SphFluid2dCpu>();
 	//	pScene->AddGameObject(pGameObject);
 	//}
 	{ // Sph Fluid 2d Gpu:
 		GameObject* pGameObject = new GameObject("sphFluid2dGpu");
-		SphFluid2dGpu* sphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
+		SphFluid2dGpu* pSphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
 		pScene->AddGameObject(pGameObject);
 	}
 	return pScene;

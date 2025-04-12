@@ -10,6 +10,16 @@
 #include "vulkanContext.h"
 #include <string>
 
+// Components:
+#include "bitonicSortGraph.h"
+#include "camera.h"
+#include "cameraController.h"
+#include "directionalLight.h"
+#include "meshRenderer.h"
+#include "pointLight.h"
+#include "postProcessEffects.h"
+#include "spotLight.h"
+#include "transform.h"
 
 
 // Encapsulate in namespace to avoid main.cpp namespace polution.
@@ -22,13 +32,13 @@ namespace emberEngine
 		static void SetUpTestSuite()
 		{
 			Application::Settings settings = {};
+			settings.vSyncEnabled = true;
 			settings.framesInFlight = 2;
 			settings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-			settings.renderheight = 100;
-			settings.renderWidth = 100;
-			settings.vSyncEnabled = true;
-			settings.windowHeight = 100;
-			settings.windowWidth = 100;
+			settings.windowWidth = 1920;
+			settings.windowHeight = 1080;
+			settings.renderWidth = 1280;
+			settings.renderheight = 720;
 			app = new Application(settings);
 		}
 		static void TearDownTestSuite()
@@ -209,6 +219,60 @@ namespace emberEngine
 		}
 		LOG_WARN(allGood);
 		EXPECT_TRUE(allGood);
+	}
+
+	Scene* InitScene()
+	{
+		Scene* pScene = new Scene();
+		{// Camera:
+			GameObject* pGameObject = new GameObject("mainCamera");
+			Float3 pos = Float3(0.0f, -5.0f, 1.0f);
+			pGameObject->GetTransform()->SetPosition(pos);
+			pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
+	
+			Camera* pCamera = pGameObject->AddComponent<Camera>();
+			pCamera->SetFarClip(100.0f);
+			CameraController* cameraController = pGameObject->AddComponent<CameraController>();
+			
+			pScene->AddGameObject(pGameObject);
+			pScene->SetActiveCamera(pCamera);
+		}
+		{// Skybox:
+			GameObject* pGameObject = new GameObject("skybox");
+			pGameObject->GetTransform()->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
+
+			MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
+			pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+			pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
+			pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+			pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skyBox0"));
+			pMeshRenderer->SetCastShadows(false);
+			pMeshRenderer->SetReceiveShadows(false);
+	
+			pScene->AddGameObject(pGameObject);
+		}
+		{// Bitonic sort graph:
+			GameObject* pGameObject = new GameObject("bitonic sort graph");
+			BitonicSortGraph* pBitonicSortGraph = pGameObject->AddComponent<BitonicSortGraph>();
+			pScene->AddGameObject(pGameObject);
+		}
+		return pScene;
+	}
+	TEST_F(GpuSort, Visualization)
+	{
+		// Create scene:
+		std::unique_ptr<Scene> pScene(InitScene());
+		GpuSort::app->SetScene(pScene.get());
+	
+		// Run application:
+		try
+		{
+			GpuSort::app->Run();
+		}
+		catch (const std::exception& e)
+		{
+			LOG_ERROR("Exception: {}", e.what());
+		}
 	}
 }
 

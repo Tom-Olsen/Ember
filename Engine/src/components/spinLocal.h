@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_spin_h__
-#define __INCLUDE_GUARD_spin_h__
+#ifndef __INCLUDE_GUARD_spinLocal_h__
+#define __INCLUDE_GUARD_spinLocal_h__
 #include "emberEngine.h"
 
 
@@ -25,4 +25,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_spin_h__
+#endif // __INCLUDE_GUARD_spinLocal_h__

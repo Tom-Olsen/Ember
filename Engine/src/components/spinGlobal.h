@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_SpinAroundOrigin_h__
-#define __INCLUDE_GUARD_SpinAroundOrigin_h__
+#ifndef __INCLUDE_GUARD_SpinGlobal_h__
+#define __INCLUDE_GUARD_SpinGlobal_h__
 #include "emberEngine.h"
 
 
@@ -26,4 +26,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_SpinAroundOrigin_h__
+#endif // __INCLUDE_GUARD_SpinGlobal_h__
