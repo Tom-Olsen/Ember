@@ -42,7 +42,7 @@ namespace emberEngine
 
 	TEST_F(GpuSort, GetDataFromGpu)
 	{
-		int count = 50;
+		int count = 16;
 		uint64_t size = (uint64_t)count * (uint64_t)sizeof(float);
 
 		// Set upload data on CPU:
@@ -78,10 +78,11 @@ namespace emberEngine
 
 
 
-	TEST_F(GpuSort, Sort)
+	TEST_F(GpuSort, SingleSort)
 	{
 		// Create storage buffer:
-		int count = 64;
+		int count = 653;	// must be <= COUNT of bitonicSort compute shader
+		uint32_t size = count * sizeof(int);
 		StorageBuffer buffer = StorageBuffer((uint32_t)count, (uint32_t)sizeof(int));
 
 		// Create unsorted array:
@@ -90,30 +91,113 @@ namespace emberEngine
 		for (int i = 0; i < count; i++)
 			unsortedData[i] = math::Random::Uniform(1, count);
 
+		// Upload unsorted data to GPU:
+		StagingBuffer uploadBuffer(size);
+		uploadBuffer.SetData(unsortedData.data(), size);
+		uploadBuffer.UploadToBuffer(buffer.GetVmaBuffer(), VulkanContext::pLogicalDevice->GetTransferQueue());
+
 		// Sort array on CPU:
 		std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
 
 		// Load compute shader and set shaderProperties:
 		std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/src/shaders/bin";
-		ComputeShader sortCS = ComputeShader("sort", directoryPath + "/sort.comp.spv");
+		ComputeShader sortCS = ComputeShader("bitonicSort", directoryPath + "/bitonicSort.comp.spv");
 		ShaderProperties shaderProperties = ShaderProperties((Shader*)&sortCS);
-		shaderProperties.SetStorageBuffer("b_data", &buffer);
+		shaderProperties.SetStorageBuffer("sortBuffer", &buffer);
+		shaderProperties.SetValue("Values", "bufferSize", count);
 		
 		// Dispatch compute shader:
-		Uint3 threadCount(count, 1, 1);
+		Uint3 threadCount(count / 2, 1, 1);
 		Compute::DispatchImmediatly(&sortCS, &shaderProperties, threadCount);
 
-		// Download data from GPU:
+		// Download sorted data from GPU:
 		std::vector<int> sortedDataGpu;
 		sortedDataGpu.resize(count);
+		StagingBuffer downloadBuffer(size);
+		downloadBuffer.DownloadFromBuffer(buffer.GetVmaBuffer(), VulkanContext::pLogicalDevice->GetTransferQueue());
+		downloadBuffer.GetData(sortedDataGpu.data(), size);
+
+		//// Print data:
+		//for (int i = 0; i < count; i++)
+		//	LOG_TRACE("unsorted:{}, CPU:{}, GPU:{}", unsortedData[i], sortedDataCpu[i], sortedDataGpu[i]);
+
+		// Check if data is correct:
+		bool allGood = true;
+		for (int i = 0; i < count; i++)
+		{
+			allGood = (sortedDataGpu[i] == sortedDataCpu[i]);
+			if (allGood == false)
+				break;
+		}
+		LOG_WARN(allGood);
+		EXPECT_TRUE(allGood);
+	}
+
+	void DispatchSingleSort(int offset, int bufferSize, StorageBuffer* buffer)
+	{
+		static bool isInitialized = false;
+		static const std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/src/shaders/bin";
+		static ComputeShader* computeShader;
+		static ShaderProperties* shaderProperties;
+		if (!isInitialized)
+		{
+			computeShader = new ComputeShader("bitonicSort", directoryPath + "/bitonicSort.comp.spv");
+			shaderProperties = new ShaderProperties((Shader*)computeShader);
+		}
+		shaderProperties->SetStorageBuffer("sortBuffer", buffer);
+		shaderProperties->SetValue("Values", "offset", offset);
+		shaderProperties->SetValue("Values", "bufferSize", bufferSize);
+
+		Uint3 threadCount(bufferSize / 2, 1, 1);
+		Compute::DispatchImmediatly(computeShader, shaderProperties, threadCount);
+	}
+
+	TEST_F(GpuSort, MultiSort)
+	{
+		// Create storage buffer:
+		int count = 20;
 		uint32_t size = count * sizeof(int);
-		StagingBuffer stagingBuffer(size);
-		stagingBuffer.DownloadFromBuffer(buffer.GetVmaBuffer(), VulkanContext::pLogicalDevice->GetTransferQueue());
-		stagingBuffer.GetData(sortedDataGpu.data(), size);
+		StorageBuffer buffer = StorageBuffer((uint32_t)count, (uint32_t)sizeof(int));
+
+		// Create unsorted array:
+		std::vector<int> unsortedData;
+		unsortedData.resize(count);
+		for (int i = 0; i < count; i++)
+			unsortedData[i] = math::Random::Uniform(1, count);
+
+		// Upload unsorted data to GPU:
+		StagingBuffer uploadBuffer(size);
+		uploadBuffer.SetData(unsortedData.data(), size);
+		uploadBuffer.UploadToBuffer(buffer.GetVmaBuffer(), VulkanContext::pLogicalDevice->GetTransferQueue());
+
+		// Sort array on CPU:
+		std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
+
+		// Dispatch compute shaders:
+		int batchSize = 16;
+		int batches = (count - 1) / batchSize + 1;
+		int remaining = count;
+		int bufferSize = batchSize;
+		// For now each dispatch sorts only its own subarray of batchSize elements (last one can have fever elements).
+		for (int i = 0; i < batches; i++)
+		{
+			if (remaining < batchSize)
+				bufferSize = remaining;
+			else
+				remaining -= batchSize;
+			DispatchSingleSort(i * batchSize, bufferSize, &buffer);
+		}
+
+		// Download sorted data from GPU:
+		std::vector<int> sortedDataGpu;
+		sortedDataGpu.resize(count);
+		StagingBuffer downloadBuffer(size);
+		downloadBuffer.DownloadFromBuffer(buffer.GetVmaBuffer(), VulkanContext::pLogicalDevice->GetTransferQueue());
+		downloadBuffer.GetData(sortedDataGpu.data(), size);
 
 		// Print data:
 		for (int i = 0; i < count; i++)
-			LOG_TRACE("CPU:{}, GPU:{}", sortedDataCpu[i], sortedDataGpu[i]);
+			LOG_TRACE("unsorted:{}, CPU:{}, GPU:{}", unsortedData[i], sortedDataCpu[i], sortedDataGpu[i]);
 
 		// Check if data is correct:
 		bool allGood = true;

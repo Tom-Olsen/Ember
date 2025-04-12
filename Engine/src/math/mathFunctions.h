@@ -18,6 +18,8 @@ namespace emberMath
 		float Sqrt(float value);
 		float Pow(float value, float exponent);
 		float Factorial(int n);
+		uint32_t NextPowerOfTwo(uint32_t n);
+		uint64_t NextPowerOfTwo(uint64_t n);
 
 		// Trigonometry:
 		float Sin(float angle);

@@ -65,6 +65,31 @@ namespace emberMath
 				throw std::runtime_error("Factorials higher 9 not supported yet!");
 			return -1;
 		}
+		uint32_t NextPowerOfTwo(uint32_t n)
+		{
+			if (n == 0) return 1;
+			n--;
+			n |= n >> 1;
+			n |= n >> 2;
+			n |= n >> 4;
+			n |= n >> 8;
+			n |= n >> 16;
+			n++;
+			return n;
+		}
+		uint64_t NextPowerOfTwo(uint64_t n)
+		{
+			if (n == 0) return 1;
+			n--;
+			n |= n >> 1;
+			n |= n >> 2;
+			n |= n >> 4;
+			n |= n >> 8;
+			n |= n >> 16;
+			n |= n >> 32;
+			n++;
+			return n;
+		}
 
 
 
