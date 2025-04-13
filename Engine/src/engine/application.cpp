@@ -1,4 +1,5 @@
 #include "application.h"
+#include "bitonicSort.h"
 #include "bufferManager.h"
 #include "component.h"
 #include "computeShaderManager.h"
@@ -42,6 +43,7 @@ namespace emberEngine
 		MeshManager::Init();
 		Editor::Init();
 		DearImGui::Init();
+		BitonicSort::Init();
 
 		// Create renderer:
 		m_pRenderer = std::make_unique<VulkanRenderer>();
@@ -50,6 +52,7 @@ namespace emberEngine
 	{
 		VulkanContext::WaitDeviceIdle();
 		// Clear static managers:
+		BitonicSort::Clear();
 		DearImGui::Clear();
 		Editor::Clear();
 		MeshManager::Clear();

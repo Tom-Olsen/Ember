@@ -294,4 +294,5 @@ namespace emberMath
 	Float4 Float4::yellow = Float4(1.0f, 1.0f, 0.0f, 1.0f);
 	Float4 Float4::cyan = Float4(0.0f, 1.0f, 1.0f, 1.0f);
 	Float4 Float4::magenta = Float4(1.0f, 0.0f, 1.0f, 1.0f);
+	Float4 Float4::orange = Float4(1.0f, 0.5f, 0.0f, 1.0f);
 }

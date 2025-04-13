@@ -17,6 +17,8 @@ namespace emberEngine
 		float width;
 		float height;
 		float lineWidth;
+		float lineGap;
+		float blockGap;
 
 	public:
 		BitonicSortGraphEditorWindow(BitonicSortGraph* pScript)
@@ -33,6 +35,8 @@ namespace emberEngine
 				Editor::InputFloat("Width:", &width, 0.1f, 1.0f, "%.8f");
 				Editor::InputFloat("Height:", &height, 0.1f, 1.0f, "%.8f");
 				Editor::InputFloat("Line Width:", &lineWidth, 0.1f, 1.0f, "%.8f");
+				Editor::InputFloat("Line Gap:", &lineGap, 0.1f, 1.0f, "%.8f");
+				Editor::InputFloat("Block Gap:", &blockGap, 0.1f, 1.0f, "%.8f");
 			}
 			ImGui::End();
 			SetData();
@@ -45,6 +49,8 @@ namespace emberEngine
 			width = m_pScript->width;
 			height = m_pScript->height;
 			lineWidth = m_pScript->lineWidth;
+			lineGap = m_pScript->lineGap;
+			blockGap = m_pScript->blockGap;
 		}
 		void SetData()
 		{
@@ -52,6 +58,8 @@ namespace emberEngine
 			m_pScript->width = width;
 			m_pScript->height = height;
 			m_pScript->lineWidth = lineWidth;
+			m_pScript->lineGap = lineGap;
+			m_pScript->blockGap = blockGap;
 		}
 	};
 }

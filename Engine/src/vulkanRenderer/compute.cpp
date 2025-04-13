@@ -20,9 +20,13 @@ namespace emberEngine
 	uint32_t Compute::s_callIndex = 0;
 	std::vector<ComputeCall> Compute::s_staticComputeCalls;
 	std::vector<ComputeCall> Compute::s_dynamicComputeCalls;
+	std::vector<ComputeCall> Compute::s_asyncComputeCalls;
 	std::vector<ComputeCall*> Compute::s_computeCallPointers;
 	std::unordered_map<ComputeShader*, ResourcePool<ShaderProperties, 10>> Compute::s_shaderPropertiesPoolMap;
+	std::unordered_map<ComputeShader*, ResourcePool<ShaderProperties, 10>> Compute::s_asyncShaderPropertiesPoolMap;
+	VulkanCommand* Compute::s_pImmediatCommand;
 	VulkanCommand* Compute::s_pAsyncCommand;
+	VkFence Compute::s_immediatFence;
 	VkFence Compute::s_asyncFence;
 
 
@@ -33,14 +37,18 @@ namespace emberEngine
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
+		s_pImmediatCommand = new VulkanCommand(VulkanContext::pLogicalDevice->GetComputeQueue());
 		s_pAsyncCommand = new VulkanCommand(VulkanContext::pLogicalDevice->GetComputeQueue());
 		VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+		VKA(vkCreateFence(VulkanContext::GetVkDevice(), &createInfo, nullptr, &s_immediatFence));
 		VKA(vkCreateFence(VulkanContext::GetVkDevice(), &createInfo, nullptr, &s_asyncFence));
 	}
 	void Compute::Clear()
 	{
 		ResetComputeCalls();
 		s_shaderPropertiesPoolMap.clear();
+		s_asyncShaderPropertiesPoolMap.clear();
+		vkDestroyFence(VulkanContext::GetVkDevice(), s_immediatFence, nullptr);
 		vkDestroyFence(VulkanContext::GetVkDevice(), s_asyncFence, nullptr);
 	}
 
@@ -109,8 +117,8 @@ namespace emberEngine
 		}
 
 		// Reset comand pool:
-		vkResetCommandPool(VulkanContext::GetVkDevice(), s_pAsyncCommand->GetVkCommandPool(), 0);
-		VkCommandBuffer commandBuffer = s_pAsyncCommand->GetVkCommandBuffer();
+		vkResetCommandPool(VulkanContext::GetVkDevice(), s_pImmediatCommand->GetVkCommandPool(), 0);
+		VkCommandBuffer commandBuffer = s_pImmediatCommand->GetVkCommandBuffer();
 
 		// Update shader specific data:
 		uint32_t frameIndex = 0;	// immediate calls don't need multiple descriptorSets. Thus use 0th descriptorSet by default.
@@ -141,6 +149,115 @@ namespace emberEngine
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 		
+		// Submit command buffer:
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 0;
+		submitInfo.pWaitSemaphores = VK_NULL_HANDLE;
+		submitInfo.pWaitDstStageMask = nullptr;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.signalSemaphoreCount = 0;
+		submitInfo.pSignalSemaphores = nullptr;
+		VKA(vkResetFences(VulkanContext::GetVkDevice(), 1, &s_immediatFence));
+		VKA(vkQueueSubmit(VulkanContext::pLogicalDevice->GetComputeQueue().queue, 1, &submitInfo, s_immediatFence));
+		VKA(vkWaitForFences(VulkanContext::GetVkDevice(), 1, &s_immediatFence, VK_TRUE, UINT64_MAX));
+	}
+	void Compute::BeginAsyncCompute()
+	{
+		// Reset comand pool:
+		vkResetCommandPool(VulkanContext::GetVkDevice(), s_pAsyncCommand->GetVkCommandPool(), 0);
+
+		// Begin command buffer recording:
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		VKA(vkBeginCommandBuffer(s_pAsyncCommand->GetVkCommandBuffer(), &beginInfo));
+	}
+	ShaderProperties* Compute::DispatchAsync(ComputeShader* pComputeShader, Uint3 threadCount)
+	{
+		if (!pComputeShader)
+		{
+			LOG_ERROR("Compute::DispatchAsync(...) failed. pComputeShader is nullptr.");
+			return nullptr;
+		}
+
+		VkCommandBuffer commandBuffer = s_pAsyncCommand->GetVkCommandBuffer();
+
+		// Update shader specific data:
+		uint32_t frameIndex = 0;	// async calls don't need multiple descriptorSets. Thus use 0th descriptorSet by default.
+		threadCount = Uint3::Max(Uint3::one, threadCount);
+		ShaderProperties* pShaderProperties = s_asyncShaderPropertiesPoolMap[pComputeShader].Acquire((Shader*)pComputeShader);
+
+		// Set pipeline:
+		VkPipeline pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
+		VkPipelineLayout pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+		ComputePushConstant pushConstant(threadCount, Time::GetTime(), Time::GetDeltaTime());
+		vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
+
+		// Compute group count:
+		Uint3 blockSize = pComputeShader->GetBlockSize();
+		uint32_t groupCountX = (threadCount.x + blockSize.x - 1) / blockSize.x;
+		uint32_t groupCountY = (threadCount.y + blockSize.y - 1) / blockSize.y;
+		uint32_t groupCountZ = (threadCount.z + blockSize.z - 1) / blockSize.z;
+
+		// Dispatch compute shader:
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &pShaderProperties->GetDescriptorSet(frameIndex), 0, nullptr);
+		vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+
+		// Record dispach as computeCall for later shaderProperties cleanup:
+		ComputeCall computeCall = { 0, threadCount, pComputeShader, pShaderProperties, VK_ACCESS_2_NONE, VK_ACCESS_2_NONE };
+		s_asyncComputeCalls.push_back(computeCall);
+
+		return pShaderProperties;
+	}
+	void Compute::DispatchAsync(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount)
+	{
+		if (!pComputeShader)
+		{
+			LOG_ERROR("Compute::DispatchAsync(...) failed. pComputeShader is nullptr.");
+			return;
+		}
+		if (!pShaderProperties)
+		{
+			LOG_ERROR("Compute::DispatchAsync(...) failed. pShaderProperties is nullptr.");
+			return;
+		}
+
+		VkCommandBuffer commandBuffer = s_pAsyncCommand->GetVkCommandBuffer();
+
+		// Update shader specific data:
+		uint32_t frameIndex = 0;	// async calls don't need multiple descriptorSets. Thus use 0th descriptorSet by default.
+		threadCount = Uint3::Max(Uint3::one, threadCount);
+		pShaderProperties->UpdateShaderData(frameIndex);
+
+		// Set pipeline:
+		VkPipeline pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
+		VkPipelineLayout pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+		ComputePushConstant pushConstant(threadCount, Time::GetTime(), Time::GetDeltaTime());
+		vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
+
+		// Compute group count:
+		Uint3 blockSize = pComputeShader->GetBlockSize();
+		uint32_t groupCountX = (threadCount.x + blockSize.x - 1) / blockSize.x;
+		uint32_t groupCountY = (threadCount.y + blockSize.y - 1) / blockSize.y;
+		uint32_t groupCountZ = (threadCount.z + blockSize.z - 1) / blockSize.z;
+
+		// Dispatch compute shader:
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &pShaderProperties->GetDescriptorSet(frameIndex), 0, nullptr);
+		vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+	}
+	void Compute::EndAsyncCompute()
+	{
+		// Update shader specific data of compute calls wit dynamical shader properties:
+		uint32_t frameIndex = 0;	// async calls don't need multiple descriptorSets. Thus use 0th descriptorSet by default.
+		for (ComputeCall& computeCall : s_asyncComputeCalls)
+			computeCall.pShaderProperties->UpdateShaderData(frameIndex);
+
+		VkCommandBuffer commandBuffer = s_pAsyncCommand->GetVkCommandBuffer();
+
+		// End command buffer recording:
+		VKA(vkEndCommandBuffer(commandBuffer));
 
 		// Submit command buffer:
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
@@ -154,6 +271,14 @@ namespace emberEngine
 		VKA(vkResetFences(VulkanContext::GetVkDevice(), 1, &s_asyncFence));
 		VKA(vkQueueSubmit(VulkanContext::pLogicalDevice->GetComputeQueue().queue, 1, &submitInfo, s_asyncFence));
 		VKA(vkWaitForFences(VulkanContext::GetVkDevice(), 1, &s_asyncFence, VK_TRUE, UINT64_MAX));
+
+		// Return all pShaderProperties of async compute calls back to the corresponding pool:
+		for (ComputeCall& computeCall : s_asyncComputeCalls)
+			s_asyncShaderPropertiesPoolMap[computeCall.pComputeShader].Release(computeCall.pShaderProperties);
+		
+		// Shrink all async pools back to max number of async computeCalls of last begin/end block:
+		for (auto& [_, pool] : s_asyncShaderPropertiesPoolMap)
+			pool.ShrinkToFit();
 	}
 
 	// Barriers:
@@ -162,6 +287,20 @@ namespace emberEngine
 		ComputeCall computeCall = { s_callIndex, Uint3::zero, nullptr, nullptr, srcAccessMask, dstAccessMask };
 		s_staticComputeCalls.push_back(computeCall);
 		s_callIndex++;
+	}
+	void Compute::BarrierAsync(VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
+	{
+		VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+		memoryBarrier.srcStageMask = PipelineStage::computeShader;
+		memoryBarrier.dstStageMask = PipelineStage::computeShader;
+		memoryBarrier.srcAccessMask = srcAccessMask;
+		memoryBarrier.dstAccessMask = dstAccessMask;
+
+		VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+		dependencyInfo.memoryBarrierCount = 1;
+		dependencyInfo.pMemoryBarriers = &memoryBarrier;
+
+		vkCmdPipelineBarrier2(s_pAsyncCommand->GetVkCommandBuffer(), &dependencyInfo);
 	}
 
 

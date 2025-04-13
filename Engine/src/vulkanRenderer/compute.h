@@ -22,9 +22,13 @@ namespace emberEngine
 		static uint32_t s_callIndex;
 		static std::vector<ComputeCall> s_staticComputeCalls;
 		static std::vector<ComputeCall> s_dynamicComputeCalls;
+		static std::vector<ComputeCall> s_asyncComputeCalls;
 		static std::vector<ComputeCall*> s_computeCallPointers;
 		static std::unordered_map<ComputeShader*, ResourcePool<ShaderProperties, 10>> s_shaderPropertiesPoolMap;
+		static std::unordered_map<ComputeShader*, ResourcePool<ShaderProperties, 10>> s_asyncShaderPropertiesPoolMap;
+		static VulkanCommand* s_pImmediatCommand;
 		static VulkanCommand* s_pAsyncCommand;
+		static VkFence s_immediatFence;
 		static VkFence s_asyncFence;
 
 	public: // Methods
@@ -39,9 +43,14 @@ namespace emberEngine
 		
 		// Async dispatch calls:
 		static void DispatchImmediatly(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount);
+		static void BeginAsyncCompute();
+		static ShaderProperties* DispatchAsync(ComputeShader* pComputeShader, Uint3 threadCount);
+		static void DispatchAsync(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount);
+		static void EndAsyncCompute();
 
 		// Barriers:
 		static void Barrier(VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
+		static void BarrierAsync(VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
 
 		// Management:
 		static std::vector<ComputeCall*>& GetComputeCallPointers();

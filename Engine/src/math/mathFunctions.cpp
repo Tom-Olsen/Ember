@@ -90,6 +90,22 @@ namespace emberMath
 			n++;
 			return n;
 		}
+		float Ln(float value)
+		{
+			return log(value);
+		}
+		float Log(float value, float base)
+		{
+			return log(value) / log(base);
+		}
+		float Log2(float value)
+		{
+			return log2(value);
+		}
+		float Log10(float value)
+		{
+			return log10(value);
+		}
 
 
 

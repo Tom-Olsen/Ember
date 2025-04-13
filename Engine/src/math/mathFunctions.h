@@ -20,6 +20,10 @@ namespace emberMath
 		float Factorial(int n);
 		uint32_t NextPowerOfTwo(uint32_t n);
 		uint64_t NextPowerOfTwo(uint64_t n);
+		float Ln(float value);
+		float Log(float value, float base);
+		float Log2(float value);
+		float Log10(float value);
 
 		// Trigonometry:
 		float Sin(float angle);

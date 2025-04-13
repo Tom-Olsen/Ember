@@ -2,11 +2,12 @@
 
 
 
-#define GROUP_SIZE 64   // max 1024 due to shared memory limit.
+#define COUNT 512   // max 2048 due to numthreads limit of 1024 (numthreads.else = COUNT/2)
 RWStructuredBuffer<int> sortBuffer : register(u0);
-groupshared int localValue[GROUP_SIZE];
+groupshared int localValue[COUNT]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 cbuffer Values : register(b1)
 {
+    int offset;
     int bufferSize;
 };
 
@@ -42,16 +43,16 @@ void Disperse(int k, uint localIndex)
 
 
 
-[numthreads(GROUP_SIZE / 2, 1, 1)]
+[numthreads(COUNT / 2, 1, 1)]
 void main(uint3 localThreadID : SV_GroupThreadID)
 {
     uint localIndex = localThreadID.x;
     
 	// Each local thread hadels two elements, as there are twice as many elments as threads.
-    localValue[2 * localIndex    ] = (2 * localIndex < bufferSize    ) ? sortBuffer[2 * localIndex    ] : 999999;
-    localValue[2 * localIndex + 1] = (2 * localIndex < bufferSize + 1) ? sortBuffer[2 * localIndex + 1] : 999999;
+    localValue[2 * localIndex    ] = (2 * localIndex     < bufferSize) ? sortBuffer[2 * localIndex     + offset] : 0x7FFFFFFF;
+    localValue[2 * localIndex + 1] = (2 * localIndex + 1 < bufferSize) ? sortBuffer[2 * localIndex + 1 + offset] : 0x7FFFFFFF;
     
-    for (uint k = 2; k <= GROUP_SIZE; k *= 2)
+    for (uint k = 2; k <= COUNT; k *= 2)
     {
         GroupMemoryBarrierWithGroupSync();
         Flip(k, localIndex);
@@ -67,7 +68,7 @@ void main(uint3 localThreadID : SV_GroupThreadID)
     
 	// Write local memory back to buffer:
     if (2 * localIndex     < bufferSize)
-        sortBuffer[2 * localIndex] = bufferSize;// localValue[2 * localIndex];
+        sortBuffer[2 * localIndex     + offset] = localValue[2 * localIndex    ];
     if (2 * localIndex + 1 < bufferSize)
-        sortBuffer[2 * localIndex + 1] = bufferSize; // localValue[2 * localIndex + 1];
+        sortBuffer[2 * localIndex + 1 + offset] = localValue[2 * localIndex + 1];
 }

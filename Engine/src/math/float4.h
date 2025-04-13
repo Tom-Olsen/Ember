@@ -117,6 +117,7 @@ namespace emberMath
 		static Float4 yellow;	// ( 1, 1, 0, 1).
 		static Float4 cyan;		// ( 0, 1, 1, 1).
 		static Float4 magenta;	// ( 1, 0, 1, 1).
+		static Float4 orange;	// ( 1, 0.5, 0, 1).
 	};
 
 	// Friend functions:

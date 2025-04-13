@@ -18,10 +18,16 @@ namespace emberEngine
 		float width;
 		float height;
 		float lineWidth;
+		float lineGap;
+		float blockGap;
 	private: // Members:
 		Material* pMaterial;
 		std::unique_ptr<BitonicSortGraphEditorWindow> editorWindow;
-
+		void DrawFlip(int k, int index, float x);
+		void DrawDisperse(int k, int index, float x);
+		void DrawHorizontalLines();
+		void DrawLocalBitonicSort(float& x, int startIndex, int localCount);
+		void DrawBigFlip(float& x);
 
 	public: // Methods:
 		BitonicSortGraph();
