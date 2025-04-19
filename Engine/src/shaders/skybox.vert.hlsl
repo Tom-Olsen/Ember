@@ -1,5 +1,5 @@
 #include "defaultPushConstant.hlsli"
-#include "mathf.hlsli"
+#include "math.hlsli"
 
 
 
@@ -36,6 +36,6 @@ VertexOutput main(VertexInput input)
     
     VertexOutput output;
     output.clipPosition = mul(mat, pos);
-    output.localPos = mul(LinAlg_RotateX3x3(-mathf_PI_2), input.position);
+    output.localPos = mul(LinAlg_RotateX3x3(-math_PI_2), input.position);
     return output;
 }

@@ -1,9 +1,9 @@
 #include "bitonicSort.h"
+#include "accessMasks.h"
 #include "compute.h"
 #include "computeShader.h"
 #include "logger.h"
 #include "shaderProperties.h"
-#include "vulkanUtility.h"
 
 
 
@@ -33,10 +33,10 @@ namespace emberEngine
 	}
 	void BitonicSort::Clear()
 	{
-		s_pLocalBitonicSort.release();
-		s_pBigFlip.release();
-		s_pBigDisperse.release();
-		s_pLocalDisperse.release();
+		s_pLocalBitonicSort.reset();
+		s_pBigFlip.reset();
+		s_pBigDisperse.reset();
+		s_pLocalDisperse.reset();
 	}
 
 
@@ -49,7 +49,7 @@ namespace emberEngine
 		int remaining = count;
 		int bufferSize = localCount;
 
-		Compute::BeginAsyncCompute();
+		uint32_t sessionID = compute::Async::CreateComputeSession();
 		// Dispatch localBitonicSort once for each local batch:
 		for (int i = 0; i < localBatches; i++)
 		{
@@ -57,18 +57,18 @@ namespace emberEngine
 				bufferSize = remaining;
 			else
 				remaining -= localCount;
-
+		
 			int offset = i * localCount;
 			Uint3 threadCount(bufferSize / 2, 1, 1);
-			ShaderProperties* shaderProperties = Compute::DispatchAsync(s_pLocalBitonicSort.get(), threadCount);
-			shaderProperties->SetStorageBuffer("sortBuffer", pBuffer);
+			ShaderProperties* shaderProperties = compute::Async::RecordComputeShader(sessionID, s_pLocalBitonicSort.get(), threadCount);
+			shaderProperties->SetStorageBuffer("dataBuffer", pBuffer);
 			shaderProperties->SetValue("Values", "offset", offset);
 			shaderProperties->SetValue("Values", "bufferSize", bufferSize);
 		}
 		// Memory barrier:
-		Compute::BarrierAsync(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::Async::RecordBarrier(sessionID, AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 		// Big flip:
-
-		Compute::EndAsyncCompute();
+		compute::Async::DispatchComputeSession(sessionID);
+		compute::Async::WaitForFinish(sessionID);
 	}
 }

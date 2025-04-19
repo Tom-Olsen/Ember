@@ -7,6 +7,10 @@
 
 namespace emberEngine
 {
+	using namespace vulkanBackend;
+
+
+
 	// Static members:
 	bool MaterialManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<Material>> MaterialManager::s_materials;
@@ -75,7 +79,7 @@ namespace emberEngine
 	}
 	void MaterialManager::Clear()
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_materials.clear();
 	}
 
@@ -101,7 +105,7 @@ namespace emberEngine
 	}
 	void MaterialManager::DeleteMaterial(const std::string& name)
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_materials.erase(name);
 	}
 

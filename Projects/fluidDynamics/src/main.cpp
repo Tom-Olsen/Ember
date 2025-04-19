@@ -7,7 +7,7 @@
 #include "directionalLight.h"
 #include "meshRenderer.h"
 #include "pointLight.h"
-#include "postProcessEffects.h"
+#include "postRenderEffects.h"
 #include "spotLight.h"
 #include "transform.h"
 #include "sphFluid2dCpu.h"
@@ -27,7 +27,7 @@ Scene* InitScene()
 
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
-		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
+		//CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -60,7 +60,7 @@ int main()
 	appSettings.windowWidth = 1920;
 	appSettings.windowHeight = 1080;
 	appSettings.renderWidth = 1280;
-	appSettings.renderheight = 720;
+	appSettings.renderHeight = 720;
 
 	Application app(appSettings);
 

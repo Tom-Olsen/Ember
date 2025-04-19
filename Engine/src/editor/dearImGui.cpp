@@ -1,15 +1,15 @@
 #include "dearImGui.h"
 #include "editor.h"
-#include "forwardRenderPass.h"
 #include "logger.h"
-#include "presentRenderPass.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "sampler.h"
 #include "samplerManager.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
+#include "vulkanForwardRenderPass.h"
 #include "vulkanMacros.h"
+#include "vulkanPresentRenderPass.h"
 #include <imgui.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
@@ -30,6 +30,10 @@
 
 namespace emberEngine
 {
+	using namespace vulkanBackend;
+
+
+
 	// Static members:
 	bool DearImGui::s_showDemoWindow = true;
 	bool DearImGui::s_wantCaptureKeyboard = false;
@@ -56,18 +60,18 @@ namespace emberEngine
 		s_pIo->FontGlobalScale = 2.0f;
 
 		ImGui::StyleColorsDark();
-		ImGui_ImplSDL3_InitForVulkan(VulkanContext::GetSDL_Window());
+		ImGui_ImplSDL3_InitForVulkan(Context::GetSDL_Window());
 
 		ImGui_ImplVulkan_InitInfo initInfo = {};
-		initInfo.Instance = VulkanContext::GetVkInstance();
-		initInfo.PhysicalDevice = VulkanContext::GetVkPhysicalDevice();
-		initInfo.Device = VulkanContext::GetVkDevice();
-		initInfo.QueueFamily = VulkanContext::pLogicalDevice->GetGraphicsQueue().familyIndex;
-		initInfo.Queue = VulkanContext::pLogicalDevice->GetGraphicsQueue().queue;
+		initInfo.Instance = Context::GetVkInstance();
+		initInfo.PhysicalDevice = Context::GetVkPhysicalDevice();
+		initInfo.Device = Context::GetVkDevice();
+		initInfo.QueueFamily = Context::pLogicalDevice->GetGraphicsQueue().familyIndex;
+		initInfo.Queue = Context::pLogicalDevice->GetGraphicsQueue().queue;
 		initInfo.RenderPass = RenderPassManager::GetPresentRenderPass()->GetVkRenderPass();
 		initInfo.DescriptorPoolSize = 2;	// DescriptorPoolSize > 0 means Imgui backend creates its own VkDescriptorPool. Need at least 1 + as many as additional calls done to ImGui_ImplVulkan_AddTexture()
 		initInfo.MinImageCount = 2;
-		initInfo.ImageCount = VulkanContext::pSwapchain->GetImages().size();
+		initInfo.ImageCount = Context::pSwapchain->GetImages().size();
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		ImGui_ImplVulkan_Init(&initInfo);
 
@@ -89,7 +93,7 @@ namespace emberEngine
 		RETURN_DISABLED();
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
-		vkDestroyDescriptorSetLayout(VulkanContext::GetVkDevice(), s_descriptorSetLayout, nullptr);
+		vkDestroyDescriptorSetLayout(Context::GetVkDevice(), s_descriptorSetLayout, nullptr);
 		ImGui::DestroyContext();
 	}
 
@@ -225,16 +229,16 @@ namespace emberEngine
 		layoutInfo.bindingCount = 1;
 		layoutInfo.pBindings = &binding;
 
-		VKA(vkCreateDescriptorSetLayout(VulkanContext::GetVkDevice(), &layoutInfo, nullptr, &s_descriptorSetLayout));
+		VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &layoutInfo, nullptr, &s_descriptorSetLayout));
 	}
 	void DearImGui::CreateDescriptorSets()
 	{
 		VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-		allocInfo.descriptorPool = VulkanContext::GetVkDescriptorPool();
+		allocInfo.descriptorPool = Context::GetVkDescriptorPool();
 		allocInfo.descriptorSetCount = 1;
 		allocInfo.pSetLayouts = &s_descriptorSetLayout;
 
-		VKA(vkAllocateDescriptorSets(VulkanContext::GetVkDevice(), &allocInfo, &s_descriptorSet));
+		VKA(vkAllocateDescriptorSets(Context::GetVkDevice(), &allocInfo, &s_descriptorSet));
 	}
 	void DearImGui::UpdateDescriptor(VkSampler sampler, VkImageView imageView)
 	{
@@ -251,6 +255,6 @@ namespace emberEngine
 		writeDescriptor.descriptorCount = 1;
 		writeDescriptor.pImageInfo = &imageInfo;
 
-		vkUpdateDescriptorSets(VulkanContext::pLogicalDevice->GetVkDevice(), 1, &writeDescriptor, 0, nullptr);
+		vkUpdateDescriptorSets(Context::pLogicalDevice->GetVkDevice(), 1, &writeDescriptor, 0, nullptr);
 	}
 }

@@ -8,8 +8,8 @@
 namespace emberEngine
 {
 	// Forward declarations:
+	class RenderCore;
 	class Scene;
-	class VulkanRenderer;
 
 
 
@@ -24,10 +24,10 @@ namespace emberEngine
 			uint32_t windowWidth;
 			uint32_t windowHeight;
 			uint32_t renderWidth;
-			uint32_t renderheight;
+			uint32_t renderHeight;
 		};
 	private: // Members:
-		std::unique_ptr<VulkanRenderer> m_pRenderer;
+		std::unique_ptr<RenderCore> m_pRenderer;
 		Scene* m_pActiveScene;
 
 	public: // Methods:

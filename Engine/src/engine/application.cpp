@@ -1,70 +1,70 @@
 #include "application.h"
 #include "bitonicSort.h"
-#include "bufferManager.h"
+#include "compute.h"
 #include "component.h"
-#include "computeShaderManager.h"
 #include "dearImGui.h"
 #include "editor.h"
+#include "emberTime.h"
 #include "eventSystem.h"
 #include "gameObject.h"
+#include "graphics.h"
+#include "lighting.h"
 #include "logger.h"
-#include "materialManager.h"
-#include "meshManager.h"
-#include "renderPassManager.h"
-#include "samplerManager.h"
+#include "managers.h"
+#include "renderCore.h"
 #include "scene.h"
-#include "textureManager.h"
-#include "emberTime.h"
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
-#include "vulkanRenderer.h"
+#include "vulkanSingleTimeCommand.h"
 
 
 
 namespace emberEngine
 {
+	using namespace vulkanBackend;
+
+
+
 	// Constructor/Destructor:
 	Application::Application(Settings settings)
 	{
 		Logger::Init();
 		m_pActiveScene = nullptr;
 
-		// Init static managers:
-		VulkanContext::Init(settings.framesInFlight, settings.msaaSamples, settings.windowWidth, settings.windowHeight, settings.vSyncEnabled);
-		VulkanGarbageCollector::Init();
+		// Init static classes:
+		Context::Init(settings.framesInFlight, settings.msaaSamples, settings.windowWidth, settings.windowHeight, settings.vSyncEnabled);
+		GarbageCollector::Init();
+		SingleTimeCommand::Init();
 		math::Random::Init();
 		EventSystem::Init();
-		RenderPassManager::Init(settings.renderWidth, settings.renderheight);
-		ComputeShaderManager::Init();
-		MaterialManager::Init();
-		BufferManager::Init();
-		TextureManager::Init();
-		SamplerManager::Init();
-		MeshManager::Init();
+		Managers::Init(settings.renderWidth, settings.renderHeight);
 		Editor::Init();
 		DearImGui::Init();
 		BitonicSort::Init();
+		Compute::Init();
+		Lighting::Init();
+		Graphics::Init();
 
 		// Create renderer:
-		m_pRenderer = std::make_unique<VulkanRenderer>();
+		m_pRenderer = std::make_unique<RenderCore>();
 	}
 	Application::~Application()
 	{
-		VulkanContext::WaitDeviceIdle();
-		// Clear static managers:
+		Context::WaitDeviceIdle();
+		m_pRenderer.reset();
+
+		// Clear static classes:
+		Graphics::Clear();
+		Lighting::Clear();
+		Compute::Clear();
 		BitonicSort::Clear();
 		DearImGui::Clear();
 		Editor::Clear();
-		MeshManager::Clear();
-		SamplerManager::Clear();
-		TextureManager::Clear();
-		BufferManager::Clear();
-		MaterialManager::Clear();
-		ComputeShaderManager::Clear();
-		RenderPassManager::Clear();
+		Managers::Clear();
 		EventSystem::Clear();
-		VulkanGarbageCollector::Clear();
-		VulkanContext::Clear();
+		SingleTimeCommand::Clear();
+		GarbageCollector::Clear();
+		Context::Clear();
 	}
 
 
@@ -80,13 +80,13 @@ namespace emberEngine
 		{
 			Time::Update();
 
-			VulkanGarbageCollector::CollectGarbage();
-			running = VulkanContext::pWindow->HandleEvents();
+			GarbageCollector::CollectGarbage();
+			running = Context::pWindow->HandleEvents();
 
 			// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
-			VkExtent2D windowExtent = VulkanContext::pWindow->GetExtent();
-			VkExtent2D surfaceExtend = VulkanContext::pSurface->GetCurrentExtent();
-			if (VulkanContext::pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
+			VkExtent2D windowExtent = Context::pWindow->GetExtent();
+			VkExtent2D surfaceExtend = Context::pSurface->GetCurrentExtent();
+			if (Context::pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
 			{
 				SDL_Delay(10);
 				continue;
@@ -103,7 +103,7 @@ namespace emberEngine
 
 			// Render loop:
 			if (m_pRenderer->RenderFrame())
-				VulkanContext::UpdateFrameIndex();
+				Context::UpdateFrameIndex();
 		}
 	}
 	void Application::SetScene(Scene* pScene)

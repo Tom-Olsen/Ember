@@ -4,14 +4,16 @@
 #include <queue>    // FIFO queue
 #include <vector>
 
-
+// Ember::TODO:
+// -add blockSize to shaderPropertiesPool?
+// -delete this file/class entirely?
 
 namespace emberEngine
 {
     /// <summary>
     /// Header only class template for easy use without explicit template instantiation.
     /// Resource Pool dynamically growths in blockSize steps.
-    /// When your resource needs inputs for its constructor, they can be handed over with the variadic template Args&&... args in Aquire().
+    /// When your resource needs inputs for its constructor, they can be handed over with the variadic template Args&&... args in Acquire().
     /// </summary>
     template <typename T, size_t blockSize>
     class ResourcePool

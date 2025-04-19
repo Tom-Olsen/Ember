@@ -18,9 +18,17 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 
    
 # ------------------- File lists --------------------
+# src/buffers/*:
+file(GLOB BUFFERS_FILES "${PROJECT_SOURCE_DIR}/src/buffers/*")
+source_group("Buffers" FILES ${BUFFERS_FILES})
+
 # src/components/*:
 file(GLOB COMPONENTS_FILES "${PROJECT_SOURCE_DIR}/src/components/*")
 source_group("Components" FILES ${COMPONENTS_FILES})
+
+# src/compute/*:
+file(GLOB COMPUTE_FILES "${PROJECT_SOURCE_DIR}/src/compute/*")
+source_group("Compute" FILES ${COMPUTE_FILES})
 
 # src/editor/*:
 file(GLOB EDITOR_FILES "${PROJECT_SOURCE_DIR}/src/editor/*")
@@ -33,6 +41,10 @@ source_group("Engine" FILES ${ENGINE_FILES})
 # src/gameObjectSystem/*:
 file(GLOB GAME_OBJECT_SYSTEM_FILES "${PROJECT_SOURCE_DIR}/src/gameObjectSystem/*")
 source_group("Game Object System" FILES ${GAME_OBJECT_SYSTEM_FILES})
+
+# src/graphics/*:
+file(GLOB GRAPHICS_FILES "${PROJECT_SOURCE_DIR}/src/graphics/*")
+source_group("Graphics" FILES ${GRAPHICS_FILES})
 
 # Imgui files:
 set(IMGUI_FILES
@@ -59,50 +71,63 @@ source_group("Math" FILES ${MATH_FILES})
 file(GLOB PHYSICS_FILES "${PROJECT_SOURCE_DIR}/src/physics/*")
 source_group("Physics" FILES ${PHYSICS_FILES})
 
-# src/pushConstants/*:
-file(GLOB PUSH_CONSTANTS_FILES "${PROJECT_SOURCE_DIR}/src/pushConstants/*")
-source_group("Push Constants" FILES ${PUSH_CONSTANTS_FILES})
+# src/gpuResources/*:
+file(GLOB GPU_RESOURCES_FILES "${PROJECT_SOURCE_DIR}/src/gpuResources/*")
+source_group("GPU Resources" FILES ${GPU_RESOURCES_FILES})
 
-# src/renderPassesAndPipelines/*:
-file(GLOB RENDER_PASSES_AND_PIPELINES_FILES "${PROJECT_SOURCE_DIR}/src/renderPassesAndPipelines/*")
-source_group("Render Passes & Pipelines" FILES ${RENDER_PASSES_AND_PIPELINES_FILES})
-
-# src/renderResources/*:
-file(GLOB RENDER_RESOURCES_FILES "${PROJECT_SOURCE_DIR}/src/renderResources/*")
-source_group("Render Resources" FILES ${RENDER_RESOURCES_FILES})
-
-# src/texture types/*:
-file(GLOB TEXTURE_TYPES_FILES "${PROJECT_SOURCE_DIR}/src/textureTypes/*")
-source_group("Texture Types" FILES ${TEXTURE_TYPES_FILES})
+# src/textures/*:
+file(GLOB TEXTURES_FILES "${PROJECT_SOURCE_DIR}/src/textures/*")
+source_group("Textures" FILES ${TEXTURES_FILES})
 
 # src/utility/*:
 file(GLOB UTILITY_FILES "${PROJECT_SOURCE_DIR}/src/utility/*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
-# src/vulkanRenderer/*:
-file(GLOB VULKAN_RENDERER_FILES "${PROJECT_SOURCE_DIR}/src/vulkanRenderer/*")
-source_group("VulkanRenderer" FILES ${VULKAN_RENDERER_FILES})
+# src/vulkanBackend/*:
+file(GLOB VULKAN_BACKEND_FILES "${PROJECT_SOURCE_DIR}/src/vulkanBackend/*")
+source_group("Vulkan Backend" FILES ${VULKAN_BACKEND_FILES})
+
+# src/vulkanBackend/pipelines/*:
+file(GLOB VULKAN_PIPELINES_FILES "${PROJECT_SOURCE_DIR}/src/vulkanBackend/pipelines/*")
+source_group("Vulkan Backend\\Pipelines" FILES ${VULKAN_PIPELINES_FILES})
+
+# src/vulkanBackend/pushConstants/*:
+file(GLOB VULKAN_PUSH_CONSTANTS_FILES "${PROJECT_SOURCE_DIR}/src/vulkanBackend/pushConstants/*")
+source_group("Vulkan Backend\\Push Constants" FILES ${VULKAN_PUSH_CONSTANTS_FILES})
+
+# src/vulkanBackend/renderPasses/*:
+file(GLOB VULKAN_RENDER_PASSES_FILES "${PROJECT_SOURCE_DIR}/src/vulkanBackend/renderPasses/*")
+source_group("Vulkan Backend\\Render Passes" FILES ${VULKAN_RENDER_PASSES_FILES})
+
+# src/vulkanBackend/utility/*:
+file(GLOB VULKAN_UTILITY_FILES "${PROJECT_SOURCE_DIR}/src/vulkanBackend/utility/*")
+source_group("Vulkan Backend\\Utility" FILES ${VULKAN_UTILITY_FILES})
 # ---------------------------------------------------
 
 
 
 # Configure library:
 add_library(${PROJECT_NAME} STATIC
+${BUFFERS_FILES}
 ${COMPONENTS_FILES}
+${COMPUTE_FILES}
 ${EDITOR_FILES}
 ${ENGINE_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
+${GRAPHICS_FILES}
 ${IMGUI_FILES}
 ${IMGUI_EXAMPLE}   # add the example as a source to make it show up in the IDE, but mark it as header only, to prevent compilation (see below)
 ${MANAGERS_FILES}
 ${MATH_FILES}
 ${PHYSICS_FILES}
-${PUSH_CONSTANTS_FILES}
-${RENDER_PASSES_AND_PIPELINES_FILES}
-${RENDER_RESOURCES_FILES}
-${TEXTURE_TYPES_FILES}
+${GPU_RESOURCES_FILES}
+${TEXTURES_FILES}
 ${UTILITY_FILES}
-${VULKAN_RENDERER_FILES})
+${VULKAN_BACKEND_FILES}
+${VULKAN_PIPELINES_FILES}
+${VULKAN_PUSH_CONSTANTS_FILES}
+${VULKAN_RENDER_PASSES_FILES}
+${VULKAN_UTILITY_FILES})
 set_source_files_properties(${IMGUI_EXAMPLE} PROPERTIES HEADER_FILE_ONLY ON)    # don't compile these files
 
 # Add engine root path as a compile definition
@@ -156,18 +181,23 @@ target_include_directories(${PROJECT_NAME} PUBLIC libs/vma/include)
 
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME}
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/components
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/editor
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gameobjectSystem
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/graphics
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/managers
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/math
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/physics
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPassesAndPipelines
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/renderResources
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/textureTypes
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/textures
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanRenderer
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/pipelines
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/pushConstants
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/renderPasses
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/utility
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 # ---------------------------------------------------

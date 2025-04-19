@@ -9,6 +9,10 @@
 
 namespace emberEngine
 {
+	using namespace vulkanBackend;
+
+
+
 	// Static members:
 	bool MeshManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<Mesh>> MeshManager::s_meshes;
@@ -95,13 +99,13 @@ namespace emberEngine
 	}
 	void MeshManager::UnloadAllMeshes()
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		for (auto& pair : s_meshes)
 			pair.second->Unload();
 	}
 	void MeshManager::Clear()
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_meshes.clear();
 	}
 

@@ -9,9 +9,12 @@
 namespace emberEngine
 {
     // Forward declarations:
-    class ShadowRenderPass;
-    class ForwardRenderPass;
-    class PresentRenderPass;
+    namespace vulkanBackend
+    {
+        class ShadowRenderPass;
+        class ForwardRenderPass;
+        class PresentRenderPass;
+    }
 
 
 
@@ -24,9 +27,9 @@ namespace emberEngine
         static bool s_isInitialized;
         static uint32_t s_renderWidth;
         static uint32_t s_renderHeight;
-        static std::unique_ptr<ShadowRenderPass> s_pShadowRenderPass;
-        static std::unique_ptr<ForwardRenderPass> s_pForwardRenderPass;
-        static std::unique_ptr<PresentRenderPass> s_pPresentRenderPass;
+        static std::unique_ptr<vulkanBackend::ShadowRenderPass> s_pShadowRenderPass;
+        static std::unique_ptr<vulkanBackend::ForwardRenderPass> s_pForwardRenderPass;
+        static std::unique_ptr<vulkanBackend::PresentRenderPass> s_pPresentRenderPass;
 
     public: // Methods
         static void Init(uint32_t renderWidth, uint32_t renderHeight);
@@ -34,9 +37,9 @@ namespace emberEngine
         static void RecreateRenderPasses();
 
         // Getters:
-        static ShadowRenderPass* GetShadowRenderPass();
-        static ForwardRenderPass* GetForwardRenderPass();
-        static PresentRenderPass* GetPresentRenderPass();
+        static vulkanBackend::ShadowRenderPass* GetShadowRenderPass();
+        static vulkanBackend::ForwardRenderPass* GetForwardRenderPass();
+        static vulkanBackend::PresentRenderPass* GetPresentRenderPass();
 
     private: // Methods
         // Delete all constructors:

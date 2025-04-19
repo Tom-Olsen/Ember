@@ -1,15 +1,19 @@
 #include "renderPassManager.h"
-#include "forwardRenderPass.h"
+#include "vulkanForwardRenderPass.h"
 #include "logger.h"
-#include "presentRenderPass.h"
-#include "renderPass.h"
-#include "shadowRenderPass.h"
+#include "vulkanPresentRenderPass.h"
+#include "vulkanRenderPass.h"
+#include "vulkanShadowRenderPass.h"
 #include "vulkanContext.h"
 
 
 
 namespace emberEngine
 {
+	using namespace vulkanBackend;
+
+
+
 	// Static members:
 	bool RenderPassManager::s_isInitialized = false;
 	uint32_t RenderPassManager::s_renderWidth = 0;
@@ -35,14 +39,14 @@ namespace emberEngine
 	}
 	void RenderPassManager::Clear()
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_pPresentRenderPass.reset();
 		s_pForwardRenderPass.reset();
 		s_pShadowRenderPass.reset();
 	}
 	void RenderPassManager::RecreateRenderPasses()
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		std::unique_ptr<PresentRenderPass> pNewPresentRenderPass = std::make_unique<PresentRenderPass>();
 		std::swap(s_pPresentRenderPass, pNewPresentRenderPass);
 	}

@@ -1,11 +1,12 @@
 #include "sphFluid2dGpu.h"
 #include "sphFluid2dGpuEditorWindow.h"
-#include "vulkanUtility.h"
+#include "accessMasks.h"
 
 
 
 namespace emberEngine
-{// Constructor/Destructor:
+{
+	// Constructor/Destructor:
 	SphFluid2dGpu::SphFluid2dGpu()
 	{
 		// Load compute shaders and materials:
@@ -105,9 +106,7 @@ namespace emberEngine
 
 		// Reset fluid to initial data:
 		DispatchResetKernal();
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 		DispatchDensityKernal(m_pPositionBuffer.get(), m_densityProperties[0].get());
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::FixedUpdate()
 	{
@@ -557,15 +556,15 @@ namespace emberEngine
 		m_pResetProperties->SetStorageBuffer("b_kv2", m_pKv2Buffer.get());
 		m_pResetProperties->SetStorageBuffer("b_tempPositions", m_pTempPositionBuffer.get());
 		m_pResetProperties->SetStorageBuffer("b_tempVelocities", m_pTempVelocityBuffer.get());
-		Compute::Dispatch(cs_pReset.get(), m_pResetProperties.get(), m_threadCount);
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::PreRender::RecordComputeShader(cs_pReset.get(), m_pResetProperties.get(), m_threadCount);
+		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::DispatchDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties)
 	{
 		pShaderProperties->SetStorageBuffer("b_positions", positionBuffer);
 		pShaderProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
-		Compute::Dispatch(cs_pDensity.get(), pShaderProperties, m_threadCount);
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::PreRender::RecordComputeShader(cs_pDensity.get(), pShaderProperties, m_threadCount);
+		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::DispatchNormalKernal()
 	{
@@ -580,8 +579,8 @@ namespace emberEngine
 		pShaderProperties->SetStorageBuffer("b_positions", positionBuffer);
 		pShaderProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
 		pShaderProperties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
-		Compute::Dispatch(cs_pPressureForceDensity.get(), pShaderProperties, m_threadCount);
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::PreRender::RecordComputeShader(cs_pPressureForceDensity.get(), pShaderProperties, m_threadCount);
+		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::DispatchViscosityForceDensityKernal(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties)
 	{
@@ -589,8 +588,8 @@ namespace emberEngine
 		pShaderProperties->SetStorageBuffer("b_velocities", velocityBuffer);
 		pShaderProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
 		pShaderProperties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
-		Compute::Dispatch(cs_pViscosityForceDensity.get(), pShaderProperties, m_threadCount);
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::PreRender::RecordComputeShader(cs_pViscosityForceDensity.get(), pShaderProperties, m_threadCount);
+		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::DispatchSurfaceTensionForceDensityKernal()
 	{
@@ -601,15 +600,15 @@ namespace emberEngine
 		pShaderProperties->SetStorageBuffer("b_positions", positionBuffer);
 		pShaderProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
 		pShaderProperties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
-		Compute::Dispatch(cs_pExternalForceDensity.get(), pShaderProperties, m_threadCount);
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::PreRender::RecordComputeShader(cs_pExternalForceDensity.get(), pShaderProperties, m_threadCount);
+		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::DispatchGravityForceDensityKernal()
 	{
 		m_pGravityForceDensityProperties->SetStorageBuffer("b_densities", m_pDensityBuffer.get());
 		m_pGravityForceDensityProperties->SetStorageBuffer("b_forceDensities", m_pForceDensityBuffer.get());
-		Compute::Dispatch(cs_pGravityForceDensity.get(), m_pGravityForceDensityProperties.get(), m_threadCount);
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::PreRender::RecordComputeShader(cs_pGravityForceDensity.get(), m_pGravityForceDensityProperties.get(), m_threadCount);
+		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::DispatchRungeKutta2Step1Kernal()
 	{
@@ -621,8 +620,8 @@ namespace emberEngine
 		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_kv1", m_pKv1Buffer.get());
 		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_tempPositions", m_pTempPositionBuffer.get());
 		m_pRungeKutta2Step1Properties->SetStorageBuffer("b_tempVelocities", m_pTempVelocityBuffer.get());
-		Compute::Dispatch(cs_pRungeKutta2Step1.get(), m_pRungeKutta2Step1Properties.get(), m_threadCount);
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::PreRender::RecordComputeShader(cs_pRungeKutta2Step1.get(), m_pRungeKutta2Step1Properties.get(), m_threadCount);
+		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::DispatchRungeKutta2Step2Kernal()
 	{
@@ -636,14 +635,14 @@ namespace emberEngine
 		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_kv2", m_pKv2Buffer.get());
 		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
 		m_pRungeKutta2Step2Properties->SetStorageBuffer("b_velocities", m_pVelocityBuffer.get());
-		Compute::Dispatch(cs_pRungeKutta2Step2.get(), m_pRungeKutta2Step2Properties.get(), m_threadCount);
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::PreRender::RecordComputeShader(cs_pRungeKutta2Step2.get(), m_pRungeKutta2Step2Properties.get(), m_threadCount);
+		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 	void SphFluid2dGpu::DispatchBoundaryCollisionsKernal()
 	{
 		m_pBoundaryCollisionsProperties->SetStorageBuffer("b_positions", m_pPositionBuffer.get());
 		m_pBoundaryCollisionsProperties->SetStorageBuffer("b_velocities", m_pVelocityBuffer.get());
-		Compute::Dispatch(cs_pBoundaryCollisions.get(), m_pBoundaryCollisionsProperties.get(), m_threadCount);
-		Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		compute::PreRender::RecordComputeShader(cs_pBoundaryCollisions.get(), m_pBoundaryCollisionsProperties.get(), m_threadCount);
+		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
 }

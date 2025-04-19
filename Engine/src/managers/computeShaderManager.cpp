@@ -9,6 +9,10 @@
 
 namespace emberEngine
 {
+	using namespace vulkanBackend;
+
+
+
 	// Static members:
 	bool ComputeShaderManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<ComputeShader>> ComputeShaderManager::s_computeShaders;
@@ -39,7 +43,7 @@ namespace emberEngine
 	}
 	void ComputeShaderManager::Clear()
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_computeShaders.clear();
 	}
 
@@ -65,7 +69,7 @@ namespace emberEngine
 	}
 	void ComputeShaderManager::DeleteComputeShader(const std::string& name)
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_computeShaders.erase(name);
 	}
 

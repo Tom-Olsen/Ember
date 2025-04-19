@@ -8,6 +8,10 @@
 
 namespace emberEngine
 {
+	using namespace vulkanBackend;
+
+
+
 	// Static members:
 	bool BufferManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<Buffer>> BufferManager::s_buffers;
@@ -26,7 +30,7 @@ namespace emberEngine
 	}
 	void BufferManager::Clear()
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_buffers.clear();
 	}
 
@@ -52,7 +56,7 @@ namespace emberEngine
 	}
 	void BufferManager::DeleteBuffer(const std::string& name)
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_buffers.erase(name);
 	}
 }

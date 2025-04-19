@@ -1,6 +1,6 @@
 #include "spotLight.h"
 #include "lighting.h"
-#include "shadowRenderPass.h"
+#include "vulkanShadowRenderPass.h"
 
 
 

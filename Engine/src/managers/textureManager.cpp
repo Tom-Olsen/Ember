@@ -12,6 +12,10 @@
 
 namespace emberEngine
 {
+	using namespace vulkanBackend;
+
+
+
 	// Static members:
 	bool TextureManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<Texture2d>> TextureManager::s_texture2ds;
@@ -68,7 +72,7 @@ namespace emberEngine
 	}
 	void TextureManager::Clear()
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_texture2ds.clear();
 	}
 
@@ -94,7 +98,7 @@ namespace emberEngine
 	}
 	void TextureManager::DeleteTexture2d(const std::string& name)
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_texture2ds.erase(name);
 	}
 

@@ -7,6 +7,10 @@
 
 namespace emberEngine
 {
+	using namespace vulkanBackend;
+
+
+
 	// Static members:
 	bool SamplerManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<Sampler>> SamplerManager::s_samplers;
@@ -28,7 +32,7 @@ namespace emberEngine
 	}
 	void SamplerManager::Clear()
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_samplers.clear();
 	}
 
@@ -54,7 +58,7 @@ namespace emberEngine
 	}
 	void SamplerManager::DeleteSampler(const std::string& name)
 	{
-		VulkanContext::WaitDeviceIdle();
+		Context::WaitDeviceIdle();
 		s_samplers.erase(name);
 	}
 

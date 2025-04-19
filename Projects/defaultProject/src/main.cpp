@@ -10,7 +10,7 @@
 #include "meshRenderer.h"
 #include "meshTester.h"
 #include "pointLight.h"
-#include "postProcessEffects.h"
+#include "postRenderEffects.h"
 #include "spinGlobal.h"
 #include "spinLocal.h"
 #include "spotLight.h"
@@ -22,37 +22,28 @@ using namespace emberEngine;
 
 // Ember::TODO now!
 // - use transfer queue in mesh class instead of graphics queue for index and vertes data transfer?
-// - replace all direct usages of VK_PIPELINE_STAGE_2_... and VK_ACCESS_2_... with constexpr values from vulkanUtility.h
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
 // - use one constants.h file both for c++ and hlsl constants that are identical, e.g. #define SHADOW_MAP_RESOLUTION 4096
 // - SceneView gui 
-// - cleanup project. e.g. renderpasses & pipelines => multiple folders e.g shadow/forward/skybox/...
 
 // Ember::TODO:
+// - add naming to all vulkan objects. Abstract naming into macro which is turned off when compiling withouth validation layers?
 // - think about different texture2d specializations. Are they all needed? Can they be simplified? How would I remove the m_layout tracking on CPU side?
 // - when not using input.vertexColor in the vertex shader, spirv optimizes the input binding away, which leads to incorrect bindings in
 //   my spirv reflection => other bindings are wrong, and textures are not displayed at all.
 // - batch image transitions and copying (e.g. texture2d creation)
-// - remove camera/directionalLight/etc. dependency from vulkanRenderer and instead use another abstraction layer that links these GamaObject Components to the render system.
 // - optimize eventsystem::AnyKey etc.
-// - Replace the structs Directional/Positional-LightData in shadowMapping.hlsli with a single LightData struct.
-//   This will allor me to utilize evry shadow mapping layer for any type of lightsource.
-//   This will allow me to replace the MAX_D/S/P_LIGHTS values with a single MAX_LIGHTS value.
 // - remove scaling from view matrizes of lights and cameras?
 // - adjust shadow config in shadowPipeline.cpp (bias values) for better shadow quality
 // - optimizations: multi threaded render loop, culling, etc.
-// - add pGameObject selection (need gizmos => ui renderpass)
-// - currently one commandPool per commandBuffer, should be one commandPool per frame, shared by all commands for that frame?
+// - add pGameObject selection (need gizmos => ui renderpass?)
 // - uniform buffer (cbuffer) data that is the same for all draw calls (e.g. light data) should be stored in a single cbuffer
 //   that is bound to a single descriptorSet that is bound to all draw calls that need that data.
 //   => make this descriptorset a "global" object in the shaderProperties class.
 // - add geometry shader stage => wireframe rendering
 // - gameobject parent system (GameObject € GameObject => transform hierarchy)
-// - GameObject::Start/OnDestroy/OnCreate/OnEnable/OnDisable etc. methods
-// - reduce maxDirectionalLights, maxPositionalLights to a single maxShadowMaps
-//   and make shadowmap indexing more dynamic to work with e.g. only directional lights or only positional lights?
 // - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
 // - add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
 //   remove normalization of any input vector that is namen 'normal' or 'tangent' or 'direction' in mathf library (same for linearAlgebra.hlsli).
@@ -62,27 +53,23 @@ using namespace emberEngine;
 // - dimm line between shadow cascades.
 // - change image loading library, stb_image sucks.
 // - proper quaternion support
-// - ui renderpass that draws on top of everything and is not affected by the pCamera (constant view/projection matrix)
 // - render image while resizing
-// - implement game physics fixedUpdate loop
-// - post processing
-// - particles (instancing)
 // - physics
 // - audio
 // - gameobject clipping logic for pCamera and lights (requires bounding box)
-// - change shared ptr in VulkanUniformBuffer.buffer to unique ptr
 // - write own logger class
 // - better shadow mapping (PCF, soft shadows, etc.)
-// - compile engine as .dll and link to game/test project
-// - render into custom image with higher precision (16-bit floats for color instead of 8-bit) and push final image to swapchain.
-//   This allows for HDR rendering and post processing effects.
-//    - look into colorspace sRGB vs linear.
+// - look into colorspace sRGB vs linear.
 // - blender model import
 // - text rendering
 // - only load textures that are used. parallel loading of textures.
 
 // Implemented Features:
-// - Forward renderpipeline.
+// - pre render compute shaders.
+// - shadow pipeline
+// - forward render pipeline.
+// - post render compute shaders.
+// - async & immediate compute.
 // - Multi lightsoure shadow mapping (directionallights, positionallights).
 // - Physical based lighting (roughnessMap, normalMap, metallicity, reflectivity).
 // - Shadow cascades with shadow snapping.
@@ -92,7 +79,7 @@ using namespace emberEngine;
 // - Graphics::Draw(...) allows for drawCall injection into render pipeline from GameObject Components.
 // - EventSystem that catches SDL events and makes them visible to all GameObjects/Components.
 // - CameraController that is identical to unities editor pCamera.
-// - Own mathf library, see mathf.h/cpp.
+// - Own math library, see math.h/cpp.
 // - Dear ImGui integration with docking feature.
 
 
@@ -107,12 +94,10 @@ Scene* ShadowCascadeScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
-		Camera* pCamera = new Camera();
+		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
-		pGameObject->AddComponent<Camera>(pCamera);
 
-		CameraController* cameraController = new CameraController();
-		pGameObject->AddComponent<CameraController>(cameraController);
+		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -120,14 +105,13 @@ Scene* ShadowCascadeScene()
 	{// Skybox:
 		GameObject* pGameObject = new GameObject("skybox");
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skyBox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -136,12 +120,11 @@ Scene* ShadowCascadeScene()
 	//	pGameObject->GetTransform()->SetPosition(-5.0f, 5.0f, 0.0f);
 	//	pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
 	//
-	//	MeshRenderer* pMeshRenderer = new MeshRenderer();
+	//	MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 	//	pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
 	//	pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlitMaterial"));
 	//	pMeshRenderer->SetCastShadows(true);
 	//	pMeshRenderer->SetReceiveShadows(true);
-	//	pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 	//
 	//	pScene->AddGameObject(pGameObject);
 	//}
@@ -158,16 +141,14 @@ Scene* ShadowCascadeScene()
 		pCamera->SetDrawFrustum(true);
 		pGameObject->AddComponent<Camera>(pCamera);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("camera"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLitMaterial"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
-		CameraController* cameraController = new CameraController();
+		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 		cameraController->SetIsActive(false);
-		pGameObject->AddComponent<CameraController>(cameraController);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -178,7 +159,7 @@ Scene* ShadowCascadeScene()
 		pGameObject->GetTransform()->SetPosition(Float3(0.0f, 3.0f, 0.0f));
 		pGameObject->GetTransform()->SetRotationMatrix(rotation);
 
-		DirectionalLight* pDirectionalLight = new DirectionalLight();
+		DirectionalLight* pDirectionalLight = pGameObject->AddComponent<DirectionalLight>();
 		pDirectionalLight->SetIntensity(1.0f);
 		pDirectionalLight->SetColor(Float3::white);
 		pDirectionalLight->SetActiveCamera(pCamera);
@@ -186,7 +167,6 @@ Scene* ShadowCascadeScene()
 		pDirectionalLight->SetShadowType(Lighting::ShadowType::soft);
 		pDirectionalLight->SetDistributionFactor(0.5f);
 		//pDirectionalLight->SetShadowCascadeCount(1);
-		pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -195,10 +175,9 @@ Scene* ShadowCascadeScene()
 		pGameObject->GetTransform()->SetPosition(0.0f, 0.0f, -0.5f);
 		pGameObject->GetTransform()->SetScale(100);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -211,7 +190,7 @@ Scene* ShadowCascadeScene()
 	        pGameObject->GetTransform()->SetPosition(pos);
 	        pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
 	
-	        MeshRenderer* pMeshRenderer = new MeshRenderer();
+	        MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 	        pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 	        pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 	        pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
@@ -219,7 +198,6 @@ Scene* ShadowCascadeScene()
 	        pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks0_roughness"));
 	        pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks0_normal"));
 	        pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-	        pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 	
 	        pScene->AddGameObject(pGameObject);
 	    }
@@ -247,11 +225,9 @@ Scene* TestScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::back, -pos, Float3::up, Float3::up));
 
-		Camera* pCamera = new Camera();
-		pGameObject->AddComponent<Camera>(pCamera);
+		Camera* pCamera = pGameObject->AddComponent<Camera>();
 
-		CameraController* cameraController = new CameraController();
-		pGameObject->AddComponent<CameraController>(cameraController);
+		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -263,21 +239,19 @@ Scene* TestScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
-		PointLight* pPointLight = new PointLight();
+		PointLight* pPointLight = pGameObject->AddComponent<PointLight>();
 		pPointLight->SetIntensity(10.0f);
 		pPointLight->SetColor(Float3(1.0f, 1.0f, 1.0f));
 		pPointLight->SetNearClip(0.5f);
 		pPointLight->SetFarClip(20.0f);
 		pPointLight->SetDrawFrustum(false);
-		pGameObject->AddComponent<PointLight>(pPointLight);
 
 		SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 45, 0));
 		pGameObject->AddComponent<SpinGlobal>(pSpinGlobal);
@@ -290,13 +264,12 @@ Scene* TestScene()
 		pGameObject->GetTransform()->SetScale(30.0f);
 		pGameObject->GetTransform()->SetRotationEulerDegrees(-90.0f, 0.0f, 0.0f);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(materialA);
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("grass"));
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
-
+		
 		pScene->AddGameObject(pGameObject);
 	}
 	{// Cube:
@@ -304,13 +277,12 @@ Scene* TestScene()
 		pGameObject->GetTransform()->SetPosition(-2.0f, 0.0f, 1.0f);
 		pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(materialB);
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("brick"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("cubeMap", TextureManager::GetTexture2d("skyBox0"));
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -328,15 +300,12 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
 
-		Camera* pCamera = new Camera();
+		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(1000.0f);
-		pGameObject->AddComponent<Camera>(pCamera);
 
-		PostProcessEffects* pPostProcessEffects = new PostProcessEffects();
-		pGameObject->AddComponent<PostProcessEffects>(pPostProcessEffects);
+		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 
-		CameraController* cameraController = new CameraController();
-		pGameObject->AddComponent<CameraController>(cameraController);
+		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -369,22 +338,20 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 	
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 	
-		PointLight* pPointLight = new PointLight();
+		PointLight* pPointLight = pGameObject->AddComponent<PointLight>();
 		pPointLight->SetIntensity(5.0f);
 		pPointLight->SetColor(Float3(1.0f, 1.0f, 1.0f));
 		pPointLight->SetNearClip(0.5f);
 		pPointLight->SetFarClip(20.0f);
 		pPointLight->SetDrawFrustum(showLightFrustums);
 		pPointLight->SetShadowType(Lighting::ShadowType::hard);
-		pGameObject->AddComponent<PointLight>(pPointLight);
 	
 		SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 0, 45));
 		pGameObject->AddComponent<SpinGlobal>(pSpinGlobal);
@@ -398,17 +365,16 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 	
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlitMaterial"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 	
 		//SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 45, 0));
 		//pGameObject->AddComponent<SpinGlobal>(pSpinGlobal);
 	
-		SpotLight* pSpotLight = new SpotLight();
+		SpotLight* pSpotLight = pGameObject->AddComponent<SpotLight>();
 		pSpotLight->SetColor(Float3::red);
 		pSpotLight->SetIntensity(200.0f);
 		pSpotLight->SetNearClip(1.1f);
@@ -418,7 +384,6 @@ Scene* DefaultScene()
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
 		pSpotLight->SetShadowType(Lighting::ShadowType::soft);
-		pGameObject->AddComponent<SpotLight>(pSpotLight);
 	
 		pScene->AddGameObject(pGameObject);
 	}
@@ -429,17 +394,16 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 	
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlitMaterial"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 	
 		//SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, -60, 0));
 		//pGameObject->AddComponent<SpinGlobal>(pSpinGlobal);
 	
-		SpotLight* pSpotLight = new SpotLight();
+		SpotLight* pSpotLight = pGameObject->AddComponent<SpotLight>();
 		pSpotLight->SetColor(Float3::green);
 		pSpotLight->SetIntensity(200.0f);
 		pSpotLight->SetNearClip(1.1f);
@@ -449,7 +413,6 @@ Scene* DefaultScene()
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
 		pSpotLight->SetShadowType(Lighting::ShadowType::soft);
-		pGameObject->AddComponent<SpotLight>(pSpotLight);
 	
 		pScene->AddGameObject(pGameObject);
 	}
@@ -460,17 +423,16 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(matrix);
 	
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlitMaterial"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 	
 		//SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 90, 0));
 		//pGameObject->AddComponent<SpinGlobal>(pSpinGlobal);
 	
-		SpotLight* pSpotLight = new SpotLight();
+		SpotLight* pSpotLight = pGameObject->AddComponent<SpotLight>();
 		pSpotLight->SetColor(Float3::blue);
 		pSpotLight->SetIntensity(200.0f);
 		pSpotLight->SetNearClip(1.1f);
@@ -480,7 +442,6 @@ Scene* DefaultScene()
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
 		pSpotLight->SetShadowType(Lighting::ShadowType::soft);
-		pGameObject->AddComponent<SpotLight>(pSpotLight);
 	
 		pScene->AddGameObject(pGameObject);
 	}
@@ -488,14 +449,13 @@ Scene* DefaultScene()
 		GameObject* pGameObject = new GameObject("skybox");
 		pGameObject->GetTransform()->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skyBox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -504,7 +464,7 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetPosition(0.0f, 0.0f, -0.5f);
 		pGameObject->GetTransform()->SetScale(30.0f);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
@@ -513,7 +473,6 @@ Scene* DefaultScene()
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 10, 0, 0));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -523,7 +482,7 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetScale(Float3(30.0f, 6.0f, 1.0f));
 		pGameObject->GetTransform()->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
@@ -532,7 +491,6 @@ Scene* DefaultScene()
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks0_normal"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 2, 0, 0));
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -540,12 +498,11 @@ Scene* DefaultScene()
 		GameObject* pGameObject = new GameObject("threeLeg");
 		pGameObject->GetTransform()->SetPosition(-3.0f, -2.0f, 0.0f);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLitMaterial"));
 		pMeshRenderer->SetCastShadows(true);
 		pMeshRenderer->SetReceiveShadows(true);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -553,7 +510,7 @@ Scene* DefaultScene()
 		GameObject* pGameObject = new GameObject("cube0");
 		pGameObject->GetTransform()->SetPosition(-2.0f, 0.0f, 0.0f);
 	
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
@@ -562,13 +519,11 @@ Scene* DefaultScene()
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("wood1_normal"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		SpinLocal* pSpinLocal = new SpinLocal(45.0f);
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
 	
-		//DrawMeshData* pDrawMeshData = new DrawMeshData();
-		//pGameObject->AddComponent<DrawMeshData>(pDrawMeshData);
+		//DrawMeshData* pDrawMeshData = pGameObject->AddComponent<DrawMeshData>();
 	
 		pScene->AddGameObject(pGameObject);
 	}
@@ -576,7 +531,7 @@ Scene* DefaultScene()
 		GameObject* pGameObject = new GameObject("meshTester");
 		pGameObject->GetTransform()->SetPosition(2.0f, 0.0f, 0.0f);
 	
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks1_color"));
@@ -584,7 +539,6 @@ Scene* DefaultScene()
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks1_normal"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		MeshTester* pMeshTester = new MeshTester(pMeshRenderer);
 		pMeshTester->AddMesh(MeshManager::GetMesh("unitQuad"));
@@ -610,7 +564,7 @@ Scene* DefaultScene()
 		GameObject* pGameObject = new GameObject("zylinder0");
 		pGameObject->GetTransform()->SetPosition(0.5f, 0.0f, 0.0f);
 	
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("zylinderSmooth"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
@@ -618,10 +572,8 @@ Scene* DefaultScene()
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks2_roughness"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks2_normal"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 	
-		//DrawMeshData* drawMeshData = new DrawMeshData();
-		//pGameObject->AddComponent<DrawMeshData>(drawMeshData);
+		//DrawMeshData* drawMeshData = pGameObject->AddComponent<DrawMeshData>();
 
 		SpinLocal* pSpinLocal = new SpinLocal(45.0f);
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
@@ -633,7 +585,7 @@ Scene* DefaultScene()
 		pGameObject->GetTransform()->SetPosition(-0.5f, 1.0f, 0.0f);
 		pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
 	
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cubeSphere"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
@@ -642,13 +594,11 @@ Scene* DefaultScene()
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("wood0_normal"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		SpinLocal* pSpinLocal = new SpinLocal(45.0f);
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
 	
-		//DrawMeshData* pDrawMeshData = new DrawMeshData();
-		//pGameObject->AddComponent<DrawMeshData>(pDrawMeshData);
+		//DrawMeshData* pDrawMeshData = pGameObject->AddComponent<DrawMeshData>();
 	
 		pScene->AddGameObject(pGameObject);
 	}
@@ -658,10 +608,9 @@ Scene* DefaultScene()
 	//	pGameObject->GetTransform()->SetPosition(pos);
 	//	pGameObject->GetTransform()->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
 	//	
-	//	TestInstancedRendering* testInstancedRendering = new TestInstancedRendering(16);
-	//	pGameObject->AddComponent<TestInstancedRendering>(testInstancedRendering);
+	//	TestInstancedRendering* testInstancedRendering = pGameObject->AddComponent<TestInstancedRendering>(testInstancedRendering);
 	//
-	//	InstancedRenderer* pInstancedRenderer = new InstancedRenderer();
+	//	InstancedRenderer* pInstancedRenderer = pGameObject->AddComponent<InstancedRenderer>();
 	//	pInstancedRenderer->SetInstanceCount(16);
 	//	pInstancedRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 	//	pInstancedRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
@@ -671,7 +620,6 @@ Scene* DefaultScene()
 	//	pInstancedRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("concrete0_roughness"));
 	//	pInstancedRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("concrete0_normal"));
 	//	pInstancedRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-	//	pGameObject->AddComponent<InstancedRenderer>(pInstancedRenderer);
 	//	
 	//	pScene->AddGameObject(pGameObject);
 	//}
@@ -688,12 +636,10 @@ Scene* PointLightScene()
 		pGameObject->GetTransform()->SetPosition(pos);
 		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
 
-		Camera* pCamera = new Camera();
+		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(1000.0f);
-		pGameObject->AddComponent<Camera>(pCamera);
 
-		CameraController* cameraController = new CameraController();
-		pGameObject->AddComponent<CameraController>(cameraController);
+		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -703,22 +649,20 @@ Scene* PointLightScene()
 		Float3 pos = Float3(0.0f, 0.0f, 0.0f);
 		pGameObject->GetTransform()->SetPosition(pos);
 	
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cubeSphere"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 	
-		PointLight* pPointLight = new PointLight();
+		PointLight* pPointLight = pGameObject->AddComponent<PointLight>();
 		pPointLight->SetIntensity(10.0f);
 		pPointLight->SetColor(Float3(1.0f, 1.0f, 1.0f));
 		pPointLight->SetNearClip(0.1f);
 		pPointLight->SetFarClip(8.0f);
 		pPointLight->SetShadowType(Lighting::ShadowType::hard);
 		//pPointLight->SetDrawFrustum(true);
-		pGameObject->AddComponent<PointLight>(pPointLight);
 	
 		pScene->AddGameObject(pGameObject);
 	}
@@ -727,7 +671,7 @@ Scene* PointLightScene()
 		pGameObject->GetTransform()->SetPosition(0.0f, 0.0f, 0.0f);
 		pGameObject->GetTransform()->SetScale(10.0f);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCubeInverse"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
@@ -736,7 +680,6 @@ Scene* PointLightScene()
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks1_normal"));
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(1.0, 1.0, 0, 0));
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -745,7 +688,7 @@ Scene* PointLightScene()
 		pGameObject->GetTransform()->SetPosition(0.0f, 0.0f, 0.0f);
 		pGameObject->GetTransform()->SetScale(1.0f);
 
-		MeshRenderer* pMeshRenderer = new MeshRenderer();
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("frame"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
@@ -756,7 +699,6 @@ Scene* PointLightScene()
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "metallicity", 1.0f);
 		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.25, 1, 0, 0));
-		pGameObject->AddComponent<MeshRenderer>(pMeshRenderer);
 
 		SpinLocal* pSpinLocal = new SpinLocal(45.0f);
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
@@ -780,7 +722,7 @@ int main()
 	appSettings.windowWidth = 1920;
 	appSettings.windowHeight = 1080;
 	appSettings.renderWidth = 1280;
-	appSettings.renderheight = 720;
+	appSettings.renderHeight = 720;
 
 	Application app(appSettings);
 	//Scene* pScene = ShadowCascadeScene();

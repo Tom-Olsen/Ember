@@ -1,5 +1,5 @@
 #include "testInstancedRendering.h"
-#include "vulkanUtility.h"
+#include "accessMasks.h"
 
 
 
@@ -37,8 +37,8 @@ namespace emberEngine
 		{
 			Uint3 threadCount = Uint3(m_pStorageBuffer->GetCount(), 1, 1);
 			m_pStartProperties->SetStorageBuffer("instanceBuffer", m_pStorageBuffer.get());
-			Compute::Dispatch(m_pStartCS, m_pStartProperties.get(), threadCount);
-			Compute::Barrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+			compute::PreRender::RecordComputeShader(m_pStartCS, m_pStartProperties.get(), threadCount);
+			compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 		}
 	}
 	void TestInstancedRendering::Update()
@@ -47,7 +47,7 @@ namespace emberEngine
 		{
 			Uint3 threadCount = Uint3(m_pStorageBuffer->GetCount(), 1, 1);
 			m_pUpdateProperties->SetStorageBuffer("instanceBuffer", m_pStorageBuffer.get());
-			Compute::Dispatch(m_pUpdateCS, m_pUpdateProperties.get(), threadCount);
+			compute::PreRender::RecordComputeShader(m_pUpdateCS, m_pUpdateProperties.get(), threadCount);
 		}
 	}
 	const std::string TestInstancedRendering::ToString() const
