@@ -20,19 +20,13 @@ namespace emberEngine
 		Uint3 m_threadCount;
 		std::unique_ptr<ComputeShader> cs_pReset;
 		std::unique_ptr<ComputeShader> cs_pDensity;
-		std::unique_ptr<ComputeShader> cs_pPressureForceDensity;
-		std::unique_ptr<ComputeShader> cs_pViscosityForceDensity;
-		std::unique_ptr<ComputeShader> cs_pExternalForceDensity;
-		std::unique_ptr<ComputeShader> cs_pGravityForceDensity;
+		std::unique_ptr<ComputeShader> cs_pForceDensity;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step1;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step2;
 		std::unique_ptr<ComputeShader> cs_pBoundaryCollisions;
 		std::unique_ptr<ShaderProperties> m_pResetProperties;
 		std::array<std::unique_ptr<ShaderProperties>, 2> m_densityProperties;
-		std::array<std::unique_ptr<ShaderProperties>, 2> m_pressureForceDensityProperties;
-		std::array<std::unique_ptr<ShaderProperties>, 2> m_viscosityForceDensityProperties;
-		std::array<std::unique_ptr<ShaderProperties>, 2> m_externalForceDensityProperties;
-		std::unique_ptr<ShaderProperties> m_pGravityForceDensityProperties;
+		std::array<std::unique_ptr<ShaderProperties>, 2> m_forceDensityProperties;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step1Properties;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step2Properties;
 		std::unique_ptr<ShaderProperties> m_pBoundaryCollisionsProperties;
@@ -151,18 +145,15 @@ namespace emberEngine
 		
 	private:
 		// Physics:
-		void DispatchResetKernal();
-		void DispatchDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
-		void DispatchNormalKernal();
-		void DispatchCurvatureKernal();
-		void DispatchPressureForceDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
-		void DispatchViscosityForceDensityKernal(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties);
-		void DispatchSurfaceTensionForceDensityKernal();
-		void DispatchExternalForceDensityKernal(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
-		void DispatchGravityForceDensityKernal();
-		void DispatchRungeKutta2Step1Kernal();
-		void DispatchRungeKutta2Step2Kernal();
-		void DispatchBoundaryCollisionsKernal();
+		void ResetFluid();
+		void ComputeDensity(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
+		void ComputeNormals();
+		void ComputeCurvature();
+		void ComputeForceDensity(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties);
+
+		void ComputeRungeKutta2Step1();
+		void ComputeRungeKutta2Step2();
+		void ComputeBoundaryCollisions();
 	};
 }
 
