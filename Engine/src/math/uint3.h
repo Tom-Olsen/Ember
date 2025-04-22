@@ -41,9 +41,18 @@ namespace emberMath
 		Uint3 operator-(const Uint3& other) const;
 		Uint3& operator-=(const Uint3& other);
 
+		// Multiplication:
+		Uint3 operator*(const Uint3& other) const;
+		Uint3& operator*=(const Uint3& other);
+		Uint3 operator*(int scalar) const;
+		Uint3& operator*=(int scalar);
+
 		// Comparison:
 		bool operator==(const Uint3& other) const;
 		bool operator!=(const Uint3& other) const;
+
+		// Friend functions:
+		friend Uint3 operator*(int a, const Uint3& b);
 
 		// Logging:
 		std::string ToString() const;

@@ -70,7 +70,6 @@ namespace emberEngine
 							pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
 							pushConstant.threadCount = computeCall.threadCount;
 							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-							pushConstant.threadCount = computeCall.threadCount;
 							vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 						}
 

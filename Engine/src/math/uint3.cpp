@@ -103,6 +103,32 @@ namespace emberMath
 
 
 
+	// Multiplication:
+	Uint3 Uint3::operator*(const Uint3& other) const
+	{
+		return Uint3(x * other.x, y * other.y, z * other.z);
+	}
+	Uint3& Uint3::operator*=(const Uint3& other)
+	{
+		this->x *= other.x;
+		this->y *= other.y;
+		this->z *= other.z;
+		return *this;
+	}
+	Uint3 Uint3::operator*(int scalar) const
+	{
+		return Uint3(x * scalar, y * scalar, z * scalar);
+	}
+	Uint3& Uint3::operator*=(int scalar)
+	{
+		x *= scalar;
+		y *= scalar;
+		z *= scalar;
+		return *this;
+	}
+
+
+
 	// Comparison:
 	bool Uint3::operator==(const Uint3& other) const
 	{
@@ -111,6 +137,14 @@ namespace emberMath
 	bool Uint3::operator!=(const Uint3& other) const
 	{
 		return !(*this == other);
+	}
+
+
+
+	// Friend functions:
+	Uint3 operator*(int a, const Uint3& b)
+	{
+		return Uint3(a * b.x, a * b.y, a * b.z);
 	}
 
 

@@ -4,6 +4,7 @@
 #include "computeShader.h"
 #include "logger.h"
 #include "shaderProperties.h"
+#include "storageBuffer.h"
 
 
 
@@ -42,32 +43,52 @@ namespace emberEngine
 
 
 	// Sorting:
-	void BitonicSort::Sort(StorageBuffer* pBuffer, int count)
+	void BitonicSort::Sort(StorageBuffer* pBuffer)
 	{
-		int localCount = 16;
-		int localBatches = (count - 1) / localCount + 1;
-		int remaining = count;
-		int bufferSize = localCount;
+		ShaderProperties* pShaderProperties;
+		int bufferSize = (int)pBuffer->GetCount();					// total number of elements for sorting (entire buffer).
+		int blockSize = 16;											// same as BLOCK_SIZE in the compute shaders.
+		int height = math::NextPowerOfTwo((uint32_t)bufferSize);	// height of biggest flip.
+		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
+		Uint3 threadCountBig = Uint3(height / 2, 1, 1);				// needed to make sure that big flip/disperse hit all swap indices.
 
+		// Create async compute session:
 		uint32_t sessionID = compute::Async::CreateComputeSession();
-		// Dispatch localBitonicSort once for each local batch:
-		for (int i = 0; i < localBatches; i++)
 		{
-			if (remaining < localCount)
-				bufferSize = remaining;
-			else
-				remaining -= localCount;
-		
-			int offset = i * localCount;
-			Uint3 threadCount(bufferSize / 2, 1, 1);
-			ShaderProperties* shaderProperties = compute::Async::RecordComputeShader(sessionID, s_pLocalBitonicSort.get(), threadCount);
+			// Local bitonic sort for each block:
+			ShaderProperties* shaderProperties = compute::Async::RecordComputeShader(sessionID, s_pLocalBitonicSort.get(), threadCountLocal);
 			shaderProperties->SetStorageBuffer("dataBuffer", pBuffer);
-			shaderProperties->SetValue("Values", "offset", offset);
 			shaderProperties->SetValue("Values", "bufferSize", bufferSize);
+			compute::Async::RecordBarrier(sessionID, AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+			
+			for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
+			{
+				// Big flip:
+				pShaderProperties = compute::Async::RecordComputeShader(sessionID, s_pBigFlip.get(), threadCountBig);
+				pShaderProperties->SetStorageBuffer("dataBuffer", pBuffer);
+				pShaderProperties->SetValue("Values", "flipHeight", flipHeight);
+				pShaderProperties->SetValue("Values", "bufferSize", bufferSize);
+				compute::Async::RecordBarrier(sessionID, AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+				
+				for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
+				{
+					// Big disperse:
+					pShaderProperties = compute::Async::RecordComputeShader(sessionID, s_pBigDisperse.get(), threadCountBig);
+					pShaderProperties->SetStorageBuffer("dataBuffer", pBuffer);
+					pShaderProperties->SetValue("Values", "disperseHeight", disperseHeight);
+					pShaderProperties->SetValue("Values", "bufferSize", bufferSize);
+					compute::Async::RecordBarrier(sessionID, AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+				}
+				
+				// Local disperse:
+				pShaderProperties = compute::Async::RecordComputeShader(sessionID, s_pLocalDisperse.get(), threadCountLocal);
+				pShaderProperties->SetStorageBuffer("dataBuffer", pBuffer);
+				pShaderProperties->SetValue("Values", "startDisperseHeight", blockSize);
+				pShaderProperties->SetValue("Values", "bufferSize", bufferSize);
+				compute::Async::RecordBarrier(sessionID, AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+			}
 		}
-		// Memory barrier:
-		compute::Async::RecordBarrier(sessionID, AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
-		// Big flip:
+		// Dispatch and wait for async compute session:
 		compute::Async::DispatchComputeSession(sessionID);
 		compute::Async::WaitForFinish(sessionID);
 	}

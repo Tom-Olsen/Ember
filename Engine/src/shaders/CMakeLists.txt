@@ -23,7 +23,7 @@ file(GLOB SHADER_SOURCES
 source_group("Vertex Shaders" FILES ${VERTEX_SHADERS})
 source_group("Fragment Shaders" FILES ${FRAGMENT_SHADERS})
 source_group("Compute Shaders" FILES ${COMPUTE_SHADERS})
-source_group("Shader Includes" FILES ${SHADER_INCLUDES})
+source_group("Includes" FILES ${SHADER_INCLUDES})
 
 set(SPIRV_OUTPUTS "")
 

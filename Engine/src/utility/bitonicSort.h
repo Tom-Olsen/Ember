@@ -11,7 +11,12 @@ namespace emberEngine
     class StorageBuffer;
 
 
-
+    /// <summary>
+    /// Sorts given int StorageBuffer in ascending order.
+    /// Sort customization requires custom shaders: localBitonicSort, bigFlip, bigDisperse, localDisperse.
+    /// Simpy copy paste existing compute shaders and modify dataBuffer type and CompareAndSwap function to your liking.
+    /// Ideally you create a new class for the your sorting algorithm, identically to this class.
+    /// </summary>
     class BitonicSort
     {
     private: // Members
@@ -26,7 +31,7 @@ namespace emberEngine
         static void Clear();
 
         // Sorting:
-        static void Sort(StorageBuffer* buffer, int count);
+        static void Sort(StorageBuffer* buffer);
 
     private: // Methods
         // Delete all constructors:
