@@ -10,6 +10,7 @@ namespace emberEngine
 {
 	// Forward decleration:
 	struct SphFluid2dGpuEditorWindow;
+	class Sph2dBitonicSort;
 
 
 
@@ -37,9 +38,12 @@ namespace emberEngine
 		float m_timeScale;
 		bool m_useGridOptimization;
 		uint32_t m_timeStep;
+		std::unique_ptr<Sph2dBitonicSort> pGpuSort;
 
 		// Data:
 		int m_particleCount;
+		std::unique_ptr<StorageBuffer> m_pCellKeyBuffer;
+		std::unique_ptr<StorageBuffer> m_pStartIndexBuffer;
 		std::unique_ptr<StorageBuffer> m_pPositionBuffer;
 		std::unique_ptr<StorageBuffer> m_pVelocityBuffer;
 		std::unique_ptr<StorageBuffer> m_pDensityBuffer;
@@ -86,7 +90,7 @@ namespace emberEngine
 	public: // Methods:
 		SphFluid2dGpu();
 		~SphFluid2dGpu();
-		
+
 		// Physics update:
 		void Reset();
 		void FixedUpdate() override;
@@ -146,10 +150,10 @@ namespace emberEngine
 	private:
 		// Physics:
 		void ResetFluid();
-		void ComputeDensity(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties);
+		void ComputeDensity(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties, float gridRadius);
 		void ComputeNormals();
 		void ComputeCurvature();
-		void ComputeForceDensity(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties);
+		void ComputeForceDensity(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties, float gridRadius);
 
 		void ComputeRungeKutta2Step1();
 		void ComputeRungeKutta2Step2();

@@ -13,16 +13,16 @@ cbuffer RenderMatrizes : register(b1)
 };
 cbuffer Values : register(b3)
 {
-    float cb_targetDensity;
-    float cb_maxVelocity;
-    int cb_colorMode;
+    float targetDensity;
+    float maxVelocity;
+    int colorMode;
 };
 
 
 
-StructuredBuffer<float2> b_positions : register(t4);
-StructuredBuffer<float2> b_velocities : register(t5);
-StructuredBuffer<float> b_densities : register(t6);
+StructuredBuffer<float2> positionBuffer : register(t4);
+StructuredBuffer<float2> velocityBuffer : register(t5);
+StructuredBuffer<float> densityBuffer : register(t6);
 
 
 
@@ -55,7 +55,7 @@ VertexOutput main(VertexInput input)
     float4x4 localToWorldMatrix = cb_localToWorldMatrix;
     if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
     {
-        float4x4 positionMatrix = LinAlg_Translate(float3(b_positions[input.instanceID].xy, 0));
+        float4x4 positionMatrix = LinAlg_Translate(float3(positionBuffer[input.instanceID].xy, 0));
         localToWorldMatrix = mul(cb_localToWorldMatrix, positionMatrix);
     }
     float4x4 localToClipMatrix = mul(cb_worldToClipMatrix, localToWorldMatrix);
@@ -63,9 +63,9 @@ VertexOutput main(VertexInput input)
     
     float4 color = input.vertexColor;
     // Color by density:
-    if (cb_colorMode == 0 && pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+    if (colorMode == 0 && pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
     {
-        float t = (b_densities[input.instanceID] - cb_targetDensity) / cb_targetDensity;
+        float t = (densityBuffer[input.instanceID] - targetDensity) / targetDensity;
         float t0 = clamp(t, 0.0f, 1.0f);
         float t1 = clamp(t - 1.0f, 0.0f, 1.0f);
         float4 colorA = t0 * float4(1, 1, 1, 1) + (1.0f - t0) * float4(0, 0, 1, 1);
@@ -73,9 +73,9 @@ VertexOutput main(VertexInput input)
         color *= (t < 1.0f) ? colorA : colorB;
     }
     // Color by velocity:
-    if (cb_colorMode == 1 && pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+    if (colorMode == 1 && pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
     {
-        float t = length(b_velocities[input.instanceID]) / cb_maxVelocity;
+        float t = length(velocityBuffer[input.instanceID]) / maxVelocity;
         float t0 = 2.0f * t;
         float t1 = 2.0f * t - 1.0f;
         float4 colorA = t0 * float4(1, 1, 1, 1) + (1.0f - t0) * float4(0, 0, 1, 1);

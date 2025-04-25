@@ -5,6 +5,7 @@
 #include "compute.h"
 #include "computeShader.h"
 #include "emberMath.h"
+#include "emberTime.h"
 #include "shaderProperties.h"
 #include "stagingBuffer.h"
 #include "storageBuffer.h"
@@ -144,10 +145,12 @@ namespace emberEngine
 		EXPECT_TRUE(allGood);
 	}
 
-	TEST_F(GpuSort, MultiSort)
+
+
+	TEST_F(GpuSort, BitonicSort)
 	{
 		// Create storage buffer:
-		int count = 123893;
+		int count = 1238933;
 		uint32_t size = count * sizeof(int);
 		StorageBuffer buffer = StorageBuffer((uint32_t)count, (uint32_t)sizeof(int));
 	
@@ -164,10 +167,16 @@ namespace emberEngine
 		uploadBuffer.UploadToBuffer(&buffer, vulkanBackend::Context::pLogicalDevice->GetTransferQueue());
 	
 		// Sort array on CPU:
+		Time::Init();
 		std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
+		//std::vector<int> sortedDataCpu = unsortedData;
+		Time::Update();
+		LOG_INFO("CPU sort time: {}s", Time::GetDeltaTime());
 
-		// Dispatch compute shaders:
+		// Sort array on GPU:
 		BitonicSort::Sort(&buffer);
+		Time::Update();
+		LOG_INFO("GPU sort time: {}s", Time::GetDeltaTime());
 	
 		// Download sorted data from GPU:
 		std::vector<int> sortedDataGpu;

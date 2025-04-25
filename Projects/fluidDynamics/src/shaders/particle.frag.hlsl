@@ -30,7 +30,7 @@ struct FragmentInput
 float4 main(FragmentInput input) : SV_TARGET
 {
     float2 uv = input.uv.xy;
-    float r = length(2 * uv - math_one2);
+    float r = length(2 * uv - float2(1, 1));
     float alpha = (1 - r);
     
     float4 color = input.vertexColor * diffuseColor;

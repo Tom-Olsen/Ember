@@ -46,8 +46,8 @@ namespace emberEngine
 	void BitonicSort::Sort(StorageBuffer* pBuffer)
 	{
 		ShaderProperties* pShaderProperties;
+		int blockSize = s_pLocalBitonicSort->GetBlockSize().x;
 		int bufferSize = (int)pBuffer->GetCount();					// total number of elements for sorting (entire buffer).
-		int blockSize = 16;											// same as BLOCK_SIZE in the compute shaders.
 		int height = math::NextPowerOfTwo((uint32_t)bufferSize);	// height of biggest flip.
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
 		Uint3 threadCountBig = Uint3(height / 2, 1, 1);				// needed to make sure that big flip/disperse hit all swap indices.
@@ -56,9 +56,9 @@ namespace emberEngine
 		uint32_t sessionID = compute::Async::CreateComputeSession();
 		{
 			// Local bitonic sort for each block:
-			ShaderProperties* shaderProperties = compute::Async::RecordComputeShader(sessionID, s_pLocalBitonicSort.get(), threadCountLocal);
-			shaderProperties->SetStorageBuffer("dataBuffer", pBuffer);
-			shaderProperties->SetValue("Values", "bufferSize", bufferSize);
+			pShaderProperties = compute::Async::RecordComputeShader(sessionID, s_pLocalBitonicSort.get(), threadCountLocal);
+			pShaderProperties->SetStorageBuffer("dataBuffer", pBuffer);
+			pShaderProperties->SetValue("Values", "bufferSize", bufferSize);
 			compute::Async::RecordBarrier(sessionID, AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 			
 			for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
@@ -83,7 +83,6 @@ namespace emberEngine
 				// Local disperse:
 				pShaderProperties = compute::Async::RecordComputeShader(sessionID, s_pLocalDisperse.get(), threadCountLocal);
 				pShaderProperties->SetStorageBuffer("dataBuffer", pBuffer);
-				pShaderProperties->SetValue("Values", "startDisperseHeight", blockSize);
 				pShaderProperties->SetValue("Values", "bufferSize", bufferSize);
 				compute::Async::RecordBarrier(sessionID, AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 			}

@@ -130,11 +130,7 @@ namespace emberEngine
 		float Density(int particleIndex, const std::vector<Float2>& positions);
 		Float2 Normal(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities);
 		float Curvature(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& normals, const std::vector<float>& densities);
-		Float2 PressureForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities);
-		Float2 ViscosityForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& velocities, const std::vector<float>& densities);
-		Float2 SurfaceTensionForceDensity(int particleIndex, const std::vector<Float2>& normals, const std::vector<float>& curvatures);
-		Float2 ExternalForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities);
-		Float2 GravityForceDensity(int particleIndex, const std::vector<float>& densities);
+		Float2 ForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& velocities, const std::vector<float>& densities);
 		void BoundaryCollisions(Float2& position, Float2& velocity);
 	};
 }

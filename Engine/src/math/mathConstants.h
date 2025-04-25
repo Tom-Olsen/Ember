@@ -22,10 +22,11 @@ namespace emberMath
 	namespace math
 	{
 		constexpr float epsilon = 1e-4f;
-		constexpr float pi = 3.14159265358979323846f;
+		constexpr float pi =  3.14159265358979323846f;
 		constexpr float pi2 = 0.50f * pi;
 		constexpr float pi4 = 0.25f * pi;
 		constexpr float piInv = 1.0f / pi;
+		constexpr float phi = 1.61803398874989484820f;
 		constexpr float rad2deg = 180.0f / pi;
 		constexpr float deg2rad = pi / 180.0f;
 		constexpr float e = 2.71828182845904523536f;

@@ -3,11 +3,14 @@
 
 
 #define BLOCK_SIZE 128                  // max 2048 due to numthreads limit of 1024 (numthreads.x = BLOCK_SIZE/2)
-RWStructuredBuffer<int> dataBuffer : register(u0);
-groupshared int localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
-cbuffer Values : register(b1)
+RWStructuredBuffer<int> cellKeyBuffer : register(u0);
+RWStructuredBuffer<float2> positionBuffer : register(u1);
+RWStructuredBuffer<float2> velocityBuffer : register(u2);
+groupshared int localCellKeyBuffer[BLOCK_SIZE]; 
+groupshared float2 localPositionBuffer[BLOCK_SIZE];
+groupshared float2 localVelocityBuffer[BLOCK_SIZE];
+cbuffer Values : register(b3)
 {
-    int startDisperseHeight; // height of first disperse.
     int bufferSize; // number of elements in the data buffer.
 };
 
@@ -15,11 +18,17 @@ cbuffer Values : register(b1)
 
 void CompareAndSwap(int i, int j)
 {
-    if (localValue[i] > localValue[j])
+    if (localCellKeyBuffer[i] > localCellKeyBuffer[j])
     {
-        uint tmp = localValue[i];
-        localValue[i] = localValue[j];
-        localValue[j] = tmp;
+        int tempCellKey = localCellKeyBuffer[i];
+        float2 tempPosition = localPositionBuffer[i];
+        float2 tempVelocity = localVelocityBuffer[i];
+        localCellKeyBuffer [i] = localCellKeyBuffer [j];
+        localPositionBuffer[i] = localPositionBuffer[j];
+        localVelocityBuffer[i] = localVelocityBuffer[j];
+        localCellKeyBuffer [j] = tempCellKey;
+        localPositionBuffer[j] = tempPosition;
+        localVelocityBuffer[j] = tempVelocity;
     }
 }
 void Disperse(int disperseHeight, uint index)
@@ -37,15 +46,19 @@ void Disperse(int disperseHeight, uint index)
 [numthreads(BLOCK_SIZE / 2, 1, 1)]
 void main(uint3 localThreadID : SV_GroupThreadID, uint3 threadID : SV_DispatchThreadID)
 {
-    uint localIndex = localThreadID.x; // local thead index € [0,BLOCK_SIZE/2]
-    uint index = threadID.x; // thread index € [0,bufferSize/2]
+    uint localIndex = localThreadID.x;  // local thead index € [0,BLOCK_SIZE/2]
+    uint index = threadID.x;            // thread index € [0,bufferSize/2]
     
 	// Load buffer into local memory (2 values per thread):
-    localValue[2 * localIndex + 0] = (2 * index + 0 < bufferSize) ? dataBuffer[2 * index + 0] : 0x7FFFFFFF;
-    localValue[2 * localIndex + 1] = (2 * index + 1 < bufferSize) ? dataBuffer[2 * index + 1] : 0x7FFFFFFF;
+    localCellKeyBuffer [2 * localIndex + 0] = (2 * index + 0 < bufferSize) ?  cellKeyBuffer[2 * index + 0] : 0x7FFFFFFF;
+    localPositionBuffer[2 * localIndex + 0] = (2 * index + 0 < bufferSize) ? positionBuffer[2 * index + 0] : 0;
+    localVelocityBuffer[2 * localIndex + 0] = (2 * index + 0 < bufferSize) ? velocityBuffer[2 * index + 0] : 0;
+    localCellKeyBuffer [2 * localIndex + 1] = (2 * index + 1 < bufferSize) ?  cellKeyBuffer[2 * index + 1] : 0x7FFFFFFF;
+    localPositionBuffer[2 * localIndex + 1] = (2 * index + 1 < bufferSize) ? positionBuffer[2 * index + 1] : 0;
+    localVelocityBuffer[2 * localIndex + 1] = (2 * index + 1 < bufferSize) ? velocityBuffer[2 * index + 1] : 0;
     
     // Execute local bitonic sort on local memory: (only sorts elements within the same block)
-    for (uint disperseHeight = startDisperseHeight; disperseHeight > 1; disperseHeight /= 2)
+    for (uint disperseHeight = BLOCK_SIZE / 2; disperseHeight > 1; disperseHeight /= 2)
     {
         GroupMemoryBarrierWithGroupSync();
         Disperse(disperseHeight, localIndex);
@@ -54,7 +67,15 @@ void main(uint3 localThreadID : SV_GroupThreadID, uint3 threadID : SV_DispatchTh
 	// Write local memory back to buffer (2 values per thread):
     GroupMemoryBarrierWithGroupSync();
     if (2 * index + 0 < bufferSize)
-        dataBuffer[2 * index + 0] = localValue[2 * localIndex + 0];
+    {
+        cellKeyBuffer [2 * index + 0] = localCellKeyBuffer [2 * localIndex + 0];
+        positionBuffer[2 * index + 0] = localPositionBuffer[2 * localIndex + 0];
+        velocityBuffer[2 * index + 0] = localVelocityBuffer[2 * localIndex + 0];
+    }
     if (2 * index + 1 < bufferSize)
-        dataBuffer[2 * index + 1] = localValue[2 * localIndex + 1];
+    {
+        cellKeyBuffer [2 * index + 1] = localCellKeyBuffer [2 * localIndex + 1];
+        positionBuffer[2 * index + 1] = localPositionBuffer[2 * localIndex + 1];
+        velocityBuffer[2 * index + 1] = localVelocityBuffer[2 * localIndex + 1];
+    }
 }

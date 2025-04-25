@@ -79,10 +79,9 @@ namespace emberEngine
 		}
 
 		float phi = math::pi * (math::Sqrt(5.0f) - 1.0f);
-		float radius = 0.4f * math::Min(m_fluidBounds.GetSize().x, m_fluidBounds.GetSize().y);
 		for (int i = 0; i < m_particleCount; i++)
 		{
-			float r = i / (m_particleCount - 1.0f) * radius;
+			float r = i / (m_particleCount - 1.0f) * m_initialDistributionRadius;
 			float theta = phi * i;
 			m_positions[i].x = math::Cos(theta) * r;
 			m_positions[i].y = math::Sin(theta) * r;
@@ -113,7 +112,7 @@ namespace emberEngine
 			return;
 
 		// Do multiple iterations of deltaT<=dt if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
-		float dt = 2.0f * Time::GetFixedDeltaTime();
+		float dt = Time::GetFixedDeltaTime();
 		float timeStep = m_timeScale * dt;
 		float restTime = timeStep;
 		while (restTime > 0.0f)
@@ -142,13 +141,7 @@ namespace emberEngine
 
 		// Compute force densities:
 		for (int i = 0; i < m_particleCount; i++)
-		{
-			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
-			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
-			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			m_forceDensities[i] += ExternalForceDensity(i, m_positions, m_densities);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
-		}
+			m_forceDensities[i] = ForceDensity(i, m_positions, m_velocities, m_densities);
 
 		// Step:
 		if (m_timeStep == 0)
@@ -185,13 +178,7 @@ namespace emberEngine
 
 		// Compute force densities:
 		for (int i = 0; i < m_particleCount; i++)
-		{
-			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
-			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
-			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			m_forceDensities[i] += ExternalForceDensity(i, m_positions, m_densities);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
-		}
+			m_forceDensities[i] = ForceDensity(i, m_positions, m_velocities, m_densities);
 
 		// Step:
 		for (int i = 0; i < m_particleCount; i++)
@@ -209,7 +196,7 @@ namespace emberEngine
 		constexpr float a2 = 2.0f / 3.0f;
 		constexpr float q  = 3.0f / 4.0f;
 
-		// Update grid for fast nearest neighbor particle look up:
+		// Update hash grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
 		m_pGrid->ApplySort(m_velocities);
 
@@ -225,13 +212,7 @@ namespace emberEngine
 
 		// Compute force densities:
 		for (int i = 0; i < m_particleCount; i++)
-		{
-			m_forceDensities[i] = PressureForceDensity(i, m_positions, m_densities);
-			m_forceDensities[i] += ViscosityForceDensity(i, m_positions, m_velocities, m_densities);
-			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			m_forceDensities[i] += ExternalForceDensity(i, m_positions, m_densities);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
-		}
+			m_forceDensities[i] = ForceDensity(i, m_positions, m_velocities, m_densities);
 
 		// First Runte-Kutta step:
 		for (int i = 0; i < m_particleCount; i++)
@@ -246,7 +227,7 @@ namespace emberEngine
 				m_tempVelocities[i] *= (m_maxVelocity / speed);
 		}
 
-		// Update grid for fast nearest neighbor particle look up:
+		// Update hash grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_tempPositions, m_effectRadius);
 		m_pGrid->ApplySort(m_tempVelocities);
 		m_pGrid->ApplySort(m_positions);
@@ -265,13 +246,7 @@ namespace emberEngine
 
 		// Compute intermediate force densities:
 		for (int i = 0; i < m_particleCount; i++)
-		{
-			m_forceDensities[i] = PressureForceDensity(i, m_tempPositions, m_densities);
-			m_forceDensities[i] += ViscosityForceDensity(i, m_tempPositions, m_tempVelocities, m_densities);
-			//m_forceDensities[i] += SurfaceTensionForceDensity(i, m_normals, m_curvatures);
-			m_forceDensities[i] += ExternalForceDensity(i, m_tempPositions, m_densities);
-			m_forceDensities[i] += GravityForceDensity(i, m_densities);
-		}
+			m_forceDensities[i] = ForceDensity(i, m_tempPositions, m_tempVelocities, m_densities);
 
 		// Second Runge-Kutta step:
 		for (int i = 0; i < m_particleCount; i++)
@@ -585,7 +560,8 @@ namespace emberEngine
 			float density = 0;
 			for (int i = 0; i < 9; i++)
 			{
-				uint32_t neighbourCellHash = m_pGrid->CellHash(particleCell + s_offsets[i]);
+				Int2 neighbourCell = particleCell + s_offsets[i];
+				int neighbourCellHash = m_pGrid->CellHash(neighbourCell);
 				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
 				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
 
@@ -629,7 +605,8 @@ namespace emberEngine
 			Float2 normal = Float2::zero;
 			for (int i = 0; i < 9; i++)
 			{
-				uint32_t neighbourCellHash = m_pGrid->CellHash(particleCell + s_offsets[i]);
+				Int2 neighbourCell = particleCell + s_offsets[i];
+				int neighbourCellHash = m_pGrid->CellHash(neighbourCell);
 				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
 				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
 
@@ -688,7 +665,8 @@ namespace emberEngine
 			float curvature = 0.0f;
 			for (int i = 0; i < 9; i++)
 			{
-				uint32_t neighbourCellHash = m_pGrid->CellHash(particleCell + s_offsets[i]);
+				Int2 neighbourCell = particleCell + s_offsets[i];
+				int neighbourCellHash = m_pGrid->CellHash(neighbourCell);
 				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
 				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
 
@@ -737,88 +715,27 @@ namespace emberEngine
 		return densityError * pressureMultiplier;
 		//return pressureMultiplier * (math::Pow(density / targetDensity, 7.0f) - 1.0f);
 	}
-	Float2 SphFluid2dCpu::PressureForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
+	Float2 SphFluid2dCpu::ForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& velocities, const std::vector<float>& densities)
 	{
-		if (m_useGridOptimization)
-		{
-			float particlePressure = Pressure(densities[particleIndex], m_targetDensity, m_pressureMultiplier);
-			Float2 particlePos = positions[particleIndex];
-			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
+		Float2 forceDensity = Float2::zero;
+		float particlePressure = Pressure(densities[particleIndex], m_targetDensity, m_pressureMultiplier);
+		Float2 particlePos = positions[particleIndex];
+		Float2 particleVel = velocities[particleIndex];
 
-			Float2 pressureForce = Float2::zero;
+		// Internal interactions (particle-particle):
+		if (m_useGridOptimization)
+		{// With hash grid optimization:
+			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
 			for (int i = 0; i < 9; i++)
 			{
-				uint32_t neighbourCellHash = m_pGrid->CellHash(particleCell + s_offsets[i]);
+				Int2 neighbourCell = particleCell + s_offsets[i];
+				int neighbourCellHash = m_pGrid->CellHash(neighbourCell);
 				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
 				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
 
 				while (otherIndex < m_particleCount) // at most as many iterations as there are particles.
 				{
-					if (otherIndex == particleIndex)
-					{
-						otherIndex++;
-						continue;
-					}
-
-					uint32_t otherCellKey = m_pGrid->GetCellKey(otherIndex);
-					if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
-						break;
-
-					Float2 otherPos = positions[otherIndex];
-					Float2 offset = particlePos - otherPos;
-					float r = offset.Length();
-					if (r < m_effectRadius)
-					{
-						Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
-						float otherParticlePressure = Pressure(densities[otherIndex], m_targetDensity, m_pressureMultiplier);
-						float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-						pressureForce += -m_mass * sharedPressure * smoothingKernals::DSpiky(r, dir, m_effectRadius) / densities[otherIndex];
-					}
-
-					otherIndex++;
-				}
-			}
-			return pressureForce;
-		}
-		else
-		{
-			Float2 pressureForce = Float2::zero;
-			float particlePressure = Pressure(densities[particleIndex], m_targetDensity, m_pressureMultiplier);
-			for (int i = 0; i < m_particleCount; i++)
-			{
-				if (i == particleIndex)
-					continue;
-			
-				Float2 offset = positions[particleIndex] - positions[i];
-				float r = offset.Length();
-				if (r < m_effectRadius)
-				{
-					Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
-					float otherParticlePressure = Pressure(densities[i], m_targetDensity, m_pressureMultiplier);
-					float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-					pressureForce += -m_mass * sharedPressure * smoothingKernals::DSpiky(r, dir, m_effectRadius) / densities[i];
-				}
-			}
-			return pressureForce;
-		}
-	}
-	Float2 SphFluid2dCpu::ViscosityForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& velocities, const std::vector<float>& densities)
-	{
-		if (m_useGridOptimization)
-		{
-			Float2 particlePos = positions[particleIndex];
-			Float2 particleVel = velocities[particleIndex];
-			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
-
-			Float2 viscosityForce = Float2::zero;
-			for (int i = 0; i < 9; i++)
-			{
-				uint32_t neighbourCellHash = m_pGrid->CellHash(particleCell + s_offsets[i]);
-				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
-				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
-
-				while (otherIndex < m_particleCount) // at most as many iterations as there are particles.
-				{
+					// Skip self interaction:
 					if (otherIndex == particleIndex)
 					{
 						otherIndex++;
@@ -835,58 +752,59 @@ namespace emberEngine
 					float r = offset.Length();
 					if (r < m_effectRadius)
 					{
+						// Pressure force density:
+						Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
+						float otherParticlePressure = Pressure(densities[otherIndex], m_targetDensity, m_pressureMultiplier);
+						float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
+						forceDensity += -m_mass * sharedPressure * smoothingKernals::DSpiky(r, dir, m_effectRadius) / densities[otherIndex];
+
+						// Viscosity force density:
 						Float2 velocityDiff = otherVel - particleVel;
-						viscosityForce += (m_mass * smoothingKernals::DDViscos(r, m_effectRadius) / densities[otherIndex]) * velocityDiff;
+						forceDensity += (m_mass * smoothingKernals::DDViscos(r, m_effectRadius) / densities[otherIndex]) * velocityDiff;
 					}
 
 					otherIndex++;
 				}
 			}
-			return m_viscosity * viscosityForce;
 		}
 		else
-		{
-			Float2 viscosityForce = Float2::zero;
+		{// Naive iteration over all particles:
 			for (int i = 0; i < m_particleCount; i++)
 			{
 				if (i == particleIndex)
 					continue;
-			
-				Float2 offset = positions[particleIndex] - positions[i];
+
+				Float2 offset = particlePos - positions[i];
 				float r = offset.Length();
 				if (r < m_effectRadius)
 				{
-					Float2 velocityDiff = velocities[i] - velocities[particleIndex];
-					viscosityForce += (m_mass * smoothingKernals::DDViscos(r, m_effectRadius) / densities[i]) * velocityDiff;
+					// Pressure force density:
+					Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
+					float otherParticlePressure = Pressure(densities[i], m_targetDensity, m_pressureMultiplier);
+					float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
+					forceDensity += -m_mass * sharedPressure * smoothingKernals::DSpiky(r, dir, m_effectRadius) / densities[i];
+
+					// Viscosity force density:
+					Float2 velocityDiff = velocities[i] - particleVel;
+					forceDensity += (m_mass * smoothingKernals::DDViscos(r, m_effectRadius) / densities[i]) * velocityDiff;
 				}
 			}
-			return m_viscosity * viscosityForce;
 		}
-	}
-	Float2 SphFluid2dCpu::SurfaceTensionForceDensity(int particleIndex, const std::vector<Float2>& normals, const std::vector<float>& curvatures)
-	{
-		Float2 normal = normals[particleIndex];
-		float normalLength = normal.Length();
-		//return (normalLength > 0.1f) ? -m_surfaceTension * normal / normalLength : Float2::zero;
-		return (normalLength > 0.1f) ? m_surfaceTension * curvatures[particleIndex] * normal / normalLength : Float2::zero;
-	}
-	Float2 SphFluid2dCpu::ExternalForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
-	{
-		if (m_attractorState != 0)
+		// External interactions:
 		{
+			// Gravity force density:
+			forceDensity += densities[particleIndex] * Float2(0.0f, -m_gravity);
+
+			// External force density:
 			Float2 offset = m_attractorPoint - positions[particleIndex];
 			float r = offset.Length();
 			if (r < m_attractorRadius && r > 1e-8f)
 			{
 				r /= m_attractorRadius;
-				return m_attractorState * m_attractorStrength * densities[particleIndex] * offset * r * r;
+				forceDensity += m_attractorState * m_attractorStrength * densities[particleIndex] * offset * r * r;
 			}
 		}
-		return 0.0f;
-	}
-	Float2 SphFluid2dCpu::GravityForceDensity(int particleIndex, const std::vector<float>& densities)
-	{
-		return densities[particleIndex] * Float2(0.0f, -m_gravity);
+		return forceDensity;
 	}
 	void SphFluid2dCpu::BoundaryCollisions(Float2& position, Float2& velocity)
 	{

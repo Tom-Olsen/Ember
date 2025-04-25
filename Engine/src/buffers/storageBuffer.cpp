@@ -1,5 +1,8 @@
 #include "storageBuffer.h"
+#include "stagingBuffer.h"
+#include "emberMath.h"
 #include "vmaBuffer.h"
+#include "vulkanContext.h"
 #include <vulkan/vulkan.h>
 
 
@@ -34,5 +37,23 @@ namespace emberEngine
 	StorageBuffer::~StorageBuffer()
 	{
 
+	}
+
+
+
+	// Upload/Download:
+	void StorageBuffer::Upload(void* pSrc, uint64_t size)
+	{
+		size = math::Min(size, m_size);
+		StagingBuffer stagingBuffer(size);
+		stagingBuffer.SetData(pSrc, size);
+		stagingBuffer.UploadToBuffer((Buffer*)this, Context::pLogicalDevice->GetTransferQueue());
+	}
+	void StorageBuffer::Download(void* pDst, uint64_t size)
+	{
+		size = math::Min(size, m_size);
+		StagingBuffer stagingBuffer(size);
+		stagingBuffer.DownloadFromBuffer((Buffer*)this, vulkanBackend::Context::pLogicalDevice->GetTransferQueue());
+		stagingBuffer.GetData(pDst, size);
 	}
 }

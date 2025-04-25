@@ -23,15 +23,18 @@ namespace emberEngine
 	{
 		return Int2(Float2::Floor((position / radius)));
 	}
-	uint32_t HashGrid2d::CellHash(Int2 cell)
+	int HashGrid2d::CellHash(Int2 cell)
 	{
-		uint32_t a = (uint32_t)cell.x * m_prime0;
-		uint32_t b = (uint32_t)cell.y * m_prime1;
-		return (a + b);
+		int a = cell.x * m_prime0;
+		int b = cell.y * m_prime1;
+		return a + b;
 	}
-	uint32_t HashGrid2d::CellKey(uint32_t cellHash)
+	uint32_t HashGrid2d::CellKey(int cellHash)
 	{
-		return cellHash % m_particleCount;
+		if (cellHash < 0)
+			return m_particleCount - (abs(cellHash) % m_particleCount);
+		else
+			return cellHash % m_particleCount;
 	}
 	uint32_t HashGrid2d::GetCellKey(int particleIndex)
 	{
@@ -50,7 +53,7 @@ namespace emberEngine
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			Int2 cell = Cell(positions[i], radius);
-			uint32_t cellHash = CellHash(cell);
+			int cellHash = CellHash(cell);
 			m_cellKeys[i] = CellKey(cellHash);
 		}
 
@@ -62,7 +65,7 @@ namespace emberEngine
 		// Reset start indices to invalid state:
 		for (int i = 0; i < m_particleCount; i++)
 			m_startIndices[i] = -1;
-
+		
 		// Fill start indices vector:
 		m_startIndices[m_cellKeys[0]] = 0;
 		for (int i = 1; i < m_particleCount; i++)

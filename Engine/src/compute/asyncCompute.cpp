@@ -124,11 +124,8 @@ namespace emberEngine
 			if (s_computeSessions[sessionID].state != ComputeSession::State::running)
 				return;	// not running => finished, no reset required.
 
-			if (vkGetFenceStatus(Context::GetVkDevice(), s_fences[sessionID]) == VK_NOT_READY)
-			{
-				VKA(vkWaitForFences(Context::GetVkDevice(), 1, &s_fences[sessionID], VK_TRUE, UINT64_MAX));
-				ResetComputeSession(sessionID);
-			}
+			VKA(vkWaitForFences(Context::GetVkDevice(), 1, &s_fences[sessionID], VK_TRUE, UINT64_MAX));
+			ResetComputeSession(sessionID);
 		}
 
 

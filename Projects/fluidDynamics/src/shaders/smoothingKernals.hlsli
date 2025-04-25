@@ -26,6 +26,8 @@ float SmoothingKernal_DDPoly6(float r, float h)
     return (r < h) ? 6.0f * h2r2 * c * (4.0f * r2 - 2.0f * h2r2) : 0.0f;
 }
 
+
+
 // Used for pressure calculations.
 float SmoothingKernal_Spiky(float r, float h)
 {
@@ -47,6 +49,8 @@ float SmoothingKernal_DDSpiky(float r, float h)
     return (r < h) ? 3.0 * c * hr * (2.0f - hr / r) : 0.0f;
 }
     
+
+
 // Used for viscosity calculations:
 float SmoothingKernal_Viscos(float r, float h)
 {

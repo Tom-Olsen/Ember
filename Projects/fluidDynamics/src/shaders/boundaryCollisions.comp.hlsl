@@ -4,16 +4,16 @@
 
 cbuffer Values : register(b0)
 {
-    float cb_collisionDampening;
-    float3 cb_min;
-    float3 cb_max;
+    float collisionDampening;
+    float3 min;
+    float3 max;
 };
-RWStructuredBuffer<float2> b_positions : register(u1);
-RWStructuredBuffer<float2> b_velocities : register(u2);
+RWStructuredBuffer<float2> positionBuffer : register(u1);
+RWStructuredBuffer<float2> velocityBuffer : register(u2);
 
 
 
-[numthreads(64, 1, 1)]
+[numthreads(128, 1, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
     const float epsilon = 1e-4f;
@@ -21,25 +21,25 @@ void main(uint3 threadID : SV_DispatchThreadID)
     
     if (index < pc.threadCount.x)
     {
-        if (b_positions[index].x < cb_min.x)
+        if (positionBuffer[index].x < min.x)
         {
-            b_positions[index].x = cb_min.x + epsilon;
-            b_velocities[index].x *= -cb_collisionDampening;
+            positionBuffer[index].x = min.x + epsilon;
+            velocityBuffer[index].x *= -collisionDampening;
         }
-        if (b_positions[index].x > cb_max.x)
+        if (positionBuffer[index].x > max.x)
         {
-            b_positions[index].x = cb_max.x - epsilon;
-            b_velocities[index].x *= -cb_collisionDampening;
+            positionBuffer[index].x = max.x - epsilon;
+            velocityBuffer[index].x *= -collisionDampening;
         }
-        if (b_positions[index].y < cb_min.y)
+        if (positionBuffer[index].y < min.y)
         {
-            b_positions[index].y = cb_min.y + epsilon;
-            b_velocities[index].y *= -cb_collisionDampening;
+            positionBuffer[index].y = min.y + epsilon;
+            velocityBuffer[index].y *= -collisionDampening;
         }
-        if (b_positions[index].y > cb_max.y)
+        if (positionBuffer[index].y > max.y)
         {
-            b_positions[index].y = cb_max.y - epsilon;
-            b_velocities[index].y *= -cb_collisionDampening;
+            positionBuffer[index].y = max.y - epsilon;
+            velocityBuffer[index].y *= -collisionDampening;
         }
     }
 }

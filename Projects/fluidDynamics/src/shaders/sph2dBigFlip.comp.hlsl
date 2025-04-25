@@ -3,8 +3,10 @@
 
 
 #define BLOCK_SIZE 128
-RWStructuredBuffer<int> dataBuffer : register(u0);
-cbuffer Values : register(b1)
+RWStructuredBuffer<int> cellKeyBuffer : register(u0);
+RWStructuredBuffer<float2> positionBuffer : register(u1);
+RWStructuredBuffer<float2> velocityBuffer : register(u2);
+cbuffer Values : register(b3)
 {
     int flipHeight; // height of the flip (number of elements involved in it).
     int bufferSize; // number of elements in data buffer.
@@ -16,13 +18,20 @@ void CompareAndSwap(int i, int j)
 {
     if (i >= bufferSize || j >= bufferSize)
         return;
-    if (dataBuffer[i] > dataBuffer[j])
+    if (cellKeyBuffer[i] > cellKeyBuffer[j])
     {
-        uint tmp = dataBuffer[i];
-        dataBuffer[i] = dataBuffer[j];
-        dataBuffer[j] = tmp;
+        int tempCellKey = cellKeyBuffer[i];
+        float2 tempPosition = positionBuffer[i];
+        float2 tempVelocity = velocityBuffer[i];
+        cellKeyBuffer [i] = cellKeyBuffer [j];
+        positionBuffer[i] = positionBuffer[j];
+        velocityBuffer[i] = velocityBuffer[j];
+        cellKeyBuffer [j] = tempCellKey;
+        positionBuffer[j] = tempPosition;
+        velocityBuffer[j] = tempVelocity;
     }
 }
+
 
 
 [numthreads(BLOCK_SIZE / 2, 1, 1)]

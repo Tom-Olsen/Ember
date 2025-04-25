@@ -4,21 +4,21 @@
 
 cbuffer Values : register(b0)
 {
-    float cb_deltaT;
-    float cb_maxVelocity;
+    float deltaT;
+    float maxVelocity;
 };
-StructuredBuffer<float2> b_forceDensities : register(t1);
-StructuredBuffer<float> b_densities : register(t2);
-StructuredBuffer<float2> b_positions : register(t3);
-StructuredBuffer<float2> b_velocities : register(t4);
-RWStructuredBuffer<float2> b_kp1 : register(u5);
-RWStructuredBuffer<float2> b_kv1 : register(u6);
-RWStructuredBuffer<float2> b_tempPositions : register(u7);
-RWStructuredBuffer<float2> b_tempVelocities : register(u8);
+StructuredBuffer<float2> forceDensityBuffer : register(t1);
+StructuredBuffer<float> densityBuffer : register(t2);
+StructuredBuffer<float2> positionBuffer : register(t3);
+StructuredBuffer<float2> velocityBuffer : register(t4);
+RWStructuredBuffer<float2> kp1Buffer : register(u5);
+RWStructuredBuffer<float2> kv1Buffer : register(u6);
+RWStructuredBuffer<float2> tempPositionBuffer : register(u7);
+RWStructuredBuffer<float2> tempVelocityBuffer : register(u8);
 
 
 
-[numthreads(64, 1, 1)]
+[numthreads(128, 1, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
     const float q  = 3.0f / 4.0f;
@@ -26,13 +26,13 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
-        float2 acceleration = b_forceDensities[index] / b_densities[index];
-        b_kp1[index] = b_velocities[index];
-        b_kv1[index] = acceleration;
-        b_tempPositions[index] = b_positions[index] + q * b_kp1[index] * cb_deltaT;
-        b_tempVelocities[index] = b_velocities[index] + q * b_kv1[index] * cb_deltaT;
-        float speed = length(b_tempVelocities[index]);
-        if (speed > cb_maxVelocity)
-            b_tempVelocities[index] *= (cb_maxVelocity / speed);
+        float2 acceleration = forceDensityBuffer[index] / densityBuffer[index];
+        kp1Buffer[index] = velocityBuffer[index];
+        kv1Buffer[index] = acceleration;
+        tempPositionBuffer[index] = positionBuffer[index] + q * kp1Buffer[index] * deltaT;
+        tempVelocityBuffer[index] = velocityBuffer[index] + q * kv1Buffer[index] * deltaT;
+        float speed = length(tempVelocityBuffer[index]);
+        if (speed > maxVelocity)
+            tempVelocityBuffer[index] *= (maxVelocity / speed);
     }
 }
