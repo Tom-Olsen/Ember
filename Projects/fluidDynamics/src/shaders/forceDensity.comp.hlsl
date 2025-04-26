@@ -16,6 +16,7 @@ cbuffer Values : register(b0)
     float viscosity;
     float mass;
     float gravity;
+    float surfaceTension;
     
     // Sph parameters:
     float effectRadius;
@@ -33,7 +34,9 @@ StructuredBuffer<uint> startIndexBuffer : register(t2);
 StructuredBuffer<float2> positionBuffer : register(t3);
 StructuredBuffer<float2> velocityBuffer : register(t4);
 StructuredBuffer<float> densityBuffer : register(t5);
-RWStructuredBuffer<float2> forceDensityBuffer : register(u6);
+StructuredBuffer<float2> normalBuffer : register(t6);
+StructuredBuffer<float> curvatureBuffer : register(t7);
+RWStructuredBuffer<float2> forceDensityBuffer : register(u8);
 
 
 
@@ -56,7 +59,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         float2 particlePos = positionBuffer[index];
         float2 particleVel = velocityBuffer[index];
         
-		// Internal interactions (particle-particle):
+		// Particle-Particle interaction forces:
         if (useGridOptimization)
         {// With hash grid optimization:
             int2 particleCell = Cell(particlePos, gridRadius);
@@ -106,6 +109,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         {// Naive iteration over all particles:
             for (int i = 0; i < particleCount; i++)
             {
+                // Skip self interaction:
                 if (i == index)
                     continue;
             
@@ -126,10 +130,14 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 }
             };
         }
-        // External interactions:
+        // Self interaction forces:
         {
             // Gravity force density:
             forceDensityBuffer[index] += densityBuffer[index] * float2(0.0f, -gravity);
+            
+            // Surface tension:
+            if (curvatureBuffer[index] != 0)
+                forceDensityBuffer[index] -= surfaceTension * curvatureBuffer[index] * normalBuffer[index];
             
             // External force density:
             float2 offset = attractorPoint - positionBuffer[index];

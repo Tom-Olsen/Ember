@@ -23,6 +23,8 @@ cbuffer Values : register(b3)
 StructuredBuffer<float2> positionBuffer : register(t4);
 StructuredBuffer<float2> velocityBuffer : register(t5);
 StructuredBuffer<float> densityBuffer : register(t6);
+StructuredBuffer<float2> normalBuffer : register(t7);
+StructuredBuffer<float> curvatureBuffer : register(t7);
 
 
 
@@ -81,6 +83,16 @@ VertexOutput main(VertexInput input)
         float4 colorA = t0 * float4(1, 1, 1, 1) + (1.0f - t0) * float4(0, 0, 1, 1);
         float4 colorB = t1 * float4(1, 0, 0, 1) + (1.0f - t1) * float4(1, 1, 1, 1);
         color *= (t < 0.5f) ? colorA : colorB;
+    }
+    // Color by normal:
+    if (colorMode == 2 && pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+    {
+        color *= float4(normalBuffer[input.instanceID], 0, 1);
+    }
+    // Color by curvature:
+    if (colorMode == 3 && pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
+    {
+        color *= (0.5f + curvatureBuffer[input.instanceID]) * float4(0, 0, 1, 1);
     }
     
     VertexOutput output;

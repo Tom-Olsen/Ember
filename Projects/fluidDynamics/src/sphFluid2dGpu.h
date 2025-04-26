@@ -21,12 +21,14 @@ namespace emberEngine
 		Uint3 m_threadCount;
 		std::unique_ptr<ComputeShader> cs_pReset;
 		std::unique_ptr<ComputeShader> cs_pDensity;
+		std::unique_ptr<ComputeShader> cs_pNormalAndCurvature;
 		std::unique_ptr<ComputeShader> cs_pForceDensity;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step1;
 		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step2;
 		std::unique_ptr<ComputeShader> cs_pBoundaryCollisions;
 		std::unique_ptr<ShaderProperties> m_pResetProperties;
 		std::array<std::unique_ptr<ShaderProperties>, 2> m_densityProperties;
+		std::array<std::unique_ptr<ShaderProperties>, 2> m_normalAndCurvatureProperties;
 		std::array<std::unique_ptr<ShaderProperties>, 2> m_forceDensityProperties;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step1Properties;
 		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step2Properties;
@@ -47,8 +49,8 @@ namespace emberEngine
 		std::unique_ptr<StorageBuffer> m_pPositionBuffer;
 		std::unique_ptr<StorageBuffer> m_pVelocityBuffer;
 		std::unique_ptr<StorageBuffer> m_pDensityBuffer;
-		//std::vector<Float2> m_normals;
-		//std::vector<float> m_curvatures;
+		std::unique_ptr<StorageBuffer> m_pNormalBuffer;
+		std::unique_ptr<StorageBuffer> m_pCurvatureBuffer;
 		std::unique_ptr<StorageBuffer> m_pForceDensityBuffer;
 
 		// Runge Kutta fields:
@@ -151,7 +153,7 @@ namespace emberEngine
 		// Physics:
 		void ResetFluid();
 		void ComputeDensity(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties, float gridRadius);
-		void ComputeNormals();
+		void ComputeNormalAndCurvature(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties, float gridRadius);
 		void ComputeCurvature();
 		void ComputeForceDensity(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties, float gridRadius);
 
