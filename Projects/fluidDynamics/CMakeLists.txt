@@ -14,12 +14,28 @@ add_subdirectory("../../engine" EmberEngine)
 
 
 
-file(GLOB SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.h" "${PROJECT_SOURCE_DIR}/src/*.cpp")
-source_group("Source Files" FILES ${SOURCE_FILES})
+# src/2d/*:
+file(GLOB 2D_CPU_FILES "${PROJECT_SOURCE_DIR}/src/2d/cpu/*")
+source_group("2D\\cpu" FILES ${2D_CPU_FILES})
+file(GLOB 2D_GPU_FILES "${PROJECT_SOURCE_DIR}/src/2d/gpu/*")
+source_group("2D\\gpu" FILES ${2D_GPU_FILES})
+
+# src/3d/*:
+file(GLOB 3D_FILES "${PROJECT_SOURCE_DIR}/src/3d/*")
+source_group("3D" FILES ${3D_FILES})
+
+# src/main.cpp:
+file(GLOB MAIN_FILE "${PROJECT_SOURCE_DIR}/src/*.h" "${PROJECT_SOURCE_DIR}/src/main.cpp")
+source_group("" FILES ${MAIN_FILE})
 
 
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+
+add_executable(${PROJECT_NAME}
+${MAIN_FILE}
+${2D_CPU_FILES}
+${2D_GPU_FILES}
+${3D_FILES})
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberEngine)
 
 
@@ -32,3 +48,11 @@ add_dependencies(${PROJECT_NAME} CompileFluidDynamicsShaders)
 # Add project root path as a compile definition
 get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_ROOT_PATH}")
+
+
+# Add src subfolders as include directories:
+target_include_directories(${PROJECT_NAME}
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/2d/cpu
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/2d/gpu
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/3d
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

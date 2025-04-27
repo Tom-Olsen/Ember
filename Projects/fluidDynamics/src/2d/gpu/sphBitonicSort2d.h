@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_sph2dBitonicSort_h__
-#define __INCLUDE_GUARD_sph2dBitonicSort_h__
+#ifndef __INCLUDE_GUARD_sphBitonicSort2d_h__
+#define __INCLUDE_GUARD_sphBitonicSort2d_h__
 #include <memory>
 
 
@@ -13,7 +13,7 @@ namespace emberEngine
 
 
 
-    class Sph2dBitonicSort
+    class SphBitonicSort2d
     {
     private: // Members
         std::unique_ptr<ComputeShader> m_pCellKeys;
@@ -26,8 +26,8 @@ namespace emberEngine
         std::unique_ptr<ShaderProperties> m_pStartIndicesProperties;
 
     public: // Methods
-        Sph2dBitonicSort();
-        ~Sph2dBitonicSort();
+        SphBitonicSort2d();
+        ~SphBitonicSort2d();
 
         void ComputeCellKeys(StorageBuffer* pCellKeyBuffer, StorageBuffer* pPositionBuffer, float gridRadius);
         void ComputeStartIndices(StorageBuffer* pCellKeyBuffer, StorageBuffer* pStartIndexBuffer);
@@ -37,4 +37,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_sph2dBitonicSort_h__
+#endif // __INCLUDE_GUARD_sphBitonicSort2d_h__

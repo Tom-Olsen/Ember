@@ -10,7 +10,7 @@ namespace emberEngine
 {
 	// Forward decleration:
 	struct SphFluid2dGpuEditorWindow;
-	class Sph2dBitonicSort;
+	class SphBitonicSort2d;
 
 
 
@@ -40,7 +40,7 @@ namespace emberEngine
 		float m_timeScale;
 		bool m_useGridOptimization;
 		uint32_t m_timeStep;
-		std::unique_ptr<Sph2dBitonicSort> pGpuSort;
+		std::unique_ptr<SphBitonicSort2d> pGpuSort;
 
 		// Data:
 		int m_particleCount;

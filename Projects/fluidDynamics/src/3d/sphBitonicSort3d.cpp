@@ -1,4 +1,4 @@
-#include "sph2dBitonicSort.h"
+#include "sphBitonicSort3d.h"
 #include "accessMasks.h"
 #include "compute.h"
 #include "computeShader.h"
@@ -11,19 +11,19 @@
 namespace emberEngine
 {
 	// Initialization and cleanup:
-	Sph2dBitonicSort::Sph2dBitonicSort()
+	SphBitonicSort3d::SphBitonicSort3d()
 	{
 		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/src/shaders/bin";
-		m_pCellKeys = std::make_unique<ComputeShader>("hashGrid2dCellKeys", directoryPath + "/hashGrid2dCellKeys.comp.spv");
-		m_pStartIndices = std::make_unique<ComputeShader>("hashGrid2dStartIndices", directoryPath + "/hashGrid2dStartIndices.comp.spv");
-		m_pLocalBitonicSort = std::make_unique<ComputeShader>("sph2dLocalBitonicSort", directoryPath + "/sph2dLocalBitonicSort.comp.spv");
-		m_pBigFlip = std::make_unique<ComputeShader>("sph2dBigFlip", directoryPath + "/sph2dBigFlip.comp.spv");
-		m_pBigDisperse = std::make_unique<ComputeShader>("sph2dBigDisperse", directoryPath + "/sph2dBigDisperse.comp.spv");
-		m_pLocalDisperse = std::make_unique<ComputeShader>("sph2dLocalDisperse", directoryPath + "/sph2dLocalDisperse.comp.spv");
+		m_pCellKeys = std::make_unique<ComputeShader>("cellKeys3d", directoryPath + "/cellKeys3d.comp.spv");
+		m_pStartIndices = std::make_unique<ComputeShader>("startIndices3d", directoryPath + "/startIndices3d.comp.spv");
+		m_pLocalBitonicSort = std::make_unique<ComputeShader>("sphLocalBitonicSort3d", directoryPath + "/sphLocalBitonicSort3d.comp.spv");
+		m_pBigFlip = std::make_unique<ComputeShader>("sphBigFlip3d", directoryPath + "/sphBigFlip3d.comp.spv");
+		m_pBigDisperse = std::make_unique<ComputeShader>("sphBigDisperse3d", directoryPath + "/sphBigDisperse3d.comp.spv");
+		m_pLocalDisperse = std::make_unique<ComputeShader>("sphLocalDisperse3d", directoryPath + "/sphLocalDisperse3d.comp.spv");
 		m_pCellKeyProperties = std::make_unique<ShaderProperties>((Shader*)m_pCellKeys.get());
 		m_pStartIndicesProperties = std::make_unique<ShaderProperties>((Shader*)m_pStartIndices.get());
 	}
-	Sph2dBitonicSort::~Sph2dBitonicSort()
+	SphBitonicSort3d::~SphBitonicSort3d()
 	{
 		m_pLocalBitonicSort.reset();
 		m_pBigFlip.reset();
@@ -34,7 +34,7 @@ namespace emberEngine
 
 
 	// Sorting:
-	void Sph2dBitonicSort::ComputeCellKeys(StorageBuffer* pCellKeyBuffer, StorageBuffer* pPositionBuffer, float gridRadius)
+	void SphBitonicSort3d::ComputeCellKeys(StorageBuffer* pCellKeyBuffer, StorageBuffer* pPositionBuffer, float gridRadius)
 	{
 		uint32_t particleCount = pCellKeyBuffer->GetCount();
 		Uint3 threadCount(particleCount, 1, 1);
@@ -45,7 +45,7 @@ namespace emberEngine
 		compute::PreRender::RecordComputeShader(m_pCellKeys.get(), m_pCellKeyProperties.get(), threadCount);
 		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
-	void Sph2dBitonicSort::ComputeStartIndices(StorageBuffer* pCellKeyBuffer, StorageBuffer* pStartIndexBuffer)
+	void SphBitonicSort3d::ComputeStartIndices(StorageBuffer* pCellKeyBuffer, StorageBuffer* pStartIndexBuffer)
 	{
 		int particleCount = pCellKeyBuffer->GetCount();
 		Uint3 threadCount(particleCount, 1, 1);
@@ -54,7 +54,7 @@ namespace emberEngine
 		compute::PreRender::RecordComputeShader(m_pStartIndices.get(), m_pStartIndicesProperties.get(), threadCount);
 		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
 	}
-	void Sph2dBitonicSort::Sort(StorageBuffer* pCellKeyBuffer, StorageBuffer* pPositionBuffer, StorageBuffer* pVelocityBuffer)
+	void SphBitonicSort3d::Sort(StorageBuffer* pCellKeyBuffer, StorageBuffer* pPositionBuffer, StorageBuffer* pVelocityBuffer)
 	{
 		ShaderProperties* pShaderProperties;
 		int blockSize = m_pLocalBitonicSort->GetBlockSize().x;

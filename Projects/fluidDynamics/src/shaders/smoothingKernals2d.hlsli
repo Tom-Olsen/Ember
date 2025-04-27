@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_smoothingKernals_hlsli__
-#define __INCLUDE_GUARD_smoothingKernals_hlsli__
+#ifndef __INCLUDE_GUARD_smoothingKernals2d_hlsli__
+#define __INCLUDE_GUARD_smoothingKernals2d_hlsli__
 #include "math.hlsli"
 
 
@@ -77,4 +77,4 @@ float SmoothingKernal_DDViscos(float r, float h)
 
 
 
-#endif //__INCLUDE_GUARD_smoothingKernals_hlsli__
+#endif //__INCLUDE_GUARD_smoothingKernals2d_hlsli__

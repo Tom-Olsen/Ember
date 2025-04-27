@@ -1,11 +1,11 @@
-#ifndef __INCLUDE_GUARD_hashGridFunctions_hlsli__
-#define __INCLUDE_GUARD_hashGridFunctions_hlsli__
+#ifndef __INCLUDE_GUARD_hashGridFunctions2d_hlsli__
+#define __INCLUDE_GUARD_hashGridFunctions2d_hlsli__
 
 
 
 // Hash grid primes:
-static const int prime0 = 15823;
-static const int prime1 = 9737333;
+static const int prime0 = 15823;    // 73856093
+static const int prime1 = 9737333;  // 19349663 
 
 
 
@@ -41,4 +41,4 @@ uint CellKey(int cellHash, int particleCount)
 
 
 
-#endif //__INCLUDE_GUARD_hashGridFunctions_hlsli__
+#endif //__INCLUDE_GUARD_hashGridFunctions2d_hlsli__

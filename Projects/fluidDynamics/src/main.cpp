@@ -66,8 +66,10 @@ int main()
 
 	// Add project specific shaders:
 	std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/src/shaders/bin";
-	Material* pParticleMaterial = new Material(Material::Type::forwardTransparent, "particleMaterial", (uint32_t)Material::Queue::transparent, directoryPath + "/particle.vert.spv", directoryPath + "/particle.frag.spv");
-	MaterialManager::AddMaterial(pParticleMaterial);
+	Material* pParticleMaterial2d = new Material(Material::Type::forwardTransparent, "particleMaterial2d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle2d.vert.spv", directoryPath + "/particle2d.frag.spv");
+	Material* pParticleMaterial3d = new Material(Material::Type::forwardTransparent, "particleMaterial3d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle3d.vert.spv", directoryPath + "/particle3d.frag.spv");
+	MaterialManager::AddMaterial(pParticleMaterial2d);
+	MaterialManager::AddMaterial(pParticleMaterial3d);
 
 	// Create scene:
 	Scene* pScene = InitScene();
