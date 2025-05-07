@@ -4,9 +4,9 @@
 
 
 // Hash grid primes:
-static const int prime0 = 15731;
-static const int prime1 = 789221;
-static const int prime2 = 1376312589;
+static const int prime0 = 15823;    //19677199;
+static const int prime1 = 9737333;  //73856093;
+static const int prime2 = 440817757;//83492791;
 
 
 
@@ -35,16 +35,14 @@ int CellHash(int3 cell)
     int a = cell.x * prime0;
     int b = cell.y * prime1;
     int c = cell.z * prime2;
-    return a + b + c;
+    return a ^ b ^ c;
 }
 uint CellKey(int cellHash, int particleCount)
 {
     // Module operation with negative numbers is not identical between c++ and hlsl.
-    // The below method circumvents this discrepency by using the abs value.
-    if (cellHash < 0)
-        return particleCount - (abs(cellHash) % particleCount);
-    else
-        return cellHash % particleCount;
+    // The below method circumvents this discrepency.
+    int mod = cellHash % particleCount;
+    return (mod + particleCount) % particleCount;
 }
 
 

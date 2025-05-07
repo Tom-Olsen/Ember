@@ -1,5 +1,6 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanInstance.h"
+#include "vulkanContext.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
 #include "vulkanSurface.h"
@@ -79,19 +80,19 @@ namespace emberEngine
 		{
 			return m_device;
 		}
-		const DeviceQueue LogicalDevice::GetGraphicsQueue() const
+		const DeviceQueue& LogicalDevice::GetGraphicsQueue() const
 		{
 			return m_graphicsQueue;
 		}
-		const DeviceQueue LogicalDevice::GetPresentQueue() const
+		const DeviceQueue& LogicalDevice::GetPresentQueue() const
 		{
 			return m_presentQueue;
 		}
-		const DeviceQueue LogicalDevice::GetComputeQueue() const
+		const DeviceQueue& LogicalDevice::GetComputeQueue() const
 		{
 			return m_computeQueue;
 		}
-		const DeviceQueue LogicalDevice::GetTransferQueue() const
+		const DeviceQueue& LogicalDevice::GetTransferQueue() const
 		{
 			return m_transferQueue;
 		}

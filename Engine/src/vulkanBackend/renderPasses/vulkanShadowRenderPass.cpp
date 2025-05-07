@@ -24,6 +24,7 @@ namespace emberEngine
 			m_shadowMaps = std::make_unique<DepthTexture2dArray>("shadowMaps", s_shadowMapFormat, Lighting::shadowMapResolution, Lighting::shadowMapResolution, s_layerCount);
 			CreateRenderpass();
 			CreateFramebuffers();
+			NAME_VK_RENDER_PASS(m_renderPass, "shadowRenderPass");
 		}
 		ShadowRenderPass::~ShadowRenderPass()
 		{

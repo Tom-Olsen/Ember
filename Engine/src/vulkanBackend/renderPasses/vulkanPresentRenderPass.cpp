@@ -17,6 +17,7 @@ namespace emberEngine
 		{
 			CreateRenderPass();
 			CreateFrameBuffers();
+			NAME_VK_RENDER_PASS(m_renderPass, "presentRenderPass");
 		}
 		PresentRenderPass::~PresentRenderPass()
 		{

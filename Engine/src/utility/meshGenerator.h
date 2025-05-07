@@ -17,6 +17,7 @@ namespace emberEngine
 		Mesh* Triangle(Float3 a, Float3 b, Float3 c, const std::string& name);
 
 		Mesh* UnitQuad();
+		Mesh* UnitQuadTwoSided();
 		Mesh* FullScreenRenderQuad();
 		Mesh* ClockwiseQuad(Float3 a, Float3 b, Float3 c, Float3 d, const std::string& name);
 		Mesh* Grid(int resolutionX, int resolutionY, const std::string& name);

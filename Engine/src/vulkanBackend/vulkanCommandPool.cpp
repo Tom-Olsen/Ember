@@ -43,6 +43,10 @@ namespace emberEngine
 				throw std::out_of_range("Reset CommandBuffer index out of range.");
 			vkResetCommandBuffer(m_buffers[index], 0);
 		}
+		VkCommandPool& CommandPool::GetVkCommandPool()
+		{
+			return m_pool;
+		}
 		VkCommandBuffer& CommandPool::GetVkCommandBuffer(int index)
 		{
 			if (index < 0 || index > m_buffers.size() - 1)

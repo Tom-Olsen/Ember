@@ -24,6 +24,7 @@ namespace emberEngine
 
             // Destroy shader module (only needed for pipeline creation):
             vkDestroyShaderModule(Context::GetVkDevice(), computeShaderModule, nullptr);
+            NAME_VK_PIPELINE(m_pipeline, "computePipeline");
         }
         ComputePipeline::~ComputePipeline()
         {

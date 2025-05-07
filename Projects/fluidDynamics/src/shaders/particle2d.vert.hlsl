@@ -3,7 +3,7 @@
 
 
 
-cbuffer RenderMatrizes : register(b1)
+cbuffer RenderMatrizes : register(b0)
 {
     float4x4 cb_localToWorldMatrix; // local to world matrix (also known as model matrix).
     float4x4 cb_viewMatrix;         // world to camera matrix.
@@ -11,7 +11,7 @@ cbuffer RenderMatrizes : register(b1)
     float4x4 cb_worldToClipMatrix;  // world to camera clip space matrix: (projection * view)
     float4x4 cb_localToClipMatrix;  // local to camera clip space matrix: (projection * view * localToWorldMatrix)
 };
-cbuffer Values : register(b3)
+cbuffer Values : register(b1)
 {
     float targetDensity;
     float maxVelocity;
@@ -20,11 +20,11 @@ cbuffer Values : register(b3)
 
 
 
-StructuredBuffer<float2> positionBuffer : register(t4);
-StructuredBuffer<float2> velocityBuffer : register(t5);
-StructuredBuffer<float> densityBuffer : register(t6);
-StructuredBuffer<float2> normalBuffer : register(t7);
-StructuredBuffer<float> curvatureBuffer : register(t7);
+StructuredBuffer<float2> positionBuffer : register(t2);
+StructuredBuffer<float2> velocityBuffer : register(t3);
+StructuredBuffer<float> densityBuffer : register(t4);
+StructuredBuffer<float2> normalBuffer : register(t5);
+StructuredBuffer<float> curvatureBuffer : register(t6);
 
 
 

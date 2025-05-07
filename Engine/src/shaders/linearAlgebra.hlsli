@@ -13,6 +13,32 @@ float3 LinAlg_VectorToPlaneProjection(float3 vec, float3 planeNormal)
 {
     return vec - LinAlg_VectorToPlaneDistance(vec, planeNormal) * planeNormal;
 }
+bool LinAlg_IsEpsilonEqual(float3 a, float3 b)
+{
+    float epsilon = 1e-4f;
+    return abs(a.x - b.x) < epsilon && abs(a.y - b.y) < epsilon && abs(a.z - b.z) < epsilon;
+}
+
+float3 LinAlg_GetOrhtogonalVector(float3 v)
+{
+    float epsilon = 1e-4f;
+    float3 result = cross(v, float3(1.0f, 0.0f, 0.0f));
+    if (length(result) < epsilon)
+    {
+        result = cross(v, float3(0.0f, 1.0f, 0.0f));
+        if (length(result) < epsilon)
+            result = cross(v, float3(0.0f, 0.0f, 1.0f));
+    }
+    return result;
+}
+float LinAlg_Angle(float3 a, float3 b)
+{
+    float epsilon = 1e-4f;
+    float lengths = length(a) * length(b);
+    if (lengths <= epsilon)
+        return 0.0f;
+    return acos(clamp(dot(a, b) / lengths, -1.0f, 1.0f));
+}
 
 
 
@@ -79,6 +105,35 @@ float4x4 LinAlg_RotateX4x4(float angle)
 	 0.0f,    s,    c, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4x4 LinAlg_Rotate4x4(float3 axis, float angle)
+{
+    float c = cos(angle);
+    float s = sin(angle);
+    float t = 1.0f - c;
+    float3 normalizedAxis = normalize(axis);
+    float x = normalizedAxis.x;
+    float y = normalizedAxis.y;
+    float z = normalizedAxis.z;
+    return float4x4
+    (    x * x * t + c, x * y * t - z * s, x * z * t + y * s, 0.0f,
+     y * x * t + z * s,     y * y * t + c, y * z * t - x * s, 0.0f,
+     z * x * t - y * s, z * y * t + x * s,     z * z * t + c, 0.0f,
+                  0.0f,              0.0f,              0.0f, 1.0f);
+}
+float4x4 LinAlg_RotateFromTo(float3 from, float3 to)
+{
+    float3 f = normalize(from);
+    float3 t = normalize(to);
+    float3 diff = abs(t - f);
+    float epsilon = 1e-4f;
+    if (LinAlg_IsEpsilonEqual(f, t))
+        return math_identity4x4;
+    if (LinAlg_IsEpsilonEqual(f, -t))
+        return LinAlg_Rotate4x4(LinAlg_GetOrhtogonalVector(f), math_PI);
+    float3 axis = cross(from, to); // normalization not needed, as Rotate(...) will normalize it
+    float angle = LinAlg_Angle(from, to);
+    return LinAlg_Rotate4x4(axis, angle);
+}
 float4x4 LinAlg_Scale(float3 scale)
 {
     return float4x4
@@ -92,8 +147,9 @@ float4x4 LinAlg_Scale(float scale)
     return LinAlg_Scale(float3(scale, scale, scale));
 }
 
-// Get Translation/Rotation/Scale from matrix:
 
+
+// Get Translation/Rotation/Scale from matrix:
 float3 LinAlg_GetTranslation(float4x4 TRS)
 {
     return float3(TRS._12, TRS._13, TRS._14);
@@ -116,6 +172,7 @@ float4x4 LinAlg_GetRotation4x4(float4x4 TRS)
     float4 column3 = float4(0, 0, 0, 1);
     return float4x4(column0, column1, column2, column3);
 }
+
 
 
 #endif //__INCLUDE_GUARD_linearAlgebra_hlsli__

@@ -71,6 +71,14 @@ namespace emberEngine
 			pMesh->ComputeTangents();
 			return pMesh;
 		}
+		Mesh* UnitQuadTwoSided()
+		{
+			std::vector<Mesh*> faces;
+			faces.reserve(2);
+			faces.push_back(UnitQuad());
+			faces.push_back(UnitQuad()->Rotate(Float4x4::rot180x));
+			return Mesh::Merge(faces, "unitQuadTwoSided");
+		}
 		Mesh* FullScreenRenderQuad()
 		{
 			Mesh* pMesh = new Mesh("fullScreenRenderQuad");

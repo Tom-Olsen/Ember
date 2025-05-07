@@ -118,6 +118,8 @@ namespace emberEngine
 			vkResetCommandPool(Context::GetVkDevice(), *commandPool, 0);
 			VKA(vkBeginCommandBuffer(*commandBuffer, &beginInfo));
 
+			NAME_VK_COMMAND_BUFFER(*commandBuffer, "SingleTimeCommandBuffer");
+			NAME_VK_COMMAND_POOL(*commandPool, "SingleTimeCommandPool");
 			return *commandBuffer;
 		}
 		void SingleTimeCommand::EndCommand(const DeviceQueue& queue)

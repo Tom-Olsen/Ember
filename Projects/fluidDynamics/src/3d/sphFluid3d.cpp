@@ -3,10 +3,9 @@
 #include "accessMasks.h"
 #include "sphBitonicSort3d.h"
 
-#include "hashGrid2d.h"
-#include "stagingBuffer.h"
+#include "vmaBuffer.h"
 #include "vulkanContext.h"
-#include "smoothingKernals.h"
+#include "vulkanMacros.h"
 
 
 
@@ -50,25 +49,26 @@ namespace emberEngine
 			SetUseGridOptimization(true);
 			m_timeStep = 0;
 			pGpuSort = std::make_unique<SphBitonicSort3d>();
-			SetParticleCount(10000);
+			SetParticleCount(5000);
 
 			// Physics:
-			SetEffectRadius(0.3f);
+			SetEffectRadius(0.6f);
 			SetMass(1.0f);
 			SetViscosity(0.5f);
-			SetSurfaceTension(0.07f);
+			SetSurfaceTension(0.0f);
 			SetCollisionDampening(0.95f);
-			SetTargetDensity(90.0f);
+			SetTargetDensity(7.0f);
 			SetPressureMultiplier(6.0f);
 			SetGravity(0.5f);
 			SetMaxVelocity(5.0f);
 
 			// User Interaction/Boundaries:
-			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
+			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
 
 			// Visuals:
-			SetColorMode(1);
-			SetInitialDistributionRadius(8.0f);
+			SetColorMode(0);
+			SetInitialDistributionShellCount(8);
+			SetInitialDistributionRadius(6.0f);
 			SetVisualRadius(0.15f);
 		}
 
@@ -91,32 +91,46 @@ namespace emberEngine
 		{
 			std::unique_ptr<StorageBuffer> pNewCellKeyBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int));
 			std::swap(m_pCellKeyBuffer, pNewCellKeyBuffer);
+			NAME_VK_BUFFER(m_pCellKeyBuffer->GetVmaBuffer()->GetVkBuffer(), "cellKeyBuffer");
 			std::unique_ptr<StorageBuffer> pNewStartIndexBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int));
 			std::swap(m_pStartIndexBuffer, pNewStartIndexBuffer);
+			NAME_VK_BUFFER(m_pStartIndexBuffer->GetVmaBuffer()->GetVkBuffer(), "startIndexBuffer");
 			std::unique_ptr<StorageBuffer> pNewPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pPositionBuffer, pNewPositionBuffer);
+			NAME_VK_BUFFER(m_pPositionBuffer->GetVmaBuffer()->GetVkBuffer(), "positionBuffer");
 			std::unique_ptr<StorageBuffer> pNewVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pVelocityBuffer, pNewVelocityBuffer);
+			NAME_VK_BUFFER(m_pVelocityBuffer->GetVmaBuffer()->GetVkBuffer(), "velocityBuffer");
 			std::unique_ptr<StorageBuffer> pNewDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float));
 			std::swap(m_pDensityBuffer, pNewDensityBuffer);
+			NAME_VK_BUFFER(m_pDensityBuffer->GetVmaBuffer()->GetVkBuffer(), "densityBuffer");
 			std::unique_ptr<StorageBuffer> pNewNormalBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pNormalBuffer, pNewNormalBuffer);
+			NAME_VK_BUFFER(m_pNormalBuffer->GetVmaBuffer()->GetVkBuffer(), "normalBuffer");
 			std::unique_ptr<StorageBuffer> pNewCurvatureBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float));
 			std::swap(m_pCurvatureBuffer, pNewCurvatureBuffer);
+			NAME_VK_BUFFER(m_pCurvatureBuffer->GetVmaBuffer()->GetVkBuffer(), "curvatureBuffer");
 			std::unique_ptr<StorageBuffer> pNewForceDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pForceDensityBuffer, pNewForceDensityBuffer);
+			NAME_VK_BUFFER(m_pForceDensityBuffer->GetVmaBuffer()->GetVkBuffer(), "forceDensityBuffer");
 			std::unique_ptr<StorageBuffer> pNewKp1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pKp1Buffer, pNewKp1Buffer);
+			NAME_VK_BUFFER(m_pKp1Buffer->GetVmaBuffer()->GetVkBuffer(), "kp1Buffer");
 			std::unique_ptr<StorageBuffer> pNewKv1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pKv1Buffer, pNewKv1Buffer);
+			NAME_VK_BUFFER(m_pKv1Buffer->GetVmaBuffer()->GetVkBuffer(), "kv1Buffer");
 			std::unique_ptr<StorageBuffer> pNewKp2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pKp2Buffer, pNewKp2Buffer);
+			NAME_VK_BUFFER(m_pKp2Buffer->GetVmaBuffer()->GetVkBuffer(), "kp2Buffer");
 			std::unique_ptr<StorageBuffer> pNewKv2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pKv2Buffer, pNewKv2Buffer);
+			NAME_VK_BUFFER(m_pKv2Buffer->GetVmaBuffer()->GetVkBuffer(), "kv2Buffer");
 			std::unique_ptr<StorageBuffer> pNewTempPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pTempPositionBuffer, pNewTempPositionBuffer);
+			NAME_VK_BUFFER(m_pTempPositionBuffer->GetVmaBuffer()->GetVkBuffer(), "tempPositionBuffer");
 			std::unique_ptr<StorageBuffer> pNewTempVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
 			std::swap(m_pTempVelocityBuffer, pNewTempVelocityBuffer);
+			NAME_VK_BUFFER(m_pTempVelocityBuffer->GetVmaBuffer()->GetVkBuffer(), "tempVelocityBuffer");
 		}
 
 		// Reset fluid to initial data:
@@ -131,7 +145,7 @@ namespace emberEngine
 	{
 		if (!m_isRunning || m_reset)
 			return;
-
+		
 		// Do multiple iterations of deltaT<=dt if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
 		float dt = Time::GetFixedDeltaTime();
 		float timeStep = m_timeScale * dt;
@@ -143,14 +157,6 @@ namespace emberEngine
 			restTime -= deltaT;
 		}
 		m_timeStep++;
-	}
-	void SphFluid3d::TimeStepLeapFrog(float deltaT)
-	{
-
-	}
-	void SphFluid3d::TimeStepVelocityVerlet(float deltaT)
-	{
-
 	}
 	void SphFluid3d::TimeStepRungeKutta2(float deltaT)
 	{
@@ -212,6 +218,7 @@ namespace emberEngine
 		{
 			m_particleCount = particleCount;
 			m_threadCount = Uint3(m_particleCount, 1, 1);
+			// TODO: remove particle count from compute shaders and use threadCount.x instead.
 			m_densityProperties[0]->SetValue("Values", "particleCount", m_particleCount);
 			m_densityProperties[1]->SetValue("Values", "particleCount", m_particleCount);
 			m_normalAndCurvatureProperties[0]->SetValue("Values", "particleCount", m_particleCount);
@@ -282,6 +289,7 @@ namespace emberEngine
 		{
 			m_targetDensity = targetDensity;
 			m_pShaderProperties->SetValue("Values", "targetDensity", m_targetDensity);
+			m_pResetProperties->SetValue("Values", "targetDensity", m_targetDensity);
 			m_forceDensityProperties[0]->SetValue("Values", "targetDensity", m_targetDensity);
 			m_forceDensityProperties[1]->SetValue("Values", "targetDensity", m_targetDensity);
 		}
@@ -333,6 +341,16 @@ namespace emberEngine
 			m_pShaderProperties->SetValue("Values", "colorMode", m_colorMode);
 		}
 	}
+	void SphFluid3d::SetInitialDistributionShellCount(int initialDistributionShellCount)
+	{
+		initialDistributionShellCount = math::Max(1, initialDistributionShellCount);
+		if (m_initialDistributionShellCount != initialDistributionShellCount)
+		{
+			m_initialDistributionShellCount = initialDistributionShellCount;
+			m_pResetProperties->SetValue("Values", "initialDistributionShellCount", m_initialDistributionShellCount);
+			m_reset = true;
+		}
+	}
 	void SphFluid3d::SetInitialDistributionRadius(float initialDistributionRadius)
 	{
 		initialDistributionRadius = math::Max(1e-4f, initialDistributionRadius);
@@ -349,7 +367,7 @@ namespace emberEngine
 		if (m_visualRadius != visualRadius)
 		{
 			m_visualRadius = visualRadius;
-			std::unique_ptr<Mesh> pNewParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(m_visualRadius));
+			std::unique_ptr<Mesh> pNewParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::CubeSphere(m_visualRadius, 2, ""));
 			std::swap(m_pParticleMesh, pNewParticleMesh);
 		}
 	}
@@ -421,6 +439,10 @@ namespace emberEngine
 	{
 		return m_colorMode;
 	}
+	int SphFluid3d::GetInitialDistributionShellCount() const
+	{
+		return m_initialDistributionShellCount;
+	}
 	float SphFluid3d::GetInitialDistributionRadius() const
 	{
 		return m_initialDistributionRadius;
@@ -435,6 +457,13 @@ namespace emberEngine
 	// Overrides:
 	void SphFluid3d::Update()
 	{
+		// Detect framerate crash:
+		if (m_isRunning && Time::GetDeltaTime() > 0.1f)
+		{
+			m_isRunning = false;
+			LOG_TRACE("Stopped simulation due to framerate crash.");
+		}
+
 		// Keyboard interactions:
 		if (EventSystem::KeyDown(SDLK_SPACE))
 		{
@@ -461,7 +490,7 @@ namespace emberEngine
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
 		Graphics::DrawBounds(localToWorld, m_fluidBounds, 0.01f, Float4::white, false, false);
-
+		
 		m_pShaderProperties->SetStorageBuffer("positionBuffer", m_pPositionBuffer.get());
 		m_pShaderProperties->SetStorageBuffer("velocityBuffer", m_pVelocityBuffer.get());
 		m_pShaderProperties->SetStorageBuffer("densityBuffer", m_pDensityBuffer.get());

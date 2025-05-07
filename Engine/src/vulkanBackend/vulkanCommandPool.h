@@ -27,6 +27,7 @@ namespace emberEngine
 
 			void ResetPool() const;
 			void ResetBuffer(int index) const;
+			VkCommandPool& GetVkCommandPool();
 			VkCommandBuffer& GetVkCommandBuffer(int index);
 			int GetBufferCount() const;
 		};

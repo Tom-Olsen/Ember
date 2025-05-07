@@ -5,7 +5,9 @@
 
 cbuffer Values : register(b0)
 {
+    int initialDistributionShellCount;
     float initialDistributionRadius;
+    float targetDensity;
 };
 RWStructuredBuffer<float3> positionBuffer : register(u1);
 RWStructuredBuffer<float3> velocityBuffer : register(u2);
@@ -28,9 +30,24 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
-        float r = index / (pc.threadCount.x - 1.0f) * initialDistributionRadius;
-        float theta = phi * index;
-        positionBuffer[index] = r * float3(cos(theta), sin(theta), 0); // TODO: use fibonacci sphere
+        // Single fibonacci sphere layers:
+        uint pointsPerShell = pc.threadCount.x / initialDistributionShellCount;
+        uint shellIndex = index / pointsPerShell;
+        uint localIndex = index % pointsPerShell;
+        float pointsInShell = max(1.0f, (float) (pointsPerShell - 1));
+        float theta = phi * localIndex;
+        float z = 1.0f - 2.0f * (localIndex / pointsInShell);
+        float rxy = sqrt(1 - z * z);
+        float shellRadius = initialDistributionRadius * sqrt((float) (shellIndex + 1) / initialDistributionShellCount);
+        positionBuffer[index] = shellRadius * float3(rxy * cos(theta), rxy * sin(theta), z);
+        
+        // Single fibonacci sphere:
+        //float theta = phi * index;
+        //float z = 1.0f - 2.0f * (index / (pc.threadCount.x - 1.0f));
+        //float rxy = sqrt(1 - z * z);
+        //positionBuffer[index] = initialDistributionRadius * float3(rxy * cos(theta), rxy * sin(theta), z);
+        
+        // All other buffers:
         velocityBuffer[index] = float3(0, 0, 0);
         densityBuffer[index] = 0.0f;
         forceDensityBuffer[index] = float3(0, 0, 0);

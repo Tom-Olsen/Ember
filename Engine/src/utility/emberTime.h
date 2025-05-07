@@ -19,7 +19,7 @@ namespace emberEngine
     public: // Methods
         static void Init();
         static void Update();
-        static void SleepS(int milliseconds);
+        static void SleepS(int seconds);
         static void SleepMs(int milliseconds);
         
         // Getters:

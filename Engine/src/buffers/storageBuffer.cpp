@@ -16,6 +16,13 @@ namespace emberEngine
 	// Constructor/Destructor:
 	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize)
 	{
+		// NOTE:
+		// Storage buffers must follow std430 layout alignment rules.
+		// Do not have general abstraction for this. Therefore, if you use anything but:
+		// int/float/float2/float3/float4/float4x4 you need to add alignment logic here:
+		if (elementSize == sizeof(Float3))
+			elementSize = sizeof(Float4);
+
 		m_count = count;
 		m_elementSize = elementSize;
 		m_size = m_count * m_elementSize;

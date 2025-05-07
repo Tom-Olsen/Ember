@@ -35,6 +35,7 @@ namespace emberEngine
 			CreateMsaaImage();
 			CreateDepthImage();
 			CreateFrameBuffers();
+			NAME_VK_RENDER_PASS(m_renderPass, "forwardRenderPass");
 		}
 		ForwardRenderPass::~ForwardRenderPass()
 		{

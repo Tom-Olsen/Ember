@@ -32,7 +32,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
             int3 particleCell = Cell(particlePos, gridRadius);
             
             densityBuffer[index] = 0;
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 27; i++)
             {
                 int3 neighbourCell = particleCell + offsets[i];
                 int neighbourCellHash = CellHash(neighbourCell);

@@ -27,6 +27,7 @@ namespace emberEngine
 		float m_gravity;
 		float m_maxVelocity;
 		int m_colorMode;
+		int m_initialDistributionShellCount;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
 
@@ -63,7 +64,8 @@ namespace emberEngine
 				Editor::InputFloat("Gravity:", &m_gravity, 0.1f, 1.0f, "%.8f");
 				Editor::InputFloat("Max Velocity:", &m_maxVelocity, 0.1f, 1.0f, "%.8f");
 				Editor::InputInt("Color Mode:", &m_colorMode);
-				Editor::InputFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
+				Editor::InputInt("Distr Shell Count:", &m_initialDistributionShellCount);
+				Editor::InputFloat("Distr Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
 				Editor::InputFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
 
 				if (ImGui::Button("Reset Simulation"))
@@ -90,6 +92,7 @@ namespace emberEngine
 			m_gravity = m_pScript->GetGravity();
 			m_maxVelocity = m_pScript->GetMaxVelocity();
 			m_colorMode = m_pScript->GetColorMode();
+			m_initialDistributionShellCount = m_pScript->GetInitialDistributionShellCount();
 			m_initialDistributionRadius = m_pScript->GetInitialDistributionRadius();
 			m_visualRadius = m_pScript->GetVisualRadius();
 		}
@@ -109,6 +112,7 @@ namespace emberEngine
 			m_pScript->SetGravity(m_gravity);
 			m_pScript->SetMaxVelocity(m_maxVelocity);
 			m_pScript->SetColorMode(m_colorMode);
+			m_pScript->SetInitialDistributionShellCount(m_initialDistributionShellCount);
 			m_pScript->SetInitialDistributionRadius(m_initialDistributionRadius);
 			m_pScript->SetVisualRadius(m_visualRadius);
 		}

@@ -57,7 +57,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         if (useGridOptimization)
         {// With hash grid optimization:
             int3 particleCell = Cell(particlePos, gridRadius);
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 27; i++)
             {
                 int3 neighbourCell = particleCell + offsets[i];
                 int neighbourCellHash = CellHash(neighbourCell);

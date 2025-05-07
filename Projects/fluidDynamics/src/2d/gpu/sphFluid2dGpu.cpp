@@ -88,10 +88,10 @@ namespace emberEngine
 			SetEffectRadius(0.3f);
 			SetMass(1.0f);
 			SetViscosity(0.5f);
-			SetSurfaceTension(0.07f);
+			SetSurfaceTension(0.0f);
 			SetCollisionDampening(0.95f);
-			SetTargetDensity(90.0f);
-			SetPressureMultiplier(6.0f);
+			SetTargetDensity(70.0f);
+			SetPressureMultiplier(8.0f);
 			SetGravity(0.5f);
 			SetMaxVelocity(5.0f);
 
@@ -155,9 +155,12 @@ namespace emberEngine
 
 		// Reset fluid to initial data:
 		ResetFluid();
-		pGpuSort->ComputeCellKeys(m_pCellKeyBuffer.get(), m_pPositionBuffer.get(), m_effectRadius);
-		pGpuSort->Sort(m_pCellKeyBuffer.get(), m_pPositionBuffer.get(), m_pVelocityBuffer.get());
-		pGpuSort->ComputeStartIndices(m_pCellKeyBuffer.get(), m_pStartIndexBuffer.get());
+		if (m_useGridOptimization)
+		{
+			pGpuSort->ComputeCellKeys(m_pCellKeyBuffer.get(), m_pPositionBuffer.get(), m_effectRadius);
+			pGpuSort->Sort(m_pCellKeyBuffer.get(), m_pPositionBuffer.get(), m_pVelocityBuffer.get());
+			pGpuSort->ComputeStartIndices(m_pCellKeyBuffer.get(), m_pStartIndexBuffer.get());
+		}
 		ComputeDensity(m_pPositionBuffer.get(), m_densityProperties[0].get(), m_effectRadius);
 		ComputeNormalAndCurvature(m_pPositionBuffer.get(), m_normalAndCurvatureProperties[0].get(), m_effectRadius);
 	}
@@ -195,9 +198,12 @@ namespace emberEngine
 		// Update hash grid for fast nearest neighbor particle look up:
 		float q = 3.0f / 4.0f;	// Runge-Kutta-2 first timestep fraction.
 		float gridRadius = 2.0f * m_effectRadius + q * m_maxVelocity * deltaT;
-		pGpuSort->ComputeCellKeys(m_pCellKeyBuffer.get(), m_pPositionBuffer.get(), gridRadius);
-		pGpuSort->Sort(m_pCellKeyBuffer.get(), m_pPositionBuffer.get(), m_pVelocityBuffer.get());
-		pGpuSort->ComputeStartIndices(m_pCellKeyBuffer.get(), m_pStartIndexBuffer.get());
+		if (m_useGridOptimization)
+		{
+			pGpuSort->ComputeCellKeys(m_pCellKeyBuffer.get(), m_pPositionBuffer.get(), gridRadius);
+			pGpuSort->Sort(m_pCellKeyBuffer.get(), m_pPositionBuffer.get(), m_pVelocityBuffer.get());
+			pGpuSort->ComputeStartIndices(m_pCellKeyBuffer.get(), m_pStartIndexBuffer.get());
+		}
 
 		// First Runte-Kutta step:
 		ComputeDensity(m_pPositionBuffer.get(), m_densityProperties[0].get(), gridRadius);
@@ -517,6 +523,13 @@ namespace emberEngine
 	// Overrides:
 	void SphFluid2dGpu::Update()
 	{
+		// Detect framerate crash:
+		if (m_isRunning && Time::GetDeltaTime() > 0.1f)
+		{
+			m_isRunning = false;
+			LOG_TRACE("Stopped simulation due to framerate crash.");
+		}
+
 		// Keyboard interactions:
 		if (EventSystem::KeyDown(SDLK_SPACE))
 		{

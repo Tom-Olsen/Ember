@@ -77,6 +77,12 @@ namespace emberEngine
 			#if defined(VALIDATION_LAYERS_ACTIVE)
 			s_vkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetDeviceProcAddr(GetVkDevice(), "vkSetDebugUtilsObjectNameEXT"));
 			#endif
+
+			// Debug naming:
+			NAME_VK_QUEUE(pLogicalDevice->GetGraphicsQueue().queue, "graphicsQueue");
+			NAME_VK_QUEUE(pLogicalDevice->GetPresentQueue().queue, "presentQueue");
+			NAME_VK_QUEUE(pLogicalDevice->GetComputeQueue().queue, "computeQueue");
+			NAME_VK_QUEUE(pLogicalDevice->GetTransferQueue().queue, "transferQueue");
 		}
 		void Context::Clear()
 		{

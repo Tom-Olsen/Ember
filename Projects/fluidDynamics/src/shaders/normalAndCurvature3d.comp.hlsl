@@ -35,7 +35,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
             
             normalBuffer[index] = 0;
             curvatureBuffer[index] = 0;
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 27; i++)
             {
                 int3 neighbourCell = particleCell + offsets[i];
                 int neighbourCellHash = CellHash(neighbourCell);

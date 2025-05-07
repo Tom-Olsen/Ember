@@ -31,10 +31,10 @@ namespace emberEngine
 
 			// Getters:
 			const VkDevice& GetVkDevice() const;
-			const DeviceQueue GetGraphicsQueue() const;
-			const DeviceQueue GetPresentQueue() const;
-			const DeviceQueue GetComputeQueue() const;
-			const DeviceQueue GetTransferQueue() const;
+			const DeviceQueue& GetGraphicsQueue() const;
+			const DeviceQueue& GetPresentQueue() const;
+			const DeviceQueue& GetComputeQueue() const;
+			const DeviceQueue& GetTransferQueue() const;
 
 		private: // Methods:
 			uint32_t FindGraphicsAndComputeQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice) const;

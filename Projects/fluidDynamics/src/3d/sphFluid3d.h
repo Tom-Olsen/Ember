@@ -77,6 +77,7 @@ namespace emberEngine
 
 		// Visuals:
 		int m_colorMode;
+		int m_initialDistributionShellCount;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
 		std::unique_ptr<Mesh> m_pParticleMesh;
@@ -92,8 +93,6 @@ namespace emberEngine
 		// Physics update:
 		void Reset();
 		void FixedUpdate() override;
-		void TimeStepLeapFrog(float deltaT);
-		void TimeStepVelocityVerlet(float deltaT);
 		void TimeStepRungeKutta2(float deltaT);
 
 		// Setters:
@@ -112,6 +111,7 @@ namespace emberEngine
 		void SetMaxVelocity(float maxVelocity);
 		void SetFluidBounds(const Bounds& bounds);
 		void SetColorMode(int colorMode);
+		void SetInitialDistributionShellCount(int initialDistributionShellCount);
 		void SetInitialDistributionRadius(float initialDistributionRadius);
 		void SetVisualRadius(float visualRadius);
 
@@ -132,6 +132,7 @@ namespace emberEngine
 		float GetMaxVelocity() const;
 		Bounds GetFluidBounds() const;
 		int GetColorMode() const;
+		int GetInitialDistributionShellCount() const;
 		float GetInitialDistributionRadius() const;
 		float GetVisualRadius() const;
 

@@ -46,21 +46,20 @@ namespace emberEngine
 		m_commandPools.reserve(Context::framesInFlight);
 		for (uint32_t i = 0; i < Context::framesInFlight; i++)
 			m_commandPools.emplace_back(RenderStage::stageCount, Context::pLogicalDevice->GetGraphicsQueue());
-		 
-		// Command buffers:
-		//m_preRenderComputeCommands.reserve(Context::framesInFlight);
-		//m_shadowCommands.reserve(Context::framesInFlight);
-		//m_forwardCommands.reserve(Context::framesInFlight);
-		//m_postRenderComputeCommands.reserve(Context::framesInFlight);
-		//m_presentCommands.reserve(Context::framesInFlight);
-		//for (uint32_t i = 0; i < Context::framesInFlight; i++)
-		//{
-		//	m_preRenderComputeCommands.emplace_back(Context::pLogicalDevice->GetGraphicsQueue());
-		//	m_shadowCommands.emplace_back(Context::pLogicalDevice->GetGraphicsQueue());
-		//	m_forwardCommands.emplace_back(Context::pLogicalDevice->GetGraphicsQueue());
-		//	m_postRenderComputeCommands.emplace_back(Context::pLogicalDevice->GetGraphicsQueue());
-		//	m_presentCommands.emplace_back(Context::pLogicalDevice->GetGraphicsQueue());
-		//}
+
+		// Debug naming:
+		NAME_VK_COMMAND_POOL(m_commandPools[0].GetVkCommandPool(), "renderCorePool0");
+		NAME_VK_COMMAND_POOL(m_commandPools[1].GetVkCommandPool(), "renderCorePool1");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::preRenderCompute), "preRenderComputeCommandBuffer0");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::preRenderCompute), "preRenderComputeCommandBuffer1");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::shadow), "shadowCommandBuffer0");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::shadow), "shadowCommandBuffer1");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::forward), "forwardCommandBuffer0");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::forward), "forwardCommandBuffer1");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::postRenderCompute), "postRenderComputeCommandBuffer0");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::postRenderCompute), "postRenderComputeCommandBuffer1");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::present), "presentCommandBuffer0");
+		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::present), "presentCommandBuffer1");
 
 		// Synchronization objects:
 		CreateFences();

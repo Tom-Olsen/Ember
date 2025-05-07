@@ -32,9 +32,9 @@ namespace emberEngine
 		s_fixedTimeAccumulator += s_deltaTime;
 		s_start = s_end;
 	}
-	void Time::SleepS(int milliseconds)
+	void Time::SleepS(int seconds)
 	{
-		std::this_thread::sleep_for(std::chrono::seconds(milliseconds));
+		std::this_thread::sleep_for(std::chrono::seconds(seconds));
 	}
 	void Time::SleepMs(int milliseconds)
 	{
