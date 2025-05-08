@@ -33,10 +33,10 @@ namespace emberEngine
 		// Initialization and cleanup:
 		void SingleTimeCommand::Init()
 		{
-			s_graphicsDeviceQueue = Context::pLogicalDevice->GetGraphicsQueue();
-			s_presentDeviceQueue = Context::pLogicalDevice->GetPresentQueue();
-			s_computeDeviceQueue = Context::pLogicalDevice->GetComputeQueue();
-			s_transferDeviceQueue = Context::pLogicalDevice->GetTransferQueue();
+			s_graphicsDeviceQueue = Context::logicalDevice.GetGraphicsQueue();
+			s_presentDeviceQueue = Context::logicalDevice.GetPresentQueue();
+			s_computeDeviceQueue = Context::logicalDevice.GetComputeQueue();
+			s_transferDeviceQueue = Context::logicalDevice.GetTransferQueue();
 			VkCommandPool* pools[4] = { &s_graphicsPool , &s_presentPool , &s_computePool , &s_transferPool };
 			VkCommandBuffer* buffers[4] = { &s_graphicsBuffer , &s_presentBuffer , &s_computeBuffer , &s_transferBuffer };
 			DeviceQueue* deviceQueues[4] = { &s_graphicsDeviceQueue, &s_presentDeviceQueue, &s_computeDeviceQueue, &s_transferDeviceQueue };

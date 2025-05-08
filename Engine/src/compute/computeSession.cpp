@@ -102,7 +102,7 @@ namespace emberEngine
 			submitInfo.signalSemaphoreCount = 0;
 			submitInfo.pSignalSemaphores = nullptr;
 			VKA(vkResetFences(Context::GetVkDevice(), 1, &fence));
-			VKA(vkQueueSubmit(Context::pLogicalDevice->GetComputeQueue().queue, 1, &submitInfo, fence));
+			VKA(vkQueueSubmit(Context::logicalDevice.GetComputeQueue().queue, 1, &submitInfo, fence));
 		}
 		void ComputeSession::ResetComputeCalls()
 		{

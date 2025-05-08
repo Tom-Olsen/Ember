@@ -61,7 +61,7 @@ namespace emberEngine
 			pShaderProperties->UpdateShaderData(0);
 
 			// Record command buffer:
-			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(Context::pLogicalDevice->GetComputeQueue());
+			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetComputeQueue());
 			{
 				// Set pipeline:
 				VkPipeline pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
@@ -80,7 +80,7 @@ namespace emberEngine
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &pShaderProperties->GetDescriptorSet(0), 0, nullptr);
 				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 			}
-			SingleTimeCommand::EndCommand(Context::pLogicalDevice->GetComputeQueue());
+			SingleTimeCommand::EndCommand(Context::logicalDevice.GetComputeQueue());
 		}
 	}
 }

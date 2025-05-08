@@ -14,11 +14,12 @@ namespace emberEngine
 		{
 		private: // Members:
 			SDL_Window* m_pWindow;
-			bool m_isMinimized = false;
-			bool m_framebufferResized = false;
+			bool m_isMinimized;
+			bool m_framebufferResized;
 
 		public: // Methods:
-			SdlWindow(uint16_t width, uint16_t height);
+			SdlWindow();
+			void Init(uint16_t width, uint16_t height);
 			~SdlWindow();
 
 			bool HandleEvents();

@@ -16,7 +16,8 @@ namespace emberEngine
 			VkDebugUtilsMessengerEXT m_debugMessenger;
 
 		public: // Methods:
-			Instance(std::vector<const char*> instanceExtensions);
+			Instance();
+			void Init(std::vector<const char*> instanceExtensions);
 			~Instance();
 
 			const VkInstance& GetVkInstance() const;

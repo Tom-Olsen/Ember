@@ -24,7 +24,12 @@ namespace emberEngine
 
 
 		// Constructor/Destructor:
-		Instance::Instance(std::vector<const char*> instanceExtensions)
+		Instance::Instance()
+		{
+			m_instance = VK_NULL_HANDLE;
+			m_debugMessenger = VK_NULL_HANDLE;
+		}
+		void Instance::Init(std::vector<const char*> instanceExtensions)
 		{
 			VkApplicationInfo applicationInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
 			applicationInfo.pApplicationName = "Application Name";

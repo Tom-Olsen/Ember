@@ -7,6 +7,7 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
+#include <assert.h>
 
 
 
@@ -15,8 +16,17 @@ namespace emberEngine
 	namespace vulkanBackend
 	{
 		// Constructor/Destructor:
-		MemoryAllocator::MemoryAllocator(Instance* pInstance, LogicalDevice* pLogicalDevice, PhysicalDevice* pPhysicalDevice)
+		MemoryAllocator::MemoryAllocator()
 		{
+			m_pAllocator = VMA_NULL;
+		}
+		void MemoryAllocator::Init(Instance* pInstance, LogicalDevice* pLogicalDevice, PhysicalDevice* pPhysicalDevice)
+		{
+			// Assertions:
+			assert(pInstance != nullptr);
+			assert(pLogicalDevice != nullptr);
+			assert(pPhysicalDevice != nullptr);
+
 			// References to vulkan functions:
 			VmaVulkanFunctions vulkanFunctions = {};
 			vulkanFunctions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;

@@ -232,15 +232,15 @@ namespace emberEngine
     }
     float EventSystem::MouseX01()
     {
-        return s_mouseX / vulkanBackend::Context::pWindow->GetWidth();
+        return s_mouseX / vulkanBackend::Context::window.GetWidth();
     }
     float EventSystem::MouseY01()
     {
-        return s_mouseY / vulkanBackend::Context::pWindow->GetHeight();
+        return s_mouseY / vulkanBackend::Context::window.GetHeight();
     }
     Float2 EventSystem::MousePos01()
     {
-        VkExtent2D extend = vulkanBackend::Context::pWindow->GetExtent();
+        VkExtent2D extend = vulkanBackend::Context::window.GetExtent();
         return Float2(s_mouseX / extend.width, s_mouseY / extend.height);
     }
     float EventSystem::MouseScrollX()

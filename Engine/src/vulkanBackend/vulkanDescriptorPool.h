@@ -20,7 +20,8 @@ namespace emberEngine
 			LogicalDevice* m_pLogicalDevice;
 
 		public: // Methods:
-			DescriptorPool(LogicalDevice* pLogicalDevice);
+			DescriptorPool();
+			void Init(LogicalDevice* pLogicalDevice);
 			~DescriptorPool();
 			const VkDescriptorPool& GetVkDescriptorPool() const;
 		};

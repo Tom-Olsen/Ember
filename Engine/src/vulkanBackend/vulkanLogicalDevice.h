@@ -26,7 +26,8 @@ namespace emberEngine
 			DeviceQueue m_transferQueue;	// async transfer queue
 
 		public: // Methods:
-			LogicalDevice(PhysicalDevice* pPhysicalDevice, Surface* pSurface, std::vector<const char*> deviceExtensions);
+			LogicalDevice();
+			void Init(PhysicalDevice* pPhysicalDevice, Surface* pSurface, std::vector<const char*> deviceExtensions);
 			~LogicalDevice();
 
 			// Getters:

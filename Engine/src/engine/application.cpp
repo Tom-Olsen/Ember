@@ -81,12 +81,12 @@ namespace emberEngine
 			Time::Update();
 
 			GarbageCollector::CollectGarbage();
-			running = Context::pWindow->HandleEvents();
+			running = Context::window.HandleEvents();
 
 			// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
-			VkExtent2D windowExtent = Context::pWindow->GetExtent();
-			VkExtent2D surfaceExtend = Context::pSurface->GetCurrentExtent();
-			if (Context::pWindow->GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
+			VkExtent2D windowExtent = Context::window.GetExtent();
+			VkExtent2D surfaceExtend = Context::surface.GetCurrentExtent();
+			if (Context::window.GetIsMinimized() || windowExtent.width == 0 || windowExtent.height == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
 			{
 				SDL_Delay(10);
 				continue;

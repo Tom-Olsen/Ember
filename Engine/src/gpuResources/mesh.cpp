@@ -783,7 +783,7 @@ namespace emberEngine
 			m_uvs.resize(m_vertexCount, Float4::zero);
 
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::pLogicalDevice->GetGraphicsQueue().queue);
+			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_vertexBuffer == nullptr || m_vertexBuffer->GetCount() != m_vertexCount)
@@ -813,7 +813,7 @@ namespace emberEngine
 			m_uvs.resize(m_vertexCount, Float4::zero);
 
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::pLogicalDevice->GetGraphicsQueue().queue);
+			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_vertexBuffer == nullptr || m_vertexBuffer->GetCount() != m_vertexCount)
@@ -826,14 +826,14 @@ namespace emberEngine
 		stagingBuffer.SetData(m_tangents.data(), GetSizeOfTangents(), GetTangentsOffset());
 		stagingBuffer.SetData(m_colors.data(), GetSizeOfColors(), GetColorsOffset());
 		stagingBuffer.SetData(m_uvs.data(), GetSizeOfUVs(), GetUVsOffset());
-		stagingBuffer.UploadToBuffer(m_vertexBuffer.get(), Context::pLogicalDevice->GetGraphicsQueue());
+		stagingBuffer.UploadToBuffer(m_vertexBuffer.get(), Context::logicalDevice.GetGraphicsQueue());
 	}
 	#endif
 	#ifdef RESIZEABLE_BAR // No staging buffer:
 	void Mesh::UpdateIndexBuffer()
 	{
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::pLogicalDevice->GetGraphicsQueue().queue);
+			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_indexBuffer == nullptr || m_triangleCount != m_indexBuffer->GetCount())
@@ -850,7 +850,7 @@ namespace emberEngine
 	void Mesh::UpdateIndexBuffer()
 	{
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::pLogicalDevice->GetGraphicsQueue().queue);
+			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_indexBuffer == nullptr || m_triangleCount != m_indexBuffer->GetCount())
@@ -860,7 +860,7 @@ namespace emberEngine
 		uint64_t size = GetSizeOfTriangles();
 		StagingBuffer stagingBuffer(size);
 		stagingBuffer.SetData(GetTrianglesUnrolled(), size);
-		stagingBuffer.UploadToBuffer(m_indexBuffer.get(), Context::pLogicalDevice->GetGraphicsQueue());
+		stagingBuffer.UploadToBuffer(m_indexBuffer.get(), Context::logicalDevice.GetGraphicsQueue());
 	}
 	#endif
 }

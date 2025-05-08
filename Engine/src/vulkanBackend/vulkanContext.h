@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_vulkanContext_h__
 // Direct include instead of forward declaration,
 // as this is the main header file that includes all other Vulkan-related headers.
+// Also allows for vulkan objects to be in place instead of pointers -> better memory access.
 #include "sdlWindow.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanDescriptorPool.h"
@@ -44,15 +45,16 @@ namespace emberEngine
 			static PFN_vkSetDebugUtilsObjectNameEXT s_vkSetDebugUtilsObjectNameEXT;
 
 		public: // Members:
-			static std::unique_ptr<SdlWindow> pWindow;
-			static std::unique_ptr<Instance> pInstance;
-			static std::unique_ptr<PhysicalDevice> pPhysicalDevice;
-			static std::unique_ptr<Surface> pSurface;
-			static std::unique_ptr<LogicalDevice> pLogicalDevice;
-			static std::unique_ptr<MemoryAllocator> pAllocator;
-			static std::unique_ptr<AllocationTracker> pAllocationTracker;
-			static std::unique_ptr<DescriptorPool> pDescriptorPool;
-			static std::unique_ptr<Swapchain> pSwapchain;
+			static SdlWindow window;
+			static Instance instance;
+			static PhysicalDevice physicalDevice;
+			static Surface surface;
+			static LogicalDevice logicalDevice;
+			static MemoryAllocator allocator;
+			static AllocationTracker allocationTracker;
+			static DescriptorPool descriptorPool;
+			static Swapchain swapchains[2];
+			static uint32_t swapchainIndex;
 			static uint32_t framesInFlight;
 			static uint32_t frameIndex;
 			static uint64_t absoluteFrameIndex;
@@ -61,6 +63,7 @@ namespace emberEngine
 		public: // Methods:
 			static void Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight, bool vSyncEnabled);
 			static void Clear();
+			static void RebuildSwapchain();
 
 			// Getters:
 			static SDL_Window* const GetSDL_Window();

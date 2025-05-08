@@ -66,12 +66,12 @@ namespace emberEngine
 		initInfo.Instance = Context::GetVkInstance();
 		initInfo.PhysicalDevice = Context::GetVkPhysicalDevice();
 		initInfo.Device = Context::GetVkDevice();
-		initInfo.QueueFamily = Context::pLogicalDevice->GetGraphicsQueue().familyIndex;
-		initInfo.Queue = Context::pLogicalDevice->GetGraphicsQueue().queue;
+		initInfo.QueueFamily = Context::logicalDevice.GetGraphicsQueue().familyIndex;
+		initInfo.Queue = Context::logicalDevice.GetGraphicsQueue().queue;
 		initInfo.RenderPass = RenderPassManager::GetPresentRenderPass()->GetVkRenderPass();
 		initInfo.DescriptorPoolSize = 2;	// DescriptorPoolSize > 0 means Imgui backend creates its own VkDescriptorPool. Need at least 1 + as many as additional calls done to ImGui_ImplVulkan_AddTexture()
 		initInfo.MinImageCount = 2;
-		initInfo.ImageCount = Context::pSwapchain->GetImages().size();
+		initInfo.ImageCount = Context::swapchains[Context::swapchainIndex].GetImages().size();
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		ImGui_ImplVulkan_Init(&initInfo);
 
@@ -255,6 +255,6 @@ namespace emberEngine
 		writeDescriptor.descriptorCount = 1;
 		writeDescriptor.pImageInfo = &imageInfo;
 
-		vkUpdateDescriptorSets(Context::pLogicalDevice->GetVkDevice(), 1, &writeDescriptor, 0, nullptr);
+		vkUpdateDescriptorSets(Context::logicalDevice.GetVkDevice(), 1, &writeDescriptor, 0, nullptr);
 	}
 }

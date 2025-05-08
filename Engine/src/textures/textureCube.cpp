@@ -69,7 +69,7 @@ namespace emberEngine
 		VkImageCreateFlags imageFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-		DeviceQueue queue = Context::pLogicalDevice->GetTransferQueue();
+		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
 		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 
 		// Transition0: Layout: undefined->transfer, Queue: transfer
@@ -83,11 +83,11 @@ namespace emberEngine
 		// Copy: pixelData -> stagingBuffer -> image
 		StagingBuffer stagingBuffer(bufferSize);
 		stagingBuffer.SetData(pFacePixels, bufferSize);
-		stagingBuffer.UploadToImage(m_pImage.get(), Context::pLogicalDevice->GetTransferQueue(), subresourceRange.layerCount);
+		stagingBuffer.UploadToImage(m_pImage.get(), Context::logicalDevice.GetTransferQueue(), subresourceRange.layerCount);
 
 		// Transition1: Layout: transfer->shader read, Queue: transfer->graphics
 		VkImageLayout newLayout1 = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		DeviceQueue newQueue1 = Context::pLogicalDevice->GetGraphicsQueue();
+		DeviceQueue newQueue1 = Context::logicalDevice.GetGraphicsQueue();
 		VkPipelineStageFlags2 srcStage1 = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 		VkPipelineStageFlags2 dstStage1 = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
 		VkAccessFlags2 srcAccessMask1 = VK_ACCESS_2_TRANSFER_WRITE_BIT;

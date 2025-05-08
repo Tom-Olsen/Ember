@@ -39,7 +39,7 @@ namespace emberEngine
 			s_sessionCount = math::Max(1, sessionCount);
 
 			// Init command pool:
-			s_pCommandPool = std::make_unique<CommandPool>(sessionCount, Context::pLogicalDevice->GetComputeQueue());
+			s_pCommandPool = std::make_unique<CommandPool>(sessionCount, Context::logicalDevice.GetComputeQueue());
 
 			// Resize compute sessions and fences:
 			s_computeSessions.resize(10);

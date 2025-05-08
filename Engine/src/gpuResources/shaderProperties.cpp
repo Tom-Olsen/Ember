@@ -417,7 +417,7 @@ namespace emberEngine
 		allocInfo.pSetLayouts = layouts.data();
 
 		m_descriptorSets.resize(Context::framesInFlight);
-		VKA(vkAllocateDescriptorSets(Context::pLogicalDevice->GetVkDevice(), &allocInfo, m_descriptorSets.data()));
+		VKA(vkAllocateDescriptorSets(Context::logicalDevice.GetVkDevice(), &allocInfo, m_descriptorSets.data()));
 	}
 	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferResourceBinding)
 	{

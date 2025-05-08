@@ -54,13 +54,13 @@ namespace emberEngine
 		size = math::Min(size, m_size);
 		StagingBuffer stagingBuffer(size);
 		stagingBuffer.SetData(pSrc, size);
-		stagingBuffer.UploadToBuffer((Buffer*)this, Context::pLogicalDevice->GetTransferQueue());
+		stagingBuffer.UploadToBuffer((Buffer*)this, Context::logicalDevice.GetTransferQueue());
 	}
 	void StorageBuffer::Download(void* pDst, uint64_t size)
 	{
 		size = math::Min(size, m_size);
 		StagingBuffer stagingBuffer(size);
-		stagingBuffer.DownloadFromBuffer((Buffer*)this, vulkanBackend::Context::pLogicalDevice->GetTransferQueue());
+		stagingBuffer.DownloadFromBuffer((Buffer*)this, Context::logicalDevice.GetTransferQueue());
 		stagingBuffer.GetData(pDst, size);
 	}
 }

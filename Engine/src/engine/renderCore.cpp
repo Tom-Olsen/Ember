@@ -45,7 +45,7 @@ namespace emberEngine
 		// Command pools:
 		m_commandPools.reserve(Context::framesInFlight);
 		for (uint32_t i = 0; i < Context::framesInFlight; i++)
-			m_commandPools.emplace_back(RenderStage::stageCount, Context::pLogicalDevice->GetGraphicsQueue());
+			m_commandPools.emplace_back(RenderStage::stageCount, Context::logicalDevice.GetGraphicsQueue());
 
 		// Debug naming:
 		NAME_VK_COMMAND_POOL(m_commandPools[0].GetVkCommandPool(), "renderCorePool0");
@@ -78,8 +78,8 @@ namespace emberEngine
 	bool RenderCore::RenderFrame()
 	{
 		// Resize Swapchain if needed:
-		VkExtent2D windowExtent = Context::pWindow->GetExtent();
-		VkExtent2D surfaceExtend = Context::pSurface->GetCurrentExtent();
+		VkExtent2D windowExtent = Context::window.GetExtent();
+		VkExtent2D surfaceExtend = Context::surface.GetCurrentExtent();
 		if (m_rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height != surfaceExtend.height)
 		{
 			m_rebuildSwapchain = false;
@@ -121,12 +121,8 @@ namespace emberEngine
 	// Private methods:
 	void RenderCore::RebuildSwapchain()
 	{
-		// Wait for graphicsQueue to finish:
-		VKA(vkQueueWaitIdle(Context::pLogicalDevice->GetGraphicsQueue().queue));
-
 		// Recreate swapchain:
-		std::unique_ptr<Swapchain> newSwapchain = std::make_unique<Swapchain>(Context::pLogicalDevice.get(), Context::pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, Context::pSwapchain.get());
-		Context::pSwapchain.swap(newSwapchain);
+		Context::RebuildSwapchain();	// calls WaitDeviceIdle().
 
 		// Recreate renderpasses:
 		RenderPassManager::RecreateRenderPasses();
@@ -143,9 +139,9 @@ namespace emberEngine
 		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[Context::frameIndex], VK_NULL_HANDLE, &m_imageIndex);
 
 		// Resize if needed:
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || Context::pWindow->GetFramebufferResized())
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || Context::window.GetFramebufferResized())
 		{
-			Context::pWindow->SetFramebufferResized(false);
+			Context::window.SetFramebufferResized(false);
 			m_rebuildSwapchain = true;
 			return false;
 		}
@@ -559,8 +555,8 @@ namespace emberEngine
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = (float)Context::pSurface->GetCurrentExtent().width;
-			viewport.height = (float)Context::pSurface->GetCurrentExtent().height;
+			viewport.width = (float)Context::surface.GetCurrentExtent().width;
+			viewport.height = (float)Context::surface.GetCurrentExtent().height;
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -575,7 +571,7 @@ namespace emberEngine
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffers()[m_imageIndex];
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = Context::pSurface->GetCurrentExtent();
+			renderPassBeginInfo.renderArea.extent = Context::surface.GetCurrentExtent();
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -619,7 +615,7 @@ namespace emberEngine
 			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::preRenderCompute);//  m_preRenderComputeCommands[Context::frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &m_preRenderComputeToShadowSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
 		}
 
 		// Shadow render pass submission:
@@ -633,7 +629,7 @@ namespace emberEngine
 			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::shadow);//m_shadowCommands[Context::frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
 		}
 
 		// Forward render pass submission:
@@ -647,7 +643,7 @@ namespace emberEngine
 			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::forward);//m_forwardCommands[Context::frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
 		}
 
 		// Post render compute submission:
@@ -661,7 +657,7 @@ namespace emberEngine
 			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::postRenderCompute);//m_postRenderComputeCommands[Context::frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &m_postRenderToPresentSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
 		}
 
 		// Present render pass submission: (signal fence when done)
@@ -675,7 +671,7 @@ namespace emberEngine
 			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::present);//m_presentCommands[Context::frameIndex].GetVkCommandBuffer();
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &m_releaseSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::pLogicalDevice->GetGraphicsQueue().queue, 1, &submitInfo, m_fences[Context::frameIndex]));
+			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_fences[Context::frameIndex]));
 		}
 	}
 	bool RenderCore::PresentImage()
@@ -687,7 +683,7 @@ namespace emberEngine
 		presentInfo.pSwapchains = &Context::GetVkSwapchainKHR();
 		presentInfo.pImageIndices = &m_imageIndex;
 
-		VkResult result = vkQueuePresentKHR(Context::pLogicalDevice->GetPresentQueue().queue, &presentInfo);
+		VkResult result = vkQueuePresentKHR(Context::logicalDevice.GetPresentQueue().queue, &presentInfo);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		{

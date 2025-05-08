@@ -15,6 +15,10 @@ namespace emberEngine
 		{
 
 		}
+		void AllocationTracker::Init()
+		{
+
+		}
 		AllocationTracker::~AllocationTracker()
 		{
 			#ifdef VALIDATION_LAYERS_ACTIVE

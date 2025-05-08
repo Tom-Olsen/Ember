@@ -1,6 +1,7 @@
 #include "vulkanPhysicalDevice.h"
 #include "vulkanInstance.h"
 #include "vulkanMacros.h"
+#include <assert.h>
 
 
 
@@ -9,8 +10,19 @@ namespace emberEngine
 	namespace vulkanBackend
 	{
 		// Constructor/Destructor:
-		PhysicalDevice::PhysicalDevice(Instance* pInstance)
+		PhysicalDevice::PhysicalDevice()
 		{
+			m_physicalDevice = VK_NULL_HANDLE;
+			m_maxMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
+			m_supportsDepthClamp = false;
+			m_supportsDepthBiasClamp = false;
+			m_supportsMultiViewport = false;
+		}
+		void PhysicalDevice::Init(Instance* pInstance)
+		{
+			// Assertions:
+			assert(pInstance != nullptr);
+
 			uint32_t numPhysicalDevices = 0;
 			VKA(vkEnumeratePhysicalDevices(pInstance->GetVkInstance(), &numPhysicalDevices, nullptr));
 			if (numPhysicalDevices == 0)

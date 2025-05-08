@@ -12,15 +12,16 @@ namespace emberEngine
 		// Static members:
 		bool Context::s_isInitialized = false;
 		PFN_vkSetDebugUtilsObjectNameEXT Context::s_vkSetDebugUtilsObjectNameEXT;
-		std::unique_ptr<SdlWindow> Context::pWindow = nullptr;
-		std::unique_ptr<Instance> Context::pInstance = nullptr;
-		std::unique_ptr<PhysicalDevice> Context::pPhysicalDevice = nullptr;
-		std::unique_ptr<Surface> Context::pSurface = nullptr;
-		std::unique_ptr<LogicalDevice> Context::pLogicalDevice = nullptr;
-		std::unique_ptr<MemoryAllocator> Context::pAllocator = nullptr;
-		std::unique_ptr< AllocationTracker> Context::pAllocationTracker = nullptr;
-		std::unique_ptr<DescriptorPool> Context::pDescriptorPool = nullptr;
-		std::unique_ptr<Swapchain> Context::pSwapchain = nullptr;
+		SdlWindow Context::window;
+		Instance Context::instance;
+		PhysicalDevice Context::physicalDevice;
+		Surface Context::surface;
+		LogicalDevice Context::logicalDevice;
+		MemoryAllocator Context::allocator;
+		AllocationTracker Context::allocationTracker;
+		DescriptorPool Context::descriptorPool;
+		Swapchain Context::swapchains[2];
+		uint32_t Context::swapchainIndex;
 		uint32_t Context::framesInFlight;
 		uint32_t Context::frameIndex;
 		uint64_t Context::absoluteFrameIndex;
@@ -40,7 +41,7 @@ namespace emberEngine
 			absoluteFrameIndex = 0;
 
 			// Window:
-			pWindow = std::make_unique<SdlWindow>(windowWidth, windowHeight);
+			window.Init(windowWidth, windowHeight);
 
 			// Get instance extensions:
 			std::vector<const char*> instanceExtensions;
@@ -48,7 +49,7 @@ namespace emberEngine
 			instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 			instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 			#endif
-			pWindow->AddSdlInstanceExtensions(instanceExtensions);		// sdl instance extensions
+			window.AddSdlInstanceExtensions(instanceExtensions);			// sdl instance extensions
 			DearImGui::AddImGuiInstanceExtensions(instanceExtensions);	// add instance extensions for docking feature
 			// and more ...
 
@@ -61,17 +62,18 @@ namespace emberEngine
 			// and more ...
 
 			// Create vulkan context:
-			pInstance = std::make_unique<Instance>(instanceExtensions);
-			pPhysicalDevice = std::make_unique<PhysicalDevice>(pInstance.get());
-			pSurface = std::make_unique<Surface>(pInstance.get(), pPhysicalDevice.get(), pWindow.get(), vSyncEnabled);
-			pLogicalDevice = std::make_unique<LogicalDevice>(pPhysicalDevice.get(), pSurface.get(), deviceExtensions);
-			pAllocator = std::make_unique<MemoryAllocator>(pInstance.get(), pLogicalDevice.get(), pPhysicalDevice.get());
-			pAllocationTracker = std::make_unique<AllocationTracker>();
-			pDescriptorPool = std::make_unique<DescriptorPool>(pLogicalDevice.get());
-			pSwapchain = std::make_unique<Swapchain>(pLogicalDevice.get(), pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+			instance.Init(instanceExtensions);
+			physicalDevice.Init(&instance);
+			surface.Init(&instance, &physicalDevice, &window, vSyncEnabled);
+			logicalDevice.Init(&physicalDevice, &surface, deviceExtensions);
+			allocator.Init(&instance, &logicalDevice, &physicalDevice);
+			allocationTracker.Init();
+			descriptorPool.Init(&logicalDevice);
+			swapchains[0].Init(&logicalDevice, &surface, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+			swapchainIndex = 0;
 
 			// Set msaa sampling value:
-			msaaSamples = std::min(msaaSamplesValue, pPhysicalDevice->GetMaxMsaaSamples());
+			msaaSamples = std::min(msaaSamplesValue, physicalDevice.GetMaxMsaaSamples());
 
 			// Load vulkan debug utility object naming function:
 			#if defined(VALIDATION_LAYERS_ACTIVE)
@@ -79,23 +81,20 @@ namespace emberEngine
 			#endif
 
 			// Debug naming:
-			NAME_VK_QUEUE(pLogicalDevice->GetGraphicsQueue().queue, "graphicsQueue");
-			NAME_VK_QUEUE(pLogicalDevice->GetPresentQueue().queue, "presentQueue");
-			NAME_VK_QUEUE(pLogicalDevice->GetComputeQueue().queue, "computeQueue");
-			NAME_VK_QUEUE(pLogicalDevice->GetTransferQueue().queue, "transferQueue");
+			NAME_VK_QUEUE(logicalDevice.GetGraphicsQueue().queue, "graphicsQueue");
+			NAME_VK_QUEUE(logicalDevice.GetPresentQueue().queue, "presentQueue");
+			NAME_VK_QUEUE(logicalDevice.GetComputeQueue().queue, "computeQueue");
+			NAME_VK_QUEUE(logicalDevice.GetTransferQueue().queue, "transferQueue");
 		}
 		void Context::Clear()
 		{
 			WaitDeviceIdle();
-			pSwapchain.reset();
-			pDescriptorPool.reset();
-			pAllocationTracker.reset();
-			pAllocator.reset();
-			pLogicalDevice.reset();
-			pSurface.reset();
-			pPhysicalDevice.reset();
-			pInstance.reset();
-			pWindow.reset();
+		}
+		void Context::RebuildSwapchain()
+		{
+			swapchains[(int)!swapchainIndex].Init(&logicalDevice, &surface, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, &swapchains[swapchainIndex]);
+			swapchains[swapchainIndex].Clear();
+			swapchainIndex = (int)!swapchainIndex;
 		}
 
 
@@ -103,43 +102,43 @@ namespace emberEngine
 		// Getters:
 		SDL_Window* const Context::GetSDL_Window()
 		{
-			return pWindow->GetSDL_Window();
+			return window.GetSDL_Window();
 		}
 		const VkInstance& Context::GetVkInstance()
 		{
-			return pInstance->GetVkInstance();
+			return instance.GetVkInstance();
 		}
 		const VkPhysicalDevice& Context::GetVkPhysicalDevice()
 		{
-			return pPhysicalDevice->GetVkPhysicalDevice();
+			return physicalDevice.GetVkPhysicalDevice();
 		}
 		const VkSurfaceKHR& Context::GetVkSurfaceKHR()
 		{
-			return pSurface->GetVkSurfaceKHR();
+			return surface.GetVkSurfaceKHR();
 		}
 		const VkDevice& Context::GetVkDevice()
 		{
-			return pLogicalDevice->GetVkDevice();
+			return logicalDevice.GetVkDevice();
 		}
 		const VmaAllocator& Context::GetVmaAllocator()
 		{
-			return pAllocator->GetVmaAllocator();
+			return allocator.GetVmaAllocator();
 		}
 		const VkDescriptorPool& Context::GetVkDescriptorPool()
 		{
-			return pDescriptorPool->GetVkDescriptorPool();
+			return descriptorPool.GetVkDescriptorPool();
 		}
 		const VkSwapchainKHR& Context::GetVkSwapchainKHR()
 		{
-			return pSwapchain->GetVkSwapchainKHR();
+			return swapchains[swapchainIndex].GetVkSwapchainKHR();
 		}
 		bool Context::DepthClampEnabled()
 		{
-			return pPhysicalDevice->SupportsDepthClamp();
+			return physicalDevice.SupportsDepthClamp();
 		}
 		bool Context::DepthBiasClampEnabled()
 		{
-			return pPhysicalDevice->SupportsDepthBiasClamp();
+			return physicalDevice.SupportsDepthBiasClamp();
 		}
 
 
@@ -156,7 +155,7 @@ namespace emberEngine
 		}
 		void Context::WaitDeviceIdle()
 		{
-			VKA(vkDeviceWaitIdle(pLogicalDevice->GetVkDevice()));
+			VKA(vkDeviceWaitIdle(logicalDevice.GetVkDevice()));
 		}
 
 		// Object naming:

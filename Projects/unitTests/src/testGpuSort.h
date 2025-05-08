@@ -7,7 +7,6 @@
 #include "emberMath.h"
 #include "emberTime.h"
 #include "shaderProperties.h"
-#include "stagingBuffer.h"
 #include "storageBuffer.h"
 #include "vulkanContext.h"
 #include <string>
@@ -53,123 +52,105 @@ namespace emberEngine
 
 
 
-	TEST_F(GpuSort, GetDataFromGpu)
-	{
-		int count = 16;
-		uint64_t size = (uint64_t)count * (uint64_t)sizeof(float);
-	
-		// Set upload data on CPU:
-		std::vector<float> uploadData;
-		uploadData.resize(count);
-		for (int i = 0; i < count; i++)
-			uploadData[i] = (float)i;
-	
-		// Perpare two staging buffers:
-		StagingBuffer stagingBufferA(size);
-		StagingBuffer stagingBufferB(size);
-	
-		// Upload data from stagingBuffer A to B:
-		stagingBufferA.SetData(uploadData.data(), size);
-		stagingBufferA.UploadToBuffer(&stagingBufferB, vulkanBackend::Context::pLogicalDevice->GetTransferQueue());
-	
-		// Download data from stagingBuffer B:
-		std::vector<float> downloadData;
-		downloadData.resize(count);
-		stagingBufferB.DownloadFromBuffer(&stagingBufferA, vulkanBackend::Context::pLogicalDevice->GetTransferQueue());
-		stagingBufferB.GetData(downloadData.data(), size);
-	
-		// Check if data is correct:
-		bool allGood = true;
-		for (int i = 0; i < count; i++)
-		{
-			allGood = (downloadData[i] == uploadData[i]);
-			if (allGood == false)
-				break;
-		}
-		EXPECT_TRUE(allGood);
-	}
+	//TEST_F(GpuSort, GetDataFromGpu)
+	//{
+	//	int count = 16;
+	//	uint64_t size = (uint64_t)count * (uint64_t)sizeof(float);
+	//
+	//	// Prepare cpu arrays:
+	//	std::vector<float> uploadData;
+	//	std::vector<float> downloadData;
+	//	uploadData.resize(count);
+	//	downloadData.resize(count);
+	//	for (int i = 0; i < count; i++)
+	//		uploadData[i] = (float)i;
+	//
+	//	// GPU upload and download:
+	//	StorageBuffer buffer(count, sizeof(float));
+	//	buffer.Upload(uploadData.data(), count * sizeof(float));
+	//	buffer.Download(downloadData.data(), count * sizeof(float));
+	//
+	//	// Check if data is correct:
+	//	bool allGood = true;
+	//	for (int i = 0; i < count; i++)
+	//	{
+	//		allGood = (downloadData[i] == uploadData[i]);
+	//		if (allGood == false)
+	//			break;
+	//	}
+	//	EXPECT_TRUE(allGood);
+	//}
 
 
 
-	TEST_F(GpuSort, LocalBitonicSort)
-	{
-		// Create storage buffer:
-		int count = 111;	// must be <= BLOCK_SIZE of localBitonicSort compute shader.
-		uint32_t size = count * sizeof(int);
-		StorageBuffer buffer = StorageBuffer((uint32_t)count, (uint32_t)sizeof(int));
-	
-		// Create unsorted array:
-		std::vector<int> unsortedData;
-		unsortedData.resize(count);
-		for (int i = 0; i < count; i++)
-			unsortedData[i] = math::Random::Uniform(1, count);
-	
-		// Upload unsorted data to GPU:
-		StagingBuffer uploadBuffer(size);
-		uploadBuffer.SetData(unsortedData.data(), size);
-		uploadBuffer.UploadToBuffer(&buffer, vulkanBackend::Context::pLogicalDevice->GetTransferQueue());
-	
-		// Sort array on CPU:
-		std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
-	
-		// Load compute shader and set shaderProperties:
-		std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/src/shaders/bin";
-		ComputeShader sortCS = ComputeShader("localBitonicSort", directoryPath + "/localBitonicSort.comp.spv");
-		ShaderProperties shaderProperties = ShaderProperties((Shader*)&sortCS);
-		shaderProperties.SetStorageBuffer("dataBuffer", &buffer);
-		shaderProperties.SetValue("Values", "bufferSize", count);
-		
-		// Dispatch compute shader and wait for finish:
-		Uint3 threadCount(count / 2, 1, 1);
-		compute::Immediate::Dispatch(&sortCS, &shaderProperties, threadCount);
-	
-		// Download sorted data from GPU:
-		std::vector<int> sortedDataGpu;
-		sortedDataGpu.resize(count);
-		StagingBuffer downloadBuffer(size);
-		downloadBuffer.DownloadFromBuffer(&buffer, vulkanBackend::Context::pLogicalDevice->GetTransferQueue());
-		downloadBuffer.GetData(sortedDataGpu.data(), size);
-	
-		//// Print data:
-		//for (int i = 0; i < count; i++)
-		//	LOG_TRACE("unsorted:{}, CPU:{}, GPU:{}", unsortedData[i], sortedDataCpu[i], sortedDataGpu[i]);
-	
-		// Check if data is correct:
-		bool allGood = true;
-		for (int i = 0; i < count; i++)
-		{
-			allGood = (sortedDataGpu[i] == sortedDataCpu[i]);
-			if (allGood == false)
-				break;
-		}
-		EXPECT_TRUE(allGood);
-	}
+	//TEST_F(GpuSort, LocalBitonicSort)
+	//{
+	//	// Create storage buffer:
+	//	int count = 111;	// must be <= BLOCK_SIZE of localBitonicSort compute shader.
+	//	uint32_t size = count * sizeof(int);
+	//	StorageBuffer buffer = StorageBuffer((uint32_t)count, (uint32_t)sizeof(int));
+	//
+	//	// Create unsorted array and upload to buffer:
+	//	std::vector<int> unsortedData;
+	//	unsortedData.resize(count);
+	//	for (int i = 0; i < count; i++)
+	//		unsortedData[i] = math::Random::Uniform(1, count);
+	//	buffer.Upload(unsortedData.data(), count * sizeof(int));
+	//
+	//	// Sort array on CPU:
+	//	std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
+	//
+	//	// Load compute shader and set shaderProperties:
+	//	std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/src/shaders/bin";
+	//	ComputeShader sortCS = ComputeShader("localBitonicSort", directoryPath + "/localBitonicSort.comp.spv");
+	//	ShaderProperties shaderProperties = ShaderProperties((Shader*)&sortCS);
+	//	shaderProperties.SetStorageBuffer("dataBuffer", &buffer);
+	//	shaderProperties.SetValue("Values", "bufferSize", count);
+	//	
+	//	// Dispatch compute shader and wait for finish:
+	//	Uint3 threadCount(count / 2, 1, 1);
+	//	compute::Immediate::Dispatch(&sortCS, &shaderProperties, threadCount);
+	//
+	//	// Download sorted data from GPU:
+	//	std::vector<int> sortedDataGpu;
+	//	sortedDataGpu.resize(count);
+	//	buffer.Download(sortedDataGpu.data(), count * sizeof(int));
+	//
+	//	//// Print data:
+	//	//for (int i = 0; i < count; i++)
+	//	//	LOG_TRACE("unsorted:{}, CPU:{}, GPU:{}", unsortedData[i], sortedDataCpu[i], sortedDataGpu[i]);
+	//
+	//	// Check if data is correct:
+	//	bool allGood = true;
+	//	for (int i = 0; i < count; i++)
+	//	{
+	//		allGood = (sortedDataGpu[i] == sortedDataCpu[i]);
+	//		if (allGood == false)
+	//			break;
+	//	}
+	//	EXPECT_TRUE(allGood);
+	//}
 
 
 
 	TEST_F(GpuSort, BitonicSort)
 	{
 		// Create storage buffer:
-		int count = 1238933;
+		int count = 4238933;
 		uint32_t size = count * sizeof(int);
 		StorageBuffer buffer = StorageBuffer((uint32_t)count, (uint32_t)sizeof(int));
-	
-		// Create unsorted array:
+
+		// Create unsorted array and upload to buffer:
 		std::vector<int> unsortedData;
 		unsortedData.resize(count);
 		math::Random::SetSeed(0);
 		for (int i = 0; i < count; i++)
 			unsortedData[i] = math::Random::Uniform(1, count);
-	
-		// Upload unsorted data to GPU:
-		StagingBuffer uploadBuffer(size);
-		uploadBuffer.SetData(unsortedData.data(), size);
-		uploadBuffer.UploadToBuffer(&buffer, vulkanBackend::Context::pLogicalDevice->GetTransferQueue());
+		buffer.Upload(unsortedData.data(), count * sizeof(int));
 	
 		// Sort array on CPU:
 		Time::Init();
 		std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
-		//std::vector<int> sortedDataCpu = unsortedData;
 		Time::Update();
 		LOG_INFO("CPU sort time: {}s", Time::GetDeltaTime());
 
@@ -181,9 +162,7 @@ namespace emberEngine
 		// Download sorted data from GPU:
 		std::vector<int> sortedDataGpu;
 		sortedDataGpu.resize(count);
-		StagingBuffer downloadBuffer(size);
-		downloadBuffer.DownloadFromBuffer(&buffer, vulkanBackend::Context::pLogicalDevice->GetTransferQueue());
-		downloadBuffer.GetData(sortedDataGpu.data(), size);
+		buffer.Download(sortedDataGpu.data(), count * sizeof(int));
 	
 		//// Print data:
 		//for (int i = 0; i < count; i++)

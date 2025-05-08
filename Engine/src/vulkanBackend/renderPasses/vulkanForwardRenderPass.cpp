@@ -173,7 +173,7 @@ namespace emberEngine
 			allocationInfo.preferredFlags = 0;
 
 			VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-			DeviceQueue queue = Context::pLogicalDevice->GetGraphicsQueue();
+			DeviceQueue queue = Context::logicalDevice.GetGraphicsQueue();
 			m_pMsaaImage = std::make_unique<VmaImage>("msaaImage", imageInfo, allocationInfo, subresourceRange, viewType, queue);
 		}
 		void ForwardRenderPass::CreateDepthImage()
@@ -207,7 +207,7 @@ namespace emberEngine
 			allocationInfo.preferredFlags = 0;
 
 			VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-			DeviceQueue queue = Context::pLogicalDevice->GetGraphicsQueue();
+			DeviceQueue queue = Context::logicalDevice.GetGraphicsQueue();
 			m_pDepthImage = std::make_unique<VmaImage>("depthImage", imageInfo, allocationInfo, subresourceRange, viewType, queue);
 
 			// Transition: Layout: undefined->depth attachment, Queue: graphics

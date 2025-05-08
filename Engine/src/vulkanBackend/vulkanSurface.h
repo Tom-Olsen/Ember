@@ -30,7 +30,8 @@ namespace emberEngine
 			SdlWindow* m_pWindow;
 
 		public: // Methods:
-			Surface(Instance* pInstance, PhysicalDevice* pPhysicalDevice, SdlWindow* pWindow, bool vSyncEnabled);
+			Surface();
+			void Init(Instance* pInstance, PhysicalDevice* pPhysicalDevice, SdlWindow* pWindow, bool vSyncEnabled);
 			~Surface();
 
 			// Getters:

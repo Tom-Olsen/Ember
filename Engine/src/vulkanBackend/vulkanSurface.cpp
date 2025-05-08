@@ -3,6 +3,7 @@
 #include "vulkanInstance.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
+#include <assert.h>
 #include <SDL3/SDL_vulkan.h>
 
 
@@ -12,8 +13,20 @@ namespace emberEngine
 	namespace vulkanBackend
 	{
 		// Constructor/Destructor:
-		Surface::Surface(Instance* pInstance, PhysicalDevice* pPhysicalDevice, SdlWindow* pWindow, bool vSyncEnabled)
+		Surface::Surface()
 		{
+			m_surface = VK_NULL_HANDLE;
+			m_pInstance = nullptr;
+			m_pPhysicalDevice = nullptr;
+			m_pWindow = nullptr;
+		}
+		void Surface::Init(Instance* pInstance, PhysicalDevice* pPhysicalDevice, SdlWindow* pWindow, bool vSyncEnabled)
+		{
+			// Assertions:
+			assert(pInstance != nullptr);
+			assert(pPhysicalDevice != nullptr);
+			assert(pWindow != nullptr);
+
 			m_pInstance = pInstance;
 			m_pPhysicalDevice = pPhysicalDevice;
 			m_pWindow = pWindow;

@@ -3,8 +3,8 @@
 #include "eventSystem.h"
 #include "dearImGui.h"
 #include "vulkanMacros.h"
+#include <assert.h>
 #include <SDL3/SDL_vulkan.h>
-#include <iostream>
 
 
 
@@ -13,8 +13,18 @@ namespace emberEngine
 	namespace vulkanBackend
 	{
 		// Constructor/Destructor:
-		SdlWindow::SdlWindow(uint16_t width, uint16_t height)
+		SdlWindow::SdlWindow()
 		{
+			m_pWindow = nullptr;
+			m_isMinimized = false;
+			m_framebufferResized = false;
+		}
+		void SdlWindow::Init(uint16_t width, uint16_t height)
+		{
+			// Assertions:
+			assert(width > 0);
+			assert(height > 0);
+
 			// Initialize SDL:
 			if (SDL_Init(SDL_INIT_VIDEO) == false)	// crashes after pulling latest version of sdl3
 				throw std::runtime_error((std::string)"SDL_Init: " + (std::string)SDL_GetError());

@@ -239,7 +239,7 @@ namespace emberEngine
 		}
 		void VmaImage::GenerateMipmaps(uint32_t mipLevels)
 		{
-			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(Context::pLogicalDevice->GetGraphicsQueue());
+			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetGraphicsQueue());
 
 			VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 			barrier.image = m_image;
@@ -316,7 +316,7 @@ namespace emberEngine
 				0, nullptr,
 				1, &barrier);
 
-			SingleTimeCommand::EndCommand(Context::pLogicalDevice->GetGraphicsQueue());
+			SingleTimeCommand::EndCommand(Context::logicalDevice.GetGraphicsQueue());
 
 			m_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		}

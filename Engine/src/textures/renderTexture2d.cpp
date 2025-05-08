@@ -33,7 +33,7 @@ namespace emberEngine
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		DeviceQueue queue = Context::pLogicalDevice->GetTransferQueue();
+		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
 		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 	}
 	RenderTexture2d::~RenderTexture2d()

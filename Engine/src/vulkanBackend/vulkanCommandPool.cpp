@@ -2,6 +2,7 @@
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
 #include <stdexcept>
+#include <assert.h>
 
 
 
@@ -12,6 +13,9 @@ namespace emberEngine
 		// Constructor/Destructor:
 		CommandPool::CommandPool(int bufferCount, DeviceQueue queue)
 		{
+			// Assertions:
+			assert(queue.queue != VK_NULL_HANDLE);
+
 			VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 			createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;	// required for vkResetCommandBuffer(...)
 			createInfo.queueFamilyIndex = queue.familyIndex;

@@ -22,6 +22,7 @@ namespace emberEngine
 
 		public: // Methods:
 			AllocationTracker();
+			void Init();
 			~AllocationTracker();
 
 			void AddVmaBuffer(VmaBuffer* vmaBuffer);

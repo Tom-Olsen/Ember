@@ -21,7 +21,8 @@ namespace emberEngine
 			VmaAllocator m_pAllocator;
 
 		public: // Methods:
-			MemoryAllocator(Instance* pInstance, LogicalDevice* pLogicalDevice, PhysicalDevice* pPhysicalDevice);
+			MemoryAllocator();
+			void Init(Instance* pInstance, LogicalDevice* pLogicalDevice, PhysicalDevice* pPhysicalDevice);
 			~MemoryAllocator();
 			const VmaAllocator& GetVmaAllocator() const;
 		};

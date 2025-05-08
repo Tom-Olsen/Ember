@@ -25,7 +25,9 @@ namespace emberEngine
 			Surface* m_pSurface;
 
 		public: // Methods:
-			Swapchain(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usage, Swapchain* pOldSwapchain = nullptr);
+			Swapchain();
+			void Init(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usage, Swapchain* pOldSwapchain = nullptr);
+			void Clear();
 			~Swapchain();
 
 			// Getters:

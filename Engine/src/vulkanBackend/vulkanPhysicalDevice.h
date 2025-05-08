@@ -18,12 +18,13 @@ namespace emberEngine
 		private: // Members:
 			VkPhysicalDevice m_physicalDevice;
 			VkSampleCountFlagBits m_maxMsaaSamples;
-			VkBool32 m_supportsDepthClamp = false;
-			VkBool32 m_supportsDepthBiasClamp = false;
-			VkBool32 m_supportsMultiViewport = false;
+			VkBool32 m_supportsDepthClamp;
+			VkBool32 m_supportsDepthBiasClamp;
+			VkBool32 m_supportsMultiViewport;
 
 		public: // Methods:
-			PhysicalDevice(Instance* pInstance);
+			PhysicalDevice();
+			void Init(Instance* pInstance);
 			~PhysicalDevice();
 
 			const VkPhysicalDevice& GetVkPhysicalDevice() const;

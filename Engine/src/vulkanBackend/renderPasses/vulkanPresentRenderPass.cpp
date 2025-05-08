@@ -31,7 +31,7 @@ namespace emberEngine
 		{
 			// Attachments:
 			VkAttachmentDescription attachment = {};
-			attachment.format = Context::pSurface->GetVkSurfaceFormatKHR().format;
+			attachment.format = Context::surface.GetVkSurfaceFormatKHR().format;
 			attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 			attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -71,8 +71,8 @@ namespace emberEngine
 		}
 		void PresentRenderPass::CreateFrameBuffers()
 		{
-			size_t imageCount = Context::pSwapchain->GetImages().size();
-			VkExtent2D extent = Context::pSurface->GetCurrentExtent();
+			size_t imageCount = Context::swapchains[Context::swapchainIndex].GetImages().size();
+			VkExtent2D extent = Context::surface.GetCurrentExtent();
 			m_framebuffers.resize(imageCount);
 
 			for (size_t i = 0; i < imageCount; i++)
@@ -80,7 +80,7 @@ namespace emberEngine
 				VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 				framebufferInfo.renderPass = m_renderPass;
 				framebufferInfo.attachmentCount = 1;
-				framebufferInfo.pAttachments = &Context::pSwapchain->GetImageViews()[i];
+				framebufferInfo.pAttachments = &Context::swapchains[Context::swapchainIndex].GetImageViews()[i];
 				framebufferInfo.width = extent.width;
 				framebufferInfo.height = extent.height;
 				framebufferInfo.layers = 1;

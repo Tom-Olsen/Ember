@@ -1,6 +1,7 @@
 #include "vulkanDescriptorPool.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
+#include <assert.h>
 
 
 
@@ -9,8 +10,16 @@ namespace emberEngine
 	namespace vulkanBackend
 	{
 		// Constructor/Destructor:
-		DescriptorPool::DescriptorPool(LogicalDevice* pLogicalDevice)
+		DescriptorPool::DescriptorPool()
 		{
+			m_descriptorPool = VK_NULL_HANDLE;
+			m_pLogicalDevice = nullptr;
+		}
+		void DescriptorPool::Init(LogicalDevice* pLogicalDevice)
+		{
+			// Assertions:
+			assert(pLogicalDevice != nullptr);
+
 			m_pLogicalDevice = pLogicalDevice;
 
 			uint32_t descriptorCount = 8192;	// maximum number of descriptor of each type in the associated pool

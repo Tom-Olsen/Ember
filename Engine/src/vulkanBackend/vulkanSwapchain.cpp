@@ -2,6 +2,7 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanSurface.h"
+#include <assert.h>
 
 
 
@@ -10,14 +11,31 @@ namespace emberEngine
 	namespace vulkanBackend
 	{
 		// Constructor/Destructor:
-		Swapchain::Swapchain(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usage, Swapchain* pOldSwapchain)
+		Swapchain::Swapchain()
 		{
+			m_swapchain = VK_NULL_HANDLE;
+			m_pLogicalDevice = nullptr;
+			m_pSurface = nullptr;
+		}
+		void Swapchain::Init(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usage, Swapchain* pOldSwapchain)
+		{
+			// Assertions:
+			assert(pLogicalDevice != nullptr);
+			assert(pSurface != nullptr);
+
 			m_pLogicalDevice = pLogicalDevice;
 			m_pSurface = pSurface;
 
 			CreateSwapchain(usage, pOldSwapchain);
 			CreateImages();
 			CreateImageViews();
+		}
+		void Swapchain::Clear()
+		{
+			VKA(vkDeviceWaitIdle(m_pLogicalDevice->GetVkDevice()));
+			for (uint32_t i = 0; i < m_imageViews.size(); i++)
+				vkDestroyImageView(m_pLogicalDevice->GetVkDevice(), m_imageViews[i], nullptr);
+			vkDestroySwapchainKHR(m_pLogicalDevice->GetVkDevice(), m_swapchain, nullptr);
 		}
 		Swapchain::~Swapchain()
 		{

@@ -4,6 +4,7 @@
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
 #include "vulkanSurface.h"
+#include <assert.h>
 #include <set>
 
 
@@ -13,8 +14,20 @@ namespace emberEngine
 	namespace vulkanBackend
 	{
 		// Constructor/Destructor:
-		LogicalDevice::LogicalDevice(PhysicalDevice* pPhysicalDevice, Surface* pSurface, std::vector<const char*> deviceExtensions)
+		LogicalDevice::LogicalDevice()
 		{
+			m_device = VK_NULL_HANDLE;
+			m_graphicsQueue = { VK_NULL_HANDLE, 0};
+			m_presentQueue  = { VK_NULL_HANDLE, 0};
+			m_computeQueue  = { VK_NULL_HANDLE, 0};
+			m_transferQueue = { VK_NULL_HANDLE, 0};
+		}
+		void LogicalDevice::Init(PhysicalDevice* pPhysicalDevice, Surface* pSurface, std::vector<const char*> deviceExtensions)
+		{
+			// Assertions:
+			assert(pPhysicalDevice != nullptr);
+			assert(pSurface != nullptr);
+
 			// Find queue family indices:
 			m_graphicsQueue.familyIndex = FindGraphicsAndComputeQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice());
 			m_presentQueue.familyIndex = FindPresentQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice(), pSurface->GetVkSurfaceKHR());

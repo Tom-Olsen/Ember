@@ -35,7 +35,7 @@ namespace emberEngine
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = 0;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-		DeviceQueue queue = Context::pLogicalDevice->GetGraphicsQueue();
+		DeviceQueue queue = Context::logicalDevice.GetGraphicsQueue();
 		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
 
 		// Although the image is in the layout undefined, the shadow renderpass automatically transitions it to shader read after rendering the shadow maps into it.
