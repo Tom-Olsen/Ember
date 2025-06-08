@@ -1,4 +1,6 @@
 #include "emberRandom.h"
+#include "logger.h"
+#include "macros.h"
 
 
 
@@ -22,6 +24,10 @@ namespace emberMath
 				s_seed = static_cast<uint32_t>(std::random_device{}());
 				s_mersenneTwister.seed(s_seed);
 			}
+
+			#ifdef LOG_INITIALIZATION
+			LOG_TRACE("math::Random initialized.");
+			#endif
 		}
 
 		// Seed management:

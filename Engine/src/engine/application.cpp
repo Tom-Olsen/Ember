@@ -10,6 +10,7 @@
 #include "graphics.h"
 #include "lighting.h"
 #include "logger.h"
+#include "macros.h"
 #include "managers.h"
 #include "renderCore.h"
 #include "scene.h"
@@ -47,6 +48,10 @@ namespace emberEngine
 
 		// Create renderer:
 		m_pRenderer = std::make_unique<RenderCore>();
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("Application initialized.");
+		#endif
 	}
 	Application::~Application()
 	{
@@ -80,7 +85,7 @@ namespace emberEngine
 		{
 			Time::Update();
 
-			GarbageCollector::CollectGarbage();
+			GarbageCollector::Cleanup();
 			running = Context::window.HandleEvents();
 
 			// If window is minimized or width/height is zero, delay loop to reduce CPU usage:

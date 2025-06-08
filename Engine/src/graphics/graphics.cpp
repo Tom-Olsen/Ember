@@ -1,17 +1,19 @@
 #include "graphics.h"
 #include "computeShader.h"
 #include "computeShaderManager.h"
-#include "vulkanForwardRenderPass.h"
 #include "logger.h"
+#include "macros.h"
 #include "material.h"
 #include "materialManager.h"
 #include "mesh.h"
 #include "meshManager.h"
+#include "poolManager.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "shader.h"
 #include "shaderProperties.h"
 #include "shaderPropertiesPool.h"
+#include "vulkanForwardRenderPass.h"
 
 
 
@@ -24,10 +26,6 @@ namespace emberEngine
 	std::vector<DrawCall> Graphics::s_staticDrawCalls;
 	std::vector<DrawCall> Graphics::s_dynamicDrawCalls;
 	std::vector<DrawCall*> Graphics::s_sortedDrawCallPointers;
-	std::unordered_map<Shader*, ShaderPropertiesPool> Graphics::s_shaderPropertiesPoolMap;
-	ShaderPropertiesPool Graphics::s_shadowShaderPropertiesPool;
-	//std::unordered_map<Shader*, ResourcePool<ShaderProperties, 20>> Graphics::s_shaderPropertiesPoolMap;
-	//ResourcePool<ShaderProperties, 200> Graphics::s_shadowShaderPropertiesPool;
 	Mesh* Graphics::s_pLineSegmentMesh;
 	Mesh* Graphics::s_pSphereMesh;
 	Mesh* Graphics::s_pArrowMesh;
@@ -51,11 +49,14 @@ namespace emberEngine
 		s_pSimpleLitMaterial = MaterialManager::GetMaterial("simpleLitMaterial");
 		s_pSimpleUnlitMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
 		s_errorMaterial = MaterialManager::GetMaterial("errorMaterial");
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("Graphics initialized.");
+		#endif
 	}
 	void Graphics::Clear()
 	{
 		ResetDrawCalls();
-		s_shaderPropertiesPoolMap.clear();
 	}
 
 
@@ -107,7 +108,7 @@ namespace emberEngine
 		}
 
 		// Setup draw call:
-		ShaderProperties* pShadowShaderProperties = s_shadowShaderPropertiesPool.CheckOut((Shader*)s_pShadowMaterial);
+		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)s_pShadowMaterial);
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, 0 };
 		s_staticDrawCalls.push_back(drawCall);
 	}
@@ -132,8 +133,8 @@ namespace emberEngine
 		}
 
 		// Setup draw call:
-		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[(Shader*)pMaterial].CheckOut((Shader*)pMaterial);
-		ShaderProperties* pShadowShaderProperties = s_shadowShaderPropertiesPool.CheckOut((Shader*)s_pShadowMaterial);
+		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)pMaterial);
+		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)s_pShadowMaterial);
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, 0 };
 		s_dynamicDrawCalls.push_back(drawCall);
 
@@ -169,7 +170,7 @@ namespace emberEngine
 
 		// Setup draw call:
 		pShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
-		ShaderProperties* pShadowShaderProperties = s_shadowShaderPropertiesPool.CheckOut((Shader*)s_pShadowMaterial);
+		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)s_pShadowMaterial);
 		pShadowShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, instanceCount };
 		s_staticDrawCalls.push_back(drawCall);
@@ -200,8 +201,8 @@ namespace emberEngine
 		}
 
 		// Setup draw call:
-		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[(Shader*)pMaterial].CheckOut((Shader*)pMaterial);
-		ShaderProperties* pShadowShaderProperties = s_shadowShaderPropertiesPool.CheckOut((Shader*)s_pShadowMaterial);
+		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)pMaterial);
+		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)s_pShadowMaterial);
 		pShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
 		pShadowShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, instanceCount };
@@ -371,17 +372,13 @@ namespace emberEngine
 		// Return all p(Shadow)ShaderProperties of dynamic draw calls back to the corresponding pool:
 		for (DrawCall& drawCall : s_dynamicDrawCalls)
 		{
-			s_shaderPropertiesPoolMap[(Shader*)drawCall.pMaterial].Return(drawCall.pShaderProperties);
-			s_shadowShaderPropertiesPool.Return(drawCall.pShadowShaderProperties);
+			PoolManager::ReturnShaderProperties((Shader*)drawCall.pMaterial, drawCall.pShaderProperties);
+			PoolManager::ReturnShaderProperties((Shader*)s_pShadowMaterial, drawCall.pShadowShaderProperties);
 		}
+
 		// Return all pShadowShaderProperties of static draw calls back to the pool:
 		for (DrawCall& drawCall : s_staticDrawCalls)
-			s_shadowShaderPropertiesPool.Return(drawCall.pShadowShaderProperties);
-
-		// Shrink all pools back to max number of drawCalls of last frame:
-		for (auto& [shader, pool] : s_shaderPropertiesPoolMap)
-			pool.ShrinkToFit();
-		s_shadowShaderPropertiesPool.ShrinkToFit();
+			PoolManager::ReturnShaderProperties((Shader*)s_pShadowMaterial, drawCall.pShadowShaderProperties);
 
 		// Remove all draw/compute calls so next frame can start fresh:
 		s_staticDrawCalls.clear();

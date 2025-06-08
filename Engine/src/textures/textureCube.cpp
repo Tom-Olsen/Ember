@@ -4,7 +4,9 @@
 #include "stb_image.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
+#include "vulkanAccessMasks.h"
 #include "vulkanContext.h"
+#include "vulkanPipelineStages.h"
 #include <array>
 
 
@@ -70,29 +72,28 @@ namespace emberEngine
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_CUBE;
 		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
-		m_pImage = std::unique_ptr<VmaImage>(CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue));
+		CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
 		// Transition0: Layout: undefined->transfer, Queue: transfer
 		VkImageLayout newLayout0 = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		VkPipelineStageFlags2 srcStage0 = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-		VkPipelineStageFlags2 dstStage0 = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-		VkAccessFlags2 srcAccessMask0 = VK_ACCESS_2_NONE;
-		VkAccessFlags2 dstAccessMask0 = VK_ACCESS_2_TRANSFER_WRITE_BIT;
+		VkPipelineStageFlags2 srcStage0 = pipelineStage::topOfPipe;
+		VkPipelineStageFlags2 dstStage0 = pipelineStage::transfer;
+		VkAccessFlags2 srcAccessMask0 = accessMask::topOfPipe::none;
+		VkAccessFlags2 dstAccessMask0 = accessMask::transfer::transferWrite;
 		m_pImage->TransitionLayout(newLayout0, srcStage0, dstStage0, srcAccessMask0, dstAccessMask0);
 
 		// Copy: pixelData -> stagingBuffer -> image
 		StagingBuffer stagingBuffer(bufferSize);
 		stagingBuffer.SetData(pFacePixels, bufferSize);
-		stagingBuffer.UploadToImage(m_pImage.get(), Context::logicalDevice.GetTransferQueue(), subresourceRange.layerCount);
+		stagingBuffer.UploadToImage(Context::logicalDevice.GetTransferQueue(), m_pImage.get(), subresourceRange.layerCount);
 
 		// Transition1: Layout: transfer->shader read, Queue: transfer->graphics
 		VkImageLayout newLayout1 = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		DeviceQueue newQueue1 = Context::logicalDevice.GetGraphicsQueue();
-		VkPipelineStageFlags2 srcStage1 = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-		VkPipelineStageFlags2 dstStage1 = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
-		VkAccessFlags2 srcAccessMask1 = VK_ACCESS_2_TRANSFER_WRITE_BIT;
-		VkAccessFlags2 dstAccessMask1 = VK_ACCESS_2_SHADER_READ_BIT;
-		m_pImage->TransitionLayoutAndQueue(newLayout1, newQueue1, srcStage1, dstStage1, srcAccessMask1, dstAccessMask1);
+		VkPipelineStageFlags2 srcStage1 = pipelineStage::transfer;
+		VkPipelineStageFlags2 dstStage1 = pipelineStage::fragmentShader;
+		VkAccessFlags2 srcAccessMask1 = accessMask::transfer::transferWrite;
+		VkAccessFlags2 dstAccessMask1 = accessMask::fragmentShader::shaderRead;
+		m_pImage->TransitionLayout(newLayout1, srcStage1, dstStage1, srcAccessMask1, dstAccessMask1);
 
 		delete[] pFacePixels;
 	}

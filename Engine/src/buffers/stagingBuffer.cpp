@@ -85,28 +85,28 @@ namespace emberEngine
 
 
 	// Upload:
-	void StagingBuffer::UploadToBuffer(Buffer* dstBuffer, const DeviceQueue& queue)
+	void StagingBuffer::UploadToBuffer(VkCommandBuffer commandBuffer, Buffer* pDstBuffer)
 	{
-		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(queue);
-
 		VkBufferCopy copyRegion = {};
 		copyRegion.srcOffset = 0;
 		copyRegion.dstOffset = 0;
-		copyRegion.size = dstBuffer->GetSize();
+		copyRegion.size = pDstBuffer->GetSize();
 
 		vkCmdCopyBuffer(
 			commandBuffer,
 			GetVmaBuffer()->GetVkBuffer(),
-			dstBuffer->GetVmaBuffer()->GetVkBuffer(),
+			pDstBuffer->GetVmaBuffer()->GetVkBuffer(),
 			1,
 			&copyRegion);
-
-		SingleTimeCommand::EndCommand(queue);
 	}
-	void StagingBuffer::UploadToImage(VmaImage* dstImage, const DeviceQueue& queue, uint64_t layerCount)
+	void StagingBuffer::UploadToBuffer(Buffer* pDstBuffer, const DeviceQueue& queue)
 	{
 		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(queue);
-
+		UploadToBuffer(commandBuffer, pDstBuffer);
+		SingleTimeCommand::EndCommand(queue);
+	}
+	void StagingBuffer::UploadToImage(VkCommandBuffer commandBuffer, VmaImage* pDstImage, uint64_t layerCount)
+	{
 		VkBufferImageCopy region = {};
 		region.bufferOffset = 0;
 		region.bufferRowLength = 0;
@@ -116,36 +116,42 @@ namespace emberEngine
 		region.imageSubresource.baseArrayLayer = 0;
 		region.imageSubresource.layerCount = layerCount;
 		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = dstImage->GetExtent();
+		region.imageExtent = pDstImage->GetExtent();
 
 		vkCmdCopyBufferToImage(
 			commandBuffer,
 			GetVmaBuffer()->GetVkBuffer(),
-			dstImage->GetVkImage(),
+			pDstImage->GetVkImage(),
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1,
 			&region);
-
+	}
+	void StagingBuffer::UploadToImage(const DeviceQueue& queue, VmaImage* pDstImage, uint64_t layerCount)
+	{
+		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(queue);
+		UploadToImage(commandBuffer, pDstImage, layerCount);
 		SingleTimeCommand::EndCommand(queue);
 	}
 
 	// Download:
-	void StagingBuffer::DownloadFromBuffer(Buffer* srcBuffer, const DeviceQueue& queue)
+	void StagingBuffer::DownloadFromBuffer(VkCommandBuffer commandBuffer, Buffer* pSrcBuffer)
 	{
-		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(queue);
-
 		VkBufferCopy copyRegion = {};
 		copyRegion.srcOffset = 0;
 		copyRegion.dstOffset = 0;
-		copyRegion.size = math::Min(m_size, srcBuffer->GetSize());
+		copyRegion.size = math::Min(m_size, pSrcBuffer->GetSize());
 
 		vkCmdCopyBuffer(
 			commandBuffer,
-			srcBuffer->GetVmaBuffer()->GetVkBuffer(),
+			pSrcBuffer->GetVmaBuffer()->GetVkBuffer(),
 			GetVmaBuffer()->GetVkBuffer(),
 			1,
 			&copyRegion);
-
+	}
+	void StagingBuffer::DownloadFromBuffer(Buffer* pSrcBuffer, const DeviceQueue& queue)
+	{
+		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(queue);
+		DownloadFromBuffer(commandBuffer, pSrcBuffer);
 		SingleTimeCommand::EndCommand(queue);
 	}
 }

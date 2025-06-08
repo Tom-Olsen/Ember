@@ -17,10 +17,6 @@ namespace emberEngine
 	public: // Methods:
 		StorageBuffer(uint32_t count, uint32_t elementSize);
 		~StorageBuffer();
-
-		// Upload/Download:
-		void Upload(void* pSrc, uint64_t size);
-		void Download(void* pDst, uint64_t size);
 	};
 }
 

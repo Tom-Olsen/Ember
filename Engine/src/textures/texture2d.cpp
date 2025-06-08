@@ -65,7 +65,7 @@ namespace emberEngine
 				return -1;
 		}
 	}
-	VmaImage* Texture2d::CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const vulkanBackend::DeviceQueue& queue)
+	void Texture2d::CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const vulkanBackend::DeviceQueue& queue)
 	{
 		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -81,6 +81,8 @@ namespace emberEngine
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.flags = imageFlags;
+		imageInfo.queueFamilyIndexCount = 1;
+		imageInfo.pQueueFamilyIndices = &queue.familyIndex;
 
 		VmaAllocationCreateInfo allocInfo = {};
 		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
@@ -88,7 +90,6 @@ namespace emberEngine
 		allocInfo.requiredFlags = memoryFlags;
 		allocInfo.preferredFlags = 0;
 
-		// Always use transfer queue by default and do queue transition later when needed.
-		return new VmaImage(m_name, imageInfo, allocInfo, subresourceRange, viewType, queue);
+		m_pImage = std::make_unique<VmaImage>(m_name, imageInfo, allocInfo, subresourceRange, viewType, queue);
 	}
 }

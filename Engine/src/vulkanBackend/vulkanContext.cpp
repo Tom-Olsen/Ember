@@ -1,6 +1,7 @@
 #include "vulkanContext.h"
 #include "dearImGui.h"
 #include "logger.h"
+#include "macros.h"
 #include "vulkanMacros.h"
 
 
@@ -81,10 +82,19 @@ namespace emberEngine
 			#endif
 
 			// Debug naming:
-			NAME_VK_QUEUE(logicalDevice.GetGraphicsQueue().queue, "graphicsQueue");
-			NAME_VK_QUEUE(logicalDevice.GetPresentQueue().queue, "presentQueue");
+			if (logicalDevice.GetGraphicsQueue().queue == logicalDevice.GetPresentQueue().queue)
+				NAME_VK_QUEUE(logicalDevice.GetGraphicsQueue().queue, "graphicsAndPresentQueue");
+			else
+			{
+				NAME_VK_QUEUE(logicalDevice.GetGraphicsQueue().queue, "graphicsQueue");
+				NAME_VK_QUEUE(logicalDevice.GetPresentQueue().queue, "presentQueue");
+			}
 			NAME_VK_QUEUE(logicalDevice.GetComputeQueue().queue, "computeQueue");
 			NAME_VK_QUEUE(logicalDevice.GetTransferQueue().queue, "transferQueue");
+
+			#ifdef LOG_INITIALIZATION
+			LOG_TRACE("VulkanContext initialized.");
+			#endif
 		}
 		void Context::Clear()
 		{

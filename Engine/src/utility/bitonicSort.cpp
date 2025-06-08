@@ -3,6 +3,7 @@
 #include "compute.h"
 #include "computeShader.h"
 #include "logger.h"
+#include "macros.h"
 #include "shaderProperties.h"
 #include "storageBuffer.h"
 
@@ -31,6 +32,10 @@ namespace emberEngine
 		s_pBigFlip = std::make_unique<ComputeShader>("bigFlip", directoryPath + "/bigFlip.comp.spv");
 		s_pBigDisperse = std::make_unique<ComputeShader>("bigDisperse", directoryPath + "/bigDisperse.comp.spv");
 		s_pLocalDisperse = std::make_unique<ComputeShader>("localDisperse", directoryPath + "/localDisperse.comp.spv");
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("BitonicSort initialized.");
+		#endif
 	}
 	void BitonicSort::Clear()
 	{

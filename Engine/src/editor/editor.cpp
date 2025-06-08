@@ -1,6 +1,7 @@
 #include "editor.h"
 #include "editorWindow.h"
 #include "logger.h"
+#include "macros.h"
 
 
 
@@ -14,7 +15,9 @@ namespace emberEngine
 	// Initialization and cleanup:
 	void Editor::Init()
 	{
-
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("Editor initialized.");
+		#endif
 	}
 	void Editor::Clear()
 	{

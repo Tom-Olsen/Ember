@@ -1,5 +1,6 @@
 #include "vulkanGarbageCollector.h"
 #include "logger.h"
+#include "macros.h"
 #include "vulkanContext.h"
 
 
@@ -20,32 +21,35 @@ namespace emberEngine
             if (s_isInitialized)
                 return;
             s_isInitialized = true;
+
+            #ifdef LOG_INITIALIZATION
+            LOG_TRACE("GarbageCollector initialized.");
+            #endif
         }
         void GarbageCollector::Clear()
         {
             Context::WaitDeviceIdle();
             for (const GarbageEntry& entry : s_garbageQueue)
-                entry.destroyCallback();
+                entry.cleanupCallback();
             s_garbageQueue.clear();
         }
 
 
 
         // Static methods:
-        void GarbageCollector::Destroy(std::function<void()> destroyCallback)
+        void GarbageCollector::RecordCleanup(std::function<void()> cleanupCallback)
         {
-            s_garbageQueue.push_back(GarbageEntry{ Context::absoluteFrameIndex, std::move(destroyCallback) });
+            s_garbageQueue.push_back(GarbageEntry{ Context::absoluteFrameIndex, std::move(cleanupCallback) });
         }
-
-        void GarbageCollector::CollectGarbage()
+        void GarbageCollector::Cleanup()
         {
-            // garbageQueue is sortet. The first entry is always the oldest. Once we find the first entry that does not get deleted we can stop.
+            // Garbage queue is sortet. The first entry is always the oldest. Once we find the first entry that does not need cleanup we can stop.
             while (!s_garbageQueue.empty())
             {
                 const GarbageEntry& entry = s_garbageQueue.front();
                 if (Context::absoluteFrameIndex >= entry.frameIndex + Context::framesInFlight)
                 {
-                    entry.destroyCallback();
+                    entry.cleanupCallback();
                     s_garbageQueue.pop_front();
                 }
                 else

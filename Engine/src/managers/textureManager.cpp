@@ -1,5 +1,8 @@
 #include "textureManager.h"
 #include "depthTexture2dArray.h"
+#include "emberTime.h"
+#include "logger.h"
+#include "macros.h"
 #include "sampleTexture2d.h"
 #include "storageTexture2d.h"
 #include "textureCube.h"
@@ -29,6 +32,10 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
+		#ifdef LOG_INITIALIZATION
+		Time::Init();
+		#endif
+
 		// Iterate through the texture directory:
 		std::string engineRootPath = ENGINE_ROOT_PATH;
 		std::filesystem::path directoryPath = engineRootPath + "/textures/";
@@ -43,32 +50,36 @@ namespace emberEngine
 				{
 					std::string name = entry.path().stem().string();
 					VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
-					if (name.find("normal"))
+					if (name.find("normal") != std::string::npos)
 						format = VK_FORMAT_R8G8B8A8_UNORM;
-					else if (name.find("roughness") || name.find("metallic"))
+					else if (name.find("roughness") != std::string::npos || name.find("metallic") != std::string::npos)
 						format = VK_FORMAT_R8_UNORM;
 					SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path());
 					AddTexture2d(pTexture);
 				}
 			}
 		}
-
+		
 		// TextureCubes:
-		TextureCube* skyBoxWhite = new TextureCube(engineRootPath + "/textures/white/", "skyBoxWhite", VK_FORMAT_R8G8B8A8_SRGB);
-		AddTexture2d(skyBoxWhite);
-		TextureCube* skyBox0 = new TextureCube(engineRootPath + "/textures/skyboxClouds1/", "skyBox0", VK_FORMAT_R8G8B8A8_SRGB);
-		AddTexture2d(skyBox0);
-		//TextureCube* skyBox01 = new TextureCube(engineRootPath + "/textures/skyboxNebula0/", "skyBox1", VK_FORMAT_R8G8B8A8_SRGB);
-		//AddTexture2d(skyBox1);
-
-
+		TextureCube* skyboxWhite = new TextureCube(engineRootPath + "/textures/white/", "skyboxWhite", VK_FORMAT_R8G8B8A8_SRGB);
+		AddTexture2d(skyboxWhite);
+		TextureCube* skybox0 = new TextureCube(engineRootPath + "/textures/skyboxClouds1/", "skybox0", VK_FORMAT_R8G8B8A8_SRGB);
+		AddTexture2d(skybox0);
+		TextureCube* skybox1 = new TextureCube(engineRootPath + "/textures/skyboxNebula0/", "skybox1", VK_FORMAT_R8G8B8A8_SRGB);
+		AddTexture2d(skybox1);
+		
 		// Default storage Texture2dArray:
 		DepthTexture2dArray* blackArray = new DepthTexture2dArray("defaultArrayTexture2d", VK_FORMAT_D32_SFLOAT, 2, 2, 2);
 		AddTexture2d(blackArray);
-
+		
 		// Default storage Texture2d:
 		StorageTexture2d* storageTexture8x8 = new StorageTexture2d("defaultStorageTexture2d", VK_FORMAT_R32G32B32A32_SFLOAT, 8, 8);
 		AddTexture2d(storageTexture8x8);
+
+		#ifdef LOG_INITIALIZATION
+		Time::Update();
+		LOG_TRACE("TextureManager initialized. ({}s)", Time::GetDeltaTime());
+		#endif
 	}
 	void TextureManager::Clear()
 	{

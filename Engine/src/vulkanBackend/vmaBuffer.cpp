@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
+#include "vulkanGarbageCollector.h"
 #include "vulkanMacros.h"
 
 
@@ -25,7 +26,7 @@ namespace emberEngine
 			VKA(vmaCreateBuffer(Context::GetVmaAllocator(), &m_bufferInfo, &m_allocInfo, &m_buffer, &m_allocation, nullptr));
 
 			#ifdef VALIDATION_LAYERS_ACTIVE
-			Context::pAllocationTracker->AddVmaBuffer(this);
+			Context::allocationTracker.AddVmaBuffer(this);
 			#endif
 		}
 		VmaBuffer::VmaBuffer(VmaBuffer&& other) noexcept
@@ -60,10 +61,15 @@ namespace emberEngine
 		}
 		VmaBuffer::~VmaBuffer()
 		{
-			vmaDestroyBuffer(Context::GetVmaAllocator(), m_buffer, m_allocation);
+			VkBuffer buffer = m_buffer;
+			VmaAllocation allocation = m_allocation;
+			GarbageCollector::RecordCleanup([buffer, allocation]()
+			{
+				vmaDestroyBuffer(Context::GetVmaAllocator(), buffer, allocation);
+			});
 
 			#ifdef VALIDATION_LAYERS_ACTIVE
-			Context::pAllocationTracker->RemoveVmaBuffer(this);
+			Context::allocationTracker.RemoveVmaBuffer(this);
 			#endif
 		}
 

@@ -603,6 +603,7 @@ namespace emberEngine
 		// Ember::TODO: Try:
 		// Compute shaders do not need to wait for aquire semaphore. Instead make them only wait for previous compute to finish.
 		// Shadow shaders then wait for aquire and computeToShadow semaphore.
+		// change wait stages to pipelineStage::computeShader, etc...
 
 		// Pre render compute submission:
 		{

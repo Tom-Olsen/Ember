@@ -1,5 +1,6 @@
 #include "meshManager.h"
 #include "logger.h"
+#include "macros.h"
 #include "mesh.h"
 #include "meshGenerator.h"
 #include "meshReader.h"
@@ -96,6 +97,10 @@ namespace emberEngine
 		Mesh* pLeb9 = MeshReader::ReadCsvFile(pathToFile);
 		pLeb9->SetName("Leb9");
 		AddMesh(pLeb9);
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("MeshManager initialized.");
+		#endif
 	}
 	void MeshManager::UnloadAllMeshes()
 	{

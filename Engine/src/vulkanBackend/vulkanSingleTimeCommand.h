@@ -33,6 +33,7 @@ namespace emberEngine
 			static VkFence s_presentFence;
 			static VkFence s_computeFence;
 			static VkFence s_transferFence;
+			static VkSemaphore s_semaphore;
 
 		public: // Methods:
 			static void Init();
@@ -41,8 +42,13 @@ namespace emberEngine
 			// Getters:
 			static VkCommandBuffer& BeginCommand(const DeviceQueue& queue);
 			static void EndCommand(const DeviceQueue& queue);
+			static void EndLinkedCommands(const DeviceQueue& firstQueue, const DeviceQueue& secondQueue, VkPipelineStageFlags2 waitDstStageMask);
 
 		private: // Methods
+			static VkCommandBuffer* FindCommandBuffer(const DeviceQueue& queue);
+			static VkCommandPool* FindCommandPool(const DeviceQueue& queue);
+			static VkFence* FindFence(const DeviceQueue& queue);
+
 			// Delete all constructors:
 			SingleTimeCommand() = delete;
 			SingleTimeCommand(const SingleTimeCommand&) = delete;

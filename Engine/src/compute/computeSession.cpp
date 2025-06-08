@@ -108,5 +108,9 @@ namespace emberEngine
 		{
 			m_computeCalls.clear();
 		}
+		std::vector<ComputeCall>& ComputeSession::GetComputeCalls()
+		{
+			return m_computeCalls;
+		}
 	}
 }

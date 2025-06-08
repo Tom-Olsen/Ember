@@ -1,4 +1,7 @@
 #include "poolManager.h"
+#include "emberMath.h"
+#include "logger.h"
+#include "macros.h"
 
 
 
@@ -6,7 +9,8 @@ namespace emberEngine
 {
 	// Static members:
 	bool PoolManager::s_isInitialized = false;
-	std::unordered_map<ComputeShader*, ShaderPropertiesPool> PoolManager::s_shaderPropertiesPoolMap;
+	std::unordered_map<Shader*, ShaderPropertiesPool> PoolManager::s_shaderPropertiesPoolMap;
+	std::map<uint32_t, StagingBufferPool> PoolManager::s_stagingBufferPoolMap;
 
 
 
@@ -16,6 +20,10 @@ namespace emberEngine
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("PoolManager initialized.");
+		#endif
 	}
 	void PoolManager::Clear()
 	{
@@ -25,12 +33,22 @@ namespace emberEngine
 
 
 	// Public methods:
-	ShaderProperties* PoolManager::CheckOutShaderProperties(ComputeShader* pComputeShader)
+	ShaderProperties* PoolManager::CheckOutShaderProperties(Shader* pShader)
 	{
-		return s_shaderPropertiesPoolMap[pComputeShader].CheckOut((Shader*)pComputeShader);
+		return s_shaderPropertiesPoolMap[pShader].CheckOut(pShader);
 	}
-	void PoolManager::ReturnShaderProperties(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties)
+	StagingBuffer* PoolManager::CheckOutStagingBuffer(uint32_t size)
 	{
-		s_shaderPropertiesPoolMap[pComputeShader].Return(pShaderProperties);
+		size = std::max(4096u,math::NextPowerOfTwo(size));
+		return s_stagingBufferPoolMap[size].CheckOut(size);
+	}
+	void PoolManager::ReturnShaderProperties(Shader* pShader, ShaderProperties* pShaderProperties)
+	{
+		s_shaderPropertiesPoolMap[pShader].Return(pShaderProperties);
+	}
+	void PoolManager::ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer)
+	{
+		size = std::max(4096u, math::NextPowerOfTwo(size));
+		s_stagingBufferPoolMap[size].Return(pStagingBuffer);
 	}
 }

@@ -22,6 +22,7 @@ namespace emberEngine
     // Public methods:
     ShaderProperties* ShaderPropertiesPool::CheckOut(Shader* pShader)
     {
+        // Create new shader properties if pool is empty:
         if (m_pool.empty())
         {
             ShaderProperties* pNewShaderProperties = new ShaderProperties(pShader);
@@ -48,7 +49,7 @@ namespace emberEngine
     {
         if (m_currentUsage != 0)
         {
-            LOG_WARN("Trying to shrink ShaderPropertiesPool which still has ShaderProperties CheckedOut: currentUsage  = {} != 0.", m_currentUsage);
+            LOG_WARN("Trying to shrink ShaderPropertiesPool which still has ShaderProperties checked out: currentUsage  = {} != 0.", m_currentUsage);
             return;
         }
 

@@ -16,6 +16,13 @@ namespace emberEngine
 				constexpr VkAccessFlagBits2 none = VK_ACCESS_2_NONE;
 			}
 
+			namespace transfer
+			{
+				constexpr VkAccessFlagBits2 transferRead = VK_ACCESS_2_TRANSFER_READ_BIT;
+				constexpr VkAccessFlagBits2 transferWrite = VK_ACCESS_2_TRANSFER_WRITE_BIT;
+				constexpr VkAccessFlagBits2 none = VK_ACCESS_2_NONE;
+			}
+
 			namespace computeShader			// VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT
 			{
 				constexpr VkAccessFlagBits2 uniformRead = VK_ACCESS_2_UNIFORM_READ_BIT;
@@ -24,6 +31,8 @@ namespace emberEngine
 				constexpr VkAccessFlagBits2 sampledRead = VK_ACCESS_2_SHADER_SAMPLED_READ_BIT;
 				constexpr VkAccessFlagBits2 storageRead = VK_ACCESS_2_SHADER_STORAGE_READ_BIT;
 				constexpr VkAccessFlagBits2 storageWrite = VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT;
+				constexpr VkAccessFlagBits2 memoryRead = VK_ACCESS_2_MEMORY_READ_BIT;
+				constexpr VkAccessFlagBits2 memoryWrite = VK_ACCESS_2_MEMORY_WRITE_BIT;
 				constexpr VkAccessFlagBits2 accelerationStructureRead = VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR;
 				constexpr VkAccessFlagBits2 descriptorBufferRead = VK_ACCESS_2_DESCRIPTOR_BUFFER_READ_BIT_EXT;
 				constexpr VkAccessFlagBits2 none = VK_ACCESS_2_NONE;

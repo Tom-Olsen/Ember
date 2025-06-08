@@ -18,11 +18,11 @@ namespace emberEngine
     /// </summary>
     class TextureManager
     {
-    private: // Members
+    private: // Members:
         static bool s_isInitialized;
         static std::unordered_map<std::string, std::unique_ptr<Texture2d>> s_texture2ds;
 
-    public: // Methods
+    public: // Methods:
         static void Init();
         static void Clear();
 
@@ -32,7 +32,7 @@ namespace emberEngine
 
         static void PrintAllTextureNames();
 
-    private: // Methods
+    private: // Methods:
         // Delete all constructors:
         TextureManager() = delete;
         TextureManager(const TextureManager&) = delete;

@@ -1,4 +1,6 @@
 #include "SamplerManager.h"
+#include "logger.h"
+#include "macros.h"
 #include "sampler.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -29,6 +31,10 @@ namespace emberEngine
 
 		Sampler* shadowSampler = Sampler::ShadowSampler("shadowSampler");
 		AddSampler(shadowSampler);
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("SamplerManager initialized.");
+		#endif
 	}
 	void SamplerManager::Clear()
 	{

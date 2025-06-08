@@ -38,6 +38,12 @@ namespace emberEngine
 		uint32_t GetCount() const;
 		uint32_t GetElementSize() const;
 		vulkanBackend::VmaBuffer* const GetVmaBuffer() const;
+		
+		// Upload/Download:
+		void Upload(VkCommandBuffer commandBuffer, void* pSrc, uint64_t size);
+		void Upload(void* pSrc, uint64_t size);
+		void Download(VkCommandBuffer commandBuffer, void* pDst, uint64_t size);
+		void Download(void* pDst, uint64_t size);
 	};
 }
 

@@ -34,6 +34,7 @@ namespace emberEngine
 			void RecordComputeCall(const ComputeCall& computeCall);
 			void Dispatch(VkCommandBuffer& commandBuffer, VkFence& fence);
 			void ResetComputeCalls();
+			std::vector<ComputeCall>& GetComputeCalls();
 		};
 	}
 }

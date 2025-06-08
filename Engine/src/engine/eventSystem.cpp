@@ -1,5 +1,7 @@
 #include "eventSystem.h"
 #include "dearImGui.h"
+#include "logger.h"
+#include "macros.h"
 #include "vulkanContext.h"
 
 
@@ -32,6 +34,10 @@ namespace emberEngine
         s_mouseY = 0;
         s_windowResized = false;
         s_quit = false;
+
+        #ifdef LOG_INITIALIZATION
+        LOG_TRACE("EventSystem initialized.");
+        #endif
     }
     void EventSystem::Clear()
     {

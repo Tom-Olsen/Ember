@@ -1,6 +1,7 @@
 #include "computeShaderManager.h"
 #include "computeShader.h"
 #include "logger.h"
+#include "macros.h"
 #include "emberMath.h"
 #include "vulkanContext.h"
 #include <filesystem>
@@ -40,6 +41,10 @@ namespace emberEngine
 				}
 			}
 		}
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("ComputeShaderManager initialized.");
+		#endif
 	}
 	void ComputeShaderManager::Clear()
 	{

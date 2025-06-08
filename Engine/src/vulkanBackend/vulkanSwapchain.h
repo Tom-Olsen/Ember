@@ -23,6 +23,7 @@ namespace emberEngine
 			std::vector<VkImageView> m_imageViews;
 			LogicalDevice* m_pLogicalDevice;
 			Surface* m_pSurface;
+			bool m_cleared;
 
 		public: // Methods:
 			Swapchain();

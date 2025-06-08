@@ -16,7 +16,7 @@ namespace emberEngine
             struct GarbageEntry
             {
                 uint64_t frameIndex;
-                std::function<void()> destroyCallback;
+                std::function<void()> cleanupCallback;
             };
 
             static bool s_isInitialized;
@@ -25,8 +25,8 @@ namespace emberEngine
         public:
             static void Init();
             static void Clear();
-            static void Destroy(std::function<void()> destroyCallback);
-            static void CollectGarbage();
+            static void RecordCleanup(std::function<void()> cleanupCallback);
+            static void Cleanup();
         };
     }
 }

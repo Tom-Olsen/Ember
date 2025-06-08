@@ -63,7 +63,7 @@ namespace emberEngine
 						case VK_IMAGE_VIEW_TYPE_1D: throw std::runtime_error("Initialization for sampling Texture1D descriptorSet not implemented yet!"); break;
 						case VK_IMAGE_VIEW_TYPE_2D: InitTexture2dResourceBinding(frameIndex, name, binding, TextureManager::GetTexture2d("white"), descriptorType); break;
 						case VK_IMAGE_VIEW_TYPE_3D: throw std::runtime_error("Initialization for sampling Texture3D descriptorSet not implemented yet!"); break;
-						case VK_IMAGE_VIEW_TYPE_CUBE: InitTexture2dResourceBinding(frameIndex, name, binding, TextureManager::GetTexture2d("skyBoxWhite"), descriptorType); break;
+						case VK_IMAGE_VIEW_TYPE_CUBE: InitTexture2dResourceBinding(frameIndex, name, binding, TextureManager::GetTexture2d("skyboxWhite"), descriptorType); break;
 						case VK_IMAGE_VIEW_TYPE_1D_ARRAY: throw std::runtime_error("Initialization for sampling Texture1DArray descriptorSet not implemented yet!"); break;
 						case VK_IMAGE_VIEW_TYPE_2D_ARRAY: InitTexture2dResourceBinding(frameIndex, name, binding, TextureManager::GetTexture2d("defaultArrayTexture2d"), descriptorType); break;
 						case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY: throw std::runtime_error("Initialization for sampling CubeTextureArray descriptorSet not implemented yet!"); break;
@@ -107,7 +107,7 @@ namespace emberEngine
 		for (uint32_t i = 0; i < Context::framesInFlight; i++)
 		{
 			VkDescriptorSet descriptorSet = m_descriptorSets[i];
-			GarbageCollector::Destroy([descriptorSet]()
+			GarbageCollector::RecordCleanup([descriptorSet]()
 			{
 				vkFreeDescriptorSets(Context::GetVkDevice(), Context::GetVkDescriptorPool(),1, &descriptorSet);
 			});

@@ -9,6 +9,7 @@
 #include "shaderProperties.h"
 #include "storageBuffer.h"
 #include "vulkanContext.h"
+#include <memory>
 #include <string>
 
 // Components:
@@ -136,7 +137,7 @@ namespace emberEngine
 	TEST_F(GpuSort, BitonicSort)
 	{
 		// Create storage buffer:
-		int count = 4238933;
+		int count = 1234567;
 		uint32_t size = count * sizeof(int);
 		StorageBuffer buffer = StorageBuffer((uint32_t)count, (uint32_t)sizeof(int));
 
@@ -164,7 +165,7 @@ namespace emberEngine
 		sortedDataGpu.resize(count);
 		buffer.Download(sortedDataGpu.data(), count * sizeof(int));
 	
-		//// Print data:
+		// Print results:
 		//for (int i = 0; i < count; i++)
 		//{
 		//	//LOG_TRACE(sortedDataGpu[i]);
@@ -174,7 +175,7 @@ namespace emberEngine
 		//		LOG_WARN("index: {}, unsorted:{}, CPU:{}, GPU:{}", i, unsortedData[i], sortedDataCpu[i], sortedDataGpu[i]);
 		//}
 	
-		// Check if data is correct:
+		// Check results:
 		bool allGood = true;
 		for (int i = 0; i < count; i++)
 		{

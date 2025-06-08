@@ -1,7 +1,11 @@
 #include "vmaImage.h"
+#include "emberMath.h"
 #include "emberTime.h"
+#include "stagingBuffer.h"
+#include "vulkanAccessMasks.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include "vulkanPipelineStages.h"
 #include "vulkanSingleTimeCommand.h"
 
 
@@ -38,7 +42,7 @@ namespace emberEngine
 			VKA(vkCreateImageView(Context::GetVkDevice(), &viewInfo, nullptr, &m_imageView));
 
 			#ifdef VALIDATION_LAYERS_ACTIVE
-			Context::pAllocationTracker->AddVmaImage(this);
+			Context::allocationTracker.AddVmaImage(this);
 			#endif
 		}
 		VmaImage::~VmaImage()
@@ -47,7 +51,7 @@ namespace emberEngine
 			vkDestroyImageView(Context::GetVkDevice(), m_imageView, nullptr);
 
 			#ifdef VALIDATION_LAYERS_ACTIVE
-			Context::pAllocationTracker->RemoveVmaImage(this);
+			Context::allocationTracker.RemoveVmaImage(this);
 			#endif
 		}
 
@@ -82,6 +86,10 @@ namespace emberEngine
 		const VkImageSubresourceRange& VmaImage::GetSubresourceRange() const
 		{
 			return m_subresourceRange;
+		}
+		const DeviceQueue& VmaImage::GetDeviceQueue() const
+		{
+			return m_queue;
 		}
 		const VkImageLayout& VmaImage::GetLayout() const
 		{
@@ -127,43 +135,34 @@ namespace emberEngine
 
 
 
+		// Upload/Download:
+		void VmaImage::Upload(VkCommandBuffer commandBuffer, void* pSrc, uint64_t size, uint32_t layerCount)
+		{
+			StagingBuffer stagingBuffer(size);
+			stagingBuffer.SetData(pSrc, size);
+			stagingBuffer.UploadToImage(commandBuffer, this, layerCount);
+		}
+		void VmaImage::Upload(void* pSrc, uint64_t size, uint32_t layerCount)
+		{
+			StagingBuffer stagingBuffer(size);
+			stagingBuffer.SetData(pSrc, size);
+			stagingBuffer.UploadToImage(Context::logicalDevice.GetTransferQueue(), this, layerCount);
+		}
+
+
+
 		// Transitions:
 		// Notes:
 		// - srcStage = flag							<->		this stage must finish before barrier blocks.
 		// - dstStage = flag							<->		this stage must wait for the barrier to release.
 		// - barrier.srcAccessMask = multiple flags		<->		these memory accesses must be flushed to L2 cache before barrier blocks.
 		// - barrier.dstAccessMask = multiple flags		<->		these memory accesses must wait for the barrier before accessing L2 cache.
-		void VmaImage::TransitionLayout(VkCommandBuffer vkCommandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
+		void VmaImage::TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
 		{
 			VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 			barrier.srcStageMask = srcStage;
-			barrier.srcAccessMask = srcAccessMask;
 			barrier.dstStageMask = dstStage;
-			barrier.dstAccessMask = dstAccessMask;
-			barrier.oldLayout = m_layout;
-			barrier.newLayout = newLayout;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.image = m_image;
-			barrier.subresourceRange = m_subresourceRange;
-
-			VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-			dependencyInfo.imageMemoryBarrierCount = 1;
-			dependencyInfo.pImageMemoryBarriers = &barrier;
-
-			vkCmdPipelineBarrier2(vkCommandBuffer, &dependencyInfo);
-
-			m_layout = newLayout;
-		}
-		void VmaImage::TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
-		{
-			// Only transition layout. Queue remains unchanged.
-			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(m_queue);
-
-			VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-			barrier.srcStageMask = srcStage;
 			barrier.srcAccessMask = srcAccessMask;
-			barrier.dstStageMask = dstStage;
 			barrier.dstAccessMask = dstAccessMask;
 			barrier.oldLayout = m_layout;
 			barrier.newLayout = newLayout;
@@ -178,147 +177,127 @@ namespace emberEngine
 
 			vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
 
-			SingleTimeCommand::EndCommand(m_queue);
-
 			m_layout = newLayout;
 		}
-		void VmaImage::TransitionQueue(const DeviceQueue& newQueue, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
+		void VmaImage::TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
 		{
-			VkImageLayout newLayout = m_layout;	// new layout = old layout
-			TransitionLayoutAndQueue(newLayout, newQueue, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
-		void VmaImage::TransitionLayoutAndQueue(VkImageLayout newLayout, const DeviceQueue& newQueue, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
-		{
-			// Barrier on release queue:
-			VkCommandBuffer releaseCommandBuffer = SingleTimeCommand::BeginCommand(m_queue);
-
-			VkImageMemoryBarrier2 releaseBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-			releaseBarrier.srcStageMask = srcStage;
-			releaseBarrier.srcAccessMask = srcAccessMask;
-			releaseBarrier.dstStageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
-			releaseBarrier.dstAccessMask = VK_ACCESS_2_NONE;
-			releaseBarrier.oldLayout = m_layout;
-			releaseBarrier.newLayout = newLayout;
-			releaseBarrier.srcQueueFamilyIndex = m_queue.familyIndex;
-			releaseBarrier.dstQueueFamilyIndex = newQueue.familyIndex;
-			releaseBarrier.image = m_image;
-			releaseBarrier.subresourceRange = m_subresourceRange;
-
-			VkDependencyInfo releaseDependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-			releaseDependencyInfo.imageMemoryBarrierCount = 1;
-			releaseDependencyInfo.pImageMemoryBarriers = &releaseBarrier;
-
-			vkCmdPipelineBarrier2(releaseCommandBuffer, &releaseDependencyInfo);
+			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(m_queue);
+			TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 			SingleTimeCommand::EndCommand(m_queue);
-
-
-			// Barrier on receiving queue:
-			VkCommandBuffer receiveCommandBuffer = SingleTimeCommand::BeginCommand(newQueue);
-
-			VkImageMemoryBarrier2 receiveBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-			receiveBarrier.srcStageMask = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-			receiveBarrier.srcAccessMask = VK_ACCESS_2_NONE;
-			receiveBarrier.dstStageMask = dstStage;
-			receiveBarrier.dstAccessMask = dstAccessMask;
-			receiveBarrier.oldLayout = m_layout;
-			receiveBarrier.newLayout = newLayout;
-			receiveBarrier.srcQueueFamilyIndex = m_queue.familyIndex;
-			receiveBarrier.dstQueueFamilyIndex = newQueue.familyIndex;
-			receiveBarrier.image = m_image;
-			receiveBarrier.subresourceRange = m_subresourceRange;
-
-			VkDependencyInfo receiveDependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-			receiveDependencyInfo.imageMemoryBarrierCount = 1;
-			receiveDependencyInfo.pImageMemoryBarriers = &receiveBarrier;
-
-			vkCmdPipelineBarrier2(receiveCommandBuffer, &receiveDependencyInfo);
-			SingleTimeCommand::EndCommand(newQueue);
-
-			m_layout = newLayout;
-			m_queue = newQueue;
 		}
-		void VmaImage::GenerateMipmaps(uint32_t mipLevels)
+		void VmaImage::GenerateMipmaps(VkCommandBuffer commandBuffer, uint32_t mipLevels)
 		{
-			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetGraphicsQueue());
-
-			VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-			barrier.image = m_image;
-			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			barrier.subresourceRange.baseArrayLayer = 0;
-			barrier.subresourceRange.layerCount = 1;
-			barrier.subresourceRange.levelCount = 1;
-
 			int mipWidth = static_cast<int>(GetWidth());
 			int mipHeight = static_cast<int>(GetHeight());
 			int mipDepth = static_cast<int>(GetDepth());
 			for (uint32_t i = 1; i < mipLevels; i++)
 			{
-				barrier.subresourceRange.baseMipLevel = i - 1;
-				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-				barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-				barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-				barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+				// Perform blit from mip level i-1 to mip level i:
+				{
+					VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+					barrier.srcStageMask = pipelineStage::transfer;
+					barrier.dstStageMask = pipelineStage::transfer;
+					barrier.srcAccessMask = accessMask::transfer::transferWrite;
+					barrier.dstAccessMask = accessMask::transfer::transferRead;
+					barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+					barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+					barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+					barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+					barrier.image = m_image;
+					barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					barrier.subresourceRange.baseArrayLayer = 0;
+					barrier.subresourceRange.baseMipLevel = i - 1;
+					barrier.subresourceRange.layerCount = 1;
+					barrier.subresourceRange.levelCount = 1;
 
-				vkCmdPipelineBarrier(commandBuffer,
-					VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-					0, nullptr,				// memory barriers
-					0, nullptr,	// buffer memory barrier
-					1, &barrier);	// image memory barriers
+					VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+					dependencyInfo.imageMemoryBarrierCount = 1;
+					dependencyInfo.pImageMemoryBarriers = &barrier;
 
-				VkImageBlit blit{};
-				blit.srcOffsets[0] = { 0, 0, 0 };
-				blit.srcOffsets[1] = { mipWidth, mipHeight, mipDepth };
-				blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				blit.srcSubresource.mipLevel = i - 1;
-				blit.srcSubresource.baseArrayLayer = 0;
-				blit.srcSubresource.layerCount = 1;
-				blit.dstOffsets[0] = { 0, 0, 0 };
-				blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
-				blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				blit.dstSubresource.mipLevel = i;
-				blit.dstSubresource.baseArrayLayer = 0;
-				blit.dstSubresource.layerCount = 1;
+					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
 
-				vkCmdBlitImage(commandBuffer,
-					m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-					m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					1, &blit,
-					VK_FILTER_LINEAR);
+					VkImageBlit blit{};
+					blit.srcOffsets[0] = { 0, 0, 0 };
+					blit.srcOffsets[1] = { mipWidth, mipHeight, mipDepth };
+					blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					blit.srcSubresource.mipLevel = i - 1;
+					blit.srcSubresource.baseArrayLayer = 0;
+					blit.srcSubresource.layerCount = 1;
+					blit.dstOffsets[0] = { 0, 0, 0 };
+					blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
+					blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					blit.dstSubresource.mipLevel = i;
+					blit.dstSubresource.baseArrayLayer = 0;
+					blit.dstSubresource.layerCount = 1;
 
-				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-				barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-				barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+					vkCmdBlitImage(commandBuffer,
+						m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+						m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+						1, &blit,
+						VK_FILTER_LINEAR);
+				}
 
-				// Transition finished mip level to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL: (synced at fragment shader stage)
-				vkCmdPipelineBarrier(commandBuffer,
-					VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-					0, nullptr,
-					0, nullptr,
-					1, &barrier);
+				// Transition mip level i-1 from TRANSFER_SRC_OPTIMAL to SHADER_READ_ONLY_OPTIMAL for shader access:
+				{
+					VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+					barrier.srcStageMask = pipelineStage::transfer;
+					barrier.dstStageMask = pipelineStage::fragmentShader;
+					barrier.srcAccessMask = accessMask::transfer::transferRead;
+					barrier.dstAccessMask = accessMask::fragmentShader::shaderRead;
+					barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+					barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+					barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+					barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+					barrier.image = m_image;
+					barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					barrier.subresourceRange.baseArrayLayer = 0;
+					barrier.subresourceRange.baseMipLevel = i - 1;
+					barrier.subresourceRange.layerCount = 1;
+					barrier.subresourceRange.levelCount = 1;
 
-				mipWidth = std::max(1, mipWidth / 2);
-				mipHeight = std::max(1, mipHeight / 2);
-				mipDepth = std::max(1, mipDepth / 2);
+					VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+					dependencyInfo.imageMemoryBarrierCount = 1;
+					dependencyInfo.pImageMemoryBarriers = &barrier;
+
+					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+
+					mipWidth = std::max(1, mipWidth / 2);
+					mipHeight = std::max(1, mipHeight / 2);
+					mipDepth = std::max(1, mipDepth / 2);
+				}
 			}
 
-			barrier.subresourceRange.baseMipLevel = mipLevels - 1;
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			// Transition last mip level to shader read-only:
+			{
+				VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+				barrier.srcStageMask = pipelineStage::transfer;
+				barrier.dstStageMask = pipelineStage::fragmentShader;
+				barrier.srcAccessMask = accessMask::transfer::transferWrite;
+				barrier.dstAccessMask = accessMask::fragmentShader::shaderRead;
+				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier.image = m_image;
+				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				barrier.subresourceRange.baseArrayLayer = 0;
+				barrier.subresourceRange.baseMipLevel = mipLevels - 1;
+				barrier.subresourceRange.layerCount = 1;
+				barrier.subresourceRange.levelCount = 1;
 
-			vkCmdPipelineBarrier(commandBuffer,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-				0, nullptr,
-				0, nullptr,
-				1, &barrier);
+				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+				dependencyInfo.imageMemoryBarrierCount = 1;
+				dependencyInfo.pImageMemoryBarriers = &barrier;
 
-			SingleTimeCommand::EndCommand(Context::logicalDevice.GetGraphicsQueue());
-
+				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+			}
 			m_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		}
+		void VmaImage::GenerateMipmaps(uint32_t mipLevels)
+		{
+			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetGraphicsQueue());
+			GenerateMipmaps(commandBuffer, mipLevels);
+			SingleTimeCommand::EndCommand(Context::logicalDevice.GetGraphicsQueue());
 		}
 
 

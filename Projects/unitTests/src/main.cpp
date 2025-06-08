@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "logger.h"
 #include <iostream>
 
 // Floating point precision:
@@ -58,6 +59,7 @@ constexpr float epsilon = 1e-6f;
 
 int main(int argc, char** argv)
 {
+	emberEngine::Logger::Init();
 	math::Random::Init();
 	testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();

@@ -18,6 +18,7 @@ namespace emberEngine
 	}
 
 
+
 	/// <summary>
 	/// Polymorphic parent class for different kinds of 2d textures.
 	/// Each derivative handles a different type of VkImage.
@@ -49,7 +50,7 @@ namespace emberEngine
 
 	protected: // Methods:
 		uint32_t BytesPerChannel(VkFormat format);
-		vulkanBackend::VmaImage* CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const vulkanBackend::DeviceQueue& queue);
+		void CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const vulkanBackend::DeviceQueue& queue);
 	};
 }
 

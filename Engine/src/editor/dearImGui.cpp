@@ -1,6 +1,7 @@
 #include "dearImGui.h"
 #include "editor.h"
 #include "logger.h"
+#include "macros.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "sampler.h"
@@ -13,18 +14,6 @@
 #include <imgui.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
-
-
-
-// Macro to disable Dear ImGui:
-//#define DISABLE_DEAR_IMGUI
-#ifdef DISABLE_DEAR_IMGUI
-	#define RETURN_DISABLED() return
-	#define RETURN_FALSE_DISABLED() return false
-#else
-	#define RETURN_DISABLED()
-	#define RETURN_FALSE_DISABLED()
-#endif
 
 
 
@@ -87,6 +76,10 @@ namespace emberEngine
 		CreateDescriptorSetLayout();
 		CreateDescriptorSets();
 		UpdateDescriptor(sampler, imageView);
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("DearImGui initialized.");
+		#endif
 	}
 	void DearImGui::Clear()
 	{

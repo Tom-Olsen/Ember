@@ -1,4 +1,6 @@
 #include "bufferManager.h"
+#include "logger.h"
+#include "macros.h"
 #include "uniformBuffer.h"
 #include "storageBuffer.h"
 #include "vulkanContext.h"
@@ -27,6 +29,10 @@ namespace emberEngine
 
 		StorageBuffer* dummyStorageBuffer = new StorageBuffer(1, 1);
 		AddBuffer(dummyStorageBuffer, "dummyStorageBuffer");
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("BufferManager initialized.");
+		#endif
 	}
 	void BufferManager::Clear()
 	{

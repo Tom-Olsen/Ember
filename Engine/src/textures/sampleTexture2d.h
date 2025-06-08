@@ -6,6 +6,11 @@
 
 namespace emberEngine
 {
+	// Forward declerations:
+	namespace vulkanBackend
+	{
+		class TextureBatchUploader;
+	}
 	/// <summary>
 	/// Texture2d specialization: <para/>
 	/// -VkImageUsageFlags		= transfer src (for mipmap creation), transfer dst, storage, sample <para/>
@@ -16,6 +21,7 @@ namespace emberEngine
 	{
 	public: // Methods:
 		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath);
+		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath, vulkanBackend::TextureBatchUploader batchUploader);
 		~SampleTexture2d();
 	};
 }

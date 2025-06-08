@@ -1,6 +1,7 @@
 #include "renderPassManager.h"
 #include "vulkanForwardRenderPass.h"
 #include "logger.h"
+#include "macros.h"
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderPass.h"
 #include "vulkanShadowRenderPass.h"
@@ -36,6 +37,10 @@ namespace emberEngine
 		s_pShadowRenderPass = std::make_unique<ShadowRenderPass>();
 		s_pForwardRenderPass = std::make_unique<ForwardRenderPass>(s_renderWidth, s_renderHeight);
 		s_pPresentRenderPass = std::make_unique<PresentRenderPass>();
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("RenderPassManager initialized.");
+		#endif
 	}
 	void RenderPassManager::Clear()
 	{

@@ -1,4 +1,6 @@
 #include "compute.h"
+#include "logger.h"
+#include "macros.h"
 
 
 
@@ -18,6 +20,10 @@ namespace emberEngine
 		compute::Immediate::Init();
 		compute::PostRender::Init();
 		compute::PreRender::Init();
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("Compute initialized.");
+		#endif
 	}
 	void Compute::Clear()
 	{

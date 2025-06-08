@@ -31,6 +31,7 @@ namespace emberEngine
 			VkImageSubresourceRange m_subresourceRange;
 			DeviceQueue m_queue;
 			VkImageLayout m_layout;
+			// Ember::TODO: add m_size member?
 
 		public: // Methods:
 			VmaImage(const std::string name, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue);
@@ -45,6 +46,7 @@ namespace emberEngine
 			const VkImageCreateInfo& GetVkImageCreateInfo() const;
 			const VmaAllocationCreateInfo& GetVmaAllocationCreateInfo() const;
 			const VkImageSubresourceRange& GetSubresourceRange() const;
+			const DeviceQueue& GetDeviceQueue() const;
 			const VkImageLayout& GetLayout() const;
 			uint64_t GetWidth() const;
 			uint64_t GetHeight() const;
@@ -57,11 +59,14 @@ namespace emberEngine
 			// Only changes the m_layout member without doing an image layout transition.
 			void SetLayout(VkImageLayout imageLayout);
 
+			// Upload/Download:
+			void Upload(VkCommandBuffer commandBuffer, void* pSrc, uint64_t size, uint32_t layerCount);
+			void Upload(void* pSrc, uint64_t size, uint32_t layerCount);
+
 			// Transitions:
-			void TransitionLayout(VkCommandBuffer vkCommandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
+			void TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
 			void TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
-			void TransitionQueue(const DeviceQueue& newQueue, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
-			void TransitionLayoutAndQueue(VkImageLayout newLayout, const DeviceQueue& newQueue, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
+			void GenerateMipmaps(VkCommandBuffer commandBuffer, uint32_t mipLevels);
 			void GenerateMipmaps(uint32_t mipLevels);
 
 			// Static methods:

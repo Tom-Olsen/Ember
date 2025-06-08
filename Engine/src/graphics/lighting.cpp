@@ -1,4 +1,6 @@
 #include "lighting.h"
+#include "logger.h"
+#include "macros.h"
 
 
 
@@ -29,6 +31,10 @@ namespace emberEngine
 		s_pointLightRotationMatrices[3] = Float4x4::RotateY(-math::pi2);
 		s_pointLightRotationMatrices[4] = Float4x4::RotateX(math::pi2);
 		s_pointLightRotationMatrices[5] = Float4x4::RotateX(-math::pi2);
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("Lighting initialized.");
+		#endif
 	}
 	void Lighting::Clear()
 	{

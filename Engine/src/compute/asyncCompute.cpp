@@ -153,7 +153,7 @@ namespace emberEngine
 			}
 
 			// Setup compute call:
-			ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(pComputeShader);
+			ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)pComputeShader);
 			ComputeCall computeCall = { 0, threadCount, pComputeShader, pShaderProperties, VK_ACCESS_2_NONE, VK_ACCESS_2_NONE };
 			s_computeSessions[sessionID].RecordComputeCall(computeCall);
 
@@ -204,6 +204,10 @@ namespace emberEngine
 		// Private methods:
 		void Async::ResetComputeSession(uint32_t sessionID)
 		{
+			// Return all pShaderProperties of compute calls back to the corresponding pool:
+			for (ComputeCall& computeCall : s_computeSessions[sessionID].GetComputeCalls())
+				PoolManager::ReturnShaderProperties((Shader*)computeCall.pComputeShader, computeCall.pShaderProperties);
+
 			s_pCommandPool->ResetBuffer(sessionID);
 			s_computeSessions[sessionID].state = ComputeSession::State::idle;
 			s_computeSessions[sessionID].ResetComputeCalls();

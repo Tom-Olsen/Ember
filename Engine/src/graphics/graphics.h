@@ -38,8 +38,6 @@ namespace emberEngine
 		static std::vector<DrawCall> s_staticDrawCalls;
 		static std::vector<DrawCall> s_dynamicDrawCalls;
 		static std::vector<DrawCall*> s_sortedDrawCallPointers;
-		static std::unordered_map<Shader*, ShaderPropertiesPool> s_shaderPropertiesPoolMap;
-		static ShaderPropertiesPool s_shadowShaderPropertiesPool;	// Ember::TODO: either remove and use above pool for everything, or make this pool with block allocation.
 		static Mesh* s_pLineSegmentMesh;
 		static Mesh* s_pSphereMesh;
 		static Mesh* s_pArrowMesh;

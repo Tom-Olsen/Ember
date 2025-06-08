@@ -16,6 +16,7 @@ namespace emberEngine
 			m_swapchain = VK_NULL_HANDLE;
 			m_pLogicalDevice = nullptr;
 			m_pSurface = nullptr;
+			m_cleared = true;
 		}
 		void Swapchain::Init(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usage, Swapchain* pOldSwapchain)
 		{
@@ -29,20 +30,22 @@ namespace emberEngine
 			CreateSwapchain(usage, pOldSwapchain);
 			CreateImages();
 			CreateImageViews();
+			m_cleared = false;
 		}
 		void Swapchain::Clear()
 		{
+			if (m_cleared)
+				return;
+
 			VKA(vkDeviceWaitIdle(m_pLogicalDevice->GetVkDevice()));
 			for (uint32_t i = 0; i < m_imageViews.size(); i++)
 				vkDestroyImageView(m_pLogicalDevice->GetVkDevice(), m_imageViews[i], nullptr);
 			vkDestroySwapchainKHR(m_pLogicalDevice->GetVkDevice(), m_swapchain, nullptr);
+			m_cleared = true;
 		}
 		Swapchain::~Swapchain()
 		{
-			VKA(vkDeviceWaitIdle(m_pLogicalDevice->GetVkDevice()));
-			for (uint32_t i = 0; i < m_imageViews.size(); i++)
-				vkDestroyImageView(m_pLogicalDevice->GetVkDevice(), m_imageViews[i], nullptr);
-			vkDestroySwapchainKHR(m_pLogicalDevice->GetVkDevice(), m_swapchain, nullptr);
+			Clear();
 		}
 
 

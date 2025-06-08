@@ -1,5 +1,6 @@
 #include "materialManager.h"
 #include "logger.h"
+#include "macros.h"
 #include "material.h"
 #include "vulkanContext.h"
 
@@ -76,6 +77,10 @@ namespace emberEngine
 		AddMaterial(pTestA);
 		Material* pTestB = new Material(forwardOpaqueType, "testBMaterial", opaqueQueue, directoryPath + "/testB.vert.spv", directoryPath + "/testB.frag.spv");
 		AddMaterial(pTestB);
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("MaterialManager initialized.");
+		#endif
 	}
 	void MaterialManager::Clear()
 	{

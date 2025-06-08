@@ -44,11 +44,14 @@ namespace emberEngine
 		void SetData(const void* pSrc, uint64_t size, uint64_t offset);
 
 		// Upload:
-		void UploadToBuffer(Buffer* dstBuffer, const vulkanBackend::DeviceQueue& queue);
-		void UploadToImage(vulkanBackend::VmaImage* dstImage, const vulkanBackend::DeviceQueue& queue, uint64_t layerCount);
+		void UploadToBuffer(VkCommandBuffer commandBuffer, Buffer* pDstBuffer);
+		void UploadToBuffer(Buffer* pDstBuffer, const vulkanBackend::DeviceQueue& queue);
+		void UploadToImage(VkCommandBuffer commandBuffer, vulkanBackend::VmaImage* pDstImage, uint64_t layerCount);
+		void UploadToImage(const vulkanBackend::DeviceQueue& queue, vulkanBackend::VmaImage* pDstImage, uint64_t layerCount);
 
 		// Download:
-		void DownloadFromBuffer(Buffer* srcBuffer, const vulkanBackend::DeviceQueue& queue);
+		void DownloadFromBuffer(VkCommandBuffer commandBuffer, Buffer* pSrcBuffer);
+		void DownloadFromBuffer(Buffer* pSrcBuffer, const vulkanBackend::DeviceQueue& queue);
 	};
 }
 
