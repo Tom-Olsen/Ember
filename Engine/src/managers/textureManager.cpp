@@ -8,6 +8,7 @@
 #include "textureCube.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include "vulkanTextureBatchUploader.h"
 #include <filesystem>
 #include <unordered_set>
 
@@ -37,6 +38,7 @@ namespace emberEngine
 		#endif
 
 		// Iterate through the texture directory:
+		TextureBatchUploader batchUploader;
 		std::string engineRootPath = ENGINE_ROOT_PATH;
 		std::filesystem::path directoryPath = engineRootPath + "/textures/";
 		std::unordered_set<std::string> validExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
@@ -54,11 +56,13 @@ namespace emberEngine
 						format = VK_FORMAT_R8G8B8A8_UNORM;
 					else if (name.find("roughness") != std::string::npos || name.find("metallic") != std::string::npos)
 						format = VK_FORMAT_R8_UNORM;
-					SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path());
+					//SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path());
+					SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path(), batchUploader);
 					AddTexture2d(pTexture);
 				}
 			}
 		}
+		batchUploader.UploadTextures();
 		
 		// TextureCubes:
 		TextureCube* skyboxWhite = new TextureCube(engineRootPath + "/textures/white/", "skyboxWhite", VK_FORMAT_R8G8B8A8_SRGB);

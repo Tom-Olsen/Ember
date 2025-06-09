@@ -23,6 +23,30 @@ namespace emberEngine
 	// Constructor/Desctructor:
 	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath)
 	{
+		StagingBuffer* pStagingBuffer = Init(name, format, filePath);
+
+		// GPU commands:
+		VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetTransferQueue());
+		VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetGraphicsQueue());
+		RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer);
+		SingleTimeCommand::EndLinkedCommands(Context::logicalDevice.GetTransferQueue(), Context::logicalDevice.GetGraphicsQueue(), pipelineStage::transfer);
+		delete pStagingBuffer;
+	}
+	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath, TextureBatchUploader& batchUploader)
+	{
+		StagingBuffer* pStagingBuffer = Init(name, format, filePath);
+		batchUploader.EnqueueTexture(pStagingBuffer, this);
+	}
+	SampleTexture2d::~SampleTexture2d()
+	{
+
+	}
+
+
+
+	// Pritvat methods:
+	StagingBuffer* SampleTexture2d::Init(const std::string& name, VkFormat format, const std::filesystem::path& filePath)
+	{
 		m_name = name;
 		m_channels = STBI_rgb_alpha;	// 4 channels
 		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
@@ -35,8 +59,8 @@ namespace emberEngine
 
 		// Upload: pixelData -> stagingBuffer
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(format);
-		StagingBuffer stagingBuffer(bufferSize);
-		stagingBuffer.SetData(pPixels, bufferSize);
+		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
+		pStagingBuffer->SetData(pPixels, bufferSize);
 		stbi_image_free(pPixels);
 
 		// Define subresource range:
@@ -56,36 +80,26 @@ namespace emberEngine
 		CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 		NAME_VK_IMAGE(m_pImage->GetVkImage(), name + " SampleTexture2d");
 
-		// GPU commands:
-		VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetTransferQueue());
-		VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetGraphicsQueue());
-		{
-			// Transition: Layout: undefined->transfer, Queue: transfer
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = pipelineStage::topOfPipe;
-			VkPipelineStageFlags2 dstStage = pipelineStage::transfer;
-			VkAccessFlags2 srcAccessMask = accessMask::transfer::none;
-			VkAccessFlags2 dstAccessMask = accessMask::transfer::transferWrite;
-			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-
-			// Upload: stagingBuffer -> image
-			stagingBuffer.UploadToImage(transferCommandBuffer, m_pImage.get(), subresourceRange.layerCount);
-
-			// Mipmapping with final transition, layout: transfer->shader read
-			m_pImage->GenerateMipmaps(graphicsCommandBuffer, subresourceRange.levelCount);
-		}
-		SingleTimeCommand::EndLinkedCommands(Context::logicalDevice.GetTransferQueue(), Context::logicalDevice.GetGraphicsQueue(), pipelineStage::transfer);
+		return pStagingBuffer;
 	}
-	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath, vulkanBackend::TextureBatchUploader batchUploader)
-	{
-		m_name = name;
-		m_channels = STBI_rgb_alpha;	// 4 channels
-		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 
-		batchUploader.EnqueueTexture(format, filePath);
-	}
-	SampleTexture2d::~SampleTexture2d()
-	{
 
+
+	// Public methods:
+	void SampleTexture2d::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
+	{
+		// Transition: Layout: undefined->transfer, Queue: transfer
+		VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		VkPipelineStageFlags2 srcStage = pipelineStage::topOfPipe;
+		VkPipelineStageFlags2 dstStage = pipelineStage::transfer;
+		VkAccessFlags2 srcAccessMask = accessMask::transfer::none;
+		VkAccessFlags2 dstAccessMask = accessMask::transfer::transferWrite;
+		m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+
+		// Upload: stagingBuffer -> image
+		pStagingBuffer->UploadToImage(transferCommandBuffer, m_pImage.get(), m_pImage->GetSubresourceRange().layerCount);
+
+		// Mipmapping with final transition, layout: transfer->shader read
+		m_pImage->GenerateMipmaps(graphicsCommandBuffer, m_pImage->GetSubresourceRange().levelCount);
 	}
 }

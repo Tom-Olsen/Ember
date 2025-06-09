@@ -1,6 +1,10 @@
 #include "vulkanTextureBatchUploader.h"
 #include "stb_image.h"
-#include "texture2d.h"
+#include "sampleTexture2d.h"
+#include "stagingBuffer.h"
+#include "vulkanContext.h"
+#include "vulkanPipelineStages.h"
+#include "vulkanSingleTimeCommand.h"
 
 
 
@@ -21,10 +25,9 @@ namespace emberEngine
 
 
 		// Public methods:
-		void TextureBatchUploader::EnqueueTexture(VkFormat format, const std::filesystem::path& filePath)
+		void TextureBatchUploader::EnqueueTexture(StagingBuffer* pStagingBuffer, SampleTexture2d* pSampleTexture2d)
 		{
-			std::scoped_lock lock(m_mutex);
-			m_pendingTextures.push_back({ format, filePath });
+			m_pendingTextures.push_back({ std::unique_ptr<StagingBuffer>(pStagingBuffer), pSampleTexture2d });
 		}
 		void TextureBatchUploader::UploadTextures()
 		{
@@ -35,11 +38,11 @@ namespace emberEngine
 		// Private methods:
 		void TextureBatchUploader::UploadTexture(const PendingTexture& pendingTexture)
 		{
-			//// Load image:
-			//stbi_set_flip_vertically_on_load(true);
-			//stbi_uc* pPixels = stbi_load(pendingTexture.filePath.string().c_str(), &m_width, &m_height, nullptr, m_channels);
-			//if (!pPixels)
-			//	throw std::runtime_error("Failed to load texture image!");
+			VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetTransferQueue());
+			VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetGraphicsQueue());
+			for (auto& pendingTexture: m_pendingTextures)
+				pendingTexture.pSampleTexture2d->RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pendingTexture.pStagingBuffer.get());
+			SingleTimeCommand::EndLinkedCommands(Context::logicalDevice.GetTransferQueue(), Context::logicalDevice.GetGraphicsQueue(), pipelineStage::transfer);
 		}
 	}
 }
