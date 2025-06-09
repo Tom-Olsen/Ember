@@ -3,6 +3,7 @@
 #include "float4.h"
 #include "mathConstants.h"
 #include "mathFunctions.h"
+#include <cmath>
 #include <stdexcept>
 #include <sstream>
 

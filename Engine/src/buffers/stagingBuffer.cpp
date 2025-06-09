@@ -4,6 +4,7 @@
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanSingleTimeCommand.h"
+#include <cstring>
 
 
 

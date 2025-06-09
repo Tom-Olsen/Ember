@@ -2,6 +2,7 @@
 #include "vmaBuffer.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
+#include <cstring>
 #include <vulkan/vulkan.h>
 
 

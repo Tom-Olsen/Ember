@@ -781,8 +781,10 @@ Scene* SingleQuadScene()
 
 int main()
 {
-	// VS debugging:
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	// VS debugging (windows only=MSVC compiler):
+	#ifdef _MSC_VER
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	#endif
 
 	// Initialization:
 	Application::Settings appSettings = {};

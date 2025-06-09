@@ -1,4 +1,4 @@
-#include "SamplerManager.h"
+#include "samplerManager.h"
 #include "logger.h"
 #include "macros.h"
 #include "sampler.h"
