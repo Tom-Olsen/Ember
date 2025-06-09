@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Output directory:
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 
-add_subdirectory("../../engine" EmberEngine)
+add_subdirectory("../../Engine" EmberEngine)
 
 add_executable(${PROJECT_NAME} src/main.cpp)
 

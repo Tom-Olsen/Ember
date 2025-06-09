@@ -2,12 +2,18 @@
 
 
 
-# Set vulkan sdk and dxc paths:
+# Set vulkan sdk path:
 if(NOT DEFINED ENV{VULKAN_SDK})
     message(FATAL_ERROR "VULKAN_SDK environment variable not set. Please set it before building.")
 endif()
 set(VULKAN_SDK_PATH $ENV{VULKAN_SDK})
-set(DXC_PATH "${VULKAN_SDK_PATH}/Bin/dxc.exe")
+
+# Set DXC path depending on platform:
+if(WIN32)
+    set(DXC_PATH "${VULKAN_SDK_PATH}/Bin/dxc.exe")
+else()
+    set(DXC_PATH "${VULKAN_SDK_PATH}/bin/dxc")
+endif()
 
 
 
