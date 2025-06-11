@@ -1,4 +1,5 @@
 #include "meshGenerator.h"
+#include "logger.h"
 #include "mesh.h"
 
 
@@ -239,8 +240,8 @@ namespace emberEngine
 			radius = std::max(1e-8f, radius);
 			Mesh* pMesh = UnitCube();
 			for (int i = 0; i < subdivisions; i++)
-				pMesh->Subdivide();
-
+                pMesh->Subdivide();
+            
 			pMesh->SetName(name);
 			pMesh->Spherify(1.0f, radius);
 			return pMesh;

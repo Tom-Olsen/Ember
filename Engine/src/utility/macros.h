@@ -11,7 +11,7 @@ namespace emberEngine
 
 
 	// enable/disable Dear ImGui:
-	//#define DISABLE_DEAR_IMGUI
+	#define DISABLE_DEAR_IMGUI
 	#ifdef DISABLE_DEAR_IMGUI
 	#define RETURN_DISABLED() return
 	#define RETURN_FALSE_DISABLED() return false
