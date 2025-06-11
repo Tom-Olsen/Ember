@@ -30,74 +30,74 @@ namespace emberEngine
 		Mesh* pUnitQuad = MeshGenerator::UnitQuad();
 		pUnitQuad->SetName("unitQuad");
 		AddMesh(pUnitQuad);
-        
+		
 		Mesh* pUnitCube = MeshGenerator::UnitCube();
 		pUnitCube->SetName("unitCube");
 		AddMesh(pUnitCube);
-        
+		
 		Mesh* pFullScreenRenderQuad = MeshGenerator::FullScreenRenderQuad();
 		pFullScreenRenderQuad->SetName("fullScreenRenderQuad");
 		AddMesh(pFullScreenRenderQuad);
-        
+		
 		Mesh* pUnitCubeInverse = MeshGenerator::UnitCube()->InvertFaces();
 		pUnitCubeInverse->SetName("unitCubeInverse");
 		AddMesh(pUnitCubeInverse);
-        
+		
 		Mesh* pHalfCube = MeshGenerator::HalfCube();
 		pHalfCube->SetName("halfCube");
 		AddMesh(pHalfCube);
-        
+		
 		Mesh* pCubeSphere = MeshGenerator::CubeSphere(0.5f, 3, "cubeSphere");
 		AddMesh(pCubeSphere);
-        
+		
 		Mesh* pDisk = MeshGenerator::Disk(0.5f, 16, "disk");
 		AddMesh(pDisk);
-        
+		
 		Mesh* pArcFlatUv = MeshGenerator::ArcFlatUv(0.3f, 0.7f, 135.0f, 16, "arcFlatUv");
 		AddMesh(pArcFlatUv);
-        
+		
 		Mesh* pArcCurvedUv = MeshGenerator::ArcCurvedUv(0.3f, 0.7f, 135.0f, 16, "arcCurvedUv");
 		AddMesh(pArcCurvedUv);
-        
+		
 		Mesh* pConeSmooth = MeshGenerator::ConeSmooth(0.5f, 1.0f, 16, "coneSmooth");
 		AddMesh(pConeSmooth);
-        
+		
 		Mesh* pConeEdgy = MeshGenerator::ConeEdgy(0.5f, 1.0f, 16, "coneEdgy");
 		AddMesh(pConeEdgy);
-        
+		
 		Mesh* pZylinderSmooth = MeshGenerator::ZylinderSmooth(0.5f, 1.0f, 16, "zylinderSmooth");
 		AddMesh(pZylinderSmooth);
-        
+		
 		Mesh* pZylinderEdgy = MeshGenerator::ZylinderEdgy(0.5f, 1.0f, 16, "zylinderEdgy");
 		AddMesh(pZylinderEdgy);
-        
+		
 		Mesh* pArrowSmooth = MeshGenerator::ArrowSmooth(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowSmooth");
 		AddMesh(pArrowSmooth);
-        
+		
 		Mesh* pArrowEdgy = MeshGenerator::ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowEdgy");
 		AddMesh(pArrowEdgy);
-        
+		
 		Mesh* pThreeLeg = MeshGenerator::ThreeLeg();
 		pThreeLeg->SetName("threeLeg");
 		AddMesh(pThreeLeg);
-        
+		
 		Mesh* pFourLeg = MeshGenerator::FourLeg();
 		pFourLeg->SetName("fourLeg");
 		AddMesh(pFourLeg);
-        
+		
 		Mesh* pCamera = MeshGenerator::Camera();
 		pCamera->SetName("camera");
 		AddMesh(pCamera);
-        
+		
 		Mesh* pFrame = MeshGenerator::Frame(0.15f, 2.0f);
 		pFrame->SetName("frame");
 		AddMesh(pFrame);
-        
+		
 		std::filesystem::path pathToFile = (std::string)ENGINE_ROOT_PATH + "/meshes/Leb9.csv";
 		Mesh* pLeb9 = MeshReader::ReadCsvFile(pathToFile);
 		pLeb9->SetName("Leb9");
 		AddMesh(pLeb9);
-        
+		
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("MeshManager initialized.");
 		#endif
