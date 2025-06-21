@@ -11,6 +11,7 @@
 #include "meshTester.h"
 #include "pointLight.h"
 #include "postRenderEffects.h"
+#include "profiler.h"
 #include "spinGlobal.h"
 #include "spinLocal.h"
 #include "spotLight.h"
@@ -786,6 +787,8 @@ int main()
 		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	#endif
 
+	Profiler::Session::Get().Start("defaultProject", "profilingResults");
+
 	// Initialization:
 	Application::Settings appSettings = {};
 	appSettings.vSyncEnabled = false;
@@ -829,5 +832,6 @@ int main()
 
 	// Terminate:
 	delete pScene;
+	Profiler::Session::Get().End();
 	return 0;
 }

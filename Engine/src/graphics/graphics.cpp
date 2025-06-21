@@ -8,6 +8,7 @@
 #include "mesh.h"
 #include "meshManager.h"
 #include "poolManager.h"
+#include "profiler.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "shader.h"
@@ -348,6 +349,7 @@ namespace emberEngine
 	}
 	std::vector<DrawCall*>* Graphics::GetSortedDrawCallPointers()
 	{
+		PROFILE_SCOPE("GetSortedDrawCallPointers");
 		// Populate sorted draw call pointers vector:
 		s_sortedDrawCallPointers.clear();
 		s_sortedDrawCallPointers.reserve(s_staticDrawCalls.size() + s_dynamicDrawCalls.size());

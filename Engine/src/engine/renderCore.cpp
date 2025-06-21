@@ -11,6 +11,7 @@
 #include "materialManager.h"
 #include "mesh.h"
 #include "meshManager.h"
+#include "profiler.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "shaderProperties.h"
@@ -77,6 +78,8 @@ namespace emberEngine
 	// Public methods:
 	bool RenderCore::RenderFrame()
 	{
+		PROFILE_SCOPE("RenderFrame");
+
 		// Resize Swapchain if needed:
 		VkExtent2D windowExtent = Context::window.GetExtent();
 		VkExtent2D surfaceExtend = Context::surface.GetCurrentExtent();
@@ -88,21 +91,30 @@ namespace emberEngine
 		}
 
 		// Wait for fence of previous frame with same frameIndex to finish:
-		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_fences[Context::frameIndex], VK_TRUE, UINT64_MAX));
-		if (!AcquireImage())
-			return 0;
-		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_fences[Context::frameIndex]));
+		{
+			PROFILE_SCOPE("WaitFence");
+			VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_fences[Context::frameIndex], VK_TRUE, UINT64_MAX));
+			if (!AcquireImage())
+				return 0;
+			VKA(vkResetFences(Context::GetVkDevice(), 1, &m_fences[Context::frameIndex]));
+		}
 
 		// Get draw calls:
 		m_pDrawCalls = Graphics::GetSortedDrawCallPointers();
 
 		// Record and submit current frame commands:
-		m_commandPools[Context::frameIndex].ResetPool();
-		RecordPreRenderComputeCommandBuffer();
-		RecordShadowCommandBuffer();
-		RecordForwardCommandBuffer();
-		RecordPostRenderComputeCommandBuffer();
-		RecordPresentCommandBuffer();
+		{
+			PROFILE_SCOPE("ResetPool");
+			m_commandPools[Context::frameIndex].ResetPool();
+		}
+		{
+			PROFILE_SCOPE("Record");
+			RecordPreRenderComputeCommandBuffer();
+			RecordShadowCommandBuffer();
+			RecordForwardCommandBuffer();
+			RecordPostRenderComputeCommandBuffer();
+			RecordPresentCommandBuffer();
+		}
 		SubmitCommandBuffers();
 
 		// Reset engine data for next frame:
@@ -600,6 +612,7 @@ namespace emberEngine
 
 	void RenderCore::SubmitCommandBuffers()
 	{
+		PROFILE_SCOPE("SubmitCommandBuffers");
 		// Ember::TODO: Try:
 		// Compute shaders do not need to wait for aquire semaphore. Instead make them only wait for previous compute to finish.
 		// Shadow shaders then wait for aquire and computeToShadow semaphore.
@@ -677,6 +690,7 @@ namespace emberEngine
 	}
 	bool RenderCore::PresentImage()
 	{
+		PROFILE_SCOPE("PresentImage");
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &m_releaseSemaphores[Context::frameIndex];	// wait for releaseSemaphor
