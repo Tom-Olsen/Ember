@@ -31,13 +31,6 @@ namespace emberEngine
 		}
 		void TextureBatchUploader::UploadTextures()
 		{
-
-		}
-
-
-		// Private methods:
-		void TextureBatchUploader::UploadTexture(const PendingTexture& pendingTexture)
-		{
 			const DeviceQueue& transferQueue = Context::logicalDevice.GetTransferQueue();
 			const DeviceQueue& graphicsQueue = Context::logicalDevice.GetGraphicsQueue();
 			if (transferQueue.queue != graphicsQueue.queue)

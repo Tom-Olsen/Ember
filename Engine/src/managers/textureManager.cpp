@@ -56,8 +56,8 @@ namespace emberEngine
 						format = VK_FORMAT_R8G8B8A8_UNORM;
 					else if (name.find("roughness") != std::string::npos || name.find("metallic") != std::string::npos)
 						format = VK_FORMAT_R8_UNORM;
-					SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path());
-					// SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path(), batchUploader);
+					//SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path());				// without batching
+					SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path(), batchUploader);	// with batching
 					AddTexture2d(pTexture);
 				}
 			}

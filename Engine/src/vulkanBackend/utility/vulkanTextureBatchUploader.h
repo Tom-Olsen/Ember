@@ -34,9 +34,6 @@ namespace emberEngine
             
             void EnqueueTexture(StagingBuffer* pStagingBuffer, SampleTexture2d* pSampleTexture2d);
             void UploadTextures();
-            
-        private: // Methods:
-            void UploadTexture(const PendingTexture& texture);
         };
     }
 }

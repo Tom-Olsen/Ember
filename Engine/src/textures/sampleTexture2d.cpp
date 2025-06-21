@@ -68,7 +68,7 @@ namespace emberEngine
 		if (!pPixels)
 			throw std::runtime_error("Failed to load texture image!");
 
-		// Upload: pixelData -> stagingBuffer
+		// Upload: pixelData -> stagingBuffer:
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(format);
 		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
 		pStagingBuffer->SetData(pPixels, bufferSize);
