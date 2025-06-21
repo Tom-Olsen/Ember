@@ -38,11 +38,23 @@ namespace emberEngine
 		// Private methods:
 		void TextureBatchUploader::UploadTexture(const PendingTexture& pendingTexture)
 		{
-			VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetTransferQueue());
-			VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetGraphicsQueue());
-			for (auto& pendingTexture: m_pendingTextures)
-				pendingTexture.pSampleTexture2d->RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pendingTexture.pStagingBuffer.get());
-			SingleTimeCommand::EndLinkedCommands(Context::logicalDevice.GetTransferQueue(), Context::logicalDevice.GetGraphicsQueue(), pipelineStage::transfer);
+			const DeviceQueue& transferQueue = Context::logicalDevice.GetTransferQueue();
+			const DeviceQueue& graphicsQueue = Context::logicalDevice.GetGraphicsQueue();
+			if (transferQueue.queue != graphicsQueue.queue)
+			{
+				VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
+				VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
+				for (auto& pendingTexture : m_pendingTextures)
+					pendingTexture.pSampleTexture2d->RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pendingTexture.pStagingBuffer.get());
+				SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, pipelineStage::transfer);
+			}
+			else
+			{
+				VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
+				for (auto& pendingTexture : m_pendingTextures)
+					pendingTexture.pSampleTexture2d->RecordGpuCommands(commandBuffer, commandBuffer, pendingTexture.pStagingBuffer.get());
+				SingleTimeCommand::EndCommand(graphicsQueue);
+			}
 		}
 	}
 }

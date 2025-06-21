@@ -38,7 +38,7 @@ namespace emberEngine
 			const DeviceQueue& GetTransferQueue() const;
 
 		private: // Methods:
-			uint32_t FindGraphicsComputeTransferQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice) const;
+			std::pair<uint32_t, uint32_t> FindGraphicsComputeTransferQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR) const;
 			void PrintQueueFamilyInfo(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR);
 		};
 	}

@@ -28,22 +28,32 @@ namespace emberEngine
 			// Assertions:
 			assert(pPhysicalDevice != nullptr);
 			assert(pSurface != nullptr);
+			//PrintQueueFamilyInfo(pPhysicalDevice->GetVkPhysicalDevice(), pSurface->GetVkSurfaceKHR());
 
 			// Find queue family indices:
-			uint32_t familyIndex = FindGraphicsComputeTransferQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice());
-			m_graphicsQueue.familyIndex = familyIndex;
-			m_presentQueue.familyIndex = familyIndex;
-			m_computeQueue.familyIndex = familyIndex;
-			m_transferQueue.familyIndex = familyIndex;
+			auto [queueFamilyIndex, queueCount] = FindGraphicsComputeTransferQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice(), pSurface->GetVkSurfaceKHR());
+			m_graphicsQueue.familyIndex = queueFamilyIndex;
+			m_presentQueue.familyIndex = queueFamilyIndex;
+			m_computeQueue.familyIndex = queueFamilyIndex;
+			m_transferQueue.familyIndex = queueFamilyIndex;
 
 			// Vector of queue create infos:
-			float queuePriorities[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 			VkDeviceQueueCreateInfo queueCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
-			queueCreateInfo.queueFamilyIndex = familyIndex;
-			queueCreateInfo.queueCount = 4;
-			queueCreateInfo.pQueuePriorities = queuePriorities;
+			queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
+			if (queueCount >= 3)
+			{
+				float queuePriorities[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+				queueCreateInfo.queueCount = 4;
+				queueCreateInfo.pQueuePriorities = queuePriorities;
+			}
+			else
+			{
+				float queuePriorities[1] = { 1.0f };
+				queueCreateInfo.queueCount = 1;
+				queueCreateInfo.pQueuePriorities = queuePriorities;
+			}
 
-			// Sync2 feature. Allows for src/dst stage to be 0 (VK_PIPELINE_STAGE_NONE).
+			// Sync2 featur: Allows for src/dst stage to be 0 (VK_PIPELINE_STAGE_NONE).
 			VkPhysicalDeviceSynchronization2FeaturesKHR sync2Features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR };
 			sync2Features.synchronization2 = VK_TRUE;
 
@@ -64,10 +74,21 @@ namespace emberEngine
 			VKA(vkCreateDevice(pPhysicalDevice->GetVkPhysicalDevice(), &deviceCreateInfo, nullptr, &m_device));
 
 			// Aquire queues:
-			vkGetDeviceQueue(m_device, m_graphicsQueue.familyIndex, 0, &m_graphicsQueue.queue);
-			vkGetDeviceQueue(m_device, m_presentQueue.familyIndex, 1, &m_presentQueue.queue);
-			vkGetDeviceQueue(m_device, m_computeQueue.familyIndex, 2, &m_computeQueue.queue);
-			vkGetDeviceQueue(m_device, m_transferQueue.familyIndex, 3, &m_transferQueue.queue);
+			if (queueCount >= 3)
+			{
+				vkGetDeviceQueue(m_device, m_graphicsQueue.familyIndex, 0, &m_graphicsQueue.queue);
+				vkGetDeviceQueue(m_device, m_presentQueue.familyIndex, 1, &m_presentQueue.queue);
+				vkGetDeviceQueue(m_device, m_computeQueue.familyIndex, 2, &m_computeQueue.queue);
+				vkGetDeviceQueue(m_device, m_transferQueue.familyIndex, 3, &m_transferQueue.queue);
+			}
+			else
+			{
+				LOG_WARN("Your device only supports a single queue. Async compute will not work.");
+				vkGetDeviceQueue(m_device, m_graphicsQueue.familyIndex, 0, &m_graphicsQueue.queue);
+				vkGetDeviceQueue(m_device, m_presentQueue.familyIndex, 0, &m_presentQueue.queue);
+				vkGetDeviceQueue(m_device, m_computeQueue.familyIndex, 0, &m_computeQueue.queue);
+				vkGetDeviceQueue(m_device, m_transferQueue.familyIndex, 0, &m_transferQueue.queue);
+			}
 		}
 		LogicalDevice::~LogicalDevice()
 		{
@@ -102,25 +123,30 @@ namespace emberEngine
 
 
 		// Private methods:
-		uint32_t LogicalDevice::FindGraphicsComputeTransferQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice) const
+		std::pair<uint32_t, uint32_t> LogicalDevice::FindGraphicsComputeTransferQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR) const
 		{
 			uint32_t queueFamilyCount = 0;
 			vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, nullptr);
 			std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyCount);
 			vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, queueFamilyProperties.data());
 
-			for (uint32_t i = 0; i < queueFamilyCount; i++)
+			for (uint32_t queueFamilyIndex = 0; queueFamilyIndex < queueFamilyCount; queueFamilyIndex++)
 			{
-				VkQueueFamilyProperties queueFamilyProperty = queueFamilyProperties[i];
+				VkQueueFamilyProperties queueFamilyProperty = queueFamilyProperties[queueFamilyIndex];
 				if (queueFamilyProperty.queueCount > 0
 					&& (queueFamilyProperty.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 					&& (queueFamilyProperty.queueFlags & VK_QUEUE_COMPUTE_BIT)
 					&& (queueFamilyProperty.queueFlags & VK_QUEUE_TRANSFER_BIT))
-					return i;
+				{
+					VkBool32 supportPresentMode = VK_FALSE;
+					vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, queueFamilyIndex, vkSurfaceKHR, &supportPresentMode);
+					if (supportPresentMode == VK_TRUE)
+						return { queueFamilyIndex, queueFamilyProperty.queueCount };
+				}
 			}
 
 			throw std::runtime_error("Terminating! No queue family found with GRAPHICS | COMPUTE | TRANSFER capabilities.");
-			return -1;
+			return  { -1, 0 };
 		}
 		void LogicalDevice::PrintQueueFamilyInfo(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR)
 		{

@@ -26,10 +26,21 @@ namespace emberEngine
 		StagingBuffer* pStagingBuffer = Init(name, format, filePath);
 
 		// GPU commands:
-		VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetTransferQueue());
-		VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetGraphicsQueue());
-		RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer);
-		SingleTimeCommand::EndLinkedCommands(Context::logicalDevice.GetTransferQueue(), Context::logicalDevice.GetGraphicsQueue(), pipelineStage::transfer);
+		const DeviceQueue& transferQueue = Context::logicalDevice.GetTransferQueue();
+		const DeviceQueue& graphicsQueue = Context::logicalDevice.GetGraphicsQueue();
+		if (transferQueue.queue != graphicsQueue.queue)
+		{
+			VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
+			VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
+			RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer);
+			SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, pipelineStage::transfer);
+		}
+		else
+		{
+			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
+			RecordGpuCommands(commandBuffer, commandBuffer, pStagingBuffer);
+			SingleTimeCommand::EndCommand(graphicsQueue);
+		}
 		delete pStagingBuffer;
 	}
 	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath, TextureBatchUploader& batchUploader)
