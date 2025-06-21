@@ -17,6 +17,11 @@ namespace emberEngine
 	public: // Methods:
 		DepthTexture2dArray(const std::string& name, VkFormat format, int width, int height, uint32_t layerCount);
 		~DepthTexture2dArray();
+
+	private: // Methods:
+		StagingBuffer* Init(const std::string& name, VkFormat format, const std::filesystem::path& path) override;
+	public: // Methods:
+		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer) override;
 	};
 }
 

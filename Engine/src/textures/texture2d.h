@@ -10,6 +10,7 @@
 namespace emberEngine
 {
 	// Forward declarations:
+	class StagingBuffer;
 	namespace vulkanBackend
 	{
 		class VmaBuffer;
@@ -51,6 +52,10 @@ namespace emberEngine
 	protected: // Methods:
 		uint32_t BytesPerChannel(VkFormat format);
 		void CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const vulkanBackend::DeviceQueue& queue);
+		virtual StagingBuffer* Init(const std::string& name, VkFormat format, const std::filesystem::path& path) = 0;
+
+	public: // Methods:
+		virtual void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer) = 0;
 	};
 }
 

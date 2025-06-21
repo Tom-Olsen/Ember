@@ -10,7 +10,7 @@ namespace emberEngine
 {
     // Forward declerations:
     class StagingBuffer;
-    class SampleTexture2d;
+    class Texture2d;
 
 
 
@@ -22,7 +22,7 @@ namespace emberEngine
             struct PendingTexture
             {
                 std::unique_ptr<StagingBuffer> pStagingBuffer;
-                SampleTexture2d* pSampleTexture2d;  // replace with polymorphic Texture class.
+                Texture2d* pTexture2d;  // replace with polymorphic Texture class.
             };
 
         private: // Members:
@@ -32,7 +32,7 @@ namespace emberEngine
             TextureBatchUploader();
             ~TextureBatchUploader();
             
-            void EnqueueTexture(StagingBuffer* pStagingBuffer, SampleTexture2d* pSampleTexture2d);
+            void EnqueueTexture(StagingBuffer* pStagingBuffer, Texture2d* pTexture2d);
             void UploadTextures();
         };
     }

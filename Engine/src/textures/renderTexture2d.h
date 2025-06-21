@@ -17,6 +17,11 @@ namespace emberEngine
 	public: // Methods:
 		RenderTexture2d(const std::string& name, VkFormat format, int width, int height);
 		~RenderTexture2d();
+
+	private: // Methods:
+		StagingBuffer* Init(const std::string& name, VkFormat format, const std::filesystem::path& path) override;
+	public: // Methods:
+		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer) override;
 	};
 }
 

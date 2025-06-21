@@ -40,4 +40,21 @@ namespace emberEngine
 	{
 
 	}
+
+
+
+	// Pritvat methods:
+	StagingBuffer* RenderTexture2d::Init(const std::string& name, VkFormat format, const std::filesystem::path& path)
+	{
+		LOG_WARN("RenderTexture2d::Init(...) not implemented yet.");
+		return nullptr;
+	}
+
+
+
+	// Public methods:
+	void RenderTexture2d::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
+	{
+		LOG_WARN("RenderTexture2d::RecordGpuCommands(...) not implemented yet.");
+	}
 }

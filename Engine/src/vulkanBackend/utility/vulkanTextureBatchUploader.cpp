@@ -25,9 +25,9 @@ namespace emberEngine
 
 
 		// Public methods:
-		void TextureBatchUploader::EnqueueTexture(StagingBuffer* pStagingBuffer, SampleTexture2d* pSampleTexture2d)
+		void TextureBatchUploader::EnqueueTexture(StagingBuffer* pStagingBuffer, Texture2d* pTexture2d)
 		{
-			m_pendingTextures.push_back({ std::unique_ptr<StagingBuffer>(pStagingBuffer), pSampleTexture2d });
+			m_pendingTextures.push_back({ std::unique_ptr<StagingBuffer>(pStagingBuffer), pTexture2d });
 		}
 		void TextureBatchUploader::UploadTextures()
 		{
@@ -38,14 +38,14 @@ namespace emberEngine
 				VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
 				VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
 				for (auto& pendingTexture : m_pendingTextures)
-					pendingTexture.pSampleTexture2d->RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pendingTexture.pStagingBuffer.get());
+					pendingTexture.pTexture2d->RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pendingTexture.pStagingBuffer.get());
 				SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, pipelineStage::transfer);
 			}
 			else
 			{
 				VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
 				for (auto& pendingTexture : m_pendingTextures)
-					pendingTexture.pSampleTexture2d->RecordGpuCommands(commandBuffer, commandBuffer, pendingTexture.pStagingBuffer.get());
+					pendingTexture.pTexture2d->RecordGpuCommands(commandBuffer, commandBuffer, pendingTexture.pStagingBuffer.get());
 				SingleTimeCommand::EndCommand(graphicsQueue);
 			}
 		}

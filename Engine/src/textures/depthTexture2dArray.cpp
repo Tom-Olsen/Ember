@@ -48,4 +48,21 @@ namespace emberEngine
 	{
 
 	}
+
+
+
+	// Pritvat methods:
+	StagingBuffer* DepthTexture2dArray::Init(const std::string& name, VkFormat format, const std::filesystem::path& path)
+	{
+		LOG_WARN("DepthTexture2dArray::Init(...) not implemented yet.");
+		return nullptr;
+	}
+
+
+
+	// Public methods:
+	void DepthTexture2dArray::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
+	{
+		LOG_WARN("DepthTexture2dArray::RecordGpuCommands(...) not implemented yet.");
+	}
 }

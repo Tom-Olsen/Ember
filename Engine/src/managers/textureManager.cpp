@@ -14,6 +14,11 @@
 
 
 
+// Ember::TODO:
+// -have a look at secondary command buffers for texture uploads. Should allow for parallel recording of commands.
+
+
+
 namespace emberEngine
 {
 	using namespace vulkanBackend;
@@ -37,8 +42,9 @@ namespace emberEngine
 		Time::Init();
 		#endif
 
-		// Iterate through the texture directory:
 		TextureBatchUploader batchUploader;
+
+		// Iterate through the texture directory:
 		std::string engineRootPath = ENGINE_ROOT_PATH;
 		std::filesystem::path directoryPath = engineRootPath + "/textures/";
 		std::unordered_set<std::string> validExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
@@ -56,21 +62,21 @@ namespace emberEngine
 						format = VK_FORMAT_R8G8B8A8_UNORM;
 					else if (name.find("roughness") != std::string::npos || name.find("metallic") != std::string::npos)
 						format = VK_FORMAT_R8_UNORM;
-					//SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path());				// without batching
-					SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path(), batchUploader);	// with batching
+					SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path(), batchUploader);
 					AddTexture2d(pTexture);
 				}
 			}
 		}
-		batchUploader.UploadTextures();
 		
 		// TextureCubes:
-		TextureCube* skyboxWhite = new TextureCube(engineRootPath + "/textures/white/", "skyboxWhite", VK_FORMAT_R8G8B8A8_SRGB);
+		TextureCube* skyboxWhite = new TextureCube("skyboxWhite", VK_FORMAT_R8G8B8A8_SRGB, engineRootPath + "/textures/white/", batchUploader);
 		AddTexture2d(skyboxWhite);
-		TextureCube* skybox0 = new TextureCube(engineRootPath + "/textures/skyboxClouds1/", "skybox0", VK_FORMAT_R8G8B8A8_SRGB);
+		TextureCube* skybox0 = new TextureCube("skybox0", VK_FORMAT_R8G8B8A8_SRGB, engineRootPath + "/textures/skyboxClouds1/", batchUploader);
 		AddTexture2d(skybox0);
-		TextureCube* skybox1 = new TextureCube(engineRootPath + "/textures/skyboxNebula0/", "skybox1", VK_FORMAT_R8G8B8A8_SRGB);
+		TextureCube* skybox1 = new TextureCube("skybox1", VK_FORMAT_R8G8B8A8_SRGB, engineRootPath + "/textures/skyboxNebula0/", batchUploader);
 		AddTexture2d(skybox1);
+
+		batchUploader.UploadTextures();
 		
 		// Default storage Texture2dArray:
 		DepthTexture2dArray* blackArray = new DepthTexture2dArray("defaultArrayTexture2d", VK_FORMAT_D32_SFLOAT, 2, 2, 2);

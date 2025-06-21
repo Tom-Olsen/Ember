@@ -127,4 +127,21 @@ namespace emberEngine
 	{
 
 	}
+
+
+
+	// Pritvat methods:
+	StagingBuffer* StorageSampleTexture2d::Init(const std::string& name, VkFormat format, const std::filesystem::path& path)
+	{
+		LOG_WARN("StorageSampleTexture2d::Init(...) not implemented yet.");
+		return nullptr;
+	}
+
+
+
+	// Public methods:
+	void StorageSampleTexture2d::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
+	{
+		LOG_WARN("StorageSampleTexture2d::RecordGpuCommands(...) not implemented yet.");
+	}
 }

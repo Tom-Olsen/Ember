@@ -21,9 +21,9 @@ namespace emberEngine
 
 
 	// Constructor/Desctructor:
-	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath)
+	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path)
 	{
-		StagingBuffer* pStagingBuffer = Init(name, format, filePath);
+		StagingBuffer* pStagingBuffer = Init(name, format, path);
 
 		// GPU commands:
 		const DeviceQueue& transferQueue = Context::logicalDevice.GetTransferQueue();
@@ -43,9 +43,9 @@ namespace emberEngine
 		}
 		delete pStagingBuffer;
 	}
-	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath, TextureBatchUploader& batchUploader)
+	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path, TextureBatchUploader& batchUploader)
 	{
-		StagingBuffer* pStagingBuffer = Init(name, format, filePath);
+		StagingBuffer* pStagingBuffer = Init(name, format, path);
 		batchUploader.EnqueueTexture(pStagingBuffer, this);
 	}
 	SampleTexture2d::~SampleTexture2d()
@@ -56,7 +56,7 @@ namespace emberEngine
 
 
 	// Pritvat methods:
-	StagingBuffer* SampleTexture2d::Init(const std::string& name, VkFormat format, const std::filesystem::path& filePath)
+	StagingBuffer* SampleTexture2d::Init(const std::string& name, VkFormat format, const std::filesystem::path& path)
 	{
 		m_name = name;
 		m_channels = STBI_rgb_alpha;	// 4 channels
@@ -64,11 +64,11 @@ namespace emberEngine
 
 		// Load pixelData:
 		stbi_set_flip_vertically_on_load(true);
-		stbi_uc* pPixels = stbi_load(filePath.string().c_str(), &m_width, &m_height, nullptr, m_channels);
+		stbi_uc* pPixels = stbi_load(path.string().c_str(), &m_width, &m_height, nullptr, m_channels);
 		if (!pPixels)
 			throw std::runtime_error("Failed to load texture image!");
 
-		// Upload: pixelData -> stagingBuffer:
+		// Upload: pixelData -> pStagingBuffer
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(format);
 		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
 		pStagingBuffer->SetData(pPixels, bufferSize);
@@ -107,7 +107,7 @@ namespace emberEngine
 		VkAccessFlags2 dstAccessMask = accessMask::transfer::transferWrite;
 		m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 
-		// Upload: stagingBuffer -> image
+		// Upload: pStagingBuffer -> image
 		pStagingBuffer->UploadToImage(transferCommandBuffer, m_pImage.get(), m_pImage->GetSubresourceRange().layerCount);
 
 		// Mipmapping with final transition, layout: transfer->shader read
