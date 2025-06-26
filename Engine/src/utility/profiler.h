@@ -18,31 +18,32 @@
 // End Session:
 // Profiler::Session::Get().End();
 //
-// Simly drag and drop the resulting .json in chrome uder the link chrome://tracing/ for result visualization.
-
-
-
-#ifndef __INCLUDE_Profiler_hh__
-#define __INCLUDE_Profiler_hh__
+// Simply drag and drop the resulting .json in chrome/chromium uder the link chrome://tracing/ for result visualization.
+#ifndef __INCLUDE_GUARD_profiler_h__
+#define __INCLUDE_GUARD_profiler_h__
 #include <chrono>
 #include <fstream>
 #include <iostream>
 #include <mutex>
-#include <omp.h>
 #include <string>
 #include <vector>
 
 
 
-#define PROFILING 1
+// Ember::TODO: multithreading support via c++ thread management, not openmp
 
+
+
+// Macro for function name extraction with any compiler:
 #if defined(_MSC_VER)
 #define FUNCTION_NAME __FUNCTION__
 #else
 #define FUNCTION_NAME __PRETTY_FUNCTION__
 #endif
 
-#if PROFILING
+// Macros for enabling/disabling chrome://tracing/ profiler:
+#define PROFILING
+#ifdef PROFILING
 #define PROFILE_SCOPE(name) Profiler::Timer timer##__LINE__(name)
 #define PROFILE_FUNCTION() PROFILE_SCOPE(FUNCTION_NAME)
 #else
@@ -237,8 +238,8 @@ namespace Profiler
             long long start = std::chrono::time_point_cast<std::chrono::microseconds>(startTimepoint).time_since_epoch().count();
             long long end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
 
-            uint32_t threadID = omp_get_thread_num();
-            Session::Get().LogResult({ name, start, end, threadID });
+            //uint32_t threadID = omp_get_thread_num();         // implement proper thread handling via c++ threads 
+            Session::Get().LogResult({ name, start, end, 0 });
 
             isStopped = true;
         }
@@ -247,4 +248,4 @@ namespace Profiler
 
 
 
-#endif //__INCLUDE_Profiler_hh__
+#endif //__INCLUDE_GUARD_profiler_h__

@@ -62,7 +62,7 @@ namespace emberEngine
 		ImGui::SetCursorPosX(availableSpace - labelWidth - checkboxWidth - border);
 
 		// Render the label and checkbox
-		ImGui::Text(label.c_str());
+		ImGui::Text("%s", label.c_str());
 		ImGui::SameLine();
 		ImGui::Checkbox(("##" + label).c_str(), v);
 	}
@@ -75,13 +75,13 @@ namespace emberEngine
 	}
 	bool Editor::InputInt(const std::string& label, int* v, int step, int step_fast, ImGuiInputTextFlags flags)
 	{
-		ImGui::Text(label.c_str());
+		ImGui::Text("%s", label.c_str());
 		ImGui::SameLine();
 		return ImGui::InputInt(("##" + label).c_str(), v, step, step_fast, flags);
 	}
 	bool Editor::InputFloat(const std::string& label, float* v, float step, float step_fast, const char* format, ImGuiInputTextFlags flags)
 	{
-		ImGui::Text(label.c_str());
+		ImGui::Text("%s", label.c_str());
 		ImGui::SameLine();
 		return ImGui::InputFloat(("##" + label).c_str(), v, step, step_fast, format, flags);
 	}

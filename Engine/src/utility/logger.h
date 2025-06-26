@@ -32,6 +32,21 @@ namespace emberEngine
 	#define LOG_WARN(...)     emberEngine::Logger::GetCoreLogger()->warn(__VA_ARGS__)
 	#define LOG_ERROR(...)    emberEngine::Logger::GetCoreLogger()->error(__VA_ARGS__)
 	#define LOG_CRITICAL(...) emberEngine::Logger::GetCoreLogger()->critical(__VA_ARGS__)
+
+    //#define ENABLE_DEBUG_LOG
+    #ifdef ENABLE_DEBUG_LOG
+    #define DEBUG_LOG_TRACE(...)    emberEngine::Logger::GetCoreLogger()->trace(__VA_ARGS__)
+    #define DEBUG_LOG_INFO(...)     emberEngine::Logger::GetCoreLogger()->info(__VA_ARGS__)
+    #define DEBUG_LOG_WARN(...)     emberEngine::Logger::GetCoreLogger()->warn(__VA_ARGS__)
+    #define DEBUG_LOG_ERROR(...)    emberEngine::Logger::GetCoreLogger()->error(__VA_ARGS__)
+    #define DEBUG_LOG_CRITICAL(...) emberEngine::Logger::GetCoreLogger()->critical(__VA_ARGS__)
+    #else
+    #define DEBUG_LOG_TRACE(...)    ((void)0)
+    #define DEBUG_LOG_INFO(...)     ((void)0)
+    #define DEBUG_LOG_WARN(...)     ((void)0)
+    #define DEBUG_LOG_ERROR(...)    ((void)0)
+    #define DEBUG_LOG_CRITICAL(...) ((void)0)
+    #endif
 }
 
 

@@ -794,17 +794,17 @@ int main()
 	appSettings.vSyncEnabled = false;
 	appSettings.framesInFlight = 2;
 	appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-	appSettings.windowWidth = 1920;
-	appSettings.windowHeight = 1080;
-	appSettings.renderWidth = 1280;
-	appSettings.renderHeight = 720;
+	appSettings.windowWidth = 2560;//1920;
+	appSettings.windowHeight = 1440;//1080;
+	appSettings.renderWidth = 2560;//1280;
+	appSettings.renderHeight = 1440;//720;
 
 	Application app(appSettings);
 	//Scene* pScene = ShadowCascadeScene();
 	//Scene* pScene = TestScene();
-	//Scene* pScene = DefaultScene();
+	Scene* pScene = DefaultScene();
 	//Scene* pScene = PointLightScene();
-	Scene* pScene = SingleQuadScene();
+	//Scene* pScene = SingleQuadScene();
 	app.SetScene(pScene);
 
 	// Debugging:

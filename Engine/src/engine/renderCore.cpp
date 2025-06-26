@@ -92,7 +92,7 @@ namespace emberEngine
 
 		// Wait for fence of previous frame with same frameIndex to finish:
 		{
-			PROFILE_SCOPE("WaitFence");
+			PROFILE_SCOPE("WaitRenderFence");
 			VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_fences[Context::frameIndex], VK_TRUE, UINT64_MAX));
 			if (!AcquireImage())
 				return 0;
@@ -109,6 +109,7 @@ namespace emberEngine
 		}
 		{
 			PROFILE_SCOPE("Record");
+			DEBUG_LOG_CRITICAL("Recording frame {}", Context::frameIndex);
 			RecordPreRenderComputeCommandBuffer();
 			RecordShadowCommandBuffer();
 			RecordForwardCommandBuffer();
@@ -121,6 +122,7 @@ namespace emberEngine
 		compute::PreRender::ResetComputeCalls();
 		Lighting::ResetLights();
 		Graphics::ResetDrawCalls();
+		compute::PostRender::ResetComputeCalls();
 
 		if (!PresentImage())
 			return 0;
@@ -194,6 +196,7 @@ namespace emberEngine
 					dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+					DEBUG_LOG_TRACE("Pre Render Compute Barrier, callIndex = {}", computeCall->callIndex);
 				}
 				// Compute call is a dispatch:
 				else
@@ -228,6 +231,7 @@ namespace emberEngine
 
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+					DEBUG_LOG_TRACE("Pre Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 				}
 			}
 
@@ -244,6 +248,7 @@ namespace emberEngine
 				dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+				DEBUG_LOG_TRACE("Memory Barrier: compute to vertex");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
@@ -260,7 +265,6 @@ namespace emberEngine
 			shadowPipeline = pShadowMaterial->GetPipeline()->GetVkPipeline();
 			shadowPipelineLayout = pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
 		}
-
 
 		// Begin command buffer:
 		VkCommandBuffer commandBuffer = m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::shadow);
@@ -315,6 +319,7 @@ namespace emberEngine
 
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+							DEBUG_LOG_INFO("Directional light, mesh = {}", drawCall->pMesh->GetName());
 						}
 						shadowMapIndex++;
 					}
@@ -339,6 +344,7 @@ namespace emberEngine
 
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+							DEBUG_LOG_INFO("Positional light, mesh = {}", drawCall->pMesh->GetName());
 						}
 						shadowMapIndex++;
 					}
@@ -427,6 +433,7 @@ namespace emberEngine
 
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);
@@ -510,6 +517,7 @@ namespace emberEngine
 
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+				DEBUG_LOG_ERROR("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 
 				// All effects access the same inputImage and outputImage.
 				// Thus add memory barrier between every effect:
@@ -525,6 +533,7 @@ namespace emberEngine
 					dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+				    DEBUG_LOG_ERROR("Post Render Compute Barrier, callIndex = {}", computeCall->callIndex);
 				}
 			}
 
@@ -536,6 +545,7 @@ namespace emberEngine
 				VkAccessFlags2 srcAccessMask = accessMask::computeShader::shaderWrite;
 				VkAccessFlags2 dstAccessMask = accessMask::fragmentShader::shaderRead;
 				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+				DEBUG_LOG_ERROR("Render Image Transition: ??? -> shader read only");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
@@ -553,7 +563,7 @@ namespace emberEngine
 		{
 			pMesh = MeshManager::GetMesh("fullScreenRenderQuad");
 			pMaterial = MaterialManager::GetMaterial("presentMaterial");
-			pShaderProperties = new ShaderProperties((Shader*)pMaterial);
+			pShaderProperties = new ShaderProperties((Shader*)pMaterial);	// TODO: never gets deleted!
 			pipeline = pMaterial->GetPipeline()->GetVkPipeline();
 			pipelineLayout = pMaterial->GetPipeline()->GetVkPipelineLayout();
 			bindingCount = pMaterial->GetVertexInputDescriptions()->size;
@@ -599,6 +609,7 @@ namespace emberEngine
 
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 				vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
+				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", pMaterial->GetName());
 			}
 			DearImGui::Render(commandBuffer);
 			vkCmdEndRenderPass(commandBuffer);
