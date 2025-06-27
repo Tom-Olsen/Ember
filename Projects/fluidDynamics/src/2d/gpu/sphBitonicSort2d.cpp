@@ -13,7 +13,7 @@ namespace emberEngine
 	// Initialization and cleanup:
 	SphBitonicSort2d::SphBitonicSort2d()
 	{
-		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/src/shaders/bin";
+		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
 		m_pCellKeys = std::make_unique<ComputeShader>("cellKeys2d", directoryPath + "/cellKeys2d.comp.spv");
 		m_pStartIndices = std::make_unique<ComputeShader>("startIndices2d", directoryPath + "/startIndices2d.comp.spv");
 		m_pLocalBitonicSort = std::make_unique<ComputeShader>("sphLocalBitonicSort2d", directoryPath + "/sphLocalBitonicSort2d.comp.spv");

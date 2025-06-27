@@ -102,7 +102,7 @@ namespace emberEngine
 	//	std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
 	//
 	//	// Load compute shader and set shaderProperties:
-	//	std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/src/shaders/bin";
+	//	std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/bin/shaders";
 	//	ComputeShader sortCS = ComputeShader("localBitonicSort", directoryPath + "/localBitonicSort.comp.spv");
 	//	ShaderProperties shaderProperties = ShaderProperties((Shader*)&sortCS);
 	//	shaderProperties.SetStorageBuffer("dataBuffer", &buffer);

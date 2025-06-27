@@ -38,16 +38,16 @@ Scene* InitScene()
 	//	SphFluid2dCpu* pSphFluid2dCpu = pGameObject->AddComponent<SphFluid2dCpu>();
 	//	pScene->AddGameObject(pGameObject);
 	//}
-	//{ // Sph Fluid 2d Gpu:
-	//	GameObject* pGameObject = new GameObject("sphFluid2dGpu");
-	//	SphFluid2dGpu* pSphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
-	//	pScene->AddGameObject(pGameObject);
-	//}
-	{ // Sph Fluid 3d:
-		GameObject* pGameObject = new GameObject("sphFluid3d");
-		SphFluid3d* pSphFluid3d = pGameObject->AddComponent<SphFluid3d>();
+	{ // Sph Fluid 2d Gpu:
+		GameObject* pGameObject = new GameObject("sphFluid2dGpu");
+		SphFluid2dGpu* pSphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
 		pScene->AddGameObject(pGameObject);
 	}
+	//{ // Sph Fluid 3d:
+	//	GameObject* pGameObject = new GameObject("sphFluid3d");
+	//	SphFluid3d* pSphFluid3d = pGameObject->AddComponent<SphFluid3d>();
+	//	pScene->AddGameObject(pGameObject);
+	//}
 	return pScene;
 }
 
@@ -55,8 +55,10 @@ Scene* InitScene()
 
 int main()
 {
-	// VS debugging:
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	// VS debugging (windows only=MSVC compiler):
+	#ifdef _MSC_VER
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	#endif
 
 	// Initialization:
 	Application::Settings appSettings = {};
@@ -71,7 +73,7 @@ int main()
 	Application app(appSettings);
 
 	// Add project specific shaders:
-	std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/src/shaders/bin";
+	std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
 	Material* pParticleMaterial2d = new Material(Material::Type::forwardTransparent, "particleMaterial2d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle2d.vert.spv", directoryPath + "/particle2d.frag.spv");
 	Material* pParticleMaterial3d = new Material(Material::Type::forwardOpaque, "particleMaterial3d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle3d.vert.spv", directoryPath + "/particle3d.frag.spv");
 	MaterialManager::AddMaterial(pParticleMaterial2d);

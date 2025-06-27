@@ -10,11 +10,10 @@ set(VULKAN_SDK_PATH $ENV{VULKAN_SDK})
 
 # Set DXC path depending on platform:
 if(WIN32)
-    set(DXC_PATH "${VULKAN_SDK_PATH}/Bin/dxc.exe")
+    set(DXC_PATH "${VULKAN_SDK_PATH}/bin/dxc.exe")
 else()
     set(DXC_PATH "${VULKAN_SDK_PATH}/bin/dxc")
 endif()
-
 
 
 
@@ -48,7 +47,7 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
         message(FATAL_ERROR "Unknown shader extension for ${SHADER_FILE}")
     endif()
 
-    set(OUTPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/bin/${FILE_NAME}${EXT_TRIMMED}.spv")
+    set(OUTPUT_FILE "${PROJECT_SOURCE_DIR}/bin/shaders/${FILE_NAME}${EXT_TRIMMED}.spv")
     list(APPEND SPIRV_OUTPUTS ${OUTPUT_FILE})
 
     set(REL_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../../Engine/src/shaders")
@@ -56,6 +55,7 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/bin/shaders
         COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE} -I ${ABS_INCLUDE_PATH}
         DEPENDS ${SHADER_FILE}
         COMMENT "Compiling shader: ${SHADER_FILE}"

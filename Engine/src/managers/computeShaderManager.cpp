@@ -27,7 +27,7 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/src/shaders/bin";
+		std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/bin/shaders";
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 		{
 			if (entry.is_regular_file())

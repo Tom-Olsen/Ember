@@ -34,7 +34,7 @@ namespace emberEngine
 		Material::Type skyboxType = Material::Type::skybox;
 		Material::Type presentType = Material::Type::present;
 
-		std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/src/shaders/bin";
+		std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/bin/shaders";
 		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
 		//AddMaterial(testMaterial);
 

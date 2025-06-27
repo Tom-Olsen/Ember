@@ -47,11 +47,12 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
         message(FATAL_ERROR "Unknown shader extension for ${SHADER_FILE}")
     endif()
 
-    set(OUTPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/bin/${FILE_NAME}${EXT_TRIMMED}.spv")
+    set(OUTPUT_FILE "${PROJECT_SOURCE_DIR}/bin/shaders/${FILE_NAME}${EXT_TRIMMED}.spv")
     list(APPEND SPIRV_OUTPUTS ${OUTPUT_FILE})
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/bin/shaders
         COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE}
         DEPENDS ${SHADER_FILE}
         COMMENT "Compiling shader: ${SHADER_FILE}"

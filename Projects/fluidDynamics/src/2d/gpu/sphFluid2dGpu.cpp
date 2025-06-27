@@ -16,7 +16,7 @@ namespace emberEngine
 	SphFluid2dGpu::SphFluid2dGpu()
 	{
 		// Load compute shaders:
-		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/src/shaders/bin";
+		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
 		cs_pReset = std::make_unique<ComputeShader>("reset2d", directoryPath + "/reset2d.comp.spv");
 		cs_pDensity = std::make_unique<ComputeShader>("density2d", directoryPath + "/density2d.comp.spv");
 		cs_pNormalAndCurvature = std::make_unique<ComputeShader>("normalAndCurvature2d", directoryPath + "/normalAndCurvature2d.comp.spv");
