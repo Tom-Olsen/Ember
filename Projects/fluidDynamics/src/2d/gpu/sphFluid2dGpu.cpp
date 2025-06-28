@@ -82,16 +82,16 @@ namespace emberEngine
 			SetUseGridOptimization(true);
 			m_timeStep = 0;
 			pGpuSort = std::make_unique<SphBitonicSort2d>();
-			SetParticleCount(10000);
+			SetParticleCount(20000);
 
 			// Physics:
-			SetEffectRadius(0.3f);
+			SetEffectRadius(0.2f);
 			SetMass(1.0f);
-			SetViscosity(0.5f);
+			SetViscosity(1.0f);
 			SetSurfaceTension(0.0f);
 			SetCollisionDampening(0.95f);
-			SetTargetDensity(70.0f);
-			SetPressureMultiplier(8.0f);
+			SetTargetDensity(40.0f);
+			SetPressureMultiplier(10.0f);
 			SetGravity(0.5f);
 			SetMaxVelocity(5.0f);
 

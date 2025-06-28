@@ -44,9 +44,9 @@ namespace emberEngine
 		s_isInitialized = true;
 
 		s_pShadowMaterial = MaterialManager::GetMaterial("shadowMaterial");
-		s_pLineSegmentMesh = MeshManager::GetMesh("zylinderEdgy");
+		s_pLineSegmentMesh = MeshManager::GetMesh("zylinderFlat");
 		s_pSphereMesh = MeshManager::GetMesh("cubeSphere");
-		s_pArrowMesh = MeshManager::GetMesh("arrowEdgy");
+		s_pArrowMesh = MeshManager::GetMesh("arrowFlat");
 		s_pSimpleLitMaterial = MaterialManager::GetMaterial("simpleLitMaterial");
 		s_pSimpleUnlitMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
 		s_errorMaterial = MaterialManager::GetMaterial("errorMaterial");
@@ -229,7 +229,7 @@ namespace emberEngine
 		return DrawMesh(s_pLineSegmentMesh, pMaterial, position, rotationMatrix, scale, receiveShadows, castShadows);
 	}
 
-	// Speciaized draw calls:
+	// Specialized draw calls:
 	void Graphics::DrawSphere(const Float3& position, float radius, const Float4& color, bool receiveShadows, bool castShadows)
 	{
 		ShaderProperties* pShaderProperties = DrawMesh(s_pSphereMesh, s_pSimpleUnlitMaterial, position, Float3x3::identity, Float3(radius), receiveShadows, castShadows);

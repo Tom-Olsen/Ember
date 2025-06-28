@@ -35,7 +35,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         uint shellIndex = index / pointsPerShell;
         uint localIndex = index % pointsPerShell;
         float pointsInShell = max(1.0f, (float) (pointsPerShell - 1));
-        float theta = phi * localIndex;
+        float theta = phi * localIndex + 0.1f * shellIndex;
         float z = 1.0f - 2.0f * (localIndex / pointsInShell);
         float rxy = sqrt(1 - z * z);
         float shellRadius = initialDistributionRadius * sqrt((float) (shellIndex + 1) / initialDistributionShellCount);

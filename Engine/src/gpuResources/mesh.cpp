@@ -28,7 +28,7 @@ namespace emberEngine
 	// Public methods:
 	void Mesh::Load()
 	{
-		// Set brocken vectors to zero:
+		// Fill brocken vectors with default values:
 		if (m_positions.size() != m_vertexCount)
 			m_positions.resize(m_vertexCount, Float3::zero);
 		if (m_normals.size() != m_vertexCount)
@@ -65,64 +65,55 @@ namespace emberEngine
 	}
 	void Mesh::SetPositions(const std::vector<Float3>& positions)
 	{
+		// Copy values into member vector:
 		m_vertexCount = static_cast<uint32_t>(positions.size());
 		m_positions = positions;
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetNormals(const std::vector<Float3>& normals)
 	{
-		if (normals.size() == m_vertexCount)
-			m_normals = normals;
-		else
-		{
-			m_normals = normals;
+		// Copy values into member vector and fill with default values if needed:
+		m_normals = normals;
+		if (normals.size() != m_vertexCount)
 			m_normals.resize(m_vertexCount, Float3::up);
-		}
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetTangents(const std::vector<Float3>& tangents)
 	{
-		if (tangents.size() == m_vertexCount)
-			m_tangents = tangents;
-		else
-		{
-			m_tangents = tangents;
+		// Copy values into member vector and fill with default values if needed:
+		m_tangents = tangents;
+		if (tangents.size() != m_vertexCount)
 			m_tangents.resize(m_vertexCount, Float3::right);
-		}
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetColors(const std::vector<Float4>& colors)
 	{
-		if (colors.size() == m_vertexCount)
-			m_colors = colors;
-		else
-		{
-			m_colors = colors;
+		// Copy values into member vector and fill with default values if needed:
+		m_colors = colors;
+		if (colors.size() != m_vertexCount)
 			m_colors.resize(m_vertexCount, Float4::one);
-		}
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetUniformColor(const Float4& color)
 	{
-		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount);
+		// Set all colors to color and fill with color if needed:
 		for (Float4& col : m_colors)
 			col = color;
+		if (m_colors.size() != m_vertexCount)
+			m_colors.resize(m_vertexCount, color);
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetUVs(const std::vector<Float4>& uvs)
 	{
-		if (uvs.size() == m_vertexCount)
-			m_uvs = uvs;
-		else
-		{
-			m_uvs.clear();
+		// Copy values into member vector and fill with default values if needed:
+		m_uvs = uvs;
+		if (uvs.size() != m_vertexCount)
 			m_uvs.resize(m_vertexCount, Float4::zero);
-		}
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetTriangles(const std::vector<Uint3>& triangles)
 	{
+		// Copy values into member vector:
 		m_triangleCount = static_cast<uint32_t>(triangles.size());
 		m_triangles = triangles;
 		m_indicesUpdated = true;
@@ -133,71 +124,61 @@ namespace emberEngine
 	// Movers:
 	void Mesh::MovePositions(std::vector<Float3>& positions)
 	{
+		// Take ownership if input data:
 		if (&positions != &m_positions)
 		{
-			m_vertexCount = static_cast<uint32_t>(positions.size());
 			m_positions = std::move(positions);
+			m_vertexCount = static_cast<uint32_t>(m_positions.size());
 			m_verticesUpdated = true;
 		}
 	}
 	void Mesh::MoveNormals(std::vector<Float3>& normals)
 	{
+		// Take ownership of input data:
 		if (&normals != &m_normals)
 		{
-			if (normals.size() == m_vertexCount)
-				m_normals = std::move(normals);
-			else
-			{
-				m_normals = std::move(normals);
+			m_normals = std::move(normals);
+			if (m_normals.size() != m_vertexCount)
 				m_normals.resize(m_vertexCount, Float3::up);
-			}
 			m_verticesUpdated = true;
 		}
 	}
 	void Mesh::MoveTangents(std::vector<Float3>& tangents)
 	{
+		// Take ownership of input data:
 		if (&tangents != &m_tangents)
 		{
-			if (tangents.size() == m_vertexCount)
-				m_tangents = std::move(tangents);
-			else
-			{
-				m_tangents = std::move(tangents);
+			m_tangents = std::move(tangents);
+			if (m_tangents.size() != m_vertexCount)
 				m_tangents.resize(m_vertexCount, Float3::right);
-			}
 			m_verticesUpdated = true;
 		}
 	}
 	void Mesh::MoveColors(std::vector<Float4>& colors)
 	{
+		// Take ownership of input data:
 		if (&colors != &m_colors)
 		{
-			if (colors.size() == m_vertexCount)
-				m_colors = std::move(colors);
-			else
-			{
-				m_colors = std::move(colors);
+			m_colors = std::move(colors);
+			if (m_colors.size() != m_vertexCount)
 				m_colors.resize(m_vertexCount, Float4::one);
-			}
 			m_verticesUpdated = true;
 		}
 	}
 	void Mesh::MoveUVs(std::vector<Float4>& uvs)
 	{
+		// Take ownership of input data:
 		if (&uvs != &m_uvs)
 		{
-			if (uvs.size() == m_vertexCount)
-				m_uvs = std::move(uvs);
-			else
-			{
-				m_uvs = std::move(uvs);
+			m_uvs = std::move(uvs);
+			if (m_uvs.size() != m_vertexCount)
 				m_uvs.resize(m_vertexCount, Float4::zero);
-			}
 			m_verticesUpdated = true;
 		}
 	}
 	void Mesh::MoveTriangles(std::vector<Uint3>& triangles)
 	{
+		// Take ownership if input data:
 		if (&triangles != &m_triangles)
 		{
 			m_triangleCount = static_cast<uint32_t>(triangles.size());
@@ -209,7 +190,7 @@ namespace emberEngine
 
 
 	// Getters:
-	std::string Mesh::GetName() const
+	const std::string& Mesh::GetName() const
 	{
 		return m_name;
 	}
@@ -223,32 +204,22 @@ namespace emberEngine
 	}
 	std::vector<Float3>& Mesh::GetPositions()
 	{
-		if (m_positions.size() != m_vertexCount)
-			m_positions.resize(m_vertexCount, Float3::zero);
 		return m_positions;
 	}
 	std::vector<Float3>& Mesh::GetNormals()
 	{
-		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, Float3::up);
 		return m_normals;
 	}
 	std::vector<Float3>& Mesh::GetTangents()
 	{
-		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, Float3::right);
 		return m_tangents;
 	}
 	std::vector<Float4>& Mesh::GetColors()
 	{
-		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, Float4::one);
 		return m_colors;
 	}
 	std::vector<Float4>& Mesh::GetUVs()
 	{
-		if (m_uvs.size() != m_vertexCount)
-			m_uvs.resize(m_vertexCount, Float4::zero);
 		return m_uvs;
 	}
 	std::vector<Uint3>& Mesh::GetTriangles()
@@ -449,10 +420,6 @@ namespace emberEngine
 	{
 		std::vector<Uint3> newTriangles;
 		newTriangles.reserve(4 * m_triangleCount);
-		bool hasNormals = (m_normals.size() == m_vertexCount);
-		bool hasTangents = (m_tangents.size() == m_vertexCount);
-		bool hasColors = (m_colors.size() == m_vertexCount);
-		bool hasUVs = (m_uvs.size() == m_vertexCount);
 
 		// Subdivide each triangle:
 		uint32_t newVertexIndex = m_vertexCount;
@@ -469,48 +436,36 @@ namespace emberEngine
 			m_positions.push_back(positionC);
 
 			// Add normals:
-			if (hasNormals)
-			{
-				Float3 normalA = (m_normals[triangle[0]] + m_normals[triangle[1]]).Normalize();
-				Float3 normalB = (m_normals[triangle[1]] + m_normals[triangle[2]]).Normalize();
-				Float3 normalC = (m_normals[triangle[2]] + m_normals[triangle[0]]).Normalize();
-				m_normals.push_back(normalA);
-				m_normals.push_back(normalB);
-				m_normals.push_back(normalC);
-			}
+			Float3 normalA = (m_normals[triangle[0]] + m_normals[triangle[1]]).Normalize();
+			Float3 normalB = (m_normals[triangle[1]] + m_normals[triangle[2]]).Normalize();
+			Float3 normalC = (m_normals[triangle[2]] + m_normals[triangle[0]]).Normalize();
+			m_normals.push_back(normalA);
+			m_normals.push_back(normalB);
+			m_normals.push_back(normalC);
 
 			// Add tangents:
-			if (hasTangents)
-			{
-				Float3 tangentA = (m_tangents[triangle[0]] + m_tangents[triangle[1]]).Normalize();
-				Float3 tangentB = (m_tangents[triangle[1]] + m_tangents[triangle[2]]).Normalize();
-				Float3 tangentC = (m_tangents[triangle[2]] + m_tangents[triangle[0]]).Normalize();
-				m_tangents.push_back(tangentA);
-				m_tangents.push_back(tangentB);
-				m_tangents.push_back(tangentC);
-			}
+			Float3 tangentA = (m_tangents[triangle[0]] + m_tangents[triangle[1]]).Normalize();
+			Float3 tangentB = (m_tangents[triangle[1]] + m_tangents[triangle[2]]).Normalize();
+			Float3 tangentC = (m_tangents[triangle[2]] + m_tangents[triangle[0]]).Normalize();
+			m_tangents.push_back(tangentA);
+			m_tangents.push_back(tangentB);
+			m_tangents.push_back(tangentC);
 
 			// Add colors:
-			if (hasColors)
-			{
-				Float4 colorA = 0.5f * (m_colors[triangle[0]] + m_colors[triangle[1]]);
-				Float4 colorB = 0.5f * (m_colors[triangle[1]] + m_colors[triangle[2]]);
-				Float4 colorC = 0.5f * (m_colors[triangle[2]] + m_colors[triangle[0]]);
-				m_colors.push_back(colorA);
-				m_colors.push_back(colorB);
-				m_colors.push_back(colorC);
-			}
+			Float4 colorA = 0.5f * (m_colors[triangle[0]] + m_colors[triangle[1]]);
+			Float4 colorB = 0.5f * (m_colors[triangle[1]] + m_colors[triangle[2]]);
+			Float4 colorC = 0.5f * (m_colors[triangle[2]] + m_colors[triangle[0]]);
+			m_colors.push_back(colorA);
+			m_colors.push_back(colorB);
+			m_colors.push_back(colorC);
 
 			// Add Uvs:
-			if (hasUVs)
-			{
-				Float4 uvA = 0.5f * (m_uvs[triangle[0]] + m_uvs[triangle[1]]);
-				Float4 uvB = 0.5f * (m_uvs[triangle[1]] + m_uvs[triangle[2]]);
-				Float4 uvC = 0.5f * (m_uvs[triangle[2]] + m_uvs[triangle[0]]);
-				m_uvs.push_back(uvA);
-				m_uvs.push_back(uvB);
-				m_uvs.push_back(uvC);
-			}
+			Float4 uvA = 0.5f * (m_uvs[triangle[0]] + m_uvs[triangle[1]]);
+			Float4 uvB = 0.5f * (m_uvs[triangle[1]] + m_uvs[triangle[2]]);
+			Float4 uvC = 0.5f * (m_uvs[triangle[2]] + m_uvs[triangle[0]]);
+			m_uvs.push_back(uvA);
+			m_uvs.push_back(uvB);
+			m_uvs.push_back(uvC);
 
 			// Add 4 triangles:
 			Uint3 newTriangleA = { triangle[0], newVertexIndex, newVertexIndex + 2 };
@@ -527,6 +482,7 @@ namespace emberEngine
 
 		// Update mesh data:
 		m_verticesUpdated = true;
+		m_vertexCount = static_cast<uint32_t>(m_positions.size());
 		MoveTriangles(newTriangles);
 		return this;
 	}
@@ -534,30 +490,21 @@ namespace emberEngine
 	{
 		factor = std::clamp(factor, 0.0f, 1.0f);
 		radius = std::max(1e-8f, radius);
-		bool hasNormals = m_normals.size() == m_vertexCount;
-		bool hasTangents = m_tangents.size() == m_vertexCount;
 
 		for (uint32_t i = 0; i < m_vertexCount; i++)
 		{
 			Float3 sphereNormal = m_positions[i].Normalize();
 			m_positions[i] = radius * (m_positions[i] + factor * (sphereNormal - m_positions[i]));
-			if (hasNormals)
-				m_normals[i] = (m_normals[i] + factor * (sphereNormal - m_normals[i])).Normalize();
-			if (hasTangents)
-				m_tangents[i] = geometry3d::PointToPlaneProjection(m_tangents[i], Float3::zero, m_normals[i]).Normalize();
+			m_normals[i] = (m_normals[i] + factor * (sphereNormal - m_normals[i])).Normalize();
+			m_tangents[i] = geometry3d::PointToPlaneProjection(m_tangents[i], Float3::zero, m_normals[i]).Normalize();
 		}
 
-		// Update mesh data (forces bool updates and logic):
-		MovePositions(m_positions);
-		if (hasNormals)
-			MoveNormals(m_normals);
-		if (hasTangents)
-			MoveTangents(m_tangents);
+		m_verticesUpdated = true;
 		return this;
 	}
 	Mesh* Mesh::InvertFaces()
 	{
-		// Positions:
+		// Triangles:
 		for (Uint3& triangle : m_triangles)
 			std::swap(triangle[1], triangle[2]);
 
@@ -603,6 +550,7 @@ namespace emberEngine
 		if (m_uvs.size() != m_vertexCount)
 		{
 			LOG_WARN("Mesh '{}' has no uvs! Cannot compute tangents.", m_name);
+			m_tangents.resize(m_vertexCount, Float3::zero);
 			return;
 		}
 		if (m_normals.size() != m_vertexCount)

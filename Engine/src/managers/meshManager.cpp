@@ -62,20 +62,20 @@ namespace emberEngine
 		Mesh* pConeSmooth = MeshGenerator::ConeSmooth(0.5f, 1.0f, 16, "coneSmooth");
 		AddMesh(pConeSmooth);
 		
-		Mesh* pConeEdgy = MeshGenerator::ConeEdgy(0.5f, 1.0f, 16, "coneEdgy");
-		AddMesh(pConeEdgy);
+		Mesh* pConeFlat = MeshGenerator::ConeFlat(0.5f, 1.0f, 16, "coneFlat");
+		AddMesh(pConeFlat);
 		
 		Mesh* pZylinderSmooth = MeshGenerator::ZylinderSmooth(0.5f, 1.0f, 16, "zylinderSmooth");
 		AddMesh(pZylinderSmooth);
 		
-		Mesh* pZylinderEdgy = MeshGenerator::ZylinderEdgy(0.5f, 1.0f, 16, "zylinderEdgy");
-		AddMesh(pZylinderEdgy);
+		Mesh* pZylinderFlat = MeshGenerator::ZylinderFlat(0.5f, 1.0f, 16, "zylinderFlat");
+		AddMesh(pZylinderFlat);
 		
 		Mesh* pArrowSmooth = MeshGenerator::ArrowSmooth(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowSmooth");
 		AddMesh(pArrowSmooth);
 		
-		Mesh* pArrowEdgy = MeshGenerator::ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowEdgy");
-		AddMesh(pArrowEdgy);
+		Mesh* pArrowFlat = MeshGenerator::ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 16, "arrowFlat");
+		AddMesh(pArrowFlat);
 		
 		Mesh* pThreeLeg = MeshGenerator::ThreeLeg();
 		pThreeLeg->SetName("threeLeg");

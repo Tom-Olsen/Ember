@@ -72,7 +72,7 @@ namespace emberEngine
 		void MoveTriangles(std::vector<Uint3>& triangles);
 
 		// Getters:
-		std::string GetName() const;
+		const std::string& GetName() const;
 		uint32_t GetVertexCount() const;
 		uint32_t GetTriangleCount() const;
 		std::vector<Float3>& GetPositions();

@@ -550,11 +550,11 @@ Scene* DefaultScene()
 		pMeshTester->AddMesh(MeshManager::GetMesh("arcFlatUv"));
 		pMeshTester->AddMesh(MeshManager::GetMesh("arcCurvedUv"));
 		pMeshTester->AddMesh(MeshManager::GetMesh("coneSmooth"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("coneEdgy"));
+		pMeshTester->AddMesh(MeshManager::GetMesh("coneFlat"));
 		pMeshTester->AddMesh(MeshManager::GetMesh("zylinderSmooth"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("zylinderEdgy"));
+		pMeshTester->AddMesh(MeshManager::GetMesh("zylinderFlat"));
 		pMeshTester->AddMesh(MeshManager::GetMesh("arrowSmooth"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("arrowEdgy"));
+		pMeshTester->AddMesh(MeshManager::GetMesh("arrowFlat"));
 		pMeshTester->AddMesh(MeshManager::GetMesh("threeLeg"));
 		pMeshTester->AddMesh(MeshManager::GetMesh("fourLeg"));
 		pGameObject->AddComponent<MeshTester>(pMeshTester);

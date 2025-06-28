@@ -11,7 +11,7 @@ namespace emberEngine
 	DrawMeshData::DrawMeshData()
 	{
 		m_pSphereMesh = MeshGenerator::CubeSphere(0.5f, 1, "cubeSphere");
-		m_pArrowMesh = MeshGenerator::ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 4, "arrowEdgy");
+		m_pArrowMesh = MeshGenerator::ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 4, "arrowFlat");
 		m_pMesh = nullptr;
 		m_pMaterial = nullptr;
 		m_pShaderProperties = nullptr;
@@ -28,7 +28,7 @@ namespace emberEngine
 	void DrawMeshData::Start()
 	{
 		m_pSphereMesh = MeshManager::GetMesh("cubeSphere");
-		m_pArrowMesh = MeshManager::GetMesh("arrowEdgy");
+		m_pArrowMesh = MeshManager::GetMesh("arrowFlat");
 		m_pMaterial = MaterialManager::GetMaterial("defaultMaterial");
 		m_pMesh = GetGameObject()->GetComponent<MeshRenderer>()->GetMesh();
 	}

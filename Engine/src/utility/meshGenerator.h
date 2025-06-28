@@ -33,18 +33,18 @@ namespace emberEngine
 		Mesh* ArcCurvedUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name);
 
 		Mesh* ConeMantleSmooth(float radius, float height, int cornerCount, const std::string& name);
-		Mesh* ConeMantleEdgy(float radius, float height, int cornerCount, const std::string& name);
+		Mesh* ConeMantleFlat(float radius, float height, int cornerCount, const std::string& name);
 		Mesh* ConeSmooth(float radius, float height, int cornerCount, const std::string& name);
-		Mesh* ConeEdgy(float radius, float height, int cornerCount, const std::string& name);
+		Mesh* ConeFlat(float radius, float height, int cornerCount, const std::string& name);
 
 
 		Mesh* ZylinderMantleSmooth(float radius, float height, int cornerCount, const std::string& name);
-		Mesh* ZylinderMantleEdgy(float radius, float height, int cornerCount, const std::string& name);
+		Mesh* ZylinderMantleFlat(float radius, float height, int cornerCount, const std::string& name);
 		Mesh* ZylinderSmooth(float radius, float height, int cornerCount, const std::string& name);
-		Mesh* ZylinderEdgy(float radius, float height, int cornerCount, const std::string& name);
+		Mesh* ZylinderFlat(float radius, float height, int cornerCount, const std::string& name);
 
 		Mesh* ArrowSmooth(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name);
-		Mesh* ArrowEdgy(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name);
+		Mesh* ArrowFlat(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name);
 
 		Mesh* ThreeLeg();
 		Mesh* FourLeg();

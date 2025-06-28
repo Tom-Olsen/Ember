@@ -414,7 +414,7 @@ namespace emberEngine
 			pMesh->ComputeTangents();
 			return pMesh;
 		}
-		Mesh* ConeMantleEdgy(float radius, float height, int cornerCount, const std::string& name)
+		Mesh* ConeMantleFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
 			std::vector<Mesh*> faces;
 			faces.reserve(cornerCount);
@@ -452,12 +452,12 @@ namespace emberEngine
 			meshes.push_back(Disk(radius, cornerCount, "coneSmooth1")->Rotate(Float3x3::rot180x));
 			return Mesh::Merge(meshes, name);
 		}
-		Mesh* ConeEdgy(float radius, float height, int cornerCount, const std::string& name)
+		Mesh* ConeFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
 			std::vector<Mesh*> meshes;
 			meshes.reserve(2);
-			meshes.push_back(ConeMantleEdgy(radius, height, cornerCount, "coneEdgy0"));
-			meshes.push_back(Disk(radius, cornerCount, "coneEdgy1")->Rotate(Float3x3::rot180x));
+			meshes.push_back(ConeMantleFlat(radius, height, cornerCount, "coneFlat0"));
+			meshes.push_back(Disk(radius, cornerCount, "coneFlat1")->Rotate(Float3x3::rot180x));
 			return Mesh::Merge(meshes, name);
 		}
 
@@ -503,7 +503,7 @@ namespace emberEngine
 			pMesh->ComputeTangents();
 			return pMesh;
 		}
-		Mesh* ZylinderMantleEdgy(float radius, float height, int cornerCount, const std::string& name)
+		Mesh* ZylinderMantleFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
 			radius = std::max(1e-8f, radius);
 			height = std::max(1e-8f, height);
@@ -546,13 +546,13 @@ namespace emberEngine
 			meshes.push_back(meshes[1]->GetCopy("zylinderSmooth2")->Rotate(Float3x3::rot180x));
 			return Mesh::Merge(meshes, name);
 		}
-		Mesh* ZylinderEdgy(float radius, float height, int cornerCount, const std::string& name)
+		Mesh* ZylinderFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
 			std::vector<Mesh*> meshes;
 			meshes.reserve(3);
-			meshes.push_back(ZylinderMantleEdgy(radius, height, cornerCount, "zylinderEdgy0"));
-			meshes.push_back(Disk(radius, cornerCount, "zylinderEdgy1")->Translate(0.5f * height * Float3::up));
-			meshes.push_back(meshes[1]->GetCopy("zylinderEdgy2")->Rotate(Float3x3::rot180x));
+			meshes.push_back(ZylinderMantleFlat(radius, height, cornerCount, "zylinderFlat0"));
+			meshes.push_back(Disk(radius, cornerCount, "zylinderFlat1")->Translate(0.5f * height * Float3::up));
+			meshes.push_back(meshes[1]->GetCopy("zylinderFlat2")->Rotate(Float3x3::rot180x));
 			return Mesh::Merge(meshes, name);
 		}
 
@@ -580,7 +580,7 @@ namespace emberEngine
 			Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
 			return Mesh::Merge(meshes, name)->Rotate(rotation);
 		}
-		Mesh* ArrowEdgy(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
+		Mesh* ArrowFlat(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
 		{
 			if (direction == Float3(0.0f))
 				direction = Float3::up;
@@ -596,10 +596,10 @@ namespace emberEngine
 			std::vector<Mesh*> meshes;
 			meshes.reserve(4);
 
-			meshes.push_back(Disk(bodyRadius, cornerCount, "arrowEdgy0")->Rotate(Float3x3::rot180x));
-			meshes.push_back(ZylinderMantleEdgy(bodyRadius, bodyHeight, cornerCount, "arrowEdgy1")->Translate(0.5f * bodyHeight * Float3::up));
-			meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowEdgy2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::rot180x));
-			meshes.push_back(ConeMantleEdgy(headRadius, headHeight, cornerCount, "arrowEdgy3")->Translate(bodyHeight * Float3::up));
+			meshes.push_back(Disk(bodyRadius, cornerCount, "arrowFlat0")->Rotate(Float3x3::rot180x));
+			meshes.push_back(ZylinderMantleFlat(bodyRadius, bodyHeight, cornerCount, "arrowFlat1")->Translate(0.5f * bodyHeight * Float3::up));
+			meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowFlat2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::rot180x));
+			meshes.push_back(ConeMantleFlat(headRadius, headHeight, cornerCount, "arrowFlat3")->Translate(bodyHeight * Float3::up));
 
 			Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
 			return Mesh::Merge(meshes, name)->Rotate(rotation);
@@ -610,9 +610,9 @@ namespace emberEngine
 			std::vector<Mesh*> meshes;
 			meshes.reserve(3);
 
-			meshes.push_back(ArrowEdgy(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg0"));
-			meshes.push_back(ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg1"));
-			meshes.push_back(ArrowEdgy(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg2"));
+			meshes.push_back(ArrowFlat(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg0"));
+			meshes.push_back(ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg1"));
+			meshes.push_back(ArrowFlat(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg2"));
 			meshes[0]->SetUniformColor(Float4::red);
 			meshes[1]->SetUniformColor(Float4::green);
 			meshes[2]->SetUniformColor(Float4::blue);
@@ -624,10 +624,10 @@ namespace emberEngine
 			std::vector<Mesh*> meshes;
 			meshes.reserve(4);
 
-			meshes.push_back(ArrowEdgy(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg0"));
-			meshes.push_back(ArrowEdgy(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg1"));
-			meshes.push_back(ArrowEdgy(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg2"));
-			meshes.push_back(ArrowEdgy(Float3::down, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg3"));
+			meshes.push_back(ArrowFlat(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg0"));
+			meshes.push_back(ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg1"));
+			meshes.push_back(ArrowFlat(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg2"));
+			meshes.push_back(ArrowFlat(Float3::down, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg3"));
 			meshes[0]->SetUniformColor(Float4::red);
 			meshes[1]->SetUniformColor(Float4::green);
 			meshes[2]->SetUniformColor(Float4::blue);
@@ -649,7 +649,7 @@ namespace emberEngine
 			meshes.push_back(UnitCube());
 			meshes[2]->Scale(Float3(0.15f, 0.2f, 0.5f));
 			meshes[2]->SetUniformColor(Float4(1.0f, 0.4f, 0.4f));
-			meshes.push_back(ConeEdgy(0.15f, 0.15f, 4, "CameraHead"));
+			meshes.push_back(ConeFlat(0.15f, 0.15f, 4, "CameraHead"));
 			meshes[3]->Rotate(Float3x3::rot45z)->Translate(0.35f * Float3::down);
 			meshes[3]->SetUniformColor(Float4::gray);
 
@@ -664,21 +664,21 @@ namespace emberEngine
 
 			for (uint32_t i = 0; i < 4; i++)
 			{
-				Mesh* pMesh = ZylinderMantleEdgy(radius / math::sqrt2, lengths.x - radius, 4, "");
+				Mesh* pMesh = ZylinderMantleFlat(radius / math::sqrt2, lengths.x - radius, 4, "");
 				pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(1, 0, 0)) * Float4x4::rot45z);
 				pMesh->Translate(Float3(0.0f, dir0[i] * 0.5f * lengths.y, dir1[i] * 0.5f * lengths.y));
 				meshes.push_back(pMesh);
 			}
 			for (uint32_t i = 0; i < 4; i++)
 			{
-				Mesh* pMesh = ZylinderMantleEdgy(radius / math::sqrt2, lengths.y - radius, 4, "");
+				Mesh* pMesh = ZylinderMantleFlat(radius / math::sqrt2, lengths.y - radius, 4, "");
 				pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 1, 0)) * Float4x4::rot45z);
 				pMesh->Translate(Float3(dir0[i] * 0.5f * lengths.x, 0.0f, dir1[i] * 0.5f * lengths.y));
 				meshes.push_back(pMesh);
 			}
 			for (uint32_t i = 0; i < 4; i++)
 			{
-				Mesh* pMesh = ZylinderMantleEdgy(radius / math::sqrt2, lengths.z - radius, 4, "");
+				Mesh* pMesh = ZylinderMantleFlat(radius / math::sqrt2, lengths.z - radius, 4, "");
 				pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 0, 1)) * Float4x4::rot45z);
 				pMesh->Translate(Float3(dir0[i] * 0.5f * lengths.x, dir1[i] * 0.5f * lengths.y, 0.0f));
 				meshes.push_back(pMesh);
@@ -694,13 +694,6 @@ namespace emberEngine
 						pMesh->RescaleUVs(Float4(2 * radius, 0.5f * radius, 1.0f, 1.0f), Float4::zero);
 						meshes.push_back(pMesh);
 					}
-			//Mesh* pMesh = UnitCube()->Transform(Float4x4::TRS(0.5f * Float3(lengths.x, lengths.y, lengths.z), Float4x4::identity, radius * Float3::one));
-			//pMesh->RescaleUVs(Float4(2 * radius, 0.5f * radius, 1.0f, 1.0f), Float4::zero);
-			//meshes.push_back(pMesh);
-
-			//meshes.push_back(UnitCube()->Transform(Float4x4::TRS(0.5f * Float3(lengths.x,  lengths.y, -lengths.z), Float4x4::identity, radius * Float3::one)));
-			//meshes.push_back(UnitCube()->Transform(Float4x4::TRS(0.5f * Float3(lengths.x, -lengths.y,  lengths.z), Float4x4::identity, radius * Float3::one)));
-			//meshes.push_back(UnitCube()->Transform(Float4x4::TRS(0.5f * Float3(lengths.x, -lengths.y, -lengths.z), Float4x4::identity, radius * Float3::one)));
 
 			return Mesh::Merge(meshes, "frame");
 		}

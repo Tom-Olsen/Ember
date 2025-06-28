@@ -38,16 +38,16 @@ Scene* InitScene()
 	//	SphFluid2dCpu* pSphFluid2dCpu = pGameObject->AddComponent<SphFluid2dCpu>();
 	//	pScene->AddGameObject(pGameObject);
 	//}
-	{ // Sph Fluid 2d Gpu:
-		GameObject* pGameObject = new GameObject("sphFluid2dGpu");
-		SphFluid2dGpu* pSphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
-		pScene->AddGameObject(pGameObject);
-	}
-	//{ // Sph Fluid 3d:
-	//	GameObject* pGameObject = new GameObject("sphFluid3d");
-	//	SphFluid3d* pSphFluid3d = pGameObject->AddComponent<SphFluid3d>();
+	//{ // Sph Fluid 2d Gpu:
+	//	GameObject* pGameObject = new GameObject("sphFluid2dGpu");
+	//	SphFluid2dGpu* pSphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
 	//	pScene->AddGameObject(pGameObject);
 	//}
+	{ // Sph Fluid 3d:
+		GameObject* pGameObject = new GameObject("sphFluid3d");
+		SphFluid3d* pSphFluid3d = pGameObject->AddComponent<SphFluid3d>();
+		pScene->AddGameObject(pGameObject);
+	}
 	return pScene;
 }
 
