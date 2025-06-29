@@ -78,7 +78,7 @@ namespace emberEngine
 	// Public methods:
 	bool RenderCore::RenderFrame()
 	{
-		PROFILE_SCOPE("RenderFrame");
+		PROFILE_FUNCTION();
 
 		// Resize Swapchain if needed:
 		VkExtent2D windowExtent = Context::window.GetExtent();
@@ -92,7 +92,7 @@ namespace emberEngine
 
 		// Wait for fence of previous frame with same frameIndex to finish:
 		{
-			PROFILE_SCOPE("WaitRenderFence");
+			PROFILE_SCOPE("GPU work");
 			VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_fences[Context::frameIndex], VK_TRUE, UINT64_MAX));
 			if (!AcquireImage())
 				return 0;
@@ -165,6 +165,7 @@ namespace emberEngine
 	
 	void RenderCore::RecordPreRenderComputeCommandBuffer()
 	{
+		PROFILE_FUNCTION();
 		// Begin command buffer:
 		VkCommandBuffer commandBuffer = m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::preRenderCompute);
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -252,6 +253,7 @@ namespace emberEngine
 	}
 	void RenderCore::RecordShadowCommandBuffer()
 	{
+		PROFILE_FUNCTION();
 		// Static parameters initialization:
 		static Material* pShadowMaterial;
 		static VkPipeline shadowPipeline;
@@ -353,6 +355,7 @@ namespace emberEngine
 	}
 	void RenderCore::RecordForwardCommandBuffer()
 	{
+		PROFILE_FUNCTION();
 		// Begin command buffer:
 		VkCommandBuffer commandBuffer = m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::forward);
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -458,6 +461,7 @@ namespace emberEngine
 	}
 	void RenderCore::RecordPostRenderComputeCommandBuffer()
 	{
+		PROFILE_FUNCTION();
 		// Begin command buffer:
 		VkCommandBuffer commandBuffer = m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::postRenderCompute);
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -549,6 +553,7 @@ namespace emberEngine
 	}
 	void RenderCore::RecordPresentCommandBuffer()
 	{
+		PROFILE_FUNCTION();
 		// Static parameters initialization:
 		static Mesh* pMesh;
 		static Material* pMaterial;
@@ -620,7 +625,7 @@ namespace emberEngine
 
 	void RenderCore::SubmitCommandBuffers()
 	{
-		PROFILE_SCOPE("SubmitCommandBuffers");
+		PROFILE_FUNCTION();
 		// Ember::TODO: Try:
 		// Compute shaders do not need to wait for aquire semaphore. Instead make them only wait for previous compute to finish.
 		// Shadow shaders then wait for aquire and computeToShadow semaphore.
@@ -698,7 +703,7 @@ namespace emberEngine
 	}
 	bool RenderCore::PresentImage()
 	{
-		PROFILE_SCOPE("PresentImage");
+		PROFILE_FUNCTION();
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &m_releaseSemaphores[Context::frameIndex];	// wait for releaseSemaphor
