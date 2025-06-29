@@ -21,4 +21,9 @@ namespace emberEngine
 		s_coreLogger = spdlog::stdout_color_mt("Ember");
 		s_coreLogger->set_level(spdlog::level::trace);
 	}
+
+	std::shared_ptr<spdlog::logger>& Logger::GetCoreLogger()
+	{
+		return s_coreLogger;
+	}
 }

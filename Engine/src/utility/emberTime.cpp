@@ -32,29 +32,68 @@ namespace emberEngine
 		s_fixedTimeAccumulator += s_deltaTime;
 		s_start = s_end;
 	}
-	void Time::SleepS(int seconds)
+	void Time::Sleep(int time, TimeUnit unit)
 	{
-		std::this_thread::sleep_for(std::chrono::seconds(seconds));
-	}
-	void Time::SleepMs(int milliseconds)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+		switch (unit)
+		{
+		case emberEngine::TimeUnit::s:
+			std::this_thread::sleep_for(std::chrono::seconds(time));
+			break;
+		case emberEngine::TimeUnit::ms:
+			std::this_thread::sleep_for(std::chrono::milliseconds(time));
+			break;
+		case emberEngine::TimeUnit::us:
+			std::this_thread::sleep_for(std::chrono::microseconds(time));
+			break;
+		default:
+			break;
+		}
 	}
 
 
 
 	// Getters:
-	float Time::GetTime()
+	float Time::GetTime(TimeUnit unit)
 	{
-		return s_time;
+		switch (unit)
+		{
+		case emberEngine::TimeUnit::s:
+			return s_time;
+		case emberEngine::TimeUnit::ms:
+			return s_time * 1'000;
+		case emberEngine::TimeUnit::us:
+			return s_time * 1'000'000;
+		default:
+			return 0;
+		}
 	}
-	float Time::GetDeltaTime()
+	float Time::GetDeltaTime(TimeUnit unit)
 	{
-		return s_deltaTime;
+		switch (unit)
+		{
+		case emberEngine::TimeUnit::s:
+			return s_deltaTime;
+		case emberEngine::TimeUnit::ms:
+			return s_deltaTime * 1'000;
+		case emberEngine::TimeUnit::us:
+			return s_deltaTime * 1'000'000;
+		default:
+			return 0;
+		}
 	}
-	float Time::GetFixedDeltaTime()
+	float Time::GetFixedDeltaTime(TimeUnit unit)
 	{
-		return s_fixedDeltaTime;
+		switch (unit)
+		{
+		case emberEngine::TimeUnit::s:
+			return s_fixedDeltaTime;
+		case emberEngine::TimeUnit::ms:
+			return s_fixedDeltaTime * 1'000;
+		case emberEngine::TimeUnit::us:
+			return s_fixedDeltaTime * 1'000'000;
+		default:
+			return 0;
+		}
 	}
 	bool Time::UpdatePhysics()
 	{

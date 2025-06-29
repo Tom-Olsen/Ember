@@ -103,10 +103,7 @@ namespace emberEngine
 		m_pDrawCalls = Graphics::GetSortedDrawCallPointers();
 
 		// Record and submit current frame commands:
-		{
-			PROFILE_SCOPE("ResetPool");
-			m_commandPools[Context::frameIndex].ResetPool();
-		}
+		m_commandPools[Context::frameIndex].ResetPool();
 		{
 			PROFILE_SCOPE("Record");
 			DEBUG_LOG_CRITICAL("Recording frame {}", Context::frameIndex);

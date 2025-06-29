@@ -39,8 +39,8 @@ namespace emberEngine
 		enum class Queue
 		{
 			opaque = 1000,
-			transparent = 2000,
-			skybox = 3000
+			skybox = 2000,
+			transparent = 3000
 		};
 
 	private: // Members:

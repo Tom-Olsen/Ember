@@ -26,8 +26,8 @@ namespace emberEngine
 		s_isInitialized = true;
 
 		uint32_t opaqueQueue = (uint32_t)Material::Queue::opaque;
-		uint32_t transparentQueue = (uint32_t)Material::Queue::transparent;
 		uint32_t skyboxQueue = (uint32_t)Material::Queue::skybox;
+		uint32_t transparentQueue = (uint32_t)Material::Queue::transparent;
 		Material::Type forwardOpaqueType = Material::Type::forwardOpaque;
 		Material::Type forwardTransparentType = Material::Type::forwardTransparent;
 		Material::Type shadowType = Material::Type::shadow;
@@ -43,6 +43,9 @@ namespace emberEngine
 
 		Material* pDefaultMaterial = new Material(forwardOpaqueType, "defaultMaterial", opaqueQueue, directoryPath + "/default.vert.spv", directoryPath + "/default.frag.spv");
 		AddMaterial(pDefaultMaterial);
+
+		Material* pTransparentMaterial = new Material(forwardTransparentType, "transparentMaterial", transparentQueue, directoryPath + "/transparent.vert.spv", directoryPath + "/transparent.frag.spv");
+		AddMaterial(pTransparentMaterial);
 
 		Material* pPresentMaterial = new Material(presentType, "presentMaterial", opaqueQueue, directoryPath + "/present.vert.spv", directoryPath + "/present.frag.spv");
 		AddMaterial(pPresentMaterial);

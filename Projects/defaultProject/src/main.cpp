@@ -624,6 +624,21 @@ Scene* DefaultScene()
 	//	
 	//	pScene->AddGameObject(pGameObject);
 	//}
+	{// Transparent quad:
+		GameObject* pGameObject = new GameObject("transparentQuad");
+		pGameObject->GetTransform()->SetPosition(0.66f, -1.33f, 1.0f);
+		pGameObject->GetTransform()->SetRotationEulerDegrees(60.0f, 0.0f, 0.0f);
+
+		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("transparentMaterial"));
+		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4(1.0, 0.0, 0, 0.25f));
+		pMeshRenderer->SetCastShadows(false);
+		pMeshRenderer->SetReceiveShadows(false);
+
+		pScene->AddGameObject(pGameObject);
+	}
 	return pScene;
 }
 Scene* PointLightScene()
@@ -787,7 +802,9 @@ int main()
 		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	#endif
 
-	Profiler::Session::Get().Start("defaultProject", "profilingResults");
+	// Profiler:
+	Profiler::Session& session = Profiler::Session::Get();
+	session.Start("defaultProject", "profilingResults");
 
 	// Initialization:
 	Application::Settings appSettings = {};
@@ -832,6 +849,12 @@ int main()
 
 	// Terminate:
 	delete pScene;
+
+	// Runtime analysis:
 	Profiler::Session::Get().End();
+	std::vector<std::string> results = session.GetAllResultNames();
+	for (std::string& result : results)
+		session.PrintFunctionAverageTime(result, TimeUnit::ms);
+
 	return 0;
 }

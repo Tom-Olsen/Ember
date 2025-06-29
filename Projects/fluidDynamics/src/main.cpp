@@ -8,6 +8,7 @@
 #include "meshRenderer.h"
 #include "pointLight.h"
 #include "postRenderEffects.h"
+#include "profiler.h"
 #include "spotLight.h"
 #include "transform.h"
 #include "sphFluid2dCpu.h"
@@ -28,7 +29,7 @@ Scene* InitScene()
 
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
-		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
+		//CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -38,16 +39,16 @@ Scene* InitScene()
 	//	SphFluid2dCpu* pSphFluid2dCpu = pGameObject->AddComponent<SphFluid2dCpu>();
 	//	pScene->AddGameObject(pGameObject);
 	//}
-	//{ // Sph Fluid 2d Gpu:
-	//	GameObject* pGameObject = new GameObject("sphFluid2dGpu");
-	//	SphFluid2dGpu* pSphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
-	//	pScene->AddGameObject(pGameObject);
-	//}
-	{ // Sph Fluid 3d:
-		GameObject* pGameObject = new GameObject("sphFluid3d");
-		SphFluid3d* pSphFluid3d = pGameObject->AddComponent<SphFluid3d>();
+	{ // Sph Fluid 2d Gpu:
+		GameObject* pGameObject = new GameObject("sphFluid2dGpu");
+		SphFluid2dGpu* pSphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
 		pScene->AddGameObject(pGameObject);
 	}
+	//{ // Sph Fluid 3d:
+	//	GameObject* pGameObject = new GameObject("sphFluid3d");
+	//	SphFluid3d* pSphFluid3d = pGameObject->AddComponent<SphFluid3d>();
+	//	pScene->AddGameObject(pGameObject);
+	//}
 	return pScene;
 }
 
@@ -59,6 +60,7 @@ int main()
 	#ifdef _MSC_VER
 		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	#endif
+	Profiler::Session::Get().Start("defaultProject", "profilingResults");
 
 	// Initialization:
 	Application::Settings appSettings = {};
@@ -95,5 +97,6 @@ int main()
 
 	// Terminate:
 	delete pScene;
+	Profiler::Session::Get().End();
 	return 0;
 }
