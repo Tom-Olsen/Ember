@@ -63,6 +63,7 @@ namespace emberEngine
 		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::present), "presentCommandBuffer1");
 
 		// Synchronization objects:
+		//BuildTaskGraph();
 		CreateFences();
 		CreateSemaphores();
 	}
@@ -107,6 +108,7 @@ namespace emberEngine
 		{
 			PROFILE_SCOPE("Record");
 			DEBUG_LOG_CRITICAL("Recording frame {}", Context::frameIndex);
+			//m_recordCommandBufferExecutor.run(m_recordCommandBufferTaskflow).wait();
 			RecordPreRenderComputeCommandBuffer();
 			RecordShadowCommandBuffer();
 			RecordForwardCommandBuffer();
@@ -130,6 +132,35 @@ namespace emberEngine
 
 
 	// Private methods:
+	void RenderCore::BuildTaskGraph()
+	{
+		m_recordCommandBufferTaskflow.name("RecordCommandBuffers");
+
+		m_taskPreCompute = m_recordCommandBufferTaskflow.emplace([this]() {
+			RecordPreRenderComputeCommandBuffer();
+		}).name("PreRenderCompute");
+
+		m_taskShadow = m_recordCommandBufferTaskflow.emplace([this]() {
+			RecordShadowCommandBuffer();
+		}).name("Shadow");
+
+		m_taskForward = m_recordCommandBufferTaskflow.emplace([this]() {
+			RecordForwardCommandBuffer();
+		}).name("Forward");
+
+		m_taskPostCompute = m_recordCommandBufferTaskflow.emplace([this]() {
+			RecordPostRenderComputeCommandBuffer();
+		}).name("PostRenderCompute");
+
+		m_taskPresent = m_recordCommandBufferTaskflow.emplace([this]() {
+			RecordPresentCommandBuffer();
+		}).name("Present");
+
+		m_taskPreCompute.precede(m_taskShadow);
+		m_taskShadow.precede(m_taskForward);
+		m_taskForward.precede(m_taskPostCompute);
+		m_taskPostCompute.precede(m_taskPresent);
+	}
 	void RenderCore::RebuildSwapchain()
 	{
 		// Recreate swapchain:

@@ -10,7 +10,7 @@ set(VULKAN_SDK_PATH $ENV{VULKAN_SDK})
 
 # Set DXC path depending on platform:
 if(WIN32)
-    set(DXC_PATH "${VULKAN_SDK_PATH}/Bin/dxc.exe")
+    set(DXC_PATH "${VULKAN_SDK_PATH}/bin/dxc.exe")
 else()
     set(DXC_PATH "${VULKAN_SDK_PATH}/bin/dxc")
 endif()

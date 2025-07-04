@@ -1,6 +1,7 @@
 #include "vulkanGarbageCollector.h"
 #include "logger.h"
 #include "macros.h"
+#include "profiler.h"
 #include "vulkanContext.h"
 
 
@@ -43,6 +44,7 @@ namespace emberEngine
         }
         void GarbageCollector::Cleanup()
         {
+            PROFILE_FUNCTION();
             // Garbage queue is sortet. The first entry is always the oldest. Once we find the first entry that does not need cleanup we can stop.
             while (!s_garbageQueue.empty())
             {

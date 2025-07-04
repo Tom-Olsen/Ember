@@ -2,6 +2,7 @@
 #include "editor.h"
 #include "logger.h"
 #include "macros.h"
+#include "profiler.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "sampler.h"
@@ -96,6 +97,7 @@ namespace emberEngine
 	// Render Logic:
 	void DearImGui::Update()
 	{
+		PROFILE_FUNCTION();
 		RETURN_DISABLED();
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL3_NewFrame();

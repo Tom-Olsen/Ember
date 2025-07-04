@@ -2,6 +2,7 @@
 #include "sdlWindow.h"
 #include "eventSystem.h"
 #include "dearImGui.h"
+#include "profiler.h"
 #include "vulkanMacros.h"
 #include <assert.h>
 #include <SDL3/SDL_vulkan.h>
@@ -46,6 +47,7 @@ namespace emberEngine
 		// Public methods:
 		bool SdlWindow::HandleEvents()
 		{
+			PROFILE_FUNCTION();
 			// Reset event system:
 			EventSystem::ClearEvents();
 

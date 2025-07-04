@@ -12,6 +12,7 @@
 #include "logger.h"
 #include "macros.h"
 #include "managers.h"
+#include "profiler.h"
 #include "renderCore.h"
 #include "scene.h"
 #include "vulkanContext.h"
@@ -83,6 +84,7 @@ namespace emberEngine
 
 		while (running)
 		{
+			PROFILE_FUNCTION();
 			Time::Update();
 
 			GarbageCollector::Cleanup();
@@ -136,6 +138,7 @@ namespace emberEngine
 	}
 	void Application::Update()
 	{
+		PROFILE_FUNCTION();
 		// Update all components of all game objects:
 		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
 		{
@@ -151,6 +154,7 @@ namespace emberEngine
 	}
 	void Application::LateUpdate()
 	{
+		PROFILE_FUNCTION();
 		// Late update all components of all game objects:
 		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
 		{
@@ -166,6 +170,7 @@ namespace emberEngine
 	}
 	void Application::FixedUpdate()
 	{
+		PROFILE_FUNCTION();
 		// Fixed update all components of all game objects:
 		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
 		{

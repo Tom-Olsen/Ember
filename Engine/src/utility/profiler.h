@@ -44,7 +44,8 @@ namespace emberEngine
         struct Result
         {
             std::string name;
-            long long start, end;
+            long long start;
+            long long end;
             uint32_t threadID;
             double Duration(TimeUnit unit) const;
             std::string ToString(TimeUnit unit = TimeUnit::s) const;
@@ -112,9 +113,9 @@ namespace emberEngine
 
 // Macro for function name extraction with any compiler:
 #if defined(_MSC_VER)
-#define FUNCTION_NAME __FUNCTION__
+    #define FUNCTION_NAME __FUNCTION__
 #else
-#define FUNCTION_NAME __PRETTY_FUNCTION__
+    #define FUNCTION_NAME __PRETTY_FUNCTION__
 #endif
 
 // Macros for enabling/disabling chrome://tracing/ profiler:

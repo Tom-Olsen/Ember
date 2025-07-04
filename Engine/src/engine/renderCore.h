@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_renderCore_h__
 #include <array>
 #include <memory>
+#include <taskflow/taskflow.hpp>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -44,6 +45,15 @@ namespace emberEngine
 		std::vector<VkSemaphore> m_postRenderToPresentSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
 
+		// Taskflow objects:
+		tf::Taskflow m_recordCommandBufferTaskflow;
+		tf::Executor m_recordCommandBufferExecutor;
+		tf::Task m_taskPreCompute;
+		tf::Task m_taskShadow;
+		tf::Task m_taskForward;
+		tf::Task m_taskPostCompute;
+		tf::Task m_taskPresent;
+
 		// Render management:
 		uint32_t m_imageIndex;
 		bool m_rebuildSwapchain;
@@ -57,6 +67,7 @@ namespace emberEngine
 		bool RenderFrame();
 
 	private: // Methods:
+		void BuildTaskGraph();
 		void RebuildSwapchain();
 		bool AcquireImage();
 		
