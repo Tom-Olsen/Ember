@@ -11,55 +11,86 @@ namespace emberEngine
 	namespace vulkanBackend
 	{
 		// Constructor/Destructor:
-		CommandPool::CommandPool(int bufferCount, DeviceQueue queue)
+		CommandPool::CommandPool(int secondaryBufferCount, DeviceQueue queue)
 		{
 			// Assertions:
 			assert(queue.queue != VK_NULL_HANDLE);
 
-			VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-			createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;	// required for vkResetCommandBuffer(...)
-			createInfo.queueFamilyIndex = queue.familyIndex;
-			VKA(vkCreateCommandPool(Context::GetVkDevice(), &createInfo, nullptr, &m_pool));
+			// Create primary command pool:
+			VkCommandPoolCreateInfo primaryCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+			primaryCreateInfo.queueFamilyIndex = queue.familyIndex;
+			VKA(vkCreateCommandPool(Context::GetVkDevice(), &primaryCreateInfo, nullptr, &m_primaryPool));
 
-			m_buffers.resize(bufferCount);
-			VkCommandBufferAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-			allocateInfo.commandPool = m_pool;
-			allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			allocateInfo.commandBufferCount = bufferCount;
-			VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &allocateInfo, m_buffers.data()));
+			// Allocate primary command buffer:
+			VkCommandBufferAllocateInfo primaryAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+			primaryAllocateInfo.commandPool = m_primaryPool;
+			primaryAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			primaryAllocateInfo.commandBufferCount = 1;
+			VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &primaryAllocateInfo, &m_primaryBuffer));
+
+			// Secondaries:
+			m_secondaryPools.resize(secondaryBufferCount);
+			m_secondaryBuffers.resize(secondaryBufferCount);
+			for (int i = 0; i < secondaryBufferCount; i++)
+			{
+				// Create secondary command pools:
+				VkCommandPoolCreateInfo secondaryCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+				secondaryCreateInfo.queueFamilyIndex = queue.familyIndex;
+				VKA(vkCreateCommandPool(Context::GetVkDevice(), &secondaryCreateInfo, nullptr, &m_secondaryPools[i]));
+
+				// Allocate secondary command buffers:
+				VkCommandBufferAllocateInfo secondaryAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+				secondaryAllocateInfo.commandPool = m_secondaryPools[i];
+				secondaryAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+				secondaryAllocateInfo.commandBufferCount = 1;
+				VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &secondaryAllocateInfo, &m_secondaryBuffers[i]));
+			}
 		}
 		CommandPool::~CommandPool()
 		{
-			vkFreeCommandBuffers(Context::GetVkDevice(), m_pool, (uint32_t)m_buffers.size(), m_buffers.data());
-			vkDestroyCommandPool(Context::GetVkDevice(), m_pool, nullptr);
+			vkFreeCommandBuffers(Context::GetVkDevice(), m_primaryPool, 1, &m_primaryBuffer);
+			vkDestroyCommandPool(Context::GetVkDevice(), m_primaryPool, nullptr);
+			for (int i = 0; i < m_secondaryBuffers.size(); i++)
+			{
+				vkFreeCommandBuffers(Context::GetVkDevice(), m_secondaryPools[i], 1, &m_secondaryBuffers[i]);
+				vkDestroyCommandPool(Context::GetVkDevice(), m_secondaryPools[i], nullptr);
+			}
 		}
 
 
 
 		// Public methods:
-		void CommandPool::ResetPool() const
+		void CommandPool::ResetPools() const
 		{
-			vkResetCommandPool(Context::GetVkDevice(), m_pool, 0);
+			vkResetCommandPool(Context::GetVkDevice(), m_primaryPool, 0);
+			for (int i = 0; i < m_secondaryBuffers.size(); i++)
+				vkResetCommandPool(Context::GetVkDevice(), m_secondaryPools[i], 0);
 		}
-		void CommandPool::ResetBuffer(int index) const
+		VkCommandPool& CommandPool::GetPrimaryVkCommandPool()
 		{
-			if (index < 0 || index > m_buffers.size() - 1)
-				throw std::out_of_range("Reset CommandBuffer index out of range.");
-			vkResetCommandBuffer(m_buffers[index], 0);
+			return m_primaryPool;
 		}
-		VkCommandPool& CommandPool::GetVkCommandPool()
+		VkCommandPool& CommandPool::GetSecondaryVkCommandPool(int index)
 		{
-			return m_pool;
+			return m_secondaryPools[index];
 		}
-		VkCommandBuffer& CommandPool::GetVkCommandBuffer(int index)
+		VkCommandBuffer& CommandPool::GetPrimaryVkCommandBuffer()
 		{
-			if (index < 0 || index > m_buffers.size() - 1)
-				throw std::out_of_range("CommandBuffer index out of range.");
-			return m_buffers[index];
+			return m_primaryBuffer;
 		}
-		int CommandPool::GetBufferCount() const
+		VkCommandBuffer& CommandPool::GetSecondaryVkCommandBuffer(int index)
 		{
-			return static_cast<int>(m_buffers.size());
+			if (index < 0 || index >= m_secondaryBuffers.size())
+				throw std::out_of_range("Secondary command buffer index out of range.");
+			return m_secondaryBuffers[index];
+		}
+		std::vector<VkCommandBuffer>& CommandPool::GetSecondaryVkCommandBuffers()
+		{
+			return m_secondaryBuffers;
+		}
+		int CommandPool::GetSecondaryBufferCount() const
+		{
+			return static_cast<int>(m_secondaryBuffers.size());
 		}
 	}
 }

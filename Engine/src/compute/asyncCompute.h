@@ -2,7 +2,6 @@
 #define __INCLUDE_GUARD_asyncCompute_h__
 #include "emberMath.h"
 #include "accessMasks.h"
-#include <memory>
 #include <queue>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -33,13 +32,13 @@ namespace emberEngine
 		private: // Members
 			static bool s_isInitialized;
 			static int s_sessionCount;
-			static std::unique_ptr<vulkanBackend::CommandPool> s_pCommandPool;
+			static std::vector<vulkanBackend::CommandPool> s_pCommandPools;
 			static std::vector<ComputeSession> s_computeSessions;
 			static std::vector<VkFence> s_fences;
 			static std::queue<uint32_t> s_freeIndices;
 
 		public: // Methods
-			static void Init(int sessionCount = 10);
+			static void Init(int sessionCount);
 			static void Clear();
 
 			// Dispatch logic:

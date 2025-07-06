@@ -45,8 +45,7 @@ namespace emberEngine
 		TextureBatchUploader batchUploader;
 
 		// Iterate through the texture directory:
-		std::string engineRootPath = ENGINE_ROOT_PATH;
-		std::filesystem::path directoryPath = engineRootPath + "/textures/";
+		std::filesystem::path directoryPath = std::string(ENGINE_ROOT_PATH) + "/textures/";
 		std::unordered_set<std::string> validExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 		{
@@ -69,11 +68,11 @@ namespace emberEngine
 		}
 		
 		// TextureCubes:
-		TextureCube* skyboxWhite = new TextureCube("skyboxWhite", VK_FORMAT_R8G8B8A8_SRGB, engineRootPath + "/textures/white/", batchUploader);
+		TextureCube* skyboxWhite = new TextureCube("skyboxWhite", VK_FORMAT_R8G8B8A8_SRGB, directoryPath.string() + "/white/", batchUploader);
 		AddTexture2d(skyboxWhite);
-		TextureCube* skybox0 = new TextureCube("skybox0", VK_FORMAT_R8G8B8A8_SRGB, engineRootPath + "/textures/skyboxClouds1/", batchUploader);
+		TextureCube* skybox0 = new TextureCube("skybox0", VK_FORMAT_R8G8B8A8_SRGB, directoryPath.string() + "/skyboxClouds1/", batchUploader);
 		AddTexture2d(skybox0);
-		TextureCube* skybox1 = new TextureCube("skybox1", VK_FORMAT_R8G8B8A8_SRGB, engineRootPath + "/textures/skyboxNebula0/", batchUploader);
+		TextureCube* skybox1 = new TextureCube("skybox1", VK_FORMAT_R8G8B8A8_SRGB, directoryPath.string() + "/skyboxNebula0/", batchUploader);
 		AddTexture2d(skybox1);
 
 		batchUploader.UploadTextures();

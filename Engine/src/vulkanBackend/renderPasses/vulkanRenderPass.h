@@ -21,6 +21,7 @@ namespace emberEngine
 		public: // Methods:
 			virtual ~RenderPass();
 			const VkRenderPass& GetVkRenderPass() const;
+			const VkFramebuffer& GetFramebuffer(int index) const;
 			const std::vector<VkFramebuffer>& GetFramebuffers() const;
 		};
 	}

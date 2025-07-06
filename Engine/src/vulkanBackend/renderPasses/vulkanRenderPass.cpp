@@ -26,6 +26,10 @@ namespace emberEngine
 		{
 			return m_renderPass;
 		}
+		const VkFramebuffer& RenderPass::GetFramebuffer(int index) const
+		{
+			return m_framebuffers[index];
+		}
 		const std::vector<VkFramebuffer>& RenderPass::GetFramebuffers() const
 		{
 			return m_framebuffers;

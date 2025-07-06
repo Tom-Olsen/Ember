@@ -18,18 +18,22 @@ namespace emberEngine
 		class CommandPool
 		{
 		private: // Members:
-			VkCommandPool m_pool;
-			std::vector<VkCommandBuffer> m_buffers;
+			VkCommandPool m_primaryPool;
+			std::vector<VkCommandPool> m_secondaryPools;
+			VkCommandBuffer m_primaryBuffer;
+			std::vector<VkCommandBuffer> m_secondaryBuffers;
 
 		public: // Methods:
-			CommandPool(int bufferCount, DeviceQueue queue);
+			CommandPool(int secondaryBufferCount, DeviceQueue queue);
 			~CommandPool();
 
-			void ResetPool() const;
-			void ResetBuffer(int index) const;
-			VkCommandPool& GetVkCommandPool();
-			VkCommandBuffer& GetVkCommandBuffer(int index);
-			int GetBufferCount() const;
+			void ResetPools() const;
+			VkCommandPool& GetPrimaryVkCommandPool();
+			VkCommandPool& GetSecondaryVkCommandPool(int index);
+			VkCommandBuffer& GetPrimaryVkCommandBuffer();
+			VkCommandBuffer& GetSecondaryVkCommandBuffer(int index);
+			std::vector<VkCommandBuffer>& GetSecondaryVkCommandBuffers();
+			int GetSecondaryBufferCount() const;
 		};
 	}
 }

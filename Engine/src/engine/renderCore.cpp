@@ -16,6 +16,7 @@
 #include "renderTexture2d.h"
 #include "shaderProperties.h"
 #include "spirvReflect.h"
+#include "taskflowManager.h"
 #include "vertexBuffer.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
@@ -31,6 +32,7 @@
 #include "vulkanPresentRenderPass.h"
 #include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
+#include <string>
 
 
 
@@ -43,27 +45,23 @@ namespace emberEngine
 	// Constructor/Destructor:
 	RenderCore::RenderCore()
 	{
-		// Command pools:
-		m_commandPools.reserve(Context::framesInFlight);
-		for (uint32_t i = 0; i < Context::framesInFlight; i++)
-			m_commandPools.emplace_back(RenderStage::stageCount, Context::logicalDevice.GetGraphicsQueue());
+		// Command pools (one per frameInFlight * renderStage):
+		m_commandPools.reserve(Context::framesInFlight * (int)RenderStage::stageCount);
+		for (int i = 0; i < Context::framesInFlight * (int)RenderStage::stageCount; i++)
+			m_commandPools.emplace_back(TaskflowManager::GetCoreCount(), Context::logicalDevice.GetGraphicsQueue());
 
 		// Debug naming:
-		NAME_VK_COMMAND_POOL(m_commandPools[0].GetVkCommandPool(), "renderCorePool0");
-		NAME_VK_COMMAND_POOL(m_commandPools[1].GetVkCommandPool(), "renderCorePool1");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::preRenderCompute), "preRenderComputeCommandBuffer0");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::preRenderCompute), "preRenderComputeCommandBuffer1");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::shadow), "shadowCommandBuffer0");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::shadow), "shadowCommandBuffer1");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::forward), "forwardCommandBuffer0");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::forward), "forwardCommandBuffer1");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::postRenderCompute), "postRenderComputeCommandBuffer0");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::postRenderCompute), "postRenderComputeCommandBuffer1");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[0].GetVkCommandBuffer(RenderStage::present), "presentCommandBuffer0");
-		NAME_VK_COMMAND_BUFFER(m_commandPools[1].GetVkCommandBuffer(RenderStage::present), "presentCommandBuffer1");
+		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
+			for (int frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+			{
+				std::string name = renderStageNames[renderStage];
+				name += "Frame" + std::to_string(frameIndex);
+				NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "primary_" + name);
+				for (int threadIndex = 0; threadIndex < TaskflowManager::GetCoreCount(); threadIndex++)
+					NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "secondary" + std::to_string(threadIndex) + "_" + name);
+			}
 
 		// Synchronization objects:
-		//BuildTaskGraph();
 		CreateFences();
 		CreateSemaphores();
 	}
@@ -91,31 +89,43 @@ namespace emberEngine
 			RebuildSwapchain();
 		}
 
-		// Wait for fence of previous frame with same frameIndex to finish:
-		{
-			PROFILE_SCOPE("GPU work");
-			VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_fences[Context::frameIndex], VK_TRUE, UINT64_MAX));
-			if (!AcquireImage())
-				return 0;
-			VKA(vkResetFences(Context::GetVkDevice(), 1, &m_fences[Context::frameIndex]));
-		}
+		// Cancel current frame on failed acquisition (e.g. window resize):
+		if (!AcquireImage())
+			return 0;
 
-		// Get draw calls:
-		m_pDrawCalls = Graphics::GetSortedDrawCallPointers();
-
+		
 		// Record and submit current frame commands:
-		m_commandPools[Context::frameIndex].ResetPool();
+		m_pDrawCalls = Graphics::GetSortedDrawCallPointers();
 		{
 			PROFILE_SCOPE("Record");
 			DEBUG_LOG_CRITICAL("Recording frame {}", Context::frameIndex);
-			//m_recordCommandBufferExecutor.run(m_recordCommandBufferTaskflow).wait();
-			RecordPreRenderComputeCommandBuffer();
-			RecordShadowCommandBuffer();
-			RecordForwardCommandBuffer();
-			RecordPostRenderComputeCommandBuffer();
-			RecordPresentCommandBuffer();
+
+			WaitForPreRenderComputeFence();
+			RecordPreRenderComputeCommands();
+			SubmitPreRenderComputeCommands();
+
+			WaitForShadowFence();
+			RecordShadowCommands();
+			SubmitShadowCommands();
+
+			WaitForForwardFence();
+			//RecordForwardCommands();
+			//SubmitForwardCommands();
+
+			tf::Taskflow taskflow;
+			for (int i = 0; i < TaskflowManager::GetCoreCount(); i++)
+				taskflow.emplace([=] { this->RecordForwardCommandsParallel(); }).name("RecordForwardCommandsParallel" + std::to_string(i));
+			TaskflowManager::RunAndWait(taskflow);
+			SubmitForwardCommandsParallel();
+
+			WaitForPostRenderComputeFence();
+			RecordPostRenderComputeCommands();
+			SubmitPostRenderComputeCommands();
+
+			WaitForPresentFence();
+			RecordPresentCommands();
+			SubmitPresentCommands();
 		}
-		SubmitCommandBuffers();
 
 		// Reset engine data for next frame:
 		compute::PreRender::ResetComputeCalls();
@@ -123,6 +133,7 @@ namespace emberEngine
 		Graphics::ResetDrawCalls();
 		compute::PostRender::ResetComputeCalls();
 
+		// Cancel current frame on failed presentation (e.g. window resize):
 		if (!PresentImage())
 			return 0;
 
@@ -132,35 +143,6 @@ namespace emberEngine
 
 
 	// Private methods:
-	void RenderCore::BuildTaskGraph()
-	{
-		m_recordCommandBufferTaskflow.name("RecordCommandBuffers");
-
-		m_taskPreCompute = m_recordCommandBufferTaskflow.emplace([this]() {
-			RecordPreRenderComputeCommandBuffer();
-		}).name("PreRenderCompute");
-
-		m_taskShadow = m_recordCommandBufferTaskflow.emplace([this]() {
-			RecordShadowCommandBuffer();
-		}).name("Shadow");
-
-		m_taskForward = m_recordCommandBufferTaskflow.emplace([this]() {
-			RecordForwardCommandBuffer();
-		}).name("Forward");
-
-		m_taskPostCompute = m_recordCommandBufferTaskflow.emplace([this]() {
-			RecordPostRenderComputeCommandBuffer();
-		}).name("PostRenderCompute");
-
-		m_taskPresent = m_recordCommandBufferTaskflow.emplace([this]() {
-			RecordPresentCommandBuffer();
-		}).name("Present");
-
-		m_taskPreCompute.precede(m_taskShadow);
-		m_taskShadow.precede(m_taskForward);
-		m_taskForward.precede(m_taskPostCompute);
-		m_taskPostCompute.precede(m_taskPresent);
-	}
 	void RenderCore::RebuildSwapchain()
 	{
 		// Recreate swapchain:
@@ -177,6 +159,12 @@ namespace emberEngine
 	}
 	bool RenderCore::AcquireImage()
 	{
+		PROFILE_FUNCTION();
+
+		// This fence wait must be here instead of WaitForPresentFence().
+		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
+		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex]));
+
 		// Signal acquireSemaphore when done:
 		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[Context::frameIndex], VK_NULL_HANDLE, &m_imageIndex);
 
@@ -193,14 +181,50 @@ namespace emberEngine
 			return true;
 		}
 	}
-	
-	void RenderCore::RecordPreRenderComputeCommandBuffer()
+
+	// Wait for fence:
+	void RenderCore::WaitForPreRenderComputeFence()
+	{
+		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_preRenderComputeFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
+		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_preRenderComputeFences[Context::frameIndex]));
+		GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute).ResetPools();
+	}
+	void RenderCore::WaitForShadowFence()
+	{
+		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_shadowFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
+		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_shadowFences[Context::frameIndex]));
+		GetCommandPool(Context::frameIndex, RenderStage::shadow).ResetPools();
+	}
+	void RenderCore::WaitForForwardFence()
+	{
+		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_forwardFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
+		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_forwardFences[Context::frameIndex]));
+		GetCommandPool(Context::frameIndex, RenderStage::forward).ResetPools();
+	}
+	void RenderCore::WaitForPostRenderComputeFence()
+	{
+		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_postRenderComputeFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
+		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_postRenderComputeFences[Context::frameIndex]));
+		GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute).ResetPools();
+	}
+	void RenderCore::WaitForPresentFence()
+	{
+		// The fence is in AcquireImage().
+		GetCommandPool(Context::frameIndex, RenderStage::present).ResetPools();
+	}
+
+	// Record commands:
+	void RenderCore::RecordPreRenderComputeCommands()
 	{
 		PROFILE_FUNCTION();
-		// Begin command buffer:
-		VkCommandBuffer commandBuffer = m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::preRenderCompute);
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		// Record pre render compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			ComputeShader* pComputeShader = nullptr;
@@ -282,10 +306,12 @@ namespace emberEngine
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
-	void RenderCore::RecordShadowCommandBuffer()
+	void RenderCore::RecordShadowCommands()
 	{
 		PROFILE_FUNCTION();
+
 		// Static parameters initialization:
+		// EMBER::ToDo: make these function static objects to class static members and init on constructor.
 		static Material* pShadowMaterial;
 		static VkPipeline shadowPipeline;
 		static VkPipelineLayout shadowPipelineLayout;
@@ -296,10 +322,13 @@ namespace emberEngine
 			shadowPipelineLayout = pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
 		}
 
-		// Begin command buffer:
-		VkCommandBuffer commandBuffer = m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::shadow);
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::shadow);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		// Record shadow commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Render pass info:
@@ -307,7 +336,7 @@ namespace emberEngine
 			clearValues.depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = RenderPassManager::GetShadowRenderPass()->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = RenderPassManager::GetShadowRenderPass()->GetFramebuffers()[0];
+			renderPassBeginInfo.framebuffer = RenderPassManager::GetShadowRenderPass()->GetFramebuffer(0);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent = VkExtent2D{ Lighting::shadowMapResolution, Lighting::shadowMapResolution };
 			renderPassBeginInfo.clearValueCount = 1;
@@ -384,13 +413,18 @@ namespace emberEngine
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
-	void RenderCore::RecordForwardCommandBuffer()
+	void RenderCore::RecordForwardCommands()
 	{
 		PROFILE_FUNCTION();
-		// Begin command buffer:
-		VkCommandBuffer commandBuffer = m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::forward);
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
+		commandPool.ResetPools();
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		// Record forward commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Viewport and scissor:
@@ -411,7 +445,7 @@ namespace emberEngine
 			clearValues[1].depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffers()[0];
+			renderPassBeginInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffer(0);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent.width = viewport.width;
 			renderPassBeginInfo.renderArea.extent.height = viewport.height;
@@ -490,13 +524,114 @@ namespace emberEngine
 		// Manually change cpu side image layout to general as this is the automatic final layout of the forward renderpass.
 		RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
-	void RenderCore::RecordPostRenderComputeCommandBuffer()
+	void RenderCore::RecordForwardCommandsParallel()
 	{
 		PROFILE_FUNCTION();
-		// Begin command buffer:
-		VkCommandBuffer commandBuffer = m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::postRenderCompute);
+
+		// Logic for workload splitting across threads:
+		int totalWorkload = (int)m_pDrawCalls->size();
+		int threadIndex = TaskflowManager::GetThreadIndex();
+		int coreCount = TaskflowManager::GetCoreCount();
+		int baseChunkSize = totalWorkload / coreCount;
+		int remainder = totalWorkload % coreCount;
+		int startIndex = threadIndex * baseChunkSize + std::min(threadIndex, remainder);
+		int endIndex = startIndex + baseChunkSize + (threadIndex < remainder ? 1 : 0);
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
+		VkCommandBuffer& secondaryCommandBuffer = commandPool.GetSecondaryVkCommandBuffer(threadIndex);
+
+		VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
+		inheritanceInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
+		inheritanceInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffer(0);
+		inheritanceInfo.subpass = 0;
+
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+		beginInfo.pInheritanceInfo = &inheritanceInfo;
+
+		// Record forward commands:
+		VKA(vkBeginCommandBuffer(secondaryCommandBuffer, &beginInfo));
+		{
+			// Viewport and scissor:
+			VkViewport viewport = {};
+			viewport.width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
+			viewport.height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			VkRect2D scissor = {};
+			scissor.extent.width = viewport.width;
+			scissor.extent.height = viewport.height;
+			vkCmdSetViewport(secondaryCommandBuffer, 0, 1, &viewport);
+			vkCmdSetScissor(secondaryCommandBuffer, 0, 1, &scissor);
+
+			// Record commands: (no beign renderpass as this is a secondary command buffer)
+			{
+				uint32_t bindingCount = 0;
+				Mesh* pMesh = nullptr;
+				Material* pMaterial = nullptr;
+				Material* pPreviousMaterial = nullptr;
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				DefaultPushConstant pushConstant(0, Time::GetTime(), Time::GetDeltaTime(), Lighting::GetDirectionalLightsCount(), Lighting::GetPositionalLightsCount(), Graphics::GetActiveCamera().position);
+
+				// Normal draw calls:
+				for (int i = startIndex; i < endIndex; i++)
+				{
+					DrawCall* drawCall = (*m_pDrawCalls)[i];
+					pMesh = drawCall->pMesh;
+
+					// Update shader specific data:
+					drawCall->SetRenderMatrizes(Graphics::GetActiveCamera().viewMatrix, Graphics::GetActiveCamera().projectionMatrix);
+					drawCall->SetLightData();
+					drawCall->pShaderProperties->UpdateShaderData();
+
+					// Change pipeline if material has changed:
+					pMaterial = drawCall->pMaterial;
+					if (pPreviousMaterial != pMaterial)
+					{
+						pPreviousMaterial = pMaterial;
+						pipeline = pMaterial->GetPipeline()->GetVkPipeline();
+						pipelineLayout = pMaterial->GetPipeline()->GetVkPipelineLayout();
+						bindingCount = pMaterial->GetVertexInputDescriptions()->size;
+						pushConstant.instanceCount = drawCall->instanceCount;
+						vkCmdBindPipeline(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+						vkCmdPushConstants(secondaryCommandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+					}
+
+					// Same material but different instance Count => update push constants:
+					if (pushConstant.instanceCount != drawCall->instanceCount)
+					{
+						pushConstant.instanceCount = drawCall->instanceCount;
+						vkCmdPushConstants(secondaryCommandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+					}
+
+					vkCmdBindVertexBuffers(secondaryCommandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
+					vkCmdBindIndexBuffer(secondaryCommandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+
+					vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+					vkCmdDrawIndexed(secondaryCommandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
+				}
+			}
+		}
+		VKA(vkEndCommandBuffer(secondaryCommandBuffer));
+
+		// Ember::TODO: remove layout tracking?
+		// Manually change cpu side image layout to general as this is the automatic final layout of the forward renderpass.
+		RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
+	}
+	void RenderCore::RecordPostRenderComputeCommands()
+	{
+		PROFILE_FUNCTION();
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		// Record post render compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			ComputeShader* pComputeShader = nullptr;
@@ -582,9 +717,10 @@ namespace emberEngine
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
-	void RenderCore::RecordPresentCommandBuffer()
+	void RenderCore::RecordPresentCommands()
 	{
 		PROFILE_FUNCTION();
+
 		// Static parameters initialization:
 		static Mesh* pMesh;
 		static Material* pMaterial;
@@ -602,10 +738,13 @@ namespace emberEngine
 			bindingCount = pMaterial->GetVertexInputDescriptions()->size;
 		}
 
-		// Begin command buffer:
-		VkCommandBuffer commandBuffer = m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::present);
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		// Record present commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Viewport and scissor:
@@ -624,7 +763,7 @@ namespace emberEngine
 			PresentRenderPass* presentRenderPass = RenderPassManager::GetPresentRenderPass();
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffers()[m_imageIndex];
+			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent = Context::surface.GetCurrentExtent();
 
@@ -654,84 +793,152 @@ namespace emberEngine
 		//RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
 
-	void RenderCore::SubmitCommandBuffers()
+	// Submit commands:
+	void RenderCore::SubmitPreRenderComputeCommands()
 	{
 		PROFILE_FUNCTION();
-		// Ember::TODO: Try:
-		// Compute shaders do not need to wait for aquire semaphore. Instead make them only wait for previous compute to finish.
-		// Shadow shaders then wait for aquire and computeToShadow semaphore.
-		// change wait stages to pipelineStage::computeShader, etc...
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
-		// Pre render compute submission:
-		{
-			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_acquireSemaphores[Context::frameIndex];
-			submitInfo.pWaitDstStageMask = &waitStage;
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::preRenderCompute);//  m_preRenderComputeCommands[Context::frameIndex].GetVkCommandBuffer();
-			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_preRenderComputeToShadowSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
-		}
-
-		// Shadow render pass submission:
-		{
-			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_preRenderComputeToShadowSemaphores[Context::frameIndex];
-			submitInfo.pWaitDstStageMask = &waitStage;
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::shadow);//m_shadowCommands[Context::frameIndex].GetVkCommandBuffer();
-			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
-		}
-
-		// Forward render pass submission:
-		{
-			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
-			submitInfo.pWaitDstStageMask = &waitStage;
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::forward);//m_forwardCommands[Context::frameIndex].GetVkCommandBuffer();
-			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
-		}
-
-		// Post render compute submission:
-		{
-			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
-			submitInfo.pWaitDstStageMask = &waitStage;
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::postRenderCompute);//m_postRenderComputeCommands[Context::frameIndex].GetVkCommandBuffer();
-			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_postRenderToPresentSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
-		}
-
-		// Present render pass submission: (signal fence when done)
-		{
-			VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &m_postRenderToPresentSemaphores[Context::frameIndex];
-			submitInfo.pWaitDstStageMask = &waitStage;
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &m_commandPools[Context::frameIndex].GetVkCommandBuffer(RenderStage::present);//m_presentCommands[Context::frameIndex].GetVkCommandBuffer();
-			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &m_releaseSemaphores[Context::frameIndex];
-			VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_fences[Context::frameIndex]));
-		}
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_acquireSemaphores[Context::frameIndex];
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_preRenderComputeToShadowSemaphores[Context::frameIndex];
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_preRenderComputeFences[Context::frameIndex]));
 	}
+	void RenderCore::SubmitShadowCommands()
+	{
+		PROFILE_FUNCTION();
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::shadow);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_preRenderComputeToShadowSemaphores[Context::frameIndex];
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_shadowFences[Context::frameIndex]));
+	}
+	void RenderCore::SubmitForwardCommands()
+	{
+		PROFILE_FUNCTION();
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_forwardFences[Context::frameIndex]));
+	}
+	void RenderCore::SubmitForwardCommandsParallel()
+	{
+		PROFILE_FUNCTION();
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
+		VkCommandBuffer& primaryCommandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		std::vector<VkCommandBuffer>& secondaryCommandBuffers = commandPool.GetSecondaryVkCommandBuffers();
+		VkCommandBufferBeginInfo primaryBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		primaryBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		vkBeginCommandBuffer(primaryCommandBuffer, &primaryBeginInfo);
+		{
+			// Render pass info:
+			std::array<VkClearValue, 2> clearValues;
+			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+			clearValues[1].depthStencil = { 1.0f, 0 };
+			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+			renderPassBeginInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
+			renderPassBeginInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffer(0);
+			renderPassBeginInfo.renderArea.offset = { 0, 0 };
+			renderPassBeginInfo.renderArea.extent.width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
+			renderPassBeginInfo.renderArea.extent.height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
+			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			renderPassBeginInfo.pClearValues = clearValues.data();
+
+			// Begin render pass:
+			vkCmdBeginRenderPass(primaryCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+			{
+				vkCmdExecuteCommands(primaryCommandBuffer, secondaryCommandBuffers.size(), secondaryCommandBuffers.data());
+			}
+			vkCmdEndRenderPass(primaryCommandBuffer);
+
+			// Release memory from vertex shaders to compute shaders:
+			{
+				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+				memoryBarrier.srcStageMask = pipelineStage::vertexShader;
+				memoryBarrier.dstStageMask = pipelineStage::computeShader;
+				memoryBarrier.srcAccessMask = accessMask::vertexShader::shaderRead;
+				memoryBarrier.dstAccessMask = accessMask::computeShader::shaderWrite;
+
+				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+				dependencyInfo.memoryBarrierCount = 1;
+				dependencyInfo.pMemoryBarriers = &memoryBarrier;
+
+				vkCmdPipelineBarrier2(primaryCommandBuffer, &dependencyInfo);
+			}
+		}
+		vkEndCommandBuffer(primaryCommandBuffer);
+
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &primaryCommandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_forwardFences[Context::frameIndex]));
+	}
+	void RenderCore::SubmitPostRenderComputeCommands()
+	{
+		PROFILE_FUNCTION();
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_postRenderToPresentSemaphores[Context::frameIndex];
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_postRenderComputeFences[Context::frameIndex]));
+	}
+	void RenderCore::SubmitPresentCommands()
+	{
+		PROFILE_FUNCTION();
+		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_postRenderToPresentSemaphores[Context::frameIndex];
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_releaseSemaphores[Context::frameIndex];
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_presentFences[Context::frameIndex]));
+	}
+
 	bool RenderCore::PresentImage()
 	{
 		PROFILE_FUNCTION();
@@ -761,9 +968,19 @@ namespace emberEngine
 		VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 		createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;	// Fence is created in the signaled state to prevent the first wait from blocking.
 
-		m_fences.resize(Context::framesInFlight);
+		m_preRenderComputeFences.resize(Context::framesInFlight);
+		m_shadowFences.resize(Context::framesInFlight);
+		m_forwardFences.resize(Context::framesInFlight);
+		m_postRenderComputeFences.resize(Context::framesInFlight);
+		m_presentFences.resize(Context::framesInFlight);
 		for (uint32_t i = 0; i < Context::framesInFlight; i++)
-			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_fences[i]));
+		{
+			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeFences[i]));
+			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowFences[i]));
+			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardFences[i]));
+			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderComputeFences[i]));
+			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_presentFences[i]));
+		}
 	}
 	void RenderCore::CreateSemaphores()
 	{
@@ -788,8 +1005,18 @@ namespace emberEngine
 	void RenderCore::DestroyFences()
 	{
 		for (uint32_t i = 0; i < Context::framesInFlight; i++)
-			vkDestroyFence(Context::GetVkDevice(), m_fences[i], nullptr);
-		m_fences.clear();
+		{
+			vkDestroyFence(Context::GetVkDevice(), m_preRenderComputeFences[i], nullptr);
+			vkDestroyFence(Context::GetVkDevice(), m_shadowFences[i], nullptr);
+			vkDestroyFence(Context::GetVkDevice(), m_forwardFences[i], nullptr);
+			vkDestroyFence(Context::GetVkDevice(), m_postRenderComputeFences[i], nullptr);
+			vkDestroyFence(Context::GetVkDevice(), m_presentFences[i], nullptr);
+		}
+		m_preRenderComputeFences.clear();
+		m_shadowFences.clear();
+		m_forwardFences.clear();
+		m_postRenderComputeFences.clear();
+		m_presentFences.clear();
 	}
 	void RenderCore::DestroySemaphores()
 	{
@@ -808,5 +1035,21 @@ namespace emberEngine
 		m_forwardToPostRenderComputeSemaphores.clear();
 		m_postRenderToPresentSemaphores.clear();
 		m_releaseSemaphores.clear();
+	}
+	CommandPool& RenderCore::GetCommandPool(int frameIndex, RenderStage renderStage)
+	{
+		return GetCommandPool(frameIndex, (int)renderStage);
+	}
+	CommandPool& RenderCore::GetCommandPool(int frameIndex, int renderStage)
+	{
+		// Fast index: frameIndex
+		// Slow index: renderStage
+		// preRenderComputeCommandBufferFrame0
+		// preRenderComputeCommandBufferFrame1
+		// shadowCommandBufferFrame0
+		// shadowCommandBufferFrame1
+		assert(renderStage < (int)RenderStage::stageCount);
+		assert(frameIndex < Context::framesInFlight);
+		return m_commandPools[frameIndex + (int)renderStage * Context::framesInFlight];
 	}
 }

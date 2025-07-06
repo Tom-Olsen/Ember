@@ -7,6 +7,7 @@
 #include "poolManager.h"
 #include "renderPassManager.h"
 #include "samplerManager.h"
+#include "taskflowManager.h"
 #include "textureManager.h"
 
 

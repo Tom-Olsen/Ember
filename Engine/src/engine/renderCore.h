@@ -2,7 +2,6 @@
 #define __INCLUDE_GUARD_renderCore_h__
 #include <array>
 #include <memory>
-#include <taskflow/taskflow.hpp>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -22,7 +21,7 @@ namespace emberEngine
 	class RenderCore
 	{
 	private: // Enums:
-		enum RenderStage
+		enum class RenderStage
 		{
 			preRenderCompute = 0,
 			shadow = 1,
@@ -31,28 +30,31 @@ namespace emberEngine
 			present = 4,
 			stageCount = 5
 		};
+		inline static constexpr std::array<const char*, (int)RenderStage::stageCount> renderStageNames =
+		{
+			"preRenderCompute",
+			"shadow",
+			"forward",
+			"postRenderCompute",
+			"present"
+		};
 
 	private: // Members:
 		// Render resources:
 		std::vector<vulkanBackend::CommandPool> m_commandPools;
 
 		// Sync objects:
-		std::vector<VkFence> m_fences;
+		std::vector<VkFence> m_preRenderComputeFences;
+		std::vector<VkFence> m_shadowFences;
+		std::vector<VkFence> m_forwardFences;
+		std::vector<VkFence> m_postRenderComputeFences;
+		std::vector<VkFence> m_presentFences;
 		std::vector<VkSemaphore> m_acquireSemaphores;
 		std::vector<VkSemaphore> m_preRenderComputeToShadowSemaphores;
 		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
 		std::vector<VkSemaphore> m_forwardToPostRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_postRenderToPresentSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
-
-		// Taskflow objects:
-		tf::Taskflow m_recordCommandBufferTaskflow;
-		tf::Executor m_recordCommandBufferExecutor;
-		tf::Task m_taskPreCompute;
-		tf::Task m_taskShadow;
-		tf::Task m_taskForward;
-		tf::Task m_taskPostCompute;
-		tf::Task m_taskPresent;
 
 		// Render management:
 		uint32_t m_imageIndex;
@@ -67,23 +69,40 @@ namespace emberEngine
 		bool RenderFrame();
 
 	private: // Methods:
-		void BuildTaskGraph();
 		void RebuildSwapchain();
 		bool AcquireImage();
-		
-		void RecordPreRenderComputeCommandBuffer();
-		void RecordShadowCommandBuffer();
-		void RecordForwardCommandBuffer();
-		void RecordPostRenderComputeCommandBuffer();
-		void RecordPresentCommandBuffer();
 
-		void SubmitCommandBuffers();
+		// Wait for fence:
+		void WaitForPreRenderComputeFence();
+		void WaitForShadowFence();
+		void WaitForForwardFence();
+		void WaitForPostRenderComputeFence();
+		void WaitForPresentFence();
+		
+		// Record commands:
+		void RecordPreRenderComputeCommands();
+		void RecordShadowCommands();
+		void RecordForwardCommands();
+		void RecordForwardCommandsParallel();
+		void RecordPostRenderComputeCommands();
+		void RecordPresentCommands();
+
+		// Submit commands:
+		void SubmitPreRenderComputeCommands();
+		void SubmitShadowCommands();
+		void SubmitForwardCommands();
+		void SubmitForwardCommandsParallel();
+		void SubmitPostRenderComputeCommands();
+		void SubmitPresentCommands();
+
 		bool PresentImage();
 
 		void CreateFences();
 		void CreateSemaphores();
 		void DestroyFences();
 		void DestroySemaphores();
+		vulkanBackend::CommandPool& GetCommandPool(int frameIndex, RenderStage renderStage);
+		vulkanBackend::CommandPool& GetCommandPool(int frameIndex, int renderStage);
 	};
 }
 

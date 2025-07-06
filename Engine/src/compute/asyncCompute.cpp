@@ -21,7 +21,7 @@ namespace emberEngine
 		// Static members:
 		bool Async::s_isInitialized = false;
 		int Async::s_sessionCount;
-		std::unique_ptr<CommandPool> Async::s_pCommandPool;
+		std::vector<CommandPool> Async::s_pCommandPools;
 		std::vector<ComputeSession> Async::s_computeSessions;
 		std::vector<VkFence> Async::s_fences;
 		std::queue<uint32_t> Async::s_freeIndices;
@@ -38,15 +38,16 @@ namespace emberEngine
 			// Set session count:
 			s_sessionCount = math::Max(1, sessionCount);
 
-			// Init command pool:
-			s_pCommandPool = std::make_unique<CommandPool>(sessionCount, Context::logicalDevice.GetComputeQueue());
-
-			// Resize compute sessions and fences:
-			s_computeSessions.resize(10);
+			// Resize/Reserve vectors:
+			s_pCommandPools.reserve(s_sessionCount);
+			s_computeSessions.resize(s_sessionCount);
 			s_fences.resize(s_sessionCount);
 
 			for (int i = 0; i < s_sessionCount; i++)
 			{
+				// Create command pools:
+				s_pCommandPools.emplace_back(0, Context::logicalDevice.GetComputeQueue());
+
 				// Create fences:
 				VkFenceCreateInfo fenceInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 				VKA(vkCreateFence(Context::GetVkDevice(), &fenceInfo, nullptr, &s_fences[i]));
@@ -69,7 +70,7 @@ namespace emberEngine
 			s_computeSessions.clear();
 
 			// Delete command pool:
-			s_pCommandPool.reset();
+			s_pCommandPools.clear();
 		}
 
 
@@ -92,7 +93,7 @@ namespace emberEngine
 				throw std::out_of_range("compute::Async::DispatchComputeSession(...) sessionID out of range.");
 			if (s_computeSessions[sessionID].state == ComputeSession::State::recording)
 			{
-				s_computeSessions[sessionID].Dispatch(s_pCommandPool->GetVkCommandBuffer(sessionID), s_fences[sessionID]);
+				s_computeSessions[sessionID].Dispatch(s_pCommandPools[sessionID].GetPrimaryVkCommandBuffer(), s_fences[sessionID]);
 				s_computeSessions[sessionID].state = ComputeSession::State::running;
 			}
 			else if (s_computeSessions[sessionID].state == ComputeSession::State::idle)
@@ -208,7 +209,7 @@ namespace emberEngine
 			for (ComputeCall& computeCall : s_computeSessions[sessionID].GetComputeCalls())
 				PoolManager::ReturnShaderProperties((Shader*)computeCall.pComputeShader, computeCall.pShaderProperties);
 
-			s_pCommandPool->ResetBuffer(sessionID);
+			s_pCommandPools[sessionID].ResetPools();
 			s_computeSessions[sessionID].state = ComputeSession::State::idle;
 			s_computeSessions[sessionID].ResetComputeCalls();
 			VKA(vkResetFences(Context::GetVkDevice(), 1, &s_fences[sessionID]));

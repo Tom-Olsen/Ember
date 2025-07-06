@@ -8,7 +8,6 @@
 #include "mesh.h"
 #include "meshManager.h"
 #include "poolManager.h"
-#include "profiler.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "shader.h"
