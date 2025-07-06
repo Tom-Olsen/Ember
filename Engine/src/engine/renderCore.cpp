@@ -565,7 +565,7 @@ namespace emberEngine
 			vkCmdSetViewport(secondaryCommandBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(secondaryCommandBuffer, 0, 1, &scissor);
 
-			// Record commands: (no beign renderpass as this is a secondary command buffer)
+			// Record commands: (no beign renderpass for secondary command buffers)
 			{
 				uint32_t bindingCount = 0;
 				Mesh* pMesh = nullptr;
