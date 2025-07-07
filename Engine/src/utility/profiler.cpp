@@ -1,4 +1,5 @@
 #include "profiler.h"
+#include "taskflowManager.h"
 #include <sstream>
 #include <thread>
 
@@ -184,7 +185,7 @@ namespace emberEngine
             long long start = std::chrono::time_point_cast<std::chrono::microseconds>(startTimepoint).time_since_epoch().count();
             long long end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
 
-            unsigned int threadID = std::hash<std::thread::id>{}(std::this_thread::get_id());
+            uint32_t threadID = TaskflowManager::GetThreadIndex();
             Session::Get().LogResult({ name, start, end, threadID });
 
             isStopped = true;

@@ -114,7 +114,7 @@ namespace emberEngine
 
 			tf::Taskflow taskflow;
 			for (int i = 0; i < TaskflowManager::GetCoreCount(); i++)
-				taskflow.emplace([=] { this->RecordForwardCommandsParallel(); }).name("RecordForwardCommandsParallel" + std::to_string(i));
+				taskflow.emplace([this] { this->RecordForwardCommandsParallel(); }).name("RecordForwardCommandsParallel" + std::to_string(i));
 			TaskflowManager::RunAndWait(taskflow);
 			SubmitForwardCommandsParallel();
 
