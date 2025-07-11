@@ -70,8 +70,8 @@ namespace emberEngine
 			void GenerateMipmaps(uint32_t mipLevels);
 
 			// Static methods:
-			static void CopyImageToImage(VmaImage* srcImage, VmaImage* dstImage, const DeviceQueue& queue);
 			static void CopyImageToImage(VkCommandBuffer commandBuffer, VmaImage* srcImage, VmaImage* dstImage, const DeviceQueue& queue);
+			static void CopyImageToImage(VmaImage* srcImage, VmaImage* dstImage, const DeviceQueue& queue);
 		};
 	}
 }

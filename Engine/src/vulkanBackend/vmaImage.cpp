@@ -187,6 +187,27 @@ namespace emberEngine
 		}
 		void VmaImage::GenerateMipmaps(VkCommandBuffer commandBuffer, uint32_t mipLevels)
 		{
+            // Memory barrier to ensure transfer queue is done with image upload before mipmapping:
+            {
+                VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+                barrier.srcStageMask = pipelineStage::transfer; // before was upload which is a transfer.
+                barrier.dstStageMask = pipelineStage::transfer; // next is blitting, which belongs to transfer.
+                barrier.srcAccessMask = accessMask::transfer::transferWrite;
+                barrier.dstAccessMask = accessMask::transfer::transferWrite;
+                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+                barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                barrier.image = m_image;
+                barrier.subresourceRange = m_subresourceRange;
+
+                VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+                dependencyInfo.imageMemoryBarrierCount = 1;
+                dependencyInfo.pImageMemoryBarriers = &barrier;
+
+                vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+            }
+
 			int mipWidth = static_cast<int>(GetWidth());
 			int mipHeight = static_cast<int>(GetHeight());
 			int mipDepth = static_cast<int>(GetDepth());
@@ -260,14 +281,15 @@ namespace emberEngine
 					dependencyInfo.pImageMemoryBarriers = &barrier;
 
 					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-
-					mipWidth = std::max(1, mipWidth / 2);
-					mipHeight = std::max(1, mipHeight / 2);
-					mipDepth = std::max(1, mipDepth / 2);
 				}
+
+                // Update dimensions for next mipmap:
+				mipWidth = std::max(1, mipWidth / 2);
+				mipHeight = std::max(1, mipHeight / 2);
+				mipDepth = std::max(1, mipDepth / 2);
 			}
 
-			// Transition last mip level to shader read-only:
+			// Transition last mip level from VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL to SHADER_READ_ONLY_OPTIMAL:
 			{
 				VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 				barrier.srcStageMask = pipelineStage::transfer;
@@ -303,23 +325,6 @@ namespace emberEngine
 
 
 		// Static methods:
-		void VmaImage::CopyImageToImage(VmaImage* srcImage, VmaImage* dstImage, const DeviceQueue& queue)
-		{
-			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(queue);
-
-			VkImageCopy copyRegion = {};
-			copyRegion.srcSubresource = srcImage->GetSubresourceLayers();
-			copyRegion.srcOffset = { 0, 0, 0 };
-			copyRegion.dstSubresource = dstImage->GetSubresourceLayers();
-			copyRegion.dstOffset = { 0, 0, 0 };
-			copyRegion.extent = srcImage->GetExtent();
-			vkCmdCopyImage(commandBuffer,
-				srcImage->GetVkImage(), srcImage->GetLayout(),
-				dstImage->GetVkImage(), dstImage->GetLayout(),
-				1, &copyRegion);
-
-			SingleTimeCommand::EndCommand(queue);
-		}
 		void VmaImage::CopyImageToImage(VkCommandBuffer commandBuffer, VmaImage* srcImage, VmaImage* dstImage, const DeviceQueue& queue)
 		{
 			VkImageCopy copyRegion = {};
@@ -329,6 +334,12 @@ namespace emberEngine
 			copyRegion.dstOffset = { 0, 0, 0 };
 			copyRegion.extent = srcImage->GetExtent();
 			vkCmdCopyImage(commandBuffer, srcImage->GetVkImage(), srcImage->GetLayout(), dstImage->GetVkImage(), dstImage->GetLayout(), 1, &copyRegion);
+		}
+		void VmaImage::CopyImageToImage(VmaImage* srcImage, VmaImage* dstImage, const DeviceQueue& queue)
+		{
+			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(queue);
+            CopyImageToImage(commandBuffer, srcImage, dstImage, queue);
+			SingleTimeCommand::EndCommand(queue);
 		}
 	}
 }

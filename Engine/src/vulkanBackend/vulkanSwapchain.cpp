@@ -51,6 +51,10 @@ namespace emberEngine
 
 
 		// Public methods:
+        int Swapchain::GetImageCount() const
+        {
+            return m_images.size();
+        }
 		const VkSwapchainKHR& Swapchain::GetVkSwapchainKHR() const
 		{
 			return m_swapchain;

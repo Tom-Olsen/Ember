@@ -49,15 +49,15 @@ namespace emberEngine
 		std::vector<VkFence> m_forwardFences;
 		std::vector<VkFence> m_postRenderComputeFences;
 		std::vector<VkFence> m_presentFences;
-		std::vector<VkSemaphore> m_acquireSemaphores;
 		std::vector<VkSemaphore> m_preRenderComputeToShadowSemaphores;
 		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
 		std::vector<VkSemaphore> m_forwardToPostRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_postRenderToPresentSemaphores;
+		std::vector<VkSemaphore> m_acquireSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
 
 		// Render management:
-		uint32_t m_imageIndex;
+		uint32_t m_imageIndex;  // updated by vkAcquireNextImageKHR(...)
 		bool m_rebuildSwapchain;
 
 		// Game engine data injection:

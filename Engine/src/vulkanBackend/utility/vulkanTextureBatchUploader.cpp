@@ -3,6 +3,7 @@
 #include "sampleTexture2d.h"
 #include "stagingBuffer.h"
 #include "vulkanContext.h"
+#include "vulkanMacros.h"
 #include "vulkanPipelineStages.h"
 #include "vulkanSingleTimeCommand.h"
 
@@ -37,13 +38,19 @@ namespace emberEngine
 			{
 				VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
 				VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
+                NAME_VK_COMMAND_BUFFER(transferCommandBuffer, "Upload Textures: transfer");
+                NAME_VK_COMMAND_BUFFER(graphicsCommandBuffer, "Upload Textures: graphics");
 				for (auto& pendingTexture : m_pendingTextures)
 					pendingTexture.pTexture2d->RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pendingTexture.pStagingBuffer.get());
-				SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, pipelineStage::transfer);
+                // Ember::ToDo: the linked command submission version is not working. Probably sync issues between the two queues.
+				// SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, pipelineStage::transfer);
+				SingleTimeCommand::EndCommand(transferQueue);
+				SingleTimeCommand::EndCommand(graphicsQueue);
 			}
 			else
 			{
 				VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
+                NAME_VK_COMMAND_BUFFER(commandBuffer, "Upload Textures: graphics + transfer");
 				for (auto& pendingTexture : m_pendingTextures)
 					pendingTexture.pTexture2d->RecordGpuCommands(commandBuffer, commandBuffer, pendingTexture.pStagingBuffer.get());
 				SingleTimeCommand::EndCommand(graphicsQueue);

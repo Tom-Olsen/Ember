@@ -18,7 +18,7 @@ namespace emberEngine
 			m_depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 			// Create render textures:
-			VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+			VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
 			m_pRenderTexture = std::make_unique<RenderTexture2d>("forwardRenderPassRenderTexture", format, renderWidth, renderHeight);
 			m_pSecondaryRenderTexture = std::make_unique<RenderTexture2d>("forwardRenderPassRenderTexture", format, renderWidth, renderHeight);
 

@@ -6,6 +6,7 @@
 #include "vmaImage.h"
 #include "vulkanAccessMasks.h"
 #include "vulkanContext.h"
+#include "vulkanMacros.h"
 #include "vulkanPipelineStages.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanTextureBatchUploader.h"
@@ -115,6 +116,7 @@ namespace emberEngine
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_CUBE;
 		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
 		CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "textureCube2d " + name);
 
 		return pStagingBuffer;
 	}

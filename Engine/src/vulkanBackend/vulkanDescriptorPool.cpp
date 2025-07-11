@@ -22,14 +22,16 @@ namespace emberEngine
 
 			m_pLogicalDevice = pLogicalDevice;
 
+            // Ember::ToDo: create dynamic way to add more descirptors if needed. See that one great webpage (Link?) fr guidance.
 			uint32_t descriptorCount = 8192;	// maximum number of descriptor of each type in the associated pool
-			std::array<VkDescriptorPoolSize, 5> poolSizes
+			std::array<VkDescriptorPoolSize, 6> poolSizes
 			{
 				VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptorCount },
 				VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, descriptorCount },
 				VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER, descriptorCount },
 				VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorCount },
-				VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descriptorCount }
+				VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descriptorCount },
+				VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount }
 				// Add more descriptor types as needed
 			};
 

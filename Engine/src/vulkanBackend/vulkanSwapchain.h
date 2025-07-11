@@ -32,6 +32,7 @@ namespace emberEngine
 			~Swapchain();
 
 			// Getters:
+            int GetImageCount() const;
 			const VkSwapchainKHR& GetVkSwapchainKHR() const;
 			const std::vector<VkImage>& GetImages() const;
 			const std::vector<VkImageView>& GetImageViews() const;

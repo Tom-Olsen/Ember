@@ -89,7 +89,7 @@ namespace emberEngine
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
 		CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), name + " SampleTexture2d");
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTexture2d " + name);
 
 		return pStagingBuffer;
 	}
@@ -99,18 +99,32 @@ namespace emberEngine
 	// Public methods:
 	void SampleTexture2d::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
 	{
-		// Transition: Layout: undefined->transfer, Queue: transfer
-		VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		VkPipelineStageFlags2 srcStage = pipelineStage::topOfPipe;
-		VkPipelineStageFlags2 dstStage = pipelineStage::transfer;
-		VkAccessFlags2 srcAccessMask = accessMask::transfer::none;
-		VkAccessFlags2 dstAccessMask = accessMask::transfer::transferWrite;
-		m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		// Transition: Layout: undefined->dstTransfer, Queue: transfer
+        {
+		    VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		    VkPipelineStageFlags2 srcStage = pipelineStage::topOfPipe;
+		    VkPipelineStageFlags2 dstStage = pipelineStage::transfer;
+		    VkAccessFlags2 srcAccessMask = accessMask::transfer::none;
+		    VkAccessFlags2 dstAccessMask = accessMask::transfer::transferWrite;
+		    m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+        }
 
 		// Upload: pStagingBuffer -> image
 		pStagingBuffer->UploadToImage(transferCommandBuffer, m_pImage.get(), m_pImage->GetSubresourceRange().layerCount);
 
-		// Mipmapping with final transition, layout: transfer->shader read
-		m_pImage->GenerateMipmaps(graphicsCommandBuffer, m_pImage->GetSubresourceRange().levelCount);
+        // Final transition, layout: transfer->shaderRead
+		// With mipmapping: Queue: graphics
+        if (m_pImage->GetSubresourceRange().levelCount > 1)
+		    m_pImage->GenerateMipmaps(graphicsCommandBuffer, m_pImage->GetSubresourceRange().levelCount);
+        // Without mipmapping: Queue: transfer
+        else
+        {
+		    VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		    VkPipelineStageFlags2 srcStage = pipelineStage::transfer;
+		    VkPipelineStageFlags2 dstStage = pipelineStage::fragmentShader;
+		    VkAccessFlags2 srcAccessMask = accessMask::transfer::transferWrite;
+		    VkAccessFlags2 dstAccessMask = accessMask::fragmentShader::shaderRead;
+		    m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+        }
 	}
 }
