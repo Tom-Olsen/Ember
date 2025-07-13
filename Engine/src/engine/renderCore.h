@@ -44,6 +44,7 @@ namespace emberEngine
 		std::vector<vulkanBackend::CommandPool> m_commandPools;
 
 		// Sync objects:
+		std::vector<VkFence> m_frameFences;
 		std::vector<VkFence> m_preRenderComputeFences;
 		std::vector<VkFence> m_shadowFences;
 		std::vector<VkFence> m_forwardFences;
@@ -73,6 +74,7 @@ namespace emberEngine
 		bool AcquireImage();
 
 		// Wait for fence:
+		void WaitForFrameFence();
 		void WaitForPreRenderComputeFence();
 		void WaitForShadowFence();
 		void WaitForForwardFence();

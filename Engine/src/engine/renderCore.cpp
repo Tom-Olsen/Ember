@@ -35,6 +35,9 @@
 #include <string>
 
 
+// frame fence  = 0
+// stage fences = 1
+#define FENCE_MODEL 0
 
 namespace emberEngine
 {
@@ -56,12 +59,12 @@ namespace emberEngine
 			{
 				std::string name = renderStageNames[renderStage];
 				name += "_frame" + std::to_string(frameIndex);
-				NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "primary_" + name);
-                NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandBuffer(), "primary_" + name);
+				NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "CommandPoolPrimary_" + name);
+                NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandBuffer(), "CommandBufferPrimary_" + name);
 				for (int threadIndex = 0; threadIndex < TaskflowManager::GetCoreCount(); threadIndex++)
                 {
-                    NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "secondary" + std::to_string(threadIndex) + "_" + name);
-                    NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "secondary_" + std::to_string(threadIndex) + "_" + name);
+                    NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPoolSecondary" + std::to_string(threadIndex) + "_" + name);
+                    NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBufferSecondary_" + std::to_string(threadIndex) + "_" + name);
                 }
 			}
 
@@ -94,6 +97,11 @@ namespace emberEngine
 		}
 
 		// Cancel current frame on failed acquisition (e.g. window resize):
+		#if FENCE_MODEL == 0
+		WaitForFrameFence();
+		#elif FENCE_MODEL == 1
+		WaitForPreRenderComputeFence();
+		#endif
 		if (!AcquireImage())
 			return 0;
 
@@ -104,15 +112,18 @@ namespace emberEngine
 			PROFILE_SCOPE("Record");
 			DEBUG_LOG_CRITICAL("Recording frame {}", Context::frameIndex);
 
-			WaitForPreRenderComputeFence();
 			RecordPreRenderComputeCommands();
 			SubmitPreRenderComputeCommands();
 
+			#if FENCE_MODEL == 1
 			WaitForShadowFence();
+			#endif
 			RecordShadowCommands();
 			SubmitShadowCommands();
 
+			#if FENCE_MODEL == 1
 			WaitForForwardFence();
+			#endif
 			RecordForwardCommands();
 			SubmitForwardCommands();
 
@@ -122,11 +133,15 @@ namespace emberEngine
 			//TaskflowManager::RunAndWait(taskflow);
 			//SubmitForwardCommandsParallel();
 
+			#if FENCE_MODEL == 1
 			WaitForPostRenderComputeFence();
+			#endif
 			RecordPostRenderComputeCommands();
 			SubmitPostRenderComputeCommands();
 
-			GetCommandPool(Context::frameIndex, RenderStage::present).ResetPools();
+			#if FENCE_MODEL == 1
+			WaitForPresentFence();
+			#endif
 			RecordPresentCommands();
 			SubmitPresentCommands();
 		}
@@ -165,10 +180,6 @@ namespace emberEngine
 	{
 		PROFILE_FUNCTION();
 
-		// This fence wait must be here instead of WaitForPresentFence().
-		 VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
-		 VKA(vkResetFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex]));
-
 		// Signal acquireSemaphore when done:
 		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[Context::frameIndex], VK_NULL_HANDLE, &m_imageIndex);
 
@@ -187,29 +198,51 @@ namespace emberEngine
 	}
 
 	// Wait for fence:
+	void RenderCore::WaitForFrameFence()
+	{
+		PROFILE_FUNCTION();
+		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_frameFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
+		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_frameFences[Context::frameIndex]));
+		GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute).ResetPools();
+		GetCommandPool(Context::frameIndex, RenderStage::shadow).ResetPools();
+		GetCommandPool(Context::frameIndex, RenderStage::forward).ResetPools();
+		GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute).ResetPools();
+		GetCommandPool(Context::frameIndex, RenderStage::present).ResetPools();
+	}
 	void RenderCore::WaitForPreRenderComputeFence()
 	{
+		PROFILE_FUNCTION();
 		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_preRenderComputeFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
 		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_preRenderComputeFences[Context::frameIndex]));
 		GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute).ResetPools();
 	}
 	void RenderCore::WaitForShadowFence()
 	{
+		PROFILE_FUNCTION();
 		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_shadowFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
 		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_shadowFences[Context::frameIndex]));
 		GetCommandPool(Context::frameIndex, RenderStage::shadow).ResetPools();
 	}
 	void RenderCore::WaitForForwardFence()
 	{
+		PROFILE_FUNCTION();
 		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_forwardFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
 		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_forwardFences[Context::frameIndex]));
 		GetCommandPool(Context::frameIndex, RenderStage::forward).ResetPools();
 	}
 	void RenderCore::WaitForPostRenderComputeFence()
 	{
+		PROFILE_FUNCTION();
 		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_postRenderComputeFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
 		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_postRenderComputeFences[Context::frameIndex]));
 		GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute).ResetPools();
+	}
+	void RenderCore::WaitForPresentFence()
+	{
+		PROFILE_FUNCTION();
+		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
+		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex]));
+		GetCommandPool(Context::frameIndex, RenderStage::present).ResetPools();
 	}
 
 	// Record commands:
@@ -465,6 +498,7 @@ namespace emberEngine
 				// Normal draw calls:
 				for (DrawCall* drawCall : *m_pDrawCalls)
 				{
+					PROFILE_SCOPE("DrawCall");
 					pMesh = drawCall->pMesh;
 
 					// Update shader specific data:
@@ -494,7 +528,6 @@ namespace emberEngine
 
 					vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
 					vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
-
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
@@ -808,7 +841,12 @@ namespace emberEngine
 		submitInfo.pCommandBuffers = &commandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_preRenderComputeToShadowSemaphores[Context::frameIndex];
+
+		#if FENCE_MODEL == 0
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		#elif FENCE_MODEL == 1
 		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_preRenderComputeFences[Context::frameIndex]));
+		#endif
 	}
 	void RenderCore::SubmitShadowCommands()
 	{
@@ -825,7 +863,12 @@ namespace emberEngine
 		submitInfo.pCommandBuffers = &commandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
+
+		#if FENCE_MODEL == 0
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		#elif FENCE_MODEL == 1
 		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_shadowFences[Context::frameIndex]));
+		#endif
 	}
 	void RenderCore::SubmitForwardCommands()
 	{
@@ -842,7 +885,12 @@ namespace emberEngine
 		submitInfo.pCommandBuffers = &commandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
+
+		#if FENCE_MODEL == 0
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		#elif FENCE_MODEL == 1
 		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_forwardFences[Context::frameIndex]));
+		#endif
 	}
 	void RenderCore::SubmitForwardCommandsParallel()
 	{
@@ -901,7 +949,12 @@ namespace emberEngine
 		submitInfo.pCommandBuffers = &primaryCommandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
+
+		#if FENCE_MODEL == 0
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		#elif FENCE_MODEL == 1
 		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_forwardFences[Context::frameIndex]));
+		#endif
 	}
 	void RenderCore::SubmitPostRenderComputeCommands()
 	{
@@ -918,7 +971,12 @@ namespace emberEngine
 		submitInfo.pCommandBuffers = &commandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_postRenderToPresentSemaphores[Context::frameIndex];
+
+		#if FENCE_MODEL == 0
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		#elif FENCE_MODEL == 1
 		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_postRenderComputeFences[Context::frameIndex]));
+		#endif
 	}
 	void RenderCore::SubmitPresentCommands()
 	{
@@ -935,7 +993,12 @@ namespace emberEngine
 		submitInfo.pCommandBuffers = &commandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_releaseSemaphores[Context::frameIndex];
+
+		#if FENCE_MODEL == 0
+		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_frameFences[Context::frameIndex]));
+		#elif FENCE_MODEL == 1
 		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_presentFences[Context::frameIndex]));
+		#endif
 	}
 
 	bool RenderCore::PresentImage()
@@ -967,6 +1030,7 @@ namespace emberEngine
 		VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 		createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;	// Fence is created in the signaled state to prevent the first wait from blocking.
 
+		m_frameFences.resize(Context::framesInFlight);
 		m_preRenderComputeFences.resize(Context::framesInFlight);
 		m_shadowFences.resize(Context::framesInFlight);
 		m_forwardFences.resize(Context::framesInFlight);
@@ -974,6 +1038,7 @@ namespace emberEngine
 		m_presentFences.resize(Context::framesInFlight);
 		for (uint32_t i = 0; i < Context::framesInFlight; i++)
 		{
+			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_frameFences[i]));
 			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeFences[i]));
 			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowFences[i]));
 			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardFences[i]));
@@ -1017,12 +1082,14 @@ namespace emberEngine
 	{
 		for (uint32_t i = 0; i < Context::framesInFlight; i++)
 		{
+			vkDestroyFence(Context::GetVkDevice(), m_frameFences[i], nullptr);
 			vkDestroyFence(Context::GetVkDevice(), m_preRenderComputeFences[i], nullptr);
 			vkDestroyFence(Context::GetVkDevice(), m_shadowFences[i], nullptr);
 			vkDestroyFence(Context::GetVkDevice(), m_forwardFences[i], nullptr);
 			vkDestroyFence(Context::GetVkDevice(), m_postRenderComputeFences[i], nullptr);
 			vkDestroyFence(Context::GetVkDevice(), m_presentFences[i], nullptr);
 		}
+		m_frameFences.clear();
 		m_preRenderComputeFences.clear();
 		m_shadowFences.clear();
 		m_forwardFences.clear();
