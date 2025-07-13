@@ -61,7 +61,7 @@ namespace emberEngine
 				for (int threadIndex = 0; threadIndex < TaskflowManager::GetCoreCount(); threadIndex++)
                 {
                     NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "secondary" + std::to_string(threadIndex) + "_" + name);
-                    NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "primary_" + std::to_string(threadIndex) + "_" + name);
+                    NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "secondary_" + std::to_string(threadIndex) + "_" + name);
                 }
 			}
 
@@ -126,7 +126,7 @@ namespace emberEngine
 			RecordPostRenderComputeCommands();
 			SubmitPostRenderComputeCommands();
 
-			WaitForPresentFence();
+			GetCommandPool(Context::frameIndex, RenderStage::present).ResetPools();
 			RecordPresentCommands();
 			SubmitPresentCommands();
 		}
@@ -166,11 +166,11 @@ namespace emberEngine
 		PROFILE_FUNCTION();
 
 		// This fence wait must be here instead of WaitForPresentFence().
-		// VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
-		// VKA(vkResetFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex]));
+		 VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
+		 VKA(vkResetFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex]));
 
 		// Signal acquireSemaphore when done:
-		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[m_imageIndex], VK_NULL_HANDLE, &m_imageIndex);
+		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[Context::frameIndex], VK_NULL_HANDLE, &m_imageIndex);
 
 		// Resize if needed:
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || Context::window.GetFramebufferResized())
@@ -210,13 +210,6 @@ namespace emberEngine
 		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_postRenderComputeFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
 		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_postRenderComputeFences[Context::frameIndex]));
 		GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute).ResetPools();
-	}
-	void RenderCore::WaitForPresentFence()
-	{
-		// The fence is in AcquireImage().
-		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
-		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_presentFences[Context::frameIndex]));
-		GetCommandPool(Context::frameIndex, RenderStage::present).ResetPools();
 	}
 
 	// Record commands:
@@ -809,7 +802,7 @@ namespace emberEngine
 		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_acquireSemaphores[m_imageIndex];
+		submitInfo.pWaitSemaphores = &m_acquireSemaphores[Context::frameIndex];
 		submitInfo.pWaitDstStageMask = &waitStage;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
@@ -941,7 +934,7 @@ namespace emberEngine
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_releaseSemaphores[m_imageIndex];
+		submitInfo.pSignalSemaphores = &m_releaseSemaphores[Context::frameIndex];
 		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_presentFences[Context::frameIndex]));
 	}
 
@@ -950,7 +943,7 @@ namespace emberEngine
 		PROFILE_FUNCTION();
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_releaseSemaphores[m_imageIndex];
+		presentInfo.pWaitSemaphores = &m_releaseSemaphores[Context::frameIndex];
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &Context::GetVkSwapchainKHR();
 		presentInfo.pImageIndices = &m_imageIndex;
@@ -986,6 +979,11 @@ namespace emberEngine
 			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardFences[i]));
 			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderComputeFences[i]));
 			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_presentFences[i]));
+			NAME_VK_FENCE(m_preRenderComputeFences[i], "PreRenderComputeFence" + std::to_string(i));
+			NAME_VK_FENCE(m_shadowFences[i], "ShadowFence" + std::to_string(i));
+			NAME_VK_FENCE(m_forwardFences[i], "ForwardFence" + std::to_string(i));
+			NAME_VK_FENCE(m_postRenderComputeFences[i], "PostRenderComputeFence" + std::to_string(i));
+			NAME_VK_FENCE(m_presentFences[i], "PresentFence" + std::to_string(i));
 		}
 	}
 	void RenderCore::CreateSemaphores()
@@ -993,27 +991,27 @@ namespace emberEngine
 		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
         // One per frame in flight:
+		m_acquireSemaphores.resize(Context::framesInFlight);
 		m_preRenderComputeToShadowSemaphores.resize(Context::framesInFlight);
 		m_shadowToForwardSemaphores.resize(Context::framesInFlight);
 		m_forwardToPostRenderComputeSemaphores.resize(Context::framesInFlight);
 		m_postRenderToPresentSemaphores.resize(Context::framesInFlight);
+		m_releaseSemaphores.resize(Context::framesInFlight);
 		for (uint32_t i = 0; i < Context::framesInFlight; i++)
 		{
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToShadowSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowToForwardSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderToPresentSemaphores[i]));
-		}
-
-        // One per swapchain image:
-        int swapChainImageCount = Context::swapchains[0].GetImageCount();
-		m_acquireSemaphores.resize(swapChainImageCount);
-		m_releaseSemaphores.resize(swapChainImageCount);
-		for (uint32_t i = 0; i < swapChainImageCount; i++)
-        {
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
-        }
+			NAME_VK_SEMAPHORE(m_acquireSemaphores[i], "AcquireSemaphore" + std::to_string(i));
+			NAME_VK_SEMAPHORE(m_preRenderComputeToShadowSemaphores[i], "PreRenderComputeToShadowSemaphore" + std::to_string(i));
+			NAME_VK_SEMAPHORE(m_shadowToForwardSemaphores[i], "ShadowToForwardSemaphore" + std::to_string(i));
+			NAME_VK_SEMAPHORE(m_forwardToPostRenderComputeSemaphores[i], "ForwardToPostRenderComputeSemaphore" + std::to_string(i));
+			NAME_VK_SEMAPHORE(m_postRenderToPresentSemaphores[i], "PostRenderToPresentSemaphore" + std::to_string(i));
+			NAME_VK_SEMAPHORE(m_releaseSemaphores[i], "ReleaseSemaphore" + std::to_string(i));
+		}
 	}
 	void RenderCore::DestroyFences()
 	{
@@ -1035,21 +1033,18 @@ namespace emberEngine
 	{
 		for (uint32_t i = 0; i < Context::framesInFlight; i++)
 		{
+			vkDestroySemaphore(Context::GetVkDevice(), m_acquireSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToShadowSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_shadowToForwardSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_forwardToPostRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_postRenderToPresentSemaphores[i], nullptr);
-		}
-		for (uint32_t i = 0; i < Context::swapchains[0].GetImageCount(); i++)
-        {
-			vkDestroySemaphore(Context::GetVkDevice(), m_acquireSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_releaseSemaphores[i], nullptr);
-        }
+		}
+		m_acquireSemaphores.clear();
 		m_preRenderComputeToShadowSemaphores.clear();
 		m_shadowToForwardSemaphores.clear();
 		m_forwardToPostRenderComputeSemaphores.clear();
 		m_postRenderToPresentSemaphores.clear();
-		m_acquireSemaphores.clear();
 		m_releaseSemaphores.clear();
 	}
 	CommandPool& RenderCore::GetCommandPool(int frameIndex, RenderStage renderStage)
