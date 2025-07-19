@@ -1,6 +1,7 @@
 ﻿#ifndef __INCLUDE_GUARD_lighting_h__
 #define __INCLUDE_GUARD_lighting_h__
 #include "emberMath.h"
+#include "shadowConstants.h"
 #include <string>
 
 
@@ -33,10 +34,9 @@ namespace emberEngine
 		};
 
 	public:	// Constexpr members:
-		// When changing these also change the corresponding GPU values in shaders/shadowMapping.hlsli.
-		static constexpr uint32_t maxDirectionalLights = 8;
-		static constexpr uint32_t maxPositionalLights = 30;
-		static constexpr uint32_t shadowMapResolution = 4096;
+		static constexpr uint32_t maxDirectionalLights = MAX_DIR_LIGHTS;
+		static constexpr uint32_t maxPositionalLights = MAX_POS_LIGHTS;
+		static constexpr uint32_t shadowMapResolution = SHADOW_MAP_RESOLUTION;
 
 	private: // Members:
 		static bool s_isInitialized;

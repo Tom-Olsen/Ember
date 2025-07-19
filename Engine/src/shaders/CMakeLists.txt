@@ -17,6 +17,7 @@ endif()
 
 
 
+file(GLOB CPP_HLSL_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 file(GLOB VERTEX_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.vert.hlsl")
 file(GLOB FRAGMENT_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.frag.hlsl")
 file(GLOB COMPUTE_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.comp.hlsl")
@@ -25,6 +26,7 @@ file(GLOB SHADER_SOURCES
     ${VERTEX_SHADERS}
     ${FRAGMENT_SHADERS}
     ${COMPUTE_SHADERS})
+source_group("C++ & HLSL Headers" FILES ${CPP_HLSL_HEADERS})
 source_group("Vertex Shaders" FILES ${VERTEX_SHADERS})
 source_group("Fragment Shaders" FILES ${FRAGMENT_SHADERS})
 source_group("Compute Shaders" FILES ${COMPUTE_SHADERS})
@@ -64,4 +66,4 @@ endforeach()
 add_custom_target(CompileShaders ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # Shader sources added as dummy targets to make them show up in the IDE.
-add_custom_target(Shaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES})
+add_custom_target(Shaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES} ${CPP_HLSL_HEADERS})

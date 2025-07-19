@@ -1,13 +1,10 @@
 #ifndef __INCLUDE_GUARD_shadowMapping_hlsli__
 #define __INCLUDE_GUARD_shadowMapping_hlsli__
 #include "math.hlsli"
+#include "shadowConstants.h"
 
 
 
-// When changing these also change the corresponding CPU values in src/VulkanRenderer/lighting.cpp.
-static const uint MAX_DIR_LIGHTS = 8;         // directional lights: sun, moon, etc.
-static const uint MAX_POS_LIGHTS = 30;        // positional lights: spot light and point lights
-static const uint SHADOW_MAP_RESOLUTION = 4096; // x,y shadow map resolution in pixels => square shadow map
 static const float2 SHADOW_MAP_TEXEL_SIZE = float2(1.0f / SHADOW_MAP_RESOLUTION, 1.0f / SHADOW_MAP_RESOLUTION); // shadow map texel size
 
 

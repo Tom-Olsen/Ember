@@ -102,6 +102,8 @@ source_group("Vulkan Backend\\Render Passes" FILES ${VULKAN_RENDER_PASSES_FILES}
 
 # src/vulkanBackend/utility/*:
 file(GLOB VULKAN_UTILITY_FILES "${PROJECT_SOURCE_DIR}/src/vulkanBackend/utility/*")
+file(GLOB CPP_HLSL_HEADERS "${PROJECT_SOURCE_DIR}/src/shaders/*.h")   # grab .h files form shaders, which contian constans for c++ and hlsl
+list(APPEND VULKAN_UTILITY_FILES ${CPP_HLSL_HEADERS})
 source_group("Vulkan Backend\\Utility" FILES ${VULKAN_UTILITY_FILES})
 # ---------------------------------------------------
 
@@ -196,6 +198,7 @@ PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/managers
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/math
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/physics
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders # needed for .h files form shaders, which contian constans for c++ and hlsl
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/textures
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend
