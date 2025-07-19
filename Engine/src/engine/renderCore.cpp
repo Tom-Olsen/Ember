@@ -53,6 +53,19 @@ namespace emberEngine
 		for (int i = 0; i < Context::framesInFlight * (int)RenderStage::stageCount; i++)
 			m_commandPools.emplace_back(TaskflowManager::GetCoreCount(), Context::logicalDevice.GetGraphicsQueue());
 
+		// Shadow render pass caching:
+		m_pShadowMaterial = MaterialManager::GetMaterial("shadowMaterial");
+		m_shadowPipeline = m_pShadowMaterial->GetPipeline()->GetVkPipeline();
+		m_shadowPipelineLayout = m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
+
+		// Present render pass caching:
+		m_pPresentMesh = MeshManager::GetMesh("fullScreenRenderQuad");
+		m_pPresentMaterial = MaterialManager::GetMaterial("presentMaterial");
+		m_pPresentShaderProperties = std::make_unique<ShaderProperties>((Shader*)m_pPresentMaterial);
+		m_presentPipeline = m_pPresentMaterial->GetPipeline()->GetVkPipeline();
+		m_presentPipelineLayout = m_pPresentMaterial->GetPipeline()->GetVkPipelineLayout();
+		m_presentBindingCount = m_pPresentMaterial->GetVertexInputDescriptions()->size;
+
 		// Debug naming:
 		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
 			for (int frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
@@ -342,18 +355,6 @@ namespace emberEngine
 	{
 		PROFILE_FUNCTION();
 
-		// Static parameters initialization:
-		// EMBER::ToDo: make these function static objects to class static members and init on constructor.
-		static Material* pShadowMaterial;
-		static VkPipeline shadowPipeline;
-		static VkPipelineLayout shadowPipelineLayout;
-		if (pShadowMaterial == nullptr)
-		{
-			pShadowMaterial = MaterialManager::GetMaterial("shadowMaterial");
-			shadowPipeline = pShadowMaterial->GetPipeline()->GetVkPipeline();
-			shadowPipelineLayout = pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
-		}
-
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::shadow);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
@@ -381,10 +382,8 @@ namespace emberEngine
 				// BestPractices validation layer warning occur when binding a pipeline with vertex input data, but not binding any vertex buffer.
 				if (Lighting::GetDirectionalLightsCount() > 0 || Lighting::GetPositionalLightsCount() > 0)
 				{
-					const VkPipeline& shadowPipeline = pShadowMaterial->GetPipeline()->GetVkPipeline();
-					const VkPipelineLayout& shadowPipelineLayout = pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
 					int shadowMapIndex = 0;
-					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
+					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipeline);
 
 					// Update shader specific data:
 					for (DrawCall* drawCall : *m_pDrawCalls)
@@ -403,12 +402,12 @@ namespace emberEngine
 							Mesh* pMesh = drawCall->pMesh;
 
 							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, light.worldToClipMatrix);
-							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+							vkCmdPushConstants(commandBuffer, m_shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer(), offsets);
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 							DEBUG_LOG_INFO("Directional light, mesh = {}", drawCall->pMesh->GetName());
 						}
@@ -428,12 +427,12 @@ namespace emberEngine
 							Mesh* pMesh = drawCall->pMesh;
 
 							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, light.worldToClipMatrix);
-							vkCmdPushConstants(commandBuffer, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
+							vkCmdPushConstants(commandBuffer, m_shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer(), offsets);
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), math::Max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 							DEBUG_LOG_INFO("Positional light, mesh = {}", drawCall->pMesh->GetName());
 						}
@@ -552,8 +551,7 @@ namespace emberEngine
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 
-		// Ember::TODO: remove layout tracking?
-		// Manually change cpu side image layout to general as this is the automatic final layout of the forward renderpass.
+		// Forward render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_GENERAL. Reflect this in the image layout:
 		RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
 	void RenderCore::RecordForwardCommandsParallel()
@@ -649,8 +647,7 @@ namespace emberEngine
 		}
 		VKA(vkEndCommandBuffer(secondaryCommandBuffer));
 
-		// Ember::TODO: remove layout tracking?
-		// Manually change cpu side image layout to general as this is the automatic final layout of the forward renderpass.
+		// Forward render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_GENERAL. Reflect this in the image layout:
 		RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
 	void RenderCore::RecordPostRenderComputeCommands()
@@ -753,23 +750,6 @@ namespace emberEngine
 	{
 		PROFILE_FUNCTION();
 
-		// Static parameters initialization:
-		static Mesh* pMesh;
-		static Material* pMaterial;
-		static ShaderProperties* pShaderProperties;
-		static VkPipeline pipeline = VK_NULL_HANDLE;
-		static VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-		static uint32_t bindingCount = 0;
-		if (pMesh == nullptr)
-		{
-			pMesh = MeshManager::GetMesh("fullScreenRenderQuad");
-			pMaterial = MaterialManager::GetMaterial("presentMaterial");
-			pShaderProperties = new ShaderProperties((Shader*)pMaterial);	// TODO: never gets deleted!
-			pipeline = pMaterial->GetPipeline()->GetVkPipeline();
-			pipelineLayout = pMaterial->GetPipeline()->GetVkPipelineLayout();
-			bindingCount = pMaterial->GetVertexInputDescriptions()->size;
-		}
-
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
@@ -803,26 +783,22 @@ namespace emberEngine
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
 				// Update shader specific data:
-				pShaderProperties->SetTexture2d("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-				pShaderProperties->UpdateShaderData();
+				m_pPresentShaderProperties->SetTexture2d("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+				m_pPresentShaderProperties->UpdateShaderData();
 
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipeline);
 
-				vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
-				vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+				vkCmdBindVertexBuffers(commandBuffer, 0, m_presentBindingCount, m_pPresentMaterial->GetMeshBuffers(m_pPresentMesh), m_pPresentMaterial->GetMeshOffsets(m_pPresentMesh));
+				vkCmdBindIndexBuffer(commandBuffer, m_pPresentMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
 
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
-				vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), 1, 0, 0, 0);
-				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", pMaterial->GetName());
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipelineLayout, 0, 1, &m_pPresentShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+				vkCmdDrawIndexed(commandBuffer, 3 * m_pPresentMesh->GetTriangleCount(), 1, 0, 0, 0);
+				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", m_pPresentMaterial->GetName());
 			}
 			DearImGui::Render(commandBuffer);
 			vkCmdEndRenderPass(commandBuffer);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
-
-		// Ember::TODO: remove layout tracking?
-		// Manually change cpu side image layout to general as this is the automatic final layout of the forward renderpass.
-		//RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
 
 	// Submit commands:

@@ -11,6 +11,9 @@ namespace emberEngine
 {
 	// Forward declarations:
 	struct DrawCall;
+	class Mesh;
+	class Material;
+	class ShaderProperties;
 	namespace vulkanBackend
 	{
 		class CommandPool;
@@ -56,6 +59,19 @@ namespace emberEngine
 		std::vector<VkSemaphore> m_forwardToPostRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_postRenderToPresentSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
+
+		// Shadow render pass caching:
+		Material* m_pShadowMaterial;
+		VkPipeline m_shadowPipeline;
+		VkPipelineLayout m_shadowPipelineLayout;
+
+		// Present render pass caching:
+		Mesh* m_pPresentMesh;
+		Material* m_pPresentMaterial;
+		std::unique_ptr<ShaderProperties> m_pPresentShaderProperties;
+		VkPipeline m_presentPipeline = VK_NULL_HANDLE;
+		VkPipelineLayout m_presentPipelineLayout = VK_NULL_HANDLE;
+		uint32_t m_presentBindingCount = 0;
 
 		// Render management:
 		uint32_t m_imageIndex;  // updated by vkAcquireNextImageKHR(...)
