@@ -17,6 +17,7 @@
 #include "shaderProperties.h"
 #include "spirvReflect.h"
 #include "taskflowManager.h"
+#include "textureManager.h"
 #include "vertexBuffer.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"

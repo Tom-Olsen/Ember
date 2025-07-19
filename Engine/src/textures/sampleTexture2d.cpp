@@ -59,7 +59,12 @@ namespace emberEngine
 	StagingBuffer* SampleTexture2d::Init(const std::string& name, VkFormat format, const std::filesystem::path& path)
 	{
 		m_name = name;
-		m_channels = STBI_rgb_alpha;	// 4 channels
+		if (format == VK_FORMAT_R8_UNORM)
+			m_channels = 1; // Grayscale
+		else if (format == VK_FORMAT_R8G8B8A8_UNORM || format == VK_FORMAT_R8G8B8A8_SRGB)
+			m_channels = 4; // RGBA
+		else
+			throw std::runtime_error("Unsupported texture format for SampleTexture2d!");
 		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 
 		// Load pixelData:

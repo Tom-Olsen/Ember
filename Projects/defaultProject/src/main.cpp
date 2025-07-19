@@ -387,7 +387,7 @@ Scene* DefaultScene()
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
-		pSpotLight->SetShadowType(Lighting::ShadowType::soft);
+		pSpotLight->SetShadowType(Lighting::ShadowType::hard);
 	
 		pScene->AddGameObject(pGameObject);
 	}
@@ -416,7 +416,7 @@ Scene* DefaultScene()
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
-		pSpotLight->SetShadowType(Lighting::ShadowType::soft);
+		pSpotLight->SetShadowType(Lighting::ShadowType::hard);
 	
 		pScene->AddGameObject(pGameObject);
 	}
@@ -445,7 +445,7 @@ Scene* DefaultScene()
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
-		pSpotLight->SetShadowType(Lighting::ShadowType::soft);
+		pSpotLight->SetShadowType(Lighting::ShadowType::hard);
 	
 		pScene->AddGameObject(pGameObject);
 	}

@@ -1,10 +1,10 @@
 SamplerState colorSampler : register(s10);
 SamplerComparisonState shadowSampler : register(s11);
 Texture2DArray<float> shadowMaps : register(t20);
-Texture2D colorMap : register(t21);         // format = VK_FORMAT_R8G8B8A8_SRGB,
-Texture2D normalMap : register(t22);        // format = VK_FORMAT_R8G8B8A8_UNORM,   opengl style unorm normal map
-Texture2D metallicityMap : register(t23);   // format = VK_FORMAT_R8_UNORM,         single channel unorm metallicity map
-Texture2D roughnessMap : register(t24);     // format = VK_FORMAT_R8_UNORM,         single channel unorm roughness map
+Texture2D colorMap : register(t21);                 // format = VK_FORMAT_R8G8B8A8_SRGB,
+Texture2D normalMap : register(t22);                // format = VK_FORMAT_R8G8B8A8_UNORM,   opengl style unorm normal map
+Texture2D<float> metallicityMap : register(t23);    // format = VK_FORMAT_R8_UNORM,         single channel unorm metallicity map
+Texture2D<float> roughnessMap : register(t24);      // format = VK_FORMAT_R8_UNORM,         single channel unorm roughness map
 #include "shadowMapping.hlsli"
 #include "defaultPushConstant.hlsli"
 
@@ -48,8 +48,8 @@ float4 main(FragmentInput input) : SV_TARGET
     float4 color = col * diffuseColor * colorMap.Sample(colorSampler, uv);
     float3 localNormal = 2.0 * normalMap.Sample(colorSampler, uv).xyz - 1.0;
     float3 worldNormal = normalize(mul(TBN, localNormal));
-    float finalRoughness = roughness * roughnessMap.Sample(colorSampler, uv).x;
-    float finalMetallicity = metallicity * metallicityMap.Sample(colorSampler, uv).x;
+    float finalRoughness = roughness * roughnessMap.Sample(colorSampler, uv);
+    float finalMetallicity = metallicity * metallicityMap.Sample(colorSampler, uv);
     
     // Lighting:
     float ambient = 0.1f;

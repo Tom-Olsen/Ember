@@ -81,7 +81,7 @@ float3 PhysicalLight
     return (diffuseBRDF + specularBRDF) * lightIntensity * nDotL;
 }
 
-float NoFileredShadow(SamplerComparisonState shadowSampler, Texture2DArray <float>shadowMaps, int arrayIndex, float3 lightUvz)
+float NoFilteredShadow(SamplerComparisonState shadowSampler, Texture2DArray <float>shadowMaps, int arrayIndex, float3 lightUvz)
 {
     return shadowMaps.SampleCmp(shadowSampler, float3(lightUvz.xy, arrayIndex), lightUvz.z);
 }
@@ -174,7 +174,7 @@ float3 PhysicalDirectionalLights
             if (receiveShadows)
             {
                 if (lightData[i].shadowType == 0)
-                    shadow = NoFileredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
+                    shadow = NoFilteredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
                 else if (lightData[i].shadowType == 1)
                     shadow = PercentageCloserFilteredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
             }
@@ -216,7 +216,7 @@ float3 PhysicalPositionalLights
                 float falloff = saturate((radius - lightData[i].blendStartEnd.y) / (lightData[i].blendStartEnd.x - lightData[i].blendStartEnd.y));
                 
                 if (lightData[i].shadowType == 0)
-                    shadow = falloff * NoFileredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
+                    shadow = falloff * NoFilteredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
                 else if (lightData[i].shadowType == 1)
                     shadow = falloff * PercentageCloserFilteredShadow(shadowSampler, shadowMaps, i + shadowMapOffset, lightUvz);
             }

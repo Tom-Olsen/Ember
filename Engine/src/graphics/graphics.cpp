@@ -32,9 +32,9 @@ namespace emberEngine
 	Material* Graphics::s_pSimpleLitMaterial;
 	Material* Graphics::s_pSimpleUnlitMaterial;
 	Material* Graphics::s_errorMaterial;
-	float Graphics::s_depthBiasConstantFactor = 1.25f;
-	float Graphics::s_depthBiasClamp = 0.0001f;
-	float Graphics::s_depthBiasSlopeFactor = 1.75f;
+	float Graphics::s_depthBiasConstantFactor = 0.0f;
+	float Graphics::s_depthBiasClamp = 0.0f;
+	float Graphics::s_depthBiasSlopeFactor = 1.0f;
 
 
 

@@ -18,7 +18,7 @@ namespace emberEngine
 			m_depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 			// Create render textures:
-			VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
+			VkFormat format = VK_FORMAT_R16G16B16A16_SFLOAT;
 			m_pRenderTexture = std::make_unique<RenderTexture2d>("forwardRenderPassRenderTexture", format, renderWidth, renderHeight);
 			m_pSecondaryRenderTexture = std::make_unique<RenderTexture2d>("forwardRenderPassRenderTexture", format, renderWidth, renderHeight);
 
@@ -112,7 +112,7 @@ namespace emberEngine
 
 			VkAttachmentReference colorResolveAttachmentReference = {};
 			colorResolveAttachmentReference.attachment = 2;
-			colorResolveAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			colorResolveAttachmentReference.layout = VK_IMAGE_LAYOUT_GENERAL;	// next pass is post processing, which expects color resolve image in VK_IMAGE_LAYOUT_GENERAL.
 
 			// Subpass:
 			VkSubpassDescription subpass = {};
