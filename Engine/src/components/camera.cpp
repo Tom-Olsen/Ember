@@ -1,5 +1,4 @@
 #include "camera.h"
-#include "fpsEditorWindow.h"
 
 
 
@@ -16,7 +15,6 @@ namespace emberEngine
 		m_projectionType = ProjectionType::perspective;
 		m_updateProjectionMatrix = true;
 		m_drawFrustum = false;
-		fpsEditorWindow = std::make_unique<FpsEditorWindow>();
 	}
 	Camera::~Camera()
 	{

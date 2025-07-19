@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_sphFluid2dGpuEditorWindow_h__
 #define __INCLUDE_GUARD_sphFluid2dGpuEditorWindow_h__
-#include "editorWindow.h"
 #include "editor.h"
+#include "editorWindow.h"
 #include "sphFluid2dGpu.h"
 #include <imgui.h>
 

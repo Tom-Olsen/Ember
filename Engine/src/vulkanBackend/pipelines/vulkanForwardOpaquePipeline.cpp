@@ -158,7 +158,7 @@ namespace emberEngine
             pipelineInfo.pMultisampleState = &multisampleState;     // Multisampling
             pipelineInfo.pDepthStencilState = &depthState;          // Depth and stencil testing
             pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
-            pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
+			pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states: viewport and scissor
             pipelineInfo.layout = m_pipelineLayout;
             pipelineInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
             pipelineInfo.subpass = 0;

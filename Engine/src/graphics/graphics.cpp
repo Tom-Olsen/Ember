@@ -32,6 +32,9 @@ namespace emberEngine
 	Material* Graphics::s_pSimpleLitMaterial;
 	Material* Graphics::s_pSimpleUnlitMaterial;
 	Material* Graphics::s_errorMaterial;
+	float Graphics::s_depthBiasConstantFactor = 1.25f;
+	float Graphics::s_depthBiasClamp = 0.0001f;
+	float Graphics::s_depthBiasSlopeFactor = 1.75f;
 
 
 
@@ -341,6 +344,23 @@ namespace emberEngine
 	}
 
 
+
+	// Setters:
+	void Graphics::SetDeptBiasConstantFactor(float depthBiasConstantFactor)
+	{
+		s_depthBiasConstantFactor = depthBiasConstantFactor;
+	}
+	void Graphics::SetDeptBiasClamp(float depthBiasClamp)
+	{
+		s_depthBiasClamp = depthBiasClamp;
+	}
+	void Graphics::SetDeptBiasSlopeFactor(float depthBiasSlopeFactor)
+	{
+		s_depthBiasSlopeFactor = depthBiasSlopeFactor;
+	}
+
+
+
 	// Getters:
 	const Graphics::Camera& Graphics::GetActiveCamera()
 	{
@@ -362,6 +382,18 @@ namespace emberEngine
 			return a->pMaterial->GetRenderQueue() < b->pMaterial->GetRenderQueue();
 		});
 		return &s_sortedDrawCallPointers;
+	}
+	float Graphics::GetDeptBiasConstantFactor()
+	{
+		return s_depthBiasConstantFactor;
+	}
+	float Graphics::GetDeptBiasClamp()
+	{
+		return s_depthBiasClamp;
+	}
+	float Graphics::GetDeptBiasSlopeFactor()
+	{
+		return s_depthBiasSlopeFactor;
 	}
 
 

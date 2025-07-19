@@ -44,6 +44,9 @@ namespace emberEngine
 		static Material* s_pSimpleLitMaterial;
 		static Material* s_pSimpleUnlitMaterial;
 		static Material* s_errorMaterial;
+		static float s_depthBiasConstantFactor;
+		static float s_depthBiasClamp;
+		static float s_depthBiasSlopeFactor;
 
 	public: // Methods:
 		static void Init();
@@ -74,9 +77,17 @@ namespace emberEngine
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width = 0.1f, const Float4& color = Float4::white, bool receiveShadows = false, bool castShadows = false);
 
+		// Setters:
+		static void SetDeptBiasConstantFactor(float depthBiasConstantFactor);
+		static void SetDeptBiasClamp(float depthBiasClamp);
+		static void SetDeptBiasSlopeFactor(float depthBiasSlopeFactor);
+
 		// Getters:
 		static const Camera& GetActiveCamera();
 		static std::vector<DrawCall*>* GetSortedDrawCallPointers();
+		static float GetDeptBiasConstantFactor();
+		static float GetDeptBiasClamp();
+		static float GetDeptBiasSlopeFactor();
 
 		// Management:
 		static void ResetDrawCalls();

@@ -12,6 +12,7 @@
 #include "pointLight.h"
 #include "postRenderEffects.h"
 #include "profiler.h"
+#include "settings.h"
 #include "spinGlobal.h"
 #include "spinLocal.h"
 #include "spotLight.h"
@@ -22,18 +23,19 @@ using namespace emberEngine;
 
 
 // Ember::TODO now!
-// - use transfer queue in mesh class instead of graphics queue for index and vertes data transfer?
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
 // - SceneView gui 
+// - go through all classes and make sure that rule of five is applied correctly.
 
 // Ember::TODO:
-// - add naming to all vulkan objects. Abstract naming into macro which is turned off when compiling withouth validation layers?
+// - use transfer queue in mesh class instead of graphics queue for index and vertex data transfer.
+//   use framesInFlight many vertex and index buffers, with two staging buffers (one for vertex and one for index data).
+//   adjust staging buffer -> mesh buffers copy to account fro frame index (same as shaderProperties) and sync with render pipeline.
 // - think about different texture2d specializations. Are they all needed? Can they be simplified? How would I remove the m_layout tracking on CPU side?
 // - when not using input.vertexColor in the vertex shader, spirv optimizes the input binding away, which leads to incorrect bindings in
 //   my spirv reflection => other bindings are wrong, and textures are not displayed at all.
-// - batch image transitions and copying (e.g. texture2d creation)
 // - optimize eventsystem::AnyKey etc.
 // - remove scaling from view matrizes of lights and cameras?
 // - adjust shadow config in shadowPipeline.cpp (bias values) for better shadow quality
@@ -81,6 +83,7 @@ using namespace emberEngine;
 // - CameraController that is identical to unities editor pCamera.
 // - Own math library, see math.h/cpp.
 // - Dear ImGui integration with docking feature.
+// - Batched texture uploading.
 
 
 
@@ -96,8 +99,9 @@ Scene* ShadowCascadeScene()
 
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
-
+		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
+		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -226,8 +230,9 @@ Scene* TestScene()
 		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::back, -pos, Float3::up, Float3::up));
 
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
-
+		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
+		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -302,10 +307,9 @@ Scene* DefaultScene()
 
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(1000.0f);
-
 		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
-
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
+		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -653,8 +657,9 @@ Scene* PointLightScene()
 
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(1000.0f);
-
+		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
+		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -733,10 +738,9 @@ Scene* SingleQuadScene()
 
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(1000.0f);
-
 		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
-
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
+		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);

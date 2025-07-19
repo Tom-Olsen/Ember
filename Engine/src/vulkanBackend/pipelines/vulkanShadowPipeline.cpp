@@ -1,4 +1,5 @@
 #include "vulkanShadowPipeline.h"
+#include "graphics.h"
 #include "lighting.h"
 #include "mesh.h"
 #include "renderPassManager.h"
@@ -108,9 +109,9 @@ namespace emberEngine
             rasterizationState.lineWidth = 1.0f;
             rasterizationState.depthClampEnable = Context::DepthClampEnabled();
             rasterizationState.depthBiasEnable = Context::DepthBiasClampEnabled();
-            rasterizationState.depthBiasConstantFactor = 1.25f;     // Tweak this value based on the scene.
-            rasterizationState.depthBiasClamp = 0.0001f;              // clamp value for equation below.
-            rasterizationState.depthBiasSlopeFactor = 1.75f;        // Slope scale bias to handle varying slopes in depth.
+            rasterizationState.depthBiasConstantFactor = Graphics::GetDeptBiasConstantFactor(); // Tweak this value based on the scene.
+            rasterizationState.depthBiasClamp = Graphics::GetDeptBiasClamp();                   // clamp value for equation below.
+            rasterizationState.depthBiasSlopeFactor = Graphics::GetDeptBiasSlopeFactor();       // Slope scale bias to handle varying slopes in depth.
             rasterizationState.rasterizerDiscardEnable = VK_FALSE;	// If true, geometry never passes through rasterization stage.
             // Bias = (float) depthBiasConstantFactor * pow(exp(max_z_in_primitive) - r, 2) + depthBiasSlopeFactor * MaxDepthSlope;
             // r is the number of mantissa bits in the floating point representation (excluding the hidden bit); for example, 23 for float32.
@@ -144,6 +145,12 @@ namespace emberEngine
             VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
             colorBlendState.attachmentCount = 0;	// no color blending for shadow mapping
 
+            // Dynamic states, can be changed without recreating the pipeline:
+            std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_DEPTH_BIAS };
+            VkPipelineDynamicStateCreateInfo dynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
+            dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+            dynamicState.pDynamicStates = dynamicStates.data();
+
             VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
             pipelineInfo.stageCount = 1;								// only vertex shaders
             pipelineInfo.pStages = &vertexShaderStageInfo;				// shader stages pointer (only vertex shader)
@@ -154,7 +161,7 @@ namespace emberEngine
             pipelineInfo.pMultisampleState = &multisampleState;			// Multisampling
             pipelineInfo.pDepthStencilState = &depthState;			    // Depth and stencil testing
             pipelineInfo.pColorBlendState = &colorBlendState;			// Color blending
-            pipelineInfo.pDynamicState = nullptr;						// no dynamic states	
+			pipelineInfo.pDynamicState = &dynamicState;					// Dynamic states: depth bias 
             pipelineInfo.layout = m_pipelineLayout;
             pipelineInfo.renderPass = RenderPassManager::GetShadowRenderPass()->GetVkRenderPass();
             pipelineInfo.subpass = 0;

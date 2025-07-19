@@ -385,6 +385,9 @@ namespace emberEngine
 					int shadowMapIndex = 0;
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipeline);
 
+					// Dynamic state: depth bias:
+					vkCmdSetDepthBias(commandBuffer, Graphics::GetDeptBiasConstantFactor(), Graphics::GetDeptBiasClamp(), Graphics::GetDeptBiasSlopeFactor());
+
 					// Update shader specific data:
 					for (DrawCall* drawCall : *m_pDrawCalls)
 						drawCall->pShadowShaderProperties->UpdateShaderData();
