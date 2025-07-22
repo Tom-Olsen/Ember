@@ -5,13 +5,13 @@ All other dependencies (SDL, vma, SPIRV-Reflect, imgui, spdlog) are submodules a
 
 The Engine folder contains a CMake project that builds the ember engine into a static library.
 Any project then must include the EmberEngine as a target_link_libraries(...).
-Examples of this setup can be found in Projects/<Project Name>/CMakeLists.txt.
+Examples of this setup can be found in <Project Name>/CMakeLists.txt.
 
 
 How to compile (Windows 10):
 Start CMake and use the following configuration:
-Where is the source code: <full path to repository, e.g. C:/.../Ember/Projects/<Project Name>>
-Where to build the binaries: <full path to build folder, e.g. C:/.../Ember/Projects/<Project Name>/build>
+Where is the source code: <full path to repository, e.g. C:/.../Ember/<Project Name>>
+Where to build the binaries: <full path to build folder, e.g. C:/.../Ember/<Project Name>/build>
 Press the buttons 'configure' and then 'generate'.
 
 You should now have a vs project <Project Name>.sln in the build folder.
@@ -20,7 +20,7 @@ You can now build and run the code with the play button or 'ctrl + F5'.
 
 
 How to compile (Ubuntu):
-In a terminal navigate to the project you want to compile, e.g. home/<username>/Documents/Ember/Projects/defaultProject.
+In a terminal navigate to the project you want to compile, e.g. home/<username>/Documents/Ember/defaultProject.
 Create a build folder:      mkdir build
 navigate into the it:       cd build
 run cmake:                  cmake ..

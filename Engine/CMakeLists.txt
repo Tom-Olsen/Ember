@@ -1,5 +1,8 @@
-# Ember/Engine/CMakeLists.txt
+# Ember/engine/CMakeLists.txt
 
+
+
+# ------------------- Project Setup ------------------
 # Choose SHARED (.dll) or STATIC (.lib) library (currently only static supported):
 set(PROJECT_TYPE STATIC)
 
@@ -15,10 +18,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin") # target directory for add_executable(...)           => .exe
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib") # target directory for add_library(MyLib STATIC ...) => .a .lib
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib") # target directory for add_library(MyLib SHARED ...) => .so .dylib .dll
+# ---------------------------------------------------
 
 
-   
-# ------------------- File lists --------------------
+
+# ------------------- File Lists --------------------
 # src/buffers/*:
 file(GLOB BUFFERS_FILES "${PROJECT_SOURCE_DIR}/src/buffers/*")
 source_group("Buffers" FILES ${BUFFERS_FILES})
@@ -109,7 +113,7 @@ source_group("Vulkan Backend\\Utility" FILES ${VULKAN_UTILITY_FILES})
 
 
 
-# Configure library:
+# ----------------- Create Library ------------------
 add_library(${PROJECT_NAME} STATIC
 ${BUFFERS_FILES}
 ${COMPONENTS_FILES}
@@ -133,7 +137,30 @@ ${VULKAN_RENDER_PASSES_FILES}
 ${VULKAN_UTILITY_FILES})
 set_source_files_properties(${IMGUI_EXAMPLE} PROPERTIES HEADER_FILE_ONLY ON)    # don't compile these files
 
-# Add engine root path as a compile definition
+# Source subdirectories:
+target_include_directories(${PROJECT_NAME}
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/components
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/editor
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gameObjectSystem
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/graphics
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/managers
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/math
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/physics
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders # needed for .h files form shaders, which contian constans for c++ and hlsl
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/textures
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/pipelines
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/pushConstants
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/renderPasses
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/utility
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Add project root path as a macro:
 get_filename_component(ENGINE_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_ROOT_PATH="${ENGINE_ROOT_PATH}")
 
@@ -141,10 +168,11 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_ROOT_PATH="${ENGINE_ROO
 if (MSVC)
     target_compile_options(${PROJECT_NAME} PUBLIC /utf-8)
 endif()
+# ---------------------------------------------------
 
 
 
-# -------------------- Libraries --------------------
+# ------------------ Link Libraries -----------------
 # Shaders:
 add_subdirectory("src/shaders")
 add_dependencies(${PROJECT_NAME} CompileShaders)
@@ -184,27 +212,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC libs/vma/include)
 
 # Taskflow: (header only)
 target_include_directories(${PROJECT_NAME} PUBLIC libs/taskflow)
-
-# Source subdirectories:
-target_include_directories(${PROJECT_NAME}
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/components
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/editor
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gameObjectSystem
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/graphics
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/managers
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/math
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/physics
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders # needed for .h files form shaders, which contian constans for c++ and hlsl
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/textures
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/pipelines
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/pushConstants
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/renderPasses
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/utility
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 # ---------------------------------------------------

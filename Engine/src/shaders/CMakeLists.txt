@@ -1,7 +1,8 @@
-# Ember/Engine/src/shaders/CMakeLists.txt
+# Ember/engine/src/shaders/CMakeLists.txt
 
 
 
+# ------------------- Project Setup ------------------
 # Set vulkan sdk path:
 if(NOT DEFINED ENV{VULKAN_SDK})
     message(FATAL_ERROR "VULKAN_SDK environment variable not set. Please set it before building.")
@@ -14,9 +15,11 @@ if(WIN32)
 else()
     set(DXC_PATH "${VULKAN_SDK_PATH}/bin/dxc")
 endif()
+# ---------------------------------------------------
 
 
 
+# ------------------- File Lists --------------------
 file(GLOB CPP_HLSL_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 file(GLOB VERTEX_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.vert.hlsl")
 file(GLOB FRAGMENT_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.frag.hlsl")
@@ -31,9 +34,12 @@ source_group("Vertex Shaders" FILES ${VERTEX_SHADERS})
 source_group("Fragment Shaders" FILES ${FRAGMENT_SHADERS})
 source_group("Compute Shaders" FILES ${COMPUTE_SHADERS})
 source_group("Includes" FILES ${SHADER_INCLUDES})
+# ---------------------------------------------------
 
+
+
+# ----------------- Create Targets ------------------
 set(SPIRV_OUTPUTS "")
-
 foreach(SHADER_FILE ${SHADER_SOURCES})
     get_filename_component(FILE_NAME ${SHADER_FILE} NAME_WE)
     get_filename_component(EXTENSION ${SHADER_FILE} EXT)
@@ -67,3 +73,4 @@ add_custom_target(CompileShaders ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # Shader sources added as dummy targets to make them show up in the IDE.
 add_custom_target(Shaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES} ${CPP_HLSL_HEADERS})
+# ---------------------------------------------------
