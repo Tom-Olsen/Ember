@@ -9,31 +9,28 @@
 
 
 
-// Basic instrumentation profiler by Cherno
 // Usage:
 //
-// Initialize Profiler (e.g. in main routine of your code):
+// Start session: (e.g. in main routine of your code)
 // Profiler::Session::Get().Start("session name", "file name" (optional));
 // 
+// Scope profiling:
 // {
 //     PROFILE_SCOPE("Some name to identify this scope");
 //     ...
 // }
 // 
+// Function profiling:
 // void Foo(...)
 // {
 //      PROFILE_FUNCTION();
 //      ...
 // }
 // 
-// End Session:
+// End session: (e.g. on application shutdown)
 // Profiler::Session::Get().End();
 //
-// Simply drag and drop the resulting .json in chrome/chromium uder the link chrome://tracing/ for result visualization.
-
-
-
-// Ember::TODO: multithreading support via c++ thread management, not openmp
+// Simply drag and drop the resulting .json in chrome/chromium under the link chrome://tracing/ for result visualization.
 
 
 
@@ -56,18 +53,15 @@ namespace emberEngine
         class Session
         {
         private: // Members:
-            std::string sessionName;
-            std::ofstream outputStream;
-            size_t profileCount;
-            std::mutex writeMutex;
-
-        public: // Members:
-            std::vector<Result> results;
-            size_t numResults;
+            std::string m_sessionName;
+            std::ofstream m_outputStream;
+            size_t m_profileCount;
+            std::mutex m_writeMutex;
+            std::vector<Result> m_results;
 
         private: // Methods:
             // Singleton Pattern: hide these constructors.
-            Session() : sessionName(""), profileCount(0), numResults(0) {}
+            Session() : m_sessionName(""), m_profileCount(0) {}
             Session(Session const&) = delete;
             void operator=(Session const&) = delete;
 
@@ -97,12 +91,12 @@ namespace emberEngine
         class Timer
         {
         private:
-            const char* name;
-            std::chrono::time_point<std::chrono::steady_clock> startTimepoint;
-            bool isStopped;
-
+            const char* m_name;
+            std::chrono::time_point<std::chrono::steady_clock> m_startTimepoint;
+            bool m_isStopped;
+            
         public:
-            Timer(const char* name_);
+            Timer(const char* name);
             ~Timer();
             void Stop();
         };

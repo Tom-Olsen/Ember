@@ -51,77 +51,76 @@ namespace emberEngine
         }
         void Session::Start(const std::string& name, const std::string& filepath)
         {
-            sessionName = name;
+            m_sessionName = name;
             std::string path = (filepath == "" ? name : filepath) + ".json";
-            outputStream.open(path);
-            profileCount = 0;
-            results.clear();
-            results.resize(1000);
-            numResults = 0;
+            m_outputStream.open(path);
+            m_profileCount = 0;
+            m_results.clear();
+            m_results.reserve(1000);
             WriteHeader();
         }
         void Session::End()
         {
             WriteFooter();
-            results.resize(numResults);
-            outputStream.close();
-            sessionName = "";
-            profileCount = 0;
+            m_results.shrink_to_fit();
+            m_outputStream.close();
+            m_sessionName = "";
+            m_profileCount = 0;
         }
 
         // Write data to json:
         void Session::LogResult(const Result& result)
         {
-            std::lock_guard<std::mutex> lock(writeMutex);
+            std::lock_guard<std::mutex> lock(m_writeMutex);
 
-            numResults++;
-            if (results.size() < numResults)
-                results.resize(results.size() + 1000);
-            results[numResults - 1] = result;
+            // Double capacity once m_results is full (expects m_results.size() != 0):
+            if (m_results.size() == m_results.capacity())
+                m_results.reserve(2 * m_results.capacity());
+            m_results.push_back(result);
 
-            if (profileCount++ > 0)
-                outputStream << ",\n";
+            if (m_profileCount++ > 0)
+                m_outputStream << ",\n";
 
             std::string name = result.name;
             std::replace(name.begin(), name.end(), '"', '\'');
 
-            outputStream << "\t\t{\n";
-            outputStream << "\t\t\t\"cat\":\"function\",\n";
-            outputStream << "\t\t\t\"dur\":" << (result.end - result.start) << ",\n";
-            outputStream << "\t\t\t\"name\":\"" << name << "\",\n";
-            outputStream << "\t\t\t\"ph\":\"X\",\n";
-            outputStream << "\t\t\t\"pid\":0,\n";
-            outputStream << "\t\t\t\"tid\":" << result.threadID << ",\n";
-            outputStream << "\t\t\t\"ts\":" << result.start << "\n";
-            outputStream << "\t\t}";
+            m_outputStream << "\t\t{\n";
+            m_outputStream << "\t\t\t\"cat\":\"function\",\n";
+            m_outputStream << "\t\t\t\"dur\":" << (result.end - result.start) << ",\n";
+            m_outputStream << "\t\t\t\"name\":\"" << name << "\",\n";
+            m_outputStream << "\t\t\t\"ph\":\"X\",\n";
+            m_outputStream << "\t\t\t\"pid\":0,\n";
+            m_outputStream << "\t\t\t\"tid\":" << result.threadID << ",\n";
+            m_outputStream << "\t\t\t\"ts\":" << result.start << "\n";
+            m_outputStream << "\t\t}";
         }
         void Session::WriteHeader()
         {
-            outputStream << "{\n";
-            outputStream << "\t\"otherData\": {},\n";
-            outputStream << "\t\"traceEvents\":\n";
-            outputStream << "\t[\n";
+            m_outputStream << "{\n";
+            m_outputStream << "\t\"otherData\": {},\n";
+            m_outputStream << "\t\"traceEvents\":\n";
+            m_outputStream << "\t[\n";
         }
         void Session::WriteFooter()
         {
-            outputStream << "\n\t]\n";
-            outputStream << "}";
-            outputStream.flush();
+            m_outputStream << "\n\t]\n";
+            m_outputStream << "}";
+            m_outputStream.flush();
         }
 
         // Result analysis:
         void Session::PrintResults(TimeUnit unit, LogLevel level)
         {
-            for (size_t i = 0; i < results.size(); i++)
-                LOG(level, "{}", results[i].ToString(unit));
+            for (size_t i = 0; i < m_results.size(); i++)
+                LOG(level, "{}", m_results[i].ToString(unit));
         }
         double Session::GetTotalTime(const std::string& resultName, TimeUnit unit)
         {
             double duration = 0;
-            for (size_t i = 0; i < results.size(); i++)
+            for (size_t i = 0; i < m_results.size(); i++)
             {
-                if (results[i].name == resultName)
-                    duration += results[i].Duration(unit);
+                if (m_results[i].name == resultName)
+                    duration += m_results[i].Duration(unit);
             }
             return duration != 0 ? duration : -1;
         }
@@ -129,11 +128,11 @@ namespace emberEngine
         {
             int count = 0;
             double duration = 0;
-            for (size_t i = 0; i < results.size(); i++)
+            for (size_t i = 0; i < m_results.size(); i++)
             {
-                if (results[i].name == resultName)
+                if (m_results[i].name == resultName)
                 {
-                    duration += results[i].Duration(unit);
+                    duration += m_results[i].Duration(unit);
                     count++;
                 }
             }
@@ -142,12 +141,12 @@ namespace emberEngine
         std::vector<std::string> Session::GetAllResultNames()
         {
             std::vector<std::string> names;
-            for (size_t i = 0; i < results.size(); i++)
+            for (size_t i = 0; i < m_results.size(); i++)
             {
-                if (std::find(names.begin(), names.end(), results[i].name) != names.end())
+                if (std::find(names.begin(), names.end(), m_results[i].name) != names.end())
                     continue;
                 else
-                    names.push_back(results[i].name);
+                    names.push_back(m_results[i].name);
             }
             return names;
         }
@@ -169,26 +168,26 @@ namespace emberEngine
 {
     namespace Profiler
     {
-        Timer::Timer(const char* name_) : name(name_), isStopped(false)
+        Timer::Timer(const char* name) : m_name(name), m_isStopped(false)
         {
-            startTimepoint = std::chrono::steady_clock::now();
+            m_startTimepoint = std::chrono::steady_clock::now();
         }
         Timer::~Timer()
         {
-            if (!isStopped)
+            if (!m_isStopped)
                 Stop();
         }
         void Timer::Stop()
         {
             auto endTimepoint = std::chrono::steady_clock::now();
 
-            long long start = std::chrono::time_point_cast<std::chrono::microseconds>(startTimepoint).time_since_epoch().count();
+            long long start = std::chrono::time_point_cast<std::chrono::microseconds>(m_startTimepoint).time_since_epoch().count();
             long long end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
 
             uint32_t threadID = TaskflowManager::GetThreadIndex();
-            Session::Get().LogResult({ name, start, end, threadID });
+            Session::Get().LogResult({ m_name, start, end, threadID });
 
-            isStopped = true;
+            m_isStopped = true;
         }
     }
 }
