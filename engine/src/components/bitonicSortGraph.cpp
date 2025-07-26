@@ -73,7 +73,7 @@ namespace emberEngine
 	{
 		for (int i = 0; i < count; i++)
 		{
-			float t = i / (count - 1.0f);	// €[0,1]
+			float t = i / (count - 1.0f);	// ï¿½[0,1]
 			float z = height * (0.5f - t);
 			Float3 start(-0.5f * width, 0.0f, z);
 			Float3 end(0.5f * width, 0.0f, z);
