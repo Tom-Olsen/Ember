@@ -1,6 +1,3 @@
-SamplerComparisonState shadowSampler : register(s11);
-Texture2DArray<float> shadowMaps : register(t20);
-#include "shadowMapping.hlsli"
 #include "defaultPushConstant.hlsli"
 
 
@@ -10,7 +7,7 @@ cbuffer SurfaceProperties : register(b2)
     float4 diffuseColor;    // (1.0, 1.0, 1.0)
     float roughness;        // 0.5
     float3 reflectivity;    // 0.4
-    bool metallic;
+    float metallicity;      // 0 = dielectric, 1 = metal
     float4 scaleOffset;     // .xy = scale, .zw = offset
 };
 

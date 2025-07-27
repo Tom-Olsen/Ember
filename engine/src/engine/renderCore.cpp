@@ -113,16 +113,12 @@ namespace emberEngine
 		ResetCommandPools();
 
 		// Cancel current frame on failed acquisition (e.g. window resize):
-		if (!Context::renderToImGuiWindow)	// no aquire with ImGui rendering
-			if (!AcquireImage())
-				return 0;
+		if (!AcquireImage())
+			return 0;
 
-		// Apply gamma correction to ImGui present texture:
-		if (Context::renderToImGuiWindow)
-		{
-			ComputeShader* pComputeShader = ComputeShaderManager::GetComputeShader("gammaCorrection");
-			compute::PostRender::RecordComputeShader(pComputeShader);
-		}
+		// I use linear color space throughout entire render process. So apply gamma correction in post processing:
+		ComputeShader* pComputeShader = ComputeShaderManager::GetComputeShader("gammaCorrection");
+		compute::PostRender::RecordComputeShader(pComputeShader);
 		
 		// Record and submit current frame commands:
 		m_pDrawCalls = Graphics::GetSortedDrawCallPointers();
@@ -162,9 +158,8 @@ namespace emberEngine
 		compute::PostRender::ResetComputeCalls();
 
 		// Cancel current frame on failed presentation (e.g. window resize):
-		if (!Context::renderToImGuiWindow)	// no present with ImGui rendering
-			if (!PresentImage())
-				return 0;
+		if (!PresentImage())
+			return 0;
 
 		return 1;
 	}
@@ -772,23 +767,25 @@ namespace emberEngine
 	void RenderCore::RecordImGuiPresentCommands()
 	{
 		PROFILE_FUNCTION();
-	
+
+		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-	
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	
+
+		// Record present commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Render pass info:
 			PresentRenderPass* presentRenderPass = RenderPassManager::GetPresentRenderPass();
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(0); // always use same 'fake' framebuffer
+			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = { 1, 1 };
-			
+			renderPassBeginInfo.renderArea.extent = Context::surface.GetCurrentExtent();
+
+			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
 				DearImGui::Render(commandBuffer);
@@ -805,24 +802,10 @@ namespace emberEngine
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
-		// Determine which semaphore to use based on whether ImGui rendering is enabled:
-		int waitSemaphoreCount;
-		VkSemaphore* pWaitSemaphores = nullptr;
-		if (Context::renderToImGuiWindow)
-		{
-			waitSemaphoreCount = 0;
-			pWaitSemaphores = nullptr;	// this is the first gpu command (no vkAcquireNextImageKHR).
-		}
-		else
-		{
-			waitSemaphoreCount = 1;
-			pWaitSemaphores = &m_acquireSemaphores[Context::frameIndex];
-		}
-
 		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.waitSemaphoreCount = waitSemaphoreCount;
-		submitInfo.pWaitSemaphores = pWaitSemaphores;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_acquireSemaphores[Context::frameIndex];
 		submitInfo.pWaitDstStageMask = &waitStage;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
@@ -951,20 +934,6 @@ namespace emberEngine
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
-		// Determine which semaphore to use based on whether ImGui rendering is enabled:
-		int signalSemaphoreCount;
-		VkSemaphore* pSignalSemaphores = nullptr;
-		if (Context::renderToImGuiWindow)
-		{
-			signalSemaphoreCount = 0;
-			pSignalSemaphores = nullptr; // this is the last gpu command (no vkQueuePresentKHR).
-		}
-		else
-		{
-			signalSemaphoreCount = 1;
-			pSignalSemaphores = &m_releaseSemaphores[Context::frameIndex];
-		}
-
 		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.waitSemaphoreCount = 1;
@@ -972,8 +941,8 @@ namespace emberEngine
 		submitInfo.pWaitDstStageMask = &waitStage;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
-		submitInfo.signalSemaphoreCount = signalSemaphoreCount;
-		submitInfo.pSignalSemaphores = pSignalSemaphores;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_releaseSemaphores[Context::frameIndex];
 
 		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_frameFences[Context::frameIndex]));
 	}

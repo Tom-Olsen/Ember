@@ -8,11 +8,6 @@
 
 namespace emberEngine
 {
-	// Forward declarations:
-	class RenderTexture2d;
-
-
-
 	namespace vulkanBackend
 	{
 		/// <summary>
@@ -20,11 +15,6 @@ namespace emberEngine
 		/// </summary>
 		class PresentRenderPass : public RenderPass
 		{
-		private: // Members:
-			int m_renderWidth;
-			int m_renderHeight;
-			std::unique_ptr<RenderTexture2d> m_pRenderTexture;	// for fake swapchain support.
-
 		public: // Methods:
 			PresentRenderPass();
 			~PresentRenderPass();
