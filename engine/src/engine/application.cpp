@@ -34,7 +34,7 @@ namespace emberEngine
 		m_pActiveScene = nullptr;
 
 		// Init static classes:
-		Context::Init(settings.framesInFlight, settings.msaaSamples, settings.windowWidth, settings.windowHeight, settings.vSyncEnabled);
+		Context::Init(settings.framesInFlight, settings.msaaSamples, settings.windowWidth, settings.windowHeight, settings.vSyncEnabled, settings.renderToImGuiWindow);
 		GarbageCollector::Init();
 		SingleTimeCommand::Init();
 		math::Random::Init();

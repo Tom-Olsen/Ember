@@ -48,11 +48,6 @@ namespace emberEngine
 
 		// Sync objects:
 		std::vector<VkFence> m_frameFences;
-		std::vector<VkFence> m_preRenderComputeFences;
-		std::vector<VkFence> m_shadowFences;
-		std::vector<VkFence> m_forwardFences;
-		std::vector<VkFence> m_postRenderComputeFences;
-		std::vector<VkFence> m_presentFences;
 		std::vector<VkSemaphore> m_acquireSemaphores;
 		std::vector<VkSemaphore> m_preRenderComputeToShadowSemaphores;
 		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
@@ -89,13 +84,9 @@ namespace emberEngine
 		void RebuildSwapchain();
 		bool AcquireImage();
 
-		// Wait for fence:
+		// Wait for previous frame:
 		void WaitForFrameFence();
-		void WaitForPreRenderComputeFence();
-		void WaitForShadowFence();
-		void WaitForForwardFence();
-		void WaitForPostRenderComputeFence();
-		void WaitForPresentFence();
+		void ResetCommandPools();
 		
 		// Record commands:
 		void RecordPreRenderComputeCommands();
@@ -104,6 +95,7 @@ namespace emberEngine
 		void RecordForwardCommandsParallel();
 		void RecordPostRenderComputeCommands();
 		void RecordPresentCommands();
+		void RecordImGuiPresentCommands();
 
 		// Submit commands:
 		void SubmitPreRenderComputeCommands();

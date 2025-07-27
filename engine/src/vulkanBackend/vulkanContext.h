@@ -59,9 +59,10 @@ namespace emberEngine
 			static uint32_t frameIndex;
 			static uint64_t absoluteFrameIndex;
 			static VkSampleCountFlagBits msaaSamples;
+			static bool renderToImGuiWindow;
 
 		public: // Methods:
-			static void Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight, bool vSyncEnabled);
+			static void Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight, bool vSyncEnabled, bool renderToImGuiWindowValue);
 			static void Clear();
 			static void RebuildSwapchain();
 

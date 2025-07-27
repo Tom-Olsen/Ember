@@ -15,6 +15,13 @@ namespace emberEngine
 		// Constructor/Destructor:
 		PresentRenderPass::PresentRenderPass()
 		{
+			// Create renderTexture as fake swapchain framebuffer:
+			VkFormat format = Context::surface.GetVkSurfaceFormatKHR().format;
+			VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+			m_renderWidth = 1;
+			m_renderHeight = 1;
+			m_pRenderTexture = std::make_unique<RenderTexture2d>("forwardRenderPassRenderTexture", format, m_renderWidth, m_renderHeight, usageFlags);
+
 			CreateRenderPass();
 			CreateFrameBuffers();
 			NAME_VK_RENDER_PASS(m_renderPass, "presentRenderPass");
@@ -38,7 +45,10 @@ namespace emberEngine
 			attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			if (Context::renderToImGuiWindow)
+				attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			else
+				attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 			// Attachment references:
 			VkAttachmentReference colorAttachmentReference = {};
@@ -71,20 +81,35 @@ namespace emberEngine
 		}
 		void PresentRenderPass::CreateFrameBuffers()
 		{
-			size_t imageCount = Context::swapchains[Context::swapchainIndex].GetImages().size();
-			VkExtent2D extent = Context::surface.GetCurrentExtent();
-			m_framebuffers.resize(imageCount);
-
-			for (size_t i = 0; i < imageCount; i++)
-			{
+			if (Context::renderToImGuiWindow)
+			{ // Render to fake frame buffer:
+				m_framebuffers.resize(1);
 				VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 				framebufferInfo.renderPass = m_renderPass;
 				framebufferInfo.attachmentCount = 1;
-				framebufferInfo.pAttachments = &Context::swapchains[Context::swapchainIndex].GetImageViews()[i];
-				framebufferInfo.width = extent.width;
-				framebufferInfo.height = extent.height;
+				framebufferInfo.pAttachments = &m_pRenderTexture->GetVmaImage()->GetVkImageView();
+				framebufferInfo.width = m_renderWidth;
+				framebufferInfo.height = m_renderHeight;
 				framebufferInfo.layers = 1;
-				vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
+				VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[0]));
+			}
+			else
+			{ // Render to swapchain:
+				size_t imageCount = Context::swapchains[Context::swapchainIndex].GetImages().size();
+				VkExtent2D extent = Context::surface.GetCurrentExtent();
+				m_framebuffers.resize(imageCount);
+
+				for (size_t i = 0; i < imageCount; i++)
+				{
+					VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+					framebufferInfo.renderPass = m_renderPass;
+					framebufferInfo.attachmentCount = 1;
+					framebufferInfo.pAttachments = &Context::swapchains[Context::swapchainIndex].GetImageViews()[i];
+					framebufferInfo.width = extent.width;
+					framebufferInfo.height = extent.height;
+					framebufferInfo.layers = 1;
+					vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
+				}
 			}
 		}
 	}

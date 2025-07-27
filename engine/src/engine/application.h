@@ -25,6 +25,7 @@ namespace emberEngine
 			uint32_t windowHeight;
 			uint32_t renderWidth;
 			uint32_t renderHeight;
+			bool renderToImGuiWindow;
 		};
 	private: // Members:
 		std::unique_ptr<RenderCore> m_pRenderer;

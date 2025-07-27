@@ -27,6 +27,7 @@ Scene* InitScene()
 
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
+		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
@@ -101,6 +102,7 @@ int main()
 	appSettings.windowHeight = 1440;//1080;
 	appSettings.renderWidth = 2560;//1280;
 	appSettings.renderHeight = 1440;//720;
+	appSettings.renderToImGuiWindow = true;
 	Graphics::SetDeptBiasSlopeFactor(3.0f);
 	Application app(appSettings);
 

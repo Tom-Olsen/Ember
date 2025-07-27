@@ -27,11 +27,12 @@ namespace emberEngine
 		uint32_t Context::frameIndex;
 		uint64_t Context::absoluteFrameIndex;
 		VkSampleCountFlagBits Context::msaaSamples;
+		bool Context::renderToImGuiWindow;
 
 
 
 		// Initialization and cleanup:
-		void Context::Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight, bool vSyncEnabled)
+		void Context::Init(uint32_t framesInFlightValue, VkSampleCountFlagBits msaaSamplesValue, uint32_t windowWidth, uint32_t windowHeight, bool vSyncEnabled, bool renderToImGuiWindowValue)
 		{
 			if (s_isInitialized)
 				return;
@@ -40,6 +41,7 @@ namespace emberEngine
 			framesInFlight = framesInFlightValue;
 			frameIndex = 0;
 			absoluteFrameIndex = 0;
+			renderToImGuiWindow = renderToImGuiWindowValue;
 
 			// Window:
 			window.Init(windowWidth, windowHeight);

@@ -103,17 +103,22 @@ namespace emberEngine
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
 		{
-			//ShowDockSpace();
-
 			// Demo window:
 			//if (s_showDemoWindow)
 			//	ImGui::ShowDemoWindow(&s_showDemoWindow);
 
 			// Render vulkanRenderer output into ImGui window:
-			//ImGui::Begin("Render Texture Viewport", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-			//ImTextureID textureID = (ImTextureID)s_descriptorSet;
-			//ImGui::Image(textureID, ImVec2((float)s_pRenderTexture->GetWidth(), (float)s_pRenderTexture->GetHeight()));
-			//ImGui::End();
+			if (Context::renderToImGuiWindow)
+			{
+				// Turn main window into a dockspace:
+				ShowDockSpace();
+
+				// Render scene into ImGui window:
+				ImGui::Begin("Render Texture Viewport", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+				ImTextureID textureID = (ImTextureID)s_descriptorSet;
+				ImGui::Image(textureID, ImVec2((float)s_pRenderTexture->GetWidth(), (float)s_pRenderTexture->GetHeight()));
+				ImGui::End();
+			}
 
 			// Render all editorWindows:
 			Editor::Render();
@@ -193,23 +198,23 @@ namespace emberEngine
 	void DearImGui::ShowDockSpace()
 	{
 		static bool dockspaceOpen = true;
-		static bool opt_fullscreen = true;
-		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+		static bool optionFullscreen = true;
+		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
 
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-		if (opt_fullscreen)
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+		if (optionFullscreen)
 		{
 			ImGuiViewport* viewport = ImGui::GetMainViewport();
 			ImGui::SetNextWindowPos(viewport->Pos);
 			ImGui::SetNextWindowSize(viewport->Size);
 			ImGui::SetNextWindowViewport(viewport->ID);
-			window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+			windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+			windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 		}
 
 		// Set up the dockspace
-		ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
-		ImGui::DockSpace(ImGui::GetID("MyDockspace"), ImVec2(0.0f, 0.0f), dockspace_flags);
+		ImGui::Begin("DockSpace Demo", &dockspaceOpen, windowFlags);
+		ImGui::DockSpace(ImGui::GetID("MyDockspace"), ImVec2(0.0f, 0.0f), dockspaceFlags);
 		ImGui::End();
 	}
 	void DearImGui::CreateDescriptorSetLayout()
