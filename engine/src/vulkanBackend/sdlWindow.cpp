@@ -62,29 +62,29 @@ namespace emberEngine
 				switch (event.type)
 				{
 					// General events:
-				case SDL_EVENT_QUIT:
-					return false;	// stop application
+					case SDL_EVENT_QUIT:
+						return false;	// stop application
 
 					// Window events:
-				case SDL_EVENT_WINDOW_MINIMIZED:
-					m_isMinimized = true;
-					break;
-				case SDL_EVENT_WINDOW_RESTORED:
-					m_isMinimized = false;
-					break;
-				case SDL_EVENT_WINDOW_RESIZED:
-					m_framebufferResized = true;
-					break;
-				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-					if (event.window.windowID == SDL_GetWindowID(m_pWindow)) // check if the event is for this window
-						return false;	// stop application
-					break;
+					case SDL_EVENT_WINDOW_MINIMIZED:
+						m_isMinimized = true;
+						break;
+					case SDL_EVENT_WINDOW_RESTORED:
+						m_isMinimized = false;
+						break;
+					case SDL_EVENT_WINDOW_RESIZED:
+						m_framebufferResized = true;
+						break;
+					case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+						if (event.window.windowID == SDL_GetWindowID(m_pWindow)) // check if the event is for this window
+							return false;	// stop application
+						break;
 
 					// Keyboard events:
-				case SDL_EVENT_KEY_DOWN:
-					if (!DearImGui::WantCaptureKeyboard() && event.key.key == SDLK_ESCAPE)
-						return false; // stop application or trigger other behavior
-					break;
+					case SDL_EVENT_KEY_DOWN:
+						if (!DearImGui::WantCaptureKeyboard() && event.key.key == SDLK_ESCAPE)
+							return false; // stop application or trigger other behavior
+						break;
 				}
 			}
 
