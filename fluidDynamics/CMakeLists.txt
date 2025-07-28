@@ -41,8 +41,7 @@ ${3D_FILES})
 target_include_directories(${PROJECT_NAME}
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/2d/cpu
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/2d/gpu
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/3d
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/3d)
 
 # Add project root path as a compile definition
 get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
@@ -52,6 +51,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_R
 
 
 # ------------------ Link Libraries -----------------
+# Ember:
 add_subdirectory("../Engine" EmberEngine)
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberEngine)
 

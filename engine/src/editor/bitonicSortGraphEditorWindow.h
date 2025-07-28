@@ -23,9 +23,11 @@ namespace emberEngine
 	public:
 		BitonicSortGraphEditorWindow(BitonicSortGraph* pScript)
 		{
+			m_name = "Bitonic Sort Graph Editor Window";
 			m_pScript = pScript;
 			GetData();
 		}
+
 		void Render() override
 		{
 			GetData();

@@ -18,6 +18,11 @@ namespace emberEngine
 		float m_deltaTimeSum = 0.0f;
 		int m_rampUpIndex = 1;
 
+		FpsEditorWindow()
+		{
+			m_name = "Fps Editor Window";
+		}
+
 		void Render() override
 		{
 			m_deltaTimeSum -= m_frameTimes[m_index];

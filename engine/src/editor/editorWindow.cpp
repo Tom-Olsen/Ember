@@ -21,4 +21,12 @@ namespace emberEngine
 	{
 		LOG_WARN("EditorWindow::Render override missing.");
 	}
+	bool EditorWindow::WantCaptureKeyboard() const
+	{
+		return m_wantCaptureEvents;
+	}
+	std::string EditorWindow::GetName() const
+	{
+		return m_name;
+	}
 }

@@ -9,6 +9,7 @@
 #include "pointLight.h"
 #include "postRenderEffects.h"
 #include "profiler.h"
+#include "sceneEditorWindow.h"
 #include "settings.h"
 #include "spotLight.h"
 #include "transform.h"
@@ -109,6 +110,11 @@ int main()
 	// Create scene:
 	Scene* pScene = InitScene();
 	app.SetScene(pScene);
+
+	// Move this somewhere else later:
+	std::unique_ptr<SceneEditorWindow> sceneEditorWindow;
+	if (appSettings.renderToImGuiWindow)
+		sceneEditorWindow = std::make_unique<SceneEditorWindow>();
 
 	// Run application:
 	try

@@ -4,15 +4,14 @@
 #include "macros.h"
 #include "profiler.h"
 #include "renderPassManager.h"
-#include "renderTexture2d.h"
 #include "sampler.h"
 #include "samplerManager.h"
+#include "texture2d.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanMacros.h"
 #include "vulkanPresentRenderPass.h"
-#include <imgui.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 
@@ -29,9 +28,8 @@ namespace emberEngine
 	bool DearImGui::s_wantCaptureKeyboard = false;
 	bool DearImGui::s_wantCaptureMouse = false;
 	ImGuiIO* DearImGui::s_pIo = nullptr;
-	RenderTexture2d* DearImGui::s_pRenderTexture = nullptr;
 	VkDescriptorSetLayout DearImGui::s_descriptorSetLayout;
-	VkDescriptorSet DearImGui::s_descriptorSet;
+	std::unordered_map<Texture2d*, VkDescriptorSet> DearImGui::s_textureToDescriptorMap;
 
 
 
@@ -65,18 +63,10 @@ namespace emberEngine
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		ImGui_ImplVulkan_Init(&initInfo);
 
+		CreateDescriptorSetLayout();
+
 		// Upload fonts:
 		ImGui_ImplVulkan_CreateFontsTexture();
-
-		// Get render texture:
-		s_pRenderTexture = RenderPassManager::GetForwardRenderPass()->GetRenderTexture();
-		VkSampler sampler = SamplerManager::GetSampler("colorSampler")->GetVkSampler();
-		VkImageView imageView = s_pRenderTexture->GetVmaImage()->GetVkImageView();
-
-		// Setup descriptorSet:
-		CreateDescriptorSetLayout();
-		CreateDescriptorSets();
-		UpdateDescriptor(sampler, imageView);
 
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("DearImGui initialized.");
@@ -85,6 +75,7 @@ namespace emberEngine
 	void DearImGui::Clear()
 	{
 		RETURN_DISABLED();
+		s_textureToDescriptorMap.clear();
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
 		vkDestroyDescriptorSetLayout(Context::GetVkDevice(), s_descriptorSetLayout, nullptr);
@@ -109,16 +100,7 @@ namespace emberEngine
 
 			// Render vulkanRenderer output into ImGui window:
 			if (Context::renderToImGuiWindow)
-			{
-				// Turn main window into a dockspace:
 				ShowDockSpace();
-
-				// Render scene into ImGui window:
-				ImGui::Begin("Render Texture Viewport", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-				ImTextureID textureID = (ImTextureID)s_descriptorSet;
-				ImGui::Image(textureID, ImVec2((float)s_pRenderTexture->GetWidth(), (float)s_pRenderTexture->GetHeight()));
-				ImGui::End();
-			}
 
 			// Render all editorWindows:
 			Editor::Render();
@@ -161,6 +143,24 @@ namespace emberEngine
 	{
 		RETURN_FALSE_DISABLED();
 		return s_wantCaptureMouse;
+	}
+	ImTextureID DearImGui::GetTextureID(Texture2d* pTexture)
+	{
+		if (!pTexture)
+			return static_cast<ImTextureID>(0);
+
+		// Return cached descriptor set if it exists:
+		auto it = s_textureToDescriptorMap.find(pTexture);
+		if (it != s_textureToDescriptorMap.end())
+			return reinterpret_cast<ImTextureID>(it->second);
+
+		// Create descriptor set for this texture:
+		VkDescriptorSet descriptorSet = CreateDescriptorSet();
+		UpdateDescriptor(descriptorSet, pTexture->GetVmaImage()->GetVkImageView(), SamplerManager::GetSampler("colorSampler")->GetVkSampler());
+
+		// Cache and return:
+		s_textureToDescriptorMap[pTexture] = descriptorSet;
+		return reinterpret_cast<ImTextureID>(descriptorSet);
 	}
 
 
@@ -231,16 +231,18 @@ namespace emberEngine
 
 		VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &layoutInfo, nullptr, &s_descriptorSetLayout));
 	}
-	void DearImGui::CreateDescriptorSets()
+	VkDescriptorSet DearImGui::CreateDescriptorSet()
 	{
 		VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 		allocInfo.descriptorPool = Context::GetVkDescriptorPool();
 		allocInfo.descriptorSetCount = 1;
 		allocInfo.pSetLayouts = &s_descriptorSetLayout;
 
-		VKA(vkAllocateDescriptorSets(Context::GetVkDevice(), &allocInfo, &s_descriptorSet));
+		VkDescriptorSet descriptorSet;
+		VKA(vkAllocateDescriptorSets(Context::GetVkDevice(), &allocInfo, &descriptorSet));
+		return descriptorSet;
 	}
-	void DearImGui::UpdateDescriptor(VkSampler sampler, VkImageView imageView)
+	void DearImGui::UpdateDescriptor(VkDescriptorSet descriptorSet, VkImageView imageView, VkSampler sampler)
 	{
 		VkDescriptorImageInfo imageInfo = {};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -248,7 +250,7 @@ namespace emberEngine
 		imageInfo.sampler = sampler;
 
 		VkWriteDescriptorSet writeDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-		writeDescriptor.dstSet = s_descriptorSet;
+		writeDescriptor.dstSet = descriptorSet;
 		writeDescriptor.dstBinding = 0;
 		writeDescriptor.dstArrayElement = 0;
 		writeDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

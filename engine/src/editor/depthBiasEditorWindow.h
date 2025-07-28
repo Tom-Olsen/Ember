@@ -20,8 +20,10 @@ namespace emberEngine
 	public: // Methods:
 		DepthBiasEditorWindow()
 		{
+			m_name = "Depth Bias Editor Window";
 			GetData();
 		}
+
 		void Render() override
 		{
 			GetData();

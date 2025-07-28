@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_GUARD_dearImGui_h__
 #define __INCLUDE_GUARD_dearImGui_h__
+#include <imgui.h>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 #include <SDL3/SDL.h>
 #include <vulkan/vulkan.h>
@@ -15,7 +17,7 @@ struct ImGuiIO;
 namespace emberEngine
 {
 	// Forward declarations:
-	class RenderTexture2d;
+	class Texture2d;
 
 
 
@@ -28,9 +30,8 @@ namespace emberEngine
 		static bool s_wantCaptureKeyboard;
 		static bool s_wantCaptureMouse;
 		static ImGuiIO* s_pIo;
-		static RenderTexture2d* s_pRenderTexture;
 		static VkDescriptorSetLayout s_descriptorSetLayout;
-		static VkDescriptorSet s_descriptorSet;
+		static std::unordered_map<Texture2d*, VkDescriptorSet> s_textureToDescriptorMap;
 
 	public: // Methods
 		static void Init();
@@ -44,15 +45,16 @@ namespace emberEngine
 		// Getters:
 		static bool WantCaptureKeyboard();
 		static bool WantCaptureMouse();
+		static ImTextureID GetTextureID(Texture2d* pTexture);
 
 		// Helper functions:
 		static void AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
 
-	private: // Methods
+	private: // Methods:
 		static void ShowDockSpace();
 		static void CreateDescriptorSetLayout();
-		static void CreateDescriptorSets();
-		static void UpdateDescriptor(VkSampler sampler, VkImageView imageView);
+		static VkDescriptorSet CreateDescriptorSet();
+		static void UpdateDescriptor(VkDescriptorSet descriptorSet, VkImageView imageView, VkSampler sampler);
 
 		// Delete all constructors:
 		DearImGui() = delete;
