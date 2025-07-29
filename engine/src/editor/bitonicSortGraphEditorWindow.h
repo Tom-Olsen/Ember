@@ -23,7 +23,7 @@ namespace emberEngine
 	public:
 		BitonicSortGraphEditorWindow(BitonicSortGraph* pScript)
 		{
-			m_name = "Bitonic Sort Graph Editor Window";
+			m_name = "Bitonic Sort Graph";
 			m_pScript = pScript;
 			GetData();
 		}
@@ -31,16 +31,12 @@ namespace emberEngine
 		void Render() override
 		{
 			GetData();
-			ImGui::Begin("Bitonic Sort Graph Editor Window");
-			{
-				Editor::InputInt("Count:", &count);
-				Editor::InputFloat("Width:", &width, 0.1f, 1.0f, "%.8f");
-				Editor::InputFloat("Height:", &height, 0.1f, 1.0f, "%.8f");
-				Editor::InputFloat("Line Width:", &lineWidth, 0.1f, 1.0f, "%.8f");
-				Editor::InputFloat("Line Gap:", &lineGap, 0.1f, 1.0f, "%.8f");
-				Editor::InputFloat("Block Gap:", &blockGap, 0.1f, 1.0f, "%.8f");
-			}
-			ImGui::End();
+			Editor::InputInt("Count:", &count);
+			Editor::InputFloat("Width:", &width, 0.1f, 1.0f, "%.8f");
+			Editor::InputFloat("Height:", &height, 0.1f, 1.0f, "%.8f");
+			Editor::InputFloat("Line Width:", &lineWidth, 0.1f, 1.0f, "%.8f");
+			Editor::InputFloat("Line Gap:", &lineGap, 0.1f, 1.0f, "%.8f");
+			Editor::InputFloat("Block Gap:", &blockGap, 0.1f, 1.0f, "%.8f");
 			SetData();
 		}
 

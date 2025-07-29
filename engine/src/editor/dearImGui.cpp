@@ -1,5 +1,6 @@
 #include "dearImGui.h"
 #include "editor.h"
+#include "editorWindow.h"
 #include "logger.h"
 #include "macros.h"
 #include "profiler.h"
@@ -36,8 +37,6 @@ namespace emberEngine
 	// Initialization and cleanup:
 	void DearImGui::Init()
 	{
-		RETURN_DISABLED();
-
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		s_pIo = &ImGui::GetIO();
@@ -74,7 +73,6 @@ namespace emberEngine
 	}
 	void DearImGui::Clear()
 	{
-		RETURN_DISABLED();
 		s_textureToDescriptorMap.clear();
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
@@ -89,7 +87,6 @@ namespace emberEngine
 	void DearImGui::Update()
 	{
 		PROFILE_FUNCTION();
-		RETURN_DISABLED();
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
@@ -113,14 +110,18 @@ namespace emberEngine
 	}
 	void DearImGui::ProcessEvent(const SDL_Event& event)
 	{
-		RETURN_DISABLED();
 		ImGui_ImplSDL3_ProcessEvent(&event);
-		s_wantCaptureKeyboard = s_pIo->WantCaptureKeyboard;
-		s_wantCaptureMouse = s_pIo->WantCaptureMouse;
+
+		bool wantCaptureEvents = false;
+		EditorWindow* focusedWindow = Editor::GetFocusedWindow();
+		if (focusedWindow != nullptr)
+			wantCaptureEvents = focusedWindow->WantCaptureEvents();
+
+		s_wantCaptureKeyboard = wantCaptureEvents;
+		s_wantCaptureMouse = wantCaptureEvents;
 	}
 	void DearImGui::Render(VkCommandBuffer& commandBuffer)
 	{
-		RETURN_DISABLED();
 		ImGui::Render();
 
 		ImDrawData* drawData = ImGui::GetDrawData();
@@ -136,12 +137,10 @@ namespace emberEngine
 	// Getters:
 	bool DearImGui::WantCaptureKeyboard()
 	{
-		RETURN_FALSE_DISABLED();
 		return s_wantCaptureKeyboard;
 	}
 	bool DearImGui::WantCaptureMouse()
 	{
-		RETURN_FALSE_DISABLED();
 		return s_wantCaptureMouse;
 	}
 	ImTextureID DearImGui::GetTextureID(Texture2d* pTexture)
@@ -175,7 +174,6 @@ namespace emberEngine
 	}
 	void DearImGui::AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions)
 	{
-		RETURN_DISABLED();
 		// Enumerate available extensions:
 		uint32_t propertiesCount;
 		std::vector<VkExtensionProperties> properties;

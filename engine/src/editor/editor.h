@@ -21,6 +21,7 @@ namespace emberEngine
 	{
 	private: // Members:
 		static std::unordered_set<EditorWindow*> s_editorWindows;
+		static EditorWindow* s_pFocusedWindow;
 
 	public: // Methods:
 		static void Init();
@@ -28,6 +29,8 @@ namespace emberEngine
 
 		// Basic functionality:
 		static void Render();
+		static EditorWindow* GetFocusedWindow();
+		static void SetFocusedWindow(EditorWindow* pEditorWindow);
 		static void AddEditorWindow(EditorWindow* pEditorWindow);
 		static void DeleteEditorWindow(EditorWindow* pEditorWindow);
 

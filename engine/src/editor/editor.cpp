@@ -9,6 +9,7 @@ namespace emberEngine
 {
 	// Static members:
 	std::unordered_set<EditorWindow*> Editor::s_editorWindows;
+	EditorWindow* Editor::s_pFocusedWindow = nullptr;
 
 
 
@@ -29,8 +30,17 @@ namespace emberEngine
 	// Basic functionality:
 	void Editor::Render()
 	{
+		s_pFocusedWindow = nullptr;
 		for (EditorWindow* editorWindow : s_editorWindows)
-			editorWindow->Render();
+			editorWindow->BaseRender();
+	}
+	EditorWindow* Editor::GetFocusedWindow()
+	{
+		return s_pFocusedWindow;
+	}
+	void Editor::SetFocusedWindow(EditorWindow* pEditorWindow)
+	{
+		s_pFocusedWindow = pEditorWindow;
 	}
 	void Editor::AddEditorWindow(EditorWindow* pEditorWindow)
 	{

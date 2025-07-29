@@ -11,6 +11,7 @@ namespace emberEngine
 {
 	struct FpsEditorWindow : EditorWindow
 	{
+	private: // Members
 		float m_frameTimes[60] = {};
 		int m_index = 0;
 		float m_frameTime;
@@ -18,9 +19,10 @@ namespace emberEngine
 		float m_deltaTimeSum = 0.0f;
 		int m_rampUpIndex = 1;
 
+	public: // Methods
 		FpsEditorWindow()
 		{
-			m_name = "Fps Editor Window";
+			m_name = "Fps";
 		}
 
 		void Render() override
@@ -41,12 +43,8 @@ namespace emberEngine
 				m_frameTime = 1.0f / m_fps;
 			}
 
-			ImGui::Begin("Performance");
-			{
-				Editor::Text("FPS: %.1f", m_fps);
-				Editor::Text("Frame Time: %.0fms", 1000 * m_frameTime);
-			}
-			ImGui::End();
+			Editor::Text("FPS: %.1f", m_fps);
+			Editor::Text("Frame Time: %.0fms", 1000 * m_frameTime);
 		}
 	};
 }
