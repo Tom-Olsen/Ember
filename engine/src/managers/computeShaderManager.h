@@ -37,6 +37,8 @@ namespace emberEngine
         ComputeShaderManager() = delete;
         ComputeShaderManager(const ComputeShaderManager&) = delete;
         ComputeShaderManager& operator=(const ComputeShaderManager&) = delete;
+        ComputeShaderManager(ComputeShaderManager&&) = delete;
+        ComputeShaderManager& operator=(ComputeShaderManager&&) = delete;
         ~ComputeShaderManager() = delete;
     };
 }

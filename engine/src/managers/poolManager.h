@@ -37,6 +37,8 @@ namespace emberEngine
         PoolManager() = delete;
         PoolManager(const PoolManager&) = delete;
         PoolManager& operator=(const PoolManager&) = delete;
+        PoolManager(PoolManager&&) = delete;
+        PoolManager& operator=(PoolManager&&) = delete;
         ~PoolManager() = delete;
     };
 }

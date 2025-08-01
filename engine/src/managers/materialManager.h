@@ -37,6 +37,8 @@ namespace emberEngine
         MaterialManager() = delete;
         MaterialManager(const MaterialManager&) = delete;
         MaterialManager& operator=(const MaterialManager&) = delete;
+        MaterialManager(MaterialManager&&) = delete;
+        MaterialManager& operator=(MaterialManager&&) = delete;
         ~MaterialManager() = delete;
     };
 }

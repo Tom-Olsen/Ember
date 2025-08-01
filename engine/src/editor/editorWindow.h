@@ -14,10 +14,16 @@ namespace emberEngine
 	{
 	protected: // Members:
 		std::string m_name;					// set by derived classes in constructor.
+		int m_ID;							// full id is "m_name##m_ID". For multiple windows with the same name, this ID must be unique.
 		ImGuiWindowFlags m_windowFlags;		// set by derived classes in constructor.
 		bool m_wantCaptureEvents = true;	// set by derived classes in constructor.
-		bool m_isOpen = true;				// tracks if window is open or closed by user.
-		bool m_isFocused = false;			// tracks if window is in focus or not.
+		std::string m_nameID;				// ideally set in inheritor constructor.
+
+		// Automatically set by EditorWindow:
+		bool m_isOpen = true;
+		bool m_isFocused = false;
+		float m_width = 0.0f;
+		float m_height = 0.0f;
 
 	public: // Methods:
 		EditorWindow();
@@ -26,7 +32,11 @@ namespace emberEngine
 		void BaseRender();		// This gets called by Editor::Render() and calls Render()
 		virtual void Render();	// This gets overridden by derived classes
 		
-		std::string GetName() const;
+		const std::string& GetName() const;
+		int GetID() const;
+		const std::string& GetNameID() const;
+		float GetWidth() const;
+		float GetHeight() const;
 		bool WantCaptureEvents() const;
 		void Open();
 	};

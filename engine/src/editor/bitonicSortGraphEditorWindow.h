@@ -24,6 +24,10 @@ namespace emberEngine
 		BitonicSortGraphEditorWindow(BitonicSortGraph* pScript)
 		{
 			m_name = "Bitonic Sort Graph";
+			m_ID = 0;
+			m_windowFlags = ImGuiWindowFlags_None;
+			m_wantCaptureEvents = true;
+			m_nameID = m_name + "##" + std::to_string(m_ID);
 			m_pScript = pScript;
 			GetData();
 		}

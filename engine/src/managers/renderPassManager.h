@@ -46,6 +46,8 @@ namespace emberEngine
         RenderPassManager() = delete;
         RenderPassManager(const RenderPassManager&) = delete;
         RenderPassManager& operator=(const RenderPassManager&) = delete;
+        RenderPassManager(RenderPassManager&&) = delete;
+        RenderPassManager& operator=(RenderPassManager&&) = delete;
         ~RenderPassManager() = delete;
     };
 }

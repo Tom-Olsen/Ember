@@ -39,6 +39,8 @@ namespace emberEngine
         SamplerManager() = delete;
         SamplerManager(const SamplerManager&) = delete;
         SamplerManager& operator=(const SamplerManager&) = delete;
+        SamplerManager(SamplerManager&&) = delete;
+        SamplerManager& operator=(SamplerManager&&) = delete;
         ~SamplerManager() = delete;
     };
 }

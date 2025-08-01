@@ -35,6 +35,8 @@ namespace emberEngine
         BufferManager() = delete;
         BufferManager(const BufferManager&) = delete;
         BufferManager& operator=(const BufferManager&) = delete;
+        BufferManager(BufferManager&&) = delete;
+        BufferManager& operator=(BufferManager&&) = delete;
         ~BufferManager() = delete;
     };
 }

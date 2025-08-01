@@ -31,6 +31,8 @@ namespace emberEngine
         TaskflowManager() = delete;
         TaskflowManager(const TaskflowManager&) = delete;
         TaskflowManager& operator=(const TaskflowManager&) = delete;
+        TaskflowManager(TaskflowManager&&) = delete;
+        TaskflowManager& operator=(TaskflowManager&&) = delete;
         ~TaskflowManager() = delete;
     };
 }

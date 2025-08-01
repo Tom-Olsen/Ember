@@ -25,6 +25,8 @@ namespace emberEngine
         Managers() = delete;
         Managers(const Managers&) = delete;
         Managers& operator=(const Managers&) = delete;
+        Managers(Managers&&) = delete;
+        Managers& operator=(Managers&&) = delete;
         ~Managers() = delete;
     };
 }

@@ -15,20 +15,26 @@ namespace emberEngine
 		float m_depthBiasConstantFactor;
 		float m_depthBiasClamp;
 		float m_depthBiasSlopeFactor;
+		bool a = true;
 
 	public: // Methods:
 		DepthBiasEditorWindow()
 		{
 			m_name = "Depth Bias";
+			m_ID = 0;
+			m_windowFlags = ImGuiWindowFlags_None;
+			m_wantCaptureEvents = true;
+			m_nameID = m_name + "##" + std::to_string(m_ID);
 			GetData();
 		}
 
 		void Render() override
 		{
 			GetData();
-			Editor::InputFloat("Depth Bias Const Factor:", &m_depthBiasConstantFactor);
-			Editor::InputFloat("Depth Bias Clamp Factor:", &m_depthBiasClamp);
-			Editor::InputFloat("Depth Bias Slope Factor:", &m_depthBiasSlopeFactor);
+			Editor::DragFloat("Const Factor:", &m_depthBiasConstantFactor);
+			Editor::DragFloat("Clamp Factor:", &m_depthBiasClamp);
+			Editor::DragFloat("Slope Factor:", &m_depthBiasSlopeFactor);
+			Editor::Checkbox("Check Box", &a);
 			SetData();
 		}
 

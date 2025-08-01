@@ -17,9 +17,11 @@ namespace emberEngine
 	{
 		SceneEditorWindow()
 		{
-			m_name = "Scene";
-			m_windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-			m_wantCaptureEvents = false;
+            m_name = "Scene";
+            m_ID = 0;
+            m_windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+            m_wantCaptureEvents = false;
+            m_nameID = m_name + "##" + std::to_string(m_ID);
 		}
 
         void Render() override

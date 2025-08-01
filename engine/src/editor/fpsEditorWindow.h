@@ -14,8 +14,8 @@ namespace emberEngine
 	private: // Members
 		float m_frameTimes[60] = {};
 		int m_index = 0;
-		float m_frameTime;
-		float m_fps;
+		float m_frameTime = 0.0f;
+		float m_fps = 0.0f;
 		float m_deltaTimeSum = 0.0f;
 		int m_rampUpIndex = 1;
 
@@ -23,6 +23,10 @@ namespace emberEngine
 		FpsEditorWindow()
 		{
 			m_name = "Fps";
+			m_ID = 0;
+			m_windowFlags = ImGuiWindowFlags_None;
+			m_wantCaptureEvents = false;
+			m_nameID = m_name + "##" + std::to_string(m_ID);
 		}
 
 		void Render() override

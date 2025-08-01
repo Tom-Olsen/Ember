@@ -40,6 +40,8 @@ namespace emberEngine
         MeshManager() = delete;
         MeshManager(const MeshManager&) = delete;
         MeshManager& operator=(const MeshManager&) = delete;
+        MeshManager(MeshManager&&) = delete;
+        MeshManager& operator=(MeshManager&&) = delete;
         ~MeshManager() = delete;
     };
 }
