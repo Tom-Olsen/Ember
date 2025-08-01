@@ -15,7 +15,6 @@ namespace emberEngine
 		float m_depthBiasConstantFactor;
 		float m_depthBiasClamp;
 		float m_depthBiasSlopeFactor;
-		bool a = true;
 
 	public: // Methods:
 		DepthBiasEditorWindow()
@@ -34,7 +33,6 @@ namespace emberEngine
 			Editor::DragFloat("Const Factor:", &m_depthBiasConstantFactor);
 			Editor::DragFloat("Clamp Factor:", &m_depthBiasClamp);
 			Editor::DragFloat("Slope Factor:", &m_depthBiasSlopeFactor);
-			Editor::Checkbox("Check Box", &a);
 			SetData();
 		}
 

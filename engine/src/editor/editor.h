@@ -13,7 +13,7 @@ namespace emberEngine
 	// Forward declerations:
 	class EditorWindow;
 
-
+	// Ember::ToDo: fix windowWidth when scrollbar is visable
 
 	/// <summary>
 	/// Static class that manages all editor windows and hands them over to dearImGui for rendering.
