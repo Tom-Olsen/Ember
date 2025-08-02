@@ -13,7 +13,6 @@ namespace emberEngine
 	float Editor::s_dragSensitivityExponent = 1.5f;
 	float Editor::s_minWidgetWidth = 50.0f;
 	float Editor::s_labelPercentile = 0.4f;
-	float Editor::s_intDragAccumulator;
 	std::unordered_set<EditorWindow*> Editor::s_editorWindows;
 	EditorWindow* Editor::s_pFocusedWindow = nullptr;
 	EditorWindow* Editor::s_pCurrentRenderedWindow = nullptr;
@@ -132,6 +131,7 @@ namespace emberEngine
 	}
 	bool Editor::DragInt(const std::string& label, int* v, int step, int step_fast, ImGuiInputTextFlags flags)
 	{
+		static float accumulator;
 		bool changed = false;
 		ImGui::PushID(label.c_str());
 		{
@@ -149,7 +149,7 @@ namespace emberEngine
 
 			// On initial interaction get int value:
 			if (mouseDown)
-				s_intDragAccumulator = *v;
+				accumulator = *v;
 
 			// Change current value on dragging motion on label:
 			if (dragging)
@@ -158,8 +158,8 @@ namespace emberEngine
 
 				float sensitivity = s_intDragSensitivityBase * std::pow(std::abs(delta.x), s_dragSensitivityExponent);
 				float sign = (delta.x >= 0.0f) ? 1.0f : -1.0f;
-				s_intDragAccumulator += sign * sensitivity;
-				*v = static_cast<int>(std::round(s_intDragAccumulator));
+				accumulator += sign * sensitivity;
+				*v = static_cast<int>(std::round(accumulator));
 
 				ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
 			}

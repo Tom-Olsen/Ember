@@ -197,6 +197,26 @@ namespace emberEngine
 
 
 
+	// Hierarchy:
+	void Transform::SetParent(Transform* pParent)
+	{
+		m_parent = pParent;
+	}
+	Transform* Transform::GetParent()
+	{
+		return m_parent;
+	}
+	void Transform::AddChild(Transform* pChild)
+	{
+		m_children.push_back(pChild);
+	}
+	void Transform::RemoveChild(Transform* pChild)
+	{
+		m_children.erase(std::remove(m_children.begin(), m_children.end(), pChild), m_children.end());
+	}
+
+
+
 	// Private methods:
 	void Transform::UpdateLocalToWorldMatrix()
 	{

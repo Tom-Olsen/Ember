@@ -26,6 +26,10 @@ namespace emberEngine
 		Float4x4 m_worldToLocalNormalMatrix;
 		bool m_updateLocalToWorldMatrix;
 
+		// Mimic gameobject hierarchy for faster access:
+		Transform* m_parent = nullptr;
+		std::vector<Transform*> m_children;
+
 	public: // Methods:
 		Transform();
 		Transform(const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, const Float3& scale = Float3::one);
@@ -64,8 +68,16 @@ namespace emberEngine
 
 		// Overrides:
 		const std::string ToString() const override;
+
 	private: // Methods:
 		void UpdateLocalToWorldMatrix();
+
+		// Hierarchy:
+		friend class GameObject;	// allow GameObject class access to private methods.
+		void SetParent(Transform* pParent);
+		Transform* GetParent();
+		void AddChild(Transform* pChild);
+		void RemoveChild(Transform* pChild);
 	};
 }
 
