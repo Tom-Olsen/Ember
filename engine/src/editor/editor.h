@@ -10,7 +10,15 @@
 namespace emberEngine
 {
 	// Forward declerations:
+	class ConsoleEditorWindow;
+	class DepthBiasEditorWindow;
 	class EditorWindow;
+	class FpsEditorWindow;
+	class GameEditorWindow;
+	class HierarchyEditorWindow;
+	class InspectorEditorWindow;
+	class ProjectEditorWindow;
+	class SceneEditorWindow;
 
 	// Ember::ToDo: fix windowWidth when scrollbar is visable
 
@@ -29,8 +37,18 @@ namespace emberEngine
 		static EditorWindow* s_pFocusedWindow;
 		static EditorWindow* s_pCurrentRenderedWindow;
 
+		// Editor windows:
+		static std::unique_ptr<ConsoleEditorWindow> s_pConsoleEditorWindow;
+		static std::unique_ptr<DepthBiasEditorWindow> s_pDepthBiasEditorWindow;
+		static std::unique_ptr<FpsEditorWindow> s_pFpsEditorWindow;
+		static std::unique_ptr<GameEditorWindow> s_pGameEditorWindow;
+		static std::unique_ptr<HierarchyEditorWindow> s_pHierarchyEditorWindow;
+		static std::unique_ptr<InspectorEditorWindow> s_pInspectorEditorWindow;
+		static std::unique_ptr<ProjectEditorWindow> s_pProjectEditorWindow;
+		static std::unique_ptr<SceneEditorWindow> s_pSceneEditorWindow;
+
 	public: // Methods:
-		static void Init();
+		static void Init(bool renderToImGuiWindow);
 		static void Clear();
 
 		// Basic functionality:

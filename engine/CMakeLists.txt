@@ -39,6 +39,10 @@ source_group("Compute" FILES ${COMPUTE_FILES})
 file(GLOB EDITOR_FILES "${PROJECT_SOURCE_DIR}/src/editor/*")
 source_group("Editor" FILES ${EDITOR_FILES})
 
+# src/editorWindows/*:
+file(GLOB EDITOR_WINDOWS_FILES "${PROJECT_SOURCE_DIR}/src/editorWindows/*")
+source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
+
 # src/engine/*:
 file(GLOB ENGINE_FILES "${PROJECT_SOURCE_DIR}/src/engine/*")
 source_group("Engine" FILES ${ENGINE_FILES})
@@ -119,6 +123,7 @@ ${BUFFERS_FILES}
 ${COMPONENTS_FILES}
 ${COMPUTE_FILES}
 ${EDITOR_FILES}
+${EDITOR_WINDOWS_FILES}
 ${ENGINE_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
 ${GRAPHICS_FILES}
@@ -143,6 +148,7 @@ PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/components
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/editor
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/editorWindows
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gameObjectSystem
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/graphics

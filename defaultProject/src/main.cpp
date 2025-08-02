@@ -12,7 +12,6 @@
 #include "pointLight.h"
 #include "postRenderEffects.h"
 #include "profiler.h"
-#include "settings.h"
 #include "spinGlobal.h"
 #include "spinLocal.h"
 #include "spotLight.h"
@@ -101,7 +100,6 @@ Scene* ShadowCascadeScene()
 		pCamera->SetFarClip(100.0f);
 		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
-		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -232,7 +230,6 @@ Scene* TestScene()
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
-		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -309,7 +306,6 @@ Scene* DefaultScene()
 		pCamera->SetFarClip(1000.0f);
 		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
-		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -659,7 +655,6 @@ Scene* PointLightScene()
 		pCamera->SetFarClip(1000.0f);
 		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
-		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
@@ -740,7 +735,6 @@ Scene* SingleQuadScene()
 		pCamera->SetFarClip(1000.0f);
 		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
 		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
-		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);

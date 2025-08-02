@@ -1,7 +1,15 @@
 #include "editor.h"
 #include "editorWindow.h"
+#include "consoleEditorWindow.h"
+#include "depthBiasEditorWindow.h"
+#include "fpsEditorWindow.h"
+#include "gameEditorWindow.h"
+#include "hierarchyEditorWindow.h"
+#include "inspectorEditorWindow.h"
+#include "projectEditorWindow.h"
 #include "logger.h"
 #include "macros.h"
+#include "sceneEditorWindow.h"
 
 
 
@@ -16,15 +24,33 @@ namespace emberEngine
 	std::unordered_set<EditorWindow*> Editor::s_editorWindows;
 	EditorWindow* Editor::s_pFocusedWindow = nullptr;
 	EditorWindow* Editor::s_pCurrentRenderedWindow = nullptr;
+	std::unique_ptr<ConsoleEditorWindow> Editor::s_pConsoleEditorWindow;
+	std::unique_ptr<DepthBiasEditorWindow> Editor::s_pDepthBiasEditorWindow;
+	std::unique_ptr<FpsEditorWindow> Editor::s_pFpsEditorWindow;
+	std::unique_ptr<GameEditorWindow> Editor::s_pGameEditorWindow;
+	std::unique_ptr<HierarchyEditorWindow> Editor::s_pHierarchyEditorWindow;
+	std::unique_ptr<InspectorEditorWindow> Editor::s_pInspectorEditorWindow;
+	std::unique_ptr<ProjectEditorWindow> Editor::s_pProjectEditorWindow;
+	std::unique_ptr<SceneEditorWindow> Editor::s_pSceneEditorWindow;
 
 
 
 	// Initialization and cleanup:
-	void Editor::Init()
+	void Editor::Init(bool renderToImGuiWindow)
 	{
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("Editor initialized.");
 		#endif
+
+		s_pConsoleEditorWindow = std::make_unique<ConsoleEditorWindow>();
+		s_pDepthBiasEditorWindow = std::make_unique<DepthBiasEditorWindow>();
+		s_pFpsEditorWindow = std::make_unique<FpsEditorWindow>();
+		s_pGameEditorWindow = std::make_unique<GameEditorWindow>();
+		s_pHierarchyEditorWindow = std::make_unique<HierarchyEditorWindow>();
+		s_pInspectorEditorWindow = std::make_unique<InspectorEditorWindow>();
+		s_pProjectEditorWindow = std::make_unique<ProjectEditorWindow>();
+		if (renderToImGuiWindow)
+			s_pSceneEditorWindow = std::make_unique<SceneEditorWindow>();
 	}
 	void Editor::Clear()
 	{

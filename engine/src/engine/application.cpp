@@ -40,7 +40,7 @@ namespace emberEngine
 		math::Random::Init();
 		EventSystem::Init();
 		Managers::Init(settings.renderWidth, settings.renderHeight);
-		Editor::Init();
+		Editor::Init(settings.renderToImGuiWindow);
 		DearImGui::Init();
 		BitonicSort::Init();
 		Compute::Init();

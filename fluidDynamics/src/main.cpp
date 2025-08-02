@@ -9,7 +9,6 @@
 #include "pointLight.h"
 #include "postRenderEffects.h"
 #include "profiler.h"
-#include "settings.h"
 #include "spotLight.h"
 #include "transform.h"
 #include "sphFluid2dCpu.h"
@@ -31,7 +30,6 @@ Scene* InitScene()
 		Camera* pCamera = pGameObject->AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
 		//CameraController* cameraController = pGameObject->AddComponent<CameraController>();
-		Settings* pSettings = pGameObject->AddComponent<Settings>();
 
 		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
