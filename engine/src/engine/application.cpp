@@ -116,6 +116,7 @@ namespace emberEngine
 	void Application::SetScene(Scene* pScene)
 	{
 		this->m_pActiveScene = pScene;
+		Editor::SetScene(pScene);
 	}
 
 

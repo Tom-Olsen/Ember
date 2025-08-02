@@ -8,24 +8,22 @@
 
 namespace emberEngine
 {
+	// Forward decleration:
+	class Scene;
+
+
+
 	struct HierarchyEditorWindow : EditorWindow
 	{
 	private: // Members
+		Scene* m_pScene;
 
 	public: // Methods
-		HierarchyEditorWindow()
-		{
-			m_name = "Hierarchy";
-			m_ID = 0;
-			m_windowFlags = ImGuiWindowFlags_None;
-			m_wantCaptureEvents = true;
-			m_nameID = m_name + "##" + std::to_string(m_ID);
-		}
+		HierarchyEditorWindow();
+		~HierarchyEditorWindow();
 
-		void Render() override
-		{
-			Editor::TextUnformatted("test");
-		}
+		void SetScene(Scene* pScene);
+		void Render() override;
 	};
 }
 

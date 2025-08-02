@@ -10,6 +10,7 @@
 namespace emberEngine
 {
 	// Forward declerations:
+	class Scene;
 	class ConsoleEditorWindow;
 	class DepthBiasEditorWindow;
 	class EditorWindow;
@@ -20,7 +21,7 @@ namespace emberEngine
 	class ProjectEditorWindow;
 	class SceneEditorWindow;
 
-	// Ember::ToDo: fix windowWidth when scrollbar is visable
+	// Ember::ToDo: fix windowWidth when scrollbar is visable.
 
 	/// <summary>
 	/// Static class that manages all editor windows and hands them over to dearImGui for rendering.
@@ -66,6 +67,19 @@ namespace emberEngine
 		static bool DragInt(const std::string& label, int* v, int step = 1, int step_fast = 100, ImGuiInputTextFlags flags = 0);
 		static bool InputFloat(const std::string& label, float* v, float step = 0.0f, float step_fast = 0.0f, const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
 		static bool DragFloat(const std::string& label, float* v, float step = 0.0f, float step_fast = 0.0f, const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
+
+		// Setters:
+		static void SetScene(Scene* pScene);
+
+		// Getters:
+		ConsoleEditorWindow* GetConsoleEditorWindow() const;
+		DepthBiasEditorWindow* GetDepthBiasEditorWindow() const;
+		FpsEditorWindow* GetFpsEditorWindow() const;
+		GameEditorWindow* GetGameEditorWindow() const;
+		HierarchyEditorWindow* GetHierarchyEditorWindow() const;
+		InspectorEditorWindow* GetInspectorEditorWindow() const;
+		ProjectEditorWindow* GetProjectEditorWindow() const;
+		SceneEditorWindow* GetSceneEditorWindow() const;
 
 	private: // Methods:
 		static float GetSpacingX();

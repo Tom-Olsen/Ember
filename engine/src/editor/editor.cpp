@@ -6,9 +6,10 @@
 #include "gameEditorWindow.h"
 #include "hierarchyEditorWindow.h"
 #include "inspectorEditorWindow.h"
-#include "projectEditorWindow.h"
 #include "logger.h"
 #include "macros.h"
+#include "projectEditorWindow.h"
+#include "scene.h"
 #include "sceneEditorWindow.h"
 
 
@@ -276,6 +277,48 @@ namespace emberEngine
 		}
 		ImGui::PopID();
 		return changed;
+	}
+
+
+
+	// Setters:
+	void Editor::SetScene(Scene* pScene)
+	{
+		s_pHierarchyEditorWindow->SetScene(pScene);
+	}
+
+	// Getters:
+	ConsoleEditorWindow* Editor::GetConsoleEditorWindow() const
+	{
+		return s_pConsoleEditorWindow.get();
+	}
+	DepthBiasEditorWindow* Editor::GetDepthBiasEditorWindow() const
+	{
+		return s_pDepthBiasEditorWindow.get();
+	}
+	FpsEditorWindow* Editor::GetFpsEditorWindow() const
+	{
+		return s_pFpsEditorWindow.get();
+	}
+	GameEditorWindow* Editor::GetGameEditorWindow() const
+	{
+		return s_pGameEditorWindow.get();
+	}
+	HierarchyEditorWindow* Editor::GetHierarchyEditorWindow() const
+	{
+		return s_pHierarchyEditorWindow.get();
+	}
+	InspectorEditorWindow* Editor::GetInspectorEditorWindow() const
+	{
+		return s_pInspectorEditorWindow.get();
+	}
+	ProjectEditorWindow* Editor::GetProjectEditorWindow() const
+	{
+		return s_pProjectEditorWindow.get();
+	}
+	SceneEditorWindow* Editor::GetSceneEditorWindow() const
+	{
+		return s_pSceneEditorWindow.get();
 	}
 
 
