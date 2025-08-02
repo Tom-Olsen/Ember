@@ -2,7 +2,6 @@
 #define __INCLUDE_GUARD_editor_h__
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 #include <imgui.h>
 
@@ -26,8 +25,7 @@ namespace emberEngine
 		static float s_dragSensitivityExponent;
 		static float s_minWidgetWidth;
 		static float s_labelPercentile;
-		static std::unordered_map<std::string, float> s_intDragAccumulators;
-		static std::unordered_set<std::string> s_validIntDragAccumulators;
+		static float s_intDragAccumulator;
 		static std::unordered_set<EditorWindow*> s_editorWindows;
 		static EditorWindow* s_pFocusedWindow;
 		static EditorWindow* s_pCurrentRenderedWindow;
