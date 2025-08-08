@@ -60,46 +60,43 @@ int main()
 	#ifdef _MSC_VER
 		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	#endif
-	Profiler::Session::Get().Start("defaultProject", "profilingResults");
 
+	// Profiler:
+	Profiler::Session& session = Profiler::Session::Get();
+	session.Start("profiling", "profilingResults");
+
+	// Initialization:
+	Application::Settings appSettings = {};
+	appSettings.vSyncEnabled = true;
+	appSettings.framesInFlight = 2;
+	appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+	appSettings.windowWidth = 1600;// 2560; //1920;
+	appSettings.windowHeight = 900;// 1440; //1080;
+	appSettings.renderWidth = 1280;// 2560; //1280;
+	appSettings.renderHeight = 720;// 1440; //720;
+	Application app(appSettings);
+
+	// Add project specific shaders:
+	std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
+	Material* pParticleMaterial2d = new Material(Material::Type::forwardTransparent, "particleMaterial2d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle2d.vert.spv", directoryPath + "/particle2d.frag.spv");
+	Material* pParticleMaterial3d = new Material(Material::Type::forwardOpaque, "particleMaterial3d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle3d.vert.spv", directoryPath + "/particle3d.frag.spv");
+	MaterialManager::AddMaterial(pParticleMaterial2d);
+	MaterialManager::AddMaterial(pParticleMaterial3d);
+
+	// Create scene:
+	Scene* pScene = InitScene();
+	app.SetScene(pScene);
 
 	// Run application:
-	Scene* pScene = nullptr;
-	try
-	{
-		// Initialization:
-		Application::Settings appSettings = {};
-		appSettings.vSyncEnabled = true;
-		appSettings.framesInFlight = 2;
-		appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-		appSettings.windowWidth = 1920;
-		appSettings.windowHeight = 1080;
-		appSettings.renderWidth = 1280;
-		appSettings.renderHeight = 720;
-
-		Application app(appSettings);
-
-		// Add project specific shaders:
-		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
-		Material* pParticleMaterial2d = new Material(Material::Type::forwardTransparent, "particleMaterial2d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle2d.vert.spv", directoryPath + "/particle2d.frag.spv");
-		Material* pParticleMaterial3d = new Material(Material::Type::forwardOpaque, "particleMaterial3d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle3d.vert.spv", directoryPath + "/particle3d.frag.spv");
-		MaterialManager::AddMaterial(pParticleMaterial2d);
-		MaterialManager::AddMaterial(pParticleMaterial3d);
-
-		// Create scene:
-		pScene = InitScene();
-		app.SetScene(pScene);
-
-		app.Run();
-	}
-	catch (const std::exception& e)
-	{
-		LOG_ERROR("Exception: {}", e.what());
-	}
+	app.Run();
 
 	// Terminate:
-	if (pScene)
-		delete pScene;
+	delete pScene;
+
+	// Runtime analysis:
 	Profiler::Session::Get().End();
+	std::vector<std::string> results = session.GetAllResultNames();
+	for (std::string& result : results)
+		session.PrintFunctionAverageTime(result, TimeUnit::ms);
 	return 0;
 }

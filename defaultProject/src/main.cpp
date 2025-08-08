@@ -801,56 +801,44 @@ int main()
 
 	// Profiler:
 	Profiler::Session& session = Profiler::Session::Get();
-	session.Start("defaultProject", "profilingResults");
+	session.Start("profiling", "profilingResults");
 
-	
+	// Initialization:
+	Application::Settings appSettings = {};
+	appSettings.vSyncEnabled = false;
+	appSettings.framesInFlight = 2;
+	appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+	appSettings.windowWidth = 1600;// 2560; //1920;
+	appSettings.windowHeight = 900;// 1440; //1080;
+	appSettings.renderWidth = 1280;// 2560; //1280;
+	appSettings.renderHeight = 720;// 1440; //720;
+	Application app(appSettings);
 
-	// Run application:
-	Scene* pScene = nullptr;
-	try
-	{
-		// Initialization:
-		Application::Settings appSettings = {};
-		appSettings.vSyncEnabled = false;
-		appSettings.framesInFlight = 2;
-		appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-		appSettings.windowWidth = 2560;//1920;
-		appSettings.windowHeight = 1440;//1080;
-		appSettings.renderWidth = 2560;//1280;
-		appSettings.renderHeight = 1440;//720;
-		Application app(appSettings);
+	// Create scene:
+	// Scene* pScene = ShadowCascadeScene();
+	// Scene* pScene = TestScene();
+	Scene* pScene = DefaultScene();
+	// Scene* pScene = PointLightScene();
+	// Scene* pScene = SingleQuadScene();
+	app.SetScene(pScene);
 
-		// Create scene:
-		// pScene = ShadowCascadeScene();
-		// pScene = TestScene();
-		pScene = DefaultScene();
-		// pScene = PointLightScene();
-		// pScene = SingleQuadScene();
-		app.SetScene(pScene);
+	// Debugging:
+	//ComputeShader* csTest =  ComputeShaderManager::GetComputeShader("testComputeShader");
+	//csTest->PrintShaderInfo();
+	//ShaderProperties* csProperties = new ShaderProperties(csTest);
+	//csProperties->Print("test");
+	//csProperties->PrintMaps();
+	//csProperties->SetTexture2d("image", TextureManager::GetTexture2d("storageTexture8x8"));
+	//delete csProperties;
+	//TextureManager::PrintAllTextureNames();
+	//pScene->PrintGameObjects();
+	//pScene->PrintLights();
+	//return 0;
 
-		// Debugging:
-		//ComputeShader* csTest =  ComputeShaderManager::GetComputeShader("testComputeShader");
-		//csTest->PrintShaderInfo();
-		//ShaderProperties* csProperties = new ShaderProperties(csTest);
-		//csProperties->Print("test");
-		//csProperties->PrintMaps();
-		//csProperties->SetTexture2d("image", TextureManager::GetTexture2d("storageTexture8x8"));
-		//delete csProperties;
-		//TextureManager::PrintAllTextureNames();
-		//pScene->PrintGameObjects();
-		//pScene->PrintLights();
-		//return 0;
-
-		app.Run();
-	}
-	catch (const std::exception& e)
-	{
-		LOG_ERROR("Exception: {}", e.what());
-	}
+	app.Run();
 
 	// Terminate:
-	if (pScene)
-		delete pScene;
+	delete pScene;
 
 	// Runtime analysis:
 	Profiler::Session::Get().End();

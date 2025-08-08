@@ -89,41 +89,39 @@ int main()
 	#ifdef _MSC_VER
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	#endif
-	Profiler::Session::Get().Start("defaultProject", "profilingResults");
 
+	// Profiler:
+	Profiler::Session& session = Profiler::Session::Get();
+	session.Start("profiling", "profilingResults");
+
+	// Initialization:
+	Application::Settings appSettings = {};
+	appSettings.vSyncEnabled = false;
+	appSettings.framesInFlight = 2;
+	appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+	appSettings.windowWidth = 1600;// 2560; //1920;
+	appSettings.windowHeight = 900;// 1440; //1080;
+	appSettings.renderWidth = 1280;// 2560; //1280;
+	appSettings.renderHeight = 720;// 1440; //720;
+	appSettings.renderToImGuiWindow = true;
+	Graphics::SetDeptBiasSlopeFactor(3.0f);
+	Application app(appSettings);
+
+	// Create scene:
+	Scene* pScene = InitScene();
+	app.SetScene(pScene);
 
 	// Run application:
-	Scene* pScene = nullptr;
-	try
-	{
-		// Initialization:
-		Application::Settings appSettings = {};
-		appSettings.vSyncEnabled = false;
-		appSettings.framesInFlight = 2;
-		appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-		appSettings.windowWidth = 1600;// 2560; //1920;
-		appSettings.windowHeight = 900;// 1440; //1080;
-		appSettings.renderWidth = 1280;// 2560; //1280;
-		appSettings.renderHeight = 720;// 1440; //720;
-		appSettings.renderToImGuiWindow = true;
-		Graphics::SetDeptBiasSlopeFactor(3.0f);
-		Application app(appSettings);
-
-		// Create scene:
-		pScene = InitScene();
-		app.SetScene(pScene);
-
-		// Run application:
-		app.Run();
-	}
-	catch (const std::exception& e)
-	{
-		LOG_ERROR("Exception: {}", e.what());
-	}
+	app.Run();
 
 	// Terminate:
-	if (pScene)
-		delete pScene;
+	delete pScene;
+
+	// Runtime analysis:
 	Profiler::Session::Get().End();
+	std::vector<std::string> results = session.GetAllResultNames();
+	for (std::string& result : results)
+		session.PrintFunctionAverageTime(result, TimeUnit::ms);
+
 	return 0;
 }
