@@ -25,7 +25,7 @@ namespace emberEngine
         // Create new staging buffer if pool is empty:
         if (m_pool.empty())
         {
-            StagingBuffer* pNewStagingBuffer = new StagingBuffer(size);
+            StagingBuffer* pNewStagingBuffer = new StagingBuffer(size, "pool");
             m_storage.push_back(pNewStagingBuffer);
             m_pool.push(pNewStagingBuffer);
         }

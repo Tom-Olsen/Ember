@@ -49,6 +49,8 @@ namespace emberEngine
 		{
 			if (vmaBuffer != nullptr)
 				m_pVmaBuffers.insert(vmaBuffer);
+
+			//LOG_INFO("{}: {}", vmaBuffer->GetName(), vmaBuffer->GetSize());
 		}
 		void AllocationTracker::AddVmaImage(VmaImage* vmaImage)
 		{

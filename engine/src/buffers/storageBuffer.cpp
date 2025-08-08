@@ -3,6 +3,7 @@
 #include "emberMath.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
+#include "vulkanMacros.h"
 #include <vulkan/vulkan.h>
 
 
@@ -14,7 +15,7 @@ namespace emberEngine
 
 
 	// Constructor/Destructor:
-	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize)
+	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize, std::string name)
 	{
 		// NOTE:
 		// Storage buffers must follow std430 layout alignment rules.
@@ -26,6 +27,7 @@ namespace emberEngine
 		m_count = count;
 		m_elementSize = elementSize;
 		m_size = m_count * m_elementSize;
+		m_name = name;
 
 		// Create buffer:
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -39,7 +41,8 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_buffer = std::make_unique<VmaBuffer>("storageBuffer", bufferInfo, allocInfo);
+		m_pBuffer = std::make_unique<VmaBuffer>("storageBuffer", bufferInfo, allocInfo);
+		NAME_VK_BUFFER(m_pBuffer->GetVkBuffer(), "storageBuffer " + m_name);
 	}
 	StorageBuffer::~StorageBuffer()
 	{

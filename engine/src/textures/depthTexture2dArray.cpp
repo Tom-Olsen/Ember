@@ -4,6 +4,7 @@
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
+#include "vulkanMacros.h"
 
 
 
@@ -37,6 +38,7 @@ namespace emberEngine
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 		DeviceQueue queue = Context::logicalDevice.GetGraphicsQueue();
 		CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "DepthTexture2dArray " + m_name);
 
 		// Although the image is in the layout undefined, the shadow renderpass automatically transitions it to shader read after rendering the shadow maps into it.
 		// The descriptorSet that binds the shadowMap to the fragment shaders of the forward renderpass needs to read the correct VkImageLayout.

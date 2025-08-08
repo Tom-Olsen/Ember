@@ -354,7 +354,7 @@ namespace emberEngine
 			const DescriptorBoundResources* const descriptorBoundResources = m_pShader->GetDescriptorBoundResources();
 			UniformBufferBlock* pUniformBufferBlock = descriptorBoundResources->uniformBufferBlockMap.at(name);
 
-			std::shared_ptr<UniformBuffer> uniformBuffer = std::make_shared<UniformBuffer>(pUniformBufferBlock);
+			std::shared_ptr<UniformBuffer> uniformBuffer = std::make_shared<UniformBuffer>(pUniformBufferBlock, m_pShader->GetName());
 			m_uniformBufferMaps[frameIndex].emplace(name, UniformBufferBinding(binding, uniformBuffer));
 
 			for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)

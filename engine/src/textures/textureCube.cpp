@@ -97,7 +97,7 @@ namespace emberEngine
 		}
 
 		// Upload: pixelData -> pStagingBuffer
-		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
+		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
 		pStagingBuffer->SetData(pFacePixels, bufferSize);
 		delete[] pFacePixels;
 

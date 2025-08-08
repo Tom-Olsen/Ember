@@ -123,33 +123,33 @@ namespace emberEngine
 		// Reallocate buffers:
 		if (m_pPositionBuffer == nullptr || m_pPositionBuffer->GetCount() != m_particleCount)
 		{
-			std::unique_ptr<StorageBuffer> pNewCellKeyBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int));
+			std::unique_ptr<StorageBuffer> pNewCellKeyBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int), "cellKeyBuffer");
 			std::swap(m_pCellKeyBuffer, pNewCellKeyBuffer);
-			std::unique_ptr<StorageBuffer> pNewStartIndexBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int));
+			std::unique_ptr<StorageBuffer> pNewStartIndexBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int), "startIndexBuffer");
 			std::swap(m_pStartIndexBuffer, pNewStartIndexBuffer);
-			std::unique_ptr<StorageBuffer> pNewPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "positionBuffer");
 			std::swap(m_pPositionBuffer, pNewPositionBuffer);
-			std::unique_ptr<StorageBuffer> pNewVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "velocityBuffer");
 			std::swap(m_pVelocityBuffer, pNewVelocityBuffer);
-			std::unique_ptr<StorageBuffer> pNewDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float));
+			std::unique_ptr<StorageBuffer> pNewDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float), "densityBuffer");
 			std::swap(m_pDensityBuffer, pNewDensityBuffer);
-			std::unique_ptr<StorageBuffer> pNewNormalBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewNormalBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "normalBuffer");
 			std::swap(m_pNormalBuffer, pNewNormalBuffer);
-			std::unique_ptr<StorageBuffer> pNewCurvatureBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float));
+			std::unique_ptr<StorageBuffer> pNewCurvatureBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float), "curvatureBuffer");
 			std::swap(m_pCurvatureBuffer, pNewCurvatureBuffer);
-			std::unique_ptr<StorageBuffer> pNewForceDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewForceDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "forceDensityBuffer");
 			std::swap(m_pForceDensityBuffer, pNewForceDensityBuffer);
-			std::unique_ptr<StorageBuffer> pNewKp1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewKp1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "kp1Buffer");
 			std::swap(m_pKp1Buffer, pNewKp1Buffer);
-			std::unique_ptr<StorageBuffer> pNewKv1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewKv1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "kv1Buffer");
 			std::swap(m_pKv1Buffer, pNewKv1Buffer);
-			std::unique_ptr<StorageBuffer> pNewKp2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewKp2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "kp2Buffer");
 			std::swap(m_pKp2Buffer, pNewKp2Buffer);
-			std::unique_ptr<StorageBuffer> pNewKv2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewKv2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "kv2Buffer");
 			std::swap(m_pKv2Buffer, pNewKv2Buffer);
-			std::unique_ptr<StorageBuffer> pNewTempPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewTempPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "tempPositionBuffer");
 			std::swap(m_pTempPositionBuffer, pNewTempPositionBuffer);
-			std::unique_ptr<StorageBuffer> pNewTempVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2));
+			std::unique_ptr<StorageBuffer> pNewTempVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "tempVelocityBuffer");
 			std::swap(m_pTempVelocityBuffer, pNewTempVelocityBuffer);
 		}
 

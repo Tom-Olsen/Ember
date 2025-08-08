@@ -17,7 +17,7 @@ namespace emberEngine
 	public: // Methods:
 		uint32_t m_count;
 		uint32_t m_elementSize;
-		VertexBuffer(uint32_t count, uint32_t elementSize);
+		VertexBuffer(uint32_t count, uint32_t elementSize, std::string name);
 		~VertexBuffer();
 	};
 }

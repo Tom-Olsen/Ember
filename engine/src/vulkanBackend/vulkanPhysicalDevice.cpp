@@ -45,7 +45,7 @@ namespace emberEngine
 
 			// Pick best device:
 			if (devices[0].second < 0)
-				throw std::runtime_error("Failed to find a suitable GPU!");
+				LOG_WARN("No device supports all required capabilities!");
 			m_physicalDevice = devices[0].first;
 
 			// Determine max msaa samples:

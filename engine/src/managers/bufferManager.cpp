@@ -27,7 +27,7 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		StorageBuffer* dummyStorageBuffer = new StorageBuffer(1, 1);
+		StorageBuffer* dummyStorageBuffer = new StorageBuffer(1, 1, "dummy");
 		AddBuffer(dummyStorageBuffer, "dummyStorageBuffer");
 
 		#ifdef LOG_INITIALIZATION

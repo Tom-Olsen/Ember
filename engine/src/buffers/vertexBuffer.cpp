@@ -1,5 +1,7 @@
 #include "vertexBuffer.h"
 #include "vmaBuffer.h"
+#include "vulkanContext.h"
+#include "vulkanMacros.h"
 
 
 
@@ -10,11 +12,12 @@ namespace emberEngine
 
 
 	// Constructor/Destructor:
-	VertexBuffer::VertexBuffer(uint32_t count, uint32_t elementSize)
+	VertexBuffer::VertexBuffer(uint32_t count, uint32_t elementSize, std::string name)
 	{
 		m_count = count;
 		m_elementSize = elementSize;
 		m_size = m_count * m_elementSize;
+		m_name = name;
 
 		// Create buffer:
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -28,7 +31,8 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_buffer = std::make_unique<VmaBuffer>("vertexBuffer", bufferInfo, allocInfo);
+		m_pBuffer = std::make_unique<VmaBuffer>("vertexBuffer", bufferInfo, allocInfo);
+		NAME_VK_BUFFER(m_pBuffer->GetVkBuffer(), "vertexBuffer " + m_name);
 	}
 	VertexBuffer::~VertexBuffer()
 	{

@@ -17,7 +17,7 @@ namespace emberEngine
 	public: // Methods:
 		uint32_t m_count;
 		uint32_t m_elementSize;
-		IndexBuffer(uint32_t count, uint32_t elementSize);
+		IndexBuffer(uint32_t count, uint32_t elementSize, std::string name);
 		~IndexBuffer();
 	};
 }

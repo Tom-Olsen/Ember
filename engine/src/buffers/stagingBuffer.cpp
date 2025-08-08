@@ -3,6 +3,7 @@
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
+#include "vulkanMacros.h"
 #include "vulkanSingleTimeCommand.h"
 #include <cstring>
 
@@ -15,9 +16,10 @@ namespace emberEngine
 
 
 	// Constructor/Destructor:
-	StagingBuffer::StagingBuffer(uint64_t size)
+	StagingBuffer::StagingBuffer(uint64_t size, std::string name)
 	{
 		m_size = size;
+		m_name = name;
 
 		// Create buffer:
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -31,11 +33,12 @@ namespace emberEngine
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_buffer = std::make_unique<VmaBuffer>("stagingBuffer", bufferInfo, allocInfo);
+		m_pBuffer = std::make_unique<VmaBuffer>("stagingBuffer", bufferInfo, allocInfo);
+		NAME_VK_BUFFER(m_pBuffer->GetVkBuffer(), "stagingBuffer " + m_name);
 
 		// Get mapped deviceData pointer:
 		VmaAllocationInfo allocInfoOut;
-		vmaGetAllocationInfo(Context::GetVmaAllocator(), m_buffer->GetVmaAllocation(), &allocInfoOut);
+		vmaGetAllocationInfo(Context::GetVmaAllocator(), m_pBuffer->GetVmaAllocation(), &allocInfoOut);
 		m_pDeviceData = allocInfoOut.pMappedData;
 	}
 	StagingBuffer::~StagingBuffer()

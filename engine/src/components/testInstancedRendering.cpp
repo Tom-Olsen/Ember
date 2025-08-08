@@ -9,7 +9,7 @@ namespace emberEngine
 	TestInstancedRendering::TestInstancedRendering(uint32_t instanceCount)
 	{
 		uint32_t elementSize = sizeof(Float4x4) + sizeof(Float4);
-		m_pStorageBuffer = std::make_unique<StorageBuffer>(instanceCount, elementSize);
+		m_pStorageBuffer = std::make_unique<StorageBuffer>(instanceCount, elementSize, "testInstancedRendering");
 		m_pStartCS = ComputeShaderManager::GetComputeShader("initialPositions");
 		m_pUpdateCS = ComputeShaderManager::GetComputeShader("updatePositions");
 		m_pStartProperties = std::make_unique<ShaderProperties>((Shader*)m_pStartCS);

@@ -28,7 +28,7 @@ namespace emberEngine
 
 
 	// Constructor/Destructor:
-	Application::Application(Settings settings)
+	Application::Application(const Settings& settings)
 	{
 		Logger::Init();
 		m_pActiveScene = nullptr;

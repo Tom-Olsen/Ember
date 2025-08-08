@@ -27,12 +27,13 @@ namespace emberEngine
 			uint32_t renderHeight;
 			bool renderToImGuiWindow;
 		};
+
 	private: // Members:
 		std::unique_ptr<RenderCore> m_pRenderer;
 		Scene* m_pActiveScene;
 
 	public: // Methods:
-		Application(Settings settings);
+		Application(const Settings& settings);
 		~Application();
 		void Run();
 		void SetScene(Scene* pScene);

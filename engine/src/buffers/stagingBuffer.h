@@ -32,7 +32,7 @@ namespace emberEngine
 		std::vector<char> m_hostData;
 		
 	public: // Methods:
-		StagingBuffer(uint64_t size);
+		StagingBuffer(uint64_t size, std::string name);
 		~StagingBuffer();
 
 		// Getters:

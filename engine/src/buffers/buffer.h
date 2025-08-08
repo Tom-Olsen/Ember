@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_buffer_h__
 #include "vk_mem_alloc.h"
 #include <memory>
+#include <string>
 
 
 
@@ -26,10 +27,11 @@ namespace emberEngine
 	class Buffer
 	{
 	protected: // Members:
+		std::string m_name;
 		uint32_t m_count;
 		uint32_t m_elementSize;
 		uint64_t m_size;	// in bytes: m_size = count * m_elementSize.
-		std::unique_ptr<vulkanBackend::VmaBuffer> m_buffer;
+		std::unique_ptr<vulkanBackend::VmaBuffer> m_pBuffer;
 
 	public: // Methods:
 		virtual ~Buffer();

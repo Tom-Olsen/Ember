@@ -75,7 +75,7 @@ namespace emberEngine
 
 		// Upload: pixelData -> pStagingBuffer
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(format);
-		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
+		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
 		pStagingBuffer->SetData(pPixels, bufferSize);
 		stbi_image_free(pPixels);
 
@@ -94,7 +94,7 @@ namespace emberEngine
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
 		CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTexture2d " + name);
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTexture2d " + m_name);
 
 		return pStagingBuffer;
 	}

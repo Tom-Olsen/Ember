@@ -30,7 +30,7 @@ namespace emberEngine
 		vulkanBackend::UniformBufferBlock* m_pUniformBufferBlock;
 
 	public: // Methods:
-		UniformBuffer(vulkanBackend::UniformBufferBlock* pUniformBufferBlock);
+		UniformBuffer(vulkanBackend::UniformBufferBlock* pUniformBufferBlock, std::string name);
 		~UniformBuffer();
 
 		void UpdateBuffer();

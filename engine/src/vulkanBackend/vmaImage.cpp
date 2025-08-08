@@ -138,13 +138,13 @@ namespace emberEngine
 		// Upload/Download:
 		void VmaImage::Upload(VkCommandBuffer commandBuffer, void* pSrc, uint64_t size, uint32_t layerCount)
 		{
-			StagingBuffer stagingBuffer(size);
+			StagingBuffer stagingBuffer(size, m_name);
 			stagingBuffer.SetData(pSrc, size);
 			stagingBuffer.UploadToImage(commandBuffer, this, layerCount);
 		}
 		void VmaImage::Upload(void* pSrc, uint64_t size, uint32_t layerCount)
 		{
-			StagingBuffer stagingBuffer(size);
+			StagingBuffer stagingBuffer(size, m_name);
 			stagingBuffer.SetData(pSrc, size);
 			stagingBuffer.UploadToImage(Context::logicalDevice.GetTransferQueue(), this, layerCount);
 		}

@@ -34,7 +34,7 @@ namespace emberEngine
 			VkApplicationInfo applicationInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
 			applicationInfo.pApplicationName = "Application Name";
 			applicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-			applicationInfo.pEngineName = "My Engine";
+			applicationInfo.pEngineName = "Ember";
 			applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 			applicationInfo.apiVersion = VK_API_VERSION_1_3;
 
@@ -66,8 +66,7 @@ namespace emberEngine
 			#endif
 
 			// Create the Vulkan instance:
-			if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS)
-				throw std::runtime_error("Failed to create instance!");
+			VKA(vkCreateInstance(&createInfo, nullptr, &m_instance));
 
 			// Debug Messenger:
 			#if defined(VALIDATION_LAYERS_ACTIVE)

@@ -2,10 +2,7 @@
 #include "sphFluid3dEditorWindow.h"
 #include "accessMasks.h"
 #include "sphBitonicSort3d.h"
-
 #include "vmaBuffer.h"
-#include "vulkanContext.h"
-#include "vulkanMacros.h"
 
 
 
@@ -89,48 +86,34 @@ namespace emberEngine
 		// Reallocate buffers:
 		if (m_pPositionBuffer == nullptr || m_pPositionBuffer->GetCount() != m_particleCount)
 		{
-			std::unique_ptr<StorageBuffer> pNewCellKeyBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int));
+			std::unique_ptr<StorageBuffer> pNewCellKeyBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int), "cellKeyBuffer");
 			std::swap(m_pCellKeyBuffer, pNewCellKeyBuffer);
-			NAME_VK_BUFFER(m_pCellKeyBuffer->GetVmaBuffer()->GetVkBuffer(), "cellKeyBuffer");
-			std::unique_ptr<StorageBuffer> pNewStartIndexBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int));
+			std::unique_ptr<StorageBuffer> pNewStartIndexBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(int), "startIndexBuffer");
 			std::swap(m_pStartIndexBuffer, pNewStartIndexBuffer);
-			NAME_VK_BUFFER(m_pStartIndexBuffer->GetVmaBuffer()->GetVkBuffer(), "startIndexBuffer");
-			std::unique_ptr<StorageBuffer> pNewPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "positionBuffer");
 			std::swap(m_pPositionBuffer, pNewPositionBuffer);
-			NAME_VK_BUFFER(m_pPositionBuffer->GetVmaBuffer()->GetVkBuffer(), "positionBuffer");
-			std::unique_ptr<StorageBuffer> pNewVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "velocityBuffer");
 			std::swap(m_pVelocityBuffer, pNewVelocityBuffer);
-			NAME_VK_BUFFER(m_pVelocityBuffer->GetVmaBuffer()->GetVkBuffer(), "velocityBuffer");
-			std::unique_ptr<StorageBuffer> pNewDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float));
+			std::unique_ptr<StorageBuffer> pNewDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float), "densityBuffer");
 			std::swap(m_pDensityBuffer, pNewDensityBuffer);
-			NAME_VK_BUFFER(m_pDensityBuffer->GetVmaBuffer()->GetVkBuffer(), "densityBuffer");
-			std::unique_ptr<StorageBuffer> pNewNormalBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewNormalBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "normalBuffer");
 			std::swap(m_pNormalBuffer, pNewNormalBuffer);
-			NAME_VK_BUFFER(m_pNormalBuffer->GetVmaBuffer()->GetVkBuffer(), "normalBuffer");
-			std::unique_ptr<StorageBuffer> pNewCurvatureBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float));
+			std::unique_ptr<StorageBuffer> pNewCurvatureBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(float), "curvatureBuffer");
 			std::swap(m_pCurvatureBuffer, pNewCurvatureBuffer);
-			NAME_VK_BUFFER(m_pCurvatureBuffer->GetVmaBuffer()->GetVkBuffer(), "curvatureBuffer");
-			std::unique_ptr<StorageBuffer> pNewForceDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewForceDensityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "forceDensityBuffer");
 			std::swap(m_pForceDensityBuffer, pNewForceDensityBuffer);
-			NAME_VK_BUFFER(m_pForceDensityBuffer->GetVmaBuffer()->GetVkBuffer(), "forceDensityBuffer");
-			std::unique_ptr<StorageBuffer> pNewKp1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewKp1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "kp1Buffer");
 			std::swap(m_pKp1Buffer, pNewKp1Buffer);
-			NAME_VK_BUFFER(m_pKp1Buffer->GetVmaBuffer()->GetVkBuffer(), "kp1Buffer");
-			std::unique_ptr<StorageBuffer> pNewKv1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewKv1Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "kv1Buffer");
 			std::swap(m_pKv1Buffer, pNewKv1Buffer);
-			NAME_VK_BUFFER(m_pKv1Buffer->GetVmaBuffer()->GetVkBuffer(), "kv1Buffer");
-			std::unique_ptr<StorageBuffer> pNewKp2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewKp2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "kp2Buffer");
 			std::swap(m_pKp2Buffer, pNewKp2Buffer);
-			NAME_VK_BUFFER(m_pKp2Buffer->GetVmaBuffer()->GetVkBuffer(), "kp2Buffer");
-			std::unique_ptr<StorageBuffer> pNewKv2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewKv2Buffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "kv2Buffer");
 			std::swap(m_pKv2Buffer, pNewKv2Buffer);
-			NAME_VK_BUFFER(m_pKv2Buffer->GetVmaBuffer()->GetVkBuffer(), "kv2Buffer");
-			std::unique_ptr<StorageBuffer> pNewTempPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewTempPositionBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "tempPositionBuffer");
 			std::swap(m_pTempPositionBuffer, pNewTempPositionBuffer);
-			NAME_VK_BUFFER(m_pTempPositionBuffer->GetVmaBuffer()->GetVkBuffer(), "tempPositionBuffer");
-			std::unique_ptr<StorageBuffer> pNewTempVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3));
+			std::unique_ptr<StorageBuffer> pNewTempVelocityBuffer = std::make_unique<StorageBuffer>((uint32_t)m_particleCount, (uint32_t)sizeof(Float3), "tempVelocityBuffer");
 			std::swap(m_pTempVelocityBuffer, pNewTempVelocityBuffer);
-			NAME_VK_BUFFER(m_pTempVelocityBuffer->GetVmaBuffer()->GetVkBuffer(), "tempVelocityBuffer");
 		}
 
 		// Reset fluid to initial data:

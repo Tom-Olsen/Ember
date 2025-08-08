@@ -91,26 +91,29 @@ int main()
 	#endif
 	Profiler::Session::Get().Start("defaultProject", "profilingResults");
 
-	// Initialization:
-	Application::Settings appSettings = {};
-	appSettings.vSyncEnabled = false;
-	appSettings.framesInFlight = 2;
-	appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-	appSettings.windowWidth = 2560;//1920;
-	appSettings.windowHeight = 1440;//1080;
-	appSettings.renderWidth = 2560;//1280;
-	appSettings.renderHeight = 1440;//720;
-	appSettings.renderToImGuiWindow = true;
-	Graphics::SetDeptBiasSlopeFactor(3.0f);
-	Application app(appSettings);
-
-	// Create scene:
-	Scene* pScene = InitScene();
-	app.SetScene(pScene);
 
 	// Run application:
+	Scene* pScene = nullptr;
 	try
 	{
+		// Initialization:
+		Application::Settings appSettings = {};
+		appSettings.vSyncEnabled = false;
+		appSettings.framesInFlight = 2;
+		appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+		appSettings.windowWidth = 1600;// 2560; //1920;
+		appSettings.windowHeight = 900;// 1440; //1080;
+		appSettings.renderWidth = 1280;// 2560; //1280;
+		appSettings.renderHeight = 720;// 1440; //720;
+		appSettings.renderToImGuiWindow = true;
+		Graphics::SetDeptBiasSlopeFactor(3.0f);
+		Application app(appSettings);
+
+		// Create scene:
+		pScene = InitScene();
+		app.SetScene(pScene);
+
+		// Run application:
 		app.Run();
 	}
 	catch (const std::exception& e)
@@ -119,7 +122,8 @@ int main()
 	}
 
 	// Terminate:
-	delete pScene;
+	if (pScene)
+		delete pScene;
 	Profiler::Session::Get().End();
 	return 0;
 }

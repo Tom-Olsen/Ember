@@ -745,7 +745,7 @@ namespace emberEngine
 
 		// Resize buffer if necessary:
 		if (m_vertexBuffer == nullptr || m_vertexBuffer->GetCount() != m_vertexCount)
-			m_vertexBuffer = std::make_unique<VertexBuffer>(m_vertexCount, GetVertexBufferElementSize());
+			m_vertexBuffer = std::make_unique<VertexBuffer>(m_vertexCount, GetVertexBufferElementSize(), m_name);
 
 		// Copy positions, colors, uvs:
 		void* data;
@@ -775,10 +775,10 @@ namespace emberEngine
 
 		// Resize buffer if necessary:
 		if (m_vertexBuffer == nullptr || m_vertexBuffer->GetCount() != m_vertexCount)
-			m_vertexBuffer = std::make_unique<VertexBuffer>(m_vertexCount, GetVertexBufferElementSize());
+			m_vertexBuffer = std::make_unique<VertexBuffer>(m_vertexCount, GetVertexBufferElementSize(), m_name);
 
 		// Copy: meshData -> stagingBuffer -> vertexBuffer
-		StagingBuffer stagingBuffer(GetVertexBufferSize());
+		StagingBuffer stagingBuffer(GetVertexBufferSize(), m_name);
 		stagingBuffer.SetData(m_positions.data(), GetSizeOfPositions(), GetPositionsOffset());
 		stagingBuffer.SetData(m_normals.data(), GetSizeOfNormals(), GetNormalsOffset());
 		stagingBuffer.SetData(m_tangents.data(), GetSizeOfTangents(), GetTangentsOffset());
@@ -795,7 +795,7 @@ namespace emberEngine
 
 		// Resize buffer if necessary:
 		if (m_indexBuffer == nullptr || m_triangleCount != m_indexBuffer->GetCount())
-			m_indexBuffer = std::make_unique<IndexBuffer>(m_triangleCount, (uint32_t)sizeof(Uint3));
+			m_indexBuffer = std::make_unique<IndexBuffer>(m_triangleCount, (uint32_t)sizeof(Uint3), m_name);
 
 		// Copy triangle indexes:
 		uint64_t size = GetSizeOfTriangles();
@@ -812,11 +812,11 @@ namespace emberEngine
 
 		// Resize buffer if necessary:
 		if (m_indexBuffer == nullptr || m_triangleCount != m_indexBuffer->GetCount())
-			m_indexBuffer = std::make_unique<IndexBuffer>(m_triangleCount, (uint32_t)sizeof(Uint3));
+			m_indexBuffer = std::make_unique<IndexBuffer>(m_triangleCount, (uint32_t)sizeof(Uint3), m_name);
 
 		// Copy: triangles -> stagingBuffer -> indexBuffer
 		uint64_t size = GetSizeOfTriangles();
-		StagingBuffer stagingBuffer(size);
+		StagingBuffer stagingBuffer(size, m_name);
 		stagingBuffer.SetData(GetTrianglesUnrolled(), size);
 		stagingBuffer.UploadToBuffer(m_indexBuffer.get(), Context::logicalDevice.GetGraphicsQueue());
 	}

@@ -36,6 +36,7 @@ namespace emberEngine
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
 		CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "RenderTexture2d " + m_name);
 	}
 	RenderTexture2d::~RenderTexture2d()
 	{

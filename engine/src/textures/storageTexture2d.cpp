@@ -6,6 +6,7 @@
 #include "vmaImage.h"
 #include "vulkanAccessMasks.h"
 #include "vulkanContext.h"
+#include "vulkanMacros.h"
 #include "vulkanPipelineStages.h"
 
 
@@ -45,6 +46,7 @@ namespace emberEngine
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
 		CreateImage(subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "StorageTexture2d " + m_name);
 
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		VkImageLayout newLayout0 = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -56,7 +58,7 @@ namespace emberEngine
 
 		// Copy: pixelData -> stagingBuffer -> image
 		uint64_t bufferSize = 4 * m_channels * m_width * m_height * BytesPerChannel(format);
-		StagingBuffer stagingBuffer(bufferSize);
+		StagingBuffer stagingBuffer(bufferSize, m_name);
 		stagingBuffer.SetData(pPixels, bufferSize);
 		stagingBuffer.UploadToImage(Context::logicalDevice.GetTransferQueue(), m_pImage.get(), subresourceRange.layerCount);
 
@@ -108,7 +110,7 @@ namespace emberEngine
 
 		// Copy: pixelData -> stagingBuffer -> image
 		uint64_t bufferSize = 4 * m_width * m_height;
-		StagingBuffer stagingBuffer(bufferSize);
+		StagingBuffer stagingBuffer(bufferSize, m_name);
 		stagingBuffer.SetData(pPixels, bufferSize);
 		stagingBuffer.UploadToImage(Context::logicalDevice.GetTransferQueue(), m_pImage.get(), subresourceRange.layerCount);
 
