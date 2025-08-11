@@ -18,14 +18,14 @@ namespace emberEngine
 	public:
 		struct Settings
 		{
-			bool vSyncEnabled;
-			uint32_t framesInFlight;
-			VkSampleCountFlagBits msaaSamples;
-			uint32_t windowWidth;
-			uint32_t windowHeight;
-			uint32_t renderWidth;
-			uint32_t renderHeight;
-			bool renderToImGuiWindow;
+			bool vSyncEnabled = false;
+			uint32_t framesInFlight = 2;
+			VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_4_BIT;
+			uint32_t windowWidth = 2560;
+			uint32_t windowHeight = 1440;
+			uint32_t renderWidth = 1920;
+			uint32_t renderHeight = 1080;
+			bool renderToImGuiWindow = false;
 		};
 
 	private: // Members:

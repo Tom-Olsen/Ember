@@ -28,16 +28,16 @@ namespace emberEngine
         {
             // Prepare render texture:
             Texture2d* pRenderTexture = (Texture2d*)RenderPassManager::GetForwardRenderPass()->GetRenderTexture();
-            ImTextureID textureID = DearImGui::GetTextureID(pRenderTexture);
+            uintptr_t textureID = DearImGui::GetTextureID(pRenderTexture);
 
             // Get imgui window:
-            const ImVec2 windowSize = ImGui::GetContentRegionAvail();
+            const Float2 windowSize = DearImGui::GetContentRegionalAvail();
 
             // Texture and window aspect ratios:
             const float textureAspect = (float)pRenderTexture->GetWidth() / (float)pRenderTexture->GetHeight();
             const float windowAspect = windowSize.x / windowSize.y;
 
-            ImVec2 imageSize;
+            Float2 imageSize;
             if (windowAspect > textureAspect)
             {
                 // Window is wider than texture aspect ratio -> letterboxing:
@@ -52,12 +52,12 @@ namespace emberEngine
             }
 
             // Center the image in the window:
-            ImVec2 cursorPos = ImGui::GetCursorPos();
-            ImVec2 offset = { 0.5f * (windowSize.x - imageSize.x), 0.5f * (windowSize.y - imageSize.y) };
-            ImGui::SetCursorPos(ImVec2(cursorPos.x + offset.x, cursorPos.y + offset.y));
+            Float2 cursorPos = DearImGui::GetCursorPos();
+            Float2 offset = 0.5f * (windowSize - imageSize);
+            DearImGui::SetCursorPos(cursorPos + offset);
 
             // Draw image:
-            ImGui::Image(textureID, imageSize);
+            DearImGui::Image(textureID, imageSize);
         }
     };
 }

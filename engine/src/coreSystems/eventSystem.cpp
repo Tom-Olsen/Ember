@@ -104,11 +104,11 @@ namespace emberEngine
             case SDL_EVENT_MOUSE_BUTTON_UP:
                 s_mouseButtonStates[event.button.button] = MouseState::up;
                 break;
-            case SDL_EVENT_MOUSE_MOTION:    // need DearImGui exclusion for this case?
+            case SDL_EVENT_MOUSE_MOTION:
                 s_mouseX = event.motion.x;
                 s_mouseY = event.motion.y;
                 break;
-            case SDL_EVENT_MOUSE_WHEEL:    // need DearImGui exclusion for this case?
+            case SDL_EVENT_MOUSE_WHEEL:
                 s_mouseScrollX = event.wheel.x;
                 s_mouseScrollY = event.wheel.y;
                 break;

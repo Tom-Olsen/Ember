@@ -1,4 +1,4 @@
-#include "dearImGui.h"
+#include "dearImGuiEnabled.h"
 #include "editor.h"
 #include "editorWindow.h"
 #include "logger.h"
@@ -143,10 +143,10 @@ namespace emberEngine
 	{
 		return s_wantCaptureMouse;
 	}
-	ImTextureID DearImGui::GetTextureID(Texture2d* pTexture)
+	uintptr_t DearImGui::GetTextureID(Texture2d* pTexture)
 	{
 		if (!pTexture)
-			return static_cast<ImTextureID>(0);
+			return 0;
 
 		// Return cached descriptor set if it exists:
 		auto it = s_textureToDescriptorMap.find(pTexture);
@@ -159,7 +159,7 @@ namespace emberEngine
 
 		// Cache and return:
 		s_textureToDescriptorMap[pTexture] = descriptorSet;
-		return reinterpret_cast<ImTextureID>(descriptorSet);
+		return reinterpret_cast<uintptr_t>(descriptorSet);
 	}
 
 
@@ -188,6 +188,34 @@ namespace emberEngine
 		if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
 			instanceExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 		#endif
+	}
+	Float2 ToFloat2(const ImVec2& v)
+	{
+		return Float2(v.x, v.y);
+	}
+	ImVec2 ToImVec2(const Float2& v)
+	{
+		return ImVec2(v.x, v.y);
+	}
+
+
+
+	// Wrappers:
+	Float2 DearImGui::GetContentRegionalAvail()
+	{
+		return ToFloat2(ImGui::GetContentRegionAvail());
+	}
+	Float2 DearImGui::GetCursorPos()
+	{
+		return ToFloat2(ImGui::GetCursorPos());
+	}
+	void DearImGui::SetCursorPos(const Float2& localPos)
+	{
+		ImGui::SetCursorPos(ToImVec2(localPos));
+	}
+	void DearImGui::Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
+	{
+		ImGui::Image(static_cast<ImTextureID>(textureID), ToImVec2(imageSize), ToImVec2(uv0), ToImVec2(uv1));
 	}
 
 

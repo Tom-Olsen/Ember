@@ -52,7 +52,7 @@ namespace emberEngine
 			instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 			instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 			#endif
-			window.AddSdlInstanceExtensions(instanceExtensions);			// sdl instance extensions
+			window.AddSdlInstanceExtensions(instanceExtensions);		// sdl instance extensions
 			DearImGui::AddImGuiInstanceExtensions(instanceExtensions);	// add instance extensions for docking feature
 			// and more ...
 

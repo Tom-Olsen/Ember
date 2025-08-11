@@ -50,8 +50,7 @@ namespace emberEngine
 		s_pHierarchyEditorWindow = std::make_unique<HierarchyEditorWindow>();
 		s_pInspectorEditorWindow = std::make_unique<InspectorEditorWindow>();
 		s_pProjectEditorWindow = std::make_unique<ProjectEditorWindow>();
-		if (renderToImGuiWindow)
-			s_pSceneEditorWindow = std::make_unique<SceneEditorWindow>();
+		s_pSceneEditorWindow = std::make_unique<SceneEditorWindow>();
 	}
 	void Editor::Clear()
 	{

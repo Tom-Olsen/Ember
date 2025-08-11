@@ -1,7 +1,7 @@
-#ifndef __INCLUDE_GUARD_dearImGui_h__
-#define __INCLUDE_GUARD_dearImGui_h__
+#ifndef __INCLUDE_GUARD_dearImGuiEnabled_h__
+#define __INCLUDE_GUARD_dearImGuiEnabled_h__
+#include "emberMath.h"
 #include <imgui.h>
-#include <memory>
 #include <unordered_map>
 #include <vector>
 #include <SDL3/SDL.h>
@@ -45,10 +45,16 @@ namespace emberEngine
 		// Getters:
 		static bool WantCaptureKeyboard();
 		static bool WantCaptureMouse();
-		static ImTextureID GetTextureID(Texture2d* pTexture);
+		static uintptr_t GetTextureID(Texture2d* pTexture);
 
 		// Helper functions:
 		static void AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
+
+		// Wrappers:
+		static Float2 GetContentRegionalAvail();
+		static Float2 GetCursorPos();
+		static void SetCursorPos(const Float2& localPos);
+		static void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one);
 
 	private: // Methods:
 		static void ShowDockSpace();
@@ -66,4 +72,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_dearImGui_h__
+#endif // __INCLUDE_GUARD_dearImGuiEnabled_h__

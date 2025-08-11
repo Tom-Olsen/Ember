@@ -26,12 +26,15 @@ source_group("2D\\gpu" FILES ${2D_GPU_FILES})
 # src/3d/*:
 file(GLOB 3D_FILES "${PROJECT_SOURCE_DIR}/src/3d/*")
 source_group("3D" FILES ${3D_FILES})
+
+file(GLOB MAIN "${PROJECT_SOURCE_DIR}/src/main.cpp")
+source_group("/" FILES ${MAIN})
 # ---------------------------------------------------
 
 
 
 # ---------------- Create Executable ----------------
-add_executable(${PROJECT_NAME} src/main.cpp
+add_executable(${PROJECT_NAME} ${MAIN}
 ${MAIN_FILE}
 ${2D_CPU_FILES}
 ${2D_GPU_FILES}
@@ -59,9 +62,3 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EmberEngine)
 add_subdirectory("src/shaders")
 add_dependencies(${PROJECT_NAME} CompileFluidDynamicsShaders)
 # ---------------------------------------------------
-
-
-
-
-
-

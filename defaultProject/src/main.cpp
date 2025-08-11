@@ -22,6 +22,13 @@ using namespace emberEngine;
 
 
 // Ember::TODO now!
+// - go through all classes and implement rule of 5 properly:
+//   If any of the following is defined, define all of them!
+//   1. Destructor					~Foo();
+//	 2. Copy constructor			Foo(const Foo& other);
+//   3. Copy assignment operator	Foo& operator=(const Foo& other);
+//   4. Move constructor			Foo(Foo&& other);
+//	 5. Move assigment operator		Foo& operator=(Foo&& other);
 // - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 // - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 // - validation layer errors when two shaders have the same binding number (binding missmatch error)
@@ -812,6 +819,7 @@ int main()
 	appSettings.windowHeight = 900;// 1440; //1080;
 	appSettings.renderWidth = 1280;// 2560; //1280;
 	appSettings.renderHeight = 720;// 1440; //720;
+	appSettings.renderToImGuiWindow = false;
 	Application app(appSettings);
 
 	// Create scene:

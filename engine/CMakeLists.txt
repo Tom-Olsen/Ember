@@ -18,11 +18,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin") # target directory for add_executable(...)           => .exe
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib") # target directory for add_library(MyLib STATIC ...) => .a .lib
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib") # target directory for add_library(MyLib SHARED ...) => .so .dylib .dll
+
+# Compile options:
+option(DEAR_IMGUI_ENABLED "Enable Dear ImGui" OFF)
 # ---------------------------------------------------
 
 
 
 # ------------------- File Lists --------------------
+# src/engine.h:
+file(GLOB ENGINE_FILE "${PROJECT_SOURCE_DIR}/src/emberEngine.h")
+source_group("/" FILES ${ENGINE_FILE})
+
 # src/buffers/*:
 file(GLOB BUFFERS_FILES "${PROJECT_SOURCE_DIR}/src/buffers/*")
 source_group("Buffers" FILES ${BUFFERS_FILES})
@@ -35,6 +42,37 @@ source_group("Components" FILES ${COMPONENTS_FILES})
 file(GLOB COMPUTE_FILES "${PROJECT_SOURCE_DIR}/src/compute/*")
 source_group("Compute" FILES ${COMPUTE_FILES})
 
+# src/coreSystems/*:
+file(GLOB CORE_SYSTEM_FILES "${PROJECT_SOURCE_DIR}/src/coreSystems/*")
+source_group("Core Systems" FILES ${CORE_SYSTEM_FILES})
+
+# src/dearImGui/*:
+file(GLOB DEAR_IMGUI_FILES "${PROJECT_SOURCE_DIR}/src/dearImGui/*")
+source_group("Dear ImGui" FILES ${DEAR_IMGUI_FILES})
+
+# Imgui files:
+if(DEAR_IMGUI_ENABLED)
+    set(DEAR_IMGUI_FILES
+        "${PROJECT_SOURCE_DIR}/src/dearImGui/dearImGui.h"
+        "${PROJECT_SOURCE_DIR}/src/dearImGui/dearImGuiEnabled.h"
+        "${PROJECT_SOURCE_DIR}/src/dearImGui/dearImGuiEnabled.cpp")
+    set(IMGUI_FILES
+        libs/imgui/imgui.cpp
+        libs/imgui/imgui_demo.cpp
+        libs/imgui/imgui_draw.cpp
+        libs/imgui/imgui_tables.cpp
+        libs/imgui/imgui_widgets.cpp
+        libs/imgui/backends/imgui_impl_sdl3.cpp
+        libs/imgui/backends/imgui_impl_vulkan.cpp)
+    set(IMGUI_EXAMPLE libs/imgui/examples/example_sdl3_vulkan/main.cpp)
+    source_group("ImGui Demo" FILES ${IMGUI_EXAMPLE})
+else()
+    set(DEAR_IMGUI_FILES
+        "${PROJECT_SOURCE_DIR}/src/dearImGui/dearImGui.h"
+        "${PROJECT_SOURCE_DIR}/src/dearImGui/dearImGuiDisabled.h")
+    set(IMGUI_FILES "")
+endif()
+
 # src/editor/*:
 file(GLOB EDITOR_FILES "${PROJECT_SOURCE_DIR}/src/editor/*")
 source_group("Editor" FILES ${EDITOR_FILES})
@@ -43,10 +81,6 @@ source_group("Editor" FILES ${EDITOR_FILES})
 file(GLOB EDITOR_WINDOWS_FILES "${PROJECT_SOURCE_DIR}/src/editorWindows/*")
 source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
 
-# src/engine/*:
-file(GLOB ENGINE_FILES "${PROJECT_SOURCE_DIR}/src/engine/*")
-source_group("Engine" FILES ${ENGINE_FILES})
-
 # src/gameObjectSystem/*:
 file(GLOB GAME_OBJECT_SYSTEM_FILES "${PROJECT_SOURCE_DIR}/src/gameObjectSystem/*")
 source_group("Game Object System" FILES ${GAME_OBJECT_SYSTEM_FILES})
@@ -54,19 +88,6 @@ source_group("Game Object System" FILES ${GAME_OBJECT_SYSTEM_FILES})
 # src/graphics/*:
 file(GLOB GRAPHICS_FILES "${PROJECT_SOURCE_DIR}/src/graphics/*")
 source_group("Graphics" FILES ${GRAPHICS_FILES})
-
-# Imgui files:
-set(IMGUI_FILES
-    libs/imgui/imgui.cpp
-    libs/imgui/imgui_demo.cpp
-    libs/imgui/imgui_draw.cpp
-    libs/imgui/imgui_tables.cpp
-    libs/imgui/imgui_widgets.cpp
-    libs/imgui/backends/imgui_impl_sdl3.cpp
-    libs/imgui/backends/imgui_impl_vulkan.cpp)
-source_group("ImGui" FILES ${IMGUI_FILES})
-set(IMGUI_EXAMPLE libs/imgui/examples/example_sdl3_vulkan/main.cpp)
-source_group("ImGui Demo" FILES ${IMGUI_EXAMPLE})
 
 # src/managers/*:
 file(GLOB MANAGERS_FILES "${PROJECT_SOURCE_DIR}/src/managers/*")
@@ -119,12 +140,14 @@ source_group("Vulkan Backend\\Utility" FILES ${VULKAN_UTILITY_FILES})
 
 # ----------------- Create Library ------------------
 add_library(${PROJECT_NAME} STATIC
+${ENGINE_FILE}
 ${BUFFERS_FILES}
 ${COMPONENTS_FILES}
 ${COMPUTE_FILES}
 ${EDITOR_FILES}
 ${EDITOR_WINDOWS_FILES}
-${ENGINE_FILES}
+${CORE_SYSTEM_FILES}
+${DEAR_IMGUI_FILES}
 ${GAME_OBJECT_SYSTEM_FILES}
 ${GRAPHICS_FILES}
 ${IMGUI_FILES}
@@ -144,12 +167,14 @@ set_source_files_properties(${IMGUI_EXAMPLE} PROPERTIES HEADER_FILE_ONLY ON)    
 
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME}
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/components
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/editor
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/editorWindows
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/coreSystems
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/dearImGui
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/gameObjectSystem
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/graphics
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/managers
@@ -163,12 +188,18 @@ PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/pipelines
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/pushConstants
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/renderPasses
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/utility
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkanBackend/utility)
 
 # Add project root path as a macro:
 get_filename_component(ENGINE_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_ROOT_PATH="${ENGINE_ROOT_PATH}")
+
+# Add wether dear imgui is enabled as a macro:
+if(DEAR_IMGUI_ENABLED)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC DEAR_IMGUI_ENABLED=1)
+else()
+    target_compile_definitions(${PROJECT_NAME} PUBLIC DEAR_IMGUI_ENABLED=0)
+endif()
 
 # Enable utf-8 encoding for microsoft visual studio: (TODO: fix files so i can remove this)
 if (MSVC)
@@ -184,7 +215,9 @@ add_subdirectory("src/shaders")
 add_dependencies(${PROJECT_NAME} CompileShaders)
 
 # Imgui:
-target_include_directories(${PROJECT_NAME} PUBLIC libs/imgui libs/imgui/backends)
+if(DEAR_IMGUI_ENABLED)
+    target_include_directories(${PROJECT_NAME} PUBLIC libs/imgui libs/imgui/backends)
+endif()
 
 # SDL (cMakeList target):
 set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
