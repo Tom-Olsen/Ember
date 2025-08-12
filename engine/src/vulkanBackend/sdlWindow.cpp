@@ -79,7 +79,7 @@ namespace emberEngine
 						if (event.window.windowID == SDL_GetWindowID(m_pWindow)) // check if the event is for this window
 							return false;	// stop application
 						break;
-
+						
 					// Keyboard events:
 					case SDL_EVENT_KEY_DOWN:
 						if (!DearImGui::WantCaptureKeyboard() && event.key.key == SDLK_ESCAPE)

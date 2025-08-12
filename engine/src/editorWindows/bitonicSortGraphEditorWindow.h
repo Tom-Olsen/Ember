@@ -1,9 +1,9 @@
 #ifndef __INCLUDE_GUARD_bitonicSortGraphEditorWindow_h__
 #define __INCLUDE_GUARD_bitonicSortGraphEditorWindow_h__
 #include "editorWindow.h"
+#include "dearImGuiFlags.h"
 #include "editor.h"
 #include "bitonicSortGraph.h"
-#include <imgui.h>
 
 
 
@@ -25,7 +25,7 @@ namespace emberEngine
 		{
 			m_name = "Bitonic Sort Graph";
 			m_ID = 0;
-			m_windowFlags = ImGuiWindowFlags_None;
+			m_windowFlags = DearImGuiWindowFlag_None;
 			m_wantCaptureEvents = true;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 			m_pScript = pScript;

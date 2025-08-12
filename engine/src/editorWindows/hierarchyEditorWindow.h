@@ -2,7 +2,6 @@
 #define __INCLUDE_GUARD_hierarchyEditorWindow_h__
 #include "editor.h"
 #include "editorWindow.h"
-#include <imgui.h>
 
 
 

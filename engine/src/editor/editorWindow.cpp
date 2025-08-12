@@ -1,4 +1,5 @@
 #include "editorWindow.h"
+#include "dearImGui.h"
 #include "editor.h"
 #include "logger.h"
 
@@ -22,11 +23,11 @@ namespace emberEngine
 		if (!m_isOpen)
 			return;
 
-		ImGui::PushID(m_nameID.c_str());
-		if (ImGui::Begin(m_nameID.c_str(), &m_isOpen, m_windowFlags))
+		DearImGui::PushID(m_nameID.c_str());
+		if (DearImGui::Begin(m_nameID.c_str(), &m_isOpen, m_windowFlags))
 		{
 			// Get window size:
-			ImVec2 size = ImGui::GetWindowSize();
+			Float2 size = DearImGui::GetWindowSize();
 			m_width = size.x;
 			m_height = size.y;
 
@@ -34,12 +35,12 @@ namespace emberEngine
 			Render();
 
 			// Let Editor know if this window is focused:
-			m_isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+			m_isFocused = DearImGui::IsWindowFocused(DearImGuiFocusedFlag_RootAndChildWindows);
 			if (m_isFocused)
 				Editor::SetFocusedWindow(this);
 		}
-		ImGui::End();	// must be called even if ImGui::Begin() returns false.
-		ImGui::PopID();
+		DearImGui::End();	// must be called even if ImGui::Begin() returns false.
+		DearImGui::PopID();
 	}
 	void EditorWindow::Render()
 	{

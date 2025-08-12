@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_editorWindow_h__
 #define __INCLUDE_GUARD_editorWindow_h__
-#include <imgui.h>
+#include "dearImGuiFlags.h"
 #include <string>
 
 
@@ -15,7 +15,7 @@ namespace emberEngine
 	protected: // Members:
 		std::string m_name;					// set by derived classes in constructor.
 		int m_ID;							// full id is "m_name##m_ID". For multiple windows with the same name, this ID must be unique.
-		ImGuiWindowFlags m_windowFlags;		// set by derived classes in constructor.
+		DearImGuiWindowFlags m_windowFlags;			// set by derived classes in constructor.
 		bool m_wantCaptureEvents = true;	// set by derived classes in constructor.
 		std::string m_nameID;				// ideally set in inheritor constructor.
 

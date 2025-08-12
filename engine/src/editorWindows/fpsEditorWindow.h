@@ -3,7 +3,6 @@
 #include "editor.h"
 #include "editorWindow.h"
 #include "emberTime.h"
-#include <imgui.h>
 
 
 
@@ -24,7 +23,7 @@ namespace emberEngine
 		{
 			m_name = "Fps";
 			m_ID = 0;
-			m_windowFlags = ImGuiWindowFlags_None;
+			m_windowFlags = WindowFlag::None;
 			m_wantCaptureEvents = false;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 		}

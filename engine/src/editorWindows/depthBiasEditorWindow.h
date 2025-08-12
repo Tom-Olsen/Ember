@@ -3,7 +3,6 @@
 #include "editor.h"
 #include "editorWindow.h"
 #include "graphics.h"
-#include <imgui.h>
 
 
 
@@ -21,7 +20,7 @@ namespace emberEngine
 		{
 			m_name = "Depth Bias";
 			m_ID = 0;
-			m_windowFlags = ImGuiWindowFlags_None;
+			m_windowFlags = WindowFlag::None;
 			m_wantCaptureEvents = true;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 			GetData();

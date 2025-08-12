@@ -1,4 +1,4 @@
-#include "editor.h"
+#include "editorEnabled.h"
 #include "editorWindow.h"
 #include "consoleEditorWindow.h"
 #include "depthBiasEditorWindow.h"
@@ -130,7 +130,7 @@ namespace emberEngine
 	{
 		ImGui::TextUnformatted(text);
 	}
-	bool Editor::InputInt(const std::string& label, int* v, int step, int step_fast, ImGuiInputTextFlags flags)
+	bool Editor::InputInt(const std::string& label, int* v, int step, int step_fast, int flags)
 	{
 		// Draw label:
 		ImGui::TextUnformatted(label.c_str());
@@ -155,7 +155,7 @@ namespace emberEngine
 		ImGui::PopID();
 		return changed;
 	}
-	bool Editor::DragInt(const std::string& label, int* v, int step, int step_fast, ImGuiInputTextFlags flags)
+	bool Editor::DragInt(const std::string& label, int* v, int step, int step_fast, int flags)
 	{
 		static float accumulator;
 		bool changed = false;
@@ -207,7 +207,7 @@ namespace emberEngine
 		ImGui::PopID();
 		return changed;
 	}
-	bool Editor::InputFloat(const std::string& label, float* v, float step, float step_fast, const char* format, ImGuiInputTextFlags flags)
+	bool Editor::InputFloat(const std::string& label, float* v, float step, float step_fast, const char* format, int flags)
 	{
 		// Draw label:
 		ImGui::TextUnformatted(label.c_str());
@@ -232,7 +232,7 @@ namespace emberEngine
 		ImGui::PopID();
 		return changed;
 	}
-	bool Editor::DragFloat(const std::string& label, float* v, float step, float step_fast, const char* format, ImGuiInputTextFlags flags)
+	bool Editor::DragFloat(const std::string& label, float* v, float step, float step_fast, const char* format, int flags)
 	{
 		bool changed = false;
 		ImGui::PushID(label.c_str());

@@ -7,7 +7,6 @@
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
 #include "vulkanForwardRenderPass.h"
-#include <imgui.h>
 
 
 
@@ -19,7 +18,7 @@ namespace emberEngine
 		{
             m_name = "Scene";
             m_ID = 0;
-            m_windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+            m_windowFlags = WindowFlag::NoCollapse | WindowFlag::NoScrollbar | WindowFlag::NoScrollWithMouse;
             m_wantCaptureEvents = false;
             m_nameID = m_name + "##" + std::to_string(m_ID);
 		}

@@ -201,6 +201,30 @@ namespace emberEngine
 
 
 	// Wrappers:
+	bool DearImGui::IsWindowFocused(DearImGuiFocusedFlags flags)
+	{
+		return ImGui::IsWindowFocused(flags);
+	}
+	bool DearImGui::Begin(const char* name, bool* pOpen, DearImGuiWindowFlags flags)
+	{
+		return ImGui::Begin(name, pOpen, flags);
+	}
+	void DearImGui::End()
+	{
+		ImGui::End();
+	}
+	void DearImGui::PushID(const char* str_id)
+	{
+		ImGui::PushID(str_id);
+	}
+	void DearImGui::PopID()
+	{
+		ImGui::PopID();
+	}
+	Float2 DearImGui::GetWindowSize()
+	{
+		return ToFloat2(ImGui::GetWindowSize());
+	}
 	Float2 DearImGui::GetContentRegionalAvail()
 	{
 		return ToFloat2(ImGui::GetContentRegionAvail());

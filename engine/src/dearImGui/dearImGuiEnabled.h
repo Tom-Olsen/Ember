@@ -1,5 +1,6 @@
 #ifndef __INCLUDE_GUARD_dearImGuiEnabled_h__
 #define __INCLUDE_GUARD_dearImGuiEnabled_h__
+#include "dearImGuiFlags.h"
 #include "emberMath.h"
 #include <imgui.h>
 #include <unordered_map>
@@ -51,6 +52,12 @@ namespace emberEngine
 		static void AddImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
 
 		// Wrappers:
+		static bool IsWindowFocused(DearImGuiFocusedFlags flags);
+		static bool Begin(const char* name, bool* pOpen, DearImGuiWindowFlags flags);
+		static void End();
+		static void PushID(const char* str_id);
+		static void PopID();
+		static Float2 GetWindowSize();
 		static Float2 GetContentRegionalAvail();
 		static Float2 GetCursorPos();
 		static void SetCursorPos(const Float2& localPos);
