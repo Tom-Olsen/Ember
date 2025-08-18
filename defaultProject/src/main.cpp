@@ -819,7 +819,6 @@ int main()
 	appSettings.windowHeight = 900;// 1440; //1080;
 	appSettings.renderWidth = 1280;// 2560; //1280;
 	appSettings.renderHeight = 720;// 1440; //720;
-	appSettings.renderToImGuiWindow = false;
 	Application app(appSettings);
 
 	// Create scene:

@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Output directory:
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin/${CMAKE_BUILD_TYPE}")
 # ---------------------------------------------------
 
 
@@ -28,8 +28,8 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_R
 
 # ------------------ Link Libraries -----------------
 # Ember:
-#add_subdirectory("../engine" EmberEngineEditorMode)
-#target_link_libraries(${PROJECT_NAME} PUBLIC EmberEngineEditorMode)
-add_subdirectory("../engine" EmberEngineGameMode)
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberEngineGameMode)
+#add_subdirectory("../engine/appEditor" AppEditor)
+#target_link_libraries(${PROJECT_NAME} PUBLIC AppEditor)
+add_subdirectory("../engine/appGame" AppGame)
+target_link_libraries(${PROJECT_NAME} PUBLIC AppGame)
 # ---------------------------------------------------
