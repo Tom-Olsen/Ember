@@ -194,9 +194,6 @@ function(build_ember_engine TARGET_NAME DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW
         ${VULKAN_RENDER_PASSES_FILES}
         ${VULKAN_UTILITY_FILES}
         ${WINDOW_FILES})
-
-    # Add dependency on shader outputs:
-    #target_sources(${TARGET_NAME} PRIVATE ${SPIRV_OUTPUTS})
     
     # Source subdirectories:
     target_include_directories(${TARGET_NAME}
@@ -254,7 +251,7 @@ function(build_ember_engine TARGET_NAME DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW
     target_link_libraries(${TARGET_NAME} PUBLIC EmberMath)
 
     # Shaders:
-    add_dependencies(${TARGET_NAME} CompileShaders)
+    add_dependencies(${TARGET_NAME} ShaderCompiler)
     
     # Imgui:
     if(DEAR_IMGUI_ENABLED)
@@ -301,7 +298,7 @@ endfunction()
 # EmberMath:
 add_subdirectory("../math" EmberMath)
 # Shaders:
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/shaders")
+add_subdirectory("../shaders" ShaderCompiler)
 # SDL:
 set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL")
