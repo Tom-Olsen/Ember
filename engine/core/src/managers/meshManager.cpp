@@ -93,7 +93,7 @@ namespace emberEngine
 		pFrame->SetName("frame");
 		AddMesh(pFrame);
 		
-		std::filesystem::path pathToFile = (std::string)ENGINE_ROOT_PATH + "/meshes/Leb9.csv";
+		std::filesystem::path pathToFile = (std::string)ENGINE_CORE_PATH + "/meshes/Leb9.csv";
 		Mesh* pLeb9 = MeshReader::ReadCsvFile(pathToFile);
 		pLeb9->SetName("Leb9");
 		AddMesh(pLeb9);

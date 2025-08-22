@@ -26,7 +26,6 @@ namespace emberEngine
 			uint32_t windowHeight = 1440;
 			uint32_t renderWidth = 1920;
 			uint32_t renderHeight = 1080;
-			bool renderToImGuiWindow = false;
 		};
 
 	private: // Members:

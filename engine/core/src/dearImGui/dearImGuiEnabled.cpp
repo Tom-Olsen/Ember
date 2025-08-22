@@ -56,7 +56,7 @@ namespace emberEngine
 		initInfo.QueueFamily = Context::logicalDevice.GetGraphicsQueue().familyIndex;
 		initInfo.Queue = Context::logicalDevice.GetGraphicsQueue().queue;
 		initInfo.RenderPass = RenderPassManager::GetPresentRenderPass()->GetVkRenderPass();
-		initInfo.DescriptorPoolSize = 2;	// DescriptorPoolSize > 0 means Imgui backend creates its own VkDescriptorPool. Need at least 1 + as many as additional calls done to ImGui_ImplVulkan_AddTexture()
+		initInfo.DescriptorPoolSize = 8 * Context::framesInFlight;	// ImGui needs at least 8 descriptor sets per frame. If you use more than 8 textures in a single frame, increase this value.
 		initInfo.MinImageCount = 2;
 		initInfo.ImageCount = Context::swapchains[Context::swapchainIndex].GetImages().size();
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
@@ -64,8 +64,9 @@ namespace emberEngine
 
 		CreateDescriptorSetLayout();
 
-		// Upload fonts:
-		ImGui_ImplVulkan_CreateFontsTexture();
+		//// Create ImGui device objects:
+		//ImGui_ImplVulkan_Init(&initInfo, renderPass);
+		//ImGui_ImplVulkan_CreateDeviceObjects();
 
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("DearImGui initialized.");

@@ -27,7 +27,7 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		std::string directoryPath = (std::string)ENGINE_ROOT_PATH + "/bin/shaders";
+		std::string directoryPath = (std::string)CORE_SHADERS_DIR + "/bin";
 		s_pLocalBitonicSort = std::make_unique<ComputeShader>("localBitonicSort", directoryPath + "/localBitonicSort.comp.spv");
 		s_pBigFlip = std::make_unique<ComputeShader>("bigFlip", directoryPath + "/bigFlip.comp.spv");
 		s_pBigDisperse = std::make_unique<ComputeShader>("bigDisperse", directoryPath + "/bigDisperse.comp.spv");

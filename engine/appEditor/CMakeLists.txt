@@ -8,7 +8,7 @@ set(PROJECT_TYPE STATIC)
 
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
-project(AppEditor)
+project(Application)
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
@@ -40,6 +40,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/sr
 
 # ------------------ Link Libraries -----------------
 # EmberCore:
-add_subdirectory("../core" EmberEngineEditorMode)
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberEngineEditorMode)
+add_subdirectory("../core/editorMode" EmberCore)
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberCore)
 # ---------------------------------------------------

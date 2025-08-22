@@ -45,7 +45,7 @@ namespace emberEngine
 		TextureBatchUploader batchUploader;
 
 		// Iterate through the texture directory:
-		std::filesystem::path directoryPath = std::string(ENGINE_ROOT_PATH) + "/textures/";
+		std::filesystem::path directoryPath = std::string(ENGINE_CORE_PATH) + "/textures/";
 		std::unordered_set<std::string> validExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 		{

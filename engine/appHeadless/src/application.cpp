@@ -39,13 +39,14 @@ namespace emberEngine
 			m_pWindow->Init(settings.windowWidth, settings.windowHeight);
 
 			// Init static classes:
-			Context::Init(m_pWindow.get(), settings.framesInFlight, settings.msaaSamples, settings.vSyncEnabled, settings.renderToImGuiWindow);
+            bool renderToImGuiWindow = false;
+			Context::Init(m_pWindow.get(), settings.framesInFlight, settings.msaaSamples, settings.vSyncEnabled, renderToImGuiWindow);
 			GarbageCollector::Init();
 			SingleTimeCommand::Init();
 			math::Random::Init();
 			EventSystem::Init();
 			Managers::Init(settings.renderWidth, settings.renderHeight);
-			Editor::Init(settings.renderToImGuiWindow);
+			Editor::Init(renderToImGuiWindow);
 			DearImGui::Init();
 			BitonicSort::Init();
 			Compute::Init();

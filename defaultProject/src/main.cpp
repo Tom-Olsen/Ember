@@ -815,10 +815,10 @@ int main()
 	appSettings.vSyncEnabled = false;
 	appSettings.framesInFlight = 2;
 	appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-	appSettings.windowWidth = 1600;// 2560; //1920;
-	appSettings.windowHeight = 900;// 1440; //1080;
-	appSettings.renderWidth = 1280;// 2560; //1280;
-	appSettings.renderHeight = 720;// 1440; //720;
+	appSettings.windowWidth  = 2560;//1600; //1920; // 2560;
+	appSettings.windowHeight = 1440;// 900; //1080; // 1440;
+	appSettings.renderWidth  = 2560;//1280; //1280; // 2560;
+	appSettings.renderHeight = 1440;// 720; // 720; // 1440;
 	Application app(appSettings);
 
 	// Create scene:
