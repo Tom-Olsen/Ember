@@ -15,7 +15,6 @@
 #include "profiler.h"
 #include "renderPassManager.h"
 #include "renderTexture2d.h"
-#include "sdlWindow.h"
 #include "shaderProperties.h"
 #include "spirvReflect.h"
 #include "taskflowManager.h"
@@ -35,6 +34,7 @@
 #include "vulkanPresentRenderPass.h"
 #include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
+#include "window.h"
 #include <string>
 
 
@@ -100,9 +100,9 @@ namespace emberEngine
 		PROFILE_FUNCTION();
 
 		// Resize Swapchain if needed:
-		VkExtent2D windowExtent = Context::pWindow->GetExtent();
+		Float2 windowSize = Window::GetSize();
 		VkExtent2D surfaceExtend = Context::surface.GetCurrentExtent();
-		if (m_rebuildSwapchain || windowExtent.width != surfaceExtend.width || windowExtent.height != surfaceExtend.height)
+		if (m_rebuildSwapchain || windowSize.x != surfaceExtend.width || windowSize.y != surfaceExtend.height)
 		{
 			m_rebuildSwapchain = false;
 			Context::ResetFrameIndex();
@@ -145,7 +145,7 @@ namespace emberEngine
 			RecordPostRenderComputeCommands();
 			SubmitPostRenderComputeCommands();
 
-			if (!Context::renderToImGuiWindow)
+			if (!Context::enableDockSpace)
 				RecordPresentCommands();
 			else
 				RecordImGuiPresentCommands();
@@ -190,9 +190,10 @@ namespace emberEngine
 		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[Context::frameIndex], VK_NULL_HANDLE, &m_imageIndex);
 
 		// Resize if needed:
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || Context::pWindow->GetFramebufferResized())
+		//if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || Context::pWindow->GetFramebufferResized())
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		{
-			Context::pWindow->SetFramebufferResized(false);
+			//Context::pWindow->SetFramebufferResized(false);
 			m_rebuildSwapchain = true;
 			return false;
 		}

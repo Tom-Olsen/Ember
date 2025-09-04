@@ -20,7 +20,7 @@ namespace emberEngine
 
 
 
-	// Initialization and cleanup:
+	// Initialization/Cleanup:
 	void BufferManager::Init()
 	{
 		if (s_isInitialized)

@@ -1,4 +1,6 @@
 #include "taskflowManager.h"
+#include "logger.h"
+#include "macros.h"
 
 
 
@@ -11,7 +13,7 @@ namespace emberEngine
 
 
 
-	// Initialization and cleanup:
+	// Initialization/Cleanup:
 	void TaskflowManager::Init()
 	{
 		if (s_isInitialized)
@@ -20,6 +22,10 @@ namespace emberEngine
 
 		s_cores = static_cast<int>(std::thread::hardware_concurrency());
 		tf::Executor s_executor(s_cores);
+
+		#ifdef LOG_INITIALIZATION
+		LOG_TRACE("TaskflowManager initialized.");
+		#endif
 	}
 	void TaskflowManager::Clear()
 	{

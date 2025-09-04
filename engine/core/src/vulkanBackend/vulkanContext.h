@@ -17,25 +17,14 @@
 
 
 
-// Forward declarations:
-struct SDL_Window;
-
-
-
 namespace emberEngine
 {
-	// Forward declarations:
-	class SdlWindow;
-
-
-
 	namespace vulkanBackend
 	{
 		/// <summary>
 		/// Context is a utility structure designed to encapsulate and manage
 		/// all components required for a Vulkan-based rendering application.
 		/// It integrates multiple Vulkan resources and functionalities into a cohesive framework: <para/>
-		/// - SdlWindow:		optional target window for rendering. Not owned by context. <para/>
 		/// - Instance:			VkInstance and validation layers. <para/>
 		/// - PhysicalDevice:	physical device selection and feature support. <para/>
 		/// - Surface:			VkSurface and present mode (mailbox, FIFO, etc.). <para/>
@@ -54,7 +43,6 @@ namespace emberEngine
 			static PFN_vkSetDebugUtilsObjectNameEXT s_vkSetDebugUtilsObjectNameEXT;
 
 		public: // Members:
-			static emberEngine::SdlWindow* pWindow;
 			static Instance instance;
 			static PhysicalDevice physicalDevice;
 			static Surface surface;
@@ -68,15 +56,14 @@ namespace emberEngine
 			static uint32_t frameIndex;
 			static uint64_t absoluteFrameIndex;
 			static VkSampleCountFlagBits msaaSamples;
-			static bool renderToImGuiWindow;
+			static bool enableDockSpace;
 
 		public: // Methods:
-			static void Init(emberEngine::SdlWindow* pWindow_, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool renderToImGuiWindow_);
+			static void Init(uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_);
 			static void Clear();
 			static void RebuildSwapchain();
 
 			// Getters:
-			static SDL_Window* const GetSDL_Window();
 			static const VkInstance& GetVkInstance();
 			static const VkPhysicalDevice& GetVkPhysicalDevice();
 			static const VkSurfaceKHR& GetVkSurfaceKHR();

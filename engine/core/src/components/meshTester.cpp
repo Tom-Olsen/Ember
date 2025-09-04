@@ -33,12 +33,12 @@ namespace emberEngine
 	}
 	void MeshTester::Update()
 	{
-		if (EventSystem::KeyDown(SDLK_PLUS))
+		if (EventSystem::KeyDown(Input::Key::Plus))
 		{
 			index = (index + 1) % m_meshes.size();
 			m_pMeshRenderer->SetMesh(m_meshes[index]);
 		}
-		if (EventSystem::KeyDown(SDLK_MINUS))
+		if (EventSystem::KeyDown(Input::Key::Minus))
 		{
 			index = (index - 1 + m_meshes.size()) % m_meshes.size();
 			m_pMeshRenderer->SetMesh(m_meshes[index]);

@@ -20,7 +20,7 @@ namespace emberEngine
 
 
 
-	// Initialization and cleanup:
+	// Initialization/Cleanup:
 	void MeshManager::Init()
 	{
 		if (s_isInitialized)

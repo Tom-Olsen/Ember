@@ -2,8 +2,8 @@
 #include "dearImGui.h"
 #include "logger.h"
 #include "macros.h"
-#include "sdlWindow.h"
 #include "vulkanMacros.h"
+#include "window.h"
 
 
 
@@ -14,7 +14,6 @@ namespace emberEngine
 		// Static members:
 		bool Context::s_isInitialized = false;
 		PFN_vkSetDebugUtilsObjectNameEXT Context::s_vkSetDebugUtilsObjectNameEXT;
-		emberEngine::SdlWindow* Context::pWindow;
 		Instance Context::instance;
 		PhysicalDevice Context::physicalDevice;
 		Surface Context::surface;
@@ -28,15 +27,13 @@ namespace emberEngine
 		uint32_t Context::frameIndex;
 		uint64_t Context::absoluteFrameIndex;
 		VkSampleCountFlagBits Context::msaaSamples;
-		bool Context::renderToImGuiWindow;
+		bool Context::enableDockSpace;
 
 
 
-		// Initialization and cleanup:
-		void Context::Init(emberEngine::SdlWindow* pWindow_, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool renderToImGuiWindow_)
+		// Initialization/Cleanup:
+		void Context::Init(uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_)
 		{
-			pWindow = pWindow_;
-
 			if (s_isInitialized)
 				return;
 			s_isInitialized = true;
@@ -44,7 +41,7 @@ namespace emberEngine
 			framesInFlight = framesInFlight_;
 			frameIndex = 0;
 			absoluteFrameIndex = 0;
-			renderToImGuiWindow = renderToImGuiWindow_;
+			enableDockSpace = enableDockSpace_;
 
 			// Get instance extensions:
 			std::vector<const char*> instanceExtensions;
@@ -52,9 +49,8 @@ namespace emberEngine
 			instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 			instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 			#endif
-			if (pWindow != nullptr)
-				pWindow->AddSdlInstanceExtensions(instanceExtensions);	// sdl instance extensions.
-			DearImGui::AddImGuiInstanceExtensions(instanceExtensions);	// add instance extensions for docking feature.
+			Window::AddWindowInstanceExtensions(instanceExtensions);			// window instance extensions.
+			DearImGui::AddDearImGuiInstanceExtensions(instanceExtensions);	// add instance extensions for docking feature.
 			// and more ...
 
 			// Get device extensions:
@@ -68,7 +64,7 @@ namespace emberEngine
 			// Create vulkan context:
 			instance.Init(instanceExtensions);
 			physicalDevice.Init(&instance);
-			surface.Init(&instance, &physicalDevice, pWindow, vSyncEnabled_);
+			surface.Init(&instance, &physicalDevice, vSyncEnabled_);
 			logicalDevice.Init(&physicalDevice, &surface, deviceExtensions);
 			allocator.Init(&instance, &logicalDevice, &physicalDevice);
 			allocationTracker.Init();
@@ -113,10 +109,6 @@ namespace emberEngine
 
 
 		// Getters:
-		SDL_Window* const Context::GetSDL_Window()
-		{
-			return pWindow->GetSDL_Window();
-		}
 		const VkInstance& Context::GetVkInstance()
 		{
 			return instance.GetVkInstance();

@@ -31,27 +31,27 @@ namespace emberEngine
 	// Private methods:
 	void CameraController::Translation()
 	{
-		float currentSpeed = EventSystem::KeyDownOrHeld(SDLK_LSHIFT) ? m_moveSpeed * m_fastMoveMultiplier : m_moveSpeed;
+		float currentSpeed = EventSystem::KeyDownOrHeld(Input::Key::ShiftLeft) ? m_moveSpeed * m_fastMoveMultiplier : m_moveSpeed;
 
 		Float3 direction = Float3::zero;
-		if (EventSystem::KeyDownOrHeld(SDLK_W)) direction -= m_pTransform->GetUp();
-		if (EventSystem::KeyDownOrHeld(SDLK_S)) direction += m_pTransform->GetUp();
-		if (EventSystem::KeyDownOrHeld(SDLK_A)) direction -= m_pTransform->GetRight();
-		if (EventSystem::KeyDownOrHeld(SDLK_D)) direction += m_pTransform->GetRight();
-		if (EventSystem::KeyDownOrHeld(SDLK_Q)) direction -= m_pTransform->GetForward();
-		if (EventSystem::KeyDownOrHeld(SDLK_E)) direction += m_pTransform->GetForward();
+		if (EventSystem::KeyDownOrHeld(Input::Key::W)) direction -= m_pTransform->GetUp();
+		if (EventSystem::KeyDownOrHeld(Input::Key::S)) direction += m_pTransform->GetUp();
+		if (EventSystem::KeyDownOrHeld(Input::Key::A)) direction -= m_pTransform->GetRight();
+		if (EventSystem::KeyDownOrHeld(Input::Key::D)) direction += m_pTransform->GetRight();
+		if (EventSystem::KeyDownOrHeld(Input::Key::Q)) direction -= m_pTransform->GetForward();
+		if (EventSystem::KeyDownOrHeld(Input::Key::E)) direction += m_pTransform->GetForward();
 
 		m_pTransform->AddToPosition(direction * currentSpeed * Time::GetDeltaTime());
 	}
 	void CameraController::Rotation()
 	{
-		if (EventSystem::MouseDown(EventSystem::MouseButton::right))
+		if (EventSystem::MouseDown(Input::MouseButton::Right))
 		{
 			m_mousePosOnDown = EventSystem::MousePos();
 			m_rotationMatrixOnDown = m_pTransform->GetRotation3x3();
 		}
 
-		if (EventSystem::MouseHeld(EventSystem::MouseButton::right))
+		if (EventSystem::MouseHeld(Input::MouseButton::Right))
 		{
 			Float2 mousePos = EventSystem::MousePos();
 			Float2 delta = 0.001f * m_rotationSpeed * (mousePos - m_mousePosOnDown);
@@ -67,13 +67,13 @@ namespace emberEngine
 		float mouseScroll = EventSystem::MouseScrollY();
 		if (mouseScroll != 0)
 		{
-			float currentSpeed = EventSystem::KeyDownOrHeld(SDLK_LSHIFT) ? m_zoomSpeed * m_fastMoveMultiplier : m_zoomSpeed;
+			float currentSpeed = EventSystem::KeyDownOrHeld(Input::Key::ShiftLeft) ? m_zoomSpeed * m_fastMoveMultiplier : m_zoomSpeed;
 			m_pTransform->AddToPosition(mouseScroll * currentSpeed * m_pTransform->GetDown());
 		}
 	}
 	void CameraController::TogglePerspectiveType()
 	{
-		if (EventSystem::KeyDown(SDLK_P))
+		if (EventSystem::KeyDown(Input::Key::P))
 		{
 			Camera* pCamera = GetGameObject()->GetComponent<Camera>();
 			if (pCamera == nullptr)
@@ -101,7 +101,7 @@ namespace emberEngine
 		}
 
 		// Toggle isActive:
-		if (EventSystem::KeyDown(SDLK_TAB))
+		if (EventSystem::KeyDown(Input::Key::Tab))
 			m_isActive = !m_isActive;
 	}
 	const std::string CameraController::ToString() const

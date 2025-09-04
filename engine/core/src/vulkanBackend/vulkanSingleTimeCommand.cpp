@@ -35,7 +35,7 @@ namespace emberEngine
 
 
 
-		// Initialization and cleanup:
+		// Initialization/Cleanup:
 		void SingleTimeCommand::Init()
 		{
 			s_graphicsDeviceQueue = Context::logicalDevice.GetGraphicsQueue();

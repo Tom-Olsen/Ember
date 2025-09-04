@@ -1,8 +1,8 @@
 #include "vulkanSurface.h"
-#include "sdlWindow.h"
 #include "vulkanInstance.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
+#include "window.h"
 #include <assert.h>
 #include <SDL3/SDL_vulkan.h>
 
@@ -18,21 +18,18 @@ namespace emberEngine
 			m_surface = VK_NULL_HANDLE;
 			m_pInstance = nullptr;
 			m_pPhysicalDevice = nullptr;
-			m_pWindow = nullptr;
 		}
-		void Surface::Init(Instance* pInstance, PhysicalDevice* pPhysicalDevice, emberEngine::SdlWindow* pWindow, bool vSyncEnabled)
+		void Surface::Init(Instance* pInstance, PhysicalDevice* pPhysicalDevice, bool vSyncEnabled)
 		{
 			// Assertions:
 			assert(pInstance != nullptr);
 			assert(pPhysicalDevice != nullptr);
-			assert(pWindow != nullptr);
 
 			m_pInstance = pInstance;
 			m_pPhysicalDevice = pPhysicalDevice;
-			m_pWindow = pWindow;
 
-			// Surface:
-			SDL_Vulkan_CreateSurface(m_pWindow->GetSDL_Window(), m_pInstance->GetVkInstance(), nullptr, &m_surface);
+			// Create surface:
+			Window::CreateSurface(m_pInstance->GetVkInstance(), nullptr, &m_surface);
 
 			// Available surfaceFormats:
 			uint32_t formatCount;

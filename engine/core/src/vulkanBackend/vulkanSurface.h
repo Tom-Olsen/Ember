@@ -7,11 +7,6 @@
 
 namespace emberEngine
 {
-	// Forward declarations:
-	class SdlWindow;
-
-
-
 	namespace vulkanBackend
 	{
 		// Forward declarations:
@@ -31,11 +26,10 @@ namespace emberEngine
 			std::vector<VkPresentModeKHR> m_availablePresentModes;
 			Instance* m_pInstance;
 			PhysicalDevice* m_pPhysicalDevice;
-			emberEngine::SdlWindow* m_pWindow;
 
 		public: // Methods:
 			Surface();
-			void Init(Instance* pInstance, PhysicalDevice* pPhysicalDevice, emberEngine::SdlWindow* pWindow, bool vSyncEnabled);
+			void Init(Instance* pInstance, PhysicalDevice* pPhysicalDevice, bool vSyncEnabled);
 			~Surface();
 
 			// Getters:

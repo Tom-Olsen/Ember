@@ -58,7 +58,6 @@ namespace emberEngine
 
 // GameObject system:
 #include "component.h"
-#include "editor.h"
 #include "gameObject.h"
 #include "scene.h"
 

@@ -19,7 +19,7 @@ namespace emberEngine
 
 
 
-	// Initialization and cleanup:
+	// Initialization/Cleanup:
 	void SamplerManager::Init()
 	{
 		if (s_isInitialized)

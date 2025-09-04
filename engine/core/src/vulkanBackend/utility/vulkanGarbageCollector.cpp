@@ -16,7 +16,7 @@ namespace emberEngine
 
 
 
-        // Initialization and cleanup:
+        // Initialization/Cleanup:
         void GarbageCollector::Init()
         {
             if (s_isInitialized)

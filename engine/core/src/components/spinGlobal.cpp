@@ -21,7 +21,7 @@ namespace emberEngine
 	// Overrides:
 	void SpinGlobal::Update()
 	{
-		if (EventSystem::KeyDown(SDLK_RETURN))
+		if (EventSystem::KeyDown(Input::Key::Enter))
 			m_spin = !m_spin;
 
 		if (m_spin == false)

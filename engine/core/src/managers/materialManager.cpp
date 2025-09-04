@@ -18,7 +18,7 @@ namespace emberEngine
 
 
 
-	// Initialization and cleanup:
+	// Initialization/Cleanup:
 	void MaterialManager::Init()
 	{
 		if (s_isInitialized)

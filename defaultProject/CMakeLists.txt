@@ -28,6 +28,6 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_R
 
 # ------------------ Link Libraries -----------------
 # Ember:
-add_subdirectory("../engine/appEditor" Application)
+add_subdirectory("../engine/applications/editor" Application)
 target_link_libraries(${PROJECT_NAME} PUBLIC Application)
 # ---------------------------------------------------

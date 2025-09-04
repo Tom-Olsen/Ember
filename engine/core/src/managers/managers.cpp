@@ -4,7 +4,7 @@
 
 namespace emberEngine
 {
-	// Initialization and cleanup:
+	// Initialization/Cleanup:
 	void Managers::Init(uint32_t renderWidth, uint32_t renderHeight)
 	{
 		TaskflowManager::Init();

@@ -34,9 +34,10 @@ add_subdirectory("${CORE_ROOT_DIR}/../math" EmberMath)
 # Shaders:
 set(SHADER_DIR "${CORE_ROOT_DIR}/../shaders")
 add_subdirectory(${SHADER_DIR} ShaderCompiler)
-# SDL:
-set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
-add_subdirectory("${CORE_ROOT_DIR}/../libs/SDL" "${CMAKE_BINARY_DIR}/SDL_build")
+# Null Window Backend:
+add_subdirectory("${CORE_ROOT_DIR}/../backends/nullWindow" "${CMAKE_BINARY_DIR}/nullWindowBackend_build")
+# SDL Window Backend:
+add_subdirectory("${CORE_ROOT_DIR}/../backends/sdlWindow" "${CMAKE_BINARY_DIR}/sdlWindowBackend_build")
 # spdlog:
 add_subdirectory("${CORE_ROOT_DIR}/../libs/spdlog" "${CMAKE_BINARY_DIR}/spdlog_build")
 # SPIRV-Reflect:
@@ -69,63 +70,20 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
     file(GLOB CORE_SYSTEM_FILES "${CORE_ROOT_DIR}/src/coreSystems/*")
     source_group("Core Systems" FILES ${CORE_SYSTEM_FILES})
     
-    # Dear Imgui files:
-    if(DEAR_IMGUI_ENABLED)
-        set(DEAR_IMGUI_FILES
-            "${CORE_ROOT_DIR}/src/dearImGui/dearImGui.h"
-            "${CORE_ROOT_DIR}/src/dearImGui/dearImGuiFlags.h"
-            "${CORE_ROOT_DIR}/src/dearImGui/dearImGuiEnabled.h"
-            "${CORE_ROOT_DIR}/src/dearImGui/dearImGuiEnabled.cpp")
-        set(IMGUI_FILES
-            "${CORE_ROOT_DIR}/../libs/imgui/imgui.h"
-            "${CORE_ROOT_DIR}/../libs/imgui/imgui.cpp"
-            "${CORE_ROOT_DIR}/../libs/imgui/imgui_demo.cpp"
-            "${CORE_ROOT_DIR}/../libs/imgui/imgui_draw.cpp"
-            "${CORE_ROOT_DIR}/../libs/imgui/imgui_tables.cpp"
-            "${CORE_ROOT_DIR}/../libs/imgui/imgui_widgets.cpp"
-            "${CORE_ROOT_DIR}/../libs/imgui/backends/imgui_impl_sdl3.cpp"
-            "${CORE_ROOT_DIR}/../libs/imgui/backends/imgui_impl_vulkan.cpp")
-    else()
-        set(DEAR_IMGUI_FILES
-            "${CORE_ROOT_DIR}/src/dearImGui/dearImGui.h"
-            "${CORE_ROOT_DIR}/src/dearImGui/dearImGuiFlags.h"
-            "${CORE_ROOT_DIR}/src/dearImGui/dearImGuiDisabled.h")
-    endif()
+    # src/dearImGui/*:
+    file(GLOB DEAR_IMGUI_FILES "${CORE_ROOT_DIR}/src/dearImGUi/*")
     source_group("Dear ImGui" FILES ${DEAR_IMGUI_FILES})
-    source_group("ImGui Demo" FILES ${IMGUI_FILES})
     
-    # src/editorWindows/*:
-    file(GLOB EDITOR_WINDOWS_FILES "${CORE_ROOT_DIR}/src/editorWindows/*")
-    source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
+    ## src/editorWindows/*:
+    #file(GLOB EDITOR_WINDOWS_FILES "${CORE_ROOT_DIR}/src/editorWindows/*")
+    #source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
     
     # src/editor/*:
-    if(EDITOR_ENABLED)
-        set(EDITOR_FILES
-        "${CORE_ROOT_DIR}/src/editor/editor.h"
-        "${CORE_ROOT_DIR}/src/editor/editorEnabled.h"
-        "${CORE_ROOT_DIR}/src/editor/editorEnabled.cpp"
-        "${CORE_ROOT_DIR}/src/editor/editorWindow.h"
-        "${CORE_ROOT_DIR}/src/editor/editorWindow.cpp")
-    else()
-        set(EDITOR_FILES
-        "${CORE_ROOT_DIR}/src/editor/editor.h"
-        "${CORE_ROOT_DIR}/src/editor/editorDisabled.h"
-        "${CORE_ROOT_DIR}/src/editor/editorWindow.h"
-        "${CORE_ROOT_DIR}/src/editor/editorWindow.cpp")
-    endif()
+    file(GLOB EDITOR_FILES "${CORE_ROOT_DIR}/src/editor/*")
     source_group("Editors" FILES ${EDITOR_FILES})
 
     # src/eventSystem/*:
-    if(WINDOW_ENABLED)
-        set(EVENT_SYSTEM_FILES
-        "${CORE_ROOT_DIR}/src/eventSystem/eventSystem.h"
-        "${CORE_ROOT_DIR}/src/eventSystem/eventSystemEnabled.h"
-        "${CORE_ROOT_DIR}/src/eventSystem/eventSystemEnabled.cpp")
-    else()
-        set(EVENT_SYSTEM_FILES
-        "${CORE_ROOT_DIR}/src/eventSystem/eventSystem.h"
-        "${CORE_ROOT_DIR}/src/eventSystem/eventSystemDisabled.h")
-    endif()
+    file(GLOB EVENT_SYSTEM_FILES "${CORE_ROOT_DIR}/src/eventSystem/*")
     source_group("Event System" FILES ${EVENT_SYSTEM_FILES})
     
     # src/gameObjectSystem/*:
@@ -179,17 +137,12 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
     source_group("Vulkan Backend\\Utility" FILES ${VULKAN_UTILITY_FILES})
 
     # src/window/*:
-    if(WINDOW_ENABLED)
-        set(WINDOW_FILES
-        "${CORE_ROOT_DIR}/src/window/sdlWindow.h"
-        "${CORE_ROOT_DIR}/src/window/sdlWindowEnabled.h"
-        "${CORE_ROOT_DIR}/src/window/sdlWindowEnabled.cpp")
-    else()
-        set(WINDOW_FILES
-        "${CORE_ROOT_DIR}/src/window/sdlWindow.h"
-        "${CORE_ROOT_DIR}/src/window/sdlWindowDisabled.h")
-    endif()
+    file(GLOB WINDOW_FILES "${CORE_ROOT_DIR}/src/window/*")
     source_group("Window" FILES ${WINDOW_FILES})
+
+    # ../../interfaces/window/*:
+    file(GLOB WINDOW_INTERFACE_FILES "${CORE_ROOT_DIR}/../interfaces/window/*")
+    source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
     # ---------------------------------------------------
     
     
@@ -208,7 +161,6 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         ${GAME_OBJECT_SYSTEM_FILES}
         ${GPU_RESOURCES_FILES}
         ${GRAPHICS_FILES}
-        ${IMGUI_FILES}
         ${MANAGERS_FILES}
         ${PHYSICS_FILES}
         ${TEXTURES_FILES}
@@ -218,7 +170,8 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         ${VULKAN_PUSH_CONSTANTS_FILES}
         ${VULKAN_RENDER_PASSES_FILES}
         ${VULKAN_UTILITY_FILES}
-        ${WINDOW_FILES})
+        ${WINDOW_FILES}
+        ${WINDOW_INTERFACE_FILES})
     
     # Source subdirectories:
     target_include_directories(${PROJECT_NAME}
@@ -227,8 +180,8 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         PUBLIC ${CORE_ROOT_DIR}/src/components
         PUBLIC ${CORE_ROOT_DIR}/src/compute
         PUBLIC ${CORE_ROOT_DIR}/src/coreSystems
-        PUBLIC ${CORE_ROOT_DIR}/src/dearImGui
-        PUBLIC ${CORE_ROOT_DIR}/src/editorWindows
+        PUBLIC ${CORE_ROOT_DIR}/src/dearImGUi
+        #PUBLIC ${CORE_ROOT_DIR}/src/editorWindows
         PUBLIC ${CORE_ROOT_DIR}/src/editor
         PUBLIC ${CORE_ROOT_DIR}/src/eventSystem
         PUBLIC ${CORE_ROOT_DIR}/src/gameObjectSystem
@@ -236,7 +189,7 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         PUBLIC ${CORE_ROOT_DIR}/src/graphics
         PUBLIC ${CORE_ROOT_DIR}/src/managers
         PUBLIC ${CORE_ROOT_DIR}/src/physics
-        PUBLIC ${SHADER_DIR}/src # needed for .h files form shaders, which contian constans for c++ and hlsl
+        PUBLIC ${SHADER_DIR}/src # needed for .h files from shaders, which contian constans for c++ and hlsl
         PUBLIC ${CORE_ROOT_DIR}/src/textures
         PUBLIC ${CORE_ROOT_DIR}/src/utility
         PUBLIC ${CORE_ROOT_DIR}/src/vulkanBackend
@@ -244,7 +197,8 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         PUBLIC ${CORE_ROOT_DIR}/src/vulkanBackend/pushConstants
         PUBLIC ${CORE_ROOT_DIR}/src/vulkanBackend/renderPasses
         PUBLIC ${CORE_ROOT_DIR}/src/vulkanBackend/utility
-        PUBLIC ${CORE_ROOT_DIR}/src/window)
+        PUBLIC ${CORE_ROOT_DIR}/src/window
+        PUBLIC ${CORE_ROOT_DIR}/../interfaces/window)
     # ---------------------------------------------------
     
     
@@ -281,30 +235,24 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
 
 
 
-    # ------------------ Link Libraries -----------------
+    # -------------- Link Custom Libraries --------------
     # EmberMath:
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
+    # Null Window Backend:
+    target_link_libraries(${PROJECT_NAME} PUBLIC nullWindowBackend)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../backends/nullWindow/src)
+
+    # SDL Window Backend:
+    target_link_libraries(${PROJECT_NAME} PUBLIC sdlWindowBackend)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../backends/sdlWindow/src)
+    # ---------------------------------------------------
+
+
+
+    # ------------- Link External Libraries -------------
     # Shaders:
     add_dependencies(${PROJECT_NAME} ShaderCompiler)
-    
-    # Imgui:
-    if(DEAR_IMGUI_ENABLED)
-        target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../libs/imgui ${CORE_ROOT_DIR}/../libs/imgui/backends)
-    endif()
-    
-    # SDL (CMakeList target):
-    if(WINDOW_ENABLED)
-        set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
-        target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../libs/SDL/include)
-        target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-static)
-        if(UNIX)
-            target_link_libraries(${PROJECT_NAME} PRIVATE pthread dl)
-        endif(UNIX)
-        if(WIN32)
-            target_link_libraries(${PROJECT_NAME} PRIVATE winmm dxguid)
-        endif(WIN32)
-    endif()
     
     # spdlog (CMakeList target):
     target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../libs/spdlog/include)

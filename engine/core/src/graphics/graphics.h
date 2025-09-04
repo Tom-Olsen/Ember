@@ -2,7 +2,6 @@
 #define __INCLUDE_GUARD_graphics_h__
 #include "drawCall.h"		// needed, as we don't save pointers.
 #include "emberMath.h"
-#include "resourcePool.h"
 #include <unordered_map>
 #include <vector>
 

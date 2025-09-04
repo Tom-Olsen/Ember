@@ -31,7 +31,7 @@ namespace emberEngine
 
 
 
-	// Initialization and cleanup:
+	// Initialization/Cleanup:
 	void TextureManager::Init()
 	{
 		if (s_isInitialized)

@@ -25,7 +25,7 @@ namespace emberEngine
 
 
 
-	// Initialization and cleanup:
+	// Initialization/Cleanup:
 	void RenderPassManager::Init(uint32_t renderWidth, uint32_t renderHeight)
 	{
 		if (s_isInitialized)

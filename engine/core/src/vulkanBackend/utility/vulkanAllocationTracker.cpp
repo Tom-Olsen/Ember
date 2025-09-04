@@ -10,7 +10,7 @@ namespace emberEngine
 {
 	namespace vulkanBackend
 	{
-		// Initialization and cleanup:
+		// Initialization/Cleanup:
 		AllocationTracker::AllocationTracker()
 		{
 
