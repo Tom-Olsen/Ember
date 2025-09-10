@@ -3,7 +3,7 @@
 
 
 
-namespace emberBackend
+namespace nullWindowBackend
 {
 	// Constructor/Destructor:
 	NullWindow::NullWindow() : m_pWindow(nullptr)
@@ -58,9 +58,9 @@ namespace emberBackend
 	{
 		return m_pWindow;
 	}
-	std::tuple<int, int> NullWindow::GetSize() const
+	iMath::Int2 NullWindow::GetSize() const
 	{
-		return std::tuple<int, int>{ 0, 0 };
+		return iMath::Int2{ 0, 0 };
 	}
 	uint32_t NullWindow::GetWindowID() const
 	{

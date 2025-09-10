@@ -2,7 +2,7 @@
 
 
 
-namespace emberBackend
+namespace nullWindowBackend
 {
 	void NullDearImGuiInstanceExtensionsLoader::AddExtensions(std::vector<const char*>& instanceExtensions) const
 	{
@@ -88,17 +88,17 @@ namespace emberBackend
 	{
 
 	}
-	std::tuple<float, float> NullDearImGui::GetWindowSize()
+	iMath::Float2 NullDearImGui::GetWindowSize()
 	{
-		return std::tuple(0, 0);
+		return iMath::Float2{ 0, 0 };
 	}
-	std::tuple<float, float> NullDearImGui::GetContentRegionalAvail()
+	iMath::Float2  NullDearImGui::GetContentRegionalAvail()
 	{
-		return std::tuple(0, 0);
+		return iMath::Float2{ 0, 0 };
 	}
-	std::tuple<float, float> NullDearImGui::GetCursorPos()
+	iMath::Float2  NullDearImGui::GetCursorPos()
 	{
-		return std::tuple(0, 0);
+		return iMath::Float2{ 0, 0 };
 	}
 	void NullDearImGui::SetCursorPos(float localPosX, float localPosY)
 	{

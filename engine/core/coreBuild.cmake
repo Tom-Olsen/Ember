@@ -139,6 +139,10 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
     # src/window/*:
     file(GLOB WINDOW_FILES "${CORE_ROOT_DIR}/src/window/*")
     source_group("Window" FILES ${WINDOW_FILES})
+    
+    # ../../interfaces/math/*:
+    file(GLOB MATH_INTERFACE_FILES "${CORE_ROOT_DIR}/../interfaces/math/*")
+    source_group("Math Interface" FILES ${MATH_INTERFACE_FILES})
 
     # ../../interfaces/window/*:
     file(GLOB WINDOW_INTERFACE_FILES "${CORE_ROOT_DIR}/../interfaces/window/*")
@@ -171,6 +175,7 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         ${VULKAN_RENDER_PASSES_FILES}
         ${VULKAN_UTILITY_FILES}
         ${WINDOW_FILES}
+        ${MATH_INTERFACE_FILES}
         ${WINDOW_INTERFACE_FILES})
     
     # Source subdirectories:
@@ -198,6 +203,7 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         PUBLIC ${CORE_ROOT_DIR}/src/vulkanBackend/renderPasses
         PUBLIC ${CORE_ROOT_DIR}/src/vulkanBackend/utility
         PUBLIC ${CORE_ROOT_DIR}/src/window
+        PUBLIC ${CORE_ROOT_DIR}/../interfaces/math
         PUBLIC ${CORE_ROOT_DIR}/../interfaces/window)
     # ---------------------------------------------------
     

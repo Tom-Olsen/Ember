@@ -15,7 +15,7 @@
 
 
 
-namespace emberBackend
+namespace sdlWindowBackend
 {
 	// Constructor/Destructor:
 	SdlWindow::SdlWindow(uint16_t width, uint16_t height)
@@ -125,11 +125,11 @@ namespace emberBackend
 				// Keyboard:
 				case SDL_EVENT_KEY_DOWN:
 					event.type = emberEngine::EventType::KeyDown;
-					event.key = emberBackend::TranslateKey(sdlEvent.key.key);
+					event.key = TranslateKey(sdlEvent.key.key);
 					break;
 				case SDL_EVENT_KEY_UP:
 					event.type = emberEngine::EventType::KeyUp;
-					event.key = emberBackend::TranslateKey(sdlEvent.key.key);
+					event.key = TranslateKey(sdlEvent.key.key);
 					break;
 				case SDL_EVENT_TEXT_INPUT:
 					event.type = emberEngine::EventType::TextInput;
@@ -144,13 +144,13 @@ namespace emberBackend
 					break;
 				case SDL_EVENT_MOUSE_BUTTON_DOWN:
 					event.type = emberEngine::EventType::MouseButtonDown;
-					event.mouseButton = emberBackend::TranslateMouseButton(sdlEvent.button.button);
+					event.mouseButton = TranslateMouseButton(sdlEvent.button.button);
 					event.mousePosX = sdlEvent.button.x;
 					event.mousePosY = sdlEvent.button.y;
 					break;
 				case SDL_EVENT_MOUSE_BUTTON_UP:
 					event.type = emberEngine::EventType::MouseButtonUp;
-					event.mouseButton = emberBackend::TranslateMouseButton(sdlEvent.button.button);
+					event.mouseButton = TranslateMouseButton(sdlEvent.button.button);
 					event.mousePosX = sdlEvent.button.x;
 					event.mousePosY = sdlEvent.button.y;
 					break;
@@ -172,12 +172,12 @@ namespace emberBackend
 				case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
 					event.type = emberEngine::EventType::ControllerButtonDown;
 					event.controllerId = sdlEvent.gbutton.which;
-					event.controllerButton = emberBackend::TranslateControllerButton(sdlEvent.gbutton.button);
+					event.controllerButton = TranslateControllerButton(sdlEvent.gbutton.button);
 					break;
 				case SDL_EVENT_GAMEPAD_BUTTON_UP:
 					event.type = emberEngine::EventType::ControllerButtonUp;
 					event.controllerId = sdlEvent.gbutton.which;
-					event.controllerButton = emberBackend::TranslateControllerButton(sdlEvent.gbutton.button);
+					event.controllerButton = TranslateControllerButton(sdlEvent.gbutton.button);
 					break;
 				case SDL_EVENT_GAMEPAD_AXIS_MOTION:
 					event.type = emberEngine::EventType::ControllerAxisMotion;
@@ -223,11 +223,11 @@ namespace emberBackend
 	{
 		return (void*)m_pWindow;
 	}
-	std::tuple<int, int> SdlWindow::GetSize() const
+	iMath::Int2 SdlWindow::GetSize() const
 	{
 		int width, height;
 		SDL_GetWindowSize(m_pWindow, &width, &height);
-		return std::tuple<int, int>{ width, height };
+		return iMath::Int2{ width, height };
 	}
 	uint32_t SdlWindow::GetWindowID() const
 	{

@@ -100,7 +100,7 @@ namespace emberEngine
 		PROFILE_FUNCTION();
 
 		// Resize Swapchain if needed:
-		Float2 windowSize = Window::GetSize();
+		Int2 windowSize = Window::GetSize();
 		VkExtent2D surfaceExtend = Context::surface.GetCurrentExtent();
 		if (m_rebuildSwapchain || windowSize.x != surfaceExtend.width || windowSize.y != surfaceExtend.height)
 		{

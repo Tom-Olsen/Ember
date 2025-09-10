@@ -2,6 +2,7 @@
 #include "event.h"
 #include "logger.h"
 #include "macros.h"
+#include "iMath.h"
 #include "nullWindow.h"
 #include "profiler.h"
 #include "sdlWindow.h"
@@ -19,9 +20,9 @@ namespace emberEngine
 	void Window::Init(uint16_t width, uint16_t height)
 	{
 		if (true)
-			s_pIWindow = std::make_unique<emberBackend::SdlWindow>(width, height);
+			s_pIWindow = std::make_unique<sdlWindowBackend::SdlWindow>(width, height);
 		else
-			s_pIWindow = std::make_unique<emberBackend::NullWindow>();
+			s_pIWindow = std::make_unique<nullWindowBackend::NullWindow>();
 
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("Window initialized.");
@@ -68,10 +69,10 @@ namespace emberEngine
 	{
 		return s_pIWindow->GetNativeHandle();
 	}
-	Float2 Window::GetSize()
+	Int2 Window::GetSize()
 	{
-		std::tuple<int, int> size = s_pIWindow->GetSize();
-		return Float2((uint32_t)std::get<0>(size), (uint32_t)std::get<1>(size));
+		iMath::Int2 size = s_pIWindow->GetSize();
+		return Int2(size[0], size[1]);
 	}
 	uint32_t Window::GetWindowID()
 	{

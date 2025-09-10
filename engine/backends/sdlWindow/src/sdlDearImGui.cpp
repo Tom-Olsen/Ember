@@ -7,7 +7,7 @@
 
 
 
-namespace emberBackend
+namespace sdlWindowBackend
 {
 	// Instance extensions loader:
 	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
@@ -236,20 +236,20 @@ namespace emberBackend
 	{
 		ImGui::PopID();
 	}
-	std::tuple<float, float> SdlDearImGui::GetWindowSize()
+	iMath::Float2 SdlDearImGui::GetWindowSize()
 	{
 		ImVec2 size = ImGui::GetWindowSize();
-		return std::tuple(size.x, size.y);
+		return iMath::Float2{ size.x, size.y };
 	}
-	std::tuple<float, float> SdlDearImGui::GetContentRegionalAvail()
+	iMath::Float2 SdlDearImGui::GetContentRegionalAvail()
 	{
 		ImVec2 regionAvail = ImGui::GetContentRegionAvail();
-		return std::tuple(regionAvail.x, regionAvail.y);
+		return iMath::Float2{ regionAvail.x, regionAvail.y };
 	}
-	std::tuple<float, float> SdlDearImGui::GetCursorPos()
+	iMath::Float2 SdlDearImGui::GetCursorPos()
 	{
 		ImVec2 cursorPos = ImGui::GetCursorPos();
-		return std::tuple(cursorPos.x, cursorPos.y);
+		return iMath::Float2{ cursorPos.x, cursorPos.y };
 	}
 	void SdlDearImGui::SetCursorPos(float localPosX, float localPosY)
 	{

@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_iDearImGui_h__
 #define __INCLUDE_GUARD_iDearImGui_h__
 #include "dearImGuiFlags.h"
-#include <tuple>
+#include <array>
 #include <vector>
 
 
@@ -53,9 +53,9 @@ namespace emberBackendInterface
 		virtual void End() = 0;
 		virtual void PushID(const char* str_id) = 0;
 		virtual void PopID() = 0;
-		virtual std::tuple<float, float> GetWindowSize() = 0;
-		virtual std::tuple<float, float> GetContentRegionalAvail() = 0;
-		virtual std::tuple<float, float> GetCursorPos() = 0;
+		virtual std::array<float, 2> GetWindowSize() = 0;
+		virtual std::array<float, 2> GetContentRegionalAvail() = 0;
+		virtual std::array<float, 2> GetCursorPos() = 0;
 		virtual void SetCursorPos(float localPosX, float localPosY) = 0;
 		virtual void Image(uintptr_t textureID, float imageWidth, float imageHeight, float u0, float v0, float u1, float v1) = 0;
     };

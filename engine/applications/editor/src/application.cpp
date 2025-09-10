@@ -99,7 +99,7 @@ namespace emberEngine
 
 				// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
 				VkExtent2D surfaceExtend = Context::surface.GetCurrentExtent();
-				Float2 windowSize = Window::GetSize();
+				Int2 windowSize = Window::GetSize();
 				if (Window::GetIsMinimized() || windowSize.x == 0 || windowSize.y == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
 				{
 					//SDL_Delay(10);

@@ -15,9 +15,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Output directory:
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib STATIC ...) => .a .lib
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib SHARED ...) => .so .dylib .dll
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/bin/${CMAKE_BUILD_TYPE}") # target directors for add_executable(MyExe ...)     => .exe
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib STATIC ...) => .a .lib
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib SHARED ...) => .so .dylib .dll
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directors for add_executable(MyExe ...)     => .exe
 # ---------------------------------------------------
 
 
@@ -26,6 +26,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/bin/${CMAKE_BUILD_
 # src/*:
 file(GLOB SOURCE_FILES "src/*")
 source_group("Source Files" FILES ${SOURCE_FILES})
+
+# ../../interfaces/math/*:
+file(GLOB MATH_INTERFACE_FILES "../../interfaces/math/*")
+source_group("Math Interface" FILES ${MATH_INTERFACE_FILES})
 
 # ../../interfaces/window/*:
 file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*")
@@ -49,10 +53,12 @@ source_group("ImGui" FILES ${IMGUI_FILES})
 add_library(${PROJECT_NAME}
     ${SOURCE_FILES}
     ${IMGUI_FILES}
+    ${MATH_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/math
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window
     ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/imgui/backends)

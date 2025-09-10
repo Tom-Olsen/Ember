@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_iWindow_h__
 #define __INCLUDE_GUARD_iWindow_h__
-#include <tuple>
+#include "iMath.h"
+#include <array>
 #include <vector>
 
 
@@ -42,7 +43,7 @@ namespace emberBackendInterface
         virtual bool GetIsMinimized() const = 0;
         virtual bool GetIsResized() const = 0;
         virtual void* GetNativeHandle() const = 0;
-        virtual std::tuple<int, int> GetSize() const = 0;
+        virtual iMath::Int2 GetSize() const = 0;
         virtual uint32_t GetWindowID() const = 0;
     };
 }

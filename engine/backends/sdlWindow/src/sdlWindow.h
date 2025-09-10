@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_sdlWindow_h__
 #include "sdlWindowExport.h"
 #include "iWindow.h"
+#include "iMath.h"
 #include <memory>
 #include <vector>
 
@@ -23,7 +24,7 @@ namespace emberBackendInterface
 
 
 
-namespace emberBackend
+namespace sdlWindowBackend
 {
 	class SDL_WINDOW_API SdlWindow : public emberBackendInterface::IWindow
 	{
@@ -59,7 +60,7 @@ namespace emberBackend
 		bool GetIsMinimized() const override;
 		bool GetIsResized() const override;
 		void* GetNativeHandle() const override;
-		std::tuple<int, int> GetSize() const override;
+		iMath::Int2 GetSize() const override;
 		uint32_t GetWindowID() const override;
 	};
 }

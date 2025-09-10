@@ -1,5 +1,6 @@
 #include "dearImGui.h"
 #include "iDearImGui.h"
+#include "iMath.h"
 #include "logger.h"
 #include "macros.h"
 #include "nullDearImGui.h"
@@ -40,9 +41,9 @@ namespace emberEngine
 		uint32_t spwachainImageCount = Context::swapchains[0].GetImages().size();
 
 		if (true)
-			s_pIDearImGui = std::make_unique<emberBackend::SdlDearImGui>(pSdlWindow, vkInstance, vkPhysicalDevice, vkDevice, vkRenderPass, vkDescriptorPool, vkQueue, queueFamilyIndex, framesInFlight, spwachainImageCount, enableDockSpace);
+			s_pIDearImGui = std::make_unique<sdlWindowBackend::SdlDearImGui>(pSdlWindow, vkInstance, vkPhysicalDevice, vkDevice, vkRenderPass, vkDescriptorPool, vkQueue, queueFamilyIndex, framesInFlight, spwachainImageCount, enableDockSpace);
 		else
-			s_pIDearImGui = std::make_unique<emberBackend::NullDearImGui>();
+			s_pIDearImGui = std::make_unique<nullWindowBackend::NullDearImGui>();
 
 		Window::LinkDearImGui(s_pIDearImGui.get());
 		#ifdef LOG_INITIALIZATION
@@ -93,9 +94,9 @@ namespace emberEngine
 	{
 		std::unique_ptr<emberBackendInterface::IDearImGuiInstanceExtensionsLoader> pInstanceExtensionLoader;
 		if (true)
-			pInstanceExtensionLoader = std::make_unique<emberBackend::SdlDearImGuiInstanceExtensionsLoader>();
+			pInstanceExtensionLoader = std::make_unique<sdlWindowBackend::SdlDearImGuiInstanceExtensionsLoader>();
 		else
-			pInstanceExtensionLoader = std::make_unique < emberBackend::NullDearImGuiInstanceExtensionsLoader>();
+			pInstanceExtensionLoader = std::make_unique <nullWindowBackend::NullDearImGuiInstanceExtensionsLoader>();
 		pInstanceExtensionLoader->AddExtensions(instanceExtensions);
 	}
 
@@ -124,18 +125,18 @@ namespace emberEngine
 	}
 	Float2 DearImGui::GetWindowSize()
 	{
-		std::tuple<float, float> size = s_pIDearImGui->GetWindowSize();
-		return Float2(std::get<0>(size), std::get<1>(size));
+		iMath::Float2 size = s_pIDearImGui->GetWindowSize();
+		return Float2(size[0], size[1]);
 	}
 	Float2 DearImGui::GetContentRegionalAvail()
 	{
-		std::tuple<float, float> avail = s_pIDearImGui->GetContentRegionalAvail();
-		return Float2(std::get<0>(avail), std::get<1>(avail));
+		iMath::Float2 avail = s_pIDearImGui->GetContentRegionalAvail();
+		return Float2(avail[0], avail[1]);
 	}
 	Float2 DearImGui::GetCursorPos()
 	{
-		std::tuple<float, float> cursorPos = s_pIDearImGui->GetCursorPos();
-		return Float2(std::get<0>(cursorPos), std::get<1>(cursorPos));
+		iMath::Float2 cursorPos = s_pIDearImGui->GetCursorPos();
+		return Float2(cursorPos[0], cursorPos[1]);
 	}
 	void DearImGui::SetCursorPos(float localPosX, float localPosY)
 	{

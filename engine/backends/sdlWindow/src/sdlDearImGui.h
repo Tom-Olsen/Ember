@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_sdlDearImGui_h__
 #include "dearImGuiFlags.h"
 #include "iDearImGui.h"
+#include "iMath.h"
 #include "sdlWindowExport.h"
 #include <tuple>
 #include <unordered_map>
@@ -26,7 +27,7 @@ typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
 
 
 
-namespace emberBackend
+namespace sdlWindowBackend
 {
 	class SDL_WINDOW_API SdlDearImGuiInstanceExtensionsLoader : public emberBackendInterface::IDearImGuiInstanceExtensionsLoader
 	{
@@ -77,9 +78,9 @@ namespace emberBackend
 		void End() override;
 		void PushID(const char* str_id) override;
 		void PopID() override;
-		std::tuple<float, float> GetWindowSize() override;
-		std::tuple<float, float> GetContentRegionalAvail() override;
-		std::tuple<float, float> GetCursorPos() override;
+		iMath::Float2 GetWindowSize() override;
+		iMath::Float2 GetContentRegionalAvail() override;
+		iMath::Float2 GetCursorPos() override;
 		void SetCursorPos(float localPosX, float localPosY) override;
 		void Image(uintptr_t textureID, float imageWidth, float imageHeight, float u0, float v0, float u1, float v1) override;
 

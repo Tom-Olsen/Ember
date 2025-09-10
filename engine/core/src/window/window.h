@@ -44,7 +44,7 @@ namespace emberEngine
 		static bool GetIsMinimized();
 		static bool GetIsResized();
 		static void* GetNativeHandle();
-		static Float2 GetSize();
+		static Int2 GetSize();
 		static uint32_t GetWindowID();
 
 	private: // Methods

@@ -5,7 +5,7 @@
 
 
 
-namespace emberBackend
+namespace sdlWindowBackend
 {
     emberEngine::Input::MouseButton TranslateMouseButton(uint8_t sdlMouseButton)
     {

@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_nullWindow_h__
 #define __INCLUDE_GUARD_nullWindow_h__
 #include "nullWindowExport.h"
+#include "iMath.h"
 #include "iWindow.h"
 #include <vector>
 
@@ -11,7 +12,7 @@ struct SDL_Window;
 
 
 
-namespace emberBackend
+namespace nullWindowBackend
 {
 	class NULL_WINDOW_API NullWindow : public emberBackendInterface::IWindow
 	{
@@ -41,7 +42,7 @@ namespace emberBackend
 		bool GetIsMinimized() const override;
 		bool GetIsResized() const override;
 		void* GetNativeHandle() const;
-		std::tuple<int, int> GetSize() const;
+		iMath::Int2 GetSize() const;
 		uint32_t GetWindowID() const;
 	};
 }
