@@ -1,6 +1,5 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_compute_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_compute_h__
-#include <filesystem>
 
 
 
@@ -12,7 +11,7 @@ namespace vulkanRendererBackend
 		static bool s_isInitialized;
 
 	public: // Methods
-		static void Init(const std::filesystem::path& inOutComputeShaderSpv);
+		static void Init();
 		static void Clear();
 
 	private: // Methods

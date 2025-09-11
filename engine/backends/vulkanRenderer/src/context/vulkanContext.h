@@ -11,7 +11,6 @@
 #include "vulkanPhysicalDevice.h"
 #include "vulkanSurface.h"
 #include "vulkanSwapchain.h"
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <vulkan/vulkan.h>
@@ -84,7 +83,7 @@ namespace vulkanRendererBackend
 		static float depthBiasSlopeFactor;
 		
 	public: // Methods:
-		static void Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights_, uint32_t maxPositionalLights_, uint32_t shadowMapResolution_, const std::filesystem::path& inOutComputeShaderSpv);
+		static void Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights_, uint32_t maxPositionalLights_, uint32_t shadowMapResolution_);
 		static void Clear();
 		static void RebuildSwapchain();
 

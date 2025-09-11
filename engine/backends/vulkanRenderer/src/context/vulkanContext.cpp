@@ -39,7 +39,7 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void Context::Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights_, uint32_t maxPositionalLights_, uint32_t shadowMapResolution_, const std::filesystem::path& inOutComputeShaderSpv)
+	void Context::Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights_, uint32_t maxPositionalLights_, uint32_t shadowMapResolution_)
 	{
 		if (s_isInitialized)
 			return;
@@ -54,7 +54,7 @@ namespace vulkanRendererBackend
 		shadowMapResolution = shadowMapResolution_;
 
 		// Init static utility:
-		Compute::Init(inOutComputeShaderSpv);
+		Compute::Init();
 		RenderPassManager::Init(renderWidth, renderHeight);
 		GarbageCollector::Init();
 

@@ -14,13 +14,13 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void Compute::Init(const std::filesystem::path& inOutComputeShaderSpv)
+	void Compute::Init()
 	{
 		if (s_isInitialized)
 			return;
 		Async::Init(10);
 		Immediate::Init();
-		PostRender::Init(inOutComputeShaderSpv);
+		PostRender::Init();
 		PreRender::Init();
 	}
 	void Compute::Clear()

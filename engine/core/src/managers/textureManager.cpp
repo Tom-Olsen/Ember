@@ -45,26 +45,31 @@ namespace emberEngine
 		TextureBatchUploader batchUploader;
 
 		// Iterate through the texture directory:
-		std::filesystem::path directoryPath = std::string(ENGINE_CORE_PATH) + "/textures/";
+		std::filesystem::path directoryPath = std::filesystem::path(ENGINE_CORE_PATH) / "textures";
 		std::unordered_set<std::string> validExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 		{
-			if (entry.is_regular_file())
-			{
-				std::string extension = entry.path().extension().string();
-				std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);	// convert to lower case (safer)
-				if (validExtensions.find(extension) != validExtensions.end())
-				{
-					std::string name = entry.path().stem().string();
-					VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
-					if (name.find("normal") != std::string::npos)
-						format = VK_FORMAT_R8G8B8A8_UNORM;
-					else if (name.find("roughness") != std::string::npos || name.find("metallic") != std::string::npos)
-						format = VK_FORMAT_R8_UNORM;
-					SampleTexture2d* pTexture = new SampleTexture2d(name, format, entry.path(), batchUploader);
-					AddTexture2d(pTexture);
-				}
-			}
+			if (!entry.is_regular_file())
+				continue;
+
+			std::filesystem::path filePath = entry.path();
+			std::string extension = filePath.extension().string();
+			std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower); // normalize
+
+			// Invalid extension:
+			if (validExtensions.find(extension) == validExtensions.end())
+				continue;
+
+			std::string name = filePath.stem().string();
+			VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
+
+			if (name.find("normal") != std::string::npos)
+				format = VK_FORMAT_R8G8B8A8_UNORM;
+			else if (name.find("roughness") != std::string::npos || name.find("metallic") != std::string::npos)
+				format = VK_FORMAT_R8_UNORM;
+
+			SampleTexture2d* pTexture = new SampleTexture2d(name, format, filePath, batchUploader);
+			AddTexture2d(pTexture);
 		}
 		
 		// TextureCubes:

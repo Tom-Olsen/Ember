@@ -1,6 +1,5 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_postRenderCompute_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_postRenderCompute_h__
-#include <filesystem>
 #include <memory>
 #include <vector>
 
@@ -26,7 +25,7 @@ namespace vulkanRendererBackend
 		static std::unique_ptr<ComputeShader> s_pInOutComputeShader; // copies final render into primary texture in case of odd number of post processing effects.
 
 	public: // Methods
-		static void Init(const std::filesystem::path& inOutComputeShaderSpv);
+		static void Init();
 		static void Clear();
 
 		// Workload recording:

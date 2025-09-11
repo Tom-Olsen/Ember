@@ -27,18 +27,21 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		std::string directoryPath = (std::string)CORE_SHADERS_DIR + "/bin";
+		std::filesystem::path directoryPath = std::filesystem::path(CORE_SHADERS_DIR) / "bin";
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 		{
-			if (entry.is_regular_file())
+			if (!entry.is_regular_file())
+				continue;
+
+			std::filesystem::path filePath = entry.path();
+			if (filePath.extension() == ".spv" && filePath.stem().string().ends_with(".comp"))
 			{
-				std::string filename = entry.path().filename().string();
-				if (filename.size() > 9 && filename.substr(filename.size() - 9) == ".comp.spv")
-				{
-					std::string name = filename.substr(0, filename.size() - 9);
-					ComputeShader* pComputeShader = new ComputeShader(name, entry.path());
-					AddComputeShader(pComputeShader);
-				}
+				// Extract shader name by removing the ".comp.spv" suffix
+				std::string name = filePath.stem().string();		// remove '.spv'
+				name = name.substr(0, name.size() - 5);	// remove '.comp'
+
+				ComputeShader* pComputeShader = new ComputeShader(name, filePath);
+				AddComputeShader(pComputeShader);
 			}
 		}
 

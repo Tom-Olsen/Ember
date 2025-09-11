@@ -9,6 +9,8 @@
 #include "vulkanForwardRenderPass.h"
 #include "vulkanRenderPassManager.h"
 #include <iostream>
+#include <filesystem>
+
 
 
 
@@ -25,12 +27,15 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void PostRender::Init(const std::filesystem::path& inOutComputeShaderSpv)
+	void PostRender::Init()
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
-		s_pInOutComputeShader = std::make_unique<ComputeShader>("inOut", inOutComputeShaderSpv);
+
+		std::filesystem::path shaderDir = std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders";
+		std::filesystem::path shaderPath = shaderDir / "inOut.comp.spv";
+		s_pInOutComputeShader = std::make_unique<ComputeShader>("inOut", shaderPath);
 	}
 	void PostRender::Clear()
 	{
