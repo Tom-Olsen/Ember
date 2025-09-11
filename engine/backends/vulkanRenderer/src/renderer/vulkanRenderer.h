@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_renderCore_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_renderCore_h__
+#ifndef __INCLUDE_GUARD_vulkanRendererBackend_renderer_h__
+#define __INCLUDE_GUARD_vulkanRendererBackend_renderer_h__
 #include <array>
 #include <memory>
 #include <vector>
@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 
 
 
-	class RenderCore
+	class Renderer
 	{
 	private: // Enums:
 		enum class RenderStage
@@ -67,15 +67,17 @@ namespace vulkanRendererBackend
 
 		// Render management:
 		uint32_t m_imageIndex;  // updated by vkAcquireNextImageKHR(...)
+		float m_time;
+		float m_deltaTime;
 		bool m_rebuildSwapchain;
 
 		// Game engine data injection:
 		std::vector<DrawCall*>* m_pDrawCalls;
 
 	public: // Methods:
-		RenderCore();
-		~RenderCore();
-		bool RenderFrame();
+		Renderer();
+		~Renderer();
+		bool RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime);
 
 	private: // Methods:
 		void RebuildSwapchain();
@@ -115,4 +117,4 @@ namespace vulkanRendererBackend
 
 
 
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_renderCore_h__
+#endif // __INCLUDE_GUARD_vulkanRendererBackend_renderer_h__
