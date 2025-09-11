@@ -1,16 +1,18 @@
 #include "drawCall.h"
 #include "lighting.h"
 #include "shaderProperties.h"
+#include <array>
 
 
 
-namespace emberEngine
+namespace vulkanRendererBackend
 {
-	void DrawCall::SetRenderMatrizes(const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
+    // Public methods:
+	void DrawCall::SetRenderMatrizes(const iMath::Float4x4& viewMatrix, const iMath::Float4x4& projectionMatrix)
 	{
 		static std::string bufferName = "RenderMatrizes";
-		Float4x4 worldToClipMatrix = projectionMatrix * viewMatrix;
-		Float4x4 localToClipMatrix = worldToClipMatrix * localToWorldMatrix;
+		iMath::Float4x4 worldToClipMatrix = iMath::Multiply(projectionMatrix, viewMatrix);
+		iMath::Float4x4 localToClipMatrix = iMath::Multiply(worldToClipMatrix, localToWorldMatrix);
 
 		pShaderProperties->SetValue(bufferName, "cb_localToWorldMatrix", localToWorldMatrix);
 		pShaderProperties->SetValue(bufferName, "cb_viewMatrix", viewMatrix);
@@ -24,9 +26,13 @@ namespace emberEngine
 		SetPositionalLightData();
 		pShaderProperties->SetValue("LightData", "receiveShadows", receiveShadows);
 	}
+
+
+
+    // Private methods:
 	void DrawCall::SetDirectionalLightData()
 	{
-		std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
+		std::vector<Lighting::DirectionalLight>& directionalLights = Lighting::GetDirectionalLights();
 		static std::string bufferName = "LightData";
 		static std::string arrayName = "directionalLightData";
 		
@@ -35,12 +41,12 @@ namespace emberEngine
 			pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
 			pShaderProperties->SetValue(bufferName, arrayName, i, "direction", directionalLights[i].direction);
 			pShaderProperties->SetValue(bufferName, arrayName, i, "shadowType", (int)directionalLights[i].shadowType);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
+			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", iMath::Float4{ directionalLights[i].color[0], directionalLights[i].color[1], directionalLights[i].color[2], directionalLights[i].intensity });
 		}
 	}
 	void DrawCall::SetPositionalLightData()
 	{
-		std::array<Lighting::PositionalLight, Lighting::maxPositionalLights>& positionalLights = Lighting::GetPositionalLights();
+		std::vector<Lighting::PositionalLight>& positionalLights = Lighting::GetPositionalLights();
 		static std::string bufferName = "LightData";
 		static std::string arrayName = "positionalLightData";
 
@@ -49,8 +55,8 @@ namespace emberEngine
 			pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
 			pShaderProperties->SetValue(bufferName, arrayName, i, "position", positionalLights[i].position);
 			pShaderProperties->SetValue(bufferName, arrayName, i, "shadowType", (int)positionalLights[i].shadowType);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(positionalLights[i].color, positionalLights[i].intensity));
-			pShaderProperties->SetValue(bufferName, arrayName, i, "blendStartEnd", Float2(positionalLights[i].blendStart, positionalLights[i].blendEnd));
+			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", iMath::Float4{ positionalLights[i].color[0],positionalLights[i].color[1],positionalLights[i].color[2], positionalLights[i].intensity});
+			pShaderProperties->SetValue(bufferName, arrayName, i, "blendStartEnd", iMath::Float2{ positionalLights[i].blendStart, positionalLights[i].blendEnd });
 		}
 	}
 }

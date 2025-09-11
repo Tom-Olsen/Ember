@@ -10,6 +10,7 @@
 #include "vulkanPipelineStages.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanTextureBatchUploader.h"
+#include <math.h>
 #include <memory>
 
 

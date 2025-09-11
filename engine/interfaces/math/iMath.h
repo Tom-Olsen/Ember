@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_iMath_h__
 #define __INCLUDE_GUARD_iMath_h__
 #include <array>
+#include <math.h>
 #include <sstream>
 
 
@@ -16,12 +17,16 @@ namespace iMath
 	using Float2 = std::array<float, 2>;
 	using Float3 = std::array<float, 3>;
 	using Float4 = std::array<float, 4>;
-	using Float2x2 = std::array<float, 4>;
-	using Float3x3 = std::array<float, 9>;
-	using Float4x4 = std::array<float, 16>;
+	using Float2x2 = std::array<float, 4>;  // column major: 0 3 6   [0+3*0] [0+3*1] [0+3*2]
+	using Float3x3 = std::array<float, 9>;  // column major: 1 4 7 = [1+3*0] [1+3*1] [1+3*2]
+	using Float4x4 = std::array<float, 16>; // column major: 2 5 8   [2+3*0] [2+3*1] [2+3*2]
+
 
 
 	// Constexpr default values:
+    constexpr float pi =  3.14159265358979323846f;
+    constexpr float pi2 = 0.50f * pi;
+
 	constexpr Uint3 Uint3Zero = Uint3{ 0, 0, 0 };
 	constexpr Uint3 Uint3One = Uint3{ 1, 1, 1 };
 
@@ -52,9 +57,62 @@ namespace iMath
 	constexpr Float4 Float4In      = Float4{  0.0f,  0.0f,  0.0f,  1.0f };
 	constexpr Float4 Float4Out     = Float4{  0.0f,  0.0f,  0.0f, -1.0f };
 
+	constexpr Float3x3 Float3x3Identity = Float3x3
+    { 1.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 1.0f };
+	constexpr Float4x4 Float4x4Identity = Float4x4
+    { 1.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f, 0.0f,
+      0.0f, 0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 0.0f, 1.0f };
 
 
-	// ToString methods:
+
+    // Basic operations:
+    inline Float4x4 Multiply(const Float4x4& a, const Float4x4& b)
+    {
+		Float4x4 result;
+		for (uint32_t i = 0; i < 4; i++)
+			for (uint32_t j = 0; j < 4; j++)
+				for (uint32_t k = 0; k < 4; k++)
+					result[i + 4 * j] += a[i + 4* k] * b[k + 4 * j];
+		return result;
+    }
+	inline Float4x4 Float4x4RotateX(float angle)
+	{
+		float c = std::cos(angle);
+		float s = std::sin(angle);
+		return Float4x4
+		{1.0f, 0.0f, 0.0f, 0.0f,
+		 0.0f,    c,   -s, 0.0f,
+		 0.0f,    s,    c, 0.0f,
+		 0.0f, 0.0f, 0.0f, 1.0f};
+	}
+	inline Float4x4 Float4x4RotateY(float angle)
+	{
+		float c = std::cos(angle);
+		float s = std::sin(angle);
+		return Float4x4
+		{   c, 0.0f,    s, 0.0f,
+		 0.0f, 1.0f, 0.0f, 0.0f,
+		   -s, 0.0f,    c, 0.0f,
+		 0.0f, 0.0f, 0.0f, 1.0f};
+	}
+	inline Float4x4 Float4x4RotateZ(float angle)
+	{
+		float c = std::cos(angle);
+		float s = std::sin(angle);
+		return Float4x4
+		{   c,   -s, 0.0f, 0.0f,
+		    s,    c, 0.0f, 0.0f,
+		 0.0f, 0.0f, 1.0f, 0.0f,
+		 0.0f, 0.0f, 0.0f, 1.0f};
+	}
+	
+    
+
+    // ToString methods:
 	inline std::string ToStringInt2(Int2 data)
 	{
 		std::ostringstream oss;

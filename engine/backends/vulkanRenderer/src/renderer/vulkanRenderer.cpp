@@ -5,7 +5,7 @@
 //#include "dearImGui.h"
 //#include "drawCall.h"
 //#include "emberTime.h"
-//#include "graphics.h"
+#include "graphics.h"
 #include "iMath.h"
 #include "indexBuffer.h"
 //#include "lighting.h"
@@ -17,7 +17,7 @@
 #include "renderTexture2d.h"
 #include "shaderProperties.h"
 #include "spirvReflect.h"
-//#include "taskflowManager.h"
+#include "taskflowManager.h"
 //#include "textureManager.h"
 #include "vertexBuffer.h"
 #include "vmaBuffer.h"
@@ -52,15 +52,14 @@ namespace vulkanRendererBackend
 		// Command pools (one per frameInFlight * renderStage):
 		m_commandPools.reserve(Context::framesInFlight * (int)RenderStage::stageCount);
 		for (int i = 0; i < Context::framesInFlight * (int)RenderStage::stageCount; i++)
-			m_commandPools.emplace_back(TaskflowManager::GetCoreCount(), Context::logicalDevice.GetGraphicsQueue());
+			m_commandPools.emplace_back(emberEngine::TaskflowManager::GetCoreCount(), Context::logicalDevice.GetGraphicsQueue());
 
 		// Shadow render pass caching:
-		m_pShadowMaterial = MaterialManager::GetMaterial("shadowMaterial");
-		m_shadowPipeline = m_pShadowMaterial->GetPipeline()->GetVkPipeline();
-		m_shadowPipelineLayout = m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
+		m_shadowPipeline = Graphics::GetShadowMaterial()->GetPipeline()->GetVkPipeline();
+		m_shadowPipelineLayout = Graphics::GetShadowMaterial()->GetPipeline()->GetVkPipelineLayout();
 
 		// Present render pass caching:
-		m_pPresentMesh = MeshManager::GetMesh("fullScreenRenderQuad");
+		m_pPresentMesh = Graphics::GetFullScreenRenderQuad();
 		m_pPresentMaterial = MaterialManager::GetMaterial("presentMaterial");
 		m_pPresentShaderProperties = std::make_unique<ShaderProperties>((Shader*)m_pPresentMaterial);
 		m_presentPipeline = m_pPresentMaterial->GetPipeline()->GetVkPipeline();

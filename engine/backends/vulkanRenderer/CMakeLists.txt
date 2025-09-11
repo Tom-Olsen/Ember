@@ -79,6 +79,10 @@ source_group("Math Interface" FILES ${MATH_INTERFACE_FILES})
 file(GLOB RENDERER_INTERFACE_FILES "../../interfaces/renderer/*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
+# ../../interfaces/utility/*:
+file(GLOB UTILITY_INTERFACE_FILES "../../interfaces/utility/*")
+source_group("Utility Interface" FILES ${UTILITY_INTERFACE_FILES})
+
 # ../../interfaces/window/*:
 file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
@@ -102,6 +106,7 @@ add_library(${PROJECT_NAME}
     ${UTILITY_FILES}
     ${MATH_INTERFACE_FILES}
     ${RENDERER_INTERFACE_FILES}
+    ${UTILITY_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
 
 # Only expose public files to consumer:
@@ -120,6 +125,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/math
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/utility
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window)
 # ---------------------------------------------------
 

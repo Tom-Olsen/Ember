@@ -10,6 +10,7 @@
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanTextureBatchUploader.h"
 #include <array>
+#include <cstring>
 #include <memory>
 
 

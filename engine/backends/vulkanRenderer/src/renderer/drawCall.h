@@ -1,10 +1,10 @@
-#ifndef __INCLUDE_GUARD_drawCall_h__
-#define __INCLUDE_GUARD_drawCall_h__
-#include "emberMath.h"
+#ifndef __INCLUDE_GUARD_vulkanRendererBackend_drawCall_h__
+#define __INCLUDE_GUARD_vulkanRendererBackend_drawCall_h__
+#include "iMath.h"
 
 
 
-namespace emberEngine
+namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class Material;
@@ -13,7 +13,7 @@ namespace emberEngine
 
 	struct DrawCall
 	{
-		Float4x4 localToWorldMatrix;
+		iMath::Float4x4 localToWorldMatrix;
 		bool receiveShadows;
 		bool castShadows;
 		Material* pMaterial;
@@ -22,7 +22,7 @@ namespace emberEngine
 		Mesh* pMesh;
 		uint32_t instanceCount;	// 0 implies no instanced rendering.
 
-		void SetRenderMatrizes(const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
+		void SetRenderMatrizes(const iMath::Float4x4& viewMatrix, const iMath::Float4x4& projectionMatrix);
 		void SetLightData();
 
 	private:
@@ -33,4 +33,4 @@ namespace emberEngine
 
 
 
-#endif // __INCLUDE_GUARD_drawCall_h__
+#endif // __INCLUDE_GUARD_vulkanRendererBackend_drawCall_h__
