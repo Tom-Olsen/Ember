@@ -5,6 +5,7 @@
 #include "geometry3d.h"
 #include "mathFunctions.h"
 #include "uint3.h"
+#include <cmath>
 #include <stdexcept>
 #include <sstream>
 

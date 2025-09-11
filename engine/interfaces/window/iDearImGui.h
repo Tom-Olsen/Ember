@@ -2,6 +2,7 @@
 #define __INCLUDE_GUARD_iDearImGui_h__
 #include "dearImGuiFlags.h"
 #include <array>
+#include <cstdint>
 #include <vector>
 
 

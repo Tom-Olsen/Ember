@@ -6,6 +6,7 @@
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
 project(sdlWindowBackend)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static SDL into this dynamic library properly.
 
 # Static vs Shared library option:
 option(BUILD_SHARED_LIBS "Build ${PROJECT_NAME} as a shared library" ON) # default ON
@@ -79,7 +80,7 @@ endif()
 # ------------------ Link Libraries -----------------
 # SDL (CMakeList target):
 set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
-add_subdirectory("../../libs/SDL" "${CMAKE_BINARY_DIR}/SDL_build")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/SDL" "${CMAKE_BINARY_DIR}/SDL_build")
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-static)
 
 # Vulkan (dynamically linked):

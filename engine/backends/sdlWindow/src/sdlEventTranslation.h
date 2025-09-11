@@ -158,4 +158,4 @@ namespace sdlWindowBackend
 
 
 
-#endif __INCLUDE_GUARD_sdlEventTranslation_h__
+#endif // __INCLUDE_GUARD_sdlEventTranslation_h__

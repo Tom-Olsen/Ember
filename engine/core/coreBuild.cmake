@@ -185,7 +185,7 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         PUBLIC ${CORE_ROOT_DIR}/src/components
         PUBLIC ${CORE_ROOT_DIR}/src/compute
         PUBLIC ${CORE_ROOT_DIR}/src/coreSystems
-        PUBLIC ${CORE_ROOT_DIR}/src/dearImGUi
+        PUBLIC ${CORE_ROOT_DIR}/src/dearImGui
         #PUBLIC ${CORE_ROOT_DIR}/src/editorWindows
         PUBLIC ${CORE_ROOT_DIR}/src/editor
         PUBLIC ${CORE_ROOT_DIR}/src/eventSystem
