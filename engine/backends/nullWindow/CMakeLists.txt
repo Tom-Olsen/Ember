@@ -59,3 +59,13 @@ else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE NULL_WINDOW_BACKEND_STATIC)
 endif()
 # ---------------------------------------------------
+
+
+
+# ------------------ Link Libraries -----------------
+# EmberMath:
+if (NOT TARGET EmberMath)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../math" EmberMath)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+# ---------------------------------------------------

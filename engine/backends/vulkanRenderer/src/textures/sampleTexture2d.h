@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_sampleTexture2d_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_sampleTexture2d_h__
 #include "texture2d.h"
-#include "iMath.h"
+#include "emberMath.h"
 
 
 
@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		SampleTexture2d(const std::string& name, float value);
-		SampleTexture2d(const std::string& name, iMath::Float4 color);
+		SampleTexture2d(const std::string& name, Float4 color);
 		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path);
 		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path, TextureBatchUploader& batchUploader);
 
@@ -43,7 +43,7 @@ namespace vulkanRendererBackend
 		void Init(StagingBuffer* pStagingBuffer);
 		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path) override;
 		StagingBuffer* Load(const std::string& name, float value);
-		StagingBuffer* Load(const std::string& name, const iMath::Float4& color);
+		StagingBuffer* Load(const std::string& name, const Float4& color);
 	};
 }
 

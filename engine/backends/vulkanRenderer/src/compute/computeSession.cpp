@@ -1,7 +1,7 @@
 #include "computeSession.h"
 #include "computeCall.h"
 #include "computeShader.h"
-#include "iMath.h"
+#include "emberMath.h"
 #include "shaderProperties.h"
 #include "vulkanAccessMasks.h"
 #include "vulkanComputePushConstant.h"
@@ -30,7 +30,7 @@ namespace vulkanRendererBackend
 			ComputeShader* pPreviousComputeShader = nullptr;
 			VkPipeline pipeline = VK_NULL_HANDLE;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-			ComputePushConstant pushConstant(iMath::Uint3One, time, deltaTime);
+			ComputePushConstant pushConstant(Uint3::one, time, deltaTime);
 
 			for (ComputeCall& computeCall : m_computeCalls)
 			{
@@ -74,10 +74,10 @@ namespace vulkanRendererBackend
 						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 					}
 
-					iMath::Uint3 blockSize = pComputeShader->GetBlockSize();
-					uint32_t groupCountX = (computeCall.threadCount[0] + blockSize[0] - 1) / blockSize[0];
-					uint32_t groupCountY = (computeCall.threadCount[1] + blockSize[1] - 1) / blockSize[1];
-					uint32_t groupCountZ = (computeCall.threadCount[2] + blockSize[2] - 1) / blockSize[2];
+					Uint3 blockSize = pComputeShader->GetBlockSize();
+					uint32_t groupCountX = (computeCall.threadCount.x + blockSize.x - 1) / blockSize.x;
+					uint32_t groupCountY = (computeCall.threadCount.y + blockSize.y - 1) / blockSize.y;
+					uint32_t groupCountZ = (computeCall.threadCount.z + blockSize.z - 1) / blockSize.z;
 
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall.pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);

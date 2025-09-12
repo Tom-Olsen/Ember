@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_drawCall_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_drawCall_h__
-#include "iMath.h"
+#include "emberMath.h"
 
 
 
@@ -13,7 +13,7 @@ namespace vulkanRendererBackend
 
 	struct DrawCall
 	{
-		iMath::Float4x4 localToWorldMatrix;
+		Float4x4 localToWorldMatrix;
 		bool receiveShadows;
 		bool castShadows;
 		Material* pMaterial;
@@ -22,7 +22,7 @@ namespace vulkanRendererBackend
 		Mesh* pMesh;
 		uint32_t instanceCount;	// 0 implies no instanced rendering.
 
-		void SetRenderMatrizes(const iMath::Float4x4& viewMatrix, const iMath::Float4x4& projectionMatrix);
+		void SetRenderMatrizes(const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
 		void SetLightData();
 
 	private:

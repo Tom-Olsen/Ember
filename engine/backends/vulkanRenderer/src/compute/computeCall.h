@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_computeCall_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_computeCall_h__
-#include "iMath.h"
+#include "emberMath.h"
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 	struct ComputeCall
 	{
 		uint32_t callIndex;						// Tracks execution order.
-		iMath::Uint3 threadCount;				// Total thread count in each dimension. GroupCount is automatically computed from blockSize of the ComputeShader.
+		Uint3 threadCount;						// Total thread count in each dimension. GroupCount is automatically computed from blockSize of the ComputeShader.
 		ComputeShader* pComputeShader;			// If null => barrier call.
 		ShaderProperties* pShaderProperties;	// Supplied by caller (static), or borrowed from pool (dynamic).
 		VkAccessFlags2 srcAccessMask;			// Only applies to barriers.

@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_graphics_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_graphics_h__
 #include "drawCall.h"		// needed, as we don't save pointers.
-#include "iMath.h"
+#include "emberMath.h"
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -26,9 +26,9 @@ namespace vulkanRendererBackend
 	public: // Structs:
 		struct Camera
 		{
-			iMath::Float3 position;
-			iMath::Float4x4 viewMatrix;
-			iMath::Float4x4 projectionMatrix;
+			Float3 position;
+			Float4x4 viewMatrix;
+			Float4x4 projectionMatrix;
 		};
 
 	private: // Members
@@ -50,15 +50,15 @@ namespace vulkanRendererBackend
 		static void Clear();
 
 		// Draw mesh:
-		static void DrawMesh(Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const iMath::Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
-		static ShaderProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, const iMath::Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMesh(Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties* DrawMesh(Mesh* pMesh, Material* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
 		
 		// Draw instanced:
-		static void DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const iMath::Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
-		static ShaderProperties* DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, const iMath::Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static void DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties* DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
 
 		// Setters:
-		static void SetActiveCamera(const iMath::Float3& position, const iMath::Float4x4& viewMatrix, const iMath::Float4x4& projectionMatrix);
+		static void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
 		static void SetDeptBiasConstantFactor(float depthBiasConstantFactor);
 		static void SetDeptBiasClamp(float depthBiasClamp);
 		static void SetDeptBiasSlopeFactor(float depthBiasSlopeFactor);

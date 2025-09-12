@@ -147,6 +147,12 @@ endif()
 
 
 # ------------------ Link Libraries -----------------
+# EmberMath:
+if (NOT TARGET EmberMath)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../math" EmberMath)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+
 # Vulkan (dynamicly linked):
 find_package(Vulkan REQUIRED)           # required to be installed
 target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})

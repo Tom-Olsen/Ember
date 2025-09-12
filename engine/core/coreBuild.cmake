@@ -31,15 +31,20 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib") # target directo
 # ------ Add Shared dependencies Subdirectories -----
 # EmberMath:
 add_subdirectory("${CORE_ROOT_DIR}/../math" EmberMath)
+
 # Shaders:
 set(SHADER_DIR "${CORE_ROOT_DIR}/../shaders")
 add_subdirectory(${SHADER_DIR} ShaderCompiler)
+
 # Null Window Backend:
 add_subdirectory("${CORE_ROOT_DIR}/../backends/nullWindow" "${CMAKE_BINARY_DIR}/nullWindowBackend_build")
+
 # SDL Window Backend:
 add_subdirectory("${CORE_ROOT_DIR}/../backends/sdlWindow" "${CMAKE_BINARY_DIR}/sdlWindowBackend_build")
+
 # spdlog:
 add_subdirectory("${CORE_ROOT_DIR}/../libs/spdlog" "${CMAKE_BINARY_DIR}/spdlog_build")
+
 # SPIRV-Reflect:
 set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE)
 add_subdirectory("${CORE_ROOT_DIR}/../libs/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
@@ -140,9 +145,9 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
     file(GLOB WINDOW_FILES "${CORE_ROOT_DIR}/src/window/*")
     source_group("Window" FILES ${WINDOW_FILES})
     
-    # ../../interfaces/math/*:
-    file(GLOB MATH_INTERFACE_FILES "${CORE_ROOT_DIR}/../interfaces/math/*")
-    source_group("Math Interface" FILES ${MATH_INTERFACE_FILES})
+    # ../../interfaces/utility/*:
+    file(GLOB UTILITY_INTERFACE_FILES "${CORE_ROOT_DIR}/../interfaces/utility/*")
+    source_group("Utility Interface" FILES ${UTILITY_INTERFACE_FILES})
 
     # ../../interfaces/window/*:
     file(GLOB WINDOW_INTERFACE_FILES "${CORE_ROOT_DIR}/../interfaces/window/*")
@@ -175,7 +180,7 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         ${VULKAN_RENDER_PASSES_FILES}
         ${VULKAN_UTILITY_FILES}
         ${WINDOW_FILES}
-        ${MATH_INTERFACE_FILES}
+        ${UTILITY_INTERFACE_FILES}
         ${WINDOW_INTERFACE_FILES})
     
     # Source subdirectories:
@@ -203,8 +208,11 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         PUBLIC ${CORE_ROOT_DIR}/src/vulkanBackend/renderPasses
         PUBLIC ${CORE_ROOT_DIR}/src/vulkanBackend/utility
         PUBLIC ${CORE_ROOT_DIR}/src/window
-        PUBLIC ${CORE_ROOT_DIR}/../interfaces/math
+        PUBLIC ${CORE_ROOT_DIR}/../interfaces/utility
         PUBLIC ${CORE_ROOT_DIR}/../interfaces/window)
+
+        get_target_property(_srcs ${PROJECT_NAME} SOURCES)
+message(STATUS "Target ${PROJECT_NAME} sources: ${_srcs}")
     # ---------------------------------------------------
     
     
@@ -244,7 +252,7 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
     # -------------- Link Custom Libraries --------------
     # EmberMath:
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
-
+    
     # Null Window Backend:
     target_link_libraries(${PROJECT_NAME} PUBLIC nullWindowBackend)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../backends/nullWindow/src)

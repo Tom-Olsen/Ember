@@ -26,15 +26,15 @@ namespace vulkanRendererBackend
 	{
 		// Fill brocken vectors with default values:
 		if (m_positions.size() != m_vertexCount)
-			m_positions.resize(m_vertexCount, iMath::Float3Zero);
+			m_positions.resize(m_vertexCount, Float3::zero);
 		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, iMath::Float3Up);
+			m_normals.resize(m_vertexCount, Float3::up);
 		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, iMath::Float3Right);
+			m_tangents.resize(m_vertexCount, Float3::right);
 		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, iMath::Float4One);
+			m_colors.resize(m_vertexCount, Float4::white);
 		if (m_uvs.size() != m_vertexCount)
-			m_uvs.resize(m_vertexCount, iMath::Float4Zero);
+			m_uvs.resize(m_vertexCount, Float4::zero);
 
 		UpdateVertexBuffer();
 		UpdateIndexBuffer();
@@ -59,55 +59,55 @@ namespace vulkanRendererBackend
 	{
 		m_name = name;
 	}
-	void Mesh::SetPositions(const std::vector<iMath::Float3>& positions)
+	void Mesh::SetPositions(const std::vector<Float3>& positions)
 	{
 		// Copy values into member vector:
 		m_vertexCount = static_cast<uint32_t>(positions.size());
 		m_positions = positions;
 		m_verticesUpdated = true;
 	}
-	void Mesh::SetNormals(const std::vector<iMath::Float3>& normals)
+	void Mesh::SetNormals(const std::vector<Float3>& normals)
 	{
 		// Copy values into member vector and fill with default values if needed:
 		m_normals = normals;
 		if (normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, iMath::Float3Up);
+			m_normals.resize(m_vertexCount, Float3::up);
 		m_verticesUpdated = true;
 	}
-	void Mesh::SetTangents(const std::vector<iMath::Float3>& tangents)
+	void Mesh::SetTangents(const std::vector<Float3>& tangents)
 	{
 		// Copy values into member vector and fill with default values if needed:
 		m_tangents = tangents;
 		if (tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, iMath::Float3Right);
+			m_tangents.resize(m_vertexCount, Float3::right);
 		m_verticesUpdated = true;
 	}
-	void Mesh::SetColors(const std::vector<iMath::Float4>& colors)
+	void Mesh::SetColors(const std::vector<Float4>& colors)
 	{
 		// Copy values into member vector and fill with default values if needed:
 		m_colors = colors;
 		if (colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, iMath::Float4One);
+			m_colors.resize(m_vertexCount, Float4::white);
 		m_verticesUpdated = true;
 	}
-	void Mesh::SetUniformColor(const iMath::Float4& color)
+	void Mesh::SetUniformColor(const Float4& color)
 	{
 		// Set all colors to color and fill with color if needed:
-		for (iMath::Float4& col : m_colors)
+		for (Float4& col : m_colors)
 			col = color;
 		if (m_colors.size() != m_vertexCount)
 			m_colors.resize(m_vertexCount, color);
 		m_verticesUpdated = true;
 	}
-	void Mesh::SetUVs(const std::vector<iMath::Float4>& uvs)
+	void Mesh::SetUVs(const std::vector<Float4>& uvs)
 	{
 		// Copy values into member vector and fill with default values if needed:
 		m_uvs = uvs;
 		if (uvs.size() != m_vertexCount)
-			m_uvs.resize(m_vertexCount, iMath::Float4Zero);
+			m_uvs.resize(m_vertexCount, Float4::zero);
 		m_verticesUpdated = true;
 	}
-	void Mesh::SetTriangles(const std::vector<iMath::Uint3>& triangles)
+	void Mesh::SetTriangles(const std::vector<Uint3>& triangles)
 	{
 		// Copy values into member vector:
 		m_triangleCount = static_cast<uint32_t>(triangles.size());
@@ -118,7 +118,7 @@ namespace vulkanRendererBackend
 
 
 	// Movers:
-	void Mesh::MovePositions(std::vector<iMath::Float3>& positions)
+	void Mesh::MovePositions(std::vector<Float3>& positions)
 	{
 		// Take ownership if input data:
 		if (&positions != &m_positions)
@@ -128,51 +128,51 @@ namespace vulkanRendererBackend
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveNormals(std::vector<iMath::Float3>& normals)
+	void Mesh::MoveNormals(std::vector<Float3>& normals)
 	{
 		// Take ownership of input data:
 		if (&normals != &m_normals)
 		{
 			m_normals = std::move(normals);
 			if (m_normals.size() != m_vertexCount)
-				m_normals.resize(m_vertexCount, iMath::Float3Up);
+				m_normals.resize(m_vertexCount, Float3::up);
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveTangents(std::vector<iMath::Float3>& tangents)
+	void Mesh::MoveTangents(std::vector<Float3>& tangents)
 	{
 		// Take ownership of input data:
 		if (&tangents != &m_tangents)
 		{
 			m_tangents = std::move(tangents);
 			if (m_tangents.size() != m_vertexCount)
-				m_tangents.resize(m_vertexCount, iMath::Float3Right);
+				m_tangents.resize(m_vertexCount, Float3::right);
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveColors(std::vector<iMath::Float4>& colors)
+	void Mesh::MoveColors(std::vector<Float4>& colors)
 	{
 		// Take ownership of input data:
 		if (&colors != &m_colors)
 		{
 			m_colors = std::move(colors);
 			if (m_colors.size() != m_vertexCount)
-				m_colors.resize(m_vertexCount, iMath::Float4One);
+				m_colors.resize(m_vertexCount, Float4::white);
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveUVs(std::vector<iMath::Float4>& uvs)
+	void Mesh::MoveUVs(std::vector<Float4>& uvs)
 	{
 		// Take ownership of input data:
 		if (&uvs != &m_uvs)
 		{
 			m_uvs = std::move(uvs);
 			if (m_uvs.size() != m_vertexCount)
-				m_uvs.resize(m_vertexCount, iMath::Float4Zero);
+				m_uvs.resize(m_vertexCount, Float4::zero);
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveTriangles(std::vector<iMath::Uint3>& triangles)
+	void Mesh::MoveTriangles(std::vector<Uint3>& triangles)
 	{
 		// Take ownership if input data:
 		if (&triangles != &m_triangles)
@@ -198,27 +198,27 @@ namespace vulkanRendererBackend
 	{
 		return m_triangleCount;
 	}
-	std::vector<iMath::Float3>& Mesh::GetPositions()
+	std::vector<Float3>& Mesh::GetPositions()
 	{
 		return m_positions;
 	}
-	std::vector<iMath::Float3>& Mesh::GetNormals()
+	std::vector<Float3>& Mesh::GetNormals()
 	{
 		return m_normals;
 	}
-	std::vector<iMath::Float3>& Mesh::GetTangents()
+	std::vector<Float3>& Mesh::GetTangents()
 	{
 		return m_tangents;
 	}
-	std::vector<iMath::Float4>& Mesh::GetColors()
+	std::vector<Float4>& Mesh::GetColors()
 	{
 		return m_colors;
 	}
-	std::vector<iMath::Float4>& Mesh::GetUVs()
+	std::vector<Float4>& Mesh::GetUVs()
 	{
 		return m_uvs;
 	}
-	std::vector<iMath::Uint3>& Mesh::GetTriangles()
+	std::vector<Uint3>& Mesh::GetTriangles()
 	{
 		return m_triangles;
 	}
@@ -328,13 +328,13 @@ namespace vulkanRendererBackend
 	{
 		// Set zero values if vectors not set:
 		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, iMath::Float3Up);
+			m_normals.resize(m_vertexCount, Float3::up);
 		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, iMath::Float3Right);
+			m_tangents.resize(m_vertexCount, Float3::right);
 		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, iMath::Float4One);
+			m_colors.resize(m_vertexCount, Float4::white);
 		if (m_uvs.size() != m_vertexCount)
-			m_uvs.resize(m_vertexCount, iMath::Float4Zero);
+			m_uvs.resize(m_vertexCount, Float4::zero);
 
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
 			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);
@@ -358,13 +358,13 @@ namespace vulkanRendererBackend
 	{
 		// Set zero values if vectors not set:
 		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, iMath::Float3Up);
+			m_normals.resize(m_vertexCount, Float3::up);
 		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, iMath::Float3Right);
+			m_tangents.resize(m_vertexCount, Float3::right);
 		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, iMath::Float4One);
+			m_colors.resize(m_vertexCount, Float4::white);
 		if (m_uvs.size() != m_vertexCount)
-			m_uvs.resize(m_vertexCount, iMath::Float4Zero);
+			m_uvs.resize(m_vertexCount, Float4::zero);
 
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
 			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);

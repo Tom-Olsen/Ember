@@ -1,6 +1,5 @@
 #include "dearImGui.h"
 #include "iDearImGui.h"
-#include "iMath.h"
 #include "logger.h"
 #include "macros.h"
 #include "nullDearImGui.h"
@@ -125,17 +124,17 @@ namespace emberEngine
 	}
 	Float2 DearImGui::GetWindowSize()
 	{
-		iMath::Float2 size = s_pIDearImGui->GetWindowSize();
+		Float2 size = s_pIDearImGui->GetWindowSize();
 		return Float2(size[0], size[1]);
 	}
 	Float2 DearImGui::GetContentRegionalAvail()
 	{
-		iMath::Float2 avail = s_pIDearImGui->GetContentRegionalAvail();
+		Float2 avail = s_pIDearImGui->GetContentRegionalAvail();
 		return Float2(avail[0], avail[1]);
 	}
 	Float2 DearImGui::GetCursorPos()
 	{
-		iMath::Float2 cursorPos = s_pIDearImGui->GetCursorPos();
+		Float2 cursorPos = s_pIDearImGui->GetCursorPos();
 		return Float2(cursorPos[0], cursorPos[1]);
 	}
 	void DearImGui::SetCursorPos(float localPosX, float localPosY)

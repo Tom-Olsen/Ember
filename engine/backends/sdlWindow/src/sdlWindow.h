@@ -1,8 +1,8 @@
 #ifndef __INCLUDE_GUARD_sdlWindow_h__
 #define __INCLUDE_GUARD_sdlWindow_h__
+#include "emberMath.h"
 #include "sdlWindowExport.h"
 #include "iWindow.h"
-#include "iMath.h"
 #include <memory>
 #include <vector>
 
@@ -60,7 +60,7 @@ namespace sdlWindowBackend
 		bool GetIsMinimized() const override;
 		bool GetIsResized() const override;
 		void* GetNativeHandle() const override;
-		iMath::Int2 GetSize() const override;
+		Int2 GetSize() const override;
 		uint32_t GetWindowID() const override;
 	};
 }

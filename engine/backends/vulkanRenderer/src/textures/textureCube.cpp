@@ -18,7 +18,7 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	TextureCube::TextureCube(const std::string& name, iMath::Float4 color)
+	TextureCube::TextureCube(const std::string& name, Float4 color)
 	{
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Load(name, color));
 		Init(pStagingBuffer.get());
@@ -149,7 +149,7 @@ namespace vulkanRendererBackend
 
 		return pStagingBuffer;
 	}
-	StagingBuffer* TextureCube::Load(const std::string& name, const iMath::Float4& color)
+	StagingBuffer* TextureCube::Load(const std::string& name, const Float4& color)
 	{
 		m_name = name;
 		m_channels = 4;

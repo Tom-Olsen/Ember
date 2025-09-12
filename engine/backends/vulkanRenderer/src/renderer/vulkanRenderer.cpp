@@ -1,19 +1,22 @@
 #include "vulkanRenderer.h"
 #include "compute.h"
+#include "computeCall.h"
 #include "computeShader.h"
 //#include "computeShaderManager.h"
 //#include "dearImGui.h"
 //#include "drawCall.h"
+#include "emberMath.h"
 //#include "emberTime.h"
 #include "graphics.h"
-#include "iMath.h"
 #include "indexBuffer.h"
-//#include "lighting.h"
+#include "lighting.h"
 #include "material.h"
 //#include "materialManager.h"
 #include "mesh.h"
 //#include "meshManager.h"
 //#include "profiler.h"
+#include "postRenderCompute.h"
+#include "preRenderCompute.h"
 #include "renderTexture2d.h"
 #include "shaderProperties.h"
 #include "spirvReflect.h"
@@ -37,6 +40,7 @@
 #include "vulkanShadowRenderPass.h"
 //#include "window.h"
 #include <string>
+#include <vector>
 
 
 
@@ -238,9 +242,9 @@ namespace vulkanRendererBackend
 			ComputeShader* pPreviousComputeShader = nullptr;
 			VkPipeline pipeline = VK_NULL_HANDLE;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-			ComputePushConstant pushConstant(iMath::Uint3One, m_time, m_deltaTime);
+			ComputePushConstant pushConstant(Uint3::one, m_time, m_deltaTime);
 
-			for (compute::ComputeCall* computeCall : PreRender::GetComputeCallPointers())
+			for (ComputeCall* computeCall : PreRender::GetComputeCallPointers())
 			{
 				// Compute call is a barrier:
 				if (computeCall->pComputeShader == nullptr)
@@ -284,7 +288,7 @@ namespace vulkanRendererBackend
 						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 					}
 
-					iMath::Uint3 blockSize = pComputeShader->GetBlockSize();
+					Uint3 blockSize = pComputeShader->GetBlockSize();
 					uint32_t groupCountX = (computeCall->threadCount[0] + blockSize[0] - 1) / blockSize[0];
 					uint32_t groupCountY = (computeCall->threadCount[1] + blockSize[1] - 1) / blockSize[1];
 					uint32_t groupCountZ = (computeCall->threadCount[2] + blockSize[2] - 1) / blockSize[2];
@@ -355,7 +359,7 @@ namespace vulkanRendererBackend
 						drawCall->pShadowShaderProperties->UpdateShaderData();
 
 					// Directional Lights:
-					std::array<Lighting::DirectionalLight, Lighting::maxDirectionalLights>& directionalLights = Lighting::GetDirectionalLights();
+					std::vector<Lighting::DirectionalLight>& directionalLights = Lighting::GetDirectionalLights();
 					for (int i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
 					{
 						Lighting::DirectionalLight& light = directionalLights[i];
@@ -380,7 +384,7 @@ namespace vulkanRendererBackend
 					}
 
 					// Positional Lights:
-					std::array<Lighting::PositionalLight, Lighting::maxPositionalLights>& positionalLights = Lighting::GetPositionalLights();
+					std::vector<Lighting::PositionalLight>& positionalLights = Lighting::GetPositionalLights();
 					for (int i = 0; i < Lighting::GetPositionalLightsCount(); i++)
 					{
 						Lighting::PositionalLight& light = positionalLights[i];
@@ -635,7 +639,7 @@ namespace vulkanRendererBackend
 			ComputePushConstant pushConstant(Uint3::one, m_time, m_deltaTime);
 
 			uint32_t callIndex = 0;
-			for (compute::ComputeCall* computeCall : compute::PostRender::GetComputeCallPointers())
+			for (ComputeCall* computeCall : PostRender::GetComputeCallPointers())
 			{
 				// Update shader specific data:
 				if (callIndex % 2 == 0)

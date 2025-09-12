@@ -1,8 +1,8 @@
 #ifndef __INCLUDE_GUARD_nullDearImGui_h__
 #define __INCLUDE_GUARD_nullDearImGui_h__
 #include "dearImGuiFlags.h"
+#include "emberMath.h"
 #include "iDearImGui.h"
-#include "iMath.h"
 #include "nullWindowExport.h"
 #include <tuple>
 #include <unordered_map>
@@ -56,9 +56,9 @@ namespace nullWindowBackend
 		void End() override;
 		void PushID(const char* str_id) override;
 		void PopID() override;
-		iMath::Float2 GetWindowSize() override;
-		iMath::Float2 GetContentRegionalAvail() override;
-		iMath::Float2 GetCursorPos() override;
+		Float2 GetWindowSize() override;
+		Float2 GetContentRegionalAvail() override;
+		Float2 GetCursorPos() override;
 		void SetCursorPos(float localPosX, float localPosY) override;
 		void Image(uintptr_t textureID, float imageWidth, float imageHeight, float u0, float v0, float u1, float v1) override;
 	};

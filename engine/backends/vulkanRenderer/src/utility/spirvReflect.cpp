@@ -290,16 +290,16 @@ namespace vulkanRendererBackend
             }
         }
     }
-    iMath::Uint3 SpirvReflect::GetBlockSize() const
+    Uint3 SpirvReflect::GetBlockSize() const
     {
         const SpvReflectEntryPoint* entryPoint = spvReflectGetEntryPoint(&m_module, "main");
         if (entryPoint)
-            return iMath::Uint3{ entryPoint->local_size.x, entryPoint->local_size.y, entryPoint->local_size.z };
+            return Uint3(entryPoint->local_size.x, entryPoint->local_size.y, entryPoint->local_size.z);
         else
         {
             //LOG_WARN("Given shader does not contain the entry point 'main' or is not a compute shader!");
             std::cerr << "Given shader does not contain the entry point 'main' or is not a compute shader!" << std::endl;
-            return iMath::Uint3{ 0, 0, 0 };
+            return Uint3::zero;
         }
     }
 

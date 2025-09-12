@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_spirvReflect_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_spirvReflect_h__
-#include "iMath.h"
+#include "emberMath.h"
 #include <spirv_reflect.h>
 #include <string>
 #include <tuple>
@@ -129,7 +129,7 @@ namespace vulkanRendererBackend
 		VertexInputDescriptions* GetVertexInputDescriptions() const;
 		// Instead of returning pointer, this function adds to one, as it is used for multiple pipeline stages, e.g. vertex + fragment.
 		void AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources) const;
-		iMath::Uint3 GetBlockSize() const;
+		Uint3 GetBlockSize() const;
 
 	private: // Methods:
 		std::vector<SpvReflectInterfaceVariable*> GetInputVariablesReflection() const;

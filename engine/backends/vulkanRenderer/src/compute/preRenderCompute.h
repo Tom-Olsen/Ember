@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_preRenderCompute_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_preRenderCompute_h__
-#include "iMath.h"
+#include "emberMath.h"
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -29,8 +29,8 @@ namespace vulkanRendererBackend
 		static void Clear();
 
 		// Workload recording:
-		static ShaderProperties* RecordComputeShader(ComputeShader* pComputeShader, iMath::Uint3 threadCount);
-		static void RecordComputeShader(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, iMath::Uint3 threadCount);
+		static ShaderProperties* RecordComputeShader(ComputeShader* pComputeShader, Uint3 threadCount);
+		static void RecordComputeShader(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount);
 		static void RecordBarrier(VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
 
 		// Management:

@@ -51,7 +51,7 @@ namespace vulkanRendererBackend
 
 	// Public methods:
 	// Draw mesh:
-	void Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const iMath::Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (!pMesh)
 		{
@@ -78,7 +78,7 @@ namespace vulkanRendererBackend
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, 0 };
 		s_staticDrawCalls.push_back(drawCall);
 	}
-	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, const iMath::Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	ShaderProperties* Graphics::DrawMesh(Mesh* pMesh, Material* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (!pMesh)
 		{
@@ -113,7 +113,7 @@ namespace vulkanRendererBackend
 
     
 	// Draw instanced:
-	void Graphics::DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const iMath::Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Graphics::DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (!pInstanceBuffer)
 		{
@@ -148,7 +148,7 @@ namespace vulkanRendererBackend
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, instanceCount };
 		s_staticDrawCalls.push_back(drawCall);
 	}
-	ShaderProperties* Graphics::DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, const iMath::Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	ShaderProperties* Graphics::DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (!pInstanceBuffer)
 		{
@@ -191,7 +191,7 @@ namespace vulkanRendererBackend
 
 
 	// Setters:
-	void Graphics::SetActiveCamera(const iMath::Float3& position, const iMath::Float4x4& viewMatrix, const iMath::Float4x4& projectionMatrix)
+	void Graphics::SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
 	{
 		s_activeCamera.position = position;
 		s_activeCamera.viewMatrix = viewMatrix;
@@ -283,27 +283,27 @@ namespace vulkanRendererBackend
 	{
 		Mesh* pMesh = new Mesh("fullScreenRenderQuad");
 
-		std::vector<iMath::Float3> positions;
+		std::vector<Float3> positions;
 		positions.emplace_back(-1.0f, -1.0f, 0.0f);
 		positions.emplace_back(-1.0f,  1.0f, 0.0f);
 		positions.emplace_back( 1.0f, -1.0f, 0.0f);
 		positions.emplace_back( 1.0f,  1.0f, 0.0f);
 
-		std::vector<iMath::Float3> normals;
+		std::vector<Float3> normals;
 		normals.emplace_back(0.0f, 0.0f, 1.0f);
 		normals.emplace_back(0.0f, 0.0f, 1.0f);
 		normals.emplace_back(0.0f, 0.0f, 1.0f);
 		normals.emplace_back(0.0f, 0.0f, 1.0f);
 
-		std::vector<iMath::Float4> uvs;
+		std::vector<Float4> uvs;
 		uvs.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
 		uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
 		uvs.emplace_back(1.0f, 0.0f, 0.0f, 0.0f);
 		uvs.emplace_back(1.0f, 1.0f, 0.0f, 0.0f);
 
-		std::vector<iMath::Uint3> triangles;
-		triangles.emplace_back(iMath::Uint3{ 0, 2, 1 });
-		triangles.emplace_back(iMath::Uint3{ 1, 2, 3 });
+		std::vector<Uint3> triangles;
+		triangles.emplace_back(Uint3(0, 2, 1));
+		triangles.emplace_back(Uint3(1, 2, 3));
 
 		pMesh->MovePositions(positions);
 		pMesh->MoveNormals(normals);

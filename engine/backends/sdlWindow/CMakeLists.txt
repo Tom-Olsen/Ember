@@ -78,6 +78,12 @@ endif()
 
 
 # ------------------ Link Libraries -----------------
+# EmberMath:
+if (NOT TARGET EmberMath)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../math" EmberMath)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+
 # SDL (CMakeList target):
 set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/SDL" "${CMAKE_BINARY_DIR}/SDL_build")

@@ -27,7 +27,6 @@
 // -defaultGpuResources: initialize texture2d objects.
 // -remove name property of classes that dont need it internally. e.g. texture and mesh?
 // -in math library change data containers to std::array<float,n> and add conversion operators to iMath types
-// -remove iMath.h interface and instead move entire emberMath librarz header files into interfaces/math with emberMath src files in core.
 // -remove shader folder from vulkanBackend and use shaders directly from core?
 
 

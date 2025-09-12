@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanDefaultPushConstant_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_vulkanDefaultPushConstant_h__
-#include "iMath.h"
+#include "emberMath.h"
 #include <string>
 
 
@@ -18,9 +18,9 @@ namespace vulkanRendererBackend
 		alignas(4) float deltaTime;
 		alignas(4) int dirLightsCount;
 		alignas(4) int posLightsCount;
-		alignas(16) iMath::Float4 cameraPosition;
+		alignas(16) Float4 cameraPosition;
 
-		DefaultPushConstant(uint32_t instanceCount, float time, float deltaTime, int dirLightsCount, int posLightsCount, const iMath::Float3& cameraPosition);
+		DefaultPushConstant(uint32_t instanceCount, float time, float deltaTime, int dirLightsCount, int posLightsCount, const Float3& cameraPosition);
 		std::string ToString();
 	};
 }

@@ -1,6 +1,6 @@
 #include "defaultGpuResources.h"
 #include "depthTexture2dArray.h"
-#include "iMath.h"
+#include "emberMath.h"
 #include "sampler.h"
 #include "sampleTexture2d.h"
 #include "storageBuffer.h"
@@ -29,9 +29,9 @@ namespace vulkanRendererBackend
 		s_pColorSampler = std::unique_ptr<Sampler>(Sampler::ColorSampler("colorSampler"));
 		s_pShadowSampler = std::unique_ptr<Sampler>(Sampler::ShadowSampler("shadowSampler"));
 		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, 1, "1x1Dummy");
-		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>("white", iMath::Float4One);
-		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>("defaultNormalMap", iMath::Float4Up);
-		s_pDefaultTextureCube = std::make_unique<TextureCube>("whiteSkybox", iMath::Float4One);
+		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>("white", Float4::white);
+		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>("defaultNormalMap", Float4::up);
+		s_pDefaultTextureCube = std::make_unique<TextureCube>("whiteSkybox", Float4::white);
 		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>("defaultArrayTexture2d", VK_FORMAT_D32_SFLOAT, 2, 1, 1);
 		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>("defaultStorageTexture", VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1);
 	}

@@ -223,11 +223,11 @@ namespace sdlWindowBackend
 	{
 		return (void*)m_pWindow;
 	}
-	iMath::Int2 SdlWindow::GetSize() const
+	Int2 SdlWindow::GetSize() const
 	{
 		int width, height;
 		SDL_GetWindowSize(m_pWindow, &width, &height);
-		return iMath::Int2{ width, height };
+		return Int2{ width, height };
 	}
 	uint32_t SdlWindow::GetWindowID() const
 	{

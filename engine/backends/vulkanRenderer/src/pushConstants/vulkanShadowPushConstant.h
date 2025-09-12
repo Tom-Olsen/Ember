@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanShadowPushConstant_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_vulkanShadowPushConstant_h__
-#include "iMath.h"
+#include "emberMath.h"
 #include <string>
 
 
@@ -15,11 +15,11 @@ namespace vulkanRendererBackend
 	struct ShadowPushConstant
 	{
 	private:
-		alignas(16) iMath::Float4x4 localToWorldMatrix;
-		alignas(16) iMath::Float4x4 worldToClipMatrix;
+		alignas(16) Float4x4 localToWorldMatrix;
+		alignas(16) Float4x4 worldToClipMatrix;
 
 	public:
-		ShadowPushConstant(int instanceCount, int shadowMapIndex, const iMath::Float4x4& localToWorldMatrix, const iMath::Float4x4& worldToClipMatrix);
+		ShadowPushConstant(int instanceCount, int shadowMapIndex, const Float4x4& localToWorldMatrix, const Float4x4& worldToClipMatrix);
 		std::string ToString();
 	};
 }

@@ -6,14 +6,14 @@
 namespace vulkanRendererBackend
 {
 	// Constructor:
-	DefaultPushConstant::DefaultPushConstant(uint32_t instanceCount, float time, float deltaTime, int dirLightsCount, int posLightsCount, const iMath::Float3& cameraPosition)
+	DefaultPushConstant::DefaultPushConstant(uint32_t instanceCount, float time, float deltaTime, int dirLightsCount, int posLightsCount, const Float3& cameraPosition)
 	{
 		this->instanceCount = instanceCount;
 		this->time = time;
 		this->deltaTime = deltaTime;
 		this->dirLightsCount = std::min(dirLightsCount, (int)Context::maxDirectionalLights);
 		this->posLightsCount = std::min(posLightsCount, (int)Context::maxPositionalLights);
-		this->cameraPosition = iMath::Float4{ cameraPosition[0], cameraPosition[1], cameraPosition[2], 1.0f };
+		this->cameraPosition = Float4(cameraPosition, 1.0f);
 	}
 
 
@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
 		output += "Delta Time: " + std::to_string(deltaTime) + "\n";
 		output += "Directional Lights Count: " + std::to_string(dirLightsCount) + "\n";
 		output += "Positional Lights Count: " + std::to_string(posLightsCount) + "\n";
-		output += "Camera Position: " + iMath::ToStringFloat4(cameraPosition);
+		output += "Camera Position: " + cameraPosition.ToString();
 		return output;
 	}
 }

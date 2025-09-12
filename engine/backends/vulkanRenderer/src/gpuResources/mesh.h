@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_mesh_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_mesh_h__
-#include "iMath.h"
+#include "emberMath.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,12 +33,12 @@ namespace vulkanRendererBackend
 		uint32_t m_triangleCount = 0;
 		std::unique_ptr<VertexBuffer> m_vertexBuffer;
 		std::unique_ptr<IndexBuffer> m_indexBuffer;
-		std::vector<iMath::Float3> m_positions;
-		std::vector<iMath::Float3> m_normals;
-		std::vector<iMath::Float3> m_tangents;
-		std::vector<iMath::Float4> m_colors;
-		std::vector<iMath::Float4> m_uvs;
-		std::vector<iMath::Uint3> m_triangles;
+		std::vector<Float3> m_positions;
+		std::vector<Float3> m_normals;
+		std::vector<Float3> m_tangents;
+		std::vector<Float4> m_colors;
+		std::vector<Float4> m_uvs;
+		std::vector<Uint3> m_triangles;
 
 	public: // Methods:
 		Mesh(const std::string& name = "");
@@ -54,32 +54,32 @@ namespace vulkanRendererBackend
 
 		// Setters:
 		void SetName(const std::string& name);
-		void SetPositions(const std::vector<iMath::Float3>& positions);
-		void SetNormals(const std::vector<iMath::Float3>& normals);
-		void SetTangents(const std::vector<iMath::Float3>& tangents);
-		void SetColors(const std::vector<iMath::Float4>& colors);
-		void SetUniformColor(const iMath::Float4& color);
-		void SetUVs(const std::vector<iMath::Float4>& uvs);
-		void SetTriangles(const std::vector<iMath::Uint3>& triangles);
+		void SetPositions(const std::vector<Float3>& positions);
+		void SetNormals(const std::vector<Float3>& normals);
+		void SetTangents(const std::vector<Float3>& tangents);
+		void SetColors(const std::vector<Float4>& colors);
+		void SetUniformColor(const Float4& color);
+		void SetUVs(const std::vector<Float4>& uvs);
+		void SetTriangles(const std::vector<Uint3>& triangles);
 
 		// Movers:
-		void MovePositions(std::vector<iMath::Float3>& positions);
-		void MoveNormals(std::vector<iMath::Float3>& normals);
-		void MoveTangents(std::vector<iMath::Float3>& tangents);
-		void MoveColors(std::vector<iMath::Float4>& colors);
-		void MoveUVs(std::vector<iMath::Float4>& uvs);
-		void MoveTriangles(std::vector<iMath::Uint3>& triangles);
+		void MovePositions(std::vector<Float3>& positions);
+		void MoveNormals(std::vector<Float3>& normals);
+		void MoveTangents(std::vector<Float3>& tangents);
+		void MoveColors(std::vector<Float4>& colors);
+		void MoveUVs(std::vector<Float4>& uvs);
+		void MoveTriangles(std::vector<Uint3>& triangles);
 
 		// Getters:
 		const std::string& GetName() const;
 		uint32_t GetVertexCount() const;
 		uint32_t GetTriangleCount() const;
-		std::vector<iMath::Float3>& GetPositions();
-		std::vector<iMath::Float3>& GetNormals();
-		std::vector<iMath::Float3>& GetTangents();
-		std::vector<iMath::Float4>& GetColors();
-		std::vector<iMath::Float4>& GetUVs();
-		std::vector<iMath::Uint3>& GetTriangles();
+		std::vector<Float3>& GetPositions();
+		std::vector<Float3>& GetNormals();
+		std::vector<Float3>& GetTangents();
+		std::vector<Float4>& GetColors();
+		std::vector<Float4>& GetUVs();
+		std::vector<Uint3>& GetTriangles();
 		uint32_t* GetTrianglesUnrolled();
 		uint32_t GetSizeOfPositions() const;
 		uint32_t GetSizeOfNormals() const;
@@ -98,7 +98,7 @@ namespace vulkanRendererBackend
 		IndexBuffer* GetIndexBuffer();
 		bool IsLoaded();
 		Mesh* GetCopy(const std::string& newName = "");
-		VkIndexType GetIndexType();
+		static VkIndexType GetIndexType();
 
 	private: // Methods:
 		void UpdateVertexBuffer();

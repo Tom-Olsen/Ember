@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_immediateCompute_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_immediateCompute_h__
 #include "computeCall.h"
-#include "iMath.h"
+#include "emberMath.h"
 
 
 
@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
 		static void Clear();
 
 		// Immediate dispatch call:
-		static void Dispatch(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, iMath::Uint3 threadCount, float time, float deltaTime);
+		static void Dispatch(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount, float time, float deltaTime);
 
 	private: // Methods
 		// Delete all constructors:

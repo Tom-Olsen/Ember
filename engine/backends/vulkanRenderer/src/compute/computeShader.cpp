@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
 	
 	
 	// Public methods:
-	iMath::Uint3 ComputeShader::GetBlockSize() const
+	Uint3 ComputeShader::GetBlockSize() const
 	{
 		return m_blockSize;
 	}

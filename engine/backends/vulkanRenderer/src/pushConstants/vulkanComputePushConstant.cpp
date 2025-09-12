@@ -5,7 +5,7 @@
 namespace vulkanRendererBackend
 {
 	// Constructor:
-	ComputePushConstant::ComputePushConstant(iMath::Uint3 threadCount, float time, float deltaTime)
+	ComputePushConstant::ComputePushConstant(Uint3 threadCount, float time, float deltaTime)
 	{
 		this->threadCount = threadCount;
 		this->time = time;
@@ -16,7 +16,7 @@ namespace vulkanRendererBackend
 	std::string ComputePushConstant::ToString()
 	{
 		std::string output = "ComputePushConstant:\n";
-		output += "ThreadCount: " + iMath::ToStringUint3(threadCount) + "\n";
+		output += "ThreadCount: " + threadCount.ToString() + "\n";
 		output += "Time: " + std::to_string(time) + "\n";
 		output += "Delta Time: " + std::to_string(deltaTime);
 		return output;

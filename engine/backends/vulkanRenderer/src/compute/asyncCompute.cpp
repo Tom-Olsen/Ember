@@ -129,7 +129,7 @@ namespace vulkanRendererBackend
 
 
 	// Workload recording:
-	ShaderProperties* Async::RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, iMath::Uint3 threadCount)
+	ShaderProperties* Async::RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, Uint3 threadCount)
 	{
 		if (sessionID < 0 || sessionID > s_sessionCount - 1)
 			throw std::out_of_range("compute::Async::RecordComputeShader(...) sessionID out of range.");
@@ -161,7 +161,7 @@ namespace vulkanRendererBackend
 		// By returning pShaderProperties, we allow user to change the shader properties of the compute call:
 		return pShaderProperties;
 	}
-	void Async::RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, iMath::Uint3 threadCount)
+	void Async::RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount)
 	{
 		if (!pComputeShader)
 		{
@@ -201,7 +201,7 @@ namespace vulkanRendererBackend
 			return;
 		}
 
-		ComputeCall computeCall = { 0, iMath::Uint3Zero, nullptr, nullptr, srcAccessMask, dstAccessMask };
+		ComputeCall computeCall = { 0, Uint3::zero, nullptr, nullptr, srcAccessMask, dstAccessMask };
 		s_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
 

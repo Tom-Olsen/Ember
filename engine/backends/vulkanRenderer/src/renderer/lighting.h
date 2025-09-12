@@ -1,6 +1,6 @@
 ﻿#ifndef __INCLUDE_GUARD_vulkanRendererBackend_lighting_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_lighting_h__
-#include "iMath.h"
+#include "emberMath.h"
 #include <string>
 #include <vector>
 
@@ -14,22 +14,22 @@ namespace vulkanRendererBackend
 		enum class ShadowType { hard, soft };
 		struct DirectionalLight
 		{
-			iMath::Float3 direction;
+			Float3 direction;
 			float intensity;
-			iMath::Float3 color;
+			Float3 color;
 			ShadowType shadowType;
-			iMath::Float4x4 worldToClipMatrix;
+			Float4x4 worldToClipMatrix;
 			std::string ToString();
 		};
 		struct PositionalLight
 		{
-			iMath::Float3 position;
+			Float3 position;
 			float intensity;
-			iMath::Float3 color;
+			Float3 color;
 			ShadowType shadowType;
 			float blendStart;
 			float blendEnd;
-			iMath::Float4x4 worldToClipMatrix;
+			Float4x4 worldToClipMatrix;
 			std::string ToString();
 		};
 
@@ -42,22 +42,22 @@ namespace vulkanRendererBackend
 		static uint32_t s_shadowMapResolution;
 		static std::vector<DirectionalLight> s_directionalLights;
 		static std::vector<PositionalLight> s_positionalLights;
-		static iMath::Float4x4 s_pointLightRotationMatrices[6];
+		static Float4x4 s_pointLightRotationMatrices[6];
 
 	public: // Methods:
 		static void Init(uint32_t maxDirectionalLights, uint32_t maxPositionalLights, uint32_t shadowMapResolution);
 		static void Clear();
 
 		// Setters/Adders:
-		static void AddDirectionalLight(const iMath::Float3& direction, float intensity, const iMath::Float3& color, ShadowType shadowType, const iMath::Float4x4& worldToClipMatrix);
-		static void AddPositionalLight(const iMath::Float3& position, float intensity, const iMath::Float3& color, ShadowType shadowType, float blendStart, float blendEnd, const iMath::Float4x4& worldToClipMatrix);
+		static void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, ShadowType shadowType, const Float4x4& worldToClipMatrix);
+		static void AddPositionalLight(const Float3& position, float intensity, const Float3& color, ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix);
 
 		// Getters:
 		static uint32_t GetDirectionalLightsCount();
 		static uint32_t GetPositionalLightsCount();
 		static std::vector<DirectionalLight>& GetDirectionalLights();
 		static std::vector<PositionalLight>& GetPositionalLights();
-		static iMath::Float4x4 GetPointLightRotationMatrix(uint32_t faceIndex);
+		static Float4x4 GetPointLightRotationMatrix(uint32_t faceIndex);
 
 		// Management:
 		static void ResetLights();

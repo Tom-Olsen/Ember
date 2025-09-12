@@ -1,7 +1,7 @@
 #include "postRenderCompute.h"
 #include "computeCall.h"
 #include "computeShader.h"
-#include "iMath.h"
+#include "emberMath.h"
 #include "poolManager.h"
 #include "renderTexture2d.h"
 #include "shaderProperties.h"
@@ -57,7 +57,7 @@ namespace vulkanRendererBackend
 		// Setup compute call:
 		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
-		iMath::Uint3 threadCount{ width, height, 1 };
+		Uint3 threadCount{ width, height, 1 };
 		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(pComputeShader);
 		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, accessMask::none::none, accessMask::none::none };
 		s_dynamicComputeCalls.push_back(computeCall);
@@ -84,7 +84,7 @@ namespace vulkanRendererBackend
 		// Setup compute call:
 		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
-		iMath::Uint3 threadCount{ width, height, 1 };
+		Uint3 threadCount{ width, height, 1 };
 		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, accessMask::none::none, accessMask::none::none };
 		s_staticComputeCalls.push_back(computeCall);
 		s_callIndex++;

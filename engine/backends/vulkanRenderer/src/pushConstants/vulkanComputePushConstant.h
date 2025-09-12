@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanComputePushConstant_h__
 #define __INCLUDE_GUARD_vulkanComputePushConstant_h__
-#include "iMath.h"
+#include "emberMath.h"
 #include <string>
 
 
@@ -13,11 +13,11 @@ namespace vulkanRendererBackend
 	/// </summary>
 	struct ComputePushConstant
 	{
-		alignas(4) iMath::Uint3 threadCount;
+		alignas(4) Uint3 threadCount;
 		alignas(4) float time;
 		alignas(4) float deltaTime;
 
-		ComputePushConstant(iMath::Uint3 threadCount, float time, float deltaTime);
+		ComputePushConstant(Uint3 threadCount, float time, float deltaTime);
 		std::string ToString();
 	};
 }

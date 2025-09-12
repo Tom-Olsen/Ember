@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_nullWindow_h__
 #define __INCLUDE_GUARD_nullWindow_h__
+#include "emberMath.h"
 #include "nullWindowExport.h"
-#include "iMath.h"
 #include "iWindow.h"
 #include <vector>
 
@@ -42,7 +42,7 @@ namespace nullWindowBackend
 		bool GetIsMinimized() const override;
 		bool GetIsResized() const override;
 		void* GetNativeHandle() const;
-		iMath::Int2 GetSize() const;
+		Int2 GetSize() const;
 		uint32_t GetWindowID() const;
 	};
 }

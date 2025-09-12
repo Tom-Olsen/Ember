@@ -88,17 +88,17 @@ namespace nullWindowBackend
 	{
 
 	}
-	iMath::Float2 NullDearImGui::GetWindowSize()
+	Float2 NullDearImGui::GetWindowSize()
 	{
-		return iMath::Float2{ 0, 0 };
+		return Float2{ 0, 0 };
 	}
-	iMath::Float2  NullDearImGui::GetContentRegionalAvail()
+	Float2  NullDearImGui::GetContentRegionalAvail()
 	{
-		return iMath::Float2{ 0, 0 };
+		return Float2{ 0, 0 };
 	}
-	iMath::Float2  NullDearImGui::GetCursorPos()
+	Float2  NullDearImGui::GetCursorPos()
 	{
-		return iMath::Float2{ 0, 0 };
+		return Float2{ 0, 0 };
 	}
 	void NullDearImGui::SetCursorPos(float localPosX, float localPosY)
 	{

@@ -236,20 +236,20 @@ namespace sdlWindowBackend
 	{
 		ImGui::PopID();
 	}
-	iMath::Float2 SdlDearImGui::GetWindowSize()
+	Float2 SdlDearImGui::GetWindowSize()
 	{
 		ImVec2 size = ImGui::GetWindowSize();
-		return iMath::Float2{ size.x, size.y };
+		return Float2{ size.x, size.y };
 	}
-	iMath::Float2 SdlDearImGui::GetContentRegionalAvail()
+	Float2 SdlDearImGui::GetContentRegionalAvail()
 	{
 		ImVec2 regionAvail = ImGui::GetContentRegionAvail();
-		return iMath::Float2{ regionAvail.x, regionAvail.y };
+		return Float2{ regionAvail.x, regionAvail.y };
 	}
-	iMath::Float2 SdlDearImGui::GetCursorPos()
+	Float2 SdlDearImGui::GetCursorPos()
 	{
 		ImVec2 cursorPos = ImGui::GetCursorPos();
-		return iMath::Float2{ cursorPos.x, cursorPos.y };
+		return Float2{ cursorPos.x, cursorPos.y };
 	}
 	void SdlDearImGui::SetCursorPos(float localPosX, float localPosY)
 	{

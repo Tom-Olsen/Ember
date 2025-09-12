@@ -1,6 +1,6 @@
 #include "shaderProperties.h"
 #include "defaultGpuResources.h"
-#include "iMath.h"
+#include "emberMath.h"
 #include "sampler.h"
 #include "shader.h"
 #include "spirvReflect.h"
@@ -88,11 +88,11 @@ namespace vulkanRendererBackend
 		SetSampler("shadowSampler", DefaultGpuResources::GetShadowSampler());
 		SetTexture2d("shadowMaps", (Texture2d*)pShadowRenderPass->GetShadowMaps());
 		SetTexture2d("normalMap", (Texture2d*)DefaultGpuResources::GetNormalMapSampleTexture2d());
-		SetValue("SurfaceProperties", "diffuseColor", iMath::Float4One);
+		SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		SetValue("SurfaceProperties", "roughness", 0.5f);
-		SetValue("SurfaceProperties", "reflectivity", iMath::Float3{ 0.4f, 0.4f, 0.4f });
+		SetValue("SurfaceProperties", "reflectivity", Float3(0.4f, 0.4f, 0.4f));
 		SetValue("SurfaceProperties", "metallicity", 0);
-		SetValue("SurfaceProperties", "scaleOffset", iMath::Float4{ 1, 1, 0, 0 });
+		SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
 	}
 	ShaderProperties::~ShaderProperties()
 	{
@@ -513,64 +513,64 @@ namespace vulkanRendererBackend
 	template void ShaderProperties::SetValue<int>(const std::string& bufferName, const std::string& memberName, const int& value);
 	template void ShaderProperties::SetValue<bool>(const std::string& bufferName, const std::string& memberName, const bool& value);
 	template void ShaderProperties::SetValue<float>(const std::string& bufferName, const std::string& memberName, const float& value);
-	template void ShaderProperties::SetValue<iMath::Float2>(const std::string& bufferName, const std::string& memberName, const iMath::Float2& value);
-	template void ShaderProperties::SetValue<iMath::Float3>(const std::string& bufferName, const std::string& memberName, const iMath::Float3& value);
-	template void ShaderProperties::SetValue<iMath::Float4>(const std::string& bufferName, const std::string& memberName, const iMath::Float4& value);
-	template void ShaderProperties::SetValue<iMath::Float4x4>(const std::string& bufferName, const std::string& memberName, const iMath::Float4x4& value);
+	template void ShaderProperties::SetValue<Float2>(const std::string& bufferName, const std::string& memberName, const Float2& value);
+	template void ShaderProperties::SetValue<Float3>(const std::string& bufferName, const std::string& memberName, const Float3& value);
+	template void ShaderProperties::SetValue<Float4>(const std::string& bufferName, const std::string& memberName, const Float4& value);
+	template void ShaderProperties::SetValue<Float4x4>(const std::string& bufferName, const std::string& memberName, const Float4x4& value);
 
 	template void ShaderProperties::SetValue<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const int& value);
 	template void ShaderProperties::SetValue<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const bool& value);
 	template void ShaderProperties::SetValue<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const float& value);
-	template void ShaderProperties::SetValue<iMath::Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const iMath::Float2& value);
-	template void ShaderProperties::SetValue<iMath::Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const iMath::Float3& value);
-	template void ShaderProperties::SetValue<iMath::Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const iMath::Float4& value);
-	template void ShaderProperties::SetValue<iMath::Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const iMath::Float4x4& value);
+	template void ShaderProperties::SetValue<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const Float2& value);
+	template void ShaderProperties::SetValue<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const Float3& value);
+	template void ShaderProperties::SetValue<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const Float4& value);
+	template void ShaderProperties::SetValue<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const Float4x4& value);
 
 	template void ShaderProperties::SetValue<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const int& value);
 	template void ShaderProperties::SetValue<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const bool& value);
 	template void ShaderProperties::SetValue<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const float& value);
-	template void ShaderProperties::SetValue<iMath::Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const iMath::Float2& value);
-	template void ShaderProperties::SetValue<iMath::Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const iMath::Float3& value);
-	template void ShaderProperties::SetValue<iMath::Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const iMath::Float4& value);
-	template void ShaderProperties::SetValue<iMath::Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const iMath::Float4x4& value);
+	template void ShaderProperties::SetValue<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float2& value);
+	template void ShaderProperties::SetValue<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float3& value);
+	template void ShaderProperties::SetValue<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float4& value);
+	template void ShaderProperties::SetValue<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float4x4& value);
 
 	template void ShaderProperties::SetValue<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const int& value);
 	template void ShaderProperties::SetValue<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const bool& value);
 	template void ShaderProperties::SetValue<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const float& value);
-	template void ShaderProperties::SetValue<iMath::Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const iMath::Float2& value);
-	template void ShaderProperties::SetValue<iMath::Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const iMath::Float3& value);
-	template void ShaderProperties::SetValue<iMath::Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const iMath::Float4& value);
-	template void ShaderProperties::SetValue<iMath::Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const iMath::Float4x4& value);
+	template void ShaderProperties::SetValue<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value);
+	template void ShaderProperties::SetValue<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
+	template void ShaderProperties::SetValue<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
+	template void ShaderProperties::SetValue<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
 
 	template int ShaderProperties::GetValue<int>(const std::string& bufferName, const std::string& memberName) const;
 	template bool ShaderProperties::GetValue<bool>(const std::string& bufferName, const std::string& memberName) const;
 	template float ShaderProperties::GetValue<float>(const std::string& bufferName, const std::string& memberName) const;
-	template iMath::Float2 ShaderProperties::GetValue<iMath::Float2>(const std::string& bufferName, const std::string& memberName) const;
-	template iMath::Float3 ShaderProperties::GetValue<iMath::Float3>(const std::string& bufferName, const std::string& memberName) const;
-	template iMath::Float4 ShaderProperties::GetValue<iMath::Float4>(const std::string& bufferName, const std::string& memberName) const;
-	template iMath::Float4x4 ShaderProperties::GetValue<iMath::Float4x4>(const std::string& bufferName, const std::string& memberName) const;
+	template Float2 ShaderProperties::GetValue<Float2>(const std::string& bufferName, const std::string& memberName) const;
+	template Float3 ShaderProperties::GetValue<Float3>(const std::string& bufferName, const std::string& memberName) const;
+	template Float4 ShaderProperties::GetValue<Float4>(const std::string& bufferName, const std::string& memberName) const;
+	template Float4x4 ShaderProperties::GetValue<Float4x4>(const std::string& bufferName, const std::string& memberName) const;
 
 	template int ShaderProperties::GetValue<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
 	template bool ShaderProperties::GetValue<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
 	template float ShaderProperties::GetValue<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template iMath::Float2 ShaderProperties::GetValue<iMath::Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template iMath::Float3 ShaderProperties::GetValue<iMath::Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template iMath::Float4 ShaderProperties::GetValue<iMath::Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template iMath::Float4x4 ShaderProperties::GetValue<iMath::Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+	template Float2 ShaderProperties::GetValue<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+	template Float3 ShaderProperties::GetValue<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+	template Float4 ShaderProperties::GetValue<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+	template Float4x4 ShaderProperties::GetValue<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
 
 	template int ShaderProperties::GetValue<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
 	template bool ShaderProperties::GetValue<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
 	template float ShaderProperties::GetValue<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template iMath::Float2 ShaderProperties::GetValue<iMath::Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template iMath::Float3 ShaderProperties::GetValue<iMath::Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template iMath::Float4 ShaderProperties::GetValue<iMath::Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template iMath::Float4x4 ShaderProperties::GetValue<iMath::Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+	template Float2 ShaderProperties::GetValue<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+	template Float3 ShaderProperties::GetValue<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+	template Float4 ShaderProperties::GetValue<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+	template Float4x4 ShaderProperties::GetValue<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
 
 	template int ShaderProperties::GetValue<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 	template bool ShaderProperties::GetValue<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 	template float ShaderProperties::GetValue<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template iMath::Float2 ShaderProperties::GetValue<iMath::Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template iMath::Float3 ShaderProperties::GetValue<iMath::Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template iMath::Float4 ShaderProperties::GetValue<iMath::Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template iMath::Float4x4 ShaderProperties::GetValue<iMath::Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+	template Float2 ShaderProperties::GetValue<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+	template Float3 ShaderProperties::GetValue<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+	template Float4 ShaderProperties::GetValue<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+	template Float4x4 ShaderProperties::GetValue<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 }

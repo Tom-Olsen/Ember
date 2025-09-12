@@ -34,7 +34,7 @@ namespace vulkanRendererBackend
 
 
 	// Workload recording:
-	ShaderProperties* PreRender::RecordComputeShader(ComputeShader* pComputeShader, iMath::Uint3 threadCount)
+	ShaderProperties* PreRender::RecordComputeShader(ComputeShader* pComputeShader, Uint3 threadCount)
 	{
 		if (!pComputeShader)
 		{
@@ -58,7 +58,7 @@ namespace vulkanRendererBackend
 		// By returning pShaderProperties, we allow user to change the shader properties of the compute call:
 		return pShaderProperties;
 	}
-	void PreRender::RecordComputeShader(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, iMath::Uint3 threadCount)
+	void PreRender::RecordComputeShader(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount)
 	{
 		if (!pComputeShader)
 		{
@@ -86,7 +86,7 @@ namespace vulkanRendererBackend
 	}
 	void PreRender::RecordBarrier(VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
 	{
-		ComputeCall computeCall = { s_callIndex, iMath::Uint3Zero, nullptr, nullptr, srcAccessMask, dstAccessMask };
+		ComputeCall computeCall = { s_callIndex, Uint3::zero, nullptr, nullptr, srcAccessMask, dstAccessMask };
 		s_staticComputeCalls.push_back(computeCall);
 		s_callIndex++;
 	}

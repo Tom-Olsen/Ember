@@ -58,9 +58,9 @@ namespace nullWindowBackend
 	{
 		return m_pWindow;
 	}
-	iMath::Int2 NullWindow::GetSize() const
+	Int2 NullWindow::GetSize() const
 	{
-		return iMath::Int2{ 0, 0 };
+		return Int2{ 0, 0 };
 	}
 	uint32_t NullWindow::GetWindowID() const
 	{

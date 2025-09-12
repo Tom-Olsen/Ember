@@ -2,7 +2,6 @@
 #include "event.h"
 #include "logger.h"
 #include "macros.h"
-#include "iMath.h"
 #include "nullWindow.h"
 #include "profiler.h"
 #include "sdlWindow.h"
@@ -71,7 +70,7 @@ namespace emberEngine
 	}
 	Int2 Window::GetSize()
 	{
-		iMath::Int2 size = s_pIWindow->GetSize();
+		Int2 size = s_pIWindow->GetSize();
 		return Int2(size[0], size[1]);
 	}
 	uint32_t Window::GetWindowID()

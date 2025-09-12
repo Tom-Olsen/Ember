@@ -33,7 +33,7 @@ namespace vulkanRendererBackend
 
 
 	// Immediate dispatch call:
-	void Immediate::Dispatch(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, iMath::Uint3 threadCount, float time, float deltaTime)
+	void Immediate::Dispatch(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount, float time, float deltaTime)
 	{
 		if (!pComputeShader)
 		{
@@ -68,10 +68,10 @@ namespace vulkanRendererBackend
 			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 
 			// Compute group count:
-			iMath::Uint3 blockSize = pComputeShader->GetBlockSize();
-			uint32_t groupCountX = (threadCount[0] + blockSize[0] - 1) / blockSize[0];
-			uint32_t groupCountY = (threadCount[1] + blockSize[1] - 1) / blockSize[1];
-			uint32_t groupCountZ = (threadCount[2] + blockSize[2] - 1) / blockSize[2];
+			Uint3 blockSize = pComputeShader->GetBlockSize();
+			uint32_t groupCountX = (threadCount.x + blockSize.x - 1) / blockSize.x;
+			uint32_t groupCountY = (threadCount.y + blockSize.y - 1) / blockSize.y;
+			uint32_t groupCountZ = (threadCount.z + blockSize.z - 1) / blockSize.z;
 
 			// Dispatch compute shader:
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &pShaderProperties->GetDescriptorSet(0), 0, nullptr);

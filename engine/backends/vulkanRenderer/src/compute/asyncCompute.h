@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_asyncCompute_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_asyncCompute_h__
-#include "iMath.h"
+#include "emberMath.h"
 #include <queue>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -42,8 +42,8 @@ namespace vulkanRendererBackend
 		static void WaitForFinish(uint32_t sessionID);
 
 		// Workload recording:
-		static ShaderProperties* RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, iMath::Uint3 threadCount);
-		static void RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, iMath::Uint3 threadCount);
+		static ShaderProperties* RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, Uint3 threadCount);
+		static void RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount);
 		static void RecordBarrier(uint32_t sessionID, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
 
 	private: // Methods
