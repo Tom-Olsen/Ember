@@ -33,8 +33,8 @@
 // Forward decleration:
 namespace emberBackendInterface
 {
-	class IWindow;
 	class IDearImGuiInstanceExtensionsLoader;
+	class IWindow;
 }
 
 
@@ -76,15 +76,12 @@ namespace vulkanRendererBackend
 		static uint64_t absoluteFrameIndex;
 		static VkSampleCountFlagBits msaaSamples;
 		static bool enableDockSpace;
-		static uint32_t maxDirectionalLights;
-		static uint32_t maxPositionalLights;
-		static uint32_t shadowMapResolution;
 		static float depthBiasConstantFactor;
 		static float depthBiasClamp;
 		static float depthBiasSlopeFactor;
 		
 	public: // Methods:
-		static void Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights_, uint32_t maxPositionalLights_, uint32_t shadowMapResolution_);
+		static void Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights, uint32_t maxPositionalLights, uint32_t shadowMapResolution);
 		static void Clear();
 		static void RebuildSwapchain();
 

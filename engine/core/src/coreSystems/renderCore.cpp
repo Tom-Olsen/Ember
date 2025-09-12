@@ -17,7 +17,7 @@
 #include "renderTexture2d.h"
 #include "shaderProperties.h"
 #include "spirvReflect.h"
-#include "taskflowManager.h"
+#include "taskSystem.h"
 #include "textureManager.h"
 #include "vertexBuffer.h"
 #include "vmaBuffer.h"
@@ -51,7 +51,7 @@ namespace emberEngine
 		// Command pools (one per frameInFlight * renderStage):
 		m_commandPools.reserve(Context::framesInFlight * (int)RenderStage::stageCount);
 		for (int i = 0; i < Context::framesInFlight * (int)RenderStage::stageCount; i++)
-			m_commandPools.emplace_back(TaskflowManager::GetCoreCount(), Context::logicalDevice.GetGraphicsQueue());
+			m_commandPools.emplace_back(emberTaskSystem::TaskSystem::GetCoreCount(), Context::logicalDevice.GetGraphicsQueue());
 
 		// Shadow render pass caching:
 		m_pShadowMaterial = MaterialManager::GetMaterial("shadowMaterial");
@@ -74,7 +74,7 @@ namespace emberEngine
 				name += "_frame" + std::to_string(frameIndex);
 				NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "CommandPoolPrimary_" + name);
                 NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandBuffer(), "CommandBufferPrimary_" + name);
-				for (int threadIndex = 0; threadIndex < TaskflowManager::GetCoreCount(); threadIndex++)
+				for (int threadIndex = 0; threadIndex < emberTaskSystem::TaskSystem::GetCoreCount(); threadIndex++)
                 {
                     NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPoolSecondary" + std::to_string(threadIndex) + "_" + name);
                     NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBufferSecondary_" + std::to_string(threadIndex) + "_" + name);
@@ -137,9 +137,9 @@ namespace emberEngine
 			SubmitForwardCommands();
 
 			//tf::Taskflow taskflow;
-			//for (int i = 0; i < TaskflowManager::GetCoreCount(); i++)
+			//for (int i = 0; i < emberTaskSystem::TaskSystem::GetCoreCount(); i++)
 			//	taskflow.emplace([this] { this->RecordForwardCommandsParallel(); }).name("RecordForwardCommandsParallel" + std::to_string(i));
-			//TaskflowManager::RunAndWait(taskflow);
+			//emberTaskSystem::TaskSystem::RunAndWait(taskflow);
 			//SubmitForwardCommandsParallel();
 
 			RecordPostRenderComputeCommands();
@@ -525,8 +525,8 @@ namespace emberEngine
 
 		// Logic for workload splitting across threads:
 		int totalWorkload = (int)m_pDrawCalls->size();
-		int threadIndex = TaskflowManager::GetThreadIndex();
-		int coreCount = TaskflowManager::GetCoreCount();
+		int threadIndex = emberTaskSystem::TaskSystem::GetThreadIndex();
+		int coreCount = emberTaskSystem::TaskSystem::GetCoreCount();
 		int baseChunkSize = totalWorkload / coreCount;
 		int remainder = totalWorkload % coreCount;
 		int startIndex = threadIndex * baseChunkSize + std::min(threadIndex, remainder);

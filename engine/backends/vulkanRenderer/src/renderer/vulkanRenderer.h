@@ -7,6 +7,14 @@
 
 
 
+// Forward declarations:
+namespace emberBackendInterface
+{
+	class IDearImGui;
+}
+
+
+
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
@@ -40,6 +48,9 @@ namespace vulkanRendererBackend
 		};
 
 	private: // Members:
+		// Backend hooks:
+		emberBackendInterface::IDearImGui* m_pIDearImGui;
+		
 		// Render resources:
 		std::vector<CommandPool> m_commandPools;
 
@@ -71,11 +82,8 @@ namespace vulkanRendererBackend
 		float m_deltaTime;
 		bool m_rebuildSwapchain;
 
-		// Game engine data injection:
-		std::vector<DrawCall*>* m_pDrawCalls;
-
 	public: // Methods:
-		Renderer();
+		Renderer(emberBackendInterface::IDearImGui* pIDearImGui);
 		~Renderer();
 		bool RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime);
 

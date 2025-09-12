@@ -71,10 +71,6 @@ source_group("Textures" FILES ${TEXTURES_FILES})
 file(GLOB UTILITY_FILES "src/utility/*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
-# ../../interfaces/math/*:
-file(GLOB MATH_INTERFACE_FILES "../../interfaces/math/*")
-source_group("Math Interface" FILES ${MATH_INTERFACE_FILES})
-
 # ../../interfaces/renderer/*:
 file(GLOB RENDERER_INTERFACE_FILES "../../interfaces/renderer/*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
@@ -104,7 +100,6 @@ add_library(${PROJECT_NAME}
     ${RENDER_PASSES_FILES}
     ${TEXTURES_FILES}
     ${UTILITY_FILES}
-    ${MATH_INTERFACE_FILES}
     ${RENDERER_INTERFACE_FILES}
     ${UTILITY_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
@@ -123,7 +118,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPasses
     ${CMAKE_CURRENT_SOURCE_DIR}/src/textures
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/math
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/utility
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window)
@@ -146,13 +140,23 @@ endif()
 
 
 
-# ------------------ Link Libraries -----------------
+# -------------- Link Custom Libraries --------------
 # EmberMath:
 if (NOT TARGET EmberMath)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../math" EmberMath)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
+# EmberTaskSystem:
+if (NOT TARGET EmberTaskSystem)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/taskSystem" EmberTaskSystem)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
+# ---------------------------------------------------
+
+
+
+# ------------- Link External Libraries -------------
 # Vulkan (dynamicly linked):
 find_package(Vulkan REQUIRED)           # required to be installed
 target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
@@ -164,7 +168,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ../../extern/vma/include)
 # SPIRV-Reflect:
 set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect
 add_subdirectory("../../extern/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
-#target_include_directories(${PROJECT_NAME} PUBLIC ../../extern/SPIRV-Reflect)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-reflect-static)
 # ---------------------------------------------------
 

@@ -1,20 +1,18 @@
-#include "taskflowManager.h"
-#include "logger.h"
-#include "macros.h"
+#include "taskSystem.h"
 
 
 
-namespace emberEngine
+namespace emberTaskSystem
 {
 	// Static members:
-	bool TaskflowManager::s_isInitialized = false;
-	int TaskflowManager::s_cores;
-	tf::Executor TaskflowManager::s_executor;
+	bool TaskSystem::s_isInitialized = false;
+	int TaskSystem::s_cores;
+	tf::Executor TaskSystem::s_executor;
 
 
 
 	// Initialization/Cleanup:
-	void TaskflowManager::Init()
+	void TaskSystem::Init()
 	{
 		if (s_isInitialized)
 			return;
@@ -22,38 +20,34 @@ namespace emberEngine
 
 		s_cores = static_cast<int>(std::thread::hardware_concurrency());
 		tf::Executor s_executor(s_cores);
-
-		#ifdef LOG_INITIALIZATION
-		LOG_TRACE("TaskflowManager initialized.");
-		#endif
 	}
-	void TaskflowManager::Clear()
+	void TaskSystem::Clear()
 	{
 
 	}
 
 
 
-	int TaskflowManager::GetCoreCount()
+	int TaskSystem::GetCoreCount()
 	{
 		return s_cores;
 	}
-	int TaskflowManager::GetThreadIndex()
+	int TaskSystem::GetThreadIndex()
 	{
 		// thread_local <=> static, but for a thread.
 		// This means index will be initialized only once per thread.
 		thread_local int index = s_counter++;
 		return index;
 	}
-	tf::Executor& TaskflowManager::GetExecutor()
+	tf::Executor& TaskSystem::GetExecutor()
 	{
 		return s_executor;
 	}
-	void TaskflowManager::RunAndWait(tf::Taskflow& taskflow)
+	void TaskSystem::RunAndWait(tf::Taskflow& taskflow)
 	{
 		s_executor.run(taskflow).wait();
 	}
-	void TaskflowManager::ResetThreadIndices()
+	void TaskSystem::ResetThreadIndices()
 	{
 		// No need to reset except when you expect number of threads in parallel zone to be less.
 		s_counter = 0;

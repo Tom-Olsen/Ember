@@ -322,6 +322,67 @@ namespace vulkanRendererBackend
 
 
 
+	// Mesh transformations (changes *this):
+	void Mesh::ComputeNormals()
+	{
+		m_normals.resize(m_vertexCount, Float3::zero);
+		for (auto& triangle : m_triangles)
+		{
+			Float3 p0 = m_positions[triangle[0]];
+			Float3 p1 = m_positions[triangle[1]];
+			Float3 p2 = m_positions[triangle[2]];
+			Float3 edge10 = p1 - p0;
+			Float3 edge20 = p2 - p0;
+			Float3 normal = Float3::Cross(edge10, edge20).Normalize();
+
+			m_normals[triangle[0]] += normal;
+			m_normals[triangle[1]] += normal;
+			m_normals[triangle[2]] += normal;
+		}
+		for (uint32_t i = 0; i < m_vertexCount; i++)
+			m_normals[i].Normalize();
+	}
+	void Mesh::ComputeTangents()
+	{
+		if (m_uvs.size() != m_vertexCount)
+		{
+			//LOG_WARN("Mesh '{}' has no uvs! Cannot compute tangents.", m_name);
+			std::cerr << "Mesh '" << m_name << "' has no uvs! Cannot compute tangents." << std::endl;
+			m_tangents.resize(m_vertexCount, Float3::zero);
+			return;
+		}
+		if (m_normals.size() != m_vertexCount)
+			ComputeNormals();
+
+		m_tangents.resize(m_vertexCount, Float3::zero);
+		for (auto& triangle : m_triangles)
+		{
+			Float3 p0 = m_positions[triangle[0]];
+			Float3 p1 = m_positions[triangle[1]];
+			Float3 p2 = m_positions[triangle[2]];
+			Float3 edge10 = p1 - p0;
+			Float3 edge20 = p2 - p0;
+			Float2 uv0 = Float2(m_uvs[triangle[0]]);
+			Float2 uv1 = Float2(m_uvs[triangle[1]]);
+			Float2 uv2 = Float2(m_uvs[triangle[2]]);
+			Float2 deltaUv10 = uv1 - uv0;
+			Float2 deltaUv20 = uv2 - uv0;
+
+			float denom = (deltaUv10.x * deltaUv20.y - deltaUv20.x * deltaUv10.y);
+			float det = std::abs(denom) < 1e-6f ? 1.0f : 1.0f / denom;
+			Float3 tangent = det * (deltaUv20.y * edge10 - deltaUv10.y * edge20);
+			tangent.Normalize();
+
+			m_tangents[triangle[0]] += tangent;
+			m_tangents[triangle[1]] += tangent;
+			m_tangents[triangle[2]] += tangent;
+		}
+		for (uint32_t i = 0; i < m_vertexCount; i++)
+			m_tangents[i] = geometry3d::PointToPlaneProjection(m_tangents[i], Float3::zero, m_normals[i]).Normalize();
+	}
+
+
+
 	// Private:
 	#ifdef RESIZEABLE_BAR // No staging buffer:
 	void Mesh::UpdateVertexBuffer()

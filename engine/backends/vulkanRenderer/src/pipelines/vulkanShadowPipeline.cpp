@@ -1,4 +1,5 @@
 #include "vulkanShadowPipeline.h"
+#include "lighting.h"
 #include "mesh.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
@@ -84,13 +85,13 @@ namespace vulkanRendererBackend
         VkViewport viewport = {};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float)Context::shadowMapResolution;
-        viewport.height = (float)Context::shadowMapResolution;
+        viewport.width = (float)Lighting::GetShadowMapResolution();
+        viewport.height = (float)Lighting::GetShadowMapResolution();
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         VkRect2D scissor = {};
         scissor.offset = { 0, 0 };
-        scissor.extent = VkExtent2D{ Context::shadowMapResolution, Context::shadowMapResolution };
+        scissor.extent = VkExtent2D{ Lighting::GetShadowMapResolution(),  Lighting::GetShadowMapResolution() };
         VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
         viewportState.viewportCount = 1;
         viewportState.pViewports = &viewport;

@@ -1,15 +1,15 @@
-#ifndef __INCLUDE_GUARD_taskflowManager_h__
-#define __INCLUDE_GUARD_taskflowManager_h__
+#ifndef __INCLUDE_GUARD_emberTaskSystem_taskSystem_h__
+#define __INCLUDE_GUARD_emberTaskSystem_taskSystem_h__
 #include <taskflow/taskflow.hpp>
 
 
 
-namespace emberEngine
+namespace emberTaskSystem
 {
     /// <summary>
     /// Purely static class that allows acces to global tf::Executor.
     /// </summary>
-    class TaskflowManager
+    class TaskSystem
     {
     private: // Members:
         static bool s_isInitialized;
@@ -28,15 +28,12 @@ namespace emberEngine
 
     private: // Methods:
         // Delete all constructors:
-        TaskflowManager() = delete;
-        TaskflowManager(const TaskflowManager&) = delete;
-        TaskflowManager& operator=(const TaskflowManager&) = delete;
-        TaskflowManager(TaskflowManager&&) = delete;
-        TaskflowManager& operator=(TaskflowManager&&) = delete;
-        ~TaskflowManager() = delete;
+        TaskSystem() = delete;
+        TaskSystem(const TaskSystem&) = delete;
+        TaskSystem& operator=(const TaskSystem&) = delete;
+        TaskSystem(TaskSystem&&) = delete;
+        TaskSystem& operator=(TaskSystem&&) = delete;
+        ~TaskSystem() = delete;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_taskflowManager_h__
+#endif // __INCLUDE_GUARD_emberTaskSystem_taskSystem_h__

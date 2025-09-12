@@ -30,7 +30,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib") # target directo
 
 # ------ Add Shared dependencies Subdirectories -----
 # EmberMath:
-add_subdirectory("${CORE_ROOT_DIR}/../math" EmberMath)
+add_subdirectory("${CORE_ROOT_DIR}/../libs/math" EmberMath)
 
 # Shaders:
 set(SHADER_DIR "${CORE_ROOT_DIR}/../shaders")
@@ -252,6 +252,12 @@ message(STATUS "Target ${PROJECT_NAME} sources: ${_srcs}")
     # -------------- Link Custom Libraries --------------
     # EmberMath:
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+
+    # EmberTaskSystem:
+    if (NOT TARGET EmberTaskSystem)
+        add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/taskSystem" EmberTaskSystem)
+    endif()
+    target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
 
     # Null Window Backend:
     target_link_libraries(${PROJECT_NAME} PUBLIC nullWindowBackend)

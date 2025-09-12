@@ -100,6 +100,10 @@ namespace vulkanRendererBackend
 		Mesh* GetCopy(const std::string& newName = "");
 		static VkIndexType GetIndexType();
 
+		// Mesh transformations (changes *this):
+		void ComputeNormals();
+		void ComputeTangents();
+
 	private: // Methods:
 		void UpdateVertexBuffer();
 		void UpdateIndexBuffer();

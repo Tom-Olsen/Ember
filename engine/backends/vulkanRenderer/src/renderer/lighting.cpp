@@ -17,6 +17,7 @@ namespace vulkanRendererBackend
 	Float4x4 Lighting::s_pointLightRotationMatrices[6];
 
 
+
 	// Initialization/Cleanup:
 	void Lighting::Init(uint32_t maxDirectionalLights, uint32_t maxPositionalLights, uint32_t shadowMapResolution)
 	{
@@ -35,15 +36,16 @@ namespace vulkanRendererBackend
         s_positionalLights.resize(s_maxPositionalLights);
 
 		s_pointLightRotationMatrices[0] = Float4x4::identity;
-		s_pointLightRotationMatrices[1] = Float4x4::RotateY( pi2);
-		s_pointLightRotationMatrices[2] = Float4x4::RotateY( pi );	
-		s_pointLightRotationMatrices[3] = Float4x4::RotateY(-pi2);
-		s_pointLightRotationMatrices[4] = Float4x4::RotateX( pi2);
-		s_pointLightRotationMatrices[5] = Float4x4::RotateX(-pi2);
+		s_pointLightRotationMatrices[1] = Float4x4::RotateY( math::pi2);
+		s_pointLightRotationMatrices[2] = Float4x4::RotateY( math::pi );	
+		s_pointLightRotationMatrices[3] = Float4x4::RotateY(-math::pi2);
+		s_pointLightRotationMatrices[4] = Float4x4::RotateX( math::pi2);
+		s_pointLightRotationMatrices[5] = Float4x4::RotateX(-math::pi2);
 	}
 	void Lighting::Clear()
 	{
-
+		s_directionalLights.clear();
+		s_positionalLights.clear();
 	}
 
 
@@ -87,6 +89,18 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
+	uint32_t Lighting::GetMaxDirectionalLights()
+	{
+		return s_maxDirectionalLights;
+	}
+	uint32_t Lighting::GetMaxPositionalLights()
+	{
+		return s_maxPositionalLights;
+	}
+	uint32_t Lighting::GetShadowMapResolution()
+	{
+		return s_shadowMapResolution;
+	}
 	uint32_t Lighting::GetDirectionalLightsCount()
 	{
 		return s_directionalLightsCount;

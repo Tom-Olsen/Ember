@@ -1,5 +1,5 @@
 
-# Ember/engine/math/CMakeLists.txt
+# Ember/engine/libs/taskSystem/CMakeLists.txt
 
 
 
@@ -9,7 +9,7 @@ set(PROJECT_TYPE STATIC)
 
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
-project(EmberMath)
+project(EmberTaskSystem)
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
@@ -35,4 +35,11 @@ add_library(${PROJECT_NAME} ${PROJECT_TYPE} ${SRC_FILES})
 
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+# ---------------------------------------------------
+
+
+
+# ------------- Link External Libraries -------------
+# Taskflow: (header only)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/taskflow)
 # ---------------------------------------------------

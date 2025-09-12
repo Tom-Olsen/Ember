@@ -53,6 +53,9 @@ namespace vulkanRendererBackend
 		static void AddPositionalLight(const Float3& position, float intensity, const Float3& color, ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix);
 
 		// Getters:
+		static uint32_t GetMaxDirectionalLights();
+		static uint32_t GetMaxPositionalLights();
+		static uint32_t GetShadowMapResolution();
 		static uint32_t GetDirectionalLightsCount();
 		static uint32_t GetPositionalLightsCount();
 		static std::vector<DirectionalLight>& GetDirectionalLights();

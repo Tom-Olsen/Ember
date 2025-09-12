@@ -1,6 +1,7 @@
 #include "vulkanShadowRenderPass.h"
 #include "depthTexture2dArray.h"
 #include "vmaImage.h"
+#include "lighting.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
 
@@ -10,7 +11,7 @@ namespace vulkanRendererBackend
 {
 	// Static members:
 	VkFormat ShadowRenderPass::s_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
-	uint32_t ShadowRenderPass::s_layerCount = Context::maxDirectionalLights + Context::maxPositionalLights;
+	uint32_t ShadowRenderPass::s_layerCount = Lighting::GetMaxDirectionalLights() + Lighting::GetMaxPositionalLights();
 
 
 
@@ -18,7 +19,7 @@ namespace vulkanRendererBackend
 	ShadowRenderPass::ShadowRenderPass()
 	{
 		// Create shadow map texture:
-		m_shadowMaps = std::make_unique<DepthTexture2dArray>("shadowMaps", s_shadowMapFormat, Context::shadowMapResolution, Context::shadowMapResolution, s_layerCount);
+		m_shadowMaps = std::make_unique<DepthTexture2dArray>("shadowMaps", s_shadowMapFormat, Lighting::GetShadowMapResolution(), Lighting::GetShadowMapResolution(), s_layerCount);
 		CreateRenderpass();
 		CreateFramebuffers();
 		NAME_VK_RENDER_PASS(m_renderPass, "shadowRenderPass");
@@ -80,8 +81,8 @@ namespace vulkanRendererBackend
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = 1;
 			framebufferInfo.pAttachments = &m_shadowMaps->GetVmaImage()->GetVkImageView();
-			framebufferInfo.width = Context::shadowMapResolution;
-			framebufferInfo.height = Context::shadowMapResolution;
+			framebufferInfo.width = Lighting::GetShadowMapResolution();
+			framebufferInfo.height = Lighting::GetShadowMapResolution();
 			framebufferInfo.layers = s_layerCount;
 			vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
 		}

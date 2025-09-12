@@ -14,9 +14,7 @@ namespace vulkanRendererBackend
 	class ComputeShader;
 	class Material;
 	class ShaderProperties;
-	class ShaderPropertiesPool;
 	class Mesh;
-	class Shader;
 	class StorageBuffer;
 
 
@@ -40,7 +38,9 @@ namespace vulkanRendererBackend
         static std::unique_ptr<Mesh> s_pFullScreenRenderQuad;
 		static std::unique_ptr<Material> s_pShadowMaterial;
 		static std::unique_ptr<Material> s_pDefaultMaterial;
-		static std::unique_ptr<Material> s_errorMaterial;
+		static std::unique_ptr<Material> s_pErrorMaterial;
+		static std::unique_ptr<Material> s_pPresentMaterial;
+		static std::unique_ptr<ComputeShader> s_pGammaCorrectionComputeShader;
 		static float s_depthBiasConstantFactor;
 		static float s_depthBiasClamp;
 		static float s_depthBiasSlopeFactor;
@@ -59,15 +59,18 @@ namespace vulkanRendererBackend
 
 		// Setters:
 		static void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
-		static void SetDeptBiasConstantFactor(float depthBiasConstantFactor);
-		static void SetDeptBiasClamp(float depthBiasClamp);
-		static void SetDeptBiasSlopeFactor(float depthBiasSlopeFactor);
+		static void SetDepthBiasConstantFactor(float depthBiasConstantFactor);
+		static void SetDepthBiasClamp(float depthBiasClamp);
+		static void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor);
 
 		// Getters:
         static Mesh* GetFullScreenRenderQuad();
         static Material* GetShadowMaterial();
+		static Material* GetDefaultMaterial();
+		static Material* GetPresentMaterial();
+		static ComputeShader* GetGammaCorrectionComputeShader();
 		static const Camera& GetActiveCamera();
-		static std::vector<DrawCall*>* GetSortedDrawCallPointers();
+		static std::vector<DrawCall*>& GetSortedDrawCallPointers();
 		static float GetDeptBiasConstantFactor();
 		static float GetDeptBiasClamp();
 		static float GetDeptBiasSlopeFactor();

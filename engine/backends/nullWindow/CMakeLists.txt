@@ -27,10 +27,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}"
 file(GLOB SOURCE_FILES "src/*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 
-# ../../interfaces/math/*:
-file(GLOB MATH_INTERFACE_FILES "../../interfaces/math/*")
-source_group("Math Interface" FILES ${MATH_INTERFACE_FILES})
-
 # ../../interfaces/window/*:
 file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
@@ -41,12 +37,10 @@ source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 # ----------------- Create Library ------------------
 add_library(${PROJECT_NAME}
     ${SOURCE_FILES}
-    ${MATH_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/math
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window)
 # ---------------------------------------------------
 
@@ -62,10 +56,10 @@ endif()
 
 
 
-# ------------------ Link Libraries -----------------
+# -------------- Link Custom Libraries --------------
 # EmberMath:
 if (NOT TARGET EmberMath)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../math" EmberMath)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 # ---------------------------------------------------

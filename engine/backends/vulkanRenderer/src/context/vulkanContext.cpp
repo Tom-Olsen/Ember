@@ -1,8 +1,10 @@
 #include "vulkanContext.h"
 #include "compute.h"
 #include "defaultGpuResources.h"
+#include "graphics.h"
 #include "iDearImGui.h"
 #include "iWindow.h"
+#include "lighting.h"
 #include "poolManager.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanMacros.h"
@@ -29,9 +31,6 @@ namespace vulkanRendererBackend
 	uint64_t Context::absoluteFrameIndex;
 	VkSampleCountFlagBits Context::msaaSamples;
 	bool Context::enableDockSpace;
-	uint32_t Context::maxDirectionalLights;
-	uint32_t Context::maxPositionalLights;
-	uint32_t Context::shadowMapResolution;
 	float Context::depthBiasConstantFactor = 0.0f;
 	float Context::depthBiasClamp = 0.0f;
 	float Context::depthBiasSlopeFactor = 1.0f;
@@ -39,7 +38,7 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void Context::Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights_, uint32_t maxPositionalLights_, uint32_t shadowMapResolution_)
+	void Context::Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights, uint32_t maxPositionalLights, uint32_t shadowMapResolution)
 	{
 		if (s_isInitialized)
 			return;
@@ -49,11 +48,9 @@ namespace vulkanRendererBackend
 		frameIndex = 0;
 		absoluteFrameIndex = 0;
 		enableDockSpace = enableDockSpace_;
-		maxDirectionalLights = maxDirectionalLights_;
-		maxPositionalLights = maxPositionalLights_;
-		shadowMapResolution = shadowMapResolution_;
 
 		// Init static utility:
+		Lighting::Init(maxDirectionalLights, maxPositionalLights, shadowMapResolution);
 		Compute::Init();
 		RenderPassManager::Init(renderWidth, renderHeight);
 		GarbageCollector::Init();
@@ -99,6 +96,7 @@ namespace vulkanRendererBackend
 		// Init static utility:
 		DefaultGpuResources::Init();
 		PoolManager::Init();
+		Graphics::Init();
 
 		// Debug naming:
 		if (logicalDevice.GetGraphicsQueue().queue == logicalDevice.GetPresentQueue().queue)
@@ -114,11 +112,13 @@ namespace vulkanRendererBackend
 	void Context::Clear()
 	{
 		WaitDeviceIdle();
+		Graphics::Clear(),
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		GarbageCollector::Clear();
 		RenderPassManager::Clear();
 		Compute::Clear();
+		Lighting::Clear();
 	}
 	void Context::RebuildSwapchain()
 	{

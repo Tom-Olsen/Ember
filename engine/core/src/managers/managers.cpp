@@ -7,7 +7,7 @@ namespace emberEngine
 	// Initialization/Cleanup:
 	void Managers::Init(uint32_t renderWidth, uint32_t renderHeight)
 	{
-		TaskflowManager::Init();
+		emberTaskSystem::TaskSystem::Init();
 		RenderPassManager::Init(renderWidth, renderHeight);
 		ComputeShaderManager::Init();
 		MaterialManager::Init();
@@ -27,6 +27,6 @@ namespace emberEngine
 		MaterialManager::Clear();
 		ComputeShaderManager::Clear();
 		RenderPassManager::Clear();
-		TaskflowManager::Clear();
+		emberTaskSystem::TaskSystem::Clear();
 	}
 }

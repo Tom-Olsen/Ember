@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "computeShader.h"
 #include "material.h"
 #include "mesh.h"
 #include "poolManager.h"
@@ -18,7 +19,9 @@ namespace vulkanRendererBackend
 	std::unique_ptr<Mesh> Graphics::s_pFullScreenRenderQuad;
 	std::unique_ptr<Material> Graphics::s_pShadowMaterial;
 	std::unique_ptr<Material> Graphics::s_pDefaultMaterial;
-	std::unique_ptr<Material> Graphics::s_errorMaterial;
+	std::unique_ptr<Material> Graphics::s_pErrorMaterial;
+	std::unique_ptr<Material> Graphics::s_pPresentMaterial;
+	std::unique_ptr<ComputeShader> Graphics::s_pGammaCorrectionComputeShader;
 	float Graphics::s_depthBiasConstantFactor = 0.0f;
 	float Graphics::s_depthBiasClamp = 0.0f;
 	float Graphics::s_depthBiasSlopeFactor = 1.0f;
@@ -33,10 +36,12 @@ namespace vulkanRendererBackend
 		s_isInitialized = true;
 
 		std::filesystem::path shaderDir = std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders";
-        s_pFullScreenRenderQuad = std::make_unique<Mesh>(CreateFullScreenRenderQuad());
+        s_pFullScreenRenderQuad = std::unique_ptr<Mesh>(CreateFullScreenRenderQuad());
 		s_pShadowMaterial = std::make_unique<Material>(Material::Type::shadow, "shadowMaterial", Material::Queue::shadow, shaderDir / "shadow.vert.spv");
 		s_pDefaultMaterial = std::make_unique<Material>(Material::Type::forwardOpaque, "defaultMaterial", Material::Queue::opaque, shaderDir / "default.vert.spv", shaderDir / "default.frag.spv");
-		s_errorMaterial = std::make_unique<Material>(Material::Type::forwardOpaque, "errorMaterial", Material::Queue::opaque, shaderDir / "error.vert.spv", shaderDir / "error.frag.spv");
+		s_pErrorMaterial = std::make_unique<Material>(Material::Type::forwardOpaque, "errorMaterial", Material::Queue::opaque, shaderDir / "error.vert.spv", shaderDir / "error.frag.spv");
+		s_pPresentMaterial = std::make_unique<Material>(Material::Type::forwardOpaque, "presentMaterial", Material::Queue::opaque, shaderDir / "present.vert.spv", shaderDir / "present.frag.spv");
+		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", shaderDir / "gammaCorrection.comp.spv");
 	}
 	void Graphics::Clear()
 	{
@@ -44,7 +49,9 @@ namespace vulkanRendererBackend
         s_pFullScreenRenderQuad.release();
         s_pShadowMaterial.release();
         s_pDefaultMaterial.release();
-        s_errorMaterial.release();
+        s_pErrorMaterial.release();
+		s_pPresentMaterial.release();
+		s_pGammaCorrectionComputeShader.release();
 	}
 
 
@@ -67,7 +74,7 @@ namespace vulkanRendererBackend
 		}
 
 		// No shadow interaction for the error material:
-		if (pMaterial == s_errorMaterial.get())
+		if (pMaterial == s_pErrorMaterial.get())
 		{
 			receiveShadows = false;
 			castShadows = false;
@@ -94,7 +101,7 @@ namespace vulkanRendererBackend
 		}
 
 		// No shadow interaction for the error material:
-		if (pMaterial == s_errorMaterial.get())
+		if (pMaterial == s_pErrorMaterial.get())
 		{
 			receiveShadows = false;
 			castShadows = false;
@@ -135,7 +142,7 @@ namespace vulkanRendererBackend
 		}
 
 		// No shadow interaction for the error material:
-		if (pMaterial == s_errorMaterial.get())
+		if (pMaterial == s_pErrorMaterial.get())
 		{
 			receiveShadows = false;
 			castShadows = false;
@@ -170,7 +177,7 @@ namespace vulkanRendererBackend
 		}
 
 		// No shadow interaction for the error material:
-		if (pMaterial == s_errorMaterial.get())
+		if (pMaterial == s_pErrorMaterial.get())
 		{
 			receiveShadows = false;
 			castShadows = false;
@@ -197,15 +204,15 @@ namespace vulkanRendererBackend
 		s_activeCamera.viewMatrix = viewMatrix;
 		s_activeCamera.projectionMatrix = projectionMatrix;
 	}
-	void Graphics::SetDeptBiasConstantFactor(float depthBiasConstantFactor)
+	void Graphics::SetDepthBiasConstantFactor(float depthBiasConstantFactor)
 	{
 		s_depthBiasConstantFactor = depthBiasConstantFactor;
 	}
-	void Graphics::SetDeptBiasClamp(float depthBiasClamp)
+	void Graphics::SetDepthBiasClamp(float depthBiasClamp)
 	{
 		s_depthBiasClamp = depthBiasClamp;
 	}
-	void Graphics::SetDeptBiasSlopeFactor(float depthBiasSlopeFactor)
+	void Graphics::SetDepthBiasSlopeFactor(float depthBiasSlopeFactor)
 	{
 		s_depthBiasSlopeFactor = depthBiasSlopeFactor;
 	}
@@ -217,15 +224,27 @@ namespace vulkanRendererBackend
     {
         return s_pFullScreenRenderQuad.get();
     }
-    Material* Graphics::GetShadowMaterial()
-    {
-        return s_pShadowMaterial.get();
-    }
+	Material* Graphics::GetShadowMaterial()
+	{
+		return s_pShadowMaterial.get();
+	}
+	Material* Graphics::GetDefaultMaterial()
+	{
+		return s_pDefaultMaterial.get();
+	}
+	Material* Graphics::GetPresentMaterial()
+	{
+		return s_pPresentMaterial.get();
+	}
+	ComputeShader* Graphics::GetGammaCorrectionComputeShader()
+	{
+		return s_pGammaCorrectionComputeShader.get();
+	}
 	const Graphics::Camera& Graphics::GetActiveCamera()
 	{
 		return s_activeCamera;
 	}
-	std::vector<DrawCall*>* Graphics::GetSortedDrawCallPointers()
+	std::vector<DrawCall*>& Graphics::GetSortedDrawCallPointers()
 	{
 		// Populate sorted draw call pointers vector:
 		s_sortedDrawCallPointers.clear();
@@ -240,7 +259,7 @@ namespace vulkanRendererBackend
 		{
 			return a->pMaterial->GetRenderQueue() < b->pMaterial->GetRenderQueue();
 		});
-		return &s_sortedDrawCallPointers;
+		return s_sortedDrawCallPointers;
 	}
 	float Graphics::GetDeptBiasConstantFactor()
 	{

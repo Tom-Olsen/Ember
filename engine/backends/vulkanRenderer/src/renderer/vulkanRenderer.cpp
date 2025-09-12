@@ -2,26 +2,21 @@
 #include "compute.h"
 #include "computeCall.h"
 #include "computeShader.h"
-//#include "computeShaderManager.h"
-//#include "dearImGui.h"
-//#include "drawCall.h"
+#include "drawCall.h"
 #include "emberMath.h"
-//#include "emberTime.h"
 #include "graphics.h"
+#include "iDearImGui.h"
 #include "indexBuffer.h"
 #include "lighting.h"
 #include "material.h"
-//#include "materialManager.h"
 #include "mesh.h"
-//#include "meshManager.h"
 //#include "profiler.h"
 #include "postRenderCompute.h"
 #include "preRenderCompute.h"
 #include "renderTexture2d.h"
 #include "shaderProperties.h"
 #include "spirvReflect.h"
-#include "taskflowManager.h"
-//#include "textureManager.h"
+#include "taskSystem.h"
 #include "vertexBuffer.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
@@ -38,17 +33,17 @@
 #include "vulkanRenderPassManager.h"
 #include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
-//#include "window.h"
 #include <string>
-#include <vector>
 
 
 
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	Renderer::Renderer()
+	Renderer::Renderer(emberBackendInterface::IDearImGui* pIDearImGui)
 	{
+		m_pIDearImGui = pIDearImGui;
+
 		m_time = 0.0f;
 		m_deltaTime = 0.0f;
 		m_rebuildSwapchain = false;
@@ -56,7 +51,7 @@ namespace vulkanRendererBackend
 		// Command pools (one per frameInFlight * renderStage):
 		m_commandPools.reserve(Context::framesInFlight * (int)RenderStage::stageCount);
 		for (int i = 0; i < Context::framesInFlight * (int)RenderStage::stageCount; i++)
-			m_commandPools.emplace_back(emberEngine::TaskflowManager::GetCoreCount(), Context::logicalDevice.GetGraphicsQueue());
+			m_commandPools.emplace_back(emberTaskSystem::TaskSystem::GetCoreCount(), Context::logicalDevice.GetGraphicsQueue());
 
 		// Shadow render pass caching:
 		m_shadowPipeline = Graphics::GetShadowMaterial()->GetPipeline()->GetVkPipeline();
@@ -64,7 +59,7 @@ namespace vulkanRendererBackend
 
 		// Present render pass caching:
 		m_pPresentMesh = Graphics::GetFullScreenRenderQuad();
-		m_pPresentMaterial = MaterialManager::GetMaterial("presentMaterial");
+		m_pPresentMaterial = Graphics::GetPresentMaterial();
 		m_pPresentShaderProperties = std::make_unique<ShaderProperties>((Shader*)m_pPresentMaterial);
 		m_presentPipeline = m_pPresentMaterial->GetPipeline()->GetVkPipeline();
 		m_presentPipelineLayout = m_pPresentMaterial->GetPipeline()->GetVkPipelineLayout();
@@ -78,7 +73,7 @@ namespace vulkanRendererBackend
 				name += "_frame" + std::to_string(frameIndex);
 				NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "CommandPoolPrimary_" + name);
                 NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandBuffer(), "CommandBufferPrimary_" + name);
-				for (int threadIndex = 0; threadIndex < TaskflowManager::GetCoreCount(); threadIndex++)
+				for (int threadIndex = 0; threadIndex < emberTaskSystem::TaskSystem::GetCoreCount(); threadIndex++)
                 {
                     NAME_VK_COMMAND_POOL(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPoolSecondary" + std::to_string(threadIndex) + "_" + name);
                     NAME_VK_COMMAND_BUFFER(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBufferSecondary_" + std::to_string(threadIndex) + "_" + name);
@@ -122,11 +117,10 @@ namespace vulkanRendererBackend
 			return 0;
 
 		// I use linear color space throughout entire render process. So apply gamma correction in post processing:
-		ComputeShader* pComputeShader = ComputeShaderManager::GetComputeShader("gammaCorrection");
-		compute::PostRender::RecordComputeShader(pComputeShader);
+		ComputeShader* pComputeShader = Graphics::GetGammaCorrectionComputeShader();
+		PostRender::RecordComputeShader(pComputeShader);
 		
 		// Record and submit current frame commands:
-		m_pDrawCalls = Graphics::GetSortedDrawCallPointers();
 		{
 			//PROFILE_SCOPE("Record");
 			//DEBUG_LOG_CRITICAL("Recording frame {}", Context::frameIndex);
@@ -141,9 +135,9 @@ namespace vulkanRendererBackend
 			SubmitForwardCommands();
 
 			//tf::Taskflow taskflow;
-			//for (int i = 0; i < TaskflowManager::GetCoreCount(); i++)
+			//for (int i = 0; i < emberTaskSystem::TaskSystem::GetCoreCount(); i++)
 			//	taskflow.emplace([this] { this->RecordForwardCommandsParallel(); }).name("RecordForwardCommandsParallel" + std::to_string(i));
-			//TaskflowManager::RunAndWait(taskflow);
+			//emberTaskSystem::TaskSystem::RunAndWait(taskflow);
 			//SubmitForwardCommandsParallel();
 
 			RecordPostRenderComputeCommands();
@@ -157,10 +151,10 @@ namespace vulkanRendererBackend
 		}
 
 		// Reset engine data for next frame:
-		compute::PreRender::ResetComputeCalls();
+		PreRender::ResetComputeCalls();
 		Lighting::ResetLights();
 		Graphics::ResetDrawCalls();
-		compute::PostRender::ResetComputeCalls();
+		PostRender::ResetComputeCalls();
 
 		// Cancel current frame on failed presentation (e.g. window resize):
 		if (!PresentImage())
@@ -322,6 +316,7 @@ namespace vulkanRendererBackend
 		//PROFILE_FUNCTION();
 
 		// Prepare command recording:
+		std::vector<DrawCall*> drawCalls = Graphics::GetSortedDrawCallPointers();
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::shadow);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -337,7 +332,7 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderPass = RenderPassManager::GetShadowRenderPass()->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = RenderPassManager::GetShadowRenderPass()->GetFramebuffer(0);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = VkExtent2D{ Lighting::shadowMapResolution, Lighting::shadowMapResolution };
+			renderPassBeginInfo.renderArea.extent = VkExtent2D{ Lighting::GetShadowMapResolution(), Lighting::GetShadowMapResolution() };
 			renderPassBeginInfo.clearValueCount = 1;
 			renderPassBeginInfo.pClearValues = &clearValues;
 			const VkDeviceSize offsets[1] = { 0 };
@@ -355,7 +350,7 @@ namespace vulkanRendererBackend
 					vkCmdSetDepthBias(commandBuffer, Graphics::GetDeptBiasConstantFactor(), Graphics::GetDeptBiasClamp(), Graphics::GetDeptBiasSlopeFactor());
 
 					// Update shader specific data:
-					for (DrawCall* drawCall : *m_pDrawCalls)
+					for (DrawCall* drawCall : drawCalls)
 						drawCall->pShadowShaderProperties->UpdateShaderData();
 
 					// Directional Lights:
@@ -363,7 +358,7 @@ namespace vulkanRendererBackend
 					for (int i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
 					{
 						Lighting::DirectionalLight& light = directionalLights[i];
-						for (DrawCall* drawCall : *m_pDrawCalls)
+						for (DrawCall* drawCall : drawCalls)
 						{
 							if (drawCall->castShadows == false)
 								continue;
@@ -388,7 +383,7 @@ namespace vulkanRendererBackend
 					for (int i = 0; i < Lighting::GetPositionalLightsCount(); i++)
 					{
 						Lighting::PositionalLight& light = positionalLights[i];
-						for (DrawCall* drawCall : *m_pDrawCalls)
+						for (DrawCall* drawCall : drawCalls)
 						{
 							if (drawCall->castShadows == false)
 								continue;
@@ -418,6 +413,7 @@ namespace vulkanRendererBackend
 		//PROFILE_FUNCTION();
 
 		// Prepare command recording:
+		std::vector<DrawCall*> drawCalls = Graphics::GetSortedDrawCallPointers();
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
 		commandPool.ResetPools();
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
@@ -464,7 +460,7 @@ namespace vulkanRendererBackend
 				DefaultPushConstant pushConstant(0, m_time, m_deltaTime, Lighting::GetDirectionalLightsCount(), Lighting::GetPositionalLightsCount(), Graphics::GetActiveCamera().position);
 
 				// Normal draw calls:
-				for (DrawCall* drawCall : *m_pDrawCalls)
+				for (DrawCall* drawCall : drawCalls)
 				{
 					//PROFILE_SCOPE("DrawCall");
 					pMesh = drawCall->pMesh;
@@ -528,9 +524,10 @@ namespace vulkanRendererBackend
 		//PROFILE_FUNCTION();
 
 		// Logic for workload splitting across threads:
-		int totalWorkload = (int)m_pDrawCalls->size();
-		int threadIndex = TaskflowManager::GetThreadIndex();
-		int coreCount = TaskflowManager::GetCoreCount();
+		std::vector<DrawCall*> drawCalls = Graphics::GetSortedDrawCallPointers();
+		int totalWorkload = (int)drawCalls.size();
+		int threadIndex = emberTaskSystem::TaskSystem::GetThreadIndex();
+		int coreCount = emberTaskSystem::TaskSystem::GetCoreCount();
 		int baseChunkSize = totalWorkload / coreCount;
 		int remainder = totalWorkload % coreCount;
 		int startIndex = threadIndex * baseChunkSize + std::min(threadIndex, remainder);
@@ -577,7 +574,7 @@ namespace vulkanRendererBackend
 				// Normal draw calls:
 				for (int i = startIndex; i < endIndex; i++)
 				{
-					DrawCall* drawCall = (*m_pDrawCalls)[i];
+					DrawCall* drawCall = (drawCalls)[i];
 					pMesh = drawCall->pMesh;
 
 					// Update shader specific data:
@@ -764,7 +761,7 @@ namespace vulkanRendererBackend
 				vkCmdDrawIndexed(commandBuffer, 3 * m_pPresentMesh->GetTriangleCount(), 1, 0, 0, 0);
 				//DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", m_pPresentMaterial->GetName());
 				
-				DearImGui::Render(commandBuffer);
+				m_pIDearImGui->Render(commandBuffer);
 			}
 			vkCmdEndRenderPass(commandBuffer);
 		}
@@ -794,7 +791,7 @@ namespace vulkanRendererBackend
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				DearImGui::Render(commandBuffer);
+				m_pIDearImGui->Render(commandBuffer);
 			}
 			vkCmdEndRenderPass(commandBuffer);
 		}

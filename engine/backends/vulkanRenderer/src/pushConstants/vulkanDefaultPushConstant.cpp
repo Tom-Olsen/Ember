@@ -1,4 +1,5 @@
 #include "vulkanDefaultPushConstant.h"
+#include "lighting.h"
 #include "vulkanContext.h"
 
 
@@ -11,8 +12,8 @@ namespace vulkanRendererBackend
 		this->instanceCount = instanceCount;
 		this->time = time;
 		this->deltaTime = deltaTime;
-		this->dirLightsCount = std::min(dirLightsCount, (int)Context::maxDirectionalLights);
-		this->posLightsCount = std::min(posLightsCount, (int)Context::maxPositionalLights);
+		this->dirLightsCount = std::min(dirLightsCount, (int)Lighting::GetMaxDirectionalLights());
+		this->posLightsCount = std::min(posLightsCount, (int)Lighting::GetMaxPositionalLights());
 		this->cameraPosition = Float4(cameraPosition, 1.0f);
 	}
 
