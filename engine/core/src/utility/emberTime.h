@@ -9,9 +9,9 @@ namespace emberEngine
 {
     enum class TimeUnit
     {
-        s = 0,  // seconds          = 10^0
-        ms = 1, // milli seconds    = 10^-3
-        us = 2  // micro seconds    = 10^-6
+        s,  // seconds       = 10^0
+        ms, // milli seconds = 10^-3
+        us  // micro seconds = 10^-6
     };
 
     constexpr std::string_view TimeUnitNames[] = { "s", "ms", "us" };

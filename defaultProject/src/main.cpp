@@ -807,7 +807,7 @@ int main()
 	#endif
 
 	// Profiler:
-	Profiler::Session& session = Profiler::Session::Get();
+	EmberProfiler::Session& session = EmberProfiler::Session::Get();
 	session.Start("profiling", "profilingResults");
 
 	// Initialization:
@@ -848,10 +848,10 @@ int main()
 	delete pScene;
 
 	// Runtime analysis:
-	Profiler::Session::Get().End();
+	EmberProfiler::Session::Get().End();
 	std::vector<std::string> results = session.GetAllResultNames();
 	for (std::string& result : results)
-		session.PrintFunctionAverageTime(result, TimeUnit::ms);
+		session.PrintFunctionAverageTime(result, EmberProfiler::TimeUnit::ms);
 
 	return 0;
 }

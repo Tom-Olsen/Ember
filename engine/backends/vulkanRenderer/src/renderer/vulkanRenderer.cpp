@@ -10,7 +10,7 @@
 #include "lighting.h"
 #include "material.h"
 #include "mesh.h"
-//#include "profiler.h"
+#include "profiler.h"
 #include "postRenderCompute.h"
 #include "preRenderCompute.h"
 #include "renderTexture2d.h"
@@ -122,8 +122,8 @@ namespace vulkanRendererBackend
 		
 		// Record and submit current frame commands:
 		{
-			//PROFILE_SCOPE("Record");
-			//DEBUG_LOG_CRITICAL("Recording frame {}", Context::frameIndex);
+			PROFILE_SCOPE("Record");
+			DEBUG_LOG_CRITICAL("Recording frame {}", Context::frameIndex);
 
 			RecordPreRenderComputeCommands();
 			SubmitPreRenderComputeCommands();
@@ -182,7 +182,7 @@ namespace vulkanRendererBackend
 	}
 	bool Renderer::AcquireImage()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 
 		// Signal acquireSemaphore when done:
 		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[Context::frameIndex], VK_NULL_HANDLE, &m_imageIndex);
@@ -205,7 +205,7 @@ namespace vulkanRendererBackend
 	// Wait for fence:
 	void Renderer::WaitForFrameFence()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_frameFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
 		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_frameFences[Context::frameIndex]));
 	}
@@ -221,7 +221,7 @@ namespace vulkanRendererBackend
 	// Record commands:
 	void Renderer::RecordPreRenderComputeCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute);
@@ -254,7 +254,7 @@ namespace vulkanRendererBackend
 					dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-					//DEBUG_LOG_TRACE("Pre Render Compute Barrier, callIndex = {}", computeCall->callIndex);
+					DEBUG_LOG_TRACE("Pre Render Compute Barrier, callIndex = {}", computeCall->callIndex);
 				}
 				// Compute call is a dispatch:
 				else
@@ -289,7 +289,7 @@ namespace vulkanRendererBackend
 
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-					//DEBUG_LOG_TRACE("Pre Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
+					DEBUG_LOG_TRACE("Pre Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 				}
 			}
 
@@ -306,14 +306,14 @@ namespace vulkanRendererBackend
 				dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-				//DEBUG_LOG_TRACE("Memory Barrier: compute to vertex");
+				DEBUG_LOG_TRACE("Memory Barrier: compute to vertex");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
 	void Renderer::RecordShadowCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 
 		// Prepare command recording:
 		std::vector<DrawCall*> drawCalls = Graphics::GetSortedDrawCallPointers();
@@ -373,7 +373,7 @@ namespace vulkanRendererBackend
 
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-							//DEBUG_LOG_INFO("Directional light, mesh = {}", drawCall->pMesh->GetName());
+							DEBUG_LOG_INFO("Directional light, mesh = {}", drawCall->pMesh->GetName());
 						}
 						shadowMapIndex++;
 					}
@@ -398,7 +398,7 @@ namespace vulkanRendererBackend
 
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-							//DEBUG_LOG_INFO("Positional light, mesh = {}", drawCall->pMesh->GetName());
+							DEBUG_LOG_INFO("Positional light, mesh = {}", drawCall->pMesh->GetName());
 						}
 						shadowMapIndex++;
 					}
@@ -410,7 +410,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::RecordForwardCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 
 		// Prepare command recording:
 		std::vector<DrawCall*> drawCalls = Graphics::GetSortedDrawCallPointers();
@@ -462,7 +462,7 @@ namespace vulkanRendererBackend
 				// Normal draw calls:
 				for (DrawCall* drawCall : drawCalls)
 				{
-					//PROFILE_SCOPE("DrawCall");
+					PROFILE_SCOPE("DrawCall");
 					pMesh = drawCall->pMesh;
 
 					// Update shader specific data:
@@ -494,7 +494,7 @@ namespace vulkanRendererBackend
 					vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					//DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
+					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);
@@ -521,7 +521,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::RecordForwardCommandsParallel()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 
 		// Logic for workload splitting across threads:
 		std::vector<DrawCall*> drawCalls = Graphics::GetSortedDrawCallPointers();
@@ -607,7 +607,7 @@ namespace vulkanRendererBackend
 
 					vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 					vkCmdDrawIndexed(secondaryCommandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					//DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
+					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
 			}
 		}
@@ -618,7 +618,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::RecordPostRenderComputeCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute);
@@ -679,7 +679,7 @@ namespace vulkanRendererBackend
 
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-				//DEBUG_LOG_ERROR("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
+				DEBUG_LOG_ERROR("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 
 				// All effects access the same inputImage and outputImage.
 				// Thus add memory barrier between every effect:
@@ -695,7 +695,7 @@ namespace vulkanRendererBackend
 					dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-					//DEBUG_LOG_ERROR("Post Render Compute Barrier, callIndex = {}", computeCall->callIndex);
+					DEBUG_LOG_ERROR("Post Render Compute Barrier, callIndex = {}", computeCall->callIndex);
 				}
 			}
 
@@ -707,14 +707,14 @@ namespace vulkanRendererBackend
 				VkAccessFlags2 srcAccessMask = accessMask::computeShader::shaderWrite;
 				VkAccessFlags2 dstAccessMask = accessMask::fragmentShader::shaderRead;
 				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-				//DEBUG_LOG_ERROR("Render Image Transition: ??? -> shader read only");
+				DEBUG_LOG_ERROR("Render Image Transition: ??? -> shader read only");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
 	void Renderer::RecordPresentCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
@@ -759,7 +759,7 @@ namespace vulkanRendererBackend
 
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipelineLayout, 0, 1, &m_pPresentShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
 				vkCmdDrawIndexed(commandBuffer, 3 * m_pPresentMesh->GetTriangleCount(), 1, 0, 0, 0);
-				//DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", m_pPresentMaterial->GetName());
+				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", m_pPresentMaterial->GetName());
 				
 				m_pIDearImGui->Render(commandBuffer);
 			}
@@ -769,7 +769,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::RecordImGuiPresentCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
@@ -801,7 +801,7 @@ namespace vulkanRendererBackend
 	// Submit commands:
 	void Renderer::SubmitPreRenderComputeCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -819,7 +819,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitShadowCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::shadow);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -837,7 +837,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitForwardCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		
@@ -855,7 +855,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitForwardCommandsParallel()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
 		VkCommandBuffer& primaryCommandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		std::vector<VkCommandBuffer>& secondaryCommandBuffers = commandPool.GetSecondaryVkCommandBuffers();
@@ -915,7 +915,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitPostRenderComputeCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -933,7 +933,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitPresentCommands()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -952,7 +952,7 @@ namespace vulkanRendererBackend
 
 	bool Renderer::PresentImage()
 	{
-		//PROFILE_FUNCTION();
+		PROFILE_FUNCTION();
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &m_releaseSemaphores[Context::frameIndex];

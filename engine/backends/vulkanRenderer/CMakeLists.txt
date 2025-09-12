@@ -153,6 +153,12 @@ if (NOT TARGET EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
+# EmberProfiler:
+if (NOT TARGET EmberProfiler)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/profiler" EmberProfiler)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
+
 # EmberTaskSystem:
 if (NOT TARGET EmberTaskSystem)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/taskSystem" EmberTaskSystem)

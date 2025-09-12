@@ -30,13 +30,24 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib") # target directo
 
 # ------ Add Shared dependencies Subdirectories -----
 # EmberLogger:
-add_subdirectory("${CORE_ROOT_DIR}/../libs/logger" EmberLogger)
+if (NOT TARGET EmberLogger)
+    add_subdirectory("${CORE_ROOT_DIR}/../libs/logger" EmberLogger)
+endif()
 
 # EmberMath:
-add_subdirectory("${CORE_ROOT_DIR}/../libs/math" EmberMath)
+if (NOT TARGET EmberMath)
+    add_subdirectory("${CORE_ROOT_DIR}/../libs/math" EmberMath)
+endif()
+
+# EmberProfiler:
+if (NOT TARGET EmberProfiler)
+    add_subdirectory("${CORE_ROOT_DIR}/../libs/profiler" EmberProfiler)
+endif()
 
 # EmberTaskSystem:
-add_subdirectory("${CORE_ROOT_DIR}/../libs/taskSystem" EmberTaskSystem)
+if (NOT TARGET EmberTaskSystem)
+    add_subdirectory("${CORE_ROOT_DIR}/../libs/taskSystem" EmberTaskSystem)
+endif()
 
 # Shaders:
 set(SHADER_DIR "${CORE_ROOT_DIR}/../shaders")
@@ -256,6 +267,9 @@ message(STATUS "Target ${PROJECT_NAME} sources: ${_srcs}")
 
     # EmberMath:
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+
+    # EmberProfiler:
+    target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
 
     # EmberTaskSystem:
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
