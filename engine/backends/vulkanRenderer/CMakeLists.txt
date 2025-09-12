@@ -159,12 +159,12 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
     
 # Vulkan Memory Allocator: (header only)
-target_include_directories(${PROJECT_NAME} PUBLIC ../../libs/vma/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ../../extern/vma/include)
 
 # SPIRV-Reflect:
 set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect
-add_subdirectory("../../libs/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
-#target_include_directories(${PROJECT_NAME} PUBLIC ../../libs/SPIRV-Reflect)
+add_subdirectory("../../extern/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
+#target_include_directories(${PROJECT_NAME} PUBLIC ../../extern/SPIRV-Reflect)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-reflect-static)
 # ---------------------------------------------------
 

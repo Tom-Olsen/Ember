@@ -1,22 +1,22 @@
-[submodule "engine/libs/SDL"]
-	path = engine/libs/SDL
+[submodule "engine/extern/SDL"]
+	path = engine/extern/SDL
 	url = https://github.com/libsdl-org/SDL.git
-[submodule "engine/libs/spdlog"]
-	path = engine/libs/spdlog
+[submodule "engine/extern/spdlog"]
+	path = engine/extern/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "engine/libs/SPIRV-Reflect"]
-	path = engine/libs/SPIRV-Reflect
+[submodule "engine/extern/SPIRV-Reflect"]
+	path = engine/extern/SPIRV-Reflect
 	url = https://github.com/KhronosGroup/SPIRV-Reflect.git
-[submodule "engine/libs/vma"]
-	path = engine/libs/vma
+[submodule "engine/extern/vma"]
+	path = engine/extern/vma
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-[submodule "engine/libs/imgui"]
-	path = engine/libs/imgui
+[submodule "engine/extern/imgui"]
+	path = engine/extern/imgui
 	url = https://github.com/ocornut/imgui.git
 	branch = docking
-[submodule "engine/libs/googletest"]
-	path = engine/libs/googletest
+[submodule "engine/extern/googletest"]
+	path = engine/extern/googletest
 	url = https://github.com/google/googletest.git
-[submodule "engine/libs/taskflow"]
-	path = engine/libs/taskflow
+[submodule "engine/extern/taskflow"]
+	path = engine/extern/taskflow
 	url = https://github.com/taskflow/taskflow.git

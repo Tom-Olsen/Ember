@@ -37,14 +37,14 @@ file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 
 set(IMGUI_FILES
-    "${CMAKE_CURRENT_LIST_DIR}/../../libs/imgui/imgui.h"
-    "${CMAKE_CURRENT_LIST_DIR}/../../libs/imgui/imgui.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../libs/imgui/imgui_demo.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../libs/imgui/imgui_draw.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../libs/imgui/imgui_tables.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../libs/imgui/imgui_widgets.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../libs/imgui/backends/imgui_impl_sdl3.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../libs/imgui/backends/imgui_impl_vulkan.cpp")
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui.h"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_demo.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_draw.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_tables.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_widgets.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/backends/imgui_impl_sdl3.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/backends/imgui_impl_vulkan.cpp")
 source_group("ImGui" FILES ${IMGUI_FILES})
 # ---------------------------------------------------
 
@@ -61,8 +61,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/math
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/imgui
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/imgui/backends)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/imgui/backends)
 # ---------------------------------------------------
 
 
@@ -86,7 +86,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
 # SDL (CMakeList target):
 set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/SDL" "${CMAKE_BINARY_DIR}/SDL_build")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../extern/SDL" "${CMAKE_BINARY_DIR}/SDL_build")
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-static)
 
 # Vulkan (dynamically linked):

@@ -43,11 +43,11 @@ add_subdirectory("${CORE_ROOT_DIR}/../backends/nullWindow" "${CMAKE_BINARY_DIR}/
 add_subdirectory("${CORE_ROOT_DIR}/../backends/sdlWindow" "${CMAKE_BINARY_DIR}/sdlWindowBackend_build")
 
 # spdlog:
-add_subdirectory("${CORE_ROOT_DIR}/../libs/spdlog" "${CMAKE_BINARY_DIR}/spdlog_build")
+add_subdirectory("${CORE_ROOT_DIR}/../extern/spdlog" "${CMAKE_BINARY_DIR}/spdlog_build")
 
 # SPIRV-Reflect:
 set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE)
-add_subdirectory("${CORE_ROOT_DIR}/../libs/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
+add_subdirectory("${CORE_ROOT_DIR}/../extern/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
 # ---------------------------------------------------
 
 
@@ -252,7 +252,7 @@ message(STATUS "Target ${PROJECT_NAME} sources: ${_srcs}")
     # -------------- Link Custom Libraries --------------
     # EmberMath:
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
-    
+
     # Null Window Backend:
     target_link_libraries(${PROJECT_NAME} PUBLIC nullWindowBackend)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../backends/nullWindow/src)
@@ -269,11 +269,11 @@ message(STATUS "Target ${PROJECT_NAME} sources: ${_srcs}")
     add_dependencies(${PROJECT_NAME} ShaderCompiler)
     
     # spdlog (CMakeList target):
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../libs/spdlog/include)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../extern/spdlog/include)
     
     # SPIRV-Reflect (CMakeList target):
     set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../libs/SPIRV-Reflect)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../extern/SPIRV-Reflect)
     target_link_libraries(${PROJECT_NAME} PUBLIC spirv-reflect-static)
     
     # Vulkan (dynamicly linked):
@@ -282,9 +282,9 @@ message(STATUS "Target ${PROJECT_NAME} sources: ${_srcs}")
     target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
     
     # Vulkan Memory Allocator: (header only)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../libs/vma/include)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../extern/vma/include)
     
     # Taskflow: (header only)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../libs/taskflow)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../extern/taskflow)
     # ---------------------------------------------------
 endfunction()
