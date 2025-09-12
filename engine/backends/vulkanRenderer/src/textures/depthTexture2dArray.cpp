@@ -1,10 +1,10 @@
 #include "depthTexture2dArray.h"
+#include "logger.h"
 #include "stb_image.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include <iostream>
 
 
 
@@ -52,8 +52,7 @@ namespace vulkanRendererBackend
 	// Public methods:
 	void DepthTexture2dArray::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
 	{
-		//LOG_WARN("DepthTexture2dArray::RecordGpuCommands(...) not implemented yet.");
-		std::cerr << "DepthTexture2dArray::RecordGpuCommands(...) not implemented yet." << std::endl;
+		LOG_WARN("DepthTexture2dArray::RecordGpuCommands(...) not implemented yet.");
 	}
 
 
@@ -61,8 +60,7 @@ namespace vulkanRendererBackend
 	// Private methods:
 	StagingBuffer* DepthTexture2dArray::Load(const std::string& name, VkFormat format, const std::filesystem::path& path)
 	{
-		//LOG_WARN("DepthTexture2dArray::Load(...) not implemented yet.");
-		std::cerr << "DepthTexture2dArray::Load(...) not implemented yet." << std::endl;
+		LOG_WARN("DepthTexture2dArray::Load(...) not implemented yet.");
 		return nullptr;
 	}
 }

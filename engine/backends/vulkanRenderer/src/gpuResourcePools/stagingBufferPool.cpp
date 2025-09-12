@@ -1,6 +1,6 @@
 #include "stagingBufferPool.h"
+#include "logger.h"
 #include "stagingBuffer.h"
-#include <iostream>
 
 
 
@@ -49,8 +49,7 @@ namespace vulkanRendererBackend
     {
         if (m_currentUsage != 0)
         {
-            //LOG_WARN("Trying to shrink StagingBufferPool which still has StagingBuffers checked out: currentUsage  = {} != 0.", m_currentUsage);
-            std::cerr << "Trying to shrink StagingBufferPool which still has StagingBuffers checked out: currentUsage = " << m_currentUsage << " != 0." << std::endl;
+            LOG_WARN("Trying to shrink StagingBufferPool which still has StagingBuffers checked out: currentUsage  = {} != 0.", m_currentUsage);
             return;
         }
 

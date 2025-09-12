@@ -1,10 +1,10 @@
 #include "vulkanSurface.h"
+#include "iWindow.h"
+#include "logger.h"
 #include "vulkanInstance.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
-#include "iWindow.h"
 #include <assert.h>
-#include <iostream>
 
 
 
@@ -163,11 +163,9 @@ namespace vulkanRendererBackend
 
 		// Always available.
 		if (vSyncEnabled == true)
-			//LOG_WARN("vSync=enabled present mode VK_PRESENT_MODE_MAILBOX_KHR not available. Using fallback mode VK_PRESENT_MODE_FIFO_KHR.");
-			std::cerr << "vSync=enabled present mode VK_PRESENT_MODE_MAILBOX_KHR not available. Using fallback mode VK_PRESENT_MODE_FIFO_KHR." << std::endl;
+			LOG_WARN("vSync=enabled present mode VK_PRESENT_MODE_MAILBOX_KHR not available. Using fallback mode VK_PRESENT_MODE_FIFO_KHR.");
 		if (vSyncEnabled == false)
-			//LOG_WARN("vSync=disabled present mode VK_PRESENT_MODE_IMMEDIATE_KHR not available. Using fallback mode VK_PRESENT_MODE_FIFO_KHR.");
-			std::cerr << "vSync=disabled present mode VK_PRESENT_MODE_IMMEDIATE_KHR not available. Using fallback mode VK_PRESENT_MODE_FIFO_KHR." << std::endl;
+			LOG_WARN("vSync=disabled present mode VK_PRESENT_MODE_IMMEDIATE_KHR not available. Using fallback mode VK_PRESENT_MODE_FIFO_KHR.");
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 }

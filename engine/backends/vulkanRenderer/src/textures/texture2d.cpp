@@ -1,11 +1,11 @@
 // needs to be defined before including stb_image.h, but may not be in the header file!
 #define STB_IMAGE_IMPLEMENTATION
 #include "texture2d.h"
+#include "logger.h"
 #include "stb_image.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanDeviceQueue.h"
-#include <iostream>
 
 
 
@@ -58,8 +58,7 @@ namespace vulkanRendererBackend
 			case VK_FORMAT_R8G8B8A8_UNORM: return 1;
 			case VK_FORMAT_R32G32B32A32_SFLOAT: return 4;
 			default:
-				//LOG_ERROR("Unsupported VkFormat: {}", (int)format);
-				std::cerr << "Unsupported VkFormat: " << format << std::endl;
+				LOG_ERROR("Unsupported VkFormat: {}", (int)format);
 				return -1;
 		}
 	}

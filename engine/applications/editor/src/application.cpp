@@ -35,7 +35,7 @@ namespace emberEngine
 
 			// Init static classes:
 			bool enableDockSpace = false;
-			Logger::Init();
+			emberLogger::Logger::Init();
 			Window::Init(settings.windowWidth, settings.windowHeight);
 			Context::Init(settings.framesInFlight, settings.msaaSamples, settings.vSyncEnabled, enableDockSpace);
 			EventSystem::Init();

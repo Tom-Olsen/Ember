@@ -2,13 +2,13 @@
 #include "computeCall.h"
 #include "computeShader.h"
 #include "emberMath.h"
+#include "logger.h"
 #include "poolManager.h"
 #include "renderTexture2d.h"
 #include "shaderProperties.h"
 #include "vulkanAccessMasks.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanRenderPassManager.h"
-#include <iostream>
 #include <filesystem>
 
 
@@ -49,8 +49,7 @@ namespace vulkanRendererBackend
 	{
 		if (!pComputeShader)
 		{
-			//LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
-			std::cerr << "compute::PostRender::RecordComputeShader(...) failed. pComputeShader is nullptr." << std::endl;
+			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
 			return nullptr;
 		}
 
@@ -70,14 +69,12 @@ namespace vulkanRendererBackend
 	{
 		if (!pComputeShader)
 		{
-			//LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
-			std::cerr << "compute::PostRender::RecordComputeShader(...) failed. pComputeShader is nullptr." << std::endl;
+			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
 			return;
 		}
 		if (!pShaderProperties)
 		{
-			//LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pShaderProperties is nullptr.");
-			std::cerr << "compute::PostRender::RecordComputeShader(...) failed. pShaderProperties is nullptr." << std::endl;
+			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pShaderProperties is nullptr.");
 			return;
 		}
 

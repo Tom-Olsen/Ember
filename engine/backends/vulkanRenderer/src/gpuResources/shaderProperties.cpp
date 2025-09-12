@@ -1,6 +1,7 @@
 #include "shaderProperties.h"
 #include "defaultGpuResources.h"
 #include "emberMath.h"
+#include "logger.h"
 #include "sampler.h"
 #include "shader.h"
 #include "spirvReflect.h"
@@ -15,7 +16,6 @@
 #include "vulkanPipeline.h"
 #include "vulkanRenderPassManager.h"
 #include "vulkanShadowRenderPass.h"
-#include <iostream>
 
 
 
@@ -308,50 +308,30 @@ namespace vulkanRendererBackend
 	// Debugging:
 	void ShaderProperties::Print(const std::string& name) const
 	{
-		//LOG_INFO("ShaderProperties: {}, {}", name, fmt::ptr(this));
-		//LOG_INFO("DescriptorSets: {}, {}", fmt::ptr(m_descriptorSets[0]), fmt::ptr(m_descriptorSets[1]));
-		std::cout << "ShaderProperties: " << name << ", " << static_cast<const void*>(this) << std::endl;
-		std::cout << "DescriptorSets: " << static_cast<const void*>(m_descriptorSets[0]) << ", " << static_cast<const void*>(m_descriptorSets[1]) << std::endl;
+		LOG_INFO("ShaderProperties: {}, {}", name, fmt::ptr(this));
+		LOG_INFO("DescriptorSets: {}, {}", fmt::ptr(m_descriptorSets[0]), fmt::ptr(m_descriptorSets[1]));
 	}
 	void ShaderProperties::PrintMaps() const
 	{
 		for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
 		{
-			// LOG_INFO("UniformBufferMaps[{}]:", frameIndex);
-			// for (const auto& [name, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
-			// 	LOG_TRACE("binding: {}, bindingName: {}", uniformBufferBinding.binding, name);
-			// 
-			// LOG_INFO("SamplerMaps[{}]:", frameIndex);
-			// for (const auto& [name, samplerBinding] : m_samplerMaps[frameIndex])
-			// 	LOG_TRACE("binding: {}, bindingName: {}, samplerName: {}", samplerBinding.binding, name, samplerBinding.pSampler->GetName());
-			// 
-			// LOG_INFO("Texture2dMaps[{}]:", frameIndex);
-			// for (const auto& [name, texture2dBinding] : m_texture2dMaps[frameIndex])
-			// 	LOG_TRACE("binding: {}, bindingName: {}, textureName: {}", texture2dBinding.binding, name, texture2dBinding.pTexture2d->GetName());
-			// 
-			// LOG_INFO("StorageBufferMaps[{}]:", frameIndex);
-			// for (const auto& [name, storageBufferBinding] : m_storageBufferMaps[frameIndex])
-			// 	LOG_TRACE("binding: {}, bindingName: {}, storageBufferSize: {}", storageBufferBinding.binding, name, storageBufferBinding.pStorageBuffer->GetSize());
-			//
-			//LOG_TRACE("\n");
-
-			std::cout << "UniformBufferMaps[" << frameIndex << "]\n";
-			for (const auto& [name, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
-				std::cout << "binding: " << uniformBufferBinding.binding << ", bindingName: " << name << "\n";
-
-			std::cout << "SamplerMaps[" << frameIndex << "]\n";
-			for (const auto& [name, samplerBinding] : m_samplerMaps[frameIndex])
-				std::cout << "binding: " << samplerBinding.binding << ", bindingName: " << name << ", samplerName: " << samplerBinding.pSampler->GetName() << "\n";
-
-			std::cout << "Texture2dMaps[" << frameIndex << "]\n";
-			for (const auto& [name, texture2dBinding] : m_texture2dMaps[frameIndex])
-				std::cout << "binding: " << texture2dBinding.binding << ", bindingName: " << name << ", textureName: " << texture2dBinding.pTexture2d->GetName() << "\n";
-
-			std::cout << "StorageBufferMaps[" << frameIndex << "]\n";
-			for (const auto& [name, storageBufferBinding] : m_storageBufferMaps[frameIndex])
-				std::cout << "binding: " << storageBufferBinding.binding << ", bindingName: " << name << ", storageBufferSize: " << storageBufferBinding.pStorageBuffer->GetSize() << "\n";
-
-			std::cout << std::endl;
+			 LOG_INFO("UniformBufferMaps[{}]:", frameIndex);
+			 for (const auto& [name, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
+			 	LOG_TRACE("binding: {}, bindingName: {}", uniformBufferBinding.binding, name);
+			 
+			 LOG_INFO("SamplerMaps[{}]:", frameIndex);
+			 for (const auto& [name, samplerBinding] : m_samplerMaps[frameIndex])
+			 	LOG_TRACE("binding: {}, bindingName: {}, samplerName: {}", samplerBinding.binding, name, samplerBinding.pSampler->GetName());
+			 
+			 LOG_INFO("Texture2dMaps[{}]:", frameIndex);
+			 for (const auto& [name, texture2dBinding] : m_texture2dMaps[frameIndex])
+			 	LOG_TRACE("binding: {}, bindingName: {}, textureName: {}", texture2dBinding.binding, name, texture2dBinding.pTexture2d->GetName());
+			 
+			 LOG_INFO("StorageBufferMaps[{}]:", frameIndex);
+			 for (const auto& [name, storageBufferBinding] : m_storageBufferMaps[frameIndex])
+			 	LOG_TRACE("binding: {}, bindingName: {}, storageBufferSize: {}", storageBufferBinding.binding, name, storageBufferBinding.pStorageBuffer->GetSize());
+			
+			LOG_TRACE("\n");
 		}
 	}
 

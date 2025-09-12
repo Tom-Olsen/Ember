@@ -29,8 +29,14 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib") # target directo
 
 
 # ------ Add Shared dependencies Subdirectories -----
+# EmberLogger:
+add_subdirectory("${CORE_ROOT_DIR}/../libs/logger" EmberLogger)
+
 # EmberMath:
 add_subdirectory("${CORE_ROOT_DIR}/../libs/math" EmberMath)
+
+# EmberTaskSystem:
+add_subdirectory("${CORE_ROOT_DIR}/../libs/taskSystem" EmberTaskSystem)
 
 # Shaders:
 set(SHADER_DIR "${CORE_ROOT_DIR}/../shaders")
@@ -240,23 +246,18 @@ message(STATUS "Target ${PROJECT_NAME} sources: ${_srcs}")
     if(WINDOW_ENABLED)
         target_compile_definitions(${PROJECT_NAME} PUBLIC "WINDOW_ENABLED")
     endif()
-
-    # Enable utf-8 encoding for microsoft visual studio: (TODO: fix files so i can remove this)
-    if (MSVC)
-        target_compile_options(${PROJECT_NAME} PUBLIC /utf-8)
-    endif()
     # ---------------------------------------------------
 
 
 
     # -------------- Link Custom Libraries --------------
+    # EmberLogger:
+    target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
+
     # EmberMath:
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
     # EmberTaskSystem:
-    if (NOT TARGET EmberTaskSystem)
-        add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/taskSystem" EmberTaskSystem)
-    endif()
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
 
     # Null Window Backend:
@@ -273,9 +274,6 @@ message(STATUS "Target ${PROJECT_NAME} sources: ${_srcs}")
     # ------------- Link External Libraries -------------
     # Shaders:
     add_dependencies(${PROJECT_NAME} ShaderCompiler)
-    
-    # spdlog (CMakeList target):
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../extern/spdlog/include)
     
     # SPIRV-Reflect (CMakeList target):
     set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect

@@ -1,4 +1,5 @@
 #include "material.h"
+#include "logger.h"
 #include "mesh.h"
 #include "vertexBuffer.h"
 #include "vulkanForwardOpaquePipeline.h"
@@ -8,7 +9,6 @@
 #include "vulkanSkyboxPipeline.h"
 #include "spirvReflect.h"
 #include "vmaBuffer.h"
-#include <iostream>
 
 
 
@@ -162,8 +162,7 @@ namespace vulkanRendererBackend
 			else if (semantic == "TEXCOORD0")
 				m_meshOffsets[i] = pMesh->GetUVsOffset();
 			else
-				//LOG_WARN("Material system does not support the VertexInputDescription semantic '{}' yet. Material::GetMeshOffsets(Mesh*) must be updated,", semantic);
-				std::cerr << "Material system does not support the VertexInputDescription semantic '" << semantic << "' yet. Material::GetMeshOffsets(Mesh*) must be updated,";
+				LOG_WARN("Material system does not support the VertexInputDescription semantic '{}' yet. Material::GetMeshOffsets(Mesh*) must be updated,", semantic);
 		}
 		return m_meshOffsets.data();
 	}

@@ -1,11 +1,11 @@
 #include "vulkanLogicalDevice.h"
+#include "logger.h"
 #include "vulkanInstance.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
 #include "vulkanSurface.h"
 #include <assert.h>
-#include <iostream>
 #include <set>
 #include <sstream>
 
@@ -106,8 +106,7 @@ namespace vulkanRendererBackend
 		}
 		else
 		{
-			//LOG_WARN("Your device does not supports enoguh (4) queues. Async compute will not work.");
-			std::cerr << "Your device does not supports enoguh (4) queues. Async compute will not work." << std::endl;
+			LOG_WARN("Your device does not supports enoguh (4) queues. Async compute will not work.");
 			vkGetDeviceQueue(m_device, m_graphicsQueue.familyIndex, 0, &m_graphicsQueue.queue);
 			vkGetDeviceQueue(m_device, m_presentQueue.familyIndex, 0, &m_presentQueue.queue);
 			vkGetDeviceQueue(m_device, m_computeQueue.familyIndex, 0, &m_computeQueue.queue);
@@ -228,7 +227,6 @@ namespace vulkanRendererBackend
 			else
 				ss << "  Presentation Support: Error (" << result << ")\n";
 		}
-		//LOG_TRACE(ss.str());
-		std::cerr << ss.str() << std::endl;
+		LOG_TRACE(ss.str());
 	}
 }

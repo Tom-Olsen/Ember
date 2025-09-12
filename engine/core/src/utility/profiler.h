@@ -61,7 +61,7 @@ namespace emberEngine
 
         private: // Methods:
             // Singleton Pattern: hide these constructors.
-            Session() : m_sessionName(""), m_profileCount(0) {}
+            Session();
             Session(Session const&) = delete;
             void operator=(Session const&) = delete;
 
@@ -78,12 +78,12 @@ namespace emberEngine
             void WriteFooter();
 
             // Result analysis:
-            void PrintResults(TimeUnit unit = TimeUnit::s, LogLevel level = LogLevel::trace);
+            void PrintResults(TimeUnit unit = TimeUnit::s, emberLogger::LogLevel level = emberLogger::LogLevel::trace);
             double GetTotalTime(const std::string& resultName, TimeUnit unit = TimeUnit::s);
             double GetAverageTime(const std::string& resultName, TimeUnit unit = TimeUnit::s);
             std::vector<std::string> GetAllResultNames();
-            void PrintFunctionTotalTIme(const std::string& name, TimeUnit unit = TimeUnit::s, LogLevel level = LogLevel::trace);
-            void PrintFunctionAverageTime(const std::string& name, TimeUnit unit = TimeUnit::s, LogLevel level = LogLevel::trace);
+            void PrintFunctionTotalTIme(const std::string& name, TimeUnit unit = TimeUnit::s, emberLogger::LogLevel level = emberLogger::LogLevel::trace);
+            void PrintFunctionAverageTime(const std::string& name, TimeUnit unit = TimeUnit::s, emberLogger::LogLevel level = emberLogger::LogLevel::trace);
         };
 
 

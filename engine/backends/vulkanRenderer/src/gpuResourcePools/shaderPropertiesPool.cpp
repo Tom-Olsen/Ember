@@ -1,7 +1,7 @@
 #include "shaderPropertiesPool.h"
+#include "logger.h"
 #include "shader.h"
 #include "shaderProperties.h"
-#include <iostream>
 
 
 
@@ -50,8 +50,7 @@ namespace vulkanRendererBackend
     {
         if (m_currentUsage != 0)
         {
-            //LOG_WARN("Trying to shrink ShaderPropertiesPool which still has ShaderProperties checked out: currentUsage = {} != 0.", m_currentUsage);
-            std::cerr << "Trying to shrink ShaderPropertiesPool which still has ShaderProperties checked out: currentUsage = " << m_currentUsage << " != 0." << std::endl;
+            LOG_WARN("Trying to shrink ShaderPropertiesPool which still has ShaderProperties checked out: currentUsage = {} != 0.", m_currentUsage);
             return;
         }
 

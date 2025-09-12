@@ -44,6 +44,11 @@ namespace emberEngine
 {
     namespace Profiler
     {
+        Session::Session() : m_sessionName(""), m_profileCount(0)
+        {
+
+        }
+
         Session& Session::Get()
         {
             static Session instance;
@@ -109,7 +114,7 @@ namespace emberEngine
         }
 
         // Result analysis:
-        void Session::PrintResults(TimeUnit unit, LogLevel level)
+        void Session::PrintResults(TimeUnit unit, emberLogger::LogLevel level)
         {
             for (size_t i = 0; i < m_results.size(); i++)
                 LOG(level, "{}", m_results[i].ToString(unit));
@@ -150,11 +155,11 @@ namespace emberEngine
             }
             return names;
         }
-        void Session::PrintFunctionTotalTIme(const std::string& name, TimeUnit unit, LogLevel level)
+        void Session::PrintFunctionTotalTIme(const std::string& name, TimeUnit unit, emberLogger::LogLevel level)
         {
             LOG(level, "{}: {}{}", name, GetTotalTime(name, unit), TimeUnitNames[static_cast<int>(unit)]);
         }
-        void Session::PrintFunctionAverageTime(const std::string& name, TimeUnit unit, LogLevel level)
+        void Session::PrintFunctionAverageTime(const std::string& name, TimeUnit unit, emberLogger::LogLevel level)
         {
             LOG(level, "{}: {}{}", name, GetAverageTime(name, unit), TimeUnitNames[static_cast<int>(unit)]);
         }

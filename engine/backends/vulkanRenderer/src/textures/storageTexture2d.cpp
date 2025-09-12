@@ -1,4 +1,5 @@
 #include "storageTexture2d.h"
+#include "logger.h"
 #include "stagingBuffer.h"
 #include "stb_image.h"
 #include "vmaBuffer.h"
@@ -7,7 +8,6 @@
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
 #include "vulkanPipelineStages.h"
-#include <iostream>
 
 
 
@@ -131,8 +131,7 @@ namespace vulkanRendererBackend
 	// Public methods:
 	void StorageTexture2d::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
 	{
-		//LOG_WARN("StorageTexture2d::RecordGpuCommands(...) not implemented yet.");
-		std::cerr << "StorageTexture2d::RecordGpuCommands(...) not implemented yet." << std::endl;
+		LOG_WARN("StorageTexture2d::RecordGpuCommands(...) not implemented yet.");
 	}
 
 
@@ -140,8 +139,7 @@ namespace vulkanRendererBackend
 	// Private methods:
 	StagingBuffer* StorageTexture2d::Load(const std::string& name, VkFormat format, const std::filesystem::path& path)
 	{
-		//LOG_WARN("StorageTexture2d::Load(...) not implemented yet.");
-		std::cerr << "StorageTexture2d::Load(...) not implemented yet." << std::endl;
+		LOG_WARN("StorageTexture2d::Load(...) not implemented yet.");
 		return nullptr;
 	}
 }

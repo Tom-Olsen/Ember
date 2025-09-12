@@ -1,8 +1,8 @@
 #include "vulkanAllocationTracker.h"
+#include "logger.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanMacros.h"
-#include <iostream>
 
 
 
@@ -67,42 +67,23 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void AllocationTracker::Cleanup()
 	{
-		//#ifdef VALIDATION_LAYERS_ACTIVE
-		//if (m_pVmaBuffers.size() == 0)
-		//	LOG_TRACE("All VmaBuffers have been destroyed.");
-		//else
-		//{
-		//	LOG_CRITICAL("Following VmaBuffers have not been destroyed:");
-		//	for (VmaBuffer* vmaBuffer : m_pVmaBuffers)
-		//		LOG_ERROR(vmaBuffer->GetName());
-		//}
-		//
-		//if (m_pVmaImages.size() == 0)
-		//	LOG_TRACE("All VmaImages have been destroyed.");
-		//else
-		//{
-		//	LOG_CRITICAL("Following VmaImages have not been destroyed:");
-		//	for (VmaImage* vmaImage : m_pVmaImages)
-		//		LOG_ERROR(vmaImage->GetName());
-		//}
-		//#endif
 		#ifdef VALIDATION_LAYERS_ACTIVE
 		if (m_pVmaBuffers.size() == 0)
-			std::cerr << "All VmaBuffers have been destroyed." << std::endl;
+			LOG_TRACE("All VmaBuffers have been destroyed.");
 		else
 		{
-			std::cerr << "Following VmaBuffers have not been destroyed:" << std::endl;
+			LOG_CRITICAL("Following VmaBuffers have not been destroyed:");
 			for (VmaBuffer* vmaBuffer : m_pVmaBuffers)
-				std::cerr << vmaBuffer->GetName() << std::endl;
+				LOG_ERROR(vmaBuffer->GetName());
 		}
-
+		
 		if (m_pVmaImages.size() == 0)
-			std::cerr << "All VmaImages have been destroyed." << std::endl;
+			LOG_TRACE("All VmaImages have been destroyed.");
 		else
 		{
-			std::cerr << "Following VmaImages have not been destroyed:" << std::endl;
+			LOG_CRITICAL("Following VmaImages have not been destroyed:");
 			for (VmaImage* vmaImage : m_pVmaImages)
-				std::cerr << "vmaImage->GetName()" << std::endl;
+				LOG_ERROR(vmaImage->GetName());
 		}
 		#endif
 	}

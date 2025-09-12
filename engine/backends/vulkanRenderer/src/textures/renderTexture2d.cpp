@@ -1,8 +1,8 @@
 #include "renderTexture2d.h"
+#include "logger.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include <iostream>
 
 
 
@@ -45,8 +45,7 @@ namespace vulkanRendererBackend
 	// Public methods:
 	void RenderTexture2d::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
 	{
-		//LOG_WARN("RenderTexture2d::RecordGpuCommands(...) not implemented yet.");
-		std::cerr << "RenderTexture2d::RecordGpuCommands(...) not implemented yet." << std::endl;
+		LOG_WARN("RenderTexture2d::RecordGpuCommands(...) not implemented yet.");
 	}
 
 
@@ -54,8 +53,7 @@ namespace vulkanRendererBackend
 	// Private methods:
 	StagingBuffer* RenderTexture2d::Load(const std::string& name, VkFormat format, const std::filesystem::path& path)
 	{
-		//LOG_WARN("RenderTexture2d::Load(...) not implemented yet.");
-		std::cerr << "RenderTexture2d::Load(...) not implemented yet." << std::endl;
+		LOG_WARN("RenderTexture2d::Load(...) not implemented yet.");
 		return nullptr;
 	}
 }

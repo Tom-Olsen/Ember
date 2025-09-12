@@ -1,10 +1,10 @@
 #include "graphics.h"
 #include "computeShader.h"
+#include "logger.h"
 #include "material.h"
 #include "mesh.h"
 #include "poolManager.h"
 #include "shaderProperties.h"
-#include <iostream>
 
 
 
@@ -62,14 +62,12 @@ namespace vulkanRendererBackend
 	{
 		if (!pMesh)
 		{
-			// LOG_ERROR("Graphics::DrawMesh(...) failed. pMesh is nullptr.");
-            std::cout << "Graphics::DrawMesh(...) failed. pMesh is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMesh is nullptr.");
 			return;
 		}
 		if (!pMaterial)
 		{
-			// LOG_ERROR("Graphics::DrawMesh(...) failed. pMaterial is nullptr.");
-            std::cout << "Graphics::DrawMesh(...) failed. pMaterial is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMaterial is nullptr.");
 			return;
 		}
 
@@ -89,14 +87,12 @@ namespace vulkanRendererBackend
 	{
 		if (!pMesh)
 		{
-			// LOG_ERROR("Graphics::DrawMesh(...) failed. pMesh is nullptr.");
-            std::cout << "Graphics::DrawMesh(...) failed. pMesh is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMesh is nullptr.");
 			return nullptr;
 		}
 		if (!pMaterial)
 		{
-			// LOG_ERROR("Graphics::DrawMesh(...) failed. pMaterial is nullptr.");
-            std::cout << "Graphics::DrawMesh(...) failed. pMaterial is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMaterial is nullptr.");
 			return nullptr;
 		}
 
@@ -124,20 +120,17 @@ namespace vulkanRendererBackend
 	{
 		if (!pInstanceBuffer)
 		{
-			// LOG_ERROR("Graphics::DrawInstanced(...) failed. pInstanceBuffer is nullptr.");
-            std::cout << "Graphics::DrawInstanced(...) failed. pInstanceBuffer is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawInstanced(...) failed. pInstanceBuffer is nullptr.");
 			return;
 		}
 		if (!pMesh)
 		{
-			// LOG_ERROR("Graphics::DrawInstanced(...) failed. pMesh is nullptr.");
-            std::cout << "Graphics::DrawInstanced(...) failed. pMesh is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawInstanced(...) failed. pMesh is nullptr.");
 			return;
 		}
 		if (!pMaterial)
 		{
-			// LOG_ERROR("Graphics::DrawInstanced(...) failed. pMaterial is nullptr.");
-            std::cout << "Graphics::DrawInstanced(...) failed. pMaterial is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawInstanced(...) failed. pMaterial is nullptr.");
 			return;
 		}
 
@@ -159,20 +152,17 @@ namespace vulkanRendererBackend
 	{
 		if (!pInstanceBuffer)
 		{
-			// LOG_ERROR("Graphics::DrawInstanced(...) failed. pInstanceBuffer is nullptr.");
-            std::cout << "Graphics::DrawInstanced(...) failed. pInstanceBuffer is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawInstanced(...) failed. pInstanceBuffer is nullptr.");
 			return nullptr;
 		}
 		if (!pMesh)
 		{
-			// LOG_ERROR("Graphics::DrawMesh(...) failed. pMesh is nullptr.");
-            std::cout << "Graphics::DrawMesh(...) failed. pMesh is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMesh is nullptr.");
 			return nullptr;
 		}
 		if (!pMaterial)
 		{
-			// LOG_ERROR("Graphics::DrawMesh(...) failed. pMaterial is nullptr.");
-            std::cout << "Graphics::DrawMesh(...) failed. pMaterial is nullptr." << std::endl;
+			LOG_ERROR("Graphics::DrawMesh(...) failed. pMaterial is nullptr.");
 			return nullptr;
 		}
 

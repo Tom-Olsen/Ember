@@ -1,5 +1,6 @@
 #include "immediateCompute.h"
 #include "computeShader.h"
+#include "logger.h"
 #include "shaderProperties.h"
 #include "vulkanComputePushConstant.h"
 #include "vulkanContext.h"
@@ -37,20 +38,17 @@ namespace vulkanRendererBackend
 	{
 		if (!pComputeShader)
 		{
-			//LOG_ERROR("compute::Immediately::Dispatch(...) failed. pComputeShader is nullptr.");
-			std::cerr << "compute::Immediately::Dispatch(...) failed. pComputeShader is nullptr." << std::endl;
+			LOG_ERROR("compute::Immediately::Dispatch(...) failed. pComputeShader is nullptr.");
 			return;
 		}
 		if (!pShaderProperties)
 		{
-			//LOG_ERROR("compute::Immediately::Dispatch(...) failed. pShaderProperties is nullptr.");
-			std::cerr << "compute::Immediately::Dispatch(...) failed. pShaderProperties is nullptr." << std::endl;
+			LOG_ERROR("compute::Immediately::Dispatch(...) failed. pShaderProperties is nullptr.");
 			return;
 		}
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
 		{
-			//LOG_ERROR("compute::Immediately::Dispatch(...) failed. threadCount has 0 entry.");
-			std::cerr << "compute::Immediately::Dispatch(...) failed. threadCount has 0 entry." << std::endl;
+			LOG_ERROR("compute::Immediately::Dispatch(...) failed. threadCount has 0 entry.");
 			return;
 		}
 

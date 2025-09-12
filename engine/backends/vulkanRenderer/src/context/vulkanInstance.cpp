@@ -1,6 +1,6 @@
 #include "vulkanInstance.h"
+#include "logger.h"
 #include "vulkanMacros.h"
-#include <iostream>
 
 
 
@@ -9,24 +9,14 @@ namespace vulkanRendererBackend
 	// Debug callback:
 	VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 	{
-		//if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
-		//	LOG_TRACE("Validation layer VERBOSE: {}", pCallbackData->pMessage);
-		//else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-		//	LOG_INFO ("Validation layer    INFO: {}", pCallbackData->pMessage);
-		//else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-		//	LOG_WARN ("Validation layer WARNING: {}", pCallbackData->pMessage);
-		//else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-		//	LOG_ERROR("Validation layer   ERROR: {}", pCallbackData->pMessage);
-		//return VK_FALSE;
-
 		if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
-			std::cerr << "Validation layer VERBOSE: " << pCallbackData->pMessage << std::endl;
+			LOG_TRACE("Validation layer VERBOSE: {}", pCallbackData->pMessage);
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-			std::cerr << "Validation layer    INFO: " << pCallbackData->pMessage << std::endl;
+			LOG_INFO ("Validation layer    INFO: {}", pCallbackData->pMessage);
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-			std::cerr << "Validation layer WARNING: " << pCallbackData->pMessage << std::endl;
+			LOG_WARN ("Validation layer WARNING: {}", pCallbackData->pMessage);
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-			std::cerr << "Validation layer   ERROR: " << pCallbackData->pMessage << std::endl;
+			LOG_ERROR("Validation layer   ERROR: {}", pCallbackData->pMessage);
 		return VK_FALSE;
 	}
 
@@ -129,8 +119,7 @@ namespace vulkanRendererBackend
 		std::string output = "available extensions:\n";
 		for (const VkExtensionProperties& extension : extensions)
 			output += "\t" + std::string(extension.extensionName) + "\n";
-		//LOG_TRACE(output);
-		std::cerr << output << std::endl;
+		LOG_TRACE(output);
 
 		// Convert to vector of const char*:
 		std::vector<const char*> extensionNames(extensionCount);

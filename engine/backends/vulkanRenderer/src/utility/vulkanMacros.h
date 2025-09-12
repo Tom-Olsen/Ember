@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanMacros_h__
 #define __INCLUDE_GUARD_vulkanRendererBackend_vulkanMacros_h__
-#include <iostream>
+#include "logger.h"
 #include <string>
 
 
@@ -9,10 +9,9 @@
 // Do not use this macro directly, use the VKA macro instead, as it can be disabled easily.
 #define VULKAN_ASSERT(val) \
 if (val != VK_SUCCESS) { \
-    std::cerr << "File:" << __FILE__ << ", Line: " << __LINE__ << ", Vulkan error: " << std::to_string(val) << std::endl;\
+    LOG_CRITICAL("File: {}, Line: {} Vulkan error: {}", __FILE__, __LINE__, std::to_string(val)); \
     std::abort(); \
 }
-//LOG_CRITICAL("File: {}, Line: {} Vulkan error: {}", __FILE__, __LINE__, std::to_string(val)); \
 
 // Shorthand for VULKAN_ASSERT which can be disabled:
 #ifndef VKA

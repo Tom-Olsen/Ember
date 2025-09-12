@@ -18,7 +18,6 @@
 
 
 // vulkanRendererBackend::ToDo:
-// -replace all std::cout/std::cerr with logging backendAPI
 // -vulkanInstance: implement checks to ensure that all requested instanceExtensions are available and throw warnings accordingly.
 // -hide static members in Context struct and only make them accessable via Get/Set methods.
 // -allow for the three depthBias values to be set via Set.

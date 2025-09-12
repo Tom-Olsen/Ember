@@ -1,8 +1,8 @@
 #include "shader.h"
-#include "vulkanPipeline.h"
+#include "logger.h"
 #include "spirvReflect.h"
+#include "vulkanPipeline.h"
 #include <fstream>
-#include <iostream>
 
 
 
@@ -31,8 +31,7 @@ namespace vulkanRendererBackend
 	// Debugging:
 	void Shader::PrintShaderInfo() const
 	{
-		//LOG_TRACE(m_pDescriptorBoundResources->ToString());
-		std::cout << m_pDescriptorBoundResources->ToString() << std::endl;
+		LOG_TRACE(m_pDescriptorBoundResources->ToString());
 	}
 
 	// Protected methods:
@@ -42,8 +41,7 @@ namespace vulkanRendererBackend
 		std::ifstream file(spvFile, std::ios::binary);
 		if (!file.is_open())
 		{
-			//LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
-			std::cerr << "Error opening shader file: " << spvFile.string() << std::endl;
+			LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
 			throw std::runtime_error("Failed to open shader file: " + spvFile.string());
 		}
 

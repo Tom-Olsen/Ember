@@ -1,9 +1,9 @@
 #include "mesh.h"
 #include "indexBuffer.h"
+#include "logger.h"
 #include "stagingBuffer.h"
 #include "vertexBuffer.h"
 #include "vulkanContext.h"
-#include <iostream>
 
 
 
@@ -346,8 +346,7 @@ namespace vulkanRendererBackend
 	{
 		if (m_uvs.size() != m_vertexCount)
 		{
-			//LOG_WARN("Mesh '{}' has no uvs! Cannot compute tangents.", m_name);
-			std::cerr << "Mesh '" << m_name << "' has no uvs! Cannot compute tangents." << std::endl;
+			LOG_WARN("Mesh '{}' has no uvs! Cannot compute tangents.", m_name);
 			m_tangents.resize(m_vertexCount, Float3::zero);
 			return;
 		}

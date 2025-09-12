@@ -1,9 +1,9 @@
 #include "vulkanPhysicalDevice.h"
+#include "logger.h"
 #include "vulkanInstance.h"
 #include "vulkanMacros.h"
 #include <algorithm>
 #include <assert.h>
-#include <iostream>
 
 
 
@@ -70,8 +70,7 @@ namespace vulkanRendererBackend
 
 		// Pick best device:
 		if (devices[0].second < 0)
-			//LOG_WARN("No device supports all required capabilities!");
-			std::cerr << "No device supports all required capabilities!" << std::endl;
+			LOG_WARN("No device supports all required capabilities!");
 		m_physicalDevice = devices[0].first;
 
 		// Determine max msaa samples:

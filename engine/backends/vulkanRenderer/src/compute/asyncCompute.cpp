@@ -1,12 +1,12 @@
 #include "asyncCompute.h"
 #include "computeCall.h"
 #include "computeSession.h"
+#include "logger.h"
 #include "poolManager.h"
 #include "vulkanAccessMasks.h"
 #include "vulkanCommandPool.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include <iostream>
 #include <stdexcept>
 
 
@@ -92,11 +92,9 @@ namespace vulkanRendererBackend
 			s_computeSessions[sessionID].state = ComputeSession::State::running;
 		}
 		else if (s_computeSessions[sessionID].state == ComputeSession::State::idle)
-			//LOG_WARN("Trying to dispatch compute session which is still in idle state (forgot to call CreateComputeSession() first).");
-			std::cerr << "Trying to dispatch compute session which is still in idle state (forgot to call CreateComputeSession() first)." << std::endl;
+			LOG_WARN("Trying to dispatch compute session which is still in idle state (forgot to call CreateComputeSession() first).");
 		else // (s_computeSessions[sessionID].state == ComputeSession::State::running)
-			//LOG_WARN("Trying to dispatch compute session which is still in running state (already dispatched).");
-			std::cerr << "Trying to dispatch compute session which is still in running state (already dispatched)." << std::endl;
+			LOG_WARN("Trying to dispatch compute session which is still in running state (already dispatched).");
 	}
 	bool Async::IsFinished(uint32_t sessionID)
 	{
@@ -136,20 +134,17 @@ namespace vulkanRendererBackend
 
 		if (!pComputeShader)
 		{
-			//LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pComputeShader is nullptr.");
-			std::cerr << "compute::Async::RecordComputeShader(...) failed. pComputeShader is nullptr." << std::endl;
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pComputeShader is nullptr.");
 			return nullptr;
 		}
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
 		{
-			//LOG_ERROR("compute::Async::RecordComputeShader(...) failed. threadCount has 0 entry.");
-			std::cerr << "compute::Async::RecordComputeShader(...) failed. threadCount has 0 entry." << std::endl;
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. threadCount has 0 entry.");
 			return nullptr;
 		}
 		if (s_computeSessions[sessionID].state != ComputeSession::State::recording)
 		{
-			//LOG_ERROR("compute::Async::RecordComputeShader(...) failed. sessionID: {} is not in recording state.", sessionID);
-			std::cerr << "compute::Async::RecordComputeShader(...) failed. sessionID: " << sessionID << "is not in recording state." << std::endl;
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. sessionID: {} is not in recording state.", sessionID);
 			return nullptr;
 		}
 
@@ -165,26 +160,22 @@ namespace vulkanRendererBackend
 	{
 		if (!pComputeShader)
 		{
-			//LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pComputeShader is nullptr.");
-			std::cerr << "compute::Async::RecordComputeShader(...) failed. pComputeShader is nullptr." << std::endl;
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pComputeShader is nullptr.");
 			return;
 		}
 		if (!pShaderProperties)
 		{
-			//LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pShaderProperties is nullptr.");
-			std::cerr << "compute::Async::RecordComputeShader(...) failed. pShaderProperties is nullptr." << std::endl;
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pShaderProperties is nullptr.");
 			return;
 		}
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
 		{
-			//LOG_ERROR("compute::Async::RecordComputeShader(...) failed. threadCount has 0 entry.");
-			std::cerr << "compute::Async::RecordComputeShader(...) failed. threadCount has 0 entry." << std::endl;
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. threadCount has 0 entry.");
 			return;
 		}
 		if (s_computeSessions[sessionID].state != ComputeSession::State::recording)
 		{
-			//LOG_ERROR("compute::Async::RecordComputeShader(...) failed. sessionID: {} is not in recording state.", sessionID);
-			std::cerr << "compute::Async::RecordComputeShader(...) failed. sessionID: " << sessionID << "is not in recording state." << std::endl;
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. sessionID: {} is not in recording state.", sessionID);
 			return;
 		}
 
@@ -196,8 +187,7 @@ namespace vulkanRendererBackend
 	{
 		if (s_computeSessions[sessionID].state != ComputeSession::State::recording)
 		{
-			//LOG_ERROR("compute::Async::RecordComputeShader(...) failed. sessionID: {} is not in recording state.", sessionID);
-			std::cerr << "compute::Async::RecordComputeShader(...) failed. sessionID: " << sessionID << "is not in recording state." << std::endl;
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. sessionID: {} is not in recording state.", sessionID);
 			return;
 		}
 

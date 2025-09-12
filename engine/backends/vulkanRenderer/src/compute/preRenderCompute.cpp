@@ -1,10 +1,10 @@
 #include "preRenderCompute.h"
 #include "computeCall.h"
 #include "computeShader.h"
+#include "logger.h"
 #include "shaderProperties.h"
 #include "poolManager.h"
 #include "vulkanAccessMasks.h"
-#include <iostream>
 
 
 
@@ -38,14 +38,12 @@ namespace vulkanRendererBackend
 	{
 		if (!pComputeShader)
 		{
-			//LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
-			std::cerr << "compute::PreRender::RecordComputeShader(...) failed. pComputeShader is nullptr." << std::endl;
+			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
 			return nullptr;
 		}
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
 		{
-			//LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. threadCount has 0 entry.");
-			std::cerr << "compute::PreRender::RecordComputeShader(...) failed. threadCount has 0 entry." << std::endl;
+			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. threadCount has 0 entry.");
 			return nullptr;
 		}
 
@@ -62,20 +60,17 @@ namespace vulkanRendererBackend
 	{
 		if (!pComputeShader)
 		{
-			//LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
-			std::cerr << "compute::PreRender::RecordComputeShader(...) failed. pComputeShader is nullptr." << std::endl;
+			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
 			return;
 		}
 		if (!pShaderProperties)
 		{
-			//LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pShaderProperties is nullptr.");
-			std::cerr << "compute::PreRender::RecordComputeShader(...) failed. pShaderProperties is nullptr." << std::endl;
+			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pShaderProperties is nullptr.");
 			return;
 		}
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
 		{
-			//LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. threadCount has 0 entry.");
-			std::cerr << "compute::PreRender::RecordComputeShader(...) failed. threadCount has 0 entry." << std::endl;
+			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. threadCount has 0 entry.");
 			return;
 		}
 

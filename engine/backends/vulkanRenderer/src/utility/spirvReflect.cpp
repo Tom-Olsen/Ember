@@ -1,6 +1,6 @@
 #include "spirvReflect.h"
+#include "logger.h"
 #include "vulkanObjectToString.h"
-#include <iostream>
 
 
 
@@ -9,10 +9,9 @@ namespace vulkanRendererBackend
     // Macro to check if a SPIRV-Reflect function returns SPV_REFLECT_RESULT_SUCCESS.
     #define SPIRV_REFLECT_ASSERT(val) \
     if (val != SPV_REFLECT_RESULT_SUCCESS) { \
-        std::cerr << "File:" << __FILE__ << ", Line: " << __LINE__ << ", SPIRV-Reflect error: " << std::to_string(val) << std::endl;\
+    LOG_CRITICAL("File: {}, Line: {} SPIRV-Reflect error: {}", __FILE__, __LINE__, std::to_string(val)); \
         std::abort(); \
     }
-    //LOG_CRITICAL("File: {}, Line: {} SPIRV-Reflect error: {}", __FILE__, __LINE__, std::to_string(val)); \
 
     // Shorthand for SPIRV_REFLECT_ASSERT which can be disabled:
     #ifndef SPVA
@@ -297,8 +296,7 @@ namespace vulkanRendererBackend
             return Uint3(entryPoint->local_size.x, entryPoint->local_size.y, entryPoint->local_size.z);
         else
         {
-            //LOG_WARN("Given shader does not contain the entry point 'main' or is not a compute shader!");
-            std::cerr << "Given shader does not contain the entry point 'main' or is not a compute shader!" << std::endl;
+            LOG_WARN("Given shader does not contain the entry point 'main' or is not a compute shader!");
             return Uint3::zero;
         }
     }
