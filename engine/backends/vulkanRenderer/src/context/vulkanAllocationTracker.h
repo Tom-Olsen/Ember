@@ -30,7 +30,6 @@ namespace vulkanRendererBackend
 		AllocationTracker(AllocationTracker&& other) noexcept;
 		AllocationTracker& operator=(AllocationTracker&& other) noexcept;
 
-		void Init();
 		void AddVmaBuffer(VmaBuffer* vmaBuffer);
 		void AddVmaImage(VmaImage* vmaImage);
 		void RemoveVmaBuffer(VmaBuffer* vmaBuffer);

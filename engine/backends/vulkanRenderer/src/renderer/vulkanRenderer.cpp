@@ -1,38 +1,40 @@
 #include "vulkanRenderer.h"
-#include "compute.h"
-#include "computeCall.h"
-#include "computeShader.h"
-#include "drawCall.h"
 #include "emberMath.h"
-#include "graphics.h"
 #include "iDearImGui.h"
-#include "indexBuffer.h"
-#include "lighting.h"
-#include "material.h"
-#include "mesh.h"
 #include "profiler.h"
-#include "postRenderCompute.h"
-#include "preRenderCompute.h"
-#include "renderTexture2d.h"
-#include "shaderProperties.h"
+#include "rendererCreateInfo.h"
 #include "spirvReflect.h"
 #include "taskSystem.h"
-#include "vertexBuffer.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanAccessMasks.h"
 #include "vulkanCommandPool.h"
+#include "vulkanCompute.h"
+#include "vulkanComputeCall.h"
 #include "vulkanComputePushConstant.h"
+#include "vulkanComputeShader.h"
 #include "vulkanContext.h"
 #include "vulkanDefaultPushConstant.h"
+#include "vulkanDrawCall.h"
 #include "vulkanForwardRenderPass.h"
+#include "vulkanGraphics.h"
+#include "vulkanIndexBuffer.h"
+#include "vulkanLighting.h"
 #include "vulkanMacros.h"
+#include "vulkanMaterial.h"
+#include "vulkanMesh.h"
 #include "vulkanPipeline.h"
 #include "vulkanPipelineStages.h"
+#include "vulkanPostRenderCompute.h"
+#include "vulkanPreRenderCompute.h"
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanRenderTexture2d.h"
+#include "vulkanShaderProperties.h"
 #include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
+#include "vulkanVertexBuffer.h"
+#include <assert.h>
 #include <string>
 
 
@@ -40,10 +42,15 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	Renderer::Renderer(emberBackendInterface::IDearImGui* pIDearImGui)
+	Renderer::Renderer(const emberEngine::RendererCreateInfo& createInfo)
 	{
-		m_pIDearImGui = pIDearImGui;
+		// Assert existence of required interfaces:
+		assert(createInfo.pIDearImGui != nullptr);
+		assert(createInfo.pIDearImGui != nullptr);
 
+		Context::Init(createInfo);
+
+		m_pIDearImGui = createInfo.pIDearImGui;
 		m_time = 0.0f;
 		m_deltaTime = 0.0f;
 		m_rebuildSwapchain = false;
@@ -86,15 +93,16 @@ namespace vulkanRendererBackend
 	}
 	Renderer::~Renderer()
 	{
-		VKA(vkDeviceWaitIdle(Context::GetVkDevice()));
+		Context::WaitDeviceIdle();
 		DestroySemaphores();
 		DestroyFences();
+		Context::Clear();
 	}
 
 
 
 	// Public methods:
-	bool Renderer::RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime)
+	void Renderer::RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime)
 	{
 		m_time = time;
 		m_deltaTime = deltaTime;
@@ -114,7 +122,7 @@ namespace vulkanRendererBackend
 
 		// Cancel current frame on failed acquisition (e.g. window resize):
 		if (!AcquireImage())
-			return 0;
+			return;
 
 		// I use linear color space throughout entire render process. So apply gamma correction in post processing:
 		ComputeShader* pComputeShader = Graphics::GetGammaCorrectionComputeShader();
@@ -158,9 +166,9 @@ namespace vulkanRendererBackend
 
 		// Cancel current frame on failed presentation (e.g. window resize):
 		if (!PresentImage())
-			return 0;
+			return;
 
-		return 1;
+		Context::UpdateFrameIndex();
 	}
 
 

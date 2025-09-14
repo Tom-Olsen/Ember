@@ -1,140 +1,74 @@
-#ifndef __INCLUDE_GUARD_shaderProperties_h__
-#define __INCLUDE_GUARD_shaderProperties_h__
+#pragma once
+#include "emberMath.h"
 #include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
-#include <vulkan/vulkan.h>
+
+
+
+// Forward decleration:
+namespace emberBackendInterface
+{
+	class IShaderProperties;
+}
 
 
 
 namespace emberEngine
 {
-	// Forward declarations:
-	class Shader;
-	class Sampler;
+	// Forward decleration:
+	class ComputeShader;
+	class Material;
 	class StorageBuffer;
 	class Texture2d;
-	class UniformBuffer;
 
 
 
-	// Resource bindings:
-	struct UniformBufferBinding
-	{
-		uint32_t binding;
-		std::shared_ptr<UniformBuffer> pUniformBuffer;
-	};
-	struct SamplerBinding
-	{
-		uint32_t binding;
-		Sampler* pSampler;
-	};
-	struct TextureBinding
-	{
-		uint32_t binding;
-		Texture2d* pTexture2d;
-		VkDescriptorType descriptorType;
-	};
-	struct StorageBufferBinding
-	{
-		uint32_t binding;
-		StorageBuffer* pStorageBuffer;
-	};
-
-	
-
-	/// <summary>
-	/// Each ShaderProperties instance is customized for a specific Material/ComputeShader.
-	/// ShaderProperties construction is expensive, do not create them in an update loop.
-	/// ShaderProperties own UniformBuffer pointers, Sampler and Texture2d pointers are owned by associated Managers.
-	/// </summary>
 	class ShaderProperties
 	{
 	private: // Members:
-		Shader* m_pShader;
+		std::unique_ptr<emberBackendInterface::IShaderProperties> m_pIShaderProperties;
 
-		// All these vectors contain one item for each frame in flight:
-		std::vector<VkDescriptorSet> m_descriptorSets;
-		std::vector<std::unordered_map<std::string, UniformBufferBinding>> m_uniformBufferMaps;
-		std::vector<std::unordered_map<std::string, SamplerBinding>> m_samplerMaps;
-		std::vector<std::unordered_map<std::string, TextureBinding>> m_texture2dMaps;
-		std::vector<std::unordered_map<std::string, StorageBufferBinding>> m_storageBufferMaps;
-
-		// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer acts as a staging buffer:
-		std::unordered_map<std::string, Sampler*> m_samplerStagingMap;
-		std::unordered_map<std::string, Texture2d*> m_texture2dStagingMap;
-		std::unordered_map<std::string, StorageBuffer*> m_storageBufferStagingMap;
-
-		// UniformBuffer instead needs one bool per frame in flight and per uniform buffer, to check if any values are updated:
-		std::vector<std::unordered_map<std::string, bool>> m_updateUniformBuffer;
+	public: // Constructors/Destructor:
+		ShaderProperties(const ComputeShader* pComputeShader);
+		ShaderProperties(const Material* pMaterial);
+		~ShaderProperties();
 
 	public: // Methods:
-		// Constructors/Destructor:
-		ShaderProperties(Shader* pShader);
-		~ShaderProperties();
-		// Delete copy operations:
-		ShaderProperties(const ShaderProperties& other) = delete;
-		ShaderProperties& operator=(const ShaderProperties& other) = delete;
-		// Delete move operations:
-		ShaderProperties(ShaderProperties&& other) = delete;
-		ShaderProperties& operator=(ShaderProperties&& other) = delete;
-
-		void UpdateShaderData(uint32_t frameIndex = -1); // -1 = current frame index.
-		const VkDescriptorSet& GetDescriptorSet(uint32_t frameIndex);
-		std::vector<VkDescriptorSet>& GetDescriptorSets();
-
 		// Setters:
-		void SetSampler(const std::string& name, Sampler* pSampler);
 		void SetTexture2d(const std::string& name, Texture2d* pTexture2d);
 		void SetStorageBuffer(const std::string& name, StorageBuffer* pStorageBuffer);
+
 		// Uniform Buffer Setters:
-		template<typename T>
-		void SetValue(const std::string& bufferName, const std::string& memberName, const T& value);
-		template<typename T>
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const T& value);
-		template<typename T>
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
-		template<typename T>
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
-
-		// Getters:
-		Shader* GetShader() const;
-		Sampler* GetSampler(const std::string& name) const;
-		Texture2d* GetTexture2d(const std::string& name) const;
-
-		// Uniform Buffer Getters:
-		template<typename T>
-		T GetValue(const std::string& bufferName, const std::string& memberName) const;
-		template<typename T>
-		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-		template<typename T>
-		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-		template<typename T>
-		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-
-		// Debugging:
-		void Print(const std::string& name) const;
-		void PrintMaps() const;
-
-	private: // Methods:
-		// Initializers:
-		void InitUniformBufferResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding);
-		void InitSamplerResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Sampler* pSampler);
-		void InitTexture2dResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture2d* pTexture2d, VkDescriptorType descriptorType);
-		void InitStorageBufferResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, StorageBuffer* pStorageBuffer);
-		void InitStagingMaps();
-		void InitDescriptorSets();
-
-		// Descriptor Set management:
-		void CreateDescriptorSets();
-		void UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding samplerResourceBinding);
-		void UpdateDescriptorSet(uint32_t frameIndex, SamplerBinding samplerResourceBinding);
-		void UpdateDescriptorSet(uint32_t frameIndex, TextureBinding texture2dResourceBinding);
-		void UpdateDescriptorSet(uint32_t frameIndex, StorageBufferBinding storageBufferResourceBinding);
+		// Simple members:
+		void SetValue(const std::string& bufferName, const std::string& memberName, int value);
+		void SetValue(const std::string& bufferName, const std::string& memberName, bool value);
+		void SetValue(const std::string& bufferName, const std::string& memberName, float value);
+		void SetValue(const std::string& bufferName, const std::string& memberName, const Float2& value);
+		void SetValue(const std::string& bufferName, const std::string& memberName, const Float3& value);
+		void SetValue(const std::string& bufferName, const std::string& memberName, const Float4& value);
+		void SetValue(const std::string& bufferName, const std::string& memberName, const Float4x4& value);
+		// Array members:
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, int value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, bool value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, float value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float2& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float3& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4x4& value);
+		// Struct members inside arrays:
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, int value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, bool value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, float value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float2& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value);
+		// Arrays inside arrays:
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, int value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, bool value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, float value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_shaderProperties_h__

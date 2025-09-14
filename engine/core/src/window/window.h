@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_window_h__
-#define __INCLUDE_GUARD_window_h__
+#pragma once
 #include "emberMath.h"
 #include <memory>
 #include <vector>
@@ -31,7 +30,7 @@ namespace emberEngine
 
 	public: // Methods:
 		// Initialization/Ceanup:
-		static void Init(uint16_t width, uint16_t height);
+		static void Init(int windowWidth, int windowHeight);
 		static void Clear();
 
 		// Window Methods:
@@ -41,9 +40,10 @@ namespace emberEngine
 		static void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR);
 
 		// Getters:
+		static emberBackendInterface::IWindow* GetInterfaceHandle();
+		static void* GetNativeHandle();
 		static bool GetIsMinimized();
 		static bool GetIsResized();
-		static void* GetNativeHandle();
 		static Int2 GetSize();
 		static uint32_t GetWindowID();
 
@@ -57,7 +57,3 @@ namespace emberEngine
 		~Window() = delete;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_window_h__

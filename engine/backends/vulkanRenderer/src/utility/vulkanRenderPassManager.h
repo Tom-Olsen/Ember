@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanRenderPassManager_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanRenderPassManager_h__
+#pragma once
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -45,7 +44,3 @@ namespace vulkanRendererBackend
         ~RenderPassManager() = delete;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanRenderPassManager_h__

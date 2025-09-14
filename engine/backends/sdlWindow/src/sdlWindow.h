@@ -39,7 +39,7 @@ namespace sdlWindowBackend
 
 	public: // Methods:
 		// Constructor/Destructor:
-		SdlWindow(uint16_t width, uint16_t height);
+		SdlWindow(int windowWidth, int windowHeight);
 		~SdlWindow();
 
 		// Non-copyable:
@@ -57,9 +57,9 @@ namespace sdlWindowBackend
 		void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const override;
 
 		// Getters:
+		void* GetNativeHandle() const override;
 		bool GetIsMinimized() const override;
 		bool GetIsResized() const override;
-		void* GetNativeHandle() const override;
 		Int2 GetSize() const override;
 		uint32_t GetWindowID() const override;
 	};

@@ -1,14 +1,16 @@
 #include "vulkanContext.h"
-#include "compute.h"
-#include "defaultGpuResources.h"
-#include "graphics.h"
 #include "iDearImGui.h"
 #include "iWindow.h"
-#include "lighting.h"
-#include "poolManager.h"
+#include "rendererCreateInfo.h"
+#include "vulkanCompute.h"
+#include "vulkanDefaultGpuResources.h"
 #include "vulkanGarbageCollector.h"
+#include "vulkanGraphics.h"
+#include "vulkanLighting.h"
 #include "vulkanMacros.h"
+#include "vulkanPoolManager.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanSingleTimeCommand.h"
 
 
 
@@ -38,32 +40,34 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void Context::Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights, uint32_t maxPositionalLights, uint32_t shadowMapResolution)
+	void Context::Init(const emberEngine::RendererCreateInfo& createInfo)
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
 
-		framesInFlight = framesInFlight_;
+		framesInFlight = createInfo.framesInFlight;
 		frameIndex = 0;
 		absoluteFrameIndex = 0;
-		enableDockSpace = enableDockSpace_;
+		enableDockSpace = createInfo.enableDockSpace;
 
 		// Init static utility:
-		Lighting::Init(maxDirectionalLights, maxPositionalLights, shadowMapResolution);
+		Lighting::Init(createInfo.maxDirectionalLights, createInfo.maxPositionalLights, createInfo.shadowMapResolution);
 		Compute::Init();
-		RenderPassManager::Init(renderWidth, renderHeight);
+		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight);
 		GarbageCollector::Init();
-
 
 		// Get instance extensions:
 		std::vector<const char*> instanceExtensions;
 		#if defined(VALIDATION_LAYERS_ACTIVE)
-		instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-		instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
+		if (IsExtensionAvailable(VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
+			instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		if (IsExtensionAvailable(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME))
+			instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 		#endif
-		pIWindow->AddWindowInstanceExtensions(instanceExtensions);				// window instance extensions.
-		pIDearImGuiInstanceExtensionsLoader->AddExtensions(instanceExtensions);	// add instance extensions for docking feature.
+		createInfo.pIWindow->AddWindowInstanceExtensions(instanceExtensions);	
+		if (createInfo.enableDearImGui)
+			AddDearImGuiInstanceExtensions(instanceExtensions);
 		// and more ...
 
 		// Get device extensions:
@@ -77,16 +81,15 @@ namespace vulkanRendererBackend
 		// Create vulkan context:
 		instance.Init(instanceExtensions);
 		physicalDevice.Init(&instance);
-		surface.Init(&instance, &physicalDevice, pIWindow, vSyncEnabled_);
+		surface.Init(&instance, &physicalDevice, createInfo.pIWindow, createInfo.vSyncEnabled);
 		logicalDevice.Init(&physicalDevice, &surface, deviceExtensions);
 		allocator.Init(&instance, &logicalDevice, &physicalDevice);
-		allocationTracker.Init();
 		descriptorPool.Init(&logicalDevice);
 		swapchains[0].Init(&logicalDevice, &surface, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 		swapchainIndex = 0;
 
 		// Set msaa sampling value:
-		msaaSamples = std::min(msaaSamples_, physicalDevice.GetMaxMsaaSamples());
+		msaaSamples = std::min(static_cast<VkSampleCountFlagBits>(createInfo.msaaSampleCount), physicalDevice.GetMaxMsaaSamples());
 
 		// Load vulkan debug utility object naming function:
 		#if defined(VALIDATION_LAYERS_ACTIVE)
@@ -94,6 +97,7 @@ namespace vulkanRendererBackend
 		#endif
 
 		// Init static utility:
+		SingleTimeCommand::Init();
 		DefaultGpuResources::Init();
 		PoolManager::Init();
 		Graphics::Init();
@@ -115,6 +119,7 @@ namespace vulkanRendererBackend
 		Graphics::Clear(),
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
+		SingleTimeCommand::Clear();
 		GarbageCollector::Clear();
 		RenderPassManager::Clear();
 		Compute::Clear();
@@ -186,7 +191,7 @@ namespace vulkanRendererBackend
 	}
 	void Context::WaitDeviceIdle()
 	{
-		VKA(vkDeviceWaitIdle(logicalDevice.GetVkDevice()));
+		VKA(vkDeviceWaitIdle(GetVkDevice()));
 	}
 
 	// Object naming:
@@ -289,5 +294,37 @@ namespace vulkanRendererBackend
 	void Context::SetObjectName(VkSwapchainKHR swapchain, const std::string& name)
 	{
 		SetObjectName(VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)swapchain, name);
+	}
+
+
+
+	// Private methods:
+	bool Context::IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
+	{
+		for (const VkExtensionProperties& p : properties)
+			if (strcmp(p.extensionName, extension) == 0)
+				return true;
+		return false;
+	}
+	void Context::AddDearImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions)
+	{
+		// Enumerate available extensions:
+		uint32_t propertiesCount;
+		std::vector<VkExtensionProperties> properties;
+		if (vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, nullptr) != VK_SUCCESS)
+			throw std::runtime_error((std::string)"Instance::AddDearImGuiInstanceExtensions: " + (std::string)"failed to enumerate instance extension properties!");
+
+		properties.resize(propertiesCount);
+		if (vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()) != VK_SUCCESS)
+			throw std::runtime_error((std::string)"Instance::AddDearImGuiInstanceExtensions: " + (std::string)"failed to enumerate instance extension properties!");
+
+		// Enable required extensions:
+		if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+			instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+
+		#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+		if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
+			instanceExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+		#endif
 	}
 }

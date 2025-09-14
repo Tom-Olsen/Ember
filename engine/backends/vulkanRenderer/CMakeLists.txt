@@ -27,10 +27,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}"
 file(GLOB SOURCE_FILES "src/*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 
-# src/buffers/*:
-file(GLOB BUFFERS_FILES "src/buffers/*")
-source_group("Buffers" FILES ${BUFFERS_FILES})
-
 # src/compute/*:
 file(GLOB COMPUTE_FILES "src/compute/*")
 source_group("Compute" FILES ${COMPUTE_FILES})
@@ -47,6 +43,18 @@ source_group("Gpu Resource Pools" FILES ${GPU_RESOURCE_POOLS_FILES})
 file(GLOB GPU_RESOURCES_FILES "src/gpuResources/*")
 source_group("Gpu Resources" FILES ${GPU_RESOURCES_FILES})
 
+# src/gpuResources/buffers/*:
+file(GLOB BUFFERS_FILES "src/gpuResources/buffers/*")
+source_group("Gpu Resources/Buffers" FILES ${BUFFERS_FILES})
+
+# src/gpuResources/buffers/*:
+file(GLOB SAMPLERS_FILES "src/gpuResources/samplers/*")
+source_group("Gpu Resources/Samplers" FILES ${SAMPLERS_FILES})
+
+# src/gpuResources/textures/*:
+file(GLOB TEXTURES_FILES "src/gpuResources/textures/*")
+source_group("Gpu Resources/Textures" FILES ${TEXTURES_FILES})
+
 # src/pipelines/*:
 file(GLOB PIPELINES_FILES "src/pipelines/*")
 source_group("Pipelines" FILES ${PIPELINES_FILES})
@@ -62,10 +70,6 @@ source_group("Renderer" FILES ${RENDERER_FILES})
 # src/renderPasses/*:
 file(GLOB RENDER_PASSES_FILES "src/renderPasses/*")
 source_group("Render Passes" FILES ${RENDER_PASSES_FILES})
-
-# src/textures/*:
-file(GLOB TEXTURES_FILES "src/textures/*")
-source_group("Textures" FILES ${TEXTURES_FILES})
 
 # src/utility/*:
 file(GLOB UTILITY_FILES "src/utility/*")
@@ -89,16 +93,17 @@ source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 # ----------------- Create Library ------------------
 add_library(${PROJECT_NAME}
     ${SOURCE_FILES}
-    ${BUFFERS_FILES}
     ${COMPUTE_FILES}
     ${CONTEXT_FILES}
     ${GPU_RESOURCE_POOLS_FILES}
     ${GPU_RESOURCES_FILES}
+        ${BUFFERS_FILES}
+        ${TEXTURES_FILES}
+        ${SAMPLERS_FILES}
     ${PIPELINES_FILES}
     ${PUSH_CONSTANTS_FILES}
     ${RENDERER_FILES}
     ${RENDER_PASSES_FILES}
-    ${TEXTURES_FILES}
     ${UTILITY_FILES}
     ${RENDERER_INTERFACE_FILES}
     ${UTILITY_INTERFACE_FILES}
@@ -107,16 +112,17 @@ add_library(${PROJECT_NAME}
 # Only expose public files to consumer:
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/buffers
     ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
     ${CMAKE_CURRENT_SOURCE_DIR}/src/context
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResourcePools
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/buffers
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/samplers
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/textures
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pipelines
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderer
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPasses
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/textures
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/utility

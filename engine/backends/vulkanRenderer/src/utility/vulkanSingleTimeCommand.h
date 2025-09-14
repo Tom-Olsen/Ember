@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanSingleTimeCommand_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanSingleTimeCommand_h__
+#pragma once
 #include <vulkan/vulkan.h>
 #include <string>
 
@@ -54,7 +53,3 @@ namespace vulkanRendererBackend
 		~SingleTimeCommand() = delete;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanSingleTimeCommand_h__

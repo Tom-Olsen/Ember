@@ -27,7 +27,7 @@ namespace emberEngine
         static std::chrono::steady_clock::time_point s_end;
 
     public: // Methods
-        static void Init();
+        static void Reset();
         static void Update();
         static void Sleep(int time, TimeUnit unit = TimeUnit::s);
         

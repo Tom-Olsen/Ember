@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanDeviceQueue_h__
-#define __INCLUDE_GUARD_vulkanDeviceQueue_h__
+#pragma once
 #include <vulkan/vulkan.h>
 #include <string>
 
@@ -14,7 +13,3 @@ namespace vulkanRendererBackend
 		std::string ToString() const;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanDeviceQueue_h__

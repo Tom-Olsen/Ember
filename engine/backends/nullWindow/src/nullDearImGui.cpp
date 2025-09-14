@@ -4,13 +4,6 @@
 
 namespace nullWindowBackend
 {
-	void NullDearImGuiInstanceExtensionsLoader::AddExtensions(std::vector<const char*>& instanceExtensions) const
-	{
-
-	}
-
-
-
 	// Constructor/Destructor:
 	NullDearImGui::NullDearImGui()
 	{

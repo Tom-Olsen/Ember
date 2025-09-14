@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanGarbageCollector_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanGarbageCollector_h__
+#pragma once
 #include <vulkan/vulkan.h>
 #include <deque>
 #include <functional>
@@ -27,7 +26,3 @@ namespace vulkanRendererBackend
         static void Cleanup();
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanGarbageCollector_h__

@@ -37,10 +37,6 @@ namespace vulkanRendererBackend
 
 
 	// Public methods:
-	void AllocationTracker::Init()
-	{
-
-	}
 	void AllocationTracker::AddVmaBuffer(VmaBuffer* vmaBuffer)
 	{
 		if (vmaBuffer != nullptr)

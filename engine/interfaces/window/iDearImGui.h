@@ -17,27 +17,11 @@ typedef struct VkSampler_T* VkSampler;
 
 namespace emberBackendInterface
 {
-	class IDearImGuiInstanceExtensionsLoader
-	{
-	public:
-		virtual void AddExtensions(std::vector<const char*>& instanceExtensions) const = 0;
-	};
-
-
-
     class IDearImGui
     {
     public:
-        IDearImGui() = default;
+		// Virtual destructor for v-table:
         virtual ~IDearImGui() = default;
-
-        // Non-copyable:
-        IDearImGui(const IDearImGui&) = delete;
-        IDearImGui& operator=(const IDearImGui&) = delete;
-
-        // Movable: (must be implemented by derived classes)
-        IDearImGui(IDearImGui&&) noexcept = default;
-        IDearImGui& operator=(IDearImGui&&) noexcept = default;
 
 		// Render Logic:
 		virtual void Update() = 0;									// Must be called in main update loop of the engine.

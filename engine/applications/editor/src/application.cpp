@@ -1,55 +1,47 @@
 #include "application.h"
-#include "compute.h"
 #include "component.h"
 #include "dearImGui.h"
 #include "emberTime.h"
 #include "eventSystem.h"
 #include "gameObject.h"
-#include "graphics.h"
-#include "lighting.h"
 #include "logger.h"
 #include "macros.h"
-#include "managers.h"
 #include "profiler.h"
-#include "renderCore.h"
+#include "renderer.h"
+#include "rendererCreateInfo.h"
 #include "scene.h"
-#include "vulkanContext.h"
-#include "vulkanGarbageCollector.h"
-#include "vulkanSingleTimeCommand.h"
+#include "shadowConstants.h"
+#include "systemInitializer.h"
 #include "window.h"
 
 
 
 namespace emberEngine
 {
-	using namespace vulkanBackend;
-
-
-
 	// Constructor/Destructor:
-	Application::Application(const Settings& settings)
+	Application::Application(const CreateInfo& applicationCreateInfo)
 	{
 		try
 		{
+			// Initialize core systems:
 			m_pActiveScene = nullptr;
-
-			// Init static classes:
-			bool enableDockSpace = false;
-			emberLogger::Logger::Init();
-			Window::Init(settings.windowWidth, settings.windowHeight);
-			Context::Init(settings.framesInFlight, settings.msaaSamples, settings.vSyncEnabled, enableDockSpace);
-			EventSystem::Init();
-			GarbageCollector::Init();
-			SingleTimeCommand::Init();
-			math::Random::Init();
-			Managers::Init(settings.renderWidth, settings.renderHeight);
-			DearImGui::Init(Window::GetNativeHandle(), enableDockSpace);
-			Compute::Init();
-			Lighting::Init();
-			Graphics::Init();
+			SystemInitializer::Init(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
 
 			// Create renderer:
-			m_pRenderer = std::make_unique<RenderCore>();
+			RendererCreateInfo rendererCreateInfo = {};
+			rendererCreateInfo.pIWindow = Window::GetInterfaceHandle();					// handle pass through.
+			rendererCreateInfo.pIDearImGui = DearImGui::GetInterfaceHandle();			// handle pass through.
+			rendererCreateInfo.vSyncEnabled = applicationCreateInfo.vSyncEnabled;		// project settings.
+			rendererCreateInfo.framesInFlight = applicationCreateInfo.framesInFlight;	// project settings.
+			rendererCreateInfo.msaaSampleCount = applicationCreateInfo.msaaSampleCount;	// project settings.
+			rendererCreateInfo.renderWidth = applicationCreateInfo.renderWidth;			// project settings.
+			rendererCreateInfo.renderHeight = applicationCreateInfo.renderHeight;		// project settings.
+			rendererCreateInfo.enableDearImGui = true;									// application dependent.
+			rendererCreateInfo.enableDockSpace = true;									// application dependent.
+			rendererCreateInfo.maxDirectionalLights = MAX_DIR_LIGHTS;					// controlled via macro for now.
+			rendererCreateInfo.maxPositionalLights = MAX_POS_LIGHTS;					// controlled via macro for now.
+			rendererCreateInfo.shadowMapResolution = SHADOW_MAP_RESOLUTION;				// controlled via macro for now.
+			m_pRenderer = std::make_unique<Renderer>(rendererCreateInfo);
 
 			#ifdef LOG_INITIALIZATION
 			LOG_TRACE("Application initialized.");
@@ -62,20 +54,7 @@ namespace emberEngine
 	}
 	Application::~Application()
 	{
-		Context::WaitDeviceIdle();
-		m_pRenderer.reset();
-
-		// Clear static classes:
-		Graphics::Clear();
-		Lighting::Clear();
-		Compute::Clear();
-		DearImGui::Clear();
-		Managers::Clear();
-		SingleTimeCommand::Clear();
-		GarbageCollector::Clear();
-		EventSystem::Clear();
-		Context::Clear();
-		Window::Clear();
+		m_pRenderer.release();
 	}
 
 
@@ -86,7 +65,7 @@ namespace emberEngine
 		try
 		{
 			bool running = true;
-			Time::Init();
+			Time::Reset();
 			Start();
 
 			while (running)
@@ -114,10 +93,7 @@ namespace emberEngine
 				DearImGui::Update();
 				Update();
 				LateUpdate();
-
-				// Render loop:
-				if (m_pRenderer->RenderFrame())
-					Context::UpdateFrameIndex();
+				m_pRenderer->RenderFrame();
 			}
 		}
 		catch (const std::exception& e)

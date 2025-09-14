@@ -18,11 +18,11 @@
 namespace sdlWindowBackend
 {
 	// Constructor/Destructor:
-	SdlWindow::SdlWindow(uint16_t width, uint16_t height)
+	SdlWindow::SdlWindow(int windowWidth, int windowHeight)
 	{
 		// Assertions:
-		assert(width > 0);
-		assert(height > 0);
+		assert(windowWidth > 0);
+		assert(windowHeight > 0);
 
 		// Initialize SDL:
 		if (SDL_Init(SDL_INIT_VIDEO) == false)	// crashes after pulling latest version of sdl3
@@ -30,7 +30,7 @@ namespace sdlWindowBackend
 
 		// Create a window pointer:
 		SDL_WindowFlags windowFlags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
-		m_pWindow = SDL_CreateWindow("Ember", width, height, windowFlags);
+		m_pWindow = SDL_CreateWindow("Ember", windowWidth, windowHeight, windowFlags);
 		if (!m_pWindow)
 			throw std::runtime_error((std::string)"SdlWindow::Init: " + (std::string)SDL_GetError());
 
@@ -211,6 +211,10 @@ namespace sdlWindowBackend
 
 
 	// Getters:
+	void* SdlWindow::GetNativeHandle() const
+	{
+		return (void*)m_pWindow;
+	}
 	bool SdlWindow::GetIsMinimized() const
 	{
 		return m_isMinimized;
@@ -218,10 +222,6 @@ namespace sdlWindowBackend
 	bool SdlWindow::GetIsResized() const
 	{
 		return m_isResized;
-	}
-	void* SdlWindow::GetNativeHandle() const
-	{
-		return (void*)m_pWindow;
 	}
 	Int2 SdlWindow::GetSize() const
 	{

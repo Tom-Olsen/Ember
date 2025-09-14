@@ -1,5 +1,6 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_renderer_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_renderer_h__
+#pragma once
+#include "iRenderer.h"
+#include "vulkanRendererExport.h"
 #include <array>
 #include <memory>
 #include <vector>
@@ -8,6 +9,10 @@
 
 
 // Forward declarations:
+namespace emberEngine
+{
+	struct RendererCreateInfo;
+}
 namespace emberBackendInterface
 {
 	class IDearImGui;
@@ -26,7 +31,7 @@ namespace vulkanRendererBackend
 
 
 
-	class Renderer
+	class VULKAN_RENDERER_API Renderer : public emberBackendInterface::IRenderer
 	{
 	private: // Enums:
 		enum class RenderStage
@@ -83,9 +88,18 @@ namespace vulkanRendererBackend
 		bool m_rebuildSwapchain;
 
 	public: // Methods:
-		Renderer(emberBackendInterface::IDearImGui* pIDearImGui);
+		Renderer(const emberEngine::RendererCreateInfo& createInfo);
 		~Renderer();
-		bool RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime);
+
+		// Non-copyable:
+		Renderer(const Renderer&) = delete;
+		Renderer& operator=(const Renderer&) = delete;
+
+		// Non-movable:
+		Renderer(Renderer&& other) noexcept = delete;
+		Renderer& operator=(Renderer&& other) noexcept = delete;
+
+		void RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime) override;
 
 	private: // Methods:
 		void RebuildSwapchain();
@@ -122,7 +136,3 @@ namespace vulkanRendererBackend
 		CommandPool& GetCommandPool(int frameIndex, int renderStage);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_renderer_h__

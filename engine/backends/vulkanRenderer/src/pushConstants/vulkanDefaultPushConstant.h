@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanDefaultPushConstant_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanDefaultPushConstant_h__
+#pragma once
 #include "emberMath.h"
 #include <string>
 
@@ -24,7 +23,3 @@ namespace vulkanRendererBackend
 		std::string ToString();
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanDefaultPushConstant_h__

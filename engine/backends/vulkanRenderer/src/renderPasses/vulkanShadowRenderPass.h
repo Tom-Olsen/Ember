@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanShadowRenderPass_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanShadowRenderPass_h__
+#pragma once
 #include "vulkanRenderPass.h"
 #include <memory>
 #include <vulkan/vulkan.h>
@@ -47,7 +46,3 @@ namespace vulkanRendererBackend
 		void CreateFramebuffers();
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanShadowRenderPass_h__

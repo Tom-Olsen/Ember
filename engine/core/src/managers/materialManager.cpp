@@ -35,6 +35,7 @@ namespace emberEngine
 		Material::Type presentType = Material::Type::present;
 
 		std::string directoryPath = (std::string)CORE_SHADERS_DIR + "/bin";
+		directoryPath = directoryPath.make_preferred(); // normalize all "/" and "\" to preferred symbol.
 		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
 		//AddMaterial(testMaterial);
 

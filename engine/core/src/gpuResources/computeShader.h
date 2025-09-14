@@ -1,28 +1,28 @@
-#ifndef __INCLUDE_GUARD_computeShader_h__
-#define __INCLUDE_GUARD_computeShader_h__
-#include "emberMath.h"
-#include "shader.h"
-#include <string>
-#include <vulkan/vulkan.h>
+#pragma once
+#include <memory>
+
+
+
+// Forward decleration:
+namespace emberBackendInterface
+{
+	class IComputeShader;
+}
 
 
 
 namespace emberEngine
 {
-	class ComputeShader : public Shader
+	class ComputeShader
 	{
 	private: // Members:
-		Uint3 m_blockSize;
+		std::unique_ptr<emberBackendInterface::IComputeShader> m_pIComputeShader;
 
-	public: // Methods:
-		// Constructors/Destructor:
+	public: // Constructors/Destructor:
 		ComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
 		~ComputeShader();
 
+	public: // Methods:
 		Uint3 GetBlockSize() const;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_computeShader_h__

@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanForwardOpaquePipeline_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanForwardOpaquePipeline_h__
+#pragma once
 #include "vulkanPipeline.h"
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -31,7 +30,3 @@ namespace vulkanRendererBackend
 		void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanForwardOpaquePipeline_h__

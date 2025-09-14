@@ -29,24 +29,24 @@ namespace emberEngine
 #include "emberTime.h"
 
 // Compute backend:
-#include "compute.h"
-#include "computeShader.h"
+//#include "compute.h"
+//#include "computeShader.h"
 
 // Graphics backend:
-#include "graphics.h"
-#include "lighting.h"
+//#include "graphics.h"
+//#include "lighting.h"
 #include "mesh.h"
 #include "material.h"
 #include "shaderProperties.h"
-#include "sampler.h"
-#include "texture2d.h"
-#include "depthTexture2dArray.h"
-#include "renderTexture2d.h"
-#include "sampleTexture2d.h"
-#include "storageSampleTexture2d.h"
-#include "storageTexture2d.h"
-#include "storageBuffer.h"
-#include "textureCube.h"
+//#include "sampler.h"
+//#include "texture2d.h"
+//#include "depthTexture2dArray.h"
+//#include "renderTexture2d.h"
+//#include "sampleTexture2d.h"
+//#include "storageSampleTexture2d.h"
+//#include "storageTexture2d.h"
+//#include "storageBuffer.h"
+//#include "textureCube.h"
 
 // Managers:
 #include "bufferManager.h"

@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
 
 		void Init(std::vector<const char*> instanceExtensions);
 		const VkInstance& GetVkInstance() const;
-		std::vector<const char*> AvailableInstanceExtensions() const;
+		std::vector<const char*> GetAllAvailableInstanceExtensionsNames() const;
 
 	private: // Methods:
 		void Cleanup();

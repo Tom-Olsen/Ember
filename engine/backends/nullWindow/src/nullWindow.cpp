@@ -6,7 +6,7 @@
 namespace nullWindowBackend
 {
 	// Constructor/Destructor:
-	NullWindow::NullWindow() : m_pWindow(nullptr)
+	NullWindow::NullWindow()
 	{
 
 	}
@@ -15,19 +15,9 @@ namespace nullWindowBackend
 
 	}
 
-	// Movable:
-	NullWindow::NullWindow(NullWindow&& other) noexcept
-	{
-		m_pWindow = nullptr;
-	}
-	NullWindow& NullWindow::operator=(NullWindow&& other) noexcept
-	{
-		m_pWindow = nullptr;
-		return *this;
-	}
 
 
-
+	// Window Methods:
 	void NullWindow::LinkDearImGui(void* pDearImGui)
 	{
 
@@ -46,6 +36,10 @@ namespace nullWindowBackend
 	}
 
 	// Getters:
+	void* NullWindow::GetNativeHandle() const
+	{
+		return nullptr;
+	}
 	bool NullWindow::GetIsMinimized() const
 	{
 		return true;
@@ -53,10 +47,6 @@ namespace nullWindowBackend
 	bool NullWindow::GetIsResized() const
 	{
 		return false;
-	}
-	void* NullWindow::GetNativeHandle() const
-	{
-		return m_pWindow;
 	}
 	Int2 NullWindow::GetSize() const
 	{

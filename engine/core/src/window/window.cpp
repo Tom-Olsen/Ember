@@ -16,10 +16,10 @@ namespace emberEngine
 
 
 	// Initialization/Cleanup:
-	void Window::Init(uint16_t width, uint16_t height)
+	void Window::Init(int windowWidth, int windowHeight)
 	{
 		if (true)
-			s_pIWindow = std::make_unique<sdlWindowBackend::SdlWindow>(width, height);
+			s_pIWindow = std::make_unique<sdlWindowBackend::SdlWindow>(windowWidth, windowHeight);
 		else
 			s_pIWindow = std::make_unique<nullWindowBackend::NullWindow>();
 
@@ -56,6 +56,14 @@ namespace emberEngine
 
 
 	// Getters:
+	emberBackendInterface::IWindow* Window::GetInterfaceHandle()
+	{
+		return s_pIWindow.get();
+	}
+	void* Window::GetNativeHandle()
+	{
+		return s_pIWindow->GetNativeHandle();
+	}
 	bool Window::GetIsMinimized()
 	{
 		return s_pIWindow->GetIsMinimized();
@@ -63,10 +71,6 @@ namespace emberEngine
 	bool Window::GetIsResized()
 	{
 		return s_pIWindow->GetIsResized();
-	}
-	void* Window::GetNativeHandle()
-	{
-		return s_pIWindow->GetNativeHandle();
 	}
 	Int2 Window::GetSize()
 	{

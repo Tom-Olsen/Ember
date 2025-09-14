@@ -39,6 +39,7 @@ namespace emberEngine
 		static void Render(VkCommandBuffer vkCommandBuffer);	// Must be called in a render pass.
 
 		// Getters:
+		static emberBackendInterface::IDearImGui* GetInterfaceHandle();
 		static bool WantCaptureKeyboard();
 		static bool WantCaptureMouse();
 		static uintptr_t GetTextureID(Texture2d* pTexture2d, Sampler* pSampler);

@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanForwardRenderpass_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanForwardRenderpass_h__
+#pragma once
 #include "vulkanRenderPass.h"
 #include <memory>
 #include <vulkan/vulkan.h>
@@ -53,7 +52,3 @@ namespace vulkanRendererBackend
 		void CreateFrameBuffers();
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanForwardRenderpass_h__

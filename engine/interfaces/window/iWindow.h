@@ -22,16 +22,8 @@ namespace emberBackendInterface
     class IWindow
     {
     public:
-        IWindow() = default;
+        // Virtual destructor for v-table:
         virtual ~IWindow() = default;
-
-        // Non-copyable:
-        IWindow(const IWindow&) = delete;
-        IWindow& operator=(const IWindow&) = delete;
-
-		// Movable: (must be implemented by derived classes)
-        IWindow(IWindow&&) noexcept = default;
-        IWindow& operator=(IWindow&&) noexcept = default;
 
         // Window Methods:
         virtual void LinkDearImGui(void* pDearImGui) = 0;
@@ -40,9 +32,9 @@ namespace emberBackendInterface
         virtual void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const = 0;
 
         // Getters:
+        virtual void* GetNativeHandle() const = 0;
         virtual bool GetIsMinimized() const = 0;
         virtual bool GetIsResized() const = 0;
-        virtual void* GetNativeHandle() const = 0;
         virtual Int2 GetSize() const = 0;
         virtual uint32_t GetWindowID() const = 0;
     };

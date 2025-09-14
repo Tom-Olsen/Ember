@@ -9,36 +9,6 @@
 
 namespace sdlWindowBackend
 {
-	// Instance extensions loader:
-	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
-	{
-		for (const VkExtensionProperties& p : properties)
-			if (strcmp(p.extensionName, extension) == 0)
-				return true;
-		return false;
-	}
-	void SdlDearImGuiInstanceExtensionsLoader::AddExtensions(std::vector<const char*>& instanceExtensions) const
-	{
-		// Enumerate available extensions:
-		uint32_t propertiesCount;
-		std::vector<VkExtensionProperties> properties;
-		if (vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, nullptr) != VK_SUCCESS)
-			throw std::runtime_error((std::string)"SdlDearImGui::AddDearImGuiInstanceExtensions: " + (std::string)"failed to enumerate instance extension properties!");
-
-		properties.resize(propertiesCount);
-		if (vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()) != VK_SUCCESS)
-			throw std::runtime_error((std::string)"SdlDearImGui::AddDearImGuiInstanceExtensions: " + (std::string)"failed to enumerate instance extension properties!");
-
-		// Enable required extensions:
-		if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
-			instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-
-		#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
-		if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
-			instanceExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-		#endif
-	}
-
 	// Constructor/Destructor:
 	SdlDearImGui::SdlDearImGui(void* pSdlWindow, VkInstance vkInstance, VkPhysicalDevice vkPhysicalDevice, VkDevice vkDevice, VkRenderPass vkRenderpass, VkDescriptorPool vkDescriptorPool, VkQueue vkQueue, uint32_t queueFamilyIndex, uint32_t framesInFlight, uint32_t spwachainImageCount, bool enableDockSpace)
 	{

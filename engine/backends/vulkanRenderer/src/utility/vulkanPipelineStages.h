@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanPipelineStages_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanPipelineStages_h__
+#pragma once
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -25,7 +24,3 @@ namespace vulkanRendererBackend
 		constexpr VkPipelineStageFlags2 allCommands = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 	}
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanPipelineStages_h__

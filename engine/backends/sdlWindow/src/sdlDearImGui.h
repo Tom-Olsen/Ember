@@ -29,14 +29,6 @@ typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
 
 namespace sdlWindowBackend
 {
-	class SDL_WINDOW_API SdlDearImGuiInstanceExtensionsLoader : public emberBackendInterface::IDearImGuiInstanceExtensionsLoader
-	{
-	public:
-		void AddExtensions(std::vector<const char*>& instanceExtensions) const override;
-	};
-
-
-
 	class SDL_WINDOW_API SdlDearImGui : public emberBackendInterface::IDearImGui
 	{
 	private: // Members

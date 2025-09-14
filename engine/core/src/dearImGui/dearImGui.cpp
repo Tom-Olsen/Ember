@@ -73,6 +73,10 @@ namespace emberEngine
 
 
 	// Getters:
+	emberBackendInterface::IDearImGui* DearImGui::GetInterfaceHandle()
+	{
+		return s_pIDearImGui.get();
+	}
 	bool DearImGui::WantCaptureKeyboard()
 	{
 		return s_pIDearImGui->WantCaptureKeyboard();

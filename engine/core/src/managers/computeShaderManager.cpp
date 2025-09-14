@@ -28,6 +28,7 @@ namespace emberEngine
 		s_isInitialized = true;
 
 		std::filesystem::path directoryPath = std::filesystem::path(CORE_SHADERS_DIR) / "bin";
+		directoryPath = directoryPath.make_preferred(); // normalize all "/" and "\" to preferred symbol.
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 		{
 			if (!entry.is_regular_file())

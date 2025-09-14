@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanRenderPass_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanRenderPass_h__
+#pragma once
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -37,7 +36,3 @@ namespace vulkanRendererBackend
 		void MoveFrom(RenderPass& other) noexcept;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanRenderPass_h__

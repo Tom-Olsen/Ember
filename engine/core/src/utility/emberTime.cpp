@@ -6,17 +6,17 @@
 namespace emberEngine
 {
 	// Static members:
-	float Time::s_time;
-	float Time::s_deltaTime;
-	float Time::s_fixedDeltaTime;
-	float Time::s_fixedTimeAccumulator;
+	float Time::s_time = 0.0f;
+	float Time::s_deltaTime = 0.0f;
+	float Time::s_fixedDeltaTime = 1.0f / 50.0f;
+	float Time::s_fixedTimeAccumulator = 0.0f;
 	std::chrono::steady_clock::time_point Time::s_start = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::time_point Time::s_end = std::chrono::steady_clock::now();
 
 
 
 	// Time management:
-	void Time::Init()
+	void Time::Reset()
 	{
 		s_time = 0.0f;
 		s_deltaTime = 0.0f;

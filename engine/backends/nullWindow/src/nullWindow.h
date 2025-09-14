@@ -16,9 +16,6 @@ namespace nullWindowBackend
 {
 	class NULL_WINDOW_API NullWindow : public emberBackendInterface::IWindow
 	{
-	private: // Members:
-		void* m_pWindow;
-
 	public: // Methods:
 		// Constructor/Destructor:
 		NullWindow();
@@ -29,8 +26,8 @@ namespace nullWindowBackend
 		NullWindow& operator=(const NullWindow&) = delete;
 
 		// Movable:
-		NullWindow(NullWindow&& other) noexcept;
-		NullWindow& operator=(NullWindow&& other) noexcept;
+		NullWindow(NullWindow&& other) noexcept = default;
+		NullWindow& operator=(NullWindow&& other) noexcept = default;
 
 		// Window Methods:
 		void LinkDearImGui(void* pDearImGui) override;
@@ -39,9 +36,9 @@ namespace nullWindowBackend
 		void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const override;
 
 		// Getters:
+		void* GetNativeHandle() const;
 		bool GetIsMinimized() const override;
 		bool GetIsResized() const override;
-		void* GetNativeHandle() const;
 		Int2 GetSize() const;
 		uint32_t GetWindowID() const;
 	};

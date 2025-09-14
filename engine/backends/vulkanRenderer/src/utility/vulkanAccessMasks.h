@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanAccessMasks_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanAccessMasks_h__
+#pragma once
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -109,7 +108,3 @@ namespace vulkanRendererBackend
 		}
 	}
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanAccessMasks_h__

@@ -10,7 +10,6 @@ namespace emberEngine
 {
 	// Static members:
 	bool MeshReader::s_isInitialized = false;
-	std::filesystem::path MeshReader::s_rootPath;
 
 
 
@@ -26,7 +25,7 @@ namespace emberEngine
 			Init();
 
 		std::string fileName = relativePath.stem().string();
-		std::filesystem::path fullPath = s_rootPath / relativePath;
+		std::filesystem::path fullPath = std::filesystem::path(ENGINE_CORE_PATH) / relativePath;
 		fullPath = fullPath.make_preferred(); // normalize all "/" and "\" to preferred symbol.
 
 		// Error handling:
@@ -133,14 +132,5 @@ namespace emberEngine
 		pMesh->MoveTriangles(triangles);
 		pMesh->SetName(fileName);
 		return pMesh;
-	}
-
-
-
-	// Static private methods
-	void MeshReader::Init()
-	{
-		s_isInitialized = true;
-		s_rootPath = std::filesystem::current_path().parent_path();
 	}
 }

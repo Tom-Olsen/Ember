@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_buffer_h__
-#define __INCLUDE_GUARD_buffer_h__
+#pragma once
 #include <cstdint>
 #include <string>
 
@@ -10,7 +9,7 @@ namespace emberBackendInterface
     class IBuffer
     {
     public:
-        IBuffer() = default;
+        // Virtual destructor for v.table:
         virtual ~IBuffer() = default;
 
         virtual std::string GetName() const = 0;
@@ -22,7 +21,3 @@ namespace emberBackendInterface
         virtual void Download(void* dst, uint64_t size) = 0;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_buffer_h__

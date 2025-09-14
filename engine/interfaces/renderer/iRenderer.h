@@ -1,6 +1,4 @@
-#ifndef __INCLUDE_GUARD_renderer_h__
-#define __INCLUDE_GUARD_renderer_h__
-#include "buffer.h"
+#pragma once
 #include <memory>
 
 
@@ -10,14 +8,9 @@ namespace emberBackendInterface
     class IRenderer
     {
     public:
+        // Virtual destructor for v-table:
         virtual ~IRenderer() = default;
 
-        // Factories:
-        virtual std::unique_ptr<Buffer> CreateBuffer(const BufferInfo& bufferInfo) = 0;
-        // ...
+        virtual void RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime) = 0;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_renderer_h__

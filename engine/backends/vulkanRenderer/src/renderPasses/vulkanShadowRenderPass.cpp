@@ -1,8 +1,8 @@
 #include "vulkanShadowRenderPass.h"
-#include "depthTexture2dArray.h"
 #include "vmaImage.h"
-#include "lighting.h"
 #include "vulkanContext.h"
+#include "vulkanDepthTexture2dArray.h"
+#include "vulkanLighting.h"
 #include "vulkanMacros.h"
 
 

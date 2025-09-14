@@ -107,19 +107,13 @@ namespace vulkanRendererBackend
 	{
 		return m_instance;
 	}
-	std::vector<const char*> Instance::AvailableInstanceExtensions() const
+	std::vector<const char*> Instance::GetAllAvailableInstanceExtensionsNames() const
 	{
 		// Get all supported instance extensions:
 		uint32_t extensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 		std::vector<VkExtensionProperties> extensions(extensionCount);
 		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-
-		// Print all supported instance extensions:
-		std::string output = "available extensions:\n";
-		for (const VkExtensionProperties& extension : extensions)
-			output += "\t" + std::string(extension.extensionName) + "\n";
-		LOG_TRACE(output);
 
 		// Convert to vector of const char*:
 		std::vector<const char*> extensionNames(extensionCount);

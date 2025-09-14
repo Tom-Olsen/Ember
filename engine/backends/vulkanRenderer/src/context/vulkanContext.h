@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanContext_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanContext_h__
+#pragma once
 // Direct include instead of forward declaration,
 // as this is the main header file that includes all other Vulkan-related headers.
 // Also allows for vulkan objects to be in place instead of pointers -> better memory access.
@@ -23,13 +22,17 @@
 // -allow for the three depthBias values to be set via Set.
 // -allow renderWidth/renderHeight to change during runtime.
 // -ShaderPropertiesPool/StagingBufferPool: remove ShrinkToFit? some other mechanism to handle unbound growth?
-// -defaultGpuResources: initialize texture2d objects.
 // -remove name property of classes that dont need it internally. e.g. texture and mesh?
-// -in math library change data containers to std::array<float,n> and add conversion operators to iMath types
+// -in math library change data containers to std::array<float,n>
 // -remove shader folder from vulkanBackend and use shaders directly from core?
 
 
+
 // Forward decleration:
+namespace emberEngine
+{
+	struct RendererCreateInfo;
+}
 namespace emberBackendInterface
 {
 	class IDearImGuiInstanceExtensionsLoader;
@@ -40,6 +43,8 @@ namespace emberBackendInterface
 
 namespace vulkanRendererBackend
 {
+
+
 	/// <summary>
 	/// Context is a utility structure designed to encapsulate and manage all components required for the renderer.
 	/// It integrates multiple Vulkan resources and functionalities into a cohesive framework: <para/>
@@ -80,7 +85,7 @@ namespace vulkanRendererBackend
 		static float depthBiasSlopeFactor;
 		
 	public: // Methods:
-		static void Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IDearImGuiInstanceExtensionsLoader* pIDearImGuiInstanceExtensionsLoader, uint32_t renderWidth, uint32_t renderHeight, uint32_t framesInFlight_, VkSampleCountFlagBits msaaSamples_, bool vSyncEnabled_, bool enableDockSpace_, uint32_t maxDirectionalLights, uint32_t maxPositionalLights, uint32_t shadowMapResolution);
+		static void Init(const emberEngine::RendererCreateInfo& createInfo);
 		static void Clear();
 		static void RebuildSwapchain();
 
@@ -126,9 +131,9 @@ namespace vulkanRendererBackend
 		static void SetObjectName(VkEvent event, const std::string& name);
 		static void SetObjectName(VkQueryPool queryPool, const std::string& name);
 		static void SetObjectName(VkSwapchainKHR swapchain, const std::string& name);
+
+	private: // Methods:
+		static bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension);
+		static void AddDearImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanContext_h__

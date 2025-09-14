@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanComputePipeline_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanComputePipeline_h__
+#pragma once
 #include "vulkanPipeline.h"
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -27,7 +26,3 @@ namespace vulkanRendererBackend
 		void CreatePipeline(const VkShaderModule& computeShaderModule);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanComputePipeline_h__

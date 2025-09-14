@@ -46,6 +46,7 @@ namespace emberEngine
 
 		// Iterate through the texture directory:
 		std::filesystem::path directoryPath = std::filesystem::path(ENGINE_CORE_PATH) / "textures";
+		directoryPath = directoryPath.make_preferred(); // normalize all "/" and "\" to preferred symbol.
 		std::unordered_set<std::string> validExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 		{

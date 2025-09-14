@@ -1,10 +1,10 @@
 #include "vulkanForwardOpaquePipeline.h"
-#include "mesh.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanMacros.h"
+#include "vulkanMesh.h"
 #include "vulkanRenderPassManager.h"
 
 

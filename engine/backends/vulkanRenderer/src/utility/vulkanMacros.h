@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanMacros_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanMacros_h__
+#pragma once
 #include "logger.h"
 #include <string>
 
@@ -72,7 +71,3 @@ if (val != VK_SUCCESS) { \
     #define NAME_VK_QUERY_POOL(queryPool, name)         ((void)0)
     #define NAME_VK_SWAPCHAIN(swapchain, name)          ((void)0)
 #endif
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanMacros_h__

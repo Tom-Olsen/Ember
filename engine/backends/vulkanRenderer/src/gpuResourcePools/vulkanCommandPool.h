@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanCommandPool_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanCommandPool_h__
+#pragma once
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -46,7 +45,3 @@ namespace vulkanRendererBackend
 		void MoveFrom(CommandPool& other) noexcept;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanCommandPool_h__

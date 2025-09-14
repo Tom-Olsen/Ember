@@ -15,14 +15,11 @@ namespace emberEngine
     {
     private:
         static bool s_isInitialized;
-        static std::filesystem::path s_rootPath;
 
     public: // Methods:
         static Mesh* ReadCsvFile(const std::filesystem::path& relativePath);
 
     private: // Methods
-        static void Init();
-
         // Delete all constructors:
         MeshReader() = delete;
         MeshReader(const MeshReader&) = delete;

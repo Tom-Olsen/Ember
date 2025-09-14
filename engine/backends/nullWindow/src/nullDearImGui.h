@@ -17,14 +17,6 @@ struct ImGuiIO;
 
 namespace nullWindowBackend
 {
-	class NULL_WINDOW_API NullDearImGuiInstanceExtensionsLoader : public emberBackendInterface::IDearImGuiInstanceExtensionsLoader
-	{
-	public:
-		void AddExtensions(std::vector<const char*>& instanceExtensions) const override;
-	};
-
-
-
 	class NULL_WINDOW_API NullDearImGui : public emberBackendInterface::IDearImGui
 	{
 	public: // Methods

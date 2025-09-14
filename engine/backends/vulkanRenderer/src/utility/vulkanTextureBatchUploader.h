@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanTextureBatchUploader_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanTextureBatchUploader_h__
+#pragma once
 #include <filesystem>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -42,7 +41,3 @@ namespace vulkanRendererBackend
         void UploadTextures();
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanTextureBatchUploader_h__
