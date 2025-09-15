@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
             case VK_FORMAT_R32_SFLOAT:          return emberEngine::TextureFormat::r32_Float;
 
                 // Fallback:
-            default: return emberEngine::TextureFormat::unknown;
+            default:                            return emberEngine::TextureFormat::unknown;
         }
     }
 }

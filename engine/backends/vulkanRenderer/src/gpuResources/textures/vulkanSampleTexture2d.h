@@ -17,7 +17,6 @@ namespace vulkanRendererBackend
 	/// -VkImageUsageFlags		= transfer src (for mipmap creation), transfer dst, storage, sample <para/>
 	/// -VkImageCreateFlagBits	= 0 <para/>
 	/// -VkImageViewType		= 2d
-	/// -path = path to image
 	/// </summary>
 	class SampleTexture2d : public Texture2d
 	{

@@ -7,7 +7,7 @@ namespace vulkanRendererBackend
 {
 	/// <summary>
 	/// Texture2d specialization: <para/>
-	/// -VkImageUsageFlags		= transfer dst, storage <para/>
+	/// -VkImageUsageFlags		= transfer dst, storage, sample <para/>
 	/// -VkImageCreateFlagBits	= 0 <para/>
 	/// -VkImageViewType		= 2d
 	/// </summary>
