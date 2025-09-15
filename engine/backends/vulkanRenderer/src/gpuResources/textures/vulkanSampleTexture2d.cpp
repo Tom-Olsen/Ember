@@ -12,22 +12,46 @@
 #include "vulkanTextureBatchUploader.h"
 #include <math.h>
 #include <memory>
+#include <unordered_set>
 
 
 
 namespace vulkanRendererBackend
 {
 	// Constructor/Desctructor:
-	SampleTexture2d::SampleTexture2d(const std::string& name, int width, int height, float value)
+	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, int width, int height)
 	{
-		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Load(name, width, height, value));
-		Init(pStagingBuffer.get());
+		// Check format validity:
+		static const std::unordered_set<VkFormat> validFormats =
+		{
+			VK_FORMAT_R8_SRGB, VK_FORMAT_R8_UINT, VK_FORMAT_R8_SINT, VK_FORMAT_R8_USCALED, VK_FORMAT_R8_SSCALED, VK_FORMAT_R8_UNORM, VK_FORMAT_R8_SNORM,
+			VK_FORMAT_R16_UINT, VK_FORMAT_R16_SINT, VK_FORMAT_R16_USCALED, VK_FORMAT_R16_SSCALED, VK_FORMAT_R16_UNORM, VK_FORMAT_R16_SNORM, VK_FORMAT_R16_SFLOAT,
+			VK_FORMAT_R32_UINT, VK_FORMAT_R32_SINT, VK_FORMAT_R32_SFLOAT,
+			VK_FORMAT_R64_UINT, VK_FORMAT_R64_SINT, VK_FORMAT_R64_SFLOAT,
+			VK_FORMAT_R8G8_SRGB, VK_FORMAT_R8G8_UINT, VK_FORMAT_R8G8_SINT, VK_FORMAT_R8G8_USCALED, VK_FORMAT_R8G8_SSCALED, VK_FORMAT_R8G8_UNORM, VK_FORMAT_R8G8_SNORM,
+			VK_FORMAT_R16G16_UINT, VK_FORMAT_R16G16_SINT, VK_FORMAT_R16G16_USCALED, VK_FORMAT_R16G16_SSCALED, VK_FORMAT_R16G16_UNORM, VK_FORMAT_R16G16_SNORM, VK_FORMAT_R16G16_SFLOAT,
+			VK_FORMAT_R32G32_UINT, VK_FORMAT_R32G32_SINT, VK_FORMAT_R32G32_SFLOAT,
+			VK_FORMAT_R64G64_UINT, VK_FORMAT_R64G64_SINT, VK_FORMAT_R64G64_SFLOAT,
+			VK_FORMAT_R8G8B8_SRGB, VK_FORMAT_R8G8B8_UINT, VK_FORMAT_R8G8B8_SINT, VK_FORMAT_R8G8B8_USCALED, VK_FORMAT_R8G8B8_SSCALED, VK_FORMAT_R8G8B8_UNORM, VK_FORMAT_R8G8B8_SNORM,
+			VK_FORMAT_R16G16B16_UINT, VK_FORMAT_R16G16B16_SINT, VK_FORMAT_R16G16B16_USCALED, VK_FORMAT_R16G16B16_SSCALED, VK_FORMAT_R16G16B16_UNORM, VK_FORMAT_R16G16B16_SNORM, VK_FORMAT_R16G16B16_SFLOAT,
+			VK_FORMAT_R32G32B32_UINT, VK_FORMAT_R32G32B32_SINT, VK_FORMAT_R32G32B32_SFLOAT,
+			VK_FORMAT_R64G64B64_UINT, VK_FORMAT_R64G64B64_SINT, VK_FORMAT_R64G64B64_SFLOAT,
+			VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UINT, VK_FORMAT_R8G8B8A8_SINT, VK_FORMAT_R8G8B8A8_USCALED, VK_FORMAT_R8G8B8A8_SSCALED, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_SNORM,
+			VK_FORMAT_R16G16B16A16_UINT, VK_FORMAT_R16G16B1A166_SINT, VK_FORMAT_R16G16BA1616_USCALED, VK_FORMAT_R16A16G16B16_SSCALED, VK_FORMAT_R1A166G16B16_UNORM, VK_FORMAT_R16A16G16B16_SNORM, VK_FORMAT_R1A166G16B16_SFLOAT,
+			VK_FORMAT_R32G32B32A32_UINT, VK_FORMAT_R32G32B32A32_SINT, VK_FORMAT_R32G32B32A32_SFLOAT,
+			VK_FORMAT_R64G64B64A64_UINT, VK_FORMAT_R64G64B64_SIA64NT, VK_FORMAT_R64G64B64_SFLA64OAT
+		};
+		if (!validFormats.contains(format))
+			throw std::runtime_error("Unsupported texture format for SampleTexture2d!");
+
+		m_name = name;
+		m_width = width;
+		m_height = height;
+		m_channels = 1;
+		m_format = format;
+		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	}
-	SampleTexture2d::SampleTexture2d(const std::string& name, int width, int height, Float4 value)
-	{
-		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Load(name, width, height, value));
-		Init(pStagingBuffer.get());
-	}
+
 	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path)
 	{
 		m_format = format;
@@ -142,22 +166,15 @@ namespace vulkanRendererBackend
 
 		return pStagingBuffer;
 	}
-	StagingBuffer* SampleTexture2d::Load(const std::string& name, int width, int height, float value)
+	StagingBuffer* SampleTexture2d::Load(float value)
 	{
-		m_name = name;
-		m_channels = 1;
-		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		m_width = width;
-		m_height = height;
-		m_format = VK_FORMAT_R8_UNORM;
-
 		// Clamp and convert:
-		uint8_t pixel = static_cast<uint8_t>(std::clamp(value, 0.0f, 1.0f) * 255.0f);
+		std::vector<float> pixels(m_width * m_height, value);
 
 		// Upload: pixel -> pStagingBuffer
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(m_format);
 		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
-		pStagingBuffer->SetData(&pixel, bufferSize);
+		pStagingBuffer->SetData(&pixels.data(), bufferSize);
 
 		// Define subresource range:
 		VkImageSubresourceRange subresourceRange{};
@@ -185,7 +202,6 @@ namespace vulkanRendererBackend
 		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		m_width = width;
 		m_height = height;
-		m_format = VK_FORMAT_R8G8B8A8_UNORM;
 
 		// Clamp and convert:
 		uint8_t pixel[4];

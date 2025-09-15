@@ -21,10 +21,11 @@ namespace vulkanRendererBackend
 	class SampleTexture2d : public Texture2d
 	{
 	public: // Methods:
-		SampleTexture2d(const std::string& name, int width, int height, float value);
-		SampleTexture2d(const std::string& name, int width, int height, Float2 value);
-		SampleTexture2d(const std::string& name, int width, int height, Float3 value);
-		SampleTexture2d(const std::string& name, int width, int height, Float4 value);
+		// Constructor/Destructor
+		SampleTexture2d(const std::string& name, VkFormat format, int width, int height);
+		~SampleTexture2d();
+
+		// Construction by file:
 		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path);
 		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path, TextureBatchUploader& batchUploader);
 
@@ -32,19 +33,41 @@ namespace vulkanRendererBackend
 		SampleTexture2d(const SampleTexture2d&) = delete;
 		SampleTexture2d& operator=(const SampleTexture2d&) = delete;
 
-		// DepthTexture2dArray:
+		// Movable:
 		SampleTexture2d(SampleTexture2d&& other) noexcept = default;
 		SampleTexture2d& operator=(SampleTexture2d&& other) noexcept = default;
 
-		~SampleTexture2d();
 		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer) override;
+
+		// Setters:
+		// Idea: SetByValue in parent class? What about cubeTextures?
+		// First implemet setting via vector.
+		// Make setbyValue highjack the vector version?
+		void ResetTexture();
+		void SetByValue(uint8_t value);
+		void SetByValue(int8_t value);
+		void SetByValue(float value);
+		void SetByValue(double value);
+		void SetByValue(uint8_t value0, uint8_t value1);
+		void SetByValue(int8_t value0, int8_t value1);
+		void SetByValue(float value0, float value1);
+		void SetByValue(uint8_t value0, uint8_t value1, uint8_t value2);
+		void SetByValue(int8_t value0, int8_t value1, int8_t value2);
+		void SetByValue(float value0, float value1, float value2);
+		void SetByValue(uint8_t value0, uint8_t value1, uint8_t value2, uint8_t value3);
+		void SetByValue(int8_t value0, int8_t value1, int8_t value2, int8_t value3);
+		void SetByValue(float value0, float value1, float value2, float value3);
+		void SetByArray(const std::vector<uint8_t>& values);
+		void SetByArray(const std::vector<int8_t>& values);
+		void SetByArray(const std::vector<float>& values);
+
 
 	private: // Methods:
 		void Init(StagingBuffer* pStagingBuffer);
 		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path) override;
-		StagingBuffer* Load(const std::string& name, int width, int height, float value);
-		StagingBuffer* Load(const std::string& name, int width, int height, const Float2& value);
-		StagingBuffer* Load(const std::string& name, int width, int height, const Float3& value);
-		StagingBuffer* Load(const std::string& name, int width, int height, const Float4& value);
+		StagingBuffer* Load(float value);
+		StagingBuffer* Load(const Float2& value);
+		StagingBuffer* Load(const Float3& value);
+		StagingBuffer* Load(const Float4& value);
 	};
 }
