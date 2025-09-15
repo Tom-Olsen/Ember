@@ -53,7 +53,7 @@ namespace vulkanRendererBackend
 		uint64_t GetWidth() const;
 		uint64_t GetHeight() const;
 		uint64_t GetChannels() const;
-		emberEngine::TextureFormat GetFormat() const;
+		const emberEngine::TextureFormat& GetFormat() const;
 		VkFormat GetVkFormat() const;
 		VmaImage* const GetVmaImage() const;
 		VkDescriptorType GetVkDescriptorType() const;

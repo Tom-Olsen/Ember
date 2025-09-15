@@ -23,9 +23,9 @@ namespace vulkanRendererBackend
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Load(name, width, height, value));
 		Init(pStagingBuffer.get());
 	}
-	SampleTexture2d::SampleTexture2d(const std::string& name, int width, int height, Float4 color)
+	SampleTexture2d::SampleTexture2d(const std::string& name, int width, int height, Float4 value)
 	{
-		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Load(name, width, height, color));
+		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Load(name, width, height, value));
 		Init(pStagingBuffer.get());
 	}
 	SampleTexture2d::SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path)
@@ -178,7 +178,7 @@ namespace vulkanRendererBackend
 
 		return pStagingBuffer;
 	}
-	StagingBuffer* SampleTexture2d::Load(const std::string& name, int width, int height, const Float4& color)
+	StagingBuffer* SampleTexture2d::Load(const std::string& name, int width, int height, const Float4& value)
 	{
 		m_name = name;
 		m_channels = 4;
@@ -189,10 +189,10 @@ namespace vulkanRendererBackend
 
 		// Clamp and convert:
 		uint8_t pixel[4];
-		pixel[0] = static_cast<uint8_t>(std::clamp(color[0], 0.0f, 1.0f) * 255.0f);
-		pixel[1] = static_cast<uint8_t>(std::clamp(color[1], 0.0f, 1.0f) * 255.0f);
-		pixel[2] = static_cast<uint8_t>(std::clamp(color[2], 0.0f, 1.0f) * 255.0f);
-		pixel[3] = static_cast<uint8_t>(std::clamp(color[3], 0.0f, 1.0f) * 255.0f);
+		pixel[0] = static_cast<uint8_t>(std::clamp(value.x, 0.0f, 1.0f) * 255.0f);
+		pixel[1] = static_cast<uint8_t>(std::clamp(value.y, 0.0f, 1.0f) * 255.0f);
+		pixel[2] = static_cast<uint8_t>(std::clamp(value.z, 0.0f, 1.0f) * 255.0f);
+		pixel[3] = static_cast<uint8_t>(std::clamp(value.w, 0.0f, 1.0f) * 255.0f);
 
 		// Upload: pixel -> pStagingBuffer
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(m_format);

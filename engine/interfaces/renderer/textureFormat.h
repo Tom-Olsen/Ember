@@ -6,133 +6,279 @@
 
 namespace emberEngine
 {
-    // Format explaination:
-    // srgb    = maps [0, 255] to [0.0, 1.0] in perceptually linear way, according to gamma encoding standart. 8bit only!
-    // uint    = unsigned integer      € [     0,   255] (8bit example)
-    // sint    =   signed integer      € [  -128,   127] (8bit example)
-    // uscaled = unsigned scaled float € [   0.0, 255.0] (8bit example)
-    // sscaled =   signed scaled float € [-128.0, 127.0] (8bit example)
-    // unorm   = unsigned normalized   € [   0.0,   1.0]
-    // snorm   =   signed normalized   € [  -1.0,   1.0]
-    // sfloat  =   signed float
+    enum class TextureFormatType : uint16_t
+    {
+        // Fallback:
+		unknown = 0,        // unknown / unsupported format
+        // Basic types:
+        srgb,               // maps [0, 255] to [0.0, 1.0] in perceptually linear way, according to gamma encoding standart. 8bit only!
+        uint,               // unsigned integer      € [     0,   255] (8bit example)
+        sint,               //   signed integer      € [  -128,   127] (8bit example)
+        uscaled,            // unsigned scaled float € [   0.0, 255.0] (8bit example)   
+        sscaled,            //   signed scaled float € [-128.0, 127.0] (8bit example)   
+        unorm,              // unsigned normalized   € [   0.0,   1.0]
+        snorm,              //   signed normalized   € [  -1.0,   1.0]
+        sfloat,             //   signed float
+        // Depth/stencil types:
+        depth00_stencil8,    //  0bit depth, 8bit stencil
+        depth16_stencil0,    // 16bit depth, 0bit stencil
+        depth16_stencil8,    // 16bit depth, 8bit stencil
+        depth24_stencil8,    // 24bit depth, 8bit stencil
+        depth32_stencil0,    // 32bit depth, 0bit stencil
+        depth32_stencil8     // 32bit depth, 8bit stencil
+    };
 
-    enum class TextureFormat1Channel
+
+
+    // Depth/stencil texture formats:
+    struct DepthStencilFormat
     {
-        // One 8bit channel:
-        r08_srgb,
-        r08_uint,
-        r08_sint,
-        r08_uscaled,
-        r08_sscaled,
-        r08_unorm,
-        r08_snorm,
-        // One 16bit channel:
-        r16_uint,
-        r16_sint,
-        r16_uscaled,
-        r16_sscaled,
-        r16_unorm,
-        r16_snorm,
-        r16_sfloat,
-        // One 32bit channel:
-        r32_uint,
-        r32_sint,
-        r32_sfloat,
-        // One 64bit channel:
-        r64_uint,
-        r64_sint,
-        r64_sfloat
+        TextureFormatType formatType;
+        DepthStencilFormat(TextureFormatType type) { formatType = type; }
     };
-    enum class TextureFormat2Channel
+
+
+
+    // Base Texture Format struct:
+    struct TextureFormat
     {
-        // Two 8bit channels:
-        rg08_srgb,
-        rg08_uint,
-        rg08_sint,
-        rg08_uscaled,
-        rg08_sscaled,
-        rg08_unorm,
-        rg08_snorm,
-        // Two 16bit channels:
-        rg16_uint,
-        rg16_sint,
-        rg16_uscaled,
-        rg16_sscaled,
-        rg16_unorm,
-        rg16_snorm,
-        rg16_sfloat,
-        // Two 32bit channels:
-        rg32_uint,
-        rg32_sint,
-        rg32_sfloat,
-        // Two 64bit channels:
-        rg64_uint,
-        rg64_sint,
-        rg64_sfloat,
+    public: // Members:
+        TextureFormatType formatType;
+
+    public: // Methods:
+        virtual ~TextureFormat() = default;
+        virtual uint32_t ChannelCount() const = 0;
+        virtual uint32_t BytesPerChannel() const = 0;
     };
-    enum class TextureFormat3Channel
+
+
+
+    // Single channel texture formats:
+    struct TextureFormat1Channel : public TextureFormat
     {
-        // Three 8bit channels:
-        rgb08_srgb,
-        rgb08_uint,
-        rgb08_sint,
-        rgb08_uscaled,
-        rgb08_sscaled,
-        rgb08_unorm,
-        rgb08_snorm,
-        // Three 16bit channels:
-        rgb16_uint,
-        rgb16_sint,
-        rgb16_uscaled,
-        rgb16_sscaled,
-        rgb16_unorm,
-        rgb16_snorm,
-        rgb16_sfloat,
-        // Three 32bit channels:
-        rgb32_uint,
-        rgb32_sint,
-        rgb32_sfloat,
-        // Three 64bit channels:
-        rgb64_uint,
-        rgb64_sint,
-        rgb64_sfloat,
+        inline uint32_t ChannelCount() const override { return 1; }
     };
-    enum class TextureFormat4Channel
+    struct TextureFormat1Channel08Bit : public TextureFormat1Channel
     {
-        // Four 8bit channels:
-        rgba08_srgb,
-        rgba08_uint,
-        rgba08_sint,
-        rgba08_uscaled,
-        rgba08_sscaled,
-        rgba08_unorm,
-        rgba08_snorm,
-        // Four 16bit channels:
-        rgba16_uint,
-        rgba16_sint,
-        rgba16_uscaled,
-        rgba16_sscaled,
-        rgba16_unorm,
-        rgba16_snorm,
-        rgba16_sfloat,
-        // Four 32bit channels:
-        rgba32_uint,
-        rgba32_sint,
-        rgba32_sfloat,
-        // Four 64bit channels:
-        rgba64_uint,
-        rgba64_sint,
-        rgba64_sfloat,
+        TextureFormat1Channel08Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 1; }
     };
-    enum class DepthStencilFormat
+    struct TextureFormat1Channel16Bit : public TextureFormat1Channel
     {
-        s08_uint,
-        d16_unorm,
-        d16_unorm_s8_uint,
-        d24_unorm_s8_uint,
-        d32_sfloat,
-        d32_sfloat_s8_uint
+        TextureFormat1Channel16Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 2; }
     };
-    
-    using GenericFormat = std::variant<TextureFormat1Channel, TextureFormat2Channel, TextureFormat3Channel, TextureFormat4Channel, DepthStencilFormat>;
+    struct TextureFormat1Channel32Bit : public TextureFormat1Channel
+    {
+        TextureFormat1Channel32Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 4; }
+    };
+    struct TextureFormat1Channel64Bit : public TextureFormat1Channel
+    {
+        TextureFormat1Channel64Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 8; }
+    };
+
+
+
+    // Dual channel texture formats:
+    struct TextureFormat2Channel : public TextureFormat
+    {
+        inline uint32_t ChannelCount() const override { return 2; }
+    };
+    struct TextureFormat2Channel08Bit : public TextureFormat2Channel
+    {
+        TextureFormat2Channel08Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 1; }
+    };
+    struct TextureFormat2Channel16Bit : public TextureFormat2Channel
+    {
+        TextureFormat2Channel16Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 2; }
+    };
+    struct TextureFormat2Channel32Bit : public TextureFormat2Channel
+    {
+        TextureFormat2Channel32Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 4; }
+    };
+    struct TextureFormat2Channel64Bit : public TextureFormat2Channel
+    {
+        TextureFormat2Channel64Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 8; }
+    };
+
+
+
+    // Triple channel texture formats:
+    struct TextureFormat3Channel : public TextureFormat
+    {
+        inline uint32_t ChannelCount() const override { return 3; }
+    };
+    struct TextureFormat3Channel08Bit : public TextureFormat3Channel
+    {
+        TextureFormat3Channel08Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 1; }
+    };
+    struct TextureFormat3Channel16Bit : public TextureFormat3Channel
+    {
+        TextureFormat3Channel16Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 2; }
+    };
+    struct TextureFormat3Channel32Bit : public TextureFormat3Channel
+    {
+        TextureFormat3Channel32Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 4; }
+    };
+    struct TextureFormat3Channel64Bit : public TextureFormat3Channel
+    {
+        TextureFormat3Channel64Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 8; }
+    };
+
+
+
+    // Quadrupel channel texture formats:
+    struct TextureFormat4Channel : public TextureFormat
+    {
+        inline uint32_t ChannelCount() const override { return 4; }
+    };
+    struct TextureFormat4Channel08Bit : public TextureFormat4Channel
+    {
+        TextureFormat4Channel08Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 1; }
+    };
+    struct TextureFormat4Channel16Bit : public TextureFormat4Channel
+    {
+        TextureFormat4Channel16Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 2; }
+    };
+    struct TextureFormat4Channel32Bit : public TextureFormat4Channel
+    {
+        TextureFormat4Channel32Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 4; }
+    };
+    struct TextureFormat4Channel64Bit : public TextureFormat4Channel
+    {
+        TextureFormat4Channel64Bit(TextureFormatType type) { formatType = type; }
+        inline uint32_t BytesPerChannel() const override { return 8; }
+    };
+
+
+
+    // Static instances of all supported formats:
+    struct DepthStencilFormats
+    {
+        inline static DepthStencilFormat unknown { TextureFormatType::unknown };
+        inline static DepthStencilFormat d00_s8  { TextureFormatType::depth00_stencil8 };
+        inline static DepthStencilFormat d16_s0  { TextureFormatType::depth16_stencil0 };
+        inline static DepthStencilFormat d16_s8  { TextureFormatType::depth16_stencil8 };
+        inline static DepthStencilFormat d24_s8  { TextureFormatType::depth24_stencil8 };
+        inline static DepthStencilFormat d32_s0  { TextureFormatType::depth32_stencil0 };
+        inline static DepthStencilFormat d32_s8  { TextureFormatType::depth32_stencil8 };
+    };
+    struct TextureFormats
+    {
+        // Fallback:
+        inline static TextureFormat1Channel08Bit unknown     { TextureFormatType::unknown };
+         
+        // Single Channel:
+        inline static TextureFormat1Channel08Bit r08_srgb    { TextureFormatType::srgb    };
+        inline static TextureFormat1Channel08Bit r08_uint    { TextureFormatType::uint    };
+        inline static TextureFormat1Channel08Bit r08_sint    { TextureFormatType::sint    };
+        inline static TextureFormat1Channel08Bit r08_uscaled { TextureFormatType::uscaled };
+        inline static TextureFormat1Channel08Bit r08_sscaled { TextureFormatType::sscaled };
+        inline static TextureFormat1Channel08Bit r08_unorm   { TextureFormatType::unorm   };
+        inline static TextureFormat1Channel08Bit r08_snorm   { TextureFormatType::snorm   };
+                                                             
+        inline static TextureFormat1Channel16Bit r16_uint    { TextureFormatType::uint    };
+        inline static TextureFormat1Channel16Bit r16_sint    { TextureFormatType::sint    };
+        inline static TextureFormat1Channel16Bit r16_uscaled { TextureFormatType::uscaled };
+        inline static TextureFormat1Channel16Bit r16_sscaled { TextureFormatType::sscaled };
+        inline static TextureFormat1Channel16Bit r16_unorm   { TextureFormatType::unorm   };
+        inline static TextureFormat1Channel16Bit r16_snorm   { TextureFormatType::snorm   };
+        inline static TextureFormat1Channel16Bit r16_sfloat  { TextureFormatType::sfloat  };
+                                                             
+        inline static TextureFormat1Channel32Bit r32_uint    { TextureFormatType::uint    };
+        inline static TextureFormat1Channel32Bit r32_sint    { TextureFormatType::sint    };
+        inline static TextureFormat1Channel32Bit r32_sfloat  { TextureFormatType::sfloat  };
+                                                             
+        inline static TextureFormat1Channel64Bit r64_uint    { TextureFormatType::uint    };
+        inline static TextureFormat1Channel64Bit r64_sint    { TextureFormatType::sint    };
+        inline static TextureFormat1Channel64Bit r64_sfloat  { TextureFormatType::sfloat  };
+
+        // Dual Channel:
+        inline static TextureFormat2Channel08Bit rg08_srgb    { TextureFormatType::srgb    };
+        inline static TextureFormat2Channel08Bit rg08_uint    { TextureFormatType::uint    };
+        inline static TextureFormat2Channel08Bit rg08_sint    { TextureFormatType::sint    };
+        inline static TextureFormat2Channel08Bit rg08_uscaled { TextureFormatType::uscaled };
+        inline static TextureFormat2Channel08Bit rg08_sscaled { TextureFormatType::sscaled };
+        inline static TextureFormat2Channel08Bit rg08_unorm   { TextureFormatType::unorm   };
+        inline static TextureFormat2Channel08Bit rg08_snorm   { TextureFormatType::snorm   };
+
+        inline static TextureFormat2Channel16Bit rg16_uint    { TextureFormatType::uint    };
+        inline static TextureFormat2Channel16Bit rg16_sint    { TextureFormatType::sint    };
+        inline static TextureFormat2Channel16Bit rg16_uscaled { TextureFormatType::uscaled };
+        inline static TextureFormat2Channel16Bit rg16_sscaled { TextureFormatType::sscaled };
+        inline static TextureFormat2Channel16Bit rg16_unorm   { TextureFormatType::unorm   };
+        inline static TextureFormat2Channel16Bit rg16_snorm   { TextureFormatType::snorm   };
+        inline static TextureFormat2Channel16Bit rg16_sfloat  { TextureFormatType::sfloat  };
+
+        inline static TextureFormat2Channel32Bit rg32_uint    { TextureFormatType::uint    };
+        inline static TextureFormat2Channel32Bit rg32_sint    { TextureFormatType::sint    };
+        inline static TextureFormat2Channel32Bit rg32_sfloat  { TextureFormatType::sfloat  };
+
+        inline static TextureFormat2Channel64Bit rg64_uint    { TextureFormatType::uint    };
+        inline static TextureFormat2Channel64Bit rg64_sint    { TextureFormatType::sint    };
+        inline static TextureFormat2Channel64Bit rg64_sfloat  { TextureFormatType::sfloat  };
+
+        // Triple Channel:
+        inline static TextureFormat3Channel08Bit rgb08_srgb    { TextureFormatType::srgb    };
+        inline static TextureFormat3Channel08Bit rgb08_uint    { TextureFormatType::uint    };
+        inline static TextureFormat3Channel08Bit rgb08_sint    { TextureFormatType::sint    };
+        inline static TextureFormat3Channel08Bit rgb08_uscaled { TextureFormatType::uscaled };
+        inline static TextureFormat3Channel08Bit rgb08_sscaled { TextureFormatType::sscaled };
+        inline static TextureFormat3Channel08Bit rgb08_unorm   { TextureFormatType::unorm   };
+        inline static TextureFormat3Channel08Bit rgb08_snorm   { TextureFormatType::snorm   };
+
+        inline static TextureFormat3Channel16Bit rgb16_uint    { TextureFormatType::uint    };
+        inline static TextureFormat3Channel16Bit rgb16_sint    { TextureFormatType::sint    };
+        inline static TextureFormat3Channel16Bit rgb16_uscaled { TextureFormatType::uscaled };
+        inline static TextureFormat3Channel16Bit rgb16_sscaled { TextureFormatType::sscaled };
+        inline static TextureFormat3Channel16Bit rgb16_unorm   { TextureFormatType::unorm   };
+        inline static TextureFormat3Channel16Bit rgb16_snorm   { TextureFormatType::snorm   };
+        inline static TextureFormat3Channel16Bit rgb16_sfloat  { TextureFormatType::sfloat  };
+
+        inline static TextureFormat3Channel32Bit rgb32_uint    { TextureFormatType::uint    };
+        inline static TextureFormat3Channel32Bit rgb32_sint    { TextureFormatType::sint    };
+        inline static TextureFormat3Channel32Bit rgb32_sfloat  { TextureFormatType::sfloat  };
+
+        inline static TextureFormat3Channel64Bit rgb64_uint    { TextureFormatType::uint    };
+        inline static TextureFormat3Channel64Bit rgb64_sint    { TextureFormatType::sint    };
+        inline static TextureFormat3Channel64Bit rgb64_sfloat  { TextureFormatType::sfloat  };
+
+        // Quadrupal Channel:
+        inline static TextureFormat4Channel08Bit rgba08_srgb    { TextureFormatType::srgb    };
+        inline static TextureFormat4Channel08Bit rgba08_uint    { TextureFormatType::uint    };
+        inline static TextureFormat4Channel08Bit rgba08_sint    { TextureFormatType::sint    };
+        inline static TextureFormat4Channel08Bit rgba08_uscaled { TextureFormatType::uscaled };
+        inline static TextureFormat4Channel08Bit rgba08_sscaled { TextureFormatType::sscaled };
+        inline static TextureFormat4Channel08Bit rgba08_unorm   { TextureFormatType::unorm   };
+        inline static TextureFormat4Channel08Bit rgba08_snorm   { TextureFormatType::snorm   };
+
+        inline static TextureFormat4Channel16Bit rgba16_uint    { TextureFormatType::uint    };
+        inline static TextureFormat4Channel16Bit rgba16_sint    { TextureFormatType::sint    };
+        inline static TextureFormat4Channel16Bit rgba16_uscaled { TextureFormatType::uscaled };
+        inline static TextureFormat4Channel16Bit rgba16_sscaled { TextureFormatType::sscaled };
+        inline static TextureFormat4Channel16Bit rgba16_unorm   { TextureFormatType::unorm   };
+        inline static TextureFormat4Channel16Bit rgba16_snorm   { TextureFormatType::snorm   };
+        inline static TextureFormat4Channel16Bit rgba16_sfloat  { TextureFormatType::sfloat  };
+
+        inline static TextureFormat4Channel32Bit rgba32_uint    { TextureFormatType::uint    };
+        inline static TextureFormat4Channel32Bit rgba32_sint    { TextureFormatType::sint    };
+        inline static TextureFormat4Channel32Bit rgba32_sfloat  { TextureFormatType::sfloat  };
+
+        inline static TextureFormat4Channel64Bit rgba64_uint    { TextureFormatType::uint    };
+        inline static TextureFormat4Channel64Bit rgba64_sint    { TextureFormatType::sint    };
+        inline static TextureFormat4Channel64Bit rgba64_sfloat  { TextureFormatType::sfloat  };
+    };
 }

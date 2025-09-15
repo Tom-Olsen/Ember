@@ -22,7 +22,9 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		SampleTexture2d(const std::string& name, int width, int height, float value);
-		SampleTexture2d(const std::string& name, int width, int height, Float4 color);
+		SampleTexture2d(const std::string& name, int width, int height, Float2 value);
+		SampleTexture2d(const std::string& name, int width, int height, Float3 value);
+		SampleTexture2d(const std::string& name, int width, int height, Float4 value);
 		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path);
 		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path, TextureBatchUploader& batchUploader);
 
@@ -41,6 +43,8 @@ namespace vulkanRendererBackend
 		void Init(StagingBuffer* pStagingBuffer);
 		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path) override;
 		StagingBuffer* Load(const std::string& name, int width, int height, float value);
-		StagingBuffer* Load(const std::string& name, int width, int height, const Float4& color);
+		StagingBuffer* Load(const std::string& name, int width, int height, const Float2& value);
+		StagingBuffer* Load(const std::string& name, int width, int height, const Float3& value);
+		StagingBuffer* Load(const std::string& name, int width, int height, const Float4& value);
 	};
 }

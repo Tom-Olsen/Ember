@@ -38,7 +38,7 @@ namespace vulkanRendererBackend
 	{
 		return static_cast<uint64_t>(m_channels);
 	}
-	emberEngine::TextureFormat Texture2d::GetFormat() const
+	const emberEngine::TextureFormat& Texture2d::GetFormat() const
 	{
 		return TranslateTextureFormat(m_format);
 	}
