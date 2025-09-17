@@ -1,6 +1,6 @@
 #include "vulkanStorageSampleTexture2d.h"
+#include "assetLoader.h"
 #include "logger.h"
-#include "stb_image.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanAccessMasks.h"
@@ -14,36 +14,17 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Desctructor:
-	StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, VkFormat format, int width, int height)
+	StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, VkFormat format, int width, int height, void* data)
 	{
 		m_name = name;
 		m_width = width;
 		m_height = height;
-		m_channels = STBI_rgb_alpha;	// 4 channels
+        m_channels = GetChannelCount(format);
 		m_format = format;
 		m_descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 
-		// Create zero initialized pixels:
-		stbi_uc* pPixels = new stbi_uc[m_width * m_height * m_channels];
-		for (uint32_t i = 0; i < m_width * m_height * m_channels; i++)
-			pPixels[i] = 0;
-
-		// Define subresource range:
-		VkImageSubresourceRange subresourceRange;
-		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		subresourceRange.baseMipLevel = 0;
-		subresourceRange.levelCount = 1;
-		subresourceRange.baseArrayLayer = 0;
-		subresourceRange.layerCount = 1;
-
-		// Create image:
-		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		VkImageCreateFlags imageFlags = 0;
-		VkMemoryPropertyFlags memoryFlags = 0;
-		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
-		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), "StorageSampleTexture2d " + m_name);
+        std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Upload(data));
+        //Init(pStagingBuffer.get());
 
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		VkImageLayout newLayout0 = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -53,11 +34,8 @@ namespace vulkanRendererBackend
 		VkAccessFlags2 dstAccessMask0 = accessMask::transfer::transferWrite;
 		m_pImage->TransitionLayout(newLayout0, srcStage0, dstStage0, srcAccessMask0, dstAccessMask0);
 
-		// Copy: pixelData -> stagingBuffer -> image
-		uint64_t bufferSize = 4 * m_channels * m_width * m_height * BytesPerChannel(m_format);
-		StagingBuffer stagingBuffer(bufferSize, m_name);
-		stagingBuffer.SetData(pPixels, bufferSize);
-		stagingBuffer.UploadToImage(Context::logicalDevice.GetTransferQueue(), m_pImage.get(), subresourceRange.layerCount);
+		// Upload: pStagingBuffer -> image
+		pStagingBuffer->UploadToImage(Context::logicalDevice.GetTransferQueue(), m_pImage.get(), m_pImage->GetSubresourceRange().layerCount);
 
 		// Transition 1: Layout: transfer->general, Queue: transfer->compute
 		VkImageLayout newLayout1 = VK_IMAGE_LAYOUT_GENERAL;
@@ -66,63 +44,22 @@ namespace vulkanRendererBackend
 		VkAccessFlags2 srcAccessMask1 = accessMask::transfer::transferWrite;
 		VkAccessFlags2 dstAccessMask1 = accessMask::computeShader::memoryRead;
 		m_pImage->TransitionLayout(newLayout1, srcStage1, dstStage1, srcAccessMask1, dstAccessMask1);
-
-		// Free memory:
-		delete[] pPixels;
 	}
-	StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath)
-	{
+    StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path)
+    {
+        int channels = GetChannelCount(format);
+        emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImage(path, channels);
+
 		m_name = name;
-		m_channels = STBI_rgb_alpha;	// 4 8-bit channels
+		m_width = imageAsset.width;
+		m_height = imageAsset.height;
+        m_channels = channels;
 		m_format = format;
-
-		// Load image:
-		stbi_set_flip_vertically_on_load(true);
-		stbi_uc* pPixels = stbi_load(filePath.string().c_str(), &m_width, &m_height, nullptr, m_channels);
-		if (!pPixels)
-			throw std::runtime_error("Failed to load texture image!");
-
-		// Define subresource range:
-		VkImageSubresourceRange subresourceRange;
-		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		subresourceRange.baseMipLevel = 0;
-		subresourceRange.levelCount = 1;
-		subresourceRange.baseArrayLayer = 0;
-		subresourceRange.layerCount = 1;
-
-		// Create image:
-		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		VkImageCreateFlags imageFlags = 0;
-		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
-		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
-
-		// Transition 0: Layout: undefined->transfer, Queue: transfer
-		VkImageLayout newLayout0 = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		VkPipelineStageFlags2 srcStage0 = pipelineStage::topOfPipe;
-		VkPipelineStageFlags2 dstStage0 = pipelineStage::transfer;
-		VkAccessFlags2 srcAccessMask0 = accessMask::topOfPipe::none;
-		VkAccessFlags2 dstAccessMask0 = accessMask::transfer::transferWrite;
-		m_pImage->TransitionLayout(newLayout0, srcStage0, dstStage0, srcAccessMask0, dstAccessMask0);
-
-		// Copy: pixelData -> stagingBuffer -> image
-		uint64_t bufferSize = 4 * m_width * m_height;
-		StagingBuffer stagingBuffer(bufferSize, m_name);
-		stagingBuffer.SetData(pPixels, bufferSize);
-		stagingBuffer.UploadToImage(Context::logicalDevice.GetTransferQueue(), m_pImage.get(), subresourceRange.layerCount);
-
-		// Transition 1: Layout: transfer->general, Queue: transfer->compute
-		VkImageLayout newLayout1 = VK_IMAGE_LAYOUT_GENERAL;
-		VkPipelineStageFlags2 srcStage1 = pipelineStage::transfer;
-		VkPipelineStageFlags2 dstStage1 = pipelineStage::computeShader;
-		VkAccessFlags2 srcAccessMask1 = accessMask::transfer::transferWrite;
-		VkAccessFlags2 dstAccessMask1 = accessMask::computeShader::memoryRead;
-		m_pImage->TransitionLayout(newLayout1, srcStage1, dstStage1, srcAccessMask1, dstAccessMask1);
-
-		// Free memory:
-		stbi_image_free(pPixels);
-	}
+		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        
+		//std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Upload((void*)imageAsset.pixels.data()));
+		//Init(pStagingBuffer.get());
+    }
 	StorageSampleTexture2d::~StorageSampleTexture2d()
 	{
 
@@ -139,9 +76,34 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	StagingBuffer* StorageSampleTexture2d::Load(const std::string& name, VkFormat format, const std::filesystem::path& path)
+	void StorageSampleTexture2d::Init(StagingBuffer* pStagingBuffer)
+    {
+
+    }
+	StagingBuffer* StorageSampleTexture2d::Upload(void* data)
 	{
-		LOG_WARN("StorageSampleTexture2d::Load(...) not implemented yet.");
-		return nullptr;
+		// Copy: pixelData -> pStagingBuffer
+		uint64_t bufferSize = 4 * m_channels * m_width * m_height * BytesPerChannel(m_format);
+		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
+		pStagingBuffer->SetData(data, bufferSize);
+
+		// Define subresource range:
+		VkImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		subresourceRange.baseArrayLayer = 0;
+		subresourceRange.baseMipLevel = 0;
+		subresourceRange.levelCount = 1;
+		subresourceRange.layerCount = 1;
+
+		// Create image:
+		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		VkImageCreateFlags imageFlags = 0;
+		VkMemoryPropertyFlags memoryFlags = 0;
+		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
+		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
+		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "StorageSampleTexture2d " + m_name);
+
+        return pStagingBuffer;
 	}
 }

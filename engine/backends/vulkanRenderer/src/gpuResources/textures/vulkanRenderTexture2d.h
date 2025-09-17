@@ -21,13 +21,13 @@ namespace vulkanRendererBackend
 		RenderTexture2d(const RenderTexture2d&) = delete;
 		RenderTexture2d& operator=(const RenderTexture2d&) = delete;
 
-		// DepthTexture2dArray:
+		// Movable:
 		RenderTexture2d(RenderTexture2d&& other) noexcept = default;
 		RenderTexture2d& operator=(RenderTexture2d&& other) noexcept = default;
 
-		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer) override;
+		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
 
 	private: // Methods:
-		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path) override;
+		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path);
 	};
 }

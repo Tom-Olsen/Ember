@@ -1,5 +1,5 @@
 #include "vulkanTextureCube.h"
-#include "stb_image.h"
+#include "assetLoader.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanAccessMasks.h"
@@ -18,21 +18,51 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	TextureCube::TextureCube(const std::string& name, Float4 color)
+    TextureCube::TextureCube(const std::string& name, VkFormat format, int width, int height, const std::array<void*, 6>& data)
 	{
-		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Load(name, color));
+		m_name = name;
+		m_width = width;
+		m_height = height;
+		m_channels = GetChannelCount(format);
+		m_format = format;
+		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+
+		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Upload(data));
 		Init(pStagingBuffer.get());
 	}
-	TextureCube::TextureCube(const std::string& name, VkFormat format, const std::filesystem::path& path)
-	{
-		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Load(name, format, path));
+    TextureCube::TextureCube(const std::string& name, VkFormat format, const std::filesystem::path& path)
+    {
+		m_name = name;
+		m_format = format;
+		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+
+        // Check if folder exists:
+		if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path))
+			throw std::runtime_error("Given path '" + path.string() + "' does not exist");
+
+		// Get paths to the 6 images:
+		const std::array<std::string, 6> directions = { "px", "nx", "py", "ny", "pz", "nz" };
+		std::array<std::filesystem::path, 6> filePaths;
+		for (uint32_t i = 0; i < 6; i++)
+			for (const auto& entry : std::filesystem::directory_iterator(path))
+				if (entry.is_regular_file() && entry.path().stem() == directions[i])
+					filePaths[i] = entry.path();
+
+        // Load all 6 images:
+        m_channels = GetChannelCount(format);
+        std::array<void*, 6> faces;
+		for (uint32_t i = 0; i < 6; i++)
+        {
+            emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImage(filePaths[i], m_channels);
+            faces[i] = (void*)imageAsset.pixels.data();
+		    m_width = imageAsset.width;
+		    m_height = imageAsset.height;
+        }
+
+        // Upload data:
+		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Upload(faces));
 		Init(pStagingBuffer.get());
-	}
-	TextureCube::TextureCube(const std::string& name, VkFormat format, const std::filesystem::path& path, TextureBatchUploader& batchUploader)
-	{
-		StagingBuffer* pStagingBuffer = Load(name, format, path);
-		batchUploader.EnqueueTexture(pStagingBuffer, this);
-	}
+    }
 	TextureCube::~TextureCube()
 	{
 
@@ -85,48 +115,16 @@ namespace vulkanRendererBackend
 		}
 		delete pStagingBuffer;
 	}
-	StagingBuffer* TextureCube::Load(const std::string& name, VkFormat format, const std::filesystem::path& path)
+	StagingBuffer* TextureCube::Upload(const std::array<void*, 6>& data)
 	{
-		m_name = name;
-		m_channels = STBI_rgb_alpha;	// 4 8-bit channels
-		m_format = format;
-		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        // Write in continuous data:
+        uint64_t faceSize = m_channels * m_width * m_height * BytesPerChannel(m_format);
+        uint64_t bufferSize = 6 * faceSize;
+        uint8_t* pFacePixels = new uint8_t[bufferSize];
+        for (int i = 0; i < 6; i++)
+            std::memcpy(pFacePixels + i * faceSize, data[i], faceSize);
 
-		// Check if folder exists:
-		if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path))
-			throw std::runtime_error("Given path '" + path.string() + "' does not exist");
-
-		// Get paths to the 6 images:
-		const std::array<std::string, 6> directions = { "px", "nx", "py", "ny", "pz", "nz" };
-		std::array<std::filesystem::path, 6> filePaths;
-		for (uint32_t i = 0; i < 6; i++)
-			for (const auto& entry : std::filesystem::directory_iterator(path))
-				if (entry.is_regular_file() && entry.path().stem() == directions[i])
-					filePaths[i] = entry.path();
-
-		// Get image info (width and height):
-		if (!stbi_info(filePaths[0].string().c_str(), &m_width, &m_height, nullptr))
-			throw std::runtime_error("Failed to get image info for: " + filePaths[0].string());
-
-		// Load all 6 faces into continous memory:
-		stbi_set_flip_vertically_on_load(false);
-		uint64_t bufferSize = 6 * m_channels * m_width * m_height * BytesPerChannel(m_format);
-		stbi_uc* pFacePixels = new stbi_uc[bufferSize];
-		for (int i = 0; i < 6; i++)
-		{
-			int w, h;	// dummy variables.
-			stbi_uc* pPixels = stbi_load(filePaths[i].string().c_str(), &w, &h, nullptr, m_channels);
-			if (!pPixels)
-			{
-				delete[] pFacePixels;
-				stbi_image_free(pPixels);
-				throw std::runtime_error("Failed to load cube texture face: " + filePaths[i].string());
-			}
-			memcpy(&pFacePixels[i * m_channels * m_width * m_height], pPixels, m_channels * m_width * m_height);
-			stbi_image_free(pPixels);
-		}
-
-		// Upload: pixelData -> pStagingBuffer
+		// Upload: data -> pStagingBuffer
 		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
 		pStagingBuffer->SetData(pFacePixels, bufferSize);
 		delete[] pFacePixels;
@@ -140,50 +138,6 @@ namespace vulkanRendererBackend
 		subresourceRange.layerCount = 6;
 
 		// Create image:
-		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		VkImageCreateFlags imageFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
-		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), "textureCube2d " + m_name);
-
-		return pStagingBuffer;
-	}
-	StagingBuffer* TextureCube::Load(const std::string& name, const Float4& color)
-	{
-		m_name = name;
-		m_channels = 4;
-		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		m_width = 1;
-		m_height = 1;
-		m_format = VK_FORMAT_R32G32B32A32_SFLOAT;
-
-		// Allocate buffer for 6 faces:
-		float pFacePixels[6 * 4];
-		for (int face = 0; face < 6; face++)
-		{
-			int offset = face * m_channels * m_width * m_height;
-			pFacePixels[offset + 0] = color[0];
-			pFacePixels[offset + 1] = color[1];
-			pFacePixels[offset + 2] = color[2];
-			pFacePixels[offset + 3] = color[3];
-		}
-
-		// Upload: pixelData -> staging buffer
-		uint64_t bufferSize = 6 * m_channels * m_width * m_height * BytesPerChannel(m_format);
-		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
-		pStagingBuffer->SetData(pFacePixels, bufferSize);
-
-		// Define subresource range
-		VkImageSubresourceRange subresourceRange{};
-		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		subresourceRange.baseArrayLayer = 0;
-		subresourceRange.baseMipLevel = 0;
-		subresourceRange.levelCount = 1;	// mipmapping makes no sense for skyboxes.
-		subresourceRange.layerCount = 6;
-
-		// Create image
 		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		VkImageCreateFlags imageFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;

@@ -6,7 +6,7 @@
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
 project(sdlWindowBackend)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static SDL into this dynamic library properly.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
 
 # Static vs Shared library option:
 option(BUILD_SHARED_LIBS "Build ${PROJECT_NAME} as a shared library" ON) # default ON

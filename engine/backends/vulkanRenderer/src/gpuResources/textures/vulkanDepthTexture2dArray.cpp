@@ -1,6 +1,5 @@
 #include "vulkanDepthTexture2dArray.h"
 #include "logger.h"
-#include "stb_image.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
@@ -40,7 +39,7 @@ namespace vulkanRendererBackend
 		// Although the image is in the layout undefined, the shadow renderpass automatically transitions it to shader read after rendering the shadow maps into it.
 		// The descriptorSet that binds the shadowMap to the fragment shaders of the forward renderpass needs to read the correct VkImageLayout.
 		// Thus we have to manually set the layout to shader read.
-		// Ember::TODO: This feels kinda like a hack, maybe due to bad code architecture. I will try to make this better some time.
+		// Ember::ToDo: This feels kinda like a hack, maybe due to bad code architecture. I will try to make this better some time.
 		m_pImage->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 	DepthTexture2dArray::~DepthTexture2dArray()

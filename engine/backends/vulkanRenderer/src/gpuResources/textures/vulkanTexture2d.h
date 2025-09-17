@@ -2,7 +2,7 @@
 #include "textureFormat.h"
 #include <memory>
 #include <string>
-#include <filesystem>
+#include <unordered_set>
 #include <vulkan/vulkan.h>
 
 
@@ -27,14 +27,26 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class Texture2d
 	{
+	protected: // Static members:
+        static std::unordered_set<VkFormat> s_valid08BitFormats;
+        static std::unordered_set<VkFormat> s_valid16BitFormats;
+        static std::unordered_set<VkFormat> s_valid32BitFormats;
+        static std::unordered_set<VkFormat> s_valid64BitFormats;
+        static std::unordered_set<VkFormat> s_validSingleChannelFormats;
+        static std::unordered_set<VkFormat> s_validDoubleChannelFormats;
+        static std::unordered_set<VkFormat> s_validTripleChannelFormats;
+        static std::unordered_set<VkFormat> s_validQuadrupleChannelFormats;
+        static std::unordered_set<VkFormat> s_validDepthFormats;
+        static std::unordered_set<VkFormat> s_validStencilFormats;
+
 	protected: // Members:
 		std::string m_name;
 		int m_width;
 		int m_height;
 		int m_channels;
 		VkFormat m_format;
-		std::unique_ptr<VmaImage> m_pImage;
 		VkDescriptorType m_descriptorType;
+		std::unique_ptr<VmaImage> m_pImage;
 
 	public: // Methods:
 		Texture2d() = default;
@@ -58,11 +70,11 @@ namespace vulkanRendererBackend
 		VmaImage* const GetVmaImage() const;
 		VkDescriptorType GetVkDescriptorType() const;
 
-		virtual void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer) = 0;
-
 	protected: // Methods:
+        uint32_t GetChannelCount(VkFormat format);
 		uint32_t BytesPerChannel(VkFormat format);
 		void CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
-		virtual StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path) = 0;
+
+    public: // Static methods:
 	};
 }

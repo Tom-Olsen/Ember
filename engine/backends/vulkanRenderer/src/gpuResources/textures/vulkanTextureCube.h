@@ -8,7 +8,6 @@ namespace vulkanRendererBackend
 {
 	// Forward declerations:
 	class StagingBuffer;
-	class TextureBatchUploader;
 
 
 
@@ -22,24 +21,22 @@ namespace vulkanRendererBackend
 	class TextureCube : public Texture2d
 	{
 	public: // Methods:
-		TextureCube(const std::string& name, Float4 color);
+		TextureCube(const std::string& name, VkFormat format, int width, int height, const std::array<void*, 6>&);
 		TextureCube(const std::string& name, VkFormat format, const std::filesystem::path& path);
-		TextureCube(const std::string& name, VkFormat format, const std::filesystem::path& path, TextureBatchUploader& batchUploader);
 
 		// Non-copyable:
 		TextureCube(const TextureCube&) = delete;
 		TextureCube& operator=(const TextureCube&) = delete;
 
-		// DepthTexture2dArray:
+		// Movable:
 		TextureCube(TextureCube&& other) noexcept = default;
 		TextureCube& operator=(TextureCube&& other) noexcept = default;
 		
 		~TextureCube();
-		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer) override;
+		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
 
 	private: // Methods:
 		void Init(StagingBuffer* pStagingBuffer);
-		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path) override;
-		StagingBuffer* Load(const std::string& name, const Float4& color);
+		StagingBuffer* Upload(const std::array<void*, 6>& data);
 	};
 }

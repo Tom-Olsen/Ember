@@ -6,6 +6,7 @@
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
 project(vulkanRendererBackend)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
 
 # Static vs Shared library option:
 option(BUILD_SHARED_LIBS "Build ${PROJECT_NAME} as a shared library" ON) # default ON
@@ -147,6 +148,12 @@ endif()
 
 
 # -------------- Link Custom Libraries --------------
+# EmberAssetLoader:
+if (NOT TARGET EmberAssetLoader)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/assetLoader" EmberAssetLoader)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberAssetLoader)
+
 # EmberLogger:
 if (NOT TARGET EmberLogger)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/logger" EmberLogger)

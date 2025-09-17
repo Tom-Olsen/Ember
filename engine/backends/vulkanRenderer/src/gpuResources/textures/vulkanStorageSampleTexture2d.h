@@ -1,5 +1,6 @@
 #pragma once
 #include "vulkanTexture2d.h"
+#include <filesystem>
 
 
 
@@ -14,21 +15,22 @@ namespace vulkanRendererBackend
 	class StorageSampleTexture2d : public Texture2d
 	{
 	public: // Methods:
-		StorageSampleTexture2d(const std::string& name, VkFormat format, int width, int height);
-		StorageSampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& filePath);
+		StorageSampleTexture2d(const std::string& name, VkFormat format, int width, int height, void* data);
+		StorageSampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path);
+		~StorageSampleTexture2d();
 		
 		// Non-copyable:
 		StorageSampleTexture2d(const StorageSampleTexture2d&) = delete;
 		StorageSampleTexture2d& operator=(const StorageSampleTexture2d&) = delete;
 
-		// DepthTexture2dArray:
+		// Movable:
 		StorageSampleTexture2d(StorageSampleTexture2d&& other) noexcept = default;
 		StorageSampleTexture2d& operator=(StorageSampleTexture2d&& other) noexcept = default;
 
-		~StorageSampleTexture2d();
-		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer) override;
+		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
 
 	private: // Methods:
-		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path) override;
+		void Init(StagingBuffer* pStagingBuffer);
+		StagingBuffer* Upload(void* data);
 	};
 }
