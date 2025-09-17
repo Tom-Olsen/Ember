@@ -13,11 +13,8 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class IndexBuffer : public Buffer
 	{
-	public: // Members:
-		uint32_t m_count;
-		uint32_t m_elementSize;
-
 	public: // Methods:
+		// Constructor/Destructor:
 		IndexBuffer(uint32_t count, uint32_t elementSize, std::string name);
 		~IndexBuffer();
 

@@ -1,7 +1,6 @@
 #pragma once
 #include "vulkanBuffer.h"
 #include <string>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 
@@ -25,9 +24,10 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		void* m_pDeviceData;
-		std::vector<char> m_hostData;
+		bool isCoherent;
 		
 	public: // Methods:
+		// Constructor/Destructor:
 		StagingBuffer(uint64_t size, std::string name);
 		~StagingBuffer();
 
@@ -40,12 +40,12 @@ namespace vulkanRendererBackend
 		StagingBuffer& operator=(StagingBuffer&&) noexcept = default;
 
 		// Getters:
-		void GetData(void* pDst, uint64_t size) const;
-		void GetData(void* pDst, uint64_t size, uint64_t offset) const;
+		void GetData(void* pDst, uint64_t size, uint64_t offset = 0) const;
 
 		// Setters:
-		void SetData(const void* pSrc, uint64_t size);
-		void SetData(const void* pSrc, uint64_t size, uint64_t offset);
+		void SetData(const void* pSrc, uint64_t size, uint64_t offset = 0);
+
+		// Use Texture instead of VmaImage!
 
 		// Upload:
 		void UploadToBuffer(VkCommandBuffer commandBuffer, Buffer* pDstBuffer);
@@ -56,5 +56,9 @@ namespace vulkanRendererBackend
 		// Download:
 		void DownloadFromBuffer(VkCommandBuffer commandBuffer, Buffer* pSrcBuffer);
 		void DownloadFromBuffer(Buffer* pSrcBuffer, const DeviceQueue& queue);
+
+		// Not implemented yet, as images are more complex due to layout transitions:
+		//void DownloadFromTexture(VkCommandBuffer commandBuffer, VmaImage* pSrcImage);
+		//void DownloadFromTexture(Buffer* pSrcBuffer, const DeviceQueue& queue);
 	};
 }

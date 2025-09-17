@@ -14,6 +14,7 @@ namespace vulkanRendererBackend
 	class DepthTexture2dArray : public Texture2d
 	{
 	public: // Methods:
+		// Constructor/Destructor:
 		DepthTexture2dArray(const std::string& name, VkFormat format, int width, int height, uint32_t layerCount);
 		~DepthTexture2dArray();
 
@@ -24,10 +25,5 @@ namespace vulkanRendererBackend
 		// Movable:
 		DepthTexture2dArray(DepthTexture2dArray&& other) noexcept = default;
 		DepthTexture2dArray& operator=(DepthTexture2dArray&& other) noexcept = default;
-
-		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
-
-	private: // Methods:
-		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path);
 	};
 }

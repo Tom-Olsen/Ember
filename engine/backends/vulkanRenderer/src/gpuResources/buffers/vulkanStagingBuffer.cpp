@@ -35,6 +35,11 @@ namespace vulkanRendererBackend
 		VmaAllocationInfo allocInfoOut;
 		vmaGetAllocationInfo(Context::GetVmaAllocator(), m_pBuffer->GetVmaAllocation(), &allocInfoOut);
 		m_pDeviceData = allocInfoOut.pMappedData;
+
+		// Query memory type properties to detect coherency:
+		VkMemoryPropertyFlags propertyFlags = 0;
+		vmaGetMemoryTypeProperties(Context::GetVmaAllocator(), allocInfoOut.memoryType, &propertyFlags);
+		isCoherent = (propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) != 0;
 	}
 	StagingBuffer::~StagingBuffer()
 	{
@@ -45,33 +50,20 @@ namespace vulkanRendererBackend
 
 	// Public methods:
 	// Getters:
-	void StagingBuffer::GetData(void* pDst, uint64_t size) const
-	{
-		if (!pDst || size == 0)
-			return;
-
-		size = std::min(size, m_size);
-		std::memcpy(pDst, m_pDeviceData, static_cast<size_t>(size));
-	}
-
 	void StagingBuffer::GetData(void* pDst, uint64_t size, uint64_t offset) const
 	{
 		if (!pDst || size == 0 || offset >= m_size)
 			return;
+
+		// Invalidate if not coherent:
+		if (!isCoherent)
+			vmaInvalidateAllocation(Context::GetVmaAllocator(), m_pBuffer->GetVmaAllocation(), offset, size);
 
 		size = std::min(size, m_size - offset);
 		std::memcpy(pDst, static_cast<const char*>(m_pDeviceData) + offset, size);
 	}
 
 	// Setters:
-	void StagingBuffer::SetData(const void* pSrc, uint64_t size)
-	{
-		if (!pSrc || size == 0)
-			return;
-
-		size = std::min(size, m_size);
-		memcpy(m_pDeviceData, pSrc, static_cast<size_t>(size));
-	}
 	void StagingBuffer::SetData(const void* pSrc, uint64_t size, uint64_t offset)
 	{
 		if (!pSrc || size == 0 || offset >= m_size)
@@ -79,6 +71,10 @@ namespace vulkanRendererBackend
 
 		size = std::min(size, m_size - offset);
 		std::memcpy(static_cast<char*>(m_pDeviceData) + offset, pSrc, size);
+
+		// Flush if not coherent:
+		if (!isCoherent)
+			vmaFlushAllocation(Context::GetVmaAllocator(), m_pBuffer->GetVmaAllocation(), offset, size);
 	}
 
 

@@ -14,6 +14,7 @@ namespace vulkanRendererBackend
 	class RenderTexture2d : public Texture2d
 	{
 	public: // Methods:
+		// Constructor/Destructor:
 		RenderTexture2d(const std::string& name, VkFormat format, int width, int height, VkImageUsageFlags usageFlags = 0);
 		~RenderTexture2d();
 
@@ -24,10 +25,5 @@ namespace vulkanRendererBackend
 		// Movable:
 		RenderTexture2d(RenderTexture2d&& other) noexcept = default;
 		RenderTexture2d& operator=(RenderTexture2d&& other) noexcept = default;
-
-		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
-
-	private: // Methods:
-		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path);
 	};
 }

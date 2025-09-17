@@ -27,11 +27,12 @@ namespace vulkanRendererBackend
 	protected: // Members:
 		std::string m_name;
 		uint32_t m_count;
-		uint32_t m_elementSize;
-		uint64_t m_size;		// in bytes: m_size = count * m_elementSize.
+		uint32_t m_elementSize;	// in bytes.
+		uint64_t m_size;		// m_size = m_count * m_elementSize.
 		std::unique_ptr<VmaBuffer> m_pBuffer;
 
 	public: // Methods:
+		// Constructor/Destructor:
 		Buffer() = default;
 		virtual ~Buffer();
 

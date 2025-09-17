@@ -2,11 +2,11 @@
 #include "emberMath.h"
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanColorSampler.h"
+#include "vulkanSampleTextureCube.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanShadowSampler.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageTexture2d.h"
-#include "vulkanTextureCube.h"
 
 
 
@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
 	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pDefaultSampleTexture2d = nullptr;
 	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pNormalMapSampleTexture2d = nullptr;
-	std::unique_ptr<TextureCube> DefaultGpuResources::s_pDefaultTextureCube = nullptr;
+	std::unique_ptr<SampleTextureCube> DefaultGpuResources::s_pDefaultTextureCube = nullptr;
 	std::unique_ptr<DepthTexture2dArray> DefaultGpuResources::s_pDefaultDepthTexture2dArray = nullptr;
 	std::unique_ptr<StorageTexture2d> DefaultGpuResources::s_pDefaultStorageTexture2d = nullptr;
 
@@ -39,7 +39,7 @@ namespace vulkanRendererBackend
         for (size_t i = 0; i < 6; i++)
             faces[i] = static_cast<void*>(floatPtrs[i]);
 
-		s_pDefaultTextureCube = std::make_unique<TextureCube>("whiteSkybox", VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, faces);
+		s_pDefaultTextureCube = std::make_unique<SampleTextureCube>("whiteSkybox", VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, faces);
 		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>("defaultArrayTexture2d", VK_FORMAT_D32_SFLOAT, 2, 1, 1);
 		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>("defaultStorageTexture", VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, (void*)&Float4::one);
 	}
@@ -77,7 +77,7 @@ namespace vulkanRendererBackend
 	{
 		return s_pNormalMapSampleTexture2d.get();
 	}
-	TextureCube* DefaultGpuResources::GetDefaultTextureCube()
+	SampleTextureCube* DefaultGpuResources::GetDefaultTextureCube()
 	{
 		return s_pDefaultTextureCube.get();
 	}

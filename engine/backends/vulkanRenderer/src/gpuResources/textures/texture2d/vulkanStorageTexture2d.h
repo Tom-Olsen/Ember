@@ -1,10 +1,16 @@
 #pragma once
 #include "vulkanTexture2d.h"
+#include <filesystem>
 
 
 
 namespace vulkanRendererBackend
 {
+	// Forward declerations:
+	class StagingBuffer;
+
+
+
 	/// <summary>
 	/// Texture2d specialization: <para/>
 	/// -VkImageUsageFlags		= transfer dst, storage <para/>
@@ -14,7 +20,10 @@ namespace vulkanRendererBackend
 	class StorageTexture2d : public Texture2d
 	{
 	public: // Methods:
+		// Constructor/Destructor:
 		StorageTexture2d(const std::string& name, VkFormat format, int width, int height, void* data);
+		StorageTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path);
+		~StorageTexture2d();
 
 		// Non-copyable:
 		StorageTexture2d(const StorageTexture2d&) = delete;
@@ -24,10 +33,8 @@ namespace vulkanRendererBackend
 		StorageTexture2d(StorageTexture2d&& other) noexcept = default;
 		StorageTexture2d& operator=(StorageTexture2d&& other) noexcept = default;
 
-		~StorageTexture2d();
-		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
-
 	private: // Methods:
-		StagingBuffer* Load(const std::string& name, VkFormat format, const std::filesystem::path& path);
+		StagingBuffer* Upload(void* data);
+		void Init(StagingBuffer* pStagingBuffer);
 	};
 }

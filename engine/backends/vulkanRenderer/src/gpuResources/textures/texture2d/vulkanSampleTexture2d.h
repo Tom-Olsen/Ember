@@ -20,7 +20,7 @@ namespace vulkanRendererBackend
 	class SampleTexture2d : public Texture2d
 	{
 	public: // Methods:
-		// Constructor/Destructor
+		// Constructor/Destructor:
 		SampleTexture2d(const std::string& name, VkFormat format, int width, int height, void* data);
 		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path);
 		~SampleTexture2d();
@@ -36,7 +36,7 @@ namespace vulkanRendererBackend
 		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
 
 	private: // Methods:
-		void Init(StagingBuffer* pStagingBuffer);
 		StagingBuffer* Upload(void* data);
+		void Init(StagingBuffer* pStagingBuffer);
 	};
 }
