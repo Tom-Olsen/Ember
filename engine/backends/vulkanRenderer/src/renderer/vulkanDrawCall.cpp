@@ -14,17 +14,17 @@ namespace vulkanRendererBackend
 		Float4x4 worldToClipMatrix = projectionMatrix * viewMatrix;
 		Float4x4 localToClipMatrix = worldToClipMatrix * localToWorldMatrix;
 
-		pShaderProperties->SetValue(bufferName, "cb_localToWorldMatrix", localToWorldMatrix);
-		pShaderProperties->SetValue(bufferName, "cb_viewMatrix", viewMatrix);
-		pShaderProperties->SetValue(bufferName, "cb_projMatrix", projectionMatrix);
-		pShaderProperties->SetValue(bufferName, "cb_worldToClipMatrix", worldToClipMatrix);
-		pShaderProperties->SetValue(bufferName, "cb_localToClipMatrix", localToClipMatrix);
+		pShaderProperties->SetFloat4x4(bufferName, "cb_localToWorldMatrix", localToWorldMatrix);
+		pShaderProperties->SetFloat4x4(bufferName, "cb_viewMatrix", viewMatrix);
+		pShaderProperties->SetFloat4x4(bufferName, "cb_projMatrix", projectionMatrix);
+		pShaderProperties->SetFloat4x4(bufferName, "cb_worldToClipMatrix", worldToClipMatrix);
+		pShaderProperties->SetFloat4x4(bufferName, "cb_localToClipMatrix", localToClipMatrix);
 	}
 	void DrawCall::SetLightData()
 	{
 		SetDirectionalLightData();
 		SetPositionalLightData();
-		pShaderProperties->SetValue("LightData", "receiveShadows", receiveShadows);
+		pShaderProperties->SetBool("LightData", "receiveShadows", receiveShadows);
 	}
 
 
@@ -38,10 +38,10 @@ namespace vulkanRendererBackend
 		
 		for (uint32_t i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
 		{
-			pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "direction", directionalLights[i].direction);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "shadowType", (int)directionalLights[i].shadowType);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
+			pShaderProperties->SetFloat4x4(bufferName, arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
+			pShaderProperties->SetFloat3(bufferName, arrayName, i, "direction", directionalLights[i].direction);
+			pShaderProperties->SetInt(bufferName, arrayName, i, "shadowType", (int)directionalLights[i].shadowType);
+			pShaderProperties->SetFloat4(bufferName, arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
 		}
 	}
 	void DrawCall::SetPositionalLightData()
@@ -52,11 +52,11 @@ namespace vulkanRendererBackend
 
 		for (uint32_t i = 0; i < Lighting::GetPositionalLightsCount(); i++)
 		{
-			pShaderProperties->SetValue(bufferName, arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "position", positionalLights[i].position);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "shadowType", (int)positionalLights[i].shadowType);
-			pShaderProperties->SetValue(bufferName, arrayName, i, "colorIntensity", Float4(positionalLights[i].color, positionalLights[i].intensity));
-			pShaderProperties->SetValue(bufferName, arrayName, i, "blendStartEnd", Float2(positionalLights[i].blendStart, positionalLights[i].blendEnd));
+			pShaderProperties->SetFloat4x4(bufferName, arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
+			pShaderProperties->SetFloat3(bufferName, arrayName, i, "position", positionalLights[i].position);
+			pShaderProperties->SetInt(bufferName, arrayName, i, "shadowType", (int)positionalLights[i].shadowType);
+			pShaderProperties->SetFloat4(bufferName, arrayName, i, "colorIntensity", Float4(positionalLights[i].color, positionalLights[i].intensity));
+			pShaderProperties->SetFloat2(bufferName, arrayName, i, "blendStartEnd", Float2(positionalLights[i].blendStart, positionalLights[i].blendEnd));
 		}
 	}
 }

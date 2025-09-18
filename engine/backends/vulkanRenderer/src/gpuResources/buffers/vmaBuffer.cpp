@@ -1,7 +1,6 @@
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
-#include "vk_mem_alloc.h"
 #include "vulkanMacros.h"
 
 

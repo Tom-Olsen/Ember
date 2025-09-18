@@ -90,53 +90,77 @@ namespace vulkanRendererBackend
 		
 		// Uniform Buffer Setters:
 		// Simple members:
-		void SetValue(const std::string& bufferName, const std::string& memberName, int value) override;
-		void SetValue(const std::string& bufferName, const std::string& memberName, bool value) override;
-		void SetValue(const std::string& bufferName, const std::string& memberName, float value) override;
-		void SetValue(const std::string& bufferName, const std::string& memberName, const Float2& value) override;
-		void SetValue(const std::string& bufferName, const std::string& memberName, const Float3& value) override;
-		void SetValue(const std::string& bufferName, const std::string& memberName, const Float4& value) override;
-		void SetValue(const std::string& bufferName, const std::string& memberName, const Float4x4& value) override;
+		void SetInt(const std::string& bufferName, const std::string& memberName, int value) override;
+		void SetBool(const std::string& bufferName, const std::string& memberName, bool value) override;
+		void SetFloat(const std::string& bufferName, const std::string& memberName, float value) override;
+		void SetFloat2(const std::string& bufferName, const std::string& memberName, const Float2& value) override;
+		void SetFloat3(const std::string& bufferName, const std::string& memberName, const Float3& value) override;
+		void SetFloat4(const std::string& bufferName, const std::string& memberName, const Float4& value) override;
+		void SetFloat4x4(const std::string& bufferName, const std::string& memberName, const Float4x4& value) override;
 		// Array members:
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, int value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, bool value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, float value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float2& value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float3& value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4& value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4x4& value) override;
-		// Struct members inside arrays:
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, int value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, bool value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, float value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float2& value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value) override;
-		// Arrays inside arrays:
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, int value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, bool value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, float value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value) override;
-		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value) override;
-		
+		void SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, int value) override;
+		void SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, bool value) override;
+		void SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, float value) override;
+		void SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float2& value) override;
+		void SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float3& value) override;
+		void SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4& value) override;
+		void SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4x4& value) override;
+		// Array of structs members:
+		void SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, int value) override;
+		void SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, bool value) override;
+		void SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, float value) override;
+		void SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float2& value) override;
+		void SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value) override;
+		void SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value) override;
+		void SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value) override;
+		// Array of arrays members:
+		void SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, int value) override;
+		void SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, bool value) override;
+		void SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, float value) override;
+		void SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value) override;
+		void SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value) override;
+		void SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value) override;
+		void SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value) override;
+
+		// Uniform Buffer Getters:
+		// Simple members:
+		int GetInt(const std::string& bufferName, const std::string& memberName) const override;
+		bool GetBool(const std::string& bufferName, const std::string& memberName) const override;
+		float GetFloat(const std::string& bufferName, const std::string& memberName) const override;
+		Float2 GetFloat2(const std::string& bufferName, const std::string& memberName) const override;
+		Float3 GetFloat3(const std::string& bufferName, const std::string& memberName) const override;
+		Float4 GetFloat4(const std::string& bufferName, const std::string& memberName) const override;
+		Float4x4 GetFloat4x4(const std::string& bufferName, const std::string& memberName) const override;
+		// Array members:
+		int GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const override;
+		bool GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const override;
+		float GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const override;
+		Float2 GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const override;
+		Float3 GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const override;
+		Float4 GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const override;
+		Float4x4 GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const override;
+		// Array of structs members:
+		int GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const override;
+		bool GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const override;
+		float GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const override;
+		Float2 GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const override;
+		Float3 GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const override;
+		Float4 GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const override;
+		Float4x4 GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const override;
+		// Array of arrays members:
+		int GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const override;
+		bool GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const override;
+		float GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const override;
+		Float2 GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const override;
+		Float3 GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const override;
+		Float4 GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const override;
+		Float4x4 GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const override;
+
 		// Getters:
 		Shader* GetShader() const;
 		Sampler* GetSampler(const std::string& name) const;
 		Texture2d* GetTexture2d(const std::string& name) const;
-
-		// Uniform Buffer Getters:
-		template<typename T>
-		T GetValue(const std::string& bufferName, const std::string& memberName) const;
-		template<typename T>
-		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-		template<typename T>
-		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-		template<typename T>
-		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-
+		
 		// Backend functionality:
 		void UpdateShaderData(uint32_t frameIndex = -1); // -1 = current frame index.
 		const VkDescriptorSet& GetDescriptorSet(uint32_t frameIndex);
@@ -162,14 +186,24 @@ namespace vulkanRendererBackend
 		void UpdateDescriptorSet(uint32_t frameIndex, TextureBinding texture2dResourceBinding);
 		void UpdateDescriptorSet(uint32_t frameIndex, StorageBufferBinding storageBufferResourceBinding);
 
-		// Uniform Buffer Setters Implementations:
+		// Getter templates, used in actual getters:
 		template<typename T>
-		void SetValueImplementation(const std::string& bufferName, const std::string& memberName, const T& value);
+		T GetValue(const std::string& bufferName, const std::string& memberName) const;
 		template<typename T>
-		void SetValueImplementation(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const T& value);
+		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
 		template<typename T>
-		void SetValueImplementation(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
+		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
 		template<typename T>
-		void SetValueImplementation(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
+		T GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+
+		// Setter templates, used in actual setters:
+		template<typename T>
+		void SetValue(const std::string& bufferName, const std::string& memberName, const T& value);
+		template<typename T>
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const T& value);
+		template<typename T>
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value);
+		template<typename T>
+		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value);
 	};
 }

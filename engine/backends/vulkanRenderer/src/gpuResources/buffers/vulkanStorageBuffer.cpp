@@ -14,13 +14,15 @@ namespace vulkanRendererBackend
 		// Storage buffers must follow std430 layout alignment rules.
 		// General abstraction not implemented yet. Therefore, if you use anything but:
 		// int/float/float2/float3/float4/float4x4 you need to add alignment logic here:
-		if (elementSize == 3 * sizeof(float))
+		if (elementSize == 3 * sizeof(float) || elementSize == 4 * sizeof(float))
 			elementSize = 4 * sizeof(float);
+		else
+			throw std::runtime_error("StorageBuffer '" + name + "' uses yet unsuported elementSize!");
 
+		m_name = name;
 		m_count = count;
 		m_elementSize = elementSize;
 		m_size = m_count * m_elementSize;
-		m_name = name;
 
 		// Create buffer:
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };

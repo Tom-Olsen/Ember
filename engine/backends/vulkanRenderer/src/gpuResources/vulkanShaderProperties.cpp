@@ -141,120 +141,240 @@ namespace vulkanRendererBackend
 
 	// Uniform Buffer Setters:
 	// Simple members:
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, int value)
+	void ShaderProperties::SetInt(const std::string& bufferName, const std::string& memberName, int value)
 	{
-		SetValueImplementation(bufferName, memberName, value);
+		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, bool value)
+	void ShaderProperties::SetBool(const std::string& bufferName, const std::string& memberName, bool value)
 	{
-		SetValueImplementation(bufferName, memberName, value);
+		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, float value)
+	void ShaderProperties::SetFloat(const std::string& bufferName, const std::string& memberName, float value)
 	{
-		SetValueImplementation(bufferName, memberName, value);
+		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, const Float2& value)
+	void ShaderProperties::SetFloat2(const std::string& bufferName, const std::string& memberName, const Float2& value)
 	{
-		SetValueImplementation(bufferName, memberName, value);
+		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, const Float3& value)
+	void ShaderProperties::SetFloat3(const std::string& bufferName, const std::string& memberName, const Float3& value)
 	{
-		SetValueImplementation(bufferName, memberName, value);
+		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, const Float4& value)
+	void ShaderProperties::SetFloat4(const std::string& bufferName, const std::string& memberName, const Float4& value)
 	{
-		SetValueImplementation(bufferName, memberName, value);
+		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, const Float4x4& value)
+	void ShaderProperties::SetFloat4x4(const std::string& bufferName, const std::string& memberName, const Float4x4& value)
 	{
-		SetValueImplementation(bufferName, memberName, value);
+		SetValue(bufferName, memberName, value);
 	}
 	// Array members:
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, int value)
+	void ShaderProperties::SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, int value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, bool value)
+	void ShaderProperties::SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, bool value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, float value)
+	void ShaderProperties::SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, float value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float2& value)
+	void ShaderProperties::SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float2& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float3& value)
+	void ShaderProperties::SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float3& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4& value)
+	void ShaderProperties::SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4x4& value)
+	void ShaderProperties::SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4x4& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	// Struct members inside arrays:
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, int value)
+	// Array of structs members:
+	void ShaderProperties::SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, int value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, memberName, value);
+		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, bool value)
+	void ShaderProperties::SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, bool value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, memberName, value);
+		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, float value)
+	void ShaderProperties::SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, float value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, memberName, value);
+		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float2& value)
+	void ShaderProperties::SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float2& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, memberName, value);
+		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value)
+	void ShaderProperties::SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, memberName, value);
+		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value)
+	void ShaderProperties::SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, memberName, value);
+		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value)
+	void ShaderProperties::SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, memberName, value);
+		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	// Arrays inside arrays:
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, int value)
+	// Array of arrays members:
+	void ShaderProperties::SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, int value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, bool value)
+	void ShaderProperties::SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, bool value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, float value)
+	void ShaderProperties::SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, float value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value)
+	void ShaderProperties::SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value)
+	void ShaderProperties::SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value)
+	void ShaderProperties::SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value)
+	void ShaderProperties::SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value)
 	{
-		SetValueImplementation(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+	}
+
+
+
+	// Uniform Buffer Getters:
+	// Simple members:
+	int ShaderProperties::GetInt(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValue<int>(bufferName, memberName);
+	}
+	bool ShaderProperties::GetBool(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValue<bool>(bufferName, memberName);
+	}
+	float ShaderProperties::GetFloat(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValue<float>(bufferName, memberName);
+	}
+	Float2 ShaderProperties::GetFloat2(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValue<Float2>(bufferName, memberName);
+	}
+	Float3 ShaderProperties::GetFloat3(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValue<Float3>(bufferName, memberName);
+	}
+	Float4 ShaderProperties::GetFloat4(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValue<Float4>(bufferName, memberName);
+	}
+	Float4x4 ShaderProperties::GetFloat4x4(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValue<Float4x4>(bufferName, memberName);
+	}
+	// Array members:
+	int ShaderProperties::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<int>(bufferName, arrayName, arrayIndex);
+	}
+	bool ShaderProperties::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<bool>(bufferName, arrayName, arrayIndex);
+	}
+	float ShaderProperties::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<float>(bufferName, arrayName, arrayIndex);
+	}
+	Float2 ShaderProperties::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<Float2>(bufferName, arrayName, arrayIndex);
+	}
+	Float3 ShaderProperties::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<Float3>(bufferName, arrayName, arrayIndex);
+	}
+	Float4 ShaderProperties::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<Float4>(bufferName, arrayName, arrayIndex);
+	}
+	Float4x4 ShaderProperties::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<Float4x4>(bufferName, arrayName, arrayIndex);
+	}
+	// Array of structs members:
+	int ShaderProperties::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<int>(bufferName, arrayName, arrayIndex, memberName);
+	}
+	bool ShaderProperties::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<bool>(bufferName, arrayName, arrayIndex, memberName);
+	}
+	float ShaderProperties::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<float>(bufferName, arrayName, arrayIndex, memberName);
+	}
+	Float2 ShaderProperties::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<Float2>(bufferName, arrayName, arrayIndex, memberName);
+	}
+	Float3 ShaderProperties::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<Float3>(bufferName, arrayName, arrayIndex, memberName);
+	}
+	Float4 ShaderProperties::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<Float4>(bufferName, arrayName, arrayIndex, memberName);
+	}
+	Float4x4 ShaderProperties::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<Float4x4>(bufferName, arrayName, arrayIndex, memberName);
+	}
+	// Array of arrays members:
+	int ShaderProperties::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<int>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	bool ShaderProperties::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<bool>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	float ShaderProperties::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<float>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float2 ShaderProperties::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<Float2>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float3 ShaderProperties::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<Float3>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float4 ShaderProperties::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<Float4>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float4x4 ShaderProperties::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<Float4x4>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
 	}
 
 
@@ -277,42 +397,6 @@ namespace vulkanRendererBackend
 		if (it != m_texture2dMaps[Context::frameIndex].end())
 			return it->second.pTexture2d;
 		return nullptr;
-	}
-
-
-
-	// Uniform Buffer Getters:
-	template<typename T>
-	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& memberName) const
-	{
-		auto it = m_uniformBufferMaps[0].find(bufferName);
-		if (it != m_uniformBufferMaps[0].end())
-			return it->second.pUniformBuffer->GetValue<T>(memberName);
-		return T();
-	}
-	template<typename T>
-	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
-	{
-		auto it = m_uniformBufferMaps[0].find(bufferName);
-		if (it != m_uniformBufferMaps[0].end())
-			return it->second.pUniformBuffer->GetValue<T>(arrayName, arrayIndex);
-		return T();
-	}
-	template<typename T>
-	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
-	{
-		auto it = m_uniformBufferMaps[0].find(bufferName);
-		if (it != m_uniformBufferMaps[0].end())
-			return it->second.pUniformBuffer->GetValue<T>(arrayName, arrayIndex, memberName);
-		return T();
-	}
-	template<typename T>
-	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
-	{
-		auto it = m_uniformBufferMaps[0].find(bufferName);
-		if (it != m_uniformBufferMaps[0].end())
-			return it->second.pUniformBuffer->GetValue<T>(arrayName, arrayIndex, subArrayName, subArrayIndex);
-		return T();
 	}
 
 
@@ -559,9 +643,45 @@ namespace vulkanRendererBackend
 
 
 
-	// Uniform Buffer Setters Implementations:
+	// Getter templates, used in actual getters:
 	template<typename T>
-	void ShaderProperties::SetValueImplementation(const std::string& bufferName, const std::string& memberName, const T& value)
+	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& memberName) const
+	{
+		auto it = m_uniformBufferMaps[0].find(bufferName);
+		if (it != m_uniformBufferMaps[0].end())
+			return it->second.pUniformBuffer->GetValue<T>(memberName);
+		return T();
+	}
+	template<typename T>
+	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		auto it = m_uniformBufferMaps[0].find(bufferName);
+		if (it != m_uniformBufferMaps[0].end())
+			return it->second.pUniformBuffer->GetValue<T>(arrayName, arrayIndex);
+		return T();
+	}
+	template<typename T>
+	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		auto it = m_uniformBufferMaps[0].find(bufferName);
+		if (it != m_uniformBufferMaps[0].end())
+			return it->second.pUniformBuffer->GetValue<T>(arrayName, arrayIndex, memberName);
+		return T();
+	}
+	template<typename T>
+	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		auto it = m_uniformBufferMaps[0].find(bufferName);
+		if (it != m_uniformBufferMaps[0].end())
+			return it->second.pUniformBuffer->GetValue<T>(arrayName, arrayIndex, subArrayName, subArrayIndex);
+		return T();
+	}
+
+
+
+	// Setter templates, used in actual setters:
+	template<typename T>
+	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, const T& value)
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -574,7 +694,7 @@ namespace vulkanRendererBackend
 		}
 	}
 	template<typename T>
-	void ShaderProperties::SetValueImplementation(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const T& value)
+	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const T& value)
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -587,7 +707,7 @@ namespace vulkanRendererBackend
 		}
 	}
 	template<typename T>
-	void ShaderProperties::SetValueImplementation(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value)
+	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value)
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -600,7 +720,7 @@ namespace vulkanRendererBackend
 		}
 	}
 	template<typename T>
-	void ShaderProperties::SetValueImplementation(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
+	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -612,71 +732,4 @@ namespace vulkanRendererBackend
 			}
 		}
 	}
-
-
-
-	// Explicit template instantiation:
-	template void ShaderProperties::SetValueImplementation<int>(const std::string& bufferName, const std::string& memberName, const int& value);
-	template void ShaderProperties::SetValueImplementation<bool>(const std::string& bufferName, const std::string& memberName, const bool& value);
-	template void ShaderProperties::SetValueImplementation<float>(const std::string& bufferName, const std::string& memberName, const float& value);
-	template void ShaderProperties::SetValueImplementation<Float2>(const std::string& bufferName, const std::string& memberName, const Float2& value);
-	template void ShaderProperties::SetValueImplementation<Float3>(const std::string& bufferName, const std::string& memberName, const Float3& value);
-	template void ShaderProperties::SetValueImplementation<Float4>(const std::string& bufferName, const std::string& memberName, const Float4& value);
-	template void ShaderProperties::SetValueImplementation<Float4x4>(const std::string& bufferName, const std::string& memberName, const Float4x4& value);
-
-	template void ShaderProperties::SetValueImplementation<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const int& value);
-	template void ShaderProperties::SetValueImplementation<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const bool& value);
-	template void ShaderProperties::SetValueImplementation<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const float& value);
-	template void ShaderProperties::SetValueImplementation<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const Float2& value);
-	template void ShaderProperties::SetValueImplementation<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const Float3& value);
-	template void ShaderProperties::SetValueImplementation<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const Float4& value);
-	template void ShaderProperties::SetValueImplementation<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const Float4x4& value);
-
-	template void ShaderProperties::SetValueImplementation<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const int& value);
-	template void ShaderProperties::SetValueImplementation<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const bool& value);
-	template void ShaderProperties::SetValueImplementation<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const float& value);
-	template void ShaderProperties::SetValueImplementation<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float2& value);
-	template void ShaderProperties::SetValueImplementation<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float3& value);
-	template void ShaderProperties::SetValueImplementation<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float4& value);
-	template void ShaderProperties::SetValueImplementation<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& memberName, const Float4x4& value);
-
-	template void ShaderProperties::SetValueImplementation<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const int& value);
-	template void ShaderProperties::SetValueImplementation<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const bool& value);
-	template void ShaderProperties::SetValueImplementation<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const float& value);
-	template void ShaderProperties::SetValueImplementation<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value);
-	template void ShaderProperties::SetValueImplementation<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
-	template void ShaderProperties::SetValueImplementation<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
-	template void ShaderProperties::SetValueImplementation<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayindex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
-
-	template int ShaderProperties::GetValue<int>(const std::string& bufferName, const std::string& memberName) const;
-	template bool ShaderProperties::GetValue<bool>(const std::string& bufferName, const std::string& memberName) const;
-	template float ShaderProperties::GetValue<float>(const std::string& bufferName, const std::string& memberName) const;
-	template Float2 ShaderProperties::GetValue<Float2>(const std::string& bufferName, const std::string& memberName) const;
-	template Float3 ShaderProperties::GetValue<Float3>(const std::string& bufferName, const std::string& memberName) const;
-	template Float4 ShaderProperties::GetValue<Float4>(const std::string& bufferName, const std::string& memberName) const;
-	template Float4x4 ShaderProperties::GetValue<Float4x4>(const std::string& bufferName, const std::string& memberName) const;
-
-	template int ShaderProperties::GetValue<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template bool ShaderProperties::GetValue<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template float ShaderProperties::GetValue<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template Float2 ShaderProperties::GetValue<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template Float3 ShaderProperties::GetValue<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template Float4 ShaderProperties::GetValue<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-	template Float4x4 ShaderProperties::GetValue<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
-
-	template int ShaderProperties::GetValue<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template bool ShaderProperties::GetValue<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template float ShaderProperties::GetValue<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template Float2 ShaderProperties::GetValue<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template Float3 ShaderProperties::GetValue<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template Float4 ShaderProperties::GetValue<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template Float4x4 ShaderProperties::GetValue<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-
-	template int ShaderProperties::GetValue<int>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template bool ShaderProperties::GetValue<bool>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template float ShaderProperties::GetValue<float>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template Float2 ShaderProperties::GetValue<Float2>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template Float3 ShaderProperties::GetValue<Float3>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template Float4 ShaderProperties::GetValue<Float4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template Float4x4 ShaderProperties::GetValue<Float4x4>(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 }

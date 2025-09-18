@@ -1,12 +1,8 @@
 #include "vulkanUniformBuffer.h"
-#include "emberMath.h"
 #include "spirvReflect.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include <cstring>
-#include <tuple>
-#include <vulkan/vulkan.h>
 
 
 
@@ -58,6 +54,247 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
+	// Simple members:
+	int UniformBuffer::GetInt(const std::string& memberName) const
+	{
+		return GetValue<int>(memberName);
+	}
+	bool UniformBuffer::GetBool(const std::string& memberName) const
+	{
+		return GetValue<bool>(memberName);
+	}
+	float UniformBuffer::GetFloat(const std::string& memberName) const
+	{
+		return GetValue<float>(memberName);
+	}
+	Float2 UniformBuffer::GetFloat2(const std::string& memberName) const
+	{
+		return GetValue<Float2>(memberName);
+	}
+	Float3 UniformBuffer::GetFloat3(const std::string& memberName) const
+	{
+		return GetValue<Float3>(memberName);
+	}
+	Float4 UniformBuffer::GetFloat4(const std::string& memberName) const
+	{
+		return GetValue<Float4>(memberName);
+	}
+	Float4x4 UniformBuffer::GetFloat4x4(const std::string& memberName) const
+	{
+		return GetValue<Float4x4>(memberName);
+	}
+	// Array members:
+	int UniformBuffer::GetInt(const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<int>(arrayName, arrayIndex);
+	}
+	bool UniformBuffer::GetBool(const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<bool>(arrayName, arrayIndex);
+	}
+	float UniformBuffer::GetFloat(const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<float>(arrayName, arrayIndex);
+	}
+	Float2 UniformBuffer::GetFloat2(const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<Float2>(arrayName, arrayIndex);
+	}
+	Float3 UniformBuffer::GetFloat3(const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<Float3>(arrayName, arrayIndex);
+	}
+	Float4 UniformBuffer::GetFloat4(const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<Float4>(arrayName, arrayIndex);
+	}
+	Float4x4 UniformBuffer::GetFloat4x4(const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValue<Float4x4>(arrayName, arrayIndex);
+	}
+	// Array of structs members:
+	int UniformBuffer::GetInt(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<int>(arrayName, arrayIndex, memberName);
+	}
+	bool UniformBuffer::GetBool(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<bool>(arrayName, arrayIndex, memberName);
+	}
+	float UniformBuffer::GetFloat(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<float>(arrayName, arrayIndex, memberName);
+	}
+	Float2 UniformBuffer::GetFloat2(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<Float2>(arrayName, arrayIndex, memberName);
+	}
+	Float3 UniformBuffer::GetFloat3(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<Float3>(arrayName, arrayIndex, memberName);
+	}
+	Float4 UniformBuffer::GetFloat4(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<Float4>(arrayName, arrayIndex, memberName);
+	}
+	Float4x4 UniformBuffer::GetFloat4x4(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValue<Float4x4>(arrayName, arrayIndex, memberName);
+	}
+	// Array of arrays members:
+	int UniformBuffer::GetInt(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<int>(arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	bool UniformBuffer::GetBool(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<bool>(arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	float UniformBuffer::GetFloat(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<float>(arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float2 UniformBuffer::GetFloat2(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<Float2>(arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float3 UniformBuffer::GetFloat3(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<Float3>(arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float4 UniformBuffer::GetFloat4(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<Float4>(arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float4x4 UniformBuffer::GetFloat4x4(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValue<Float4x4>(arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+
+
+
+	// Setters:
+	// Simple members:
+	bool UniformBuffer::SetInt(const std::string& memberName, int value)
+	{
+		return SetValue(memberName, value);
+	}
+	bool UniformBuffer::SetBool(const std::string& memberName, bool value)
+	{
+		return SetValue(memberName, value);
+	}
+	bool UniformBuffer::SetFloat(const std::string& memberName, float value)
+	{
+		return SetValue(memberName, value);
+	}
+	bool UniformBuffer::SetFloat2(const std::string& memberName, const Float2& value)
+	{
+		return SetValue(memberName, value);
+	}
+	bool UniformBuffer::SetFloat3(const std::string& memberName, const Float3& value)
+	{
+		return SetValue(memberName, value);
+	}
+	bool UniformBuffer::SetFloat4(const std::string& memberName, const Float4& value)
+	{
+		return SetValue(memberName, value);
+	}
+	bool UniformBuffer::SetFloat4x4(const std::string& memberName, const Float4x4& value)
+	{
+		return SetValue(memberName, value);
+	}
+	// Array members:
+	bool UniformBuffer::SetInt(const std::string& arrayName, uint32_t arrayIndex, int value)
+	{
+		return SetValue(arrayName, arrayIndex, value);
+	}
+	bool UniformBuffer::SetBool(const std::string& arrayName, uint32_t arrayIndex, bool value)
+	{
+		return SetValue(arrayName, arrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat(const std::string& arrayName, uint32_t arrayIndex, float value)
+	{
+		return SetValue(arrayName, arrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat2(const std::string& arrayName, uint32_t arrayIndex, const Float2& value)
+	{
+		return SetValue(arrayName, arrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat3(const std::string& arrayName, uint32_t arrayIndex, const Float3& value)
+	{
+		return SetValue(arrayName, arrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat4(const std::string& arrayName, uint32_t arrayIndex, const Float4& value)
+	{
+		return SetValue(arrayName, arrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat4x4(const std::string& arrayName, uint32_t arrayIndex, const Float4x4& value)
+	{
+		return SetValue(arrayName, arrayIndex, value);
+	}
+	// Array of structs members:
+	bool UniformBuffer::SetInt(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, int value)
+	{
+		return SetValue(arrayName, arrayIndex, memberName, value);
+	}
+	bool UniformBuffer::SetBool(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, bool value)
+	{
+		return SetValue(arrayName, arrayIndex, memberName, value);
+	}
+	bool UniformBuffer::SetFloat(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, float value)
+	{
+		return SetValue(arrayName, arrayIndex, memberName, value);
+	}
+	bool UniformBuffer::SetFloat2(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float2& value)
+	{
+		return SetValue(arrayName, arrayIndex, memberName, value);
+	}
+	bool UniformBuffer::SetFloat3(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value)
+	{
+		return SetValue(arrayName, arrayIndex, memberName, value);
+	}
+	bool UniformBuffer::SetFloat4(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value)
+	{
+		return SetValue(arrayName, arrayIndex, memberName, value);
+	}
+	bool UniformBuffer::SetFloat4x4(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value)
+	{
+		return SetValue(arrayName, arrayIndex, memberName, value);
+	}
+	// Array of arrays members:
+	bool UniformBuffer::SetInt(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, int value)
+	{
+		return SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+	}
+	bool UniformBuffer::SetBool(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, bool value)
+	{
+		return SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, float value)
+	{
+		return SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat2(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value)
+	{
+		return SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat3(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value)
+	{
+		return SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat4(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value)
+	{
+		return SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+	}
+	bool UniformBuffer::SetFloat4x4(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value)
+	{
+		return SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+	}
+
+
+
+	// Private methods:
+	// Getter templates, used in actual getters:
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& memberName) const
 	{
@@ -125,7 +362,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Setters:
+	// Setter templates, used in actual setters:
 	template<typename T>
 	bool UniformBuffer::SetValue(const std::string& memberName, const T& value)
 	{
@@ -193,7 +430,22 @@ namespace vulkanRendererBackend
 
 
 
-	// Private methods:
+	// Templates for interal use:
+	template<typename T>
+	T UniformBuffer::GetData(uint32_t offset, uint32_t size) const
+	{
+		// redirect bool to int:
+		if constexpr (std::is_same<T, bool>::value)
+		{
+			int intValue = GetData<int>(offset, size);
+			return static_cast<bool>(intValue);
+		}
+
+		T value;
+		size_t dataSize = std::min(static_cast<size_t>(size), (sizeof(value)));
+		std::memcpy(&value, m_hostData.data() + offset, dataSize);
+		return value;
+	}
 	template<typename T>
 	bool UniformBuffer::CheckAndUpdateData(const T& value, uint32_t offset, uint32_t size)
 	{
@@ -216,102 +468,4 @@ namespace vulkanRendererBackend
 		std::memcpy(m_hostData.data() + offset, newData, dataSize);
 		return true;
 	}
-	template<typename T>
-	T UniformBuffer::GetData(uint32_t offset, uint32_t size) const
-	{
-		// redirect bool to int:
-		if constexpr (std::is_same<T, bool>::value)
-		{
-			int intValue = GetData<int>(offset, size);
-			return static_cast<bool>(intValue);
-		}
-
-		T value;
-		size_t dataSize = std::min(static_cast<size_t>(size), (sizeof(value)));
-		std::memcpy(&value, m_hostData.data() + offset, dataSize);
-		return value;
-	}
-
-
-
-	// Explicit template instantiation:
-	template bool UniformBuffer::CheckAndUpdateData<int>(const int& value, uint32_t offset, uint32_t size);
-	template bool UniformBuffer::CheckAndUpdateData<bool>(const bool& value, uint32_t offset, uint32_t size);
-	template bool UniformBuffer::CheckAndUpdateData<float>(const float& value, uint32_t offset, uint32_t size);
-	template bool UniformBuffer::CheckAndUpdateData<Float2>(const Float2& value, uint32_t offset, uint32_t size);
-	template bool UniformBuffer::CheckAndUpdateData<Float3>(const Float3& value, uint32_t offset, uint32_t size);
-	template bool UniformBuffer::CheckAndUpdateData<Float4>(const Float4& value, uint32_t offset, uint32_t size);
-	template bool UniformBuffer::CheckAndUpdateData<Float4x4>(const Float4x4& value, uint32_t offset, uint32_t size);
-
-	template int UniformBuffer::GetData<int>(uint32_t offset, uint32_t size) const;
-	template bool UniformBuffer::GetData<bool>(uint32_t offset, uint32_t size) const;
-	template float UniformBuffer::GetData<float>(uint32_t offset, uint32_t size) const;
-	template Float2 UniformBuffer::GetData<Float2>(uint32_t offset, uint32_t size) const;
-	template Float3 UniformBuffer::GetData<Float3>(uint32_t offset, uint32_t size) const;
-	template Float4 UniformBuffer::GetData<Float4>(uint32_t offset, uint32_t size) const;
-	template Float4x4 UniformBuffer::GetData<Float4x4>(uint32_t offset, uint32_t size) const;
-
-	template bool UniformBuffer::SetValue<int>(const std::string& memberName, const int& value);
-	template bool UniformBuffer::SetValue<bool>(const std::string& memberName, const bool& value);
-	template bool UniformBuffer::SetValue<float>(const std::string& memberName, const float& value);
-	template bool UniformBuffer::SetValue<Float2>(const std::string& memberName, const Float2& value);
-	template bool UniformBuffer::SetValue<Float3>(const std::string& memberName, const Float3& value);
-	template bool UniformBuffer::SetValue<Float4>(const std::string& memberName, const Float4& value);
-	template bool UniformBuffer::SetValue<Float4x4>(const std::string& memberName, const Float4x4& value);
-
-	template bool UniformBuffer::SetValue<int>(const std::string& arrayName, uint32_t arrayIndex, const int& value);
-	template bool UniformBuffer::SetValue<bool>(const std::string& arrayName, uint32_t arrayIndex, const bool& value);
-	template bool UniformBuffer::SetValue<float>(const std::string& arrayName, uint32_t arrayIndex, const float& value);
-	template bool UniformBuffer::SetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex, const Float2& value);
-	template bool UniformBuffer::SetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const Float3& value);
-	template bool UniformBuffer::SetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const Float4& value);
-	template bool UniformBuffer::SetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const Float4x4& value);
-
-	template bool UniformBuffer::SetValue<int>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const int& value);
-	template bool UniformBuffer::SetValue<bool>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const bool& value);
-	template bool UniformBuffer::SetValue<float>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const float& value);
-	template bool UniformBuffer::SetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float2& value);
-	template bool UniformBuffer::SetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value);
-	template bool UniformBuffer::SetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value);
-	template bool UniformBuffer::SetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value);
-
-	template bool UniformBuffer::SetValue<int>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const int& value);
-	template bool UniformBuffer::SetValue<bool>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const bool& value);
-	template bool UniformBuffer::SetValue<float>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const float& value);
-	template bool UniformBuffer::SetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value);
-	template bool UniformBuffer::SetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
-	template bool UniformBuffer::SetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
-	template bool UniformBuffer::SetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
-
-	template int UniformBuffer::GetValue<int>(const std::string& memberName) const;
-	template bool UniformBuffer::GetValue<bool>(const std::string& memberName) const;
-	template float UniformBuffer::GetValue<float>(const std::string& memberName) const;
-	template Float2 UniformBuffer::GetValue<Float2>(const std::string& memberName) const;
-	template Float3 UniformBuffer::GetValue<Float3>(const std::string& memberName) const;
-	template Float4 UniformBuffer::GetValue<Float4>(const std::string& memberName) const;
-	template Float4x4 UniformBuffer::GetValue<Float4x4>(const std::string& memberName) const;
-
-	template int UniformBuffer::GetValue<int>(const std::string& arrayName, uint32_t arrayIndex) const;
-	template bool UniformBuffer::GetValue<bool>(const std::string& arrayName, uint32_t arrayIndex) const;
-	template float UniformBuffer::GetValue<float>(const std::string& arrayName, uint32_t arrayIndex) const;
-	template Float2 UniformBuffer::GetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex) const;
-	template Float3 UniformBuffer::GetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex) const;
-	template Float4 UniformBuffer::GetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex) const;
-	template Float4x4 UniformBuffer::GetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex) const;
-
-	template int UniformBuffer::GetValue<int>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template bool UniformBuffer::GetValue<bool>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template float UniformBuffer::GetValue<float>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template Float2 UniformBuffer::GetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template Float3 UniformBuffer::GetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template Float4 UniformBuffer::GetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-	template Float4x4 UniformBuffer::GetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
-
-	template int UniformBuffer::GetValue<int>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template bool UniformBuffer::GetValue<bool>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template float UniformBuffer::GetValue<float>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template Float2 UniformBuffer::GetValue<Float2>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template Float3 UniformBuffer::GetValue<Float3>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template Float4 UniformBuffer::GetValue<Float4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
-	template Float4x4 UniformBuffer::GetValue<Float4x4>(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 }
