@@ -1,17 +1,14 @@
 #include "vulkanSampleTexture2d.h"
 #include "assetLoader.h"
-#include "vmaBuffer.h"
+#include "emberMath.h"
 #include "vmaImage.h"
 #include "vulkanAccessMasks.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include "vulkanObjectToString.h"
 #include "vulkanPipelineStages.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
-#include <math.h>
 #include <memory>
-#include <unordered_set>
 
 
 
@@ -30,8 +27,8 @@ namespace vulkanRendererBackend
 		m_format = format;
 		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 
-        std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Upload(data));
-        Init(pStagingBuffer.get());
+        std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Staging(data));
+        Upload(pStagingBuffer.get());
 
 		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTexture2d " + m_name);
 	}
@@ -50,8 +47,8 @@ namespace vulkanRendererBackend
 		m_format = format;
 		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
         
-		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Upload((void*)imageAsset.pixels.data()));
-		Init(pStagingBuffer.get());
+		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Staging((void*)imageAsset.pixels.data()));
+		Upload(pStagingBuffer.get());
 
 		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTexture2d " + m_name);
 	}
@@ -62,42 +59,8 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
-	void SampleTexture2d::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
-	{
-		// Transition 0: Layout: undefined->dstTransfer, Queue: transfer
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = pipelineStage::topOfPipe;
-			VkPipelineStageFlags2 dstStage = pipelineStage::transfer;
-			VkAccessFlags2 srcAccessMask = accessMask::transfer::none;
-			VkAccessFlags2 dstAccessMask = accessMask::transfer::transferWrite;
-			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
-
-		// Upload: pStagingBuffer -> image
-		pStagingBuffer->UploadToImage(transferCommandBuffer, m_pImage.get(), m_pImage->GetSubresourceRange().layerCount);
-
-		// Transition 1: Layout: transfer->shaderRead
-		// With mipmapping: Queue: graphics
-		if (m_pImage->GetSubresourceRange().levelCount > 1)
-			m_pImage->GenerateMipmaps(graphicsCommandBuffer, m_pImage->GetSubresourceRange().levelCount);
-		// Without mipmapping: Queue: transfer
-		else
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = pipelineStage::transfer;
-			VkPipelineStageFlags2 dstStage = pipelineStage::fragmentShader;
-			VkAccessFlags2 srcAccessMask = accessMask::transfer::transferWrite;
-			VkAccessFlags2 dstAccessMask = accessMask::fragmentShader::shaderRead;
-			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
-	}
-
-
-
 	// Private methods:
-	StagingBuffer* SampleTexture2d::Upload(void* data)
+	StagingBuffer* SampleTexture2d::Staging(void* data)
     {
 		// Upload: data -> pStagingBuffer
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(m_format);
@@ -110,7 +73,7 @@ namespace vulkanRendererBackend
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.baseMipLevel = 0;
 		subresourceRange.layerCount = 1;
-		subresourceRange.levelCount = static_cast<uint32_t>(std::floor(std::log2(std::max(m_width, m_height)))) + 1;	// mip levels
+		subresourceRange.levelCount = static_cast<uint32_t>(math::Floor(math::Log2(math::Max(m_width, m_height)))) + 1;	// mip levels
 
 		// Create image:
 		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -122,7 +85,7 @@ namespace vulkanRendererBackend
 
 		return pStagingBuffer;
     }
-	void SampleTexture2d::Init(StagingBuffer* pStagingBuffer)
+	void SampleTexture2d::Upload(StagingBuffer* pStagingBuffer)
 	{
 		const DeviceQueue& transferQueue = Context::logicalDevice.GetTransferQueue();
 		const DeviceQueue& graphicsQueue = Context::logicalDevice.GetGraphicsQueue();
@@ -138,6 +101,36 @@ namespace vulkanRendererBackend
 			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
 			RecordGpuCommands(commandBuffer, commandBuffer, pStagingBuffer);
 			SingleTimeCommand::EndCommand(graphicsQueue);
+		}
+	}
+	void SampleTexture2d::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
+	{
+		// Transition 0: Layout: undefined->dstTransfer, Queue: transfer
+		{
+			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			VkPipelineStageFlags2 srcStage = pipelineStage::topOfPipe;
+			VkPipelineStageFlags2 dstStage = pipelineStage::transfer;
+			VkAccessFlags2 srcAccessMask = accessMask::transfer::none;
+			VkAccessFlags2 dstAccessMask = accessMask::transfer::transferWrite;
+			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		}
+
+		// Upload: pStagingBuffer -> texture
+		pStagingBuffer->UploadToTexture(transferCommandBuffer, this, m_pImage->GetSubresourceRange().layerCount);
+
+		// Transition 1: Layout: transfer->shaderRead
+		// With mipmapping: Queue: graphics
+		if (m_pImage->GetSubresourceRange().levelCount > 1)
+			m_pImage->GenerateMipmaps(graphicsCommandBuffer, m_pImage->GetSubresourceRange().levelCount);
+		// Without mipmapping: Queue: transfer
+		else
+		{
+			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			VkPipelineStageFlags2 srcStage = pipelineStage::transfer;
+			VkPipelineStageFlags2 dstStage = pipelineStage::fragmentShader;
+			VkAccessFlags2 srcAccessMask = accessMask::transfer::transferWrite;
+			VkAccessFlags2 dstAccessMask = accessMask::fragmentShader::shaderRead;
+			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 	}
 }

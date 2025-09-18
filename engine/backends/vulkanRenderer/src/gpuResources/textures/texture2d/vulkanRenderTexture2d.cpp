@@ -1,5 +1,4 @@
 #include "vulkanRenderTexture2d.h"
-#include "logger.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"

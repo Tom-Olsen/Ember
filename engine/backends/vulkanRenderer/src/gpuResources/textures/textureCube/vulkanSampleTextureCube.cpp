@@ -93,8 +93,8 @@ namespace vulkanRendererBackend
 			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 
-		// Upload: pStagingBuffer -> image
-		pStagingBuffer->UploadToImage(transferCommandBuffer, m_pImage.get(), m_pImage->GetSubresourceRange().layerCount);
+		// Upload: pStagingBuffer -> texture
+		pStagingBuffer->UploadToTexture(transferCommandBuffer, this, m_pImage->GetSubresourceRange().layerCount);
 
 		// Transition1: Layout: transfer->shaderRead
 		{

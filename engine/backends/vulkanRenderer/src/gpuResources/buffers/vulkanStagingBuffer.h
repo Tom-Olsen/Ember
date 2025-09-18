@@ -10,7 +10,7 @@ namespace vulkanRendererBackend
 	// Forward declarations:
 	class Buffer;
 	struct DeviceQueue;
-	class VmaImage;
+	class Texture;
 
 
 
@@ -45,20 +45,16 @@ namespace vulkanRendererBackend
 		// Setters:
 		void SetData(const void* pSrc, uint64_t size, uint64_t offset = 0);
 
-		// Use Texture instead of VmaImage!
-
 		// Upload:
 		void UploadToBuffer(VkCommandBuffer commandBuffer, Buffer* pDstBuffer);
 		void UploadToBuffer(Buffer* pDstBuffer, const DeviceQueue& queue);
-		void UploadToImage(VkCommandBuffer commandBuffer, VmaImage* pDstImage, uint64_t layerCount);
-		void UploadToImage(const DeviceQueue& queue, VmaImage* pDstImage, uint64_t layerCount);
+		void UploadToTexture(VkCommandBuffer commandBuffer, Texture* pDstTexture, uint64_t layerCount);
+		void UploadToTexture(const DeviceQueue& queue, Texture* pDstTexture, uint64_t layerCount);
 
 		// Download:
 		void DownloadFromBuffer(VkCommandBuffer commandBuffer, Buffer* pSrcBuffer);
 		void DownloadFromBuffer(Buffer* pSrcBuffer, const DeviceQueue& queue);
-
-		// Not implemented yet, as images are more complex due to layout transitions:
-		//void DownloadFromTexture(VkCommandBuffer commandBuffer, VmaImage* pSrcImage);
-		//void DownloadFromTexture(Buffer* pSrcBuffer, const DeviceQueue& queue);
+		//void DownloadFromTexture(VkCommandBuffer commandBuffer, Texture* pSrcTexture);
+		//void DownloadFromTexture(Texture* pSrcTexture, const DeviceQueue& queue);
 	};
 }

@@ -1,7 +1,5 @@
 #include "vulkanStorageTexture2d.h"
 #include "assetLoader.h"
-#include "logger.h"
-#include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanAccessMasks.h"
 #include "vulkanContext.h"
@@ -26,8 +24,8 @@ namespace vulkanRendererBackend
 		m_format = format;
 		m_descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 
-		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Upload(data));
-		Init(pStagingBuffer.get());
+		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Staging(data));
+		Upload(pStagingBuffer.get());
 
 		NAME_VK_IMAGE(m_pImage->GetVkImage(), "StorageTexture2d " + m_name);
 	}
@@ -46,8 +44,8 @@ namespace vulkanRendererBackend
 		m_format = format;
 		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 
-		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Upload((void*)imageAsset.pixels.data()));
-		Init(pStagingBuffer.get());
+		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Staging((void*)imageAsset.pixels.data()));
+		Upload(pStagingBuffer.get());
 
 		NAME_VK_IMAGE(m_pImage->GetVkImage(), "StorageTexture2d " + m_name);
 	}
@@ -59,7 +57,7 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	StagingBuffer* StorageTexture2d::Upload(void* data)
+	StagingBuffer* StorageTexture2d::Staging(void* data)
 	{
 		// Upload: data -> pStagingBuffer
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(m_format);
@@ -84,7 +82,7 @@ namespace vulkanRendererBackend
 
 		return pStagingBuffer;
 	}
-	void StorageTexture2d::Init(StagingBuffer* pStagingBuffer)
+	void StorageTexture2d::Upload(StagingBuffer* pStagingBuffer)
 	{
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		{
@@ -96,8 +94,8 @@ namespace vulkanRendererBackend
 			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 
-		// Upload: pStagingBuffer -> image
-		pStagingBuffer->UploadToImage(Context::logicalDevice.GetTransferQueue(), m_pImage.get(), m_pImage->GetSubresourceRange().layerCount);
+		// Upload: pStagingBuffer -> texture
+		pStagingBuffer->UploadToTexture(Context::logicalDevice.GetTransferQueue(), this, m_pImage->GetSubresourceRange().layerCount);
 
 		// Transition 1: Layout: transfer->general, Queue: transfer->compute
 		{

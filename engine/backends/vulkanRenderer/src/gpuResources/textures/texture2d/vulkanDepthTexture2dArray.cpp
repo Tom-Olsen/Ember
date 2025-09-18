@@ -1,5 +1,4 @@
 #include "vulkanDepthTexture2dArray.h"
-#include "logger.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"

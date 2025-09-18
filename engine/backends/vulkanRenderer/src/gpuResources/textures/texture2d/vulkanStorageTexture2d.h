@@ -34,7 +34,7 @@ namespace vulkanRendererBackend
 		StorageTexture2d& operator=(StorageTexture2d&& other) noexcept = default;
 
 	private: // Methods:
-		StagingBuffer* Upload(void* data);
-		void Init(StagingBuffer* pStagingBuffer);
+		StagingBuffer* Staging(void* data);
+		void Upload(StagingBuffer* pStagingBuffer);
 	};
 }

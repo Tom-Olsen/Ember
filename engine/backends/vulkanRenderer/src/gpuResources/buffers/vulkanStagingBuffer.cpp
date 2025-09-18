@@ -4,6 +4,7 @@
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
 #include "vulkanSingleTimeCommand.h"
+#include "vulkanTexture.h"
 #include <cstring>
 
 
@@ -100,7 +101,7 @@ namespace vulkanRendererBackend
 		UploadToBuffer(vkCommandBuffer, pDstBuffer);
 		SingleTimeCommand::EndCommand(queue);
 	}
-	void StagingBuffer::UploadToImage(VkCommandBuffer vkCommandBuffer, VmaImage* pDstImage, uint64_t layerCount)
+	void StagingBuffer::UploadToTexture(VkCommandBuffer vkCommandBuffer, Texture* pDstTexture, uint64_t layerCount)
 	{
 		VkBufferImageCopy region = {};
 		region.bufferOffset = 0;
@@ -111,20 +112,20 @@ namespace vulkanRendererBackend
 		region.imageSubresource.baseArrayLayer = 0;
 		region.imageSubresource.layerCount = layerCount;
 		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = pDstImage->GetExtent();
+		region.imageExtent = pDstTexture->GetVmaImage()->GetExtent();
 
 		vkCmdCopyBufferToImage(
 			vkCommandBuffer,
 			m_pBuffer->GetVkBuffer(),
-			pDstImage->GetVkImage(),
+			pDstTexture->GetVmaImage()->GetVkImage(),
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1,
 			&region);
 	}
-	void StagingBuffer::UploadToImage(const DeviceQueue& queue, VmaImage* pDstImage, uint64_t layerCount)
+	void StagingBuffer::UploadToTexture(const DeviceQueue& queue, Texture* pDstTexture, uint64_t layerCount)
 	{
 		VkCommandBuffer vkCommandBuffer = SingleTimeCommand::BeginCommand(queue);
-		UploadToImage(vkCommandBuffer, pDstImage, layerCount);
+		UploadToTexture(vkCommandBuffer, pDstTexture, layerCount);
 		SingleTimeCommand::EndCommand(queue);
 	}
 

@@ -61,10 +61,6 @@ namespace vulkanRendererBackend
 		// Only changes the m_layout member without doing an image layout transition.
 		void SetLayout(VkImageLayout imageLayout);
 
-		// Upload/Download:
-		void Upload(VkCommandBuffer commandBuffer, void* pSrc, uint64_t size, uint32_t layerCount);
-		void Upload(void* pSrc, uint64_t size, uint32_t layerCount);
-
 		// Transitions:
 		void TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
 		void TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);

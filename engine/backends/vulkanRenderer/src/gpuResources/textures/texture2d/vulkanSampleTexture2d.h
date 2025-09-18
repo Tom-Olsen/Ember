@@ -33,10 +33,9 @@ namespace vulkanRendererBackend
 		SampleTexture2d(SampleTexture2d&& other) noexcept = default;
 		SampleTexture2d& operator=(SampleTexture2d&& other) noexcept = default;
 
+    private: // Methods:
+		StagingBuffer* Staging(void* data);
+		void Upload(StagingBuffer* pStagingBuffer);
 		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
-
-	private: // Methods:
-		StagingBuffer* Upload(void* data);
-		void Init(StagingBuffer* pStagingBuffer);
 	};
 }
