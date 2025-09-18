@@ -36,10 +36,10 @@ namespace vulkanRendererBackend
 
 	protected: // Members:
 		std::string m_name;
-		int m_width;
-		int m_height;
-		int m_depth;
-		int m_channels;
+		uint32_t m_width;
+		uint32_t m_height;
+		uint32_t m_depth;
+		uint32_t m_channels;
 		VkFormat m_format;
 		VkDescriptorType m_descriptorType;
 		std::unique_ptr<VmaImage> m_pImage;
@@ -59,10 +59,10 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		const std::string& GetName() const;
-		uint64_t GetWidth() const;
-		uint64_t GetHeight() const;
-		uint64_t GetDepth() const;
-		uint64_t GetChannels() const;
+		uint32_t GetWidth() const;
+		uint32_t GetHeight() const;
+		uint32_t GetDepth() const;
+		uint32_t GetChannels() const;
 		const emberEngine::TextureFormat& GetFormat() const;
 		VkFormat GetVkFormat() const;
 		VmaImage* const GetVmaImage() const;

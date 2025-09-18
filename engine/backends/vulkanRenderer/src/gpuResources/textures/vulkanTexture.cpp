@@ -87,21 +87,21 @@ namespace vulkanRendererBackend
 	{
 		return m_name;
 	}
-	uint64_t Texture::GetWidth() const
+	uint32_t Texture::GetWidth() const
 	{
-		return static_cast<uint64_t>(m_width);
+		return m_width;
 	}
-	uint64_t Texture::GetHeight() const
+	uint32_t Texture::GetHeight() const
 	{
-		return static_cast<uint64_t>(m_height);
+		return m_height;
 	}
-	uint64_t Texture::GetDepth() const
+	uint32_t Texture::GetDepth() const
 	{
-		return static_cast<uint64_t>(m_depth);
+		return m_depth;
 	}
-	uint64_t Texture::GetChannels() const
+	uint32_t Texture::GetChannels() const
 	{
-		return static_cast<uint64_t>(m_channels);
+		return m_channels;
 	}
 	const emberEngine::TextureFormat& Texture::GetFormat() const
 	{

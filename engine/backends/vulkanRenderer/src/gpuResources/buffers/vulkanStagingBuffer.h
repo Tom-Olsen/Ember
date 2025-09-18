@@ -54,7 +54,7 @@ namespace vulkanRendererBackend
 		// Download:
 		void DownloadFromBuffer(VkCommandBuffer commandBuffer, Buffer* pSrcBuffer);
 		void DownloadFromBuffer(Buffer* pSrcBuffer, const DeviceQueue& queue);
-		//void DownloadFromTexture(VkCommandBuffer commandBuffer, Texture* pSrcTexture);
-		//void DownloadFromTexture(Texture* pSrcTexture, const DeviceQueue& queue);
+		void DownloadFromTexture(VkCommandBuffer commandBuffer, Texture* pSrcTexture);
+		void DownloadFromTexture(Texture* pSrcTexture, const DeviceQueue& queue);
 	};
 }
