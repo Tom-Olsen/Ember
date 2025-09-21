@@ -1,5 +1,6 @@
 #include "vulkanGarbageCollector.h"
 #include "vulkanContext.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -31,7 +32,7 @@ namespace vulkanRendererBackend
     // Static methods:
     void GarbageCollector::RecordCleanup(std::function<void()> cleanupCallback)
     {
-        s_garbageQueue.push_back(GarbageEntry{ Context::absoluteFrameIndex, std::move(cleanupCallback) });
+        s_garbageQueue.push_back(GarbageEntry{ Context::GetAbsoluteFrameIndex(), std::move(cleanupCallback)});
     }
     void GarbageCollector::Cleanup()
     {
@@ -39,7 +40,7 @@ namespace vulkanRendererBackend
         while (!s_garbageQueue.empty())
         {
             const GarbageEntry& entry = s_garbageQueue.front();
-            if (Context::absoluteFrameIndex >= entry.frameIndex + Context::framesInFlight)
+            if (Context::GetAbsoluteFrameIndex() >= entry.frameIndex + Context::GetFramesInFlight())
             {
                 entry.cleanupCallback();
                 s_garbageQueue.pop_front();

@@ -1,6 +1,14 @@
 #pragma once
-#include <vulkan/vulkan.h>
+#include "vulkanPipelineStage.h"
 #include <string>
+
+
+
+// Forward declarations:
+typedef struct VkCommandPool_T* VkCommandPool;
+typedef struct VkCommandBuffer_T* VkCommandBuffer;
+typedef struct VkFence_T* VkFence;
+typedef struct VkSemaphore_T* VkSemaphore;
 
 
 
@@ -39,7 +47,7 @@ namespace vulkanRendererBackend
 		// Getters:
 		static VkCommandBuffer& BeginCommand(const DeviceQueue& queue);
 		static void EndCommand(const DeviceQueue& queue);
-		static void EndLinkedCommands(const DeviceQueue& firstQueue, const DeviceQueue& secondQueue, VkPipelineStageFlags2 waitDstStageMask);
+		static void EndLinkedCommands(const DeviceQueue& firstQueue, const DeviceQueue& secondQueue, PipelineStage waitDstStageMask);
 
 	private: // Methods
 		static VkCommandBuffer* FindCommandBuffer(const DeviceQueue& queue);

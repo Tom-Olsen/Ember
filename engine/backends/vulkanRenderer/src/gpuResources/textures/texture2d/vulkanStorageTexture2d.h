@@ -13,16 +13,16 @@ namespace vulkanRendererBackend
 
 	/// <summary>
 	/// Texture2d specialization: <para/>
-	/// -VkImageUsageFlags		= transfer dst, storage <para/>
-	/// -VkImageCreateFlagBits	= 0 <para/>
-	/// -VkImageViewType		= 2d
+	/// -ImageUsageFlag		= transfer dst, storage <para/>
+	/// -ImageCreateFlagBit	= 0 <para/>
+	/// -ImageViewType		= 2d
 	/// </summary>
 	class StorageTexture2d : public Texture2d
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		StorageTexture2d(const std::string& name, VkFormat format, int width, int height, void* data);
-		StorageTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path);
+		StorageTexture2d(const std::string& name, Format format, int width, int height, void* data);
+		StorageTexture2d(const std::string& name, Format format, const std::filesystem::path& path);
 		~StorageTexture2d();
 
 		// Non-copyable:

@@ -1,8 +1,10 @@
 #include "vulkanCommandPool.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include "vulkanLogicalDevice.h"
 #include <stdexcept>
 #include <assert.h>
+#include <vulkan/vulkan.h>
 
 
 

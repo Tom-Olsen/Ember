@@ -9,10 +9,11 @@ namespace emberBackendInterface
 {
     class IMesh
     {
-    public: // Virtual destructor for v-table:
-        virtual ~IMesh() = default;
+	public: // Methods:
+		// Virtual destructor for v-table:
+		virtual ~IMesh() = default;
 
-	public: // Setters:
+		// Setters:
 		virtual void SetName(const std::string& name) = 0;
 		virtual void SetPositions(const std::vector<Float3>& positions) = 0;
 		virtual void SetNormals(const std::vector<Float3>& normals) = 0;
@@ -22,7 +23,7 @@ namespace emberBackendInterface
 		virtual void SetUVs(const std::vector<Float4>& uvs) = 0;
 		virtual void SetTriangles(const std::vector<Uint3>& triangles) = 0;
 
-	public: // Movers:
+		// Movers:
 		virtual void MovePositions(std::vector<Float3>& positions) = 0;
 		virtual void MoveNormals(std::vector<Float3>& normals) = 0;
 		virtual void MoveTangents(std::vector<Float3>& tangents) = 0;
@@ -30,7 +31,7 @@ namespace emberBackendInterface
 		virtual void MoveUVs(std::vector<Float4>& uvs) = 0;
 		virtual void MoveTriangles(std::vector<Uint3>& triangles) = 0;
 
-	public: // Getters:
+		// Getters:
 		virtual const std::string& GetName() const = 0;
 		virtual uint32_t GetVertexCount() const = 0;
 		virtual uint32_t GetTriangleCount() const = 0;
@@ -41,7 +42,7 @@ namespace emberBackendInterface
 		virtual std::vector<Float4>& GetUVs() = 0;
 		virtual std::vector<Uint3>& GetTriangles() = 0;
 
-	public: // Mesh transformations (changes *this):
+		// Mesh transformations (changes *this):
 		virtual void ComputeNormals() = 0;
 		virtual void ComputeTangents() = 0;
     };

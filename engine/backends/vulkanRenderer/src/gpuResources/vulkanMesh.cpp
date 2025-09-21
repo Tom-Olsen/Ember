@@ -2,8 +2,10 @@
 #include "logger.h"
 #include "vulkanIndexBuffer.h"
 #include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanStagingBuffer.h"
 #include "vulkanVertexBuffer.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -315,29 +317,29 @@ namespace vulkanRendererBackend
 		}
 		return m_pIndexBuffer.get();
 	}
-	VkDeviceSize Mesh::GetPositionsOffset() const
+	uint64_t Mesh::GetPositionsOffset() const
 	{
 		return 0;
 	}
-	VkDeviceSize Mesh::GetNormalsOffset() const
+	uint64_t Mesh::GetNormalsOffset() const
 	{
 		return GetSizeOfPositions();
 	}
-	VkDeviceSize Mesh::GetTangentsOffset() const
+	uint64_t Mesh::GetTangentsOffset() const
 	{
 		return GetSizeOfPositions() + GetSizeOfNormals();
 	}
-	VkDeviceSize Mesh::GetColorsOffset() const
+	uint64_t Mesh::GetColorsOffset() const
 	{
 		return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents();
 	}
-	VkDeviceSize Mesh::GetUVsOffset() const
+	uint64_t Mesh::GetUVsOffset() const
 	{
 		return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors();
 	}
-	VkIndexType Mesh::GetIndexType()
+	IndexType Mesh::GetIndexType()
 	{
-		return VK_INDEX_TYPE_UINT32;
+		return IndexTypes::uint32;
 	}
 	bool Mesh::IsLoaded()
 	{
@@ -390,7 +392,7 @@ namespace vulkanRendererBackend
 			m_uvs.resize(m_vertexCount, Float4::zero);
 
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);
+			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_pVertexBuffer == nullptr || m_pVertexBuffer->GetCount() != m_vertexCount)
@@ -420,7 +422,7 @@ namespace vulkanRendererBackend
 			m_uvs.resize(m_vertexCount, Float4::zero);
 
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);
+			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_pVertexBuffer == nullptr || m_pVertexBuffer->GetCount() != m_vertexCount)
@@ -433,14 +435,14 @@ namespace vulkanRendererBackend
 		stagingBuffer.SetData(m_tangents.data(), GetSizeOfTangents(), GetTangentsOffset());
 		stagingBuffer.SetData(m_colors.data(), GetSizeOfColors(), GetColorsOffset());
 		stagingBuffer.SetData(m_uvs.data(), GetSizeOfUVs(), GetUVsOffset());
-		stagingBuffer.UploadToBuffer(m_pVertexBuffer.get(), Context::logicalDevice.GetGraphicsQueue());
+		stagingBuffer.UploadToBuffer(m_pVertexBuffer.get(), Context::GetLogicalDevice()->GetGraphicsQueue());
 	}
 	#endif
 	#ifdef RESIZEABLE_BAR // No staging buffer:
 	void Mesh::UpdateIndexBuffer()
 	{
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);
+			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_pIndexBuffer == nullptr || m_triangleCount != m_pIndexBuffer->GetCount())
@@ -457,7 +459,7 @@ namespace vulkanRendererBackend
 	void Mesh::UpdateIndexBuffer()
 	{
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::logicalDevice.GetGraphicsQueue().queue);
+			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
 		if (m_pIndexBuffer == nullptr || m_triangleCount != m_pIndexBuffer->GetCount())
@@ -467,7 +469,7 @@ namespace vulkanRendererBackend
 		uint64_t size = GetSizeOfTriangles();
 		StagingBuffer stagingBuffer(size, m_name);
 		stagingBuffer.SetData(GetTrianglesUnrolled(), size);
-		stagingBuffer.UploadToBuffer(m_pIndexBuffer.get(), Context::logicalDevice.GetGraphicsQueue());
+		stagingBuffer.UploadToBuffer(m_pIndexBuffer.get(), Context::GetLogicalDevice()->GetGraphicsQueue());
 	}
 	#endif
 }

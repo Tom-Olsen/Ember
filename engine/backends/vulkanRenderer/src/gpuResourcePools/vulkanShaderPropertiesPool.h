@@ -38,6 +38,5 @@ namespace vulkanRendererBackend
 
         ShaderProperties* CheckOut(Shader* pShader);
         void Return(ShaderProperties* pShaderProperties);
-        void ShrinkToFit(); // Should only ever be called if current usage is 0.
     };
 }

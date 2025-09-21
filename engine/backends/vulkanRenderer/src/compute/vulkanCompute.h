@@ -6,14 +6,14 @@ namespace vulkanRendererBackend
 {
 	class Compute
 	{
-	private: // Members
+	private: // Members:
 		static bool s_isInitialized;
 
-	public: // Methods
+	public: // Methods:
 		static void Init();
 		static void Clear();
 
-	private: // Methods
+	private: // Methods:
 		// Delete all constructors:
 		Compute() = delete;
 		Compute(const Compute&) = delete;

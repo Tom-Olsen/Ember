@@ -1,11 +1,16 @@
 #pragma once
 #include "iShaderProperties.h"
+#include "vulkanDescriptorType.h"
 #include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan.h>
+
+
+
+// Forward declarations:
+typedef struct VkDescriptorSet_T* VkDescriptorSet;
 
 
 
@@ -35,7 +40,7 @@ namespace vulkanRendererBackend
 	{
 		uint32_t binding;
 		Texture2d* pTexture2d;
-		VkDescriptorType descriptorType;
+		DescriptorType descriptorType;
 	};
 	struct StorageBufferBinding
 	{
@@ -174,7 +179,7 @@ namespace vulkanRendererBackend
 		// Initializers:
 		void InitUniformBufferResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding);
 		void InitSamplerResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Sampler* pSampler);
-		void InitTexture2dResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture2d* pTexture2d, VkDescriptorType descriptorType);
+		void InitTexture2dResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture2d* pTexture2d, DescriptorType descriptorType);
 		void InitStorageBufferResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, StorageBuffer* pStorageBuffer);
 		void InitStagingMaps();
 		void InitDescriptorSets();

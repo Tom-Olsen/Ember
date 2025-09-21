@@ -1,14 +1,13 @@
-#pragma once
-#include "textureFormat.h"
+#include "vulkanConvertTextureFormat.h"
 #include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
-    const emberEngine::DepthStencilFormat& TranslateDepthStencilFormat(VkFormat vkFormat)
+    const emberEngine::DepthStencilFormat& ConvertDepthStencilFormat(Format format)
     {
-        switch (vkFormat)
+        switch (format)
         {
             // Depth/Stencil:
             case VK_FORMAT_S8_UINT:             return emberEngine::DepthStencilFormats::d00_s8;
@@ -18,22 +17,21 @@ namespace vulkanRendererBackend
             case VK_FORMAT_D32_SFLOAT:          return emberEngine::DepthStencilFormats::d32_s0;
             case VK_FORMAT_D32_SFLOAT_S8_UINT:  return emberEngine::DepthStencilFormats::d32_s8;
 
-            // Fallback:
+                // Fallback:
             default:                            return emberEngine::DepthStencilFormats::unknown;
         }
     }
 
-
-    const emberEngine::TextureFormat& TranslateTextureFormat(VkFormat vkFormat)
+    const emberEngine::TextureFormat& ConvertTextureFormat(Format format)
     {
-        switch (vkFormat)
+        switch (format)
         {
             // Single Channel:
             case VK_FORMAT_R8_SRGB:                 return emberEngine::TextureFormats::r08_srgb;
             case VK_FORMAT_R8_UINT:                 return emberEngine::TextureFormats::r08_uint;
             case VK_FORMAT_R8_SINT:                 return emberEngine::TextureFormats::r08_sint;
-			case VK_FORMAT_R8_USCALED:              return emberEngine::TextureFormats::r08_uscaled;
-			case VK_FORMAT_R8_SSCALED:              return emberEngine::TextureFormats::r08_sscaled;
+            case VK_FORMAT_R8_USCALED:              return emberEngine::TextureFormats::r08_uscaled;
+            case VK_FORMAT_R8_SSCALED:              return emberEngine::TextureFormats::r08_sscaled;
             case VK_FORMAT_R8_UNORM:                return emberEngine::TextureFormats::r08_unorm;
             case VK_FORMAT_R8_SNORM:                return emberEngine::TextureFormats::r08_snorm;
 
@@ -53,7 +51,7 @@ namespace vulkanRendererBackend
             case VK_FORMAT_R64_SINT:                return emberEngine::TextureFormats::r64_sint;
             case VK_FORMAT_R64_SFLOAT:              return emberEngine::TextureFormats::r64_sfloat;
 
-            // Dual Channel:
+                // Dual Channel:
             case VK_FORMAT_R8G8_SRGB:               return emberEngine::TextureFormats::rg08_srgb;
             case VK_FORMAT_R8G8_UINT:               return emberEngine::TextureFormats::rg08_uint;
             case VK_FORMAT_R8G8_SINT:               return emberEngine::TextureFormats::rg08_sint;
@@ -78,7 +76,7 @@ namespace vulkanRendererBackend
             case VK_FORMAT_R64G64_SINT:             return emberEngine::TextureFormats::rg64_sint;
             case VK_FORMAT_R64G64_SFLOAT:           return emberEngine::TextureFormats::rg64_sfloat;
 
-            // Triple Channel:
+                // Triple Channel:
             case VK_FORMAT_R8G8B8_SRGB:             return emberEngine::TextureFormats::rgb08_srgb;
             case VK_FORMAT_R8G8B8_UINT:             return emberEngine::TextureFormats::rgb08_uint;
             case VK_FORMAT_R8G8B8_SINT:             return emberEngine::TextureFormats::rgb08_sint;
@@ -103,7 +101,7 @@ namespace vulkanRendererBackend
             case VK_FORMAT_R64G64B64_SINT:          return emberEngine::TextureFormats::rgb64_sint;
             case VK_FORMAT_R64G64B64_SFLOAT:        return emberEngine::TextureFormats::rgb64_sfloat;
 
-            // Quadrupal Channel:
+                // Quadrupal Channel:
             case VK_FORMAT_R8G8B8A8_SRGB:           return emberEngine::TextureFormats::rgba08_srgb;
             case VK_FORMAT_R8G8B8A8_UINT:           return emberEngine::TextureFormats::rgba08_uint;
             case VK_FORMAT_R8G8B8A8_SINT:           return emberEngine::TextureFormats::rgba08_sint;
@@ -128,7 +126,7 @@ namespace vulkanRendererBackend
             case VK_FORMAT_R64G64B64A64_SINT:       return emberEngine::TextureFormats::rgba64_sint;
             case VK_FORMAT_R64G64B64A64_SFLOAT:     return emberEngine::TextureFormats::rgba64_sfloat;
 
-            // Fallback
+                // Fallback
             default: return emberEngine::TextureFormats::unknown;
         }
     }

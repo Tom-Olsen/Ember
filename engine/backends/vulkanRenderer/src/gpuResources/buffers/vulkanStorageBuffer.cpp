@@ -25,13 +25,13 @@ namespace vulkanRendererBackend
 		m_size = m_count * m_elementSize;
 
 		// Create buffer:
-		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		BufferCreateInfo bufferInfo = {};
 		bufferInfo.size = m_size;
-		bufferInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		bufferInfo.usages = BufferUsageFlags::storage_buffer_bit | BufferUsageFlags::transfer_src_bit | BufferUsageFlags::transfer_dst_bit;
+		bufferInfo.sharingMode = SharingModes::exclusive;
 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+		AllocationCreateInfo allocInfo = {};
+		allocInfo.usages = MemoryUsages::auto_prefer_device;
 		allocInfo.flags = 0;
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;

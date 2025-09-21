@@ -1,5 +1,4 @@
 #pragma once
-#include <memory>
 
 
 
@@ -7,7 +6,7 @@ namespace emberBackendInterface
 {
     class IRenderer
     {
-    public:
+    public: // Methods:
         // Virtual destructor for v-table:
         virtual ~IRenderer() = default;
 

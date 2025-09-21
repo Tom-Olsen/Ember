@@ -2,15 +2,17 @@
 #include "stb_image.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStages.h"
+#include "vulkanPipelineStage.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
 #include "vulkanTexture2d.h"
+#include <filesystem>
+#include <vulkan/vulkan.h>
 
 
 
-// Ember::ToDo: batch uploading currently disabled/removed. Reimplement with parallel taskflow streaming.
+// vulkanRendererBackend::ToDo: batch uploading currently disabled/removed. Reimplement with parallel taskflow streaming.
 
 
 //namespace vulkanRendererBackend
@@ -34,8 +36,8 @@
 //	}
 //	void TextureBatchUploader::UploadTextures()
 //	{
-//		const DeviceQueue& transferQueue = Context::logicalDevice.GetTransferQueue();
-//		const DeviceQueue& graphicsQueue = Context::logicalDevice.GetGraphicsQueue();
+//		const DeviceQueue& transferQueue = Context::GetLogicalDevice()->GetTransferQueue();
+//		const DeviceQueue& graphicsQueue = Context::GetLogicalDevice()->GetGraphicsQueue();
 //		if (transferQueue.queue != graphicsQueue.queue)
 //		{
 //			VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);

@@ -2,17 +2,11 @@
 // Direct include instead of forward declaration,
 // as this is the main header file that includes all other Vulkan-related headers.
 // Also allows for vulkan objects to be in place instead of pointers -> better memory access.
-#include "vulkanAllocationTracker.h"
-#include "vulkanDescriptorPool.h"
-#include "vulkanInstance.h"
-#include "vulkanLogicalDevice.h"
-#include "vulkanMemoryAllocator.h"
-#include "vulkanPhysicalDevice.h"
-#include "vulkanSurface.h"
-#include "vulkanSwapchain.h"
+#include "vulkanSampleCountFlag.h"
+#include <array>
 #include <memory>
 #include <string>
-#include <vulkan/vulkan.h>
+#include <vector>
 
 
 
@@ -38,51 +32,88 @@ namespace emberBackendInterface
 	class IDearImGuiInstanceExtensionsLoader;
 	class IWindow;
 }
+typedef struct VkInstance_T* VkInstance;
+typedef struct VkPhysicalDevice_T* VkPhysicalDevice;
+typedef struct VmaAllocator_T* VmaAllocator;
+typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
+typedef struct VkDevice_T* VkDevice;
+typedef struct VkDescriptorPool_T* VkDescriptorPool;
+typedef struct VkSwapchainKHR_T* VkSwapchainKHR;
+typedef struct VkBuffer_T* VkBuffer;
+typedef struct VkImage_T* VkImage;
+typedef struct VkImageView_T* VkImageView;
+typedef struct VkBufferView_T* VkBufferView;
+typedef struct VkDeviceMemory_T* VkDeviceMemory;
+typedef struct VkShaderModule_T* VkShaderModule;
+typedef struct VkPipeline_T* VkPipeline;
+typedef struct VkPipelineLayout_T* VkPipelineLayout;
+typedef struct VkRenderPass_T* VkRenderPass;
+typedef struct VkFramebuffer_T* VkFramebuffer;
+typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
+typedef struct VkDescriptorSet_T* VkDescriptorSet;
+typedef struct VkDescriptorPool_T* VkDescriptorPool;
+typedef struct VkSampler_T* VkSampler;
+typedef struct VkCommandPool_T* VkCommandPool;
+typedef struct VkCommandBuffer_T* VkCommandBuffer;
+typedef struct VkQueue_T* VkQueue;
+typedef struct VkSemaphore_T* VkSemaphore;
+typedef struct VkFence_T* VkFence;
+typedef struct VkEvent_T* VkEvent;
+typedef struct VkQueryPool_T* VkQueryPool;
+typedef struct VkSwapchainKHR_T* VkSwapchainKHR;
 
 
 
 namespace vulkanRendererBackend
 {
+	// Forward decleration:
+	class Instance;
+	class PhysicalDevice;
+	class Surface;
+	class LogicalDevice;
+	class MemoryAllocator;
+	class AllocationTracker;
+	class DescriptorPool;
+	class Swapchain;
+
 
 
 	/// <summary>
-	/// Context is a utility structure designed to encapsulate and manage all components required for the renderer.
+	/// Context is a utility class designed to encapsulate and manage all components required for the renderer.
 	/// It integrates multiple Vulkan resources and functionalities into a cohesive framework: <para/>
-	/// - Instance:			VkInstance and validation layers. <para/>
-	/// - PhysicalDevice:	physical device selection and feature support. <para/>
-	/// - Surface:			VkSurface and present mode (mailbox, FIFO, etc.). <para/>
-	/// - LogicalDevice:	VkDevice and queues (graphics, present, compute, transfer). <para/>
-	/// - MemoryAllocator:	VmaAllocator for flexible memory allocation pools. <para/>
-	/// - DescriptorPool:	VkDescriptorPool settings. <para/>
-	/// - Swapchain:		VkSwapchainKHR, spwapchain images, image views, and recreation. <para/>
-	/// - framesInFlight:	Number of frames in flight for synchronization. <para/>
-	/// - frameIndex:		Current frame index for synchronization. <para/>
-	/// - msaaSamples:		Msaa level, clamped to the maximum supported by the physical device. <para/>
+	/// - Instance:				VkInstance and validation layers. <para/>
+	/// - PhysicalDevice:		physical device selection and feature support. <para/>
+	/// - Surface:				VkSurface and present mode (mailbox, FIFO, etc.). <para/>
+	/// - LogicalDevice:		VkDevice and queues (graphics, present, compute, transfer). <para/>
+	/// - MemoryAllocator:		VmaAllocator for flexible memory allocation pools. <para/>
+	/// - AllocationTracker:	tracks vmaBuffer and vmaImage creation and destruction. <para/>
+	/// - DescriptorPool:		VkDescriptorPool settings. <para/>
+	/// - Swapchain:			VkSwapchainKHR, spwapchain images, image views, and recreation. <para/>
+	/// - framesInFlight:		Number of frames in flight for synchronization. <para/>
+	/// - frameIndex:			Current frame index for synchronization. <para/>
+	/// - msaaSamples:			Msaa level, clamped to the maximum supported by the physical device. <para/>
 	/// </summary>
-	struct Context
+	class Context
 	{
 	private: // Members:
 		static bool s_isInitialized;
-		static PFN_vkSetDebugUtilsObjectNameEXT s_vkSetDebugUtilsObjectNameEXT;
-
-	public: // Members: ("constants")
-		static Instance instance;
-		static PhysicalDevice physicalDevice;
-		static Surface surface;
-		static LogicalDevice logicalDevice;
-		static MemoryAllocator allocator;
-		static AllocationTracker allocationTracker;
-		static DescriptorPool descriptorPool;
-		static Swapchain swapchains[2];
-		static uint32_t swapchainIndex;
-		static uint32_t framesInFlight;
-		static uint32_t frameIndex;
-		static uint64_t absoluteFrameIndex;
-		static VkSampleCountFlagBits msaaSamples;
-		static bool enableDockSpace;
-		static float depthBiasConstantFactor;
-		static float depthBiasClamp;
-		static float depthBiasSlopeFactor;
+		static std::unique_ptr<Instance> m_pInstance;
+		static std::unique_ptr<PhysicalDevice> m_pPhysicalDevice;
+		static std::unique_ptr<Surface> m_pSurface;
+		static std::unique_ptr<LogicalDevice> m_pLogicalDevice;
+		static std::unique_ptr<MemoryAllocator> m_pMemoryAllocator;
+		static std::unique_ptr<AllocationTracker> m_pAllocationTracker;
+		static std::unique_ptr<DescriptorPool> m_pDescriptorPool;
+		static std::array<std::unique_ptr<Swapchain>, 2> m_swapchains;
+		static uint32_t m_swapchainIndex;
+		static uint32_t m_framesInFlight;
+		static uint32_t m_frameIndex;
+		static uint64_t m_absoluteFrameIndex;
+		static SampleCountFlag m_msaaSamples;
+		static bool m_enableDockSpace;
+		static float m_depthBiasConstantFactor;
+		static float m_depthBiasClamp;
+		static float m_depthBiasSlopeFactor;
 		
 	public: // Methods:
 		static void Init(const emberEngine::RendererCreateInfo& createInfo);
@@ -90,15 +121,33 @@ namespace vulkanRendererBackend
 		static void RebuildSwapchain();
 
 		// Getters:
-		static const VkInstance& GetVkInstance();
-		static const VkPhysicalDevice& GetVkPhysicalDevice();
-		static const VkSurfaceKHR& GetVkSurfaceKHR();
-		static const VkDevice& GetVkDevice();
-		static const VmaAllocator& GetVmaAllocator();
-		static const VkDescriptorPool& GetVkDescriptorPool();
+		static const Instance* GetInstance();
+		static const PhysicalDevice* GetPhysicalDevice();
+		static const Surface* GetSurface();
+		static const LogicalDevice* GetLogicalDevice();
+		static const MemoryAllocator* GetMemoryAllocator();
+		static const AllocationTracker* GetAllocationTracker();
+		static const DescriptorPool* GetDescriptorPool();
+		static const Swapchain* GetSwapchain();
+
+		static const VkInstance GetVkInstance();
+		static const VkPhysicalDevice GetVkPhysicalDevice();
+		static const VkSurfaceKHR GetVkSurfaceKHR();
+		static const VkDevice GetVkDevice();
+		static const VmaAllocator GetVmaAllocator();
+		static const VkDescriptorPool GetVkDescriptorPool();
 		static const VkSwapchainKHR& GetVkSwapchainKHR();
 		static bool DepthClampEnabled();
 		static bool DepthBiasClampEnabled();
+
+		static uint32_t GetFramesInFlight();
+		static uint32_t GetFrameIndex();
+		static uint64_t GetAbsoluteFrameIndex();
+		static SampleCountFlag GetMsaaSamples();
+		static bool DockSpaceEnabled();
+		static float GetDepthBiasConstantFactor();
+		static float GetDepthBiasClamp();
+		static float GetDepthBiasSlopeFactor();
 
 		// Frame logic:
 		static void UpdateFrameIndex();
@@ -106,8 +155,6 @@ namespace vulkanRendererBackend
 		static void WaitDeviceIdle();
 
 		// Debug utility object naming functions:
-	private:
-		static void SetObjectName(VkObjectType objectType, uint64_t objectHandle, const std::string& name);
 	public:
 		static void SetObjectName(VkBuffer buffer, const std::string& name);
 		static void SetObjectName(VkImage image, const std::string& name);
@@ -133,7 +180,6 @@ namespace vulkanRendererBackend
 		static void SetObjectName(VkSwapchainKHR swapchain, const std::string& name);
 
 	private: // Methods:
-		static bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension);
 		static void AddDearImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
 	};
 }

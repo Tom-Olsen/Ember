@@ -1,13 +1,15 @@
 #include "vulkanAsyncCompute.h"
 #include "logger.h"
-#include "vulkanAccessMasks.h"
+#include "vulkanAccessMask.h"
 #include "vulkanCommandPool.h"
 #include "vulkanComputeCall.h"
 #include "vulkanComputeSession.h"
 #include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanPoolManager.h"
 #include <stdexcept>
+#include <vulkan/vulkan.h>
 
 
 
@@ -41,7 +43,7 @@ namespace vulkanRendererBackend
 		for (int i = 0; i < s_sessionCount; i++)
 		{
 			// Create command pools:
-			s_pCommandPools.emplace_back(0, Context::logicalDevice.GetComputeQueue());
+			s_pCommandPools.emplace_back(0, Context::GetLogicalDevice()->GetComputeQueue());
 
 			// Create fences:
 			VkFenceCreateInfo fenceInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
@@ -150,7 +152,7 @@ namespace vulkanRendererBackend
 
 		// Setup compute call:
 		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)pComputeShader);
-		ComputeCall computeCall = { 0, threadCount, pComputeShader, pShaderProperties, accessMask::none::none, accessMask::none::none };
+		ComputeCall computeCall = { 0, threadCount, pComputeShader, pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
 		s_computeSessions[sessionID].RecordComputeCall(computeCall);
 
 		// By returning pShaderProperties, we allow user to change the shader properties of the compute call:
@@ -180,10 +182,10 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		ComputeCall computeCall = { 0, threadCount, pComputeShader, pShaderProperties, accessMask::none::none, accessMask::none::none };
+		ComputeCall computeCall = { 0, threadCount, pComputeShader, pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
 		s_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
-	void Async::RecordBarrier(uint32_t sessionID, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
+	void Async::RecordBarrier(uint32_t sessionID, AccessMask srcAccessMask, AccessMask dstAccessMask)
 	{
 		if (s_computeSessions[sessionID].state != ComputeSession::State::recording)
 		{

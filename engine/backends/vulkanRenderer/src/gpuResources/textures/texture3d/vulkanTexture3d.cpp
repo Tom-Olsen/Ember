@@ -1,6 +1,4 @@
 #include "vulkanTexture3d.h"
-#include "vmaImage.h"
-#include "vulkanDeviceQueue.h"
 
 
 
@@ -19,9 +17,9 @@ namespace vulkanRendererBackend
 
 
 	// Protected methods:
-	void Texture3d::CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
+	void Texture3d::CreateImage(ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, ImageViewType viewType, const DeviceQueue& queue)
 	{
-		VkImageType imageType = VK_IMAGE_TYPE_3D;
+		ImageType imageType = ImageTypes::image_type_3d;
 		CreateImageBase(imageType, subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 	}
 }

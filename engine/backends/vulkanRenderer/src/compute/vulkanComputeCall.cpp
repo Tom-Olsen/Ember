@@ -1,6 +1,6 @@
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
-#include "vulkanObjectToString.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -10,8 +10,8 @@ namespace vulkanRendererBackend
 	{
 		if (pComputeShader == nullptr)
 		{
-			std::string dstName = objectToString::VkAccessFlagBits2ToString(dstAccessMask);
-			std::string srcName = objectToString::VkAccessFlagBits2ToString(srcAccessMask);
+			std::string dstName = AccessMasks::ToString(dstAccessMask);
+			std::string srcName = AccessMasks::ToString(srcAccessMask);
 			return "ComputeBarrier: dstAccessMask=" + dstName + ", srcAccessMask=" + srcName;
 		}
 		else

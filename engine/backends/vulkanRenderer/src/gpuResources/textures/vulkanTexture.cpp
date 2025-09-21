@@ -1,79 +1,82 @@
 #include "vulkanTexture.h"
-#include "logger.h"
-#include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanDeviceQueue.h"
-#include "vulkanTextureFormatTranslation.h"
+#include "vulkanConvertTextureFormat.h"
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
 	// Static members:
-	std::unordered_set<VkFormat> Texture::s_valid08BitFormats =
+	std::unordered_set<Format> Texture::s_valid08BitFormats =
 	{
-		VK_FORMAT_R8_SRGB, VK_FORMAT_R8_UINT, VK_FORMAT_R8_SINT, VK_FORMAT_R8_USCALED, VK_FORMAT_R8_SSCALED, VK_FORMAT_R8_UNORM, VK_FORMAT_R8_SNORM,
-		VK_FORMAT_R8G8_SRGB, VK_FORMAT_R8G8_UINT, VK_FORMAT_R8G8_SINT, VK_FORMAT_R8G8_USCALED, VK_FORMAT_R8G8_SSCALED, VK_FORMAT_R8G8_UNORM, VK_FORMAT_R8G8_SNORM,
-		VK_FORMAT_R8G8B8_SRGB, VK_FORMAT_R8G8B8_UINT, VK_FORMAT_R8G8B8_SINT, VK_FORMAT_R8G8B8_USCALED, VK_FORMAT_R8G8B8_SSCALED, VK_FORMAT_R8G8B8_UNORM, VK_FORMAT_R8G8B8_SNORM,
-		VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UINT, VK_FORMAT_R8G8B8A8_SINT, VK_FORMAT_R8G8B8A8_USCALED, VK_FORMAT_R8G8B8A8_SSCALED, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_SNORM,
+		Formats::r8_srgb, Formats::r8_uint, Formats::r8_sint, Formats::r8_uscaled, Formats::r8_sscaled, Formats::r8_unorm, Formats::r8_snorm,
+		Formats::r8g8_srgb, Formats::r8g8_uint, Formats::r8g8_sint, Formats::r8g8_uscaled, Formats::r8g8_sscaled, Formats::r8g8_unorm, Formats::r8g8_snorm,
+		Formats::r8g8b8_srgb, Formats::r8g8b8_uint, Formats::r8g8b8_sint, Formats::r8g8b8_uscaled, Formats::r8g8b8_sscaled, Formats::r8g8b8_unorm, Formats::r8g8b8_snorm,
+		Formats::r8g8b8a8_srgb, Formats::r8g8b8a8_uint, Formats::r8g8b8a8_sint, Formats::r8g8b8a8_uscaled, Formats::r8g8b8a8_sscaled, Formats::r8g8b8a8_unorm, Formats::r8g8b8a8_snorm,
 	};
-	std::unordered_set<VkFormat> Texture::s_valid16BitFormats =
+	std::unordered_set<Format> Texture::s_valid16BitFormats =
 	{
-		VK_FORMAT_R16_UINT, VK_FORMAT_R16_SINT, VK_FORMAT_R16_USCALED, VK_FORMAT_R16_SSCALED, VK_FORMAT_R16_UNORM, VK_FORMAT_R16_SNORM, VK_FORMAT_R16_SFLOAT,
-		VK_FORMAT_R16G16_UINT, VK_FORMAT_R16G16_SINT, VK_FORMAT_R16G16_USCALED, VK_FORMAT_R16G16_SSCALED, VK_FORMAT_R16G16_UNORM, VK_FORMAT_R16G16_SNORM, VK_FORMAT_R16G16_SFLOAT,
-		VK_FORMAT_R16G16B16_UINT, VK_FORMAT_R16G16B16_SINT, VK_FORMAT_R16G16B16_USCALED, VK_FORMAT_R16G16B16_SSCALED, VK_FORMAT_R16G16B16_UNORM, VK_FORMAT_R16G16B16_SNORM, VK_FORMAT_R16G16B16_SFLOAT,
-		VK_FORMAT_R16G16B16A16_UINT, VK_FORMAT_R16G16B16A16_SINT, VK_FORMAT_R16G16B16A16_USCALED, VK_FORMAT_R16G16B16A16_SSCALED, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R16G16B16A16_SNORM, VK_FORMAT_R16G16B16A16_SFLOAT,
+		Formats::r16_uint, Formats::r16_sint, Formats::r16_uscaled, Formats::r16_sscaled, Formats::r16_unorm, Formats::r16_snorm, Formats::r16_sfloat,
+		Formats::r16g16_uint, Formats::r16g16_sint, Formats::r16g16_uscaled, Formats::r16g16_sscaled, Formats::r16g16_unorm, Formats::r16g16_snorm, Formats::r16g16_sfloat,
+		Formats::r16g16b16_uint, Formats::r16g16b16_sint, Formats::r16g16b16_uscaled, Formats::r16g16b16_sscaled, Formats::r16g16b16_unorm, Formats::r16g16b16_snorm, Formats::r16g16b16_sfloat,
+		Formats::r16g16b16a16_uint, Formats::r16g16b16a16_sint, Formats::r16g16b16a16_uscaled, Formats::r16g16b16a16_sscaled, Formats::r16g16b16a16_unorm, Formats::r16g16b16a16_snorm, Formats::r16g16b16a16_sfloat,
 	};
-	std::unordered_set<VkFormat> Texture::s_valid32BitFormats =
+	std::unordered_set<Format> Texture::s_valid32BitFormats =
 	{
-		VK_FORMAT_R32_UINT, VK_FORMAT_R32_SINT, VK_FORMAT_R32_SFLOAT,
-		VK_FORMAT_R32G32_UINT, VK_FORMAT_R32G32_SINT, VK_FORMAT_R32G32_SFLOAT,
-		VK_FORMAT_R32G32B32_UINT, VK_FORMAT_R32G32B32_SINT, VK_FORMAT_R32G32B32_SFLOAT,
-		VK_FORMAT_R32G32B32A32_UINT, VK_FORMAT_R32G32B32A32_SINT, VK_FORMAT_R32G32B32A32_SFLOAT,
+		Formats::r32_uint, Formats::r32_sint, Formats::r32_sfloat,
+		Formats::r32g32_uint, Formats::r32g32_sint, Formats::r32g32_sfloat,
+		Formats::r32g32b32_uint, Formats::r32g32b32_sint, Formats::r32g32b32_sfloat,
+		Formats::r32g32b32a32_uint, Formats::r32g32b32a32_sint, Formats::r32g32b32a32_sfloat,
 	};
-	std::unordered_set<VkFormat> Texture::s_valid64BitFormats =
+	std::unordered_set<Format> Texture::s_valid64BitFormats =
 	{
-		VK_FORMAT_R64_UINT, VK_FORMAT_R64_SINT, VK_FORMAT_R64_SFLOAT,
-		VK_FORMAT_R64G64_UINT, VK_FORMAT_R64G64_SINT, VK_FORMAT_R64G64_SFLOAT,
-		VK_FORMAT_R64G64B64_UINT, VK_FORMAT_R64G64B64_SINT, VK_FORMAT_R64G64B64_SFLOAT,
-		VK_FORMAT_R64G64B64A64_UINT, VK_FORMAT_R64G64B64A64_SINT, VK_FORMAT_R64G64B64A64_SFLOAT
+		Formats::r64_uint, Formats::r64_sint, Formats::r64_sfloat,
+		Formats::r64g64_uint, Formats::r64g64_sint, Formats::r64g64_sfloat,
+		Formats::r64g64b64_uint, Formats::r64g64b64_sint, Formats::r64g64b64_sfloat,
+		Formats::r64g64b64a64_uint, Formats::r64g64b64a64_sint, Formats::r64g64b64a64_sfloat
 	};
-	std::unordered_set<VkFormat> Texture::s_validSingleChannelFormats =
+	std::unordered_set<Format> Texture::s_validSingleChannelFormats =
 	{
-		VK_FORMAT_R8_SRGB, VK_FORMAT_R8_UINT, VK_FORMAT_R8_SINT, VK_FORMAT_R8_USCALED, VK_FORMAT_R8_SSCALED, VK_FORMAT_R8_UNORM, VK_FORMAT_R8_SNORM,
-		VK_FORMAT_R16_UINT, VK_FORMAT_R16_SINT, VK_FORMAT_R16_USCALED, VK_FORMAT_R16_SSCALED, VK_FORMAT_R16_UNORM, VK_FORMAT_R16_SNORM, VK_FORMAT_R16_SFLOAT,
-		VK_FORMAT_R32_UINT, VK_FORMAT_R32_SINT, VK_FORMAT_R32_SFLOAT,
-		VK_FORMAT_R64_UINT, VK_FORMAT_R64_SINT, VK_FORMAT_R64_SFLOAT,
+		Formats::r8_srgb, Formats::r8_uint, Formats::r8_sint, Formats::r8_uscaled, Formats::r8_sscaled, Formats::r8_unorm, Formats::r8_snorm,
+		Formats::r16_uint, Formats::r16_sint, Formats::r16_uscaled, Formats::r16_sscaled, Formats::r16_unorm, Formats::r16_snorm, Formats::r16_sfloat,
+		Formats::r32_uint, Formats::r32_sint, Formats::r32_sfloat,
+		Formats::r64_uint, Formats::r64_sint, Formats::r64_sfloat,
 	};
-	std::unordered_set<VkFormat> Texture::s_validDoubleChannelFormats =
+	std::unordered_set<Format> Texture::s_validDoubleChannelFormats =
 	{
-		VK_FORMAT_R8G8_SRGB, VK_FORMAT_R8G8_UINT, VK_FORMAT_R8G8_SINT, VK_FORMAT_R8G8_USCALED, VK_FORMAT_R8G8_SSCALED, VK_FORMAT_R8G8_UNORM, VK_FORMAT_R8G8_SNORM,
-		VK_FORMAT_R16G16_UINT, VK_FORMAT_R16G16_SINT, VK_FORMAT_R16G16_USCALED, VK_FORMAT_R16G16_SSCALED, VK_FORMAT_R16G16_UNORM, VK_FORMAT_R16G16_SNORM, VK_FORMAT_R16G16_SFLOAT,
-		VK_FORMAT_R32G32_UINT, VK_FORMAT_R32G32_SINT, VK_FORMAT_R32G32_SFLOAT,
-		VK_FORMAT_R64G64_UINT, VK_FORMAT_R64G64_SINT, VK_FORMAT_R64G64_SFLOAT,
+		Formats::r8g8_srgb, Formats::r8g8_uint, Formats::r8g8_sint, Formats::r8g8_uscaled, Formats::r8g8_sscaled, Formats::r8g8_unorm, Formats::r8g8_snorm,
+		Formats::r16g16_uint, Formats::r16g16_sint, Formats::r16g16_uscaled, Formats::r16g16_sscaled, Formats::r16g16_unorm, Formats::r16g16_snorm, Formats::r16g16_sfloat,
+		Formats::r32g32_uint, Formats::r32g32_sint, Formats::r32g32_sfloat,
+		Formats::r64g64_uint, Formats::r64g64_sint, Formats::r64g64_sfloat,
 	};
-	std::unordered_set<VkFormat> Texture::s_validTripleChannelFormats =
+	std::unordered_set<Format> Texture::s_validTripleChannelFormats =
 	{
-		VK_FORMAT_R8G8B8_SRGB, VK_FORMAT_R8G8B8_UINT, VK_FORMAT_R8G8B8_SINT, VK_FORMAT_R8G8B8_USCALED, VK_FORMAT_R8G8B8_SSCALED, VK_FORMAT_R8G8B8_UNORM, VK_FORMAT_R8G8B8_SNORM,
-		VK_FORMAT_R16G16B16_UINT, VK_FORMAT_R16G16B16_SINT, VK_FORMAT_R16G16B16_USCALED, VK_FORMAT_R16G16B16_SSCALED, VK_FORMAT_R16G16B16_UNORM, VK_FORMAT_R16G16B16_SNORM, VK_FORMAT_R16G16B16_SFLOAT,
-		VK_FORMAT_R32G32B32_UINT, VK_FORMAT_R32G32B32_SINT, VK_FORMAT_R32G32B32_SFLOAT,
-		VK_FORMAT_R64G64B64_UINT, VK_FORMAT_R64G64B64_SINT, VK_FORMAT_R64G64B64_SFLOAT,
+		Formats::r8g8b8_srgb, Formats::r8g8b8_uint, Formats::r8g8b8_sint, Formats::r8g8b8_uscaled, Formats::r8g8b8_sscaled, Formats::r8g8b8_unorm, Formats::r8g8b8_snorm,
+		Formats::r16g16b16_uint, Formats::r16g16b16_sint, Formats::r16g16b16_uscaled, Formats::r16g16b16_sscaled, Formats::r16g16b16_unorm, Formats::r16g16b16_snorm, Formats::r16g16b16_sfloat,
+		Formats::r32g32b32_uint, Formats::r32g32b32_sint, Formats::r32g32b32_sfloat,
+		Formats::r64g64b64_uint, Formats::r64g64b64_sint, Formats::r64g64b64_sfloat,
 	};
-	std::unordered_set<VkFormat> Texture::s_validQuadrupleChannelFormats =
+	std::unordered_set<Format> Texture::s_validQuadrupleChannelFormats =
 	{
-		VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UINT, VK_FORMAT_R8G8B8A8_SINT, VK_FORMAT_R8G8B8A8_USCALED, VK_FORMAT_R8G8B8A8_SSCALED, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_SNORM,
-		VK_FORMAT_R16G16B16A16_UINT, VK_FORMAT_R16G16B16A16_SINT, VK_FORMAT_R16G16B16A16_USCALED, VK_FORMAT_R16G16B16A16_SSCALED, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R16G16B16A16_SNORM, VK_FORMAT_R16G16B16A16_SFLOAT,
-		VK_FORMAT_R32G32B32A32_UINT, VK_FORMAT_R32G32B32A32_SINT, VK_FORMAT_R32G32B32A32_SFLOAT,
-		VK_FORMAT_R64G64B64A64_UINT, VK_FORMAT_R64G64B64A64_SINT, VK_FORMAT_R64G64B64A64_SFLOAT
+		Formats::r8g8b8a8_srgb, Formats::r8g8b8a8_uint, Formats::r8g8b8a8_sint, Formats::r8g8b8a8_uscaled, Formats::r8g8b8a8_sscaled, Formats::r8g8b8a8_unorm, Formats::r8g8b8a8_snorm,
+		Formats::r16g16b16a16_uint, Formats::r16g16b16a16_sint, Formats::r16g16b16a16_uscaled, Formats::r16g16b16a16_sscaled, Formats::r16g16b16a16_unorm, Formats::r16g16b16a16_snorm, Formats::r16g16b16a16_sfloat,
+		Formats::r32g32b32a32_uint, Formats::r32g32b32a32_sint, Formats::r32g32b32a32_sfloat,
+		Formats::r64g64b64a64_uint, Formats::r64g64b64a64_sint, Formats::r64g64b64a64_sfloat
 	};
-	std::unordered_set<VkFormat> Texture::s_validDepthFormats =
-	{ VK_FORMAT_D16_UNORM, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT };
-	std::unordered_set<VkFormat> Texture::s_validStencilFormats =
-	{ VK_FORMAT_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT };
+	std::unordered_set<Format> Texture::s_validDepthFormats =
+	{ Formats::d16_unorm, Formats::d16_unorm_s8_uint, Formats::d24_unorm_s8_uint, Formats::d32_sfloat, Formats::d32_sfloat_s8_uint };
+	std::unordered_set<Format> Texture::s_validStencilFormats =
+	{ Formats::s8_uint, Formats::d16_unorm_s8_uint, Formats::d24_unorm_s8_uint, Formats::d32_sfloat_s8_uint };
 
 
 
-	// Virtual Destructor:
+	// Constructor/Destructor:
+	Texture::Texture()
+	{
+
+	}
 	Texture::~Texture()
 	{
 
@@ -103,11 +106,11 @@ namespace vulkanRendererBackend
 	{
 		return m_channels;
 	}
-	const emberEngine::TextureFormat& Texture::GetFormat() const
+	const emberEngine::TextureFormat& Texture::GetTextureFormat() const
 	{
-		return TranslateTextureFormat(m_format);
+		return ConvertTextureFormat(m_format);
 	}
-	VkFormat Texture::GetVkFormat() const
+	Format Texture::GetFormat() const
 	{
 		return m_format;
 	}
@@ -115,7 +118,7 @@ namespace vulkanRendererBackend
 	{
 		return m_pImage.get();
 	}
-	VkDescriptorType Texture::GetVkDescriptorType() const
+	DescriptorType Texture::GetDescriptorType() const
 	{
 		return m_descriptorType;
 	}
@@ -123,7 +126,7 @@ namespace vulkanRendererBackend
 
 
 	// Protected methods:
-	uint32_t Texture::GetChannelCount(VkFormat format)
+	uint32_t Texture::GetChannelCount(Format format)
 	{
 		if (s_validSingleChannelFormats.contains(format))
 			return 1;
@@ -142,10 +145,10 @@ namespace vulkanRendererBackend
 		if (channels > 0)
 			return channels;
 
-		throw std::runtime_error("Unsupported Texture format: " + std::to_string(static_cast<int>(format)));
+		throw std::runtime_error("Unsupported Texture format: " + Formats::ToString(format));
 		return -1;
 	}
-	uint32_t Texture::BytesPerChannel(VkFormat format)
+	uint32_t Texture::BytesPerChannel(Format format)
 	{
 		if (s_valid08BitFormats.contains(format))
 			return 1;
@@ -156,42 +159,42 @@ namespace vulkanRendererBackend
 		if (s_valid64BitFormats.contains(format))
 			return 8;
 
-		throw std::runtime_error("Unsupported Texture format: " + std::to_string(static_cast<int>(format)));
+		throw std::runtime_error("Unsupported Texture format: " + Formats::ToString(format));
 		return -1;
 	}
-	bool Texture::IsValidImageFormat(VkFormat format)
+	bool Texture::IsValidImageFormat(Format format)
 	{
 		return s_valid08BitFormats.contains(format) || s_valid16BitFormats.contains(format) || s_valid32BitFormats.contains(format) || s_valid64BitFormats.contains(format);
 	}
-	bool Texture::IsDepthFormat(VkFormat format)
+	bool Texture::IsDepthFormat(Format format)
 	{
 		return s_validDepthFormats.contains(format);
 	}
-	bool Texture::IsStencilFormat(VkFormat format)
+	bool Texture::IsStencilFormat(Format format)
 	{
 		return s_validStencilFormats.contains(format);
 	}
-	void Texture::CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
+	void Texture::CreateImageBase(ImageType imageType, ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, ImageViewType viewType, const DeviceQueue& queue)
 	{
-		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+		ImageCreateInfo imageInfo = {};
 		imageInfo.imageType = imageType;
-		imageInfo.extent.width = m_width;
-		imageInfo.extent.height = m_height;
-		imageInfo.extent.depth = m_depth;
+		imageInfo.extent.x = m_width;
+		imageInfo.extent.y = m_height;
+		imageInfo.extent.z = m_depth;
 		imageInfo.mipLevels = subresourceRange.levelCount;
 		imageInfo.arrayLayers = subresourceRange.layerCount;
 		imageInfo.format = format;
-		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		imageInfo.usage = usageFlags;
-		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.tiling = ImageTilings::optimal;
+		imageInfo.initialLayout = ImageLayouts::undefined;
+		imageInfo.usages = usageFlags;
+		imageInfo.sharingMode = SharingModes::exclusive;
+		imageInfo.sampleCountFlags = SampleCountFlags::sample_count_1_bit;
 		imageInfo.flags = imageFlags;
 		imageInfo.queueFamilyIndexCount = 1;
 		imageInfo.pQueueFamilyIndices = &queue.familyIndex;
 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+		AllocationCreateInfo allocInfo = {};
+		allocInfo.usages = MemoryUsages::auto_prefer_device;
 		allocInfo.requiredFlags = memoryFlags;
 
 		m_pImage = std::make_unique<VmaImage>(m_name, imageInfo, allocInfo, subresourceRange, viewType, queue);

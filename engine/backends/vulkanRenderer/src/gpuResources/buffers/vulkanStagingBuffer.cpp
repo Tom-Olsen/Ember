@@ -1,13 +1,14 @@
 #include "vulkanStagingBuffer.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
-#include "vulkanAccessMasks.h"
+#include "vulkanAccessMask.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStages.h"
+#include "vulkanPipelineStage.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanTexture.h"
 #include <cstring>
+#include <vulkan/vulkan.h>
 
 
 
@@ -20,14 +21,14 @@ namespace vulkanRendererBackend
 		m_name = name;
 
 		// Create buffer:
-		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		BufferCreateInfo bufferInfo = {};
 		bufferInfo.size = m_size;
-		bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		bufferInfo.usages = BufferUsageFlags::transfer_src_bit | BufferUsageFlags::transfer_dst_bit;
+		bufferInfo.sharingMode = SharingModes::exclusive;
 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+		AllocationCreateInfo allocInfo = {};
+		allocInfo.usages = MemoryUsages::auto_prefer_host;
+		allocInfo.flags = AllocationCreateFlags::mapped_bit | AllocationCreateFlags::host_access_random_bit;
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
@@ -114,7 +115,8 @@ namespace vulkanRendererBackend
 		region.imageSubresource.baseArrayLayer = 0;
 		region.imageSubresource.layerCount = layerCount;
 		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = pDstTexture->GetVmaImage()->GetExtent();
+		Uint3 extent = pDstTexture->GetVmaImage()->GetExtent();
+		region.imageExtent = VkExtent3D{ extent.x, extent.y, extent.z };
 
 		vkCmdCopyBufferToImage(
 			vkCommandBuffer,
@@ -155,16 +157,16 @@ namespace vulkanRendererBackend
 	void StagingBuffer::DownloadFromTexture(VkCommandBuffer commandBuffer, Texture* pSrcTexture)
     {
         // Cache original layout:
-        VkImageLayout originalLayout = pSrcTexture->GetVmaImage()->GetLayout();
+		VkImageLayout originalLayout = static_cast<VkImageLayout>(pSrcTexture->GetVmaImage()->GetImageLayout());
 
         // Ember::ToDo: track stage and access usage of textures and use them here!
 		// Transition 0: Layout: original->srcTransfer, Queue: transfer
         {
 		    VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		    VkPipelineStageFlags2 srcStage = pipelineStage::bottomOfPipe;   // use tracked stage here.
-		    VkPipelineStageFlags2 dstStage = pipelineStage::copy;
-		    VkAccessFlags2 srcAccessMask = accessMask::bottomOfPipe::none;  // use tracked access here.
-		    VkAccessFlags2 dstAccessMask = accessMask::copy::transferRead;
+		    PipelineStage srcStage = PipelineStages::bottomOfPipe;   // use tracked stage here.
+		    PipelineStage dstStage = PipelineStages::copy;
+		    AccessMask srcAccessMask = AccessMasks::BottomOfPipe::none;  // use tracked access here.
+		    AccessMask dstAccessMask = AccessMasks::Copy::transferRead;
             pSrcTexture->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
         }
 
@@ -194,10 +196,10 @@ namespace vulkanRendererBackend
 		// Transition 1: Layout: srcTransfer->original, Queue: transfer
         {
 		    VkImageLayout newLayout = originalLayout;
-		    VkPipelineStageFlags2 srcStage = pipelineStage::copy;
-		    VkPipelineStageFlags2 dstStage = pipelineStage::bottomOfPipe;   // use tracked stage here.
-		    VkAccessFlags2 srcAccessMask = accessMask::copy::transferRead;
-		    VkAccessFlags2 dstAccessMask = accessMask::bottomOfPipe::none;  // use access stage here.
+		    PipelineStage srcStage = PipelineStages::copy;
+		    PipelineStage dstStage = PipelineStages::bottomOfPipe;   // use tracked stage here.
+		    AccessMask srcAccessMask = AccessMasks::Copy::transferRead;
+		    AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;  // use tracked access here.
             pSrcTexture->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
         }
     }

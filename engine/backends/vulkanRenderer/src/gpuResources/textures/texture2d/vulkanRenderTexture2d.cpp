@@ -2,13 +2,14 @@
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include "vulkanLogicalDevice.h"
 
 
 
 namespace vulkanRendererBackend
 {
 	// Constructor/Desctructor:
-	RenderTexture2d::RenderTexture2d(const std::string& name, VkFormat format, int width, int height, VkImageUsageFlags usageFlags)
+	RenderTexture2d::RenderTexture2d(const std::string& name, Format format, int width, int height, ImageUsageFlag usageFlags)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("RenderTexture2d '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
@@ -18,11 +19,11 @@ namespace vulkanRendererBackend
 		m_height = height;
 		m_channels = GetChannelCount(format);
 		m_format = format;
-		m_descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		m_descriptorType = DescriptorTypes::storage_image;
 
 		// Define subresource range:
-		VkImageSubresourceRange subresourceRange;
-		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		ImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = ImageAspectFlags::color_bit;
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.baseMipLevel = 0;
 		subresourceRange.layerCount = 1;
@@ -30,11 +31,11 @@ namespace vulkanRendererBackend
 
 		// Create image:
 		if (usageFlags == 0)	// Default usage flags:
-			usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		VkImageCreateFlags imageFlags = 0;
-		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
+			usageFlags = ImageUsageFlags::transfer_src_bit | ImageUsageFlags::transfer_dst_bit | ImageUsageFlags::storage_bit | ImageUsageFlags::sampled_bit | ImageUsageFlags::color_attachment_bit;
+		ImageCreateFlag imageFlags = 0;
+		MemoryPropertyFlag memoryFlags = MemoryPropertyFlags::device_local_bit;
+		ImageViewType viewType = ImageViewTypes::view_type_2d;
+		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
 		NAME_VK_IMAGE(m_pImage->GetVkImage(), "RenderTexture2d " + m_name);

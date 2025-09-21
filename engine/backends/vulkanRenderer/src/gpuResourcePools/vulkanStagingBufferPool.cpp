@@ -1,5 +1,4 @@
 #include "vulkanStagingBufferPool.h"
-#include "logger.h"
 #include "vulkanStagingBuffer.h"
 
 
@@ -44,24 +43,5 @@ namespace vulkanRendererBackend
     {
         m_pool.push(pStagingBuffer);
         m_currentUsage--;
-    }
-    void StagingBufferPool::ShrinkToFit()
-    {
-        if (m_currentUsage != 0)
-        {
-            LOG_WARN("Trying to shrink StagingBufferPool which still has StagingBuffers checked out: currentUsage  = {} != 0.", m_currentUsage);
-            return;
-        }
-
-        // Resize storage:
-        for (size_t i = m_peakUsage; i < m_storage.size(); i++)
-            delete m_storage[i];
-        m_storage.resize(m_peakUsage);
-
-        // Rebuild queue:
-        std::queue<StagingBuffer*> newPool;
-        for (int i = 0; i < m_storage.size(); i++)
-            newPool.push(m_storage[i]);
-        std::swap(m_pool, newPool);
     }
 }

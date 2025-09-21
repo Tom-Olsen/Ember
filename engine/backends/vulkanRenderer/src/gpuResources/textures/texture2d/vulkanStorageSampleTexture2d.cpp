@@ -1,10 +1,11 @@
 #include "vulkanStorageSampleTexture2d.h"
 #include "assetLoader.h"
 #include "vmaImage.h"
-#include "vulkanAccessMasks.h"
+#include "vulkanAccessMask.h"
 #include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStages.h"
+#include "vulkanPipelineStage.h"
 #include "vulkanStagingBuffer.h"
 
 
@@ -12,7 +13,7 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Desctructor:
-	StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, VkFormat format, int width, int height, void* data)
+	StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, Format format, int width, int height, void* data)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("StorageSampleTexture2d '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
@@ -22,14 +23,14 @@ namespace vulkanRendererBackend
 		m_height = height;
         m_channels = GetChannelCount(format);
 		m_format = format;
-		m_descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		m_descriptorType = DescriptorTypes::storage_image;
 
         std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Staging(data));
         Upload(pStagingBuffer.get());
 
 		NAME_VK_IMAGE(m_pImage->GetVkImage(), "StorageSampleTexture2d " + m_name);
 	}
-    StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path)
+    StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, Format format, const std::filesystem::path& path)
     {
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("StorageSampleTexture2d '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
@@ -42,7 +43,7 @@ namespace vulkanRendererBackend
 		m_height = imageAsset.height;
         m_channels = channels;
 		m_format = format;
-		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		m_descriptorType = DescriptorTypes::storage_image;
         
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Staging((void*)imageAsset.pixels.data()));
 		Upload(pStagingBuffer.get());
@@ -65,19 +66,19 @@ namespace vulkanRendererBackend
 		pStagingBuffer->SetData(data, bufferSize);
 
 		// Define subresource range:
-		VkImageSubresourceRange subresourceRange;
-		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		ImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = ImageAspectFlags::color_bit;
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.baseMipLevel = 0;
 		subresourceRange.layerCount = 1;
 		subresourceRange.levelCount = 1;	// no mipmapping for storage images.
 
 		// Create image:
-		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		VkImageCreateFlags imageFlags = 0;
-		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
+		ImageUsageFlag usageFlags = ImageUsageFlags::transfer_dst_bit | ImageUsageFlags::storage_bit | ImageUsageFlags::sampled_bit;
+		ImageCreateFlag imageFlags = 0;
+		MemoryPropertyFlag memoryFlags = MemoryPropertyFlags::device_local_bit;
+		ImageViewType viewType = ImageViewTypes::view_type_2d;
+		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
 		return pStagingBuffer;
@@ -86,24 +87,24 @@ namespace vulkanRendererBackend
     {
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = pipelineStage::topOfPipe;
-			VkPipelineStageFlags2 dstStage = pipelineStage::transfer;
-			VkAccessFlags2 srcAccessMask = accessMask::topOfPipe::none;
-			VkAccessFlags2 dstAccessMask = accessMask::transfer::transferWrite;
+			ImageLayout newLayout = ImageLayouts::transfer_dst_optimal;
+			PipelineStage srcStage = PipelineStages::topOfPipe;
+			PipelineStage dstStage = PipelineStages::transfer;
+			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
+			AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
 			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 
 		// Upload: pStagingBuffer -> texture
-		pStagingBuffer->UploadToTexture(Context::logicalDevice.GetTransferQueue(), this, m_pImage->GetSubresourceRange().layerCount);
+		pStagingBuffer->UploadToTexture(Context::GetLogicalDevice()->GetTransferQueue(), this, m_pImage->GetImageSubresourceRange().layerCount);
 
 		// Transition 1: Layout: transfer->general, Queue: transfer->compute
 		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-			VkPipelineStageFlags2 srcStage = pipelineStage::transfer;
-			VkPipelineStageFlags2 dstStage = pipelineStage::computeShader;
-			VkAccessFlags2 srcAccessMask = accessMask::transfer::transferWrite;
-			VkAccessFlags2 dstAccessMask = accessMask::computeShader::memoryRead;
+			ImageLayout newLayout = ImageLayouts::general;
+			PipelineStage srcStage = PipelineStages::transfer;
+			PipelineStage dstStage = PipelineStages::computeShader;
+			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
+			AccessMask dstAccessMask = AccessMasks::ComputeShader::memoryRead;
 			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
     }

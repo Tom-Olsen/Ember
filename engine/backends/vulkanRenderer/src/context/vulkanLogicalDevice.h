@@ -1,8 +1,13 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanLogicalDevice_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanLogicalDevice_h__
+#pragma once
 #include "vulkanDeviceQueue.h"
-#include <vulkan/vulkan.h>
 #include <vector>
+
+
+
+// Forward declarations:
+typedef struct VkDevice_T* VkDevice;
+typedef struct VkPhysicalDevice_T* VkPhysicalDevice;
+typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
 
 
 
@@ -24,7 +29,7 @@ namespace vulkanRendererBackend
 		DeviceQueue m_transferQueue;	// async transfer queue
 
 	public: // Methods:
-		LogicalDevice();
+		LogicalDevice(PhysicalDevice* pPhysicalDevice, Surface* pSurface, std::vector<const char*>& deviceExtensions);
 		~LogicalDevice();
 
 		// Non-copyable:
@@ -34,8 +39,6 @@ namespace vulkanRendererBackend
 		// Movable:
 		LogicalDevice(LogicalDevice&& other) noexcept;
 		LogicalDevice& operator=(LogicalDevice&& other) noexcept;
-
-		void Init(PhysicalDevice* pPhysicalDevice, Surface* pSurface, std::vector<const char*> deviceExtensions);
 
 		// Getters:
 		const VkDevice& GetVkDevice() const;
@@ -51,7 +54,3 @@ namespace vulkanRendererBackend
 		void PrintQueueFamilyInfo(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanLogicalDevice_h__

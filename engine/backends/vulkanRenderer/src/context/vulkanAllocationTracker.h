@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanAllocationTracker_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanAllocationTracker_h__
+#pragma once
 #include <unordered_set>
 
 
@@ -40,7 +39,3 @@ namespace vulkanRendererBackend
 		void MoveFrom(AllocationTracker& other) noexcept;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanAllocationTracker_h__

@@ -7,10 +7,11 @@ namespace emberBackendInterface
 {
     class IComputeShader
     {
-    public: // Virtual destructor for v-table:
+    public: // Methods:
+        // Virtual destructor for v-table:
         virtual ~IComputeShader() = default;
 
-    public: // Methods:
+        // Getters:
         virtual Uint3 GetBlockSize() const = 0;
     };
 }

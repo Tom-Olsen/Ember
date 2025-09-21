@@ -1,6 +1,7 @@
 #include "vulkanInstance.h"
 #include "logger.h"
 #include "vulkanMacros.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -23,37 +24,7 @@ namespace vulkanRendererBackend
 
 
 	// Constructor/Destructor:
-	Instance::Instance()
-	{
-		m_instance = VK_NULL_HANDLE;
-		m_debugMessenger = VK_NULL_HANDLE;
-	}
-	Instance::~Instance()
-	{
-		Cleanup();
-	}
-
-
-
-	// Move semantics:
-	Instance::Instance(Instance&& other) noexcept
-	{
-		MoveFrom(other);
-	}
-	Instance& Instance::operator=(Instance&& other) noexcept
-	{
-		if (this != &other)
-		{
-			Cleanup();
-			MoveFrom(other);
-		}
-		return *this;
-	}
-
-
-
-	// Public methods:
-	void Instance::Init(std::vector<const char*> instanceExtensions)
+	Instance::Instance(std::vector<const char*> instanceExtensions)
 	{
 		VkApplicationInfo applicationInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
 		applicationInfo.pApplicationName = "Application Name";
@@ -103,6 +74,31 @@ namespace vulkanRendererBackend
 		VKA(pfnCreateDebugUtilsMessengerEXT(m_instance, &debugCreateInfo, nullptr, &m_debugMessenger));
 		#endif
 	}
+	Instance::~Instance()
+	{
+		Cleanup();
+	}
+
+
+
+	// Move semantics:
+	Instance::Instance(Instance&& other) noexcept
+	{
+		MoveFrom(other);
+	}
+	Instance& Instance::operator=(Instance&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Cleanup();
+			MoveFrom(other);
+		}
+		return *this;
+	}
+
+
+
+	// Public methods:
 	const VkInstance& Instance::GetVkInstance() const
 	{
 		return m_instance;

@@ -1,6 +1,9 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanMemoryAllocator_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanMemoryAllocator_h__
-#include "vk_mem_alloc.h"
+#pragma once
+
+
+
+// Forward declarations:
+typedef struct VmaAllocator_T* VmaAllocator;
 
 
 
@@ -19,7 +22,7 @@ namespace vulkanRendererBackend
 		VmaAllocator m_pAllocator;
 
 	public: // Methods:
-		MemoryAllocator();
+		MemoryAllocator(Instance* pInstance, LogicalDevice* pLogicalDevice, PhysicalDevice* pPhysicalDevice);
 		~MemoryAllocator();
 
 		// Non-copyable:
@@ -30,7 +33,6 @@ namespace vulkanRendererBackend
 		MemoryAllocator(MemoryAllocator&& other) noexcept;
 		MemoryAllocator& operator=(MemoryAllocator&& other) noexcept;
 
-		void Init(Instance* pInstance, LogicalDevice* pLogicalDevice, PhysicalDevice* pPhysicalDevice);
 		const VmaAllocator& GetVmaAllocator() const;
 
 	private: // Methods:
@@ -38,7 +40,3 @@ namespace vulkanRendererBackend
 		void MoveFrom(MemoryAllocator& other) noexcept;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanMemoryAllocator_h__

@@ -8,45 +8,14 @@
 #include <assert.h>
 #include <set>
 #include <sstream>
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	LogicalDevice::LogicalDevice()
-	{
-		m_device = VK_NULL_HANDLE;
-		m_graphicsQueue = { VK_NULL_HANDLE, (uint32_t)-1};
-		m_presentQueue  = { VK_NULL_HANDLE, (uint32_t)-1};
-		m_computeQueue  = { VK_NULL_HANDLE, (uint32_t)-1};
-		m_transferQueue = { VK_NULL_HANDLE, (uint32_t)-1};
-	}
-	LogicalDevice::~LogicalDevice()
-	{
-		Cleanup();
-	}
-
-
-	// Move semantics:
-	LogicalDevice::LogicalDevice(LogicalDevice&& other) noexcept
-	{
-		MoveFrom(other);
-	}
-	LogicalDevice& LogicalDevice::operator=(LogicalDevice&& other) noexcept
-	{
-		if (this != &other)
-		{
-			Cleanup();
-			MoveFrom(other);
-		}
-		return *this;
-	}
-
-
-
-	// Public methods:
-	void LogicalDevice::Init(PhysicalDevice* pPhysicalDevice, Surface* pSurface, std::vector<const char*> deviceExtensions)
+	LogicalDevice::LogicalDevice(PhysicalDevice* pPhysicalDevice, Surface* pSurface, std::vector<const char*>& deviceExtensions)
 	{
 		// Assertions:
 		assert(pPhysicalDevice != nullptr);
@@ -113,9 +82,30 @@ namespace vulkanRendererBackend
 			vkGetDeviceQueue(m_device, m_transferQueue.familyIndex, 0, &m_transferQueue.queue);
 		}
 	}
+	LogicalDevice::~LogicalDevice()
+	{
+		Cleanup();
+	}
+
+
+	// Move semantics:
+	LogicalDevice::LogicalDevice(LogicalDevice&& other) noexcept
+	{
+		MoveFrom(other);
+	}
+	LogicalDevice& LogicalDevice::operator=(LogicalDevice&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Cleanup();
+			MoveFrom(other);
+		}
+		return *this;
+	}
 
 
 
+	// Public methods:
 	// Getters:
 	const VkDevice& LogicalDevice::GetVkDevice() const
 	{
@@ -155,10 +145,10 @@ namespace vulkanRendererBackend
 		m_transferQueue = other.m_transferQueue;
 
 		other.m_device = VK_NULL_HANDLE;
-		other.m_graphicsQueue = {};
-		other.m_presentQueue = {};
-		other.m_computeQueue = {};
-		other.m_transferQueue = {};
+		other.m_graphicsQueue = DeviceQueue{VK_NULL_HANDLE, (uint32_t)-1};
+		other.m_presentQueue = DeviceQueue{VK_NULL_HANDLE, (uint32_t)-1};
+		other.m_computeQueue = DeviceQueue{VK_NULL_HANDLE, (uint32_t)-1};
+		other.m_transferQueue = DeviceQueue{VK_NULL_HANDLE, (uint32_t)-1};
 	}
 	std::pair<uint32_t, uint32_t> LogicalDevice::FindGraphicsComputeTransferQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR) const
 	{

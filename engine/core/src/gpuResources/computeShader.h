@@ -18,11 +18,12 @@ namespace emberEngine
 	private: // Members:
 		std::unique_ptr<emberBackendInterface::IComputeShader> m_pIComputeShader;
 
-	public: // Constructors/Destructor:
+	public: // Methods:
+		// Constructor/Destructor:
 		ComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
 		~ComputeShader();
 
-	public: // Methods:
+		// Getters:
 		Uint3 GetBlockSize() const;
 	};
 }

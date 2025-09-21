@@ -6,20 +6,17 @@
 #include "vulkanMacros.h"
 #include "vulkanMesh.h"
 #include "vulkanRenderPassManager.h"
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ForwardTransparentPipeline::ForwardTransparentPipeline
-    (const std::vector<char>& vertexCode,
-        const std::vector<char>& fragmentCode,
-        const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
-        const VertexInputDescriptions* const pVertexInputDescriptions)
+    ForwardTransparentPipeline::ForwardTransparentPipeline(const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
     {
         // Create pipeline Layout:
-        CreatePipelineLayout(vkDescriptorSetLayoutBindings);
+        CreatePipelineLayout(descriptorSetLayoutBindings);
 
         // Create vertex and fragment shader modules from .spv files:
         VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
@@ -41,12 +38,12 @@ namespace vulkanRendererBackend
 
 
     // Private:
-    void ForwardTransparentPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
+    void ForwardTransparentPipeline::CreatePipelineLayout(std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
     {
         // Descriptor set layout:
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-        descriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.size();
-        descriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.data();
+        descriptorSetLayoutCreateInfo.bindingCount = descriptorSetLayoutBindings.size();
+        descriptorSetLayoutCreateInfo.pBindings = reinterpret_cast<VkDescriptorSetLayoutBinding*>(descriptorSetLayoutBindings.data());
         VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
 
         // Push constants layout:
@@ -63,7 +60,7 @@ namespace vulkanRendererBackend
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
     }
-    void ForwardTransparentPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
+    void ForwardTransparentPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, VertexInputDescriptions* pVertexInputDescriptions)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -82,9 +79,9 @@ namespace vulkanRendererBackend
         // Vertex input:
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         vertexInputState.vertexBindingDescriptionCount = pVertexInputDescriptions->size;
-        vertexInputState.pVertexBindingDescriptions = pVertexInputDescriptions->bindings.data();
+        vertexInputState.pVertexBindingDescriptions = reinterpret_cast<VkVertexInputBindingDescription*>(pVertexInputDescriptions->bindings.data());
         vertexInputState.vertexAttributeDescriptionCount = pVertexInputDescriptions->size;
-        vertexInputState.pVertexAttributeDescriptions = pVertexInputDescriptions->attributes.data();
+        vertexInputState.pVertexAttributeDescriptions = reinterpret_cast<VkVertexInputAttributeDescription*>(pVertexInputDescriptions->attributes.data());
 
         // Input assembly:
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
@@ -110,7 +107,7 @@ namespace vulkanRendererBackend
         // Multisampling:
         VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
         multisampleState.sampleShadingEnable = VK_FALSE;
-        multisampleState.rasterizationSamples = Context::msaaSamples;
+        multisampleState.rasterizationSamples = static_cast<VkSampleCountFlagBits>(Context::GetMsaaSamples());
         multisampleState.minSampleShading = 1.0f;           // Optional
         multisampleState.pSampleMask = nullptr;             // Optional
         multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional

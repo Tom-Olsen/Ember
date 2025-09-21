@@ -1,6 +1,9 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanDescriptorPool_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanDescriptorPool_h__
-#include <vulkan/vulkan.h>
+#pragma once
+
+
+
+// Forward declarations:
+typedef struct VkDescriptorPool_T* VkDescriptorPool;
 
 
 
@@ -18,7 +21,7 @@ namespace vulkanRendererBackend
 		LogicalDevice* m_pLogicalDevice;
 
 	public: // Methods:
-		DescriptorPool();
+		DescriptorPool(LogicalDevice* pLogicalDevice);
 		~DescriptorPool();
 
 		// Non-copyable:
@@ -29,7 +32,6 @@ namespace vulkanRendererBackend
 		DescriptorPool(DescriptorPool&& other) noexcept;
 		DescriptorPool& operator=(DescriptorPool&& other) noexcept;
 
-		void Init(LogicalDevice* pLogicalDevice);
 		const VkDescriptorPool& GetVkDescriptorPool() const;
 
 	private: // Methods:
@@ -37,7 +39,3 @@ namespace vulkanRendererBackend
 		void MoveFrom(DescriptorPool& other) noexcept;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanDescriptorPool_h__

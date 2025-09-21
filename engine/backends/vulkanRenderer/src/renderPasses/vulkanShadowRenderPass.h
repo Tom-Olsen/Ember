@@ -1,7 +1,7 @@
 #pragma once
 #include "vulkanRenderPass.h"
+#include "vulkanFormat.h"
 #include <memory>
-#include <vulkan/vulkan.h>
 
 
 
@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
 		std::unique_ptr<DepthTexture2dArray> m_shadowMaps;
 
 	public: // Members:
-		static VkFormat s_shadowMapFormat;
+		static Format s_shadowMapFormat;
 		static uint32_t s_layerCount;
 
 	public: // Methods:

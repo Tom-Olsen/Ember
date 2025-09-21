@@ -88,6 +88,10 @@ source_group("Renderer" FILES ${RENDERER_FILES})
 file(GLOB RENDER_PASSES_FILES "src/renderPasses/*.*")
 source_group("Render Passes" FILES ${RENDER_PASSES_FILES})
 
+# src/types/*:
+file(GLOB TYPES_FILES "src/types/*.*")
+source_group("Types" FILES ${TYPES_FILES})
+
 # src/utility/*:
 file(GLOB UTILITY_FILES "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
@@ -95,10 +99,6 @@ source_group("Utility" FILES ${UTILITY_FILES})
 # ../../interfaces/renderer/*:
 file(GLOB RENDERER_INTERFACE_FILES "../../interfaces/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
-
-# ../../interfaces/utility/*:
-file(GLOB UTILITY_INTERFACE_FILES "../../interfaces/utility/*.*")
-source_group("Utility Interface" FILES ${UTILITY_INTERFACE_FILES})
 
 # ../../interfaces/window/*:
 file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*.*")
@@ -125,9 +125,9 @@ add_library(${PROJECT_NAME}
     ${PUSH_CONSTANTS_FILES}
     ${RENDERER_FILES}
     ${RENDER_PASSES_FILES}
+    ${TYPES_FILES}
     ${UTILITY_FILES}
     ${RENDERER_INTERFACE_FILES}
-    ${UTILITY_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
 
 # Only expose public files to consumer:
@@ -148,9 +148,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderer
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPasses
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/types
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/utility
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window)
 # ---------------------------------------------------
 

@@ -1,7 +1,13 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_vulkanSwapchain_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_vulkanSwapchain_h__
-#include <vulkan/vulkan.h>
+#pragma once
+#include "vulkanImageUsageFlag.h"
 #include <vector>
+
+
+
+// Forward declerations:
+typedef struct VkSwapchainKHR_T* VkSwapchainKHR;
+typedef struct VkImage_T* VkImage;
+typedef struct VkImageView_T* VkImageView;
 
 
 
@@ -21,10 +27,10 @@ namespace vulkanRendererBackend
 		std::vector<VkImageView> m_imageViews;
 		LogicalDevice* m_pLogicalDevice;
 		Surface* m_pSurface;
-		VkImageUsageFlags m_usage;
+		ImageUsageFlag m_usages;
 
 	public: // Methods:
-		Swapchain();
+		Swapchain(LogicalDevice* pLogicalDevice, Surface* pSurface, ImageUsageFlag usages, Swapchain* pOldSwapchain = nullptr);
 		~Swapchain();
 
 		// Non-copyable:
@@ -35,7 +41,7 @@ namespace vulkanRendererBackend
 		Swapchain(Swapchain&& other) noexcept;
 		Swapchain& operator=(Swapchain&& other) noexcept;
 
-		void Init(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usage, Swapchain* pOldSwapchain = nullptr);
+		void Init(LogicalDevice* pLogicalDevice, Surface* pSurface, ImageUsageFlag usages, Swapchain* pOldSwapchain = nullptr);
 
 		// Getters:
         int GetImageCount() const;
@@ -46,12 +52,8 @@ namespace vulkanRendererBackend
 	private: // Methods:
 		void Cleanup();
 		void MoveFrom(Swapchain& other) noexcept;
-		void CreateSwapchain(VkImageUsageFlags usage, Swapchain* pOldSwapchain);
+		void CreateSwapchain(Swapchain* pOldSwapchain);
 		void CreateImages();
 		void CreateImageViews();
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_vulkanSwapchain_h__

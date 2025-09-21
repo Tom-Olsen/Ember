@@ -1,7 +1,9 @@
 #include "vulkanBuffer.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanStagingBuffer.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -40,7 +42,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Upload/Download:
+	// Data transfer:
 	void Buffer::Upload(VkCommandBuffer vkCommandBuffer, void* pSrc, uint64_t size)
 	{
 		size = std::min(size, m_size);
@@ -53,7 +55,7 @@ namespace vulkanRendererBackend
 		size = std::min(size, m_size);
 		StagingBuffer stagingBuffer(size, "tempB Buffer::Upload(...)");
 		stagingBuffer.SetData(pSrc, size);
-		stagingBuffer.UploadToBuffer(this, Context::logicalDevice.GetTransferQueue());
+		stagingBuffer.UploadToBuffer(this, Context::GetLogicalDevice()->GetTransferQueue());
 	}
 	void Buffer::Download(VkCommandBuffer vkCommandBuffer, void* pDst, uint64_t size)
 	{
@@ -66,7 +68,7 @@ namespace vulkanRendererBackend
 	{
 		size = std::min(size, m_size);
 		StagingBuffer stagingBuffer(size, "tempB Buffer::Download(...)");
-		stagingBuffer.DownloadFromBuffer(this, Context::logicalDevice.GetTransferQueue());
+		stagingBuffer.DownloadFromBuffer(this, Context::GetLogicalDevice()->GetTransferQueue());
 		stagingBuffer.GetData(pDst, size);
 	}
 }

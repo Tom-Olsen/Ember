@@ -1,5 +1,6 @@
 #include "vulkanUniformBuffer.h"
 #include "spirvReflect.h"
+#include "vk_mem_alloc.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -16,14 +17,14 @@ namespace vulkanRendererBackend
 		m_name = name;
 
 		// Create buffer:
-		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		BufferCreateInfo bufferInfo = {};
 		bufferInfo.size = m_size;
-		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		bufferInfo.usages = BufferUsageFlags::uniform_buffer_bit;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+		AllocationCreateInfo allocInfo = {};
+		allocInfo.usages = MemoryUsages::auto_prefer_host;
+		allocInfo.flags = AllocationCreateFlags::mapped_bit | AllocationCreateFlags::host_access_sequential_write_bit;
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 

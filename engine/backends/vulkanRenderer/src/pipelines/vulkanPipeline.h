@@ -1,8 +1,13 @@
 #pragma once
 #include <vector>
-#include <vulkan/vulkan.h>
 
 
+
+// Forward decleration:
+typedef struct VkPipeline_T* VkPipeline;
+typedef struct VkPipelineLayout_T* VkPipelineLayout;
+typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
+typedef struct VkShaderModule_T* VkShaderModule;
 
 namespace vulkanRendererBackend
 {

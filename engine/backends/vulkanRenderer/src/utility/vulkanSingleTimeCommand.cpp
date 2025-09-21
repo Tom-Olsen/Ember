@@ -1,10 +1,11 @@
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanContext.h"
 #include "vulkanDeviceQueue.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStages.h"
 #include <assert.h>
 #include <stdexcept>
+#include <vulkan/vulkan.h>
 
 
 
@@ -34,10 +35,10 @@ namespace vulkanRendererBackend
 	// Initialization/Cleanup:
 	void SingleTimeCommand::Init()
 	{
-		s_graphicsDeviceQueue = Context::logicalDevice.GetGraphicsQueue();
-		s_presentDeviceQueue = Context::logicalDevice.GetPresentQueue();
-		s_computeDeviceQueue = Context::logicalDevice.GetComputeQueue();
-		s_transferDeviceQueue = Context::logicalDevice.GetTransferQueue();
+		s_graphicsDeviceQueue = Context::GetLogicalDevice()->GetGraphicsQueue();
+		s_presentDeviceQueue = Context::GetLogicalDevice()->GetPresentQueue();
+		s_computeDeviceQueue = Context::GetLogicalDevice()->GetComputeQueue();
+		s_transferDeviceQueue = Context::GetLogicalDevice()->GetTransferQueue();
 		VkCommandPool* pPools[4] = { &s_graphicsPool , &s_presentPool , &s_computePool , &s_transferPool };
 		VkCommandBuffer* pBuffers[4] = { &s_graphicsBuffer , &s_presentBuffer , &s_computeBuffer , &s_transferBuffer };
 		DeviceQueue* pDeviceQueues[4] = { &s_graphicsDeviceQueue, &s_presentDeviceQueue, &s_computeDeviceQueue, &s_transferDeviceQueue };
@@ -141,7 +142,7 @@ namespace vulkanRendererBackend
 		VKA(vkWaitForFences(Context::GetVkDevice(), 1, pFence, VK_TRUE, UINT64_MAX));
 		VKA(vkResetFences(Context::GetVkDevice(), 1, pFence));
 	}
-	void SingleTimeCommand::EndLinkedCommands(const DeviceQueue& firstQueue, const DeviceQueue& secondQueue, VkPipelineStageFlags2 waitDstStageMask)
+	void SingleTimeCommand::EndLinkedCommands(const DeviceQueue& firstQueue, const DeviceQueue& secondQueue, PipelineStage waitDstStageMask)
 	{
 		assert(firstQueue.queue != secondQueue.queue);
 
@@ -161,7 +162,7 @@ namespace vulkanRendererBackend
 
 			VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 			signalSemaphoreInfo.semaphore = s_semaphore;
-			signalSemaphoreInfo.stageMask = pipelineStage::allCommands;
+			signalSemaphoreInfo.stageMask = PipelineStages::allCommands;
 
 			VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
 			submitInfo.commandBufferInfoCount = 1;

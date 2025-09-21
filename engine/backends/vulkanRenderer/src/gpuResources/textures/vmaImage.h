@@ -1,8 +1,22 @@
 #pragma once
 #include "vk_mem_alloc.h"
+#include "vmaAllocationCreateInfo.h"
+#include "vulkanAccessMask.h"
 #include "vulkanDeviceQueue.h"
+#include "vulkanImageCreateInfo.h"
+#include "vulkanImageLayout.h"
+#include "vulkanImageViewType.h"
+#include "vulkanPipelineStage.h"
+#include "vulkanImageSubresourceLayers.h"
+#include "vulkanImageSubresourceRange.h"
 #include <string>
-#include <vulkan/vulkan.h>
+
+
+
+// Forward declarations:
+typedef struct VkImage_T* VkImage;
+typedef struct VmaAllocation_T* VmaAllocation;
+typedef struct VkImageView_T* VkImageView;
 
 
 
@@ -22,14 +36,14 @@ namespace vulkanRendererBackend
 		VkImage m_image;
 		VmaAllocation m_allocation;
 		VkImageView m_imageView;
-		VkImageCreateInfo m_imageInfo;
-		VmaAllocationCreateInfo m_allocationInfo;
-		VkImageSubresourceRange m_subresourceRange;
+		ImageCreateInfo m_imageInfo;
+		AllocationCreateInfo m_allocationInfo;
+		ImageSubresourceRange m_subresourceRange;
 		DeviceQueue m_queue;
-		VkImageLayout m_layout;
+		ImageLayout m_layout;
 
 	public: // Methods:
-		VmaImage(const std::string name, const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue);
+		VmaImage(const std::string name, const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, ImageViewType viewType, const DeviceQueue& queue);
 		~VmaImage();
 
 		// Non-copyable:
@@ -45,25 +59,25 @@ namespace vulkanRendererBackend
 		const VkImage& GetVkImage() const;
 		const VmaAllocation& GetVmaAllocation() const;
 		const VkImageView& GetVkImageView() const;
-		const VkImageCreateInfo& GetVkImageCreateInfo() const;
-		const VmaAllocationCreateInfo& GetVmaAllocationCreateInfo() const;
-		const VkImageSubresourceRange& GetSubresourceRange() const;
+		const ImageCreateInfo& GetImageCreateInfo() const;
+		const AllocationCreateInfo& GetAllocationCreateInfo() const;
+		const ImageSubresourceRange& GetImageSubresourceRange() const;
 		const DeviceQueue& GetDeviceQueue() const;
-		const VkImageLayout& GetLayout() const;
+		const ImageLayout& GetImageLayout() const;
 		uint64_t GetWidth() const;
 		uint64_t GetHeight() const;
 		uint64_t GetDepth() const;
-		const VkExtent3D& GetExtent() const;
-		VkFormat GetFormat() const;
-		VkImageSubresourceLayers GetSubresourceLayers() const;
+		const Uint3& GetExtent() const;
+		Format GetFormat() const;
+		ImageSubresourceLayers GetImageSubresourceLayers() const;
 
 		// Setters:
 		// Only changes the m_layout member without doing an image layout transition.
-		void SetLayout(VkImageLayout imageLayout);
+		void SetLayout(ImageLayout imageLayout);
 
 		// Transitions:
-		void TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
-		void TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask);
+		void TransitionLayout(VkCommandBuffer commandBuffer, ImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
+		void TransitionLayout(ImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
 		void GenerateMipmaps(VkCommandBuffer commandBuffer, uint32_t mipLevels);
 		void GenerateMipmaps(uint32_t mipLevels);
 

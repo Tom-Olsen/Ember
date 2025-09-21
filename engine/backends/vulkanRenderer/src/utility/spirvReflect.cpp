@@ -1,6 +1,6 @@
 #include "spirvReflect.h"
 #include "logger.h"
-#include "vulkanObjectToString.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -46,11 +46,11 @@ namespace vulkanRendererBackend
     }
     std::string UniformBufferMember::ToString(const std::string& name, int indent) const
     {
-        std::string output(indent, ' ');
-        output += name + ": offset=" + std::to_string(offset) + ", size=" + std::to_string(size) + "\n";
+        std::ostringstream ss;
+        ss << std::string(indent, ' ') << name << ": offset=" << offset << ", size=" << size << "\n";
         for (const auto& [subMemberName, pSubMember] : m_subMembers)
-            output += pSubMember->ToString(subMemberName, indent + 2);
-        return output;
+            ss << pSubMember->ToString(subMemberName, indent + 2);
+        return ss.str();
     }
     // -------------------------------------------------------------
 
@@ -91,11 +91,11 @@ namespace vulkanRendererBackend
     }
     std::string UniformBufferBlock::ToString(int indent) const
     {
-        std::string output(indent, ' ');
-        output += name + "(binding=" + std::to_string(bindingIndex) + ", size=" + std::to_string(size) + "):\n";
-        for (const auto& [name, member] : members)
-            output += member->ToString(name, indent + 2);
-        return output;
+        std::ostringstream ss;
+        ss << std::string(indent, ' ') << name << "(binding=" << bindingIndex << ", size=" << size << "):\n";
+        for (const auto& [memberName, member] : members)
+            ss << member->ToString(memberName, indent + 2);
+        return ss.str();
     }
     // -------------------------------------------------------------
 
@@ -105,14 +105,16 @@ namespace vulkanRendererBackend
     // Public methods:
     std::string VertexInputDescriptions::ToString() const
     {
-        std::string output = "";
+        std::ostringstream ss;
         for (int i = 0; i < size; i++)
         {
-            output += semantics[i] + ":\n";
-            output += "  BindingDescription:   binding=" + std::to_string(bindings[i].binding) + ", stride=" + std::to_string(bindings[i].stride) + ", inputRate=" + objectToString::VkVertexInputRateToString(bindings[i].inputRate) + "\n";
-            output += "  AttributeDescription: binding=" + std::to_string(attributes[i].binding) + ", format=" + objectToString::VkFormatToString(attributes[i].format) + ", location=" + std::to_string(attributes[i].location) + ", offset=" + std::to_string(attributes[i].offset) + "\n";
+            ss << semantics[i] << ":\n"
+               << "  BindingDescription:   binding=" << bindings[i].binding << ", stride=" << bindings[i].stride
+               << ", inputRate=" << VertexInputRates::ToString(bindings[i].inputRate) << "\n"
+               << "  AttributeDescription: binding=" << attributes[i].binding << ", format=" << Formats::ToString(attributes[i].format)
+               << ", location=" << attributes[i].location << ", offset=" << attributes[i].offset << "\n";
         }
-        return output;
+        return ss.str();
     }
     // -------------------------------------------------------------
 
@@ -121,38 +123,41 @@ namespace vulkanRendererBackend
     // ------------------ DescriptorBoundResources -----------------
     std::string DescriptorBoundResources::ToString() const
     {
-        std::string output = "descriptorSetBindingNames:(" + std::to_string(bindingCount) + ")\n";
-
-        output += "\ndescriptorSetLayoutBindings:\n";
+        std::ostringstream ss;
+        ss << "descriptorSetBindingNames:(" << bindingCount << ")\n";
+        ss << "\ndescriptorSetLayoutBindings:\n";
         for (int i = 0; i < bindingCount; i++)
         {
-            output += "  " + descriptorSetBindingNames[i] + ": binding=" + std::to_string(descriptorSetLayoutBindings[i].binding) + ", count=" + std::to_string(descriptorSetLayoutBindings[i].descriptorCount) + ", type=" + objectToString::VkDescriptorTypeToString(descriptorSetLayoutBindings[i].descriptorType) + ", stage=" + objectToString::VkShaderStageFlagsToString(descriptorSetLayoutBindings[i].stageFlags);
+            ss << "  " << descriptorSetBindingNames[i]
+               << ": binding=" << descriptorSetLayoutBindings[i].binding
+               << ", count=" << descriptorSetLayoutBindings[i].descriptorCount
+               << ", type=" << DescriptorTypes::ToString(descriptorSetLayoutBindings[i].descriptorType)
+               << ", stage=" << ShaderStages::ToString(descriptorSetLayoutBindings[i].shaderStage);
 
             auto it = uniformBufferBlockMap.find(descriptorSetBindingNames[i]);
             if (it != uniformBufferBlockMap.end())
             {
-                output += "\n" + it->second->ToString(4);
+                ss << "\n" << it->second->ToString(4);
                 continue;
             }
 
             auto itt = sampleViewTypeMap.find(descriptorSetBindingNames[i]);
             if (itt != sampleViewTypeMap.end())
             {
-                output += ", viewType=" + objectToString::VkImageViewTypeToString(itt->second) + "\n";
+                ss << ", viewType=" << ImageViewTypes::ToString(itt->second) << "\n";
                 continue;
             }
 
             auto ittt = storageViewTypeMap.find(descriptorSetBindingNames[i]);
             if (ittt != storageViewTypeMap.end())
             {
-                output += ", viewType=" + objectToString::VkImageViewTypeToString(ittt->second) + "\n";
+                ss << ", viewType=" << ImageViewTypes::ToString(ittt->second) << "\n";
                 continue;
             }
 
-            output += "\n"; // extra new line in case of samplers as they do not have their own extra output which already adds the new line.
+            ss << "\n"; // extra newline for samplers (they don't add one themselves).
         }
-
-        return output;
+        return ss.str();
     }
     // -------------------------------------------------------------
 
@@ -188,10 +193,10 @@ namespace vulkanRendererBackend
             uint32_t vectorSize = pInput->type_description->traits.numeric.vector.component_count;
             uint32_t size = typeSize * vectorSize;
 
-            VkVertexInputBindingDescription bindingDescription = {};
+            VertexInputBindingDescription bindingDescription = {};
             bindingDescription.binding = pInput->location;
             bindingDescription.stride = size;
-            bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            bindingDescription.inputRate = VertexInputRates::vertex;
             vertexInputDescriptions->bindings.push_back(bindingDescription);
 
             std::string semantic = std::string(pInput->name);
@@ -202,7 +207,7 @@ namespace vulkanRendererBackend
                 vertexInputDescriptions->semantics.push_back("unknown");
             vertexInputDescriptions->semantics.push_back(semantic);
 
-            VkVertexInputAttributeDescription attributeDescription = {};
+            VertexInputAttributeDescription attributeDescription = {};
             attributeDescription.binding = pInput->location;
             attributeDescription.location = pInput->location;
             attributeDescription.format = (VkFormat)pInput->format;
@@ -229,11 +234,11 @@ namespace vulkanRendererBackend
             for (uint32_t bindingIndex = 0; bindingIndex < pSetReflection->binding_count; bindingIndex++)
             {
                 SpvReflectDescriptorBinding* pBindingReflection = pSetReflection->bindings[bindingIndex];
-                VkDescriptorSetLayoutBinding layoutBinding = {};
+                DescriptorSetLayoutBinding layoutBinding = {};
                 layoutBinding.binding = pBindingReflection->binding;
-                layoutBinding.descriptorType = VkDescriptorType((int)pBindingReflection->descriptor_type);
+                layoutBinding.descriptorType = DescriptorType((int)pBindingReflection->descriptor_type);
                 layoutBinding.descriptorCount = pBindingReflection->count;
-                layoutBinding.stageFlags = VkShaderStageFlagBits((int)m_module.shader_stage);
+                layoutBinding.shaderStage = ShaderStage((int)m_module.shader_stage);
                 layoutBinding.pImmutableSamplers = nullptr;
 
                 // Add binding and name to lists:

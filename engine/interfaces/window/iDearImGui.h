@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_iDearImGui_h__
-#define __INCLUDE_GUARD_iDearImGui_h__
+#pragma once
 #include "dearImGuiFlags.h"
 #include "emberMath.h"
 #include <array>
@@ -46,7 +45,3 @@ namespace emberBackendInterface
 		virtual void Image(uintptr_t textureID, float imageWidth, float imageHeight, float u0, float v0, float u1, float v1) = 0;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_iDearImGui_h__

@@ -4,11 +4,14 @@
 #include <array>
 #include <memory>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 
 
 // Forward declarations:
+typedef struct VkFence_T* VkFence;
+typedef struct VkSemaphore_T* VkSemaphore;
+typedef struct VkPipeline_T* VkPipeline;
+typedef struct VkPipelineLayout_T* VkPipelineLayout;
 namespace emberEngine
 {
 	struct RendererCreateInfo;
@@ -77,8 +80,8 @@ namespace vulkanRendererBackend
 		Mesh* m_pPresentMesh;
 		Material* m_pPresentMaterial;
 		std::unique_ptr<ShaderProperties> m_pPresentShaderProperties;
-		VkPipeline m_presentPipeline = VK_NULL_HANDLE;
-		VkPipelineLayout m_presentPipelineLayout = VK_NULL_HANDLE;
+		VkPipeline m_presentPipeline = nullptr;
+		VkPipelineLayout m_presentPipelineLayout = nullptr;
 		uint32_t m_presentBindingCount = 0;
 
 		// Render management:

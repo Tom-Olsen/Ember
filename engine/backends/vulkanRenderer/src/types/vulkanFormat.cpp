@@ -1,0 +1,195 @@
+#include "vulkanFormat.h"
+#include <unordered_map>
+#include <vulkan\vulkan.h>
+
+
+
+namespace vulkanRendererBackend
+{
+    Format Formats::undefined = VK_FORMAT_UNDEFINED;
+    Format Formats::r8_unorm = VK_FORMAT_R8_UNORM;
+    Format Formats::r8_snorm = VK_FORMAT_R8_SNORM;
+    Format Formats::r8_uscaled = VK_FORMAT_R8_USCALED;
+    Format Formats::r8_sscaled = VK_FORMAT_R8_SSCALED;
+    Format Formats::r8_uint = VK_FORMAT_R8_UINT;
+    Format Formats::r8_sint = VK_FORMAT_R8_SINT;
+    Format Formats::r8_srgb = VK_FORMAT_R8_SRGB;
+    Format Formats::r8g8_unorm = VK_FORMAT_R8G8_UNORM;
+    Format Formats::r8g8_snorm = VK_FORMAT_R8G8_SNORM;
+    Format Formats::r8g8_uscaled = VK_FORMAT_R8G8_USCALED;
+    Format Formats::r8g8_sscaled = VK_FORMAT_R8G8_SSCALED;
+    Format Formats::r8g8_uint = VK_FORMAT_R8G8_UINT;
+    Format Formats::r8g8_sint = VK_FORMAT_R8G8_SINT;
+    Format Formats::r8g8_srgb = VK_FORMAT_R8G8_SRGB;
+    Format Formats::r8g8b8_unorm = VK_FORMAT_R8G8B8_UNORM;
+    Format Formats::r8g8b8_snorm = VK_FORMAT_R8G8B8_SNORM;
+    Format Formats::r8g8b8_uscaled = VK_FORMAT_R8G8B8_USCALED;
+    Format Formats::r8g8b8_sscaled = VK_FORMAT_R8G8B8_SSCALED;
+    Format Formats::r8g8b8_uint = VK_FORMAT_R8G8B8_UINT;
+    Format Formats::r8g8b8_sint = VK_FORMAT_R8G8B8_SINT;
+    Format Formats::r8g8b8_srgb = VK_FORMAT_R8G8B8_SRGB;
+    Format Formats::r8g8b8a8_unorm = VK_FORMAT_R8G8B8A8_UNORM;
+    Format Formats::r8g8b8a8_snorm = VK_FORMAT_R8G8B8A8_SNORM;
+    Format Formats::r8g8b8a8_uscaled = VK_FORMAT_R8G8B8A8_USCALED;
+    Format Formats::r8g8b8a8_sscaled = VK_FORMAT_R8G8B8A8_SSCALED;
+    Format Formats::r8g8b8a8_uint = VK_FORMAT_R8G8B8A8_UINT;
+    Format Formats::r8g8b8a8_sint = VK_FORMAT_R8G8B8A8_SINT;
+    Format Formats::r8g8b8a8_srgb = VK_FORMAT_R8G8B8A8_SRGB;
+    Format Formats::r16_unorm = VK_FORMAT_R16_UNORM;
+    Format Formats::r16_snorm = VK_FORMAT_R16_SNORM;
+    Format Formats::r16_uscaled = VK_FORMAT_R16_USCALED;
+    Format Formats::r16_sscaled = VK_FORMAT_R16_SSCALED;
+    Format Formats::r16_uint = VK_FORMAT_R16_UINT;
+    Format Formats::r16_sint = VK_FORMAT_R16_SINT;
+    Format Formats::r16_sfloat = VK_FORMAT_R16_SFLOAT;
+    Format Formats::r16g16_unorm = VK_FORMAT_R16G16_UNORM;
+    Format Formats::r16g16_snorm = VK_FORMAT_R16G16_SNORM;
+    Format Formats::r16g16_uscaled = VK_FORMAT_R16G16_USCALED;
+    Format Formats::r16g16_sscaled = VK_FORMAT_R16G16_SSCALED;
+    Format Formats::r16g16_uint = VK_FORMAT_R16G16_UINT;
+    Format Formats::r16g16_sint = VK_FORMAT_R16G16_SINT;
+    Format Formats::r16g16_sfloat = VK_FORMAT_R16G16_SFLOAT;
+    Format Formats::r16g16b16_unorm = VK_FORMAT_R16G16B16_UNORM;
+    Format Formats::r16g16b16_snorm = VK_FORMAT_R16G16B16_SNORM;
+    Format Formats::r16g16b16_uscaled = VK_FORMAT_R16G16B16_USCALED;
+    Format Formats::r16g16b16_sscaled = VK_FORMAT_R16G16B16_SSCALED;
+    Format Formats::r16g16b16_uint = VK_FORMAT_R16G16B16_UINT;
+    Format Formats::r16g16b16_sint = VK_FORMAT_R16G16B16_SINT;
+    Format Formats::r16g16b16_sfloat = VK_FORMAT_R16G16B16_SFLOAT;
+    Format Formats::r16g16b16a16_unorm = VK_FORMAT_R16G16B16A16_UNORM;
+    Format Formats::r16g16b16a16_snorm = VK_FORMAT_R16G16B16A16_SNORM;
+    Format Formats::r16g16b16a16_uscaled = VK_FORMAT_R16G16B16A16_USCALED;
+    Format Formats::r16g16b16a16_sscaled = VK_FORMAT_R16G16B16A16_SSCALED;
+    Format Formats::r16g16b16a16_uint = VK_FORMAT_R16G16B16A16_UINT;
+    Format Formats::r16g16b16a16_sint = VK_FORMAT_R16G16B16A16_SINT;
+    Format Formats::r16g16b16a16_sfloat = VK_FORMAT_R16G16B16A16_SFLOAT;
+    Format Formats::r32_uint = VK_FORMAT_R32_UINT;
+    Format Formats::r32_sint = VK_FORMAT_R32_SINT;
+    Format Formats::r32_sfloat = VK_FORMAT_R32_SFLOAT;
+    Format Formats::r32g32_uint = VK_FORMAT_R32G32_UINT;
+    Format Formats::r32g32_sint = VK_FORMAT_R32G32_SINT;
+    Format Formats::r32g32_sfloat = VK_FORMAT_R32G32_SFLOAT;
+    Format Formats::r32g32b32_uint = VK_FORMAT_R32G32B32_UINT;
+    Format Formats::r32g32b32_sint = VK_FORMAT_R32G32B32_SINT;
+    Format Formats::r32g32b32_sfloat = VK_FORMAT_R32G32B32_SFLOAT;
+    Format Formats::r32g32b32a32_uint = VK_FORMAT_R32G32B32A32_UINT;
+    Format Formats::r32g32b32a32_sint = VK_FORMAT_R32G32B32A32_SINT;
+    Format Formats::r32g32b32a32_sfloat = VK_FORMAT_R32G32B32A32_SFLOAT;
+    Format Formats::r64_uint = VK_FORMAT_R64_UINT;
+    Format Formats::r64_sint = VK_FORMAT_R64_SINT;
+    Format Formats::r64_sfloat = VK_FORMAT_R64_SFLOAT;
+    Format Formats::r64g64_uint = VK_FORMAT_R64G64_UINT;
+    Format Formats::r64g64_sint = VK_FORMAT_R64G64_SINT;
+    Format Formats::r64g64_sfloat = VK_FORMAT_R64G64_SFLOAT;
+    Format Formats::r64g64b64_uint = VK_FORMAT_R64G64B64_UINT;
+    Format Formats::r64g64b64_sint = VK_FORMAT_R64G64B64_SINT;
+    Format Formats::r64g64b64_sfloat = VK_FORMAT_R64G64B64_SFLOAT;
+    Format Formats::r64g64b64a64_uint = VK_FORMAT_R64G64B64A64_UINT;
+    Format Formats::r64g64b64a64_sint = VK_FORMAT_R64G64B64A64_SINT;
+    Format Formats::r64g64b64a64_sfloat = VK_FORMAT_R64G64B64A64_SFLOAT;
+    Format Formats::d16_unorm = VK_FORMAT_D16_UNORM;
+    Format Formats::d32_sfloat = VK_FORMAT_D32_SFLOAT;
+    Format Formats::s8_uint = VK_FORMAT_S8_UINT;
+    Format Formats::d16_unorm_s8_uint = VK_FORMAT_D16_UNORM_S8_UINT;
+    Format Formats::d24_unorm_s8_uint = VK_FORMAT_D24_UNORM_S8_UINT;
+    Format Formats::d32_sfloat_s8_uint = VK_FORMAT_D32_SFLOAT_S8_UINT;
+    Format Formats::max_enum = VK_FORMAT_MAX_ENUM;
+
+    std::string Formats::ToString(Format format)
+    {
+        const static std::unordered_map<Format, std::string> formatNames =
+        {
+            { Formats::undefined, "undefined" },
+            { Formats::r8_unorm, "r8_unorm" },
+            { Formats::r8_snorm, "r8_snorm" },
+            { Formats::r8_uscaled, "r8_uscaled" },
+            { Formats::r8_sscaled, "r8_sscaled" },
+            { Formats::r8_uint, "r8_uint" },
+            { Formats::r8_sint, "r8_sint" },
+            { Formats::r8_srgb, "r8_srgb" },
+            { Formats::r8g8_unorm, "r8g8_unorm" },
+            { Formats::r8g8_snorm, "r8g8_snorm" },
+            { Formats::r8g8_uscaled, "r8g8_uscaled" },
+            { Formats::r8g8_sscaled, "r8g8_sscaled" },
+            { Formats::r8g8_uint, "r8g8_uint" },
+            { Formats::r8g8_sint, "r8g8_sint" },
+            { Formats::r8g8_srgb, "r8g8_srgb" },
+            { Formats::r8g8b8_unorm, "r8g8b8_unorm" },
+            { Formats::r8g8b8_snorm, "r8g8b8_snorm" },
+            { Formats::r8g8b8_uscaled, "r8g8b8_uscaled" },
+            { Formats::r8g8b8_sscaled, "r8g8b8_sscaled" },
+            { Formats::r8g8b8_uint, "r8g8b8_uint" },
+            { Formats::r8g8b8_sint, "r8g8b8_sint" },
+            { Formats::r8g8b8_srgb, "r8g8b8_srgb" },
+            { Formats::r8g8b8a8_unorm, "r8g8b8a8_unorm" },
+            { Formats::r8g8b8a8_snorm, "r8g8b8a8_snorm" },
+            { Formats::r8g8b8a8_uscaled, "r8g8b8a8_uscaled" },
+            { Formats::r8g8b8a8_sscaled, "r8g8b8a8_sscaled" },
+            { Formats::r8g8b8a8_uint, "r8g8b8a8_uint" },
+            { Formats::r8g8b8a8_sint, "r8g8b8a8_sint" },
+            { Formats::r8g8b8a8_srgb, "r8g8b8a8_srgb" },
+            { Formats::r16_unorm, "r16_unorm" },
+            { Formats::r16_snorm, "r16_snorm" },
+            { Formats::r16_uscaled, "r16_uscaled" },
+            { Formats::r16_sscaled, "r16_sscaled" },
+            { Formats::r16_uint, "r16_uint" },
+            { Formats::r16_sint, "r16_sint" },
+            { Formats::r16_sfloat, "r16_sfloat" },
+            { Formats::r16g16_unorm, "r16g16_unorm" },
+            { Formats::r16g16_snorm, "r16g16_snorm" },
+            { Formats::r16g16_uscaled, "r16g16_uscaled" },
+            { Formats::r16g16_sscaled, "r16g16_sscaled" },
+            { Formats::r16g16_uint, "r16g16_uint" },
+            { Formats::r16g16_sint, "r16g16_sint" },
+            { Formats::r16g16_sfloat, "r16g16_sfloat" },
+            { Formats::r16g16b16_unorm, "r16g16b16_unorm" },
+            { Formats::r16g16b16_snorm, "r16g16b16_snorm" },
+            { Formats::r16g16b16_uscaled, "r16g16b16_uscaled" },
+            { Formats::r16g16b16_sscaled, "r16g16b16_sscaled" },
+            { Formats::r16g16b16_uint, "r16g16b16_uint" },
+            { Formats::r16g16b16_sint, "r16g16b16_sint" },
+            { Formats::r16g16b16_sfloat, "r16g16b16_sfloat" },
+            { Formats::r16g16b16a16_unorm, "r16g16b16a16_unorm" },
+            { Formats::r16g16b16a16_snorm, "r16g16b16a16_snorm" },
+            { Formats::r16g16b16a16_uscaled, "r16g16b16a16_uscaled" },
+            { Formats::r16g16b16a16_sscaled, "r16g16b16a16_sscaled" },
+            { Formats::r16g16b16a16_uint, "r16g16b16a16_uint" },
+            { Formats::r16g16b16a16_sint, "r16g16b16a16_sint" },
+            { Formats::r16g16b16a16_sfloat, "r16g16b16a16_sfloat" },
+            { Formats::r32_uint, "r32_uint" },
+            { Formats::r32_sint, "r32_sint" },
+            { Formats::r32_sfloat, "r32_sfloat" },
+            { Formats::r32g32_uint, "r32g32_uint" },
+            { Formats::r32g32_sint, "r32g32_sint" },
+            { Formats::r32g32_sfloat, "r32g32_sfloat" },
+            { Formats::r32g32b32_uint, "r32g32b32_uint" },
+            { Formats::r32g32b32_sint, "r32g32b32_sint" },
+            { Formats::r32g32b32_sfloat, "r32g32b32_sfloat" },
+            { Formats::r32g32b32a32_uint, "r32g32b32a32_uint" },
+            { Formats::r32g32b32a32_sint, "r32g32b32a32_sint" },
+            { Formats::r32g32b32a32_sfloat, "r32g32b32a32_sfloat" },
+            { Formats::r64_uint, "r64_uint" },
+            { Formats::r64_sint, "r64_sint" },
+            { Formats::r64_sfloat, "r64_sfloat" },
+            { Formats::r64g64_uint, "r64g64_uint" },
+            { Formats::r64g64_sint, "r64g64_sint" },
+            { Formats::r64g64_sfloat, "r64g64_sfloat" },
+            { Formats::r64g64b64_uint, "r64g64b64_uint" },
+            { Formats::r64g64b64_sint, "r64g64b64_sint" },
+            { Formats::r64g64b64_sfloat, "r64g64b64_sfloat" },
+            { Formats::r64g64b64a64_uint, "r64g64b64a64_uint" },
+            { Formats::r64g64b64a64_sint, "r64g64b64a64_sint" },
+            { Formats::r64g64b64a64_sfloat, "r64g64b64a64_sfloat" },
+            { Formats::d16_unorm, "d16_unorm" },
+            { Formats::d32_sfloat, "d32_sfloat" },
+            { Formats::s8_uint, "s8_uint" },
+            { Formats::d16_unorm_s8_uint, "d16_unorm_s8_uint" },
+            { Formats::d24_unorm_s8_uint, "d24_unorm_s8_uint" },
+            { Formats::d32_sfloat_s8_uint, "d32_sfloat_s8_uint" },
+            { Formats::max_enum, "max_enum" },
+        };
+
+        auto it = formatNames.find(format);
+        return it != formatNames.end() ? it->second : "unknown";
+    }
+}

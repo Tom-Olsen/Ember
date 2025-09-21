@@ -1,6 +1,10 @@
 #pragma once
 #include <string>
-#include <vulkan/vulkan.h>
+
+
+
+// Forward decleration:
+typedef struct VkSampler_T* VkSampler;
 
 
 
@@ -27,7 +31,6 @@ namespace vulkanRendererBackend
 		// Getters:
 		VkSampler& GetVkSampler();
 		const std::string& GetName() const;
-		VkPhysicalDeviceProperties GetVkPhysicalDeviceProperties() const;
 
 	private: // Methods:
 		void Cleanup();

@@ -1,7 +1,6 @@
 #pragma once
 #include "vulkanRenderPass.h"
 #include <memory>
-#include <vulkan/vulkan.h>
 
 
 

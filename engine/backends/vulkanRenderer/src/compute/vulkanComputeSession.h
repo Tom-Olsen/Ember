@@ -1,6 +1,6 @@
 #pragma once
+#include "vulkanComputeCall.h"
 #include <vector>
-#include <vulkan/vulkan.h>
 
 
 
@@ -13,13 +13,14 @@
 
 
 
+// Forward decleration:
+typedef struct VkCommandBuffer_T* VkCommandBuffer;
+typedef struct VkFence_T* VkFence;
+
+
+
 namespace vulkanRendererBackend
 {
-	// Forward decleration:
-	struct ComputeCall;
-
-
-
 	struct ComputeSession
 	{
 	public: // Members:
@@ -31,7 +32,7 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		void RecordComputeCall(const ComputeCall& computeCall);
-		void Dispatch(VkCommandBuffer& commandBuffer, VkFence& fence, float time, float deltaTime);
+		void Dispatch(VkCommandBuffer commandBuffer, VkFence fence, float time, float deltaTime);
 		void ResetComputeCalls();
 		std::vector<ComputeCall>& GetComputeCalls();
 	};

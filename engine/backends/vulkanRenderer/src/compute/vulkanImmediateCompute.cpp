@@ -3,6 +3,7 @@
 #include "vulkanComputePushConstant.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanPipeline.h"
 #include "vulkanShaderProperties.h"
@@ -56,7 +57,7 @@ namespace vulkanRendererBackend
 		pShaderProperties->UpdateShaderData(0);
 
 		// Record command buffer:
-		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(Context::logicalDevice.GetComputeQueue());
+		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(Context::GetLogicalDevice()->GetComputeQueue());
 		{
 			// Set pipeline:
 			VkPipeline pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
@@ -75,6 +76,6 @@ namespace vulkanRendererBackend
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &pShaderProperties->GetDescriptorSet(0), 0, nullptr);
 			vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 		}
-		SingleTimeCommand::EndCommand(Context::logicalDevice.GetComputeQueue());
+		SingleTimeCommand::EndCommand(Context::GetLogicalDevice()->GetComputeQueue());
 	}
 }

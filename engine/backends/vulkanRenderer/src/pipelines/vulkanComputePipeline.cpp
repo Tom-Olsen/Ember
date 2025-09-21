@@ -3,16 +3,17 @@
 #include "vulkanComputePushConstant.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ComputePipeline::ComputePipeline(const std::vector<char>& computeCode, const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
+    ComputePipeline::ComputePipeline(const std::vector<char>& computeCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
     {
         // Create pipeline Layout:
-        CreatePipelineLayout(vkDescriptorSetLayoutBindings);
+        CreatePipelineLayout(descriptorSetLayoutBindings);
 
         // Create compute shader module from .spv files:
         VkShaderModule computeShaderModule = CreateShaderModule(computeCode);
@@ -32,12 +33,12 @@ namespace vulkanRendererBackend
 
 
     // Private:
-    void ComputePipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
+    void ComputePipeline::CreatePipelineLayout(std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
     {
         // Descriptor set layout:
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-        descriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.size();
-        descriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.data();
+        descriptorSetLayoutCreateInfo.bindingCount = descriptorSetLayoutBindings.size();
+        descriptorSetLayoutCreateInfo.pBindings = reinterpret_cast<VkDescriptorSetLayoutBinding*>(descriptorSetLayoutBindings.data());
         VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
 
         // Push constants layout:

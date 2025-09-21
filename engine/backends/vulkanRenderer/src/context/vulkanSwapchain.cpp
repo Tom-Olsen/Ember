@@ -3,23 +3,22 @@
 #include "vulkanMacros.h"
 #include "vulkanSurface.h"
 #include <assert.h>
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	Swapchain::Swapchain()
+	Swapchain::Swapchain(LogicalDevice* pLogicalDevice, Surface* pSurface, ImageUsageFlag usages, Swapchain* pOldSwapchain)
 	{
-		m_swapchain = VK_NULL_HANDLE;
-		m_pLogicalDevice = nullptr;
-		m_pSurface = nullptr;
-		m_usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM;
+		Init(pLogicalDevice, pSurface, usages, pOldSwapchain);
 	}
 	Swapchain::~Swapchain()
 	{
 		Cleanup();
 	}
+
 
 
 	// Move semantics:
@@ -40,7 +39,7 @@ namespace vulkanRendererBackend
 
 
 	// Public methods:
-	void Swapchain::Init(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usage, Swapchain* pOldSwapchain)
+	void Swapchain::Init(LogicalDevice* pLogicalDevice, Surface* pSurface, ImageUsageFlag usages, Swapchain* pOldSwapchain)
 	{
 		// Assertions:
 		assert(pLogicalDevice != nullptr);
@@ -48,12 +47,16 @@ namespace vulkanRendererBackend
 
 		m_pLogicalDevice = pLogicalDevice;
 		m_pSurface = pSurface;
-		m_usage = usage;
+		m_usages = usages;
 
-		CreateSwapchain(usage, pOldSwapchain);
+		CreateSwapchain(pOldSwapchain);
 		CreateImages();
 		CreateImageViews();
 	}
+
+
+
+	// Getters:
     int Swapchain::GetImageCount() const
     {
         return m_images.size();
@@ -83,16 +86,16 @@ namespace vulkanRendererBackend
 	}
 	void Swapchain::MoveFrom(Swapchain& other) noexcept
 	{
-		Init(other.m_pLogicalDevice, other.m_pSurface, other.m_usage, &other);
+		Init(other.m_pLogicalDevice, other.m_pSurface, other.m_usages, &other);
 		
 		other.m_swapchain = VK_NULL_HANDLE;
 		other.m_images.clear();
 		other.m_imageViews.clear();
 		other.m_pLogicalDevice = nullptr;
 		other.m_pSurface = nullptr;
-		other.m_usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM;
+		other.m_usages = ImageUsageFlags::flag_bits_max_enum;
 	}
-	void Swapchain::CreateSwapchain(VkImageUsageFlags usage, Swapchain* pOldSwapchain)
+	void Swapchain::CreateSwapchain(Swapchain* pOldSwapchain)
 	{
 		uint32_t imageCount = m_pSurface->GetMinImageCount() + 1;
 		if (m_pSurface->GetMaxImageCount() > 0 && imageCount > m_pSurface->GetMaxImageCount())
@@ -101,15 +104,15 @@ namespace vulkanRendererBackend
 		VkSwapchainCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 		createInfo.surface = m_pSurface->GetVkSurfaceKHR();
 		createInfo.minImageCount = imageCount;
-		createInfo.imageFormat = m_pSurface->GetVkSurfaceFormatKHR().format;
-		createInfo.imageColorSpace = m_pSurface->GetVkSurfaceFormatKHR().colorSpace;
-		createInfo.imageExtent = m_pSurface->GetCurrentExtent();
+		createInfo.imageFormat = static_cast<VkFormat>(m_pSurface->GetSurfaceFormat().format);
+		createInfo.imageColorSpace = static_cast<VkColorSpaceKHR>(m_pSurface->GetSurfaceFormat().colorSpace);
+		m_pSurface->GetCurrentExtent(createInfo.imageExtent);
 		createInfo.imageArrayLayers = 1;									// always 1 unless stereoscopic 3D application.
-		createInfo.imageUsage = usage;
+		createInfo.imageUsage = m_usages;
 		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;			// we assume that only one queue family will access the images for now.
 		createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;	// dont rotate or flip.
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;		// dont blend with other windows.
-		createInfo.presentMode = m_pSurface->GetVkPresentModeKHR();
+		createInfo.presentMode = static_cast<VkPresentModeKHR>(m_pSurface->GetPresentMode());
 		createInfo.oldSwapchain = pOldSwapchain ? pOldSwapchain->GetVkSwapchainKHR() : VK_NULL_HANDLE;
 		createInfo.clipped = VK_TRUE;										// clip pixels that are obscured by other windows.
 		VKA(vkCreateSwapchainKHR(m_pLogicalDevice->GetVkDevice(), &createInfo, nullptr, &m_swapchain));
@@ -129,7 +132,7 @@ namespace vulkanRendererBackend
 			VkImageViewCreateInfo createInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 			createInfo.image = m_images[i];
 			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			createInfo.format = m_pSurface->GetVkSurfaceFormatKHR().format;
+			createInfo.format = static_cast<VkFormat>(m_pSurface->GetSurfaceFormat().format);
 			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;

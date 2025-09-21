@@ -8,7 +8,11 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
+
+
+
+// Forward declarations:
+typedef struct VkBuffer_T* VkBuffer;
 
 
 
@@ -33,7 +37,7 @@ namespace vulkanRendererBackend
 		uint32_t m_renderQueue;	// shadow=0, opaque=1000, transparent=2000, skybox=3000
 		std::unique_ptr<VertexInputDescriptions> m_pVertexInputDescriptions;
 		std::vector<VkBuffer> m_meshBuffers;
-		std::vector<VkDeviceSize> m_meshOffsets;
+		std::vector<uint64_t> m_meshOffsets;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -53,6 +57,6 @@ namespace vulkanRendererBackend
 		uint32_t GetRenderQueue() const override;
 		const VertexInputDescriptions* const GetVertexInputDescriptions() const;
 		const VkBuffer* const GetMeshBuffers(Mesh* pMesh);
-		const VkDeviceSize* const GetMeshOffsets(Mesh* pMesh);
+		const uint64_t* const GetMeshOffsets(Mesh* pMesh);
 	};
 }

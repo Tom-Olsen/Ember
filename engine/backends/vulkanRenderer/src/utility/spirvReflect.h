@@ -1,12 +1,13 @@
-#ifndef __INCLUDE_GUARD_vulkanRendererBackend_spirvReflect_h__
-#define __INCLUDE_GUARD_vulkanRendererBackend_spirvReflect_h__
+#pragma once
 #include "emberMath.h"
-#include <spirv_reflect.h>
+#include "vulkanDescriptorSetLayoutBinding.h"
+#include "vulkanImageViewType.h"
+#include "vulkanVertexInputAttributeDescription.h"
+#include "vulkanVertexInputBindingDescription.h"
+#include <spirv_reflect.h>	// vulkanRendererBackend::ToDo: put this include into .cpp
 #include <string>
-#include <tuple>
 #include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 
 
@@ -90,8 +91,8 @@ namespace vulkanRendererBackend
 	{
 		uint32_t size = 0;
 		std::vector<std::string> semantics;
-		std::vector<VkVertexInputBindingDescription> bindings;
-		std::vector<VkVertexInputAttributeDescription> attributes;
+		std::vector<VertexInputBindingDescription> bindings;
+		std::vector<VertexInputAttributeDescription> attributes;
 		std::string ToString() const;
 	};
 
@@ -106,13 +107,13 @@ namespace vulkanRendererBackend
 	{
 		uint32_t bindingCount = 0; // number of descriptorSetBindingNames and descriptorSetLayoutBindings
 		std::vector<std::string> descriptorSetBindingNames;
-		std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+		std::vector<DescriptorSetLayoutBinding> descriptorSetLayoutBindings;
 		// One UniformBufferBlock* for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER.
 		std::unordered_map<std::string, UniformBufferBlock*> uniformBufferBlockMap;
-		// One VkImageViewType for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-		std::unordered_map<std::string, VkImageViewType> sampleViewTypeMap;
-		// One VkImageViewType for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_STORAGE_IMAGE.
-		std::unordered_map<std::string, VkImageViewType> storageViewTypeMap;
+		// One ImageViewType for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+		std::unordered_map<std::string, ImageViewType> sampleViewTypeMap;
+		// One ImageViewType for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_STORAGE_IMAGE.
+		std::unordered_map<std::string, ImageViewType> storageViewTypeMap;
 		std::string ToString() const;
 	};
 
@@ -141,7 +142,3 @@ namespace vulkanRendererBackend
 		void ArrayReflection(const std::string& arrayName, const SpvReflectBlockVariable& arrayReflection, UniformBufferMember* pMember) const;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_vulkanRendererBackend_spirvReflect_h__

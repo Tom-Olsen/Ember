@@ -1,6 +1,7 @@
-#include "vulkanShadowSampler.h"
+ï»¿#include "vulkanShadowSampler.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -10,7 +11,8 @@ namespace vulkanRendererBackend
 	ShadowSampler::ShadowSampler(const std::string& name)
 	{
 		m_name = name;
-		VkPhysicalDeviceProperties properties = GetVkPhysicalDeviceProperties();
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(Context::GetVkPhysicalDevice(), &properties);
 
 		VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 		samplerInfo.magFilter = VK_FILTER_LINEAR;							// magnified texels filter
@@ -21,7 +23,7 @@ namespace vulkanRendererBackend
 		samplerInfo.anisotropyEnable = VK_FALSE;							// no anisotropic filtering for depth mapping
 		samplerInfo.maxAnisotropy = 0.0f;									// lower values = better performance but lower quality
 		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;	// border color for: addressModeU/V/W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE/BORDER
-		samplerInfo.unnormalizedCoordinates = VK_FALSE;						// VK_FALSE: uvw € [0,1], VK_TRUE: uvw € [0, width/height/depth]
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;						// VK_FALSE: uvw â‚¬ [0,1], VK_TRUE: uvw â‚¬ [0, width/height/depth]
 		samplerInfo.compareEnable = VK_TRUE;								// enable comparison against a reference value
 		samplerInfo.compareOp = VK_COMPARE_OP_LESS_OR_EQUAL;				// comparison function to apply
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;				// how to handle mipmapping

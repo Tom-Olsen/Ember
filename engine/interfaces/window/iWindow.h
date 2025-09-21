@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_iWindow_h__
-#define __INCLUDE_GUARD_iWindow_h__
+#pragma once
 #include "emberMath.h"
 #include <array>
 #include <vector>
@@ -39,7 +38,3 @@ namespace emberBackendInterface
         virtual uint32_t GetWindowID() const = 0;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_iWindow_h__

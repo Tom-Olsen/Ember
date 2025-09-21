@@ -1,7 +1,7 @@
 #pragma once
 #include "vulkanRenderPass.h"
+#include "vulkanFormat.h"
 #include <memory>
-#include <vulkan/vulkan.h>
 
 
 
@@ -25,7 +25,7 @@ namespace vulkanRendererBackend
 		std::unique_ptr<VmaImage> m_pDepthImage;
 		std::unique_ptr<RenderTexture2d> m_pRenderTexture;
 		std::unique_ptr<RenderTexture2d> m_pSecondaryRenderTexture;
-		VkFormat m_depthFormat;
+		Format m_depthFormat;
 
 	public: // Methods:
 		ForwardRenderPass(uint32_t renderWidth, uint32_t renderHeight);

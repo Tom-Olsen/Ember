@@ -1,7 +1,12 @@
 #pragma once
 #include "vulkanPipeline.h"
+#include "vulkanDescriptorSetLayoutBinding.h"
 #include <vector>
-#include <vulkan/vulkan.h>
+
+
+
+// Forward declarations:
+typedef struct VkShaderModule_T* VkShaderModule;
 
 
 
@@ -18,11 +23,11 @@ namespace vulkanRendererBackend
 	class ComputePipeline : public Pipeline
 	{
 	public: // Methods:
-		ComputePipeline(const std::vector<char>& computeCode, const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings);
+		ComputePipeline(const std::vector<char>& computeCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
 		~ComputePipeline();
 
 	private: // Methods:
-		void CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings);
+		void CreatePipelineLayout(std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
 		void CreatePipeline(const VkShaderModule& computeShaderModule);
 	};
 }

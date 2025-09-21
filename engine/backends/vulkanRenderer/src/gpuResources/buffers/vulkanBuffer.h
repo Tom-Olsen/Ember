@@ -1,9 +1,12 @@
 #pragma once
 #include "iBuffer.h"
-#include "vk_mem_alloc.h"
 #include <memory>
 #include <string>
-#include <vulkan/vulkan.h>
+
+
+
+// Forward declarations:
+typedef struct VkCommandBuffer_T* VkCommandBuffer;
 
 
 
@@ -50,8 +53,8 @@ namespace vulkanRendererBackend
 		uint32_t GetCount() const override;
 		uint32_t GetElementSize() const override;
 		VmaBuffer* const GetVmaBuffer() const;
-		
-		// Upload/Download:
+
+		// Data transfer:
 		void Upload(VkCommandBuffer vkCommandBuffer, void* pSrc, uint64_t size);
 		void Upload(const void* pSrc, uint64_t size) override;
 		void Download(VkCommandBuffer vkCommandBuffer, void* pDst, uint64_t size);

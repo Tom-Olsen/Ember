@@ -1,6 +1,7 @@
 ﻿#include "vulkanSampler.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -45,12 +46,6 @@ namespace vulkanRendererBackend
 	const std::string& Sampler::GetName() const
 	{
 		return m_name;
-	}
-	VkPhysicalDeviceProperties Sampler::GetVkPhysicalDeviceProperties() const
-	{
-		VkPhysicalDeviceProperties properties{};
-		vkGetPhysicalDeviceProperties(Context::GetVkPhysicalDevice(), &properties);
-		return properties;
 	}
 
 

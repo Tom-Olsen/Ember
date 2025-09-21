@@ -7,7 +7,7 @@
 #include "taskSystem.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
-#include "vulkanAccessMasks.h"
+#include "vulkanAccessMask.h"
 #include "vulkanCommandPool.h"
 #include "vulkanCompute.h"
 #include "vulkanComputeCall.h"
@@ -20,11 +20,12 @@
 #include "vulkanGraphics.h"
 #include "vulkanIndexBuffer.h"
 #include "vulkanLighting.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanMaterial.h"
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
-#include "vulkanPipelineStages.h"
+#include "vulkanPipelineStage.h"
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
 #include "vulkanPresentRenderPass.h"
@@ -33,9 +34,11 @@
 #include "vulkanShaderProperties.h"
 #include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
+#include "vulkanSurface.h"
 #include "vulkanVertexBuffer.h"
 #include <assert.h>
 #include <string>
+#include <vulkan/vulkan.h>
 
 
 
@@ -56,9 +59,9 @@ namespace vulkanRendererBackend
 		m_rebuildSwapchain = false;
 
 		// Command pools (one per frameInFlight * renderStage):
-		m_commandPools.reserve(Context::framesInFlight * (int)RenderStage::stageCount);
-		for (int i = 0; i < Context::framesInFlight * (int)RenderStage::stageCount; i++)
-			m_commandPools.emplace_back(emberTaskSystem::TaskSystem::GetCoreCount(), Context::logicalDevice.GetGraphicsQueue());
+		m_commandPools.reserve(Context::GetFramesInFlight() * (int)RenderStage::stageCount);
+		for (int i = 0; i < Context::GetFramesInFlight() * (int)RenderStage::stageCount; i++)
+			m_commandPools.emplace_back(emberTaskSystem::TaskSystem::GetCoreCount(), Context::GetLogicalDevice()->GetGraphicsQueue());
 
 		// Shadow render pass caching:
 		m_shadowPipeline = Graphics::GetShadowMaterial()->GetPipeline()->GetVkPipeline();
@@ -74,7 +77,7 @@ namespace vulkanRendererBackend
 
 		// Debug naming:
 		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
-			for (int frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+			for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 			{
 				std::string name = renderStageNames[renderStage];
 				name += "_frame" + std::to_string(frameIndex);
@@ -108,7 +111,8 @@ namespace vulkanRendererBackend
 		m_deltaTime = deltaTime;
 
 		// Resize Swapchain if needed:
-		VkExtent2D surfaceExtend = Context::surface.GetCurrentExtent();
+		VkExtent2D surfaceExtend;
+		Context::GetSurface()->GetCurrentExtent(surfaceExtend);
 		if (m_rebuildSwapchain || windowWidth != surfaceExtend.width || windowHeight != surfaceExtend.height)
 		{
 			m_rebuildSwapchain = false;
@@ -131,7 +135,7 @@ namespace vulkanRendererBackend
 		// Record and submit current frame commands:
 		{
 			PROFILE_SCOPE("Record");
-			DEBUG_LOG_CRITICAL("Recording frame {}", Context::frameIndex);
+			DEBUG_LOG_CRITICAL("Recording frame {}", Context::GetFrameIndex());
 
 			RecordPreRenderComputeCommands();
 			SubmitPreRenderComputeCommands();
@@ -151,7 +155,7 @@ namespace vulkanRendererBackend
 			RecordPostRenderComputeCommands();
 			SubmitPostRenderComputeCommands();
 
-			if (!Context::enableDockSpace)
+			if (!Context::DockSpaceEnabled())
 				RecordPresentCommands();
 			else
 				RecordImGuiPresentCommands();
@@ -193,7 +197,7 @@ namespace vulkanRendererBackend
 		PROFILE_FUNCTION();
 
 		// Signal acquireSemaphore when done:
-		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[Context::frameIndex], VK_NULL_HANDLE, &m_imageIndex);
+		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[Context::GetFrameIndex()], VK_NULL_HANDLE, &m_imageIndex);
 
 		// Resize if needed:
 		//if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || Context::pWindow->GetFramebufferResized())
@@ -214,16 +218,16 @@ namespace vulkanRendererBackend
 	void Renderer::WaitForFrameFence()
 	{
 		PROFILE_FUNCTION();
-		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_frameFences[Context::frameIndex], VK_TRUE, UINT64_MAX));
-		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_frameFences[Context::frameIndex]));
+		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_frameFences[Context::GetFrameIndex()], VK_TRUE, UINT64_MAX));
+		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_frameFences[Context::GetFrameIndex()]));
 	}
 	void Renderer::ResetCommandPools()
 	{
-		GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute).ResetPools();
-		GetCommandPool(Context::frameIndex, RenderStage::shadow).ResetPools();
-		GetCommandPool(Context::frameIndex, RenderStage::forward).ResetPools();
-		GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute).ResetPools();
-		GetCommandPool(Context::frameIndex, RenderStage::present).ResetPools();
+		GetCommandPool(Context::GetFrameIndex(), RenderStage::preRenderCompute).ResetPools();
+		GetCommandPool(Context::GetFrameIndex(), RenderStage::shadow).ResetPools();
+		GetCommandPool(Context::GetFrameIndex(), RenderStage::forward).ResetPools();
+		GetCommandPool(Context::GetFrameIndex(), RenderStage::postRenderCompute).ResetPools();
+		GetCommandPool(Context::GetFrameIndex(), RenderStage::present).ResetPools();
 	}
 
 	// Record commands:
@@ -232,7 +236,7 @@ namespace vulkanRendererBackend
 		PROFILE_FUNCTION();
 
 		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::preRenderCompute);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -252,8 +256,8 @@ namespace vulkanRendererBackend
 				if (computeCall->pComputeShader == nullptr)
 				{
 					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-					memoryBarrier.srcStageMask = pipelineStage::computeShader;
-					memoryBarrier.dstStageMask = pipelineStage::computeShader;
+					memoryBarrier.srcStageMask = PipelineStages::computeShader;
+					memoryBarrier.dstStageMask = PipelineStages::computeShader;
 					memoryBarrier.srcAccessMask = computeCall->srcAccessMask;
 					memoryBarrier.dstAccessMask = computeCall->dstAccessMask;
 
@@ -295,7 +299,7 @@ namespace vulkanRendererBackend
 					uint32_t groupCountY = (computeCall->threadCount[1] + blockSize[1] - 1) / blockSize[1];
 					uint32_t groupCountZ = (computeCall->threadCount[2] + blockSize[2] - 1) / blockSize[2];
 
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 					DEBUG_LOG_TRACE("Pre Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 				}
@@ -304,10 +308,10 @@ namespace vulkanRendererBackend
 			// Release memory from compute shaders to vertex shaders:
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-				memoryBarrier.srcStageMask = pipelineStage::computeShader;
-				memoryBarrier.dstStageMask = pipelineStage::vertexShader;
-				memoryBarrier.srcAccessMask = accessMask::computeShader::shaderWrite;
-				memoryBarrier.dstAccessMask = accessMask::vertexShader::shaderRead;
+				memoryBarrier.srcStageMask = PipelineStages::computeShader;
+				memoryBarrier.dstStageMask = PipelineStages::vertexShader;
+				memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+				memoryBarrier.dstAccessMask = AccessMasks::VertexShader::shaderRead;
 
 				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
 				dependencyInfo.memoryBarrierCount = 1;
@@ -325,7 +329,7 @@ namespace vulkanRendererBackend
 
 		// Prepare command recording:
 		std::vector<DrawCall*> drawCalls = Graphics::GetSortedDrawCallPointers();
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::shadow);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::shadow);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -377,9 +381,9 @@ namespace vulkanRendererBackend
 							vkCmdPushConstants(commandBuffer, m_shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer(), offsets);
-							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
 
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 							DEBUG_LOG_INFO("Directional light, mesh = {}", drawCall->pMesh->GetName());
 						}
@@ -402,9 +406,9 @@ namespace vulkanRendererBackend
 							vkCmdPushConstants(commandBuffer, m_shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer(), offsets);
-							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
 
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 							DEBUG_LOG_INFO("Positional light, mesh = {}", drawCall->pMesh->GetName());
 						}
@@ -422,7 +426,7 @@ namespace vulkanRendererBackend
 
 		// Prepare command recording:
 		std::vector<DrawCall*> drawCalls = Graphics::GetSortedDrawCallPointers();
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::forward);
 		commandPool.ResetPools();
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -499,8 +503,8 @@ namespace vulkanRendererBackend
 					}
 
 					vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
-					vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+					vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
@@ -510,10 +514,10 @@ namespace vulkanRendererBackend
 			// Release memory from vertex shaders to compute shaders:
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-				memoryBarrier.srcStageMask = pipelineStage::vertexShader;
-				memoryBarrier.dstStageMask = pipelineStage::computeShader;
-				memoryBarrier.srcAccessMask = accessMask::vertexShader::shaderRead;
-				memoryBarrier.dstAccessMask = accessMask::computeShader::shaderWrite;
+				memoryBarrier.srcStageMask = PipelineStages::vertexShader;
+				memoryBarrier.dstStageMask = PipelineStages::computeShader;
+				memoryBarrier.srcAccessMask = AccessMasks::VertexShader::shaderRead;
+				memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderWrite;
 
 				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
 				dependencyInfo.memoryBarrierCount = 1;
@@ -542,7 +546,7 @@ namespace vulkanRendererBackend
 		int endIndex = startIndex + baseChunkSize + (threadIndex < remainder ? 1 : 0);
 
 		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::forward);
 		VkCommandBuffer& secondaryCommandBuffer = commandPool.GetSecondaryVkCommandBuffer(threadIndex);
 
 		VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
@@ -611,9 +615,9 @@ namespace vulkanRendererBackend
 					}
 
 					vkCmdBindVertexBuffers(secondaryCommandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
-					vkCmdBindIndexBuffer(secondaryCommandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+					vkCmdBindIndexBuffer(secondaryCommandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
 
-					vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+					vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDrawIndexed(secondaryCommandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
@@ -629,7 +633,7 @@ namespace vulkanRendererBackend
 		PROFILE_FUNCTION();
 
 		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::postRenderCompute);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -685,7 +689,7 @@ namespace vulkanRendererBackend
 				uint32_t groupCountY = (computeCall->threadCount.y + blockSize.y - 1) / blockSize.y;
 				uint32_t groupCountZ = (computeCall->threadCount.z + blockSize.z - 1) / blockSize.z;
 
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 				DEBUG_LOG_ERROR("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 
@@ -693,10 +697,10 @@ namespace vulkanRendererBackend
 				// Thus add memory barrier between every effect:
 				{
 					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-					memoryBarrier.srcStageMask = pipelineStage::computeShader;
-					memoryBarrier.dstStageMask = pipelineStage::computeShader;
-					memoryBarrier.srcAccessMask = accessMask::computeShader::shaderWrite;
-					memoryBarrier.dstAccessMask = accessMask::computeShader::shaderRead;
+					memoryBarrier.srcStageMask = PipelineStages::computeShader;
+					memoryBarrier.dstStageMask = PipelineStages::computeShader;
+					memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+					memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderRead;
 
 					VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
 					dependencyInfo.memoryBarrierCount = 1;
@@ -710,10 +714,10 @@ namespace vulkanRendererBackend
 			// Transition renderTexture image to shader read only optimal:
 			{
 				VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				VkPipelineStageFlags2 srcStage = pipelineStage::computeShader;
-				VkPipelineStageFlags2 dstStage = pipelineStage::fragmentShader;
-				VkAccessFlags2 srcAccessMask = accessMask::computeShader::shaderWrite;
-				VkAccessFlags2 dstAccessMask = accessMask::fragmentShader::shaderRead;
+				PipelineStage srcStage = PipelineStages::computeShader;
+				PipelineStage dstStage = PipelineStages::fragmentShader;
+				VkAccessFlags2 srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+				VkAccessFlags2 dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 				DEBUG_LOG_ERROR("Render Image Transition: ??? -> shader read only");
 			}
@@ -725,7 +729,7 @@ namespace vulkanRendererBackend
 		PROFILE_FUNCTION();
 
 		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::present);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -733,10 +737,13 @@ namespace vulkanRendererBackend
 		// Record present commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
+			VkExtent2D currentExtent;
+			Context::GetSurface()->GetCurrentExtent(currentExtent);
+
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = (float)Context::surface.GetCurrentExtent().width;
-			viewport.height = (float)Context::surface.GetCurrentExtent().height;
+			viewport.width = (float)currentExtent.width;
+			viewport.height = (float)currentExtent.height;
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -751,7 +758,7 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = Context::surface.GetCurrentExtent();
+			renderPassBeginInfo.renderArea.extent = currentExtent;
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -763,9 +770,9 @@ namespace vulkanRendererBackend
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipeline);
 
 				vkCmdBindVertexBuffers(commandBuffer, 0, m_presentBindingCount, m_pPresentMaterial->GetMeshBuffers(m_pPresentMesh), m_pPresentMaterial->GetMeshOffsets(m_pPresentMesh));
-				vkCmdBindIndexBuffer(commandBuffer, m_pPresentMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, Mesh::GetIndexType());
+				vkCmdBindIndexBuffer(commandBuffer, m_pPresentMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
 
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipelineLayout, 0, 1, &m_pPresentShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipelineLayout, 0, 1, &m_pPresentShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 				vkCmdDrawIndexed(commandBuffer, 3 * m_pPresentMesh->GetTriangleCount(), 1, 0, 0, 0);
 				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", m_pPresentMaterial->GetName());
 				
@@ -780,7 +787,7 @@ namespace vulkanRendererBackend
 		PROFILE_FUNCTION();
 
 		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::present);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -788,13 +795,16 @@ namespace vulkanRendererBackend
 		// Record present commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
+			VkExtent2D currentExtent;
+			Context::GetSurface()->GetCurrentExtent(currentExtent);
+
 			// Render pass info:
 			PresentRenderPass* presentRenderPass = RenderPassManager::GetPresentRenderPass();
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = Context::surface.GetCurrentExtent();
+			renderPassBeginInfo.renderArea.extent = currentExtent;
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -810,61 +820,103 @@ namespace vulkanRendererBackend
 	void Renderer::SubmitPreRenderComputeCommands()
 	{
 		PROFILE_FUNCTION();
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::preRenderCompute);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::preRenderCompute);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_acquireSemaphores[Context::frameIndex];
-		submitInfo.pWaitDstStageMask = &waitStage;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_preRenderComputeToShadowSemaphores[Context::frameIndex];
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_acquireSemaphores[Context::GetFrameIndex()];
+		waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
 
-		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		// Command buffer info:
+		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		cmdBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_preRenderComputeToShadowSemaphores[Context::GetFrameIndex()];
+		signalSemaphoreInfo.stageMask = PipelineStages::computeShader;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &cmdBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
 	void Renderer::SubmitShadowCommands()
 	{
 		PROFILE_FUNCTION();
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::shadow);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::shadow);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_preRenderComputeToShadowSemaphores[Context::frameIndex];
-		submitInfo.pWaitDstStageMask = &waitStage;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_preRenderComputeToShadowSemaphores[Context::GetFrameIndex()];
+		waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
 
-		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		// Command buffer info:
+		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		cmdBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[Context::GetFrameIndex()];
+		signalSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &cmdBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
 	void Renderer::SubmitForwardCommands()
 	{
 		PROFILE_FUNCTION();
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::forward);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
-		submitInfo.pWaitDstStageMask = &waitStage;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[Context::GetFrameIndex()];
+		waitSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest;
 
-		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		// Command buffer info:
+		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		cmdBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[Context::GetFrameIndex()];
+		signalSemaphoreInfo.stageMask = PipelineStages::computeShader;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &cmdBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
 	void Renderer::SubmitForwardCommandsParallel()
 	{
 		PROFILE_FUNCTION();
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::forward);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::forward);
 		VkCommandBuffer& primaryCommandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		std::vector<VkCommandBuffer>& secondaryCommandBuffers = commandPool.GetSecondaryVkCommandBuffers();
 		VkCommandBufferBeginInfo primaryBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -895,10 +947,10 @@ namespace vulkanRendererBackend
 			// Release memory from vertex shaders to compute shaders:
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-				memoryBarrier.srcStageMask = pipelineStage::vertexShader;
-				memoryBarrier.dstStageMask = pipelineStage::computeShader;
-				memoryBarrier.srcAccessMask = accessMask::vertexShader::shaderRead;
-				memoryBarrier.dstAccessMask = accessMask::computeShader::shaderWrite;
+				memoryBarrier.srcStageMask = PipelineStages::vertexShader;
+				memoryBarrier.dstStageMask = PipelineStages::computeShader;
+				memoryBarrier.srcAccessMask = AccessMasks::VertexShader::shaderRead;
+				memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderWrite;
 
 				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
 				dependencyInfo.memoryBarrierCount = 1;
@@ -909,53 +961,95 @@ namespace vulkanRendererBackend
 		}
 		vkEndCommandBuffer(primaryCommandBuffer);
 
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_shadowToForwardSemaphores[Context::frameIndex];
-		submitInfo.pWaitDstStageMask = &waitStage;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &primaryCommandBuffer;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[Context::GetFrameIndex()];
+		waitSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest;
 
-		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		// Command buffer info:
+		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		cmdBufferInfo.commandBuffer = primaryCommandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[Context::GetFrameIndex()];
+		signalSemaphoreInfo.stageMask = PipelineStages::computeShader;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &cmdBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
 	void Renderer::SubmitPostRenderComputeCommands()
 	{
 		PROFILE_FUNCTION();
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::postRenderCompute);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::postRenderCompute);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_forwardToPostRenderComputeSemaphores[Context::frameIndex];
-		submitInfo.pWaitDstStageMask = &waitStage;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_postRenderToPresentSemaphores[Context::frameIndex];
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[Context::GetFrameIndex()];
+		waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
 
-		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, nullptr));
+		// Command buffer info:
+		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		cmdBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_postRenderToPresentSemaphores[Context::GetFrameIndex()];
+		signalSemaphoreInfo.stageMask = PipelineStages::computeShader;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &cmdBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
 	void Renderer::SubmitPresentCommands()
 	{
 		PROFILE_FUNCTION();
-		CommandPool& commandPool = GetCommandPool(Context::frameIndex, RenderStage::present);
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::present);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_postRenderToPresentSemaphores[Context::frameIndex];
-		submitInfo.pWaitDstStageMask = &waitStage;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_releaseSemaphores[Context::frameIndex];
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_postRenderToPresentSemaphores[Context::GetFrameIndex()];
+		waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
 
-		VKA(vkQueueSubmit(Context::logicalDevice.GetGraphicsQueue().queue, 1, &submitInfo, m_frameFences[Context::frameIndex]));
+		// Command buffer info:
+		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		cmdBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_releaseSemaphores[Context::GetFrameIndex()];
+		signalSemaphoreInfo.stageMask = PipelineStages::colorAttachmentOutput;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &cmdBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, m_frameFences[Context::GetFrameIndex()]));
 	}
 
 	bool Renderer::PresentImage()
@@ -963,12 +1057,12 @@ namespace vulkanRendererBackend
 		PROFILE_FUNCTION();
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_releaseSemaphores[Context::frameIndex];
+		presentInfo.pWaitSemaphores = &m_releaseSemaphores[Context::GetFrameIndex()];
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &Context::GetVkSwapchainKHR();
 		presentInfo.pImageIndices = &m_imageIndex;
 
-		VkResult result = vkQueuePresentKHR(Context::logicalDevice.GetPresentQueue().queue, &presentInfo);
+		VkResult result = vkQueuePresentKHR(Context::GetLogicalDevice()->GetPresentQueue().queue, &presentInfo);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		{
@@ -987,8 +1081,8 @@ namespace vulkanRendererBackend
 		VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 		createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;	// Fence is created in the signaled state to prevent the first wait from blocking.
 
-		m_frameFences.resize(Context::framesInFlight);
-		for (uint32_t i = 0; i < Context::framesInFlight; i++)
+		m_frameFences.resize(Context::GetFramesInFlight());
+		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_frameFences[i]));
 			NAME_VK_FENCE(m_frameFences[i], "FrameFences" + std::to_string(i));
@@ -999,13 +1093,13 @@ namespace vulkanRendererBackend
 		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
         // One per frame in flight:
-		m_acquireSemaphores.resize(Context::framesInFlight);
-		m_preRenderComputeToShadowSemaphores.resize(Context::framesInFlight);
-		m_shadowToForwardSemaphores.resize(Context::framesInFlight);
-		m_forwardToPostRenderComputeSemaphores.resize(Context::framesInFlight);
-		m_postRenderToPresentSemaphores.resize(Context::framesInFlight);
-		m_releaseSemaphores.resize(Context::framesInFlight);
-		for (uint32_t i = 0; i < Context::framesInFlight; i++)
+		m_acquireSemaphores.resize(Context::GetFramesInFlight());
+		m_preRenderComputeToShadowSemaphores.resize(Context::GetFramesInFlight());
+		m_shadowToForwardSemaphores.resize(Context::GetFramesInFlight());
+		m_forwardToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
+		m_postRenderToPresentSemaphores.resize(Context::GetFramesInFlight());
+		m_releaseSemaphores.resize(Context::GetFramesInFlight());
+		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToShadowSemaphores[i]));
@@ -1023,13 +1117,13 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::DestroyFences()
 	{
-		for (uint32_t i = 0; i < Context::framesInFlight; i++)
+		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 			vkDestroyFence(Context::GetVkDevice(), m_frameFences[i], nullptr);
 		m_frameFences.clear();
 	}
 	void Renderer::DestroySemaphores()
 	{
-		for (uint32_t i = 0; i < Context::framesInFlight; i++)
+		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			vkDestroySemaphore(Context::GetVkDevice(), m_acquireSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToShadowSemaphores[i], nullptr);
@@ -1058,7 +1152,7 @@ namespace vulkanRendererBackend
 		// shadowCommandBufferFrame0
 		// shadowCommandBufferFrame1
 		assert(renderStage < (int)RenderStage::stageCount);
-		assert(frameIndex < Context::framesInFlight);
-		return m_commandPools[frameIndex + (int)renderStage * Context::framesInFlight];
+		assert(frameIndex < Context::GetFramesInFlight());
+		return m_commandPools[frameIndex + (int)renderStage * Context::GetFramesInFlight()];
 	}
 }

@@ -1,14 +1,15 @@
 #include "vulkanComputeSession.h"
 #include "emberMath.h"
-#include "vulkanAccessMasks.h"
-#include "vulkanComputeCall.h"
+#include "vulkanAccessMask.h"
 #include "vulkanComputePushConstant.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanPipeline.h"
-#include "vulkanPipelineStages.h"
+#include "vulkanPipelineStage.h"
 #include "vulkanShaderProperties.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -19,7 +20,7 @@ namespace vulkanRendererBackend
 	{
 		m_computeCalls.push_back(computeCall);
 	}
-	void ComputeSession::Dispatch(VkCommandBuffer& commandBuffer, VkFence& fence, float time, float deltaTime)
+	void ComputeSession::Dispatch(VkCommandBuffer commandBuffer, VkFence fence, float time, float deltaTime)
 	{
 		// Record command buffer:
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -38,8 +39,8 @@ namespace vulkanRendererBackend
 				if (computeCall.pComputeShader == nullptr)
 				{
 					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-					memoryBarrier.srcStageMask = pipelineStage::computeShader;
-					memoryBarrier.dstStageMask = pipelineStage::computeShader;
+					memoryBarrier.srcStageMask = PipelineStages::computeShader;
+					memoryBarrier.dstStageMask = PipelineStages::computeShader;
 					memoryBarrier.srcAccessMask = computeCall.srcAccessMask;
 					memoryBarrier.dstAccessMask = computeCall.dstAccessMask;
 
@@ -79,7 +80,7 @@ namespace vulkanRendererBackend
 					uint32_t groupCountY = (computeCall.threadCount.y + blockSize.y - 1) / blockSize.y;
 					uint32_t groupCountZ = (computeCall.threadCount.z + blockSize.z - 1) / blockSize.z;
 
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall.pShaderProperties->GetDescriptorSet(Context::frameIndex), 0, nullptr);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall.pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 				}
 			}
@@ -96,7 +97,7 @@ namespace vulkanRendererBackend
 		submitInfo.signalSemaphoreCount = 0;
 		submitInfo.pSignalSemaphores = nullptr;
 		VKA(vkResetFences(Context::GetVkDevice(), 1, &fence));
-		VKA(vkQueueSubmit(Context::logicalDevice.GetComputeQueue().queue, 1, &submitInfo, fence));
+		VKA(vkQueueSubmit(Context::GetLogicalDevice()->GetComputeQueue().queue, 1, &submitInfo, fence));
 	}
 	void ComputeSession::ResetComputeCalls()
 	{

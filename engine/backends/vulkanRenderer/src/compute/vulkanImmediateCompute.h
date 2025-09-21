@@ -1,6 +1,5 @@
 #pragma once
 #include "emberMath.h"
-#include "vulkanComputeCall.h"
 
 
 
@@ -14,17 +13,17 @@ namespace vulkanRendererBackend
 
 	class Immediate
 	{
-	private: // Members
+	private: // Members:
 		static bool s_isInitialized;
 
-	public: // Methods
+	public: // Methods:
 		static void Init();
 		static void Clear();
 
 		// Immediate dispatch call:
 		static void Dispatch(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount, float time, float deltaTime);
 
-	private: // Methods
+	private: // Methods:
 		// Delete all constructors:
 		Immediate() = delete;
 		Immediate(const Immediate&) = delete;

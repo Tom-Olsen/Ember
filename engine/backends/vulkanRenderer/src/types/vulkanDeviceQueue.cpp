@@ -5,7 +5,7 @@
 
 namespace vulkanRendererBackend
 {
-	std::string DeviceQueue::ToString() const
+	std::string DeviceQueue::ToString()
 	{
 		std::stringstream ss;
 		ss << "(" << familyIndex << "," << (void*)queue << ")";

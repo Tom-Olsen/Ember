@@ -4,46 +4,14 @@
 #include "vulkanMacros.h"
 #include <algorithm>
 #include <assert.h>
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	PhysicalDevice::PhysicalDevice()
-	{
-		m_physicalDevice = VK_NULL_HANDLE;
-		m_maxMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
-		m_supportsDepthClamp = false;
-		m_supportsDepthBiasClamp = false;
-		m_supportsMultiViewport = false;
-	}
-	PhysicalDevice::~PhysicalDevice()
-	{
-		Cleanup();
-	}
-
-
-
-	// Move semantics:
-	PhysicalDevice::PhysicalDevice(PhysicalDevice&& other) noexcept
-	{
-		MoveFrom(other);
-	}
-	PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other) noexcept
-	{
-		if (this != &other)
-		{
-			Cleanup();
-			MoveFrom(other);
-		}
-		return *this;
-	}
-
-
-
-	// Public methdos:
-	void PhysicalDevice::Init(Instance* pInstance)
+	PhysicalDevice::PhysicalDevice(Instance* pInstance)
 	{
 		// Assertions:
 		assert(pInstance != nullptr);
@@ -76,23 +44,48 @@ namespace vulkanRendererBackend
 		// Determine max msaa samples:
 		m_maxMsaaSamples = MaxUsableMsaaSampleCount();
 	}
+	PhysicalDevice::~PhysicalDevice()
+	{
+		Cleanup();
+	}
+
+
+
+	// Move semantics:
+	PhysicalDevice::PhysicalDevice(PhysicalDevice&& other) noexcept
+	{
+		MoveFrom(other);
+	}
+	PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Cleanup();
+			MoveFrom(other);
+		}
+		return *this;
+	}
+
+
+
+	// Public methdos:
 	const VkPhysicalDevice& PhysicalDevice::GetVkPhysicalDevice() const
 	{
 		return m_physicalDevice;
 	}
-	VkSampleCountFlagBits PhysicalDevice::GetMaxMsaaSamples() const
+	uint32_t PhysicalDevice::GetMaxMsaaSamples() const
 	{
 		return m_maxMsaaSamples;
 	}
-	VkBool32 PhysicalDevice::SupportsDepthClamp() const
+	bool PhysicalDevice::SupportsDepthClamp() const
 	{
 		return m_supportsDepthClamp;
 	}
-	VkBool32 PhysicalDevice::SupportsDepthBiasClamp() const
+	bool PhysicalDevice::SupportsDepthBiasClamp() const
 	{
 		return m_supportsDepthBiasClamp;
 	}
-	VkBool32 PhysicalDevice::SupportsMultiViewport() const
+	bool PhysicalDevice::SupportsMultiViewport() const
 	{
 		return m_supportsMultiViewport;
 	}
@@ -126,18 +119,18 @@ namespace vulkanRendererBackend
 		vkGetPhysicalDeviceFeatures(dev, &deviceFeatures);
 
 		// Check essential features:
-		VkBool32 essentials = (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU);
+		bool essentials = (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU);
 		essentials &= HasGraphicsAndComputeQueueFamily(dev);
-		essentials &= deviceFeatures.geometryShader;
-		essentials &= deviceFeatures.tessellationShader;
-		essentials &= deviceFeatures.wideLines;
-		essentials &= deviceFeatures.samplerAnisotropy;
-		essentials &= deviceFeatures.dualSrcBlend;
-		essentials &= deviceFeatures.depthBiasClamp;
-		essentials &= deviceFeatures.depthBounds;
-		essentials &= deviceFeatures.shaderClipDistance;
-		essentials &= deviceFeatures.shaderCullDistance;
-		essentials &= deviceFeatures.samplerAnisotropy;
+		essentials &= static_cast<bool>(deviceFeatures.geometryShader);
+		essentials &= static_cast<bool>(deviceFeatures.tessellationShader);
+		essentials &= static_cast<bool>(deviceFeatures.wideLines);
+		essentials &= static_cast<bool>(deviceFeatures.samplerAnisotropy);
+		essentials &= static_cast<bool>(deviceFeatures.dualSrcBlend);
+		essentials &= static_cast<bool>(deviceFeatures.depthBiasClamp);
+		essentials &= static_cast<bool>(deviceFeatures.depthBounds);
+		essentials &= static_cast<bool>(deviceFeatures.shaderClipDistance);
+		essentials &= static_cast<bool>(deviceFeatures.shaderCullDistance);
+		essentials &= static_cast<bool>(deviceFeatures.samplerAnisotropy);
 		if (essentials == false)
 			return -1; // negative score = invalid device.
 
@@ -157,7 +150,7 @@ namespace vulkanRendererBackend
 
 		return score;
 	}
-	VkBool32 PhysicalDevice::HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const
+	bool PhysicalDevice::HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const
 	{
 		// Find queue family that supports Graphics and Compute.
 		// This is needed for tightly integrating graphics shaders that rely on output data of compute shaders, e.g. LineRendererPro.
@@ -178,7 +171,7 @@ namespace vulkanRendererBackend
 
 		return false;
 	}
-	VkBool32 PhysicalDevice::HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const
+	bool PhysicalDevice::HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const
 	{
 		// Find queue family that supports presenting to the surface.
 		uint32_t queueFamilyCount = 0;
@@ -197,19 +190,19 @@ namespace vulkanRendererBackend
 
 		return false;
 	}
-	VkSampleCountFlagBits PhysicalDevice::MaxUsableMsaaSampleCount() const
+	uint32_t PhysicalDevice::MaxUsableMsaaSampleCount() const
 	{
 		VkPhysicalDeviceProperties physicalDeviceProperties;
 		vkGetPhysicalDeviceProperties(m_physicalDevice, &physicalDeviceProperties);
 
 		VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
-		if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
-		if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
-		if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
-		if (counts & VK_SAMPLE_COUNT_8_BIT) { return VK_SAMPLE_COUNT_8_BIT; }
-		if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
-		if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
+		if (counts & VK_SAMPLE_COUNT_64_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_64_BIT); }
+		if (counts & VK_SAMPLE_COUNT_32_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_32_BIT); }
+		if (counts & VK_SAMPLE_COUNT_16_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_16_BIT); }
+		if (counts & VK_SAMPLE_COUNT_8_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_8_BIT); }
+		if (counts & VK_SAMPLE_COUNT_4_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_4_BIT); }
+		if (counts & VK_SAMPLE_COUNT_2_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_2_BIT); }
 
-		return VK_SAMPLE_COUNT_1_BIT;
+		return static_cast<uint32_t>(VK_SAMPLE_COUNT_1_BIT);
 	}
 }

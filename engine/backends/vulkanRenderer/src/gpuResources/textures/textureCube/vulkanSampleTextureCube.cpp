@@ -1,16 +1,14 @@
 #include "vulkanSampleTextureCube.h"
 #include "assetLoader.h"
-#include "vmaBuffer.h"
 #include "vmaImage.h"
-#include "vulkanAccessMasks.h"
+#include "vulkanAccessMask.h"
 #include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStages.h"
+#include "vulkanPipelineStage.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
-#include "vulkanTextureBatchUploader.h"
 #include <array>
-#include <cstring>
 #include <memory>
 
 
@@ -18,7 +16,7 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	SampleTextureCube::SampleTextureCube(const std::string& name, VkFormat format, int width, int height, const std::array<void*, 6>& data)
+	SampleTextureCube::SampleTextureCube(const std::string& name, Format format, int width, int height, const std::array<void*, 6>& data)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("SampleTextureCube '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
@@ -28,21 +26,21 @@ namespace vulkanRendererBackend
 		m_height = height;
 		m_channels = GetChannelCount(format);
 		m_format = format;
-		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		m_descriptorType = DescriptorTypes::sampled_image;
 
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Upload(data));
 		Init(pStagingBuffer.get());
 
 		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTextureCube " + m_name);
 	}
-	SampleTextureCube::SampleTextureCube(const std::string& name, VkFormat format, const std::filesystem::path& path)
+	SampleTextureCube::SampleTextureCube(const std::string& name, Format format, const std::filesystem::path& path)
     {
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("SampleTextureCube '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
 
 		m_name = name;
 		m_format = format;
-		m_descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		m_descriptorType = DescriptorTypes::sampled_image;
 
         // Check if folder exists:
 		if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path))
@@ -81,28 +79,28 @@ namespace vulkanRendererBackend
 
 
 	// Public methods:
-	void SampleTextureCube::RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
+	void SampleTextureCube::RecordGpuCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
 	{
 		// Transition0: Layout: undefined->transfer, Queue: transfer
 		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = pipelineStage::topOfPipe;
-			VkPipelineStageFlags2 dstStage = pipelineStage::transfer;
-			VkAccessFlags2 srcAccessMask = accessMask::topOfPipe::none;
-			VkAccessFlags2 dstAccessMask = accessMask::transfer::transferWrite;
+			ImageLayout newLayout = ImageLayouts::transfer_dst_optimal;
+			PipelineStage srcStage = PipelineStages::topOfPipe;
+			PipelineStage dstStage = PipelineStages::transfer;
+			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
+			AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
 			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 
 		// Upload: pStagingBuffer -> texture
-		pStagingBuffer->UploadToTexture(transferCommandBuffer, this, m_pImage->GetSubresourceRange().layerCount);
+		pStagingBuffer->UploadToTexture(transferCommandBuffer, this, m_pImage->GetImageSubresourceRange().layerCount);
 
 		// Transition1: Layout: transfer->shaderRead
 		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = pipelineStage::transfer;
-			VkPipelineStageFlags2 dstStage = pipelineStage::fragmentShader;
-			VkAccessFlags2 srcAccessMask = accessMask::transfer::transferWrite;
-			VkAccessFlags2 dstAccessMask = accessMask::fragmentShader::shaderRead;
+			ImageLayout newLayout = ImageLayouts::shader_read_only_optimal;
+			PipelineStage srcStage = PipelineStages::transfer;
+			PipelineStage dstStage = PipelineStages::fragmentShader;
+			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
+			AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 	}
@@ -125,33 +123,33 @@ namespace vulkanRendererBackend
 		delete[] pFacePixels;
 
 		// Define subresource range:
-		VkImageSubresourceRange subresourceRange;
-		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		ImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = ImageAspectFlags::color_bit;
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.baseMipLevel = 0;
 		subresourceRange.levelCount = 1;	// mipmapping makes no sense for skyboxes.
 		subresourceRange.layerCount = 6;
 
 		// Create image:
-		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		VkImageCreateFlags imageFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-		DeviceQueue queue = Context::logicalDevice.GetTransferQueue();
+		ImageUsageFlag usageFlags = ImageUsageFlags::transfer_src_bit | ImageUsageFlags::transfer_dst_bit | ImageUsageFlags::sampled_bit;
+		ImageCreateFlag imageFlags = ImageCreateFlags::cube_compatible_bit;
+		MemoryPropertyFlag memoryFlags = MemoryPropertyFlags::device_local_bit;
+		ImageViewType viewType = ImageViewTypes::view_type_cube;
+		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
 		return pStagingBuffer;
 	}
 	void SampleTextureCube::Init(StagingBuffer* pStagingBuffer)
 	{
-		const DeviceQueue& transferQueue = Context::logicalDevice.GetTransferQueue();
-		const DeviceQueue& graphicsQueue = Context::logicalDevice.GetGraphicsQueue();
+		const DeviceQueue& transferQueue = Context::GetLogicalDevice()->GetTransferQueue();
+		const DeviceQueue& graphicsQueue = Context::GetLogicalDevice()->GetGraphicsQueue();
 		if (transferQueue.queue != graphicsQueue.queue)
 		{
 			VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
 			VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
 			RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer);
-			SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, pipelineStage::transfer);
+			SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, PipelineStages::transfer);
 		}
 		else
 		{

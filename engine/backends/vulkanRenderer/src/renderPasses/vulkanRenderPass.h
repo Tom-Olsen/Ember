@@ -1,6 +1,11 @@
 #pragma once
 #include <vector>
-#include <vulkan/vulkan.h>
+
+
+
+// Forward decleration:
+typedef struct VkRenderPass_T* VkRenderPass;
+typedef struct VkFramebuffer_T* VkFramebuffer;
 
 
 

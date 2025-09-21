@@ -34,9 +34,9 @@ namespace emberEngine
 		VkDevice vkDevice = Context::GetVkDevice();
 		VkRenderPass vkRenderPass = RenderPassManager::GetPresentRenderPass()->GetVkRenderPass();
 		VkDescriptorPool vkDescriptorPool = Context::GetVkDescriptorPool();
-		VkQueue vkQueue = Context::logicalDevice.GetGraphicsQueue().queue;
-		uint32_t queueFamilyIndex = Context::logicalDevice.GetGraphicsQueue().familyIndex;
-		uint32_t framesInFlight = Context::framesInFlight;
+		VkQueue vkQueue = Context::GetLogicalDevice()->GetGraphicsQueue().queue;
+		uint32_t queueFamilyIndex = Context::GetLogicalDevice()->GetGraphicsQueue().familyIndex;
+		uint32_t framesInFlight = Context::GetFramesInFlight();
 		uint32_t spwachainImageCount = Context::swapchains[0].GetImages().size();
 
 		if (true)

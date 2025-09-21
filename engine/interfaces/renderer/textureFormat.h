@@ -6,7 +6,7 @@
 
 namespace emberEngine
 {
-    enum class TextureFormatType : uint16_t
+    enum class TextureFormatType : uint32_t
     {
         // Fallback:
 		unknown = 0,        // unknown / unsupported format

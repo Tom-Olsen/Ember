@@ -9,6 +9,7 @@
 #include "vulkanVertexBuffer.h"
 #include "spirvReflect.h"
 #include "vmaBuffer.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -149,7 +150,7 @@ namespace vulkanRendererBackend
 			m_meshBuffers[i] = pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer();
 		return m_meshBuffers.data();
 	}
-	const VkDeviceSize* const Material::GetMeshOffsets(Mesh* pMesh)
+	const uint64_t* const Material::GetMeshOffsets(Mesh* pMesh)
 	{
 		for (uint32_t i = 0; i < m_pVertexInputDescriptions->size; i++)
 		{

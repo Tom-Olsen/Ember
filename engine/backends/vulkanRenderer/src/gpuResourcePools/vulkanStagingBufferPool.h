@@ -36,6 +36,5 @@ namespace vulkanRendererBackend
 
         StagingBuffer* CheckOut(uint32_t size);
         void Return(StagingBuffer* pStagingBuffer);
-        void ShrinkToFit(); // Should only ever be called if current usage is 0.
     };
 }

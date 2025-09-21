@@ -30,8 +30,8 @@ namespace vulkanRendererBackend
 		s_pColorSampler = std::make_unique<ColorSampler>("colorSampler");
 		s_pShadowSampler = std::make_unique<ShadowSampler>("shadowSampler");
 		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, 1, "1x1Dummy");
-		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>("white", VK_FORMAT_R8G8B8A8_UNORM, 1, 1, (void*)&Float4::white);
-		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>("defaultNormalMap", VK_FORMAT_R8G8B8A8_UNORM, 1, 1, (void*)&Float4::up);
+		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>("white", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::white);
+		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>("defaultNormalMap", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::up);
         
         // Thisis ugly:
         std::array<Float4*, 6> floatPtrs = { &Float4::white, &Float4::white, &Float4::white, &Float4::white, &Float4::white, &Float4::white };
@@ -39,9 +39,9 @@ namespace vulkanRendererBackend
         for (size_t i = 0; i < 6; i++)
             faces[i] = static_cast<void*>(floatPtrs[i]);
 
-		s_pDefaultTextureCube = std::make_unique<SampleTextureCube>("whiteSkybox", VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, faces);
-		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>("defaultArrayTexture2d", VK_FORMAT_D32_SFLOAT, 2, 1, 1);
-		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>("defaultStorageTexture", VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, (void*)&Float4::one);
+		s_pDefaultTextureCube = std::make_unique<SampleTextureCube>("whiteSkybox", Formats::r32g32b32a32_sfloat, 1, 1, faces);
+		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>("defaultArrayTexture2d", Formats::d32_sfloat, 2, 1, 1);
+		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>("defaultStorageTexture", Formats::r32g32b32a32_sfloat, 1, 1, (void*)&Float4::one);
 	}
 	void DefaultGpuResources::Clear()
 	{

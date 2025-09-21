@@ -1,10 +1,11 @@
 #include "vulkanPreRenderCompute.h"
 #include "logger.h"
-#include "vulkanAccessMasks.h"
+#include "vulkanAccessMask.h"
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
 #include "vulkanPoolManager.h"
 #include "vulkanShaderProperties.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -33,7 +34,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Workload recording:
+	// Recording:
 	ShaderProperties* PreRender::RecordComputeShader(ComputeShader* pComputeShader, Uint3 threadCount)
 	{
 		if (!pComputeShader)
@@ -49,7 +50,7 @@ namespace vulkanRendererBackend
 
 		// Setup compute call:
 		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(pComputeShader);
-		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, accessMask::none::none, accessMask::none::none };
+		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
 		s_dynamicComputeCalls.push_back(computeCall);
 		s_callIndex++;
 
@@ -75,11 +76,11 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, accessMask::none::none, accessMask::none::none };
+		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
 		s_staticComputeCalls.push_back(computeCall);
 		s_callIndex++;
 	}
-	void PreRender::RecordBarrier(VkAccessFlags2 srcAccessMask, VkAccessFlags2 dstAccessMask)
+	void PreRender::RecordBarrier(AccessMask srcAccessMask, AccessMask dstAccessMask)
 	{
 		ComputeCall computeCall = { s_callIndex, Uint3::zero, nullptr, nullptr, srcAccessMask, dstAccessMask };
 		s_staticComputeCalls.push_back(computeCall);

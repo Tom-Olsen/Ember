@@ -1,0 +1,23 @@
+#pragma once
+#include "textureFormat.h"
+#include <string>
+
+
+
+namespace emberBackendInterface
+{
+    class ITexture
+    {
+    public: // Methods:
+        // Virtual destructor for v-table:
+        virtual ~ITexture() = default;
+
+        // Getters:
+        virtual const std::string& GetName() const = 0;
+        virtual uint32_t GetWidth() const = 0;
+        virtual uint32_t GetHeight() const = 0;
+        virtual uint32_t GetDepth() const = 0;
+        virtual uint32_t GetChannels() const = 0;
+        virtual const emberEngine::TextureFormat& GetTextureFormat() const = 0;
+    };
+}

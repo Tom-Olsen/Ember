@@ -7,6 +7,7 @@
 #include "vulkanContext.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanGarbageCollector.h"
+#include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
@@ -17,6 +18,7 @@
 #include "vulkanStorageBuffer.h"
 #include "vulkanTexture2d.h"
 #include "vulkanUniformBuffer.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -28,56 +30,50 @@ namespace vulkanRendererBackend
 		m_pShader = pShader;
 
 		// Create resource bindings and uniform buffer update logic for each frameInFlight:
-		m_uniformBufferMaps = std::vector<std::unordered_map<std::string, UniformBufferBinding>>(Context::framesInFlight);
-		m_samplerMaps = std::vector<std::unordered_map<std::string, SamplerBinding>>(Context::framesInFlight);
-		m_texture2dMaps = std::vector<std::unordered_map<std::string, TextureBinding>>(Context::framesInFlight);
-		m_storageBufferMaps = std::vector<std::unordered_map<std::string, StorageBufferBinding>>(Context::framesInFlight);
-		m_updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(Context::framesInFlight);
+		m_uniformBufferMaps = std::vector<std::unordered_map<std::string, UniformBufferBinding>>(Context::GetFramesInFlight());
+		m_samplerMaps = std::vector<std::unordered_map<std::string, SamplerBinding>>(Context::GetFramesInFlight());
+		m_texture2dMaps = std::vector<std::unordered_map<std::string, TextureBinding>>(Context::GetFramesInFlight());
+		m_storageBufferMaps = std::vector<std::unordered_map<std::string, StorageBufferBinding>>(Context::GetFramesInFlight());
+		m_updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(Context::GetFramesInFlight());
 
 		// Initialize all resource bindings:
-		for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
 			const DescriptorBoundResources* const descriptorBoundResources = m_pShader->GetDescriptorBoundResources();
 			for (uint32_t i = 0; i < descriptorBoundResources->bindingCount; i++)
 			{
-				VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = descriptorBoundResources->descriptorSetLayoutBindings[i];
-				VkDescriptorType descriptorType = descriptorSetLayoutBinding.descriptorType;
+				DescriptorSetLayoutBinding descriptorSetLayoutBinding = descriptorBoundResources->descriptorSetLayoutBindings[i];
+				DescriptorType descriptorType = descriptorSetLayoutBinding.descriptorType;
 				uint32_t binding = descriptorSetLayoutBinding.binding;
 				const std::string& name = descriptorBoundResources->descriptorSetBindingNames[i];
 
-				if (descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+				if (descriptorType == DescriptorTypes::uniform_buffer)
 					InitUniformBufferResourceBinding(frameIndex, name, binding);
-				else if (descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER)
+				else if (descriptorType == DescriptorTypes::sampler)
 					InitSamplerResourceBinding(frameIndex, name, binding, DefaultGpuResources::GetColorSampler());
-				else if (descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+				else if (descriptorType == DescriptorTypes::sampled_image)
 				{
-					VkImageViewType viewType = descriptorBoundResources->sampleViewTypeMap.at(name);
-					switch (viewType)
-					{
-						case VK_IMAGE_VIEW_TYPE_1D: throw std::runtime_error("Initialization for sampling Texture1D descriptorSet not implemented yet!"); break;
-						case VK_IMAGE_VIEW_TYPE_2D: InitTexture2dResourceBinding(frameIndex, name, binding, (Texture2d*)DefaultGpuResources::GetDefaultSampleTexture2d(), descriptorType); break;
-						case VK_IMAGE_VIEW_TYPE_3D: throw std::runtime_error("Initialization for sampling Texture3D descriptorSet not implemented yet!"); break;
-						case VK_IMAGE_VIEW_TYPE_CUBE: InitTexture2dResourceBinding(frameIndex, name, binding, (Texture2d*)DefaultGpuResources::GetDefaultTextureCube(), descriptorType); break;
-						case VK_IMAGE_VIEW_TYPE_1D_ARRAY: throw std::runtime_error("Initialization for sampling Texture1DArray descriptorSet not implemented yet!"); break;
-						case VK_IMAGE_VIEW_TYPE_2D_ARRAY: InitTexture2dResourceBinding(frameIndex, name, binding, (Texture2d*)DefaultGpuResources::GetDefaultDepthTexture2dArray(), descriptorType); break;
-						case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY: throw std::runtime_error("Initialization for sampling CubeTextureArray descriptorSet not implemented yet!"); break;
-					}
+					ImageViewType viewType = descriptorBoundResources->sampleViewTypeMap.at(name);
+					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for sampling Texture1D descriptorSet not implemented yet!");
+					else if (viewType == ImageViewTypes::view_type_2d) InitTexture2dResourceBinding(frameIndex, name, binding, (Texture2d*)DefaultGpuResources::GetDefaultSampleTexture2d(), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for sampling Texture3D descriptorSet not implemented yet!");
+					else if (viewType == ImageViewTypes::view_type_cube) InitTexture2dResourceBinding(frameIndex, name, binding, (Texture2d*)DefaultGpuResources::GetDefaultTextureCube(), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_1d_array) throw std::runtime_error("Initialization for sampling Texture1DArray descriptorSet not implemented yet!");
+					else if (viewType == ImageViewTypes::view_type_2d_array) InitTexture2dResourceBinding(frameIndex, name, binding, (Texture2d*)DefaultGpuResources::GetDefaultDepthTexture2dArray(), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization for sampling CubeTextureArray descriptorSet not implemented yet!");
 				}
-				else if (descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
+				else if (descriptorType == DescriptorTypes::storage_image)
 				{
-					VkImageViewType viewType = descriptorBoundResources->storageViewTypeMap.at(name);
-					switch (viewType)
-					{
-						case VK_IMAGE_VIEW_TYPE_1D: throw std::runtime_error("Initialization for storage Texture1D descriptorSet not implemented yet!"); break;
-						case VK_IMAGE_VIEW_TYPE_2D: InitTexture2dResourceBinding(frameIndex, name, binding, (Texture2d*)DefaultGpuResources::GetDefaultStorageTexture2d(), descriptorType); break;
-						case VK_IMAGE_VIEW_TYPE_3D: throw std::runtime_error("Initialization for storage Texture3D descriptorSet not implemented yet!"); break;
-						case VK_IMAGE_VIEW_TYPE_CUBE: throw std::runtime_error("Initialization for storage CubeTexture descriptorSet not implemented yet!"); break;
-						case VK_IMAGE_VIEW_TYPE_1D_ARRAY: throw std::runtime_error("Initialization storage for Texture1DArray descriptorSet not implemented yet!"); break;
-						case VK_IMAGE_VIEW_TYPE_2D_ARRAY: throw std::runtime_error("Initialization storage for Texture2DArray descriptorSet not implemented yet!"); break;
-						case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY: throw std::runtime_error("Initialization storage for CubeTextureArray descriptorSet not implemented yet!"); break;
-					}
+					ImageViewType viewType = descriptorBoundResources->storageViewTypeMap.at(name);
+					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for storage Texture1D descriptorSet not implemented yet!");
+					else if (viewType == ImageViewTypes::view_type_2d) InitTexture2dResourceBinding(frameIndex, name, binding, (Texture2d*)DefaultGpuResources::GetDefaultStorageTexture2d(), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for storage Texture3D descriptorSet not implemented yet!");
+					else if (viewType == ImageViewTypes::view_type_cube) throw std::runtime_error("Initialization for storage CubeTexture descriptorSet not implemented yet!");
+					else if (viewType == ImageViewTypes::view_type_1d_array) throw std::runtime_error("Initialization storage for Texture1DArray descriptorSet not implemented yet!");
+					else if (viewType == ImageViewTypes::view_type_2d_array) throw std::runtime_error("Initialization storage for Texture2DArray descriptorSet not implemented yet!");
+					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization storage for CubeTextureArray descriptorSet not implemented yet!");
 				}
-				else if (descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
+				else if (descriptorType == DescriptorTypes::storage_buffer)
 					InitStorageBufferResourceBinding(frameIndex, name, binding, DefaultGpuResources::GetDefaultStorageBuffer());
 			}
 		}
@@ -98,7 +94,7 @@ namespace vulkanRendererBackend
 	ShaderProperties::~ShaderProperties()
 	{
 		// Queue the destruction of each descriptor set for later collection.
-		for (uint32_t i = 0; i < Context::framesInFlight; i++)
+		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			VkDescriptorSet descriptorSet = m_descriptorSets[i];
 			GarbageCollector::RecordCleanup([descriptorSet]()
@@ -386,15 +382,15 @@ namespace vulkanRendererBackend
 	}
 	Sampler* ShaderProperties::GetSampler(const std::string& name) const
 	{
-		auto it = m_samplerMaps[Context::frameIndex].find(name);
-		if (it != m_samplerMaps[Context::frameIndex].end())
+		auto it = m_samplerMaps[Context::GetFrameIndex()].find(name);
+		if (it != m_samplerMaps[Context::GetFrameIndex()].end())
 			return it->second.pSampler;
 		return nullptr;
 	}
 	Texture2d* ShaderProperties::GetTexture2d(const std::string& name) const
 	{
-		auto it = m_texture2dMaps[Context::frameIndex].find(name);
-		if (it != m_texture2dMaps[Context::frameIndex].end())
+		auto it = m_texture2dMaps[Context::GetFrameIndex()].find(name);
+		if (it != m_texture2dMaps[Context::GetFrameIndex()].end())
 			return it->second.pTexture2d;
 		return nullptr;
 	}
@@ -405,8 +401,8 @@ namespace vulkanRendererBackend
 	void ShaderProperties::UpdateShaderData(uint32_t frameIndex)
 	{
 		// invalid frameIndex (-1 or >= framesInFlight) => use current frameIndex. frameIndex = -1 is default behaviour.
-		if (frameIndex == -1 || frameIndex >= Context::framesInFlight)
-			frameIndex = Context::frameIndex;
+		if (frameIndex == -1 || frameIndex >= Context::GetFramesInFlight())
+			frameIndex = Context::GetFrameIndex();
 
 		// Stream uniform buffer data from host memory to GPU only for current frameIndex:
 		for (auto& [name, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
@@ -467,7 +463,7 @@ namespace vulkanRendererBackend
 	}
 	void ShaderProperties::PrintMaps() const
 	{
-		for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
 			 LOG_INFO("UniformBufferMaps[{}]:", frameIndex);
 			 for (const auto& [name, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
@@ -504,7 +500,7 @@ namespace vulkanRendererBackend
 			std::shared_ptr<UniformBuffer> uniformBuffer = std::make_shared<UniformBuffer>(pUniformBufferBlock, m_pShader->GetName());
 			m_uniformBufferMaps[frameIndex].emplace(name, UniformBufferBinding(binding, uniformBuffer));
 
-			for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 				m_updateUniformBuffer[frameIndex].emplace(name, true);
 		}
 	}
@@ -514,7 +510,7 @@ namespace vulkanRendererBackend
 		if (it == m_samplerMaps[frameIndex].end())
 			m_samplerMaps[frameIndex].emplace(name, SamplerBinding(binding, pSampler));
 	}
-	void ShaderProperties::InitTexture2dResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture2d* pTexture2d, VkDescriptorType descriptorType)
+	void ShaderProperties::InitTexture2dResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture2d* pTexture2d, DescriptorType descriptorType)
 	{
 		auto it = m_texture2dMaps[frameIndex].find(name);
 		if (it == m_texture2dMaps[frameIndex].end())
@@ -538,7 +534,7 @@ namespace vulkanRendererBackend
 	void ShaderProperties::InitDescriptorSets()
 	{
 		CreateDescriptorSets();
-		for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
 			for (auto& [_, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
 				UpdateDescriptorSet(frameIndex, uniformBufferBinding);
@@ -556,15 +552,15 @@ namespace vulkanRendererBackend
 	// Descriptor Set management:
 	void ShaderProperties::CreateDescriptorSets()
 	{
-		std::vector<VkDescriptorSetLayout> layouts(Context::framesInFlight, m_pShader->GetPipeline()->GetVkDescriptorSetLayout());	// same layout for all frames
+		std::vector<VkDescriptorSetLayout> layouts(Context::GetFramesInFlight(), m_pShader->GetPipeline()->GetVkDescriptorSetLayout());	// same layout for all frames
 
 		VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 		allocInfo.descriptorPool = Context::GetVkDescriptorPool();
-		allocInfo.descriptorSetCount = Context::framesInFlight;
+		allocInfo.descriptorSetCount = Context::GetFramesInFlight();
 		allocInfo.pSetLayouts = layouts.data();
 
-		m_descriptorSets.resize(Context::framesInFlight);
-		VKA(vkAllocateDescriptorSets(Context::logicalDevice.GetVkDevice(), &allocInfo, m_descriptorSets.data()));
+		m_descriptorSets.resize(Context::GetFramesInFlight());
+		VKA(vkAllocateDescriptorSets(Context::GetLogicalDevice()->GetVkDevice(), &allocInfo, m_descriptorSets.data()));
 	}
 	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferResourceBinding)
 	{
@@ -606,14 +602,14 @@ namespace vulkanRendererBackend
 	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, TextureBinding texture2dResourceBinding)
 	{
 		VkDescriptorImageInfo imageInfo = {};
-		imageInfo.imageLayout = texture2dResourceBinding.pTexture2d->GetVmaImage()->GetLayout();
+		imageInfo.imageLayout = static_cast<VkImageLayout>(texture2dResourceBinding.pTexture2d->GetVmaImage()->GetImageLayout());
 		imageInfo.imageView = texture2dResourceBinding.pTexture2d->GetVmaImage()->GetVkImageView();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
 		descriptorWrite.dstBinding = texture2dResourceBinding.binding;
 		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = texture2dResourceBinding.descriptorType;
+		descriptorWrite.descriptorType = static_cast<VkDescriptorType>(texture2dResourceBinding.descriptorType);
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = nullptr;
 		descriptorWrite.pImageInfo = &imageInfo;
@@ -686,7 +682,7 @@ namespace vulkanRendererBackend
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
 		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 			{
 				if (m_uniformBufferMaps[frameIndex].at(bufferName).pUniformBuffer->SetValue(memberName, value))
 					m_updateUniformBuffer[frameIndex].at(bufferName) = true;
@@ -699,7 +695,7 @@ namespace vulkanRendererBackend
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
 		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 			{
 				if (m_uniformBufferMaps[frameIndex].at(bufferName).pUniformBuffer->SetValue(arrayName, arrayIndex, value))
 					m_updateUniformBuffer[frameIndex].at(bufferName) = true;
@@ -712,7 +708,7 @@ namespace vulkanRendererBackend
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
 		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 			{
 				if (m_uniformBufferMaps[frameIndex].at(bufferName).pUniformBuffer->SetValue(arrayName, arrayIndex, memberName, value))
 					m_updateUniformBuffer[frameIndex].at(bufferName) = true;
@@ -725,7 +721,7 @@ namespace vulkanRendererBackend
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
 		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < Context::framesInFlight; frameIndex++)
+			for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 			{
 				if (m_uniformBufferMaps[frameIndex].at(bufferName).pUniformBuffer->SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value))
 					m_updateUniformBuffer[frameIndex].at(bufferName) = true;

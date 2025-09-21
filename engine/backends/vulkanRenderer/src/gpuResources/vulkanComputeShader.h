@@ -4,7 +4,6 @@
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
 #include <string>
-#include <vulkan/vulkan.h>
 
 
 

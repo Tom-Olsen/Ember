@@ -4,6 +4,11 @@
 
 
 
+// Forward declerations:
+typedef struct VkCommandBuffer_T* VkCommandBuffer;
+
+
+
 namespace vulkanRendererBackend
 {
 	// Forward declerations:
@@ -13,16 +18,16 @@ namespace vulkanRendererBackend
 
 	/// <summary>
 	/// Texture2d specialization: <para/>
-	/// -VkImageUsageFlags		= transfer src (for mipmap creation), transfer dst, storage, sample <para/>
-	/// -VkImageCreateFlagBits	= 0 <para/>
-	/// -VkImageViewType		= 2d
+	/// -ImageUsageFlag		= transfer src (for mipmap creation), transfer dst, storage, sample <para/>
+	/// -ImageCreateFlagBit	= 0 <para/>
+	/// -ImageViewType		= 2d
 	/// </summary>
 	class SampleTexture2d : public Texture2d
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		SampleTexture2d(const std::string& name, VkFormat format, int width, int height, void* data);
-		SampleTexture2d(const std::string& name, VkFormat format, const std::filesystem::path& path);
+		SampleTexture2d(const std::string& name, Format format, int width, int height, void* data);
+		SampleTexture2d(const std::string& name, Format format, const std::filesystem::path& path);
 		~SampleTexture2d();
 
 		// Non-copyable:
@@ -36,6 +41,6 @@ namespace vulkanRendererBackend
     private: // Methods:
 		StagingBuffer* Staging(void* data);
 		void Upload(StagingBuffer* pStagingBuffer);
-		void RecordGpuCommands(VkCommandBuffer& transferCommandBuffer, VkCommandBuffer& graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
+		void RecordGpuCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
 	};
 }

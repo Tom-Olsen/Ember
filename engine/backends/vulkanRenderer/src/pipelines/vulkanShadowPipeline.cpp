@@ -7,20 +7,18 @@
 #include "vulkanRenderPassManager.h"
 #include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ShadowPipeline::ShadowPipeline
-    (const std::vector<char>& vertexCode,
-        const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings,
-        const VertexInputDescriptions* const pVertexInputDescriptions)
+    ShadowPipeline::ShadowPipeline(const std::vector<char>& vertexCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
     {
 
         // Create pipeline Layout:
-        CreatePipelineLayout(vkDescriptorSetLayoutBindings);
+        CreatePipelineLayout(descriptorSetLayoutBindings);
 
         // Create vertex and fragment shader modules from .spv files:
         VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
@@ -40,12 +38,12 @@ namespace vulkanRendererBackend
 
 
     // Private:
-    void ShadowPipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayoutBinding>& vkDescriptorSetLayoutBindings)
+    void ShadowPipeline::CreatePipelineLayout(std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
     {
         // Descriptor set layout:
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-        descriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.size();
-        descriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.data();
+        descriptorSetLayoutCreateInfo.bindingCount = descriptorSetLayoutBindings.size();
+        descriptorSetLayoutCreateInfo.pBindings = reinterpret_cast<VkDescriptorSetLayoutBinding*>(descriptorSetLayoutBindings.data());
         VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
 
         // Push constants layout:
@@ -62,7 +60,7 @@ namespace vulkanRendererBackend
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
     }
-    void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VertexInputDescriptions* const pVertexInputDescriptions)
+    void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, VertexInputDescriptions* pVertexInputDescriptions)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -73,9 +71,9 @@ namespace vulkanRendererBackend
         // Vertex input:
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         vertexInputState.vertexBindingDescriptionCount = pVertexInputDescriptions->size;
-        vertexInputState.pVertexBindingDescriptions = pVertexInputDescriptions->bindings.data();
+        vertexInputState.pVertexBindingDescriptions = reinterpret_cast<VkVertexInputBindingDescription*>(pVertexInputDescriptions->bindings.data());
         vertexInputState.vertexAttributeDescriptionCount = pVertexInputDescriptions->size;
-        vertexInputState.pVertexAttributeDescriptions = pVertexInputDescriptions->attributes.data();
+        vertexInputState.pVertexAttributeDescriptions = reinterpret_cast<VkVertexInputAttributeDescription*>(pVertexInputDescriptions->attributes.data());
 
         // Input assembly:
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
@@ -106,9 +104,9 @@ namespace vulkanRendererBackend
         rasterizationState.lineWidth = 1.0f;
         rasterizationState.depthClampEnable = Context::DepthClampEnabled();
         rasterizationState.depthBiasEnable = Context::DepthBiasClampEnabled();
-        rasterizationState.depthBiasConstantFactor = Context::depthBiasConstantFactor;  // Tweak this value based on the scene.
-        rasterizationState.depthBiasClamp = Context::depthBiasClamp;                    // Clamp value for equation below.
-        rasterizationState.depthBiasSlopeFactor = Context::depthBiasSlopeFactor;        // Slope scale bias to handle varying slopes in depth.
+        rasterizationState.depthBiasConstantFactor = Context::GetDepthBiasConstantFactor();  // Tweak this value based on the scene.
+        rasterizationState.depthBiasClamp = Context::GetDepthBiasClamp();                    // Clamp value for equation below.
+        rasterizationState.depthBiasSlopeFactor = Context::GetDepthBiasSlopeFactor();        // Slope scale bias to handle varying slopes in depth.
         rasterizationState.rasterizerDiscardEnable = VK_FALSE;	// If true, geometry never passes through rasterization stage.
         // Bias = (float) depthBiasConstantFactor * pow(exp(max_z_in_primitive) - r, 2) + depthBiasSlopeFactor * MaxDepthSlope;
         // r is the number of mantissa bits in the floating point representation (excluding the hidden bit); for example, 23 for float32.

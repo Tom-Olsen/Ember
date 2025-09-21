@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_dearImGuiFlags_h__
-#define __INCLUDE_GUARD_dearImGuiFlags_h__
+#pragma once
 
 
 
@@ -46,7 +45,3 @@ namespace emberEngine
        DearImGuiFocusedFlag_RootAndChildWindows = DearImGuiFocusedFlag_RootWindow | DearImGuiFocusedFlag_ChildWindows
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_dearImGuiFlags_h__

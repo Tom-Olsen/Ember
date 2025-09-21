@@ -15,7 +15,7 @@ namespace vulkanRendererBackend
 
 	class PostRender
 	{
-	private: // Members
+	private: // Members:
 		static bool s_isInitialized;
 		static uint32_t s_callIndex;
 		static std::vector<ComputeCall> s_staticComputeCalls;
@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
 		static std::vector<ComputeCall*> s_computeCallPointers;
 		static std::unique_ptr<ComputeShader> s_pInOutComputeShader; // copies final render into primary texture in case of odd number of post processing effects.
 
-	public: // Methods
+	public: // Methods:
 		static void Init();
 		static void Clear();
 
@@ -35,7 +35,7 @@ namespace vulkanRendererBackend
 		static std::vector<ComputeCall*>& GetComputeCallPointers();
 		static void ResetComputeCalls();
 
-	private: // Methods
+	private: // Methods:
 		// Delete all constructors:
 		PostRender() = delete;
 		PostRender(const PostRender&) = delete;

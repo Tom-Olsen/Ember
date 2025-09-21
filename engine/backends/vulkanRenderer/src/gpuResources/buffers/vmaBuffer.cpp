@@ -1,7 +1,9 @@
 #include "vmaBuffer.h"
+#include "vk_mem_alloc.h"
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanMacros.h"
+#include <vulkan/vulkan.h>
 
 
 
@@ -13,15 +15,38 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaBuffer::VmaBuffer(const std::string& name, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
+	VmaBuffer::VmaBuffer(const std::string& name, const BufferCreateInfo& bufferInfo, const AllocationCreateInfo& allocInfo)
 	{
 		m_name = name + std::to_string(s_index);
 		s_index++;
 		m_bufferInfo = bufferInfo;
-		m_allocInfo = allocInfo;
+		m_allocationInfo = allocInfo;
 		m_buffer = VK_NULL_HANDLE;
 		m_allocation = nullptr;
-		VKA(vmaCreateBuffer(Context::GetVmaAllocator(), &m_bufferInfo, &m_allocInfo, &m_buffer, &m_allocation, nullptr));
+
+		// Convert BufferCreateInfo -> VkBufferCreateInfo:
+		VkBufferCreateInfo vkBufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		vkBufferInfo.pNext = m_bufferInfo.pNext;
+		vkBufferInfo.flags = m_bufferInfo.flags;
+		vkBufferInfo.size = m_bufferInfo.size;
+		vkBufferInfo.usage = m_bufferInfo.usages;
+		vkBufferInfo.sharingMode = static_cast<VkSharingMode>(m_bufferInfo.sharingMode);
+		vkBufferInfo.queueFamilyIndexCount = m_bufferInfo.queueFamilyIndexCount;
+		vkBufferInfo.pQueueFamilyIndices = m_bufferInfo.pQueueFamilyIndices;
+
+		// Convert AllocationCreateInfo -> VmaAllocationCreateInfo:
+		VmaAllocationCreateInfo vmaAllocationInfo = {};
+		vmaAllocationInfo.flags = m_allocationInfo.flags;
+		vmaAllocationInfo.usage = static_cast<VmaMemoryUsage>(m_allocationInfo.usages);
+		vmaAllocationInfo.requiredFlags = m_allocationInfo.requiredFlags;
+		vmaAllocationInfo.preferredFlags = m_allocationInfo.preferredFlags;
+		vmaAllocationInfo.memoryTypeBits = m_allocationInfo.memoryTypeBits;
+		vmaAllocationInfo.pool = m_allocationInfo.pool;
+		vmaAllocationInfo.pUserData = m_allocationInfo.pUserData;
+		vmaAllocationInfo.priority = m_allocationInfo.priority;
+
+		// Create Buffer:
+		VKA(vmaCreateBuffer(Context::GetVmaAllocator(), &vkBufferInfo, &vmaAllocationInfo, &m_buffer, &m_allocation, nullptr));
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
 		Context::allocationTracker.AddVmaBuffer(this);
@@ -68,13 +93,13 @@ namespace vulkanRendererBackend
 	{
 		return m_allocation;
 	}
-	const VkBufferCreateInfo& VmaBuffer::GetVkBufferCreateInfo() const
+	const BufferCreateInfo& VmaBuffer::GetBufferCreateInfo() const
 	{
 		return m_bufferInfo;
 	}
-	const VmaAllocationCreateInfo& VmaBuffer::GetVmaAllocationCreateInfo() const
+	const AllocationCreateInfo& VmaBuffer::GetAllocationCreateInfo() const
 	{
-		return m_allocInfo;
+		return m_allocationInfo;
 	}
 	uint64_t VmaBuffer::GetSize()
 	{
@@ -99,12 +124,12 @@ namespace vulkanRendererBackend
 		m_buffer = other.m_buffer;
 		m_allocation = other.m_allocation;
 		m_bufferInfo = other.m_bufferInfo;
-		m_allocInfo = other.m_allocInfo;
+		m_allocationInfo = other.m_allocationInfo;
 
 		other.m_name = "";
 		other.m_buffer = VK_NULL_HANDLE;
 		other.m_allocation = nullptr;
 		other.m_bufferInfo = {};
-		other.m_allocInfo = {};
+		other.m_allocationInfo = {};
 	}
 }

@@ -3,42 +3,14 @@
 #include "vulkanMacros.h"
 #include <array>
 #include <assert.h>
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	DescriptorPool::DescriptorPool()
-	{
-		m_descriptorPool = VK_NULL_HANDLE;
-		m_pLogicalDevice = nullptr;
-	}
-	DescriptorPool::~DescriptorPool()
-	{
-		Cleanup();
-	}
-
-
-	// Move semantics:
-	DescriptorPool::DescriptorPool(DescriptorPool&& other) noexcept
-	{
-		MoveFrom(other);
-	}
-	DescriptorPool& DescriptorPool::operator=(DescriptorPool&& other) noexcept
-	{
-		if (this != &other)
-		{
-			Cleanup();
-			MoveFrom(other);
-		}
-		return *this;
-	}
-
-
-
-	// Public methods:
-	void DescriptorPool::Init(LogicalDevice* pLogicalDevice)
+	DescriptorPool::DescriptorPool(LogicalDevice* pLogicalDevice)
 	{
 		// Assertions:
 		assert(pLogicalDevice != nullptr);
@@ -66,6 +38,30 @@ namespace vulkanRendererBackend
 
 		VKA(vkCreateDescriptorPool(m_pLogicalDevice->GetVkDevice(), &poolInfo, nullptr, &m_descriptorPool));
 	}
+	DescriptorPool::~DescriptorPool()
+	{
+		Cleanup();
+	}
+
+
+	// Move semantics:
+	DescriptorPool::DescriptorPool(DescriptorPool&& other) noexcept
+	{
+		MoveFrom(other);
+	}
+	DescriptorPool& DescriptorPool::operator=(DescriptorPool&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Cleanup();
+			MoveFrom(other);
+		}
+		return *this;
+	}
+
+
+
+	// Public methods:
 	const VkDescriptorPool& DescriptorPool::GetVkDescriptorPool() const
 	{
 		return m_descriptorPool;

@@ -1,9 +1,17 @@
 #pragma once
+#include "iTexture.h"
 #include "textureFormat.h"
+#include "vulkanFormat.h"
+#include "vulkanDescriptorType.h"
+#include "vulkanImageCreateFlag.h"
+#include "vulkanImageSubresourceRange.h"
+#include "vulkanImageUsageFlag.h"
+#include "vulkanImageViewType.h"
+#include "vulkanImageType.h"
+#include "vulkanMemoryPropertyFlag.h"
 #include <memory>
 #include <string>
 #include <unordered_set>
-#include <vulkan/vulkan.h>
 
 
 
@@ -20,19 +28,19 @@ namespace vulkanRendererBackend
 	/// <summary>
 	/// Base class for different kinds of textures: 1d, 2d, 3d, cube.
 	/// </summary>
-	class Texture
+	class Texture : public emberBackendInterface::ITexture
 	{
 	protected: // Static members:
-		static std::unordered_set<VkFormat> s_valid08BitFormats;
-		static std::unordered_set<VkFormat> s_valid16BitFormats;
-		static std::unordered_set<VkFormat> s_valid32BitFormats;
-		static std::unordered_set<VkFormat> s_valid64BitFormats;
-		static std::unordered_set<VkFormat> s_validSingleChannelFormats;
-		static std::unordered_set<VkFormat> s_validDoubleChannelFormats;
-		static std::unordered_set<VkFormat> s_validTripleChannelFormats;
-		static std::unordered_set<VkFormat> s_validQuadrupleChannelFormats;
-		static std::unordered_set<VkFormat> s_validDepthFormats;
-		static std::unordered_set<VkFormat> s_validStencilFormats;
+		static std::unordered_set<Format> s_valid08BitFormats;
+		static std::unordered_set<Format> s_valid16BitFormats;
+		static std::unordered_set<Format> s_valid32BitFormats;
+		static std::unordered_set<Format> s_valid64BitFormats;
+		static std::unordered_set<Format> s_validSingleChannelFormats;
+		static std::unordered_set<Format> s_validDoubleChannelFormats;
+		static std::unordered_set<Format> s_validTripleChannelFormats;
+		static std::unordered_set<Format> s_validQuadrupleChannelFormats;
+		static std::unordered_set<Format> s_validDepthFormats;
+		static std::unordered_set<Format> s_validStencilFormats;
 
 	protected: // Members:
 		std::string m_name;
@@ -40,13 +48,13 @@ namespace vulkanRendererBackend
 		uint32_t m_height;
 		uint32_t m_depth;
 		uint32_t m_channels;
-		VkFormat m_format;
-		VkDescriptorType m_descriptorType;
+		Format m_format;
+		DescriptorType m_descriptorType;
 		std::unique_ptr<VmaImage> m_pImage;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		Texture() = default;
+		Texture();
 		virtual ~Texture();
 
 		// Non-copyable:
@@ -58,22 +66,22 @@ namespace vulkanRendererBackend
 		Texture& operator=(Texture&& other) noexcept = default;
 
 		// Getters:
-		const std::string& GetName() const;
-		uint32_t GetWidth() const;
-		uint32_t GetHeight() const;
-		uint32_t GetDepth() const;
-		uint32_t GetChannels() const;
-		const emberEngine::TextureFormat& GetFormat() const;
-		VkFormat GetVkFormat() const;
+		const std::string& GetName() const override;
+		uint32_t GetWidth() const override;
+		uint32_t GetHeight() const override;
+		uint32_t GetDepth() const override;
+		uint32_t GetChannels() const override;
+		const emberEngine::TextureFormat& GetTextureFormat() const override;
+		Format GetFormat() const;
 		VmaImage* const GetVmaImage() const;
-		VkDescriptorType GetVkDescriptorType() const;
+		DescriptorType GetDescriptorType() const;
 
 	protected: // Methods:
-		uint32_t GetChannelCount(VkFormat format);
-		uint32_t BytesPerChannel(VkFormat format);
-		bool IsValidImageFormat(VkFormat format);
-		bool IsDepthFormat(VkFormat format);
-		bool IsStencilFormat(VkFormat format);
-		void CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
+		uint32_t GetChannelCount(Format format);
+		uint32_t BytesPerChannel(Format format);
+		bool IsValidImageFormat(Format format);
+		bool IsDepthFormat(Format format);
+		bool IsStencilFormat(Format format);
+		void CreateImageBase(ImageType imageType, ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, ImageViewType viewType, const DeviceQueue& queue);
 	};
 }

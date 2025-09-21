@@ -1,10 +1,5 @@
 #pragma once
-#include "textureFormat.h"
 #include "vulkanTexture.h"
-#include <memory>
-#include <string>
-#include <unordered_set>
-#include <vulkan/vulkan.h>
 
 
 
@@ -14,7 +9,6 @@ namespace vulkanRendererBackend
 	class StagingBuffer;
 	class VmaBuffer;
 	class VmaImage;
-	struct DeviceQueue;
 
 
 
@@ -22,9 +16,9 @@ namespace vulkanRendererBackend
 	/// Polymorphic parent class for different kinds of 2d textures.
 	/// Each derivative handles a different type of VkImage.
 	/// The images differ in: <para/>
-	/// -VkImageUsageFlags		=> transfer, sampling, storage, depth, color. <para/>
-	/// -VkImageCreateFlagBits	=> additional specialisations. <para/>
-	/// -VkImageViewType		=> single image, array.
+	/// -ImageUsageFlag		=> transfer, sampling, storage, depth, color. <para/>
+	/// -ImageCreateFlagBit	=> additional specialisations. <para/>
+	/// -ImageViewType		=> single image, array.
 	/// </summary>
 	class Texture2d : public Texture
 	{
@@ -42,6 +36,6 @@ namespace vulkanRendererBackend
 		Texture2d& operator=(Texture2d&& other) noexcept = default;
 
 	protected: // Methods:
-		void CreateImage(VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
+		void CreateImage(ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, ImageViewType viewType, const DeviceQueue& queue);
 	};
 }

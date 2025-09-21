@@ -1,11 +1,11 @@
 #pragma once
 #include "emberMath.h"
 #include "iMesh.h"
+#include "vulkanIndexType.h"
 #include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 
 
@@ -98,12 +98,12 @@ namespace vulkanRendererBackend
 		uint64_t GetSizeOfTriangles() const;
 		VertexBuffer* GetVertexBuffer();
 		IndexBuffer* GetIndexBuffer();
-		VkDeviceSize GetPositionsOffset() const;
-		VkDeviceSize GetNormalsOffset() const;
-		VkDeviceSize GetTangentsOffset() const;
-		VkDeviceSize GetColorsOffset() const;
-		VkDeviceSize GetUVsOffset() const;
-		static VkIndexType GetIndexType();
+		uint64_t GetPositionsOffset() const;
+		uint64_t GetNormalsOffset() const;
+		uint64_t GetTangentsOffset() const;
+		uint64_t GetColorsOffset() const;
+		uint64_t GetUVsOffset() const;
+		static IndexType GetIndexType();
 		bool IsLoaded();
 
 	private: // Methods:

@@ -1,7 +1,12 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
+
+
+
+// Forward declarations:
+typedef struct VkCommandPool_T* VkCommandPool;
+typedef struct VkCommandBuffer_T* VkCommandBuffer;
 
 
 

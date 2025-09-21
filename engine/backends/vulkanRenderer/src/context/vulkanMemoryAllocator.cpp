@@ -2,6 +2,7 @@
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
 #define VMA_VULKAN_VERSION 1003000
+#include "vk_mem_alloc.h"
 #include "vulkanMemoryAllocator.h"
 #include "vulkanInstance.h"
 #include "vulkanLogicalDevice.h"
@@ -14,35 +15,7 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	MemoryAllocator::MemoryAllocator()
-	{
-		m_pAllocator = nullptr;
-	}
-	MemoryAllocator::~MemoryAllocator()
-	{
-		Cleanup();
-	}
-
-
-	// Move semantics:
-	MemoryAllocator::MemoryAllocator(MemoryAllocator&& other) noexcept
-	{
-		MoveFrom(other);
-	}
-	MemoryAllocator& MemoryAllocator::operator=(MemoryAllocator&& other) noexcept
-	{
-		if (this != &other)
-		{
-			Cleanup();
-			MoveFrom(other);
-		}
-		return *this;
-	}
-
-
-
-	// Public methods:
-	void MemoryAllocator::Init(Instance* pInstance, LogicalDevice* pLogicalDevice, PhysicalDevice* pPhysicalDevice)
+	MemoryAllocator::MemoryAllocator(Instance* pInstance, LogicalDevice* pLogicalDevice, PhysicalDevice* pPhysicalDevice)
 	{
 		// Assertions:
 		assert(pInstance != nullptr);
@@ -71,6 +44,30 @@ namespace vulkanRendererBackend
 		// Create allocator:
 		VKA(vmaCreateAllocator(&allocatorInfo, &m_pAllocator));
 	}
+	MemoryAllocator::~MemoryAllocator()
+	{
+		Cleanup();
+	}
+
+
+	// Move semantics:
+	MemoryAllocator::MemoryAllocator(MemoryAllocator&& other) noexcept
+	{
+		MoveFrom(other);
+	}
+	MemoryAllocator& MemoryAllocator::operator=(MemoryAllocator&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Cleanup();
+			MoveFrom(other);
+		}
+		return *this;
+	}
+
+
+
+	// Public methods:
 	const VmaAllocator& MemoryAllocator::GetVmaAllocator() const
 	{
 		return m_pAllocator;
