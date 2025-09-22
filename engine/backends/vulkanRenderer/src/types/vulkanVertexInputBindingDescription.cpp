@@ -1,4 +1,4 @@
-#include "vulkanVertexinputBindingDescription.h"
+#include "vulkanVertexInputBindingDescription.h"
 #include <sstream>
 
 

@@ -6,7 +6,7 @@
 
 namespace vulkanRendererBackend
 {
-	using AccessMask = uint32_t;
+	using AccessMask = uint64_t;
 	struct AccessMasks
 	{
 		// VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT:
