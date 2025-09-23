@@ -16,13 +16,13 @@ namespace emberEngine
 {
 	class Texture
 	{
-	private: // Members:
+	protected: // Members:
 		std::unique_ptr<emberBackendInterface::ITexture> m_pITexture;
 
 	public: // Methods:
 		// Constructors/Destructor:
 		Texture() = default;
-		~Texture() virtual;
+		virtual ~Texture();
 
 		// Non-copyable:
 		Texture(const Texture&) = delete;
@@ -38,6 +38,6 @@ namespace emberEngine
 		uint32_t GetHeight() const;
 		uint32_t GetDepth() const;
 		uint32_t GetChannels() const;
-		TextureFormat GetFormat() const;
+		const TextureFormat& GetFormat() const;
 	};
 }

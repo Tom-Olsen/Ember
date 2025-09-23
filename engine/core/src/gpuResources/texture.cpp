@@ -6,28 +6,28 @@
 namespace emberEngine
 {
 	// Getters:
-	const std::string& GetName() const
+	const std::string& Texture::GetName() const
 	{
 		return m_pITexture->GetName();
 	}
-	uint32_t GetWidth() const
+	uint32_t Texture::GetWidth() const
 	{
 		return m_pITexture->GetWidth();
 	}
-	uint32_t GetHeight() const
+	uint32_t Texture::GetHeight() const
 	{
 		return m_pITexture->GetHeight();
 	}
-	uint32_t GetDepth() const
+	uint32_t Texture::GetDepth() const
 	{
 		return m_pITexture->GetDepth();
 	}
-	uint32_t GetChannels() const
+	uint32_t Texture::GetChannels() const
 	{
 		return m_pITexture->GetChannels();
 	}
-	TextureFormat GetFormat() const
+	const TextureFormat& Texture::GetFormat() const
 	{
-		return m_pITexture->GetFormat();
+		return m_pITexture->GetTextureFormat();
 	}
 }

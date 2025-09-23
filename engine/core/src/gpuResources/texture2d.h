@@ -11,7 +11,7 @@ namespace emberEngine
 	{
 	public: // methods:
 		// Constructor/Destructor:
-		Texture2d(const std::string& name, int width, int height, TextureFormat format, TextureUsage usage);
+		Texture2d(const std::string& name, int width, int height, const TextureFormat& format, TextureUsage usage);
 		~Texture2d();
 
 		// Non-copyable:

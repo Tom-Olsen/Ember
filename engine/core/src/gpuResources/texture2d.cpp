@@ -1,5 +1,4 @@
 #include "texture2d.h"
-#include "iTexture2d.h"
 #include "vulkanRenderTexture2d.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanStorageSampleTexture2d.h"
@@ -10,7 +9,7 @@
 
 namespace emberEngine
 {
-	Texture::Texture(const std::string& name, int width, int height, TextureFormat format, TextureUsage usage)
+	Texture2d::Texture2d(const std::string& name, int width, int height, const TextureFormat& format, TextureUsage usage)
 	{
 		switch (usage)
 		{
@@ -31,7 +30,7 @@ namespace emberEngine
 			break;
 		}
 	}
-	Texture::~Texture()
+	Texture2d::~Texture2d()
 	{
 
 	}
