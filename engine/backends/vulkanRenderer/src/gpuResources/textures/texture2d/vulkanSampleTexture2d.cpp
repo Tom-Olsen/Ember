@@ -16,42 +16,20 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Desctructor:
+	SampleTexture2d::SampleTexture2d(const std::string& name, Format format, int width, int height)
+	{
+		Init(name, format, width, height);
+	}
 	SampleTexture2d::SampleTexture2d(const std::string& name, Format format, int width, int height, void* data)
 	{
-		if (!IsValidImageFormat(format))
-			throw std::runtime_error("SampleTexture2d '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
-
-        m_name = name;
-		m_width = width;
-		m_height = height;
-        m_channels = GetChannelCount(format);
-		m_format = format;
-		m_descriptorType = DescriptorTypes::sampled_image;
-
-        std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Staging(data));
-        Upload(pStagingBuffer.get());
-
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTexture2d " + m_name);
+		Init(name, format, width, height);
+		SetData(data);
 	}
 	SampleTexture2d::SampleTexture2d(const std::string& name, Format format, const std::filesystem::path& path)
 	{
-		if (!IsValidImageFormat(format))
-			throw std::runtime_error("SampleTexture2d '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
-
-        int channels = GetChannelCount(format);
-        emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageFile(path, channels);
-
-		m_name = name;
-		m_width = imageAsset.width;
-		m_height = imageAsset.height;
-        m_channels = channels;
-		m_format = format;
-		m_descriptorType = DescriptorTypes::sampled_image;
-        
-		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(Staging((void*)imageAsset.pixels.data()));
-		Upload(pStagingBuffer.get());
-
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTexture2d " + m_name);
+		emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageFile(path, GetChannelCount(format));
+		Init(name, format, imageAsset.width, imageAsset.height);
+		SetData((void*)imageAsset.pixels.data());
 	}
 	SampleTexture2d::~SampleTexture2d()
 	{
@@ -60,8 +38,30 @@ namespace vulkanRendererBackend
 
 
 
+	// Public methods:
+	void SampleTexture2d::SetData(void* data)
+	{
+		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(StageData(data));
+		Upload(pStagingBuffer.get());
+	}
+	
+
+
 	// Private methods:
-	StagingBuffer* SampleTexture2d::Staging(void* data)
+	void SampleTexture2d::Init(const std::string& name, Format format, int width, int height)
+	{
+		if (!IsValidImageFormat(format))
+			throw std::runtime_error("SampleTexture2d '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
+
+		m_name = name;
+		m_width = width;
+		m_height = height;
+		m_channels = GetChannelCount(format);
+		m_format = format;
+		m_descriptorType = DescriptorTypes::sampled_image;
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTexture2d " + m_name);
+	}
+	StagingBuffer* SampleTexture2d::StageData(void* data)
     {
 		// Upload: data -> pStagingBuffer
 		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(m_format);

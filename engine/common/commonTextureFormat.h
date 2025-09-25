@@ -1,15 +1,16 @@
 #pragma once
 #include <variant>
 #include <cstdint>
+#include <string_view>
 
 
 
-namespace emberEngine
+namespace emberCommon
 {
     enum class TextureFormatType : uint32_t
     {
         // Fallback:
-		unknown = 0,        // unknown / unsupported format
+        undefined,          // undefined / unsupported format
         // Basic types:
         srgb,               // maps [0, 255] to [0.0, 1.0] in perceptually linear way, according to gamma encoding standart. 8bit only!
         uint,               // unsigned integer      € [     0,   255] (8bit example)
@@ -26,6 +27,24 @@ namespace emberEngine
         depth24_stencil8,    // 24bit depth, 8bit stencil
         depth32_stencil0,    // 32bit depth, 0bit stencil
         depth32_stencil8     // 32bit depth, 8bit stencil
+    };
+    inline constexpr std::string_view TextureFormatTypeNames[] =
+    {
+        "undefined",
+        "srgb",
+        "uint",
+        "sint",
+        "uscaled",
+        "sscaled",
+        "unorm",
+        "snorm",
+        "sfloat",
+        "depth00_stencil8",
+        "depth16_stencil0",
+        "depth16_stencil8",
+        "depth24_stencil8",
+        "depth32_stencil0",
+        "depth32_stencil8"
     };
 
 
@@ -168,18 +187,18 @@ namespace emberEngine
     // Static instances of all supported formats:
     struct DepthStencilFormats
     {
-        inline static DepthStencilFormat unknown { TextureFormatType::unknown };
-        inline static DepthStencilFormat d00_s8  { TextureFormatType::depth00_stencil8 };
-        inline static DepthStencilFormat d16_s0  { TextureFormatType::depth16_stencil0 };
-        inline static DepthStencilFormat d16_s8  { TextureFormatType::depth16_stencil8 };
-        inline static DepthStencilFormat d24_s8  { TextureFormatType::depth24_stencil8 };
-        inline static DepthStencilFormat d32_s0  { TextureFormatType::depth32_stencil0 };
-        inline static DepthStencilFormat d32_s8  { TextureFormatType::depth32_stencil8 };
+        inline static DepthStencilFormat undefined { TextureFormatType::undefined };
+        inline static DepthStencilFormat d00_s8    { TextureFormatType::depth00_stencil8 };
+        inline static DepthStencilFormat d16_s0    { TextureFormatType::depth16_stencil0 };
+        inline static DepthStencilFormat d16_s8    { TextureFormatType::depth16_stencil8 };
+        inline static DepthStencilFormat d24_s8    { TextureFormatType::depth24_stencil8 };
+        inline static DepthStencilFormat d32_s0    { TextureFormatType::depth32_stencil0 };
+        inline static DepthStencilFormat d32_s8    { TextureFormatType::depth32_stencil8 };
     };
     struct TextureFormats
     {
         // Fallback:
-        inline static TextureFormat1Channel08Bit unknown     { TextureFormatType::unknown };
+        inline static TextureFormat1Channel08Bit undefined  { TextureFormatType::undefined };
          
         // Single Channel:
         inline static TextureFormat1Channel08Bit r08_srgb    { TextureFormatType::srgb    };

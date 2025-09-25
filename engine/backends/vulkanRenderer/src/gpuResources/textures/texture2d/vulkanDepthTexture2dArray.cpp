@@ -1,4 +1,5 @@
 #include "vulkanDepthTexture2dArray.h"
+#include "logger.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanLogicalDevice.h"
@@ -48,5 +49,13 @@ namespace vulkanRendererBackend
 	DepthTexture2dArray::~DepthTexture2dArray()
 	{
 
+	}
+
+
+
+	// Public method:
+	void DepthTexture2dArray::SetData(void* data)
+	{
+		LOG_WARN("Setting data of a DepthTexture2dArray manually is not allowed!");
 	}
 }

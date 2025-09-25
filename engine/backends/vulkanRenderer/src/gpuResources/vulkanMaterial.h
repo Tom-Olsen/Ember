@@ -1,7 +1,7 @@
 #pragma once
 #include "iMaterial.h"
-#include "materialType.h"
-#include "renderQueue.h"
+#include "commonMaterialType.h"
+#include "commonRenderQueue.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
 #include <filesystem>
@@ -33,7 +33,7 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Material : public Shader, public emberBackendInterface::IMaterial
 	{
 	private: // Members:
-		emberEngine::MaterialType m_type;
+		emberCommon::MaterialType m_type;
 		uint32_t m_renderQueue;	// shadow=0, opaque=1000, transparent=2000, skybox=3000
 		std::unique_ptr<VertexInputDescriptions> m_pVertexInputDescriptions;
 		std::vector<VkBuffer> m_meshBuffers;
@@ -41,7 +41,8 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Constructors/Destructor:
-		Material(emberEngine::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		Material(uint32_t shadowMapResolution);	// special constructor for shadowMaterial.
 		~Material();
 
 		// Non-copyable:
@@ -53,7 +54,7 @@ namespace vulkanRendererBackend
 		Material& operator=(Material&& other);
 
 		// Getters:
-		emberEngine::MaterialType GetType() const override;
+		emberCommon::MaterialType GetType() const override;
 		uint32_t GetRenderQueue() const override;
 		const VertexInputDescriptions* const GetVertexInputDescriptions() const;
 		const VkBuffer* const GetMeshBuffers(Mesh* pMesh);

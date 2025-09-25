@@ -1,6 +1,6 @@
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanContext.h"
-#include "vulkanLighting.h"
+#include <sstream>
 
 
 
@@ -12,8 +12,8 @@ namespace vulkanRendererBackend
 		this->instanceCount = instanceCount;
 		this->time = time;
 		this->deltaTime = deltaTime;
-		this->dirLightsCount = std::min(dirLightsCount, (int)Lighting::GetMaxDirectionalLights());
-		this->posLightsCount = std::min(posLightsCount, (int)Lighting::GetMaxPositionalLights());
+		this->dirLightsCount = dirLightsCount;
+		this->posLightsCount = posLightsCount;
 		this->cameraPosition = Float4(cameraPosition, 1.0f);
 	}
 
@@ -22,13 +22,14 @@ namespace vulkanRendererBackend
 	// Public methods:
 	std::string DefaultPushConstant::ToString()
 	{
-		std::string output = "DefaultPushConstant:\n";
-		output += "Instance Count: " + std::to_string(instanceCount) + "\n";
-		output += "Time: " + std::to_string(time) + "\n";
-		output += "Delta Time: " + std::to_string(deltaTime) + "\n";
-		output += "Directional Lights Count: " + std::to_string(dirLightsCount) + "\n";
-		output += "Positional Lights Count: " + std::to_string(posLightsCount) + "\n";
-		output += "Camera Position: " + cameraPosition.ToString();
-		return output;
+		std::stringstream ss;
+		ss << "DefaultPushConstant:\n";
+		ss << "Instance Count: " << instanceCount << "\n";
+		ss << "Time: " << time << "\n";
+		ss << "Delta Time: " << deltaTime << "\n";
+		ss << "Directional Lights Count: " << dirLightsCount << "\n";
+		ss << "Positional Lights Count: " << posLightsCount << "\n";
+		ss << "Camera Position: " << cameraPosition.ToString();
+		return ss.str();
 	}
 }

@@ -3,22 +3,20 @@
 
 
 
-namespace emberEngine
+namespace emberCommon
 {
     enum class TextureUsage : uint32_t
     {
         sample,
         storage,
 		storageAndSample,
-        renderTarget,
-        cubeMap
+        renderTarget
     };
-	constexpr std::string_view TextureUsageNames[] =
+	inline constexpr std::string_view TextureUsageNames[] =
 	{
 		"sample",
 		"storage",
 		"storageAndSample",
-		"renderTarget",
-		"cubeMap"
+		"renderTarget"
 	};
 }

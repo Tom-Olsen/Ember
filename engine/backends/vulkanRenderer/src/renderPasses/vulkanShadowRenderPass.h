@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
 		static uint32_t s_layerCount;
 
 	public: // Methods:
-		ShadowRenderPass();
+		ShadowRenderPass(uint32_t shadowMapResolution, uint32_t maxLightsCount);
 		~ShadowRenderPass();
 
 		// Non-copyable:
@@ -43,6 +43,6 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		void CreateRenderpass();
-		void CreateFramebuffers();
+		void CreateFramebuffers(uint32_t shadowMapResolution, uint32_t maxLightsCount);
 	};
 }

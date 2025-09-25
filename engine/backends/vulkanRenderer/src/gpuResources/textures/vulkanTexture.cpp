@@ -106,9 +106,9 @@ namespace vulkanRendererBackend
 	{
 		return m_channels;
 	}
-	const emberEngine::TextureFormat& Texture::GetTextureFormat() const
+	const emberCommon::TextureFormat& Texture::GetTextureFormat() const
 	{
-		return ConvertTextureFormat(m_format);
+		return VulkanFormatToTextureFormat(m_format);
 	}
 	Format Texture::GetFormat() const
 	{

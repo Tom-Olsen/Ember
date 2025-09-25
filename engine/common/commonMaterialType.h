@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberCommon
 {
 	enum class MaterialType : uint32_t
 	{
@@ -13,7 +13,7 @@ namespace emberEngine
 		skybox,
 		present
 	};
-	constexpr std::string_view MaterialTypeNames[] =
+	inline constexpr std::string_view MaterialTypeNames[] =
 	{
 		"forwardOpaque",
 		"forwardTransparent",

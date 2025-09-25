@@ -9,7 +9,7 @@
 namespace emberEngine
 {
     // Forward declarations:
-    class Texture2d;
+    class Texture;
 
 
 
@@ -20,15 +20,15 @@ namespace emberEngine
     {
     private: // Members:
         static bool s_isInitialized;
-        static std::unordered_map<std::string, std::unique_ptr<Texture2d>> s_texture2ds;
+        static std::unordered_map<std::string, std::unique_ptr<Texture>> s_textures;
 
     public: // Methods:
         static void Init();
         static void Clear();
 
-        static void AddTexture2d(Texture2d* pTexture);
-        static Texture2d* GetTexture2d(const std::string& name);
-        static void DeleteTexture2d(const std::string& name);
+        static void AddTexture(Texture* pTexture);
+        static Texture* GetTexture(const std::string& name);
+        static void DeleteTexture(const std::string& name);
 
         static void PrintAllTextureNames();
 

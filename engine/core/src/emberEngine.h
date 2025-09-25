@@ -34,7 +34,6 @@ namespace emberEngine
 
 // Graphics backend:
 //#include "graphics.h"
-//#include "lighting.h"
 #include "mesh.h"
 #include "material.h"
 #include "shaderProperties.h"

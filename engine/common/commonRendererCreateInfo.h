@@ -1,5 +1,5 @@
 #pragma once
-#include "msaaSampleCount.h"
+#include "commonMsaaSampleCount.h"
 
 
 
@@ -20,7 +20,7 @@ namespace emberEngine
 		emberBackendInterface::IDearImGui* pIDearImGui = nullptr;
 		bool vSyncEnabled = true;
 		uint32_t framesInFlight = 2;
-		MsaaSampleCount msaaSampleCount = MsaaSampleCount::sampleCount04;
+		emberCommon::MsaaSampleCount msaaSampleCount = emberCommon::MsaaSampleCount::sampleCount04;
 		uint32_t renderWidth = 2560;
 		uint32_t renderHeight = 1440;
 		bool enableDearImGui = true;

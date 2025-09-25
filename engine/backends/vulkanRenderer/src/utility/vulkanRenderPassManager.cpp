@@ -18,13 +18,13 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void RenderPassManager::Init(uint32_t renderWidth, uint32_t renderHeight)
+	void RenderPassManager::Init(uint32_t renderWidth, uint32_t renderHeight, uint32_t shadowMapResolution, uint32_t maxLightsCount)
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
 
-		s_pShadowRenderPass = std::make_unique<ShadowRenderPass>();
+		s_pShadowRenderPass = std::make_unique<ShadowRenderPass>(shadowMapResolution, maxLightsCount);
 		s_pForwardRenderPass = std::make_unique<ForwardRenderPass>(renderWidth, renderHeight);
 		s_pPresentRenderPass = std::make_unique<PresentRenderPass>();
 	}

@@ -18,6 +18,7 @@ namespace vulkanRendererBackend
 		VkDebugUtilsMessengerEXT m_debugMessenger;
 
 	public: // Methods:
+		// Constructor/Destructor:
 		Instance(std::vector<const char*> instanceExtensions);
 		~Instance();
 

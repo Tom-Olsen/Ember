@@ -1,17 +1,15 @@
 #include "vulkanContext.h"
+#include "commonRendererCreateInfo.h"
 #include "emberMath.h"
 #include "iDearImGui.h"
 #include "iWindow.h"
-#include "rendererCreateInfo.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanCompute.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDescriptorPool.h"
 #include "vulkanGarbageCollector.h"
-#include "vulkanGraphics.h"
 #include "vulkanImageUsageFlag.h"
 #include "vulkanInstance.h"
-#include "vulkanLighting.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanMemoryAllocator.h"
@@ -67,9 +65,9 @@ namespace vulkanRendererBackend
 		m_enableDockSpace = createInfo.enableDockSpace;
 
 		// Init static utility:
-		Lighting::Init(createInfo.maxDirectionalLights, createInfo.maxPositionalLights, createInfo.shadowMapResolution);
 		Compute::Init();
-		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight);
+		uint32_t maxLightsCount = createInfo.maxDirectionalLights + createInfo.maxPositionalLights;
+		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
 		GarbageCollector::Init();
 
 		// Get instance extensions:
@@ -116,7 +114,6 @@ namespace vulkanRendererBackend
 		SingleTimeCommand::Init();
 		DefaultGpuResources::Init();
 		PoolManager::Init();
-		Graphics::Init();
 
 		// Debug naming:
 		if (m_pLogicalDevice->GetGraphicsQueue().queue == m_pLogicalDevice->GetPresentQueue().queue)
@@ -132,14 +129,12 @@ namespace vulkanRendererBackend
 	void Context::Clear()
 	{
 		WaitDeviceIdle();
-		Graphics::Clear(),
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		SingleTimeCommand::Clear();
 		GarbageCollector::Clear();
 		RenderPassManager::Clear();
 		Compute::Clear();
-		Lighting::Clear();
 	}
 	void Context::RebuildSwapchain()
 	{

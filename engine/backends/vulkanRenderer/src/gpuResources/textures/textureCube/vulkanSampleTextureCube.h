@@ -26,7 +26,8 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		SampleTextureCube(const std::string& name, Format format, int width, int height, const std::array<void*, 6>&);
+		SampleTextureCube(const std::string& name, Format format, int width, int height);
+		SampleTextureCube(const std::string& name, Format format, int width, int height, void* data);
 		SampleTextureCube(const std::string& name, Format format, const std::filesystem::path& path);
 		~SampleTextureCube();
 
@@ -37,11 +38,13 @@ namespace vulkanRendererBackend
 		// Movable:
 		SampleTextureCube(SampleTextureCube&& other) noexcept = default;
 		SampleTextureCube& operator=(SampleTextureCube&& other) noexcept = default;
-		
-		void RecordGpuCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
+
+		void SetData(void* data) override;
 
 	private: // Methods:
-		StagingBuffer* Upload(const std::array<void*, 6>& data);
-		void Init(StagingBuffer* pStagingBuffer);
+		void Init(const std::string& name, Format format, int width, int height);
+		StagingBuffer* StageData(void* data);
+		void Upload(StagingBuffer* pStagingBuffer);
+		void RecordGpuCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
 	};
 }

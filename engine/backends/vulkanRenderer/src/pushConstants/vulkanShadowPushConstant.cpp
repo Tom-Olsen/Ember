@@ -1,4 +1,5 @@
 #include "vulkanShadowPushConstant.h"
+#include <sstream>
 
 
 
@@ -22,12 +23,13 @@ namespace vulkanRendererBackend
 		localToWorld[{3, 0}] = 0;
 		localToWorld[{3, 1}] = 0;
 
-		std::string output = "ShadowPushConstant:\n";
-		output += "Instance Count: " + std::to_string(localToWorldMatrix[{3, 0}]) + "\n";
-		output += "Shadow Map Index: " + std::to_string(localToWorldMatrix[{3, 1}]) + "\n";
-		output += "Local To World Matrix: " + localToWorld.ToString() + "\n";
-		output += "Compressed Matrix: " + localToWorldMatrix.ToString() + "\n";
-		output += "World To Clip Matrix: " + worldToClipMatrix.ToString();
-		return output;
+		std::stringstream ss;
+		ss << "ShadowPushConstant:\n";
+		ss << "Instance Count: " << localToWorldMatrix[{3, 0}] << "\n";
+		ss << "Shadow Map Index: " << localToWorldMatrix[{3, 1}] << "\n";
+		ss << "Local To World Matrix: " << localToWorld.ToString() << "\n";
+		ss << "Compressed Matrix: " << localToWorldMatrix.ToString() << "\n";
+		ss << "World To Clip Matrix: " << worldToClipMatrix.ToString();
+		return ss.str();
 	}
 }

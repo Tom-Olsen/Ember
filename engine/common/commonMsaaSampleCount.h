@@ -2,7 +2,7 @@
 
 
 
-namespace emberEngine
+namespace emberCommon
 {
     enum class MsaaSampleCount : uint32_t
     {

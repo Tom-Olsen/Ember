@@ -1,5 +1,5 @@
 #pragma once
-#include "materialType.h"
+#include "commonMaterialType.h"
 
 
 
@@ -12,7 +12,7 @@ namespace emberBackendInterface
         virtual ~IMaterial() = default;
 
         // Getters:
-        virtual emberEngine::MaterialType GetType() const = 0;
+        virtual emberCommon::MaterialType GetType() const = 0;
         virtual uint32_t GetRenderQueue() const = 0;
     };
 }

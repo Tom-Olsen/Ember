@@ -19,7 +19,6 @@
 // 
 //     Renderer::Renderer()
 //         Context::Init()
-//             Lighting::Init()
 //             Compute::Init()
 //                 ImmediateCompute::Init()
 //                 PostRenderCompute::Init()

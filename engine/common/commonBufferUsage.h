@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberCommon
 {
 	enum class BufferUsage : uint32_t
 	{

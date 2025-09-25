@@ -15,7 +15,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		RenderTexture2d(const std::string& name, Format format, int width, int height, ImageUsageFlag usageFlags = 0);
+		RenderTexture2d(const std::string& name, Format format, int width, int height);
 		~RenderTexture2d();
 
 		// Non-copyable:
@@ -25,5 +25,7 @@ namespace vulkanRendererBackend
 		// Movable:
 		RenderTexture2d(RenderTexture2d&& other) noexcept = default;
 		RenderTexture2d& operator=(RenderTexture2d&& other) noexcept = default;
+
+		void SetData(void* data) override;
 	};
 }

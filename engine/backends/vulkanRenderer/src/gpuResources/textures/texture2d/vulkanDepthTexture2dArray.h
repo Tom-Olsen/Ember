@@ -25,5 +25,7 @@ namespace vulkanRendererBackend
 		// Movable:
 		DepthTexture2dArray(DepthTexture2dArray&& other) noexcept = default;
 		DepthTexture2dArray& operator=(DepthTexture2dArray&& other) noexcept = default;
+
+		void SetData(void* data) override;
 	};
 }

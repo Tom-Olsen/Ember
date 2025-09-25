@@ -21,6 +21,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
+		StorageTexture2d(const std::string& name, Format format, int width, int height);
 		StorageTexture2d(const std::string& name, Format format, int width, int height, void* data);
 		StorageTexture2d(const std::string& name, Format format, const std::filesystem::path& path);
 		~StorageTexture2d();
@@ -33,8 +34,11 @@ namespace vulkanRendererBackend
 		StorageTexture2d(StorageTexture2d&& other) noexcept = default;
 		StorageTexture2d& operator=(StorageTexture2d&& other) noexcept = default;
 
+		void SetData(void* data) override;
+
 	private: // Methods:
-		StagingBuffer* Staging(void* data);
+		void Init(const std::string& name, Format format, int width, int height);
+		StagingBuffer* StageData(void* data);
 		void Upload(StagingBuffer* pStagingBuffer);
 	};
 }

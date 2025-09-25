@@ -98,6 +98,10 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
     # src/window/*:
     file(GLOB WINDOW_FILES "${CORE_ROOT_DIR}/src/window/*")
     source_group("Window" FILES ${WINDOW_FILES})
+
+    # ../../common/*:
+    file(GLOB COMMON_INTERFACE_FILES "../../common/*.*")
+    source_group("Commen" FILES ${COMMON_INTERFACE_FILES})
     
     # ../../interfaces/renderer/*:
     file(GLOB RENDERER_INTERFACE_FILES "${CORE_ROOT_DIR}/../interfaces/renderer/*")
@@ -125,6 +129,7 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         ${RENDERER_FILES}
         ${UTILITY_FILES}
         ${WINDOW_FILES}
+        ${COMMON_INTERFACE_FILES}
         ${RENDERER_INTERFACE_FILES}
         ${WINDOW_INTERFACE_FILES})
     
@@ -144,6 +149,7 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         PUBLIC ${CORE_ROOT_DIR}/src/renderer
         PUBLIC ${CORE_ROOT_DIR}/src/utility
         PUBLIC ${CORE_ROOT_DIR}/src/window
+        PUBLIC ${CORE_ROOT_DIR}/../common
         PUBLIC ${CORE_ROOT_DIR}/../interfaces/renderer
         PUBLIC ${CORE_ROOT_DIR}/../interfaces/window)
 

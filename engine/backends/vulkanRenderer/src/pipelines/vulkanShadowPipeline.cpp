@@ -1,7 +1,6 @@
 #include "vulkanShadowPipeline.h"
 #include "spirvReflect.h"
 #include "vulkanContext.h"
-#include "vulkanLighting.h"
 #include "vulkanMacros.h"
 #include "vulkanMesh.h"
 #include "vulkanRenderPassManager.h"
@@ -14,7 +13,7 @@
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ShadowPipeline::ShadowPipeline(const std::vector<char>& vertexCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
+    ShadowPipeline::ShadowPipeline(uint32_t shadowMapResolution, const std::vector<char>& vertexCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
     {
 
         // Create pipeline Layout:
@@ -24,7 +23,7 @@ namespace vulkanRendererBackend
         VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
 
         // Create pipeline:
-        CreatePipeline(vertexShaderModule, pVertexInputDescriptions);
+        CreatePipeline(shadowMapResolution, vertexShaderModule, pVertexInputDescriptions);
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
@@ -60,7 +59,7 @@ namespace vulkanRendererBackend
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
     }
-    void ShadowPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, VertexInputDescriptions* pVertexInputDescriptions)
+    void ShadowPipeline::CreatePipeline(uint32_t shadowMapResolution, const VkShaderModule& vertexShaderModule, VertexInputDescriptions* pVertexInputDescriptions)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -83,13 +82,13 @@ namespace vulkanRendererBackend
         VkViewport viewport = {};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float)Lighting::GetShadowMapResolution();
-        viewport.height = (float)Lighting::GetShadowMapResolution();
+        viewport.width = (float)shadowMapResolution;
+        viewport.height = (float)shadowMapResolution;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         VkRect2D scissor = {};
         scissor.offset = { 0, 0 };
-        scissor.extent = VkExtent2D{ Lighting::GetShadowMapResolution(),  Lighting::GetShadowMapResolution() };
+        scissor.extent = VkExtent2D{ shadowMapResolution,  shadowMapResolution };
         VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
         viewportState.viewportCount = 1;
         viewportState.pViewports = &viewport;

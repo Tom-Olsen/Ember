@@ -16,7 +16,7 @@
 namespace vulkanRendererBackend
 {
 	// Constructors/Destructor:
-	Material::Material(emberEngine::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material::Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		m_type = type;
 		m_name = name;
@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 		m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
 
 		// Opaque forward material creation:
-		if (m_type == emberEngine::MaterialType::forwardOpaque)
+		if (m_type == emberCommon::MaterialType::forwardOpaque)
 		{
 			// Load vertex shader:
 			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -44,7 +44,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Transparent forward material creation:
-		if (m_type == emberEngine::MaterialType::forwardTransparent)
+		if (m_type == emberCommon::MaterialType::forwardTransparent)
 		{
 			// Load vertex shader:
 			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -63,23 +63,8 @@ namespace vulkanRendererBackend
 			m_pPipeline = std::make_unique<ForwardTransparentPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 
-		// Shadow material creation:
-		else if (m_type == emberEngine::MaterialType::shadow)
-		{
-			// Load vertex shader:
-			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
-			SpirvReflect vertexShaderReflect(vertexCode);
-			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
-			m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
-			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
-
-			// Create pipeline:
-			m_pPipeline = std::make_unique<ShadowPipeline>(vertexCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
-		}
-
 		// Skybox material creation:
-		else if (m_type == emberEngine::MaterialType::skybox)
+		else if (m_type == emberCommon::MaterialType::skybox)
 		{
 			// Load vertex shader:
 			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -99,7 +84,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Present material creation:
-		else if (m_type == emberEngine::MaterialType::present)
+		else if (m_type == emberCommon::MaterialType::present)
 		{
 			// Load vertex shader:
 			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
@@ -118,6 +103,26 @@ namespace vulkanRendererBackend
 			m_pPipeline = std::make_unique<PresentPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 	}
+	// Special constructor for shadowMaterial:
+	Material::Material(uint32_t shadowMapResolution)
+	{
+		m_type = emberCommon::MaterialType::shadow;
+		m_name = "shadowMaterial";
+		m_renderQueue = emberCommon::RenderQueue::shadow;
+		m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
+
+		// Load vertex shader:
+		std::filesystem::path directoryPath = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();
+		std::vector<char> vertexCode = ReadShaderCode(directoryPath / "shadow.vert.spv");
+		SpirvReflect vertexShaderReflect(vertexCode);
+		vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
+		m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
+		m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
+		m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
+
+		// Create pipeline:
+		m_pPipeline = std::make_unique<ShadowPipeline>(shadowMapResolution, vertexCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+	}
 	Material::~Material()
 	{
 
@@ -131,7 +136,7 @@ namespace vulkanRendererBackend
 
 	// Public methods:
 	// Getters:
-	emberEngine::MaterialType Material::GetType() const
+	emberCommon::MaterialType Material::GetType() const
 	{
 		return m_type;
 	}

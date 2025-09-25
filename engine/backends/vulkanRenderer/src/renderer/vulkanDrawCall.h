@@ -1,5 +1,7 @@
 #pragma once
+#include "commonLighting.h"
 #include "emberMath.h"
+#include <vector>
 
 
 
@@ -24,10 +26,10 @@ namespace vulkanRendererBackend
 		uint32_t instanceCount;	// 0 implies no instanced rendering.
 
 		void SetRenderMatrizes(const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
-		void SetLightData();
+		void SetLightData(std::vector<emberCommon::DirectionalLight>& directionalLights, std::vector<emberCommon::PositionalLight>& positionalLights);
 
 	private:
-		void SetDirectionalLightData();
-		void SetPositionalLightData();
+		void SetDirectionalLightData(std::vector<emberCommon::DirectionalLight>& directionalLights);
+		void SetPositionalLightData(std::vector<emberCommon::PositionalLight>& positionalLights);
 	};
 }

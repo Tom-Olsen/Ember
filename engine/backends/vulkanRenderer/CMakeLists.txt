@@ -96,6 +96,10 @@ source_group("Types" FILES ${TYPES_FILES})
 file(GLOB UTILITY_FILES "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
+# ../../common/*:
+file(GLOB COMMON_INTERFACE_FILES "../../common/*.*")
+source_group("Commen" FILES ${COMMON_INTERFACE_FILES})
+
 # ../../interfaces/renderer/*:
 file(GLOB RENDERER_INTERFACE_FILES "../../interfaces/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
@@ -127,6 +131,7 @@ add_library(${PROJECT_NAME}
     ${RENDER_PASSES_FILES}
     ${TYPES_FILES}
     ${UTILITY_FILES}
+    ${COMMON_INTERFACE_FILES}
     ${RENDERER_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
 
@@ -150,6 +155,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPasses
     ${CMAKE_CURRENT_SOURCE_DIR}/src/types
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../common
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window)
 # ---------------------------------------------------

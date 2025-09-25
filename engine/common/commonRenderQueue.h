@@ -2,7 +2,7 @@
 
 
 
-namespace emberEngine
+namespace emberCommon
 {
 	enum RenderQueue : int32_t // negative values allowed.
 	{

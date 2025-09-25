@@ -24,11 +24,11 @@ namespace vulkanRendererBackend
 	class ShadowPipeline : public Pipeline
 	{
 	public: // Methods:
-		ShadowPipeline(const std::vector<char>& vertexCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
+		ShadowPipeline(uint32_t shadowMapResolution, const std::vector<char>& vertexCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
 		~ShadowPipeline();
 
 	private: // Methods:
 		void CreatePipelineLayout(std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
-		void CreatePipeline(const VkShaderModule& vertexShaderModule, VertexInputDescriptions* pVertexInputDescriptions);
+		void CreatePipeline(uint32_t shadowMapResolution, const VkShaderModule& vertexShaderModule, VertexInputDescriptions* pVertexInputDescriptions);
 	};
 }

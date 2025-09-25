@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
         static std::unique_ptr<PresentRenderPass> s_pPresentRenderPass;
 
     public: // Methods
-        static void Init(uint32_t renderWidth, uint32_t renderHeight);
+        static void Init(uint32_t renderWidth, uint32_t renderHeight, uint32_t shadowMapResolution, uint32_t maxLightsCount);
         static void Clear();
         static void RecreateRenderPasses();
 

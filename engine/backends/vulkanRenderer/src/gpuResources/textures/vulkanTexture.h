@@ -1,6 +1,6 @@
 #pragma once
 #include "iTexture.h"
-#include "textureFormat.h"
+#include "commonTextureFormat.h"
 #include "vulkanFormat.h"
 #include "vulkanDescriptorType.h"
 #include "vulkanImageCreateFlag.h"
@@ -71,7 +71,7 @@ namespace vulkanRendererBackend
 		uint32_t GetHeight() const override;
 		uint32_t GetDepth() const override;
 		uint32_t GetChannels() const override;
-		const emberEngine::TextureFormat& GetTextureFormat() const override;
+		const emberCommon::TextureFormat& GetTextureFormat() const override;
 		Format GetFormat() const;
 		VmaImage* const GetVmaImage() const;
 		DescriptorType GetDescriptorType() const;

@@ -1,51 +1,27 @@
-#pragma once
-#include "emberMath.h"
+#include "texture.h"
 #include "textureFormat.h"
 #include "textureUsage.h"
-#include <memory>
-
-
-
-// Forward decleration:
-namespace emberBackendInterface
-{
-	class ITexture2d;
-}
+#include <string>
+#include <filesystem>
 
 
 
 namespace emberEngine
 {
-	class Texture2d
+	class TextureCube : public Texture
 	{
-	private: // Members:
-		std::unique_ptr<emberBackendInterface::ITexture2d> m_pITexture2d;
+	public: // methods:
+		// Constructor/Destructor:
+		TextureCube(const std::string& name, int width, int height, const TextureFormat& format, TextureUsage usage);
+		TextureCube(const std::string& name, const TextureFormat& format, TextureUsage usage, const std::filesystem::path& path);
+		~TextureCube();
 
-	public: // Constructors/Destructor:
-		Texture2d(const std::string& name, int width, int height, TextureFormat format, TextureUsage usage);
-		~Texture2d();
+		// Non-copyable:
+		TextureCube(const TextureCube&) = delete;
+		TextureCube& operator=(const TextureCube&) = delete;
 
-	public: // Methods:
-        // Getters:
-		const std::string& GetName() const
-		{
-			return m_pITexture2d->GetName();
-		}
-		uint64_t GetWidth() const
-		{
-			return m_pITexture2d->GetWidth();
-		}
-		uint64_t GetHeight() const
-		{
-			return m_pITexture2d->GetHeight();
-		}
-		uint64_t GetChannels() const
-		{
-			return m_pITexture2d->GetChannels();
-		}
-		TextureFormat GetFormat() const
-		{
-			return m_pITexture2d->GetFormat();
-		}
+		// Movable:
+		TextureCube(TextureCube&& other) noexcept = default;
+		TextureCube& operator=(TextureCube&& other) noexcept = default;
 	};
 }

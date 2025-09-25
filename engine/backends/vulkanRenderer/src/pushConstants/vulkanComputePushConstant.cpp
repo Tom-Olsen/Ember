@@ -1,4 +1,5 @@
 #include "vulkanComputePushConstant.h"
+#include <sstream>
 
 
 
@@ -15,10 +16,11 @@ namespace vulkanRendererBackend
 	// Public methods:
 	std::string ComputePushConstant::ToString()
 	{
-		std::string output = "ComputePushConstant:\n";
-		output += "ThreadCount: " + threadCount.ToString() + "\n";
-		output += "Time: " + std::to_string(time) + "\n";
-		output += "Delta Time: " + std::to_string(deltaTime);
-		return output;
+		std::stringstream ss;
+		ss << "ComputePushConstant:\n";
+		ss << "ThreadCount: " << threadCount.ToString() << "\n";
+		ss << "Time: " << time << "\n";
+		ss << "Delta Time: " << deltaTime;
+		return ss.str();
 	}
 }

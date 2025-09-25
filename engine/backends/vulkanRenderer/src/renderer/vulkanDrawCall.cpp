@@ -1,5 +1,4 @@
 #include "vulkanDrawCall.h"
-#include "vulkanLighting.h"
 #include "vulkanShaderProperties.h"
 #include <array>
 
@@ -20,23 +19,21 @@ namespace vulkanRendererBackend
 		pShaderProperties->SetFloat4x4(bufferName, "cb_worldToClipMatrix", worldToClipMatrix);
 		pShaderProperties->SetFloat4x4(bufferName, "cb_localToClipMatrix", localToClipMatrix);
 	}
-	void DrawCall::SetLightData()
+	void DrawCall::SetLightData(std::vector<emberCommon::DirectionalLight>& directionalLights, std::vector<emberCommon::PositionalLight>& positionalLights)
 	{
-		SetDirectionalLightData();
-		SetPositionalLightData();
+		SetDirectionalLightData(directionalLights);
+		SetPositionalLightData(positionalLights);
 		pShaderProperties->SetBool("LightData", "receiveShadows", receiveShadows);
 	}
 
 
 
     // Private methods:
-	void DrawCall::SetDirectionalLightData()
+	void DrawCall::SetDirectionalLightData(std::vector<emberCommon::DirectionalLight>& directionalLights)
 	{
-		std::vector<Lighting::DirectionalLight>& directionalLights = Lighting::GetDirectionalLights();
 		static std::string bufferName = "LightData";
 		static std::string arrayName = "directionalLightData";
-		
-		for (uint32_t i = 0; i < Lighting::GetDirectionalLightsCount(); i++)
+		for (uint32_t i = 0; i < directionalLights.size(); i++)
 		{
 			pShaderProperties->SetFloat4x4(bufferName, arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
 			pShaderProperties->SetFloat3(bufferName, arrayName, i, "direction", directionalLights[i].direction);
@@ -44,13 +41,11 @@ namespace vulkanRendererBackend
 			pShaderProperties->SetFloat4(bufferName, arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
 		}
 	}
-	void DrawCall::SetPositionalLightData()
+	void DrawCall::SetPositionalLightData(std::vector<emberCommon::PositionalLight>& positionalLights)
 	{
-		std::vector<Lighting::PositionalLight>& positionalLights = Lighting::GetPositionalLights();
 		static std::string bufferName = "LightData";
 		static std::string arrayName = "positionalLightData";
-
-		for (uint32_t i = 0; i < Lighting::GetPositionalLightsCount(); i++)
+		for (uint32_t i = 0; i < positionalLights.size(); i++)
 		{
 			pShaderProperties->SetFloat4x4(bufferName, arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
 			pShaderProperties->SetFloat3(bufferName, arrayName, i, "position", positionalLights[i].position);

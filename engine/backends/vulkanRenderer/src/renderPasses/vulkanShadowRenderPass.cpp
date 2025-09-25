@@ -2,7 +2,6 @@
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanDepthTexture2dArray.h"
-#include "vulkanLighting.h"
 #include "vulkanMacros.h"
 #include <vulkan/vulkan.h>
 
@@ -12,17 +11,16 @@ namespace vulkanRendererBackend
 {
 	// Static members:
 	Format ShadowRenderPass::s_shadowMapFormat = Formats::d32_sfloat;
-	uint32_t ShadowRenderPass::s_layerCount = Lighting::GetMaxDirectionalLights() + Lighting::GetMaxPositionalLights();
 
 
 
 	// Constructor/Destructor:
-	ShadowRenderPass::ShadowRenderPass()
+	ShadowRenderPass::ShadowRenderPass(uint32_t shadowMapResolution, uint32_t maxLightsCount)
 	{
 		// Create shadow map texture:
-		m_shadowMaps = std::make_unique<DepthTexture2dArray>("shadowMaps", (VkFormat)s_shadowMapFormat, Lighting::GetShadowMapResolution(), Lighting::GetShadowMapResolution(), s_layerCount);
+		m_shadowMaps = std::make_unique<DepthTexture2dArray>("shadowMaps", (VkFormat)s_shadowMapFormat, shadowMapResolution, shadowMapResolution, maxLightsCount);
 		CreateRenderpass();
-		CreateFramebuffers();
+		CreateFramebuffers(shadowMapResolution, maxLightsCount);
 		NAME_VK_RENDER_PASS(m_renderPass, "shadowRenderPass");
 	}
 	ShadowRenderPass::~ShadowRenderPass()
@@ -72,7 +70,7 @@ namespace vulkanRendererBackend
 		createInfo.pSubpasses = &subpass;
 		VKA(vkCreateRenderPass(Context::GetVkDevice(), &createInfo, nullptr, &m_renderPass));
 	}
-	void ShadowRenderPass::CreateFramebuffers()
+	void ShadowRenderPass::CreateFramebuffers(uint32_t shadowMapResolution, uint32_t maxLightsCount)
 	{
 		size_t imageCount = 1;
 		m_framebuffers.resize(imageCount);
@@ -82,9 +80,9 @@ namespace vulkanRendererBackend
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = 1;
 			framebufferInfo.pAttachments = &m_shadowMaps->GetVmaImage()->GetVkImageView();
-			framebufferInfo.width = Lighting::GetShadowMapResolution();
-			framebufferInfo.height = Lighting::GetShadowMapResolution();
-			framebufferInfo.layers = s_layerCount;
+			framebufferInfo.width = shadowMapResolution;
+			framebufferInfo.height = shadowMapResolution;
+			framebufferInfo.layers = maxLightsCount;
 			vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
 		}
 	}

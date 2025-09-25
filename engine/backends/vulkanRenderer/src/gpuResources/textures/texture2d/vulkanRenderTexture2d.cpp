@@ -9,7 +9,7 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Desctructor:
-	RenderTexture2d::RenderTexture2d(const std::string& name, Format format, int width, int height, ImageUsageFlag usageFlags)
+	RenderTexture2d::RenderTexture2d(const std::string& name, Format format, int width, int height)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("RenderTexture2d '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
@@ -30,8 +30,7 @@ namespace vulkanRendererBackend
 		subresourceRange.levelCount = 1;
 
 		// Create image:
-		if (usageFlags == 0)	// Default usage flags:
-			usageFlags = ImageUsageFlags::transfer_src_bit | ImageUsageFlags::transfer_dst_bit | ImageUsageFlags::storage_bit | ImageUsageFlags::sampled_bit | ImageUsageFlags::color_attachment_bit;
+		ImageUsageFlag usageFlags = ImageUsageFlags::transfer_src_bit | ImageUsageFlags::transfer_dst_bit | ImageUsageFlags::storage_bit | ImageUsageFlags::sampled_bit | ImageUsageFlags::color_attachment_bit;
 		ImageCreateFlag imageFlags = 0;
 		MemoryPropertyFlag memoryFlags = MemoryPropertyFlags::device_local_bit;
 		ImageViewType viewType = ImageViewTypes::view_type_2d;
@@ -43,5 +42,13 @@ namespace vulkanRendererBackend
 	RenderTexture2d::~RenderTexture2d()
 	{
 
+	}
+
+
+
+	// Public method:
+	void RenderTexture2d::SetData(void* data)
+	{
+		LOG_WARN("Setting data of a RenderTexture2d manually is not allowed!");
 	}
 }
