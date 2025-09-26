@@ -33,6 +33,7 @@
 #include "vulkanShaderProperties.h"
 #include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
+#include "vulkanStorageBuffer.h"
 #include "vulkanSurface.h"
 #include "vulkanVertexBuffer.h"
 #include <assert.h>
@@ -231,7 +232,7 @@ namespace vulkanRendererBackend
 
 
 	// Draw mesh:
-	void Renderer::DrawMesh(Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (!pMesh)
 		{
@@ -245,7 +246,7 @@ namespace vulkanRendererBackend
 		}
 
 		// No shadow interaction for the error material:
-		if (pMaterial == m_pErrorMaterial.get())
+		if (static_cast<Material*>(pMaterial) == m_pErrorMaterial.get())
 		{
 			receiveShadows = false;
 			castShadows = false;
@@ -253,12 +254,12 @@ namespace vulkanRendererBackend
 
 		// Setup draw call:
 		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)m_pShadowMaterial.get());
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, 0 };
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<ShaderProperties*>(pShaderProperties), pShadowShaderProperties, static_cast<Mesh*>(pMesh), 0 };
 		m_staticDrawCalls.push_back(drawCall);
 	}
-	ShaderProperties* Renderer::DrawMesh(Mesh* pMesh, Material* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	emberBackendInterface::IShaderProperties* Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
-		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)pMaterial);
+		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
 		DrawMesh(pMesh, pMaterial, pShaderProperties, localToWorldMatrix, receiveShadows, castShadows);
 		return pShaderProperties;
 	}
@@ -266,7 +267,7 @@ namespace vulkanRendererBackend
 
 
 	// Draw instanced:
-	void Renderer::DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, ShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Renderer::DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (!pInstanceBuffer)
 		{
@@ -285,22 +286,22 @@ namespace vulkanRendererBackend
 		}
 
 		// No shadow interaction for the error material:
-		if (pMaterial == m_pErrorMaterial.get())
+		if (static_cast<Material*>(pMaterial) == m_pErrorMaterial.get())
 		{
 			receiveShadows = false;
 			castShadows = false;
 		}
 
 		// Setup draw call:
-		pShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
+		pShaderProperties->SetBuffer("instanceBuffer", pInstanceBuffer);
 		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)m_pShadowMaterial.get());
-		pShadowShaderProperties->SetStorageBuffer("instanceBuffer", pInstanceBuffer);
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShaderProperties, pShadowShaderProperties, pMesh, instanceCount };
+		pShadowShaderProperties->SetBuffer("instanceBuffer", pInstanceBuffer);
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<ShaderProperties*>(pShaderProperties), pShadowShaderProperties, static_cast<Mesh*>(pMesh), instanceCount };
 		m_staticDrawCalls.push_back(drawCall);
 	}
-	ShaderProperties* Renderer::DrawInstanced(uint32_t instanceCount, StorageBuffer* pInstanceBuffer, Mesh* pMesh, Material* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	emberBackendInterface::IShaderProperties* Renderer::DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
-		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)pMaterial);
+		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
 		DrawInstanced(instanceCount, pInstanceBuffer, pMesh, pMaterial, pShaderProperties, localToWorldMatrix, receiveShadows, castShadows);
 		return pShaderProperties;
 	}
@@ -860,13 +861,13 @@ namespace vulkanRendererBackend
 				// Update shader specific data:
 				if (callIndex % 2 == 0)
 				{
-					computeCall->pShaderProperties->SetTexture2d("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-					computeCall->pShaderProperties->SetTexture2d("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
+					computeCall->pShaderProperties->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+					computeCall->pShaderProperties->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
 				}
 				else
 				{
-					computeCall->pShaderProperties->SetTexture2d("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
-					computeCall->pShaderProperties->SetTexture2d("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+					computeCall->pShaderProperties->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
+					computeCall->pShaderProperties->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
 				}
 				callIndex++;
 				computeCall->pShaderProperties->UpdateShaderData();
@@ -971,7 +972,7 @@ namespace vulkanRendererBackend
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
 				// Update shader specific data:
-				m_pPresentShaderProperties->SetTexture2d("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+				m_pPresentShaderProperties->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
 				m_pPresentShaderProperties->UpdateShaderData();
 
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipeline);

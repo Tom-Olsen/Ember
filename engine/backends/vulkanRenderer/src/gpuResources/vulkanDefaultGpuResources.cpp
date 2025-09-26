@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
 	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pDefaultSampleTexture2d = nullptr;
 	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pNormalMapSampleTexture2d = nullptr;
-	std::unique_ptr<SampleTextureCube> DefaultGpuResources::s_pDefaultTextureCube = nullptr;
+	std::unique_ptr<SampleTextureCube> DefaultGpuResources::s_pDefaultSampleTextureCube = nullptr;
 	std::unique_ptr<DepthTexture2dArray> DefaultGpuResources::s_pDefaultDepthTexture2dArray = nullptr;
 	std::unique_ptr<StorageTexture2d> DefaultGpuResources::s_pDefaultStorageTexture2d = nullptr;
 
@@ -33,7 +33,7 @@ namespace vulkanRendererBackend
 		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>("white", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::white);
 		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>("defaultNormalMap", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::up);
         std::array<Float4, 6> whiteFaces = { Float4::white, Float4::white, Float4::white, Float4::white, Float4::white, Float4::white };
-		s_pDefaultTextureCube = std::make_unique<SampleTextureCube>("whiteSkybox", Formats::r32g32b32a32_sfloat, 1, 1, whiteFaces.data());
+		s_pDefaultSampleTextureCube = std::make_unique<SampleTextureCube>("whiteSkybox", Formats::r32g32b32a32_sfloat, 1, 1, whiteFaces.data());
 		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>("defaultArrayTexture2d", Formats::d32_sfloat, 2, 1, 1);
 		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>("defaultStorageTexture", Formats::r32g32b32a32_sfloat, 1, 1, (void*)&Float4::one);
 	}
@@ -44,7 +44,7 @@ namespace vulkanRendererBackend
 		s_pDefaultStorageBuffer.reset();
 		s_pDefaultSampleTexture2d.reset();
 		s_pNormalMapSampleTexture2d.reset();
-		s_pDefaultTextureCube.reset();
+		s_pDefaultSampleTextureCube.reset();
 		s_pDefaultDepthTexture2dArray.reset();
 		s_pDefaultStorageTexture2d.reset();
 	}
@@ -71,9 +71,9 @@ namespace vulkanRendererBackend
 	{
 		return s_pNormalMapSampleTexture2d.get();
 	}
-	SampleTextureCube* DefaultGpuResources::GetDefaultTextureCube()
+	SampleTextureCube* DefaultGpuResources::GetDefaultSampleTextureCube()
 	{
-		return s_pDefaultTextureCube.get();
+		return s_pDefaultSampleTextureCube.get();
 	}
 	DepthTexture2dArray* DefaultGpuResources::GetDefaultDepthTexture2dArray()
 	{

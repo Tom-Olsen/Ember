@@ -25,7 +25,7 @@ namespace vulkanRendererBackend
 	/// -VmaMemoryUsage				=> prefer host/device, ... <para/>
 	/// -VmaAllocationCreateFlags	=> mapped, host access, ...
 	/// </summary>
-	class Buffer : emberBackendInterface::IBuffer
+	class Buffer : public emberBackendInterface::IBuffer
 	{
 	protected: // Members:
 		std::string m_name;

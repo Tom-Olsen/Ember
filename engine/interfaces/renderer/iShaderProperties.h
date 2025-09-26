@@ -4,18 +4,17 @@
 
 
 
-// Forward declerations:
-namespace vulkanRendererBackend
-{
-    class Sampler;
-    class Texture2d;
-    class StorageBuffer;
-}
 
 
 
 namespace emberBackendInterface
 {
+    // Forward declerations:
+    class ITexture;
+    class IBuffer;
+
+
+
     class IShaderProperties
     {
     public: // Methods:
@@ -23,8 +22,8 @@ namespace emberBackendInterface
         virtual ~IShaderProperties() = default;
 
         //virtual void SetSampler(const std::string& name, vulkanRendererBackend::Sampler* pSampler) = 0;
-        virtual void SetTexture2d(const std::string& name, vulkanRendererBackend::Texture2d* pTexture2d) = 0;
-        virtual void SetStorageBuffer(const std::string& name, vulkanRendererBackend::StorageBuffer* pStorageBuffer) = 0;
+        virtual void SetTexture(const std::string& name, ITexture* pTexture2d) = 0;
+        virtual void SetBuffer(const std::string& name, IBuffer* pStorageBuffer) = 0;
 
         // Setters:
 		// Simple members:
