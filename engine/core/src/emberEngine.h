@@ -23,39 +23,30 @@ namespace emberEngine
 
 // Basic functionality:
 #include "eventSystem.h"
-#include "logger.h"
 #include "emberMath.h"
-#include "meshGenerator.h"
 #include "emberTime.h"
+#include "logger.h"
+#include "meshGenerator.h"
 
-// Compute backend:
-//#include "compute.h"
-//#include "computeShader.h"
+// Render/Compute backends:
+#include "renderer.h"
+#include "compute.h"
 
-// Graphics backend:
-//#include "graphics.h"
+// Gpu resources:
+#include "buffer.h"
 #include "mesh.h"
 #include "material.h"
+#include "computeShader.h"
 #include "shaderProperties.h"
-//#include "sampler.h"
-//#include "texture2d.h"
-//#include "depthTexture2dArray.h"
-//#include "renderTexture2d.h"
-//#include "sampleTexture2d.h"
-//#include "storageSampleTexture2d.h"
-//#include "storageTexture2d.h"
-//#include "storageBuffer.h"
-//#include "textureCube.h"
 
 // Managers:
 #include "bufferManager.h"
 #include "computeShaderManager.h"
 #include "materialManager.h"
 #include "meshManager.h"
-#include "samplerManager.h"
 #include "textureManager.h"
 
-// GameObject system:
+// Game Object System (ECS):
 #include "component.h"
 #include "gameObject.h"
 #include "scene.h"

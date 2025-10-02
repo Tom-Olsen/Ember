@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_instancedRenderer_h__
-#define __INCLUDE_GUARD_instancedRenderer_h__
+#pragma once
 #include "emberEngine.h"
 
 
@@ -13,7 +12,7 @@ namespace emberEngine
 
 
 
-	class InstancedRenderer : public Component
+	class InstancedMeshRenderer : public Component
 	{
 	private: // Members:
 		uint32_t m_instanceCount;
@@ -21,12 +20,12 @@ namespace emberEngine
 		bool m_receiveShadows;
 		Mesh* m_pMesh;
 		Material* m_pMaterial;
-		StorageBuffer* m_pInstanceBuffer;
-		std::unique_ptr<ShaderProperties> m_pShaderProperties;
+		Buffer* m_pInstanceBuffer;
+		ShaderProperties m_shaderProperties;
 
 	public: // Methods:
-		InstancedRenderer();
-		~InstancedRenderer();
+		InstancedMeshRenderer();
+		~InstancedMeshRenderer();
 		
 		// Setter:
 		void SetInstanceCount(uint32_t instanceCount);
@@ -34,7 +33,7 @@ namespace emberEngine
 		void SetReceiveShadows(bool receiveShadows);
 		void SetMesh(Mesh* pMesh);
 		void SetMaterial(Material* pMaterial);
-		void SetInstanceBuffer(StorageBuffer* pInstanceBuffer);
+		void SetInstanceBuffer(Buffer* pInstanceBuffer);
 
 		// Forward render pass getters:
 		uint32_t GetInstanceCount() const;
@@ -42,15 +41,11 @@ namespace emberEngine
 		bool GetReceiveShadows() const;
 		Mesh* GetMesh();
 		Material* GetMaterial();
-		StorageBuffer* GetInstanceBuffer();
-		ShaderProperties* GetShaderProperties();
+		Buffer* GetInstanceBuffer();
+		ShaderProperties& GetShaderProperties();
 
 		// Overrides:
 		void Update() override;
 		const std::string ToString() const override;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_instancedRenderer_h__

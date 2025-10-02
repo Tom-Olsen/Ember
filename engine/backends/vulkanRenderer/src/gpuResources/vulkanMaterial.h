@@ -54,6 +54,7 @@ namespace vulkanRendererBackend
 		Material& operator=(Material&& other);
 
 		// Getters:
+		const std::string& GetName() const override;
 		emberCommon::MaterialType GetType() const override;
 		uint32_t GetRenderQueue() const override;
 		const VertexInputDescriptions* const GetVertexInputDescriptions() const;

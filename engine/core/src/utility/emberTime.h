@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_timer_h__
-#define __INCLUDE_GUARD_timer_h__
+#pragma once
 #include <chrono>
 #include <string_view>
 
@@ -45,7 +44,3 @@ namespace emberEngine
         ~Time() = delete;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_timer_h__

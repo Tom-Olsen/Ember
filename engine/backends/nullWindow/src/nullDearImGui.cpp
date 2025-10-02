@@ -53,7 +53,7 @@ namespace nullWindowBackend
 	{
 		return false;
 	}
-	uintptr_t NullDearImGui::GetTextureID(VkImageView vkImageView, VkSampler vkSampler)
+	uintptr_t NullDearImGui::GetTextureID(void* vkImageView)
 	{
 		return 0;
 	}

@@ -10,6 +10,7 @@ namespace emberLogger
 
 
 
+	// Initialization/Clear:
 	void Logger::Init()
 	{
 		if (s_initialized)
@@ -21,7 +22,14 @@ namespace emberLogger
 		s_coreLogger = spdlog::stdout_color_mt("Ember");
 		s_coreLogger->set_level(spdlog::level::trace);
 	}
+	void Logger::Clear()
+	{
 
+	}
+
+
+
+	// Getters:
 	std::shared_ptr<spdlog::logger>& Logger::GetCoreLogger()
 	{
 		return s_coreLogger;

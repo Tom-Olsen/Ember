@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testInstancedRendering_h__
-#define __INCLUDE_GUARD_testInstancedRendering_h__
+#pragma once
 #include "emberEngine.h"
 
 
@@ -16,15 +15,15 @@ namespace emberEngine
 	private: // Members:
 		ComputeShader* m_pStartCS;
 		ComputeShader* m_pUpdateCS;
-		std::unique_ptr<StorageBuffer> m_pStorageBuffer;
-		std::unique_ptr<ShaderProperties> m_pStartProperties;
-		std::unique_ptr<ShaderProperties> m_pUpdateProperties;
+		std::unique_ptr<Buffer> m_pInstanceBuffer;
+		ShaderProperties m_startProperties;
+		ShaderProperties m_updateProperties;
 
 	public: // Methods:
 		TestInstancedRendering(uint32_t instanceCount);
 		~TestInstancedRendering();
 
-		StorageBuffer* GetInstanceBuffer() const;
+		Buffer* GetInstanceBuffer() const;
 
 		// Overrides:
 		void Start() override;
@@ -32,7 +31,3 @@ namespace emberEngine
 		const std::string ToString() const override;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_testInstancedRendering_h__

@@ -17,28 +17,15 @@
 
 namespace vulkanRendererBackend
 {
-	// Static members:
-	bool PostRender::s_isInitialized = false;
-	uint32_t PostRender::s_callIndex = 0;
-	std::vector<ComputeCall> PostRender::s_staticComputeCalls;
-	std::vector<ComputeCall> PostRender::s_dynamicComputeCalls;
-	std::vector<ComputeCall*> PostRender::s_computeCallPointers;
-	std::unique_ptr<ComputeShader> PostRender::s_pInOutComputeShader;
-
-
-
-	// Initialization/Cleanup:
-	void PostRender::Init()
+	// Constructor/Destructor:
+	PostRender::PostRender()
 	{
-		if (s_isInitialized)
-			return;
-		s_isInitialized = true;
-
-		std::filesystem::path shaderDir = std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders";
+		m_callIndex = 0;
+		std::filesystem::path shaderDir = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();
 		std::filesystem::path shaderPath = shaderDir / "inOut.comp.spv";
-		s_pInOutComputeShader = std::make_unique<ComputeShader>("inOut", shaderPath);
+		m_pInOutComputeShader = std::make_unique<ComputeShader>("inOut", shaderPath);
 	}
-	void PostRender::Clear()
+	PostRender::~PostRender()
 	{
 		ResetComputeCalls();
 	}
@@ -46,46 +33,32 @@ namespace vulkanRendererBackend
 
 
 	// Workload recording:
-	ShaderProperties* PostRender::RecordComputeShader(ComputeShader* pComputeShader)
+	void PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties)
 	{
-		if (!pComputeShader)
+		if (!pIComputeShader)
 		{
-			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
-			return nullptr;
+			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
+			return;
+		}
+		if (!pIShaderProperties)
+		{
+			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIShaderProperties is nullptr.");
+			return;
 		}
 
 		// Setup compute call:
 		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
-		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(pComputeShader);
-		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
-		s_dynamicComputeCalls.push_back(computeCall);
-		s_callIndex++;
-
-		// By returning pShaderProperties, we allow user to change the shader properties of the compute call:
-		return pShaderProperties;
+		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<ShaderProperties*>(pIShaderProperties), AccessMasks::None::none, AccessMasks::None::none };
+		m_staticComputeCalls.push_back(computeCall);
+		m_callIndex++;
 	}
-	void PostRender::RecordComputeShader(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties)
+	emberBackendInterface::IShaderProperties* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
 	{
-		if (!pComputeShader)
-		{
-			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
-			return;
-		}
-		if (!pShaderProperties)
-		{
-			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pShaderProperties is nullptr.");
-			return;
-		}
-
-		// Setup compute call:
-		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
-		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
-		Uint3 threadCount{ width, height, 1 };
-		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
-		s_staticComputeCalls.push_back(computeCall);
-		s_callIndex++;
+		ShaderProperties* pIShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		RecordComputeShader(pIComputeShader, static_cast<emberBackendInterface::IShaderProperties*>(pIShaderProperties));
+		return pIShaderProperties;
 	}
 
 
@@ -93,34 +66,34 @@ namespace vulkanRendererBackend
 	// Management:
 	std::vector<ComputeCall*>& PostRender::GetComputeCallPointers()
 	{
-		size_t count = s_staticComputeCalls.size() + s_dynamicComputeCalls.size();
+		size_t count = m_staticComputeCalls.size() + m_dynamicComputeCalls.size();
 
 		// Add inOut.comp.hlsl if odd number of post render compute calls, as it simply copies the input to the output texture:
 		if (count % 2 == 1)
 		{
-			RecordComputeShader(s_pInOutComputeShader.get());
+			RecordComputeShader(m_pInOutComputeShader.get());
 			count++;
 		}
 
 		// Populate draw call pointers vector according to callIndex:
-		s_computeCallPointers.resize(count);
-		for (auto& computeCall : s_staticComputeCalls)
-			s_computeCallPointers[computeCall.callIndex] = &computeCall;
-		for (auto& computeCall : s_dynamicComputeCalls)
-			s_computeCallPointers[computeCall.callIndex] = &computeCall;
+		m_computeCallPointers.resize(count);
+		for (auto& computeCall : m_staticComputeCalls)
+			m_computeCallPointers[computeCall.callIndex] = &computeCall;
+		for (auto& computeCall : m_dynamicComputeCalls)
+			m_computeCallPointers[computeCall.callIndex] = &computeCall;
 
-		return s_computeCallPointers;
+		return m_computeCallPointers;
 	}
 	void PostRender::ResetComputeCalls()
 	{
 		// Return all pShaderProperties of compute calls back to the corresponding pool:
-		for (ComputeCall& computeCall : s_dynamicComputeCalls)
+		for (ComputeCall& computeCall : m_dynamicComputeCalls)
 			PoolManager::ReturnShaderProperties(computeCall.pComputeShader, computeCall.pShaderProperties);
 
 		// Remove all computeCalls so next frame can start fresh:
-		s_staticComputeCalls.clear();
-		s_dynamicComputeCalls.clear();
-		s_computeCallPointers.clear();
-		s_callIndex = 0;
+		m_staticComputeCalls.clear();
+		m_dynamicComputeCalls.clear();
+		m_computeCallPointers.clear();
+		m_callIndex = 0;
 	}
 }

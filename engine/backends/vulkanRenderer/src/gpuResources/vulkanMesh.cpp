@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
 
 
 	// Public methods:
-	// Setters:
+	// Setters: (copy the vector)
 	void Mesh::SetName(const std::string& name)
 	{
 		m_name = name;
@@ -36,13 +36,13 @@ namespace vulkanRendererBackend
 	{
 		// Copy values into member vector:
 		m_vertexCount = static_cast<uint32_t>(positions.size());
-		m_positions = positions;
+		m_positions.assign(positions.begin(), positions.end());
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetNormals(const std::vector<Float3>& normals)
 	{
 		// Copy values into member vector and fill with default values if needed:
-		m_normals = normals;
+		m_normals.assign(normals.begin(), normals.end());
 		if (normals.size() != m_vertexCount)
 			m_normals.resize(m_vertexCount, Float3::up);
 		m_verticesUpdated = true;
@@ -50,7 +50,7 @@ namespace vulkanRendererBackend
 	void Mesh::SetTangents(const std::vector<Float3>& tangents)
 	{
 		// Copy values into member vector and fill with default values if needed:
-		m_tangents = tangents;
+		m_tangents.assign(tangents.begin(), tangents.end());
 		if (tangents.size() != m_vertexCount)
 			m_tangents.resize(m_vertexCount, Float3::right);
 		m_verticesUpdated = true;
@@ -58,7 +58,7 @@ namespace vulkanRendererBackend
 	void Mesh::SetColors(const std::vector<Float4>& colors)
 	{
 		// Copy values into member vector and fill with default values if needed:
-		m_colors = colors;
+		m_colors.assign(colors.begin(), colors.end());
 		if (colors.size() != m_vertexCount)
 			m_colors.resize(m_vertexCount, Float4::white);
 		m_verticesUpdated = true;
@@ -75,7 +75,7 @@ namespace vulkanRendererBackend
 	void Mesh::SetUVs(const std::vector<Float4>& uvs)
 	{
 		// Copy values into member vector and fill with default values if needed:
-		m_uvs = uvs;
+		m_uvs.assign(uvs.begin(), uvs.end());
 		if (uvs.size() != m_vertexCount)
 			m_uvs.resize(m_vertexCount, Float4::zero);
 		m_verticesUpdated = true;
@@ -84,14 +84,14 @@ namespace vulkanRendererBackend
 	{
 		// Copy values into member vector:
 		m_triangleCount = static_cast<uint32_t>(triangles.size());
-		m_triangles = triangles;
+		m_triangles.assign(triangles.begin(), triangles.end());
 		m_indicesUpdated = true;
 	}
 
 
 
-	// Movers:
-	void Mesh::MovePositions(std::vector<Float3>& positions)
+	// Movers: (take ownership of vector)
+	void Mesh::MovePositions(std::vector<Float3>&& positions)
 	{
 		// Take ownership if input data:
 		if (&positions != &m_positions)
@@ -101,7 +101,7 @@ namespace vulkanRendererBackend
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveNormals(std::vector<Float3>& normals)
+	void Mesh::MoveNormals(std::vector<Float3>&& normals)
 	{
 		// Take ownership of input data:
 		if (&normals != &m_normals)
@@ -112,7 +112,7 @@ namespace vulkanRendererBackend
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveTangents(std::vector<Float3>& tangents)
+	void Mesh::MoveTangents(std::vector<Float3>&& tangents)
 	{
 		// Take ownership of input data:
 		if (&tangents != &m_tangents)
@@ -123,7 +123,7 @@ namespace vulkanRendererBackend
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveColors(std::vector<Float4>& colors)
+	void Mesh::MoveColors(std::vector<Float4>&& colors)
 	{
 		// Take ownership of input data:
 		if (&colors != &m_colors)
@@ -134,7 +134,7 @@ namespace vulkanRendererBackend
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveUVs(std::vector<Float4>& uvs)
+	void Mesh::MoveUVs(std::vector<Float4>&& uvs)
 	{
 		// Take ownership of input data:
 		if (&uvs != &m_uvs)
@@ -145,7 +145,7 @@ namespace vulkanRendererBackend
 			m_verticesUpdated = true;
 		}
 	}
-	void Mesh::MoveTriangles(std::vector<Uint3>& triangles)
+	void Mesh::MoveTriangles(std::vector<Uint3>&& triangles)
 	{
 		// Take ownership if input data:
 		if (&triangles != &m_triangles)
@@ -194,6 +194,30 @@ namespace vulkanRendererBackend
 	std::vector<Uint3>& Mesh::GetTriangles()
 	{
 		return m_triangles;
+	}
+	void Mesh::RegisterUpdate()
+	{
+		if (m_positions.size() != m_normals.size()
+			|| m_positions.size() != m_tangents.size()
+			|| m_positions.size() != m_colors.size()
+			|| m_positions.size() != m_uvs.size())
+		{
+			LOG_ERROR("Mesh::RegisterUpdate: dimensions of modified vectors of mesh '{}' do not match!", m_name);
+			return;
+		}
+		m_vertexCount = m_positions.size();
+		m_verticesUpdated = true;
+	}
+	emberBackendInterface::IMesh* Mesh::GetCopy(const std::string& newName)
+	{
+		Mesh* copy = new Mesh(newName);
+		copy->SetPositions(m_positions);
+		copy->SetNormals(m_normals);
+		copy->SetTangents(m_tangents);
+		copy->SetColors(m_colors);
+		copy->SetUVs(m_uvs);
+		copy->SetTriangles(m_triangles);
+		return static_cast<emberBackendInterface::IMesh*>(copy);
 	}
 
 
@@ -258,7 +282,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Backend getters:
+	// Getters for backend only:
 	uint32_t* Mesh::GetTrianglesUnrolled()
 	{
 		return reinterpret_cast<uint32_t*>(m_triangles.data());

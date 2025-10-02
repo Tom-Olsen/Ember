@@ -13,45 +13,45 @@
 
 namespace emberEngine
 {
-	Texture2d::Texture2d(const std::string& name, int width, int height, const TextureFormat& format, TextureUsage usage)
+	Texture2d::Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
 	{
 		vulkanRendererBackend::Format vulkanFormat = vulkanRendererBackend::TextureFormatToVulkanFormat(format);
 		switch (usage)
 		{
-			case TextureUsage::sample:
+			case emberCommon::TextureUsage::sample:
 				m_pITexture = std::make_unique<vulkanRendererBackend::SampleTexture2d>(name, vulkanFormat, width, height);
 				break;
-			case TextureUsage::storage:
+			case emberCommon::TextureUsage::storage:
 				m_pITexture = std::make_unique<vulkanRendererBackend::StorageTexture2d>(name, vulkanFormat, width, height);
 				break;
-			case TextureUsage::storageAndSample:
+			case emberCommon::TextureUsage::storageAndSample:
 				m_pITexture = std::make_unique<vulkanRendererBackend::StorageSampleTexture2d>(name, vulkanFormat, width, height);
 				break;
-			case TextureUsage::renderTarget:
+			case emberCommon::TextureUsage::renderTarget:
 				m_pITexture = std::make_unique<vulkanRendererBackend::RenderTexture2d>(name, vulkanFormat, width, height);
 				break;
-			default LOG_ERROR("Texture2d: Unsuported TextureUsage '{}'", TextureUsageNames[usage]);
+			default: LOG_ERROR("Texture2d: Unsuported TextureUsage '{}'", emberCommon::TextureUsageNames[static_cast<int>(usage)]);
 		}
 	}
-	Texture2d::Texture2d(const std::string& name, const TextureFormat& format, TextureUsage usage, const std::filesystem::path& path)
+	Texture2d::Texture2d(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path)
 	{
 		vulkanRendererBackend::Format vulkanFormat = vulkanRendererBackend::TextureFormatToVulkanFormat(format);
 		switch (usage)
 		{
-		case TextureUsage::sample:
-			m_pITexture = std::make_unique<vulkanRendererBackend::SampleTexture2d>(name, vulkanFormat, path);
-			break;
-		case TextureUsage::storage:
-			m_pITexture = std::make_unique<vulkanRendererBackend::StorageTexture2d>(name, vulkanFormat, path);
-			break;
-		case TextureUsage::storageAndSample:
-			m_pITexture = std::make_unique<vulkanRendererBackend::StorageSampleTexture2d>(name, vulkanFormat, path);
-			break;
-		case TextureUsage::renderTarget:
-			m_pITexture = std::make_unique<vulkanRendererBackend::RenderTexture2d>(name, vulkanFormat);
-			LOG_WARN("Texture2d: TextureUsage = 'renderTarget' does not support loading from disk. Use constructor without 'path'.")
-			break;
-			default LOG_ERROR("Texture2d: Unsuported TextureUsage '{}'", TextureUsageNames[usage]);
+			case emberCommon::TextureUsage::sample:
+				m_pITexture = std::make_unique<vulkanRendererBackend::SampleTexture2d>(name, vulkanFormat, path);
+				break;
+			case emberCommon::TextureUsage::storage:
+				m_pITexture = std::make_unique<vulkanRendererBackend::StorageTexture2d>(name, vulkanFormat, path);
+				break;
+			case emberCommon::TextureUsage::storageAndSample:
+				m_pITexture = std::make_unique<vulkanRendererBackend::StorageSampleTexture2d>(name, vulkanFormat, path);
+				break;
+			case emberCommon::TextureUsage::renderTarget:
+				m_pITexture = nullptr;
+				LOG_ERROR("Texture2d: TextureUsage = 'renderTarget' does not support loading from disk. Use constructor without 'path'.");
+				break;
+			default: LOG_ERROR("Texture2d: Unsuported TextureUsage '{}'", emberCommon::TextureUsageNames[static_cast<int>(usage)]);
 		}
 	}
 	Texture2d::~Texture2d()

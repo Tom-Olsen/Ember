@@ -18,7 +18,9 @@ namespace emberMath
 			static uint32_t s_seed;
 
 		public: // Methods:
+			// Initialization/Clear:
 			static void Init();
+			static void Clear();
 
 			// Seed management:
 			static void SetSeed(uint32_t seed);

@@ -14,6 +14,7 @@ namespace emberMath
 
 
 		// Public methods:
+		// Initialization/Clear:
 		void Random::Init()
 		{
 			if (!s_isInitialized)
@@ -22,6 +23,10 @@ namespace emberMath
 				s_seed = static_cast<uint32_t>(std::random_device{}());
 				s_mersenneTwister.seed(s_seed);
 			}
+		}
+		void Random::Clear()
+		{
+
 		}
 
 		// Seed management:

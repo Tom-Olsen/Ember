@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_eventSystem_h__
-#define __INCLUDE_GUARD_eventSystem_h__
+#pragma once
 #include "emberMath.h"
 #include "input.h"
 #include <unordered_map>
@@ -65,7 +64,3 @@ namespace emberEngine
         ~EventSystem() = delete;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_eventSystem_h__

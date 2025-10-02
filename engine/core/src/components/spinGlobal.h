@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_SpinGlobal_h__
-#define __INCLUDE_GUARD_SpinGlobal_h__
+#pragma once
 #include "emberEngine.h"
 
 
@@ -23,7 +22,3 @@ namespace emberEngine
 		const std::string ToString() const override;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_SpinGlobal_h__

@@ -1,5 +1,4 @@
 #include "spotLight.h"
-#include "lighting.h"
 #include "vulkanShadowRenderPass.h"
 
 
@@ -11,7 +10,7 @@ namespace emberEngine
 	{
 		m_intensity = 1.0f;
 		m_color = Float3::white;
-		m_shadowType = Lighting::ShadowType::hard;
+		m_shadowType = emberCommon::ShadowType::hard;
 		m_fov = math::deg2rad * 45.0f;
 		m_nearClip = 0.1f;
 		m_farClip = 15.0f;
@@ -36,7 +35,7 @@ namespace emberEngine
 	{
 		m_color = color;
 	}
-	void SpotLight::SetShadowType(Lighting::ShadowType shadowType)
+	void SpotLight::SetShadowType(emberCommon::ShadowType shadowType)
 	{
 		m_shadowType = shadowType;
 	}
@@ -79,7 +78,7 @@ namespace emberEngine
 	{
 		return m_color;
 	}
-	Lighting::ShadowType SpotLight::GetShadowType() const
+	emberCommon::ShadowType SpotLight::GetShadowType() const
 	{
 		return m_shadowType;
 	}
@@ -130,10 +129,10 @@ namespace emberEngine
 	void SpotLight::LateUpdate()
 	{
 		Float4x4 worldToClipMatrix = GetProjectionMatrix() * GetViewMatrix();
-		Lighting::AddPositionalLight(GetTransform()->GetPosition(), m_intensity, m_color, m_shadowType, m_blendStart, m_blendEnd, worldToClipMatrix);
+		Renderer::AddPositionalLight(GetTransform()->GetPosition(), m_intensity, m_color, m_shadowType, m_blendStart, m_blendEnd, worldToClipMatrix);
 
 		if (m_drawFrustum)
-			Graphics::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, Float4(m_color, 1.0f));
+			Renderer::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, Float4(m_color, 1.0f));
 	}
 	const std::string SpotLight::ToString() const
 	{

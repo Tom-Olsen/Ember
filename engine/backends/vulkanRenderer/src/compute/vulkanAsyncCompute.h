@@ -1,4 +1,6 @@
 #pragma once
+#include "iCompute.h"
+#include "commonAccessMask.h"
 #include "emberMath.h"
 #include "vulkanAccessMask.h"
 #include <queue>
@@ -8,14 +10,17 @@
 
 // Forward decleration:
 typedef struct VkFence_T* VkFence;
+namespace emberBackendInterface
+{
+	class IComputeShader;
+	class IShaderProperties;
+}
 
 
 
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class ComputeShader;
-	class ShaderProperties;
 	class CommandPool;
 
 
@@ -25,38 +30,40 @@ namespace vulkanRendererBackend
 
 
 
-	class Async
+	class Async : public emberBackendInterface::ICompute::IAsync
 	{
 	private: // Members:
-		static bool s_isInitialized;
-		static int s_sessionCount;
-		static std::vector<CommandPool> s_pCommandPools;
-		static std::vector<ComputeSession> s_computeSessions;
-		static std::vector<VkFence> s_fences;
-		static std::queue<uint32_t> s_freeIndices;
+		uint16_t m_sessionCount;
+		std::vector<CommandPool> m_pCommandPools;
+		std::vector<ComputeSession> m_computeSessions;
+		std::vector<VkFence> m_fences;
+		std::queue<uint16_t> m_freeIndices;
 
 	public: // Methods:
-		static void Init(int sessionCount);
-		static void Clear();
+		// Constructor/Destructor:
+		Async(uint16_t sessionCount);
+		~Async();
 
-		// Dispatch logic:
-		static uint32_t CreateComputeSession();
-		static void DispatchComputeSession(uint32_t sessionID, float time, float deltaTime);
-		static bool IsFinished(uint32_t sessionID);
-		static void WaitForFinish(uint32_t sessionID);
-
-		// Workload recording:
-		static ShaderProperties* RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, Uint3 threadCount);
-		static void RecordComputeShader(uint32_t sessionID, ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount);
-		static void RecordBarrier(uint32_t sessionID, AccessMask srcAccessMask, AccessMask dstAccessMask);
-
-	private: // Methods:
-		static void ResetComputeSession(uint32_t sessionID);
-
-		// Delete all constructors:
-		Async() = delete;
+		// Non-copyable:
 		Async(const Async&) = delete;
 		Async& operator=(const Async&) = delete;
-		~Async() = delete;
+
+		// Movable:
+		Async(Async&& other) noexcept = default;
+		Async& operator=(Async&& other) noexcept = default;
+
+		// Dispatch logic:
+		uint16_t CreateComputeSession() override;
+		void DispatchComputeSession(uint16_t sessionID, float time, float deltaTime) override;
+		bool IsFinished(uint16_t sessionID) override;
+		void WaitForFinish(uint16_t sessionID) override;
+
+		// Workload recording:
+		void RecordComputeShader(uint16_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties, Uint3 threadCount) override;
+		emberBackendInterface::IShaderProperties* RecordComputeShader(uint16_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount) override;
+		void RecordBarrier(uint16_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) override;
+
+	private: // Methods:
+		void ResetComputeSession(uint16_t sessionID);
 	};
 }

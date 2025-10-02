@@ -8,23 +8,41 @@
 
 namespace emberEngine
 {
+	// Private methods:
+	emberBackendInterface::IBuffer* Buffer::GetInterfaceHandle()
+	{
+		return m_pIBuffer.get();
+	}
+
+
+
+	// Public methods:
 	// Constructor/Destructor:
-	Buffer::Buffer(uint32_t count, uint32_t elementSize, const std::string& name, BufferUsage usage)
+	Buffer::Buffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage)
 	{
 		switch (usage)
 		{
-		case BufferUsage::index:
+		case emberCommon::BufferUsage::index:
 			m_pIBuffer = std::make_unique<vulkanRendererBackend::IndexBuffer>(count, elementSize, name);
 			break;
-		case BufferUsage::storage:
+		case emberCommon::BufferUsage::storage:
 			m_pIBuffer = std::make_unique<vulkanRendererBackend::StorageBuffer>(count, elementSize, name);
 			break;
-		case BufferUsage::vertex:
+		case emberCommon::BufferUsage::vertex:
 			m_pIBuffer = std::make_unique<vulkanRendererBackend::VertexBuffer>(count, elementSize, name);
 			break;
 		}
 	}
-	Buffer::~Buffer();
+	Buffer::~Buffer()
+	{
+
+	}
+
+
+
+	// Movable:
+	Buffer::Buffer(Buffer&& other) noexcept = default;
+	Buffer& Buffer::operator=(Buffer&& other) noexcept = default;
 
 
 

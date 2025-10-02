@@ -30,7 +30,11 @@ namespace emberLogger
 		static std::shared_ptr<spdlog::logger> s_coreLogger;
 
 	public: // Methods:
+		// Initialization/Clear:
 		static void Init();	// Must be called once before using the logger.
+		static void Clear();
+
+		// Getters:
 		static std::shared_ptr<spdlog::logger>& GetCoreLogger();
 	};
 

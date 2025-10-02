@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_component_h__
-#define __INCLUDE_GUARD_component_h__
+#pragma once
 #include <string>
 
 
@@ -51,7 +50,3 @@ namespace emberEngine
 		virtual const std::string ToString() const = 0;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_component_h__

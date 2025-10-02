@@ -1,6 +1,16 @@
 #pragma once
+#include "iCompute.h"
 #include <memory>
 #include <vector>
+
+
+
+// Forward declarations:
+namespace emberBackendInterface
+{
+	class IComputeShader;
+	class IShaderProperties;
+}
 
 
 
@@ -8,38 +18,38 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class ComputeShader;
-	class ShaderProperties;
 	struct ComputeCall;
 
 
 
-	class PostRender
+	class PostRender : public emberBackendInterface::ICompute::IPostRender
 	{
 	private: // Members:
-		static bool s_isInitialized;
-		static uint32_t s_callIndex;
-		static std::vector<ComputeCall> s_staticComputeCalls;
-		static std::vector<ComputeCall> s_dynamicComputeCalls;
-		static std::vector<ComputeCall*> s_computeCallPointers;
-		static std::unique_ptr<ComputeShader> s_pInOutComputeShader; // copies final render into primary texture in case of odd number of post processing effects.
+		uint32_t m_callIndex;
+		std::vector<ComputeCall> m_staticComputeCalls;
+		std::vector<ComputeCall> m_dynamicComputeCalls;
+		std::vector<ComputeCall*> m_computeCallPointers;
+		std::unique_ptr<ComputeShader> m_pInOutComputeShader; // copies final render into primary texture in case of odd number of post processing effects.
 
 	public: // Methods:
-		static void Init();
-		static void Clear();
+		// Constructor/Destructor:
+		PostRender();
+		~PostRender();
 
-		// Workload recording:
-		static ShaderProperties* RecordComputeShader(ComputeShader* pComputeShader);
-		static void RecordComputeShader(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties);
-
-		// Management:
-		static std::vector<ComputeCall*>& GetComputeCallPointers();
-		static void ResetComputeCalls();
-
-	private: // Methods:
-		// Delete all constructors:
-		PostRender() = delete;
+		// Non-copyable:
 		PostRender(const PostRender&) = delete;
 		PostRender& operator=(const PostRender&) = delete;
-		~PostRender() = delete;
+
+		// Movable:
+		PostRender(PostRender&& other) noexcept = default;
+		PostRender& operator=(PostRender&& other) noexcept = default;
+
+		// Workload recording:
+		void RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IShaderProperties* pShaderProperties) override;
+		emberBackendInterface::IShaderProperties* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader) override;
+
+		// Management:
+		std::vector<ComputeCall*>& GetComputeCallPointers();
+		void ResetComputeCalls();
 	};
 }

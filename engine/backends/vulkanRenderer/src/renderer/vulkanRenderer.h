@@ -2,6 +2,7 @@
 #include "iRenderer.h"
 #include "commonCamera.h"
 #include "commonLighting.h"
+#include "commonRendererCreateInfo.h"
 #include "vulkanDrawCall.h"
 #include "vulkanRendererExport.h"
 #include <array>
@@ -15,14 +16,11 @@ typedef struct VkFence_T* VkFence;
 typedef struct VkSemaphore_T* VkSemaphore;
 typedef struct VkPipeline_T* VkPipeline;
 typedef struct VkPipelineLayout_T* VkPipelineLayout;
-namespace emberEngine
-{
-	struct RendererCreateInfo;
-}
 namespace emberBackendInterface
 {
 	class IBuffer;
 	class IDearImGui;
+	class ICompute;
 	class IMaterial;
 	class IMesh;
 	class IShaderProperties;
@@ -34,6 +32,7 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class CommandPool;
+	class Compute;
 	class ComputeShader;
 	struct DrawCall;
 	class Mesh;
@@ -67,6 +66,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		// Backend hooks:
 		emberBackendInterface::IDearImGui* m_pIDearImGui;
+		Compute* m_pCompute;
 		
 		// Render resources:
 		std::vector<CommandPool> m_commandPools;
@@ -93,7 +93,6 @@ namespace vulkanRendererBackend
 		uint32_t m_shadowMapResolution;
 		std::vector<emberCommon::DirectionalLight> m_directionalLights;
 		std::vector<emberCommon::PositionalLight> m_positionalLights;
-		std::array<Float4x4, 6> m_pointLightRotationMatrices;
 
 		// Present render pass caching:
 		std::unique_ptr<Mesh> m_pPresentMesh;
@@ -108,10 +107,6 @@ namespace vulkanRendererBackend
 		std::vector<DrawCall> m_staticDrawCalls;
 		std::vector<DrawCall> m_dynamicDrawCalls;
 		std::vector<DrawCall*> m_sortedDrawCallPointers;
-
-		// Maybe move somewhere else?
-		std::unique_ptr<Material> m_pDefaultMaterial;
-		std::unique_ptr<Material> m_pErrorMaterial;
 		std::unique_ptr<ComputeShader> m_pGammaCorrectionComputeShader;
 
 		// Render management:
@@ -121,18 +116,18 @@ namespace vulkanRendererBackend
 		bool m_rebuildSwapchain;
 
 	public: // Methods:
-		Renderer(const emberEngine::RendererCreateInfo& createInfo);
+		Renderer(const emberCommon::RendererCreateInfo& createInfo);
 		~Renderer();
 
 		// Non-copyable:
 		Renderer(const Renderer&) = delete;
 		Renderer& operator=(const Renderer&) = delete;
 
-		// Non-movable:
-		Renderer(Renderer&& other) noexcept = delete;
-		Renderer& operator=(Renderer&& other) noexcept = delete;
+		// Movable:
+		Renderer(Renderer&& other) noexcept;
+		Renderer& operator=(Renderer&& other) noexcept;
 
-		// Main render call:
+		// Main render loop:
 		void RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime) override;
 
 		// Lightsources:
@@ -148,15 +143,34 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IShaderProperties* DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true) override;
 
 		// Getters:
+		uint32_t GetShadowMapResolution() override;
 		float GetDeptBiasConstantFactor();
 		float GetDeptBiasClamp();
 		float GetDeptBiasSlopeFactor();
 
 		// Setters:
-		void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
+		void SetIComputeHandle(emberBackendInterface::ICompute* pICompute) override;
+		void SetIDearImGuiHandle(emberBackendInterface::IDearImGui* pIDearImGui) override;
+		void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix) override;
 		void SetDepthBiasConstantFactor(float depthBiasConstantFactor);
 		void SetDepthBiasClamp(float depthBiasClamp);
 		void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor);
+
+		// Functionallity forwarding:
+		void CollectGarbage() override;
+		void WaitDeviceIdle() override; // needed so core can wait before destroying resource managers and then renderer.
+
+		// Vulkan handle passthrough for API coupling:
+		void* GetVkInstance() override;
+		void* GetVkPhysicalDevice() override;
+		void* GetVkDevice() override;
+		void* GetPresentVkRenderPass() override;
+		void* GetVkDescriptorPool() override;
+		void* GetGraphicsVkQueue() override;
+		void* GetColorSampler() override;
+		uint32_t GetGraphicsVkQueueFamilyIndex() override;
+		uint32_t GetSwapchainImageCount() override;
+		uint32_t GetFramesInFlight() override;
 
 	private: // Methods:
 		// Reset render state:

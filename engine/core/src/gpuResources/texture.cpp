@@ -5,6 +5,21 @@
 
 namespace emberEngine
 {
+	// Private Methods:
+	emberBackendInterface::ITexture* Texture::GetInterfaceHandle()
+	{
+		return m_pITexture.get();
+	}
+
+
+
+	// Public Methods:
+	// Movable:
+	Texture::Texture(Texture&& other) noexcept = default;
+	Texture& Texture::operator=(Texture&& other) noexcept = default;
+
+
+
 	// Getters:
 	const std::string& Texture::GetName() const
 	{
@@ -26,7 +41,7 @@ namespace emberEngine
 	{
 		return m_pITexture->GetChannels();
 	}
-	const TextureFormat& Texture::GetFormat() const
+	const emberCommon::TextureFormat& Texture::GetFormat() const
 	{
 		return m_pITexture->GetTextureFormat();
 	}

@@ -15,27 +15,44 @@ namespace emberBackendInterface
 namespace emberEngine
 {
 	// Forward decleration:
+	class Buffer;
+	class Compute;
 	class ComputeShader;
 	class Material;
 	class StorageBuffer;
-	class Texture2d;
+	class Texture;
 
 
 
 	class ShaderProperties
 	{
+		// Friends:
+		friend class Renderer;
+		friend class Compute;
+
 	private: // Members:
 		std::unique_ptr<emberBackendInterface::IShaderProperties> m_pIShaderProperties;
-
-	public: // Constructors/Destructor:
-		ShaderProperties(const ComputeShader* pComputeShader);
-		ShaderProperties(const Material* pMaterial);
-		~ShaderProperties();
+		emberBackendInterface::IShaderProperties* GetInterfaceHandle();
 
 	public: // Methods:
+		// Constructors/Destructor:
+		ShaderProperties();
+		ShaderProperties(ComputeShader& computeShader);
+		ShaderProperties(Material& material);
+		ShaderProperties(emberBackendInterface::IShaderProperties* pIShaderProperties);
+		~ShaderProperties();
+
+		// Non-copyable:
+		ShaderProperties(const ShaderProperties&) = delete;
+		ShaderProperties& operator=(const ShaderProperties&) = delete;
+
+		// Movable:
+		ShaderProperties(ShaderProperties&& other) noexcept;
+		ShaderProperties& operator=(ShaderProperties&& other) noexcept;
+
 		// Setters:
-		void SetTexture2d(const std::string& name, Texture2d* pTexture2d);
-		void SetStorageBuffer(const std::string& name, StorageBuffer* pStorageBuffer);
+		void SetTexture(const std::string& name, Texture& texture);
+		void SetBuffer(const std::string& name, Buffer& buffer);
 
 		// Uniform Buffer Setters:
 		// Simple members:

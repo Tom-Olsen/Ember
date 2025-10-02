@@ -13,7 +13,7 @@ namespace vulkanRendererBackend
         struct GarbageEntry
         {
             uint64_t frameIndex;
-            std::function<void()> cleanupCallback;
+            std::function<void()> collectGarbageCallback;
         };
 
         static bool s_isInitialized;
@@ -22,7 +22,7 @@ namespace vulkanRendererBackend
     public:
         static void Init();
         static void Clear();
-        static void RecordCleanup(std::function<void()> cleanupCallback);
-        static void Cleanup();
+        static void RecordGarbage(std::function<void()> collectGarbageCallback);
+        static void CollectGarbage();
     };
 }

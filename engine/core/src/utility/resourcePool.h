@@ -1,12 +1,16 @@
-#ifndef __INCLUDE_GUARD_resourcePool_h__
-#define __INCLUDE_GUARD_resourcePool_h__
+#pragma once
 #include "logger.h"
 #include <queue>    // FIFO queue
 #include <vector>
 
+
+
 // Ember::TODO:
 // -add blockSize to shaderPropertiesPool?
 // -delete this file/class entirely?
+// -currently not used at all! debrecated? If used in vulkanBackend only, move it there.
+
+
 
 namespace emberEngine
 {
@@ -93,7 +97,3 @@ namespace emberEngine
         }
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_resourcePool_h__

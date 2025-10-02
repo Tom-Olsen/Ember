@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_application_h__
 #define __INCLUDE_GUARD_application_h__
-#include "msaaSampleCount.h"
+#include "commonMsaaSampleCount.h"
 #include <memory>
 
 
@@ -20,7 +20,7 @@ namespace emberEngine
 		{
 			bool vSyncEnabled = false;
 			uint32_t framesInFlight = 2;
-			MsaaSampleCount msaaSampleCount = MsaaSampleCount::sampleCount04;
+			MsaaSampleCount msaaSampleCount = emberCommon::MsaaSampleCount::sampleCount04;
 			int windowWidth = 2560;
 			int windowHeight = 1440;
 			uint32_t renderWidth = 1920;
@@ -29,7 +29,6 @@ namespace emberEngine
 
 	private: // Members:
 		Scene* m_pActiveScene;
-		std::unique_ptr<Renderer> m_pRenderer;
 
 	public: // Methods:
 		Application(const CreateInfo& createInfo);

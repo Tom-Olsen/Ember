@@ -1,4 +1,5 @@
 #include "pointLight.h"
+#include "renderer.h"
 #include "vulkanShadowRenderPass.h"
 
 
@@ -10,7 +11,7 @@ namespace emberEngine
 	{
 		m_intensity = 1.0f;
 		m_color = Float3::white;
-		m_shadowType = Lighting::ShadowType::hard;
+		m_shadowType = emberCommon::ShadowType::hard;
 		m_nearClip = 0.1f;
 		m_farClip = 15.0f;
 		m_updateProjectionMatrix = true;
@@ -32,7 +33,7 @@ namespace emberEngine
 	{
 		m_color = color;
 	}
-	void PointLight::SetShadowType(Lighting::ShadowType shadowType)
+	void PointLight::SetShadowType(emberCommon::ShadowType shadowType)
 	{
 		m_shadowType = shadowType;
 	}
@@ -62,7 +63,7 @@ namespace emberEngine
 	{
 		return m_color;
 	}
-	Lighting::ShadowType PointLight::GetShadowType() const
+	emberCommon::ShadowType PointLight::GetShadowType() const
 	{
 		return m_shadowType;
 	}
@@ -106,14 +107,14 @@ namespace emberEngine
 		constexpr float blendEnd = 3.0f;
 		for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
 		{
-			Float4x4 viewMatrix = Lighting::GetPointLightRotationMatrix(faceIndex) * GetViewMatrix();
+			Float4x4 viewMatrix = Renderer::GetPointLightRotationMatrix(faceIndex) * GetViewMatrix();
 			Float4x4 worldToClipMatrix = GetProjectionMatrix() * viewMatrix;
-			Lighting::AddPositionalLight(GetTransform()->GetPosition(), m_intensity, m_color, m_shadowType, blendStard, blendEnd, worldToClipMatrix);
+			Renderer::AddPositionalLight(GetTransform()->GetPosition(), m_intensity, m_color, m_shadowType, blendStard, blendEnd, worldToClipMatrix);
 		}
 
 		if (m_drawFrustum)
 			for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
-				Graphics::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix() * Lighting::GetPointLightRotationMatrix(faceIndex), 0.1f, Float4(m_color, 1.0f));
+				Renderer::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix() * Renderer::GetPointLightRotationMatrix(faceIndex), 0.1f, Float4(m_color, 1.0f));
 	}
 	const std::string PointLight::ToString() const
 	{

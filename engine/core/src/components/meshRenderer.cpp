@@ -11,8 +11,8 @@ namespace emberEngine
 		m_receiveShadows = true;
 
 		m_pMesh = nullptr;
-		m_pMaterial = MaterialManager::GetMaterial("errorMaterial");
-		m_pShaderProperties = std::make_unique<ShaderProperties>(m_pMaterial);
+		m_pMaterial = MaterialManager::TryGetMaterial("errorMaterial");
+		m_shaderProperties = ShaderProperties(*m_pMaterial);
 	}
 	MeshRenderer::~MeshRenderer()
 	{
@@ -39,16 +39,16 @@ namespace emberEngine
 	{
 		if (pMaterial == nullptr)
 		{
-			if (m_pMaterial != MaterialManager::GetMaterial("errorMaterial"))
+			if (m_pMaterial != MaterialManager::TryGetMaterial("errorMaterial"))
 			{
-				m_pMaterial = MaterialManager::GetMaterial("errorMaterial");
-				m_pShaderProperties = std::make_unique<ShaderProperties>(m_pMaterial);
+				m_pMaterial = MaterialManager::TryGetMaterial("errorMaterial");
+				m_shaderProperties = ShaderProperties(*m_pMaterial);
 			}
 		}
 		else if (m_pMaterial != pMaterial)
 		{
 			m_pMaterial = pMaterial;
-			m_pShaderProperties = std::make_unique<ShaderProperties>(m_pMaterial);
+			m_shaderProperties = ShaderProperties(*m_pMaterial);
 		}
 	}
 
@@ -71,9 +71,9 @@ namespace emberEngine
 	{
 		return m_pMaterial;
 	}
-	ShaderProperties* MeshRenderer::GetShaderProperties()
+	ShaderProperties& MeshRenderer::GetShaderProperties()
 	{
-		return m_pShaderProperties.get();
+		return m_shaderProperties;
 	}
 
 
@@ -82,7 +82,7 @@ namespace emberEngine
 	void MeshRenderer::Update()
 	{
 		Float4x4 localToWorldMatrix = m_pTransform->GetLocalToWorldMatrix();
-		Graphics::DrawMesh(m_pMesh, m_pMaterial, m_pShaderProperties.get(), localToWorldMatrix, m_receiveShadows, m_castShadows);
+		Renderer::DrawMesh(*m_pMesh, *m_pMaterial, m_shaderProperties, localToWorldMatrix, m_receiveShadows, m_castShadows);
 	}
 	const std::string MeshRenderer::ToString() const
 	{

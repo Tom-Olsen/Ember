@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_meshRenderer_h__
-#define __INCLUDE_GUARD_meshRenderer_h__
+#pragma once
 #include "emberEngine.h"
 
 
@@ -20,7 +19,7 @@ namespace emberEngine
 		bool m_receiveShadows;
 		Mesh* m_pMesh;
 		Material* m_pMaterial;
-		std::unique_ptr<ShaderProperties> m_pShaderProperties;
+		ShaderProperties m_shaderProperties;
 
 	public: // Methods:
 		MeshRenderer();
@@ -37,14 +36,10 @@ namespace emberEngine
 		bool GetReceiveShadows() const;
 		Mesh* GetMesh();
 		Material* GetMaterial();
-		ShaderProperties* GetShaderProperties();
+		ShaderProperties& GetShaderProperties();
 
 		// Overrides:
 		void Update() override;
 		const std::string ToString() const override;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_meshRenderer_h__

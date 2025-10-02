@@ -1,10 +1,10 @@
 #include "dearImGui.h"
 #include "iDearImGui.h"
+#include "iTexture.h"
 #include "logger.h"
 #include "macros.h"
 #include "nullDearImGui.h"
-#include "renderPassManager.h"
-#include "sampler.h"
+#include "renderer.h"
 #include "sdlDearImGui.h"
 #include "texture2d.h"
 #include "vmaImage.h"
@@ -17,30 +17,20 @@
 
 namespace emberEngine
 {
-	using namespace vulkanBackend;
-
-
-
 	// Static members:
 	std::unique_ptr<emberBackendInterface::IDearImGui> DearImGui::s_pIDearImGui;
+	emberBackendInterface::IDearImGui* DearImGui::GetInterfaceHandle()
+	{
+		return s_pIDearImGui.get();
+	}
 
 
 
-	// Initialization/Ceanup:
+	// Initialization/Cleanup:
 	void DearImGui::Init(void* pSdlWindow, bool enableDockSpace)
 	{
-		VkInstance vkInstance = Context::GetVkInstance();
-		VkPhysicalDevice vkPhysicalDevice = Context::GetVkPhysicalDevice();
-		VkDevice vkDevice = Context::GetVkDevice();
-		VkRenderPass vkRenderPass = RenderPassManager::GetPresentRenderPass()->GetVkRenderPass();
-		VkDescriptorPool vkDescriptorPool = Context::GetVkDescriptorPool();
-		VkQueue vkQueue = Context::GetLogicalDevice()->GetGraphicsQueue().queue;
-		uint32_t queueFamilyIndex = Context::GetLogicalDevice()->GetGraphicsQueue().familyIndex;
-		uint32_t framesInFlight = Context::GetFramesInFlight();
-		uint32_t spwachainImageCount = Context::swapchains[0].GetImages().size();
-
 		if (true)
-			s_pIDearImGui = std::make_unique<sdlWindowBackend::SdlDearImGui>(pSdlWindow, vkInstance, vkPhysicalDevice, vkDevice, vkRenderPass, vkDescriptorPool, vkQueue, queueFamilyIndex, framesInFlight, spwachainImageCount, enableDockSpace);
+			s_pIDearImGui = std::make_unique<sdlWindowBackend::SdlDearImGui>(Window::GetInterfaceHandle(), Renderer::GetInterfaceHandle(), enableDockSpace);
 		else
 			s_pIDearImGui = std::make_unique<nullWindowBackend::NullDearImGui>();
 
@@ -73,10 +63,6 @@ namespace emberEngine
 
 
 	// Getters:
-	emberBackendInterface::IDearImGui* DearImGui::GetInterfaceHandle()
-	{
-		return s_pIDearImGui.get();
-	}
 	bool DearImGui::WantCaptureKeyboard()
 	{
 		return s_pIDearImGui->WantCaptureKeyboard();
@@ -85,22 +71,9 @@ namespace emberEngine
 	{
 		return s_pIDearImGui->WantCaptureMouse();
 	}
-	uintptr_t DearImGui::GetTextureID(Texture2d* pTexture2d, Sampler* pSampler)
+	uintptr_t DearImGui::GetTextureID(Texture* pTexture)
 	{
-		return s_pIDearImGui->GetTextureID(pTexture2d->GetVmaImage()->GetVkImageView(), pSampler->GetVkSampler());
-	}
-
-
-
-	// Helper functions:
-	void DearImGui::AddDearImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions)
-	{
-		std::unique_ptr<emberBackendInterface::IDearImGuiInstanceExtensionsLoader> pInstanceExtensionLoader;
-		if (true)
-			pInstanceExtensionLoader = std::make_unique<sdlWindowBackend::SdlDearImGuiInstanceExtensionsLoader>();
-		else
-			pInstanceExtensionLoader = std::make_unique <nullWindowBackend::NullDearImGuiInstanceExtensionsLoader>();
-		pInstanceExtensionLoader->AddExtensions(instanceExtensions);
+		return s_pIDearImGui->GetTextureID(pTexture->GetInterfaceHandle()->GetVkImageView());
 	}
 
 

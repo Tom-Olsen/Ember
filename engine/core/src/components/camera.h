@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_camera_h__
-#define __INCLUDE_GUARD_camera_h__
+#pragma once
 #include "emberEngine.h"
 
 
@@ -54,7 +53,3 @@ namespace emberEngine
 		void UpdateProjectionMatrix();
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_camera_h__

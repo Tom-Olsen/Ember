@@ -46,4 +46,10 @@ if (NOT TARGET EmberMath)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+
+# EmberLogger:
+if (NOT TARGET EmberLogger)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/logger" EmberLogger)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
 # ---------------------------------------------------

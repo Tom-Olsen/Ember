@@ -1,10 +1,8 @@
 #include "vulkanContext.h"
-#include "commonRendererCreateInfo.h"
 #include "emberMath.h"
 #include "iDearImGui.h"
 #include "iWindow.h"
 #include "vulkanAllocationTracker.h"
-#include "vulkanCompute.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDescriptorPool.h"
 #include "vulkanGarbageCollector.h"
@@ -53,7 +51,7 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void Context::Init(const emberEngine::RendererCreateInfo& createInfo)
+	void Context::Init(const emberCommon::RendererCreateInfo& createInfo)
 	{
 		if (s_isInitialized)
 			return;
@@ -65,7 +63,6 @@ namespace vulkanRendererBackend
 		m_enableDockSpace = createInfo.enableDockSpace;
 
 		// Init static utility:
-		Compute::Init();
 		uint32_t maxLightsCount = createInfo.maxDirectionalLights + createInfo.maxPositionalLights;
 		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
 		GarbageCollector::Init();
@@ -128,13 +125,16 @@ namespace vulkanRendererBackend
 	}
 	void Context::Clear()
 	{
+		if (!s_isInitialized)
+			return;
+		s_isInitialized = false;
+
 		WaitDeviceIdle();
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		SingleTimeCommand::Clear();
 		GarbageCollector::Clear();
 		RenderPassManager::Clear();
-		Compute::Clear();
 	}
 	void Context::RebuildSwapchain()
 	{

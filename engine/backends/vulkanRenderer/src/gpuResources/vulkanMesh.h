@@ -41,19 +41,20 @@ namespace vulkanRendererBackend
 		std::vector<Float4> m_uvs;
 		std::vector<Uint3> m_triangles;
 
-	public: // Constructors/Destructor:
+	public: // Methods:
+		// Constructors/Destructor:
 		Mesh(const std::string& name = "");
 		~Mesh();
 
-	public: // Non-copyable:
+		// Non-copyable:
 		Mesh(const Mesh& other) = delete;
 		Mesh& operator=(const Mesh& other) = delete;
 
-	public: // Movable:
+		// Movable:
 		Mesh(Mesh&& other) noexcept;
 		Mesh& operator=(Mesh&& other) noexcept;
 
-	public: // Setters:
+		// Setters: (copy the vector)
 		void SetName(const std::string& name) override;
 		void SetPositions(const std::vector<Float3>& positions) override;
 		void SetNormals(const std::vector<Float3>& normals) override;
@@ -63,15 +64,15 @@ namespace vulkanRendererBackend
 		void SetUVs(const std::vector<Float4>& uvs) override;
 		void SetTriangles(const std::vector<Uint3>& triangles) override;
 
-	public: // Movers:
-		void MovePositions(std::vector<Float3>& positions) override;
-		void MoveNormals(std::vector<Float3>& normals) override;
-		void MoveTangents(std::vector<Float3>& tangents) override;
-		void MoveColors(std::vector<Float4>& colors) override;
-		void MoveUVs(std::vector<Float4>& uvs) override;
-		void MoveTriangles(std::vector<Uint3>& triangles) override;
+		// Movers: (take ownership of vector)
+		void MovePositions(std::vector<Float3>&& positions) override;
+		void MoveNormals(std::vector<Float3>&& normals) override;
+		void MoveTangents(std::vector<Float3>&& tangents) override;
+		void MoveColors(std::vector<Float4>&& colors) override;
+		void MoveUVs(std::vector<Float4>&& uvs) override;
+		void MoveTriangles(std::vector<Uint3>&& triangles) override;
 
-	public: // Getters:
+		// Getters:
 		const std::string& GetName() const override;
 		uint32_t GetVertexCount() const override;
 		uint32_t GetTriangleCount() const override;
@@ -81,12 +82,14 @@ namespace vulkanRendererBackend
 		std::vector<Float4>& GetColors() override;
 		std::vector<Float4>& GetUVs() override;
 		std::vector<Uint3>& GetTriangles() override;
+		void RegisterUpdate() override;	// must be called after modifying any of the std::vector<..>& directly>.
+		emberBackendInterface::IMesh* GetCopy(const std::string& newName) override;
 
-	public: // Mesh transformations (changes *this):
+		// Mesh transformations (changes *this):
 		void ComputeNormals() override;
 		void ComputeTangents() override;
 
-	public: // Backend getters:
+		// Getters for backend only:
 		uint32_t* GetTrianglesUnrolled();
 		uint32_t GetSizeOfPositions() const;
 		uint32_t GetSizeOfNormals() const;

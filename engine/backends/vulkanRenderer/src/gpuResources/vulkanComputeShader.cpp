@@ -33,4 +33,8 @@ namespace vulkanRendererBackend
 	{
 		return m_blockSize;
 	}
+	const std::string& ComputeShader::GetName() const
+	{
+		return m_name;
+	}
 }

@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_dearImGui_h__
-#define __INCLUDE_GUARD_dearImGui_h__
+#pragma once
 #include "dearImGuiFlags.h"
 #include "emberMath.h"
 #include <memory>
@@ -12,7 +11,7 @@ typedef struct VkCommandBuffer_T* VkCommandBuffer;
 namespace emberEngine
 {
 	class Sampler;
-	class Texture2d;
+	class Texture;
 }
 namespace emberBackendInterface
 {
@@ -25,11 +24,15 @@ namespace emberEngine
 {
 	class DearImGui
 	{
+		// Friends:
+		friend class Renderer;
+
 	private: // Members:
 		static std::unique_ptr<emberBackendInterface::IDearImGui> s_pIDearImGui;
+		static emberBackendInterface::IDearImGui* GetInterfaceHandle();
 
 	public: // Methods:
-		// Initialization/Ceanup:
+		// Initialization/Cleanup:
 		static void Init(void* pSdlWindow, bool enableDockSpace);
 		static void Clear();
 
@@ -39,13 +42,9 @@ namespace emberEngine
 		static void Render(VkCommandBuffer vkCommandBuffer);	// Must be called in a render pass.
 
 		// Getters:
-		static emberBackendInterface::IDearImGui* GetInterfaceHandle();
 		static bool WantCaptureKeyboard();
 		static bool WantCaptureMouse();
-		static uintptr_t GetTextureID(Texture2d* pTexture2d, Sampler* pSampler);
-
-		// Helper functions:
-		static void AddDearImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
+		static uintptr_t GetTextureID(Texture* pTexture);
 
 		// Wrappers:
 		static bool IsWindowFocused(emberEngine::DearImGuiFocusedFlags flags);
@@ -69,7 +68,3 @@ namespace emberEngine
 		~DearImGui() = delete;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_dearImGui_h__

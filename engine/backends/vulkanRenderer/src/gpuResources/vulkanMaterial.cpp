@@ -136,6 +136,10 @@ namespace vulkanRendererBackend
 
 	// Public methods:
 	// Getters:
+	const std::string& Material::GetName() const
+	{
+		return m_name;
+	}
 	emberCommon::MaterialType Material::GetType() const
 	{
 		return m_type;

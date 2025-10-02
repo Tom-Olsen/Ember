@@ -12,10 +12,6 @@
 
 namespace emberEngine
 {
-	using namespace vulkanBackend;
-
-
-
 	// Static members:
 	bool TextureManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> TextureManager::s_textures;
@@ -30,10 +26,11 @@ namespace emberEngine
 		s_isInitialized = true;
 
 		#ifdef LOG_INITIALIZATION
-		Time::Init();
+		Time::Reset();
 		#endif
 
-		// Iterate through the texture directory:
+		// Iterate through the texture directory: (for now everything interpreted as 2d sample textures)
+		emberCommon::TextureUsage usage = emberCommon::TextureUsage::sample;
 		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_CORE_PATH) / "textures").make_preferred();
 		std::unordered_set<std::string> validExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
@@ -50,24 +47,24 @@ namespace emberEngine
 				continue;
 
 			std::string name = filePath.stem().string();
-			TextureFormat format = TextureFormats::rgba08_srgb;
+			emberCommon::TextureFormat format = emberCommon::TextureFormats::rgb08_srgb;
 
 			if (name.find("normal") != std::string::npos)
-				format = TextureFormats::rgba08_unorm;
+				format = emberCommon::TextureFormats::rgba08_unorm;
 			else if (name.find("roughness") != std::string::npos || name.find("metallic") != std::string::npos)
-				format = TextureFormats::r08_unorm;
+				format = emberCommon::TextureFormats::r08_unorm;
 
-			Texture2d* pTexture2d = new Texture2d(name, format, filePath);
-			AddTexture(pTexture2d);
+			Texture2d texture2d(name, format, usage, filePath);
+			AddTexture(std::move(texture2d));
 		}
 		
 		// TextureCubes:
-		TextureCube* skyboxWhite = new TextureCube("skyboxWhite", TextureFormats::rgba08_srgb, directoryPath.string() + "/white/");
-		AddTexture(skyboxWhite);
-		TextureCube* skybox0 = new TextureCube("skybox0", TextureFormats::rgba08_srgb, directoryPath.string() + "/skyboxClouds1/");
-		AddTexture(skybox0);
-		TextureCube* skybox1 = new TextureCube("skybox1", TextureFormats::rgba08_srgb, directoryPath.string() + "/skyboxNebula0/");
-		AddTexture(skybox1);
+		TextureCube skyboxWhite("skyboxWhite", emberCommon::TextureFormats::rgba08_srgb, emberCommon::TextureUsage::sample, directoryPath.string() + "/white/");
+		AddTexture(std::move(skyboxWhite));
+		TextureCube skybox0("skybox0", emberCommon::TextureFormats::rgba08_srgb, emberCommon::TextureUsage::sample, directoryPath.string() + "/skyboxClouds1/");
+		AddTexture(std::move(skybox0));
+		TextureCube skybox1("skybox1", emberCommon::TextureFormats::rgba08_srgb, emberCommon::TextureUsage::sample, directoryPath.string() + "/skyboxNebula0/");
+		AddTexture(std::move(skybox1));
 
 		#ifdef LOG_INITIALIZATION
 		Time::Update();
@@ -76,23 +73,26 @@ namespace emberEngine
 	}
 	void TextureManager::Clear()
 	{
-		Context::WaitDeviceIdle();
 		s_textures.clear();
 	}
 
 
 
 	// Add/Get/Delete:
-	void TextureManager::AddTexture(Texture* pTexture)
+	void TextureManager::AddTexture(Texture&& texture)
 	{
-		// If texture already contained in TextureManager, do nothing.
-		if (s_textures.emplace(pTexture->GetName(), std::unique_ptr<Texture>(pTexture)).second == false)
-		{
-			LOG_WARN("Texture with the name: {} already exists in TextureManager!", pTexture->GetName());
-			return;
-		}
+		auto newTexture = std::make_unique<Texture>(std::move(texture));
+		if (!s_textures.emplace(newTexture->GetName(), std::move(newTexture)).second)
+			LOG_WARN("Texture with the name: {} already exists in TextureManager!", newTexture->GetName());
 	}
-	Texture* TextureManager::GetTexture(const std::string& name)
+	Texture& TextureManager::GetTexture(const std::string& name)
+	{
+		auto it = s_textures.find(name);
+		if (it == s_textures.end())
+			throw std::runtime_error("Texture not found: " + name);
+		return *(it->second);
+	}
+	Texture* TextureManager::TryGetTexture(const std::string& name)
 	{
 		auto it = s_textures.find(name);
 		if (it != s_textures.end())
@@ -102,14 +102,13 @@ namespace emberEngine
 	}
 	void TextureManager::DeleteTexture(const std::string& name)
 	{
-		Context::WaitDeviceIdle();
 		s_textures.erase(name);
 	}
 
 
 
 	// Debugging:
-	void TextureManager::PrintAllTextureNames()
+	void TextureManager::Print()
 	{
 		LOG_TRACE("Names of all managed textures:");
 		for (const auto& [name, _] : s_textures)

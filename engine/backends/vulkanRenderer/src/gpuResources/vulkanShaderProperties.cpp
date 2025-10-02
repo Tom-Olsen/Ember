@@ -31,6 +31,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Consructor/Destructor:
 	ShaderProperties::ShaderProperties(Shader* pShader)
 	{
@@ -106,7 +107,7 @@ namespace vulkanRendererBackend
 		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			VkDescriptorSet descriptorSet = m_descriptorSets[i];
-			GarbageCollector::RecordCleanup([descriptorSet]()
+			GarbageCollector::RecordGarbage([descriptorSet]()
 			{
 				vkFreeDescriptorSets(Context::GetVkDevice(), Context::GetVkDescriptorPool(),1, &descriptorSet);
 			});
@@ -115,7 +116,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Movable:
+	ShaderProperties::ShaderProperties(ShaderProperties&& other) noexcept = default;
+	ShaderProperties& ShaderProperties::operator=(ShaderProperties&& other) noexcept = default;
+
+
+
 	// Setters:
 	void ShaderProperties::SetSampler(const std::string& name, Sampler* pSampler)
 	{

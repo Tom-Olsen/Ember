@@ -1,23 +1,47 @@
 #pragma once
+#include "iCompute.h"
+#include "commonRendererCreateInfo.h"
+#include "emberMath.h"
+#include "vulkanRendererExport.h"
+#include <memory>
 
 
 
 namespace vulkanRendererBackend
 {
-	class Compute
+	// Forward declarations:
+	class Async;
+	class Immediate;
+	class PostRender;
+	class PreRender;
+
+
+
+	class VULKAN_RENDERER_API Compute : public emberBackendInterface::ICompute
 	{
 	private: // Members:
-		static bool s_isInitialized;
+		std::unique_ptr<emberBackendInterface::ICompute::IAsync> m_pIAsync;
+		std::unique_ptr<emberBackendInterface::ICompute::IImmediate> m_pIImmediate;
+		std::unique_ptr<emberBackendInterface::ICompute::IPostRender> m_pIPostRender;
+		std::unique_ptr<emberBackendInterface::ICompute::IPreRender> m_pIPreRender;
 
 	public: // Methods:
-		static void Init();
-		static void Clear();
+		// Constructor/Destructor:
+		Compute();
+		~Compute();
 
-	private: // Methods:
-		// Delete all constructors:
-		Compute() = delete;
+		// Non-copyable:
 		Compute(const Compute&) = delete;
 		Compute& operator=(const Compute&) = delete;
-		~Compute() = delete;
+
+		// Movable:
+		Compute(Compute&& other) noexcept = default;
+		Compute& operator=(Compute&& other) noexcept = default;
+
+		// Getters:
+		Async* GetAsyncCompute();
+		Immediate* GetImmediateCompute();
+		PostRender* GetPostRenderCompute();
+		PreRender* GetPreRenderCompute();
 	};
 }

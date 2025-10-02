@@ -1,4 +1,5 @@
 #pragma once
+#include "commonTextureFormat.h"
 #include <memory>
 #include <string>
 
@@ -16,8 +17,13 @@ namespace emberEngine
 {
 	class Texture
 	{
+		// Friends:
+		friend class DearImGui;
+		friend class ShaderProperties;
+
 	protected: // Members:
 		std::unique_ptr<emberBackendInterface::ITexture> m_pITexture;
+		emberBackendInterface::ITexture* GetInterfaceHandle();
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -29,8 +35,8 @@ namespace emberEngine
 		Texture& operator=(const Texture&) = delete;
 
 		// Movable:
-		Texture(Texture&& other) noexcept = default;
-		Texture& operator=(Texture&& other) noexcept = default;
+		Texture(Texture&& other) noexcept;
+		Texture& operator=(Texture&& other) noexcept;
 
 		// Getters:
 		const std::string& GetName() const;
@@ -38,6 +44,6 @@ namespace emberEngine
 		uint32_t GetHeight() const;
 		uint32_t GetDepth() const;
 		uint32_t GetChannels() const;
-		const TextureFormat& GetFormat() const;
+		const emberCommon::TextureFormat& GetFormat() const;
 	};
 }

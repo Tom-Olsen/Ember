@@ -113,7 +113,7 @@ namespace vulkanRendererBackend
 	{
 		VkBuffer buffer = m_buffer;
 		VmaAllocation allocation = m_allocation;
-		GarbageCollector::RecordCleanup([buffer, allocation]()
+		GarbageCollector::RecordGarbage([buffer, allocation]()
 		{
 			vmaDestroyBuffer(Context::GetVmaAllocator(), buffer, allocation);
 		});

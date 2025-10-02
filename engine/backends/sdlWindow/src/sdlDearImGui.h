@@ -12,18 +12,18 @@
 
 // Forward declarations:
 struct ImGuiIO;
-struct SDL_Window;
-typedef struct VkInstance_T* VkInstance;
-typedef struct VkPhysicalDevice_T* VkPhysicalDevice;
 typedef struct VkDevice_T* VkDevice;
-typedef struct VkRenderPass_T* VkRenderPass;
 typedef struct VkDescriptorPool_T* VkDescriptorPool;
-typedef struct VkQueue_T* VkQueue;
 typedef struct VkCommandBuffer_T* VkCommandBuffer;
 typedef struct VkImageView_T* VkImageView;
 typedef struct VkSampler_T* VkSampler;
 typedef struct VkDescriptorSet_T* VkDescriptorSet;
 typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
+namespace emberBackendInterface
+{
+	class IWindow;
+	class IRenderer;
+}
 
 
 
@@ -35,15 +35,17 @@ namespace sdlWindowBackend
 		VkDevice m_vkDevice;
 		VkDescriptorPool m_vkDescriptorPool;
 		VkDescriptorSetLayout m_descriptorSetLayout;
+		VkSampler m_vkColorSampler;
 		ImGuiIO* m_pIo;
 		bool m_wantCaptureKeyboard;
 		bool m_wantCaptureMouse;
 		bool m_enableDockSpace;
 		std::unordered_map<VkImageView, VkDescriptorSet> m_vkImageViewToDescriptorMap;
+		
 
 	public: // Methods
 		// Constructor/Destructor:
-		SdlDearImGui(void* pSdlWindow, VkInstance vkInstance, VkPhysicalDevice vkPhysicalDevice, VkDevice vkDevice, VkRenderPass vkRenderpass, VkDescriptorPool vkDescriptorPool, VkQueue vkQueue, uint32_t queueFamilyIndex, uint32_t framesInFlight, uint32_t spwachainImageCount, bool enableDockSpace);
+		SdlDearImGui(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, bool enableDockSpace);
 		~SdlDearImGui();
 
 		// Non-copyable:
@@ -62,7 +64,7 @@ namespace sdlWindowBackend
 		// Getters:
 		bool WantCaptureKeyboard() override;
 		bool WantCaptureMouse() override;
-		uintptr_t GetTextureID(VkImageView vkImageView, VkSampler vkSampler) override;
+		uintptr_t GetTextureID(void* vkImageView) override;
 
 		// Wrappers:
 		bool IsWindowFocused(emberEngine::DearImGuiFocusedFlags flags) override;

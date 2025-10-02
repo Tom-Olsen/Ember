@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_shadowCascade_h__
-#define __INCLUDE_GUARD_shadowCascade_h__
+#pragma once
 #include "emberMath.h"
 
 
@@ -37,7 +36,3 @@ namespace emberEngine
 		float ComputeFarClip(Camera* const pCamera, const Float4x4& lightLocalToWorldMatrix);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_shadowCascade_h__

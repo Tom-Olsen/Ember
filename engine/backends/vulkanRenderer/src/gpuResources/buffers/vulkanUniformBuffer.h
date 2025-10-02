@@ -21,7 +21,6 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class UniformBuffer : public Buffer
 	{
-	// Friends:
 	friend class ShaderProperties;	// shaderProperties needs access to templated SetValue(...) methods.
 
 	private: // Members:

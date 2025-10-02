@@ -1,4 +1,6 @@
 #include "sdlDearImGui.h"
+#include "iWindow.h"
+#include "iRenderer.h"
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
@@ -10,10 +12,11 @@
 namespace sdlWindowBackend
 {
 	// Constructor/Destructor:
-	SdlDearImGui::SdlDearImGui(void* pSdlWindow, VkInstance vkInstance, VkPhysicalDevice vkPhysicalDevice, VkDevice vkDevice, VkRenderPass vkRenderpass, VkDescriptorPool vkDescriptorPool, VkQueue vkQueue, uint32_t queueFamilyIndex, uint32_t framesInFlight, uint32_t spwachainImageCount, bool enableDockSpace)
+	SdlDearImGui::SdlDearImGui(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, bool enableDockSpace)
 	{
-		m_vkDevice = vkDevice;
-		m_vkDescriptorPool = vkDescriptorPool;
+		m_vkDevice = static_cast<VkDevice>(pIRenderer->GetVkDevice());
+		m_vkDescriptorPool = static_cast<VkDescriptorPool>(pIRenderer->GetVkDescriptorPool());
+		m_vkColorSampler = static_cast<VkSampler>(pIRenderer->GetColorSampler());
 		m_wantCaptureKeyboard = false;
 		m_wantCaptureMouse = false;
 		m_enableDockSpace = enableDockSpace;
@@ -28,19 +31,19 @@ namespace sdlWindowBackend
 		m_pIo->FontGlobalScale = 2.0f;
 
 		ImGui::StyleColorsDark();
-		ImGui_ImplSDL3_InitForVulkan(static_cast<SDL_Window*>(pSdlWindow));
+		ImGui_ImplSDL3_InitForVulkan(static_cast<SDL_Window*>(pIWindow->GetNativeHandle()));
 
 		ImGui_ImplVulkan_InitInfo initInfo = {};
-		initInfo.Instance = vkInstance;
-		initInfo.PhysicalDevice = vkPhysicalDevice;
+		initInfo.Instance = static_cast<VkInstance>(pIRenderer->GetVkInstance());
+		initInfo.PhysicalDevice = static_cast<VkPhysicalDevice>(pIRenderer->GetVkPhysicalDevice());
 		initInfo.Device = m_vkDevice;
-		initInfo.Queue = vkQueue;
-		initInfo.QueueFamily = queueFamilyIndex;
-		initInfo.RenderPass = vkRenderpass;
-		initInfo.DescriptorPoolSize = 8 * framesInFlight;	// ImGui needs at least 8 descriptor sets per frame. If you use more than 8 textures in a single frame, increase this value.
+		initInfo.Queue = static_cast<VkQueue>(pIRenderer->GetGraphicsVkQueue());
+		initInfo.QueueFamily = pIRenderer->GetGraphicsVkQueueFamilyIndex();
+		initInfo.RenderPass = static_cast<VkRenderPass>(pIRenderer->GetPresentVkRenderPass());
+		initInfo.DescriptorPoolSize = 8 * pIRenderer->GetFramesInFlight();	// ImGui needs at least 8 descriptor sets per frame. If you use more than 8 textures in a single frame, increase this value.
 		initInfo.MinImageCount = 2;
-		initInfo.ImageCount = spwachainImageCount;
-		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT; // Ember::ToDo: write own msaa sampler enum and conversion from vulkan enums to ember enums;
+		initInfo.ImageCount = pIRenderer->GetSwapchainImageCount();
+		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;	// same as renderer present pass, which is hardcoded to 1.
 		ImGui_ImplVulkan_Init(&initInfo);
 
 		CreateDescriptorSetLayout();
@@ -86,7 +89,8 @@ namespace sdlWindowBackend
 			// Release own resources:
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplSDL3_Shutdown();
-			vkDestroyDescriptorSetLayout(m_vkDevice, m_descriptorSetLayout, nullptr);
+			if (m_descriptorSetLayout != VK_NULL_HANDLE)
+				vkDestroyDescriptorSetLayout(m_vkDevice, m_descriptorSetLayout, nullptr);
 			ImGui::DestroyContext();
 			m_vkImageViewToDescriptorMap.clear();
 
@@ -164,22 +168,24 @@ namespace sdlWindowBackend
 	{
 		return m_wantCaptureMouse;
 	}
-	uintptr_t SdlDearImGui::GetTextureID(VkImageView vkImageView, VkSampler vkSampler)
+	uintptr_t SdlDearImGui::GetTextureID(void* vkImageView)
 	{
 		if (!vkImageView)
 			return 0;
 
+		VkImageView imageView = static_cast<VkImageView>(vkImageView);
+
 		// Return cached descriptor set if it exists:
-		auto it = m_vkImageViewToDescriptorMap.find(vkImageView);
+		auto it = m_vkImageViewToDescriptorMap.find(imageView);
 		if (it != m_vkImageViewToDescriptorMap.end())
 			return reinterpret_cast<ImTextureID>(it->second);
 
 		// Create descriptor set for this vkImageView:
 		VkDescriptorSet vkDescriptorSet = CreateDescriptorSet();
-		UpdateDescriptor(vkDescriptorSet, vkImageView, vkSampler);
+		UpdateDescriptor(vkDescriptorSet, imageView, m_vkColorSampler);
 
 		// Cache and return:
-		m_vkImageViewToDescriptorMap[vkImageView] = vkDescriptorSet;
+		m_vkImageViewToDescriptorMap[imageView] = vkDescriptorSet;
 		return reinterpret_cast<uintptr_t>(vkDescriptorSet);
 	}
 

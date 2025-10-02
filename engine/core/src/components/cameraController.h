@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_cameraController_h__
-#define __INCLUDE_GUARD_cameraController_h__
+#pragma once
 #include "emberEngine.h"
 
 
@@ -34,7 +33,3 @@ namespace emberEngine
 		void TogglePerspectiveType();
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_cameraController_h__

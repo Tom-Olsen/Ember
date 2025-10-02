@@ -1,5 +1,5 @@
 #pragma once
-#include "bufferUsage.h"
+#include "commonBufferUsage.h"
 #include <memory>
 #include <string>
 
@@ -17,13 +17,25 @@ namespace emberEngine
 {
 	class Buffer
 	{
+		friend class Renderer;
+		friend class ShaderProperties;
+
 	private: // Members:
 		std::unique_ptr<emberBackendInterface::IBuffer> m_pIBuffer;
+		emberBackendInterface::IBuffer* GetInterfaceHandle();
 
 	public: // Methods:
 		// Constructor/Destructor:
-		Buffer(uint32_t count, uint32_t elementSize, const std::string& name, BufferUsage usage);
+		Buffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage);
 		~Buffer();
+
+		// Non-copyable:
+		Buffer(const Buffer&) = delete;
+		Buffer& operator=(const Buffer&) = delete;
+
+		// Movable:
+		Buffer(Buffer&& other) noexcept;
+		Buffer& operator=(Buffer&& other) noexcept;
 
 		// Getters:
 		std::string GetName() const;

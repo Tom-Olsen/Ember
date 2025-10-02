@@ -1,17 +1,24 @@
 #include "application.h"
+#include "bufferManager.h"
+#include "commonRendererCreateInfo.h"
 #include "component.h"
+#include "computeShaderManager.h"
+#include "compute.h"
 #include "dearImGui.h"
+#include "emberMath.h"
 #include "emberTime.h"
 #include "eventSystem.h"
 #include "gameObject.h"
 #include "logger.h"
 #include "macros.h"
+#include "materialManager.h"
+#include "meshManager.h"
 #include "profiler.h"
 #include "renderer.h"
-#include "rendererCreateInfo.h"
 #include "scene.h"
 #include "shadowConstants.h"
 #include "systemInitializer.h"
+#include "textureManager.h"
 #include "window.h"
 
 
@@ -23,14 +30,19 @@ namespace emberEngine
 	{
 		try
 		{
-			// Initialize core systems:
 			m_pActiveScene = nullptr;
-			SystemInitializer::Init(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
 
-			// Create renderer:
-			RendererCreateInfo rendererCreateInfo = {};
+			// Basic systems:
+			emberLogger::Logger::Init();
+			math::Random::Init();
+
+			// Window/Event systems:
+			Window::Init(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
+			EventSystem::Init();
+
+			// Renderer/DearImGui:
+			emberCommon::RendererCreateInfo rendererCreateInfo = {};
 			rendererCreateInfo.pIWindow = Window::GetInterfaceHandle();					// handle pass through.
-			rendererCreateInfo.pIDearImGui = DearImGui::GetInterfaceHandle();			// handle pass through.
 			rendererCreateInfo.vSyncEnabled = applicationCreateInfo.vSyncEnabled;		// project settings.
 			rendererCreateInfo.framesInFlight = applicationCreateInfo.framesInFlight;	// project settings.
 			rendererCreateInfo.msaaSampleCount = applicationCreateInfo.msaaSampleCount;	// project settings.
@@ -41,7 +53,18 @@ namespace emberEngine
 			rendererCreateInfo.maxDirectionalLights = MAX_DIR_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.maxPositionalLights = MAX_POS_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.shadowMapResolution = SHADOW_MAP_RESOLUTION;				// controlled via macro for now.
-			m_pRenderer = std::make_unique<Renderer>(rendererCreateInfo);
+			Renderer::Init(rendererCreateInfo);
+			Compute::Init();
+			DearImGui::Init();
+			Renderer::SetIComputeHandle();
+			Renderer::SetIDearImGuiHandle();
+
+			// Gpu Resource Managers:
+			ComputeShaderManager::Init();
+			MaterialManager::Init();
+			BufferManager::Init();
+			TextureManager::Init();
+			MeshManager::Init();
 
 			#ifdef LOG_INITIALIZATION
 			LOG_TRACE("Application initialized.");
@@ -54,7 +77,29 @@ namespace emberEngine
 	}
 	Application::~Application()
 	{
-		m_pRenderer.release();
+		// Wait for gpu to finish any remaining work:
+		Renderer::WaitDeviceIdle();
+
+		// Gpu Resource Managers:
+		MeshManager::Clear();
+		TextureManager::Clear();
+		BufferManager::Clear();
+		MaterialManager::Clear();
+		ComputeShaderManager::Clear();
+
+		// Renderer/DearImGui:
+		DearImGui::Clear();
+		Compute::Clear();
+		Renderer::Clear();
+		SystemInitializer::Clear();
+
+		// Window/Event systems:
+		EventSystem::Clear();
+		Window::Clear();
+
+		// Basic systems:
+		math::Random::Clear();
+		emberLogger::Logger::Clear();
 	}
 
 
@@ -73,7 +118,7 @@ namespace emberEngine
 				PROFILE_FUNCTION();
 				Time::Update();
 
-				GarbageCollector::Cleanup();
+				Renderer::CollectGarbage()
 				running = EventSystem::ProcessEvents();
 
 				// If window is minimized or width/height is zero, delay loop to reduce CPU usage:

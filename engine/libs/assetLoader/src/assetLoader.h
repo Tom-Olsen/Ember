@@ -1,3 +1,4 @@
+#pragma once
 #include "emberMath.h"
 #include <cstddef>
 #include <filesystem>
@@ -44,4 +45,6 @@ namespace emberAssetLoader
     // desiredChannels = 4, imageChannels == 3: copy RGB, set A=255
     // desiredChannels = 4, imageChannels == 4: copy
     Image LoadImageFile(const std::filesystem::path& path, int desiredChannels = 0);
+
+    Mesh LoadMeshCsv(const std::filesystem::path& path);
 }

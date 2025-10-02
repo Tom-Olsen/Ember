@@ -91,8 +91,8 @@ namespace vulkanRendererBackend
 		ShaderProperties& operator=(const ShaderProperties& other) = delete;
 
 		// Movable:
-		ShaderProperties(ShaderProperties&& other) = default;
-		ShaderProperties& operator=(ShaderProperties&& other) = default;
+		ShaderProperties(ShaderProperties&& other) noexcept;
+		ShaderProperties& operator=(ShaderProperties&& other) noexcept;
 
 		// Setters:
 		void SetSampler(const std::string& name, Sampler* pSampler);// for internal usage only.

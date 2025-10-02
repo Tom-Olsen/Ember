@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_materialManager_h__
-#define __INCLUDE_GUARD_materialManager_h__
+#pragma once
 #include <unordered_map>
 #include <memory>
 #include <string>
@@ -26,11 +25,12 @@ namespace emberEngine
         static void Init();
         static void Clear();
 
-        static void AddMaterial(Material* pMaterial);
-        static Material* GetMaterial(const std::string& name);
+        static void AddMaterial(Material&& material); // must be called as AddMaterial(std::move(material)). Leaves input material empty.
+        static Material& GetMaterial(const std::string& name);
+        static Material* TryGetMaterial(const std::string& name);
         static void DeleteMaterial(const std::string& name);
 
-        static void PrintAllMaterialNames();
+        static void Print();
 
     private: // Methods
         // Delete all constructors:
@@ -42,7 +42,3 @@ namespace emberEngine
         ~MaterialManager() = delete;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_materialManager_h__

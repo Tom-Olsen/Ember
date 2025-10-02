@@ -1,6 +1,7 @@
+#pragma once
 #include "texture.h"
-#include "textureFormat.h"
-#include "textureUsage.h"
+#include "commonTextureFormat.h"
+#include "commonTextureUsage.h"
 #include <string>
 #include <filesystem>
 
@@ -12,8 +13,8 @@ namespace emberEngine
 	{
 	public: // methods:
 		// Constructor/Destructor:
-		Texture2d(const std::string& name, int width, int height, const TextureFormat& format, TextureUsage usage);
-		Texture2d(const std::string& name, const TextureFormat& format, TextureUsage usage, const std::filesystem::path& path);
+		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage);
+		Texture2d(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path);
 		~Texture2d();
 
 		// Non-copyable:

@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_bufferManager_h__
-#define __INCLUDE_GUARD_bufferManager_h__
+#pragma once
 #include <unordered_map>
 #include <memory>
 #include <string>
@@ -26,9 +25,12 @@ namespace emberEngine
         static void Init();
         static void Clear();
 
-        static void AddBuffer(Buffer* pBuffer, const std::string& name);
-        static Buffer* GetBuffer(const std::string& name);
+        static void AddBuffer(Buffer&& buffer); // must be called as AddBuffer(std::move(buffer)). Leaves input buffer empty.
+        static Buffer& GetBuffer(const std::string& name);
+        static Buffer* TryGetBuffer(const std::string& name);
         static void DeleteBuffer(const std::string& name);
+
+        static void Print();
 
     private: // Methods
         // Delete all constructors:
@@ -40,7 +42,3 @@ namespace emberEngine
         ~BufferManager() = delete;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_bufferManager_h__

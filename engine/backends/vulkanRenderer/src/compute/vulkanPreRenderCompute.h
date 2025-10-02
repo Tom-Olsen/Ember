@@ -1,46 +1,57 @@
 #pragma once
+#include "iCompute.h"
+#include "commonAccessMask.h"
 #include "emberMath.h"
 #include "vulkanAccessMask.h"
 #include <vector>
 
 
 
+// Forward declarations:
+namespace emberBackendInterface
+{
+	class IComputeShader;
+	class IShaderProperties;
+}
+
+
+
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class ComputeShader;
-	class ShaderProperties;
 	struct ComputeCall;
 
 
 
-	class PreRender
+	class PreRender : public emberBackendInterface::ICompute::IPreRender
 	{
 	private: // Members:
-		static bool s_isInitialized;
-		static uint32_t s_callIndex;
-		static std::vector<ComputeCall> s_staticComputeCalls;
-		static std::vector<ComputeCall> s_dynamicComputeCalls;
-		static std::vector<ComputeCall*> s_computeCallPointers;
+		bool m_isInitialized;
+		uint32_t m_callIndex;
+		std::vector<ComputeCall> m_staticComputeCalls;
+		std::vector<ComputeCall> m_dynamicComputeCalls;
+		std::vector<ComputeCall*> m_computeCallPointers;
 
 	public: // Methods:
-		static void Init();
-		static void Clear();
+		// Constructor/Destructor:
+		PreRender();
+		~PreRender();
 
-		// Recording:
-		static ShaderProperties* RecordComputeShader(ComputeShader* pComputeShader, Uint3 threadCount);
-		static void RecordComputeShader(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount);
-		static void RecordBarrier(AccessMask srcAccessMask, AccessMask dstAccessMask);
-
-		// Management:
-		static std::vector<ComputeCall*>& GetComputeCallPointers();
-		static void ResetComputeCalls();
-
-	private: // Methods:
-		// Delete all constructors:
-		PreRender() = delete;
+		// Non-copyable:
 		PreRender(const PreRender&) = delete;
 		PreRender& operator=(const PreRender&) = delete;
-		~PreRender() = delete;
+
+		// Movable:
+		PreRender(PreRender&& other) noexcept = default;
+		PreRender& operator=(PreRender&& other) noexcept = default;
+
+		// Workload recording:
+		void RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IShaderProperties* pShaderProperties, Uint3 threadCount) override;
+		emberBackendInterface::IShaderProperties* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
+		void RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) override;
+
+		// Management:
+		std::vector<ComputeCall*>& GetComputeCallPointers();
+		void ResetComputeCalls();
 	};
 }

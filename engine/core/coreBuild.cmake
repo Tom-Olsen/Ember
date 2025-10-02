@@ -187,6 +187,12 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
 
 
     # -------------- Link Custom Libraries --------------
+    # EmberAssetLoader:
+    if (NOT TARGET EmberAssetLoader)
+        add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../libs/assetLoader" EmberAssetLoader)
+    endif()
+    target_link_libraries(${PROJECT_NAME} PUBLIC EmberAssetLoader)
+
     # EmberLogger:
     if (NOT TARGET EmberLogger)
         add_subdirectory("${CORE_ROOT_DIR}/../libs/logger" EmberLogger)

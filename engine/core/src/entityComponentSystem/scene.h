@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_scene_h__
-#define __INCLUDE_GUARD_scene_h__
+#pragma once
 #include <array>
 #include <memory>
 #include <string>
@@ -50,7 +49,3 @@ namespace emberEngine
 		void PrintGameObjects() const;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_scene_h__

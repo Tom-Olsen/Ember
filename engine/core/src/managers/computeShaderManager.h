@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_computeShaderManager_h__
-#define __INCLUDE_GUARD_computeShaderManager_h__
+#pragma once
 #include <unordered_map>
 #include <memory>
 #include <string>
@@ -26,11 +25,12 @@ namespace emberEngine
         static void Init();
         static void Clear();
 
-        static void AddComputeShader(ComputeShader* pComputeShader);
-        static ComputeShader* GetComputeShader(const std::string& name);
+        static void AddComputeShader(ComputeShader&& computeShader);  // must be called as AddComputeShader(std::move(computeShader)). Leaves input computeShader empty.
+        static ComputeShader& GetComputeShader(const std::string& name);
+        static ComputeShader* TryGetComputeShader(const std::string& name);
         static void DeleteComputeShader(const std::string& name);
 
-        static void PrintAllComputeShaderNames();
+        static void Print();
 
     private: // Methods
         // Delete all constructors:
@@ -42,7 +42,3 @@ namespace emberEngine
         ~ComputeShaderManager() = delete;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_computeShaderManager_h__

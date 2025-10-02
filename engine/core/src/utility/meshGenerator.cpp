@@ -1,6 +1,5 @@
 #include "meshGenerator.h"
 #include "logger.h"
-#include "mesh.h"
 
 
 
@@ -8,9 +7,9 @@ namespace emberEngine
 {
 	namespace MeshGenerator
 	{
-		Mesh* Triangle(Float3 a, Float3 b, Float3 c, const std::string& name)
+		Mesh Triangle(Float3 a, Float3 b, Float3 c, const std::string& name)
 		{
-			Mesh* pMesh = new Mesh(name);
+			Mesh mesh(name);
 
 			std::vector<Float3> positions;
 			positions.emplace_back(a);
@@ -31,17 +30,17 @@ namespace emberEngine
 			std::vector<Uint3> triangles;
 			triangles.emplace_back(Uint3(0, 1, 2));
 
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
 
-		Mesh* UnitQuad()
+		Mesh UnitQuad()
 		{
-			Mesh* pMesh = new Mesh("unitQuad");
+			Mesh mesh("unitQuad");
 
 			std::vector<Float3> positions;
 			positions.emplace_back(-0.5f, -0.5f, 0.0f);
@@ -65,24 +64,24 @@ namespace emberEngine
 			triangles.emplace_back(Uint3(0, 2, 1));
 			triangles.emplace_back(Uint3(1, 2, 3));
 
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
-		Mesh* UnitQuadTwoSided()
+		Mesh UnitQuadTwoSided()
 		{
-			std::vector<Mesh*> faces;
+			std::vector<Mesh> faces;
 			faces.reserve(2);
-			faces.push_back(UnitQuad());
-			faces.push_back(UnitQuad()->Rotate(Float4x4::rot180x));
+			faces.emplace_back(std::move(UnitQuad()));
+			faces.emplace_back(std::move(UnitQuad().Rotate(Float4x4::rot180x)));
 			return Mesh::Merge(faces, "unitQuadTwoSided");
 		}
-		Mesh* FullScreenRenderQuad()
+		Mesh FullScreenRenderQuad()
 		{
-			Mesh* pMesh = new Mesh("fullScreenRenderQuad");
+			Mesh mesh("fullScreenRenderQuad");
 
 			std::vector<Float3> positions;
 			positions.emplace_back(-1.0f, -1.0f, 0.0f);
@@ -106,16 +105,16 @@ namespace emberEngine
 			triangles.emplace_back(Uint3(0, 2, 1));
 			triangles.emplace_back(Uint3(1, 2, 3));
 
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
-		Mesh* ClockwiseQuad(Float3 a, Float3 b, Float3 c, Float3 d, const std::string& name)
+		Mesh ClockwiseQuad(Float3 a, Float3 b, Float3 c, Float3 d, const std::string& name)
 		{
-			Mesh* pMesh = new Mesh(name);
+			Mesh mesh(name);
 
 			std::vector<Float3> positions;
 			positions.emplace_back(a);
@@ -140,16 +139,16 @@ namespace emberEngine
 			triangles.emplace_back(Uint3(0, 3, 1));
 			triangles.emplace_back(Uint3(1, 3, 2));
 
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
-		Mesh* Grid(int resolutionX, int resolutionY, const std::string& name)
+		Mesh Grid(int resolutionX, int resolutionY, const std::string& name)
 		{
-			Mesh* pMesh = new Mesh(name);
+			Mesh mesh(name);
 
 			std::vector<Float3> positions;
 			std::vector<Float3> normals;
@@ -183,15 +182,15 @@ namespace emberEngine
 				}
 			}
 
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
 
-		Mesh* UnitCube()
+		Mesh UnitCube()
 		{
 			Float3 p000 = 0.5f * Float3(-1.0f, -1.0f, -1.0f);
 			Float3 p001 = 0.5f * Float3(-1.0f, -1.0f,  1.0f);
@@ -202,18 +201,18 @@ namespace emberEngine
 			Float3 p110 = 0.5f * Float3( 1.0f,  1.0f, -1.0f);
 			Float3 p111 = 0.5f * Float3( 1.0f,  1.0f,  1.0f);
 
-			std::vector<Mesh*> faces;
+			std::vector<Mesh> faces;
 			faces.reserve(6);
-			faces.push_back(ClockwiseQuad(p110, p100, p101, p111, "+x"));
-			faces.push_back(ClockwiseQuad(p000, p010, p011, p001, "-x"));
-			faces.push_back(ClockwiseQuad(p010, p110, p111, p011, "+y"));
-			faces.push_back(ClockwiseQuad(p100, p000, p001, p101, "-y"));
-			faces.push_back(ClockwiseQuad(p101, p001, p011, p111, "+z"));
-			faces.push_back(ClockwiseQuad(p000, p100, p110, p010, "-z"));
+			faces.emplace_back(std::move(ClockwiseQuad(p110, p100, p101, p111, "+x")));
+			faces.emplace_back(std::move(ClockwiseQuad(p000, p010, p011, p001, "-x")));
+			faces.emplace_back(std::move(ClockwiseQuad(p010, p110, p111, p011, "+y")));
+			faces.emplace_back(std::move(ClockwiseQuad(p100, p000, p001, p101, "-y")));
+			faces.emplace_back(std::move(ClockwiseQuad(p101, p001, p011, p111, "+z")));
+			faces.emplace_back(std::move(ClockwiseQuad(p000, p100, p110, p010, "-z")));
 
 			return Mesh::Merge(faces, "unitCube");
 		}
-		Mesh* HalfCube()
+		Mesh HalfCube()
 		{
 			Float3 p000 = 0.5f * Float3(-1, -1, 0);
 			Float3 p001 = 0.5f * Float3(-1, -1, 1);
@@ -224,30 +223,30 @@ namespace emberEngine
 			Float3 p110 = 0.5f * Float3( 1,  1, 0);
 			Float3 p111 = 0.5f * Float3( 1,  1, 1);
 
-			std::vector<Mesh*> faces;
+			std::vector<Mesh> faces;
 			faces.reserve(5);
-			faces.push_back(ClockwiseQuad(p110, p100, p101, p111, "+x"));
-			faces.push_back(ClockwiseQuad(p000, p010, p011, p001, "-x"));
-			faces.push_back(ClockwiseQuad(p010, p110, p111, p011, "+y"));
-			faces.push_back(ClockwiseQuad(p100, p000, p001, p101, "-y"));
-			faces.push_back(ClockwiseQuad(p101, p001, p011, p111, "+z"));
+			faces.emplace_back(std::move(ClockwiseQuad(p110, p100, p101, p111, "+x")));
+			faces.emplace_back(std::move(ClockwiseQuad(p000, p010, p011, p001, "-x")));
+			faces.emplace_back(std::move(ClockwiseQuad(p010, p110, p111, p011, "+y")));
+			faces.emplace_back(std::move(ClockwiseQuad(p100, p000, p001, p101, "-y")));
+			faces.emplace_back(std::move(ClockwiseQuad(p101, p001, p011, p111, "+z")));
 
 			return Mesh::Merge(faces, "halfCube");
 		}
 
-		Mesh* CubeSphere(float radius, int subdivisions, const std::string& name)
+		Mesh CubeSphere(float radius, int subdivisions, const std::string& name)
 		{
 			radius = std::max(1e-8f, radius);
-			Mesh* pMesh = UnitCube();
+			Mesh mesh = UnitCube();
 			for (int i = 0; i < subdivisions; i++)
-                pMesh->Subdivide();
+				mesh.Subdivide();
             
-			pMesh->SetName(name);
-			pMesh->Spherify(1.0f, radius);
-			return pMesh;
+			mesh.SetName(name);
+			mesh.Spherify(1.0f, radius);
+			return mesh;
 		}
 
-		Mesh* Disk(float radius, int cornerCount, const std::string& name)
+		Mesh Disk(float radius, int cornerCount, const std::string& name)
 		{
 			cornerCount = std::max(3, cornerCount);
 			std::vector<Float3> positions;	positions.reserve(cornerCount + 1);
@@ -275,16 +274,16 @@ namespace emberEngine
 				triangles.push_back(Uint3(i, i + 1, cornerCount));
 			triangles.push_back(Uint3(0, cornerCount, cornerCount - 1));
 
-			Mesh* pMesh = new Mesh(name);
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			Mesh mesh(name);
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
 
-		Mesh* ArcFlatUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
+		Mesh ArcFlatUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
 		{
 			// Validate input values:
 			degrees = math::Clamp(degrees, 0.0f, 360.0f);
@@ -320,15 +319,15 @@ namespace emberEngine
 				triangles.push_back(Uint3(i + 1, i + 3, i + 2));
 			}
 
-			Mesh* pMesh = new Mesh(name);
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			Mesh mesh(name);
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
-		Mesh* ArcCurvedUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
+		Mesh ArcCurvedUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
 		{
 			// Validate input values:
 			degrees = math::Clamp(degrees, 0.0f, 360.0f);
@@ -365,16 +364,16 @@ namespace emberEngine
 				triangles.push_back(Uint3(i + 1, i + 3, i + 2));
 			}
 
-			Mesh* pMesh = new Mesh(name);
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			Mesh mesh(name);
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
 
-		Mesh* ConeMantleSmooth(float radius, float height, int cornerCount, const std::string& name)
+		Mesh ConeMantleSmooth(float radius, float height, int cornerCount, const std::string& name)
 		{
 			radius = std::max(1e-8f, radius);
 			height = std::max(1e-8f, height);
@@ -406,17 +405,17 @@ namespace emberEngine
 			for (int i = 0; i < cornerCount; i++)
 				triangles.push_back(Uint3(i, i + 1, cornerCount + 1));
 
-			Mesh* pMesh = new Mesh(name);
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			Mesh mesh(name);
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
-		Mesh* ConeMantleFlat(float radius, float height, int cornerCount, const std::string& name)
+		Mesh ConeMantleFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
-			std::vector<Mesh*> faces;
+			std::vector<Mesh> faces;
 			faces.reserve(cornerCount);
 			std::vector<Float4> uvs(3);
 
@@ -433,35 +432,35 @@ namespace emberEngine
 				Float3 a = radius * Float3(x0, y0, 0.0f);
 				Float3 b = radius * Float3(x1, y1, 0.0f);
 				Float3 c = Float3(0.0f, 0.0f, height);
-				Mesh* face = Triangle(a, b, c, "");
+				Mesh face = Triangle(a, b, c, "");
 				uvs[0] = Float4(0.5f * (x0 + 1.0f), 0.5f * (y0 + 1.0f), 0.0f, 0.0f);
 				uvs[1] = Float4(0.5f * (x1 + 1.0f), 0.5f * (y1 + 1.0f), 0.0f, 0.0f);
 				uvs[2] = Float4(0.5f, 0.5f, 0.0f, 0.0f);
-				face->SetUVs(uvs);
+				face.SetUVs(uvs);
 
-				faces.push_back(face);
+				faces.emplace_back(std::move(face));
 			}
 
 			return Mesh::Merge(faces, name);
 		}
-		Mesh* ConeSmooth(float radius, float height, int cornerCount, const std::string& name)
+		Mesh ConeSmooth(float radius, float height, int cornerCount, const std::string& name)
 		{
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(2);
-			meshes.push_back(ConeMantleSmooth(radius, height, cornerCount, "coneSmooth0"));
-			meshes.push_back(Disk(radius, cornerCount, "coneSmooth1")->Rotate(Float3x3::rot180x));
+			meshes.emplace_back(std::move(ConeMantleSmooth(radius, height, cornerCount, "coneSmooth0")));
+			meshes.emplace_back(std::move(Disk(radius, cornerCount, "coneSmooth1").Rotate(Float3x3::rot180x)));
 			return Mesh::Merge(meshes, name);
 		}
-		Mesh* ConeFlat(float radius, float height, int cornerCount, const std::string& name)
+		Mesh ConeFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(2);
-			meshes.push_back(ConeMantleFlat(radius, height, cornerCount, "coneFlat0"));
-			meshes.push_back(Disk(radius, cornerCount, "coneFlat1")->Rotate(Float3x3::rot180x));
+			meshes.emplace_back(std::move(ConeMantleFlat(radius, height, cornerCount, "coneFlat0")));
+			meshes.emplace_back(std::move(Disk(radius, cornerCount, "coneFlat1").Rotate(Float3x3::rot180x)));
 			return Mesh::Merge(meshes, name);
 		}
 
-		Mesh* ZylinderMantleSmooth(float radius, float height, int cornerCount, const std::string& name)
+		Mesh ZylinderMantleSmooth(float radius, float height, int cornerCount, const std::string& name)
 		{
 			radius = std::max(1e-8f, radius);
 			height = std::max(1e-8f, height);
@@ -495,21 +494,21 @@ namespace emberEngine
 				triangles.push_back(Uint3(i + 1, i + 2, i + 3));
 			}
 
-			Mesh* pMesh = new Mesh(name);
-			pMesh->MovePositions(positions);
-			pMesh->MoveNormals(normals);
-			pMesh->MoveUVs(uvs);
-			pMesh->MoveTriangles(triangles);
-			pMesh->ComputeTangents();
-			return pMesh;
+			Mesh mesh(name);
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			mesh.ComputeTangents();
+			return mesh;
 		}
-		Mesh* ZylinderMantleFlat(float radius, float height, int cornerCount, const std::string& name)
+		Mesh ZylinderMantleFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
 			radius = std::max(1e-8f, radius);
 			height = std::max(1e-8f, height);
 			cornerCount = std::max(3, cornerCount);
 
-			std::vector<Mesh*> faces;
+			std::vector<Mesh> faces;
 			faces.reserve(2 * cornerCount);
 			std::vector<Float4> uvs(4);
 
@@ -520,43 +519,42 @@ namespace emberEngine
 			{
 				float alpha = (i + 0.5f) * dAlpha;
 
-				Mesh* face = UnitQuad();
-				face->Scale(Float3(width, height, 1.0f));
-				Float3x3 rotation = Float3x3::RotateZ(math::pi2 + alpha) * Float3x3::rot90x;
-				face->Rotate(rotation);
-				face->Translate(Float3(dist * math::Cos(alpha), dist * math::Sin(alpha), 0.0f));
+				Mesh face = UnitQuad();
+				face.Scale(Float3(width, height, 1.0f));
+				face.Rotate(Float3x3::RotateZ(math::pi2 + alpha) * Float3x3::rot90x);
+				face.Translate(Float3(dist * math::Cos(alpha), dist * math::Sin(alpha), 0.0f));
 
 				uvs[0] = Float4((i + 0.0f) / cornerCount, 0.0f, 0.0f, 0.0f);
 				uvs[1] = Float4((i + 0.0f) / cornerCount, 1.0f, 0.0f, 0.0f);
 				uvs[2] = Float4((i + 1.0f) / cornerCount, 0.0f, 0.0f, 0.0f);
 				uvs[3] = Float4((i + 1.0f) / cornerCount, 1.0f, 0.0f, 0.0f);
-				face->SetUVs(uvs);
+				face.SetUVs(uvs);
 
-				faces.push_back(face);
+				faces.emplace_back(std::move(face));
 			}
 
 			return Mesh::Merge(faces, name);
 		}
-		Mesh* ZylinderSmooth(float radius, float height, int cornerCount, const std::string& name)
+		Mesh ZylinderSmooth(float radius, float height, int cornerCount, const std::string& name)
 		{
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(3);
-			meshes.push_back(ZylinderMantleSmooth(radius, height, cornerCount, "zylinderSmooth0"));
-			meshes.push_back(Disk(radius, cornerCount, "zylinderSmooth1")->Translate(0.5f * height * Float3::up));
-			meshes.push_back(meshes[1]->GetCopy("zylinderSmooth2")->Rotate(Float3x3::rot180x));
+			meshes.emplace_back(std::move(ZylinderMantleSmooth(radius, height, cornerCount, "zylinderSmooth0")));
+			meshes.emplace_back(std::move(Disk(radius, cornerCount, "zylinderSmooth1").Translate(0.5f * height * Float3::up)));
+			meshes.emplace_back(std::move(meshes[1].GetCopy("zylinderSmooth2").Rotate(Float3x3::rot180x)));
 			return Mesh::Merge(meshes, name);
 		}
-		Mesh* ZylinderFlat(float radius, float height, int cornerCount, const std::string& name)
+		Mesh ZylinderFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(3);
-			meshes.push_back(ZylinderMantleFlat(radius, height, cornerCount, "zylinderFlat0"));
-			meshes.push_back(Disk(radius, cornerCount, "zylinderFlat1")->Translate(0.5f * height * Float3::up));
-			meshes.push_back(meshes[1]->GetCopy("zylinderFlat2")->Rotate(Float3x3::rot180x));
+			meshes.emplace_back(std::move(ZylinderMantleFlat(radius, height, cornerCount, "zylinderFlat0")));
+			meshes.emplace_back(std::move(Disk(radius, cornerCount, "zylinderFlat1").Translate(0.5f * height * Float3::up)));
+			meshes.emplace_back(std::move(meshes[1].GetCopy("zylinderFlat2").Rotate(Float3x3::rot180x)));
 			return Mesh::Merge(meshes, name);
 		}
 
-		Mesh* ArrowSmooth(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
+		Mesh ArrowSmooth(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
 		{
 			if (direction == Float3(0.0f))
 				direction = Float3::up;
@@ -569,18 +567,18 @@ namespace emberEngine
 			headRadius = std::max(headRadius, bodyRadius);
 			cornerCount = std::max(3, cornerCount);
 
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(4);
 
-			meshes.push_back(Disk(bodyRadius, cornerCount, "arrowSmooth0")->Rotate(Float3x3::rot180x));
-			meshes.push_back(ZylinderMantleSmooth(bodyRadius, bodyHeight, cornerCount, "arrowSmooth1")->Translate(0.5f * bodyHeight * Float3::up));
-			meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowSmooth2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::rot180x));
-			meshes.push_back(ConeMantleSmooth(headRadius, headHeight, cornerCount, "arrowSmooth3")->Translate(bodyHeight * Float3::up));
+			meshes.emplace_back(std::move(Disk(bodyRadius, cornerCount, "arrowSmooth0").Rotate(Float3x3::rot180x)));
+			meshes.emplace_back(std::move(ZylinderMantleSmooth(bodyRadius, bodyHeight, cornerCount, "arrowSmooth1").Translate(0.5f * bodyHeight * Float3::up)));
+			meshes.emplace_back(std::move(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowSmooth2").Translate(-bodyHeight * Float3::up).Rotate(Float3x3::rot180x)));
+			meshes.emplace_back(std::move(ConeMantleSmooth(headRadius, headHeight, cornerCount, "arrowSmooth3").Translate(bodyHeight * Float3::up)));
 
 			Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
-			return Mesh::Merge(meshes, name)->Rotate(rotation);
+			return Mesh::Merge(meshes, name).Rotate(rotation);
 		}
-		Mesh* ArrowFlat(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
+		Mesh ArrowFlat(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
 		{
 			if (direction == Float3(0.0f))
 				direction = Float3::up;
@@ -593,95 +591,96 @@ namespace emberEngine
 			headRadius = std::max(headRadius, bodyRadius);
 			cornerCount = std::max(3, cornerCount);
 
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(4);
 
-			meshes.push_back(Disk(bodyRadius, cornerCount, "arrowFlat0")->Rotate(Float3x3::rot180x));
-			meshes.push_back(ZylinderMantleFlat(bodyRadius, bodyHeight, cornerCount, "arrowFlat1")->Translate(0.5f * bodyHeight * Float3::up));
-			meshes.push_back(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowFlat2")->Translate(-bodyHeight * Float3::up)->Rotate(Float3x3::rot180x));
-			meshes.push_back(ConeMantleFlat(headRadius, headHeight, cornerCount, "arrowFlat3")->Translate(bodyHeight * Float3::up));
+			meshes.emplace_back(std::move(Disk(bodyRadius, cornerCount, "arrowFlat0").Rotate(Float3x3::rot180x)));
+			meshes.emplace_back(std::move(ZylinderMantleFlat(bodyRadius, bodyHeight, cornerCount, "arrowFlat1").Translate(0.5f * bodyHeight * Float3::up)));
+			meshes.emplace_back(std::move(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowFlat2").Translate(-bodyHeight * Float3::up).Rotate(Float3x3::rot180x)));
+			meshes.emplace_back(std::move(ConeMantleFlat(headRadius, headHeight, cornerCount, "arrowFlat3").Translate(bodyHeight * Float3::up)));
 
 			Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
-			return Mesh::Merge(meshes, name)->Rotate(rotation);
+			return Mesh::Merge(meshes, name).Rotate(rotation);
 		}
 
-		Mesh* ThreeLeg()
+		Mesh ThreeLeg()
 		{
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(3);
 
-			meshes.push_back(ArrowFlat(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg0"));
-			meshes.push_back(ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg1"));
-			meshes.push_back(ArrowFlat(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg2"));
-			meshes[0]->SetUniformColor(Float4::red);
-			meshes[1]->SetUniformColor(Float4::green);
-			meshes[2]->SetUniformColor(Float4::blue);
+			meshes.emplace_back(std::move(ArrowFlat(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg0")));
+			meshes.emplace_back(std::move(ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg1")));
+			meshes.emplace_back(std::move(ArrowFlat(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg2")));
+			meshes[0].SetUniformColor(Float4::red);
+			meshes[1].SetUniformColor(Float4::green);
+			meshes[2].SetUniformColor(Float4::blue);
 
 			return Mesh::Merge(meshes, "threeLeg");
 		}
-		Mesh* FourLeg()
+		Mesh FourLeg()
 		{
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(4);
 
-			meshes.push_back(ArrowFlat(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg0"));
-			meshes.push_back(ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg1"));
-			meshes.push_back(ArrowFlat(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg2"));
-			meshes.push_back(ArrowFlat(Float3::down, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg3"));
-			meshes[0]->SetUniformColor(Float4::red);
-			meshes[1]->SetUniformColor(Float4::green);
-			meshes[2]->SetUniformColor(Float4::blue);
-			meshes[3]->SetUniformColor(Float4::white);
+			meshes.emplace_back(std::move(ArrowFlat(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg0")));
+			meshes.emplace_back(std::move(ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg1")));
+			meshes.emplace_back(std::move(ArrowFlat(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg2")));
+			meshes.emplace_back(std::move(ArrowFlat(Float3::down, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg3")));
+			meshes[0].SetUniformColor(Float4::red);
+			meshes[1].SetUniformColor(Float4::green);
+			meshes[2].SetUniformColor(Float4::blue);
+			meshes[3].SetUniformColor(Float4::white);
 
 			return Mesh::Merge(meshes, "fourLeg");
 		}
 
-		Mesh* Camera()
+		Mesh Camera()
 		{
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(2);
-			meshes.push_back(ZylinderSmooth(0.1f, 0.05f, 16, "Roll0"));
-			meshes[0]->Rotate(Float3x3::rot90y)->Translate(0.2f * Float3::forward + 0.1f * Float3::down);
-			meshes[0]->SetUniformColor(Float4::gray);
-			meshes.push_back(ZylinderSmooth(0.1f, 0.05f, 16, "Roll1"));
-			meshes[1]->Rotate(Float3x3::rot90y)->Translate(0.2f * Float3::forward + 0.1f * Float3::up);
-			meshes[1]->SetUniformColor(Float4::gray);
-			meshes.push_back(UnitCube());
-			meshes[2]->Scale(Float3(0.15f, 0.2f, 0.5f));
-			meshes[2]->SetUniformColor(Float4(1.0f, 0.4f, 0.4f));
-			meshes.push_back(ConeFlat(0.15f, 0.15f, 4, "CameraHead"));
-			meshes[3]->Rotate(Float3x3::rot45z)->Translate(0.35f * Float3::down);
-			meshes[3]->SetUniformColor(Float4::gray);
+
+			meshes.emplace_back(std::move(ZylinderSmooth(0.1f, 0.05f, 16, "Roll0")));
+			meshes[0].Rotate(Float3x3::rot90y).Translate(0.2f * Float3::forward + 0.1f * Float3::down);
+			meshes[0].SetUniformColor(Float4::gray);
+			meshes.emplace_back(std::move(ZylinderSmooth(0.1f, 0.05f, 16, "Roll1")));
+			meshes[1].Rotate(Float3x3::rot90y).Translate(0.2f * Float3::forward + 0.1f * Float3::up);
+			meshes[1].SetUniformColor(Float4::gray);
+			meshes.emplace_back(std::move(UnitCube()));
+			meshes[2].Scale(Float3(0.15f, 0.2f, 0.5f));
+			meshes[2].SetUniformColor(Float4(1.0f, 0.4f, 0.4f));
+			meshes.emplace_back(std::move(ConeFlat(0.15f, 0.15f, 4, "CameraHead")));
+			meshes[3].Rotate(Float3x3::rot45z).Translate(0.35f * Float3::down);
+			meshes[3].SetUniformColor(Float4::gray);
 
 			return Mesh::Merge(meshes, "camera");
 		}
-		Mesh* Frame(float radius, const Float3& lengths)
+		Mesh Frame(float radius, const Float3& lengths)
 		{
-			std::vector<Mesh*> meshes;
+			std::vector<Mesh> meshes;
 			meshes.reserve(20);
 			float dir0[4] = { 1, -1,  1, -1 };
 			float dir1[4] = { 1,  1, -1, -1 };
 
 			for (uint32_t i = 0; i < 4; i++)
 			{
-				Mesh* pMesh = ZylinderMantleFlat(radius / math::sqrt2, lengths.x - radius, 4, "");
-				pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(1, 0, 0)) * Float4x4::rot45z);
-				pMesh->Translate(Float3(0.0f, dir0[i] * 0.5f * lengths.y, dir1[i] * 0.5f * lengths.y));
-				meshes.push_back(pMesh);
+				Mesh mesh = ZylinderMantleFlat(radius / math::sqrt2, lengths.x - radius, 4, "");
+				mesh.Rotate(Float4x4::RotateFromTo(Float3::up, Float3(1, 0, 0)) * Float4x4::rot45z);
+				mesh.Translate(Float3(0.0f, dir0[i] * 0.5f * lengths.y, dir1[i] * 0.5f * lengths.y));
+				meshes.emplace_back(std::move(mesh));
 			}
 			for (uint32_t i = 0; i < 4; i++)
 			{
-				Mesh* pMesh = ZylinderMantleFlat(radius / math::sqrt2, lengths.y - radius, 4, "");
-				pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 1, 0)) * Float4x4::rot45z);
-				pMesh->Translate(Float3(dir0[i] * 0.5f * lengths.x, 0.0f, dir1[i] * 0.5f * lengths.y));
-				meshes.push_back(pMesh);
+				Mesh mesh = ZylinderMantleFlat(radius / math::sqrt2, lengths.y - radius, 4, "");
+				mesh.Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 1, 0)) * Float4x4::rot45z);
+				mesh.Translate(Float3(dir0[i] * 0.5f * lengths.x, 0.0f, dir1[i] * 0.5f * lengths.y));
+				meshes.emplace_back(std::move(mesh));
 			}
 			for (uint32_t i = 0; i < 4; i++)
 			{
-				Mesh* pMesh = ZylinderMantleFlat(radius / math::sqrt2, lengths.z - radius, 4, "");
-				pMesh->Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 0, 1)) * Float4x4::rot45z);
-				pMesh->Translate(Float3(dir0[i] * 0.5f * lengths.x, dir1[i] * 0.5f * lengths.y, 0.0f));
-				meshes.push_back(pMesh);
+				Mesh mesh = ZylinderMantleFlat(radius / math::sqrt2, lengths.z - radius, 4, "");
+				mesh.Rotate(Float4x4::RotateFromTo(Float3::up, Float3(0, 0, 1)) * Float4x4::rot45z);
+				mesh.Translate(Float3(dir0[i] * 0.5f * lengths.x, dir1[i] * 0.5f * lengths.y, 0.0f));
+				meshes.emplace_back(std::move(mesh));
 			}
 
 			for (uint32_t i = 0; i < 2; i++)
@@ -690,9 +689,10 @@ namespace emberEngine
 					{
 						Float3 sign = Float3((i == 0) ? -1.0f : 1.0f, (j == 0) ? -1.0f : 1.0f, (k == 0) ? -1.0f : 1.0f);
 						Float3 pos = 0.5f * sign * Float3(lengths.x, lengths.y, lengths.z);
-						Mesh* pMesh = UnitCube()->Transform(Float4x4::TRS(pos, Float4x4::identity, radius * Float3::one));
-						pMesh->RescaleUVs(Float4(2 * radius, 0.5f * radius, 1.0f, 1.0f), Float4::zero);
-						meshes.push_back(pMesh);
+						Mesh mesh = UnitCube();
+						mesh.Transform(Float4x4::TRS(pos, Float4x4::identity, radius * Float3::one));
+						mesh.RescaleUVs(Float4(2 * radius, 0.5f * radius, 1.0f, 1.0f), Float4::zero);
+						meshes.emplace_back(std::move(mesh));
 					}
 
 			return Mesh::Merge(meshes, "frame");

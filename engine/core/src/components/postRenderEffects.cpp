@@ -7,7 +7,7 @@ namespace emberEngine
 	// Constructor/Destructor:
 	PostRenderEffects::PostRenderEffects()
 	{
-		effects.push_back(ComputeShaderManager::GetComputeShader("postProcessing"));
+		effects.push_back(ComputeShaderManager::TryGetComputeShader("postProcessing"));
 	}
 	PostRenderEffects::~PostRenderEffects()
 	{
@@ -20,7 +20,7 @@ namespace emberEngine
 	void PostRenderEffects::LateUpdate()
 	{
 		for (ComputeShader* pComputeShader : effects)
-			compute::PostRender::RecordComputeShader(pComputeShader);
+			Compute::GetPostRender()->RecordComputeShader(*pComputeShader);
 	}
 	const std::string PostRenderEffects::ToString() const
 	{

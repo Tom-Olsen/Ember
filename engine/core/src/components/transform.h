@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_transform_h__
-#define __INCLUDE_GUARD_transform_h__
+#pragma once
 #include "component.h"
 #include "emberMath.h"
 
@@ -16,6 +15,8 @@ namespace emberEngine
 	/// </summary>
 	class Transform : public Component
 	{
+		friend class GameObject;
+
 	private: // Members:
 		Float3 m_position;
 		Float3x3 m_rotationMatrix;
@@ -73,14 +74,9 @@ namespace emberEngine
 		void UpdateLocalToWorldMatrix();
 
 		// Hierarchy:
-		friend class GameObject;	// allow GameObject class access to private methods.
 		void SetParent(Transform* pParent);
 		Transform* GetParent();
 		void AddChild(Transform* pChild);
 		void RemoveChild(Transform* pChild);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_transform_h__

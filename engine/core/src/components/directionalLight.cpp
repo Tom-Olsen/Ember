@@ -1,7 +1,8 @@
 ﻿#include "directionalLight.h"
 #include "camera.h"
-#include "shadowCascade.h"
 #include "logger.h"
+#include "renderer.h"
+#include "shadowCascade.h"
 
 
 
@@ -12,7 +13,7 @@ namespace emberEngine
 	{
 		m_intensity = 1.0f;
 		m_color = Float3::white;
-		m_shadowType = Lighting::ShadowType::hard;
+		m_shadowType = emberCommon::ShadowType::hard;
 		m_pActiveCamera = nullptr;
 		m_shadowCascadeCount = 4;
 		m_distributionFactor = 0.0f;
@@ -40,7 +41,7 @@ namespace emberEngine
 	{
 		m_color = color;
 	}
-	void DirectionalLight::SetShadowType(Lighting::ShadowType shadowType)
+	void DirectionalLight::SetShadowType(emberCommon::ShadowType shadowType)
 	{
 		m_shadowType = shadowType;
 	}
@@ -80,7 +81,7 @@ namespace emberEngine
 	{
 		return m_color;
 	}
-	Lighting::ShadowType DirectionalLight::GetShadowType() const
+	emberCommon::ShadowType DirectionalLight::GetShadowType() const
 	{
 		return m_shadowType;
 	}
@@ -134,31 +135,31 @@ namespace emberEngine
 			m_shadowCascadeSplits[i] = (1.0f - m_distributionFactor) * linear + m_distributionFactor * logarithmic;
 		}
 
-		// Update shadow cascades and add directional lights to Lighting system:
+		// Update shadow cascades and add directional lights to renderer:
 		float sceneHeight = 30.0f; // this is for testing, get height from scene later.
 		for (int i = 0; i < m_shadowCascadeCount; i++)
 		{
 			Float3 direction = GetTransform()->GetDown();
 			m_shadowCascades[i]->Update(camera, direction, m_shadowCascadeSplits[i], m_shadowCascadeSplits[i + 1], sceneHeight);
 			Float4x4 worldToClipMatrix = m_shadowCascades[i]->GetProjectionMatrix() * m_shadowCascades[i]->GetViewMatrix();
-			Lighting::AddDirectionalLight(direction, m_intensity, m_color, m_shadowType, worldToClipMatrix);
+			Renderer::AddDirectionalLight(direction, m_intensity, m_color, m_shadowType, worldToClipMatrix);
 		}
 
 		// Visualization for debugging:
 		if (m_drawFrustum)
 		{
-			Material* pUnlitMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
-			Material* pVertexUnlit = MaterialManager::GetMaterial("vertexColorUnlitMaterial");
-			Mesh* pSphere = MeshManager::GetMesh("cubeSphere");
-			Mesh* fourLeg = MeshManager::GetMesh("fourLeg");
+			Material& pUnlitMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
+			Material& pVertexUnlit = MaterialManager::GetMaterial("vertexColorUnlitMaterial");
+			Mesh& pSphere = MeshManager::GetMesh("cubeSphere");
+			Mesh& fourLeg = MeshManager::GetMesh("fourLeg");
 			ShaderProperties* pShaderProperties = nullptr;
 
 			Float4 colors[4] = { Float4::red, Float4::green, Float4::blue, Float4::yellow };
 			for (int i = 0; i < (int)m_shadowCascadeCount; i++)
 			{
 				Float4x4 localToWorldMatrix = m_shadowCascades[i]->GetViewMatrix().Inverse();
-				Graphics::DrawMesh(fourLeg, pVertexUnlit, localToWorldMatrix, false, false);
-				Graphics::DrawFrustum(localToWorldMatrix, m_shadowCascades[i]->GetProjectionMatrix(), 0.1f, colors[i]);
+				Renderer::DrawMesh(fourLeg, pVertexUnlit, localToWorldMatrix, false, false);
+				Renderer::DrawFrustum(localToWorldMatrix, m_shadowCascades[i]->GetProjectionMatrix(), 0.1f, colors[i]);
 			}
 		}
 	}

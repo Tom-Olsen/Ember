@@ -40,7 +40,7 @@ namespace nullWindowBackend
 		// Getters:
 		bool WantCaptureKeyboard() override;
 		bool WantCaptureMouse() override;
-		uintptr_t GetTextureID(VkImageView vkImageView, VkSampler vkSampler) override;
+		uintptr_t GetTextureID(void* vkImageView) override;
 
 		// Wrappers:
 		bool IsWindowFocused(emberEngine::DearImGuiFocusedFlags flags) override;

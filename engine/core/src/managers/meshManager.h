@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_meshManager_h__
-#define __INCLUDE_GUARD_meshManager_h__
+#pragma once
 #include <unordered_map>
 #include <memory>
 #include <string>
@@ -26,14 +25,15 @@ namespace emberEngine
 
     public: // Methods
         static void Init();
-        static void UnloadAllMeshes();
+        //static void UnloadAllMeshes();    // ember::ToDo: not sure if this is needed
         static void Clear();
 
-        static void AddMesh(Mesh* pMesh);
-        static Mesh* GetMesh(const std::string& name);
+        static void AddMesh(Mesh&& mesh);  // must be called as AddMesh(std::move(mesh)). Leaves input mesh empty.
+        static Mesh& GetMesh(const std::string& name);
+        static Mesh* TryGetMesh(const std::string& name);
         static void DeleteMesh(const std::string& name);
 
-        static void PrintAllMeshNames();
+        static void Print();
 
     private: // Methods
         // Delete all constructors:
@@ -45,7 +45,3 @@ namespace emberEngine
         ~MeshManager() = delete;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_meshManager_h__

@@ -136,9 +136,9 @@ namespace emberEngine
 	// Overrides:
 	void Camera::LateUpdate()
 	{
-		Graphics::SetActiveCamera(GetTransform()->GetPosition(), GetViewMatrix(), GetProjectionMatrix());
+		Renderer::SetActiveCamera(GetTransform()->GetPosition(), GetViewMatrix(), GetProjectionMatrix());
 		if (m_drawFrustum)
-			Graphics::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix());
+			Renderer::DrawFrustum(m_pTransform->GetLocalToWorldMatrix(), GetProjectionMatrix());
 	}
 	const std::string Camera::ToString() const
 	{

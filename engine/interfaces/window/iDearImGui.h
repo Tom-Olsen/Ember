@@ -30,7 +30,7 @@ namespace emberBackendInterface
 		// Getters:
 		virtual bool WantCaptureKeyboard() = 0;
 		virtual bool WantCaptureMouse() = 0;
-		virtual uintptr_t GetTextureID(VkImageView vkImageView, VkSampler vkSampler) = 0;
+		virtual uintptr_t GetTextureID(void* vkImageView) = 0;
 
 		// Wrappers:
 		virtual bool IsWindowFocused(emberEngine::DearImGuiFocusedFlags flags) = 0;

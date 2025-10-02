@@ -25,11 +25,15 @@ namespace emberEngine
 
 	class Window
 	{
+		// Friends:
+		friend class DearImGui;
+
 	private: // Members:
 		static std::unique_ptr<emberBackendInterface::IWindow> s_pIWindow;
+		static emberBackendInterface::IWindow* GetInterfaceHandle();
 
 	public: // Methods:
-		// Initialization/Ceanup:
+		// Initialization/Cleanup:
 		static void Init(int windowWidth, int windowHeight);
 		static void Clear();
 
@@ -40,8 +44,6 @@ namespace emberEngine
 		static void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR);
 
 		// Getters:
-		static emberBackendInterface::IWindow* GetInterfaceHandle();
-		static void* GetNativeHandle();
 		static bool GetIsMinimized();
 		static bool GetIsResized();
 		static Int2 GetSize();

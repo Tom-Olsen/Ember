@@ -12,6 +12,10 @@ namespace emberEngine
 {
 	// Static members:
 	std::unique_ptr<emberBackendInterface::IWindow> Window::s_pIWindow;
+	emberBackendInterface::IWindow* Window::GetInterfaceHandle()
+	{
+		return s_pIWindow.get();
+	}
 
 
 
@@ -56,14 +60,6 @@ namespace emberEngine
 
 
 	// Getters:
-	emberBackendInterface::IWindow* Window::GetInterfaceHandle()
-	{
-		return s_pIWindow.get();
-	}
-	void* Window::GetNativeHandle()
-	{
-		return s_pIWindow->GetNativeHandle();
-	}
 	bool Window::GetIsMinimized()
 	{
 		return s_pIWindow->GetIsMinimized();

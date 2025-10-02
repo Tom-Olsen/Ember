@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_pointLight_h__
-#define __INCLUDE_GUARD_pointLight_h__
+#pragma once
+#include "commonLighting.h"
 #include "emberEngine.h"
 
 
@@ -13,7 +13,7 @@ namespace emberEngine
 	private: // Members:
 		float m_intensity;
 		Float3 m_color;
-		Lighting::ShadowType m_shadowType;
+		emberCommon::ShadowType m_shadowType;
 		float m_nearClip;
 		float m_farClip;
 		bool m_updateProjectionMatrix;
@@ -27,7 +27,7 @@ namespace emberEngine
 		// Setters:
 		void SetIntensity(const float& intensity);
 		void SetColor(const Float3& color = Float3::one);
-		void SetShadowType(Lighting::ShadowType shadowType);
+		void SetShadowType(emberCommon::ShadowType shadowType);
 		void SetNearClip(const float& nearClip);
 		void SetFarClip(const float& farClip);
 		void SetDrawFrustum(bool drawFrustum);
@@ -35,7 +35,7 @@ namespace emberEngine
 		// Getters:
 		float GetIntensity() const;
 		Float3 GetColor() const;
-		Lighting::ShadowType GetShadowType() const;
+		emberCommon::ShadowType GetShadowType() const;
 		float GetNearClip() const;
 		float GetFarClip() const;
 		Float4x4 GetViewMatrix() const;
@@ -49,7 +49,3 @@ namespace emberEngine
 		void UpdateProjectionMatrix();
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_pointLight_h__

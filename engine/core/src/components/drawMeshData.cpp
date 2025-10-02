@@ -10,11 +10,10 @@ namespace emberEngine
 	// Constructor/Destructor:
 	DrawMeshData::DrawMeshData()
 	{
-		m_pSphereMesh = MeshGenerator::CubeSphere(0.5f, 1, "cubeSphere");
-		m_pArrowMesh = MeshGenerator::ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 4, "arrowFlat");
+		m_pSphereMesh = MeshManager::TryGetMesh("cubeSphere");
+		m_pArrowMesh = MeshManager::TryGetMesh("arrowFlat");
 		m_pMesh = nullptr;
 		m_pMaterial = nullptr;
-		m_pShaderProperties = nullptr;
 	}
 	DrawMeshData::~DrawMeshData()
 	{
@@ -27,9 +26,9 @@ namespace emberEngine
 	// Overrides:
 	void DrawMeshData::Start()
 	{
-		m_pSphereMesh = MeshManager::GetMesh("cubeSphere");
-		m_pArrowMesh = MeshManager::GetMesh("arrowFlat");
-		m_pMaterial = MaterialManager::GetMaterial("defaultMaterial");
+		m_pSphereMesh = MeshManager::TryGetMesh("cubeSphere");
+		m_pArrowMesh = MeshManager::TryGetMesh("arrowFlat");
+		m_pMaterial = MaterialManager::TryGetMaterial("defaultMaterial");
 		m_pMesh = GetGameObject()->GetComponent<MeshRenderer>()->GetMesh();
 	}
 	void DrawMeshData::LateUpdate()
@@ -54,14 +53,14 @@ namespace emberEngine
 			Float3 worldTangent = Float3(normalMatrix * Float4(localTangent, 0.0f));
 
 			// Draw calls:
-			m_pShaderProperties = Graphics::DrawMesh(m_pSphereMesh, m_pMaterial, Float3(worldPosition), Float3x3::identity, 0.1f, receiveShadows, castShadows);
-			m_pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.66f, 0.33f, 0.0f, 1.0f));
+			m_shaderProperties[0] = Renderer::DrawMesh(*m_pSphereMesh, *m_pMaterial, Float3(worldPosition), Float3x3::identity, 0.1f, receiveShadows, castShadows);
+			m_shaderProperties[0].SetValue("SurfaceProperties", "diffuseColor", Float4(0.66f, 0.33f, 0.0f, 1.0f));
 
-			m_pShaderProperties = Graphics::DrawMesh(m_pArrowMesh, m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f, receiveShadows, castShadows);
-			m_pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(0.0f, 0.0f, 1.0f, 1.0f));
+			m_shaderProperties[1] = Renderer::DrawMesh(*m_pArrowMesh, *m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f, receiveShadows, castShadows);
+			m_shaderProperties[1].SetValue("SurfaceProperties", "diffuseColor", Float4(0.0f, 0.0f, 1.0f, 1.0f));
 
-			m_pShaderProperties = Graphics::DrawMesh(m_pArrowMesh, m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f, receiveShadows, castShadows);
-			m_pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
+			m_shaderProperties[2] = Renderer::DrawMesh(*m_pArrowMesh, *m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f, receiveShadows, castShadows);
+			m_shaderProperties[2].SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
 		}
 	}
 	const std::string DrawMeshData::ToString() const

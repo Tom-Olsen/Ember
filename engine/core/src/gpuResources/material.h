@@ -1,6 +1,6 @@
 #pragma once
-#include "materialType.h"
-#include "renderQueue.h"
+#include "commonMaterialType.h"
+#include "commonRenderQueue.h"
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -19,12 +19,17 @@ namespace emberEngine
 {
 	class Material
 	{
+		// Friends:
+		friend class Renderer;
+		friend class ShaderProperties;
+
 	private: // Members:
 		std::unique_ptr<emberBackendInterface::IMaterial> m_pIMaterial;
+		emberBackendInterface::IMaterial* GetInterfaceHandle();
 
 	public: // Methods:
 		// Constructors/Destructor:
-		Material(MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
 		~Material();
 
 		// Non-copyable:
@@ -32,16 +37,13 @@ namespace emberEngine
 		Material& operator=(const Material& other) = delete;
 
 		// Movable:
-		Material(Material&& other) = default;
-		Material& operator=(Material&& other) = default;
-
-		// Getters:
-		Type GetType() const;
-		uint32_t GetRenderQueue() const;
+		Material(Material&& other);
+		Material& operator=(Material&& other);
 
 	public: // Methods:
 		// Getters:
-		MaterialType GetType() const;
+		const std::string& GetName() const;
+		emberCommon::MaterialType GetType() const;
 		uint32_t GetRenderQueue() const;
 	};
 }

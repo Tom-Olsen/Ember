@@ -16,8 +16,23 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}"
 
 
 
+# ------------------- File Lists --------------------
+# src/main.cpp:
+file(GLOB MAIN_FILE "src/main.cpp")
+source_group("/" FILES ${MAIN_FILE})
+
+# src/scenes/*:
+file(GLOB SCENE_FILES "src/scenes/*")
+source_group("Scenes" FILES ${SCENE_FILES})
+# ---------------------------------------------------
+
+
+
 # ---------------- Create Executable ----------------
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} ${MAIN_FILE} ${SCENE_FILES})
+target_include_directories(${PROJECT_NAME} PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}/src
+	${CMAKE_CURRENT_SOURCE_DIR}/src/scenes)
 
 # Add project root path as a macro:
 get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)

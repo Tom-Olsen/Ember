@@ -1,19 +1,12 @@
 #include "bufferManager.h"
+#include "buffer.h"
 #include "logger.h"
 #include "macros.h"
-#include "uniformBuffer.h"
-#include "storageBuffer.h"
-#include "vulkanContext.h"
-#include "vulkanMacros.h"
 
 
 
 namespace emberEngine
 {
-	using namespace vulkanBackend;
-
-
-
 	// Static members:
 	bool BufferManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<Buffer>> BufferManager::s_buffers;
@@ -27,8 +20,8 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		StorageBuffer* dummyStorageBuffer = new StorageBuffer(1, 1, "dummy");
-		AddBuffer(dummyStorageBuffer, "dummyStorageBuffer");
+		Buffer dummyStorageBuffer(1, 1, "dummyStorageBuffer", emberCommon::BufferUsage::storage);
+		AddBuffer(std::move(dummyStorageBuffer));
 
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("BufferManager initialized.");
@@ -36,23 +29,26 @@ namespace emberEngine
 	}
 	void BufferManager::Clear()
 	{
-		Context::WaitDeviceIdle();
 		s_buffers.clear();
 	}
 
 
 
 	// Add/Get/Delete:
-	void BufferManager::AddBuffer(Buffer* pBuffer, const std::string& name)
+	void BufferManager::AddBuffer(Buffer&& buffer)
 	{
-		// If buffer already contained in BufferManager, do nothing.
-		if (s_buffers.emplace(name, std::unique_ptr<Buffer>(pBuffer)).second == false)
-		{
-			LOG_WARN("Buffer with the name: {} already exists in BufferManager!", name);
-			return;
-		}
+		auto newBuffer = std::make_unique<Buffer>(std::move(buffer));
+		if (!s_buffers.emplace(newBuffer->GetName(), std::move(newBuffer)).second)
+			LOG_WARN("Buffer with the name: {} already exists in BufferManager!", newBuffer->GetName());
 	}
-	Buffer* BufferManager::GetBuffer(const std::string& name)
+	Buffer& BufferManager::GetBuffer(const std::string& name)
+	{
+		auto it = s_buffers.find(name);
+		if (it == s_buffers.end())
+			throw std::runtime_error("Buffer not found: " + name);
+		return *(it->second);
+	}
+	Buffer* BufferManager::TryGetBuffer(const std::string& name)
 	{
 		auto it = s_buffers.find(name);
 		if (it != s_buffers.end())
@@ -62,7 +58,16 @@ namespace emberEngine
 	}
 	void BufferManager::DeleteBuffer(const std::string& name)
 	{
-		Context::WaitDeviceIdle();
 		s_buffers.erase(name);
+	}
+
+
+
+	// Debugging:
+	void BufferManager::Print()
+	{
+		LOG_TRACE("BufferManager content:");
+		for (const auto& pair : s_buffers)
+			LOG_TRACE(pair.first);
 	}
 }

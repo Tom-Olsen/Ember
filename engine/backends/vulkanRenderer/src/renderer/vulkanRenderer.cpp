@@ -1,5 +1,4 @@
 #include "vulkanRenderer.h"
-#include "commonRendererCreateInfo.h"
 #include "emberMath.h"
 #include "iDearImGui.h"
 #include "profiler.h"
@@ -14,9 +13,11 @@
 #include "vulkanComputePushConstant.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
+#include "vulkanDefaultGpuResources.h"
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanDrawCall.h"
 #include "vulkanForwardRenderPass.h"
+#include "vulkanGarbageCollector.h"
 #include "vulkanIndexBuffer.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -35,6 +36,7 @@
 #include "vulkanShadowRenderPass.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanSurface.h"
+#include "vulkanSwapchain.h"
 #include "vulkanVertexBuffer.h"
 #include <assert.h>
 #include <string>
@@ -44,16 +46,12 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
-	Renderer::Renderer(const emberEngine::RendererCreateInfo& createInfo)
+	Renderer::Renderer(const emberCommon::RendererCreateInfo& createInfo)
 	{
-		// Assert existence of required interfaces:
-		assert(createInfo.pIDearImGui != nullptr);
-		assert(createInfo.pIDearImGui != nullptr);
-
 		Context::Init(createInfo);
 
-		m_pIDearImGui = createInfo.pIDearImGui;
 		m_time = 0.0f;
 		m_deltaTime = 0.0f;
 		m_rebuildSwapchain = false;
@@ -77,12 +75,6 @@ namespace vulkanRendererBackend
 		m_shadowMapResolution = createInfo.shadowMapResolution;
 		m_directionalLights.resize(m_maxDirectionalLights);
 		m_positionalLights.resize(m_maxPositionalLights);
-		m_pointLightRotationMatrices[0] = Float4x4::identity;
-		m_pointLightRotationMatrices[1] = Float4x4::RotateY( math::pi2);
-		m_pointLightRotationMatrices[2] = Float4x4::RotateY( math::pi );
-		m_pointLightRotationMatrices[3] = Float4x4::RotateY(-math::pi2);
-		m_pointLightRotationMatrices[4] = Float4x4::RotateX( math::pi2);
-		m_pointLightRotationMatrices[5] = Float4x4::RotateX(-math::pi2);
 
 		// Present render pass caching:
 		m_pPresentMesh = std::unique_ptr<Mesh>(CreateFullScreenRenderQuad());
@@ -92,9 +84,6 @@ namespace vulkanRendererBackend
 		m_presentPipelineLayout = m_pPresentMaterial->GetPipeline()->GetVkPipelineLayout();
 		m_presentBindingCount = m_pPresentMaterial->GetVertexInputDescriptions()->size;
 
-		// Maybe move somewhere else?
-		m_pDefaultMaterial = std::make_unique<Material>(emberCommon::MaterialType::forwardOpaque, "defaultMaterial", emberCommon::RenderQueue::opaque, directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
-		m_pErrorMaterial = std::make_unique<Material>(emberCommon::MaterialType::forwardOpaque, "errorMaterial", emberCommon::RenderQueue::opaque, directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
 		m_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", directoryPath / "gammaCorrection.comp.spv");
 
 		// Debug naming:
@@ -119,6 +108,7 @@ namespace vulkanRendererBackend
 	Renderer::~Renderer()
 	{
 		Context::WaitDeviceIdle();
+		GarbageCollector::CollectGarbage();
 		DestroySemaphores();
 		DestroyFences();
 		Context::Clear();
@@ -126,7 +116,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Movable:
+	Renderer::Renderer(Renderer&& other) noexcept = default;
+	Renderer& Renderer::operator=(Renderer&& other) noexcept = default;
+
+
+
 	// Main render call:
 	void Renderer::RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime)
 	{
@@ -152,7 +147,7 @@ namespace vulkanRendererBackend
 			return;
 
 		// We use linear color space throughout entire render process. So apply gamma correction in post processing as last step:
-		PostRender::RecordComputeShader(m_pGammaCorrectionComputeShader.get());
+		m_pCompute->GetPostRenderCompute()->RecordComputeShader(m_pGammaCorrectionComputeShader.get());
 		SortDrawCallPointers();
 		
 		// Record and submit current frame commands:
@@ -186,10 +181,10 @@ namespace vulkanRendererBackend
 		}
 
 		// Reset render state:
-		PreRender::ResetComputeCalls();
+		m_pCompute->GetPreRenderCompute()->ResetComputeCalls();
 		ResetLights();
 		ResetDrawCalls();
-		PostRender::ResetComputeCalls();
+		m_pCompute->GetPostRenderCompute()->ResetComputeCalls();
 
 		// Cancel current frame on failed presentation (e.g. window resize):
 		if (!PresentImage())
@@ -245,13 +240,6 @@ namespace vulkanRendererBackend
 			return;
 		}
 
-		// No shadow interaction for the error material:
-		if (static_cast<Material*>(pMaterial) == m_pErrorMaterial.get())
-		{
-			receiveShadows = false;
-			castShadows = false;
-		}
-
 		// Setup draw call:
 		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)m_pShadowMaterial.get());
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<ShaderProperties*>(pShaderProperties), pShadowShaderProperties, static_cast<Mesh*>(pMesh), 0 };
@@ -285,13 +273,6 @@ namespace vulkanRendererBackend
 			return;
 		}
 
-		// No shadow interaction for the error material:
-		if (static_cast<Material*>(pMaterial) == m_pErrorMaterial.get())
-		{
-			receiveShadows = false;
-			castShadows = false;
-		}
-
 		// Setup draw call:
 		pShaderProperties->SetBuffer("instanceBuffer", pInstanceBuffer);
 		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)m_pShadowMaterial.get());
@@ -309,6 +290,10 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
+	uint32_t Renderer::GetShadowMapResolution()
+	{
+		return m_shadowMapResolution;
+	}
 	float Renderer::GetDeptBiasConstantFactor()
 	{
 		return m_depthBiasConstantFactor;
@@ -325,6 +310,14 @@ namespace vulkanRendererBackend
 
 
 	// Setters:
+	void Renderer::SetIComputeHandle(emberBackendInterface::ICompute* pICompute)
+	{
+		m_pCompute = static_cast<Compute*>(pICompute);
+	}
+	void Renderer::SetIDearImGuiHandle(emberBackendInterface::IDearImGui* pIDearImGui)
+	{
+		m_pIDearImGui = pIDearImGui;
+	}
 	void Renderer::SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
 	{
 		m_activeCamera.position = position;
@@ -342,6 +335,62 @@ namespace vulkanRendererBackend
 	void Renderer::SetDepthBiasSlopeFactor(float depthBiasSlopeFactor)
 	{
 		m_depthBiasSlopeFactor = depthBiasSlopeFactor;
+	}
+
+
+
+	// Functionallity forwarding:
+	void Renderer::CollectGarbage()
+	{
+		GarbageCollector::CollectGarbage();
+	}
+	void Renderer::WaitDeviceIdle()
+	{
+		Context::WaitDeviceIdle();
+	}
+
+
+
+	// Vulkan handle passthrough for API coupling:
+	void* Renderer::GetVkInstance()
+	{
+		return static_cast<void*>(Context::GetVkInstance());
+	}
+	void* Renderer::GetVkPhysicalDevice()
+	{
+		return static_cast<void*>(Context::GetVkPhysicalDevice());
+	}
+	void* Renderer::GetVkDevice()
+	{
+		return static_cast<void*>(Context::GetVkDevice());
+	}
+	void* Renderer::GetPresentVkRenderPass()
+	{
+		return static_cast<void*>(RenderPassManager::GetPresentRenderPass()->GetVkRenderPass());
+	}
+	void* Renderer::GetVkDescriptorPool()
+	{
+		return static_cast<void*>(Context::GetVkDescriptorPool());
+	}
+	void* Renderer::GetGraphicsVkQueue()
+	{
+		return static_cast<void*>(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
+	}
+	void* Renderer::GetColorSampler()
+	{
+		return static_cast<void*>(DefaultGpuResources::GetColorSampler());
+	}
+	uint32_t Renderer::GetGraphicsVkQueueFamilyIndex()
+	{
+		return Context::GetLogicalDevice()->GetGraphicsQueue().familyIndex;
+	}
+	uint32_t Renderer::GetSwapchainImageCount()
+	{
+		return Context::GetSwapchain()->GetImageCount();
+	}
+	uint32_t Renderer::GetFramesInFlight()
+	{
+		return Context::GetFramesInFlight();
 	}
 
 
@@ -465,7 +514,7 @@ namespace vulkanRendererBackend
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 			ComputePushConstant pushConstant(Uint3::one, m_time, m_deltaTime);
 
-			for (ComputeCall* computeCall : PreRender::GetComputeCallPointers())
+			for (ComputeCall* computeCall : m_pCompute->GetPreRenderCompute()->GetComputeCallPointers())
 			{
 				// Compute call is a barrier:
 				if (computeCall->pComputeShader == nullptr)
@@ -856,7 +905,7 @@ namespace vulkanRendererBackend
 			ComputePushConstant pushConstant(Uint3::one, m_time, m_deltaTime);
 
 			uint32_t callIndex = 0;
-			for (ComputeCall* computeCall : PostRender::GetComputeCallPointers())
+			for (ComputeCall* computeCall : m_pCompute->GetPostRenderCompute()->GetComputeCallPointers())
 			{
 				// Update shader specific data:
 				if (callIndex % 2 == 0)
@@ -1401,10 +1450,10 @@ namespace vulkanRendererBackend
 		triangles.emplace_back(Uint3(0, 2, 1));
 		triangles.emplace_back(Uint3(1, 2, 3));
 
-		pMesh->MovePositions(positions);
-		pMesh->MoveNormals(normals);
-		pMesh->MoveUVs(uvs);
-		pMesh->MoveTriangles(triangles);
+		pMesh->MovePositions(std::move(positions));
+		pMesh->MoveNormals(std::move(normals));
+		pMesh->MoveUVs(std::move(uvs));
+		pMesh->MoveTriangles(std::move(triangles));
 		pMesh->ComputeTangents();
 		return pMesh;
 	}

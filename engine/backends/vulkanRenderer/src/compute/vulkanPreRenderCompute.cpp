@@ -3,6 +3,7 @@
 #include "vulkanAccessMask.h"
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
+#include "vulkanConvertAccessMask.h"
 #include "vulkanPoolManager.h"
 #include "vulkanShaderProperties.h"
 #include <vulkan/vulkan.h>
@@ -11,62 +12,29 @@
 
 namespace vulkanRendererBackend
 {
-	// Static members:
-	bool PreRender::s_isInitialized = false;
-	uint32_t PreRender::s_callIndex = 0;
-	std::vector<ComputeCall> PreRender::s_staticComputeCalls;
-	std::vector<ComputeCall> PreRender::s_dynamicComputeCalls;
-	std::vector<ComputeCall*> PreRender::s_computeCallPointers;
-
-
-
-	// Initialization/Cleanup:
-	void PreRender::Init()
+	// Constructor/Destructor:
+	PreRender::PreRender()
 	{
-		if (s_isInitialized)
-			return;
-		s_isInitialized = true;
+		m_callIndex = 0;
 	}
-	void PreRender::Clear()
+	PreRender::~PreRender()
 	{
 		ResetComputeCalls();
 	}
 
 
 
-	// Recording:
-	ShaderProperties* PreRender::RecordComputeShader(ComputeShader* pComputeShader, Uint3 threadCount)
+	// Workload recording:
+	void PreRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties, Uint3 threadCount)
 	{
-		if (!pComputeShader)
+		if (!pIComputeShader)
 		{
-			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
-			return nullptr;
-		}
-		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
-		{
-			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. threadCount has 0 entry.");
-			return nullptr;
-		}
-
-		// Setup compute call:
-		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(pComputeShader);
-		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
-		s_dynamicComputeCalls.push_back(computeCall);
-		s_callIndex++;
-
-		// By returning pShaderProperties, we allow user to change the shader properties of the compute call:
-		return pShaderProperties;
-	}
-	void PreRender::RecordComputeShader(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount)
-	{
-		if (!pComputeShader)
-		{
-			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pComputeShader is nullptr.");
+			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
 			return;
 		}
-		if (!pShaderProperties)
+		if (!pIShaderProperties)
 		{
-			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pShaderProperties is nullptr.");
+			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pIShaderProperties is nullptr.");
 			return;
 		}
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
@@ -76,15 +44,21 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		ComputeCall computeCall = { s_callIndex, threadCount, pComputeShader, pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
-		s_staticComputeCalls.push_back(computeCall);
-		s_callIndex++;
+		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<ShaderProperties*>(pIShaderProperties), AccessMasks::None::none, AccessMasks::None::none };
+		m_staticComputeCalls.push_back(computeCall);
+		m_callIndex++;
 	}
-	void PreRender::RecordBarrier(AccessMask srcAccessMask, AccessMask dstAccessMask)
+	emberBackendInterface::IShaderProperties* PreRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
-		ComputeCall computeCall = { s_callIndex, Uint3::zero, nullptr, nullptr, srcAccessMask, dstAccessMask };
-		s_staticComputeCalls.push_back(computeCall);
-		s_callIndex++;
+		ShaderProperties* pIShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		RecordComputeShader(pIComputeShader, static_cast<emberBackendInterface::IShaderProperties*>(pIShaderProperties), threadCount);
+		return pIShaderProperties;
+	}
+	void PreRender::RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
+	{
+		ComputeCall computeCall = { m_callIndex, Uint3::zero, nullptr, nullptr, CommonToVulkanAccessMask(srcAccessMask), CommonToVulkanAccessMask(dstAccessMask) };
+		m_staticComputeCalls.push_back(computeCall);
+		m_callIndex++;
 	}
 
 
@@ -93,24 +67,24 @@ namespace vulkanRendererBackend
 	std::vector<ComputeCall*>& PreRender::GetComputeCallPointers()
 	{
 		// Populate draw call pointers vector according to callIndex:
-		s_computeCallPointers.resize(s_staticComputeCalls.size() + s_dynamicComputeCalls.size());
-		for (auto& computeCall : s_staticComputeCalls)
-			s_computeCallPointers[computeCall.callIndex] = &computeCall;
-		for (auto& computeCall : s_dynamicComputeCalls)
-			s_computeCallPointers[computeCall.callIndex] = &computeCall;
+		m_computeCallPointers.resize(m_staticComputeCalls.size() + m_dynamicComputeCalls.size());
+		for (auto& computeCall : m_staticComputeCalls)
+			m_computeCallPointers[computeCall.callIndex] = &computeCall;
+		for (auto& computeCall : m_dynamicComputeCalls)
+			m_computeCallPointers[computeCall.callIndex] = &computeCall;
 
-		return s_computeCallPointers;
+		return m_computeCallPointers;
 	}
 	void PreRender::ResetComputeCalls()
 	{
 		// Return all pShaderProperties of compute calls back to the corresponding pool:
-		for (ComputeCall& computeCall : s_dynamicComputeCalls)
+		for (ComputeCall& computeCall : m_dynamicComputeCalls)
 			PoolManager::ReturnShaderProperties(computeCall.pComputeShader, computeCall.pShaderProperties);
 
 		// Remove all computeCalls so next frame can start fresh:
-		s_staticComputeCalls.clear();
-		s_dynamicComputeCalls.clear();
-		s_computeCallPointers.clear();
-		s_callIndex = 0;
+		m_staticComputeCalls.clear();
+		m_dynamicComputeCalls.clear();
+		m_computeCallPointers.clear();
+		m_callIndex = 0;
 	}
 }

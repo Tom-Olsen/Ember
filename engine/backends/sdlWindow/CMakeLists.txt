@@ -28,6 +28,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}"
 file(GLOB SOURCE_FILES "src/*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 
+# ../../common/*:
+file(GLOB COMMON_INTERFACE_FILES "../../common/*.*")
+source_group("Commen" FILES ${COMMON_INTERFACE_FILES})
+
+# ../../interfaces/renderer/*:
+file(GLOB RENDERER_INTERFACE_FILES "../../interfaces/renderer/*")
+source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
+
 # ../../interfaces/window/*:
 file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
@@ -50,10 +58,14 @@ source_group("ImGui" FILES ${IMGUI_FILES})
 add_library(${PROJECT_NAME}
     ${SOURCE_FILES}
     ${IMGUI_FILES}
+    ${COMMON_INTERFACE_FILES}
+    ${RENDERER_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window
     ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/imgui/backends)

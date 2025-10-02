@@ -3,17 +3,12 @@
 #include "logger.h"
 #include "macros.h"
 #include "emberMath.h"
-#include "vulkanContext.h"
 #include <filesystem>
 
 
 
 namespace emberEngine
 {
-	using namespace vulkanBackend;
-
-
-
 	// Static members:
 	bool ComputeShaderManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<ComputeShader>> ComputeShaderManager::s_computeShaders;
@@ -40,8 +35,8 @@ namespace emberEngine
 				std::string name = filePath.stem().string();		// remove '.spv'
 				name = name.substr(0, name.size() - 5);	// remove '.comp'
 
-				ComputeShader* pComputeShader = new ComputeShader(name, filePath);
-				AddComputeShader(pComputeShader);
+				ComputeShader computeShader(name, filePath);
+				AddComputeShader(std::move(computeShader));
 			}
 		}
 
@@ -51,23 +46,26 @@ namespace emberEngine
 	}
 	void ComputeShaderManager::Clear()
 	{
-		Context::WaitDeviceIdle();
 		s_computeShaders.clear();
 	}
 
 
 
-	// Add/get/delete:
-	void ComputeShaderManager::AddComputeShader(ComputeShader* pComputeShader)
+	// Add/Get/Delete:
+	void ComputeShaderManager::AddComputeShader(ComputeShader&& computeShader)
 	{
-		// If compute shader already contained in ComputeShaderManager, do nothing.
-		if (s_computeShaders.emplace(pComputeShader->GetName(), std::unique_ptr<ComputeShader>(pComputeShader)).second == false)
-		{
-			LOG_WARN("ComputeShader with the name: {} already exists in ComputeShaderManager!", pComputeShader->GetName());
-			return;
-		}
+		auto newComputeShader = std::make_unique<ComputeShader>(std::move(computeShader));
+		if (!s_computeShaders.emplace(newComputeShader->GetName(), std::move(newComputeShader)).second)
+			LOG_WARN("ComputeShader with the name: {} already exists in ComputeShaderManager!", newComputeShader->GetName());
 	}
-	ComputeShader* ComputeShaderManager::GetComputeShader(const std::string& name)
+	ComputeShader& ComputeShaderManager::GetComputeShader(const std::string& name)
+	{
+		auto it = s_computeShaders.find(name);
+		if (it == s_computeShaders.end())
+			throw std::runtime_error("ComputeShader not found: " + name);
+		return *(it->second);
+	}
+	ComputeShader* ComputeShaderManager::TryGetComputeShader(const std::string& name)
 	{
 		auto it = s_computeShaders.find(name);
 		if (it != s_computeShaders.end())
@@ -77,16 +75,15 @@ namespace emberEngine
 	}
 	void ComputeShaderManager::DeleteComputeShader(const std::string& name)
 	{
-		Context::WaitDeviceIdle();
 		s_computeShaders.erase(name);
 	}
 
 
 
 	// Debugging:
-	void ComputeShaderManager::PrintAllComputeShaderNames()
+	void ComputeShaderManager::Print()
 	{
-		LOG_TRACE("Names of all managed compute shaders:");
+		LOG_TRACE("ComputeShaderManager content:");
 		for (const auto& pair : s_computeShaders)
 			LOG_TRACE(pair.first);
 	}

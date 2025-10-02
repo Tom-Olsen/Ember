@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_textureManager_h__
-#define __INCLUDE_GUARD_textureManager_h__
+#pragma once
 #include <unordered_map>
 #include <memory>
 #include <string>
@@ -26,11 +25,12 @@ namespace emberEngine
         static void Init();
         static void Clear();
 
-        static void AddTexture(Texture* pTexture);
-        static Texture* GetTexture(const std::string& name);
+        static void AddTexture(Texture&& texture); // must be called as AddTexture(std::move(texture)). Leaves input texture empty.
+        static Texture& GetTexture(const std::string& name);
+        static Texture* TryGetTexture(const std::string& name);
         static void DeleteTexture(const std::string& name);
 
-        static void PrintAllTextureNames();
+        static void Print();
 
     private: // Methods:
         // Delete all constructors:
@@ -42,7 +42,3 @@ namespace emberEngine
         ~TextureManager() = delete;
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_textureManager_h__

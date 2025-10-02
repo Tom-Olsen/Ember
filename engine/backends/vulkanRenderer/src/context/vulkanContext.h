@@ -2,6 +2,7 @@
 // Direct include instead of forward declaration,
 // as this is the main header file that includes all other Vulkan-related headers.
 // Also allows for vulkan objects to be in place instead of pointers -> better memory access.
+#include "commonRendererCreateInfo.h"
 #include "vulkanSampleCountFlag.h"
 #include <array>
 #include <memory>
@@ -23,10 +24,6 @@
 
 
 // Forward decleration:
-namespace emberEngine
-{
-	struct RendererCreateInfo;
-}
 namespace emberBackendInterface
 {
 	class IDearImGuiInstanceExtensionsLoader;
@@ -116,7 +113,7 @@ namespace vulkanRendererBackend
 		static float m_depthBiasSlopeFactor;
 		
 	public: // Methods:
-		static void Init(const emberEngine::RendererCreateInfo& createInfo);
+		static void Init(const emberCommon::RendererCreateInfo& createInfo);
 		static void Clear();
 		static void RebuildSwapchain();
 

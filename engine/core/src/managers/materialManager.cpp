@@ -1,17 +1,14 @@
 #include "materialManager.h"
+#include "commonRenderQueue.h"
 #include "logger.h"
 #include "macros.h"
 #include "material.h"
-#include "vulkanContext.h"
+#include <filesystem>
 
 
 
 namespace emberEngine
 {
-	using namespace vulkanBackend;
-
-
-
 	// Static members:
 	bool MaterialManager::s_isInitialized = false;
 	std::unordered_map<std::string, std::unique_ptr<Material>> MaterialManager::s_materials;
@@ -25,62 +22,62 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		uint32_t opaqueQueue = (uint32_t)Material::Queue::opaque;
-		uint32_t skyboxQueue = (uint32_t)Material::Queue::skybox;
-		uint32_t transparentQueue = (uint32_t)Material::Queue::transparent;
-		Material::Type forwardOpaqueType = Material::Type::forwardOpaque;
-		Material::Type forwardTransparentType = Material::Type::forwardTransparent;
-		Material::Type shadowType = Material::Type::shadow;
-		Material::Type skyboxType = Material::Type::skybox;
-		Material::Type presentType = Material::Type::present;
+		uint32_t shadowQueue = emberCommon::RenderQueue::shadow;
+		uint32_t opaqueQueue = emberCommon::RenderQueue::opaque;
+		uint32_t skyboxQueue = emberCommon::RenderQueue::skybox;
+		uint32_t transparentQueue = emberCommon::RenderQueue::transparent;
+		emberCommon::MaterialType forwardOpaqueType = emberCommon::MaterialType::forwardOpaque;
+		emberCommon::MaterialType forwardTransparentType = emberCommon::MaterialType::forwardTransparent;
+		emberCommon::MaterialType shadowType = emberCommon::MaterialType::shadow;
+		emberCommon::MaterialType skyboxType = emberCommon::MaterialType::skybox;
+		emberCommon::MaterialType presentType = emberCommon::MaterialType::present;
 
-		std::string directoryPath = (std::string)CORE_SHADERS_DIR + "/bin";
-		directoryPath = directoryPath.make_preferred(); // normalize all "/" and "\" to preferred symbol.
+		std::filesystem::path directoryPath = (std::filesystem::path(CORE_SHADERS_DIR) / "bin").make_preferred();
 		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
 		//AddMaterial(testMaterial);
 
-		Material* pErrorMaterial = new Material(forwardOpaqueType, "errorMaterial", opaqueQueue, directoryPath + "/error.vert.spv", directoryPath + "/error.frag.spv");
-		AddMaterial(pErrorMaterial);
+		Material errorMaterial(forwardOpaqueType, "errorMaterial", opaqueQueue, directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
+		AddMaterial(std::move(errorMaterial));
 
-		Material* pDefaultMaterial = new Material(forwardOpaqueType, "defaultMaterial", opaqueQueue, directoryPath + "/default.vert.spv", directoryPath + "/default.frag.spv");
-		AddMaterial(pDefaultMaterial);
+		Material defaultMaterial(forwardOpaqueType, "defaultMaterial", opaqueQueue, directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
+		AddMaterial(std::move(defaultMaterial));
 
-		Material* pTransparentMaterial = new Material(forwardTransparentType, "transparentMaterial", transparentQueue, directoryPath + "/transparent.vert.spv", directoryPath + "/transparent.frag.spv");
-		AddMaterial(pTransparentMaterial);
+		Material transparentMaterial(forwardTransparentType, "transparentMaterial", transparentQueue, directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv");
+		AddMaterial(std::move(transparentMaterial));
 
-		Material* pPresentMaterial = new Material(presentType, "presentMaterial", opaqueQueue, directoryPath + "/present.vert.spv", directoryPath + "/present.frag.spv");
-		AddMaterial(pPresentMaterial);
+		Material presentMaterial(presentType, "presentMaterial", opaqueQueue, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
+		AddMaterial(std::move(presentMaterial));
 
-		Material* pVertexColorLitMaterial = new Material(forwardOpaqueType, "vertexColorLitMaterial", opaqueQueue, directoryPath + "/vertexColorLit.vert.spv", directoryPath + "/vertexColorLit.frag.spv");
-		AddMaterial(pVertexColorLitMaterial);
+		Material vertexColorLitMaterial(forwardOpaqueType, "vertexColorLitMaterial", opaqueQueue, directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv");
+		AddMaterial(std::move(vertexColorLitMaterial));
 
-		Material* pVertexColorUnlitMaterial = new Material(forwardOpaqueType, "vertexColorUnlitMaterial", opaqueQueue, directoryPath + "/vertexColorUnlit.vert.spv", directoryPath + "/vertexColorUnlit.frag.spv");
-		AddMaterial(pVertexColorUnlitMaterial);
+		Material vertexColorUnlitMaterial(forwardOpaqueType, "vertexColorUnlitMaterial", opaqueQueue, directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv");
+		AddMaterial(std::move(vertexColorUnlitMaterial));
 
-		Material* pNormalsMaterial = new Material(forwardOpaqueType, "normalMaterial", opaqueQueue, directoryPath + "/normals.vert.spv", directoryPath + "/normals.frag.spv");
-		AddMaterial(pNormalsMaterial);
+		Material normalsMaterial(forwardOpaqueType, "normalMaterial", opaqueQueue, directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv");
+		AddMaterial(std::move(normalsMaterial));
 
-		Material* pShadowMaterial = new Material(shadowType, "shadowMaterial", opaqueQueue, directoryPath + "/shadow.vert.spv");
-		AddMaterial(pShadowMaterial);
+		Material shadowMaterial(shadowType, "shadowMaterial", shadowQueue, directoryPath / "shadow.vert.spv");
+		AddMaterial(std::move(shadowMaterial));
 
-		Material* pSkyBoxMaterial = new Material(skyboxType, "skyboxMaterial", skyboxQueue, directoryPath + "/skybox.vert.spv", directoryPath + "/skybox.frag.spv");
-		AddMaterial(pSkyBoxMaterial);
+		Material skyBoxMaterial(skyboxType, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
+		AddMaterial(std::move(skyBoxMaterial));
 
-		Material* pSimpleLitMaterial = new Material(forwardOpaqueType, "simpleLitMaterial", opaqueQueue, directoryPath + "/simpleLit.vert.spv", directoryPath + "/simpleLit.frag.spv");
-		AddMaterial(pSimpleLitMaterial);
+		Material simpleLitMaterial(forwardOpaqueType, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
+		AddMaterial(std::move(simpleLitMaterial));
 
-		Material* pSimpleUnlitMaterial = new Material(forwardOpaqueType, "simpleUnlitMaterial", opaqueQueue, directoryPath + "/simpleUnlit.vert.spv", directoryPath + "/simpleUnlit.frag.spv");
-		AddMaterial(pSimpleUnlitMaterial);
+		Material simpleUnlitMaterial(forwardOpaqueType, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
+		AddMaterial(std::move(simpleUnlitMaterial));
 
 		// For testing spirv reflect:
-		Material* pTest = new Material(forwardOpaqueType, "testMaterial", opaqueQueue, directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
-		AddMaterial(pTest);
+		Material test(forwardOpaqueType, "testMaterial", opaqueQueue, directoryPath / "test.vert.spv", directoryPath / "test.frag.spv");
+		AddMaterial(std::move(test));
 
 		// For testing the binding missmatch error:
-		Material* pTestA = new Material(forwardOpaqueType, "testAMaterial", opaqueQueue, directoryPath + "/testA.vert.spv", directoryPath + "/testA.frag.spv");
-		AddMaterial(pTestA);
-		Material* pTestB = new Material(forwardOpaqueType, "testBMaterial", opaqueQueue, directoryPath + "/testB.vert.spv", directoryPath + "/testB.frag.spv");
-		AddMaterial(pTestB);
+		Material testA(forwardOpaqueType, "testAMaterial", opaqueQueue, directoryPath / "testA.vert.spv", directoryPath / "testA.frag.spv");
+		AddMaterial(std::move(testA));
+		Material testB(forwardOpaqueType, "testBMaterial", opaqueQueue, directoryPath / "testB.vert.spv", directoryPath / "testB.frag.spv");
+		AddMaterial(std::move(testB));
 
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("MaterialManager initialized.");
@@ -88,23 +85,26 @@ namespace emberEngine
 	}
 	void MaterialManager::Clear()
 	{
-		Context::WaitDeviceIdle();
 		s_materials.clear();
 	}
 
 
 
-	// Add/get/delete:
-	void MaterialManager::AddMaterial(Material* pMaterial)
+	// Add/Get/Delete:
+	void MaterialManager::AddMaterial(Material&& material)
 	{
-		// If material already contained in MaterialManager, do nothing.
-		if (s_materials.emplace(pMaterial->GetName(), std::unique_ptr<Material>(pMaterial)).second == false)
-		{
-			LOG_WARN("Material with the name: {} already exists in MaterialManager!", pMaterial->GetName());
-			return;
-		}
+		auto newMaterial = std::make_unique<Material>(std::move(material));
+		if (!s_materials.emplace(newMaterial->GetName(), std::move(newMaterial)).second)
+			LOG_WARN("Material with the name: {} already exists in MaterialManager!", newMaterial->GetName());
 	}
-	Material* MaterialManager::GetMaterial(const std::string& name)
+	Material& MaterialManager::GetMaterial(const std::string& name)
+	{
+		auto it = s_materials.find(name);
+		if (it == s_materials.end())
+			throw std::runtime_error("Material not found: " + name);
+		return *(it->second);
+	}
+	Material* MaterialManager::TryGetMaterial(const std::string& name)
 	{
 		auto it = s_materials.find(name);
 		if (it != s_materials.end())
@@ -114,16 +114,15 @@ namespace emberEngine
 	}
 	void MaterialManager::DeleteMaterial(const std::string& name)
 	{
-		Context::WaitDeviceIdle();
 		s_materials.erase(name);
 	}
 
 
 
 	// Debugging:
-	void MaterialManager::PrintAllMaterialNames()
+	void MaterialManager::Print()
 	{
-		LOG_TRACE("Names of all managed materials:");
+		LOG_TRACE("MaterialManager content:");
 		for (const auto& pair : s_materials)
 			LOG_TRACE(pair.first);
 	}

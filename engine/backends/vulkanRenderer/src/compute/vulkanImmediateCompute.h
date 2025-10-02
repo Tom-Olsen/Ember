@@ -1,33 +1,36 @@
 #pragma once
+#include "iCompute.h"
 #include "emberMath.h"
+
+
+
+// Forward declarations:
+namespace emberBackendInterface
+{
+	class IComputeShader;
+	class IShaderProperties;
+}
 
 
 
 namespace vulkanRendererBackend
 {
-	// Forward declarations:
-	class ComputeShader;
-	class ShaderProperties;
-
-
-
-	class Immediate
+	class Immediate : public emberBackendInterface::ICompute::IImmediate
 	{
-	private: // Members:
-		static bool s_isInitialized;
-
 	public: // Methods:
-		static void Init();
-		static void Clear();
+		// Constructor/Destructor:
+		Immediate();
+		~Immediate();
 
-		// Immediate dispatch call:
-		static void Dispatch(ComputeShader* pComputeShader, ShaderProperties* pShaderProperties, Uint3 threadCount, float time, float deltaTime);
-
-	private: // Methods:
-		// Delete all constructors:
-		Immediate() = delete;
+		// Non-copyable:
 		Immediate(const Immediate&) = delete;
 		Immediate& operator=(const Immediate&) = delete;
-		~Immediate() = delete;
+
+		// Movable:
+		Immediate(Immediate&& other) noexcept = default;
+		Immediate& operator=(Immediate&& other) noexcept = default;
+
+		// Immediate dispatch call:
+		void Dispatch(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IShaderProperties* pShaderProperties, Uint3 threadCount, float time, float deltaTime) override;
 	};
 }

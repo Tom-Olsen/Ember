@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_gameObject_h__
-#define __INCLUDE_GUARD_gameObject_h__
+#pragma once
 #include "component.h"
 #include "logger.h"
 #include "scene.h"
@@ -215,7 +214,3 @@ namespace emberEngine
 		}
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_gameObject_h__
