@@ -25,6 +25,12 @@ namespace vulkanRendererBackend
 
 
 
+	// Movable:
+	Compute::Compute(Compute&& other) noexcept = default;
+	Compute& Compute::operator=(Compute&& other) noexcept = default;
+
+
+
 	// Getters:
 	Async* Compute::GetAsyncCompute()
 	{

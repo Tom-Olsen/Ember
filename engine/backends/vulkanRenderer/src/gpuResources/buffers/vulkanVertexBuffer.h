@@ -1,5 +1,7 @@
 #pragma once
 #include "vulkanBuffer.h"
+#include "vulkanRendererExport.h"
+#include <string>
 
 
 
@@ -11,11 +13,11 @@ namespace vulkanRendererBackend
 	/// -VmaMemoryUsage				= prefer device <para/>
 	/// -VmaAllocationCreateFlags	= 0
 	/// </summary>
-	class VertexBuffer : public Buffer
+	class VULKAN_RENDERER_API VertexBuffer : public Buffer
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		VertexBuffer(uint32_t count, uint32_t elementSize, std::string name);
+		VertexBuffer(uint32_t count, uint32_t elementSize, const std::string& name);
 		~VertexBuffer();
 
 		// Non-copyable:
@@ -23,7 +25,7 @@ namespace vulkanRendererBackend
 		VertexBuffer& operator=(const VertexBuffer&) = delete;
 
 		// Movable:
-		VertexBuffer(VertexBuffer&&) noexcept = default;
-		VertexBuffer& operator=(VertexBuffer&&) noexcept = default;
+		VertexBuffer(VertexBuffer&&) noexcept;
+		VertexBuffer& operator=(VertexBuffer&&) noexcept;
 	};
 }

@@ -20,6 +20,7 @@ namespace emberEngine
 {
 	// Forward decleration:
 	struct Event;
+	class Application;
 
 
 
@@ -27,6 +28,7 @@ namespace emberEngine
 	{
 		// Friends:
 		friend class DearImGui;
+		friend class Application;
 
 	private: // Members:
 		static std::unique_ptr<emberBackendInterface::IWindow> s_pIWindow;

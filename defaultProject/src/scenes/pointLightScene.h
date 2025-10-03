@@ -1,4 +1,22 @@
-#pragma one
+#pragma once
+#include "emberEngine.h"
+// Components:
+#include "camera.h"
+#include "cameraController.h"
+#include "directionalLight.h"
+#include "drawMeshData.h"
+#include "instancedMeshRenderer.h"
+#include "meshRenderer.h"
+#include "meshTester.h"
+#include "pointLight.h"
+#include "postRenderEffects.h"
+#include "profiler.h"
+#include "spinGlobal.h"
+#include "spinLocal.h"
+#include "spotLight.h"
+#include "testInstancedRendering.h"
+#include "transform.h"
+using namespace emberEngine;
 
 
 
@@ -29,7 +47,7 @@ inline Scene* PointLightScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cubeSphere"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4::white);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -38,7 +56,7 @@ inline Scene* PointLightScene()
 		pPointLight->SetColor(Float3(1.0f, 1.0f, 1.0f));
 		pPointLight->SetNearClip(0.1f);
 		pPointLight->SetFarClip(8.0f);
-		pPointLight->SetShadowType(Lighting::ShadowType::hard);
+		pPointLight->SetShadowType(emberCommon::ShadowType::hard);
 		//pPointLight->SetDrawFrustum(true);
 
 		pScene->AddGameObject(pGameObject);
@@ -51,12 +69,11 @@ inline Scene* PointLightScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCubeInverse"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks1_color"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks1_roughness"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks1_normal"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(1.0, 1.0, 0, 0));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks1_color"));
+		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks1_roughness"));
+		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("bricks1_normal"));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(1.0, 1.0, 0, 0));
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -68,14 +85,13 @@ inline Scene* PointLightScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("frame"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("metal0_color"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("metal0_normal"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("metallicMap", TextureManager::GetTexture2d("metal0_metallic"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("metal0_roughness"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "metallicity", 1.0f);
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.25, 1, 0, 0));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("metal0_color"));
+		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("metal0_normal"));
+		pMeshRenderer->GetShaderProperties().SetTexture("metallicMap", TextureManager::GetTexture("metal0_metallic"));
+		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("metal0_roughness"));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "metallicity", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(0.25, 1, 0, 0));
 
 		SpinLocal* pSpinLocal = new SpinLocal(45.0f);
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);

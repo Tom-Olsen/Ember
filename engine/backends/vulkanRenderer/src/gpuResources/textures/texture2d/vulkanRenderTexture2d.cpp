@@ -8,6 +8,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public method:
 	// Constructor/Desctructor:
 	RenderTexture2d::RenderTexture2d(const std::string& name, Format format, int width, int height)
 	{
@@ -46,7 +47,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Public method:
+	// Movable:
+	RenderTexture2d::RenderTexture2d(RenderTexture2d&& other) noexcept = default;
+	RenderTexture2d& RenderTexture2d::operator=(RenderTexture2d&& other) noexcept = default;
+
+
+
 	void RenderTexture2d::SetData(void* data)
 	{
 		LOG_WARN("Setting data of a RenderTexture2d manually is not allowed!");

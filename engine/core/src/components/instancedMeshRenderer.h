@@ -31,17 +31,17 @@ namespace emberEngine
 		void SetInstanceCount(uint32_t instanceCount);
 		void SetCastShadows(bool castShadows);
 		void SetReceiveShadows(bool receiveShadows);
-		void SetMesh(Mesh* pMesh);
-		void SetMaterial(Material* pMaterial);
-		void SetInstanceBuffer(Buffer* pInstanceBuffer);
+		void SetMesh(Mesh& mesh);
+		void SetMaterial(Material& material);
+		void SetInstanceBuffer(Buffer& instanceBuffer);
 
 		// Forward render pass getters:
 		uint32_t GetInstanceCount() const;
 		bool GetCastShadows() const;
 		bool GetReceiveShadows() const;
-		Mesh* GetMesh();
-		Material* GetMaterial();
-		Buffer* GetInstanceBuffer();
+		Mesh& GetMesh();
+		Material& GetMaterial();
+		Buffer& GetInstanceBuffer();
 		ShaderProperties& GetShaderProperties();
 
 		// Overrides:

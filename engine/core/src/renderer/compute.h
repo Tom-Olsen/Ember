@@ -30,7 +30,7 @@ namespace emberEngine
 
 		public: // Methods:
 			// Constructor/Destructor:
-			Async(uint16_t sessionCount);
+			Async(uint32_t sessionCount);
 			~Async();
 
 			// Non-copyable:
@@ -42,15 +42,15 @@ namespace emberEngine
 			Async& operator=(Async&& other) noexcept = default;
 
 			// Dispatch logic:
-			uint16_t CreateComputeSession();
-			void DispatchComputeSession(uint16_t sessionID);
-			bool IsFinished(uint16_t sessionID);
-			void WaitForFinish(uint16_t sessionID);
+			uint32_t CreateComputeSession();
+			void DispatchComputeSession(uint32_t sessionID);
+			bool IsFinished(uint32_t sessionID);
+			void WaitForFinish(uint32_t sessionID);
 
 			// Workload recording:
-			void RecordComputeShader(uint16_t sessionID, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
-			ShaderProperties RecordComputeShader(uint16_t sessionID, ComputeShader& computeShader, Uint3 threadCount);
-			void RecordBarrier(uint16_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask);
+			void RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
+			ShaderProperties RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount);
+			void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask);
 		};
 
 

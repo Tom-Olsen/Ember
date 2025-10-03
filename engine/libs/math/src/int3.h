@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_int3_h__
-#define __INCLUDE_GUARD_int3_h__
+#pragma once
 #include "int2.h"
 #include <string>
 
@@ -71,7 +70,3 @@ namespace emberMath
 		static Int3 backward;	// -z = ( 0, 0,-1).
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_int3_h__

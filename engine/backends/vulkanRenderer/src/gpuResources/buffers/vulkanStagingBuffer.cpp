@@ -14,8 +14,9 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
-	StagingBuffer::StagingBuffer(uint64_t size, std::string name)
+	StagingBuffer::StagingBuffer(uint64_t size, const std::string& name)
 	{
 		m_size = size;
 		m_name = name;
@@ -52,7 +53,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Movable:
+	StagingBuffer::StagingBuffer(StagingBuffer&&) noexcept = default;
+	StagingBuffer& StagingBuffer::operator=(StagingBuffer&&) noexcept = default;
+
+
+
 	// Getters:
 	void StagingBuffer::GetData(void* pDst, uint64_t size, uint64_t offset) const
 	{

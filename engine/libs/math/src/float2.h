@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_float2_h__
-#define __INCLUDE_GUARD_float2_h__
+#pragma once
 #include <string>
 
 
@@ -108,7 +107,3 @@ namespace emberMath
 	// Friend functions:
 	Float2 operator/(float scalar, const Float2& vector);
 }
-
-
-
-#endif // __INCLUDE_GUARD_float2_h__

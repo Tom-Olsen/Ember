@@ -31,24 +31,16 @@ namespace emberEngine
 	{
 		m_receiveShadows = receiveShadows;
 	}
-	void MeshRenderer::SetMesh(Mesh* pMesh)
+	void MeshRenderer::SetMesh(Mesh& mesh)
 	{
-		m_pMesh = pMesh;
+		m_pMesh = &mesh;
 	}
-	void MeshRenderer::SetMaterial(Material* pMaterial)
+	void MeshRenderer::SetMaterial(Material& material)
 	{
-		if (pMaterial == nullptr)
+		if (m_pMaterial->GetName() != material.GetName())
 		{
-			if (m_pMaterial != MaterialManager::TryGetMaterial("errorMaterial"))
-			{
-				m_pMaterial = MaterialManager::TryGetMaterial("errorMaterial");
-				m_shaderProperties = ShaderProperties(*m_pMaterial);
-			}
-		}
-		else if (m_pMaterial != pMaterial)
-		{
-			m_pMaterial = pMaterial;
-			m_shaderProperties = ShaderProperties(*m_pMaterial);
+			m_pMaterial = &material;
+			m_shaderProperties = ShaderProperties(material);
 		}
 	}
 
@@ -63,13 +55,13 @@ namespace emberEngine
 	{
 		return m_receiveShadows;
 	}
-	Mesh* MeshRenderer::GetMesh()
+	Mesh& MeshRenderer::GetMesh()
 	{
-		return m_pMesh;
+		return *m_pMesh;
 	}
-	Material* MeshRenderer::GetMaterial()
+	Material& MeshRenderer::GetMaterial()
 	{
-		return m_pMaterial;
+		return *m_pMaterial;
 	}
 	ShaderProperties& MeshRenderer::GetShaderProperties()
 	{

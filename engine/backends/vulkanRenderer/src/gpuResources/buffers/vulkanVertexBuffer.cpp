@@ -6,8 +6,9 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
-	VertexBuffer::VertexBuffer(uint32_t count, uint32_t elementSize, std::string name)
+	VertexBuffer::VertexBuffer(uint32_t count, uint32_t elementSize, const std::string& name)
 	{
 		m_count = count;
 		m_elementSize = elementSize;
@@ -33,4 +34,10 @@ namespace vulkanRendererBackend
 	{
 
 	}
+
+
+
+	// Movable:
+	VertexBuffer::VertexBuffer(VertexBuffer&&) noexcept = default;
+	VertexBuffer& VertexBuffer::operator=(VertexBuffer&&) noexcept = default;
 }

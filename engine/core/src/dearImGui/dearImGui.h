@@ -33,7 +33,7 @@ namespace emberEngine
 
 	public: // Methods:
 		// Initialization/Cleanup:
-		static void Init(void* pSdlWindow, bool enableDockSpace);
+		static void Init(bool enableDockSpace);
 		static void Clear();
 
 		// Render Logic:

@@ -14,6 +14,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
 	Immediate::Immediate()
 	{
@@ -23,6 +24,12 @@ namespace vulkanRendererBackend
 	{
 
 	}
+
+
+
+	// Movable:
+	Immediate::Immediate(Immediate&& other) noexcept = default;
+	Immediate& Immediate::operator=(Immediate&& other) noexcept = default;
 
 
 

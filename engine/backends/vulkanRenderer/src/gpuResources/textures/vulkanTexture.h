@@ -9,6 +9,7 @@
 #include "vulkanImageViewType.h"
 #include "vulkanImageType.h"
 #include "vulkanMemoryPropertyFlag.h"
+#include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -28,7 +29,7 @@ namespace vulkanRendererBackend
 	/// <summary>
 	/// Base class for different kinds of textures: 1d, 2d, 3d, cube.
 	/// </summary>
-	class Texture : public emberBackendInterface::ITexture
+	class VULKAN_RENDERER_API Texture : public emberBackendInterface::ITexture
 	{
 	protected: // Static members:
 		static std::unordered_set<Format> s_valid08BitFormats;
@@ -52,9 +53,12 @@ namespace vulkanRendererBackend
 		DescriptorType m_descriptorType;
 		std::unique_ptr<VmaImage> m_pImage;
 
-	public: // Methods:
-		// Constructor/Destructor:
+	protected: // Methods:
+		// Constructor:
 		Texture();
+
+	public: // Methods:
+		// Destructor:
 		virtual ~Texture();
 
 		// Non-copyable:
@@ -62,8 +66,8 @@ namespace vulkanRendererBackend
 		Texture& operator=(const Texture&) = delete;
 
 		// Movable:
-		Texture(Texture&& other) noexcept = default;
-		Texture& operator=(Texture&& other) noexcept = default;
+		Texture(Texture&& other) noexcept;
+		Texture& operator=(Texture&& other) noexcept;
 
 		// Getters:
 		const std::string& GetName() const override;

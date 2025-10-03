@@ -1,4 +1,22 @@
-#pragma one
+#pragma once
+#include "emberEngine.h"
+// Components:
+#include "camera.h"
+#include "cameraController.h"
+#include "directionalLight.h"
+#include "drawMeshData.h"
+#include "instancedMeshRenderer.h"
+#include "meshRenderer.h"
+#include "meshTester.h"
+#include "pointLight.h"
+#include "postRenderEffects.h"
+#include "profiler.h"
+#include "spinGlobal.h"
+#include "spinLocal.h"
+#include "spotLight.h"
+#include "testInstancedRendering.h"
+#include "transform.h"
+using namespace emberEngine;
 
 
 
@@ -26,8 +44,7 @@ inline Scene* ShadowCascadeScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skybox0"));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("skybox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -82,7 +99,7 @@ inline Scene* ShadowCascadeScene()
 		pDirectionalLight->SetColor(Float3::white);
 		pDirectionalLight->SetActiveCamera(pCamera);
 		//pDirectionalLight->SetDrawFrustum(true);
-		pDirectionalLight->SetShadowType(Lighting::ShadowType::soft);
+		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
 		pDirectionalLight->SetDistributionFactor(0.5f);
 		//pDirectionalLight->SetShadowCascadeCount(1);
 
@@ -111,11 +128,10 @@ inline Scene* ShadowCascadeScene()
 			MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 			pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 			pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-			pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-			pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks0_color"));
-			pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks0_roughness"));
-			pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks0_normal"));
-			pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+			pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks0_color"));
+			pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks0_roughness"));
+			pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("bricks0_normal"));
+			pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
 
 			pScene->AddGameObject(pGameObject);
 		}

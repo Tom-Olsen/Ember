@@ -35,8 +35,8 @@ namespace vulkanRendererBackend
 		Compute& operator=(const Compute&) = delete;
 
 		// Movable:
-		Compute(Compute&& other) noexcept = default;
-		Compute& operator=(Compute&& other) noexcept = default;
+		Compute(Compute&& other) noexcept;
+		Compute& operator=(Compute&& other) noexcept;
 
 		// Getters:
 		Async* GetAsyncCompute();

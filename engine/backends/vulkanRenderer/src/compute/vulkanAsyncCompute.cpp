@@ -21,17 +21,17 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	Async::Async(uint16_t sessionCount)
+	Async::Async(uint32_t sessionCount)
 	{
 		// Set session count:
-		m_sessionCount = math::Max((uint16_t)1, sessionCount);
+		m_sessionCount = math::Max((uint32_t)1, sessionCount);
 
 		// Resize/Reserve vectors:
 		m_pCommandPools.reserve(m_sessionCount);
 		m_computeSessions.resize(m_sessionCount);
 		m_fences.resize(m_sessionCount);
 
-		for (uint16_t i = 0; i < m_sessionCount; i++)
+		for (uint32_t i = 0; i < m_sessionCount; i++)
 		{
 			// Create command pools:
 			m_pCommandPools.emplace_back(0, Context::GetLogicalDevice()->GetComputeQueue());
@@ -47,7 +47,7 @@ namespace vulkanRendererBackend
 	Async::~Async()
 	{
 		// Empty queue:
-		std::queue<uint16_t> empty;
+		std::queue<uint32_t> empty;
 		std::swap(m_freeIndices, empty);
 
 		// Delete fences:
@@ -63,19 +63,25 @@ namespace vulkanRendererBackend
 
 
 
+	// Movable:
+	Async::Async(Async&& other) noexcept = default;
+	Async& Async::operator=(Async&& other) noexcept = default;
+
+
+
 	// Dispatch logic:
-	uint16_t Async::CreateComputeSession()
+	uint32_t Async::CreateComputeSession()
 	{
 		if (m_freeIndices.empty())
 			throw std::runtime_error("compute::Async::CreateComputeSession(...) has run out of free sessionIDs (sessionCount=" + std::to_string(m_sessionCount) + ").You can increase sessionCount in compute::Async::Init(...).");
 
-		uint16_t sessionID = m_freeIndices.front();
+		uint32_t sessionID = m_freeIndices.front();
 		m_freeIndices.pop();
 		m_computeSessions[sessionID].state = ComputeSession::State::recording;
 
 		return sessionID;
 	}
-	void Async::DispatchComputeSession(uint16_t sessionID, float time, float deltaTime)
+	void Async::DispatchComputeSession(uint32_t sessionID, float time, float deltaTime)
 	{
 		if (sessionID < 0 || sessionID > m_sessionCount - 1)
 			throw std::out_of_range("compute::Async::DispatchComputeSession(...) sessionID out of range.");
@@ -89,7 +95,7 @@ namespace vulkanRendererBackend
 		else // (m_computeSessions[sessionID].state == ComputeSession::State::running)
 			LOG_WARN("Trying to dispatch compute session which is still in running state (already dispatched).");
 	}
-	bool Async::IsFinished(uint16_t sessionID)
+	bool Async::IsFinished(uint32_t sessionID)
 	{
 		if (sessionID < 0 || sessionID > m_sessionCount - 1)
 			throw std::out_of_range("compute::Async::IsFinished(...) sessionID out of range.");
@@ -105,7 +111,7 @@ namespace vulkanRendererBackend
 
 		return isFinished;
 	}
-	void Async::WaitForFinish(uint16_t sessionID)
+	void Async::WaitForFinish(uint32_t sessionID)
 	{
 		if (sessionID < 0 || sessionID > m_sessionCount - 1)
 			throw std::out_of_range("compute::Async::WaitForFinish(...) sessionID out of range.");
@@ -120,7 +126,7 @@ namespace vulkanRendererBackend
 
 
 	// Workload recording:
-	void Async::RecordComputeShader(uint16_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties, Uint3 threadCount)
+	void Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties, Uint3 threadCount)
 	{
 		if (0 < sessionID || sessionID > m_sessionCount - 1)
 		{
@@ -152,13 +158,13 @@ namespace vulkanRendererBackend
 		ComputeCall computeCall = { 0, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<ShaderProperties*>(pIShaderProperties), AccessMasks::None::none, AccessMasks::None::none };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
-	emberBackendInterface::IShaderProperties* Async::RecordComputeShader(uint16_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
+	emberBackendInterface::IShaderProperties* Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
 		ShaderProperties* pIShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
 		RecordComputeShader(sessionID, pIComputeShader, static_cast<emberBackendInterface::IShaderProperties*>(pIShaderProperties), threadCount);
 		return static_cast<emberBackendInterface::IShaderProperties*>(pIShaderProperties);
 	}
-	void Async::RecordBarrier(uint16_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
+	void Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
 	{
 		if (m_computeSessions[sessionID].state != ComputeSession::State::recording)
 		{
@@ -173,7 +179,7 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	void Async::ResetComputeSession(uint16_t sessionID)
+	void Async::ResetComputeSession(uint32_t sessionID)
 	{
 		// Return all pShaderProperties of compute calls back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeSessions[sessionID].GetComputeCalls())

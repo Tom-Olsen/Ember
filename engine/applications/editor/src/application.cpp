@@ -17,7 +17,6 @@
 #include "renderer.h"
 #include "scene.h"
 #include "shadowConstants.h"
-#include "systemInitializer.h"
 #include "textureManager.h"
 #include "window.h"
 
@@ -55,7 +54,7 @@ namespace emberEngine
 			rendererCreateInfo.shadowMapResolution = SHADOW_MAP_RESOLUTION;				// controlled via macro for now.
 			Renderer::Init(rendererCreateInfo);
 			Compute::Init();
-			DearImGui::Init();
+			DearImGui::Init(rendererCreateInfo.enableDockSpace);
 			Renderer::SetIComputeHandle();
 			Renderer::SetIDearImGuiHandle();
 
@@ -91,7 +90,6 @@ namespace emberEngine
 		DearImGui::Clear();
 		Compute::Clear();
 		Renderer::Clear();
-		SystemInitializer::Clear();
 
 		// Window/Event systems:
 		EventSystem::Clear();
@@ -118,13 +116,13 @@ namespace emberEngine
 				PROFILE_FUNCTION();
 				Time::Update();
 
-				Renderer::CollectGarbage()
+				Renderer::CollectGarbage();
 				running = EventSystem::ProcessEvents();
 
 				// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
-				VkExtent2D surfaceExtend = Context::surface.GetCurrentExtent();
 				Int2 windowSize = Window::GetSize();
-				if (Window::GetIsMinimized() || windowSize.x == 0 || windowSize.y == 0 || surfaceExtend.width == 0 || surfaceExtend.height == 0)
+				Uint2 surfaceExtent = Renderer::GetSurfaceExtent();
+				if (Window::GetIsMinimized() || windowSize.x == 0 || windowSize.y == 0 || surfaceExtent.x == 0 || surfaceExtent.y == 0)
 				{
 					//SDL_Delay(10);
 					continue;
@@ -138,7 +136,7 @@ namespace emberEngine
 				DearImGui::Update();
 				Update();
 				LateUpdate();
-				m_pRenderer->RenderFrame();
+				Renderer::RenderFrame();
 			}
 		}
 		catch (const std::exception& e)

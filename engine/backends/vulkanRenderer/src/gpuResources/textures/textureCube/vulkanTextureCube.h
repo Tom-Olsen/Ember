@@ -1,6 +1,6 @@
 #pragma once
 #include "vulkanTexture.h"
-#include <filesystem>
+#include "vulkanRendererExport.h"
 
 
 
@@ -14,11 +14,14 @@ namespace vulkanRendererBackend
 	/// -ImageCreateFlagBit	=> additional specialisations. <para/>
 	/// -ImageViewType		=> single image, array.
 	/// </summary>
-	class TextureCube : public Texture
+	class VULKAN_RENDERER_API TextureCube : public Texture
 	{
-	public: // Methods:
-		// Constructor/Destructor:
+	protected: // Methods:
+		// Constructor:
 		TextureCube();
+
+	public: // Methods:
+		// Destructor:
 		virtual ~TextureCube();
 
 		// Non-copyable:
@@ -26,8 +29,8 @@ namespace vulkanRendererBackend
 		TextureCube& operator=(const TextureCube&) = delete;
 
 		// Movable:
-		TextureCube(TextureCube&& other) noexcept = default;
-		TextureCube& operator=(TextureCube&& other) noexcept = default;
+		TextureCube(TextureCube&& other) noexcept;
+		TextureCube& operator=(TextureCube&& other) noexcept;
 
 	protected: // Methods:
 		void CreateImage(ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, ImageViewType viewType, const DeviceQueue& queue);

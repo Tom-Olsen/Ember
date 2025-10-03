@@ -15,6 +15,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Desctructor:
 	SampleTexture2d::SampleTexture2d(const std::string& name, Format format, int width, int height)
 	{
@@ -38,7 +39,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Movable:
+	SampleTexture2d::SampleTexture2d(SampleTexture2d&& other) noexcept = default;
+	SampleTexture2d& SampleTexture2d::operator=(SampleTexture2d&& other) noexcept = default;
+
+
+
 	void SampleTexture2d::SetData(void* data)
 	{
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(StageData(data));

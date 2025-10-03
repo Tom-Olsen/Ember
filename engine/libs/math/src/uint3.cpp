@@ -168,6 +168,6 @@ namespace emberMath
 	Uint3 Uint3::zero = Uint3(0);			// zero = Uint3(0,0,0).
 	Uint3 Uint3::one = Uint3(1);			// one = Uint3(1,1,1).
 	Uint3 Uint3::right = Uint3(1, 0, 0);	// right = Uint3(1,0,0).
-	Uint3 Uint3::up = Uint3(0, 1, 0);		// up = Uint3(0,1,0).
-	Uint3 Uint3::forward = Uint3(0, 0, 1);	// forward = Uint3(0,0,1).
+	Uint3 Uint3::forward = Uint3(0, 1, 0);	// forward = Uint3(0,1,0).
+	Uint3 Uint3::up = Uint3(0, 0, 1);		// up = Uint3(0,0,1).
 }

@@ -3,6 +3,7 @@
 #include "commonAccessMask.h"
 #include "emberMath.h"
 #include "vulkanAccessMask.h"
+#include "vulkanRendererExport.h"
 #include <vector>
 
 
@@ -23,7 +24,7 @@ namespace vulkanRendererBackend
 
 
 
-	class PreRender : public emberBackendInterface::ICompute::IPreRender
+	class VULKAN_RENDERER_API PreRender : public emberBackendInterface::ICompute::IPreRender
 	{
 	private: // Members:
 		bool m_isInitialized;
@@ -42,8 +43,8 @@ namespace vulkanRendererBackend
 		PreRender& operator=(const PreRender&) = delete;
 
 		// Movable:
-		PreRender(PreRender&& other) noexcept = default;
-		PreRender& operator=(PreRender&& other) noexcept = default;
+		PreRender(PreRender&& other) noexcept;
+		PreRender& operator=(PreRender&& other) noexcept;
 
 		// Workload recording:
 		void RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IShaderProperties* pShaderProperties, Uint3 threadCount) override;

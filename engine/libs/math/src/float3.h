@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_float3_h__
-#define __INCLUDE_GUARD_float3_h__
+#pragma once
 #include <string>
 
 
@@ -125,7 +124,3 @@ namespace emberMath
 	// Friend functions:
 	Float3 operator/(float scalar, const Float3& vector);
 }
-
-
-
-#endif // __INCLUDE_GUARD_float3_h__

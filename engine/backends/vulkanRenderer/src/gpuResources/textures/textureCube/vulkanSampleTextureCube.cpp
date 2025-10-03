@@ -15,6 +15,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
 	SampleTextureCube::SampleTextureCube(const std::string& name, Format format, int width, int height)
 	{
@@ -83,7 +84,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Movable:
+	SampleTextureCube::SampleTextureCube(SampleTextureCube&& other) noexcept = default;
+	SampleTextureCube& SampleTextureCube::operator=(SampleTextureCube&& other) noexcept = default;
+
+
+
 	void SampleTextureCube::SetData(void* data)
 	{
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(StageData(data));

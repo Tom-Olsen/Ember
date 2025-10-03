@@ -1,6 +1,8 @@
 #pragma once
 #include "vulkanTexture2d.h"
+#include "vulkanRendererExport.h"
 #include <filesystem>
+#include <string>
 
 
 
@@ -17,7 +19,7 @@ namespace vulkanRendererBackend
 	/// -ImageCreateFlagBit	= 0 <para/>
 	/// -ImageViewType		= 2d
 	/// </summary>
-	class StorageTexture2d : public Texture2d
+	class VULKAN_RENDERER_API StorageTexture2d : public Texture2d
 	{
 	public: // Methods:
 		// Constructor/Destructor:
@@ -31,8 +33,8 @@ namespace vulkanRendererBackend
 		StorageTexture2d& operator=(const StorageTexture2d&) = delete;
 
 		// Movable:
-		StorageTexture2d(StorageTexture2d&& other) noexcept = default;
-		StorageTexture2d& operator=(StorageTexture2d&& other) noexcept = default;
+		StorageTexture2d(StorageTexture2d&& other) noexcept;
+		StorageTexture2d& operator=(StorageTexture2d&& other) noexcept;
 
 		void SetData(void* data) override;
 

@@ -15,8 +15,8 @@ namespace emberCommon
 namespace vulkanRendererBackend
 {
     using Format = uint32_t;
-    const vulkanRendererBackend::Format TextureFormatToVulkanFormat(emberCommon::TextureFormat);
-    const vulkanRendererBackend::Format DepthStencilFormatToVulkanFormat(emberCommon::DepthStencilFormat);
+    const vulkanRendererBackend::Format TextureFormatToVulkanFormat(const emberCommon::TextureFormat&);
+    const vulkanRendererBackend::Format DepthStencilFormatToVulkanFormat(const emberCommon::DepthStencilFormat&);
 }
 
 
@@ -70,7 +70,7 @@ namespace emberCommon
     {
         // Friends:
         friend struct DepthStencilFormats;
-        friend const vulkanRendererBackend::Format vulkanRendererBackend::DepthStencilFormatToVulkanFormat(emberCommon::DepthStencilFormat format);
+        friend const vulkanRendererBackend::Format vulkanRendererBackend::DepthStencilFormatToVulkanFormat(const emberCommon::DepthStencilFormat&);
 
     private: // Members:
         TextureFormatType formatType;
@@ -93,7 +93,7 @@ namespace emberCommon
     {
         // Friends:
         friend struct TextureFormats;   // only TextureFormats can construct TextureFormat objects.
-        friend const vulkanRendererBackend::Format vulkanRendererBackend::TextureFormatToVulkanFormat(emberCommon::TextureFormat);
+        friend const vulkanRendererBackend::Format vulkanRendererBackend::TextureFormatToVulkanFormat(const emberCommon::TextureFormat&);
 
     private: // Members:
         uint32_t channelCount;

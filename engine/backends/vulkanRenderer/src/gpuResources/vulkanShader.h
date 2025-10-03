@@ -1,4 +1,5 @@
 #pragma once
+#include "vulkanRendererExport.h"
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -17,17 +18,19 @@ namespace vulkanRendererBackend
 	/// <summary>
 	/// Polymorphic parent class for Material and ComputeShader.
 	/// </summary>
-	class Shader
+	class VULKAN_RENDERER_API Shader
 	{
 	protected: // Members:
 		std::string m_name;
 		std::unique_ptr<Pipeline> m_pPipeline;
 		std::unique_ptr<DescriptorBoundResources> m_pDescriptorBoundResources;
 	
-	protected: // Constructor (only for derived classes)
-		Shader() = default;
+	protected:  // Methods:
+		// Constructor:
+		Shader();
 
 	public: // Methods:
+		// Destructor:
 		virtual ~Shader();
 
 		// Non-copyable:
@@ -35,8 +38,8 @@ namespace vulkanRendererBackend
 		Shader& operator=(const Shader&) = delete;
 
 		// Movable:
-		Shader(Shader&& other) noexcept = default;
-		Shader& operator=(Shader&& other) noexcept = default;
+		Shader(Shader&& other) noexcept;
+		Shader& operator=(Shader&& other) noexcept;
 
 		// Getters:
 		const std::string& GetName() const;

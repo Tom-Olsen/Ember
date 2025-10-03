@@ -7,8 +7,9 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
-	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize, std::string name)
+	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize, const std::string& name)
 	{
 		// NOTE:
 		// Storage buffers must follow std430 layout alignment rules.
@@ -43,4 +44,10 @@ namespace vulkanRendererBackend
 	{
 
 	}
+
+
+
+	// Movable:
+	StorageBuffer::StorageBuffer(StorageBuffer&&) noexcept = default;
+	StorageBuffer& StorageBuffer::operator=(StorageBuffer&&) noexcept = default;
 }

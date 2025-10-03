@@ -1,4 +1,5 @@
 #pragma once
+#include "emberMath.h"
 #include "vulkanColorSpace.h"
 #include "vulkanFormat.h"
 #include "vulkanPresentMode.h"
@@ -58,9 +59,9 @@ namespace vulkanRendererBackend
 		const VkSurfaceKHR GetVkSurfaceKHR() const;
 		const SurfaceFormat GetSurfaceFormat() const;
 		const PresentMode GetPresentMode() const;
-		void GetCurrentExtent(VkExtent2D& currentExtent) const;
-		void GetMinImageExtent(VkExtent2D& minImageExtent) const;
-		void GetMaxImageExtent(VkExtent2D& maxImageExtent) const;
+		Uint2 GetCurrentExtent() const;
+		Uint2 GetMinImageExtent() const;
+		Uint2 GetMaxImageExtent() const;
 		uint32_t GetMinImageCount() const;
 		uint32_t GetMaxImageCount() const;
 

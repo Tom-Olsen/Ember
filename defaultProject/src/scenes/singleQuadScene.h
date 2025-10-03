@@ -1,4 +1,22 @@
-#pragma one
+#pragma once
+#include "emberEngine.h"
+// Components:
+#include "camera.h"
+#include "cameraController.h"
+#include "directionalLight.h"
+#include "drawMeshData.h"
+#include "instancedMeshRenderer.h"
+#include "meshRenderer.h"
+#include "meshTester.h"
+#include "pointLight.h"
+#include "postRenderEffects.h"
+#include "profiler.h"
+#include "spinGlobal.h"
+#include "spinLocal.h"
+#include "spotLight.h"
+#include "testInstancedRendering.h"
+#include "transform.h"
+using namespace emberEngine;
 
 
 
@@ -42,7 +60,7 @@ inline Scene* SingleQuadScene()
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(false);
-		pSpotLight->SetShadowType(Lighting::ShadowType::soft);
+		pSpotLight->SetShadowType(emberCommon::ShadowType::soft);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -53,12 +71,11 @@ inline Scene* SingleQuadScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("example"));
-		//pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("wood1_roughness"));
-		//pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("wood1_normal"));
-		//pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("example"));
+		//pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("wood1_roughness"));
+		//pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("wood1_normal"));
+		//pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
 
 		SpinLocal* pSpinLocal = new SpinLocal(45.0f);
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);

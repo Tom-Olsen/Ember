@@ -9,14 +9,14 @@ namespace emberCommon
     {
         sample,
         storage,
-		storageAndSample,
+		storageSample,
         renderTarget
     };
 	inline constexpr std::string_view TextureUsageNames[] =
 	{
 		"sample",
 		"storage",
-		"storageAndSample",
+		"storageSample",
 		"renderTarget"
 	};
 }

@@ -91,23 +91,23 @@ namespace vulkanRendererBackend
 	{
 		return m_presentMode;
 	}
-	void Surface::GetCurrentExtent(VkExtent2D& currentExtent) const
+	Uint2 Surface::GetCurrentExtent() const
 	{
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities);
-		currentExtent = surfaceCapabilities.currentExtent;
+		return Uint2(surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
 	}
-	void Surface::GetMinImageExtent(VkExtent2D& minImageExtent) const
+	Uint2 Surface::GetMinImageExtent() const
 	{
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities);
-		minImageExtent = surfaceCapabilities.minImageExtent;
+		return Uint2(surfaceCapabilities.minImageExtent.width, surfaceCapabilities.minImageExtent.height);
 	}
-	void Surface::GetMaxImageExtent(VkExtent2D& maxImageExtent) const
+	Uint2 Surface::GetMaxImageExtent() const
 	{
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities);
-		maxImageExtent = surfaceCapabilities.maxImageExtent;
+		return Uint2(surfaceCapabilities.maxImageExtent.width, surfaceCapabilities.maxImageExtent.height);
 	}
 	uint32_t Surface::GetMinImageCount() const
 	{

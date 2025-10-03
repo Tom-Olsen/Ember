@@ -9,7 +9,12 @@
 
 namespace vulkanRendererBackend
 {
-	// Virtual Destructor:
+	// Public Methods:
+	// Constructor/Destructor:
+	Buffer::Buffer()
+	{
+
+	}
 	Buffer::~Buffer()
 	{
 		Context::WaitDeviceIdle();
@@ -17,7 +22,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Public Methods:
+	// Movable:
+	Buffer::Buffer(Buffer&&) noexcept = default;
+	Buffer& Buffer::operator=(Buffer&&) noexcept = default;
+
+
+
 	// Getters:
 	std::string Buffer::GetName() const
 	{

@@ -36,29 +36,21 @@ namespace emberEngine
 	{
 		m_receiveShadows = receiveShadows;
 	}
-	void InstancedMeshRenderer::SetMesh(Mesh* pMesh)
+	void InstancedMeshRenderer::SetMesh(Mesh& mesh)
 	{
-		m_pMesh = pMesh;
+		m_pMesh = &mesh;
 	}
-	void InstancedMeshRenderer::SetMaterial(Material* pMaterial)
+	void InstancedMeshRenderer::SetMaterial(Material& material)
 	{
-		if (pMaterial == nullptr)
+		if (m_pMaterial->GetName() != material.GetName())
 		{
-			if (m_pMaterial != MaterialManager::TryGetMaterial("errorMaterial"))
-			{
-				m_pMaterial = MaterialManager::TryGetMaterial("errorMaterial");
-				m_shaderProperties = ShaderProperties(*m_pMaterial);
-			}
-		}
-		else if (m_pMaterial != pMaterial)
-		{
-			m_pMaterial = pMaterial;
-			m_shaderProperties = ShaderProperties(*m_pMaterial);
+			m_pMaterial = &material;
+			m_shaderProperties = ShaderProperties(material);
 		}
 	}
-	void InstancedMeshRenderer::SetInstanceBuffer(Buffer* pInstanceBuffer)
+	void InstancedMeshRenderer::SetInstanceBuffer(Buffer& instanceBuffer)
 	{
-		m_pInstanceBuffer = pInstanceBuffer;
+		m_pInstanceBuffer = &instanceBuffer;
 	}
 
 
@@ -76,17 +68,17 @@ namespace emberEngine
 	{
 		return m_receiveShadows;
 	}
-	Mesh* InstancedMeshRenderer::GetMesh()
+	Mesh& InstancedMeshRenderer::GetMesh()
 	{
-		return m_pMesh;
+		return *m_pMesh;
 	}
-	Material* InstancedMeshRenderer::GetMaterial()
+	Material& InstancedMeshRenderer::GetMaterial()
 	{
-		return m_pMaterial;
+		return *m_pMaterial;
 	}
-	Buffer* InstancedMeshRenderer::GetInstanceBuffer()
+	Buffer& InstancedMeshRenderer::GetInstanceBuffer()
 	{
-		return m_pInstanceBuffer;
+		return *m_pInstanceBuffer;
 	}
 	ShaderProperties& InstancedMeshRenderer::GetShaderProperties()
 	{

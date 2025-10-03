@@ -9,11 +9,28 @@
 
 namespace vulkanRendererBackend
 {
-	// Virtual Destructor:
+	// Protected methods:
+	// Constructor:
+	Shader::Shader()
+	{
+
+	}
+
+
+	// Public methods:
+	// Destructor:
 	Shader::~Shader()
 	{
 
 	}
+
+
+
+	// Movable:
+	Shader::Shader(Shader&& other) noexcept = default;
+	Shader& Shader::operator=(Shader&& other) noexcept = default;
+
+
 
 	// Getters:
 	const std::string& Shader::GetName() const
@@ -29,11 +46,15 @@ namespace vulkanRendererBackend
 		return m_pDescriptorBoundResources.get();
 	}
 
+
+
 	// Debugging:
 	void Shader::PrintShaderInfo() const
 	{
 		LOG_TRACE(m_pDescriptorBoundResources->ToString());
 	}
+
+
 
 	// Protected methods:
 	std::vector<char> Shader::ReadShaderCode(const std::filesystem::path& spvFile)

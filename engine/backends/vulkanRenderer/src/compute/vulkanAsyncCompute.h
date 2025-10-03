@@ -3,6 +3,7 @@
 #include "commonAccessMask.h"
 #include "emberMath.h"
 #include "vulkanAccessMask.h"
+#include "vulkanRendererExport.h"
 #include <queue>
 #include <vector>
 
@@ -30,18 +31,18 @@ namespace vulkanRendererBackend
 
 
 
-	class Async : public emberBackendInterface::ICompute::IAsync
+	class VULKAN_RENDERER_API Async : public emberBackendInterface::ICompute::IAsync
 	{
 	private: // Members:
-		uint16_t m_sessionCount;
+		uint32_t m_sessionCount;
 		std::vector<CommandPool> m_pCommandPools;
 		std::vector<ComputeSession> m_computeSessions;
 		std::vector<VkFence> m_fences;
-		std::queue<uint16_t> m_freeIndices;
+		std::queue<uint32_t> m_freeIndices;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		Async(uint16_t sessionCount);
+		Async(uint32_t sessionCount);
 		~Async();
 
 		// Non-copyable:
@@ -49,21 +50,21 @@ namespace vulkanRendererBackend
 		Async& operator=(const Async&) = delete;
 
 		// Movable:
-		Async(Async&& other) noexcept = default;
-		Async& operator=(Async&& other) noexcept = default;
+		Async(Async&& other) noexcept;
+		Async& operator=(Async&& other) noexcept;
 
 		// Dispatch logic:
-		uint16_t CreateComputeSession() override;
-		void DispatchComputeSession(uint16_t sessionID, float time, float deltaTime) override;
-		bool IsFinished(uint16_t sessionID) override;
-		void WaitForFinish(uint16_t sessionID) override;
+		uint32_t CreateComputeSession() override;
+		void DispatchComputeSession(uint32_t sessionID, float time, float deltaTime) override;
+		bool IsFinished(uint32_t sessionID) override;
+		void WaitForFinish(uint32_t sessionID) override;
 
 		// Workload recording:
-		void RecordComputeShader(uint16_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties, Uint3 threadCount) override;
-		emberBackendInterface::IShaderProperties* RecordComputeShader(uint16_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount) override;
-		void RecordBarrier(uint16_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) override;
+		void RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties, Uint3 threadCount) override;
+		emberBackendInterface::IShaderProperties* RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount) override;
+		void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) override;
 
 	private: // Methods:
-		void ResetComputeSession(uint16_t sessionID);
+		void ResetComputeSession(uint32_t sessionID);
 	};
 }

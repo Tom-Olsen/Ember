@@ -1,5 +1,7 @@
 #pragma once
 #include "vulkanBuffer.h"
+#include "vulkanRendererExport.h"
+#include <string>
 
 
 
@@ -11,11 +13,11 @@ namespace vulkanRendererBackend
 	/// -VmaMemoryUsage				= prefer device <para/>
 	/// -VmaAllocationCreateFlags	= 0
 	/// </summary>
-	class IndexBuffer : public Buffer
+	class VULKAN_RENDERER_API IndexBuffer : public Buffer
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		IndexBuffer(uint32_t count, uint32_t elementSize, std::string name);
+		IndexBuffer(uint32_t count, uint32_t elementSize, const std::string& name);
 		~IndexBuffer();
 
 		// Non-copyable:
@@ -23,7 +25,7 @@ namespace vulkanRendererBackend
 		IndexBuffer& operator=(const IndexBuffer&) = delete;
 
 		// Movable:
-		IndexBuffer(IndexBuffer&&) noexcept = default;
-		IndexBuffer& operator=(IndexBuffer&&) noexcept = default;
+		IndexBuffer(IndexBuffer&&) noexcept;
+		IndexBuffer& operator=(IndexBuffer&&) noexcept;
 	};
 }

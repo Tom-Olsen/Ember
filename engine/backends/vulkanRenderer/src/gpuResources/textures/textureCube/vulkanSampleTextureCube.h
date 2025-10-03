@@ -1,6 +1,8 @@
 #pragma once
 #include "vulkanTextureCube.h"
+#include "vulkanRendererExport.h"
 #include <filesystem>
+#include <string>
 
 
 
@@ -22,7 +24,7 @@ namespace vulkanRendererBackend
 	/// -ImageCreateFlagBit	= cube compatible <para/>
 	/// -ImageViewType		= 2d
 	/// </summary>
-	class SampleTextureCube : public TextureCube
+	class VULKAN_RENDERER_API SampleTextureCube : public TextureCube
 	{
 	public: // Methods:
 		// Constructor/Destructor:
@@ -36,8 +38,8 @@ namespace vulkanRendererBackend
 		SampleTextureCube& operator=(const SampleTextureCube&) = delete;
 
 		// Movable:
-		SampleTextureCube(SampleTextureCube&& other) noexcept = default;
-		SampleTextureCube& operator=(SampleTextureCube&& other) noexcept = default;
+		SampleTextureCube(SampleTextureCube&& other) noexcept;
+		SampleTextureCube& operator=(SampleTextureCube&& other) noexcept;
 
 		void SetData(void* data) override;
 

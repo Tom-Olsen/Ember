@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_mathConstants_h__
-#define __INCLUDE_GUARD_mathConstants_h__
+#pragma once
 #include <stdint.h>
 
 
@@ -38,4 +37,3 @@ namespace emberMath
 		constexpr float minValue = -3.402823466e+38f;
 	}
 }
-#endif // __INCLUDE_GUARD_mathConstants_h__

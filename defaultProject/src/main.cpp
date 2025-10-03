@@ -1,22 +1,7 @@
 ﻿#define SDL_MAIN_HANDLED
+#include "profiler.h"
 #include "application.h"
 #include "emberEngine.h"
-// Components:
-#include "camera.h"
-#include "cameraController.h"
-#include "directionalLight.h"
-#include "drawMeshData.h"
-#include "instancedMeshRenderer.h"
-#include "meshRenderer.h"
-#include "meshTester.h"
-#include "pointLight.h"
-#include "postRenderEffects.h"
-#include "profiler.h"
-#include "spinGlobal.h"
-#include "spinLocal.h"
-#include "spotLight.h"
-#include "testInstancedRendering.h"
-#include "transform.h"
 // Scenes:
 #include "defaultScene.h"
 #include "pointLightScene.h"
@@ -24,8 +9,6 @@
 #include "singleQuadScene.h"
 #include "testScene.h"
 using namespace emberEngine;
-
-
 
 // Ember::TODO now!
 // - gpu resources on core side should always be handled as value/reference types as they are simple wrappers around a single pointer.
@@ -114,13 +97,12 @@ int main()
 		Application::CreateInfo appCreateInfo = {};
 		appCreateInfo.vSyncEnabled = false;
 		appCreateInfo.framesInFlight = 2;
-		appCreateInfo.msaaSamples = MsaaSampleCount::sampleCount04;
+		appCreateInfo.msaaSampleCount = emberCommon::MsaaSampleCount::sampleCount04;
 		appCreateInfo.windowWidth = 2560;//1600; //1920; // 2560;
 		appCreateInfo.windowHeight = 1440;// 900; //1080; // 1440;
 		appCreateInfo.renderWidth = 2560;//1280; //1280; // 2560;
 		appCreateInfo.renderHeight = 1440;// 720; // 720; // 1440;
-		Application& app = Application::GetApplication();
-		app.Init(appCreateInfo);
+		Application app(appCreateInfo);
 
 		// Create scene:
 		// std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(ShadowCascadeScene());
@@ -128,7 +110,7 @@ int main()
 		std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(DefaultScene());
 		// std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(PointLightScene());
 		// std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(SingleQuadScene());
-		app.SetScene(pScene);
+		app.SetScene(pScene.get());
 
 		// Debugging:
 		//ComputeShader* csTest =  ComputeShaderManager::GetComputeShader("testComputeShader");
@@ -136,7 +118,7 @@ int main()
 		//ShaderProperties* csProperties = new ShaderProperties(csTest);
 		//csProperties->Print("test");
 		//csProperties->PrintMaps();
-		//csProperties->SetTexture2d("image", TextureManager::GetTexture2d("storageTexture8x8"));
+		//csProperties->SetTexture("image", TextureManager::GetTexture("storageTexture8x8"));
 		//delete csProperties;
 		//TextureManager::PrintAllTextureNames();
 		//pScene->PrintGameObjects();

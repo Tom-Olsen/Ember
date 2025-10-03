@@ -15,6 +15,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructors/Destructor:
 	Material::Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
@@ -128,13 +129,14 @@ namespace vulkanRendererBackend
 
 	}
 
+
+
 	// Movable:
 	Material::Material(Material&& other) = default;
 	Material& Material::operator=(Material&& other) = default;
 
 
 
-	// Public methods:
 	// Getters:
 	const std::string& Material::GetName() const
 	{

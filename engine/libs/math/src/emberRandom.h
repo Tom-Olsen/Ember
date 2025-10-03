@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_emberRandom_h__
-#define __INCLUDE_GUARD_emberRandom_h__
+#pragma once
 #include "float2.h"
 #include "float3.h"
 #include <random>
@@ -35,6 +34,3 @@ namespace emberMath
 		};
 	}
 }
-
-
-#endif // __INCLUDE_GUARD_emberRandom_h__

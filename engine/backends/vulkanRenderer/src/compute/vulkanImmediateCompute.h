@@ -1,6 +1,7 @@
 #pragma once
 #include "iCompute.h"
 #include "emberMath.h"
+#include "vulkanRendererExport.h"
 
 
 
@@ -15,7 +16,7 @@ namespace emberBackendInterface
 
 namespace vulkanRendererBackend
 {
-	class Immediate : public emberBackendInterface::ICompute::IImmediate
+	class VULKAN_RENDERER_API Immediate : public emberBackendInterface::ICompute::IImmediate
 	{
 	public: // Methods:
 		// Constructor/Destructor:
@@ -27,8 +28,8 @@ namespace vulkanRendererBackend
 		Immediate& operator=(const Immediate&) = delete;
 
 		// Movable:
-		Immediate(Immediate&& other) noexcept = default;
-		Immediate& operator=(Immediate&& other) noexcept = default;
+		Immediate(Immediate&& other) noexcept;
+		Immediate& operator=(Immediate&& other) noexcept;
 
 		// Immediate dispatch call:
 		void Dispatch(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IShaderProperties* pShaderProperties, Uint3 threadCount, float time, float deltaTime) override;

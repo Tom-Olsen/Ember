@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_geometry3d_h__
-#define __INCLUDE_GUARD_geometry3d_h__
+#pragma once
 #include "float3.h"
 #include <stdint.h>
 
@@ -18,7 +17,3 @@ namespace emberMath
 		Float3 LinePlaneIntersection(const Float3& lineSupport, const Float3& lineDirection, const Float3& planeSupport, const Float3& planeNormal);
 	}
 }
-
-
-
-#endif // __INCLUDE_GUARD_geometry3d_h__

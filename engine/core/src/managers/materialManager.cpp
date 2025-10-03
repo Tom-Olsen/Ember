@@ -93,15 +93,19 @@ namespace emberEngine
 	// Add/Get/Delete:
 	void MaterialManager::AddMaterial(Material&& material)
 	{
+		std::string name = material.GetName();
 		auto newMaterial = std::make_unique<Material>(std::move(material));
-		if (!s_materials.emplace(newMaterial->GetName(), std::move(newMaterial)).second)
-			LOG_WARN("Material with the name: {} already exists in MaterialManager!", newMaterial->GetName());
+		if (!s_materials.emplace(name, std::move(newMaterial)).second)
+			LOG_WARN("Material with the name: {} already exists in MaterialManager!", name);
 	}
 	Material& MaterialManager::GetMaterial(const std::string& name)
 	{
 		auto it = s_materials.find(name);
 		if (it == s_materials.end())
-			throw std::runtime_error("Material not found: " + name);
+		{
+			LOG_ERROR("Material not found: {}", name);
+			return GetMaterial("errorMaterial");
+		}
 		return *(it->second);
 	}
 	Material* MaterialManager::TryGetMaterial(const std::string& name)
@@ -110,7 +114,7 @@ namespace emberEngine
 		if (it != s_materials.end())
 			return it->second.get();
 		LOG_WARN("Material '{}' not found!", name);
-		return nullptr;
+		return TryGetMaterial("errorMaterial");
 	}
 	void MaterialManager::DeleteMaterial(const std::string& name)
 	{

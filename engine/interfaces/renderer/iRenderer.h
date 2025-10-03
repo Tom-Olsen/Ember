@@ -39,6 +39,7 @@ namespace emberBackendInterface
 
         // Getters:
         virtual uint32_t GetShadowMapResolution() = 0;
+        virtual Uint2 GetSurfaceExtent() = 0;
 
         // Setters:
         virtual void SetIComputeHandle(emberBackendInterface::ICompute* pICompute) = 0;

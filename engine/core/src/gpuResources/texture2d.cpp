@@ -24,7 +24,7 @@ namespace emberEngine
 			case emberCommon::TextureUsage::storage:
 				m_pITexture = std::make_unique<vulkanRendererBackend::StorageTexture2d>(name, vulkanFormat, width, height);
 				break;
-			case emberCommon::TextureUsage::storageAndSample:
+			case emberCommon::TextureUsage::storageSample:
 				m_pITexture = std::make_unique<vulkanRendererBackend::StorageSampleTexture2d>(name, vulkanFormat, width, height);
 				break;
 			case emberCommon::TextureUsage::renderTarget:
@@ -44,7 +44,7 @@ namespace emberEngine
 			case emberCommon::TextureUsage::storage:
 				m_pITexture = std::make_unique<vulkanRendererBackend::StorageTexture2d>(name, vulkanFormat, path);
 				break;
-			case emberCommon::TextureUsage::storageAndSample:
+			case emberCommon::TextureUsage::storageSample:
 				m_pITexture = std::make_unique<vulkanRendererBackend::StorageSampleTexture2d>(name, vulkanFormat, path);
 				break;
 			case emberCommon::TextureUsage::renderTarget:

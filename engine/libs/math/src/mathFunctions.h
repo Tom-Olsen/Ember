@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_mathFunctions_h__
-#define __INCLUDE_GUARD_mathFunctions_h__
+#pragma once
 #include <stdint.h>
 
 
@@ -43,4 +42,3 @@ namespace emberMath
 		T Clamp(T value, T min, T max);
 	}
 }
-#endif // __INCLUDE_GUARD_mathFunctions_h__

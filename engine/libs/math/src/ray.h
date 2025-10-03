@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_ray_h__
-#define __INCLUDE_GUARD_ray_h__
+#pragma once
 #include "float3.h"
 #include <string>
 
@@ -26,7 +25,3 @@ namespace emberMath
 		friend std::ostream& operator<<(std::ostream& os, const Ray& ray);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_ray_h__

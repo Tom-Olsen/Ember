@@ -72,8 +72,7 @@ namespace vulkanRendererBackend
 	void PresentRenderPass::CreateFrameBuffers()
 	{
 		size_t imageCount = Context::GetSwapchain()->GetImages().size();
-		VkExtent2D extent;
-		Context::GetSurface()->GetCurrentExtent(extent);
+		Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
 		m_framebuffers.resize(imageCount);
 
 		for (size_t i = 0; i < imageCount; i++)
@@ -82,8 +81,8 @@ namespace vulkanRendererBackend
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = 1;
 			framebufferInfo.pAttachments = &Context::GetSwapchain()->GetImageViews()[i];
-			framebufferInfo.width = extent.width;
-			framebufferInfo.height = extent.height;
+			framebufferInfo.width = surfaceExtend.x;
+			framebufferInfo.height = surfaceExtend.y;
 			framebufferInfo.layers = 1;
 			vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
 		}

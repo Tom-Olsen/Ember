@@ -17,6 +17,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
 	PostRender::PostRender()
 	{
@@ -29,6 +30,12 @@ namespace vulkanRendererBackend
 	{
 		ResetComputeCalls();
 	}
+
+
+
+	// Movable:
+	PostRender::PostRender(PostRender&& other) noexcept = default;
+	PostRender& PostRender::operator=(PostRender&& other) noexcept = default;
 
 
 

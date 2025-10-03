@@ -1,5 +1,6 @@
 #pragma once
 #include "iBuffer.h"
+#include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
 
@@ -25,7 +26,7 @@ namespace vulkanRendererBackend
 	/// -VmaMemoryUsage				=> prefer host/device, ... <para/>
 	/// -VmaAllocationCreateFlags	=> mapped, host access, ...
 	/// </summary>
-	class Buffer : public emberBackendInterface::IBuffer
+	class VULKAN_RENDERER_API Buffer : public emberBackendInterface::IBuffer
 	{
 	protected: // Members:
 		std::string m_name;
@@ -36,7 +37,7 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Constructor/Destructor:
-		Buffer() = default;
+		Buffer();
 		virtual ~Buffer();
 
 		// Non-copyable:
@@ -44,8 +45,8 @@ namespace vulkanRendererBackend
 		Buffer& operator=(const Buffer&) = delete;
 
 		// Movable:
-		Buffer(Buffer&&) noexcept = default;
-		Buffer& operator=(Buffer&&) noexcept = default;
+		Buffer(Buffer&&) noexcept;
+		Buffer& operator=(Buffer&&) noexcept;
 
 		// Getters:
 		std::string GetName() const override;

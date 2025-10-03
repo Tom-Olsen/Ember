@@ -24,87 +24,84 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}"
 
 
 # ------------------- File Lists --------------------
-# src/*:
-file(GLOB SOURCE_FILES "src/*.*")
-source_group("Source Files" FILES ${SOURCE_FILES})
-
-# src/compute/*:
+# *.* makes sure to only include files and not folders.
+# src/compute/*.*:
 file(GLOB COMPUTE_FILES "src/compute/*.*")
 source_group("Compute" FILES ${COMPUTE_FILES})
 
-# src/context/*:
+# src/context/*.*:
 file(GLOB CONTEXT_FILES "src/context/*.*")
 source_group("Context" FILES ${CONTEXT_FILES})
 
-# src/gpuResourcePools/*:
+# src/gpuResourcePools/*.*:
 file(GLOB GPU_RESOURCE_POOLS_FILES "src/gpuResourcePools/*.*")
 source_group("Gpu Resource Pools" FILES ${GPU_RESOURCE_POOLS_FILES})
 
-# src/gpuResources/*:
+# src/gpuResources/*.*:
 file(GLOB GPU_RESOURCES_FILES "src/gpuResources/*.*")
 source_group("Gpu Resources" FILES ${GPU_RESOURCES_FILES})
 
-# src/gpuResources/buffers/*:
+# src/gpuResources/buffers/*.*:
 file(GLOB BUFFERS_FILES "src/gpuResources/buffers/*.*")
 source_group("Gpu Resources/Buffers" FILES ${BUFFERS_FILES})
 
-# src/gpuResources/buffers/*:
+# src/gpuResources/samplers/*.*:
 file(GLOB SAMPLERS_FILES "src/gpuResources/samplers/*.*")
 source_group("Gpu Resources/Samplers" FILES ${SAMPLERS_FILES})
 
-# src/gpuResources/textures/*:
+# src/gpuResources/textures/*.*:
 file(GLOB TEXTURES_FILES "src/gpuResources/textures/*.*")
 source_group("Gpu Resources/Textures" FILES ${TEXTURES_FILES})
 
-# src/gpuResources/texture1d/*:
+# src/gpuResources/textures/texture1d/*.*:
 file(GLOB TEXTURE_1D_FILES "src/gpuResources/textures/texture1d/*.*")
 source_group("Gpu Resources/Textures/Texture1d" FILES ${TEXTURE_1D_FILES})
 
-# src/gpuResources/texture2d/*:
+# src/gpuResources/textures/texture2d/*.*:
 file(GLOB TEXTURE_2D_FILES "src/gpuResources/textures/texture2d/*.*")
 source_group("Gpu Resources/Textures/Texture2d" FILES ${TEXTURE_2D_FILES})
 
-# src/gpuResources/texture3d/*:
+# src/gpuResources/textures/texture3d/*.*:
 file(GLOB TEXTURE_3D_FILES "src/gpuResources/textures/texture3d/*.*")
 source_group("Gpu Resources/Textures/Texture3d" FILES ${TEXTURE_3D_FILES})
 
-# src/gpuResources/textureCube/*:
+# src/gpuResources/textures/textureCube/*.*:
 file(GLOB TEXTURE_CUBE_FILES "src/gpuResources/textures/textureCube/*.*")
 source_group("Gpu Resources/Textures/TextureCube" FILES ${TEXTURE_CUBE_FILES})
 
-# src/pipelines/*:
+# src/pipelines/*.*:
 file(GLOB PIPELINES_FILES "src/pipelines/*.*")
 source_group("Pipelines" FILES ${PIPELINES_FILES})
 
-# src/pushConstants/*:
+# src/pushConstants/*.*:
 file(GLOB PUSH_CONSTANTS_FILES "src/pushConstants/*.*")
 source_group("Push Constants" FILES ${PUSH_CONSTANTS_FILES})
 
-# src/renderer/*:
+# src/renderer/*.*:
 file(GLOB RENDERER_FILES "src/renderer/*.*")
 source_group("Renderer" FILES ${RENDERER_FILES})
 
-# src/renderPasses/*:
+# src/renderPasses/*.*:
 file(GLOB RENDER_PASSES_FILES "src/renderPasses/*.*")
 source_group("Render Passes" FILES ${RENDER_PASSES_FILES})
 
-# src/types/*:
+# src/types/*.*:
 file(GLOB TYPES_FILES "src/types/*.*")
 source_group("Types" FILES ${TYPES_FILES})
 
-# src/utility/*:
+# src/utility/*.*:
 file(GLOB UTILITY_FILES "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
-# ../../common/*:
+# ../../common/*.*:
 file(GLOB COMMON_INTERFACE_FILES "../../common/*.*")
 source_group("Commen" FILES ${COMMON_INTERFACE_FILES})
 
-# ../../interfaces/renderer/*:
+# ../../interfaces/renderer/*.*:
 file(GLOB RENDERER_INTERFACE_FILES "../../interfaces/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
-# ../../interfaces/window/*:
+# ../../interfaces/window/*.*:
 file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 # ---------------------------------------------------
@@ -113,18 +110,17 @@ source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 
 # ----------------- Create Library ------------------
 add_library(${PROJECT_NAME}
-    ${SOURCE_FILES}
     ${COMPUTE_FILES}
     ${CONTEXT_FILES}
     ${GPU_RESOURCE_POOLS_FILES}
     ${GPU_RESOURCES_FILES}
         ${BUFFERS_FILES}
+        ${SAMPLERS_FILES}
         ${TEXTURES_FILES}
             ${TEXTURE_1D_FILES}
             ${TEXTURE_2D_FILES}
             ${TEXTURE_3D_FILES}
             ${TEXTURE_CUBE_FILES}
-        ${SAMPLERS_FILES}
     ${PIPELINES_FILES}
     ${PUSH_CONSTANTS_FILES}
     ${RENDERER_FILES}
@@ -137,7 +133,6 @@ add_library(${PROJECT_NAME}
 
 # Only expose public files to consumer:
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
     ${CMAKE_CURRENT_SOURCE_DIR}/src/context
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResourcePools

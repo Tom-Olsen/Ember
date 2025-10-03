@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_uint3_h__
-#define __INCLUDE_GUARD_uint3_h__
+#pragma once
 #include <string>
 
 
@@ -62,11 +61,7 @@ namespace emberMath
 		static Uint3 zero;
 		static Uint3 one;
 		static Uint3 right;		// +x = ( 1, 0, 0).
-		static Uint3 up;		// +y = ( 0, 1, 0).
-		static Uint3 forward;	// +z = ( 0, 0, 1).
+		static Uint3 forward;	// +y = ( 0, 1, 0).
+		static Uint3 up;		// +z = ( 0, 0, 1).
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_uint3_h__

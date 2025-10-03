@@ -1,4 +1,22 @@
-#pragma one
+#pragma once
+#include "emberEngine.h"
+// Components:
+#include "camera.h"
+#include "cameraController.h"
+#include "directionalLight.h"
+#include "drawMeshData.h"
+#include "instancedMeshRenderer.h"
+#include "meshRenderer.h"
+#include "meshTester.h"
+#include "pointLight.h"
+#include "postRenderEffects.h"
+#include "profiler.h"
+#include "spinGlobal.h"
+#include "spinLocal.h"
+#include "spotLight.h"
+#include "testInstancedRendering.h"
+#include "transform.h"
+using namespace emberEngine;
 
 
 
@@ -8,8 +26,8 @@ inline Scene* TestScene()
 	// The two test materials are spcifically constructed to replicate this error.
 	// Activate validation layers in VulkanRenderer/vulkanMacros.h to see the error.
 
-	Material* materialA = MaterialManager::GetMaterial("testAMaterial");
-	Material* materialB = MaterialManager::GetMaterial("testBMaterial");
+	Material& materialA = MaterialManager::GetMaterial("testAMaterial");
+	Material& materialB = MaterialManager::GetMaterial("testBMaterial");
 
 	//materialA->PrintBindings();
 	//materialA->PrintUniformBuffers();
@@ -40,7 +58,7 @@ inline Scene* TestScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4::white);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -65,8 +83,7 @@ inline Scene* TestScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(materialA);
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("grass"));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("grass"));
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -78,9 +95,8 @@ inline Scene* TestScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(materialB);
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("brick"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("cubeMap", TextureManager::GetTexture2d("skybox0"));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("brick"));
+		pMeshRenderer->GetShaderProperties().SetTexture("cubeMap", TextureManager::GetTexture("skybox0"));
 
 		pScene->AddGameObject(pGameObject);
 	}

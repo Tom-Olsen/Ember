@@ -1,5 +1,6 @@
 #pragma once
 #include "iCompute.h"
+#include "vulkanRendererExport.h"
 #include <memory>
 #include <vector>
 
@@ -22,7 +23,7 @@ namespace vulkanRendererBackend
 
 
 
-	class PostRender : public emberBackendInterface::ICompute::IPostRender
+	class VULKAN_RENDERER_API PostRender : public emberBackendInterface::ICompute::IPostRender
 	{
 	private: // Members:
 		uint32_t m_callIndex;
@@ -41,8 +42,8 @@ namespace vulkanRendererBackend
 		PostRender& operator=(const PostRender&) = delete;
 
 		// Movable:
-		PostRender(PostRender&& other) noexcept = default;
-		PostRender& operator=(PostRender&& other) noexcept = default;
+		PostRender(PostRender&& other) noexcept;
+		PostRender& operator=(PostRender&& other) noexcept;
 
 		// Workload recording:
 		void RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IShaderProperties* pShaderProperties) override;

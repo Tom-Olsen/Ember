@@ -11,6 +11,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
 	Mesh::Mesh(const std::string& name)
 	{
@@ -21,12 +22,14 @@ namespace vulkanRendererBackend
 
 	}
 
+
+
 	// Movable:
 	Mesh::Mesh(Mesh&& other) noexcept = default;
 	Mesh& Mesh::operator=(Mesh&& other) noexcept = default;
 
 
-	// Public methods:
+
 	// Setters: (copy the vector)
 	void Mesh::SetName(const std::string& name)
 	{

@@ -42,6 +42,11 @@ namespace emberEngine
 	{
 		s_pIRenderer.reset();
 	}
+	void Renderer::WaitDeviceIdle()
+	{
+		s_pIRenderer->WaitDeviceIdle();
+	}
+
 
 
 	// Main render loop:
@@ -265,6 +270,10 @@ namespace emberEngine
 	const uint32_t Renderer::GetShadowMapResolution()
 	{
 		return s_pIRenderer->GetShadowMapResolution();
+	}
+	const Uint2 Renderer::GetSurfaceExtent()
+	{
+		return s_pIRenderer->GetSurfaceExtent();
 	}
 	const Float4x4& Renderer::GetPointLightRotationMatrix(int faceIndex)
 	{

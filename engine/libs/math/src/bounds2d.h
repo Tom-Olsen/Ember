@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_bounds2d_h__
-#define __INCLUDE_GUARD_bounds2d_h__
+#pragma once
 #include "float2.h"
 #include "float3.h"
 #include <array>
@@ -48,7 +47,3 @@ namespace emberMath
 		friend std::ostream& operator<<(std::ostream& os, const Bounds2d& bounds);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_bounds2d_h__

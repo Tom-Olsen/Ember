@@ -129,9 +129,8 @@ namespace vulkanRendererBackend
 		m_deltaTime = deltaTime;
 
 		// Resize Swapchain if needed:
-		VkExtent2D surfaceExtend;
-		Context::GetSurface()->GetCurrentExtent(surfaceExtend);
-		if (m_rebuildSwapchain || windowWidth != surfaceExtend.width || windowHeight != surfaceExtend.height)
+		Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
+		if (m_rebuildSwapchain || windowWidth != surfaceExtend.x || windowHeight != surfaceExtend.y)
 		{
 			m_rebuildSwapchain = false;
 			Context::ResetFrameIndex();
@@ -293,6 +292,10 @@ namespace vulkanRendererBackend
 	uint32_t Renderer::GetShadowMapResolution()
 	{
 		return m_shadowMapResolution;
+	}
+	Uint2 Renderer::GetSurfaceExtent()
+	{
+		return Context::GetSurface()->GetCurrentExtent();
 	}
 	float Renderer::GetDeptBiasConstantFactor()
 	{
@@ -994,13 +997,12 @@ namespace vulkanRendererBackend
 		// Record present commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
-			VkExtent2D currentExtent;
-			Context::GetSurface()->GetCurrentExtent(currentExtent);
+			Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
 
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = (float)currentExtent.width;
-			viewport.height = (float)currentExtent.height;
+			viewport.width = (float)surfaceExtend.x;
+			viewport.height = (float)surfaceExtend.y;
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -1015,7 +1017,7 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = currentExtent;
+			renderPassBeginInfo.renderArea.extent = VkExtent2D(surfaceExtend.x, surfaceExtend.y);
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -1052,8 +1054,7 @@ namespace vulkanRendererBackend
 		// Record present commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
-			VkExtent2D currentExtent;
-			Context::GetSurface()->GetCurrentExtent(currentExtent);
+			Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
 
 			// Render pass info:
 			PresentRenderPass* presentRenderPass = RenderPassManager::GetPresentRenderPass();
@@ -1061,7 +1062,7 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = currentExtent;
+			renderPassBeginInfo.renderArea.extent = VkExtent2D(surfaceExtend.x, surfaceExtend.y);
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);

@@ -9,8 +9,9 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
-	UniformBuffer::UniformBuffer(UniformBufferBlock* pUniformBufferBlock, std::string name)
+	UniformBuffer::UniformBuffer(UniformBufferBlock* pUniformBufferBlock, const std::string& name)
 	{
 		m_pUniformBufferBlock = pUniformBufferBlock;
 		m_size = m_pUniformBufferBlock->size;
@@ -46,7 +47,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Movable:
+	UniformBuffer::UniformBuffer(UniformBuffer&&) noexcept = default;
+	UniformBuffer& UniformBuffer::operator=(UniformBuffer&&) noexcept = default;
+
+
+
 	void UniformBuffer::UpdateBuffer()
 	{
 		memcpy(m_pDeviceData, m_hostData.data(), m_hostData.size());

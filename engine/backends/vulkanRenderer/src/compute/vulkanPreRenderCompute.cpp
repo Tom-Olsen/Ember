@@ -12,6 +12,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
 	PreRender::PreRender()
 	{
@@ -21,6 +22,12 @@ namespace vulkanRendererBackend
 	{
 		ResetComputeCalls();
 	}
+
+
+
+	// Movable:
+	PreRender::PreRender(PreRender&& other) noexcept = default;
+	PreRender& PreRender::operator=(PreRender&& other) noexcept = default;
 
 
 

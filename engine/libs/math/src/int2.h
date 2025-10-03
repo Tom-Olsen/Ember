@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_int2_h__
-#define __INCLUDE_GUARD_int2_h__
+#pragma once
 #include <string>
 
 
@@ -71,7 +70,3 @@ namespace emberMath
 		static Int2 down;	// -y = ( 0,-1).
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_int2_h__

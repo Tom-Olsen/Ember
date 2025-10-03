@@ -4,15 +4,27 @@
 
 namespace vulkanRendererBackend
 {
-	// Virtual Destructor:
+	// Protected method:
+	// Constructor:
 	Texture3d::Texture3d()
 	{
 
 	}
+
+
+
+	// Public method:
+	// Desctructor:
 	Texture3d::~Texture3d()
 	{
 
 	}
+
+
+
+	// Movable:
+	Texture3d::Texture3d(Texture3d&& other) noexcept = default;
+	Texture3d& Texture3d::operator=(Texture3d&& other) noexcept = default;
 
 
 

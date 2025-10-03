@@ -44,7 +44,7 @@ namespace emberEngine
 
 		// Main render loop:
 		static void RenderFrame();
-		void CollectGarbage();
+		static void CollectGarbage();
 
 		// Lightsources:
 		static void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix);
@@ -77,6 +77,7 @@ namespace emberEngine
 
 		// Getters:
 		static const uint32_t GetShadowMapResolution();
+		static const Uint2 GetSurfaceExtent();
 		static const Float4x4& GetPointLightRotationMatrix(int faceIndex);
 
 		// Setters:

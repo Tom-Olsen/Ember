@@ -30,7 +30,7 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Constructor/Destructor:
-		UniformBuffer(UniformBufferBlock* pUniformBufferBlock, std::string name);
+		UniformBuffer(UniformBufferBlock* pUniformBufferBlock, const std::string& name);
 		~UniformBuffer();
 
 		// Non-copyable:
@@ -38,8 +38,8 @@ namespace vulkanRendererBackend
 		UniformBuffer& operator=(const UniformBuffer&) = delete;
 
 		// Movable:
-		UniformBuffer(UniformBuffer&&) noexcept = default;
-		UniformBuffer& operator=(UniformBuffer&&) noexcept = default;
+		UniformBuffer(UniformBuffer&&) noexcept;
+		UniformBuffer& operator=(UniformBuffer&&) noexcept;
 
 		void UpdateBuffer();
 

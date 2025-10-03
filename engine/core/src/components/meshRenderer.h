@@ -28,14 +28,14 @@ namespace emberEngine
 		// Setter:
 		void SetCastShadows(bool castShadows);
 		void SetReceiveShadows(bool receiveShadows);
-		void SetMesh(Mesh* pMesh);
-		void SetMaterial(Material* pMaterial);
+		void SetMesh(Mesh& mesh);
+		void SetMaterial(Material& material);
 
 		// Forward render pass getters:
 		bool GetCastShadows() const;
 		bool GetReceiveShadows() const;
-		Mesh* GetMesh();
-		Material* GetMaterial();
+		Mesh& GetMesh();
+		Material& GetMaterial();
 		ShaderProperties& GetShaderProperties();
 
 		// Overrides:

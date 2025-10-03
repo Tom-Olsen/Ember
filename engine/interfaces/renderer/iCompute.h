@@ -26,15 +26,15 @@ namespace emberBackendInterface
             virtual ~IAsync() = default;
 
             // Dispatch logic:
-            virtual uint16_t CreateComputeSession() = 0;
-            virtual void DispatchComputeSession(uint16_t sessionID, float time, float deltaTime) = 0;
-            virtual bool IsFinished(uint16_t sessionID) = 0;
-            virtual void WaitForFinish(uint16_t sessionID) = 0;
+            virtual uint32_t CreateComputeSession() = 0;
+            virtual void DispatchComputeSession(uint32_t sessionID, float time, float deltaTime) = 0;
+            virtual bool IsFinished(uint32_t sessionID) = 0;
+            virtual void WaitForFinish(uint32_t sessionID) = 0;
 
             // Workload recording:
-            virtual void RecordComputeShader(uint16_t sessionID, IComputeShader* pIComputeShader, IShaderProperties* pIShaderProperties, Uint3 threadCount) = 0;
-            virtual IShaderProperties* RecordComputeShader(uint16_t sessionID, IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
-            virtual void RecordBarrier(uint16_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) = 0;
+            virtual void RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, IShaderProperties* pIShaderProperties, Uint3 threadCount) = 0;
+            virtual IShaderProperties* RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
+            virtual void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) = 0;
         };
 
 

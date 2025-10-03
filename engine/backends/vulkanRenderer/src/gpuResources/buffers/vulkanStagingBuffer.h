@@ -32,7 +32,7 @@ namespace vulkanRendererBackend
 		
 	public: // Methods:
 		// Constructor/Destructor:
-		StagingBuffer(uint64_t size, std::string name);
+		StagingBuffer(uint64_t size, const std::string& name);
 		~StagingBuffer();
 
 		// Non-copyable:
@@ -40,8 +40,8 @@ namespace vulkanRendererBackend
 		StagingBuffer& operator=(const StagingBuffer&) = delete;
 
 		// Movable:
-		StagingBuffer(StagingBuffer&&) noexcept = default;
-		StagingBuffer& operator=(StagingBuffer&&) noexcept = default;
+		StagingBuffer(StagingBuffer&&) noexcept;
+		StagingBuffer& operator=(StagingBuffer&&) noexcept;
 
 		// Getters:
 		void GetData(void* pDst, uint64_t size, uint64_t offset = 0) const;

@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_emberMath_h__
-#define __INCLUDE_GUARD_emberMath_h__
+#pragma once
 #include <stdint.h>
 
 
@@ -8,6 +7,7 @@
 // Basic types:
 #include "int2.h"
 #include "int3.h"
+#include "uint2.h"
 #include "uint3.h"
 #include "float2.h"
 #include "float3.h"
@@ -35,7 +35,3 @@
 
 // Force emberMath namespace everywhere:
 using namespace emberMath;
-
-
-
-#endif // __INCLUDE_GUARD_emberMath_h__

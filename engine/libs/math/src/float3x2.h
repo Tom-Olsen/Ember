@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_float3x2_h__
-#define __INCLUDE_GUARD_float3x2_h__
+#pragma once
 #include "mathConstants.h"
 #include <string>
 
@@ -104,7 +103,3 @@ namespace emberMath
 		static Float3x2 minValue;	// all entries are math::minValue.
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_float3x2_h__

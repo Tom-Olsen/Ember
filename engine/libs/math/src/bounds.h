@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_bounds_h__
-#define __INCLUDE_GUARD_bounds_h__
+#pragma once
 #include "float3.h"
 #include "ray.h"
 #include <array>
@@ -51,7 +50,3 @@ namespace emberMath
 		friend std::ostream& operator<<(std::ostream& os, const Bounds& bounds);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_bounds_h__

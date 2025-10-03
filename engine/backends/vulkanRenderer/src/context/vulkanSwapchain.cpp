@@ -106,7 +106,8 @@ namespace vulkanRendererBackend
 		createInfo.minImageCount = imageCount;
 		createInfo.imageFormat = static_cast<VkFormat>(m_pSurface->GetSurfaceFormat().format);
 		createInfo.imageColorSpace = static_cast<VkColorSpaceKHR>(m_pSurface->GetSurfaceFormat().colorSpace);
-		m_pSurface->GetCurrentExtent(createInfo.imageExtent);
+		Uint2 surfaceExtent = m_pSurface->GetCurrentExtent();
+		createInfo.imageExtent = VkExtent2D(surfaceExtent.x, surfaceExtent.y);
 		createInfo.imageArrayLayers = 1;									// always 1 unless stereoscopic 3D application.
 		createInfo.imageUsage = m_usages;
 		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;			// we assume that only one queue family will access the images for now.

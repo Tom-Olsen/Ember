@@ -1,4 +1,22 @@
-#pragma one
+#pragma once
+#include "emberEngine.h"
+// Components:
+#include "camera.h"
+#include "cameraController.h"
+#include "directionalLight.h"
+#include "drawMeshData.h"
+#include "instancedMeshRenderer.h"
+#include "meshRenderer.h"
+#include "meshTester.h"
+#include "pointLight.h"
+#include "postRenderEffects.h"
+#include "profiler.h"
+#include "spinGlobal.h"
+#include "spinLocal.h"
+#include "spotLight.h"
+#include "testInstancedRendering.h"
+#include "transform.h"
+using namespace emberEngine;
 
 
 
@@ -38,7 +56,7 @@ inline Scene* DefaultScene()
 	//	pDirectionalLight->SetShadowCascadeSplit(1, 0.2f);
 	//	pDirectionalLight->SetShadowCascadeSplit(2, 0.5f);
 	//	pDirectionalLight->SetShadowCascadeSplit(3, 1.0f);
-	//	pDirectionalLight->SetShadowType(Lighting::ShadowType::soft);
+	//	pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
 	//	pGameObject->AddComponent<DirectionalLight>(pDirectionalLight);
 	//
 	//	pScene->AddGameObject(pGameObject);
@@ -53,7 +71,7 @@ inline Scene* DefaultScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4::white);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -63,7 +81,7 @@ inline Scene* DefaultScene()
 		pPointLight->SetNearClip(0.5f);
 		pPointLight->SetFarClip(20.0f);
 		pPointLight->SetDrawFrustum(showLightFrustums);
-		pPointLight->SetShadowType(Lighting::ShadowType::hard);
+		pPointLight->SetShadowType(emberCommon::ShadowType::hard);
 
 		SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 0, 45));
 		pGameObject->AddComponent<SpinGlobal>(pSpinGlobal);
@@ -95,7 +113,7 @@ inline Scene* DefaultScene()
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
-		pSpotLight->SetShadowType(Lighting::ShadowType::hard);
+		pSpotLight->SetShadowType(emberCommon::ShadowType::hard);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -124,7 +142,7 @@ inline Scene* DefaultScene()
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
-		pSpotLight->SetShadowType(Lighting::ShadowType::hard);
+		pSpotLight->SetShadowType(emberCommon::ShadowType::hard);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -153,7 +171,7 @@ inline Scene* DefaultScene()
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
-		pSpotLight->SetShadowType(Lighting::ShadowType::hard);
+		pSpotLight->SetShadowType(emberCommon::ShadowType::hard);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -164,8 +182,7 @@ inline Scene* DefaultScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skybox0"));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("skybox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -179,12 +196,11 @@ inline Scene* DefaultScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("ground0_color"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 10, 0, 0));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
+		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
+		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("ground0_normal"));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(10, 10, 0, 0));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -197,12 +213,11 @@ inline Scene* DefaultScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks0_color"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks0_roughness"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks0_normal"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 2, 0, 0));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks0_color"));
+		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks0_roughness"));
+		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("bricks0_normal"));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(10, 2, 0, 0));
 
 		pScene->AddGameObject(pGameObject);
 	}
@@ -225,12 +240,11 @@ inline Scene* DefaultScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("wood1_color"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("wood1_roughness"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("wood1_normal"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("wood1_color"));
+		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("wood1_roughness"));
+		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("wood1_normal"));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
 
 		SpinLocal* pSpinLocal = new SpinLocal(45.0f);
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
@@ -245,29 +259,28 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks1_color"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks1_roughness"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks1_normal"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks1_color"));
+		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks1_roughness"));
+		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("bricks1_normal"));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
 
 		MeshTester* pMeshTester = new MeshTester(pMeshRenderer);
-		pMeshTester->AddMesh(MeshManager::GetMesh("unitQuad"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("unitCube"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("halfCube"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("cubeSphere"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("disk"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("arcFlatUv"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("arcCurvedUv"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("coneSmooth"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("coneFlat"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("zylinderSmooth"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("zylinderFlat"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("arrowSmooth"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("arrowFlat"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("threeLeg"));
-		pMeshTester->AddMesh(MeshManager::GetMesh("fourLeg"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("unitQuad"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("unitCube"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("halfCube"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("cubeSphere"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("disk"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("arcFlatUv"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("arcCurvedUv"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("coneSmooth"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("coneFlat"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("zylinderSmooth"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("zylinderFlat"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("arrowSmooth"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("arrowFlat"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("threeLeg"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("fourLeg"));
 		pGameObject->AddComponent<MeshTester>(pMeshTester);
 
 		pScene->AddGameObject(pGameObject);
@@ -279,11 +292,10 @@ inline Scene* DefaultScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("zylinderSmooth"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("bricks2_color"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("bricks2_roughness"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("bricks2_normal"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks2_color"));
+		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks2_roughness"));
+		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("bricks2_normal"));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
 
 		//DrawMeshData* drawMeshData = pGameObject->AddComponent<DrawMeshData>();
 
@@ -300,12 +312,11 @@ inline Scene* DefaultScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cubeSphere"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("wood0_color"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("wood0_roughness"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("wood0_normal"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
+		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("wood0_color"));
+		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("wood0_roughness"));
+		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("wood0_normal"));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
 
 		SpinLocal* pSpinLocal = new SpinLocal(45.0f);
 		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
@@ -327,11 +338,10 @@ inline Scene* DefaultScene()
 	//	pInstancedRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
 	//	pInstancedRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 	//	pInstancedRenderer->SetInstanceBuffer(testInstancedRendering->GetInstanceBuffer());
-	//	pInstancedRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-	//	pInstancedRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("concrete0_color"));
-	//	pInstancedRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("concrete0_roughness"));
-	//	pInstancedRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("concrete0_normal"));
-	//	pInstancedRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+	//	pInstancedRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("concrete0_color"));
+	//	pInstancedRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("concrete0_roughness"));
+	//	pInstancedRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("concrete0_normal"));
+	//	pInstancedRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
 	//	
 	//	pScene->AddGameObject(pGameObject);
 	//}
@@ -343,8 +353,7 @@ inline Scene* DefaultScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("transparentMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "diffuseColor", Float4(1.0, 0.0, 0, 0.25f));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4(1.0, 0.0, 0, 0.25f));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 

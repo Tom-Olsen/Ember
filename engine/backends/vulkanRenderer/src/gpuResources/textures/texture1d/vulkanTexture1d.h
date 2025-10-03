@@ -1,5 +1,6 @@
 #pragma once
 #include "vulkanTexture.h"
+#include "vulkanRendererExport.h"
 
 
 
@@ -13,11 +14,14 @@ namespace vulkanRendererBackend
 	/// -ImageCreateFlagBit	=> additional specialisations. <para/>
 	/// -ImageViewType		=> single image, array.
 	/// </summary>
-	class Texture1d : public Texture
+	class VULKAN_RENDERER_API Texture1d : public Texture
 	{
-	public: // Methods:
-		// Constructor/Destructor:
+	protected: // Methods:
+		// Constructor:
 		Texture1d();
+
+	public: // Methods:
+		// Destructor:
 		virtual ~Texture1d();
 
 		// Non-copyable:
@@ -25,8 +29,8 @@ namespace vulkanRendererBackend
 		Texture1d& operator=(const Texture1d&) = delete;
 
 		// Movable:
-		Texture1d(Texture1d&& other) noexcept = default;
-		Texture1d& operator=(Texture1d&& other) noexcept = default;
+		Texture1d(Texture1d&& other) noexcept;
+		Texture1d& operator=(Texture1d&& other) noexcept;
 
 	protected: // Methods:
 		void CreateImage(ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, ImageViewType viewType, const DeviceQueue& queue);

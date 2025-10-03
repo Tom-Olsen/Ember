@@ -58,7 +58,12 @@ namespace vulkanRendererBackend
 				if (descriptorType == DescriptorTypes::uniform_buffer)
 					InitUniformBufferResourceBinding(frameIndex, name, binding);
 				else if (descriptorType == DescriptorTypes::sampler)
-					InitSamplerResourceBinding(frameIndex, name, binding, DefaultGpuResources::GetColorSampler());
+				{// Samplers are 'static'. Correct one gets selected on initialization and can't be changed later.
+					if (name == "colorSampler")
+						InitSamplerResourceBinding(frameIndex, name, binding, DefaultGpuResources::GetColorSampler());
+					else if (name == "shadowSampler")
+						InitSamplerResourceBinding(frameIndex, name, binding, DefaultGpuResources::GetShadowSampler());
+				}
 				else if (descriptorType == DescriptorTypes::sampled_image)
 				{
 					ImageViewType viewType = descriptorBoundResources->sampleViewTypeMap.at(name);
@@ -92,7 +97,6 @@ namespace vulkanRendererBackend
 
 		// Set default values:
 		ShadowRenderPass* pShadowRenderPass = RenderPassManager::GetShadowRenderPass();
-		SetSampler("shadowSampler", DefaultGpuResources::GetShadowSampler());
 		SetTexture("shadowMaps", static_cast<Texture*>(pShadowRenderPass->GetShadowMaps()));
 		SetTexture("normalMap", static_cast<Texture*>(DefaultGpuResources::GetNormalMapSampleTexture2d()));
 		SetValue("SurfaceProperties", "diffuseColor", Float4::white);
@@ -123,14 +127,6 @@ namespace vulkanRendererBackend
 
 
 	// Setters:
-	void ShaderProperties::SetSampler(const std::string& name, Sampler* pSampler)
-	{
-		// If sampler with 'name' doesnt exist, skip:
-		auto it = m_samplerStagingMap.find(name);
-		if (it == m_samplerStagingMap.end())
-			return;
-		it->second = pSampler;
-	}
 	void ShaderProperties::SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture)
 	{
 		// If texture with 'name' doesnt exist, skip:
@@ -394,13 +390,6 @@ namespace vulkanRendererBackend
 	Shader* ShaderProperties::GetShader() const
 	{
 		return m_pShader;
-	}
-	Sampler* ShaderProperties::GetSampler(const std::string& name) const
-	{
-		auto it = m_samplerMaps[Context::GetFrameIndex()].find(name);
-		if (it != m_samplerMaps[Context::GetFrameIndex()].end())
-			return it->second.pSampler;
-		return nullptr;
 	}
 	Texture* ShaderProperties::GetTexture(const std::string& name) const
 	{

@@ -6,8 +6,9 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
-	IndexBuffer::IndexBuffer(uint32_t count, uint32_t elementSize, std::string name)
+	IndexBuffer::IndexBuffer(uint32_t count, uint32_t elementSize, const std::string& name)
 	{
 		m_count = count;
 		m_elementSize = elementSize;
@@ -33,4 +34,10 @@ namespace vulkanRendererBackend
 	{
 
 	}
+
+
+
+	// Movable:
+	IndexBuffer::IndexBuffer(IndexBuffer&&) noexcept = default;
+	IndexBuffer& IndexBuffer::operator=(IndexBuffer&&) noexcept = default;
 }

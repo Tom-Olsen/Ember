@@ -14,6 +14,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Desctructor:
 	StorageTexture2d::StorageTexture2d(const std::string& name, Format format, int width, int height)
 	{
@@ -37,7 +38,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Movable:
+	StorageTexture2d::StorageTexture2d(StorageTexture2d&& other) noexcept = default;
+	StorageTexture2d& StorageTexture2d::operator=(StorageTexture2d&& other) noexcept = default;
+
+
+
 	void StorageTexture2d::SetData(void* data)
 	{
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(StageData(data));

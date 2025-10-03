@@ -4,15 +4,25 @@
 
 namespace vulkanRendererBackend
 {
-	// Constructor/Destructor:
+	// Protected method:
+	// Constructor:
     TextureCube::TextureCube()
 	{
 		m_depth = 1;
 	}
+
+
+
+	// Public method:
+	// Desctructor:
 	TextureCube::~TextureCube()
 	{
 
 	}
+
+	// Movable:
+	TextureCube::TextureCube(TextureCube&& other) noexcept = default;
+	TextureCube& TextureCube::operator=(TextureCube&& other) noexcept = default;
 
 
 

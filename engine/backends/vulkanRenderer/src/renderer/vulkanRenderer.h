@@ -144,6 +144,7 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		uint32_t GetShadowMapResolution() override;
+		Uint2 GetSurfaceExtent() override;
 		float GetDeptBiasConstantFactor();
 		float GetDeptBiasClamp();
 		float GetDeptBiasSlopeFactor();

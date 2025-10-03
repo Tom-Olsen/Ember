@@ -19,6 +19,14 @@ namespace vulkanRendererBackend
 		ComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
 		~ComputeShader();
 
+		// Non-copyable:
+		ComputeShader(const ComputeShader&) = delete;
+		ComputeShader& operator=(const ComputeShader&) = delete;
+
+		// Movable:
+		ComputeShader(ComputeShader&& other) noexcept;
+		ComputeShader& operator=(ComputeShader&& other) noexcept;
+
 		// Getters:
 		Uint3 GetBlockSize() const override;
 		const std::string& GetName() const override;

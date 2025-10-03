@@ -95,7 +95,6 @@ namespace vulkanRendererBackend
 		ShaderProperties& operator=(ShaderProperties&& other) noexcept;
 
 		// Setters:
-		void SetSampler(const std::string& name, Sampler* pSampler);// for internal usage only.
 		void SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture) override;
 		void SetBuffer(const std::string& name, emberBackendInterface::IBuffer* pBuffer) override;
 		
@@ -169,7 +168,6 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		Shader* GetShader() const;
-		Sampler* GetSampler(const std::string& name) const;
 		Texture* GetTexture(const std::string& name) const;
 		
 		// Backend functionality:

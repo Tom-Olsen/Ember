@@ -27,7 +27,7 @@ namespace emberEngine
 
 
 	// Initialization/Cleanup:
-	void DearImGui::Init(void* pSdlWindow, bool enableDockSpace)
+	void DearImGui::Init(bool enableDockSpace)
 	{
 		if (true)
 			s_pIDearImGui = std::make_unique<sdlWindowBackend::SdlDearImGui>(Window::GetInterfaceHandle(), Renderer::GetInterfaceHandle(), enableDockSpace);

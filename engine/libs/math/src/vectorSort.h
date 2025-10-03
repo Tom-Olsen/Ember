@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_vectorSort_h__
-#define __INCLUDE_GUARD_vectorSort_h__
+#pragma once
 #include <algorithm>
 #include <numeric>
 #include <stdexcept>
@@ -49,7 +48,3 @@ namespace emberMath
 		}
 	}
 }
-
-
-
-#endif // __INCLUDE_GUARD_vectorSort_h__

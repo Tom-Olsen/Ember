@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_float4x4_h__
-#define __INCLUDE_GUARD_float4x4_h__
+#pragma once
 #include "mathConstants.h"
 #include "uint3.h"	// needed for default value: rotationOrder = Uint3(1, 0, 2)
 #include <string>
@@ -160,7 +159,3 @@ namespace emberMath
 		static Float4x4 rot315z;	// 315 degrees rotation around z-axis.
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_float4x4_h__

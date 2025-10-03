@@ -14,8 +14,15 @@
 namespace emberEngine
 {
 	// Compute::Async subclass:
+	// Private:
+	emberBackendInterface::ICompute::IAsync* Compute::Async::GetInterfaceHandle()
+	{
+		return m_pIAsync.get();
+	}
+
+	// Public:
 	// Constructor/Destructor:
-	Compute::Async::Async(uint16_t sessionCount)
+	Compute::Async::Async(uint32_t sessionCount)
 	{
 		m_pIAsync = std::make_unique<vulkanRendererBackend::Async>(sessionCount);
 	}
@@ -25,33 +32,33 @@ namespace emberEngine
 	}
 
 	// Dispatch logic:
-	uint16_t Compute::Async::CreateComputeSession()
+	uint32_t Compute::Async::CreateComputeSession()
 	{
 		return m_pIAsync->CreateComputeSession();
 	}
-	void Compute::Async::DispatchComputeSession(uint16_t sessionID)
+	void Compute::Async::DispatchComputeSession(uint32_t sessionID)
 	{
 		m_pIAsync->DispatchComputeSession(sessionID, Time::GetTime(), Time::GetDeltaTime());
 	}
-	bool Compute::Async::IsFinished(uint16_t sessionID)
+	bool Compute::Async::IsFinished(uint32_t sessionID)
 	{
 		return m_pIAsync->IsFinished(sessionID);
 	}
-	void Compute::Async::WaitForFinish(uint16_t sessionID)
+	void Compute::Async::WaitForFinish(uint32_t sessionID)
 	{
 		m_pIAsync->WaitForFinish(sessionID);
 	}
 
 	// Workload recording:
-	void Compute::Async::RecordComputeShader(uint16_t sessionID, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount)
+	void Compute::Async::RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount)
 	{
 		m_pIAsync->RecordComputeShader(sessionID, computeShader.GetInterfaceHandle(), shaderProperties.GetInterfaceHandle(), threadCount);
 	}
-	ShaderProperties Compute::Async::RecordComputeShader(uint16_t sessionID, ComputeShader& computeShader, Uint3 threadCount)
+	ShaderProperties Compute::Async::RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount)
 	{
 		return ShaderProperties(m_pIAsync->RecordComputeShader(sessionID, computeShader.GetInterfaceHandle(), threadCount));
 	}
-	void Compute::Async::RecordBarrier(uint16_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
+	void Compute::Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
 	{
 		m_pIAsync->RecordBarrier(sessionID, srcAccessMask, dstAccessMask);
 	}
@@ -59,6 +66,13 @@ namespace emberEngine
 
 
 	// Compute::Immediate subclass:
+	// Private:
+	emberBackendInterface::ICompute::IImmediate* Compute::Immediate::GetInterfaceHandle()
+	{
+		return m_pIImmediate.get();
+	}
+
+	// Public:
 	// Constructor/Destructor:
 	Compute::Immediate::Immediate()
 	{
@@ -78,6 +92,13 @@ namespace emberEngine
 
 
 	// Compute::PostRender subclass:
+	// Private:
+	emberBackendInterface::ICompute::IPostRender* Compute::PostRender::GetInterfaceHandle()
+	{
+		return m_pIPostRender.get();
+	}
+
+	// Public:
 	// Constructor/Destructor:
 	Compute::PostRender::PostRender()
 	{
@@ -101,6 +122,13 @@ namespace emberEngine
 
 
 	// Compute::PreRender subclass:
+	// Private:
+	emberBackendInterface::ICompute::IPreRender* Compute::PreRender::GetInterfaceHandle()
+	{
+		return m_pIPreRender.get();
+	}
+
+	// Public:
 	// Constructor/Destructor:
 	Compute::PreRender::PreRender()
 	{
@@ -128,11 +156,27 @@ namespace emberEngine
 
 
 	// Compute class:
+	// Static members:
+	std::unique_ptr<emberBackendInterface::ICompute> Compute::s_pICompute;
+	std::unique_ptr<Compute::Async> Compute::s_pAsync;
+	std::unique_ptr<Compute::Immediate> Compute::s_pImmediate;
+	std::unique_ptr<Compute::PostRender> Compute::s_pPostRender;
+	std::unique_ptr<Compute::PreRender> Compute::s_pPreRender;
+
+
+
+	// Private:
+	emberBackendInterface::ICompute* Compute::GetInterfaceHandle()
+	{
+		return s_pICompute.get();
+	}
+
+	// Public:
 	// Initialization/Cleanup:
 	void Compute::Init()
 	{
 		s_pICompute = std::make_unique<vulkanRendererBackend::Compute>();
-		s_pAsync = std::make_unique<Async>(10);
+		s_pAsync = std::make_unique<Async>((uint32_t)10);
 		s_pImmediate = std::make_unique<Immediate>();
 		s_pPostRender = std::make_unique<PostRender>();
 		s_pPreRender = std::make_unique<PreRender>();

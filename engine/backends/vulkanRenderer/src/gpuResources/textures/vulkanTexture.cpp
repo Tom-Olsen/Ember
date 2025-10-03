@@ -72,15 +72,27 @@ namespace vulkanRendererBackend
 
 
 
-	// Constructor/Destructor:
+	// Protected methods:
+	// Constructor:
 	Texture::Texture()
 	{
 
 	}
+
+
+
+	// Public methods:
+	// Destructor:
 	Texture::~Texture()
 	{
 
 	}
+
+
+
+	// Movable:
+	Texture::Texture(Texture&& other) noexcept = default;
+	Texture& Texture::operator=(Texture&& other) noexcept = default;
 
 
 
