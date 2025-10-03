@@ -1,5 +1,6 @@
 #pragma once
 #include "logger.h"
+#include "vulkanContext.h"
 #include <string>
 
 
@@ -18,7 +19,7 @@ if (val != VK_SUCCESS) { \
 #endif
 
 // Feature toggle macros:
-//#define VALIDATION_LAYERS_ACTIVE      // enable/disable vulkan validation layers and vulkanAllocationTracker.
+#define VALIDATION_LAYERS_ACTIVE      // enable/disable vulkan validation layers and vulkanAllocationTracker.
 //#define RESIZEABLE_BAR                // enabled = no staging buffer, disabled = with staging buffer
 
 

@@ -1,5 +1,6 @@
 #include "vmaBuffer.h"
 #include "vk_mem_alloc.h"
+#include "vulkanAllocationTracker.h"
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanMacros.h"
@@ -49,14 +50,14 @@ namespace vulkanRendererBackend
 		VKA(vmaCreateBuffer(Context::GetVmaAllocator(), &vkBufferInfo, &vmaAllocationInfo, &m_buffer, &m_allocation, nullptr));
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::allocationTracker.AddVmaBuffer(this);
+		Context::GetAllocationTracker()->AddVmaBuffer(this);
 		#endif
 	}
 	VmaBuffer::~VmaBuffer()
 	{
 		Cleanup();
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::allocationTracker.RemoveVmaBuffer(this);
+		Context::GetAllocationTracker()->RemoveVmaBuffer(this);
 		#endif
 	}
 

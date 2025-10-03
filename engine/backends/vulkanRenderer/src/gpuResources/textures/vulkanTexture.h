@@ -75,7 +75,7 @@ namespace vulkanRendererBackend
 		uint32_t GetHeight() const override;
 		uint32_t GetDepth() const override;
 		uint32_t GetChannels() const override;
-		const emberCommon::TextureFormat& GetTextureFormat() const override;
+		const emberCommon::TextureFormat GetTextureFormat() const override;
 		void* GetVkImageView() const override;
 		Format GetFormat() const;
 		VmaImage* const GetVmaImage() const;

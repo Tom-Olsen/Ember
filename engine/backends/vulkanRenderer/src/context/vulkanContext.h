@@ -123,7 +123,7 @@ namespace vulkanRendererBackend
 		static const Surface* GetSurface();
 		static const LogicalDevice* GetLogicalDevice();
 		static const MemoryAllocator* GetMemoryAllocator();
-		static const AllocationTracker* GetAllocationTracker();
+		static AllocationTracker* GetAllocationTracker();
 		static const DescriptorPool* GetDescriptorPool();
 		static const Swapchain* GetSwapchain();
 
@@ -175,8 +175,5 @@ namespace vulkanRendererBackend
 		static void SetObjectName(VkEvent event, const std::string& name);
 		static void SetObjectName(VkQueryPool queryPool, const std::string& name);
 		static void SetObjectName(VkSwapchainKHR swapchain, const std::string& name);
-
-	private: // Methods:
-		static void AddDearImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions);
 	};
 }

@@ -1,4 +1,5 @@
 #include "vmaImage.h"
+#include "vulkanAllocationTracker.h"
 #include "vulkanContext.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -70,14 +71,14 @@ namespace vulkanRendererBackend
 		VKA(vkCreateImageView(Context::GetVkDevice(), &viewInfo, nullptr, &m_imageView));
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::allocationTracker.AddVmaImage(this);
+		Context::GetAllocationTracker()->AddVmaImage(this);
 		#endif
 	}
 	VmaImage::~VmaImage()
 	{
 		Cleanup();
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::allocationTracker.RemoveVmaImage(this);
+		Context::GetAllocationTracker()->RemoveVmaImage(this);
 		#endif
 	}
 

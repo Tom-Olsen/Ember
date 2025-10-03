@@ -79,6 +79,8 @@ namespace emberEngine
 		Material testB(forwardOpaqueType, "testBMaterial", opaqueQueue, directoryPath / "testB.vert.spv", directoryPath / "testB.frag.spv");
 		AddMaterial(std::move(testB));
 
+		Print();
+
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("MaterialManager initialized.");
 		#endif

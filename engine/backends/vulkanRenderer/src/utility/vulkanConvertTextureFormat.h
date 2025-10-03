@@ -1,20 +1,21 @@
 #pragma once
 #include "commonTextureFormat.h"
 #include "vulkanFormat.h"
+#include "vulkanRendererExport.h"
 
 
 
 namespace vulkanRendererBackend
 {
-    // Format -> emberCommon::DepthStencilFormat:
-    const emberCommon::DepthStencilFormat& VulkanFormatToDepthStencilFormat(vulkanRendererBackend::Format format);
-    // emberCommon::DepthStencilFormat -> Format:
-    const vulkanRendererBackend::Format DepthStencilFormatToVulkanFormat(const emberCommon::DepthStencilFormat& format);
+    // emberCommon::DepthStencilFormat -> vulkanRendererBackend::Format:
+    [[nodiscard]] vulkanRendererBackend::Format VULKAN_RENDERER_API DepthStencilFormatCommonToVulkan(emberCommon::DepthStencilFormat format);
+    // vulkanRendererBackend::Format -> emberCommon::DepthStencilFormat:
+    [[nodiscard]] emberCommon::DepthStencilFormat DepthStencilFormatVulkanToCommon(vulkanRendererBackend::Format format);
 
 
 
-    // Format -> emberCommon::TextureFormat:
-    const emberCommon::TextureFormat& VulkanFormatToTextureFormat(vulkanRendererBackend::Format format);
-    // emberCommon::TextureFormat -> Format:
-    const vulkanRendererBackend::Format TextureFormatToVulkanFormat(const emberCommon::TextureFormat& format);
+    // emberCommon::TextureFormat -> vulkanRendererBackend::Format:
+    [[nodiscard]] vulkanRendererBackend::Format VULKAN_RENDERER_API TextureFormatCommonToVulkan(emberCommon::TextureFormat format);
+    // vulkanRendererBackend::Format -> emberCommon::TextureFormat:
+    [[nodiscard]] emberCommon::TextureFormat TextureFormatVulkanToCommon(vulkanRendererBackend::Format format);
 }

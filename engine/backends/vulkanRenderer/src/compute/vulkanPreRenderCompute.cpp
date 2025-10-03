@@ -63,7 +63,7 @@ namespace vulkanRendererBackend
 	}
 	void PreRender::RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
 	{
-		ComputeCall computeCall = { m_callIndex, Uint3::zero, nullptr, nullptr, CommonToVulkanAccessMask(srcAccessMask), CommonToVulkanAccessMask(dstAccessMask) };
+		ComputeCall computeCall = { m_callIndex, Uint3::zero, nullptr, nullptr, AccessMaskCommonToVulkan(srcAccessMask), AccessMaskCommonToVulkan(dstAccessMask) };
 		m_staticComputeCalls.push_back(computeCall);
 		m_callIndex++;
 	}

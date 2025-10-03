@@ -29,7 +29,7 @@ namespace vulkanRendererBackend
 	{
 		s_pColorSampler = std::make_unique<ColorSampler>("colorSampler");
 		s_pShadowSampler = std::make_unique<ShadowSampler>("shadowSampler");
-		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, 1, "1x1Dummy");
+		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, sizeof(int), "1x1Dummy");
 		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>("white", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::white);
 		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>("defaultNormalMap", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::up);
         std::array<Float4, 6> whiteFaces = { Float4::white, Float4::white, Float4::white, Float4::white, Float4::white, Float4::white };

@@ -20,9 +20,6 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		Buffer dummyStorageBuffer(1, 1, "dummyStorageBuffer", emberCommon::BufferUsage::storage);
-		AddBuffer(std::move(dummyStorageBuffer));
-
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("BufferManager initialized.");
 		#endif

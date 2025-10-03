@@ -10,7 +10,7 @@ namespace emberEngine
 {
 	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
 	{
-		vulkanRendererBackend::Format vulkanFormat = vulkanRendererBackend::TextureFormatToVulkanFormat(format);
+		vulkanRendererBackend::Format vulkanFormat = vulkanRendererBackend::TextureFormatCommonToVulkan(format);
 		switch (usage)
 		{
 			case emberCommon::TextureUsage::sample:
@@ -21,7 +21,7 @@ namespace emberEngine
 	}
 	TextureCube::TextureCube(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path)
 	{
-		vulkanRendererBackend::Format vulkanFormat = vulkanRendererBackend::TextureFormatToVulkanFormat(format);
+		vulkanRendererBackend::Format vulkanFormat = vulkanRendererBackend::TextureFormatCommonToVulkan(format);
 		switch (usage)
 		{
 			case emberCommon::TextureUsage::sample:

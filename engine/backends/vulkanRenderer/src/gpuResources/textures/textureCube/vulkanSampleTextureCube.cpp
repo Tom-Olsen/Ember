@@ -156,7 +156,6 @@ namespace vulkanRendererBackend
 			RecordGpuCommands(commandBuffer, commandBuffer, pStagingBuffer);
 			SingleTimeCommand::EndCommand(graphicsQueue);
 		}
-		delete pStagingBuffer;
 	}
 	void SampleTextureCube::RecordGpuCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
 	{

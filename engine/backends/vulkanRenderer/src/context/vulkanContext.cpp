@@ -23,8 +23,9 @@
 
 namespace vulkanRendererBackend
 {
-	// Vulkan debug utility object naming function pointer:
-	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
+	// Forward declerations:
+	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;						// vulkan debug utility object naming function pointer.
+	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>&, const char*);	// helper function.
 
 
 
@@ -62,22 +63,32 @@ namespace vulkanRendererBackend
 		m_absoluteFrameIndex = 0;
 		m_enableDockSpace = createInfo.enableDockSpace;
 
-		// Init static utility:
-		uint32_t maxLightsCount = createInfo.maxDirectionalLights + createInfo.maxPositionalLights;
-		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
-		GarbageCollector::Init();
+		// Enumerate available extensions:
+		uint32_t propertiesCount;
+		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, nullptr));
+		std::vector<VkExtensionProperties> properties(propertiesCount);
+		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()));
 
 		// Get instance extensions:
 		std::vector<const char*> instanceExtensions;
 		#if defined(VALIDATION_LAYERS_ACTIVE)
-		if (IsExtensionAvailable(VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
+		if (IsExtensionAvailable(properties, VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
 			instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-		if (IsExtensionAvailable(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME))
+		if (IsExtensionAvailable(properties, VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME))
 			instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 		#endif
+
 		createInfo.pIWindow->AddWindowInstanceExtensions(instanceExtensions);	
+
 		if (createInfo.enableDearImGui)
-			AddDearImGuiInstanceExtensions(instanceExtensions);
+		{
+			if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+				instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+			#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+			if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
+				instanceExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+			#endif
+		}
 		// and more ...
 
 		// Get device extensions:
@@ -108,7 +119,10 @@ namespace vulkanRendererBackend
 		#endif
 
 		// Init static utility:
+		uint32_t maxLightsCount = createInfo.maxDirectionalLights + createInfo.maxPositionalLights;
 		SingleTimeCommand::Init();
+		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
+		GarbageCollector::Init();
 		DefaultGpuResources::Init();
 		PoolManager::Init();
 
@@ -132,9 +146,9 @@ namespace vulkanRendererBackend
 		WaitDeviceIdle();
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
-		SingleTimeCommand::Clear();
 		GarbageCollector::Clear();
 		RenderPassManager::Clear();
+		SingleTimeCommand::Clear();
 	}
 	void Context::RebuildSwapchain()
 	{
@@ -166,7 +180,7 @@ namespace vulkanRendererBackend
 	{
 		return m_pMemoryAllocator.get();
 	}
-	const AllocationTracker* Context::GetAllocationTracker()
+	AllocationTracker* Context::GetAllocationTracker()
 	{
 		return m_pAllocationTracker.get();
 	}
@@ -276,7 +290,7 @@ namespace vulkanRendererBackend
 		nameInfo.objectHandle = objectHandle;
 		nameInfo.pObjectName = name.c_str();
 
-		vkSetDebugUtilsObjectNameEXT(GetVkDevice(), &nameInfo);
+		vkSetDebugUtilsObjectNameEXT(Context::GetVkDevice(), &nameInfo);
 		#endif
 	}
 	void Context::SetObjectName(VkBuffer buffer, const std::string& name)
@@ -377,26 +391,5 @@ namespace vulkanRendererBackend
 			if (strcmp(p.extensionName, extension) == 0)
 				return true;
 		return false;
-	}
-	void Context::AddDearImGuiInstanceExtensions(std::vector<const char*>& instanceExtensions)
-	{
-		// Enumerate available extensions:
-		uint32_t propertiesCount;
-		std::vector<VkExtensionProperties> properties;
-		if (vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, nullptr) != VK_SUCCESS)
-			throw std::runtime_error((std::string)"Instance::AddDearImGuiInstanceExtensions: " + (std::string)"failed to enumerate instance extension properties!");
-
-		properties.resize(propertiesCount);
-		if (vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()) != VK_SUCCESS)
-			throw std::runtime_error((std::string)"Instance::AddDearImGuiInstanceExtensions: " + (std::string)"failed to enumerate instance extension properties!");
-
-		// Enable required extensions:
-		if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
-			instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-
-		#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
-		if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
-			instanceExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-		#endif
 	}
 }

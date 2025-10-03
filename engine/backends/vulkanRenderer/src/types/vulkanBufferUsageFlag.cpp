@@ -5,35 +5,35 @@
 
 namespace vulkanRendererBackend
 {
-    BufferUsageFlag BufferUsageFlags::transfer_src_bit;
-    BufferUsageFlag BufferUsageFlags::transfer_dst_bit;
-    BufferUsageFlag BufferUsageFlags::uniform_texel_buffer_bit;
-    BufferUsageFlag BufferUsageFlags::storage_texel_buffer_bit;
-    BufferUsageFlag BufferUsageFlags::uniform_buffer_bit;
-    BufferUsageFlag BufferUsageFlags::storage_buffer_bit;
-    BufferUsageFlag BufferUsageFlags::index_buffer_bit;
-    BufferUsageFlag BufferUsageFlags::vertex_buffer_bit;
-    BufferUsageFlag BufferUsageFlags::indirect_buffer_bit;
-    BufferUsageFlag BufferUsageFlags::shader_device_address_bit;
-    BufferUsageFlag BufferUsageFlags::video_decode_src_bit_khr;
-    BufferUsageFlag BufferUsageFlags::video_decode_dst_bit_khr;
-    BufferUsageFlag BufferUsageFlags::transform_feedback_buffer_bit_ext;
-    BufferUsageFlag BufferUsageFlags::transform_feedback_counter_buffer_bit_ext;
-    BufferUsageFlag BufferUsageFlags::conditional_rendering_bit_ext;
+    BufferUsageFlag BufferUsageFlags::transfer_src_bit = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    BufferUsageFlag BufferUsageFlags::transfer_dst_bit = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    BufferUsageFlag BufferUsageFlags::uniform_texel_buffer_bit = VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+    BufferUsageFlag BufferUsageFlags::storage_texel_buffer_bit = VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
+    BufferUsageFlag BufferUsageFlags::uniform_buffer_bit = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    BufferUsageFlag BufferUsageFlags::storage_buffer_bit = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    BufferUsageFlag BufferUsageFlags::index_buffer_bit = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+    BufferUsageFlag BufferUsageFlags::vertex_buffer_bit = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    BufferUsageFlag BufferUsageFlags::indirect_buffer_bit = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
+    BufferUsageFlag BufferUsageFlags::shader_device_address_bit = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+    BufferUsageFlag BufferUsageFlags::video_decode_src_bit_khr = VK_BUFFER_USAGE_VIDEO_DECODE_SRC_BIT_KHR;
+    BufferUsageFlag BufferUsageFlags::video_decode_dst_bit_khr = VK_BUFFER_USAGE_VIDEO_DECODE_DST_BIT_KHR;
+    BufferUsageFlag BufferUsageFlags::transform_feedback_buffer_bit_ext = VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_BUFFER_BIT_EXT;
+    BufferUsageFlag BufferUsageFlags::transform_feedback_counter_buffer_bit_ext = VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_COUNTER_BUFFER_BIT_EXT;
+    BufferUsageFlag BufferUsageFlags::conditional_rendering_bit_ext = VK_BUFFER_USAGE_CONDITIONAL_RENDERING_BIT_EXT;
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-    BufferUsageFlag BufferUsageFlags::execution_graph_scratch_bit_amdx;
+    BufferUsageFlag BufferUsageFlags::execution_graph_scratch_bit_amdx = VK_BUFFER_USAGE_EXECUTION_GRAPH_SCRATCH_BIT_AMDX;
     #endif
-    BufferUsageFlag BufferUsageFlags::acceleration_structure_build_input_read_only_bit_khr;
-    BufferUsageFlag BufferUsageFlags::acceleration_structure_storage_bit_khr;
-    BufferUsageFlag BufferUsageFlags::shader_binding_table_bit_khr;
-    BufferUsageFlag BufferUsageFlags::video_encode_dst_bit_khr;
-    BufferUsageFlag BufferUsageFlags::video_encode_src_bit_khr;
-    BufferUsageFlag BufferUsageFlags::sampler_descriptor_buffer_bit_ext;
-    BufferUsageFlag BufferUsageFlags::resource_descriptor_buffer_bit_ext;
-    BufferUsageFlag BufferUsageFlags::push_descriptors_descriptor_buffer_bit_ext;
-    BufferUsageFlag BufferUsageFlags::micromap_build_input_read_only_bit_ext;
-    BufferUsageFlag BufferUsageFlags::micromap_storage_bit_ext;
-    BufferUsageFlag BufferUsageFlags::flag_bits_max_enum;
+    BufferUsageFlag BufferUsageFlags::acceleration_structure_build_input_read_only_bit_khr = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+    BufferUsageFlag BufferUsageFlags::acceleration_structure_storage_bit_khr = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR;
+    BufferUsageFlag BufferUsageFlags::shader_binding_table_bit_khr = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR;
+    BufferUsageFlag BufferUsageFlags::video_encode_dst_bit_khr = VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR;
+    BufferUsageFlag BufferUsageFlags::video_encode_src_bit_khr = VK_BUFFER_USAGE_VIDEO_ENCODE_SRC_BIT_KHR;
+    BufferUsageFlag BufferUsageFlags::sampler_descriptor_buffer_bit_ext = VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT;
+    BufferUsageFlag BufferUsageFlags::resource_descriptor_buffer_bit_ext = VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT;
+    BufferUsageFlag BufferUsageFlags::push_descriptors_descriptor_buffer_bit_ext = VK_BUFFER_USAGE_PUSH_DESCRIPTORS_DESCRIPTOR_BUFFER_BIT_EXT;
+    BufferUsageFlag BufferUsageFlags::micromap_build_input_read_only_bit_ext = VK_BUFFER_USAGE_MICROMAP_BUILD_INPUT_READ_ONLY_BIT_EXT;
+    BufferUsageFlag BufferUsageFlags::micromap_storage_bit_ext = VK_BUFFER_USAGE_MICROMAP_STORAGE_BIT_EXT;
+    BufferUsageFlag BufferUsageFlags::flag_bits_max_enum = VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM;
 
     std::string BufferUsageFlags::ToString(BufferUsageFlag bufferUsageFlag)
     {

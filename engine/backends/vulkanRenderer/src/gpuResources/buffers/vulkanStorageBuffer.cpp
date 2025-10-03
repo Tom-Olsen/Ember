@@ -1,6 +1,7 @@
 #include "vulkanStorageBuffer.h"
 #include "vmaBuffer.h"
 #include "vulkanMacros.h"
+#include <string>
 #include <vulkan/vulkan.h>
 
 
@@ -11,18 +12,9 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize, const std::string& name)
 	{
-		// NOTE:
-		// Storage buffers must follow std430 layout alignment rules.
-		// General abstraction not implemented yet. Therefore, if you use anything but:
-		// int/float/float2/float3/float4/float4x4 you need to add alignment logic here:
-		if (elementSize == 3 * sizeof(float) || elementSize == 4 * sizeof(float))
-			elementSize = 4 * sizeof(float);
-		else
-			throw std::runtime_error("StorageBuffer '" + name + "' uses yet unsuported elementSize!");
-
 		m_name = name;
 		m_count = count;
-		m_elementSize = elementSize;
+		m_elementSize = Std430Alignment(elementSize);
 		m_size = m_count * m_elementSize;
 
 		// Create buffer:
@@ -50,4 +42,22 @@ namespace vulkanRendererBackend
 	// Movable:
 	StorageBuffer::StorageBuffer(StorageBuffer&&) noexcept = default;
 	StorageBuffer& StorageBuffer::operator=(StorageBuffer&&) noexcept = default;
+
+
+
+	// Private methods:
+	uint32_t StorageBuffer::Std430Alignment(uint32_t elementSize)
+	{
+	    switch (elementSize)
+	    {
+	        case sizeof(int):         return sizeof(int); // also works for float as int and float both have size 4.
+	        case 2 * sizeof(float):   return 2 * sizeof(float);
+	        case 3 * sizeof(float):   return 4 * sizeof(float);
+	        case 4 * sizeof(float):   return 4 * sizeof(float);
+	        case 16 * sizeof(float):  return 16 * sizeof(float);
+	        default: 
+	            throw std::runtime_error("StorageBuffer '" + m_name + "' uses unsupported elementSize '" + std::to_string(elementSize) + "' in std430 layout!");
+				return 0;
+	    }
+	}
 }

@@ -172,7 +172,7 @@ namespace vulkanRendererBackend
 			return;
 		}
 		
-		ComputeCall computeCall = { 0, Uint3::zero, nullptr, nullptr, CommonToVulkanAccessMask(srcAccessMask), CommonToVulkanAccessMask(dstAccessMask) };
+		ComputeCall computeCall = { 0, Uint3::zero, nullptr, nullptr, AccessMaskCommonToVulkan(srcAccessMask), AccessMaskCommonToVulkan(dstAccessMask) };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
 
