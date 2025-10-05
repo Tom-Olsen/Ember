@@ -88,6 +88,7 @@ namespace emberEngine
 	void MaterialManager::Clear()
 	{
 		s_materials.clear();
+		s_isInitialized = false;
 	}
 
 

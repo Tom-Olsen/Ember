@@ -34,6 +34,7 @@ namespace vulkanRendererBackend
 		s_pPresentRenderPass.reset();
 		s_pForwardRenderPass.reset();
 		s_pShadowRenderPass.reset();
+		s_isInitialized = false;
 	}
 	void RenderPassManager::RecreateRenderPasses()
 	{

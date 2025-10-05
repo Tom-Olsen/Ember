@@ -63,8 +63,6 @@ namespace vulkanRendererBackend
 			m_commandPools.emplace_back(emberTaskSystem::TaskSystem::GetCoreCount(), Context::GetLogicalDevice()->GetGraphicsQueue());
 
 		// Shadow/Light system:
-		m_pShadowMaterial = std::make_unique<Material>(m_shadowMapResolution);
-		m_shadowPipelineLayout = m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
 		m_depthBiasConstantFactor = 0.0f;
 		m_depthBiasClamp = 0.0f;
 		m_depthBiasSlopeFactor = 1.0f;
@@ -75,10 +73,12 @@ namespace vulkanRendererBackend
 		m_shadowMapResolution = createInfo.shadowMapResolution;
 		m_directionalLights.resize(m_maxDirectionalLights);
 		m_positionalLights.resize(m_maxPositionalLights);
+		m_pShadowMaterial = std::make_unique<Material>(m_shadowMapResolution);
+		m_shadowPipelineLayout = m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
 
 		// Present render pass caching:
 		m_pPresentMesh = std::unique_ptr<Mesh>(CreateFullScreenRenderQuad());
-		m_pPresentMaterial = std::make_unique<Material>(emberCommon::MaterialType::forwardOpaque, "presentMaterial", emberCommon::RenderQueue::opaque, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
+		m_pPresentMaterial = std::make_unique<Material>(emberCommon::MaterialType::present, "presentMaterial", emberCommon::RenderQueue::opaque, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
 		m_pPresentShaderProperties = std::make_unique<ShaderProperties>((Shader*)m_pPresentMaterial.get());
 		m_presentPipeline = m_pPresentMaterial->GetPipeline()->GetVkPipeline();
 		m_presentPipelineLayout = m_pPresentMaterial->GetPipeline()->GetVkPipelineLayout();
@@ -572,7 +572,7 @@ namespace vulkanRendererBackend
 				}
 			}
 
-			// Release memory from compute shaders to vertex shaders:
+			// Release memory from pre render compute shaders to vertex shaders:
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
 				memoryBarrier.srcStageMask = PipelineStages::computeShader;
@@ -772,7 +772,7 @@ namespace vulkanRendererBackend
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
-			// Release memory from vertex shaders to compute shaders:
+			// Release memory from vertex shaders to post render compute shaders:
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
 				memoryBarrier.srcStageMask = PipelineStages::vertexShader;
@@ -1086,7 +1086,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_acquireSemaphores[Context::GetFrameIndex()];
-		waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
+		waitSemaphoreInfo.stageMask = PipelineStages::topOfPipe;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1127,7 +1127,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[Context::GetFrameIndex()];
-		signalSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest;
+		signalSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest | PipelineStages::lateFragmentTest;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -1150,7 +1150,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[Context::GetFrameIndex()];
-		waitSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest;
+		waitSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest | PipelineStages::lateFragmentTest;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1159,7 +1159,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[Context::GetFrameIndex()];
-		signalSemaphoreInfo.stageMask = PipelineStages::computeShader;
+		signalSemaphoreInfo.stageMask = PipelineStages::colorAttachmentOutput;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -1288,7 +1288,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_postRenderToPresentSemaphores[Context::GetFrameIndex()];
-		waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
+		waitSemaphoreInfo.stageMask = PipelineStages::colorAttachmentOutput;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1297,7 +1297,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_releaseSemaphores[Context::GetFrameIndex()];
-		signalSemaphoreInfo.stageMask = PipelineStages::colorAttachmentOutput;
+		signalSemaphoreInfo.stageMask = PipelineStages::bottomOfPipe;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };

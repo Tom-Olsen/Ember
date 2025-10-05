@@ -95,7 +95,7 @@ namespace vulkanRendererBackend
 		std::vector<const char*> deviceExtensions;
 		deviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		// These extensions are integrated in Vulkan 1.2 as features, but ImGui relies on them as an extensions => Validation Layer warnings.
-		deviceExtensions.emplace_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
+		deviceExtensions.emplace_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);	// Ember::ToDo: implement this properly so the warnings vanish.
 		deviceExtensions.emplace_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
 		// and more ...
 
@@ -139,16 +139,13 @@ namespace vulkanRendererBackend
 	}
 	void Context::Clear()
 	{
-		if (!s_isInitialized)
-			return;
-		s_isInitialized = false;
-
 		WaitDeviceIdle();
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		GarbageCollector::Clear();
 		RenderPassManager::Clear();
 		SingleTimeCommand::Clear();
+		s_isInitialized = false;
 	}
 	void Context::RebuildSwapchain()
 	{

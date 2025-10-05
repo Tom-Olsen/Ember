@@ -21,6 +21,7 @@ namespace vulkanRendererBackend
 	void PoolManager::Clear()
 	{
 		s_shaderPropertiesPoolMap.clear();
+		s_isInitialized = false;
 	}
 
 

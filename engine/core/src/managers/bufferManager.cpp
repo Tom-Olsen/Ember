@@ -27,6 +27,7 @@ namespace emberEngine
 	void BufferManager::Clear()
 	{
 		s_buffers.clear();
+		s_isInitialized = false;
 	}
 
 

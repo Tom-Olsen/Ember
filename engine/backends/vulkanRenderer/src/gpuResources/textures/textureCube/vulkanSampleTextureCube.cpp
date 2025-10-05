@@ -59,7 +59,7 @@ namespace vulkanRendererBackend
 		int channels = GetChannelCount(format);
 		for (size_t i = 0; i < filePaths.size(); i++)
 		{
-			emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageFile(filePaths[i], channels);
+			emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageFile(filePaths[i], channels, false);
 			if (i == 0)
 			{
 				width = imageAsset.width;
@@ -111,15 +111,6 @@ namespace vulkanRendererBackend
 		m_channels = GetChannelCount(format);
 		m_format = format;
 		m_descriptorType = DescriptorTypes::sampled_image;
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTextureCube " + m_name);
-	}
-
-	StagingBuffer* SampleTextureCube::StageData(void* data)
-	{
-		// Upload: data -> pStagingBuffer
-		uint64_t bufferSize = 6 * m_channels * m_width * m_height * BytesPerChannel(m_format);
-		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
-		pStagingBuffer->SetData(data, bufferSize);
 
 		// Define subresource range:
 		ImageSubresourceRange subresourceRange;
@@ -137,6 +128,15 @@ namespace vulkanRendererBackend
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTextureCube " + m_name);
+	}
+
+	StagingBuffer* SampleTextureCube::StageData(void* data)
+	{
+		// Upload: data -> pStagingBuffer
+		uint64_t bufferSize = 6 * m_channels * m_width * m_height * BytesPerChannel(m_format);
+		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
+		pStagingBuffer->SetData(data, bufferSize);
 		return pStagingBuffer;
 	}
 	void SampleTextureCube::Upload(StagingBuffer* pStagingBuffer)

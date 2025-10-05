@@ -49,6 +49,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
 # EmberLogger:
 if (NOT TARGET EmberLogger)
+    set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/logger" EmberLogger)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)

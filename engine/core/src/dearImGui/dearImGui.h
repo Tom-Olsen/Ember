@@ -28,6 +28,7 @@ namespace emberEngine
 		friend class Renderer;
 
 	private: // Members:
+		static bool s_isInitialized;
 		static std::unique_ptr<emberBackendInterface::IDearImGui> s_pIDearImGui;
 		static emberBackendInterface::IDearImGui* GetInterfaceHandle();
 

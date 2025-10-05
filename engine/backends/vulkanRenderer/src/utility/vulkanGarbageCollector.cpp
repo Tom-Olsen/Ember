@@ -25,6 +25,7 @@ namespace vulkanRendererBackend
         for (const GarbageEntry& entry : s_garbageQueue)
             entry.collectGarbageCallback();
         s_garbageQueue.clear();
+        s_isInitialized = false;
     }
 
 

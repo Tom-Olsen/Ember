@@ -49,7 +49,7 @@ namespace emberEngine
 	{
 		return m_pITexture->GetChannels();
 	}
-	const emberCommon::TextureFormat& Texture::GetFormat() const
+	const emberCommon::TextureFormat Texture::GetFormat() const
 	{
 		return m_pITexture->GetTextureFormat();
 	}

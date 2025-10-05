@@ -16,6 +16,7 @@
 namespace emberEngine
 {
 	// Static members:
+	bool Renderer::s_isInitialized = false;
 	std::unique_ptr<emberBackendInterface::IRenderer> Renderer::s_pIRenderer;
 	std::array<Float4x4, 6> Renderer::s_pointLightRotationMatrices;
 	emberBackendInterface::IRenderer* Renderer::GetInterfaceHandle()
@@ -29,6 +30,10 @@ namespace emberEngine
 	// Initialization/Cleanup:
 	void Renderer::Init(const emberCommon::RendererCreateInfo& createInfo)
 	{
+		if (s_isInitialized)
+			return;
+		s_isInitialized = true;
+
 		s_pointLightRotationMatrices[0] = Float4x4::identity;
 		s_pointLightRotationMatrices[1] = Float4x4::RotateY( math::pi2);
 		s_pointLightRotationMatrices[2] = Float4x4::RotateY( math::pi );
@@ -41,6 +46,7 @@ namespace emberEngine
 	void Renderer::Clear()
 	{
 		s_pIRenderer.reset();
+		s_isInitialized = false;
 	}
 	void Renderer::WaitDeviceIdle()
 	{

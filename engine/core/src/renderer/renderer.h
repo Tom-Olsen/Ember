@@ -32,6 +32,7 @@ namespace emberEngine
 		friend class DearImGui;
 
 	private: // Members:
+		static bool s_isInitialized;
 		static std::unique_ptr<emberBackendInterface::IRenderer> s_pIRenderer;
 		static emberBackendInterface::IRenderer* GetInterfaceHandle();
 		static std::array<Float4x4, 6> s_pointLightRotationMatrices;

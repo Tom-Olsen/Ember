@@ -64,14 +64,6 @@ namespace vulkanRendererBackend
 		m_channels = GetChannelCount(format);
 		m_format = format;
 		m_descriptorType = DescriptorTypes::storage_image;
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), "StorageTexture2d " + m_name);
-	}
-	StagingBuffer* StorageTexture2d::StageData(void* data)
-	{
-		// Upload: data -> pStagingBuffer
-		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(m_format);
-		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
-		pStagingBuffer->SetData(data, bufferSize);
 
 		// Define subresource range:
 		ImageSubresourceRange subresourceRange;
@@ -89,6 +81,14 @@ namespace vulkanRendererBackend
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
+		NAME_VK_IMAGE(m_pImage->GetVkImage(), "StorageTexture2d " + m_name);
+	}
+	StagingBuffer* StorageTexture2d::StageData(void* data)
+	{
+		// Upload: data -> pStagingBuffer
+		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(m_format);
+		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
+		pStagingBuffer->SetData(data, bufferSize);
 		return pStagingBuffer;
 	}
 	void StorageTexture2d::Upload(StagingBuffer* pStagingBuffer)

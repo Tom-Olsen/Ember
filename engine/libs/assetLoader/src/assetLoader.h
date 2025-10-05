@@ -44,7 +44,7 @@ namespace emberAssetLoader
     // desiredChannels = 4, imageChannels == 2: use R as gray in RGB, set A=B
     // desiredChannels = 4, imageChannels == 3: copy RGB, set A=255
     // desiredChannels = 4, imageChannels == 4: copy
-    Image LoadImageFile(const std::filesystem::path& path, int desiredChannels = 0);
+    Image LoadImageFile(const std::filesystem::path& path, int desiredChannels = 0, bool flipImage = true);
 
     Mesh LoadMeshCsv(const std::filesystem::path& path);
 }

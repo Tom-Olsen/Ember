@@ -24,7 +24,9 @@ namespace emberLogger
 	}
 	void Logger::Clear()
 	{
-
+		spdlog::drop_all();
+		s_coreLogger.reset();
+		s_initialized = false;
 	}
 
 

@@ -47,6 +47,7 @@ namespace emberEngine
 	void ComputeShaderManager::Clear()
 	{
 		s_computeShaders.clear();
+		s_isInitialized = false;
 	}
 
 

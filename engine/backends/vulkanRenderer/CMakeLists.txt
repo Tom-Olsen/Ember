@@ -9,7 +9,7 @@ project(vulkanRendererBackend)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
 
 # Static vs Shared library option:
-option(BUILD_SHARED_LIBS "Build ${PROJECT_NAME} as a shared library" ON) # default ON
+option(VULKAN_RENDERER_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
@@ -109,27 +109,51 @@ source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 
 
 # ----------------- Create Library ------------------
-add_library(${PROJECT_NAME}
-    ${COMPUTE_FILES}
-    ${CONTEXT_FILES}
-    ${GPU_RESOURCE_POOLS_FILES}
-    ${GPU_RESOURCES_FILES}
-        ${BUFFERS_FILES}
-        ${SAMPLERS_FILES}
-        ${TEXTURES_FILES}
-            ${TEXTURE_1D_FILES}
-            ${TEXTURE_2D_FILES}
-            ${TEXTURE_3D_FILES}
-            ${TEXTURE_CUBE_FILES}
-    ${PIPELINES_FILES}
-    ${PUSH_CONSTANTS_FILES}
-    ${RENDERER_FILES}
-    ${RENDER_PASSES_FILES}
-    ${TYPES_FILES}
-    ${UTILITY_FILES}
-    ${COMMON_INTERFACE_FILES}
-    ${RENDERER_INTERFACE_FILES}
-    ${WINDOW_INTERFACE_FILES})
+if (VULKAN_RENDERER_BACKEND_BUILD_SHARED)
+    add_library(${PROJECT_NAME} SHARED
+        ${COMPUTE_FILES}
+        ${CONTEXT_FILES}
+        ${GPU_RESOURCE_POOLS_FILES}
+        ${GPU_RESOURCES_FILES}
+            ${BUFFERS_FILES}
+            ${SAMPLERS_FILES}
+            ${TEXTURES_FILES}
+                ${TEXTURE_1D_FILES}
+                ${TEXTURE_2D_FILES}
+                ${TEXTURE_3D_FILES}
+                ${TEXTURE_CUBE_FILES}
+        ${PIPELINES_FILES}
+        ${PUSH_CONSTANTS_FILES}
+        ${RENDERER_FILES}
+        ${RENDER_PASSES_FILES}
+        ${TYPES_FILES}
+        ${UTILITY_FILES}
+        ${COMMON_INTERFACE_FILES}
+        ${RENDERER_INTERFACE_FILES}
+        ${WINDOW_INTERFACE_FILES})
+else()
+    add_library(${PROJECT_NAME} STATIC
+        ${COMPUTE_FILES}
+        ${CONTEXT_FILES}
+        ${GPU_RESOURCE_POOLS_FILES}
+        ${GPU_RESOURCES_FILES}
+            ${BUFFERS_FILES}
+            ${SAMPLERS_FILES}
+            ${TEXTURES_FILES}
+                ${TEXTURE_1D_FILES}
+                ${TEXTURE_2D_FILES}
+                ${TEXTURE_3D_FILES}
+                ${TEXTURE_CUBE_FILES}
+        ${PIPELINES_FILES}
+        ${PUSH_CONSTANTS_FILES}
+        ${RENDERER_FILES}
+        ${RENDER_PASSES_FILES}
+        ${TYPES_FILES}
+        ${UTILITY_FILES}
+        ${COMMON_INTERFACE_FILES}
+        ${RENDERER_INTERFACE_FILES}
+        ${WINDOW_INTERFACE_FILES})
+endif()
 
 # Only expose public files to consumer:
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -163,10 +187,10 @@ get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" AB
 target_compile_definitions(${PROJECT_NAME} PUBLIC VULKAN_LIBRARY_ROOT_PATH="${VULKAN_LIBRARY_ROOT_PATH}")
 
 # Library compilation logic:
-if(BUILD_SHARED_LIBS)
+if(VULKAN_RENDERER_BACKEND_BUILD_SHARED)
     target_compile_definitions(${PROJECT_NAME} PRIVATE VULKAN_RENDERER_BACKEND_EXPORTS)
 else()
-    target_compile_definitions(${PROJECT_NAME} PRIVATE VULKAN_RENDERER_BACKEND_STATIC)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC VULKAN_RENDERER_BACKEND_STATIC)
 endif()
 # ---------------------------------------------------
 
@@ -181,6 +205,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EmberAssetLoader)
 
 # EmberLogger:
 if (NOT TARGET EmberLogger)
+    set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/logger" EmberLogger)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)

@@ -31,6 +31,7 @@ namespace emberEngine
 		friend class Application;
 
 	private: // Members:
+		static bool s_isInitialized;
 		static std::unique_ptr<emberBackendInterface::IWindow> s_pIWindow;
 		static emberBackendInterface::IWindow* GetInterfaceHandle();
 

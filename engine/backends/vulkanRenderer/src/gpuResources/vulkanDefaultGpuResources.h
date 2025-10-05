@@ -18,6 +18,7 @@ namespace vulkanRendererBackend
     class DefaultGpuResources
     {
     private: // Members:
+        static bool s_isInitialized;
         static std::unique_ptr<Sampler> s_pColorSampler;
         static std::unique_ptr<Sampler> s_pShadowSampler;
         static std::unique_ptr<StorageBuffer> s_pDefaultStorageBuffer;

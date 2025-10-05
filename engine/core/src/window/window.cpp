@@ -11,6 +11,7 @@
 namespace emberEngine
 {
 	// Static members:
+	bool Window::s_isInitialized = false;
 	std::unique_ptr<emberBackendInterface::IWindow> Window::s_pIWindow;
 	emberBackendInterface::IWindow* Window::GetInterfaceHandle()
 	{
@@ -22,6 +23,10 @@ namespace emberEngine
 	// Initialization/Cleanup:
 	void Window::Init(int windowWidth, int windowHeight)
 	{
+		if (s_isInitialized)
+			return;
+		s_isInitialized = true;
+
 		if (true)
 			s_pIWindow = std::make_unique<sdlWindowBackend::SdlWindow>(windowWidth, windowHeight);
 		else
@@ -34,6 +39,7 @@ namespace emberEngine
 	void Window::Clear()
 	{
 		s_pIWindow.reset();
+		s_isInitialized = false;
 	}
 
 

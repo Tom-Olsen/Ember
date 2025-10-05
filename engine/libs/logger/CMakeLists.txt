@@ -4,20 +4,22 @@
 
 
 # ------------------- Project Setup ------------------
-# Choose SHARED (.dll) or STATIC (.lib) library (currently only static supported):
-set(PROJECT_TYPE STATIC)
-
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
 project(EmberLogger)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
+
+# Static vs Shared library option:
+option(EMBER_LOGGER_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" OFF) # default = static
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Output directory:
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "lib/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib STATIC ...) => .a .lib
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "lib/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib SHARED ...) => .so .dylib .dll
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib STATIC ...) => .a .lib
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib SHARED ...) => .so .dylib .dll
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directors for add_executable(MyExe ...) 
 # ---------------------------------------------------
 
 
@@ -31,7 +33,11 @@ source_group("Source Files" FILES ${SRC_FILES})
 
 
 # ----------------- Create Library ------------------
-add_library(${PROJECT_NAME} ${PROJECT_TYPE} ${SRC_FILES})
+if (EMBER_LOGGER_BUILD_SHARED)
+    add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
+else()
+    add_library(${PROJECT_NAME} STATIC ${SRC_FILES})
+endif()
 
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -39,6 +45,17 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/sr
 # Enable utf-8 encoding for microsoft visual studio (needed for spdlog):
 if (MSVC)
     target_compile_options(${PROJECT_NAME} PUBLIC /utf-8)
+endif()
+# ---------------------------------------------------
+
+
+
+# ---------------------- Macros ---------------------
+# Library compilation logic:
+if (EMBER_LOGGER_BUILD_SHARED)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LOGGER_EXPORTS)
+else()
+    target_compile_definitions(${PROJECT_NAME} PUBLIC LOGGER_STATIC)
 endif()
 # ---------------------------------------------------
 

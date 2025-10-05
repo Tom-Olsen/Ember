@@ -12,6 +12,7 @@
 namespace vulkanRendererBackend
 {
 	// Static members:
+	bool SingleTimeCommand::s_isInitialized = false;
 	VkCommandPool SingleTimeCommand::s_graphicsPool;
 	VkCommandPool SingleTimeCommand::s_presentPool;
 	VkCommandPool SingleTimeCommand::s_computePool;
@@ -35,6 +36,10 @@ namespace vulkanRendererBackend
 	// Initialization/Cleanup:
 	void SingleTimeCommand::Init()
 	{
+		if (s_isInitialized)
+			return;
+		s_isInitialized = true;
+
 		s_graphicsDeviceQueue = Context::GetLogicalDevice()->GetGraphicsQueue();
 		s_presentDeviceQueue = Context::GetLogicalDevice()->GetPresentQueue();
 		s_computeDeviceQueue = Context::GetLogicalDevice()->GetComputeQueue();
@@ -104,6 +109,8 @@ namespace vulkanRendererBackend
 
 		// Destroy semaphore:
 		vkDestroySemaphore(Context::GetVkDevice(), s_semaphore, nullptr);
+
+		s_isInitialized = false;
 	}
 
 

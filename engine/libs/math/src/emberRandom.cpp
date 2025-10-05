@@ -17,16 +17,16 @@ namespace emberMath
 		// Initialization/Clear:
 		void Random::Init()
 		{
-			if (!s_isInitialized)
-			{
-				s_isInitialized = true;
-				s_seed = static_cast<uint32_t>(std::random_device{}());
-				s_mersenneTwister.seed(s_seed);
-			}
+			if (s_isInitialized)
+				return;
+			s_isInitialized = true;
+
+			s_seed = static_cast<uint32_t>(std::random_device{}());
+			s_mersenneTwister.seed(s_seed);
 		}
 		void Random::Clear()
 		{
-
+			s_isInitialized = false;
 		}
 
 		// Seed management:

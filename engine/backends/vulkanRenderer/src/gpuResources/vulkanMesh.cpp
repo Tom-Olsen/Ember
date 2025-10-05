@@ -200,14 +200,6 @@ namespace vulkanRendererBackend
 	}
 	void Mesh::RegisterUpdate()
 	{
-		if (m_positions.size() != m_normals.size()
-			|| m_positions.size() != m_tangents.size()
-			|| m_positions.size() != m_colors.size()
-			|| m_positions.size() != m_uvs.size())
-		{
-			LOG_ERROR("Mesh::RegisterUpdate: dimensions of modified vectors of mesh '{}' do not match!", m_name);
-			return;
-		}
 		m_vertexCount = m_positions.size();
 		m_verticesUpdated = true;
 	}

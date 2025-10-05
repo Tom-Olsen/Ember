@@ -19,7 +19,7 @@ namespace emberAssetLoader
 
 
     // Loaders:
-	Image LoadImageFile(const std::filesystem::path& path, int desiredChannels)
+	Image LoadImageFile(const std::filesystem::path& path, int desiredChannels, bool flipImage)
 	{
 		// Error handling:
 		if (!std::filesystem::exists(path))
@@ -39,7 +39,7 @@ namespace emberAssetLoader
         int width;
         int height = 0;
         int imageChannels = 0;
-		stbi_set_flip_vertically_on_load(true);
+		stbi_set_flip_vertically_on_load(flipImage);
 		stbi_uc* pPixels = stbi_load(path.string().c_str(), &width, &height, &imageChannels, desiredChannels);
 		if (!pPixels)
 			throw std::runtime_error("Failed to load image!");

@@ -1,7 +1,7 @@
-#ifndef __INCLUDE_GUARD_emberLogger_Logger_h__
-#define __INCLUDE_GUARD_emberLogger_Logger_h__
-#include <memory>
+#pragma once
+#include "loggerExport.h"
 #include "spdlog/spdlog.h"
+#include <memory>
 
 
 
@@ -23,7 +23,7 @@ namespace emberLogger
 	/// Must call Init() to initialize the static class before using the logger.
 	/// Macros for logging are: LOG_TRACE(), LOG_INFO(), LOG_WARN(), LOG_ERROR(), LOG_CRITICAL().
 	/// </summary>
-	class Logger
+	class LOGGER_API Logger
 	{
 	private: // Members:
 		static bool s_initialized;
@@ -76,7 +76,3 @@ namespace emberLogger
     #define DEBUG_LOG_CRITICAL(...) ((void)0)
     #endif
 }
-
-
-
-#endif // __INCLUDE_GUARD_Logger_h__

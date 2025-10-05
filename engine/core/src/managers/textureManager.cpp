@@ -47,7 +47,7 @@ namespace emberEngine
 				continue;
 
 			std::string name = filePath.stem().string();
-			emberCommon::TextureFormat format = emberCommon::TextureFormats::rgb08_srgb;
+			emberCommon::TextureFormat format = emberCommon::TextureFormats::rgba08_srgb;
 
 			if (name.find("normal") != std::string::npos)
 				format = emberCommon::TextureFormats::rgba08_unorm;
@@ -74,6 +74,7 @@ namespace emberEngine
 	void TextureManager::Clear()
 	{
 		s_textures.clear();
+		s_isInitialized = false;
 	}
 
 

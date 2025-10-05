@@ -107,6 +107,7 @@ namespace emberEngine
 	void MeshManager::Clear()
 	{
 		s_meshes.clear();
+		s_isInitialized = false;
 	}
 
 

@@ -134,6 +134,7 @@ namespace emberEngine
 
 
 	private: // Members:
+		static bool s_isInitialized;
 		static std::unique_ptr<emberBackendInterface::ICompute> s_pICompute;
 		static std::unique_ptr<Async> s_pAsync;
 		static std::unique_ptr<Immediate> s_pImmediate;

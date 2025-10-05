@@ -13,6 +13,7 @@
 namespace vulkanRendererBackend
 {
 	// Static members:
+	bool DefaultGpuResources::s_isInitialized = false;
 	std::unique_ptr<Sampler> DefaultGpuResources::s_pColorSampler = nullptr;
 	std::unique_ptr<Sampler> DefaultGpuResources::s_pShadowSampler = nullptr;
 	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
@@ -27,6 +28,9 @@ namespace vulkanRendererBackend
 	// Initialization/Cleanup:
 	void DefaultGpuResources::Init()
 	{
+		if (s_isInitialized)
+			return;
+		s_isInitialized = true;
 		s_pColorSampler = std::make_unique<ColorSampler>("colorSampler");
 		s_pShadowSampler = std::make_unique<ShadowSampler>("shadowSampler");
 		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, sizeof(int), "1x1Dummy");
@@ -47,6 +51,7 @@ namespace vulkanRendererBackend
 		s_pDefaultSampleTextureCube.reset();
 		s_pDefaultDepthTexture2dArray.reset();
 		s_pDefaultStorageTexture2d.reset();
+		s_isInitialized = false;
 	}
 
 

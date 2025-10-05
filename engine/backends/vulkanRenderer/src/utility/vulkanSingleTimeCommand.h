@@ -22,6 +22,7 @@ namespace vulkanRendererBackend
 	class SingleTimeCommand
 	{
 	private: // Members:
+		static bool s_isInitialized;
 		static VkCommandPool s_graphicsPool;
 		static VkCommandPool s_presentPool;
 		static VkCommandPool s_computePool;

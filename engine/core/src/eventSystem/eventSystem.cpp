@@ -41,7 +41,10 @@ namespace emberEngine
     }
     void EventSystem::Clear()
     {
-
+        ClearEvents();
+        s_keyStates.clear();
+        s_mouseButtonStates.clear();
+        s_isInitialized = false;
     }
 
 

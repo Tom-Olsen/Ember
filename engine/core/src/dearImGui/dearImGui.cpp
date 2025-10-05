@@ -18,6 +18,7 @@
 namespace emberEngine
 {
 	// Static members:
+	bool DearImGui::s_isInitialized = false;
 	std::unique_ptr<emberBackendInterface::IDearImGui> DearImGui::s_pIDearImGui;
 	emberBackendInterface::IDearImGui* DearImGui::GetInterfaceHandle()
 	{
@@ -29,6 +30,10 @@ namespace emberEngine
 	// Initialization/Cleanup:
 	void DearImGui::Init(bool enableDockSpace)
 	{
+		if (s_isInitialized)
+			return;
+		s_isInitialized = true;
+
 		if (true)
 			s_pIDearImGui = std::make_unique<sdlWindowBackend::SdlDearImGui>(Window::GetInterfaceHandle(), Renderer::GetInterfaceHandle(), enableDockSpace);
 		else
@@ -42,6 +47,7 @@ namespace emberEngine
 	void DearImGui::Clear()
 	{
 		s_pIDearImGui.reset();
+		s_isInitialized = false;
 	}
 
 

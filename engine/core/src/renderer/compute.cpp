@@ -157,6 +157,7 @@ namespace emberEngine
 
 	// Compute class:
 	// Static members:
+	bool Compute::s_isInitialized = false;
 	std::unique_ptr<emberBackendInterface::ICompute> Compute::s_pICompute;
 	std::unique_ptr<Compute::Async> Compute::s_pAsync;
 	std::unique_ptr<Compute::Immediate> Compute::s_pImmediate;
@@ -175,6 +176,10 @@ namespace emberEngine
 	// Initialization/Cleanup:
 	void Compute::Init()
 	{
+		if (s_isInitialized)
+			return;
+		s_isInitialized = true;
+
 		s_pICompute = std::make_unique<vulkanRendererBackend::Compute>();
 		s_pAsync = std::make_unique<Async>((uint32_t)10);
 		s_pImmediate = std::make_unique<Immediate>();
@@ -188,6 +193,7 @@ namespace emberEngine
 		s_pImmediate.reset();
 		s_pPostRender.reset();
 		s_pPreRender.reset();
+		s_isInitialized = false;
 	}
 
 	// Getters:

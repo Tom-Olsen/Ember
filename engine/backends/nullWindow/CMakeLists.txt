@@ -6,9 +6,10 @@
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
 project(nullWindowBackend)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
 
 # Static vs Shared library option:
-option(BUILD_SHARED_LIBS "Build ${PROJECT_NAME} as a shared library" ON) # default ON
+option(NULL_WINDOW_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
@@ -35,9 +36,15 @@ source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 
 
 # ----------------- Create Library ------------------
-add_library(${PROJECT_NAME}
-    ${SOURCE_FILES}
-    ${WINDOW_INTERFACE_FILES})
+if (NULL_WINDOW_BACKEND_BUILD_SHARED)
+    add_library(${PROJECT_NAME} SHARED
+        ${SOURCE_FILES}
+        ${WINDOW_INTERFACE_FILES})
+else()
+    add_library(${PROJECT_NAME} STATIC
+        ${SOURCE_FILES}
+        ${WINDOW_INTERFACE_FILES})
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -47,10 +54,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 
 # ---------------------- Macros ---------------------
-if(BUILD_SHARED_LIBS)
+if(NULL_WINDOW_BACKEND_BUILD_SHARED)
     target_compile_definitions(${PROJECT_NAME} PRIVATE NULL_WINDOW_BACKEND_EXPORTS)
 else()
-    target_compile_definitions(${PROJECT_NAME} PRIVATE NULL_WINDOW_BACKEND_STATIC)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC NULL_WINDOW_BACKEND_STATIC)
 endif()
 # ---------------------------------------------------
 
@@ -59,6 +66,7 @@ endif()
 # -------------- Link Custom Libraries --------------
 # EmberLogger:
 if (NOT TARGET EmberLogger)
+    set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/logger" EmberLogger)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)

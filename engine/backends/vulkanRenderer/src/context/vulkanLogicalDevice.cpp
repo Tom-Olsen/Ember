@@ -29,21 +29,18 @@ namespace vulkanRendererBackend
 		m_computeQueue.familyIndex = queueFamilyIndex;
 		m_transferQueue.familyIndex = queueFamilyIndex;
 
+		// Queue priorities:
+		std::vector<float> queuePriorities;
+		if (queueCount >= 4)
+			queuePriorities.assign(4, 1.0f);
+		else
+			queuePriorities.assign(1, 1.0f);
+
 		// Vector of queue create infos:
 		VkDeviceQueueCreateInfo queueCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
 		queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
-		if (queueCount >= 3)
-		{
-			float queuePriorities[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			queueCreateInfo.queueCount = 4;
-			queueCreateInfo.pQueuePriorities = queuePriorities;
-		}
-		else
-		{
-			float queuePriorities[1] = { 1.0f };
-			queueCreateInfo.queueCount = 1;
-			queueCreateInfo.pQueuePriorities = queuePriorities;
-		}
+		queueCreateInfo.queueCount = queuePriorities.size();
+		queueCreateInfo.pQueuePriorities = queuePriorities.data();
 
 		// Sync2 featur: Allows for src/dst stage to be 0 (VK_PIPELINE_STAGE_NONE).
 		VkPhysicalDeviceSynchronization2FeaturesKHR sync2Features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR };

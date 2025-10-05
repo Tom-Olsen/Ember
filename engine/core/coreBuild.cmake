@@ -195,6 +195,7 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
 
     # EmberLogger:
     if (NOT TARGET EmberLogger)
+        set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib." FORCE)
         add_subdirectory("${CORE_ROOT_DIR}/../libs/logger" EmberLogger)
     endif()
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
@@ -222,17 +223,18 @@ function(build_ember_core DEAR_IMGUI_ENABLED EDITOR_ENABLED WINDOW_ENABLED)
         add_subdirectory(${SHADER_DIR} ShaderCompiler)
     endif()
     add_dependencies(${PROJECT_NAME} ShaderCompiler)
+    # ---------------------------------------------------
 
+
+
+    # ------------------ Link Backends ------------------
     # Null Window Backend:
     target_link_libraries(${PROJECT_NAME} PUBLIC nullWindowBackend)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../backends/nullWindow/src)
 
     # SDL Window Backend:
     target_link_libraries(${PROJECT_NAME} PUBLIC sdlWindowBackend)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../backends/sdlWindow/src)
 
     # Vulkan Renderer Backend:
     target_link_libraries(${PROJECT_NAME} PUBLIC vulkanRendererBackend)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_ROOT_DIR}/../backends/vulkanRenderer/src)
     # ---------------------------------------------------
 endfunction()
