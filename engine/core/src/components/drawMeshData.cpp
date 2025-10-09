@@ -1,7 +1,5 @@
 #include "drawMeshData.h"
-#include "gameObject.h"
 #include "meshRenderer.h"
-using namespace emberEngine;
 
 
 

@@ -1,12 +1,9 @@
-#ifndef __INCLUDE_GUARD_sdlDearImGui_h__
-#define __INCLUDE_GUARD_sdlDearImGui_h__
-#include "dearImGuiFlags.h"
+#pragma once
+#include "commonGuiFlags.h"
 #include "emberMath.h"
-#include "iDearImGui.h"
-#include "sdlWindowExport.h"
-#include <tuple>
+#include "iGui.h"
+#include "imGuiSdlVulkanExport.h"
 #include <unordered_map>
-#include <vector>
 
 
 
@@ -23,13 +20,14 @@ namespace emberBackendInterface
 {
 	class IWindow;
 	class IRenderer;
+	class ITexture;
 }
 
 
 
-namespace sdlWindowBackend
+namespace imGuiSdlVulkanBackend
 {
-	class SDL_WINDOW_API SdlDearImGui : public emberBackendInterface::IDearImGui
+	class IMGUI_SDL_VULKAN_API Gui : public emberBackendInterface::IGui
 	{
 	private: // Members
 		VkDevice m_vkDevice;
@@ -45,37 +43,37 @@ namespace sdlWindowBackend
 
 	public: // Methods
 		// Constructor/Destructor:
-		SdlDearImGui(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, bool enableDockSpace);
-		~SdlDearImGui();
+		Gui(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, bool enableDockSpace);
+		~Gui();
 
 		// Non-copyable:
-		SdlDearImGui(const SdlDearImGui&) = delete;
-		SdlDearImGui& operator=(const SdlDearImGui&) = delete;
+		Gui(const Gui&) = delete;
+		Gui& operator=(const Gui&) = delete;
 
 		// Movable:
-		SdlDearImGui(SdlDearImGui&& other) noexcept;
-		SdlDearImGui& operator=(SdlDearImGui&& other) noexcept;
+		Gui(Gui&& other) noexcept;
+		Gui& operator=(Gui&& other) noexcept;
 
 		// Render Logic:
 		void Update() override;									// Must be called in main update loop of the engine.
-		void ProcessEvent(void* pEvent) override;			// Must be called in from sdl window.
+		void ProcessEvent(const void* pWindowEvent) override;	// Must be called in from window.
 		void Render(VkCommandBuffer vkCommandBuffer) override;	// Must be called in a render pass.
 
 		// Getters:
 		bool WantCaptureKeyboard() override;
 		bool WantCaptureMouse() override;
-		uintptr_t GetTextureID(void* vkImageView) override;
+		uintptr_t GetTextureID(emberBackendInterface::ITexture* pITexture) override;
 
 		// Wrappers:
-		bool IsWindowFocused(emberEngine::DearImGuiFocusedFlags flags) override;
-		bool Begin(const char* name, bool* pOpen, emberEngine::DearImGuiWindowFlags flags) override;
+		bool IsWindowFocused(emberCommon::GuiFocusedFlags flags) override;
+		bool Begin(const char* name, bool* pOpen, emberCommon::GuiWindowFlags flags) override;
 		void End() override;
 		void PushID(const char* str_id) override;
 		void PopID() override;
 		Float2 GetWindowSize() override;
 		Float2 GetContentRegionalAvail() override;
 		Float2 GetCursorPos() override;
-		void SetCursorPos(float localPosX, float localPosY) override;
+		void SetCursorPos(const Float2& localPos) override;
 		void Image(uintptr_t textureID, float imageWidth, float imageHeight, float u0, float v0, float u1, float v1) override;
 
 	private: // Methods:
@@ -85,7 +83,3 @@ namespace sdlWindowBackend
 		void UpdateDescriptor(VkDescriptorSet vkDescriptorSet, VkImageView vkImageView, VkSampler vkSampler);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_sdlDearImGui_h__

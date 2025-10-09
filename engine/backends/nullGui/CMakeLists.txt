@@ -1,15 +1,15 @@
-# Ember/engine/backends/nullWindow/CMakeLists.txt
+# Ember/engine/backends/nullGui/CMakeLists.txt
 
 
 
 # ------------------- Project Setup ------------------
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
-project(nullWindowBackend)
+project(nullGuiBackend)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
 
 # Static vs Shared library option:
-option(NULL_WINDOW_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
+option(NULL_GUI_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
@@ -32,61 +32,49 @@ source_group("Source Files" FILES ${SOURCE_FILES})
 file(GLOB COMMON_FILES "../../common/*.*")
 source_group("Commen" FILES ${COMMON_FILES})
 
-# ../../interfaces/window/*:
-file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*")
-source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
+# ../../interfaces/gui/*:
+file(GLOB GUI_INTERFACE_FILES "../../interfaces/gui/*")
+source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
 # ---------------------------------------------------
 
 
 
 # ----------------- Create Library ------------------
-if (NULL_WINDOW_BACKEND_BUILD_SHARED)
+if (NULL_GUI_BACKEND_BUILD_SHARED)
     add_library(${PROJECT_NAME} SHARED
         ${SOURCE_FILES}
         ${COMMON_FILES}
-        ${WINDOW_INTERFACE_FILES})
+        ${GUI_INTERFACE_FILES})
 else()
     add_library(${PROJECT_NAME} STATIC
         ${SOURCE_FILES}
         ${COMMON_FILES}
-        ${WINDOW_INTERFACE_FILES})
+        ${GUI_INTERFACE_FILES})
 endif()
+
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/gui)
 # ---------------------------------------------------
 
 
 
 # ---------------------- Macros ---------------------
-if(NULL_WINDOW_BACKEND_BUILD_SHARED)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE NULL_WINDOW_BACKEND_EXPORTS)
+if(NULL_GUI_BACKEND_BUILD_SHARED)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE NULL_GUI_BACKEND_EXPORTS)
 else()
-    target_compile_definitions(${PROJECT_NAME} PUBLIC NULL_WINDOW_BACKEND_STATIC)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC NULL_GUI_BACKEND_STATIC)
 endif()
 # ---------------------------------------------------
 
 
 
 # -------------- Link Custom Libraries --------------
-# EmberLogger:
-if (NOT TARGET EmberLogger)
-    set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/logger" EmberLogger)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
-
 # EmberMath:
 if (NOT TARGET EmberMath)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
-
-# EmberProfiler:
-if (NOT TARGET EmberProfiler)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/profiler" EmberProfiler)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
 # ---------------------------------------------------

@@ -18,7 +18,7 @@ namespace emberEngine
 	class Texture
 	{
 		// Friends:
-		friend class DearImGui;
+		friend class Gui;
 		friend class ShaderProperties;
 
 	protected: // Members:

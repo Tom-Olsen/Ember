@@ -122,9 +122,9 @@ namespace vulkanRendererBackend
 	{
 		return TextureFormatVulkanToCommon(m_format);
 	}
-	void* Texture::GetVkImageView() const
+	const VkImageView& Texture::GetVkImageView() const
 	{
-		return static_cast<void*>(GetVmaImage()->GetVkImageView());
+		return GetVmaImage()->GetVkImageView();
 	}
 	Format Texture::GetFormat() const
 	{

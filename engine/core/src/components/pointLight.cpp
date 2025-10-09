@@ -1,6 +1,5 @@
 #include "pointLight.h"
 #include "renderer.h"
-#include "vulkanShadowRenderPass.h"
 
 
 
@@ -11,7 +10,7 @@ namespace emberEngine
 	{
 		m_intensity = 1.0f;
 		m_color = Float3::white;
-		m_shadowType = emberCommon::ShadowType::hard;
+		m_shadowType = ShadowType::hard;
 		m_nearClip = 0.1f;
 		m_farClip = 15.0f;
 		m_updateProjectionMatrix = true;
@@ -33,7 +32,7 @@ namespace emberEngine
 	{
 		m_color = color;
 	}
-	void PointLight::SetShadowType(emberCommon::ShadowType shadowType)
+	void PointLight::SetShadowType(ShadowType shadowType)
 	{
 		m_shadowType = shadowType;
 	}
@@ -63,7 +62,7 @@ namespace emberEngine
 	{
 		return m_color;
 	}
-	emberCommon::ShadowType PointLight::GetShadowType() const
+	ShadowType PointLight::GetShadowType() const
 	{
 		return m_shadowType;
 	}

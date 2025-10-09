@@ -1,5 +1,4 @@
 #include "testInstancedRendering.h"
-#include "commonAccessMask.h"
 
 
 
@@ -9,7 +8,7 @@ namespace emberEngine
 	TestInstancedRendering::TestInstancedRendering(uint32_t instanceCount)
 	{
 		uint32_t elementSize = sizeof(Float4x4) + sizeof(Float4);
-		m_pInstanceBuffer = std::make_unique<Buffer>(instanceCount, elementSize, "testInstancedRendering", emberCommon::BufferUsage::storage);
+		m_pInstanceBuffer = std::make_unique<Buffer>(instanceCount, elementSize, "testInstancedRendering", BufferUsage::storage);
 		m_pStartCS = ComputeShaderManager::TryGetComputeShader("initialPositions");
 		m_pUpdateCS = ComputeShaderManager::TryGetComputeShader("updatePositions");
 		m_startProperties = ShaderProperties(*m_pStartCS);
@@ -38,7 +37,7 @@ namespace emberEngine
 			Uint3 threadCount = Uint3(m_pInstanceBuffer->GetCount(), 1, 1);
 			m_startProperties.SetBuffer("instanceBuffer", *m_pInstanceBuffer);
 			Compute::GetPreRender()->RecordComputeShader(*m_pStartCS, m_startProperties, threadCount);
-			Compute::GetPreRender()->RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+			Compute::GetPreRender()->RecordBarrier(AccessMasks::computeShader_shaderWrite, AccessMasks::computeShader_shaderRead);
 		}
 	}
 	void TestInstancedRendering::Update()

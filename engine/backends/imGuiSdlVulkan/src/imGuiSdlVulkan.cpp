@@ -1,18 +1,19 @@
-#include "sdlDearImGui.h"
+#include "imGuiSdlVulkan.h"
 #include "iWindow.h"
 #include "iRenderer.h"
+#include "iTexture.h"
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
-#include <stdexcept>
 #include <vulkan/vulkan.h>
 
 
 
-namespace sdlWindowBackend
+namespace imGuiSdlVulkanBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
-	SdlDearImGui::SdlDearImGui(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, bool enableDockSpace)
+	Gui::Gui(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, bool enableDockSpace)
 	{
 		m_vkDevice = static_cast<VkDevice>(pIRenderer->GetVkDevice());
 		m_vkDescriptorPool = static_cast<VkDescriptorPool>(pIRenderer->GetVkDescriptorPool());
@@ -48,11 +49,12 @@ namespace sdlWindowBackend
 
 		CreateDescriptorSetLayout();
 	}
-	SdlDearImGui::~SdlDearImGui()
+	Gui::~Gui()
 	{
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
-		vkDestroyDescriptorSetLayout(m_vkDevice, m_descriptorSetLayout, nullptr);
+		if (m_descriptorSetLayout != VK_NULL_HANDLE)
+			vkDestroyDescriptorSetLayout(m_vkDevice, m_descriptorSetLayout, nullptr);
 		ImGui::DestroyContext();
 		m_vkImageViewToDescriptorMap.clear();
 	}
@@ -60,7 +62,7 @@ namespace sdlWindowBackend
 
 
 	// Move semantics:
-	SdlDearImGui::SdlDearImGui(SdlDearImGui&& other) noexcept
+	Gui::Gui(Gui&& other) noexcept
 	{
 		// Transfer resources: other->this
 		m_vkDevice = other.m_vkDevice;
@@ -82,7 +84,7 @@ namespace sdlWindowBackend
 		other.m_enableDockSpace = false;
 		other.m_vkImageViewToDescriptorMap.clear();
 	}
-	SdlDearImGui& SdlDearImGui::operator=(SdlDearImGui&& other) noexcept
+	Gui& Gui::operator=(Gui&& other) noexcept
 	{
 		if (this != &other)
 		{
@@ -110,7 +112,7 @@ namespace sdlWindowBackend
 
 
 	// Public methods:
-	void SdlDearImGui::Update()
+	void Gui::Update()
 	{
 		//PROFILE_FUNCTION();
 		ImGui_ImplVulkan_NewFrame();
@@ -133,9 +135,9 @@ namespace sdlWindowBackend
 		if (m_pIo->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 			ImGui::UpdatePlatformWindows();
 	}
-	void SdlDearImGui::ProcessEvent(void* pEvent)
+	void Gui::ProcessEvent(const void* pWindowEvent)
 	{
-		ImGui_ImplSDL3_ProcessEvent(static_cast<SDL_Event*>(pEvent));
+		ImGui_ImplSDL3_ProcessEvent(static_cast<const SDL_Event*>(pWindowEvent));
 
 		// bool wantCaptureEvents = false;
 		// void* focusedWindow = m_pIEditor->GetFocusedWindow();
@@ -145,7 +147,7 @@ namespace sdlWindowBackend
 		// m_wantCaptureKeyboard = wantCaptureEvents;
 		// m_wantCaptureMouse = wantCaptureEvents;
 	}
-	void SdlDearImGui::Render(VkCommandBuffer vkCommandBuffer)
+	void Gui::Render(VkCommandBuffer vkCommandBuffer)
 	{
 		ImGui::Render();
 
@@ -160,20 +162,20 @@ namespace sdlWindowBackend
 
 
 	// Getters:
-	bool SdlDearImGui::WantCaptureKeyboard()
+	bool Gui::WantCaptureKeyboard()
 	{
 		return m_wantCaptureKeyboard;
 	}
-	bool SdlDearImGui::WantCaptureMouse()
+	bool Gui::WantCaptureMouse()
 	{
 		return m_wantCaptureMouse;
 	}
-	uintptr_t SdlDearImGui::GetTextureID(void* vkImageView)
+	uintptr_t Gui::GetTextureID(emberBackendInterface::ITexture* pITexture)
 	{
-		if (!vkImageView)
+		if (!pITexture)
 			return 0;
 
-		VkImageView imageView = static_cast<VkImageView>(vkImageView);
+		VkImageView imageView = pITexture->GetVkImageView();
 
 		// Return cached descriptor set if it exists:
 		auto it = m_vkImageViewToDescriptorMap.find(imageView);
@@ -192,46 +194,46 @@ namespace sdlWindowBackend
 
 
 	// Wrappers:
-	bool SdlDearImGui::IsWindowFocused(emberEngine::DearImGuiFocusedFlags flags)
+	bool Gui::IsWindowFocused(emberCommon::GuiFocusedFlags flags)
 	{
 		return ImGui::IsWindowFocused(flags);
 	}
-	bool SdlDearImGui::Begin(const char* name, bool* pOpen, emberEngine::DearImGuiWindowFlags flags)
+	bool Gui::Begin(const char* name, bool* pOpen, emberCommon::GuiWindowFlags flags)
 	{
 		return ImGui::Begin(name, pOpen, flags);
 	}
-	void SdlDearImGui::End()
+	void Gui::End()
 	{
 		ImGui::End();
 	}
-	void SdlDearImGui::PushID(const char* str_id)
+	void Gui::PushID(const char* str_id)
 	{
 		ImGui::PushID(str_id);
 	}
-	void SdlDearImGui::PopID()
+	void Gui::PopID()
 	{
 		ImGui::PopID();
 	}
-	Float2 SdlDearImGui::GetWindowSize()
+	Float2 Gui::GetWindowSize()
 	{
 		ImVec2 size = ImGui::GetWindowSize();
 		return Float2{ size.x, size.y };
 	}
-	Float2 SdlDearImGui::GetContentRegionalAvail()
+	Float2 Gui::GetContentRegionalAvail()
 	{
 		ImVec2 regionAvail = ImGui::GetContentRegionAvail();
 		return Float2{ regionAvail.x, regionAvail.y };
 	}
-	Float2 SdlDearImGui::GetCursorPos()
+	Float2 Gui::GetCursorPos()
 	{
 		ImVec2 cursorPos = ImGui::GetCursorPos();
 		return Float2{ cursorPos.x, cursorPos.y };
 	}
-	void SdlDearImGui::SetCursorPos(float localPosX, float localPosY)
+	void Gui::SetCursorPos(const Float2& localPos)
 	{
-		ImGui::SetCursorPos(ImVec2(localPosX, localPosY));
+		ImGui::SetCursorPos(ImVec2(localPos.x, localPos.y));
 	}
-	void SdlDearImGui::Image(uintptr_t textureID, float imageWidth, float imageHeight, float u0, float v0, float u1, float v1)
+	void Gui::Image(uintptr_t textureID, float imageWidth, float imageHeight, float u0, float v0, float u1, float v1)
 	{
 		ImGui::Image(static_cast<ImTextureID>(textureID), ImVec2(imageWidth, imageHeight), ImVec2(u0, v0), ImVec2(u1, v1));
 	}
@@ -239,21 +241,21 @@ namespace sdlWindowBackend
 
 
 	// Private methods:
-	void SdlDearImGui::ShowDockSpace()
+	void Gui::ShowDockSpace()
 	{
 		static bool dockspaceOpen = true;
 		static bool optionFullscreen = true;
-		static ImGuiDockNodeFlags dockspaceFlags = emberEngine::DearImGuiWindowFlag_None;
+		static ImGuiDockNodeFlags dockspaceFlags = emberCommon::GuiWindowFlag_None;
 
-		ImGuiWindowFlags windowFlags = emberEngine::DearImGuiWindowFlag_MenuBar | emberEngine::DearImGuiWindowFlag_NoDocking;
+		ImGuiWindowFlags windowFlags = emberCommon::GuiWindowFlag_MenuBar | emberCommon::GuiWindowFlag_NoDocking;
 		if (optionFullscreen)
 		{
 			ImGuiViewport* viewport = ImGui::GetMainViewport();
 			ImGui::SetNextWindowPos(viewport->Pos);
 			ImGui::SetNextWindowSize(viewport->Size);
 			ImGui::SetNextWindowViewport(viewport->ID);
-			windowFlags |= emberEngine::DearImGuiWindowFlag_NoTitleBar | emberEngine::DearImGuiWindowFlag_NoResize | emberEngine::DearImGuiWindowFlag_NoMove;
-			windowFlags |= emberEngine::DearImGuiWindowFlag_NoBringToFrontOnFocus | emberEngine::DearImGuiWindowFlag_NoNavFocus;
+			windowFlags |= emberCommon::GuiWindowFlag_NoTitleBar | emberCommon::GuiWindowFlag_NoResize | emberCommon::GuiWindowFlag_NoMove;
+			windowFlags |= emberCommon::GuiWindowFlag_NoBringToFrontOnFocus | emberCommon::GuiWindowFlag_NoNavFocus;
 		}
 
 		// Set up the dockspace
@@ -261,7 +263,7 @@ namespace sdlWindowBackend
 		ImGui::DockSpace(ImGui::GetID("MyDockspace"), ImVec2(0.0f, 0.0f), dockspaceFlags);
 		ImGui::End();
 	}
-	void SdlDearImGui::CreateDescriptorSetLayout()
+	void Gui::CreateDescriptorSetLayout()
 	{
 		VkDescriptorSetLayoutBinding binding = {};
 		binding.binding = 0;
@@ -276,7 +278,7 @@ namespace sdlWindowBackend
 		if (vkCreateDescriptorSetLayout(m_vkDevice, &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
 			throw std::runtime_error((std::string)"DearImGui::CreateDescriptorSetLayout: " + (std::string)"failed to create descriptor set layout!");
 	}
-	VkDescriptorSet SdlDearImGui::CreateDescriptorSet()
+	VkDescriptorSet Gui::CreateDescriptorSet()
 	{
 		VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 		allocInfo.descriptorPool = m_vkDescriptorPool;
@@ -288,7 +290,7 @@ namespace sdlWindowBackend
 			throw std::runtime_error((std::string)"DearImGui::CreateDescriptorSet: " + (std::string)"failed to allocate descriptor sets!");
 		return descriptorSet;
 	}
-	void SdlDearImGui::UpdateDescriptor(VkDescriptorSet vkDescriptorSet, VkImageView vkImageView, VkSampler vkSampler)
+	void Gui::UpdateDescriptor(VkDescriptorSet vkDescriptorSet, VkImageView vkImageView, VkSampler vkSampler)
 	{
 		VkDescriptorImageInfo imageInfo = {};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

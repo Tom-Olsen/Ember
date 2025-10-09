@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_sdlWindow_h__
-#define __INCLUDE_GUARD_sdlWindow_h__
+#pragma once
+#include "commonEvent.h"
 #include "emberMath.h"
 #include "sdlWindowExport.h"
 #include "iWindow.h"
@@ -13,25 +13,21 @@ struct SDL_Window;
 typedef struct VkInstance_T* VkInstance;
 struct VkAllocationCallbacks;
 typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
-namespace emberEngine
-{
-	struct Event;
-}
 namespace emberBackendInterface
 {
-	class IDearImGui;
+	class IGui;
 }
 
 
 
 namespace sdlWindowBackend
 {
-	class SDL_WINDOW_API SdlWindow : public emberBackendInterface::IWindow
+	class SDL_WINDOW_API Window : public emberBackendInterface::IWindow
 	{
 	private: // Members:
-		SDL_Window* m_pWindow = nullptr;
-		emberBackendInterface::IDearImGui* m_pDearImGui = nullptr;
-		std::vector<emberEngine::Event> m_events;
+		SDL_Window* m_pSdlWindow = nullptr;
+		emberBackendInterface::IGui* m_pIGui = nullptr;
+		std::vector<emberCommon::Event> m_events;
 		const int m_maxEvents = 32;
 		bool m_isMinimized = false;
 		bool m_isResized = false;
@@ -39,20 +35,20 @@ namespace sdlWindowBackend
 
 	public: // Methods:
 		// Constructor/Destructor:
-		SdlWindow(int windowWidth, int windowHeight);
-		~SdlWindow();
+		Window(int windowWidth, int windowHeight);
+		~Window();
 
 		// Non-copyable:
-		SdlWindow(const SdlWindow&) = delete;
-		SdlWindow& operator=(const SdlWindow&) = delete;
+		Window(const Window&) = delete;
+		Window& operator=(const Window&) = delete;
 
 		// Movable:
-		SdlWindow(SdlWindow&& other) noexcept;
-		SdlWindow& operator=(SdlWindow&& other) noexcept;
+		Window(Window&& other) noexcept;
+		Window& operator=(Window&& other) noexcept;
 
 		// Window Methods:
-		void LinkDearImGui(void* pDearImGui) override;
-		std::vector<emberEngine::Event> PollEvents() override;
+		void LinkDearImGui(emberBackendInterface::IGui* pIGui) override;
+		std::vector<emberCommon::Event> PollEvents() override;
 		void AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions) const override;
 		void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const override;
 
@@ -64,7 +60,3 @@ namespace sdlWindowBackend
 		uint32_t GetWindowID() const override;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_sdlWindow_h__

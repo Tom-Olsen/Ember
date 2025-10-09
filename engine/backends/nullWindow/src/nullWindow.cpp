@@ -1,16 +1,16 @@
 #include "nullWindow.h"
-#include "event.h"
 
 
 
 namespace nullWindowBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
-	NullWindow::NullWindow()
+	Window::Window()
 	{
 
 	}
-	NullWindow::~NullWindow()
+	Window::~Window()
 	{
 
 	}
@@ -18,41 +18,41 @@ namespace nullWindowBackend
 
 
 	// Window Methods:
-	void NullWindow::LinkDearImGui(void* pDearImGui)
+	void Window::LinkDearImGui(emberBackendInterface::IGui* pDearImGui)
 	{
 
 	}
-	std::vector<emberEngine::Event> NullWindow::PollEvents()
+	std::vector<emberCommon::Event> Window::PollEvents()
 	{
-		return std::vector<emberEngine::Event>();
+		return std::vector<emberCommon::Event>();
 	}
-	void NullWindow::AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions) const
+	void Window::AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions) const
 	{
 
 	}
-	void NullWindow::CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const
+	void Window::CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const
 	{
 
 	}
 
 	// Getters:
-	void* NullWindow::GetNativeHandle() const
+	void* Window::GetNativeHandle() const
 	{
 		return nullptr;
 	}
-	bool NullWindow::GetIsMinimized() const
+	bool Window::GetIsMinimized() const
 	{
 		return true;
 	}
-	bool NullWindow::GetIsResized() const
+	bool Window::GetIsResized() const
 	{
 		return false;
 	}
-	Int2 NullWindow::GetSize() const
+	Int2 Window::GetSize() const
 	{
 		return Int2{ 0, 0 };
 	}
-	uint32_t NullWindow::GetWindowID() const
+	uint32_t Window::GetWindowID() const
 	{
 		return 0;
 	}

@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "commonLighting.h"
 #include "emberEngine.h"
 
 
@@ -19,7 +18,7 @@ namespace emberEngine
 	private: // Members:
 		float m_intensity;
 		Float3 m_color;
-		emberCommon::ShadowType m_shadowType;
+		ShadowType m_shadowType;
 		Camera* m_pActiveCamera;
 		int m_shadowCascadeCount;
 		float m_distributionFactor;		// €[0,1], 0 = linear, 1 = logarithmic
@@ -34,7 +33,7 @@ namespace emberEngine
 		// Setters:
 		void SetIntensity(float intensity);
 		void SetColor(const Float3& color);
-		void SetShadowType(emberCommon::ShadowType shadowType);
+		void SetShadowType(ShadowType shadowType);
 		void SetActiveCamera(Camera* pCamera);
 		void SetShadowCascadeCount(int shadowCascadeCount);
 		void SetDistributionFactor(float distributionFactor);
@@ -43,7 +42,7 @@ namespace emberEngine
 		// Getters:
 		float GetIntensity() const;
 		Float3 GetColor() const;
-		emberCommon::ShadowType GetShadowType() const;
+		ShadowType GetShadowType() const;
 		Camera* GetActiveCamera() const;
 		int GetShadowCascadeCount() const;
 		float GetDistributionFactor() const;

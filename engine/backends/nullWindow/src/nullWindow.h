@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_nullWindow_h__
-#define __INCLUDE_GUARD_nullWindow_h__
+#pragma once
+#include "commonEvent.h"
 #include "emberMath.h"
 #include "nullWindowExport.h"
 #include "iWindow.h"
@@ -8,30 +8,33 @@
 
 
 // Forward decleration:
-struct SDL_Window;
+namespace emberBackendInterface
+{
+	class IGui;
+}
 
 
 
 namespace nullWindowBackend
 {
-	class NULL_WINDOW_API NullWindow : public emberBackendInterface::IWindow
+	class NULL_WINDOW_API Window : public emberBackendInterface::IWindow
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		NullWindow();
-		~NullWindow();
+		Window();
+		~Window();
 
 		// Non-copyable:
-		NullWindow(const NullWindow&) = delete;
-		NullWindow& operator=(const NullWindow&) = delete;
+		Window(const Window&) = delete;
+		Window& operator=(const Window&) = delete;
 
 		// Movable:
-		NullWindow(NullWindow&& other) noexcept = default;
-		NullWindow& operator=(NullWindow&& other) noexcept = default;
+		Window(Window&& other) noexcept = default;
+		Window& operator=(Window&& other) noexcept = default;
 
 		// Window Methods:
-		void LinkDearImGui(void* pDearImGui) override;
-		std::vector<emberEngine::Event> PollEvents() override;
+		void LinkDearImGui(emberBackendInterface::IGui* pDearImGui) override;
+		std::vector<emberCommon::Event> PollEvents() override;
 		void AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions) const override;
 		void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const override;
 
@@ -43,7 +46,3 @@ namespace nullWindowBackend
 		uint32_t GetWindowID() const;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_nullWindow_h__

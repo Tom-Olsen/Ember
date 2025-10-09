@@ -29,7 +29,7 @@ namespace emberEngine
 	class Renderer
 	{
 		// Friends:
-		friend class DearImGui;
+		friend class Gui;
 
 	private: // Members:
 		static bool s_isInitialized;

@@ -1,8 +1,8 @@
 #include "renderer.h"
 #include "buffer.h"
 #include "compute.h"
-#include "dearImGui.h"
 #include "emberTime.h"
+#include "gui.h"
 #include "mesh.h"
 #include "meshManager.h"
 #include "material.h"
@@ -295,7 +295,7 @@ namespace emberEngine
 	}
 	void Renderer::SetIDearImGuiHandle()
 	{
-		s_pIRenderer->SetIDearImGuiHandle(DearImGui::GetInterfaceHandle());
+		s_pIRenderer->SetIGuiHandle(Gui::GetInterfaceHandle());
 	}
 	void Renderer::SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
 	{

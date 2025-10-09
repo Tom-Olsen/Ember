@@ -1,4 +1,5 @@
 #pragma once
+#include "commonEvent.h"
 #include "emberMath.h"
 #include <array>
 #include <vector>
@@ -9,9 +10,9 @@
 typedef struct VkInstance_T* VkInstance;
 struct VkAllocationCallbacks;
 typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
-namespace emberEngine
+namespace emberBackendInterface
 {
-    struct Event;
+    class IGui;
 }
 
 
@@ -25,8 +26,8 @@ namespace emberBackendInterface
         virtual ~IWindow() = default;
 
         // Window Methods:
-        virtual void LinkDearImGui(void* pDearImGui) = 0;
-        virtual std::vector<emberEngine::Event> PollEvents() = 0;
+        virtual void LinkDearImGui(emberBackendInterface::IGui* pIGui) = 0;
+        virtual std::vector<emberCommon::Event> PollEvents() = 0;
 		virtual void AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions) const = 0;
         virtual void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const = 0;
 

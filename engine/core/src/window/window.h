@@ -1,4 +1,5 @@
 #pragma once
+#include "commonEvent.h"
 #include "emberMath.h"
 #include <memory>
 #include <vector>
@@ -11,6 +12,7 @@ struct VkAllocationCallbacks;
 typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
 namespace emberBackendInterface
 {
+	class IGui;
 	class IWindow;
 }
 
@@ -19,7 +21,6 @@ namespace emberBackendInterface
 namespace emberEngine
 {
 	// Forward decleration:
-	struct Event;
 	class Application;
 
 
@@ -27,8 +28,8 @@ namespace emberEngine
 	class Window
 	{
 		// Friends:
-		friend class DearImGui;
 		friend class Application;
+		friend class Gui;
 
 	private: // Members:
 		static bool s_isInitialized;
@@ -41,8 +42,8 @@ namespace emberEngine
 		static void Clear();
 
 		// Window Methods:
-		static void LinkDearImGui(void* pDeatImGui);
-		static std::vector<Event> PollEvents();
+		static void LinkDearImGui(emberBackendInterface::IGui* pDeatImGui);
+		static std::vector<emberCommon::Event> PollEvents();
 		static void AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions);
 		static void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR);
 

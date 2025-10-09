@@ -1,6 +1,5 @@
 #include "vulkanContext.h"
 #include "emberMath.h"
-#include "iDearImGui.h"
 #include "iWindow.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanDefaultGpuResources.h"
@@ -80,7 +79,7 @@ namespace vulkanRendererBackend
 
 		createInfo.pIWindow->AddWindowInstanceExtensions(instanceExtensions);	
 
-		if (createInfo.enableDearImGui)
+		if (createInfo.enableGui)
 		{
 			if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
 				instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);

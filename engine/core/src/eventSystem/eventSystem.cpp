@@ -1,6 +1,5 @@
 #include "eventSystem.h"
-#include "dearImGui.h"
-#include "event.h"
+#include "commonEvent.h"
 #include "logger.h"
 #include "macros.h"
 #include "profiler.h"
@@ -12,8 +11,8 @@ namespace emberEngine
 {
     // Static members:
     bool EventSystem::s_isInitialized = false;
-    std::unordered_map<Input::Key, EventSystem::KeyState> EventSystem::s_keyStates;
-    std::unordered_map<Input::MouseButton, EventSystem::MouseState> EventSystem::s_mouseButtonStates;
+    std::unordered_map<emberCommon::Input::Key, EventSystem::KeyState> EventSystem::s_keyStates;
+    std::unordered_map<emberCommon::Input::MouseButton, EventSystem::MouseState> EventSystem::s_mouseButtonStates;
     float EventSystem::s_mouseX;
     float EventSystem::s_mouseY;
     float EventSystem::s_mouseScrollX;
@@ -30,8 +29,8 @@ namespace emberEngine
             return;
         s_isInitialized = true;
 
-        s_keyStates = std::unordered_map<Input::Key, KeyState>();
-        s_mouseButtonStates = std::unordered_map<Input::MouseButton, MouseState>();
+        s_keyStates = std::unordered_map<emberCommon::Input::Key, KeyState>();
+        s_mouseButtonStates = std::unordered_map<emberCommon::Input::MouseButton, MouseState>();
         s_mouseX = 0;
         s_mouseY = 0;
 
@@ -56,70 +55,70 @@ namespace emberEngine
 		ClearEvents();  // reset and transition previous event states.
         
         // Poll events:
-        std::vector<Event> events = Window::PollEvents();
-        for (const Event& event : events)
+        std::vector<emberCommon::Event> events = Window::PollEvents();
+        for (const emberCommon::Event& event : events)
         {
             switch (event.type)
             {
                 // System / Window:
-                case EventType::Quit:
+                case emberCommon::EventType::Quit:
                     return false;
                     break;
-                case EventType::WindowClose:
+                case emberCommon::EventType::WindowClose:
                     if (event.windowID == Window::GetWindowID()) // check for main window.
                         return false;
                     break;
-                case EventType::WindowResized:
+                case emberCommon::EventType::WindowResized:
                     break;
-                case EventType::WindowMinimized:
+                case emberCommon::EventType::WindowMinimized:
                     break;
-                case EventType::WindowRestored:
+                case emberCommon::EventType::WindowRestored:
                     break;
-                case EventType::WindowFocusGained:
+                case emberCommon::EventType::WindowFocusGained:
                     break;
-                case EventType::WindowFocusLost:
+                case emberCommon::EventType::WindowFocusLost:
                     break;
 
                 // Keyboard events:
-                case EventType::KeyDown:
+                case emberCommon::EventType::KeyDown:
                     s_keyStates[event.key] = KeyState::down;
                     break;
-                case EventType::KeyUp:
+                case emberCommon::EventType::KeyUp:
                     s_keyStates[event.key] = KeyState::up;
                     break;
-                case EventType::TextInput:
+                case emberCommon::EventType::TextInput:
                     break;
 
-                // Mouse events:
-                case EventType::MouseMoved:
+                    // Mouse events:
+                case emberCommon::EventType::MouseMoved:
                     s_mouseX = event.mousePosX;
                     s_mouseY = event.mousePosY;
                     break;
-                case EventType::MouseButtonDown:
+                case emberCommon::EventType::MouseButtonDown:
                     s_mouseButtonStates[event.mouseButton] = MouseState::down;
                     break;
-                case EventType::MouseButtonUp:
+                case emberCommon::EventType::MouseButtonUp:
                     s_mouseButtonStates[event.mouseButton] = MouseState::up;
                     break;
-                case EventType::MouseWheel:
+                case emberCommon::EventType::MouseWheel:
                     s_mouseScrollX = event.mouseWheelX;
                     s_mouseScrollY = event.mouseWheelY;
                     break;
 
                 // Controller events:
-                case EventType::ControllerConnected:
+                case emberCommon::EventType::ControllerConnected:
                     // Ember::ToDo: handle controller connection.
-					break;
-                case EventType::ControllerDisconnected:
+                    break;
+                case emberCommon::EventType::ControllerDisconnected:
                     // Ember::ToDo: handle controller disconnection.
                     break;
-                case EventType::ControllerButtonDown:
+                case emberCommon::EventType::ControllerButtonDown:
                     // Ember::ToDo: handle controller button down.
                     break;
-                case EventType::ControllerButtonUp:
+                case emberCommon::EventType::ControllerButtonUp:
                     // Ember::ToDo: handle controller button up.
                     break;
-                case EventType::ControllerAxisMotion:
+                case emberCommon::EventType::ControllerAxisMotion:
                     // Ember::ToDo: handle controller axis motion.
                     break;
 
@@ -175,37 +174,37 @@ namespace emberEngine
                 return true;
         return false;
     }
-    bool EventSystem::KeyDown(Input::Key key)
+    bool EventSystem::KeyDown(emberCommon::Input::Key key)
     {
         auto it = s_keyStates.find(key);
         return it != s_keyStates.end() && it->second == KeyState::down;
     }
-    bool EventSystem::KeyUp(Input::Key key)
+    bool EventSystem::KeyUp(emberCommon::Input::Key key)
     {
         auto it = s_keyStates.find(key);
         return it != s_keyStates.end() && it->second == KeyState::up;
     }
-    bool EventSystem::KeyHeld(Input::Key key)
+    bool EventSystem::KeyHeld(emberCommon::Input::Key key)
     {
         auto it = s_keyStates.find(key);
         return it != s_keyStates.end() && it->second == KeyState::held;
     }
-    bool EventSystem::KeyDownOrHeld(Input::Key key)
+    bool EventSystem::KeyDownOrHeld(emberCommon::Input::Key key)
     {
         auto it = s_keyStates.find(key);
         return it != s_keyStates.end() && (it->second == KeyState::down || it->second == KeyState::held);
     }
-    bool EventSystem::MouseDown(Input::MouseButton button)
+    bool EventSystem::MouseDown(emberCommon::Input::MouseButton button)
     {
         auto it = s_mouseButtonStates.find(button);
         return it != s_mouseButtonStates.end() && it->second == MouseState::down;
     }
-    bool EventSystem::MouseUp(Input::MouseButton button)
+    bool EventSystem::MouseUp(emberCommon::Input::MouseButton button)
     {
         auto it = s_mouseButtonStates.find(button);
         return it != s_mouseButtonStates.end() && it->second == MouseState::up;
     }
-    bool EventSystem::MouseHeld(Input::MouseButton button)
+    bool EventSystem::MouseHeld(emberCommon::Input::MouseButton button)
     {
         auto it = s_mouseButtonStates.find(button);
         return it != s_mouseButtonStates.end() && it->second == MouseState::held;

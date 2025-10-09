@@ -1,6 +1,6 @@
 #pragma once
 #include "emberMath.h"
-#include "input.h"
+#include "commonInput.h"
 #include <unordered_map>
 
 
@@ -15,8 +15,8 @@ namespace emberEngine
 
     private: // Members
         static bool s_isInitialized;
-        static std::unordered_map<Input::Key, KeyState> s_keyStates;
-        static std::unordered_map<Input::MouseButton, MouseState> s_mouseButtonStates;
+        static std::unordered_map<emberCommon::Input::Key, KeyState> s_keyStates;
+        static std::unordered_map<emberCommon::Input::MouseButton, MouseState> s_mouseButtonStates;
         static float s_mouseX;
         static float s_mouseY;
         static float s_mouseScrollX;
@@ -38,13 +38,13 @@ namespace emberEngine
         static bool AnyMouseDown();
         static bool AnyMouseUp();
         static bool AnyMouseHeld();
-        static bool KeyDown(Input::Key key);
-        static bool KeyUp(Input::Key key);
-        static bool KeyHeld(Input::Key key);
-        static bool KeyDownOrHeld(Input::Key key);
-        static bool MouseDown(Input::MouseButton button);
-        static bool MouseUp(Input::MouseButton button);
-        static bool MouseHeld(Input::MouseButton button);
+        static bool KeyDown(emberCommon::Input::Key key);
+        static bool KeyUp(emberCommon::Input::Key key);
+        static bool KeyHeld(emberCommon::Input::Key key);
+        static bool KeyDownOrHeld(emberCommon::Input::Key key);
+        static bool MouseDown(emberCommon::Input::MouseButton button);
+        static bool MouseUp(emberCommon::Input::MouseButton button);
+        static bool MouseHeld(emberCommon::Input::MouseButton button);
         static float MouseX();
         static float MouseY();
         static Float2 MousePos();

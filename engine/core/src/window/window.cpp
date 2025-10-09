@@ -1,5 +1,4 @@
 #include "window.h"
-#include "event.h"
 #include "logger.h"
 #include "macros.h"
 #include "nullWindow.h"
@@ -28,9 +27,9 @@ namespace emberEngine
 		s_isInitialized = true;
 
 		if (true)
-			s_pIWindow = std::make_unique<sdlWindowBackend::SdlWindow>(windowWidth, windowHeight);
+			s_pIWindow = std::make_unique<sdlWindowBackend::Window>(windowWidth, windowHeight);
 		else
-			s_pIWindow = std::make_unique<nullWindowBackend::NullWindow>();
+			s_pIWindow = std::make_unique<nullWindowBackend::Window>();
 
 		#ifdef LOG_INITIALIZATION
 		LOG_TRACE("Window initialized.");
@@ -45,11 +44,11 @@ namespace emberEngine
 
 
 	// Public methods:
-	void Window::LinkDearImGui(void* pDearImGui)
+	void Window::LinkDearImGui(emberBackendInterface::IGui* pDearImGui)
 	{
 		s_pIWindow->LinkDearImGui(pDearImGui);
 	}
-	std::vector<Event> Window::PollEvents()
+	std::vector<emberCommon::Event> Window::PollEvents()
 	{
 		PROFILE_FUNCTION();
 		return s_pIWindow->PollEvents();

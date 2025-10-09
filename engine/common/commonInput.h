@@ -1,11 +1,8 @@
-#ifndef __INCLUDE_GUARD_input_h__
-#define __INCLUDE_GUARD_input_h__
+#pragma once
 
 
 
-// The input system is supposed to be accessable in the ECS.
-// So it should reside in the emberEngine namespace.
-namespace emberEngine
+namespace emberCommon
 {
     struct Input
     {
@@ -79,7 +76,3 @@ namespace emberEngine
         };
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_input_h__

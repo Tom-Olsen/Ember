@@ -40,10 +40,6 @@ source_group("Applications" FILES ${APPLICATIONS_FILES})
 file(GLOB COMPONENTS_FILES "${ENGINE_CORE_PATH}/src/components/*.*")
 source_group("Components" FILES ${COMPONENTS_FILES})
  
-# src/dearImGui/*.*:
-file(GLOB DEAR_IMGUI_FILES "${ENGINE_CORE_PATH}/src/dearImGUi/*.*")
-source_group("Dear ImGui" FILES ${DEAR_IMGUI_FILES})
- 
 ## src/editorWindows/*.*:
 #file(GLOB EDITOR_WINDOWS_FILES "${ENGINE_CORE_PATH}/src/editorWindows/*.*")
 #source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
@@ -63,6 +59,10 @@ source_group("Event System" FILES ${EVENT_SYSTEM_FILES})
 # src/gpuResources/*.*:
 file(GLOB GPU_RESOURCES_FILES "${ENGINE_CORE_PATH}/src/gpuResources/*.*")
 source_group("Gpu Resources" FILES ${GPU_RESOURCES_FILES})
+ 
+# src/gui/*.*:
+file(GLOB GUI_FILES "${ENGINE_CORE_PATH}/src/gUi/*.*")
+source_group("Gui" FILES ${GUI_FILES})
  
 # src/managers/*.*:
 file(GLOB MANAGERS_FILES "${ENGINE_CORE_PATH}/src/managers/*.*")
@@ -85,8 +85,12 @@ file(GLOB WINDOW_FILES "${ENGINE_CORE_PATH}/src/window/*.*")
 source_group("Window" FILES ${WINDOW_FILES})
 
 # ../../common/*.*:
-file(GLOB COMMON_INTERFACE_FILES "{COMMON_DIR}/*.*")
-source_group("Commen" FILES ${COMMON_INTERFACE_FILES})
+file(GLOB COMMON_FILES "{COMMON_DIR}/*.*")
+source_group("Commen" FILES ${COMMON_FILES})
+
+# ../../interfaces/gui/*.*:
+file(GLOB GUI_INTERFACE_FILES "${INTERFACES_DIR}/gui/*.*")
+source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
  
 # ../../interfaces/renderer/*.*:
 file(GLOB RENDERER_INTERFACE_FILES "${INTERFACES_DIR}/renderer/*.*")
@@ -104,18 +108,19 @@ add_library(${PROJECT_NAME} STATIC
     ${ENGINE_FILE}
     ${APPLICATIONS_FILES}
     ${COMPONENTS_FILES}
-    ${DEAR_IMGUI_FILES}
     #${EDITOR_FILES}
     #${EDITOR_WINDOWS_FILES}
     ${EVENT_SYSTEM_FILES}
     ${GPU_RESOURCES_FILES}
+    ${GUI_FILES}
     ${ENTITY_COMPONENT_SYSTEM_FILES}
     ${MANAGERS_FILES}
     ${PHYSICS_FILES}
     ${RENDERER_FILES}
     ${UTILITY_FILES}
     ${WINDOW_FILES}
-    ${COMMON_INTERFACE_FILES}
+    ${COMMON_FILES}
+    ${GUI_INTERFACE_FILES}
     ${RENDERER_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
  
@@ -125,18 +130,19 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC ${ENGINE_CORE_PATH}/src
     PUBLIC ${ENGINE_CORE_PATH}/src/applications
     PUBLIC ${ENGINE_CORE_PATH}/src/components
-    PUBLIC ${ENGINE_CORE_PATH}/src/dearImGui
     #PUBLIC ${ENGINE_CORE_PATH}/src/editorWindows
     #PUBLIC ${ENGINE_CORE_PATH}/src/editor
     PUBLIC ${ENGINE_CORE_PATH}/src/entityComponentSystem
     PUBLIC ${ENGINE_CORE_PATH}/src/eventSystem
     PUBLIC ${ENGINE_CORE_PATH}/src/gpuResources
+    PUBLIC ${ENGINE_CORE_PATH}/src/gui
     PUBLIC ${ENGINE_CORE_PATH}/src/managers
     PUBLIC ${ENGINE_CORE_PATH}/src/physics
     PUBLIC ${ENGINE_CORE_PATH}/src/renderer
     PUBLIC ${ENGINE_CORE_PATH}/src/utility
     PUBLIC ${ENGINE_CORE_PATH}/src/window
     PUBLIC ${ENGINE_CORE_PATH}/../common
+    PUBLIC ${ENGINE_CORE_PATH}/../interfaces/gui
     PUBLIC ${ENGINE_CORE_PATH}/../interfaces/renderer
     PUBLIC ${ENGINE_CORE_PATH}/../interfaces/window)
 # ---------------------------------------------------
@@ -203,6 +209,18 @@ if (NOT TARGET sdlWindowBackend)
     add_subdirectory("${BACKENDS_DIR}/sdlWindow" sdlWindowBackend)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC sdlWindowBackend)
+
+# Null Gui:
+if (NOT TARGET nullGuiBackend)
+    add_subdirectory("${BACKENDS_DIR}/nullGui" nullGuiBackend)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC nullGuiBackend)
+
+# ImGui SDL Vulkan:
+if (NOT TARGET imGuiSdlVulkanBackend)
+    add_subdirectory("${BACKENDS_DIR}/imGuiSdlVulkan" imGuiSdlVulkanBackend)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC imGuiSdlVulkanBackend)
 
 # Vulkan Renderer:
 if (NOT TARGET vulkanRendererBackend)

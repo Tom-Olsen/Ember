@@ -35,7 +35,7 @@ namespace emberEngine
 	{
 		m_color = color;
 	}
-	void SpotLight::SetShadowType(emberCommon::ShadowType shadowType)
+	void SpotLight::SetShadowType(ShadowType shadowType)
 	{
 		m_shadowType = shadowType;
 	}
@@ -78,7 +78,7 @@ namespace emberEngine
 	{
 		return m_color;
 	}
-	emberCommon::ShadowType SpotLight::GetShadowType() const
+	ShadowType SpotLight::GetShadowType() const
 	{
 		return m_shadowType;
 	}

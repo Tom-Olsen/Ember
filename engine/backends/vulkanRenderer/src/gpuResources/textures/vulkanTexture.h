@@ -16,6 +16,11 @@
 
 
 
+// Forward declarations:
+typedef struct VkImageView_T* VkImageView;
+
+
+
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
@@ -76,7 +81,7 @@ namespace vulkanRendererBackend
 		uint32_t GetDepth() const override;
 		uint32_t GetChannels() const override;
 		const emberCommon::TextureFormat GetTextureFormat() const override;
-		void* GetVkImageView() const override;
+		const VkImageView& GetVkImageView() const override;
 		Format GetFormat() const;
 		VmaImage* const GetVmaImage() const;
 		DescriptorType GetDescriptorType() const;

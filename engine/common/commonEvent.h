@@ -1,11 +1,10 @@
-#ifndef __INCLUDE_GUARD_event_h__
-#define __INCLUDE_GUARD_event_h__
-#include "input.h"
+#pragma once
+#include "commonInput.h"
 #include <string>
 
 
 
-namespace emberEngine
+namespace emberCommon
 {
     enum class EventType
     {
@@ -66,7 +65,3 @@ namespace emberEngine
 		uint32_t resizeWidth{ 0 }, resizeHeight{ 0 };
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_iEvent_h__

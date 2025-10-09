@@ -9,7 +9,7 @@ namespace emberBackendInterface
     // Forward declerations:
     class IBuffer;
     class ICompute;
-    class IDearImGui;
+    class IGui;
     class IMaterial;
     class IMesh;
     class IShaderProperties;
@@ -43,7 +43,7 @@ namespace emberBackendInterface
 
         // Setters:
         virtual void SetIComputeHandle(emberBackendInterface::ICompute* pICompute) = 0;
-        virtual void SetIDearImGuiHandle(emberBackendInterface::IDearImGui* pIDearImGui) = 0;
+        virtual void SetIGuiHandle(emberBackendInterface::IGui* pIGui) = 0;
         virtual void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix) = 0;
 
         // Functionallity forwarding:

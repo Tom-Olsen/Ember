@@ -94,8 +94,12 @@ file(GLOB UTILITY_FILES "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
 # ../../common/*.*:
-file(GLOB COMMON_INTERFACE_FILES "../../common/*.*")
-source_group("Commen" FILES ${COMMON_INTERFACE_FILES})
+file(GLOB COMMON_FILES "../../common/*.*")
+source_group("Commen" FILES ${COMMON_FILES})
+
+# ../../interfaces/gui/*:
+file(GLOB GUI_INTERFACE_FILES "../../interfaces/gui/*")
+source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
 
 # ../../interfaces/renderer/*.*:
 file(GLOB RENDERER_INTERFACE_FILES "../../interfaces/renderer/*.*")
@@ -128,7 +132,8 @@ if (VULKAN_RENDERER_BACKEND_BUILD_SHARED)
         ${RENDER_PASSES_FILES}
         ${TYPES_FILES}
         ${UTILITY_FILES}
-        ${COMMON_INTERFACE_FILES}
+        ${COMMON_FILES}
+        ${GUI_INTERFACE_FILES}
         ${RENDERER_INTERFACE_FILES}
         ${WINDOW_INTERFACE_FILES})
 else()
@@ -150,7 +155,8 @@ else()
         ${RENDER_PASSES_FILES}
         ${TYPES_FILES}
         ${UTILITY_FILES}
-        ${COMMON_INTERFACE_FILES}
+        ${COMMON_FILES}
+        ${GUI_INTERFACE_FILES}
         ${RENDERER_INTERFACE_FILES}
         ${WINDOW_INTERFACE_FILES})
 endif()
@@ -175,6 +181,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/types
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/gui
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window)
 # ---------------------------------------------------

@@ -1,5 +1,4 @@
 #pragma once
-#include "commonLighting.h"
 #include "emberEngine.h"
 
 
@@ -14,7 +13,7 @@ namespace emberEngine
 	private: // Members:
 		float m_intensity;
 		Float3 m_color;
-		emberCommon::ShadowType m_shadowType;
+		ShadowType m_shadowType;
 		float m_fov;
 		float m_nearClip;
 		float m_farClip;
@@ -31,7 +30,7 @@ namespace emberEngine
 		// Setters:
 		void SetIntensity(const float& intensity);
 		void SetColor(const Float3& color);
-		void SetShadowType(emberCommon::ShadowType shadowType);
+		void SetShadowType(ShadowType shadowType);
 		void SetFov(const float& fov);
 		void SetNearClip(const float& nearClip);
 		void SetFarClip(const float& farClip);
@@ -42,7 +41,7 @@ namespace emberEngine
 		// Getters:
 		float GetIntensity() const;
 		Float3 GetColor() const;
-		emberCommon::ShadowType GetShadowType() const;
+		ShadowType GetShadowType() const;
 		float GetFov() const;
 		float GetNearClip() const;
 		float GetFarClip() const;

@@ -2,6 +2,7 @@
 #include "emberEngine.h"
 
 
+
 namespace emberEngine
 {
 	class CameraController : public Component

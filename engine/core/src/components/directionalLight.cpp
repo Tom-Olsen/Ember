@@ -1,7 +1,5 @@
 ﻿#include "directionalLight.h"
 #include "camera.h"
-#include "logger.h"
-#include "renderer.h"
 #include "shadowCascade.h"
 
 
@@ -13,7 +11,7 @@ namespace emberEngine
 	{
 		m_intensity = 1.0f;
 		m_color = Float3::white;
-		m_shadowType = emberCommon::ShadowType::hard;
+		m_shadowType = ShadowType::hard;
 		m_pActiveCamera = nullptr;
 		m_shadowCascadeCount = 4;
 		m_distributionFactor = 0.0f;
@@ -41,7 +39,7 @@ namespace emberEngine
 	{
 		m_color = color;
 	}
-	void DirectionalLight::SetShadowType(emberCommon::ShadowType shadowType)
+	void DirectionalLight::SetShadowType(ShadowType shadowType)
 	{
 		m_shadowType = shadowType;
 	}
@@ -81,7 +79,7 @@ namespace emberEngine
 	{
 		return m_color;
 	}
-	emberCommon::ShadowType DirectionalLight::GetShadowType() const
+	ShadowType DirectionalLight::GetShadowType() const
 	{
 		return m_shadowType;
 	}

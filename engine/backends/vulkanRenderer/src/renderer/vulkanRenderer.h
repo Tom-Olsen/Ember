@@ -19,7 +19,7 @@ typedef struct VkPipelineLayout_T* VkPipelineLayout;
 namespace emberBackendInterface
 {
 	class IBuffer;
-	class IDearImGui;
+	class IGui;
 	class ICompute;
 	class IMaterial;
 	class IMesh;
@@ -65,7 +65,7 @@ namespace vulkanRendererBackend
 
 	private: // Members:
 		// Backend hooks:
-		emberBackendInterface::IDearImGui* m_pIDearImGui;
+		emberBackendInterface::IGui* m_pIGui;
 		Compute* m_pCompute;
 		
 		// Render resources:
@@ -151,7 +151,7 @@ namespace vulkanRendererBackend
 
 		// Setters:
 		void SetIComputeHandle(emberBackendInterface::ICompute* pICompute) override;
-		void SetIDearImGuiHandle(emberBackendInterface::IDearImGui* pIDearImGui) override;
+		void SetIGuiHandle(emberBackendInterface::IGui* pIGui) override;
 		void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix) override;
 		void SetDepthBiasConstantFactor(float depthBiasConstantFactor);
 		void SetDepthBiasClamp(float depthBiasClamp);

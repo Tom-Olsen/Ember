@@ -1,15 +1,15 @@
-# Ember/engine/backends/sdlWindow/CMakeLists.txt
+# Ember/engine/backends/imGuiSdlVulkan/CMakeLists.txt
 
 
 
 # ------------------- Project Setup ------------------
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
-project(sdlWindowBackend)
+project(imGuiSdlVulkanBackend)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
 
 # Static vs Shared library option:
-option(SDL_WINDOW_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
+option(IMGUI_SDL_VULKAN_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
@@ -29,8 +29,8 @@ file(GLOB SOURCE_FILES "src/*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 
 # ../../common/*:
-file(GLOB COMMON_FILES "../../common/*.*")
-source_group("Commen" FILES ${COMMON_FILES})
+file(GLOB COMMON_INTERFACE_FILES "../../common/*.*")
+source_group("Commen" FILES ${COMMON_INTERFACE_FILES})
 
 # ../../interfaces/gui/*:
 file(GLOB GUI_INTERFACE_FILES "../../interfaces/gui/*")
@@ -43,22 +43,35 @@ source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 # ../../interfaces/window/*:
 file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
+
+set(IMGUI_FILES
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui.h"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_demo.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_draw.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_tables.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_widgets.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/backends/imgui_impl_sdl3.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/backends/imgui_impl_vulkan.cpp")
+source_group("ImGui" FILES ${IMGUI_FILES})
 # ---------------------------------------------------
 
 
 
 # ----------------- Create Library ------------------
-if (SDL_WINDOW_BACKEND_BUILD_SHARED)
+if (IMGUI_SDL_VULKAN_BACKEND_BUILD_SHARED)
     add_library(${PROJECT_NAME} SHARED
         ${SOURCE_FILES}
-        ${COMMON_FILES}
+        ${IMGUI_FILES}
+        ${COMMON_INTERFACE_FILES}
         ${GUI_INTERFACE_FILES}
         ${RENDERER_INTERFACE_FILES}
         ${WINDOW_INTERFACE_FILES})
 else()
     add_library(${PROJECT_NAME} STATIC
         ${SOURCE_FILES}
-        ${COMMON_FILES}
+        ${IMGUI_FILES}
+        ${COMMON_INTERFACE_FILES}
         ${GUI_INTERFACE_FILES}
         ${RENDERER_INTERFACE_FILES}
         ${WINDOW_INTERFACE_FILES})
@@ -70,16 +83,18 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/gui
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/imgui/backends)
 # ---------------------------------------------------
 
 
 
 # ---------------------- Macros ---------------------
-if(SDL_WINDOW_BACKEND_BUILD_SHARED)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE SDL_WINDOW_BACKEND_EXPORTS)
+if(IMGUI_SDL_VULKAN_BACKEND_BUILD_SHARED)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_SDL_VULKAN_BACKEND_EXPORTS)
 else()
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SDL_WINDOW_BACKEND_STATIC)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC IMGUI_SDL_VULKAN_BACKEND_STATIC)
 endif()
 # ---------------------------------------------------
 

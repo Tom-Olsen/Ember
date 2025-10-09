@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_emberEngine_h__
-#define __INCLUDE_GUARD_emberEngine_h__
+#pragma once
 
 
 
@@ -9,7 +8,7 @@
 
 
 
-// Enums: (move somewhere else?)
+// Ember::ToDo: move this somewhere else!
 namespace emberEngine
 {
 	enum class ProjectionType { perspective, orthographic};
@@ -51,6 +50,23 @@ namespace emberEngine
 #include "gameObject.h"
 #include "scene.h"
 
+// Common (core <-> backend) communication: (Not all included on purpose for now)
+#include "commonAccessMask.h"
+#include "commonInput.h"
+#include "commonLighting.h"
 
+// Common Aliases:
+namespace emberEngine
+{
+    // Input aliasing:
+    using Input = emberCommon::Input;
+    using MouseButton = emberCommon::Input::MouseButton;
+    using ControllerButton = emberCommon::Input::ControllerButton;
+    using Key = emberCommon::Input::Key;
 
-#endif // __INCLUDE_GUARD_emberEngine_h__
+    // Compute shader aliasing:
+    using AccessMasks = emberCommon::AccessMasks;
+    using BufferUsage = emberCommon::BufferUsage;
+
+    using ShadowType = emberCommon::ShadowType;
+}

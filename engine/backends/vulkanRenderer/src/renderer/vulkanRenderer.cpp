@@ -1,6 +1,6 @@
 #include "vulkanRenderer.h"
 #include "emberMath.h"
-#include "iDearImGui.h"
+#include "iGui.h"
 #include "profiler.h"
 #include "spirvReflect.h"
 #include "taskSystem.h"
@@ -317,9 +317,9 @@ namespace vulkanRendererBackend
 	{
 		m_pCompute = static_cast<Compute*>(pICompute);
 	}
-	void Renderer::SetIDearImGuiHandle(emberBackendInterface::IDearImGui* pIDearImGui)
+	void Renderer::SetIGuiHandle(emberBackendInterface::IGui* pIGui)
 	{
-		m_pIDearImGui = pIDearImGui;
+		m_pIGui = pIGui;
 	}
 	void Renderer::SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
 	{
@@ -1035,7 +1035,7 @@ namespace vulkanRendererBackend
 				vkCmdDrawIndexed(commandBuffer, 3 * m_pPresentMesh->GetTriangleCount(), 1, 0, 0, 0);
 				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", m_pPresentMaterial->GetName());
 				
-				m_pIDearImGui->Render(commandBuffer);
+				m_pIGui->Render(commandBuffer);
 			}
 			vkCmdEndRenderPass(commandBuffer);
 		}
@@ -1067,7 +1067,7 @@ namespace vulkanRendererBackend
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				m_pIDearImGui->Render(commandBuffer);
+				m_pIGui->Render(commandBuffer);
 			}
 			vkCmdEndRenderPass(commandBuffer);
 		}

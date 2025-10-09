@@ -4,11 +4,11 @@
 #include "component.h"
 #include "computeShaderManager.h"
 #include "compute.h"
-#include "dearImGui.h"
 #include "emberMath.h"
 #include "emberTime.h"
 #include "eventSystem.h"
 #include "gameObject.h"
+#include "gui.h"
 #include "logger.h"
 #include "macros.h"
 #include "materialManager.h"
@@ -47,14 +47,14 @@ namespace emberEngine
 			rendererCreateInfo.msaaSampleCount = applicationCreateInfo.msaaSampleCount;	// project settings.
 			rendererCreateInfo.renderWidth = applicationCreateInfo.renderWidth;			// project settings.
 			rendererCreateInfo.renderHeight = applicationCreateInfo.renderHeight;		// project settings.
-			rendererCreateInfo.enableDearImGui = true;									// application dependent.
+			rendererCreateInfo.enableGui = true;										// application dependent.
 			rendererCreateInfo.enableDockSpace = false;									// application dependent.
 			rendererCreateInfo.maxDirectionalLights = MAX_DIR_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.maxPositionalLights = MAX_POS_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.shadowMapResolution = SHADOW_MAP_RESOLUTION;				// controlled via macro for now.
 			Renderer::Init(rendererCreateInfo);
 			Compute::Init();
-			DearImGui::Init(rendererCreateInfo.enableDockSpace);
+			Gui::Init(rendererCreateInfo.enableDockSpace);
 			Renderer::SetIComputeHandle();
 			Renderer::SetIDearImGuiHandle();
 
@@ -86,8 +86,8 @@ namespace emberEngine
 		MaterialManager::Clear();
 		ComputeShaderManager::Clear();
 
-		// Renderer/DearImGui:
-		DearImGui::Clear();
+		// Renderer/Gui:
+		Gui::Clear();
 		Compute::Clear();
 		Renderer::Clear();
 
@@ -133,7 +133,7 @@ namespace emberEngine
 					FixedUpdate();
 
 				// Game update loop:
-				DearImGui::Update();
+				Gui::Update();
 				Update();
 				LateUpdate();
 				Renderer::RenderFrame();
