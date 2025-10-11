@@ -17,7 +17,7 @@ get_filename_component(CORE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../shaders" A
 get_filename_component(BACKENDS_DIR "${CMAKE_CURRENT_LIST_DIR}/../backends" ABSOLUTE)       # backends
 get_filename_component(COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../common" ABSOLUTE)           # commom
 get_filename_component(INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../interfaces" ABSOLUTE)   # interfaces
-get_filename_component(LIBS_DIR ${CMAKE_CURRENT_LIST_DIR}/../libs ABSOLUTE)                 # libs
+get_filename_component(LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../libs" ABSOLUTE)               # libs
 
 # Output directory:
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib STATIC ...) => .a .lib
@@ -31,22 +31,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}"
 # src/engine.h:
 file(GLOB ENGINE_FILE "${ENGINE_CORE_PATH}/src/emberEngine.h")
 source_group("/" FILES ${ENGINE_FILE})
-
-# src/applications/*.*
-file(GLOB APPLICATIONS_FILES "${ENGINE_CORE_PATH}/src/applications/*.*")
-source_group("Applications" FILES ${APPLICATIONS_FILES})
  
 # src/components/*.*:
 file(GLOB COMPONENTS_FILES "${ENGINE_CORE_PATH}/src/components/*.*")
 source_group("Components" FILES ${COMPONENTS_FILES})
- 
-## src/editorWindows/*.*:
-#file(GLOB EDITOR_WINDOWS_FILES "${ENGINE_CORE_PATH}/src/editorWindows/*.*")
-#source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
- 
-## src/editor/*.*:
-#file(GLOB EDITOR_FILES "${ENGINE_CORE_PATH}/src/editor/*.*")
-#source_group("Editors" FILES ${EDITOR_FILES})
  
 # src/entityComponentSystem/*.*:
 file(GLOB ENTITY_COMPONENT_SYSTEM_FILES "${ENGINE_CORE_PATH}/src/entityComponentSystem/*.*")
@@ -108,8 +96,6 @@ add_library(${PROJECT_NAME} STATIC
     ${ENGINE_FILE}
     ${APPLICATIONS_FILES}
     ${COMPONENTS_FILES}
-    #${EDITOR_FILES}
-    #${EDITOR_WINDOWS_FILES}
     ${EVENT_SYSTEM_FILES}
     ${GPU_RESOURCES_FILES}
     ${GUI_FILES}
@@ -130,8 +116,6 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC ${ENGINE_CORE_PATH}/src
     PUBLIC ${ENGINE_CORE_PATH}/src/applications
     PUBLIC ${ENGINE_CORE_PATH}/src/components
-    #PUBLIC ${ENGINE_CORE_PATH}/src/editorWindows
-    #PUBLIC ${ENGINE_CORE_PATH}/src/editor
     PUBLIC ${ENGINE_CORE_PATH}/src/entityComponentSystem
     PUBLIC ${ENGINE_CORE_PATH}/src/eventSystem
     PUBLIC ${ENGINE_CORE_PATH}/src/gpuResources
@@ -193,38 +177,4 @@ if (NOT TARGET ShaderCompiler)
     add_subdirectory(${CORE_SHADERS_DIR} ShaderCompiler)
 endif()
 add_dependencies(${PROJECT_NAME} ShaderCompiler)
-# ---------------------------------------------------
-
-
-
-# ------------------ Link Backends ------------------
-# Null Window:
-if (NOT TARGET nullWindowBackend)
-    add_subdirectory("${BACKENDS_DIR}/nullWindow" nullWindowBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC nullWindowBackend)
-
-# SDL Window:
-if (NOT TARGET sdlWindowBackend)
-    add_subdirectory("${BACKENDS_DIR}/sdlWindow" sdlWindowBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC sdlWindowBackend)
-
-# Null Gui:
-if (NOT TARGET nullGuiBackend)
-    add_subdirectory("${BACKENDS_DIR}/nullGui" nullGuiBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC nullGuiBackend)
-
-# ImGui SDL Vulkan:
-if (NOT TARGET imGuiSdlVulkanBackend)
-    add_subdirectory("${BACKENDS_DIR}/imGuiSdlVulkan" imGuiSdlVulkanBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC imGuiSdlVulkanBackend)
-
-# Vulkan Renderer:
-if (NOT TARGET vulkanRendererBackend)
-    add_subdirectory("${BACKENDS_DIR}/vulkanRenderer" vulkanRendererBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC vulkanRendererBackend)
 # ---------------------------------------------------

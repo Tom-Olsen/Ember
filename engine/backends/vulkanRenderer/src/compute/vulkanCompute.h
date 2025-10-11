@@ -43,5 +43,9 @@ namespace vulkanRendererBackend
 		Immediate* GetImmediateCompute();
 		PostRender* GetPostRenderCompute();
 		PreRender* GetPreRenderCompute();
+		emberBackendInterface::ICompute::IAsync* GetAsyncComputeInterfaceHandle() override;
+		emberBackendInterface::ICompute::IImmediate* GetImmediateComputeInterfaceHandle() override;
+		emberBackendInterface::ICompute::IPostRender* GetPostRenderComputeInterfaceHandle() override;
+		emberBackendInterface::ICompute::IPreRender* GetPreRenderComputeInterfaceHandle() override;
 	};
 }

@@ -1,7 +1,5 @@
 #include "textureManager.h"
-#include "emberTime.h"
 #include "logger.h"
-#include "macros.h"
 #include "texture.h"
 #include "texture2d.h"
 #include "textureCube.h"
@@ -24,10 +22,6 @@ namespace emberEngine
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
-
-		#ifdef LOG_INITIALIZATION
-		Time::Reset();
-		#endif
 
 		// Iterate through the texture directory: (for now everything interpreted as 2d sample textures)
 		emberCommon::TextureUsage usage = emberCommon::TextureUsage::sample;
@@ -65,11 +59,6 @@ namespace emberEngine
 		AddTexture(std::move(skybox0));
 		TextureCube skybox1("skybox1", emberCommon::TextureFormats::rgba08_srgb, emberCommon::TextureUsage::sample, directoryPath.string() + "/skyboxNebula0/");
 		AddTexture(std::move(skybox1));
-
-		#ifdef LOG_INITIALIZATION
-		Time::Update();
-		LOG_TRACE("TextureManager initialized. ({}s)", Time::GetDeltaTime());
-		#endif
 	}
 	void TextureManager::Clear()
 	{

@@ -14,21 +14,12 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Desctructor:
-	StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, Format format, int width, int height)
-	{
-		Init(name, format, width, height);
-	}
 	StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, Format format, int width, int height, void* data)
 	{
 		Init(name, format, width, height);
-		SetData(data);
+		if (data)
+			SetData(data);
 	}
-    StorageSampleTexture2d::StorageSampleTexture2d(const std::string& name, Format format, const std::filesystem::path& path)
-    {
-        emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageFile(path, GetChannelCount(format));
-		Init(name, format, imageAsset.width, imageAsset.height);
-		SetData((void*)imageAsset.pixels.data());
-    }
 	StorageSampleTexture2d::~StorageSampleTexture2d()
 	{
 

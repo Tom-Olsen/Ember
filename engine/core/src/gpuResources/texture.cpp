@@ -53,4 +53,12 @@ namespace emberEngine
 	{
 		return m_pITexture->GetTextureFormat();
 	}
+
+
+
+	// Setters:
+	void Texture::SetData(void* data)
+	{
+		m_pITexture->SetData(data);
+	}
 }

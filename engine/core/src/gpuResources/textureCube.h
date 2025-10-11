@@ -12,7 +12,7 @@ namespace emberEngine
 	{
 	public: // methods:
 		// Constructor/Destructor:
-		TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage);
+		TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data = nullptr);
 		TextureCube(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path);
 		~TextureCube();
 

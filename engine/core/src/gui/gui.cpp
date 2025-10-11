@@ -1,12 +1,6 @@
 #include "gui.h"
 #include "iGui.h"
-#include "imGuiSdlVulkan.h"
-#include "logger.h"
-#include "macros.h"
-#include "nullGui.h"
-#include "renderer.h"
 #include "texture2d.h"
-#include "window.h"
 
 
 
@@ -15,29 +9,17 @@ namespace emberEngine
 	// Static members:
 	bool Gui::s_isInitialized = false;
 	std::unique_ptr<emberBackendInterface::IGui> Gui::s_pIGui;
-	emberBackendInterface::IGui* Gui::GetInterfaceHandle()
-	{
-		return s_pIGui.get();
-	}
 
 
 
 	// Initialization/Cleanup:
-	void Gui::Init(bool enableDockSpace)
+	void Gui::Init(emberBackendInterface::IGui* pIGui)
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
 
-		if (true)
-			s_pIGui = std::make_unique<imGuiSdlVulkanBackend::Gui>(Window::GetInterfaceHandle(), Renderer::GetInterfaceHandle(), enableDockSpace);
-		else
-			s_pIGui = std::make_unique<nullGuiBackend::Gui>();
-
-		Window::LinkDearImGui(s_pIGui.get());
-		#ifdef LOG_INITIALIZATION
-		LOG_TRACE("Gui initialized.");
-		#endif
+		s_pIGui = std::unique_ptr<emberBackendInterface::IGui>(pIGui);
 	}
 	void Gui::Clear()
 	{

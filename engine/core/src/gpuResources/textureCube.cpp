@@ -1,34 +1,21 @@
 #include "textureCube.h"
-#include "logger.h"
-#include "vulkanConvertTextureFormat.h"
-#include "vulkanFormat.h"
-#include "vulkanSampleTextureCube.h"
+#include "assetLoader.h"
+#include "iTexture.h"
+#include "renderer.h"
 
 
 
 namespace emberEngine
 {
-	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
+	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
-		vulkanRendererBackend::Format vulkanFormat = vulkanRendererBackend::TextureFormatCommonToVulkan(format);
-		switch (usage)
-		{
-			case emberCommon::TextureUsage::sample:
-				m_pITexture = std::make_unique<vulkanRendererBackend::SampleTextureCube>(name, vulkanFormat, width, height);
-				break;
-			default: LOG_ERROR("TextureCube: Unsuported TextureUsage '{}'", emberCommon::TextureUsageNames[static_cast<int>(usage)]);
-		}
+		m_pITexture = std::unique_ptr<emberBackendInterface::ITexture>(Renderer::CreateTextureCube(name, width, height, format, usage, data));
 	}
 	TextureCube::TextureCube(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path)
 	{
-		vulkanRendererBackend::Format vulkanFormat = vulkanRendererBackend::TextureFormatCommonToVulkan(format);
-		switch (usage)
-		{
-			case emberCommon::TextureUsage::sample:
-				m_pITexture = std::make_unique<vulkanRendererBackend::SampleTextureCube>(name, vulkanFormat, path);
-				break;
-			default: LOG_ERROR("TextureCube: Unsuported TextureUsage '{}'", emberCommon::TextureUsageNames[static_cast<int>(usage)]);
-		}
+		emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageCubeFiles(path, format.channels, false);
+		void* data = static_cast<void*>(imageAsset.pixels.data());
+		m_pITexture = std::unique_ptr<emberBackendInterface::ITexture>(Renderer::CreateTextureCube(name, imageAsset.width, imageAsset.height, format, usage, data));
 	}
 	TextureCube::~TextureCube()
 	{

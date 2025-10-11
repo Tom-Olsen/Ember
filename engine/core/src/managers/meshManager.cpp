@@ -1,7 +1,6 @@
 #include "meshManager.h"
 #include "assetLoader.h"
 #include "logger.h"
-#include "macros.h"
 #include "mesh.h"
 #include "meshGenerator.h"
 
@@ -93,10 +92,6 @@ namespace emberEngine
 		Mesh leb9("leb9");
 		leb9.MoveMeshAsset(emberAssetLoader::LoadMeshCsv(leb9File));
 		AddMesh(std::move(leb9));
-		
-		#ifdef LOG_INITIALIZATION
-		LOG_TRACE("MeshManager initialized.");
-		#endif
 	}
 	//void MeshManager::UnloadAllMeshes()
 	//{

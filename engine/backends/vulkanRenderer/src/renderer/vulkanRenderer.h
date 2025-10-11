@@ -2,7 +2,10 @@
 #include "iRenderer.h"
 #include "commonCamera.h"
 #include "commonLighting.h"
+#include "commonMaterialType.h"
 #include "commonRendererCreateInfo.h"
+#include "commonTextureFormat.h"
+#include "commonTextureUsage.h"
 #include "vulkanDrawCall.h"
 #include "vulkanRendererExport.h"
 #include <array>
@@ -24,6 +27,8 @@ namespace emberBackendInterface
 	class IMaterial;
 	class IMesh;
 	class IShaderProperties;
+	class ITexture;
+	class IWindow;
 }
 
 
@@ -116,7 +121,7 @@ namespace vulkanRendererBackend
 		bool m_rebuildSwapchain;
 
 	public: // Methods:
-		Renderer(const emberCommon::RendererCreateInfo& createInfo);
+		Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow);
 		~Renderer();
 
 		// Non-copyable:
@@ -160,6 +165,18 @@ namespace vulkanRendererBackend
 		// Functionallity forwarding:
 		void CollectGarbage() override;
 		void WaitDeviceIdle() override; // needed so core can wait before destroying resource managers and then renderer.
+
+        // Gpu resource factories:
+		emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage) override;
+		//emberBackendInterface::ITexture* CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
+		emberBackendInterface::ITexture* CreateTexture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
+		//emberBackendInterface::ITexture* CreateTexture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
+		emberBackendInterface::ITexture* CreateTextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
+		emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) override;
+		emberBackendInterface::IMaterial* CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
+		emberBackendInterface::IMesh* CreateMesh(const std::string& name) override;
+		emberBackendInterface::IShaderProperties* CreateShaderProperties(emberBackendInterface::IComputeShader* pIComputeShader) override;
+		emberBackendInterface::IShaderProperties* CreateShaderProperties(emberBackendInterface::IMaterial* pIMaterial) override;
 
 		// Vulkan handle passthrough for API coupling:
 		void* GetVkInstance() override;

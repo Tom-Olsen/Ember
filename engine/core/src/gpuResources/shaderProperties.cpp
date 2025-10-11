@@ -1,12 +1,11 @@
 #include "shaderProperties.h"
 #include "buffer.h"
 #include "computeShader.h"
+#include "iMesh.h"
+#include "iShaderProperties.h"
 #include "material.h"
+#include "renderer.h"
 #include "texture.h"
-#include "vulkanComputeShader.h"
-#include "vulkanMaterial.h"
-#include "vulkanShader.h"
-#include "vulkanShaderProperties.h"
 
 
 
@@ -27,16 +26,12 @@ namespace emberEngine
 	ShaderProperties::ShaderProperties(ComputeShader& computeShader)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
-		vulkanRendererBackend::ComputeShader* pComputeShader = static_cast<vulkanRendererBackend::ComputeShader*>(pIComputeShader);
-		vulkanRendererBackend::ComputeShader* pShader = static_cast<vulkanRendererBackend::ComputeShader*>(pComputeShader);
-		m_pIShaderProperties = std::make_unique<vulkanRendererBackend::ShaderProperties>(pShader);
+		m_pIShaderProperties = std::unique_ptr<emberBackendInterface::IShaderProperties>(Renderer::CreateShaderProperties(pIComputeShader));
 	}
 	ShaderProperties::ShaderProperties(Material& material)
 	{
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
-		vulkanRendererBackend::Material* pMaterial = static_cast<vulkanRendererBackend::Material*>(pIMaterial);
-		vulkanRendererBackend::Shader* pShader = static_cast<vulkanRendererBackend::Shader*>(pMaterial);
-		m_pIShaderProperties = std::make_unique<vulkanRendererBackend::ShaderProperties>(pShader);
+		m_pIShaderProperties = std::unique_ptr<emberBackendInterface::IShaderProperties>(Renderer::CreateShaderProperties(pIMaterial));
 	}
 	ShaderProperties::ShaderProperties(emberBackendInterface::IShaderProperties* pIShaderProperties)
 	{

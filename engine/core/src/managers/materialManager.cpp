@@ -1,7 +1,6 @@
 #include "materialManager.h"
 #include "commonRenderQueue.h"
 #include "logger.h"
-#include "macros.h"
 #include "material.h"
 #include <filesystem>
 
@@ -80,10 +79,6 @@ namespace emberEngine
 		AddMaterial(std::move(testB));
 
 		Print();
-
-		#ifdef LOG_INITIALIZATION
-		LOG_TRACE("MaterialManager initialized.");
-		#endif
 	}
 	void MaterialManager::Clear()
 	{

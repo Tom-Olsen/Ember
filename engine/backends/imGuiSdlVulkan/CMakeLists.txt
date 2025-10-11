@@ -5,7 +5,7 @@
 # ------------------- Project Setup ------------------
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
-project(imGuiSdlVulkanBackend)
+project(ImGuiSdlVulkanBackend)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
 
 # Static vs Shared library option:

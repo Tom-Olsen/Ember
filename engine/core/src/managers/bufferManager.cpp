@@ -1,7 +1,6 @@
 #include "bufferManager.h"
 #include "buffer.h"
 #include "logger.h"
-#include "macros.h"
 
 
 
@@ -19,10 +18,6 @@ namespace emberEngine
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
-
-		#ifdef LOG_INITIALIZATION
-		LOG_TRACE("BufferManager initialized.");
-		#endif
 	}
 	void BufferManager::Clear()
 	{

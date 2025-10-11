@@ -2,11 +2,6 @@
 #include "computeShader.h"
 #include "emberTime.h"
 #include "shaderProperties.h"
-#include "vulkanAsyncCompute.h"
-#include "vulkanCompute.h"
-#include "vulkanImmediateCompute.h"
-#include "vulkanPostRenderCompute.h"
-#include "vulkanPreRenderCompute.h"
 #include "iCompute.h"
 
 
@@ -14,17 +9,11 @@
 namespace emberEngine
 {
 	// Compute::Async subclass:
-	// Private:
-	emberBackendInterface::ICompute::IAsync* Compute::Async::GetInterfaceHandle()
-	{
-		return m_pIAsync.get();
-	}
-
 	// Public:
 	// Constructor/Destructor:
-	Compute::Async::Async(uint32_t sessionCount)
+	Compute::Async::Async(emberBackendInterface::ICompute::IAsync* pIAsync)
 	{
-		m_pIAsync = std::make_unique<vulkanRendererBackend::Async>(sessionCount);
+		m_pIAsync = std::unique_ptr<emberBackendInterface::ICompute::IAsync>(pIAsync);
 	}
 	Compute::Async::~Async()
 	{
@@ -66,17 +55,11 @@ namespace emberEngine
 
 
 	// Compute::Immediate subclass:
-	// Private:
-	emberBackendInterface::ICompute::IImmediate* Compute::Immediate::GetInterfaceHandle()
-	{
-		return m_pIImmediate.get();
-	}
-
 	// Public:
 	// Constructor/Destructor:
-	Compute::Immediate::Immediate()
+	Compute::Immediate::Immediate(emberBackendInterface::ICompute::IImmediate* pIImmediate)
 	{
-		m_pIImmediate = std::make_unique<vulkanRendererBackend::Immediate>();
+		m_pIImmediate = std::unique_ptr<emberBackendInterface::ICompute::IImmediate>(pIImmediate);
 	}
 	Compute::Immediate::~Immediate()
 	{
@@ -92,17 +75,11 @@ namespace emberEngine
 
 
 	// Compute::PostRender subclass:
-	// Private:
-	emberBackendInterface::ICompute::IPostRender* Compute::PostRender::GetInterfaceHandle()
-	{
-		return m_pIPostRender.get();
-	}
-
 	// Public:
 	// Constructor/Destructor:
-	Compute::PostRender::PostRender()
+	Compute::PostRender::PostRender(emberBackendInterface::ICompute::IPostRender* pIPostRender)
 	{
-		m_pIPostRender = std::make_unique<vulkanRendererBackend::PostRender>();
+		m_pIPostRender = std::unique_ptr<emberBackendInterface::ICompute::IPostRender>(pIPostRender);
 	}
 	Compute::PostRender::~PostRender()
 	{
@@ -122,17 +99,11 @@ namespace emberEngine
 
 
 	// Compute::PreRender subclass:
-	// Private:
-	emberBackendInterface::ICompute::IPreRender* Compute::PreRender::GetInterfaceHandle()
-	{
-		return m_pIPreRender.get();
-	}
-
 	// Public:
 	// Constructor/Destructor:
-	Compute::PreRender::PreRender()
+	Compute::PreRender::PreRender(emberBackendInterface::ICompute::IPreRender* pIPreRender)
 	{
-		m_pIPreRender = std::make_unique<vulkanRendererBackend::PreRender>();
+		m_pIPreRender = std::unique_ptr<emberBackendInterface::ICompute::IPreRender>(pIPreRender);
 	}
 	Compute::PreRender::~PreRender()
 	{
@@ -166,25 +137,19 @@ namespace emberEngine
 
 
 
-	// Private:
-	emberBackendInterface::ICompute* Compute::GetInterfaceHandle()
-	{
-		return s_pICompute.get();
-	}
-
 	// Public:
 	// Initialization/Cleanup:
-	void Compute::Init()
+	void Compute::Init(emberBackendInterface::ICompute* pICompute)
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
 
-		s_pICompute = std::make_unique<vulkanRendererBackend::Compute>();
-		s_pAsync = std::make_unique<Async>((uint32_t)10);
-		s_pImmediate = std::make_unique<Immediate>();
-		s_pPostRender = std::make_unique<PostRender>();
-		s_pPreRender = std::make_unique<PreRender>();
+		s_pICompute = std::unique_ptr<emberBackendInterface::ICompute>(pICompute);
+		s_pAsync = std::make_unique<Async>(s_pICompute->GetAsyncComputeInterfaceHandle());
+		s_pImmediate = std::make_unique<Immediate>(s_pICompute->GetImmediateComputeInterfaceHandle());
+		s_pPostRender = std::make_unique<PostRender>(s_pICompute->GetPostRenderComputeInterfaceHandle());
+		s_pPreRender = std::make_unique<PreRender>(s_pICompute->GetPreRenderComputeInterfaceHandle());
 	}
 	void Compute::Clear()
 	{

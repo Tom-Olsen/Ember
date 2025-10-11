@@ -1,4 +1,4 @@
-#include "application.h"
+#include "gameApplication.h"
 #include "bufferManager.h"
 #include "commonRendererCreateInfo.h"
 #include "component.h"
@@ -10,7 +10,6 @@
 #include "gameObject.h"
 #include "gui.h"
 #include "logger.h"
-#include "macros.h"
 #include "materialManager.h"
 #include "meshManager.h"
 #include "profiler.h"
@@ -19,6 +18,17 @@
 #include "shadowConstants.h"
 #include "textureManager.h"
 #include "window.h"
+// Backends:
+#include "nullWindow.h"
+#include "sdlWindow.h"
+#include "vulkanRenderer.h"
+#include "vulkanAsyncCompute.h"
+#include "vulkanCompute.h"
+#include "vulkanImmediateCompute.h"
+#include "vulkanPostRenderCompute.h"
+#include "vulkanPreRenderCompute.h"
+#include "imGuiSdlVulkan.h"
+#include "nullGui.h"
 
 
 
@@ -34,14 +44,19 @@ namespace emberEngine
 			// Basic systems:
 			emberLogger::Logger::Init();
 			math::Random::Init();
-
-			// Window/Event systems:
-			Window::Init(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
 			EventSystem::Init();
 
-			// Renderer/DearImGui:
+
+
+			// Window backend:
+			emberBackendInterface::IWindow* pIWindow;
+			if (true)
+				pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
+			else
+				pIWindow = new nullWindowBackend::Window();
+
+			// Renderer backend:
 			emberCommon::RendererCreateInfo rendererCreateInfo = {};
-			rendererCreateInfo.pIWindow = Window::GetInterfaceHandle();					// handle pass through.
 			rendererCreateInfo.vSyncEnabled = applicationCreateInfo.vSyncEnabled;		// project settings.
 			rendererCreateInfo.framesInFlight = applicationCreateInfo.framesInFlight;	// project settings.
 			rendererCreateInfo.msaaSampleCount = applicationCreateInfo.msaaSampleCount;	// project settings.
@@ -52,11 +67,34 @@ namespace emberEngine
 			rendererCreateInfo.maxDirectionalLights = MAX_DIR_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.maxPositionalLights = MAX_POS_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.shadowMapResolution = SHADOW_MAP_RESOLUTION;				// controlled via macro for now.
-			Renderer::Init(rendererCreateInfo);
-			Compute::Init();
-			Gui::Init(rendererCreateInfo.enableDockSpace);
-			Renderer::SetIComputeHandle();
-			Renderer::SetIDearImGuiHandle();
+			emberBackendInterface::IRenderer* pIRenderer;
+			if (true)
+				pIRenderer = new vulkanRendererBackend::Renderer(rendererCreateInfo, pIWindow);
+
+			// Compute backend:
+			emberBackendInterface::ICompute* pICompute;
+			if (true)
+				pICompute = new vulkanRendererBackend::Compute();
+
+			// Gui backend:
+			emberBackendInterface::IGui* pIGui;
+			if (true)
+				pIGui = new imGuiSdlVulkanBackend::Gui(pIWindow, pIRenderer, rendererCreateInfo.enableDockSpace);
+			else
+				pIGui = new nullGuiBackend::Gui();
+
+			// Link backends together:
+			pIRenderer->SetIGuiHandle(pIGui);			// needed so renderer can inject gui draw calls in present renderpass.
+			pIRenderer->SetIComputeHandle(pICompute);	// needed for pre- and post-render compute shaders.
+			pIWindow->LinkDearImGui(pIGui);				// needed for window->gui event passthrough.
+
+
+
+			// Backend wrappers:
+			Window::Init(pIWindow);
+			Renderer::Init(pIRenderer);
+			Compute::Init(pICompute);
+			Gui::Init(pIGui);
 
 			// Gpu Resource Managers:
 			ComputeShaderManager::Init();
@@ -64,10 +102,6 @@ namespace emberEngine
 			BufferManager::Init();
 			TextureManager::Init();
 			MeshManager::Init();
-
-			#ifdef LOG_INITIALIZATION
-			LOG_TRACE("Application initialized.");
-			#endif
 		}
 		catch (const std::exception& e)
 		{

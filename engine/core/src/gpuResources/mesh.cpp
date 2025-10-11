@@ -1,6 +1,6 @@
 #include "mesh.h"
 #include "iMesh.h"
-#include "vulkanMesh.h"
+#include "renderer.h"
 
 
 
@@ -18,11 +18,11 @@ namespace emberEngine
 	// Constructors/Destructor:
 	Mesh::Mesh()
 	{
-		m_pIMesh = std::make_unique<vulkanRendererBackend::Mesh>("");
+		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(Renderer::CreateMesh(""));
 	}
 	Mesh::Mesh(const std::string& name)
 	{
-		m_pIMesh = std::make_unique<vulkanRendererBackend::Mesh>(name);
+		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(Renderer::CreateMesh(name));
 	}
 	Mesh::Mesh(emberBackendInterface::IMesh* pIMesh)
 	{

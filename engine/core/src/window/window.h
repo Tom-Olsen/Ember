@@ -12,7 +12,6 @@ struct VkAllocationCallbacks;
 typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
 namespace emberBackendInterface
 {
-	class IGui;
 	class IWindow;
 }
 
@@ -20,29 +19,18 @@ namespace emberBackendInterface
 
 namespace emberEngine
 {
-	// Forward decleration:
-	class Application;
-
-
-
 	class Window
 	{
-		// Friends:
-		friend class Application;
-		friend class Gui;
-
 	private: // Members:
 		static bool s_isInitialized;
 		static std::unique_ptr<emberBackendInterface::IWindow> s_pIWindow;
-		static emberBackendInterface::IWindow* GetInterfaceHandle();
 
 	public: // Methods:
 		// Initialization/Cleanup:
-		static void Init(int windowWidth, int windowHeight);
+		static void Init(emberBackendInterface::IWindow* pIWindow);
 		static void Clear();
 
 		// Window Methods:
-		static void LinkDearImGui(emberBackendInterface::IGui* pDeatImGui);
 		static std::vector<emberCommon::Event> PollEvents();
 		static void AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions);
 		static void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR);

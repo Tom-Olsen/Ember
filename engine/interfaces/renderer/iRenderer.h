@@ -1,6 +1,11 @@
 #pragma once
 #include "emberMath.h"
+#include "commonBufferUsage.h"
 #include "commonLighting.h"
+#include "commonMaterialType.h"
+#include "commonTextureFormat.h"
+#include "commonTextureUsage.h"
+#include <filesystem>
 
 
 
@@ -9,10 +14,12 @@ namespace emberBackendInterface
     // Forward declerations:
     class IBuffer;
     class ICompute;
+    class IComputeShader;
     class IGui;
     class IMaterial;
     class IMesh;
     class IShaderProperties;
+    class ITexture;
 
 
 
@@ -49,6 +56,18 @@ namespace emberBackendInterface
         // Functionallity forwarding:
         virtual void CollectGarbage() = 0;
         virtual void WaitDeviceIdle() = 0;
+
+        // Gpu resource factories:
+        virtual IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage) = 0;
+        //virtual ITexture* CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
+        virtual ITexture* CreateTexture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
+        //virtual ITexture* CreateTexture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
+        virtual ITexture* CreateTextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
+        virtual IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) = 0;
+        virtual IMaterial* CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
+        virtual IMesh* CreateMesh(const std::string& name) = 0;
+        virtual IShaderProperties* CreateShaderProperties(IComputeShader* pIComputeShader) = 0;
+        virtual IShaderProperties* CreateShaderProperties(IMaterial* pIMaterial) = 0;
 
         // Vulkan handle passthrough for API coupling:
         virtual void* GetVkInstance() = 0;

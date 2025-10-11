@@ -113,7 +113,7 @@ namespace vulkanRendererBackend
 		static float m_depthBiasSlopeFactor;
 		
 	public: // Methods:
-		static void Init(const emberCommon::RendererCreateInfo& createInfo);
+		static void Init(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow);
 		static void Clear();
 		static void RebuildSwapchain();
 

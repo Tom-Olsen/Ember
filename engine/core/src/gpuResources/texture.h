@@ -45,5 +45,8 @@ namespace emberEngine
 		uint32_t GetDepth() const;
 		uint32_t GetChannels() const;
 		const emberCommon::TextureFormat GetFormat() const;
+
+		// Setters:
+		void SetData(void* data);
 	};
 }

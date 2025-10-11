@@ -4,19 +4,10 @@
 
 
 
-// Forward decleration:
-namespace emberBackendInterface
-{
-	class IWindow;
-}
-
-
-
 namespace emberCommon
 {
 	struct RendererCreateInfo
 	{
-		emberBackendInterface::IWindow* pIWindow = nullptr;
 		bool vSyncEnabled = true;
 		uint32_t framesInFlight = 2;
 		emberCommon::MsaaSampleCount msaaSampleCount = emberCommon::MsaaSampleCount::sampleCount04;

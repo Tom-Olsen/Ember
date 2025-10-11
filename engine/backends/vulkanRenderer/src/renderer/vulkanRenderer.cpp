@@ -1,6 +1,7 @@
 #include "vulkanRenderer.h"
 #include "emberMath.h"
 #include "iGui.h"
+#include "logger.h"
 #include "profiler.h"
 #include "spirvReflect.h"
 #include "taskSystem.h"
@@ -13,6 +14,7 @@
 #include "vulkanComputePushConstant.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
+#include "vulkanConvertTextureFormat.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanDrawCall.h"
@@ -31,10 +33,14 @@
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderPassManager.h"
 #include "vulkanRenderTexture2d.h"
+#include "vulkanSampleTexture2d.h"
+#include "vulkanSampleTextureCube.h"
 #include "vulkanShaderProperties.h"
 #include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
 #include "vulkanStorageBuffer.h"
+#include "vulkanStorageSampleTexture2d.h"
+#include "vulkanStorageTexture2d.h"
 #include "vulkanSurface.h"
 #include "vulkanSwapchain.h"
 #include "vulkanVertexBuffer.h"
@@ -48,9 +54,9 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	Renderer::Renderer(const emberCommon::RendererCreateInfo& createInfo)
+	Renderer::Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow)
 	{
-		Context::Init(createInfo);
+		Context::Init(createInfo, pIWindow);
 
 		m_time = 0.0f;
 		m_deltaTime = 0.0f;
@@ -350,6 +356,98 @@ namespace vulkanRendererBackend
 	void Renderer::WaitDeviceIdle()
 	{
 		Context::WaitDeviceIdle();
+	}
+
+
+
+	// Gpu resource factories:
+	emberBackendInterface::IBuffer* Renderer::CreateBuffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage)
+	{
+		emberBackendInterface::IBuffer* pIBuffer = nullptr;
+		switch (usage)
+		{
+		case emberCommon::BufferUsage::index:
+			pIBuffer = new IndexBuffer(count, elementSize, name);
+			break;
+		case emberCommon::BufferUsage::storage:
+			pIBuffer = new StorageBuffer(count, elementSize, name);
+			break;
+		case emberCommon::BufferUsage::vertex:
+			pIBuffer = new VertexBuffer(count, elementSize, name);
+			break;
+		default:
+			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateBufferUnknown invalid BufferUsage type: " + (std::string)emberCommon::BufferUsageNames[(int)usage]);
+		}
+		return pIBuffer;
+	}
+	//emberBackendInterface::ITexture* Renderer::CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
+	//{
+	//
+	//}
+	emberBackendInterface::ITexture* Renderer::CreateTexture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	{
+		Format vulkanFormat = TextureFormatCommonToVulkan(format);
+		emberBackendInterface::ITexture* pITexture = nullptr;
+		switch (usage)
+		{
+		case emberCommon::TextureUsage::sample:
+			pITexture = new SampleTexture2d(name, vulkanFormat, width, height, data);
+			break;
+		case emberCommon::TextureUsage::storage:
+			pITexture = new StorageTexture2d(name, vulkanFormat, width, height, data);
+			break;
+		case emberCommon::TextureUsage::storageSample:
+			pITexture = new StorageSampleTexture2d(name, vulkanFormat, width, height, data);
+			break;
+		case emberCommon::TextureUsage::renderTarget:
+			pITexture = new RenderTexture2d(name, vulkanFormat, width, height);
+			break;
+		default:
+			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTexture2d: invalid TextureUsage type: " + (std::string)emberCommon::TextureUsageNames[(int)usage]);
+		}
+		return pITexture;
+	}
+	//emberBackendInterface::ITexture* Renderer::CreateTexture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
+	//{
+	//
+	//}
+	emberBackendInterface::ITexture* Renderer::CreateTextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	{
+		Format vulkanFormat = TextureFormatCommonToVulkan(format);
+		emberBackendInterface::ITexture* pITexture = nullptr;
+		switch (usage)
+		{
+		case emberCommon::TextureUsage::sample:
+			pITexture = new SampleTextureCube(name, vulkanFormat, width, height, data);
+			break;
+		default:
+			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTextureCube: invalid TextureUsage type: " + (std::string)emberCommon::TextureUsageNames[(int)usage]);
+		}
+		return pITexture;
+	}
+	emberBackendInterface::IComputeShader* Renderer::CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv)
+	{
+		return new ComputeShader(name, computeSpv);
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	{
+		return new Material(type, name, renderQueue, vertexSpv, fragmentSpv);
+	}
+	emberBackendInterface::IMesh* Renderer::CreateMesh(const std::string& name)
+	{
+		return new Mesh(name);
+	}
+	emberBackendInterface::IShaderProperties* Renderer::CreateShaderProperties(emberBackendInterface::IComputeShader* pIComputeShader)
+	{
+		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
+		Shader* pShader = static_cast<Shader*>(pComputeShader);
+		return new ShaderProperties(pShader);
+	}
+	emberBackendInterface::IShaderProperties* Renderer::CreateShaderProperties(emberBackendInterface::IMaterial* pIMaterial)
+	{
+		Material* pMaterial = static_cast<Material*>(pIMaterial);
+		Shader* pShader = static_cast<Shader*>(pMaterial);
+		return new ShaderProperties(pShader);
 	}
 
 

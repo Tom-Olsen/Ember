@@ -13,7 +13,7 @@ namespace emberEngine
 	//{
 	//public: // methods:
 	//	// Constructor/Destructor:
-	//	Texture1d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage);
+	//	Texture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage);
 	//	Texture1d(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path);
 	//	~Texture1d();
 	//

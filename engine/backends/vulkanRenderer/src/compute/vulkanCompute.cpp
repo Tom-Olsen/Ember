@@ -13,7 +13,7 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	Compute::Compute()
 	{
-		m_pIAsync = std::make_unique<Async>(10);
+		m_pIAsync = std::make_unique<Async>(10);	// 10 = max session count.
 		m_pIImmediate = std::make_unique<Immediate>();
 		m_pIPostRender = std::make_unique<PostRender>();
 		m_pIPreRender = std::make_unique<PreRender>();
@@ -47,5 +47,21 @@ namespace vulkanRendererBackend
 	PreRender* Compute::GetPreRenderCompute()
 	{
 		return static_cast<PreRender*>(m_pIPreRender.get());
+	}
+	emberBackendInterface::ICompute::IAsync* Compute::GetAsyncComputeInterfaceHandle()
+	{
+		return static_cast<emberBackendInterface::ICompute::IAsync*>(m_pIAsync.get());
+	}
+	emberBackendInterface::ICompute::IImmediate* Compute::GetImmediateComputeInterfaceHandle()
+	{
+		return static_cast<emberBackendInterface::ICompute::IImmediate*>(m_pIImmediate.get());
+	}
+	emberBackendInterface::ICompute::IPostRender* Compute::GetPostRenderComputeInterfaceHandle()
+	{
+		return static_cast<emberBackendInterface::ICompute::IPostRender*>(m_pIPostRender.get());
+	}
+	emberBackendInterface::ICompute::IPreRender* Compute::GetPreRenderComputeInterfaceHandle()
+	{
+		return static_cast<emberBackendInterface::ICompute::IPreRender*>(m_pIPreRender.get());
 	}
 }

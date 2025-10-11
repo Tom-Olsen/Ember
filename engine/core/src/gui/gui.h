@@ -25,17 +25,13 @@ namespace emberEngine
 {
 	class Gui
 	{
-		// Friends:
-		friend class Renderer;
-
 	private: // Members:
 		static bool s_isInitialized;
 		static std::unique_ptr<emberBackendInterface::IGui> s_pIGui;
-		static emberBackendInterface::IGui* GetInterfaceHandle();
 
 	public: // Methods:
 		// Initialization/Cleanup:
-		static void Init(bool enableDockSpace);
+		static void Init(emberBackendInterface::IGui* pIGui);
 		static void Clear();
 
 		// Render Logic:

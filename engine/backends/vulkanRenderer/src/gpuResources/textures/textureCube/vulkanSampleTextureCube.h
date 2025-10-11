@@ -28,9 +28,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		SampleTextureCube(const std::string& name, Format format, int width, int height);
-		SampleTextureCube(const std::string& name, Format format, int width, int height, void* data);
-		SampleTextureCube(const std::string& name, Format format, const std::filesystem::path& path);
+		SampleTextureCube(const std::string& name, Format format, int width, int height, void* data = nullptr);
 		~SampleTextureCube();
 
 		// Non-copyable:

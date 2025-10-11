@@ -51,7 +51,7 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void Context::Init(const emberCommon::RendererCreateInfo& createInfo)
+	void Context::Init(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow)
 	{
 		if (s_isInitialized)
 			return;
@@ -77,7 +77,7 @@ namespace vulkanRendererBackend
 			instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 		#endif
 
-		createInfo.pIWindow->AddWindowInstanceExtensions(instanceExtensions);	
+		pIWindow->AddWindowInstanceExtensions(instanceExtensions);	
 
 		if (createInfo.enableGui)
 		{
@@ -101,7 +101,7 @@ namespace vulkanRendererBackend
 		// Create vulkan context:
 		m_pInstance = std::make_unique<Instance>(instanceExtensions);
 		m_pPhysicalDevice = std::make_unique<PhysicalDevice>(m_pInstance.get());
-		m_pSurface = std::make_unique<Surface>(m_pInstance.get(), m_pPhysicalDevice.get(), createInfo.pIWindow, createInfo.vSyncEnabled);
+		m_pSurface = std::make_unique<Surface>(m_pInstance.get(), m_pPhysicalDevice.get(), pIWindow, createInfo.vSyncEnabled);
 		m_pLogicalDevice = std::make_unique<LogicalDevice>(m_pPhysicalDevice.get(), m_pSurface.get(), deviceExtensions);
 		m_pMemoryAllocator = std::make_unique<MemoryAllocator>(m_pInstance.get(), m_pLogicalDevice.get(), m_pPhysicalDevice.get());
 		m_pAllocationTracker = std::make_unique<AllocationTracker>();

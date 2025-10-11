@@ -1,7 +1,5 @@
 #include "eventSystem.h"
 #include "commonEvent.h"
-#include "logger.h"
-#include "macros.h"
 #include "profiler.h"
 #include "window.h"
 
@@ -33,10 +31,6 @@ namespace emberEngine
         s_mouseButtonStates = std::unordered_map<emberCommon::Input::MouseButton, MouseState>();
         s_mouseX = 0;
         s_mouseY = 0;
-
-        #ifdef LOG_INITIALIZATION
-        LOG_TRACE("EventSystem initialized.");
-        #endif
     }
     void EventSystem::Clear()
     {

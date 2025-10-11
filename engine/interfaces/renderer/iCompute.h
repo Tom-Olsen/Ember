@@ -75,5 +75,12 @@ namespace emberBackendInterface
             virtual IShaderProperties* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
             virtual void RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) = 0;
         };
+
+
+
+        virtual IAsync* GetAsyncComputeInterfaceHandle() = 0;
+        virtual IImmediate* GetImmediateComputeInterfaceHandle() = 0;
+        virtual IPostRender* GetPostRenderComputeInterfaceHandle() = 0;
+        virtual IPreRender* GetPreRenderComputeInterfaceHandle() = 0;
     };
 }

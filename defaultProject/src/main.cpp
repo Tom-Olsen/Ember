@@ -1,6 +1,6 @@
 ﻿#define SDL_MAIN_HANDLED
 #include "profiler.h"
-#include "application.h"
+#include "gameApplication.h"
 #include "emberEngine.h"
 // Scenes:
 #include "defaultScene.h"

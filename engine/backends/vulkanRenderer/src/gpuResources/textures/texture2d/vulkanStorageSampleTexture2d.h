@@ -23,9 +23,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		StorageSampleTexture2d(const std::string& name, Format format, int width, int height);
-		StorageSampleTexture2d(const std::string& name, Format format, int width, int height, void* data);
-		StorageSampleTexture2d(const std::string& name, Format format, const std::filesystem::path& path);
+		StorageSampleTexture2d(const std::string& name, Format format, int width, int height, void* data = nullptr);
 		~StorageSampleTexture2d();
 		
 		// Non-copyable:

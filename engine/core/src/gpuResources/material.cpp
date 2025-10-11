@@ -1,5 +1,6 @@
 #include "material.h"
-#include "vulkanMaterial.h"
+#include "iMaterial.h"
+#include "renderer.h"
 
 
 
@@ -17,7 +18,7 @@ namespace emberEngine
 	// Constructor/Destructor:
 	Material::Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		m_pIMaterial = std::make_unique<vulkanRendererBackend::Material>(type, name, renderQueue, vertexSpv, fragmentSpv);
+		m_pIMaterial = std::unique_ptr<emberBackendInterface::IMaterial>(Renderer::CreateMaterial(type, name, renderQueue, vertexSpv, fragmentSpv));
 	}
 	Material::~Material()
 	{

@@ -1,6 +1,7 @@
 #include "computeShader.h"
 #include "compute.h"
-#include "vulkanComputeShader.h"
+#include "iComputeShader.h"
+#include "renderer.h"
 
 
 
@@ -18,7 +19,7 @@ namespace emberEngine
 	// Constructor/Destructor:
 	ComputeShader::ComputeShader(const std::string& name, const std::filesystem::path& computeSpv)
 	{
-		m_pIComputeShader = std::make_unique<vulkanRendererBackend::ComputeShader>(name, computeSpv);
+		m_pIComputeShader = std::unique_ptr<emberBackendInterface::IComputeShader>(Renderer::CreateComputeShader(name, computeSpv));
 	}
 	ComputeShader::~ComputeShader()
 	{

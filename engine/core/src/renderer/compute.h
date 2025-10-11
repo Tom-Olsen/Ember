@@ -18,19 +18,15 @@ namespace emberEngine
 
 	class Compute
 	{
-		// Friends:
-		friend class Renderer;
-
 	public: // Subclasses:
 		class Async
 		{
 		private: // Members:
 			std::unique_ptr<emberBackendInterface::ICompute::IAsync> m_pIAsync;
-			emberBackendInterface::ICompute::IAsync* GetInterfaceHandle();
 
 		public: // Methods:
 			// Constructor/Destructor:
-			Async(uint32_t sessionCount);
+			Async(emberBackendInterface::ICompute::IAsync* pIAsync);
 			~Async();
 
 			// Non-copyable:
@@ -59,11 +55,10 @@ namespace emberEngine
 		{
 		private: // Members:
 			std::unique_ptr<emberBackendInterface::ICompute::IImmediate> m_pIImmediate;
-			emberBackendInterface::ICompute::IImmediate* GetInterfaceHandle();
 
 		public: // Methods:
 			// Constructor/Destructor:
-			Immediate();
+			Immediate(emberBackendInterface::ICompute::IImmediate* pIImmediate);
 			~Immediate();
 
 			// Non-copyable:
@@ -84,11 +79,10 @@ namespace emberEngine
 		{
 		private: // Members:
 			std::unique_ptr<emberBackendInterface::ICompute::IPostRender> m_pIPostRender;
-			emberBackendInterface::ICompute::IPostRender* GetInterfaceHandle();
 
 		public: // Methods:
 			// Constructor/Destructor:
-			PostRender();
+			PostRender(emberBackendInterface::ICompute::IPostRender* pIPostRender);
 			~PostRender();
 
 			// Non-copyable:
@@ -110,11 +104,10 @@ namespace emberEngine
 		{
 		private: // Members:
 			std::unique_ptr<emberBackendInterface::ICompute::IPreRender> m_pIPreRender;
-			emberBackendInterface::ICompute::IPreRender* GetInterfaceHandle();
 
 		public: // Methods:
 			// Constructor/Destructor:
-			PreRender();
+			PreRender(emberBackendInterface::ICompute::IPreRender* pIPreRender);
 			~PreRender();
 
 			// Non-copyable:
@@ -140,11 +133,10 @@ namespace emberEngine
 		static std::unique_ptr<Immediate> s_pImmediate;
 		static std::unique_ptr<PostRender> s_pPostRender;
 		static std::unique_ptr<PreRender> s_pPreRender;
-		static emberBackendInterface::ICompute* GetInterfaceHandle();
 
 	public: // Methods:
 		// Initialization/Cleanup:
-		static void Init();
+		static void Init(emberBackendInterface::ICompute* pICompute);
 		static void Clear();
 
 		// Getters:

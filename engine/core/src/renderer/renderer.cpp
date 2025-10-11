@@ -1,14 +1,12 @@
 #include "renderer.h"
 #include "buffer.h"
-#include "compute.h"
 #include "emberTime.h"
-#include "gui.h"
+#include "iRenderer.h"
 #include "mesh.h"
 #include "meshManager.h"
 #include "material.h"
 #include "materialManager.h"
 #include "shaderProperties.h"
-#include "vulkanRenderer.h"
 #include "window.h"
 
 
@@ -28,7 +26,7 @@ namespace emberEngine
 
 	// Public Methods:
 	// Initialization/Cleanup:
-	void Renderer::Init(const emberCommon::RendererCreateInfo& createInfo)
+	void Renderer::Init(emberBackendInterface::IRenderer* pIRenderer)
 	{
 		if (s_isInitialized)
 			return;
@@ -41,16 +39,12 @@ namespace emberEngine
 		s_pointLightRotationMatrices[4] = Float4x4::RotateX( math::pi2);
 		s_pointLightRotationMatrices[5] = Float4x4::RotateX(-math::pi2);
 
-		s_pIRenderer = std::make_unique<vulkanRendererBackend::Renderer>(createInfo);
+		s_pIRenderer = std::unique_ptr<emberBackendInterface::IRenderer>(pIRenderer);
 	}
 	void Renderer::Clear()
 	{
 		s_pIRenderer.reset();
 		s_isInitialized = false;
-	}
-	void Renderer::WaitDeviceIdle()
-	{
-		s_pIRenderer->WaitDeviceIdle();
 	}
 
 
@@ -60,10 +54,6 @@ namespace emberEngine
 	{
 		Int2 size = Window::GetSize();
 		s_pIRenderer->RenderFrame(size.x, size.y, Time::GetTime(), Time::GetDeltaTime());
-	}
-	void Renderer::CollectGarbage()
-	{
-		s_pIRenderer->CollectGarbage();
 	}
 
 
@@ -289,16 +279,62 @@ namespace emberEngine
 
 
 	// Setters:
-	void Renderer::SetIComputeHandle()
-	{
-		s_pIRenderer->SetIComputeHandle(Compute::GetInterfaceHandle());
-	}
-	void Renderer::SetIDearImGuiHandle()
-	{
-		s_pIRenderer->SetIGuiHandle(Gui::GetInterfaceHandle());
-	}
 	void Renderer::SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
 	{
 		s_pIRenderer->SetActiveCamera(position, viewMatrix, projectionMatrix);
+	}
+
+
+
+	// Functionallity forwarding:
+	void Renderer::CollectGarbage()
+	{
+		s_pIRenderer->CollectGarbage();
+	}
+	void Renderer::WaitDeviceIdle()
+	{
+		s_pIRenderer->WaitDeviceIdle();
+	}
+
+	// Gpu resource factories:
+	emberBackendInterface::IBuffer* Renderer::CreateBuffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage)
+	{
+		return s_pIRenderer->CreateBuffer(count, elementSize, name, usage);
+	}
+	//static emberBackendInterface::ITexture* Renderer::CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	//{
+	//
+	//}
+	emberBackendInterface::ITexture* Renderer::CreateTexture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	{
+		return s_pIRenderer->CreateTexture2d(name, width, height, format, usage, data);
+	}
+	//static emberBackendInterface::ITexture* Renderer::CreateTexture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	//{
+	//
+	//}
+	emberBackendInterface::ITexture* Renderer::CreateTextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	{
+		return s_pIRenderer->CreateTextureCube(name, width, height, format, usage, data);
+	}
+	emberBackendInterface::IComputeShader* Renderer::CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv)
+	{
+		return s_pIRenderer->CreateComputeShader(name, computeSpv);
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	{
+		return s_pIRenderer->CreateMaterial(type, name, renderQueue, vertexSpv, fragmentSpv);
+	}
+	emberBackendInterface::IMesh* Renderer::CreateMesh(const std::string& name)
+	{
+		return s_pIRenderer->CreateMesh(name);
+	}
+	emberBackendInterface::IShaderProperties* Renderer::CreateShaderProperties(emberBackendInterface::IComputeShader* pIComputeShader)
+	{
+		return s_pIRenderer->CreateShaderProperties(pIComputeShader);
+	}
+	emberBackendInterface::IShaderProperties* Renderer::CreateShaderProperties(emberBackendInterface::IMaterial* pIMaterial)
+	{
+		return s_pIRenderer->CreateShaderProperties(pIMaterial);
 	}
 }

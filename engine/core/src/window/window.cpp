@@ -1,9 +1,5 @@
 #include "window.h"
-#include "logger.h"
-#include "macros.h"
-#include "nullWindow.h"
-#include "profiler.h"
-#include "sdlWindow.h"
+#include "iWindow.h"
 
 
 
@@ -12,28 +8,17 @@ namespace emberEngine
 	// Static members:
 	bool Window::s_isInitialized = false;
 	std::unique_ptr<emberBackendInterface::IWindow> Window::s_pIWindow;
-	emberBackendInterface::IWindow* Window::GetInterfaceHandle()
-	{
-		return s_pIWindow.get();
-	}
 
 
 
 	// Initialization/Cleanup:
-	void Window::Init(int windowWidth, int windowHeight)
+	void Window::Init(emberBackendInterface::IWindow* pIWindow)
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
 
-		if (true)
-			s_pIWindow = std::make_unique<sdlWindowBackend::Window>(windowWidth, windowHeight);
-		else
-			s_pIWindow = std::make_unique<nullWindowBackend::Window>();
-
-		#ifdef LOG_INITIALIZATION
-		LOG_TRACE("Window initialized.");
-		#endif
+		s_pIWindow = std::unique_ptr<emberBackendInterface::IWindow>(pIWindow);
 	}
 	void Window::Clear()
 	{
@@ -44,13 +29,8 @@ namespace emberEngine
 
 
 	// Public methods:
-	void Window::LinkDearImGui(emberBackendInterface::IGui* pDearImGui)
-	{
-		s_pIWindow->LinkDearImGui(pDearImGui);
-	}
 	std::vector<emberCommon::Event> Window::PollEvents()
 	{
-		PROFILE_FUNCTION();
 		return s_pIWindow->PollEvents();
 	}
 	void Window::AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions)

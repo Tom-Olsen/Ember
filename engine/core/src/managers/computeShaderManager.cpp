@@ -1,7 +1,6 @@
 #include "computeShaderManager.h"
 #include "computeShader.h"
 #include "logger.h"
-#include "macros.h"
 #include "emberMath.h"
 #include <filesystem>
 
@@ -39,10 +38,6 @@ namespace emberEngine
 				AddComputeShader(std::move(computeShader));
 			}
 		}
-
-		#ifdef LOG_INITIALIZATION
-		LOG_TRACE("ComputeShaderManager initialized.");
-		#endif
 	}
 	void ComputeShaderManager::Clear()
 	{

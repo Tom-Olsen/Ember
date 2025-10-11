@@ -17,66 +17,12 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	SampleTextureCube::SampleTextureCube(const std::string& name, Format format, int width, int height)
-	{
-		Init(name, format, width, height);
-	}
 	SampleTextureCube::SampleTextureCube(const std::string& name, Format format, int width, int height, void* data)
 	{
 		Init(name, format, width, height);
-		SetData(data);
+		if (data)
+			SetData(data);
 	}
-	SampleTextureCube::SampleTextureCube(const std::string& name, Format format, const std::filesystem::path& path)
-    {
-        // Check if folder exists:
-		if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path))
-			throw std::runtime_error("Given path '" + path.string() + "' does not exist");
-
-		// Cube face names:
-		static const std::array<std::string, 6> directions = { "px", "nx", "py", "ny", "pz", "nz" };
-
-		// Collect file paths:
-		std::vector<std::filesystem::path> filePaths(6);
-		for (uint32_t i = 0; i < 6; i++)
-		{
-			bool found = false;
-			for (const auto& entry : std::filesystem::directory_iterator(path))
-			{
-				if (entry.is_regular_file() && entry.path().stem() == directions[i])
-				{
-					filePaths[i] = entry.path();
-					found = true;
-					break;
-				}
-			}
-			if (!found)
-				throw std::runtime_error("Missing cubemap face: " + directions[i]);
-		}
-
-		// Load all 6 images and append pixel data continuously
-		std::vector<std::byte> data;
-		int width, height;
-		int channels = GetChannelCount(format);
-		for (size_t i = 0; i < filePaths.size(); i++)
-		{
-			emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageFile(filePaths[i], channels, false);
-			if (i == 0)
-			{
-				width = imageAsset.width;
-				height = imageAsset.height;
-			}
-			else
-			{
-				if (imageAsset.width != width || imageAsset.height != height)
-					throw std::runtime_error("Cubemap face size mismatch at: " + filePaths[i].string());
-			}
-			data.insert(data.end(), imageAsset.pixels.begin(), imageAsset.pixels.end());
-		}
-
-        // Upload data:
-		Init(name, format, width, height);
-		SetData(data.data());
-    }
 	SampleTextureCube::~SampleTextureCube()
 	{
 

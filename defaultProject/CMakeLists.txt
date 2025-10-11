@@ -45,6 +45,6 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_R
 
 # ------------------ Link Libraries -----------------
 # Ember:
-add_subdirectory("../engine/core" EmberCore)
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberCore)
+add_subdirectory("../applications/gameApp" GameApp)
+target_link_libraries(${PROJECT_NAME} PUBLIC GameApp)
 # ---------------------------------------------------
