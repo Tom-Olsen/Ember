@@ -102,7 +102,7 @@ namespace emberEngine
 		static void CollectGarbage();
 		static void WaitDeviceIdle();
 
-	private: // Methods
+	private: // Methods:
 		// Gpu resource factories:
 		static emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage);
 		//static emberBackendInterface::ITexture* CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data);

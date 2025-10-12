@@ -14,15 +14,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Cache directories:
 get_filename_component(ENGINE_CORE_PATH "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)               # engine core
 get_filename_component(CORE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../shaders" ABSOLUTE)    # core shaders
-get_filename_component(BACKENDS_DIR "${CMAKE_CURRENT_LIST_DIR}/../backends" ABSOLUTE)       # backends
 get_filename_component(COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../common" ABSOLUTE)           # commom
 get_filename_component(INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../interfaces" ABSOLUTE)   # interfaces
 get_filename_component(LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../libs" ABSOLUTE)               # libs
 
 # Output directory:
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib STATIC ...) => .a .lib
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib SHARED ...) => .so .dylib .dll
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directors for add_executable(MyExe ...)     => .exe
+if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
+endif()
+if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Library output directory" FORCE) # .so .dylib .dll
+endif()
+if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Runtime output directory" FORCE) # .exe
+endif()
 # ---------------------------------------------------
 
 
@@ -35,6 +40,10 @@ source_group("/" FILES ${ENGINE_FILE})
 # src/components/*.*:
 file(GLOB COMPONENTS_FILES "${ENGINE_CORE_PATH}/src/components/*.*")
 source_group("Components" FILES ${COMPONENTS_FILES})
+ 
+# src/editor/*.*:
+file(GLOB EDITOR_FILES "${ENGINE_CORE_PATH}/src/editor/*.*")
+source_group("Editor" FILES ${EDITOR_FILES})
  
 # src/entityComponentSystem/*.*:
 file(GLOB ENTITY_COMPONENT_SYSTEM_FILES "${ENGINE_CORE_PATH}/src/entityComponentSystem/*.*")
@@ -76,6 +85,10 @@ source_group("Window" FILES ${WINDOW_FILES})
 file(GLOB COMMON_FILES "{COMMON_DIR}/*.*")
 source_group("Commen" FILES ${COMMON_FILES})
 
+# ../../interfaces/editor/*.*:
+file(GLOB EDITOR_INTERFACE_FILES "${INTERFACES_DIR}/editor/*.*")
+source_group("Editor Interface" FILES ${EDITOR_INTERFACE_FILES})
+
 # ../../interfaces/gui/*.*:
 file(GLOB GUI_INTERFACE_FILES "${INTERFACES_DIR}/gui/*.*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
@@ -96,6 +109,7 @@ add_library(${PROJECT_NAME} STATIC
     ${ENGINE_FILE}
     ${APPLICATIONS_FILES}
     ${COMPONENTS_FILES}
+    ${EDITOR_FILES}
     ${EVENT_SYSTEM_FILES}
     ${GPU_RESOURCES_FILES}
     ${GUI_FILES}
@@ -106,6 +120,7 @@ add_library(${PROJECT_NAME} STATIC
     ${UTILITY_FILES}
     ${WINDOW_FILES}
     ${COMMON_FILES}
+    ${EDITOR_INTERFACE_FILES}
     ${GUI_INTERFACE_FILES}
     ${RENDERER_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
@@ -116,6 +131,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC ${ENGINE_CORE_PATH}/src
     PUBLIC ${ENGINE_CORE_PATH}/src/applications
     PUBLIC ${ENGINE_CORE_PATH}/src/components
+    PUBLIC ${ENGINE_CORE_PATH}/src/editor
     PUBLIC ${ENGINE_CORE_PATH}/src/entityComponentSystem
     PUBLIC ${ENGINE_CORE_PATH}/src/eventSystem
     PUBLIC ${ENGINE_CORE_PATH}/src/gpuResources
@@ -126,6 +142,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC ${ENGINE_CORE_PATH}/src/utility
     PUBLIC ${ENGINE_CORE_PATH}/src/window
     PUBLIC ${ENGINE_CORE_PATH}/../common
+    PUBLIC ${ENGINE_CORE_PATH}/../interfaces/editor
     PUBLIC ${ENGINE_CORE_PATH}/../interfaces/gui
     PUBLIC ${ENGINE_CORE_PATH}/../interfaces/renderer
     PUBLIC ${ENGINE_CORE_PATH}/../interfaces/window)

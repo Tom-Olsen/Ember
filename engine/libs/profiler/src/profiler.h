@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_emberProfiler_profiler_h__
-#define __INCLUDE_GUARD_emberProfiler_profiler_h__
+#pragma once
 #include "logger.h"
 #include <fstream>
 #include <mutex>
@@ -127,7 +126,3 @@ namespace EmberProfiler
 #define PROFILE_SCOPE(name)
 #define PROFILE_FUNCTION()
 #endif
-
-
-
-#endif //__INCLUDE_GUARD_emberProfiler_profiler_h__

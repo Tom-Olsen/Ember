@@ -1,4 +1,4 @@
-#define SDL_STATIC
+#define SDL_MAIN_HANDLED
 #include "sdlWindow.h"
 #include "iGui.h"
 #include "sdlEventTranslation.h"

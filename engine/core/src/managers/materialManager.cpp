@@ -77,8 +77,6 @@ namespace emberEngine
 		AddMaterial(std::move(testA));
 		Material testB(forwardOpaqueType, "testBMaterial", opaqueQueue, directoryPath / "testB.vert.spv", directoryPath / "testB.frag.spv");
 		AddMaterial(std::move(testB));
-
-		Print();
 	}
 	void MaterialManager::Clear()
 	{
