@@ -10,6 +10,7 @@ set(PROJECT_TYPE STATIC)
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.31)
 project(EmberTaskSystem)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed for ubuntu to link this into a shared library.
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
