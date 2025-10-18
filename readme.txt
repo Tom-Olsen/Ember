@@ -75,10 +75,6 @@ Implemented features:
 
 
 Ember::TODO now!
-	- Hierarchy not showing gameObjects.
-		- camera movement in scene / game window not working.
-		- move ECS start / update / etc from application to scene.
-		- rescaling window crashes applications.
 - Memory leak on application shutdown.
 - performance worse than before architecture restructure.
 - make other projects compile and run again.
