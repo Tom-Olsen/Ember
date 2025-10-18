@@ -94,9 +94,16 @@ namespace emberEngine
 		static const uint32_t GetShadowMapResolution();
 		static const Uint2 GetSurfaceExtent();
 		static const Float4x4& GetPointLightRotationMatrix(int faceIndex);
+		static Texture2d GetRenderTexture();
+		static float GetDepthBiasConstantFactor();
+		static float GetDepthBiasClamp();
+		static float GetDepthBiasSlopeFactor();
 
 		// Setters:
 		static void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
+		static void SetDepthBiasConstantFactor(float depthBiasConstantFactor);
+		static void SetDepthBiasClamp(float depthBiasClamp);
+		static void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor);
 
 		// Functionallity forwarding:
 		static void CollectGarbage();

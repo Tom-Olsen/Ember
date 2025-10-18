@@ -1,27 +1,47 @@
 #pragma once
+#include "commonGuiFlags.h"
 #include <memory>
-
-
-// Forward declerations:
-namespace emberBackendInterface
-{
-	class IEditor;
-}
+#include <string>
+#include <unordered_set>
 
 
 
 namespace emberEngine
 {
+	// Forward declerations:
+	class EditorWindow;
+
+
+
 	class Editor
 	{
+		// Friends:
+		friend class EditorWindow;
+
 	private: // Members:
-		static bool s_isInitialized;
-		static std::unique_ptr<emberBackendInterface::IEditor> s_pIEditor;
+		static EditorWindow* s_pFocusedWindow;
+		static EditorWindow* s_pCurrentRenderedWindow;
+		static std::unordered_set<EditorWindow*> s_pEditorWindows;
 
 	public: // Methods:
-		//Initialization/Clear:
-		static void Init(emberBackendInterface::IEditor* pIEditor);
-		static void Clear();
+		// Editor functionality:
+		static void Render();
+
+		// EditorWindow->editor communication:
+		static void SetFocusedWindow(EditorWindow* pEditorWindow);
+		static void AddEditorWindow(EditorWindow* pEditorWindow);
+		static void DeleteEditorWindow(EditorWindow* pEditorWindow);
+
+		// Getters:
+		static EditorWindow* GetFocusedWindow();
+		static bool GetFocusedWindowWantCaptureEvents();
+		static float GetSpacingX();
+		static float GetWindowWidth();
+		static float GetWindowHeight();
+		static float GetRemainingWidth();
+		static const std::string& GetWindowName();
+		static int GetWindowID();
+		static const std::string& GetWindowNameID();
 
 	private: // Methods:
 		// Delete all constructors:

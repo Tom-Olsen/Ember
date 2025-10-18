@@ -22,12 +22,14 @@ namespace emberEngine
 		friend class ShaderProperties;
 
 	protected: // Members:
-		std::unique_ptr<emberBackendInterface::ITexture> m_pITexture;
+		bool m_ownsTexture;
+		emberBackendInterface::ITexture* m_pITexture; // conditional ownership, depending on usecase.
 		emberBackendInterface::ITexture* GetInterfaceHandle();
 
 	public: // Methods:
 		// Constructors/Destructor:
-		Texture() = default;
+		Texture();
+		Texture(emberBackendInterface::ITexture* pITexture, bool ownsTexture);
 		virtual ~Texture();
 
 		// Non-copyable:

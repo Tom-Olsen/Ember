@@ -55,6 +55,7 @@ namespace vulkanRendererBackend
 	}
 
 
+
 	// Public methods:
 	Sampler* DefaultGpuResources::GetColorSampler()
 	{

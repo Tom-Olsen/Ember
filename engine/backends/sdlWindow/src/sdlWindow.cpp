@@ -64,22 +64,60 @@ namespace sdlWindowBackend
 
 
 	// Window Methods:
-	void Window::LinkDearImGui(emberBackendInterface::IGui* pIGui)
+	void Window::LinkIGuiHandle(emberBackendInterface::IGui* pIGui)
 	{
 		m_pIGui = pIGui;
 	}
 	std::vector<emberCommon::Event> Window::PollEvents()
 	{
 		SDL_Event sdlEvent;
-		m_pIGui->ProcessEvent(&sdlEvent);
 		m_events.clear();
 
 		while (SDL_PollEvent(&sdlEvent))
 		{
+			// Passthrough to Gui backend:
+			m_pIGui->ProcessEvent(&sdlEvent);
+
+			// Handle quit immediately:
+			if (sdlEvent.type == SDL_EVENT_QUIT)
+			{
+				emberCommon::Event event{};
+				event.type = emberCommon::EventType::Quit;
+				m_events.push_back(event);
+				continue;
+			}
+
+			bool guiWantsKeyboard = m_pIGui->WantCaptureKeyboard();
+			bool guiWantsMouse = m_pIGui->WantCaptureMouse();
+
 			emberCommon::Event event{};
 			bool isEvent = true;
 
-			// System / Window:
+			// Ignore events captured by Gui:
+			switch (sdlEvent.type)
+			{
+				// Mouse events:
+				case SDL_EVENT_MOUSE_MOTION:
+				case SDL_EVENT_MOUSE_BUTTON_DOWN:
+				case SDL_EVENT_MOUSE_BUTTON_UP:
+				case SDL_EVENT_MOUSE_WHEEL:
+					if (guiWantsMouse)
+						continue;
+					break;
+
+				// Keyboard events:
+				case SDL_EVENT_KEY_DOWN:
+				case SDL_EVENT_KEY_UP:
+				case SDL_EVENT_TEXT_INPUT:
+					if (guiWantsKeyboard)
+						continue;
+					break;
+
+				default:
+					break;
+			}
+
+			// Convert event:
 			switch (sdlEvent.type)
 			{
 				case SDL_EVENT_QUIT:
@@ -186,6 +224,7 @@ namespace sdlWindowBackend
 					break;
 			}
 
+			// Store event for event system:
 			if (isEvent)
 				m_events.push_back(event);
 		}

@@ -47,11 +47,18 @@ namespace emberBackendInterface
         // Getters:
         virtual uint32_t GetShadowMapResolution() = 0;
         virtual Uint2 GetSurfaceExtent() = 0;
+        virtual ITexture* GetRenderTexture() = 0;
+        virtual float GetDepthBiasConstantFactor() = 0;
+        virtual float GetDepthBiasClamp() = 0;
+        virtual float GetDepthBiasSlopeFactor() = 0;
 
         // Setters:
-        virtual void SetIComputeHandle(emberBackendInterface::ICompute* pICompute) = 0;
-        virtual void SetIGuiHandle(emberBackendInterface::IGui* pIGui) = 0;
+        virtual void LinkIComputeHandle(emberBackendInterface::ICompute* pICompute) = 0;
+        virtual void LinkIGuiHandle(emberBackendInterface::IGui* pIGui) = 0;
         virtual void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix) = 0;
+        virtual void SetDepthBiasConstantFactor(float depthBiasConstantFactor) = 0;
+        virtual void SetDepthBiasClamp(float depthBiasClamp) = 0;
+        virtual void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) = 0;
 
         // Functionallity forwarding:
         virtual void CollectGarbage() = 0;

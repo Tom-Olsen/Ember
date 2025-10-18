@@ -38,6 +38,10 @@ source_group("Source Files" FILES ${SOURCE_FILES})
 file(GLOB COMMON_INTERFACE_FILES "../../common/*.*")
 source_group("Commen" FILES ${COMMON_INTERFACE_FILES})
 
+# ../../interfaces/editor/*:
+file(GLOB EDITOR_INTERFACE_FILES "../../interfaces/editor/*")
+source_group("Editor Interface" FILES ${EDITOR_INTERFACE_FILES})
+
 # ../../interfaces/gui/*:
 file(GLOB GUI_INTERFACE_FILES "../../interfaces/gui/*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
@@ -70,6 +74,7 @@ if (IMGUI_SDL_VULKAN_BACKEND_BUILD_SHARED)
         ${SOURCE_FILES}
         ${IMGUI_FILES}
         ${COMMON_INTERFACE_FILES}
+        ${EDITOR_INTERFACE_FILES}
         ${GUI_INTERFACE_FILES}
         ${RENDERER_INTERFACE_FILES}
         ${WINDOW_INTERFACE_FILES})
@@ -78,6 +83,7 @@ else()
         ${SOURCE_FILES}
         ${IMGUI_FILES}
         ${COMMON_INTERFACE_FILES}
+        ${EDITOR_INTERFACE_FILES}
         ${GUI_INTERFACE_FILES}
         ${RENDERER_INTERFACE_FILES}
         ${WINDOW_INTERFACE_FILES})
@@ -87,6 +93,7 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/editor
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/gui
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
     ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window

@@ -150,17 +150,18 @@ namespace vulkanRendererBackend
 		// Getters:
 		uint32_t GetShadowMapResolution() override;
 		Uint2 GetSurfaceExtent() override;
-		float GetDeptBiasConstantFactor();
-		float GetDeptBiasClamp();
-		float GetDeptBiasSlopeFactor();
+		emberBackendInterface::ITexture* GetRenderTexture() override;
+		float GetDepthBiasConstantFactor() override;
+		float GetDepthBiasClamp() override;
+		float GetDepthBiasSlopeFactor() override;
 
 		// Setters:
-		void SetIComputeHandle(emberBackendInterface::ICompute* pICompute) override;
-		void SetIGuiHandle(emberBackendInterface::IGui* pIGui) override;
+		void LinkIComputeHandle(emberBackendInterface::ICompute* pICompute) override;
+		void LinkIGuiHandle(emberBackendInterface::IGui* pIGui) override;
 		void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix) override;
-		void SetDepthBiasConstantFactor(float depthBiasConstantFactor);
-		void SetDepthBiasClamp(float depthBiasClamp);
-		void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor);
+		void SetDepthBiasConstantFactor(float depthBiasConstantFactor) override;
+		void SetDepthBiasClamp(float depthBiasClamp) override;
+		void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) override;
 
 		// Functionallity forwarding:
 		void CollectGarbage() override;

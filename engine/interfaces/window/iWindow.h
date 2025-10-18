@@ -26,7 +26,7 @@ namespace emberBackendInterface
         virtual ~IWindow() = default;
 
         // Window Methods:
-        virtual void LinkDearImGui(emberBackendInterface::IGui* pIGui) = 0;
+        virtual void LinkIGuiHandle(emberBackendInterface::IGui* pIGui) = 0;
         virtual std::vector<emberCommon::Event> PollEvents() = 0;
 		virtual void AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions) const = 0;
         virtual void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const = 0;

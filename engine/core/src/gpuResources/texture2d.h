@@ -15,6 +15,7 @@ namespace emberEngine
 		// Constructor/Destructor:
 		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data = nullptr);
 		Texture2d(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path);
+		Texture2d(emberBackendInterface::ITexture* pITexture, bool ownsTexture);
 		~Texture2d();
 
 		// Non-copyable:

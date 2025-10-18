@@ -7,6 +7,8 @@
 #include "material.h"
 #include "materialManager.h"
 #include "shaderProperties.h"
+#include "texture.h"
+#include "texture2d.h"
 #include "window.h"
 
 
@@ -275,6 +277,22 @@ namespace emberEngine
 	{
 		return s_pointLightRotationMatrices[faceIndex];
 	}
+	Texture2d Renderer::GetRenderTexture()
+	{
+		return Texture2d(s_pIRenderer->GetRenderTexture(), false);
+	}
+	float Renderer::GetDepthBiasConstantFactor()
+	{
+		return s_pIRenderer->GetDepthBiasConstantFactor();
+	}
+	float Renderer::GetDepthBiasClamp()
+	{
+		return s_pIRenderer->GetDepthBiasClamp();
+	}
+	float Renderer::GetDepthBiasSlopeFactor()
+	{
+		return s_pIRenderer->GetDepthBiasSlopeFactor();
+	}
 
 
 
@@ -282,6 +300,18 @@ namespace emberEngine
 	void Renderer::SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
 	{
 		s_pIRenderer->SetActiveCamera(position, viewMatrix, projectionMatrix);
+	}
+	void Renderer::SetDepthBiasConstantFactor(float depthBiasConstantFactor)
+	{
+		s_pIRenderer->SetDepthBiasConstantFactor(depthBiasConstantFactor);
+	}
+	void Renderer::SetDepthBiasClamp(float depthBiasClamp)
+	{
+		s_pIRenderer->SetDepthBiasClamp(depthBiasClamp);
+	}
+	void Renderer::SetDepthBiasSlopeFactor(float depthBiasSlopeFactor)
+	{
+		s_pIRenderer->SetDepthBiasSlopeFactor(depthBiasSlopeFactor);
 	}
 
 

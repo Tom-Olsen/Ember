@@ -85,10 +85,6 @@ source_group("Window" FILES ${WINDOW_FILES})
 file(GLOB COMMON_FILES "{COMMON_DIR}/*.*")
 source_group("Commen" FILES ${COMMON_FILES})
 
-# ../../interfaces/editor/*.*:
-file(GLOB EDITOR_INTERFACE_FILES "${INTERFACES_DIR}/editor/*.*")
-source_group("Editor Interface" FILES ${EDITOR_INTERFACE_FILES})
-
 # ../../interfaces/gui/*.*:
 file(GLOB GUI_INTERFACE_FILES "${INTERFACES_DIR}/gui/*.*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
@@ -120,7 +116,6 @@ add_library(${PROJECT_NAME} STATIC
     ${UTILITY_FILES}
     ${WINDOW_FILES}
     ${COMMON_FILES}
-    ${EDITOR_INTERFACE_FILES}
     ${GUI_INTERFACE_FILES}
     ${RENDERER_INTERFACE_FILES}
     ${WINDOW_INTERFACE_FILES})
@@ -142,7 +137,6 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC ${ENGINE_CORE_PATH}/src/utility
     PUBLIC ${ENGINE_CORE_PATH}/src/window
     PUBLIC ${ENGINE_CORE_PATH}/../common
-    PUBLIC ${ENGINE_CORE_PATH}/../interfaces/editor
     PUBLIC ${ENGINE_CORE_PATH}/../interfaces/gui
     PUBLIC ${ENGINE_CORE_PATH}/../interfaces/renderer
     PUBLIC ${ENGINE_CORE_PATH}/../interfaces/window)

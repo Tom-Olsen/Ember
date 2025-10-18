@@ -18,7 +18,7 @@ namespace nullWindowBackend
 
 
 	// Window Methods:
-	void Window::LinkDearImGui(emberBackendInterface::IGui* pDearImGui)
+	void Window::LinkIGuiHandle(emberBackendInterface::IGui* pDearImGui)
 	{
 
 	}

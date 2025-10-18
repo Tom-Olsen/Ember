@@ -34,17 +34,23 @@ endif()
 # src/*:
 file(GLOB SOURCE_FILES "${APPLICATION_PATH}/src/*")
 source_group("Source Files" FILES ${SOURCE_FILES})
+
+# src/editorWindows/*:
+file(GLOB EDITOR_WINDOWS_FILES "src/editorWindows/*")
+source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
 # ---------------------------------------------------
  
  
  
 # ----------------- Create Library ------------------
 add_library(${PROJECT_NAME} STATIC
-    ${SOURCE_FILES})
+    ${SOURCE_FILES}
+    ${EDITOR_WINDOWS_FILES})
  
 # Source subdirectories:
-target_include_directories(${PROJECT_NAME}
-    PUBLIC ${APPLICATION_PATH}/src)
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${APPLICATION_PATH}/src
+    ${APPLICATION_PATH}/src/editorWindows)
 # ---------------------------------------------------
  
  
@@ -66,12 +72,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EmberCore)
 
 
 # ------------------ Link Backends ------------------
-# Ember Editor:
-if (NOT TARGET EmberEditorBackend)
-    add_subdirectory("${BACKENDS_DIR}/emberEditor" EmberEditorBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberEditorBackend)
-
 # Vulkan Renderer:
 if (NOT TARGET VulkanRendererBackend)
     add_subdirectory("${BACKENDS_DIR}/vulkanRenderer" VulkanRendererBackend)

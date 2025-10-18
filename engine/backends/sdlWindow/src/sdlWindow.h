@@ -47,7 +47,7 @@ namespace sdlWindowBackend
 		Window& operator=(Window&& other) noexcept;
 
 		// Window Methods:
-		void LinkDearImGui(emberBackendInterface::IGui* pIGui) override;
+		void LinkIGuiHandle(emberBackendInterface::IGui* pIGui) override;
 		std::vector<emberCommon::Event> PollEvents() override;
 		void AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions) const override;
 		void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR) const override;

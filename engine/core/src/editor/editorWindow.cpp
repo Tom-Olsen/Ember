@@ -1,13 +1,13 @@
 #include "editorWindow.h"
-#include "dearImGui.h"
 #include "editor.h"
+#include "gui.h"
 #include "logger.h"
 
 
 
 namespace emberEngine
 {
-	// Constructor/Destructor:
+	// Constructors/Destructor:
 	EditorWindow::EditorWindow()
 	{
 		Editor::AddEditorWindow(this);
@@ -17,17 +17,30 @@ namespace emberEngine
 		Editor::DeleteEditorWindow(this);
 	}
 
-	void EditorWindow::BaseRender()
+
+
+	// Movable:
+	EditorWindow::EditorWindow(EditorWindow&& other) noexcept = default;
+	EditorWindow& EditorWindow::operator=(EditorWindow&& other) noexcept = default;
+
+
+
+	// Rendering:
+	void EditorWindow::Open()
+	{
+		m_isOpen = true;
+	}
+	void EditorWindow::RenderWindow()
 	{
 		// Skip rendering if window is closed:
 		if (!m_isOpen)
 			return;
 
-		DearImGui::PushID(m_nameID.c_str());
-		if (DearImGui::Begin(m_nameID.c_str(), &m_isOpen, m_windowFlags))
+		Gui::PushID(m_nameID.c_str());
+		if (Gui::Begin(m_nameID.c_str(), &m_isOpen, m_windowFlags))
 		{
 			// Get window size:
-			Float2 size = DearImGui::GetWindowSize();
+			Float2 size = Gui::GetWindowSize();
 			m_width = size.x;
 			m_height = size.y;
 
@@ -35,18 +48,21 @@ namespace emberEngine
 			Render();
 
 			// Let Editor know if this window is focused:
-			m_isFocused = DearImGui::IsWindowFocused(DearImGuiFocusedFlag_RootAndChildWindows);
+			m_isFocused = Gui::IsWindowFocused(emberCommon::GuiFocusedFlag::GuiFocusedFlag_RootAndChildWindows);
 			if (m_isFocused)
 				Editor::SetFocusedWindow(this);
 		}
-		DearImGui::End();	// must be called even if ImGui::Begin() returns false.
-		DearImGui::PopID();
+		Gui::End();	// must be called even if ImGui::Begin() returns false.
+		Gui::PopID();
 	}
 	void EditorWindow::Render()
 	{
 		LOG_WARN("EditorWindow::Render override missing.");
 	}
 
+
+
+	// Getters:
 	const std::string& EditorWindow::GetName() const
 	{
 		return m_name;
@@ -70,9 +86,5 @@ namespace emberEngine
 	bool EditorWindow::WantCaptureEvents() const
 	{
 		return m_wantCaptureEvents;
-	}
-	void EditorWindow::Open()
-	{
-		m_isOpen = true;
 	}
 }

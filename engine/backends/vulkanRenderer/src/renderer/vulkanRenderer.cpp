@@ -33,6 +33,7 @@
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderPassManager.h"
 #include "vulkanRenderTexture2d.h"
+#include "vulkanSampler.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanShaderProperties.h"
@@ -303,15 +304,21 @@ namespace vulkanRendererBackend
 	{
 		return Context::GetSurface()->GetCurrentExtent();
 	}
-	float Renderer::GetDeptBiasConstantFactor()
+	emberBackendInterface::ITexture* Renderer::GetRenderTexture()
+	{
+		RenderTexture2d* pRenderTexture = RenderPassManager::GetForwardRenderPass()->GetRenderTexture();
+		emberBackendInterface::ITexture* pITexture = static_cast<emberBackendInterface::ITexture*>(pRenderTexture);
+		return pITexture;
+	}
+	float Renderer::GetDepthBiasConstantFactor()
 	{
 		return m_depthBiasConstantFactor;
 	}
-	float Renderer::GetDeptBiasClamp()
+	float Renderer::GetDepthBiasClamp()
 	{
 		return m_depthBiasClamp;
 	}
-	float Renderer::GetDeptBiasSlopeFactor()
+	float Renderer::GetDepthBiasSlopeFactor()
 	{
 		return m_depthBiasSlopeFactor;
 	}
@@ -319,11 +326,11 @@ namespace vulkanRendererBackend
 
 
 	// Setters:
-	void Renderer::SetIComputeHandle(emberBackendInterface::ICompute* pICompute)
+	void Renderer::LinkIComputeHandle(emberBackendInterface::ICompute* pICompute)
 	{
 		m_pCompute = static_cast<Compute*>(pICompute);
 	}
-	void Renderer::SetIGuiHandle(emberBackendInterface::IGui* pIGui)
+	void Renderer::LinkIGuiHandle(emberBackendInterface::IGui* pIGui)
 	{
 		m_pIGui = pIGui;
 	}
@@ -479,7 +486,7 @@ namespace vulkanRendererBackend
 	}
 	void* Renderer::GetColorSampler()
 	{
-		return static_cast<void*>(DefaultGpuResources::GetColorSampler());
+		return static_cast<void*>(DefaultGpuResources::GetColorSampler()->GetVkSampler());
 	}
 	uint32_t Renderer::GetGraphicsVkQueueFamilyIndex()
 	{
