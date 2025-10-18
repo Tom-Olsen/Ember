@@ -44,5 +44,8 @@ namespace nullWindowBackend
 		bool GetIsResized() const override;
 		Int2 GetSize() const;
 		uint32_t GetWindowID() const;
+
+		// Setters:
+		void ResetWindowResized() override;
 	};
 }

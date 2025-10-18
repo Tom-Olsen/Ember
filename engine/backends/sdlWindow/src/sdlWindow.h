@@ -58,5 +58,8 @@ namespace sdlWindowBackend
 		bool GetIsResized() const override;
 		Int2 GetSize() const override;
 		uint32_t GetWindowID() const override;
+
+		// Setters:
+		void ResetWindowResized() override;
 	};
 }

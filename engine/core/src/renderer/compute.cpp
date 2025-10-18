@@ -17,7 +17,7 @@ namespace emberEngine
 	}
 	Compute::Async::~Async()
 	{
-		m_pIAsync.reset();
+
 	}
 
 	// Dispatch logic:

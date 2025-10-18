@@ -1,6 +1,7 @@
 #include "vulkanRenderer.h"
 #include "emberMath.h"
 #include "iGui.h"
+#include "iWindow.h"
 #include "logger.h"
 #include "profiler.h"
 #include "spirvReflect.h"
@@ -57,6 +58,7 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	Renderer::Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow)
 	{
+		m_pIWindow = pIWindow;
 		Context::Init(createInfo, pIWindow);
 
 		m_time = 0.0f;
@@ -130,14 +132,15 @@ namespace vulkanRendererBackend
 
 
 	// Main render call:
-	void Renderer::RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime)
+	void Renderer::RenderFrame(float time, float deltaTime)
 	{
 		m_time = time;
 		m_deltaTime = deltaTime;
 
 		// Resize Swapchain if needed:
+		Int2 windowSize = m_pIWindow->GetSize();
 		Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
-		if (m_rebuildSwapchain || windowWidth != surfaceExtend.x || windowHeight != surfaceExtend.y)
+		if (m_rebuildSwapchain || windowSize.x != surfaceExtend.x || windowSize.y != surfaceExtend.y)
 		{
 			m_rebuildSwapchain = false;
 			Context::ResetFrameIndex();
@@ -552,10 +555,9 @@ namespace vulkanRendererBackend
 		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[Context::GetFrameIndex()], VK_NULL_HANDLE, &m_imageIndex);
 
 		// Resize if needed:
-		//if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || Context::pWindow->GetFramebufferResized())
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_pIWindow->GetIsResized())
 		{
-			//Context::pWindow->SetFramebufferResized(false);
+			m_pIWindow->ResetWindowResized();
 			m_rebuildSwapchain = true;
 			return false;
 		}

@@ -37,5 +37,8 @@ namespace emberBackendInterface
         virtual bool GetIsResized() const = 0;
         virtual Int2 GetSize() const = 0;
         virtual uint32_t GetWindowID() const = 0;
+
+        // Setters:
+        virtual void ResetWindowResized() = 0;
     };
 }

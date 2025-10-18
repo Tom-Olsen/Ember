@@ -71,6 +71,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		// Backend hooks:
 		emberBackendInterface::IGui* m_pIGui;
+		emberBackendInterface::IWindow* m_pIWindow;
 		Compute* m_pCompute;
 		
 		// Render resources:
@@ -133,7 +134,7 @@ namespace vulkanRendererBackend
 		Renderer& operator=(Renderer&& other) noexcept;
 
 		// Main render loop:
-		void RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime) override;
+		void RenderFrame(float time, float deltaTime) override;
 
 		// Lightsources:
 		void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix) override;

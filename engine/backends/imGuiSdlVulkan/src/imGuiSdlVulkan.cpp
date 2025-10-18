@@ -142,8 +142,8 @@ namespace imGuiSdlVulkanBackend
 	{
 		ImGui_ImplSDL3_ProcessEvent(static_cast<const SDL_Event*>(pWindowEvent));
 		bool wantCaptureEvents = m_captureCallback ? m_captureCallback() : false;
-		m_wantCaptureKeyboard = m_pIo->WantCaptureKeyboard || wantCaptureEvents;
-		m_wantCaptureMouse = m_pIo->WantCaptureMouse || wantCaptureEvents;
+		m_wantCaptureKeyboard = m_pIo->WantCaptureKeyboard && wantCaptureEvents;
+		m_wantCaptureMouse = m_pIo->WantCaptureMouse && wantCaptureEvents;
 	}
 	void Gui::Render(VkCommandBuffer vkCommandBuffer)
 	{

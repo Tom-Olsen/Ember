@@ -45,6 +45,12 @@ namespace emberEngine
 		void Load();
 		void Unload();
 
+		// ECS methods:
+		void Start();
+		void Update();
+		void LateUpdate();
+		void FixedUpdate();
+
 		// Debugging:
 		void PrintGameObjects() const;
 	};

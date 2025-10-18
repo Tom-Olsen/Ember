@@ -56,4 +56,12 @@ namespace nullWindowBackend
 	{
 		return 0;
 	}
+
+
+
+	// Setters:
+	void Window::ResetWindowResized()
+	{
+		
+	}
 }

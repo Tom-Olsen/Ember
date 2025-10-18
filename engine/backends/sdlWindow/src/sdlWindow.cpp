@@ -21,6 +21,8 @@ namespace sdlWindowBackend
 		assert(windowWidth > 0);
 		assert(windowHeight > 0);
 
+		m_isResized = false;
+
 		// Initialize SDL:
 		if (SDL_Init(SDL_INIT_VIDEO) == false)	// crashes after pulling latest version of sdl3
 			throw std::runtime_error((std::string)"Window::Init: " + (std::string)SDL_GetError());
@@ -268,5 +270,13 @@ namespace sdlWindowBackend
 	uint32_t Window::GetWindowID() const
 	{
 		return (uint32_t)SDL_GetWindowID(m_pSdlWindow);
+	}
+
+
+
+	// Setters:
+	void Window::ResetWindowResized()
+	{
+		m_isResized = false;
 	}
 }

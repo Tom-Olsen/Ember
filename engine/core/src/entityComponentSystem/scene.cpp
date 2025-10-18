@@ -1,8 +1,9 @@
 #include "scene.h"
 #include "camera.h"
+#include "component.h"
 #include "gameObject.h"
 #include "logger.h"
-#include "material.h"
+#include "profiler.h"
 
 
 
@@ -94,6 +95,73 @@ namespace emberEngine
 	void Scene::Unload()
 	{
 
+	}
+
+
+
+	// ECS methods:
+	void Scene::Start()
+	{
+		// Start all components of all game objects:
+		for (auto& [_, gameObject] : m_gameObjects)
+		{
+			if (gameObject->isActive)
+			{
+				for (auto& [_, component] : gameObject->GetComponents())
+				{
+					if (component->isActive)
+						component->Start();
+				}
+			}
+		}
+	}
+	void Scene::Update()
+	{
+		PROFILE_FUNCTION();
+		// Update all components of all game objects:
+		for (auto& [_, gameObject] : m_gameObjects)
+		{
+			if (gameObject->isActive)
+			{
+				for (auto& [_, component] : gameObject->GetComponents())
+				{
+					if (component->isActive)
+						component->Update();
+				}
+			}
+		}
+	}
+	void Scene::LateUpdate()
+	{
+		PROFILE_FUNCTION();
+		// Late update all components of all game objects:
+		for (auto& [_, gameObject] : m_gameObjects)
+		{
+			if (gameObject->isActive)
+			{
+				for (auto& [_, component] : gameObject->GetComponents())
+				{
+					if (component->isActive)
+						component->LateUpdate();
+				}
+			}
+		}
+	}
+	void Scene::FixedUpdate()
+	{
+		PROFILE_FUNCTION();
+		// Fixed update all components of all game objects:
+		for (auto& [_, gameObject] : m_gameObjects)
+		{
+			if (gameObject->isActive)
+			{
+				for (auto& [_, component] : gameObject->GetComponents())
+				{
+					if (component->isActive)
+						component->FixedUpdate();
+				}
+			}
+		}
 	}
 
 

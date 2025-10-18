@@ -75,12 +75,13 @@ Implemented features:
 
 
 Ember::TODO now!
-- Hierarchy not showing gameObjects.
+	- Hierarchy not showing gameObjects.
+		- camera movement in scene / game window not working.
+		- move ECS start / update / etc from application to scene.
+		- rescaling window crashes applications.
+- Memory leak on application shutdown.
 - performance worse than before architecture restructure.
-- camera movement in scene/game window not working.
-- rescaling window crashes applications.
 - make other projects compile and run again.
-- move ECS start/update/etc from application to scene.
 - build core as .dll
 - target_link_libraries(backends) with PRIVATE keyword?
 - gpu resources on core side should always be handled as value/reference types as they are simple wrappers around a single pointer.

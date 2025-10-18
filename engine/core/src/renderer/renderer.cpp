@@ -54,8 +54,7 @@ namespace emberEngine
 	// Main render loop:
 	void Renderer::RenderFrame()
 	{
-		Int2 size = Window::GetSize();
-		s_pIRenderer->RenderFrame(size.x, size.y, Time::GetTime(), Time::GetDeltaTime());
+		s_pIRenderer->RenderFrame(Time::GetTime(), Time::GetDeltaTime());
 	}
 
 

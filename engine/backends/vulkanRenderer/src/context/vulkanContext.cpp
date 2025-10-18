@@ -148,9 +148,10 @@ namespace vulkanRendererBackend
 	}
 	void Context::RebuildSwapchain()
 	{
-		int nextm_swapchainIndex = (int)!m_swapchainIndex;
-		m_swapchains[nextm_swapchainIndex] = std::move(m_swapchains[m_swapchainIndex]);
-		m_swapchainIndex = nextm_swapchainIndex;
+		WaitDeviceIdle();
+		int nextSwapchainIndex = (int)!m_swapchainIndex;
+		m_swapchains[nextSwapchainIndex] = std::make_unique<Swapchain>(m_pLogicalDevice.get(), m_pSurface.get(), ImageUsageFlags::color_attachment_bit | ImageUsageFlags::transfer_dst_bit, m_swapchains[m_swapchainIndex].get());
+		m_swapchainIndex = nextSwapchainIndex;
 	}
 
 

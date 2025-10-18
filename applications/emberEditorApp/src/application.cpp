@@ -169,7 +169,7 @@ namespace emberApplication
 		{
 			bool running = true;
 			emberEngine::Time::Reset();
-			Start();
+			m_pActiveScene->Start();
 
 			while (running)
 			{
@@ -187,12 +187,12 @@ namespace emberApplication
 
 				// Physics Update Loop:
 				while (emberEngine::Time::UpdatePhysics())
-					FixedUpdate();
+					m_pActiveScene->FixedUpdate();
 
 				// Game update loop:
 				emberEngine::Gui::Update();
-				Update();
-				LateUpdate();
+				m_pActiveScene->Update();
+				m_pActiveScene->LateUpdate();
 				emberEngine::Renderer::RenderFrame();
 			}
 		}
@@ -208,6 +208,7 @@ namespace emberApplication
 	void Application::SetScene(emberEngine::Scene* pScene)
 	{
 		this->m_pActiveScene = pScene;
+		m_pHierarchyEditorWindow->SetScene(pScene);
 	}
 
 
@@ -244,72 +245,5 @@ namespace emberApplication
 	emberEditor::SceneEditorWindow* Application::GetSceneEditorWindow() const
 	{
 		return m_pSceneEditorWindow.get();
-	}
-
-
-
-	// Private methods:
-	void Application::Start()
-	{
-		// Start all components of all game objects:
-		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
-		{
-			if (gameObject->isActive)
-			{
-				for (auto& [_, component] : gameObject->GetComponents())
-				{
-					if (component->isActive)
-						component->Start();
-				}
-			}
-		}
-	}
-	void Application::Update()
-	{
-		PROFILE_FUNCTION();
-		// Update all components of all game objects:
-		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
-		{
-			if (gameObject->isActive)
-			{
-				for (auto& [_, component] : gameObject->GetComponents())
-				{
-					if (component->isActive)
-						component->Update();
-				}
-			}
-		}
-	}
-	void Application::LateUpdate()
-	{
-		PROFILE_FUNCTION();
-		// Late update all components of all game objects:
-		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
-		{
-			if (gameObject->isActive)
-			{
-				for (auto& [_, component] : gameObject->GetComponents())
-				{
-					if (component->isActive)
-						component->LateUpdate();
-				}
-			}
-		}
-	}
-	void Application::FixedUpdate()
-	{
-		PROFILE_FUNCTION();
-		// Fixed update all components of all game objects:
-		for (auto& [_, gameObject] : m_pActiveScene->GetGameObjects())
-		{
-			if (gameObject->isActive)
-			{
-				for (auto& [_, component] : gameObject->GetComponents())
-				{
-					if (component->isActive)
-						component->FixedUpdate();
-				}
-			}
-		}
 	}
 }

@@ -79,11 +79,5 @@ namespace emberApplication
 		emberEditor::InspectorEditorWindow* GetInspectorEditorWindow() const;
 		emberEditor::ProjectEditorWindow* GetProjectEditorWindow() const;
 		emberEditor::SceneEditorWindow* GetSceneEditorWindow() const;
-
-	private: // Methods:
-		void Start();
-		void Update();
-		void LateUpdate();
-		void FixedUpdate();
 	};
 }

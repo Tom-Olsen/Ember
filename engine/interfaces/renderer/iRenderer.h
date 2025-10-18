@@ -30,7 +30,7 @@ namespace emberBackendInterface
         virtual ~IRenderer() = default;
 
         // Main render loop:
-        virtual void RenderFrame(int windowWidth, int windowHeight, float time, float deltaTime) = 0;
+        virtual void RenderFrame(float time, float deltaTime) = 0;
 
         // Lightsources:
         virtual void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix) = 0;
