@@ -1,6 +1,7 @@
 #include "vulkanGarbageCollector.h"
 #include "vulkanContext.h"
 #include <vulkan/vulkan.h>
+#include "logger.h"
 
 
 
@@ -21,6 +22,7 @@ namespace vulkanRendererBackend
     }
     void GarbageCollector::Clear()
     {
+        LOG_INFO("Destroying GarbageCollector");
         Context::WaitDeviceIdle();
         for (const GarbageEntry& entry : s_garbageQueue)
             entry.collectGarbageCallback();

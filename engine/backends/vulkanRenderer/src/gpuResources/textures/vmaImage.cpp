@@ -1,6 +1,7 @@
 #include "vmaImage.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanContext.h"
+#include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanSingleTimeCommand.h"
@@ -391,8 +392,14 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void VmaImage::Cleanup()
 	{
-		vmaDestroyImage(Context::GetVmaAllocator(), m_image, m_allocation);
-		vkDestroyImageView(Context::GetVkDevice(), m_imageView, nullptr);
+		VkImage image = m_image;
+		VkImageView imageView = m_imageView;
+		VmaAllocation allocation = m_allocation;
+		GarbageCollector::RecordGarbage([image, imageView, allocation]()
+		{
+			vmaDestroyImage(Context::GetVmaAllocator(), image, allocation);
+			vkDestroyImageView(Context::GetVkDevice(), imageView, nullptr);
+		});
 	}
 	void VmaImage::MoveFrom(VmaImage& other) noexcept
 	{

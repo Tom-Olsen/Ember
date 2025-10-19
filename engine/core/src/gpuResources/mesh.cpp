@@ -30,7 +30,7 @@ namespace emberEngine
 	}
 	Mesh::~Mesh()
 	{
-		m_pIMesh.release();
+
 	}
 
 

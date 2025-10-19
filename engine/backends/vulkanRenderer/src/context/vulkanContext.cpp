@@ -138,12 +138,22 @@ namespace vulkanRendererBackend
 	}
 	void Context::Clear()
 	{
+		LOG_INFO("Destroying Context");
 		WaitDeviceIdle();
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		GarbageCollector::Clear();
 		RenderPassManager::Clear();
 		SingleTimeCommand::Clear();
+		m_swapchains[0].reset();
+		m_swapchains[1].reset();
+		m_pDescriptorPool.reset();
+		m_pAllocationTracker.reset();
+		m_pMemoryAllocator.reset();
+		m_pLogicalDevice.reset();
+		m_pSurface.reset();
+		m_pPhysicalDevice.reset();
+		m_pInstance.reset();
 		s_isInitialized = false;
 	}
 	void Context::RebuildSwapchain()

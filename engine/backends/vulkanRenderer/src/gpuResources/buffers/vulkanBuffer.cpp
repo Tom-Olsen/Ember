@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 	}
 	Buffer::~Buffer()
 	{
-		Context::WaitDeviceIdle();
+
 	}
 
 
