@@ -54,19 +54,20 @@ Alternatively you can setup visual studio or any IDE of your liking to compile/r
 Implemented features:
 -clean architecture split of core and backends
 -multiple application modes:
- -emberGameApp:         sdlWindow, nullGui, nullEditor.
- -emberGameDebugApp:    sdlWindow, imGuiSdlVulkan, nullEditor.
- -emberEditorApp:       sdlWindow, imGuiSdlVulkan, emberEditor.
- -emberHeadlessApp:     nullWindow, nullGui, nullEditor.
+    -emberGameApp:         sdlWindow, nullGui.
+    -emberGameDebugApp:    sdlWindow, imGuiSdlVulkan.
+    -emberEditorApp:       sdlWindow, imGuiSdlVulkan + custom editor window classes.
+    -emberHeadlessApp:     nullWindow, nullGui.
+-clean separation of editor into its own applicationl.
 -Pipelines:
- -preRender compute (instancing data manipulation).
- -shadoow mapping (multiple light sources, directional/positional lights, physical based(roughnessMap, normalMap, metallicity, reflectivity), shadow cascades with shadow snapping, instanced rendering support).
- -forward renderpass (opaque + skybox + transparent, instanced rendering support).
- -postRender compute (post processing effects).
- -async comppute.
- -immediate compue.
+    -preRender compute (instancing data manipulation).
+    -shadoow mapping (multiple light sources, directional/positional lights, physical based(roughnessMap, normalMap, metallicity, reflectivity), shadow cascades with shadow snapping, instanced rendering support).
+    -forward renderpass (opaque + skybox + transparent, instanced rendering support).
+    -postRender compute (post processing effects).
+    -async comppute.
+    -immediate compue.
 -Fully automated descriptorSet system for shaderProperties (see spirvReflect.h/cpp) which handles descriptorSets for Materials and ComputeShaders.
--ECS
+-ECS.
 -EventSystem that catches SDL events and makes them visible to Gui+Editor+GameObjects/Components.
 -CameraController that is identical to unities editor pCamera.
 -Custom math library, see math.h/cpp. (will be refactored to be a glm wrapper soon).
@@ -75,7 +76,6 @@ Implemented features:
 
 
 Ember::TODO now!
-- Memory leak on application shutdown.
 - performance worse than before architecture restructure.
 - make other projects compile and run again.
 - build core as .dll

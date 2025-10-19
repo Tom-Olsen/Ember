@@ -57,8 +57,6 @@ namespace emberApplication
 			math::Random::Init();
 			emberEngine::EventSystem::Init();
 
-
-
 			// Window backend:
 			emberBackendInterface::IWindow* pIWindow;
 			if (true)
@@ -140,16 +138,14 @@ namespace emberApplication
 		emberEngine::MaterialManager::Clear();
 		emberEngine::ComputeShaderManager::Clear();
 
-		// Renderer/Gui:
+		// Backends:
 		emberEngine::Gui::Clear();
 		emberEngine::Compute::Clear();
 		emberEngine::Renderer::Clear();
-
-		// Window/Event systems:
-		emberEngine::EventSystem::Clear();
 		emberEngine::Window::Clear();
 
 		// Basic systems:
+		emberEngine::EventSystem::Clear();
 		math::Random::Clear();
 		emberLogger::Logger::Clear();
 	}

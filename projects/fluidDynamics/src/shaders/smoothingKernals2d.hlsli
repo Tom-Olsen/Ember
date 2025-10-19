@@ -42,7 +42,7 @@ float SmoothingKernal_DDSpiky(float r, float h)
     float hr = h - r;
     return (r < h) ? 3.0 * c * hr * (2.0f - hr / r) : 0.0f;
 }
-    
+
 
 
 // Used for viscosity calculations:

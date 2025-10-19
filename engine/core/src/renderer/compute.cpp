@@ -13,7 +13,7 @@ namespace emberEngine
 	// Constructor/Destructor:
 	Compute::Async::Async(emberBackendInterface::ICompute::IAsync* pIAsync)
 	{
-		m_pIAsync = std::unique_ptr<emberBackendInterface::ICompute::IAsync>(pIAsync);
+		m_pIAsync = pIAsync;
 	}
 	Compute::Async::~Async()
 	{
@@ -59,11 +59,11 @@ namespace emberEngine
 	// Constructor/Destructor:
 	Compute::Immediate::Immediate(emberBackendInterface::ICompute::IImmediate* pIImmediate)
 	{
-		m_pIImmediate = std::unique_ptr<emberBackendInterface::ICompute::IImmediate>(pIImmediate);
+		m_pIImmediate = pIImmediate;
 	}
 	Compute::Immediate::~Immediate()
 	{
-		m_pIImmediate.reset();
+
 	}
 
 	// Immediate dispatch call:
@@ -79,11 +79,11 @@ namespace emberEngine
 	// Constructor/Destructor:
 	Compute::PostRender::PostRender(emberBackendInterface::ICompute::IPostRender* pIPostRender)
 	{
-		m_pIPostRender = std::unique_ptr<emberBackendInterface::ICompute::IPostRender>(pIPostRender);
+		m_pIPostRender = pIPostRender;
 	}
 	Compute::PostRender::~PostRender()
 	{
-		m_pIPostRender.reset();
+
 	}
 
 	// Workload recording:
@@ -103,11 +103,11 @@ namespace emberEngine
 	// Constructor/Destructor:
 	Compute::PreRender::PreRender(emberBackendInterface::ICompute::IPreRender* pIPreRender)
 	{
-		m_pIPreRender = std::unique_ptr<emberBackendInterface::ICompute::IPreRender>(pIPreRender);
+		m_pIPreRender = pIPreRender;
 	}
 	Compute::PreRender::~PreRender()
 	{
-		m_pIPreRender.reset();
+
 	}
 
 	// Workload recording:
@@ -153,11 +153,11 @@ namespace emberEngine
 	}
 	void Compute::Clear()
 	{
-		s_pICompute.reset();
-		s_pAsync.reset();
-		s_pImmediate.reset();
-		s_pPostRender.reset();
 		s_pPreRender.reset();
+		s_pPostRender.reset();
+		s_pImmediate.reset();
+		s_pAsync.reset();
+		s_pICompute.reset();
 		s_isInitialized = false;
 	}
 

@@ -22,7 +22,7 @@ namespace emberEngine
 		class Async
 		{
 		private: // Members:
-			std::unique_ptr<emberBackendInterface::ICompute::IAsync> m_pIAsync;
+			emberBackendInterface::ICompute::IAsync* m_pIAsync; // ICompute owns the ICompute::IAsync instance.
 
 		public: // Methods:
 			// Constructor/Destructor:
@@ -54,7 +54,7 @@ namespace emberEngine
 		class Immediate
 		{
 		private: // Members:
-			std::unique_ptr<emberBackendInterface::ICompute::IImmediate> m_pIImmediate;
+			emberBackendInterface::ICompute::IImmediate* m_pIImmediate;  // ICompute owns the ICompute::IImmediate instance.
 
 		public: // Methods:
 			// Constructor/Destructor:
@@ -78,7 +78,7 @@ namespace emberEngine
 		class PostRender
 		{
 		private: // Members:
-			std::unique_ptr<emberBackendInterface::ICompute::IPostRender> m_pIPostRender;
+			emberBackendInterface::ICompute::IPostRender* m_pIPostRender;  // ICompute owns the ICompute::IPostRender instance.
 
 		public: // Methods:
 			// Constructor/Destructor:
@@ -103,7 +103,7 @@ namespace emberEngine
 		class PreRender
 		{
 		private: // Members:
-			std::unique_ptr<emberBackendInterface::ICompute::IPreRender> m_pIPreRender;
+			emberBackendInterface::ICompute::IPreRender* m_pIPreRender;  // ICompute owns the ICompute::IPreRender instance.
 
 		public: // Methods:
 			// Constructor/Destructor:
