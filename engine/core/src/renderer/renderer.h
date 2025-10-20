@@ -6,6 +6,7 @@
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
 #include "emberMath.h"
+#include "texture2d.h"
 #include <array>
 #include <memory>
 #include <filesystem>
