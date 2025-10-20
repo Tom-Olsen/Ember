@@ -76,6 +76,7 @@ Implemented features:
 
 
 Ember::TODO now!
+- crash on shutdown: 5 vma allocations are dangling.
 - performance worse than before architecture restructure.
 - make other projects compile and run again.
 - build core as .dll

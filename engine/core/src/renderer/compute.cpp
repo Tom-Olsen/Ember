@@ -45,7 +45,9 @@ namespace emberEngine
 	}
 	ShaderProperties Compute::Async::RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount)
 	{
-		return ShaderProperties(m_pIAsync->RecordComputeShader(sessionID, computeShader.GetInterfaceHandle(), threadCount));
+		ShaderProperties shaderProperties = ShaderProperties(m_pIAsync->RecordComputeShader(sessionID, computeShader.GetInterfaceHandle(), threadCount));
+		shaderProperties.SetOwnerShip(false);
+		return shaderProperties;
 	}
 	void Compute::Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
 	{
@@ -93,7 +95,9 @@ namespace emberEngine
 	}
 	ShaderProperties Compute::PostRender::RecordComputeShader(ComputeShader& computeShader)
 	{
-		return ShaderProperties(m_pIPostRender->RecordComputeShader(computeShader.GetInterfaceHandle()));
+		ShaderProperties shaderProperties = ShaderProperties(m_pIPostRender->RecordComputeShader(computeShader.GetInterfaceHandle()));
+		shaderProperties.SetOwnerShip(false);
+		return shaderProperties;
 	}
 
 
@@ -117,7 +121,9 @@ namespace emberEngine
 	}
 	ShaderProperties Compute::PreRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
-		return ShaderProperties(m_pIPreRender->RecordComputeShader(computeShader.GetInterfaceHandle(), threadCount));
+		ShaderProperties shaderProperties = ShaderProperties(m_pIPreRender->RecordComputeShader(computeShader.GetInterfaceHandle(), threadCount));
+		shaderProperties.SetOwnerShip(false);
+		return shaderProperties;
 	}
 	void Compute::PreRender::RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
 	{

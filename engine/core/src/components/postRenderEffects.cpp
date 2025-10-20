@@ -20,7 +20,7 @@ namespace emberEngine
 	void PostRenderEffects::LateUpdate()
 	{
 		for (ComputeShader* pComputeShader : effects)
-			Compute::GetPostRender()->RecordComputeShader(*pComputeShader);
+			ShaderProperties shaderProperties = Compute::GetPostRender()->RecordComputeShader(*pComputeShader);
 	}
 	const std::string PostRenderEffects::ToString() const
 	{

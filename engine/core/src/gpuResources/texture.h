@@ -22,7 +22,7 @@ namespace emberEngine
 		friend class ShaderProperties;
 
 	protected: // Members:
-		bool m_ownsTexture;
+		bool m_ownsITexture;
 		emberBackendInterface::ITexture* m_pITexture; // conditional ownership, depending on usecase.
 		emberBackendInterface::ITexture* GetInterfaceHandle();
 

@@ -31,7 +31,8 @@ namespace emberEngine
 		friend class Compute;
 
 	private: // Members:
-		std::unique_ptr<emberBackendInterface::IShaderProperties> m_pIShaderProperties;
+		bool m_ownsIShaderProperties;	// Can be set to false by Renderer or Compute (friends) when creating ShaderProperties from existing backend managed IShaderProperties.
+		emberBackendInterface::IShaderProperties* m_pIShaderProperties; // conditional ownership, depending on usecase.
 		emberBackendInterface::IShaderProperties* GetInterfaceHandle();
 
 	public: // Methods:
@@ -87,5 +88,11 @@ namespace emberEngine
 		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
 		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
 		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
+
+		// Getters
+		std::string GetShaderName() const;
+
+	private: // Methods:
+		void SetOwnerShip(bool ownsShaderProperties);
 	};
 }

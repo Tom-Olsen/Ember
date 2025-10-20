@@ -13,7 +13,7 @@ namespace emberEngine
 {
 	emberBackendInterface::IShaderProperties* ShaderProperties::GetInterfaceHandle()
 	{
-		return m_pIShaderProperties.get();
+		return m_pIShaderProperties;
 	}
 
 
@@ -21,32 +21,58 @@ namespace emberEngine
 	// Constructor/Destructor:
 	ShaderProperties::ShaderProperties()
 	{
+		m_ownsIShaderProperties = false;
 		m_pIShaderProperties = nullptr;
 	}
 	ShaderProperties::ShaderProperties(ComputeShader& computeShader)
 	{
+		m_ownsIShaderProperties = true;
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
-		m_pIShaderProperties = std::unique_ptr<emberBackendInterface::IShaderProperties>(Renderer::CreateShaderProperties(pIComputeShader));
+		m_pIShaderProperties = Renderer::CreateShaderProperties(pIComputeShader);
 	}
 	ShaderProperties::ShaderProperties(Material& material)
 	{
+		m_ownsIShaderProperties = true;
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
-		m_pIShaderProperties = std::unique_ptr<emberBackendInterface::IShaderProperties>(Renderer::CreateShaderProperties(pIMaterial));
+		m_pIShaderProperties = Renderer::CreateShaderProperties(pIMaterial);
 	}
 	ShaderProperties::ShaderProperties(emberBackendInterface::IShaderProperties* pIShaderProperties)
 	{
-		m_pIShaderProperties = std::unique_ptr<emberBackendInterface::IShaderProperties>(pIShaderProperties);
+		m_ownsIShaderProperties = true;
+		m_pIShaderProperties = pIShaderProperties;
 	}
 	ShaderProperties::~ShaderProperties()
 	{
-		m_pIShaderProperties.release();
+		if (m_ownsIShaderProperties && m_pIShaderProperties)
+			delete m_pIShaderProperties;
 	}
 
 
 
 	// Movable:
-	ShaderProperties::ShaderProperties(ShaderProperties&& other) noexcept = default;
-	ShaderProperties& ShaderProperties::operator=(ShaderProperties&& other) noexcept = default;
+	ShaderProperties::ShaderProperties(ShaderProperties&& other) noexcept
+	{
+		m_ownsIShaderProperties = other.m_ownsIShaderProperties;
+		m_pIShaderProperties = other.m_pIShaderProperties;
+
+		other.m_ownsIShaderProperties = false;
+		other.m_pIShaderProperties = nullptr;
+	}
+	ShaderProperties& ShaderProperties::operator=(ShaderProperties&& other) noexcept
+	{
+		if (this != &other)
+		{
+			if (m_ownsIShaderProperties)
+				delete m_pIShaderProperties;
+
+			m_ownsIShaderProperties = other.m_ownsIShaderProperties;
+			m_pIShaderProperties = other.m_pIShaderProperties;
+
+			other.m_ownsIShaderProperties = false;
+			other.m_pIShaderProperties = nullptr;
+		}
+		return *this;
+	}
 
 
 
@@ -179,5 +205,21 @@ namespace emberEngine
 	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value)
 	{
 		m_pIShaderProperties->SetFloat4x4(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
+	}
+
+
+
+	// Getters:
+	std::string ShaderProperties::GetShaderName() const
+	{
+		return m_pIShaderProperties->GetShaderName();
+	}
+
+
+
+	// Private methods:
+	void ShaderProperties::SetOwnerShip(bool ownsShaderProperties)
+	{
+		m_ownsIShaderProperties = ownsShaderProperties;
 	}
 }

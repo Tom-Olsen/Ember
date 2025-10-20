@@ -391,6 +391,10 @@ namespace vulkanRendererBackend
 	{
 		return m_pShader;
 	}
+	std::string ShaderProperties::GetShaderName() const
+	{
+		return m_pShader->GetName();
+	}
 	Texture* ShaderProperties::GetTexture(const std::string& name) const
 	{
 		auto it = m_textureMaps[Context::GetFrameIndex()].find(name);

@@ -64,6 +64,13 @@ namespace vulkanRendererBackend
 	void AllocationTracker::Cleanup()
 	{
 		#ifdef VALIDATION_LAYERS_ACTIVE
+
+		// Enable this if something went wrong for more detailed memory stats:
+		char* stats = nullptr;
+		vmaBuildStatsString(Context::GetVmaAllocator(), &stats, true);
+		LOG_INFO(stats);
+		vmaFreeStatsString(Context::GetVmaAllocator(), stats);
+
 		if (m_pVmaBuffers.size() == 0)
 			LOG_TRACE("All VmaBuffers have been destroyed.");
 		else

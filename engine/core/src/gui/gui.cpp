@@ -295,7 +295,7 @@ namespace emberEngine
 			float inputWidth = Editor::GetRemainingWidth() - Editor::GetSpacingX();
 			inputWidth = math::Max(inputWidth, s_minWidgetWidth);
 			Gui::SetNextItemWidth(inputWidth);
-			bool interaction = Gui::InputInt("##Input", value, step, stepFast, flags);
+			bool interaction = s_pIGui->InputInt("##Input", value, step, stepFast, flags);
 
 			changed = dragging || interaction;
 		}
@@ -365,7 +365,7 @@ namespace emberEngine
 			float inputWidth = Editor::GetRemainingWidth() - Editor::GetSpacingX();
 			inputWidth = math::Max(inputWidth, s_minWidgetWidth);
 			Gui::SetNextItemWidth(inputWidth);
-			bool interaction = Gui::InputFloat("##Input", value, step, stepFast, format, flags);
+			bool interaction = s_pIGui->InputFloat("##Input", value, step, stepFast, format, flags);
 
 			changed = dragging || interaction;
 		}

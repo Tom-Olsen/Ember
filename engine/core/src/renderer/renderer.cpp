@@ -91,7 +91,9 @@ namespace emberEngine
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
-		return ShaderProperties(s_pIRenderer->DrawMesh(mesh.GetInterfaceHandle(), material.GetInterfaceHandle(), localToWorldMatrix, receiveShadows, castShadows));
+		ShaderProperties shaderProperties = ShaderProperties(s_pIRenderer->DrawMesh(mesh.GetInterfaceHandle(), material.GetInterfaceHandle(), localToWorldMatrix, receiveShadows, castShadows));
+		shaderProperties.SetOwnerShip(false);
+		return shaderProperties;
 	}
 	ShaderProperties Renderer::DrawMesh(Mesh& mesh, Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
 	{
@@ -125,7 +127,9 @@ namespace emberEngine
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
-		return ShaderProperties(s_pIRenderer->DrawInstanced(instanceCount, instanceBuffer.GetInterfaceHandle(), mesh.GetInterfaceHandle(), material.GetInterfaceHandle(), localToWorldMatrix, receiveShadows, castShadows));
+		ShaderProperties shaderProperties = ShaderProperties(s_pIRenderer->DrawInstanced(instanceCount, instanceBuffer.GetInterfaceHandle(), mesh.GetInterfaceHandle(), material.GetInterfaceHandle(), localToWorldMatrix, receiveShadows, castShadows));
+		shaderProperties.SetOwnerShip(false);
+		return shaderProperties;
 	}
 	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
 	{

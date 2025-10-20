@@ -168,6 +168,7 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		Shader* GetShader() const;
+		std::string GetShaderName() const override;
 		Texture* GetTexture(const std::string& name) const;
 		
 		// Backend functionality:
