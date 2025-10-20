@@ -1,5 +1,5 @@
 Prerequisites:
-To compile this code, you need to have Vulkan SDK 1.3.290.0 (or later) and cmake version 3.31 (or later) installed.
+To compile this code, you need to have Vulkan SDK 1.3.290.0 (or later) and cmake version 3.30 (or later) installed.
 All other dependencies (googletest, imgui, SDL, spdlog, SPIRV-Reflect, vma) are submodules and will be compiled from source.
 (Don't forget to clone recursively for the submodules: git clone --recurse-submodules <repository-url>)
 

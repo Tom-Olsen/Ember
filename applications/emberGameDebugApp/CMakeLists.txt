@@ -4,7 +4,7 @@
 
 # ------------------- Project Setup ------------------
 # Minimum version requirement and project name:
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.30)
 project(EmberGameDebugApp)
 
 # C++ standard:
