@@ -1,13 +1,13 @@
 #include "vulkanAllocationTracker.h"
 #include "logger.h"
-#include "vmaBuffer.h"
-#include "vmaImage.h"
+#include "vulkanContext.h"
 #include "vulkanMacros.h"
 
 
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Initialization/Cleanup:
 	AllocationTracker::AllocationTracker()
 	{
@@ -36,26 +36,29 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
-	void AllocationTracker::AddVmaBuffer(VmaBuffer* vmaBuffer)
+	// Registration:
+	void AllocationTracker::AddVmaBufferAllocation(VmaAllocation allocation, const std::string& name)
 	{
-		if (vmaBuffer != nullptr)
-			m_pVmaBuffers.insert(vmaBuffer);
+		if (allocation)
+			m_vmaBufferAllocations[allocation] = name;
 	}
-	void AllocationTracker::AddVmaImage(VmaImage* vmaImage)
+
+	void AllocationTracker::AddVmaImageAllocation(VmaAllocation allocation, const std::string& name)
 	{
-		if (vmaImage != nullptr)
-			m_pVmaImages.insert(vmaImage);
+		if (allocation)
+			m_vmaImageAllocations[allocation] = name;
 	}
-	void AllocationTracker::RemoveVmaBuffer(VmaBuffer* vmaBuffer)
+
+	void AllocationTracker::RemoveVmaBufferAllocation(VmaAllocation allocation)
 	{
-		if (vmaBuffer != nullptr)
-			m_pVmaBuffers.erase(vmaBuffer);
+		if (allocation)
+			m_vmaBufferAllocations.erase(allocation);
 	}
-	void AllocationTracker::RemoveVmaImage(VmaImage* vmaImage)
+
+	void AllocationTracker::RemoveVmaImageAllocation(VmaAllocation allocation)
 	{
-		if (vmaImage != nullptr)
-			m_pVmaImages.erase(vmaImage);
+		if (allocation)
+			m_vmaImageAllocations.erase(allocation);
 	}
 
 
@@ -64,38 +67,36 @@ namespace vulkanRendererBackend
 	void AllocationTracker::Cleanup()
 	{
 		#ifdef VALIDATION_LAYERS_ACTIVE
+		//char* stats = nullptr;
+		//vmaBuildStatsString(Context::GetVmaAllocator(), &stats, true);
+		//LOG_TRACE(stats);
+		//vmaFreeStatsString(Context::GetVmaAllocator(), stats);
 
-		// Enable this if something went wrong for more detailed memory stats:
-		char* stats = nullptr;
-		vmaBuildStatsString(Context::GetVmaAllocator(), &stats, true);
-		LOG_INFO(stats);
-		vmaFreeStatsString(Context::GetVmaAllocator(), stats);
-
-		if (m_pVmaBuffers.size() == 0)
-			LOG_TRACE("All VmaBuffers have been destroyed.");
+		if (m_vmaBufferAllocations.size() == 0)
+			LOG_TRACE("All VmaBufferAllocations have been destroyed.");
 		else
 		{
-			LOG_CRITICAL("Following VmaBuffers have not been destroyed:");
-			for (VmaBuffer* vmaBuffer : m_pVmaBuffers)
-				LOG_ERROR(vmaBuffer->GetName());
+			LOG_CRITICAL("Following VmaBufferAllocations have not been destroyed:");
+			for (auto& [alloc, name] : m_vmaBufferAllocations)
+				LOG_ERROR(name);
 		}
 		
-		if (m_pVmaImages.size() == 0)
-			LOG_TRACE("All VmaImages have been destroyed.");
+		if (m_vmaImageAllocations.size() == 0)
+			LOG_TRACE("All VmaImagesAllocations have been destroyed.");
 		else
 		{
-			LOG_CRITICAL("Following VmaImages have not been destroyed:");
-			for (VmaImage* vmaImage : m_pVmaImages)
-				LOG_ERROR(vmaImage->GetName());
+			LOG_CRITICAL("Following VmaImagesAllocations have not been destroyed:");
+			for (auto& [alloc, name] : m_vmaImageAllocations)
+				LOG_ERROR(name);
 		}
 		#endif
 	}
 	void AllocationTracker::MoveFrom(AllocationTracker& other) noexcept
 	{
-		m_pVmaBuffers = std::move(other.m_pVmaBuffers);
-		m_pVmaImages = std::move(other.m_pVmaImages);
+		m_vmaBufferAllocations = std::move(other.m_vmaBufferAllocations);
+		m_vmaImageAllocations = std::move(other.m_vmaImageAllocations);
 
-		other.m_pVmaBuffers.clear();
-		other.m_pVmaImages.clear();
+		other.m_vmaBufferAllocations.clear();
+		other.m_vmaImageAllocations.clear();
 	}
 }

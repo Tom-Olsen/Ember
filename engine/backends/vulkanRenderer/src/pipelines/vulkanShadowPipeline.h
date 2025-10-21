@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 	class ShadowPipeline : public Pipeline
 	{
 	public: // Methods:
-		ShadowPipeline(uint32_t shadowMapResolution, const std::vector<char>& vertexCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
+		ShadowPipeline(const std::string& name, uint32_t shadowMapResolution, const std::vector<char>& vertexCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
 		~ShadowPipeline();
 
 	private: // Methods:

@@ -22,7 +22,7 @@ namespace emberEngine
 	}
 	Material::~Material()
 	{
-		m_pIMaterial.release();
+
 	}
 
 

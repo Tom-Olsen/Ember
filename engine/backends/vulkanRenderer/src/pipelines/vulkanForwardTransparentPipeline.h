@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
 	class ForwardTransparentPipeline : public Pipeline
 	{
 	public: // Methods:
-		ForwardTransparentPipeline(const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
+		ForwardTransparentPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
 		~ForwardTransparentPipeline();
 
 	private: // Methods:

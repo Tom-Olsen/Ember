@@ -76,7 +76,6 @@ Implemented features:
 
 
 Ember::TODO now!
-- crash on shutdown: 5 vma allocations are dangling.
 - performance worse than before architecture restructure.
 - make other projects compile and run again.
 - build core as .dll
@@ -100,42 +99,42 @@ Ember::TODO now!
 
 
 
-// Ember::TODO:
-// - use transfer queue in mesh class instead of graphics queue for index and vertex data transfer.
-//   use framesInFlight many vertex and index buffers, with two staging buffers (one for vertex and one for index data).
-//   adjust staging buffer -> mesh buffers copy to account fro frame index (same as shaderProperties) and sync with render pipeline.
-// - think about different texture2d specializations. Are they all needed? Can they be simplified? How would I remove the m_layout tracking on CPU side?
-// - when not using input.vertexColor in the vertex shader, spirv optimizes the input binding away, which leads to incorrect bindings in
-//   my spirv reflection => other bindings are wrong, and textures are not displayed at all.
-// - optimize eventsystem::AnyKey etc.
-// - remove scaling from view matrizes of lights and cameras?
-// - adjust shadow config in shadowPipeline.cpp (bias values) for better shadow quality
-// - optimizations: multi threaded render loop, culling, etc.
-// - add pGameObject selection (need gizmos => ui renderpass?)
-// - uniform buffer (cbuffer) data that is the same for all draw calls (e.g. light data) should be stored in a single cbuffer
-//   that is bound to a single descriptorSet that is bound to all draw calls that need that data.
-//   => make this descriptorset a "global" object in the shaderProperties class.
-// - add geometry shader stage => wireframe rendering
-// - gameobject parent system (GameObject € GameObject => transform hierarchy)
-// - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
-// - add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
-//   remove normalization of any input vector that is namen 'normal' or 'tangent' or 'direction' in mathf library (same for linearAlgebra.hlsli).
-// - Proper documentation for shaderProperties, uniformBuffers, spirvReflect classes
+Ember::TODO:
+- use transfer queue in mesh class instead of graphics queue for index and vertex data transfer.
+  use framesInFlight many vertex and index buffers, with two staging buffers (one for vertex and one for index data).
+  adjust staging buffer -> mesh buffers copy to account fro frame index (same as shaderProperties) and sync with render pipeline.
+- think about different texture2d specializations. Are they all needed? Can they be simplified? How would I remove the m_layout tracking on CPU side?
+- when not using input.vertexColor in the vertex shader, spirv optimizes the input binding away, which leads to incorrect bindings in
+  my spirv reflection => other bindings are wrong, and textures are not displayed at all.
+- optimize eventsystem::AnyKey etc.
+- remove scaling from view matrizes of lights and cameras?
+- adjust shadow config in shadowPipeline.cpp (bias values) for better shadow quality
+- optimizations: multi threaded render loop, culling, etc.
+- add pGameObject selection (need gizmos => ui renderpass?)
+- uniform buffer (cbuffer) data that is the same for all draw calls (e.g. light data) should be stored in a single cbuffer
+  that is bound to a single descriptorSet that is bound to all draw calls that need that data.
+  => make this descriptorset a "global" object in the shaderProperties class.
+- add geometry shader stage => wireframe rendering
+- gameobject parent system (GameObject € GameObject => transform hierarchy)
+- add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
+- add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
+  remove normalization of any input vector that is namen 'normal' or 'tangent' or 'direction' in mathf library (same for linearAlgebra.hlsli).
+- Proper documentation for shaderProperties, uniformBuffers, spirvReflect classes
 
-// Ember::TODO long term:
-// - dimm line between shadow cascades.
-// - change image loading library, stb_image sucks.
-// - proper quaternion support
-// - render image while resizing
-// - physics
-// - audio
-// - gameobject clipping logic for pCamera and lights (requires bounding box)
-// - write own logger class
-// - better shadow mapping (PCF, soft shadows, etc.)
-// - look into colorspace sRGB vs linear.
-// - blender model import
-// - text rendering
-// - only load textures that are used. parallel loading of textures.
+Ember::TODO long term:
+- dimm line between shadow cascades.
+- change image loading library, stb_image sucks.
+- proper quaternion support
+- render image while resizing
+- physics
+- audio
+- gameobject clipping logic for pCamera and lights (requires bounding box)
+- write own logger class
+- better shadow mapping (PCF, soft shadows, etc.)
+- look into colorspace sRGB vs linear.
+- blender model import
+- text rendering
+- only load textures that are used. parallel loading of textures.
 
 
 

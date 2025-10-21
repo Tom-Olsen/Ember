@@ -12,8 +12,10 @@
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    PresentPipeline::PresentPipeline(const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
+    PresentPipeline::PresentPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
     {
+        m_name = name;
+
         // Create pipeline Layout:
         CreatePipelineLayout(descriptorSetLayoutBindings);
 
@@ -27,7 +29,7 @@ namespace vulkanRendererBackend
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
         vkDestroyShaderModule(Context::GetVkDevice(), fragmentShaderModule, nullptr);
-        NAME_VK_PIPELINE(m_pipeline, "presentPipeline");
+        NAME_VK_PIPELINE(m_pipeline, m_name + "presentPipeline");
     }
     PresentPipeline::~PresentPipeline()
     {
@@ -50,6 +52,7 @@ namespace vulkanRendererBackend
         pipelineLayoutCreateInfo.setLayoutCount = 1;
         pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
         vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
+        NAME_VK_PIPELINE_LAYOUT(m_pipelineLayout, m_name + "PresentPipelineLayout");
     }
     void PresentPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, VertexInputDescriptions* pVertexInputDescriptions)
     {

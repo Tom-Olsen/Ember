@@ -1,5 +1,7 @@
 #pragma once
-#include <unordered_set>
+#include "vk_mem_alloc.h"
+#include <string>
+#include <unordered_map>
 
 
 
@@ -14,8 +16,8 @@ namespace vulkanRendererBackend
 	class AllocationTracker
 	{
 	private: // Members:
-		std::unordered_set<VmaBuffer*> m_pVmaBuffers;
-		std::unordered_set<VmaImage*> m_pVmaImages;
+		std::unordered_map<VmaAllocation, std::string> m_vmaBufferAllocations;
+		std::unordered_map<VmaAllocation, std::string> m_vmaImageAllocations;
 
 	public: // Methods:
 		AllocationTracker();
@@ -29,10 +31,11 @@ namespace vulkanRendererBackend
 		AllocationTracker(AllocationTracker&& other) noexcept;
 		AllocationTracker& operator=(AllocationTracker&& other) noexcept;
 
-		void AddVmaBuffer(VmaBuffer* vmaBuffer);
-		void AddVmaImage(VmaImage* vmaImage);
-		void RemoveVmaBuffer(VmaBuffer* vmaBuffer);
-		void RemoveVmaImage(VmaImage* vmaImage);
+		// Registration:
+		void AddVmaBufferAllocation(VmaAllocation allocation, const std::string& name);
+		void AddVmaImageAllocation(VmaAllocation allocation, const std::string& name);
+		void RemoveVmaBufferAllocation(VmaAllocation allocation);
+		void RemoveVmaImageAllocation(VmaAllocation allocation);
 
 	private: // Methods:
 		void Cleanup();

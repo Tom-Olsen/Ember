@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 	class SkyboxPipeline : public Pipeline
 	{
 	public: // Methods:
-		SkyboxPipeline(const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
+		SkyboxPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
 		~SkyboxPipeline();
 
 	private: // Methods:

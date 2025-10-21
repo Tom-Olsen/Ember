@@ -13,7 +13,7 @@
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ShadowPipeline::ShadowPipeline(uint32_t shadowMapResolution, const std::vector<char>& vertexCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
+    ShadowPipeline::ShadowPipeline(const std::string& name, uint32_t shadowMapResolution, const std::vector<char>& vertexCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
     {
 
         // Create pipeline Layout:
@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
-        NAME_VK_PIPELINE(m_pipeline, "shadowPipeline");
+        NAME_VK_PIPELINE(m_pipeline, m_name + "ShadowPipeline");
     }
     ShadowPipeline::~ShadowPipeline()
     {
@@ -58,6 +58,7 @@ namespace vulkanRendererBackend
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
+        NAME_VK_PIPELINE_LAYOUT(m_pipelineLayout, m_name + "ShadowPipelineLayout");
     }
     void ShadowPipeline::CreatePipeline(uint32_t shadowMapResolution, const VkShaderModule& vertexShaderModule, VertexInputDescriptions* pVertexInputDescriptions)
     {

@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <vector>
 
 
@@ -20,6 +21,7 @@ namespace vulkanRendererBackend
 		VkDescriptorSetLayout m_descriptorSetLayout;
 		VkPipelineLayout m_pipelineLayout;
 		VkPipeline m_pipeline;
+		std::string m_name;
 
 	public: // Methods:
 		Pipeline() = default;

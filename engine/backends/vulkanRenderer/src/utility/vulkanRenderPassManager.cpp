@@ -30,7 +30,6 @@ namespace vulkanRendererBackend
 	}
 	void RenderPassManager::Clear()
 	{
-		Context::WaitDeviceIdle();
 		s_pPresentRenderPass.reset();
 		s_pForwardRenderPass.reset();
 		s_pShadowRenderPass.reset();

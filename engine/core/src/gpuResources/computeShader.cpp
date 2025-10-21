@@ -23,7 +23,7 @@ namespace emberEngine
 	}
 	ComputeShader::~ComputeShader()
 	{
-		m_pIComputeShader.release();
+
 	}
 
 

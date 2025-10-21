@@ -117,9 +117,14 @@ namespace vulkanRendererBackend
 	Renderer::~Renderer()
 	{
 		Context::WaitDeviceIdle();
-		GarbageCollector::CollectGarbage();
 		DestroySemaphores();
 		DestroyFences();
+		m_commandPools.clear();
+		m_pShadowMaterial.reset();
+		m_pPresentMesh.reset();
+		m_pPresentMaterial.reset();
+		m_pPresentShaderProperties.reset();
+		m_pGammaCorrectionComputeShader.reset();
 		Context::Clear();
 	}
 

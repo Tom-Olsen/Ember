@@ -22,8 +22,6 @@ namespace vulkanRendererBackend
     }
     void GarbageCollector::Clear()
     {
-        LOG_INFO("Destroying GarbageCollector");
-        Context::WaitDeviceIdle();
         for (const GarbageEntry& entry : s_garbageQueue)
             entry.collectGarbageCallback();
         s_garbageQueue.clear();

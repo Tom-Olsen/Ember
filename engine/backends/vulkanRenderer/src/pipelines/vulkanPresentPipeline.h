@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 	class PresentPipeline : public Pipeline
 	{
 	public: // Methods:
-		PresentPipeline(const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
+		PresentPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
 		~PresentPipeline();
 
 	private: // Methods:

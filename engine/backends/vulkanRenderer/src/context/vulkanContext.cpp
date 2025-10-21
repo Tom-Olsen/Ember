@@ -120,8 +120,8 @@ namespace vulkanRendererBackend
 		// Init static utility:
 		uint32_t maxLightsCount = createInfo.maxDirectionalLights + createInfo.maxPositionalLights;
 		SingleTimeCommand::Init();
-		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
 		GarbageCollector::Init();
+		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
 		DefaultGpuResources::Init();
 		PoolManager::Init();
 
@@ -138,12 +138,10 @@ namespace vulkanRendererBackend
 	}
 	void Context::Clear()
 	{
-		LOG_INFO("Destroying Context");
-		WaitDeviceIdle();
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
-		GarbageCollector::Clear();
 		RenderPassManager::Clear();
+		GarbageCollector::Clear();
 		SingleTimeCommand::Clear();
 		m_swapchains[0].reset();
 		m_swapchains[1].reset();

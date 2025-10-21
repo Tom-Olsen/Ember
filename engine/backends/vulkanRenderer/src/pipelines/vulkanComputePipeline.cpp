@@ -10,8 +10,10 @@
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ComputePipeline::ComputePipeline(const std::vector<char>& computeCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
+    ComputePipeline::ComputePipeline(const std::string& name, const std::vector<char>& computeCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
     {
+        m_name = name;
+
         // Create pipeline Layout:
         CreatePipelineLayout(descriptorSetLayoutBindings);
 
@@ -23,7 +25,7 @@ namespace vulkanRendererBackend
 
         // Destroy shader module (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), computeShaderModule, nullptr);
-        NAME_VK_PIPELINE(m_pipeline, "computePipeline");
+        NAME_VK_PIPELINE(m_pipeline, m_name + "ComputePipeline");
     }
     ComputePipeline::~ComputePipeline()
     {
@@ -54,6 +56,7 @@ namespace vulkanRendererBackend
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
+        NAME_VK_PIPELINE_LAYOUT(m_pipelineLayout, m_name + "ComputePipelineLayout");
     }
     void ComputePipeline::CreatePipeline(const VkShaderModule& computeShaderModule)
     {

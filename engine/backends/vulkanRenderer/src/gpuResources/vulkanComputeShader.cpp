@@ -19,7 +19,7 @@ namespace vulkanRendererBackend
 		m_blockSize = computeShaderReflect.GetBlockSize();
 		computeShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 	
-		m_pPipeline = std::make_unique<ComputePipeline>(computeCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings);
+		m_pPipeline = std::make_unique<ComputePipeline>(name, computeCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings);
 	}
 	ComputeShader::~ComputeShader()
 	{

@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
 	class ComputePipeline : public Pipeline
 	{
 	public: // Methods:
-		ComputePipeline(const std::vector<char>& computeCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
+		ComputePipeline(const std::string& name, const std::vector<char>& computeCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
 		~ComputePipeline();
 
 	private: // Methods:

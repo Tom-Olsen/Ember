@@ -58,6 +58,7 @@ namespace vulkanRendererBackend
 
 		// Create image:
 		VKA(vmaCreateImage(Context::GetVmaAllocator(), &vkImageInfo, &vmaAllocationInfo, &m_image, &m_allocation, nullptr));
+		NAME_VK_IMAGE(m_image, m_name + "Image");
 
 		// Create image view:
 		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
@@ -70,17 +71,15 @@ namespace vulkanRendererBackend
 		viewInfo.subresourceRange.layerCount = m_subresourceRange.layerCount;
 		viewInfo.subresourceRange.levelCount = m_subresourceRange.levelCount;
 		VKA(vkCreateImageView(Context::GetVkDevice(), &viewInfo, nullptr, &m_imageView));
+		NAME_VK_IMAGE_VIEW(m_imageView, m_name + "ImageView");
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::GetAllocationTracker()->AddVmaImage(this);
+		Context::GetAllocationTracker()->AddVmaImageAllocation(m_allocation, m_name);
 		#endif
 	}
 	VmaImage::~VmaImage()
 	{
 		Cleanup();
-		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::GetAllocationTracker()->RemoveVmaImage(this);
-		#endif
 	}
 
 
@@ -392,13 +391,31 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void VmaImage::Cleanup()
 	{
+		// Avoid double cleanup:
+		if (m_image == VK_NULL_HANDLE && m_imageView == VK_NULL_HANDLE && m_allocation == nullptr)
+			return;
+
+		// Capture current handles locally, then clear this object so destructor/moves are safe:
 		VkImage image = m_image;
 		VkImageView imageView = m_imageView;
 		VmaAllocation allocation = m_allocation;
+
+		// Clear members so to avoid double cleanup:
+		m_image = VK_NULL_HANDLE;
+		m_imageView = VK_NULL_HANDLE;
+		m_allocation = nullptr;
+		m_name.clear();
+
 		GarbageCollector::RecordGarbage([image, imageView, allocation]()
 		{
-			vmaDestroyImage(Context::GetVmaAllocator(), image, allocation);
-			vkDestroyImageView(Context::GetVkDevice(), imageView, nullptr);
+			if (imageView != VK_NULL_HANDLE)
+				vkDestroyImageView(Context::GetVkDevice(), imageView, nullptr);
+			if (allocation != nullptr || image != VK_NULL_HANDLE)
+				vmaDestroyImage(Context::GetVmaAllocator(), image, allocation);
+
+			#ifdef VALIDATION_LAYERS_ACTIVE
+			Context::GetAllocationTracker()->RemoveVmaImageAllocation(allocation);
+			#endif
 		});
 	}
 	void VmaImage::MoveFrom(VmaImage& other) noexcept

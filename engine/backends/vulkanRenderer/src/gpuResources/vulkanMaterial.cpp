@@ -41,7 +41,7 @@ namespace vulkanRendererBackend
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 			// Create pipeline:
-			m_pPipeline = std::make_unique<ForwardOpaquePipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+			m_pPipeline = std::make_unique<ForwardOpaquePipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 
 		// Transparent forward material creation:
@@ -61,7 +61,7 @@ namespace vulkanRendererBackend
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 			// Create pipeline:
-			m_pPipeline = std::make_unique<ForwardTransparentPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+			m_pPipeline = std::make_unique<ForwardTransparentPipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 
 		// Skybox material creation:
@@ -81,7 +81,7 @@ namespace vulkanRendererBackend
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 			// Create pipeline:
-			m_pPipeline = std::make_unique<SkyboxPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+			m_pPipeline = std::make_unique<SkyboxPipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 
 		// Present material creation:
@@ -101,7 +101,7 @@ namespace vulkanRendererBackend
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
 			// Create pipeline:
-			m_pPipeline = std::make_unique<PresentPipeline>(vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+			m_pPipeline = std::make_unique<PresentPipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 	}
 	// Special constructor for shadowMaterial:
@@ -122,7 +122,7 @@ namespace vulkanRendererBackend
 		m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 		// Create pipeline:
-		m_pPipeline = std::make_unique<ShadowPipeline>(shadowMapResolution, vertexCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+		m_pPipeline = std::make_unique<ShadowPipeline>(m_name, shadowMapResolution, vertexCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 	}
 	Material::~Material()
 	{

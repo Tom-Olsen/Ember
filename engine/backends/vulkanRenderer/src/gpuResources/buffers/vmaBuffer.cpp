@@ -48,17 +48,15 @@ namespace vulkanRendererBackend
 
 		// Create Buffer:
 		VKA(vmaCreateBuffer(Context::GetVmaAllocator(), &vkBufferInfo, &vmaAllocationInfo, &m_buffer, &m_allocation, nullptr));
+		NAME_VK_BUFFER(m_buffer, m_name + "Buffer");
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::GetAllocationTracker()->AddVmaBuffer(this);
+		Context::GetAllocationTracker()->AddVmaBufferAllocation(m_allocation, m_name);
 		#endif
 	}
 	VmaBuffer::~VmaBuffer()
 	{
 		Cleanup();
-		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::GetAllocationTracker()->RemoveVmaBuffer(this);
-		#endif
 	}
 
 
@@ -112,11 +110,27 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void VmaBuffer::Cleanup()
 	{
+		// Avoid double cleanup:
+		if (m_buffer == VK_NULL_HANDLE && m_allocation == nullptr)
+			return;
+
+		// Capture current handles locally, then clear this object so destructor/moves are safe:
 		VkBuffer buffer = m_buffer;
 		VmaAllocation allocation = m_allocation;
+
+		// Clear members so to avoid double cleanup:
+		m_buffer = VK_NULL_HANDLE;
+		m_allocation = nullptr;
+		m_name.clear();
+
 		GarbageCollector::RecordGarbage([buffer, allocation]()
 		{
-			vmaDestroyBuffer(Context::GetVmaAllocator(), buffer, allocation);
+			if (buffer != VK_NULL_HANDLE)
+				vmaDestroyBuffer(Context::GetVmaAllocator(), buffer, allocation);
+
+			#ifdef VALIDATION_LAYERS_ACTIVE
+			Context::GetAllocationTracker()->RemoveVmaBufferAllocation(allocation);
+			#endif
 		});
 	}
 	void VmaBuffer::MoveFrom(VmaBuffer& other) noexcept

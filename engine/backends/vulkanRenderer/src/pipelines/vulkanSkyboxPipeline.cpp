@@ -12,7 +12,7 @@
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    SkyboxPipeline::SkyboxPipeline(const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
+    SkyboxPipeline::SkyboxPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions)
     {
         // Create pipeline Layout:
         CreatePipelineLayout(descriptorSetLayoutBindings);
@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
         vkDestroyShaderModule(Context::GetVkDevice(), fragmentShaderModule, nullptr);
-        NAME_VK_PIPELINE(m_pipeline, "skyboxPipeline");
+        NAME_VK_PIPELINE(m_pipeline, m_name + "SkyboxPipeline");
     }
     SkyboxPipeline::~SkyboxPipeline()
     {
@@ -58,6 +58,7 @@ namespace vulkanRendererBackend
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
+        NAME_VK_PIPELINE_LAYOUT(m_pipelineLayout, m_name + "SkyboxPipelineLayout");
     }
     void SkyboxPipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, VertexInputDescriptions* pVertexInputDescriptions)
     {
