@@ -27,7 +27,7 @@ namespace emberEngine
 #include "logger.h"
 #include "meshGenerator.h"
 
-// Render/Compute backends:
+// Renderer/Compute:
 #include "renderer.h"
 #include "compute.h"
 
@@ -45,10 +45,10 @@ namespace emberEngine
 #include "meshManager.h"
 #include "textureManager.h"
 
-// Game Object System (ECS):
-#include "component.h"
-#include "gameObject.h"
-#include "scene.h"
+// ECS:
+#ifndef EMBER_CORE_EXPORTS
+#include "ecs.h"
+#endif
 
 // Common (core <-> backend) communication: (Not all included on purpose for now)
 #include "commonAccessMask.h"
@@ -70,3 +70,17 @@ namespace emberEngine
 
     using ShadowType = emberCommon::ShadowType;
 }
+
+// Basic components:
+#ifndef EMBER_CORE_EXPORTS // don't exist in the core!
+#include "camera.h"
+#include "cameraController.h"
+#include "directionalLight.h"
+#include "entityState.h"
+#include "instancedMeshRenderer.h"
+#include "meshRenderer.h"
+#include "pointLight.h"
+#include "postRenderEffects.h"
+#include "spotLight.h"
+#include "transform.h"
+#endif

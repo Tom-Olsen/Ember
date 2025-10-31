@@ -1,6 +1,7 @@
 #include "texture.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
+#include "emberCoreExport.h"
 #include <string>
 #include <filesystem>
 
@@ -8,7 +9,7 @@
 
 namespace emberEngine
 {
-	class TextureCube : public Texture
+	class EMBER_CORE_API TextureCube : public Texture
 	{
 	public: // methods:
 		// Constructor/Destructor:

@@ -1,0 +1,45 @@
+#include "hierarchyEditorWindow.h"
+#include "commonGuiFlags.h"
+#include "entity.h"
+#include "gui.h"
+#include "scene.h"
+
+
+
+namespace emberEditor
+{
+	// Easy access to emberEngine Gui:
+	using Gui = emberEngine::Gui;
+
+
+
+	// Constructor/Destructor:
+	HierarchyEditorWindow::HierarchyEditorWindow()
+	{
+		m_name = "Hierarchy";
+		m_ID = 0;
+		m_windowFlags = emberCommon::GuiWindowFlag_None;
+		m_wantCaptureEvents = true;
+		m_nameID = m_name + "##" + std::to_string(m_ID);
+		m_pScene = nullptr;
+	}
+	HierarchyEditorWindow::~HierarchyEditorWindow()
+	{
+
+	}
+
+	void HierarchyEditorWindow::SetScene(emberEngine::Scene* pScene)
+	{
+		m_pScene = pScene;
+	}
+
+	void HierarchyEditorWindow::Render()
+	{
+		if (m_pScene != nullptr)
+		{
+			std::vector<std::string> entityNames = m_pScene->GetEntityNames();
+			for (const std::string& name : entityNames)
+				Gui::TextUnformatted(name.c_str());
+		}
+	}
+}

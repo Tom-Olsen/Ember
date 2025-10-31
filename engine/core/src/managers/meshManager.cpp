@@ -88,7 +88,7 @@ namespace emberEngine
 		frame.SetName("frame");
 		AddMesh(std::move(frame));
 		
-		std::filesystem::path leb9File = (std::filesystem::path(ENGINE_CORE_PATH) / "meshes/Leb9.csv").make_preferred();
+		std::filesystem::path leb9File = (std::filesystem::path(ENGINE_CORE_DIR) / "meshes/Leb9.csv").make_preferred();
 		Mesh leb9("leb9");
 		leb9.MoveMeshAsset(emberAssetLoader::LoadMeshCsv(leb9File));
 		AddMesh(std::move(leb9));

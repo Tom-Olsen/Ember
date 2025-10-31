@@ -1,6 +1,7 @@
 #pragma once
 #include "commonGuiFlags.h"
 #include "commonGuiStyle.h"
+#include "emberCoreExport.h"
 #include "emberMath.h"
 #include <memory>
 
@@ -22,7 +23,7 @@ namespace emberBackendInterface
 
 namespace emberEngine
 {
-	class Gui
+	class EMBER_CORE_API Gui
 	{
 		// Friends:
 		friend class EditorWindow;

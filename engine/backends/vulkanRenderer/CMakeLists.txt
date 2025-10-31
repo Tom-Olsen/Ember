@@ -15,6 +15,13 @@ option(VULKAN_RENDERER_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared l
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Cache directories:
+get_filename_component(COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../../common" ABSOLUTE)            # common 
+get_filename_component(INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../../interfaces" ABSOLUTE)    # interfaces
+get_filename_component(LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../libs" ABSOLUTE)                   # libs
+get_filename_component(EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../../extern" ABSOLUTE)            # extern 
+
+
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
@@ -31,88 +38,67 @@ endif()
 
 # ------------------- File Lists --------------------
 # *.* makes sure to only include files and not folders.
-# src/compute/*.*:
 file(GLOB COMPUTE_FILES "src/compute/*.*")
 source_group("Compute" FILES ${COMPUTE_FILES})
 
-# src/context/*.*:
 file(GLOB CONTEXT_FILES "src/context/*.*")
 source_group("Context" FILES ${CONTEXT_FILES})
 
-# src/gpuResourcePools/*.*:
 file(GLOB GPU_RESOURCE_POOLS_FILES "src/gpuResourcePools/*.*")
 source_group("Gpu Resource Pools" FILES ${GPU_RESOURCE_POOLS_FILES})
 
-# src/gpuResources/*.*:
 file(GLOB GPU_RESOURCES_FILES "src/gpuResources/*.*")
 source_group("Gpu Resources" FILES ${GPU_RESOURCES_FILES})
 
-# src/gpuResources/buffers/*.*:
 file(GLOB BUFFERS_FILES "src/gpuResources/buffers/*.*")
 source_group("Gpu Resources/Buffers" FILES ${BUFFERS_FILES})
 
-# src/gpuResources/samplers/*.*:
 file(GLOB SAMPLERS_FILES "src/gpuResources/samplers/*.*")
 source_group("Gpu Resources/Samplers" FILES ${SAMPLERS_FILES})
 
-# src/gpuResources/textures/*.*:
 file(GLOB TEXTURES_FILES "src/gpuResources/textures/*.*")
 source_group("Gpu Resources/Textures" FILES ${TEXTURES_FILES})
 
-# src/gpuResources/textures/texture1d/*.*:
 file(GLOB TEXTURE_1D_FILES "src/gpuResources/textures/texture1d/*.*")
 source_group("Gpu Resources/Textures/Texture1d" FILES ${TEXTURE_1D_FILES})
 
-# src/gpuResources/textures/texture2d/*.*:
 file(GLOB TEXTURE_2D_FILES "src/gpuResources/textures/texture2d/*.*")
 source_group("Gpu Resources/Textures/Texture2d" FILES ${TEXTURE_2D_FILES})
 
-# src/gpuResources/textures/texture3d/*.*:
 file(GLOB TEXTURE_3D_FILES "src/gpuResources/textures/texture3d/*.*")
 source_group("Gpu Resources/Textures/Texture3d" FILES ${TEXTURE_3D_FILES})
 
-# src/gpuResources/textures/textureCube/*.*:
 file(GLOB TEXTURE_CUBE_FILES "src/gpuResources/textures/textureCube/*.*")
 source_group("Gpu Resources/Textures/TextureCube" FILES ${TEXTURE_CUBE_FILES})
 
-# src/pipelines/*.*:
 file(GLOB PIPELINES_FILES "src/pipelines/*.*")
 source_group("Pipelines" FILES ${PIPELINES_FILES})
 
-# src/pushConstants/*.*:
 file(GLOB PUSH_CONSTANTS_FILES "src/pushConstants/*.*")
 source_group("Push Constants" FILES ${PUSH_CONSTANTS_FILES})
 
-# src/renderer/*.*:
 file(GLOB RENDERER_FILES "src/renderer/*.*")
 source_group("Renderer" FILES ${RENDERER_FILES})
 
-# src/renderPasses/*.*:
 file(GLOB RENDER_PASSES_FILES "src/renderPasses/*.*")
 source_group("Render Passes" FILES ${RENDER_PASSES_FILES})
 
-# src/types/*.*:
 file(GLOB TYPES_FILES "src/types/*.*")
 source_group("Types" FILES ${TYPES_FILES})
 
-# src/utility/*.*:
 file(GLOB UTILITY_FILES "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
-# ../../common/*.*:
-file(GLOB COMMON_FILES "../../common/*.*")
+file(GLOB COMMON_FILES "${COMMON_DIR}/*.*")
 source_group("Commen" FILES ${COMMON_FILES})
 
-# ../../interfaces/gui/*:
-file(GLOB GUI_INTERFACE_FILES "../../interfaces/gui/*")
+file(GLOB GUI_INTERFACE_FILES "${INTERFACES_DIR}/gui/*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
 
-# ../../interfaces/renderer/*.*:
-file(GLOB RENDERER_INTERFACE_FILES "../../interfaces/renderer/*.*")
+file(GLOB RENDERER_INTERFACE_FILES "${INTERFACES_DIR}/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
-# ../../interfaces/window/*.*:
-file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*.*")
+file(GLOB WINDOW_INTERFACE_FILES "${INTERFACES_DIR}/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 # ---------------------------------------------------
 
@@ -186,10 +172,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPasses
     ${CMAKE_CURRENT_SOURCE_DIR}/src/types
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/gui
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window)
+    ${COMMON_DIR}
+    ${INTERFACES_DIR}/gui
+    ${INTERFACES_DIR}/renderer
+    ${INTERFACES_DIR}/window)
 # ---------------------------------------------------
 
 
@@ -212,32 +198,32 @@ endif()
 # -------------- Link Custom Libraries --------------
 # EmberAssetLoader:
 if (NOT TARGET EmberAssetLoader)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/assetLoader" EmberAssetLoader)
+    add_subdirectory("${LIBS_DIR}/assetLoader" EmberAssetLoader)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberAssetLoader)
 
 # EmberLogger:
 if (NOT TARGET EmberLogger)
     set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/logger" EmberLogger)
+    add_subdirectory("${LIBS_DIR}/logger" EmberLogger)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
 
 # EmberMath:
 if (NOT TARGET EmberMath)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/math" EmberMath)
+    add_subdirectory("${LIBS_DIR}/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
 # EmberProfiler:
 if (NOT TARGET EmberProfiler)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/profiler" EmberProfiler)
+    add_subdirectory("${LIBS_DIR}/profiler" EmberProfiler)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
 
 # EmberTaskSystem:
 if (NOT TARGET EmberTaskSystem)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/taskSystem" EmberTaskSystem)
+    add_subdirectory("${LIBS_DIR}/taskSystem" EmberTaskSystem)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
 # ---------------------------------------------------
@@ -251,11 +237,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
     
 # Vulkan Memory Allocator: (header only)
-target_include_directories(${PROJECT_NAME} PUBLIC ../../extern/vma/include)
+target_include_directories(${PROJECT_NAME} PUBLIC "${EXTERN_DIR}/vma/include")
 
 # SPIRV-Reflect:
 set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect
-add_subdirectory("../../extern/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
+add_subdirectory("${EXTERN_DIR}/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-reflect-static)
 # ---------------------------------------------------
 

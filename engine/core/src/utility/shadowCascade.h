@@ -1,16 +1,12 @@
 #pragma once
+#include "emberCoreExport.h"
 #include "emberMath.h"
 
 
 
 namespace emberEngine
 {
-	// Forward declarations:
-	class Camera;
-
-
-
-	class ShadowCascade
+	class EMBER_CORE_API ShadowCascade
 	{
 	private: // Members:
 		static Float4 s_frustum_Clip[8];
@@ -24,15 +20,15 @@ namespace emberEngine
 
 	public: // Methods:
 		ShadowCascade();
-		void Update(Camera* const pCamera, const Float3& direction_World, float nearDepth, float farDepth, float sceneHeight);
+		void Update(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction_World, float nearDepth, float farDepth, float sceneHeight);
 		Float3 GetPosition() const;
 		Float3 GetDirection() const;
 		Float4x4 GetViewMatrix() const;
 		Float4x4 GetProjectionMatrix() const;
 
 	private: // Methods:
-		void ComputeCascadePositionAndSize(Camera* const pCamera, float nearDepth, float farDepth, float sceneHeight);
-		void ComputeSubFrustum(Camera* const pCamera, float nearDepth, float farDepth, const Float4x4& clipToCameraLocalMatrix, const Float4x4& cameraLocalToWorldMatrix);
-		float ComputeFarClip(Camera* const pCamera, const Float4x4& lightLocalToWorldMatrix);
+		void ComputeCascadePositionAndSize(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, float nearDepth, float farDepth, float sceneHeight);
+		void ComputeSubFrustum(float nearDepth, float farDepth, const Float4x4& clipToCameraLocalMatrix, const Float4x4& cameraLocalToWorldMatrix);
+		float ComputeFarClip(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& lightLocalToWorldMatrix);
 	};
 }

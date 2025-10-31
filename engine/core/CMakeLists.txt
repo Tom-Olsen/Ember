@@ -7,16 +7,20 @@
 cmake_minimum_required(VERSION 3.30)
 project(EmberCore)
 
+# Static vs Shared library option:
+option(EMBER_CORE_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
+
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Cache directories:
-get_filename_component(ENGINE_CORE_PATH "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)               # engine core
+get_filename_component(ENGINE_CORE_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)                # engine core
 get_filename_component(CORE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../shaders" ABSOLUTE)    # core shaders
 get_filename_component(COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../common" ABSOLUTE)           # commom
 get_filename_component(INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../interfaces" ABSOLUTE)   # interfaces
 get_filename_component(LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../libs" ABSOLUTE)               # libs
+get_filename_component(EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../extern" ABSOLUTE)           # extern
 
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
@@ -33,67 +37,46 @@ endif()
 
 
 # ------------------- File Lists --------------------
-# src/engine.h:
-file(GLOB ENGINE_FILE "${ENGINE_CORE_PATH}/src/emberEngine.h")
+# *.* makes sure to only include files and not folders.
+file(GLOB ENGINE_FILE "${ENGINE_CORE_DIR}/src/*.*")
 source_group("/" FILES ${ENGINE_FILE})
  
-# src/components/*.*:
-file(GLOB COMPONENTS_FILES "${ENGINE_CORE_PATH}/src/components/*.*")
-source_group("Components" FILES ${COMPONENTS_FILES})
- 
-# src/editor/*.*:
-file(GLOB EDITOR_FILES "${ENGINE_CORE_PATH}/src/editor/*.*")
+file(GLOB EDITOR_FILES "${ENGINE_CORE_DIR}/src/editor/*.*")
 source_group("Editor" FILES ${EDITOR_FILES})
- 
-# src/entityComponentSystem/*.*:
-file(GLOB ENTITY_COMPONENT_SYSTEM_FILES "${ENGINE_CORE_PATH}/src/entityComponentSystem/*.*")
-source_group("Entity Component System" FILES ${ENTITY_COMPONENT_SYSTEM_FILES})
 
-# src/eventSystem/*.*:
-file(GLOB EVENT_SYSTEM_FILES "${ENGINE_CORE_PATH}/src/eventSystem/*.*")
+file(GLOB EVENT_SYSTEM_FILES "${ENGINE_CORE_DIR}/src/eventSystem/*.*")
 source_group("Event System" FILES ${EVENT_SYSTEM_FILES})
 
-# src/gpuResources/*.*:
-file(GLOB GPU_RESOURCES_FILES "${ENGINE_CORE_PATH}/src/gpuResources/*.*")
+file(GLOB GPU_RESOURCES_FILES "${ENGINE_CORE_DIR}/src/gpuResources/*.*")
 source_group("Gpu Resources" FILES ${GPU_RESOURCES_FILES})
  
-# src/gui/*.*:
-file(GLOB GUI_FILES "${ENGINE_CORE_PATH}/src/gUi/*.*")
+file(GLOB GUI_FILES "${ENGINE_CORE_DIR}/src/gui/*.*")
 source_group("Gui" FILES ${GUI_FILES})
  
-# src/managers/*.*:
-file(GLOB MANAGERS_FILES "${ENGINE_CORE_PATH}/src/managers/*.*")
+file(GLOB MANAGERS_FILES "${ENGINE_CORE_DIR}/src/managers/*.*")
 source_group("Managers" FILES ${MANAGERS_FILES})
  
-# src/physics/*.*:
-file(GLOB PHYSICS_FILES "${ENGINE_CORE_PATH}/src/physics/*.*")
+file(GLOB PHYSICS_FILES "${ENGINE_CORE_DIR}/src/physics/*.*")
 source_group("Physics" FILES ${PHYSICS_FILES})
  
-# src/renderer/*.*:
-file(GLOB RENDERER_FILES "${ENGINE_CORE_PATH}/src/renderer/*.*")
+file(GLOB RENDERER_FILES "${ENGINE_CORE_DIR}/src/renderer/*.*")
 source_group("Renderer" FILES ${RENDERER_FILES})
  
-# src/utility/*.*:
-file(GLOB UTILITY_FILES "${ENGINE_CORE_PATH}/src/utility/*.*")
+file(GLOB UTILITY_FILES "${ENGINE_CORE_DIR}/src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
-# src/window/*.*:
-file(GLOB WINDOW_FILES "${ENGINE_CORE_PATH}/src/window/*.*")
+file(GLOB WINDOW_FILES "${ENGINE_CORE_DIR}/src/window/*.*")
 source_group("Window" FILES ${WINDOW_FILES})
 
-# ../../common/*.*:
-file(GLOB COMMON_FILES "{COMMON_DIR}/*.*")
-source_group("Commen" FILES ${COMMON_FILES})
+file(GLOB COMMON_FILES "${COMMON_DIR}/*.*")
+source_group("Common" FILES ${COMMON_FILES})
 
-# ../../interfaces/gui/*.*:
 file(GLOB GUI_INTERFACE_FILES "${INTERFACES_DIR}/gui/*.*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
  
-# ../../interfaces/renderer/*.*:
 file(GLOB RENDERER_INTERFACE_FILES "${INTERFACES_DIR}/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
-# ../../interfaces/window/*.*:
 file(GLOB WINDOW_INTERFACE_FILES "${INTERFACES_DIR}/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 # ---------------------------------------------------
@@ -101,52 +84,71 @@ source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
  
  
 # ----------------- Create Library ------------------
-add_library(${PROJECT_NAME} STATIC
-    ${ENGINE_FILE}
-    ${APPLICATIONS_FILES}
-    ${COMPONENTS_FILES}
-    ${EDITOR_FILES}
-    ${EVENT_SYSTEM_FILES}
-    ${GPU_RESOURCES_FILES}
-    ${GUI_FILES}
-    ${ENTITY_COMPONENT_SYSTEM_FILES}
-    ${MANAGERS_FILES}
-    ${PHYSICS_FILES}
-    ${RENDERER_FILES}
-    ${UTILITY_FILES}
-    ${WINDOW_FILES}
-    ${COMMON_FILES}
-    ${GUI_INTERFACE_FILES}
-    ${RENDERER_INTERFACE_FILES}
-    ${WINDOW_INTERFACE_FILES})
- 
+if (EMBER_CORE_BUILD_SHARED)
+    add_library(${PROJECT_NAME} SHARED
+        ${ENGINE_FILE}
+        ${EDITOR_FILES}
+        ${EVENT_SYSTEM_FILES}
+        ${GPU_RESOURCES_FILES}
+        ${GUI_FILES}
+        ${MANAGERS_FILES}
+        ${PHYSICS_FILES}
+        ${RENDERER_FILES}
+        ${UTILITY_FILES}
+        ${WINDOW_FILES}
+        ${COMMON_FILES}
+        ${GUI_INTERFACE_FILES}
+        ${RENDERER_INTERFACE_FILES}
+        ${WINDOW_INTERFACE_FILES})
+else()
+    add_library(${PROJECT_NAME} STATIC
+        ${ENGINE_FILE}
+        ${EDITOR_FILES}
+        ${EVENT_SYSTEM_FILES}
+        ${GPU_RESOURCES_FILES}
+        ${GUI_FILES}
+        ${MANAGERS_FILES}
+        ${PHYSICS_FILES}
+        ${RENDERER_FILES}
+        ${UTILITY_FILES}
+        ${WINDOW_FILES}
+        ${COMMON_FILES}
+        ${GUI_INTERFACE_FILES}
+        ${RENDERER_INTERFACE_FILES}
+        ${WINDOW_INTERFACE_FILES})
+endif()
+
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME}
     PUBLIC ${CORE_SHADERS_DIR}/src # needed for .h files from shaders, which contian constans for c++ and hlsl
-    PUBLIC ${ENGINE_CORE_PATH}/src
-    PUBLIC ${ENGINE_CORE_PATH}/src/applications
-    PUBLIC ${ENGINE_CORE_PATH}/src/components
-    PUBLIC ${ENGINE_CORE_PATH}/src/editor
-    PUBLIC ${ENGINE_CORE_PATH}/src/entityComponentSystem
-    PUBLIC ${ENGINE_CORE_PATH}/src/eventSystem
-    PUBLIC ${ENGINE_CORE_PATH}/src/gpuResources
-    PUBLIC ${ENGINE_CORE_PATH}/src/gui
-    PUBLIC ${ENGINE_CORE_PATH}/src/managers
-    PUBLIC ${ENGINE_CORE_PATH}/src/physics
-    PUBLIC ${ENGINE_CORE_PATH}/src/renderer
-    PUBLIC ${ENGINE_CORE_PATH}/src/utility
-    PUBLIC ${ENGINE_CORE_PATH}/src/window
-    PUBLIC ${ENGINE_CORE_PATH}/../common
-    PUBLIC ${ENGINE_CORE_PATH}/../interfaces/gui
-    PUBLIC ${ENGINE_CORE_PATH}/../interfaces/renderer
-    PUBLIC ${ENGINE_CORE_PATH}/../interfaces/window)
+    PUBLIC ${ENGINE_CORE_DIR}/src
+    PUBLIC ${ENGINE_CORE_DIR}/src/editor
+    PUBLIC ${ENGINE_CORE_DIR}/src/eventSystem
+    PUBLIC ${ENGINE_CORE_DIR}/src/gpuResources
+    PUBLIC ${ENGINE_CORE_DIR}/src/gui
+    PUBLIC ${ENGINE_CORE_DIR}/src/managers
+    PUBLIC ${ENGINE_CORE_DIR}/src/physics
+    PUBLIC ${ENGINE_CORE_DIR}/src/renderer
+    PUBLIC ${ENGINE_CORE_DIR}/src/utility
+    PUBLIC ${ENGINE_CORE_DIR}/src/window
+    PUBLIC ${COMMON_DIR}
+    PUBLIC ${INTERFACES_DIR}/gui
+    PUBLIC ${INTERFACES_DIR}/renderer
+    PUBLIC ${INTERFACES_DIR}/window)
 # ---------------------------------------------------
- 
- 
- 
+
+
+
 # ---------------------- Macros ---------------------
-target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_CORE_PATH="${ENGINE_CORE_PATH}")
+target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_CORE_DIR="${ENGINE_CORE_DIR}")
 target_compile_definitions(${PROJECT_NAME} PUBLIC CORE_SHADERS_DIR="${CORE_SHADERS_DIR}")
+
+# Library compilation logic:
+if(EMBER_CORE_BUILD_SHARED)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE EMBER_CORE_EXPORTS)
+else()
+    target_compile_definitions(${PROJECT_NAME} PUBLIC EMBER_CORE_STATIC)
+endif()
 # ---------------------------------------------------
 
 
@@ -188,4 +190,16 @@ if (NOT TARGET ShaderCompiler)
     add_subdirectory(${CORE_SHADERS_DIR} ShaderCompiler)
 endif()
 add_dependencies(${PROJECT_NAME} ShaderCompiler)
+# ---------------------------------------------------
+
+
+
+# ------------- Link External Libraries -------------
+#EnTT:
+set(ENTT_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(ENTT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+if (NOT TARGET EnTT::EnTT)
+    add_subdirectory("${EXTERN_DIR}/EnTT" "${CMAKE_BINARY_DIR}/EnTT_build")
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EnTT::EnTT)
 # ---------------------------------------------------

@@ -1,4 +1,5 @@
 #pragma once
+#include "emberCoreExport.h"
 #include <chrono>
 #include <string_view>
 
@@ -15,7 +16,7 @@ namespace emberEngine
 
     constexpr std::string_view TimeUnitNames[] = { "s", "ms", "us" };
 
-    class Time
+    class EMBER_CORE_API Time
     {
     private: // Members
         static float s_time;                    // in seconds.

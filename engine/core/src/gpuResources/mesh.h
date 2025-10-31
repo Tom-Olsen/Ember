@@ -1,5 +1,6 @@
 #pragma once
 #include "assetLoader.h"
+#include "emberCoreExport.h"
 #include "emberMath.h"
 #include <memory>
 #include <string>
@@ -17,7 +18,7 @@ namespace emberBackendInterface
 
 namespace emberEngine
 {
-	class Mesh
+	class EMBER_CORE_API Mesh
 	{
 		// Friends:
 		friend class Renderer;

@@ -1,5 +1,6 @@
 #pragma once
 #include "commonGuiFlags.h"
+#include "emberCoreExport.h"
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -13,7 +14,7 @@ namespace emberEngine
 
 
 
-	class Editor
+	class EMBER_CORE_API Editor
 	{
 		// Friends:
 		friend class EditorWindow;

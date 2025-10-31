@@ -1,5 +1,4 @@
 ﻿#include "shadowCascade.h"
-#include "camera.h"
 #include "emberEngine.h"
 
 
@@ -30,10 +29,10 @@ namespace emberEngine
 		m_viewMatrix = Float4x4::identity;
 		m_projectionMatrix = Float4x4::identity;
 	}
-	void ShadowCascade::Update(Camera* const pCamera, const Float3& direction_World, float nearDepth, float farDepth, float sceneHeight)
+	void ShadowCascade::Update(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction_World, float nearDepth, float farDepth, float sceneHeight)
 	{
 		m_direction = direction_World;
-		ComputeCascadePositionAndSize(pCamera, nearDepth, farDepth, sceneHeight);
+		ComputeCascadePositionAndSize(cameraLocalToWorldMatrix, cameraProjectionMatrix, nearDepth, farDepth, sceneHeight);
 
 		// Construct view matrix:
 		Float4x4 posMatrix = Float4x4::Translate(m_position);
@@ -41,14 +40,13 @@ namespace emberEngine
 		Float4x4 lightLocalToWorldMatrix = posMatrix * rotMatrix;
 		m_viewMatrix = lightLocalToWorldMatrix.Inverse(); // world to light local.
 
-
 		// Construct orthographic projection matrix:
 		float left = -0.5f * m_size;
 		float right = 0.5f * m_size;
 		float bottom = -0.5f * m_size;
 		float top = 0.5f * m_size;
 		float nearClip = 0.0f;
-		float farClip = ComputeFarClip(pCamera, lightLocalToWorldMatrix);
+		float farClip = ComputeFarClip(cameraLocalToWorldMatrix, lightLocalToWorldMatrix);
 		m_projectionMatrix = Float4x4::Orthographic(left, right, bottom, top, nearClip, farClip);
 	}
 
@@ -73,11 +71,10 @@ namespace emberEngine
 
 
 	// Private methods:
-	void ShadowCascade::ComputeCascadePositionAndSize(Camera* const pCamera, float nearDepth, float farDepth, float sceneHeight)
+	void ShadowCascade::ComputeCascadePositionAndSize(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, float nearDepth, float farDepth, float sceneHeight)
 	{
 		// Transformation matrizes:
-		Float4x4 clipToCameraLocalMatrix = pCamera->GetProjectionMatrix().Inverse();
-		Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
+		Float4x4 clipToCameraLocalMatrix = cameraProjectionMatrix.Inverse();
 
 		// Construct 2d plane orhtogonal to light direction, with coordinate system alignes with light local space:
 		Float4x4 rotMatrix = Float4x4::RotateThreeLeg(Float3::down, m_direction, Float3::right, Float3::right);
@@ -87,7 +84,7 @@ namespace emberEngine
 		Float2x3 worldToPlane = planeToWorld.LeftInverse();
 
 		// Compute camera sub frustum in camera space and world space:
-		ComputeSubFrustum(pCamera, nearDepth, farDepth, clipToCameraLocalMatrix, cameraLocalToWorldMatrix);
+		ComputeSubFrustum(nearDepth, farDepth, clipToCameraLocalMatrix, cameraLocalToWorldMatrix);
 
 		// Compute orthographic projection size:
 		float diagFar = (m_subFrustum_CameraLocal[7] - m_subFrustum_CameraLocal[1]).Length();
@@ -116,7 +113,7 @@ namespace emberEngine
 		Float3 planeSupport = sceneHeight * Float3::up;
 		m_position = geometry3d::LinePlaneIntersection(projectionCenter_World, m_direction, planeSupport, planeNormal);
 	}
-	void ShadowCascade::ComputeSubFrustum(Camera* const pCamera, float nearDepth, float farDepth, const Float4x4& clipToCameraLocalMatrix, const Float4x4& cameraLocalToWorldMatrix)
+	void ShadowCascade::ComputeSubFrustum(float nearDepth, float farDepth, const Float4x4& clipToCameraLocalMatrix, const Float4x4& cameraLocalToWorldMatrix)
 	{
 		// Camera frustum in camera space:
 		Float3 frustum_CameraLocal[8];
@@ -141,11 +138,11 @@ namespace emberEngine
 		for (uint32_t i = 0; i < 8; i++)
 			m_subFrustum_World[i] = Float3(cameraLocalToWorldMatrix * Float4(m_subFrustum_CameraLocal[i], 1.0f));
 	}
-	float ShadowCascade::ComputeFarClip(Camera* const pCamera, const Float4x4& lightLocalToWorldMatrix)
+	float ShadowCascade::ComputeFarClip(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& lightLocalToWorldMatrix)
 	{
 		// Construct bounding box that encapsulates the sub frustum and the light source in light space:
 		Bounds bounds = Bounds(Float3::zero, Float3::zero);	// lights source located at zero.
-		Float4x4 cameraLocalToLightLocalMatrix = m_viewMatrix * pCamera->GetTransform()->GetLocalToWorldMatrix();
+		Float4x4 cameraLocalToLightLocalMatrix = m_viewMatrix * cameraLocalToWorldMatrix;
 		Float3 subFrustum_LightLocal[8];
 		for (uint32_t i = 0; i < 8; i++)
 		{

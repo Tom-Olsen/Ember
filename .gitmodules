@@ -20,3 +20,9 @@
 [submodule "engine/extern/taskflow"]
 	path = engine/extern/taskflow
 	url = https://github.com/taskflow/taskflow.git
+[submodule "engine/extern/entt"]
+	path = engine/extern/entt
+	url = https://github.com/skypjack/entt.git
+[submodule "engine/extern/EnTT"]
+	path = engine/extern/EnTT
+	url = https://github.com/skypjack/entt.git

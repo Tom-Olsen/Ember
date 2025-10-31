@@ -1,5 +1,6 @@
 #pragma once
 #include "commonTextureFormat.h"
+#include "emberCoreExport.h"
 #include <memory>
 #include <string>
 
@@ -15,7 +16,7 @@ namespace emberBackendInterface
 
 namespace emberEngine
 {
-	class Texture
+	class EMBER_CORE_API Texture
 	{
 		// Friends:
 		friend class Gui;

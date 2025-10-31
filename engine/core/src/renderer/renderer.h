@@ -5,6 +5,7 @@
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
+#include "emberCoreExport.h"
 #include "emberMath.h"
 #include "texture2d.h"
 #include <array>
@@ -37,7 +38,7 @@ namespace emberEngine
 
 	
 
-	class Renderer
+	class EMBER_CORE_API Renderer
 	{
 		// Friends:
 		friend class Buffer;

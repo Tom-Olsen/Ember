@@ -32,34 +32,23 @@ int main()
 		appCreateInfo.windowHeight = 1440;// 900; //1080; // 1440;
 		appCreateInfo.renderWidth = 2560;//1280; //1280; // 2560;
 		appCreateInfo.renderHeight = 1440;// 720; // 720; // 1440;
-		emberApplication::Application app(appCreateInfo);
+		emberApplication::Application::Init(appCreateInfo);
 
 		// Create scene:
-		// std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(ShadowCascadeScene());
-		// std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(TestScene());
-		std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(DefaultScene());
-		// std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(PointLightScene());
+		 std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(DefaultScene());
+		 //std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(PointLightScene());
+		 //std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(ShadowCascadeScene());
 		// std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(SingleQuadScene());
-		app.SetScene(pScene.get());
+		//std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(TestScene());
+		emberApplication::Application::SetScene(pScene.get());
 
-		// Debugging:
-		//ComputeShader* csTest =  ComputeShaderManager::GetComputeShader("testComputeShader");
-		//csTest->PrintShaderInfo();
-		//ShaderProperties* csProperties = new ShaderProperties(csTest);
-		//csProperties->Print("test");
-		//csProperties->PrintMaps();
-		//csProperties->SetTexture("image", TextureManager::GetTexture("storageTexture8x8"));
-		//delete csProperties;
-		//TextureManager::PrintAllTextureNames();
-		//pScene->PrintGameObjects();
-		//pScene->PrintLights();
-		//return 0;
-
-		app.Run();
+		// Run app and clear:
+		emberApplication::Application::Run();
+		emberApplication::Application::Clear();
 	}
+	EmberProfiler::Session::Get().End();
 
 	// Runtime analysis:
-	EmberProfiler::Session::Get().End();
 	std::vector<std::string> results = session.GetAllResultNames();
 	for (std::string& result : results)
 		session.PrintFunctionAverageTime(result, EmberProfiler::TimeUnit::ms);

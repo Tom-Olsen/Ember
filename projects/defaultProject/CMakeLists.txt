@@ -1,4 +1,5 @@
 # Ember/defaultProject/CMakeLists.txt
+# Ember/defaultProject/CMakeLists.txt
 
 
 
@@ -9,6 +10,9 @@ project(DefaultProject)
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Cache directories:
+get_filename_component(APPLICATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../engine/applications" ABSOLUTE)  # applications
 
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
@@ -25,21 +29,25 @@ endif()
 
 
 # ------------------- File Lists --------------------
-# src/main.cpp:
 file(GLOB MAIN_FILE "src/main.cpp")
 source_group("/" FILES ${MAIN_FILE})
 
-# src/scenes/*:
-file(GLOB SCENE_FILES "src/scenes/*")
+file(GLOB COMPONENTS_FILES "src/components/*.*")
+source_group("Components" FILES ${COMPONENTS_FILES})
+
+file(GLOB SCENE_FILES "src/scenes/*.*")
 source_group("Scenes" FILES ${SCENE_FILES})
 # ---------------------------------------------------
 
 
 
 # ---------------- Create Executable ----------------
-add_executable(${PROJECT_NAME} ${MAIN_FILE} ${SCENE_FILES})
+add_executable(${PROJECT_NAME} ${MAIN_FILE}
+	${COMPONENTS_FILES}
+	${SCENE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/src
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components
 	${CMAKE_CURRENT_SOURCE_DIR}/src/scenes)
 
 # Add project root path as a macro:
@@ -51,10 +59,10 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_R
 
 # ------------------ Link Libraries -----------------
 ## Ember Game Debug Application:
-#add_subdirectory("../../applications/emberGameDebugApp" EmberGameDebugApp)
+#add_subdirectory("${APPLICATIONS_DIR}/emberGameDebugApp" EmberGameDebugApp)
 #target_link_libraries(${PROJECT_NAME} PUBLIC EmberGameDebugApp)
 
 # Ember Editor Application:
-add_subdirectory("../../applications/emberEditorApp" EmberEditorApp)
+add_subdirectory("${APPLICATIONS_DIR}/emberEditorApp" EmberEditorApp)
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberEditorApp)
 # ---------------------------------------------------

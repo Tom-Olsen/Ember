@@ -59,6 +59,8 @@ namespace vulkanRendererBackend
 		SingleTimeCommand() = delete;
 		SingleTimeCommand(const SingleTimeCommand&) = delete;
 		SingleTimeCommand& operator=(const SingleTimeCommand&) = delete;
+		SingleTimeCommand(SingleTimeCommand&&) = delete;
+		SingleTimeCommand& operator=(SingleTimeCommand&&) = delete;
 		~SingleTimeCommand() = delete;
 	};
 }

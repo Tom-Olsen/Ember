@@ -2,6 +2,7 @@
 #include "iCompute.h"
 #include "commonAccessMask.h"
 #include "commonRendererCreateInfo.h"
+#include "emberCoreExport.h"
 #include "emberMath.h"
 #include <memory>
 #include <vector>
@@ -16,10 +17,11 @@ namespace emberEngine
 	class ShaderProperties;
 
 
-	class Compute
+
+	class EMBER_CORE_API Compute
 	{
 	public: // Subclasses:
-		class Async
+		class EMBER_CORE_API Async
 		{
 		private: // Members:
 			emberBackendInterface::ICompute::IAsync* m_pIAsync; // ICompute owns the ICompute::IAsync instance.
@@ -51,7 +53,7 @@ namespace emberEngine
 
 
 
-		class Immediate
+		class EMBER_CORE_API Immediate
 		{
 		private: // Members:
 			emberBackendInterface::ICompute::IImmediate* m_pIImmediate;  // ICompute owns the ICompute::IImmediate instance.
@@ -75,7 +77,7 @@ namespace emberEngine
 
 
 
-		class PostRender
+		class EMBER_CORE_API PostRender
 		{
 		private: // Members:
 			emberBackendInterface::ICompute::IPostRender* m_pIPostRender;  // ICompute owns the ICompute::IPostRender instance.
@@ -100,7 +102,7 @@ namespace emberEngine
 
 
 
-		class PreRender
+		class EMBER_CORE_API PreRender
 		{
 		private: // Members:
 			emberBackendInterface::ICompute::IPreRender* m_pIPreRender;  // ICompute owns the ICompute::IPreRender instance.

@@ -1,21 +1,11 @@
 #pragma once
 #include "emberEngine.h"
-// Components:
-#include "camera.h"
-#include "cameraController.h"
-#include "directionalLight.h"
+// Custom components:
 #include "drawMeshData.h"
-#include "instancedMeshRenderer.h"
-#include "meshRenderer.h"
 #include "meshTester.h"
-#include "pointLight.h"
-#include "postRenderEffects.h"
-#include "profiler.h"
 #include "spinGlobal.h"
 #include "spinLocal.h"
-#include "spotLight.h"
 #include "testInstancedRendering.h"
-#include "transform.h"
 using namespace emberEngine;
 
 
@@ -23,35 +13,41 @@ using namespace emberEngine;
 inline Scene* SingleQuadScene()
 {
 	Scene* pScene = new Scene();
+	pScene->SetIsEnabled(true);
+
 	{// Camera:
-		GameObject* pGameObject = new GameObject("mainCamera");
+		Entity entity = Entity::Create("mainCamera");
 		Float3 pos = Float3(0.0f, -2.0f, 1.5f);
-		pGameObject->GetTransform()->SetPosition(pos);
-		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
+		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up);
 
-		Camera* pCamera = pGameObject->AddComponent<Camera>();
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+		pTransform->SetRotationMatrix(matrix);
+
+		Camera* pCamera = entity.AddComponent<Camera>();
 		pCamera->SetFarClip(1000.0f);
-		PostRenderEffects* pPostRenderEffects = pGameObject->AddComponent<PostRenderEffects>();
-		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 
-		pScene->AddGameObject(pGameObject);
+		PostRenderEffects* pPostRenderEffects = entity.AddComponent<PostRenderEffects>();
+		CameraController* cameraController = entity.AddComponent<CameraController>();
+
 		pScene->SetActiveCamera(pCamera);
 	}
 	{// SpotLight2:
-		GameObject* pGameObject = new GameObject("light2");
+		Entity entity = Entity::Create("light2");
 		Float3 pos = Float3(0.0f, 0.0f, 5.0f);
-		pGameObject->GetTransform()->SetPosition(pos);
 
-		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+
+		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlitMaterial"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
-		//SpinGlobal* pSpinGlobal = new SpinGlobal(Float3::zero, Float3(0, 90, 0));
-		//pGameObject->AddComponent<SpinGlobal>(pSpinGlobal);
+		//SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, Float3(0, 90, 0));
 
-		SpotLight* pSpotLight = pGameObject->AddComponent<SpotLight>();
+		SpotLight* pSpotLight = entity.AddComponent<SpotLight>();
 		pSpotLight->SetColor(Float3::white);
 		pSpotLight->SetIntensity(200.0f);
 		pSpotLight->SetNearClip(1.1f);
@@ -61,14 +57,14 @@ inline Scene* SingleQuadScene()
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(false);
 		pSpotLight->SetShadowType(emberCommon::ShadowType::soft);
-
-		pScene->AddGameObject(pGameObject);
 	}
 	{// Quad:
-		GameObject* pGameObject = new GameObject("quad");
-		pGameObject->GetTransform()->SetPosition(0.0f, 0.0f, 0.0f);
+		Entity entity = Entity::Create("quad");
 
-		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(0.0f, 0.0f, 0.0f);
+
+		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("example"));
@@ -77,12 +73,9 @@ inline Scene* SingleQuadScene()
 		//pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
 
-		SpinLocal* pSpinLocal = new SpinLocal(45.0f);
-		pGameObject->AddComponent<SpinLocal>(pSpinLocal);
+		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(45.0f);
 
-		//DrawMeshData* pDrawMeshData = pGameObject->AddComponent<DrawMeshData>();
-
-		pScene->AddGameObject(pGameObject);
+		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}
 	return pScene;
 }

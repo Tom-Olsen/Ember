@@ -25,7 +25,7 @@ namespace emberEngine
 
 		// Iterate through the texture directory: (for now everything interpreted as 2d sample textures)
 		emberCommon::TextureUsage usage = emberCommon::TextureUsage::sample;
-		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_CORE_PATH) / "textures").make_preferred();
+		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_CORE_DIR) / "textures").make_preferred();
 		std::unordered_set<std::string> validExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 		{
@@ -72,8 +72,9 @@ namespace emberEngine
 	void TextureManager::AddTexture(Texture&& texture)
 	{
 		auto newTexture = std::make_unique<Texture>(std::move(texture));
-		if (!s_textures.emplace(newTexture->GetName(), std::move(newTexture)).second)
-			LOG_WARN("Texture with the name: {} already exists in TextureManager!", newTexture->GetName());
+		std::string name = newTexture->GetName();
+		if (!s_textures.emplace(name, std::move(newTexture)).second)
+			LOG_WARN("Texture with the name: {} already exists in TextureManager!", name);
 	}
 	Texture& TextureManager::GetTexture(const std::string& name)
 	{

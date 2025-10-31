@@ -1,4 +1,5 @@
 #pragma once
+#include "emberCoreExport.h"
 #include "emberMath.h"
 #include "commonInput.h"
 #include <unordered_map>
@@ -7,7 +8,7 @@
 
 namespace emberEngine
 {
-    class EventSystem
+    class EMBER_CORE_API EventSystem
     {
     public: // Enums:
         enum class KeyState { none, down, up, held };

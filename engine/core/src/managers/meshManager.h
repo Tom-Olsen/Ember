@@ -1,4 +1,5 @@
 #pragma once
+#include "emberCoreExport.h"
 #include <unordered_map>
 #include <memory>
 #include <string>
@@ -15,7 +16,7 @@ namespace emberEngine
     /// <summary>
     /// Purely static class that takes care of lifetime of all Mesh objects.
     /// </summary>
-    class MeshManager
+    class EMBER_CORE_API MeshManager
     {
     public: // Members
 

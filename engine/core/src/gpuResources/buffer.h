@@ -1,5 +1,6 @@
 #pragma once
 #include "commonBufferUsage.h"
+#include "emberCoreExport.h"
 #include <memory>
 #include <string>
 
@@ -15,7 +16,7 @@ namespace emberBackendInterface
 
 namespace emberEngine
 {
-	class Buffer
+	class EMBER_CORE_API Buffer
 	{
 		friend class Renderer;
 		friend class ShaderProperties;

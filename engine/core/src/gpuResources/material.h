@@ -1,6 +1,7 @@
 #pragma once
 #include "commonMaterialType.h"
 #include "commonRenderQueue.h"
+#include "emberCoreExport.h"
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -17,7 +18,7 @@ namespace emberBackendInterface
 
 namespace emberEngine
 {
-	class Material
+	class EMBER_CORE_API Material
 	{
 		// Friends:
 		friend class Renderer;

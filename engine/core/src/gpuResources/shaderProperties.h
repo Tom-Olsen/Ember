@@ -1,4 +1,5 @@
 #pragma once
+#include "emberCoreExport.h"
 #include "emberMath.h"
 #include <memory>
 
@@ -24,7 +25,7 @@ namespace emberEngine
 
 
 
-	class ShaderProperties
+	class EMBER_CORE_API ShaderProperties
 	{
 		// Friends:
 		friend class Renderer;

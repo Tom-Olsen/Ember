@@ -1,5 +1,6 @@
 #pragma once
 #include "commonGuiFlags.h"
+#include "emberCoreExport.h"
 #include <memory>
 #include <string>
 
@@ -7,7 +8,7 @@
 
 namespace emberEngine
 {
-	class EditorWindow
+	class EMBER_CORE_API EditorWindow
 	{
 	protected: // Members:
 		std::string m_name;							// set by derived classes in constructor.

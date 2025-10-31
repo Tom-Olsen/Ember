@@ -152,7 +152,6 @@ namespace vulkanRendererBackend
 		static void WaitDeviceIdle();
 
 		// Debug utility object naming functions:
-	public:
 		static void SetObjectName(VkBuffer buffer, const std::string& name);
 		static void SetObjectName(VkImage image, const std::string& name);
 		static void SetObjectName(VkImageView imageView, const std::string& name);
@@ -175,5 +174,14 @@ namespace vulkanRendererBackend
 		static void SetObjectName(VkEvent event, const std::string& name);
 		static void SetObjectName(VkQueryPool queryPool, const std::string& name);
 		static void SetObjectName(VkSwapchainKHR swapchain, const std::string& name);
+
+	private: // Methods
+		// Delete all constructors:
+		Context() = delete;
+		Context(const Context&) = delete;
+		Context& operator=(const Context&) = delete;
+		Context(Context&&) = delete;
+		Context& operator=(Context&&) = delete;
+		~Context() = delete;
 	};
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "commonEvent.h"
+#include "emberCoreExport.h"
 #include "emberMath.h"
 #include <memory>
 #include <vector>
@@ -19,7 +20,7 @@ namespace emberBackendInterface
 
 namespace emberEngine
 {
-	class Window
+	class EMBER_CORE_API Window
 	{
 	private: // Members:
 		static bool s_isInitialized;

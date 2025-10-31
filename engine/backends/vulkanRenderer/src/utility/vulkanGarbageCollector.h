@@ -24,5 +24,14 @@ namespace vulkanRendererBackend
         static void Clear();
         static void RecordGarbage(std::function<void()> collectGarbageCallback);
         static void CollectGarbage();
+
+    private: // Methods
+        // Delete all constructors:
+        GarbageCollector() = delete;
+        GarbageCollector(const GarbageCollector&) = delete;
+        GarbageCollector& operator=(const GarbageCollector&) = delete;
+        GarbageCollector(GarbageCollector&&) = delete;
+        GarbageCollector& operator=(GarbageCollector&&) = delete;
+        ~GarbageCollector() = delete;
     };
 }
