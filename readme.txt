@@ -76,7 +76,6 @@ Implemented features:
 
 
 Ember::TODO now!
-- new crash on application shutdown (most likely some vma buffers/images not getting properly disposed of).
 - make naming of engineCore vs core concistend across cmake projects and folder naming.
 - move meshes and textures into a resource folder.
 - performance worse than before architecture restructure.
@@ -92,7 +91,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE <ProjectName>_PROJECT)
   second const: the adress inside the pointer cant be chaged.
 - target_link_libraries(backends) with PRIVATE keyword?
 - better unified model for descriptorset bindings e.g: 0-127 for textures, 128-255 for buffers, etc.
-- descriptorsetpool management with dynamic creration of further pools when needed.
+- descriptorsetpool management with dynamic creration of further pools when needed. currently there seems to be an error that after some runtime descriptorset alocation fails. why are new descriptor sets allocatedin the first place?
 - gpu resources on core side should always be handled as value/reference types as they are simple wrappers around a single pointer.
 - go through all classes and implement rule of 5 properly:
   If any of the following is defined, define all of them!

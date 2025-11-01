@@ -29,7 +29,7 @@ namespace vulkanRendererBackend
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_pBuffer = std::make_unique<VmaBuffer>("storageBuffer", bufferInfo, allocInfo);
+		m_pBuffer = std::make_unique<VmaBuffer>("storageBuffer_" + m_name, bufferInfo, allocInfo);
 		NAME_VK_BUFFER(m_pBuffer->GetVkBuffer(), "storageBuffer " + m_name);
 	}
 	StorageBuffer::~StorageBuffer()

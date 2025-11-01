@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_pBuffer = std::make_unique<VmaBuffer>("indexBuffer", bufferInfo, allocInfo);
+		m_pBuffer = std::make_unique<VmaBuffer>("indexBuffer_" + m_name, bufferInfo, allocInfo);
 		NAME_VK_BUFFER(m_pBuffer->GetVkBuffer(), "indexBuffer " + m_name);
 	}
 	IndexBuffer::~IndexBuffer()

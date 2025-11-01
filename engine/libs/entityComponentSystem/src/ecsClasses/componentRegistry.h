@@ -13,6 +13,7 @@ namespace emberEngine
 		static std::vector<void(*)(entt::registry&)>& GetFixedUpdateRegistry();
 		static std::vector<void(*)(entt::registry&)>& GetUpdateRegistry();
 		static std::vector<void(*)(entt::registry&)>& GetLateUpdateRegistry();
+		static std::vector<void(*)(entt::registry&)>& GetDestructionRegistry();
 
 
 
@@ -52,11 +53,16 @@ namespace emberEngine
 						component.LateUpdate();
 				});
 			};
+			auto destroyCallback = [](entt::registry& registry)
+			{
+				registry.clear<T>();
+			};
 
 			GetStartRegistry().push_back(startCallback);
 			GetFixedUpdateRegistry().push_back(fixedUpdateCallback);
 			GetUpdateRegistry().push_back(updateCallback);
 			GetLateUpdateRegistry().push_back(lateUpdateCallback);
+			GetDestructionRegistry().push_back(destroyCallback);
 		}
 	};
 }

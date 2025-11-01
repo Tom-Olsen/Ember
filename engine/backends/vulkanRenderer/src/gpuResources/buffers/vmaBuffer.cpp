@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 	// Constructors/Destructor:
 	VmaBuffer::VmaBuffer(const std::string& name, const BufferCreateInfo& bufferInfo, const AllocationCreateInfo& allocInfo)
 	{
-		m_name = name + std::to_string(s_index);
+		m_name = name + "_" + std::to_string(s_index);
 		s_index++;
 		m_bufferInfo = bufferInfo;
 		m_allocationInfo = allocInfo;

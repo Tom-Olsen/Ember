@@ -35,15 +35,18 @@ int main()
 		emberApplication::Application::Init(appCreateInfo);
 
 		// Create scene:
-		 std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(DefaultScene());
-		 //std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(PointLightScene());
-		 //std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(ShadowCascadeScene());
-		// std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(SingleQuadScene());
-		//std::unique_ptr<Scene> pScene = std::unique_ptr<Scene>(TestScene());
-		emberApplication::Application::SetScene(pScene.get());
+		 Scene* pScene = DefaultScene();
+		// Scene* pScene = PointLightScene();
+		// Scene* pScene = ShadowCascadeScene();
+		// Scene* pScene = SingleQuadScene();
+		// Scene* pScene = TestScene();
+		emberApplication::Application::SetScene(pScene);
 
-		// Run app and clear:
+		// Run app:
 		emberApplication::Application::Run();
+
+		// App shutdown:
+		delete pScene;
 		emberApplication::Application::Clear();
 	}
 	EmberProfiler::Session::Get().End();

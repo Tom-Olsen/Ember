@@ -23,6 +23,10 @@ namespace emberEngine
 	}
 	Scene::~Scene()
 	{
+		// Delete all components:
+		for (auto& destroyCallback : ComponentRegistry::GetDestructionRegistry())
+			destroyCallback(m_registry);
+
 		m_registry.clear();
 		m_entityHandlesMap.clear();
 		m_entityNamesMap.clear();
@@ -127,23 +131,23 @@ namespace emberEngine
 	// ECS callbacks:
 	void Scene::Start()
 	{
-		for (auto& callback : ComponentRegistry::GetStartRegistry())
-			callback(m_registry);
+		for (auto& startCallback : ComponentRegistry::GetStartRegistry())
+			startCallback(m_registry);
 	}
 	void Scene::FixedUpdate()
 	{
-		for (auto& callback : ComponentRegistry::GetFixedUpdateRegistry())
-			callback(m_registry);
+		for (auto& fixedUpdateCallback : ComponentRegistry::GetFixedUpdateRegistry())
+			fixedUpdateCallback(m_registry);
 	}
 	void Scene::Update()
 	{
-		for (auto& callback : ComponentRegistry::GetUpdateRegistry())
-			callback(m_registry);
+		for (auto& updateCallback : ComponentRegistry::GetUpdateRegistry())
+			updateCallback(m_registry);
 	}
 	void Scene::LateUpdate()
 	{
-		for (auto& callback : ComponentRegistry::GetLateUpdateRegistry())
-			callback(m_registry);
+		for (auto& lateUpdateCallback : ComponentRegistry::GetLateUpdateRegistry())
+			lateUpdateCallback(m_registry);
 	}
 
 

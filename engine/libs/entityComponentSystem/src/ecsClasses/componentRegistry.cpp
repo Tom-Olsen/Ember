@@ -24,4 +24,9 @@ namespace emberEngine
 		static std::vector<void(*)(entt::registry&)> s_lateUpdateRegistry;
 		return s_lateUpdateRegistry;
 	}
+	std::vector<void(*)(entt::registry&)>& ComponentRegistry::GetDestructionRegistry()
+	{
+		static std::vector<void(*)(entt::registry&)> s_destructionRegistry;
+		return s_destructionRegistry;
+	}
 }
