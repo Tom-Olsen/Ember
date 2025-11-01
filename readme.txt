@@ -1,14 +1,15 @@
 Prerequisites:
 To compile this code, you need to have Vulkan SDK 1.3.290.0 (or later) and cmake version 3.30 (or later) installed.
 All other dependencies (googletest, imgui, SDL, spdlog, SPIRV-Reflect, vma) are submodules and will be compiled from source.
-(Don't forget to clone recursively for the submodules: git clone --recurse-submodules <repository-url>)
+(Don't forget to clone recursively for the submodules: git clone --recurse-submodules <repository-url>, or after cloning do: git submodule update --init --recursive)
 
 
 
 Architecture:
-The engine consists of a core (Ember/engine/core) and multiple backend libraries: emberEditor, imGuiSdlVulkan, nullEditor, nullGui, nullWindow, sdlWindow, vulkanRenderer (Ember/engine/backends).
-The core and the backends all build into shared libraries which then get linked into multiple statically build applications (Ember/applications), emberEditorApp, emberGameApp, emberGameDebugApp, emberHeadlessApp.
-The difference between these applications is the actual backends that get linked and used, e.g. emberHeadlessApp uses all the nullX backends as it doesnt need a window, gui or an editor.
+The engine consists of a core (Ember/engine/core) and multiple backend libraries: imGuiSdlVulkan, nullGui, nullWindow, sdlWindow, vulkanRenderer (Ember/engine/backends).
+The core and the backends all build into shared libraries which then get linked into multiple statically build applications (Ember/engine/applications), emberEditorApp, emberGameApp, emberGameDebugApp, emberHeadlessApp.
+The difference between these applications is the actual backends that get linked and used, e.g. emberHeadlessApp uses all the nullX backends as it doesnt need a window or gui.
+Each application type comes with its own additional code. E.g. the editorApp contains the editorWindows.
 To create a new project simply link any of these applications into your project and you are good to go.
 Examples of this can be found in Ember/projects/... .
 The other folders in the Ember/engine folder are:
@@ -21,8 +22,8 @@ Ember/engine/shaders    ->   basic shaders which are shipped with the engine by 
 
 
 Project Setup:
-To create a new project simply link the desired base application from 'Ember/application/*' in your CMakeLists.txt via:
-    add_subdirectory("../../applications/emberEditorApp" EmberEditorApp)
+To create a new project simply link the desired base application from 'Ember/engine/application/*' in your CMakeLists.txt via:
+    add_subdirectory("../../engine/applications/emberEditorApp" EmberEditorApp)
     target_link_libraries(${PROJECT_NAME} PUBLIC EmberEditorApp)
 
 
@@ -58,7 +59,7 @@ Implemented features:
     -emberGameDebugApp:    sdlWindow, imGuiSdlVulkan.
     -emberEditorApp:       sdlWindow, imGuiSdlVulkan + custom editor window classes.
     -emberHeadlessApp:     nullWindow, nullGui.
--clean separation of editor into its own applicationl.
+-clean separation of editor code into its own application.
 -Pipelines:
     -preRender compute (instancing data manipulation).
     -shadoow mapping (multiple light sources, directional/positional lights, physical based(roughnessMap, normalMap, metallicity, reflectivity), shadow cascades with shadow snapping, instanced rendering support).
@@ -67,7 +68,7 @@ Implemented features:
     -async comppute.
     -immediate compue.
 -Fully automated descriptorSet system for shaderProperties (see spirvReflect.h/cpp) which handles descriptorSets for Materials and ComputeShaders.
--ECS.
+-ECS: static library in the Embere/engine/libs folder which gets linked to the applications. The core has no access to the ECS.
 -EventSystem that catches SDL events and makes them visible to Gui+Editor+GameObjects/Components.
 -CameraController that is identical to unities editor pCamera.
 -Custom math library, see math.h/cpp. (will be refactored to be a glm wrapper soon).
@@ -95,11 +96,11 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE <ProjectName>_PROJECT)
 - gpu resources on core side should always be handled as value/reference types as they are simple wrappers around a single pointer.
 - go through all classes and implement rule of 5 properly:
   If any of the following is defined, define all of them!
-  1. Destructor					~Foo();
-	 2. Copy constructor			Foo(const Foo& other);
-  3. Copy assignment operator	Foo& operator=(const Foo& other);
-  4. Move constructor			Foo(Foo&& other);
-	 5. Move assigment operator		Foo& operator=(Foo&& other);
+    1. Destructor					~Foo();
+    2. Copy constructor			    Foo(const Foo& other);
+    3. Copy assignment operator	    Foo& operator=(const Foo& other);
+    4. Move constructor			    Foo(Foo&& other);
+    5. Move assigment operator		Foo& operator=(Foo&& other);
 - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 - sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 - validation layer errors when two shaders have the same binding number (binding missmatch error)
@@ -108,6 +109,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE <ProjectName>_PROJECT)
   Also add void* data to CreateBuffer factory.
 - add name to vulkanRendererBackend::Buffer? (also add Get/SetName(...) in IBuffer).
 - move emberCommon::... to backend::... conversion to where its needed when its only ever needed once.
+- headless mode
 
 
 

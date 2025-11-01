@@ -4,14 +4,17 @@
 
 
 
+// Forward declarations:
 namespace emberEngine
 {
-	// Forward declarations:
 	class Renderer;
 	class Scene;
+}
 
 
 
+namespace emberApplication
+{
 	class Application
 	{
 	public:
@@ -27,18 +30,28 @@ namespace emberEngine
 		};
 
 	private: // Members:
-		Scene* m_pActiveScene;
+		static emberEngine::Scene* m_pActiveScene;
 
 	public: // Methods:
-		Application(const CreateInfo& createInfo);
-		~Application();
-		void Run();
-		void SetScene(Scene* pScene);
+		static void Init(const CreateInfo& createInfo);
+		static void Clear();
 
-	private: // Methods:
-		void Start();
-		void Update();
-		void LateUpdate();
-		void FixedUpdate();
+		// Main loop:
+		static void Run();
+
+		// Setters:
+		static void SetScene(emberEngine::Scene* pScene);
+
+		// Getters:
+		static emberEngine::Scene* GetActiveScene();
+
+	private: // Methods
+		// Delete all constructors:
+		Application() = delete;
+		Application(const Application&) = delete;
+		Application& operator=(const Application&) = delete;
+		Application(Application&&) = delete;
+		Application& operator=(Application&&) = delete;
+		~Application() = delete;
 	};
 }

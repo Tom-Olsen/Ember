@@ -25,7 +25,7 @@ namespace emberEngine
 
 		// Iterate through the texture directory: (for now everything interpreted as 2d sample textures)
 		emberCommon::TextureUsage usage = emberCommon::TextureUsage::sample;
-		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_CORE_DIR) / "textures").make_preferred();
+		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_RESOURCES_DIR) / "textures").make_preferred();
 		std::unordered_set<std::string> validExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
 		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 		{

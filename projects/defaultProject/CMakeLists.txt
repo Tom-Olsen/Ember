@@ -1,5 +1,4 @@
-# Ember/defaultProject/CMakeLists.txt
-# Ember/defaultProject/CMakeLists.txt
+# Ember/projects/defaultProject/CMakeLists.txt
 
 
 
@@ -58,11 +57,11 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_R
 
 
 # ------------------ Link Libraries -----------------
-## Ember Game Debug Application:
-#add_subdirectory("${APPLICATIONS_DIR}/emberGameDebugApp" EmberGameDebugApp)
-#target_link_libraries(${PROJECT_NAME} PUBLIC EmberGameDebugApp)
+# Ember Game Debug Application:
+add_subdirectory("${APPLICATIONS_DIR}/emberGameApp" EmberGameApp)
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberGameApp)
 
-# Ember Editor Application:
-add_subdirectory("${APPLICATIONS_DIR}/emberEditorApp" EmberEditorApp)
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberEditorApp)
+## Ember Editor Application:
+#add_subdirectory("${APPLICATIONS_DIR}/emberEditorApp" EmberEditorApp)
+#target_link_libraries(${PROJECT_NAME} PUBLIC EmberEditorApp)
 # ---------------------------------------------------

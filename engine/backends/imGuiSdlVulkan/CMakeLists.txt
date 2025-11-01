@@ -15,6 +15,12 @@ option(IMGUI_SDL_VULKAN_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Cache directories:
+get_filename_component(ENGINE_COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../../common" ABSOLUTE)         # commom
+get_filename_component(ENGINE_EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../../extern" ABSOLUTE)         # extern
+get_filename_component(ENGINE_INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../../interfaces" ABSOLUTE) # interfaces
+get_filename_component(ENGINE_LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../libs" ABSOLUTE)                # libs
+
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
@@ -30,39 +36,30 @@ endif()
 
 
 # ------------------- File Lists --------------------
-# src/*:
-file(GLOB SOURCE_FILES "src/*")
+file(GLOB SOURCE_FILES "src/*.*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 
-# ../../common/*:
-file(GLOB COMMON_INTERFACE_FILES "../../common/*.*")
+file(GLOB COMMON_INTERFACE_FILES "${ENGINE_COMMON_DIR}/*.*")
 source_group("Commen" FILES ${COMMON_INTERFACE_FILES})
 
-# ../../interfaces/editor/*:
-file(GLOB EDITOR_INTERFACE_FILES "../../interfaces/editor/*")
-source_group("Editor Interface" FILES ${EDITOR_INTERFACE_FILES})
-
-# ../../interfaces/gui/*:
-file(GLOB GUI_INTERFACE_FILES "../../interfaces/gui/*")
+file(GLOB GUI_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/gui/*.*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
 
-# ../../interfaces/renderer/*:
-file(GLOB RENDERER_INTERFACE_FILES "../../interfaces/renderer/*")
+file(GLOB RENDERER_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
-# ../../interfaces/window/*:
-file(GLOB WINDOW_INTERFACE_FILES "../../interfaces/window/*")
+file(GLOB WINDOW_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 
 set(IMGUI_FILES
-    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui.h"
-    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_demo.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_draw.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_tables.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/imgui_widgets.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/backends/imgui_impl_sdl3.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/../../extern/imgui/backends/imgui_impl_vulkan.cpp")
+    "${ENGINE_EXTERN_DIR}/imgui/imgui.h"
+    "${ENGINE_EXTERN_DIR}/imgui/imgui.cpp"
+    "${ENGINE_EXTERN_DIR}/imgui/imgui_demo.cpp"
+    "${ENGINE_EXTERN_DIR}/imgui/imgui_draw.cpp"
+    "${ENGINE_EXTERN_DIR}/imgui/imgui_tables.cpp"
+    "${ENGINE_EXTERN_DIR}/imgui/imgui_widgets.cpp"
+    "${ENGINE_EXTERN_DIR}/imgui/backends/imgui_impl_sdl3.cpp"
+    "${ENGINE_EXTERN_DIR}/imgui/backends/imgui_impl_vulkan.cpp")
 source_group("ImGui" FILES ${IMGUI_FILES})
 # ---------------------------------------------------
 
@@ -92,13 +89,12 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/editor
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/gui
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/renderer
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/window
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/imgui
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/imgui/backends)
+    ${ENGINE_COMMON_DIR}
+    ${ENGINE_INTERFACES_DIR}/gui
+    ${ENGINE_INTERFACES_DIR}/renderer
+    ${ENGINE_INTERFACES_DIR}/window
+    ${ENGINE_EXTERN_DIR}/imgui
+    ${ENGINE_EXTERN_DIR}/imgui/backends)
 # ---------------------------------------------------
 
 
@@ -117,19 +113,19 @@ endif()
 # EmberLogger:
 if (NOT TARGET EmberLogger)
     set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/logger" EmberLogger)
+    add_subdirectory("${ENGINE_LIBS_DIR}/libs/logger" EmberLogger)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
 
 # EmberMath:
 if (NOT TARGET EmberMath)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/math" EmberMath)
+    add_subdirectory("${ENGINE_LIBS_DIR}/libs/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
 # EmberProfiler:
 if (NOT TARGET EmberProfiler)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/profiler" EmberProfiler)
+    add_subdirectory("${ENGINE_LIBS_DIR}/libs/profiler" EmberProfiler)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
 # ---------------------------------------------------
@@ -141,7 +137,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
 if (NOT TARGET SDL3::SDL3-shared)
     set(SDL_STATIC OFF CACHE BOOL "Build SDL3 as a static library" FORCE)
     set(SDL_SHARED ON CACHE BOOL "Build SDL3 as a shared library" FORCE)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../extern/SDL" "${CMAKE_BINARY_DIR}/SDL_build")
+    add_subdirectory("${ENGINE_EXTERN_DIR}/SDL" "${CMAKE_BINARY_DIR}/SDL_build")
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-shared)
 

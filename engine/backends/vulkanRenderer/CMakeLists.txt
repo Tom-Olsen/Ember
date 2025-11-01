@@ -16,11 +16,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Cache directories:
-get_filename_component(COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../../common" ABSOLUTE)            # common 
-get_filename_component(INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../../interfaces" ABSOLUTE)    # interfaces
-get_filename_component(LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../libs" ABSOLUTE)                   # libs
-get_filename_component(EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../../extern" ABSOLUTE)            # extern 
-
+get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)             # vulkan
+get_filename_component(ENGINE_COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../../common" ABSOLUTE)         # commom
+get_filename_component(ENGINE_EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../../extern" ABSOLUTE)         # extern
+get_filename_component(ENGINE_INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../../interfaces" ABSOLUTE) # interfaces
+get_filename_component(ENGINE_LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../libs" ABSOLUTE)             # libs
+get_filename_component(ENGINE_RESOURCES_DIR "${CMAKE_CURRENT_LIST_DIR}/../../resources" ABSOLUTE)   # resources
+get_filename_component(ENGINE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../shaders" ABSOLUTE)       # shaders
 
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
@@ -37,7 +39,6 @@ endif()
 
 
 # ------------------- File Lists --------------------
-# *.* makes sure to only include files and not folders.
 file(GLOB COMPUTE_FILES "src/compute/*.*")
 source_group("Compute" FILES ${COMPUTE_FILES})
 
@@ -89,16 +90,16 @@ source_group("Types" FILES ${TYPES_FILES})
 file(GLOB UTILITY_FILES "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
-file(GLOB COMMON_FILES "${COMMON_DIR}/*.*")
+file(GLOB COMMON_FILES "${ENGINE_COMMON_DIR}/*.*")
 source_group("Commen" FILES ${COMMON_FILES})
 
-file(GLOB GUI_INTERFACE_FILES "${INTERFACES_DIR}/gui/*")
+file(GLOB GUI_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/gui/*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
 
-file(GLOB RENDERER_INTERFACE_FILES "${INTERFACES_DIR}/renderer/*.*")
+file(GLOB RENDERER_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
-file(GLOB WINDOW_INTERFACE_FILES "${INTERFACES_DIR}/window/*.*")
+file(GLOB WINDOW_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 # ---------------------------------------------------
 
@@ -172,18 +173,18 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPasses
     ${CMAKE_CURRENT_SOURCE_DIR}/src/types
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
-    ${COMMON_DIR}
-    ${INTERFACES_DIR}/gui
-    ${INTERFACES_DIR}/renderer
-    ${INTERFACES_DIR}/window)
+    ${ENGINE_COMMON_DIR}
+    ${ENGINE_INTERFACES_DIR}/gui
+    ${ENGINE_INTERFACES_DIR}/renderer
+    ${ENGINE_INTERFACES_DIR}/window)
 # ---------------------------------------------------
 
 
 
 # ---------------------- Macros ---------------------
 # Path to vulkan library source directory:
-get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 target_compile_definitions(${PROJECT_NAME} PUBLIC VULKAN_LIBRARY_ROOT_PATH="${VULKAN_LIBRARY_ROOT_PATH}")
+target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
 
 # Library compilation logic:
 if(VULKAN_RENDERER_BACKEND_BUILD_SHARED)
@@ -198,34 +199,40 @@ endif()
 # -------------- Link Custom Libraries --------------
 # EmberAssetLoader:
 if (NOT TARGET EmberAssetLoader)
-    add_subdirectory("${LIBS_DIR}/assetLoader" EmberAssetLoader)
+    add_subdirectory("${ENGINE_LIBS_DIR}/assetLoader" EmberAssetLoader)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberAssetLoader)
 
 # EmberLogger:
 if (NOT TARGET EmberLogger)
     set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
-    add_subdirectory("${LIBS_DIR}/logger" EmberLogger)
+    add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
 
 # EmberMath:
 if (NOT TARGET EmberMath)
-    add_subdirectory("${LIBS_DIR}/math" EmberMath)
+    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
 # EmberProfiler:
 if (NOT TARGET EmberProfiler)
-    add_subdirectory("${LIBS_DIR}/profiler" EmberProfiler)
+    add_subdirectory("${ENGINE_LIBS_DIR}/profiler" EmberProfiler)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
 
 # EmberTaskSystem:
 if (NOT TARGET EmberTaskSystem)
-    add_subdirectory("${LIBS_DIR}/taskSystem" EmberTaskSystem)
+    add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
+
+# Shaders:
+if (NOT TARGET ShaderCompiler)
+    add_subdirectory(${ENGINE_SHADERS_DIR} ShaderCompiler)
+endif()
+add_dependencies(${PROJECT_NAME} ShaderCompiler)
 # ---------------------------------------------------
 
 
@@ -237,33 +244,33 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
     
 # Vulkan Memory Allocator: (header only)
-target_include_directories(${PROJECT_NAME} PUBLIC "${EXTERN_DIR}/vma/include")
+target_include_directories(${PROJECT_NAME} PUBLIC "${ENGINE_EXTERN_DIR}/vma/include")
 
 # SPIRV-Reflect:
 set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect
-add_subdirectory("${EXTERN_DIR}/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
+add_subdirectory("${ENGINE_EXTERN_DIR}/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-reflect-static)
 # ---------------------------------------------------
 
 
 
-# ----------------- Compile Shaders -----------------
-if(WIN32)
-    set(SHADER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/compileShaders.bat")
-    add_custom_target(CompileShaders ALL
-        COMMAND "${SHADER_SCRIPT}"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders"
-        COMMENT "Compiling HLSL compute shaders (Windows)"
-    )
-elseif(UNIX)
-    set(SHADER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/compileShaders.sh")
-    add_custom_target(CompileShaders ALL
-        COMMAND bash "${SHADER_SCRIPT}"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders"
-        COMMENT "Compiling HLSL compute shaders (Linux/Ubuntu)"
-    )
-endif()
-
-# Make sure your Vulkan library depends on shaders being compiled first
-add_dependencies(${PROJECT_NAME} CompileShaders)
+## ----------------- Compile Shaders -----------------
+#if(WIN32)
+#    set(SHADER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/compileShaders.bat")
+#    add_custom_target(CompileShaders ALL
+#        COMMAND "${SHADER_SCRIPT}"
+#        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders"
+#        COMMENT "Compiling HLSL compute shaders (Windows)"
+#    )
+#elseif(UNIX)
+#    set(SHADER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/compileShaders.sh")
+#    add_custom_target(CompileShaders ALL
+#        COMMAND bash "${SHADER_SCRIPT}"
+#        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders"
+#        COMMENT "Compiling HLSL compute shaders (Linux/Ubuntu)"
+#    )
+#endif()
+#
+## Make sure your Vulkan library depends on shaders being compiled first
+#add_dependencies(${PROJECT_NAME} CompileShaders)
 # ---------------------------------------------------

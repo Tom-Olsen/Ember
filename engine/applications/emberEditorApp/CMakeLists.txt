@@ -12,11 +12,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Cache directories:
-get_filename_component(APPLICATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)               # application
-get_filename_component(BACKENDS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../backends" ABSOLUTE)    # backends
-get_filename_component(ENGINE_CORE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../core" ABSOLUTE)     # core
-get_filename_component(EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../../extern" ABSOLUTE)        # extern
-get_filename_component(LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../libs" ABSOLUTE)            # libs
+get_filename_component(ENGINE_APPLICATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)            # application
+get_filename_component(ENGINE_BACKENDS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../backends" ABSOLUTE) # backends
+get_filename_component(ENGINE_CORE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../core" ABSOLUTE)         # core
+get_filename_component(ENGINE_LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../libs" ABSOLUTE)         # libs
 
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
@@ -33,14 +32,11 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB SOURCE_FILES "${APPLICATIONS_DIR}/src/*.*")
+file(GLOB SOURCE_FILES "${ENGINE_APPLICATIONS_DIR}/src/*.*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 
 file(GLOB EDITOR_WINDOWS_FILES "src/editorWindows/*.*")
 source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
-
-file(GLOB TEMPLATE_WRAPPERS_FILES "src/templateWrappers/*.*")
-source_group("Template Wrappers" FILES ${TEMPLATE_WRAPPERS_FILES})
 # ---------------------------------------------------
  
  
@@ -48,20 +44,18 @@ source_group("Template Wrappers" FILES ${TEMPLATE_WRAPPERS_FILES})
 # ----------------- Create Library ------------------
 add_library(${PROJECT_NAME} STATIC
     ${SOURCE_FILES}
-    ${EDITOR_WINDOWS_FILES}
-    ${TEMPLATE_WRAPPERS_FILES})
+    ${EDITOR_WINDOWS_FILES})
  
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ${APPLICATIONS_DIR}/src
-    ${APPLICATIONS_DIR}/src/editorWindows
-    ${APPLICATIONS_DIR}/src/templateWrappers)
+    ${ENGINE_APPLICATIONS_DIR}/src
+    ${ENGINE_APPLICATIONS_DIR}/src/editorWindows)
 # ---------------------------------------------------
  
  
  
 # ---------------------- Macros ---------------------
-target_compile_definitions(${PROJECT_NAME} PUBLIC APPLICATIONS_DIR="${APPLICATIONS_DIR}")
+target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_APPLICATIONS_DIR="${ENGINE_APPLICATIONS_DIR}")
 # ---------------------------------------------------
 
 
@@ -75,7 +69,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EmberCore)
 
 # EntityComponentSystem:
 if (NOT TARGET EntityComponentSystem)
-    add_subdirectory("${LIBS_DIR}/entityComponentSystem" EntityComponentSystem)
+    add_subdirectory("${ENGINE_LIBS_DIR}/entityComponentSystem" EntityComponentSystem)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EntityComponentSystem)
 # ---------------------------------------------------
@@ -85,31 +79,31 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EntityComponentSystem)
 # ------------------ Link Backends ------------------
 # Vulkan Renderer:
 if (NOT TARGET VulkanRendererBackend)
-    add_subdirectory("${BACKENDS_DIR}/vulkanRenderer" VulkanRendererBackend)
+    add_subdirectory("${ENGINE_BACKENDS_DIR}/vulkanRenderer" VulkanRendererBackend)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC VulkanRendererBackend)
 
 # Null Window:
 if (NOT TARGET NullWindowBackend)
-    add_subdirectory("${BACKENDS_DIR}/nullWindow" NullWindowBackend)
+    add_subdirectory("${ENGINE_BACKENDS_DIR}/nullWindow" NullWindowBackend)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC NullWindowBackend)
 
 # SDL Window:
 if (NOT TARGET SdlWindowBackend)
-    add_subdirectory("${BACKENDS_DIR}/sdlWindow" SdlWindowBackend)
+    add_subdirectory("${ENGINE_BACKENDS_DIR}/sdlWindow" SdlWindowBackend)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC SdlWindowBackend)
 
 # Null Gui:
 if (NOT TARGET NullGuiBackend)
-    add_subdirectory("${BACKENDS_DIR}/nullGui" NullGuiBackend)
+    add_subdirectory("${ENGINE_BACKENDS_DIR}/nullGui" NullGuiBackend)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC NullGuiBackend)
 
 # ImGui SDL Vulkan:
 if (NOT TARGET ImGuiSdlVulkanBackend)
-    add_subdirectory("${BACKENDS_DIR}/imGuiSdlVulkan" ImGuiSdlVulkanBackend)
+    add_subdirectory("${ENGINE_BACKENDS_DIR}/imGuiSdlVulkan" ImGuiSdlVulkanBackend)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC ImGuiSdlVulkanBackend)
 # ---------------------------------------------------

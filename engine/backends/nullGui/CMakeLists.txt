@@ -15,25 +15,33 @@ option(NULL_GUI_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library"
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Cache directories:
+get_filename_component(ENGINE_COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../../common" ABSOLUTE)         # commom
+get_filename_component(ENGINE_INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../../interfaces" ABSOLUTE) # interfaces
+get_filename_component(ENGINE_LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../libs" ABSOLUTE)             # libs
+
 # Output directory:
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib STATIC ...) => .a .lib
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directory for add_library(MyLib SHARED ...) => .so .dylib .dll
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}") # target directors for add_executable(MyExe ...)     => .exe
+if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
+endif()
+if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Library output directory" FORCE) # .so .dylib .dll
+endif()
+if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Runtime output directory" FORCE) # .exe
+endif()
 # ---------------------------------------------------
 
 
 
 # ------------------- File Lists --------------------
-# src/*:
-file(GLOB SOURCE_FILES "src/*")
+file(GLOB SOURCE_FILES "src/*.*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 
-# ../../common/*:
-file(GLOB COMMON_FILES "../../common/*.*")
+file(GLOB COMMON_FILES "${ENGINE_COMMON_DIR}/*.*")
 source_group("Commen" FILES ${COMMON_FILES})
 
-# ../../interfaces/gui/*:
-file(GLOB GUI_INTERFACE_FILES "../../interfaces/gui/*")
+file(GLOB GUI_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/gui/*.*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
 # ---------------------------------------------------
 
@@ -55,8 +63,8 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../interfaces/gui)
+    ${ENGINE_COMMON_DIR}
+    ${ENGINE_INTERFACES_DIR}/gui)
 # ---------------------------------------------------
 
 
@@ -74,7 +82,7 @@ endif()
 # -------------- Link Custom Libraries --------------
 # EmberMath:
 if (NOT TARGET EmberMath)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/math" EmberMath)
+    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 # ---------------------------------------------------

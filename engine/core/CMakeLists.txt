@@ -15,12 +15,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Cache directories:
-get_filename_component(ENGINE_CORE_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)                # engine core
-get_filename_component(CORE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../shaders" ABSOLUTE)    # core shaders
-get_filename_component(COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../common" ABSOLUTE)           # commom
-get_filename_component(INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../interfaces" ABSOLUTE)   # interfaces
-get_filename_component(LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../libs" ABSOLUTE)               # libs
-get_filename_component(EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../extern" ABSOLUTE)           # extern
+get_filename_component(ENGINE_COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../common" ABSOLUTE)            # commom
+get_filename_component(ENGINE_CORE_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)                        # core
+get_filename_component(ENGINE_EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../extern" ABSOLUTE)            # extern
+get_filename_component(ENGINE_INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../interfaces" ABSOLUTE)    # interfaces
+get_filename_component(ENGINE_LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../libs" ABSOLUTE)                # libs
+get_filename_component(ENGINE_RESOURCES_DIR "${CMAKE_CURRENT_LIST_DIR}/../resources" ABSOLUTE)      # resources
+get_filename_component(ENGINE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../shaders" ABSOLUTE)          # shaders
 
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
@@ -68,16 +69,16 @@ source_group("Utility" FILES ${UTILITY_FILES})
 file(GLOB WINDOW_FILES "${ENGINE_CORE_DIR}/src/window/*.*")
 source_group("Window" FILES ${WINDOW_FILES})
 
-file(GLOB COMMON_FILES "${COMMON_DIR}/*.*")
+file(GLOB COMMON_FILES "${ENGINE_COMMON_DIR}/*.*")
 source_group("Common" FILES ${COMMON_FILES})
 
-file(GLOB GUI_INTERFACE_FILES "${INTERFACES_DIR}/gui/*.*")
+file(GLOB GUI_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/gui/*.*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
  
-file(GLOB RENDERER_INTERFACE_FILES "${INTERFACES_DIR}/renderer/*.*")
+file(GLOB RENDERER_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
-file(GLOB WINDOW_INTERFACE_FILES "${INTERFACES_DIR}/window/*.*")
+file(GLOB WINDOW_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 # ---------------------------------------------------
  
@@ -120,7 +121,7 @@ endif()
 
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME}
-    PUBLIC ${CORE_SHADERS_DIR}/src # needed for .h files from shaders, which contian constans for c++ and hlsl
+    PUBLIC ${ENGINE_SHADERS_DIR}/src # needed for .h files from shaders, which contian constans for c++ and hlsl
     PUBLIC ${ENGINE_CORE_DIR}/src
     PUBLIC ${ENGINE_CORE_DIR}/src/editor
     PUBLIC ${ENGINE_CORE_DIR}/src/eventSystem
@@ -131,17 +132,18 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC ${ENGINE_CORE_DIR}/src/renderer
     PUBLIC ${ENGINE_CORE_DIR}/src/utility
     PUBLIC ${ENGINE_CORE_DIR}/src/window
-    PUBLIC ${COMMON_DIR}
-    PUBLIC ${INTERFACES_DIR}/gui
-    PUBLIC ${INTERFACES_DIR}/renderer
-    PUBLIC ${INTERFACES_DIR}/window)
+    PUBLIC ${ENGINE_COMMON_DIR}
+    PUBLIC ${ENGINE_INTERFACES_DIR}/gui
+    PUBLIC ${ENGINE_INTERFACES_DIR}/renderer
+    PUBLIC ${ENGINE_INTERFACES_DIR}/window)
 # ---------------------------------------------------
 
 
 
 # ---------------------- Macros ---------------------
 target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_CORE_DIR="${ENGINE_CORE_DIR}")
-target_compile_definitions(${PROJECT_NAME} PUBLIC CORE_SHADERS_DIR="${CORE_SHADERS_DIR}")
+target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_RESOURCES_DIR="${ENGINE_RESOURCES_DIR}")
+target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
 
 # Library compilation logic:
 if(EMBER_CORE_BUILD_SHARED)
@@ -156,38 +158,38 @@ endif()
 # -------------- Link Custom Libraries --------------
 # EmberAssetLoader:
 if (NOT TARGET EmberAssetLoader)
-    add_subdirectory("${LIBS_DIR}/assetLoader" EmberAssetLoader)
+    add_subdirectory("${ENGINE_LIBS_DIR}/assetLoader" EmberAssetLoader)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberAssetLoader)
 
 # EmberLogger:
 if (NOT TARGET EmberLogger)
     set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib." FORCE)
-    add_subdirectory("${LIBS_DIR}/logger" EmberLogger)
+    add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
 
 # EmberMath:
 if (NOT TARGET EmberMath)
-    add_subdirectory("${LIBS_DIR}/math" EmberMath)
+    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
 # EmberProfiler:
 if (NOT TARGET EmberProfiler)
-    add_subdirectory("${LIBS_DIR}/profiler" EmberProfiler)
+    add_subdirectory("${ENGINE_LIBS_DIR}/profiler" EmberProfiler)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
 
 # EmberTaskSystem:
 if (NOT TARGET EmberTaskSystem)
-    add_subdirectory("${LIBS_DIR}/taskSystem" EmberTaskSystem)
+    add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
 
 # Shaders:
 if (NOT TARGET ShaderCompiler)
-    add_subdirectory(${CORE_SHADERS_DIR} ShaderCompiler)
+    add_subdirectory(${ENGINE_SHADERS_DIR} ShaderCompiler)
 endif()
 add_dependencies(${PROJECT_NAME} ShaderCompiler)
 # ---------------------------------------------------
@@ -199,7 +201,7 @@ add_dependencies(${PROJECT_NAME} ShaderCompiler)
 set(ENTT_BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(ENTT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 if (NOT TARGET EnTT::EnTT)
-    add_subdirectory("${EXTERN_DIR}/EnTT" "${CMAKE_BINARY_DIR}/EnTT_build")
+    add_subdirectory("${ENGINE_EXTERN_DIR}/EnTT" "${CMAKE_BINARY_DIR}/EnTT_build")
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EnTT::EnTT)
 # ---------------------------------------------------
