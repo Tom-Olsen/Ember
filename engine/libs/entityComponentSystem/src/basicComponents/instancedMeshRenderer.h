@@ -12,7 +12,7 @@ namespace emberEngine
 		bool m_castShadows;
 		bool m_receiveShadows;
 		Mesh* m_pMesh;
-		Material* m_pMaterial;
+		Material m_material;
 		Buffer* m_pInstanceBuffer;
 		ShaderProperties m_shaderProperties;
 
@@ -25,7 +25,7 @@ namespace emberEngine
 		void SetCastShadows(bool castShadows);
 		void SetReceiveShadows(bool receiveShadows);
 		void SetMesh(Mesh& mesh);
-		void SetMaterial(Material& material);
+		void SetMaterial(const Material& material);
 		void SetInstanceBuffer(Buffer& instanceBuffer);
 
 		// Forward render pass getters:

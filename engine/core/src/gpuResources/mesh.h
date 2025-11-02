@@ -25,7 +25,7 @@ namespace emberEngine
 
 	private: // Members:
 		std::unique_ptr<emberBackendInterface::IMesh> m_pIMesh;
-		emberBackendInterface::IMesh* GetInterfaceHandle();
+		emberBackendInterface::IMesh* const GetInterfaceHandle() const;
 
 	public: // Methods:
 		// Constructors/Destructor:

@@ -1,4 +1,4 @@
-# Ember/fluidDynamics/src/shaders/CMakeLists.txt
+# Ember/projects/fluidDynamics/shaders/CMakeLists.txt
 
 
 
@@ -15,15 +15,18 @@ if(WIN32)
 else()
     set(DXC_PATH "${VULKAN_SDK_PATH}/bin/dxc")
 endif()
+
+# Cache directories:
+get_filename_component(ENGINE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../engine/shaders" ABSOLUTE)  # engine shaders
 # ---------------------------------------------------
 
 
 
 # ------------------- File Lists --------------------
-file(GLOB VERTEX_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.vert.hlsl")
-file(GLOB FRAGMENT_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.frag.hlsl")
-file(GLOB COMPUTE_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.comp.hlsl")
-file(GLOB SHADER_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/*.hlsli")
+file(GLOB VERTEX_SHADERS "src/*.vert.hlsl")
+file(GLOB FRAGMENT_SHADERS "src/*.frag.hlsl")
+file(GLOB COMPUTE_SHADERS "src/*.comp.hlsl")
+file(GLOB SHADER_INCLUDES "src/*.hlsli" "${ENGINE_SHADERS_DIR}/src/*.hlsli")
 file(GLOB SHADER_SOURCES 
     ${VERTEX_SHADERS}
     ${FRAGMENT_SHADERS}
@@ -37,6 +40,7 @@ source_group("Includes" FILES ${SHADER_INCLUDES})
 
 
 # ----------------- Create Targets ------------------
+set(OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(SPIRV_OUTPUTS "")
 foreach(SHADER_FILE ${SHADER_SOURCES})
     get_filename_component(FILE_NAME ${SHADER_FILE} NAME_WE)
@@ -53,25 +57,25 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
         message(FATAL_ERROR "Unknown shader extension for ${SHADER_FILE}")
     endif()
 
-    set(OUTPUT_FILE "${PROJECT_SOURCE_DIR}/bin/shaders/${FILE_NAME}${EXT_TRIMMED}.spv")
+    set(OUTPUT_FILE "${OUTPUT_DIR}/${FILE_NAME}${EXT_TRIMMED}.spv")
     list(APPEND SPIRV_OUTPUTS ${OUTPUT_FILE})
-
-    set(REL_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../Engine/src/shaders")
-    file(REAL_PATH "${REL_INCLUDE_PATH}" ABS_INCLUDE_PATH BASE_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/bin/shaders
-        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE} -I ${ABS_INCLUDE_PATH}
+        BYPRODUCTS ${OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main -I src -I ${ENGINE_SHADERS_DIR}/src ${SHADER_FILE} -Fo ${OUTPUT_FILE}
         DEPENDS ${SHADER_FILE}
         COMMENT "Compiling shader: ${SHADER_FILE}"
         VERBATIM
     )
+    message(STATUS ${SHADER_FILE})
+    message(STATUS ${OUTPUT_FILE})
 endforeach()
 
 # Shader compile target:
-add_custom_target(CompileFluidDynamicsShaders ALL DEPENDS ${SPIRV_OUTPUTS})
+add_custom_target(ProjectShaderCompiler ALL DEPENDS ${SPIRV_OUTPUTS})
 
-# Shader sources added as dummy targets to make them show up in the IDE.
-add_custom_target(FluidDynamicsShaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES})
+# Shader sources added as dummy targets to make them show up in the IDE:
+add_custom_target(ProjectShaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES} ${CPP_HLSL_HEADERS})
 # ---------------------------------------------------

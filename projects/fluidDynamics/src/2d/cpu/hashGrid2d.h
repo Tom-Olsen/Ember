@@ -1,11 +1,10 @@
-#ifndef __INCLUDE_GUARD_hashGrid2d_h__
-#define __INCLUDE_GUARD_hashGrid2d_h__
+#pragma once
 #include "emberMath.h"
 #include <vector>
 
 
 
-namespace emberEngine
+namespace fluidDynamics
 {
 	class HashGrid2d
 	{
@@ -30,7 +29,3 @@ namespace emberEngine
 		void ApplySort(std::vector<Float2>& data);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_hashGrid2d_h__

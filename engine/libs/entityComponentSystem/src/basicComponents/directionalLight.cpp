@@ -153,8 +153,8 @@ namespace emberEngine
 		// Visualization for debugging:
 		if (m_drawFrustum)
 		{
-			Material& pUnlitMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
-			Material& pVertexUnlit = MaterialManager::GetMaterial("vertexColorUnlitMaterial");
+			Material pUnlitMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
+			Material pVertexUnlit = MaterialManager::GetMaterial("vertexColorUnlitMaterial");
 			Mesh& pSphere = MeshManager::GetMesh("cubeSphere");
 			Mesh& fourLeg = MeshManager::GetMesh("fourLeg");
 			ShaderProperties* pShaderProperties = nullptr;

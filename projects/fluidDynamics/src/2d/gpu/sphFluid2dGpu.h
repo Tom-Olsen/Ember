@@ -1,15 +1,20 @@
-#ifndef __INCLUDE_GUARD_sphFluid2dGpu_h__
-#define __INCLUDE_GUARD_sphFluid2dGpu_h__
+#pragma once
 #include "emberEngine.h"
-#include <array>
-#include <memory>
+using namespace emberEngine;
 
 
 
-namespace emberEngine
+// Forward decleration:
+namespace emberEditor
+{
+	struct SphFluid2dGpuEditorWindow;
+}
+
+
+
+namespace fluidDynamics
 {
 	// Forward decleration:
-	struct SphFluid2dGpuEditorWindow;
 	class SphBitonicSort2d;
 
 
@@ -19,20 +24,20 @@ namespace emberEngine
 	private: // Members:
 		// Compute shaders:
 		Uint3 m_threadCount;
-		std::unique_ptr<ComputeShader> cs_pReset;
-		std::unique_ptr<ComputeShader> cs_pDensity;
-		std::unique_ptr<ComputeShader> cs_pNormalAndCurvature;
-		std::unique_ptr<ComputeShader> cs_pForceDensity;
-		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step1;
-		std::unique_ptr<ComputeShader> cs_pRungeKutta2Step2;
-		std::unique_ptr<ComputeShader> cs_pBoundaryCollisions;
-		std::unique_ptr<ShaderProperties> m_pResetProperties;
-		std::array<std::unique_ptr<ShaderProperties>, 2> m_densityProperties;
-		std::array<std::unique_ptr<ShaderProperties>, 2> m_normalAndCurvatureProperties;
-		std::array<std::unique_ptr<ShaderProperties>, 2> m_forceDensityProperties;
-		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step1Properties;
-		std::unique_ptr<ShaderProperties> m_pRungeKutta2Step2Properties;
-		std::unique_ptr<ShaderProperties> m_pBoundaryCollisionsProperties;
+		ComputeShader cs_reset;
+		ComputeShader cs_density;
+		ComputeShader cs_normalAndCurvature;
+		ComputeShader cs_forceDensity;
+		ComputeShader cs_rungeKutta2Step1;
+		ComputeShader cs_rungeKutta2Step2;
+		ComputeShader cs_boundaryCollisions;
+		ShaderProperties m_resetProperties;
+		std::array<ShaderProperties, 2> m_densityProperties;
+		std::array<ShaderProperties, 2> m_normalAndCurvatureProperties;
+		std::array<ShaderProperties, 2> m_forceDensityProperties;
+		ShaderProperties m_rungeKutta2Step1Properties;
+		ShaderProperties m_rungeKutta2Step2Properties;
+		ShaderProperties m_boundaryCollisionsProperties;
 
 		// Management:
 		bool m_isRunning;
@@ -44,22 +49,22 @@ namespace emberEngine
 
 		// Data:
 		int m_particleCount;
-		std::unique_ptr<StorageBuffer> m_pCellKeyBuffer;
-		std::unique_ptr<StorageBuffer> m_pStartIndexBuffer;
-		std::unique_ptr<StorageBuffer> m_pPositionBuffer;
-		std::unique_ptr<StorageBuffer> m_pVelocityBuffer;
-		std::unique_ptr<StorageBuffer> m_pDensityBuffer;
-		std::unique_ptr<StorageBuffer> m_pNormalBuffer;
-		std::unique_ptr<StorageBuffer> m_pCurvatureBuffer;
-		std::unique_ptr<StorageBuffer> m_pForceDensityBuffer;
+		Buffer m_cellKeyBuffer;
+		Buffer m_startIndexBuffer;
+		Buffer m_positionBuffer;
+		Buffer m_velocityBuffer;
+		Buffer m_densityBuffer;
+		Buffer m_normalBuffer;
+		Buffer m_curvatureBuffer;
+		Buffer m_forceDensityBuffer;
 
 		// Runge Kutta fields:
-		std::unique_ptr<StorageBuffer> m_pKp1Buffer;
-		std::unique_ptr<StorageBuffer> m_pKv1Buffer;
-		std::unique_ptr<StorageBuffer> m_pKp2Buffer;
-		std::unique_ptr<StorageBuffer> m_pKv2Buffer;
-		std::unique_ptr<StorageBuffer> m_pTempPositionBuffer;
-		std::unique_ptr<StorageBuffer> m_pTempVelocityBuffer;
+		Buffer m_kp1Buffer;
+		Buffer m_kv1Buffer;
+		Buffer m_kp2Buffer;
+		Buffer m_kv2Buffer;
+		Buffer m_tempPositionBuffer;
+		Buffer m_tempVelocityBuffer;
 
 		// Physics:
 		float m_effectRadius;
@@ -83,11 +88,11 @@ namespace emberEngine
 		int m_colorMode;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
-		std::unique_ptr<Mesh> m_pParticleMesh;
-		std::unique_ptr<Mesh> m_pRingMesh;
-		Material* m_pParticleMaterial;
-		std::unique_ptr<ShaderProperties> m_pShaderProperties;
-		std::unique_ptr<SphFluid2dGpuEditorWindow> editorWindow;
+		Mesh m_particleMesh;
+		Mesh m_ringMesh;
+		Material m_particleMaterial;
+		ShaderProperties m_shaderProperties;
+		std::unique_ptr<emberEditor::SphFluid2dGpuEditorWindow> editorWindow;
 
 	public: // Methods:
 		SphFluid2dGpu();
@@ -147,22 +152,17 @@ namespace emberEngine
 
 		// Overrides:
 		void Update() override;
-		const std::string ToString() const override;
 		
 	private:
 		// Physics:
 		void ResetFluid();
-		void ComputeDensity(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties, float gridRadius);
-		void ComputeNormalAndCurvature(StorageBuffer* positionBuffer, ShaderProperties* pShaderProperties, float gridRadius);
+		void ComputeDensity(Buffer& positionBuffer, ShaderProperties& shaderProperties, float gridRadius);
+		void ComputeNormalAndCurvature(Buffer& positionBuffer, ShaderProperties& shaderProperties, float gridRadius);
 		void ComputeCurvature();
-		void ComputeForceDensity(StorageBuffer* positionBuffer, StorageBuffer* velocityBuffer, ShaderProperties* pShaderProperties, float gridRadius);
+		void ComputeForceDensity(Buffer& positionBuffer, Buffer& velocityBuffer, ShaderProperties& shaderProperties, float gridRadius);
 
 		void ComputeRungeKutta2Step1();
 		void ComputeRungeKutta2Step2();
 		void ComputeBoundaryCollisions();
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_sphFluid2dGpu_h__

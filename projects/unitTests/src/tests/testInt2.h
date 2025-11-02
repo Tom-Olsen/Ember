@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testInt2_h__
-#define __INCLUDE_GUARD_testInt2_h__
+#pragma once
 
 
 
@@ -116,7 +115,3 @@ TEST(Int2, OperatorMultiplicationScalarRight)
 	Int2 mult = a * b;
 	EXPECT_NEAR2(mult, Int2(3, 6), epsilon);
 }
-
-
-
-#endif // __INCLUDE_GUARD_testInt2_h__

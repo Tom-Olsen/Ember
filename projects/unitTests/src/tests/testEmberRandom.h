@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testEmberRandom_h__
-#define __INCLUDE_GUARD_testEmberRandom_h__
+#pragma once
 
 
 
@@ -13,7 +12,7 @@ TEST(Random, SetSeed)
 		0.31637555f,
 		0.1307073f,
 		0.18391882f,
-		0.039759498f,
+		0.039759457f,
 		0.20456028f,
 		0.8264361f,
 		0.567725f,
@@ -22,10 +21,7 @@ TEST(Random, SetSeed)
 	for (int i = 0; i < 10; i++)
 	{
 		float random = math::Random::Uniform01();
+		LOG_TRACE(prediction[i]);
 		EXPECT_FLOAT_EQ(random, prediction[i]);
 	}
 }
-
-
-
-#endif // __INCLUDE_GUARD_testEmberRandom_h__

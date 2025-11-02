@@ -5,7 +5,7 @@
 
 
 
-namespace emberEngine
+namespace fluidDynamics
 {
 	const std::array<Int2, 9> SphFluid2dCpu::s_offsets = {
 	Int2(-1, -1), Int2(-1, 0), Int2(-1, 1),
@@ -43,10 +43,10 @@ namespace emberEngine
 		// Visuals:
 		SetInitialDistributionRadius(6.0f);
 		SetVisualRadius(0.25f);
-		m_pParticleMaterial = MaterialManager::GetMaterial("particleMaterial");
+		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial");
 
 		// Editor Window:
-		editorWindow = std::make_unique<SphFluid2dCpuEditorWindow>(this);
+		editorWindow = std::make_unique<emberEditor::SphFluid2dCpuEditorWindow>(this);
 	}
 	SphFluid2dCpu::~SphFluid2dCpu()
 	{
@@ -327,8 +327,7 @@ namespace emberEngine
 		attractorRadius = math::Max(0.01f, attractorRadius);
 		if (m_attractorRadius != attractorRadius)
 		{
-			std::unique_ptr<Mesh> pNewRingMesh = std::unique_ptr<Mesh>(MeshGenerator::ArcFlatUv(attractorRadius - 0.1f, attractorRadius + 0.1f, 360.0f, 100, "attractorRing"));
-			std::swap(m_pRingMesh, pNewRingMesh);
+			m_ringMesh = MeshGenerator::ArcFlatUv(attractorRadius - 0.1f, attractorRadius + 0.1f, 360.0f, 100, "attractorRing");
 			m_attractorRadius = attractorRadius;
 		}
 	}
@@ -355,8 +354,7 @@ namespace emberEngine
 		if (m_visualRadius != visualRadius)
 		{
 			m_visualRadius = visualRadius;
-			std::unique_ptr<Mesh> pNewParticleMesh = std::unique_ptr<Mesh>(MeshGenerator::UnitQuad()->Scale(m_visualRadius));
-			std::swap(m_pParticleMesh, pNewParticleMesh);
+			m_particleMesh = MeshGenerator::UnitQuad().Scale(m_visualRadius);
 		}
 	}
 
@@ -450,7 +448,7 @@ namespace emberEngine
 	void SphFluid2dCpu::Update()
 	{
 		// Keyboard interactions:
-		if (EventSystem::KeyDown(SDLK_SPACE))
+		if (EventSystem::KeyDown(Input::Key::Space))
 		{
 			m_isRunning = !m_isRunning;
 			if (m_isRunning)
@@ -458,7 +456,7 @@ namespace emberEngine
 			else
 				LOG_TRACE("Simulation stopped.");
 		}
-		if (EventSystem::KeyDown(SDLK_DELETE))
+		if (EventSystem::KeyDown(Input::Key::Delete))
 		{
 			m_isRunning = false;
 			Reset();
@@ -469,7 +467,7 @@ namespace emberEngine
 		float mouseScroll = EventSystem::MouseScrollY();
 		if (mouseScroll != 0)
 		{
-			if (EventSystem::KeyDownOrHeld(SDLK_LSHIFT))
+			if (EventSystem::KeyDown(Input::Key::ShiftLeft))
 			{
 				float zoomFactor = 1.0f + 0.1f * mouseScroll;
 				SetAttractorStrength(zoomFactor * m_attractorStrength);
@@ -482,18 +480,23 @@ namespace emberEngine
 		}
 
 		// Mouse left and right click:
-		if (EventSystem::MouseHeld(EventSystem::MouseButton::left) ^ EventSystem::MouseHeld(EventSystem::MouseButton::right)) // exlusive or
+		if (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)) // exlusive or.
 		{
-			Ray ray = Ray::CameraRay(EventSystem::MousePos01());
+			Camera* pCamera = Scene::GetActiveScene()->GetActiveCamera();
+			Transform* pCameraTransform = pCamera->GetTransform();
+			Float3 cameraPos = pCameraTransform->GetPosition();
+			Float3 cameraViewDirection = pCameraTransform->GetDown();
+
+			Ray ray(cameraPos, cameraViewDirection);
 			std::optional<Float3> hit = m_fluidBounds.IntersectRay(ray);
 			if (hit.has_value())
 			{
 				m_attractorPoint = Float2(hit.value());
-				ShaderProperties* shaderProperties = Graphics::DrawMesh(m_pRingMesh.get(), MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
-				shaderProperties->SetValue("SurfaceProperties", "diffuseColor", Float4::red);
-				if (EventSystem::MouseHeld(EventSystem::MouseButton::left))
+				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
+				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
+				if (EventSystem::MouseHeld(Input::MouseButton::Left))
 					m_attractorState = 1;
-				if (EventSystem::MouseHeld(EventSystem::MouseButton::right))
+				if (EventSystem::MouseHeld(Input::MouseButton::Right))
 					m_attractorState = -1;
 			}
 			else
@@ -505,11 +508,11 @@ namespace emberEngine
 
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
-		Graphics::DrawBounds(localToWorld, m_fluidBounds, 0.01f, Float4::white, false, false);
+		Renderer::DrawBounds(localToWorld, m_fluidBounds, 0.01f, Float4::white, false, false);
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			Float4x4 matrix = localToWorld * Float4x4::Translate(Float3(m_positions[i]));
-			ShaderProperties* pShaderProperties = Graphics::DrawMesh(m_pParticleMesh.get(), m_pParticleMaterial, matrix, false, false);
+			ShaderProperties shaderProperties = Renderer::DrawMesh(m_particleMesh, m_particleMaterial, matrix, false, false);
 
 			// Color by density:
 			{
@@ -519,14 +522,14 @@ namespace emberEngine
 				Float4 colorA = t0 * Float4::white + (1.0f - t0) * Float4::blue;
 				Float4 colorB = t1 * Float4::red + (1.0f - t1) * Float4::white;
 				Float4 color = (t < 1.0f) ? colorA : colorB;
-				pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
+				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 			}
 
 			//// Color by normal length:
 			//{
 			//	float length = m_normals[i].Length();
 			//	Float4 color = Float4::white * (1.0f - length) + Float4::red * length;
-			//	pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
+			//	shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 			//}
 
 			//// Color by curvature length:
@@ -537,13 +540,9 @@ namespace emberEngine
 			//	Float4 colorA = t0 * Float4::white + (1.0f - t0) * Float4::blue;
 			//	Float4 colorB = t1 * Float4::red + (1.0f - t1) * Float4::white;
 			//	Float4 color = (t < 1.0f) ? colorA : colorB;
-			//	pShaderProperties->SetValue("SurfaceProperties", "diffuseColor", color);
+			//	shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 			//}
 		}
-	}
-	const std::string SphFluid2dCpu::ToString() const
-	{
-		return "SphFluid2dCpu";
 	}
 
 

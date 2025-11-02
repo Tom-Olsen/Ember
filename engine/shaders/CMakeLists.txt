@@ -73,8 +73,8 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
 endforeach()
 
 # Shader compile target:
-add_custom_target(ShaderCompiler ALL DEPENDS ${SPIRV_OUTPUTS})
+add_custom_target(EmberShaderCompiler ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # Shader sources added as dummy targets to make them show up in the IDE:
-add_custom_target(Shaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES} ${CPP_HLSL_HEADERS})
+add_custom_target(EmberShaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES} ${CPP_HLSL_HEADERS})
 # ---------------------------------------------------

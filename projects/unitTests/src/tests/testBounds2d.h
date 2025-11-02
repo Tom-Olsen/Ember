@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testBounds2d_h__
-#define __INCLUDE_GUARD_testBounds2d_h__
+#pragma once
 
 
 
@@ -85,7 +84,3 @@ TEST(Bounds2d, SetMinMax)
 	EXPECT_FLOAT2_EQ(size, Float2(1.0f, 2.0f));
 	EXPECT_FLOAT2_EQ(center, Float2(0.5f, 1.0f));
 }
-
-
-
-#endif // __INCLUDE_GUARD_testBounds2d_h__

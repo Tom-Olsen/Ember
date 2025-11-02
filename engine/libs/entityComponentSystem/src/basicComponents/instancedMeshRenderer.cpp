@@ -12,8 +12,8 @@ namespace emberEngine
 		m_receiveShadows = true;
 
 		m_pMesh = nullptr;
-		m_pMaterial = MaterialManager::TryGetMaterial("errorMaterial");
-		m_shaderProperties = ShaderProperties(*m_pMaterial);
+		m_material = MaterialManager::GetMaterial("errorMaterial");
+		m_shaderProperties = ShaderProperties(m_material);
 	}
 	InstancedMeshRenderer::~InstancedMeshRenderer()
 	{
@@ -40,12 +40,12 @@ namespace emberEngine
 	{
 		m_pMesh = &mesh;
 	}
-	void InstancedMeshRenderer::SetMaterial(Material& material)
+	void InstancedMeshRenderer::SetMaterial(const Material& material)
 	{
-		if (m_pMaterial->GetName() != material.GetName())
+		if (m_material.GetName() != material.GetName())
 		{
-			m_pMaterial = &material;
-			m_shaderProperties = ShaderProperties(material);
+			m_material = material;
+			m_shaderProperties = ShaderProperties{ material };
 		}
 	}
 	void InstancedMeshRenderer::SetInstanceBuffer(Buffer& instanceBuffer)
@@ -74,7 +74,7 @@ namespace emberEngine
 	}
 	Material& InstancedMeshRenderer::GetMaterial()
 	{
-		return *m_pMaterial;
+		return m_material;
 	}
 	Buffer& InstancedMeshRenderer::GetInstanceBuffer()
 	{
@@ -92,6 +92,6 @@ namespace emberEngine
 	{
 		uint32_t instanceCount = math::Min(m_instanceCount, m_pInstanceBuffer->GetCount());
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
-		Renderer::DrawInstanced(instanceCount, *m_pInstanceBuffer, *m_pMesh, *m_pMaterial, m_shaderProperties, localToWorldMatrix, m_receiveShadows, m_castShadows);
+		Renderer::DrawInstanced(instanceCount, *m_pInstanceBuffer, *m_pMesh, m_material, m_shaderProperties, localToWorldMatrix, m_receiveShadows, m_castShadows);
 	}
 }

@@ -4,7 +4,7 @@
 
 
 
-namespace emberEngine
+namespace fluidDynamics
 {
 	// Constructor/Destructor:
 	HashGrid2d::HashGrid2d(int particleCount) : m_particleCount(particleCount)

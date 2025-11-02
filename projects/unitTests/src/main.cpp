@@ -36,30 +36,30 @@ constexpr float epsilon = 1e-6f;
 
 // math testing:
 #include "emberMath.h"
-//#include "testBounds.h"
-//#include "testBounds2d.h"
-//#include "testEmberRandom.h"
-//#include "testFloat2.h"
-//#include "testFloat2x2.h"
-//#include "testFloat2x3.h"
-//#include "testFloat3.h"
-//#include "testFloat3x2.h"
-//#include "testFloat3x3.h"
-//#include "testFloat4.h"
-//#include "testFloat4x4.h"
-//#include "testGeometry3d.h"
-//#include "testInt2.h"
-//#include "testInt3.h"
-//#include "testMathf.h"
-//#include "testRay.h"
-//#include "testUint3.h"
-#include "testGpuSort.h"
+#include "testBounds.h"
+#include "testBounds2d.h"
+#include "testEmberRandom.h"
+#include "testFloat2.h"
+#include "testFloat2x2.h"
+#include "testFloat2x3.h"
+#include "testFloat3.h"
+#include "testFloat3x2.h"
+#include "testFloat3x3.h"
+#include "testFloat4.h"
+#include "testFloat4x4.h"
+#include "testGeometry3d.h"
+#include "testInt2.h"
+#include "testInt3.h"
+#include "testMathf.h"
+#include "testRay.h"
+#include "testUint3.h"
+//#include "testGpuSort.h"
 
 
 
 int main(int argc, char** argv)
 {
-	emberEngine::Logger::Init();
+	emberLogger::Logger::Init();
 	math::Random::Init();
 	testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();

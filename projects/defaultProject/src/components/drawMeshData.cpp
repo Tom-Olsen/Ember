@@ -11,7 +11,6 @@ namespace emberEngine
 		m_pSphereMesh = MeshManager::TryGetMesh("cubeSphere");
 		m_pArrowMesh = MeshManager::TryGetMesh("arrowFlat");
 		m_pMesh = nullptr;
-		m_pMaterial = nullptr;
 	}
 	DrawMeshData::~DrawMeshData()
 	{
@@ -26,7 +25,7 @@ namespace emberEngine
 	{
 		m_pSphereMesh = MeshManager::TryGetMesh("cubeSphere");
 		m_pArrowMesh = MeshManager::TryGetMesh("arrowFlat");
-		m_pMaterial = MaterialManager::TryGetMaterial("defaultMaterial");
+		m_material = MaterialManager::GetMaterial("defaultMaterial");
 		MeshRenderer* pMeshRenderer = GetComponent<MeshRenderer>();
 		m_pMesh = &pMeshRenderer->GetMesh();
 	}
@@ -52,13 +51,13 @@ namespace emberEngine
 			Float3 worldTangent = Float3(normalMatrix * Float4(localTangent, 0.0f));
 
 			// Draw calls:
-			m_shaderProperties[0] = Renderer::DrawMesh(*m_pSphereMesh, *m_pMaterial, Float3(worldPosition), Float3x3::identity, 0.1f, receiveShadows, castShadows);
+			m_shaderProperties[0] = Renderer::DrawMesh(*m_pSphereMesh, m_material, Float3(worldPosition), Float3x3::identity, 0.1f, receiveShadows, castShadows);
 			m_shaderProperties[0].SetValue("SurfaceProperties", "diffuseColor", Float4(0.66f, 0.33f, 0.0f, 1.0f));
 
-			m_shaderProperties[1] = Renderer::DrawMesh(*m_pArrowMesh, *m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f, receiveShadows, castShadows);
+			m_shaderProperties[1] = Renderer::DrawMesh(*m_pArrowMesh, m_material, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldNormal), 0.1f, receiveShadows, castShadows);
 			m_shaderProperties[1].SetValue("SurfaceProperties", "diffuseColor", Float4(0.0f, 0.0f, 1.0f, 1.0f));
 
-			m_shaderProperties[2] = Renderer::DrawMesh(*m_pArrowMesh, *m_pMaterial, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f, receiveShadows, castShadows);
+			m_shaderProperties[2] = Renderer::DrawMesh(*m_pArrowMesh, m_material, Float3(worldPosition), Float3x3::RotateFromTo(Float3::forward, worldTangent), 0.1f, receiveShadows, castShadows);
 			m_shaderProperties[2].SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
 		}
 	}

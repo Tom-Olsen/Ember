@@ -150,6 +150,23 @@ namespace sdlWindowBackend
             case SDLK_LGUI:         return emberCommon::Input::Key::MetaLeft;
             case SDLK_RGUI:         return emberCommon::Input::Key::MetaRight;
 
+            // Editing / navigation:
+            case SDLK_INSERT:       return emberCommon::Input::Key::Insert;
+            case SDLK_DELETE:       return emberCommon::Input::Key::Delete;
+            case SDLK_HOME:         return emberCommon::Input::Key::Home;
+            case SDLK_END:          return emberCommon::Input::Key::End;
+            case SDLK_PAGEUP:       return emberCommon::Input::Key::PageUp;
+            case SDLK_PAGEDOWN:     return emberCommon::Input::Key::PageDown;
+
+            // Lock keys:
+            case SDLK_CAPSLOCK:     return emberCommon::Input::Key::CapsLock;
+            case SDLK_NUMLOCKCLEAR: return emberCommon::Input::Key::NumLock;
+            case SDLK_SCROLLLOCK:   return emberCommon::Input::Key::ScrollLock;
+
+            // Misc:
+            case SDLK_PRINTSCREEN:  return emberCommon::Input::Key::PrintScreen;
+            case SDLK_PAUSE:        return emberCommon::Input::Key::Pause;
+
             default: return emberCommon::Input::Key::Unknown;
         }
     }

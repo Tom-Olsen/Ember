@@ -1,64 +1,54 @@
 #include "sphBitonicSort3d.h"
-#include "accessMasks.h"
-#include "compute.h"
-#include "computeShader.h"
-#include "logger.h"
-#include "shaderProperties.h"
-#include "storageBuffer.h"
 
 
 
-namespace emberEngine
+namespace fluidDynamics
 {
 	// Initialization and cleanup:
 	SphBitonicSort3d::SphBitonicSort3d()
 	{
 		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
-		m_pCellKeys = std::make_unique<ComputeShader>("cellKeys3d", directoryPath + "/cellKeys3d.comp.spv");
-		m_pStartIndices = std::make_unique<ComputeShader>("startIndices3d", directoryPath + "/startIndices3d.comp.spv");
-		m_pLocalBitonicSort = std::make_unique<ComputeShader>("sphLocalBitonicSort3d", directoryPath + "/sphLocalBitonicSort3d.comp.spv");
-		m_pBigFlip = std::make_unique<ComputeShader>("sphBigFlip3d", directoryPath + "/sphBigFlip3d.comp.spv");
-		m_pBigDisperse = std::make_unique<ComputeShader>("sphBigDisperse3d", directoryPath + "/sphBigDisperse3d.comp.spv");
-		m_pLocalDisperse = std::make_unique<ComputeShader>("sphLocalDisperse3d", directoryPath + "/sphLocalDisperse3d.comp.spv");
-		m_pCellKeyProperties = std::make_unique<ShaderProperties>((Shader*)m_pCellKeys.get());
-		m_pStartIndicesProperties = std::make_unique<ShaderProperties>((Shader*)m_pStartIndices.get());
+		m_cellKeys = ComputeShader("cellKeys3d", directoryPath + "/cellKeys3d.comp.spv");
+		m_startIndices = ComputeShader("startIndices3d", directoryPath + "/startIndices3d.comp.spv");
+		m_localBitonicSort = ComputeShader("sphLocalBitonicSort3d", directoryPath + "/sphLocalBitonicSort3d.comp.spv");
+		m_bigFlip = ComputeShader("sphBigFlip3d", directoryPath + "/sphBigFlip3d.comp.spv");
+		m_bigDisperse = ComputeShader("sphBigDisperse3d", directoryPath + "/sphBigDisperse3d.comp.spv");
+		m_localDisperse = ComputeShader("sphLocalDisperse3d", directoryPath + "/sphLocalDisperse3d.comp.spv");
+		m_cellKeyProperties = ShaderProperties(m_cellKeys);
+		m_startIndicesProperties = ShaderProperties(m_startIndices);
 	}
 	SphBitonicSort3d::~SphBitonicSort3d()
 	{
-		m_pLocalBitonicSort.reset();
-		m_pBigFlip.reset();
-		m_pBigDisperse.reset();
-		m_pLocalDisperse.reset();
+
 	}
 
 
 
 	// Sorting:
-	void SphBitonicSort3d::ComputeCellKeys(StorageBuffer* pCellKeyBuffer, StorageBuffer* pPositionBuffer, float gridRadius)
+	void SphBitonicSort3d::ComputeCellKeys(Buffer& cellKeyBuffer, Buffer& positionBuffer, float gridRadius)
 	{
-		uint32_t particleCount = pCellKeyBuffer->GetCount();
+		uint32_t particleCount = cellKeyBuffer.GetCount();
 		Uint3 threadCount(particleCount, 1, 1);
-		m_pCellKeyProperties->SetStorageBuffer("cellKeyBuffer", pCellKeyBuffer);
-		m_pCellKeyProperties->SetStorageBuffer("positionBuffer", pPositionBuffer);
-		m_pCellKeyProperties->SetValue("Values", "gridRadius", gridRadius);
-		m_pCellKeyProperties->SetValue("Values", "particleCount", (int)particleCount);
-		compute::PreRender::RecordComputeShader(m_pCellKeys.get(), m_pCellKeyProperties.get(), threadCount);
-		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		m_cellKeyProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
+		m_cellKeyProperties.SetBuffer("positionBuffer", positionBuffer);
+		m_cellKeyProperties.SetValue("Values", "gridRadius", gridRadius);
+		m_cellKeyProperties.SetValue("Values", "particleCount", (int)particleCount);
+		Compute::PreRender::RecordComputeShader(m_cellKeys, m_cellKeyProperties, threadCount);
+		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
 	}
-	void SphBitonicSort3d::ComputeStartIndices(StorageBuffer* pCellKeyBuffer, StorageBuffer* pStartIndexBuffer)
+	void SphBitonicSort3d::ComputeStartIndices(Buffer& cellKeyBuffer, Buffer& startIndexBuffer)
 	{
-		int particleCount = pCellKeyBuffer->GetCount();
+		int particleCount = cellKeyBuffer.GetCount();
 		Uint3 threadCount(particleCount, 1, 1);
-		m_pStartIndicesProperties->SetStorageBuffer("startIndexBuffer", pStartIndexBuffer);
-		m_pStartIndicesProperties->SetStorageBuffer("cellKeyBuffer", pCellKeyBuffer);
-		compute::PreRender::RecordComputeShader(m_pStartIndices.get(), m_pStartIndicesProperties.get(), threadCount);
-		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		m_startIndicesProperties.SetBuffer("startIndexBuffer", startIndexBuffer);
+		m_startIndicesProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
+		Compute::PreRender::RecordComputeShader(m_startIndices, m_startIndicesProperties, threadCount);
+		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
 	}
-	void SphBitonicSort3d::Sort(StorageBuffer* pCellKeyBuffer, StorageBuffer* pPositionBuffer, StorageBuffer* pVelocityBuffer)
+	void SphBitonicSort3d::Sort(Buffer& cellKeyBuffer, Buffer& positionBuffer, Buffer& velocityBuffer)
 	{
-		ShaderProperties* pShaderProperties;
-		int blockSize = m_pLocalBitonicSort->GetBlockSize().x;
-		int bufferSize = (int)pPositionBuffer->GetCount();			// total number of particles.
+		int blockSize = m_localBitonicSort.GetBlockSize().x;
+		int bufferSize = (int)positionBuffer.GetCount();			// total number of particles.
 		int height = math::NextPowerOfTwo((uint32_t)bufferSize);	// height of biggest flip.
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
 		Uint3 threadCountBig = Uint3(height / 2, 1, 1);				// needed to make sure that big flip/disperse hit all swap indices.
@@ -66,43 +56,43 @@ namespace emberEngine
 		threadCountBig = Uint3::Max(threadCountBig, Uint3::one);
 
 		// Local bitonic sort for each block:
-		pShaderProperties = compute::PreRender::RecordComputeShader(m_pLocalBitonicSort.get(), threadCountLocal);
-		pShaderProperties->SetStorageBuffer("cellKeyBuffer", pCellKeyBuffer);
-		pShaderProperties->SetStorageBuffer("positionBuffer", pPositionBuffer);
-		pShaderProperties->SetStorageBuffer("velocityBuffer", pVelocityBuffer);
-		pShaderProperties->SetValue("Values", "bufferSize", bufferSize);
-		compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+		ShaderProperties shaderProperties = Compute::PreRender::RecordComputeShader(m_localBitonicSort, threadCountLocal);
+		shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
+		shaderProperties.SetBuffer("positionBuffer", positionBuffer);
+		shaderProperties.SetBuffer("velocityBuffer", velocityBuffer);
+		shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
 
 		for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
 		{
 			// Big flip:
-			pShaderProperties = compute::PreRender::RecordComputeShader(m_pBigFlip.get(), threadCountBig);
-			pShaderProperties->SetStorageBuffer("cellKeyBuffer", pCellKeyBuffer);
-			pShaderProperties->SetStorageBuffer("positionBuffer", pPositionBuffer);
-			pShaderProperties->SetStorageBuffer("velocityBuffer", pVelocityBuffer);
-			pShaderProperties->SetValue("Values", "flipHeight", flipHeight);
-			pShaderProperties->SetValue("Values", "bufferSize", bufferSize);
-			compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+			shaderProperties = Compute::PreRender::RecordComputeShader(m_bigFlip, threadCountBig);
+			shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
+			shaderProperties.SetBuffer("positionBuffer", positionBuffer);
+			shaderProperties.SetBuffer("velocityBuffer", velocityBuffer);
+			shaderProperties.SetValue("Values", "flipHeight", flipHeight);
+			shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+			Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
 
 			for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
 			{
 				// Big disperse:
-				pShaderProperties = compute::PreRender::RecordComputeShader(m_pBigDisperse.get(), threadCountBig);
-				pShaderProperties->SetStorageBuffer("cellKeyBuffer", pCellKeyBuffer);
-				pShaderProperties->SetStorageBuffer("positionBuffer", pPositionBuffer);
-				pShaderProperties->SetStorageBuffer("velocityBuffer", pVelocityBuffer);
-				pShaderProperties->SetValue("Values", "disperseHeight", disperseHeight);
-				pShaderProperties->SetValue("Values", "bufferSize", bufferSize);
-				compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+				shaderProperties = Compute::PreRender::RecordComputeShader(m_bigDisperse, threadCountBig);
+				shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
+				shaderProperties.SetBuffer("positionBuffer", positionBuffer);
+				shaderProperties.SetBuffer("velocityBuffer", velocityBuffer);
+				shaderProperties.SetValue("Values", "disperseHeight", disperseHeight);
+				shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+				Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
 			}
 
 			// Local disperse:
-			pShaderProperties = compute::PreRender::RecordComputeShader(m_pLocalDisperse.get(), threadCountLocal);
-			pShaderProperties->SetStorageBuffer("cellKeyBuffer", pCellKeyBuffer);
-			pShaderProperties->SetStorageBuffer("positionBuffer", pPositionBuffer);
-			pShaderProperties->SetStorageBuffer("velocityBuffer", pVelocityBuffer);
-			pShaderProperties->SetValue("Values", "bufferSize", bufferSize);
-			compute::PreRender::RecordBarrier(AccessMask::ComputeShader::shaderWrite, AccessMask::ComputeShader::shaderRead);
+			shaderProperties = Compute::PreRender::RecordComputeShader(m_localDisperse, threadCountLocal);
+			shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
+			shaderProperties.SetBuffer("positionBuffer", positionBuffer);
+			shaderProperties.SetBuffer("velocityBuffer", velocityBuffer);
+			shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+			Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
 		}
 	}
 }

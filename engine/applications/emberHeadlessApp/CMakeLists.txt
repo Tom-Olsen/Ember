@@ -1,11 +1,11 @@
-# Ember/applications/emberGameDebugApp/CMakeLists.txt
+# Ember/applications/emberHeadlessApp/CMakeLists.txt
 
 
 
 # ------------------- Project Setup ------------------
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.30)
-project(EmberGameDebugApp)
+project(EmberHeadlessApp)
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
@@ -32,24 +32,19 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB SOURCE_FILES "src/*.*")
+file(GLOB SOURCE_FILES "${ENGINE_APPLICATIONS_DIR}/src/*.*")
 source_group("Source Files" FILES ${SOURCE_FILES})
-
-file(GLOB DEBUG_WINDOWS_FILES "src/debugWindows/*.*")
-source_group("Debug Windows" FILES ${DEBUG_WINDOWS_FILES})
 # ---------------------------------------------------
  
  
  
 # ----------------- Create Library ------------------
 add_library(${PROJECT_NAME} STATIC
-    ${SOURCE_FILES}
-    ${DEBUG_WINDOWS_FILES})
+    ${SOURCE_FILES})
  
 # Source subdirectories:
-target_include_directories(${PROJECT_NAME}
-    PUBLIC ${ENGINE_APPLICATIONS_DIR}/src
-    PUBLIC ${ENGINE_APPLICATIONS_DIR}/src/debugWindows)
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${ENGINE_APPLICATIONS_DIR}/src)
 # ---------------------------------------------------
  
  
@@ -83,15 +78,15 @@ if (NOT TARGET VulkanRendererBackend)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC VulkanRendererBackend)
 
-# SDL Window:
-if (NOT TARGET SdlWindowBackend)
-    add_subdirectory("${ENGINE_BACKENDS_DIR}/sdlWindow" SdlWindowBackend)
+# Null Window:
+if (NOT TARGET NullWindowBackend)
+    add_subdirectory("${ENGINE_BACKENDS_DIR}/nullWindow" NullWindowBackend)
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC SdlWindowBackend)
+target_link_libraries(${PROJECT_NAME} PUBLIC NullWindowBackend)
 
-# ImGui SDL Vulkan:
-if (NOT TARGET ImGuiSdlVulkanBackend)
-    add_subdirectory("${ENGINE_BACKENDS_DIR}/imGuiSdlVulkan" ImGuiSdlVulkanBackend)
+# Null Gui:
+if (NOT TARGET NullGuiBackend)
+    add_subdirectory("${ENGINE_BACKENDS_DIR}/nullGui" NullGuiBackend)
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC ImGuiSdlVulkanBackend)
+target_link_libraries(${PROJECT_NAME} PUBLIC NullGuiBackend)
 # ---------------------------------------------------

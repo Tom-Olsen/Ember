@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testBounds_h__
-#define __INCLUDE_GUARD_testBounds_h__
+#pragma once
 
 
 
@@ -85,7 +84,3 @@ TEST(Bounds, SetMinMax)
 	EXPECT_FLOAT3_EQ(size, Float3(1.0f, 2.0f, 4.0f));
 	EXPECT_FLOAT3_EQ(center, Float3(0.5f, 1.0f, 2.0f));
 }
-
-
-
-#endif // __INCLUDE_GUARD_testBounds_h__

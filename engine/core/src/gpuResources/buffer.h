@@ -27,6 +27,7 @@ namespace emberEngine
 
 	public: // Methods:
 		// Constructor/Destructor:
+		Buffer();
 		Buffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage);
 		~Buffer();
 
@@ -43,6 +44,7 @@ namespace emberEngine
 		uint64_t GetSize() const;
 		uint32_t GetCount() const;
 		uint32_t GetElementSize() const;
+		bool IsValid() const;
 
 		// Upload/Download:
 		void Upload(const void* pSrc, uint64_t size);

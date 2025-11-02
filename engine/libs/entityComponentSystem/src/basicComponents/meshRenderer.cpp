@@ -11,8 +11,8 @@ namespace emberEngine
 		m_receiveShadows = true;
 
 		m_pMesh = nullptr;
-		m_pMaterial = MaterialManager::TryGetMaterial("errorMaterial");
-		m_shaderProperties = ShaderProperties(*m_pMaterial);
+		m_material = MaterialManager::GetMaterial("errorMaterial");
+		m_shaderProperties = ShaderProperties(m_material);
 	}
 	MeshRenderer::~MeshRenderer()
 	{
@@ -35,12 +35,12 @@ namespace emberEngine
 	{
 		m_pMesh = &mesh;
 	}
-	void MeshRenderer::SetMaterial(Material& material)
+	void MeshRenderer::SetMaterial(const Material& material)
 	{
-		if (m_pMaterial->GetName() != material.GetName())
+		if (m_material.GetName() != material.GetName())
 		{
-			m_pMaterial = &material;
-			m_shaderProperties = ShaderProperties(material);
+			m_material = material;
+			m_shaderProperties = ShaderProperties{ material };
 		}
 	}
 
@@ -61,7 +61,7 @@ namespace emberEngine
 	}
 	Material& MeshRenderer::GetMaterial()
 	{
-		return *m_pMaterial;
+		return m_material;
 	}
 	ShaderProperties& MeshRenderer::GetShaderProperties()
 	{
@@ -74,6 +74,6 @@ namespace emberEngine
 	void MeshRenderer::Update()
 	{
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
-		Renderer::DrawMesh(*m_pMesh, *m_pMaterial, m_shaderProperties, localToWorldMatrix, m_receiveShadows, m_castShadows);
+		Renderer::DrawMesh(*m_pMesh, m_material, m_shaderProperties, localToWorldMatrix, m_receiveShadows, m_castShadows);
 	}
 }

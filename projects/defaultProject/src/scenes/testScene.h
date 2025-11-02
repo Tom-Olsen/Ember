@@ -16,8 +16,8 @@ inline Scene* TestScene()
 	// The two test materials are spcifically constructed to replicate this error.
 	// Activate validation layers in VulkanRenderer/vulkanMacros.h to see the error.
 
-	Material& materialA = MaterialManager::GetMaterial("testAMaterial");
-	Material& materialB = MaterialManager::GetMaterial("testBMaterial");
+	Material materialA = MaterialManager::GetMaterial("testAMaterial");
+	Material materialB = MaterialManager::GetMaterial("testBMaterial");
 
 	//materialA->PrintBindings();
 	//materialA->PrintUniformBuffers();

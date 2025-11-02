@@ -72,7 +72,24 @@ namespace emberCommon
             ShiftLeft, ShiftRight,
             CtrlLeft, CtrlRight,
             AltLeft, AltRight,
-            MetaLeft, MetaRight // windows key.
+            MetaLeft, MetaRight, // windows key.
+
+            // Editing/Navigation keys:
+            Insert,
+            Delete,
+            Home,
+            End,
+            PageUp,
+            PageDown,
+
+            // Lock keys:
+            CapsLock,
+            NumLock,
+            ScrollLock,
+
+            // Misc:
+            PrintScreen,
+            Pause
         };
     };
 }

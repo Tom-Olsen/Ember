@@ -1,4 +1,5 @@
 #pragma once
+#include "emberCoreExport.h"
 #include "emberMath.h"
 #include <memory>
 #include <filesystem>
@@ -22,7 +23,7 @@ namespace emberEngine
 
 
 
-	class ComputeShader
+	class EMBER_CORE_API ComputeShader
 	{
 		// Friends:
 		friend class Compute;
@@ -34,6 +35,7 @@ namespace emberEngine
 
 	public: // Methods:
 		// Constructor/Destructor:
+		ComputeShader();
 		ComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
 		~ComputeShader();
 

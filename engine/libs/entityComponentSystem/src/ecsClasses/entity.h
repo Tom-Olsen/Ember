@@ -36,9 +36,9 @@ namespace emberEngine
 		static Entity Create(const std::string& name);	// Registers the entity in the currently active scene.
 		void Destroy();									// Properly disposed entity from ECS registry.
 
-		// Non-copyable:
-		Entity(const Entity&) = delete;
-		Entity& operator=(const Entity&) = delete;
+		// Copyable:
+		Entity(const Entity&) = default;
+		Entity& operator=(const Entity&) = default;
 
 		// Movable:
 		Entity(Entity&& other) noexcept = default;

@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testFloat3_h__
-#define __INCLUDE_GUARD_testFloat3_h__
+#pragma once
 
 
 
@@ -281,7 +280,3 @@ TEST(Float3, OperatorDivisionScalarRight)
 	Float3 div = a / b;
 	EXPECT_NEAR3(div, Float3(1.0f / 3.0f, 2.0f / 3.0f, 3.0f / 3.0f), epsilon);
 }
-
-
-
-#endif // __INCLUDE_GUARD_testFloat3_h__

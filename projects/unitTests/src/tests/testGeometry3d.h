@@ -1,11 +1,10 @@
-#ifndef __INCLUDE_GUARD_testGeometry3d_h__
-#define __INCLUDE_GUARD_testGeometry3d_h__
+#pragma once
 
 
 
 TEST(geometry3d, GetOrhtogonalVector)
 {
-	Float3 direction = math::Random::UniformDirection();
+	Float3 direction = math::Random::UniformDirection3();
 	Float3 orthogonal = geometry3d::GetOrhtogonalVector(direction);
 	float dot = Float3::Dot(direction, orthogonal);
 	EXPECT_FLOAT_EQ(dot, 0.0f);
@@ -129,5 +128,3 @@ TEST(geometry3d, LinePlaneIntersection)
 		}
 	EXPECT_TRUE(allGood);
 }
-
-#endif // __INCLUDE_GUARD_testGeometry3d_h__

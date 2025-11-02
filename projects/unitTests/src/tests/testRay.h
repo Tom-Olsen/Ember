@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testRay_h__
-#define __INCLUDE_GUARD_testRay_h__
+#pragma once
 
 
 
@@ -12,7 +11,3 @@ TEST(Ray, GetPoint)
 	Float3 point = origin + distance * direction.Normalize();
 	EXPECT_NEAR3(ray.GetPoint(distance), point, epsilon);
 }
-
-
-
-#endif // __INCLUDE_GUARD_testRay_h__

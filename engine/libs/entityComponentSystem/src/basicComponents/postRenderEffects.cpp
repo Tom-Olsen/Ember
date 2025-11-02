@@ -20,6 +20,6 @@ namespace emberEngine
 	void PostRenderEffects::LateUpdate()
 	{
 		for (ComputeShader* pComputeShader : effects)
-			ShaderProperties shaderProperties = Compute::GetPostRender()->RecordComputeShader(*pComputeShader);
+			ShaderProperties shaderProperties = Compute::PostRender::RecordComputeShader(*pComputeShader);
 	}
 }

@@ -69,7 +69,7 @@ Implemented features:
     -immediate compue.
 -Fully automated descriptorSet system for shaderProperties (see spirvReflect.h/cpp) which handles descriptorSets for Materials and ComputeShaders.
 -ECS: static library in the Embere/engine/libs folder which gets linked to the applications. The core has no access to the ECS.
--EventSystem that catches SDL events and makes them visible to Gui+Editor+GameObjects/Components.
+-EventSystem that catches SDL events and makes them visible to Gui+Editor+Entities/Components.
 -CameraController that is identical to unities editor pCamera.
 -Custom math library, see math.h/cpp. (will be refactored to be a glm wrapper soon).
 -Dear ImGui integration with docking feature.
@@ -77,16 +77,14 @@ Implemented features:
 
 
 Ember::TODO now!
-- make naming of engineCore vs core concistend across cmake projects and folder naming.
-- move meshes and textures into a resource folder.
 - performance worse than before architecture restructure.
-- make other projects compile and run again.
+- make other projects compile and run again. => currently working on this! unitTest works, fluidDynamics is on its way. headless mode needs testing for proper unitTests.
 - add?:
 # ---------------------- Macros ---------------------
 target_compile_definitions(${PROJECT_NAME} PRIVATE <ProjectName>_PROJECT)
 # ---------------------------------------------------
   to all cmake projects.
-- Add proper const to all methods that return a pointer:
+- Add proper const to all methods that return a member pointer:
   const Type* const Foo()...:
   fist const: interpreted as (const Type*) meaning the value cant be changed.
   second const: the adress inside the pointer cant be chaged.
@@ -102,7 +100,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE <ProjectName>_PROJECT)
     4. Move constructor			    Foo(Foo&& other);
     5. Move assigment operator		Foo& operator=(Foo&& other);
 - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
-- sort gameObjects first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
+- sort entities first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 - validation layer errors when two shaders have the same binding number (binding missmatch error)
 - SceneView gui 
 - add SetData(...) to emberBackendInterface::IBuffer interface and appropiate overloads to vertex/index/storage buffers.
@@ -117,23 +115,20 @@ Ember::TODO:
 - use transfer queue in mesh class instead of graphics queue for index and vertex data transfer.
   use framesInFlight many vertex and index buffers, with two staging buffers (one for vertex and one for index data).
   adjust staging buffer -> mesh buffers copy to account fro frame index (same as shaderProperties) and sync with render pipeline.
-- think about different texture2d specializations. Are they all needed? Can they be simplified? How would I remove the m_layout tracking on CPU side?
 - when not using input.vertexColor in the vertex shader, spirv optimizes the input binding away, which leads to incorrect bindings in
   my spirv reflection => other bindings are wrong, and textures are not displayed at all.
 - optimize eventsystem::AnyKey etc.
 - remove scaling from view matrizes of lights and cameras?
-- adjust shadow config in shadowPipeline.cpp (bias values) for better shadow quality
 - optimizations: multi threaded render loop, culling, etc.
-- add pGameObject selection (need gizmos => ui renderpass?)
+- add entity selection (need gizmos => ui renderpass?)
 - uniform buffer (cbuffer) data that is the same for all draw calls (e.g. light data) should be stored in a single cbuffer
   that is bound to a single descriptorSet that is bound to all draw calls that need that data.
   => make this descriptorset a "global" object in the shaderProperties class.
 - add geometry shader stage => wireframe rendering
-- gameobject parent system (GameObject € GameObject => transform hierarchy)
+- entity parent system (entity € entity => transform hierarchy)
 - add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
 - add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
   remove normalization of any input vector that is namen 'normal' or 'tangent' or 'direction' in mathf library (same for linearAlgebra.hlsli).
-- Proper documentation for shaderProperties, uniformBuffers, spirvReflect classes
 
 Ember::TODO long term:
 - dimm line between shadow cascades.
@@ -142,10 +137,8 @@ Ember::TODO long term:
 - render image while resizing
 - physics
 - audio
-- gameobject clipping logic for pCamera and lights (requires bounding box)
-- write own logger class
+- entity clipping logic for pCamera and lights (requires bounding box)
 - better shadow mapping (PCF, soft shadows, etc.)
-- look into colorspace sRGB vs linear.
 - blender model import
 - text rendering
 - only load textures that are used. parallel loading of textures.

@@ -1,8 +1,9 @@
 #include "materialManager.h"
 #include "commonRenderQueue.h"
+#include "iMaterial.h"
 #include "logger.h"
 #include "material.h"
-#include <filesystem>
+#include "renderer.h"
 
 
 
@@ -10,7 +11,7 @@ namespace emberEngine
 {
 	// Static members:
 	bool MaterialManager::s_isInitialized = false;
-	std::unordered_map<std::string, std::unique_ptr<Material>> MaterialManager::s_materials;
+	std::unordered_map<std::string, std::unique_ptr<emberBackendInterface::IMaterial>> MaterialManager::s_materialInterfacesMap;
 
 
 
@@ -35,95 +36,77 @@ namespace emberEngine
 		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
 		//AddMaterial(testMaterial);
 
-		Material errorMaterial(forwardOpaqueType, "errorMaterial", opaqueQueue, directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
-		AddMaterial(std::move(errorMaterial));
-
-		Material defaultMaterial(forwardOpaqueType, "defaultMaterial", opaqueQueue, directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
-		AddMaterial(std::move(defaultMaterial));
-
-		Material transparentMaterial(forwardTransparentType, "transparentMaterial", transparentQueue, directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv");
-		AddMaterial(std::move(transparentMaterial));
-
-		Material presentMaterial(presentType, "presentMaterial", opaqueQueue, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
-		AddMaterial(std::move(presentMaterial));
-
-		Material vertexColorLitMaterial(forwardOpaqueType, "vertexColorLitMaterial", opaqueQueue, directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv");
-		AddMaterial(std::move(vertexColorLitMaterial));
-
-		Material vertexColorUnlitMaterial(forwardOpaqueType, "vertexColorUnlitMaterial", opaqueQueue, directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv");
-		AddMaterial(std::move(vertexColorUnlitMaterial));
-
-		Material normalsMaterial(forwardOpaqueType, "normalMaterial", opaqueQueue, directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv");
-		AddMaterial(std::move(normalsMaterial));
-
-		Material shadowMaterial(shadowType, "shadowMaterial", shadowQueue, directoryPath / "shadow.vert.spv");
-		AddMaterial(std::move(shadowMaterial));
-
-		Material skyBoxMaterial(skyboxType, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
-		AddMaterial(std::move(skyBoxMaterial));
-
-		Material simpleLitMaterial(forwardOpaqueType, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
-		AddMaterial(std::move(simpleLitMaterial));
-
-		Material simpleUnlitMaterial(forwardOpaqueType, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
-		AddMaterial(std::move(simpleUnlitMaterial));
-
+		CreateMaterial(forwardOpaqueType, "errorMaterial", opaqueQueue, directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
+		CreateMaterial(forwardOpaqueType, "defaultMaterial", opaqueQueue, directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
+		CreateMaterial(forwardTransparentType, "transparentMaterial", transparentQueue, directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv");
+		CreateMaterial(presentType, "presentMaterial", opaqueQueue, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
+		CreateMaterial(forwardOpaqueType, "vertexColorLitMaterial", opaqueQueue, directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv");
+		CreateMaterial(forwardOpaqueType, "vertexColorUnlitMaterial", opaqueQueue, directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv");
+		CreateMaterial(forwardOpaqueType, "normalMaterial", opaqueQueue, directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv");
+		CreateMaterial(shadowType, "shadowMaterial", shadowQueue, directoryPath / "shadow.vert.spv");
+		CreateMaterial(skyboxType, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
+		CreateMaterial(forwardOpaqueType, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
+		CreateMaterial(forwardOpaqueType, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
+		
 		// For testing spirv reflect:
-		Material test(forwardOpaqueType, "testMaterial", opaqueQueue, directoryPath / "test.vert.spv", directoryPath / "test.frag.spv");
-		AddMaterial(std::move(test));
+		CreateMaterial(forwardOpaqueType, "testMaterial", opaqueQueue, directoryPath / "test.vert.spv", directoryPath / "test.frag.spv");
 
 		// For testing the binding missmatch error:
-		Material testA(forwardOpaqueType, "testAMaterial", opaqueQueue, directoryPath / "testA.vert.spv", directoryPath / "testA.frag.spv");
-		AddMaterial(std::move(testA));
-		Material testB(forwardOpaqueType, "testBMaterial", opaqueQueue, directoryPath / "testB.vert.spv", directoryPath / "testB.frag.spv");
-		AddMaterial(std::move(testB));
+		CreateMaterial(forwardOpaqueType, "testAMaterial", opaqueQueue, directoryPath / "testA.vert.spv", directoryPath / "testA.frag.spv");
+		CreateMaterial(forwardOpaqueType, "testBMaterial", opaqueQueue, directoryPath / "testB.vert.spv", directoryPath / "testB.frag.spv");
 	}
 	void MaterialManager::Clear()
 	{
-		s_materials.clear();
+		s_materialInterfacesMap.clear();
 		s_isInitialized = false;
 	}
 
 
 
 	// Add/Get/Delete:
-	void MaterialManager::AddMaterial(Material&& material)
+	Material MaterialManager::CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		std::string name = material.GetName();
-		auto newMaterial = std::make_unique<Material>(std::move(material));
-		if (!s_materials.emplace(name, std::move(newMaterial)).second)
-			LOG_WARN("Material with the name: {} already exists in MaterialManager!", name);
-	}
-	Material& MaterialManager::GetMaterial(const std::string& name)
-	{
-		auto it = s_materials.find(name);
-		if (it == s_materials.end())
+		auto it = s_materialInterfacesMap.find(name);
+		if (it != s_materialInterfacesMap.end())
 		{
-			LOG_ERROR("Material not found: {}", name);
-			return GetMaterial("errorMaterial");
+			LOG_WARN("Material '{}' already exists — returning existing instance.", name);
+			return Material{ it->second.get() };
 		}
-		return *(it->second);
+
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateMaterial(type, name, renderQueue, vertexSpv, fragmentSpv);
+		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
+		return Material{ result.first->second.get() };
 	}
-	Material* MaterialManager::TryGetMaterial(const std::string& name)
+	Material MaterialManager::GetMaterial(const std::string& name)
 	{
-		auto it = s_materials.find(name);
-		if (it != s_materials.end())
-			return it->second.get();
-		LOG_WARN("Material '{}' not found!", name);
-		return TryGetMaterial("errorMaterial");
+		auto it = s_materialInterfacesMap.find(name);
+		if (it == s_materialInterfacesMap.end())
+			throw std::runtime_error("Material not found: " + name);
+		return Material{ it->second.get() };
+	}
+	Material MaterialManager::TryGetMaterial(const std::string& name)
+	{
+		auto it = s_materialInterfacesMap.find(name);
+		if (it == s_materialInterfacesMap.end())
+		{
+			LOG_ERROR("Material '{}' not found!", name);
+			return Material();
+		}
+		return Material{ it->second.get() };
 	}
 	void MaterialManager::DeleteMaterial(const std::string& name)
 	{
-		s_materials.erase(name);
+		s_materialInterfacesMap.erase(name);
 	}
+
 
 
 
 	// Debugging:
 	void MaterialManager::Print()
-	{
-		LOG_TRACE("MaterialManager content:");
-		for (const auto& pair : s_materials)
-			LOG_TRACE(pair.first);
-	}
+    {
+        LOG_TRACE("MaterialManager contents:");
+        for (auto& [name, _] : s_materialInterfacesMap)
+            LOG_TRACE("  {}", name);
+    }
 }

@@ -18,7 +18,6 @@
 #include "textureManager.h"
 #include "window.h"
 // Backends:
-#include "nullWindow.h"
 #include "sdlWindow.h"
 #include "vulkanRenderer.h"
 #include "vulkanAsyncCompute.h"
@@ -26,7 +25,6 @@
 #include "vulkanImmediateCompute.h"
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
-#include "nullGui.h"
 #include "imGuiSdlVulkan.h"
 
 
@@ -52,11 +50,7 @@ namespace emberApplication
 			emberEngine::EventSystem::Init();
 
 			// Window backend:
-			emberBackendInterface::IWindow* pIWindow;
-			if (true)
-				pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
-			else
-				pIWindow = new nullWindowBackend::Window();
+			emberBackendInterface::IWindow* pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
 
 			// Renderer backend:
 			emberCommon::RendererCreateInfo rendererCreateInfo = {};
@@ -80,11 +74,7 @@ namespace emberApplication
 				pICompute = new vulkanRendererBackend::Compute();
 
 			// Gui backend:
-			emberBackendInterface::IGui* pIGui;
-			if (true)
-				pIGui = new imGuiSdlVulkanBackend::Gui(pIWindow, pIRenderer, rendererCreateInfo.enableDockSpace);
-			//else
-			//	pIGui = new nullGuiBackend::Gui();
+			emberBackendInterface::IGui* pIGui = new imGuiSdlVulkanBackend::Gui(pIWindow, pIRenderer, rendererCreateInfo.enableDockSpace);
 
 			// Link backends together:
 			pIRenderer->LinkIGuiHandle(pIGui);			// needed so renderer can inject gui draw calls in present renderpass.

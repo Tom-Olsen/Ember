@@ -1,40 +1,29 @@
-#ifndef __INCLUDE_GUARD_sphBitonicSort3d_h__
-#define __INCLUDE_GUARD_sphBitonicSort3d_h__
-#include <memory>
+#pragma once
+#include "emberEngine.h"
+using namespace emberEngine;
 
 
 
-namespace emberEngine
+namespace fluidDynamics
 {
-    // Forward declerations:
-    class ComputeShader;
-    class StorageBuffer;
-    class ShaderProperties;
-
-
-
     class SphBitonicSort3d
     {
     private: // Members
-        std::unique_ptr<ComputeShader> m_pCellKeys;
-        std::unique_ptr<ComputeShader> m_pStartIndices;
-        std::unique_ptr<ComputeShader> m_pLocalBitonicSort;
-        std::unique_ptr<ComputeShader> m_pBigFlip;
-        std::unique_ptr<ComputeShader> m_pBigDisperse;
-        std::unique_ptr<ComputeShader> m_pLocalDisperse;
-        std::unique_ptr<ShaderProperties> m_pCellKeyProperties;
-        std::unique_ptr<ShaderProperties> m_pStartIndicesProperties;
+        ComputeShader m_cellKeys;
+        ComputeShader m_startIndices;
+        ComputeShader m_localBitonicSort;
+        ComputeShader m_bigFlip;
+        ComputeShader m_bigDisperse;
+        ComputeShader m_localDisperse;
+        ShaderProperties m_cellKeyProperties;
+        ShaderProperties m_startIndicesProperties;
 
     public: // Methods
         SphBitonicSort3d();
         ~SphBitonicSort3d();
 
-        void ComputeCellKeys(StorageBuffer* pCellKeyBuffer, StorageBuffer* pPositionBuffer, float gridRadius);
-        void ComputeStartIndices(StorageBuffer* pCellKeyBuffer, StorageBuffer* pStartIndexBuffer);
-        void Sort(StorageBuffer* pCellKeyBuffer, StorageBuffer* pPositionBuffer, StorageBuffer* pVelocityBuffer);
+        void ComputeCellKeys(Buffer& cellKeyBuffer, Buffer& positionBuffer, float gridRadius);
+        void ComputeStartIndices(Buffer& cellKeyBuffer, Buffer& startIndexBuffer);
+        void Sort(Buffer& cellKeyBuffer, Buffer& positionBuffer, Buffer& velocityBuffer);
     };
 }
-
-
-
-#endif // __INCLUDE_GUARD_sphBitonicSort3d_h__

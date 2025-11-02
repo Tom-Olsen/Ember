@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testFloat3x2_h__
-#define __INCLUDE_GUARD_testFloat3x2_h__
+#pragma once
 
 
 
@@ -308,7 +307,3 @@ TEST(Float3x2, OperatorMultiplicationFloat3Left)
 	EXPECT_FLOAT_EQ(mult.x, a * vector.x + c * vector.y + e * vector.z);
 	EXPECT_FLOAT_EQ(mult.y, b * vector.x + d * vector.y + f * vector.z);
 }
-
-
-
-#endif // __INCLUDE_GUARD_testFloat3x2_h__

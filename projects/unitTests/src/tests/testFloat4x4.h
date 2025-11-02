@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testFloat4x4_h__
-#define __INCLUDE_GUARD_testFloat4x4_h__
+#pragma once
 
 
 
@@ -697,7 +696,3 @@ TEST(Float4x4, OperatorMultiplicationFloat4Left)
 	EXPECT_FLOAT_EQ(mult.z, m02 * vector.x + m12 * vector.y + m22 * vector.z + m32 * vector.w);
 	EXPECT_FLOAT_EQ(mult.w, m03 * vector.x + m13 * vector.y + m23 * vector.z + m33 * vector.w);
 }
-
-
-
-#endif // __INCLUDE_GUARD_testFloat4x4_h__

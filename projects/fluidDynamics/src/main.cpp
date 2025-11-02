@@ -1,53 +1,46 @@
 ﻿#define SDL_MAIN_HANDLED
+#include "profiler.h"
 #include "application.h"
 #include "emberEngine.h"
 // Components:
-#include "camera.h"
-#include "cameraController.h"
-#include "directionalLight.h"
-#include "meshRenderer.h"
-#include "pointLight.h"
-#include "postRenderEffects.h"
-#include "profiler.h"
-#include "spotLight.h"
-#include "transform.h"
 #include "sphFluid2dCpu.h"
 #include "sphFluid2dGpu.h"
 #include "sphFluid3d.h"
 using namespace emberEngine;
+using namespace fluidDynamics;
 
 
 
 Scene* InitScene()
 {
 	Scene* pScene = new Scene();
+	pScene->SetIsEnabled(true);
+
 	{// Camera:
-		GameObject* pGameObject = new GameObject("mainCamera");
+		Entity entity = Entity::Create("mainCamera");
 		Float3 pos = Float3(0.0f, 0.0f, 17.0f);
-		pGameObject->GetTransform()->SetPosition(pos);
-		//pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
 
-		Camera* pCamera = pGameObject->AddComponent<Camera>();
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+		//pTransform->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
+
+		Camera* pCamera = entity.AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
-		//CameraController* cameraController = pGameObject->AddComponent<CameraController>();
+		//CameraController* cameraController = entity.AddComponent<CameraController>();
 
-		pScene->AddGameObject(pGameObject);
 		pScene->SetActiveCamera(pCamera);
 	}
 	//{ // Sph Fluid 2d Cpu:
-	//	GameObject* pGameObject = new GameObject("sphFluid2dCpu");
-	//	SphFluid2dCpu* pSphFluid2dCpu = pGameObject->AddComponent<SphFluid2dCpu>();
-	//	pScene->AddGameObject(pGameObject);
+	//	Entity entity = Entity::Create("sphFluid2dCpu");
+	//	SphFluid2dCpu* pSphFluid2dCpu = entity.AddComponent<SphFluid2dCpu>();
 	//}
 	{ // Sph Fluid 2d Gpu:
-		GameObject* pGameObject = new GameObject("sphFluid2dGpu");
-		SphFluid2dGpu* pSphFluid2dGpu = pGameObject->AddComponent<SphFluid2dGpu>();
-		pScene->AddGameObject(pGameObject);
+		Entity entity = Entity::Create("sphFluid2dGpu");
+		SphFluid2dGpu* pSphFluid2dGpu = entity.AddComponent<SphFluid2dGpu>();
 	}
 	//{ // Sph Fluid 3d:
-	//	GameObject* pGameObject = new GameObject("sphFluid3d");
-	//	SphFluid3d* pSphFluid3d = pGameObject->AddComponent<SphFluid3d>();
-	//	pScene->AddGameObject(pGameObject);
+	//	Entity entity = Entity::Create("sphFluid3d");
+	//	SphFluid3d* pSphFluid3d = entity.AddComponent<SphFluid3d>();
 	//}
 	return pScene;
 }
@@ -62,41 +55,43 @@ int main()
 	#endif
 
 	// Profiler:
-	Profiler::Session& session = Profiler::Session::Get();
+	EmberProfiler::Session& session = EmberProfiler::Session::Get();
 	session.Start("profiling", "profilingResults");
+	{
+		// Initialization:
+		emberApplication::Application::CreateInfo appCreateInfo = {};
+		appCreateInfo.vSyncEnabled = true;
+		appCreateInfo.framesInFlight = 2;
+		appCreateInfo.msaaSampleCount = emberCommon::MsaaSampleCount::sampleCount04;
+		appCreateInfo.windowWidth = 1600;// 2560; //1920;
+		appCreateInfo.windowHeight = 900;// 1440; //1080;
+		appCreateInfo.renderWidth = 1600;// 2560; //1280;
+		appCreateInfo.renderHeight = 900;// 1440; //720;
+		emberApplication::Application::Init(appCreateInfo);
 
-	// Initialization:
-	Application::Settings appSettings = {};
-	appSettings.vSyncEnabled = true;
-	appSettings.framesInFlight = 2;
-	appSettings.msaaSamples = VK_SAMPLE_COUNT_4_BIT;
-	appSettings.windowWidth = 1600;// 2560; //1920;
-	appSettings.windowHeight = 900;// 1440; //1080;
-	appSettings.renderWidth = 1280;// 2560; //1280;
-	appSettings.renderHeight = 720;// 1440; //720;
-	Application app(appSettings);
+		// Add project specific shaders:
 
-	// Add project specific shaders:
-	std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
-	Material* pParticleMaterial2d = new Material(Material::Type::forwardTransparent, "particleMaterial2d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle2d.vert.spv", directoryPath + "/particle2d.frag.spv");
-	Material* pParticleMaterial3d = new Material(Material::Type::forwardOpaque, "particleMaterial3d", (uint32_t)Material::Queue::transparent, directoryPath + "/particle3d.vert.spv", directoryPath + "/particle3d.frag.spv");
-	MaterialManager::AddMaterial(pParticleMaterial2d);
-	MaterialManager::AddMaterial(pParticleMaterial3d);
+		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
+		Material::Create(emberCommon::MaterialType::forwardTransparent, "particleMaterial2d", emberCommon::RenderQueue::transparent, directoryPath / "particle2d.vert.spv", directoryPath / "particle2d.frag.spv");
+		Material::Create(emberCommon::MaterialType::forwardOpaque, "particleMaterial3d", emberCommon::RenderQueue::transparent, directoryPath / "particle3d.vert.spv", directoryPath / "particle3d.frag.spv");
 
-	// Create scene:
-	Scene* pScene = InitScene();
-	app.SetScene(pScene);
+		// Create scene:
+		Scene* pScene = InitScene();
+		emberApplication::Application::SetScene(pScene);
 
-	// Run application:
-	app.Run();
+		// Run app:
+		emberApplication::Application::Run();
 
-	// Terminate:
-	delete pScene;
+		// App shutdown:
+		delete pScene;
+		emberApplication::Application::Clear();
+	}
+	EmberProfiler::Session::Get().End();
 
 	// Runtime analysis:
-	Profiler::Session::Get().End();
 	std::vector<std::string> results = session.GetAllResultNames();
 	for (std::string& result : results)
-		session.PrintFunctionAverageTime(result, TimeUnit::ms);
+		session.PrintFunctionAverageTime(result, EmberProfiler::TimeUnit::ms);
+
 	return 0;
 }

@@ -1,18 +1,22 @@
-#ifndef __INCLUDE_GUARD_sphFluid2dGpuEditorWindow_h__
-#define __INCLUDE_GUARD_sphFluid2dGpuEditorWindow_h__
-#include "editor.h"
+#pragma once
+#include "commonGuiFlags.h"
 #include "editorWindow.h"
+#include "gui.h"
 #include "sphFluid2dGpu.h"
-#include <imgui.h>
 
 
 
-namespace emberEngine
+namespace emberEditor
 {
-	struct SphFluid2dGpuEditorWindow : EditorWindow
+	struct SphFluid2dGpuEditorWindow : public emberEngine::EditorWindow
 	{
+		// Easy access to emberEngine Gui:
+		using Gui = emberEngine::Gui;
+
+
+
 	private:
-		SphFluid2dGpu* m_pScript;
+		fluidDynamics::SphFluid2dGpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
 		bool m_useGridOptimization;
@@ -33,11 +37,11 @@ namespace emberEngine
 		float m_visualRadius;
 
 	public:
-		SphFluid2dGpuEditorWindow(SphFluid2dGpu* pScript)
+		SphFluid2dGpuEditorWindow(fluidDynamics::SphFluid2dGpu* pScript)
 		{
 			m_name = "Sph Fluid 2d Gpu";
 			m_ID = 0;
-			m_windowFlags = ImGuiWindowFlags_None;
+			m_windowFlags = emberCommon::GuiWindowFlag_None;
 			m_wantCaptureEvents = true;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 			m_pScript = pScript;
@@ -53,27 +57,27 @@ namespace emberEngine
 		void Render() override
 		{
 			GetData();
-			Editor::Checkbox("Is Running:", &m_isRunning);
-			Editor::InputFloat("Time Scale:", &m_timeScale);
-			Editor::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
-			Editor::Text(("Time Step:" + std::to_string(m_pScript->GetTimeStep())).c_str());
-			Editor::InputInt("Particle Count:", &m_particleCount);
-			Editor::InputFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
-			Editor::InputFloat("Mass:", &m_mass, 0.1f, 1.0f, "%.8f");
-			Editor::InputFloat("Viscosity:", &m_viscosity, 0.1f, 1.0f, "%.8f");
-			Editor::InputFloat("Surface Tension:", &m_surfaceTension, 0.1f, 1.0f, "%.8f");
-			Editor::InputFloat("Collision Dampening:", &m_collisionDampening, 0.1f, 1.0f, "%.8f");
-			Editor::InputFloat("Target Density:", &m_targetDensity, 0.1f, 1.0f, "%.8f");
-			Editor::InputFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f, "%.8f");
-			Editor::InputFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
-			Editor::InputFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
-			Editor::InputFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
-			Editor::InputFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
-			Editor::InputInt("Color Mode:", &m_colorMode);
-			Editor::InputFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
-			Editor::InputFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
+			Gui::Checkbox("Is Running:", &m_isRunning);
+			Gui::InputFloat("Time Scale:", &m_timeScale);
+			Gui::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
+			Gui::Text(("Time Step:" + std::to_string(m_pScript->GetTimeStep())).c_str());
+			Gui::InputInt("Particle Count:", &m_particleCount);
+			Gui::InputFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
+			Gui::InputFloat("Mass:", &m_mass, 0.1f, 1.0f, "%.8f");
+			Gui::InputFloat("Viscosity:", &m_viscosity, 0.1f, 1.0f, "%.8f");
+			Gui::InputFloat("Surface Tension:", &m_surfaceTension, 0.1f, 1.0f, "%.8f");
+			Gui::InputFloat("Collision Dampening:", &m_collisionDampening, 0.1f, 1.0f, "%.8f");
+			Gui::InputFloat("Target Density:", &m_targetDensity, 0.1f, 1.0f, "%.8f");
+			Gui::InputFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f, "%.8f");
+			Gui::InputFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
+			Gui::InputFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
+			Gui::InputFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
+			Gui::InputFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
+			Gui::InputInt("Color Mode:", &m_colorMode);
+			Gui::InputFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
+			Gui::InputFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
 
-			if (ImGui::Button("Reset Simulation"))
+			if (Gui::Button("Reset Simulation"))
 				m_pScript->Reset();
 			SetData();
 		}
@@ -123,7 +127,3 @@ namespace emberEngine
 		}
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_sphFluid2dGpuEditorWindow_h__

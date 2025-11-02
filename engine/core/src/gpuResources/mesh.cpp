@@ -7,7 +7,7 @@
 namespace emberEngine
 {
 	// Private methods:
-	emberBackendInterface::IMesh* Mesh::GetInterfaceHandle()
+	emberBackendInterface::IMesh* const Mesh::GetInterfaceHandle() const
 	{
 		return m_pIMesh.get();
 	}

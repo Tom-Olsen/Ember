@@ -1,6 +1,6 @@
-#ifndef __INCLUDE_GUARD_smoothingKernals_h__
-#define __INCLUDE_GUARD_smoothingKernals_h__
+#pragma once
 #include "emberMath.h"
+
 
 
 namespace smoothingKernals
@@ -72,7 +72,3 @@ namespace smoothingKernals
         return (r < h) ? c * (4.0f / h2 + 0.5f * h / (r * r * r) - 4.5f * r / h3) : 0.0f;
     }
 };
-
-
-
-#endif // __INCLUDE_GUARD_smoothingKernals_h__

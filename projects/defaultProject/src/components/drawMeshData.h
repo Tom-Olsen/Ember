@@ -10,7 +10,7 @@ namespace emberEngine
 	private: // Members:
 		Mesh* m_pSphereMesh;
 		Mesh* m_pArrowMesh;
-		Material* m_pMaterial;
+		Material m_material;
 		Mesh* m_pMesh;
 		ShaderProperties m_shaderProperties[3];
 

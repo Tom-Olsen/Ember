@@ -1,15 +1,20 @@
-#ifndef __INCLUDE_GUARD_sphFluid2dCpu_h__
-#define __INCLUDE_GUARD_sphFluid2dCpu_h__
+#pragma once
 #include "emberEngine.h"
-#include <array>
-#include <memory>
+using namespace emberEngine;
 
 
 
-namespace emberEngine
+// Forward decleration:
+namespace emberEditor
+{
+	struct SphFluid2dCpuEditorWindow;
+}
+
+
+
+namespace fluidDynamics
 {
 	// Forward decleration:
-	struct SphFluid2dCpuEditorWindow;
 	struct HashGrid2d;
 
 
@@ -63,10 +68,10 @@ namespace emberEngine
 		// Visuals:
 		float m_initialDistributionRadius;
 		float m_visualRadius;
-		std::unique_ptr<Mesh> m_pParticleMesh;
-		std::unique_ptr<Mesh> m_pRingMesh;
-		Material* m_pParticleMaterial;
-		std::unique_ptr<SphFluid2dCpuEditorWindow> editorWindow;
+		Mesh m_particleMesh;
+		Mesh m_ringMesh;
+		Material m_particleMaterial;
+		std::unique_ptr<emberEditor::SphFluid2dCpuEditorWindow> editorWindow;
 
 	public: // Methods:
 		SphFluid2dCpu();
@@ -123,7 +128,6 @@ namespace emberEngine
 		// Overrides:
 		void Start() override;
 		void Update() override;
-		const std::string ToString() const override;
 
 	private:
 		// Physics:
@@ -134,7 +138,3 @@ namespace emberEngine
 		void BoundaryCollisions(Float2& position, Float2& velocity);
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_sphFluid2dCpu_h__

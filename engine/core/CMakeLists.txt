@@ -188,10 +188,10 @@ endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
 
 # Shaders:
-if (NOT TARGET ShaderCompiler)
-    add_subdirectory(${ENGINE_SHADERS_DIR} ShaderCompiler)
+if (NOT TARGET EmberShaderCompiler)
+    add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
 endif()
-add_dependencies(${PROJECT_NAME} ShaderCompiler)
+add_dependencies(${PROJECT_NAME} EmberShaderCompiler)
 # ---------------------------------------------------
 
 

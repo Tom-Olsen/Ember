@@ -83,23 +83,11 @@ if (NOT TARGET VulkanRendererBackend)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC VulkanRendererBackend)
 
-# Null Window:
-if (NOT TARGET NullWindowBackend)
-    add_subdirectory("${ENGINE_BACKENDS_DIR}/nullWindow" NullWindowBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC NullWindowBackend)
-
 # SDL Window:
 if (NOT TARGET SdlWindowBackend)
     add_subdirectory("${ENGINE_BACKENDS_DIR}/sdlWindow" SdlWindowBackend)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC SdlWindowBackend)
-
-# Null Gui:
-if (NOT TARGET NullGuiBackend)
-    add_subdirectory("${ENGINE_BACKENDS_DIR}/nullGui" NullGuiBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC NullGuiBackend)
 
 # ImGui SDL Vulkan:
 if (NOT TARGET ImGuiSdlVulkanBackend)

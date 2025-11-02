@@ -17,6 +17,10 @@ namespace emberEngine
 
 	// Public methods:
 	// Constructor/Destructor:
+	ComputeShader::ComputeShader()
+	{
+		m_pIComputeShader = nullptr;
+	}
 	ComputeShader::ComputeShader(const std::string& name, const std::filesystem::path& computeSpv)
 	{
 		m_pIComputeShader = std::unique_ptr<emberBackendInterface::IComputeShader>(Renderer::CreateComputeShader(name, computeSpv));

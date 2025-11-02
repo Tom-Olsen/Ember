@@ -40,7 +40,7 @@ namespace emberEngine
 		// Constructors/Destructor:
 		ShaderProperties();
 		ShaderProperties(ComputeShader& computeShader);
-		ShaderProperties(Material& material);
+		ShaderProperties(const Material& material);
 		ShaderProperties(emberBackendInterface::IShaderProperties* pIShaderProperties);
 		~ShaderProperties();
 

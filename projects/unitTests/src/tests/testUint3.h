@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_testUint3_h__
-#define __INCLUDE_GUARD_testUint3_h__
+#pragma once
 
 
 
@@ -74,7 +73,3 @@ TEST(Uint3, OperatorNotEqual)
 	Uint3 b(1, 2, 4);
 	EXPECT_TRUE(a != b);
 }
-
-
-
-#endif // __INCLUDE_GUARD_testUint3_h__

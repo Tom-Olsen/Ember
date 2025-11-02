@@ -16,6 +16,10 @@ namespace emberEngine
 
 	// Public methods:
 	// Constructor/Destructor:
+	Buffer::Buffer()
+	{
+		m_pIBuffer = nullptr;
+	}
 	Buffer::Buffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage)
 	{
 		m_pIBuffer = std::unique_ptr<emberBackendInterface::IBuffer>(Renderer::CreateBuffer(count, elementSize, name, usage));
@@ -61,5 +65,9 @@ namespace emberEngine
 	void Buffer::Download(void* pDst, uint64_t size)
 	{
 		m_pIBuffer->Download(pDst, size);
+	}
+	bool Buffer::IsValid() const
+	{
+		return m_pIBuffer != nullptr;
 	}
 }

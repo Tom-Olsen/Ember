@@ -15,6 +15,7 @@ namespace emberEngine
 
     /// <summary>
     /// Purely static class that takes care of lifetime of all Mesh objects.
+    /// Meshes hold ownership over IMesh objects (different to MaterialManager).
     /// </summary>
     class EMBER_CORE_API MeshManager
     {

@@ -30,7 +30,7 @@ namespace emberEngine
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		m_pIShaderProperties = Renderer::CreateShaderProperties(pIComputeShader);
 	}
-	ShaderProperties::ShaderProperties(Material& material)
+	ShaderProperties::ShaderProperties(const Material& material)
 	{
 		m_ownsIShaderProperties = true;
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();

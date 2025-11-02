@@ -72,22 +72,22 @@ namespace emberEngine
 
 
 	// Draw mesh:
-	void Renderer::DrawMesh(Mesh& mesh, Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Renderer::DrawMesh(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		s_pIRenderer->DrawMesh(mesh.GetInterfaceHandle(), material.GetInterfaceHandle(), shaderProperties.GetInterfaceHandle(), localToWorldMatrix, receiveShadows, castShadows);
 	}
-	void Renderer::DrawMesh(Mesh& mesh, Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
+	void Renderer::DrawMesh(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
 	{
 		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 		DrawMesh(mesh, material, shaderProperties, localToWorldMatrix, receiveShadows, castShadows);
 	}
-	void Renderer::DrawMesh(Mesh& mesh, Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
+	void Renderer::DrawMesh(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
 	{
 		DrawMesh(mesh, material, shaderProperties, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
 	}
-	ShaderProperties Renderer::DrawMesh(Mesh& mesh, Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	ShaderProperties Renderer::DrawMesh(Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
@@ -95,12 +95,12 @@ namespace emberEngine
 		shaderProperties.SetOwnerShip(false);
 		return shaderProperties;
 	}
-	ShaderProperties Renderer::DrawMesh(Mesh& mesh, Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
+	ShaderProperties Renderer::DrawMesh(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
 	{
 		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 		return DrawMesh(mesh, material, localToWorldMatrix, receiveShadows, castShadows);
 	}
-	ShaderProperties Renderer::DrawMesh(Mesh& mesh, Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
+	ShaderProperties Renderer::DrawMesh(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
 	{
 		return DrawMesh(mesh, material, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
 	}
@@ -108,22 +108,22 @@ namespace emberEngine
 
 
 	// Draw instanced:
-	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		s_pIRenderer->DrawInstanced(instanceCount, instanceBuffer.GetInterfaceHandle(), mesh.GetInterfaceHandle(), material.GetInterfaceHandle(), shaderProperties.GetInterfaceHandle(), localToWorldMatrix, receiveShadows, castShadows);
 	}
-	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
+	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
 	{
 		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 		return DrawInstanced(instanceCount, instanceBuffer, mesh, material, shaderProperties, localToWorldMatrix, receiveShadows, castShadows);
 	}
-	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
+	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
 	{
 		return DrawInstanced(instanceCount, instanceBuffer, mesh, material, shaderProperties, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
 	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
@@ -131,12 +131,12 @@ namespace emberEngine
 		shaderProperties.SetOwnerShip(false);
 		return shaderProperties;
 	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
+	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
 	{
 		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 		return DrawInstanced(instanceCount, instanceBuffer, mesh, material, localToWorldMatrix, receiveShadows, castShadows);
 	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
+	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
 	{
 		return DrawInstanced(instanceCount, instanceBuffer, mesh, material, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
 	}
@@ -168,7 +168,7 @@ namespace emberEngine
 	void Renderer::DrawArrow(const Float3& position, const Float3& direction, float size, const Float4& color, bool receiveShadows, bool castShadows)
 	{
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
-		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("arrowFlat"), MaterialManager::GetMaterial("defaultMaterial"), position, rotationMatrix, Float3(size), receiveShadows, castShadows);
+		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("arrowFlat"), MaterialManager::GetMaterial("defaultMaterial"), position, rotationMatrix, size, receiveShadows, castShadows);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 	}
 	void Renderer::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Float4& color, bool receiveShadows, bool castShadows)
