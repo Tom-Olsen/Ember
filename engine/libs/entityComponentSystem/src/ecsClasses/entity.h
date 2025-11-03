@@ -1,5 +1,4 @@
 #pragma once
-#include "scene.h"
 #include <entt/entt.hpp>
 #include <string>
 #include <vector>
@@ -12,6 +11,7 @@ namespace emberEngine
 	class Component;
 	class EntityState;
 	class Transform;
+	class Scene;
 
 
 
