@@ -7,13 +7,13 @@ namespace fluidDynamics
 	// Initialization and cleanup:
 	SphBitonicSort2d::SphBitonicSort2d()
 	{
-		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
-		m_cellKeys = ComputeShader("cellKeys2d", directoryPath + "/cellKeys2d.comp.spv");
-		m_startIndices = ComputeShader("startIndices2d", directoryPath + "/startIndices2d.comp.spv");
-		m_localBitonicSort = ComputeShader("sphLocalBitonicSort2d", directoryPath + "/sphLocalBitonicSort2d.comp.spv");
-		m_bigFlip = ComputeShader("sphBigFlip2d", directoryPath + "/sphBigFlip2d.comp.spv");
-		m_bigDisperse = ComputeShader("sphBigDisperse2d", directoryPath + "/sphBigDisperse2d.comp.spv");
-		m_localDisperse = ComputeShader("sphLocalDisperse2d", directoryPath + "/sphLocalDisperse2d.comp.spv");
+		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
+		m_cellKeys = ComputeShader("cellKeys2d", directoryPath / "cellKeys2d.comp.spv");
+		m_startIndices = ComputeShader("startIndices2d", directoryPath / "startIndices2d.comp.spv");
+		m_localBitonicSort = ComputeShader("sphLocalBitonicSort2d", directoryPath / "sphLocalBitonicSort2d.comp.spv");
+		m_bigFlip = ComputeShader("sphBigFlip2d", directoryPath / "sphBigFlip2d.comp.spv");
+		m_bigDisperse = ComputeShader("sphBigDisperse2d", directoryPath / "sphBigDisperse2d.comp.spv");
+		m_localDisperse = ComputeShader("sphLocalDisperse2d", directoryPath / "sphLocalDisperse2d.comp.spv");
 		m_cellKeyProperties = ShaderProperties(m_cellKeys);
 		m_startIndicesProperties = ShaderProperties(m_startIndices);
 	}

@@ -32,6 +32,5 @@
 // Sort:
 #include "vectorSort.h"
 
-
 // Force emberMath namespace everywhere:
 using namespace emberMath;

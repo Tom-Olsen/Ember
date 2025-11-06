@@ -43,7 +43,7 @@ namespace fluidDynamics
 		// Visuals:
 		SetInitialDistributionRadius(6.0f);
 		SetVisualRadius(0.25f);
-		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial");
+		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial2d");
 
 		// Editor Window:
 		editorWindow = std::make_unique<emberEditor::SphFluid2dCpuEditorWindow>(this);
@@ -98,6 +98,7 @@ namespace fluidDynamics
 
 		// Reset fluid to initial data:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
+		m_pGrid->ApplySort(m_positions);
 		m_pGrid->ApplySort(m_velocities);
 		for (int i = 0; i < m_particleCount; i++)
 			m_densities[i] = Density(i, m_positions);
@@ -127,6 +128,7 @@ namespace fluidDynamics
 	{
 		// Update grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
+		m_pGrid->ApplySort(m_positions);
 		m_pGrid->ApplySort(m_velocities);
 
 		// Compute densities:
@@ -164,6 +166,7 @@ namespace fluidDynamics
 	{
 		// Update grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
+		m_pGrid->ApplySort(m_positions);
 		m_pGrid->ApplySort(m_velocities);
 
 		// Compute densities:
@@ -198,6 +201,7 @@ namespace fluidDynamics
 
 		// Update hash grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_positions, m_effectRadius);
+		m_pGrid->ApplySort(m_positions);
 		m_pGrid->ApplySort(m_velocities);
 
 		// Compute densities:
@@ -229,6 +233,7 @@ namespace fluidDynamics
 
 		// Update hash grid for fast nearest neighbor particle look up:
 		m_pGrid->UpdateGrid(m_tempPositions, m_effectRadius);
+		m_pGrid->ApplySort(m_tempPositions);
 		m_pGrid->ApplySort(m_tempVelocities);
 		m_pGrid->ApplySort(m_positions);
 		m_pGrid->ApplySort(m_velocities);

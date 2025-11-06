@@ -178,5 +178,25 @@ namespace emberMath
 		template uint16_t math::Clamp(uint16_t, uint16_t, uint16_t);
 		template uint32_t math::Clamp(uint32_t, uint32_t, uint32_t);
 		template uint64_t math::Clamp(uint64_t, uint64_t, uint64_t);
+
+
+
+		// Primes:
+		bool IsPrime(size_t n)
+		{
+			if (n < 2) return false;
+			if (n % 2 == 0) return n == 2;
+			for (size_t i = 3; i * i <= n; i += 2)
+				if (n % i == 0) return false;
+			return true;
+		}
+		size_t NextPrimeAbove(size_t n)
+		{
+			if (n <= 2) return 2;
+			size_t candidate = (n % 2 == 0) ? n + 1 : n + 2;
+			while (!IsPrime(candidate))
+				candidate += 2;
+			return candidate;
+		}
 	}
 }

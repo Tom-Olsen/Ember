@@ -7,10 +7,12 @@
 namespace fluidDynamics
 {
 	// Constructor/Destructor:
-	HashGrid2d::HashGrid2d(int particleCount) : m_particleCount(particleCount)
+	HashGrid2d::HashGrid2d(int particleCount)
 	{
-		m_cellKeys.resize(m_particleCount);
-		m_startIndices.resize(m_particleCount);
+		m_particleCount = particleCount;
+		m_size = math::NextPrimeAbove(2 * particleCount);
+		m_cellKeys.resize(particleCount);
+		m_startIndices.resize(m_size, -1);
 	}
 	HashGrid2d::~HashGrid2d()
 	{
@@ -19,56 +21,71 @@ namespace fluidDynamics
 
 
 
-	Int2 HashGrid2d::Cell(Float2 position, float radius)
+	// Geters:
+	size_t HashGrid2d::GetSize() const
 	{
-		return Int2(Float2::Floor((position / radius)));
+		return m_size;
 	}
-	int HashGrid2d::CellHash(Int2 cell)
-	{
-		int a = cell.x * m_prime0;
-		int b = cell.y * m_prime1;
-		return a + b;
-	}
-	uint32_t HashGrid2d::CellKey(int cellHash)
-	{
-		if (cellHash < 0)
-			return m_particleCount - (abs(cellHash) % m_particleCount);
-		else
-			return cellHash % m_particleCount;
-	}
-	uint32_t HashGrid2d::GetCellKey(int particleIndex)
+	uint32_t HashGrid2d::GetCellKey(int particleIndex) const
 	{
 		return m_cellKeys[particleIndex];
 	}
-	uint32_t HashGrid2d::GetStartIndex(int cellKey)
+	uint32_t HashGrid2d::GetStartIndex(int cellKey) const
 	{
 		return m_startIndices[cellKey];
 	}
 
 
 
+	// Hashing:
+	Int2 HashGrid2d::Cell(Float2 position, float radius)
+	{
+		return Int2(Float2::Floor((position / radius)));
+	}
+	int64_t HashGrid2d::CellHash(Int2 cell)
+	{
+		int64_t hash = (int64_t(cell.x) * m_prime0) ^ (int64_t(cell.y) * m_prime1);
+		hash ^= (hash >> 33);
+		hash *= 0xff51afd7ed558ccdULL;
+		hash ^= (hash >> 33);
+		return hash;
+	}
+	uint32_t HashGrid2d::CellKey(int cellHash)
+	{
+		return ((cellHash % m_size) + m_size) % m_size;
+	}
+
+
+
+	// Main hash grid mechanism:
 	void HashGrid2d::UpdateGrid(std::vector<Float2>& positions, float radius)
 	{
-		// Fill cellKeys vector:
-		for (int i = 0; i < m_particleCount; i++)
+		size_t count = positions.size();
+		if (count == 0)
+			return;
+
+		if (count != m_particleCount)
+		{
+			m_particleCount = count;
+			m_cellKeys.resize(count);
+		}
+
+		// Compute cell keys:
+		for (size_t i = 0; i < m_particleCount; i++)
 		{
 			Int2 cell = Cell(positions[i], radius);
-			int cellHash = CellHash(cell);
+			int64_t cellHash = CellHash(cell);
 			m_cellKeys[i] = CellKey(cellHash);
 		}
 
 		// Sort vectors:
 		m_permutation = math::SortPermutation(m_cellKeys, [](uint32_t const& a, uint32_t const& b) { return a < b; });
 		m_cellKeys = math::ApplyPermutation(m_cellKeys, m_permutation);
-		positions = math::ApplyPermutation(positions, m_permutation);
-
-		// Reset start indices to invalid state:
-		for (int i = 0; i < m_particleCount; i++)
-			m_startIndices[i] = -1;
 		
-		// Fill start indices vector:
+		// Compute start indices:
+		std::fill(m_startIndices.begin(), m_startIndices.end(), -1);
 		m_startIndices[m_cellKeys[0]] = 0;
-		for (int i = 1; i < m_particleCount; i++)
+		for (size_t i = 1; i < m_particleCount; i++)
 		{
 			if (m_cellKeys[i] != m_cellKeys[i - 1])
 				m_startIndices[m_cellKeys[i]] = i;

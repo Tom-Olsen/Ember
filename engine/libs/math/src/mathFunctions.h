@@ -12,7 +12,6 @@ namespace emberMath
 		float Round(float value, int decimals = 0);
 		float Floor(float value, int decimals = 0);
 		float Ceil(float value, int decimals = 0);
-		//float Clamp(float value, float min, float max);
 		float Sign(float value);
 		float Sqrt(float value);
 		float Pow(float value, float exponent);
@@ -40,5 +39,9 @@ namespace emberMath
 		T Max(T a, T b);
 		template<typename T>
 		T Clamp(T value, T min, T max);
+
+		// Primes:
+		bool IsPrime(size_t n);
+		size_t NextPrimeAbove(size_t n);
 	}
 }

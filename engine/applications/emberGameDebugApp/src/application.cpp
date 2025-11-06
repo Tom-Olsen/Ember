@@ -66,7 +66,7 @@ namespace emberApplication
 			rendererCreateInfo.renderWidth = applicationCreateInfo.renderWidth;			// project settings.
 			rendererCreateInfo.renderHeight = applicationCreateInfo.renderHeight;		// project settings.
 			rendererCreateInfo.enableGui = true;										// application dependent.
-			rendererCreateInfo.enableDockSpace = true;									// application dependent.
+			rendererCreateInfo.enableDockSpace = false;									// application dependent.
 			rendererCreateInfo.maxDirectionalLights = MAX_DIR_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.maxPositionalLights = MAX_POS_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.shadowMapResolution = SHADOW_MAP_RESOLUTION;				// controlled via macro for now.

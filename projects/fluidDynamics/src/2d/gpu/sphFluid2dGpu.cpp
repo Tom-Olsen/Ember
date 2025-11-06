@@ -14,14 +14,14 @@ namespace fluidDynamics
 	SphFluid2dGpu::SphFluid2dGpu()
 	{
 		// Load compute shaders:
-		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
-		cs_reset = ComputeShader("reset2d", directoryPath + "/reset2d.comp.spv");
-		cs_density = ComputeShader("density2d", directoryPath + "/density2d.comp.spv");
-		cs_normalAndCurvature = ComputeShader("normalAndCurvature2d", directoryPath + "/normalAndCurvature2d.comp.spv");
-		cs_forceDensity = ComputeShader("forceDensity2d", directoryPath + "/forceDensity2d.comp.spv");
-		cs_rungeKutta2Step1 = ComputeShader("rungeKutta2Step1_2d", directoryPath + "/rungeKutta2Step1_2d.comp.spv");
-		cs_rungeKutta2Step2 = ComputeShader("rungeKutta2Step2_2d", directoryPath + "/rungeKutta2Step2_2d.comp.spv");
-		cs_boundaryCollisions = ComputeShader("boundaryCollisions2d", directoryPath + "/boundaryCollisions2d.comp.spv");
+		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
+		cs_reset = ComputeShader("reset2d", directoryPath / "reset2d.comp.spv");
+		cs_density = ComputeShader("density2d", directoryPath / "density2d.comp.spv");
+		cs_normalAndCurvature = ComputeShader("normalAndCurvature2d", directoryPath / "normalAndCurvature2d.comp.spv");
+		cs_forceDensity = ComputeShader("forceDensity2d", directoryPath / "forceDensity2d.comp.spv");
+		cs_rungeKutta2Step1 = ComputeShader("rungeKutta2Step1_2d", directoryPath / "rungeKutta2Step1_2d.comp.spv");
+		cs_rungeKutta2Step2 = ComputeShader("rungeKutta2Step2_2d", directoryPath / "rungeKutta2Step2_2d.comp.spv");
+		cs_boundaryCollisions = ComputeShader("boundaryCollisions2d", directoryPath / "boundaryCollisions2d.comp.spv");
 		
 		// Initialize shader properties:
 		m_resetProperties = ShaderProperties(cs_reset);
