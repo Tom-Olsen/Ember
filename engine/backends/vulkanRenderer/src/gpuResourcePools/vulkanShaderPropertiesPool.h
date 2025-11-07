@@ -36,7 +36,11 @@ namespace vulkanRendererBackend
         ShaderPropertiesPool(ShaderPropertiesPool&& other) noexcept = default;
         ShaderPropertiesPool& operator=(ShaderPropertiesPool&& other) noexcept = default;
 
+        // Checkout/Return:
         ShaderProperties* CheckOut(Shader* pShader);
         void Return(ShaderProperties* pShaderProperties);
+
+        // Debugging:
+        void PrintPoolState();
     };
 }

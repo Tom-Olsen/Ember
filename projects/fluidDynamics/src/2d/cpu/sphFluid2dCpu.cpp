@@ -487,12 +487,7 @@ namespace fluidDynamics
 		// Mouse left and right click:
 		if (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)) // exlusive or.
 		{
-			Camera* pCamera = Scene::GetActiveScene()->GetActiveCamera();
-			Transform* pCameraTransform = pCamera->GetTransform();
-			Float3 cameraPos = pCameraTransform->GetPosition();
-			Float3 cameraViewDirection = pCameraTransform->GetDown();
-
-			Ray ray(cameraPos, cameraViewDirection);
+			Ray ray = Scene::GetActiveScene()->GetActiveCamera()->GetClickRay();
 			std::optional<Float3> hit = m_fluidBounds.IntersectRay(ray);
 			if (hit.has_value())
 			{
@@ -518,7 +513,7 @@ namespace fluidDynamics
 		{
 			Float4x4 matrix = localToWorld * Float4x4::Translate(Float3(m_positions[i]));
 			ShaderProperties shaderProperties = Renderer::DrawMesh(m_particleMesh, m_particleMaterial, matrix, false, false);
-
+		
 			// Color by density:
 			{
 				float t = (m_densities[i] - m_targetDensity) / m_targetDensity;
@@ -529,14 +524,14 @@ namespace fluidDynamics
 				Float4 color = (t < 1.0f) ? colorA : colorB;
 				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 			}
-
+		
 			//// Color by normal length:
 			//{
 			//	float length = m_normals[i].Length();
 			//	Float4 color = Float4::white * (1.0f - length) + Float4::red * length;
 			//	shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 			//}
-
+		
 			//// Color by curvature length:
 			//{
 			//	float t = m_curvatures[i];

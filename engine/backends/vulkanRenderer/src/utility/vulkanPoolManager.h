@@ -31,14 +31,20 @@ namespace vulkanRendererBackend
     public: // Methods
         static void Init();
         static void Clear();
+
+        // Checkout:
         static ShaderProperties* CheckOutShaderProperties(Shader* pShader);
         static StagingBuffer* CheckOutStagingBuffer(uint32_t size);
+
+        // Return:
         static void ReturnShaderProperties(Shader* pShader, ShaderProperties* pShaderProperties);
         static void ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer);
 
-    private: // Methods
-        static uint32_t NextPowerOfTwo(uint32_t n);
+        // Debugging:
+        static void PrintShaderPropertiesPoolState();
+        static void PrintStagingBufferPoolState();
 
+    private: // Methods
         // Delete all constructors:
         PoolManager() = delete;
         PoolManager(const PoolManager&) = delete;

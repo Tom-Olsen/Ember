@@ -41,7 +41,7 @@ namespace vulkanRendererBackend
 
 	// Workload recording:
 	void PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties)
-	{
+	{// for static compute calls.
 		if (!pIComputeShader)
 		{
 			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
@@ -62,10 +62,22 @@ namespace vulkanRendererBackend
 		m_callIndex++;
 	}
 	emberBackendInterface::IShaderProperties* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
-	{
-		ShaderProperties* pIShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		RecordComputeShader(pIComputeShader, static_cast<emberBackendInterface::IShaderProperties*>(pIShaderProperties));
-		return pIShaderProperties;
+	{// for dynamic compute calls.
+		if (!pIComputeShader)
+		{
+			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
+			return nullptr;
+		}
+
+		// Setup compute call:
+		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
+		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
+		Uint3 threadCount{ width, height, 1 };
+		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
+		m_dynamicComputeCalls.push_back(computeCall);
+		m_callIndex++;
+		return pShaderProperties;
 	}
 
 

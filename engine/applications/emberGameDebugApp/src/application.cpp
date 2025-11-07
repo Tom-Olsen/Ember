@@ -53,7 +53,6 @@ namespace emberApplication
 			// Basic systems:
 			emberLogger::Logger::Init();
 			math::Random::Init();
-			emberEngine::EventSystem::Init();
 
 			// Window backend:
 			emberBackendInterface::IWindow* pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
@@ -104,6 +103,9 @@ namespace emberApplication
 			// Editor windows:
 			m_pDepthBiasEditorWindow = std::make_unique<emberEditor::DepthBiasEditorWindow>();
 			m_pFpsEditorWindow = std::make_unique<emberEditor::FpsEditorWindow>();
+
+			// Other systems:
+			emberEngine::EventSystem::Init();
 		}
 		catch (const std::exception& e)
 		{
@@ -114,6 +116,9 @@ namespace emberApplication
 	{
 		// Wait for gpu to finish any remaining work:
 		emberEngine::Renderer::WaitDeviceIdle();
+
+		// Other systems:
+		emberEngine::EventSystem::Clear();
 
 		// Gpu Resource Managers:
 		emberEngine::MeshManager::Clear();
@@ -129,7 +134,6 @@ namespace emberApplication
 		emberEngine::Window::Clear();
 
 		// Basic systems:
-		emberEngine::EventSystem::Clear();
 		math::Random::Clear();
 		emberLogger::Logger::Clear();
 	}
@@ -144,7 +148,7 @@ namespace emberApplication
 			bool running = true;
 			emberEngine::Time::Reset();
 			m_pActiveScene->Start();
-
+			
 			while (running)
 			{
 				PROFILE_FUNCTION();

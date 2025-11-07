@@ -65,7 +65,6 @@ namespace emberApplication
 			// Basic systems:
 			emberLogger::Logger::Init();
 			math::Random::Init();
-			emberEngine::EventSystem::Init();
 
 			// Window backend:
 			emberBackendInterface::IWindow* pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
@@ -122,6 +121,9 @@ namespace emberApplication
 			m_pInspectorEditorWindow = std::make_unique<emberEditor::InspectorEditorWindow>();
 			m_pProjectEditorWindow = std::make_unique<emberEditor::ProjectEditorWindow>();
 			m_pSceneEditorWindow = std::make_unique<emberEditor::SceneEditorWindow>();
+
+			// Other systems:
+			emberEngine::EventSystem::Init();
 		}
 		catch (const std::exception& e)
 		{
@@ -132,6 +134,9 @@ namespace emberApplication
 	{
 		// Wait for gpu to finish any remaining work:
 		emberEngine::Renderer::WaitDeviceIdle();
+
+		// Other systems:
+		emberEngine::EventSystem::Clear();
 
 		// Gpu Resource Managers:
 		emberEngine::MeshManager::Clear();
@@ -147,7 +152,6 @@ namespace emberApplication
 		emberEngine::Window::Clear();
 
 		// Basic systems:
-		emberEngine::EventSystem::Clear();
 		math::Random::Clear();
 		emberLogger::Logger::Clear();
 	}

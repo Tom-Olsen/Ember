@@ -44,6 +44,7 @@ namespace emberEngine
 		ProjectionType GetProjectionType() const;
 		Float4x4 GetViewMatrix() const;
 		Float4x4 GetProjectionMatrix();
+		Ray GetClickRay();
 
 		// Overrides:
 		void LateUpdate() override;

@@ -1,10 +1,12 @@
 #include "vulkanStagingBufferPool.h"
+#include "logger.h"
 #include "vulkanStagingBuffer.h"
 
 
 
 namespace vulkanRendererBackend
 {
+    // Public methods:
     // Constructor/Destructor:
     StagingBufferPool::StagingBufferPool()
     {
@@ -18,7 +20,7 @@ namespace vulkanRendererBackend
     }
 
 
-    // Public methods:
+    // Checkout/Return:
     StagingBuffer* StagingBufferPool::CheckOut(uint32_t size)
     {
         // Create new staging buffer if pool is empty:
@@ -43,5 +45,14 @@ namespace vulkanRendererBackend
     {
         m_pool.push(pStagingBuffer);
         m_currentUsage--;
+    }
+
+
+
+    // Debugging:
+    void StagingBufferPool::PrintPoolState()
+    {
+        LOG_TRACE("   Stored StagingBuffers count: {}", m_storage.size());
+        LOG_TRACE("Available StagingBuffers count: {}", m_pool.size());
     }
 }

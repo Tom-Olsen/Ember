@@ -1,4 +1,7 @@
 #include "vulkanPoolManager.h"
+#include "emberMath.h"
+#include "logger.h"
+#include "vulkanShader.h"
 
 
 
@@ -11,6 +14,7 @@ namespace vulkanRendererBackend
 
 
 
+	// Public methods:
 	// Initialization/Cleanup:
 	void PoolManager::Init()
 	{
@@ -27,39 +31,49 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Checkout:
 	ShaderProperties* PoolManager::CheckOutShaderProperties(Shader* pShader)
 	{
-		return s_shaderPropertiesPoolMap[pShader].CheckOut(pShader);
+		//return s_shaderPropertiesPoolMap[pShader].CheckOut(pShader);
+		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[pShader].CheckOut(pShader);
+		return pShaderProperties;
 	}
 	StagingBuffer* PoolManager::CheckOutStagingBuffer(uint32_t size)
 	{
-		size = std::max(4096u, NextPowerOfTwo(size));
+		size = std::max(4096u, math::NextPowerOfTwo(size));
 		return s_stagingBufferPoolMap[size].CheckOut(size);
 	}
+
+
+
+	// Return:
 	void PoolManager::ReturnShaderProperties(Shader* pShader, ShaderProperties* pShaderProperties)
 	{
 		s_shaderPropertiesPoolMap[pShader].Return(pShaderProperties);
 	}
 	void PoolManager::ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer)
 	{
-		size = std::max(4096u, NextPowerOfTwo(size));
+		size = std::max(4096u, math::NextPowerOfTwo(size));
 		s_stagingBufferPoolMap[size].Return(pStagingBuffer);
 	}
 
 
 
-	// Private methods:
-	uint32_t PoolManager::NextPowerOfTwo(uint32_t n)
+	// Debugging:
+	void PoolManager::PrintShaderPropertiesPoolState()
 	{
-		if (n == 0) return 1;
-		n--;
-		n |= n >> 1;
-		n |= n >> 2;
-		n |= n >> 4;
-		n |= n >> 8;
-		n |= n >> 16;
-		n++;
-		return n;
+		for (auto& [pShader, shaderPropertiesPool] : s_shaderPropertiesPoolMap)
+		{
+			LOG_INFO("Shader '{}':", pShader->GetName());
+			shaderPropertiesPool.PrintPoolState();
+		}
+	}
+	void PoolManager::PrintStagingBufferPoolState()
+	{
+		for (auto& [bufferSize, stagingBufferPool] : s_stagingBufferPoolMap)
+		{
+			LOG_INFO("BufferSize '{}':", bufferSize);
+			stagingBufferPool.PrintPoolState();
+		}
 	}
 }

@@ -34,7 +34,11 @@ namespace vulkanRendererBackend
         StagingBufferPool(StagingBufferPool&& other) noexcept = default;
         StagingBufferPool& operator=(StagingBufferPool&& other) noexcept = default;
 
+        // Checkout/Return:
         StagingBuffer* CheckOut(uint32_t size);
         void Return(StagingBuffer* pStagingBuffer);
+
+        // Debugging:
+        void PrintPoolState();
     };
 }

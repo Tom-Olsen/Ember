@@ -3,6 +3,7 @@
 #include "computeShader.h"
 #include "iMesh.h"
 #include "iShaderProperties.h"
+#include "logger.h"
 #include "material.h"
 #include "renderer.h"
 #include "texture.h"

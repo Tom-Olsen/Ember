@@ -110,8 +110,8 @@ namespace vulkanRendererBackend
 
 		// DrawCall management:
 		emberCommon::Camera m_activeCamera;
-		std::vector<DrawCall> m_staticDrawCalls;
-		std::vector<DrawCall> m_dynamicDrawCalls;
+		std::vector<DrawCall> m_staticDrawCalls;	// for draw calls that manage their own ShaderProperties.
+		std::vector<DrawCall> m_dynamicDrawCalls;	// for draw calls that get a ShaderProperties assigned from a pool.
 		std::vector<DrawCall*> m_sortedDrawCallPointers;
 		std::unique_ptr<ComputeShader> m_pGammaCorrectionComputeShader;
 

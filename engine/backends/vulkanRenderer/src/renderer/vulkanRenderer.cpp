@@ -241,8 +241,8 @@ namespace vulkanRendererBackend
 
 
 	// Draw mesh:
-	void Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
-	{
+	void Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IShaderProperties* pIShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	{// for static draw calls.
 		if (!pMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMesh is nullptr.");
@@ -253,16 +253,35 @@ namespace vulkanRendererBackend
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMaterial is nullptr.");
 			return;
 		}
+		if (!pIShaderProperties)
+		{
+			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pIShaderProperties is nullptr.");
+			return;
+		}
 
 		// Setup draw call:
 		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)m_pShadowMaterial.get());
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<ShaderProperties*>(pShaderProperties), pShadowShaderProperties, static_cast<Mesh*>(pMesh), 0 };
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<ShaderProperties*>(pIShaderProperties), pShadowShaderProperties, static_cast<Mesh*>(pMesh), 0 };
 		m_staticDrawCalls.push_back(drawCall);
 	}
 	emberBackendInterface::IShaderProperties* Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
-	{
+	{// for dynamic draw calls.
+		if (!pMesh)
+		{
+			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMesh is nullptr.");
+			return nullptr;
+		}
+		if (!pMaterial)
+		{
+			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMaterial is nullptr.");
+			return nullptr;
+		}
+
+		// Setup draw call:
 		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
-		DrawMesh(pMesh, pMaterial, pShaderProperties, localToWorldMatrix, receiveShadows, castShadows);
+		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)m_pShadowMaterial.get());
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), pShaderProperties, pShadowShaderProperties, static_cast<Mesh*>(pMesh), 0 };
+		m_dynamicDrawCalls.push_back(drawCall);
 		return pShaderProperties;
 	}
 
@@ -529,7 +548,9 @@ namespace vulkanRendererBackend
 
 		// Return all pShadowShaderProperties of static draw calls back to the pool:
 		for (DrawCall& drawCall : m_staticDrawCalls)
+		{
 			PoolManager::ReturnShaderProperties((Shader*)m_pShadowMaterial.get(), drawCall.pShadowShaderProperties);
+		}
 
 		// Clear all draw calls for next frame:
 		m_staticDrawCalls.clear();

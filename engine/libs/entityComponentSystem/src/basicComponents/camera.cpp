@@ -118,6 +118,32 @@ namespace emberEngine
 			UpdateProjectionMatrix();
 		return m_projectionMatrix;
 	}
+	Ray Camera::GetClickRay()
+	{
+		// Mouse position:
+		Float2 mousePos01 = EventSystem::MousePos01();		// € [ 0, 1]
+		Float2 screenPos = 2.0f * mousePos01 - Float2::one;	// € [-1, 1]
+
+		// Get camera inverse matrices:
+		Float4x4 projectionInv = GetProjectionMatrix().Inverse();
+		Float4x4 viewInv = GetViewMatrix().Inverse();
+
+		// near and far plane NDC:
+		Float4 nearPlaneNDC = Float4(screenPos, 0.0f, 1.0f);
+		Float4 farPlaneNDC = Float4(screenPos, 1.0f, 1.0f);
+
+		// Unproject NDC to camera space coordinates:
+		Float4 nearCamera = projectionInv * nearPlaneNDC;
+		Float4 farCamera = projectionInv * farPlaneNDC;
+		nearCamera /= nearCamera.w;
+		farCamera /= farCamera.w;
+
+		// Convert camera space to world space coordinates:
+		Float3 nearWorld = Float3(viewInv * nearCamera);
+		Float3 farWorld = Float3(viewInv * farCamera);
+
+		return Ray(nearWorld, (farWorld - nearWorld).Normalize());
+	}
 
 
 

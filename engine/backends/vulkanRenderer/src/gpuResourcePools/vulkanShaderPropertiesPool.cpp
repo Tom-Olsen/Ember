@@ -7,6 +7,7 @@
 
 namespace vulkanRendererBackend
 {
+    // Public methods:
     // Constructor/Destructor:
     ShaderPropertiesPool::ShaderPropertiesPool()
     {
@@ -20,7 +21,7 @@ namespace vulkanRendererBackend
     }
 
 
-    // Public methods:
+    // Checkout/Return:
     ShaderProperties* ShaderPropertiesPool::CheckOut(Shader* pShader)
     {
         // Create new shader properties if pool is empty:
@@ -45,5 +46,14 @@ namespace vulkanRendererBackend
     {
         m_pool.push(pShaderProperties);
         m_currentUsage--;
+    }
+
+
+
+    // Debugging:
+    void ShaderPropertiesPool::PrintPoolState()
+    {
+        LOG_TRACE("   Stored ShaderProperties count: {}", m_storage.size());
+        LOG_TRACE("Available ShaderProperties count: {}", m_pool.size());
     }
 }

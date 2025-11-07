@@ -31,6 +31,8 @@ namespace emberEngine
         s_mouseButtonStates = std::unordered_map<emberCommon::Input::MouseButton, MouseState>();
         s_mouseX = 0;
         s_mouseY = 0;
+        s_windowWidth = Window::GetSize().x;
+        s_windowHeight = Window::GetSize().y;
     }
     void EventSystem::Clear()
     {
@@ -60,13 +62,23 @@ namespace emberEngine
                     break;
                 case emberCommon::EventType::WindowClose:
                     if (event.windowID == Window::GetWindowID()) // check for main window.
+                    {
+                        s_windowWidth = 0;
+                        s_windowHeight = 0;
                         return false;
+                    }
                     break;
                 case emberCommon::EventType::WindowResized:
+                    s_windowWidth = Window::GetSize().x;
+                    s_windowHeight = Window::GetSize().y;
                     break;
                 case emberCommon::EventType::WindowMinimized:
+                    s_windowWidth = 0;
+                    s_windowHeight = 0;
                     break;
                 case emberCommon::EventType::WindowRestored:
+                    s_windowWidth = Window::GetSize().x;
+                    s_windowHeight = Window::GetSize().y;
                     break;
                 case emberCommon::EventType::WindowFocusGained:
                     break;
