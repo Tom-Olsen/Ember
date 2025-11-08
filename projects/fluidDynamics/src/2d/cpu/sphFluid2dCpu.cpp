@@ -551,75 +551,68 @@ namespace fluidDynamics
 	// Physics:
 	float SphFluid2dCpu::Density(int particleIndex, const std::vector<Float2>& positions)
 	{
+		float density = 0;
+		Float2 particlePos = positions[particleIndex];
 		if (m_useGridOptimization)
 		{
-			Float2 particlePos = positions[particleIndex];
 			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
-
-			float density = 0;
-			for (int i = 0; i < 9; i++)
+			for (const Int2& offset : s_offsets)
 			{
-				Int2 neighbourCell = particleCell + s_offsets[i];
-				int neighbourCellHash = m_pGrid->CellHash(neighbourCell);
-				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
-				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
+				Int2 neighbourCell = particleCell + offset;
+				const uint32_t cellKey = m_pGrid->GetCellKey(neighbourCell);
+				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCell);
 
-				while (otherIndex < m_particleCount) // at most as many iterations as there are particles.
+				// Skip empty cells:
+				if (otherIndex == uint32_t(-1) || otherIndex >= m_particleCount)
+					continue;
+
+				while (otherIndex < m_particleCount && m_pGrid->GetCellKey(otherIndex) == cellKey)
 				{
-					uint32_t otherCellKey = m_pGrid->GetCellKey(otherIndex);
-					if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
-						break;
-
 					Float2 otherPos = positions[otherIndex];
 					Float2 offset = particlePos - otherPos;
 					float r = offset.Length();
 					if (r < m_effectRadius)
 						density += m_mass * smoothingKernals::Poly6(r, m_effectRadius);
-
 					otherIndex++;
 				}
 			}
-			return density;
 		}
 		else
 		{
-			float density = 0;
 			for (int i = 0; i < m_particleCount; i++)
 			{
-				Float2 offset = positions[particleIndex] - positions[i];
+				Float2 offset = particlePos - positions[i];
 				float r = offset.Length();
 				if (r < m_effectRadius)
 					density += m_mass * smoothingKernals::Poly6(r, m_effectRadius);
 			}
-			return density;
 		}
+		return density;
 	}
 	Float2 SphFluid2dCpu::Normal(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
 	{
+		Float2 normal = Float2::zero;
 		if (m_useGridOptimization)
 		{
 			Float2 particlePos = positions[particleIndex];
 			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
-
-			Float2 normal = Float2::zero;
-			for (int i = 0; i < 9; i++)
+			for (const Int2& offset : s_offsets)
 			{
-				Int2 neighbourCell = particleCell + s_offsets[i];
-				int neighbourCellHash = m_pGrid->CellHash(neighbourCell);
-				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
-				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
+				Int2 neighbourCell = particleCell + offset;
+				const uint32_t cellKey = m_pGrid->GetCellKey(neighbourCell);
+				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCell);
 
-				while (otherIndex < m_particleCount) // at most as many iterations as there are particles.
+				// Skip empty cells:
+				if (otherIndex == uint32_t(-1) || otherIndex >= m_particleCount)
+					continue;
+
+				while (otherIndex < m_particleCount && m_pGrid->GetCellKey(otherIndex) == cellKey)
 				{
 					if (otherIndex == particleIndex)
 					{
 						otherIndex++;
 						continue;
 					}
-
-					uint32_t otherCellKey = m_pGrid->GetCellKey(otherIndex);
-					if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
-						break;
 
 					Float2 otherPos = positions[otherIndex];
 					Float2 offset = particlePos - otherPos;
@@ -629,15 +622,12 @@ namespace fluidDynamics
 						Float2 dir = offset / r;
 						normal += m_mass / densities[otherIndex] * smoothingKernals::DSpiky(r, dir, m_effectRadius);
 					}
-
 					otherIndex++;
 				}
 			}
-			return normal;
 		}
 		else
 		{
-			Float2 normal= Float2::zero;
 			for (int i = 0; i < m_particleCount; i++)
 			{
 				if (i == particleIndex)
@@ -651,25 +641,27 @@ namespace fluidDynamics
 					normal += m_mass / densities[i] * smoothingKernals::DSpiky(r, dir, m_effectRadius);
 				}
 			}
-			return normal;
 		}
+		return normal;
 	}
 	float SphFluid2dCpu::Curvature(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& normals, const std::vector<float>& densities)
 	{
+		float curvature = 0.0f;
+		Float2 particlePos = positions[particleIndex];
 		if (m_useGridOptimization)
 		{
-			Float2 particlePos = positions[particleIndex];
 			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
-
-			float curvature = 0.0f;
-			for (int i = 0; i < 9; i++)
+			for (const Int2& offset : s_offsets)
 			{
-				Int2 neighbourCell = particleCell + s_offsets[i];
-				int neighbourCellHash = m_pGrid->CellHash(neighbourCell);
-				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
-				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
+				Int2 neighbourCell = particleCell + offset;
+				const uint32_t cellKey = m_pGrid->GetCellKey(neighbourCell);
+				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCell);
 
-				while (otherIndex < m_particleCount) // at most as many iterations as there are particles.
+				// Skip empty cells:
+				if (otherIndex == uint32_t(-1) || otherIndex >= m_particleCount)
+					continue;
+
+				while (otherIndex < m_particleCount && m_pGrid->GetCellKey(otherIndex) == cellKey)
 				{
 					if (otherIndex == particleIndex)
 					{
@@ -677,36 +669,29 @@ namespace fluidDynamics
 						continue;
 					}
 
-					uint32_t otherCellKey = m_pGrid->GetCellKey(otherIndex);
-					if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
-						break;
-
 					Float2 otherPos = positions[otherIndex];
 					Float2 offset = particlePos - otherPos;
 					float r = offset.Length();
 					if (r < m_effectRadius && r > 1e-8f)
 						curvature -= m_mass / densities[otherIndex] * smoothingKernals::DDSpiky(r, m_effectRadius) / normals[otherIndex].Length();
-
 					otherIndex++;
 				}
 			}
-			return curvature;
 		}
 		else
 		{
-			float curvature = 0.0f;
 			for (int i = 0; i < m_particleCount; i++)
 			{
 				if (i == particleIndex)
 					continue;
 
-				Float2 offset = positions[particleIndex] - positions[i];
+				Float2 offset = particlePos - positions[i];
 				float r = offset.Length();
 				if (r < m_effectRadius && r > 1e-8f)
 					curvature -= m_mass / densities[i] * smoothingKernals::DDSpiky(r, m_effectRadius) / normals[i].Length();
 			}
-			return curvature;
 		}
+		return curvature;
 	}
 	float Pressure(float density, float targetDensity, float pressureMultiplier)
 	{
@@ -723,27 +708,25 @@ namespace fluidDynamics
 
 		// Internal interactions (particle-particle):
 		if (m_useGridOptimization)
-		{// With hash grid optimization:
+		{
 			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
-			for (int i = 0; i < 9; i++)
+			for (const Int2& offset : s_offsets)
 			{
-				Int2 neighbourCell = particleCell + s_offsets[i];
-				int neighbourCellHash = m_pGrid->CellHash(neighbourCell);
-				uint32_t neighbourCellKey = m_pGrid->CellKey(neighbourCellHash);
-				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCellKey);
+				Int2 neighbourCell = particleCell + offset;
+				const uint32_t cellKey = m_pGrid->GetCellKey(neighbourCell);
+				uint32_t otherIndex = m_pGrid->GetStartIndex(neighbourCell);
 
-				while (otherIndex < m_particleCount) // at most as many iterations as there are particles.
+				// Skip empty cells:
+				if (otherIndex == uint32_t(-1) || otherIndex >= m_particleCount)
+					continue;
+
+				while (otherIndex < m_particleCount && m_pGrid->GetCellKey(otherIndex) == cellKey)
 				{
-					// Skip self interaction:
 					if (otherIndex == particleIndex)
 					{
 						otherIndex++;
 						continue;
 					}
-
-					uint32_t otherCellKey = m_pGrid->GetCellKey(otherIndex);
-					if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
-						break;
 
 					Float2 otherPos = positions[otherIndex];
 					Float2 otherVel = velocities[otherIndex];
@@ -761,13 +744,12 @@ namespace fluidDynamics
 						Float2 velocityDiff = otherVel - particleVel;
 						forceDensity += (m_mass * smoothingKernals::DDViscos(r, m_effectRadius) / densities[otherIndex]) * velocityDiff;
 					}
-
 					otherIndex++;
 				}
 			}
 		}
 		else
-		{// Naive iteration over all particles:
+		{
 			for (int i = 0; i < m_particleCount; i++)
 			{
 				if (i == particleIndex)
@@ -789,6 +771,7 @@ namespace fluidDynamics
 				}
 			}
 		}
+
 		// External interactions:
 		{
 			// Gravity force density:
