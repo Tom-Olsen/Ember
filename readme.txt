@@ -77,37 +77,26 @@ Implemented features:
 
 
 Ember::TODO now!
+- add BufferView<T> with T=all math types which allows for stricter compile time buffer property restrictions.
 - performance worse than before architecture restructure.
 - make other projects compile and run again. => currently working on this! unitTest works, fluidDynamics is on its way. headless mode needs testing for proper unitTests.
-- add?:
-# ---------------------- Macros ---------------------
-target_compile_definitions(${PROJECT_NAME} PRIVATE <ProjectName>_PROJECT)
-# ---------------------------------------------------
-  to all cmake projects.
 - math::Random has static state and is in a static library that gets linked multiple times => inconcistent state. Fix this.
-- rewrite math library to be a wrapper around glm.
+- rewrite math library to be a wrapper around glm?
 - Add proper const to all methods that return a member pointer:
   const Type* const Foo()...:
   fist const: interpreted as (const Type*) meaning the value cant be changed.
   second const: the adress inside the pointer cant be chaged.
 - target_link_libraries(backends) with PRIVATE keyword?
 - better unified model for descriptorset bindings e.g: 0-127 for textures, 128-255 for buffers, etc.
-- descriptorsetpool management with dynamic creration of further pools when needed. currently there seems to be an error that after some runtime descriptorset alocation fails. why are new descriptor sets allocatedin the first place?
-- gpu resources on core side should always be handled as value/reference types as they are simple wrappers around a single pointer.
-- go through all classes and implement rule of 5 properly:
-  If any of the following is defined, define all of them!
-    1. Destructor					~Foo();
-    2. Copy constructor			    Foo(const Foo& other);
-    3. Copy assignment operator	    Foo& operator=(const Foo& other);
-    4. Move constructor			    Foo(Foo&& other);
-    5. Move assigment operator		Foo& operator=(Foo&& other);
+- descriptorsetpool management with dynamic creation of further pools when needed.
+- use one and he same descriptorset for all shadowproperties? meaning i would have to bind multiple shaderproperties to each draw call.
 - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 - sort entities first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
+- implement frustum culling.
 - validation layer errors when two shaders have the same binding number (binding missmatch error)
-- SceneView gui 
 - add SetData(...) to emberBackendInterface::IBuffer interface and appropiate overloads to vertex/index/storage buffers.
   Also add void* data to CreateBuffer factory.
-- add name to vulkanRendererBackend::Buffer? (also add Get/SetName(...) in IBuffer).
+- vmaBuffer and Buffer have a m_name member, same for vmaImage and Texture. One should be enough, having both is redundant?
 - move emberCommon::... to backend::... conversion to where its needed when its only ever needed once.
 - headless mode
 

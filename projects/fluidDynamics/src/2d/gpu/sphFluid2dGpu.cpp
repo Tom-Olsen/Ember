@@ -119,6 +119,7 @@ namespace fluidDynamics
 		// Reallocate buffers:
 		if (m_positionBuffer.IsValid() == false || m_positionBuffer.GetCount() != m_particleCount)
 		{
+			// Data buffers:
 			m_cellKeyBuffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(int), "cellKeyBuffer", BufferUsage::storage);
 			m_startIndexBuffer = Buffer((uint32_t)m_hashGridSize, (uint32_t)sizeof(int), "startIndexBuffer", BufferUsage::storage);
 			m_positionBuffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "positionBuffer", BufferUsage::storage);
@@ -127,12 +128,15 @@ namespace fluidDynamics
 			m_normalBuffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "normalBuffer", BufferUsage::storage);
 			m_curvatureBuffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(float), "curvatureBuffer", BufferUsage::storage);
 			m_forceDensityBuffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "forceDensityBuffer", BufferUsage::storage);
+			// Runge Kutta buffers:
 			m_kp1Buffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "kp1Buffer", BufferUsage::storage);
 			m_kv1Buffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "kv1Buffer", BufferUsage::storage);
 			m_kp2Buffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "kp2Buffer", BufferUsage::storage);
 			m_kv2Buffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "kv2Buffer", BufferUsage::storage);
 			m_tempPositionBuffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "tempPositionBuffer", BufferUsage::storage);
 			m_tempVelocityBuffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "tempVelocityBuffer", BufferUsage::storage);
+			// Temp buffers:
+			m_sortPermutationBuffer = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(int), "sortPermutationBuffer", BufferUsage::storage);
 			m_reorderBuffer0 = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "reorderBuffer0", BufferUsage::storage);
 			m_reorderBuffer1 = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "reorderBuffer1", BufferUsage::storage);
 			m_reorderBuffer2 = Buffer((uint32_t)m_particleCount, (uint32_t)sizeof(Float2), "reorderBuffer2", BufferUsage::storage);
@@ -199,7 +203,7 @@ namespace fluidDynamics
 			ComputeCellKeysPreRender();
 			Compute::PreRender::RecordBarrierWaitStorageWriteBeforeRead();
 
-			GpuSort::SortPreRender(m_cellKeyBuffer);
+			GpuSort::SortPreRender(m_cellKeyBuffer);	// This is wrong! Need SortPermutaion with a sortPermutationBuffer, to apply same sort to oher buffers.
 			Compute::PreRender::RecordBarrierWaitStorageWriteBeforeRead();
 
 			ComputeStartIndicesPreRender();
@@ -227,7 +231,7 @@ namespace fluidDynamics
 			ComputeCellKeysPreRender();
 			Compute::PreRender::RecordBarrierWaitStorageWriteBeforeRead();
 
-			GpuSort::SortPreRender(m_cellKeyBuffer);
+			GpuSort::SortPreRender(m_cellKeyBuffer);	// This is wrong! Need SortPermutaion with a sortPermutationBuffer, to apply same sort to oher buffers.
 			Compute::PreRender::RecordBarrierWaitStorageWriteBeforeRead();
 
 			ComputeStartIndicesPreRender();
@@ -661,7 +665,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::ComputeCellKeysAsync(uint32_t sessionID)
 	{
-		Uint3 threadCount(m_cellKeyBuffer.GetCount(), 1, 1);
+		Uint3 threadCount(m_particleCount, 1, 1);
 		m_cellKeysProperties.SetBuffer("cellKeyBuffer", m_cellKeyBuffer);
 		m_cellKeysProperties.SetBuffer("positionBuffer", m_positionBuffer);
 		m_cellKeysProperties.SetValue("Values", "gridRadius", m_effectRadius);
@@ -670,7 +674,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::ComputeStartIndicesAsync(uint32_t sessionID)
 	{
-		Uint3 threadCount(m_cellKeyBuffer.GetCount(), 1, 1);
+		Uint3 threadCount(m_particleCount, 1, 1);
 		m_startIndicesProperties.SetBuffer("startIndexBuffer", m_startIndexBuffer);
 		m_startIndicesProperties.SetBuffer("cellKeyBuffer", m_cellKeyBuffer);
 		Compute::Async::RecordComputeShader(sessionID, m_startIndicesComputeShader, m_startIndicesProperties, threadCount);

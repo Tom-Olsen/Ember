@@ -16,46 +16,37 @@ namespace emberEngine
     {
     private: // Members
         static bool s_isInitialized;
-        static std::unique_ptr<ComputeShader> s_pLocalBitonicSortComputeShader;
-        static std::unique_ptr<ComputeShader> s_pBigFlipComputeShader;
-        static std::unique_ptr<ComputeShader> s_pBigDisperseComputeShader;
-        static std::unique_ptr<ComputeShader> s_pLocalDisperseComputeShader;
-        static std::unique_ptr<ComputeShader> s_pReorderFloat1ComputeShader;
-        static std::unique_ptr<ComputeShader> s_pReorderFloat2ComputeShader;
-        static std::unique_ptr<ComputeShader> s_pReorderFloat3ComputeShader;
-        static std::unique_ptr<ComputeShader> s_pReorderFloat4ComputeShader;
-        static std::unique_ptr<ShaderProperties> s_pReorderFloat1ShaderProperties;
-        static std::unique_ptr<ShaderProperties> s_pReorderFloat2ShaderProperties;
-        static std::unique_ptr<ShaderProperties> s_pReorderFloat3ShaderProperties;
-        static std::unique_ptr<ShaderProperties> s_pReorderFloat4ShaderProperties;
+        // Bitonic sort compute shaders:
+        static std::unique_ptr<ComputeShader> s_pLocalBitonicSortIntComputeShader;
+        static std::unique_ptr<ComputeShader> s_pBigFlipIntComputeShader;
+        static std::unique_ptr<ComputeShader> s_pBigDisperseIntComputeShader;
+        static std::unique_ptr<ComputeShader> s_pLocalDisperseIntComputeShader;
+        // Apply permutation compute shaders:
+        static std::unique_ptr<ComputeShader> s_pApplyPermutationFloat1ComputeShader;
+        static std::unique_ptr<ComputeShader> s_pApplyPermutationFloat2ComputeShader;
+        static std::unique_ptr<ComputeShader> s_pApplyPermutationFloat3ComputeShader;
+        static std::unique_ptr<ComputeShader> s_pApplyPermutationFloat4ComputeShader;
+        // Apply permutation shader properties:
+        static std::unique_ptr<ShaderProperties> s_pApplyPermutationFloat1ShaderProperties;
+        static std::unique_ptr<ShaderProperties> s_pApplyPermutationFloat2ShaderProperties;
+        static std::unique_ptr<ShaderProperties> s_pApplyPermutationFloat3ShaderProperties;
+        static std::unique_ptr<ShaderProperties> s_pApplyPermutationFloat4ShaderProperties;
 
     public: // Methods:
 	    // Initialization/Cleanup:
         static void Init();
         static void Clear();
 
-        // Sorting:
-        static void SortImmediate(Buffer& buffer);
-        static void SortAsync(uint32_t sessionID, Buffer& buffer);
-        static void SortPreRender(Buffer& buffer);
+        // ToDo: add BufferView<T> class and use it for proper branching of below methods for different(all) emberMath types.
 
-        // Reorder immediate:
-        static void ReorderFloatImmediate(Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
-        static void ReorderFloat2Immediate(Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
-        static void ReorderFloat3Immediate(Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
-        static void ReorderFloat4Immediate(Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
+        // Sort:
+        static void Sort(ComputeType computeType, Buffer& buffer);
 
-        // Reorder async:
-        static void ReorderFloatAsync(uint32_t sessionID, Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
-        static void ReorderFloat2Async(uint32_t sessionID, Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
-        static void ReorderFloat3Async(uint32_t sessionID, Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
-        static void ReorderFloat4Async(uint32_t sessionID, Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
+        // Permutation sort:
+        static void SortPermutation(ComputeType computeType, Buffer& buffer, Buffer& permutationBuffer);
 
-        // Reorder pre render:
-        static void ReorderFloatPreRender(Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
-        static void ReorderFloat2PreRender(Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
-        static void ReorderFloat3PreRender(Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
-        static void ReorderFloat4PreRender(Buffer& indexBuffer, Buffer& inBuffer, Buffer& outBuffer);
+        // Apply permutation:
+        static void ApplyPermutation(ComputeType computeType, Buffer& permutationBuffer, Buffer& inBuffer, Buffer& outBuffer);
 
     private: // Methods
         // Delete all constructors:

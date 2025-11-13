@@ -1,6 +1,7 @@
 #include "compute.h"
 #include "computeShader.h"
 #include "emberTime.h"
+#include "logger.h"
 #include "shaderProperties.h"
 #include "iCompute.h"
 
@@ -173,5 +174,81 @@ namespace emberEngine
 		Compute::Async::Clear();
 		s_pICompute.reset();
 		s_isInitialized = false;
+	}
+
+
+
+	// Workload recording:
+	void Compute::RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount, uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				Async::RecordComputeShader(sessionID, computeShader, shaderProperties, threadCount);
+				break;
+			case ComputeType::immediate:
+				Immediate::Dispatch(computeShader, shaderProperties, threadCount);
+				break;
+			case ComputeType::postRender:
+				PostRender::RecordComputeShader(computeShader, shaderProperties);
+				break;
+			case ComputeType::preRender:
+				PreRender::RecordComputeShader(computeShader, shaderProperties, threadCount);
+				break;
+		}
+	}
+	ShaderProperties Compute::RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount, uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				return Async::RecordComputeShader(sessionID, computeShader, threadCount);
+				break;
+			case ComputeType::immediate:
+				return Immediate::Dispatch(computeShader, threadCount);
+				break;
+			case ComputeType::postRender:
+				return PostRender::RecordComputeShader(computeShader);
+				break;
+			case ComputeType::preRender:
+				return PreRender::RecordComputeShader(computeShader, threadCount);
+				break;
+		}
+	}
+	void Compute::RecordBarrier(ComputeType computeType, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask , uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				Async::RecordBarrier(sessionID, srcAccessMask, dstAccessMask);
+				break;
+			case ComputeType::immediate:
+				LOG_WARN("Compute::RecordBarrier(...): does not support ComputeType::immediate.")
+				break;
+			case ComputeType::postRender:
+				LOG_WARN("Compute::RecordBarrier(...): does not support ComputeType::postRender.")
+				break;
+			case ComputeType::preRender:
+				PreRender::RecordBarrier(srcAccessMask, dstAccessMask);
+				break;
+		}
+	}
+	void Compute::RecordBarrierWaitStorageWriteBeforeRead(ComputeType computeType, uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				Async::RecordBarrierWaitStorageWriteBeforeRead(sessionID);
+				break;
+			case ComputeType::immediate:
+				LOG_WARN("Compute::RecordBarrierWaitStorageWriteBeforeRead(...): does not support ComputeType::immediate.")
+				break;
+			case ComputeType::postRender:
+				LOG_WARN("Compute::RecordBarrierWaitStorageWriteBeforeRead(...): does not support ComputeType::postRender.")
+				break;
+			case ComputeType::preRender:
+				PreRender::RecordBarrierWaitStorageWriteBeforeRead();
+				break;
+		}
 	}
 }

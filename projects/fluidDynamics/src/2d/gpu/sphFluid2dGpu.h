@@ -47,7 +47,7 @@ namespace fluidDynamics
 		bool m_useGridOptimization;
 		uint32_t m_timeStep;
 
-		// Data:
+		// Data buffers:
 		int m_particleCount;
 		int m_hashGridSize;
 		Buffer m_cellKeyBuffer;
@@ -59,13 +59,16 @@ namespace fluidDynamics
 		Buffer m_curvatureBuffer;
 		Buffer m_forceDensityBuffer;
 
-		// Runge Kutta:
+		// Runge Kutta buffers:
 		Buffer m_kp1Buffer;
 		Buffer m_kv1Buffer;
 		Buffer m_kp2Buffer;
 		Buffer m_kv2Buffer;
 		Buffer m_tempPositionBuffer;
 		Buffer m_tempVelocityBuffer;
+
+		// Temp buffers:
+		Buffer m_sortPermutationBuffer;
 		Buffer m_reorderBuffer0;
 		Buffer m_reorderBuffer1;
 		Buffer m_reorderBuffer2;

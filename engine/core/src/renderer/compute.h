@@ -18,6 +18,17 @@ namespace emberEngine
 
 
 
+	// Allows for easier delegation to correct compute queue:
+	enum class ComputeType
+	{
+		async,
+		immediate,
+		postRender,
+		preRender
+	};
+
+
+
 	class EMBER_CORE_API Compute
 	{
 	public: // Subclasses:
@@ -142,6 +153,12 @@ namespace emberEngine
 		// Initialization/Cleanup:
 		static void Init(emberBackendInterface::ICompute* pICompute);
 		static void Clear();
+
+		// Workload recording (delegates to given computeType):
+		static void RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount = Uint3::zero, uint32_t sessionID = -1);
+		static ShaderProperties RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount = Uint3::zero, uint32_t sessionID = -1);
+		static void RecordBarrier(ComputeType computeType, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask, uint32_t sessionID = -1);
+		static void RecordBarrierWaitStorageWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);
 
 	private: // Methods
 		// Delete all constructors:
