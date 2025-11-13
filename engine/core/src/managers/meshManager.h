@@ -26,6 +26,7 @@ namespace emberEngine
         static std::unordered_map<std::string, std::unique_ptr<Mesh>> s_meshes;
 
     public: // Methods
+        // Initialization/Cleanup:
         static void Init();
         //static void UnloadAllMeshes();    // ember::ToDo: not sure if this is needed
         static void Clear();

@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_shadowMapping_hlsli__
-#define __INCLUDE_GUARD_shadowMapping_hlsli__
+#pragma once
 #include "math.hlsli"
 #include "shadowConstants.h"
 
@@ -258,7 +257,3 @@ float3 PhysicalLighting
 // Gold                 1.00 0.71 0.29 | 1.00 0.86 0.57
 // Aluminium            0.91 0.92 0.92 | 0.96 0.96 0.97
 // Silver               0.95 0.93 0.88 | 0.98 0.97 0.95
-
-
-
-#endif // __INCLUDE_GUARD_shadowMapping_hlsli__

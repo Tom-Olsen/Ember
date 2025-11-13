@@ -54,6 +54,10 @@ namespace emberEngine
 	{
 		m_pIAsync->RecordBarrier(sessionID, srcAccessMask, dstAccessMask);
 	}
+	void Compute::Async::RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID)
+	{
+		Compute::Async::RecordBarrier(sessionID, emberCommon::AccessMasks::computeShader_storageWrite, emberCommon::AccessMasks::computeShader_storageRead);
+	}
 
 
 
@@ -132,6 +136,10 @@ namespace emberEngine
 	void Compute::PreRender::RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
 	{
 		m_pIPreRender->RecordBarrier(srcAccessMask, dstAccessMask);
+	}
+	void Compute::PreRender::RecordBarrierWaitStorageWriteBeforeRead()
+	{
+		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_storageWrite, emberCommon::AccessMasks::computeShader_storageRead);
 	}
 
 

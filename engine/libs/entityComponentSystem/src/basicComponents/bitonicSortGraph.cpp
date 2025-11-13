@@ -1,5 +1,4 @@
 #include "bitonicSortGraph.h"
-#include "bitonicSortGraphEditorWindow.h"
 
 
 
@@ -8,28 +7,18 @@ namespace emberEngine
 	// Constructor/Destructor:
 	BitonicSortGraph::BitonicSortGraph()
 	{
-		// Local Bitonic 64:
-		//count = 64;
-		//width = 10;
-		//height = 5;
-		//lineWidth = 0.015f;
-		//lineGap = 0.03f;
-		//blockGap = 0.125f;
-
 		count = 64;
 		width = 10;
 		height = 5;
 		lineWidth = 0.015f;
 		lineGap = 0.03f;
 		blockGap = 0.125f;
-
-		pMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
-		editorWindow = std::make_unique<BitonicSortGraphEditorWindow>(this);
 	}
 	BitonicSortGraph::~BitonicSortGraph()
 	{
 
 	}
+
 
 
 	// Overrides:
@@ -47,9 +36,9 @@ namespace emberEngine
 		float y1 = height * (0.5f - t1);
 		Float3 pos0 = Float3(GetTransform()->GetLocalToWorldMatrix() * Float4(x, y0, 0.1, 1));
 		Float3 pos1 = Float3(GetTransform()->GetLocalToWorldMatrix() * Float4(x, y1, 0.1, 1));
-		Graphics::DrawSphere(pos0, 3 * lineWidth, Float4::red, false, false);
-		Graphics::DrawSphere(pos1, 3 * lineWidth, Float4::red, false, false);
-		Graphics::DrawLineSegment(pos0, pos1, lineWidth, 0.8f * Float4::red, false, false);
+		Renderer::DrawSphere(pos0, 3 * lineWidth, Float4::red, false, false);
+		Renderer::DrawSphere(pos1, 3 * lineWidth, Float4::red, false, false);
+		Renderer::DrawLineSegment(pos0, pos1, lineWidth, 0.8f * Float4::red, false, false);
 	}
 	void BitonicSortGraph::DrawDisperse(int k, int index, float x)
 	{
@@ -65,9 +54,9 @@ namespace emberEngine
 		float y1 = height * (0.5f - t1);
 		Float3 pos0 = Float3(GetTransform()->GetLocalToWorldMatrix() * Float4(x, y0, 0.1, 1));
 		Float3 pos1 = Float3(GetTransform()->GetLocalToWorldMatrix() * Float4(x, y1, 0.1, 1));
-		Graphics::DrawSphere(pos0, 3 * lineWidth, Float4::orange, false, false);
-		Graphics::DrawSphere(pos1, 3 * lineWidth, Float4::orange, false, false);
-		Graphics::DrawLineSegment(pos0, pos1, lineWidth, 0.8f * Float4::orange, false, false);
+		Renderer::DrawSphere(pos0, 3 * lineWidth, Float4::orange, false, false);
+		Renderer::DrawSphere(pos1, 3 * lineWidth, Float4::orange, false, false);
+		Renderer::DrawLineSegment(pos0, pos1, lineWidth, 0.8f * Float4::orange, false, false);
 	}
 	void BitonicSortGraph::DrawHorizontalLines()
 	{
@@ -77,7 +66,7 @@ namespace emberEngine
 			float z = height * (0.5f - t);
 			Float3 start(-0.5f * width, 0.0f, z);
 			Float3 end(0.5f * width, 0.0f, z);
-			Graphics::DrawLineSegment(start, end, lineWidth, 0.8f * Float4::white, false, false);
+			Renderer::DrawLineSegment(start, end, lineWidth, 0.8f * Float4::white, false, false);
 		}
 	}
 	void BitonicSortGraph::DrawLocalBitonicSort(float& x, int startIndex, int localCount)
@@ -122,9 +111,5 @@ namespace emberEngine
 		DrawLocalBitonicSort(x, 2 * count / 8, count / 4);
 		x = -0.48f * width;
 		DrawLocalBitonicSort(x, 3 * count / 8, count / 4);
-	}
-	const std::string BitonicSortGraph::ToString() const
-	{
-		return "BitonicSortGraph";
 	}
 }

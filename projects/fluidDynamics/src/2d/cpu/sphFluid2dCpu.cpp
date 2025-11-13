@@ -14,6 +14,7 @@ namespace fluidDynamics
 
 
 
+	// Public methods:
 	// Constructor/Destructor:
 	SphFluid2dCpu::SphFluid2dCpu()
 	{
@@ -47,6 +48,7 @@ namespace fluidDynamics
 
 		// Editor Window:
 		editorWindow = std::make_unique<emberEditor::SphFluid2dCpuEditorWindow>(this);
+		Reset();
 	}
 	SphFluid2dCpu::~SphFluid2dCpu()
 	{
@@ -106,10 +108,12 @@ namespace fluidDynamics
 		//	m_normals[i] = Normal(i, m_positions, m_densities);
 		//for (int i = 0; i < m_particleCount; i++)
 		//	m_curvatures[i] = Curvature(i, m_positions, m_normals, m_densities);
+
+		m_reset = false;
 	}
 	void SphFluid2dCpu::FixedUpdate()
 	{
-		if (!m_isRunning)
+		if (!m_isRunning || m_reset)
 			return;
 
 		// Do multiple iterations of deltaT<=dt if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
@@ -288,7 +292,7 @@ namespace fluidDynamics
 		if (m_particleCount != particleCount)
 		{
 			m_particleCount = particleCount;
-			Reset();
+			m_reset = true;
 		}
 	}
 	void SphFluid2dCpu::SetEffectRadius(float effectRadius)
@@ -350,7 +354,7 @@ namespace fluidDynamics
 		if (m_initialDistributionRadius != initialDistributionRadius)
 		{
 			m_initialDistributionRadius = initialDistributionRadius;
-			Reset();
+			m_reset = true;
 		}
 	}
 	void SphFluid2dCpu::SetVisualRadius(float visualRadius)
@@ -464,8 +468,15 @@ namespace fluidDynamics
 		if (EventSystem::KeyDown(Input::Key::Delete))
 		{
 			m_isRunning = false;
-			Reset();
+			m_reset = true;
 			LOG_TRACE("Simulation stopped and reset.");
+		}
+
+		// Reset:
+		if (m_reset)
+		{
+			Reset();
+			return;
 		}
 
 		// Mouse scrolling:

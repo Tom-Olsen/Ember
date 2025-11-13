@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_shadowPushConstant_hlsli__
-#define __INCLUDE_GUARD_shadowPushConstant_hlsli__
+#pragma once
 
 
 
@@ -14,7 +13,3 @@ struct ShadowPushConstant
 #else
 [[vk::push_constant]] ConstantBuffer<ShadowPushConstant> pc;
 #endif
-
-
-
-#endif //__INCLUDE_GUARD_shadowPushConstant_hlsli__

@@ -14,7 +14,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     int index = int(threadID.x);
     if (index < pc.threadCount.x)
     {
-        startIndexBuffer[index] = -1;
+        startIndexBuffer[index] = uint(-1);
         if (index == 0)
             startIndexBuffer[cellKeyBuffer[0]] = 0;
         else

@@ -41,6 +41,7 @@ namespace emberEngine
 			static void RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
 			static ShaderProperties RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask);
+			static void RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID);
 
 		private: // Methods
 			// Delete all constructors:
@@ -119,6 +120,7 @@ namespace emberEngine
 			static void RecordComputeShader(ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
 			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask);
+			static void RecordBarrierWaitStorageWriteBeforeRead();
 
 		private: // Methods
 			// Delete all constructors:

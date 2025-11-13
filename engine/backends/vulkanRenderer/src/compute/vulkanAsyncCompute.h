@@ -64,6 +64,9 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IShaderProperties* RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount) override;
 		void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) override;
 
+		// Debugging:
+		void PrintSessionsState();
+
 	private: // Methods:
 		void ResetComputeSession(uint32_t sessionID);
 	};

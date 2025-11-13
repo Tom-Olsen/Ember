@@ -56,8 +56,12 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_R
 
 # -------------- Link Custom Libraries --------------
 # Ember Headless Application:
-add_subdirectory("${ENGINE_APPLICATIONS_DIR}/emberHeadlessApp" EmberHeadlessApp)
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberHeadlessApp)
+#add_subdirectory("${ENGINE_APPLICATIONS_DIR}/emberHeadlessApp" EmberHeadlessApp)
+#target_link_libraries(${PROJECT_NAME} PUBLIC EmberHeadlessApp)
+
+# Ember Game Application:
+add_subdirectory("${ENGINE_APPLICATIONS_DIR}/embergameApp" EmberGameApp)
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberGameApp)
 # ---------------------------------------------------
 
 

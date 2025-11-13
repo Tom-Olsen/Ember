@@ -83,8 +83,8 @@ namespace vulkanRendererBackend
 	}
 	void Async::DispatchComputeSession(uint32_t sessionID, float time, float deltaTime)
 	{
-		if (sessionID < 0 || sessionID > m_sessionCount - 1)
-			throw std::out_of_range("compute::Async::DispatchComputeSession(...) sessionID out of range.");
+		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
+			throw std::out_of_range("compute::Async::DispatchComputeSession(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 		if (m_computeSessions[sessionID].state == ComputeSession::State::recording)
 		{
 			m_computeSessions[sessionID].Dispatch(m_pCommandPools[sessionID].GetPrimaryVkCommandBuffer(), m_fences[sessionID], time, deltaTime);
@@ -97,14 +97,14 @@ namespace vulkanRendererBackend
 	}
 	bool Async::IsFinished(uint32_t sessionID)
 	{
-		if (sessionID < 0 || sessionID > m_sessionCount - 1)
-			throw std::out_of_range("compute::Async::IsFinished(...) sessionID out of range.");
+		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
+			throw std::out_of_range("compute::Async::IsFinished(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 
 		if (m_computeSessions[sessionID].state != ComputeSession::State::running)
 			return true;	// not running => finished=true, and no reset required.
 
 		VkResult result = vkGetFenceStatus(Context::GetVkDevice(), m_fences[sessionID]);
-		bool isFinished = (result == VK_SUCCESS) ? true : false;
+		bool isFinished = (result == VK_SUCCESS ? true : false);
 
 		if (isFinished)
 			ResetComputeSession(sessionID);
@@ -113,8 +113,8 @@ namespace vulkanRendererBackend
 	}
 	void Async::WaitForFinish(uint32_t sessionID)
 	{
-		if (sessionID < 0 || sessionID > m_sessionCount - 1)
-			throw std::out_of_range("compute::Async::WaitForFinish(...) sessionID out of range.");
+		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
+			throw std::out_of_range("compute::Async::WaitForFinish(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 
 		if (m_computeSessions[sessionID].state != ComputeSession::State::running)
 			return;	// not running => finished, no reset required.
@@ -128,9 +128,9 @@ namespace vulkanRendererBackend
 	// Workload recording:
 	void Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties, Uint3 threadCount)
 	{
-		if (0 < sessionID || sessionID > m_sessionCount - 1)
+		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
 		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) sessionID out of range.");
+			LOG_ERROR("compute::Async::RecordComputeShader(...) sessionID '{}' out of range.", sessionID);
 			return;
 		}
 		if (!pIComputeShader)
@@ -145,7 +145,7 @@ namespace vulkanRendererBackend
 		}
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
 		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. threadCount has 0 entry.");
+			LOG_ERROR("compute::Async::RecordComputeShader(...) '{}' failed. threadCount has 0 entry.", pIComputeShader->GetName());
 			return;
 		}
 		if (m_computeSessions[sessionID].state != ComputeSession::State::recording)
@@ -174,6 +174,21 @@ namespace vulkanRendererBackend
 		
 		ComputeCall computeCall = { 0, Uint3::zero, nullptr, nullptr, AccessMaskCommonToVulkan(srcAccessMask), AccessMaskCommonToVulkan(dstAccessMask) };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
+	}
+
+
+
+	// Debugging:
+	void Async::PrintSessionsState()
+	{
+		std::queue<uint32_t> copy = m_freeIndices;
+		std::string freeSessions;
+		while (!copy.empty())
+		{
+			freeSessions += std::to_string(copy.front()) + " ";
+			copy.pop();
+		}
+		LOG_INFO("Free sessions: {}", freeSessions);
 	}
 
 

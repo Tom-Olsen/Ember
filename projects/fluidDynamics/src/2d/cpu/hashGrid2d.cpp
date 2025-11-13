@@ -6,6 +6,7 @@
 
 namespace fluidDynamics
 {
+	// Public methods:
 	// Constructor/Destructor:
 	HashGrid2d::HashGrid2d(int particleCount)
 	{
@@ -45,7 +46,7 @@ namespace fluidDynamics
 	// Getters by cell:
 	uint32_t HashGrid2d::GetCellKey(Int2 cell) const
 	{
-		int64_t cellHash = CellHash(cell);
+		uint32_t cellHash = CellHash(cell);
 		return CellKey(cellHash);
 	}
 	uint32_t HashGrid2d::GetStartIndex(Int2 cell) const
@@ -61,17 +62,19 @@ namespace fluidDynamics
 	{
 		return Int2(Float2::Floor((position / radius)));
 	}
-	int64_t HashGrid2d::CellHash(Int2 cell) const
+	uint32_t HashGrid2d::CellHash(Int2 cell) const
 	{
-		int64_t hash = (int64_t(cell.x) * m_prime0) ^ (int64_t(cell.y) * m_prime1);
-		hash ^= (hash >> 33);
-		hash *= 0xff51afd7ed558ccdULL;
-		hash ^= (hash >> 33);
+		uint32_t hash = (uint32_t(cell.x) * m_prime0) + (uint32_t(cell.y) * m_prime1);
+		hash ^= hash >> 16;
+		hash *= 0x85ebca6b;
+		hash ^= hash >> 13;
+		hash *= 0xc2b2ae35;
+		hash ^= hash >> 16;
 		return hash;
 	}
-	uint32_t HashGrid2d::CellKey(int cellHash) const
+	uint32_t HashGrid2d::CellKey(uint32_t cellHash) const
 	{
-		return ((cellHash % m_size) + m_size) % m_size;
+		return cellHash % m_size;
 	}
 
 
@@ -89,7 +92,7 @@ namespace fluidDynamics
 		for (size_t i = 0; i < m_particleCount; i++)
 		{
 			Int2 cell = Cell(positions[i], radius);
-			int64_t cellHash = CellHash(cell);
+			uint32_t cellHash = CellHash(cell);
 			m_cellKeys[i] = CellKey(cellHash);
 		}
 

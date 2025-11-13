@@ -50,6 +50,9 @@ namespace emberEngine
 #include "ecs.h"
 #endif
 
+// Other:
+#include "gpuSort.h"
+
 // Common (core <-> backend) communication: (Not all included on purpose for now)
 #include "commonAccessMask.h"
 #include "commonInput.h"
@@ -73,14 +76,14 @@ namespace emberEngine
 
 // Basic components:
 #ifndef EMBER_CORE_EXPORTS // don't exist in the core!
-#include "camera.h"
-#include "cameraController.h"
-#include "directionalLight.h"
-#include "entityState.h"
-#include "instancedMeshRenderer.h"
-#include "meshRenderer.h"
-#include "pointLight.h"
-#include "postRenderEffects.h"
-#include "spotLight.h"
-#include "transform.h"
+    #include "camera.h"
+    #include "cameraController.h"
+    #include "directionalLight.h"
+    #include "entityState.h"
+    #include "instancedMeshRenderer.h"
+    #include "meshRenderer.h"
+    #include "pointLight.h"
+    #include "postRenderEffects.h"
+    #include "spotLight.h"
+    #include "transform.h"
 #endif

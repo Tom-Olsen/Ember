@@ -34,6 +34,7 @@ namespace emberEngine
         static std::unordered_map<std::string, std::unique_ptr<emberBackendInterface::IMaterial>> s_materialInterfacesMap;
 
     public: // Methods
+        // Initialization/Cleanup:
         static void Init();
         static void Clear();
 

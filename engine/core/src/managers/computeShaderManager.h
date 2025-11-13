@@ -23,6 +23,7 @@ namespace emberEngine
         static std::unordered_map<std::string, std::unique_ptr<ComputeShader>> s_computeShaders;
 
     public: // Methods
+        // Initialization/Cleanup:
         static void Init();
         static void Clear();
 

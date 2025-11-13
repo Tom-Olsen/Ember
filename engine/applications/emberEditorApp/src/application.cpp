@@ -1,22 +1,18 @@
 #include "application.h"
-#include "bufferManager.h"
 #include "commonRendererCreateInfo.h"
 #include "component.h"
-#include "computeShaderManager.h"
 #include "compute.h"
+#include "core.h"
 #include "editor.h"
 #include "emberMath.h"
 #include "emberTime.h"
 #include "eventSystem.h"
 #include "gui.h"
 #include "logger.h"
-#include "materialManager.h"
-#include "meshManager.h"
 #include "profiler.h"
 #include "renderer.h"
 #include "scene.h"
 #include "shadowConstants.h"
-#include "textureManager.h"
 #include "window.h"
 // Backends:
 #include "sdlWindow.h"
@@ -62,9 +58,8 @@ namespace emberApplication
 		{
 			m_pActiveScene = nullptr;
 
-			// Basic systems:
-			emberLogger::Logger::Init();
-			math::Random::Init();
+			// Init basic systems:
+			emberEngine::Core::InitBasics();
 
 			// Window backend:
 			emberBackendInterface::IWindow* pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
@@ -81,36 +76,20 @@ namespace emberApplication
 			rendererCreateInfo.maxDirectionalLights = MAX_DIR_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.maxPositionalLights = MAX_POS_LIGHTS;					// controlled via macro for now.
 			rendererCreateInfo.shadowMapResolution = SHADOW_MAP_RESOLUTION;				// controlled via macro for now.
-			emberBackendInterface::IRenderer* pIRenderer;
-			if (true)
-				pIRenderer = new vulkanRendererBackend::Renderer(rendererCreateInfo, pIWindow);
+			emberBackendInterface::IRenderer* pIRenderer = new vulkanRendererBackend::Renderer(rendererCreateInfo, pIWindow);
 
 			// Compute backend:
-			emberBackendInterface::ICompute* pICompute;
-			if (true)
-				pICompute = new vulkanRendererBackend::Compute();
+			emberBackendInterface::ICompute* pICompute = new vulkanRendererBackend::Compute();
 
 			// Gui backend:
 			emberBackendInterface::IGui* pIGui = new imGuiSdlVulkanBackend::Gui(pIWindow, pIRenderer, rendererCreateInfo.enableDockSpace);
 
-			// Link backends together:
-			pIRenderer->LinkIGuiHandle(pIGui);			// needed so renderer can inject gui draw calls in present renderpass.
-			pIRenderer->LinkIComputeHandle(pICompute);	// needed for pre- and post-render compute shaders.
-			pIWindow->LinkIGuiHandle(pIGui);			// needed for window->gui event passthrough.
-			pIGui->SetEditorCallbacks(emberEngine::Editor::Render, emberEngine::Editor::GetFocusedWindowWantCaptureEvents);
-
-			// Backend wrappers:
-			emberEngine::Window::Init(pIWindow);
-			emberEngine::Renderer::Init(pIRenderer);
-			emberEngine::Compute::Init(pICompute);
-			emberEngine::Gui::Init(pIGui);
+			// Init backends:
+			emberEngine::Core::InitBackends(pIWindow, pIRenderer, pICompute, pIGui);
 
 			// Gpu Resource Managers:
-			emberEngine::ComputeShaderManager::Init();
-			emberEngine::MaterialManager::Init();
-			emberEngine::BufferManager::Init();
-			emberEngine::TextureManager::Init();
-			emberEngine::MeshManager::Init();
+			emberEngine::Core::InitManagers();
+			emberEngine::Core::InitOther();
 
 			// Editor windows:
 			m_pConsoleEditorWindow = std::make_unique<emberEditor::ConsoleEditorWindow>();
@@ -132,28 +111,11 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
-		// Wait for gpu to finish any remaining work:
 		emberEngine::Renderer::WaitDeviceIdle();
-
-		// Other systems:
-		emberEngine::EventSystem::Clear();
-
-		// Gpu Resource Managers:
-		emberEngine::MeshManager::Clear();
-		emberEngine::TextureManager::Clear();
-		emberEngine::BufferManager::Clear();
-		emberEngine::MaterialManager::Clear();
-		emberEngine::ComputeShaderManager::Clear();
-
-		// Backends:
-		emberEngine::Gui::Clear();
-		emberEngine::Compute::Clear();
-		emberEngine::Renderer::Clear();
-		emberEngine::Window::Clear();
-
-		// Basic systems:
-		math::Random::Clear();
-		emberLogger::Logger::Clear();
+		emberEngine::Core::ClearOther();
+		emberEngine::Core::ClearManagers();
+		emberEngine::Core::ClearBackends();
+		emberEngine::Core::ClearBasics();
 	}
 
 

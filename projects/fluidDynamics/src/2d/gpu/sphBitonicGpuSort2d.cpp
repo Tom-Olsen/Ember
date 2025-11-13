@@ -1,11 +1,12 @@
-#include "sphBitonicSort2d.h"
+#include "sphBitonicGpuSort2d.h"
 
 
 
 namespace fluidDynamics
 {
+	// Public methods:
 	// Initialization and cleanup:
-	SphBitonicSort2d::SphBitonicSort2d()
+	SphBitonicGpuSort2d::SphBitonicGpuSort2d()
 	{
 		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
 		m_cellKeys = ComputeShader("cellKeys2d", directoryPath / "cellKeys2d.comp.spv");
@@ -17,35 +18,45 @@ namespace fluidDynamics
 		m_cellKeyProperties = ShaderProperties(m_cellKeys);
 		m_startIndicesProperties = ShaderProperties(m_startIndices);
 	}
-	SphBitonicSort2d::~SphBitonicSort2d()
+	SphBitonicGpuSort2d::~SphBitonicGpuSort2d()
 	{
 
 	}
 
+
+
+	// Setters:
+	void SphBitonicGpuSort2d::SetHashGridSize(int particleCount)
+	{
+		m_hashGridSize = math::NextPrimeAbove(2 * particleCount);
+	}
+	void SphBitonicGpuSort2d::SetGridRadius(float gridRadius)
+	{
+		m_gridRadius = gridRadius;
+	}
+	
 
 
 	// Sorting:
-	void SphBitonicSort2d::ComputeCellKeys(Buffer& cellKeyBuffer, Buffer& positionBuffer, float gridRadius)
+	void SphBitonicGpuSort2d::ComputeCellKeys(Buffer& cellKeyBuffer, Buffer& positionBuffer)
 	{
-		uint32_t particleCount = cellKeyBuffer.GetCount();
-		Uint3 threadCount(particleCount, 1, 1);
+		Uint3 threadCount(cellKeyBuffer.GetCount(), 1, 1);
 		m_cellKeyProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
 		m_cellKeyProperties.SetBuffer("positionBuffer", positionBuffer);
-		m_cellKeyProperties.SetValue("Values", "gridRadius", gridRadius);
-		m_cellKeyProperties.SetValue("Values", "particleCount", (int)particleCount);
+		m_cellKeyProperties.SetValue("Values", "gridRadius", m_gridRadius);
+		m_cellKeyProperties.SetValue("Values", "hashGridSize", (int)m_hashGridSize);
 		Compute::PreRender::RecordComputeShader(m_cellKeys, m_cellKeyProperties, threadCount);
 		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
 	}
-	void SphBitonicSort2d::ComputeStartIndices(Buffer& cellKeyBuffer, Buffer& startIndexBuffer)
+	void SphBitonicGpuSort2d::ComputeStartIndices(Buffer& cellKeyBuffer, Buffer& startIndexBuffer)
 	{
-		int particleCount = cellKeyBuffer.GetCount();
-		Uint3 threadCount(particleCount, 1, 1);
+		Uint3 threadCount(cellKeyBuffer.GetCount(), 1, 1);
 		m_startIndicesProperties.SetBuffer("startIndexBuffer", startIndexBuffer);
 		m_startIndicesProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
 		Compute::PreRender::RecordComputeShader(m_startIndices, m_startIndicesProperties, threadCount);
 		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
 	}
-	void SphBitonicSort2d::Sort(Buffer& cellKeyBuffer, Buffer& positionBuffer, Buffer& velocityBuffer)
+	void SphBitonicGpuSort2d::Sort(Buffer& cellKeyBuffer, Buffer& positionBuffer, Buffer& velocityBuffer)
 	{
 		int blockSize = m_localBitonicSort.GetBlockSize().x;
 		int bufferSize = (int)positionBuffer.GetCount();			// total number of particles.

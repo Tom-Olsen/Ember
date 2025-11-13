@@ -70,7 +70,7 @@ Implemented features:
 -Fully automated descriptorSet system for shaderProperties (see spirvReflect.h/cpp) which handles descriptorSets for Materials and ComputeShaders.
 -ECS: static library in the Embere/engine/libs folder which gets linked to the applications. The core has no access to the ECS.
 -EventSystem that catches SDL events and makes them visible to Gui+Editor+Entities/Components.
--CameraController that is identical to unities editor pCamera.
+-CameraController that is identical to unities editor.
 -Custom math library, see math.h/cpp. (will be refactored to be a glm wrapper soon).
 -Dear ImGui integration with docking feature.
 
@@ -84,6 +84,8 @@ Ember::TODO now!
 target_compile_definitions(${PROJECT_NAME} PRIVATE <ProjectName>_PROJECT)
 # ---------------------------------------------------
   to all cmake projects.
+- math::Random has static state and is in a static library that gets linked multiple times => inconcistent state. Fix this.
+- rewrite math library to be a wrapper around glm.
 - Add proper const to all methods that return a member pointer:
   const Type* const Foo()...:
   fist const: interpreted as (const Type*) meaning the value cant be changed.

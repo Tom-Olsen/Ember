@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_interpolation_hlsli__
-#define __INCLUDE_GUARD_interpolation_hlsli__
+#pragma once
 #include "mathConstants.hlsli"
 
 
@@ -50,5 +49,3 @@ float Interpolation_Bicubic(float2 p,
     float Fp2 = Interpolation_Cubic(p.x, fm1p2, fp0p2, fp1p2, fp2p2);
     return Interpolation_Cubic(p.y, Fm1, Fp0, Fp1, Fp2);
 }
-
-#endif //__INCLUDE_GUARD_interpolation_hlsli__

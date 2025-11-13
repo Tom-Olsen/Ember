@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_GUARD_mathConstants_hlsli__
-#define __INCLUDE_GUARD_mathConstants_hlsli__
+#pragma once
 
 
 
@@ -19,5 +18,3 @@ static const float4 math_one4 = float4(1, 1, 1, 1);
 static const float2x2 math_identity2x2 = float2x2(1, 0, 0, 1);
 static const float3x3 math_identity3x3 = float3x3(1, 0, 0, 0, 1, 0, 0, 0, 1);
 static const float4x4 math_identity4x4 = float4x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-
-#endif // __INCLUDE_GUARD_mathConstants_hlsli__

@@ -23,6 +23,7 @@ namespace emberEngine
         static std::unordered_map<std::string, std::unique_ptr<Texture>> s_textures;
 
     public: // Methods:
+        // Initialization/Cleanup:
         static void Init();
         static void Clear();
 

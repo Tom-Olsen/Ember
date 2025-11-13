@@ -25,6 +25,7 @@ namespace emberEngine
 
 
 
+	// Public methods:
 	// Initialization/Cleanup:
 	void Gui::Init(emberBackendInterface::IGui* pIGui)
 	{

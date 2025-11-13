@@ -24,6 +24,7 @@ namespace fluidDynamics
 	private: // Members:
 		// Management:
 		bool m_isRunning;
+		bool m_reset;
 		float m_timeScale;
 		bool m_useGridOptimization;
 		uint32_t m_timeStep;
@@ -39,7 +40,7 @@ namespace fluidDynamics
 		std::vector<float> m_curvatures;
 		std::vector<Float2> m_forceDensities;
 
-		// Runge Kutta fields:
+		// Runge Kutta:
 		std::vector<Float2> m_kp1;
 		std::vector<Float2> m_kv1;
 		std::vector<Float2> m_kp2;

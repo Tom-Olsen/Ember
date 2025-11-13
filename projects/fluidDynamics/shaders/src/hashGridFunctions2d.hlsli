@@ -1,11 +1,10 @@
-#ifndef __INCLUDE_GUARD_hashGridFunctions2d_hlsli__
-#define __INCLUDE_GUARD_hashGridFunctions2d_hlsli__
+#pragma once
 
 
 
 // Hash grid primes:
-static const int prime0 = 73856093;
-static const int prime1 = 83492791;
+static const uint prime0 = 73856093;
+static const uint prime1 = 83492791;
 
 
 
@@ -19,24 +18,37 @@ static const int2 offsets[9] =
 
 
 
-int2 Cell(float2 position, float radius)
+// Hashing:
+int2 HashGrid2d_Cell(float2 position, float radius)
 {
     return int2(floor(position / radius));
 }
-int CellHash(int2 cell)
+uint HashGrid2d_CellHash(int2 cell)
 {
-    int a = cell.x * prime0;
-    int b = cell.y * prime1;
-    return a ^ b;
+    uint hash = (uint(cell.x) * prime0) + (uint(cell.y) * prime1);
+    hash ^= hash >> 16;
+    hash *= 0x85ebca6b;
+    hash ^= hash >> 13;
+    hash *= 0xc2b2ae35;
+    hash ^= hash >> 16;
+    return hash;
 }
-uint CellKey(int cellHash, int particleCount)
+uint HashGrid2d_CellKey(int cellHash, int hashGridSize)
 {
-    // Module operation with negative numbers is not identical between c++ and hlsl.
-    // The below method circumvents this discrepency.
-    int mod = cellHash % particleCount;
-    return (mod + particleCount) % particleCount;
+    // hashGridSize ~ 2*particleCount for fever collisions.
+    return cellHash % hashGridSize;
 }
 
 
 
-#endif //__INCLUDE_GUARD_hashGridFunctions2d_hlsli__
+// Getters:
+uint HashGrid2d_GetCellKey(int2 cell, int hashGridSize)
+{
+    uint cellHash = HashGrid2d_CellHash(cell);
+    return HashGrid2d_CellKey(cellHash, hashGridSize);
+}
+uint HashGrid2d_GetStartIndex(int2 cell, int hashGridSize, StructuredBuffer<uint> startIndexBuffer)
+{
+    uint cellKey = HashGrid2d_GetCellKey(cell, hashGridSize);
+    return startIndexBuffer[cellKey];
+}

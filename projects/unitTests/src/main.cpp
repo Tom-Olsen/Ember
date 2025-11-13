@@ -53,7 +53,7 @@ constexpr float epsilon = 1e-6f;
 #include "testMathf.h"
 #include "testRay.h"
 #include "testUint3.h"
-//#include "testGpuSort.h"
+#include "testGpuSort.h"
 
 
 
@@ -61,6 +61,8 @@ int main(int argc, char** argv)
 {
 	emberLogger::Logger::Init();
 	math::Random::Init();
-	testing::InitGoogleTest(&argc, argv);
+	::testing::InitGoogleTest(&argc, argv);
+	::testing::FLAGS_gtest_catch_exceptions = false;
+	::testing::FLAGS_gtest_output = "console";
 	return RUN_ALL_TESTS();
 }

@@ -1,16 +1,11 @@
-#ifndef __INCLUDE_GUARD_bitonicSortGraph_h__
-#define __INCLUDE_GUARD_bitonicSortGraph_h__
+#pragma once
 #include "emberEngine.h"
 
 
 
 namespace emberEngine
 {
-	// Forward declerations:
-	struct BitonicSortGraphEditorWindow;
-
-
-
+	// Renders bitonic sort graph for debugging.
 	class BitonicSortGraph : public Component
 	{
 	public: // Members:
@@ -20,9 +15,8 @@ namespace emberEngine
 		float lineWidth;
 		float lineGap;
 		float blockGap;
-	private: // Members:
-		Material* pMaterial;
-		std::unique_ptr<BitonicSortGraphEditorWindow> editorWindow;
+
+	private: // Methods:
 		void DrawFlip(int k, int index, float x);
 		void DrawDisperse(int k, int index, float x);
 		void DrawHorizontalLines();
@@ -35,10 +29,5 @@ namespace emberEngine
 
 		// Overrides:
 		void Update() override;
-		const std::string ToString() const override;
 	};
 }
-
-
-
-#endif // __INCLUDE_GUARD_bitonicSortGraph_h__

@@ -81,12 +81,12 @@ namespace emberCommon
 		inline static ComputeShaderAccessMask computeShader_shaderRead{ AccessMaskFlag::shaderRead };
 		inline static ComputeShaderAccessMask computeShader_shaderWrite{ AccessMaskFlag::shaderWrite };
 		inline static ComputeShaderAccessMask computeShader_sampledRead{ AccessMaskFlag::sampledRead };
-		inline static ComputeShaderAccessMask computeShader_storageRea{ AccessMaskFlag::storageRead };
-		inline static ComputeShaderAccessMask computeShader_storageWrit{ AccessMaskFlag::storageWrite };
-		inline static ComputeShaderAccessMask computeShader_memoryRea{ AccessMaskFlag::memoryRead };
-		inline static ComputeShaderAccessMask computeShader_memoryWrit{ AccessMaskFlag::memoryWrite };
-		inline static ComputeShaderAccessMask computeShader_accelerationStructureRea{ AccessMaskFlag::accelerationStructureRead };
-		inline static ComputeShaderAccessMask computeShader_descriptorBufferRea{ AccessMaskFlag::descriptorBufferRead };
+		inline static ComputeShaderAccessMask computeShader_storageRead{ AccessMaskFlag::storageRead };
+		inline static ComputeShaderAccessMask computeShader_storageWrite{ AccessMaskFlag::storageWrite };
+		inline static ComputeShaderAccessMask computeShader_memoryRead{ AccessMaskFlag::memoryRead };
+		inline static ComputeShaderAccessMask computeShader_memoryWrite{ AccessMaskFlag::memoryWrite };
+		inline static ComputeShaderAccessMask computeShader_accelerationStructureRead{ AccessMaskFlag::accelerationStructureRead };
+		inline static ComputeShaderAccessMask computeShader_descriptorBufferRead{ AccessMaskFlag::descriptorBufferRead };
 		inline static ComputeShaderAccessMask computeShader_none{ AccessMaskFlag::none };
 
 		inline static VertexAttributeInputAccessMask vertexAttributeInput_vertexAttributeRead{ AccessMaskFlag::vertexAttributeRead };
