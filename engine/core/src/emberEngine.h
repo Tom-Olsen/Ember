@@ -33,6 +33,7 @@ namespace emberEngine
 
 // Gpu resources:
 #include "buffer.h"
+#include "bufferView.h"
 #include "mesh.h"
 #include "material.h"
 #include "computeShader.h"
@@ -45,9 +46,13 @@ namespace emberEngine
 #include "meshManager.h"
 #include "textureManager.h"
 
-// ECS:
+// Entity Component System: (include order important)
 #ifndef EMBER_CORE_EXPORTS
-#include "ecs.h"
+    #include "scene.h"
+    #include "entity.h"
+    #include "component.h"
+    #include "entity.inl"
+    #include "component.inl"
 #endif
 
 // Other:

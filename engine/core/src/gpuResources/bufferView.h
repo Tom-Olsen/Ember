@@ -1,0 +1,48 @@
+
+#pragma once
+#include <string.h>
+
+
+
+namespace emberEngine
+{
+    // Forward decleration:
+    class Buffer;
+
+
+
+    template<typename T>
+    class BufferView
+    {
+    private: // Members:
+        Buffer* m_pBuffer;
+        uint32_t m_offset;
+        uint32_t m_count;
+
+    public: // Methods:
+		// Constructor/Destructor:
+        BufferView(Buffer& buffer);
+        BufferView(Buffer& buffer, uint32_t offset, uint32_t count);
+
+		// Copyable:
+		BufferView(const BufferView&) = default;
+		BufferView& operator=(const BufferView&) = default;
+
+		// Movable:
+		BufferView(BufferView&& other) noexcept = default;
+		BufferView& operator=(BufferView&& other) noexcept = default;
+
+        // Getters:
+		std::string GetName() const;
+        uint64_t GetSize() const;
+        uint32_t GetCount() const;
+		uint32_t GetElementSize() const;
+        bool IsValid() const;
+        const Buffer* const GetBuffer() const;
+        uint32_t GetOffset() const;
+
+        // Setters:
+        void SetOffset(uint32_t offset);
+        void SetCount(uint32_t count);
+    };
+}

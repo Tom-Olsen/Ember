@@ -141,4 +141,18 @@ namespace emberEngine
 		s_pApplyPermutationFloat1ShaderProperties->SetBuffer("outBuffer", outBuffer);
 		Compute::Immediate::Dispatch(*s_pApplyPermutationFloat1ComputeShader, *s_pApplyPermutationFloat1ShaderProperties, threadCount);
 	}
+
+
+    
+    // Explicit template instantiations:
+    template class GpuSort<int>;
+    template class GpuSort<Int2>;
+    template class GpuSort<Int3>;
+    template class GpuSort<uint32_t>;
+    template class GpuSort<Uint2>;
+    template class GpuSort<Uint3>;
+    template class GpuSort<float>;
+    template class GpuSort<Float2>;
+    template class GpuSort<Float3>;
+    template class GpuSort<Float4>;
 }

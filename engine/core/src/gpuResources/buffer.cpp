@@ -54,6 +54,10 @@ namespace emberEngine
 	{
 		return m_pIBuffer->GetElementSize();
 	}
+	bool Buffer::IsValid() const
+	{
+		return m_pIBuffer != nullptr;
+	}
 
 
 
@@ -65,9 +69,5 @@ namespace emberEngine
 	void Buffer::Download(void* pDst, uint64_t size)
 	{
 		m_pIBuffer->Download(pDst, size);
-	}
-	bool Buffer::IsValid() const
-	{
-		return m_pIBuffer != nullptr;
 	}
 }
