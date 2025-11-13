@@ -42,6 +42,7 @@ namespace fluidDynamics
 		m_fluidBounds = Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f));
 
 		// Visuals:
+		SetColorMode(1);
 		SetInitialDistributionRadius(6.0f);
 		SetVisualRadius(0.25f);
 		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial2d");
@@ -349,6 +350,12 @@ namespace fluidDynamics
 	{
 		m_fluidBounds = bounds;
 	}
+	void SphFluid2dCpu::SetColorMode(int colorMode)
+	{
+		colorMode = math::Clamp(colorMode, 0, 3);
+		if (m_colorMode != colorMode)
+			m_colorMode = colorMode;
+	}
 	void SphFluid2dCpu::SetInitialDistributionRadius(float initialDistributionRadius)
 	{
 		if (m_initialDistributionRadius != initialDistributionRadius)
@@ -438,6 +445,10 @@ namespace fluidDynamics
 	{
 		return m_fluidBounds;
 	}
+	int SphFluid2dCpu::GetColorMode() const
+	{
+		return m_colorMode;
+	}
 	float SphFluid2dCpu::GetInitialDistributionRadius() const
 	{
 		return m_initialDistributionRadius;
@@ -526,6 +537,7 @@ namespace fluidDynamics
 			ShaderProperties shaderProperties = Renderer::DrawMesh(m_particleMesh, m_particleMaterial, matrix, false, false);
 		
 			// Color by density:
+			if (m_colorMode == 0)
 			{
 				float t = (m_densities[i] - m_targetDensity) / m_targetDensity;
 				float t0 = math::Clamp(t, 0.0f, 1.0f);
@@ -535,24 +547,29 @@ namespace fluidDynamics
 				Float4 color = (t < 1.0f) ? colorA : colorB;
 				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 			}
-		
-			//// Color by normal length:
-			//{
-			//	float length = m_normals[i].Length();
-			//	Float4 color = Float4::white * (1.0f - length) + Float4::red * length;
-			//	shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
-			//}
-		
-			//// Color by curvature length:
-			//{
-			//	float t = m_curvatures[i];
-			//	float t0 = math::Clamp(t, 0.0f, 1.0f);
-			//	float t1 = math::Clamp(t - 1.0f, 0.0f, 1.0f);
-			//	Float4 colorA = t0 * Float4::white + (1.0f - t0) * Float4::blue;
-			//	Float4 colorB = t1 * Float4::red + (1.0f - t1) * Float4::white;
-			//	Float4 color = (t < 1.0f) ? colorA : colorB;
-			//	shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
-			//}
+    		// Color by velocity:
+			else if (m_colorMode == 1)
+			{
+				float t = m_velocities[i].Length() / m_maxVelocity;
+        		float t0 = 2.0f * t;
+        		float t1 = 2.0f * t - 1.0f;
+				Float4 colorA = t0 * Float4::white + (1.0f - t0) * Float4::blue;
+				Float4 colorB = t1 * Float4::red + (1.0f - t1) * Float4::white;
+				Float4 color = (t < 0.5f) ? colorA : colorB;
+				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
+			}
+			// Color by normal:
+			else if (m_colorMode == 2)
+			{
+				Float4 color = Float4(m_normals[i].x, m_normals[i].y, 0, 1);
+				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
+			}
+			// Color by curvature:
+			else if (m_colorMode == 3)
+			{
+        		Float4 color = (0.5f + m_curvatures[i]) * Float4(0, 0, 1, 1);
+				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
+			}
 		}
 	}
 

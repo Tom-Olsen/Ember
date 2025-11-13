@@ -67,6 +67,7 @@ namespace fluidDynamics
 		Bounds m_fluidBounds;
 
 		// Visuals:
+		int m_colorMode;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
 		Mesh m_particleMesh;
@@ -102,6 +103,7 @@ namespace fluidDynamics
 		void SetAttractorRadius(float attractorRadius);
 		void SetAttractorStrength(float attractorStrength);
 		void SetFluidBounds(const Bounds& bounds);
+		void SetColorMode(int colorMode);
 		void SetInitialDistributionRadius(float initialDistributionRadius);
 		void SetVisualRadius(float visualRadius);
 		
@@ -123,6 +125,7 @@ namespace fluidDynamics
 		float GetAttractorRadius() const;
 		float GetAttractorStrength() const;
 		Bounds GetFluidBounds() const;
+		int GetColorMode() const;
 		float GetInitialDistributionRadius() const;
 		float GetVisualRadius() const;
 

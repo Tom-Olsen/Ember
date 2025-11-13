@@ -97,7 +97,7 @@ namespace fluidDynamics
 			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
 
 			// Visuals:
-			SetColorMode(1);
+			SetColorMode(0);
 			SetInitialDistributionRadius(8.0f);
 			SetVisualRadius(0.15f);
 		}

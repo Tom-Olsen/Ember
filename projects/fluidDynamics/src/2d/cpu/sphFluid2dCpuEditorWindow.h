@@ -32,6 +32,7 @@ namespace emberEditor
 		float m_maxVelocity;
 		float m_attractorRadius;
 		float m_attractorStrength;
+		int m_colorMode;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
 
@@ -57,23 +58,24 @@ namespace emberEditor
 		{
 			GetData();
 			Gui::Checkbox("Is Running:", &m_isRunning);
-			Gui::InputFloat("Time Scale:", &m_timeScale);
+			Gui::DragFloat("Time Scale:", &m_timeScale);
 			Gui::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
 			Gui::Text(("Time Step:" + std::to_string(m_pScript->GetTimeStep())).c_str());
-			Gui::InputInt("Particle Count:", &m_particleCount);
-			Gui::InputFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
-			Gui::InputFloat("Mass:", &m_mass, 0.1f, 1.0f, "%.8f");
-			Gui::InputFloat("Viscosity:", &m_viscosity, 0.1f, 1.0f, "%.8f");
-			Gui::InputFloat("Surface Tension:", &m_surfaceTension, 0.1f, 1.0f, "%.8f");
-			Gui::InputFloat("Collision Dampening:", &m_collisionDampening, 0.1f, 1.0f, "%.8f");
-			Gui::InputFloat("Target Density:", &m_targetDensity, 0.1f, 1.0f, "%.8f");
-			Gui::InputFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f, "%.8f");
-			Gui::InputFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
-			Gui::InputFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
-			Gui::InputFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
-			Gui::InputFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
-			Gui::InputFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
-			Gui::InputFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
+			Gui::DragInt("Particle Count:", &m_particleCount);
+			Gui::DragFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Mass:", &m_mass, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Viscosity:", &m_viscosity, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Surface Tension:", &m_surfaceTension, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Collision Dampening:", &m_collisionDampening, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Target Density:", &m_targetDensity, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
+			Gui::DragFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
+			Gui::DragFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
+			Gui::DragFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
+			Gui::DragInt("Color Mode:", &m_colorMode);
+			Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
 
 			if (Gui::Button("Reset Simulation"))
 				m_pScript->Reset();
@@ -98,6 +100,7 @@ namespace emberEditor
 			m_maxVelocity = m_pScript->GetMaxVelocity();
 			m_attractorRadius = m_pScript->GetAttractorRadius();
 			m_attractorStrength = m_pScript->GetAttractorStrength();
+			m_colorMode = m_pScript->GetColorMode();
 			m_visualRadius = m_pScript->GetVisualRadius();
 			m_initialDistributionRadius = m_pScript->GetInitialDistributionRadius();
 		}
@@ -118,6 +121,7 @@ namespace emberEditor
 			m_pScript->SetMaxVelocity(m_maxVelocity);
 			m_pScript->SetAttractorRadius(m_attractorRadius);
 			m_pScript->SetAttractorStrength(m_attractorStrength);
+			m_pScript->SetColorMode(m_colorMode);
 			m_pScript->SetVisualRadius(m_visualRadius);
 			m_pScript->SetInitialDistributionRadius(m_initialDistributionRadius);
 		}
