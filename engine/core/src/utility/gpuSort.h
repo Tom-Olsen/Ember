@@ -16,12 +16,17 @@ namespace emberEngine
     {
     private: // Members
         static bool s_isInitialized;
-        // Bitonic sort compute shaders:
+
         static std::unique_ptr<ComputeShader> s_pLocalBitonicSortComputeShader;
         static std::unique_ptr<ComputeShader> s_pBigFlipComputeShader;
         static std::unique_ptr<ComputeShader> s_pBigDisperseComputeShader;
         static std::unique_ptr<ComputeShader> s_pLocalDisperseComputeShader;
-        // Apply permutation resources:
+
+        static std::unique_ptr<ComputeShader> s_pLocalBitonicSortPermutationComputeShader;
+        static std::unique_ptr<ComputeShader> s_pBigFlipPermutationComputeShader;
+        static std::unique_ptr<ComputeShader> s_pBigDispersePermutationComputeShader;
+        static std::unique_ptr<ComputeShader> s_pLocalDispersePermutationComputeShader;
+
         static std::unique_ptr<ComputeShader> s_pApplyPermutationComputeShader;
         static std::unique_ptr<ShaderProperties> s_pApplyPermutationShaderProperties;
 
@@ -31,13 +36,13 @@ namespace emberEngine
         static void Clear();
 
         // Sort:
-        static void Sort(ComputeType computeType, BufferView<T>& buffer);
+        static void Sort(ComputeType computeType, BufferView<T>& bufferView);
 
         // Permutation sort:
-        static void SortPermutation(ComputeType computeType, BufferView<T>& buffer, Buffer& permutationBuffer);
+        static void SortPermutation(ComputeType computeType, BufferView<T>& bufferView, BufferView<int>& permutationBufferView);
 
         // Apply permutation:
-        static void ApplyPermutation(ComputeType computeType, Buffer& permutationBuffer, BufferView<T>& inBuffer, BufferView<T>& outBuffer);
+        static void ApplyPermutation(ComputeType computeType, BufferView<int>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID = -1);
 
     private: // Methods
         // Delete all constructors:

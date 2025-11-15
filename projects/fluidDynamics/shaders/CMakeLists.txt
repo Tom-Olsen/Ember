@@ -23,14 +23,19 @@ get_filename_component(ENGINE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../en
 
 
 # ------------------- File Lists --------------------
-file(GLOB VERTEX_SHADERS "src/*.vert.hlsl")
-file(GLOB FRAGMENT_SHADERS "src/*.frag.hlsl")
+# Gather shader source files and includes from all subdirectories:
 file(GLOB COMPUTE_SHADERS "src/*.comp.hlsl")
-file(GLOB SHADER_INCLUDES "src/*.hlsli" "${ENGINE_SHADERS_DIR}/src/*.hlsli")
+file(GLOB FRAGMENT_SHADERS "src/*.frag.hlsl")
+file(GLOB VERTEX_SHADERS "src/*.vert.hlsl")
+file(GLOB SHADER_INCLUDES "src/*.hlsli" "${ENGINE_SHADERS_DIR}/src/includes/*.*" "${ENGINE_SHADERS_DIR}/src/includesCppHlsl/*.*")
+
+# Combine shader source files:
 file(GLOB SHADER_SOURCES 
-    ${VERTEX_SHADERS}
+    ${COMPUTE_SHADERS}
     ${FRAGMENT_SHADERS}
-    ${COMPUTE_SHADERS})
+    ${VERTEX_SHADERS})
+    
+# Organize files into IDE groups:
 source_group("Vertex Shaders" FILES ${VERTEX_SHADERS})
 source_group("Fragment Shaders" FILES ${FRAGMENT_SHADERS})
 source_group("Compute Shaders" FILES ${COMPUTE_SHADERS})
@@ -46,7 +51,8 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
     get_filename_component(FILE_NAME ${SHADER_FILE} NAME_WE)
     get_filename_component(EXTENSION ${SHADER_FILE} EXT)
     string(REPLACE ".hlsl" "" EXT_TRIMMED ${EXTENSION}) # trim ".hlsl"
-
+    
+    # Shadertype is determined by file extension, not by folder placement:
     if(EXTENSION MATCHES "vert.hlsl$")
         set(SHADER_TYPE "vs_6_0")
     elseif(EXTENSION MATCHES "frag.hlsl$")
@@ -64,8 +70,9 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
         OUTPUT ${OUTPUT_FILE}
         BYPRODUCTS ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main -I src -I ${ENGINE_SHADERS_DIR}/src ${SHADER_FILE} -Fo ${OUTPUT_FILE}
-        DEPENDS ${SHADER_FILE}
+        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src -I ${ENGINE_SHADERS_DIR}/src/includes -I ${ENGINE_SHADERS_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
+        DEPENDS ${SHADER_FILE} ${SHADER_INCLUDES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         COMMENT "Compiling shader: ${SHADER_FILE}"
         VERBATIM
     )
@@ -77,5 +84,9 @@ endforeach()
 add_custom_target(ProjectShaderCompiler ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # Shader sources added as dummy targets to make them show up in the IDE:
-add_custom_target(ProjectShaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES} ${CPP_HLSL_HEADERS})
+add_custom_target(ProjectShaders SOURCES
+    ${COMPUTE_SHADERS}
+    ${FRAGMENT_SHADERS}
+    ${SHADER_INCLUDES}
+    ${VERTEX_SHADERS})
 # ---------------------------------------------------

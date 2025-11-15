@@ -1,5 +1,4 @@
 #include "bufferView.h"
-#include "buffer.h"
 #include "emberMath.h"
 #include "logger.h"
 
@@ -9,6 +8,13 @@ namespace emberEngine
 {
     // Public methodfs:
 	// Constructor/Destructor:
+    template<typename T>
+    BufferView<T>::BufferView()
+    {
+        m_pBuffer = nullptr;
+        m_offset = 0;
+        m_count = 0;
+    }
     template<typename T>
     BufferView<T>::BufferView(Buffer& buffer)
     {
@@ -61,9 +67,9 @@ namespace emberEngine
         return m_pBuffer && m_pBuffer->IsValid() && (m_offset + m_count) <= m_pBuffer->GetCount();
     }
     template<typename T>
-    const Buffer* const BufferView<T>::GetBuffer() const
+    Buffer& BufferView<T>::GetBuffer() const
     {
-        return m_pBuffer;
+        return *m_pBuffer;
     }
     template<typename T>
     uint32_t BufferView<T>::GetOffset() const

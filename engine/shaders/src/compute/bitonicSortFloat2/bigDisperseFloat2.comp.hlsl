@@ -1,9 +1,10 @@
 #include "computePushConstant.hlsli"
+#include "math.hlsli"
 
 
 
 #define BLOCK_SIZE 128
-RWStructuredBuffer<int> dataBuffer : register(u0);
+RWStructuredBuffer<float2> dataBuffer : register(u0);
 cbuffer Values : register(b1)
 {
     int disperseHeight; // height of the disperse (number of elements involved in it).
@@ -14,15 +15,37 @@ cbuffer Values : register(b1)
 
 void CompareAndSwap(int i, int j)
 {
-    if (i >= bufferSize || j >= bufferSize)
-        return;
-    if (dataBuffer[i] > dataBuffer[j])
+    float lenI = length(dataBuffer[i]);
+    float lenJ = length(dataBuffer[j]);
+
+    // Compare by length first:
+    bool swap = false;
+    if (lenI > lenJ)
+        swap = true;
+    else if (lenI == lenJ)
     {
-        uint tmp = dataBuffer[i];
+        // Compute angles from (1,0) counterclockwise (0 ... 2pi):
+        float angleA = atan2(dataBuffer[i].y, dataBuffer[i].x);
+        float angleB = atan2(dataBuffer[j].y, dataBuffer[j].x);
+
+        // atan2 returns [-pi, pi], convert to [0, 2pi]
+        if (angleA < 0)
+            angleA += 2.0 * math_PI;
+        if (angleB < 0)
+            angleB += 2.0 * math_PI;
+
+        if (angleA > angleB)
+            swap = true;
+    }
+
+    if (swap)
+    {
+        float2 tmp = dataBuffer[i];
         dataBuffer[i] = dataBuffer[j];
         dataBuffer[j] = tmp;
     }
 }
+
 
 
 [numthreads(BLOCK_SIZE / 2, 1, 1)]

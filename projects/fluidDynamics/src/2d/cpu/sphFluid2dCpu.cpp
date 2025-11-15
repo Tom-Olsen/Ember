@@ -620,9 +620,9 @@ namespace fluidDynamics
 	Float2 SphFluid2dCpu::Normal(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities)
 	{
 		Float2 normal = Float2::zero;
+		Float2 particlePos = positions[particleIndex];
 		if (m_useGridOptimization)
 		{
-			Float2 particlePos = positions[particleIndex];
 			Int2 particleCell = m_pGrid->Cell(particlePos, m_effectRadius);
 			for (const Int2& offset : s_offsets)
 			{
@@ -661,7 +661,7 @@ namespace fluidDynamics
 				if (i == particleIndex)
 					continue;
 
-				Float2 offset = positions[particleIndex] - positions[i];
+				Float2 offset = particlePos - positions[i];
 				float r = offset.Length();
 				if (r < m_effectRadius && r > 1e-8f)
 				{

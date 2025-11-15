@@ -8,8 +8,8 @@
 cbuffer Values : register(b0)
 {
     int particleCount;
+    int hashGridSize; // ~2*particleCount
     int useGridOptimization;
-    float gridRadius;
     float effectRadius;
     float mass;
 };
@@ -26,41 +26,37 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
+        densityBuffer[index] = 0;
+        float2 particlePos = positionBuffer[index];
         if (useGridOptimization)
-        {// With hash grid optimization:
-            float2 particlePos = positionBuffer[index];
-            int2 particleCell = Cell(particlePos, gridRadius);
-            
-            densityBuffer[index] = 0;
+        {
+            int2 particleCell = HashGrid2d_Cell(particlePos, effectRadius);
             for (int i = 0; i < 9; i++)
             {
                 int2 neighbourCell = particleCell + offsets[i];
-                int neighbourCellHash = CellHash(neighbourCell);
-                uint neighbourCellKey = CellKey(neighbourCellHash, particleCount);
-                uint otherIndex = startIndexBuffer[neighbourCellKey];
+                uint cellKey = HashGrid2d_GetCellKey(neighbourCell, hashGridSize);
+                uint otherIndex = HashGrid2d_GetStartIndex(neighbourCell, hashGridSize, startIndexBuffer);
             
-                while (otherIndex < particleCount) // at most as many iterations as there are particles.
+				// Skip empty cells:
+                if (otherIndex == uint(-1) || otherIndex >= particleCount)
+                    continue;
+                
+                while (otherIndex < particleCount && cellKeyBuffer[otherIndex] == cellKey)
                 {
-                    uint otherCellKey = cellKeyBuffer[otherIndex];
-                    if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
-                        break;
-            
                     float2 otherPos = positionBuffer[otherIndex];
                     float2 offset = particlePos - otherPos;
                     float r = length(offset);
                     if (r < effectRadius)
                         densityBuffer[index] += mass * SmoothingKernal_Poly6(r, effectRadius);
-            
                     otherIndex++;
                 }
             }
         }
         else
-        {// Naive iteration over all particles:
-            densityBuffer[index] = 0;
+        {
             for (int i = 0; i < particleCount; i++)
             {
-                float2 offset = positionBuffer[index] - positionBuffer[i];
+                float2 offset = particlePos - positionBuffer[i];
                 float r = length(offset);
                 if (r < effectRadius)
                     densityBuffer[index] += mass * SmoothingKernal_Poly6(r, effectRadius);

@@ -75,6 +75,32 @@ namespace fluidDynamics
 		Buffer m_reorderBuffer3;
 		Buffer m_reorderBuffer4;
 
+		// Data buffer views:
+		BufferView<int> m_cellKeyBufferView;
+		BufferView<int> m_startIndexBufferView;
+		BufferView<Float2> m_positionBufferView;
+		BufferView<Float2> m_velocityBufferView;
+		BufferView<float> m_densityBufferView;
+		BufferView<Float2> m_normalBufferView;
+		BufferView<Float2> m_curvatureBufferView;
+		BufferView<Float2> m_forceDensityBufferView;
+
+		// Runge Kutta buffer views:
+		BufferView<Float2> m_kp1BufferView;
+		BufferView<Float2> m_kv1BufferView;
+		BufferView<Float2> m_kp2BufferView;
+		BufferView<Float2> m_kv2BufferView;
+		BufferView<Float2> m_tempPositionBufferView;
+		BufferView<Float2> m_tempVelocityBufferView;
+
+		// Temp buffer views:
+		BufferView<int> m_sortPermutationBufferView;
+		BufferView<Float2> m_reorderBufferView0;
+		BufferView<Float2> m_reorderBufferView1;
+		BufferView<Float2> m_reorderBufferView2;
+		BufferView<Float2> m_reorderBufferView3;
+		BufferView<Float2> m_reorderBufferView4;
+
 		// Physics:
 		float m_effectRadius;
 		float m_mass;
@@ -163,27 +189,16 @@ namespace fluidDynamics
 		void Update() override;
 		
 	private:
-		// Async compute shaders dispatches:
-		void ResetFluidAsync(uint32_t sessionID);
-		void ComputeCellKeysAsync(uint32_t sessionID);
-		void ComputeStartIndicesAsync(uint32_t sessionID);
-		void ComputeDensityAsync(uint32_t sessionID, Buffer& positionBuffer, ShaderProperties& shaderProperties, float gridRadius);
-		void ComputeNormalAndCurvatureAsync(uint32_t sessionID, Buffer& positionBuffer, ShaderProperties& shaderProperties, float gridRadius);
-		void ComputeCurvatureAsync(uint32_t sessionID);
-		void ComputeForceDensityAsync(uint32_t sessionID, Buffer& positionBuffer, Buffer& velocityBuffer, ShaderProperties& shaderProperties, float gridRadius);
-		void ComputeRungeKutta2Step1Async(uint32_t sessionID);
-		void ComputeRungeKutta2Step2Async(uint32_t sessionID);
-		void ComputeBoundaryCollisionsAsync(uint32_t sessionID);
-
-		// Pre render compute shaders dispatches:
-		void ComputeCellKeysPreRender();
-		void ComputeStartIndicesPreRender();
-		void ComputeDensityPreRender(Buffer& positionBuffer, ShaderProperties& shaderProperties, float gridRadius);
-		void ComputeNormalAndCurvaturePreRender(Buffer& positionBuffer, ShaderProperties& shaderProperties, float gridRadius);
-		void ComputeCurvaturePreRender();
-		void ComputeForceDensityPreRender(Buffer& positionBuffer, Buffer& velocityBuffer, ShaderProperties& shaderProperties, float gridRadius);
-		void ComputeRungeKutta2Step1PreRender();
-		void ComputeRungeKutta2Step2PreRender();
-		void ComputeBoundaryCollisionsPreRender();
+		// Compute shader recording:
+		void ResetFluid();
+		void ComputeCellKeys(BufferView<Float2>& positionBufferView);
+		void ComputeStartIndices();
+		void ComputeDensity(BufferView<Float2>& positionBufferView, ShaderProperties& shaderProperties);
+		void ComputeNormalAndCurvature(BufferView<Float2>& positionBufferView, ShaderProperties& shaderProperties);
+		void ComputeCurvature();
+		void ComputeForceDensity(BufferView<Float2>& positionBufferView, BufferView<Float2>& velocityBufferView, ShaderProperties& shaderProperties);
+		void ComputeRungeKutta2Step1();
+		void ComputeRungeKutta2Step2();
+		void ComputeBoundaryCollisions();
 	};
 }

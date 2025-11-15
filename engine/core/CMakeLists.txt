@@ -121,7 +121,7 @@ endif()
 
 # Source subdirectories:
 target_include_directories(${PROJECT_NAME}
-    PUBLIC ${ENGINE_SHADERS_DIR}/src # needed for .h files from shaders, which contian constans for c++ and hlsl
+    PUBLIC ${ENGINE_SHADERS_DIR}/src/includesCppHlsl # needed for .h files from shaders, which contian constans for c++ and hlsl, e.g. shadowMap sizes
     PUBLIC ${ENGINE_CORE_DIR}/src
     PUBLIC ${ENGINE_CORE_DIR}/src/editor
     PUBLIC ${ENGINE_CORE_DIR}/src/eventSystem

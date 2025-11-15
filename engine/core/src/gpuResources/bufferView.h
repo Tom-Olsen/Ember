@@ -1,6 +1,9 @@
 
 #pragma once
-#include <string.h>
+#include "buffer.h"
+#include "emberCoreExport.h"
+#include <cstdint>
+#include <string>
 
 
 
@@ -12,7 +15,7 @@ namespace emberEngine
 
 
     template<typename T>
-    class BufferView
+    class EMBER_CORE_API BufferView
     {
     private: // Members:
         Buffer* m_pBuffer;
@@ -21,6 +24,7 @@ namespace emberEngine
 
     public: // Methods:
 		// Constructor/Destructor:
+        BufferView();
         BufferView(Buffer& buffer);
         BufferView(Buffer& buffer, uint32_t offset, uint32_t count);
 
@@ -38,7 +42,7 @@ namespace emberEngine
         uint32_t GetCount() const;
 		uint32_t GetElementSize() const;
         bool IsValid() const;
-        const Buffer* const GetBuffer() const;
+        Buffer& GetBuffer() const;
         uint32_t GetOffset() const;
 
         // Setters:

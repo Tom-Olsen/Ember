@@ -20,20 +20,34 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB CPP_HLSL_HEADERS "src/*.h")
-file(GLOB VERTEX_SHADERS "src/*.vert.hlsl")
-file(GLOB FRAGMENT_SHADERS "src/*.frag.hlsl")
-file(GLOB COMPUTE_SHADERS "src/*.comp.hlsl")
-file(GLOB SHADER_INCLUDES "src/*.hlsli")
+# Gather shader source files and includes from all subdirectories:
+file(GLOB COMPUTE_SHADERS "src/compute/*.*")
+    file(GLOB APPLY_PERMUTATION "src/compute/applyPermutation/*.*")
+    file(GLOB BITONIC_SORT_FLOAT2 "src/compute/bitonicSortFloat2/*.*")
+    file(GLOB BITONIC_SORT_INT "src/compute/bitonicSortInt/*.*")
+file(GLOB FRAGMENT_SHADERS "src/fragment/*.*")
+file(GLOB SHADER_INCLUDES "src/includes/*.*")
+file(GLOB CPP_HLSL_INCLUDES "src/includesCppHlsl/*.*")
+file(GLOB VERTEX_SHADERS "src/vertex/*.*")
+
+# Combine shader source files:
 file(GLOB SHADER_SOURCES 
-    ${VERTEX_SHADERS}
+    ${COMPUTE_SHADERS}
+    ${APPLY_PERMUTATION}
+    ${BITONIC_SORT_FLOAT2}
+    ${BITONIC_SORT_INT}
     ${FRAGMENT_SHADERS}
-    ${COMPUTE_SHADERS})
-source_group("C++ & HLSL Headers" FILES ${CPP_HLSL_HEADERS})
-source_group("Vertex Shaders" FILES ${VERTEX_SHADERS})
-source_group("Fragment Shaders" FILES ${FRAGMENT_SHADERS})
+    ${VERTEX_SHADERS})
+
+# Organize files into IDE groups:
 source_group("Compute Shaders" FILES ${COMPUTE_SHADERS})
+source_group("Compute Shaders/Apply Permutation" FILES ${APPLY_PERMUTATION})
+source_group("Compute Shaders/Bitonic Sort Float2" FILES ${BITONIC_SORT_FLOAT2})
+source_group("Compute Shaders/Bitonic Sort Int" FILES ${BITONIC_SORT_INT})
+source_group("Fragment Shaders" FILES ${FRAGMENT_SHADERS})
 source_group("Includes" FILES ${SHADER_INCLUDES})
+source_group("Includes C++ & HLSL" FILES ${CPP_HLSL_INCLUDES})
+source_group("Vertex Shaders" FILES ${VERTEX_SHADERS})
 # ---------------------------------------------------
 
 
@@ -46,6 +60,7 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
     get_filename_component(EXTENSION ${SHADER_FILE} EXT)
     string(REPLACE ".hlsl" "" EXT_TRIMMED ${EXTENSION}) # trim ".hlsl"
 
+    # Shadertype is determined by file extension, not by folder placement:
     if(EXTENSION MATCHES "vert.hlsl$")
         set(SHADER_TYPE "vs_6_0")
     elseif(EXTENSION MATCHES "frag.hlsl$")
@@ -63,8 +78,9 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
         OUTPUT ${OUTPUT_FILE}
         BYPRODUCTS ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE}
-        DEPENDS ${SHADER_FILE}
+        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src/includes -I ${CMAKE_CURRENT_LIST_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
+        DEPENDS ${SHADER_FILE} ${SHADER_INCLUDES} ${CPP_HLSL_INCLUDES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         COMMENT "Compiling shader: ${SHADER_FILE}"
         VERBATIM
     )
@@ -76,5 +92,13 @@ endforeach()
 add_custom_target(EmberShaderCompiler ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # Shader sources added as dummy targets to make them show up in the IDE:
-add_custom_target(EmberShaders SOURCES ${VERTEX_SHADERS} ${FRAGMENT_SHADERS} ${COMPUTE_SHADERS} ${SHADER_INCLUDES} ${CPP_HLSL_HEADERS})
+add_custom_target(EmberShaders SOURCES
+    ${COMPUTE_SHADERS}
+    ${APPLY_PERMUTATION}
+    ${BITONIC_SORT_FLOAT2}
+    ${BITONIC_SORT_INT}
+    ${FRAGMENT_SHADERS}
+    ${SHADER_INCLUDES}
+    ${CPP_HLSL_INCLUDES}
+    ${VERTEX_SHADERS})
 # ---------------------------------------------------

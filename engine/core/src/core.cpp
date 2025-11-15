@@ -52,7 +52,8 @@ namespace emberEngine
 	void Core::InitOther()
 	{
 		EventSystem::Init();
-		GpuSort::Init();
+		GpuSort<int>::Init();
+		GpuSort<Float2>::Init();
 	}
 
 
@@ -80,7 +81,8 @@ namespace emberEngine
 	}
 	void Core::ClearOther()
 	{
-		GpuSort::Clear();
+		GpuSort<Float2>::Clear();
+		GpuSort<int>::Clear();
 		EventSystem::Clear();
 	}
 }

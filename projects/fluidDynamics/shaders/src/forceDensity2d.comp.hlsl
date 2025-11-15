@@ -9,8 +9,8 @@ cbuffer Values : register(b0)
 {
     // General parameters:
     int particleCount;
+    int hashGridSize; // ~2*particleCount
     int useGridOptimization;
-    float gridRadius;
     
     // Physics:
     float viscosity;
@@ -61,16 +61,19 @@ void main(uint3 threadID : SV_DispatchThreadID)
         
 		// Particle-Particle interaction forces:
         if (useGridOptimization)
-        {// With hash grid optimization:
-            int2 particleCell = Cell(particlePos, gridRadius);
+        { // With hash grid optimization:
+            int2 particleCell = HashGrid2d_Cell(particlePos, effectRadius);
             for (int i = 0; i < 9; i++)
             {
                 int2 neighbourCell = particleCell + offsets[i];
-                int neighbourCellHash = CellHash(neighbourCell);
-                uint neighbourCellKey = CellKey(neighbourCellHash, particleCount);
-                uint otherIndex = startIndexBuffer[neighbourCellKey];
-
-                while (otherIndex < particleCount) // at most as many iterations as there are particles.
+                uint cellKey = HashGrid2d_GetCellKey(neighbourCell, hashGridSize);
+                uint otherIndex = HashGrid2d_GetStartIndex(neighbourCell, hashGridSize, startIndexBuffer);
+                
+				// Skip empty cells:
+                if (otherIndex == uint(-1) || otherIndex >= particleCount)
+                    continue;
+                
+                while (otherIndex < particleCount && cellKeyBuffer[otherIndex] == cellKey)
                 {
                     // Skip self interaction:
                     if (otherIndex == index)
@@ -78,10 +81,6 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         otherIndex++;
                         continue;
                     }
-                    
-                    uint otherCellKey = cellKeyBuffer[otherIndex];
-                    if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
-                        break;
                     
                     float2 otherPos = positionBuffer[otherIndex];
                     float2 otherVel = velocityBuffer[otherIndex];
@@ -100,20 +99,19 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         float2 velocityDiff = otherVel - particleVel;
                         forceDensityBuffer[index] += (mass * SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]) * velocityDiff;
                     }
-
                     otherIndex++;
                 }
             }
         }
         else
-        {// Naive iteration over all particles:
+        {
             for (int i = 0; i < particleCount; i++)
             {
                 // Skip self interaction:
                 if (i == index)
                     continue;
             
-                float2 offset = positionBuffer[index] - positionBuffer[i];
+                float2 offset = particlePos - positionBuffer[i];
                 float r = length(offset);
                 if (r < effectRadius)
                 {
