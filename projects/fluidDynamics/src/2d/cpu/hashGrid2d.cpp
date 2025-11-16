@@ -8,21 +8,30 @@ namespace fluidDynamics
 {
 	// Public methods:
 	// Constructor/Destructor:
+	HashGrid2d::HashGrid2d()
+	{
+		m_particleCount = 0;
+		m_size = 0;
+	}
 	HashGrid2d::HashGrid2d(int particleCount)
 	{
-		m_particleCount = particleCount;
-		m_size = math::NextPrimeAbove(2 * particleCount);	// better hashing (fever collosions of cell hashes).
-		m_cellKeys.resize(particleCount);
-		m_startIndices.resize(m_size, uint32_t(-1));
-
-		// Note on start indices array:
-		// Start indices vector is sparse and mostly contains invalid (-1) entries.
-		// Each access to this array is done by m_startIndices[CellKey(Cellhash(cell(position,radius)))],
-		// and the celll keys range from 0 to m_size-1.
+		Reallocate(particleCount);
 	}
 	HashGrid2d::~HashGrid2d()
 	{
 
+	}
+	void HashGrid2d::Reallocate(int particleCount)
+	{
+		m_particleCount = particleCount;
+		m_size = math::NextPrimeAbove(2 * m_particleCount);
+		m_cellKeys.resize(m_particleCount);
+		m_startIndices.resize(m_size, uint32_t(-1));
+		m_sortPermutation.resize(m_particleCount);
+		// Note on start indices array:
+		// Start indices vector is sparse and mostly contains invalid (-1) entries.
+		// Each access to this array is done by m_startIndices[CellKey(Cellhash(cell(position,radius)))],
+		// and the celll keys range from 0 to m_size-1.
 	}
 
 
@@ -97,7 +106,7 @@ namespace fluidDynamics
 		}
 
 		// Sort vectors:
-		m_sortPermutation = math::SortPermutation(m_cellKeys, [](uint32_t const& a, uint32_t const& b) { return a < b; });
+		math::SortPermutation(m_cellKeys, m_sortPermutation, [](uint32_t const& a, uint32_t const& b) { return a < b; });
 		m_cellKeys = math::ApplyPermutation(m_cellKeys, m_sortPermutation);
 		
 		// Compute start indices:

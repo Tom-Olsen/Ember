@@ -35,7 +35,11 @@ public:
 
 
 
-TEST_F(TEST_SphGluid2dGpu, GetDataFromGpu)
+TEST_F(TEST_SphGluid2dGpu, Density)
 {
+	int particleCount = 1000;
+	std::vector<Float2> m_positions;
+	std::vector<float> m_densities;
+
 	EXPECT_TRUE(true);
 }

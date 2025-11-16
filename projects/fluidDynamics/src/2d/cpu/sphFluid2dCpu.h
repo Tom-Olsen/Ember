@@ -1,5 +1,7 @@
 #pragma once
 #include "emberEngine.h"
+#include "hashGrid2d.h"
+#include "sphFluid2dCpuSolver.h"
 using namespace emberEngine;
 
 
@@ -14,11 +16,6 @@ namespace emberEditor
 
 namespace fluidDynamics
 {
-	// Forward decleration:
-	struct HashGrid2d;
-
-
-
 	class SphFluid2dCpu : public Component
 	{
 	private: // Members:
@@ -26,45 +23,18 @@ namespace fluidDynamics
 		bool m_isRunning;
 		bool m_reset;
 		float m_timeScale;
-		bool m_useGridOptimization;
+		bool m_useHashGridOptimization;
 		uint32_t m_timeStep;
-		std::unique_ptr<HashGrid2d> m_pGrid;
-		static const std::array<Int2, 9> s_offsets;
+		int m_particleCount;
+
+		// Settings:
+		SphFluid2dCpuSolver::Settings m_settings;
+		SphFluid2dCpuSolver::Attractor m_attractor;
 
 		// Data:
-		int m_particleCount;
-		std::vector<Float2> m_positions;
-		std::vector<Float2> m_velocities;
-		std::vector<float> m_densities;
-		std::vector<Float2> m_normals;
-		std::vector<float> m_curvatures;
-		std::vector<Float2> m_forceDensities;
-
-		// Runge Kutta:
-		std::vector<Float2> m_kp1;
-		std::vector<Float2> m_kv1;
-		std::vector<Float2> m_kp2;
-		std::vector<Float2> m_kv2;
-		std::vector<Float2> m_tempPositions;
-		std::vector<Float2> m_tempVelocities;
-
-		// Physics:
-		float m_effectRadius;
-		float m_mass;
-		float m_viscosity;
-		float m_surfaceTension;
-		float m_collisionDampening;
-		float m_targetDensity;
-		float m_pressureMultiplier;
-		float m_gravity;
-		float m_maxVelocity;
-
-		// User Interaction/Boundaries:
-		int m_attractorState;
-		Float2 m_attractorPoint;
-		float m_attractorRadius;
-		float m_attractorStrength;
-		Bounds m_fluidBounds;
+		HashGrid2d m_hashGrid;
+		SphFluid2dCpuSolver::Data m_data;
+		SphFluid2dCpuSolver::RungeKutta m_rungeKutta;
 
 		// Visuals:
 		int m_colorMode;
@@ -73,6 +43,8 @@ namespace fluidDynamics
 		Mesh m_particleMesh;
 		Mesh m_ringMesh;
 		Material m_particleMaterial;
+
+		// Editor Window:
 		std::unique_ptr<emberEditor::SphFluid2dCpuEditorWindow> editorWindow;
 
 	public: // Methods:
@@ -89,7 +61,7 @@ namespace fluidDynamics
 		// Setters:
 		void SetIsRunning(bool isRunning);
 		void SetTimeScale(float timeScale);
-		void SetUseGridOptimization(bool useGridOptimization);
+		void SetUseHashGridOptimization(bool useGridOptimization);
 		void SetParticleCount(int particleCount);
 		void SetEffectRadius(float effectRadius);
 		void SetMass(float mass);
@@ -110,7 +82,7 @@ namespace fluidDynamics
 		// Getters:
 		bool GetIsRunning() const;
 		float GetTimeScale() const;
-		bool GetUseGridOptimization() const;
+		bool GetUseHashGridOptimization() const;
 		uint32_t GetTimeStep() const;
 		int GetParticleCount() const;
 		float GetEffectRadius() const;
@@ -130,15 +102,6 @@ namespace fluidDynamics
 		float GetVisualRadius() const;
 
 		// Overrides:
-		void Start() override;
 		void Update() override;
-
-	private:
-		// Physics:
-		float Density(int particleIndex, const std::vector<Float2>& positions);
-		Float2 Normal(int particleIndex, const std::vector<Float2>& positions, const std::vector<float>& densities);
-		float Curvature(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& normals, const std::vector<float>& densities);
-		Float2 ForceDensity(int particleIndex, const std::vector<Float2>& positions, const std::vector<Float2>& velocities, const std::vector<float>& densities);
-		void BoundaryCollisions(Float2& position, Float2& velocity);
 	};
 }

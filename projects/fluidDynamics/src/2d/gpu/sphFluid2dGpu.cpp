@@ -159,13 +159,6 @@ namespace fluidDynamics
 			m_kv2BufferView = BufferView<Float2>(m_kv2Buffer);
 			m_tempPositionBufferView = BufferView<Float2>(m_tempPositionBuffer);
 			m_tempVelocityBufferView = BufferView<Float2>(m_tempVelocityBuffer);
-			// Runge Kutta buffer views:
-			m_kp1BufferView = BufferView<Float2>(m_kp1Buffer);
-			m_kv1BufferView = BufferView<Float2>(m_kv1Buffer);
-			m_kp2BufferView = BufferView<Float2>(m_kp2Buffer);
-			m_kv2BufferView = BufferView<Float2>(m_kv2Buffer);
-			m_tempPositionBufferView = BufferView<Float2>(m_tempPositionBuffer);
-			m_tempVelocityBufferView = BufferView<Float2>(m_tempVelocityBuffer);
 			// Temp buffer views:
 			m_sortPermutationBufferView = BufferView<int>(m_sortPermutationBuffer);
 			m_reorderBufferView0 = BufferView<Float2>(m_reorderBuffer0);
@@ -196,8 +189,8 @@ namespace fluidDynamics
 		Compute::PreRender::RecordBarrierWaitStorageWriteBeforeRead();
 		ComputeNormalAndCurvature(m_positionBufferView, m_normalAndCurvatureProperties[0]);
 
-		m_reset = false;
 		m_isRunning = false;
+		m_reset = false;
 	}
 	void SphFluid2dGpu::FixedUpdate()
 	{

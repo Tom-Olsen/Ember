@@ -205,7 +205,6 @@ namespace emberEngine
 				return Async::RecordComputeShader(sessionID, computeShader, threadCount);
 				break;
 			case ComputeType::immediate:
-				LOG_WARN("ShaderProperties Compute::RecordComputeShader(...): does not support ComputeType::immediate.");
 				break;
 			case ComputeType::postRender:
 				return PostRender::RecordComputeShader(computeShader);
@@ -223,10 +222,8 @@ namespace emberEngine
 				Async::RecordBarrier(sessionID, srcAccessMask, dstAccessMask);
 				break;
 			case ComputeType::immediate:
-				LOG_WARN("Compute::RecordBarrier(...): does not support ComputeType::immediate.");
 				break;
 			case ComputeType::postRender:
-				LOG_WARN("Compute::RecordBarrier(...): does not support ComputeType::postRender.");
 				break;
 			case ComputeType::preRender:
 				PreRender::RecordBarrier(srcAccessMask, dstAccessMask);
@@ -241,10 +238,8 @@ namespace emberEngine
 				Async::RecordBarrierWaitStorageWriteBeforeRead(sessionID);
 				break;
 			case ComputeType::immediate:
-				LOG_WARN("Compute::RecordBarrierWaitStorageWriteBeforeRead(...): does not support ComputeType::immediate.");
 				break;
 			case ComputeType::postRender:
-				LOG_WARN("Compute::RecordBarrierWaitStorageWriteBeforeRead(...): does not support ComputeType::postRender.");
 				break;
 			case ComputeType::preRender:
 				PreRender::RecordBarrierWaitStorageWriteBeforeRead();

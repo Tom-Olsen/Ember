@@ -19,7 +19,7 @@ namespace emberEditor
 		fluidDynamics::SphFluid2dCpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
-		bool m_useGridOptimization;
+		bool m_useHashGridOptimization;
 		int m_particleCount;
 		float m_effectRadius;
 		float m_mass;
@@ -59,7 +59,7 @@ namespace emberEditor
 			GetData();
 			Gui::Checkbox("Is Running:", &m_isRunning);
 			Gui::DragFloat("Time Scale:", &m_timeScale);
-			Gui::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
+			Gui::Checkbox("Use Hash Grid Optimization:", &m_useHashGridOptimization);
 			Gui::Text(("Time Step:" + std::to_string(m_pScript->GetTimeStep())).c_str());
 			Gui::DragInt("Particle Count:", &m_particleCount);
 			Gui::DragFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
@@ -87,7 +87,7 @@ namespace emberEditor
 		{
 			m_isRunning = m_pScript->GetIsRunning();
 			m_timeScale = m_pScript->GetTimeScale();
-			m_useGridOptimization = m_pScript->GetUseGridOptimization();
+			m_useHashGridOptimization = m_pScript->GetUseHashGridOptimization();
 			m_particleCount = m_pScript->GetParticleCount();
 			m_effectRadius = m_pScript->GetEffectRadius();
 			m_mass = m_pScript->GetMass();
@@ -108,7 +108,7 @@ namespace emberEditor
 		{
 			m_pScript->SetIsRunning(m_isRunning);
 			m_pScript->SetTimeScale(m_timeScale);
-			m_pScript->SetUseGridOptimization(m_useGridOptimization);
+			m_pScript->SetUseHashGridOptimization(m_useHashGridOptimization);
 			m_pScript->SetParticleCount(m_particleCount);
 			m_pScript->SetEffectRadius(m_effectRadius);
 			m_pScript->SetMass(m_mass);
