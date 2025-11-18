@@ -24,7 +24,7 @@ namespace fluidDynamics
 		};
 		struct Settings
 		{
-			HashGrid2d* pHashGrid;	// optional, but recommended.
+			HashGrid2d* pHashGrid = nullptr;	// optional, but recommended.
 			float effectRadius;
 			float mass;
 			float viscosity;

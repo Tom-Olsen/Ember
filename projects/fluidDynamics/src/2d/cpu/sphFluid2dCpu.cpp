@@ -19,6 +19,8 @@ namespace fluidDynamics
 		m_particleCount = 400;
 
 		// Settings:
+		m_hashGrid.Reallocate(m_particleCount);
+		m_settings.pHashGrid = (m_useHashGridOptimization ? & m_hashGrid : nullptr);
 		m_settings.effectRadius = 0.5f;
 		m_settings.mass = 1.0f;
 		m_settings.viscosity = 0.5f;

@@ -76,10 +76,10 @@ namespace emberEditor
 			Gui::DragInt("Color Mode:", &m_colorMode);
 			Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
+			SetData();
 
 			if (Gui::Button("Reset Simulation"))
 				m_pScript->Reset();
-			SetData();
 		}
 
 	private:
