@@ -7,9 +7,9 @@
 
 cbuffer Values : register(b0)
 {
-    int particleCount;
+    // particleCount = pc.threadCount.x
     int hashGridSize; // ~2*particleCount
-    int useGridOptimization;
+    int useHashGridOptimization;
     float effectRadius;
     float mass;
 };
@@ -31,7 +31,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         normalBuffer[index] = 0;
         curvatureBuffer[index] = 0;
         float2 particlePos = positionBuffer[index];
-        if (useGridOptimization)
+        if (useHashGridOptimization)
         {
             int2 particleCell = HashGrid2d_Cell(particlePos, effectRadius);
             for (int i = 0; i < 9; i++)
@@ -41,10 +41,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 uint otherIndex = HashGrid2d_GetStartIndex(neighbourCell, hashGridSize, startIndexBuffer);
             
 				// Skip empty cells:
-                if (otherIndex == uint(-1) || otherIndex >= particleCount)
+                if (otherIndex == uint(-1) || otherIndex >= pc.threadCount.x)
                     continue;
                 
-                while (otherIndex < particleCount && cellKeyBuffer[otherIndex] == cellKey)
+                while (otherIndex < pc.threadCount.x && cellKeyBuffer[otherIndex] == cellKey)
                 {
                     // Skip self interaction:
                     if (otherIndex == index)
@@ -75,7 +75,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         }
         else
         {
-            for (int i = 0; i < particleCount; i++)
+            for (int i = 0; i < pc.threadCount.x; i++)
             {
                 // Skip self interaction:
                 if (i == index)

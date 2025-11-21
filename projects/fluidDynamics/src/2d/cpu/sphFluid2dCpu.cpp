@@ -1,5 +1,4 @@
 #include "sphFluid2dCpu.h"
-#include "smoothingKernals.h"
 #include "sphFluid2dCpuEditorWindow.h"
 
 
@@ -99,7 +98,7 @@ namespace fluidDynamics
 		while (restTime > 0.0f)
 		{
 			float deltaT = math::Min(dt, restTime);
-			SphFluid2dCpuSolver::TimeStepRungeKutta2(deltaT, m_data, m_settings, m_attractor, m_rungeKutta);
+			SphFluid2dCpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_data, m_attractor, m_rungeKutta);
 			restTime -= deltaT;
 		}
 		m_timeStep++;

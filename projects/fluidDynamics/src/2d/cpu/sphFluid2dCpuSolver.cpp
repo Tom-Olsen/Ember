@@ -1,6 +1,6 @@
-#include "SphFluid2dCpuSolver.h"
+#include "sphFluid2dCpuSolver.h"
 #include "hashGrid2d.h"
-#include "smoothingKernals.h"
+#include "smoothingKernals2d.h"
 
 
 
@@ -44,16 +44,12 @@ namespace fluidDynamics
 		// Reallocate:
 		kp1.resize(particleCount);
 		kv1.resize(particleCount);
-		kp2.resize(particleCount);
-		kv2.resize(particleCount);
 		tempPositions.resize(particleCount);
 		tempVelocities.resize(particleCount);
 
 		// Reset all entries to zero:
 		std::fill(kp1.begin(), kp1.end(), Float2::zero);
 		std::fill(kv1.begin(), kv1.end(), Float2::zero);
-		std::fill(kp2.begin(), kp2.end(), Float2::zero);
-		std::fill(kv2.begin(), kv2.end(), Float2::zero);
 		std::fill(tempPositions.begin(), tempPositions.end(), Float2::zero);
 		std::fill(tempVelocities.begin(), tempVelocities.end(), Float2::zero);
 	}
@@ -62,7 +58,7 @@ namespace fluidDynamics
 
 	// Public methods:
 	// Ordinary Differential Equation Solvers:
-	void SphFluid2dCpuSolver::TimeStepLeapFrog(float dt, int timeStep, Data& data, const Settings& settings, const Attractor& attractor)
+	void SphFluid2dCpuSolver::TimeStepLeapFrog(float dt, int timeStep, const Settings& settings, Data& data, const Attractor& attractor)
 	{
 		// Update grid for fast nearest neighbor particle look up:
 		if (settings.pHashGrid != nullptr)
@@ -98,7 +94,7 @@ namespace fluidDynamics
 			BoundaryCollisions(data.positions[i], data.velocities[i], settings);
 		}
 	}
-	void SphFluid2dCpuSolver::TimeStepVelocityVerlet(float dt, Data& data, const Settings& settings, const Attractor& attractor)
+	void SphFluid2dCpuSolver::TimeStepVelocityVerlet(float dt, const Settings& settings, Data& data, const Attractor& attractor)
 	{
 		// Update grid for fast nearest neighbor particle look up:
 		if (settings.pHashGrid != nullptr)
@@ -127,7 +123,7 @@ namespace fluidDynamics
 			BoundaryCollisions(data.positions[i], data.velocities[i], settings);
 		}
 	}
-	void SphFluid2dCpuSolver::TimeStepRungeKutta2(float dt, Data& data, const Settings& settings, const Attractor& attractor, RungeKutta& rungeKutta)
+	void SphFluid2dCpuSolver::TimeStepRungeKutta2(float dt, const Settings& settings, Data& data, const Attractor& attractor, RungeKutta& rungeKutta)
 	{
 		// Runge Kutta coefficients:
 		constexpr float a1 = 1.0f / 3.0f;
@@ -167,9 +163,10 @@ namespace fluidDynamics
 			settings.pHashGrid->UpdateGrid(rungeKutta.tempPositions, settings.effectRadius);
 			settings.pHashGrid->ApplySort(rungeKutta.tempPositions);
 			settings.pHashGrid->ApplySort(rungeKutta.tempVelocities);
+			settings.pHashGrid->ApplySort(rungeKutta.kp1);
+			settings.pHashGrid->ApplySort(rungeKutta.kv1);
 			settings.pHashGrid->ApplySort(data.positions);
 			settings.pHashGrid->ApplySort(data.velocities);
-			settings.pHashGrid->ApplySort(rungeKutta.kv1);
 		}
 
 		// Compute force densities:
@@ -182,10 +179,10 @@ namespace fluidDynamics
 		for (int i = 0; i < data.ParticleCount(); i++)
 		{
 			Float2 acceleration = data.forceDensities[i] / data.densities[i];
-			rungeKutta.kp2[i] = rungeKutta.tempVelocities[i];
-			rungeKutta.kv2[i] = acceleration;
-			data.positions[i] += (a1 * rungeKutta.kp1[i] + a2 * rungeKutta.kp2[i]) * dt;
-			data.velocities[i] += (a1 * rungeKutta.kv1[i] + a2 * rungeKutta.kv2[i]) * dt;
+			Float2 kp2 = rungeKutta.tempVelocities[i];
+			Float2 kv2 = acceleration;
+			data.positions[i] += (a1 * rungeKutta.kp1[i] + a2 * kp2) * dt;
+			data.velocities[i] += (a1 * rungeKutta.kv1[i] + a2 * kv2) * dt;
 			float speed = data.velocities[i].Length();
 			if (speed > settings.maxVelocity)
 				data.velocities[i] *= (settings.maxVelocity / speed);

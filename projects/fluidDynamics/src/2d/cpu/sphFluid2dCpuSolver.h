@@ -11,6 +11,20 @@ namespace fluidDynamics
 	class SphFluid2dCpuSolver
 	{
 	public: // Structs:
+		struct Settings
+		{
+			HashGrid2d* pHashGrid = nullptr;	// optional, but recommended.
+			float effectRadius = 0.5f;
+			float mass = 1.0f;
+			float viscosity = 0.5f;
+			float surfaceTension = 0.07f;
+			float collisionDampening = 0.95f;
+			float targetDensity = 15.0f;
+			float pressureMultiplier = 20.0f;
+			float gravity = 0.5f;
+			float maxVelocity = 5.0f;
+			Bounds fluidBounds = Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f));
+		};
 		struct Data
 		{
 			std::vector<Float2> positions;
@@ -19,31 +33,17 @@ namespace fluidDynamics
 			std::vector<Float2> normals;
 			std::vector<float> curvatures;
 			std::vector<Float2> forceDensities;
+
 			int ParticleCount();
 			void Reallocate(int particleCount);
-		};
-		struct Settings
-		{
-			HashGrid2d* pHashGrid = nullptr;	// optional, but recommended.
-			float effectRadius;
-			float mass;
-			float viscosity;
-			float surfaceTension;
-			float collisionDampening;
-			float targetDensity;
-			float pressureMultiplier;
-			float gravity;
-			float maxVelocity;
-			Bounds fluidBounds;
 		};
 		struct RungeKutta	// only needed for RungeKutta2 solver.
 		{
 			std::vector<Float2> kp1;
 			std::vector<Float2> kv1;
-			std::vector<Float2> kp2;
-			std::vector<Float2> kv2;
 			std::vector<Float2> tempPositions;
 			std::vector<Float2> tempVelocities;
+
 			void Reallocate(int particleCount);
 		};
 		struct Attractor
@@ -56,9 +56,9 @@ namespace fluidDynamics
 
 	public: // Methods:
 		// Ordinary Differential Equation Solvers:
-		static void TimeStepLeapFrog(float dt, int timeStep, Data& data, const Settings& settings, const Attractor& attractor);
-		static void TimeStepVelocityVerlet(float dt, Data& data, const Settings& settings, const Attractor& attractor);
-		static void TimeStepRungeKutta2(float dt, Data& data, const Settings& settings, const Attractor& attractor, RungeKutta& rungeKutta);
+		static void TimeStepLeapFrog(float dt, int timeStep, const Settings& settings, Data& data, const Attractor& attractor);
+		static void TimeStepVelocityVerlet(float dt, const Settings& settings, Data& data, const Attractor& attractor);
+		static void TimeStepRungeKutta2(float dt, const Settings& settings, Data& data, const Attractor& attractor, RungeKutta& rungeKutta);
 
 		// Particle computations:
 		static float Density(int particleIndex, const Settings& settings, const std::vector<Float2>& positions);

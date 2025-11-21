@@ -50,6 +50,9 @@ source_group("3D" FILES ${3D_FILES})
 
 file(GLOB TESTS_FILES "src/tests/*.*")
 source_group("Tests" FILES ${TESTS_FILES})
+
+file(GLOB UTILITY_FILES "src/utility/*.*")
+source_group("Utility" FILES ${UTILITY_FILES})
 # ---------------------------------------------------
 
 
@@ -58,23 +61,27 @@ source_group("Tests" FILES ${TESTS_FILES})
 add_executable(${PROJECT_NAME} ${MAIN_FILE}
     ${2D_CPU_FILES}
     ${2D_GPU_FILES}
-    ${3D_FILES})
+    ${3D_FILES}
+    ${UTILITY_FILES})
 add_executable(${TEST_PR_NAME} ${UNIT_TESTS_MAIN_FILE}
     ${2D_CPU_FILES}
     ${2D_GPU_FILES}
     ${3D_FILES}
-    ${TESTS_FILES})
+    ${TESTS_FILES}
+    ${UTILITY_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/2d/cpu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/2d/gpu
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/3d)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/3d
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utility)
 target_include_directories(${TEST_PR_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/2d/cpu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/2d/gpu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/3d
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/tests)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/tests
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utility)
 
 # Add project root path as a compile definition
 get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)

@@ -30,14 +30,14 @@ Scene* InitScene()
 
 		pScene->SetActiveCamera(pCamera);
 	}
-	{ // Sph Fluid 2d Cpu:
-		Entity entity = Entity::Create("sphFluid2dCpu");
-		SphFluid2dCpu* pSphFluid2dCpu = entity.AddComponent<SphFluid2dCpu>();
-	}
-	//{ // Sph Fluid 2d Gpu:
-	//	Entity entity = Entity::Create("sphFluid2dGpu");
-	//	SphFluid2dGpu* pSphFluid2dGpu = entity.AddComponent<SphFluid2dGpu>();
+	//{ // Sph Fluid 2d Cpu:
+	//	Entity entity = Entity::Create("sphFluid2dCpu");
+	//	SphFluid2dCpu* pSphFluid2dCpu = entity.AddComponent<SphFluid2dCpu>();
 	//}
+	{ // Sph Fluid 2d Gpu:
+		Entity entity = Entity::Create("sphFluid2dGpu");
+		SphFluid2dGpu* pSphFluid2dGpu = entity.AddComponent<SphFluid2dGpu>();
+	}
 	//{ // Sph Fluid 3d:
 	//	Entity entity = Entity::Create("sphFluid3d");
 	//	SphFluid3d* pSphFluid3d = entity.AddComponent<SphFluid3d>();

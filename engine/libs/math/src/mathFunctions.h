@@ -44,5 +44,9 @@ namespace emberMath
 		// Primes:
 		bool IsPrime(size_t n);
 		size_t NextPrimeAbove(size_t n);
+
+		// Boolean:
+		bool IsEpsilonEqual(float a, float b);
+		bool IsEpsilonEqual(float a, float b, float epsilon);
 	}
 }

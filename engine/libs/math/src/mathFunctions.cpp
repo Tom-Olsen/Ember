@@ -1,4 +1,5 @@
 #include "mathFunctions.h"
+#include "mathConstants.h"
 #include <math.h>
 #include <stdexcept>
 
@@ -197,6 +198,18 @@ namespace emberMath
 			while (!IsPrime(candidate))
 				candidate += 2;
 			return candidate;
+		}
+
+
+
+		// Boolean:
+		bool IsEpsilonEqual(float a, float b)
+		{
+			return Abs(a - b) < math::epsilon;
+		}
+		bool IsEpsilonEqual(float a, float b, float epsilon)
+		{
+			return Abs(a - b) < epsilon;
 		}
 	}
 }

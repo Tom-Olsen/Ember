@@ -54,9 +54,6 @@ namespace fluidDynamics
 		// Physics update:
 		void Reset();
 		void FixedUpdate() override;
-		void TimeStepLeapFrog(float deltaT);
-		void TimeStepVelocityVerlet(float deltaT);
-		void TimeStepRungeKutta2(float deltaT);
 
 		// Setters:
 		void SetIsRunning(bool isRunning);

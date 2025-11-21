@@ -108,7 +108,7 @@ namespace emberEditor
 		{
 			m_pScript->SetIsRunning(m_isRunning);
 			m_pScript->SetTimeScale(m_timeScale);
-			m_pScript->SetUseGridOptimization(m_useGridOptimization);
+			m_pScript->SetUseHashGridOptimization(m_useGridOptimization);
 			m_pScript->SetParticleCount(m_particleCount);
 			m_pScript->SetEffectRadius(m_effectRadius);
 			m_pScript->SetMass(m_mass);

@@ -8,9 +8,9 @@
 cbuffer Values : register(b0)
 {
     // General parameters:
-    int particleCount;
+    // particleCount = pc.threadCount.x
     int hashGridSize; // ~2*particleCount
-    int useGridOptimization;
+    int useHashGridOptimization;
     
     // Physics:
     float viscosity;
@@ -60,7 +60,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         float2 particleVel = velocityBuffer[index];
         
 		// Particle-Particle interaction forces:
-        if (useGridOptimization)
+        if (useHashGridOptimization)
         { // With hash grid optimization:
             int2 particleCell = HashGrid2d_Cell(particlePos, effectRadius);
             for (int i = 0; i < 9; i++)
@@ -70,10 +70,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 uint otherIndex = HashGrid2d_GetStartIndex(neighbourCell, hashGridSize, startIndexBuffer);
                 
 				// Skip empty cells:
-                if (otherIndex == uint(-1) || otherIndex >= particleCount)
+                if (otherIndex == uint(-1) || otherIndex >= pc.threadCount.x)
                     continue;
                 
-                while (otherIndex < particleCount && cellKeyBuffer[otherIndex] == cellKey)
+                while (otherIndex < pc.threadCount.x && cellKeyBuffer[otherIndex] == cellKey)
                 {
                     // Skip self interaction:
                     if (otherIndex == index)
@@ -105,7 +105,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         }
         else
         {
-            for (int i = 0; i < particleCount; i++)
+            for (int i = 0; i < pc.threadCount.x; i++)
             {
                 // Skip self interaction:
                 if (i == index)

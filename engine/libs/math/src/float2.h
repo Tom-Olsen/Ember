@@ -77,6 +77,7 @@ namespace emberMath
 
 		// Comparison:
 		bool IsEpsilonEqual(const Float2& other) const;
+		bool IsEpsilonEqual(const Float2& other, float epsilon) const;
 		bool operator==(const Float2& other) const;
 		bool operator!=(const Float2& other) const;
 

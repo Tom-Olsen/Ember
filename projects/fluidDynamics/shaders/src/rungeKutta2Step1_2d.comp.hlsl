@@ -4,7 +4,7 @@
 
 cbuffer Values : register(b0)
 {
-    float deltaT;
+    float dt;
     float maxVelocity;
 };
 StructuredBuffer<float2> forceDensityBuffer : register(t1);
@@ -29,8 +29,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
         float2 acceleration = forceDensityBuffer[index] / densityBuffer[index];
         kp1Buffer[index] = velocityBuffer[index];
         kv1Buffer[index] = acceleration;
-        tempPositionBuffer[index] = positionBuffer[index] + q * kp1Buffer[index] * deltaT;
-        tempVelocityBuffer[index] = velocityBuffer[index] + q * kv1Buffer[index] * deltaT;
+        tempPositionBuffer[index] = positionBuffer[index] + q * kp1Buffer[index] * dt;
+        tempVelocityBuffer[index] = velocityBuffer[index] + q * kv1Buffer[index] * dt;
         float speed = length(tempVelocityBuffer[index]);
         if (speed > maxVelocity)
             tempVelocityBuffer[index] *= (maxVelocity / speed);

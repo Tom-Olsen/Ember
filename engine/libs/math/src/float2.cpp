@@ -230,6 +230,10 @@ namespace emberMath
 	{
 		return std::fabs(x - other.x) < math::epsilon && std::fabs(y - other.y) < math::epsilon;
 	}
+	bool Float2::IsEpsilonEqual(const Float2& other, float epsilon) const
+	{
+		return std::fabs(x - other.x) < math::epsilon && std::fabs(y - other.y) < epsilon;
+	}
 	bool Float2::operator==(const Float2& other) const
 	{
 		return x == other.x && y == other.y;
