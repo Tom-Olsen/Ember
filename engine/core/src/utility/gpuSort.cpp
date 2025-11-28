@@ -7,7 +7,7 @@ namespace emberEngine
 	// Static members:
 	template <typename T>
 	bool GpuSort<T>::s_isInitialized = false;
-
+	// Bitonic sort compute shaders:
 	template <typename T>
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pLocalBitonicSortComputeShader;
 	template <typename T>
@@ -16,7 +16,7 @@ namespace emberEngine
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pBigDisperseComputeShader;
 	template <typename T>
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pLocalDisperseComputeShader;
-
+	// Bitonic permutation sort compute shaders:
 	template <typename T>
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pLocalBitonicSortPermutationComputeShader;
 	template <typename T>
@@ -25,11 +25,21 @@ namespace emberEngine
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pBigDispersePermutationComputeShader;
 	template <typename T>
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pLocalDispersePermutationComputeShader;
-
+	// Initialize index(permutation) buffer:
+	template <typename T>
+	std::unique_ptr<ComputeShader> GpuSort<T>::s_pInitIndexBufferComputeShader;
+	template <typename T>
+	std::unique_ptr<ShaderProperties> GpuSort<T>::s_pInitIndexBufferShaderProperties;
+	// Apply permutation:
 	template <typename T>
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pApplyPermutationComputeShader;
 	template <typename T>
 	std::unique_ptr<ShaderProperties> GpuSort<T>::s_pApplyPermutationShaderProperties;
+	// Invert permutation:
+	template <typename T>
+	std::unique_ptr<ComputeShader> GpuSort<T>::s_pInvertPermutationComputeShader;
+	template <typename T>
+	std::unique_ptr<ShaderProperties> GpuSort<T>::s_pInvertPermutationShaderProperties;
 
 
 
@@ -134,7 +144,6 @@ namespace emberEngine
 		}
 		if constexpr (std::is_same_v<T, float>)
 		{
-			throw std::runtime_error("GpuSort<Int2>::Init: shaders for float not implemented yet.");
 			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>("localBitonicSortFloat", directoryPath / "localBitonicSortFloat.comp.spv");
 			s_pBigFlipComputeShader = std::make_unique<ComputeShader>("bigFlipFloat", directoryPath / "bigFlipFloat.comp.spv");
 			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>("bigDisperseFloat", directoryPath / "bigDisperseFloat.comp.spv");
@@ -192,22 +201,34 @@ namespace emberEngine
 			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>("applyPermutationFloat4", directoryPath / "applyPermutationFloat4.comp.spv");
 		}
 		s_pApplyPermutationShaderProperties = std::make_unique<ShaderProperties>(*s_pApplyPermutationComputeShader);
+
+		s_pInitIndexBufferComputeShader = std::make_unique<ComputeShader>("initIndexBuffer", directoryPath / "initIndexBuffer.comp.spv");
+		s_pInitIndexBufferShaderProperties = std::make_unique<ShaderProperties>(*s_pInitIndexBufferComputeShader);
+		s_pInvertPermutationComputeShader = std::make_unique<ComputeShader>("invertPermutation", directoryPath / "invertPermutation.comp.spv");
+		s_pInvertPermutationShaderProperties = std::make_unique<ShaderProperties>(*s_pInvertPermutationComputeShader);
 	}
 	template <typename T>
 	void GpuSort<T>::Clear()
 	{
+		// Bitonic sort compute shaders:
 		s_pLocalBitonicSortComputeShader.reset();
 		s_pBigFlipComputeShader.reset();
 		s_pBigDisperseComputeShader.reset();
 		s_pLocalDisperseComputeShader.reset();
-
+		// Bitonic permutation sort compute shaders:
 		s_pLocalBitonicSortPermutationComputeShader.reset();
 		s_pBigFlipPermutationComputeShader.reset();
 		s_pBigDispersePermutationComputeShader.reset();
 		s_pLocalDispersePermutationComputeShader.reset();
-
+		// Initialize index(permutation) buffer:
+		s_pInitIndexBufferComputeShader.reset();
+		s_pInitIndexBufferShaderProperties.reset();
+		// Apply permutation:
 		s_pApplyPermutationComputeShader.reset();
 		s_pApplyPermutationShaderProperties.reset();
+		// Invert permutation:
+		s_pInvertPermutationComputeShader.reset();
+		s_pInvertPermutationShaderProperties.reset();
 
 		s_isInitialized = false;
 	}
@@ -230,7 +251,7 @@ namespace emberEngine
 
 		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
 		uint32_t sessionID = -1;
-		bool isImmediateCompute = computeType == ComputeType::immediate;
+		bool isImmediateCompute = (computeType == ComputeType::immediate);
 		if (isImmediateCompute)
 		{
 			sessionID = Compute::Async::CreateComputeSession();
@@ -284,21 +305,21 @@ namespace emberEngine
 
 	// Permutation sort:
 	template <typename T>
-	void GpuSort<T>::SortPermutation(ComputeType computeType, BufferView<T>& bufferView, BufferView<int>& permutationBufferView)
+	void GpuSort<T>::SortPermutation(ComputeType computeType, BufferView<T>& bufferView, BufferView<uint32_t>& permutationBufferView)
 	{
 		// Sorting makes no sense for PostRender compute, as it is only for post processing effects:
 		assert(computeType != ComputeType::postRender);
 
 		// Gpu buffer access setup:
 		int blockSize = s_pLocalBitonicSortPermutationComputeShader->GetBlockSize().x;
-		int bufferSize = static_cast<int>(bufferView.GetCount());		// total number of elements for sorting (entire buffer).
+		int bufferSize = static_cast<int>(bufferView.GetCount());	// total number of elements for sorting (entire buffer).
 		int height = math::NextPowerOfTwo((uint32_t)bufferSize);	// height of biggest flip.
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
 		Uint3 threadCountBig = Uint3(height / 2, 1, 1);				// needed to make sure that big flip/disperse hit all swap indices.
 
 		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
 		uint32_t sessionID = -1;
-		bool isImmediateCompute = computeType == ComputeType::immediate;
+		bool isImmediateCompute = (computeType == ComputeType::immediate);
 		if (isImmediateCompute)
 		{
 			sessionID = Compute::Async::CreateComputeSession();
@@ -307,6 +328,12 @@ namespace emberEngine
 
 		// Record compute shaders:
 		{
+			// Initialize index(permutation) buffer:
+			Uint3 threadCountInit = Uint3(permutationBufferView.GetCount(), 1, 1);
+			s_pInitIndexBufferShaderProperties->SetBuffer("indexBuffer", permutationBufferView.GetBuffer());
+			Compute::RecordComputeShader(computeType, *s_pInitIndexBufferComputeShader, *s_pInitIndexBufferShaderProperties, threadCountInit, sessionID);
+			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+
 			// Local bitonic sort for each block:
 			ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, *s_pLocalBitonicSortPermutationComputeShader, threadCountLocal, sessionID);
 			shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
@@ -356,7 +383,7 @@ namespace emberEngine
 
 	// Apply Permutation:
 	template <typename T>
-	void GpuSort<T>::ApplyPermutation(ComputeType computeType, BufferView<int>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID)
+	void GpuSort<T>::ApplyPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID)
 	{
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
 		s_pApplyPermutationShaderProperties->SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
@@ -366,6 +393,15 @@ namespace emberEngine
 	}
 
 
+	// Invert Permutation:
+	template <typename T>
+	void GpuSort<T>::InvertPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView, uint32_t sessionID)
+	{
+		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
+		s_pInvertPermutationShaderProperties->SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
+		s_pInvertPermutationShaderProperties->SetBuffer("inversePermutationBuffer", inversePermutationBufferView.GetBuffer());
+		Compute::RecordComputeShader(computeType, *s_pInvertPermutationComputeShader, *s_pInvertPermutationShaderProperties, threadCount, sessionID);
+	}
 
     // Explicit template instantiations:
     template class GpuSort<int>;

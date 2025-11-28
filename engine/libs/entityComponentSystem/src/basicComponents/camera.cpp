@@ -1,4 +1,4 @@
-#include "camera.h"
+ï»¿#include "camera.h"
 
 
 
@@ -121,8 +121,8 @@ namespace emberEngine
 	Ray Camera::GetClickRay()
 	{
 		// Mouse position:
-		Float2 mousePos01 = EventSystem::MousePos01();		// € [ 0, 1]
-		Float2 screenPos = 2.0f * mousePos01 - Float2::one;	// € [-1, 1]
+		Float2 mousePos01 = EventSystem::MousePos01();		// â‚¬ [ 0, 1]
+		Float2 screenPos = 2.0f * mousePos01 - Float2::one;	// â‚¬ [-1, 1]
 
 		// Get camera inverse matrices:
 		Float4x4 projectionInv = GetProjectionMatrix().Inverse();

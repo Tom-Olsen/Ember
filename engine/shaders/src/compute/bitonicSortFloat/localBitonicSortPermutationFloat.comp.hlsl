@@ -4,9 +4,9 @@
 
 
 #define BLOCK_SIZE 128                  // max 2048 due to numthreads limit of 1024 (numthreads.x = BLOCK_SIZE/2)
-RWStructuredBuffer<float2> dataBuffer : register(u0);
+RWStructuredBuffer<float> dataBuffer : register(u0);
 RWStructuredBuffer<uint> permutationBuffer : register(u1);
-groupshared float2 localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
+groupshared float localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 groupshared uint localPermutationValue[BLOCK_SIZE];
 cbuffer Values : register(b2)
 {
@@ -17,32 +17,9 @@ cbuffer Values : register(b2)
 
 void CompareAndSwap(uint i, uint j)
 {
-    float lenI = length(localValue[i]);
-    float lenJ = length(localValue[j]);
-
-    // Compare by length first:
-    bool swap = false;
-    if (lenI > lenJ)
-        swap = true;
-    else if (lenI == lenJ)
+    if (localValue[i] > localValue[j])
     {
-        // Compute angles from (1,0) counterclockwise (0 ... 2pi):
-        float angleA = atan2(localValue[i].y, localValue[i].x);
-        float angleB = atan2(localValue[j].y, localValue[j].x);
-
-        // atan2 returns [-pi, pi], convert to [0, 2pi]
-        if (angleA < 0)
-            angleA += 2.0 * math_PI;
-        if (angleB < 0)
-            angleB += 2.0 * math_PI;
-
-        if (angleA > angleB)
-            swap = true;
-    }
-
-    if (swap)
-    {
-        float2 tmp = localValue[i];
+        float tmp = localValue[i];
         localValue[i] = localValue[j];
         localValue[j] = tmp;
         

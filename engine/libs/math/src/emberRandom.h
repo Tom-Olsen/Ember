@@ -24,6 +24,7 @@ namespace emberMath
 			// Seed management:
 			static void SetSeed(uint32_t seed);
 			static uint32_t GetSeed();
+			static std::mt19937& GetEngine();
 
 			// Random number generation:
 			static float Uniform01();

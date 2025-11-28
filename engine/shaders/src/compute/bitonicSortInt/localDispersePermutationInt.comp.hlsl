@@ -4,17 +4,17 @@
 
 #define BLOCK_SIZE 128                  // max 2048 due to numthreads limit of 1024 (numthreads.x = BLOCK_SIZE/2)
 RWStructuredBuffer<int> dataBuffer : register(u0);
-RWStructuredBuffer<int> permutationBuffer : register(u1);
+RWStructuredBuffer<uint> permutationBuffer : register(u1);
 groupshared int localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
-groupshared int localPermutationValue[BLOCK_SIZE];
+groupshared uint localPermutationValue[BLOCK_SIZE];
 cbuffer Values : register(b2)
 {
-    int bufferSize; // number of elements in the data buffer.
+    uint bufferSize; // number of elements in the data buffer.
 };
 
 
 
-void CompareAndSwap(int i, int j)
+void CompareAndSwap(uint i, uint j)
 {
     if (localValue[i] > localValue[j])
     {
@@ -22,18 +22,18 @@ void CompareAndSwap(int i, int j)
         localValue[i] = localValue[j];
         localValue[j] = tmp;
         
-        int tmpPermutation = localPermutationValue[i];
+        uint tmpIndex = localPermutationValue[i];
         localPermutationValue[i] = localPermutationValue[j];
-        localPermutationValue[j] = tmpPermutation;
+        localPermutationValue[j] = tmpIndex;
     }
 }
-void Disperse(int disperseHeight, uint index)
+void Disperse(uint disperseHeight, uint index)
 {
     // Do not simplify these equations, as int floor rounding is required!
-    int halfDisperseHeight = disperseHeight / 2;
-    int block = index / halfDisperseHeight;
-    int i = index + block * halfDisperseHeight;
-    int j = i + halfDisperseHeight;
+    uint halfDisperseHeight = disperseHeight / 2;
+    uint block = index / halfDisperseHeight;
+    uint i = index + block * halfDisperseHeight;
+    uint j = i + halfDisperseHeight;
     CompareAndSwap(i, j);
 }
 

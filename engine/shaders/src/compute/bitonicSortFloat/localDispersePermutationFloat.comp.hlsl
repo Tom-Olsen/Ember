@@ -4,9 +4,9 @@
 
 
 #define BLOCK_SIZE 128                  // max 2048 due to numthreads limit of 1024 (numthreads.x = BLOCK_SIZE/2)
-RWStructuredBuffer<float2> dataBuffer : register(u0);
+RWStructuredBuffer<float> dataBuffer : register(u0);
 RWStructuredBuffer<uint> permutationBuffer : register(u1);
-groupshared float2 localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
+groupshared float localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 groupshared uint localPermutationValue[BLOCK_SIZE];
 cbuffer Values : register(b2)
 {
@@ -17,32 +17,9 @@ cbuffer Values : register(b2)
 
 void CompareAndSwap(uint i, uint j)
 {
-    float lenI = length(localValue[i]);
-    float lenJ = length(localValue[j]);
-
-    // Compare by length first:
-    bool swap = false;
-    if (lenI > lenJ)
-        swap = true;
-    else if (lenI == lenJ)
+    if (localValue[i] > localValue[j])
     {
-        // Compute angles from (1,0) counterclockwise (0 ... 2pi):
-        float angleA = atan2(localValue[i].y, localValue[i].x);
-        float angleB = atan2(localValue[j].y, localValue[j].x);
-
-        // atan2 returns [-pi, pi], convert to [0, 2pi]
-        if (angleA < 0)
-            angleA += 2.0 * math_PI;
-        if (angleB < 0)
-            angleB += 2.0 * math_PI;
-
-        if (angleA > angleB)
-            swap = true;
-    }
-
-    if (swap)
-    {
-        float2 tmp = localValue[i];
+        float tmp = localValue[i];
         localValue[i] = localValue[j];
         localValue[j] = tmp;
         
@@ -50,15 +27,6 @@ void CompareAndSwap(uint i, uint j)
         localPermutationValue[i] = localPermutationValue[j];
         localPermutationValue[j] = tmpPermutation;
     }
-}
-void Flip(uint flipHeight, uint index)
-{
-    // Do not simplify these equations, as int floor rounding is required!
-    uint halfFlipHeight = flipHeight / 2;
-    uint block = index / halfFlipHeight;
-    uint i = index + block * halfFlipHeight;
-    uint j = flipHeight - 1 - index + 3 * halfFlipHeight * block;
-    CompareAndSwap(i, j);
 }
 void Disperse(uint disperseHeight, uint index)
 {
@@ -85,15 +53,10 @@ void main(uint3 localThreadID : SV_GroupThreadID, uint3 threadID : SV_DispatchTh
     localPermutationValue[2 * localIndex + 1] = (2 * index + 1 < bufferSize) ? permutationBuffer[2 * index + 1] : -1;
     
     // Execute local bitonic sort on local memory: (only sorts elements within the same block)
-    for (uint flipHeight = 2; flipHeight <= BLOCK_SIZE; flipHeight *= 2)
+    for (uint disperseHeight = BLOCK_SIZE; disperseHeight > 1; disperseHeight /= 2)
     {
         GroupMemoryBarrierWithGroupSync();
-        Flip(flipHeight, localIndex);
-        for (uint disperseHeight = flipHeight / 2; disperseHeight > 1; disperseHeight /= 2)
-        {
-            GroupMemoryBarrierWithGroupSync();
-            Disperse(disperseHeight, localIndex);
-        }
+        Disperse(disperseHeight, localIndex);
     }
     
 	// Write local memory back to buffer (2 values per thread):

@@ -38,10 +38,10 @@ namespace emberMath
 		}
 		// Create sorting permutation in given vector:
 		template <typename T, typename Compare>
-		inline void SortPermutation(const std::vector<T>& vector, std::vector<std::size_t>& permutation, const Compare& compare)
+		inline void SortPermutation(const std::vector<T>& vector, std::vector<size_t>& permutation, const Compare& compare)
 		{
 			if (vector.size() != permutation.size())
-				throw std::runtime_error("SortPermutation: vector and permutation do not have same length.");
+				permutation.resize(vector.size());
 
 			std::iota(permutation.begin(), permutation.end(), 0);	// fills with indexes 0, 1, 2, ...
 			std::sort(permutation.begin(), permutation.end(), [&](std::size_t i, std::size_t j) { return compare(vector[i], vector[j]); });

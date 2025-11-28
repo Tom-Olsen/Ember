@@ -8,12 +8,12 @@ RWStructuredBuffer<float2> dataBuffer : register(u0);
 groupshared float2 localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 cbuffer Values : register(b1)
 {
-    int bufferSize; // number of elements in the data buffer.
+    uint bufferSize; // number of elements in the data buffer.
 };
 
 
 
-void CompareAndSwap(int i, int j)
+void CompareAndSwap(uint i, uint j)
 {
     float lenI = length(localValue[i]);
     float lenJ = length(localValue[j]);
@@ -45,22 +45,22 @@ void CompareAndSwap(int i, int j)
         localValue[j] = tmp;
     }
 }
-void Flip(int flipHeight, uint index)
+void Flip(uint flipHeight, uint index)
 {
     // Do not simplify these equations, as int floor rounding is required!
-    int halfFlipHeight = flipHeight / 2;
-    int block = index / halfFlipHeight;
-    int i = index + block * halfFlipHeight;
-    int j = flipHeight - 1 - index + 3 * halfFlipHeight * block;
+    uint halfFlipHeight = flipHeight / 2;
+    uint block = index / halfFlipHeight;
+    uint i = index + block * halfFlipHeight;
+    uint j = flipHeight - 1 - index + 3 * halfFlipHeight * block;
     CompareAndSwap(i, j);
 }
-void Disperse(int disperseHeight, uint index)
+void Disperse(uint disperseHeight, uint index)
 {
     // Do not simplify these equations, as int floor rounding is required!
-    int halfDisperseHeight = disperseHeight / 2;
-    int block = index / halfDisperseHeight;
-    int i = index + block * halfDisperseHeight;
-    int j = i + halfDisperseHeight;
+    uint halfDisperseHeight = disperseHeight / 2;
+    uint block = index / halfDisperseHeight;
+    uint i = index + block * halfDisperseHeight;
+    uint j = i + halfDisperseHeight;
     CompareAndSwap(i, j);
 }
 

@@ -7,14 +7,17 @@
 RWStructuredBuffer<float2> dataBuffer : register(u0);
 cbuffer Values : register(b1)
 {
-    int flipHeight; // height of the flip (number of elements involved in it).
-    int bufferSize; // number of elements in data buffer.
+    uint flipHeight; // height of the flip (number of elements involved in it).
+    uint bufferSize; // number of elements in data buffer.
 };
 
 
 
-void CompareAndSwap(int i, int j)
+void CompareAndSwap(uint i, uint j)
 {
+    if (i >= bufferSize || j >= bufferSize)
+        return;
+    
     float lenI = length(dataBuffer[i]);
     float lenJ = length(dataBuffer[j]);
 
@@ -54,9 +57,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x; // thread index € [0,bufferSize/2]
     
     // Do not simplify these equations, as int floor rounding is required!
-    int halfFlipHeight = flipHeight / 2;
-    int block = index / halfFlipHeight;
-    int i = index + block * halfFlipHeight;
-    int j = flipHeight - 1 - index + 3 * halfFlipHeight * block;
+    uint halfFlipHeight = flipHeight / 2;
+    uint block = index / halfFlipHeight;
+    uint i = index + block * halfFlipHeight;
+    uint j = flipHeight - 1 - index + 3 * halfFlipHeight * block;
     CompareAndSwap(i, j);
 }

@@ -34,6 +34,7 @@ namespace emberEngine
 // Gpu resources:
 #include "buffer.h"
 #include "bufferView.h"
+#include "bufferTyped.h"
 #include "mesh.h"
 #include "material.h"
 #include "computeShader.h"

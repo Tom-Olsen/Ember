@@ -11,11 +11,13 @@ namespace fluidDynamics
 	private: // Members:
 		size_t m_particleCount;
 		size_t m_size;
+		bool m_inverseValid;
 		const size_t m_prime0 = 73856093;
 		const size_t m_prime1 = 83492791;
-		std::vector<uint32_t> m_cellKeys;			// m_cellKeys[particleIndex] = cell key (hash % Count) of given particle.
-		std::vector<uint32_t> m_startIndices;		// m_startIndices[cellKey] = first entry in cellKeys that is in that cell, else uint32_t(-1).
-		std::vector<std::size_t> m_sortPermutation;	// permutations for sorting.
+		std::vector<uint32_t> m_cellKeys;				// m_cellKeys[particleIndex] = cell key (hash % Count) of given particle.
+		std::vector<uint32_t> m_startIndices;			// m_startIndices[cellKey] = first entry in cellKeys that is in that cell, else uint32_t(-1).
+		std::vector<size_t> m_sortPermutation;			// permutations for sorting.
+		std::vector<size_t> m_inverseSortPermutation;	// permutation for unsorting.
 
 	public: // Methods:
 		HashGrid2d();
@@ -39,6 +41,12 @@ namespace fluidDynamics
 
 		// Main hash grid mechanism:
 		void UpdateGrid(std::vector<Float2>& positions, float radius);
+		void ApplySort(std::vector<float>& data) const;
 		void ApplySort(std::vector<Float2>& data) const;
+		void UndoSort(std::vector<float>& data);
+		void UndoSort(std::vector<Float2>& data);
+
+	private: // Methods:
+		void UpdateInverseSortPermutation();
 	};
 }

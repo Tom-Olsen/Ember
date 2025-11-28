@@ -4,8 +4,8 @@
 
 
 #define BLOCK_SIZE 128                  // max 2048 due to numthreads limit of 1024 (numthreads.x = BLOCK_SIZE/2)
-RWStructuredBuffer<float2> dataBuffer : register(u0);
-groupshared float2 localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
+RWStructuredBuffer<float> dataBuffer : register(u0);
+groupshared float localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 cbuffer Values : register(b1)
 {
     uint bufferSize; // number of elements in the data buffer.
@@ -15,37 +15,14 @@ cbuffer Values : register(b1)
 
 void CompareAndSwap(uint i, uint j)
 {
-    float lenI = length(localValue[i]);
-    float lenJ = length(localValue[j]);
-
-    // Compare by length first:
-    bool swap = false;
-    if (lenI > lenJ)
-        swap = true;
-    else if (lenI == lenJ)
+    if (localValue[i] > localValue[j])
     {
-        // Compute angles from (1,0) counterclockwise (0 ... 2pi):
-        float angleA = atan2(localValue[i].y, localValue[i].x);
-        float angleB = atan2(localValue[j].y, localValue[j].x);
-
-        // atan2 returns [-pi, pi], convert to [0, 2pi]
-        if (angleA < 0)
-            angleA += 2.0 * math_PI;
-        if (angleB < 0)
-            angleB += 2.0 * math_PI;
-
-        if (angleA > angleB)
-            swap = true;
-    }
-
-    if (swap)
-    {
-        float2 tmp = localValue[i];
+        float tmp = localValue[i];
         localValue[i] = localValue[j];
         localValue[j] = tmp;
     }
 }
-void Disperse(int disperseHeight, uint index)
+void Disperse(uint disperseHeight, uint index)
 {
     // Do not simplify these equations, as int floor rounding is required!
     uint halfDisperseHeight = disperseHeight / 2;

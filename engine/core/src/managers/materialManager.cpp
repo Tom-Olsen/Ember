@@ -1,4 +1,4 @@
-#include "materialManager.h"
+﻿#include "materialManager.h"
 #include "commonRenderQueue.h"
 #include "iMaterial.h"
 #include "logger.h"
@@ -69,7 +69,7 @@ namespace emberEngine
 		auto it = s_materialInterfacesMap.find(name);
 		if (it != s_materialInterfacesMap.end())
 		{
-			LOG_WARN("Material '{}' already exists � returning existing instance.", name);
+			LOG_WARN("Material '{}' already exists — returning existing instance.", name);
 			return Material{ it->second.get() };
 		}
 

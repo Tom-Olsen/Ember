@@ -39,6 +39,10 @@ namespace emberMath
 		{
 			return s_seed;
 		}
+		std::mt19937& Random::GetEngine()
+		{
+			return s_mersenneTwister;
+		}
 
 		// Random number generation:
 		float Random::Uniform01()

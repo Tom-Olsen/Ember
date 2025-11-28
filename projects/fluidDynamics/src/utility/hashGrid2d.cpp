@@ -12,9 +12,11 @@ namespace fluidDynamics
 	{
 		m_particleCount = 0;
 		m_size = 0;
+		m_inverseValid = false;
 	}
 	HashGrid2d::HashGrid2d(int particleCount)
 	{
+		m_inverseValid = false;
 		Reallocate(particleCount);
 	}
 	HashGrid2d::~HashGrid2d()
@@ -139,8 +141,35 @@ namespace fluidDynamics
 		// 		Otherwise, iterate through the contiguous block in m_cellKeys until the key changes
 		// 		Those are your neighbor particles.
 	}
+	void HashGrid2d::ApplySort(std::vector<float>& data) const
+	{
+		data = math::ApplyPermutation(data, m_sortPermutation);
+	}
 	void HashGrid2d::ApplySort(std::vector<Float2>& data) const
 	{
 		data = math::ApplyPermutation(data, m_sortPermutation);
+	}
+	void HashGrid2d::UndoSort(std::vector<float>& data)
+	{
+		if (!m_inverseValid)
+			UpdateInverseSortPermutation();
+		data = math::ApplyPermutation(data, m_inverseSortPermutation);
+	}
+	void HashGrid2d::UndoSort(std::vector<Float2>& data)
+	{
+		if (!m_inverseValid)
+			UpdateInverseSortPermutation();
+		data = math::ApplyPermutation(data, m_inverseSortPermutation);
+	}
+
+
+
+	// Private methods:
+	void HashGrid2d::UpdateInverseSortPermutation()
+	{
+		m_inverseSortPermutation.resize(m_particleCount);
+		for (size_t i = 0; i < m_particleCount; i++)
+			m_inverseSortPermutation[m_sortPermutation[i]] = i;
+		m_inverseValid = true;
 	}
 }

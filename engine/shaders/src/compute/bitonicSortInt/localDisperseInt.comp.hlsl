@@ -7,12 +7,12 @@ RWStructuredBuffer<int> dataBuffer : register(u0);
 groupshared int localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 cbuffer Values : register(b1)
 {
-    int bufferSize; // number of elements in the data buffer.
+    uint bufferSize; // number of elements in the data buffer.
 };
 
 
 
-void CompareAndSwap(int i, int j)
+void CompareAndSwap(uint i, uint j)
 {
     if (localValue[i] > localValue[j])
     {

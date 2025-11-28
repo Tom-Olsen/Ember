@@ -6,7 +6,7 @@
 
 namespace emberEngine
 {
-    // Public methodfs:
+    // Public methods:
 	// Constructor/Destructor:
     template<typename T>
     BufferView<T>::BufferView()
@@ -89,6 +89,20 @@ namespace emberEngine
     void BufferView<T>::SetCount(uint32_t count)
     {
         m_count = count;
+    }
+
+
+
+    // Upload/Download:
+    template<typename T>
+    void BufferView<T>::Upload(const void* pSrc, uint64_t count)
+    {
+        m_pBuffer->Upload(pSrc, count * sizeof(T));
+    }
+    template<typename T>
+    void BufferView<T>::Download(void* pDst, uint64_t count)
+    {
+        m_pBuffer->Download(pDst, count * sizeof(T));
     }
 
 

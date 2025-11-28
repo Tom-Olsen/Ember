@@ -22,9 +22,10 @@ endif()
 # ------------------- File Lists --------------------
 # Gather shader source files and includes from all subdirectories:
 file(GLOB COMPUTE_SHADERS "src/compute/*.*")
-    file(GLOB APPLY_PERMUTATION "src/compute/applyPermutation/*.*")
+    file(GLOB BITONIC_SORT_FLOAT "src/compute/bitonicSortFloat/*.*")
     file(GLOB BITONIC_SORT_FLOAT2 "src/compute/bitonicSortFloat2/*.*")
     file(GLOB BITONIC_SORT_INT "src/compute/bitonicSortInt/*.*")
+    file(GLOB PERMUTATION "src/compute/permutation/*.*")
 file(GLOB FRAGMENT_SHADERS "src/fragment/*.*")
 file(GLOB SHADER_INCLUDES "src/includes/*.*")
 file(GLOB CPP_HLSL_INCLUDES "src/includesCppHlsl/*.*")
@@ -33,17 +34,19 @@ file(GLOB VERTEX_SHADERS "src/vertex/*.*")
 # Combine shader source files:
 file(GLOB SHADER_SOURCES 
     ${COMPUTE_SHADERS}
-    ${APPLY_PERMUTATION}
+    ${BITONIC_SORT_FLOAT}
     ${BITONIC_SORT_FLOAT2}
     ${BITONIC_SORT_INT}
+    ${PERMUTATION}
     ${FRAGMENT_SHADERS}
     ${VERTEX_SHADERS})
 
 # Organize files into IDE groups:
 source_group("Compute Shaders" FILES ${COMPUTE_SHADERS})
-source_group("Compute Shaders/Apply Permutation" FILES ${APPLY_PERMUTATION})
+source_group("Compute Shaders/Bitonic Sort Float" FILES ${BITONIC_SORT_FLOAT})
 source_group("Compute Shaders/Bitonic Sort Float2" FILES ${BITONIC_SORT_FLOAT2})
 source_group("Compute Shaders/Bitonic Sort Int" FILES ${BITONIC_SORT_INT})
+source_group("Compute Shaders/Permutation" FILES ${PERMUTATION})
 source_group("Fragment Shaders" FILES ${FRAGMENT_SHADERS})
 source_group("Includes" FILES ${SHADER_INCLUDES})
 source_group("Includes C++ & HLSL" FILES ${CPP_HLSL_INCLUDES})
@@ -94,9 +97,10 @@ add_custom_target(EmberShaderCompiler ALL DEPENDS ${SPIRV_OUTPUTS})
 # Shader sources added as dummy targets to make them show up in the IDE:
 add_custom_target(EmberShaders SOURCES
     ${COMPUTE_SHADERS}
-    ${APPLY_PERMUTATION}
+    ${BITONIC_SORT_FLOAT}
     ${BITONIC_SORT_FLOAT2}
     ${BITONIC_SORT_INT}
+    ${PERMUTATION}
     ${FRAGMENT_SHADERS}
     ${SHADER_INCLUDES}
     ${CPP_HLSL_INCLUDES}

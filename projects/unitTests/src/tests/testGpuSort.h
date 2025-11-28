@@ -31,138 +31,166 @@ namespace emberEngine
 
 
 
-	TEST_F(TEST_GpuSort, GetDataFromGpu)
-	{
-		int count = 16;
-		uint64_t size = (uint64_t)count * (uint64_t)sizeof(float);
-	
-		// Prepare cpu arrays:
-		std::vector<float> uploadData;
-		std::vector<float> downloadData;
-		uploadData.resize(count);
-		downloadData.resize(count);
-		for (int i = 0; i < count; i++)
-			uploadData[i] = (float)i;
-	
-		// GPU upload and download:
-		Buffer buffer = Buffer(count, sizeof(float), "dataBuffer", BufferUsage::storage);
-		buffer.Upload(uploadData.data(), count * sizeof(float));
-		buffer.Download(downloadData.data(), count * sizeof(float));
-	
-		// Check if data is correct:
-		bool allGood = true;
-		for (int i = 0; i < count; i++)
-		{
-			allGood = (downloadData[i] == uploadData[i]);
-			if (allGood == false)
-				break;
-		}
-		EXPECT_TRUE(allGood);
-	}
-
-
-
 	TEST_F(TEST_GpuSort, LocalBitonicSort)
 	{
-		// Create storage buffer:
-		int count = 111;	// must be <= BLOCK_SIZE of localBitonicSort compute shader.
-		uint32_t size = count * sizeof(int);
-		Buffer buffer = Buffer(count, sizeof(int), "dataBuffer", BufferUsage::storage);
-	
-		// Create unsorted array and upload to buffer:
-		std::vector<int> unsortedData;
-		unsortedData.resize(count);
+		// Number of elements:
+		int count = 111;	// must be <= BLOCK_SIZE = 128 of localBitonicSort compute shader.
+
+		// Prepare cpu array:
+		std::vector<int> uploadData(count);
 		for (int i = 0; i < count; i++)
-			unsortedData[i] = math::Random::Uniform(1, count);
-		buffer.Upload(unsortedData.data(), count * sizeof(int));
+			uploadData[i] = math::Random::Uniform(1, count);
+
+		// Prepare gpu buffer:
+		Buffer buffer = Buffer(count, sizeof(int), "dataBuffer", BufferUsage::storage);
+		buffer.Upload(uploadData.data(), count * sizeof(int));
 	
-		// Sort array on CPU:
-		std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
-	
-		// Load compute shader and set shaderProperties:
+		// Prepare compute shader:
 		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
 		ComputeShader sortCS = ComputeShader("localBitonicSort", directoryPath / "localBitonicSort.comp.spv");
 		ShaderProperties shaderProperties = ShaderProperties(sortCS);
 		shaderProperties.SetBuffer("dataBuffer", buffer);
 		shaderProperties.SetValue("Values", "bufferSize", count);
-		
-		// Dispatch compute shader and wait for finish:
+
+		// Sort array on cpu:
+		std::vector<int> sortedDataCpu = math::CopySort(uploadData, [](int a, int b) { return a < b; });
+
+		// Sort array on gpu:
 		Uint3 threadCount(count / 2, 1, 1);
 		Compute::Immediate::Dispatch(sortCS, shaderProperties, threadCount);
 	
-		// Download sorted data from GPU:
-		std::vector<int> sortedDataGpu;
-		sortedDataGpu.resize(count);
+		// Buffer download:
+		std::vector<int> sortedDataGpu(count);
 		buffer.Download(sortedDataGpu.data(), count * sizeof(int));
-	
-		//// Print data:
-		//for (int i = 0; i < count; i++)
-		//	LOG_TRACE("unsorted:{}, CPU:{}, GPU:{}", unsortedData[i], sortedDataCpu[i], sortedDataGpu[i]);
 	
 		// Check if data is correct:
 		bool allGood = true;
 		for (int i = 0; i < count; i++)
 		{
-			allGood = (sortedDataGpu[i] == sortedDataCpu[i]);
-			if (allGood == false)
-				break;
+			if (sortedDataCpu[i] != sortedDataGpu[i])
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "Sort mismatch at " << i << ": cpu = " << sortedDataCpu[i] << ", gpu = " << sortedDataGpu[i];
+			}
 		}
 		EXPECT_TRUE(allGood);
 	}
 
 
 
-	TEST_F(TEST_GpuSort, BitonicSort)
+	TEST_F(TEST_GpuSort, BitonicSortInt)
 	{
-		// Create storage buffer:
+		// Number of elements:
 		int count = 1234567;
-		uint32_t size = count * sizeof(int);
-		Buffer buffer = Buffer(count, sizeof(int), "dataBuffer", BufferUsage::storage);
-	
-		// Create unsorted array and upload to buffer:
-		std::vector<int> unsortedData;
-		unsortedData.resize(count);
-		math::Random::SetSeed(0);
+
+		// Prepare cpu array:
+		std::vector<int> dataCpu(count);
 		for (int i = 0; i < count; i++)
-			unsortedData[i] = math::Random::Uniform(1, count);
-		buffer.Upload(unsortedData.data(), count * sizeof(int));
+			dataCpu[i] = math::Random::Uniform(1, count);
+
+		// Prepare gpu buffer:
+		BufferTyped<int> buffer = BufferTyped<int>(count, "buffer", BufferUsage::storage);
+		buffer.Upload(dataCpu.data(), count);
 	
-		// Sort array on CPU:
+		// Sort array on cpu:
 		Time::Reset();
-		std::vector<int> sortedDataCpu = math::CopySort(unsortedData, [](int a, int b) { return a < b; });
+		math::Sort(dataCpu, [](int a, int b) { return a < b; });
 		Time::Update();
-		LOG_INFO("CPU sort time: {}s", Time::GetDeltaTime());
+		LOG_INFO("cpu sort time: {}s", Time::GetDeltaTime());
 	
-		// Sort array on GPU:
-		GpuSort::SortImmediate(buffer);
+		// Sort array on gpu:
+		GpuSort<int>::Sort(ComputeType::immediate, buffer.GetBufferView());
 		Time::Update();
-		LOG_INFO("GPU sort time: {}s", Time::GetDeltaTime());
+		LOG_INFO("gpu sort time: {}s", Time::GetDeltaTime());
 	
-		// Download sorted data from GPU:
-		std::vector<int> sortedDataGpu;
-		sortedDataGpu.resize(count);
-		buffer.Download(sortedDataGpu.data(), count * sizeof(int));
-	
-		// Print results:
-		//for (int i = 0; i < count; i++)
-		//{
-		//	//LOG_TRACE(sortedDataGpu[i]);
-		//	if (sortedDataCpu[i] == sortedDataGpu[i])
-		//		LOG_TRACE("index: {}, unsorted:{}, CPU:{}, GPU:{}", i, unsortedData[i], sortedDataCpu[i], sortedDataGpu[i]);
-		//	else
-		//		LOG_WARN("index: {}, unsorted:{}, CPU:{}, GPU:{}", i, unsortedData[i], sortedDataCpu[i], sortedDataGpu[i]);
-		//}
+		// Download:
+		std::vector<int> dataGpu(count);
+		buffer.Download(dataGpu.data(), count);
 	
 		// Check results:
 		bool allGood = true;
 		for (int i = 0; i < count; i++)
 		{
-			allGood = (sortedDataGpu[i] == sortedDataCpu[i]);
-			if (allGood == false)
-				break;
+			if (dataCpu[i] != dataGpu[i])
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "Sort mismatch at " << i << ": cpu = " << dataCpu[i] << ", gpu = " << dataGpu[i];
+			}
 		}
 		EXPECT_TRUE(allGood);
 	}
+	
+	
+	
+	TEST_F(TEST_GpuSort, BitonicPermutationSortInt)
+	{
+		// Number of elements:
+		int count = 12345;
+
+		// Prepare cpu arrays:
+		std::vector<int> dataCpu0(count);
+		std::vector<int> dataCpu1(count);
+		std::vector<size_t> permutationCpu(count);
+		std::iota(dataCpu0.begin(), dataCpu0.end(), 0);
+		std::iota(dataCpu1.begin(), dataCpu1.end(), 0);
+		std::shuffle(dataCpu0.begin(), dataCpu0.end(), math::Random::GetEngine());
+		std::shuffle(dataCpu1.begin(), dataCpu1.end(), math::Random::GetEngine());
+
+		// Prepare gpu buffers:
+		BufferTyped<int> dataBuffer0 = BufferTyped<int>(count, "dataBufferBuffer0", BufferUsage::storage);
+		BufferTyped<int> dataBuffer1 = BufferTyped<int>(count, "dataBufferBuffer1", BufferUsage::storage);
+		BufferTyped<int> tempBuffer = BufferTyped<int>(count, "tempBuffer", BufferUsage::storage);
+		BufferTyped<uint32_t> permutationBuffer = BufferTyped<uint32_t>(count, "permutationBuffer", BufferUsage::storage);
+		dataBuffer0.Upload(dataCpu0.data(), count);
+		dataBuffer1.Upload(dataCpu1.data(), count);
+	
+		// Sort array on cpu:
+		Time::Reset();
+		math::SortPermutation(dataCpu0, permutationCpu, [](int const& a, int const& b) { return a < b; });
+		dataCpu0 = math::ApplyPermutation(dataCpu0, permutationCpu);
+		dataCpu1 = math::ApplyPermutation(dataCpu1, permutationCpu);
+		Time::Update();
+		LOG_INFO("cpu sort time: {}s", Time::GetDeltaTime());
+	
+		// Sort array on gpu:
+		GpuSort<int>::SortPermutation(ComputeType::immediate, dataBuffer0.GetBufferView(), permutationBuffer.GetBufferView());
+		GpuSort<int>::ApplyPermutation(ComputeType::immediate, permutationBuffer.GetBufferView(), dataBuffer1.GetBufferView(), tempBuffer.GetBufferView());
+		std::swap(dataBuffer1, tempBuffer);
+		Time::Update();
+		LOG_INFO("gpu sort time: {}s", Time::GetDeltaTime());
+	
+		// Download:
+		std::vector<int> dataGpu0(count);
+		std::vector<int> dataGpu1(count);
+		std::vector<int> permutationGpu(count);
+		dataBuffer0.Download(dataGpu0.data(), count);
+		dataBuffer1.Download(dataGpu1.data(), count);
+		permutationBuffer.Download(permutationGpu.data(), count);
+	
+		// Check results:
+		bool allGood = true;
+		for (int i = 0; i < count; i++)
+		{
+			if (dataCpu0[i] != dataGpu0[i])
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "Sort mismatch at buffer0, " << i << ": cpu = " << dataCpu0[i] << ", gpu = " << dataGpu0[i];
+			}
+			if (dataCpu1[i] != dataGpu1[i])
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "Sort mismatch at buffer1, " << i << ": cpu = " << dataCpu1[i] << ", gpu = " << dataGpu1[i];
+			}
+			if (permutationCpu[i] != permutationGpu[i])
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "Sort mismatch at buffer1, " << i << ": cpu = " << permutationCpu[i] << ", gpu = " << permutationGpu[i];
+			}
+		}
+		EXPECT_TRUE(allGood);
+	}
+
+
 
 	//Scene* InitScene()
 	//{

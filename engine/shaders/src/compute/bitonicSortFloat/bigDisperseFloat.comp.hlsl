@@ -1,11 +1,11 @@
 #include "computePushConstant.hlsli"
+#include "math.hlsli"
 
 
 
 #define BLOCK_SIZE 128
-RWStructuredBuffer<int> dataBuffer : register(u0);
-RWStructuredBuffer<uint> permutationBuffer : register(u1);
-cbuffer Values : register(b2)
+RWStructuredBuffer<float> dataBuffer : register(u0);
+cbuffer Values : register(b1)
 {
     uint disperseHeight; // height of the disperse (number of elements involved in it).
     uint bufferSize; // number of elements in data buffer.
@@ -19,13 +19,9 @@ void CompareAndSwap(uint i, uint j)
         return;
     if (dataBuffer[i] > dataBuffer[j])
     {
-        int tmp = dataBuffer[i];
+        float tmp = dataBuffer[i];
         dataBuffer[i] = dataBuffer[j];
         dataBuffer[j] = tmp;
-        
-        uint tmpIndex = permutationBuffer[i];
-        permutationBuffer[i] = permutationBuffer[j];
-        permutationBuffer[j] = tmpIndex;
     }
 }
 

@@ -1,13 +1,13 @@
 #include "computePushConstant.hlsli"
+#include "math.hlsli"
 
 
 
 #define BLOCK_SIZE 128
-RWStructuredBuffer<int> dataBuffer : register(u0);
-RWStructuredBuffer<uint> permutationBuffer : register(u1);
-cbuffer Values : register(b2)
+RWStructuredBuffer<float> dataBuffer : register(u0);
+cbuffer Values : register(b1)
 {
-    uint disperseHeight; // height of the disperse (number of elements involved in it).
+    uint flipHeight; // height of the flip (number of elements involved in it).
     uint bufferSize; // number of elements in data buffer.
 };
 
@@ -19,13 +19,9 @@ void CompareAndSwap(uint i, uint j)
         return;
     if (dataBuffer[i] > dataBuffer[j])
     {
-        int tmp = dataBuffer[i];
+        float tmp = dataBuffer[i];
         dataBuffer[i] = dataBuffer[j];
         dataBuffer[j] = tmp;
-        
-        uint tmpIndex = permutationBuffer[i];
-        permutationBuffer[i] = permutationBuffer[j];
-        permutationBuffer[j] = tmpIndex;
     }
 }
 
@@ -37,9 +33,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x; // thread index € [0,bufferSize/2]
     
     // Do not simplify these equations, as int floor rounding is required!
-    uint halfDisperseHeight = disperseHeight / 2;
-    uint block = index / halfDisperseHeight;
-    uint i = index + block * halfDisperseHeight;
-    uint j = i + halfDisperseHeight;
+    uint halfFlipHeight = flipHeight / 2;
+    uint block = index / halfFlipHeight;
+    uint i = index + block * halfFlipHeight;
+    uint j = flipHeight - 1 - index + 3 * halfFlipHeight * block;
     CompareAndSwap(i, j);
 }

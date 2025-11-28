@@ -48,5 +48,9 @@ namespace emberEngine
         // Setters:
         void SetOffset(uint32_t offset);
         void SetCount(uint32_t count);
+
+        // Upload/Download:
+        void Upload(const void* pSrc, uint64_t count);
+        void Download(void* pDst, uint64_t count);
     };
 }
