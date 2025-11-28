@@ -43,8 +43,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 
                 while (otherIndex < pc.threadCount.x && cellKeyBuffer[otherIndex] == cellKey)
                 {
-                    float2 otherPos = positionBuffer[otherIndex];
-                    float2 offset = particlePos - otherPos;
+                    float2 offset = particlePos - positionBuffer[otherIndex];
                     float r = length(offset);
                     if (r < effectRadius)
                         densityBuffer[index] += mass * SmoothingKernal_Poly6(r, effectRadius);

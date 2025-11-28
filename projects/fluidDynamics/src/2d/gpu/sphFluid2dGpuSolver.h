@@ -25,36 +25,21 @@ namespace fluidDynamics
 		};
 		struct Data
 		{
-			Buffer cellKeyBuffer;
-			Buffer startIndexBuffer;
-			Buffer sortPermutationBuffer;
-			Buffer positionBuffer;
-			Buffer velocityBuffer;
-			Buffer densityBuffer;
-			Buffer normalBuffer;
-			Buffer curvatureBuffer;
-			Buffer forceDensityBuffer;
-			Buffer tempBuffer0;
-			Buffer tempBuffer1;
-			Buffer tempBuffer2;
-			Buffer tempBuffer3;
-			Buffer tempBuffer4;
-			Buffer tempBuffer5;
-			BufferView<int> cellKeyBufferView;
-			BufferView<int> startIndexBufferView;
-			BufferView<int> sortPermutationBufferView;
-			BufferView<Float2> positionBufferView;
-			BufferView<Float2> velocityBufferView;
-			BufferView<float> densityBufferView;
-			BufferView<Float2> normalBufferView;
-			BufferView<Float2> curvatureBufferView;
-			BufferView<Float2> forceDensityBufferView;
-			BufferView<Float2> tempBufferView0;
-			BufferView<Float2> tempBufferView1;
-			BufferView<Float2> tempBufferView2;
-			BufferView<Float2> tempBufferView3;
-			BufferView<Float2> tempBufferView4;
-			BufferView<Float2> tempBufferView5;
+			BufferTyped<int> cellKeyBuffer;
+			BufferTyped<int> startIndexBuffer;
+			BufferTyped<uint32_t> sortPermutationBuffer;
+			BufferTyped<Float2> positionBuffer;
+			BufferTyped<Float2> velocityBuffer;
+			BufferTyped<float> densityBuffer;
+			BufferTyped<Float2> normalBuffer;
+			BufferTyped<Float2> curvatureBuffer;
+			BufferTyped<Float2> forceDensityBuffer;
+			BufferTyped<Float2> tempBuffer0;
+			BufferTyped<Float2> tempBuffer1;
+			BufferTyped<Float2> tempBuffer2;
+			BufferTyped<Float2> tempBuffer3;
+			BufferTyped<Float2> tempBuffer4;
+			BufferTyped<Float2> tempBuffer5;
 			ComputeShader resetComputeShader;
 			ShaderProperties resetProperties;
 
@@ -64,14 +49,10 @@ namespace fluidDynamics
 		};
 		struct RungeKutta	// only needed for RungeKutta2 solver.
 		{
-			Buffer kp1Buffer;
-			Buffer kv1Buffer;
-			Buffer tempPositionBuffer;
-			Buffer tempVelocityBuffer;
-			BufferView<Float2> kp1BufferView;
-			BufferView<Float2> kv1BufferView;
-			BufferView<Float2> tempPositionBufferView;
-			BufferView<Float2> tempVelocityBufferView;
+			BufferTyped<Float2> kp1Buffer;
+			BufferTyped<Float2> kv1Buffer;
+			BufferTyped<Float2> tempPositionBuffer;
+			BufferTyped<Float2> tempVelocityBuffer;
 			ComputeShader resetComputeShader;
 			ShaderProperties resetProperties;
 

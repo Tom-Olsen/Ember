@@ -21,56 +21,40 @@ namespace fluidDynamics
 		{
 			// Reallocate:
 			int hashGridSize = math::NextPrimeAbove(2 * particleCount);
-			cellKeyBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(int), "cellKeyBuffer", BufferUsage::storage);
-			startIndexBuffer = Buffer((uint32_t)hashGridSize, (uint32_t)sizeof(int), "startIndexBuffer", BufferUsage::storage);
-			sortPermutationBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(int), "sortPermutationBuffer", BufferUsage::storage);
-			positionBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "positionBuffer", BufferUsage::storage);
-			velocityBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "velocityBuffer", BufferUsage::storage);
-			densityBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(float), "densityBuffer", BufferUsage::storage);
-			normalBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "normalBuffer", BufferUsage::storage);
-			curvatureBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(float), "curvatureBuffer", BufferUsage::storage);
-			forceDensityBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "forceDensityBuffer", BufferUsage::storage);
-			tempBuffer0 = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "tempBuffer0", BufferUsage::storage);
-			tempBuffer1 = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "tempBuffer1", BufferUsage::storage);
-			tempBuffer2 = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "tempBuffer2", BufferUsage::storage);
-			tempBuffer3 = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "tempBuffer3", BufferUsage::storage);
-			tempBuffer4 = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "tempBuffer4", BufferUsage::storage);
-			tempBuffer5 = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "tempBuffer5", BufferUsage::storage);
-			// Reasign buffer views:
-			cellKeyBufferView = BufferView<int>(cellKeyBuffer);
-			startIndexBufferView = BufferView<int>(startIndexBuffer);
-			sortPermutationBufferView = BufferView<int>(sortPermutationBuffer);
-			positionBufferView = BufferView<Float2>(positionBuffer);
-			velocityBufferView = BufferView<Float2>(velocityBuffer);
-			densityBufferView = BufferView<float>(densityBuffer);
-			normalBufferView = BufferView<Float2>(normalBuffer);
-			curvatureBufferView = BufferView<Float2>(curvatureBuffer);
-			forceDensityBufferView = BufferView<Float2>(forceDensityBuffer);
-			tempBufferView0 = BufferView<Float2>(tempBuffer0);
-			tempBufferView1 = BufferView<Float2>(tempBuffer1);
-			tempBufferView2 = BufferView<Float2>(tempBuffer2);
-			tempBufferView3 = BufferView<Float2>(tempBuffer3);
-			tempBufferView4 = BufferView<Float2>(tempBuffer4);
-			tempBufferView5 = BufferView<Float2>(tempBuffer5);
+			cellKeyBuffer = BufferTyped<int>((uint32_t)particleCount, "cellKeyBuffer", BufferUsage::storage);
+			startIndexBuffer = BufferTyped<int>((uint32_t)hashGridSize, "startIndexBuffer", BufferUsage::storage);
+			sortPermutationBuffer = BufferTyped<uint32_t>((uint32_t)particleCount, "sortPermutationBuffer", BufferUsage::storage);
+			positionBuffer = BufferTyped<Float2>((uint32_t)particleCount, "positionBuffer", BufferUsage::storage);
+			velocityBuffer = BufferTyped<Float2>((uint32_t)particleCount, "velocityBuffer", BufferUsage::storage);
+			densityBuffer = BufferTyped<float>((uint32_t)particleCount, "densityBuffer", BufferUsage::storage);
+			normalBuffer = BufferTyped<Float2>((uint32_t)particleCount, "normalBuffer", BufferUsage::storage);
+			curvatureBuffer = BufferTyped<Float2>((uint32_t)particleCount, "curvatureBuffer", BufferUsage::storage);
+			forceDensityBuffer = BufferTyped<Float2>((uint32_t)particleCount, "forceDensityBuffer", BufferUsage::storage);
+			tempBuffer0 = BufferTyped<Float2>((uint32_t)particleCount, "tempBuffer0", BufferUsage::storage);
+			tempBuffer1 = BufferTyped<Float2>((uint32_t)particleCount, "tempBuffer1", BufferUsage::storage);
+			tempBuffer2 = BufferTyped<Float2>((uint32_t)particleCount, "tempBuffer2", BufferUsage::storage);
+			tempBuffer3 = BufferTyped<Float2>((uint32_t)particleCount, "tempBuffer3", BufferUsage::storage);
+			tempBuffer4 = BufferTyped<Float2>((uint32_t)particleCount, "tempBuffer4", BufferUsage::storage);
+			tempBuffer5 = BufferTyped<Float2>((uint32_t)particleCount, "tempBuffer5", BufferUsage::storage);
 			// Reset data:
 			Uint3 threadCount(positionBuffer.GetCount(), 1, 1);
 			resetProperties.SetValue("Values", "hashGridSize", hashGridSize);
 			resetProperties.SetValue("Values", "initialDistributionRadius", initialDistributionRadius);
-			resetProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
-			resetProperties.SetBuffer("startIndexBuffer", startIndexBuffer);
-			resetProperties.SetBuffer("sortPermutationBuffer", sortPermutationBuffer);
-			resetProperties.SetBuffer("positionBuffer", positionBuffer);
-			resetProperties.SetBuffer("velocityBuffer", velocityBuffer);
-			resetProperties.SetBuffer("densityBuffer", densityBuffer);
-			resetProperties.SetBuffer("normalBuffer", normalBuffer);
-			resetProperties.SetBuffer("curvatureBuffer", curvatureBuffer);
-			resetProperties.SetBuffer("forceDensityBuffer", forceDensityBuffer);
-			resetProperties.SetBuffer("tempBuffer0", tempBuffer0);
-			resetProperties.SetBuffer("tempBuffer1", tempBuffer1);
-			resetProperties.SetBuffer("tempBuffer2", tempBuffer2);
-			resetProperties.SetBuffer("tempBuffer3", tempBuffer3);
-			resetProperties.SetBuffer("tempBuffer4", tempBuffer4);
-			resetProperties.SetBuffer("tempBuffer5", tempBuffer5);
+			resetProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer.GetBuffer());
+			resetProperties.SetBuffer("startIndexBuffer", startIndexBuffer.GetBuffer());
+			resetProperties.SetBuffer("sortPermutationBuffer", sortPermutationBuffer.GetBuffer());
+			resetProperties.SetBuffer("positionBuffer", positionBuffer.GetBuffer());
+			resetProperties.SetBuffer("velocityBuffer", velocityBuffer.GetBuffer());
+			resetProperties.SetBuffer("densityBuffer", densityBuffer.GetBuffer());
+			resetProperties.SetBuffer("normalBuffer", normalBuffer.GetBuffer());
+			resetProperties.SetBuffer("curvatureBuffer", curvatureBuffer.GetBuffer());
+			resetProperties.SetBuffer("forceDensityBuffer", forceDensityBuffer.GetBuffer());
+			resetProperties.SetBuffer("tempBuffer0", tempBuffer0.GetBuffer());
+			resetProperties.SetBuffer("tempBuffer1", tempBuffer1.GetBuffer());
+			resetProperties.SetBuffer("tempBuffer2", tempBuffer2.GetBuffer());
+			resetProperties.SetBuffer("tempBuffer3", tempBuffer3.GetBuffer());
+			resetProperties.SetBuffer("tempBuffer4", tempBuffer4.GetBuffer());
+			resetProperties.SetBuffer("tempBuffer5", tempBuffer5.GetBuffer());
 			Compute::PreRender::RecordComputeShader(resetComputeShader, resetProperties, threadCount);
 		}
 	}
@@ -93,21 +77,16 @@ namespace fluidDynamics
 		if (particleCount != ParticleCount())
 		{
 			// Reallocate:
-			kp1Buffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "kp1Buffer", BufferUsage::storage);
-			kv1Buffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "kv1Buffer", BufferUsage::storage);
-			tempPositionBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "tempPositionBuffer", BufferUsage::storage);
-			tempVelocityBuffer = Buffer((uint32_t)particleCount, (uint32_t)sizeof(Float2), "tempVelocityBuffer", BufferUsage::storage);
-			// Reasign buffer views:
-			kp1BufferView = BufferView<Float2>(kp1Buffer);
-			kv1BufferView = BufferView<Float2>(kv1Buffer);
-			tempPositionBufferView = BufferView<Float2>(tempPositionBuffer);
-			tempVelocityBufferView = BufferView<Float2>(tempVelocityBuffer);
+			kp1Buffer = BufferTyped<Float2>((uint32_t)particleCount, "kp1Buffer", BufferUsage::storage);
+			kv1Buffer = BufferTyped<Float2>((uint32_t)particleCount, "kv1Buffer", BufferUsage::storage);
+			tempPositionBuffer = BufferTyped<Float2>((uint32_t)particleCount, "tempPositionBuffer", BufferUsage::storage);
+			tempVelocityBuffer = BufferTyped<Float2>((uint32_t)particleCount, "tempVelocityBuffer", BufferUsage::storage);
 			// Reset data:
 			Uint3 threadCount(kp1Buffer.GetCount(), 1, 1);
-			resetProperties.SetBuffer("kp1Buffer", kp1Buffer);
-			resetProperties.SetBuffer("kv1Buffer", kv1Buffer);
-			resetProperties.SetBuffer("tempPositionBuffer", tempPositionBuffer);
-			resetProperties.SetBuffer("tempVelocityBuffer", tempVelocityBuffer);
+			resetProperties.SetBuffer("kp1Buffer", kp1Buffer.GetBuffer());
+			resetProperties.SetBuffer("kv1Buffer", kv1Buffer.GetBuffer());
+			resetProperties.SetBuffer("tempPositionBuffer", tempPositionBuffer.GetBuffer());
+			resetProperties.SetBuffer("tempVelocityBuffer", tempVelocityBuffer.GetBuffer());
 			Compute::PreRender::RecordComputeShader(resetComputeShader, resetProperties, threadCount);
 		}
 	}
@@ -228,69 +207,69 @@ namespace fluidDynamics
 		// Update hash grid for fast nearest neighbor particle look up:
 		if (settings.useHashGridOptimization)
 		{
-			ComputeCellKeys(computeShaders, data.cellKeyBufferView, data.positionBufferView);
+			ComputeCellKeys(computeShaders, data.cellKeyBuffer.GetBufferView(), data.positionBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
-			GpuSort<int>::SortPermutation(ComputeType::preRender, data.cellKeyBufferView, data.sortPermutationBufferView);
+			GpuSort<int>::SortPermutation(ComputeType::preRender, data.cellKeyBuffer.GetBufferView(), data.sortPermutationBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
-			ComputeStartIndices(computeShaders, data.startIndexBufferView, data.cellKeyBufferView);
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBufferView, data.positionBufferView, data.tempBufferView0);
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBufferView, data.velocityBufferView, data.tempBufferView1);
+			ComputeStartIndices(computeShaders, data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
+			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.tempBuffer0.GetBufferView());
+			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBuffer.GetBufferView(), data.velocityBuffer.GetBufferView(), data.tempBuffer1.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
-			std::swap(data.positionBufferView, data.tempBufferView0);
-			std::swap(data.velocityBufferView, data.tempBufferView1);
+			std::swap(data.positionBuffer, data.tempBuffer0);
+			std::swap(data.velocityBuffer, data.tempBuffer1);
 		}
 
 		// First Runte-Kutta step:
-		ComputeDensities(computeShaders, data.densityBufferView, data.positionBufferView, data.startIndexBufferView, data.cellKeyBufferView);
+		ComputeDensities(computeShaders, data.densityBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
-		ComputeNormalsAndCurvatures(computeShaders, data.normalBufferView, data.curvatureBufferView, data.densityBufferView, data.positionBufferView, data.startIndexBufferView, data.cellKeyBufferView);
+		ComputeNormalsAndCurvatures(computeShaders, data.normalBuffer.GetBufferView(), data.curvatureBuffer.GetBufferView(), data.densityBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
-		ComputeForceDensities(computeShaders, data.forceDensityBufferView, data.densityBufferView, data.positionBufferView, data.velocityBufferView, data.normalBuffer, data.curvatureBuffer, data.startIndexBufferView, data.cellKeyBufferView);
+		ComputeForceDensities(computeShaders, data.forceDensityBuffer.GetBufferView(), data.densityBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.velocityBuffer.GetBufferView(), data.normalBuffer.GetBufferView(), data.curvatureBuffer.GetBufferView(), data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
-		ComputeRungeKutta2Step1(computeShaders, data.forceDensityBufferView, data.densityBufferView, data.positionBufferView, data.velocityBufferView, rungeKutta.kp1BufferView, rungeKutta.kv1BufferView, rungeKutta.tempPositionBufferView, rungeKutta.tempVelocityBufferView);
+		ComputeRungeKutta2Step1(computeShaders, data.forceDensityBuffer.GetBufferView(), data.densityBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.velocityBuffer.GetBufferView(), rungeKutta.kp1Buffer.GetBufferView(), rungeKutta.kv1Buffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView(), rungeKutta.tempVelocityBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
 		// Update hash grid for fast nearest neighbor particle look up:
 		if (settings.useHashGridOptimization)
 		{
-			ComputeCellKeys(computeShaders, data.cellKeyBufferView, rungeKutta.tempPositionBufferView);
+			ComputeCellKeys(computeShaders, data.cellKeyBuffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
-			GpuSort<int>::SortPermutation(ComputeType::preRender, data.cellKeyBufferView, data.sortPermutationBufferView);
+			GpuSort<int>::SortPermutation(ComputeType::preRender, data.cellKeyBuffer.GetBufferView(), data.sortPermutationBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
-			ComputeStartIndices(computeShaders, data.startIndexBufferView, data.cellKeyBufferView);
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBufferView, rungeKutta.tempPositionBufferView, data.tempBufferView0);
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBufferView, rungeKutta.tempVelocityBufferView, data.tempBufferView1);
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBufferView, rungeKutta.kp1BufferView, data.tempBufferView2);
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBufferView, rungeKutta.kv1BufferView, data.tempBufferView3);
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBufferView, data.positionBufferView, data.tempBufferView4);
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBufferView, data.velocityBufferView, data.tempBufferView5);
+			ComputeStartIndices(computeShaders, data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
+			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBuffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView(), data.tempBuffer0.GetBufferView());
+			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBuffer.GetBufferView(), rungeKutta.tempVelocityBuffer.GetBufferView(), data.tempBuffer1.GetBufferView());
+			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBuffer.GetBufferView(), rungeKutta.kp1Buffer.GetBufferView(), data.tempBuffer2.GetBufferView());
+			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBuffer.GetBufferView(), rungeKutta.kv1Buffer.GetBufferView(), data.tempBuffer3.GetBufferView());
+			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.tempBuffer4.GetBufferView());
+			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, data.sortPermutationBuffer.GetBufferView(), data.velocityBuffer.GetBufferView(), data.tempBuffer5.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
-			std::swap(rungeKutta.tempPositionBufferView, data.tempBufferView0);
-			std::swap(rungeKutta.tempVelocityBufferView, data.tempBufferView1);
-			std::swap(rungeKutta.kp1BufferView, data.tempBufferView2);
-			std::swap(rungeKutta.kv1BufferView, data.tempBufferView3);
-			std::swap(data.positionBufferView, data.tempBufferView4);
-			std::swap(data.velocityBufferView, data.tempBufferView5);
+			std::swap(rungeKutta.tempPositionBuffer.GetBufferView(), data.tempBuffer0.GetBufferView());
+			std::swap(rungeKutta.tempVelocityBuffer.GetBufferView(), data.tempBuffer1.GetBufferView());
+			std::swap(rungeKutta.kp1Buffer.GetBufferView(), data.tempBuffer2.GetBufferView());
+			std::swap(rungeKutta.kv1Buffer.GetBufferView(), data.tempBuffer3.GetBufferView());
+			std::swap(data.positionBuffer.GetBufferView(), data.tempBuffer4.GetBufferView());
+			std::swap(data.velocityBuffer.GetBufferView(), data.tempBuffer5.GetBufferView());
 		}
 
 		// Second Runge-Kutta step:
-		ComputeDensities(computeShaders, data.densityBufferView, rungeKutta.tempPositionBufferView, data.startIndexBufferView, data.cellKeyBufferView);
+		ComputeDensities(computeShaders, data.densityBuffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView(), data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
-		ComputeNormalsAndCurvatures(computeShaders, data.normalBufferView, data.curvatureBufferView, data.densityBufferView, rungeKutta.tempPositionBufferView, data.startIndexBufferView, data.cellKeyBufferView);
+		ComputeNormalsAndCurvatures(computeShaders, data.normalBuffer.GetBufferView(), data.curvatureBuffer.GetBufferView(), data.densityBuffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView(), data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
-		ComputeForceDensities(computeShaders, data.forceDensityBufferView, data.densityBufferView, rungeKutta.tempPositionBufferView, rungeKutta.tempVelocityBufferView, data.normalBuffer, data.curvatureBuffer, data.startIndexBufferView, data.cellKeyBufferView);
+		ComputeForceDensities(computeShaders, data.forceDensityBuffer.GetBufferView(), data.densityBuffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView(), rungeKutta.tempVelocityBuffer.GetBufferView(), data.normalBuffer.GetBufferView(), data.curvatureBuffer.GetBufferView(), data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
-		ComputeRungeKutta2Step1(computeShaders, data.forceDensityBufferView, data.densityBufferView, data.positionBufferView, data.velocityBufferView, rungeKutta.kp1BufferView, rungeKutta.kv1BufferView, rungeKutta.tempPositionBufferView, rungeKutta.tempVelocityBufferView);
+		ComputeRungeKutta2Step1(computeShaders, data.forceDensityBuffer.GetBufferView(), data.densityBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.velocityBuffer.GetBufferView(), rungeKutta.kp1Buffer.GetBufferView(), rungeKutta.kv1Buffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView(), rungeKutta.tempVelocityBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
 		// Resolve boundary collisions:
-		ComputeBoundaryCollisions(computeShaders, data.positionBufferView, data.velocityBufferView);
+		ComputeBoundaryCollisions(computeShaders, data.positionBuffer.GetBufferView(), data.velocityBuffer.GetBufferView());
 	}
 
 

@@ -100,21 +100,21 @@ namespace fluidDynamics
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 		if (m_settings.useHashGridOptimization)
 		{
-			SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBufferView, m_data.positionBufferView);
+			SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
-			GpuSort<int>::SortPermutation(ComputeType::preRender, m_data.cellKeyBufferView, m_data.sortPermutationBufferView);
+			GpuSort<int>::SortPermutation(ComputeType::preRender, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
-			SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBufferView, m_data.cellKeyBufferView);
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, m_data.sortPermutationBufferView, m_data.positionBufferView, m_data.tempBufferView0);
+			SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
-			std::swap(m_data.positionBufferView, m_data.tempBufferView0);
+			std::swap(m_data.positionBuffer, m_data.tempBuffer0);
 		}
-		SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBufferView, m_data.positionBufferView, m_data.startIndexBufferView, m_data.cellKeyBufferView);
+		SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
-		SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBufferView, m_data.curvatureBufferView, m_data.densityBufferView, m_data.positionBufferView, m_data.startIndexBufferView, m_data.cellKeyBufferView);
+		SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 
 		m_isRunning = false;
 		m_reset = false;
@@ -474,11 +474,11 @@ namespace fluidDynamics
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
 		Renderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f, Float4::white, false, false);
-		m_shaderProperties.SetBuffer("positionBuffer", m_data.positionBuffer);
-		m_shaderProperties.SetBuffer("velocityBuffer", m_data.velocityBuffer);
-		m_shaderProperties.SetBuffer("densityBuffer", m_data.densityBuffer);
-		m_shaderProperties.SetBuffer("normalBuffer", m_data.normalBuffer);
-		m_shaderProperties.SetBuffer("curvatureBuffer", m_data.curvatureBuffer);
-		Renderer::DrawInstanced(m_particleCount, m_data.positionBuffer, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
+		m_shaderProperties.SetBuffer("positionBuffer", m_data.positionBuffer.GetBuffer());
+		m_shaderProperties.SetBuffer("velocityBuffer", m_data.velocityBuffer.GetBuffer());
+		m_shaderProperties.SetBuffer("densityBuffer", m_data.densityBuffer.GetBuffer());
+		m_shaderProperties.SetBuffer("normalBuffer", m_data.normalBuffer.GetBuffer());
+		m_shaderProperties.SetBuffer("curvatureBuffer", m_data.curvatureBuffer.GetBuffer());
+		Renderer::DrawInstanced(m_particleCount, m_data.positionBuffer.GetBuffer(), m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
 	}
 }
