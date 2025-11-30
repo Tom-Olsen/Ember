@@ -16,7 +16,7 @@ namespace smoothingKernals
     {
         constexpr float c0 = 315.0f / (64.0f * math::pi);
         float c = c0 / math::Pow(h, 9.0f);
-        return (r < h) ? -6.0f * c * math::Pow(h * h - r * r, 2.0f) * dir : 0.0f;
+        return (r < h) ? -6.0f * c * math::Pow(h * h - r * r, 2.0f) * dir : Float2::zero;
     }
     inline float DDPoly6(float r, float h)
     {
@@ -38,7 +38,7 @@ namespace smoothingKernals
     {
         constexpr float c0 = 15.0f / math::pi;
         float c = c0 / math::Pow(h, 6.0f);
-        return (r < h) ? -3.0f * c * math::Pow(h - r, 2.0f) * dir : 0.0f;
+        return (r < h) ? -3.0f * c * math::Pow(h - r, 2.0f) * dir : Float2::zero;
     }
     inline float DDSpiky(float r, float h)
     {
@@ -61,7 +61,7 @@ namespace smoothingKernals
         float c = c0 / math::Pow(h, 3.0f);
         float r2 = r * r;
         float h2 = h * h;
-        return (r < h) ? c * (-1.5f * r2 / (h2 * h) + 2.0f * r / h2 - 0.5f * h / r2) * dir : 0.0f;
+        return (r < h) ? c * (-1.5f * r2 / (h2 * h) + 2.0f * r / h2 - 0.5f * h / r2) * dir : Float2::zero;
     }
     inline float DDViscos(float r, float h)
     {

@@ -9,8 +9,8 @@ cbuffer Values : register(b0)
 {
     // General parameters:
     // particleCount = pc.threadCount.x
-    int hashGridSize; // ~2*particleCount
-    int useHashGridOptimization;
+    uint hashGridSize; // ~2*particleCount
+    uint useHashGridOptimization;
     
     // Physics:
     float viscosity;
@@ -24,7 +24,7 @@ cbuffer Values : register(b0)
     float pressureMultiplier;
     
     // Attractor:
-    int attractorState;
+    uint attractorState;
     float attractorRadius;
     float attractorStrength;
     float2 attractorPoint;
@@ -51,7 +51,7 @@ float Pressure(float density, float targetDensity, float pressureMultiplier)
 [numthreads(128, 1, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
-    int index = int(threadID.x);
+    uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
         forceDensityBuffer[index] = float2(0, 0);
@@ -63,7 +63,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         if (useHashGridOptimization)
         { // With hash grid optimization:
             int2 particleCell = HashGrid2d_Cell(particlePos, effectRadius);
-            for (int i = 0; i < 9; i++)
+            for (uint i = 0; i < 9; i++)
             {
                 int2 neighbourCell = particleCell + offsets[i];
                 uint cellKey = HashGrid2d_GetCellKey(neighbourCell, hashGridSize);
@@ -105,7 +105,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         }
         else
         {
-            for (int i = 0; i < pc.threadCount.x; i++)
+            for (uint i = 0; i < pc.threadCount.x; i++)
             {
                 // Skip self interaction:
                 if (i == index)

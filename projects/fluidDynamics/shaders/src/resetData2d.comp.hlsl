@@ -5,12 +5,12 @@
 
 cbuffer Values : register(b0)
 {
-    int hashGridSize;   // 2 * particleCount rounded up to next prime.
+    uint hashGridSize; // 2 * particleCount rounded up to next prime.
     float initialDistributionRadius;
 };
-RWStructuredBuffer<int> cellKeyBuffer : register(u1);
-RWStructuredBuffer<int> startIndexBuffer : register(u2);
-RWStructuredBuffer<int> sortPermutationBuffer : register(u3);
+RWStructuredBuffer<uint> cellKeyBuffer : register(u1);
+RWStructuredBuffer<uint> startIndexBuffer : register(u2);
+RWStructuredBuffer<uint> sortPermutationBuffer : register(u3);
 RWStructuredBuffer<float2> positionBuffer : register(u4);
 RWStructuredBuffer<float2> velocityBuffer : register(u5);
 RWStructuredBuffer<float> densityBuffer : register(u6);

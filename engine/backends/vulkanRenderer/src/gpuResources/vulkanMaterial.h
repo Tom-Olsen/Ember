@@ -60,5 +60,8 @@ namespace vulkanRendererBackend
 		const VertexInputDescriptions* const GetVertexInputDescriptions() const;
 		const VkBuffer* const GetMeshBuffers(Mesh* pMesh);
 		const uint64_t* const GetMeshOffsets(Mesh* pMesh);
+
+		// Debugging:
+		void Print() const override;
 	};
 }

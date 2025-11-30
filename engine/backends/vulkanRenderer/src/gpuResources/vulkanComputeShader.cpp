@@ -43,4 +43,12 @@ namespace vulkanRendererBackend
 	{
 		return m_name;
 	}
+
+
+
+	// Debugging:
+	void ComputeShader::Print() const
+	{
+		PrintShaderInfo();
+	}
 }

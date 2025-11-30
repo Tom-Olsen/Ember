@@ -72,9 +72,19 @@ namespace emberEngine
         m_buffer.Upload(pSrc, count * sizeof(T));
     }
     template<typename T>
+    void BufferTyped<T>::Upload(const std::vector<T>& src)
+    {
+        m_buffer.Upload(src.data(), src.size() * sizeof(T));
+    }
+    template<typename T>
     void BufferTyped<T>::Download(void* pDst, uint64_t count)
     {
         m_buffer.Download(pDst, count * sizeof(T));
+    }
+    template<typename T>
+    void BufferTyped<T>::Download(std::vector<T>& dst)
+    {
+        m_buffer.Download(dst.data(), dst.size() * sizeof(T));
     }
 
 

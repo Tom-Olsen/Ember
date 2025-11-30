@@ -53,5 +53,8 @@ namespace emberEngine
 		emberCommon::MaterialType GetType() const;
 		uint32_t GetRenderQueue() const;
 		bool IsValid() const;
+
+		// Debugging:
+		void Print() const;
 	};
 }

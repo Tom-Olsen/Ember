@@ -45,7 +45,7 @@ float SmoothingKernal_DDSpiky(float r, float h)
     float c0 = 15.0f / math_PI;
     float c = c0 / pow(h, 6.0f);
     float hr = h - r;
-    return (r < h) ? 3.0 * c * hr * (2.0f - hr / r) : 0.0f;
+    return (r < h) ? 3.0f * c * hr * (2.0f - hr / r) : 0.0f;
 }
 
 

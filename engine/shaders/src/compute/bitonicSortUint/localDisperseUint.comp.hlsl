@@ -3,8 +3,8 @@
 
 
 #define BLOCK_SIZE 128                  // max 2048 due to numthreads limit of 1024 (numthreads.x = BLOCK_SIZE/2)
-RWStructuredBuffer<int> dataBuffer : register(u0);
-groupshared int localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
+RWStructuredBuffer<uint> dataBuffer : register(u0);
+groupshared uint localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 cbuffer Values : register(b1)
 {
     uint bufferSize; // number of elements in the data buffer.
@@ -40,8 +40,8 @@ void main(uint3 localThreadID : SV_GroupThreadID, uint3 threadID : SV_DispatchTh
     uint index = threadID.x; // global thread index � [0,bufferSize/2]
     
 	// Load buffer into local memory (2 values per thread):
-    localValue[2 * localIndex + 0] = (2 * index + 0 < bufferSize) ? dataBuffer[2 * index + 0] : 0x7FFFFFFF;
-    localValue[2 * localIndex + 1] = (2 * index + 1 < bufferSize) ? dataBuffer[2 * index + 1] : 0x7FFFFFFF;
+    localValue[2 * localIndex + 0] = (2 * index + 0 < bufferSize) ? dataBuffer[2 * index + 0] : 0xFFFFFFFF;
+    localValue[2 * localIndex + 1] = (2 * index + 1 < bufferSize) ? dataBuffer[2 * index + 1] : 0xFFFFFFFF;
     
     // Execute local bitonic sort on local memory: (only sorts elements within the same block)
     for (uint disperseHeight = BLOCK_SIZE; disperseHeight > 1; disperseHeight /= 2)

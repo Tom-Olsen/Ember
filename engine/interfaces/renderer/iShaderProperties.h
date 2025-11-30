@@ -93,5 +93,9 @@ namespace emberBackendInterface
 		virtual Float3 GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const = 0;
 		virtual Float4 GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const = 0;
 		virtual Float4x4 GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const = 0;
+
+        // Debugging:
+        virtual void Print() const = 0;
+        virtual void PrintMaps() const = 0;
     };
 }

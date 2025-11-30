@@ -66,4 +66,12 @@ namespace emberEngine
 	{
 		return m_pIMaterial != nullptr;
 	}
+
+
+
+	// Debugging:
+	void Material::Print() const
+	{
+		m_pIMaterial->Print();
+	}
 }

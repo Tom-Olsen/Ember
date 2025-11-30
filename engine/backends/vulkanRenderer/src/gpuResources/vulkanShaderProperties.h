@@ -177,8 +177,8 @@ namespace vulkanRendererBackend
 		std::vector<VkDescriptorSet>& GetDescriptorSets();
 
 		// Debugging:
-		void Print(const std::string& name) const;
-		void PrintMaps() const;
+		void Print() const override;
+		void PrintMaps() const override;
 
 	private: // Methods:
 		// Initializers:

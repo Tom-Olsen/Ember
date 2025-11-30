@@ -3,10 +3,6 @@
 
 
 
-cbuffer Values : register(b0)
-{
-    float initialDistributionRadius;
-};
 RWStructuredBuffer<float2> kp1Buffer : register(u0);
 RWStructuredBuffer<float2> kv1Buffer : register(u1);
 RWStructuredBuffer<float2> tempPositionBuffer : register(u2);

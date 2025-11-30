@@ -182,4 +182,12 @@ namespace vulkanRendererBackend
 		}
 		return m_meshOffsets.data();
 	}
+
+
+
+	// Debugging:
+	void Material::Print() const
+	{
+		PrintShaderInfo();
+	}
 }

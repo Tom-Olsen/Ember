@@ -103,7 +103,7 @@ namespace fluidDynamics
 			SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
-			GpuSort<int>::SortPermutation(ComputeType::preRender, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
+			GpuSort<uint32_t>::SortPermutation(ComputeType::preRender, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
 			SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());

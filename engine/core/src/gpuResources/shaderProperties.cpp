@@ -218,6 +218,18 @@ namespace emberEngine
 
 
 
+	// Debugging:
+	void ShaderProperties::Print() const
+	{
+		m_pIShaderProperties->Print();
+	}
+	void ShaderProperties::PrintMaps() const
+	{
+		m_pIShaderProperties->PrintMaps();
+	}
+
+
+
 	// Private methods:
 	void ShaderProperties::SetOwnerShip(bool ownsShaderProperties)
 	{

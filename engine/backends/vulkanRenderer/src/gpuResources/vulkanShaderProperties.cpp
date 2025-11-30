@@ -464,9 +464,9 @@ namespace vulkanRendererBackend
 
 
 	// Debugging:
-	void ShaderProperties::Print(const std::string& name) const
+	void ShaderProperties::Print() const
 	{
-		LOG_INFO("ShaderProperties: {}, {}", name, fmt::ptr(this));
+		LOG_INFO("ShaderProperties: {}, {}", m_pShader->GetName(), fmt::ptr(this));
 		LOG_INFO("DescriptorSets: {}, {}", fmt::ptr(m_descriptorSets[0]), fmt::ptr(m_descriptorSets[1]));
 	}
 	void ShaderProperties::PrintMaps() const

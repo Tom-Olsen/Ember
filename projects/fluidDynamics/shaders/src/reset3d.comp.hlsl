@@ -5,7 +5,7 @@
 
 cbuffer Values : register(b0)
 {
-    int initialDistributionShellCount;
+    uint initialDistributionShellCount;
     float initialDistributionRadius;
     float targetDensity;
 };

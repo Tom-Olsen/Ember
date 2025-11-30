@@ -5,6 +5,7 @@
 #include "emberCoreExport.h"
 #include <cstdint>
 #include <string>
+#include <vector>
 
 
 
@@ -47,6 +48,8 @@ namespace emberEngine
 
         // Upload/Download:
         void Upload(const void* pSrc, uint64_t count);
+        void Upload(const std::vector<T>& src);
         void Download(void* pDst, uint64_t count);
+        void Download(std::vector<T>& dst);
     };
 }

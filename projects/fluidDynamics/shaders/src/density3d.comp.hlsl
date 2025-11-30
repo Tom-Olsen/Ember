@@ -7,8 +7,8 @@
 
 cbuffer Values : register(b0)
 {
-    int particleCount;
-    int useGridOptimization;
+    uint particleCount;
+    uint useGridOptimization;
     float gridRadius;
     float effectRadius;
     float mass;
@@ -32,10 +32,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
             int3 particleCell = Cell(particlePos, gridRadius);
             
             densityBuffer[index] = 0;
-            for (int i = 0; i < 27; i++)
+            for (uint i = 0; i < 27; i++)
             {
                 int3 neighbourCell = particleCell + offsets[i];
-                int neighbourCellHash = CellHash(neighbourCell);
+                uint neighbourCellHash = CellHash(neighbourCell);
                 uint neighbourCellKey = CellKey(neighbourCellHash, particleCount);
                 uint otherIndex = startIndexBuffer[neighbourCellKey];
             
@@ -58,7 +58,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         else
         {// Naive iteration over all particles:
             densityBuffer[index] = 0;
-            for (int i = 0; i < particleCount; i++)
+            for (uint i = 0; i < particleCount; i++)
             {
                 float3 offset = positionBuffer[index] - positionBuffer[i];
                 float r = length(offset);

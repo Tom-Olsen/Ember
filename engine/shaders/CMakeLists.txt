@@ -25,6 +25,7 @@ file(GLOB COMPUTE_SHADERS "src/compute/*.*")
     file(GLOB BITONIC_SORT_FLOAT "src/compute/bitonicSortFloat/*.*")
     file(GLOB BITONIC_SORT_FLOAT2 "src/compute/bitonicSortFloat2/*.*")
     file(GLOB BITONIC_SORT_INT "src/compute/bitonicSortInt/*.*")
+    file(GLOB BITONIC_SORT_UINT "src/compute/bitonicSortUint/*.*")
     file(GLOB PERMUTATION "src/compute/permutation/*.*")
 file(GLOB FRAGMENT_SHADERS "src/fragment/*.*")
 file(GLOB SHADER_INCLUDES "src/includes/*.*")
@@ -37,6 +38,7 @@ file(GLOB SHADER_SOURCES
     ${BITONIC_SORT_FLOAT}
     ${BITONIC_SORT_FLOAT2}
     ${BITONIC_SORT_INT}
+    ${BITONIC_SORT_UINT}
     ${PERMUTATION}
     ${FRAGMENT_SHADERS}
     ${VERTEX_SHADERS})
@@ -46,6 +48,7 @@ source_group("Compute Shaders" FILES ${COMPUTE_SHADERS})
 source_group("Compute Shaders/Bitonic Sort Float" FILES ${BITONIC_SORT_FLOAT})
 source_group("Compute Shaders/Bitonic Sort Float2" FILES ${BITONIC_SORT_FLOAT2})
 source_group("Compute Shaders/Bitonic Sort Int" FILES ${BITONIC_SORT_INT})
+source_group("Compute Shaders/Bitonic Sort Uint" FILES ${BITONIC_SORT_UINT})
 source_group("Compute Shaders/Permutation" FILES ${PERMUTATION})
 source_group("Fragment Shaders" FILES ${FRAGMENT_SHADERS})
 source_group("Includes" FILES ${SHADER_INCLUDES})
@@ -100,6 +103,7 @@ add_custom_target(EmberShaders SOURCES
     ${BITONIC_SORT_FLOAT}
     ${BITONIC_SORT_FLOAT2}
     ${BITONIC_SORT_INT}
+    ${BITONIC_SORT_UINT}
     ${PERMUTATION}
     ${FRAGMENT_SHADERS}
     ${SHADER_INCLUDES}

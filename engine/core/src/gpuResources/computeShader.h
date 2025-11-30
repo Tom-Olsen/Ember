@@ -50,5 +50,8 @@ namespace emberEngine
 		// Getters:
 		Uint3 GetBlockSize() const;
 		const std::string& GetName() const;
+
+		// Debugging:
+		void Print() const;
 	};
 }

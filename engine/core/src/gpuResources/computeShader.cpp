@@ -47,4 +47,12 @@ namespace emberEngine
 	{
 		return m_pIComputeShader->GetName();
 	}
+
+
+
+	// Debugging:
+	void ComputeShader::Print() const
+	{
+		m_pIComputeShader->Print();
+	}
 }

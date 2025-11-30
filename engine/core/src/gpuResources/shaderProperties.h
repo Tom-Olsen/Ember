@@ -93,6 +93,10 @@ namespace emberEngine
 		// Getters
 		std::string GetShaderName() const;
 
+		// Debugging:
+		void Print() const;
+		void PrintMaps() const;
+
 	private: // Methods:
 		void SetOwnerShip(bool ownsShaderProperties);
 	};

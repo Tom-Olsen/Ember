@@ -30,5 +30,8 @@ namespace vulkanRendererBackend
 		// Getters:
 		Uint3 GetBlockSize() const override;
 		const std::string& GetName() const override;
+
+		// Debugging:
+		void Print() const override;
 	};
 }

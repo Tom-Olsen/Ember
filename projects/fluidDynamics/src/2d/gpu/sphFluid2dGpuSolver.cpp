@@ -21,8 +21,8 @@ namespace fluidDynamics
 		{
 			// Reallocate:
 			int hashGridSize = math::NextPrimeAbove(2 * particleCount);
-			cellKeyBuffer = BufferTyped<int>((uint32_t)particleCount, "cellKeyBuffer", BufferUsage::storage);
-			startIndexBuffer = BufferTyped<int>((uint32_t)hashGridSize, "startIndexBuffer", BufferUsage::storage);
+			cellKeyBuffer = BufferTyped<uint32_t>((uint32_t)particleCount, "cellKeyBuffer", BufferUsage::storage);
+			startIndexBuffer = BufferTyped<uint32_t>((uint32_t)hashGridSize, "startIndexBuffer", BufferUsage::storage);
 			sortPermutationBuffer = BufferTyped<uint32_t>((uint32_t)particleCount, "sortPermutationBuffer", BufferUsage::storage);
 			positionBuffer = BufferTyped<Float2>((uint32_t)particleCount, "positionBuffer", BufferUsage::storage);
 			velocityBuffer = BufferTyped<Float2>((uint32_t)particleCount, "velocityBuffer", BufferUsage::storage);
@@ -99,6 +99,7 @@ namespace fluidDynamics
 		// Load compute shaders:
 		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
 		cellKeysComputeShader = ComputeShader("cellKeys2d", directoryPath / "cellKeys2d.comp.spv");
+		startIndicesResetComputeShader = ComputeShader("startIndicesReset2d", directoryPath / "startIndicesReset2d.comp.spv");
 		startIndicesComputeShader = ComputeShader("startIndices2d", directoryPath / "startIndices2d.comp.spv");
 		densityComputeShader = ComputeShader("density2d", directoryPath / "density2d.comp.spv");
 		normalAndCurvatureComputeShader = ComputeShader("normalAndCurvature2d", directoryPath / "normalAndCurvature2d.comp.spv");
@@ -109,6 +110,7 @@ namespace fluidDynamics
 
 		// Initialize shader properties:
 		cellKeysProperties = ShaderProperties(cellKeysComputeShader);
+		startIndicesResetProperties = ShaderProperties(startIndicesResetComputeShader);
 		startIndicesProperties = ShaderProperties(startIndicesComputeShader);
 		densityProperties = ShaderProperties(densityComputeShader);
 		normalAndCurvatureProperties = ShaderProperties(normalAndCurvatureComputeShader);
@@ -116,6 +118,10 @@ namespace fluidDynamics
 		rungeKutta2Step1Properties = ShaderProperties(rungeKutta2Step1ComputeShader);
 		rungeKutta2Step2Properties = ShaderProperties(rungeKutta2Step2ComputeShader);
 		boundaryCollisionsProperties = ShaderProperties(boundaryCollisionsComputeShader);
+
+		densityComputeShader.Print();
+		densityProperties.Print();
+		densityProperties.PrintMaps();
 	}
 	void SphFluid2dGpuSolver::ComputeShaders::SetUseHashGridOptimization(bool useHashGridOptimization)
 	{
@@ -210,7 +216,7 @@ namespace fluidDynamics
 			ComputeCellKeys(computeShaders, data.cellKeyBuffer.GetBufferView(), data.positionBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
-			GpuSort<int>::SortPermutation(ComputeType::preRender, data.cellKeyBuffer.GetBufferView(), data.sortPermutationBuffer.GetBufferView());
+			GpuSort<uint32_t>::SortPermutation(ComputeType::preRender, data.cellKeyBuffer.GetBufferView(), data.sortPermutationBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
 			ComputeStartIndices(computeShaders, data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
@@ -238,7 +244,7 @@ namespace fluidDynamics
 			ComputeCellKeys(computeShaders, data.cellKeyBuffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
-			GpuSort<int>::SortPermutation(ComputeType::preRender, data.cellKeyBuffer.GetBufferView(), data.sortPermutationBuffer.GetBufferView());
+			GpuSort<uint32_t>::SortPermutation(ComputeType::preRender, data.cellKeyBuffer.GetBufferView(), data.sortPermutationBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
 			ComputeStartIndices(computeShaders, data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
@@ -275,21 +281,31 @@ namespace fluidDynamics
 
 
 	// Field computations:
-	void SphFluid2dGpuSolver::ComputeCellKeys(ComputeShaders& computeShaders, const BufferView<int>& cellKeyBufferView, const BufferView<Float2>& positionBufferView)
+	void SphFluid2dGpuSolver::ComputeCellKeys(ComputeShaders& computeShaders, const BufferView<uint32_t>& cellKeyBufferView, const BufferView<Float2>& positionBufferView)
 	{
 		Uint3 threadCount(cellKeyBufferView.GetCount(), 1, 1);
 		computeShaders.cellKeysProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		computeShaders.cellKeysProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
 		Compute::RecordComputeShader(computeShaders.computeType, computeShaders.cellKeysComputeShader, computeShaders.cellKeysProperties, threadCount);
 	}
-	void SphFluid2dGpuSolver::ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<int> startIndexBufferView, const BufferView<int>& cellKeyBufferView)
+	void SphFluid2dGpuSolver::ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<uint32_t> startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
-		Uint3 threadCount(cellKeyBufferView.GetCount(), 1, 1);	// dispatch size is equal to number of particles. startIndexBuffer is bigger.
-		computeShaders.startIndicesProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
-		computeShaders.startIndicesProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
-		Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesComputeShader, computeShaders.startIndicesProperties, threadCount);
+		// Reset start index buffer:
+		{
+			Uint3 threadCount(startIndexBufferView.GetCount(), 1, 1);	// reset all possible start indices.
+			computeShaders.startIndicesResetProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
+			Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesResetComputeShader, computeShaders.startIndicesResetProperties, threadCount);
+		}
+		// Compute start indices:
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
+		{
+			Uint3 threadCount(cellKeyBufferView.GetCount(), 1, 1);	// start indices only needed for each particle.
+			computeShaders.startIndicesProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
+			computeShaders.startIndicesProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
+			Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesComputeShader, computeShaders.startIndicesProperties, threadCount);
+		}
 	}
-	void SphFluid2dGpuSolver::ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<int> startIndexBufferView, const BufferView<int>& cellKeyBufferView)
+	void SphFluid2dGpuSolver::ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<uint32_t> startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(densityBufferView.GetCount(), 1, 1);
 		computeShaders.densityProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
@@ -298,7 +314,7 @@ namespace fluidDynamics
 		computeShaders.densityProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityComputeShader, computeShaders.densityProperties, threadCount);
 	}
-	void SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float2>& normalBufferView, const BufferView<Float2>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<int> startIndexBufferView, const BufferView<int>& cellKeyBufferView)
+	void SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float2>& normalBufferView, const BufferView<Float2>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<uint32_t> startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(normalBufferView.GetCount(), 1, 1);
 		computeShaders.normalAndCurvatureProperties.SetBuffer("normalBuffer", normalBufferView.GetBuffer());
@@ -309,7 +325,7 @@ namespace fluidDynamics
 		computeShaders.normalAndCurvatureProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		Compute::RecordComputeShader(computeShaders.computeType, computeShaders.normalAndCurvatureComputeShader, computeShaders.normalAndCurvatureProperties, threadCount);
 	}
-	void SphFluid2dGpuSolver::ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView, const BufferView<Float2>& normalBufferView, const BufferView<Float2>& curvatureBufferView, const BufferView<int> startIndexBufferView, const BufferView<int>& cellKeyBufferView)
+	void SphFluid2dGpuSolver::ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView, const BufferView<Float2>& normalBufferView, const BufferView<Float2>& curvatureBufferView, const BufferView<uint32_t> startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(forceDensityBufferView.GetCount(), 1, 1);
 		computeShaders.forceDensityProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());

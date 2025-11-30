@@ -8,8 +8,8 @@
 cbuffer Values : register(b0)
 {
     // General parameters:
-    int particleCount;
-    int useGridOptimization;
+    uint particleCount;
+    uint useGridOptimization;
     float gridRadius;
     
     // Physics:
@@ -45,7 +45,7 @@ float Pressure(float density, float targetDensity, float pressureMultiplier)
 [numthreads(128, 1, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
-    int index = int(threadID.x);
+    uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
         forceDensityBuffer[index] = float3(0, 0, 0);
@@ -57,10 +57,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
         if (useGridOptimization)
         {// With hash grid optimization:
             int3 particleCell = Cell(particlePos, gridRadius);
-            for (int i = 0; i < 27; i++)
+            for (uint i = 0; i < 27; i++)
             {
                 int3 neighbourCell = particleCell + offsets[i];
-                int neighbourCellHash = CellHash(neighbourCell);
+                uint neighbourCellHash = CellHash(neighbourCell);
                 uint neighbourCellKey = CellKey(neighbourCellHash, particleCount);
                 uint otherIndex = startIndexBuffer[neighbourCellKey];
 
@@ -101,7 +101,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         }
         else
         {// Naive iteration over all particles:
-            for (int i = 0; i < particleCount; i++)
+            for (uint i = 0; i < particleCount; i++)
             {
                 // Skip self interaction:
                 if (i == index)

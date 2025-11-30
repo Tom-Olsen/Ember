@@ -84,7 +84,7 @@ namespace emberEngine
 		}
 		if constexpr (std::is_same_v<T, Int3>)
 		{
-			throw std::runtime_error("GpuSort<Int2>::Init: shaders for Int3 not implemented yet.");
+			throw std::runtime_error("GpuSort<Int3>::Init: shaders for Int3 not implemented yet.");
 			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>("localBitonicSortInt3", directoryPath / "localBitonicSortInt3.comp.spv");
 			s_pBigFlipComputeShader = std::make_unique<ComputeShader>("bigFlipInt3", directoryPath / "bigFlipInt3.comp.spv");
 			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>("bigDisperseInt3", directoryPath / "bigDisperseInt3.comp.spv");
@@ -99,7 +99,6 @@ namespace emberEngine
 		}
 		if constexpr (std::is_same_v<T, uint32_t>)
 		{
-			throw std::runtime_error("GpuSort<Int2>::Init: shaders for uint32_t not implemented yet.");
 			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>("localBitonicSortUint", directoryPath / "localBitonicSortUint.comp.spv");
 			s_pBigFlipComputeShader = std::make_unique<ComputeShader>("bigFlipUint", directoryPath / "bigFlipUint.comp.spv");
 			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>("bigDisperseUint", directoryPath / "bigDisperseInt.comp.spv");
@@ -114,7 +113,7 @@ namespace emberEngine
 		}
 		if constexpr (std::is_same_v<T, Uint2>)
 		{
-			throw std::runtime_error("GpuSort<Int2>::Init: shaders for Uint2 not implemented yet.");
+			throw std::runtime_error("GpuSort<Uint2>::Init: shaders for Uint2 not implemented yet.");
 			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>("localBitonicSortUint2", directoryPath / "localBitonicSortUint2.comp.spv");
 			s_pBigFlipComputeShader = std::make_unique<ComputeShader>("bigFlipUint2", directoryPath / "bigFlipUint2.comp.spv");
 			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>("bigDisperseUint2", directoryPath / "bigDisperseUint2.comp.spv");
@@ -129,7 +128,7 @@ namespace emberEngine
 		}
 		if constexpr (std::is_same_v<T, Uint3>)
 		{
-			throw std::runtime_error("GpuSort<Int2>::Init: shaders for Uint3 not implemented yet.");
+			throw std::runtime_error("GpuSort<Uint3>::Init: shaders for Uint3 not implemented yet.");
 			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>("localBitonicSortUint3", directoryPath / "localBitonicSortUint3.comp.spv");
 			s_pBigFlipComputeShader = std::make_unique<ComputeShader>("bigFlipUint3", directoryPath / "bigFlipUint3.comp.spv");
 			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>("bigDisperseUint3", directoryPath / "bigDisperseUint3.comp.spv");
@@ -172,7 +171,7 @@ namespace emberEngine
 		}
 		if constexpr (std::is_same_v<T, Float3>)
 		{
-			throw std::runtime_error("GpuSort<Int2>::Init: shaders for Float3 not implemented yet.");
+			throw std::runtime_error("GpuSort<Float3>::Init: shaders for Float3 not implemented yet.");
 			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>("localBitonicSortFloat3", directoryPath / "localBitonicSortFloat3.comp.spv");
 			s_pBigFlipComputeShader = std::make_unique<ComputeShader>("bigFlipFloat3", directoryPath / "bigFlipFloat3.comp.spv");
 			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>("bigDisperseFloat3", directoryPath / "bigDisperseFloat3.comp.spv");
@@ -187,7 +186,7 @@ namespace emberEngine
 		}
 		if constexpr (std::is_same_v<T, Float4>)
 		{
-			throw std::runtime_error("GpuSort<Int2>::Init: shaders for Float4 not implemented yet.");
+			throw std::runtime_error("GpuSort<Float4>::Init: shaders for Float4 not implemented yet.");
 			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>("localBitonicSortFloat4", directoryPath / "localBitonicSortFloat4.comp.spv");
 			s_pBigFlipComputeShader = std::make_unique<ComputeShader>("bigFlipFloat4", directoryPath / "bigFlipFloat4.comp.spv");
 			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>("bigDisperseFloat4", directoryPath / "bigDisperseFloat4.comp.spv");
