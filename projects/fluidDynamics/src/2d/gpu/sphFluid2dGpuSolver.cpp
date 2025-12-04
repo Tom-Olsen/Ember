@@ -1,5 +1,5 @@
 #include "sphFluid2dGpuSolver.h"
-
+#include "logger.h"
 
 
 namespace fluidDynamics
@@ -118,10 +118,6 @@ namespace fluidDynamics
 		rungeKutta2Step1Properties = ShaderProperties(rungeKutta2Step1ComputeShader);
 		rungeKutta2Step2Properties = ShaderProperties(rungeKutta2Step2ComputeShader);
 		boundaryCollisionsProperties = ShaderProperties(boundaryCollisionsComputeShader);
-
-		densityComputeShader.Print();
-		densityProperties.Print();
-		densityProperties.PrintMaps();
 	}
 	void SphFluid2dGpuSolver::ComputeShaders::SetUseHashGridOptimization(bool useHashGridOptimization)
 	{
@@ -290,6 +286,8 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpuSolver::ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
+		LOG_ERROR(startIndexBufferView.IsValid());
+		LOG_ERROR(cellKeyBufferView.IsValid());
 		// Reset start index buffer:
 		{
 			Uint3 threadCount(startIndexBufferView.GetCount(), 1, 1);	// reset all possible start indices.

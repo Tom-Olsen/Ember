@@ -123,12 +123,23 @@ namespace fluidDynamics
 		//m_computeShaders.startIndicesResetProperties.PrintMaps();
 
 		// This crashes:
-		//SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+		LOG_WARN(m_data.startIndexBuffer.GetBufferView().IsValid());
+		LOG_WARN(m_data.cellKeyBuffer.GetBufferView().IsValid());
+		SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 
 		// This works: (although its the same as above?)
-		//Uint3 threadCount(m_data.startIndexBuffer.GetCount(), 1, 1);	// reset all possible start indices.
-		//m_computeShaders.startIndicesResetProperties.SetBuffer("startIndexBuffer", m_data.startIndexBuffer.GetBuffer());
-		//Compute::RecordComputeShader(m_computeShaders.computeType, m_computeShaders.startIndicesResetComputeShader, m_computeShaders.startIndicesResetProperties, threadCount);
+		//{
+		//	Uint3 threadCount(m_data.startIndexBuffer.GetCount(), 1, 1);	// reset all possible start indices.
+		//	m_computeShaders.startIndicesResetProperties.SetBuffer("startIndexBuffer", m_data.startIndexBuffer.GetBuffer());
+		//	Compute::RecordComputeShader(m_computeShaders.computeType, m_computeShaders.startIndicesResetComputeShader, m_computeShaders.startIndicesResetProperties, threadCount);
+		//}
+		//Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+		//{
+		//	Uint3 threadCount(m_data.cellKeyBuffer.GetCount(), 1, 1);	// start indices only needed for each particle.
+		//	m_computeShaders.startIndicesProperties.SetBuffer("startIndexBuffer", m_data.startIndexBuffer.GetBuffer());
+		//	m_computeShaders.startIndicesProperties.SetBuffer("cellKeyBuffer", m_data.cellKeyBuffer.GetBuffer());
+		//	Compute::RecordComputeShader(m_computeShaders.computeType, m_computeShaders.startIndicesComputeShader, m_computeShaders.startIndicesProperties, threadCount);
+		//}
 
 		m_isRunning = false;
 		m_reset = false;
