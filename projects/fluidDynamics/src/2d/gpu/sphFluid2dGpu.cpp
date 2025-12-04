@@ -80,7 +80,7 @@ namespace fluidDynamics
 
 		// Editor Window:
 		editorWindow = std::make_unique<emberEditor::SphFluid2dGpuEditorWindow>(this);
-		Reset();
+		m_reset = true;
 	}
 	SphFluid2dGpu::~SphFluid2dGpu()
 	{
@@ -97,24 +97,38 @@ namespace fluidDynamics
 		m_rungeKutta.Reallocate(m_particleCount);
 
 		// Compute intial fluid state:
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
-		if (m_settings.useHashGridOptimization)
-		{
-			SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+		//Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+		//if (m_settings.useHashGridOptimization)
+		//{
+		//	SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
+		//	Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+		//
+		//	GpuSort<uint32_t>::SortPermutation(ComputeType::preRender, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
+		//	Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+		//
+		//	SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+		//	GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
+		//	Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+		//
+		//	std::swap(m_data.positionBuffer, m_data.tempBuffer0);
+		//}
+		//SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+		//Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+		//SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 
-			GpuSort<uint32_t>::SortPermutation(ComputeType::preRender, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+		//LOG_WARN("count: {}", m_data.startIndexBuffer.GetCount());
+		//LOG_WARN("isValid: {}", m_data.startIndexBuffer.IsValid());
+		//LOG_WARN("   ComputeShader: {}", m_computeShaders.startIndicesResetComputeShader.GetName());
+		//m_computeShaders.startIndicesResetProperties.Print();
+		//m_computeShaders.startIndicesResetProperties.PrintMaps();
 
-			SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+		// This crashes:
+		//SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 
-			std::swap(m_data.positionBuffer, m_data.tempBuffer0);
-		}
-		SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
-		SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+		// This works: (although its the same as above?)
+		//Uint3 threadCount(m_data.startIndexBuffer.GetCount(), 1, 1);	// reset all possible start indices.
+		//m_computeShaders.startIndicesResetProperties.SetBuffer("startIndexBuffer", m_data.startIndexBuffer.GetBuffer());
+		//Compute::RecordComputeShader(m_computeShaders.computeType, m_computeShaders.startIndicesResetComputeShader, m_computeShaders.startIndicesResetProperties, threadCount);
 
 		m_isRunning = false;
 		m_reset = false;
