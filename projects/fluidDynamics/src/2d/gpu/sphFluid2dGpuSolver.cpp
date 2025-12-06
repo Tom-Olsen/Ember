@@ -1,5 +1,5 @@
 #include "sphFluid2dGpuSolver.h"
-
+#include "logger.h"
 
 
 namespace fluidDynamics
@@ -284,8 +284,10 @@ namespace fluidDynamics
 		computeShaders.cellKeysProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
 		Compute::RecordComputeShader(computeShaders.computeType, computeShaders.cellKeysComputeShader, computeShaders.cellKeysProperties, threadCount);
 	}
-	void SphFluid2dGpuSolver::ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<uint32_t> startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
+	void SphFluid2dGpuSolver::ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
+		LOG_ERROR(startIndexBufferView.IsValid());
+		LOG_ERROR(cellKeyBufferView.IsValid());
 		// Reset start index buffer:
 		{
 			Uint3 threadCount(startIndexBufferView.GetCount(), 1, 1);	// reset all possible start indices.
@@ -301,7 +303,7 @@ namespace fluidDynamics
 			Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesComputeShader, computeShaders.startIndicesProperties, threadCount);
 		}
 	}
-	void SphFluid2dGpuSolver::ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<uint32_t> startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
+	void SphFluid2dGpuSolver::ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(densityBufferView.GetCount(), 1, 1);
 		computeShaders.densityProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
@@ -310,7 +312,7 @@ namespace fluidDynamics
 		computeShaders.densityProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityComputeShader, computeShaders.densityProperties, threadCount);
 	}
-	void SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float2>& normalBufferView, const BufferView<Float2>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<uint32_t> startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
+	void SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float2>& normalBufferView, const BufferView<Float2>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(normalBufferView.GetCount(), 1, 1);
 		computeShaders.normalAndCurvatureProperties.SetBuffer("normalBuffer", normalBufferView.GetBuffer());
@@ -321,7 +323,7 @@ namespace fluidDynamics
 		computeShaders.normalAndCurvatureProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		Compute::RecordComputeShader(computeShaders.computeType, computeShaders.normalAndCurvatureComputeShader, computeShaders.normalAndCurvatureProperties, threadCount);
 	}
-	void SphFluid2dGpuSolver::ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView, const BufferView<Float2>& normalBufferView, const BufferView<Float2>& curvatureBufferView, const BufferView<uint32_t> startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
+	void SphFluid2dGpuSolver::ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView, const BufferView<Float2>& normalBufferView, const BufferView<Float2>& curvatureBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(forceDensityBufferView.GetCount(), 1, 1);
 		computeShaders.forceDensityProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
