@@ -118,10 +118,6 @@ namespace fluidDynamics
 		rungeKutta2Step1Properties = ShaderProperties(rungeKutta2Step1ComputeShader);
 		rungeKutta2Step2Properties = ShaderProperties(rungeKutta2Step2ComputeShader);
 		boundaryCollisionsProperties = ShaderProperties(boundaryCollisionsComputeShader);
-
-		densityComputeShader.Print();
-		densityProperties.Print();
-		densityProperties.PrintMaps();
 	}
 	void SphFluid2dGpuSolver::ComputeShaders::SetUseHashGridOptimization(bool useHashGridOptimization)
 	{

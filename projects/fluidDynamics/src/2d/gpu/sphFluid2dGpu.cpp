@@ -80,7 +80,7 @@ namespace fluidDynamics
 
 		// Editor Window:
 		editorWindow = std::make_unique<emberEditor::SphFluid2dGpuEditorWindow>(this);
-		Reset();
+		m_reset = true;
 	}
 	SphFluid2dGpu::~SphFluid2dGpu()
 	{
@@ -89,36 +89,7 @@ namespace fluidDynamics
 
 
 
-	// Physics update:
-	void SphFluid2dGpu::Reset()
-	{
-		m_timeStep = 0;
-		m_data.Reallocate(m_particleCount, m_initialDistributionRadius);
-		m_rungeKutta.Reallocate(m_particleCount);
-
-		// Compute intial fluid state:
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
-		if (m_settings.useHashGridOptimization)
-		{
-			SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
-
-			GpuSort<uint32_t>::SortPermutation(ComputeType::preRender, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
-
-			SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-			GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
-
-			std::swap(m_data.positionBuffer, m_data.tempBuffer0);
-		}
-		SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
-		SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-
-		m_isRunning = false;
-		m_reset = false;
-	}
+	// Overrides:
 	void SphFluid2dGpu::FixedUpdate()
 	{
 		if (!m_isRunning || m_reset)
@@ -136,10 +107,117 @@ namespace fluidDynamics
 		}
 		m_timeStep++;
 	}
+	void SphFluid2dGpu::Update()
+	{
+		// Detect framerate crash:
+		if (m_isRunning && Time::GetDeltaTime() > 0.1f)
+		{
+			m_isRunning = false;
+			LOG_TRACE("Stopped simulation due to framerate crash.");
+		}
+
+		// Keyboard interactions:
+		if (EventSystem::KeyDown(Input::Key::Space))
+		{
+			m_isRunning = !m_isRunning;
+			if (m_isRunning)
+				LOG_TRACE("Simulation running.");
+			else
+				LOG_TRACE("Simulation stopped.");
+		}
+		if (EventSystem::KeyDown(Input::Key::Delete))
+		{
+			m_reset = true;
+			LOG_TRACE("Simulation stopped and reset.");
+		}
+
+		// Reset:
+		if (m_reset)
+		{
+			m_timeStep = 0;
+			m_data.Reallocate(m_particleCount, m_initialDistributionRadius);
+			m_rungeKutta.Reallocate(m_particleCount);
+
+			// Compute intial fluid state:
+			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+			if (m_settings.useHashGridOptimization)
+			{
+				SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
+				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+
+				GpuSort<uint32_t>::SortPermutation(ComputeType::preRender, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
+				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+
+				SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+				GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
+				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+
+				std::swap(m_data.positionBuffer, m_data.tempBuffer0);
+			}
+			SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+			SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+
+			m_isRunning = false;
+			m_reset = false;
+			return;
+		}
+
+		// Mouse scrolling:
+		float mouseScroll = EventSystem::MouseScrollY();
+		if (mouseScroll != 0)
+		{
+			if (EventSystem::KeyDownOrHeld(Input::Key::ShiftLeft))
+			{
+				float zoomFactor = 1.0f + 0.1f * mouseScroll;
+				SetAttractorStrength(zoomFactor * m_attractor.strength);
+			}
+			else
+			{
+				float zoomFactor = 1.0f + 0.1f * mouseScroll;
+				SetAttractorRadius(zoomFactor * m_attractor.radius);
+			}
+		}
+
+		// Mouse left and right click:
+		if (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)) // exlusive or
+		{
+			Ray ray = Scene::GetActiveScene()->GetActiveCamera()->GetClickRay();
+			std::optional<Float3> hit = m_settings.fluidBounds.IntersectRay(ray);
+			if (hit.has_value())
+			{
+				SetAttractorPoint(Float2(hit.value()));
+				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
+				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
+				if (EventSystem::MouseHeld(Input::MouseButton::Left))
+					SetAttractorState(1);
+				if (EventSystem::MouseHeld(Input::MouseButton::Right))
+					SetAttractorState(-1);
+			}
+			else
+				SetAttractorState(0);
+		}
+		else
+			SetAttractorState(0);
+
+		// Rendering:
+		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
+		Renderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f, Float4::white, false, false);
+		m_shaderProperties.SetBuffer("positionBuffer", m_data.positionBuffer.GetBuffer());
+		m_shaderProperties.SetBuffer("velocityBuffer", m_data.velocityBuffer.GetBuffer());
+		m_shaderProperties.SetBuffer("densityBuffer", m_data.densityBuffer.GetBuffer());
+		m_shaderProperties.SetBuffer("normalBuffer", m_data.normalBuffer.GetBuffer());
+		m_shaderProperties.SetBuffer("curvatureBuffer", m_data.curvatureBuffer.GetBuffer());
+		Renderer::DrawInstanced(m_particleCount, m_data.positionBuffer.GetBuffer(), m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
+	}
 
 
 
 	// Setters:
+	void SphFluid2dGpu::Reset()
+	{
+		m_reset = true;
+	}
 	void SphFluid2dGpu::SetIsRunning(bool isRunning)
 	{
 		m_isRunning = isRunning;
@@ -398,87 +476,5 @@ namespace fluidDynamics
 	float SphFluid2dGpu::GetVisualRadius() const
 	{
 		return m_visualRadius;
-	}
-
-
-
-	// Overrides:
-	void SphFluid2dGpu::Update()
-	{
-		// Detect framerate crash:
-		if (m_isRunning && Time::GetDeltaTime() > 0.1f)
-		{
-			m_isRunning = false;
-			LOG_TRACE("Stopped simulation due to framerate crash.");
-		}
-
-		// Keyboard interactions:
-		if (EventSystem::KeyDown(Input::Key::Space))
-		{
-			m_isRunning = !m_isRunning;
-			if (m_isRunning)
-				LOG_TRACE("Simulation running.");
-			else
-				LOG_TRACE("Simulation stopped.");
-		}
-		if (EventSystem::KeyDown(Input::Key::Delete))
-		{
-			m_reset = true;
-			LOG_TRACE("Simulation stopped and reset.");
-		}
-
-		// Reset:
-		if (m_reset)
-		{
-			Reset();
-			return;
-		}
-
-		// Mouse scrolling:
-		float mouseScroll = EventSystem::MouseScrollY();
-		if (mouseScroll != 0)
-		{
-			if (EventSystem::KeyDownOrHeld(Input::Key::ShiftLeft))
-			{
-				float zoomFactor = 1.0f + 0.1f * mouseScroll;
-				SetAttractorStrength(zoomFactor * m_attractor.strength);
-			}
-			else
-			{
-				float zoomFactor = 1.0f + 0.1f * mouseScroll;
-				SetAttractorRadius(zoomFactor * m_attractor.radius);
-			}
-		}
-
-		// Mouse left and right click:
-		if (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)) // exlusive or
-		{
-			Ray ray = Scene::GetActiveScene()->GetActiveCamera()->GetClickRay();
-			std::optional<Float3> hit = m_settings.fluidBounds.IntersectRay(ray);
-			if (hit.has_value())
-			{
-				SetAttractorPoint(Float2(hit.value()));
-				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
-				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
-				if (EventSystem::MouseHeld(Input::MouseButton::Left))
-					SetAttractorState(1);
-				if (EventSystem::MouseHeld(Input::MouseButton::Right))
-					SetAttractorState(-1);
-			}
-			else
-				SetAttractorState(0);
-		}
-		else
-			SetAttractorState(0);
-
-		// Rendering:
-		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
-		Renderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f, Float4::white, false, false);
-		m_shaderProperties.SetBuffer("positionBuffer", m_data.positionBuffer.GetBuffer());
-		m_shaderProperties.SetBuffer("velocityBuffer", m_data.velocityBuffer.GetBuffer());
-		m_shaderProperties.SetBuffer("densityBuffer", m_data.densityBuffer.GetBuffer());
-		m_shaderProperties.SetBuffer("normalBuffer", m_data.normalBuffer.GetBuffer());
-		m_shaderProperties.SetBuffer("curvatureBuffer", m_data.curvatureBuffer.GetBuffer());
-		Renderer::DrawInstanced(m_particleCount, m_data.positionBuffer.GetBuffer(), m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
 	}
 }

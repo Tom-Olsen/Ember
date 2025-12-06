@@ -50,11 +50,12 @@ namespace fluidDynamics
 		SphFluid2dGpu();
 		~SphFluid2dGpu();
 
-		// Physics update:
-		void Reset();
+		// Overrides:
 		void FixedUpdate() override;
+		void Update() override;
 
 		// Setters:
+		void Reset();
 		void SetIsRunning(bool isRunning);
 		void SetTimeScale(float timeScale);
 		void SetUseHashGridOptimization(bool useGridOptimization);
@@ -98,8 +99,5 @@ namespace fluidDynamics
 		int GetColorMode() const;
 		float GetInitialDistributionRadius() const;
 		float GetVisualRadius() const;
-
-		// Overrides:
-		void Update() override;
 	};
 }

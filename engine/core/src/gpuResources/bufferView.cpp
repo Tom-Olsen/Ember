@@ -37,6 +37,11 @@ namespace emberEngine
         else
             m_count = count;
     }
+    template<typename T>
+    BufferView<T>::~BufferView()
+    {
+
+    }
 
 
 

@@ -27,6 +27,7 @@ namespace emberEngine
         BufferView();
         BufferView(Buffer& buffer);
         BufferView(Buffer& buffer, uint32_t offset, uint32_t count);
+        ~BufferView();
 
 		// Copyable:
 		BufferView(const BufferView&) = default;

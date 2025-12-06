@@ -34,8 +34,8 @@ namespace emberEngine
         BufferTyped& operator=(const BufferTyped&) = delete;
 
         // Movable:
-        BufferTyped(BufferTyped&& other) noexcept = default;
-        BufferTyped& operator=(BufferTyped&& other) noexcept = default;
+        BufferTyped(BufferTyped&& other) noexcept;
+        BufferTyped& operator=(BufferTyped&& other) noexcept;
 
         // Getters:
         std::string GetName() const;

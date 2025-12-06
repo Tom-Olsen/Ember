@@ -17,6 +17,7 @@ namespace vulkanRendererBackend
 	}
 
 
+
 	// Public methods:
 	// Destructor:
 	Shader::~Shader()

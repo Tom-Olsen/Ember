@@ -15,7 +15,7 @@ namespace emberEngine
 	template<typename T>
 	BufferTyped<T>::BufferTyped(uint32_t count, const std::string& name, emberCommon::BufferUsage usage)
 	{
-		m_buffer = Buffer(count, sizeof(T), name, usage);
+        m_buffer = Buffer(count, sizeof(T), name, usage);
         m_bufferView = BufferView<T>(m_buffer);
 	}
 	template<typename T>
@@ -23,6 +23,32 @@ namespace emberEngine
 	{
 
 	}
+
+
+
+    // Movable:
+    template<typename T>
+    BufferTyped<T>::BufferTyped(BufferTyped&& other) noexcept
+    {
+        m_buffer = std::move(other.m_buffer);
+        m_bufferView = BufferView<T>(m_buffer);
+
+        other.m_buffer = Buffer();
+        other.m_bufferView = BufferView<T>();
+    }
+    template<typename T>
+    BufferTyped<T>& BufferTyped<T>::operator=(BufferTyped&& other) noexcept
+    {
+        if (this != &other)
+        {
+            m_buffer = std::move(other.m_buffer);
+            m_bufferView = BufferView<T>(m_buffer);
+
+            other.m_buffer = Buffer();
+            other.m_bufferView = BufferView<T>();
+        }
+        return *this;
+    }
 
 
 
