@@ -25,21 +25,13 @@ namespace emberEngine
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pBigDispersePermutationComputeShader;
 	template <typename T>
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pLocalDispersePermutationComputeShader;
-	// Initialize index(permutation) buffer:
+	// Other compute shaders:
 	template <typename T>
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pInitIndexBufferComputeShader;
 	template <typename T>
-	std::unique_ptr<ShaderProperties> GpuSort<T>::s_pInitIndexBufferShaderProperties;
-	// Apply permutation:
-	template <typename T>
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pApplyPermutationComputeShader;
 	template <typename T>
-	std::unique_ptr<ShaderProperties> GpuSort<T>::s_pApplyPermutationShaderProperties;
-	// Invert permutation:
-	template <typename T>
 	std::unique_ptr<ComputeShader> GpuSort<T>::s_pInvertPermutationComputeShader;
-	template <typename T>
-	std::unique_ptr<ShaderProperties> GpuSort<T>::s_pInvertPermutationShaderProperties;
 
 
 
@@ -199,12 +191,9 @@ namespace emberEngine
 
 			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>("applyPermutationFloat4", directoryPath / "applyPermutationFloat4.comp.spv");
 		}
-		s_pApplyPermutationShaderProperties = std::make_unique<ShaderProperties>(*s_pApplyPermutationComputeShader);
 
 		s_pInitIndexBufferComputeShader = std::make_unique<ComputeShader>("initIndexBuffer", directoryPath / "initIndexBuffer.comp.spv");
-		s_pInitIndexBufferShaderProperties = std::make_unique<ShaderProperties>(*s_pInitIndexBufferComputeShader);
 		s_pInvertPermutationComputeShader = std::make_unique<ComputeShader>("invertPermutation", directoryPath / "invertPermutation.comp.spv");
-		s_pInvertPermutationShaderProperties = std::make_unique<ShaderProperties>(*s_pInvertPermutationComputeShader);
 	}
 	template <typename T>
 	void GpuSort<T>::Clear()
@@ -219,15 +208,10 @@ namespace emberEngine
 		s_pBigFlipPermutationComputeShader.reset();
 		s_pBigDispersePermutationComputeShader.reset();
 		s_pLocalDispersePermutationComputeShader.reset();
-		// Initialize index(permutation) buffer:
+		// Other compute shaders:
 		s_pInitIndexBufferComputeShader.reset();
-		s_pInitIndexBufferShaderProperties.reset();
-		// Apply permutation:
 		s_pApplyPermutationComputeShader.reset();
-		s_pApplyPermutationShaderProperties.reset();
-		// Invert permutation:
 		s_pInvertPermutationComputeShader.reset();
-		s_pInvertPermutationShaderProperties.reset();
 
 		s_isInitialized = false;
 	}
@@ -329,12 +313,12 @@ namespace emberEngine
 		{
 			// Initialize index(permutation) buffer:
 			Uint3 threadCountInit = Uint3(permutationBufferView.GetCount(), 1, 1);
-			s_pInitIndexBufferShaderProperties->SetBuffer("indexBuffer", permutationBufferView.GetBuffer());
-			Compute::RecordComputeShader(computeType, *s_pInitIndexBufferComputeShader, *s_pInitIndexBufferShaderProperties, threadCountInit, sessionID);
+			ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, *s_pInitIndexBufferComputeShader, threadCountInit, sessionID);
+			shaderProperties.SetBuffer("indexBuffer", permutationBufferView.GetBuffer());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 			// Local bitonic sort for each block:
-			ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, *s_pLocalBitonicSortPermutationComputeShader, threadCountLocal, sessionID);
+			shaderProperties = Compute::RecordComputeShader(computeType, *s_pLocalBitonicSortPermutationComputeShader, threadCountLocal, sessionID);
 			shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 			shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 			shaderProperties.SetValue("Values", "bufferSize", bufferSize);
@@ -385,10 +369,10 @@ namespace emberEngine
 	void GpuSort<T>::ApplyPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID)
 	{
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
-		s_pApplyPermutationShaderProperties->SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
-		s_pApplyPermutationShaderProperties->SetBuffer("inBuffer", inBufferView.GetBuffer());
-		s_pApplyPermutationShaderProperties->SetBuffer("outBuffer", outBufferView.GetBuffer());
-		Compute::RecordComputeShader(computeType , *s_pApplyPermutationComputeShader, *s_pApplyPermutationShaderProperties, threadCount, sessionID);
+		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType , *s_pApplyPermutationComputeShader, threadCount, sessionID);
+		shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
+		shaderProperties.SetBuffer("inBuffer", inBufferView.GetBuffer());
+		shaderProperties.SetBuffer("outBuffer", outBufferView.GetBuffer());
 	}
 
 
@@ -397,9 +381,9 @@ namespace emberEngine
 	void GpuSort<T>::InvertPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView, uint32_t sessionID)
 	{
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
-		s_pInvertPermutationShaderProperties->SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
-		s_pInvertPermutationShaderProperties->SetBuffer("inversePermutationBuffer", inversePermutationBufferView.GetBuffer());
-		Compute::RecordComputeShader(computeType, *s_pInvertPermutationComputeShader, *s_pInvertPermutationShaderProperties, threadCount, sessionID);
+		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, *s_pInvertPermutationComputeShader, threadCount, sessionID);
+		shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
+		shaderProperties.SetBuffer("inversePermutationBuffer", inversePermutationBufferView.GetBuffer());
 	}
 
     // Explicit template instantiations:

@@ -21,11 +21,11 @@ namespace fluidDynamics
 		//	m_isRunning = false;
 		//	m_reset = true;
 		//	m_timeScale = 4.0f;
-		//	SetUseHashGridOptimization(true);
 		//	m_timeStep = 0;
 		//	SetParticleCount(2000);
 		//
-		//	// Physics:
+		//	// Settings:
+		//	SetUseHashGridOptimization(true);
 		//	SetEffectRadius(0.5f);
 		//	SetMass(1.0f);
 		//	SetViscosity(0.5f);
@@ -35,11 +35,11 @@ namespace fluidDynamics
 		//	SetPressureMultiplier(10.0f);
 		//	SetGravity(0.5f);
 		//	SetMaxVelocity(5.0f);
+		//	SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
 		//
-		//	// User Interaction/Boundaries:
+		//	// User Interaction:
 		//	SetAttractorRadius(3.0f);
 		//	SetAttractorStrength(2.0f);
-		//	SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
 		//
 		//	// Visuals:
 		//	SetColorMode(0);
@@ -52,25 +52,25 @@ namespace fluidDynamics
 			m_isRunning = false;
 			m_reset = true;
 			m_timeScale = 4.0f;
-			SetUseHashGridOptimization(false);
 			m_timeStep = 0;
 			SetParticleCount(20000);
 
-			// Physics:
+			// Settings:
+			SetUseHashGridOptimization(true);
 			SetEffectRadius(0.2f);
 			SetMass(1.0f);
 			SetViscosity(1.0f);
 			SetSurfaceTension(0.0f);
 			SetCollisionDampening(0.95f);
-			SetTargetDensity(40.0f);
+			SetTargetDensity(200.0f);
 			SetPressureMultiplier(10.0f);
 			SetGravity(0.5f);
 			SetMaxVelocity(5.0f);
+			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
 
-			// User Interaction/Boundaries:
+			// User Interaction:
 			SetAttractorRadius(3.0f);
 			SetAttractorStrength(2.0f);
-			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
 
 			// Visuals:
 			SetColorMode(0);
@@ -134,9 +134,10 @@ namespace fluidDynamics
 		// Reset:
 		if (m_reset)
 		{
+			LOG_INFO("reset");
 			m_timeStep = 0;
-			m_data.Reallocate(m_particleCount, m_initialDistributionRadius);
-			m_rungeKutta.Reallocate(m_particleCount);
+			m_data.Reallocate(m_particleCount, m_initialDistributionRadius, m_computeShaders.computeType);
+			m_rungeKutta.Reallocate(m_particleCount, m_computeShaders.computeType);
 
 			// Compute intial fluid state:
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
@@ -145,14 +146,17 @@ namespace fluidDynamics
 				SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
-				GpuSort<uint32_t>::SortPermutation(ComputeType::preRender, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
+				GpuSort<uint32_t>::SortPermutation(m_computeShaders.computeType, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
+				// TODO: move the reset start index buffer from inside ComputeStartIndices into its own method so it can be done with the SortPermutation before the previous barrier.
 				SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-				GpuSort<Float2>::ApplyPermutation(ComputeType::preRender, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
+				GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
+				GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.velocityBuffer.GetBufferView(), m_data.tempBuffer1.GetBufferView());
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
 				std::swap(m_data.positionBuffer, m_data.tempBuffer0);
+				std::swap(m_data.velocityBuffer, m_data.tempBuffer1);
 			}
 			SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
@@ -476,5 +480,26 @@ namespace fluidDynamics
 	float SphFluid2dGpu::GetVisualRadius() const
 	{
 		return m_visualRadius;
+	}
+
+
+
+	// Debugging:
+	void SphFluid2dGpu::Print()
+	{
+		LOG_INFO("Printing:");
+		m_isRunning = false;
+
+		std::vector<float> densities(m_particleCount);
+		m_data.densityBuffer.Download(densities);
+
+		std::vector<Float2> positions(m_particleCount);
+		m_data.positionBuffer.Download(positions);
+
+		std::vector<Float2> forceDensities(m_particleCount);
+		m_data.forceDensityBuffer.Download(forceDensities);
+
+		for (int i = 0; i < m_particleCount; i++)
+			LOG_TRACE("positions[{}] = {}, density[{}] = {}, forceDensity[{}] = {}", i, positions[i].ToString(), i, densities[i], i, forceDensities[i].ToString());
 	}
 }

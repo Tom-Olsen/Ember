@@ -26,15 +26,10 @@ namespace emberEngine
         static std::unique_ptr<ComputeShader> s_pBigFlipPermutationComputeShader;
         static std::unique_ptr<ComputeShader> s_pBigDispersePermutationComputeShader;
         static std::unique_ptr<ComputeShader> s_pLocalDispersePermutationComputeShader;
-        // Initialize index(permutation) buffer:
+        // Other compute shaders:
         static std::unique_ptr<ComputeShader> s_pInitIndexBufferComputeShader;
-        static std::unique_ptr<ShaderProperties> s_pInitIndexBufferShaderProperties;
-        // Apply permutation:
         static std::unique_ptr<ComputeShader> s_pApplyPermutationComputeShader;
-        static std::unique_ptr<ShaderProperties> s_pApplyPermutationShaderProperties;
-        // Invert permutation:
         static std::unique_ptr<ComputeShader> s_pInvertPermutationComputeShader;
-        static std::unique_ptr<ShaderProperties> s_pInvertPermutationShaderProperties;
 
     public: // Methods:
 	    // Initialization/Cleanup:

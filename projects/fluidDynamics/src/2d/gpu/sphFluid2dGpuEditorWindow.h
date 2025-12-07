@@ -57,6 +57,8 @@ namespace emberEditor
 		void Render() override
 		{
 			GetData();
+
+			// Fields:
 			Gui::Checkbox("Is Running:", &m_isRunning);
 			Gui::DragFloat("Time Scale:", &m_timeScale);
 			Gui::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
@@ -76,9 +78,13 @@ namespace emberEditor
 			Gui::DragInt("Color Mode:", &m_colorMode);
 			Gui::DragFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
-
+			
+			// Buttons:
 			if (Gui::Button("Reset Simulation"))
 				m_pScript->Reset();
+			if (Gui::Button("Print"))
+				m_pScript->Print();
+
 			SetData();
 		}
 

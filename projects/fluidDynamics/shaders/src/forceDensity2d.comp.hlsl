@@ -57,11 +57,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
         forceDensityBuffer[index] = float2(0, 0);
         float particlePressure = Pressure(densityBuffer[index], targetDensity, pressureMultiplier);
         float2 particlePos = positionBuffer[index];
-        float2 particleVel = velocityBuffer[index];
-        
-		// Particle-Particle interaction forces:
         if (useHashGridOptimization)
-        { // With hash grid optimization:
+        {
             int2 particleCell = HashGrid2d_Cell(particlePos, effectRadius);
             for (uint i = 0; i < 9; i++)
             {
@@ -82,9 +79,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         continue;
                     }
                     
-                    float2 otherPos = positionBuffer[otherIndex];
-                    float2 otherVel = velocityBuffer[otherIndex];
-                    float2 offset = particlePos - otherPos;
+                    float2 offset = particlePos - positionBuffer[otherIndex];
                     float r = length(offset);
                     if (r < effectRadius)
                     {
@@ -96,7 +91,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky(r, dir, effectRadius) / densityBuffer[otherIndex];
 
 						// Viscosity force density:
-                        float2 velocityDiff = otherVel - particleVel;
+                        float2 velocityDiff = velocityBuffer[otherIndex] - velocityBuffer[index];
                         forceDensityBuffer[index] += (mass * SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]) * velocityDiff;
                     }
                     otherIndex++;

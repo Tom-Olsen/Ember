@@ -99,5 +99,8 @@ namespace fluidDynamics
 		int GetColorMode() const;
 		float GetInitialDistributionRadius() const;
 		float GetVisualRadius() const;
+
+		// Debugging:
+		void Print();
 	};
 }

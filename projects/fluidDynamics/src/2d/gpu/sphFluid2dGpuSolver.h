@@ -11,17 +11,17 @@ namespace fluidDynamics
 	public: // Structs:
 		struct Settings
 		{
-			bool useHashGridOptimization = true;
-			float effectRadius = 0.5f;
-			float mass = 1.0f;
-			float viscosity = 0.5f;
-			float surfaceTension = 0.07f;
-			float collisionDampening = 0.95f;
-			float targetDensity = 15.0f;
-			float pressureMultiplier = 20.0f;
-			float gravity = 0.5f;
-			float maxVelocity = 5.0f;
-			Bounds fluidBounds = Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f));
+			bool useHashGridOptimization;
+			float effectRadius;
+			float mass;
+			float viscosity;
+			float surfaceTension;
+			float collisionDampening;
+			float targetDensity;
+			float pressureMultiplier;
+			float gravity;
+			float maxVelocity;
+			Bounds fluidBounds;
 		};
 		struct Data
 		{
@@ -45,7 +45,7 @@ namespace fluidDynamics
 
 			Data();
 			int ParticleCount();
-			void Reallocate(int particleCount, float initialDistributionRadius);
+			void Reallocate(int particleCount, float initialDistributionRadius, ComputeType computeType);
 		};
 		struct RungeKutta	// only needed for RungeKutta2 solver.
 		{
@@ -58,7 +58,7 @@ namespace fluidDynamics
 
 			RungeKutta();
 			int ParticleCount();
-			void Reallocate(int particleCount);
+			void Reallocate(int particleCount, ComputeType computeType);
 		};
 		struct Attractor
 		{
@@ -69,7 +69,7 @@ namespace fluidDynamics
 		};
 		struct ComputeShaders
 		{
-			ComputeType computeType = ComputeType::preRender;
+			ComputeType computeType;
 			ComputeShader cellKeysComputeShader;
 			ComputeShader startIndicesResetComputeShader;
 			ComputeShader startIndicesComputeShader;
