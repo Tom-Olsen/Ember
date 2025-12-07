@@ -45,8 +45,5 @@ namespace fluidDynamics
 		void ApplySort(std::vector<Float2>& data) const;
 		void UndoSort(std::vector<float>& data);
 		void UndoSort(std::vector<Float2>& data);
-
-	private: // Methods:
-		void UpdateInverseSortPermutation();
 	};
 }

@@ -107,11 +107,11 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EmberGameDebugApp)
 target_link_libraries(${TEST_PR_NAME} PUBLIC EmberGameDebugApp)
 
 # Shaders:
-if (NOT TARGET ProjectShaderCompiler)
-    add_subdirectory(${PROJECT_SHADERS_DIR} ProjectShaderCompiler)
+if (NOT TARGET FluidDynamicsShaderCompiler)
+    add_subdirectory(${PROJECT_SHADERS_DIR} FluidDynamicsShaderCompiler)
 endif()
-add_dependencies(${PROJECT_NAME} ProjectShaderCompiler)
-add_dependencies(${TEST_PR_NAME} ProjectShaderCompiler)
+add_dependencies(${PROJECT_NAME} FluidDynamicsShaderCompiler)
+add_dependencies(${TEST_PR_NAME} FluidDynamicsShaderCompiler)
 # ---------------------------------------------------
 
 

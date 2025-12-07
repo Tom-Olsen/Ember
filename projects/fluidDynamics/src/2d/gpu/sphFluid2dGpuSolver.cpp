@@ -286,8 +286,6 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpuSolver::ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
-		LOG_ERROR(startIndexBufferView.IsValid());
-		LOG_ERROR(cellKeyBufferView.IsValid());
 		// Reset start index buffer:
 		{
 			Uint3 threadCount(startIndexBufferView.GetCount(), 1, 1);	// reset all possible start indices.

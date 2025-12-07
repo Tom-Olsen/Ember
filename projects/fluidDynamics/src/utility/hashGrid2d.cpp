@@ -16,8 +16,8 @@ namespace fluidDynamics
 	}
 	HashGrid2d::HashGrid2d(int particleCount)
 	{
-		m_inverseValid = false;
 		Reallocate(particleCount);
+		m_inverseValid = false;
 	}
 	HashGrid2d::~HashGrid2d()
 	{
@@ -30,6 +30,7 @@ namespace fluidDynamics
 		m_cellKeys.resize(m_particleCount);
 		m_startIndices.resize(m_size, uint32_t(-1));
 		m_sortPermutation.resize(m_particleCount);
+		m_inverseValid = false;
 		// Note on start indices array:
 		// Start indices vector is sparse and mostly contains invalid (-1) entries.
 		// Each access to this array is done by m_startIndices[CellKey(Cellhash(cell(position,radius)))],
@@ -119,6 +120,7 @@ namespace fluidDynamics
 			if (m_cellKeys[i] != m_cellKeys[i - 1])
 				m_startIndices[m_cellKeys[i]] = i;
 		}
+		m_inverseValid = false;
 		
 		// Result:
 		// m_cellKeys(sorted) :  [0, 0, 0, 2, 2, 3, 3, 3, 4, 5]
@@ -152,24 +154,19 @@ namespace fluidDynamics
 	void HashGrid2d::UndoSort(std::vector<float>& data)
 	{
 		if (!m_inverseValid)
-			UpdateInverseSortPermutation();
+		{
+			math::InvertPermutation(m_sortPermutation, m_inverseSortPermutation);
+			m_inverseValid = true;
+		}
 		data = math::ApplyPermutation(data, m_inverseSortPermutation);
 	}
 	void HashGrid2d::UndoSort(std::vector<Float2>& data)
 	{
 		if (!m_inverseValid)
-			UpdateInverseSortPermutation();
+		{
+			math::InvertPermutation(m_sortPermutation, m_inverseSortPermutation);
+			m_inverseValid = true;
+		}
 		data = math::ApplyPermutation(data, m_inverseSortPermutation);
-	}
-
-
-
-	// Private methods:
-	void HashGrid2d::UpdateInverseSortPermutation()
-	{
-		m_inverseSortPermutation.resize(m_particleCount);
-		for (size_t i = 0; i < m_particleCount; i++)
-			m_inverseSortPermutation[m_sortPermutation[i]] = i;
-		m_inverseValid = true;
 	}
 }

@@ -81,10 +81,10 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
 endforeach()
 
 # Shader compile target:
-add_custom_target(ProjectShaderCompiler ALL DEPENDS ${SPIRV_OUTPUTS})
+add_custom_target(FluidDynamicsShaderCompiler ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # Shader sources added as dummy targets to make them show up in the IDE:
-add_custom_target(ProjectShaders SOURCES
+add_custom_target(FluidDynamicsShaders SOURCES
     ${COMPUTE_SHADERS}
     ${FRAGMENT_SHADERS}
     ${SHADER_INCLUDES}

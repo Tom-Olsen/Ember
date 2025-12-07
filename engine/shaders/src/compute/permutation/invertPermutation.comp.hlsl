@@ -4,7 +4,7 @@
 
 #define BLOCK_SIZE 128
 StructuredBuffer<uint> permutationBuffer : register(t0);
-RWStructuredBuffer<uint> inversePermutationBuffer : register(u0);
+RWStructuredBuffer<uint> inversePermutationBuffer : register(u1);
 
 
 

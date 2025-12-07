@@ -40,12 +40,31 @@ namespace emberMath
 		template <typename T, typename Compare>
 		inline void SortPermutation(const std::vector<T>& vector, std::vector<size_t>& permutation, const Compare& compare)
 		{
-			if (vector.size() != permutation.size())
+			if (permutation.size() != vector.size())
 				permutation.resize(vector.size());
 
 			std::iota(permutation.begin(), permutation.end(), 0);	// fills with indexes 0, 1, 2, ...
 			std::sort(permutation.begin(), permutation.end(), [&](std::size_t i, std::size_t j) { return compare(vector[i], vector[j]); });
 		}
+
+
+
+		// Inverte sorting permutation vector:
+		inline std::vector<std::size_t> InvertPermutation(const std::vector<size_t>& permutation)
+		{
+			std::vector<size_t> inversePermutation(permutation.size());
+			for (size_t i = 0; i < permutation.size(); i++)
+				inversePermutation[permutation[i]] = i;
+			return inversePermutation;
+		}
+		inline void InvertPermutation(const std::vector<size_t>& permutation, std::vector<size_t>& inversePermutation)
+		{
+			if (inversePermutation.size() != permutation.size())
+				inversePermutation.resize(permutation.size());
+			for (size_t i = 0; i < permutation.size(); i++)
+				inversePermutation[permutation[i]] = i;
+		}
+
 
 
 

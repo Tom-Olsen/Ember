@@ -171,6 +171,11 @@ namespace emberEngine
 		bool allGood = true;
 		for (int i = 0; i < count; i++)
 		{
+			if (permutationCpu[i] != permutationGpu[i])
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "Sort permutation mismatch, " << i << ": cpu = " << permutationCpu[i] << ", gpu = " << permutationGpu[i];
+			}
 			if (dataCpu0[i] != dataGpu0[i])
 			{
 				allGood = false;
@@ -181,12 +186,48 @@ namespace emberEngine
 				allGood = false;
 				EXPECT_FALSE(true) << "Sort mismatch at buffer1, " << i << ": cpu = " << dataCpu1[i] << ", gpu = " << dataGpu1[i];
 			}
-			if (permutationCpu[i] != permutationGpu[i])
+		}
+
+		// Inverse permutation Cpu:
+		std::vector<size_t> inversePermutationCpu = math::InvertPermutation(permutationCpu);
+
+		// Unsort on Cpu:
+		dataCpu0 = math::ApplyPermutation(dataCpu0, inversePermutationCpu);
+		dataCpu1 = math::ApplyPermutation(dataCpu1, inversePermutationCpu);
+
+		// Inverse permutation Gpu:
+		BufferTyped<uint32_t> inversePermutationBuffer = BufferTyped<uint32_t>(count, "inversePermutationBuffer", BufferUsage::storage);
+		GpuSort<int>::InvertPermutation(ComputeType::immediate, permutationBuffer.GetBufferView(), inversePermutationBuffer.GetBufferView());
+		inversePermutationBuffer.Download(permutationGpu.data(), count);
+
+		// Unsort on Gpu:
+		GpuSort<int>::ApplyPermutation(ComputeType::immediate, inversePermutationBuffer.GetBufferView(), dataBuffer0.GetBufferView(), tempBuffer.GetBufferView());
+		std::swap(dataBuffer0, tempBuffer);
+		dataBuffer0.Download(dataGpu0.data(), count);
+		GpuSort<int>::ApplyPermutation(ComputeType::immediate, inversePermutationBuffer.GetBufferView(), dataBuffer1.GetBufferView(), tempBuffer.GetBufferView());
+		std::swap(dataBuffer1, tempBuffer);
+		dataBuffer1.Download(dataGpu1.data(), count);
+
+		// Check results:
+		for (int i = 0; i < count; i++)
+		{
+			if (inversePermutationCpu[i] != permutationGpu[i])
 			{
 				allGood = false;
-				EXPECT_FALSE(true) << "Sort mismatch at buffer1, " << i << ": cpu = " << permutationCpu[i] << ", gpu = " << permutationGpu[i];
+				EXPECT_FALSE(true) << "Inverse sort permutation mismatch, " << i << ": cpu = " << inversePermutationCpu[i] << ", gpu = " << permutationGpu[i];
+			}
+			if (dataCpu0[i] != dataGpu0[i])
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "Unsort mismatch at buffer0, " << i << ": cpu = " << dataCpu0[i] << ", gpu = " << dataGpu0[i];
+			}
+			if (dataCpu1[i] != dataGpu1[i])
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "Unsort mismatch at buffer0, " << i << ": cpu = " << dataCpu1[i] << ", gpu = " << dataGpu1[i];
 			}
 		}
+
 		EXPECT_TRUE(allGood);
 	}
 

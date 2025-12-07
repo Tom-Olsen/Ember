@@ -31,7 +31,8 @@ namespace emberEngine
     BufferTyped<T>::BufferTyped(BufferTyped&& other) noexcept
     {
         m_buffer = std::move(other.m_buffer);
-        m_bufferView = BufferView<T>(m_buffer);
+        m_bufferView = std::move(other.m_bufferView);
+        m_bufferView.SetBuffer(m_buffer);
 
         other.m_buffer = Buffer();
         other.m_bufferView = BufferView<T>();
@@ -42,7 +43,8 @@ namespace emberEngine
         if (this != &other)
         {
             m_buffer = std::move(other.m_buffer);
-            m_bufferView = BufferView<T>(m_buffer);
+            m_bufferView = std::move(other.m_bufferView);
+            m_bufferView.SetBuffer(m_buffer);
 
             other.m_buffer = Buffer();
             other.m_bufferView = BufferView<T>();

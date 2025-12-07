@@ -186,17 +186,17 @@ TEST_F(TEST_SphGluid2dGpu, DensityHashGrid)
 		cpuSettings.gravity = 0.5f;
 		cpuSettings.maxVelocity = 5.0f;
 		cpuSettings.fluidBounds = Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f));
-
+	
 		// Compute densities:
 		hashGrid.UpdateGrid(positions, cpuSettings.effectRadius);
 		hashGrid.ApplySort(positions);
 		fluidDynamics::SphFluid2dCpuSolver::ComputeDensities(cpuSettings, densities, positions);
-
+	
 		// Undo sorting (for comparison):
 		hashGrid.UndoSort(positions);
 		hashGrid.UndoSort(densities);
 	}
-
+	
 	// Gpu version:
 	{
 		fluidDynamics::SphFluid2dGpuSolver::Settings gpuSettings;
@@ -211,7 +211,7 @@ TEST_F(TEST_SphGluid2dGpu, DensityHashGrid)
 		gpuSettings.gravity = 0.5f;
 		gpuSettings.maxVelocity = 5.0f;
 		gpuSettings.fluidBounds = Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f));
-
+	
 		fluidDynamics::SphFluid2dGpuSolver::ComputeShaders computeShaders;
 		computeShaders.computeType = ComputeType::immediate;
 		computeShaders.SetUseHashGridOptimization(gpuSettings.useHashGridOptimization);
@@ -226,15 +226,15 @@ TEST_F(TEST_SphGluid2dGpu, DensityHashGrid)
 		computeShaders.SetGravity(gpuSettings.gravity);
 		computeShaders.SetMaxVelocity(gpuSettings.maxVelocity);
 		computeShaders.SetFluidBounds(gpuSettings.fluidBounds);
-
+	
 		// Hash grid setup:
 		fluidDynamics::SphFluid2dGpuSolver::ComputeCellKeys(computeShaders, cellKeyBuffer.GetBufferView(), positionBuffer.GetBufferView());
 		GpuSort<uint32_t>::SortPermutation(ComputeType::immediate, cellKeyBuffer.GetBufferView(), sortPermutationBuffer.GetBufferView());
 		fluidDynamics::SphFluid2dGpuSolver::ComputeStartIndices(computeShaders, startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
 		GpuSort<Float2>::ApplyPermutation(ComputeType::immediate, sortPermutationBuffer.GetBufferView(), positionBuffer.GetBufferView(), tempBuffer0.GetBufferView());
 		std::swap(positionBuffer, tempBuffer0);
-
-		// Compute densities:
+		
+		//// Compute densities:
 		fluidDynamics::SphFluid2dGpuSolver::ComputeDensities(computeShaders, densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
 
 		// Undo sorting (for comparison):	
@@ -266,7 +266,7 @@ TEST_F(TEST_SphGluid2dGpu, DensityHashGrid)
 				allGood = false;
 				EXPECT_FALSE(true) << "Position mismatch at " << i << ": cpu = " << positions[i] << ", gpu = " << positionsGpu[i];
 			}
-		}// this test passes
+		}
 
 		for (int i = 0; i < particleCount; i++)
 		{
@@ -275,7 +275,7 @@ TEST_F(TEST_SphGluid2dGpu, DensityHashGrid)
 				allGood = false;
 				EXPECT_FALSE(true) << "CellKey mismatch at " << i << ": cpu = " << hashGrid.GetCellKey(i) << ", gpu = " << cellKeysGpu[i];
 			}
-		}// this test passes
+		}
 
 		for (int i = 0; i < hashGridSize; i++)
 		{
@@ -284,8 +284,8 @@ TEST_F(TEST_SphGluid2dGpu, DensityHashGrid)
 				allGood = false;
 				EXPECT_FALSE(true) << "StartIndex mismatch at " << i << ": cpu = " << hashGrid.GetStartIndex(i) << ", gpu = " << startIndicesGpu[i];
 			}
-		}// this test passes
-
+		}
+		
 		for (int i = 0; i < particleCount; i++)
 		{
 			if (!math::IsEpsilonEqual(densities[i], densitiesGpu[i], 1e-3f))
@@ -293,7 +293,8 @@ TEST_F(TEST_SphGluid2dGpu, DensityHashGrid)
 				allGood = false;
 				EXPECT_FALSE(true) << "Density mismatch at particle " << i << ": cpu = " << densities[i] << ", gpu = " << densitiesGpu[i] <<", ratio = " << densitiesGpu[i] / densities[i] << ", cpuPos = " << positions[i] << ", gpuPos = " << positionsGpu[i];
 			}
-		}// this test fails
+		}
+
 		EXPECT_TRUE(allGood);
 	}
 }

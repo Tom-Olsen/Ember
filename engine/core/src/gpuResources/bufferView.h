@@ -34,8 +34,8 @@ namespace emberEngine
 		BufferView& operator=(const BufferView&) = default;
 
 		// Movable:
-		BufferView(BufferView&& other) noexcept = default;
-		BufferView& operator=(BufferView&& other) noexcept = default;
+		BufferView(BufferView&& other) noexcept;
+		BufferView& operator=(BufferView&& other) noexcept;
 
         // Getters:
 		std::string GetName() const;
@@ -47,6 +47,7 @@ namespace emberEngine
         uint32_t GetOffset() const;
 
         // Setters:
+        void SetBuffer(Buffer& buffer);
         void SetOffset(uint32_t offset);
         void SetCount(uint32_t count);
 

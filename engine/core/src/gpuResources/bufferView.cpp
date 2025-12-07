@@ -45,6 +45,36 @@ namespace emberEngine
 
 
 
+    // Movable:
+    template<typename T>
+    BufferView<T>::BufferView(BufferView&& other) noexcept
+    {
+        m_pBuffer = other.m_pBuffer;
+        m_offset = other.m_offset;
+        m_count = other.m_count;
+
+        other.m_pBuffer = nullptr;
+        other.m_offset = 0;
+        other.m_count = 0;
+    }
+    template<typename T>
+    BufferView<T>& BufferView<T>::operator=(BufferView&& other) noexcept
+    {
+        if (this != &other)
+        {
+            m_pBuffer = other.m_pBuffer;
+            m_offset = other.m_offset;
+            m_count = other.m_count;
+
+            other.m_pBuffer = nullptr;
+            other.m_offset = 0;
+            other.m_count = 0;
+        }
+        return *this;
+    }
+
+
+
     // Getters:
     template<typename T>
     std::string BufferView<T>::GetName() const
@@ -85,6 +115,11 @@ namespace emberEngine
 
 
     // Setters:
+    template<typename T>
+    void BufferView<T>::SetBuffer(Buffer& buffer)
+    {
+        m_pBuffer = &buffer;
+    }
     template<typename T>
     void BufferView<T>::SetOffset(uint32_t offset)
     {

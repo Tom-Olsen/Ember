@@ -34,7 +34,9 @@ constexpr float epsilon = 1e-6f;
 	EXPECT_NEAR(a.z, b.z, e); \
 	EXPECT_NEAR(a.w, b.w, e);
 
-// math testing:
+
+
+// Math testing:
 #include "emberMath.h"
 //#include "testBounds.h"
 //#include "testBounds2d.h"

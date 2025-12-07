@@ -21,7 +21,6 @@ TEST(Random, SetSeed)
 	for (int i = 0; i < 10; i++)
 	{
 		float random = math::Random::Uniform01();
-		LOG_TRACE(prediction[i]);
 		EXPECT_FLOAT_EQ(random, prediction[i]);
 	}
 }
