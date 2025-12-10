@@ -80,6 +80,11 @@ namespace emberEditor
 			Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
 			
 			// Buttons:
+			static bool step = false;
+			if (step)
+				step = m_isRunning = false;
+			if (Gui::Button("Step"))
+				step = m_isRunning = true;
 			if (Gui::Button("Reset Simulation"))
 				m_pScript->Reset();
 			if (Gui::Button("Print"))

@@ -15,7 +15,7 @@ RWStructuredBuffer<float2> positionBuffer : register(u4);
 RWStructuredBuffer<float2> velocityBuffer : register(u5);
 RWStructuredBuffer<float> densityBuffer : register(u6);
 RWStructuredBuffer<float2> normalBuffer : register(u7);
-RWStructuredBuffer<float2> curvatureBuffer : register(u8);
+RWStructuredBuffer<float> curvatureBuffer : register(u8);
 RWStructuredBuffer<float2> forceDensityBuffer : register(u9);
 RWStructuredBuffer<float2> tempBuffer0 : register(u10);
 RWStructuredBuffer<float2> tempBuffer1 : register(u11);
@@ -48,7 +48,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         velocityBuffer[index] = float2(0, 0);
         densityBuffer[index] = 0.0f;
         normalBuffer[index] = float2(0, 0);
-        curvatureBuffer[index] = float2(0, 0);
+        curvatureBuffer[index] = 0;
         forceDensityBuffer[index] = float2(0, 0);
         tempBuffer0[index] = float2(0, 0);
         tempBuffer1[index] = float2(0, 0);

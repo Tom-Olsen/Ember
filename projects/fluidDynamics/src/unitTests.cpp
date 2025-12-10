@@ -1,8 +1,5 @@
 #include <gtest/gtest.h>
 
-// Floating point precision:
-constexpr float epsilon = 1e-6f;
-
 // Custom test macros:
 // Float2/3/4 equality:
 #define EXPECT_FLOAT2_EQ(a, b) \

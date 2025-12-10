@@ -47,23 +47,54 @@ namespace fluidDynamics
 		//	SetVisualRadius(0.25f);
 		//}
 		// Settings1:
+		//{
+		//	// Management:
+		//	m_isRunning = false;
+		//	m_reset = true;
+		//	m_timeScale = 4.0f;
+		//	m_timeStep = 0;
+		//	SetParticleCount(20000);
+		//
+		//	// Settings:
+		//	SetUseHashGridOptimization(true);
+		//	SetEffectRadius(0.2f);
+		//	SetMass(1.0f);
+		//	SetViscosity(1.0f);
+		//	SetSurfaceTension(0.0f);
+		//	SetCollisionDampening(0.95f);
+		//	SetTargetDensity(200.0f);
+		//	SetPressureMultiplier(10.0f);
+		//	SetGravity(0.5f);
+		//	SetMaxVelocity(5.0f);
+		//	SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
+		//
+		//	// User Interaction:
+		//	SetAttractorRadius(3.0f);
+		//	SetAttractorStrength(2.0f);
+		//
+		//	// Visuals:
+		//	SetColorMode(0);
+		//	SetInitialDistributionRadius(8.0f);
+		//	SetVisualRadius(0.15f);
+		//}
+		// Settings2:
 		{
 			// Management:
 			m_isRunning = false;
 			m_reset = true;
-			m_timeScale = 4.0f;
+			m_timeScale = 2.0f;
 			m_timeStep = 0;
-			SetParticleCount(20000);
+			SetParticleCount(2000);
 
 			// Settings:
-			SetUseHashGridOptimization(true);
-			SetEffectRadius(0.2f);
+			SetUseHashGridOptimization(false);
+			SetEffectRadius(0.5f);
 			SetMass(1.0f);
-			SetViscosity(1.0f);
-			SetSurfaceTension(0.0f);
+			SetViscosity(0.5f);
+			SetSurfaceTension(0.007f);
 			SetCollisionDampening(0.95f);
-			SetTargetDensity(200.0f);
-			SetPressureMultiplier(10.0f);
+			SetTargetDensity(15.0f);
+			SetPressureMultiplier(20.0f);
 			SetGravity(0.5f);
 			SetMaxVelocity(5.0f);
 			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
@@ -74,8 +105,8 @@ namespace fluidDynamics
 
 			// Visuals:
 			SetColorMode(0);
-			SetInitialDistributionRadius(8.0f);
-			SetVisualRadius(0.15f);
+			SetInitialDistributionRadius(6.0f);
+			SetVisualRadius(0.25f);
 		}
 
 		// Editor Window:

@@ -12,8 +12,8 @@ StructuredBuffer<float> densityBuffer : register(t2);
 StructuredBuffer<float2> kp1Buffer : register(t3);
 StructuredBuffer<float2> kv1Buffer : register(t4);
 StructuredBuffer<float2> tempVelocityBuffer : register(t5);
-RWStructuredBuffer<float2> positionBuffer : register(u8);
-RWStructuredBuffer<float2> velocityBuffer : register(u9);
+RWStructuredBuffer<float2> positionBuffer : register(u6);
+RWStructuredBuffer<float2> velocityBuffer : register(u7);
 
 
 
