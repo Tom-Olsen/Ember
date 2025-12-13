@@ -16,13 +16,14 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Cache directories:
-get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)             # vulkan
-get_filename_component(ENGINE_COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}/../../common" ABSOLUTE)         # commom
-get_filename_component(ENGINE_EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../../extern" ABSOLUTE)         # extern
-get_filename_component(ENGINE_INTERFACES_DIR "${CMAKE_CURRENT_LIST_DIR}/../../interfaces" ABSOLUTE) # interfaces
-get_filename_component(ENGINE_LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../libs" ABSOLUTE)             # libs
-get_filename_component(ENGINE_RESOURCES_DIR "${CMAKE_CURRENT_LIST_DIR}/../../resources" ABSOLUTE)   # resources
-get_filename_component(ENGINE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../shaders" ABSOLUTE)       # shaders
+get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE) # vulkan
+get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)           # engine
+get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)               # commom
+get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)               # extern
+get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)       # interfaces
+get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                   # libs 
+get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)         # resources
+get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)             # shaders
 
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)

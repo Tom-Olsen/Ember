@@ -11,9 +11,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Cache directories:
-get_filename_component(ENGINE_APPLICATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../engine/applications" ABSOLUTE)  # applications
-get_filename_component(ENGINE_EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../../engine/extern" ABSOLUTE)              # extern
-get_filename_component(PROJECT_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/shaders" ABSOLUTE)                        # shaders
+get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../engine" ABSOLUTE)        # engine
+get_filename_component(ENGINE_APPLICATIONS_DIR "${ENGINE_DIR}/applications" ABSOLUTE)       # applications
+get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)                   # extern
+get_filename_component(PROJECT_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/shaders" ABSOLUTE)    # shaders
 
 # Custom target name for unit tests:
 set(TEST_PR_NAME ${PROJECT_NAME}UnitTests)

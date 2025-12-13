@@ -16,6 +16,10 @@ option(EMBER_LOGGER_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" OFF
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Cache directories:
+get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   # engine
+get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)       # extern
+
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
@@ -69,5 +73,5 @@ endif()
 
 # ------------- Link External Libraries -------------
 # spdlog (CMakeList target):
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../extern/spdlog/include)
+target_include_directories(${PROJECT_NAME} PUBLIC "${ENGINE_EXTERN_DIR}/spdlog/include")
 # ---------------------------------------------------

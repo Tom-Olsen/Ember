@@ -12,9 +12,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Cache directories:
-get_filename_component(ENGINE_CORE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../core" ABSOLUTE) # core
-get_filename_component(EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../../extern" ABSOLUTE)    # extern
-get_filename_component(LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../libs" ABSOLUTE)        # libs
+get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   # engine
+get_filename_component(ENGINE_CORE_DIR "${ENGINE_DIR}/core" ABSOLUTE)           # core
+get_filename_component(EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)              # extern
+get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)           # libs
 
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
@@ -65,13 +66,13 @@ target_link_libraries(${PROJECT_NAME} PUBLIC EmberCore)
 # EmberLogger:
 if (NOT TARGET EmberLogger)
     set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib." FORCE)
-    add_subdirectory("${LIBS_DIR}/logger" EmberLogger)
+    add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
 
 # EmberMath:
 if (NOT TARGET EmberMath)
-    add_subdirectory("${LIBS_DIR}/math" EmberMath)
+    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 # ---------------------------------------------------

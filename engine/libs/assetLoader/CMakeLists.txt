@@ -16,6 +16,10 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into t
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Cache directories:
+get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   # engine
+get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)           # libs
+
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
@@ -50,14 +54,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/sr
 # -------------- Link Custom Libraries --------------
 # EmberMath:
 if (NOT TARGET EmberMath)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../math" EmberMath)
+    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
 
 # EmberLogger:
 if (NOT TARGET EmberLogger)
     set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/logger" EmberLogger)
+    add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
 # ---------------------------------------------------
