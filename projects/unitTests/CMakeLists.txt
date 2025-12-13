@@ -29,23 +29,19 @@ endif()
 
 
 
-
 # ------------------- File Lists --------------------
 file(GLOB MAIN_FILE "src/main.cpp")
 source_group("/" FILES ${MAIN_FILE})
 
-file(GLOB TESTS_FILES "src/tests/*.*")
-source_group("Tests" FILES ${TESTS_FILES})
+file(GLOB TEST_FILES "src/test*.cpp")
+source_group("Tests" FILES ${TEST_FILES})
 # ---------------------------------------------------
 
 
 
 # ---------------- Create Executable ----------------
-add_executable(${PROJECT_NAME} ${MAIN_FILE}
-    ${TESTS_FILES})
-target_include_directories(${PROJECT_NAME} PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}/src
-	${CMAKE_CURRENT_SOURCE_DIR}/src/tests)
+add_executable(${PROJECT_NAME} ${MAIN_FILE} ${TEST_FILES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Add project root path as a macro:
 get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
