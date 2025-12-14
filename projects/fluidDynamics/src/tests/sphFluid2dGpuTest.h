@@ -41,12 +41,20 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 	// Basic parameters:
 	int particleCount = 200;
 	int hashGridSize = math::NextPrimeAbove(2 * particleCount);
+	float dt = 0.01;
+	float a1 = 1.0f / 3.0f;
+	float a2 = 2.0f / 3.0f;
+	float q = 3.0f / 4.0f;
 
-	// Cpu buffers:
+	// Cpu arrays:
 	std::vector<Float2> positions(particleCount);
 	std::vector<Float2> velocities(particleCount);
 	std::vector<float> densities(particleCount);
 	std::vector<Float2> forceDensities(particleCount);
+	std::vector<Float2> kp1(particleCount);
+	std::vector<Float2> kv1(particleCount);
+	std::vector<Float2> tempPositions(particleCount);
+	std::vector<Float2> tempVelocities(particleCount);
 	fluidDynamics::HashGrid2d hashGrid(particleCount);
 
 	// Gpu buffers:
@@ -56,6 +64,10 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 	BufferTyped<Float2> normalBuffer = BufferTyped<Float2>(particleCount, "normalBuffer", BufferUsage::storage);
 	BufferTyped<float> curvatureBuffer = BufferTyped<float>(particleCount, "curvatureBuffer", BufferUsage::storage);
 	BufferTyped<Float2> forceDensityBuffer = BufferTyped<Float2>(particleCount, "forceDensityBuffer", BufferUsage::storage);
+	BufferTyped<Float2> kp1Buffer = BufferTyped<Float2>(particleCount, "kp1Buffer", BufferUsage::storage);
+	BufferTyped<Float2> kv1Buffer = BufferTyped<Float2>(particleCount, "kv1Buffer", BufferUsage::storage);
+	BufferTyped<Float2> tempPositionBuffer = BufferTyped<Float2>(particleCount, "tempPositionBuffer", BufferUsage::storage);
+	BufferTyped<Float2> tempVelocityBuffer = BufferTyped<Float2>(particleCount, "tempVelocityBuffer", BufferUsage::storage);
 	BufferTyped<uint32_t> cellKeyBuffer = BufferTyped<uint32_t>(particleCount, "cellKeyBuffer", BufferUsage::storage);
 	BufferTyped<uint32_t> startIndexBuffer = BufferTyped<uint32_t>(hashGridSize, "startIndexBuffer", BufferUsage::storage);
 	// Gpu host vectors for download:
@@ -63,6 +75,10 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 	std::vector<Float2> velocitiesGpu(particleCount);
 	std::vector<float> densitiesGpu(particleCount);
 	std::vector<Float2> forceDensitiesGpu(particleCount);
+	std::vector<Float2> kp1Gpu(particleCount);
+	std::vector<Float2> kv1Gpu(particleCount);
+	std::vector<Float2> tempPositionsGpu(particleCount);
+	std::vector<Float2> tempVelocitiesGpu(particleCount);
 
 	// Data initialization:
 	float initialDistributionRadius = 6.0f;
@@ -104,6 +120,18 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 
 		fluidDynamics::SphFluid2dCpuSolver::ComputeDensities(cpuSettings, densities, positions);
 		fluidDynamics::SphFluid2dCpuSolver::ComputeForceDensities(cpuSettings, cpuAttractor, forceDensities, positions, densities, velocities);
+		// First Runte-Kutta step:
+		for (int i = 0; i < particleCount; i++)
+		{
+			Float2 acceleration = forceDensities[i] / densities[i];
+			kp1[i] = velocities[i];
+			kv1[i] = acceleration;
+			tempPositions[i] = positions[i] + q * kp1[i] * dt;
+			tempVelocities[i] = velocities[i] + q * kv1[i] * dt;
+			float speed = tempVelocities[i].Length();
+			if (speed > cpuSettings.maxVelocity)
+				tempVelocities[i] *= (cpuSettings.maxVelocity / speed);
+		}
 	}
 
 	// Gpu version:
@@ -135,13 +163,23 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 		computeShaders.SetGravity(gpuSettings.gravity);
 		computeShaders.SetMaxVelocity(gpuSettings.maxVelocity);
 		computeShaders.SetFluidBounds(gpuSettings.fluidBounds);
-	
+		computeShaders.rungeKutta2Step1ComputeShader.Print();
+		computeShaders.rungeKutta2Step1Properties.Print();
+		computeShaders.rungeKutta2Step1Properties.PrintMaps();
+		//return;
+
 		fluidDynamics::SphFluid2dGpuSolver::ComputeDensities(computeShaders, densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
 		fluidDynamics::SphFluid2dGpuSolver::ComputeForceDensities(computeShaders, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView(), normalBuffer.GetBufferView(), curvatureBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
+		fluidDynamics::SphFluid2dGpuSolver::ComputeRungeKutta2Step1(computeShaders, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), kp1Buffer.GetBufferView(), kv1Buffer.GetBufferView(), tempPositionBuffer.GetBufferView(), tempVelocityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView());
+
 		positionBuffer.Download(positionsGpu);
 		velocityBuffer.Download(velocitiesGpu);
 		densityBuffer.Download(densitiesGpu);
 		forceDensityBuffer.Download(forceDensitiesGpu);
+		kp1Buffer.Download(kp1Gpu);
+		kv1Buffer.Download(kv1Gpu);
+		tempPositionBuffer.Download(tempPositionsGpu);
+		tempVelocityBuffer.Download(tempVelocitiesGpu);
 	}
 
 	// Compare results:
@@ -153,25 +191,46 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 			if (!positions[i].IsEpsilonEqual(positionsGpu[i], epsilon))
 			{
 				allGood = false;
-				EXPECT_FALSE(true) << "Position mismatch at particle " << i << ": cpu = " << positions[i] << ", gpu = " << positionsGpu[i];
+				EXPECT_FALSE(true) << "position mismatch at particle " << i << ": cpu = " << positions[i] << ", gpu = " << positionsGpu[i];
 			}
 			if (!velocities[i].IsEpsilonEqual(velocitiesGpu[i], epsilon))
 			{
 				allGood = false;
-				EXPECT_FALSE(true) << "Velocity mismatch at particle " << i << ": cpu = " << velocities[i] << ", gpu = " << velocitiesGpu[i];
+				EXPECT_FALSE(true) << "velocity mismatch at particle " << i << ": cpu = " << velocities[i] << ", gpu = " << velocitiesGpu[i];
 			}
 			float relativeDensiyDiff = math::Abs((densities[i] - densitiesGpu[i]) / densities[i]);
 			if (relativeDensiyDiff > epsilon)
 			{
 				allGood = false;
-				EXPECT_FALSE(true) << "Density mismatch at particle " << i << ": cpu = " << densities[i] << ", gpu = " << densitiesGpu[i];
+				EXPECT_FALSE(true) << "density mismatch at particle " << i << ": cpu = " << densities[i] << ", gpu = " << densitiesGpu[i];
 			}
 			Float2 relativeForceDensiyDiff = Float2::Abs((forceDensities[i] - forceDensitiesGpu[i]) / forceDensities[i]);
 			if (relativeForceDensiyDiff.x > epsilon || relativeForceDensiyDiff.y > epsilon)
 			{
 				allGood = false;
-				EXPECT_FALSE(true) << "Force density mismatch at particle " << i << ": cpu = " << forceDensities[i] << ", gpu = " << forceDensitiesGpu[i];
+				EXPECT_FALSE(true) << "force density mismatch at particle " << i << ": cpu = " << forceDensities[i] << ", gpu = " << forceDensitiesGpu[i];
 			}
+
+			//if (!kp1[i].IsEpsilonEqual(kp1Gpu[i], epsilon))
+			//{
+			//	allGood = false;
+			//	EXPECT_FALSE(true) << "kp1 mismatch at particle " << i << ": cpu = " << kp1[i] << ", gpu = " << kp1Gpu[i];
+			//}
+			//if (!kv1[i].IsEpsilonEqual(kv1Gpu[i], epsilon))
+			//{
+			//	allGood = false;
+			//	EXPECT_FALSE(true) << "kv1 mismatch at particle " << i << ": cpu = " << kv1[i] << ", gpu = " << kv1Gpu[i];
+			//}
+			//if (!tempPositions[i].IsEpsilonEqual(tempPositionsGpu[i], epsilon))
+			//{
+			//	allGood = false;
+			//	EXPECT_FALSE(true) << "temp positions mismatch at particle " << i << ": cpu = " << tempPositions[i] << ", gpu = " << tempPositionsGpu[i];
+			//}
+			//if (!tempVelocities[i].IsEpsilonEqual(tempVelocitiesGpu[i], epsilon))
+			//{
+			//	allGood = false;
+			//	EXPECT_FALSE(true) << "temp velocities mismatch at particle " << i << ": cpu = " << tempVelocities[i] << ", gpu = " << tempVelocitiesGpu[i];
+			//}
 		}
 		EXPECT_TRUE(allGood);
 	}

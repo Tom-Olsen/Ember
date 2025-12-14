@@ -28,11 +28,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
     {
         float2 acceleration = forceDensityBuffer[index] / densityBuffer[index];
         kp1Buffer[index] = velocityBuffer[index];
-        kv1Buffer[index] = acceleration;
-        tempPositionBuffer[index] = positionBuffer[index] + q * kp1Buffer[index] * dt;
-        tempVelocityBuffer[index] = velocityBuffer[index] + q * kv1Buffer[index] * dt;
-        float speed = length(tempVelocityBuffer[index]);
-        if (speed > maxVelocity)
-            tempVelocityBuffer[index] *= (maxVelocity / speed);
+        kv1Buffer[index] = acceleration * positionBuffer[index] * dt * maxVelocity;
+        tempPositionBuffer[index] = float2(1234, 5678);
+        //tempPositionBuffer[index] = positionBuffer[index] + q * kp1Buffer[index] * dt;
+        //tempVelocityBuffer[index] = velocityBuffer[index] + q * kv1Buffer[index] * dt;
+        //float speed = length(tempVelocityBuffer[index]);
+        //if (speed > maxVelocity)
+        //    tempVelocityBuffer[index] *= (maxVelocity / speed);
     }
 }

@@ -36,13 +36,15 @@ namespace vulkanRendererBackend
     void UniformBufferMember::AddSubMember(std::string name, UniformBufferMember* pSubMember)
     {
         // Take ownership of UniformBufferMember pointer:
-        m_subMembers.emplace(name, pSubMember);
+        if (!pSubMember)
+            return;
+        m_subMembers.emplace(std::move(name),std::unique_ptr<UniformBufferMember>(pSubMember));
     }
     UniformBufferMember* UniformBufferMember::GetSubMember(const std::string& name) const
     {
         auto it = m_subMembers.find(name);
         if (it != m_subMembers.end())
-            return it->second;
+            return it->second.get();
         return nullptr;
     }
     std::string UniformBufferMember::ToString(const std::string& name, int indent) const
@@ -68,15 +70,16 @@ namespace vulkanRendererBackend
     }
     UniformBufferBlock::~UniformBufferBlock()
     {
-        for (auto& member : members)
-            delete member.second;
+
     }
 
     // Public methods:
     void UniformBufferBlock::AddMember(std::string name, UniformBufferMember* pMember)
     {
         // Take ownership of UniformBufferMember pointer:
-        members.emplace(name, pMember);
+        if (!pMember)
+            return;
+        m_members.emplace(name, std::unique_ptr<UniformBufferMember>(pMember));
 
         // Adjust size:
         uint32_t newSize = pMember->offset + pMember->size;
@@ -85,16 +88,16 @@ namespace vulkanRendererBackend
     }
     UniformBufferMember* UniformBufferBlock::GetMember(const std::string& name) const
     {
-        auto it = members.find(name);
-        if (it != members.end())
-            return it->second;
+        auto it = m_members.find(name);
+        if (it != m_members.end())
+            return it->second.get();
         return nullptr;
     }
     std::string UniformBufferBlock::ToString(int indent) const
     {
         std::ostringstream ss;
         ss << std::string(indent, ' ') << name << "(binding=" << bindingIndex << ", size=" << size << "):\n";
-        for (const auto& [memberName, member] : members)
+        for (const auto& [memberName, member] : m_members)
             ss << member->ToString(memberName, indent + 2);
         return ss.str();
     }
@@ -168,10 +171,12 @@ namespace vulkanRendererBackend
     // Constructor/Destructor:
     SpirvReflect::SpirvReflect(const std::vector<char>& code)
     {
+        // Load module:
         SPVA(spvReflectCreateShaderModule(code.size(), code.data(), &m_module));
     }
     SpirvReflect::~SpirvReflect()
     {
+        // Dispose module:
         spvReflectDestroyShaderModule(&m_module);
     }
 
@@ -205,7 +210,7 @@ namespace vulkanRendererBackend
             if (pos != std::string::npos)
                 semantic = semantic.substr(pos + 1);
             else    // shader semantic somehow broken.
-                vertexInputDescriptions->semantics.push_back("unknown");
+                semantic = "unknown";
             vertexInputDescriptions->semantics.push_back(semantic);
 
             VertexInputAttributeDescription attributeDescription = {};
@@ -216,7 +221,7 @@ namespace vulkanRendererBackend
             vertexInputDescriptions->attributes.push_back(attributeDescription);
         }
 
-        // Shrink to fitt, as due to built in system values original reserve might have been to big:
+        // Shrink to fit, as due to built in system values original reserve might have been to big:
         vertexInputDescriptions->semantics.shrink_to_fit();
         vertexInputDescriptions->bindings.shrink_to_fit();
         vertexInputDescriptions->attributes.shrink_to_fit();
@@ -290,7 +295,7 @@ namespace vulkanRendererBackend
                 {
                     SpvReflectBlockVariable& blockReflection = pBindingReflection->block;
                     UniformBufferBlock* pUniformBufferBlock = GetUniformBufferBlock(blockReflection, pSetReflection->set, pBindingReflection->binding);
-                    descriptorBoundResources->uniformBufferBlockMap.emplace(pUniformBufferBlock->name, pUniformBufferBlock);
+                    descriptorBoundResources->uniformBufferBlockMap.emplace(pUniformBufferBlock->name, std::unique_ptr<UniformBufferBlock>(pUniformBufferBlock));
                 }
             }
         }

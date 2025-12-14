@@ -4,6 +4,7 @@
 #include "vulkanImageViewType.h"
 #include "vulkanVertexInputAttributeDescription.h"
 #include "vulkanVertexInputBindingDescription.h"
+#include <memory>
 #include <spirv_reflect.h>	// vulkanRendererBackend::ToDo: put this include into .cpp
 #include <string>
 #include <unordered_map>
@@ -28,7 +29,7 @@ namespace vulkanRendererBackend
 		uint32_t size;		// in bytes.
 
 	private: // Members:
-		std::unordered_map<std::string, UniformBufferMember*> m_subMembers;
+		std::unordered_map<std::string, std::unique_ptr<UniformBufferMember>> m_subMembers;
 
 	public: // Methods:
 		UniformBufferMember();
@@ -62,7 +63,7 @@ namespace vulkanRendererBackend
 		uint32_t bindingIndex;	// bX, where X is the index. 
 
 	private: // Members:
-		std::unordered_map<std::string, UniformBufferMember*> members;
+		std::unordered_map<std::string, std::unique_ptr<UniformBufferMember>> m_members;
 
 	public: // Methods:
 		UniformBufferBlock(const std::string& name, uint32_t size, uint32_t setIndex, uint32_t bindingIndex);
@@ -108,8 +109,8 @@ namespace vulkanRendererBackend
 		uint32_t bindingCount = 0; // number of descriptorSetBindingNames and descriptorSetLayoutBindings
 		std::vector<std::string> descriptorSetBindingNames;
 		std::vector<DescriptorSetLayoutBinding> descriptorSetLayoutBindings;
-		// One UniformBufferBlock* for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER.
-		std::unordered_map<std::string, UniformBufferBlock*> uniformBufferBlockMap;
+		// One UniformBufferBlock unique ptr for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER.
+		std::unordered_map<std::string, std::unique_ptr<UniformBufferBlock>> uniformBufferBlockMap;
 		// One ImageViewType for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
 		std::unordered_map<std::string, ImageViewType> sampleViewTypeMap;
 		// One ImageViewType for each descriptorSetLayoutBindings entry with VkDescriptorType=VK_DESCRIPTOR_TYPE_STORAGE_IMAGE.

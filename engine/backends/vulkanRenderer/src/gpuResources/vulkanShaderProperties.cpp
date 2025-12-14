@@ -503,7 +503,7 @@ namespace vulkanRendererBackend
 		if (it == m_uniformBufferMaps[frameIndex].end())
 		{
 			const DescriptorBoundResources* const descriptorBoundResources = m_pShader->GetDescriptorBoundResources();
-			UniformBufferBlock* pUniformBufferBlock = descriptorBoundResources->uniformBufferBlockMap.at(name);
+			UniformBufferBlock* pUniformBufferBlock = descriptorBoundResources->uniformBufferBlockMap.at(name).get();
 
 			std::shared_ptr<UniformBuffer> uniformBuffer = std::make_shared<UniformBuffer>(pUniformBufferBlock, m_pShader->GetName());
 			m_uniformBufferMaps[frameIndex].emplace(name, UniformBufferBinding(binding, uniformBuffer));
