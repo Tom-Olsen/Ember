@@ -252,26 +252,3 @@ set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Refle
 add_subdirectory("${ENGINE_EXTERN_DIR}/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-reflect-static)
 # ---------------------------------------------------
-
-
-
-## ----------------- Compile Shaders -----------------
-#if(WIN32)
-#    set(SHADER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/compileShaders.bat")
-#    add_custom_target(CompileShaders ALL
-#        COMMAND "${SHADER_SCRIPT}"
-#        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders"
-#        COMMENT "Compiling HLSL compute shaders (Windows)"
-#    )
-#elseif(UNIX)
-#    set(SHADER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/compileShaders.sh")
-#    add_custom_target(CompileShaders ALL
-#        COMMAND bash "${SHADER_SCRIPT}"
-#        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders"
-#        COMMENT "Compiling HLSL compute shaders (Linux/Ubuntu)"
-#    )
-#endif()
-#
-## Make sure your Vulkan library depends on shaders being compiled first
-#add_dependencies(${PROJECT_NAME} CompileShaders)
-# ---------------------------------------------------

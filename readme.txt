@@ -21,6 +21,13 @@ Ember/engine/shaders    ->   basic shaders which are shipped with the engine by 
 
 
 
+Unit Tests:
+Each library and backend contains its own unit test project (when applicable, not everything has unit tests) inside its folder, e.g. Ember/engine/backends/vulkanRenderer/unitTests/CMakeLists.txt.
+These unit tests can either be build indepedently, or all be build+run at the same time via the meta unit test proect at Ember/unitTests/CMakeLists.txt, simply execute the runAllTests.bat/.sh script.
+The project at Ember/projects/unitTests/CMakeLists.txt, contains higher level integration tests, e.g. compute shaders, which are easier/better to test in the context of the entire engine.
+
+
+
 Project Setup:
 To create a new project simply link the desired base application from 'Ember/engine/application/*' in your CMakeLists.txt via:
     add_subdirectory("../../engine/applications/emberEditorApp" EmberEditorApp)
@@ -77,7 +84,7 @@ Implemented features:
 
 
 Ember::TODO now!
-- add BufferView<T> with T=all math types which allows for stricter compile time buffer property restrictions.
+- remove the custom vulkan types and simply include vulkan in headers. The interfaces create a natural barrier to ensure vulkan isnt included in any engine core code.
 - performance worse than before architecture restructure.
 - make other projects compile and run again. => currently working on this! unitTest works, fluidDynamics is on its way. headless mode needs testing for proper unitTests.
 - math::Random has static state and is in a static library that gets linked multiple times => inconcistent state. Fix this.

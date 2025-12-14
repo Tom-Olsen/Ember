@@ -15,6 +15,7 @@ get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
 get_filename_component(ENGINE_BACKENDS_DIR "${ENGINE_DIR}/backends" ABSOLUTE)       # backends
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)               # libs
 get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)           # extern
+get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)         # shaders
 
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
@@ -34,6 +35,9 @@ endif()
 file(GLOB MAIN_FILE "src/main.cpp")
 source_group("/" FILES ${MAIN_FILE})
 
+set(SPIRV_TEST "src/spirvReflect2.h" "src/spirvReflect2.cpp")
+source_group("Spirv Test" FILES ${SPIRV_TEST})
+
 file(GLOB TEST_FILES "src/test*.cpp")
 source_group("Tests" FILES ${TEST_FILES})
 # ---------------------------------------------------
@@ -41,12 +45,37 @@ source_group("Tests" FILES ${TEST_FILES})
 
 
 # ---------------- Create Executable ----------------
-add_executable(${PROJECT_NAME} ${MAIN_FILE} ${TEST_FILES})
+add_executable(${PROJECT_NAME} ${MAIN_FILE} ${TEST_FILES} ${SPIRV_TEST})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+# ---------------------------------------------------
 
-# Add project root path as a macro:
-get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
-target_compile_definitions(${PROJECT_NAME} PRIVATE PROJECT_ROOT_PATH="${PROJECT_ROOT_PATH}")
+
+
+# ---------------------- Macros ---------------------
+target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
+# ---------------------------------------------------
+
+
+
+# -------------- Link Custom Libraries --------------
+# EmberLogger:
+if (NOT TARGET EmberLogger)
+    set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib." FORCE)
+    add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
+
+# EmberMath:
+if (NOT TARGET EmberMath)
+    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+
+# Shaders:
+if (NOT TARGET EmberShaderCompiler)
+    add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
+endif()
+add_dependencies(${PROJECT_NAME} EmberShaderCompiler)
 # ---------------------------------------------------
 
 
