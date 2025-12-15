@@ -10,6 +10,7 @@ set(PROJECT_TYPE STATIC)
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.30)
 project(EmberMath)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
