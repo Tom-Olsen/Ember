@@ -3,9 +3,13 @@
 
 
 # ------------------- Project Setup ------------------
+# Choose SHARED (.dll) or STATIC (.lib) library (currently only static supported):
+set(PROJECT_TYPE STATIC)
+
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.30)
-project(EntityComponentSystem)
+project(EmberEntityComponentSystem)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
@@ -32,11 +36,9 @@ endif()
 
 
 # ------------------- File Lists --------------------
-# src/basicComponents/*.*:
 file(GLOB BASIC_COMPONENTS_FILES "src/basicComponents/*.*")
 source_group("Basic Components" FILES ${BASIC_COMPONENTS_FILES})
 
-# src/ecsClasses/*.*:
 file(GLOB ECS_CLASSES_FILES "src/ecsClasses/*.*")
 source_group("ECS Classes" FILES ${ECS_CLASSES_FILES})
 # ---------------------------------------------------

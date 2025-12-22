@@ -1,16 +1,15 @@
-
 # Ember/engine/libs/logger/CMakeLists.txt
 
 
 
 # ------------------- Project Setup ------------------
+# Static vs Shared library option:
+option(EMBER_LOGGER_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" OFF) # default = static
+
 # Minimum version requirement and project name:
 cmake_minimum_required(VERSION 3.30)
 project(EmberLogger)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
-
-# Static vs Shared library option:
-option(EMBER_LOGGER_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" OFF) # default = static
 
 # C++ standard:
 set(CMAKE_CXX_STANDARD 20)
@@ -35,7 +34,6 @@ endif()
 
 
 # ------------------- File Lists --------------------
-# src/*:
 file(GLOB SRC_FILES "src/*")
 source_group("Source Files" FILES ${SRC_FILES})
 # ---------------------------------------------------

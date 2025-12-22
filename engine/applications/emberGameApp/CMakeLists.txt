@@ -59,15 +59,15 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_APPLICATIONS_DIR="${ENG
 # -------------- Link Custom Libraries --------------
 # EmberCore:
 if (NOT TARGET EmberCore)
-    add_subdirectory(${ENGINE_CORE_DIR} EmberCore)
+    add_subdirectory("${ENGINE_CORE_DIR}" EmberCore)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberCore)
 
-# EntityComponentSystem:
-if (NOT TARGET EntityComponentSystem)
-    add_subdirectory("${ENGINE_LIBS_DIR}/entityComponentSystem" EntityComponentSystem)
+# EmberEntityComponentSystem:
+if (NOT TARGET EmberEntityComponentSystem)
+    add_subdirectory("${ENGINE_LIBS_DIR}/entityComponentSystem" EmberEntityComponentSystem)
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EntityComponentSystem)
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberEntityComponentSystem)
 # ---------------------------------------------------
 
 

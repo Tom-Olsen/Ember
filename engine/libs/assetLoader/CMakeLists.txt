@@ -1,4 +1,3 @@
-
 # Ember/engine/libs/assetLoader/CMakeLists.txt
 
 
@@ -35,7 +34,6 @@ endif()
 
 
 # ------------------- File Lists --------------------
-# src/*:
 file(GLOB SRC_FILES "src/*")
 source_group("Source Files" FILES ${SRC_FILES})
 # ---------------------------------------------------
