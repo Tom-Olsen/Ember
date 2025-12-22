@@ -21,13 +21,6 @@ cbuffer RenderMatrizes : register(b1)
     float4x4 cb_localToClipMatrix; // local to camera clip space matrix: (projection * view * localToWorldMatrix)
 };
 
-struct A
-{
-    int a;
-    float b;
-    float2x2 c;
-};
-
 struct VertexInput
 {
     uint instanceID : SV_InstanceID; // Instance ID: System value => built in variable
@@ -36,7 +29,6 @@ struct VertexInput
     float3 tangent : TANGENT; // tangent in local/model space
     float4 vertexColor : COLOR; // vertex color
     float4 uv : TEXCOORD0;
-    A a : TEST;
     float b[2] : TEXCOORD01;
 };
 
@@ -47,7 +39,6 @@ struct VertexOutput
     float3 tangent : TANGENT; // tangent in local/model space
     float4 vertexColor : COLOR; // vertex color
     float4 uv : TEXCOORD0;
-    A a : TEST;
     float b[2] : TEXCOORD01;
 };
 
@@ -57,11 +48,10 @@ VertexOutput main(VertexInput input)
 {
     VertexOutput output;
     output.position = input.position;
-    //output.normal = input.normal;
+    output.normal = input.normal;
     //output.tangent = input.tangent;
     //output.vertexColor = input.vertexColor;
     //output.uv = input.uv;
-    output.a = input.a;
     output.b = input.b;
     
     if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
