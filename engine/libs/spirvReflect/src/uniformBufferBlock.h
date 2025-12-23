@@ -29,8 +29,7 @@ namespace emberSpirvReflect
 		// Constructor:
 		UniformBufferBlock(SpvReflectBlockVariable* blockReflection, uint32_t setIndex, uint32_t bindingIndex);
 
-		// Members:
-		void AddMember(UniformBufferMember member);
+		// Getters:
 		const UniformBufferMember* GetMember(const std::string& name) const;
 
 		// Debugging:

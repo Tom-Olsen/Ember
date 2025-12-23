@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -21,7 +22,7 @@ namespace emberSpirvReflect
 		uint32_t size;		// in bytes.
 
 	private: // Members:
-		std::unordered_map<std::string, UniformBufferMember> m_subMembers;
+		std::unordered_map<std::string, std::unique_ptr<UniformBufferMember>> m_subMembers;
 
 	public: // Methods:
 		// Constructor:

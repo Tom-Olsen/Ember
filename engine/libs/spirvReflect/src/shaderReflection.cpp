@@ -60,7 +60,7 @@ namespace emberSpirvReflect
         for (uint32_t i = 0; i < inputs.size(); i++)
         {
             SpvReflectInterfaceVariable* pInput = inputs[i];
-            //LOG_TRACE(ToString(pInput));    // debug output.
+            LOG_TRACE(ToString(pInput));    // debug output.
             VertexInputDescription vertexInputDescription = VertexInputDescription(pInput);
             if (vertexInputDescription.isValid) // skips array and build in types.
             {

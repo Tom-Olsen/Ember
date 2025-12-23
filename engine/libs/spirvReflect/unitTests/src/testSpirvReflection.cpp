@@ -40,6 +40,7 @@ TEST(ShaderReflection, VertexShaderReflection)
 	std::vector<char> code = ReadShaderCode(vertexSpv);
 	
 	// Create reflection module:
+	LOG_WARN("Starting vertex shader reflection test...");
 	emberSpirvReflect::ShaderReflection reflection(code);
 	reflection.GetVertexInputDescriptions();
 	reflection.AddDescriptorBoundResources(nullptr);
@@ -57,6 +58,7 @@ TEST(ShaderReflection, FragmentShaderReflection)
 	std::vector<char> code = ReadShaderCode(fargmentSpv);
 
 	// Create reflection module:
+	LOG_WARN("Starting fragment shader reflection test...");
 	emberSpirvReflect::ShaderReflection reflection(code);
 	reflection.GetVertexInputDescriptions();
 	reflection.AddDescriptorBoundResources(nullptr);

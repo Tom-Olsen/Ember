@@ -21,22 +21,26 @@ namespace emberSpirvReflect
         {
             SpvReflectBlockVariable& memberReflection = blockReflection->members[memberIndex];
             UniformBufferMember member(memberReflection);
-            AddMember(member);
+            m_members.emplace(member.name, std::move(member));
+            // Size of the block is end of last member:
+            uint32_t memberEnd = member.offset + member.size;
+            if (memberEnd > size)
+                size = memberEnd;
         }
 	}
-    void UniformBufferBlock::AddMember(UniformBufferMember member)
-    {
-        m_members.emplace(member.name, std::move(member));
-        // Size of the block is offset+size of last member:
-        uint32_t newSize = member.offset + member.size;
-        if (newSize > size)
-            size = newSize;
-    }
+
+
+
+    // Getters:
     const UniformBufferMember* UniformBufferBlock::GetMember(const std::string& name) const
     {
         auto it = m_members.find(name);
         return it == m_members.end() ? nullptr : &it->second;
     }
+
+
+
+    // Debugging:
     std::string UniformBufferBlock::ToString(int indent) const
     {
         std::ostringstream ss;
