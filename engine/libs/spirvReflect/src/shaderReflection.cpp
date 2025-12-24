@@ -60,6 +60,7 @@ namespace emberSpirvReflect
         for (uint32_t i = 0; i < inputs.size(); i++)
         {
             SpvReflectInterfaceVariable* pInput = inputs[i];
+            LOG_INFO("Vertex Input [{}]:", i);
             LOG_TRACE(ToString(pInput));    // debug output.
             VertexInputDescription vertexInputDescription = VertexInputDescription(pInput);
             if (vertexInputDescription.isValid) // skips array and build in types.
@@ -83,10 +84,11 @@ namespace emberSpirvReflect
     
         // First print all the informationsimilat to GetVertexInputDescriptions.
 
-        for (uint32_t setIndex = 0; setIndex < descriptors.size(); setIndex++)
+        for (uint32_t i = 0; i < descriptors.size(); i++)
         {
-            LOG_TRACE(ToString(descriptors[setIndex]));
-            //SpvReflectDescriptorSet* pSetReflection = descriptors[setIndex];
+            LOG_INFO("Descriptor Set [{}]:", i);
+            LOG_TRACE(ToString(descriptors[i]));
+            //SpvReflectDescriptorSet* pSetReflection = descriptors[i];
             //descriptorBoundResources->bindingCount += pSetReflection->binding_count;
             //for (uint32_t bindingIndex = 0; bindingIndex < pSetReflection->binding_count; bindingIndex++)
             //{
