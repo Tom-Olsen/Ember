@@ -1,8 +1,8 @@
-SamplerState colorSampler : register(s10);
-SamplerComparisonState shadowSampler : register(s11);
-Texture2D colorMap : register(t20);
-TextureCube cubeMap : register(t21);
-Texture2DArray<float> shadowMaps : register(t22);
+SamplerState colorSampler : register(s10, space0);
+SamplerComparisonState shadowSampler : register(s11, space0);
+Texture2D colorMap : register(t20, space1);
+TextureCube cubeMap : register(t21, space1);
+Texture2DArray<float> shadowMaps : register(t22, space1);
 
 
 

@@ -45,6 +45,6 @@ namespace emberSpirvReflect
 		// Assumes 1 buffer per vertex input, no interleaving:
 		std::vector<VertexInputDescription> GetVertexInputDescriptions() const;
 		// Instead of returning pointer, this function adds to one, as it is used for multiple pipeline stages, e.g. vertex + fragment.
-		void AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources) const;
+		void AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources, VkShaderStageFlagBits shaderStage) const;
 	};
 }

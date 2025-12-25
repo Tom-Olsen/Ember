@@ -5,6 +5,16 @@
 
 namespace emberSpirvReflect
 {
+    // Public methods:
+    // Constructor:
+    DescriptorBoundResources::DescriptorBoundResources()
+    {
+
+    }
+
+
+
+    // Debuggig:
     std::string DescriptorBoundResources::ToString() const
     {
         std::ostringstream ss;

@@ -1,5 +1,6 @@
 #pragma once
 #include "uniformBufferBlock.h"
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -12,7 +13,6 @@ namespace emberSpirvReflect
 	struct DescriptorBoundResources
 	{
 	public: // Members:
-		uint32_t bindingCount = 0; // number of descriptorSetBindingNames and descriptorSetLayoutBindings
 		std::vector<std::string> descriptorSetBindingNames;
 		std::vector<VkDescriptorSetLayoutBinding> vkDescriptorSetLayoutBindings;
 		std::unordered_map<std::string, UniformBufferBlock> uniformBufferBlockMap;	// VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER.
@@ -21,10 +21,10 @@ namespace emberSpirvReflect
 
 	public: // Methods:
 		// Constructor:
-		// Move initialization here.
+		DescriptorBoundResources();
 		
 		// Getters:
-		// GetCound? and remove bindingCount member? bindingCount = descriptorSetBindingNames.size()?
+		// ...
 
 		// Debugging:
 		std::string ToString() const;

@@ -1,4 +1,5 @@
 #include "shaderReflection.h"
+#include "descriptor.h"
 #include "descriptorBoundResources.h"
 #include "logger.h"
 #include "spirvReflectToString.h"
@@ -60,12 +61,12 @@ namespace emberSpirvReflect
         for (uint32_t i = 0; i < inputs.size(); i++)
         {
             SpvReflectInterfaceVariable* pInput = inputs[i];
-            LOG_INFO("Vertex Input [{}]:", i);
-            LOG_TRACE(ToString(pInput));    // debug output.
+            LOG_INFO("Vertex Input [{}]:", i);  // debug output.
+            LOG_TRACE(ToString(pInput));        // debug output.
             VertexInputDescription vertexInputDescription = VertexInputDescription(pInput);
             if (vertexInputDescription.isValid) // skips array and build in types.
             {
-                //LOG_INFO(vertexInputDescription.ToString());    // debug output.
+                LOG_INFO(vertexInputDescription.ToString());    // debug output.
                 vertexInputDescriptions.push_back(vertexInputDescription);
             }
         }
@@ -74,25 +75,32 @@ namespace emberSpirvReflect
         return vertexInputDescriptions;
     }
 
-    void ShaderReflection::AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources) const
+    void ShaderReflection::AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources, VkShaderStageFlagBits shaderStage) const
     {
         // Get descriptor set reflection:
         uint32_t setCount = 0;
         SPVA(spvReflectEnumerateDescriptorSets(m_pModule.get(), &setCount, nullptr));
-        std::vector<SpvReflectDescriptorSet*> descriptors(setCount);
-        SPVA(spvReflectEnumerateDescriptorSets(m_pModule.get(), &setCount, descriptors.data()));
-    
-        // First print all the informationsimilat to GetVertexInputDescriptions.
+        std::vector<SpvReflectDescriptorSet*> descriptorSets(setCount);
+        SPVA(spvReflectEnumerateDescriptorSets(m_pModule.get(), &setCount, descriptorSets.data()));
 
-        for (uint32_t i = 0; i < descriptors.size(); i++)
+        // One DescriptorBoundResources per set/space:
+        for (uint32_t i = 0; i < descriptorSets.size(); i++)
         {
-            LOG_INFO("Descriptor Set [{}]:", i);
-            LOG_TRACE(ToString(descriptors[i]));
-            //SpvReflectDescriptorSet* pSetReflection = descriptors[i];
-            //descriptorBoundResources->bindingCount += pSetReflection->binding_count;
-            //for (uint32_t bindingIndex = 0; bindingIndex < pSetReflection->binding_count; bindingIndex++)
+            SpvReflectDescriptorSet* pDescriptorSet = descriptorSets[i];
+            LOG_INFO("Descriptor Set [{}]:", i);    // debug output.
+            LOG_TRACE(ToString(pDescriptorSet));    // debug output.
+            
+            for (uint32_t bindingIndex = 0; bindingIndex < pDescriptorSet->binding_count; bindingIndex++)
+            {
+                SpvReflectDescriptorBinding* pBinding = pDescriptorSet->bindings[bindingIndex];
+                Descriptor descriptor(pBinding, shaderStage);
+                LOG_INFO(descriptor.ToString());
+            }
+
+            //descriptorBoundResources->bindingCount += pDescriptorSet->binding_count;
+            //for (uint32_t bindingIndex = 0; bindingIndex < pDescriptorSet->binding_count; bindingIndex++)
             //{
-            //    SpvReflectDescriptorBinding* pBindingReflection = pSetReflection->bindings[bindingIndex];
+            //    SpvReflectDescriptorBinding* pBindingReflection = pDescriptorSet->bindings[bindingIndex];
             //    DescriptorSetLayoutBinding layoutBinding = {};
             //    layoutBinding.binding = pBindingReflection->binding;
             //    layoutBinding.descriptorType = DescriptorType((int)pBindingReflection->descriptor_type);
@@ -147,7 +155,7 @@ namespace emberSpirvReflect
             //    if (pBindingReflection->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
             //    {
             //        SpvReflectBlockVariable& blockReflection = pBindingReflection->block;
-            //        UniformBufferBlock* pUniformBufferBlock = GetUniformBufferBlock(blockReflection, pSetReflection->set, pBindingReflection->binding);
+            //        UniformBufferBlock* pUniformBufferBlock = GetUniformBufferBlock(blockReflection, pDescriptorSet->set, pBindingReflection->binding);
             //        descriptorBoundResources->uniformBufferBlockMap.emplace(pUniformBufferBlock->name, std::unique_ptr<UniformBufferBlock>(pUniformBufferBlock));
             //    }
             //}
