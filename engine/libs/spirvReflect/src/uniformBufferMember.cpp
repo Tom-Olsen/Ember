@@ -16,7 +16,7 @@ namespace emberSpirvReflect
 		this->size = memberReflection.size;
 
 		// Array member:
-		if (arrayIndex != uint32_t(-1))
+		if (arrayIndex != UINT32_MAX)
 		{
 			name += "[" + std::to_string(arrayIndex) + "]";		// add array index to name.
 			offset += memberReflection.array.stride * arrayIndex;	// offset relative to 0th element.
@@ -24,7 +24,7 @@ namespace emberSpirvReflect
 		}
 
 		// Submember struct reflection:
-		if (IsStruct(memberReflection) > 0 && !IsArray(memberReflection))
+		if (IsStruct(memberReflection) && !IsArray(memberReflection))
 		{
 			for (uint32_t subMemberIndex = 0; subMemberIndex < memberReflection.member_count; subMemberIndex++)
 			{
@@ -33,7 +33,7 @@ namespace emberSpirvReflect
 				m_subMembers.emplace(subMember->name, std::move(subMember));
 			}
 		}
-
+		
 		// Submember array reflection:
 		if (IsArray(memberReflection))
 		{
@@ -47,13 +47,68 @@ namespace emberSpirvReflect
 
 
 
+	// Copyable:
+	UniformBufferMember::UniformBufferMember(const UniformBufferMember& other)
+	{
+	    this->name = other.name;
+	    this->offset = other.offset;
+	    this->size = other.size;
+		this->m_subMembers.reserve(other.m_subMembers.size());
+		for (const auto& [key, value] : other.m_subMembers)
+		{
+			if (value)
+				m_subMembers.emplace(key, std::make_unique<UniformBufferMember>(*value));
+			else
+				m_subMembers.emplace(key, nullptr);
+		}
+	}
+	UniformBufferMember& UniformBufferMember::operator=(const UniformBufferMember& other)
+	{
+	    if (this == &other)
+	        return *this;
+
+		this->name = other.name;
+		this->offset = other.offset;
+		this->size = other.size;
+		this->m_subMembers.reserve(other.m_subMembers.size());
+		for (const auto& [key, value] : other.m_subMembers)
+		{
+			if (value)
+				m_subMembers.emplace(key, std::make_unique<UniformBufferMember>(*value));
+			else
+				m_subMembers.emplace(key, nullptr);
+		}
+	
+	    return *this;
+	}
+
+
+
 	// Getters:
 	const UniformBufferMember* UniformBufferMember::GetSubMember(const std::string& name) const
 	{
 		auto it = m_subMembers.find(name);
 		return it == m_subMembers.end() ? nullptr  : it->second.get();
 	}
+	bool UniformBufferMember::IsLayoutCompatible(const UniformBufferMember& other) const
+	{
+		// Basics:
+		if (offset != other.offset) return false;
+		if (size != other.size) return false;
+		
+		// Sub-members:
+		if (m_subMembers.size() != other.m_subMembers.size()) return false;
+		for (const auto& [name, subMember] : m_subMembers)
+		{
+			const UniformBufferMember* otherSub = other.GetSubMember(name);
+			if (!otherSub) return false;
+			if (!subMember->IsLayoutCompatible(*otherSub))
+				return false;
+		}
 
+		// Fully compatible:
+		return true;
+	}
 
 
 	// Debugging:

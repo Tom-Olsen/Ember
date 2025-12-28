@@ -1,6 +1,7 @@
 #pragma once
 #include "uniformBufferMember.h"
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -26,11 +27,21 @@ namespace emberSpirvReflect
 		std::unordered_map<std::string, UniformBufferMember> m_members;
 
 	public: // Methods:
-		// Constructor:
-		UniformBufferBlock(SpvReflectBlockVariable* blockReflection, uint32_t setIndex, uint32_t bindingIndex);
+		// Constructors:
+		UniformBufferBlock();
+		UniformBufferBlock(const SpvReflectBlockVariable& blockReflection, uint32_t setIndex, uint32_t bindingIndex);
+
+		// Copyable:
+		UniformBufferBlock(const UniformBufferBlock& other) = default;
+		UniformBufferBlock& operator=(const UniformBufferBlock& other) = default;
+
+		// Movable:
+		UniformBufferBlock(UniformBufferBlock&& other) noexcept = default;
+		UniformBufferBlock& operator=(UniformBufferBlock&& other) noexcept = default;
 
 		// Getters:
 		const UniformBufferMember* GetMember(const std::string& name) const;
+		bool IsLayoutCompatible(const UniformBufferBlock& other) const;
 
 		// Debugging:
 		std::string ToString(int indent = 0) const;

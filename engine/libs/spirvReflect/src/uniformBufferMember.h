@@ -28,10 +28,19 @@ namespace emberSpirvReflect
 		// Constructor:
 		// -offset for recursive struct/array members.
 		// -arrayIndex for array elements.
-		UniformBufferMember(const SpvReflectBlockVariable& memberReflection, uint32_t offset = 0, uint32_t arrayIndex = -1);
+		UniformBufferMember(const SpvReflectBlockVariable& memberReflection, uint32_t offset = 0, uint32_t arrayIndex = UINT32_MAX);
+
+		// Copyable:
+		UniformBufferMember(const UniformBufferMember& other);
+		UniformBufferMember& operator=(const UniformBufferMember& other);
+
+		// Movable:
+		UniformBufferMember(UniformBufferMember&& other) noexcept = default;
+		UniformBufferMember& operator=(UniformBufferMember&& other) noexcept = default;
 
 		// Getters:
 		const UniformBufferMember* GetSubMember(const std::string& name) const;
+		bool IsLayoutCompatible(const UniformBufferMember& other) const;
 
 		// Debugging:
 		std::string ToString(const std::string& name, int indent = 0) const;

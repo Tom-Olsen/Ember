@@ -1,34 +1,22 @@
 #pragma once
-#include "vertexInputDescription.h"
-#include "emberMath.h"
-#include <memory>
+#include "shaderStageReflection.h"
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
 
 
 
-// Forward declerations:
-struct SpvReflectShaderModule;
-struct DescriptorBoundResources;
-
-
-
 namespace emberSpirvReflect
 {
-	// Forward declerations:
-	struct DescriptorBoundResources;
-
-
-
 	class ShaderReflection
 	{
 	private: // Members:
-		std::unique_ptr<SpvReflectShaderModule> m_pModule;
+		std::vector<ShaderStageReflection> m_shaderStageReflections;
+		std::vector<Descriptor> m_descriptors;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		ShaderReflection(const std::vector<char>& code);
+		ShaderReflection();
 		~ShaderReflection();
 
 		// Non-copyable:
@@ -40,11 +28,17 @@ namespace emberSpirvReflect
 		ShaderReflection& operator=(ShaderReflection&& other) noexcept = delete;
 
 		// Functionality:
-		// For compute shaders only:
-		Uint3 GetBlockSize() const;
-		// Assumes 1 buffer per vertex input, no interleaving:
-		std::vector<VertexInputDescription> GetVertexInputDescriptions() const;
-		// Instead of returning pointer, this function adds to one, as it is used for multiple pipeline stages, e.g. vertex + fragment.
-		void AddDescriptorBoundResources(DescriptorBoundResources* const descriptorBoundResources, VkShaderStageFlagBits shaderStage) const;
+		void AddShaderStage(VkShaderStageFlagBits shaderStage, const std::vector<char>& code);
+		void MergeDescriptors();
+
+		// Getters:
+		const ShaderStageReflection* GetFragmentShaderReflection() const;
+		const ShaderStageReflection* GetVertexShaderReflection() const;
+		const ShaderStageReflection* GetComputeShaderReflection() const;
+		const ShaderStageReflection* GetStageReflection(VkShaderStageFlagBits stage) const;
+
+		// Debugging:
+		std::string ToString() const;
+		std::string ToStringAll() const;
 	};
 }

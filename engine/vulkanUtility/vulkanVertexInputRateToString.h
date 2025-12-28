@@ -10,9 +10,9 @@ namespace emberVulkanUtility
 		switch (vkVertexInputRate)
 		{
 			case VK_VERTEX_INPUT_RATE_VERTEX:
-				return "VK_VERTEX_INPUT_RATE_VERTEX(0)"; break;
+				return "VK_VERTEX_INPUT_RATE_VERTEX"; break;
 			case VK_VERTEX_INPUT_RATE_INSTANCE:
-				return "VK_VERTEX_INPUT_RATE_INSTANCE(1)"; break;
+				return "VK_VERTEX_INPUT_RATE_INSTANCE"; break;
 			case VK_VERTEX_INPUT_RATE_MAX_ENUM:
 				return "VK_VERTEX_INPUT_RATE_MAX_ENUM"; break;
 			default:

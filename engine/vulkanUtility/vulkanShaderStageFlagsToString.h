@@ -25,7 +25,7 @@ namespace emberVulkanUtility
                 if (!first)
                     ss << " | ";
                 first = false;
-                ss << name << "(0x" << std::hex << static_cast<uint32_t>(bit) << std::dec << ")";
+                ss << name;
             }
         };
 
