@@ -28,7 +28,7 @@ namespace emberSpirvReflect
         for (uint32_t memberIndex = 0; memberIndex < blockReflection.member_count; memberIndex++)
         {
             SpvReflectBlockVariable& memberReflection = blockReflection.members[memberIndex];
-            UniformBufferMember member =UniformBufferMember(memberReflection);
+            UniformBufferMember member = UniformBufferMember(memberReflection);
             uint32_t memberEnd = member.offset + member.size;
             if (memberEnd > size)
                 size = memberEnd; // size of the block is end of last member.
@@ -70,9 +70,9 @@ namespace emberSpirvReflect
     {
         std::ostringstream ss;
         std::string indentStr(indent, ' ');
-        ss << indentStr << name << "(binding=" << bindingIndex << ", size=" << size << "):\n";
+        ss << indentStr << name << "(set=" << setIndex<< ", binding=" << bindingIndex << ", size = " << size << "):";
         for (const auto& [memberName, member] : m_members)
-            ss << member.ToString(memberName, indent + 2);
+            ss << "\n" << member.ToString(memberName, indent + 2);
         return ss.str();
     }
 }

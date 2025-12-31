@@ -1,4 +1,5 @@
 #include "uniformBufferMember.h"
+#include "spirvReflectToString.h"
 #include <spirv_reflect.h>
 #include <sstream>
 
@@ -16,11 +17,13 @@ namespace emberSpirvReflect
 		this->size = memberReflection.size;
 
 		// Array member:
+		bool isArrayMember = false;
 		if (arrayIndex != UINT32_MAX)
 		{
 			name += "[" + std::to_string(arrayIndex) + "]";		// add array index to name.
 			offset += memberReflection.array.stride * arrayIndex;	// offset relative to 0th element.
 			size = memberReflection.array.stride;					// size of array element.
+			isArrayMember = true;
 		}
 
 		// Submember struct reflection:
@@ -33,9 +36,9 @@ namespace emberSpirvReflect
 				m_subMembers.emplace(subMember->name, std::move(subMember));
 			}
 		}
-		
-		// Submember array reflection:
-		if (IsArray(memberReflection))
+
+		// Submember array reflection: (array of array not possible).
+		if (IsArray(memberReflection) && !isArrayMember)
 		{
 			for (uint32_t arrayIndex = 0; arrayIndex < memberReflection.array.dims[0]; arrayIndex++)
 			{
@@ -116,9 +119,9 @@ namespace emberSpirvReflect
 	{
 		std::ostringstream ss;
 		std::string indentStr(indent, ' ');
-		ss << indentStr << name << ": offset=" << offset << ", size=" << size << "\n";
+		ss << indentStr << name << ": offset=" << offset << ", size=" << size;
 		for (const auto& [subMemberName, subMember] : m_subMembers)
-			ss << subMember->ToString(subMemberName, indent + 2);
+			ss << "\n" << subMember->ToString(subMemberName, indent + 2);
 		return ss.str();
 	}
 

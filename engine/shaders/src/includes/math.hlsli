@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __INCLUDE_GUARD_math_hlsli__
+#define __INCLUDE_GUARD_math_hlsli__
 
 
 
@@ -26,3 +27,7 @@ uint NextPowerOfTwo(uint n)
     n++;
     return n;
 }
+
+
+
+#endif // __INCLUDE_GUARD_math_hlsli__

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __INCLUDE_GUARD_computePushConstant_hlsli__
+#define __INCLUDE_GUARD_computePushConstant_hlsli__
 
 
 
@@ -13,3 +14,7 @@ struct ComputePushConstant
 #else
 [[vk::push_constant]] ConstantBuffer<ComputePushConstant> pc;
 #endif
+
+
+
+#endif // __INCLUDE_GUARD_computePushConstant_hlsli__

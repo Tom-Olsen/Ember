@@ -8,7 +8,7 @@
 
 namespace emberSpirvReflect
 {
-    // Enum to string conversions:
+    // Typedef enum to string conversions:
     inline std::string ToString(const SpvDim& dim)
     {
         switch (dim)
@@ -1016,7 +1016,7 @@ namespace emberSpirvReflect
 
 
     // Flag bits mask to string conversions: (typedefed as uint32_t, so same function name not possible)
-    inline std::string ToStringDecorationFlags(const SpvReflectDecorationFlags& decoration_flags)
+    inline std::string ToString_DecorationFlags(const SpvReflectDecorationFlags& decoration_flags)
     {
         if (decoration_flags == SPV_REFLECT_DECORATION_NONE)
             return "SPV_REFLECT_DECORATION_NONE";
@@ -1051,7 +1051,7 @@ namespace emberSpirvReflect
             ss << "UNKNOWN_REFLECT_DECORATION_FLAG_BITS(0x" << std::hex << static_cast<uint32_t>(decoration_flags) << std::dec << ")";
         return ss.str();
     }
-    inline std::string ToStringTypeFlags(const SpvReflectTypeFlags& type_flags)
+    inline std::string ToString_TypeFlags(const SpvReflectTypeFlags& type_flags)
     {
         if (type_flags == SPV_REFLECT_TYPE_FLAG_UNDEFINED)
             return "SPV_REFLECT_TYPE_FLAG_UNDEFINED";
@@ -1086,7 +1086,7 @@ namespace emberSpirvReflect
             ss << "UNKNOWN_REFLECT_TYPE_FLAG_BITS(0x" << std::hex << static_cast<uint32_t>(type_flags) << std::dec << ")";
         return ss.str();
     }
-    inline std::string ToStringVariableFlags(const SpvReflectVariableFlags& flags)
+    inline std::string ToString_VariableFlags(const SpvReflectVariableFlags& flags)
     {
         if (flags == SPV_REFLECT_VARIABLE_FLAGS_NONE)
             return "SPV_REFLECT_VARIABLE_FLAGS_NONE";
@@ -1167,33 +1167,34 @@ namespace emberSpirvReflect
         ss << indentStr << "type_description.type_name: " << (type_description->type_name ? type_description->type_name : "") << "\n";
         ss << indentStr << "type_description.struct_member_name: " << (type_description->struct_member_name ? type_description->struct_member_name : "") << "\n";
         ss << indentStr << "type_description.storage_class: " << type_description->storage_class << "\n";
-        ss << indentStr << "type_description.type_flags: " << ToStringTypeFlags(type_description->type_flags) << "\n";
-        ss << indentStr << "type_description.decoration_flags: " << ToStringDecorationFlags(type_description->decoration_flags) << "\n";
+        ss << indentStr << "type_description.type_flags: " << ToString_TypeFlags(type_description->type_flags) << "\n";
+        ss << indentStr << "type_description.decoration_flags: " << ToString_DecorationFlags(type_description->decoration_flags) << "\n";
         ss << indentStr << "type_description.numeric:\n" << ToString(type_description->traits.numeric, indent + 2);
         ss << indentStr << "type_description.image:\n" << ToString(type_description->traits.image, indent + 2);
         ss << indentStr << "type_description.array:\n" << ToString(type_description->traits.array, indent + 2);
         return ss.str();
     }
-    inline std::string ToString(const SpvReflectBlockVariable& block, int indent = 0)
+    inline std::string ToString(const SpvReflectBlockVariable& block, int indent = 0, int memberIndex = -1)
     {
         std::string indentStr = std::string(indent, ' ');
+        std::string memberStr = memberIndex >= 0 ? "[" + std::to_string(memberIndex) + "]" : "";
         std::ostringstream ss;
-    	ss << indentStr << "block.spirv_id: " << block.spirv_id << "\n";
-        ss << indentStr << "block.name: " << (block.name ? block.name : "") << "\n";
-    	ss << indentStr << "block.offset: " << block.offset << "\n";
-    	ss << indentStr << "block.absolute_offset: " << block.absolute_offset << "\n";
-    	ss << indentStr << "block.size: " << block.size << "\n";
-    	ss << indentStr << "block.padded_size: " << block.padded_size << "\n";
-        ss << indentStr << "block.decoration_flags: " << ToStringDecorationFlags(block.decoration_flags) << "\n";
-        ss << indentStr << "block.numeric:\n" << ToString(block.numeric, indent + 2);
-        ss << indentStr << "block.array:\n" << ToString(block.array, indent + 2);
-        ss << indentStr << "block.flags: " << ToStringVariableFlags(block.flags) << "\n";
-        ss << indentStr << "block.member_count: " << block.member_count << "\n";
+    	ss << indentStr << "block" << memberStr << ".spirv_id: " << block.spirv_id << "\n";
+        ss << indentStr << "block" << memberStr << ".name: " << (block.name ? block.name : "") << "\n";
+    	ss << indentStr << "block" << memberStr << ".offset: " << block.offset << "\n";
+    	ss << indentStr << "block" << memberStr << ".absolute_offset: " << block.absolute_offset << "\n";
+    	ss << indentStr << "block" << memberStr << ".size: " << block.size << "\n";
+    	ss << indentStr << "block" << memberStr << ".padded_size: " << block.padded_size << "\n";
+        ss << indentStr << "block" << memberStr << ".decoration_flags: " << ToString_DecorationFlags(block.decoration_flags) << "\n";
+        ss << indentStr << "block" << memberStr << ".numeric:\n" << ToString(block.numeric, indent + 2);
+        ss << indentStr << "block" << memberStr << ".array:\n" << ToString(block.array, indent + 2);
+        ss << indentStr << "block" << memberStr << ".flags: " << ToString_VariableFlags(block.flags) << "\n";
+        ss << indentStr << "block" << memberStr << ".member_count: " << block.member_count << "\n";
         for (int i = 0; i < block.member_count; i++)
-            ss << ToString(block.members[i], indent + 2);
+            ss << ToString(block.members[i], indent + 2, i);
         if (block.type_description)
-            ss << indentStr << "block.type_description: " << ToString(block.type_description) << "\n";
-        ss << indentStr << "block.word_offset.offset: " << block.word_offset.offset << "\n";
+            ss << indentStr << "block" << memberStr << ".type_description:\n" << ToString(block.type_description, indent + 2);
+        ss << indentStr << "block" << memberStr << ".word_offset.offset: " << block.word_offset.offset << "\n";
         return ss.str();
     }
     inline std::string ToString(SpvReflectDescriptorBinding* pBinding, int index = 0, int indent = 0)
@@ -1222,7 +1223,7 @@ namespace emberSpirvReflect
             ss << indentStr << "pBinding[" << index << "].type_description:\n" << ToString(pBinding->type_description, indent + 2);
         ss << indentStr << "pBinding[" << index << "].word_offset.binding: " << pBinding->word_offset.binding << "\n";
         ss << indentStr << "pBinding[" << index << "].word_offset.set: " << pBinding->word_offset.set << "\n";
-        ss << indentStr << "pBinding[" << index << "].decoration_flags: " << ToStringDecorationFlags(pBinding->decoration_flags) << "\n";
+        ss << indentStr << "pBinding[" << index << "].decoration_flags: " << ToString_DecorationFlags(pBinding->decoration_flags) << "\n";
         ss << indentStr << "pBinding[" << index << "].user_type: " << ToString(pBinding->user_type) << "\n";
         return ss.str();
     }
@@ -1240,7 +1241,7 @@ namespace emberSpirvReflect
         ss << indentStr << "variable.component: " << pVariable->component << "\n";
         ss << indentStr << "variable.storage_class: " << ToString(pVariable->storage_class) << "\n";
         ss << indentStr << "variable.semantic: " << (pVariable->semantic ? pVariable->semantic : "") << "\n";
-        ss << indentStr << "variable.decoration_flags: " << ToStringDecorationFlags(pVariable->decoration_flags) << "\n";
+        ss << indentStr << "variable.decoration_flags: " << ToString_DecorationFlags(pVariable->decoration_flags) << "\n";
     	ss << indentStr << "variable.built_in: " << pVariable->built_in << "\n";
         ss << indentStr << "variable.numeric:\n" << ToString(pVariable->numeric, indent + 2);
         ss << indentStr << "variable.array:\n" << ToString(pVariable->array, indent + 2);

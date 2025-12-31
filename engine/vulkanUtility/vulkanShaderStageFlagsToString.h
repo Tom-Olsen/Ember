@@ -6,7 +6,7 @@
 
 namespace emberVulkanUtility
 {
-	inline std::string ToString(VkShaderStageFlags vkShaderStageFlags)
+	inline std::string ToString_VkShaderStageFlags(VkShaderStageFlags vkShaderStageFlags)
 	{
         if (vkShaderStageFlags == 0)
             return "none";

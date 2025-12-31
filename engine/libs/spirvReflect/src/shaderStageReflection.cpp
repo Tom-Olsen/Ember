@@ -42,7 +42,6 @@ namespace emberSpirvReflect
                 m_stageSpecific = std::monostate{};
                 break;
         }
-
         m_descriptors = ExtractDescriptors();
     }
     ShaderStageReflection::~ShaderStageReflection()
@@ -84,7 +83,7 @@ namespace emberSpirvReflect
     {
         std::ostringstream ss;
         std::string indentStr(indent, ' ');
-        ss << indentStr << "shaderStage: " << emberVulkanUtility::ToString(m_shaderStage) << "\n";
+        ss << indentStr << "shaderStage: " << emberVulkanUtility::ToString_VkShaderStageFlags(m_shaderStage) << "\n";
         indent += 2;
         indentStr = std::string(indent, ' ');
 
@@ -165,7 +164,7 @@ namespace emberSpirvReflect
         {
             SpvReflectDescriptorSet* pDescriptorSet = descriptorSets[i];
             //LOG_INFO("Descriptor Set [{}]:", i);    // debug output.
-            //LOG_TRACE(ToString(pDescriptorSet));    // debug output.
+            //LOG_TRACE(emberSpirvReflect::ToString(pDescriptorSet));    // debug output.
 
             // Loop over all bindings:
             for (uint32_t bindingIndex = 0; bindingIndex < pDescriptorSet->binding_count; bindingIndex++)

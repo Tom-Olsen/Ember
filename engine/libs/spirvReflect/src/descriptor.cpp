@@ -1,5 +1,6 @@
 #include "descriptor.h"
 #include "spirvReflectToString.h"
+#include "vulkanImageViewTypeToString.h"
 #include "vulkanShaderStageFlagsToString.h"
 #include <sstream>
 
@@ -71,7 +72,19 @@ namespace emberSpirvReflect
         ss << "binding: " << binding << ", ";
         ss << "descriptorCount: " << descriptorCount << ", ";
         ss << "descriptorType: " << emberSpirvReflect::ToString(descriptorType) << ", ";
-        ss << "shaderStage: " << emberVulkanUtility::ToString(shaderStage);
+        ss << "shaderStage: " << emberVulkanUtility::ToString_VkShaderStageFlags(shaderStage);
+        switch (descriptorType)
+        {
+        case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            ss << "\n" << uniformBufferBlock.ToString(indent + 2);
+            break;
+        case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+            ss << ", vkImageViewType(sampled): " << emberVulkanUtility::ToString(vkImageViewType);
+            break;
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+            ss << ", vkImageViewType(storage): " << emberVulkanUtility::ToString(vkImageViewType);
+            break;
+        }
         return ss.str();
     }
 

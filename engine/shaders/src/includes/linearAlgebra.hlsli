@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __INCLUDE_GUARD_linearAlgebra_hlsli__
+#define __INCLUDE_GUARD_linearAlgebra_hlsli__
 #include "mathConstants.hlsli"
 
 
@@ -171,3 +172,7 @@ float4x4 LinAlg_GetRotation4x4(float4x4 TRS)
     float4 column3 = float4(0, 0, 0, 1);
     return float4x4(column0, column1, column2, column3);
 }
+
+
+
+#endif // __INCLUDE_GUARD_linearAlgebra_hlsli__
