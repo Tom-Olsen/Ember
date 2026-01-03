@@ -22,33 +22,32 @@ namespace vulkanRendererBackend
 		m_type = type;
 		m_name = name;
 		m_renderQueue = renderQueue;
-		m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
 
-		// Opaque forward material creation:
-		if (m_type == emberCommon::MaterialType::forwardOpaque)
+		switch (m_type)
 		{
-			// Load vertex shader:
-			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
-			SpirvReflect vertexShaderReflect(vertexCode);
-			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
-			m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
-			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
+			case emberCommon::MaterialType::forwardOpaque:
+				// Load vertex shader:
+				std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
+				m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+				size_t size = m_shaderReflection.GetVertexShaderReflection()->GetVertexInfo()->inputs.size();
+				m_meshBuffers.resize(size, VK_NULL_HANDLE);
+				m_meshOffsets.resize(size, 0);
 
-			// Load fragment shader:
-			std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
-			SpirvReflect fragmentShaderReflect(fragmentCode);
-			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
+				// Load fragment shader:
+				std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
+				m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
 
-			// Create pipeline:
-			m_pPipeline = std::make_unique<ForwardOpaquePipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+				// Create pipeline:
+				m_shaderReflection.MergeDescriptors();
+				//m_shaderReflection.GetVkDescriptorSetLayoutBindings() // integrate this properly into pipeline creation
+				m_pPipeline = std::make_unique<ForwardOpaquePipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
 		}
 
 		// Transparent forward material creation:
 		if (m_type == emberCommon::MaterialType::forwardTransparent)
 		{
 			// Load vertex shader:
-			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+			std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
 			SpirvReflect vertexShaderReflect(vertexCode);
 			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
@@ -56,7 +55,7 @@ namespace vulkanRendererBackend
 			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 			// Load fragment shader:
-			std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
+			std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
 			SpirvReflect fragmentShaderReflect(fragmentCode);
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
@@ -68,7 +67,7 @@ namespace vulkanRendererBackend
 		else if (m_type == emberCommon::MaterialType::skybox)
 		{
 			// Load vertex shader:
-			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+			std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
 			SpirvReflect vertexShaderReflect(vertexCode);
 			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
@@ -76,7 +75,7 @@ namespace vulkanRendererBackend
 			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 			// Load fragment shader:
-			std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
+			std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
 			SpirvReflect fragmentShaderReflect(fragmentCode);
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
@@ -88,7 +87,7 @@ namespace vulkanRendererBackend
 		else if (m_type == emberCommon::MaterialType::present)
 		{
 			// Load vertex shader:
-			std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
+			std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
 			SpirvReflect vertexShaderReflect(vertexCode);
 			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
@@ -96,7 +95,7 @@ namespace vulkanRendererBackend
 			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 			// Load fragment shader:
-			std::vector<char> fragmentCode = ReadShaderCode(fragmentSpv);
+			std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
 			SpirvReflect fragmentShaderReflect(fragmentCode);
 			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 
@@ -114,7 +113,7 @@ namespace vulkanRendererBackend
 
 		// Load vertex shader:
 		std::filesystem::path directoryPath = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();
-		std::vector<char> vertexCode = ReadShaderCode(directoryPath / "shadow.vert.spv");
+		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(directoryPath / "shadow.vert.spv");
 		SpirvReflect vertexShaderReflect(vertexCode);
 		vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 		m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());

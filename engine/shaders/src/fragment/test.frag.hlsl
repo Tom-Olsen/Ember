@@ -55,9 +55,7 @@ float4 main(FragmentInput input) : SV_TARGET
     float3 worldNormal = normalize(mul(TBN, localNormal));
     float metallicity = surface_metallicity * metallicityMap.Sample(colorSampler, uv);
     float roughness = surface_roughness * roughnessMap.Sample(colorSampler, uv);
-    //return float4(color.xyz * localNormal, 1.0) * metallicity * roughness;
     
-    // here sometihng breaks on reflection.
     // Lighting:
     float ambient = 0.1f;
     float3 finalColor = ambient * color.xyz;

@@ -1,5 +1,8 @@
 ﻿#include "shaderReflection.h"
+#include "logger.h"
+#include "vulkanDescriptorSetLayoutBindingToString.h"
 #include <assert.h>
+#include <fstream>
 #include <sstream>
 
 
@@ -10,7 +13,9 @@ namespace emberSpirvReflect
     // Constructor/Destructor:
     ShaderReflection::ShaderReflection()
     {
-
+        m_isInitialized = false;
+        for (uint32_t i = 0; i < m_descriptorSets.size(); i++)
+            m_descriptorSets[i] = DescriptorSet(i);
     }
     ShaderReflection::~ShaderReflection()
     {
@@ -20,39 +25,54 @@ namespace emberSpirvReflect
 
 
     // Functioanlity:
+    std::vector<char> ShaderReflection::ReadShaderCode(const std::filesystem::path& spvFile)
+    {
+        // Open shader file:
+        std::ifstream file(spvFile, std::ios::binary);
+        if (!file.is_open())
+        {
+            LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
+            throw std::runtime_error("Failed to open shader file: " + spvFile.string());
+        }
+
+        // Get file size:
+        file.seekg(0, std::ios::end);
+        size_t fileSize = static_cast<size_t>(file.tellg());
+        file.seekg(0, std::ios::beg);
+
+        // Copy code:
+        std::vector<char> code(fileSize);
+        file.read(code.data(), fileSize);
+        file.close();
+
+        return code;
+    }
     void ShaderReflection::AddShaderStage(VkShaderStageFlagBits shaderStage, const std::vector<char>& code)
     {
+        assert(!m_isInitialized && "Can't add further ShaderStageReflections to already initialized ShaderReflection.");
         assert(!GetStageReflection(shaderStage) && "Can't add a ShaderStageReflection twice to ShaderReflection.");
+        assert(!GetStageReflection(VK_SHADER_STAGE_COMPUTE_BIT) && "Can't add ShaderStageReflection to ShaderReflection containing compute.");
         if (shaderStage == VK_SHADER_STAGE_COMPUTE_BIT)
             assert(m_shaderStageReflections.empty() && "Can't add compute ShaderStageReflection to none empty ShaderReflection.");
-        assert(!GetStageReflection(VK_SHADER_STAGE_COMPUTE_BIT) && "Can't add additional ShaderStageReflection to ShaderReflection containing compute.");
-
         m_shaderStageReflections.emplace_back(shaderStage, code);
     }
-    void ShaderReflection::MergeDescriptors()
+    void ShaderReflection::CreateDescriptorSets()
     {
-        m_descriptors.clear();
+        assert(!m_isInitialized && "Can't ShaderReflection::CreateDescriptorSets() twice.");
         for (const ShaderStageReflection& stageReflection : m_shaderStageReflections)
         {
             const std::vector<Descriptor>& stageDescriptors = stageReflection.GetDescriptors();
             for (const Descriptor& descriptor : stageDescriptors)
             {
-                bool merged = false;
-                for (Descriptor& existingDescriptor : m_descriptors)
+                if (descriptor.set > m_descriptorSets.size())
                 {
-                    // Same descriptor used in multiple stages → merge stage flags:
-                    if (existingDescriptor.IsEqual(descriptor))
-                    {
-                        existingDescriptor.shaderStage |= descriptor.shaderStage;
-                        merged = true;
-                        break;
-                    }
+                    LOG_CRITICAL("Descriptor set index out of range: {}", std::to_string(descriptor.set));
+                    assert(false);
                 }
-
-                if (!merged)
-                    m_descriptors.push_back(descriptor);
+                m_descriptorSets[descriptor.set].AddDescriptor(descriptor);
             }
         }
+        m_isInitialized = true;
     }
 
 
@@ -103,21 +123,29 @@ namespace emberSpirvReflect
         }
 
         // Descriptor sets:
-        if (m_descriptors.size() > 0)
-        {
-            ss << "descriptors:\n";
-            for (int i = 0; i < m_descriptors.size(); i++)
-                ss << m_descriptors[i].ToString(2) << "\n";
-        }
+        for (int i = 0; i < m_descriptorSets.size(); i++)
+            if (m_descriptorSets[i].GetSet() == i) // else invalid.
+                ss << m_descriptorSets[i].ToString() << "\n";
+
         return ss.str();
     }
     std::string ShaderReflection::ToStringAll() const
     {
         std::ostringstream ss;
-        ss << "All shader stages without merger:\n";
+        ss << "All shader stages:\n";
         int indent = 2;
         for (int i = 0; i < m_shaderStageReflections.size(); i++)
             ss << m_shaderStageReflections[i].ToString(indent);
         return ss.str();
+    }
+    void ShaderReflection::PrintDescriptorSetLayoutBindings()
+    {
+        for (auto& descriptorSet : m_descriptorSets)
+        {
+            LOG_INFO("Set{}", descriptorSet.GetSet());
+            const std::vector<VkDescriptorSetLayoutBinding>& bindings = descriptorSet.GetVkDescriptorSetLayoutBindings();
+            for (const auto& binding : bindings)
+                LOG_TRACE(emberVulkanUtility::ToString(binding));
+        }
     }
 }

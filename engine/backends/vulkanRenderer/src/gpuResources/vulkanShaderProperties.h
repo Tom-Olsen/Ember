@@ -66,6 +66,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		Shader* m_pShader;
 
+		// Ember::ToDo: resolve string to binding index once and use binding index as key for unordered maps!
 		// All these vectors contain one item for each frame in flight:
 		std::vector<VkDescriptorSet> m_descriptorSets;
 		std::vector<std::unordered_map<std::string, UniformBufferBinding>> m_uniformBufferMaps;

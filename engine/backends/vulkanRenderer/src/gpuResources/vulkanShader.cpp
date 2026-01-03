@@ -42,9 +42,9 @@ namespace vulkanRendererBackend
 	{
 		return m_pPipeline.get();
 	}
-	const DescriptorBoundResources* const Shader::GetDescriptorBoundResources() const
+	const emberSpirvReflect::ShaderReflection& const Shader::GetShaderReflection() const
 	{
-		return m_pDescriptorBoundResources.get();
+		return m_shaderReflection;
 	}
 
 
@@ -52,32 +52,6 @@ namespace vulkanRendererBackend
 	// Debugging:
 	void Shader::PrintShaderInfo() const
 	{
-		LOG_TRACE(m_pDescriptorBoundResources->ToString());
-	}
-
-
-
-	// Protected methods:
-	std::vector<char> Shader::ReadShaderCode(const std::filesystem::path& spvFile)
-	{
-		// Open shader file:
-		std::ifstream file(spvFile, std::ios::binary);
-		if (!file.is_open())
-		{
-			LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
-			throw std::runtime_error("Failed to open shader file: " + spvFile.string());
-		}
-
-		// Get file size:
-		file.seekg(0, std::ios::end);
-		size_t fileSize = static_cast<size_t>(file.tellg());
-		file.seekg(0, std::ios::beg);
-
-		// Copy code:
-		std::vector<char> code(fileSize);
-		file.read(code.data(), fileSize);
-		file.close();
-
-		return code;
+		LOG_TRACE("ShaderInfo: {}\n{}", m_name, m_shaderReflection.ToString());
 	}
 }

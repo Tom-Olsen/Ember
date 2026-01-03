@@ -6,105 +6,108 @@
 
 
 
-// Helper functions:
-std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile)
-{
-	// Open shader file:
-	std::ifstream file(spvFile, std::ios::binary);
-	if (!file.is_open())
-	{
-		LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
-		throw std::runtime_error("Failed to open shader file: " + spvFile.string());
-	}
-
-	// Get file size:
-	file.seekg(0, std::ios::end);
-	size_t fileSize = static_cast<size_t>(file.tellg());
-	file.seekg(0, std::ios::beg);
-
-	// Copy code:
-	std::vector<char> code(fileSize);
-	file.read(code.data(), fileSize);
-	file.close();
-
-	return code;
-}
-
-
-
 TEST(ShaderReflection, VertexShaderReflection)
 {
-	// Load shader code:
-	std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
-	std::filesystem::path vertexSpv = directoryPath / "test.vert.spv";
-	std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
-	
-	// Create reflection module:
-	LOG_WARN("Starting vertex shader reflection test:");
-	emberSpirvReflect::ShaderReflection shaderReflection;
-	shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
-	shaderReflection.MergeDescriptors();
-	LOG_TRACE(shaderReflection.ToString());
+	try
+	{
+		// Load shader code:
+		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
+		std::filesystem::path vertexSpv = directoryPath / "test.vert.spv";
+		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
 
-    EXPECT_TRUE(true);
+		// Create reflection module:
+		LOG_WARN("Starting vertex shader reflection test:");
+		emberSpirvReflect::ShaderReflection shaderReflection;
+		shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+		shaderReflection.CreateDescriptorSets();
+		LOG_TRACE(shaderReflection.ToString());
+
+		EXPECT_TRUE(true);
+	}
+	catch (const std::exception& e)
+	{
+		FAIL() << "Exception thrown:\n" << e.what();
+	}
 }
 
 
 
 TEST(ShaderReflection, FragmentShaderReflection)
 {
-	// Load shader code:
-	std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
-	std::filesystem::path fargmentSpv = directoryPath / "test.frag.spv";
-	std::vector<char> fragmentCode = ReadShaderCode(fargmentSpv);
+	try
+	{
+		// Load shader code:
+		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
+		std::filesystem::path fargmentSpv = directoryPath / "test.frag.spv";
+		std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fargmentSpv);
 
-	// Create reflection module:
-	LOG_WARN("Starting fragment shader reflection test:");
-	emberSpirvReflect::ShaderReflection shaderReflection;
-	shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
-	shaderReflection.MergeDescriptors();
-	LOG_TRACE(shaderReflection.ToString());
+		// Create reflection module:
+		LOG_WARN("Starting fragment shader reflection test:");
+		emberSpirvReflect::ShaderReflection shaderReflection;
+		shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
+		shaderReflection.CreateDescriptorSets();
+		LOG_TRACE(shaderReflection.ToString());
 
-	EXPECT_TRUE(true);
+		EXPECT_TRUE(true);
+	}
+	catch (const std::exception& e)
+	{
+		FAIL() << "Exception thrown:\n" << e.what();
+	}
 }
 
 
 
 TEST(ShaderReflection, VertexAndFragmentShaderReflection)
 {
-	// Load shader code:
-	std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
-	std::filesystem::path vertexSpv = directoryPath / "test.vert.spv";
-	std::filesystem::path fargmentSpv = directoryPath / "test.frag.spv";
-	std::vector<char> vertexCode = ReadShaderCode(vertexSpv);
-	std::vector<char> fragmentCode = ReadShaderCode(fargmentSpv);
+	try
+	{
+		// Load shader code:
+		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
+		std::filesystem::path vertexSpv = directoryPath / "test.vert.spv";
+		std::filesystem::path fargmentSpv = directoryPath / "test.frag.spv";
+		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
+		std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fargmentSpv);
 
-	// Create reflection module:
-	LOG_WARN("Starting fragment+vertex shader reflection test:");
-	emberSpirvReflect::ShaderReflection shaderReflection;
-	shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
-	shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
-	shaderReflection.MergeDescriptors();
-	LOG_TRACE(shaderReflection.ToString());
+		// Create reflection module:
+		LOG_WARN("Starting fragment+vertex shader reflection test:");
+		emberSpirvReflect::ShaderReflection shaderReflection;
+		shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+		shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
+		shaderReflection.CreateDescriptorSets();
+		LOG_TRACE(shaderReflection.ToString());
+		shaderReflection.PrintDescriptorSetLayoutBindings();
 
-	EXPECT_TRUE(true);
+		EXPECT_TRUE(true);
+	}
+	catch (const std::exception& e)
+	{
+		FAIL() << "Exception thrown:\n" << e.what();
+	}
 }
 
 
 
 TEST(ShaderReflection, ComputeShaderReflection)
 {
-	// Load shader code:
-	std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
-	std::filesystem::path computeSpv = directoryPath / "test.comp.spv";
-	std::vector<char> computeCode = ReadShaderCode(computeSpv);
+	try
+	{
+		// Load shader code:
+		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
+		std::filesystem::path computeSpv = directoryPath / "test.comp.spv";
+		std::vector<char> computeCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(computeSpv);
 
-	// Create reflection module:
-	LOG_WARN("Starting compute shader reflection test:");
-	emberSpirvReflect::ShaderReflection shaderReflection;
-	shaderReflection.AddShaderStage(VK_SHADER_STAGE_COMPUTE_BIT, computeCode);
-	shaderReflection.MergeDescriptors();
-	LOG_TRACE(shaderReflection.ToString());
+		// Create reflection module:
+		LOG_WARN("Starting compute shader reflection test:");
+		emberSpirvReflect::ShaderReflection shaderReflection;
+		shaderReflection.AddShaderStage(VK_SHADER_STAGE_COMPUTE_BIT, computeCode);
+		shaderReflection.CreateDescriptorSets();
+		LOG_TRACE(shaderReflection.ToString());
 
-	EXPECT_TRUE(true);
+		EXPECT_TRUE(true);
+	}
+	catch (const std::exception& e)
+	{
+		FAIL() << "Exception thrown:\n" << e.what();
+	}
 }

@@ -6,11 +6,11 @@
 
 StructuredBuffer<float> dataBuffer : register(t0, MATERIAL_SET);
 Texture2D<float4> inputImage : register(t1, MATERIAL_SET);
-RWTexture2D<float4> outputImage : register(u1, MATERIAL_SET);
+RWTexture2D<float4> outputImage : register(u2, MATERIAL_SET);
 
 
 
-cbuffer Properties : register(b0, MATERIAL_SET)
+cbuffer Properties : register(b3, MATERIAL_SET)
 {
     uint a;
     uint b;

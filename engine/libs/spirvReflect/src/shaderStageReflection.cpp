@@ -1,5 +1,4 @@
 #include "shaderStageReflection.h"
-#include "descriptorBoundResources.h"
 #include "logger.h"
 #include "spirvReflectToString.h"
 #include "vulkanShaderStageFlagsToString.h"
@@ -137,12 +136,12 @@ namespace emberSpirvReflect
         for (uint32_t i = 0; i < inputs.size(); i++)
         {
             SpvReflectInterfaceVariable* pInput = inputs[i];
-            //LOG_INFO("Vertex Input [{}]:", i);  // debug output.
-            //LOG_TRACE(ToString(pInput));        // debug output.
+            //LOG_INFO("Vertex Input [{}]:", i);
+            //LOG_TRACE(ToString(pInput));
             VertexInputDescription vertexInputDescription = VertexInputDescription(pInput);
             if (vertexInputDescription.isValid) // skips array and build in types.
             {
-                //LOG_INFO(vertexInputDescription.ToString());    // debug output.
+                //LOG_INFO(vertexInputDescription.ToString());
                 vertexInputDescriptions.push_back(vertexInputDescription);
             }
         }
@@ -163,8 +162,8 @@ namespace emberSpirvReflect
         for (uint32_t i = 0; i < descriptorSets.size(); i++)
         {
             SpvReflectDescriptorSet* pDescriptorSet = descriptorSets[i];
-            //LOG_INFO("Descriptor Set [{}]:", i);    // debug output.
-            //LOG_TRACE(emberSpirvReflect::ToString(pDescriptorSet));    // debug output.
+            //LOG_INFO("Descriptor Set [{}]:", i);
+            //LOG_TRACE(emberSpirvReflect::ToString(pDescriptorSet));
 
             // Loop over all bindings:
             for (uint32_t bindingIndex = 0; bindingIndex < pDescriptorSet->binding_count; bindingIndex++)

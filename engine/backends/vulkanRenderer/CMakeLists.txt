@@ -16,14 +16,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Cache directories:
-get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE) # vulkan
-get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)           # engine
-get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)               # commom
-get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)               # extern
-get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)       # interfaces
-get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                   # libs 
-get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)         # resources
-get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)             # shaders
+get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)     # vulkan
+get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)               # engine
+get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)                   # commom
+get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)                   # extern
+get_filename_component(ENGINE_VULKAN_UTILITY_DIR "${ENGINE_DIR}/vulkanUtility" ABSOLUTE)    # vulkan utility
+get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)           # interfaces
+get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs 
+get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)             # resources
+get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)                 # shaders
 
 # Output directory:
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
@@ -102,6 +103,9 @@ source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
 file(GLOB WINDOW_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
+
+file(GLOB VULKAN_UTILITY_FILES "${ENGINE_VULKAN_UTILITY_DIR}/*")
+source_group("Vulkan Utility" FILES ${VULKAN_UTILITY_FILES})
 # ---------------------------------------------------
 
 
@@ -129,7 +133,8 @@ if (VULKAN_RENDERER_BACKEND_BUILD_SHARED)
         ${COMMON_FILES}
         ${GUI_INTERFACE_FILES}
         ${RENDERER_INTERFACE_FILES}
-        ${WINDOW_INTERFACE_FILES})
+        ${WINDOW_INTERFACE_FILES}
+        ${VULKAN_UTILITY_FILES})
 else()
     add_library(${PROJECT_NAME} STATIC
         ${COMPUTE_FILES}
@@ -152,7 +157,8 @@ else()
         ${COMMON_FILES}
         ${GUI_INTERFACE_FILES}
         ${RENDERER_INTERFACE_FILES}
-        ${WINDOW_INTERFACE_FILES})
+        ${WINDOW_INTERFACE_FILES}
+        ${VULKAN_UTILITY_FILES})
 endif()
 
 # Only expose public files to consumer:
@@ -223,6 +229,12 @@ if (NOT TARGET EmberProfiler)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
 
+# EmberSpirvReflect:
+if (NOT TARGET EmberSpirvReflect)
+    add_subdirectory("${ENGINE_LIBS_DIR}/spirvReflect" EmberSpirvReflect)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberSpirvReflect)
+
 # EmberTaskSystem:
 if (NOT TARGET EmberTaskSystem)
     add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
@@ -246,9 +258,4 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
     
 # Vulkan Memory Allocator: (header only)
 target_include_directories(${PROJECT_NAME} PUBLIC "${ENGINE_EXTERN_DIR}/vma/include")
-
-# SPIRV-Reflect:
-set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE) # enable static lib compilation for SPIRV-Reflect
-add_subdirectory("${ENGINE_EXTERN_DIR}/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
-target_link_libraries(${PROJECT_NAME} PUBLIC spirv-reflect-static)
 # ---------------------------------------------------

@@ -1,4 +1,5 @@
 #pragma once
+#include "shaderReflection.h"
 #include "vulkanRendererExport.h"
 #include <filesystem>
 #include <memory>
@@ -11,7 +12,6 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class Pipeline;
-	struct DescriptorBoundResources;
 
 
 
@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
 	protected: // Members:
 		std::string m_name;
 		std::unique_ptr<Pipeline> m_pPipeline;
-		std::unique_ptr<DescriptorBoundResources> m_pDescriptorBoundResources;
+		emberSpirvReflect::ShaderReflection m_shaderReflection;
 	
 	protected:  // Methods:
 		// Constructor:
@@ -44,12 +44,9 @@ namespace vulkanRendererBackend
 		// Getters:
 		const std::string& GetName() const;
 		const Pipeline* const GetPipeline() const;
-		const DescriptorBoundResources* const GetDescriptorBoundResources() const;
+		const emberSpirvReflect::ShaderReflection& const GetShaderReflection() const;
 
 		// Debugging:
 		void PrintShaderInfo() const;
-
-	protected: // Methods:
-		static std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile);
 	};
 }

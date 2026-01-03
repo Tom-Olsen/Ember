@@ -35,9 +35,6 @@ endif()
 file(GLOB MAIN_FILE "src/main.cpp")
 source_group("/" FILES ${MAIN_FILE})
 
-set(SPIRV_TEST "src/spirvReflect2.h" "src/spirvReflect2.cpp")
-source_group("Spirv Test" FILES ${SPIRV_TEST})
-
 file(GLOB TEST_FILES "src/test*.cpp")
 source_group("Tests" FILES ${TEST_FILES})
 # ---------------------------------------------------
@@ -70,6 +67,12 @@ if (NOT TARGET EmberMath)
     add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+
+# EmberSpirvReflect:
+if (NOT TARGET EmberSpirvReflect)
+    add_subdirectory("${ENGINE_LIBS_DIR}/spirvReflect" EmberSpirvReflect)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberSpirvReflect)
 
 # Shaders:
 if (NOT TARGET EmberShaderCompiler)

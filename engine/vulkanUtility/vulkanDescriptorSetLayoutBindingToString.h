@@ -12,7 +12,7 @@ namespace emberVulkanUtility
 	{
 		std::ostringstream ss;
 		ss << "binding: " << vkDescriptorSetLayoutBinding.binding << ", descriptorType: " << emberVulkanUtility::ToString(vkDescriptorSetLayoutBinding.descriptorType) << ", ";
-		ss << "descriptorCount: " << vkDescriptorSetLayoutBinding.descriptorCount<< ", shaderStage: " << emberVulkanUtility::ToString(vkDescriptorSetLayoutBinding.stageFlags) << ", ";
+		ss << "descriptorCount: " << vkDescriptorSetLayoutBinding.descriptorCount << ", shaderStage: " << emberVulkanUtility::ToString_VkShaderStageFlags(vkDescriptorSetLayoutBinding.stageFlags) << ", ";
 		ss << "sampler: " << vkDescriptorSetLayoutBinding.pImmutableSamplers;
 		return ss.str();
 	}

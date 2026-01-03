@@ -1,6 +1,5 @@
 #pragma once
 #include "uniformBufferBlock.h"
-#include <memory>
 #include <spirv_reflect.h>
 #include <string>
 #include <variant>
@@ -15,10 +14,7 @@ namespace emberSpirvReflect
     public: // Members:
         std::string name;
         uint32_t set;
-        uint32_t binding;
-        uint32_t descriptorCount; // element count for array bindings. 1 otherwise. 0 = special handling required
-        SpvReflectDescriptorType descriptorType;
-        VkShaderStageFlags shaderStage;
+        VkDescriptorSetLayoutBinding vkDescriptorSetLayoutBinding;
         UniformBufferBlock uniformBufferBlock;  // only valid for descriptorType = SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER.
         VkImageViewType vkImageViewType;        // only valid for descriptorType = SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED/STORAGE_IMAGE.
 

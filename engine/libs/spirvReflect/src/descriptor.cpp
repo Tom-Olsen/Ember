@@ -1,5 +1,6 @@
 #include "descriptor.h"
 #include "spirvReflectToString.h"
+#include "vulkanDescriptorSetLayoutBindingToString.h"
 #include "vulkanImageViewTypeToString.h"
 #include "vulkanShaderStageFlagsToString.h"
 #include <sstream>
@@ -15,20 +16,21 @@ namespace emberSpirvReflect
     {
         name = pBinding->name;
         set = pBinding->set;
-        binding = pBinding->binding;
-        descriptorCount = pBinding->count;
-        descriptorType = pBinding->descriptor_type;
-        this->shaderStage = shaderStage;
+        vkDescriptorSetLayoutBinding.binding = pBinding->binding;
+        vkDescriptorSetLayoutBinding.descriptorType = VkDescriptorType(pBinding->descriptor_type);
+        vkDescriptorSetLayoutBinding.descriptorCount = pBinding->count;
+        vkDescriptorSetLayoutBinding.stageFlags = shaderStage;
+        vkDescriptorSetLayoutBinding.pImmutableSamplers = nullptr;  // not in use yet.
 
-        switch (descriptorType)
+        switch (vkDescriptorSetLayoutBinding.descriptorType)
         {
-            case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-                uniformBufferBlock = UniformBufferBlock(pBinding->block, set, binding);
+            case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                uniformBufferBlock = UniformBufferBlock(pBinding->block, set, vkDescriptorSetLayoutBinding.binding);
                 break;
-            case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+            case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
                 vkImageViewType = ExtractVkImageViewType(pBinding);
                 break;
-            case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+            case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
                 vkImageViewType = ExtractVkImageViewType(pBinding);
                 break;
         }
@@ -44,17 +46,23 @@ namespace emberSpirvReflect
 
         // Basics:
         if (set != other.set) return false;
-        if (binding != other.binding) return false;
-        if (descriptorCount != other.descriptorCount) return false;
-        if (descriptorType != other.descriptorType) return false;
+        if (vkDescriptorSetLayoutBinding.binding != other.vkDescriptorSetLayoutBinding.binding) return false;
+        if (vkDescriptorSetLayoutBinding.descriptorCount != other.vkDescriptorSetLayoutBinding.descriptorCount) return false;
+        if (vkDescriptorSetLayoutBinding.descriptorType != other.vkDescriptorSetLayoutBinding.descriptorType) return false;
 
         // Uniform buffers:
-        if (!uniformBufferBlock.IsLayoutCompatible(other.uniformBufferBlock))
-            return false;
+        if (vkDescriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+        {
+            if (!uniformBufferBlock.IsLayoutCompatible(other.uniformBufferBlock))
+                return false;
+        }
 
         // Images:
-        if (vkImageViewType != other.vkImageViewType)
-            return false;
+        if (vkDescriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE || vkDescriptorSetLayoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
+        {
+            if (vkImageViewType != other.vkImageViewType)
+                return false;
+        }
 
         // Descriptors match:
         return true;
@@ -66,22 +74,20 @@ namespace emberSpirvReflect
     std::string Descriptor::ToString(int indent) const
     {
         std::ostringstream ss;
-        ss << std::string(indent, ' ');
+        std::string indentStr = std::string(indent, ' ');
+        ss << indentStr;
         ss << "name: "<< name << ", ";
         ss << "set: " << set << ", ";
-        ss << "binding: " << binding << ", ";
-        ss << "descriptorCount: " << descriptorCount << ", ";
-        ss << "descriptorType: " << emberSpirvReflect::ToString(descriptorType) << ", ";
-        ss << "shaderStage: " << emberVulkanUtility::ToString_VkShaderStageFlags(shaderStage);
-        switch (descriptorType)
+        ss << "VkDescriptorSetLayoutBinding{" << emberVulkanUtility::ToString(vkDescriptorSetLayoutBinding) << "}";
+        switch (vkDescriptorSetLayoutBinding.descriptorType)
         {
-        case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+        case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
             ss << "\n" << uniformBufferBlock.ToString(indent + 2);
             break;
-        case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+        case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
             ss << ", vkImageViewType(sampled): " << emberVulkanUtility::ToString(vkImageViewType);
             break;
-        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+        case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
             ss << ", vkImageViewType(storage): " << emberVulkanUtility::ToString(vkImageViewType);
             break;
         }
