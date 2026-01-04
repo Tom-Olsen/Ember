@@ -17,7 +17,7 @@ TEST(ShaderReflection, VertexShaderReflection)
 
 		// Create reflection module:
 		LOG_WARN("Starting vertex shader reflection test:");
-		emberSpirvReflect::ShaderReflection shaderReflection;
+		emberSpirvReflect::ShaderReflection shaderReflection(5);
 		shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
 		shaderReflection.CreateDescriptorSets();
 		LOG_TRACE(shaderReflection.ToString());
@@ -43,7 +43,7 @@ TEST(ShaderReflection, FragmentShaderReflection)
 
 		// Create reflection module:
 		LOG_WARN("Starting fragment shader reflection test:");
-		emberSpirvReflect::ShaderReflection shaderReflection;
+		emberSpirvReflect::ShaderReflection shaderReflection(5);
 		shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
 		shaderReflection.CreateDescriptorSets();
 		LOG_TRACE(shaderReflection.ToString());
@@ -71,7 +71,7 @@ TEST(ShaderReflection, VertexAndFragmentShaderReflection)
 
 		// Create reflection module:
 		LOG_WARN("Starting fragment+vertex shader reflection test:");
-		emberSpirvReflect::ShaderReflection shaderReflection;
+		emberSpirvReflect::ShaderReflection shaderReflection(5);
 		shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
 		shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
 		shaderReflection.CreateDescriptorSets();
@@ -99,7 +99,7 @@ TEST(ShaderReflection, ComputeShaderReflection)
 
 		// Create reflection module:
 		LOG_WARN("Starting compute shader reflection test:");
-		emberSpirvReflect::ShaderReflection shaderReflection;
+		emberSpirvReflect::ShaderReflection shaderReflection(5);
 		shaderReflection.AddShaderStage(VK_SHADER_STAGE_COMPUTE_BIT, computeCode);
 		shaderReflection.CreateDescriptorSets();
 		LOG_TRACE(shaderReflection.ToString());

@@ -2,7 +2,6 @@
 #include "shaderStageReflection.h"
 #include "descriptor.h"
 #include "descriptorSet.h"
-#include <array>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -17,11 +16,11 @@ namespace emberSpirvReflect
 	private: // Members:
 		bool m_isInitialized;
 		std::vector<ShaderStageReflection> m_shaderStageReflections;
-		std::array<DescriptorSet, 5> m_descriptorSets;
+		std::vector<DescriptorSet> m_descriptorSets;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		ShaderReflection();
+		explicit ShaderReflection(size_t descriptorSetCount);
 		~ShaderReflection();
 
 		// Non-copyable:
@@ -42,6 +41,8 @@ namespace emberSpirvReflect
 		const ShaderStageReflection* GetVertexShaderReflection() const;
 		const ShaderStageReflection* GetComputeShaderReflection() const;
 		const ShaderStageReflection* GetStageReflection(VkShaderStageFlagBits stage) const;
+		const DescriptorSet& GetDescriptorSet(uint32_t set) const;
+		const std::vector<DescriptorSet>& GetDescriptorSets() const;
 
 		// Debugging:
 		std::string ToString() const;

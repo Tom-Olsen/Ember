@@ -33,9 +33,9 @@ namespace vulkanRendererBackend
 	
 
 	// Public methods:
-	const VkDescriptorSetLayout& Pipeline::GetVkDescriptorSetLayout() const
+	const VkDescriptorSetLayout& Pipeline::GetVkDescriptorSetLayout(size_t set) const
 	{
-		return m_descriptorSetLayout;
+		return m_descriptorSetLayouts[set];
 	}
 	const VkPipelineLayout& Pipeline::GetVkPipelineLayout() const
 	{
@@ -65,17 +65,18 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void Pipeline::Cleanup()
 	{
-		vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_descriptorSetLayout, nullptr);
-		vkDestroyPipelineLayout(Context::GetVkDevice(), m_pipelineLayout, nullptr);
 		vkDestroyPipeline(Context::GetVkDevice(), m_pipeline, nullptr);
+		vkDestroyPipelineLayout(Context::GetVkDevice(), m_pipelineLayout, nullptr);
+		for (int i = 0; i < m_descriptorSetLayouts.size(); i++)
+			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_descriptorSetLayouts[i], nullptr);
 	}
 	void Pipeline::MoveFrom(Pipeline& other) noexcept
 	{
-		m_descriptorSetLayout = other.m_descriptorSetLayout;
+		m_descriptorSetLayouts = other.m_descriptorSetLayouts;
 		m_pipelineLayout = other.m_pipelineLayout;
 		m_pipeline = other.m_pipeline;
 
-		other.m_descriptorSetLayout = VK_NULL_HANDLE;
+		other.m_descriptorSetLayouts.clear();
 		other.m_pipelineLayout = VK_NULL_HANDLE;
 		other.m_pipeline = VK_NULL_HANDLE;
 	}

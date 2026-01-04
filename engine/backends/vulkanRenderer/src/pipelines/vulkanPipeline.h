@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <string>
 #include <vector>
 
@@ -17,8 +18,11 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class Pipeline
 	{
+	public: // Members:
+		static constexpr uint32_t s_setCount = 5;
+
 	protected: // Members:
-		VkDescriptorSetLayout m_descriptorSetLayout;
+		std::array<VkDescriptorSetLayout, s_setCount> m_descriptorSetLayouts;
 		VkPipelineLayout m_pipelineLayout;
 		VkPipeline m_pipeline;
 		std::string m_name;
@@ -35,7 +39,7 @@ namespace vulkanRendererBackend
 		Pipeline(Pipeline&& other) noexcept;
 		Pipeline& operator=(Pipeline&& other) noexcept;
 
-		const VkDescriptorSetLayout& GetVkDescriptorSetLayout() const;
+		const VkDescriptorSetLayout& GetVkDescriptorSetLayout(size_t set) const;
 		const VkPipelineLayout& GetVkPipelineLayout() const;
 		const VkPipeline& GetVkPipeline() const;
 

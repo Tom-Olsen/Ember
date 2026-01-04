@@ -3,6 +3,7 @@
 #include "vulkanForwardOpaquePipeline.h"
 #include "vulkanForwardTransparentPipeline.h"
 #include "vulkanMesh.h"
+#include "vulkanPipeline.h"
 #include "vulkanPresentPipeline.h"
 #include "vulkanShadowPipeline.h"
 #include "vulkanSkyboxPipeline.h"
@@ -18,11 +19,8 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructors/Destructor:
 	Material::Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+		: m_shaderReflection(Pipeline::s_setCount), m_type(type), m_name(name), m_renderQueue(renderQueue)
 	{
-		m_type = type;
-		m_name = name;
-		m_renderQueue = renderQueue;
-
 		switch (m_type)
 		{
 			case emberCommon::MaterialType::forwardOpaque:
@@ -38,9 +36,8 @@ namespace vulkanRendererBackend
 				m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
 
 				// Create pipeline:
-				m_shaderReflection.MergeDescriptors();
-				//m_shaderReflection.GetVkDescriptorSetLayoutBindings() // integrate this properly into pipeline creation
-				m_pPipeline = std::make_unique<ForwardOpaquePipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+				m_shaderReflection.CreateDescriptorSets();
+				m_pPipeline = std::make_unique<ForwardOpaquePipeline>(m_name, vertexCode, fragmentCode, m_shaderReflection.GetDescriptorSets());
 		}
 
 		// Transparent forward material creation:

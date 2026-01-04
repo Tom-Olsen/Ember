@@ -11,11 +11,12 @@ namespace emberSpirvReflect
 {
     // Public methods:
     // Constructor/Destructor:
-    ShaderReflection::ShaderReflection()
+    ShaderReflection::ShaderReflection(size_t descriptorSetCount)
     {
         m_isInitialized = false;
-        for (uint32_t i = 0; i < m_descriptorSets.size(); i++)
-            m_descriptorSets[i] = DescriptorSet(i);
+        m_descriptorSets.reserve(descriptorSetCount);
+        for (uint32_t i = 0; i < descriptorSetCount; i++)
+            m_descriptorSets.emplace_back(i);
     }
     ShaderReflection::~ShaderReflection()
     {
@@ -59,12 +60,14 @@ namespace emberSpirvReflect
     void ShaderReflection::CreateDescriptorSets()
     {
         assert(!m_isInitialized && "Can't ShaderReflection::CreateDescriptorSets() twice.");
+
+        // Fill descriptor sets:
         for (const ShaderStageReflection& stageReflection : m_shaderStageReflections)
         {
             const std::vector<Descriptor>& stageDescriptors = stageReflection.GetDescriptors();
             for (const Descriptor& descriptor : stageDescriptors)
             {
-                if (descriptor.set > m_descriptorSets.size())
+                if (descriptor.set >= m_descriptorSets.size())
                 {
                     LOG_CRITICAL("Descriptor set index out of range: {}", std::to_string(descriptor.set));
                     assert(false);
@@ -72,6 +75,11 @@ namespace emberSpirvReflect
                 m_descriptorSets[descriptor.set].AddDescriptor(descriptor);
             }
         }
+
+        // Create descriptor set layot bindings:
+        for (int i = 0; i < m_descriptorSets.size(); i++)
+            m_descriptorSets[i].CreateVkDescriptorSetLayoutBindings();
+
         m_isInitialized = true;
     }
 
@@ -95,6 +103,14 @@ namespace emberSpirvReflect
             if (stageReflection.GetShaderStage() == shaderStage)
                 return &stageReflection;
         return nullptr;
+    }
+    const DescriptorSet& ShaderReflection::GetDescriptorSet(uint32_t set) const
+    {
+        return m_descriptorSets[set];
+    }
+    const std::vector<DescriptorSet>& ShaderReflection::GetDescriptorSets() const
+    {
+        return m_descriptorSets;
     }
 
 

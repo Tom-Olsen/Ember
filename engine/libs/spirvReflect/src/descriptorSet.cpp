@@ -12,17 +12,19 @@ namespace emberSpirvReflect
     DescriptorSet::DescriptorSet()
     {
         m_set = UINT32_MAX;
+        m_isInitialized = false;
     }
     DescriptorSet::DescriptorSet(uint32_t set)
     {
         m_set = set;
+        m_isInitialized = false;
     }
 
 
 
     void DescriptorSet::AddDescriptor(const Descriptor& descriptor)
     {
-        assert(m_vkDescriptorSetLayoutBinding.empty() && "DescriptorSet::AddDescriptor(const Descriptor&) called after layout bindings were finalized.");
+        assert(!m_isInitialized && "DescriptorSet::AddDescriptor(const Descriptor&) called after layout bindings were finalized.");
 
         auto it = m_descriptors.find(descriptor.vkDescriptorSetLayoutBinding.binding);
         if (it != m_descriptors.end())
@@ -34,6 +36,22 @@ namespace emberSpirvReflect
         else
             m_descriptors.emplace(descriptor.vkDescriptorSetLayoutBinding.binding, descriptor);
     }
+    void DescriptorSet::CreateVkDescriptorSetLayoutBindings()
+    {
+        if (m_isInitialized == false)
+        {
+            m_vkDescriptorSetLayoutBinding.reserve(m_descriptors.size());
+            for (const auto& [binding, descriptor] : m_descriptors)
+                m_vkDescriptorSetLayoutBinding.push_back(descriptor.vkDescriptorSetLayoutBinding);
+
+            // Sorting for better debug output.
+            std::sort(m_vkDescriptorSetLayoutBinding.begin(), m_vkDescriptorSetLayoutBinding.end(),
+                [](const VkDescriptorSetLayoutBinding& a, const VkDescriptorSetLayoutBinding& b)
+            { return a.binding < b.binding; });
+
+            m_isInitialized = true;
+        }
+    }
 
 
 
@@ -42,19 +60,9 @@ namespace emberSpirvReflect
     {
         return m_set;
     }
-    const std::vector<VkDescriptorSetLayoutBinding>& DescriptorSet::GetVkDescriptorSetLayoutBindings()
+    const std::vector<VkDescriptorSetLayoutBinding>& DescriptorSet::GetVkDescriptorSetLayoutBindings() const
     {
-        if (m_vkDescriptorSetLayoutBinding.empty())
-        {
-            m_vkDescriptorSetLayoutBinding.reserve(m_descriptors.size());
-            for (const auto& [binding, descriptor] : m_descriptors)
-                m_vkDescriptorSetLayoutBinding.push_back(descriptor.vkDescriptorSetLayoutBinding);
-
-            std::sort(m_vkDescriptorSetLayoutBinding.begin(), m_vkDescriptorSetLayoutBinding.end(),
-                [](const VkDescriptorSetLayoutBinding& a, const VkDescriptorSetLayoutBinding& b)
-                { return a.binding < b.binding; });
-        }
-
+        assert(m_isInitialized && "Must call DescriptorSet::CreateVkDescriptorSetLayoutBindings() before DescriptorSet::GetVkDescriptorSetLayoutBindings().");
         return m_vkDescriptorSetLayoutBinding;
     }
 
