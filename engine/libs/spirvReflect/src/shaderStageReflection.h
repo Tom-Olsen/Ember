@@ -20,6 +20,9 @@ namespace emberSpirvReflect
 	// Stage specific info:
 	struct VertexStageInfo
 	{
+		// Remove the VertexInputDescription struct and have data here directly.
+		// Do two reflections, one for interleaved buffer and one with one buffer for each attribute.
+		// => create each pipeline twice, once for each layout.
 		std::vector<VertexInputDescription> inputs;
 	};
 	struct ComputeStageInfo
