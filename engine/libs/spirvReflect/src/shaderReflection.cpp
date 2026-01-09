@@ -123,11 +123,11 @@ namespace emberSpirvReflect
         // Vertex inputs:
         if (const ShaderStageReflection* pShaderStageReflection = GetVertexShaderReflection())
         {
-            if (const VertexStageInfo* vertexStageInfo = pShaderStageReflection->GetVertexInfo())
+            if (const std::vector<VertexStageInfo>* vertexStageInfos = pShaderStageReflection->GetVertexInfos())
             {
                 ss << "vertexInput:\n";
-                for (int i = 0; i < vertexStageInfo->inputs.size(); i++)
-                    ss << "  " << vertexStageInfo->inputs[i].ToString() << "\n";
+                for (const VertexStageInfo& vertexStageInfo : *vertexStageInfos)
+                    ss << "  " << vertexStageInfo.ToString() << "\n";
             }
         }
 
@@ -135,7 +135,7 @@ namespace emberSpirvReflect
         if (const ShaderStageReflection* pShaderStageReflection = GetComputeShaderReflection())
         {
             if (const ComputeStageInfo* computeStageInfo = pShaderStageReflection->GetComputeInfo())
-                ss << "blockSize: " << computeStageInfo->blockSize.ToString();
+                ss << "blockSize: " << computeStageInfo->blockSize.ToString() << "\n";
         }
 
         // Descriptor sets:

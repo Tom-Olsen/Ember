@@ -1,5 +1,4 @@
 #pragma once
-#include "vertexInputDescription.h"
 #include "descriptor.h"
 #include "emberMath.h"
 #include <memory>
@@ -18,16 +17,18 @@ struct SpvReflectShaderModule;
 namespace emberSpirvReflect
 {
 	// Stage specific info:
-	struct VertexStageInfo
-	{
-		// Remove the VertexInputDescription struct and have data here directly.
-		// Do two reflections, one for interleaved buffer and one with one buffer for each attribute.
-		// => create each pipeline twice, once for each layout.
-		std::vector<VertexInputDescription> inputs;
-	};
 	struct ComputeStageInfo
 	{
 		Uint3 blockSize;
+	};
+	struct VertexStageInfo
+	{
+		std::string semantic;
+		uint32_t location;
+		uint32_t typeSize;
+		uint32_t vectorSize;
+		VkFormat format;
+		std::string ToString() const;
 	};
 
 
@@ -37,7 +38,7 @@ namespace emberSpirvReflect
 	private: // Members:
 		VkShaderStageFlagBits m_shaderStage;
 		std::unique_ptr<SpvReflectShaderModule> m_pModule;
-		std::variant<std::monostate, VertexStageInfo, ComputeStageInfo> m_stageSpecific;
+		std::variant<std::monostate, std::vector<VertexStageInfo>, ComputeStageInfo> m_stageSpecific;
 		std::vector<Descriptor> m_descriptors;
 
 	public: // Methods:
@@ -55,7 +56,7 @@ namespace emberSpirvReflect
 
 		// Getters:
 		VkShaderStageFlagBits GetShaderStage() const;
-		const VertexStageInfo* GetVertexInfo() const;
+		const std::vector<VertexStageInfo>* GetVertexInfos() const;
 		const ComputeStageInfo* GetComputeInfo() const;
 		const std::vector<Descriptor>& GetDescriptors() const;
 
@@ -63,8 +64,8 @@ namespace emberSpirvReflect
 		std::string ToString(int indent = 0) const;
 
 	private: // Methods:
-		Uint3 ExtractBlockSize() const;
-		std::vector<VertexInputDescription> ExtractVertexInputDescriptions() const;
+		ComputeStageInfo ExtractComputeStageInfo() const;
+		std::vector<VertexStageInfo> ExtractVertexStageInfo() const;
 		std::vector<Descriptor> ExtractDescriptors() const;
 	};
 }
