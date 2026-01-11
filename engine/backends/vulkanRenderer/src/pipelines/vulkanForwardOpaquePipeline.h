@@ -20,9 +20,7 @@ namespace vulkanRendererBackend
 
 
 
-	/// <summary>
-	/// Opaque pipeline associated with the ForwardRenderPass materials.
-	/// </summary>
+	template<typename vertexLayout>
 	class ForwardOpaquePipeline : public Pipeline
 	{
 	public: // Methods:

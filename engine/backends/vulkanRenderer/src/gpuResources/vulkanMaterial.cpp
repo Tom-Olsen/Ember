@@ -2,12 +2,12 @@
 #include "logger.h"
 #include "vulkanForwardOpaquePipeline.h"
 #include "vulkanForwardTransparentPipeline.h"
-#include "vulkanMesh.h"
 #include "vulkanPipeline.h"
 #include "vulkanPresentPipeline.h"
 #include "vulkanShadowPipeline.h"
 #include "vulkanSkyboxPipeline.h"
 #include "vulkanVertexBuffer.h"
+#include "vulkanVertexLayout.h"
 #include "spirvReflect.h"
 #include "vmaBuffer.h"
 #include <vulkan/vulkan.h>
@@ -27,9 +27,6 @@ namespace vulkanRendererBackend
 				// Load vertex shader:
 				std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
 				m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
-				size_t size = m_shaderReflection.GetVertexShaderReflection()->GetVertexInfo()->inputs.size();
-				m_meshBuffers.resize(size, VK_NULL_HANDLE);
-				m_meshOffsets.resize(size, 0);
 
 				// Load fragment shader:
 				std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
@@ -37,7 +34,7 @@ namespace vulkanRendererBackend
 
 				// Create pipeline:
 				m_shaderReflection.CreateDescriptorSets();
-				m_pPipeline = std::make_unique<ForwardOpaquePipeline>(m_name, vertexCode, fragmentCode, m_shaderReflection.GetDescriptorSets());
+				m_pPipeline = std::make_unique<ForwardOpaquePipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection.GetDescriptorSets());
 		}
 
 		// Transparent forward material creation:
@@ -48,8 +45,6 @@ namespace vulkanRendererBackend
 			SpirvReflect vertexShaderReflect(vertexCode);
 			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
-			m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
-			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 			// Load fragment shader:
 			std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
@@ -68,8 +63,6 @@ namespace vulkanRendererBackend
 			SpirvReflect vertexShaderReflect(vertexCode);
 			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
-			m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
-			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 			// Load fragment shader:
 			std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
@@ -88,8 +81,6 @@ namespace vulkanRendererBackend
 			SpirvReflect vertexShaderReflect(vertexCode);
 			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
-			m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
-			m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 			// Load fragment shader:
 			std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
@@ -114,8 +105,6 @@ namespace vulkanRendererBackend
 		SpirvReflect vertexShaderReflect(vertexCode);
 		vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
 		m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
-		m_meshBuffers.resize(m_pVertexInputDescriptions->size, VK_NULL_HANDLE);
-		m_meshOffsets.resize(m_pVertexInputDescriptions->size, 0);
 
 		// Create pipeline:
 		m_pPipeline = std::make_unique<ShadowPipeline>(m_name, shadowMapResolution, vertexCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
@@ -150,34 +139,36 @@ namespace vulkanRendererBackend
 	{
 		return m_pVertexInputDescriptions.get();
 	}
-	const VkBuffer* const Material::GetMeshBuffers(Mesh* pMesh)
-	{
-		// All entries are stored in the same buffer:
-		for (uint32_t i = 0; i < m_meshBuffers.size(); i++)
-			m_meshBuffers[i] = pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer();
-		return m_meshBuffers.data();
-	}
-	const uint64_t* const Material::GetMeshOffsets(Mesh* pMesh)
-	{
-		for (uint32_t i = 0; i < m_pVertexInputDescriptions->size; i++)
-		{
-			const std::string& semantic = m_pVertexInputDescriptions->semantics[i];
 
-			if (semantic == "POSITION")
-				m_meshOffsets[i] = pMesh->GetPositionsOffset();
-			else if (semantic == "NORMAL")
-				m_meshOffsets[i] = pMesh->GetNormalsOffset();
-			else if (semantic == "TANGENT")
-				m_meshOffsets[i] = pMesh->GetTangentsOffset();
-			else if (semantic == "COLOR")
-				m_meshOffsets[i] = pMesh->GetColorsOffset();
-			else if (semantic == "TEXCOORD0")
-				m_meshOffsets[i] = pMesh->GetUVsOffset();
-			else
-				LOG_WARN("Material system does not support the VertexInputDescription semantic '{}' yet. Material::GetMeshOffsets(Mesh*) must be updated,", semantic);
-		}
-		return m_meshOffsets.data();
-	}
+	//// Ember::ToDo: move this to mesh class and allow interleaved buffers aswell!
+	//const VkBuffer* const Material::GetMeshBuffers(Mesh* pMesh)
+	//{
+	//	// All entries are stored in the same buffer:
+	//	for (uint32_t i = 0; i < m_meshBuffers.size(); i++)
+	//		m_meshBuffers[i] = pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer();
+	//	return m_meshBuffers.data();
+	//}
+	//const uint64_t* const Material::GetMeshOffsets(Mesh* pMesh)
+	//{
+	//	for (uint32_t i = 0; i < m_pVertexInputDescriptions->size; i++)
+	//	{
+	//		const std::string& semantic = m_pVertexInputDescriptions->semantics[i];
+	//
+	//		if (semantic == "POSITION")
+	//			m_meshOffsets[i] = pMesh->GetPositionsOffset();
+	//		else if (semantic == "NORMAL")
+	//			m_meshOffsets[i] = pMesh->GetNormalsOffset();
+	//		else if (semantic == "TANGENT")
+	//			m_meshOffsets[i] = pMesh->GetTangentsOffset();
+	//		else if (semantic == "COLOR")
+	//			m_meshOffsets[i] = pMesh->GetColorsOffset();
+	//		else if (semantic == "TEXCOORD0")
+	//			m_meshOffsets[i] = pMesh->GetUVsOffset();
+	//		else
+	//			LOG_WARN("Material system does not support the VertexInputDescription semantic '{}' yet. Material::GetMeshOffsets(Mesh*) must be updated,", semantic);
+	//	}
+	//	return m_meshOffsets.data();
+	//}
 
 
 

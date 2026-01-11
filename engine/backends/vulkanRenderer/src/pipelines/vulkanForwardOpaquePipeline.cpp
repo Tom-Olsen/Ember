@@ -7,6 +7,7 @@
 #include "vulkanMacros.h"
 #include "vulkanMesh.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanVertexLayout.h"
 #include <vulkan/vulkan.h>
 
 
@@ -14,7 +15,8 @@
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ForwardOpaquePipeline::ForwardOpaquePipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, const emberSpirvReflect::ShaderReflection& shaderReflection)
+    template<typename vertexLayout>
+    ForwardOpaquePipeline<vertexLayout>::ForwardOpaquePipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, const emberSpirvReflect::ShaderReflection& shaderReflection)
     {
         m_name = name;
 
@@ -41,7 +43,8 @@ namespace vulkanRendererBackend
 
 
     // Private:
-    void ForwardOpaquePipeline::CreatePipelineLayout(const emberSpirvReflect::ShaderReflection& shaderReflection)
+    template<typename vertexLayout>
+    void ForwardOpaquePipeline<vertexLayout>::CreatePipelineLayout(const emberSpirvReflect::ShaderReflection& shaderReflection)
     {
         // Descriptor set layouts:
         for (int i = 0; i < s_setCount; i++)
@@ -61,14 +64,15 @@ namespace vulkanRendererBackend
 
         // Pipeline layout:
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipelineLayoutCreateInfo.setLayoutCount = s_setCount;
+        pipelineLayoutCreateInfo.setLayoutCount = m_descriptorSetLayouts.size(); // = s_setCount
         pipelineLayoutCreateInfo.pSetLayouts = m_descriptorSetLayouts.data();
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout));
         NAME_VK_PIPELINE_LAYOUT(m_pipelineLayout, m_name + "ForwardOpaquePipelineLayout");
     }
-    void ForwardOpaquePipeline::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const emberSpirvReflect::ShaderReflection& shaderReflection)
+    template<typename vertexLayout>
+    void ForwardOpaquePipeline<vertexLayout>::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const emberSpirvReflect::ShaderReflection& shaderReflection)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -85,13 +89,14 @@ namespace vulkanRendererBackend
         VkPipelineShaderStageCreateInfo shaderStages[2] = { vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo };
 
         // Vertex input:
-        // Need redesign here. Need a vector of VkVertexInputBindingDescription and a vector of VkVertexInputAttributeDescription
-        //const std::vector<emberSpirvReflect::VertexInputDescription>& vertexInputs = shaderReflection.GetVertexShaderReflection()->GetVertexInfo()->inputs;
+        const std::vector<emberSpirvReflect::VertexStageInfo>& vertexStageinfos = *shaderReflection.GetVertexShaderReflection()->GetVertexInfos();
+        std::vector<VkVertexInputBindingDescription> vertexBindings = GetVertexBindingDescriptions<vertexLayout>(vertexStageinfos);
+        std::vector<VkVertexInputAttributeDescription> vertexAttributes = GetVertexAttributeDescriptions<vertexLayout>(vertexStageinfos);
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-        vertexInputState.vertexBindingDescriptionCount = inputs.size();
-        vertexInputState.pVertexBindingDescriptions = reinterpret_cast<VkVertexInputBindingDescription*>(pVertexInputDescriptions->bindings.data());
-        vertexInputState.vertexAttributeDescriptionCount = pVertexInputDescriptions->size;
-        vertexInputState.pVertexAttributeDescriptions = reinterpret_cast<VkVertexInputAttributeDescription*>(pVertexInputDescriptions->attributes.data());
+        vertexInputState.vertexBindingDescriptionCount = vertexBindings.size();
+        vertexInputState.pVertexBindingDescriptions = vertexBindings.data();
+        vertexInputState.vertexAttributeDescriptionCount = vertexAttributes.size()
+        vertexInputState.pVertexAttributeDescriptions = vertexAttributes.data();
 
         // Input assembly:
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
@@ -172,4 +177,10 @@ namespace vulkanRendererBackend
 
         VKA(vkCreateGraphicsPipelines(Context::GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
     }
+
+
+
+    // Explicit template instantiation:
+    template class ForwardOpaquePipeline<InterleavedVertexLayout>;
+    template class ForwardOpaquePipeline<SeparateVertexLayout>;
 }

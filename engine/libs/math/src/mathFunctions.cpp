@@ -153,8 +153,8 @@ namespace emberMath
 		template uint16_t math::Min(uint16_t, uint16_t);
 		template uint32_t math::Min(uint32_t, uint32_t);
 		template uint64_t math::Min(uint64_t, uint64_t);
-		template<typename T>
 
+		template<typename T>
 		T Max(T a, T b)
 		{
 			return a > b ? a : b;
