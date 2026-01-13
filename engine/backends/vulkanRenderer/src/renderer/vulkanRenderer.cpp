@@ -240,6 +240,7 @@ namespace vulkanRendererBackend
 	}
 
 
+
 	// Draw mesh:
 	void Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IShaderProperties* pIShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{// for static draw calls.
@@ -699,6 +700,7 @@ namespace vulkanRendererBackend
 					uint32_t groupCountY = (computeCall->threadCount[1] + blockSize[1] - 1) / blockSize[1];
 					uint32_t groupCountZ = (computeCall->threadCount[2] + blockSize[2] - 1) / blockSize[2];
 
+					// Ember::ToDo: bind all descriptor sets 0-4
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 					DEBUG_LOG_TRACE("Pre Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
@@ -746,7 +748,6 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderArea.extent = VkExtent2D{ m_shadowMapResolution, m_shadowMapResolution };
 			renderPassBeginInfo.clearValueCount = 1;
 			renderPassBeginInfo.pClearValues = &clearValues;
-			const VkDeviceSize offsets[1] = { 0 };
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -755,6 +756,7 @@ namespace vulkanRendererBackend
 				if (m_directionalLightsCount > 0 || m_positionalLightsCount > 0)
 				{
 					int shadowMapIndex = 0;
+					// Ember::ToDo: split entire logic for two pipelines (interleaved + separate vertex buffers)
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pShadowMaterial->GetPipeline()->GetVkPipeline());
 
 					// Dynamic state: depth bias:
@@ -764,6 +766,7 @@ namespace vulkanRendererBackend
 					for (DrawCall* drawCall : m_sortedDrawCallPointers)
 						drawCall->pShadowShaderProperties->UpdateShaderData();
 
+					// Ember::ToDo: iterate over draw calls first and then light sources?
 					// Directional Lights:
 					for (int i = 0; i < m_directionalLightsCount; i++)
 					{
@@ -777,9 +780,11 @@ namespace vulkanRendererBackend
 							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, m_directionalLights[i].worldToClipMatrix);
 							vkCmdPushConstants(commandBuffer, m_shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
+							// Ember::ToDo: get buffers AND offsets from mesh (depends on mesh vertex buffer mode interleaved vs separate)
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer(), offsets);
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
 
+							// Ember::ToDo: bind all descriptor sets 0-4
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 							DEBUG_LOG_INFO("Directional light, mesh = {}", drawCall->pMesh->GetName());
@@ -800,9 +805,11 @@ namespace vulkanRendererBackend
 							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, m_positionalLights[i].worldToClipMatrix);
 							vkCmdPushConstants(commandBuffer, m_shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
 
+							// Ember::ToDo: get buffers AND offsets from mesh (depends on mesh vertex buffer mode interleaved vs separate)
 							vkCmdBindVertexBuffers(commandBuffer, 0, 1, &pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer(), offsets);
 							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
 
+							// Ember::ToDo: bind all descriptor sets 0-4
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 							DEBUG_LOG_INFO("Positional light, mesh = {}", drawCall->pMesh->GetName());
@@ -896,8 +903,10 @@ namespace vulkanRendererBackend
 						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 
+					// Ember::ToDo: get buffers AND offsets from mesh (depends on mesh vertex buffer mode interleaved vs separate)
 					vkCmdBindVertexBuffers(commandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
 					vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
+					// Ember::ToDo: bind all descriptor sets 0-4
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
@@ -1007,9 +1016,11 @@ namespace vulkanRendererBackend
 						vkCmdPushConstants(secondaryCommandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 
+					// Ember::ToDo: get buffers AND offsets from mesh (depends on mesh vertex buffer mode interleaved vs separate)
 					vkCmdBindVertexBuffers(secondaryCommandBuffer, 0, bindingCount, pMaterial->GetMeshBuffers(pMesh), pMaterial->GetMeshOffsets(pMesh));
 					vkCmdBindIndexBuffer(secondaryCommandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
 
+					// Ember::ToDo: bind all descriptor sets 0-4
 					vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDrawIndexed(secondaryCommandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
@@ -1082,6 +1093,7 @@ namespace vulkanRendererBackend
 				uint32_t groupCountY = (computeCall->threadCount.y + blockSize.y - 1) / blockSize.y;
 				uint32_t groupCountZ = (computeCall->threadCount.z + blockSize.z - 1) / blockSize.z;
 
+				// Ember::ToDo: bind all descriptor sets 0-4
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 				DEBUG_LOG_ERROR("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
@@ -1161,9 +1173,11 @@ namespace vulkanRendererBackend
 
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipeline);
 
+				// Ember::ToDo: get buffers AND offsets from mesh (depends on mesh vertex buffer mode interleaved vs separate)
 				vkCmdBindVertexBuffers(commandBuffer, 0, m_presentBindingCount, m_pPresentMaterial->GetMeshBuffers(m_pPresentMesh.get()), m_pPresentMaterial->GetMeshOffsets(m_pPresentMesh.get()));
 				vkCmdBindIndexBuffer(commandBuffer, m_pPresentMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, static_cast<VkIndexType>(Mesh::GetIndexType()));
 
+				// Ember::ToDo: bind all descriptor sets 0-4
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipelineLayout, 0, 1, &m_pPresentShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 				vkCmdDrawIndexed(commandBuffer, 3 * m_pPresentMesh->GetTriangleCount(), 1, 0, 0, 0);
 				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", m_pPresentMaterial->GetName());
@@ -1456,17 +1470,12 @@ namespace vulkanRendererBackend
 		presentInfo.pImageIndices = &m_imageIndex;
 
 		VkResult result = vkQueuePresentKHR(Context::GetLogicalDevice()->GetPresentQueue().queue, &presentInfo);
-
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 		{
 			m_rebuildSwapchain = true;
 			return false;
 		}
-		else
-		{
-			VKA(result);
-			return true;
-		}
+		return true;
 	}
 
 
