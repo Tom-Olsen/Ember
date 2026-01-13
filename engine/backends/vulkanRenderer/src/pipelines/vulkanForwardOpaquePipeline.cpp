@@ -1,11 +1,9 @@
 #include "vulkanForwardOpaquePipeline.h"
-#include "descriptorSet.h"
 #include "shaderReflection.h"
 #include "vulkanContext.h"
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanMacros.h"
-#include "vulkanMesh.h"
 #include "vulkanRenderPassManager.h"
 #include "vulkanVertexLayout.h"
 #include <vulkan/vulkan.h>
@@ -35,7 +33,8 @@ namespace vulkanRendererBackend
         vkDestroyShaderModule(Context::GetVkDevice(), fragmentShaderModule, nullptr);
         NAME_VK_PIPELINE(m_pipeline, m_name + "ForwardOpaquePipeline");
     }
-    ForwardOpaquePipeline::~ForwardOpaquePipeline()
+    template<typename vertexLayout>
+    ForwardOpaquePipeline<vertexLayout>::~ForwardOpaquePipeline()
     {
 
     }

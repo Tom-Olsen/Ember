@@ -21,93 +21,48 @@ namespace vulkanRendererBackend
 	Material::Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 		: m_shaderReflection(Pipeline::s_setCount), m_type(type), m_name(name), m_renderQueue(renderQueue)
 	{
+		// Load vertex shader:
+		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
+		m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+
+		// Load fragment shader:
+		std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
+		m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
+
+		// Create descriptor sets:
+		m_shaderReflection.CreateDescriptorSets();
+
+		// Create pipeline:
 		switch (m_type)
 		{
 			case emberCommon::MaterialType::forwardOpaque:
-				// Load vertex shader:
-				std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
-				m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
-
-				// Load fragment shader:
-				std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
-				m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
-
-				// Create pipeline:
-				m_shaderReflection.CreateDescriptorSets();
-				m_pPipeline = std::make_unique<ForwardOpaquePipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection.GetDescriptorSets());
-		}
-
-		// Transparent forward material creation:
-		if (m_type == emberCommon::MaterialType::forwardTransparent)
-		{
-			// Load vertex shader:
-			std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
-			SpirvReflect vertexShaderReflect(vertexCode);
-			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
-
-			// Load fragment shader:
-			std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
-			SpirvReflect fragmentShaderReflect(fragmentCode);
-			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-
-			// Create pipeline:
-			m_pPipeline = std::make_unique<ForwardTransparentPipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
-		}
-
-		// Skybox material creation:
-		else if (m_type == emberCommon::MaterialType::skybox)
-		{
-			// Load vertex shader:
-			std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
-			SpirvReflect vertexShaderReflect(vertexCode);
-			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
-
-			// Load fragment shader:
-			std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
-			SpirvReflect fragmentShaderReflect(fragmentCode);
-			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-
-			// Create pipeline:
-			m_pPipeline = std::make_unique<SkyboxPipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
-		}
-
-		// Present material creation:
-		else if (m_type == emberCommon::MaterialType::present)
-		{
-			// Load vertex shader:
-			std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
-			SpirvReflect vertexShaderReflect(vertexCode);
-			vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-			m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
-
-			// Load fragment shader:
-			std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
-			SpirvReflect fragmentShaderReflect(fragmentCode);
-			fragmentShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-
-			// Create pipeline:
-			m_pPipeline = std::make_unique<PresentPipeline>(m_name, vertexCode, fragmentCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+				m_pPipeline = std::make_unique<ForwardOpaquePipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				break;
+			case emberCommon::MaterialType::forwardTransparent:
+				m_pPipeline = std::make_unique<ForwardTransparentPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				break;
+			case emberCommon::MaterialType::skybox:
+				m_pPipeline = std::make_unique<SkyboxPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				break;
+			case emberCommon::MaterialType::present:
+				m_pPipeline = std::make_unique<PresentPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				break;
 		}
 	}
 	// Special constructor for shadowMaterial:
 	Material::Material(uint32_t shadowMapResolution)
+		: m_shaderReflection(Pipeline::s_setCount), m_type(emberCommon::MaterialType::shadow), m_name("shadowMaterial"), m_renderQueue(emberCommon::RenderQueue::shadow)
 	{
-		m_type = emberCommon::MaterialType::shadow;
-		m_name = "shadowMaterial";
-		m_renderQueue = emberCommon::RenderQueue::shadow;
-		m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
-
 		// Load vertex shader:
 		std::filesystem::path directoryPath = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(directoryPath / "shadow.vert.spv");
-		SpirvReflect vertexShaderReflect(vertexCode);
-		vertexShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-		m_pVertexInputDescriptions = std::unique_ptr<VertexInputDescriptions>(vertexShaderReflect.GetVertexInputDescriptions());
+		m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+
+		// Create descriptor sets:
+		m_shaderReflection.CreateDescriptorSets();
 
 		// Create pipeline:
-		m_pPipeline = std::make_unique<ShadowPipeline>(m_name, shadowMapResolution, vertexCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings, m_pVertexInputDescriptions.get());
+		m_pPipeline = std::make_unique<ShadowPipeline<SeparateVertexLayout>>(m_name, shadowMapResolution, vertexCode, m_shaderReflection);
 	}
 	Material::~Material()
 	{

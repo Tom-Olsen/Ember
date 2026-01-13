@@ -1,13 +1,15 @@
 #pragma once
 #include "vulkanPipeline.h"
-#include "vulkanDescriptorSetLayoutBinding.h"
 #include <vector>
 
 
 
 // Forward declarations:
-struct VkDescriptorSetLayoutBinding;
 typedef struct VkShaderModule_T* VkShaderModule;
+namespace emberSpirvReflect
+{
+	class ShaderReflection;
+}
 
 
 
@@ -18,17 +20,15 @@ namespace vulkanRendererBackend
 
 
 
-	/// <summary>
-	/// Pipeline associated with the PresentRenderPass materials.
-	/// </summary>
+	template<typename vertexLayout>
 	class PresentPipeline : public Pipeline
 	{
 	public: // Methods:
-		PresentPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings, VertexInputDescriptions* pVertexInputDescriptions);
+		PresentPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, const emberSpirvReflect::ShaderReflection& shaderReflection);
 		~PresentPipeline();
 
 	private: // Methods:
-		void CreatePipelineLayout(std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
-		void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, VertexInputDescriptions* pVertexInputDescriptions);
+		void CreatePipelineLayout(const emberSpirvReflect::ShaderReflection& shaderReflection);
+		void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const emberSpirvReflect::ShaderReflection& shaderReflection);
 	};
 }
