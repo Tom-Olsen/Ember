@@ -1,5 +1,5 @@
 #include "defaultPushConstant.hlsli"
-#include "descriptorSets.hlsli"
+#include "descriptorSetMacros.h"
 #include "fragmentShaderCommon.hlsli"
 #include "math.hlsli"
 #include "shadowMapping.hlsli"

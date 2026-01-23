@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_shadowMapping_hlsli__
 #define __INCLUDE_GUARD_shadowMapping_hlsli__
-#include "descriptorSets.hlsli"
+#include "descriptorSetMacros.h"
 #include "math.hlsli"
 #include "shadowConstants.h"
 #include "lightData.hlsli"

@@ -121,22 +121,22 @@ else()
 endif()
 
 # Source subdirectories:
-target_include_directories(${PROJECT_NAME}
-    PUBLIC ${ENGINE_SHADERS_DIR}/src/includesCppHlsl # needed for .h files from shaders, which contian constans for c++ and hlsl, e.g. shadowMap sizes
-    PUBLIC ${ENGINE_CORE_DIR}/src
-    PUBLIC ${ENGINE_CORE_DIR}/src/editor
-    PUBLIC ${ENGINE_CORE_DIR}/src/eventSystem
-    PUBLIC ${ENGINE_CORE_DIR}/src/gpuResources
-    PUBLIC ${ENGINE_CORE_DIR}/src/gui
-    PUBLIC ${ENGINE_CORE_DIR}/src/managers
-    PUBLIC ${ENGINE_CORE_DIR}/src/physics
-    PUBLIC ${ENGINE_CORE_DIR}/src/renderer
-    PUBLIC ${ENGINE_CORE_DIR}/src/utility
-    PUBLIC ${ENGINE_CORE_DIR}/src/window
-    PUBLIC ${ENGINE_COMMON_DIR}
-    PUBLIC ${ENGINE_INTERFACES_DIR}/gui
-    PUBLIC ${ENGINE_INTERFACES_DIR}/renderer
-    PUBLIC ${ENGINE_INTERFACES_DIR}/window)
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${ENGINE_SHADERS_DIR}/src/includesCppHlsl # needed for .h files from shaders, which contian constans for c++ and hlsl, e.g. shadowMap sizes
+    ${ENGINE_CORE_DIR}/src
+    ${ENGINE_CORE_DIR}/src/editor
+    ${ENGINE_CORE_DIR}/src/eventSystem
+    ${ENGINE_CORE_DIR}/src/gpuResources
+    ${ENGINE_CORE_DIR}/src/gui
+    ${ENGINE_CORE_DIR}/src/managers
+    ${ENGINE_CORE_DIR}/src/physics
+    ${ENGINE_CORE_DIR}/src/renderer
+    ${ENGINE_CORE_DIR}/src/utility
+    ${ENGINE_CORE_DIR}/src/window
+    ${ENGINE_COMMON_DIR}
+    ${ENGINE_INTERFACES_DIR}/gui
+    ${ENGINE_INTERFACES_DIR}/renderer
+    ${ENGINE_INTERFACES_DIR}/window)
 # ---------------------------------------------------
 
 

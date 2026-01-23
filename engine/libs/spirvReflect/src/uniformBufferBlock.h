@@ -43,6 +43,9 @@ namespace emberSpirvReflect
 		const UniformBufferMember* GetMember(const std::string& name) const;
 		bool IsLayoutCompatible(const UniformBufferBlock& other) const;
 
+		// Setters: (testing and hard coded descriptor sets)
+		void AddMember(const UniformBufferMember& member);
+
 		// Debugging:
 		std::string ToString(int indent = 0) const;
 	};

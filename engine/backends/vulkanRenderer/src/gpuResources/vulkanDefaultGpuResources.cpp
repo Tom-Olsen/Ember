@@ -1,10 +1,8 @@
 #include "vulkanDefaultGpuResources.h"
 #include "emberMath.h"
 #include "vulkanDepthTexture2dArray.h"
-#include "vulkanColorSampler.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanSampleTexture2d.h"
-#include "vulkanShadowSampler.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageTexture2d.h"
 
@@ -14,8 +12,6 @@ namespace vulkanRendererBackend
 {
 	// Static members:
 	bool DefaultGpuResources::s_isInitialized = false;
-	std::unique_ptr<Sampler> DefaultGpuResources::s_pColorSampler = nullptr;
-	std::unique_ptr<Sampler> DefaultGpuResources::s_pShadowSampler = nullptr;
 	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
 	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pDefaultSampleTexture2d = nullptr;
 	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pNormalMapSampleTexture2d = nullptr;
@@ -31,8 +27,6 @@ namespace vulkanRendererBackend
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
-		s_pColorSampler = std::make_unique<ColorSampler>("colorSampler");
-		s_pShadowSampler = std::make_unique<ShadowSampler>("shadowSampler");
 		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, sizeof(int), "1x1Dummy");
 		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>("white", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::white);
 		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>("defaultNormalMap", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::up);
@@ -43,8 +37,6 @@ namespace vulkanRendererBackend
 	}
 	void DefaultGpuResources::Clear()
 	{
-		s_pColorSampler.reset();
-		s_pShadowSampler.reset();
 		s_pDefaultStorageBuffer.reset();
 		s_pDefaultSampleTexture2d.reset();
 		s_pNormalMapSampleTexture2d.reset();
@@ -57,14 +49,6 @@ namespace vulkanRendererBackend
 
 
 	// Public methods:
-	Sampler* DefaultGpuResources::GetColorSampler()
-	{
-		return s_pColorSampler.get();
-	}
-	Sampler* DefaultGpuResources::GetShadowSampler()
-	{
-		return s_pShadowSampler.get();
-	}
 	StorageBuffer* DefaultGpuResources::GetDefaultStorageBuffer()
 	{
 		return s_pDefaultStorageBuffer.get();

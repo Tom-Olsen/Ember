@@ -1,4 +1,4 @@
-#include "descriptorSets.hlsli"
+#include "descriptorSetMacros.h"
 #include "defaultPushConstant.hlsli"
 #include "math.hlsli"
 #include "vertexShaderCommon.hlsli"

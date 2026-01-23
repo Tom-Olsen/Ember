@@ -65,6 +65,17 @@ namespace emberSpirvReflect
 
 
 
+    // Setters: (only for hard coded descriptor sets, e.g. engineSet, sceneSet, frameSet)
+    void UniformBufferBlock::AddMember(const UniformBufferMember& member)
+    {
+        uint32_t memberEnd = member.offset + member.size;
+        if (memberEnd > size)
+            size = memberEnd; // size of the block is end of last member.
+        m_members.emplace(member.name, std::move(member));
+    }
+
+
+
     // Debugging:
     std::string UniformBufferBlock::ToString(int indent) const
     {

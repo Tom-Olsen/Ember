@@ -1,4 +1,4 @@
-#include "descriptorSets.hlsli"
+#include "descriptorSetMacros.h"
 #include "computePushConstant.hlsli"
 #include "math.hlsli"
 

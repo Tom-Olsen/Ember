@@ -7,7 +7,6 @@ namespace vulkanRendererBackend
 {
     // Forward declerations:
     class DepthTexture2dArray;
-    class Sampler;
     class SampleTextureCube;
     class SampleTexture2d;
     class StorageBuffer;
@@ -19,8 +18,6 @@ namespace vulkanRendererBackend
     {
     private: // Members:
         static bool s_isInitialized;
-        static std::unique_ptr<Sampler> s_pColorSampler;
-        static std::unique_ptr<Sampler> s_pShadowSampler;
         static std::unique_ptr<StorageBuffer> s_pDefaultStorageBuffer;
         static std::unique_ptr<SampleTexture2d> s_pDefaultSampleTexture2d;
         static std::unique_ptr<SampleTexture2d> s_pNormalMapSampleTexture2d;
@@ -33,8 +30,6 @@ namespace vulkanRendererBackend
         static void Init();
         static void Clear();
 
-        static Sampler* GetColorSampler();
-        static Sampler* GetShadowSampler();
         static StorageBuffer* GetDefaultStorageBuffer();
         static SampleTexture2d* GetDefaultSampleTexture2d();
         static SampleTexture2d* GetNormalMapSampleTexture2d();

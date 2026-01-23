@@ -14,7 +14,6 @@
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderPassManager.h"
-#include "vulkanSampler.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanStorageBuffer.h"
@@ -39,7 +38,6 @@ namespace vulkanRendererBackend
 
 		// Create resource bindings and uniform buffer update logic for each frameInFlight:
 		m_uniformBufferMaps = std::vector<std::unordered_map<std::string, UniformBufferBinding>>(Context::GetFramesInFlight());
-		m_samplerMaps = std::vector<std::unordered_map<std::string, SamplerBinding>>(Context::GetFramesInFlight());
 		m_textureMaps = std::vector<std::unordered_map<std::string, TextureBinding>>(Context::GetFramesInFlight());
 		m_bufferMaps = std::vector<std::unordered_map<std::string, BufferBinding>>(Context::GetFramesInFlight());
 		m_updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(Context::GetFramesInFlight());
@@ -56,30 +54,23 @@ namespace vulkanRendererBackend
 				const std::string& name = descriptorBoundResources->descriptorSetBindingNames[i];
 
 				if (descriptorType == DescriptorTypes::uniform_buffer)
-					InitUniformBufferResourceBinding(frameIndex, name, binding);
-				else if (descriptorType == DescriptorTypes::sampler)
-				{// Samplers are 'static'. Correct one gets selected on initialization and can't be changed later.
-					if (name == "colorSampler")
-						InitSamplerResourceBinding(frameIndex, name, binding, DefaultGpuResources::GetColorSampler());
-					else if (name == "shadowSampler")
-						InitSamplerResourceBinding(frameIndex, name, binding, DefaultGpuResources::GetShadowSampler());
-				}
+					InitUniformBufferBinding(frameIndex, name, binding);
 				else if (descriptorType == DescriptorTypes::sampled_image)
 				{
 					ImageViewType viewType = descriptorBoundResources->sampleViewTypeMap.at(name);
 					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for sampling Texture1d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d) InitTextureResourceBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTexture2d()), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTexture2d()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for sampling Texture3d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_cube) InitTextureResourceBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTextureCube()), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_cube) InitTextureBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTextureCube()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_1d_array) throw std::runtime_error("Initialization for sampling Texture1dArray descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d_array) InitTextureResourceBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultDepthTexture2dArray()), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_2d_array) InitTextureBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultDepthTexture2dArray()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization for sampling CubeTextureArray descriptorSet not implemented yet!");
 				}
 				else if (descriptorType == DescriptorTypes::storage_image)
 				{
 					ImageViewType viewType = descriptorBoundResources->storageViewTypeMap.at(name);
 					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for storage Texture1d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d) InitTextureResourceBinding(frameIndex, name, binding, static_cast<Texture2d*>(DefaultGpuResources::GetDefaultStorageTexture2d()), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, name, binding, static_cast<Texture2d*>(DefaultGpuResources::GetDefaultStorageTexture2d()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for storage Texture3d descriptorSet not implemented yet!");
 					else if (viewType == ImageViewTypes::view_type_cube) throw std::runtime_error("Initialization for storage CubeTexture descriptorSet not implemented yet!");
 					else if (viewType == ImageViewTypes::view_type_1d_array) throw std::runtime_error("Initialization storage for Texture1dArray descriptorSet not implemented yet!");
@@ -87,7 +78,7 @@ namespace vulkanRendererBackend
 					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization storage for CubeTextureArray descriptorSet not implemented yet!");
 				}
 				else if (descriptorType == DescriptorTypes::storage_buffer)
-					InitBufferResourceBinding(frameIndex, name, binding, static_cast<Buffer*>(DefaultGpuResources::GetDefaultStorageBuffer()), descriptorType);
+					InitBufferBinding(frameIndex, name, binding, static_cast<Buffer*>(DefaultGpuResources::GetDefaultStorageBuffer()), descriptorType);
 				else
 					throw std::runtime_error("ShaderProperties::ShaderProperties(Shader*) shader contains currently unsuported DescriptorType:" + DescriptorTypes::ToString(descriptorType) + "!");
 			}
@@ -422,16 +413,6 @@ namespace vulkanRendererBackend
 			}
 		}
 
-		// Change the pointer the descriptor set points at to the new sampler:
-		for (auto& [name, samplerBinding] : m_samplerMaps[frameIndex])
-		{
-			if (samplerBinding.pSampler != m_samplerStagingMap.at(name))
-			{
-				samplerBinding.pSampler = m_samplerStagingMap.at(name);
-				UpdateDescriptorSet(frameIndex, samplerBinding);
-			}
-		}
-
 		// Change the pointer the descriptor set points at to the new texture:
 		for (auto& [name, textureBinding] : m_textureMaps[frameIndex])
 		{
@@ -477,10 +458,6 @@ namespace vulkanRendererBackend
 			 for (const auto& [name, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
 			 	LOG_TRACE("binding: {}, bindingName: {}", uniformBufferBinding.binding, name);
 			 
-			 LOG_INFO("SamplerMaps[{}]:", frameIndex);
-			 for (const auto& [name, samplerBinding] : m_samplerMaps[frameIndex])
-			 	LOG_TRACE("binding: {}, bindingName: {}, samplerName: {}", samplerBinding.binding, name, samplerBinding.pSampler->GetName());
-			 
 			 LOG_INFO("TextureMaps[{}]:", frameIndex);
 			 for (const auto& [name, textureBinding] : m_textureMaps[frameIndex])
 			 	LOG_TRACE("binding: {}, bindingName: {}, textureName: {}", textureBinding.binding, name, textureBinding.pTexture->GetName());
@@ -497,7 +474,7 @@ namespace vulkanRendererBackend
 
 	// Private methods:
 	// Initializers:
-	void ShaderProperties::InitUniformBufferResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding)
+	void ShaderProperties::InitUniformBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding)
 	{
 		auto it = m_uniformBufferMaps[frameIndex].find(name);
 		if (it == m_uniformBufferMaps[frameIndex].end())
@@ -512,19 +489,13 @@ namespace vulkanRendererBackend
 				m_updateUniformBuffer[frameIndex].emplace(name, true);
 		}
 	}
-	void ShaderProperties::InitSamplerResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Sampler* pSampler)
-	{
-		auto it = m_samplerMaps[frameIndex].find(name);
-		if (it == m_samplerMaps[frameIndex].end())
-			m_samplerMaps[frameIndex].emplace(name, SamplerBinding(binding, pSampler));
-	}
-	void ShaderProperties::InitTextureResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture* pTexture, DescriptorType descriptorType)
+	void ShaderProperties::InitTextureBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture* pTexture, DescriptorType descriptorType)
 	{
 		auto it = m_textureMaps[frameIndex].find(name);
 		if (it == m_textureMaps[frameIndex].end())
 			m_textureMaps[frameIndex].emplace(name, TextureBinding(binding, pTexture, descriptorType));
 	}
-	void ShaderProperties::InitBufferResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType)
+	void ShaderProperties::InitBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType)
 	{
 		auto it = m_bufferMaps[frameIndex].find(name);
 		if (it == m_bufferMaps[frameIndex].end())
@@ -532,8 +503,6 @@ namespace vulkanRendererBackend
 	}
 	void ShaderProperties::InitStagingMaps()
 	{
-		for (auto& [name, samplerBinding] : m_samplerMaps[0])
-			m_samplerStagingMap.emplace(name, samplerBinding.pSampler);
 		for (auto& [name, textureBinding] : m_textureMaps[0])
 			m_textureStagingMap.emplace(name, textureBinding.pTexture);
 		for (auto& [name, bufferBinding] : m_bufferMaps[0])
@@ -546,8 +515,6 @@ namespace vulkanRendererBackend
 		{
 			for (auto& [_, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
 				UpdateDescriptorSet(frameIndex, uniformBufferBinding);
-			for (auto& [_, samplerBinding] : m_samplerMaps[frameIndex])
-				UpdateDescriptorSet(frameIndex, samplerBinding);
 			for (auto& [_, textureBinding] : m_textureMaps[frameIndex])
 				UpdateDescriptorSet(frameIndex, textureBinding);
 			for (auto& [_, bufferBinding] : m_bufferMaps[frameIndex])
@@ -570,16 +537,16 @@ namespace vulkanRendererBackend
 		m_descriptorSets.resize(Context::GetFramesInFlight());
 		VKA(vkAllocateDescriptorSets(Context::GetLogicalDevice()->GetVkDevice(), &allocInfo, m_descriptorSets.data()));
 	}
-	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferResourceBinding)
+	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferBinding)
 	{
 		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = uniformBufferResourceBinding.pUniformBuffer->GetVmaBuffer()->GetVkBuffer();
+		bufferInfo.buffer = uniformBufferBinding.pUniformBuffer->GetVmaBuffer()->GetVkBuffer();
 		bufferInfo.offset = 0;
-		bufferInfo.range = uniformBufferResourceBinding.pUniformBuffer->GetSize();
+		bufferInfo.range = uniformBufferBinding.pUniformBuffer->GetSize();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
-		descriptorWrite.dstBinding = uniformBufferResourceBinding.binding;
+		descriptorWrite.dstBinding = uniformBufferBinding.binding;
 		descriptorWrite.dstArrayElement = 0;
 		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		descriptorWrite.descriptorCount = 1;
@@ -589,35 +556,17 @@ namespace vulkanRendererBackend
 
 		vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
-	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, SamplerBinding samplerResourceBinding)
-	{
-		VkDescriptorImageInfo samplerInfo = {};
-		samplerInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		samplerInfo.sampler = samplerResourceBinding.pSampler->GetVkSampler();
-
-		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
-		descriptorWrite.dstBinding = samplerResourceBinding.binding;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = nullptr;
-		descriptorWrite.pImageInfo = &samplerInfo;
-		descriptorWrite.pTexelBufferView = nullptr;
-
-		vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
-	}
-	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, TextureBinding textureResourceBinding)
+	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, TextureBinding textureBinding)
 	{
 		VkDescriptorImageInfo imageInfo = {};
-		imageInfo.imageLayout = static_cast<VkImageLayout>(textureResourceBinding.pTexture->GetVmaImage()->GetImageLayout());
-		imageInfo.imageView = textureResourceBinding.pTexture->GetVmaImage()->GetVkImageView();
+		imageInfo.imageLayout = static_cast<VkImageLayout>(textureBinding.pTexture->GetVmaImage()->GetImageLayout());
+		imageInfo.imageView = textureBinding.pTexture->GetVmaImage()->GetVkImageView();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
-		descriptorWrite.dstBinding = textureResourceBinding.binding;
+		descriptorWrite.dstBinding = textureBinding.binding;
 		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = static_cast<VkDescriptorType>(textureResourceBinding.descriptorType);
+		descriptorWrite.descriptorType = static_cast<VkDescriptorType>(textureBinding.descriptorType);
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = nullptr;
 		descriptorWrite.pImageInfo = &imageInfo;
@@ -625,18 +574,18 @@ namespace vulkanRendererBackend
 
 		vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
-	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, BufferBinding bufferResourceBinding)
+	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, BufferBinding bufferBinding)
 	{
 		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = bufferResourceBinding.pBuffer->GetVmaBuffer()->GetVkBuffer();
+		bufferInfo.buffer = bufferBinding.pBuffer->GetVmaBuffer()->GetVkBuffer();
 		bufferInfo.offset = 0;
-		bufferInfo.range = bufferResourceBinding.pBuffer->GetSize();
+		bufferInfo.range = bufferBinding.pBuffer->GetSize();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
-		descriptorWrite.dstBinding = bufferResourceBinding.binding;
+		descriptorWrite.dstBinding = bufferBinding.binding;
 		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = static_cast<VkDescriptorType>(bufferResourceBinding.descriptorType);
+		descriptorWrite.descriptorType = static_cast<VkDescriptorType>(bufferBinding.descriptorType);
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = &bufferInfo;
 		descriptorWrite.pImageInfo = nullptr;
