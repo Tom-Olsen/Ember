@@ -38,7 +38,6 @@ namespace vulkanRendererBackend
 	void Mesh::SetPositions(const std::vector<Float3>& positions)
 	{
 		// Copy values into member vector:
-		m_vertexCount = static_cast<uint32_t>(positions.size());
 		m_positions.assign(positions.begin(), positions.end());
 		m_verticesUpdated = true;
 	}
@@ -46,24 +45,24 @@ namespace vulkanRendererBackend
 	{
 		// Copy values into member vector and fill with default values if needed:
 		m_normals.assign(normals.begin(), normals.end());
-		if (normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, Float3::up);
+		if (normals.size() != GetVertexCount())
+			m_normals.resize(GetVertexCount(), Float3::up);
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetTangents(const std::vector<Float3>& tangents)
 	{
 		// Copy values into member vector and fill with default values if needed:
 		m_tangents.assign(tangents.begin(), tangents.end());
-		if (tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, Float3::right);
+		if (tangents.size() != GetVertexCount())
+			m_tangents.resize(GetVertexCount(), Float3::right);
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetColors(const std::vector<Float4>& colors)
 	{
 		// Copy values into member vector and fill with default values if needed:
 		m_colors.assign(colors.begin(), colors.end());
-		if (colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, Float4::white);
+		if (colors.size() != GetVertexCount())
+			m_colors.resize(GetVertexCount(), Float4::white);
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetUniformColor(const Float4& color)
@@ -71,16 +70,16 @@ namespace vulkanRendererBackend
 		// Set all colors to color and fill with color if needed:
 		for (Float4& col : m_colors)
 			col = color;
-		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, color);
+		if (m_colors.size() != GetVertexCount())
+			m_colors.resize(GetVertexCount(), color);
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetUVs(const std::vector<Float4>& uvs)
 	{
 		// Copy values into member vector and fill with default values if needed:
 		m_uvs.assign(uvs.begin(), uvs.end());
-		if (uvs.size() != m_vertexCount)
-			m_uvs.resize(m_vertexCount, Float4::zero);
+		if (uvs.size() != GetVertexCount())
+			m_uvs.resize(GetVertexCount(), Float4::zero);
 		m_verticesUpdated = true;
 	}
 	void Mesh::SetTriangles(const std::vector<Uint3>& triangles)
@@ -100,7 +99,6 @@ namespace vulkanRendererBackend
 		if (&positions != &m_positions)
 		{
 			m_positions = std::move(positions);
-			m_vertexCount = static_cast<uint32_t>(m_positions.size());
 			m_verticesUpdated = true;
 		}
 	}
@@ -110,8 +108,8 @@ namespace vulkanRendererBackend
 		if (&normals != &m_normals)
 		{
 			m_normals = std::move(normals);
-			if (m_normals.size() != m_vertexCount)
-				m_normals.resize(m_vertexCount, Float3::up);
+			if (m_normals.size() != GetVertexCount())
+				m_normals.resize(GetVertexCount(), Float3::up);
 			m_verticesUpdated = true;
 		}
 	}
@@ -121,8 +119,8 @@ namespace vulkanRendererBackend
 		if (&tangents != &m_tangents)
 		{
 			m_tangents = std::move(tangents);
-			if (m_tangents.size() != m_vertexCount)
-				m_tangents.resize(m_vertexCount, Float3::right);
+			if (m_tangents.size() != GetVertexCount())
+				m_tangents.resize(GetVertexCount(), Float3::right);
 			m_verticesUpdated = true;
 		}
 	}
@@ -132,8 +130,8 @@ namespace vulkanRendererBackend
 		if (&colors != &m_colors)
 		{
 			m_colors = std::move(colors);
-			if (m_colors.size() != m_vertexCount)
-				m_colors.resize(m_vertexCount, Float4::white);
+			if (m_colors.size() != GetVertexCount())
+				m_colors.resize(GetVertexCount(), Float4::white);
 			m_verticesUpdated = true;
 		}
 	}
@@ -143,8 +141,8 @@ namespace vulkanRendererBackend
 		if (&uvs != &m_uvs)
 		{
 			m_uvs = std::move(uvs);
-			if (m_uvs.size() != m_vertexCount)
-				m_uvs.resize(m_vertexCount, Float4::zero);
+			if (m_uvs.size() != GetVertexCount())
+				m_uvs.resize(GetVertexCount(), Float4::zero);
 			m_verticesUpdated = true;
 		}
 	}
@@ -168,7 +166,7 @@ namespace vulkanRendererBackend
 	}
 	uint32_t Mesh::GetVertexCount() const
 	{
-		return m_vertexCount;
+		return m_positions.size();
 	}
 	uint32_t Mesh::GetTriangleCount() const
 	{
@@ -200,7 +198,6 @@ namespace vulkanRendererBackend
 	}
 	void Mesh::RegisterUpdate()
 	{
-		m_vertexCount = m_positions.size();
 		m_verticesUpdated = true;
 	}
 	emberBackendInterface::IMesh* Mesh::GetCopy(const std::string& newName)
@@ -220,7 +217,7 @@ namespace vulkanRendererBackend
 	// Mesh transformations (changes *this):
 	void Mesh::ComputeNormals()
 	{
-		m_normals.resize(m_vertexCount, Float3::zero);
+		m_normals.resize(GetVertexCount(), Float3::zero);
 		for (auto& triangle : m_triangles)
 		{
 			Float3 p0 = m_positions[triangle[0]];
@@ -234,21 +231,21 @@ namespace vulkanRendererBackend
 			m_normals[triangle[1]] += normal;
 			m_normals[triangle[2]] += normal;
 		}
-		for (uint32_t i = 0; i < m_vertexCount; i++)
+		for (uint32_t i = 0; i < GetVertexCount(); i++)
 			m_normals[i].Normalize();
 	}
 	void Mesh::ComputeTangents()
 	{
-		if (m_uvs.size() != m_vertexCount)
+		if (m_uvs.size() != GetVertexCount())
 		{
 			LOG_WARN("Mesh '{}' has no uvs! Cannot compute tangents.", m_name);
-			m_tangents.resize(m_vertexCount, Float3::zero);
+			m_tangents.resize(GetVertexCount(), Float3::zero);
 			return;
 		}
-		if (m_normals.size() != m_vertexCount)
+		if (m_normals.size() != GetVertexCount())
 			ComputeNormals();
 
-		m_tangents.resize(m_vertexCount, Float3::zero);
+		m_tangents.resize(GetVertexCount(), Float3::zero);
 		for (auto& triangle : m_triangles)
 		{
 			Float3 p0 = m_positions[triangle[0]];
@@ -271,7 +268,7 @@ namespace vulkanRendererBackend
 			m_tangents[triangle[1]] += tangent;
 			m_tangents[triangle[2]] += tangent;
 		}
-		for (uint32_t i = 0; i < m_vertexCount; i++)
+		for (uint32_t i = 0; i < GetVertexCount(); i++)
 			m_tangents[i] = geometry3d::PointToPlaneProjection(m_tangents[i], Float3::zero, m_normals[i]).Normalize();
 	}
 
@@ -280,27 +277,28 @@ namespace vulkanRendererBackend
 	// Getters for backend only:
 	uint32_t* Mesh::GetTrianglesUnrolled()
 	{
+		static_assert(sizeof(Uint3) == 3 * sizeof(uint32_t));
 		return reinterpret_cast<uint32_t*>(m_triangles.data());
 	}
 	uint32_t Mesh::GetSizeOfPositions() const
 	{
-		return m_vertexCount * 3 * sizeof(float);
+		return GetVertexCount() * 3 * sizeof(float);
 	}
 	uint32_t Mesh::GetSizeOfNormals() const
 	{
-		return m_vertexCount * 3 * sizeof(float);
+		return GetVertexCount() * 3 * sizeof(float);
 	}
 	uint32_t Mesh::GetSizeOfTangents() const
 	{
-		return m_vertexCount * 3 * sizeof(float);
+		return GetVertexCount() * 3 * sizeof(float);
 	}
 	uint32_t Mesh::GetSizeOfColors() const
 	{
-		return m_vertexCount * 4 * sizeof(float);
+		return GetVertexCount() * 4 * sizeof(float);
 	}
 	uint32_t Mesh::GetSizeOfUVs() const
 	{
-		return m_vertexCount * 4 * sizeof(float);
+		return GetVertexCount() * 4 * sizeof(float);
 	}
 	uint32_t Mesh::GetVertexBufferElementSize() const
 	{
@@ -371,16 +369,14 @@ namespace vulkanRendererBackend
 	void Mesh::Load()
 	{
 		// Fill brocken vectors with default values:
-		if (m_positions.size() != m_vertexCount)
-			m_positions.resize(m_vertexCount, Float3::zero);
-		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, Float3::up);
-		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, Float3::right);
-		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, Float4::white);
-		if (m_uvs.size() != m_vertexCount)
-			m_uvs.resize(m_vertexCount, Float4::zero);
+		if (m_normals.size() != GetVertexCount())
+			m_normals.resize(GetVertexCount(), Float3::up);
+		if (m_tangents.size() != GetVertexCount())
+			m_tangents.resize(GetVertexCount(), Float3::right);
+		if (m_colors.size() != GetVertexCount())
+			m_colors.resize(GetVertexCount(), Float4::white);
+		if (m_uvs.size() != GetVertexCount())
+			m_uvs.resize(GetVertexCount(), Float4::zero);
 
 		UpdateVertexBuffer();
 		UpdateIndexBuffer();
@@ -401,21 +397,21 @@ namespace vulkanRendererBackend
 	void Mesh::UpdateVertexBuffer()
 	{
 		// Set zero values if vectors not set:
-		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, Float3::up);
-		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, Float3::right);
-		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, Float4::white);
-		if (m_uvs.size() != m_vertexCount)
-			m_uvs.resize(m_vertexCount, Float4::zero);
+		if (m_normals.size() != GetVertexCount())
+			m_normals.resize(GetVertexCount(), Float3::up);
+		if (m_tangents.size() != GetVertexCount())
+			m_tangents.resize(GetVertexCount(), Float3::right);
+		if (m_colors.size() != GetVertexCount())
+			m_colors.resize(GetVertexCount(), Float4::white);
+		if (m_uvs.size() != GetVertexCount())
+			m_uvs.resize(GetVertexCount(), Float4::zero);
 
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
 			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
-		if (m_pVertexBuffer == nullptr || m_pVertexBuffer->GetCount() != m_vertexCount)
-			m_pVertexBuffer = std::make_unique<VertexBuffer>(m_vertexCount, GetVertexBufferElementSize(), m_name);
+		if (m_pVertexBuffer == nullptr || m_pVertexBuffer->GetCount() != GetVertexCount())
+			m_pVertexBuffer = std::make_unique<VertexBuffer>(GetVertexCount(), GetVertexBufferElementSize(), m_name);
 
 		// Copy positions, colors, uvs:
 		void* data;
@@ -431,21 +427,21 @@ namespace vulkanRendererBackend
 	void Mesh::UpdateVertexBuffer()
 	{
 		// Set zero values if vectors not set:
-		if (m_normals.size() != m_vertexCount)
-			m_normals.resize(m_vertexCount, Float3::up);
-		if (m_tangents.size() != m_vertexCount)
-			m_tangents.resize(m_vertexCount, Float3::right);
-		if (m_colors.size() != m_vertexCount)
-			m_colors.resize(m_vertexCount, Float4::white);
-		if (m_uvs.size() != m_vertexCount)
-			m_uvs.resize(m_vertexCount, Float4::zero);
+		if (m_normals.size() != GetVertexCount())
+			m_normals.resize(GetVertexCount(), Float3::up);
+		if (m_tangents.size() != GetVertexCount())
+			m_tangents.resize(GetVertexCount(), Float3::right);
+		if (m_colors.size() != GetVertexCount())
+			m_colors.resize(GetVertexCount(), Float4::white);
+		if (m_uvs.size() != GetVertexCount())
+			m_uvs.resize(GetVertexCount(), Float4::zero);
 
 		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
 			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
 
 		// Resize buffer if necessary:
-		if (m_pVertexBuffer == nullptr || m_pVertexBuffer->GetCount() != m_vertexCount)
-			m_pVertexBuffer = std::make_unique<VertexBuffer>(m_vertexCount, GetVertexBufferElementSize(), m_name);
+		if (m_pVertexBuffer == nullptr || m_pVertexBuffer->GetCount() != GetVertexCount())
+			m_pVertexBuffer = std::make_unique<VertexBuffer>(GetVertexCount(), GetVertexBufferElementSize(), m_name);
 
 		// Copy: meshData -> stagingBuffer -> vertexBuffer
 		StagingBuffer stagingBuffer(GetVertexBufferSize(), m_name);

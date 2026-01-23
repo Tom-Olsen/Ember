@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 
 		m_pLogicalDevice = pLogicalDevice;
 
-		// Ember::ToDo: create dynamic way to add more descirptors if needed. See that one great webpage (Link?) fr guidance.
+		// Ember::ToDo: create dynamic way to add more descirptors if needed. See that one great webpage (Link?) for guidance.
 		uint32_t descriptorCount = 8192;	// maximum number of descriptor of each type in the associated pool
 		std::array<VkDescriptorPoolSize, 6> poolSizes
 		{
