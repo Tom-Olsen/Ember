@@ -30,131 +30,22 @@ namespace vulkanRendererBackend
 
 
 
-	// Setters: (copy the vector)
+	// Setters:
 	void Mesh::SetName(const std::string& name)
 	{
 		m_name = name;
 	}
-	void Mesh::SetPositions(const std::vector<Float3>& positions)
+	void Mesh::SetMeshType(Mesh::MeshType type)
 	{
-		// Copy values into member vector:
-		m_positions.assign(positions.begin(), positions.end());
-		m_verticesUpdated = true;
+		m_meshType = type;
 	}
-	void Mesh::SetNormals(const std::vector<Float3>& normals)
+	void Mesh::SetIndexType(Mesh::IndexType type)
 	{
-		// Copy values into member vector and fill with default values if needed:
-		m_normals.assign(normals.begin(), normals.end());
-		if (normals.size() != GetVertexCount())
-			m_normals.resize(GetVertexCount(), Float3::up);
-		m_verticesUpdated = true;
+		m_indexType = type;
 	}
-	void Mesh::SetTangents(const std::vector<Float3>& tangents)
+	void Mesh::SetMemoryLayout(Mesh::MemoryLayout layout)
 	{
-		// Copy values into member vector and fill with default values if needed:
-		m_tangents.assign(tangents.begin(), tangents.end());
-		if (tangents.size() != GetVertexCount())
-			m_tangents.resize(GetVertexCount(), Float3::right);
-		m_verticesUpdated = true;
-	}
-	void Mesh::SetColors(const std::vector<Float4>& colors)
-	{
-		// Copy values into member vector and fill with default values if needed:
-		m_colors.assign(colors.begin(), colors.end());
-		if (colors.size() != GetVertexCount())
-			m_colors.resize(GetVertexCount(), Float4::white);
-		m_verticesUpdated = true;
-	}
-	void Mesh::SetUniformColor(const Float4& color)
-	{
-		// Set all colors to color and fill with color if needed:
-		for (Float4& col : m_colors)
-			col = color;
-		if (m_colors.size() != GetVertexCount())
-			m_colors.resize(GetVertexCount(), color);
-		m_verticesUpdated = true;
-	}
-	void Mesh::SetUVs(const std::vector<Float4>& uvs)
-	{
-		// Copy values into member vector and fill with default values if needed:
-		m_uvs.assign(uvs.begin(), uvs.end());
-		if (uvs.size() != GetVertexCount())
-			m_uvs.resize(GetVertexCount(), Float4::zero);
-		m_verticesUpdated = true;
-	}
-	void Mesh::SetTriangles(const std::vector<Uint3>& triangles)
-	{
-		// Copy values into member vector:
-		m_triangleCount = static_cast<uint32_t>(triangles.size());
-		m_triangles.assign(triangles.begin(), triangles.end());
-		m_indicesUpdated = true;
-	}
-
-
-
-	// Movers: (take ownership of vector)
-	void Mesh::MovePositions(std::vector<Float3>&& positions)
-	{
-		// Take ownership if input data:
-		if (&positions != &m_positions)
-		{
-			m_positions = std::move(positions);
-			m_verticesUpdated = true;
-		}
-	}
-	void Mesh::MoveNormals(std::vector<Float3>&& normals)
-	{
-		// Take ownership of input data:
-		if (&normals != &m_normals)
-		{
-			m_normals = std::move(normals);
-			if (m_normals.size() != GetVertexCount())
-				m_normals.resize(GetVertexCount(), Float3::up);
-			m_verticesUpdated = true;
-		}
-	}
-	void Mesh::MoveTangents(std::vector<Float3>&& tangents)
-	{
-		// Take ownership of input data:
-		if (&tangents != &m_tangents)
-		{
-			m_tangents = std::move(tangents);
-			if (m_tangents.size() != GetVertexCount())
-				m_tangents.resize(GetVertexCount(), Float3::right);
-			m_verticesUpdated = true;
-		}
-	}
-	void Mesh::MoveColors(std::vector<Float4>&& colors)
-	{
-		// Take ownership of input data:
-		if (&colors != &m_colors)
-		{
-			m_colors = std::move(colors);
-			if (m_colors.size() != GetVertexCount())
-				m_colors.resize(GetVertexCount(), Float4::white);
-			m_verticesUpdated = true;
-		}
-	}
-	void Mesh::MoveUVs(std::vector<Float4>&& uvs)
-	{
-		// Take ownership of input data:
-		if (&uvs != &m_uvs)
-		{
-			m_uvs = std::move(uvs);
-			if (m_uvs.size() != GetVertexCount())
-				m_uvs.resize(GetVertexCount(), Float4::zero);
-			m_verticesUpdated = true;
-		}
-	}
-	void Mesh::MoveTriangles(std::vector<Uint3>&& triangles)
-	{
-		// Take ownership if input data:
-		if (&triangles != &m_triangles)
-		{
-			m_triangleCount = static_cast<uint32_t>(triangles.size());
-			m_triangles = std::move(triangles);
-			m_indicesUpdated = true;
-		}
+		m_memoryLayout = layout;
 	}
 
 
@@ -164,326 +55,224 @@ namespace vulkanRendererBackend
 	{
 		return m_name;
 	}
-	uint32_t Mesh::GetVertexCount() const
+	Mesh::MeshType Mesh::GetMeshType() const
 	{
-		return m_positions.size();
+		return m_meshType;
 	}
-	uint32_t Mesh::GetTriangleCount() const
+	Mesh::IndexType Mesh::GetIndexType() const
 	{
-		return m_triangleCount;
+		return m_indexType;
 	}
-	std::vector<Float3>& Mesh::GetPositions()
+	Mesh::MemoryLayout Mesh::GetMemoryLayout() const
 	{
-		return m_positions;
-	}
-	std::vector<Float3>& Mesh::GetNormals()
-	{
-		return m_normals;
-	}
-	std::vector<Float3>& Mesh::GetTangents()
-	{
-		return m_tangents;
-	}
-	std::vector<Float4>& Mesh::GetColors()
-	{
-		return m_colors;
-	}
-	std::vector<Float4>& Mesh::GetUVs()
-	{
-		return m_uvs;
-	}
-	std::vector<Uint3>& Mesh::GetTriangles()
-	{
-		return m_triangles;
-	}
-	void Mesh::RegisterUpdate()
-	{
-		m_verticesUpdated = true;
+		return m_memoryLayout;
 	}
 	emberBackendInterface::IMesh* Mesh::GetCopy(const std::string& newName)
 	{
 		Mesh* copy = new Mesh(newName);
-		copy->SetPositions(m_positions);
-		copy->SetNormals(m_normals);
-		copy->SetTangents(m_tangents);
-		copy->SetColors(m_colors);
-		copy->SetUVs(m_uvs);
-		copy->SetTriangles(m_triangles);
+		copy->SetMeshType(m_meshType);
+		copy->SetIndexType(m_indexType);
+		copy->SetMemoryLayout(m_memoryLayout);
 		return static_cast<emberBackendInterface::IMesh*>(copy);
 	}
 
 
 
-	// Mesh transformations (changes *this):
-	void Mesh::ComputeNormals()
-	{
-		m_normals.resize(GetVertexCount(), Float3::zero);
-		for (auto& triangle : m_triangles)
-		{
-			Float3 p0 = m_positions[triangle[0]];
-			Float3 p1 = m_positions[triangle[1]];
-			Float3 p2 = m_positions[triangle[2]];
-			Float3 edge10 = p1 - p0;
-			Float3 edge20 = p2 - p0;
-			Float3 normal = Float3::Cross(edge10, edge20).Normalize();
-
-			m_normals[triangle[0]] += normal;
-			m_normals[triangle[1]] += normal;
-			m_normals[triangle[2]] += normal;
-		}
-		for (uint32_t i = 0; i < GetVertexCount(); i++)
-			m_normals[i].Normalize();
-	}
-	void Mesh::ComputeTangents()
-	{
-		if (m_uvs.size() != GetVertexCount())
-		{
-			LOG_WARN("Mesh '{}' has no uvs! Cannot compute tangents.", m_name);
-			m_tangents.resize(GetVertexCount(), Float3::zero);
-			return;
-		}
-		if (m_normals.size() != GetVertexCount())
-			ComputeNormals();
-
-		m_tangents.resize(GetVertexCount(), Float3::zero);
-		for (auto& triangle : m_triangles)
-		{
-			Float3 p0 = m_positions[triangle[0]];
-			Float3 p1 = m_positions[triangle[1]];
-			Float3 p2 = m_positions[triangle[2]];
-			Float3 edge10 = p1 - p0;
-			Float3 edge20 = p2 - p0;
-			Float2 uv0 = Float2(m_uvs[triangle[0]]);
-			Float2 uv1 = Float2(m_uvs[triangle[1]]);
-			Float2 uv2 = Float2(m_uvs[triangle[2]]);
-			Float2 deltaUv10 = uv1 - uv0;
-			Float2 deltaUv20 = uv2 - uv0;
-
-			float denom = (deltaUv10.x * deltaUv20.y - deltaUv20.x * deltaUv10.y);
-			float det = std::abs(denom) < 1e-6f ? 1.0f : 1.0f / denom;
-			Float3 tangent = det * (deltaUv20.y * edge10 - deltaUv10.y * edge20);
-			tangent.Normalize();
-
-			m_tangents[triangle[0]] += tangent;
-			m_tangents[triangle[1]] += tangent;
-			m_tangents[triangle[2]] += tangent;
-		}
-		for (uint32_t i = 0; i < GetVertexCount(); i++)
-			m_tangents[i] = geometry3d::PointToPlaneProjection(m_tangents[i], Float3::zero, m_normals[i]).Normalize();
-	}
-
-
-
-	// Getters for backend only:
-	uint32_t* Mesh::GetTrianglesUnrolled()
-	{
-		static_assert(sizeof(Uint3) == 3 * sizeof(uint32_t));
-		return reinterpret_cast<uint32_t*>(m_triangles.data());
-	}
-	uint32_t Mesh::GetSizeOfPositions() const
-	{
-		return GetVertexCount() * 3 * sizeof(float);
-	}
-	uint32_t Mesh::GetSizeOfNormals() const
-	{
-		return GetVertexCount() * 3 * sizeof(float);
-	}
-	uint32_t Mesh::GetSizeOfTangents() const
-	{
-		return GetVertexCount() * 3 * sizeof(float);
-	}
-	uint32_t Mesh::GetSizeOfColors() const
-	{
-		return GetVertexCount() * 4 * sizeof(float);
-	}
-	uint32_t Mesh::GetSizeOfUVs() const
-	{
-		return GetVertexCount() * 4 * sizeof(float);
-	}
-	uint32_t Mesh::GetVertexBufferElementSize() const
-	{
-		return static_cast<uint32_t>(3 * 3 * sizeof(float) + 2 * 4 * sizeof(float));
-	}
-	uint64_t Mesh::GetVertexBufferSize() const
-	{
-		return static_cast<uint64_t>(GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors() + GetSizeOfUVs());
-	}
-	uint64_t Mesh::GetSizeOfTriangles() const
-	{
-		return static_cast<uint64_t>(m_triangles.size() * 3 * sizeof(uint32_t));
-	}
+		// Backend only:
 	VertexBuffer* Mesh::GetVertexBuffer()
 	{
-		if (!m_isLoaded)
-			Load();
-		if (m_verticesUpdated)
-		{
-			UpdateVertexBuffer();
-			m_verticesUpdated = false;
-		}
-		return m_pVertexBuffer.get();
+		if (m_meshType == MeshType::dynamic)
+			return m_pVertexBuffers[0].get();
+		else
+			return m_pVertexBuffers[Context::GetFrameIndex()].get();
 	}
 	IndexBuffer* Mesh::GetIndexBuffer()
 	{
-		if (!m_isLoaded)
-			Load();
-		if (m_indicesUpdated)
-		{
-			UpdateIndexBuffer();
-			m_indicesUpdated = false;
-		}
-		return m_pIndexBuffer.get();
+		if (m_meshType == MeshType::static)
+			return m_pIndexBuffers[0].get();
+		else
+			return m_pIndexBuffers[Context::GetFrameIndex()].get();
 	}
-	uint64_t Mesh::GetPositionsOffset() const
-	{
-		return 0;
-	}
-	uint64_t Mesh::GetNormalsOffset() const
-	{
-		return GetSizeOfPositions();
-	}
-	uint64_t Mesh::GetTangentsOffset() const
-	{
-		return GetSizeOfPositions() + GetSizeOfNormals();
-	}
-	uint64_t Mesh::GetColorsOffset() const
-	{
-		return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents();
-	}
-	uint64_t Mesh::GetUVsOffset() const
-	{
-		return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors();
-	}
-	IndexType Mesh::GetIndexType()
-	{
-		return IndexTypes::uint32;
-	}
-	bool Mesh::IsLoaded()
-	{
-		return m_isLoaded;
-	}
+	//uint64_t Mesh::GetPositionsOffset() const
+	//{
+	//	return 0;
+	//}
+	//uint64_t Mesh::GetNormalsOffset() const
+	//{
+	//	return GetSizeOfPositions();
+	//}
+	//uint64_t Mesh::GetTangentsOffset() const
+	//{
+	//	return GetSizeOfPositions() + GetSizeOfNormals();
+	//}
+	//uint64_t Mesh::GetColorsOffset() const
+	//{
+	//	return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents();
+	//}
+	//uint64_t Mesh::GetUVsOffset() const
+	//{
+	//	return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors();
+	//}
 
 
 
-	// Private methods:
-	void Mesh::Load()
-	{
-		// Fill brocken vectors with default values:
-		if (m_normals.size() != GetVertexCount())
-			m_normals.resize(GetVertexCount(), Float3::up);
-		if (m_tangents.size() != GetVertexCount())
-			m_tangents.resize(GetVertexCount(), Float3::right);
-		if (m_colors.size() != GetVertexCount())
-			m_colors.resize(GetVertexCount(), Float4::white);
-		if (m_uvs.size() != GetVertexCount())
-			m_uvs.resize(GetVertexCount(), Float4::zero);
-
-		UpdateVertexBuffer();
-		UpdateIndexBuffer();
-		m_verticesUpdated = false;
-		m_indicesUpdated = false;
-		m_isLoaded = true;
-	}
-	void Mesh::Unload()
-	{
-		// Call destructors and set ptr to nullptrs:
-		m_pVertexBuffer.reset();
-		m_pIndexBuffer.reset();
-		m_verticesUpdated = false;
-		m_indicesUpdated = false;
-		m_isLoaded = false;
-	}
-	#ifdef RESIZEABLE_BAR // No staging buffer:
-	void Mesh::UpdateVertexBuffer()
-	{
-		// Set zero values if vectors not set:
-		if (m_normals.size() != GetVertexCount())
-			m_normals.resize(GetVertexCount(), Float3::up);
-		if (m_tangents.size() != GetVertexCount())
-			m_tangents.resize(GetVertexCount(), Float3::right);
-		if (m_colors.size() != GetVertexCount())
-			m_colors.resize(GetVertexCount(), Float4::white);
-		if (m_uvs.size() != GetVertexCount())
-			m_uvs.resize(GetVertexCount(), Float4::zero);
-
-		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
-
-		// Resize buffer if necessary:
-		if (m_pVertexBuffer == nullptr || m_pVertexBuffer->GetCount() != GetVertexCount())
-			m_pVertexBuffer = std::make_unique<VertexBuffer>(GetVertexCount(), GetVertexBufferElementSize(), m_name);
-
-		// Copy positions, colors, uvs:
-		void* data;
-		VKA(vmaMapMemory(Context::GetVmaAllocator(), m_pVertexBuffer->allocation, &data));
-		memcpy(static_cast<char*>(data), m_positions.data(), GetSizeOfPositions());
-		memcpy(static_cast<char*>(data) + GetSizeOfPositions(), m_normals.data(), GetSizeOfNormals());
-		memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals(), m_tangents.data(), GetSizeOfTangents());
-		memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents(), m_colors.data(), GetSizeOfColors());
-		memcpy(static_cast<char*>(data) + GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors(), m_uvs.data(), GetSizeOfUVs());
-		VKA(vmaUnmapMemory(Context::GetVmaAllocator(), m_pVertexBuffer->allocation));
-	}
+	// Update GPU buffers:
+	#ifdef RESIZEABLE_BAR // No staging buffer: not implemented yet
+	//void Mesh::UpdateVertexBuffer(std::vector<Float3>* positions, std::vector<Float3>* normals, std::vector<Float3>* tangents, std::vector<Float4>* colors, std::vector<Float4>* uvs)
+	//{
+	//	size_t vertexCount = positions->size();
+	//
+	//	// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
+	//	if (m_meshType == MeshType::static)
+	//		vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
+	//
+	//	// Resize buffer if necessary:
+	//	for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
+	//	{
+	//		if (m_pVertexBuffers[i] == nullptr || m_pVertexBuffers[i]->GetCount() != vertexCount)
+	//			m_pVertexBuffers[i] = std::make_unique<VertexBuffer>(vertexCount, sizeof(Vertex), m_name);
+	//	}
+	//
+	//	// Copy: meshData -> vertexBuffer
+	//	if (m_memoryLayout == MemoryLayout::interleaved)
+	//	{
+	//		for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
+	//		{
+	//			void* data;
+	//			VKA(vmaMapMemory(Context::GetVmaAllocator(), m_pVertexBuffers[i]->allocation, &data));
+	//			for (size_t j = 0; j < vertexCount; j++)
+	//			{
+	//				Vertex vertex;
+	//				vertex.position = (*positions)[j];
+	//				vertex.normal = normals ? (*normals)[j] : Float3::up;
+	//				vertex.tangent = tangents ? (*tangents)[j] : Float3::right;
+	//				vertex.color = colors ? (*colors)[j] : Float4::white;
+	//				vertex.uv = uvs ? (*uvs)[j] : Float4::zero;
+	//				memcpy(static_cast<char*>(data) + j * sizeof(Vertex), &vertex, sizeof(Vertex));
+	//			}
+	//			VKA(vmaUnmapMemory(Context::GetVmaAllocator(), m_pVertexBuffers[i]->allocation));
+	//		}
+	//	}
+	//	else // (m_memoryLayout == MemoryLayout::separate)
+	//	{
+	//		size_t posEnd = vertexCount * sizeof(Float3);
+	//		size_t normEnd = posEnd + vertexCount * sizeof(Float3);
+	//		size_t tangEnd = normEnd + vertexCount * sizeof(Float3);
+	//		size_t colorEnd = tangEnd + vertexCount * sizeof(Float4);
+	//		size_t uvEnd = colorEnd + vertexCount * sizeof(Float4);
+	//		for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
+	//		{
+	//			void* data;
+	//			VKA(vmaMapMemory(Context::GetVmaAllocator(), m_pVertexBuffers[i]->allocation, &data));
+	//			if (positions) memcpy(static_cast<char*>(data), positions->data(), posEnd);
+	//			if (normals) memcpy(static_cast<char*>(data) + posEnd, normals->data(), normEnd);
+	//			if (tangents) memcpy(static_cast<char*>(data) + normEnd, tangents->data(), tangEnd);
+	//			if (colors) memcpy(static_cast<char*>(data) + tangEnd, colors->data(), colorEnd);
+	//			if (uvs) memcpy(static_cast<char*>(data) + colorEnd, uvs->data(), uvEnd);
+	//			VKA(vmaUnmapMemory(Context::GetVmaAllocator(), m_pVertexBuffers[i]->allocation));
+	//		}
+	//	}
+	//}
 	#else // With Staging buffer:
-	void Mesh::UpdateVertexBuffer()
+	void Mesh::UpdateVertexBuffer(std::vector<Float3>* positions, std::vector<Float3>* normals, std::vector<Float3>* tangents, std::vector<Float4>* colors, std::vector<Float4>* uvs)
 	{
-		// Set zero values if vectors not set:
-		if (m_normals.size() != GetVertexCount())
-			m_normals.resize(GetVertexCount(), Float3::up);
-		if (m_tangents.size() != GetVertexCount())
-			m_tangents.resize(GetVertexCount(), Float3::right);
-		if (m_colors.size() != GetVertexCount())
-			m_colors.resize(GetVertexCount(), Float4::white);
-		if (m_uvs.size() != GetVertexCount())
-			m_uvs.resize(GetVertexCount(), Float4::zero);
+		size_t vertexCount = positions->size();
 
-		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
+		// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
+		if (m_meshType == MeshType::static)
 			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
 
-		// Resize buffer if necessary:
-		if (m_pVertexBuffer == nullptr || m_pVertexBuffer->GetCount() != GetVertexCount())
-			m_pVertexBuffer = std::make_unique<VertexBuffer>(GetVertexCount(), GetVertexBufferElementSize(), m_name);
+		// Resize buffers if necessary:
+		for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
+		{
+			if (m_pVertexBuffers[i] == nullptr || m_pVertexBuffers[i]->GetCount() != vertexCount)
+				m_pVertexBuffers[i] = std::make_unique<VertexBuffer>(vertexCount, sizeof(Vertex), m_name);
+		}
 
 		// Copy: meshData -> stagingBuffer -> vertexBuffer
-		StagingBuffer stagingBuffer(GetVertexBufferSize(), m_name);
-		stagingBuffer.SetData(m_positions.data(), GetSizeOfPositions(), GetPositionsOffset());
-		stagingBuffer.SetData(m_normals.data(), GetSizeOfNormals(), GetNormalsOffset());
-		stagingBuffer.SetData(m_tangents.data(), GetSizeOfTangents(), GetTangentsOffset());
-		stagingBuffer.SetData(m_colors.data(), GetSizeOfColors(), GetColorsOffset());
-		stagingBuffer.SetData(m_uvs.data(), GetSizeOfUVs(), GetUVsOffset());
-		stagingBuffer.UploadToBuffer(m_pVertexBuffer.get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+		if (m_memoryLayout == MemoryLayout::interleaved)
+		{
+			for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
+			{
+				StagingBuffer stagingBuffer(vertexCount * sizeof(Vertex), m_name);
+				for (size_t j = 0; j < vertexCount; j++)
+				{
+					Vertex vertex;
+					vertex.position = (*positions)[j];
+					vertex.normal = normals ? (*normals)[j] : Float3::up;
+					vertex.tangent = tangents ? (*tangents)[j] : Float3::right;
+					vertex.color = colors ? (*colors)[j] : Float4::white;
+					vertex.uv = uvs ? (*uvs)[j] : Float4::zero;
+					stagingBuffer.SetData(&vertex, sizeof(Vertex), j * sizeof(Vertex));
+				}
+				stagingBuffer.UploadToBuffer(m_pVertexBuffers[i].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+			}
+		}
+		else
+		{
+			for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
+			{
+				size_t posEnd = vertexCount * sizeof(Float3);
+				size_t normEnd = posEnd + vertexCount * sizeof(Float3);
+				size_t tangEnd = normEnd + vertexCount * sizeof(Float3);
+				size_t colorEnd = tangEnd + vertexCount * sizeof(Float4);
+				size_t uvEnd = colorEnd + vertexCount * sizeof(Float4);
+				StagingBuffer stagingBuffer(vertexCount * sizeof(Vertex), m_name);
+				stagingBuffer.SetData(positions->data(), 0, posEnd);
+				stagingBuffer.SetData(normals->data(), posEnd, normEnd);
+				stagingBuffer.SetData(tangents->data(), normEnd, tangEnd);
+				stagingBuffer.SetData(colors->data(), tangEnd, colorEnd);
+				stagingBuffer.SetData(uvs->data(), colorEnd, uvEnd);
+				stagingBuffer.UploadToBuffer(m_pVertexBuffers[i].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+			}
+		}
 	}
 	#endif
-	#ifdef RESIZEABLE_BAR // No staging buffer:
-	void Mesh::UpdateIndexBuffer()
-	{
-		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
-			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
-
-		// Resize buffer if necessary:
-		if (m_pIndexBuffer == nullptr || m_triangleCount != m_pIndexBuffer->GetCount())
-			m_pIndexBuffer = std::make_unique<IndexBuffer>(m_triangleCount, 3 * (uint32_t)sizeof(uint32_t), m_name);
-
-		// Copy triangle indexes:
-		uint64_t size = GetSizeOfTriangles();
-		void* data;
-		VKA(vmaMapMemory(Context::GetVmaAllocator(), m_pIndexBuffer->allocation, &data));
-		memcpy(data, GetTrianglesUnrolled(), size);
-		VKA(vmaUnmapMemory(Context::GetVmaAllocator(), m_pIndexBuffer->allocation));
-	}
+	#ifdef RESIZEABLE_BAR // No staging buffer: not implemented yet
+	//void Mesh::UpdateIndexBuffer(std::vector<Uint3>* triangles)
+	//{
+	//	static_assert(sizeof(Uint3) == 3 * sizeof(uint32_t));
+	//	size_t triangleCount = triangles->size();
+	//
+	//	// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
+	//	if (m_meshType == MeshType::static)
+	//		vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
+	//
+	//	// Resize buffer if necessary:
+	//	for (size_t i = 0; i < m_pIndexBuffers.size(); i++)
+	//	{
+	//		if (m_pIndexBuffers[i] == nullptr || m_pIndexBuffers[i]->GetCount() != triangleCount)
+	//			m_pIndexBuffers[i] = std::make_unique<IndexBuffer>(triangleCount, 3 * (uint32_t)sizeof(uint32_t), m_name);
+	//	}
+	//
+	//	// Copy: triangles -> indexBuffer
+	//	uint64_t size = triangleCount * sizeof(Uint3);
+	//	void* data;
+	//	VKA(vmaMapMemory(Context::GetVmaAllocator(), m_pIndexBuffer->allocation, &data));
+	//	memcpy(data, reinterpret_cast<uint32_t*>(m_triangles.data()), size);
+	//	VKA(vmaUnmapMemory(Context::GetVmaAllocator(), m_pIndexBuffer->allocation));
+	//}
 	#else // With Staging buffer:
 	void Mesh::UpdateIndexBuffer()
 	{
-		if (m_isLoaded)	// wait for previous render calls to finish if mesh could be in use already
+		static_assert(sizeof(Uint3) == 3 * sizeof(uint32_t));
+		size_t triangleCount = triangles->size();
+
+		// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
+		if (m_meshType == MeshType::static)
 			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
 
-		// Resize buffer if necessary:
-		if (m_pIndexBuffer == nullptr || m_triangleCount != m_pIndexBuffer->GetCount())
-			m_pIndexBuffer = std::make_unique<IndexBuffer>(m_triangleCount, 3 * (uint32_t)sizeof(uint32_t), m_name);
+		// Resize buffers if necessary:
+		for (size_t i = 0; i < m_pIndexBuffers.size(); i++)
+		{
+			if (m_pIndexBuffers[i] == nullptr || m_pIndexBuffers[i]->GetCount() != triangleCount)
+				m_pIndexBuffers[i] = std::make_unique<IndexBuffer>(triangleCount, 3 * (uint32_t)sizeof(uint32_t), m_name);
+		}
 
 		// Copy: triangles -> stagingBuffer -> indexBuffer
-		uint64_t size = GetSizeOfTriangles();
+		uint64_t size = triangleCount * sizeof(Uint3);
 		StagingBuffer stagingBuffer(size, m_name);
-		stagingBuffer.SetData(GetTrianglesUnrolled(), size);
+		stagingBuffer.SetData(reinterpret_cast<uint32_t*>(m_triangles.data()), size);
 		stagingBuffer.UploadToBuffer(m_pIndexBuffer.get(), Context::GetLogicalDevice()->GetGraphicsQueue());
 	}
 	#endif

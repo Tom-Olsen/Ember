@@ -15,6 +15,15 @@ namespace emberBackendInterface
 }
 
 
+//// Set zero values if vectors not set:
+//if (m_normals.size() != GetVertexCount())
+//	m_normals.resize(GetVertexCount(), Float3::up);
+//if (m_tangents.size() != GetVertexCount())
+//	m_tangents.resize(GetVertexCount(), Float3::right);
+//if (m_colors.size() != GetVertexCount())
+//	m_colors.resize(GetVertexCount(), Float4::white);
+//if (m_uvs.size() != GetVertexCount())
+//	m_uvs.resize(GetVertexCount(), Float4::zero);
 
 namespace emberEngine
 {
