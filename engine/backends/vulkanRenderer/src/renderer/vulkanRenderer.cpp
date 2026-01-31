@@ -411,7 +411,7 @@ namespace vulkanRendererBackend
 			pIBuffer = new VertexBuffer(count, elementSize, name);
 			break;
 		default:
-			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateBufferUnknown invalid BufferUsage type: " + (std::string)emberCommon::BufferUsageNames[(int)usage]);
+			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateBuffer: Unknown invalid BufferUsage type: " + (std::string)emberCommon::BufferUsageNames[(int)usage]);
 		}
 		return pIBuffer;
 	}

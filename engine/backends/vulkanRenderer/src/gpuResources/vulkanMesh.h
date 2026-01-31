@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 
@@ -23,21 +24,16 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Mesh : public emberBackendInterface::IMesh
 	{
 	public: // Enums/Structs:
-		enum class MeshType
-		{
-			static,
-			dynamic
-		};
-		enum class IndexType
-		{
-			uint16,
-			uint32
-		};
-		enum class MemoryLayout
-		{
-			interleaved,
-			separate
-		};
+		//enum class MeshType
+		//{
+		//	staticMesh,
+		//	dynamicMesh
+		//};
+		//enum class MemoryLayout
+		//{
+		//	interleaved,
+		//	separate
+		//};
 		struct Vertex
 		{
 			Float3 position;
@@ -59,21 +55,41 @@ namespace vulkanRendererBackend
 		//	all = positions | normals | tangents | colors | uvs | triangles
 		//};
 		//typedef uint32_t UpdateFlags;
-		struct PendingVertexUpload
+
+	private: // Structs:
+		template<typename BufferType>
+		struct BufferPair
 		{
-			uint64_t generation;
-			uint32_t remainingFramesMask;	// one bit per frame in flight.
-			StagingBuffer stagingBuffer;
-			uint64_t lastSignalValue;		// for semaphore synchronization.
-		};
+			std::unique_ptr<BufferType> pBufferA;
+			std::unique_ptr<BufferType> pBufferB;
+			bool inUseA = false;
+			bool inUseB = false;
+    		uint64_t generationA = 0;
+    		uint64_t generationB = 0;
+			BufferType* GetActiveBuffer()
+			{
+				if (generationA > generationB)
+				{
+					inUseA = true;
+					inUseB = false;
+					return pBufferA.get();
+				}
+				else
+				{
+					inUseA = false;
+					inUseB = true;
+					return pBufferB.get();
+				}
+			}
+		}
 
 	private: // Members:
 		std::string m_name;
-		MeshType m_meshType = MeshType::static;
-		IndexType m_indexType = IndexType::uint32;
-		MemoryLayout m_memoryLayout = MemoryLayout::interleaved;
-		std::vector<std::unique_ptr<VertexBuffer>> m_pVertexBuffers;
-		std::vector<std::unique_ptr<IndexBuffer>> m_pIndexBuffers;
+		//MeshType m_meshType = MeshType::static;	// Ember::ToDo: implement static meshes.
+		VkIndexType m_vkIndexType = VK_INDEX_TYPE_UINT16;
+		//MemoryLayout m_memoryLayout = MemoryLayout::interleaved; // Ember::ToDo: implement interleaved meshes.
+		std::vector<std::unique_ptr<BufferPair>> m_pVertexBuffers;
+		std::vector<std::unique_ptr<BufferPair>> m_pIndexBuffers;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -90,13 +106,12 @@ namespace vulkanRendererBackend
 
 		// Setters:
 		void SetName(const std::string& name) override;
-		void SetMeshType(MeshType type);
-		void SetIndexType(IndexType type) override;
+		//void SetMeshType(MeshType type);
 		void SetMemoryLayout(MemoryLayout layout) override;
 
 		// Getters:
 		const std::string& GetName() const override;
-		MeshType GetMeshType() const;
+		//MeshType GetMeshType() const;
 		IndexType GetIndexType() const override;
 		MemoryLayout GetMemoryLayout() const override;
 		emberBackendInterface::IMesh* GetCopy(const std::string& newName) override;
@@ -108,6 +123,5 @@ namespace vulkanRendererBackend
 		// Backend only:
 		VertexBuffer* GetVertexBuffer();
 		IndexBuffer* GetIndexBuffer();
-
 	};
 }

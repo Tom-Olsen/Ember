@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "vulkanIndexBuffer.h"
 #include "vulkanContext.h"
+#include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanStagingBuffer.h"
 #include "vulkanVertexBuffer.h"
@@ -16,6 +17,8 @@ namespace vulkanRendererBackend
 	Mesh::Mesh(const std::string& name)
 	{
 		m_name = name;
+		m_pVertexBuffers.resize(Context::GetFramesInFlight());
+		m_pIndexBuffers.resize(Context::GetFramesInFlight());
 	}
 	Mesh::~Mesh()
 	{
@@ -35,14 +38,16 @@ namespace vulkanRendererBackend
 	{
 		m_name = name;
 	}
-	void Mesh::SetMeshType(Mesh::MeshType type)
-	{
-		m_meshType = type;
-	}
-	void Mesh::SetIndexType(Mesh::IndexType type)
-	{
-		m_indexType = type;
-	}
+	//void Mesh::SetMeshType(Mesh::MeshType type)
+	//{
+	//	if (m_meshType != type)
+	//	{
+	//		m_meshType = type;
+	//		size_t bufferCount = (type == MeshType::static) ? 1 : Context::GetFramesInFlight();
+	//		m_pVertexBuffers.resize(bufferCount);
+	//		m_pIndexBuffers.resize(bufferCount);
+	//	}
+	//}
 	void Mesh::SetMemoryLayout(Mesh::MemoryLayout layout)
 	{
 		m_memoryLayout = layout;
@@ -55,64 +60,37 @@ namespace vulkanRendererBackend
 	{
 		return m_name;
 	}
-	Mesh::MeshType Mesh::GetMeshType() const
+	//Mesh::MeshType Mesh::GetMeshType() const
+	//{
+	//	return m_meshType;
+	//}
+	Mesh::VkIndexType Mesh::GetVkIndexType() const
 	{
-		return m_meshType;
+		return m_vkIndexType;
 	}
-	Mesh::IndexType Mesh::GetIndexType() const
-	{
-		return m_indexType;
-	}
-	Mesh::MemoryLayout Mesh::GetMemoryLayout() const
-	{
-		return m_memoryLayout;
-	}
+	//Mesh::MemoryLayout Mesh::GetMemoryLayout() const
+	//{
+	//	return m_memoryLayout;
+	//}
 	emberBackendInterface::IMesh* Mesh::GetCopy(const std::string& newName)
 	{
 		Mesh* copy = new Mesh(newName);
-		copy->SetMeshType(m_meshType);
-		copy->SetIndexType(m_indexType);
-		copy->SetMemoryLayout(m_memoryLayout);
+		//copy->SetMeshType(m_meshType);
+		//copy->SetMemoryLayout(m_memoryLayout);
 		return static_cast<emberBackendInterface::IMesh*>(copy);
 	}
 
 
 
-		// Backend only:
+	// Backend only:
 	VertexBuffer* Mesh::GetVertexBuffer()
 	{
-		if (m_meshType == MeshType::dynamic)
-			return m_pVertexBuffers[0].get();
-		else
-			return m_pVertexBuffers[Context::GetFrameIndex()].get();
+		return m_pVertexBuffers[Context::GetFrameIndex()]->GetActiveBuffer();
 	}
 	IndexBuffer* Mesh::GetIndexBuffer()
 	{
-		if (m_meshType == MeshType::static)
-			return m_pIndexBuffers[0].get();
-		else
-			return m_pIndexBuffers[Context::GetFrameIndex()].get();
+		return m_pIndexBuffers[Context::GetFrameIndex()]->GetActiveBuffer();
 	}
-	//uint64_t Mesh::GetPositionsOffset() const
-	//{
-	//	return 0;
-	//}
-	//uint64_t Mesh::GetNormalsOffset() const
-	//{
-	//	return GetSizeOfPositions();
-	//}
-	//uint64_t Mesh::GetTangentsOffset() const
-	//{
-	//	return GetSizeOfPositions() + GetSizeOfNormals();
-	//}
-	//uint64_t Mesh::GetColorsOffset() const
-	//{
-	//	return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents();
-	//}
-	//uint64_t Mesh::GetUVsOffset() const
-	//{
-	//	return GetSizeOfPositions() + GetSizeOfNormals() + GetSizeOfTangents() + GetSizeOfColors();
-	//}
 
 
 
@@ -177,6 +155,7 @@ namespace vulkanRendererBackend
 	void Mesh::UpdateVertexBuffer(std::vector<Float3>* positions, std::vector<Float3>* normals, std::vector<Float3>* tangents, std::vector<Float4>* colors, std::vector<Float4>* uvs)
 	{
 		size_t vertexCount = positions->size();
+		m_vkIndexType = (vertexCount > 65535) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16; 
 
 		// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
 		if (m_meshType == MeshType::static)
@@ -253,14 +232,53 @@ namespace vulkanRendererBackend
 	//	VKA(vmaUnmapMemory(Context::GetVmaAllocator(), m_pIndexBuffer->allocation));
 	//}
 	#else // With Staging buffer:
-	void Mesh::UpdateIndexBuffer()
+	void Mesh::UpdateIndexBuffer(std::vector<Uint3>* triangles)
 	{
 		static_assert(sizeof(Uint3) == 3 * sizeof(uint32_t));
 		size_t triangleCount = triangles->size();
 
-		// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
 		if (m_meshType == MeshType::static)
+		{
+			// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
 			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
+
+			// Resize buffers if necessary:
+			uint32_t elemetSize = (m_vkIndexType == VK_INDEX_TYPE_UINT16) ? sizeof(uint16_t) : sizeof(uint32_t);	
+			if (m_pIndexBuffers[0] == nullptr || m_pIndexBuffers[0]->GetCount() != triangleCount || m_pIndexBuffers[0]->GetElementSize() != elemetSize)
+				m_pIndexBuffers[0] = std::make_unique<IndexBuffer>(triangleCount, 3 * elemetSize, m_name);
+
+			if (m_vkIndexType == VK_INDEX_TYPE_UINT16)
+			{
+				// Convert triangles to uint16_t:
+				std::vector<uint16_t> triangles16(3 * triangleCount);
+				for (size_t i = 0; i < triangleCount; i++)
+				{
+					triangles16[0 + 3 * i] = static_cast<uint16_t>((*triangles)[i].x);
+					triangles16[1 + 3 * i] = static_cast<uint16_t>((*triangles)[i].y);
+					triangles16[2 + 3 * i] = static_cast<uint16_t>((*triangles)[i].z);
+				}
+
+				// Copy: triangles(16bit) -> stagingBuffer -> indexBuffer
+				uint64_t size = 3 * triangleCount * sizeof(uint16_t);
+				StagingBuffer stagingBuffer(size, m_name);
+				stagingBuffer.SetData(reinterpret_cast<uint16_t*>(triangles16.data()), size);
+				stagingBuffer.UploadToBuffer(m_pIndexBuffers[0].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+			}
+			else // (m_indexType == IndexType::uint32)
+			{
+				// Copy: triangles(32bit) -> stagingBuffer -> indexBuffer
+				uint64_t size = 3 * triangleCount * sizeof(uint32_t);
+				StagingBuffer stagingBuffer(size, m_name);
+				stagingBuffer.SetData(reinterpret_cast<uint32_t*>(triangles->data()), size);
+				stagingBuffer.UploadToBuffer(m_pIndexBuffers[0].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+			}
+		}
+		else // (m_meshType == MeshType::dynamic)
+		{
+
+		}
+
+
 
 		// Resize buffers if necessary:
 		for (size_t i = 0; i < m_pIndexBuffers.size(); i++)
@@ -269,11 +287,31 @@ namespace vulkanRendererBackend
 				m_pIndexBuffers[i] = std::make_unique<IndexBuffer>(triangleCount, 3 * (uint32_t)sizeof(uint32_t), m_name);
 		}
 
-		// Copy: triangles -> stagingBuffer -> indexBuffer
-		uint64_t size = triangleCount * sizeof(Uint3);
-		StagingBuffer stagingBuffer(size, m_name);
-		stagingBuffer.SetData(reinterpret_cast<uint32_t*>(m_triangles.data()), size);
-		stagingBuffer.UploadToBuffer(m_pIndexBuffer.get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+		if (m_vkIndexType == VK_INDEX_TYPE_UINT16)
+		{
+			// Convert triangles to uint16_t:
+			std::vector<uint16_t> triangles16(3 * triangleCount);
+			for (size_t i = 0; i < triangleCount; i++)
+			{
+				triangles16[0 + 3 * i] = static_cast<uint16_t>((*triangles)[i].x);
+				triangles16[1 + 3 * i] = static_cast<uint16_t>((*triangles)[i].y);
+				triangles16[2 + 3 * i] = static_cast<uint16_t>((*triangles)[i].z);
+			}
+
+			// Copy: triangles(16bit) -> stagingBuffer -> indexBuffer
+			uint64_t size = 3 * triangleCount * sizeof(uint16_t);
+			StagingBuffer stagingBuffer(size, m_name);
+			stagingBuffer.SetData(reinterpret_cast<uint16_t*>(triangles16.data()), size);
+			stagingBuffer.UploadToBuffer(m_pIndexBuffers[0].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+		}
+		else // (m_indexType == IndexType::uint32)
+		{
+			// Copy: triangles(32bit) -> stagingBuffer -> indexBuffer
+			uint64_t size = 3 * triangleCount * sizeof(uint32_t);
+			StagingBuffer stagingBuffer(size, m_name);
+			stagingBuffer.SetData(reinterpret_cast<uint32_t*>(triangles->data()), size);
+			stagingBuffer.UploadToBuffer(m_pIndexBuffers[0].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+		}
 	}
 	#endif
 }

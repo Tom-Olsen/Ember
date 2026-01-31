@@ -1,6 +1,4 @@
 #pragma once
-#include "iBuffer.h"
-#include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
 
@@ -26,7 +24,7 @@ namespace vulkanRendererBackend
 	/// -VmaMemoryUsage				=> prefer host/device, ... <para/>
 	/// -VmaAllocationCreateFlags	=> mapped, host access, ...
 	/// </summary>
-	class VULKAN_RENDERER_API Buffer : public emberBackendInterface::IBuffer
+	class Buffer
 	{
 	protected: // Members:
 		std::string m_name;
