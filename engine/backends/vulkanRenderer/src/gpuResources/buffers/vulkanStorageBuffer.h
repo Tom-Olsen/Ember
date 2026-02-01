@@ -1,7 +1,6 @@
 #pragma once
 #include "vulkanBuffer.h"
 #include "vulkanRendererExport.h"
-#include <string>
 
 
 
@@ -17,7 +16,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		StorageBuffer(uint32_t count, uint32_t elementSize, const std::string& name);
+		StorageBuffer(uint32_t count, uint32_t elementSize);
 		~StorageBuffer();
 
 		// Non-copyable:

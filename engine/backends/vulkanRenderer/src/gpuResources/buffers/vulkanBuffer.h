@@ -1,4 +1,6 @@
 #pragma once
+#include "iBuffer.h"
+#include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
 
@@ -24,10 +26,9 @@ namespace vulkanRendererBackend
 	/// -VmaMemoryUsage				=> prefer host/device, ... <para/>
 	/// -VmaAllocationCreateFlags	=> mapped, host access, ...
 	/// </summary>
-	class Buffer
+	class VULKAN_RENDERER_API Buffer : public emberBackendInterface::IBuffer
 	{
 	protected: // Members:
-		std::string m_name;
 		uint32_t m_count;
 		uint32_t m_elementSize;	// in bytes.
 		uint64_t m_size;		// m_size = m_count * m_elementSize.
@@ -47,16 +48,20 @@ namespace vulkanRendererBackend
 		Buffer& operator=(Buffer&&) noexcept;
 
 		// Getters:
-		std::string GetName() const override;
 		uint64_t GetSize() const override;
 		uint32_t GetCount() const override;
 		uint32_t GetElementSize() const override;
 		VmaBuffer* const GetVmaBuffer() const;
 
 		// Data transfer:
-		void Upload(VkCommandBuffer vkCommandBuffer, void* pSrc, uint64_t size);
 		void Upload(const void* pSrc, uint64_t size) override;
-		void Download(VkCommandBuffer vkCommandBuffer, void* pDst, uint64_t size);
 		void Download(void* pDst, uint64_t size) override;
+
+		// Debugging:
+		void SetDebugName(const std::string& name) override;
+
+		// Backend only:
+		void Upload(VkCommandBuffer vkCommandBuffer, void* pSrc, uint64_t size);
+		void Download(VkCommandBuffer vkCommandBuffer, void* pDst, uint64_t size);
 	};
 }

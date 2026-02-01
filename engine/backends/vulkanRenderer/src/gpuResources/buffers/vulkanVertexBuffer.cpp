@@ -1,6 +1,5 @@
 #include "vulkanVertexBuffer.h"
 #include "vmaBuffer.h"
-#include "vulkanMacros.h"
 
 
 
@@ -8,12 +7,11 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	VertexBuffer::VertexBuffer(uint32_t count, uint32_t elementSize, const std::string& name)
+	VertexBuffer::VertexBuffer(uint32_t count, uint32_t elementSize)
 	{
 		m_count = count;
 		m_elementSize = elementSize;
 		m_size = m_count * m_elementSize;
-		m_name = name;
 
 		// Create buffer:
 		BufferCreateInfo bufferInfo = {};
@@ -27,8 +25,7 @@ namespace vulkanRendererBackend
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_pBuffer = std::make_unique<VmaBuffer>("vertexBuffer_" + m_name, bufferInfo, allocInfo);
-		NAME_VK_BUFFER(m_pBuffer->GetVkBuffer(), "vertexBuffer " + m_name);
+		m_pBuffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
 	}
 	VertexBuffer::~VertexBuffer()
 	{

@@ -1,7 +1,5 @@
 #include "vulkanStorageBuffer.h"
 #include "vmaBuffer.h"
-#include "vulkanMacros.h"
-#include <string>
 #include <vulkan/vulkan.h>
 
 
@@ -10,9 +8,8 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize, const std::string& name)
+	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize)
 	{
-		m_name = name;
 		m_count = count;
 		m_elementSize = Std430Alignment(elementSize);
 		m_size = m_count * m_elementSize;
@@ -29,8 +26,7 @@ namespace vulkanRendererBackend
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_pBuffer = std::make_unique<VmaBuffer>("storageBuffer_" + m_name, bufferInfo, allocInfo);
-		NAME_VK_BUFFER(m_pBuffer->GetVkBuffer(), "storageBuffer " + m_name);
+		m_pBuffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
 	}
 	StorageBuffer::~StorageBuffer()
 	{
@@ -56,7 +52,7 @@ namespace vulkanRendererBackend
 	        case 4 * sizeof(float):   return 4 * sizeof(float);
 	        case 16 * sizeof(float):  return 16 * sizeof(float);
 	        default: 
-	            throw std::runtime_error("StorageBuffer '" + m_name + "' uses unsupported elementSize '" + std::to_string(elementSize) + "' in std430 layout!");
+	            throw std::runtime_error("StorageBuffer uses unsupported elementSize '" + std::to_string(elementSize) + "' in std430 layout!");
 				return 0;
 	    }
 	}

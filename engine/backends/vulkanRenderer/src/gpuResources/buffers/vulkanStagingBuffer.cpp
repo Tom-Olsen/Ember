@@ -3,11 +3,9 @@
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
-#include "vulkanMacros.h"
 #include "vulkanPipelineStage.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanTexture.h"
-#include <cstring>
 #include <vulkan/vulkan.h>
 
 
@@ -16,10 +14,9 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	StagingBuffer::StagingBuffer(uint64_t size, const std::string& name)
+	StagingBuffer::StagingBuffer(uint64_t size)
 	{
 		m_size = size;
-		m_name = name;
 
 		// Create buffer:
 		BufferCreateInfo bufferInfo = {};
@@ -33,8 +30,7 @@ namespace vulkanRendererBackend
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_pBuffer = std::make_unique<VmaBuffer>("stagingBuffer_" + m_name, bufferInfo, allocInfo);
-		NAME_VK_BUFFER(m_pBuffer->GetVkBuffer(), "stagingBuffer " + m_name);
+		m_pBuffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
 
 		// Get mapped deviceData pointer:
 		VmaAllocationInfo allocInfoOut;

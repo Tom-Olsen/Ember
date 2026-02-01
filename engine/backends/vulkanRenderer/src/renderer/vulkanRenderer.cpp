@@ -169,6 +169,9 @@ namespace vulkanRendererBackend
 			PROFILE_SCOPE("Record");
 			DEBUG_LOG_CRITICAL("Recording frame {}", Context::GetFrameIndex());
 
+			RecordResourceUpdateCommands();
+			SubmitResourceUpdateCommands();
+
 			RecordPreRenderComputeCommands();
 			SubmitPreRenderComputeCommands();
 
@@ -622,6 +625,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::ResetCommandPools()
 	{
+		GetCommandPool(Context::GetFrameIndex(), RenderStage::resourceUpdate).ResetPools();
 		GetCommandPool(Context::GetFrameIndex(), RenderStage::preRenderCompute).ResetPools();
 		GetCommandPool(Context::GetFrameIndex(), RenderStage::shadow).ResetPools();
 		GetCommandPool(Context::GetFrameIndex(), RenderStage::forward).ResetPools();
@@ -632,6 +636,23 @@ namespace vulkanRendererBackend
 
 
 	// Record commands:
+	void Renderer::RecordResourceUpdateCommands()
+	{
+		PROFILE_FUNCTION();
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::resourceUpdate);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		// Record resource update commands:
+		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		{
+			// Ember::ToDo: implement resource update command recording.
+		}
+		VKA(vkEndCommandBuffer(commandBuffer));
+	}
 	void Renderer::RecordPreRenderComputeCommands()
 	{
 		PROFILE_FUNCTION();
@@ -1224,6 +1245,38 @@ namespace vulkanRendererBackend
 
 
 	// Submit commands:
+	void Renderer::SubmitResourceUpdateCommands()
+	{
+		PROFILE_FUNCTION();
+		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::resourceUpdate);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_acquireSemaphores[Context::GetFrameIndex()];
+		waitSemaphoreInfo.stageMask = PipelineStages::topOfPipe;
+
+		// Command buffer info:
+		VkCommandBufferSubmitInfo cmdBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		cmdBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_resourceUpdateToPreRenderComputeSemaphores[Context::GetFrameIndex()];
+		signalSemaphoreInfo.stageMask = PipelineStages::transfer;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &cmdBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
+	}
 	void Renderer::SubmitPreRenderComputeCommands()
 	{
 		PROFILE_FUNCTION();
@@ -1232,7 +1285,7 @@ namespace vulkanRendererBackend
 
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_acquireSemaphores[Context::GetFrameIndex()];
+		waitSemaphoreInfo.semaphore = m_resourceUpdateToPreRenderComputeSemaphores[Context::GetFrameIndex()];
 		waitSemaphoreInfo.stageMask = PipelineStages::topOfPipe;
 
 		// Command buffer info:
@@ -1499,6 +1552,7 @@ namespace vulkanRendererBackend
 
         // One per frame in flight:
 		m_acquireSemaphores.resize(Context::GetFramesInFlight());
+		m_resourceUpdateToPreRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_preRenderComputeToShadowSemaphores.resize(Context::GetFramesInFlight());
 		m_shadowToForwardSemaphores.resize(Context::GetFramesInFlight());
 		m_forwardToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
@@ -1507,12 +1561,14 @@ namespace vulkanRendererBackend
 		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_resourceUpdateToPreRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToShadowSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowToForwardSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderToPresentSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
 			NAME_VK_SEMAPHORE(m_acquireSemaphores[i], "AcquireSemaphore" + std::to_string(i));
+			NAME_VK_SEMAPHORE(m_resourceUpdateToPreRenderComputeSemaphores[i], "ResourceUpdateToPreRenderComputeSemaphore" + std::to_string(i));
 			NAME_VK_SEMAPHORE(m_preRenderComputeToShadowSemaphores[i], "PreRenderComputeToShadowSemaphore" + std::to_string(i));
 			NAME_VK_SEMAPHORE(m_shadowToForwardSemaphores[i], "ShadowToForwardSemaphore" + std::to_string(i));
 			NAME_VK_SEMAPHORE(m_forwardToPostRenderComputeSemaphores[i], "ForwardToPostRenderComputeSemaphore" + std::to_string(i));
@@ -1531,6 +1587,7 @@ namespace vulkanRendererBackend
 		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			vkDestroySemaphore(Context::GetVkDevice(), m_acquireSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_resourceUpdateToPreRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToShadowSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_shadowToForwardSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_forwardToPostRenderComputeSemaphores[i], nullptr);
@@ -1538,6 +1595,7 @@ namespace vulkanRendererBackend
 			vkDestroySemaphore(Context::GetVkDevice(), m_releaseSemaphores[i], nullptr);
 		}
 		m_acquireSemaphores.clear();
+		m_resourceUpdateToPreRenderComputeSemaphores.clear();
 		m_preRenderComputeToShadowSemaphores.clear();
 		m_shadowToForwardSemaphores.clear();
 		m_forwardToPostRenderComputeSemaphores.clear();

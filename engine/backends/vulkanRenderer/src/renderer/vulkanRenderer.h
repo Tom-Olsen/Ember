@@ -52,15 +52,17 @@ namespace vulkanRendererBackend
 	private: // Enums:
 		enum class RenderStage
 		{
-			preRenderCompute = 0,
-			shadow = 1,
-			forward = 2,
-			postRenderCompute = 3,
-			present = 4,
-			stageCount = 5
+			resourceUpdate = 0,
+			preRenderCompute = 1,
+			shadow = 2,
+			forward = 3,
+			postRenderCompute = 4,
+			present = 5,
+			stageCount = 6
 		};
 		inline static constexpr std::array<const char*, (int)RenderStage::stageCount> renderStageNames =
 		{
+			"resourceUpdate",
 			"preRenderCompute",
 			"shadow",
 			"forward",
@@ -80,6 +82,7 @@ namespace vulkanRendererBackend
 		// Sync objects:
 		std::vector<VkFence> m_frameFences;
 		std::vector<VkSemaphore> m_acquireSemaphores;
+		std::vector<VkSemaphore> m_resourceUpdateToPreRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_preRenderComputeToShadowSemaphores;
 		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
 		std::vector<VkSemaphore> m_forwardToPostRenderComputeSemaphores;
@@ -206,6 +209,7 @@ namespace vulkanRendererBackend
 		void ResetCommandPools();
 
 		// Record commands:
+		void RecordResourceUpdateCommands();
 		void RecordPreRenderComputeCommands();
 		void RecordShadowCommands();
 		void RecordForwardCommands();
@@ -215,6 +219,7 @@ namespace vulkanRendererBackend
 		void RecordImGuiPresentCommands();
 
 		// Submit commands:
+		void SubmitResourceUpdateCommands();
 		void SubmitPreRenderComputeCommands();
 		void SubmitShadowCommands();
 		void SubmitForwardCommands();

@@ -3,7 +3,6 @@
 #include "vk_mem_alloc.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
-#include "vulkanMacros.h"
 
 
 
@@ -11,11 +10,10 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	UniformBuffer::UniformBuffer(UniformBufferBlock* pUniformBufferBlock, const std::string& name)
+	UniformBuffer::UniformBuffer(UniformBufferBlock* pUniformBufferBlock)
 	{
 		m_pUniformBufferBlock = pUniformBufferBlock;
 		m_size = m_pUniformBufferBlock->size;
-		m_name = name;
 
 		// Create buffer:
 		BufferCreateInfo bufferInfo = {};
@@ -29,8 +27,7 @@ namespace vulkanRendererBackend
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
-		m_pBuffer = std::make_unique<VmaBuffer>("uniformBuffer_" + m_name, bufferInfo, allocInfo);
-		NAME_VK_BUFFER(m_pBuffer->GetVkBuffer(), "uniformBuffer " + m_name);
+		m_pBuffer = std::make_unique<VmaBuffer>(bufferInfo, allocInfo);
 
 		// Get mapped deviceData pointer:
 		VmaAllocationInfo info;

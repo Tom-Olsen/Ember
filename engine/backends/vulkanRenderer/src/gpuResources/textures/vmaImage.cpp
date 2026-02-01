@@ -410,7 +410,7 @@ namespace vulkanRendererBackend
 		{
 			if (imageView != VK_NULL_HANDLE)
 				vkDestroyImageView(Context::GetVkDevice(), imageView, nullptr);
-			if (allocation != nullptr || image != VK_NULL_HANDLE)
+			if (image != VK_NULL_HANDLE && allocation != nullptr)
 				vmaDestroyImage(Context::GetVmaAllocator(), image, allocation);
 
 			#ifdef VALIDATION_LAYERS_ACTIVE

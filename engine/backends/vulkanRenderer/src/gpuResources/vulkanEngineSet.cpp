@@ -75,18 +75,25 @@ namespace vulkanRendererBackend
 	}
 	EngineSet::~EngineSet()
 	{
-		// Queue the destruction of descriptor set for later collection:
-		VkDescriptorSet descriptorSet = m_descriptorSet;
-		GarbageCollector::RecordGarbage([descriptorSet]()
+		if (m_descriptorSet != VK_NULL_HANDLE)
 		{
-			vkFreeDescriptorSets(Context::GetVkDevice(), Context::GetVkDescriptorPool(), 1, &descriptorSet);
-		});
-		// Queue the destruction of descriptor set layout for later collection:
-		VkDescriptorSetLayout descriptorSetLayout = m_descriptorSetLayout;
-		GarbageCollector::RecordGarbage([descriptorSetLayout]()
+			VkDescriptorSet descriptorSet = m_descriptorSet;
+			m_descriptorSet = VK_NULL_HANDLE;
+			GarbageCollector::RecordGarbage([descriptorSet]()
+			{
+				vkFreeDescriptorSets(Context::GetVkDevice(), Context::GetVkDescriptorPool(), 1, &descriptorSet);
+			});
+		}
+
+		if (m_descriptorSetLayout != VK_NULL_HANDLE)
 		{
-			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), descriptorSetLayout, nullptr);
-		});
+			VkDescriptorSetLayout descriptorSetLayout = m_descriptorSetLayout;
+			m_descriptorSetLayout = VK_NULL_HANDLE;
+			GarbageCollector::RecordGarbage([descriptorSetLayout]()
+			{
+				vkDestroyDescriptorSetLayout(Context::GetVkDevice(), descriptorSetLayout, nullptr);
+			});
+		}
 	}
 
 

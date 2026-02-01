@@ -1,6 +1,5 @@
 #pragma once
 #include "vulkanBuffer.h"
-#include <string>
 
 
 
@@ -32,7 +31,7 @@ namespace vulkanRendererBackend
 		
 	public: // Methods:
 		// Constructor/Destructor:
-		StagingBuffer(uint64_t size, const std::string& name);
+		StagingBuffer(uint64_t size);
 		~StagingBuffer();
 
 		// Non-copyable:

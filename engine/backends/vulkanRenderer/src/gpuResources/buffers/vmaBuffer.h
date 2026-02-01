@@ -23,14 +23,13 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		static uint32_t s_index;
-		std::string m_name;
 		VkBuffer m_buffer;
 		VmaAllocation m_allocation;
 		BufferCreateInfo m_bufferInfo;
 		AllocationCreateInfo m_allocationInfo;
 
 	public: // Methods:
-		VmaBuffer(const std::string& name, const BufferCreateInfo& bufferInfo, const AllocationCreateInfo& allocInfo);
+		VmaBuffer(const BufferCreateInfo& bufferInfo, const AllocationCreateInfo& allocInfo);
 		~VmaBuffer();
 
 		// Non-copyable:
@@ -42,7 +41,6 @@ namespace vulkanRendererBackend
 		VmaBuffer& operator=(VmaBuffer&& other) noexcept;
 
 		// Getters:
-		const std::string& GetName() const;
 		const VkBuffer& GetVkBuffer() const;
 		const VmaAllocation& GetVmaAllocation() const;
 		const BufferCreateInfo& GetBufferCreateInfo() const;

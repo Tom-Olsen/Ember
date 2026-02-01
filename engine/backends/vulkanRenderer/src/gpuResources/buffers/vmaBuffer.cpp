@@ -16,10 +16,8 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaBuffer::VmaBuffer(const std::string& name, const BufferCreateInfo& bufferInfo, const AllocationCreateInfo& allocInfo)
+	VmaBuffer::VmaBuffer(const BufferCreateInfo& bufferInfo, const AllocationCreateInfo& allocInfo)
 	{
-		m_name = name + "_" + std::to_string(s_index);
-		s_index++;
 		m_bufferInfo = bufferInfo;
 		m_allocationInfo = allocInfo;
 		m_buffer = VK_NULL_HANDLE;
@@ -48,10 +46,10 @@ namespace vulkanRendererBackend
 
 		// Create Buffer:
 		VKA(vmaCreateBuffer(Context::GetVmaAllocator(), &vkBufferInfo, &vmaAllocationInfo, &m_buffer, &m_allocation, nullptr));
-		NAME_VK_BUFFER(m_buffer, m_name + "Buffer");
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::GetAllocationTracker()->AddVmaBufferAllocation(m_allocation, m_name);
+		Context::GetAllocationTracker()->AddVmaBufferAllocation(m_allocation, std::to_string(s_index));
+		s_index++;
 		#endif
 	}
 	VmaBuffer::~VmaBuffer()
@@ -80,10 +78,6 @@ namespace vulkanRendererBackend
 
 	// Public methods:
 	// Getters:
-	const std::string& VmaBuffer::GetName() const
-	{
-		return m_name;
-	}
 	const VkBuffer& VmaBuffer::GetVkBuffer() const
 	{
 		return m_buffer;
@@ -121,11 +115,10 @@ namespace vulkanRendererBackend
 		// Clear members so to avoid double cleanup:
 		m_buffer = VK_NULL_HANDLE;
 		m_allocation = nullptr;
-		m_name.clear();
 
 		GarbageCollector::RecordGarbage([buffer, allocation]()
 		{
-			if (buffer != VK_NULL_HANDLE)
+			if (buffer != VK_NULL_HANDLE && allocation != nullptr)
 				vmaDestroyBuffer(Context::GetVmaAllocator(), buffer, allocation);
 
 			#ifdef VALIDATION_LAYERS_ACTIVE
@@ -135,13 +128,11 @@ namespace vulkanRendererBackend
 	}
 	void VmaBuffer::MoveFrom(VmaBuffer& other) noexcept
 	{
-		m_name = other.m_name;
 		m_buffer = other.m_buffer;
 		m_allocation = other.m_allocation;
 		m_bufferInfo = other.m_bufferInfo;
 		m_allocationInfo = other.m_allocationInfo;
 
-		other.m_name = "";
 		other.m_buffer = VK_NULL_HANDLE;
 		other.m_allocation = nullptr;
 		other.m_bufferInfo = {};

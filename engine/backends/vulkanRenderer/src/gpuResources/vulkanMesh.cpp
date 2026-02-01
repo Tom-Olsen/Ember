@@ -1,5 +1,6 @@
 #include "vulkanMesh.h"
 #include "logger.h"
+#include "vmaBuffer.h"
 #include "vulkanIndexBuffer.h"
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
@@ -14,11 +15,13 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	Mesh::Mesh(const std::string& name)
+	Mesh::Mesh()
 	{
-		m_name = name;
-		m_pVertexBuffers.resize(Context::GetFramesInFlight());
-		m_pIndexBuffers.resize(Context::GetFramesInFlight());
+		size_t frames = Context::GetFramesInFlight();
+		m_pVertexBuffers.resize(frames);
+		m_pIndexBuffers.resize(frames);
+		m_vkBuffersCache.resize(frames);
+		m_vkOffsetsCache.resize(frames);
 	}
 	Mesh::~Mesh()
 	{
@@ -34,10 +37,6 @@ namespace vulkanRendererBackend
 
 
 	// Setters:
-	void Mesh::SetName(const std::string& name)
-	{
-		m_name = name;
-	}
 	//void Mesh::SetMeshType(Mesh::MeshType type)
 	//{
 	//	if (m_meshType != type)
@@ -48,270 +47,204 @@ namespace vulkanRendererBackend
 	//		m_pIndexBuffers.resize(bufferCount);
 	//	}
 	//}
-	void Mesh::SetMemoryLayout(Mesh::MemoryLayout layout)
-	{
-		m_memoryLayout = layout;
-	}
 
 
 
 	// Getters:
-	const std::string& Mesh::GetName() const
-	{
-		return m_name;
-	}
 	//Mesh::MeshType Mesh::GetMeshType() const
 	//{
 	//	return m_meshType;
 	//}
-	Mesh::VkIndexType Mesh::GetVkIndexType() const
+	emberCommon::VertexMemoryLayout Mesh::GetVertexMemoryLayout() const
 	{
-		return m_vkIndexType;
-	}
-	//Mesh::MemoryLayout Mesh::GetMemoryLayout() const
-	//{
-	//	return m_memoryLayout;
-	//}
-	emberBackendInterface::IMesh* Mesh::GetCopy(const std::string& newName)
-	{
-		Mesh* copy = new Mesh(newName);
-		//copy->SetMeshType(m_meshType);
-		//copy->SetMemoryLayout(m_memoryLayout);
-		return static_cast<emberBackendInterface::IMesh*>(copy);
-	}
-
-
-
-	// Backend only:
-	VertexBuffer* Mesh::GetVertexBuffer()
-	{
-		return m_pVertexBuffers[Context::GetFrameIndex()]->GetActiveBuffer();
-	}
-	IndexBuffer* Mesh::GetIndexBuffer()
-	{
-		return m_pIndexBuffers[Context::GetFrameIndex()]->GetActiveBuffer();
+		return m_vertexMemoryLayout;
 	}
 
 
 
 	// Update GPU buffers:
-	#ifdef RESIZEABLE_BAR // No staging buffer: not implemented yet
-	//void Mesh::UpdateVertexBuffer(std::vector<Float3>* positions, std::vector<Float3>* normals, std::vector<Float3>* tangents, std::vector<Float4>* colors, std::vector<Float4>* uvs)
-	//{
-	//	size_t vertexCount = positions->size();
-	//
-	//	// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
-	//	if (m_meshType == MeshType::static)
-	//		vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
-	//
-	//	// Resize buffer if necessary:
-	//	for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
-	//	{
-	//		if (m_pVertexBuffers[i] == nullptr || m_pVertexBuffers[i]->GetCount() != vertexCount)
-	//			m_pVertexBuffers[i] = std::make_unique<VertexBuffer>(vertexCount, sizeof(Vertex), m_name);
-	//	}
-	//
-	//	// Copy: meshData -> vertexBuffer
-	//	if (m_memoryLayout == MemoryLayout::interleaved)
-	//	{
-	//		for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
-	//		{
-	//			void* data;
-	//			VKA(vmaMapMemory(Context::GetVmaAllocator(), m_pVertexBuffers[i]->allocation, &data));
-	//			for (size_t j = 0; j < vertexCount; j++)
-	//			{
-	//				Vertex vertex;
-	//				vertex.position = (*positions)[j];
-	//				vertex.normal = normals ? (*normals)[j] : Float3::up;
-	//				vertex.tangent = tangents ? (*tangents)[j] : Float3::right;
-	//				vertex.color = colors ? (*colors)[j] : Float4::white;
-	//				vertex.uv = uvs ? (*uvs)[j] : Float4::zero;
-	//				memcpy(static_cast<char*>(data) + j * sizeof(Vertex), &vertex, sizeof(Vertex));
-	//			}
-	//			VKA(vmaUnmapMemory(Context::GetVmaAllocator(), m_pVertexBuffers[i]->allocation));
-	//		}
-	//	}
-	//	else // (m_memoryLayout == MemoryLayout::separate)
-	//	{
-	//		size_t posEnd = vertexCount * sizeof(Float3);
-	//		size_t normEnd = posEnd + vertexCount * sizeof(Float3);
-	//		size_t tangEnd = normEnd + vertexCount * sizeof(Float3);
-	//		size_t colorEnd = tangEnd + vertexCount * sizeof(Float4);
-	//		size_t uvEnd = colorEnd + vertexCount * sizeof(Float4);
-	//		for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
-	//		{
-	//			void* data;
-	//			VKA(vmaMapMemory(Context::GetVmaAllocator(), m_pVertexBuffers[i]->allocation, &data));
-	//			if (positions) memcpy(static_cast<char*>(data), positions->data(), posEnd);
-	//			if (normals) memcpy(static_cast<char*>(data) + posEnd, normals->data(), normEnd);
-	//			if (tangents) memcpy(static_cast<char*>(data) + normEnd, tangents->data(), tangEnd);
-	//			if (colors) memcpy(static_cast<char*>(data) + tangEnd, colors->data(), colorEnd);
-	//			if (uvs) memcpy(static_cast<char*>(data) + colorEnd, uvs->data(), uvEnd);
-	//			VKA(vmaUnmapMemory(Context::GetVmaAllocator(), m_pVertexBuffers[i]->allocation));
-	//		}
-	//	}
-	//}
-	#else // With Staging buffer:
-	void Mesh::UpdateVertexBuffer(std::vector<Float3>* positions, std::vector<Float3>* normals, std::vector<Float3>* tangents, std::vector<Float4>* colors, std::vector<Float4>* uvs)
+	void Mesh::UpdateVertexBuffer(const std::vector<Float3>& positions, std::vector<Float3>* pNormals, std::vector<Float3>* pTangents, std::vector<Float4>* pColors, std::vector<Float4>* pUvs, emberCommon::VertexMemoryLayout vertexMemoryLayout)
 	{
-		size_t vertexCount = positions->size();
-		m_vkIndexType = (vertexCount > 65535) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16; 
+		m_vertexMemoryLayout = vertexMemoryLayout;
+		UpdateVertexBuffer(positions, pNormals, pTangents, pColors, pUvs);
+	}
+	void Mesh::UpdateVertexBuffer(const std::vector<Float3>& positions, std::vector<Float3>* pNormals, std::vector<Float3>* pTangents, std::vector<Float4>* pColors, std::vector<Float4>* pUvs)
+	{
+		size_t vertexCount = positions.size();
 
-		// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
-		if (m_meshType == MeshType::static)
-			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
+		// Reset staging buffer:
+		m_pVertexStagingBuffer.reset();
+		m_pVertexStagingBuffer = std::make_unique<StagingBuffer>(vertexCount * sizeof(Vertex));
 
-		// Resize buffers if necessary:
-		for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
+		// Copy: meshData -> stagingBuffer
+		if (m_vertexMemoryLayout == emberCommon::VertexMemoryLayout::interleaved)
 		{
-			if (m_pVertexBuffers[i] == nullptr || m_pVertexBuffers[i]->GetCount() != vertexCount)
-				m_pVertexBuffers[i] = std::make_unique<VertexBuffer>(vertexCount, sizeof(Vertex), m_name);
-		}
-
-		// Copy: meshData -> stagingBuffer -> vertexBuffer
-		if (m_memoryLayout == MemoryLayout::interleaved)
-		{
-			for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
+			for (size_t j = 0; j < vertexCount; j++)
 			{
-				StagingBuffer stagingBuffer(vertexCount * sizeof(Vertex), m_name);
-				for (size_t j = 0; j < vertexCount; j++)
-				{
-					Vertex vertex;
-					vertex.position = (*positions)[j];
-					vertex.normal = normals ? (*normals)[j] : Float3::up;
-					vertex.tangent = tangents ? (*tangents)[j] : Float3::right;
-					vertex.color = colors ? (*colors)[j] : Float4::white;
-					vertex.uv = uvs ? (*uvs)[j] : Float4::zero;
-					stagingBuffer.SetData(&vertex, sizeof(Vertex), j * sizeof(Vertex));
-				}
-				stagingBuffer.UploadToBuffer(m_pVertexBuffers[i].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+				Vertex vertex;
+				vertex.position	= positions[j];
+				vertex.normal	= pNormals	? (*pNormals)[j]	: Float3::up;
+				vertex.tangent	= pTangents	? (*pTangents)[j]	: Float3::right;
+				vertex.color	= pColors	? (*pColors)[j]		: Float4::white;
+				vertex.uv		= pUvs		? (*pUvs)[j]		: Float4::zero;
+				m_pVertexStagingBuffer->SetData(&vertex, sizeof(Vertex), j * sizeof(Vertex));
 			}
 		}
 		else
 		{
-			for (size_t i = 0; i < m_pVertexBuffers.size(); i++)
-			{
-				size_t posEnd = vertexCount * sizeof(Float3);
-				size_t normEnd = posEnd + vertexCount * sizeof(Float3);
-				size_t tangEnd = normEnd + vertexCount * sizeof(Float3);
-				size_t colorEnd = tangEnd + vertexCount * sizeof(Float4);
-				size_t uvEnd = colorEnd + vertexCount * sizeof(Float4);
-				StagingBuffer stagingBuffer(vertexCount * sizeof(Vertex), m_name);
-				stagingBuffer.SetData(positions->data(), 0, posEnd);
-				stagingBuffer.SetData(normals->data(), posEnd, normEnd);
-				stagingBuffer.SetData(tangents->data(), normEnd, tangEnd);
-				stagingBuffer.SetData(colors->data(), tangEnd, colorEnd);
-				stagingBuffer.SetData(uvs->data(), colorEnd, uvEnd);
-				stagingBuffer.UploadToBuffer(m_pVertexBuffers[i].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
-			}
+			const size_t positionsOffset = 0;
+			const size_t normalsOffset	= positionsOffset + vertexCount * sizeof(Float3);
+			const size_t tangentsOffset = normalsOffset + vertexCount * sizeof(Float3);
+			const size_t colorsOffset = tangentsOffset + vertexCount * sizeof(Float3);
+			const size_t uvsOffset = colorsOffset + vertexCount * sizeof(Float4);
+
+			m_pVertexStagingBuffer->SetData(positions.data(), vertexCount * sizeof(Float3), positionsOffset);
+			WriteArrayToVertexStagingBuffer(pNormals ? pNormals->data() : nullptr, vertexCount, normalsOffset, Float3::up);
+			WriteArrayToVertexStagingBuffer(pTangents ? pTangents->data() : nullptr, vertexCount, tangentsOffset, Float3::right);
+			WriteArrayToVertexStagingBuffer(pColors ? pColors->data() : nullptr, vertexCount, colorsOffset, Float4::white);
+			WriteArrayToVertexStagingBuffer(pUvs ? pUvs->data() : nullptr, vertexCount, uvsOffset, Float4::zero);
 		}
 	}
-	#endif
-	#ifdef RESIZEABLE_BAR // No staging buffer: not implemented yet
-	//void Mesh::UpdateIndexBuffer(std::vector<Uint3>* triangles)
-	//{
-	//	static_assert(sizeof(Uint3) == 3 * sizeof(uint32_t));
-	//	size_t triangleCount = triangles->size();
-	//
-	//	// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
-	//	if (m_meshType == MeshType::static)
-	//		vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
-	//
-	//	// Resize buffer if necessary:
-	//	for (size_t i = 0; i < m_pIndexBuffers.size(); i++)
-	//	{
-	//		if (m_pIndexBuffers[i] == nullptr || m_pIndexBuffers[i]->GetCount() != triangleCount)
-	//			m_pIndexBuffers[i] = std::make_unique<IndexBuffer>(triangleCount, 3 * (uint32_t)sizeof(uint32_t), m_name);
-	//	}
-	//
-	//	// Copy: triangles -> indexBuffer
-	//	uint64_t size = triangleCount * sizeof(Uint3);
-	//	void* data;
-	//	VKA(vmaMapMemory(Context::GetVmaAllocator(), m_pIndexBuffer->allocation, &data));
-	//	memcpy(data, reinterpret_cast<uint32_t*>(m_triangles.data()), size);
-	//	VKA(vmaUnmapMemory(Context::GetVmaAllocator(), m_pIndexBuffer->allocation));
-	//}
-	#else // With Staging buffer:
-	void Mesh::UpdateIndexBuffer(std::vector<Uint3>* triangles)
+	void Mesh::UpdateIndexBuffer(const std::vector<Uint3>& triangles, uint32_t vertexCount)
 	{
 		static_assert(sizeof(Uint3) == 3 * sizeof(uint32_t));
-		size_t triangleCount = triangles->size();
+		size_t triangleCount = triangles.size();
 
-		if (m_meshType == MeshType::static)
+		// Determine index type:
+		if (vertexCount > 0)
+			m_vkIndexType = (vertexCount > 65535) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
+		else
 		{
-			// Updating static mesh forces wait for previous render calls to finish as mesh could be in use already:
-			vkQueueWaitIdle(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
+			uint32_t maxIndex = 0;
+			for (const auto& tri : triangles)
+				maxIndex = std::max({ maxIndex, tri.x, tri.y, tri.z });
+			m_vkIndexType = (maxIndex > 65535) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
+		}
+		uint32_t elemetSize = (m_vkIndexType == VK_INDEX_TYPE_UINT16) ? sizeof(uint16_t) : sizeof(uint32_t);
 
-			// Resize buffers if necessary:
-			uint32_t elemetSize = (m_vkIndexType == VK_INDEX_TYPE_UINT16) ? sizeof(uint16_t) : sizeof(uint32_t);	
-			if (m_pIndexBuffers[0] == nullptr || m_pIndexBuffers[0]->GetCount() != triangleCount || m_pIndexBuffers[0]->GetElementSize() != elemetSize)
-				m_pIndexBuffers[0] = std::make_unique<IndexBuffer>(triangleCount, 3 * elemetSize, m_name);
+		// Reset staging buffer:
+		m_pIndexStagingBuffer.reset();
+		m_pIndexStagingBuffer = std::make_unique<StagingBuffer>(3 * triangleCount * elemetSize);
 
+		// Copy: triangleData -> stagingBuffer
+		{
 			if (m_vkIndexType == VK_INDEX_TYPE_UINT16)
 			{
 				// Convert triangles to uint16_t:
 				std::vector<uint16_t> triangles16(3 * triangleCount);
 				for (size_t i = 0; i < triangleCount; i++)
 				{
-					triangles16[0 + 3 * i] = static_cast<uint16_t>((*triangles)[i].x);
-					triangles16[1 + 3 * i] = static_cast<uint16_t>((*triangles)[i].y);
-					triangles16[2 + 3 * i] = static_cast<uint16_t>((*triangles)[i].z);
+					triangles16[0 + 3 * i] = static_cast<uint16_t>(triangles[i].x);
+					triangles16[1 + 3 * i] = static_cast<uint16_t>(triangles[i].y);
+					triangles16[2 + 3 * i] = static_cast<uint16_t>(triangles[i].z);
 				}
 
-				// Copy: triangles(16bit) -> stagingBuffer -> indexBuffer
+				// Copy:
 				uint64_t size = 3 * triangleCount * sizeof(uint16_t);
-				StagingBuffer stagingBuffer(size, m_name);
-				stagingBuffer.SetData(reinterpret_cast<uint16_t*>(triangles16.data()), size);
-				stagingBuffer.UploadToBuffer(m_pIndexBuffers[0].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+				m_pIndexStagingBuffer->SetData(reinterpret_cast<uint16_t*>(triangles16.data()), size);
 			}
 			else // (m_indexType == IndexType::uint32)
 			{
-				// Copy: triangles(32bit) -> stagingBuffer -> indexBuffer
 				uint64_t size = 3 * triangleCount * sizeof(uint32_t);
-				StagingBuffer stagingBuffer(size, m_name);
-				stagingBuffer.SetData(reinterpret_cast<uint32_t*>(triangles->data()), size);
-				stagingBuffer.UploadToBuffer(m_pIndexBuffers[0].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
+				m_pIndexStagingBuffer->SetData(reinterpret_cast<uint32_t*>(triangles.data()), size);
 			}
-		}
-		else // (m_meshType == MeshType::dynamic)
-		{
-
-		}
-
-
-
-		// Resize buffers if necessary:
-		for (size_t i = 0; i < m_pIndexBuffers.size(); i++)
-		{
-			if (m_pIndexBuffers[i] == nullptr || m_pIndexBuffers[i]->GetCount() != triangleCount)
-				m_pIndexBuffers[i] = std::make_unique<IndexBuffer>(triangleCount, 3 * (uint32_t)sizeof(uint32_t), m_name);
-		}
-
-		if (m_vkIndexType == VK_INDEX_TYPE_UINT16)
-		{
-			// Convert triangles to uint16_t:
-			std::vector<uint16_t> triangles16(3 * triangleCount);
-			for (size_t i = 0; i < triangleCount; i++)
-			{
-				triangles16[0 + 3 * i] = static_cast<uint16_t>((*triangles)[i].x);
-				triangles16[1 + 3 * i] = static_cast<uint16_t>((*triangles)[i].y);
-				triangles16[2 + 3 * i] = static_cast<uint16_t>((*triangles)[i].z);
-			}
-
-			// Copy: triangles(16bit) -> stagingBuffer -> indexBuffer
-			uint64_t size = 3 * triangleCount * sizeof(uint16_t);
-			StagingBuffer stagingBuffer(size, m_name);
-			stagingBuffer.SetData(reinterpret_cast<uint16_t*>(triangles16.data()), size);
-			stagingBuffer.UploadToBuffer(m_pIndexBuffers[0].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
-		}
-		else // (m_indexType == IndexType::uint32)
-		{
-			// Copy: triangles(32bit) -> stagingBuffer -> indexBuffer
-			uint64_t size = 3 * triangleCount * sizeof(uint32_t);
-			StagingBuffer stagingBuffer(size, m_name);
-			stagingBuffer.SetData(reinterpret_cast<uint32_t*>(triangles->data()), size);
-			stagingBuffer.UploadToBuffer(m_pIndexBuffers[0].get(), Context::GetLogicalDevice()->GetGraphicsQueue());
 		}
 	}
-	#endif
+
+
+
+	// Backend only:
+	VkIndexType Mesh::GetVkIndexType() const
+	{
+		return m_vkIndexType;
+	}
+	VertexBuffer* Mesh::GetVertexBuffer()
+	{
+		return m_pVertexBuffers[Context::GetFrameIndex()].get();
+	}
+	VertexBuffer* Mesh::GetVertexBuffer(uint32_t frameIndex)
+	{
+		return m_pVertexBuffers[frameIndex].get();
+	}
+	IndexBuffer* Mesh::GetIndexBuffer()
+	{
+		return m_pIndexBuffers[Context::GetFrameIndex()].get();
+	}
+	IndexBuffer* Mesh::GetIndexBuffer(uint32_t frameIndex)
+	{
+		return m_pIndexBuffers[frameIndex].get();
+	}
+	VkBuffer* Mesh::GetVkBuffers()
+	{
+		return m_vkBuffersCache[Context::GetFrameIndex()].data();
+	}
+	VkDeviceSize* Mesh::GetVkOffsets()
+	{
+		return m_vkOffsetsCache[Context::GetFrameIndex()].data();
+	}
+
+
+
+	void Mesh::RecordUpdateCommand(VkCommandBuffer vkCommandBuffer, uint32_t frameIndex)
+	{
+		uint32_t vertexCount = m_pVertexStagingBuffer->GetCount();
+		uint32_t indexCount = m_pIndexStagingBuffer->GetCount();
+		uint32_t elemetSize = (m_vkIndexType == VK_INDEX_TYPE_UINT16) ? sizeof(uint16_t) : sizeof(uint32_t);
+
+		// Resize buffers:
+		if (m_pVertexBuffers[frameIndex] == nullptr || m_pVertexBuffers[frameIndex]->GetCount() != vertexCount)
+			m_pVertexBuffers[frameIndex] = std::make_unique<VertexBuffer>(vertexCount, sizeof(Vertex));
+		if (m_pIndexBuffers[frameIndex] == nullptr || m_pIndexBuffers[frameIndex]->GetCount() != indexCount || m_pIndexBuffers[0]->GetElementSize() != elemetSize)
+			m_pIndexBuffers[frameIndex] = std::make_unique<IndexBuffer>(indexCount, elemetSize);
+
+		UpdateBufferCache(frameIndex, vertexCount);
+
+		// Ember::ToDo:
+		// record transfer command to load data from staging buffers to buffer[frameIndex].
+		// first build update command recording and submission in vulkan renderer.
+	}
+
+
+
+	// Private methods:
+	void Mesh::UpdateBufferCache(uint32_t frameIndex, uint32_t vertexCount)
+	{
+		std::vector<VkBuffer>& buffers = m_vkBuffersCache[frameIndex];
+		std::vector<VkDeviceSize>& offsets = m_vkOffsetsCache[frameIndex];
+		buffers.clear();
+		offsets.clear();
+		VkBuffer vkBuffer = m_pVertexBuffers[frameIndex]->GetVmaBuffer()->GetVkBuffer();
+
+		if (m_vertexMemoryLayout == emberCommon::VertexMemoryLayout::interleaved)
+		{
+			buffers.push_back(vkBuffer);
+			offsets.push_back(0);
+		}
+		else
+		{
+			VkDeviceSize offset = 0;
+			buffers.push_back(vkBuffer); offsets.push_back(offset);
+			offset += vertexCount * sizeof(Float3);
+			buffers.push_back(vkBuffer); offsets.push_back(offset);
+			offset += vertexCount * sizeof(Float3);
+			buffers.push_back(vkBuffer); offsets.push_back(offset);
+			offset += vertexCount * sizeof(Float3);
+			buffers.push_back(vkBuffer); offsets.push_back(offset);
+			offset += vertexCount * sizeof(Float4);
+			buffers.push_back(vkBuffer); offsets.push_back(offset);
+			//offset += vertexCount * sizeof(Float4); // for future data.
+		}
+	}
+	template<typename T>
+	void Mesh::WriteArrayToVertexStagingBuffer(const T* pSrc, size_t count, size_t offset, const T& defaultValue)
+	{
+		const size_t sizeInBytes = count * sizeof(T);
+		if (pSrc)
+			m_pVertexStagingBuffer->SetData(pSrc, sizeInBytes, offset);
+		else
+		{
+			std::vector<T> defaults(count, defaultValue);
+			m_pVertexStagingBuffer->SetData(defaults.data(), sizeInBytes, offset);
+		}
+	}
 }
