@@ -48,7 +48,7 @@ namespace vulkanRendererBackend
 		// Setters:
 		void SetData(const void* pSrc, uint64_t size, uint64_t offset = 0);
 
-		// Upload:
+		// Upload: // Ember::ToDo: rename to RecordCopyTo...
 		void UploadToBuffer(VkCommandBuffer commandBuffer, Buffer* pDstBuffer);
 		void UploadToBuffer(Buffer* pDstBuffer, const DeviceQueue& queue);
 		void UploadToTexture(VkCommandBuffer commandBuffer, Texture* pDstTexture, uint64_t layerCount);

@@ -59,7 +59,7 @@ namespace vulkanRendererBackend
 	Renderer::Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow)
 	{
 		m_pIWindow = pIWindow;
-		Context::Init(createInfo, pIWindow);
+		Context::Init(createInfo, pIWindow, this);
 
 		m_time = 0.0f;
 		m_deltaTime = 0.0f;
@@ -93,6 +93,7 @@ namespace vulkanRendererBackend
 		m_presentPipelineLayout = m_pPresentMaterial->GetPipeline()->GetVkPipelineLayout();
 		m_presentBindingCount = m_pPresentMaterial->GetVertexInputDescriptions()->size;
 
+		m_pendingMeshUpdates.resize(Context::GetFramesInFlight()); // prepare one pending mesh update vector per frame in flight.
 		m_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", directoryPath / "gammaCorrection.comp.spv");
 
 		// Debug naming:
@@ -534,6 +535,19 @@ namespace vulkanRendererBackend
 
 
 
+	// Backend only:
+	void Renderer::QueueMeshForUpdate(vulkanRendererBackend::Mesh* pMesh)
+	{
+		// Prevent double-adding:
+		for (std::vector<Mesh*>& meshUpdates : m_pendingMeshUpdates)
+		{
+			if (std::find(meshUpdatesbegin(), meshUpdates.end(), pMesh) == meshUpdates.end())
+				meshUpdates.push_back(pMesh);
+		}
+	}
+
+
+
 	// Private methods:
 	// Reset render state:
 	void Renderer::ResetLights()
@@ -640,8 +654,14 @@ namespace vulkanRendererBackend
 	{
 		PROFILE_FUNCTION();
 
+		// Prepare meshes to update:
+		uint32_t frameIndex = Context::GetFrameIndex();
+		std::vector<Mesh*>& meshUpdates = m_pendingMeshUpdates[frameIndex];
+		if (meshUpdates.empty())
+			return;
+
 		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::resourceUpdate);
+		CommandPool& commandPool = GetCommandPool(frameIndex, RenderStage::resourceUpdate);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -649,9 +669,13 @@ namespace vulkanRendererBackend
 		// Record resource update commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
-			// Ember::ToDo: implement resource update command recording.
+			for (Mesh* mesh : meshUpdates)
+				mesh->RecordUpdateCommand(commandBuffer, frameIndex);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
+
+		// Clear only mesh updates of current frame:
+		meshUpdates.clear();
 	}
 	void Renderer::RecordPreRenderComputeCommands()
 	{

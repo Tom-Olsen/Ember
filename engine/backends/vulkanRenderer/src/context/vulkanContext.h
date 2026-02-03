@@ -71,6 +71,7 @@ namespace vulkanRendererBackend
 	class MemoryAllocator;
 	class AllocationTracker;
 	class DescriptorPool;
+	class Renderer;
 	class Swapchain;
 
 
@@ -102,6 +103,7 @@ namespace vulkanRendererBackend
 		static std::unique_ptr<AllocationTracker> m_pAllocationTracker;
 		static std::unique_ptr<DescriptorPool> m_pDescriptorPool;
 		static std::array<std::unique_ptr<Swapchain>, 2> m_swapchains;
+		static Renderer* m_pRenderer; // no ownership.
 		static uint32_t m_swapchainIndex;
 		static uint32_t m_framesInFlight;
 		static uint32_t m_frameIndex;
@@ -113,7 +115,7 @@ namespace vulkanRendererBackend
 		static float m_depthBiasSlopeFactor;
 		
 	public: // Methods:
-		static void Init(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow);
+		static void Init(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow, Renderer* pRenderer);
 		static void Clear();
 		static void RebuildSwapchain();
 
@@ -126,6 +128,7 @@ namespace vulkanRendererBackend
 		static AllocationTracker* GetAllocationTracker();
 		static const DescriptorPool* GetDescriptorPool();
 		static const Swapchain* GetSwapchain();
+		static const Renderer* GetRenderer();
 
 		static const VkInstance GetVkInstance();
 		static const VkPhysicalDevice GetVkPhysicalDevice();

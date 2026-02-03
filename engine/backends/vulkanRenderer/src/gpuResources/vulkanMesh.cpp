@@ -5,6 +5,7 @@
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
+#include "vulkanRenderer.h"
 #include "vulkanStagingBuffer.h"
 #include "vulkanVertexBuffer.h"
 #include <vulkan/vulkan.h>
@@ -104,6 +105,8 @@ namespace vulkanRendererBackend
 			WriteArrayToVertexStagingBuffer(pColors ? pColors->data() : nullptr, vertexCount, colorsOffset, Float4::white);
 			WriteArrayToVertexStagingBuffer(pUvs ? pUvs->data() : nullptr, vertexCount, uvsOffset, Float4::zero);
 		}
+
+		Context::GetRenderer()->QueueMeshForUpdate(this);
 	}
 	void Mesh::UpdateIndexBuffer(const std::vector<Uint3>& triangles, uint32_t vertexCount)
 	{
@@ -192,16 +195,22 @@ namespace vulkanRendererBackend
 		uint32_t elemetSize = (m_vkIndexType == VK_INDEX_TYPE_UINT16) ? sizeof(uint16_t) : sizeof(uint32_t);
 
 		// Resize buffers:
+		bool reallocationTriggered = false;
 		if (m_pVertexBuffers[frameIndex] == nullptr || m_pVertexBuffers[frameIndex]->GetCount() != vertexCount)
+		{
 			m_pVertexBuffers[frameIndex] = std::make_unique<VertexBuffer>(vertexCount, sizeof(Vertex));
+			reallocationTriggered = true;
+		}
 		if (m_pIndexBuffers[frameIndex] == nullptr || m_pIndexBuffers[frameIndex]->GetCount() != indexCount || m_pIndexBuffers[0]->GetElementSize() != elemetSize)
+		{
 			m_pIndexBuffers[frameIndex] = std::make_unique<IndexBuffer>(indexCount, elemetSize);
+			reallocationTriggered = true;
+		}
+		if (reallocationTriggered)
+			UpdateBufferCache(frameInde1x, vertexCount);
 
-		UpdateBufferCache(frameIndex, vertexCount);
-
-		// Ember::ToDo:
-		// record transfer command to load data from staging buffers to buffer[frameIndex].
-		// first build update command recording and submission in vulkan renderer.
+		m_pVertexStagingBuffer->UploadToBuffer(vkCommandBuffer, m_pVertexBuffers[frameIndex]->GetVmaBuffer()->GetVkBuffer());
+		m_pIndexStagingBuffer->UploadToBuffer(vkCommandBuffer, m_pIndexBuffers[frameIndex]->GetVmaBuffer()->GetVkBuffer());
 	}
 
 

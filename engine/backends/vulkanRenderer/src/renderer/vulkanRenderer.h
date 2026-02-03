@@ -111,8 +111,9 @@ namespace vulkanRendererBackend
 		VkPipelineLayout m_presentPipelineLayout = nullptr;
 		uint32_t m_presentBindingCount = 0;
 
-		// DrawCall management:
+		// DrawCall/GpuUpdate management:
 		emberCommon::Camera m_activeCamera;
+		std::vector<std::vector<Mesh*>> m_pendingMeshUpdates;	// one vector per frame in flight. 
 		std::vector<DrawCall> m_staticDrawCalls;	// for draw calls that manage their own ShaderProperties.
 		std::vector<DrawCall> m_dynamicDrawCalls;	// for draw calls that get a ShaderProperties assigned from a pool.
 		std::vector<DrawCall*> m_sortedDrawCallPointers;
@@ -194,6 +195,9 @@ namespace vulkanRendererBackend
 		uint32_t GetGraphicsVkQueueFamilyIndex() override;
 		uint32_t GetSwapchainImageCount() override;
 		uint32_t GetFramesInFlight() override;
+
+		// Backend only:
+		void QueueMeshForUpdate(Mesh* pMesh);
 
 	private: // Methods:
 		// Reset render state:

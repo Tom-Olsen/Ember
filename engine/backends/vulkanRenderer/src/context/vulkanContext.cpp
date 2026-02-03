@@ -51,7 +51,7 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void Context::Init(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow)
+	void Context::Init(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow, Renderer* pRenderer)
 	{
 		if (s_isInitialized)
 			return;
@@ -77,7 +77,8 @@ namespace vulkanRendererBackend
 			instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 		#endif
 
-		pIWindow->AddWindowInstanceExtensions(instanceExtensions);	
+		pIWindow->AddWindowInstanceExtensions(instanceExtensions);
+		m_pRenderer = pRenderer;
 
 		if (createInfo.enableGui)
 		{
@@ -196,6 +197,10 @@ namespace vulkanRendererBackend
 	const Swapchain* Context::GetSwapchain()
 	{
 		return m_swapchains[m_swapchainIndex].get();
+	}
+	static const Renderer* Context::GetRenderer()
+	{
+		return m_pRenderer;
 	}
 
 	const VkInstance Context::GetVkInstance()
