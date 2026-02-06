@@ -109,7 +109,6 @@ namespace vulkanRendererBackend
 		std::unique_ptr<ShaderProperties> m_pPresentShaderProperties;
 		VkPipeline m_presentPipeline = nullptr;
 		VkPipelineLayout m_presentPipelineLayout = nullptr;
-		uint32_t m_presentBindingCount = 0;
 
 		// DrawCall/GpuUpdate management:
 		emberCommon::Camera m_activeCamera;

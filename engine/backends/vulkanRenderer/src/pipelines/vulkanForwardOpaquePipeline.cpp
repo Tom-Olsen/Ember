@@ -94,7 +94,7 @@ namespace vulkanRendererBackend
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         vertexInputState.vertexBindingDescriptionCount = vertexBindings.size();
         vertexInputState.pVertexBindingDescriptions = vertexBindings.data();
-        vertexInputState.vertexAttributeDescriptionCount = vertexAttributes.size()
+        vertexInputState.vertexAttributeDescriptionCount = vertexAttributes.size();
         vertexInputState.pVertexAttributeDescriptions = vertexAttributes.data();
 
         // Input assembly:

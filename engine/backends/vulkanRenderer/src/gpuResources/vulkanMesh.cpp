@@ -21,8 +21,8 @@ namespace vulkanRendererBackend
 		size_t frames = Context::GetFramesInFlight();
 		m_pVertexBuffers.resize(frames);
 		m_pIndexBuffers.resize(frames);
-		m_vkBuffersCache.resize(frames);
-		m_vkOffsetsCache.resize(frames);
+		m_buffersCache.resize(frames);
+		m_offsetsCache.resize(frames);
 	}
 	Mesh::~Mesh()
 	{
@@ -161,29 +161,33 @@ namespace vulkanRendererBackend
 	{
 		return m_vkIndexType;
 	}
-	VertexBuffer* Mesh::GetVertexBuffer()
+	VertexBuffer* Mesh::GetVertexBuffer() const
 	{
 		return m_pVertexBuffers[Context::GetFrameIndex()].get();
 	}
-	VertexBuffer* Mesh::GetVertexBuffer(uint32_t frameIndex)
+	VertexBuffer* Mesh::GetVertexBuffer(uint32_t frameIndex) const
 	{
 		return m_pVertexBuffers[frameIndex].get();
 	}
-	IndexBuffer* Mesh::GetIndexBuffer()
+	IndexBuffer* Mesh::GetIndexBuffer() const
 	{
 		return m_pIndexBuffers[Context::GetFrameIndex()].get();
 	}
-	IndexBuffer* Mesh::GetIndexBuffer(uint32_t frameIndex)
+	IndexBuffer* Mesh::GetIndexBuffer(uint32_t frameIndex) const
 	{
 		return m_pIndexBuffers[frameIndex].get();
 	}
-	VkBuffer* Mesh::GetVkBuffers()
+	VkBuffer* Mesh::GetVkBuffers() const
 	{
-		return m_vkBuffersCache[Context::GetFrameIndex()].data();
+		return m_buffersCache[Context::GetFrameIndex()].data();
 	}
-	VkDeviceSize* Mesh::GetVkOffsets()
+	VkDeviceSize* Mesh::GetOffsets() const
 	{
-		return m_vkOffsetsCache[Context::GetFrameIndex()].data();
+		return m_offsetsCache[Context::GetFrameIndex()].data();
+	}
+	uint32_t Mesh::GetVertexBindingCount() const
+	{
+		return m_vertexMemoryLayout == emberCommon::VertexMemoryLayout::interleaved ? 1 : 5;
 	}
 
 
@@ -201,7 +205,7 @@ namespace vulkanRendererBackend
 			m_pVertexBuffers[frameIndex] = std::make_unique<VertexBuffer>(vertexCount, sizeof(Vertex));
 			reallocationTriggered = true;
 		}
-		if (m_pIndexBuffers[frameIndex] == nullptr || m_pIndexBuffers[frameIndex]->GetCount() != indexCount || m_pIndexBuffers[0]->GetElementSize() != elemetSize)
+		if (m_pIndexBuffers[frameIndex] == nullptr || m_pIndexBuffers[frameIndex]->GetCount() != indexCount || m_pIndexBuffers[frameIndex]->GetElementSize() != elemetSize)
 		{
 			m_pIndexBuffers[frameIndex] = std::make_unique<IndexBuffer>(indexCount, elemetSize);
 			reallocationTriggered = true;
@@ -218,8 +222,8 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void Mesh::UpdateBufferCache(uint32_t frameIndex, uint32_t vertexCount)
 	{
-		std::vector<VkBuffer>& buffers = m_vkBuffersCache[frameIndex];
-		std::vector<VkDeviceSize>& offsets = m_vkOffsetsCache[frameIndex];
+		std::vector<VkBuffer>& buffers = m_buffersCache[frameIndex];
+		std::vector<VkDeviceSize>& offsets = m_offsetsCache[frameIndex];
 		buffers.clear();
 		offsets.clear();
 		VkBuffer vkBuffer = m_pVertexBuffers[frameIndex]->GetVmaBuffer()->GetVkBuffer();

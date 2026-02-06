@@ -47,8 +47,8 @@ namespace vulkanRendererBackend
 		std::unique_ptr<StagingBuffer> m_pIndexStagingBuffer;
 		std::vector<std::unique_ptr<VertexBuffer>> m_pVertexBuffers;
 		std::vector<std::unique_ptr<IndexBuffer>> m_pIndexBuffers;
-		std::vector<std::vector<VkBuffer>> m_vkBuffersCache;
-		std::vector<std::vector<VkDeviceSize>> m_vkOffsetsCache;
+		std::vector<std::vector<VkBuffer>> m_buffersCache;
+		std::vector<std::vector<VkDeviceSize>> m_offsetsCache;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -77,14 +77,15 @@ namespace vulkanRendererBackend
 
 		// Backend only:
 		VkIndexType GetVkIndexType() const;
-		VertexBuffer* GetVertexBuffer();
-		VertexBuffer* GetVertexBuffer(uint32_t frameIndex);
-		IndexBuffer* GetIndexBuffer();
-		IndexBuffer* GetIndexBuffer(uint32_t frameIndex);
-		VkBuffer* GetVkBuffers();
-		VkDeviceSize* GetVkOffsets();
+		VertexBuffer* GetVertexBuffer() const;
+		VertexBuffer* GetVertexBuffer(uint32_t frameIndex) const;
+		IndexBuffer* GetIndexBuffer() const;
+		IndexBuffer* GetIndexBuffer(uint32_t frameIndex) const;
+		VkBuffer* GetVkBuffers() const;
+		VkDeviceSize* GetOffsets() const;
+		uint32_t GetVertexBindingCount() const;
 		void RecordUpdateCommand(VkCommandBuffer vkCommandBuffer, uint32_t frameIndex);
-
+		
 	private:
 		void UpdateBufferCache(uint32_t frameIndex, uint32_t vertexCount):
 		template<typename T>
