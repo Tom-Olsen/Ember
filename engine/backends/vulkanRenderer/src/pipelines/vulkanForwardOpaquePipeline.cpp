@@ -6,6 +6,7 @@
 #include "vulkanMacros.h"
 #include "vulkanRenderPassManager.h"
 #include "vulkanVertexLayout.h"
+#include <type_traits>
 #include <vulkan/vulkan.h>
 
 
@@ -31,7 +32,7 @@ namespace vulkanRendererBackend
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
         vkDestroyShaderModule(Context::GetVkDevice(), fragmentShaderModule, nullptr);
-        NAME_VK_PIPELINE(m_pipeline, m_name + "ForwardOpaquePipeline");
+        NAME_VK_OBJECT(m_pipeline, m_name + "ForwardOpaquePipeline");
     }
     template<typename vertexLayout>
     ForwardOpaquePipeline<vertexLayout>::~ForwardOpaquePipeline()
@@ -46,7 +47,7 @@ namespace vulkanRendererBackend
     void ForwardOpaquePipeline<vertexLayout>::CreatePipelineLayout(const emberSpirvReflect::ShaderReflection& shaderReflection)
     {
         // Descriptor set layouts:
-        for (int i = 0; i < s_setCount; i++)
+        for (int i = 0; i < s_descriptorSetCount; i++)
         {
             const std::vector<VkDescriptorSetLayoutBinding>& bindings = shaderReflection.GetDescriptorSet(i).GetVkDescriptorSetLayoutBindings();
             VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -63,7 +64,7 @@ namespace vulkanRendererBackend
 
         // Pipeline layout:
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipelineLayoutCreateInfo.setLayoutCount = m_descriptorSetLayouts.size(); // = s_setCount
+        pipelineLayoutCreateInfo.setLayoutCount = m_descriptorSetLayouts.size(); // = s_descriptorSetCount
         pipelineLayoutCreateInfo.pSetLayouts = m_descriptorSetLayouts.data();
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;

@@ -16,6 +16,7 @@ namespace emberCommon
 	enum class VertexMemoryLayout
 	{
 		interleaved,
-		separate
+		separate,
+		count
 	};
 }

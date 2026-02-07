@@ -2,13 +2,13 @@
 #include "logger.h"
 #include "vulkanForwardOpaquePipeline.h"
 #include "vulkanForwardTransparentPipeline.h"
+#include "vulkanMesh.h"
 #include "vulkanPipeline.h"
 #include "vulkanPresentPipeline.h"
 #include "vulkanShadowPipeline.h"
 #include "vulkanSkyboxPipeline.h"
 #include "vulkanVertexBuffer.h"
 #include "vulkanVertexLayout.h"
-#include "spirvReflect.h"
 #include "vmaBuffer.h"
 #include <vulkan/vulkan.h>
 
@@ -19,7 +19,7 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructors/Destructor:
 	Material::Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
-		: m_shaderReflection(Pipeline::s_setCount), m_type(type), m_name(name), m_renderQueue(renderQueue)
+		: m_shaderReflection(Pipeline::s_descriptorSetCount), m_type(type), m_name(name), m_renderQueue(renderQueue)
 	{
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -33,25 +33,30 @@ namespace vulkanRendererBackend
 		m_shaderReflection.CreateDescriptorSets();
 
 		// Create pipeline:
+		m_pPipelines.resize(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
 		switch (m_type)
 		{
 			case emberCommon::MaterialType::forwardOpaque:
-				m_pPipeline = std::make_unique<ForwardOpaquePipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::interleaved)] = std::make_unique<ForwardOpaquePipeline<InterleavedVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<ForwardOpaquePipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
 				break;
 			case emberCommon::MaterialType::forwardTransparent:
-				m_pPipeline = std::make_unique<ForwardTransparentPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::interleaved)] = std::make_unique<ForwardTransparentPipeline<InterleavedVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<ForwardTransparentPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
 				break;
 			case emberCommon::MaterialType::skybox:
-				m_pPipeline = std::make_unique<SkyboxPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::interleaved)] = std::make_unique<SkyboxPipeline<InterleavedVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<SkyboxPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
 				break;
 			case emberCommon::MaterialType::present:
-				m_pPipeline = std::make_unique<PresentPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::interleaved)] = std::make_unique<PresentPipeline<InterleavedVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
+				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<PresentPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_shaderReflection);
 				break;
 		}
 	}
 	// Special constructor for shadowMaterial:
 	Material::Material(uint32_t shadowMapResolution)
-		: m_shaderReflection(Pipeline::s_setCount), m_type(emberCommon::MaterialType::shadow), m_name("shadowMaterial"), m_renderQueue(emberCommon::RenderQueue::shadow)
+		: m_shaderReflection(Pipeline::s_descriptorSetCount), m_type(emberCommon::MaterialType::shadow), m_name("shadowMaterial"), m_renderQueue(emberCommon::RenderQueue::shadow)
 	{
 		// Load vertex shader:
 		std::filesystem::path directoryPath = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();
@@ -90,40 +95,16 @@ namespace vulkanRendererBackend
 	{
 		return m_renderQueue;
 	}
-	const VertexInputDescriptions* const Material::GetVertexInputDescriptions() const
+	const VertexInputDescriptions* Material::GetVertexInputDescriptions() const
 	{
 		return m_pVertexInputDescriptions.get();
 	}
-
-	//// Ember::ToDo: move this to mesh class and allow interleaved buffers aswell!
-	//const VkBuffer* const Material::GetMeshBuffers(Mesh* pMesh)
-	//{
-	//	// All entries are stored in the same buffer:
-	//	for (uint32_t i = 0; i < m_meshBuffers.size(); i++)
-	//		m_meshBuffers[i] = pMesh->GetVertexBuffer()->GetVmaBuffer()->GetVkBuffer();
-	//	return m_meshBuffers.data();
-	//}
-	//const uint64_t* const Material::GetMeshOffsets(Mesh* pMesh)
-	//{
-	//	for (uint32_t i = 0; i < m_pVertexInputDescriptions->size; i++)
-	//	{
-	//		const std::string& semantic = m_pVertexInputDescriptions->semantics[i];
-	//
-	//		if (semantic == "POSITION")
-	//			m_meshOffsets[i] = pMesh->GetPositionsOffset();
-	//		else if (semantic == "NORMAL")
-	//			m_meshOffsets[i] = pMesh->GetNormalsOffset();
-	//		else if (semantic == "TANGENT")
-	//			m_meshOffsets[i] = pMesh->GetTangentsOffset();
-	//		else if (semantic == "COLOR")
-	//			m_meshOffsets[i] = pMesh->GetColorsOffset();
-	//		else if (semantic == "TEXCOORD0")
-	//			m_meshOffsets[i] = pMesh->GetUVsOffset();
-	//		else
-	//			LOG_WARN("Material system does not support the VertexInputDescription semantic '{}' yet. Material::GetMeshOffsets(Mesh*) must be updated,", semantic);
-	//	}
-	//	return m_meshOffsets.data();
-	//}
+	const Pipeline* Material::GetPipeline(const Mesh* pMesh) const
+	{
+		Pipeline* pPipeline = m_pPipelines[static_cast<size_t>(pMesh->GetVertexMemoryLayout())].get();
+		assert(pPipeline && "Material::GetPipeline: Pipeline not supported for this vertex layout");
+		return pPipeline;
+	}
 
 
 

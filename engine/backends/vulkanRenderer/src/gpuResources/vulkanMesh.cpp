@@ -157,6 +157,14 @@ namespace vulkanRendererBackend
 
 
 	// Backend only:
+	uint32_t Mesh::GetVertexCount() const
+	{
+		return m_pVertexBuffers[Context::GetFrameIndex()]->GetCount();
+	}
+	uint32_t Mesh::GetIndexCount() const
+	{
+		return m_pIndexBuffers[Context::GetFrameIndex()]->GetCount();
+	}
 	VkIndexType Mesh::GetVkIndexType() const
 	{
 		return m_vkIndexType;

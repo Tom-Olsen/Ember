@@ -8,7 +8,6 @@
 #include "vulkanRenderPassManager.h"
 #include "vulkanShadowRenderPass.h"
 #include "vulkanUniformBuffer.h"
-#include "vulkanUniformBufferBlock.h"
 #include <vulkan/vulkan.h>
 
 

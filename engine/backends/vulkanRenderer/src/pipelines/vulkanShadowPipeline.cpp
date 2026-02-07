@@ -16,6 +16,7 @@ namespace vulkanRendererBackend
     template<typename vertexLayout>
     ShadowPipeline<vertexLayout>::ShadowPipeline(const std::string& name, uint32_t shadowMapResolution, const std::vector<char>& vertexCode, const emberSpirvReflect::ShaderReflection& shaderReflection)
     {
+        m_name = name;
 
         // Create pipeline Layout:
         CreatePipelineLayout(shaderReflection);
@@ -43,7 +44,7 @@ namespace vulkanRendererBackend
     void ShadowPipeline<vertexLayout>::CreatePipelineLayout(const emberSpirvReflect::ShaderReflection& shaderReflection)
     {
         // Descriptor set layouts:
-        for (int i = 0; i < s_setCount; i++)
+        for (int i = 0; i < s_descriptorSetCount; i++)
         {
             const std::vector<VkDescriptorSetLayoutBinding>& bindings = shaderReflection.GetDescriptorSet(i).GetVkDescriptorSetLayoutBindings();
             VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -60,7 +61,7 @@ namespace vulkanRendererBackend
 
         // Pipeline layout:
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipelineLayoutCreateInfo.setLayoutCount = m_descriptorSetLayouts.size(); // = s_setCount
+        pipelineLayoutCreateInfo.setLayoutCount = m_descriptorSetLayouts.size(); // = s_descriptorSetCount
         pipelineLayoutCreateInfo.pSetLayouts = m_descriptorSetLayouts.data();
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;

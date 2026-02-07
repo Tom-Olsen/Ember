@@ -1,5 +1,4 @@
 #include "vulkanComputePipeline.h"
-#include "spirvReflect.h"
 #include "vulkanComputePushConstant.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
@@ -10,22 +9,22 @@
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ComputePipeline::ComputePipeline(const std::string& name, const std::vector<char>& computeCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
+    ComputePipeline::ComputePipeline(const std::string& name, const std::vector<char>& computeCode, const emberSpirvReflect::ShaderReflection& shaderReflection)
     {
         m_name = name;
 
         // Create pipeline Layout:
-        CreatePipelineLayout(descriptorSetLayoutBindings);
+        CreatePipelineLayout(shaderReflection);
 
         // Create compute shader module from .spv files:
         VkShaderModule computeShaderModule = CreateShaderModule(computeCode);
 
         // Create pipeline:
-        CreatePipeline(computeShaderModule);
+        CreatePipeline(computeShaderModule, shaderReflection);
 
         // Destroy shader module (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), computeShaderModule, nullptr);
-        NAME_VK_PIPELINE(m_pipeline, m_name + "ComputePipeline");
+        NAME_VK_OBJECT(m_pipeline, m_name + "ComputePipeline");
     }
     ComputePipeline::~ComputePipeline()
     {

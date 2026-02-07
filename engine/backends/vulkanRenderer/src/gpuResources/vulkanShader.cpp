@@ -1,6 +1,5 @@
 #include "vulkanShader.h"
 #include "logger.h"
-#include "spirvReflect.h"
 #include "vulkanPipeline.h"
 #include <fstream>
 #include <vulkan/vulkan.h>
@@ -38,10 +37,10 @@ namespace vulkanRendererBackend
 	{
 		return m_name;
 	}
-	const Pipeline* const Shader::GetPipeline() const
-	{
-		return m_pPipeline.get();
-	}
+	//const Pipeline* const Shader::GetPipeline() const
+	//{
+	//	return m_pPipeline.get();
+	//}
 	const emberSpirvReflect::ShaderReflection& const Shader::GetShaderReflection() const
 	{
 		return m_shaderReflection;

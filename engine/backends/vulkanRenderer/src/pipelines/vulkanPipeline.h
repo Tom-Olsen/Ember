@@ -21,10 +21,10 @@ namespace vulkanRendererBackend
 	class Pipeline
 	{
 	public: // Members:
-		static constexpr uint32_t s_setCount = 5;
+		static constexpr uint32_t s_descriptorSetCount = 5;
 
 	protected: // Members:
-		std::array<VkDescriptorSetLayout, s_setCount> m_descriptorSetLayouts;
+		std::array<VkDescriptorSetLayout, s_descriptorSetCount> m_descriptorSetLayouts;
 		VkPipelineLayout m_pipelineLayout;
 		VkPipeline m_pipeline;
 		std::string m_name;

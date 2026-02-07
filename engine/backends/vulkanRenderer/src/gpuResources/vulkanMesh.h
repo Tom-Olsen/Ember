@@ -76,6 +76,8 @@ namespace vulkanRendererBackend
 		void UpdateIndexBuffer(const std::vector<Uint3>& triangles, uint32_t vertexCount = 0) override;
 
 		// Backend only:
+		uint32_t GetVertexCount() const;
+		uint32_t GetIndexCount() const;
 		VkIndexType GetVkIndexType() const;
 		VertexBuffer* GetVertexBuffer() const;
 		VertexBuffer* GetVertexBuffer(uint32_t frameIndex) const;

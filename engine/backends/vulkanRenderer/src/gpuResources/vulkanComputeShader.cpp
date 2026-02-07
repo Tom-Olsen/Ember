@@ -1,5 +1,4 @@
 #include "vulkanComputeShader.h"
-#include "spirvReflect.h"
 #include "vulkanComputePipeline.h"
 
 
@@ -14,12 +13,17 @@ namespace vulkanRendererBackend
 		m_pDescriptorBoundResources = std::make_unique<DescriptorBoundResources>();
 	
 		// Load compute shader:
-		std::vector<char> computeCode = ReadShaderCode(computeSpv);
-		SpirvReflect computeShaderReflect(computeCode);
-		m_blockSize = computeShaderReflect.GetBlockSize();
-		computeShaderReflect.AddDescriptorBoundResources(m_pDescriptorBoundResources.get());
-	
-		m_pPipeline = std::make_unique<ComputePipeline>(name, computeCode, m_pDescriptorBoundResources->descriptorSetLayoutBindings);
+		std::vector<char> computeCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(computeSpv);
+		m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+
+		// Create descriptor sets:
+		m_shaderReflection.CreateDescriptorSets();
+
+		// Get block size:
+		m_blockSize = m_shaderReflection.GetComputeShaderReflection()->GetComputeInfo()->blockSize;
+
+		// Create pipeline:
+		m_pPipelines.emplace_back(std::make_unique<ComputePipeline>(m_name, computeCode, m_shaderReflection));
 	}
 	ComputeShader::~ComputeShader()
 	{
@@ -42,6 +46,10 @@ namespace vulkanRendererBackend
 	const std::string& ComputeShader::GetName() const
 	{
 		return m_name;
+	}
+	const Pipeline* const ComputeShader::GetPipeline() const
+	{
+		return m_pPipelines[0];	// compute shaders only ever contain 1 pipeline.
 	}
 
 

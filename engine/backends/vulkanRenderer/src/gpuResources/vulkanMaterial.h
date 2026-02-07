@@ -20,6 +20,7 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	struct VertexInputDescriptions;
+	class Mesh;
 
 
 
@@ -54,7 +55,8 @@ namespace vulkanRendererBackend
 		const std::string& GetName() const override;
 		emberCommon::MaterialType GetType() const override;
 		uint32_t GetRenderQueue() const override;
-		const VertexInputDescriptions* const GetVertexInputDescriptions() const;
+		const VertexInputDescriptions* GetVertexInputDescriptions() const;
+		const Pipeline* GetPipeline(const Mesh* pMesh) const;
 
 		// Debugging:
 		void Print() const override;

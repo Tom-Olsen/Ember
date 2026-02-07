@@ -1,6 +1,5 @@
 #pragma once
 #include "vulkanPipeline.h"
-#include "vulkanDescriptorSetLayoutBinding.h"
 #include <vector>
 
 
@@ -12,18 +11,13 @@ typedef struct VkShaderModule_T* VkShaderModule;
 
 namespace vulkanRendererBackend
 {
-	// Forward declarations:
-	struct VertexInputDescriptions;
-
-
-
 	/// <summary>
 	/// Pipeline for compute shaders.
 	/// </summary>
 	class ComputePipeline : public Pipeline
 	{
 	public: // Methods:
-		ComputePipeline(const std::string& name, const std::vector<char>& computeCode, std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
+		ComputePipeline(const std::string& name, const std::vector<char>& computeCode, const emberSpirvReflect::ShaderReflection& shaderReflection);
 		~ComputePipeline();
 
 	private: // Methods:

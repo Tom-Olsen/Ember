@@ -15,11 +15,6 @@ namespace emberSpirvReflect
 
 namespace vulkanRendererBackend
 {
-	// Forward declarations:
-	struct VertexInputDescriptions;
-
-
-
 	template<typename vertexLayout>
 	class ForwardOpaquePipeline : public Pipeline
 	{

@@ -102,6 +102,7 @@ namespace vulkanRendererBackend
 		uint32_t m_shadowMapResolution;
 		std::vector<emberCommon::DirectionalLight> m_directionalLights;
 		std::vector<emberCommon::PositionalLight> m_positionalLights;
+		std::vector<Float4x4> m_lightWorldToClipMatrizes;
 
 		// Present render pass caching:
 		std::unique_ptr<Mesh> m_pPresentMesh;
@@ -206,6 +207,7 @@ namespace vulkanRendererBackend
 		void RebuildSwapchain();
 		bool AcquireImage();
 		void SortDrawCallPointers();
+		void UpdateShaderData();
 
 		// Wait for previous frame:
 		void WaitForFrameFence();
@@ -229,7 +231,6 @@ namespace vulkanRendererBackend
 		void SubmitForwardCommandsParallel();
 		void SubmitPostRenderComputeCommands();
 		void SubmitPresentCommands();
-
 		bool PresentImage();
 
 		// Sync objects management:

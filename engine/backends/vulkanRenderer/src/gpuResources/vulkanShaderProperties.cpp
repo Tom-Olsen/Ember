@@ -1,7 +1,6 @@
 #include "vulkanShaderProperties.h"
 #include "emberMath.h"
 #include "logger.h"
-#include "spirvReflect.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanBuffer.h"

@@ -22,7 +22,7 @@ namespace vulkanRendererBackend
 	{
 	protected: // Members:
 		std::string m_name;
-		std::unique_ptr<Pipeline> m_pPipeline;
+		std::vector<std::unique_ptr<Pipeline>> m_pPipelines;
 		emberSpirvReflect::ShaderReflection m_shaderReflection;
 	
 	protected:  // Methods:
@@ -43,7 +43,7 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		const std::string& GetName() const;
-		const Pipeline* const GetPipeline() const;
+		//const Pipeline* const GetPipeline() const;
 		const emberSpirvReflect::ShaderReflection& const GetShaderReflection() const;
 
 		// Debugging:

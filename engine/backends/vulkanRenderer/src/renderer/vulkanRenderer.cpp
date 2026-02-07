@@ -4,7 +4,6 @@
 #include "iWindow.h"
 #include "logger.h"
 #include "profiler.h"
-#include "spirvReflect.h"
 #include "taskSystem.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
@@ -82,6 +81,7 @@ namespace vulkanRendererBackend
 		m_shadowMapResolution = createInfo.shadowMapResolution;
 		m_directionalLights.resize(m_maxDirectionalLights);
 		m_positionalLights.resize(m_maxPositionalLights);
+		m_lightWorldToClipMatrizes.resize(m_maxDirectionalLights + m_maxPositionalLights);
 		m_pShadowMaterial = std::make_unique<Material>(m_shadowMapResolution);
 		m_shadowPipelineLayout = m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
 
@@ -163,6 +163,7 @@ namespace vulkanRendererBackend
 		// We use linear color space throughout entire render process. So apply gamma correction in post processing as last step:
 		m_pCompute->GetPostRenderCompute()->RecordComputeShader(m_pGammaCorrectionComputeShader.get());
 		SortDrawCallPointers();
+		UpdateShaderData();
 		
 		// Record and submit current frame commands:
 		{
@@ -186,6 +187,7 @@ namespace vulkanRendererBackend
 			//	taskflow.emplace([this] { this->RecordForwardCommandsParallel(); }).name("RecordForwardCommandsParallel" + std::to_string(i));
 			//emberTaskSystem::TaskSystem::RunAndWait(taskflow);
 			//SubmitForwardCommandsParallel();
+			// transition of resources to post render compute missing.
 
 			RecordPostRenderComputeCommands();
 			SubmitPostRenderComputeCommands();
@@ -620,11 +622,67 @@ namespace vulkanRendererBackend
 		for (auto& drawCall : m_dynamicDrawCalls)
 			m_sortedDrawCallPointers.push_back(&drawCall);
 
-		// Sort draw call pointers according to material renderQueue:
+		// Sort by renderQueue first, then interleaved before separate:
 		std::sort(m_sortedDrawCallPointers.begin(), m_sortedDrawCallPointers.end(), [](DrawCall* a, DrawCall* b)
 		{
-			return a->pMaterial->GetRenderQueue() < b->pMaterial->GetRenderQueue();
+			// RenderQueue:
+			int renderQueueA = static_cast<int>(a->pMaterial->GetRenderQueue());
+			int renderQueueB = static_cast<int>(b->pMaterial->GetRenderQueue());
+			if (renderQueueA != renderQueueB)
+				return renderQueueA < renderQueueB;
+
+			// Interleaved(0) before separate(1):
+			auto layoutA = a->pMesh->GetVertexMemoryLayout();
+			auto layoutB = b->pMesh->GetVertexMemoryLayout();
+			if (layoutA != layoutB)
+				return layoutA < layoutB;
+
+			// Tie-breaker by pointer:
+			return a < b;
 		});
+	}
+	void Renderer::UpdateShaderData()
+	{
+		// Pre render compute:
+		for (ComputeCall* computeCall : m_pCompute->GetPreRenderCompute()->GetComputeCallPointers())
+			if (computeCall->pComputeShader)
+				computeCall->pShaderProperties->UpdateShaderData();
+
+		// Light matrizes:
+		int shadowLightCount = 0;
+		for (uint32_t i = 0; i < m_directionalLightsCount; i++)
+			m_lightWorldToClipMatrizes[shadowLightCount++] = m_directionalLights[i].worldToClipMatrix;
+		for (uint32_t i = 0; i < m_positionalLightsCount; i++)
+			m_lightWorldToClipMatrizes[shadowLightCount++] = m_positionalLights[i].worldToClipMatrix;
+
+		// Forward calls:
+		for (DrawCall* drawCall : m_sortedDrawCallPointers)
+		{
+			drawCall->pShadowShaderProperties->UpdateShaderData();
+			drawCall->SetRenderMatrizes(m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
+			drawCall->SetLightData(m_directionalLights, m_positionalLights);
+			drawCall->pShaderProperties->UpdateShaderData();
+		}
+
+		// Post render compute:
+		for (ComputeCall* computeCall : m_pCompute->GetPostRenderCompute()->GetComputeCallPointers())
+		{
+			if (computeCall->callIndex % 2 == 0)
+			{
+				computeCall->pShaderProperties->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+				computeCall->pShaderProperties->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
+			}
+			else
+			{
+				computeCall->pShaderProperties->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
+				computeCall->pShaderProperties->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+			}
+			computeCall->pShaderProperties->UpdateShaderData();
+		}
+
+		// Present call:
+		m_pPresentShaderProperties->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+		m_pPresentShaderProperties->UpdateShaderData();
 	}
 
 
@@ -716,9 +774,6 @@ namespace vulkanRendererBackend
 				// Compute call is a dispatch:
 				else
 				{
-					// Update shader specific data:
-					computeCall->pShaderProperties->UpdateShaderData();
-
 					// Change pipeline if compute shader has changed:
 					pComputeShader = computeCall->pComputeShader;
 					if (pPreviousComputeShader != pComputeShader)
@@ -764,7 +819,7 @@ namespace vulkanRendererBackend
 				dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-				DEBUG_LOG_TRACE("Memory Barrier: compute to vertex");
+				DEBUG_LOG_TRACE("Memory Barrier: pre compute to vertex");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
@@ -796,67 +851,41 @@ namespace vulkanRendererBackend
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				// BestPractices validation layer warning occur when binding a pipeline with vertex input data, but not binding any vertex buffer.
-				if (m_directionalLightsCount > 0 || m_positionalLightsCount > 0)
-				{
-					int shadowMapIndex = 0;
-					// Ember::ToDo: split entire logic for two pipelines (interleaved + separate vertex buffers)
-					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pShadowMaterial->GetPipeline()->GetVkPipeline());
+				VkPipeline pipeline = VK_NULL_HANDLE;
 
+				// Lights:
+				const uint32_t shadowLightCount = m_directionalLightsCount + m_positionalLightsCount;
+				if (shadowLightCount > 0)
+				{
 					// Dynamic state: depth bias:
 					vkCmdSetDepthBias(commandBuffer, m_depthBiasConstantFactor, m_depthBiasClamp, m_depthBiasSlopeFactor);
 
-					// Update shader specific data:
+					// Draw calls:
 					for (DrawCall* drawCall : m_sortedDrawCallPointers)
-						drawCall->pShadowShaderProperties->UpdateShaderData();
-
-					// Ember::ToDo: iterate over draw calls first and then light sources?
-					// Directional Lights:
-					for (int i = 0; i < m_directionalLightsCount; i++)
 					{
-						for (DrawCall* drawCall : m_sortedDrawCallPointers)
+						if (drawCall->castShadows == false)
+							continue;
+
+						// Pipeline swap:
+						if (pipeline != m_pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline())
 						{
-							if (drawCall->castShadows == false)
-								continue;
-
-							Mesh* pMesh = drawCall->pMesh;
-
-							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, m_directionalLights[i].worldToClipMatrix);
-							vkCmdPushConstants(commandBuffer, m_shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-
-							vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());
-							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
-
-							// Ember::ToDo: bind all descriptor sets 0-4
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
-							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-							DEBUG_LOG_INFO("Directional light, mesh = {}", drawCall->pMesh->GetName());
+							pipeline = m_pShadowMaterial->GetPipeline()->GetVkPipeline();
+							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 						}
-						shadowMapIndex++;
-					}
 
-					// Positional Lights:
-					for (int i = 0; i < m_positionalLightsCount; i++)
-					{
-						for (DrawCall* drawCall : m_sortedDrawCallPointers)
+						vkCmdBindVertexBuffers(commandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
+						vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
+
+						// Ember::ToDo: bind all descriptor sets 0-4
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+
+						for (uint32_t shadowMapIndex = 0; shadowMapIndex < shadowLightCount; shadowMapIndex++)
 						{
-							if (drawCall->castShadows == false)
-								continue;
-
-							Mesh* pMesh = drawCall->pMesh;
-
-							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, m_positionalLights[i].worldToClipMatrix);
+							ShadowPushConstant pushConstant(drawCall->instanceCount, shadowMapIndex, drawCall->localToWorldMatrix, m_lightWorldToClipMatrizes[shadowMapIndex]);
 							vkCmdPushConstants(commandBuffer, m_shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ShadowPushConstant), &pushConstant);
-
-							vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());
-							vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
-
-							// Ember::ToDo: bind all descriptor sets 0-4
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
-							vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-							DEBUG_LOG_INFO("Positional light, mesh = {}", drawCall->pMesh->GetName());
+							vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+							DEBUG_LOG_INFO("Light {}, mesh = {}", shadowMapIndex, drawCall->pMesh->GetName());
 						}
-						shadowMapIndex++;
 					}
 				}
 			}
@@ -906,50 +935,35 @@ namespace vulkanRendererBackend
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				uint32_t bindingCount = 0;
-				Mesh* pMesh = nullptr;
-				Material* pMaterial = nullptr;
-				Material* pPreviousMaterial = nullptr;
 				VkPipeline pipeline = VK_NULL_HANDLE;
-				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 				DefaultPushConstant pushConstant(0, m_time, m_deltaTime, m_directionalLightsCount, m_positionalLightsCount, m_activeCamera.position);
 
-				// Normal draw calls:
+				// Draw calls:
 				for (DrawCall* drawCall : m_sortedDrawCallPointers)
 				{
 					PROFILE_SCOPE("DrawCall");
-					pMesh = drawCall->pMesh;
 
-					// Update shader specific data:
-					drawCall->SetRenderMatrizes(m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
-					drawCall->SetLightData(m_directionalLights, m_positionalLights);
-					drawCall->pShaderProperties->UpdateShaderData();
-
-					// Change pipeline if material has changed:
-					pMaterial = drawCall->pMaterial;
-					if (pPreviousMaterial != pMaterial)
+					// Pipeline swap:
+					if (pipeline != drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline())
 					{
-						pPreviousMaterial = pMaterial;
-						pipeline = pMaterial->GetPipeline()->GetVkPipeline();
-						pipelineLayout = pMaterial->GetPipeline()->GetVkPipelineLayout();
-						bindingCount = pMaterial->GetVertexInputDescriptions()->size;
+						pipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
 						pushConstant.instanceCount = drawCall->instanceCount;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+						vkCmdPushConstants(commandBuffer, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 
-					// Same material but different instance Count => update push constants:
+					// Same pipeline but different instance Count => update push constants:
 					if (pushConstant.instanceCount != drawCall->instanceCount)
 					{
 						pushConstant.instanceCount = drawCall->instanceCount;
-						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+						vkCmdPushConstants(commandBuffer, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 
-					vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());
-					vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
+					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
+					vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
 					// Ember::ToDo: bind all descriptor sets 0-4
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
-					vkCmdDrawIndexed(commandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(), 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
 			}
@@ -968,6 +982,7 @@ namespace vulkanRendererBackend
 				dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+				DEBUG_LOG_TRACE("Memory Barrier: vertex to post compute");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
@@ -1016,53 +1031,38 @@ namespace vulkanRendererBackend
 			vkCmdSetViewport(secondaryCommandBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(secondaryCommandBuffer, 0, 1, &scissor);
 
-			// Record commands: (no beign renderpass for secondary command buffers)
+			// Record commands: (no begin renderpass for secondary command buffers)
 			{
-				uint32_t bindingCount = 0;
-				Mesh* pMesh = nullptr;
-				Material* pMaterial = nullptr;
-				Material* pPreviousMaterial = nullptr;
 				VkPipeline pipeline = VK_NULL_HANDLE;
-				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 				DefaultPushConstant pushConstant(0, m_time, m_deltaTime, m_directionalLightsCount, m_positionalLightsCount, m_activeCamera.position);
 
-				// Normal draw calls:
+				// Draw calls:
 				for (int i = startIndex; i < endIndex; i++)
 				{
 					DrawCall* drawCall = (m_sortedDrawCallPointers)[i];
-					pMesh = drawCall->pMesh;
 
-					// Update shader specific data:
-					drawCall->SetRenderMatrizes(m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
-					drawCall->SetLightData(m_directionalLights, m_positionalLights);
-					drawCall->pShaderProperties->UpdateShaderData();
-
-					// Change pipeline if material has changed:
-					pMaterial = drawCall->pMaterial;
-					if (pPreviousMaterial != pMaterial)
+					// Pipeline swap:
+					if (pipeline != drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline())
 					{
-						pPreviousMaterial = pMaterial;
-						pipeline = pMaterial->GetPipeline()->GetVkPipeline();
-						pipelineLayout = pMaterial->GetPipeline()->GetVkPipelineLayout();
-						bindingCount = pMaterial->GetVertexInputDescriptions()->size;
+						pipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
 						pushConstant.instanceCount = drawCall->instanceCount;
 						vkCmdBindPipeline(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-						vkCmdPushConstants(secondaryCommandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+						vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 
-					// Same material but different instance Count => update push constants:
+					// Same pipeline but different instance Count => update push constants:
 					if (pushConstant.instanceCount != drawCall->instanceCount)
 					{
 						pushConstant.instanceCount = drawCall->instanceCount;
-						vkCmdPushConstants(secondaryCommandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+						vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 
-					vkCmdBindVertexBuffers(secondaryCommandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());
-					vkCmdBindIndexBuffer(secondaryCommandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
+					vkCmdBindVertexBuffers(secondaryCommandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
+					vkCmdBindIndexBuffer(secondaryCommandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
 
 					// Ember::ToDo: bind all descriptor sets 0-4
-					vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
-					vkCmdDrawIndexed(secondaryCommandBuffer, 3 * pMesh->GetTriangleCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+					vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(); , 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+					vkCmdDrawIndexed(secondaryCommandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
 			}
@@ -1091,23 +1091,8 @@ namespace vulkanRendererBackend
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 			ComputePushConstant pushConstant(Uint3::one, m_time, m_deltaTime);
 
-			uint32_t callIndex = 0;
 			for (ComputeCall* computeCall : m_pCompute->GetPostRenderCompute()->GetComputeCallPointers())
 			{
-				// Update shader specific data:
-				if (callIndex % 2 == 0)
-				{
-					computeCall->pShaderProperties->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-					computeCall->pShaderProperties->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
-				}
-				else
-				{
-					computeCall->pShaderProperties->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
-					computeCall->pShaderProperties->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-				}
-				callIndex++;
-				computeCall->pShaderProperties->UpdateShaderData();
-
 				// Change pipeline if compute shader has changed:
 				pComputeShader = computeCall->pComputeShader;
 				if (pPreviousComputeShader != pComputeShader)
@@ -1164,7 +1149,7 @@ namespace vulkanRendererBackend
 				VkAccessFlags2 srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
 				VkAccessFlags2 dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-				DEBUG_LOG_ERROR("Render Image Transition: ??? -> shader read only");
+				DEBUG_LOG_ERROR("Render Image Transition: shader write -> shader read only");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
@@ -1207,10 +1192,6 @@ namespace vulkanRendererBackend
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				// Update shader specific data:
-				m_pPresentShaderProperties->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-				m_pPresentShaderProperties->UpdateShaderData();
-
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipeline);
 
 				vkCmdBindVertexBuffers(commandBuffer, 0, m_pPresentMesh->GetVertexBindingCount(), m_pPresentMesh->GetVkBuffers(), m_pPresentMesh->GetOffsets());
@@ -1218,7 +1199,7 @@ namespace vulkanRendererBackend
 
 				// Ember::ToDo: bind all descriptor sets 0-4
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipelineLayout, 0, 1, &m_pPresentShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
-				vkCmdDrawIndexed(commandBuffer, 3 * m_pPresentMesh->GetTriangleCount(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(commandBuffer, m_pPresentMesh->GetIndexCount(), 1, 0, 0, 0);
 				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", m_pPresentMaterial->GetName());
 				
 				m_pIGui->Render(commandBuffer);
@@ -1529,7 +1510,6 @@ namespace vulkanRendererBackend
 		// Submit:
 		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, m_frameFences[Context::GetFrameIndex()]));
 	}
-
 	bool Renderer::PresentImage()
 	{
 		PROFILE_FUNCTION();
@@ -1622,7 +1602,8 @@ namespace vulkanRendererBackend
 	}
 	
 	
-	
+
+	// Internal getters:
 	CommandPool& Renderer::GetCommandPool(int frameIndex, RenderStage renderStage)
 	{
 		return GetCommandPool(frameIndex, (int)renderStage);
