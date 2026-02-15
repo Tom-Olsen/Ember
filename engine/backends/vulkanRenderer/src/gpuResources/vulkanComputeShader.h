@@ -4,6 +4,7 @@
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
 #include <string>
+#include <vulkan/vulkan.h>
 
 
 
@@ -13,6 +14,7 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		Uint3 m_blockSize;
+		VkPipelineLayout m_pipelineLayout;
 
 	public: // Methods:
 		// Constructors/Destructor:

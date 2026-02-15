@@ -433,7 +433,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Templates for interal use:
+	// Templates for internal use:
 	template<typename T>
 	T UniformBuffer::GetData(uint32_t offset, uint32_t size) const
 	{

@@ -163,6 +163,7 @@ endif()
 
 # Only expose public files to consumer:
 target_include_directories(${PROJECT_NAME} PUBLIC
+    ${ENGINE_SHADERS_DIR}/src/includesCppHlsl # needed for .h files from shaders, which contian constans for c++ and hlsl, e.g. shadowMap sizes
     ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
     ${CMAKE_CURRENT_SOURCE_DIR}/src/context
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResourcePools

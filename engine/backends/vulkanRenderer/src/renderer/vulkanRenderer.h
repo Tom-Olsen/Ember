@@ -40,6 +40,7 @@ namespace vulkanRendererBackend
 	class Compute;
 	class ComputeShader;
 	struct DrawCall;
+	class EngineSet;
 	class Mesh;
 	class Material;
 	class ShaderProperties;
@@ -78,6 +79,7 @@ namespace vulkanRendererBackend
 		
 		// Render resources:
 		std::vector<CommandPool> m_commandPools;
+		std::unique_ptr<EngineSet> m_pEngineSet;
 
 		// Sync objects:
 		std::vector<VkFence> m_frameFences;
@@ -103,13 +105,6 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::DirectionalLight> m_directionalLights;
 		std::vector<emberCommon::PositionalLight> m_positionalLights;
 		std::vector<Float4x4> m_lightWorldToClipMatrizes;
-
-		// Present render pass caching:
-		std::unique_ptr<Mesh> m_pPresentMesh;
-		std::unique_ptr<Material> m_pPresentMaterial;
-		std::unique_ptr<ShaderProperties> m_pPresentShaderProperties;
-		VkPipeline m_presentPipeline = nullptr;
-		VkPipelineLayout m_presentPipelineLayout = nullptr;
 
 		// DrawCall/GpuUpdate management:
 		emberCommon::Camera m_activeCamera;
@@ -239,9 +234,8 @@ namespace vulkanRendererBackend
 		void DestroyFences();
 		void DestroySemaphores();
 		
+		// Internal getters:
 		CommandPool& GetCommandPool(int frameIndex, RenderStage renderStage);
 		CommandPool& GetCommandPool(int frameIndex, int renderStage);
-
-		Mesh* CreateFullScreenRenderQuad();
 	};
 }

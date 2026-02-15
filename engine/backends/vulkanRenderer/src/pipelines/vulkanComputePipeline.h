@@ -11,17 +11,14 @@ typedef struct VkShaderModule_T* VkShaderModule;
 
 namespace vulkanRendererBackend
 {
-	/// <summary>
-	/// Pipeline for compute shaders.
-	/// </summary>
 	class ComputePipeline : public Pipeline
 	{
 	public: // Methods:
-		ComputePipeline(const std::string& name, const std::vector<char>& computeCode, const emberSpirvReflect::ShaderReflection& shaderReflection);
+		ComputePipeline(const std::string& name, const std::vector<char>& computeCode, const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts);
 		~ComputePipeline();
 
 	private: // Methods:
-		void CreatePipelineLayout(std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
+		void CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts);
 		void CreatePipeline(const VkShaderModule& computeShaderModule);
 	};
 }

@@ -20,7 +20,7 @@ namespace emberSpirvReflect
 	public: // Members:
 		std::string name;
 		uint32_t size;			// in bytes.
-		uint32_t setIndex;		// always 0 for HLSL shaders.
+		uint32_t setIndex;
 		uint32_t bindingIndex;	// bX, where X is the index. 
 
 	private: // Members:

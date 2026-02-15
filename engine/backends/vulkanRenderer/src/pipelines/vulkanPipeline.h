@@ -25,7 +25,6 @@ namespace vulkanRendererBackend
 
 	protected: // Members:
 		std::array<VkDescriptorSetLayout, s_descriptorSetCount> m_descriptorSetLayouts;
-		VkPipelineLayout m_pipelineLayout;
 		VkPipeline m_pipeline;
 		std::string m_name;
 
@@ -42,7 +41,6 @@ namespace vulkanRendererBackend
 		Pipeline& operator=(Pipeline&& other) noexcept;
 
 		const VkDescriptorSetLayout& GetVkDescriptorSetLayout(size_t set) const;
-		const VkPipelineLayout& GetVkPipelineLayout() const;
 		const VkPipeline& GetVkPipeline() const;
 
 	protected: // Methods:

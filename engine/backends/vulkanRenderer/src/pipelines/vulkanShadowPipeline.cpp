@@ -1,5 +1,4 @@
 #include "vulkanShadowPipeline.h"
-#include "shaderReflection.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
 #include "vulkanRenderPassManager.h"
@@ -14,12 +13,12 @@ namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
     template<typename vertexLayout>
-    ShadowPipeline<vertexLayout>::ShadowPipeline(const std::string& name, uint32_t shadowMapResolution, const std::vector<char>& vertexCode, const emberSpirvReflect::ShaderReflection& shaderReflection)
+    ShadowPipeline<vertexLayout>::ShadowPipeline(const std::string& name, uint32_t shadowMapResolution, const std::vector<char>& vertexCode, const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
         m_name = name;
 
         // Create pipeline Layout:
-        CreatePipelineLayout(shaderReflection);
+        CreatePipelineLayout(vkDescriptorSetLayouts);
 
         // Create vertex and fragment shader modules from .spv files:
         VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
@@ -29,7 +28,7 @@ namespace vulkanRendererBackend
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
-        NAME_VK_PIPELINE(m_pipeline, m_name + "ShadowPipeline");
+        NAME_VK_OBJECT(m_pipeline, m_name + "ShadowPipeline");
     }
     template<typename vertexLayout>
     ShadowPipeline<vertexLayout>::~ShadowPipeline()
@@ -41,18 +40,8 @@ namespace vulkanRendererBackend
 
     // Private:
     template<typename vertexLayout>
-    void ShadowPipeline<vertexLayout>::CreatePipelineLayout(const emberSpirvReflect::ShaderReflection& shaderReflection)
+    void ShadowPipeline<vertexLayout>::CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts)
     {
-        // Descriptor set layouts:
-        for (int i = 0; i < s_descriptorSetCount; i++)
-        {
-            const std::vector<VkDescriptorSetLayoutBinding>& bindings = shaderReflection.GetDescriptorSet(i).GetVkDescriptorSetLayoutBindings();
-            VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-            descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-            descriptorSetLayoutCreateInfo.pBindings = bindings.empty() ? nullptr : bindings.data();
-            VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayouts[i]));
-        }
-
         // Push constants layout:
         VkPushConstantRange pushConstantRange = {};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -61,15 +50,16 @@ namespace vulkanRendererBackend
 
         // Pipeline layout:
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipelineLayoutCreateInfo.setLayoutCount = m_descriptorSetLayouts.size(); // = s_descriptorSetCount
-        pipelineLayoutCreateInfo.pSetLayouts = m_descriptorSetLayouts.data();
+        pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
+        pipelineLayoutCreateInfo.pSetLayouts = vkDescriptorSetLayouts.data();
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+
         VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout));
-        NAME_VK_PIPELINE_LAYOUT(m_pipelineLayout, m_name + "ShadowPipelineLayout");
+        NAME_VK_OBJECT(m_pipelineLayout, m_name + "ShadowPipelineLayout");
     }
     template<typename vertexLayout>
-    void ShadowPipeline<vertexLayout>::CreatePipeline(uint32_t shadowMapResolution, const VkShaderModule& vertexShaderModule, const emberSpirvReflect::ShaderReflection& shaderReflection)
+    void ShadowPipeline<vertexLayout>::CreatePipeline(uint32_t shadowMapResolution, const VkShaderModule& vertexShaderModule, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -78,13 +68,10 @@ namespace vulkanRendererBackend
         vertexShaderStageInfo.pName = "main";
 
         // Vertex input:
-        const std::vector<emberSpirvReflect::VertexStageInfo>& vertexStageinfos = *shaderReflection.GetVertexShaderReflection()->GetVertexInfos();
-        std::vector<VkVertexInputBindingDescription> vertexBindings = GetVertexBindingDescriptions<vertexLayout>(vertexStageinfos);
-        std::vector<VkVertexInputAttributeDescription> vertexAttributes = GetVertexAttributeDescriptions<vertexLayout>(vertexStageinfos);
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-        vertexInputState.vertexBindingDescriptionCount = vertexBindings.size();
+        vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexBindings.size());
         vertexInputState.pVertexBindingDescriptions = vertexBindings.data();
-        vertexInputState.vertexAttributeDescriptionCount = vertexAttributes.size()
+        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributes.size());
         vertexInputState.pVertexAttributeDescriptions = vertexAttributes.data();
 
         // Input assembly:

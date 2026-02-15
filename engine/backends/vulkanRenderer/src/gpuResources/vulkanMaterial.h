@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 
@@ -48,8 +49,8 @@ namespace vulkanRendererBackend
 		Material& operator=(const Material& other) = delete;
 
 		// Movable:
-		Material(Material&& other);
-		Material& operator=(Material&& other);
+		Material(Material&& other) noexcept;
+		Material& operator=(Material&& other) noexcept;
 
 		// Getters:
 		const std::string& GetName() const override;

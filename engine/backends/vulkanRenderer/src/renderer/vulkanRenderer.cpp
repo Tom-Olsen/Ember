@@ -18,6 +18,7 @@
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanDrawCall.h"
+#include "vulkanEngineSet.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanIndexBuffer.h"
@@ -63,12 +64,14 @@ namespace vulkanRendererBackend
 		m_time = 0.0f;
 		m_deltaTime = 0.0f;
 		m_rebuildSwapchain = false;
-		std::filesystem::path directoryPath = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();
+		std::filesystem::path shadersSrcDirectory = (std::filesystem::path(ENGINE_SHADERS_DIR) / "shaders" / "src").make_preferred();
 
 		// Command pools (one per frameInFlight * renderStage):
 		m_commandPools.reserve(Context::GetFramesInFlight() * (int)RenderStage::stageCount);
 		for (int i = 0; i < Context::GetFramesInFlight() * (int)RenderStage::stageCount; i++)
 			m_commandPools.emplace_back(emberTaskSystem::TaskSystem::GetCoreCount(), Context::GetLogicalDevice()->GetGraphicsQueue());
+
+		m_pEngineSet = std::make_unique<EngineSet>(createInfo.maxDirectionalLights, createInfo.maxPositionalLights);
 
 		// Shadow/Light system:
 		m_depthBiasConstantFactor = 0.0f;
@@ -85,15 +88,8 @@ namespace vulkanRendererBackend
 		m_pShadowMaterial = std::make_unique<Material>(m_shadowMapResolution);
 		m_shadowPipelineLayout = m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
 
-		// Present render pass caching:
-		m_pPresentMesh = std::unique_ptr<Mesh>(CreateFullScreenRenderQuad());
-		m_pPresentMaterial = std::make_unique<Material>(emberCommon::MaterialType::present, "presentMaterial", emberCommon::RenderQueue::opaque, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
-		m_pPresentShaderProperties = std::make_unique<ShaderProperties>((Shader*)m_pPresentMaterial.get());
-		m_presentPipeline = m_pPresentMaterial->GetPipeline()->GetVkPipeline();
-		m_presentPipelineLayout = m_pPresentMaterial->GetPipeline()->GetVkPipelineLayout();
-
 		m_pendingMeshUpdates.resize(Context::GetFramesInFlight()); // prepare one pending mesh update vector per frame in flight.
-		m_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", directoryPath / "gammaCorrection.comp.spv");
+		m_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", shadersSrcDirectory / "compute" / "gammaCorrection.comp.spv");
 
 		// Debug naming:
 		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
@@ -121,9 +117,6 @@ namespace vulkanRendererBackend
 		DestroyFences();
 		m_commandPools.clear();
 		m_pShadowMaterial.reset();
-		m_pPresentMesh.reset();
-		m_pPresentMaterial.reset();
-		m_pPresentShaderProperties.reset();
 		m_pGammaCorrectionComputeShader.reset();
 		Context::Clear();
 	}
@@ -681,8 +674,9 @@ namespace vulkanRendererBackend
 		}
 
 		// Present call:
-		m_pPresentShaderProperties->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-		m_pPresentShaderProperties->UpdateShaderData();
+		ShaderProperties* pPresentShaderProperties = DefaultGpuResources::GetDefaultPresentShaderProperties();
+		pPresentShaderProperties->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+		pPresentShaderProperties->UpdateShaderData();
 	}
 
 
@@ -896,6 +890,101 @@ namespace vulkanRendererBackend
 	void Renderer::RecordForwardCommands()
 	{
 		PROFILE_FUNCTION();
+
+		VkDescriptorSet boundSets[5] =
+		{
+			VK_NULL_HANDLE,
+			VK_NULL_HANDLE,
+			VK_NULL_HANDLE,
+			VK_NULL_HANDLE,
+			VK_NULL_HANDLE
+		};
+		// Use this array for:
+		if (boundSets[setIndex] != newSet)
+		{
+			vkCmdBindDescriptorSets(...);
+			boundSets[setIndex] = newSet;
+		}
+
+
+		// Any compatible pipeline layout, e.g. 0th draw calls:
+		VkPipelineLayout layout = drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(); 
+
+		// Bind these only once after vkCmdBeginRenderPass
+		{ // Engine set (0), once per command buffer
+			VkDescriptorSet ds = DefaultGpuResources::GetDefaultShaderProperties()
+				->GetDescriptorSet(ENGINE_SET_INDEX, Context::GetFrameIndex())
+				.GetVkDescriptorSet();
+
+			vkCmdBindDescriptorSets(
+				commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				layout,
+				ENGINE_SET_INDEX,
+				1, &ds,
+				0, nullptr
+			);
+
+			boundSets[ENGINE_SET_INDEX] = ds;
+		}
+		{ // Scene set (1)
+			VkDescriptorSet ds = DefaultGpuResources::GetDefaultShaderProperties()
+				->GetDescriptorSet(SCENE_SET_INDEX, Context::GetFrameIndex())
+				.GetVkDescriptorSet();
+
+			vkCmdBindDescriptorSets(... set = 1 ...);
+			boundSets[SCENE_SET_INDEX] = ds;
+		}
+		{// Frame set (2)
+			VkDescriptorSet ds = DefaultGpuResources::GetDefaultShaderProperties()
+				->GetDescriptorSet(FRAME_SET_INDEX, Context::GetFrameIndex())
+				.GetVkDescriptorSet();
+
+			vkCmdBindDescriptorSets(... set = 2 ...);
+			boundSets[FRAME_SET_INDEX] = ds;
+		}
+
+		// In draw call Loop:
+		{// Material set (3)
+			VkDescriptorSet materialSet =
+				drawCall->pMaterial->GetShaderProperties()
+				->GetDescriptorSet(MATERIAL_SET_INDEX, Context::GetFrameIndex())
+				.GetVkDescriptorSet();
+
+			if (boundSets[MATERIAL_SET_INDEX] != materialSet)
+			{
+				vkCmdBindDescriptorSets(
+					commandBuffer,
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
+					layout,
+					MATERIAL_SET_INDEX,
+					1, &materialSet,
+					0, nullptr
+				);
+				boundSets[MATERIAL_SET_INDEX] = materialSet;
+			}
+		}
+		{// Draw set (4)
+			VkDescriptorSet drawSet =
+				drawCall->pShaderProperties
+				->GetDescriptorSet(DRAW_SET_INDEX, Context::GetFrameIndex())
+				.GetVkDescriptorSet();
+
+			// always changes:
+			vkCmdBindDescriptorSets(
+				commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				layout,
+				DRAW_SET_INDEX,
+				1, &drawSet,
+				0, nullptr
+			);
+
+			boundSets[DRAW_SET_INDEX] = drawSet;
+		}
+
+
+
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::forward);
@@ -1167,6 +1256,9 @@ namespace vulkanRendererBackend
 		// Record present commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
+			Material* pMaterial = DefaultGpuResources::GetDefaultPresentMaterial();
+			ShaderProperties* pPresentShaderProperties = DefaultGpuResources::GetDefaultPresentShaderProperties();
+			Mesh* pMesh = DefaultGpuResources::GetDefaultRenderQuad();
 			Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
 
 			// Viewport and scissor:
@@ -1189,18 +1281,19 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent = VkExtent2D(surfaceExtend.x, surfaceExtend.y);
 
+
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipeline);
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline()->GetVkPipeline());
 
-				vkCmdBindVertexBuffers(commandBuffer, 0, m_pPresentMesh->GetVertexBindingCount(), m_pPresentMesh->GetVkBuffers(), m_pPresentMesh->GetOffsets());
-				vkCmdBindIndexBuffer(secondarycommandBufferCommandBuffer, m_pPresentMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, m_pPresentMesh->GetVkIndexType());
+				vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());
+				vkCmdBindIndexBuffer(secondarycommandBufferCommandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
 
 				// Ember::ToDo: bind all descriptor sets 0-4
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_presentPipelineLayout, 0, 1, &m_pPresentShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
-				vkCmdDrawIndexed(commandBuffer, m_pPresentMesh->GetIndexCount(), 1, 0, 0, 0);
-				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", m_pPresentMaterial->GetName());
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline()->GetVkPipelineLayout(), 0, 1, &pPresentShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+				vkCmdDrawIndexed(commandBuffer, pMesh->GetIndexCount(), 1, 0, 0, 0);
+				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", pMaterial->GetName());
 				
 				m_pIGui->Render(commandBuffer);
 			}
@@ -1620,41 +1713,5 @@ namespace vulkanRendererBackend
 		assert(renderStage < (int)RenderStage::stageCount);
 		assert(frameIndex < Context::GetFramesInFlight());
 		return m_commandPools[frameIndex + (int)renderStage * Context::GetFramesInFlight()];
-	}
-
-
-
-	Mesh* Renderer::CreateFullScreenRenderQuad()
-	{
-		Mesh* pMesh = new Mesh("fullScreenRenderQuad");
-
-		std::vector<Float3> positions;
-		positions.emplace_back(-1.0f, -1.0f, 0.0f);
-		positions.emplace_back(-1.0f, 1.0f, 0.0f);
-		positions.emplace_back(1.0f, -1.0f, 0.0f);
-		positions.emplace_back(1.0f, 1.0f, 0.0f);
-
-		std::vector<Float3> normals;
-		normals.emplace_back(0.0f, 0.0f, 1.0f);
-		normals.emplace_back(0.0f, 0.0f, 1.0f);
-		normals.emplace_back(0.0f, 0.0f, 1.0f);
-		normals.emplace_back(0.0f, 0.0f, 1.0f);
-
-		std::vector<Float4> uvs;
-		uvs.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
-		uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
-		uvs.emplace_back(1.0f, 0.0f, 0.0f, 0.0f);
-		uvs.emplace_back(1.0f, 1.0f, 0.0f, 0.0f);
-
-		std::vector<Uint3> triangles;
-		triangles.emplace_back(Uint3(0, 2, 1));
-		triangles.emplace_back(Uint3(1, 2, 3));
-
-		pMesh->MovePositions(std::move(positions));
-		pMesh->MoveNormals(std::move(normals));
-		pMesh->MoveUVs(std::move(uvs));
-		pMesh->MoveTriangles(std::move(triangles));
-		pMesh->ComputeTangents();
-		return pMesh;
 	}
 }

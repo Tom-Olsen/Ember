@@ -12,19 +12,24 @@ namespace emberSpirvReflect
     DescriptorSet::DescriptorSet()
     {
         m_set = UINT32_MAX;
-        m_isInitialized = false;
+        m_layoutCreated = false;
     }
     DescriptorSet::DescriptorSet(uint32_t set)
     {
         m_set = set;
-        m_isInitialized = false;
+        m_layoutCreated = false;
+    }
+    DescriptorSet::~DescriptorSet()
+    {
+
     }
 
 
 
+    // Main functionality:
     void DescriptorSet::AddDescriptor(const Descriptor& descriptor)
     {
-        assert(!m_isInitialized && "DescriptorSet::AddDescriptor(const Descriptor&) called after layout bindings were finalized.");
+        assert(!m_layoutCreated && "DescriptorSet::AddDescriptor(const Descriptor&) called after layout bindings were finalized.");
 
         auto it = m_descriptors.find(descriptor.vkDescriptorSetLayoutBinding.binding);
         if (it != m_descriptors.end())
@@ -36,21 +41,20 @@ namespace emberSpirvReflect
         else
             m_descriptors.emplace(descriptor.vkDescriptorSetLayoutBinding.binding, descriptor);
     }
-    void DescriptorSet::CreateVkDescriptorSetLayoutBindings()
+    void DescriptorSet::CreateLayoutBindings()
     {
-        if (m_isInitialized == false)
-        {
-            m_vkDescriptorSetLayoutBinding.reserve(m_descriptors.size());
-            for (const auto& [binding, descriptor] : m_descriptors)
-                m_vkDescriptorSetLayoutBinding.push_back(descriptor.vkDescriptorSetLayoutBinding);
+        assert(!m_layoutCreated && "DescriptorSet::CreateLayout() called twice.");
 
-            // Sorting for better debug output.
-            std::sort(m_vkDescriptorSetLayoutBinding.begin(), m_vkDescriptorSetLayoutBinding.end(),
-                [](const VkDescriptorSetLayoutBinding& a, const VkDescriptorSetLayoutBinding& b)
-            { return a.binding < b.binding; });
+        m_vkDescriptorSetLayoutBinding.reserve(m_descriptors.size());   
+        for (const auto& [_, descriptor] : m_descriptors)
+            m_vkDescriptorSetLayoutBinding.push_back(descriptor.vkDescriptorSetLayoutBinding);
 
-            m_isInitialized = true;
-        }
+        // Sorting for better debug output.
+        std::sort(m_vkDescriptorSetLayoutBinding.begin(), m_vkDescriptorSetLayoutBinding.end(),
+            [](const VkDescriptorSetLayoutBinding& a, const VkDescriptorSetLayoutBinding& b)
+        { return a.binding < b.binding; });
+
+        m_layoutCreated = true; m_vkDescriptorSetLayoutBinding
     }
 
 
@@ -62,7 +66,7 @@ namespace emberSpirvReflect
     }
     const std::vector<VkDescriptorSetLayoutBinding>& DescriptorSet::GetVkDescriptorSetLayoutBindings() const
     {
-        assert(m_isInitialized && "Must call DescriptorSet::CreateVkDescriptorSetLayoutBindings() before DescriptorSet::GetVkDescriptorSetLayoutBindings().");
+        assert(m_layoutCreated && "Must call DescriptorSet::CreateLayout() before DescriptorSet::GetVkDescriptorSetLayoutBindings().");
         return m_vkDescriptorSetLayoutBinding;
     }
 

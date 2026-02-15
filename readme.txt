@@ -1,4 +1,4 @@
-Prerequisites:
+Build Requirements:
 To compile this code, you need to have Vulkan SDK 1.3.290.0 (or later) and cmake version 3.30 (or later) installed.
 All other dependencies (googletest, imgui, SDL, spdlog, SPIRV-Reflect, vma) are submodules and will be compiled from source.
 (Don't forget to clone recursively for the submodules: git clone --recurse-submodules <repository-url>, or after cloning do: git submodule update --init --recursive)
@@ -11,12 +11,12 @@ The core and the backends all build into shared libraries which then get linked 
 The difference between these applications is the actual backends that get linked and used, e.g. emberHeadlessApp uses all the nullX backends as it doesnt need a window or gui.
 Each application type comes with its own additional code. E.g. the editorApp contains the editorWindows.
 To create a new project simply link any of these applications into your project and you are good to go.
-Examples of this can be found in Ember/projects/... .
+Examples of this can be found in the projects folder (Ember/projects/<project name>).
 The other folders in the Ember/engine folder are:
 Ember/engine/common     ->   header only communication structs/enums which get included by core and backends.
 Ember/engine/extern     ->   external libraries (submodules).
 Ember/engine/interfaces ->   interfaces which get implemented by the backends.
-Ember/engine/libs       ->   static libraries without global/static state that can be used by core and backends, e.g. assetLoader, logger, math, profiler, threadPool.
+Ember/engine/libs       ->   static libraries without global/static state that can be used by core and backends, e.g. assetLoader, entityComponentSystem, logger, math, profiler, spirvReflect, threadPool.
 Ember/engine/shaders    ->   basic shaders which are shipped with the engine by default; more can be added in your own project.
 
 
@@ -35,7 +35,7 @@ To create a new project simply link the desired base application from 'Ember/eng
 
 
 
-How to compile (Windows 10):
+How to compile (Windows):
 Start CMake and use the following configuration:
 Where is the source code:    <parent folder of CMakeLists.txt, e.g. C:/.../Ember/project/defaultProject>
 Where to build the binaries: <path to build folder,            e.g. C:/.../Ember/project/defaultProject/build>
@@ -47,10 +47,10 @@ You can now build and run the code with the play button or 'ctrl + F5'.
 
 
 
-How to compile (Ubuntu):
+How to compile (Linux):
 In a terminal navigate to the project you want to compile, e.g. 'home/<username>/Documents/Ember/projects/defaultProject'.
 Create a build folder:      mkdir build
-navigate into the it:       cd build
+navigate into it:           cd build
 run cmake:                  cmake ..
 run make:                   make (optional: make -j, for multi core compilation)
 navigate to bin:            cd ../bin/<buildType>
@@ -74,13 +74,18 @@ Implemented features:
     -postRender compute (post processing effects).
     -async comppute.
     -immediate compue.
--Fully automated descriptorSet system for shaderProperties (see spirvReflect.h/cpp) which handles descriptorSets for Materials and ComputeShaders.
--ECS: static library in the Embere/engine/libs folder which gets linked to the applications. The core has no access to the ECS.
+-Pipeline Modes:
+    -interleaved (vertex input memory layout)
+    -separate (vertex input memory layout)
+-Fully automated descriptorSet system for shaderProperties (Ember/engine/libs/spirvReflect/shaderReflection.h/cpp) which handles descriptorSets for Materials and ComputeShaders.
+-ECS: static library (Embere/engine/libs/entityComponentSystem) which gets linked to the applications. The core has no access to the ECS.
 -EventSystem that catches SDL events and makes them visible to Gui+Editor+Entities/Components.
 -CameraController that is identical to unities editor.
--Custom math library, see math.h/cpp. (will be refactored to be a glm wrapper soon).
+-Custom math library (Embere/engine/libs/math.h/cpp).
 -Dear ImGui integration with docking feature.
-
+-VulkanBackend features:
+    -vulkan object gargabe collector
+    -dynamic meshes with multibuffering
 
 
 Ember::TODO now!

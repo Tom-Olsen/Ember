@@ -9,18 +9,18 @@
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ComputePipeline::ComputePipeline(const std::string& name, const std::vector<char>& computeCode, const emberSpirvReflect::ShaderReflection& shaderReflection)
+    ComputePipeline::ComputePipeline(const std::string& name, const std::vector<char>& computeCode, const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts)
     {
         m_name = name;
 
         // Create pipeline Layout:
-        CreatePipelineLayout(shaderReflection);
+        CreatePipelineLayout(vkDescriptorSetLayouts);
 
         // Create compute shader module from .spv files:
         VkShaderModule computeShaderModule = CreateShaderModule(computeCode);
 
         // Create pipeline:
-        CreatePipeline(computeShaderModule, shaderReflection);
+        CreatePipeline(computeShaderModule);
 
         // Destroy shader module (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), computeShaderModule, nullptr);
@@ -34,14 +34,8 @@ namespace vulkanRendererBackend
 
 
     // Private:
-    void ComputePipeline::CreatePipelineLayout(std::vector<DescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
+    void ComputePipeline::CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts)
     {
-        // Descriptor set layout:
-        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-        descriptorSetLayoutCreateInfo.bindingCount = descriptorSetLayoutBindings.size();
-        descriptorSetLayoutCreateInfo.pBindings = reinterpret_cast<VkDescriptorSetLayoutBinding*>(descriptorSetLayoutBindings.data());
-        VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
-
         // Push constants layout:
         VkPushConstantRange pushConstantRange = {};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -50,12 +44,12 @@ namespace vulkanRendererBackend
 
         // Pipeline layout:
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipelineLayoutCreateInfo.setLayoutCount = 1;
-        pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
+        pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
+        pipelineLayoutCreateInfo.pSetLayouts = vkDescriptorSetLayouts.data();
         pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
         pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
         vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
-        NAME_VK_PIPELINE_LAYOUT(m_pipelineLayout, m_name + "ComputePipelineLayout");
+        NAME_VK_OBJECT(m_pipelineLayout, m_name + "ComputePipelineLayout");
     }
     void ComputePipeline::CreatePipeline(const VkShaderModule& computeShaderModule)
     {

@@ -5,25 +5,25 @@
 
 // Notes:
 // - higher set index = higher update frequency
-// - (reflection): these descriptor sets are generate dynamically based on the shader code via reflection. See ShaderProperties.
-// - (hard coded): these descriptor sets are always the same and known by the engine. See EngineSet, SceneSet, FrameSet.
+// - (dynamic): these descriptor sets are generate dynamically based on the shader code via reflection. See ShaderProperties.
+// -  (static): these descriptor sets are always the same and get extracted from the default material once on startup.
 
 
 
 //  HLSL spaces:
-#define ENGINE_SET    space0  // e.g engine:    samplers, shadowMaps, global noise textures, etc	(hard coded)
-#define SCENE_SET     space1  // e.g lighting:  dirLightCount, posLightsCount						(hard coded)
-#define MATERIAL_SET  space2  // e.g material:  textures, buffers, instanceData, metallicity etc.	(reflection)
-#define FRAME_SET     space3  // e.g camera:    view, proj, viewProj, cameraPos						(hard coded)
-#define DRAW_SET      space4  // e.g drawCall:  localToWorld, worldToLocal							(reflection)
+#define ENGINE_SET    space0  // e.g engine:    samplers, shadowMaps, global noise textures, etc	(static)
+#define SCENE_SET     space1  // e.g lighting:  dirLightCount, posLightsCount						(static)
+#define FRAME_SET     space2  // e.g camera:    view, proj, viewProj, cameraPos						(static)
+#define MATERIAL_SET  space3  // e.g material:  textures, buffers, instanceData, metallicity etc.	(dynamic)
+#define DRAW_SET      space4  // e.g drawCall:  localToWorld, worldToLocal							(dynamic)
 
 
 
 // Vulkan set indices:
 #define ENGINE_SET_INDEX    0
 #define SCENE_SET_INDEX     1
-#define MATERIAL_SET_INDEX  2
-#define FRAME_SET_INDEX     3
+#define FRAME_SET_INDEX     2
+#define MATERIAL_SET_INDEX  3
 #define DRAW_SET_INDEX      4
 
 

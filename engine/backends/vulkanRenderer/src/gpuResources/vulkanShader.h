@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 
@@ -22,6 +23,8 @@ namespace vulkanRendererBackend
 	{
 	protected: // Members:
 		std::string m_name;
+		std::vector<VkDescriptorSetLayout> m_vkDescriptorSetLayouts;
+		VkPipelineLayout m_vkPipelineLayout;
 		std::vector<std::unique_ptr<Pipeline>> m_pPipelines;
 		emberSpirvReflect::ShaderReflection m_shaderReflection;
 	
@@ -41,10 +44,13 @@ namespace vulkanRendererBackend
 		Shader(Shader&& other) noexcept;
 		Shader& operator=(Shader&& other) noexcept;
 
+		// Create descriptor sets:
+		void CreateDescriptorSetLayout();
+
 		// Getters:
 		const std::string& GetName() const;
-		//const Pipeline* const GetPipeline() const;
 		const emberSpirvReflect::ShaderReflection& const GetShaderReflection() const;
+		const VkPipelineLayout& GetVkPipelineLayout() const;
 
 		// Debugging:
 		void PrintShaderInfo() const;

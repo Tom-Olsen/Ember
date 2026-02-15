@@ -76,9 +76,9 @@ namespace emberSpirvReflect
             }
         }
 
-        // Create descriptor set layot bindings:
+        // Create descriptor set layout bindings:
         for (int i = 0; i < m_descriptorSets.size(); i++)
-            m_descriptorSets[i].CreateVkDescriptorSetLayoutBindings();
+            m_descriptorSets[i].CreateLayoutBindings();
 
         m_isInitialized = true;
     }
