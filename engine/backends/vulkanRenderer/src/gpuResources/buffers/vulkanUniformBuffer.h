@@ -9,7 +9,10 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	struct UniformBufferBlock;
+	namespace emberSpirvReflect
+	{
+		struct UniformBufferBlock;
+	}
 
 
 
@@ -26,11 +29,11 @@ namespace vulkanRendererBackend
 	private: // Members:
 		void* m_pDeviceData;
 		std::vector<char> m_hostData;
-		UniformBufferBlock* m_pUniformBufferBlock;
+		emberSpirvReflect::UniformBufferBlock* m_pUniformBufferBlock; // must be replaced with a vulkanBackend defined layout struct and better to store by value.
 
 	public: // Methods:
 		// Constructor/Destructor:
-		UniformBuffer(UniformBufferBlock* pUniformBufferBlock);
+		UniformBuffer(emberSpirvReflect::UniformBufferBlock* pUniformBufferBlock);
 		~UniformBuffer();
 
 		// Non-copyable:

@@ -1,4 +1,5 @@
 #include "vulkanRenderer.h"
+#include "descriptorSetMacros.h"
 #include "emberMath.h"
 #include "iGui.h"
 #include "iWindow.h"
@@ -17,8 +18,8 @@
 #include "vulkanConvertTextureFormat.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDefaultPushConstant.h"
+#include "vulkanDescriptorSetBinding.h"
 #include "vulkanDrawCall.h"
-#include "vulkanEngineSet.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanIndexBuffer.h"
@@ -37,7 +38,6 @@
 #include "vulkanSampler.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSampleTextureCube.h"
-#include "vulkanShaderProperties.h"
 #include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
 #include "vulkanStorageBuffer.h"
@@ -71,8 +71,6 @@ namespace vulkanRendererBackend
 		for (int i = 0; i < Context::GetFramesInFlight() * (int)RenderStage::stageCount; i++)
 			m_commandPools.emplace_back(emberTaskSystem::TaskSystem::GetCoreCount(), Context::GetLogicalDevice()->GetGraphicsQueue());
 
-		m_pEngineSet = std::make_unique<EngineSet>(createInfo.maxDirectionalLights, createInfo.maxPositionalLights);
-
 		// Shadow/Light system:
 		m_depthBiasConstantFactor = 0.0f;
 		m_depthBiasClamp = 0.0f;
@@ -86,7 +84,7 @@ namespace vulkanRendererBackend
 		m_positionalLights.resize(m_maxPositionalLights);
 		m_lightWorldToClipMatrizes.resize(m_maxDirectionalLights + m_maxPositionalLights);
 		m_pShadowMaterial = std::make_unique<Material>(m_shadowMapResolution);
-		m_shadowPipelineLayout = m_pShadowMaterial->GetPipeline()->GetVkPipelineLayout();
+		m_shadowPipelineLayout = m_pShadowMaterial->GetVkPipelineLayout();
 
 		m_pendingMeshUpdates.resize(Context::GetFramesInFlight()); // prepare one pending mesh update vector per frame in flight.
 		m_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", shadersSrcDirectory / "compute" / "gammaCorrection.comp.spv");
@@ -130,10 +128,11 @@ namespace vulkanRendererBackend
 
 
 	// Main render call:
-	void Renderer::RenderFrame(float time, float deltaTime)
+	void Renderer::RenderFrame(float time, float deltaTime, emberBackendInterface::IShaderDescriptorSet* pSceneDescriptorSet)
 	{
 		m_time = time;
 		m_deltaTime = deltaTime;
+		m_pSceneDescriptorSet = pSceneDescriptorSet;
 
 		// Resize Swapchain if needed:
 		Int2 windowSize = m_pIWindow->GetSize();
@@ -156,12 +155,14 @@ namespace vulkanRendererBackend
 		// We use linear color space throughout entire render process. So apply gamma correction in post processing as last step:
 		m_pCompute->GetPostRenderCompute()->RecordComputeShader(m_pGammaCorrectionComputeShader.get());
 		SortDrawCallPointers();
-		UpdateShaderData();
+		UpdateShaderData(Context::GetFrameIndex());
 		
 		// Record and submit current frame commands:
 		{
 			PROFILE_SCOPE("Record");
 			DEBUG_LOG_CRITICAL("Recording frame {}", Context::GetFrameIndex());
+
+			// Ember::ToDo: only record commands if they contain at least one command.
 
 			RecordResourceUpdateCommands();
 			SubmitResourceUpdateCommands();
@@ -240,7 +241,7 @@ namespace vulkanRendererBackend
 
 
 	// Draw mesh:
-	void Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IShaderProperties* pIShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IShaderDescriptorSet* pIShaderDescriptorSet, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{// for static draw calls.
 		if (!pMesh)
 		{
@@ -252,18 +253,18 @@ namespace vulkanRendererBackend
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMaterial is nullptr.");
 			return;
 		}
-		if (!pIShaderProperties)
+		if (!pIShaderDescriptorSet)
 		{
-			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pIShaderProperties is nullptr.");
+			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pIShaderDescriptorSet is nullptr.");
 			return;
 		}
 
 		// Setup draw call:
-		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)m_pShadowMaterial.get());
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<ShaderProperties*>(pIShaderProperties), pShadowShaderProperties, static_cast<Mesh*>(pMesh), 0 };
+		DescriptorSetBinding* pShadowShaderDescriptorSet = PoolManager::CheckOutShaderDescriptorSet((Shader*)m_pShadowMaterial.get());
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<DescriptorSetBinding*>(pIShaderDescriptorSet), pShadowShaderDescriptorSet, static_cast<Mesh*>(pMesh), 0 };
 		m_staticDrawCalls.push_back(drawCall);
 	}
-	emberBackendInterface::IShaderProperties* Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	emberBackendInterface::IShaderDescriptorSet* Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{// for dynamic draw calls.
 		if (!pMesh)
 		{
@@ -277,17 +278,17 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup draw call:
-		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
-		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)m_pShadowMaterial.get());
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), pShaderProperties, pShadowShaderProperties, static_cast<Mesh*>(pMesh), 0 };
+		DescriptorSetBinding* pShaderDescriptorSet = PoolManager::CheckOutShaderDescriptorSet(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
+		DescriptorSetBinding* pShadowShaderDescriptorSet = PoolManager::CheckOutShaderDescriptorSet((Shader*)m_pShadowMaterial.get());
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), pShaderDescriptorSet, pShadowShaderDescriptorSet, static_cast<Mesh*>(pMesh), 0 };
 		m_dynamicDrawCalls.push_back(drawCall);
-		return pShaderProperties;
+		return pShaderDescriptorSet;
 	}
 
 
 
 	// Draw instanced:
-	void Renderer::DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Renderer::DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IShaderDescriptorSet* pShaderDescriptorSet, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (!pInstanceBuffer)
 		{
@@ -306,17 +307,17 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup draw call:
-		pShaderProperties->SetBuffer("instanceBuffer", pInstanceBuffer);
-		ShaderProperties* pShadowShaderProperties = PoolManager::CheckOutShaderProperties((Shader*)m_pShadowMaterial.get());
-		pShadowShaderProperties->SetBuffer("instanceBuffer", pInstanceBuffer);
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<ShaderProperties*>(pShaderProperties), pShadowShaderProperties, static_cast<Mesh*>(pMesh), instanceCount };
+		pShaderDescriptorSet->SetBuffer("instanceBuffer", pInstanceBuffer);
+		DescriptorSetBinding* pShadowShaderDescriptorSet = PoolManager::CheckOutShaderDescriptorSet((Shader*)m_pShadowMaterial.get());
+		pShadowShaderDescriptorSet->SetBuffer("instanceBuffer", pInstanceBuffer);
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<DescriptorSetBinding*>(pShaderDescriptorSet), pShadowShaderDescriptorSet, static_cast<Mesh*>(pMesh), instanceCount };
 		m_staticDrawCalls.push_back(drawCall);
 	}
-	emberBackendInterface::IShaderProperties* Renderer::DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	emberBackendInterface::IShaderDescriptorSet* Renderer::DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
-		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
-		DrawInstanced(instanceCount, pInstanceBuffer, pMesh, pMaterial, pShaderProperties, localToWorldMatrix, receiveShadows, castShadows);
-		return pShaderProperties;
+		DescriptorSetBinding* pShaderDescriptorSet = PoolManager::CheckOutShaderDescriptorSet(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
+		DrawInstanced(instanceCount, pInstanceBuffer, pMesh, pMaterial, pShaderDescriptorSet, localToWorldMatrix, receiveShadows, castShadows);
+		return pShaderDescriptorSet;
 	}
 
 
@@ -470,17 +471,17 @@ namespace vulkanRendererBackend
 	{
 		return new Mesh(name);
 	}
-	emberBackendInterface::IShaderProperties* Renderer::CreateShaderProperties(emberBackendInterface::IComputeShader* pIComputeShader)
+	emberBackendInterface::IShaderDescriptorSet* Renderer::CreateShaderDescriptorSet(emberBackendInterface::IComputeShader* pIComputeShader)
 	{
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 		Shader* pShader = static_cast<Shader*>(pComputeShader);
-		return new ShaderProperties(pShader);
+		return new DescriptorSetBinding(pShader);
 	}
-	emberBackendInterface::IShaderProperties* Renderer::CreateShaderProperties(emberBackendInterface::IMaterial* pIMaterial)
+	emberBackendInterface::IShaderDescriptorSet* Renderer::CreateShaderDescriptorSet(emberBackendInterface::IMaterial* pIMaterial)
 	{
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		Shader* pShader = static_cast<Shader*>(pMaterial);
-		return new ShaderProperties(pShader);
+		return new DescriptorSetBinding(pShader);
 	}
 
 
@@ -551,17 +552,17 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::ResetDrawCalls()
 	{
-		// Return all pShaderProperties/pShadowShaderProperties of dynamic draw calls back to the corresponding pool:
+		// Return all pShaderDescriptorSet/pShadowShaderDescriptorSet of dynamic draw calls back to the corresponding pool:
 		for (DrawCall& drawCall : m_dynamicDrawCalls)
 		{
-			PoolManager::ReturnShaderProperties((Shader*)drawCall.pMaterial, drawCall.pShaderProperties);
-			PoolManager::ReturnShaderProperties((Shader*)m_pShadowMaterial.get(), drawCall.pShadowShaderProperties);
+			PoolManager::ReturnShaderDescriptorSet((Shader*)drawCall.pMaterial, drawCall.pShaderDescriptorSet);
+			PoolManager::ReturnShaderDescriptorSet((Shader*)m_pShadowMaterial.get(), drawCall.pShadowShaderDescriptorSet);
 		}
 
-		// Return all pShadowShaderProperties of static draw calls back to the pool:
+		// Return all pShadowShaderDescriptorSet of static draw calls back to the pool:
 		for (DrawCall& drawCall : m_staticDrawCalls)
 		{
-			PoolManager::ReturnShaderProperties((Shader*)m_pShadowMaterial.get(), drawCall.pShadowShaderProperties);
+			PoolManager::ReturnShaderDescriptorSet((Shader*)m_pShadowMaterial.get(), drawCall.pShadowShaderDescriptorSet);
 		}
 
 		// Clear all draw calls for next frame:
@@ -639,7 +640,7 @@ namespace vulkanRendererBackend
 		// Pre render compute:
 		for (ComputeCall* computeCall : m_pCompute->GetPreRenderCompute()->GetComputeCallPointers())
 			if (computeCall->pComputeShader)
-				computeCall->pShaderProperties->UpdateShaderData();
+				computeCall->pShaderDescriptorSet->UpdateShaderData(Context::GetFrameIndex());
 
 		// Light matrizes:
 		int shadowLightCount = 0;
@@ -651,10 +652,10 @@ namespace vulkanRendererBackend
 		// Forward calls:
 		for (DrawCall* drawCall : m_sortedDrawCallPointers)
 		{
-			drawCall->pShadowShaderProperties->UpdateShaderData();
+			drawCall->pShadowShaderDescriptorSet->UpdateShaderData(Context::GetFrameIndex());
 			drawCall->SetRenderMatrizes(m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
 			drawCall->SetLightData(m_directionalLights, m_positionalLights);
-			drawCall->pShaderProperties->UpdateShaderData();
+			drawCall->pShaderDescriptorSet->UpdateShaderData(Context::GetFrameIndex());
 		}
 
 		// Post render compute:
@@ -662,21 +663,21 @@ namespace vulkanRendererBackend
 		{
 			if (computeCall->callIndex % 2 == 0)
 			{
-				computeCall->pShaderProperties->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-				computeCall->pShaderProperties->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
+				computeCall->pShaderDescriptorSet->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+				computeCall->pShaderDescriptorSet->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
 			}
 			else
 			{
-				computeCall->pShaderProperties->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
-				computeCall->pShaderProperties->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+				computeCall->pShaderDescriptorSet->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
+				computeCall->pShaderDescriptorSet->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
 			}
-			computeCall->pShaderProperties->UpdateShaderData();
+			computeCall->pShaderDescriptorSet->UpdateShaderData(Context::GetFrameIndex());
 		}
 
 		// Present call:
-		ShaderProperties* pPresentShaderProperties = DefaultGpuResources::GetDefaultPresentShaderProperties();
-		pPresentShaderProperties->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-		pPresentShaderProperties->UpdateShaderData();
+		DescriptorSetBinding* pPresentShaderDescriptorSet = DefaultGpuResources::GetDefaultPresentShaderDescriptorSet();
+		pPresentShaderDescriptorSet->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+		pPresentShaderDescriptorSet->UpdateShaderData(Context::GetFrameIndex());
 	}
 
 
@@ -774,7 +775,7 @@ namespace vulkanRendererBackend
 					{
 						pPreviousComputeShader = pComputeShader;
 						pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
-						pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
+						pipelineLayout = pComputeShader->GetVkPipelineLayout();
 						pushConstant.threadCount = computeCall->threadCount;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 						pushConstant.threadCount = computeCall->threadCount;
@@ -794,7 +795,7 @@ namespace vulkanRendererBackend
 					uint32_t groupCountZ = (computeCall->threadCount[2] + blockSize[2] - 1) / blockSize[2];
 
 					// Ember::ToDo: bind all descriptor sets 0-4
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderDescriptorSet->GetVkDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 					DEBUG_LOG_TRACE("Pre Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 				}
@@ -871,7 +872,7 @@ namespace vulkanRendererBackend
 						vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
 
 						// Ember::ToDo: bind all descriptor sets 0-4
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowPipelineLayout, 0, 1, &drawCall->pShadowShaderDescriptorSet->GetVkDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 
 						for (uint32_t shadowMapIndex = 0; shadowMapIndex < shadowLightCount; shadowMapIndex++)
 						{
@@ -890,101 +891,6 @@ namespace vulkanRendererBackend
 	void Renderer::RecordForwardCommands()
 	{
 		PROFILE_FUNCTION();
-
-		VkDescriptorSet boundSets[5] =
-		{
-			VK_NULL_HANDLE,
-			VK_NULL_HANDLE,
-			VK_NULL_HANDLE,
-			VK_NULL_HANDLE,
-			VK_NULL_HANDLE
-		};
-		// Use this array for:
-		if (boundSets[setIndex] != newSet)
-		{
-			vkCmdBindDescriptorSets(...);
-			boundSets[setIndex] = newSet;
-		}
-
-
-		// Any compatible pipeline layout, e.g. 0th draw calls:
-		VkPipelineLayout layout = drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(); 
-
-		// Bind these only once after vkCmdBeginRenderPass
-		{ // Engine set (0), once per command buffer
-			VkDescriptorSet ds = DefaultGpuResources::GetDefaultShaderProperties()
-				->GetDescriptorSet(ENGINE_SET_INDEX, Context::GetFrameIndex())
-				.GetVkDescriptorSet();
-
-			vkCmdBindDescriptorSets(
-				commandBuffer,
-				VK_PIPELINE_BIND_POINT_GRAPHICS,
-				layout,
-				ENGINE_SET_INDEX,
-				1, &ds,
-				0, nullptr
-			);
-
-			boundSets[ENGINE_SET_INDEX] = ds;
-		}
-		{ // Scene set (1)
-			VkDescriptorSet ds = DefaultGpuResources::GetDefaultShaderProperties()
-				->GetDescriptorSet(SCENE_SET_INDEX, Context::GetFrameIndex())
-				.GetVkDescriptorSet();
-
-			vkCmdBindDescriptorSets(... set = 1 ...);
-			boundSets[SCENE_SET_INDEX] = ds;
-		}
-		{// Frame set (2)
-			VkDescriptorSet ds = DefaultGpuResources::GetDefaultShaderProperties()
-				->GetDescriptorSet(FRAME_SET_INDEX, Context::GetFrameIndex())
-				.GetVkDescriptorSet();
-
-			vkCmdBindDescriptorSets(... set = 2 ...);
-			boundSets[FRAME_SET_INDEX] = ds;
-		}
-
-		// In draw call Loop:
-		{// Material set (3)
-			VkDescriptorSet materialSet =
-				drawCall->pMaterial->GetShaderProperties()
-				->GetDescriptorSet(MATERIAL_SET_INDEX, Context::GetFrameIndex())
-				.GetVkDescriptorSet();
-
-			if (boundSets[MATERIAL_SET_INDEX] != materialSet)
-			{
-				vkCmdBindDescriptorSets(
-					commandBuffer,
-					VK_PIPELINE_BIND_POINT_GRAPHICS,
-					layout,
-					MATERIAL_SET_INDEX,
-					1, &materialSet,
-					0, nullptr
-				);
-				boundSets[MATERIAL_SET_INDEX] = materialSet;
-			}
-		}
-		{// Draw set (4)
-			VkDescriptorSet drawSet =
-				drawCall->pShaderProperties
-				->GetDescriptorSet(DRAW_SET_INDEX, Context::GetFrameIndex())
-				.GetVkDescriptorSet();
-
-			// always changes:
-			vkCmdBindDescriptorSets(
-				commandBuffer,
-				VK_PIPELINE_BIND_POINT_GRAPHICS,
-				layout,
-				DRAW_SET_INDEX,
-				1, &drawSet,
-				0, nullptr
-			);
-
-			boundSets[DRAW_SET_INDEX] = drawSet;
-		}
-
-
-
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(Context::GetFrameIndex(), RenderStage::forward);
@@ -1024,8 +930,20 @@ namespace vulkanRendererBackend
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				VkPipeline pipeline = VK_NULL_HANDLE;
+				// Bindings management:
 				DefaultPushConstant pushConstant(0, m_time, m_deltaTime, m_directionalLightsCount, m_positionalLightsCount, m_activeCamera.position);
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+
+				// Bind static descriptorSets:
+				VkDescriptorSet staticDescriptorSets[3] =
+				{
+					DefaultGpuResources::GetGlobalDescriptorSetBinding()->GetVkDescriptorSet(Context::GetFrameIndex()),
+					m_pSceneDescriptorSet->GetVkDescriptorSet(Context::GetFrameIndex()),
+					DefaultGpuResources::GetFrameDescriptorSetBinding()->GetVkDescriptorSet(Context::GetFrameIndex())
+				};
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_sortedDrawCallPointers[0]->pMaterial->GetVkPipelineLayout(), 0, 3, staticDescriptorSets, 0, nullptr);
+				// Ember::ToDo: This only works if descriptorSets 0-2 are exactly the same for EVERY pipelineLayout. Make sure that this is 100% the case!
 
 				// Draw calls:
 				for (DrawCall* drawCall : m_sortedDrawCallPointers)
@@ -1036,22 +954,34 @@ namespace vulkanRendererBackend
 					if (pipeline != drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline())
 					{
 						pipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
-						pushConstant.instanceCount = drawCall->instanceCount;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-						vkCmdPushConstants(commandBuffer, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+
+						// Pipeline swap:
+						if (pipelineLayout != drawCall->pMaterial->GetVkPipelineLayout())
+						{
+							pipelineLayout = drawCall->pMaterial->GetVkPipelineLayout();
+							// Bind per material(shader) descriptor set:
+							if (drawCall->pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(Context::GetFrameIndex()) != VK_NULL_HANDLE)
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &drawCall->pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+						}
 					}
 
-					// Same pipeline but different instance Count => update push constants:
+					// Same pipelineLayout but different instance Count -> update push constants:
 					if (pushConstant.instanceCount != drawCall->instanceCount)
 					{
 						pushConstant.instanceCount = drawCall->instanceCount;
-						vkCmdPushConstants(commandBuffer, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 
+					// Bind per draw call descriptor set:
+					if (drawCall->pDescriptorSetBinding->GetVkDescriptorSet(Context::GetFrameIndex()) != VK_NULL_HANDLE)
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, DRAW_SET_INDEX, 1, &drawCall->pDescriptorSetBinding->GetVkDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+					
+					// Bind mesh data:
 					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
 					vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
-					// Ember::ToDo: bind all descriptor sets 0-4
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(), 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+					
+					// Draw call:
 					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
@@ -1136,21 +1066,21 @@ namespace vulkanRendererBackend
 						pipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
 						pushConstant.instanceCount = drawCall->instanceCount;
 						vkCmdBindPipeline(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-						vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+						vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 
 					// Same pipeline but different instance Count => update push constants:
 					if (pushConstant.instanceCount != drawCall->instanceCount)
 					{
 						pushConstant.instanceCount = drawCall->instanceCount;
-						vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+						vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 					}
 
 					vkCmdBindVertexBuffers(secondaryCommandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
 					vkCmdBindIndexBuffer(secondaryCommandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
 
 					// Ember::ToDo: bind all descriptor sets 0-4
-					vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, drawCall->pMaterial->GetPipeline()->GetVkPipelineLayout(); , 0, 1, &drawCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+					vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, drawCall->pMaterial->GetVkPipelineLayout(); , 0, 1, &drawCall->pShaderDescriptorSet->GetVkDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDrawIndexed(secondaryCommandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
@@ -1188,7 +1118,7 @@ namespace vulkanRendererBackend
 				{
 					pPreviousComputeShader = pComputeShader;
 					pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
-					pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
+					pipelineLayout = pComputeShader->GetVkPipelineLayout();
 					pushConstant.threadCount = computeCall->threadCount;
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 					pushConstant.threadCount = computeCall->threadCount;
@@ -1208,7 +1138,7 @@ namespace vulkanRendererBackend
 				uint32_t groupCountZ = (computeCall->threadCount.z + blockSize.z - 1) / blockSize.z;
 
 				// Ember::ToDo: bind all descriptor sets 0-4
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall->pShaderDescriptorSet->GetVkDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 				DEBUG_LOG_ERROR("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 
@@ -1257,7 +1187,7 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			Material* pMaterial = DefaultGpuResources::GetDefaultPresentMaterial();
-			ShaderProperties* pPresentShaderProperties = DefaultGpuResources::GetDefaultPresentShaderProperties();
+			DescriptorSetBinding* pPresentShaderDescriptorSet = DefaultGpuResources::GetDefaultPresentShaderDescriptorSet();
 			Mesh* pMesh = DefaultGpuResources::GetDefaultRenderQuad();
 			Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
 
@@ -1291,7 +1221,7 @@ namespace vulkanRendererBackend
 				vkCmdBindIndexBuffer(secondarycommandBufferCommandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
 
 				// Ember::ToDo: bind all descriptor sets 0-4
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline()->GetVkPipelineLayout(), 0, 1, &pPresentShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetVkPipelineLayout(), 0, 1, &pPresentShaderDescriptorSet->GetVkDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 				vkCmdDrawIndexed(commandBuffer, pMesh->GetIndexCount(), 1, 0, 0, 0);
 				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", pMaterial->GetName());
 				

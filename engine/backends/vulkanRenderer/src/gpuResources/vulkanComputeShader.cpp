@@ -1,5 +1,7 @@
 #include "vulkanComputeShader.h"
+#include "descriptorSetMacros.h"
 #include "vulkanComputePipeline.h"
+#include "vulkanDescriptorSetBinding.h"
 
 
 
@@ -24,6 +26,9 @@ namespace vulkanRendererBackend
 
 		// Create pipeline:
 		m_pPipelines.emplace_back(std::make_unique<ComputePipeline>(m_name, computeCode, m_vkDescriptorSetLayouts));
+
+		// Create shader descriptorSetBinding:
+		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>((Shader*)this, SHADER_SET_INDEX);
 	}
 	ComputeShader::~ComputeShader()
 	{

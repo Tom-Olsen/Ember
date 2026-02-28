@@ -9,12 +9,26 @@
 
 namespace emberSpirvReflect
 {
+    //// DescriptorResource variant:
+    //struct UniformBufferDescriptor
+    //{
+    //    BufferLayout layout;
+    //};
+    //struct ImageDescriptor
+    //{
+    //    VkImageViewType viewType;
+    //};
+    //using DescriptorResource = std::variant<std::monostate, UniformBufferDescriptor, ImageDescriptor>;
+
+
+
     struct Descriptor
     {
     public: // Members:
         std::string name;
         uint32_t set;
         VkDescriptorSetLayoutBinding vkDescriptorSetLayoutBinding;
+        // Ember::ToDo: use variant here see above example code.
         UniformBufferBlock uniformBufferBlock;  // only valid for descriptorType = SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER.
         VkImageViewType vkImageViewType;        // only valid for descriptorType = SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED/STORAGE_IMAGE.
 

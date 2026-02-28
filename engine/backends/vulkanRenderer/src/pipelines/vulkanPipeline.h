@@ -1,4 +1,5 @@
 #pragma once
+#include "descriptorSetMacros.h"
 #include <array>
 #include <string>
 #include <vector>
@@ -20,11 +21,8 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class Pipeline
 	{
-	public: // Members:
-		static constexpr uint32_t s_descriptorSetCount = 5;
-
 	protected: // Members:
-		std::array<VkDescriptorSetLayout, s_descriptorSetCount> m_descriptorSetLayouts;
+		std::array<VkDescriptorSetLayout, DESCRIPTOR_SET_COUNT> m_descriptorSetLayouts;
 		VkPipeline m_pipeline;
 		std::string m_name;
 

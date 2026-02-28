@@ -8,19 +8,20 @@
 
 namespace emberSpirvReflect
 {
-    class DescriptorSet
+    class DescriptorSetReflection
     {
     private: // Members:
         uint32_t m_set;
         bool m_layoutCreated;
         std::unordered_map<uint32_t, Descriptor> m_descriptors;
+        std::vector<std::string> m_descriptorNames;
         std::vector<VkDescriptorSetLayoutBinding> m_vkDescriptorSetLayoutBinding;
 
     public: // Methods:
         // Constructor:
-        DescriptorSet();
-        DescriptorSet(uint32_t set);
-        ~DescriptorSet();
+        DescriptorSetReflection();
+        DescriptorSetReflection(uint32_t set);
+        ~DescriptorSetReflection();
 
         // Main functionality:
         void AddDescriptor(const Descriptor& descriptor);
@@ -28,6 +29,7 @@ namespace emberSpirvReflect
 
         // Getters:
         uint32_t GetSet() const;
+        const std::vector<std::string>& GetDescriptorNames() const;
         const std::vector<VkDescriptorSetLayoutBinding>& GetVkDescriptorSetLayoutBindings() const;
 
         // Debugging:

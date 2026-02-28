@@ -43,7 +43,7 @@ namespace emberSpirvReflect
 		const UniformBufferMember* GetMember(const std::string& name) const;
 		bool IsLayoutCompatible(const UniformBufferBlock& other) const;
 
-		// Setters: (testing and hard coded descriptor sets)
+		// Setters: (testing)
 		void AddMember(const UniformBufferMember& member);
 
 		// Debugging:
@@ -60,6 +60,6 @@ namespace emberSpirvReflect
 	// };
 	// UniformBufferBlock dataBuffer(...);
 	// dataBuffer.m_members = {foo, c, d}
-	// foo.m_submemers = {a,b}
-	// d.m_submemers = {d0,d1}
+	// foo.m_members = {a,b}
+	// d.m_members = {d0,d1}
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include "iShaderProperties.h"
+#include "iDescriptorSetBinding.h"
 #include "vulkanDescriptorType.h"
 #include "vulkanRendererExport.h"
 #include <memory>
@@ -23,6 +23,7 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class Shader;
+	class Sampler;
 	class Buffer;
 	class Texture;
 	class UniformBuffer;
@@ -34,6 +35,11 @@ namespace vulkanRendererBackend
 	{
 		uint32_t binding;
 		std::shared_ptr<UniformBuffer> pUniformBuffer; // Ember::ToDo: why is this a shared_ptr and not unique_ptr?
+	};
+	struct SamplerBinding
+	{
+		uint32_t binding;
+		Sampler* pSampler;
 	};
 	struct TextureBinding
 	{
@@ -51,23 +57,26 @@ namespace vulkanRendererBackend
 
 
 	/// <summary>
-	/// Each ShaderProperties instance is customized for a specific Material/ComputeShader.
-	/// ShaderProperties construction is expensive, do not create them in an update loop.
-	/// ShaderProperties own UniformBuffer pointers, Texture pointers are not owned by ShaderProperties.
+	/// Each DescriptorSetBinding links to one specific vkDescriptorSet and manages all the associated gpu resources.
+	/// DescriptorSetBinding own UniformBuffer pointers; Sampler and Texture pointers are not owned by DescriptorSetBinding.
+	/// DescriptorSetBinding construction is expensive, pre create them or use the DescriptorSetBindingPool.
 	/// </summary>
-	class VULKAN_RENDERER_API ShaderProperties : public emberBackendInterface::IShaderProperties
+	class VULKAN_RENDERER_API DescriptorSetBinding : public emberBackendInterface::IDescriptorSetBinding
 	{
 	private: // Members:
 		Shader* m_pShader;
+		uint32_t m_setIndex;
 
 		// Ember::ToDo: resolve string to binding index once and use binding index as key for unordered maps!
 		// All these vectors contain one item for each frame in flight:
 		std::vector<VkDescriptorSet> m_descriptorSets;
 		std::vector<std::unordered_map<std::string, UniformBufferBinding>> m_uniformBufferMaps;
+		std::vector<std::unordered_map<std::string, SamplerBinding>> m_samplerMaps;
 		std::vector<std::unordered_map<std::string, TextureBinding>> m_textureMaps;
 		std::vector<std::unordered_map<std::string, BufferBinding>> m_bufferMaps;
 
 		// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer acts as a staging buffer:
+		std::unordered_map<std::string, Sampler*> m_samplerStagingMap;
 		std::unordered_map<std::string, Texture*> m_textureStagingMap;
 		std::unordered_map<std::string, Buffer*> m_bufferStagingMap;
 
@@ -76,16 +85,16 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Constructors/Destructor:
-		ShaderProperties(Shader* pShader);
-		~ShaderProperties();
+		DescriptorSetBinding(Shader* pShader, uint32_t setIndex);
+		~DescriptorSetBinding();
 
 		// Non-copyable:
-		ShaderProperties(const ShaderProperties& other) = delete;
-		ShaderProperties& operator=(const ShaderProperties& other) = delete;
+		DescriptorSetBinding(const DescriptorSetBinding& other) = delete;
+		DescriptorSetBinding& operator=(const DescriptorSetBinding& other) = delete;
 
 		// Movable:
-		ShaderProperties(ShaderProperties&& other) noexcept;
-		ShaderProperties& operator=(ShaderProperties&& other) noexcept;
+		DescriptorSetBinding(DescriptorSetBinding&& other) noexcept;
+		DescriptorSetBinding& operator=(DescriptorSetBinding&& other) noexcept;
 
 		// Setters:
 		void SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture) override;
@@ -161,13 +170,14 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		Shader* GetShader() const;
+		uint32_t GetSetIndex() const;
 		std::string GetShaderName() const override;
 		Texture* GetTexture(const std::string& name) const;
 		
 		// Backend functionality:
-		void UpdateShaderData(uint32_t frameIndex = -1); // -1 = current frame index.
-		const VkDescriptorSet& GetDescriptorSet(uint32_t frameIndex);
-		std::vector<VkDescriptorSet>& GetDescriptorSets();
+		void UpdateShaderData(uint32_t frameIndex);
+		const VkDescriptorSet& GetVkDescriptorSet(uint32_t frameIndex);
+		const std::vector<VkDescriptorSet>& GetVkDescriptorSets();
 
 		// Debugging:
 		void Print() const override;
@@ -176,6 +186,7 @@ namespace vulkanRendererBackend
 	private: // Methods:
 		// Initializers:
 		void InitUniformBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding);
+		void InitSamplerResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Sampler* pSampler);
 		void InitTextureBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture* pTexture, DescriptorType descriptorType);
 		void InitBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType);
 		void InitStagingMaps();
@@ -183,6 +194,8 @@ namespace vulkanRendererBackend
 
 		// Descriptor Set management:
 		void CreateDescriptorSets();
+		void UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding samplerResourceBinding);
+		void UpdateDescriptorSet(uint32_t frameIndex, SamplerBinding samplerResourceBinding);
 		void UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferBinding);
 		void UpdateDescriptorSet(uint32_t frameIndex, TextureBinding textureBinding);
 		void UpdateDescriptorSet(uint32_t frameIndex, BufferBinding buffeBinding);

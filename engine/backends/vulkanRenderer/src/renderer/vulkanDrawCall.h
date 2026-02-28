@@ -9,7 +9,7 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class Material;
-	class ShaderProperties;
+	class DescriptorSetBinding;
 	class Mesh;
 
 
@@ -20,8 +20,8 @@ namespace vulkanRendererBackend
 		bool receiveShadows;
 		bool castShadows;
 		Material* pMaterial;
-		ShaderProperties* pShaderProperties;
-		ShaderProperties* pShadowShaderProperties;
+		DescriptorSetBinding* pDescriptorSetBinding;
+		DescriptorSetBinding* pShadowDescriptorSetBinding;
 		Mesh* pMesh;
 		uint32_t instanceCount;	// 0 implies no instanced rendering.
 

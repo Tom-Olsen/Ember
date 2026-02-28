@@ -1,6 +1,8 @@
-#include "vulkanShaderProperties.h"
+#include "vulkanDescriptorSetBinding.h"
+#include "descriptorSetMacros.h"
 #include "emberMath.h"
 #include "logger.h"
+#include "shaderReflection.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanBuffer.h"
@@ -13,6 +15,7 @@
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanSampler.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanStorageBuffer.h"
@@ -23,6 +26,7 @@
 #include "vulkanTexture2d.h"
 #include "vulkanTextureCube.h"
 #include "vulkanUniformBuffer.h"
+#include <assert.h>
 #include <vulkan/vulkan.h>
 
 
@@ -31,29 +35,40 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Consructor/Destructor:
-	ShaderProperties::ShaderProperties(Shader* pShader)
+	DescriptorSetBinding::DescriptorSetBinding(Shader* pShader, uint32_t setIndex)
+		: m_pShader(pShader), m_setIndex(setIndex)
 	{
-		m_pShader = pShader;
-
 		// Create resource bindings and uniform buffer update logic for each frameInFlight:
 		m_uniformBufferMaps = std::vector<std::unordered_map<std::string, UniformBufferBinding>>(Context::GetFramesInFlight());
+		m_samplerMaps = std::vector<std::unordered_map<std::string, SamplerBinding>>(Context::GetFramesInFlight());
 		m_textureMaps = std::vector<std::unordered_map<std::string, TextureBinding>>(Context::GetFramesInFlight());
 		m_bufferMaps = std::vector<std::unordered_map<std::string, BufferBinding>>(Context::GetFramesInFlight());
 		m_updateUniformBuffer = std::vector<std::unordered_map<std::string, bool>>(Context::GetFramesInFlight());
 
+		// Get descriptorSet information from shader reflection:
+		const emberSpirvReflect::DescriptorSet& reflectedSet = m_pShader->GetShaderReflection().GetDescriptorSet(m_setIndex);
+		const std::vector<std::string>& descriptorNames = reflectedSet.GetDescriptorNames();
+		const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetLayoutBindings = reflectedSet.GetVkDescriptorSetLayoutBindings();
+		assert(descriptorNames.size() == descriptorSetLayoutBindings.size());
+
 		// Initialize all resource bindings:
 		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
-			const DescriptorBoundResources* const descriptorBoundResources = m_pShader->GetDescriptorBoundResources();
-			for (uint32_t i = 0; i < descriptorBoundResources->bindingCount; i++)
+			for (uint32_t i = 0; i < descriptorNames.size(); i++)
 			{
-				DescriptorSetLayoutBinding descriptorSetLayoutBinding = descriptorBoundResources->descriptorSetLayoutBindings[i];
-				DescriptorType descriptorType = descriptorSetLayoutBinding.descriptorType;
-				uint32_t binding = descriptorSetLayoutBinding.binding;
-				const std::string& name = descriptorBoundResources->descriptorSetBindingNames[i];
+				const std::string& name = descriptorNames[i];
+				DescriptorType descriptorType = descriptorSetLayoutBindings[i].descriptorType;
+				uint32_t binding = descriptorSetLayoutBindings[i].binding;
 
 				if (descriptorType == DescriptorTypes::uniform_buffer)
 					InitUniformBufferBinding(frameIndex, name, binding);
+				else if (descriptorType == DescriptorTypes::sampler)
+				{// All samplers are in the global set and thus 'static'. Correct one gets selected on initialization and can't be changed later.
+					if (name == "colorSampler")
+						InitSamplerResourceBinding(frameIndex, name, binding, DefaultGpuResources::GetColorSampler());
+					else if (name == "shadowSampler")
+						InitSamplerResourceBinding(frameIndex, name, binding, DefaultGpuResources::GetShadowSampler());
+				}
 				else if (descriptorType == DescriptorTypes::sampled_image)
 				{
 					ImageViewType viewType = descriptorBoundResources->sampleViewTypeMap.at(name);
@@ -79,15 +94,17 @@ namespace vulkanRendererBackend
 				else if (descriptorType == DescriptorTypes::storage_buffer)
 					InitBufferBinding(frameIndex, name, binding, static_cast<Buffer*>(DefaultGpuResources::GetDefaultStorageBuffer()), descriptorType);
 				else
-					throw std::runtime_error("ShaderProperties::ShaderProperties(Shader*) shader contains currently unsuported DescriptorType:" + DescriptorTypes::ToString(descriptorType) + "!");
+					throw std::runtime_error("DescriptorSetBinding::DescriptorSetBinding(Shader*) shader contains currently unsuported DescriptorType:" + DescriptorTypes::ToString(descriptorType) + "!");
 			}
 		}
 		InitStagingMaps();
 		InitDescriptorSets();
 
 		// Set default values:
+		// GLOBAL_SET_INDEX
 		ShadowRenderPass* pShadowRenderPass = RenderPassManager::GetShadowRenderPass();
 		SetTexture("shadowMaps", static_cast<Texture*>(pShadowRenderPass->GetShadowMaps()));
+		// SHADER_SET_INDEX
 		SetTexture("normalMap", static_cast<Texture*>(DefaultGpuResources::GetNormalMapSampleTexture2d()));
 		SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		SetValue("SurfaceProperties", "roughness", 0.5f);
@@ -95,9 +112,9 @@ namespace vulkanRendererBackend
 		SetValue("SurfaceProperties", "metallicity", 0);
 		SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
 	}
-	ShaderProperties::~ShaderProperties()
+	DescriptorSetBinding::~DescriptorSetBinding()
 	{
-		// Queue the destruction of each descriptor set for later collection.
+		// Queue the destruction of each descriptor set for later collection:
 		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			VkDescriptorSet descriptorSet = m_descriptorSets[i];
@@ -111,13 +128,13 @@ namespace vulkanRendererBackend
 
 
 	// Movable:
-	ShaderProperties::ShaderProperties(ShaderProperties&& other) noexcept = default;
-	ShaderProperties& ShaderProperties::operator=(ShaderProperties&& other) noexcept = default;
+	DescriptorSetBinding::DescriptorSetBinding(DescriptorSetBinding&& other) noexcept = default;
+	DescriptorSetBinding& DescriptorSetBinding::operator=(DescriptorSetBinding&& other) noexcept = default;
 
 
 
 	// Setters:
-	void ShaderProperties::SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture)
+	void DescriptorSetBinding::SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture)
 	{
 		// If texture with 'name' doesnt exist, skip:
 		auto it = m_textureStagingMap.find(name);
@@ -125,7 +142,7 @@ namespace vulkanRendererBackend
 			return;
 		it->second = static_cast<Texture*>(pTexture);
 	}
-	void ShaderProperties::SetBuffer(const std::string& name, emberBackendInterface::IBuffer* pBuffer)
+	void DescriptorSetBinding::SetBuffer(const std::string& name, emberBackendInterface::IBuffer* pBuffer)
 	{
 		// If buffer with 'name' doesnt exist, skip:
 		auto it = m_bufferStagingMap.find(name);
@@ -138,118 +155,118 @@ namespace vulkanRendererBackend
 
 	// Uniform Buffer Setters:
 	// Simple members:
-	void ShaderProperties::SetInt(const std::string& bufferName, const std::string& memberName, int value)
+	void DescriptorSetBinding::SetInt(const std::string& bufferName, const std::string& memberName, int value)
 	{
 		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetBool(const std::string& bufferName, const std::string& memberName, bool value)
+	void DescriptorSetBinding::SetBool(const std::string& bufferName, const std::string& memberName, bool value)
 	{
 		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetFloat(const std::string& bufferName, const std::string& memberName, float value)
+	void DescriptorSetBinding::SetFloat(const std::string& bufferName, const std::string& memberName, float value)
 	{
 		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetFloat2(const std::string& bufferName, const std::string& memberName, const Float2& value)
+	void DescriptorSetBinding::SetFloat2(const std::string& bufferName, const std::string& memberName, const Float2& value)
 	{
 		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetFloat3(const std::string& bufferName, const std::string& memberName, const Float3& value)
+	void DescriptorSetBinding::SetFloat3(const std::string& bufferName, const std::string& memberName, const Float3& value)
 	{
 		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetFloat4(const std::string& bufferName, const std::string& memberName, const Float4& value)
+	void DescriptorSetBinding::SetFloat4(const std::string& bufferName, const std::string& memberName, const Float4& value)
 	{
 		SetValue(bufferName, memberName, value);
 	}
-	void ShaderProperties::SetFloat4x4(const std::string& bufferName, const std::string& memberName, const Float4x4& value)
+	void DescriptorSetBinding::SetFloat4x4(const std::string& bufferName, const std::string& memberName, const Float4x4& value)
 	{
 		SetValue(bufferName, memberName, value);
 	}
 	// Array members:
-	void ShaderProperties::SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, int value)
+	void DescriptorSetBinding::SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, int value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, bool value)
+	void DescriptorSetBinding::SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, bool value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, float value)
+	void DescriptorSetBinding::SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, float value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float2& value)
+	void DescriptorSetBinding::SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float2& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float3& value)
+	void DescriptorSetBinding::SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float3& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4& value)
+	void DescriptorSetBinding::SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
-	void ShaderProperties::SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4x4& value)
+	void DescriptorSetBinding::SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const Float4x4& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, value);
 	}
 	// Array of structs members:
-	void ShaderProperties::SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, int value)
+	void DescriptorSetBinding::SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, int value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, bool value)
+	void DescriptorSetBinding::SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, bool value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, float value)
+	void DescriptorSetBinding::SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, float value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float2& value)
+	void DescriptorSetBinding::SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float2& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value)
+	void DescriptorSetBinding::SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float3& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value)
+	void DescriptorSetBinding::SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
-	void ShaderProperties::SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value)
+	void DescriptorSetBinding::SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const Float4x4& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, memberName, value);
 	}
 	// Array of arrays members:
-	void ShaderProperties::SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, int value)
+	void DescriptorSetBinding::SetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, int value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, bool value)
+	void DescriptorSetBinding::SetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, bool value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, float value)
+	void DescriptorSetBinding::SetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, float value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value)
+	void DescriptorSetBinding::SetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float2& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value)
+	void DescriptorSetBinding::SetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value)
+	void DescriptorSetBinding::SetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
-	void ShaderProperties::SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value)
+	void DescriptorSetBinding::SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value)
 	{
 		SetValue(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
@@ -258,118 +275,118 @@ namespace vulkanRendererBackend
 
 	// Uniform Buffer Getters:
 	// Simple members:
-	int ShaderProperties::GetInt(const std::string& bufferName, const std::string& memberName) const
+	int DescriptorSetBinding::GetInt(const std::string& bufferName, const std::string& memberName) const
 	{
 		return GetValue<int>(bufferName, memberName);
 	}
-	bool ShaderProperties::GetBool(const std::string& bufferName, const std::string& memberName) const
+	bool DescriptorSetBinding::GetBool(const std::string& bufferName, const std::string& memberName) const
 	{
 		return GetValue<bool>(bufferName, memberName);
 	}
-	float ShaderProperties::GetFloat(const std::string& bufferName, const std::string& memberName) const
+	float DescriptorSetBinding::GetFloat(const std::string& bufferName, const std::string& memberName) const
 	{
 		return GetValue<float>(bufferName, memberName);
 	}
-	Float2 ShaderProperties::GetFloat2(const std::string& bufferName, const std::string& memberName) const
+	Float2 DescriptorSetBinding::GetFloat2(const std::string& bufferName, const std::string& memberName) const
 	{
 		return GetValue<Float2>(bufferName, memberName);
 	}
-	Float3 ShaderProperties::GetFloat3(const std::string& bufferName, const std::string& memberName) const
+	Float3 DescriptorSetBinding::GetFloat3(const std::string& bufferName, const std::string& memberName) const
 	{
 		return GetValue<Float3>(bufferName, memberName);
 	}
-	Float4 ShaderProperties::GetFloat4(const std::string& bufferName, const std::string& memberName) const
+	Float4 DescriptorSetBinding::GetFloat4(const std::string& bufferName, const std::string& memberName) const
 	{
 		return GetValue<Float4>(bufferName, memberName);
 	}
-	Float4x4 ShaderProperties::GetFloat4x4(const std::string& bufferName, const std::string& memberName) const
+	Float4x4 DescriptorSetBinding::GetFloat4x4(const std::string& bufferName, const std::string& memberName) const
 	{
 		return GetValue<Float4x4>(bufferName, memberName);
 	}
 	// Array members:
-	int ShaderProperties::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	int DescriptorSetBinding::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
 	{
 		return GetValue<int>(bufferName, arrayName, arrayIndex);
 	}
-	bool ShaderProperties::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	bool DescriptorSetBinding::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
 	{
 		return GetValue<bool>(bufferName, arrayName, arrayIndex);
 	}
-	float ShaderProperties::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	float DescriptorSetBinding::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
 	{
 		return GetValue<float>(bufferName, arrayName, arrayIndex);
 	}
-	Float2 ShaderProperties::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	Float2 DescriptorSetBinding::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
 	{
 		return GetValue<Float2>(bufferName, arrayName, arrayIndex);
 	}
-	Float3 ShaderProperties::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	Float3 DescriptorSetBinding::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
 	{
 		return GetValue<Float3>(bufferName, arrayName, arrayIndex);
 	}
-	Float4 ShaderProperties::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	Float4 DescriptorSetBinding::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
 	{
 		return GetValue<Float4>(bufferName, arrayName, arrayIndex);
 	}
-	Float4x4 ShaderProperties::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	Float4x4 DescriptorSetBinding::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
 	{
 		return GetValue<Float4x4>(bufferName, arrayName, arrayIndex);
 	}
 	// Array of structs members:
-	int ShaderProperties::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	int DescriptorSetBinding::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
 		return GetValue<int>(bufferName, arrayName, arrayIndex, memberName);
 	}
-	bool ShaderProperties::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	bool DescriptorSetBinding::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
 		return GetValue<bool>(bufferName, arrayName, arrayIndex, memberName);
 	}
-	float ShaderProperties::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	float DescriptorSetBinding::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
 		return GetValue<float>(bufferName, arrayName, arrayIndex, memberName);
 	}
-	Float2 ShaderProperties::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	Float2 DescriptorSetBinding::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
 		return GetValue<Float2>(bufferName, arrayName, arrayIndex, memberName);
 	}
-	Float3 ShaderProperties::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	Float3 DescriptorSetBinding::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
 		return GetValue<Float3>(bufferName, arrayName, arrayIndex, memberName);
 	}
-	Float4 ShaderProperties::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	Float4 DescriptorSetBinding::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
 		return GetValue<Float4>(bufferName, arrayName, arrayIndex, memberName);
 	}
-	Float4x4 ShaderProperties::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	Float4x4 DescriptorSetBinding::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
 		return GetValue<Float4x4>(bufferName, arrayName, arrayIndex, memberName);
 	}
 	// Array of arrays members:
-	int ShaderProperties::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	int DescriptorSetBinding::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
 		return GetValue<int>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
 	}
-	bool ShaderProperties::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	bool DescriptorSetBinding::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
 		return GetValue<bool>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
 	}
-	float ShaderProperties::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	float DescriptorSetBinding::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
 		return GetValue<float>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
 	}
-	Float2 ShaderProperties::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	Float2 DescriptorSetBinding::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
 		return GetValue<Float2>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
 	}
-	Float3 ShaderProperties::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	Float3 DescriptorSetBinding::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
 		return GetValue<Float3>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
 	}
-	Float4 ShaderProperties::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	Float4 DescriptorSetBinding::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
 		return GetValue<Float4>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
 	}
-	Float4x4 ShaderProperties::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	Float4x4 DescriptorSetBinding::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
 		return GetValue<Float4x4>(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
 	}
@@ -377,15 +394,19 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
-	Shader* ShaderProperties::GetShader() const
+	Shader* DescriptorSetBinding::GetShader() const
 	{
 		return m_pShader;
 	}
-	std::string ShaderProperties::GetShaderName() const
+	uint32_t DescriptorSetBinding::GetSetIndex() const
+	{
+		return m_setIndex;
+	}
+	std::string DescriptorSetBinding::GetShaderName() const
 	{
 		return m_pShader->GetName();
 	}
-	Texture* ShaderProperties::GetTexture(const std::string& name) const
+	Texture* DescriptorSetBinding::GetTexture(const std::string& name) const
 	{
 		auto it = m_textureMaps[Context::GetFrameIndex()].find(name);
 		if (it != m_textureMaps[Context::GetFrameIndex()].end())
@@ -396,12 +417,8 @@ namespace vulkanRendererBackend
 
 
 	// Backend functionality:
-	void ShaderProperties::UpdateShaderData(uint32_t frameIndex)
+	void DescriptorSetBinding::UpdateShaderData(uint32_t frameIndex)
 	{
-		// invalid frameIndex (-1 or >= framesInFlight) => use current frameIndex. frameIndex = -1 is default behaviour.
-		if (frameIndex == -1 || frameIndex >= Context::GetFramesInFlight())
-			frameIndex = Context::GetFrameIndex();
-
 		// Stream uniform buffer data from host memory to GPU only for current frameIndex:
 		for (auto& [name, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
 		{
@@ -409,6 +426,16 @@ namespace vulkanRendererBackend
 			{
 				uniformBufferBinding.pUniformBuffer->UpdateBuffer();
 				m_updateUniformBuffer[frameIndex].at(name) = false;
+			}
+		}
+
+		// Change the pointer the descriptor set points at to the new sampler:
+		for (auto& [name, samplerBinding] : m_samplerMaps[frameIndex])
+		{
+			if (samplerBinding.pSampler != m_samplerStagingMap.at(name))
+			{
+				samplerBinding.pSampler = m_samplerStagingMap.at(name);
+				UpdateDescriptorSet(frameIndex, samplerBinding);
 			}
 		}
 
@@ -432,11 +459,11 @@ namespace vulkanRendererBackend
 			}
 		}
 	}
-	const VkDescriptorSet& ShaderProperties::GetDescriptorSet(uint32_t frameIndex)
+	const VkDescriptorSet& DescriptorSetBinding::GetVkDescriptorSet(uint32_t frameIndex)
 	{
 		return m_descriptorSets[frameIndex];
 	}
-	std::vector<VkDescriptorSet>& ShaderProperties::GetDescriptorSets()
+	const std::vector<VkDescriptorSet>& DescriptorSetBinding::GetVkDescriptorSets()
 	{
 		return m_descriptorSets;
 	}
@@ -444,18 +471,22 @@ namespace vulkanRendererBackend
 
 
 	// Debugging:
-	void ShaderProperties::Print() const
+	void DescriptorSetBinding::Print() const
 	{
-		LOG_INFO("ShaderProperties: {}, {}", m_pShader->GetName(), fmt::ptr(this));
+		LOG_INFO("DescriptorSetBinding: {}, {}", m_pShader->GetName(), fmt::ptr(this));
 		LOG_INFO("DescriptorSets: {}, {}", fmt::ptr(m_descriptorSets[0]), fmt::ptr(m_descriptorSets[1]));
 	}
-	void ShaderProperties::PrintMaps() const
+	void DescriptorSetBinding::PrintMaps() const
 	{
 		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
 			 LOG_INFO("UniformBufferMaps[{}]:", frameIndex);
 			 for (const auto& [name, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
 			 	LOG_TRACE("binding: {}, bindingName: {}", uniformBufferBinding.binding, name);
+
+			 LOG_INFO("SamplerMaps[{}]:", frameIndex);
+			 for (const auto& [name, samplerBinding] : m_samplerMaps[frameIndex])
+				 LOG_TRACE("binding: {}, bindingName: {}, samplerName: {}", samplerBinding.binding, name, samplerBinding.pSampler->GetName());
 			 
 			 LOG_INFO("TextureMaps[{}]:", frameIndex);
 			 for (const auto& [name, textureBinding] : m_textureMaps[frameIndex])
@@ -473,7 +504,7 @@ namespace vulkanRendererBackend
 
 	// Private methods:
 	// Initializers:
-	void ShaderProperties::InitUniformBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding)
+	void DescriptorSetBinding::InitUniformBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding)
 	{
 		auto it = m_uniformBufferMaps[frameIndex].find(name);
 		if (it == m_uniformBufferMaps[frameIndex].end())
@@ -488,32 +519,42 @@ namespace vulkanRendererBackend
 				m_updateUniformBuffer[frameIndex].emplace(name, true);
 		}
 	}
-	void ShaderProperties::InitTextureBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture* pTexture, DescriptorType descriptorType)
+	void DescriptorSetBinding::InitSamplerResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Sampler* pSampler)
+	{
+		auto it = m_samplerMaps[frameIndex].find(name);
+		if (it == m_samplerMaps[frameIndex].end())
+			m_samplerMaps[frameIndex].emplace(name, SamplerBinding(binding, pSampler));
+	}
+	void DescriptorSetBinding::InitTextureBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture* pTexture, DescriptorType descriptorType)
 	{
 		auto it = m_textureMaps[frameIndex].find(name);
 		if (it == m_textureMaps[frameIndex].end())
 			m_textureMaps[frameIndex].emplace(name, TextureBinding(binding, pTexture, descriptorType));
 	}
-	void ShaderProperties::InitBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType)
+	void DescriptorSetBinding::InitBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType)
 	{
 		auto it = m_bufferMaps[frameIndex].find(name);
 		if (it == m_bufferMaps[frameIndex].end())
 			m_bufferMaps[frameIndex].emplace(name, BufferBinding(binding, pBuffer, descriptorType));
 	}
-	void ShaderProperties::InitStagingMaps()
+	void DescriptorSetBinding::InitStagingMaps()
 	{
+		for (auto& [name, samplerBinding] : m_samplerMaps[0])
+			m_samplerStagingMap.emplace(name, samplerBinding.pSampler);
 		for (auto& [name, textureBinding] : m_textureMaps[0])
 			m_textureStagingMap.emplace(name, textureBinding.pTexture);
 		for (auto& [name, bufferBinding] : m_bufferMaps[0])
 			m_bufferStagingMap.emplace(name, bufferBinding.pBuffer);
 	}
-	void ShaderProperties::InitDescriptorSets()
+	void DescriptorSetBinding::InitDescriptorSets()
 	{
 		CreateDescriptorSets();
 		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
 			for (auto& [_, uniformBufferBinding] : m_uniformBufferMaps[frameIndex])
 				UpdateDescriptorSet(frameIndex, uniformBufferBinding);
+			for (auto& [_, samplerBinding] : m_samplerMaps[frameIndex])
+				UpdateDescriptorSet(frameIndex, samplerBinding);
 			for (auto& [_, textureBinding] : m_textureMaps[frameIndex])
 				UpdateDescriptorSet(frameIndex, textureBinding);
 			for (auto& [_, bufferBinding] : m_bufferMaps[frameIndex])
@@ -524,7 +565,7 @@ namespace vulkanRendererBackend
 
 
 	// Descriptor Set management:
-	void ShaderProperties::CreateDescriptorSets()
+	void DescriptorSetBinding::CreateDescriptorSets()
 	{
 		std::vector<VkDescriptorSetLayout> layouts(Context::GetFramesInFlight(), m_pShader->GetPipeline()->GetVkDescriptorSetLayout());	// same layout for all frames
 
@@ -536,7 +577,7 @@ namespace vulkanRendererBackend
 		m_descriptorSets.resize(Context::GetFramesInFlight());
 		VKA(vkAllocateDescriptorSets(Context::GetLogicalDevice()->GetVkDevice(), &allocInfo, m_descriptorSets.data()));
 	}
-	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferBinding)
+	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferBinding)
 	{
 		VkDescriptorBufferInfo bufferInfo = {};
 		bufferInfo.buffer = uniformBufferBinding.pUniformBuffer->GetVmaBuffer()->GetVkBuffer();
@@ -555,7 +596,25 @@ namespace vulkanRendererBackend
 
 		vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
-	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, TextureBinding textureBinding)
+	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, SamplerBinding samplerResourceBinding)
+	{
+		VkDescriptorImageInfo samplerInfo = {};
+		samplerInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		samplerInfo.sampler = samplerResourceBinding.pSampler->GetVkSampler();
+
+		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
+		descriptorWrite.dstBinding = samplerResourceBinding.binding;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = nullptr;
+		descriptorWrite.pImageInfo = &samplerInfo;
+		descriptorWrite.pTexelBufferView = nullptr;
+
+		vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
+	}
+	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, TextureBinding textureBinding)
 	{
 		VkDescriptorImageInfo imageInfo = {};
 		imageInfo.imageLayout = static_cast<VkImageLayout>(textureBinding.pTexture->GetVmaImage()->GetImageLayout());
@@ -573,7 +632,7 @@ namespace vulkanRendererBackend
 
 		vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
-	void ShaderProperties::UpdateDescriptorSet(uint32_t frameIndex, BufferBinding bufferBinding)
+	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, BufferBinding bufferBinding)
 	{
 		VkDescriptorBufferInfo bufferInfo = {};
 		bufferInfo.buffer = bufferBinding.pBuffer->GetVmaBuffer()->GetVkBuffer();
@@ -597,7 +656,7 @@ namespace vulkanRendererBackend
 
 	// Getter templates, used in actual getters:
 	template<typename T>
-	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& memberName) const
+	T DescriptorSetBinding::GetValue(const std::string& bufferName, const std::string& memberName) const
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -605,7 +664,7 @@ namespace vulkanRendererBackend
 		return T();
 	}
 	template<typename T>
-	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	T DescriptorSetBinding::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -613,7 +672,7 @@ namespace vulkanRendererBackend
 		return T();
 	}
 	template<typename T>
-	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	T DescriptorSetBinding::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -621,7 +680,7 @@ namespace vulkanRendererBackend
 		return T();
 	}
 	template<typename T>
-	T ShaderProperties::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	T DescriptorSetBinding::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -633,7 +692,7 @@ namespace vulkanRendererBackend
 
 	// Setter templates, used in actual setters:
 	template<typename T>
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& memberName, const T& value)
+	void DescriptorSetBinding::SetValue(const std::string& bufferName, const std::string& memberName, const T& value)
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -646,7 +705,7 @@ namespace vulkanRendererBackend
 		}
 	}
 	template<typename T>
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const T& value)
+	void DescriptorSetBinding::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const T& value)
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -659,7 +718,7 @@ namespace vulkanRendererBackend
 		}
 	}
 	template<typename T>
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value)
+	void DescriptorSetBinding::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value)
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())
@@ -672,7 +731,7 @@ namespace vulkanRendererBackend
 		}
 	}
 	template<typename T>
-	void ShaderProperties::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
+	void DescriptorSetBinding::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
 	{
 		auto it = m_uniformBufferMaps[0].find(bufferName);
 		if (it != m_uniformBufferMaps[0].end())

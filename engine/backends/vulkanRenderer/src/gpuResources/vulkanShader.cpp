@@ -1,5 +1,6 @@
 #include "vulkanShader.h"
 #include "logger.h"
+#include "vulkanDescriptorSetBinding.h"
 #include "vulkanMacros.h"
 #include "vulkanPipeline.h"
 #include <fstream>
@@ -58,15 +59,21 @@ namespace vulkanRendererBackend
 	// Create descriptor sets:
 	void Shader::CreateDescriptorSetLayout()
 	{
-		m_shaderReflection.CreateDescriptorSets();
+		m_shaderReflection.CreateDescriptorSetReflections();
 
-		const std::vector<emberSpirvReflect::DescriptorSet>& descriptorSets = m_shaderReflection.GetDescriptorSets();
+		const std::vector<emberSpirvReflect::DescriptorSetReflection>& descriptorSetReflections = m_shaderReflection.GetDescriptorSetReflections();
 		m_vkDescriptorSetLayouts.clear();
-		m_vkDescriptorSetLayouts.resize(descriptorSets.size());
+		m_vkDescriptorSetLayouts.resize(DESCRIPTOR_SET_COUNT);
 
-		for (size_t i = 0; i < descriptorSets.size(); i++)
+		// Sets GLOBAL_SET(0), SCENE_SET(1), and FRAME_SET(2) represent constant data and get bound to every shader:
+		//m_vkDescriptorSetLayouts[0] = GlobalSetLayout();
+		//m_vkDescriptorSetLayouts[1] = SceneSetLayout();
+		//m_vkDescriptorSetLayouts[2] = FrameSetLayout();
+
+		// Only SHADER_SET(3) and DRAW_SET(4) are retrieved via reflection:
+		for (size_t i = 3; i < SET_COUNT; i++)
 		{
-			const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings = descriptorSets[i].GetVkDescriptorSetLayoutBindings();
+			const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings = descriptorSetReflections[i].GetVkDescriptorSetLayoutBindings();
 			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
 			descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
 			descriptorSetLayoutCreateInfo.pBindings = layoutBindings.empty() ? nullptr : layoutBindings.data();
@@ -85,9 +92,13 @@ namespace vulkanRendererBackend
 	{
 		return m_shaderReflection;
 	}
-	const VkPipelineLayout& Material::GetVkPipelineLayout() const
+	const VkPipelineLayout& Shader::GetVkPipelineLayout() const
 	{
-		return m_pipelineLayout;
+		return m_vkPipelineLayout;
+	}
+	const DescriptorSetBinding* Shader::GetDescriptorSetBinding() const
+	{
+		return m_pShaderDescriptorSetBinding.get();
 	}
 
 

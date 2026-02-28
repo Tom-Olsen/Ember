@@ -1,6 +1,8 @@
 #include "vulkanMaterial.h"
+#include "descriptorSetMacros.h"
 #include "logger.h"
 #include "vulkanDefaultPushConstant.h"
+#include "vulkanDescriptorSetBinding.h"
 #include "vulkanForwardOpaquePipeline.h"
 #include "vulkanForwardTransparentPipeline.h"
 #include "vulkanMacros.h"
@@ -21,7 +23,7 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructors/Destructor:
 	Material::Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
-		: m_shaderReflection(Pipeline::s_descriptorSetCount), m_type(type), m_name(name), m_renderQueue(renderQueue)
+		: m_shaderReflection(DESCRIPTOR_SET_COUNT), m_type(type), m_name(name), m_renderQueue(renderQueue)
 	{
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -77,10 +79,13 @@ namespace vulkanRendererBackend
 				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<PresentPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_vkDescriptorSetLayouts, vertexBindingsSeparate, vertexAttributesSeparate);
 				break;
 		}
+
+		// Create shader descriptorSetBinding:
+		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>((Shader*)this, SHADER_SET_INDEX);
 	}
 	// Special constructor for shadowMaterial:
 	Material::Material(uint32_t shadowMapResolution)
-		: m_shaderReflection(Pipeline::s_descriptorSetCount), m_type(emberCommon::MaterialType::shadow), m_name("shadowMaterial"), m_renderQueue(emberCommon::RenderQueue::shadow)
+		: m_shaderReflection(DESCRIPTOR_SET_COUNT), m_type(emberCommon::MaterialType::shadow), m_name("shadowMaterial"), m_renderQueue(emberCommon::RenderQueue::shadow)
 	{
 		// Load vertex shader:
 		std::filesystem::path directoryPath = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();

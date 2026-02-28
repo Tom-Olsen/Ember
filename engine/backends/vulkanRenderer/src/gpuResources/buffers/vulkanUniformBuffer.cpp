@@ -1,4 +1,5 @@
 #include "vulkanUniformBuffer.h"
+#include "uniformBufferBlock.h"
 #include "vk_mem_alloc.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
@@ -9,7 +10,7 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	UniformBuffer::UniformBuffer(UniformBufferBlock* pUniformBufferBlock)
+	UniformBuffer::UniformBuffer(emberSpirvReflect::UniformBufferBlock* pUniformBufferBlock)
 	{
 		m_pUniformBufferBlock = pUniformBufferBlock;
 		m_size = m_pUniformBufferBlock->size;

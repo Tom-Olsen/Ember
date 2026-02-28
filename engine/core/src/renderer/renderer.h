@@ -34,6 +34,7 @@ namespace emberEngine
 	class Buffer;
 	class Material;
 	class Mesh;
+	class Scene;
 	class ShaderProperties;
 
 	
@@ -62,7 +63,7 @@ namespace emberEngine
 		static void Clear();
 
 		// Main render loop:
-		static void RenderFrame();
+		static void RenderFrame(Scene* pScene);
 
 		// Lightsources:
 		static void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix);

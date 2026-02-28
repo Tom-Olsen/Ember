@@ -1,5 +1,5 @@
 #include "vulkanDrawCall.h"
-#include "vulkanShaderProperties.h"
+#include "vulkanDescriptorSetBinding.h"
 #include <array>
 
 
@@ -13,17 +13,17 @@ namespace vulkanRendererBackend
 		Float4x4 worldToClipMatrix = projectionMatrix * viewMatrix;
 		Float4x4 localToClipMatrix = worldToClipMatrix * localToWorldMatrix;
 
-		pShaderProperties->SetFloat4x4(bufferName, "cb_localToWorldMatrix", localToWorldMatrix);
-		pShaderProperties->SetFloat4x4(bufferName, "cb_viewMatrix", viewMatrix);
-		pShaderProperties->SetFloat4x4(bufferName, "cb_projMatrix", projectionMatrix);
-		pShaderProperties->SetFloat4x4(bufferName, "cb_worldToClipMatrix", worldToClipMatrix);
-		pShaderProperties->SetFloat4x4(bufferName, "cb_localToClipMatrix", localToClipMatrix);
+		pDescriptorSetBinding->SetFloat4x4(bufferName, "cb_localToWorldMatrix", localToWorldMatrix);
+		pDescriptorSetBinding->SetFloat4x4(bufferName, "cb_viewMatrix", viewMatrix);
+		pDescriptorSetBinding->SetFloat4x4(bufferName, "cb_projMatrix", projectionMatrix);
+		pDescriptorSetBinding->SetFloat4x4(bufferName, "cb_worldToClipMatrix", worldToClipMatrix);
+		pDescriptorSetBinding->SetFloat4x4(bufferName, "cb_localToClipMatrix", localToClipMatrix);
 	}
 	void DrawCall::SetLightData(std::vector<emberCommon::DirectionalLight>& directionalLights, std::vector<emberCommon::PositionalLight>& positionalLights)
 	{
 		SetDirectionalLightData(directionalLights);
 		SetPositionalLightData(positionalLights);
-		pShaderProperties->SetBool("LightData", "receiveShadows", receiveShadows);
+		pDescriptorSetBinding->SetBool("LightData", "receiveShadows", receiveShadows);
 	}
 
 
@@ -35,10 +35,10 @@ namespace vulkanRendererBackend
 		static std::string arrayName = "directionalLightData";
 		for (uint32_t i = 0; i < directionalLights.size(); i++)
 		{
-			pShaderProperties->SetFloat4x4(bufferName, arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
-			pShaderProperties->SetFloat3(bufferName, arrayName, i, "direction", directionalLights[i].direction);
-			pShaderProperties->SetInt(bufferName, arrayName, i, "shadowType", (int)directionalLights[i].shadowType);
-			pShaderProperties->SetFloat4(bufferName, arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
+			pDescriptorSetBinding->SetFloat4x4(bufferName, arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
+			pDescriptorSetBinding->SetFloat3(bufferName, arrayName, i, "direction", directionalLights[i].direction);
+			pDescriptorSetBinding->SetInt(bufferName, arrayName, i, "shadowType", (int)directionalLights[i].shadowType);
+			pDescriptorSetBinding->SetFloat4(bufferName, arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
 		}
 	}
 	void DrawCall::SetPositionalLightData(std::vector<emberCommon::PositionalLight>& positionalLights)
@@ -47,11 +47,11 @@ namespace vulkanRendererBackend
 		static std::string arrayName = "positionalLightData";
 		for (uint32_t i = 0; i < positionalLights.size(); i++)
 		{
-			pShaderProperties->SetFloat4x4(bufferName, arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
-			pShaderProperties->SetFloat3(bufferName, arrayName, i, "position", positionalLights[i].position);
-			pShaderProperties->SetInt(bufferName, arrayName, i, "shadowType", (int)positionalLights[i].shadowType);
-			pShaderProperties->SetFloat4(bufferName, arrayName, i, "colorIntensity", Float4(positionalLights[i].color, positionalLights[i].intensity));
-			pShaderProperties->SetFloat2(bufferName, arrayName, i, "blendStartEnd", Float2(positionalLights[i].blendStart, positionalLights[i].blendEnd));
+			pDescriptorSetBinding->SetFloat4x4(bufferName, arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
+			pDescriptorSetBinding->SetFloat3(bufferName, arrayName, i, "position", positionalLights[i].position);
+			pDescriptorSetBinding->SetInt(bufferName, arrayName, i, "shadowType", (int)positionalLights[i].shadowType);
+			pDescriptorSetBinding->SetFloat4(bufferName, arrayName, i, "colorIntensity", Float4(positionalLights[i].color, positionalLights[i].intensity));
+			pDescriptorSetBinding->SetFloat2(bufferName, arrayName, i, "blendStartEnd", Float2(positionalLights[i].blendStart, positionalLights[i].blendEnd));
 		}
 	}
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "shaderStageReflection.h"
 #include "descriptor.h"
-#include "descriptorSet.h"
+#include "descriptorSetReflection.h"
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -16,7 +16,7 @@ namespace emberSpirvReflect
 	private: // Members:
 		bool m_isInitialized;
 		std::vector<ShaderStageReflection> m_shaderStageReflections;
-		std::vector<DescriptorSet> m_descriptorSets;
+		std::vector<DescriptorSetReflection> m_descriptorSetReflections;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -34,15 +34,15 @@ namespace emberSpirvReflect
 		// Functionality:
 		static std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile);
 		void AddShaderStage(VkShaderStageFlagBits shaderStage, const std::vector<char>& code);
-		void CreateDescriptorSets();
+		void CreateDescriptorSetReflections();
 
 		// Getters:
 		const ShaderStageReflection* GetFragmentShaderReflection() const;
 		const ShaderStageReflection* GetVertexShaderReflection() const;
 		const ShaderStageReflection* GetComputeShaderReflection() const;
 		const ShaderStageReflection* GetStageReflection(VkShaderStageFlagBits stage) const;
-		const DescriptorSet& GetDescriptorSet(uint32_t set) const;
-		const std::vector<DescriptorSet>& GetDescriptorSets() const;
+		const DescriptorSetReflection& GetDescriptorSetReflection(uint32_t set) const;
+		const std::vector<DescriptorSetReflection>& GetDescriptorSetReflections() const;
 
 		// Debugging:
 		std::string ToString() const;

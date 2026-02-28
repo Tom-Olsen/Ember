@@ -7,14 +7,14 @@
 
 
 // Material set:
-Texture2D colorMap : register(t0, MATERIAL_SET);                 // format = VK_FORMAT_R8G8B8A8_SRGB,
-Texture2D normalMap : register(t1, MATERIAL_SET);                // format = VK_FORMAT_R8G8B8A8_UNORM,   opengl style unorm normal map
-Texture2D<float> metallicityMap : register(t2, MATERIAL_SET);    // format = VK_FORMAT_R8_UNORM,         single channel unorm metallicity map
-Texture2D<float> roughnessMap : register(t3, MATERIAL_SET);      // format = VK_FORMAT_R8_UNORM,         single channel unorm roughness map
+Texture2D colorMap : register(t0, SHADER_SET);                 // format = VK_FORMAT_R8G8B8A8_SRGB,
+Texture2D normalMap : register(t1, SHADER_SET);                // format = VK_FORMAT_R8G8B8A8_UNORM,   opengl style unorm normal map
+Texture2D<float> metallicityMap : register(t2, SHADER_SET);    // format = VK_FORMAT_R8_UNORM,         single channel unorm metallicity map
+Texture2D<float> roughnessMap : register(t3, SHADER_SET);      // format = VK_FORMAT_R8_UNORM,         single channel unorm roughness map
 
 
 
-cbuffer SurfaceProperties : register(b4, MATERIAL_SET)
+cbuffer SurfaceProperties : register(b4, SHADER_SET)
 {
     float4 surface_diffuseColor;    // (1.0, 1.0, 1.0)
     float surface_roughness;        // 0.5

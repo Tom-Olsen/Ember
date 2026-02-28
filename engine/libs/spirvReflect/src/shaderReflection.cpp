@@ -14,9 +14,9 @@ namespace emberSpirvReflect
     ShaderReflection::ShaderReflection(size_t descriptorSetCount)
     {
         m_isInitialized = false;
-        m_descriptorSets.reserve(descriptorSetCount);
+        m_descriptorSetReflections.reserve(descriptorSetCount);
         for (uint32_t i = 0; i < descriptorSetCount; i++)
-            m_descriptorSets.emplace_back(i);
+            m_descriptorSetReflections.emplace_back(i);
     }
     ShaderReflection::~ShaderReflection()
     {
@@ -57,7 +57,7 @@ namespace emberSpirvReflect
             assert(m_shaderStageReflections.empty() && "Can't add compute ShaderStageReflection to none empty ShaderReflection.");
         m_shaderStageReflections.emplace_back(shaderStage, code);
     }
-    void ShaderReflection::CreateDescriptorSets()
+    void ShaderReflection::CreateDescriptorSetReflections()
     {
         assert(!m_isInitialized && "Can't ShaderReflection::CreateDescriptorSets() twice.");
 
@@ -67,18 +67,18 @@ namespace emberSpirvReflect
             const std::vector<Descriptor>& stageDescriptors = stageReflection.GetDescriptors();
             for (const Descriptor& descriptor : stageDescriptors)
             {
-                if (descriptor.set >= m_descriptorSets.size())
+                if (descriptor.set >= m_descriptorSetReflections.size())
                 {
-                    LOG_CRITICAL("Descriptor set index out of range: {}", std::to_string(descriptor.set));
+                    LOG_CRITICAL("Descriptor set index out of range: {}, highest allowed descriptorSet: {}", std::to_string(descriptor.set), m_descriptorSetReflections.size() - 1);
                     assert(false);
                 }
-                m_descriptorSets[descriptor.set].AddDescriptor(descriptor);
+                m_descriptorSetReflections[descriptor.set].AddDescriptor(descriptor);
             }
         }
 
         // Create descriptor set layout bindings:
-        for (int i = 0; i < m_descriptorSets.size(); i++)
-            m_descriptorSets[i].CreateLayoutBindings();
+        for (int i = 0; i < m_descriptorSetReflections.size(); i++)
+            m_descriptorSetReflections[i].CreateLayoutBindings();
 
         m_isInitialized = true;
     }
@@ -104,13 +104,13 @@ namespace emberSpirvReflect
                 return &stageReflection;
         return nullptr;
     }
-    const DescriptorSet& ShaderReflection::GetDescriptorSet(uint32_t set) const
+    const DescriptorSetReflection& ShaderReflection::GetDescriptorSetReflection(uint32_t set) const
     {
-        return m_descriptorSets[set];
+        return m_descriptorSetReflections[set];
     }
-    const std::vector<DescriptorSet>& ShaderReflection::GetDescriptorSets() const
+    const std::vector<DescriptorSetReflection>& ShaderReflection::GetDescriptorSetReflections() const
     {
-        return m_descriptorSets;
+        return m_descriptorSetReflections;
     }
 
 
@@ -139,9 +139,9 @@ namespace emberSpirvReflect
         }
 
         // Descriptor sets:
-        for (int i = 0; i < m_descriptorSets.size(); i++)
-            if (m_descriptorSets[i].GetSet() == i) // else invalid.
-                ss << m_descriptorSets[i].ToString() << "\n";
+        for (int i = 0; i < m_descriptorSetReflections.size(); i++)
+            if (m_descriptorSetReflections[i].GetSet() == i) // else invalid.
+                ss << m_descriptorSetReflections[i].ToString() << "\n";
 
         return ss.str();
     }
@@ -156,7 +156,7 @@ namespace emberSpirvReflect
     }
     void ShaderReflection::PrintDescriptorSetLayoutBindings()
     {
-        for (auto& descriptorSet : m_descriptorSets)
+        for (auto& descriptorSet : m_descriptorSetReflections)
         {
             LOG_INFO("Set{}", descriptorSet.GetSet());
             const std::vector<VkDescriptorSetLayoutBinding>& bindings = descriptorSet.GetVkDescriptorSetLayoutBindings();

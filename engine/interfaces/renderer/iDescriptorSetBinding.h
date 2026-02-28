@@ -15,11 +15,11 @@ namespace emberBackendInterface
 
 
 
-    class IShaderProperties
+    class IDescriptorSetBinding
     {
     public: // Methods:
         // Virtual destructor for v-table:
-        virtual ~IShaderProperties() = default;
+        virtual ~IDescriptorSetBinding() = default;
 
         //virtual void SetSampler(const std::string& name, vulkanRendererBackend::Sampler* pSampler) = 0;
         virtual void SetTexture(const std::string& name, ITexture* pTexture2d) = 0;

@@ -151,3 +151,4 @@ Ember::TODO long term:
 Useful Information:
 Device Info: https://vulkan.gpuinfo.org/
 Vulkan documentation: https://vulkan.lunarg.com/doc/sdk
+HLSL alignment visualizer: https://maraneshi.github.io/HLSL-ConstantBufferLayoutVisualizer/

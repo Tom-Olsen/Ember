@@ -9,9 +9,10 @@ namespace vulkanRendererBackend
     class DepthTexture2dArray;
     class Material;
     class Mesh;
+    class Sampler;
     class SampleTextureCube;
     class SampleTexture2d;
-    class ShaderProperties;
+    class DescriptorSetBinding;
     class StorageBuffer;
     class StorageTexture2d;
 
@@ -21,12 +22,15 @@ namespace vulkanRendererBackend
     {
     private: // Members:
         static bool s_isInitialized;
+        // Samplers:
+        static std::unique_ptr<Sampler> s_pColorSampler;
+        static std::unique_ptr<Sampler> s_pShadowSampler;
         // Materials:
         static std::unique_ptr<Material> s_pDefaultMaterial;
         static std::unique_ptr<Material> s_pDefaultPresentMaterial;
-        // ShaderProperties:
-        static std::unique_ptr<ShaderProperties> s_pDefaultShaderProperties;
-        static std::unique_ptr<ShaderProperties> s_pDefaultPresentShaderProperties;
+        // DescriptorSetBindings:
+        static std::unique_ptr<DescriptorSetBinding> s_pGlobalDescriptorSetBinding;
+        static std::unique_ptr<DescriptorSetBinding> s_pFrameDescriptorSetBinding;
         // Meshes:
         static std::unique_ptr<Mesh> s_pDefaultRenderQuad;
         // Buffers:
@@ -38,17 +42,19 @@ namespace vulkanRendererBackend
         static std::unique_ptr<DepthTexture2dArray> s_pDefaultDepthTexture2dArray;
         static std::unique_ptr<StorageTexture2d> s_pDefaultStorageTexture2d;
 
-
     public: // Methods:
         static void Init();
         static void Clear();
 
+        // Samplers:
+        static Sampler* GetColorSampler();
+        static Sampler* GetShadowSampler();
         // Materials:
         static Material* GetDefaultMaterial();
         static Material* GetDefaultPresentMaterial();
-        // ShaderProperties:
-        static ShaderProperties* GetDefaultShaderProperties();
-        static ShaderProperties* GetDefaultPresentShaderProperties();
+        // DescriptorSetBindings:
+        static DescriptorSetBinding* GetGlobalDescriptorSetBinding();
+        static DescriptorSetBinding* GetFrameDescriptorSetBinding();
         // Meshes:
         static Mesh* GetDefaultRenderQuad();
         // Buffers:
@@ -58,7 +64,6 @@ namespace vulkanRendererBackend
         static SampleTextureCube* GetDefaultSampleTextureCube();
         static DepthTexture2dArray* GetDefaultDepthTexture2dArray();
         static StorageTexture2d* GetDefaultStorageTexture2d();
-
 
     private: // Methods
         void CreateDefaultRenderQuad();

@@ -1,11 +1,14 @@
 #include "vulkanDefaultGpuResources.h"
+#include "descriptorSetMacros.h"
 #include "emberMath.h"
+#include "vulkanColorSampler.h"
 #include "vulkanDepthTexture2dArray.h"
+#include "vulkanDescriptorSetBinding.h"
 #include "vulkanMaterial.h"
 #include "vulkanMesh.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanSampleTexture2d.h"
-#include "vulkanShaderProperties.h"
+#include "vulkanShadowSampler.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageTexture2d.h"
 #include <filesystem>
@@ -16,12 +19,15 @@ namespace vulkanRendererBackend
 {
 	// Static members:
 	bool DefaultGpuResources::s_isInitialized = false;
+	// Samplers:
+	std::unique_ptr<Sampler> DefaultGpuResources::s_pColorSampler = nullptr;
+	std::unique_ptr<Sampler> DefaultGpuResources::s_pShadowSampler = nullptr;
 	// Materials:
 	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultMaterial = nullptr;
 	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultPresentMaterial = nullptr;
-	// ShaderProperties:
-	std::unique_ptr<ShaderProperties> DefaultGpuResources::s_pDefaultShaderProperties = nullptr;
-	std::unique_ptr<ShaderProperties> DefaultGpuResources::s_pDefaultPresentShaderProperties = nullptr;
+	// DescriptorSetBindings:
+	std::unique_ptr<DescriptorSetBinding> DefaultGpuResources::s_pGlobalDescriptorSetBinding = nullptr;
+	std::unique_ptr<DescriptorSetBinding> DefaultGpuResources::s_pFrameDescriptorSetBinding = nullptr;
 	// Meshes:
 	std::unique_ptr<Mesh> DefaultGpuResources::s_pDefaultRenderQuad = nullptr;
 	// Buffers:
@@ -42,13 +48,16 @@ namespace vulkanRendererBackend
 			return;
 		s_isInitialized = true;
 
+		// Samplers:
+		s_pColorSampler = std::make_unique<ColorSampler>("colorSampler");
+		s_pShadowSampler = std::make_unique<ShadowSampler>("shadowSampler");
 		// Materials:
 		std::filesystem::path shadersSrcDirectory = (std::filesystem::path(ENGINE_SHADERS_DIR) / "shaders" / "src").make_preferred();
 		s_pDefaultMaterial = std::make_unique<Material>(emberCommon::MaterialType::forwardOpaque, "defaultMaterial", emberCommon::RenderQueue::opaque, shadersSrcDirectory / "vertex" / "default.vert.hlsl", shadersSrcDirectory / "fragment" / "default.frag.hlsl");
 		s_pDefaultPresentMaterial = std::make_unique<Material>(emberCommon::MaterialType::present, "presentMaterial", emberCommon::RenderQueue::opaque, shadersSrcDirectory / "vertex" / "present.vert.spv", shadersSrcDirectory / "fragment" / "present.frag.spv");
-		// ShaderProperties:
-		s_pDefaultShaderProperties = std::make_unique<ShaderProperties>((Shader*)s_pDefaultMaterial.get());
-		s_pDefaultPresentShaderProperties = std::make_unique<ShaderProperties>((Shader*)s_pDefaultPresentMaterial.get());
+		// DescriptorSetBindings:
+		s_pGlobalDescriptorSetBinding = std::make_unique<DescriptorSetBinding>((Shader*)s_pDefaultMaterial.get(), GLOBAL_SET_INDEX);
+		s_pFrameDescriptorSetBinding = std::make_unique<DescriptorSetBinding>((Shader*)s_pDefaultMaterial.get(), FRAME_SET_INDEX);
 		// Meshes:
 		s_pDefaultRenderQuad = std::make_unique<Mesh>();
 		CreateDefaultRenderQuad();
@@ -64,12 +73,15 @@ namespace vulkanRendererBackend
 	}
 	void DefaultGpuResources::Clear()
 	{
+		// Samplers:
+		s_pColorSampler.reset();
+		s_pShadowSampler.reset();
 		// Materials:
 		s_pDefaultMaterial.reset();
 		s_pDefaultPresentMaterial.reset();
-		// ShaderProperties:
-		s_pDefaultShaderProperties.reset();
-		s_pDefaultPresentShaderProperties.reset();
+		// DescriptorSetBindings:
+		s_pGlobalDescriptorSetBinding.reset();
+		s_pFrameDescriptorSetBinding.reset();
 		// Meshes:
 		s_pDefaultRenderQuad
 		// Buffers:
@@ -87,6 +99,15 @@ namespace vulkanRendererBackend
 
 	// Public methods:
 	// Getters:
+	// Samplers:
+	Sampler* DefaultGpuResources::GetColorSampler()
+	{
+		return s_pColorSampler.get();
+	}
+	Sampler* DefaultGpuResources::GetShadowSampler()
+	{
+		return s_pShadowSampler.get();
+	}
 	// Materials:
 	Material* DefaultGpuResources::GetDefaultMaterial()
 	{
@@ -96,14 +117,14 @@ namespace vulkanRendererBackend
 	{
 		return s_pDefaultPresentMaterial.get();
 	}
-	// ShaderProperties:
-	ShaderProperties* DefaultGpuResources::GetDefaultShaderProperties()
+	// DescriptorSetBindings:
+	DescriptorSetBinding* DefaultGpuResources::GetGlobalDescriptorSetBinding()
 	{
-		return s_pDefaultShaderProperties.get();
+		return s_pGlobalDescriptorSetBinding.get();
 	}
-	ShaderProperties* DefaultGpuResources::GetDefaultPresentShaderProperties()
+	DescriptorSetBinding* DefaultGpuResources::GetFrameDescriptorSetBinding()
 	{
-		return s_pDefaultPresentShaderProperties.get();
+		return s_pFrameDescriptorSetBinding.get();
 	}
 	// Meshes:
 	Mesh* DefaultGpuResources::GetDefaultRenderQuad()

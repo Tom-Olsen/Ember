@@ -6,6 +6,7 @@
 #include "meshManager.h"
 #include "material.h"
 #include "materialManager.h"
+#include "scene.h"
 #include "shaderProperties.h"
 #include "texture.h"
 #include "texture2d.h"
@@ -52,7 +53,7 @@ namespace emberEngine
 
 
 	// Main render loop:
-	void Renderer::RenderFrame()
+	void Renderer::RenderFrame(Scene* pScene)
 	{
 		s_pIRenderer->RenderFrame(Time::GetTime(), Time::GetDeltaTime());
 	}

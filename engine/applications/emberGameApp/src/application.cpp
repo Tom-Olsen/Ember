@@ -120,7 +120,7 @@ namespace emberApplication
 				emberEngine::Gui::Update();
 				m_pActiveScene->Update();
 				m_pActiveScene->LateUpdate();
-				emberEngine::Renderer::RenderFrame();
+				emberEngine::Renderer::RenderFrame(m_pActiveScene);
 			}
 		}
 		catch (const std::exception& e)

@@ -27,7 +27,7 @@ struct InstanceData
     float4x4 localToWorldMatrix;    // per instance TRS matrix (relative to group transform).
     float4 color;                   // per instance color.
 };
-StructuredBuffer<InstanceData> instanceBuffer : register(t100, MATERIAL_SET);
+StructuredBuffer<InstanceData> instanceBuffer : register(t100, SHADER_SET);
 
 
 
