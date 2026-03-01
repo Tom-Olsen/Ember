@@ -57,6 +57,12 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 
 # -------------- Link Custom Libraries --------------
+# EmberBufferLayout:
+if (NOT TARGET EmberBufferLayout)
+    add_subdirectory("${ENGINE_LIBS_DIR}/bufferLayout" EmberBufferLayout)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberBufferLayout)
+
 # EmberLogger:
 if (NOT TARGET EmberLogger)
     set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")

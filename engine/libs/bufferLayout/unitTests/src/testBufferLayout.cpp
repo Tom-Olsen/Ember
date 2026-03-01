@@ -3,31 +3,38 @@
 #include <gtest/gtest.h>
 
 
+
+using namespace emberBufferLayout;
+
+
+
 struct alignas(16) Foo
 {
 	int a;
 	float b;
 };
 
+
+
 TEST(ShaderReflection, VertexShaderReflection)
 {
 	try
 	{
-		emberBufferLayout::BufferLayout bufferLayout("testLayout");
+		BufferLayout bufferLayout("testLayout");
 
-		emberBufferLayout::BufferMember memberFoo("foo", 0, sizeof(Foo));
-		emberBufferLayout::BufferMember subMemberFooA("a", 0, sizeof(int));
-		emberBufferLayout::BufferMember subMemberFooB("b", sizeof(int), sizeof(float));
+		BufferMember memberFoo("foo", 0, sizeof(Foo));
+		BufferMember subMemberFooA("a", 0, sizeof(int));
+		BufferMember subMemberFooB("b", sizeof(int), sizeof(float));
 		memberFoo.AddSubMember(subMemberFooA);
 		memberFoo.AddSubMember(subMemberFooB);
 		bufferLayout.AddMember(memberFoo);
 
-		emberBufferLayout::BufferMember memberC("c", sizeof(Foo), 4 * sizeof(float));
+		BufferMember memberC("c", sizeof(Foo), 4 * sizeof(float));
 		bufferLayout.AddMember(memberC);
 
-		emberBufferLayout::BufferMember memberD("d", sizeof(Foo) + 4 * sizeof(float), 2 * 4 * sizeof(float));
-		emberBufferLayout::BufferMember subMemberFooD0("d0", sizeof(Foo) + 4 * sizeof(float), 4 * sizeof(float));
-		emberBufferLayout::BufferMember subMemberFooD1("d1", sizeof(Foo) + 2 * 4 * sizeof(float), 4 * sizeof(float));
+		BufferMember memberD("d", sizeof(Foo) + 4 * sizeof(float), 2 * 4 * sizeof(float));
+		BufferMember subMemberFooD0("d0", sizeof(Foo) + 4 * sizeof(float), 4 * sizeof(float));
+		BufferMember subMemberFooD1("d1", sizeof(Foo) + 2 * 4 * sizeof(float), 4 * sizeof(float));
 		memberD.AddSubMember(subMemberFooD0);
 		memberD.AddSubMember(subMemberFooD1);
 		bufferLayout.AddMember(memberD);

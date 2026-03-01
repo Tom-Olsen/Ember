@@ -60,7 +60,7 @@ namespace emberBufferLayout
 
         uint32_t memberEnd = member.GetOffset() + member.GetSize();
         if (memberEnd > m_size)
-            m_size = memberEnd; // size of the block is end of last member.
+            m_size = memberEnd; // size of the buffer is end of last member.
         m_members.push_back(member);
         m_indexMap.emplace(member.GetName(), m_members.size() - 1);
     }

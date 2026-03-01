@@ -32,8 +32,8 @@ namespace emberSpirvReflect
         std::ifstream file(spvFile, std::ios::binary);
         if (!file.is_open())
         {
-            LOG_CRITICAL("Error opening shader file: {}", spvFile.string());
-            throw std::runtime_error("Failed to open shader file: " + spvFile.string());
+            LOG_CRITICAL("ShaderReflection::ReadShaderCode: Error opening shader file: {}", spvFile.string());
+            throw std::runtime_error("ShaderReflection::ReadShaderCode: Failed to open shader file: " + spvFile.string());
         }
 
         // Get file size:
@@ -50,29 +50,29 @@ namespace emberSpirvReflect
     }
     void ShaderReflection::AddShaderStage(VkShaderStageFlagBits shaderStage, const std::vector<char>& code)
     {
-        assert(!m_isInitialized && "Can't add further ShaderStageReflections to already initialized ShaderReflection.");
-        assert(!GetStageReflection(shaderStage) && "Can't add a ShaderStageReflection twice to ShaderReflection.");
-        assert(!GetStageReflection(VK_SHADER_STAGE_COMPUTE_BIT) && "Can't add ShaderStageReflection to ShaderReflection containing compute.");
+        assert(!m_isInitialized && "ShaderReflection::AddShaderStage: Can't add further ShaderStageReflections to already initialized ShaderReflection.");
+        assert(!GetStageReflection(shaderStage) && "ShaderReflection::AddShaderStage: Can't add a ShaderStageReflection twice to ShaderReflection.");
+        assert(!GetStageReflection(VK_SHADER_STAGE_COMPUTE_BIT) && "ShaderReflection::AddShaderStage: Can't add ShaderStageReflection to ShaderReflection containing compute.");
         if (shaderStage == VK_SHADER_STAGE_COMPUTE_BIT)
-            assert(m_shaderStageReflections.empty() && "Can't add compute ShaderStageReflection to none empty ShaderReflection.");
+            assert(m_shaderStageReflections.empty() && "ShaderReflection::AddShaderStage: Can't add compute ShaderStageReflection to none empty ShaderReflection.");
         m_shaderStageReflections.emplace_back(shaderStage, code);
     }
     void ShaderReflection::CreateDescriptorSetReflections()
     {
         assert(!m_isInitialized && "Can't ShaderReflection::CreateDescriptorSets() twice.");
 
-        // Fill descriptor sets:
+        // Fill descriptor set reflections:
         for (const ShaderStageReflection& stageReflection : m_shaderStageReflections)
         {
-            const std::vector<Descriptor>& stageDescriptors = stageReflection.GetDescriptors();
-            for (const Descriptor& descriptor : stageDescriptors)
+            const std::vector<DescriptorReflection>& stageDescriptorReflections = stageReflection.GetDescriptorReflections();
+            for (const DescriptorReflection& descriptorReflection : stageDescriptorReflections)
             {
-                if (descriptor.set >= m_descriptorSetReflections.size())
+                if (descriptorReflection.GetSet() >= m_descriptorSetReflections.size())
                 {
-                    LOG_CRITICAL("Descriptor set index out of range: {}, highest allowed descriptorSet: {}", std::to_string(descriptor.set), m_descriptorSetReflections.size() - 1);
+                    LOG_CRITICAL("ShaderReflection::CreateDescriptorSetReflections: Descriptor set index out of range: {}, highest allowed descriptorSet: {}", std::to_string(descriptorReflection.GetSet()), m_descriptorSetReflections.size() - 1);
                     assert(false);
                 }
-                m_descriptorSetReflections[descriptor.set].AddDescriptor(descriptor);
+                m_descriptorSetReflections[descriptorReflection.GetSet()].AddDescriptorReflection(descriptorReflection);
             }
         }
 
@@ -138,9 +138,9 @@ namespace emberSpirvReflect
                 ss << "blockSize: " << computeStageInfo->blockSize.ToString() << "\n";
         }
 
-        // Descriptor sets:
+        // Descriptor set reflections:
         for (int i = 0; i < m_descriptorSetReflections.size(); i++)
-            if (m_descriptorSetReflections[i].GetSet() == i) // else invalid.
+            //if (m_descriptorSetReflections[i].GetSet() == i) // else invalid.
                 ss << m_descriptorSetReflections[i].ToString() << "\n";
 
         return ss.str();

@@ -9,7 +9,7 @@
 
 namespace emberBufferLayout
 {
-	// Represents a member of a UniformBufferBlock, which may have sub-members (structs/arrays):
+	// Represents a member of a bufferLayout.
 	struct BufferMember
 	{
 	public: // Members:
@@ -24,7 +24,7 @@ namespace emberBufferLayout
 	public: // Methods:
 		// Constructor:
 		BufferMember(const std::string& name, uint32_t offset, uint32_t size);
-
+		
 		// Copyable:
 		BufferMember(const BufferMember& other) = default;
 		BufferMember& operator=(const BufferMember& other) = default;

@@ -1,4 +1,5 @@
 #include "bufferMember.h"
+#include <cassert>
 #include <sstream>
 
 
@@ -65,7 +66,9 @@ namespace emberBufferLayout
 	void BufferMember::AddSubMember(const BufferMember& subMember)
 	{
 		if (m_indexMap.contains(subMember.GetName()))
-			throw std::runtime_error("BufferMember::AddSubMember: Duplicate member name in BufferMember subMembers.");
+			throw std::runtime_error("BufferMember::AddSubMember: Duplicate subMember name.");
+
+		uint32_t subMemberEnd = subMember.GetOffset() + subMember.GetSize();
 		m_subMembers.push_back(subMember);
 		m_indexMap.emplace(subMember.GetName(), m_subMembers.size() - 1);
 	}

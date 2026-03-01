@@ -1,6 +1,6 @@
 #pragma once
 #include "shaderStageReflection.h"
-#include "descriptor.h"
+#include "descriptorReflection.h"
 #include "descriptorSetReflection.h"
 #include <filesystem>
 #include <string>

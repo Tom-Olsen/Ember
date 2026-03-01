@@ -1,5 +1,5 @@
 #pragma once
-#include "descriptor.h"
+#include "descriptorReflection.h"
 #include <unordered_map>
 #include <string>
 #include <vulkan\vulkan.h>
@@ -13,7 +13,7 @@ namespace emberSpirvReflect
     private: // Members:
         uint32_t m_set;
         bool m_layoutCreated;
-        std::unordered_map<uint32_t, Descriptor> m_descriptors;
+        std::unordered_map<uint32_t, DescriptorReflection> m_descriptorReflections;
         std::vector<std::string> m_descriptorNames;
         std::vector<VkDescriptorSetLayoutBinding> m_vkDescriptorSetLayoutBinding;
 
@@ -24,7 +24,7 @@ namespace emberSpirvReflect
         ~DescriptorSetReflection();
 
         // Main functionality:
-        void AddDescriptor(const Descriptor& descriptor);
+        void AddDescriptorReflection(const DescriptorReflection& descriptorReflection);
         void CreateLayoutBindings();
 
         // Getters:

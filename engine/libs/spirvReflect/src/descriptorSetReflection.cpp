@@ -27,32 +27,32 @@ namespace emberSpirvReflect
 
 
     // Main functionality:
-    void DescriptorSetReflection::AddDescriptor(const Descriptor& descriptor)
+    void DescriptorSetReflection::AddDescriptorReflection(const DescriptorReflection& descriptorReflection)
     {
-        assert((m_set < UINT32_MAX) && "DescriptorSetReflection::AddDescriptor(const Descriptor&): forgot to set m_set by calling proper constructor (not default).");
-        assert(!m_layoutCreated && "DescriptorSetReflection::AddDescriptor(const Descriptor&) called after layout bindings were finalized.");
+        assert((m_set < UINT32_MAX) && "DescriptorSetReflection::AddDescriptor: Forgot to set m_set by calling proper constructor (not default).");
+        assert(!m_layoutCreated && "DescriptorSetReflection::AddDescriptor: Called after layout bindings were finalized.");
 
-        auto it = m_descriptors.find(descriptor.vkDescriptorSetLayoutBinding.binding);
-        if (it != m_descriptors.end())
+        auto it = m_descriptorReflections.find(descriptorReflection.GetVkDescriptorSetLayoutBinding().binding);
+        if (it != m_descriptorReflections.end())
         {
-            if(!it->second.IsEqual(descriptor))
-                throw std::runtime_error("Found unequal descriptors with same set+binding:\n prev: " + it->second.ToString() + "\n  new: " + descriptor.ToString());
-            it->second.vkDescriptorSetLayoutBinding.stageFlags |= descriptor.vkDescriptorSetLayoutBinding.stageFlags;
+            if(!it->second.IsEqual(descriptorReflection))
+                throw std::runtime_error("DescriptorSetReflection::AddDescriptor: Found unequal descriptors with same set+binding:\n prev: " + it->second.ToString() + "\n  new: " + descriptorReflection.ToString());
+            it->second.AddShaderStage(descriptorReflection.GetVkDescriptorSetLayoutBinding().stageFlags);
         }
         else
-            m_descriptors.emplace(descriptor.vkDescriptorSetLayoutBinding.binding, descriptor);
+            m_descriptorReflections.emplace(descriptorReflection.GetVkDescriptorSetLayoutBinding().binding, descriptorReflection);
     }
     void DescriptorSetReflection::CreateLayoutBindings()
     {
         assert((m_set < UINT32_MAX) && "DescriptorSetReflection::CreateLayoutBindings(): forgot to set m_set by calling proper constructor (not default).");
         assert(!m_layoutCreated && "DescriptorSetReflection::CreateLayoutBindings() called twice.");
 
-        m_descriptorNames.reserve(m_descriptors.size());
-        m_vkDescriptorSetLayoutBinding.reserve(m_descriptors.size());   
-        for (const auto& [_, descriptor] : m_descriptors)
+        m_descriptorNames.reserve(m_descriptorReflections.size());
+        m_vkDescriptorSetLayoutBinding.reserve(m_descriptorReflections.size());
+        for (const auto& [_, descriptorReflection] : m_descriptorReflections)
         {
-            m_descriptorNames.push_back(descriptor.name);
-            m_vkDescriptorSetLayoutBinding.push_back(descriptor.vkDescriptorSetLayoutBinding);
+            m_descriptorNames.push_back(descriptorReflection.GetName());
+            m_vkDescriptorSetLayoutBinding.push_back(descriptorReflection.GetVkDescriptorSetLayoutBinding());
         }
 
         // Sorting:
@@ -89,8 +89,8 @@ namespace emberSpirvReflect
         std::ostringstream ss;
         std::string indentStr = std::string(indent, ' ');
         ss << indentStr << "DescriptorSetReflection: " << m_set;
-        for (auto [binding, descriptor] : m_descriptors)
-            ss << "\n" << descriptor.ToString(indent + 2);
+        for (auto [binding, descriptorReflection] : m_descriptorReflections)
+            ss << "\n" << descriptorReflection.ToString(indent + 2);
         return ss.str();
     }
 }

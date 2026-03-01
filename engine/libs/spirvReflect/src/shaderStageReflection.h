@@ -1,5 +1,5 @@
 #pragma once
-#include "descriptor.h"
+#include "descriptorReflection.h"
 #include "emberMath.h"
 #include <memory>
 #include <string>
@@ -16,7 +16,7 @@ struct SpvReflectShaderModule;
 
 namespace emberSpirvReflect
 {
-	// Stage specific info:
+	// ShaderStageInfo variant:
 	struct ComputeStageInfo
 	{
 		Uint3 blockSize;
@@ -30,6 +30,7 @@ namespace emberSpirvReflect
 		VkFormat format;
 		std::string ToString() const;
 	};
+	using ShaderStageInfo = std::variant<std::monostate, ComputeStageInfo, std::vector<VertexStageInfo>>;
 
 
 
@@ -38,8 +39,8 @@ namespace emberSpirvReflect
 	private: // Members:
 		VkShaderStageFlagBits m_shaderStage;
 		std::unique_ptr<SpvReflectShaderModule> m_pModule;
-		std::variant<std::monostate, std::vector<VertexStageInfo>, ComputeStageInfo> m_stageSpecific;
-		std::vector<Descriptor> m_descriptors;
+		ShaderStageInfo m_shaderStageInfo;
+		std::vector<DescriptorReflection> m_descriptorReflections;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -58,7 +59,7 @@ namespace emberSpirvReflect
 		VkShaderStageFlagBits GetShaderStage() const;
 		const std::vector<VertexStageInfo>* GetVertexInfos() const;
 		const ComputeStageInfo* GetComputeInfo() const;
-		const std::vector<Descriptor>& GetDescriptors() const;
+		const std::vector<DescriptorReflection>& GetDescriptorReflections() const;
 
 		// Debugging:
 		std::string ToString(int indent = 0) const;
@@ -66,6 +67,6 @@ namespace emberSpirvReflect
 	private: // Methods:
 		ComputeStageInfo ExtractComputeStageInfo() const;
 		std::vector<VertexStageInfo> ExtractVertexStageInfo() const;
-		std::vector<Descriptor> ExtractDescriptors() const;
+		std::vector<DescriptorReflection> ExtractDescriptorReflections() const;
 	};
 }

@@ -46,18 +46,18 @@ namespace emberSpirvReflect
         switch (m_shaderStage)
         {
             case VK_SHADER_STAGE_COMPUTE_BIT:
-                m_stageSpecific = ExtractComputeStageInfo();
+                m_shaderStageInfo = ExtractComputeStageInfo();
                 break;
 
             case VK_SHADER_STAGE_VERTEX_BIT:
-                m_stageSpecific = ExtractVertexStageInfo();
+                m_shaderStageInfo = ExtractVertexStageInfo();
                 break;
 
             default:
-                m_stageSpecific = std::monostate{};
+                m_shaderStageInfo = std::monostate{};
                 break;
         }
-        m_descriptors = ExtractDescriptors();
+        m_descriptorReflections = ExtractDescriptorReflections();
     }
     ShaderStageReflection::~ShaderStageReflection()
     {
@@ -80,15 +80,15 @@ namespace emberSpirvReflect
     }
     const std::vector<VertexStageInfo>* ShaderStageReflection::GetVertexInfos() const
     {
-        return std::get_if<std::vector<VertexStageInfo>>(&m_stageSpecific);
+        return std::get_if<std::vector<VertexStageInfo>>(&m_shaderStageInfo);
     }
     const ComputeStageInfo* ShaderStageReflection::GetComputeInfo() const
     {
-        return std::get_if<ComputeStageInfo>(&m_stageSpecific);
+        return std::get_if<ComputeStageInfo>(&m_shaderStageInfo);
     }
-    const std::vector<Descriptor>& ShaderStageReflection::GetDescriptors() const
+    const std::vector<DescriptorReflection>& ShaderStageReflection::GetDescriptorReflections() const
     {
-        return m_descriptors;
+        return m_descriptorReflections;
     }
 
 
@@ -114,12 +114,12 @@ namespace emberSpirvReflect
         if (const ComputeStageInfo* computeStageInfo = GetComputeInfo())
             ss << indentStr << "blockSize: " << computeStageInfo->blockSize.ToString() << "\n";
 
-        // Descriptor sets:
-        if (m_descriptors.size() > 0)
+        // Descriptor set reflections:
+        if (m_descriptorReflections.size() > 0)
         {
             ss << indentStr << "descriptors:\n";
-            for (int i = 0; i < m_descriptors.size(); i++)
-                ss << m_descriptors[i].ToString(indent + 2) << "\n";
+            for (int i = 0; i < m_descriptorReflections.size(); i++)
+                ss << m_descriptorReflections[i].ToString(indent + 2) << "\n";
         }
         return ss.str();
     }
@@ -182,31 +182,31 @@ namespace emberSpirvReflect
         vertexStageInfos.shrink_to_fit();
         return vertexStageInfos;
     }
-    std::vector<Descriptor> ShaderStageReflection::ExtractDescriptors() const
+    std::vector<DescriptorReflection> ShaderStageReflection::ExtractDescriptorReflections() const
     {
         // Get descriptor set reflection:
         uint32_t setCount = 0;
         SPVA(spvReflectEnumerateDescriptorSets(m_pModule.get(), &setCount, nullptr));
-        std::vector<SpvReflectDescriptorSet*> descriptorSets(setCount);
-        SPVA(spvReflectEnumerateDescriptorSets(m_pModule.get(), &setCount, descriptorSets.data()));
+        std::vector<SpvReflectDescriptorSet*> spvDescriptorSets(setCount);
+        SPVA(spvReflectEnumerateDescriptorSets(m_pModule.get(), &setCount, spvDescriptorSets.data()));
 
-        std::vector<Descriptor> descriptors;
+        std::vector<DescriptorReflection> descriptorReflections;
         // Loop over sets/spaces:
-        for (uint32_t i = 0; i < descriptorSets.size(); i++)
+        for (uint32_t i = 0; i < spvDescriptorSets.size(); i++)
         {
-            SpvReflectDescriptorSet* pDescriptorSet = descriptorSets[i];
+            SpvReflectDescriptorSet* pSpvDescriptorSet = spvDescriptorSets[i];
             //LOG_INFO("Descriptor Set [{}]:", i);
-            //LOG_TRACE(emberSpirvReflect::ToString(pDescriptorSet));
+            //LOG_TRACE(emberSpirvReflect::ToString(pSpvDescriptorSet));
 
             // Loop over all bindings:
-            for (uint32_t bindingIndex = 0; bindingIndex < pDescriptorSet->binding_count; bindingIndex++)
+            for (uint32_t bindingIndex = 0; bindingIndex < pSpvDescriptorSet->binding_count; bindingIndex++)
             {
-                SpvReflectDescriptorBinding* pBinding = pDescriptorSet->bindings[bindingIndex];
-                descriptors.emplace_back(pBinding, m_shaderStage);
+                SpvReflectDescriptorBinding* pBinding = pSpvDescriptorSet->bindings[bindingIndex];
+                descriptorReflections.emplace_back(pBinding, m_shaderStage);
                 //LOG_INFO(descriptors[descriptors.size() - 1].ToString());
             }
         }
 
-        return descriptors;
+        return descriptorReflections;
     }
 }
