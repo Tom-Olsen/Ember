@@ -63,6 +63,10 @@ namespace emberBufferLayout
 
 
 	// Setters:
+	void BufferMember::SetSize(uint32_t size)
+	{
+		m_size = size;
+	}
 	void BufferMember::AddSubMember(const BufferMember& subMember)
 	{
 		if (m_indexMap.contains(subMember.GetName()))

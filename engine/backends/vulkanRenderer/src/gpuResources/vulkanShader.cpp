@@ -1,8 +1,11 @@
 #include "vulkanShader.h"
 #include "logger.h"
 #include "vulkanDescriptorSetBinding.h"
+#include "vulkanFrameDescriptorSetLayout.h"
+#include "vulkanGlobalDescriptorSetLayout.h"
 #include "vulkanMacros.h"
 #include "vulkanPipeline.h"
+#include "vulkanSceneDescriptorSetLayout.h"
 #include <fstream>
 #include <vulkan/vulkan.h>
 
@@ -66,12 +69,12 @@ namespace vulkanRendererBackend
 		m_vkDescriptorSetLayouts.resize(DESCRIPTOR_SET_COUNT);
 
 		// Sets GLOBAL_SET(0), SCENE_SET(1), and FRAME_SET(2) represent constant data and get bound to every shader:
-		//m_vkDescriptorSetLayouts[0] = GlobalSetLayout();
-		//m_vkDescriptorSetLayouts[1] = SceneSetLayout();
-		//m_vkDescriptorSetLayouts[2] = FrameSetLayout();
+		m_vkDescriptorSetLayouts[0] = GlobalDescriptorSetLayout::GetVkDescriptorSetLayout();
+		m_vkDescriptorSetLayouts[1] = SceneDescriptorSetLayout::GetVkDescriptorSetLayout();
+		m_vkDescriptorSetLayouts[2] = FrameDescriptorSetLayout::GetVkDescriptorSetLayout();
 
 		// Only SHADER_SET(3) and DRAW_SET(4) are retrieved via reflection:
-		for (size_t i = 3; i < SET_COUNT; i++)
+		for (size_t i = 3; i < SET_COUNT; i++) // Ember::ToDo: i think this here needs updating.
 		{
 			const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings = descriptorSetReflections[i].GetVkDescriptorSetLayoutBindings();
 			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };

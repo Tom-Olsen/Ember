@@ -12,12 +12,10 @@ namespace emberBufferLayout
 	// Represents a member of a bufferLayout.
 	struct BufferMember
 	{
-	public: // Members:
+	private: // Members:
 		std::string m_name;
 		uint32_t m_offset;	// in bytes.
 		uint32_t m_size;	// in bytes.
-
-	private: // Members:
 		std::vector<BufferMember> m_subMembers;
 		std::unordered_map<std::string, uint32_t> m_indexMap;
 
@@ -42,6 +40,7 @@ namespace emberBufferLayout
 		[[nodiscard]] bool IsLayoutCompatible(const BufferMember& other) const;
 
 		// Setters:
+		void SetSize(uint32_t size);
 		void AddSubMember(const BufferMember& subMember);
 
 		// Debugging:

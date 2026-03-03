@@ -1,4 +1,5 @@
 #pragma once
+#include "bufferLayout.h"
 #include "emberMath.h"
 #include "vulkanBuffer.h"
 #include <string>
@@ -8,15 +9,8 @@
 
 namespace vulkanRendererBackend
 {
-	// Forward declarations:
-	namespace emberSpirvReflect
-	{
-		struct UniformBufferBlock;
-	}
-
-
-
 	/// <summary>
+	/// Manages cpu data and a gpu ring buffer that can fit framesInFlight many copies of the cpu data. <para/>
 	/// Buffer specialization: <para/>
 	/// -VkBufferUsageFlags			= uniform <para/>
 	/// -VmaMemoryUsage				= prefer host <para/>
@@ -27,13 +21,14 @@ namespace vulkanRendererBackend
 	friend class ShaderProperties;	// shaderProperties needs access to templated SetValue(...) methods.
 
 	private: // Members:
-		void* m_pDeviceData;
+		uint8_t* m_pDeviceData;
 		std::vector<char> m_hostData;
-		emberSpirvReflect::UniformBufferBlock* m_pUniformBufferBlock; // must be replaced with a vulkanBackend defined layout struct and better to store by value.
+		uint32_t m_alignedSize;
+		emberBufferLayout::BufferLayout m_bufferLayout;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		UniformBuffer(emberSpirvReflect::UniformBufferBlock* pUniformBufferBlock);
+		UniformBuffer(emberBufferLayout::BufferLayout bufferLayout);
 		~UniformBuffer();
 
 		// Non-copyable:
@@ -41,12 +36,15 @@ namespace vulkanRendererBackend
 		UniformBuffer& operator=(const UniformBuffer&) = delete;
 
 		// Movable:
-		UniformBuffer(UniformBuffer&&) noexcept;
-		UniformBuffer& operator=(UniformBuffer&&) noexcept;
+		UniformBuffer(UniformBuffer&&) noexcept = default;
+		UniformBuffer& operator=(UniformBuffer&&) noexcept = default;
 
-		void UpdateBuffer();
+		// Update buffer:
+		void UpdateBuffer(uint32_t frameIndex);
 
 		// Getters:
+		uint32_t GetAlignedSubBufferSize();
+		uint32_t GetBufferOffset(uint32_t frameIndex);
 		// Simple members:
 		int GetInt(const std::string& memberName) const;
 		bool GetBool(const std::string& memberName) const;

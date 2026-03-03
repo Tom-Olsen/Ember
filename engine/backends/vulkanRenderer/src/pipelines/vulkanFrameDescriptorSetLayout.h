@@ -14,22 +14,19 @@ namespace vulkanRendererBackend
 
     class FrameDescriptorSetLayout
     {
-    private:
-        static std::vector<UniformBuffer*> s_uniformBuffers;
+    private: // Members:
+        static UniformBuffer s_uniformCameraBuffer;
         static VkDescriptorSetLayout s_descriptorSetLayout;
         static std::vector<VkDescriptorSet> s_descriptorSets;
 
-    public:
+    public: // Methods:
         // Init/Clear:
         static void Init();
         static void Clear();
 
         // Setters:
-        static void SetCameraPosition(const Float4& position, uint32_t frameIndex);
-        static void SetViewMatrix(const Float4x4& view, uint32_t frameIndex);
-        static void SetProjMatrix(const Float4x4& proj, uint32_t frameIndex);
-        static void SetWorldToClipMatrix(const Float4x4& w2c, uint32_t frameIndex);
-
+        static void SetCameraData(const Float4& cameraPosition, const Float4x4& viewMatrix, const Float4x4& projMatrix);
+        
         // Getters:
         static VkDescriptorSetLayout GetVkDescriptorSetLayout();
         static VkDescriptorSet GetVkDescriptorSet(uint32_t frameIndex);

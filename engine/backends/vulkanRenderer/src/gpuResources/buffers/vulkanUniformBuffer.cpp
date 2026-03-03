@@ -1,8 +1,9 @@
 #include "vulkanUniformBuffer.h"
-#include "uniformBufferBlock.h"
 #include "vk_mem_alloc.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
+#include "vulkanPhysicalDevice.h"
+#include <cassert>
 
 
 
@@ -10,14 +11,20 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	UniformBuffer::UniformBuffer(emberSpirvReflect::UniformBufferBlock* pUniformBufferBlock)
+	UniformBuffer::UniformBuffer(emberBufferLayout::BufferLayout bufferLayout)
+		: m_bufferLayout(bufferLayout)
 	{
-		m_pUniformBufferBlock = pUniformBufferBlock;
-		m_size = m_pUniformBufferBlock->size;
-
+		// Compute buffer size:
+		VkPhysicalDeviceProperties deviceProperties;
+		vkGetPhysicalDeviceProperties(Context::GetPhysicalDevice()->GetVkPhysicalDevice(), &deviceProperties);
+		uint32_t alignment = deviceProperties.limits.minUniformBufferOffsetAlignment;
+		uint32_t structSize = bufferLayout.GetSize();
+		m_alignedSize = ((structSize + alignment - 1) / alignment) * alignment;
+		uint32_t bufferSize = Context::GetFramesInFlight() * m_alignedSize;
+		
 		// Create buffer:
 		BufferCreateInfo bufferInfo = {};
-		bufferInfo.size = m_size;
+		bufferInfo.size = bufferSize;
 		bufferInfo.usages = BufferUsageFlags::uniform_buffer_bit;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -32,10 +39,10 @@ namespace vulkanRendererBackend
 		// Get mapped deviceData pointer:
 		VmaAllocationInfo info;
 		vmaGetAllocationInfo(Context::GetVmaAllocator(), m_pBuffer->GetVmaAllocation(), &info);
-		m_pDeviceData = info.pMappedData;
+		m_pDeviceData = static_cast<uint8_t*>(info.pMappedData);
 
 		// Allocate host data:
-		m_hostData.resize(m_size);
+		m_hostData.resize(m_bufferLayout.GetSize());
 	}
 	UniformBuffer::~UniformBuffer()
 	{
@@ -44,20 +51,26 @@ namespace vulkanRendererBackend
 
 
 
-	// Movable:
-	UniformBuffer::UniformBuffer(UniformBuffer&&) noexcept = default;
-	UniformBuffer& UniformBuffer::operator=(UniformBuffer&&) noexcept = default;
-
-
-
-	void UniformBuffer::UpdateBuffer()
+	// Update buffer:
+	void UniformBuffer::UpdateBuffer(uint32_t frameIndex)
 	{
-		memcpy(m_pDeviceData, m_hostData.data(), m_hostData.size());
+		assert(frameIndex < Context::GetFramesInFlight());
+		uint32_t offset = frameIndex * m_alignedSize;
+		memcpy(m_pDeviceData + offset, m_hostData.data(), m_hostData.size());
 	}
 
 
 
 	// Getters:
+	uint32_t GetAlignedSubBufferSize()
+	{
+		return m_alignedSize;
+	}
+	uint32_t UniformBuffer::GetBufferOffset(uint32_t frameIndex)
+	{
+		assert(frameIndex < Context::GetFramesInFlight());
+		return frameIndex * m_alignedSize;
+	}
 	// Simple members:
 	int UniformBuffer::GetInt(const std::string& memberName) const
 	{
@@ -302,7 +315,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& memberName) const
 	{
-		UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(memberName);
+		UniformBufferMember* pMember = m_bufferLayout.GetMember(memberName);
 		if (pMember != nullptr)
 			return GetData<T>(pMember->offset, pMember->size);
 
@@ -312,7 +325,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& arrayName, uint32_t arrayIndex) const
 	{
-		UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
 			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
@@ -326,7 +339,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
-		UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
 			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
@@ -344,7 +357,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
-		UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
 			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
@@ -370,7 +383,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	bool UniformBuffer::SetValue(const std::string& memberName, const T& value)
 	{
-		UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(memberName);
+		UniformBufferMember* pMember = m_bufferLayout.GetMember(memberName);
 		if (pMember != nullptr)
 			return CheckAndUpdateData(value, pMember->offset, pMember->size);
 
@@ -380,7 +393,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const T& value)
 	{
-		UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
 			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
@@ -394,7 +407,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value)
 	{
-		UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
 			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
@@ -412,7 +425,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
 	{
-		UniformBufferMember* pMember = m_pUniformBufferBlock->GetMember(arrayName);
+		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
 			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");

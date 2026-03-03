@@ -70,13 +70,13 @@ namespace vulkanRendererBackend
 		// Ember::ToDo: resolve string to binding index once and use binding index as key for unordered maps!
 		// All these vectors contain one item for each frame in flight:
 		std::vector<VkDescriptorSet> m_descriptorSets;
-		std::vector<std::unordered_map<std::string, UniformBufferBinding>> m_uniformBufferMaps;
+		std::vector<std::unordered_map<std::string, UniformBufferBinding>> m_uniformBufferMaps; // Ember::ToDo: update for new UniformBuffer class.
 		std::vector<std::unordered_map<std::string, SamplerBinding>> m_samplerMaps;
 		std::vector<std::unordered_map<std::string, TextureBinding>> m_textureMaps;
 		std::vector<std::unordered_map<std::string, BufferBinding>> m_bufferMaps;
 
 		// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer acts as a staging buffer:
-		std::unordered_map<std::string, Sampler*> m_samplerStagingMap;
+		std::unordered_map<std::string, Sampler*> m_samplerStagingMap; // Ember::ToDo: delete all sampler stuff in here.
 		std::unordered_map<std::string, Texture*> m_textureStagingMap;
 		std::unordered_map<std::string, Buffer*> m_bufferStagingMap;
 

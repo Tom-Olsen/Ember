@@ -30,7 +30,7 @@ namespace vulkanRendererBackend
 		emberSpirvReflect::ShaderReflection m_shaderReflection;
 		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 	
-	protected:  // Methods:
+	protected: // Methods:
 		// Constructor:
 		Shader();
 

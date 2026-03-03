@@ -4,7 +4,9 @@
 #include "vulkanAllocationTracker.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDescriptorPool.h"
+#include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanGarbageCollector.h"
+#include "vulkanGlobalDescriptorSetLayout.h"
 #include "vulkanImageUsageFlag.h"
 #include "vulkanInstance.h"
 #include "vulkanLogicalDevice.h"
@@ -13,11 +15,11 @@
 #include "vulkanPhysicalDevice.h"
 #include "vulkanPoolManager.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanSceneDescriptorSetLayout.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanSurface.h"
 #include "vulkanSwapchain.h"
 #include <vulkan/vulkan.h>
-
 
 
 namespace vulkanRendererBackend
@@ -125,6 +127,9 @@ namespace vulkanRendererBackend
 		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
 		DefaultGpuResources::Init();
 		PoolManager::Init();
+		GlobalDescriptorSetLayout::Init();
+		SceneDescriptorSetLayout::Init();
+		FrameDescriptorSetLayout::Init();
 
 		// Debug naming:
 		if (m_pLogicalDevice->GetGraphicsQueue().queue == m_pLogicalDevice->GetPresentQueue().queue)
@@ -139,6 +144,10 @@ namespace vulkanRendererBackend
 	}
 	void Context::Clear()
 	{
+		WaitDeviceIdle();
+		FrameDescriptorSetLayout::Clear();
+		SceneDescriptorSetLayout::Clear();
+		GlobalDescriptorSetLayout::Clear();
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		RenderPassManager::Clear();

@@ -22,7 +22,7 @@ namespace vulkanRendererBackend
 
     // Public Methods:
     // Init/Clear:
-    void GlobalDescriptorSetLayout::Init() // Ember::ToDo: call Init() and Clear() at appropriate locations in Context constructor/destructor.
+    void GlobalDescriptorSetLayout::Init()
     {
         // Create descriptor set layout:
         {
@@ -98,7 +98,7 @@ namespace vulkanRendererBackend
         // Queue the destruction of each descriptor set for later collection:
         for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
         {
-            VkDescriptorSet descriptorSet = m_descriptorSets[i];
+            VkDescriptorSet descriptorSet = s_descriptorSets[i];
             GarbageCollector::RecordGarbage([descriptorSet]()
             {
                 vkFreeDescriptorSets(Context::GetVkDevice(), Context::GetVkDescriptorPool(), 1, &descriptorSet);

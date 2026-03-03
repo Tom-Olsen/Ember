@@ -16,8 +16,6 @@ namespace emberBufferLayout
 	private: // Members:
 		std::string m_name;
 		uint32_t m_size;	// in bytes, derived from added members.
-
-	private: // Members:
 		std::vector<BufferMember> m_members;
 		std::unordered_map<std::string, uint32_t> m_indexMap;
 

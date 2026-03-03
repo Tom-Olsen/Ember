@@ -1,4 +1,5 @@
 #include "vulkanFrameDescriptorSetLayout.h"
+#include "vmaBuffer.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
 #include "vulkanUniformBuffer.h"
@@ -9,9 +10,9 @@
 namespace vulkanRendererBackend
 {
     // Static members:
+    UniformBuffer FrameDescriptorSetLayout::s_uniformCameraBuffer;
     VkDescriptorSetLayout FrameDescriptorSetLayout::s_descriptorSetLayout = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> FrameDescriptorSetLayout::s_descriptorSets;
-    std::vector<UniformBuffer*> FrameDescriptorSetLayout::s_uniformBuffers;
 
 
 
@@ -48,67 +49,70 @@ namespace vulkanRendererBackend
             VKA(vkAllocateDescriptorSets(Context::GetVkDevice(), &allocInfo, s_descriptorSets.data()));
         }
 
-        // Create uniform buffers:
-        s_uniformBuffers.resize(Context::GetFramesInFlight());
-        for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
+        // Create uniform camera buffer:
         {
-            UniformBufferBlock uniformBufferBlock();
-            uniformBufferBlock.n
-            s_uniformBuffers.emplace_back()
+            uint32_t offset = 0;
+            emberBufferLayout::BufferMember cameraPosition("camera_Position", offset, sizeof(Float4));
+            offset += sizeof(Float4);
+            emberBufferLayout::BufferMember cameraViewMatrix("camera_viewMatrix", offset, sizeof(Float4x4));
+            offset += sizeof(Float4x4);
+            emberBufferLayout::BufferMember cameraProjMatrix("camera_projMatrix", offset, sizeof(Float4x4));
+            offset += sizeof(Float4x4);
+            emberBufferLayout::BufferMember cameraWorldToClipMatrix("camera_worldToClipMatrix", offset, sizeof(Float4x4));
+
+            emberBufferLayout::BufferLayout bufferLayout("Camera");
+            bufferLayout.AddMember(cameraPosition);
+            bufferLayout.AddMember(cameraViewMatrix);
+            bufferLayout.AddMember(cameraProjMatrix);
+            bufferLayout.AddMember(cameraWorldToClipMatrix);
+
+            s_uniformCameraBuffer = UniformBuffer(bufferLayout);
         }
 
-        // --- Create per-frame uniform buffers ---
-        s_cpuData.resize(Context::GetFramesInFlight());
-        s_dirty.resize(Context::GetFramesInFlight(), true);
-
+        // Bind uniform light properties buffer to descriptor sets:
         for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
         {
-            s_uniformBuffers[i] = new UniformBuffer(sizeof(CameraData));
+            VkDescriptorBufferInfo bufferInfo;
+            bufferInfo.buffer = s_uniformCameraBuffer.GetVmaBuffer()->GetVkBuffer();
+            bufferInfo.offset = i * s_uniformCameraBuffer.GetAlignedSubBufferSize();
+            bufferInfo.range = s_uniformCameraBuffer.GetSize();
 
-            VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = s_uniformBuffers[i]->GetVkBuffer();
-            bufferInfo.offset = 0;
-            bufferInfo.range = sizeof(CameraData);
+            VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+            descriptorWrite.dstSet = s_descriptorSets[i];
+            descriptorWrite.dstBinding = 1300;
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pBufferInfo = &bufferInfo;
+            descriptorWrite.pImageInfo = nullptr;
+            descriptorWrite.pTexelBufferView = nullptr;
 
-            VkWriteDescriptorSet write{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-            write.dstSet = s_descriptorSets[i];
-            write.dstBinding = 1300;
-            write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            write.descriptorCount = 1;
-            write.pBufferInfo = &bufferInfo;
-
-            vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &write, 0, nullptr);
+            vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
         }
     }
     void FrameDescriptorSetLayout::Clear()
     {
-        for (UniformBuffer* ub : s_uniformBuffers)
-            delete ub;
-
         vkDestroyDescriptorSetLayout(Context::GetVkDevice(), s_descriptorSetLayout, nullptr);
+
+        // Queue the destruction of each descriptor set for later collection:
+        for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
+        {
+            VkDescriptorSet descriptorSet = s_descriptorSets[i];
+            GarbageCollector::RecordGarbage([descriptorSet]()
+            {
+                vkFreeDescriptorSets(Context::GetVkDevice(), Context::GetVkDescriptorPool(), 1, &descriptorSet);
+            });
+        }
     }
 
 
     // Setters:
-    void FrameDescriptorSetLayout::SetCameraPosition(const Float4& position, uint32_t frameIndex)
+    void FrameDescriptorSetLayout::SetCameraData(const Float4& cameraPosition, const Float4x4& viewMatrix, const Float4x4& projMatrix)
     {
-        s_cpuData[frameIndex].camera_Position = position;
-        s_dirty[frameIndex] = true;
-    }
-    void FrameDescriptorSetLayout::SetViewMatrix(const Float4x4& view, uint32_t frameIndex)
-    {
-        s_cpuData[frameIndex].camera_viewMatrix = view;
-        s_dirty[frameIndex] = true;
-    }
-    void FrameDescriptorSetLayout::SetProjMatrix(const Float4x4& proj, uint32_t frameIndex)
-    {
-        s_cpuData[frameIndex].camera_projMatrix = proj;
-        s_dirty[frameIndex] = true;
-    }
-    void FrameDescriptorSetLayout::SetWorldToClipMatrix(const Float4x4& w2c, uint32_t frameIndex)
-    {
-        s_cpuData[frameIndex].camera_worldToClipMatrix = w2c;
-        s_dirty[frameIndex] = true;
+        Float4x4 worldToClipMatrix = projMatrix * viewMatrix;
+        s_uniformCameraBuffer.SetFloat4("camera_Position", cameraPosition);
+        s_uniformCameraBuffer.SetFloat4x4("camera_viewMatrix", viewMatrix);
+        s_uniformCameraBuffer.SetFloat4x4("camera_projMatrix", projMatrix);
+        s_uniformCameraBuffer.SetFloat4x4("camera_worldToClipMatrix", worldToClipMatrix);
     }
 
 
@@ -126,12 +130,8 @@ namespace vulkanRendererBackend
 
 
     // Update data:
-    void FrameDescriptorSetLayout::Update(uint32_t frameIndex)
+    void FrameDescriptorSetLayout::UpdateShaderData(uint32_t frameIndex)
     {
-        if (!s_dirty[frameIndex])
-            return;
-
-        s_uniformBuffers[frameIndex]->UploadData(&s_cpuData[frameIndex], sizeof(CameraData));
-        s_dirty[frameIndex] = false;
+        s_uniformCameraBuffer.UpdateBuffer(frameIndex);
     }
 }
