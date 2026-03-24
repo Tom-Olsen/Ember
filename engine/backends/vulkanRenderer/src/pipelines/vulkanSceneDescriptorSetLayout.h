@@ -16,7 +16,7 @@ namespace vulkanRendererBackend
     class SceneDescriptorSetLayout
     {
     private: // Members:
-        static UniformBuffer s_uniformLightPropertiesBuffer;
+        static std::unique_ptr<UniformBuffer> s_pUniformLightPropertiesBuffer;
         static VkDescriptorSetLayout s_descriptorSetLayout;
         static std::vector<VkDescriptorSet> s_descriptorSets;
 

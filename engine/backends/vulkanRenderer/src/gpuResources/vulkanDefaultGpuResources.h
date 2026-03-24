@@ -6,6 +6,7 @@
 namespace vulkanRendererBackend
 {
     // Forward declerations:
+    class ComputeShader;
     class DepthTexture2dArray;
     class Material;
     class Mesh;
@@ -26,11 +27,10 @@ namespace vulkanRendererBackend
         static std::unique_ptr<Sampler> s_pColorSampler;
         static std::unique_ptr<Sampler> s_pShadowSampler;
         // Materials:
-        static std::unique_ptr<Material> s_pDefaultMaterial;
         static std::unique_ptr<Material> s_pDefaultPresentMaterial;
-        // DescriptorSetBindings:
-        static std::unique_ptr<DescriptorSetBinding> s_pGlobalDescriptorSetBinding;
-        static std::unique_ptr<DescriptorSetBinding> s_pFrameDescriptorSetBinding;
+        static std::unique_ptr<Material> s_pDefaultShadowMaterial;
+        // Compute shaders:
+        static std::unique_ptr<ComputeShader> s_pGammaCorrectionComputeShader;
         // Meshes:
         static std::unique_ptr<Mesh> s_pDefaultRenderQuad;
         // Buffers:
@@ -43,18 +43,17 @@ namespace vulkanRendererBackend
         static std::unique_ptr<StorageTexture2d> s_pDefaultStorageTexture2d;
 
     public: // Methods:
-        static void Init();
+        static void Init(uint32_t shadowMapResolution);
         static void Clear();
 
         // Samplers:
         static Sampler* GetColorSampler();
         static Sampler* GetShadowSampler();
         // Materials:
-        static Material* GetDefaultMaterial();
         static Material* GetDefaultPresentMaterial();
-        // DescriptorSetBindings:
-        static DescriptorSetBinding* GetGlobalDescriptorSetBinding();
-        static DescriptorSetBinding* GetFrameDescriptorSetBinding();
+        static Material* GetDefaultShadowMaterial();
+        // Compute shaders:
+        static ComputeShader* GetGammaCorrectionComputeShader();
         // Meshes:
         static Mesh* GetDefaultRenderQuad();
         // Buffers:
@@ -66,7 +65,7 @@ namespace vulkanRendererBackend
         static StorageTexture2d* GetDefaultStorageTexture2d();
 
     private: // Methods
-        void CreateDefaultRenderQuad();
+        static Mesh CreateDefaultRenderQuad();
         // Delete all constructors:
         DefaultGpuResources() = delete;
         DefaultGpuResources(const DefaultGpuResources&) = delete;

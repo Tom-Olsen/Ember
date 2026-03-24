@@ -8,6 +8,12 @@
 namespace vulkanRendererBackend
 {
 	// Virtual Destructor:
+	Pipeline::Pipeline()
+	{
+		m_name = "";
+		m_pipeline = VK_NULL_HANDLE;
+		m_descriptorSetLayouts.fill(VK_NULL_HANDLE);
+	}
 	Pipeline::~Pipeline()
 	{
 		Cleanup();
@@ -67,10 +73,12 @@ namespace vulkanRendererBackend
 	}
 	void Pipeline::MoveFrom(Pipeline& other) noexcept
 	{
-		m_descriptorSetLayouts = other.m_descriptorSetLayouts;
+		m_name = other.m_name;
 		m_pipeline = other.m_pipeline;
+		m_descriptorSetLayouts = other.m_descriptorSetLayouts;
 
-		other.m_descriptorSetLayouts.clear();
+		other.m_name = "";
 		other.m_pipeline = VK_NULL_HANDLE;
+		other.m_descriptorSetLayouts.fill(VK_NULL_HANDLE);
 	}
 }

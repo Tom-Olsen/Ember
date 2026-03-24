@@ -3,6 +3,7 @@
 #include <fstream>
 #include <filesystem>
 #include <gtest/gtest.h>
+#include <vulkan/vulkan.h>
 
 
 
@@ -76,7 +77,6 @@ TEST(ShaderReflection, VertexAndFragmentShaderReflection)
 		shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
 		shaderReflection.CreateDescriptorSetReflections();
 		LOG_TRACE(shaderReflection.ToString());
-		shaderReflection.PrintDescriptorSetLayoutBindings();
 
 		EXPECT_TRUE(true);
 	}

@@ -44,7 +44,7 @@ namespace vulkanRendererBackend
 		// Ember::ToDo: This feels kinda like a hack, maybe due to bad code architecture. I will try to make this better some time.
 		m_pImage->SetLayout(ImageLayouts::shader_read_only_optimal);
 
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), "DepthTexture2dArray " + m_name);
+		NAME_VK_OBJECT(m_pImage->GetVkImage(), "DepthTexture2dArray " + m_name);
 	}
 	DepthTexture2dArray::~DepthTexture2dArray()
 	{

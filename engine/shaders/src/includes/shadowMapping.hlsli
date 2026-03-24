@@ -1,10 +1,8 @@
 #ifndef __INCLUDE_GUARD_shadowMapping_hlsli__
 #define __INCLUDE_GUARD_shadowMapping_hlsli__
-#include "descriptorSetMacros.h"
-#include "math.hlsli"
+#include "fragmentShaderCommon.hlsli"
 #include "shadowConstants.h"
 #include "lightData.hlsli"
-#include "fragmentShaderCommon.hlsli"
 
 
 
@@ -154,7 +152,7 @@ float3 PhysicalDirectionalLights(float3 worldPos, float3 normal, float3 color, f
             // Light:
             float3 lightIntensity = light_directionData[i].colorIntensity.xyz * light_directionData[i].colorIntensity.w;
             float3 lightDir = normalize(-light_directionData[i].direction);
-            float3 viewDir = normalize(camera_Position - worldPos);
+            float3 viewDir = normalize(float3(camera_position.xyz) - worldPos);
             float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
             
             totalLight += shadow * light;
@@ -195,7 +193,7 @@ float3 PhysicalPositionalLights(float3 worldPos, float3 normal, float3 color, fl
             float distSq = dot(light_positionData[i].position - worldPos, light_positionData[i].position - worldPos);
             float3 lightIntensity = light_positionData[i].colorIntensity.xyz * light_positionData[i].colorIntensity.w / distSq;
             float3 lightDir = normalize(light_positionData[i].position - worldPos);
-            float3 viewDir = normalize(camera_Position - worldPos);
+            float3 viewDir = normalize(float3(camera_position.xyz) - worldPos);
             float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
             
             totalLight += shadow * light;

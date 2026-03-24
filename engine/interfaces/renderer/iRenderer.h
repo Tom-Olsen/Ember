@@ -18,7 +18,7 @@ namespace emberBackendInterface
     class IGui;
     class IMaterial;
     class IMesh;
-    class IShaderProperties;
+    class IDescriptorSetBinding;
     class ITexture;
 
 
@@ -37,12 +37,12 @@ namespace emberBackendInterface
         virtual void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) = 0;
 
         // Draw mesh:
-        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
-        virtual IShaderProperties* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
+        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
+        virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
 
         // Draw instanced:
-        virtual void DrawInstanced(uint32_t instanceCount, IBuffer* pInstanceBuffer, IMesh* pMesh, IMaterial* pMaterial, IShaderProperties* pShaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
-        virtual IShaderProperties* DrawInstanced(uint32_t instanceCount, IBuffer* pInstanceBuffer, IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
+        virtual void DrawInstanced(uint32_t instanceCount, IBuffer* pInstanceBuffer, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
+        virtual IDescriptorSetBinding* DrawInstanced(uint32_t instanceCount, IBuffer* pInstanceBuffer, IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
 
         // Getters:
         virtual uint32_t GetShadowMapResolution() = 0;
@@ -73,8 +73,8 @@ namespace emberBackendInterface
         virtual IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) = 0;
         virtual IMaterial* CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
         virtual IMesh* CreateMesh(const std::string& name) = 0;
-        virtual IShaderProperties* CreateShaderProperties(IComputeShader* pIComputeShader) = 0;
-        virtual IShaderProperties* CreateShaderProperties(IMaterial* pIMaterial) = 0;
+        virtual IDescriptorSetBinding* CreateDescriptorSetBinding(IComputeShader* pIComputeShader) = 0;
+        virtual IDescriptorSetBinding* CreateDescriptorSetBinding(IMaterial* pIMaterial) = 0;
 
         // Vulkan handle passthrough for API coupling:
         virtual void* GetVkInstance() = 0;

@@ -2,6 +2,7 @@
 #include "vmaImage.h"
 #include "vulkanContext.h"
 #include "vulkanDefaultGpuResources.h"
+#include "vulkanDepthTexture2dArray.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -28,21 +29,21 @@ namespace vulkanRendererBackend
         {
             std::array<VkDescriptorSetLayoutBinding, 3> bindings{};
 
-            // SamplerState colorSampler : register(s3000)
+            // SamplerState colorSampler : register(s3000, GLOBAL_SET):
             bindings[0].binding = 3000;
             bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
             bindings[0].descriptorCount = 1;
             bindings[0].stageFlags = VK_SHADER_STAGE_ALL; // or restrict if desired
             bindings[0].pImmutableSamplers = &DefaultGpuResources::GetColorSampler()->GetVkSampler();
 
-            // SamplerComparisonState shadowSampler : register(s3001)
+            // SamplerComparisonState shadowSampler : register(s3001, GLOBAL_SET):
             bindings[1].binding = 3001;
             bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
             bindings[1].descriptorCount = 1;
             bindings[1].stageFlags = VK_SHADER_STAGE_ALL;
             bindings[1].pImmutableSamplers = &DefaultGpuResources::GetShadowSampler()->GetVkSampler();
 
-            // Texture2DArray<float> shadowMaps : register(t3100)
+            // Texture2DArray<float> shadowMaps : register(t3100, GLOBAL_SET):
             bindings[2].binding = 3100;
             bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             bindings[2].descriptorCount = 1;

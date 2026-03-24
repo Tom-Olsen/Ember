@@ -10,51 +10,44 @@
 
 namespace vulkanRendererBackend
 {
+    // Public methods:
     // Constructor/Destructor:
-    template<typename vertexLayout>
-    PresentPipeline<vertexLayout>::PresentPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
+    PresentPipeline::PresentPipeline(
+        const std::string& name,
+        VkPipelineLayout vkPipelineLayout,
+        const std::vector<char>& vertexCode,
+        const std::vector<char>& fragmentCode,
+        const std::vector<VkVertexInputBindingDescription>& vertexBindings,
+        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
         m_name = name;
-
-        // Create pipeline Layout:
-        CreatePipelineLayout(vkDescriptorSetLayouts);
 
         // Create vertex and fragment shader modules from .spv files:
         VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
         VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
 
         // Create pipeline:
-        CreatePipeline(vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes);
+        CreatePipeline(vkPipelineLayout, vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes);
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
         vkDestroyShaderModule(Context::GetVkDevice(), fragmentShaderModule, nullptr);
         NAME_VK_OBJECT(m_pipeline, m_name + "presentPipeline");
     }
-    template<typename vertexLayout>
-    PresentPipeline<vertexLayout>::~PresentPipeline()
+    PresentPipeline::~PresentPipeline()
     {
 
     }
 
 
 
-    // Private:
-    template<typename vertexLayout>
-    void PresentPipeline<vertexLayout>::CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts)
-    {
-        // Pipeline layout:
-        VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
-        pipelineLayoutCreateInfo.pSetLayouts = vkDescriptorSetLayouts.data();
-        pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-        pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
-
-        VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout));
-        NAME_VK_OBJECT(m_pipelineLayout, m_name + "PresentPipelineLayout");
-    }
-    template<typename vertexLayout>
-    void PresentPipeline<vertexLayout>::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
+    // Private methods:
+    void PresentPipeline::CreatePipeline(
+        VkPipelineLayout vkPipelineLayout,
+        const VkShaderModule& vertexShaderModule,
+        const VkShaderModule& fragmentShaderModule,
+        const std::vector<VkVertexInputBindingDescription>& vertexBindings,
+        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -107,17 +100,6 @@ namespace vulkanRendererBackend
         multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional
         multisampleState.alphaToOneEnable = VK_FALSE;       // Optional
 
-        // Color blending:
-        VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
-        colorBlendAttachmentState.blendEnable = VK_FALSE;
-        colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
-        colorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        colorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
-
         // Color blending pseudo code:
         // if (blendEnable)
         // {
@@ -128,9 +110,20 @@ namespace vulkanRendererBackend
         //     finalColor = newColor;
         // finalColor = finalColor & colorWriteMask;
 
-        // Current settings give standard alpha blending:
+        // Standard alpha blending:
         // finalColor.rgb = (srcAlpha * newColor.rgb) + ((1 - srcAlpha) * oldColor.rgb);
         // finalColor.a = newAlpha.a;
+
+        // Color blending:
+        VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
+        colorBlendAttachmentState.blendEnable = VK_FALSE;
+        colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        colorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
 
         // Color blending settings:
         VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
@@ -159,7 +152,7 @@ namespace vulkanRendererBackend
         pipelineInfo.pMultisampleState = &multisampleState;     // Multisampling
         pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
         pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
-        pipelineInfo.layout = m_pipelineLayout;
+        pipelineInfo.layout = vkPipelineLayout;
         pipelineInfo.renderPass = RenderPassManager::GetPresentRenderPass()->GetVkRenderPass();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one

@@ -26,7 +26,7 @@ namespace vulkanRendererBackend
         // Create new staging buffer if pool is empty:
         if (m_pool.empty())
         {
-            StagingBuffer* pNewStagingBuffer = new StagingBuffer(size, "pool");
+            StagingBuffer* pNewStagingBuffer = new StagingBuffer(size);
             m_storage.push_back(pNewStagingBuffer);
             m_pool.push(pNewStagingBuffer);
         }

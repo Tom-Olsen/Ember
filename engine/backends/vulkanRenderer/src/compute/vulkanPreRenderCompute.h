@@ -12,7 +12,7 @@
 namespace emberBackendInterface
 {
 	class IComputeShader;
-	class IShaderProperties;
+	class IDescriptorSetBinding;
 }
 
 
@@ -47,8 +47,8 @@ namespace vulkanRendererBackend
 		PreRender& operator=(PreRender&& other) noexcept;
 
 		// Workload recording:
-		void RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IShaderProperties* pShaderProperties, Uint3 threadCount) override;
-		emberBackendInterface::IShaderProperties* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
+		void RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IDescriptorSetBinding* pDescriptorSetBinding, Uint3 threadCount) override;
+		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
 		void RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) override;
 
 		// Management:

@@ -1,6 +1,3 @@
-#include "descriptorSetMacros.h"
-#include "defaultPushConstant.hlsli"
-#include "math.hlsli"
 #include "vertexShaderCommon.hlsli"
 
 
@@ -33,10 +30,8 @@ VertexOutput main(VertexInput input)
     float4 pos = float4(input.position, 1.0f);
     float4 normal = float4(input.normal, 0.0f);
     float4 tangent = float4(input.tangent, 0.0f);
-    float4x4 localToWorldMatrix = model_localToWorldMatrix;
-    if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
-        localToWorldMatrix = mul(model_localToWorldMatrix, instanceBuffer[input.instanceID].localToWorldMatrix);
-    float4x4 localToClipMatrix = mul(camera_worldToClipMatrix, localToWorldMatrix);
+    float4x4 localToWorldMatrix = GetLocalToWorldMatrix(input.instanceID);
+    float4x4 localToClipMatrix = GetLocalToClipMatrix(input.instanceID, localToWorldMatrix);
     float4x4 normalMatrix = LinAlg_NormalMatrix(localToWorldMatrix);
     
     VertexOutput output;

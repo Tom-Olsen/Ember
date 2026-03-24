@@ -6,6 +6,7 @@
 #include "vulkanVertexInputRateToString.h"
 #include <spirv_reflect.h>
 #include <sstream>
+#include <vulkan/vulkan.h>
 
 
 
@@ -22,14 +23,14 @@ LOG_CRITICAL("File: {}, Line: {} SPIRV-Reflect error: {}", __FILE__, __LINE__, s
 namespace emberSpirvReflect
 {
     // VertexStageInfo struct:
-	std::string VertexStageInfo::ToString() const
+	std::string VertexAttributeInfo::ToString() const
 	{
     	std::ostringstream ss;
         ss << "semantic=" << semantic << ", ";
         ss << "location=" << location << ", ";
         ss << "typeSize=" << typeSize << ", ";
         ss << "vectorSize=" << vectorSize << ", ";
-        ss << "format=" << emberVulkanUtility::ToString(format);
+        ss << "format=" << emberVulkanUtility::ToString((VkFormat)format);
         return ss.str();
 	}
 
@@ -37,7 +38,7 @@ namespace emberSpirvReflect
 
     // Public methods:
     // Constructor/Destructor:
-    ShaderStageReflection::ShaderStageReflection(VkShaderStageFlagBits shaderStage, const std::vector<char>& code)
+    ShaderStageReflection::ShaderStageReflection(uint32_t shaderStage, const std::vector<char>& code)
     {
         m_shaderStage = shaderStage;
         m_pModule = std::make_unique<SpvReflectShaderModule>();
@@ -74,13 +75,13 @@ namespace emberSpirvReflect
 
 
     // Getters:
-    VkShaderStageFlagBits ShaderStageReflection::GetShaderStage() const
+    uint32_t ShaderStageReflection::GetShaderStage() const
     {
         return m_shaderStage;
     }
-    const std::vector<VertexStageInfo>* ShaderStageReflection::GetVertexInfos() const
+    const VertexStageInfo* ShaderStageReflection::GetVertexInfo() const
     {
-        return std::get_if<std::vector<VertexStageInfo>>(&m_shaderStageInfo);
+        return std::get_if<VertexStageInfo>(&m_shaderStageInfo);
     }
     const ComputeStageInfo* ShaderStageReflection::GetComputeInfo() const
     {
@@ -103,11 +104,11 @@ namespace emberSpirvReflect
         indentStr = std::string(indent, ' ');
 
         // Vertex inputs:
-        if (const std::vector<VertexStageInfo>* vertexStageInfos = GetVertexInfos())
+        if (const VertexStageInfo* vertexStageInfo = GetVertexInfo())
         {
             ss << indentStr << "vertexInput:\n";
-            for (const VertexStageInfo& vertexStageInfo : *vertexStageInfos)
-                ss << indentStr << "  " << vertexStageInfo.ToString() << "\n";
+            for (const VertexAttributeInfo& attribute : vertexStageInfo->vertexAttributes)
+                ss << indentStr << "  " << attribute.ToString() << "\n";
         }
 
         // Compute block size:
@@ -138,7 +139,7 @@ namespace emberSpirvReflect
             return ComputeStageInfo{ Uint3::zero };
         }
     }
-    std::vector<VertexStageInfo> ShaderStageReflection::ExtractVertexStageInfo() const
+    VertexStageInfo ShaderStageReflection::ExtractVertexStageInfo() const
     {
         // Get vertex input reflection:
         uint32_t inputCount = 0;
@@ -147,8 +148,8 @@ namespace emberSpirvReflect
         SPVA(spvReflectEnumerateInputVariables(m_pModule.get(), &inputCount, inputs.data()));
 
         // Extract vertex input description information:
-        std::vector<VertexStageInfo> vertexStageInfos;
-        vertexStageInfos.reserve(inputs.size());
+        std::vector<VertexAttributeInfo> vertexAttributes;
+        vertexAttributes.reserve(inputs.size());
         for (uint32_t i = 0; i < inputs.size(); i++)
         {
             SpvReflectInterfaceVariable* pInput = inputs[i];
@@ -160,27 +161,27 @@ namespace emberSpirvReflect
                 continue; // built in system values (e.g. SV_InstanceID) are handled automatically by vulkan.
             if (pInput->array.dims_count > 0)
                 continue; // array inputs not supported (yet).
-            VertexStageInfo vertexStageInfo;
+            VertexAttributeInfo vertexAttribute;
 
             // Semantic:
-            vertexStageInfo.semantic = (pInput->name) ? std::string(pInput->name) : "";
-            size_t pos = vertexStageInfo.semantic.rfind('.');
+            vertexAttribute.semantic = (pInput->name) ? std::string(pInput->name) : "";
+            size_t pos = vertexAttribute.semantic.rfind('.');
             if (pos != std::string::npos)
-                vertexStageInfo.semantic = vertexStageInfo.semantic.substr(pos + 1);
+                vertexAttribute.semantic = vertexAttribute.semantic.substr(pos + 1);
             else    // shader semantic somehow broken.
-                vertexStageInfo.semantic = "unknown";
+                vertexAttribute.semantic = "unknown";
 
             // Location, typeSize, vectorSize, format:
-            vertexStageInfo.location = pInput->location;
-            vertexStageInfo.typeSize = pInput->type_description->traits.numeric.scalar.width / 8;
-            vertexStageInfo.vectorSize = pInput->type_description->traits.numeric.vector.component_count;
-            vertexStageInfo.format = (VkFormat)pInput->format;
+            vertexAttribute.location = pInput->location;
+            vertexAttribute.typeSize = pInput->type_description->traits.numeric.scalar.width / 8;
+            vertexAttribute.vectorSize = pInput->type_description->traits.numeric.vector.component_count;
+            vertexAttribute.format = (uint32_t)pInput->format;
 
-            vertexStageInfos.push_back(vertexStageInfo);
+            vertexAttributes.push_back(vertexAttribute);
         }
+        vertexAttributes.shrink_to_fit();
 
-        vertexStageInfos.shrink_to_fit();
-        return vertexStageInfos;
+        return VertexStageInfo{ vertexAttributes };
     }
     std::vector<DescriptorReflection> ShaderStageReflection::ExtractDescriptorReflections() const
     {

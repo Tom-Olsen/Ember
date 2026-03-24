@@ -24,15 +24,15 @@ namespace vulkanRendererBackend
 	{
 	protected: // Members:
 		std::string m_name;
+		emberSpirvReflect::ShaderReflection m_shaderReflection;
 		std::vector<VkDescriptorSetLayout> m_vkDescriptorSetLayouts;
 		VkPipelineLayout m_vkPipelineLayout;
 		std::vector<std::unique_ptr<Pipeline>> m_pPipelines;
-		emberSpirvReflect::ShaderReflection m_shaderReflection;
 		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 	
 	protected: // Methods:
 		// Constructor:
-		Shader();
+		Shader(const std::string& name);
 
 	public: // Methods:
 		// Destructor:
@@ -54,6 +54,7 @@ namespace vulkanRendererBackend
 		const emberSpirvReflect::ShaderReflection& const GetShaderReflection() const;
 		const VkPipelineLayout& GetVkPipelineLayout() const;
 		const DescriptorSetBinding* GetDescriptorSetBinding() const;
+		const std::vector<VkDescriptorSetLayout>& GetVkDescriptorSetLayout() const;
 
 		// Debugging:
 		void PrintShaderInfo() const;

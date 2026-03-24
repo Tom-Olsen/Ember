@@ -7,18 +7,14 @@ namespace emberCommon
 {
 	enum class MaterialType : uint32_t
 	{
-		forwardOpaque,
-		forwardTransparent,
+		forward,
 		shadow,
-		skybox,
 		present
 	};
 	inline constexpr std::string_view MaterialTypeNames[] =
 	{
-		"forwardOpaque",
-		"forwardTransparent",
+		"forward",
 		"shadow",
-		"skybox",
 		"present"
 	};
 }

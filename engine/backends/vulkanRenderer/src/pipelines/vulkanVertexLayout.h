@@ -12,7 +12,7 @@ namespace vulkanRendererBackend
 	struct SeparateVertexLayout {};
 
 	template<typename vertexLayout>
-	std::vector<VkVertexInputBindingDescription> GetVertexBindingDescriptions(const std::vector<emberSpirvReflect::VertexStageInfo>& vertexStageInfos);
+	std::vector<VkVertexInputBindingDescription> GetVertexBindingDescriptions(const std::vector<emberSpirvReflect::VertexAttributeInfo>& vertexAttributeInfos);
 	template<typename vertexLayout>
-	std::vector<VkVertexInputAttributeDescription> GetVertexAttributeDescriptions(const std::vector<emberSpirvReflect::VertexStageInfo>& vertexStageInfos);
+	std::vector<VkVertexInputAttributeDescription> GetVertexAttributeDescriptions(const std::vector<emberSpirvReflect::VertexAttributeInfo>& vertexAttributeInfos);
 }

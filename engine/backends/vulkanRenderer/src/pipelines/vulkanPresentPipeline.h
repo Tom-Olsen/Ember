@@ -1,30 +1,34 @@
 #pragma once
+#include "commonPipelineState.h"
 #include "vulkanPipeline.h"
 #include <vector>
-
-
-
-// Forward declarations:
-typedef struct VkShaderModule_T* VkShaderModule;
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
-	// Forward declarations:
-	struct VertexInputDescriptions;
-
-
-
-	template<typename vertexLayout>
+	/// <summary>
+	/// Renders finallized image into swapchain via presentRenderPass.
+	/// </summary>
 	class PresentPipeline : public Pipeline
 	{
 	public: // Methods:
-		PresentPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
+		PresentPipeline(
+			const std::string& name,
+			VkPipelineLayout vkPipelineLayout,
+			const std::vector<char>& vertexCode,
+			const std::vector<char>& fragmentCode,
+			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
+			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
 		~PresentPipeline();
 
 	private: // Methods:
-		void CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts);
-		void CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
+		void CreatePipeline(
+			VkPipelineLayout vkPipelineLayout,
+			const VkShaderModule& vertexShaderModule,
+			const VkShaderModule& fragmentShaderModule,
+			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
+			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
 	};
 }

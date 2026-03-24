@@ -1,11 +1,12 @@
 #include "vulkanDefaultGpuResources.h"
 #include "descriptorSetMacros.h"
 #include "emberMath.h"
+#include "vulkanComputeShader.h"
 #include "vulkanColorSampler.h"
 #include "vulkanDepthTexture2dArray.h"
-#include "vulkanDescriptorSetBinding.h"
 #include "vulkanMaterial.h"
 #include "vulkanMesh.h"
+#include "vulkanSampler.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanShadowSampler.h"
@@ -23,11 +24,10 @@ namespace vulkanRendererBackend
 	std::unique_ptr<Sampler> DefaultGpuResources::s_pColorSampler = nullptr;
 	std::unique_ptr<Sampler> DefaultGpuResources::s_pShadowSampler = nullptr;
 	// Materials:
-	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultMaterial = nullptr;
 	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultPresentMaterial = nullptr;
-	// DescriptorSetBindings:
-	std::unique_ptr<DescriptorSetBinding> DefaultGpuResources::s_pGlobalDescriptorSetBinding = nullptr;
-	std::unique_ptr<DescriptorSetBinding> DefaultGpuResources::s_pFrameDescriptorSetBinding = nullptr;
+	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultShadowMaterial = nullptr;
+	// Compute shaders:
+	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pGammaCorrectionComputeShader = nullptr;
 	// Meshes:
 	std::unique_ptr<Mesh> DefaultGpuResources::s_pDefaultRenderQuad = nullptr;
 	// Buffers:
@@ -42,27 +42,25 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
-	void DefaultGpuResources::Init()
+	void DefaultGpuResources::Init(uint32_t shadowMapResolution)
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
+		std::filesystem::path shadersSrcDirectory = (std::filesystem::path(ENGINE_SHADERS_DIR) / "shaders" / "src").make_preferred();
 
 		// Samplers:
 		s_pColorSampler = std::make_unique<ColorSampler>("colorSampler");
 		s_pShadowSampler = std::make_unique<ShadowSampler>("shadowSampler");
 		// Materials:
-		std::filesystem::path shadersSrcDirectory = (std::filesystem::path(ENGINE_SHADERS_DIR) / "shaders" / "src").make_preferred();
-		s_pDefaultMaterial = std::make_unique<Material>(emberCommon::MaterialType::forwardOpaque, "defaultMaterial", emberCommon::RenderQueue::opaque, shadersSrcDirectory / "vertex" / "default.vert.hlsl", shadersSrcDirectory / "fragment" / "default.frag.hlsl");
-		s_pDefaultPresentMaterial = std::make_unique<Material>(emberCommon::MaterialType::present, "presentMaterial", emberCommon::RenderQueue::opaque, shadersSrcDirectory / "vertex" / "present.vert.spv", shadersSrcDirectory / "fragment" / "present.frag.spv");
-		// DescriptorSetBindings:
-		s_pGlobalDescriptorSetBinding = std::make_unique<DescriptorSetBinding>((Shader*)s_pDefaultMaterial.get(), GLOBAL_SET_INDEX);
-		s_pFrameDescriptorSetBinding = std::make_unique<DescriptorSetBinding>((Shader*)s_pDefaultMaterial.get(), FRAME_SET_INDEX);
+		s_pDefaultPresentMaterial = std::make_unique<Material>(Material::CreatePresent("presentMaterial", shadersSrcDirectory / "vertex" / "present.vert.spv", shadersSrcDirectory / "fragment" / "present.frag.spv"));
+		s_pDefaultShadowMaterial = std::make_unique<Material>(Material::CreateShadow("shadowMaterial", shadowMapResolution));
+		// Compute shaders:
+		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", shadersSrcDirectory / "compute" / "gammaCorrection.comp.spv");
 		// Meshes:
-		s_pDefaultRenderQuad = std::make_unique<Mesh>();
-		CreateDefaultRenderQuad();
+		s_pDefaultRenderQuad = std::make_unique<Mesh>(CreateDefaultRenderQuad());
 		// Buffers:
-		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, sizeof(int), "1x1Dummy");
+		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, sizeof(int));
 		// Textures:
 		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>("white", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::white);
 		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>("defaultNormalMap", Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::up);
@@ -77,13 +75,12 @@ namespace vulkanRendererBackend
 		s_pColorSampler.reset();
 		s_pShadowSampler.reset();
 		// Materials:
-		s_pDefaultMaterial.reset();
 		s_pDefaultPresentMaterial.reset();
-		// DescriptorSetBindings:
-		s_pGlobalDescriptorSetBinding.reset();
-		s_pFrameDescriptorSetBinding.reset();
+		s_pDefaultShadowMaterial.reset();
+		// Compute shaders:
+		s_pGammaCorrectionComputeShader.reset();
 		// Meshes:
-		s_pDefaultRenderQuad
+		s_pDefaultRenderQuad.reset();
 		// Buffers:
 		s_pDefaultStorageBuffer.reset();
 		// Textures:
@@ -109,22 +106,18 @@ namespace vulkanRendererBackend
 		return s_pShadowSampler.get();
 	}
 	// Materials:
-	Material* DefaultGpuResources::GetDefaultMaterial()
-	{
-		return s_pDefaultMaterial.get();
-	}
 	Material* DefaultGpuResources::GetDefaultPresentMaterial()
 	{
 		return s_pDefaultPresentMaterial.get();
 	}
-	// DescriptorSetBindings:
-	DescriptorSetBinding* DefaultGpuResources::GetGlobalDescriptorSetBinding()
+	Material* DefaultGpuResources::GetDefaultShadowMaterial()
 	{
-		return s_pGlobalDescriptorSetBinding.get();
+		return s_pDefaultShadowMaterial.get();
 	}
-	DescriptorSetBinding* DefaultGpuResources::GetFrameDescriptorSetBinding()
+	// Compute shaders:
+	ComputeShader* DefaultGpuResources::GetGammaCorrectionComputeShader()
 	{
-		return s_pFrameDescriptorSetBinding.get();
+		return s_pGammaCorrectionComputeShader.get();
 	}
 	// Meshes:
 	Mesh* DefaultGpuResources::GetDefaultRenderQuad()
@@ -160,7 +153,7 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	void DefaultGpuResources::CreateDefaultRenderQuad()
+	Mesh DefaultGpuResources::CreateDefaultRenderQuad()
 	{
 		std::vector<Float3> positions;
 		positions.emplace_back(-1.0f, -1.0f, 0.0f);
@@ -196,7 +189,9 @@ namespace vulkanRendererBackend
 		triangles.emplace_back(Uint3(0, 2, 1));
 		triangles.emplace_back(Uint3(1, 2, 3));
 
-		s_pDefaultRenderQuad->UpdateVertexBuffer(positions, &normals, &tangents, &colors, &uvs, emberCommon::VertexMemoryLayout::interleaved);
-		s_pDefaultRenderQuad->UpdateIndexBuffer(triangles, 4);
+		Mesh mesh;
+		mesh.UpdateVertexBuffer(positions, &normals, &tangents, &colors, &uvs, emberCommon::VertexMemoryLayout::interleaved);
+		mesh.UpdateIndexBuffer(triangles, 4);
+		return mesh;
 	}
 }

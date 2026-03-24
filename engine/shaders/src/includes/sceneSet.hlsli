@@ -16,4 +16,14 @@ cbuffer LightProperties : register(b2300, SCENE_SET)
 
 
 
+float4x4 GetShadowWorldToClipMatrix(uint targetIndex)
+{
+    if (targetIndex < MAX_DIR_LIGHTS)
+        return light_directionData[targetIndex].worldToClipMatrix;
+    else
+        return light_positionData[targetIndex - MAX_DIR_LIGHTS].worldToClipMatrix;
+}
+
+
+
 #endif // __INCLUDE_GUARD_sceneSet_hlsli__

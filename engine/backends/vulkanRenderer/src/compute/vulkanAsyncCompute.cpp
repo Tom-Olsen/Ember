@@ -11,7 +11,7 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanPoolManager.h"
-#include "vulkanShaderProperties.h"
+#include "vulkanDescriptorSetBinding.h"
 #include <stdexcept>
 #include <vulkan/vulkan.h>
 
@@ -126,7 +126,7 @@ namespace vulkanRendererBackend
 
 
 	// Workload recording:
-	void Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties, Uint3 threadCount)
+	void Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount)
 	{
 		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
 		{
@@ -138,9 +138,9 @@ namespace vulkanRendererBackend
 			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
 			return;
 		}
-		if (!pIShaderProperties)
+		if (!pIDescriptorSetBinding)
 		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pIShaderProperties is nullptr.");
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pIDescriptorSetBinding is nullptr.");
 			return;
 		}
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
@@ -155,14 +155,14 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		ComputeCall computeCall = { 0, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<ShaderProperties*>(pIShaderProperties), AccessMasks::None::none, AccessMasks::None::none };
+		ComputeCall computeCall = { 0, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), AccessMasks::None::none, AccessMasks::None::none };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
-	emberBackendInterface::IShaderProperties* Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
+	emberBackendInterface::IDescriptorSetBinding* Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
-		ShaderProperties* pIShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		RecordComputeShader(sessionID, pIComputeShader, static_cast<emberBackendInterface::IShaderProperties*>(pIShaderProperties), threadCount);
-		return static_cast<emberBackendInterface::IShaderProperties*>(pIShaderProperties);
+		DescriptorSetBinding* pISDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		RecordComputeShader(sessionID, pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding), threadCount);
+		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding);
 	}
 	void Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
 	{
@@ -196,9 +196,9 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void Async::ResetComputeSession(uint32_t sessionID)
 	{
-		// Return all pShaderProperties of compute calls back to the corresponding pool:
+		// Return all pDescriptorSetBinding of compute calls back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeSessions[sessionID].GetComputeCalls())
-			PoolManager::ReturnShaderProperties((Shader*)computeCall.pComputeShader, computeCall.pShaderProperties);
+			PoolManager::ReturnDescriptorSetBinding((Shader*)computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
 
 		m_pCommandPools[sessionID].ResetPools();
 		m_computeSessions[sessionID].state = ComputeSession::State::idle;

@@ -1,5 +1,6 @@
 #include "vulkanStorageBuffer.h"
 #include "vmaBuffer.h"
+#include <stdexcept>
 #include <vulkan/vulkan.h>
 
 

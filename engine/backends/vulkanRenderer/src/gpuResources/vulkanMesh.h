@@ -1,5 +1,5 @@
 #pragma once
-#include "commonVertexMemoryLayout.h"
+#include "commonPipelineState.h"
 #include "emberMath.h"
 #include "iMesh.h"
 #include "vulkanIndexType.h"
@@ -64,10 +64,10 @@ namespace vulkanRendererBackend
 		Mesh& operator=(Mesh&& other) noexcept;
 
 		// Setters:
-		//void SetMeshType(MeshType type);
+		//void SetMeshType(MeshType type) override;
 
 		// Getters:
-		//MeshType GetMeshType() const;
+		//MeshType GetMeshType() const override;
 		emberCommon::VertexMemoryLayout GetVertexMemoryLayout() const override;
 
 		// Update GPU buffers:
@@ -79,17 +79,17 @@ namespace vulkanRendererBackend
 		uint32_t GetVertexCount() const;
 		uint32_t GetIndexCount() const;
 		VkIndexType GetVkIndexType() const;
-		VertexBuffer* GetVertexBuffer() const;
-		VertexBuffer* GetVertexBuffer(uint32_t frameIndex) const;
-		IndexBuffer* GetIndexBuffer() const;
-		IndexBuffer* GetIndexBuffer(uint32_t frameIndex) const;
-		VkBuffer* GetVkBuffers() const;
-		VkDeviceSize* GetOffsets() const;
+		const VertexBuffer* GetVertexBuffer() const;
+		const VertexBuffer* GetVertexBuffer(uint32_t frameIndex) const;
+		const IndexBuffer* GetIndexBuffer() const;
+		const IndexBuffer* GetIndexBuffer(uint32_t frameIndex) const;
+		const VkBuffer* GetVkBuffers() const;
+		const VkDeviceSize* GetOffsets() const;
 		uint32_t GetVertexBindingCount() const;
 		void RecordUpdateCommand(VkCommandBuffer vkCommandBuffer, uint32_t frameIndex);
 		
 	private:
-		void UpdateBufferCache(uint32_t frameIndex, uint32_t vertexCount):
+		void UpdateBufferCache(uint32_t frameIndex, uint32_t vertexCount);
 		template<typename T>
 		void WriteArrayToVertexStagingBuffer(const T* pSrc, size_t count, size_t offset, const T& defaultValue);
 	};

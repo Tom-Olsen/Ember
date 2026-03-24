@@ -128,7 +128,7 @@ namespace vulkanRendererBackend
 		static AllocationTracker* GetAllocationTracker();
 		static const DescriptorPool* GetDescriptorPool();
 		static const Swapchain* GetSwapchain();
-		static const Renderer* GetRenderer();
+		static Renderer* GetRenderer();
 
 		static const VkInstance GetVkInstance();
 		static const VkPhysicalDevice GetVkPhysicalDevice();

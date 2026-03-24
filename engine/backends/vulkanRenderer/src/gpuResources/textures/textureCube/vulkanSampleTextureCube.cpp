@@ -74,14 +74,14 @@ namespace vulkanRendererBackend
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
-		NAME_VK_IMAGE(m_pImage->GetVkImage(), "SampleTextureCube " + m_name);
+		NAME_VK_OBJECT(m_pImage->GetVkImage(), "SampleTextureCube " + m_name);
 	}
 
 	StagingBuffer* SampleTextureCube::StageData(void* data)
 	{
 		// Upload: data -> pStagingBuffer
 		uint64_t bufferSize = 6 * m_channels * m_width * m_height * BytesPerChannel(m_format);
-		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize, m_name);
+		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
 		pStagingBuffer->SetData(data, bufferSize);
 		return pStagingBuffer;
 	}

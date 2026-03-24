@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <fstream>
 #include <sstream>
+#include <vulkan/vulkan.h>
 
 
 
@@ -48,7 +49,7 @@ namespace emberSpirvReflect
 
         return code;
     }
-    void ShaderReflection::AddShaderStage(VkShaderStageFlagBits shaderStage, const std::vector<char>& code)
+    void ShaderReflection::AddShaderStage(uint32_t shaderStage, const std::vector<char>& code)
     {
         assert(!m_isInitialized && "ShaderReflection::AddShaderStage: Can't add further ShaderStageReflections to already initialized ShaderReflection.");
         assert(!GetStageReflection(shaderStage) && "ShaderReflection::AddShaderStage: Can't add a ShaderStageReflection twice to ShaderReflection.");
@@ -76,41 +77,36 @@ namespace emberSpirvReflect
             }
         }
 
-        // Create descriptor set layout bindings:
-        for (int i = 0; i < m_descriptorSetReflections.size(); i++)
-            m_descriptorSetReflections[i].CreateLayoutBindings();
-
         m_isInitialized = true;
     }
 
 
     // Getters:
-    const ShaderStageReflection* ShaderReflection::GetFragmentShaderReflection() const
+    const ComputeStageInfo* ShaderReflection::GetComputeStageInfo() const
     {
-        return GetStageReflection(VK_SHADER_STAGE_FRAGMENT_BIT);
+        return GetComputeShaderReflection()->GetComputeInfo();
     }
-    const ShaderStageReflection* ShaderReflection::GetVertexShaderReflection() const
+    const VertexStageInfo* ShaderReflection::GetVertexStageInfo() const
     {
-        return GetStageReflection(VK_SHADER_STAGE_VERTEX_BIT);
-    }
-    const ShaderStageReflection* ShaderReflection::GetComputeShaderReflection() const
-    {
-        return GetStageReflection(VK_SHADER_STAGE_COMPUTE_BIT);
-    }
-    const ShaderStageReflection* ShaderReflection::GetStageReflection(VkShaderStageFlagBits shaderStage) const
-    {
-        for (const auto& stageReflection : m_shaderStageReflections)
-            if (stageReflection.GetShaderStage() == shaderStage)
-                return &stageReflection;
-        return nullptr;
+        return GetVertexShaderReflection()->GetVertexInfo();
     }
     const DescriptorSetReflection& ShaderReflection::GetDescriptorSetReflection(uint32_t set) const
     {
         return m_descriptorSetReflections[set];
     }
-    const std::vector<DescriptorSetReflection>& ShaderReflection::GetDescriptorSetReflections() const
+    const DescriptorReflection* ShaderReflection::GetDescriptorReflection(uint32_t setIndex, const std::string& name) const
     {
-        return m_descriptorSetReflections;
+        if (setIndex >= m_descriptorSetReflections.size())
+            return nullptr;
+
+        const DescriptorSetReflection& descriptorSetReflection = m_descriptorSetReflections[setIndex];
+        for (const auto& descriptor : descriptorSetReflection.GetDescriptorReflections())
+        {
+            if (descriptor.GetName() == name)
+                return &descriptor;
+        }
+
+        return nullptr;
     }
 
 
@@ -123,11 +119,11 @@ namespace emberSpirvReflect
         // Vertex inputs:
         if (const ShaderStageReflection* pShaderStageReflection = GetVertexShaderReflection())
         {
-            if (const std::vector<VertexStageInfo>* vertexStageInfos = pShaderStageReflection->GetVertexInfos())
+            if (const VertexStageInfo* vertexStageInfo = pShaderStageReflection->GetVertexInfo())
             {
                 ss << "vertexInput:\n";
-                for (const VertexStageInfo& vertexStageInfo : *vertexStageInfos)
-                    ss << "  " << vertexStageInfo.ToString() << "\n";
+                for (const VertexAttributeInfo& vertexAttribute : vertexStageInfo->vertexAttributes)
+                    ss << "  " << vertexAttribute.ToString() << "\n";
             }
         }
 
@@ -154,14 +150,27 @@ namespace emberSpirvReflect
             ss << m_shaderStageReflections[i].ToString(indent);
         return ss.str();
     }
-    void ShaderReflection::PrintDescriptorSetLayoutBindings()
+
+
+
+    // Private methods:
+    const ShaderStageReflection* ShaderReflection::GetFragmentShaderReflection() const
     {
-        for (auto& descriptorSet : m_descriptorSetReflections)
-        {
-            LOG_INFO("Set{}", descriptorSet.GetSet());
-            const std::vector<VkDescriptorSetLayoutBinding>& bindings = descriptorSet.GetVkDescriptorSetLayoutBindings();
-            for (const auto& binding : bindings)
-                LOG_TRACE(emberVulkanUtility::ToString(binding));
-        }
+        return GetStageReflection(VK_SHADER_STAGE_FRAGMENT_BIT);
+    }
+    const ShaderStageReflection* ShaderReflection::GetVertexShaderReflection() const
+    {
+        return GetStageReflection(VK_SHADER_STAGE_VERTEX_BIT);
+    }
+    const ShaderStageReflection* ShaderReflection::GetComputeShaderReflection() const
+    {
+        return GetStageReflection(VK_SHADER_STAGE_COMPUTE_BIT);
+    }
+    const ShaderStageReflection* ShaderReflection::GetStageReflection(uint32_t shaderStage) const
+    {
+        for (const auto& stageReflection : m_shaderStageReflections)
+            if (stageReflection.GetShaderStage() == shaderStage)
+                return &stageReflection;
+        return nullptr;
     }
 }

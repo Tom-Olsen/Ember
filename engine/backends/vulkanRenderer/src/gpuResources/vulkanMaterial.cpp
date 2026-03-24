@@ -1,16 +1,15 @@
 #include "vulkanMaterial.h"
+#include "commonPipelineState.h"
 #include "descriptorSetMacros.h"
 #include "logger.h"
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanDescriptorSetBinding.h"
-#include "vulkanForwardOpaquePipeline.h"
-#include "vulkanForwardTransparentPipeline.h"
+#include "vulkanForwardPipeline.h"
 #include "vulkanMacros.h"
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
 #include "vulkanPresentPipeline.h"
 #include "vulkanShadowPipeline.h"
-#include "vulkanSkyboxPipeline.h"
 #include "vulkanVertexBuffer.h"
 #include "vulkanVertexLayout.h"
 #include "vmaBuffer.h"
@@ -20,27 +19,40 @@
 
 namespace vulkanRendererBackend
 {
-	// Public methods:
-	// Constructors/Destructor:
-	Material::Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
-		: m_shaderReflection(DESCRIPTOR_SET_COUNT), m_type(type), m_name(name), m_renderQueue(renderQueue)
+	// Private methods:
+	// Constructors:
+	Material::Material(const std::string& name) : Shader(name)
 	{
+
+	}
+
+
+
+	// Public methods:
+	// Factories/Destructor:
+	Material Material::CreateForward(const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	{
+		Material material = Material(name);
+		material.m_renderQueue = renderQueue;
+		material.m_type = emberCommon::MaterialType::forward;
+
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
-		m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+		material.m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
 
 		// Load fragment shader:
 		std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
-		m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
+		material.m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
 
 		// Prepare pipeline data:
-		// Vertex input layout:
-		CreateDescriptorSetLayout();
-		const std::vector<emberSpirvReflect::VertexStageInfo>& vertexStageinfos = *m_shaderReflection.GetVertexShaderReflection()->GetVertexInfos();
-		std::vector<VkVertexInputBindingDescription> vertexBindingsInterleaved = GetVertexBindingDescriptions<InterleavedVertexLayout>(vertexStageinfos);
-		std::vector<VkVertexInputBindingDescription> vertexBindingsSeparate = GetVertexBindingDescriptions<SeparateVertexLayout>(vertexStageinfos);
-		std::vector<VkVertexInputAttributeDescription> vertexAttributesInterleaved = GetVertexAttributeDescriptions<InterleavedVertexLayout>(vertexStageinfos);
-		std::vector<VkVertexInputAttributeDescription> vertexAttributesSeparate = GetVertexAttributeDescriptions<SeparateVertexLayout>(vertexStageinfos);
+		material.CreateDescriptorSetLayout();
+		const std::vector<emberSpirvReflect::VertexAttributeInfo>& vertexAttributeInfos = material.m_shaderReflection.GetVertexStageInfo()->vertexAttributes;
+		std::vector<VkVertexInputBindingDescription> vertexBindingsInterleaved = GetVertexBindingDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
+		std::vector<VkVertexInputBindingDescription> vertexBindingsSeparate = GetVertexBindingDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
+		std::vector<VkVertexInputAttributeDescription> vertexAttributesInterleaved = GetVertexAttributeDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
+		std::vector<VkVertexInputAttributeDescription> vertexAttributesSeparate = GetVertexAttributeDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
+		std::array<std::vector<VkVertexInputBindingDescription>*, 2> vertexBindingVectors = { &vertexBindingsInterleaved , &vertexBindingsSeparate };
+		std::array<std::vector<VkVertexInputAttributeDescription>*, 2> vertexAttributeVectors = { &vertexAttributesInterleaved , &vertexAttributesSeparate };
 
 		// Push constants layout:
 		VkPushConstantRange pushConstantRange = {};
@@ -50,59 +62,141 @@ namespace vulkanRendererBackend
 
 		// Pipeline layout:
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-		pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(m_vkDescriptorSetLayouts.size());
-		pipelineLayoutCreateInfo.pSetLayouts = m_vkDescriptorSetLayouts.data();
+		pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(material.m_vkDescriptorSetLayouts.size());
+		pipelineLayoutCreateInfo.pSetLayouts = material.m_vkDescriptorSetLayouts.data();
 		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &material.m_vkPipelineLayout));
+		NAME_VK_OBJECT(material.m_vkPipelineLayout, material.m_name + "ForwardPipelineLayout");
 
-		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_vkPipelineLayout));
-		NAME_VK_OBJECT(m_vkPipelineLayout, m_name + "ForwardOpaquePipelineLayout");
-
-		// Create pipeline:
-		m_pPipelines.resize(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
-		switch (m_type)
-		{
-			case emberCommon::MaterialType::forwardOpaque:
-				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::interleaved)] = std::make_unique<ForwardOpaquePipeline<InterleavedVertexLayout>>(m_name, vertexCode, fragmentCode, m_vkDescriptorSetLayouts, vertexBindingsInterleaved, vertexAttributesInterleaved);
-				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<ForwardOpaquePipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_vkDescriptorSetLayouts, vertexBindingsSeparate, vertexAttributesSeparate);
-				break;
-			case emberCommon::MaterialType::forwardTransparent:
-				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::interleaved)] = std::make_unique<ForwardTransparentPipeline<InterleavedVertexLayout>>(m_name, vertexCode, fragmentCode, m_vkDescriptorSetLayouts, vertexBindingsInterleaved, vertexAttributesInterleaved);
-				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<ForwardTransparentPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_vkDescriptorSetLayouts, vertexBindingsSeparate, vertexAttributesSeparate);
-				break;
-			case emberCommon::MaterialType::skybox:
-				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::interleaved)] = std::make_unique<SkyboxPipeline<InterleavedVertexLayout>>(m_name, vertexCode, fragmentCode, m_vkDescriptorSetLayouts, vertexBindingsInterleaved, vertexAttributesInterleaved);
-				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<SkyboxPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_vkDescriptorSetLayouts, vertexBindingsSeparate, vertexAttributesSeparate);
-				break;
-			case emberCommon::MaterialType::present:
-				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::interleaved)] = std::make_unique<PresentPipeline<InterleavedVertexLayout>>(m_name, vertexCode, fragmentCode, m_vkDescriptorSetLayouts, vertexBindingsInterleaved, vertexAttributesInterleaved);
-				m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<PresentPipeline<SeparateVertexLayout>>(m_name, vertexCode, fragmentCode, m_vkDescriptorSetLayouts, vertexBindingsSeparate, vertexAttributesSeparate);
-				break;
-		}
+		// Create pipelines:
+		material.m_pPipelines.reserve(static_cast<size_t>(static_cast<size_t>(emberCommon::RenderMode::count) * static_cast<size_t>(emberCommon::VertexMemoryLayout::count)));
+		for (uint32_t j = 0; j < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); j++)
+			for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::RenderMode::count); i++)
+			{
+				uint32_t index = i + j * emberCommon::RenderMode::count;
+				material.m_pPipelines.emplace_back(
+					material.m_name,
+					material.m_vkPipelineLayout,
+					static_cast<emberCommon::RenderMode>(i),
+					vertexCode, 
+					fragmentCode, 
+					*vertexBindingVectors[j], 
+					*vertexAttributeVectors[j]);
+			}
 
 		// Create shader descriptorSetBinding:
-		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>((Shader*)this, SHADER_SET_INDEX);
+		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>&material, SHADER_SET_INDEX);
+		return material;
 	}
-	// Special constructor for shadowMaterial:
-	Material::Material(uint32_t shadowMapResolution)
-		: m_shaderReflection(DESCRIPTOR_SET_COUNT), m_type(emberCommon::MaterialType::shadow), m_name("shadowMaterial"), m_renderQueue(emberCommon::RenderQueue::shadow)
+	Material Material::CreateShadow(const std::string& name, uint32_t shadowMapResolution)
 	{
+		Material material = Material(name);
+		material.m_renderQueue = emberCommon::RenderQueue::shadow;
+		material.m_type = emberCommon::MaterialType::shadow;
+
 		// Load vertex shader:
 		std::filesystem::path directoryPath = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(directoryPath / "shadow.vert.spv");
-		m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+		material.m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
 
 		// Prepare pipeline data:
-		CreateDescriptorSetLayout();
-		const std::vector<emberSpirvReflect::VertexStageInfo>& vertexStageinfos = *m_shaderReflection.GetVertexShaderReflection()->GetVertexInfos();
-		std::vector<VkVertexInputBindingDescription> vertexBindingsInterleaved = GetVertexBindingDescriptions<InterleavedVertexLayout>(vertexStageinfos);
-		std::vector<VkVertexInputBindingDescription> vertexBindingsSeparate = GetVertexBindingDescriptions<SeparateVertexLayout>(vertexStageinfos);
-		std::vector<VkVertexInputAttributeDescription> vertexAttributesInterleaved = GetVertexAttributeDescriptions<InterleavedVertexLayout>(vertexStageinfos);
-		std::vector<VkVertexInputAttributeDescription> vertexAttributesSeparate = GetVertexAttributeDescriptions<SeparateVertexLayout>(vertexStageinfos);
+		material.CreateDescriptorSetLayout();
+		const std::vector<emberSpirvReflect::VertexAttributeInfo>& vertexAttributeInfos = material.m_shaderReflection.GetVertexStageInfo()->vertexAttributes;
+		std::vector<VkVertexInputBindingDescription> vertexBindingsInterleaved = GetVertexBindingDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
+		std::vector<VkVertexInputBindingDescription> vertexBindingsSeparate = GetVertexBindingDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
+		std::vector<VkVertexInputAttributeDescription> vertexAttributesInterleaved = GetVertexAttributeDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
+		std::vector<VkVertexInputAttributeDescription> vertexAttributesSeparate = GetVertexAttributeDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
+		std::array<std::vector<VkVertexInputBindingDescription>*, 2> vertexBindingVectors = { &vertexBindingsInterleaved , &vertexBindingsSeparate };
+		std::array<std::vector<VkVertexInputAttributeDescription>*, 2> vertexAttributeVectors = { &vertexAttributesInterleaved , &vertexAttributesSeparate };
 
-		// Create pipeline:
-		m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::interleaved)] = std::make_unique<ShadowPipeline<InterleavedVertexLayout>>(m_name, shadowMapResolution, vertexCode, m_vkDescriptorSetLayouts, vertexBindingsInterleaved, vertexAttributesInterleaved);
-		m_pPipelines[static_cast<size_t>(emberCommon::VertexMemoryLayout::separate)] = std::make_unique<ShadowPipeline<SeparateVertexLayout>>(m_name, shadowMapResolution, vertexCode, m_vkDescriptorSetLayouts, vertexBindingsSeparate, vertexAttributesSeparate);
+		// Push constants layout:
+		VkPushConstantRange pushConstantRange = {};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // shadow materials are vertex shader only.
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(DefaultPushConstant);
+
+		// Pipeline layout:
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+		pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(material.m_vkDescriptorSetLayouts.size());
+		pipelineLayoutCreateInfo.pSetLayouts = material.m_vkDescriptorSetLayouts.data();
+		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &material.m_vkPipelineLayout));
+		NAME_VK_OBJECT(material.m_vkPipelineLayout, material.m_name + "ShadowPipelineLayout");
+
+		// Create pipelines:
+		material.m_pPipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
+		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
+		{
+			material.m_pPipelines.emplace_back(
+				material.m_name,
+				material.m_vkPipelineLayout,
+				shadowMapResolution,
+				vertexCode,
+				*vertexBindingVectors[i],
+				*vertexAttributeVectors[i]);
+		}
+
+		// Create shader descriptorSetBinding:
+		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>&material, SHADER_SET_INDEX);
+		return material;
+	}
+	Material Material::CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	{
+		Material material = Material(name);
+		material.m_renderQueue = 0;
+		material.m_type = emberCommon::MaterialType::present;
+
+		// Load vertex shader:
+		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
+		material.m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+
+		// Load fragment shader:
+		std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
+		material.m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
+
+		// Prepare pipeline data:
+		material.CreateDescriptorSetLayout();
+		const std::vector<emberSpirvReflect::VertexAttributeInfo>& vertexAttributeInfos = material.m_shaderReflection.GetVertexStageInfo()->vertexAttributes;
+		std::vector<VkVertexInputBindingDescription> vertexBindingsInterleaved = GetVertexBindingDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
+		std::vector<VkVertexInputBindingDescription> vertexBindingsSeparate = GetVertexBindingDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
+		std::vector<VkVertexInputAttributeDescription> vertexAttributesInterleaved = GetVertexAttributeDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
+		std::vector<VkVertexInputAttributeDescription> vertexAttributesSeparate = GetVertexAttributeDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
+		std::array<std::vector<VkVertexInputBindingDescription>*, 2> vertexBindingVectors = { &vertexBindingsInterleaved , &vertexBindingsSeparate };
+		std::array<std::vector<VkVertexInputAttributeDescription>*, 2> vertexAttributeVectors = { &vertexAttributesInterleaved , &vertexAttributesSeparate };
+
+		// Push constants layout:
+		VkPushConstantRange pushConstantRange = {};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(DefaultPushConstant);
+
+		// Pipeline layout:
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+		pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(material.m_vkDescriptorSetLayouts.size());
+		pipelineLayoutCreateInfo.pSetLayouts = material.m_vkDescriptorSetLayouts.data();
+		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &material.m_vkPipelineLayout));
+		NAME_VK_OBJECT(material.m_vkPipelineLayout, material.m_name + "PresentPipelineLayout");
+
+		// Create pipelines:
+		material.m_pPipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
+		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
+		{
+			material.m_pPipelines.emplace_back(
+				material.m_name,
+				material.m_vkPipelineLayout,
+				vertexCode,
+				fragmentCode,
+				*vertexBindingVectors[i],
+				*vertexAttributeVectors[i]);
+		}
+
+		// Create shader descriptorSetBinding:
+		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>&material, SHADER_SET_INDEX);
+		return material;
 	}
 	Material::~Material()
 	{

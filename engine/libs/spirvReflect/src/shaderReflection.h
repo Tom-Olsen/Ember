@@ -5,12 +5,22 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 
 
 namespace emberSpirvReflect
 {
+	/// <summary>
+	/// Build shader reflection by adding individual shader stages: <para/>
+	/// -shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode); <para/>
+	/// -shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode); <para/>
+	/// -... <para/>
+	/// Extract information about individual stages: <para/>
+	/// -Get(StageName)StageInfo(); <para/>
+	/// Information about descriptorSet reflection: <para/>
+	/// -GetDescriptorSetReflection(uint32_t set); <para/>
+	/// -GetDescriptorSetReflection(uint32_t set).GetDescriptorReflections();
+	/// </summary>
 	class ShaderReflection
 	{
 	private: // Members:
@@ -33,20 +43,23 @@ namespace emberSpirvReflect
 
 		// Functionality:
 		static std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile);
-		void AddShaderStage(VkShaderStageFlagBits shaderStage, const std::vector<char>& code);
+		void AddShaderStage(uint32_t shaderStage, const std::vector<char>& code);
 		void CreateDescriptorSetReflections();
 
 		// Getters:
-		const ShaderStageReflection* GetFragmentShaderReflection() const;
-		const ShaderStageReflection* GetVertexShaderReflection() const;
-		const ShaderStageReflection* GetComputeShaderReflection() const;
-		const ShaderStageReflection* GetStageReflection(VkShaderStageFlagBits stage) const;
+		const ComputeStageInfo* GetComputeStageInfo() const;
+		const VertexStageInfo* GetVertexStageInfo() const;
 		const DescriptorSetReflection& GetDescriptorSetReflection(uint32_t set) const;
-		const std::vector<DescriptorSetReflection>& GetDescriptorSetReflections() const;
+		const DescriptorReflection* GetDescriptorReflection(uint32_t setIndex, const std::string& name) const;
 
 		// Debugging:
 		std::string ToString() const;
 		std::string ToStringAll() const;
-		void PrintDescriptorSetLayoutBindings();
+
+	private: // Methods:
+		const ShaderStageReflection* GetFragmentShaderReflection() const;
+		const ShaderStageReflection* GetVertexShaderReflection() const;
+		const ShaderStageReflection* GetComputeShaderReflection() const;
+		const ShaderStageReflection* GetStageReflection(uint32_t shaderStage) const;
 	};
 }

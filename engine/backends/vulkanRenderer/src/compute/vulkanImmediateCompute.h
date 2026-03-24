@@ -9,7 +9,7 @@
 namespace emberBackendInterface
 {
 	class IComputeShader;
-	class IShaderProperties;
+	class IDescriptorSetBinding;
 }
 
 
@@ -32,6 +32,6 @@ namespace vulkanRendererBackend
 		Immediate& operator=(Immediate&& other) noexcept;
 
 		// Immediate dispatch call:
-		void Dispatch(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IShaderProperties* pShaderProperties, Uint3 threadCount, float time, float deltaTime) override;
+		void Dispatch(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IDescriptorSetBinding* pDescriptorSetBinding, Uint3 threadCount, float time, float deltaTime) override;
 	};
 }

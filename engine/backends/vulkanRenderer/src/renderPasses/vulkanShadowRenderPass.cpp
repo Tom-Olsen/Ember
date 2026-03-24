@@ -21,7 +21,7 @@ namespace vulkanRendererBackend
 		m_shadowMaps = std::make_unique<DepthTexture2dArray>("shadowMaps", (VkFormat)s_shadowMapFormat, shadowMapResolution, shadowMapResolution, maxLightsCount);
 		CreateRenderpass();
 		CreateFramebuffers(shadowMapResolution, maxLightsCount);
-		NAME_VK_RENDER_PASS(m_renderPass, "shadowRenderPass");
+		NAME_VK_OBJECT(m_renderPass, "shadowRenderPass");
 	}
 	ShadowRenderPass::~ShadowRenderPass()
 	{

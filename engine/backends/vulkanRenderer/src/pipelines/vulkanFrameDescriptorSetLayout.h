@@ -1,7 +1,7 @@
 #pragma once
 #include "emberMath.h"
-#include <vulkan/vulkan.h>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 
@@ -15,7 +15,7 @@ namespace vulkanRendererBackend
     class FrameDescriptorSetLayout
     {
     private: // Members:
-        static UniformBuffer s_uniformCameraBuffer;
+        static std::unique_ptr<UniformBuffer> s_pUniformCameraBuffer;
         static VkDescriptorSetLayout s_descriptorSetLayout;
         static std::vector<VkDescriptorSet> s_descriptorSets;
 

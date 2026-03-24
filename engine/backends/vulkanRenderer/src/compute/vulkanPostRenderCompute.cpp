@@ -8,7 +8,7 @@
 #include "vulkanPoolManager.h"
 #include "vulkanRenderPassManager.h"
 #include "vulkanRenderTexture2d.h"
-#include "vulkanShaderProperties.h"
+#include "vulkanDescriptorSetBinding.h"
 #include <filesystem>
 #include <vulkan/vulkan.h>
 
@@ -40,16 +40,16 @@ namespace vulkanRendererBackend
 
 
 	// Workload recording:
-	void PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties)
+	void PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding)
 	{// for static compute calls.
 		if (!pIComputeShader)
 		{
 			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
 			return;
 		}
-		if (!pIShaderProperties)
+		if (!pIDescriptorSetBinding)
 		{
-			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIShaderProperties is nullptr.");
+			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIDescriptorSetBinding is nullptr.");
 			return;
 		}
 
@@ -57,11 +57,11 @@ namespace vulkanRendererBackend
 		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
-		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<ShaderProperties*>(pIShaderProperties), AccessMasks::None::none, AccessMasks::None::none };
+		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), AccessMasks::None::none, AccessMasks::None::none };
 		m_staticComputeCalls.push_back(computeCall);
 		m_callIndex++;
 	}
-	emberBackendInterface::IShaderProperties* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
+	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
 	{// for dynamic compute calls.
 		if (!pIComputeShader)
 		{
@@ -73,11 +73,11 @@ namespace vulkanRendererBackend
 		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
-		ShaderProperties* pShaderProperties = PoolManager::CheckOutShaderProperties(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), pShaderProperties, AccessMasks::None::none, AccessMasks::None::none };
+		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none };
 		m_dynamicComputeCalls.push_back(computeCall);
 		m_callIndex++;
-		return pShaderProperties;
+		return pDescriptorSetBinding;
 	}
 
 
@@ -105,9 +105,9 @@ namespace vulkanRendererBackend
 	}
 	void PostRender::ResetComputeCalls()
 	{
-		// Return all pShaderProperties of compute calls back to the corresponding pool:
+		// Return all pDescriptorSetBinding of compute calls back to the corresponding pool:
 		for (ComputeCall& computeCall : m_dynamicComputeCalls)
-			PoolManager::ReturnShaderProperties(computeCall.pComputeShader, computeCall.pShaderProperties);
+			PoolManager::ReturnDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
 
 		// Remove all computeCalls so next frame can start fresh:
 		m_staticComputeCalls.clear();

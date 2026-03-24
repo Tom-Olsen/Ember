@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_GUARD_vertexShaderCommon_hlsli__
 #define __INCLUDE_GUARD_vertexShaderCommon_hlsli__
 #include "descriptorSetMacros.h"
+#include "defaultPushConstant.hlsli"
+#include "math.hlsli"
 #include "frameSet.hlsli"
 
 
@@ -13,7 +15,7 @@
 
 
 // Per draw call resources:
-cbuffer ModelMatrizes : register(b100, DRAW_SET)
+cbuffer ModelMatrizes : register(b300, DRAW_SET)
 {
     float4x4 model_localToWorldMatrix; // TRS matrix.
     float4x4 model_worldToLocalMatrix; // inverse TRS matrix.
@@ -31,8 +33,17 @@ StructuredBuffer<InstanceData> instanceBuffer : register(t100, SHADER_SET);
 
 
 
-// Macros:
-#define model_localToClipMatrix mul(camera_worldToClipMatrix, model_localToWorldMatrix)
+// Functions:
+float4x4 GetLocalToWorldMatrix(uint instanceID)
+{
+    if (pc.instanceCount != 0 && instanceID < pc.instanceCount)
+        return mul(model_localToWorldMatrix, instanceBuffer[instanceID].localToWorldMatrix);
+    return model_localToWorldMatrix;
+}
+float4x4 GetLocalToClipMatrix(uint instanceID, float4x4 localToWorldMatrix)
+{
+    return mul(camera_worldToClipMatrix, localToWorldMatrix);
+}
 
 
 

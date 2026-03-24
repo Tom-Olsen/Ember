@@ -15,7 +15,8 @@ namespace vulkanRendererBackend
 {
 	// Protected methods:
 	// Constructor:
-	Shader::Shader()
+	Shader::Shader(const std::string& name)
+		: m_name(name), m_shaderReflection(DESCRIPTOR_SET_COUNT)
 	{
 
 	}
@@ -27,7 +28,7 @@ namespace vulkanRendererBackend
 	Shader::~Shader()
 	{
 		for (int i = 0; i < m_vkDescriptorSetLayouts.size(); i++)
-			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_vkDescriptorSetLayout, nullptr);
+			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_vkDescriptorSetLayouts, nullptr);
 		vkDestroyPipelineLayout(Context::GetVkDevice(), m_vkPipelineLayout, nullptr);
 	}
 
@@ -37,22 +38,22 @@ namespace vulkanRendererBackend
 	Shader::Shader(Shader&& other) noexcept
 	{
 		m_name = std::move(other.m_name);
+		m_shaderReflection = other.m_shaderReflection;	// Ember::ToDO: use move semantics here aswell. ShaderReflection needs move semantics.
 		m_vkDescriptorSetLayouts = std::move(other.m_vkDescriptorSetLayouts);
 		m_vkPipelineLayout = other.m_vkPipelineLayout;
 		other.m_vkPipelineLayout = VK_NULL_HANDLE;
 		m_pPipelines = std::move(other.m_pPipelines);
-		m_shaderReflection = other.m_shaderReflection;	// Ember::ToDO: use move semantics here aswell. ShaderReflection needs move semantics.
 	}
 	Shader& Shader::operator=(Shader&& other) noexcept
 	{
 		if (this != &other)
 		{
 			m_name = std::move(other.m_name);
+			m_shaderReflection = other.m_shaderReflection;
 			m_vkDescriptorSetLayouts = std::move(other.m_vkDescriptorSetLayouts);
 			m_vkPipelineLayout = other.m_vkPipelineLayout;
 			other.m_vkPipelineLayout = VK_NULL_HANDLE;
 			m_pPipelines = std::move(other.m_pPipelines);
-			m_shaderReflection = other.m_shaderReflection;
 		}
 		return *this;
 	}
@@ -73,13 +74,34 @@ namespace vulkanRendererBackend
 		m_vkDescriptorSetLayouts[1] = SceneDescriptorSetLayout::GetVkDescriptorSetLayout();
 		m_vkDescriptorSetLayouts[2] = FrameDescriptorSetLayout::GetVkDescriptorSetLayout();
 
-		// Only SHADER_SET(3) and DRAW_SET(4) are retrieved via reflection:
-		for (size_t i = 3; i < SET_COUNT; i++) // Ember::ToDo: i think this here needs updating.
+		// Only SHADER_SET(3) and DRAW_SET(4) are dynamic and come from reflection:
+		for (size_t i = 3; i < SET_COUNT; i++)
 		{
-			const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings = descriptorSetReflections[i].GetVkDescriptorSetLayoutBindings();
+			const std::vector<emberSpirvReflect::DescriptorReflection>& descriptors = descriptorSetReflections[i].GetDescriptorReflections();
+
+			std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+			layoutBindings.reserve(descriptors.size());
+
+			for (const emberSpirvReflect::DescriptorReflection& descriptor : descriptors)
+			{
+				VkDescriptorSetLayoutBinding binding = {};
+				binding.binding = descriptor.GetBinding();
+				binding.descriptorCount = descriptor.GetDescriptorCount();
+				binding.descriptorType = static_cast<VkDescriptorType>(descriptor.GetDescriptorType());
+				binding.stageFlags = static_cast<VkShaderStageFlags>(descriptor.GetShaderStage());
+				binding.pImmutableSamplers = nullptr; // not allowed.
+				layoutBindings.push_back(binding);
+			}
+
+			// Sort by binding index to match vulkan spec expectations:
+			std::sort(layoutBindings.begin(), layoutBindings.end(),
+				[](const VkDescriptorSetLayoutBinding& a, const VkDescriptorSetLayoutBinding& b)
+			{ return a.binding < b.binding; });
+
 			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
 			descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
 			descriptorSetLayoutCreateInfo.pBindings = layoutBindings.empty() ? nullptr : layoutBindings.data();
+
 			VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_vkDescriptorSetLayouts[i]));
 		}
 	}
@@ -102,6 +124,10 @@ namespace vulkanRendererBackend
 	const DescriptorSetBinding* Shader::GetDescriptorSetBinding() const
 	{
 		return m_pShaderDescriptorSetBinding.get();
+	}
+	const std::vector<VkDescriptorSetLayout>& Shader::GetVkDescriptorSetLayout() const
+	{
+		return m_vkDescriptorSetLayouts;
 	}
 
 

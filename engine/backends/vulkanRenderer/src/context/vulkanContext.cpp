@@ -125,7 +125,7 @@ namespace vulkanRendererBackend
 		SingleTimeCommand::Init();
 		GarbageCollector::Init();
 		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
-		DefaultGpuResources::Init();
+		DefaultGpuResources::Init(createInfo.shadowMapResolution);
 		PoolManager::Init();
 		GlobalDescriptorSetLayout::Init();
 		SceneDescriptorSetLayout::Init();
@@ -133,14 +133,14 @@ namespace vulkanRendererBackend
 
 		// Debug naming:
 		if (m_pLogicalDevice->GetGraphicsQueue().queue == m_pLogicalDevice->GetPresentQueue().queue)
-			NAME_VK_QUEUE(m_pLogicalDevice->GetGraphicsQueue().queue, "graphicsAndPresentQueue");
+			NAME_VK_OBJECT(m_pLogicalDevice->GetGraphicsQueue().queue, "graphicsAndPresentQueue");
 		else
 		{
-			NAME_VK_QUEUE(m_pLogicalDevice->GetGraphicsQueue().queue, "graphicsQueue");
-			NAME_VK_QUEUE(m_pLogicalDevice->GetPresentQueue().queue, "presentQueue");
+			NAME_VK_OBJECT(m_pLogicalDevice->GetGraphicsQueue().queue, "graphicsQueue");
+			NAME_VK_OBJECT(m_pLogicalDevice->GetPresentQueue().queue, "presentQueue");
 		}
-		NAME_VK_QUEUE(m_pLogicalDevice->GetComputeQueue().queue, "computeQueue");
-		NAME_VK_QUEUE(m_pLogicalDevice->GetTransferQueue().queue, "transferQueue");
+		NAME_VK_OBJECT(m_pLogicalDevice->GetComputeQueue().queue, "computeQueue");
+		NAME_VK_OBJECT(m_pLogicalDevice->GetTransferQueue().queue, "transferQueue");
 	}
 	void Context::Clear()
 	{
@@ -207,7 +207,7 @@ namespace vulkanRendererBackend
 	{
 		return m_swapchains[m_swapchainIndex].get();
 	}
-	static const Renderer* Context::GetRenderer()
+	Renderer* Context::GetRenderer()
 	{
 		return m_pRenderer;
 	}

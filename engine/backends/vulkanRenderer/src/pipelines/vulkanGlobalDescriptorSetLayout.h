@@ -24,6 +24,6 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		static VkDescriptorSetLayout GetVkDescriptorSetLayout();
-		static VkDescriptorSet GetVkDescriptorSet(uint32_t frameIndex)
+		static VkDescriptorSet GetVkDescriptorSet(uint32_t frameIndex);
 	};
 }

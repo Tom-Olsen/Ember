@@ -10,7 +10,7 @@
 namespace vulkanRendererBackend
 {
     // Static members:
-    UniformBuffer FrameDescriptorSetLayout::s_uniformCameraBuffer;
+    std::unique_ptr<UniformBuffer> FrameDescriptorSetLayout::s_pUniformCameraBuffer;
     VkDescriptorSetLayout FrameDescriptorSetLayout::s_descriptorSetLayout = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> FrameDescriptorSetLayout::s_descriptorSets;
 
@@ -22,6 +22,7 @@ namespace vulkanRendererBackend
     {
         // Create descriptor set layout:
         {
+            // cbuffer Camera : register(b1300, FRAME_SET):
             VkDescriptorSetLayoutBinding binding{};
             binding.binding = 1300;
             binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -52,7 +53,7 @@ namespace vulkanRendererBackend
         // Create uniform camera buffer:
         {
             uint32_t offset = 0;
-            emberBufferLayout::BufferMember cameraPosition("camera_Position", offset, sizeof(Float4));
+            emberBufferLayout::BufferMember cameraPosition("camera_position", offset, sizeof(Float4));
             offset += sizeof(Float4);
             emberBufferLayout::BufferMember cameraViewMatrix("camera_viewMatrix", offset, sizeof(Float4x4));
             offset += sizeof(Float4x4);
@@ -66,16 +67,16 @@ namespace vulkanRendererBackend
             bufferLayout.AddMember(cameraProjMatrix);
             bufferLayout.AddMember(cameraWorldToClipMatrix);
 
-            s_uniformCameraBuffer = UniformBuffer(bufferLayout);
+            s_pUniformCameraBuffer = std::make_unique<UniformBuffer>(bufferLayout);
         }
 
         // Bind uniform light properties buffer to descriptor sets:
         for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
         {
             VkDescriptorBufferInfo bufferInfo;
-            bufferInfo.buffer = s_uniformCameraBuffer.GetVmaBuffer()->GetVkBuffer();
-            bufferInfo.offset = i * s_uniformCameraBuffer.GetAlignedSubBufferSize();
-            bufferInfo.range = s_uniformCameraBuffer.GetSize();
+            bufferInfo.buffer = s_pUniformCameraBuffer->GetVmaBuffer()->GetVkBuffer();
+            bufferInfo.offset = i * s_pUniformCameraBuffer->GetAlignedSubBufferSize();
+            bufferInfo.range = s_pUniformCameraBuffer->GetSize();
 
             VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
             descriptorWrite.dstSet = s_descriptorSets[i];
@@ -109,10 +110,10 @@ namespace vulkanRendererBackend
     void FrameDescriptorSetLayout::SetCameraData(const Float4& cameraPosition, const Float4x4& viewMatrix, const Float4x4& projMatrix)
     {
         Float4x4 worldToClipMatrix = projMatrix * viewMatrix;
-        s_uniformCameraBuffer.SetFloat4("camera_Position", cameraPosition);
-        s_uniformCameraBuffer.SetFloat4x4("camera_viewMatrix", viewMatrix);
-        s_uniformCameraBuffer.SetFloat4x4("camera_projMatrix", projMatrix);
-        s_uniformCameraBuffer.SetFloat4x4("camera_worldToClipMatrix", worldToClipMatrix);
+        s_pUniformCameraBuffer->SetFloat4("camera_position", cameraPosition);
+        s_pUniformCameraBuffer->SetFloat4x4("camera_viewMatrix", viewMatrix);
+        s_pUniformCameraBuffer->SetFloat4x4("camera_projMatrix", projMatrix);
+        s_pUniformCameraBuffer->SetFloat4x4("camera_worldToClipMatrix", worldToClipMatrix);
     }
 
 
@@ -132,6 +133,6 @@ namespace vulkanRendererBackend
     // Update data:
     void FrameDescriptorSetLayout::UpdateShaderData(uint32_t frameIndex)
     {
-        s_uniformCameraBuffer.UpdateBuffer(frameIndex);
+        s_pUniformCameraBuffer->UpdateBuffer(frameIndex);
     }
 }

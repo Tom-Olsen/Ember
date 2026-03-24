@@ -53,14 +53,14 @@ namespace vulkanRendererBackend
 	void Buffer::Upload(const void* pSrc, uint64_t size)
 	{
 		size = std::min(size, m_size);
-		StagingBuffer stagingBuffer(size, "tempB Buffer::Upload(...)");
+		StagingBuffer stagingBuffer(size);
 		stagingBuffer.SetData(pSrc, size);
 		stagingBuffer.UploadToBuffer(this, Context::GetLogicalDevice()->GetTransferQueue());
 	}
 	void Buffer::Download(void* pDst, uint64_t size)
 	{
 		size = std::min(size, m_size);
-		StagingBuffer stagingBuffer(size, "tempB Buffer::Download(...)");
+		StagingBuffer stagingBuffer(size);
 		stagingBuffer.DownloadFromBuffer(this, Context::GetLogicalDevice()->GetTransferQueue());
 		stagingBuffer.GetData(pDst, size);
 	}
@@ -79,14 +79,14 @@ namespace vulkanRendererBackend
 	void Buffer::Upload(VkCommandBuffer vkCommandBuffer, void* pSrc, uint64_t size)
 	{
 		size = std::min(size, m_size);
-		StagingBuffer stagingBuffer(size, "tempA Buffer::Upload(...)");
+		StagingBuffer stagingBuffer(size);
 		stagingBuffer.SetData(pSrc, size);
 		stagingBuffer.UploadToBuffer(vkCommandBuffer, this);
 	}
 	void Buffer::Download(VkCommandBuffer vkCommandBuffer, void* pDst, uint64_t size)
 	{
 		size = std::min(size, m_size);
-		StagingBuffer stagingBuffer(size, "tempA Buffer::Download(...)");
+		StagingBuffer stagingBuffer(size);
 		stagingBuffer.DownloadFromBuffer(vkCommandBuffer, this);
 		stagingBuffer.GetData(pDst, size);
 	}

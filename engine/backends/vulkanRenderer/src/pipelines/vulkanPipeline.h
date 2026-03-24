@@ -22,12 +22,12 @@ namespace vulkanRendererBackend
 	class Pipeline
 	{
 	protected: // Members:
-		std::array<VkDescriptorSetLayout, DESCRIPTOR_SET_COUNT> m_descriptorSetLayouts;
-		VkPipeline m_pipeline;
 		std::string m_name;
+		VkPipeline m_pipeline;
+		std::array<VkDescriptorSetLayout, DESCRIPTOR_SET_COUNT> m_descriptorSetLayouts;
 
 	public: // Methods:
-		Pipeline() = default;
+		Pipeline();
 		virtual ~Pipeline();
 
 		// Non-copyable:

@@ -1,5 +1,5 @@
 #pragma once
-#include "vulkanShaderPropertiesPool.h"
+#include "vulkanDescriptorSetBindingPool.h"
 #include "vulkanStagingBufferPool.h"
 #include <map>
 #include <unordered_map>
@@ -9,8 +9,9 @@
 namespace vulkanRendererBackend
 {
     // Forward declarations:
-    class Shader;
+    class DescriptorSetBinding;
     class ComputeShader;
+    class Shader;
     class StagingBuffer;
 
 
@@ -25,7 +26,7 @@ namespace vulkanRendererBackend
     {
     private: // Members
         static bool s_isInitialized;
-		static std::unordered_map<Shader*, ShaderPropertiesPool> s_shaderPropertiesPoolMap;
+		static std::unordered_map<Shader*, DescriptorSetBindingPool> s_descriptorSetBindingPoolMap;
         static std::map<uint32_t, StagingBufferPool> s_stagingBufferPoolMap;
 
     public: // Methods
@@ -33,15 +34,15 @@ namespace vulkanRendererBackend
         static void Clear();
 
         // Checkout:
-        static ShaderProperties* CheckOutShaderProperties(Shader* pShader);
+        static DescriptorSetBinding* CheckOutDescriptorSetBinding(Shader* pShader);
         static StagingBuffer* CheckOutStagingBuffer(uint32_t size);
 
         // Return:
-        static void ReturnShaderProperties(Shader* pShader, ShaderProperties* pShaderProperties);
+        static void ReturnDescriptorSetBinding(Shader* pShader, DescriptorSetBinding* pDescriptorSetBinding);
         static void ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer);
 
         // Debugging:
-        static void PrintShaderPropertiesPoolState();
+        static void PrintDescriptorSetBindingPoolState();
         static void PrintStagingBufferPoolState();
 
     private: // Methods

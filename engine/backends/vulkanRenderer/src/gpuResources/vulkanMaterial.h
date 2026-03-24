@@ -38,10 +38,15 @@ namespace vulkanRendererBackend
 		uint32_t m_renderQueue;	// shadow=0, opaque=1000, transparent=2000, skybox=3000
 		std::unique_ptr<VertexInputDescriptions> m_pVertexInputDescriptions;
 
+	private: // Methods:
+		// Constructor:
+		Material(const std::string& name);
+
 	public: // Methods:
-		// Constructors/Destructor:
-		Material(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
-		Material(uint32_t shadowMapResolution);	// special constructor for shadowMaterial.
+		// Factories/Destructor:
+		static Material CreateForward(const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static Material CreateShadow(const std::string& name, uint32_t shadowMapResolution);
+		static Material CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		~Material();
 
 		// Non-copyable:

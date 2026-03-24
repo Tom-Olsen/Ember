@@ -4,7 +4,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
 #include <variant>
 
 
@@ -21,30 +20,34 @@ namespace emberSpirvReflect
 	{
 		Uint3 blockSize;
 	};
-	struct VertexStageInfo
+	struct VertexAttributeInfo
 	{
 		std::string semantic;
 		uint32_t location;
 		uint32_t typeSize;
 		uint32_t vectorSize;
-		VkFormat format;
+		uint32_t format;
 		std::string ToString() const;
 	};
-	using ShaderStageInfo = std::variant<std::monostate, ComputeStageInfo, std::vector<VertexStageInfo>>;
+	struct VertexStageInfo
+	{
+		std::vector<VertexAttributeInfo> vertexAttributes;
+	};
+	using ShaderStageInfo = std::variant<std::monostate, ComputeStageInfo, VertexStageInfo>;
 
 
 
 	class ShaderStageReflection
 	{
 	private: // Members:
-		VkShaderStageFlagBits m_shaderStage;
+		uint32_t m_shaderStage;
 		std::unique_ptr<SpvReflectShaderModule> m_pModule;
 		ShaderStageInfo m_shaderStageInfo;
 		std::vector<DescriptorReflection> m_descriptorReflections;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		ShaderStageReflection(VkShaderStageFlagBits shaderStage, const std::vector<char>& code);
+		ShaderStageReflection(uint32_t shaderStage, const std::vector<char>& code);
 		~ShaderStageReflection();
 
 		// Non-copyable:
@@ -56,8 +59,8 @@ namespace emberSpirvReflect
 		ShaderStageReflection& operator=(ShaderStageReflection&& other) noexcept;
 
 		// Getters:
-		VkShaderStageFlagBits GetShaderStage() const;
-		const std::vector<VertexStageInfo>* GetVertexInfos() const;
+		uint32_t GetShaderStage() const;
+		const VertexStageInfo* GetVertexInfo() const;
 		const ComputeStageInfo* GetComputeInfo() const;
 		const std::vector<DescriptorReflection>& GetDescriptorReflections() const;
 
@@ -66,7 +69,7 @@ namespace emberSpirvReflect
 
 	private: // Methods:
 		ComputeStageInfo ExtractComputeStageInfo() const;
-		std::vector<VertexStageInfo> ExtractVertexStageInfo() const;
+		VertexStageInfo ExtractVertexStageInfo() const;
 		std::vector<DescriptorReflection> ExtractDescriptorReflections() const;
 	};
 }

@@ -36,7 +36,7 @@ namespace vulkanRendererBackend
 		CreateMsaaImage();
 		CreateDepthImage();
 		CreateFrameBuffers();
-		NAME_VK_RENDER_PASS(m_renderPass, "forwardRenderPass");
+		NAME_VK_OBJECT(m_renderPass, "forwardRenderPass");
 	}
 	ForwardRenderPass::~ForwardRenderPass()
 	{

@@ -14,7 +14,7 @@ typedef struct VkFence_T* VkFence;
 namespace emberBackendInterface
 {
 	class IComputeShader;
-	class IShaderProperties;
+	class IDescriptorSetBinding;
 }
 
 
@@ -60,8 +60,8 @@ namespace vulkanRendererBackend
 		void WaitForFinish(uint32_t sessionID) override;
 
 		// Workload recording:
-		void RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IShaderProperties* pIShaderProperties, Uint3 threadCount) override;
-		emberBackendInterface::IShaderProperties* RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount) override;
+		void RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount) override;
+		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount) override;
 		void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) override;
 
 		// Debugging:

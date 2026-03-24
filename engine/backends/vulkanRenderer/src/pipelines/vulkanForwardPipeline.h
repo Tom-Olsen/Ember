@@ -9,26 +9,28 @@
 namespace vulkanRendererBackend
 {
 	/// <summary>
-	/// For rendering to shadowMap atlas of shadow renderpass.
+	/// For rendering to forward renderpass render target.
 	/// </summary>
-	class ShadowPipeline : public Pipeline
+	class ForwardPipeline : public Pipeline
 	{
 	public: // Methods:
-		ShadowPipeline(
+		ForwardPipeline(
 			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,
-			uint32_t shadowMapResolution,
+			emberCommon::RenderMode renderMode,
 			const std::vector<char>& vertexCode,
+			const std::vector<char>& fragmentCode,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
 			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
-		~ShadowPipeline();
+		~ForwardPipeline();
 
 	private: // Methods:
 		void CreatePipeline(
-			uint32_t shadowMapResolution,
 			VkPipelineLayout vkPipelineLayout,
 			const VkShaderModule& vertexShaderModule,
+			const VkShaderModule& fragmentShaderModule,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
+			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
+			emberCommon::RenderMode renderMode);
 	};
 }

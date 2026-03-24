@@ -14,7 +14,6 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		Uint3 m_blockSize;
-		VkPipelineLayout m_pipelineLayout;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -26,13 +25,13 @@ namespace vulkanRendererBackend
 		ComputeShader& operator=(const ComputeShader&) = delete;
 
 		// Movable:
-		ComputeShader(ComputeShader&& other) noexcept;
-		ComputeShader& operator=(ComputeShader&& other) noexcept;
+		ComputeShader(ComputeShader&& other) noexcept = default;
+		ComputeShader& operator=(ComputeShader&& other) noexcept = default;
 
 		// Getters:
-		Uint3 GetBlockSize() const override;
 		const std::string& GetName() const override;
-		const Pipeline* const GetPipeline() const;
+		Uint3 GetBlockSize() const override;
+		const Pipeline* GetPipeline() const;
 
 		// Debugging:
 		void Print() const override;

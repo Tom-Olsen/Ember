@@ -58,7 +58,7 @@ namespace vulkanRendererBackend
 
 		// Create image:
 		VKA(vmaCreateImage(Context::GetVmaAllocator(), &vkImageInfo, &vmaAllocationInfo, &m_image, &m_allocation, nullptr));
-		NAME_VK_IMAGE(m_image, m_name + "Image");
+		NAME_VK_OBJECT(m_image, m_name + "Image");
 
 		// Create image view:
 		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
@@ -71,7 +71,7 @@ namespace vulkanRendererBackend
 		viewInfo.subresourceRange.layerCount = m_subresourceRange.layerCount;
 		viewInfo.subresourceRange.levelCount = m_subresourceRange.levelCount;
 		VKA(vkCreateImageView(Context::GetVkDevice(), &viewInfo, nullptr, &m_imageView));
-		NAME_VK_IMAGE_VIEW(m_imageView, m_name + "ImageView");
+		NAME_VK_OBJECT(m_imageView, m_name + "ImageView");
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
 		Context::GetAllocationTracker()->AddVmaImageAllocation(m_allocation, m_name);

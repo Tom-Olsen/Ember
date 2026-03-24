@@ -4,11 +4,11 @@
 #include "vulkanComputePushConstant.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
+#include "vulkanDescriptorSetBinding.h"
 #include "vulkanMacros.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanPipeline.h"
 #include "vulkanPipelineStage.h"
-#include "vulkanShaderProperties.h"
 #include <vulkan/vulkan.h>
 
 
@@ -54,7 +54,7 @@ namespace vulkanRendererBackend
 				else
 				{
 					// Update shader specific data:
-					computeCall.pShaderProperties->UpdateShaderData();
+					computeCall.pDescriptorSetBinding->UpdateShaderData(0);
 
 					// Change pipeline if compute shader has changed:
 					pComputeShader = computeCall.pComputeShader;
@@ -80,7 +80,7 @@ namespace vulkanRendererBackend
 					uint32_t groupCountY = (computeCall.threadCount.y + blockSize.y - 1) / blockSize.y;
 					uint32_t groupCountZ = (computeCall.threadCount.z + blockSize.z - 1) / blockSize.z;
 
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall.pShaderProperties->GetDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall.pDescriptorSetBinding->GetVkDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 				}
 			}

@@ -1,67 +1,99 @@
-#include "vulkanForwardTransparentPipeline.h"
+#include "vulkanForwardPipeline.h"
 #include "vulkanContext.h"
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanMacros.h"
 #include "vulkanRenderPassManager.h"
-#include "vulkanVertexLayout.h"
-#include <vulkan/vulkan.h>
+#include <type_traits>
 
 
 
 namespace vulkanRendererBackend
 {
+    // Public methods:
     // Constructor/Destructor:
-    template<typename vertexLayout>
-    ForwardTransparentPipeline<vertexLayout>::ForwardTransparentPipeline(const std::string& name, const std::vector<char>& vertexCode, const std::vector<char>& fragmentCode, const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
+    ForwardPipeline::ForwardPipeline(
+        const std::string& name,
+        VkPipelineLayout vkPipelineLayout,
+        emberCommon::RenderMode renderMode,
+        const std::vector<char>& vertexCode,
+        const std::vector<char>& fragmentCode,
+        const std::vector<VkVertexInputBindingDescription>& vertexBindings,
+        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
         m_name = name;
-
-        // Create pipeline Layout:
-        CreatePipelineLayout(vkDescriptorSetLayouts);
 
         // Create vertex and fragment shader modules from .spv files:
         VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
         VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
 
         // Create pipeline:
-        CreatePipeline(vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes);
+        CreatePipeline(vkPipelineLayout, vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes, renderMode);
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
         vkDestroyShaderModule(Context::GetVkDevice(), fragmentShaderModule, nullptr);
-        NAME_VK_OBJECT(m_pipeline, m_name + "ForwardTransparentPipeline");
+        NAME_VK_OBJECT(m_pipeline, m_name + "ForwardPipeline");
     }
-    template<typename vertexLayout>
-    ForwardTransparentPipeline<vertexLayout>::~ForwardTransparentPipeline()
+    ForwardPipeline::~ForwardPipeline()
     {
 
     }
 
 
 
-    // Private:
-    template<typename vertexLayout>
-    void ForwardTransparentPipeline<vertexLayout>::CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts)
+    // Private methods:
+    void ForwardPipeline::CreatePipeline(
+        VkPipelineLayout vkPipelineLayout,
+        const VkShaderModule& vertexShaderModule,
+        const VkShaderModule& fragmentShaderModule,
+        const std::vector<VkVertexInputBindingDescription>& vertexBindings,
+        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
+        emberCommon::RenderMode renderMode)
     {
-        // Push constants layout:
-        VkPushConstantRange pushConstantRange = {};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(DefaultPushConstant);
+        // Render mode specifics:
+        VkPolygonMode polygonMode;
+        VkCullModeFlagBits cullMode;
+        VkFrontFace frontFace;
+        VkBool32 depthWriteEnable;
+        VkCompareOp depthCompareOp;
+        VkBool32 blendEnable;
+        switch (renderMode)
+        {
+            case emberCommon::RenderMode::opaque:
+                polygonMode = VK_POLYGON_MODE_FILL;
+                cullMode = VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT;
+                frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+                depthWriteEnable = VK_TRUE;
+                depthCompareOp = VK_COMPARE_OP_LESS;
+                blendEnable = VK_FALSE;
+                break;
+            case emberCommon::RenderMode::transparent:
+                polygonMode = VK_POLYGON_MODE_FILL;
+                cullMode = VkCullModeFlagBits::VK_CULL_MODE_NONE;
+                frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+                depthWriteEnable = VK_FALSE;
+                depthCompareOp = VK_COMPARE_OP_LESS;
+                blendEnable = VK_TRUE;
+                break;
+            case emberCommon::RenderMode::skybox:
+                polygonMode = VK_POLYGON_MODE_FILL;
+                cullMode = VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT;
+                frontFace = VK_FRONT_FACE_CLOCKWISE;
+                depthWriteEnable = VK_FALSE;
+                depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+                blendEnable = VK_FALSE;
+                break;
+            case emberCommon::RenderMode::wireframe:
+                polygonMode = VK_POLYGON_MODE_LINE;
+                cullMode = VkCullModeFlagBits::VK_CULL_MODE_NONE;
+                frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+                depthWriteEnable = VK_TRUE;
+                depthCompareOp = VK_COMPARE_OP_LESS;
+                blendEnable = VK_FALSE;
+                break;
+        }
 
-        // Pipeline layout:
-        VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
-        pipelineLayoutCreateInfo.pSetLayouts = vkDescriptorSetLayouts.data();
-        pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-        pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-        VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout));
-        NAME_VK_OBJECT(m_pipelineLayout, m_name + "ForwardTransparentPipelineLayout");
-    }
-    template<typename vertexLayout>
-    void ForwardTransparentPipeline<vertexLayout>::CreatePipeline(const VkShaderModule& vertexShaderModule, const VkShaderModule& fragmentShaderModule, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
-    {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
         vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -74,7 +106,7 @@ namespace vulkanRendererBackend
         fragmentShaderStageCreateInfo.module = fragmentShaderModule;
         fragmentShaderStageCreateInfo.pName = "main";
 
-        VkPipelineShaderStageCreateInfo shaderStages[2] = { vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo };
+        std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = { vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo };
 
         // Vertex input:
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
@@ -94,15 +126,15 @@ namespace vulkanRendererBackend
 
         // Rasterization:
         VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-        rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;          // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
-        rasterizationState.cullMode = VK_CULL_MODE_NONE;                // no culling, so transparent objects are seen from both sides
-        rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // which face of triangle is front: 123 or 132?
-        rasterizationState.lineWidth = 1.0f;                            // width of lines. Bigger 1.0f requires wideLines feature
-        rasterizationState.depthClampEnable = VK_FALSE;                 // clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature.
-        rasterizationState.depthBiasEnable = VK_FALSE;                  // Optional
-        rasterizationState.depthBiasConstantFactor = 0.0f;              // Optional
-        rasterizationState.depthBiasClamp = 0.0f;                       // Optional
-        rasterizationState.depthBiasSlopeFactor = 0.0f;                 // Optional
+        rasterizationState.polygonMode = polygonMode;       // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
+        rasterizationState.cullMode = cullMode;             // which face to cull
+        rasterizationState.frontFace = frontFace;           // which face of triangle is front: 123 or 132?
+        rasterizationState.lineWidth = 1.0f;                // width of lines. Bigger 1.0f requires wideLines feature
+        rasterizationState.depthClampEnable = VK_FALSE;     // clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature.
+        rasterizationState.depthBiasEnable = VK_FALSE;      // Optional
+        rasterizationState.depthBiasConstantFactor = 0.0f;  // Optional
+        rasterizationState.depthBiasClamp = 0.0f;           // Optional
+        rasterizationState.depthBiasSlopeFactor = 0.0f;     // Optional
 
         // Multisampling:
         VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
@@ -115,22 +147,11 @@ namespace vulkanRendererBackend
 
         // Depth and stencil testing:
         VkPipelineDepthStencilStateCreateInfo depthState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-        depthState.depthTestEnable = VK_TRUE;             // depth of new fragments should be compared to the depth buffer to see if they should be discarded
-        depthState.depthWriteEnable = VK_FALSE;           // don't write to depth attachment due to transparency.
-        depthState.depthCompareOp = VK_COMPARE_OP_LESS;   // comparison that is performed to keep or discard fragments. lower = closer to camera
-        depthState.depthBoundsTestEnable = VK_FALSE;      // allows to keep only fragments in the below defined range
-        depthState.stencilTestEnable = VK_FALSE;          // stencil buffer operations (not used yet)
-
-        // Color blending:
-        VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
-        colorBlendAttachmentState.blendEnable = VK_TRUE;
-        colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
-        colorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        colorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
+        depthState.depthTestEnable = VK_TRUE;               // depth of new fragments should be compared to the depth buffer to see if they should be discarded
+        depthState.depthWriteEnable = depthWriteEnable;     // new depth of fragments that pass the depth test should be written to the depth buffer
+        depthState.depthCompareOp = depthCompareOp;         // comparison that is performed to keep or discard fragments. lower = closer to camera
+        depthState.depthBoundsTestEnable = VK_FALSE;        // allows to keep only fragments in the below defined range
+        depthState.stencilTestEnable = VK_FALSE;            // stencil buffer operations (not used yet)
 
         // Color blending pseudo code:
         // if (blendEnable)
@@ -142,9 +163,20 @@ namespace vulkanRendererBackend
         //     finalColor = newColor;
         // finalColor = finalColor & colorWriteMask;
 
-        // Current settings give standard alpha blending:
+        // Standard alpha blending:
         // finalColor.rgb = (srcAlpha * newColor.rgb) + ((1 - srcAlpha) * oldColor.rgb);
         // finalColor.a = newAlpha.a;
+
+        // Color blending:
+        VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
+        colorBlendAttachmentState.blendEnable = blendEnable;
+        colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        colorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
 
         // Color blending settings:
         VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
@@ -164,8 +196,8 @@ namespace vulkanRendererBackend
         dynamicState.pDynamicStates = dynamicStates.data();
 
         VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-        pipelineInfo.stageCount = 2;                            // vertex and fragment shaders
-        pipelineInfo.pStages = shaderStages;
+        pipelineInfo.stageCount = shaderStages.size();          // vertex and fragment shaders
+        pipelineInfo.pStages = shaderStages.data();
         pipelineInfo.pVertexInputState = &vertexInputState;     // Buffer format
         pipelineInfo.pInputAssemblyState = &inputAssemblyState; // Input assembler
         pipelineInfo.pViewportState = &viewportState;           // Viewport and scissor
@@ -173,8 +205,8 @@ namespace vulkanRendererBackend
         pipelineInfo.pMultisampleState = &multisampleState;     // Multisampling
         pipelineInfo.pDepthStencilState = &depthState;          // Depth and stencil testing
         pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
-        pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states
-        pipelineInfo.layout = m_pipelineLayout;
+		pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states: viewport and scissor
+        pipelineInfo.layout = vkPipelineLayout;
         pipelineInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
@@ -182,10 +214,4 @@ namespace vulkanRendererBackend
 
         VKA(vkCreateGraphicsPipelines(Context::GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
     }
-
-
-
-    // Explicit template instantiation:
-    template class ForwardTransparentPipeline<InterleavedVertexLayout>;
-    template class ForwardTransparentPipeline<SeparateVertexLayout>;
 }

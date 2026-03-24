@@ -1,6 +1,7 @@
 #include "vulkanPoolManager.h"
 #include "emberMath.h"
 #include "logger.h"
+#include "vulkanDescriptorSetBinding.h"
 #include "vulkanShader.h"
 
 
@@ -9,7 +10,7 @@ namespace vulkanRendererBackend
 {
 	// Static members:
 	bool PoolManager::s_isInitialized = false;
-	std::unordered_map<Shader*, ShaderPropertiesPool> PoolManager::s_shaderPropertiesPoolMap;
+	std::unordered_map<Shader*, DescriptorSetBindingPool> PoolManager::s_descriptorSetBindingPoolMap;
 	std::map<uint32_t, StagingBufferPool> PoolManager::s_stagingBufferPoolMap;
 
 
@@ -24,7 +25,7 @@ namespace vulkanRendererBackend
 	}
 	void PoolManager::Clear()
 	{
-		s_shaderPropertiesPoolMap.clear();
+		s_descriptorSetBindingPoolMap.clear();
 		s_stagingBufferPoolMap.clear();
 		s_isInitialized = false;
 	}
@@ -32,11 +33,9 @@ namespace vulkanRendererBackend
 
 
 	// Checkout:
-	ShaderProperties* PoolManager::CheckOutShaderProperties(Shader* pShader)
+	DescriptorSetBinding* PoolManager::CheckOutDescriptorSetBinding(Shader* pShader)
 	{
-		//return s_shaderPropertiesPoolMap[pShader].CheckOut(pShader);
-		ShaderProperties* pShaderProperties = s_shaderPropertiesPoolMap[pShader].CheckOut(pShader);
-		return pShaderProperties;
+		return s_descriptorSetBindingPoolMap[pShader].CheckOut(pShader);
 	}
 	StagingBuffer* PoolManager::CheckOutStagingBuffer(uint32_t size)
 	{
@@ -47,9 +46,9 @@ namespace vulkanRendererBackend
 
 
 	// Return:
-	void PoolManager::ReturnShaderProperties(Shader* pShader, ShaderProperties* pShaderProperties)
+	void PoolManager::ReturnDescriptorSetBinding(Shader* pShader, DescriptorSetBinding* pDescriptorSetBinding)
 	{
-		s_shaderPropertiesPoolMap[pShader].Return(pShaderProperties);
+		s_descriptorSetBindingPoolMap[pShader].Return(pDescriptorSetBinding);
 	}
 	void PoolManager::ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer)
 	{
@@ -60,12 +59,12 @@ namespace vulkanRendererBackend
 
 
 	// Debugging:
-	void PoolManager::PrintShaderPropertiesPoolState()
+	void PoolManager::PrintDescriptorSetBindingPoolState()
 	{
-		for (auto& [pShader, shaderPropertiesPool] : s_shaderPropertiesPoolMap)
+		for (auto& [pShader, descriptorSetBindingPool] : s_descriptorSetBindingPoolMap)
 		{
 			LOG_INFO("Shader '{}':", pShader->GetName());
-			shaderPropertiesPool.PrintPoolState();
+			descriptorSetBindingPool.PrintPoolState();
 		}
 	}
 	void PoolManager::PrintStagingBufferPoolState()

@@ -9,7 +9,7 @@ namespace emberBackendInterface
     // Forward declerations:
     class IBuffer;
     class IComputeShader;
-    class IShaderProperties;
+    class IDescriptorSetBinding;
 
 
 
@@ -32,8 +32,8 @@ namespace emberBackendInterface
             virtual void WaitForFinish(uint32_t sessionID) = 0;
 
             // Workload recording:
-            virtual void RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, IShaderProperties* pIShaderProperties, Uint3 threadCount) = 0;
-            virtual IShaderProperties* RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
+            virtual void RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount) = 0;
+            virtual IDescriptorSetBinding* RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
             virtual void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) = 0;
         };
 
@@ -46,7 +46,7 @@ namespace emberBackendInterface
             virtual ~IImmediate() = default;
 
             // Immediate dispatch call:
-            virtual void Dispatch(IComputeShader* pIComputeShader, IShaderProperties* pIShaderProperties, Uint3 threadCount, float time, float deltaTime) = 0;
+            virtual void Dispatch(IComputeShader* pComputeShader, IDescriptorSetBinding* pDescriptorSetBinding, Uint3 threadCount, float time, float deltaTime) = 0;
         };
 
 
@@ -58,8 +58,8 @@ namespace emberBackendInterface
             virtual ~IPostRender() = default;
 
             // Workload recording:
-            virtual void RecordComputeShader(IComputeShader* pIComputeShader, IShaderProperties* pIShaderProperties) = 0;
-            virtual IShaderProperties* RecordComputeShader(IComputeShader* pIComputeShader) = 0;
+            virtual void RecordComputeShader(IComputeShader* pIComputeShader, IDescriptorSetBinding* pIDescriptorSetBinding) = 0;
+            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader) = 0;
         };
 
 
@@ -71,8 +71,8 @@ namespace emberBackendInterface
             virtual ~IPreRender() = default;
 
             // Workload recording:
-            virtual void RecordComputeShader(IComputeShader* pIComputeShader, IShaderProperties* pIShaderProperties, Uint3 threadCount) = 0;
-            virtual IShaderProperties* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
+            virtual void RecordComputeShader(IComputeShader* pIComputeShader, IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount) = 0;
+            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
             virtual void RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) = 0;
         };
 

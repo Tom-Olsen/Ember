@@ -1,8 +1,11 @@
 #ifndef __INCLUDE_GUARD_fragmentShaderCommon_hlsli__
 #define __INCLUDE_GUARD_fragmentShaderCommon_hlsli__
+#include "descriptorSetMacros.h"
+#include "defaultPushConstant.hlsli"
+#include "math.hlsli"
 #include "globalSet.hlsli"
-#include "frameSet.hlsli"
 #include "sceneSet.hlsli"
+#include "frameSet.hlsli"
 
 
 

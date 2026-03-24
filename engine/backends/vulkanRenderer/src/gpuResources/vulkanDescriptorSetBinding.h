@@ -2,6 +2,7 @@
 #include "iDescriptorSetBinding.h"
 #include "vulkanDescriptorType.h"
 #include "vulkanRendererExport.h"
+#include "vulkanUniformBuffer.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -23,10 +24,8 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class Shader;
-	class Sampler;
 	class Buffer;
 	class Texture;
-	class UniformBuffer;
 
 
 
@@ -34,12 +33,7 @@ namespace vulkanRendererBackend
 	struct UniformBufferBinding	// UniformBuffer is a Buffer, but gets handled differently than other buffers as it owns cpu side memory which must be uploaded to gpu on update.
 	{
 		uint32_t binding;
-		std::shared_ptr<UniformBuffer> pUniformBuffer; // Ember::ToDo: why is this a shared_ptr and not unique_ptr?
-	};
-	struct SamplerBinding
-	{
-		uint32_t binding;
-		Sampler* pSampler;
+		UniformBuffer uniformBuffer;
 	};
 	struct TextureBinding
 	{
@@ -58,7 +52,7 @@ namespace vulkanRendererBackend
 
 	/// <summary>
 	/// Each DescriptorSetBinding links to one specific vkDescriptorSet and manages all the associated gpu resources.
-	/// DescriptorSetBinding own UniformBuffer pointers; Sampler and Texture pointers are not owned by DescriptorSetBinding.
+	/// DescriptorSetBinding owns UniformBuffer; Buffers and Texture pointers are not owned by DescriptorSetBinding.
 	/// DescriptorSetBinding construction is expensive, pre create them or use the DescriptorSetBindingPool.
 	/// </summary>
 	class VULKAN_RENDERER_API DescriptorSetBinding : public emberBackendInterface::IDescriptorSetBinding
@@ -70,18 +64,13 @@ namespace vulkanRendererBackend
 		// Ember::ToDo: resolve string to binding index once and use binding index as key for unordered maps!
 		// All these vectors contain one item for each frame in flight:
 		std::vector<VkDescriptorSet> m_descriptorSets;
-		std::vector<std::unordered_map<std::string, UniformBufferBinding>> m_uniformBufferMaps; // Ember::ToDo: update for new UniformBuffer class.
-		std::vector<std::unordered_map<std::string, SamplerBinding>> m_samplerMaps;
 		std::vector<std::unordered_map<std::string, TextureBinding>> m_textureMaps;
 		std::vector<std::unordered_map<std::string, BufferBinding>> m_bufferMaps;
+		std::unordered_map<std::string, UniformBufferBinding> m_uniformBufferMap; // uniformBuffer handles framesInFlight with a ring buffer.
 
 		// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer acts as a staging buffer:
-		std::unordered_map<std::string, Sampler*> m_samplerStagingMap; // Ember::ToDo: delete all sampler stuff in here.
 		std::unordered_map<std::string, Texture*> m_textureStagingMap;
 		std::unordered_map<std::string, Buffer*> m_bufferStagingMap;
-
-		// UniformBuffer instead needs one bool per frame in flight and per uniform buffer, to check if any values are updated:
-		std::vector<std::unordered_map<std::string, bool>> m_updateUniformBuffer;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -186,7 +175,6 @@ namespace vulkanRendererBackend
 	private: // Methods:
 		// Initializers:
 		void InitUniformBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding);
-		void InitSamplerResourceBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Sampler* pSampler);
 		void InitTextureBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture* pTexture, DescriptorType descriptorType);
 		void InitBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType);
 		void InitStagingMaps();
@@ -194,8 +182,6 @@ namespace vulkanRendererBackend
 
 		// Descriptor Set management:
 		void CreateDescriptorSets();
-		void UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding samplerResourceBinding);
-		void UpdateDescriptorSet(uint32_t frameIndex, SamplerBinding samplerResourceBinding);
 		void UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferBinding);
 		void UpdateDescriptorSet(uint32_t frameIndex, TextureBinding textureBinding);
 		void UpdateDescriptorSet(uint32_t frameIndex, BufferBinding buffeBinding);

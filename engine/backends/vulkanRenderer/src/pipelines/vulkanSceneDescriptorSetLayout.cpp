@@ -12,7 +12,7 @@
 namespace vulkanRendererBackend
 {
     // Static members:
-    UniformBuffer SceneDescriptorSetLayout::s_uniformLightPropertiesBuffer;
+    std::unique_ptr<UniformBuffer> SceneDescriptorSetLayout::s_pUniformLightPropertiesBuffer;
     VkDescriptorSetLayout SceneDescriptorSetLayout::s_descriptorSetLayout = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> SceneDescriptorSetLayout::s_descriptorSets;
 
@@ -24,6 +24,7 @@ namespace vulkanRendererBackend
     {
         // Create descriptor set layout:
         {
+            // cbuffer LightProperties : register(b2300, SCENE_SET):
             VkDescriptorSetLayoutBinding binding{};
             binding.binding = 2300;
             binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -112,16 +113,16 @@ namespace vulkanRendererBackend
             bufferLayout.AddMember(lightDirectionData);
             bufferLayout.AddMember(lightPositionalData);
 
-            s_uniformLightPropertiesBuffer = UniformBuffer(bufferLayout);
+            s_pUniformLightPropertiesBuffer = std::make_unique<UniformBuffer>(bufferLayout);
         }
 
         // Bind uniform light properties buffer to descriptor sets:
         for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
         {
             VkDescriptorBufferInfo bufferInfo;
-            bufferInfo.buffer = s_uniformLightPropertiesBuffer.GetVmaBuffer()->GetVkBuffer();
-            bufferInfo.offset = i * s_uniformLightPropertiesBuffer.GetAlignedSubBufferSize();
-            bufferInfo.range = s_uniformLightPropertiesBuffer.GetSize();
+            bufferInfo.buffer = s_pUniformLightPropertiesBuffer->GetVmaBuffer()->GetVkBuffer();
+            bufferInfo.offset = i * s_pUniformLightPropertiesBuffer->GetAlignedSubBufferSize();
+            bufferInfo.range = s_pUniformLightPropertiesBuffer->GetSize();
 
             VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
             descriptorWrite.dstSet = s_descriptorSets[i];
@@ -155,7 +156,6 @@ namespace vulkanRendererBackend
     // Setters:
     void SceneDescriptorSetLayout::SetLightData(std::vector<emberCommon::DirectionalLight>& directionalLights, std::vector<emberCommon::PositionalLight>& positionalLights)
     {
-        assert(frameIndex < Context::GetFramesInFlight());
         SetDirectionalLightData(directionalLights);
         SetPositionalLightData(positionalLights);
     }
@@ -177,7 +177,7 @@ namespace vulkanRendererBackend
     // Update data:
     void SceneDescriptorSetLayout::UpdateShaderData(uint32_t frameIndex)
     {
-        s_uniformLightPropertiesBuffer.UpdateBuffer(frameIndex);
+        s_pUniformLightPropertiesBuffer->UpdateBuffer(frameIndex);
     }
 
 
@@ -186,28 +186,28 @@ namespace vulkanRendererBackend
     void SceneDescriptorSetLayout::SetDirectionalLightData(std::vector<emberCommon::DirectionalLight>& directionalLights)
     {
         assert(directionalLights.size() <= MAX_DIR_LIGHTS);
-        s_uniformLightPropertiesBuffer.SetInt("light_dirCount", static_cast<int>(directionalLights.size()));
+        s_pUniformLightPropertiesBuffer->SetInt("light_dirCount", static_cast<int>(directionalLights.size()));
         static std::string arrayName = "light_directionData";
         for (uint32_t i = 0; i < directionalLights.size(); i++)
         {
-            s_uniformLightPropertiesBuffer.SetFloat4x4(arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
-            s_uniformLightPropertiesBuffer.SetFloat3(arrayName, i, "direction", directionalLights[i].direction);
-            s_uniformLightPropertiesBuffer.SetInt(arrayName, i, "shadowType", static_cast<int>(directionalLights[i].shadowType));
-            s_uniformLightPropertiesBuffer.SetFloat4(arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
+            s_pUniformLightPropertiesBuffer->SetFloat4x4(arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
+            s_pUniformLightPropertiesBuffer->SetFloat3(arrayName, i, "direction", directionalLights[i].direction);
+            s_pUniformLightPropertiesBuffer->SetInt(arrayName, i, "shadowType", static_cast<int>(directionalLights[i].shadowType));
+            s_pUniformLightPropertiesBuffer->SetFloat4(arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
         }
     }
     void SceneDescriptorSetLayout::SetPositionalLightData(std::vector<emberCommon::PositionalLight>& positionalLights)
     {
         assert(positionalLights.size() <= MAX_POS_LIGHTS);
-        s_uniformLightPropertiesBuffer.SetInt("light_posCount", static_cast<int>(positionalLights.size()));
+        s_pUniformLightPropertiesBuffer->SetInt("light_posCount", static_cast<int>(positionalLights.size()));
         static std::string arrayName = "light_positionData";
         for (uint32_t i = 0; i < positionalLights.size(); i++)
         {
-            s_uniformLightPropertiesBuffer.SetFloat4x4(arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
-            s_uniformLightPropertiesBuffer.SetFloat3(arrayName, i, "position", positionalLights[i].position);
-            s_uniformLightPropertiesBuffer.SetInt(arrayName, i, "shadowType", static_cast<int>(positionalLights[i].shadowType));
-            s_uniformLightPropertiesBuffer.SetFloat4(arrayName, i, "colorIntensity", Float4(positionalLights[i].color, positionalLights[i].intensity));
-            s_uniformLightPropertiesBuffer.SetFloat2(arrayName, i, "blendStartEnd", Float2(positionalLights[i].blendStart, positionalLights[i].blendEnd));
+            s_pUniformLightPropertiesBuffer->SetFloat4x4(arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
+            s_pUniformLightPropertiesBuffer->SetFloat3(arrayName, i, "position", positionalLights[i].position);
+            s_pUniformLightPropertiesBuffer->SetInt(arrayName, i, "shadowType", static_cast<int>(positionalLights[i].shadowType));
+            s_pUniformLightPropertiesBuffer->SetFloat4(arrayName, i, "colorIntensity", Float4(positionalLights[i].color, positionalLights[i].intensity));
+            s_pUniformLightPropertiesBuffer->SetFloat2(arrayName, i, "blendStartEnd", Float2(positionalLights[i].blendStart, positionalLights[i].blendEnd));
         }
     }
 }

@@ -62,7 +62,7 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
-	uint32_t GetAlignedSubBufferSize()
+	uint32_t UniformBuffer::GetAlignedSubBufferSize()
 	{
 		return m_alignedSize;
 	}
@@ -315,65 +315,65 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& memberName) const
 	{
-		UniformBufferMember* pMember = m_bufferLayout.GetMember(memberName);
+		const emberBufferLayout::BufferMember* pMember = m_bufferLayout.GetMember(memberName);
 		if (pMember != nullptr)
-			return GetData<T>(pMember->offset, pMember->size);
+			return GetData<T>(pMember->GetOffset(), pMember->GetSize());
 
-		// could not find requested entry:
+		// Could not find requested entry:
 		return T();
 	}
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& arrayName, uint32_t arrayIndex) const
 	{
-		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
+		const emberBufferLayout::BufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
-			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+			const emberBufferLayout::BufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
 			if (pSubMember != nullptr)
-				return GetData<T>(pSubMember->offset, pSubMember->size);
+				return GetData<T>(pSubMember->GetOffset(), pSubMember->GetSize());
 		}
 
-		// could not find requested entry:
+		// Could not find requested entry:
 		return T();
 	}
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
-		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
+		const emberBufferLayout::BufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
-			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+			const emberBufferLayout::BufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
 			if (pSubMember != nullptr)
 			{
-				UniformBufferMember* pSubSubMember = pSubMember->GetSubMember(memberName);
+				const emberBufferLayout::BufferMember* pSubSubMember = pSubMember->GetSubMember(memberName);
 				if (pSubSubMember != nullptr)
-					return GetData<T>(pSubSubMember->offset, pSubSubMember->size);
+					return GetData<T>(pSubSubMember->GetOffset(), pSubSubMember->GetSize());
 			}
 		}
 
-		// could not find requested entry:
+		// Could not find requested entry:
 		return T();
 	}
 	template<typename T>
 	T UniformBuffer::GetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
-		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
+		const emberBufferLayout::BufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
-			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+			const emberBufferLayout::BufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
 			if (pSubMember != nullptr)
 			{
-				UniformBufferMember* pSubSubMember = pSubMember->GetSubMember(subArrayName);
+				const emberBufferLayout::BufferMember* pSubSubMember = pSubMember->GetSubMember(subArrayName);
 				if (pSubSubMember != nullptr)
 				{
-					UniformBufferMember* pSubSubSubMember = pSubSubMember->GetSubMember(subArrayName + "[" + std::to_string(subArrayIndex) + "]");
+					const emberBufferLayout::BufferMember* pSubSubSubMember = pSubSubMember->GetSubMember(subArrayName + "[" + std::to_string(subArrayIndex) + "]");
 					if (pSubSubSubMember != nullptr)
-						return GetData<T>(pSubSubSubMember->offset, pSubSubSubMember->size);
+						return GetData<T>(pSubSubSubMember->GetOffset(), pSubSubSubMember->GetSize());
 				}
 			}
 		}
 
-		// could not find requested entry:
+		// Could not find requested entry:
 		return T();
 	}
 
@@ -383,65 +383,65 @@ namespace vulkanRendererBackend
 	template<typename T>
 	bool UniformBuffer::SetValue(const std::string& memberName, const T& value)
 	{
-		UniformBufferMember* pMember = m_bufferLayout.GetMember(memberName);
+		const emberBufferLayout::BufferMember* pMember = m_bufferLayout.GetMember(memberName);
 		if (pMember != nullptr)
-			return CheckAndUpdateData(value, pMember->offset, pMember->size);
+			return CheckAndUpdateData(value, pMember->GetOffset(), pMember->GetSize());
 
-		// value not found:
+		// Value not found:
 		return false;
 	}
 	template<typename T>
 	bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const T& value)
 	{
-		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
+		const emberBufferLayout::BufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
-			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+			const emberBufferLayout::BufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
 			if (pSubMember != nullptr)
-				return CheckAndUpdateData(value, pSubMember->offset, pSubMember->size);
+				return CheckAndUpdateData(value, pSubMember->GetOffset(), pSubMember->GetSize());
 		}
 
-		// value not found:
+		// Value not found:
 		return false;
 	}
 	template<typename T>
 	bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value)
 	{
-		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
+		const emberBufferLayout::BufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
-			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+			const emberBufferLayout::BufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
 			if (pSubMember != nullptr)
 			{
-				UniformBufferMember* pSubSubMember = pSubMember->GetSubMember(memberName);
+				const emberBufferLayout::BufferMember* pSubSubMember = pSubMember->GetSubMember(memberName);
 				if (pSubSubMember != nullptr)
-					return CheckAndUpdateData(value, pSubSubMember->offset, pSubSubMember->size);
+					return CheckAndUpdateData(value, pSubSubMember->GetOffset(), pSubSubMember->GetSize());
 			}
 		}
 
-		// value not found:
+		// Value not found:
 		return false;
 	}
 	template<typename T>
 	bool UniformBuffer::SetValue(const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
 	{
-		UniformBufferMember* pMember = m_bufferLayout.GetMember(arrayName);
+		const emberBufferLayout::BufferMember* pMember = m_bufferLayout.GetMember(arrayName);
 		if (pMember != nullptr)
 		{
-			UniformBufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
+			const emberBufferLayout::BufferMember* pSubMember = pMember->GetSubMember(arrayName + "[" + std::to_string(arrayIndex) + "]");
 			if (pSubMember != nullptr)
 			{
-				UniformBufferMember* pSubSubMember = pSubMember->GetSubMember(subArrayName);
+				const emberBufferLayout::BufferMember* pSubSubMember = pSubMember->GetSubMember(subArrayName);
 				if (pSubSubMember != nullptr)
 				{
-					UniformBufferMember* pSubSubSubMember = pSubSubMember->GetSubMember(subArrayName + "[" + std::to_string(subArrayIndex) + "]");
+					const emberBufferLayout::BufferMember* pSubSubSubMember = pSubSubMember->GetSubMember(subArrayName + "[" + std::to_string(subArrayIndex) + "]");
 					if (pSubSubSubMember != nullptr)
-						return CheckAndUpdateData(value, pSubSubSubMember->offset, pSubSubSubMember->size);
+						return CheckAndUpdateData(value, pSubSubSubMember->GetOffset(), pSubSubSubMember->GetSize());
 				}
 			}
 		}
 
-		// value not found:
+		// Value not found:
 		return false;
 	}
 
@@ -451,7 +451,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T UniformBuffer::GetData(uint32_t offset, uint32_t size) const
 	{
-		// redirect bool to int:
+		// Redirect bool to int:
 		if constexpr (std::is_same<T, bool>::value)
 		{
 			int intValue = GetData<int>(offset, size);
@@ -466,7 +466,7 @@ namespace vulkanRendererBackend
 	template<typename T>
 	bool UniformBuffer::CheckAndUpdateData(const T& value, uint32_t offset, uint32_t size)
 	{
-		// redirect bool to int:
+		// Redirect bool to int:
 		if constexpr (std::is_same<T, bool>::value)
 		{
 			int intValue = static_cast<int>(value);

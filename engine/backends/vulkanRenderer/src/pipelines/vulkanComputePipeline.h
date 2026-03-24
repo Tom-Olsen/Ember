@@ -14,11 +14,10 @@ namespace vulkanRendererBackend
 	class ComputePipeline : public Pipeline
 	{
 	public: // Methods:
-		ComputePipeline(const std::string& name, const std::vector<char>& computeCode, const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts);
+		ComputePipeline(const std::string& name, VkPipelineLayout vkPipelineLayout, const std::vector<char>& computeCode);
 		~ComputePipeline();
 
 	private: // Methods:
-		void CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts);
-		void CreatePipeline(const VkShaderModule& computeShaderModule);
+		void CreatePipeline(VkPipelineLayout vkPipelineLayout, const VkShaderModule& computeShaderModule);
 	};
 }

@@ -17,6 +17,7 @@ namespace emberCommon
 	};
 
 
+
 	enum class VertexMemoryLayout : uint32_t
 	{
 		interleaved,
@@ -32,6 +33,8 @@ namespace emberCommon
 			default: return "unknown";
 		}
 	}
+
+
 
 	enum class RenderMode : uint32_t
 	{
@@ -53,6 +56,8 @@ namespace emberCommon
 		}
 	}
 
+
+
 	enum class CullMode : uint32_t
 	{
 		back,
@@ -70,6 +75,7 @@ namespace emberCommon
 			default: return "unknown";
 		}
 	}
+
 
 
 	struct PipelineState

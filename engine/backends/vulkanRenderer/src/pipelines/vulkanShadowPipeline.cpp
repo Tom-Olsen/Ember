@@ -1,65 +1,51 @@
 #include "vulkanShadowPipeline.h"
 #include "vulkanContext.h"
+#include "vulkanDefaultPushConstant.h"
 #include "vulkanMacros.h"
 #include "vulkanRenderPassManager.h"
-#include "vulkanShadowPushConstant.h"
 #include "vulkanShadowRenderPass.h"
-#include "vulkanVertexLayout.h"
 #include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
+    // Public methods:
     // Constructor/Destructor:
-    template<typename vertexLayout>
-    ShadowPipeline<vertexLayout>::ShadowPipeline(const std::string& name, uint32_t shadowMapResolution, const std::vector<char>& vertexCode, const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
+    ShadowPipeline::ShadowPipeline(
+        const std::string& name,
+        VkPipelineLayout vkPipelineLayout,
+        uint32_t shadowMapResolution,
+        const std::vector<char>& vertexCode,
+        const std::vector<VkVertexInputBindingDescription>& vertexBindings,
+        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
         m_name = name;
-
-        // Create pipeline Layout:
-        CreatePipelineLayout(vkDescriptorSetLayouts);
 
         // Create vertex and fragment shader modules from .spv files:
         VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
 
         // Create pipeline:
-        CreatePipeline(shadowMapResolution, vertexShaderModule, shaderReflection);
+        CreatePipeline(shadowMapResolution, vkPipelineLayout, vertexShaderModule, vertexBindings, vertexAttributes);
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
         NAME_VK_OBJECT(m_pipeline, m_name + "ShadowPipeline");
     }
-    template<typename vertexLayout>
-    ShadowPipeline<vertexLayout>::~ShadowPipeline()
+    ShadowPipeline::~ShadowPipeline()
     {
 
     }
 
 
 
-    // Private:
-    template<typename vertexLayout>
-    void ShadowPipeline<vertexLayout>::CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& vkDescriptorSetLayouts)
-    {
-        // Push constants layout:
-        VkPushConstantRange pushConstantRange = {};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(ShadowPushConstant);
-
-        // Pipeline layout:
-        VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
-        pipelineLayoutCreateInfo.pSetLayouts = vkDescriptorSetLayouts.data();
-        pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-        pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-
-        VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout));
-        NAME_VK_OBJECT(m_pipelineLayout, m_name + "ShadowPipelineLayout");
-    }
-    template<typename vertexLayout>
-    void ShadowPipeline<vertexLayout>::CreatePipeline(uint32_t shadowMapResolution, const VkShaderModule& vertexShaderModule, const std::vector<VkVertexInputBindingDescription>& vertexBindings, const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
+    // Private methods:
+    void ShadowPipeline::CreatePipeline(
+        uint32_t shadowMapResolution,
+        VkPipelineLayout vkPipelineLayout,
+        const VkShaderModule& vertexShaderModule,
+        const std::vector<VkVertexInputBindingDescription>& vertexBindings,
+        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -156,7 +142,7 @@ namespace vulkanRendererBackend
         pipelineInfo.pDepthStencilState = &depthState;			    // Depth and stencil testing
         pipelineInfo.pColorBlendState = &colorBlendState;			// Color blending
 		pipelineInfo.pDynamicState = &dynamicState;					// Dynamic states: depth bias 
-        pipelineInfo.layout = m_pipelineLayout;
+        pipelineInfo.layout = vkPipelineLayout;
         pipelineInfo.renderPass = RenderPassManager::GetShadowRenderPass()->GetVkRenderPass();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;

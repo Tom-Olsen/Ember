@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 	{
 		CreateRenderPass();
 		CreateFrameBuffers();
-		NAME_VK_RENDER_PASS(m_renderPass, "presentRenderPass");
+		NAME_VK_OBJECT(m_renderPass, "presentRenderPass");
 	}
 	PresentRenderPass::~PresentRenderPass()
 	{

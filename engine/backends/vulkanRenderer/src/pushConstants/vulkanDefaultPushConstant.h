@@ -12,14 +12,12 @@ namespace vulkanRendererBackend
 	/// </summary>
 	struct DefaultPushConstant
 	{
+		alignas(4) uint32_t targetIndex;
 		alignas(4) uint32_t instanceCount;
 		alignas(4) float time;
 		alignas(4) float deltaTime;
-		alignas(4) int dirLightsCount;
-		alignas(4) int posLightsCount;
-		alignas(16) Float4 cameraPosition;
 
-		DefaultPushConstant(uint32_t instanceCount, float time, float deltaTime, int dirLightsCount, int posLightsCount, const Float3& cameraPosition);
+		DefaultPushConstant(uint32_t targetIndex, uint32_t instanceCount, float time, float deltaTime);
 		std::string ToString();
 	};
 }

@@ -144,12 +144,12 @@ namespace vulkanRendererBackend
 
 				// Copy:
 				uint64_t size = 3 * triangleCount * sizeof(uint16_t);
-				m_pIndexStagingBuffer->SetData(reinterpret_cast<uint16_t*>(triangles16.data()), size);
+				m_pIndexStagingBuffer->SetData(reinterpret_cast<const uint16_t*>(triangles16.data()), size);
 			}
 			else // (m_indexType == IndexType::uint32)
 			{
 				uint64_t size = 3 * triangleCount * sizeof(uint32_t);
-				m_pIndexStagingBuffer->SetData(reinterpret_cast<uint32_t*>(triangles.data()), size);
+				m_pIndexStagingBuffer->SetData(reinterpret_cast<const uint32_t*>(triangles.data()), size);
 			}
 		}
 	}
@@ -169,27 +169,27 @@ namespace vulkanRendererBackend
 	{
 		return m_vkIndexType;
 	}
-	VertexBuffer* Mesh::GetVertexBuffer() const
+	const VertexBuffer* Mesh::GetVertexBuffer() const
 	{
 		return m_pVertexBuffers[Context::GetFrameIndex()].get();
 	}
-	VertexBuffer* Mesh::GetVertexBuffer(uint32_t frameIndex) const
+	const VertexBuffer* Mesh::GetVertexBuffer(uint32_t frameIndex) const
 	{
 		return m_pVertexBuffers[frameIndex].get();
 	}
-	IndexBuffer* Mesh::GetIndexBuffer() const
+	const IndexBuffer* Mesh::GetIndexBuffer() const
 	{
 		return m_pIndexBuffers[Context::GetFrameIndex()].get();
 	}
-	IndexBuffer* Mesh::GetIndexBuffer(uint32_t frameIndex) const
+	const IndexBuffer* Mesh::GetIndexBuffer(uint32_t frameIndex) const
 	{
 		return m_pIndexBuffers[frameIndex].get();
 	}
-	VkBuffer* Mesh::GetVkBuffers() const
+	const VkBuffer* Mesh::GetVkBuffers() const
 	{
 		return m_buffersCache[Context::GetFrameIndex()].data();
 	}
-	VkDeviceSize* Mesh::GetOffsets() const
+	const VkDeviceSize* Mesh::GetOffsets() const
 	{
 		return m_offsetsCache[Context::GetFrameIndex()].data();
 	}
@@ -219,10 +219,10 @@ namespace vulkanRendererBackend
 			reallocationTriggered = true;
 		}
 		if (reallocationTriggered)
-			UpdateBufferCache(frameInde1x, vertexCount);
+			UpdateBufferCache(frameIndex, vertexCount);
 
-		m_pVertexStagingBuffer->UploadToBuffer(vkCommandBuffer, m_pVertexBuffers[frameIndex]->GetVmaBuffer()->GetVkBuffer());
-		m_pIndexStagingBuffer->UploadToBuffer(vkCommandBuffer, m_pIndexBuffers[frameIndex]->GetVmaBuffer()->GetVkBuffer());
+		m_pVertexStagingBuffer->UploadToBuffer(vkCommandBuffer, static_cast<Buffer*>(m_pVertexBuffers[frameIndex].get()));
+		m_pIndexStagingBuffer->UploadToBuffer(vkCommandBuffer, static_cast<Buffer*>(m_pIndexBuffers[frameIndex].get()));
 	}
 
 
