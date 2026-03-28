@@ -13,7 +13,7 @@ set(VULKAN_SDK_PATH $ENV{VULKAN_SDK})
 if(WIN32)
     set(DXC_PATH "${VULKAN_SDK_PATH}/bin/dxc.exe")
 else()
-    set(DXC_PATH "${VULKAN_SDK_PATH}/bin/dxc")
+    find_program(DXC_PATH dxc REQUIRED)
 endif()
 # ---------------------------------------------------
 
