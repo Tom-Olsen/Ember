@@ -1,5 +1,6 @@
 #include "vulkanComputeSession.h"
 #include "emberMath.h"
+#include "logger.h"
 #include "vulkanAccessMask.h"
 #include "vulkanComputePushConstant.h"
 #include "vulkanComputeShader.h"
@@ -9,6 +10,7 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanPipeline.h"
 #include "vulkanPipelineStage.h"
+#include "vulkanRenderer.h"
 #include <vulkan/vulkan.h>
 
 
@@ -28,7 +30,6 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			ComputeShader* pComputeShader = nullptr;
-			ComputeShader* pPreviousComputeShader = nullptr;
 			VkPipeline pipeline = VK_NULL_HANDLE;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 			ComputePushConstant pushConstant(Uint3::one, time, deltaTime);
@@ -58,30 +59,30 @@ namespace vulkanRendererBackend
 
 					// Change pipeline if compute shader has changed:
 					pComputeShader = computeCall.pComputeShader;
-					if (pPreviousComputeShader != pComputeShader)
+					if (pComputeShader != computeCall.pComputeShader)
 					{
-						pPreviousComputeShader = pComputeShader;
+						pComputeShader = computeCall.pComputeShader;
 						pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
-						pipelineLayout = pComputeShader->GetPipeline()->GetVkPipelineLayout();
-						pushConstant.threadCount = computeCall.threadCount;
+						pipelineLayout = pComputeShader->GetVkPipelineLayout();
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 					}
 
-					// Same compute shader but different thread Count => update push constants:
-					if (pushConstant.threadCount != computeCall.threadCount)
-					{
-						pushConstant.threadCount = computeCall.threadCount;
-						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
-					}
+					// Push constant:
+					pushConstant.threadCount = computeCall.threadCount;
+					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 
+			        // Compute group count:
 					Uint3 blockSize = pComputeShader->GetBlockSize();
 					uint32_t groupCountX = (computeCall.threadCount.x + blockSize.x - 1) / blockSize.x;
 					uint32_t groupCountY = (computeCall.threadCount.y + blockSize.y - 1) / blockSize.y;
 					uint32_t groupCountZ = (computeCall.threadCount.z + blockSize.z - 1) / blockSize.z;
 
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &computeCall.pDescriptorSetBinding->GetVkDescriptorSet(Context::GetFrameIndex()), 0, nullptr);
-					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+                    // Dispatch compute shader:
+                    VkDescriptorSet globalSet = Context::GetRenderer()->GetStaticDescriptorSets(0)[GLOBAL_SET_INDEX];
+			        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, GLOBAL_SET_INDEX, 1, &globalSet, 0, nullptr);
+			        if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(0); vkDescriptorSet != VK_NULL_HANDLE)
+			        	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+			        vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 				}
 			}
 		}
