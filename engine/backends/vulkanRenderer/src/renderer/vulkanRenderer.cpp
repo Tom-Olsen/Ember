@@ -163,7 +163,7 @@ namespace vulkanRendererBackend
 		// We use linear color space throughout entire render process. So apply gamma correction in post processing as last step:
 		m_pCompute->GetPostRenderCompute()->RecordComputeShader(DefaultGpuResources::GetGammaCorrectionComputeShader());
 		SortDrawCallPointers();
-		UpdateShaderData(m_frameIndex);
+		UpdateShaderData();
 		
 		// Record and submit current frame commands:
 		{
@@ -192,7 +192,7 @@ namespace vulkanRendererBackend
 			RecordPostRenderComputeCommands();
 			SubmitPostRenderComputeCommands();
 
-			if (!Context::DockSpaceEnabled())ep
+			if (!Context::DockSpaceEnabled())
 				RecordPresentCommands();
 			else
 				RecordImGuiPresentCommands();
@@ -311,7 +311,7 @@ namespace vulkanRendererBackend
 
 		// Setup draw call:
 		pDescriptorSetBinding->SetBuffer("instanceBuffer", pInstanceBuffer);
-		DescriptorSetBinding* pShadowDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding((Shader*)m_pShadowMaterial.get());
+		DescriptorSetBinding* pShadowDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()));
 		pShadowDescriptorSetBinding->SetBuffer("instanceBuffer", pInstanceBuffer);
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<DescriptorSetBinding*>(pDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
 		m_staticDrawCalls.push_back(drawCall);
@@ -409,64 +409,64 @@ namespace vulkanRendererBackend
 
 
 	// Gpu resource factories:
-	emberBackendInterface::IBuffer* Renderer::CreateBuffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage)
+	emberBackendInterface::IBuffer* Renderer::CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage)
 	{
 		emberBackendInterface::IBuffer* pIBuffer = nullptr;
 		switch (usage)
 		{
 		case emberCommon::BufferUsage::index:
-			pIBuffer = new IndexBuffer(count, elementSize, name);
+			pIBuffer = new IndexBuffer(count, elementSize);
 			break;
 		case emberCommon::BufferUsage::storage:
-			pIBuffer = new StorageBuffer(count, elementSize, name);
+			pIBuffer = new StorageBuffer(count, elementSize);
 			break;
 		case emberCommon::BufferUsage::vertex:
-			pIBuffer = new VertexBuffer(count, elementSize, name);
+			pIBuffer = new VertexBuffer(count, elementSize);
 			break;
 		default:
 			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateBuffer: Unknown invalid BufferUsage type: " + (std::string)emberCommon::BufferUsageNames[(int)usage]);
 		}
 		return pIBuffer;
 	}
-	//emberBackendInterface::ITexture* Renderer::CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
+	//emberBackendInterface::ITexture* Renderer::CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
 	//{
 	//
 	//}
-	emberBackendInterface::ITexture* Renderer::CreateTexture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* Renderer::CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
 		Format vulkanFormat = TextureFormatCommonToVulkan(format);
 		emberBackendInterface::ITexture* pITexture = nullptr;
 		switch (usage)
 		{
 		case emberCommon::TextureUsage::sample:
-			pITexture = new SampleTexture2d(name, vulkanFormat, width, height, data);
+			pITexture = new SampleTexture2d(vulkanFormat, width, height, data);
 			break;
 		case emberCommon::TextureUsage::storage:
-			pITexture = new StorageTexture2d(name, vulkanFormat, width, height, data);
+			pITexture = new StorageTexture2d(vulkanFormat, width, height, data);
 			break;
 		case emberCommon::TextureUsage::storageSample:
-			pITexture = new StorageSampleTexture2d(name, vulkanFormat, width, height, data);
+			pITexture = new StorageSampleTexture2d(vulkanFormat, width, height, data);
 			break;
 		case emberCommon::TextureUsage::renderTarget:
-			pITexture = new RenderTexture2d(name, vulkanFormat, width, height);
+			pITexture = new RenderTexture2d(vulkanFormat, width, height);
 			break;
 		default:
 			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTexture2d: invalid TextureUsage type: " + (std::string)emberCommon::TextureUsageNames[(int)usage]);
 		}
 		return pITexture;
 	}
-	//emberBackendInterface::ITexture* Renderer::CreateTexture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
+	//emberBackendInterface::ITexture* Renderer::CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
 	//{
 	//
 	//}
-	emberBackendInterface::ITexture* Renderer::CreateTextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* Renderer::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
 		Format vulkanFormat = TextureFormatCommonToVulkan(format);
 		emberBackendInterface::ITexture* pITexture = nullptr;
 		switch (usage)
 		{
 		case emberCommon::TextureUsage::sample:
-			pITexture = new SampleTextureCube(name, vulkanFormat, width, height, data);
+			pITexture = new SampleTextureCube(vulkanFormat, width, height, data);
 			break;
 		default:
 			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTextureCube: invalid TextureUsage type: " + (std::string)emberCommon::TextureUsageNames[(int)usage]);
@@ -477,25 +477,25 @@ namespace vulkanRendererBackend
 	{
 		return new ComputeShader(name, computeSpv);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		return new Material(type, name, renderQueue, vertexSpv, fragmentSpv);
+        return new Material(Material::CreateForward(name, renderQueue, vertexSpv, fragmentSpv));
 	}
-	emberBackendInterface::IMesh* Renderer::CreateMesh(const std::string& name)
+	emberBackendInterface::IMesh* Renderer::CreateMesh()
 	{
-		return new Mesh(name);
+		return new Mesh();
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::CreateDescriptorSetBinding(emberBackendInterface::IComputeShader* pIComputeShader)
 	{
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 		Shader* pShader = static_cast<Shader*>(pComputeShader);
-		return new DescriptorSetBinding(pShader);
+		return new DescriptorSetBinding(pShader, SHADER_SET_INDEX);
 	}
-	emberBackendInterface::IDescriptorSetBinding* Renderer::CreateDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial)
+	emberBackendInterface::IDescriptorSetBinding* Renderer::CreateDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial, uint32_t setIndex)
 	{
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		Shader* pShader = static_cast<Shader*>(pMaterial);
-		return new DescriptorSetBinding(pShader);
+		return new DescriptorSetBinding(pShader, setIndex);
 	}
 
 
@@ -550,7 +550,7 @@ namespace vulkanRendererBackend
 		// Prevent double-adding:
 		for (std::vector<Mesh*>& meshUpdates : m_pendingMeshUpdates)
 		{
-			if (std::find(meshUpdatesbegin(), meshUpdates.end(), pMesh) == meshUpdates.end())
+			if (std::find(meshUpdates.begin(), meshUpdates.end(), pMesh) == meshUpdates.end())
 				meshUpdates.push_back(pMesh);
 		}
 	}
@@ -659,7 +659,7 @@ namespace vulkanRendererBackend
 		SceneDescriptorSetLayout::UpdateShaderData(m_frameIndex);
 
 		// Frame descriptor set:
-		FrameDescriptorSetLayout::SetCameraData(m_activeCamera.position, m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
+		FrameDescriptorSetLayout::SetCameraData(Float4(m_activeCamera.position, 1.0f), m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
 		FrameDescriptorSetLayout::UpdateShaderData(m_frameIndex);
 
 		// Pre render compute:
@@ -691,7 +691,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Present call:
-		DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentShaderDescriptorSet();
+		DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentMaterial()->GetDescriptorSetBinding();
 		pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
 		pPresentShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 	}
@@ -865,9 +865,10 @@ namespace vulkanRendererBackend
 			if (m_sortedDrawCallPointers.size() > 0)
 			{
 				// Pipeline:
-				VkPipeline pipeline = DefaultGpuResources::GetDefaultShadowMaterial()->GetPipeline()->GetVkPipeline();
-				VkPipelineLayout pipelineLayout = DefaultGpuResources::GetDefaultShadowMaterial()->GetVkPipelineLayout();
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+                const Material* pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
+
 				
 				// Bind static descriptorSets:
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
@@ -888,6 +889,22 @@ namespace vulkanRendererBackend
 					{
 						if (drawCall->castShadows == false)
 							continue;
+
+					    // Pipeline swap:
+					    if (pipeline != drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline())
+					    {
+				            pipeline = pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
+					    	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+                        
+					    	// Pipeline layout swap:
+					    	if (pipelineLayout != pShadowMaterial->GetVkPipelineLayout())
+					    	{
+					    		pipelineLayout = pShadowMaterial->GetVkPipelineLayout();
+					    		// Bind per shader descriptor set:
+					    		if (VkDescriptorSet vkDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+					    			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+					    	}
+					    }
 
 						// Bind per draw call descriptor set:
 						if (VkDescriptorSet vkDescriptorSet = drawCall->pShadowDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -975,7 +992,7 @@ namespace vulkanRendererBackend
 						pipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-						// Pipeline swap:
+						// Pipeline layout swap:
 						if (pipelineLayout != drawCall->pMaterial->GetVkPipelineLayout())
 						{
 							pipelineLayout = drawCall->pMaterial->GetVkPipelineLayout();
@@ -1223,18 +1240,18 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = VkExtent2D(surfaceExtend.x, surfaceExtend.y);
+			renderPassBeginInfo.renderArea.extent = VkExtent2D{surfaceExtend.x, surfaceExtend.y};
 
 			// Begin render pass:
 			Material* pMaterial = DefaultGpuResources::GetDefaultPresentMaterial();
 			Mesh* pMesh = DefaultGpuResources::GetDefaultRenderQuad();
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline()->GetVkPipeline());
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline(pMesh)->GetVkPipeline());
 
 				// Bind mesh data:
 				vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());
-				vkCmdBindIndexBuffer(secondarycommandBufferCommandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
+				vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
 
 				// Bind descriptorSets:
 				VkDescriptorSet descriptorSets[4] =
@@ -1276,7 +1293,7 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = VkExtent2D(surfaceExtend.x, surfaceExtend.y);
+			renderPassBeginInfo.renderArea.extent = VkExtent2D{surfaceExtend.x, surfaceExtend.y};
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);

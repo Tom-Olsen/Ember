@@ -10,12 +10,11 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Desctructor:
-	DepthTexture2dArray::DepthTexture2dArray(const std::string& name, Format format, int width, int height, uint32_t layerCount)
+	DepthTexture2dArray::DepthTexture2dArray(Format format, int width, int height, uint32_t layerCount)
 	{
 		if (!IsDepthFormat(format))
-			throw std::runtime_error("DepthTexture2dArray '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
+			throw std::runtime_error("DepthTexture2dArray::DepthTexture2dArray(...): unsuported format: " + std::to_string(static_cast<int>(format)));
 
-		m_name = name;
 		m_width = width;
 		m_height = height;
 		m_channels = GetChannelCount(format);
@@ -44,7 +43,7 @@ namespace vulkanRendererBackend
 		// Ember::ToDo: This feels kinda like a hack, maybe due to bad code architecture. I will try to make this better some time.
 		m_pImage->SetLayout(ImageLayouts::shader_read_only_optimal);
 
-		NAME_VK_OBJECT(m_pImage->GetVkImage(), "DepthTexture2dArray " + m_name);
+		NAME_VK_OBJECT(m_pImage->GetVkImage(), "DepthTexture2dArray");
 	}
 	DepthTexture2dArray::~DepthTexture2dArray()
 	{

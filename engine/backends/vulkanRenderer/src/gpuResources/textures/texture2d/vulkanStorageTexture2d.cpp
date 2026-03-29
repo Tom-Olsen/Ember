@@ -16,9 +16,9 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Desctructor:
-	StorageTexture2d::StorageTexture2d(const std::string& name, Format format, int width, int height, void* data)
+	StorageTexture2d::StorageTexture2d(Format format, int width, int height, void* data)
 	{
-		Init(name, format, width, height);
+		Init(format, width, height);
 		if (data)
 			SetData(data);
 	}
@@ -44,12 +44,11 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	void StorageTexture2d::Init(const std::string& name, Format format, int width, int height)
+	void StorageTexture2d::Init(Format format, int width, int height)
 	{
 		if (!IsValidImageFormat(format))
-			throw std::runtime_error("StorageTexture2d '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
+			throw std::runtime_error("StorageTexture2d::Init(...): unsuported format: " + std::to_string(static_cast<int>(format)));
 
-		m_name = name;
 		m_width = width;
 		m_height = height;
 		m_channels = GetChannelCount(format);
@@ -72,7 +71,7 @@ namespace vulkanRendererBackend
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
-		NAME_VK_OBJECT(m_pImage->GetVkImage(), "StorageTexture2d " + m_name);
+		NAME_VK_OBJECT(m_pImage->GetVkImage(), "StorageTexture2d");
 	}
 	StagingBuffer* StorageTexture2d::StageData(void* data)
 	{

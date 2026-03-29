@@ -49,7 +49,6 @@ namespace vulkanRendererBackend
 		static std::unordered_set<Format> s_validStencilFormats;
 
 	protected: // Members:
-		std::string m_name;
 		uint32_t m_width;
 		uint32_t m_height;
 		uint32_t m_depth;
@@ -75,7 +74,6 @@ namespace vulkanRendererBackend
 		Texture& operator=(Texture&& other) noexcept;
 
 		// Getters:
-		const std::string& GetName() const override;
 		uint32_t GetWidth() const override;
 		uint32_t GetHeight() const override;
 		uint32_t GetDepth() const override;

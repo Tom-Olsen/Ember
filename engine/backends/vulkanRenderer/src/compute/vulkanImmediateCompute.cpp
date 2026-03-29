@@ -76,7 +76,7 @@ namespace vulkanRendererBackend
 
 			// Dispatch compute shader:
 			uint32_t frameIndex = Context::GetFrameIndex();
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, Context::GetRenderer()->GetStaticDescriptorSets(frameIndex), 0, nullptr);
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, Context::GetRenderer()->GetStaticDescriptorSets(frameIndex).data(), 0, nullptr);
 			if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 			vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);

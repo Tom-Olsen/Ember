@@ -17,9 +17,9 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	SampleTextureCube::SampleTextureCube(const std::string& name, Format format, int width, int height, void* data)
+	SampleTextureCube::SampleTextureCube(Format format, int width, int height, void* data)
 	{
-		Init(name, format, width, height);
+		Init(format, width, height);
 		if (data)
 			SetData(data);
 	}
@@ -46,12 +46,11 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	void SampleTextureCube::Init(const std::string& name, Format format, int width, int height)
+	void SampleTextureCube::Init(Format format, int width, int height)
 	{
 		if (!IsValidImageFormat(format))
-			throw std::runtime_error("SampleTextureCube '" + name + "' uses unsuported format: " + std::to_string(static_cast<int>(format)));
+			throw std::runtime_error("SampleTextureCube::Init(...): unsuported format: " + std::to_string(static_cast<int>(format)));
 
-		m_name = name;
 		m_width = width;
 		m_height = height;
 		m_channels = GetChannelCount(format);
@@ -74,7 +73,7 @@ namespace vulkanRendererBackend
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
-		NAME_VK_OBJECT(m_pImage->GetVkImage(), "SampleTextureCube " + m_name);
+		NAME_VK_OBJECT(m_pImage->GetVkImage(), "SampleTextureCube");
 	}
 
 	StagingBuffer* SampleTextureCube::StageData(void* data)

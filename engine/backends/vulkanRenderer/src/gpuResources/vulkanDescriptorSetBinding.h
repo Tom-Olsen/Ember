@@ -165,8 +165,8 @@ namespace vulkanRendererBackend
 		
 		// Backend functionality:
 		void UpdateShaderData(uint32_t frameIndex);
-		const VkDescriptorSet& GetVkDescriptorSet(uint32_t frameIndex);
-		const std::vector<VkDescriptorSet>& GetVkDescriptorSets();
+		const VkDescriptorSet& GetVkDescriptorSet(uint32_t frameIndex) const;
+		const std::vector<VkDescriptorSet>& GetVkDescriptorSets() const;
 
 		// Debugging:
 		void Print() const override;

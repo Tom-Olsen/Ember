@@ -1,4 +1,5 @@
 #include "vulkanShader.h"
+#include "descriptorSetMacros.h"
 #include "logger.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanFrameDescriptorSetLayout.h"
@@ -28,7 +29,7 @@ namespace vulkanRendererBackend
 	Shader::~Shader()
 	{
 		for (int i = 0; i < m_vkDescriptorSetLayouts.size(); i++)
-			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_vkDescriptorSetLayouts, nullptr);
+			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_vkDescriptorSetLayouts[i], nullptr);
 		vkDestroyPipelineLayout(Context::GetVkDevice(), m_vkPipelineLayout, nullptr);
 	}
 
@@ -36,20 +37,20 @@ namespace vulkanRendererBackend
 
 	// Movable:
 	Shader::Shader(Shader&& other) noexcept
+        : m_name(std::move(other.m_name))
+        , m_shaderReflection(std::move(other.m_shaderReflection))
+        , m_vkDescriptorSetLayouts(std::move(other.m_vkDescriptorSetLayouts))
+        , m_vkPipelineLayout(other.m_vkPipelineLayout)
+        , m_pPipelines(std::move(other.m_pPipelines))
 	{
-		m_name = std::move(other.m_name);
-		m_shaderReflection = other.m_shaderReflection;	// Ember::ToDO: use move semantics here aswell. ShaderReflection needs move semantics.
-		m_vkDescriptorSetLayouts = std::move(other.m_vkDescriptorSetLayouts);
-		m_vkPipelineLayout = other.m_vkPipelineLayout;
-		other.m_vkPipelineLayout = VK_NULL_HANDLE;
-		m_pPipelines = std::move(other.m_pPipelines);
+        
 	}
 	Shader& Shader::operator=(Shader&& other) noexcept
 	{
 		if (this != &other)
 		{
 			m_name = std::move(other.m_name);
-			m_shaderReflection = other.m_shaderReflection;
+			m_shaderReflection = std::move(other.m_shaderReflection);
 			m_vkDescriptorSetLayouts = std::move(other.m_vkDescriptorSetLayouts);
 			m_vkPipelineLayout = other.m_vkPipelineLayout;
 			other.m_vkPipelineLayout = VK_NULL_HANDLE;
@@ -65,7 +66,6 @@ namespace vulkanRendererBackend
 	{
 		m_shaderReflection.CreateDescriptorSetReflections();
 
-		const std::vector<emberSpirvReflect::DescriptorSetReflection>& descriptorSetReflections = m_shaderReflection.GetDescriptorSetReflections();
 		m_vkDescriptorSetLayouts.clear();
 		m_vkDescriptorSetLayouts.resize(DESCRIPTOR_SET_COUNT);
 
@@ -75,9 +75,9 @@ namespace vulkanRendererBackend
 		m_vkDescriptorSetLayouts[2] = FrameDescriptorSetLayout::GetVkDescriptorSetLayout();
 
 		// Only SHADER_SET(3) and DRAW_SET(4) are dynamic and come from reflection:
-		for (size_t i = 3; i < SET_COUNT; i++)
+		for (size_t i = 3; i < DESCRIPTOR_SET_COUNT; i++)
 		{
-			const std::vector<emberSpirvReflect::DescriptorReflection>& descriptors = descriptorSetReflections[i].GetDescriptorReflections();
+			const std::vector<emberSpirvReflect::DescriptorReflection>& descriptors = m_shaderReflection.GetDescriptorSetReflection(i).GetDescriptorReflections();
 
 			std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
 			layoutBindings.reserve(descriptors.size());
@@ -113,7 +113,7 @@ namespace vulkanRendererBackend
 	{
 		return m_name;
 	}
-	const emberSpirvReflect::ShaderReflection& const Shader::GetShaderReflection() const
+	const emberSpirvReflect::ShaderReflection& Shader::GetShaderReflection() const
 	{
 		return m_shaderReflection;
 	}
@@ -121,7 +121,7 @@ namespace vulkanRendererBackend
 	{
 		return m_vkPipelineLayout;
 	}
-	const DescriptorSetBinding* Shader::GetDescriptorSetBinding() const
+	DescriptorSetBinding* Shader::GetDescriptorSetBinding() const
 	{
 		return m_pShaderDescriptorSetBinding.get();
 	}

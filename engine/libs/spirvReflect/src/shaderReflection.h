@@ -37,9 +37,9 @@ namespace emberSpirvReflect
 		ShaderReflection(const ShaderReflection&) = delete;
 		ShaderReflection& operator=(const ShaderReflection&) = delete;
 
-		// Non-Movable:
-		ShaderReflection(ShaderReflection&& other) noexcept = delete;
-		ShaderReflection& operator=(ShaderReflection&& other) noexcept = delete;
+		// Movable:
+		ShaderReflection(ShaderReflection&& other) noexcept;
+		ShaderReflection& operator=(ShaderReflection&& other) noexcept;
 
 		// Functionality:
 		static std::vector<char> ReadShaderCode(const std::filesystem::path& spvFile);

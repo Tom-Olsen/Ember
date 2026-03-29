@@ -15,7 +15,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		DepthTexture2dArray(const std::string& name, Format format, int width, int height, uint32_t layerCount);
+		DepthTexture2dArray(Format format, int width, int height, uint32_t layerCount);
 		~DepthTexture2dArray();
 
 		// Non-copyable:

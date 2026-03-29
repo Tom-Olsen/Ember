@@ -432,11 +432,11 @@ namespace vulkanRendererBackend
 			}
 		}
 	}
-	const VkDescriptorSet& DescriptorSetBinding::GetVkDescriptorSet(uint32_t frameIndex)
+	const VkDescriptorSet& DescriptorSetBinding::GetVkDescriptorSet(uint32_t frameIndex) const
 	{
 		return m_descriptorSets[frameIndex];
 	}
-	const std::vector<VkDescriptorSet>& DescriptorSetBinding::GetVkDescriptorSets()
+	const std::vector<VkDescriptorSet>& DescriptorSetBinding::GetVkDescriptorSets() const
 	{
 		return m_descriptorSets;
 	}

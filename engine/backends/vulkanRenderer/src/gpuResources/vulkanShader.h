@@ -51,9 +51,9 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		const std::string& GetName() const;
-		const emberSpirvReflect::ShaderReflection& const GetShaderReflection() const;
+		const emberSpirvReflect::ShaderReflection& GetShaderReflection() const;
 		const VkPipelineLayout& GetVkPipelineLayout() const;
-		const DescriptorSetBinding* GetDescriptorSetBinding() const;
+		DescriptorSetBinding* GetDescriptorSetBinding() const;
 		const std::vector<VkDescriptorSetLayout>& GetVkDescriptorSetLayout() const;
 
 		// Debugging:
