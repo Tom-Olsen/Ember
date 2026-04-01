@@ -6,6 +6,7 @@
 #include "vulkanPipelineStage.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanTexture.h"
+#include <cstring>
 #include <vulkan/vulkan.h>
 
 

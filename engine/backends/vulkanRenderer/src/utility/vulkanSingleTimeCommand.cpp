@@ -73,19 +73,19 @@ namespace vulkanRendererBackend
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &s_semaphore));
 		}
 
-		NAME_VK_COMMAND_BUFFER(s_graphicsBuffer, "SingleTimeGraphicsCommandBuffer");
-		NAME_VK_COMMAND_BUFFER(s_presentBuffer, "SingleTimePresentCommandBuffer");
-		NAME_VK_COMMAND_BUFFER(s_computeBuffer, "SingleTimeComputeCommandBuffer");
-		NAME_VK_COMMAND_BUFFER(s_transferBuffer, "SingleTimeTransferCommandBuffer");
-		NAME_VK_COMMAND_POOL(s_graphicsPool, "SingleTimeGraphicsCommandPool");
-		NAME_VK_COMMAND_POOL(s_presentPool, "SingleTimePresentCommandPool");
-		NAME_VK_COMMAND_POOL(s_computePool, "SingleTimeComputeCommandPool");
-		NAME_VK_COMMAND_POOL(s_transferPool, "SingleTimeTransferCommandPool");
-		NAME_VK_FENCE(s_graphicsPool, "SingleTimeGraphicsFence");
-		NAME_VK_FENCE(s_presentPool, "SingleTimePresentFence");
-		NAME_VK_FENCE(s_computePool, "SingleTimeComputeFence");
-		NAME_VK_FENCE(s_transferPool, "SingleTimeTransferFence");
-		NAME_VK_SEMAPHORE(s_semaphore, "SingleTimeCommandSemaphore");
+		NAME_VK_OBJECT(s_graphicsBuffer, "SingleTimeGraphicsCommandBuffer");
+		NAME_VK_OBJECT(s_presentBuffer, "SingleTimePresentCommandBuffer");
+		NAME_VK_OBJECT(s_computeBuffer, "SingleTimeComputeCommandBuffer");
+		NAME_VK_OBJECT(s_transferBuffer, "SingleTimeTransferCommandBuffer");
+		NAME_VK_OBJECT(s_graphicsPool, "SingleTimeGraphicsCommandPool");
+		NAME_VK_OBJECT(s_presentPool, "SingleTimePresentCommandPool");
+		NAME_VK_OBJECT(s_computePool, "SingleTimeComputeCommandPool");
+		NAME_VK_OBJECT(s_transferPool, "SingleTimeTransferCommandPool");
+		NAME_VK_OBJECT(s_graphicsPool, "SingleTimeGraphicsFence");
+		NAME_VK_OBJECT(s_presentPool, "SingleTimePresentFence");
+		NAME_VK_OBJECT(s_computePool, "SingleTimeComputeFence");
+		NAME_VK_OBJECT(s_transferPool, "SingleTimeTransferFence");
+		NAME_VK_OBJECT(s_semaphore, "SingleTimeCommandSemaphore");
 	}
 	void SingleTimeCommand::Clear()
 	{

@@ -46,7 +46,7 @@ namespace vulkanRendererBackend
             {
                 VkVertexInputAttributeDescription attribute;
                 attribute.binding = 0;
-                attribute.format = vertexAttributeInfo.format;
+                attribute.format = VkFormat(vertexAttributeInfo.format);
                 attribute.location = vertexAttributeInfo.location;
                 attribute.offset = offset;
                 attributes.push_back(attribute);
@@ -59,7 +59,7 @@ namespace vulkanRendererBackend
             {
                 VkVertexInputAttributeDescription attribute;
                 attribute.binding = i;
-                attribute.format = vertexAttributeInfos[i].format;
+                attribute.format = VkFormat(vertexAttributeInfos[i].format);
                 attribute.location = vertexAttributeInfos[i].location;
                 attribute.offset = 0;
                 attributes.push_back(attribute);
@@ -73,6 +73,6 @@ namespace vulkanRendererBackend
     // Explicit template instantiation:
     template std::vector<VkVertexInputBindingDescription> GetVertexBindingDescriptions<InterleavedVertexLayout>(const std::vector<emberSpirvReflect::VertexAttributeInfo>&);
     template std::vector<VkVertexInputBindingDescription> GetVertexBindingDescriptions<SeparateVertexLayout>(const std::vector<emberSpirvReflect::VertexAttributeInfo>&);
-    template std::vector<VkVertexInputBindingDescription> GetVertexAttributeDescriptions<InterleavedVertexLayout>(const std::vector<emberSpirvReflect::VertexAttributeInfo>&);
-    template std::vector<VkVertexInputBindingDescription> GetVertexAttributeDescriptions<SeparateVertexLayout>(const std::vector<emberSpirvReflect::VertexAttributeInfo>&);
+    template std::vector<VkVertexInputAttributeDescription> GetVertexAttributeDescriptions<InterleavedVertexLayout>(const std::vector<emberSpirvReflect::VertexAttributeInfo>&);
+    template std::vector<VkVertexInputAttributeDescription> GetVertexAttributeDescriptions<SeparateVertexLayout>(const std::vector<emberSpirvReflect::VertexAttributeInfo>&);
 }

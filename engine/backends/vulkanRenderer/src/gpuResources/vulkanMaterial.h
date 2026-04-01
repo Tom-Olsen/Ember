@@ -20,7 +20,6 @@ typedef struct VkBuffer_T* VkBuffer;
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	struct VertexInputDescriptions;
 	class Mesh;
 
 
@@ -36,7 +35,6 @@ namespace vulkanRendererBackend
 	private: // Members:
 		emberCommon::MaterialType m_type;
 		uint32_t m_renderQueue;	// shadow=0, opaque=1000, transparent=2000, skybox=3000
-		std::unique_ptr<VertexInputDescriptions> m_pVertexInputDescriptions;
 
 	private: // Methods:
 		// Constructor:
@@ -61,7 +59,6 @@ namespace vulkanRendererBackend
 		const std::string& GetName() const override;
 		emberCommon::MaterialType GetType() const override;
 		uint32_t GetRenderQueue() const override;
-		const VertexInputDescriptions* GetVertexInputDescriptions() const;
 		const Pipeline* GetPipeline(const Mesh* pMesh) const;
 
 		// Debugging:

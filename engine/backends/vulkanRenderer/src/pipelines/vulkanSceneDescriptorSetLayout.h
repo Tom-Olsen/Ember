@@ -1,6 +1,7 @@
 #pragma once
 #include "commonLighting.h"
 #include "emberMath.h"
+#include <memory>
 #include <vulkan/vulkan.h>
 #include <vector>
 

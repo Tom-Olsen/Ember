@@ -209,6 +209,6 @@ namespace vulkanRendererBackend
 		allocInfo.usages = MemoryUsages::auto_prefer_device;
 		allocInfo.requiredFlags = memoryFlags;
 
-		m_pImage = std::make_unique<VmaImage>(m_name, imageInfo, allocInfo, subresourceRange, viewType, queue);
+		m_pImage = std::make_unique<VmaImage>(imageInfo, allocInfo, subresourceRange, viewType, queue);
 	}
 }

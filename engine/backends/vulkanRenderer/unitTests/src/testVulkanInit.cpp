@@ -1,5 +1,4 @@
 #include "logger.h"
-#include "spirvReflect2.h"
 #include <fstream>
 #include <filesystem>
 #include <gtest/gtest.h>

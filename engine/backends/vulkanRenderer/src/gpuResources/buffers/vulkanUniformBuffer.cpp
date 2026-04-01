@@ -4,6 +4,7 @@
 #include "vulkanContext.h"
 #include "vulkanPhysicalDevice.h"
 #include <cassert>
+#include <cstring>
 
 
 

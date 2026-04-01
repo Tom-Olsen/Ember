@@ -74,19 +74,20 @@ namespace vulkanRendererBackend
 		for (uint32_t j = 0; j < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); j++)
 			for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::RenderMode::count); i++)
 			{
-				uint32_t index = i + j * emberCommon::RenderMode::count;
+				uint32_t index = i + j * static_cast<uint32_t>(emberCommon::RenderMode::count);
 				material.m_pPipelines.emplace_back(
+                    std::make_unique<ForwardPipeline>(
 					material.m_name,
 					material.m_vkPipelineLayout,
 					static_cast<emberCommon::RenderMode>(i),
 					vertexCode, 
 					fragmentCode, 
 					*vertexBindingVectors[j], 
-					*vertexAttributeVectors[j]);
+					*vertexAttributeVectors[j]));
 			}
 
 		// Create shader descriptorSetBinding:
-		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>&material, SHADER_SET_INDEX);
+		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(&material), SHADER_SET_INDEX);
 		return material;
 	}
 	Material Material::CreateShadow(const std::string& name, uint32_t shadowMapResolution)
@@ -130,16 +131,17 @@ namespace vulkanRendererBackend
 		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
 		{
 			material.m_pPipelines.emplace_back(
+                    std::make_unique<ShadowPipeline>(
 				material.m_name,
 				material.m_vkPipelineLayout,
 				shadowMapResolution,
 				vertexCode,
 				*vertexBindingVectors[i],
-				*vertexAttributeVectors[i]);
+				*vertexAttributeVectors[i]));
 		}
 
 		// Create shader descriptorSetBinding:
-		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>&material, SHADER_SET_INDEX);
+		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(&material), SHADER_SET_INDEX);
 		return material;
 	}
 	Material Material::CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
@@ -186,16 +188,17 @@ namespace vulkanRendererBackend
 		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
 		{
 			material.m_pPipelines.emplace_back(
+                    std::make_unique<PresentPipeline>(
 				material.m_name,
 				material.m_vkPipelineLayout,
 				vertexCode,
 				fragmentCode,
 				*vertexBindingVectors[i],
-				*vertexAttributeVectors[i]);
+				*vertexAttributeVectors[i]));
 		}
 
 		// Create shader descriptorSetBinding:
-		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>&material, SHADER_SET_INDEX);
+		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(&material), SHADER_SET_INDEX);
 		return material;
 	}
 	Material::~Material()
@@ -223,10 +226,6 @@ namespace vulkanRendererBackend
 	uint32_t Material::GetRenderQueue() const
 	{
 		return m_renderQueue;
-	}
-	const VertexInputDescriptions* Material::GetVertexInputDescriptions() const
-	{
-		return m_pVertexInputDescriptions.get();
 	}
 	const Pipeline* Material::GetPipeline(const Mesh* pMesh) const
 	{

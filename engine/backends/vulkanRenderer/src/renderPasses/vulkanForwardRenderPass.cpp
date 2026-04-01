@@ -20,8 +20,8 @@ namespace vulkanRendererBackend
 
 		// Create render textures:
 		Format renderTextureFormat = Formats::r16g16b16a16_sfloat;
-		m_pRenderTexture = std::make_unique<RenderTexture2d>("forwardRenderPassRenderTexture", (VkFormat)renderTextureFormat, renderWidth, renderHeight);
-		m_pSecondaryRenderTexture = std::make_unique<RenderTexture2d>("forwardRenderPassRenderTexture", (VkFormat)renderTextureFormat, renderWidth, renderHeight);
+		m_pRenderTexture = std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight);
+		m_pSecondaryRenderTexture = std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight);
 
 		// Primary render texture will be transitioned to VK_IMAGE_LAYOUT_GENERAL by renderPass.
 		// Secondary render texture must be transitioned manually:
@@ -175,7 +175,7 @@ namespace vulkanRendererBackend
 
 		ImageViewType viewType = ImageViewTypes::view_type_2d;
 		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
-		m_pMsaaImage = std::make_unique<VmaImage>("msaaImage", imageInfo, allocationInfo, subresourceRange, viewType, queue);
+		m_pMsaaImage = std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue);
 	}
 	void ForwardRenderPass::CreateDepthImage()
 	{
@@ -209,7 +209,7 @@ namespace vulkanRendererBackend
 
 		ImageViewType viewType = ImageViewTypes::view_type_2d;
 		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
-		m_pDepthImage = std::make_unique<VmaImage>("depthImage", imageInfo, allocationInfo, subresourceRange, viewType, queue);
+		m_pDepthImage = std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue);
 
 		// Transition: Layout: undefined->depth attachment, Queue: graphics
 		ImageLayout newLayout = ImageLayouts::depth_stencil_attachment_optimal;

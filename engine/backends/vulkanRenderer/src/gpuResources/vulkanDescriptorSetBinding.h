@@ -182,9 +182,9 @@ namespace vulkanRendererBackend
 
 		// Descriptor Set management:
 		void CreateDescriptorSets();
-		void UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferBinding);
-		void UpdateDescriptorSet(uint32_t frameIndex, TextureBinding textureBinding);
-		void UpdateDescriptorSet(uint32_t frameIndex, BufferBinding buffeBinding);
+		void UpdateDescriptorSet(uint32_t frameIndex, const UniformBufferBinding& uniformBufferBinding);
+		void UpdateDescriptorSet(uint32_t frameIndex, const TextureBinding& textureBinding);
+		void UpdateDescriptorSet(uint32_t frameIndex, const BufferBinding& buffeBinding);
 
 		// Getter templates, used in actual getters:
 		template<typename T>

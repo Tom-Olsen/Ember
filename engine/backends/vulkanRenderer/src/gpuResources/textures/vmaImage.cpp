@@ -18,10 +18,8 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaImage::VmaImage(const std::string name, const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, ImageViewType viewType, const DeviceQueue& queue)
+	VmaImage::VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, ImageViewType viewType, const DeviceQueue& queue)
 	{
-		m_name = name + std::to_string(s_index);
-		s_index++;
 		m_imageInfo = imageInfo;
 		m_allocationInfo = allocationInfo;
 		m_subresourceRange = subresourceRange;
@@ -58,7 +56,7 @@ namespace vulkanRendererBackend
 
 		// Create image:
 		VKA(vmaCreateImage(Context::GetVmaAllocator(), &vkImageInfo, &vmaAllocationInfo, &m_image, &m_allocation, nullptr));
-		NAME_VK_OBJECT(m_image, m_name + "Image");
+		NAME_VK_OBJECT(m_image, "Image" + std::to_string(s_index));
 
 		// Create image view:
 		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
@@ -71,11 +69,12 @@ namespace vulkanRendererBackend
 		viewInfo.subresourceRange.layerCount = m_subresourceRange.layerCount;
 		viewInfo.subresourceRange.levelCount = m_subresourceRange.levelCount;
 		VKA(vkCreateImageView(Context::GetVkDevice(), &viewInfo, nullptr, &m_imageView));
-		NAME_VK_OBJECT(m_imageView, m_name + "ImageView");
+		NAME_VK_OBJECT(m_imageView, "ImageView" + std::to_string(s_index));
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::GetAllocationTracker()->AddVmaImageAllocation(m_allocation, m_name);
+		Context::GetAllocationTracker()->AddVmaImageAllocation(m_allocation, std::to_string(s_index));
 		#endif
+		s_index++;
 	}
 	VmaImage::~VmaImage()
 	{
@@ -102,10 +101,6 @@ namespace vulkanRendererBackend
 
 	// Public methods:
 	// Getters:
-	const std::string& VmaImage::GetName() const
-	{
-		return m_name;
-	}
 	const VkImage& VmaImage::GetVkImage() const
 	{
 		return m_image;
@@ -404,7 +399,6 @@ namespace vulkanRendererBackend
 		m_image = VK_NULL_HANDLE;
 		m_imageView = VK_NULL_HANDLE;
 		m_allocation = nullptr;
-		m_name.clear();
 
 		GarbageCollector::RecordGarbage([image, imageView, allocation]()
 		{
@@ -420,7 +414,6 @@ namespace vulkanRendererBackend
 	}
 	void VmaImage::MoveFrom(VmaImage& other) noexcept
 	{
-		m_name = other.m_name;
 		m_image = other.m_image;
 		m_allocation = other.m_allocation;
 		m_imageView = other.m_imageView;
@@ -430,7 +423,6 @@ namespace vulkanRendererBackend
 		m_queue = other.m_queue;
 		m_layout = other.m_layout;
 
-		other.m_name = "";
 		other.m_image = VK_NULL_HANDLE;
 		other.m_allocation = nullptr;
 		other.m_imageView = VK_NULL_HANDLE;

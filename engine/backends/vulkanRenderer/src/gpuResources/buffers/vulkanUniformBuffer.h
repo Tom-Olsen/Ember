@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class UniformBuffer : public Buffer
 	{
-	friend class ShaderProperties;	// shaderProperties needs access to templated SetValue(...) methods.
+	friend class DescriptorSetBinding;	// DescriptorSetBinding needs access to templated SetValue(...) methods.
 
 	private: // Members:
 		uint8_t* m_pDeviceData;

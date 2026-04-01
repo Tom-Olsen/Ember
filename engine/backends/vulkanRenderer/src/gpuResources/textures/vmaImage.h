@@ -32,7 +32,6 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		static uint32_t s_index;
-		std::string m_name;
 		VkImage m_image;
 		VmaAllocation m_allocation;
 		VkImageView m_imageView;
@@ -43,7 +42,7 @@ namespace vulkanRendererBackend
 		ImageLayout m_layout;
 
 	public: // Methods:
-		VmaImage(const std::string name, const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, ImageViewType viewType, const DeviceQueue& queue);
+		VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, ImageViewType viewType, const DeviceQueue& queue);
 		~VmaImage();
 
 		// Non-copyable:

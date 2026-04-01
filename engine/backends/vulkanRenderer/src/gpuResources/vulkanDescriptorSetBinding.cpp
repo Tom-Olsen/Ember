@@ -40,27 +40,22 @@ namespace vulkanRendererBackend
 		m_textureMaps = std::vector<std::unordered_map<std::string, TextureBinding>>(Context::GetFramesInFlight());
 		m_bufferMaps = std::vector<std::unordered_map<std::string, BufferBinding>>(Context::GetFramesInFlight());
 		m_uniformBufferMap = std::unordered_map<std::string, UniformBufferBinding>();
-
-		// Get descriptorSet information from shader reflection:
-		const emberSpirvReflect::DescriptorSet& reflectedSet = m_pShader->GetShaderReflection().GetDescriptorSet(m_setIndex);
-		const std::vector<std::string>& descriptorNames = reflectedSet.GetDescriptorNames();
-		const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetLayoutBindings = reflectedSet.GetVkDescriptorSetLayoutBindings();
-		assert(descriptorNames.size() == descriptorSetLayoutBindings.size());
-
+        
 		// Initialize all resource bindings:
+		const emberSpirvReflect::DescriptorSetReflection& descriptorSetReflection = m_pShader->GetShaderReflection().GetDescriptorSetReflection(m_setIndex);
 		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
-			for (uint32_t i = 0; i < descriptorNames.size(); i++)
+            for (const emberSpirvReflect::DescriptorReflection& descriptorReflection : descriptorSetReflection.GetDescriptorReflections())
 			{
-				const std::string& name = descriptorNames[i];
-				DescriptorType descriptorType = descriptorSetLayoutBindings[i].descriptorType;
-				uint32_t binding = descriptorSetLayoutBindings[i].binding;
+				const std::string& name = descriptorReflection.GetName();
+				DescriptorType descriptorType = descriptorReflection.GetDescriptorType();
+				uint32_t binding = descriptorReflection.GetBinding();
 
 				if (descriptorType == DescriptorTypes::uniform_buffer)
 					InitUniformBufferBinding(frameIndex, name, binding);
 				else if (descriptorType == DescriptorTypes::sampled_image)
 				{
-					ImageViewType viewType = descriptorBoundResources->sampleViewTypeMap.at(name);
+					ImageViewType viewType = descriptorReflection.GetImageDescriptor()->imageViewType;;
 					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for sampling Texture1d descriptorSet not implemented yet!");
 					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTexture2d()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for sampling Texture3d descriptorSet not implemented yet!");
@@ -71,7 +66,7 @@ namespace vulkanRendererBackend
 				}
 				else if (descriptorType == DescriptorTypes::storage_image)
 				{
-					ImageViewType viewType = descriptorBoundResources->storageViewTypeMap.at(name);
+					ImageViewType viewType = descriptorReflection.GetImageDescriptor()->imageViewType;;
 					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for storage Texture1d descriptorSet not implemented yet!");
 					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, name, binding, static_cast<Texture2d*>(DefaultGpuResources::GetDefaultStorageTexture2d()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for storage Texture3d descriptorSet not implemented yet!");
@@ -459,7 +454,7 @@ namespace vulkanRendererBackend
 
 			 LOG_INFO("TextureMaps[{}]:", frameIndex);
 			 for (const auto& [name, textureBinding] : m_textureMaps[frameIndex])
-			 	LOG_TRACE("binding: {}, bindingName: {}, textureName: {}", textureBinding.binding, name, textureBinding.pTexture->GetName());
+			 	LOG_TRACE("binding: {}, bindingName: {}", textureBinding.binding, name);
 			 
 			 LOG_INFO("BufferMaps[{}]:", frameIndex);
 			 for (const auto& [name, bufferBinding] : m_bufferMaps[frameIndex])
@@ -486,20 +481,20 @@ namespace vulkanRendererBackend
 		if (!uniformBufferDescriptor)
 			throw std::runtime_error("DescriptorSetBinding::InitUniformBufferBinding: Descriptor is not a uniform buffer: " + name);
 
-		UniformBuffer uniformBuffer(ubDeuniformBufferDescriptorsc->bufferLayout);
-		m_uniformBufferMap.emplace(name, UniformBufferBinding(binding, std::move(uniformBuffer)));
+		UniformBuffer uniformBuffer(uniformBufferDescriptor->bufferLayout);
+		m_uniformBufferMap.emplace(name, UniformBufferBinding{binding, std::move(uniformBuffer)});
 	}
 	void DescriptorSetBinding::InitTextureBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture* pTexture, DescriptorType descriptorType)
 	{
 		auto it = m_textureMaps[frameIndex].find(name);
 		if (it == m_textureMaps[frameIndex].end())
-			m_textureMaps[frameIndex].emplace(name, TextureBinding(binding, pTexture, descriptorType));
+			m_textureMaps[frameIndex].emplace(name, TextureBinding{binding, pTexture, descriptorType});
 	}
 	void DescriptorSetBinding::InitBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType)
 	{
 		auto it = m_bufferMaps[frameIndex].find(name);
 		if (it == m_bufferMaps[frameIndex].end())
-			m_bufferMaps[frameIndex].emplace(name, BufferBinding(binding, pBuffer, descriptorType));
+			m_bufferMaps[frameIndex].emplace(name, BufferBinding{binding, pBuffer, descriptorType});
 	}
 	void DescriptorSetBinding::InitStagingMaps()
 	{
@@ -527,7 +522,7 @@ namespace vulkanRendererBackend
 	// Descriptor Set management:
 	void DescriptorSetBinding::CreateDescriptorSets()
 	{
-		std::vector<VkDescriptorSetLayout> layouts(Context::GetFramesInFlight(), m_pShader->GetPipeline()->GetVkDescriptorSetLayout());	// same layout for all frames
+		std::vector<VkDescriptorSetLayout> layouts(Context::GetFramesInFlight(), m_pShader->GetVkDescriptorSetLayout()[m_setIndex]);	// same layout for all frames
 
 		VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 		allocInfo.descriptorPool = Context::GetVkDescriptorPool();
@@ -537,12 +532,12 @@ namespace vulkanRendererBackend
 		m_descriptorSets.resize(Context::GetFramesInFlight());
 		VKA(vkAllocateDescriptorSets(Context::GetLogicalDevice()->GetVkDevice(), &allocInfo, m_descriptorSets.data()));
 	}
-	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, UniformBufferBinding uniformBufferBinding)
+	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, const UniformBufferBinding& uniformBufferBinding)
 	{
 		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = uniformBufferBinding.pUniformBuffer->GetVmaBuffer()->GetVkBuffer();
+		bufferInfo.buffer = uniformBufferBinding.uniformBuffer.GetVmaBuffer()->GetVkBuffer();
 		bufferInfo.offset = 0;
-		bufferInfo.range = uniformBufferBinding.pUniformBuffer->GetSize();
+		bufferInfo.range = uniformBufferBinding.uniformBuffer.GetSize();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
@@ -556,7 +551,7 @@ namespace vulkanRendererBackend
 
 		vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
-	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, TextureBinding textureBinding)
+	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, const TextureBinding& textureBinding)
 	{
 		VkDescriptorImageInfo imageInfo = {};
 		imageInfo.imageLayout = static_cast<VkImageLayout>(textureBinding.pTexture->GetVmaImage()->GetImageLayout());
@@ -574,7 +569,7 @@ namespace vulkanRendererBackend
 
 		vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
-	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, BufferBinding bufferBinding)
+	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, const BufferBinding& bufferBinding)
 	{
 		VkDescriptorBufferInfo bufferInfo = {};
 		bufferInfo.buffer = bufferBinding.pBuffer->GetVmaBuffer()->GetVkBuffer();
@@ -610,7 +605,7 @@ namespace vulkanRendererBackend
 	{
 		auto it = m_uniformBufferMap.find(bufferName);
 		if (it != m_uniformBufferMap.end())
-			return it->second.oniformBuffer.GetValue<T>(arrayName, arrayIndex);
+			return it->second.uniformBuffer.GetValue<T>(arrayName, arrayIndex);
 		return T();
 	}
 	template<typename T>
