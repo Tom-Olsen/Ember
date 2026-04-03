@@ -1,5 +1,5 @@
 #include "emberMath.h"
-#include "macros.h"
+#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -8,19 +8,19 @@ TEST(Bounds2d, GetMin)
 {
 	Bounds2d bounds(Float2(1.0f, 2.0f), Float2(2.0f, 3.0f));
 	Float2 min = bounds.GetMin();
-	EXPECT_FLOAT2_EQ(min, Float2(-1.0f, -1.0f));
+	ExpectEqualVec(min, Float2(-1.0f, -1.0f));
 }
 TEST(Bounds2d, GetMax)
 {
 	Bounds2d bounds(Float2(1.0f, 2.0f), Float2(2.0f, 3.0f));
 	Float2 max = bounds.GetMax();
-	EXPECT_FLOAT2_EQ(max, Float2(3.0f, 5.0f));
+	ExpectEqualVec(max, Float2(3.0f, 5.0f));
 }
 TEST(Bounds2d, GetSize)
 {
 	Bounds2d bounds(Float2(1.0f, 2.0f), Float2(2.0f, 3.0f));
 	Float2 size = bounds.GetSize();
-	EXPECT_FLOAT2_EQ(size, Float2(4.0f, 6.0f));
+	ExpectEqualVec(size, Float2(4.0f, 6.0f));
 }
 TEST(Bounds2d, GetDiagonal)
 {
@@ -33,7 +33,7 @@ TEST(Bounds2d, ClosestPoint)
 	Bounds2d bounds(Float2(1.0f, 2.0f), Float2(2.0f, 3.0f));
 	Float2 point = Float2(1.0f, 2.0f);
 	Float2 closestPoint = bounds.ClosestPoint(point);
-	EXPECT_FLOAT2_EQ(closestPoint, Float2(1.0f, 2.0f));
+	ExpectEqualVec(closestPoint, Float2(1.0f, 2.0f));
 }
 TEST(Bounds2d, Contains)
 {
@@ -52,8 +52,8 @@ TEST(Bounds2d, Encapsulate)
 	Float2 size = bounds.GetSize();
 	Float2 center = bounds.center;
 	EXPECT_TRUE(contains);
-	EXPECT_FLOAT2_EQ(size, Float2(3.0f, 3.0f));
-	EXPECT_FLOAT2_EQ(center, Float2(0.5f, 0.5f));
+	ExpectEqualVec(size, Float2(3.0f, 3.0f));
+	ExpectEqualVec(center, Float2(0.5f, 0.5f));
 }
 TEST(Bounds2d, Expand_Float)
 {
@@ -63,7 +63,7 @@ TEST(Bounds2d, Expand_Float)
 	bounds.Expand(amount);
 	Float2 size = bounds.GetSize();
 	Float2 result = 2.0f * amount * Float2::one + sizeOld;
-	EXPECT_FLOAT2_EQ(size, result);
+	ExpectEqualVec(size, result);
 }
 TEST(Bounds2d, Expand_Float3)
 {
@@ -73,7 +73,7 @@ TEST(Bounds2d, Expand_Float3)
 	bounds.Expand(amount);
 	Float2 size = bounds.GetSize();
 	Float2 result = 2.0f * amount + sizeOld;
-	EXPECT_FLOAT2_EQ(size, result);
+	ExpectEqualVec(size, result);
 }
 TEST(Bounds2d, SetMinMax)
 {
@@ -83,6 +83,6 @@ TEST(Bounds2d, SetMinMax)
 	bounds.SetMinMax(min, max);
 	Float2 size = bounds.GetSize();
 	Float2 center = bounds.center;
-	EXPECT_FLOAT2_EQ(size, Float2(1.0f, 2.0f));
-	EXPECT_FLOAT2_EQ(center, Float2(0.5f, 1.0f));
+	ExpectEqualVec(size, Float2(1.0f, 2.0f));
+	ExpectEqualVec(center, Float2(0.5f, 1.0f));
 }

@@ -15,6 +15,7 @@ namespace emberMath
 	{
 	public:
 		// Members:
+        static constexpr int size = 3;
 		float x, y, z;
 
 		// Constructors:

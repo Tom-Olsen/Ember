@@ -29,7 +29,8 @@ namespace emberMath
 
 	public:
 		// Members:
-		float data[9];
+        static constexpr int size = 9;
+		float data[size];
 
 		// Constructors:
 		Float3x3();
@@ -67,6 +68,8 @@ namespace emberMath
 		static Float3x3 RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New);
 
 		// Access:
+		float& operator[](int index);
+		float operator[](int index) const;
 		float& operator[](const Index2& index);
 		float operator[](const Index2& index) const;
 		Float3 GetRow(int index) const;

@@ -102,6 +102,14 @@ namespace emberMath
 
 
 	// Access:
+	float& Float2x3::operator[](int index)
+	{
+		return data[index];
+	}
+	float Float2x3::operator[](int index) const
+	{
+		return data[index];
+	}
 	float& Float2x3::operator[](const Index2& index)
 	{
 		if (index.i >= 0 && index.i < 2 && index.j >= 0 && index.j < 3)

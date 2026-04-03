@@ -1,5 +1,5 @@
 #include "emberMath.h"
-#include "macros.h"
+#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -11,9 +11,9 @@ TEST(Float3x3, ConstructorRowsScalar)
 	Float3 row1 = Float3(4.0f, 5.0f, 6.0f);
 	Float3 row2 = Float3(7.0f, 8.0f, 9.0f);
 	Float3x3 matrix = Float3x3::Rows(row0.x, row0.y, row0.z, row1.x, row1.y, row1.z, row2.x, row2.y, row2.z);
-	EXPECT_FLOAT3_EQ(matrix.GetRow(0), row0);
-	EXPECT_FLOAT3_EQ(matrix.GetRow(1), row1);
-	EXPECT_FLOAT3_EQ(matrix.GetRow(2), row2);
+	ExpectEqualVec(matrix.GetRow(0), row0);
+	ExpectEqualVec(matrix.GetRow(1), row1);
+	ExpectEqualVec(matrix.GetRow(2), row2);
 }
 TEST(Float3x3, ConstructorRowsVector)
 {
@@ -21,9 +21,9 @@ TEST(Float3x3, ConstructorRowsVector)
 	Float3 row1 = Float3(4.0f, 5.0f, 6.0f);
 	Float3 row2 = Float3(7.0f, 8.0f, 9.0f);
 	Float3x3 matrix = Float3x3::Rows(row0, row1, row2);
-	EXPECT_FLOAT3_EQ(matrix.GetRow(0), row0);
-	EXPECT_FLOAT3_EQ(matrix.GetRow(1), row1);
-	EXPECT_FLOAT3_EQ(matrix.GetRow(2), row2);
+	ExpectEqualVec(matrix.GetRow(0), row0);
+	ExpectEqualVec(matrix.GetRow(1), row1);
+	ExpectEqualVec(matrix.GetRow(2), row2);
 }
 TEST(Float3x3, ConstructorColumnsScalar)
 {
@@ -31,9 +31,9 @@ TEST(Float3x3, ConstructorColumnsScalar)
 	Float3 column1 = Float3(4.0f, 5.0f, 6.0f);
 	Float3 column2 = Float3(7.0f, 8.0f, 9.0f);
 	Float3x3 matrix = Float3x3::Columns(column0.x, column0.y, column0.z, column1.x, column1.y, column1.z, column2.x, column2.y, column2.z);
-	EXPECT_FLOAT3_EQ(matrix.GetColumn(0), column0);
-	EXPECT_FLOAT3_EQ(matrix.GetColumn(1), column1);
-	EXPECT_FLOAT3_EQ(matrix.GetColumn(2), column2);
+	ExpectEqualVec(matrix.GetColumn(0), column0);
+	ExpectEqualVec(matrix.GetColumn(1), column1);
+	ExpectEqualVec(matrix.GetColumn(2), column2);
 }
 TEST(Float3x3, ConstructorColumnsVector)
 {
@@ -41,9 +41,9 @@ TEST(Float3x3, ConstructorColumnsVector)
 	Float3 column1 = Float3(4.0f, 5.0f, 6.0f);
 	Float3 column2 = Float3(7.0f, 8.0f, 9.0f);
 	Float3x3 matrix = Float3x3::Columns(column0, column1, column2);
-	EXPECT_FLOAT3_EQ(matrix.GetColumn(0), column0);
-	EXPECT_FLOAT3_EQ(matrix.GetColumn(1), column1);
-	EXPECT_FLOAT3_EQ(matrix.GetColumn(2), column2);
+	ExpectEqualVec(matrix.GetColumn(0), column0);
+	ExpectEqualVec(matrix.GetColumn(1), column1);
+	ExpectEqualVec(matrix.GetColumn(2), column2);
 }
 
 // Math operations:
@@ -100,21 +100,21 @@ TEST(Float3x3, RotateX)
 	Float3x3 rotMatrix = Float3x3::RotateX(math::pi2);
 	Float3 v0 = Float3(0.0f, 1.0f, 0.0f);
 	Float3 v1 = rotMatrix * v0;
-	EXPECT_NEAR3(v1, Float3(0.0f, 0.0f, 1.0f), epsilon);
+	ExpectNearVec(v1, Float3(0.0f, 0.0f, 1.0f), epsilon);
 }
 TEST(Float3x3, RotateY)
 {
 	Float3x3 rotMatrix = Float3x3::RotateY(math::pi2);
 	Float3 v0 = Float3(1.0f, 0.0f, 0.0f);
 	Float3 v1 = rotMatrix * v0;
-	EXPECT_NEAR3(v1, Float3(0.0f, 0.0f, -1.0f), epsilon);
+	ExpectNearVec(v1, Float3(0.0f, 0.0f, -1.0f), epsilon);
 }
 TEST(Float3x3, RotateZ)
 {
 	Float3x3 rotMatrix = Float3x3::RotateX(math::pi2);
 	Float3 v0 = Float3(0.0f, 0.0f, 1.0f);
 	Float3 v1 = rotMatrix * v0;
-	EXPECT_NEAR3(v1, Float3(0.0f, -1.0f, 0.0f), epsilon);
+	ExpectNearVec(v1, Float3(0.0f, -1.0f, 0.0f), epsilon);
 }
 TEST(Float3x3, RotateAroundAxis)
 {
@@ -122,7 +122,7 @@ TEST(Float3x3, RotateAroundAxis)
 	Float3x3 rotMatrix = Float3x3::Rotate(axis, math::pi);
 	Float3 v0 = Float3::right;
 	Float3 v1 = rotMatrix * v0;
-	EXPECT_NEAR3(v1, Float3::forward, epsilon);
+	ExpectNearVec(v1, Float3::forward, epsilon);
 }
 
 //TEST(Float3x3, RotateByEulerAngles)
@@ -136,7 +136,7 @@ TEST(Float3x3, RotateFromTo)
 	Float3x3 rotMatrix = Float3x3::RotateFromTo(from, to);
 	Float3 v0 = Float3(1.0f, 0.0f, 0.0f);
 	Float3 v1 = rotMatrix * v0;
-	EXPECT_NEAR3(v1, to, epsilon);
+	ExpectNearVec(v1, to, epsilon);
 }
 //TEST(Float3x3, RotateThreeLeg)
 //{
@@ -144,8 +144,8 @@ TEST(Float3x3, RotateFromTo)
 //	Float3x3 rotMatrix = Float3x3::RotateThreeLeg(Float3::forward, Float3::right, Float3::up, Float3::backward);
 //	Float3 right = rotMatrix * Float3::forward;
 //	Float3 backward = rotMatrix * Float3::up;
-//	EXPECT_NEAR3(Float3::right, right, epsilon);
-//	EXPECT_NEAR3(Float3::backward, backward, epsilon);
+//	ExpectNearVec(Float3::right, right, epsilon);
+//	ExpectNearVec(Float3::backward, backward, epsilon);
 //}
 
 // Access:
@@ -186,9 +186,9 @@ TEST(Float3x3, GetRow)
 	Float3 row1 = Float3(4.0f, 5.0f, 6.0f);
 	Float3 row2 = Float3(7.0f, 8.0f, 9.0f);
 	Float3x3 matrix = Float3x3::Rows(row0, row1, row2);
-	EXPECT_FLOAT3_EQ(matrix.GetRow(0), row0);
-	EXPECT_FLOAT3_EQ(matrix.GetRow(1), row1);
-	EXPECT_FLOAT3_EQ(matrix.GetRow(2), row2);
+	ExpectEqualVec(matrix.GetRow(0), row0);
+	ExpectEqualVec(matrix.GetRow(1), row1);
+	ExpectEqualVec(matrix.GetRow(2), row2);
 }
 TEST(Float3x3, GetColumn)
 {
@@ -196,9 +196,9 @@ TEST(Float3x3, GetColumn)
 	Float3 column1 = Float3(4.0f, 5.0f, 6.0f);
 	Float3 column2 = Float3(7.0f, 8.0f, 9.0f);
 	Float3x3 matrix = Float3x3::Columns(column0, column1, column2);
-	EXPECT_FLOAT3_EQ(matrix.GetColumn(0), column0);
-	EXPECT_FLOAT3_EQ(matrix.GetColumn(1), column1);
-	EXPECT_FLOAT3_EQ(matrix.GetColumn(2), column2);
+	ExpectEqualVec(matrix.GetColumn(0), column0);
+	ExpectEqualVec(matrix.GetColumn(1), column1);
+	ExpectEqualVec(matrix.GetColumn(2), column2);
 }
 
 // Assignment:
@@ -228,9 +228,9 @@ TEST(Float3x3, OperatorAddition)
 	Float3 row0Add = row0A + row0B;
 	Float3 row1Add = row1A + row1B;
 	Float3 row2Add = row2A + row2B;
-	EXPECT_FLOAT3_EQ(add.GetRow(0), row0Add);
-	EXPECT_FLOAT3_EQ(add.GetRow(1), row1Add);
-	EXPECT_FLOAT3_EQ(add.GetRow(2), row2Add);
+	ExpectEqualVec(add.GetRow(0), row0Add);
+	ExpectEqualVec(add.GetRow(1), row1Add);
+	ExpectEqualVec(add.GetRow(2), row2Add);
 }
 TEST(Float3x3, OperatorAdditionAssignment)
 {
@@ -246,9 +246,9 @@ TEST(Float3x3, OperatorAdditionAssignment)
 	Float3 row0Add = row0A + row0B;
 	Float3 row1Add = row1A + row1B;
 	Float3 row2Add = row2A + row2B;
-	EXPECT_FLOAT3_EQ(add.GetRow(0), row0Add);
-	EXPECT_FLOAT3_EQ(add.GetRow(1), row1Add);
-	EXPECT_FLOAT3_EQ(add.GetRow(2), row2Add);
+	ExpectEqualVec(add.GetRow(0), row0Add);
+	ExpectEqualVec(add.GetRow(1), row1Add);
+	ExpectEqualVec(add.GetRow(2), row2Add);
 }
 
 // Substraction:
@@ -266,9 +266,9 @@ TEST(Float3x3, OperatorSubstraction)
 	Float3 row0Sub = row0A - row0B;
 	Float3 row1Sub = row1A - row1B;
 	Float3 row2Sub = row2A - row2B;
-	EXPECT_FLOAT3_EQ(sub.GetRow(0), row0Sub);
-	EXPECT_FLOAT3_EQ(sub.GetRow(1), row1Sub);
-	EXPECT_FLOAT3_EQ(sub.GetRow(2), row2Sub);
+	ExpectEqualVec(sub.GetRow(0), row0Sub);
+	ExpectEqualVec(sub.GetRow(1), row1Sub);
+	ExpectEqualVec(sub.GetRow(2), row2Sub);
 }
 TEST(Float3x3, OperatorSubstractionAssignment)
 {
@@ -284,9 +284,9 @@ TEST(Float3x3, OperatorSubstractionAssignment)
 	Float3 row0Sub = row0A - row0B;
 	Float3 row1Sub = row1A - row1B;
 	Float3 row2Sub = row2A - row2B;
-	EXPECT_FLOAT3_EQ(sub.GetRow(0), row0Sub);
-	EXPECT_FLOAT3_EQ(sub.GetRow(1), row1Sub);
-	EXPECT_FLOAT3_EQ(sub.GetRow(2), row2Sub);
+	ExpectEqualVec(sub.GetRow(0), row0Sub);
+	ExpectEqualVec(sub.GetRow(1), row1Sub);
+	ExpectEqualVec(sub.GetRow(2), row2Sub);
 }
 TEST(Float3x3, OperatorNegation)
 {
@@ -295,9 +295,9 @@ TEST(Float3x3, OperatorNegation)
 	Float3 row2 = Float3(7.0f, 8.0f, 9.0f);
 	Float3x3 matrix = Float3x3::Rows(row0, row1, row2);
 	Float3x3 negation = -matrix;
-	EXPECT_FLOAT3_EQ(negation.GetRow(0), -row0);
-	EXPECT_FLOAT3_EQ(negation.GetRow(1), -row1);
-	EXPECT_FLOAT3_EQ(negation.GetRow(2), -row2);
+	ExpectEqualVec(negation.GetRow(0), -row0);
+	ExpectEqualVec(negation.GetRow(1), -row1);
+	ExpectEqualVec(negation.GetRow(2), -row2);
 }
 
 // Multiplication:
@@ -306,18 +306,18 @@ TEST(Float3x3, OperatorMultiplication)
 	Float3x3 matrixA = Float3x3::Rows(Float3(1, 2, 3), Float3(4, 5, 6), Float3(7, 8, 9));
 	Float3x3 matrixB = Float3x3::Rows(Float3(9, 8, 7), Float3(6, 5, 4), Float3(3, 2, 1));
 	Float3x3 mult = matrixA * matrixB;
-	EXPECT_FLOAT3_EQ(mult.GetRow(0), Float3(30, 24, 18));
-	EXPECT_FLOAT3_EQ(mult.GetRow(1), Float3(84, 69, 54));
-	EXPECT_FLOAT3_EQ(mult.GetRow(2), Float3(138, 114, 90));
+	ExpectEqualVec(mult.GetRow(0), Float3(30, 24, 18));
+	ExpectEqualVec(mult.GetRow(1), Float3(84, 69, 54));
+	ExpectEqualVec(mult.GetRow(2), Float3(138, 114, 90));
 }
 TEST(Float3x3, OperatorMultiplicationAssignment)
 {
 	Float3x3 mult = Float3x3::Rows(Float3(1, 2, 3), Float3(4, 5, 6), Float3(7, 8, 9));
 	Float3x3 matrixB = Float3x3::Rows(Float3(9, 8, 7), Float3(6, 5, 4), Float3(3, 2, 1));
 	mult *= matrixB;
-	EXPECT_FLOAT3_EQ(mult.GetRow(0), Float3(30, 24, 18));
-	EXPECT_FLOAT3_EQ(mult.GetRow(1), Float3(84, 69, 54));
-	EXPECT_FLOAT3_EQ(mult.GetRow(2), Float3(138, 114, 90));
+	ExpectEqualVec(mult.GetRow(0), Float3(30, 24, 18));
+	ExpectEqualVec(mult.GetRow(1), Float3(84, 69, 54));
+	ExpectEqualVec(mult.GetRow(2), Float3(138, 114, 90));
 }
 TEST(Float3x3, OperatorMultiplicationScalarAssignment)
 {
@@ -327,9 +327,9 @@ TEST(Float3x3, OperatorMultiplicationScalarAssignment)
 	Float3x3 mult = Float3x3::Rows(row0, row1, row2);
 	float scalar = 2.0f;
 	mult *= scalar;
-	EXPECT_FLOAT3_EQ(mult.GetRow(0), scalar * row0);
-	EXPECT_FLOAT3_EQ(mult.GetRow(1), scalar * row1);
-	EXPECT_FLOAT3_EQ(mult.GetRow(2), scalar * row2);
+	ExpectEqualVec(mult.GetRow(0), scalar * row0);
+	ExpectEqualVec(mult.GetRow(1), scalar * row1);
+	ExpectEqualVec(mult.GetRow(2), scalar * row2);
 }
 
 // Division:
@@ -344,9 +344,9 @@ TEST(Float3x3, OperatorDivision)
 	Float3 row0Div = row0 / scalar;
 	Float3 row1Div = row1 / scalar;
 	Float3 row2Div = row2 / scalar;
-	EXPECT_FLOAT3_EQ(div.GetRow(0), row0Div);
-	EXPECT_FLOAT3_EQ(div.GetRow(1), row1Div);
-	EXPECT_FLOAT3_EQ(div.GetRow(2), row2Div);
+	ExpectEqualVec(div.GetRow(0), row0Div);
+	ExpectEqualVec(div.GetRow(1), row1Div);
+	ExpectEqualVec(div.GetRow(2), row2Div);
 }
 TEST(Float3x3, OperatorDivisionAssignment)
 {
@@ -359,9 +359,9 @@ TEST(Float3x3, OperatorDivisionAssignment)
 	Float3 row0Div = row0 / scalar;
 	Float3 row1Div = row1 / scalar;
 	Float3 row2Div = row2 / scalar;
-	EXPECT_FLOAT3_EQ(div.GetRow(0), row0Div);
-	EXPECT_FLOAT3_EQ(div.GetRow(1), row1Div);
-	EXPECT_FLOAT3_EQ(div.GetRow(2), row2Div);
+	ExpectEqualVec(div.GetRow(0), row0Div);
+	ExpectEqualVec(div.GetRow(1), row1Div);
+	ExpectEqualVec(div.GetRow(2), row2Div);
 }
 
 // Comparison:
@@ -390,18 +390,18 @@ TEST(Float3x3, OperatorMultiplicationScalarRight)
 	Float3x3 matrix = Float3x3::Rows(Float3(1.0f, 2.0f, 3.0f), Float3(4.0f, 5.0f, 6.0f), Float3(7.0f, 8.0f, 9.0f));
 	float scalar = 2.0f;
 	Float3x3 mult = matrix * scalar;
-	EXPECT_FLOAT3_EQ(mult.GetRow(0), scalar * matrix.GetRow(0));
-	EXPECT_FLOAT3_EQ(mult.GetRow(1), scalar * matrix.GetRow(1));
-	EXPECT_FLOAT3_EQ(mult.GetRow(2), scalar * matrix.GetRow(2));
+	ExpectEqualVec(mult.GetRow(0), scalar * matrix.GetRow(0));
+	ExpectEqualVec(mult.GetRow(1), scalar * matrix.GetRow(1));
+	ExpectEqualVec(mult.GetRow(2), scalar * matrix.GetRow(2));
 }
 TEST(Float3x3, OperatorMultiplicationScalarLeft)
 {
 	Float3x3 matrix = Float3x3::Rows(Float3(1.0f, 2.0f, 3.0f), Float3(4.0f, 5.0f, 6.0f), Float3(7.0f, 8.0f, 9.0f));
 	float scalar = 2.0f;
 	Float3x3 mult = scalar * matrix;
-	EXPECT_FLOAT3_EQ(mult.GetRow(0), scalar * matrix.GetRow(0));
-	EXPECT_FLOAT3_EQ(mult.GetRow(1), scalar * matrix.GetRow(1));
-	EXPECT_FLOAT3_EQ(mult.GetRow(2), scalar * matrix.GetRow(2));
+	ExpectEqualVec(mult.GetRow(0), scalar * matrix.GetRow(0));
+	ExpectEqualVec(mult.GetRow(1), scalar * matrix.GetRow(1));
+	ExpectEqualVec(mult.GetRow(2), scalar * matrix.GetRow(2));
 }
 TEST(Float3x3, OperatorMultiplicationFloat3Right)
 {

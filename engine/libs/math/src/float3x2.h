@@ -29,7 +29,8 @@ namespace emberMath
 
 	public:
 		// Members:
-		float data[6];
+        static constexpr int size = 6;
+		float data[size];
 
 		// Constructors:
 		Float3x2();
@@ -54,6 +55,8 @@ namespace emberMath
 		bool IsEpsilonZero() const;
 
 		// Access:
+		float& operator[](int index);
+		float operator[](int index) const;
 		float& operator[](const Index2& index);
 		float operator[](const Index2& index) const;
 		Float2 GetRow(int index) const;

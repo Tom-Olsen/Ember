@@ -1,5 +1,5 @@
 #include "emberMath.h"
-#include "macros.h"
+#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -108,12 +108,12 @@ TEST(Int2, OperatorMultiplicationScalarLeft)
 	Int2 a(1, 2);
 	float b = 3;
 	Int2 mult = b * a;
-	EXPECT_NEAR2(mult, Int2(3, 6), epsilon);
+	ExpectNearVec(mult, Int2(3, 6), epsilon);
 }
 TEST(Int2, OperatorMultiplicationScalarRight)
 {
 	Int2 a(1, 2);
 	float b = 3;
 	Int2 mult = a * b;
-	EXPECT_NEAR2(mult, Int2(3, 6), epsilon);
+	ExpectNearVec(mult, Int2(3, 6), epsilon);
 }

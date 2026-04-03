@@ -1,5 +1,5 @@
 #include "emberMath.h"
-#include "macros.h"
+#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -8,7 +8,7 @@
 TEST(Float4, DirectionConstructor)
 {
 	Float4 direction = Float4::Direction(math::pi4, math::pi4);
-	EXPECT_NEAR4(direction, Float4(0.5f, 0.5f, math::sqrt2Inv, 0.0f), epsilon);
+	ExpectNearVec(direction, Float4(0.5f, 0.5f, math::sqrt2Inv, 0.0f), epsilon);
 }
 
 // Math operations:
@@ -35,21 +35,21 @@ TEST(Float4, Abs)
 {
 	Float4 a(-1.0f, -2.0f, -3.0f, 4.0f);
 	Float4 abs = Float4::Abs(a);
-	EXPECT_NEAR4(abs, Float4(1.0f, 2.0f, 3.0f, 4.0f), epsilon);
+	ExpectNearVec(abs, Float4(1.0f, 2.0f, 3.0f, 4.0f), epsilon);
 }
 TEST(Float4, Min)
 {
 	Float4 a(1.0f, 2.0f, 4.0f, 1.0f);
 	Float4 b(3.0f, 4.0f, 1.0f, 2.0f);
 	Float4 min = Float4::Min(a, b);
-	EXPECT_NEAR4(min, Float4(1.0f, 2.0f, 1.0f, 1.0f), epsilon);
+	ExpectNearVec(min, Float4(1.0f, 2.0f, 1.0f, 1.0f), epsilon);
 }
 TEST(Float4, Max)
 {
 	Float4 a(1.0f, 2.0f, 4.0f, 1.0f);
 	Float4 b(3.0f, 4.0f, 1.0f, 2.0f);
 	Float4 max = Float4::Max(a, b);
-	EXPECT_NEAR4(max, Float4(3.0f, 4.0f, 4.0f, 2.0f), epsilon);
+	ExpectNearVec(max, Float4(3.0f, 4.0f, 4.0f, 2.0f), epsilon);
 }
 TEST(Float4, Clamp)
 {
@@ -57,7 +57,7 @@ TEST(Float4, Clamp)
 	Float4 min(2.0f, 3.0f, 1.0f, -2.0f);
 	Float4 max(3.0f, 4.0f, 3.0f, -1.0f);
 	Float4 clamped = Float4::Clamp(value, min, max);
-	EXPECT_NEAR4(clamped, Float4(2.0f, 4.0f, 2.0f, -1.0f), epsilon);
+	ExpectNearVec(clamped, Float4(2.0f, 4.0f, 2.0f, -1.0f), epsilon);
 }
 
 // Access:
@@ -81,7 +81,7 @@ TEST(Float4, xyz)
 {
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	Float3 xyz = a.xyz();
-	EXPECT_NEAR3(xyz, Float3(1.0f, 2.0f, 3.0f), epsilon);
+	ExpectNearVec(xyz, Float3(1.0f, 2.0f, 3.0f), epsilon);
 }
 
 // Assignment:
@@ -90,7 +90,7 @@ TEST(Float4, OperatorAssignment)
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
 	a = b;
-	EXPECT_FLOAT4_EQ(a, b);
+	ExpectEqualVec(a, b);
 }
 
 // Addition:
@@ -99,14 +99,14 @@ TEST(Float4, OperatorAddition)
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
 	Float4 add = a + b;
-	EXPECT_NEAR4(add, Float4(6.0f, 8.0f, 10.0f, 12.0f), epsilon);
+	ExpectNearVec(add, Float4(6.0f, 8.0f, 10.0f, 12.0f), epsilon);
 }
 TEST(Float4, OperatorAdditionAssignment)
 {
 	Float4 add(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
 	add +=b;
-	EXPECT_NEAR4(add, Float4(6.0f, 8.0f, 10.0f, 12.0f), epsilon);
+	ExpectNearVec(add, Float4(6.0f, 8.0f, 10.0f, 12.0f), epsilon);
 }
 
 // Substraction:
@@ -115,20 +115,20 @@ TEST(Float4, OperatorSubstraction)
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
 	Float4 sub = a - b;
-	EXPECT_NEAR4(sub, Float4(-4.0f, -4.0f, -4.0f, -4.0f), epsilon);
+	ExpectNearVec(sub, Float4(-4.0f, -4.0f, -4.0f, -4.0f), epsilon);
 }
 TEST(Float4, OperatorSubstractionAssignment)
 {
 	Float4 sub(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
 	sub -= b;
-	EXPECT_NEAR4(sub, Float4(-4.0f, -4.0f, -4.0f, -4.0f), epsilon);
+	ExpectNearVec(sub, Float4(-4.0f, -4.0f, -4.0f, -4.0f), epsilon);
 }
 TEST(Float4, OperatorNegation)
 {
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 negation = -a;
-	EXPECT_NEAR4(negation, Float4(-1.0f, -2.0f, -3.0f, -4.0f), epsilon);
+	ExpectNearVec(negation, Float4(-1.0f, -2.0f, -3.0f, -4.0f), epsilon);
 }
 
 // Multiplication:
@@ -137,21 +137,21 @@ TEST(Float4, OperatorMultiplication)
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
 	Float4 mult = a * b;
-	EXPECT_NEAR4(mult, Float4(5.0f, 12.0f, 21.0f, 32.0f), epsilon);
+	ExpectNearVec(mult, Float4(5.0f, 12.0f, 21.0f, 32.0f), epsilon);
 }
 TEST(Float4, OperatorMultiplicationAssignment)
 {
 	Float4 mult(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
 	mult *=b;
-	EXPECT_NEAR4(mult, Float4(5.0f, 12.0f, 21.0f, 32.0f), epsilon);
+	ExpectNearVec(mult, Float4(5.0f, 12.0f, 21.0f, 32.0f), epsilon);
 }
 TEST(Float4, OperatorMultiplicationScalarAssignment)
 {
 	Float4 mult(1.0f, 2.0f, 3.0f, 4.0f);
 	float b = 3.0f;
 	mult *= b;
-	EXPECT_NEAR4(mult, Float4(3.0f, 6.0f, 9.0f, 12.0f), epsilon);
+	ExpectNearVec(mult, Float4(3.0f, 6.0f, 9.0f, 12.0f), epsilon);
 }
 
 // Division:
@@ -160,21 +160,21 @@ TEST(Float4, OperatorDivision)
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
 	Float4 div = a / b;
-	EXPECT_NEAR4(div, Float4(1.0f / 5.0f, 2.0f / 6.0f, 3.0f / 7.0f, 4.0f / 8.0f), epsilon);
+	ExpectNearVec(div, Float4(1.0f / 5.0f, 2.0f / 6.0f, 3.0f / 7.0f, 4.0f / 8.0f), epsilon);
 }
 TEST(Float4, OperatorDivisionAssignment)
 {
 	Float4 div(1.0f, 2.0f, 3.0f, 4.0f);
 	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
 	div /= b;
-	EXPECT_NEAR4(div, Float4(1.0f / 5.0f, 2.0f / 6.0f, 3.0f / 7.0f, 4.0f / 8.0f), epsilon);
+	ExpectNearVec(div, Float4(1.0f / 5.0f, 2.0f / 6.0f, 3.0f / 7.0f, 4.0f / 8.0f), epsilon);
 }
 TEST(Float4, OperatorDivisionScalarAssignment)
 {
 	Float4 div(1.0f, 2.0f, 3.0f, 4.0f);
 	float b = 4.0f;
 	div /= b;
-	EXPECT_NEAR4(div, Float4(1.0f / 4.0f, 2.0f / 4.0f, 3.0f / 4.0f, 1.0f), epsilon);
+	ExpectNearVec(div, Float4(1.0f / 4.0f, 2.0f / 4.0f, 3.0f / 4.0f, 1.0f), epsilon);
 }
 
 // Comparison:
@@ -203,26 +203,26 @@ TEST(Float4, OperatorMultiplicationScalarLeft)
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	float b = 3.0f;
 	Float4 mult = b * a;
-	EXPECT_NEAR4(mult, Float4(3.0f, 6.0f, 9.0f, 12.0f), epsilon);
+	ExpectNearVec(mult, Float4(3.0f, 6.0f, 9.0f, 12.0f), epsilon);
 }
 TEST(Float4, OperatorMultiplicationScalarRight)
 {
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	float b = 3.0f;
 	Float4 mult = a * b;
-	EXPECT_NEAR4(mult, Float4(3.0f, 6.0f, 9.0f, 12.0f), epsilon);
+	ExpectNearVec(mult, Float4(3.0f, 6.0f, 9.0f, 12.0f), epsilon);
 }
 TEST(Float4, OperatorDivisionScalarLeft)
 {
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	float b = 4.0f;
 	Float4 div = b / a;
-	EXPECT_NEAR4(div, Float4(4.0f / 1.0f, 4.0f / 2.0f, 4.0f / 3.0f, 4.0f / 4.0f), epsilon);
+	ExpectNearVec(div, Float4(4.0f / 1.0f, 4.0f / 2.0f, 4.0f / 3.0f, 4.0f / 4.0f), epsilon);
 }
 TEST(Float4, OperatorDivisionScalarRight)
 {
 	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
 	float b = 4.0f;
 	Float4 div = a / b;
-	EXPECT_NEAR4(div, Float4(1.0f / 4.0f, 2.0f / 4.0f, 3.0f / 4.0f, 4.0f / 4.0f), epsilon);
+	ExpectNearVec(div, Float4(1.0f / 4.0f, 2.0f / 4.0f, 3.0f / 4.0f, 4.0f / 4.0f), epsilon);
 }

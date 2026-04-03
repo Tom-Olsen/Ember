@@ -1,5 +1,5 @@
 #include "emberMath.h"
-#include "macros.h"
+#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -8,7 +8,7 @@
 TEST(Float2, DirectionConstructor)
 {
 	Float2 direction = Float2::Direction(math::pi4);
-	EXPECT_NEAR2(direction, math::sqrt2Inv * Float2::one, epsilon);
+	ExpectNearVec(direction, math::sqrt2Inv * Float2::one, epsilon);
 }
 
 // Math operations:
@@ -34,13 +34,13 @@ TEST(Float2, Normalize)
 {
 	Float2 a(3.0f, 4.0f);
 	Float2 normalized = a.Normalize();
-	EXPECT_NEAR2(normalized, Float2(0.6f, 0.8f), epsilon);
+	ExpectNearVec(normalized, Float2(0.6f, 0.8f), epsilon);
 }
 TEST(Float2, Rotate)
 {
 	Float2 a(1.0f, 0.0f);
 	Float2 rotated = a.Rotate(math::pi4);
-	EXPECT_NEAR2(rotated, Float2(math::sqrt2Inv, math::sqrt2Inv), epsilon);
+	ExpectNearVec(rotated, Float2(math::sqrt2Inv, math::sqrt2Inv), epsilon);
 }
 TEST(Float2, IsEpsilonZero)
 {
@@ -53,7 +53,7 @@ TEST(Float2, Abs)
 {
 	Float2 a(-1.0f, -2.0f);
 	Float2 abs = Float2::Abs(a);
-	EXPECT_NEAR2(abs, Float2(1.0f, 2.0f), epsilon);
+	ExpectNearVec(abs, Float2(1.0f, 2.0f), epsilon);
 }
 TEST(Float2, Dot)
 {
@@ -95,14 +95,14 @@ TEST(Float2, Min)
 	Float2 a(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	Float2 min = Float2::Min(a, b);
-	EXPECT_NEAR2(min, Float2(1.0f, 2.0f), epsilon);
+	ExpectNearVec(min, Float2(1.0f, 2.0f), epsilon);
 }
 TEST(Float2, Max)
 {
 	Float2 a(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	Float2 max = Float2::Max(a, b);
-	EXPECT_NEAR2(max, Float2(3.0f, 4.0f), epsilon);
+	ExpectNearVec(max, Float2(3.0f, 4.0f), epsilon);
 }
 TEST(Float2, Clamp)
 {
@@ -110,7 +110,7 @@ TEST(Float2, Clamp)
 	Float2 min(2.0f, 3.0f);
 	Float2 max(3.0f, 4.0f);
 	Float2 clamped = Float2::Clamp(value, min, max);
-	EXPECT_NEAR2(clamped, Float2(2.0f, 4.0f), epsilon);
+	ExpectNearVec(clamped, Float2(2.0f, 4.0f), epsilon);
 }
 
 // Access:
@@ -131,7 +131,7 @@ TEST(Float2, OperatorAssignment)
 	Float2 a(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	a = b;
-	EXPECT_FLOAT2_EQ(a, b);
+	ExpectEqualVec(a, b);
 }
 
 // Addition:
@@ -140,14 +140,14 @@ TEST(Float2, OperatorAddition)
 	Float2 a(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	Float2 add = a + b;
-	EXPECT_NEAR2(add, Float2(4.0f, 6.0f), epsilon);
+	ExpectNearVec(add, Float2(4.0f, 6.0f), epsilon);
 }
 TEST(Float2, OperatorAdditionAssignment)
 {
 	Float2 add(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	add += b;
-	EXPECT_NEAR2(add, Float2(4.0f, 6.0f), epsilon);
+	ExpectNearVec(add, Float2(4.0f, 6.0f), epsilon);
 }
 
 // Substraction:
@@ -156,20 +156,20 @@ TEST(Float2, OperatorSubstraction)
 	Float2 a(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	Float2 sub = a - b;
-	EXPECT_NEAR2(sub, Float2(-2.0f, -2.0f), epsilon);
+	ExpectNearVec(sub, Float2(-2.0f, -2.0f), epsilon);
 }
 TEST(Float2, OperatorSubstractionAssignment)
 {
 	Float2 sub(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	sub -= b;
-	EXPECT_NEAR2(sub, Float2(-2.0f, -2.0f), epsilon);
+	ExpectNearVec(sub, Float2(-2.0f, -2.0f), epsilon);
 }
 TEST(Float2, OperatorNegation)
 {
 	Float2 a(1.0f, 2.0f);
 	Float2 negation = -a;
-	EXPECT_NEAR2(negation, Float2(-1.0f, -2.0f), epsilon);
+	ExpectNearVec(negation, Float2(-1.0f, -2.0f), epsilon);
 }
 
 // Multiplication:
@@ -178,21 +178,21 @@ TEST(Float2, OperatorMultiplication)
 	Float2 a(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	Float2 mult = a * b;
-	EXPECT_NEAR2(mult, Float2(3.0f, 8.0f), epsilon);
+	ExpectNearVec(mult, Float2(3.0f, 8.0f), epsilon);
 }
 TEST(Float2, OperatorMultiplicationAssignment)
 {
 	Float2 mult(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	mult *= b;
-	EXPECT_NEAR2(mult, Float2(3.0f, 8.0f), epsilon);
+	ExpectNearVec(mult, Float2(3.0f, 8.0f), epsilon);
 }
 TEST(Float2, OperatorMultiplicationScalarAssignment)
 {
 	Float2 mult(1.0f, 2.0f);
 	float b = 3.0f;
 	mult *= b;
-	EXPECT_NEAR2(mult, Float2(3.0f, 6.0f), epsilon);
+	ExpectNearVec(mult, Float2(3.0f, 6.0f), epsilon);
 }
 
 // Division:
@@ -201,21 +201,21 @@ TEST(Float2, OperatorDivision)
 	Float2 a(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	Float2 div = a / b;
-	EXPECT_NEAR2(div, Float2(1.0f / 3.0f, 2.0f / 4.0f), epsilon);
+	ExpectNearVec(div, Float2(1.0f / 3.0f, 2.0f / 4.0f), epsilon);
 }
 TEST(Float2, OperatorDivisionAssignment)
 {
 	Float2 div(1.0f, 2.0f);
 	Float2 b(3.0f, 4.0f);
 	div /= b;
-	EXPECT_NEAR2(div, Float2(1.0f / 3.0f, 2.0f / 4.0f), epsilon);
+	ExpectNearVec(div, Float2(1.0f / 3.0f, 2.0f / 4.0f), epsilon);
 }
 TEST(Float2, OperatorDivisionScalarAssignment)
 {
 	Float2 div(1.0f, 2.0f);
 	float b = 3.0f;
 	div /= b;
-	EXPECT_NEAR2(div, Float2(1.0f / 3.0f, 2.0f / 3.0f), epsilon);
+	ExpectNearVec(div, Float2(1.0f / 3.0f, 2.0f / 3.0f), epsilon);
 }
 
 // Comparison:
@@ -244,26 +244,26 @@ TEST(Float2, OperatorMultiplicationScalarLeft)
 	Float2 a(1.0f, 2.0f);
 	float b = 3.0f;
 	Float2 mult = b * a;
-	EXPECT_NEAR2(mult, Float2(3.0f, 6.0f), epsilon);
+	ExpectNearVec(mult, Float2(3.0f, 6.0f), epsilon);
 }
 TEST(Float2, OperatorMultiplicationScalarRight)
 {
 	Float2 a(1.0f, 2.0f);
 	float b = 3.0f;
 	Float2 mult = a * b;
-	EXPECT_NEAR2(mult, Float2(3.0f, 6.0f), epsilon);
+	ExpectNearVec(mult, Float2(3.0f, 6.0f), epsilon);
 }
 TEST(Float2, OperatorDivisionScalarLeft)
 {
 	Float2 a(1.0f, 2.0f);
 	float b = 3.0f;
 	Float2 div = b / a;
-	EXPECT_NEAR2(div, Float2(3.0f / 1.0f, 3.0f / 2.0f), epsilon);
+	ExpectNearVec(div, Float2(3.0f / 1.0f, 3.0f / 2.0f), epsilon);
 }
 TEST(Float2, OperatorDivisionScalarRight)
 {
 	Float2 a(1.0f, 2.0f);
 	float b = 3.0f;
 	Float2 div = a / b;
-	EXPECT_NEAR2(div, Float2(1.0f / 3.0f, 2.0f / 3.0f), epsilon);
+	ExpectNearVec(div, Float2(1.0f / 3.0f, 2.0f / 3.0f), epsilon);
 }
