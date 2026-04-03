@@ -27,6 +27,9 @@ namespace emberMath
 		// Math operations:
 
 		// Static math operations:
+		static Int2 Min(const Int2& a, const Int2& b);
+		static Int2 Max(const Int2& a, const Int2& b);
+		static Int2 Clamp(const Int2& value, const Int2& min, const Int2& max);
 
 		// Access:
 		int& operator[](int index);
@@ -53,6 +56,10 @@ namespace emberMath
 		// Comparison:
 		bool operator==(const Int2& other) const;
 		bool operator!=(const Int2& other) const;
+        bool operator<(const Int2& other) const;
+        bool operator<=(const Int2& other) const;
+        bool operator>(const Int2& other) const;
+        bool operator>=(const Int2& other) const;
 
 		// Friend functions:
 		friend Int2 operator*(int a, const Int2& b);

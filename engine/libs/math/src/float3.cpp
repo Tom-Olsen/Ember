@@ -3,8 +3,7 @@
 #include "float4.h"
 #include "mathConstants.h"
 #include "mathFunctions.h"
-#include <cmath>
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -38,11 +37,11 @@ namespace emberMath
 	}
 	float Float3::Length() const
 	{
-		return sqrt(LengthSq());
+		return math::Sqrt(LengthSq());
 	}
 	float Float3::Theta() const
 	{
-		return math::Atan2(sqrt(x * x + y * y), z);
+		return math::Atan2(math::Sqrt(x * x + y * y), z);
 	}
 	float Float3::Phi() const
 	{
@@ -70,9 +69,10 @@ namespace emberMath
 			theta = -theta;
 		return length * Float3::Direction(theta, phi);
 	}
-	bool Float3::IsEpsilonZero() const
+	bool Float3::IsEpsilonZero(float epsilon) const
 	{
-		return IsEpsilonEqual(Float3::zero);
+        assert(epsilon > 0.0f);
+		return IsEpsilonEqual(Float3::zero, epsilon);
 	}
 
 
@@ -82,15 +82,15 @@ namespace emberMath
 	{
 		return Float3(math::Abs(a.x), math::Abs(a.y), math::Abs(a.z));
 	}
-	Float3 Float3::Round(const Float3& value, int decimals)
+	Float3 Float3::Round(const Float3& value, uint8_t decimals)
 	{
 		return Float3(math::Round(value.x, decimals), math::Round(value.y, decimals), math::Round(value.z, decimals));
 	}
-	Float3 Float3::Ceil(const Float3& value, int decimals)
+	Float3 Float3::Ceil(const Float3& value, uint8_t decimals)
 	{
 		return Float3(math::Ceil(value.x), math::Ceil(value.y), math::Ceil(value.z));
 	}
-	Float3 Float3::Floor(const Float3& value, int decimals)
+	Float3 Float3::Floor(const Float3& value, uint8_t decimals)
 	{
 		return Float3(math::Floor(value.x), math::Floor(value.y), math::Floor(value.z));
 	}
@@ -102,8 +102,8 @@ namespace emberMath
 	{
 		return Float3
 		(a.y * b.z - a.z * b.y,
-			a.z * b.x - a.x * b.z,
-			a.x * b.y - a.y * b.x);
+         a.z * b.x - a.x * b.z,
+         a.x * b.y - a.y * b.x);
 	}
 	float Float3::DistanceSq(const Float3& a, const Float3& b)
 	{
@@ -130,6 +130,7 @@ namespace emberMath
 	}
 	Float3 Float3::Clamp(const Float3& value, const Float3& min, const Float3& max)
 	{
+        assert(min < max);
 		return Float3(math::Clamp(value.x, min.x, max.x), math::Clamp(value.y, min.y, max.y), math::Clamp(value.z, min.z, max.z));
 	}
 
@@ -138,17 +139,17 @@ namespace emberMath
 	// Access:
 	float& Float3::operator[](int index)
 	{
+        assert(index >= 0 && index < 3);
 		if (index == 0) return x;
 		if (index == 1) return y;
 		if (index == 2) return z;
-		throw std::out_of_range("Float3 index out of range.");
 	}
 	float Float3::operator[](int index) const
 	{
+        assert(index >= 0 && index < 3);
 		if (index == 0) return x;
 		if (index == 1) return y;
 		if (index == 2) return z;
-		throw std::out_of_range("Float3 index out of range.");
 	}
 
 
@@ -236,10 +237,16 @@ namespace emberMath
 	// Division:
 	Float3 Float3::operator/(const Float3& other) const
 	{
+        assert(other.x != 0.0f);
+        assert(other.y != 0.0f);
+        assert(other.z != 0.0f);
 		return Float3(x / other.x, y / other.y, z / other.z);
 	}
 	Float3& Float3::operator/=(const Float3& other)
 	{
+        assert(other.x != 0.0f);
+        assert(other.y != 0.0f);
+        assert(other.z != 0.0f);
 		this->x /= other.x;
 		this->y /= other.y;
 		this->z /= other.z;
@@ -247,6 +254,7 @@ namespace emberMath
 	}
 	Float3& Float3::operator/=(float scalar)
 	{
+        assert(scalar != 0.0f);
 		x /= scalar;
 		y /= scalar;
 		z /= scalar;
@@ -256,9 +264,9 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float3::IsEpsilonEqual(const Float3& other) const
+	bool Float3::IsEpsilonEqual(const Float3& other, float epsilon) const
 	{
-		return std::fabs(x - other.x) < math::epsilon && std::fabs(y - other.y) < math::epsilon && std::fabs(z - other.z) < math::epsilon;
+		return math::Abs(x - other.x) < epsilon && math::Abs(y - other.y) < epsilon && math::Abs(z - other.z) < epsilon;
 	}
 	bool Float3::operator==(const Float3& other) const
 	{
@@ -268,7 +276,22 @@ namespace emberMath
 	{
 		return !(*this == other);
 	}
-
+    bool Float3::operator<(const Float3& other) const
+    {
+        return x < other.x && y < other.y && z < other.z;
+    }
+    bool Float3::operator<=(const Float3& other) const
+    {
+        return x <= other.x && y <= other.y && z <= other.z;
+    }
+    bool Float3::operator>(const Float3& other) const
+    {
+        return x > other.x && y > other.y && z > other.z;
+    }
+    bool Float3::operator>=(const Float3& other) const
+    {
+        return x >= other.x && y >= other.y && z >= other.z;
+    }
 
 
 	// Friend functions:
@@ -282,10 +305,14 @@ namespace emberMath
 	}
 	Float3 operator/(const Float3& a, float b)
 	{
+        assert(b != 0.0f);
 		return Float3(a.x / b, a.y / b, a.z / b);
 	}
 	Float3 operator/(float a, const Float3& b)
 	{
+        assert(b.x != 0.0f);
+        assert(b.y != 0.0f);
+        assert(b.z != 0.0f);
 		return Float3(a / b.x, a / b.y, a / b.z);
 	}
 

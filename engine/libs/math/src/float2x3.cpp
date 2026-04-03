@@ -5,7 +5,7 @@
 #include "float3x2.h"
 #include "float3x3.h"
 #include "mathFunctions.h"
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -15,8 +15,8 @@ namespace emberMath
 	// Constructors:
 	Float2x3::Float2x3
 	(float xx, float xy,	// column 0
-		float yx, float yy,	// column 1
-		float zx, float zy)	// column 2
+     float yx, float yy,	// column 1
+     float zx, float zy)	// column 2
 	{
 		data[0] = xx; data[2] = yx; data[4] = zx;
 		data[1] = xy; data[3] = yy; data[5] = zy;
@@ -49,34 +49,34 @@ namespace emberMath
 	{
 		return Float2x3
 		(row0.x, row1.x,
-			row0.y, row1.y,
-			row0.z, row1.z);
+         row0.y, row1.y,
+         row0.z, row1.z);
 	}
 	Float2x3 Float2x3::Rows
 	(float row0x, float row0y, float row0z,
-		float row1x, float row1y, float row1z)
+     float row1x, float row1y, float row1z)
 	{
 		return Float2x3
 		(row0x, row1x,
-			row0y, row1y,
-			row0z, row1z);
+         row0y, row1y,
+         row0z, row1z);
 	}
 	Float2x3 Float2x3::Columns(const Float2& column0, const Float2& column1, const Float2& column2)
 	{
 		return Float2x3
 		(column0.x, column0.y,
-			column1.x, column1.y,
-			column2.x, column2.y);
+         column1.x, column1.y,
+         column2.x, column2.y);
 	}
 	Float2x3 Float2x3::Columns
 	(float column0x, float column0y,
-		float column1x, float column1y,
-		float column2x, float column2y)
+     float column1x, float column1y,
+     float column2x, float column2y)
 	{
 		return Float2x3
 		(column0x, column0y,
-			column1x, column1y,
-			column2x, column2y);
+         column1x, column1y,
+         column2x, column2y);
 	}
 
 
@@ -94,9 +94,10 @@ namespace emberMath
 		Float3x2 aT = this->Transpose();
 		return aT * ((*this) * aT).Inverse();
 	}
-	bool Float2x3::IsEpsilonZero() const
+	bool Float2x3::IsEpsilonZero(float epsilon) const
 	{
-		return IsEpsilonEqual(Float2x3::zero);
+        assert(epsilon > 0.0f);
+		return IsEpsilonEqual(Float2x3::zero, epsilon);
 	}
 
 
@@ -104,35 +105,35 @@ namespace emberMath
 	// Access:
 	float& Float2x3::operator[](int index)
 	{
+        assert(index >= 0 && index < 6);
 		return data[index];
 	}
 	float Float2x3::operator[](int index) const
 	{
+        assert(index >= 0 && index < 6);
 		return data[index];
 	}
 	float& Float2x3::operator[](const Index2& index)
 	{
-		if (index.i >= 0 && index.i < 2 && index.j >= 0 && index.j < 3)
-			return data[index.i + 2 * index.j];
-		throw std::out_of_range("Float2x3 index out of range.");
+        assert(index.i >= 0 && index.i < 2);
+        assert(index.j >= 0 && index.j < 3);
+        return data[index.i + 2 * index.j];
 	}
 	float Float2x3::operator[](const Index2& index) const
 	{
-		if (index.i >= 0 && index.i < 2 && index.j >= 0 && index.j < 3)
-			return data[index.i + 2 * index.j];
-		throw std::out_of_range("Float2x3 index out of range.");
+        assert(index.i >= 0 && index.i < 2);
+        assert(index.j >= 0 && index.j < 3);
+        return data[index.i + 2 * index.j];
 	}
 	Float3 Float2x3::GetRow(int index) const
 	{
-		if (index >= 0 && index < 2)
-			return Float3(data[index], data[index + 2], data[index + 4]);
-		throw std::out_of_range("Float2x3 row index out of range.");
+        assert(index >= 0 && index < 2);
+        return Float3(data[index], data[index + 2], data[index + 4]);
 	}
 	Float2 Float2x3::GetColumn(int index) const
 	{
-		if (index >= 0 && index < 3)
-			return Float2(data[2 * index], data[2 * index + 1]);
-		throw std::out_of_range("Float2x3 column index out of range.");
+        assert(index >= 0 && index < 3);
+        return Float2(data[2 * index], data[2 * index + 1]);
 	}
 
 
@@ -213,6 +214,7 @@ namespace emberMath
 	// Division:
 	Float2x3 Float2x3::operator/(float scalar) const
 	{
+        assert(scalar != 0.0f);
 		Float2x3 result;
 		for (uint32_t i = 0; i < 6; i++)
 			result.data[i] = data[i] / scalar;
@@ -220,6 +222,7 @@ namespace emberMath
 	}
 	Float2x3& Float2x3::operator/=(float scalar)
 	{
+        assert(scalar != 0.0f);
 		for (uint32_t i = 0; i < 6; i++)
 			data[i] /= scalar;
 		return *this;
@@ -228,10 +231,11 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float2x3::IsEpsilonEqual(const Float2x3& other) const
+	bool Float2x3::IsEpsilonEqual(const Float2x3& other, float epsilon) const
 	{
+        assert(epsilon > 0.0f);
 		for (uint32_t i = 0; i < 6; i++)
-			if (math::Abs(data[i] - other.data[i]) > math::epsilon)
+			if (math::Abs(data[i] - other.data[i]) > epsilon)
 				return false;
 		return true;
 	}

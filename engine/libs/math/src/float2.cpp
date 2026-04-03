@@ -3,8 +3,7 @@
 #include "float4.h"
 #include "mathConstants.h"
 #include "mathFunctions.h"
-#include <cmath>
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -32,7 +31,7 @@ namespace emberMath
 	}
 	float Float2::Length() const
 	{
-		return sqrt(LengthSq());
+		return math::Sqrt(LengthSq());
 	}
 	float Float2::Angle() const
 	{
@@ -51,9 +50,10 @@ namespace emberMath
 		float s = math::Sin(angle);
 		return Float2(x * c - y * s, x * s + y * c);
 	}
-	bool Float2::IsEpsilonZero() const
+	bool Float2::IsEpsilonZero(float epsilon) const
 	{
-		return IsEpsilonEqual(Float2::zero);
+        assert(epsilon > 0.0f);
+		return IsEpsilonEqual(Float2::zero, epsilon);
 	}
 
 
@@ -63,15 +63,15 @@ namespace emberMath
 	{
 		return Float2(math::Abs(a.x), math::Abs(a.y));
 	}
-	Float2 Float2::Round(const Float2& value, int decimals)
+	Float2 Float2::Round(const Float2& value, uint8_t decimals)
 	{
 		return Float2(math::Round(value.x, decimals), math::Round(value.y, decimals));
 	}
-	Float2 Float2::Ceil(const Float2& value, int decimals)
+	Float2 Float2::Ceil(const Float2& value, uint8_t decimals)
 	{
 		return Float2(math::Ceil(value.x), math::Ceil(value.y));
 	}
-	Float2 Float2::Floor(const Float2& value, int decimals)
+	Float2 Float2::Floor(const Float2& value, uint8_t decimals)
 	{
 		return Float2(math::Floor(value.x), math::Floor(value.y));
 	}
@@ -110,6 +110,7 @@ namespace emberMath
 	}
 	Float2 Float2::Clamp(const Float2& value, const Float2& min, const Float2& max)
 	{
+        assert(min < max);
 		return Float2(math::Clamp(value.x, min.x, max.x), math::Clamp(value.y, min.y, max.y));
 	}
 
@@ -118,15 +119,15 @@ namespace emberMath
 	// Access:
 	float& Float2::operator[](int index)
 	{
+        assert(index >= 0 && index < 2);
 		if (index == 0) return x;
 		if (index == 1) return y;
-		throw std::out_of_range("Float2 index out of range.");
 	}
 	float Float2::operator[](int index) const
 	{
+        assert(index >= 0 && index < 2);
 		if (index == 0) return x;
 		if (index == 1) return y;
-		throw std::out_of_range("Float2 index out of range.");
 	}
 
 
@@ -208,16 +209,21 @@ namespace emberMath
 	// Division:
 	Float2 Float2::operator/(const Float2& other) const
 	{
+        assert(other.x != 0.0f);
+        assert(other.y != 0.0f);
 		return Float2(x / other.x, y / other.y);
 	}
 	Float2& Float2::operator/=(const Float2& other)
 	{
+        assert(other.x != 0.0f);
+        assert(other.y != 0.0f);
 		this->x /= other.x;
 		this->y /= other.y;
 		return *this;
 	}
 	Float2& Float2::operator/=(float scalar)
 	{
+        assert(scalar != 0.0f);
 		x /= scalar;
 		y /= scalar;
 		return *this;
@@ -226,13 +232,10 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float2::IsEpsilonEqual(const Float2& other) const
-	{
-		return std::fabs(x - other.x) < math::epsilon && std::fabs(y - other.y) < math::epsilon;
-	}
 	bool Float2::IsEpsilonEqual(const Float2& other, float epsilon) const
 	{
-		return std::fabs(x - other.x) < math::epsilon && std::fabs(y - other.y) < epsilon;
+        assert(epsilon > 0.0f);
+		return math::Abs(x - other.x) < epsilon && math::Abs(y - other.y) < epsilon;
 	}
 	bool Float2::operator==(const Float2& other) const
 	{
@@ -242,6 +245,22 @@ namespace emberMath
 	{
 		return !(*this == other);
 	}
+    bool Float2::operator<(const Float2& other) const
+    {
+        return x < other.x && y < other.y;
+    }
+    bool Float2::operator<=(const Float2& other) const
+    {
+        return x <= other.x && y <= other.y;
+    }
+    bool Float2::operator>(const Float2& other) const
+    {
+        return x > other.x && y > other.y;
+    }
+    bool Float2::operator>=(const Float2& other) const
+    {
+        return x >= other.x && y >= other.y;
+    }
 
 
 
@@ -256,10 +275,13 @@ namespace emberMath
 	}
 	Float2 operator/(float a, const Float2& b)
 	{
+        assert(b.x != 0.0f);
+        assert(b.y != 0.0f);
 		return Float2(a / b.x, a / b.y);
 	}
 	Float2 operator/(const Float2& a, float b)
 	{
+        assert(b != 0.0f);
 		return Float2(a.x / b, a.y / b);
 	}
 

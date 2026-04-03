@@ -3,8 +3,7 @@
 #include "float3.h"
 #include "mathConstants.h"
 #include "mathFunctions.h"
-#include <cmath>
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -42,11 +41,12 @@ namespace emberMath
 	}
 	float Float4::Length() const
 	{
-		return sqrt(LengthSq());
+		return math::Sqrt(LengthSq());
 	}
-	bool Float4::IsEpsilonZero() const
+	bool Float4::IsEpsilonZero(float epsilon) const
 	{
-		return IsEpsilonEqual(Float4::zero);
+        assert(epsilon > 0.0f);
+		return IsEpsilonEqual(Float4::zero, epsilon);
 	}
 
 
@@ -56,15 +56,15 @@ namespace emberMath
 	{
 		return Float4(math::Abs(a.x), math::Abs(a.y), math::Abs(a.z), math::Abs(a.w));
 	}
-	Float4 Float4::Round(const Float4& value, int decimals)
+	Float4 Float4::Round(const Float4& value, uint8_t decimals)
 	{
 		return Float4(math::Round(value.x, decimals), math::Round(value.y, decimals), math::Round(value.z, decimals), math::Round(value.w, decimals));
 	}
-	Float4 Float4::Ceil(const Float4& value, int decimals)
+	Float4 Float4::Ceil(const Float4& value, uint8_t decimals)
 	{
 		return Float4(math::Ceil(value.x), math::Ceil(value.y), math::Ceil(value.z), math::Ceil(value.w));
 	}
-	Float4 Float4::Floor(const Float4& value, int decimals)
+	Float4 Float4::Floor(const Float4& value, uint8_t decimals)
 	{
 		return Float4(math::Floor(value.x), math::Floor(value.y), math::Floor(value.z), math::Floor(value.w));
 	}
@@ -78,6 +78,7 @@ namespace emberMath
 	}
 	Float4 Float4::Clamp(const Float4& value, const Float4& min, const Float4& max)
 	{
+        assert(min < max);
 		return Float4(math::Clamp(value.x, min.x, max.x), math::Clamp(value.y, min.y, max.y), math::Clamp(value.z, min.z, max.z), math::Clamp(value.w, min.w, max.w));
 	}
 
@@ -86,19 +87,19 @@ namespace emberMath
 	// Access:
 	float& Float4::operator[](int index)
 	{
+        assert(index >= 0 && index < 4);
 		if (index == 0) return x;
 		if (index == 1) return y;
 		if (index == 2) return z;
 		if (index == 3) return w;
-		throw std::out_of_range("Float4 index out of range.");
 	}
 	float Float4::operator[](int index) const
 	{
+        assert(index >= 0 && index < 4);
 		if (index == 0) return x;
 		if (index == 1) return y;
 		if (index == 2) return z;
 		if (index == 3) return w;
-		throw std::out_of_range("Float4 index out of range.");
 	}
 	Float3 Float4::xyz() const
 	{
@@ -196,10 +197,18 @@ namespace emberMath
 	// Division:
 	Float4 Float4::operator/(const Float4& other) const
 	{
+        assert(other.x != 0.0f);
+        assert(other.y != 0.0f);
+        assert(other.z != 0.0f);
+        assert(other.w != 0.0f);
 		return Float4(x / other.x, y / other.y, z / other.z, w / other.w);
 	}
 	Float4& Float4::operator/=(const Float4& other)
 	{
+        assert(other.x != 0.0f);
+        assert(other.y != 0.0f);
+        assert(other.z != 0.0f);
+        assert(other.w != 0.0f);
 		this->x /= other.x;
 		this->y /= other.y;
 		this->z /= other.z;
@@ -208,6 +217,7 @@ namespace emberMath
 	}
 	Float4& Float4::operator/=(float scalar)
 	{
+        assert(scalar != 0.0f);
 		x /= scalar;
 		y /= scalar;
 		z /= scalar;
@@ -218,9 +228,10 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float4::IsEpsilonEqual(const Float4& other) const
+	bool Float4::IsEpsilonEqual(const Float4& other, float epsilon) const
 	{
-		return std::fabs(x - other.x) < math::epsilon && std::fabs(y - other.y) < math::epsilon && std::fabs(z - other.z) < math::epsilon && std::fabs(w - other.w) < math::epsilon;
+        assert(epsilon > 0.0f);
+		return math::Abs(x - other.x) < epsilon && math::Abs(y - other.y) < epsilon && math::Abs(z - other.z) < epsilon && math::Abs(w - other.w) < epsilon;
 	}
 	bool Float4::operator==(const Float4& other) const
 	{
@@ -230,6 +241,22 @@ namespace emberMath
 	{
 		return !(*this == other);
 	}
+    bool Float4::operator<(const Float4& other) const
+    {
+        return x < other.x && y < other.y && z < other.z && w < other.w;
+    }
+    bool Float4::operator<=(const Float4& other) const
+    {
+        return x <= other.x && y <= other.y && z <= other.z && w <= other.w;
+    }
+    bool Float4::operator>(const Float4& other) const
+    {
+        return x > other.x && y > other.y && z > other.z && w > other.w;
+    }
+    bool Float4::operator>=(const Float4& other) const
+    {
+        return x >= other.x && y >= other.y && z >= other.z && w >= other.w;
+    }
 
 
 
@@ -244,10 +271,15 @@ namespace emberMath
 	}
 	Float4 operator/(const Float4& a, float b)
 	{
+        assert(b != 0.0f);
 		return Float4(a.x / b, a.y / b, a.z / b, a.w / b);
 	}
 	Float4 operator/(float a, const Float4& b)
 	{
+        assert(b.x != 0.0f);
+        assert(b.y != 0.0f);
+        assert(b.z != 0.0f);
+        assert(b.w != 0.0f);
 		return Float4(a / b.x, a / b.y, a / b.z, a / b.w);
 	}
 

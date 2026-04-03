@@ -5,8 +5,7 @@
 #include "geometry3d.h"
 #include "mathFunctions.h"
 #include "uint3.h"
-#include <cmath>
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -111,9 +110,9 @@ namespace emberMath
 	float Float4x4::Determinant() const
 	{
 		return data[0] * (data[5] * (data[10] * data[15] - data[11] * data[14]) - data[6] * (data[9] * data[15] - data[11] * data[13]) + data[7] * (data[9] * data[14] - data[10] * data[13]))
-			- data[1] * (data[4] * (data[10] * data[15] - data[11] * data[14]) - data[6] * (data[8] * data[15] - data[11] * data[12]) + data[7] * (data[8] * data[14] - data[10] * data[12]))
-			+ data[2] * (data[4] * (data[9] * data[15] - data[11] * data[13]) - data[5] * (data[8] * data[15] - data[11] * data[12]) + data[7] * (data[8] * data[13] - data[9] * data[12]))
-			- data[3] * (data[4] * (data[9] * data[14] - data[10] * data[13]) - data[5] * (data[8] * data[14] - data[10] * data[12]) + data[6] * (data[8] * data[13] - data[9] * data[12]));
+			 - data[1] * (data[4] * (data[10] * data[15] - data[11] * data[14]) - data[6] * (data[8] * data[15] - data[11] * data[12]) + data[7] * (data[8] * data[14] - data[10] * data[12]))
+			 + data[2] * (data[4] * (data[9] * data[15] - data[11] * data[13]) - data[5] * (data[8] * data[15] - data[11] * data[12]) + data[7] * (data[8] * data[13] - data[9] * data[12]))
+			 - data[3] * (data[4] * (data[9] * data[14] - data[10] * data[13]) - data[5] * (data[8] * data[14] - data[10] * data[12]) + data[6] * (data[8] * data[13] - data[9] * data[12]));
 	}
 	Float4x4 Float4x4::Inverse() const
 	{
@@ -148,9 +147,10 @@ namespace emberMath
 			(data[0] * (data[5] * data[10] - data[6] * data[9]) - data[1] * (data[4] * data[10] - data[6] * data[8]) + data[2] * (data[4] * data[9] - data[5] * data[8])) * invDet
 		);
 	}
-	bool Float4x4::IsEpsilonZero() const
+	bool Float4x4::IsEpsilonZero(float epsilon) const
 	{
-		return IsEpsilonEqual(Float4x4::zero);
+        assert(epsilon > 0.0f);
+		return IsEpsilonEqual(Float4x4::zero, epsilon);
 	}
 
 
@@ -188,6 +188,8 @@ namespace emberMath
 	}
 	Float4x4 Float4x4::Rotate(const Float3& axis, float angle)
 	{
+        assert(!axis.IsEpsilonZero());
+
 		float c = math::Cos(angle);
 		float s = math::Sin(angle);
 		float t = 1.0f - c;
@@ -212,6 +214,9 @@ namespace emberMath
 	}
 	Float4x4 Float4x4::RotateFromTo(const Float3& from, const Float3& to)
 	{
+        assert(!from.IsEpsilonZero());
+        assert(!to.IsEpsilonZero());
+
 		Float3 f = from.Normalize();
 		Float3 t = to.Normalize();
 		if (f.IsEpsilonEqual(t))
@@ -224,6 +229,11 @@ namespace emberMath
 	}
 	Float4x4 Float4x4::RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New)
 	{
+        assert(!direction0Old.IsEpsilonZero());
+        assert(!direction0New.IsEpsilonZero());
+        assert(!direction1Old.IsEpsilonZero());
+        assert(!direction1New.IsEpsilonZero());
+
 		// Rotate direction0Old to direction0New:
 		Float3 axis = Float3::Cross(direction0Old, direction0New);
 		float angle0 = Float3::Angle(direction0Old, direction0New);
@@ -278,6 +288,10 @@ namespace emberMath
 	}
 	Float4x4 Float4x4::Perspective(float fov, float aspectRatio, float nearClip, float farClip)
 	{
+        assert(fov > 0.0f);
+        assert(aspectRatio > 0.0f);
+        assert(nearClip < farClip);
+
 		//// OpenGL:
 		//float tanHalfFov = math::Tan(0.5f * fov);
 		//float xx = 1.0f / (aspectRatio * tanHalfFov);
@@ -306,6 +320,10 @@ namespace emberMath
 	}
 	Float4x4 Float4x4::Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip)
 	{
+        assert(left < right);
+        assert(bottom < top);
+        assert(nearClip < farClip);
+
 		//// OpenGL:
 		//float xx = 2.0f / (right - left);
 		//float yy = 2.0f / (top - bottom);
@@ -340,35 +358,35 @@ namespace emberMath
 	// Access:
 	float& Float4x4::operator[](int index)
 	{
+        assert(index >= 0 && index < 16);
 		return data[index];
 	}
 	float Float4x4::operator[](int index) const
 	{
+        assert(index >= 0 && index < 16);
 		return data[index];
 	}
 	float& Float4x4::operator[](const Index2& index)
 	{
-		if (index.i >= 0 && index.i < 4 && index.j >= 0 && index.j < 4)
-			return data[index.i + 4 * index.j];
-		throw std::out_of_range("Float4x4 index out of range.");
+        assert(index.i >= 0 && index.i < 4);
+        assert(index.j >= 0 && index.j < 4);
+		return data[index.i + 4 * index.j];
 	}
 	float Float4x4::operator[](const Index2& index) const
 	{
-		if (index.i >= 0 && index.i < 4 && index.j >= 0 && index.j < 4)
-			return data[index.i + 4 * index.j];
-		throw std::out_of_range("Float4x4 index out of range.");
+        assert(index.i >= 0 && index.i < 4);
+        assert(index.j >= 0 && index.j < 4);
+        return data[index.i + 4 * index.j];
 	}
 	Float4 Float4x4::GetRow(int index) const
 	{
-		if (index >= 0 && index < 4)
-			return Float4(data[index], data[index + 4], data[index + 8], data[index + 12]);
-		throw std::out_of_range("Float4x4 row index out of range.");
+        assert(index >= 0 && index < 4);
+        return Float4(data[index], data[index + 4], data[index + 8], data[index + 12]);
 	}
 	Float4 Float4x4::GetColumn(int index) const
 	{
-		if (index >= 0 && index < 4)
-			return Float4(data[4 * index], data[4 * index + 1], data[4 * index + 2], data[4 * index + 3]);
-		throw std::out_of_range("Float4x4 column index out of range.");
+        assert(index >= 0 && index < 4);
+        return Float4(data[4 * index], data[4 * index + 1], data[4 * index + 2], data[4 * index + 3]);
 	}
 	Float3 Float4x4::GetTranslation() const
 	{
@@ -503,6 +521,7 @@ namespace emberMath
 	// Division:
 	Float4x4 Float4x4::operator/(float scalar) const
 	{
+        assert(scalar != 0.0f);
 		Float4x4 result;
 		for (uint32_t i = 0; i < 16; i++)
 			result.data[i] = data[i] / scalar;
@@ -510,6 +529,7 @@ namespace emberMath
 	}
 	Float4x4& Float4x4::operator/=(float scalar)
 	{
+        assert(scalar != 0.0f);
 		for (uint32_t i = 0; i < 16; i++)
 			data[i] /= scalar;
 		return *this;
@@ -518,10 +538,11 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float4x4::IsEpsilonEqual(const Float4x4& other) const
+	bool Float4x4::IsEpsilonEqual(const Float4x4& other, float epsilon) const
 	{
+        assert(epsilon > 0.0f);
 		for (uint32_t i = 0; i < 16; i++)
-			if (std::fabs(data[i] - other.data[i]) > math::epsilon)
+			if (math::Abs(data[i] - other.data[i]) > epsilon)
 				return false;
 		return true;
 	}

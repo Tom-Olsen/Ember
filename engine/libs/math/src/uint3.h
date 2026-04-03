@@ -24,6 +24,7 @@ namespace emberMath
 		// Static math operations:
 		static Uint3 Min(const Uint3& a, const Uint3& b);
 		static Uint3 Max(const Uint3& a, const Uint3& b);
+		static Uint3 Clamp(const Uint3& value, const Uint3& min, const Uint3& max);
 
 		// Access:
 		uint32_t& operator[](int index);
@@ -50,6 +51,10 @@ namespace emberMath
 		// Comparison:
 		bool operator==(const Uint3& other) const;
 		bool operator!=(const Uint3& other) const;
+        bool operator<(const Uint3& other) const;
+        bool operator<=(const Uint3& other) const;
+        bool operator>(const Uint3& other) const;
+        bool operator>=(const Uint3& other) const;
 
 		// Friend functions:
 		friend Uint3 operator*(int a, const Uint3& b);

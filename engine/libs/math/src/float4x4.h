@@ -60,7 +60,7 @@ namespace emberMath
 		float Determinant() const;
 		Float4x4 Inverse() const;
 		Float4x4 Inverse(float det) const;
-		bool IsEpsilonZero() const;
+		bool IsEpsilonZero(float epsilon = math::epsilon) const;
 
 		// Static math operations:
 		static Float4x4 RotateX(float angle);
@@ -117,7 +117,7 @@ namespace emberMath
 		Float4x4& operator/=(float scalar);
 
 		// Comparison:
-		bool IsEpsilonEqual(const Float4x4& other) const;
+		bool IsEpsilonEqual(const Float4x4& other, float epsilon = math::epsilon) const;
 		bool operator==(const Float4x4& other) const;
 		bool operator!=(const Float4x4& other) const;
 

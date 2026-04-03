@@ -1,4 +1,6 @@
 #pragma once
+#include "mathConstants.h"
+#include <cstdint>
 #include <string>
 
 
@@ -36,13 +38,13 @@ namespace emberMath
 		// Math operations:
 		float LengthSq() const;
 		float Length() const;
-		bool IsEpsilonZero() const;
+		bool IsEpsilonZero(float epsilon = math::epsilon) const;
 
 		// Static math operations:
 		static Float4 Abs(const Float4& a);
-		static Float4 Round(const Float4& value, int decimals = 0);
-		static Float4 Ceil(const Float4& value, int decimals = 0);
-		static Float4 Floor(const Float4& value, int decimals = 0);
+		static Float4 Round(const Float4& value, uint8_t decimals = 0);
+		static Float4 Ceil(const Float4& value, uint8_t decimals = 0);
+		static Float4 Floor(const Float4& value, uint8_t decimals = 0);
 		static Float4 Min(const Float4& a, const Float4& b);
 		static Float4 Max(const Float4& a, const Float4& b);
 		static Float4 Clamp(const Float4& value, const Float4& min, const Float4& max);
@@ -76,9 +78,13 @@ namespace emberMath
 		Float4& operator/=(float scalar);
 
 		// Comparison:
-		bool IsEpsilonEqual(const Float4& other) const;
+		bool IsEpsilonEqual(const Float4& other, float epsilon = math::epsilon) const;
 		bool operator==(const Float4& other) const;
 		bool operator!=(const Float4& other) const;
+        bool operator<(const Float4& other) const;
+        bool operator<=(const Float4& other) const;
+        bool operator>(const Float4& other) const;
+        bool operator>=(const Float4& other) const;
 
 		// Friend functions:
 		friend Float4 operator*(const Float4& a, float b);

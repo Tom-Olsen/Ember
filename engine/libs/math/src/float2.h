@@ -1,4 +1,6 @@
 #pragma once
+#include "mathConstants.h"
+#include <cstdint>
 #include <string>
 
 
@@ -33,13 +35,13 @@ namespace emberMath
 		float Angle() const;
 		Float2 Normalize() const;
 		Float2 Rotate(float angle) const;
-		bool IsEpsilonZero() const;
+		bool IsEpsilonZero(float epsilon = math::epsilon) const;
 
 		// Static math operations:
 		static Float2 Abs(const Float2& a);
-		static Float2 Round(const Float2& value, int decimals = 0);
-		static Float2 Ceil(const Float2& value, int decimals = 0);
-		static Float2 Floor(const Float2& value, int decimals = 0);
+		static Float2 Round(const Float2& value, uint8_t decimals = 0);
+		static Float2 Ceil(const Float2& value, uint8_t decimals = 0);
+		static Float2 Floor(const Float2& value, uint8_t decimals = 0);
 		static float Dot(const Float2& a, const Float2& b);
 		static float Cross(const Float2& a, const Float2& b);
 		static float DistanceSq(const Float2& a, const Float2& b);
@@ -77,10 +79,13 @@ namespace emberMath
 		Float2& operator/=(float scalar);
 
 		// Comparison:
-		bool IsEpsilonEqual(const Float2& other) const;
-		bool IsEpsilonEqual(const Float2& other, float epsilon) const;
+		bool IsEpsilonEqual(const Float2& other, float epsilon = math::epsilon) const;
 		bool operator==(const Float2& other) const;
 		bool operator!=(const Float2& other) const;
+        bool operator<(const Float2& other) const;
+        bool operator<=(const Float2& other) const;
+        bool operator>(const Float2& other) const;
+        bool operator>=(const Float2& other) const;
 
 		// Friend functions:
 		friend Float2 operator*(float a, const Float2& b);

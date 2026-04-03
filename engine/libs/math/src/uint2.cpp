@@ -1,6 +1,6 @@
 #include "uint2.h"
 #include "mathFunctions.h"
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -28,21 +28,26 @@ namespace emberMath
 	{
 		return Uint2(math::Max(a.x, b.x), math::Max(a.y, b.y));
 	}
+	Uint2 Uint2::Clamp(const Uint2& value, const Uint2& min, const Uint2& max)
+	{
+        assert(min < max);
+		return Uint2(math::Clamp(value.x, min.x, max.x), math::Clamp(value.y, min.y, max.y));
+	}
 
 
 
 	// Access:
 	uint32_t& Uint2::operator[](int index)
 	{
+        assert(index >= 0 && index < 2);
 		if (index == 0) return x;
 		if (index == 1) return y;
-		throw std::out_of_range("Uint2 index out of range.");
 	}
 	uint32_t Uint2::operator[](int index) const
 	{
+        assert(index >= 0 && index < 2);
 		if (index == 0) return x;
 		if (index == 1) return y;
-		throw std::out_of_range("Uint2 index out of range.");
 	}
 
 
@@ -130,6 +135,22 @@ namespace emberMath
 	{
 		return !(*this == other);
 	}
+    bool Uint2::operator<(const Uint2& other) const
+    {
+        return x < other.x && y < other.y;
+    }
+    bool Uint2::operator<=(const Uint2& other) const
+    {
+        return x <= other.x && y <= other.y;
+    }
+    bool Uint2::operator>(const Uint2& other) const
+    {
+        return x > other.x && y > other.y;
+    }
+    bool Uint2::operator>=(const Uint2& other) const
+    {
+        return x >= other.x && y >= other.y;
+    }
 
 
 

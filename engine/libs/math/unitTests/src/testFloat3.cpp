@@ -252,6 +252,30 @@ TEST(Float3, OperatorNotEqual)
 	Float3 b(1.0f, 2.0f, 3.1f);
 	EXPECT_TRUE(a != b);
 }
+TEST(Float3, OperatorSmaller)
+{
+	Float3 a(1.0f, 2.0f, 3.0f);
+	Float3 b(4.0f, 5.0f, 6.0f);
+	EXPECT_TRUE(a < b);
+}
+TEST(Float3, OperatorSmallerEqual)
+{
+	Float3 a(1.0f, 2.0f, 3.0f);
+	Float3 b(1.0f, 2.0f, 6.0f);
+	EXPECT_TRUE(a <= b);
+}
+TEST(Float3, OperatorBigger)
+{
+	Float3 a(4.0f, 5.0f, 6.0f);
+	Float3 b(1.0f, 2.0f, 3.0f);
+	EXPECT_TRUE(a > b);
+}
+TEST(Float3, OperatorBiggerEqual)
+{
+	Float3 a(1.0f, 2.0f, 6.0f);
+	Float3 b(1.0f, 2.0f, 3.0f);
+	EXPECT_TRUE(a >= b);
+}
 
 // Friend functions:
 TEST(Float3, OperatorMultiplicationScalarLeft)

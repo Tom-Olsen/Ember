@@ -4,6 +4,30 @@
 
 
 
+// Static math operations:
+TEST(Int3, Min)
+{
+	Int3 a(1, 2, 4);
+	Int3 b(3, 4, 1);
+	Int3 min = Int3::Min(a, b);
+	ExpectNearVec(min, Int3(1, 2, 1), epsilon);
+}
+TEST(Int3, Max)
+{
+	Int3 a(1, 2, 4);
+	Int3 b(3, 4, 1);
+	Int3 max = Int3::Max(a, b);
+	ExpectNearVec(max, Int3(3, 4, 4), epsilon);
+}
+TEST(Int3, Clamp)
+{
+	Int3 value(1, 5, 2);
+	Int3 min(2, 3, 1);
+	Int3 max(3, 4, 3);
+	Int3 clamped = Int3::Clamp(value, min, max);
+	ExpectNearVec(clamped, Int3(2, 4, 2), epsilon);
+}
+
 // Access:
 TEST(Int3, OperatorBrackets)
 {
@@ -103,6 +127,30 @@ TEST(Int3, OperatorNotEqual)
 	Int3 a(1, 2, 3);
 	Int3 b(1, 2, 4);
 	EXPECT_TRUE(a != b);
+}
+TEST(Int3, OperatorSmaller)
+{
+	Int3 a(1, 2, 3);
+	Int3 b(4, 5, 6);
+	EXPECT_TRUE(a < b);
+}
+TEST(Int3, OperatorSmallerEqual)
+{
+	Int3 a(1, 2, 3);
+	Int3 b(1, 2, 6);
+	EXPECT_TRUE(a <= b);
+}
+TEST(Int3, OperatorBigger)
+{
+	Int3 a(4, 5, 6);
+	Int3 b(1, 2, 3);
+	EXPECT_TRUE(a > b);
+}
+TEST(Int3, OperatorBiggerEqual)
+{
+	Int3 a(1, 2, 6);
+	Int3 b(1, 2, 3);
+	EXPECT_TRUE(a >= b);
 }
 
 // Friend functions:

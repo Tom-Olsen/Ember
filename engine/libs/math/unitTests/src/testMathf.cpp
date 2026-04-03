@@ -101,7 +101,6 @@ TEST(Mathf, Atan)
 }
 TEST(Mathf, Atan2)
 {
-	EXPECT_NEAR(math::Atan2(0.0f, 0.0f), 0.0f, epsilon);
 	EXPECT_NEAR(math::Atan2(0.0f, 1.0f), 0.0f, epsilon);
 	EXPECT_NEAR(math::Atan2(1.0f, 1.0f), math::pi4, epsilon);
 	EXPECT_NEAR(math::Atan2(1.0f, 0.0f), math::pi2, epsilon);

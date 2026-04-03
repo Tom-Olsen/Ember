@@ -1,6 +1,7 @@
 #include "int2.h"
 #include "float2.h"
-#include <stdexcept>
+#include "mathFunctions.h"
+#include <cassert>
 #include <sstream>
 
 
@@ -21,21 +22,34 @@ namespace emberMath
 
 
 	// Static math operations:
+	Int2 Int2::Min(const Int2& a, const Int2& b)
+	{
+		return Int2(math::Min(a.x, b.x), math::Min(a.y, b.y));
+	}
+	Int2 Int2::Max(const Int2& a, const Int2& b)
+	{
+		return Int2(math::Max(a.x, b.x), math::Max(a.y, b.y));
+	}
+	Int2 Int2::Clamp(const Int2& value, const Int2& min, const Int2& max)
+	{
+        assert(min < max);
+		return Int2(math::Clamp(value.x, min.x, max.x), math::Clamp(value.y, min.y, max.y));
+	}
 
 
 
 	// Access:
 	int& Int2::operator[](int index)
 	{
+        assert(index >= 0 && index < 2);
 		if (index == 0) return x;
 		if (index == 1) return y;
-		throw std::out_of_range("Int2 index out of range.");
 	}
 	int Int2::operator[](int index) const
 	{
+        assert(index >= 0 && index < 2);
 		if (index == 0) return x;
 		if (index == 1) return y;
-		throw std::out_of_range("Int2 index out of range.");
 	}
 
 
@@ -123,6 +137,22 @@ namespace emberMath
 	{
 		return !(*this == other);
 	}
+    bool Int2::operator<(const Int2& other) const
+    {
+        return x < other.x && y < other.y;
+    }
+    bool Int2::operator<=(const Int2& other) const
+    {
+        return x <= other.x && y <= other.y;
+    }
+    bool Int2::operator>(const Int2& other) const
+    {
+        return x > other.x && y > other.y;
+    }
+    bool Int2::operator>=(const Int2& other) const
+    {
+        return x >= other.x && y >= other.y;
+    }
 
 
 

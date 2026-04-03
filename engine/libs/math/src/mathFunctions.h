@@ -1,5 +1,7 @@
 #pragma once
+#include "mathConstants.h"
 #include <cstddef>
+#include <cstdint>
 #include <stdint.h>
 
 
@@ -10,9 +12,9 @@ namespace emberMath
 	{
 		// Basic math:
 		float Abs(float value);
-		float Round(float value, int decimals = 0);
-		float Floor(float value, int decimals = 0);
-		float Ceil(float value, int decimals = 0);
+		float Round(float value, uint8_t decimals = 0);
+		float Floor(float value, uint8_t decimals = 0);
+		float Ceil(float value, uint8_t decimals = 0);
 		float Sign(float value);
 		float Sqrt(float value);
 		float Pow(float value, float exponent);
@@ -46,7 +48,6 @@ namespace emberMath
 		size_t NextPrimeAbove(size_t n);
 
 		// Boolean:
-		bool IsEpsilonEqual(float a, float b);
-		bool IsEpsilonEqual(float a, float b, float epsilon);
+		bool IsEpsilonEqual(float a, float b, float epsilon = math::epsilon);
 	}
 }

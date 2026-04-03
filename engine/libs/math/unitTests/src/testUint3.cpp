@@ -4,6 +4,30 @@
 
 
 
+// Static math operations:
+TEST(Uint3, Min)
+{
+	Uint3 a(1, 2, 4);
+	Uint3 b(3, 4, 1);
+	Uint3 min = Uint3::Min(a, b);
+	ExpectNearVec(min, Uint3(1, 2, 1), epsilon);
+}
+TEST(Uint3, Max)
+{
+	Uint3 a(1, 2, 4);
+	Uint3 b(3, 4, 1);
+	Uint3 max = Uint3::Max(a, b);
+	ExpectNearVec(max, Uint3(3, 4, 4), epsilon);
+}
+TEST(Uint3, Clamp)
+{
+	Uint3 value(1, 5, 2);
+	Uint3 min(2, 3, 1);
+	Uint3 max(3, 4, 3);
+	Uint3 clamped = Uint3::Clamp(value, min, max);
+	ExpectNearVec(clamped, Uint3(2, 4, 2), epsilon);
+}
+
 // Access:
 TEST(Uint3, OperatorBrackets)
 {
@@ -74,4 +98,28 @@ TEST(Uint3, OperatorNotEqual)
 	Uint3 a(1, 2, 3);
 	Uint3 b(1, 2, 4);
 	EXPECT_TRUE(a != b);
+}
+TEST(Uint3, OperatorSmaller)
+{
+	Uint3 a(1, 2, 3);
+	Uint3 b(4, 5, 6);
+	EXPECT_TRUE(a < b);
+}
+TEST(Uint3, OperatorSmallerEqual)
+{
+	Uint3 a(1, 2, 3);
+	Uint3 b(1, 2, 6);
+	EXPECT_TRUE(a <= b);
+}
+TEST(Uint3, OperatorBigger)
+{
+	Uint3 a(4, 5, 6);
+	Uint3 b(1, 2, 3);
+	EXPECT_TRUE(a > b);
+}
+TEST(Uint3, OperatorBiggerEqual)
+{
+	Uint3 a(1, 2, 6);
+	Uint3 b(1, 2, 3);
+	EXPECT_TRUE(a >= b);
 }

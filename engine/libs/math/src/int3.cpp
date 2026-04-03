@@ -1,6 +1,7 @@
 #include "int3.h"
 #include "int2.h"
-#include <stdexcept>
+#include "mathFunctions.h"
+#include <cassert>
 #include <sstream>
 
 
@@ -23,23 +24,36 @@ namespace emberMath
 
 
 	// Static math operations:
+	Int3 Int3::Min(const Int3& a, const Int3& b)
+	{
+		return Int3(math::Min(a.x, b.x), math::Min(a.y, b.y), math::Min(a.z, b.z));
+	}
+	Int3 Int3::Max(const Int3& a, const Int3& b)
+	{
+		return Int3(math::Max(a.x, b.x), math::Max(a.y, b.y), math::Max(a.z, b.z));
+	}
+	Int3 Int3::Clamp(const Int3& value, const Int3& min, const Int3& max)
+	{
+        assert(min < max);
+		return Int3(math::Clamp(value.x, min.x, max.x), math::Clamp(value.y, min.y, max.y), math::Clamp(value.z, min.z, max.z));
+	}
 
 
 
 	// Access:
 	int& Int3::operator[](int index)
 	{
+        assert(index >= 0 && index < 3);
 		if (index == 0) return x;
 		if (index == 1) return y;
 		if (index == 2) return z;
-		throw std::out_of_range("Int3 index out of range.");
 	}
 	int Int3::operator[](int index) const
 	{
+        assert(index >= 0 && index < 3);
 		if (index == 0) return x;
 		if (index == 1) return y;
 		if (index == 2) return z;
-		throw std::out_of_range("Int3 index out of range.");
 	}
 
 
@@ -65,6 +79,22 @@ namespace emberMath
 		}
 		return *this;
 	}
+    bool Int3::operator<(const Int3& other) const
+    {
+        return x < other.x && y < other.y && z < other.z;
+    }
+    bool Int3::operator<=(const Int3& other) const
+    {
+        return x <= other.x && y <= other.y && z <= other.z;
+    }
+    bool Int3::operator>(const Int3& other) const
+    {
+        return x > other.x && y > other.y && z > other.z;
+    }
+    bool Int3::operator>=(const Int3& other) const
+    {
+        return x >= other.x && y >= other.y && z >= other.z;
+    }
 
 
 

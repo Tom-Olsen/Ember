@@ -1,6 +1,7 @@
 #include "bounds.h"
 #include "mathConstants.h"
 #include "mathFunctions.h"
+#include <cassert>
 #include <sstream>
 
 
@@ -64,19 +65,20 @@ namespace emberMath
 		return std::array<Float3, 8>
 		{
 			Float3(min.x, min.y, min.z),
-				Float3(min.x, min.y, max.z),
-				Float3(min.x, max.y, min.z),
-				Float3(min.x, max.y, max.z),
-				Float3(max.x, min.y, min.z),
-				Float3(max.x, min.y, max.z),
-				Float3(max.x, max.y, min.z),
-				Float3(max.x, max.y, max.z)
+			Float3(min.x, min.y, max.z),
+			Float3(min.x, max.y, min.z),
+			Float3(min.x, max.y, max.z),
+			Float3(max.x, min.y, min.z),
+			Float3(max.x, min.y, max.z),
+			Float3(max.x, max.y, min.z),
+			Float3(max.x, max.y, max.z)
 		};
 	}
 
 	// Setters:
 	void Bounds::SetMinMax(const Float3& min, const Float3& max)
 	{
+        assert(min < max);
 		center = 0.5f * (max + min);
 		extents = 0.5f * (max - min);
 	}
@@ -105,11 +107,14 @@ namespace emberMath
 	}
 	void Bounds::Expand(float amount)
 	{
-		extents += Float3(math::Abs(amount));
+		extents += Float3(amount);
+        if (amount < 0.0f)
+            extents = Float3::Max(extents, Float3(0.0f));
 	}
 	void Bounds::Expand(const Float3& amount)
 	{
 		extents += Float3::Abs(amount);
+        extents = Float3::Max(extents, Float3(0.0f));
 	}
 	std::optional<Float3> Bounds::IntersectRay(const Ray& ray) const
 	{

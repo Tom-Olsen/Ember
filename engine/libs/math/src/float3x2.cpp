@@ -5,7 +5,7 @@
 #include "float2x3.h"
 #include "float3x3.h"
 #include "mathFunctions.h"
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -15,7 +15,7 @@ namespace emberMath
 	// Constructors:
 	Float3x2::Float3x2
 	(float xx, float xy, float xz,	// column 0
-		float yx, float yy, float yz)	// column 1
+     float yx, float yy, float yz)	// column 1
 	{
 		data[0] = xx; data[3] = yx;
 		data[1] = xy; data[4] = yy;
@@ -49,30 +49,30 @@ namespace emberMath
 	{
 		return Float3x2
 		(row0.x, row1.x, row2.x,
-			row0.y, row1.y, row2.y);
+         row0.y, row1.y, row2.y);
 	}
 	Float3x2 Float3x2::Rows
 	(float row0x, float row0y,
-		float row1x, float row1y,
-		float row2x, float row2y)
+     float row1x, float row1y,
+     float row2x, float row2y)
 	{
 		return Float3x2
 		(row0x, row1x, row2x,
-			row0y, row1y, row2y);
+         row0y, row1y, row2y);
 	}
 	Float3x2 Float3x2::Columns(const Float3& column0, const Float3& column1)
 	{
 		return Float3x2
 		(column0.x, column0.y, column0.z,
-			column1.x, column1.y, column1.z);
+         column1.x, column1.y, column1.z);
 	}
 	Float3x2 Float3x2::Columns
 	(float column0x, float column0y, float column0z,
-		float column1x, float column1y, float column1z)
+     float column1x, float column1y, float column1z)
 	{
 		return Float3x2
 		(column0x, column0y, column0z,
-			column1x, column1y, column1z);
+         column1x, column1y, column1z);
 	}
 
 
@@ -89,9 +89,10 @@ namespace emberMath
 		Float2x3 aT = this->Transpose();
 		return (aT * (*this)).Inverse() * aT;
 	}
-	bool Float3x2::IsEpsilonZero() const
+	bool Float3x2::IsEpsilonZero(float epsilon) const
 	{
-		return IsEpsilonEqual(Float3x2::zero);
+        assert(epsilon > 0.0f);
+		return IsEpsilonEqual(Float3x2::zero, epsilon);
 	}
 
 
@@ -99,35 +100,35 @@ namespace emberMath
 	// Access:
 	float& Float3x2::operator[](int index)
 	{
+        assert(index >= 0 && index < 6);
 		return data[index];
 	}
 	float Float3x2::operator[](int index) const
 	{
+        assert(index >= 0 && index < 6);
 		return data[index];
 	}
 	float& Float3x2::operator[](const Index2& index)
 	{
-		if (index.i >= 0 && index.i < 3 && index.j >= 0 && index.j < 2)
-			return data[index.i + 3 * index.j];
-		throw std::out_of_range("Float3x2 index out of range.");
+        assert(index.i >= 0 && index.i < 3);
+        assert(index.j >= 0 && index.j < 2);
+        return data[index.i + 3 * index.j];
 	}
 	float Float3x2::operator[](const Index2& index) const
 	{
-		if (index.i >= 0 && index.i < 3 && index.j >= 0 && index.j < 2)
-			return data[index.i + 3 * index.j];
-		throw std::out_of_range("Float3x2 index out of range.");
+        assert(index.i >= 0 && index.i < 3);
+        assert(index.j >= 0 && index.j < 2);
+        return data[index.i + 3 * index.j];
 	}
 	Float2 Float3x2::GetRow(int index) const
 	{
-		if (index >= 0 && index < 3)
-			return Float2(data[index], data[index + 3]);
-		throw std::out_of_range("Float3x2 row index out of range.");
+        assert(index >= 0 && index < 3);
+		return Float2(data[index], data[index + 3]);
 	}
 	Float3 Float3x2::GetColumn(int index) const
 	{
-		if (index >= 0 && index < 2)
-			return Float3(data[3 * index], data[3 * index + 1], data[3 * index + 2]);
-		throw std::out_of_range("Float3x2 column index out of range.");
+        assert(index >= 0 && index < 2);
+        return Float3(data[3 * index], data[3 * index + 1], data[3 * index + 2]);
 	}
 
 
@@ -207,6 +208,7 @@ namespace emberMath
 	// Division:
 	Float3x2 Float3x2::operator/(float scalar) const
 	{
+        assert(scalar != 0.0f);
 		Float3x2 result;
 		for (uint32_t i = 0; i < 6; i++)
 			result.data[i] = data[i] / scalar;
@@ -214,6 +216,7 @@ namespace emberMath
 	}
 	Float3x2& Float3x2::operator/=(float scalar)
 	{
+        assert(scalar != 0.0f);
 		for (uint32_t i = 0; i < 6; i++)
 			data[i] /= scalar;
 		return *this;
@@ -222,10 +225,11 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float3x2::IsEpsilonEqual(const Float3x2& other) const
+	bool Float3x2::IsEpsilonEqual(const Float3x2& other, float epsilon) const
 	{
+        assert(epsilon > 0.0f);
 		for (uint32_t i = 0; i < 6; i++)
-			if (math::Abs(data[i] - other.data[i]) > math::epsilon)
+			if (math::Abs(data[i] - other.data[i]) > epsilon)
 				return false;
 		return true;
 	}

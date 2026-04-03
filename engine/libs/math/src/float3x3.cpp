@@ -4,7 +4,7 @@
 #include "geometry3d.h"
 #include "mathFunctions.h"
 #include "uint3.h"
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -14,8 +14,8 @@ namespace emberMath
 	// Constructors:
 	Float3x3::Float3x3
 	(float xx, float xy, float xz,	// column 0
-		float yx, float yy, float yz,	// column 1
-		float zx, float zy, float zz)	// column 2
+     float yx, float yy, float yz,	// column 1
+     float zx, float zy, float zz)	// column 2
 	{
 		data[0] = xx; data[3] = yx; data[6] = zx;
 		data[1] = xy; data[4] = yy; data[7] = zy;
@@ -55,35 +55,35 @@ namespace emberMath
 	{
 		return Float3x3
 		(row0.x, row1.x, row2.x,
-			row0.y, row1.y, row2.y,
-			row0.z, row1.z, row2.z);
+         row0.y, row1.y, row2.y,
+         row0.z, row1.z, row2.z);
 	}
 	Float3x3 Float3x3::Rows
 	(float row0x, float row0y, float row0z,
-		float row1x, float row1y, float row1z,
-		float row2x, float row2y, float row2z)
+     float row1x, float row1y, float row1z,
+     float row2x, float row2y, float row2z)
 	{
 		return Float3x3
 		(row0x, row1x, row2x,
-			row0y, row1y, row2y,
-			row0z, row1z, row2z);
+         row0y, row1y, row2y,
+         row0z, row1z, row2z);
 	}
 	Float3x3 Float3x3::Columns(const Float3& column0, const Float3& column1, const Float3& column2)
 	{
 		return Float3x3
 		(column0.x, column0.y, column0.z,
-			column1.x, column1.y, column1.z,
-			column2.x, column2.y, column2.z);
+         column1.x, column1.y, column1.z,
+         column2.x, column2.y, column2.z);
 	}
 	Float3x3 Float3x3::Columns
 	(float column0x, float column0y, float column0z,
-		float column1x, float column1y, float column1z,
-		float column2x, float column2y, float column2z)
+     float column1x, float column1y, float column1z,
+     float column2x, float column2y, float column2z)
 	{
 		return Float3x3
 		(column0x, column0y, column0z,
-			column1x, column1y, column1z,
-			column2x, column2y, column2z);
+         column1x, column1y, column1z,
+         column2x, column2y, column2z);
 	}
 
 
@@ -127,9 +127,10 @@ namespace emberMath
 			(data[0] * data[4] - data[1] * data[3]) * invDet
 		);
 	}
-	bool Float3x3::IsEpsilonZero() const
+	bool Float3x3::IsEpsilonZero(float epsilon) const
 	{
-		return IsEpsilonEqual(Float3x3::zero);
+        assert(epsilon > 0.0f);
+		return IsEpsilonEqual(Float3x3::zero, epsilon);
 	}
 
 
@@ -164,6 +165,8 @@ namespace emberMath
 	}
 	Float3x3 Float3x3::Rotate(const Float3& axis, float angle)
 	{
+        assert(!axis.IsEpsilonZero());
+
 		float c = math::Cos(angle);
 		float s = math::Sin(angle);
 		float t = 1.0f - c;
@@ -186,6 +189,9 @@ namespace emberMath
 	}
 	Float3x3 Float3x3::RotateFromTo(const Float3& from, const Float3& to)
 	{
+        assert(!from.IsEpsilonZero());
+        assert(!to.IsEpsilonZero());
+
 		Float3 f = from.Normalize();
 		Float3 t = to.Normalize();
 		if (f.IsEpsilonEqual(t))
@@ -198,6 +204,11 @@ namespace emberMath
 	}
 	Float3x3 Float3x3::RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New)
 	{
+        assert(!direction0Old.IsEpsilonZero());
+        assert(!direction0New.IsEpsilonZero());
+        assert(!direction1Old.IsEpsilonZero());
+        assert(!direction1New.IsEpsilonZero());
+
 		// Rotate direction0Old to direction0New:
 		Float3 axis = Float3::Cross(direction0Old, direction0New);
 		float angle0 = Float3::Angle(direction0Old, direction0New);
@@ -224,35 +235,35 @@ namespace emberMath
 	// Access:
 	float& Float3x3::operator[](int index)
 	{
+        assert(index >= 0 && index < 9);
 		return data[index];
 	}
 	float Float3x3::operator[](int index) const
 	{
+        assert(index >= 0 && index < 9);
 		return data[index];
 	}
 	float& Float3x3::operator[](const Index2& index)
 	{
-		if (index.i >= 0 && index.i < 3 && index.j >= 0 && index.j < 3)
-			return data[index.i + 3 * index.j];
-		throw std::out_of_range("Float3x3 index out of range.");
+        assert(index.i >= 0 && index.i < 3);
+        assert(index.j >= 0 && index.j < 3);
+        return data[index.i + 3 * index.j];
 	}
 	float Float3x3::operator[](const Index2& index) const
 	{
-		if (index.i >= 0 && index.i < 3 && index.j >= 0 && index.j < 3)
-			return data[index.i + 3 * index.j];
-		throw std::out_of_range("Float3x3 index out of range.");
+        assert(index.i >= 0 && index.i < 3);
+        assert(index.j >= 0 && index.j < 3);
+        return data[index.i + 3 * index.j];
 	}
 	Float3 Float3x3::GetRow(int index) const
 	{
-		if (index >= 0 && index < 3)
-			return Float3(data[index], data[index + 3], data[index + 6]);
-		throw std::out_of_range("Float3x3 row index out of range.");
+        assert(index >= 0 && index < 3);
+        return Float3(data[index], data[index + 3], data[index + 6]);
 	}
 	Float3 Float3x3::GetColumn(int index) const
 	{
-		if (index >= 0 && index < 3)
-			return Float3(data[3 * index], data[3 * index + 1], data[3 * index + 2]);
-		throw std::out_of_range("Float3x3 column index out of range.");
+        assert(index >= 0 && index < 3);
+        return Float3(data[3 * index], data[3 * index + 1], data[3 * index + 2]);
 	}
 
 
@@ -348,6 +359,7 @@ namespace emberMath
 	// Division:
 	Float3x3 Float3x3::operator/(float scalar) const
 	{
+        assert(scalar != 0.0f);
 		Float3x3 result;
 		for (uint32_t i = 0; i < 9; i++)
 			result.data[i] = data[i] / scalar;
@@ -355,6 +367,7 @@ namespace emberMath
 	}
 	Float3x3& Float3x3::operator/=(float scalar)
 	{
+        assert(scalar != 0.0f);
 		for (uint32_t i = 0; i < 9; i++)
 			data[i] /= scalar;
 		return *this;
@@ -363,10 +376,11 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float3x3::IsEpsilonEqual(const Float3x3& other) const
+	bool Float3x3::IsEpsilonEqual(const Float3x3& other, float epsilon) const
 	{
+        assert(epsilon > 0.0f);
 		for (uint32_t i = 0; i < 9; i++)
-			if (math::Abs(data[i] - other.data[i]) > math::epsilon)
+			if (math::Abs(data[i] - other.data[i]) > epsilon)
 				return false;
 		return true;
 	}
@@ -446,9 +460,9 @@ namespace emberMath
 	// Numbers:
 	Float3x3 Float3x3::zero = Float3x3(0.0f);
 	Float3x3 Float3x3::identity = Float3x3
-	(1.0f, 0.0f, 0.0f,
-	 0.0f, 1.0f, 0.0f,
-	 0.0f, 0.0f, 1.0f);
+    (1.0f, 0.0f, 0.0f,
+     0.0f, 1.0f, 0.0f,
+     0.0f, 0.0f, 1.0f);
 	Float3x3 Float3x3::maxValue = Float3x3(math::maxValue);
 	Float3x3 Float3x3::minValue = Float3x3(math::minValue);
 

@@ -1,7 +1,7 @@
 #include "float2x2.h"
 #include "float2.h"
 #include "mathFunctions.h"
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -26,7 +26,7 @@ namespace emberMath
 	}
 	Float2x2::Float2x2
 	(float xx, float xy,	// column 0
-		float yx, float yy)	// column 1
+     float yx, float yy)	// column 1
 	{
 		data[0] = xx; data[2] = yx;
 		data[1] = xy; data[3] = yy;
@@ -44,29 +44,29 @@ namespace emberMath
 	{
 		return Float2x2
 		(row0.x, row1.x,
-			row0.y, row1.y);
+         row0.y, row1.y);
 	}
 	Float2x2 Float2x2::Rows
 	(float row0x, float row0y,
-		float row1x, float row1y)
+     float row1x, float row1y)
 	{
 		return Float2x2
 		(row0x, row1x,
-			row0y, row1y);
+         row0y, row1y);
 	}
 	Float2x2 Float2x2::Columns(const Float2& column0, const Float2& column1)
 	{
 		return Float2x2
 		(column0.x, column0.y,
-			column1.x, column1.y);
+         column1.x, column1.y);
 	}
 	Float2x2 Float2x2::Columns
 	(float column0x, float column0y,
-		float column1x, float column1y)
+     float column1x, float column1y)
 	{
 		return Float2x2
 		(column0x, column0y,
-			column1x, column1y);
+         column1x, column1y);
 	}
 
 
@@ -98,9 +98,10 @@ namespace emberMath
 			-invDet * data[2], invDet * data[0]
 		);
 	}
-	bool Float2x2::IsEpsilonZero() const
+	bool Float2x2::IsEpsilonZero(float epsilon) const
 	{
-		return IsEpsilonEqual(Float2x2::zero);
+        assert(epsilon > 0.0f);
+		return IsEpsilonEqual(Float2x2::zero, epsilon);
 	}
 
 
@@ -112,7 +113,7 @@ namespace emberMath
 		float s = math::Sin(radians);
 		return Float2x2::Rows
 		(c, -s,
-			s, c);
+         s, c);
 	}
 
 
@@ -120,35 +121,35 @@ namespace emberMath
 	// Access:
 	float& Float2x2::operator[](int index)
 	{
+        assert(index >= 0 && index < 4);
 		return data[index];
 	}
 	float Float2x2::operator[](int index) const
 	{
+        assert(index >= 0 && index < 4);
 		return data[index];
 	}
 	float& Float2x2::operator[](const Index2& index)
 	{
-		if (index.i >= 0 && index.i < 2 && index.j >= 0 && index.j < 2)
-			return data[index.i + 2 * index.j];
-		throw std::out_of_range("Float2x2 index out of range.");
+        assert(index.i >= 0 && index.i < 2);
+        assert(index.j >= 0 && index.j < 2);
+        return data[index.i + 2 * index.j];
 	}
 	float Float2x2::operator[](const Index2& index) const
 	{
-		if (index.i >= 0 && index.i < 2 && index.j >= 0 && index.j < 2)
-			return data[index.i + 2 * index.j];
-		throw std::out_of_range("Float2x2 index out of range.");
+        assert(index.i >= 0 && index.i < 2);
+        assert(index.j >= 0 && index.j < 2);
+        return data[index.i + 2 * index.j];
 	}
 	Float2 Float2x2::GetRow(int index) const
 	{
-		if (index >= 0 && index < 2)
-			return Float2(data[index], data[index + 2]);
-		throw std::out_of_range("Float2x2 row index out of range.");
+        assert(index >= 0 && index < 2);
+        return Float2(data[index], data[index + 2]);
 	}
 	Float2 Float2x2::GetColumn(int index) const
 	{
-		if (index >= 0 && index < 2)
-			return Float2(data[2 * index], data[2 * index + 1]);
-		throw std::out_of_range("Float2x2 column index out of range.");
+        assert(index >= 0 && index < 4);
+        return Float2(data[2 * index], data[2 * index + 1]);
 	}
 
 
@@ -243,6 +244,7 @@ namespace emberMath
 	// Division:
 	Float2x2 Float2x2::operator/(float scalar) const
 	{
+        assert(scalar != 0.0f);
 		Float2x2 result;
 		for (uint32_t i = 0; i < 4; i++)
 			result.data[i] = data[i] / scalar;
@@ -250,6 +252,7 @@ namespace emberMath
 	}
 	Float2x2& Float2x2::operator/=(float scalar)
 	{
+        assert(scalar != 0.0f);
 		for (uint32_t i = 0; i < 4; i++)
 			data[i] /= scalar;
 		return *this;
@@ -258,10 +261,11 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float2x2::IsEpsilonEqual(const Float2x2& other) const
+	bool Float2x2::IsEpsilonEqual(const Float2x2& other, float epsilon) const
 	{
+        assert(epsilon > 0.0f);
 		for (uint32_t i = 0; i < 4; i++)
-			if (math::Abs(data[i] - other.data[i]) > math::epsilon)
+			if (math::Abs(data[i] - other.data[i]) > epsilon)
 				return false;
 		return true;
 	}
@@ -335,9 +339,7 @@ namespace emberMath
 
 	// Static members:
 	Float2x2 Float2x2::zero = Float2x2(0.0f);
-	Float2x2 Float2x2::identity = Float2x2
-	(1.0f, 0.0f,
-		0.0f, 1.0f);
+	Float2x2 Float2x2::identity = Float2x2(1.0f, 0.0f, 0.0f, 1.0f);
 	Float2x2 Float2x2::maxValue = Float2x2(math::maxValue);
 	Float2x2 Float2x2::minValue = Float2x2(math::minValue);
 }

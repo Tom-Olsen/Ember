@@ -56,7 +56,7 @@ namespace emberMath
 		float Determinant() const;
 		Float3x3 Inverse() const;
 		Float3x3 Inverse(float det) const;
-		bool IsEpsilonZero() const;
+		bool IsEpsilonZero(float epsilon = math::epsilon) const;
 
 		// Static math operations:
 		static Float3x3 RotateX(float angle);
@@ -98,7 +98,7 @@ namespace emberMath
 		Float3x3& operator/=(float scalar);
 
 		// Comparison:
-		bool IsEpsilonEqual(const Float3x3& other) const;
+		bool IsEpsilonEqual(const Float3x3& other, float epsilon = math::epsilon) const;
 		bool operator==(const Float3x3& other) const;
 		bool operator!=(const Float3x3& other) const;
 

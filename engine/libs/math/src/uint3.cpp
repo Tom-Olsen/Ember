@@ -1,6 +1,6 @@
 #include "uint3.h"
 #include "mathFunctions.h"
-#include <stdexcept>
+#include <cassert>
 #include <sstream>
 
 
@@ -28,23 +28,28 @@ namespace emberMath
 	{
 		return Uint3(math::Max(a.x, b.x), math::Max(a.y, b.y), math::Max(a.z, b.z));
 	}
+	Uint3 Uint3::Clamp(const Uint3& value, const Uint3& min, const Uint3& max)
+	{
+        assert(min < max);
+		return Uint3(math::Clamp(value.x, min.x, max.x), math::Clamp(value.y, min.y, max.y), math::Clamp(value.z, min.z, max.z));
+	}
 
 
 
 	// Access:
 	uint32_t& Uint3::operator[](int index)
 	{
+        assert(index >= 0 && index < 3);
 		if (index == 0) return x;
 		if (index == 1) return y;
 		if (index == 2) return z;
-		throw std::out_of_range("Uint3 index out of range.");
 	}
 	uint32_t Uint3::operator[](int index) const
 	{
+        assert(index >= 0 && index < 3);
 		if (index == 0) return x;
 		if (index == 1) return y;
 		if (index == 2) return z;
-		throw std::out_of_range("Uint3 index out of range.");
 	}
 
 
@@ -138,6 +143,22 @@ namespace emberMath
 	{
 		return !(*this == other);
 	}
+    bool Uint3::operator<(const Uint3& other) const
+    {
+        return x < other.x && y < other.y && z < other.z;
+    }
+    bool Uint3::operator<=(const Uint3& other) const
+    {
+        return x <= other.x && y <= other.y && z <= other.z;
+    }
+    bool Uint3::operator>(const Uint3& other) const
+    {
+        return x > other.x && y > other.y && z > other.z;
+    }
+    bool Uint3::operator>=(const Uint3& other) const
+    {
+        return x >= other.x && y >= other.y && z >= other.z;
+    }
 
 
 

@@ -1,5 +1,6 @@
 #include "bounds2d.h"
 #include "mathFunctions.h"
+#include <cassert>
 #include <sstream>
 
 
@@ -76,6 +77,7 @@ namespace emberMath
 	// Setters:
 	void Bounds2d::SetMinMax(const Float2& min, const Float2& max)
 	{
+        assert(min < max);
 		center = 0.5f * (max + min);
 		extents = 0.5f * (max - min);
 	}
@@ -138,11 +140,14 @@ namespace emberMath
 	}
 	void Bounds2d::Expand(float amount)
 	{
-		extents += Float2(math::Abs(amount));
+		extents += Float2(amount);
+        if (amount < 0.0f)
+            extents = Float2::Max(extents, Float2(0.0f));
 	}
 	void Bounds2d::Expand(const Float2& amount)
 	{
 		extents += Float2::Abs(amount);
+        extents = Float2::Max(extents, Float2(0.0f));
 	}
 
 	// Logging:

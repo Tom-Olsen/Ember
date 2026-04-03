@@ -1,5 +1,5 @@
 #include "mathFunctions.h"
-#include "mathConstants.h"
+#include <cassert>
 #include <math.h>
 #include <stdexcept>
 
@@ -14,17 +14,17 @@ namespace emberMath
 		{
 			return fabsf(value);
 		}
-		float Round(float value, int decimals)
+		float Round(float value, uint8_t decimals)
 		{
 			float factor = powf(10.0f, decimals);
 			return roundf(value * factor) / factor;
 		}
-		float Floor(float value, int decimals)
+		float Floor(float value, uint8_t decimals)
 		{
 			float factor = powf(10.0f, decimals);
 			return floorf(value * factor) / factor;
 		}
-		float Ceil(float value, int decimals)
+		float Ceil(float value, uint8_t decimals)
 		{
 			float factor = powf(10.0f, decimals);
 			return ceilf(value * factor) / factor;
@@ -44,6 +44,7 @@ namespace emberMath
 		template<int N>
 		float Factorial()
 		{
+            assert(N >= 0);
 			if constexpr (N > 1)
 				return N * Factorial<N - 1>();
 			else if (N == 1)
@@ -53,6 +54,7 @@ namespace emberMath
 		}
 		float Factorial(int n)
 		{
+            assert(n >= 0);
 			if (n < 2) return 1;
 			else if (n == 2) return Factorial<2>();
 			else if (n == 3) return Factorial<3>();
@@ -93,18 +95,24 @@ namespace emberMath
 		}
 		float Ln(float value)
 		{
+            assert(value > 0.0f);
 			return log(value);
 		}
 		float Log(float value, float base)
 		{
+            assert(value > 0.0f);
+            assert(base > 0.0f);
+            assert(base != 1.0f);
 			return log(value) / log(base);
 		}
 		float Log2(float value)
 		{
+            assert(value > 0.0f);
 			return log2(value);
 		}
 		float Log10(float value)
 		{
+            assert(value > 0.0f);
 			return log10(value);
 		}
 
@@ -125,10 +133,12 @@ namespace emberMath
 		}
 		float Asin(float value)
 		{
+            assert(-1.0f <= value && value <= 1.0f);
 			return asinf(value);
 		}
 		float Acos(float value)
 		{
+            assert(-1.0f <= value && value <= 1.0f);
 			return acosf(value);
 		}
 		float Atan(float z)
@@ -137,6 +147,7 @@ namespace emberMath
 		}
 		float Atan2(float y, float x)
 		{
+            assert(!(x == 0.0f && y == 0.0f));
 			return atan2f(y, x);
 		}
 
@@ -168,6 +179,7 @@ namespace emberMath
 		template<typename T>
 		T Clamp(T value, T min, T max)
 		{
+            assert(min < max);
 			if (value < min)
 				return min;
 			if (value > max)
@@ -203,10 +215,6 @@ namespace emberMath
 
 
 		// Boolean:
-		bool IsEpsilonEqual(float a, float b)
-		{
-			return Abs(a - b) < math::epsilon;
-		}
 		bool IsEpsilonEqual(float a, float b, float epsilon)
 		{
 			return Abs(a - b) < epsilon;

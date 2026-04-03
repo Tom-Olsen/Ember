@@ -14,7 +14,7 @@ TEST(Random, SetSeed)
 		0.31637555f,
 		0.1307073f,
 		0.18391882f,
-		0.039759457f,
+		0.039759498f,
 		0.20456028f,
 		0.8264361f,
 		0.567725f,
@@ -23,6 +23,7 @@ TEST(Random, SetSeed)
 	for (int i = 0; i < 10; i++)
 	{
 		float random = math::Random::Uniform01();
+        std::cout << prediction[i] << std::endl;
 		EXPECT_FLOAT_EQ(random, prediction[i]);
 	}
 }

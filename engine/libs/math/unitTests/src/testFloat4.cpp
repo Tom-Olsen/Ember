@@ -196,6 +196,30 @@ TEST(Float4, OperatorNotEqual)
 	Float4 b(1.0f, 2.0f, 3.0f, 4.1f);
 	EXPECT_TRUE(a != b);
 }
+TEST(Float4, OperatorSmaller)
+{
+	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
+	Float4 b(5.0f, 6.0f, 7.0f, 8.0f);
+	EXPECT_TRUE(a < b);
+}
+TEST(Float4, OperatorSmallerEqual)
+{
+	Float4 a(1.0f, 2.0f, 3.0f, 4.0f);
+	Float4 b(1.0f, 2.0f, 3.0f, 8.0f);
+	EXPECT_TRUE(a <= b);
+}
+TEST(Float4, OperatorBigger)
+{
+	Float4 a(5.0f, 6.0f, 7.0f, 8.0f);
+	Float4 b(1.0f, 2.0f, 3.0f, 4.0f);
+	EXPECT_TRUE(a > b);
+}
+TEST(Float4, OperatorBiggerEqual)
+{
+	Float4 a(1.0f, 2.0f, 3.0f, 8.0f);
+	Float4 b(1.0f, 2.0f, 3.0f, 4.0f);
+	EXPECT_TRUE(a >= b);
+}
 
 // Friend functions:
 TEST(Float4, OperatorMultiplicationScalarLeft)

@@ -1,4 +1,5 @@
 #include "ray.h"
+#include <cassert>
 #include <sstream>
 
 
@@ -6,7 +7,12 @@
 namespace emberMath
 {
 	// Constructor:
-	Ray::Ray(const Float3& origin, const Float3& direction) : origin(origin), direction(direction.Normalize()) {}
+	Ray::Ray(const Float3& origin, const Float3& direction)
+    : origin(origin)
+    {
+        assert(!direction.IsEpsilonZero());
+        this->direction = direction.Normalize();
+    }
 
 
 

@@ -1,4 +1,5 @@
 #include "emberRandom.h"
+#include <cassert>
 
 
 
@@ -52,11 +53,13 @@ namespace emberMath
 		}
 		float Random::Uniform(float min, float max)
 		{
+            assert(min < max);
 			std::uniform_real_distribution<float> distribution(min, max);
 			return distribution(s_mersenneTwister);
 		}
 		int Random::Uniform(int min, int max)
 		{
+            assert(min < max);
 			std::uniform_int_distribution<int> distribution(min, max);
 			return distribution(s_mersenneTwister);
 		}
