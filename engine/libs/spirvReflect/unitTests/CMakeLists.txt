@@ -17,15 +17,9 @@ get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)       
 get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)         # shaders
 
 # Output directory:
-if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
-endif()
-if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Library output directory" FORCE) # .so .dylib .dll
-endif()
-if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Runtime output directory" FORCE) # .exe
-endif()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib) # .a .lib
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # .so .dylib .dll, must be next to .exe on windows
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # .exe
 # ---------------------------------------------------
 
 
@@ -48,6 +42,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/s
 
 
 # ---------------------- Macros ---------------------
+get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
+target_compile_definitions(${PROJECT_NAME} PRIVATE PROJECT_ROOT_PATH="${PROJECT_ROOT_PATH}")
 target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
 # ---------------------------------------------------
 
@@ -55,15 +51,11 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_S
 
 # -------------- Link Custom Libraries --------------
 # EmberSpirvReflect:
-if (NOT TARGET EmberSpirvReflect)
-    add_subdirectory("${ENGINE_LIBS_DIR}/spirvReflect" EmberSpirvReflect)
-endif()
+add_subdirectory("${ENGINE_LIBS_DIR}/spirvReflect" EmberSpirvReflect)
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberSpirvReflect)
 
 # Shaders:
-if (NOT TARGET EmberShaderCompiler)
-    add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
-endif()
+add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
 add_dependencies(${PROJECT_NAME} EmberShaderCompiler)
 # ---------------------------------------------------
 
@@ -74,9 +66,7 @@ add_dependencies(${PROJECT_NAME} EmberShaderCompiler)
 if(USE_EXTERNAL_GTEST)
     target_link_libraries(${PROJECT_NAME} PRIVATE gtest gtest_main)
 else()
-    if (NOT TARGET googletest-distribution)
-        add_subdirectory("${ENGINE_EXTERN_DIR}/googletest" googletest-distribution)
-    endif()
+    add_subdirectory("${ENGINE_EXTERN_DIR}/googletest" googletest-distribution)
     target_link_libraries(${PROJECT_NAME} PRIVATE gtest gtest_main)
 endif()
 

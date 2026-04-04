@@ -129,13 +129,13 @@ namespace emberSpirvReflect
         switch (m_descriptorType)
         {
             case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-                ss << "\n" << GetUniformBufferDescriptor()->bufferLayout.ToString(indent + 2);
+                ss << GetUniformBufferDescriptor()->bufferLayout.ToString(indent + 2);
                 break;
             case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-                ss << ", vkImageViewType(sampled): " << emberVulkanUtility::ToString((VkImageViewType)GetImageDescriptor()->imageViewType);
+                ss << "vkImageViewType(sampled): " << emberVulkanUtility::ToString((VkImageViewType)GetImageDescriptor()->imageViewType);
                 break;
             case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-                ss << ", vkImageViewType(storage): " << emberVulkanUtility::ToString((VkImageViewType)GetImageDescriptor()->imageViewType);
+                ss << "vkImageViewType(storage): " << emberVulkanUtility::ToString((VkImageViewType)GetImageDescriptor()->imageViewType);
                 break;
         }
         return ss.str();

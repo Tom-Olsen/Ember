@@ -27,14 +27,14 @@ namespace emberSpirvReflect
     // Main functionality:
     void DescriptorSetReflection::AddDescriptorReflection(const DescriptorReflection& descriptorReflection)
     {
-        assert((m_set < UINT32_MAX) && "DescriptorSetReflection::AddDescriptor: Forgot to set m_set by calling proper constructor (not default).");
+        assert((m_set < UINT32_MAX) && "DescriptorSetReflection::AddDescriptor(...): Forgot to set m_set by calling proper constructor (not default).");
 
         for (DescriptorReflection& existing : m_descriptorReflections)
         {
             if (existing.GetBinding() == descriptorReflection.GetBinding())
             {
                 if (!existing.IsEqual(descriptorReflection))
-                    throw std::runtime_error("DescriptorSetReflection::AddDescriptor: Found unequal descriptors with same set+binding:\n prev: " + existing.ToString() + "\n  new: " + descriptorReflection.ToString());
+                    throw std::runtime_error("DescriptorSetReflection::AddDescriptor(...): Found unequal descriptors with same set+binding:\n prev: " + existing.ToString() + "\n  new: " + descriptorReflection.ToString());
 
                 existing.AddShaderStage(descriptorReflection.GetShaderStage());
                 return;
