@@ -6,7 +6,7 @@
 
 
 
-cbuffer LightProperties : register(b2300, SCENE_SET)
+cbuffer LightProperties : register(b2399, SCENE_SET)
 {
     int light_dirCount;   // number of active directional lights in the scene.
     int light_posCount;   // number of active positional lights in the scene.

@@ -4,9 +4,9 @@
 
 
 
-SamplerState colorSampler : register(s3000, GLOBAL_SET);
-SamplerComparisonState shadowSampler : register(s3001, GLOBAL_SET);
-Texture2DArray<float> shadowMaps : register(t3100, GLOBAL_SET);
+SamplerState colorSampler : register(s3099, GLOBAL_SET);
+SamplerComparisonState shadowSampler : register(s3098, GLOBAL_SET);
+Texture2DArray<float> shadowMaps : register(t3199, GLOBAL_SET);
 
 
 

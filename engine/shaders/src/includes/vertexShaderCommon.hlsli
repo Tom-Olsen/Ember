@@ -15,7 +15,7 @@
 
 
 // Per draw call resources:
-cbuffer ModelMatrizes : register(b300, DRAW_SET)
+cbuffer ModelMatrizes : register(b399, DRAW_SET)
 {
     float4x4 model_localToWorldMatrix; // TRS matrix.
     float4x4 model_worldToLocalMatrix; // inverse TRS matrix.
@@ -29,7 +29,7 @@ struct InstanceData
     float4x4 localToWorldMatrix;    // per instance TRS matrix (relative to group transform).
     float4 color;                   // per instance color.
 };
-StructuredBuffer<InstanceData> instanceBuffer : register(t100, SHADER_SET);
+StructuredBuffer<InstanceData> instanceBuffer : register(t199, SHADER_SET);
 
 
 

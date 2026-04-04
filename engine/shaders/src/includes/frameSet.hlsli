@@ -4,7 +4,7 @@
 
 
 
-cbuffer Camera : register(b1300, FRAME_SET)
+cbuffer Camera : register(b1399, FRAME_SET)
 {
     float4 camera_position;             // camera position.
     float4x4 camera_viewMatrix;         // world to camera matrix.
