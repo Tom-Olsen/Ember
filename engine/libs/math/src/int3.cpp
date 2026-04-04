@@ -44,16 +44,12 @@ namespace emberMath
 	int& Int3::operator[](int index)
 	{
         assert(index >= 0 && index < 3);
-		if (index == 0) return x;
-		if (index == 1) return y;
-		if (index == 2) return z;
+		return (&x)[index];
 	}
 	int Int3::operator[](int index) const
 	{
         assert(index >= 0 && index < 3);
-		if (index == 0) return x;
-		if (index == 1) return y;
-		if (index == 2) return z;
+		return (&x)[index];
 	}
 
 

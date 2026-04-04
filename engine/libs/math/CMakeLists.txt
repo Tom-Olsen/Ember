@@ -3,7 +3,7 @@
 
 
 # ------------------- Project Setup ------------------
-set(PROJECT_TYPE STATIC) # Choose SHARED (.dll/.so) or STATIC (.lib/.a) library (currently only static supported):
+set(PROJECT_TYPE STATIC)    # Choose SHARED (.dll/.so) or STATIC (.lib/.a) library (currently only static supported):
 set(TARGET_NAME EmberMath)
 # ---------------------------------------------------
 

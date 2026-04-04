@@ -42,14 +42,12 @@ namespace emberMath
 	int& Int2::operator[](int index)
 	{
         assert(index >= 0 && index < 2);
-		if (index == 0) return x;
-		if (index == 1) return y;
+		return (&x)[index];
 	}
 	int Int2::operator[](int index) const
 	{
         assert(index >= 0 && index < 2);
-		if (index == 0) return x;
-		if (index == 1) return y;
+		return (&x)[index];
 	}
 
 

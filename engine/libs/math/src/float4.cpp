@@ -88,18 +88,12 @@ namespace emberMath
 	float& Float4::operator[](int index)
 	{
         assert(index >= 0 && index < 4);
-		if (index == 0) return x;
-		if (index == 1) return y;
-		if (index == 2) return z;
-		if (index == 3) return w;
+		return (&x)[index];
 	}
 	float Float4::operator[](int index) const
 	{
         assert(index >= 0 && index < 4);
-		if (index == 0) return x;
-		if (index == 1) return y;
-		if (index == 2) return z;
-		if (index == 3) return w;
+		return (&x)[index];
 	}
 	Float3 Float4::xyz() const
 	{
