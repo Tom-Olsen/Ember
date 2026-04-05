@@ -36,6 +36,9 @@ add_library(${TARGET_NAME} ${PROJECT_TYPE} ${SRC_FILES} ${VULKAN_UTILITY_FILES})
 target_include_directories(${TARGET_NAME} PUBLIC 
     ${ENGINE_VULKAN_UTILITY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Allow linking this static library into shared libraries:
+set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ---------------------------------------------------
 
 
@@ -66,4 +69,5 @@ target_link_libraries(${TARGET_NAME} PUBLIC ${Vulkan_LIBRARIES})
 set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "Build static library for SPIRV-Reflect" FORCE)  # enable static lib compilation for SPIRV-Reflect
 add_subdirectory("${ENGINE_EXTERN_DIR}/SPIRV-Reflect" "${CMAKE_BINARY_DIR}/SPIRV-Reflect_build")
 target_link_libraries(${TARGET_NAME} PUBLIC spirv-reflect-static)
+set_target_properties(spirv-reflect-static PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ---------------------------------------------------

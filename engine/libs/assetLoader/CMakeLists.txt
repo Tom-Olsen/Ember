@@ -29,6 +29,9 @@ add_library(${TARGET_NAME} ${PROJECT_TYPE} ${SRC_FILES})
 
 # Source subdirectories:
 target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Allow linking this static library into shared libraries:
+set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ---------------------------------------------------
 
 

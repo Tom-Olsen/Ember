@@ -38,6 +38,9 @@ add_library(${TARGET_NAME} STATIC
 target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/basicComponents
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ecsClasses)
+
+# Allow linking this static library into shared libraries:
+set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ---------------------------------------------------
 
 

@@ -38,6 +38,9 @@ target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 if (MSVC)
     target_compile_options(${TARGET_NAME} PUBLIC /utf-8)
 endif()
+
+# Allow linking this static library into shared libraries:
+set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ---------------------------------------------------
 
 
