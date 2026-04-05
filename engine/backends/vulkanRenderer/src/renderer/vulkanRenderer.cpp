@@ -4,8 +4,8 @@
 #include "iGui.h"
 #include "iWindow.h"
 #include "logger.h"
+#include "parallelThreadPool.h"
 #include "profiler.h"
-#include "taskSystem.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
@@ -69,7 +69,7 @@ namespace vulkanRendererBackend
 		// Command pools (one per frameInFlight * renderStage):
 		m_commandPools.reserve(Context::GetFramesInFlight() * (int)RenderStage::stageCount);
 		for (int i = 0; i < Context::GetFramesInFlight() * (int)RenderStage::stageCount; i++)
-			m_commandPools.emplace_back(emberTaskSystem::TaskSystem::GetCoreCount(), Context::GetLogicalDevice()->GetGraphicsQueue());
+			m_commandPools.emplace_back(emberTaskSystem::ParallelThreadPool::GetCoreCount(), Context::GetLogicalDevice()->GetGraphicsQueue());
 
 		// Shadow/Light system:
 		m_depthBiasConstantFactor = 0.0f;
@@ -94,7 +94,7 @@ namespace vulkanRendererBackend
 				name += "_frame" + std::to_string(frameIndex);
 				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "CommandPoolPrimary_" + name);
 				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandBuffer(), "CommandBufferPrimary_" + name);
-				for (int threadIndex = 0; threadIndex < emberTaskSystem::TaskSystem::GetCoreCount(); threadIndex++)
+				for (int threadIndex = 0; threadIndex < emberTaskSystem::ParallelThreadPool::GetCoreCount(); threadIndex++)
                 {
 					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPoolSecondary" + std::to_string(threadIndex) + "_" + name);
 					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBufferSecondary_" + std::to_string(threadIndex) + "_" + name);

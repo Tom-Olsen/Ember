@@ -22,6 +22,6 @@ namespace emberBackendInterface
         virtual void Download(void* pDst, uint64_t size) = 0;
 
         // Debugging:
-        virtual void SetDebugName(const std::string& name);
+        virtual void SetDebugName(const std::string& name) = 0;
     };
 }

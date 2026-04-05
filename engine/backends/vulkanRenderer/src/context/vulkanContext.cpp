@@ -40,6 +40,7 @@ namespace vulkanRendererBackend
 	std::unique_ptr<AllocationTracker> Context::m_pAllocationTracker;
 	std::unique_ptr<DescriptorPool> Context::m_pDescriptorPool;
 	std::array<std::unique_ptr<Swapchain>, 2> Context::m_swapchains;
+	Renderer* Context::m_pRenderer;
 	uint32_t Context::m_swapchainIndex;
 	uint32_t Context::m_framesInFlight;
 	uint32_t Context::m_frameIndex;

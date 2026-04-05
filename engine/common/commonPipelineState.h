@@ -24,7 +24,7 @@ namespace emberCommon
 		separate,
 		count
 	};
-	std::string VertexMemoryLayoutToString(VertexMemoryLayout vertexMemoryLayout)
+	inline std::string VertexMemoryLayoutToString(VertexMemoryLayout vertexMemoryLayout)
 	{
 		switch (vertexMemoryLayout)
 		{
@@ -44,7 +44,7 @@ namespace emberCommon
 		wireframe,
 		count
 	};
-	std::string RenderModeToString(RenderMode renderMode)
+	inline std::string RenderModeToString(RenderMode renderMode)
 	{
 		switch (renderMode)
 		{
@@ -65,7 +65,7 @@ namespace emberCommon
 		none,
 		count
 	};
-	std::string CullModeToString(CullMode cullMode)
+	inline std::string CullModeToString(CullMode cullMode)
 	{
 		switch (cullMode)
 		{
@@ -83,14 +83,14 @@ namespace emberCommon
 		VertexMemoryLayout vertexMemoryLayout;
 		RenderMode renderMode;
 		CullMode cullMode;
-		uint32_t Index() const
+		inline uint32_t Index() const
 		{
 			constexpr uint32_t vertexMemoryLayoutCount = static_cast<uint32_t>(VertexMemoryLayout::count);
 			constexpr uint32_t renderModeCount = static_cast<uint32_t>(RenderMode::count);
 			constexpr uint32_t cullModeCount = static_cast<uint32_t>(CullMode::count);
 			return static_cast<uint32_t>(vertexMemoryLayout) + static_cast<uint32_t>(renderMode) * vertexMemoryLayoutCount + static_cast<uint32_t>(cullMode) * vertexMemoryLayoutCount * renderModeCount;
 		}
-		std::string ToString() const
+		inline std::string ToString() const
 		{
 			return "vertexMemoryLayout=" + VertexMemoryLayoutToString(vertexMemoryLayout) + ", renderMode=" + RenderModeToString(renderMode) + ", cullMode=" + CullModeToString(cullMode);
 		}
