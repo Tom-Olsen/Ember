@@ -47,7 +47,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/s
 
 
 # ---------------------- Macros ---------------------
-get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 target_compile_definitions(${PROJECT_NAME} PRIVATE PROJECT_ROOT_PATH="${PROJECT_ROOT_PATH}")
 # ---------------------------------------------------
 

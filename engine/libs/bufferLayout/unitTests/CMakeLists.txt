@@ -54,7 +54,6 @@ add_subdirectory("${ENGINE_LIBS_DIR}/bufferLayout" EmberBufferLayout)
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberBufferLayout)
 
 # EmberLogger:
-set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
 add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
 # ---------------------------------------------------

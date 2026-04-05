@@ -11,6 +11,10 @@ get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs
 get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)                   # extern
 get_filename_component(ENGINE_VULKAN_UTILITY_DIR "${ENGINE_DIR}/vulkanUtility" ABSOLUTE)    # vulkan utility
+
+if(TARGET ${TARGET_NAME})
+    return()
+endif()
 # ---------------------------------------------------
 
 
@@ -42,7 +46,6 @@ add_subdirectory("${ENGINE_LIBS_DIR}/bufferLayout" EmberBufferLayout)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberBufferLayout)
 
 # EmberLogger:
-set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
 add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberLogger)
 

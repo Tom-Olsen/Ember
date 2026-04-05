@@ -1,15 +1,18 @@
 # Ember/engine/libs/logger/CMakeLists.txt
 
 
-
 # ------------------- Project Setup ------------------
-# Static (default) vs Shared library option:
+# Static vs Shared library option:
 set(TARGET_NAME EmberLogger)
-option(EMBER_LOGGER_BUILD_SHARED "Build ${TARGET_NAME} as a shared library" OFF)
+option(EMBER_LOGGER_BUILD_SHARED "Build ${TARGET_NAME} as a shared library" ON)
 
 # Cache directories:
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   # engine
 get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)       # extern
+
+if(TARGET ${TARGET_NAME})
+    return()
+endif()
 # ---------------------------------------------------
 
 
@@ -22,11 +25,11 @@ source_group("Source Files" FILES ${SRC_FILES})
 
 
 # ----------------- Create Library ------------------
-if (EMBER_LOGGER_BUILD_SHARED)
-    add_library(${TARGET_NAME} SHARED ${SRC_FILES})
-else()
-    add_library(${TARGET_NAME} STATIC ${SRC_FILES})
+set(LIB_TYPE STATIC)
+if(EMBER_LOGGER_BUILD_SHARED)
+    set(LIB_TYPE SHARED)
 endif()
+add_library(${TARGET_NAME} ${LIB_TYPE} ${SRC_FILES})
 
 # Source subdirectories:
 target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

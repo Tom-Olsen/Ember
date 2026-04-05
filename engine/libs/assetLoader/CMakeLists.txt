@@ -9,6 +9,10 @@ set(PROJECT_TYPE STATIC)    # Choose SHARED (.dll/.so) or STATIC (.lib/.a) libra
 # Cache directories:
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   # engine
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)           # libs
+
+if(TARGET ${TARGET_NAME})
+    return()
+endif()
 # ---------------------------------------------------
 
 
@@ -35,7 +39,6 @@ add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberMath)
 
 # EmberLogger:
-set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
 add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberLogger)
 # ---------------------------------------------------

@@ -9,6 +9,10 @@ set(PROJECT_TYPE STATIC)    # Choose SHARED (.dll/.so) or STATIC (.lib/.a) libra
 # Cache directories:
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   # engine
 get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)       # extern
+
+if(TARGET ${TARGET_NAME})
+    return()
+endif()
 # ---------------------------------------------------
 
 

@@ -3,17 +3,9 @@
 
 
 # ------------------- Project Setup ------------------
-# Minimum version requirement and project name:
-cmake_minimum_required(VERSION 3.30)
-project(VulkanRendererBackend)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
-
-# Static vs Shared library option:
-option(VULKAN_RENDERER_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
-
-# C++ standard:
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Static (default) vs Shared library option:
+set(TARGET_NAME VulkanRendererBackend)
+option(VULKAN_RENDERER_BACKEND_BUILD_SHARED "Build ${TARGET_NAME} as a shared library" ON)
 
 # Cache directories:
 get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)     # vulkan
@@ -25,17 +17,6 @@ get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs 
 get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)             # resources
 get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)                 # shaders
-
-# Output directory:
-if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
-endif()
-if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Library output directory" FORCE) # .so .dylib .dll
-endif()
-if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Runtime output directory" FORCE) # .exe
-endif()
 # ---------------------------------------------------
 
 
@@ -111,58 +92,36 @@ source_group("Vulkan Utility" FILES ${VULKAN_UTILITY_FILES})
 
 
 # ----------------- Create Library ------------------
-if (VULKAN_RENDERER_BACKEND_BUILD_SHARED)
-    add_library(${PROJECT_NAME} SHARED
-        ${COMPUTE_FILES}
-        ${CONTEXT_FILES}
-        ${GPU_RESOURCE_POOLS_FILES}
-        ${GPU_RESOURCES_FILES}
-            ${BUFFERS_FILES}
-            ${SAMPLERS_FILES}
-            ${TEXTURES_FILES}
-                ${TEXTURE_1D_FILES}
-                ${TEXTURE_2D_FILES}
-                ${TEXTURE_3D_FILES}
-                ${TEXTURE_CUBE_FILES}
-        ${PIPELINES_FILES}
-        ${PUSH_CONSTANTS_FILES}
-        ${RENDERER_FILES}
-        ${RENDER_PASSES_FILES}
-        ${TYPES_FILES}
-        ${UTILITY_FILES}
-        ${COMMON_FILES}
-        ${GUI_INTERFACE_FILES}
-        ${RENDERER_INTERFACE_FILES}
-        ${WINDOW_INTERFACE_FILES}
-        ${VULKAN_UTILITY_FILES})
-else()
-    add_library(${PROJECT_NAME} STATIC
-        ${COMPUTE_FILES}
-        ${CONTEXT_FILES}
-        ${GPU_RESOURCE_POOLS_FILES}
-        ${GPU_RESOURCES_FILES}
-            ${BUFFERS_FILES}
-            ${SAMPLERS_FILES}
-            ${TEXTURES_FILES}
-                ${TEXTURE_1D_FILES}
-                ${TEXTURE_2D_FILES}
-                ${TEXTURE_3D_FILES}
-                ${TEXTURE_CUBE_FILES}
-        ${PIPELINES_FILES}
-        ${PUSH_CONSTANTS_FILES}
-        ${RENDERER_FILES}
-        ${RENDER_PASSES_FILES}
-        ${TYPES_FILES}
-        ${UTILITY_FILES}
-        ${COMMON_FILES}
-        ${GUI_INTERFACE_FILES}
-        ${RENDERER_INTERFACE_FILES}
-        ${WINDOW_INTERFACE_FILES}
-        ${VULKAN_UTILITY_FILES})
+set(LIB_TYPE STATIC)
+if(VULKAN_RENDERER_BACKEND_BUILD_SHARED)
+    set(LIB_TYPE SHARED)
 endif()
+add_library(${TARGET_NAME} ${LIB_TYPE}
+    ${COMPUTE_FILES}
+    ${CONTEXT_FILES}
+    ${GPU_RESOURCE_POOLS_FILES}
+    ${GPU_RESOURCES_FILES}
+        ${BUFFERS_FILES}
+        ${SAMPLERS_FILES}
+        ${TEXTURES_FILES}
+            ${TEXTURE_1D_FILES}
+            ${TEXTURE_2D_FILES}
+            ${TEXTURE_3D_FILES}
+            ${TEXTURE_CUBE_FILES}
+    ${PIPELINES_FILES}
+    ${PUSH_CONSTANTS_FILES}
+    ${RENDERER_FILES}
+    ${RENDER_PASSES_FILES}
+    ${TYPES_FILES}
+    ${UTILITY_FILES}
+    ${COMMON_FILES}
+    ${GUI_INTERFACE_FILES}
+    ${RENDERER_INTERFACE_FILES}
+    ${WINDOW_INTERFACE_FILES}
+    ${VULKAN_UTILITY_FILES})
 
-# Only expose public files to consumer:
-target_include_directories(${PROJECT_NAME} PUBLIC
+# Source subdirectories:
+target_include_directories(${TARGET_NAME} PUBLIC
     ${ENGINE_SHADERS_DIR}/src/includesCppHlsl # needed for .h files from shaders, which contian constans for c++ and hlsl, e.g. shadowMap sizes
     ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
     ${CMAKE_CURRENT_SOURCE_DIR}/src/context
@@ -185,20 +144,22 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${ENGINE_INTERFACES_DIR}/gui
     ${ENGINE_INTERFACES_DIR}/renderer
     ${ENGINE_INTERFACES_DIR}/window)
+    
+#set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ---------------------------------------------------
 
 
 
 # ---------------------- Macros ---------------------
 # Path to vulkan library source directory:
-target_compile_definitions(${PROJECT_NAME} PUBLIC VULKAN_LIBRARY_ROOT_PATH="${VULKAN_LIBRARY_ROOT_PATH}")
-target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
+target_compile_definitions(${TARGET_NAME} PUBLIC VULKAN_LIBRARY_ROOT_PATH="${VULKAN_LIBRARY_ROOT_PATH}")
+target_compile_definitions(${TARGET_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
 
 # Library compilation logic:
 if(VULKAN_RENDERER_BACKEND_BUILD_SHARED)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE VULKAN_RENDERER_BACKEND_EXPORTS)
+    target_compile_definitions(${TARGET_NAME} PRIVATE VULKAN_RENDERER_BACKEND_EXPORTS)
 else()
-    target_compile_definitions(${PROJECT_NAME} PUBLIC VULKAN_RENDERER_BACKEND_STATIC)
+    target_compile_definitions(${TARGET_NAME} PUBLIC VULKAN_RENDERER_BACKEND_STATIC)
 endif()
 # ---------------------------------------------------
 
@@ -206,53 +167,32 @@ endif()
 
 # -------------- Link Custom Libraries --------------
 # EmberAssetLoader:
-if (NOT TARGET EmberAssetLoader)
-    add_subdirectory("${ENGINE_LIBS_DIR}/assetLoader" EmberAssetLoader)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberAssetLoader)
+add_subdirectory("${ENGINE_LIBS_DIR}/assetLoader" EmberAssetLoader)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberAssetLoader)
 
 # EmberBufferLayout:
-if (NOT TARGET EmberBufferLayout)
-    add_subdirectory("${ENGINE_LIBS_DIR}/bufferLayout" EmberBufferLayout)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberBufferLayout)
+add_subdirectory("${ENGINE_LIBS_DIR}/bufferLayout" EmberBufferLayout)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberBufferLayout)
 
 # EmberLogger:
-if (NOT TARGET EmberLogger)
-    set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
-    add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
+add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberLogger)
 
 # EmberMath:
-if (NOT TARGET EmberMath)
-    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
-
-# EmberProfiler:
-if (NOT TARGET EmberProfiler)
-    add_subdirectory("${ENGINE_LIBS_DIR}/profiler" EmberProfiler)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
+add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberMath)
 
 # EmberSpirvReflect:
-if (NOT TARGET EmberSpirvReflect)
-    add_subdirectory("${ENGINE_LIBS_DIR}/spirvReflect" EmberSpirvReflect)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberSpirvReflect)
+add_subdirectory("${ENGINE_LIBS_DIR}/spirvReflect" EmberSpirvReflect)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberSpirvReflect)
 
 # EmberTaskSystem:
-if (NOT TARGET EmberTaskSystem)
-    add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
+add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberTaskSystem)
 
 # Shaders:
-if (NOT TARGET EmberShaderCompiler)
-    add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
-endif()
-add_dependencies(${PROJECT_NAME} EmberShaderCompiler)
+add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
+add_dependencies(${TARGET_NAME} EmberShaderCompiler)
 # ---------------------------------------------------
 
 
@@ -260,9 +200,10 @@ add_dependencies(${PROJECT_NAME} EmberShaderCompiler)
 # ------------- Link External Libraries -------------
 # Vulkan (dynamicly linked):
 find_package(Vulkan REQUIRED)           # required to be installed
-target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
+target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${TARGET_NAME} PUBLIC ${Vulkan_LIBRARIES})
+# target_link_libraries(${TARGET_NAME} PUBLIC Vulkan::Vulkan) can this replace above 2 lines?
     
 # Vulkan Memory Allocator: (header only)
-target_include_directories(${PROJECT_NAME} PUBLIC "${ENGINE_EXTERN_DIR}/vma/include")
+target_include_directories(${TARGET_NAME} PUBLIC "${ENGINE_EXTERN_DIR}/vma/include")
 # ---------------------------------------------------

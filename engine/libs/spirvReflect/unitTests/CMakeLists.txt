@@ -42,8 +42,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/s
 
 
 # ---------------------- Macros ---------------------
-get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
-target_compile_definitions(${PROJECT_NAME} PRIVATE PROJECT_ROOT_PATH="${PROJECT_ROOT_PATH}")
 target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
 # ---------------------------------------------------
 
@@ -55,7 +53,7 @@ add_subdirectory("${ENGINE_LIBS_DIR}/spirvReflect" EmberSpirvReflect)
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberSpirvReflect)
 
 # Shaders:
-add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
+add_subdirectory("${ENGINE_SHADERS_DIR}" EmberShaderCompiler)
 add_dependencies(${PROJECT_NAME} EmberShaderCompiler)
 # ---------------------------------------------------
 

@@ -5,6 +5,10 @@
 # ------------------- Project Setup ------------------
 set(TARGET_NAME EmberMath)
 set(PROJECT_TYPE STATIC)    # Choose SHARED (.dll/.so) or STATIC (.lib/.a) library (currently only static supported):
+
+if(TARGET ${TARGET_NAME})
+    return()
+endif()
 # ---------------------------------------------------
 
 

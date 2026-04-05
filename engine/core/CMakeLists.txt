@@ -3,16 +3,9 @@
 
 
 # ------------------- Project Setup ------------------
-# Minimum version requirement and project name:
-cmake_minimum_required(VERSION 3.30)
-project(EmberCore)
-
-# Static vs Shared library option:
-option(EMBER_CORE_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
-
-# C++ standard:
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Static (default) vs Shared library option:
+set(TARGET_NAME EmberCore)
+option(EMBER_CORE_BUILD_SHARED "Build ${TARGET_NAME} as a shared library" ON)
 
 # Cache directories:
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)          # engine
@@ -23,23 +16,11 @@ get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)               # libs
 get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)     # resources
 get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)         # shaders
-
-# Output directory:
-if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
-endif()
-if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Library output directory" FORCE) # .so .dylib .dll
-endif()
-if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Runtime output directory" FORCE) # .exe
-endif()
 # ---------------------------------------------------
 
 
 
 # ------------------- File Lists --------------------
-# *.* makes sure to only include files and not folders.
 file(GLOB ENGINE_FILE "${ENGINE_CORE_DIR}/src/*.*")
 source_group("/" FILES ${ENGINE_FILE})
  
@@ -86,42 +67,28 @@ source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
  
  
 # ----------------- Create Library ------------------
-if (EMBER_CORE_BUILD_SHARED)
-    add_library(${PROJECT_NAME} SHARED
-        ${ENGINE_FILE}
-        ${EDITOR_FILES}
-        ${EVENT_SYSTEM_FILES}
-        ${GPU_RESOURCES_FILES}
-        ${GUI_FILES}
-        ${MANAGERS_FILES}
-        ${PHYSICS_FILES}
-        ${RENDERER_FILES}
-        ${UTILITY_FILES}
-        ${WINDOW_FILES}
-        ${COMMON_FILES}
-        ${GUI_INTERFACE_FILES}
-        ${RENDERER_INTERFACE_FILES}
-        ${WINDOW_INTERFACE_FILES})
-else()
-    add_library(${PROJECT_NAME} STATIC
-        ${ENGINE_FILE}
-        ${EDITOR_FILES}
-        ${EVENT_SYSTEM_FILES}
-        ${GPU_RESOURCES_FILES}
-        ${GUI_FILES}
-        ${MANAGERS_FILES}
-        ${PHYSICS_FILES}
-        ${RENDERER_FILES}
-        ${UTILITY_FILES}
-        ${WINDOW_FILES}
-        ${COMMON_FILES}
-        ${GUI_INTERFACE_FILES}
-        ${RENDERER_INTERFACE_FILES}
-        ${WINDOW_INTERFACE_FILES})
+set(LIB_TYPE STATIC)
+if(VULKAN_RENDERER_BACKEND_BUILD_SHARED)
+    set(LIB_TYPE SHARED)
 endif()
+add_library(${TARGET_NAME} ${LIB_TYPE}
+    ${ENGINE_FILE}
+    ${EDITOR_FILES}
+    ${EVENT_SYSTEM_FILES}
+    ${GPU_RESOURCES_FILES}
+    ${GUI_FILES}
+    ${MANAGERS_FILES}
+    ${PHYSICS_FILES}
+    ${RENDERER_FILES}
+    ${UTILITY_FILES}
+    ${WINDOW_FILES}
+    ${COMMON_FILES}
+    ${GUI_INTERFACE_FILES}
+    ${RENDERER_INTERFACE_FILES}
+    ${WINDOW_INTERFACE_FILES})
 
 # Source subdirectories:
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${TARGET_NAME} PUBLIC
     ${ENGINE_SHADERS_DIR}/src/includesCppHlsl # needed for .h files from shaders, which contian constans for c++ and hlsl, e.g. shadowMap sizes
     ${ENGINE_CORE_DIR}/src
     ${ENGINE_CORE_DIR}/src/editor
@@ -142,15 +109,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 
 # ---------------------- Macros ---------------------
-target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_CORE_DIR="${ENGINE_CORE_DIR}")
-target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_RESOURCES_DIR="${ENGINE_RESOURCES_DIR}")
-target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
+target_compile_definitions(${TARGET_NAME} PUBLIC ENGINE_CORE_DIR="${ENGINE_CORE_DIR}")
+target_compile_definitions(${TARGET_NAME} PUBLIC ENGINE_RESOURCES_DIR="${ENGINE_RESOURCES_DIR}")
+target_compile_definitions(${TARGET_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
 
 # Library compilation logic:
 if(EMBER_CORE_BUILD_SHARED)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE EMBER_CORE_EXPORTS)
+    target_compile_definitions(${TARGET_NAME} PRIVATE EMBER_CORE_EXPORTS)
 else()
-    target_compile_definitions(${PROJECT_NAME} PUBLIC EMBER_CORE_STATIC)
+    target_compile_definitions(${TARGET_NAME} PUBLIC EMBER_CORE_STATIC)
 endif()
 # ---------------------------------------------------
 
@@ -161,38 +128,37 @@ endif()
 if (NOT TARGET EmberAssetLoader)
     add_subdirectory("${ENGINE_LIBS_DIR}/assetLoader" EmberAssetLoader)
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberAssetLoader)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberAssetLoader)
 
 # EmberLogger:
 if (NOT TARGET EmberLogger)
-    set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib." FORCE)
     add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberLogger)
 
 # EmberMath:
 if (NOT TARGET EmberMath)
     add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberMath)
 
 # EmberProfiler:
 if (NOT TARGET EmberProfiler)
     add_subdirectory("${ENGINE_LIBS_DIR}/profiler" EmberProfiler)
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberProfiler)
 
 # EmberTaskSystem:
 if (NOT TARGET EmberTaskSystem)
     add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberTaskSystem)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberTaskSystem)
 
 # Shaders:
 if (NOT TARGET EmberShaderCompiler)
     add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
 endif()
-add_dependencies(${PROJECT_NAME} EmberShaderCompiler)
+add_dependencies(${TARGET_NAME} EmberShaderCompiler)
 # ---------------------------------------------------
 
 
@@ -204,5 +170,5 @@ set(ENTT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 if (NOT TARGET EnTT::EnTT)
     add_subdirectory("${ENGINE_EXTERN_DIR}/EnTT" "${CMAKE_BINARY_DIR}/EnTT_build")
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EnTT::EnTT)
+target_link_libraries(${TARGET_NAME} PUBLIC EnTT::EnTT)
 # ---------------------------------------------------

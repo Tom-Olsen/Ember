@@ -18,15 +18,9 @@ get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)       
 get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)         # shaders
 
 # Output directory:
-if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
-endif()
-if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Library output directory" FORCE) # .so .dylib .dll
-endif()
-if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Runtime output directory" FORCE) # .exe
-endif()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib) # .a .lib
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # .so .dylib .dll, must be next to .exe on windows
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # .exe
 # ---------------------------------------------------
 
 
@@ -54,40 +48,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_S
 
 
 
-# -------------- Link Custom Libraries --------------
-# EmberLogger:
-if (NOT TARGET EmberLogger)
-    set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib." FORCE)
-    add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
-
-# EmberMath:
-if (NOT TARGET EmberMath)
-    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
-
-# EmberSpirvReflect:
-if (NOT TARGET EmberSpirvReflect)
-    add_subdirectory("${ENGINE_LIBS_DIR}/spirvReflect" EmberSpirvReflect)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberSpirvReflect)
-
-# Shaders:
-if (NOT TARGET EmberShaderCompiler)
-    add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
-endif()
-add_dependencies(${PROJECT_NAME} EmberShaderCompiler)
-# ---------------------------------------------------
-
-
-
 # ------------------- Link Backend ------------------
 # Vulkan Renderer:
-if (NOT TARGET VulkanRendererBackend)
-    add_subdirectory("${ENGINE_BACKENDS_DIR}/vulkanRenderer" VulkanRendererBackend)
-endif()
+add_subdirectory("${ENGINE_BACKENDS_DIR}/vulkanRenderer" VulkanRendererBackend)
 target_link_libraries(${PROJECT_NAME} PRIVATE VulkanRendererBackend)
 # ---------------------------------------------------
 
@@ -98,9 +61,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE VulkanRendererBackend)
 if(USE_EXTERNAL_GTEST)
     target_link_libraries(${PROJECT_NAME} PRIVATE gtest gtest_main)
 else()
-    if (NOT TARGET googletest-distribution)
-        add_subdirectory("${ENGINE_EXTERN_DIR}/googletest" googletest-distribution)
-    endif()
+    add_subdirectory("${ENGINE_EXTERN_DIR}/googletest" googletest-distribution)
     target_link_libraries(${PROJECT_NAME} PRIVATE gtest gtest_main)
 endif()
 

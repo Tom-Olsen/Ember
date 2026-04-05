@@ -11,6 +11,10 @@ get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   
 get_filename_component(ENGINE_CORE_DIR "${ENGINE_DIR}/core" ABSOLUTE)           # core
 get_filename_component(EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)              # extern
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)           # libs
+
+if(TARGET ${TARGET_NAME})
+    return()
+endif()
 # ---------------------------------------------------
 
 
@@ -40,11 +44,10 @@ target_include_directories(${TARGET_NAME} PUBLIC
 
 # -------------- Link Custom Libraries --------------
 # EmberCore:
-add_subdirectory(${ENGINE_CORE_DIR} EmberCore)
+add_subdirectory("${ENGINE_CORE_DIR}" EmberCore)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberCore)
 
 # EmberLogger:
-set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib." FORCE)
 add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberLogger)
 
