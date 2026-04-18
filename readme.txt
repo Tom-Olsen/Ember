@@ -3,6 +3,8 @@ To compile this project, you need to have Vulkan SDK 1.3.290.0 (or later), cmake
 (included in vulkan on windows and some linux distros, see https://github.com/microsoft/DirectXShaderCompiler/releases for latest release and install if needed).
 All other dependencies (googletest, imgui, SDL, spdlog, SPIRV-Reflect, vma) are submodules and will be compiled from source.
 (Don't forget to clone recursively for the submodules: git clone --recurse-submodules <repository-url>, or after cloning do: git submodule update --init --recursive)
+Note that on some linux distros further dependencies for SDL might be needed. In this case cmake will fail when trying to generate the sdl dependent targets.
+Simply follow the instructions of the error message and/or ask an LLM of your choice.
 
 
 

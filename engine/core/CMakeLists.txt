@@ -16,6 +16,10 @@ get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)               # libs
 get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)     # resources
 get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)         # shaders
+
+if(TARGET ${TARGET_NAME})
+    return()
+endif()
 # ---------------------------------------------------
 
 
@@ -125,50 +129,22 @@ endif()
 
 # -------------- Link Custom Libraries --------------
 # EmberAssetLoader:
-if (NOT TARGET EmberAssetLoader)
-    add_subdirectory("${ENGINE_LIBS_DIR}/assetLoader" EmberAssetLoader)
-endif()
+add_subdirectory("${ENGINE_LIBS_DIR}/assetLoader" EmberAssetLoader)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberAssetLoader)
 
 # EmberLogger:
-if (NOT TARGET EmberLogger)
-    add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
-endif()
+add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberLogger)
 
 # EmberMath:
-if (NOT TARGET EmberMath)
-    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
-endif()
+add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberMath)
 
-# EmberProfiler:
-if (NOT TARGET EmberProfiler)
-    add_subdirectory("${ENGINE_LIBS_DIR}/profiler" EmberProfiler)
-endif()
-target_link_libraries(${TARGET_NAME} PUBLIC EmberProfiler)
-
 # EmberTaskSystem:
-if (NOT TARGET EmberTaskSystem)
-    add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
-endif()
+add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberTaskSystem)
 
 # Shaders:
-if (NOT TARGET EmberShaderCompiler)
-    add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
-endif()
+add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)
 add_dependencies(${TARGET_NAME} EmberShaderCompiler)
-# ---------------------------------------------------
-
-
-
-# ------------- Link External Libraries -------------
-#EnTT:
-set(ENTT_BUILD_TESTING OFF CACHE BOOL "" FORCE)
-set(ENTT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-if (NOT TARGET EnTT::EnTT)
-    add_subdirectory("${ENGINE_EXTERN_DIR}/EnTT" "${CMAKE_BINARY_DIR}/EnTT_build")
-endif()
-target_link_libraries(${TARGET_NAME} PUBLIC EnTT::EnTT)
 # ---------------------------------------------------

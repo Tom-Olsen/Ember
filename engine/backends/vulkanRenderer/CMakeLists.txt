@@ -17,6 +17,10 @@ get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs 
 get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)             # resources
 get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)                 # shaders
+
+if(TARGET ${TARGET_NAME})
+    return()
+endif()
 # ---------------------------------------------------
 
 
@@ -144,8 +148,6 @@ target_include_directories(${TARGET_NAME} PUBLIC
     ${ENGINE_INTERFACES_DIR}/gui
     ${ENGINE_INTERFACES_DIR}/renderer
     ${ENGINE_INTERFACES_DIR}/window)
-    
-#set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ---------------------------------------------------
 
 

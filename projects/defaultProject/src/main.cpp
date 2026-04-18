@@ -20,7 +20,7 @@ int main()
 	#endif
 
 	// Profiler:
-	EmberProfiler::Session& session = EmberProfiler::Session::Get();
+    emberTaskSystem::profiler::Session& session = emberTaskSystem::profiler::Session::Get();
 	session.Start("profiling", "profilingResults");
 	{
 		// Initialization:

@@ -3,17 +3,9 @@
 
 
 # ------------------- Project Setup ------------------
-# Minimum version requirement and project name:
-cmake_minimum_required(VERSION 3.30)
-project(SdlWindowBackend)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON) # needed to link static libraries into this dynamic library.
-
-# Static vs Shared library option:
-option(SDL_WINDOW_BACKEND_BUILD_SHARED "Build ${PROJECT_NAME} as a shared library" ON) # default = dynamic
-
-# C++ standard:
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Static (default) vs Shared library option:
+set(TARGET_NAME SdlWindowBackend)
+option(SDL_WINDOW_BACKEND_BUILD_SHARED "Build ${TARGET_NAME} as a shared library" ON)
 
 # Cache directories:
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)       # engine
@@ -22,15 +14,8 @@ get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)       
 get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)   # interfaces
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)               # libs
 
-# Output directory:
-if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
-endif()
-if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Library output directory" FORCE) # .so .dylib .dll
-endif()
-if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Runtime output directory" FORCE) # .exe
+if(TARGET ${TARGET_NAME})
+    return()
 endif()
 # ---------------------------------------------------
 
@@ -56,24 +41,19 @@ source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 
 
 # ----------------- Create Library ------------------
-if (SDL_WINDOW_BACKEND_BUILD_SHARED)
-    add_library(${PROJECT_NAME} SHARED
-        ${SOURCE_FILES}
-        ${COMMON_FILES}
-        ${GUI_INTERFACE_FILES}
-        ${RENDERER_INTERFACE_FILES}
-        ${WINDOW_INTERFACE_FILES})
-else()
-    add_library(${PROJECT_NAME} STATIC
-        ${SOURCE_FILES}
-        ${COMMON_FILES}
-        ${GUI_INTERFACE_FILES}
-        ${RENDERER_INTERFACE_FILES}
-        ${WINDOW_INTERFACE_FILES})
+set(LIB_TYPE STATIC)
+if(SDL_WINDOW_BACKEND_BUILD_SHARED)
+    set(LIB_TYPE SHARED)
 endif()
+add_library(${TARGET_NAME} ${LIB_TYPE}
+    ${SOURCE_FILES}
+    ${COMMON_FILES}
+    ${GUI_INTERFACE_FILES}
+    ${RENDERER_INTERFACE_FILES}
+    ${WINDOW_INTERFACE_FILES})
 
-
-target_include_directories(${PROJECT_NAME} PUBLIC
+# Source subdirectories:
+target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${ENGINE_COMMON_DIR}
     ${ENGINE_INTERFACES_DIR}/gui
@@ -85,9 +65,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 # ---------------------- Macros ---------------------
 if(SDL_WINDOW_BACKEND_BUILD_SHARED)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE SDL_WINDOW_BACKEND_EXPORTS)
+    target_compile_definitions(${TARGET_NAME} PRIVATE SDL_WINDOW_BACKEND_EXPORTS)
 else()
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SDL_WINDOW_BACKEND_STATIC)
+    target_compile_definitions(${TARGET_NAME} PUBLIC SDL_WINDOW_BACKEND_STATIC)
 endif()
 # ---------------------------------------------------
 
@@ -95,23 +75,16 @@ endif()
 
 # -------------- Link Custom Libraries --------------
 # EmberLogger:
-if (NOT TARGET EmberLogger)
-    set(EMBER_LOGGER_BUILD_SHARED ON CACHE BOOL "Build EmberLogger as shared lib.")
-    add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberLogger)
+add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberLogger)
 
 # EmberMath:
-if (NOT TARGET EmberMath)
-    add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberMath)
+add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberMath)
 
-# EmberProfiler:
-if (NOT TARGET EmberProfiler)
-    add_subdirectory("${ENGINE_LIBS_DIR}/profiler" EmberProfiler)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberProfiler)
+# EmberTaskSystem:
+add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberTaskSystem)
 # ---------------------------------------------------
 
 
@@ -123,10 +96,10 @@ if (NOT TARGET SDL3::SDL3-shared)
     set(SDL_SHARED ON CACHE BOOL "Build SDL3 as a shared library" FORCE)
     add_subdirectory("${ENGINE_EXTERN_DIR}/SDL" "${CMAKE_BINARY_DIR}/SDL_build")
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3-shared)
+target_link_libraries(${TARGET_NAME} PUBLIC SDL3::SDL3-shared)
 
 # Vulkan (dynamically linked):
 find_package(Vulkan REQUIRED)           # required to be installed
-target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
+target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${TARGET_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # ---------------------------------------------------

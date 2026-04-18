@@ -3,6 +3,15 @@
 
 
 # ------------------- Project Setup ------------------
+set(TARGET_NAME EmberShaderCompiler)
+
+# Cache directories:
+get_filename_component(COMPUTE_DIR "${CMAKE_CURRENT_LIST_DIR}/src/compute" ABSOLUTE)                    # compute shaders  (.comp.hlsl)
+get_filename_component(FRAGMENT_DIR "${CMAKE_CURRENT_LIST_DIR}/src/fragment" ABSOLUTE)                  # fragment shaders (.frag.hlsl)
+get_filename_component(INCLUDES_DIR "${CMAKE_CURRENT_LIST_DIR}/src/includes" ABSOLUTE)                  # shader includes  (.hlsli)
+get_filename_component(INCLUDES_CPP_HLSL_DIR "${CMAKE_CURRENT_LIST_DIR}/src/includesCppHlsl" ABSOLUTE)  # shader+cpp includes  (.h)
+get_filename_component(VERTEX_DIR "${CMAKE_CURRENT_LIST_DIR}/src/vertex" ABSOLUTE)                      # vertex includes  (.vert.hlsl)
+
 # Set vulkan sdk path:
 if(NOT DEFINED ENV{VULKAN_SDK})
     message(FATAL_ERROR "VULKAN_SDK environment variable not set. Please set it before building.")
@@ -15,22 +24,26 @@ if(WIN32)
 else()
     find_program(DXC_PATH dxc REQUIRED)
 endif()
+
+if(TARGET ${TARGET_NAME})
+    return()
+endif()
 # ---------------------------------------------------
 
 
 
 # ------------------- File Lists --------------------
 # Gather shader source files and includes from all subdirectories:
-file(GLOB COMPUTE_SHADERS "src/compute/*.*")
-    file(GLOB BITONIC_SORT_FLOAT "src/compute/bitonicSortFloat/*.*")
-    file(GLOB BITONIC_SORT_FLOAT2 "src/compute/bitonicSortFloat2/*.*")
-    file(GLOB BITONIC_SORT_INT "src/compute/bitonicSortInt/*.*")
-    file(GLOB BITONIC_SORT_UINT "src/compute/bitonicSortUint/*.*")
-    file(GLOB PERMUTATION "src/compute/permutation/*.*")
-file(GLOB FRAGMENT_SHADERS "src/fragment/*.*")
-file(GLOB SHADER_INCLUDES "src/includes/*.*")
-file(GLOB CPP_HLSL_INCLUDES "src/includesCppHlsl/*.*")
-file(GLOB VERTEX_SHADERS "src/vertex/*.*")
+file(GLOB COMPUTE_SHADERS "${COMPUTE_DIR}/*.*")
+    file(GLOB BITONIC_SORT_FLOAT "${COMPUTE_DIR}/bitonicSortFloat/*.*")
+    file(GLOB BITONIC_SORT_FLOAT2 "${COMPUTE_DIR}/bitonicSortFloat2/*.*")
+    file(GLOB BITONIC_SORT_INT "${COMPUTE_DIR}/bitonicSortInt/*.*")
+    file(GLOB BITONIC_SORT_UINT "${COMPUTE_DIR}/bitonicSortUint/*.*")
+    file(GLOB PERMUTATION "${COMPUTE_DIR}/permutation/*.*")
+file(GLOB FRAGMENT_SHADERS "${FRAGMENT_DIR}/*.*")
+file(GLOB SHADER_INCLUDES "${INCLUDES_DIR}/*.*")
+file(GLOB CPP_HLSL_INCLUDES "${INCLUDES_CPP_HLSL_DIR}/*.*")
+file(GLOB VERTEX_SHADERS "${VERTEX_DIR}/*.*")
 
 # Combine shader source files:
 file(GLOB SHADER_SOURCES 
@@ -95,7 +108,7 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
 endforeach()
 
 # Shader compile target:
-add_custom_target(EmberShaderCompiler ALL DEPENDS ${SPIRV_OUTPUTS})
+add_custom_target(${TARGET_NAME} ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # Shader sources added as dummy targets to make them show up in the IDE:
 add_custom_target(EmberShaders SOURCES

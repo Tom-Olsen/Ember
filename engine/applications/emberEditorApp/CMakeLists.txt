@@ -3,13 +3,8 @@
 
 
 # ------------------- Project Setup ------------------
-# Minimum version requirement and project name:
-cmake_minimum_required(VERSION 3.30)
-project(EmberEditorApp)
-
-# C++ standard:
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(TARGET_NAME EmberEditorApp)
+set(PROJECT_TYPE STATIC)    # Choose SHARED (.dll/.so) or STATIC (.lib/.a) library (currently only static supported):
 
 # Cache directories:
 get_filename_component(ENGINE_APPLICATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)    # application
@@ -18,15 +13,8 @@ get_filename_component(ENGINE_BACKENDS_DIR "${ENGINE_DIR}/backends" ABSOLUTE)   
 get_filename_component(ENGINE_CORE_DIR "${ENGINE_DIR}/core" ABSOLUTE)                   # core
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                   # libs
 
-# Output directory:
-if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
-endif()
-if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Library output directory" FORCE) # .so .dylib .dll
-endif()
-if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Runtime output directory" FORCE) # .exe
+if(TARGET ${TARGET_NAME})
+    return()
 endif()
 # ---------------------------------------------------
 
@@ -43,12 +31,12 @@ source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
  
  
 # ----------------- Create Library ------------------
-add_library(${PROJECT_NAME} STATIC
+add_library(${TARGET_NAME} STATIC
     ${SOURCE_FILES}
     ${EDITOR_WINDOWS_FILES})
  
 # Source subdirectories:
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${TARGET_NAME} PUBLIC
     ${ENGINE_APPLICATIONS_DIR}/src
     ${ENGINE_APPLICATIONS_DIR}/src/editorWindows)
 # ---------------------------------------------------
@@ -56,43 +44,33 @@ target_include_directories(${PROJECT_NAME} PUBLIC
  
  
 # ---------------------- Macros ---------------------
-target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_APPLICATIONS_DIR="${ENGINE_APPLICATIONS_DIR}")
+target_compile_definitions(${TARGET_NAME} PUBLIC ENGINE_APPLICATIONS_DIR="${ENGINE_APPLICATIONS_DIR}")
 # ---------------------------------------------------
 
 
 
 # -------------- Link Custom Libraries --------------
 # EmberCore:
-if (NOT TARGET EmberCore)
-    add_subdirectory("${ENGINE_CORE_DIR}" EmberCore)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberCore)
+add_subdirectory("${ENGINE_CORE_DIR}" EmberCore)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberCore)
 
 # EmberEntityComponentSystem:
-if (NOT TARGET EmberEntityComponentSystem)
-    add_subdirectory("${ENGINE_LIBS_DIR}/entityComponentSystem" EmberEntityComponentSystem)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberEntityComponentSystem)
+add_subdirectory("${ENGINE_LIBS_DIR}/entityComponentSystem" EmberEntityComponentSystem)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberEntityComponentSystem)
 # ---------------------------------------------------
 
 
 
 # ------------------ Link Backends ------------------
 # Vulkan Renderer:
-if (NOT TARGET VulkanRendererBackend)
-    add_subdirectory("${ENGINE_BACKENDS_DIR}/vulkanRenderer" VulkanRendererBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC VulkanRendererBackend)
+add_subdirectory("${ENGINE_BACKENDS_DIR}/vulkanRenderer" VulkanRendererBackend)
+target_link_libraries(${TARGET_NAME} PUBLIC VulkanRendererBackend)
 
 # SDL Window:
-if (NOT TARGET SdlWindowBackend)
-    add_subdirectory("${ENGINE_BACKENDS_DIR}/sdlWindow" SdlWindowBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC SdlWindowBackend)
+add_subdirectory("${ENGINE_BACKENDS_DIR}/sdlWindow" SdlWindowBackend)
+target_link_libraries(${TARGET_NAME} PUBLIC SdlWindowBackend)
 
 # ImGui SDL Vulkan:
-if (NOT TARGET ImGuiSdlVulkanBackend)
-    add_subdirectory("${ENGINE_BACKENDS_DIR}/imGuiSdlVulkan" ImGuiSdlVulkanBackend)
-endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC ImGuiSdlVulkanBackend)
+add_subdirectory("${ENGINE_BACKENDS_DIR}/imGuiSdlVulkan" ImGuiSdlVulkanBackend)
+target_link_libraries(${TARGET_NAME} PUBLIC ImGuiSdlVulkanBackend)
 # ---------------------------------------------------
