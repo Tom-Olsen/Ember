@@ -13,7 +13,7 @@
 
 // vulkanRendererBackend::ToDo:
 // -vulkanInstance: implement checks to ensure that all requested instanceExtensions are available and throw warnings accordingly.
-// -hide static members in Context struct and only make them accessable via Get/Set methods.
+// -hide static members in Context struct and only make them accessible via Get/Set methods.
 // -allow for the three depthBias values to be set via Set.
 // -allow renderWidth/renderHeight to change during runtime.
 // -ShaderPropertiesPool/StagingBufferPool: remove ShrinkToFit? some other mechanism to handle unbound growth?
@@ -23,7 +23,7 @@
 
 
 
-// Forward decleration:
+// Forward declaration:
 namespace emberBackendInterface
 {
 	class IDearImGuiInstanceExtensionsLoader;
@@ -63,7 +63,7 @@ typedef struct VkSwapchainKHR_T* VkSwapchainKHR;
 
 namespace vulkanRendererBackend
 {
-	// Forward decleration:
+	// Forward declaration:
 	class Instance;
 	class PhysicalDevice;
 	class Surface;
@@ -86,7 +86,7 @@ namespace vulkanRendererBackend
 	/// - MemoryAllocator:		VmaAllocator for flexible memory allocation pools. <para/>
 	/// - AllocationTracker:	tracks vmaBuffer and vmaImage creation and destruction. <para/>
 	/// - DescriptorPool:		VkDescriptorPool settings. <para/>
-	/// - Swapchain:			VkSwapchainKHR, spwapchain images, image views, and recreation. <para/>
+	/// - Swapchain:			VkSwapchainKHR, swapchain images, image views, and recreation. <para/>
 	/// - framesInFlight:		Number of frames in flight for synchronization. <para/>
 	/// - frameIndex:			Current frame index for synchronization. <para/>
 	/// - msaaSamples:			Msaa level, clamped to the maximum supported by the physical device. <para/>
