@@ -49,18 +49,30 @@ namespace emberEngine
 
 
 
+	// Setters:
+	void Material::SetRenderQueue(uint32_t renderQueue)
+	{
+		m_pIMaterial->SetRenderQueue(renderQueue);
+	}
+	void Material::SetRenderMode(emberCommon::RenderMode renderMode)
+	{
+		m_pIMaterial->SetRenderMode(renderMode);
+	}
+
+
+
 	// Getters:
 	const std::string& Material::GetName() const
 	{
 		return m_pIMaterial->GetName();
 	}
-	emberCommon::MaterialType Material::GetType() const
-	{
-		return m_pIMaterial->GetType();
-	}
 	uint32_t Material::GetRenderQueue() const
 	{
 		return m_pIMaterial->GetRenderQueue();
+	}
+	emberCommon::RenderMode Material::GetRenderMode() const
+	{
+		return m_pIMaterial->GetRenderMode();
 	}
 	bool Material::IsValid() const
 	{

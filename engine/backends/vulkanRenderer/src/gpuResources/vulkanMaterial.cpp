@@ -30,11 +30,11 @@ namespace vulkanRendererBackend
 
 	// Public methods:
 	// Factories/Destructor:
-	Material Material::CreateForward(const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreateForward(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		Material material = Material(name);
+		material.m_renderMode = renderMode;
 		material.m_renderQueue = renderQueue;
-		material.m_type = emberCommon::MaterialType::forward;
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -94,7 +94,7 @@ namespace vulkanRendererBackend
 	{
 		Material material = Material(name);
 		material.m_renderQueue = emberCommon::RenderQueue::shadow;
-		material.m_type = emberCommon::MaterialType::shadow;
+		material.m_renderMode = emberCommon::RenderMode::opaque;
 
 		// Load vertex shader:
 		std::filesystem::path directoryPath = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();
@@ -131,7 +131,7 @@ namespace vulkanRendererBackend
 		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
 		{
 			material.m_pPipelines.emplace_back(
-                    std::make_unique<ShadowPipeline>(
+                std::make_unique<ShadowPipeline>(
 				material.m_name,
 				material.m_vkPipelineLayout,
 				shadowMapResolution,
@@ -148,7 +148,7 @@ namespace vulkanRendererBackend
 	{
 		Material material = Material(name);
 		material.m_renderQueue = 0;
-		material.m_type = emberCommon::MaterialType::present;
+		material.m_renderMode = emberCommon::RenderMode::opaque;
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -212,6 +212,21 @@ namespace vulkanRendererBackend
 	Material::Material(Material&& other) noexcept = default;
 	Material& Material::operator=(Material&& other) noexcept = default;
 
+    
+
+	// Setters:
+	void Material::SetRenderQueue(uint32_t renderQueue)
+	{
+		m_renderQueue = renderQueue;
+	}
+	void Material::SetRenderMode(emberCommon::RenderMode renderMode)
+	{
+        // Noop for shadow and present materials. They only support opaque mode and thus have m_pPipelines.size() = emberCommon::VertexMemoryLayout::count:
+		if (m_pPipelines.size() == static_cast<size_t>(emberCommon::VertexMemoryLayout::count))
+			return;
+		m_renderMode = renderMode;
+	}
+
 
 
 	// Getters:
@@ -219,18 +234,27 @@ namespace vulkanRendererBackend
 	{
 		return m_name;
 	}
-	emberCommon::MaterialType Material::GetType() const
-	{
-		return m_type;
-	}
 	uint32_t Material::GetRenderQueue() const
 	{
 		return m_renderQueue;
 	}
+	emberCommon::RenderMode Material::GetRenderMode() const
+	{
+		return m_renderMode;
+	}
 	const Pipeline* Material::GetPipeline(const Mesh* pMesh) const
 	{
-		Pipeline* pPipeline = m_pPipelines[static_cast<size_t>(pMesh->GetVertexMemoryLayout())].get();
-		assert(pPipeline && "Material::GetPipeline: Pipeline not supported for this vertex layout");
+		const size_t vertexLayoutIndex = static_cast<size_t>(pMesh->GetVertexMemoryLayout());
+		size_t pipelineIndex = vertexLayoutIndex;
+		if (m_pPipelines.size() == static_cast<size_t>(emberCommon::VertexMemoryLayout::count))
+			pipelineIndex = vertexLayoutIndex;
+		else
+		{
+			const size_t renderModeCount = static_cast<size_t>(emberCommon::RenderMode::count);
+			pipelineIndex = static_cast<size_t>(m_renderMode) + vertexLayoutIndex * renderModeCount;
+		}
+		Pipeline* pPipeline = m_pPipelines[pipelineIndex].get();
+		assert(pPipeline && "Material::GetPipeline(...): Pipeline not supported for this vertex layout");
 		return pPipeline;
 	}
 

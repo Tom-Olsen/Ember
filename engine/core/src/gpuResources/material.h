@@ -1,5 +1,6 @@
 #pragma once
 #include "commonMaterialType.h"
+#include "commonPipelineState.h"
 #include "commonRenderQueue.h"
 #include "emberCoreExport.h"
 #include <filesystem>
@@ -48,10 +49,14 @@ namespace emberEngine
 		Material(Material&& other) = default;
 		Material& operator=(Material&& other) = default;
 
+		// Setters:
+		void SetRenderQueue(uint32_t renderQueue);
+		void SetRenderMode(emberCommon::RenderMode renderMode);
+
 		// Getters:
 		const std::string& GetName() const;
-		emberCommon::MaterialType GetType() const;
 		uint32_t GetRenderQueue() const;
+		emberCommon::RenderMode GetRenderMode() const;
 		bool IsValid() const;
 
 		// Debugging:

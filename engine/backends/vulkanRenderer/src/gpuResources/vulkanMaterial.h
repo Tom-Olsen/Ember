@@ -1,6 +1,7 @@
 #pragma once
 #include "iMaterial.h"
 #include "commonMaterialType.h"
+#include "commonPipelineState.h"
 #include "commonRenderQueue.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
@@ -33,7 +34,7 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Material : public Shader, public emberBackendInterface::IMaterial
 	{
 	private: // Members:
-		emberCommon::MaterialType m_type;
+        emberCommon::RenderMode m_renderMode;
 		uint32_t m_renderQueue;	// shadow=0, opaque=1000, transparent=2000, skybox=3000
 
 	private: // Methods:
@@ -42,7 +43,7 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Factories/Destructor:
-		static Material CreateForward(const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static Material CreateForward(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static Material CreateShadow(const std::string& name, uint32_t shadowMapResolution);
 		static Material CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		~Material();
@@ -55,10 +56,14 @@ namespace vulkanRendererBackend
 		Material(Material&& other) noexcept;
 		Material& operator=(Material&& other) noexcept;
 
+		// Setters:
+		void SetRenderQueue(uint32_t renderQueue) override;
+		void SetRenderMode(emberCommon::RenderMode renderMode) override;
+
 		// Getters:
 		const std::string& GetName() const override;
-		emberCommon::MaterialType GetType() const override;
 		uint32_t GetRenderQueue() const override;
+		emberCommon::RenderMode GetRenderMode() const override;
 		const Pipeline* GetPipeline(const Mesh* pMesh) const;
 
 		// Debugging:
