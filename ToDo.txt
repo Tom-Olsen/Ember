@@ -1,0 +1,43 @@
+Promts:
+
+Fix QueueMeshForUpdate() so it only adds a mesh once per intended flight frame and does not search or insert across all pending-frame vectors.
+
+Change debug naming in vulkanSingleTimeCommand.cpp to label pools as pools and fences as fences consistently.
+
+Add logging or error reporting for AddDirectionalLight() and AddPositionalLight() when max light capacity is reached instead of silently returning.
+
+Make RecordResourceUpdateCommands() robust by validating command buffer begin/record success before clearing pending mesh update lists.
+
+Replace runtime string lookups in descriptor binding resolution with a cached binding-index lookup keyed by binding ID.
+
+Change vulkanPoolManager to avoid implicit pool creation with operator[]; use find() and explicit creation only when needed.
+
+Add change detection for light data updates so SceneDescriptorSetLayout::SetLightData() is only called when lights actually change.
+
+Review draw-call sorting and reduce per-frame overhead by caching sort keys or only resorting when relevant state changes.
+
+Add thread safety or synchronization around m_pendingMeshUpdates to prevent data races if mesh updates are queued from multiple threads.
+
+Re-enable texture batch uploading with correct queue synchronization and barriers between transfer and graphics queues.
+
+Ensure descriptor set destruction in VulkanDescriptorSetBinding is safe even when Context lifetime ends before garbage collection completes.
+
+Introduce a bounded cleanup policy for vulkanStagingBufferPool so staging buffer storage does not grow without limit.
+
+Add shutdown validation to vulkanGarbageCollector.Clear() so in-flight frame resources cannot be cleared unsafely.
+
+Implement Vulkan extension availability checks before requesting instance/device extensions in vulkanContext.cpp.
+
+Handle VK_SUBOPTIMAL_KHR separately from VK_ERROR_OUT_OF_DATE_KHR so swapchain rebuild is only performed when truly necessary.
+
+Add explicit validation in PoolManager when a null or invalid Shader pointer is passed to CheckOutDescriptorSetBinding.
+
+Fix typos and misleading comments in the Vulkan backend, including "Destroyy" and "enoguh".
+
+Standardize naming across the backend to avoid inconsistent prefixes like m_pLogicalDevice vs m_swapchains and mixed getter return styles.
+
+Replace manual CheckOut/Return resource management patterns with RAII wrappers where possible to reduce leak and misuse risk.
+
+Reduce static shared state usage in Context, PoolManager, GarbageCollector, and RenderPassManager to improve encapsulation and thread safety.
+
+Audit raw VkHandle passthrough APIs in vulkanRenderer.h and reduce external coupling by exposing higher-level abstractions instead.
