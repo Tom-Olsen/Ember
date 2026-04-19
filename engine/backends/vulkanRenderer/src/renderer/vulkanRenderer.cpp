@@ -959,7 +959,7 @@ namespace vulkanRendererBackend
 						for (uint32_t shadowMapIndex = 0; shadowMapIndex < shadowLightCount; shadowMapIndex++)
 						{
 							// Push constant:
-							DefaultPushConstant pushConstant(shadowMapIndex, drawCall->instanceCount, m_time, m_deltaTime);
+							DefaultPushConstant pushConstant(shadowMapIndex, drawCall->instanceCount, false, m_time, m_deltaTime);
 							vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 							// Dispatch:
@@ -1053,7 +1053,7 @@ namespace vulkanRendererBackend
 					}
 
 					// Push constant:
-					DefaultPushConstant pushConstant(0, drawCall->instanceCount, m_time, m_deltaTime);
+					DefaultPushConstant pushConstant(0, drawCall->instanceCount, drawCall->receiveShadows, m_time, m_deltaTime);
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Bind per draw call descriptor set:

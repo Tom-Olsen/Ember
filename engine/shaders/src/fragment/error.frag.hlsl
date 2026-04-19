@@ -4,7 +4,7 @@
 
 struct FragmentInput
 {
-    float4 clipPosition : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float4 clipPosition : SV_POSITION;  // position in clip space: x,y in [-1,1] z in [0,1]
 };
 
 

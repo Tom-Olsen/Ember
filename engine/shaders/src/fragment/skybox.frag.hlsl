@@ -5,7 +5,7 @@ TextureCube colorMap : register(t100, SHADER_SET);
 
 struct FragmentInput
 {
-    float4 position : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float4 position : SV_POSITION;  // position in clip space: x,y in [-1,1] z in [0,1]
     float3 localPos : TEXCOORD1;    // position in local space
 };
 

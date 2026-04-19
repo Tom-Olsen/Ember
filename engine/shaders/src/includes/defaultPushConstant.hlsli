@@ -5,8 +5,9 @@
 
 struct DefaultPushConstant
 {
-    uint targetIndex;   // renderTarget, shadowMap, cubeFace, etc. depending on context.
-    uint instanceCount; // 0 implies no instanced rendering.
+    uint targetIndex;       // renderTarget, shadowMap, cubeFace, etc. depending on context.
+    uint instanceCount;     // 0 implies no instanced rendering.
+    uint receiveShadows;    // 0 = no, other = yes
     float time;
     float deltaTime;
 };
