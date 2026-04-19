@@ -49,6 +49,7 @@
 #include "vulkanSwapchain.h"
 #include "vulkanVertexBuffer.h"
 #include <assert.h>
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 
@@ -85,7 +86,7 @@ namespace vulkanRendererBackend
 		m_positionalLights.resize(m_maxPositionalLights);
 
 		// Mesh updates:
-		m_pendingMeshUpdates.resize(Context::GetFramesInFlight()); // prepare one pending mesh update vector per frame in flight.
+		m_pendingMeshUpdates.resize(Context::GetFramesInFlight()); // Prepare one pending mesh update vector per frame in flight.
 
 		// Debug naming:
 		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
@@ -96,10 +97,10 @@ namespace vulkanRendererBackend
 				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "CommandPoolPrimary_" + name);
 				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandBuffer(), "CommandBufferPrimary_" + name);
 				for (int threadIndex = 0; threadIndex < emberTaskSystem::ParallelThreadPool::GetCoreCount(); threadIndex++)
-                {
+				{
 					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPoolSecondary" + std::to_string(threadIndex) + "_" + name);
 					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBufferSecondary_" + std::to_string(threadIndex) + "_" + name);
-                }
+				}
 			}
 
 		// Synchronization objects:
@@ -652,23 +653,36 @@ namespace vulkanRendererBackend
 		for (auto& drawCall : m_dynamicDrawCalls)
 			m_sortedDrawCallPointers.push_back(&drawCall);
 
-		// Sort by renderQueue first, then interleaved before separate:
-		std::sort(m_sortedDrawCallPointers.begin(), m_sortedDrawCallPointers.end(), [](DrawCall* a, DrawCall* b)
+		// Sort by renderQueue first, then handle transparent draw order, then group by vertex layout.
+		std::sort(m_sortedDrawCallPointers.begin(), m_sortedDrawCallPointers.end(), [this](DrawCall* drawCallA, DrawCall* drawCallB)
 		{
 			// RenderQueue:
-			int renderQueueA = static_cast<int>(a->pMaterial->GetRenderQueue());
-			int renderQueueB = static_cast<int>(b->pMaterial->GetRenderQueue());
+			int renderQueueA = static_cast<int>(drawCallA->pMaterial->GetRenderQueue());
+			int renderQueueB = static_cast<int>(drawCallB->pMaterial->GetRenderQueue());
 			if (renderQueueA != renderQueueB)
 				return renderQueueA < renderQueueB;
 
+			// Transparent materials back-to-front ordering:
+			const bool transparentA = drawCallA->pMaterial->GetRenderMode() == emberCommon::RenderMode::transparent;
+			const bool transparentB = drawCallB->pMaterial->GetRenderMode() == emberCommon::RenderMode::transparent;
+			if (transparentA && transparentB)
+			{
+			    const Float3 drawPositionA = Float3(drawCallA->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
+			    const Float3 drawPositionB = Float3(drawCallB->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
+				const float distanceA = Float3::DistanceSq(drawPositionA, m_activeCamera.position);
+				const float distanceB = Float3::DistanceSq(drawPositionB, m_activeCamera.position);
+				if (distanceA != distanceB)
+					return distanceA > distanceB;
+			}
+
 			// Interleaved(0) before separate(1):
-			auto layoutA = a->pMesh->GetVertexMemoryLayout();
-			auto layoutB = b->pMesh->GetVertexMemoryLayout();
+			auto layoutA = drawCallA->pMesh->GetVertexMemoryLayout();
+			auto layoutB = drawCallB->pMesh->GetVertexMemoryLayout();
 			if (layoutA != layoutB)
 				return layoutA < layoutB;
 
 			// Tie-breaker by pointer:
-			return a < b;
+			return drawCallA < drawCallB;
 		});
 	}
 	void Renderer::UpdateShaderData()
@@ -777,12 +791,12 @@ namespace vulkanRendererBackend
 		// Record pre render compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		std::vector<ComputeCall*>& computeCalls = m_pCompute->GetPreRenderCompute()->GetComputeCallPointers();
-		if (computeCalls.size() > 0)
-		{
-			// Pipeline:
-			VkPipeline pipeline = VK_NULL_HANDLE;
-			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-			bool staticDescriptorSetsBound = false;
+			if (computeCalls.size() > 0)
+			{
+				// Pipeline:
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				bool staticDescriptorSetsBound = false;
 
 			for (ComputeCall* computeCall : computeCalls)
 			{
@@ -889,11 +903,11 @@ namespace vulkanRendererBackend
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			if (m_sortedDrawCallPointers.size() > 0)
 			{
-				// Pipeline:
-				VkPipeline pipeline = VK_NULL_HANDLE;
-				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-				const Material* pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
-			    bool staticDescriptorSetsBound = false;
+					// Pipeline:
+					VkPipeline pipeline = VK_NULL_HANDLE;
+					VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+					const Material* pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
+					bool staticDescriptorSetsBound = false;
 
 				// Lights:
 				const uint32_t shadowLightCount = m_directionalLightsCount + m_positionalLightsCount;
@@ -908,31 +922,31 @@ namespace vulkanRendererBackend
 						if (drawCall->castShadows == false)
 							continue;
 
-					    // Pipeline swap:
-						VkPipeline newPipeline = pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
-					    if (pipeline != newPipeline)
-					    {
-				            pipeline = newPipeline;
-					    	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-                        
-					    	// Pipeline layout swap:
-                            VkPipelineLayout newPipelineLayout = pShadowMaterial->GetVkPipelineLayout();
-					    	if (pipelineLayout != newPipelineLayout)
-					    	{
-					    		pipelineLayout = newPipelineLayout;
+							// Pipeline swap:
+							VkPipeline newPipeline = pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
+							if (pipeline != newPipeline)
+							{
+								pipeline = newPipeline;
+								vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-					    		// Bind static descriptor sets:
-                                if (!staticDescriptorSetsBound)
-                                {
-                                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-                                    staticDescriptorSetsBound = true;
-                                }
+								// Pipeline layout swap:
+								VkPipelineLayout newPipelineLayout = pShadowMaterial->GetVkPipelineLayout();
+								if (pipelineLayout != newPipelineLayout)
+								{
+									pipelineLayout = newPipelineLayout;
 
-					    		// Bind per shader descriptor set:
-					    		if (VkDescriptorSet vkDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-					    			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
-					    	}
-					    }
+									// Bind static descriptor sets:
+									if (!staticDescriptorSetsBound)
+									{
+										vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+										staticDescriptorSetsBound = true;
+									}
+
+									// Bind per shader descriptor set:
+									if (VkDescriptorSet vkDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+										vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+								}
+							}
 
 						// Bind per draw call descriptor set:
 						if (VkDescriptorSet vkDescriptorSet = drawCall->pShadowDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1000,12 +1014,12 @@ namespace vulkanRendererBackend
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-			if (m_sortedDrawCallPointers.size() > 0)
-			{
-				// Pipeline:
-				VkPipeline pipeline = VK_NULL_HANDLE;
-				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-                bool staticDescriptorSetsBound = false;
+				if (m_sortedDrawCallPointers.size() > 0)
+				{
+					// Pipeline:
+					VkPipeline pipeline = VK_NULL_HANDLE;
+					VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+					bool staticDescriptorSetsBound = false;
 
 				// Draw calls:
 				for (DrawCall* drawCall : m_sortedDrawCallPointers)
@@ -1019,18 +1033,18 @@ namespace vulkanRendererBackend
 						pipeline = newPipeline;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-						// Pipeline layout swap:
-                        VkPipelineLayout newPipelineLayout = drawCall->pMaterial->GetVkPipelineLayout();
-						if (pipelineLayout != newPipelineLayout)
-						{
-							pipelineLayout = newPipelineLayout;
+							// Pipeline layout swap:
+							VkPipelineLayout newPipelineLayout = drawCall->pMaterial->GetVkPipelineLayout();
+							if (pipelineLayout != newPipelineLayout)
+							{
+								pipelineLayout = newPipelineLayout;
 
-							// Bind static descriptor sets:
-                            if (!staticDescriptorSetsBound)
-                            {
-                                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-                                staticDescriptorSetsBound = true;
-                            }
+								// Bind static descriptor sets:
+								if (!staticDescriptorSetsBound)
+								{
+									vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+									staticDescriptorSetsBound = true;
+								}
 
 							// Bind per shader descriptor set:
 							if (VkDescriptorSet vkDescriptorSet = drawCall->pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1173,12 +1187,12 @@ namespace vulkanRendererBackend
 		// Record post render compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		std::vector<ComputeCall*>& computeCalls = m_pCompute->GetPostRenderCompute()->GetComputeCallPointers();
-		if (computeCalls.size() > 0)
-		{
-			// Pipeline:
-			VkPipeline pipeline = VK_NULL_HANDLE;
-			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-            bool staticDescriptorSetsBound = false;
+			if (computeCalls.size() > 0)
+			{
+				// Pipeline:
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				bool staticDescriptorSetsBound = false;
 
 			for (ComputeCall* computeCall : computeCalls)
 			{
@@ -1190,14 +1204,14 @@ namespace vulkanRendererBackend
 				{
 					pipeline = newPipeline;
 					pipelineLayout = pComputeShader->GetVkPipelineLayout();
-					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 
-					// Bind static descriptor sets:
-                    if (!staticDescriptorSetsBound)
-                    {
-                        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-                        staticDescriptorSetsBound = true;
-                    }
+						// Bind static descriptor sets:
+						if (!staticDescriptorSetsBound)
+						{
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+							staticDescriptorSetsBound = true;
+						}
 
 					// Bind per shader descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
