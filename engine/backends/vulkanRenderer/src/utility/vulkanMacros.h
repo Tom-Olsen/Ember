@@ -26,7 +26,7 @@ if (val != VK_SUCCESS) { \
 
 // Naming macros:
 #ifdef VALIDATION_LAYERS_ACTIVE
-    #define NAME_VK_OBJECT(buffer, name) vulkanRendererBackend::Context::SetObjectName(buffer, name)
+    #define NAME_VK_OBJECT(object, name) vulkanRendererBackend::Context::SetObjectName(object, name)
 #else
-    #define NAME_VK_OBJECT(buffer, name) ((void)0)
+    #define NAME_VK_OBJECT(object, name) ((void)0)
 #endif

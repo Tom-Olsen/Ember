@@ -331,25 +331,25 @@ namespace emberEngine
 	}
 
 	// Gpu resource factories:
-	emberBackendInterface::IBuffer* Renderer::CreateBuffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage)
+	emberBackendInterface::IBuffer* Renderer::CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage)
 	{
-		return s_pIRenderer->CreateBuffer(count, elementSize, name, usage);
+		return s_pIRenderer->CreateBuffer(count, elementSize, usage);
 	}
 	//static emberBackendInterface::ITexture* Renderer::CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	//{
 	//
 	//}
-	emberBackendInterface::ITexture* Renderer::CreateTexture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* Renderer::CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
-		return s_pIRenderer->CreateTexture2d(name, width, height, format, usage, data);
+		return s_pIRenderer->CreateTexture2d(width, height, format, usage, data);
 	}
 	//static emberBackendInterface::ITexture* Renderer::CreateTexture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	//{
 	//
 	//}
-	emberBackendInterface::ITexture* Renderer::CreateTextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* Renderer::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
-		return s_pIRenderer->CreateTextureCube(name, width, height, format, usage, data);
+		return s_pIRenderer->CreateTextureCube(width, height, format, usage, data);
 	}
 	emberBackendInterface::IComputeShader* Renderer::CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv)
 	{

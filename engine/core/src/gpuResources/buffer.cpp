@@ -21,8 +21,10 @@ namespace emberEngine
 		m_pIBuffer = nullptr;
 	}
 	Buffer::Buffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage)
+        : m_name(name)
 	{
-		m_pIBuffer = std::unique_ptr<emberBackendInterface::IBuffer>(Renderer::CreateBuffer(count, elementSize, name, usage));
+		m_pIBuffer = std::unique_ptr<emberBackendInterface::IBuffer>(Renderer::CreateBuffer(count, elementSize, usage));
+        m_pIBuffer->SetDebugName(m_name);
 	}
 	Buffer::~Buffer()
 	{
@@ -40,7 +42,7 @@ namespace emberEngine
 	// Getters:
 	std::string Buffer::GetName() const
 	{
-		return m_pIBuffer->GetName();
+		return m_name;
 	}
 	uint64_t Buffer::GetSize() const
 	{

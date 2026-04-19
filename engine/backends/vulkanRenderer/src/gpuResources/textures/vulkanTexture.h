@@ -84,6 +84,9 @@ namespace vulkanRendererBackend
 		VmaImage* const GetVmaImage() const;
 		DescriptorType GetDescriptorType() const;
 
+        // Debugging:
+        void SetDebugName(const std::string& name) override;
+
 	protected: // Methods:
 		uint32_t GetChannelCount(Format format);
 		uint32_t BytesPerChannel(Format format);

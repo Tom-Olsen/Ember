@@ -27,5 +27,8 @@ namespace emberBackendInterface
 
         // Setters:
         virtual void SetData(void* data) = 0;
+
+        // Debugging:
+        virtual void SetDebugName(const std::string& name) = 0;
     };
 }

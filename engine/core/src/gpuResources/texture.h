@@ -24,6 +24,7 @@ namespace emberEngine
 
 	protected: // Members:
 		bool m_ownsITexture;
+        std::string m_name;
 		emberBackendInterface::ITexture* m_pITexture; // conditional ownership, depending on usecase.
 		emberBackendInterface::ITexture* GetInterfaceHandle();
 

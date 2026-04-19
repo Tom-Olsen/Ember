@@ -176,21 +176,20 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IDescriptorSetBinding* CreateDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial, uint32_t setIndex) override;
 
 		// Vulkan handle passthrough for API coupling:
-		void* GetVkInstance() override;
-		void* GetVkPhysicalDevice() override;
-		void* GetVkDevice() override;
-		void* GetPresentVkRenderPass() override;
-		void* GetVkDescriptorPool() override;
-		void* GetGraphicsVkQueue() override;
-		void* GetColorSampler() override;
-		uint32_t GetGraphicsVkQueueFamilyIndex() override;
-		uint32_t GetSwapchainImageCount() override;
-		uint32_t GetFramesInFlight() override;
+		void* GetVkInstance() const override;
+		void* GetVkPhysicalDevice() const override;
+		void* GetVkDevice() const override;
+		void* GetPresentVkRenderPass() const override;
+		void* GetVkDescriptorPool() const override;
+		void* GetGraphicsVkQueue() const override;
+		void* GetColorSampler() const override;
+		uint32_t GetGraphicsVkQueueFamilyIndex() const override;
+		uint32_t GetSwapchainImageCount() const override;
+		uint32_t GetFramesInFlight() const override;
 
 		// Backend only:
 		void QueueMeshForUpdate(Mesh* pMesh);
 		std::array<VkDescriptorSet, 3>& GetStaticDescriptorSets(uint32_t frameIndex);
-
 
 	private: // Methods:
 		// Reset render state:

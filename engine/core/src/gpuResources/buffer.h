@@ -22,6 +22,7 @@ namespace emberEngine
 		friend class ShaderProperties;
 
 	private: // Members:
+        std::string m_name;
 		std::unique_ptr<emberBackendInterface::IBuffer> m_pIBuffer;
 		emberBackendInterface::IBuffer* GetInterfaceHandle();
 

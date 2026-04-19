@@ -1,7 +1,8 @@
 #include "vulkanTexture.h"
 #include "vmaImage.h"
-#include "vulkanDeviceQueue.h"
 #include "vulkanConvertTextureFormat.h"
+#include "vulkanDeviceQueue.h"
+#include "vulkanMacros.h"
 #include <vulkan/vulkan.h>
 
 
@@ -134,6 +135,15 @@ namespace vulkanRendererBackend
 	{
 		return m_descriptorType;
 	}
+
+
+
+    // Debugging:
+    void Texture::SetDebugName(const std::string& name)
+    {
+        NAME_VK_OBJECT(m_pImage->GetVkImage(), name);
+        NAME_VK_OBJECT(m_pImage->GetVkImageView(), name);
+    }
 
 
 

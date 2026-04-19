@@ -18,11 +18,13 @@ namespace emberEngine
 	Texture::Texture()
 	{
 		m_ownsITexture = false;
+        m_name = "#unnamed";
 		m_pITexture = nullptr;
 	}
 	Texture::Texture(emberBackendInterface::ITexture* pITexture, bool ownsTexture)
 	{
 		m_ownsITexture = ownsTexture;
+        m_name = "#unnamed";
 		m_pITexture = pITexture;
 	}
 	Texture::~Texture()

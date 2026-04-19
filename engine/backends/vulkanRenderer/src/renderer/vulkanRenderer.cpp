@@ -501,43 +501,43 @@ namespace vulkanRendererBackend
 
 
 	// Vulkan handle passthrough for API coupling:
-	void* Renderer::GetVkInstance()
+	void* Renderer::GetVkInstance() const
 	{
 		return static_cast<void*>(Context::GetVkInstance());
 	}
-	void* Renderer::GetVkPhysicalDevice()
+	void* Renderer::GetVkPhysicalDevice() const
 	{
 		return static_cast<void*>(Context::GetVkPhysicalDevice());
 	}
-	void* Renderer::GetVkDevice()
+	void* Renderer::GetVkDevice() const
 	{
 		return static_cast<void*>(Context::GetVkDevice());
 	}
-	void* Renderer::GetPresentVkRenderPass()
+	void* Renderer::GetPresentVkRenderPass() const
 	{
 		return static_cast<void*>(RenderPassManager::GetPresentRenderPass()->GetVkRenderPass());
 	}
-	void* Renderer::GetVkDescriptorPool()
+	void* Renderer::GetVkDescriptorPool() const
 	{
 		return static_cast<void*>(Context::GetVkDescriptorPool());
 	}
-	void* Renderer::GetGraphicsVkQueue()
+	void* Renderer::GetGraphicsVkQueue() const
 	{
 		return static_cast<void*>(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
 	}
-	void* Renderer::GetColorSampler()
+	void* Renderer::GetColorSampler() const
 	{
 		return static_cast<void*>(DefaultGpuResources::GetColorSampler()->GetVkSampler());
 	}
-	uint32_t Renderer::GetGraphicsVkQueueFamilyIndex()
+	uint32_t Renderer::GetGraphicsVkQueueFamilyIndex() const
 	{
 		return Context::GetLogicalDevice()->GetGraphicsQueue().familyIndex;
 	}
-	uint32_t Renderer::GetSwapchainImageCount()
+	uint32_t Renderer::GetSwapchainImageCount() const
 	{
 		return Context::GetSwapchain()->GetImageCount();
 	}
-	uint32_t Renderer::GetFramesInFlight()
+	uint32_t Renderer::GetFramesInFlight() const
 	{
 		return Context::GetFramesInFlight();
 	}

@@ -77,15 +77,15 @@ namespace emberBackendInterface
         virtual IDescriptorSetBinding* CreateDescriptorSetBinding(IMaterial* pIMaterial, uint32_t setIndex) = 0;
 
         // Vulkan handle passthrough for API coupling:
-        virtual void* GetVkInstance() = 0;
-        virtual void* GetVkPhysicalDevice() = 0;
-        virtual void* GetVkDevice() = 0;
-        virtual void* GetPresentVkRenderPass() = 0;
-        virtual void* GetVkDescriptorPool() = 0;
-        virtual void* GetGraphicsVkQueue() = 0;
-        virtual void* GetColorSampler() = 0;
-        virtual uint32_t GetGraphicsVkQueueFamilyIndex() = 0;
-        virtual uint32_t GetSwapchainImageCount() = 0;
-        virtual uint32_t GetFramesInFlight() = 0;
+        virtual void* GetVkInstance() const = 0;
+        virtual void* GetVkPhysicalDevice() const = 0;
+        virtual void* GetVkDevice() const = 0;
+        virtual void* GetPresentVkRenderPass() const = 0;
+        virtual void* GetVkDescriptorPool() const = 0;
+        virtual void* GetGraphicsVkQueue() const = 0;
+        virtual void* GetColorSampler() const = 0;
+        virtual uint32_t GetGraphicsVkQueueFamilyIndex() const = 0;
+        virtual uint32_t GetSwapchainImageCount() const = 0;
+        virtual uint32_t GetFramesInFlight() const = 0;
     };
 }
