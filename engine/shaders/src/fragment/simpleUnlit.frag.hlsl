@@ -11,7 +11,7 @@ cbuffer SurfaceProperties : register(b2)
 
 struct FragmentInput
 {
-    float4 clipPosition : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float4 clipPosition : SV_POSITION;  // position in clip space: x,yâ‚¬[-1,1] zâ‚¬[0,1]
 };
 
 
