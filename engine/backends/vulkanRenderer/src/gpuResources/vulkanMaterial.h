@@ -1,6 +1,5 @@
 #pragma once
 #include "iMaterial.h"
-#include "commonMaterialType.h"
 #include "commonPipelineState.h"
 #include "commonRenderQueue.h"
 #include "vulkanRendererExport.h"

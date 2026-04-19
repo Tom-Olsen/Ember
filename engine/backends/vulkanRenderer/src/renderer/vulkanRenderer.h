@@ -2,7 +2,6 @@
 #include "iRenderer.h"
 #include "commonCamera.h"
 #include "commonLighting.h"
-#include "commonMaterialType.h"
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
