@@ -7,9 +7,8 @@ namespace emberCommon
 {
 	enum RenderQueue : int32_t // negative values allowed.
 	{
-		shadow = 0,
-		opaque = 1000,
-		skybox = 2000,
-		transparent = 3000
+		opaque = 0,
+		skybox = 1000,
+		transparent = 2000
 	};
 }

@@ -13,6 +13,7 @@
 #include "vulkanVertexBuffer.h"
 #include "vulkanVertexLayout.h"
 #include "vmaBuffer.h"
+#include <stdexcept>
 #include <vulkan/vulkan.h>
 
 
@@ -20,10 +21,32 @@
 namespace vulkanRendererBackend
 {
 	// Private methods:
-	// Constructors:
+	// Constructor:
 	Material::Material(const std::string& name) : Shader(name)
 	{
+		m_type = Type::forward;
+		m_renderMode = emberCommon::RenderMode::opaque;
+		m_renderQueue = emberCommon::RenderQueue::opaque;
+	}
 
+    // Pipeline indexing:
+	size_t Material::GetPipelineIndex(const Mesh* pMesh) const
+	{
+		const size_t vertexLayoutIndex = static_cast<size_t>(pMesh->GetVertexMemoryLayout());
+		switch (m_type)
+		{
+		case Type::forward:
+		{
+			const size_t renderModeCount = static_cast<size_t>(emberCommon::RenderMode::count);
+			return static_cast<size_t>(m_renderMode) + vertexLayoutIndex * renderModeCount;
+		}
+		case Type::shadow:
+			return vertexLayoutIndex;
+		case Type::present:
+			return vertexLayoutIndex;
+		default:
+			throw std::runtime_error("Material::GetPipelineIndex(...) failed. Unsupported material type.");
+		}
 	}
 
 
@@ -33,6 +56,7 @@ namespace vulkanRendererBackend
 	Material Material::CreateForward(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		Material material = Material(name);
+		material.m_type = Type::forward;
 		material.m_renderMode = renderMode;
 		material.m_renderQueue = renderQueue;
 
@@ -74,16 +98,15 @@ namespace vulkanRendererBackend
 		for (uint32_t j = 0; j < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); j++)
 			for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::RenderMode::count); i++)
 			{
-				uint32_t index = i + j * static_cast<uint32_t>(emberCommon::RenderMode::count);
 				material.m_pPipelines.emplace_back(
-                    std::make_unique<ForwardPipeline>(
-					material.m_name,
-					material.m_vkPipelineLayout,
-					static_cast<emberCommon::RenderMode>(i),
-					vertexCode, 
-					fragmentCode, 
-					*vertexBindingVectors[j], 
-					*vertexAttributeVectors[j]));
+					std::make_unique<ForwardPipeline>(
+						material.m_name,
+						material.m_vkPipelineLayout,
+						static_cast<emberCommon::RenderMode>(i),
+						vertexCode,
+						fragmentCode,
+						*vertexBindingVectors[j],
+						*vertexAttributeVectors[j]));
 			}
 
 		// Create shader descriptorSetBinding:
@@ -93,7 +116,8 @@ namespace vulkanRendererBackend
 	Material Material::CreateShadow(const std::string& name, uint32_t shadowMapResolution)
 	{
 		Material material = Material(name);
-		material.m_renderQueue = emberCommon::RenderQueue::shadow;
+		material.m_type = Type::shadow;
+		material.m_renderQueue = 0; // has no inpact on shadow materials.
 		material.m_renderMode = emberCommon::RenderMode::opaque;
 
 		// Load vertex shader:
@@ -131,13 +155,13 @@ namespace vulkanRendererBackend
 		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
 		{
 			material.m_pPipelines.emplace_back(
-                std::make_unique<ShadowPipeline>(
-				material.m_name,
-				material.m_vkPipelineLayout,
-				shadowMapResolution,
-				vertexCode,
-				*vertexBindingVectors[i],
-				*vertexAttributeVectors[i]));
+				std::make_unique<ShadowPipeline>(
+					material.m_name,
+					material.m_vkPipelineLayout,
+					shadowMapResolution,
+					vertexCode,
+					*vertexBindingVectors[i],
+					*vertexAttributeVectors[i]));
 		}
 
 		// Create shader descriptorSetBinding:
@@ -147,7 +171,8 @@ namespace vulkanRendererBackend
 	Material Material::CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		Material material = Material(name);
-		material.m_renderQueue = 0;
+		material.m_type = Type::present;
+		material.m_renderQueue = 0; // has no inpact on present materials.
 		material.m_renderMode = emberCommon::RenderMode::opaque;
 
 		// Load vertex shader:
@@ -188,13 +213,13 @@ namespace vulkanRendererBackend
 		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
 		{
 			material.m_pPipelines.emplace_back(
-                    std::make_unique<PresentPipeline>(
-				material.m_name,
-				material.m_vkPipelineLayout,
-				vertexCode,
-				fragmentCode,
-				*vertexBindingVectors[i],
-				*vertexAttributeVectors[i]));
+				std::make_unique<PresentPipeline>(
+					material.m_name,
+					material.m_vkPipelineLayout,
+					vertexCode,
+					fragmentCode,
+					*vertexBindingVectors[i],
+					*vertexAttributeVectors[i]));
 		}
 
 		// Create shader descriptorSetBinding:
@@ -212,8 +237,8 @@ namespace vulkanRendererBackend
 	Material::Material(Material&& other) noexcept = default;
 	Material& Material::operator=(Material&& other) noexcept = default;
 
-    
 
+    
 	// Setters:
 	void Material::SetRenderQueue(uint32_t renderQueue)
 	{
@@ -221,8 +246,8 @@ namespace vulkanRendererBackend
 	}
 	void Material::SetRenderMode(emberCommon::RenderMode renderMode)
 	{
-        // Noop for shadow and present materials. They only support opaque mode and thus have m_pPipelines.size() = emberCommon::VertexMemoryLayout::count:
-		if (m_pPipelines.size() == static_cast<size_t>(emberCommon::VertexMemoryLayout::count))
+		// No-op for shadow and present materials. They only support opaque mode.
+		if (m_type == Type::shadow || m_type == Type::present)
 			return;
 		m_renderMode = renderMode;
 	}
@@ -244,15 +269,7 @@ namespace vulkanRendererBackend
 	}
 	const Pipeline* Material::GetPipeline(const Mesh* pMesh) const
 	{
-		const size_t vertexLayoutIndex = static_cast<size_t>(pMesh->GetVertexMemoryLayout());
-		size_t pipelineIndex = vertexLayoutIndex;
-		if (m_pPipelines.size() == static_cast<size_t>(emberCommon::VertexMemoryLayout::count))
-			pipelineIndex = vertexLayoutIndex;
-		else
-		{
-			const size_t renderModeCount = static_cast<size_t>(emberCommon::RenderMode::count);
-			pipelineIndex = static_cast<size_t>(m_renderMode) + vertexLayoutIndex * renderModeCount;
-		}
+		const size_t pipelineIndex = GetPipelineIndex(pMesh);
 		Pipeline* pPipeline = m_pPipelines[pipelineIndex].get();
 		assert(pPipeline && "Material::GetPipeline(...): Pipeline not supported for this vertex layout");
 		return pPipeline;

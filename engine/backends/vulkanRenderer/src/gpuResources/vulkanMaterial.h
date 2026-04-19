@@ -4,6 +4,7 @@
 #include "commonRenderQueue.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -32,13 +33,25 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class VULKAN_RENDERER_API Material : public Shader, public emberBackendInterface::IMaterial
 	{
+	private: // Enums:
+		enum class Type : uint8_t
+		{
+			forward,
+			shadow,
+			present
+		};
+
 	private: // Members:
-        emberCommon::RenderMode m_renderMode;
-		uint32_t m_renderQueue;	// shadow=0, opaque=1000, transparent=2000, skybox=3000
+		Type m_type;
+		emberCommon::RenderMode m_renderMode;
+		uint32_t m_renderQueue; // opaque=0-999, transparent=1000-1999, skybox=2000-...
 
 	private: // Methods:
 		// Constructor:
 		Material(const std::string& name);
+
+        // Pipeline indexing:
+		size_t GetPipelineIndex(const Mesh* pMesh) const;
 
 	public: // Methods:
 		// Factories/Destructor:
