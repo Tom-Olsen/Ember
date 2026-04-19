@@ -32,7 +32,7 @@
 namespace vulkanRendererBackend
 {
 	// Public methods:
-	// Consructor/Destructor:
+	// Constructor/Destructor:
 	DescriptorSetBinding::DescriptorSetBinding(Shader* pShader, uint32_t setIndex)
 		: m_pShader(pShader), m_setIndex(setIndex)
 	{
@@ -78,7 +78,7 @@ namespace vulkanRendererBackend
 				else if (descriptorType == DescriptorTypes::storage_buffer)
 					InitBufferBinding(frameIndex, name, binding, static_cast<Buffer*>(DefaultGpuResources::GetDefaultStorageBuffer()), descriptorType);
 				else
-					throw std::runtime_error("DescriptorSetBinding::DescriptorSetBinding(Shader*) shader contains currently unsuported DescriptorType:" + DescriptorTypes::ToString(descriptorType) + "!");
+					throw std::runtime_error("DescriptorSetBinding::DescriptorSetBinding(Shader*) shader contains currently unsupported DescriptorType:" + DescriptorTypes::ToString(descriptorType) + "!");
 			}
 		}
 		InitStagingMaps();
@@ -120,7 +120,7 @@ namespace vulkanRendererBackend
 	// Setters:
 	void DescriptorSetBinding::SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture)
 	{
-		// If texture with 'name' doesnt exist, skip:
+		// If texture with 'name' doesn't exist, skip:
 		auto it = m_textureStagingMap.find(name);
 		if (it == m_textureStagingMap.end())
 			return;
@@ -128,7 +128,7 @@ namespace vulkanRendererBackend
 	}
 	void DescriptorSetBinding::SetBuffer(const std::string& name, emberBackendInterface::IBuffer* pBuffer)
 	{
-		// If buffer with 'name' doesnt exist, skip:
+		// If buffer with 'name' doesn't exist, skip:
 		auto it = m_bufferStagingMap.find(name);
 		if (it == m_bufferStagingMap.end())
 			return;
