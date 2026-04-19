@@ -49,6 +49,7 @@
 #include "vulkanSwapchain.h"
 #include "vulkanVertexBuffer.h"
 #include <assert.h>
+#include <stdexcept>
 #include <string>
 
 
@@ -160,6 +161,9 @@ namespace vulkanRendererBackend
 		if (!AcquireImage())
 			return;
 
+		if (!m_pCompute)
+			throw std::runtime_error("vulkanRendererBackend::Renderer::RenderFrame(...) failed. Compute backend is not linked.");
+
 		// We use linear color space throughout entire render process. So apply gamma correction in post processing as last step:
 		m_pCompute->GetPostRenderCompute()->RecordComputeShader(DefaultGpuResources::GetGammaCorrectionComputeShader());
 		SortDrawCallPointers();
@@ -168,7 +172,7 @@ namespace vulkanRendererBackend
 		// Record and submit current frame commands:
 		{
 			PROFILE_SCOPE("Record");
-			DEBUG_LOG_CRITICAL("Recording frame {}", m_frameIndex);
+			DEBUG_LOG_TRACE("Recording frame {}", m_frameIndex);
 
 			RecordResourceUpdateCommands();
 			SubmitResourceUpdateCommands();
@@ -284,7 +288,9 @@ namespace vulkanRendererBackend
 
 		// Setup draw call:
 		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
-		DrawMesh(pMesh, pMaterial, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pDescriptorSetBinding), localToWorldMatrix, receiveShadows, castShadows);
+		DescriptorSetBinding* pShadowDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()));
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), pDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), 0 };
+		m_dynamicDrawCalls.push_back(drawCall);
 		return pDescriptorSetBinding;
 	}
 
@@ -308,6 +314,11 @@ namespace vulkanRendererBackend
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawInstanced(...) failed. pMaterial is nullptr.");
 			return;
 		}
+		if (!pDescriptorSetBinding)
+		{
+			LOG_ERROR("vulkanRendererBackend::Renderer::DrawInstanced(...) failed. pDescriptorSetBinding is nullptr.");
+			return;
+		}
 
 		// Setup draw call:
 		pDescriptorSetBinding->SetBuffer("instanceBuffer", pInstanceBuffer);
@@ -318,6 +329,11 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{// for dynamic draw calls.
+		if (!pInstanceBuffer)
+		{
+			LOG_ERROR("vulkanRendererBackend::Renderer::DrawInstanced(...) failed. pInstanceBuffer is nullptr.");
+			return nullptr;
+		}
 		if (!pMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawInstanced(...) failed. pMesh is nullptr.");
@@ -330,7 +346,11 @@ namespace vulkanRendererBackend
 		}
 
 		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
-		DrawInstanced(instanceCount, pInstanceBuffer, pMesh, pMaterial, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pDescriptorSetBinding), localToWorldMatrix, receiveShadows, castShadows);
+		pDescriptorSetBinding->SetBuffer("instanceBuffer", pInstanceBuffer);
+		DescriptorSetBinding* pShadowDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()));
+		pShadowDescriptorSetBinding->SetBuffer("instanceBuffer", pInstanceBuffer);
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), pDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
+		m_dynamicDrawCalls.push_back(drawCall);
 		return pDescriptorSetBinding;
 	}
 
@@ -396,7 +416,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Functionallity forwarding:
+	// Functionality forwarding:
 	void Renderer::CollectGarbage()
 	{
 		GarbageCollector::CollectGarbage();
@@ -477,9 +497,9 @@ namespace vulkanRendererBackend
 	{
 		return new ComputeShader(name, computeSpv);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-        return new Material(Material::CreateForward(name, renderQueue, vertexSpv, fragmentSpv));
+        return new Material(Material::CreateForward(name, renderMode, renderQueue, vertexSpv, fragmentSpv));
 	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh()
 	{
@@ -762,9 +782,7 @@ namespace vulkanRendererBackend
 			// Pipeline:
 			VkPipeline pipeline = VK_NULL_HANDLE;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-
-			// Bind static descriptorSets:
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computeCalls[0]->pComputeShader->GetVkPipelineLayout(), 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+			bool staticDescriptorSetsBound = false;
 
 			for (ComputeCall* computeCall : computeCalls)
 			{
@@ -796,6 +814,13 @@ namespace vulkanRendererBackend
 						pipeline = newPipeline;
 						pipelineLayout = pComputeShader->GetVkPipelineLayout();
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+
+						// Bind static descriptor sets:
+						if (!staticDescriptorSetsBound)
+						{
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+							staticDescriptorSetsBound = true;
+						}
 
 						// Bind per shader descriptor set:
 						if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -867,15 +892,8 @@ namespace vulkanRendererBackend
 				// Pipeline:
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-                const Material* pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
-
-				
-				// Bind static descriptorSets:
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-
-				// Bind per shader descriptor set:
-				if (VkDescriptorSet vkDescriptorSet = DefaultGpuResources::GetDefaultShadowMaterial()->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+				const Material* pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
+			    bool staticDescriptorSetsBound = false;
 
 				// Lights:
 				const uint32_t shadowLightCount = m_directionalLightsCount + m_positionalLightsCount;
@@ -891,15 +909,25 @@ namespace vulkanRendererBackend
 							continue;
 
 					    // Pipeline swap:
-					    if (pipeline != drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline())
+						VkPipeline newPipeline = pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
+					    if (pipeline != newPipeline)
 					    {
-				            pipeline = pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
+				            pipeline = newPipeline;
 					    	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
                         
 					    	// Pipeline layout swap:
-					    	if (pipelineLayout != pShadowMaterial->GetVkPipelineLayout())
+                            VkPipelineLayout newPipelineLayout = pShadowMaterial->GetVkPipelineLayout();
+					    	if (pipelineLayout != newPipelineLayout)
 					    	{
-					    		pipelineLayout = pShadowMaterial->GetVkPipelineLayout();
+					    		pipelineLayout = newPipelineLayout;
+
+					    		// Bind static descriptor sets:
+                                if (!staticDescriptorSetsBound)
+                                {
+                                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+                                    staticDescriptorSetsBound = true;
+                                }
+
 					    		// Bind per shader descriptor set:
 					    		if (VkDescriptorSet vkDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 					    			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
@@ -977,9 +1005,7 @@ namespace vulkanRendererBackend
 				// Pipeline:
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-
-				// Bind static descriptorSets:
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_sortedDrawCallPointers[0]->pMaterial->GetVkPipelineLayout(), 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+                bool staticDescriptorSetsBound = false;
 
 				// Draw calls:
 				for (DrawCall* drawCall : m_sortedDrawCallPointers)
@@ -987,15 +1013,25 @@ namespace vulkanRendererBackend
 					PROFILE_SCOPE("DrawCall");
 
 					// Pipeline swap:
-					if (pipeline != drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline())
+					VkPipeline newPipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
+					if (pipeline != newPipeline)
 					{
-						pipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
+						pipeline = newPipeline;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
 						// Pipeline layout swap:
-						if (pipelineLayout != drawCall->pMaterial->GetVkPipelineLayout())
+                        VkPipelineLayout newPipelineLayout = drawCall->pMaterial->GetVkPipelineLayout();
+						if (pipelineLayout != newPipelineLayout)
 						{
-							pipelineLayout = drawCall->pMaterial->GetVkPipelineLayout();
+							pipelineLayout = newPipelineLayout;
+
+							// Bind static descriptor sets:
+                            if (!staticDescriptorSetsBound)
+                            {
+                                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+                                staticDescriptorSetsBound = true;
+                            }
+
 							// Bind per shader descriptor set:
 							if (VkDescriptorSet vkDescriptorSet = drawCall->pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
@@ -1016,7 +1052,7 @@ namespace vulkanRendererBackend
 					
 					// Draw call:
 					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
+					DEBUG_LOG_TRACE("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);
@@ -1142,9 +1178,7 @@ namespace vulkanRendererBackend
 			// Pipeline:
 			VkPipeline pipeline = VK_NULL_HANDLE;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-
-			// Bind static descriptorSets:
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computeCalls[0]->pComputeShader->GetVkPipelineLayout(), 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+            bool staticDescriptorSetsBound = false;
 
 			for (ComputeCall* computeCall : computeCalls)
 			{
@@ -1157,6 +1191,13 @@ namespace vulkanRendererBackend
 					pipeline = newPipeline;
 					pipelineLayout = pComputeShader->GetVkPipelineLayout();
 					vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+
+					// Bind static descriptor sets:
+                    if (!staticDescriptorSetsBound)
+                    {
+                        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+                        staticDescriptorSetsBound = true;
+                    }
 
 					// Bind per shader descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1175,7 +1216,7 @@ namespace vulkanRendererBackend
 
 				// Dispatch:
 				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-				DEBUG_LOG_ERROR("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
+				DEBUG_LOG_TRACE("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 
 				// All effects access the same inputImage and outputImage.
 				// Thus add memory barrier between every effect:
@@ -1191,7 +1232,7 @@ namespace vulkanRendererBackend
 					dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-					DEBUG_LOG_ERROR("Post Render Compute Barrier, callIndex = {}", computeCall->callIndex);
+					DEBUG_LOG_TRACE("Post Render Compute Barrier, callIndex = {}", computeCall->callIndex);
 				}
 			}
 
@@ -1203,7 +1244,7 @@ namespace vulkanRendererBackend
 				VkAccessFlags2 srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
 				VkAccessFlags2 dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-				DEBUG_LOG_ERROR("Render Image Transition: shader write -> shader read only");
+				DEBUG_LOG_TRACE("Render Image Transition: shader write -> shader read only");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
@@ -1265,7 +1306,8 @@ namespace vulkanRendererBackend
 				
 				// Dispatch:
 				vkCmdDrawIndexed(commandBuffer, pMesh->GetIndexCount(), 1, 0, 0, 0);
-				m_pIGui->Render(commandBuffer);
+				if (m_pIGui)
+					m_pIGui->Render(commandBuffer);
 				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", pMaterial->GetName());
 			}
 			vkCmdEndRenderPass(commandBuffer);
@@ -1298,7 +1340,8 @@ namespace vulkanRendererBackend
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				m_pIGui->Render(commandBuffer);
+				if (m_pIGui)
+					m_pIGui->Render(commandBuffer);
 			}
 			vkCmdEndRenderPass(commandBuffer);
 		}

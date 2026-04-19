@@ -69,9 +69,9 @@ namespace vulkanRendererBackend
 
 	private: // Members:
 		// Backend hooks:
-		emberBackendInterface::IGui* m_pIGui;
-		emberBackendInterface::IWindow* m_pIWindow;
-		Compute* m_pCompute;
+		emberBackendInterface::IGui* m_pIGui = nullptr;
+		emberBackendInterface::IWindow* m_pIWindow = nullptr;
+		Compute* m_pCompute = nullptr;
 		
 		// Render resources:
 		std::vector<CommandPool> m_commandPools;
@@ -159,7 +159,7 @@ namespace vulkanRendererBackend
 		void SetDepthBiasClamp(float depthBiasClamp) override;
 		void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) override;
 
-		// Functionallity forwarding:
+		// Functionality forwarding:
 		void CollectGarbage() override;
 		void WaitDeviceIdle() override; // needed so core can wait before destroying resource managers and then renderer.
 
@@ -170,7 +170,7 @@ namespace vulkanRendererBackend
 		//emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) override;
-		emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
+		emberBackendInterface::IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
 		emberBackendInterface::IMesh* CreateMesh() override;
 		emberBackendInterface::IDescriptorSetBinding* CreateDescriptorSetBinding(emberBackendInterface::IComputeShader* pIComputeShader) override;
 		emberBackendInterface::IDescriptorSetBinding* CreateDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial, uint32_t setIndex) override;
