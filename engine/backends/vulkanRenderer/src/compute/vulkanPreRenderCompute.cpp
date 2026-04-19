@@ -57,9 +57,20 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::IDescriptorSetBinding* PreRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
-		DescriptorSetBinding* pIDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		RecordComputeShader(pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding), threadCount);
-		return pIDescriptorSetBinding;
+		if (!pIComputeShader)
+		{
+			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
+			return nullptr;
+		}
+		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
+		{
+			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. threadCount has 0 entry.");
+			return nullptr;
+		}
+
+		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		RecordComputeShader(pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pDescriptorSetBinding), threadCount);
+		return pDescriptorSetBinding;
 	}
 	void PreRender::RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
 	{
