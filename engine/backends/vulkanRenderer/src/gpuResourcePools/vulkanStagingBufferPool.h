@@ -7,7 +7,7 @@
 
 namespace vulkanRendererBackend
 {
-    // Forward declerations:
+    // Forward declarations:
     class StagingBuffer;
 
 

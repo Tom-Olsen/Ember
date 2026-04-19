@@ -13,7 +13,7 @@ namespace vulkanRendererBackend
 	DepthTexture2dArray::DepthTexture2dArray(Format format, int width, int height, uint32_t layerCount)
 	{
 		if (!IsDepthFormat(format))
-			throw std::runtime_error("DepthTexture2dArray::DepthTexture2dArray(...): unsuported format: " + std::to_string(static_cast<int>(format)));
+			throw std::runtime_error("DepthTexture2dArray::DepthTexture2dArray(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));
 
 		m_width = width;
 		m_height = height;

@@ -6,7 +6,7 @@
 
 namespace vulkanRendererBackend
 {
-    // Forward declerations:
+    // Forward declarations:
     class StagingBuffer;
     class Texture2d;
 

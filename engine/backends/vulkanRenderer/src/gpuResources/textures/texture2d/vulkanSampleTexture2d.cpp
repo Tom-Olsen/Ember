@@ -48,7 +48,7 @@ namespace vulkanRendererBackend
 	void SampleTexture2d::Init(Format format, int width, int height)
 	{
 		if (!IsValidImageFormat(format))
-			throw std::runtime_error("SampleTexture2d::Init(...): unsuported format: " + std::to_string(static_cast<int>(format)));
+			throw std::runtime_error("SampleTexture2d::Init(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));
 
 		m_width = width;
 		m_height = height;

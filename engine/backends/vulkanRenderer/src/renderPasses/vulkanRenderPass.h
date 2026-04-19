@@ -3,7 +3,7 @@
 
 
 
-// Forward decleration:
+// Forward declaration:
 typedef struct VkRenderPass_T* VkRenderPass;
 typedef struct VkFramebuffer_T* VkFramebuffer;
 

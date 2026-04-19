@@ -6,7 +6,7 @@
 
 namespace vulkanRendererBackend
 {
-	// Forward decleration:
+	// Forward declaration:
 	class Texture;
 
 

@@ -5,7 +5,7 @@
 
 namespace vulkanRendererBackend
 {
-    // Forward declerations:
+    // Forward declarations:
     class ComputeShader;
     class DepthTexture2dArray;
     class Material;

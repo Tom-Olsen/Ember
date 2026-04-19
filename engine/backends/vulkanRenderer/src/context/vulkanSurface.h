@@ -8,7 +8,7 @@
 
 
 
-// Forward declerations:
+// Forward declarations:
 struct VkExtent2D;
 typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
 namespace emberBackendInterface

@@ -9,7 +9,7 @@
 
 
 
-// Forward decleration:
+// Forward declaration:
 typedef struct VkFence_T* VkFence;
 namespace emberBackendInterface
 {

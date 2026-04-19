@@ -14,7 +14,7 @@ namespace vulkanRendererBackend
 	RenderTexture2d::RenderTexture2d(Format format, int width, int height)
 	{
 		if (!IsValidImageFormat(format))
-			throw std::runtime_error("RenderTexture2d::RenderTexture2d(...): unsuported format: " + std::to_string(static_cast<int>(format)));
+			throw std::runtime_error("RenderTexture2d::RenderTexture2d(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));
 
 		m_width = width;
 		m_height = height;

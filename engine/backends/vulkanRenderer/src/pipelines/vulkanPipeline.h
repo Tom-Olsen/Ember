@@ -6,7 +6,7 @@
 
 
 
-// Forward decleration:
+// Forward declaration:
 typedef struct VkPipeline_T* VkPipeline;
 typedef struct VkPipelineLayout_T* VkPipelineLayout;
 typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;

@@ -3,7 +3,7 @@
 
 
 
-// Forward decleration:
+// Forward declaration:
 typedef struct VkSampler_T* VkSampler;
 
 

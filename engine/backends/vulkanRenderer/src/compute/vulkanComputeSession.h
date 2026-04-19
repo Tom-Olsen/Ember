@@ -4,7 +4,7 @@
 
 
 
-// vulkanRendererBackend::ToDo: (these are older, maybe some are debrecated?)
+// vulkanRendererBackend::ToDo: (these are older, maybe some are deprecated?)
 // -get VkFence from some pooling mechanism
 // -get VkCommandBuffer from one VkCommandPool
 // -add other pools to poolManager, e.g. VkFence and VkCommandBuffer/VkCommandPool
@@ -13,7 +13,7 @@
 
 
 
-// Forward decleration:
+// Forward declaration:
 typedef struct VkCommandBuffer_T* VkCommandBuffer;
 typedef struct VkFence_T* VkFence;
 

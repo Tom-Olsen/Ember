@@ -4,7 +4,7 @@
 
 
 
-// Forward declerations:
+// Forward declarations:
 typedef struct VkSwapchainKHR_T* VkSwapchainKHR;
 typedef struct VkImage_T* VkImage;
 typedef struct VkImageView_T* VkImageView;

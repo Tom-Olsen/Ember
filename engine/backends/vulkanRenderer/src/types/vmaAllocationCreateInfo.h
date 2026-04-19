@@ -7,7 +7,7 @@
 
 
 
-// Forward decleration:
+// Forward declaration:
 typedef struct VmaPool_T* VmaPool;
 
 
