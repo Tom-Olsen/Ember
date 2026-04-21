@@ -17,6 +17,10 @@ namespace emberBackendInterface
 	class ITexture;
 	class IBuffer;
 }
+namespace emberBufferLayout
+{
+	struct BufferLayout;
+}
 
 
 
@@ -61,16 +65,19 @@ namespace vulkanRendererBackend
 		Shader* m_pShader;
 		uint32_t m_setIndex;
 
-		// Ember::ToDo: resolve string to binding index once and use binding index as key for unordered maps!
+        // Fast lookup of incides by name and vise versa:
+		std::unordered_map<std::string, uint32_t> m_bindingIndices;
+		std::unordered_map<uint32_t, std::string> m_bindingNames;   // for debug output only.
+
 		// All these vectors contain one item for each frame in flight:
 		std::vector<VkDescriptorSet> m_descriptorSets;
-		std::vector<std::unordered_map<std::string, TextureBinding>> m_textureMaps;
-		std::vector<std::unordered_map<std::string, BufferBinding>> m_bufferMaps;
-		std::unordered_map<std::string, UniformBufferBinding> m_uniformBufferMap; // uniformBuffer handles framesInFlight with a ring buffer.
+		std::vector<std::unordered_map<uint32_t, TextureBinding>> m_textureMaps;
+		std::vector<std::unordered_map<uint32_t, BufferBinding>> m_bufferMaps;
+		std::unordered_map<uint32_t, UniformBufferBinding> m_uniformBufferMap; // uniformBuffer handles framesInFlight with a ring buffer.
 
 		// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer acts as a staging buffer:
-		std::unordered_map<std::string, Texture*> m_textureStagingMap;
-		std::unordered_map<std::string, Buffer*> m_bufferStagingMap;
+		std::unordered_map<uint32_t, Texture*> m_textureStagingMap;
+		std::unordered_map<uint32_t, Buffer*> m_bufferStagingMap;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -173,10 +180,12 @@ namespace vulkanRendererBackend
 		void PrintMaps() const override;
 
 	private: // Methods:
+		const uint32_t* FindBindingIndex(const std::string& name) const;
+
 		// Initializers:
-		void InitUniformBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding);
-		void InitTextureBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture* pTexture, DescriptorType descriptorType);
-		void InitBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType);
+		void InitUniformBufferBinding(uint32_t binding, const emberBufferLayout::BufferLayout& bufferLayout);
+		void InitTextureBinding(uint32_t frameIndex, uint32_t binding, Texture* pTexture, DescriptorType descriptorType);
+		void InitBufferBinding(uint32_t frameIndex, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType);
 		void InitStagingMaps();
 		void InitDescriptorSets();
 

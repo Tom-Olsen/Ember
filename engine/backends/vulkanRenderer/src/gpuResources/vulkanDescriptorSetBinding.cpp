@@ -37,9 +37,9 @@ namespace vulkanRendererBackend
 		: m_pShader(pShader), m_setIndex(setIndex)
 	{
 		// Create resource bindings and uniform buffer update logic for each frameInFlight:
-		m_textureMaps = std::vector<std::unordered_map<std::string, TextureBinding>>(Context::GetFramesInFlight());
-		m_bufferMaps = std::vector<std::unordered_map<std::string, BufferBinding>>(Context::GetFramesInFlight());
-		m_uniformBufferMap = std::unordered_map<std::string, UniformBufferBinding>();
+		m_textureMaps = std::vector<std::unordered_map<uint32_t, TextureBinding>>(Context::GetFramesInFlight());
+		m_bufferMaps = std::vector<std::unordered_map<uint32_t, BufferBinding>>(Context::GetFramesInFlight());
+		m_uniformBufferMap = std::unordered_map<uint32_t, UniformBufferBinding>();
         
 		// Initialize all resource bindings:
 		const emberSpirvReflect::DescriptorSetReflection& descriptorSetReflection = m_pShader->GetShaderReflection().GetDescriptorSetReflection(m_setIndex);
@@ -50,25 +50,30 @@ namespace vulkanRendererBackend
 				const std::string& name = descriptorReflection.GetName();
 				DescriptorType descriptorType = descriptorReflection.GetDescriptorType();
 				uint32_t binding = descriptorReflection.GetBinding();
+				if (frameIndex == 0)
+				{
+					m_bindingIndices.emplace(name, binding);
+					m_bindingNames.emplace(binding, name);
+				}
 
 				if (descriptorType == DescriptorTypes::uniform_buffer)
-					InitUniformBufferBinding(frameIndex, name, binding);
+					InitUniformBufferBinding(binding, descriptorReflection.GetUniformBufferDescriptor()->bufferLayout);
 				else if (descriptorType == DescriptorTypes::sampled_image)
 				{
 					ImageViewType viewType = descriptorReflection.GetImageDescriptor()->imageViewType;;
 					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for sampling Texture1d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTexture2d()), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTexture2d()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for sampling Texture3d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_cube) InitTextureBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTextureCube()), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_cube) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTextureCube()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_1d_array) throw std::runtime_error("Initialization for sampling Texture1dArray descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d_array) InitTextureBinding(frameIndex, name, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultDepthTexture2dArray()), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_2d_array) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultDepthTexture2dArray()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization for sampling CubeTextureArray descriptorSet not implemented yet!");
 				}
 				else if (descriptorType == DescriptorTypes::storage_image)
 				{
 					ImageViewType viewType = descriptorReflection.GetImageDescriptor()->imageViewType;;
 					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for storage Texture1d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, name, binding, static_cast<Texture2d*>(DefaultGpuResources::GetDefaultStorageTexture2d()), descriptorType);
+					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, binding, static_cast<Texture2d*>(DefaultGpuResources::GetDefaultStorageTexture2d()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for storage Texture3d descriptorSet not implemented yet!");
 					else if (viewType == ImageViewTypes::view_type_cube) throw std::runtime_error("Initialization for storage CubeTexture descriptorSet not implemented yet!");
 					else if (viewType == ImageViewTypes::view_type_1d_array) throw std::runtime_error("Initialization storage for Texture1dArray descriptorSet not implemented yet!");
@@ -76,7 +81,7 @@ namespace vulkanRendererBackend
 					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization storage for CubeTextureArray descriptorSet not implemented yet!");
 				}
 				else if (descriptorType == DescriptorTypes::storage_buffer)
-					InitBufferBinding(frameIndex, name, binding, static_cast<Buffer*>(DefaultGpuResources::GetDefaultStorageBuffer()), descriptorType);
+					InitBufferBinding(frameIndex, binding, static_cast<Buffer*>(DefaultGpuResources::GetDefaultStorageBuffer()), descriptorType);
 				else
 					throw std::runtime_error("DescriptorSetBinding::DescriptorSetBinding(Shader*) shader contains currently unsupported DescriptorType:" + DescriptorTypes::ToString(descriptorType) + "!");
 			}
@@ -121,7 +126,10 @@ namespace vulkanRendererBackend
 	void DescriptorSetBinding::SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture)
 	{
 		// If texture with 'name' doesn't exist, skip:
-		auto it = m_textureStagingMap.find(name);
+		const uint32_t* pBinding = FindBindingIndex(name);
+		if (!pBinding)
+			return;
+		auto it = m_textureStagingMap.find(*pBinding);
 		if (it == m_textureStagingMap.end())
 			return;
 		it->second = static_cast<Texture*>(pTexture);
@@ -129,7 +137,10 @@ namespace vulkanRendererBackend
 	void DescriptorSetBinding::SetBuffer(const std::string& name, emberBackendInterface::IBuffer* pBuffer)
 	{
 		// If buffer with 'name' doesn't exist, skip:
-		auto it = m_bufferStagingMap.find(name);
+		const uint32_t* pBinding = FindBindingIndex(name);
+		if (!pBinding)
+			return;
+		auto it = m_bufferStagingMap.find(*pBinding);
 		if (it == m_bufferStagingMap.end())
 			return;
 		it->second = static_cast<Buffer*>(pBuffer);
@@ -392,7 +403,11 @@ namespace vulkanRendererBackend
 	}
 	Texture* DescriptorSetBinding::GetTexture(const std::string& name) const
 	{
-		auto it = m_textureMaps[Context::GetFrameIndex()].find(name);
+        // Texture not found, return null:
+		const uint32_t* pBinding = FindBindingIndex(name);
+		if (!pBinding)
+			return nullptr;
+		auto it = m_textureMaps[Context::GetFrameIndex()].find(*pBinding);
 		if (it != m_textureMaps[Context::GetFrameIndex()].end())
 			return it->second.pTexture;
 		return nullptr;
@@ -404,25 +419,27 @@ namespace vulkanRendererBackend
 	void DescriptorSetBinding::UpdateShaderData(uint32_t frameIndex)
 	{
 		// Stream uniform buffer data from host memory to GPU only for current frameIndex:
-		for (auto& [name, uniformBufferBinding] : m_uniformBufferMap)
+		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
 			uniformBufferBinding.uniformBuffer.UpdateBuffer(frameIndex);
 
 		// Change the pointer the descriptor set points at to the new texture:
-		for (auto& [name, textureBinding] : m_textureMaps[frameIndex])
+		for (auto& [binding, textureBinding] : m_textureMaps[frameIndex])
 		{
-			if (textureBinding.pTexture != m_textureStagingMap.at(name))
+			Texture* pStagedTexture = m_textureStagingMap.at(binding);
+			if (textureBinding.pTexture != pStagedTexture)
 			{
-				textureBinding.pTexture = m_textureStagingMap.at(name);
+				textureBinding.pTexture = pStagedTexture;
 				UpdateDescriptorSet(frameIndex, textureBinding);
 			}
 		}
 
 		// Change the pointer the descriptor set points at to the new buffer:
-		for (auto& [name, bufferBinding] : m_bufferMaps[frameIndex])
+		for (auto& [binding, bufferBinding] : m_bufferMaps[frameIndex])
 		{
-			if (bufferBinding.pBuffer != m_bufferStagingMap.at(name))
+			Buffer* pStagedBuffer = m_bufferStagingMap.at(binding);
+			if (bufferBinding.pBuffer != pStagedBuffer)
 			{
-				bufferBinding.pBuffer = m_bufferStagingMap.at(name);
+				bufferBinding.pBuffer = pStagedBuffer;
 				UpdateDescriptorSet(frameIndex, bufferBinding);
 			}
 		}
@@ -449,16 +466,16 @@ namespace vulkanRendererBackend
 		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
 			 LOG_INFO("UniformBufferMaps[{}]:", frameIndex);
-			 for (const auto& [name, uniformBufferBinding] : m_uniformBufferMap)
-			 	LOG_TRACE("binding: {}, bindingName: {}", uniformBufferBinding.binding, name);
+			 for (const auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
+			 	LOG_TRACE("binding: {}, bindingName: {}", uniformBufferBinding.binding, m_bindingNames.at(binding));
 
 			 LOG_INFO("TextureMaps[{}]:", frameIndex);
-			 for (const auto& [name, textureBinding] : m_textureMaps[frameIndex])
-			 	LOG_TRACE("binding: {}, bindingName: {}", textureBinding.binding, name);
+			 for (const auto& [binding, textureBinding] : m_textureMaps[frameIndex])
+			 	LOG_TRACE("binding: {}, bindingName: {}", textureBinding.binding, m_bindingNames.at(binding));
 			 
 			 LOG_INFO("BufferMaps[{}]:", frameIndex);
-			 for (const auto& [name, bufferBinding] : m_bufferMaps[frameIndex])
-			 	LOG_TRACE("binding: {}, bindingName: {}, bufferSize: {}", bufferBinding.binding, name, bufferBinding.pBuffer->GetSize());
+			 for (const auto& [binding, bufferBinding] : m_bufferMaps[frameIndex])
+			 	LOG_TRACE("binding: {}, bindingName: {}, bufferSize: {}", bufferBinding.binding, m_bindingNames.at(binding), bufferBinding.pBuffer->GetSize());
 			
 			LOG_TRACE("\n");
 		}
@@ -467,41 +484,43 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	// Initializers:
-	void DescriptorSetBinding::InitUniformBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding)
+	const uint32_t* DescriptorSetBinding::FindBindingIndex(const std::string& name) const
 	{
-		if (m_uniformBufferMap.contains(name))
+		auto it = m_bindingIndices.find(name);
+		if (it != m_bindingIndices.end())
+			return &it->second;
+		return nullptr;
+	}
+
+
+    
+	// Initializers:
+	void DescriptorSetBinding::InitUniformBufferBinding(uint32_t binding, const emberBufferLayout::BufferLayout& bufferLayout)
+	{
+		if (m_uniformBufferMap.contains(binding))
 			return; // already initialized.
 
-		const emberSpirvReflect::DescriptorReflection* descriptorReflection = m_pShader->GetShaderReflection().GetDescriptorReflection(m_setIndex, name);
-		if (!descriptorReflection)
-			throw std::runtime_error("DescriptorSetBinding::InitUniformBufferBinding: Descriptor not found in shader reflection: " + name);
-
-		const emberSpirvReflect::UniformBufferDescriptor* uniformBufferDescriptor = descriptorReflection->GetUniformBufferDescriptor();
-		if (!uniformBufferDescriptor)
-			throw std::runtime_error("DescriptorSetBinding::InitUniformBufferBinding: Descriptor is not a uniform buffer: " + name);
-
-		UniformBuffer uniformBuffer(uniformBufferDescriptor->bufferLayout);
-		m_uniformBufferMap.emplace(name, UniformBufferBinding{binding, std::move(uniformBuffer)});
+		UniformBuffer uniformBuffer(bufferLayout);
+		m_uniformBufferMap.emplace(binding, UniformBufferBinding{binding, std::move(uniformBuffer)});
 	}
-	void DescriptorSetBinding::InitTextureBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Texture* pTexture, DescriptorType descriptorType)
+	void DescriptorSetBinding::InitTextureBinding(uint32_t frameIndex, uint32_t binding, Texture* pTexture, DescriptorType descriptorType)
 	{
-		auto it = m_textureMaps[frameIndex].find(name);
+		auto it = m_textureMaps[frameIndex].find(binding);
 		if (it == m_textureMaps[frameIndex].end())
-			m_textureMaps[frameIndex].emplace(name, TextureBinding{binding, pTexture, descriptorType});
+			m_textureMaps[frameIndex].emplace(binding, TextureBinding{binding, pTexture, descriptorType});
 	}
-	void DescriptorSetBinding::InitBufferBinding(uint32_t frameIndex, const std::string& name, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType)
+	void DescriptorSetBinding::InitBufferBinding(uint32_t frameIndex, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType)
 	{
-		auto it = m_bufferMaps[frameIndex].find(name);
+		auto it = m_bufferMaps[frameIndex].find(binding);
 		if (it == m_bufferMaps[frameIndex].end())
-			m_bufferMaps[frameIndex].emplace(name, BufferBinding{binding, pBuffer, descriptorType});
+			m_bufferMaps[frameIndex].emplace(binding, BufferBinding{binding, pBuffer, descriptorType});
 	}
 	void DescriptorSetBinding::InitStagingMaps()
 	{
-		for (auto& [name, textureBinding] : m_textureMaps[0])
-			m_textureStagingMap.emplace(name, textureBinding.pTexture);
-		for (auto& [name, bufferBinding] : m_bufferMaps[0])
-			m_bufferStagingMap.emplace(name, bufferBinding.pBuffer);
+		for (auto& [binding, textureBinding] : m_textureMaps[0])
+			m_textureStagingMap.emplace(binding, textureBinding.pTexture);
+		for (auto& [binding, bufferBinding] : m_bufferMaps[0])
+			m_bufferStagingMap.emplace(binding, bufferBinding.pBuffer);
 	}
 	void DescriptorSetBinding::InitDescriptorSets()
 	{
@@ -595,7 +614,11 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T DescriptorSetBinding::GetValue(const std::string& bufferName, const std::string& memberName) const
 	{
-		auto it = m_uniformBufferMap.find(bufferName);
+		const uint32_t* pBinding = FindBindingIndex(bufferName);
+		if (!pBinding)
+			return T();
+
+		auto it = m_uniformBufferMap.find(*pBinding);
 		if (it != m_uniformBufferMap.end())
 			return it->second.uniformBuffer.GetValue<T>(memberName);
 		return T();
@@ -603,7 +626,11 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T DescriptorSetBinding::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
 	{
-		auto it = m_uniformBufferMap.find(bufferName);
+		const uint32_t* pBinding = FindBindingIndex(bufferName);
+		if (!pBinding)
+			return T();
+
+		auto it = m_uniformBufferMap.find(*pBinding);
 		if (it != m_uniformBufferMap.end())
 			return it->second.uniformBuffer.GetValue<T>(arrayName, arrayIndex);
 		return T();
@@ -611,7 +638,11 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T DescriptorSetBinding::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
 	{
-		auto it = m_uniformBufferMap.find(bufferName);
+		const uint32_t* pBinding = FindBindingIndex(bufferName);
+		if (!pBinding)
+			return T();
+
+		auto it = m_uniformBufferMap.find(*pBinding);
 		if (it != m_uniformBufferMap.end())
 			return it->second.uniformBuffer.GetValue<T>(arrayName, arrayIndex, memberName);
 		return T();
@@ -619,7 +650,11 @@ namespace vulkanRendererBackend
 	template<typename T>
 	T DescriptorSetBinding::GetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
 	{
-		auto it = m_uniformBufferMap.find(bufferName);
+		const uint32_t* pBinding = FindBindingIndex(bufferName);
+		if (!pBinding)
+			return T();
+
+		auto it = m_uniformBufferMap.find(*pBinding);
 		if (it != m_uniformBufferMap.end())
 			return it->second.uniformBuffer.GetValue<T>(arrayName, arrayIndex, subArrayName, subArrayIndex);
 		return T();
@@ -631,41 +666,45 @@ namespace vulkanRendererBackend
 	template<typename T>
 	void DescriptorSetBinding::SetValue(const std::string& bufferName, const std::string& memberName, const T& value)
 	{
-		auto it = m_uniformBufferMap.find(bufferName);
+		const uint32_t* pBinding = FindBindingIndex(bufferName);
+		if (!pBinding)
+			return;
+
+		auto it = m_uniformBufferMap.find(*pBinding);
 		if (it != m_uniformBufferMap.end())
-		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-				m_uniformBufferMap.at(bufferName).uniformBuffer.SetValue(memberName, value);
-		}
+			it->second.uniformBuffer.SetValue(memberName, value);
 	}
 	template<typename T>
 	void DescriptorSetBinding::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const T& value)
 	{
-		auto it = m_uniformBufferMap.find(bufferName);
+		const uint32_t* pBinding = FindBindingIndex(bufferName);
+		if (!pBinding)
+			return;
+
+		auto it = m_uniformBufferMap.find(*pBinding);
 		if (it != m_uniformBufferMap.end())
-		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-				m_uniformBufferMap.at(bufferName).uniformBuffer.SetValue(arrayName, arrayIndex, value);
-		}
+			it->second.uniformBuffer.SetValue(arrayName, arrayIndex, value);
 	}
 	template<typename T>
 	void DescriptorSetBinding::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName, const T& value)
 	{
-		auto it = m_uniformBufferMap.find(bufferName);
+		const uint32_t* pBinding = FindBindingIndex(bufferName);
+		if (!pBinding)
+			return;
+
+		auto it = m_uniformBufferMap.find(*pBinding);
 		if (it != m_uniformBufferMap.end())
-		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-				m_uniformBufferMap.at(bufferName).uniformBuffer.SetValue(arrayName, arrayIndex, memberName, value);
-		}
+			it->second.uniformBuffer.SetValue(arrayName, arrayIndex, memberName, value);
 	}
 	template<typename T>
 	void DescriptorSetBinding::SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const T& value)
 	{
-		auto it = m_uniformBufferMap.find(bufferName);
+		const uint32_t* pBinding = FindBindingIndex(bufferName);
+		if (!pBinding)
+			return;
+
+		auto it = m_uniformBufferMap.find(*pBinding);
 		if (it != m_uniformBufferMap.end())
-		{// bufferName exists => set value for all frames:
-			for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-				m_uniformBufferMap.at(bufferName).uniformBuffer.SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
-		}
+			it->second.uniformBuffer.SetValue(arrayName, arrayIndex, subArrayName, subArrayIndex, value);
 	}
 }
