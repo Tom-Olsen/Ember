@@ -222,7 +222,10 @@ namespace vulkanRendererBackend
 	void Renderer::AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix)
 	{
 		if (m_directionalLightsCount == m_maxDirectionalLights)
-			return;
+        {
+            LOG_WARN("Renderer::AddDirectionalLight(...) max directional light capacity reached. Ignoring further directional light sources.");
+            return;
+        }
 
 		m_directionalLights[m_directionalLightsCount].direction = direction;
 		m_directionalLights[m_directionalLightsCount].intensity = intensity;
@@ -235,7 +238,10 @@ namespace vulkanRendererBackend
 	void Renderer::AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix)
 	{
 		if (m_positionalLightsCount == m_maxPositionalLights)
+        {
+            LOG_WARN("Renderer::AddPositionalLight(...) max positional light capacity reached. Ignoring further positional light sources.");
 			return;
+        }
 
 		m_positionalLights[m_positionalLightsCount].position = position;
 		m_positionalLights[m_positionalLightsCount].intensity = intensity;

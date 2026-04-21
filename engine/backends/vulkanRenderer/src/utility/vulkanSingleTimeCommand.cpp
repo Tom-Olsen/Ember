@@ -81,10 +81,10 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(s_presentPool, "SingleTimePresentCommandPool");
 		NAME_VK_OBJECT(s_computePool, "SingleTimeComputeCommandPool");
 		NAME_VK_OBJECT(s_transferPool, "SingleTimeTransferCommandPool");
-		NAME_VK_OBJECT(s_graphicsPool, "SingleTimeGraphicsFence");
-		NAME_VK_OBJECT(s_presentPool, "SingleTimePresentFence");
-		NAME_VK_OBJECT(s_computePool, "SingleTimeComputeFence");
-		NAME_VK_OBJECT(s_transferPool, "SingleTimeTransferFence");
+		NAME_VK_OBJECT(s_graphicsPool, "SingleTimeGraphicsPool");
+		NAME_VK_OBJECT(s_presentPool, "SingleTimePresentPool");
+		NAME_VK_OBJECT(s_computePool, "SingleTimeComputePool");
+		NAME_VK_OBJECT(s_transferPool, "SingleTimeTransferPool");
 		NAME_VK_OBJECT(s_semaphore, "SingleTimeCommandSemaphore");
 	}
 	void SingleTimeCommand::Clear()
