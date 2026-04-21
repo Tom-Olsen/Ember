@@ -489,6 +489,7 @@ namespace vulkanRendererBackend
 		auto it = m_bindingIndices.find(name);
 		if (it != m_bindingIndices.end())
 			return &it->second;
+        LOG_WARN("Shader {} does not have a binding names {}", m_pShader->GetName(), name);
 		return nullptr;
 	}
 

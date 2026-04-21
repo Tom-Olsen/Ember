@@ -65,7 +65,7 @@ namespace vulkanRendererBackend
 		Shader* m_pShader;
 		uint32_t m_setIndex;
 
-        // Fast lookup of incides by name and vise versa:
+        // Fast lookup of indices by name and vice versa:
 		std::unordered_map<std::string, uint32_t> m_bindingIndices;
 		std::unordered_map<uint32_t, std::string> m_bindingNames;   // for debug output only.
 

@@ -2,10 +2,6 @@ Promts:
 
 Fix QueueMeshForUpdate() so it only adds a mesh once per intended flight frame and does not search or insert across all pending-frame vectors.
 
-Change debug naming in vulkanSingleTimeCommand.cpp to label pools as pools and fences as fences consistently.
-
-Add logging or error reporting for AddDirectionalLight() and AddPositionalLight() when max light capacity is reached instead of silently returning.
-
 Make RecordResourceUpdateCommands() robust by validating command buffer begin/record success before clearing pending mesh update lists.
 
 Replace runtime string lookups in descriptor binding resolution with a cached binding-index lookup keyed by binding ID.
