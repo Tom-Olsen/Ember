@@ -51,13 +51,13 @@ namespace emberEngine
 		shaderProperties.SetOwnerShip(false);
 		return shaderProperties;
 	}
-	void Compute::Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
+	void Compute::Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask)
 	{
 		m_pIAsync->RecordBarrier(sessionID, srcAccessMask, dstAccessMask);
 	}
 	void Compute::Async::RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID)
 	{
-		Compute::Async::RecordBarrier(sessionID, emberCommon::AccessMasks::computeShader_storageWrite, emberCommon::AccessMasks::computeShader_storageRead);
+		Compute::Async::RecordBarrier(sessionID, emberCommon::ComputeAccessFlag::storageWrite, emberCommon::ComputeAccessFlag::storageRead);
 	}
 
 
@@ -134,13 +134,13 @@ namespace emberEngine
 		shaderProperties.SetOwnerShip(false);
 		return shaderProperties;
 	}
-	void Compute::PreRender::RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
+	void Compute::PreRender::RecordBarrier(emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask)
 	{
 		m_pIPreRender->RecordBarrier(srcAccessMask, dstAccessMask);
 	}
 	void Compute::PreRender::RecordBarrierWaitStorageWriteBeforeRead()
 	{
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_storageWrite, emberCommon::AccessMasks::computeShader_storageRead);
+		Compute::PreRender::RecordBarrier(emberCommon::ComputeAccessFlag::storageWrite, emberCommon::ComputeAccessFlag::storageRead);
 	}
 
 
@@ -214,7 +214,7 @@ namespace emberEngine
 				break;
 		}
 	}
-	void Compute::RecordBarrier(ComputeType computeType, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask , uint32_t sessionID)
+	void Compute::RecordBarrier(ComputeType computeType, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask , uint32_t sessionID)
 	{
 		switch (computeType)
 		{

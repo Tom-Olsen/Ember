@@ -1,4 +1,5 @@
 #pragma once
+#include "commonPipelineState.h"
 #include "emberMath.h"
 #include <vector>
 

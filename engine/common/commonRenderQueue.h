@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <string_view>
 
 
 
@@ -11,4 +12,14 @@ namespace emberCommon
 		skybox = 1000,
 		transparent = 2000
 	};
+	inline constexpr std::string_view RenderQueueToString(RenderQueue renderQueue)
+	{
+		switch (renderQueue)
+		{
+			case RenderQueue::opaque: return "opaque";
+			case RenderQueue::skybox: return "skybox";
+			case RenderQueue::transparent: return "transparent";
+			default: return "unknown";
+		}
+	}
 }

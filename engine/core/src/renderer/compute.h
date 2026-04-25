@@ -1,6 +1,6 @@
 #pragma once
 #include "iCompute.h"
-#include "commonAccessMask.h"
+#include "commonComputeAccessMask.h"
 #include "commonRendererCreateInfo.h"
 #include "emberCoreExport.h"
 #include "emberMath.h"
@@ -51,7 +51,7 @@ namespace emberEngine
 			// Workload recording:
 			static void RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
 			static ShaderProperties RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask);
+			static void RecordBarrier(uint32_t sessionID, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask);
 			static void RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID);
 
 		private: // Methods
@@ -130,7 +130,7 @@ namespace emberEngine
 			// Workload recording:
 			static void RecordComputeShader(ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
 			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask);
+			static void RecordBarrier(emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask);
 			static void RecordBarrierWaitStorageWriteBeforeRead();
 
 		private: // Methods
@@ -157,7 +157,7 @@ namespace emberEngine
 		// Workload recording (delegates to given computeType):
 		static void RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount = Uint3::zero, uint32_t sessionID = -1);
 		static ShaderProperties RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount = Uint3::zero, uint32_t sessionID = -1);
-		static void RecordBarrier(ComputeType computeType, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask, uint32_t sessionID = -1);
+		static void RecordBarrier(ComputeType computeType, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask, uint32_t sessionID = -1);
 		static void RecordBarrierWaitStorageWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);
 
 	private: // Methods

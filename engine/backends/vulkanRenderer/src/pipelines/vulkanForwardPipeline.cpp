@@ -4,6 +4,7 @@
 #include "vulkanForwardRenderPass.h"
 #include "vulkanMacros.h"
 #include "vulkanRenderPassManager.h"
+#include <stdexcept>
 #include <type_traits>
 
 
@@ -92,6 +93,8 @@ namespace vulkanRendererBackend
                 depthCompareOp = VK_COMPARE_OP_LESS;
                 blendEnable = VK_FALSE;
                 break;
+            default:
+                throw std::runtime_error("ForwardPipeline::CreatePipeline(...) failed. Unsupported render mode.");
         }
 
         // Vertex shader:

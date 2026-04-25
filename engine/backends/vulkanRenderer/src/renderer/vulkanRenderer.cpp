@@ -451,7 +451,7 @@ namespace vulkanRendererBackend
 			pIBuffer = new VertexBuffer(count, elementSize);
 			break;
 		default:
-			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateBuffer: Unknown invalid BufferUsage type: " + (std::string)emberCommon::BufferUsageNames[(int)usage]);
+			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateBuffer: Unknown invalid BufferUsage type: " + std::string(emberCommon::BufferUsageToString(usage)));
 		}
 		return pIBuffer;
 	}
@@ -478,7 +478,7 @@ namespace vulkanRendererBackend
 			pITexture = new RenderTexture2d(vulkanFormat, width, height);
 			break;
 		default:
-			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTexture2d: invalid TextureUsage type: " + (std::string)emberCommon::TextureUsageNames[(int)usage]);
+			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTexture2d: invalid TextureUsage type: " + std::string(emberCommon::TextureUsageToString(usage)));
 		}
 		return pITexture;
 	}
@@ -496,7 +496,7 @@ namespace vulkanRendererBackend
 			pITexture = new SampleTextureCube(vulkanFormat, width, height, data);
 			break;
 		default:
-			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTextureCube: invalid TextureUsage type: " + (std::string)emberCommon::TextureUsageNames[(int)usage]);
+			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTextureCube: invalid TextureUsage type: " + std::string(emberCommon::TextureUsageToString(usage)));
 		}
 		return pITexture;
 	}

@@ -1,6 +1,8 @@
 #pragma once
 #include "commonInput.h"
+#include <sstream>
 #include <string>
+#include <string_view>
 
 
 
@@ -38,6 +40,34 @@ namespace emberCommon
         ControllerAxisMotion,
     };
 
+    inline constexpr std::string_view EventTypeToString(EventType type)
+    {
+        switch (type)
+        {
+            case EventType::None: return "None";
+            case EventType::Quit: return "Quit";
+            case EventType::WindowClose: return "WindowClose";
+            case EventType::WindowResized: return "WindowResized";
+            case EventType::WindowMinimized: return "WindowMinimized";
+            case EventType::WindowRestored: return "WindowRestored";
+            case EventType::WindowFocusGained: return "WindowFocusGained";
+            case EventType::WindowFocusLost: return "WindowFocusLost";
+            case EventType::KeyDown: return "KeyDown";
+            case EventType::KeyUp: return "KeyUp";
+            case EventType::TextInput: return "TextInput";
+            case EventType::MouseMoved: return "MouseMoved";
+            case EventType::MouseButtonDown: return "MouseButtonDown";
+            case EventType::MouseButtonUp: return "MouseButtonUp";
+            case EventType::MouseWheel: return "MouseWheel";
+            case EventType::ControllerConnected: return "ControllerConnected";
+            case EventType::ControllerDisconnected: return "ControllerDisconnected";
+            case EventType::ControllerButtonDown: return "ControllerButtonDown";
+            case EventType::ControllerButtonUp: return "ControllerButtonUp";
+            case EventType::ControllerAxisMotion: return "ControllerAxisMotion";
+            default: return "Unknown";
+        }
+    }
+
     struct Event
     {
         // Event type:
@@ -63,5 +93,23 @@ namespace emberCommon
         // Window resize:
 		uint32_t windowID{ 0 };
 		uint32_t resizeWidth{ 0 }, resizeHeight{ 0 };
+
+        inline std::string ToString() const
+        {
+            std::ostringstream ss;
+            ss << "type: " << EventTypeToString(type);
+            ss << ", key: " << Input::KeyToString(key);
+            ss << ", mouseButton: " << Input::MouseButtonToString(mouseButton);
+            ss << ", mousePos: (" << mousePosX << ", " << mousePosY << ")";
+            ss << ", mouseWheel: (" << mouseWheelX << ", " << mouseWheelY << ")";
+            ss << ", controllerId: " << controllerId;
+            ss << ", controllerButton: " << Input::ControllerButtonToString(controllerButton);
+            ss << ", axis: " << static_cast<uint32_t>(axis);
+            ss << ", axisValue: " << axisValue;
+            ss << ", text: " << text;
+            ss << ", windowID: " << windowID;
+            ss << ", resize: (" << resizeWidth << ", " << resizeHeight << ")";
+            return ss.str();
+        }
     };
 }

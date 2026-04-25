@@ -6,38 +6,6 @@
 
 namespace vulkanRendererBackend
 {
-    // emberCommon::DepthStencilFormat -> vulkanRendererBackend::Format:
-    vulkanRendererBackend::Format DepthStencilFormatCommonToVulkan(emberCommon::DepthStencilFormat format)
-    {
-        switch (format.flag)
-        {
-            case emberCommon::FormatFlag::d00_s8: return vulkanRendererBackend::Formats::d16_unorm;
-            case emberCommon::FormatFlag::d16_s0: return vulkanRendererBackend::Formats::d32_sfloat;
-            case emberCommon::FormatFlag::d16_s8: return vulkanRendererBackend::Formats::s8_uint;
-            case emberCommon::FormatFlag::d24_s8: return vulkanRendererBackend::Formats::d16_unorm_s8_uint;
-            case emberCommon::FormatFlag::d32_s0: return vulkanRendererBackend::Formats::d24_unorm_s8_uint;
-            case emberCommon::FormatFlag::d32_s8: return vulkanRendererBackend::Formats::d32_sfloat_s8_uint;
-            default: return vulkanRendererBackend::Formats::undefined;
-        }
-    }
-
-    // vulkanRendererBackend::Format -> emberCommon::DepthStencilFormat:
-    emberCommon::DepthStencilFormat DepthStencilFormatVulkanToCommon(vulkanRendererBackend::Format format)
-    {
-        switch (format)
-        {
-            case VK_FORMAT_D16_UNORM: return emberCommon::DepthStencilFormat{ emberCommon::FormatFlag::d00_s8 };
-            case VK_FORMAT_D32_SFLOAT: return emberCommon::DepthStencilFormat{ emberCommon::FormatFlag::d16_s0 };
-            case VK_FORMAT_S8_UINT: return emberCommon::DepthStencilFormat{ emberCommon::FormatFlag::d16_s8 };
-            case VK_FORMAT_D16_UNORM_S8_UINT: return emberCommon::DepthStencilFormat{ emberCommon::FormatFlag::d24_s8 };
-            case VK_FORMAT_D24_UNORM_S8_UINT: return emberCommon::DepthStencilFormat{ emberCommon::FormatFlag::d32_s0 };
-            case VK_FORMAT_D32_SFLOAT_S8_UINT: return emberCommon::DepthStencilFormat{ emberCommon::FormatFlag::d32_s8 };
-            default: return emberCommon::DepthStencilFormat{ emberCommon::FormatFlag::undefined };
-        }
-    }
-
-
-
     // emberCommon::TextureFormat -> vulkanRendererBackend::Format:
     vulkanRendererBackend::Format TextureFormatCommonToVulkan(emberCommon::TextureFormat format)
     {

@@ -1,6 +1,6 @@
 #pragma once
 #include "iCompute.h"
-#include "commonAccessMask.h"
+#include "commonComputeAccessMask.h"
 #include "emberMath.h"
 #include "vulkanAccessMask.h"
 #include "vulkanRendererExport.h"
@@ -62,7 +62,7 @@ namespace vulkanRendererBackend
 		// Workload recording:
 		void RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount) override;
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount) override;
-		void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) override;
+		void RecordBarrier(uint32_t sessionID, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask) override;
 
 		// Debugging:
 		void PrintSessionsState();

@@ -12,10 +12,14 @@ namespace emberCommon
 		vertex,
 		storage
 	};
-	constexpr std::string_view BufferUsageNames[] =
+	inline constexpr std::string_view BufferUsageToString(BufferUsage usage)
 	{
-		"index",
-		"vertex",
-		"storage"
-	};
+		switch (usage)
+		{
+			case BufferUsage::index: return "index";
+			case BufferUsage::vertex: return "vertex";
+			case BufferUsage::storage: return "storage";
+			default: return "unknown";
+		}
+	}
 }

@@ -3,7 +3,7 @@
 #include "vulkanAccessMask.h"
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
-#include "vulkanConvertAccessMask.h"
+#include "vulkanConvertComputeAccessMask.h"
 #include "vulkanPoolManager.h"
 #include "vulkanDescriptorSetBinding.h"
 #include <vulkan/vulkan.h>
@@ -72,9 +72,9 @@ namespace vulkanRendererBackend
 		RecordComputeShader(pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pDescriptorSetBinding), threadCount);
 		return pDescriptorSetBinding;
 	}
-	void PreRender::RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
+	void PreRender::RecordBarrier(emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask)
 	{
-		ComputeCall computeCall = { m_callIndex, Uint3::zero, nullptr, nullptr, AccessMaskCommonToVulkan(srcAccessMask), AccessMaskCommonToVulkan(dstAccessMask) };
+		ComputeCall computeCall = { m_callIndex, Uint3::zero, nullptr, nullptr, ComputeAccessFlagsCommonToVulkan(srcAccessMask), ComputeAccessFlagsCommonToVulkan(dstAccessMask) };
 		m_staticComputeCalls.push_back(computeCall);
 		m_callIndex++;
 	}

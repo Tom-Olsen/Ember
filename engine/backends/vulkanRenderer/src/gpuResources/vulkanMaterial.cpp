@@ -1,5 +1,4 @@
 #include "vulkanMaterial.h"
-#include "commonPipelineState.h"
 #include "descriptorSetMacros.h"
 #include "logger.h"
 #include "vulkanDefaultPushConstant.h"

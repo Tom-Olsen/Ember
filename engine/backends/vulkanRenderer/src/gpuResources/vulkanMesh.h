@@ -25,11 +25,6 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Mesh : public emberBackendInterface::IMesh
 	{
 	public: // Enums/Structs:
-		//enum class MeshType
-		//{
-		//	staticMesh,
-		//	dynamicMesh
-		//};
 		struct Vertex
 		{
 			Float3 position;

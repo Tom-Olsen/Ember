@@ -1,5 +1,5 @@
 #pragma once
-#include "commonAccessMask.h"
+#include "commonComputeAccessMask.h"
 #include "emberMath.h"
 
 
@@ -34,7 +34,7 @@ namespace emberBackendInterface
             // Workload recording:
             virtual void RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount) = 0;
             virtual IDescriptorSetBinding* RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
-            virtual void RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) = 0;
+            virtual void RecordBarrier(uint32_t sessionID, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask) = 0;
         };
 
 
@@ -73,7 +73,7 @@ namespace emberBackendInterface
             // Workload recording:
             virtual void RecordComputeShader(IComputeShader* pIComputeShader, IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount) = 0;
             virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
-            virtual void RecordBarrier(emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask) = 0;
+            virtual void RecordBarrier(emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask) = 0;
         };
 
 

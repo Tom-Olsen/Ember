@@ -6,7 +6,7 @@
 #include "vulkanComputeCall.h"
 #include "vulkanComputeSession.h"
 #include "vulkanComputeShader.h"
-#include "vulkanConvertAccessMask.h"
+#include "vulkanConvertComputeAccessMask.h"
 #include "vulkanContext.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -164,7 +164,7 @@ namespace vulkanRendererBackend
 		RecordComputeShader(sessionID, pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding), threadCount);
 		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding);
 	}
-	void Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeShaderAccessMask srcAccessMask, emberCommon::ComputeShaderAccessMask dstAccessMask)
+	void Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask)
 	{
 		if (m_computeSessions[sessionID].state != ComputeSession::State::recording)
 		{
@@ -172,7 +172,7 @@ namespace vulkanRendererBackend
 			return;
 		}
 		
-		ComputeCall computeCall = { 0, Uint3::zero, nullptr, nullptr, AccessMaskCommonToVulkan(srcAccessMask), AccessMaskCommonToVulkan(dstAccessMask) };
+		ComputeCall computeCall = { 0, Uint3::zero, nullptr, nullptr, ComputeAccessFlagsCommonToVulkan(srcAccessMask), ComputeAccessFlagsCommonToVulkan(dstAccessMask) };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
 

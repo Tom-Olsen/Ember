@@ -60,7 +60,7 @@ namespace emberEngine
 #include "gpuSort.h"
 
 // Common (core <-> backend) communication: (Not all included on purpose for now)
-#include "commonAccessMask.h"
+#include "commonComputeAccessMask.h"
 #include "commonInput.h"
 #include "commonLighting.h"
 
@@ -74,7 +74,7 @@ namespace emberEngine
     using Key = emberCommon::Input::Key;
 
     // Compute shader aliasing:
-    using AccessMasks = emberCommon::AccessMasks;
+    using ComputeAccessFlag = emberCommon::ComputeAccessFlag;
     using BufferUsage = emberCommon::BufferUsage;
 
     using ShadowType = emberCommon::ShadowType;

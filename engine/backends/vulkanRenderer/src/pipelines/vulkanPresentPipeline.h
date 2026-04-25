@@ -1,5 +1,4 @@
 #pragma once
-#include "commonPipelineState.h"
 #include "vulkanPipeline.h"
 #include <vector>
 #include <vulkan/vulkan.h>
