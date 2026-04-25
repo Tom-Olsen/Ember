@@ -76,6 +76,7 @@ namespace vulkanRendererBackend
 		const std::string& GetName() const override;
 		uint32_t GetRenderQueue() const override;
 		emberCommon::RenderMode GetRenderMode() const override;
+		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
 		const Pipeline* GetPipeline(const Mesh* pMesh) const;
 
 		// Debugging:

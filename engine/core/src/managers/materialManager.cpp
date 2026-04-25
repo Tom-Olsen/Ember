@@ -22,38 +22,34 @@ namespace emberEngine
 			return;
 		s_isInitialized = true;
 
-		uint32_t shadowQueue = emberCommon::RenderQueue::shadow;
 		uint32_t opaqueQueue = emberCommon::RenderQueue::opaque;
 		uint32_t skyboxQueue = emberCommon::RenderQueue::skybox;
 		uint32_t transparentQueue = emberCommon::RenderQueue::transparent;
-		emberCommon::MaterialType forwardOpaqueType = emberCommon::MaterialType::forwardOpaque;
-		emberCommon::MaterialType forwardTransparentType = emberCommon::MaterialType::forwardTransparent;
-		emberCommon::MaterialType shadowType = emberCommon::MaterialType::shadow;
-		emberCommon::MaterialType skyboxType = emberCommon::MaterialType::skybox;
-		emberCommon::MaterialType presentType = emberCommon::MaterialType::present;
+		emberCommon::RenderMode opaqueMode = emberCommon::RenderMode::opaque;
+		emberCommon::RenderMode transparentMode = emberCommon::RenderMode::transparent;
+		emberCommon::RenderMode skyboxMode = emberCommon::RenderMode::skybox;
 
 		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
 		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
 		//AddMaterial(testMaterial);
 
-		CreateMaterial(forwardOpaqueType, "errorMaterial", opaqueQueue, directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
-		CreateMaterial(forwardOpaqueType, "defaultMaterial", opaqueQueue, directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
-		CreateMaterial(forwardTransparentType, "transparentMaterial", transparentQueue, directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv");
-		CreateMaterial(presentType, "presentMaterial", opaqueQueue, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
-		CreateMaterial(forwardOpaqueType, "vertexColorLitMaterial", opaqueQueue, directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv");
-		CreateMaterial(forwardOpaqueType, "vertexColorUnlitMaterial", opaqueQueue, directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv");
-		CreateMaterial(forwardOpaqueType, "normalMaterial", opaqueQueue, directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv");
-		CreateMaterial(shadowType, "shadowMaterial", shadowQueue, directoryPath / "shadow.vert.spv");
-		CreateMaterial(skyboxType, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
-		CreateMaterial(forwardOpaqueType, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
-		CreateMaterial(forwardOpaqueType, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
+		CreateMaterial(opaqueMode, "errorMaterial", opaqueQueue, directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
+		CreateMaterial(opaqueMode, "defaultMaterial", opaqueQueue, directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
+		CreateMaterial(transparentMode, "transparentMaterial", transparentQueue, directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv");
+		CreateMaterial(opaqueMode, "presentMaterial", opaqueQueue, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
+		CreateMaterial(opaqueMode, "vertexColorLitMaterial", opaqueQueue, directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv");
+		CreateMaterial(opaqueMode, "vertexColorUnlitMaterial", opaqueQueue, directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv");
+		CreateMaterial(opaqueMode, "normalMaterial", opaqueQueue, directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv");
+		CreateMaterial(skyboxMode, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
+		CreateMaterial(opaqueMode, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
+		CreateMaterial(opaqueMode, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
 		
 		// For testing spirv reflect:
-		CreateMaterial(forwardOpaqueType, "testMaterial", opaqueQueue, directoryPath / "test.vert.spv", directoryPath / "test.frag.spv");
+		CreateMaterial(opaqueMode, "testMaterial", opaqueQueue, directoryPath / "test.vert.spv", directoryPath / "test.frag.spv");
 
 		// For testing the binding missmatch error:
-		CreateMaterial(forwardOpaqueType, "testAMaterial", opaqueQueue, directoryPath / "testA.vert.spv", directoryPath / "testA.frag.spv");
-		CreateMaterial(forwardOpaqueType, "testBMaterial", opaqueQueue, directoryPath / "testB.vert.spv", directoryPath / "testB.frag.spv");
+		CreateMaterial(opaqueMode, "testAMaterial", opaqueQueue, directoryPath / "testA.vert.spv", directoryPath / "testA.frag.spv");
+		CreateMaterial(opaqueMode, "testBMaterial", opaqueQueue, directoryPath / "testB.vert.spv", directoryPath / "testB.frag.spv");
 	}
 	void MaterialManager::Clear()
 	{
@@ -64,7 +60,7 @@ namespace emberEngine
 
 
 	// Add/Get/Delete:
-	Material MaterialManager::CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material MaterialManager::CreateMaterial(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		auto it = s_materialInterfacesMap.find(name);
 		if (it != s_materialInterfacesMap.end())
@@ -73,7 +69,7 @@ namespace emberEngine
 			return Material{ it->second.get() };
 		}
 
-		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateMaterial(type, name, renderQueue, vertexSpv, fragmentSpv);
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateMaterial(renderMode, name, renderQueue, vertexSpv, fragmentSpv);
 		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
 		return Material{ result.first->second.get() };
 	}

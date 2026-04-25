@@ -1,6 +1,7 @@
 #pragma once
 #include "emberCoreExport.h"
 #include "emberMath.h"
+#include <cstdint>
 #include <memory>
 
 
@@ -8,7 +9,7 @@
 // Forward decleration:
 namespace emberBackendInterface
 {
-	class IShaderProperties;
+	class IDescriptorSetBinding;
 }
 
 
@@ -32,16 +33,20 @@ namespace emberEngine
 		friend class Compute;
 
 	private: // Members:
-		bool m_ownsIShaderProperties;	// Can be set to false by Renderer or Compute (friends) when creating ShaderProperties from existing backend managed IShaderProperties.
-		emberBackendInterface::IShaderProperties* m_pIShaderProperties; // conditional ownership, depending on usecase.
-		emberBackendInterface::IShaderProperties* GetInterfaceHandle();
+		bool m_ownsICallDescriptorSetBinding;
+		bool m_callDescriptorSetBindingExpired;
+		uint64_t m_callDescriptorSetBindingGeneration;
+		emberBackendInterface::IDescriptorSetBinding* m_pIShaderDescriptorSetBinding; // Owned by the shader/material/compute shader.
+		emberBackendInterface::IDescriptorSetBinding* m_pICallDescriptorSetBinding; // conditional ownership, depending on usecase.
+		emberBackendInterface::IDescriptorSetBinding* GetCallInterfaceHandle();
 
 	public: // Methods:
 		// Constructors/Destructor:
 		ShaderProperties();
 		ShaderProperties(ComputeShader& computeShader);
+		ShaderProperties(ComputeShader& computeShader, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, bool ownsCallDescriptorSetBinding);
 		ShaderProperties(const Material& material);
-		ShaderProperties(emberBackendInterface::IShaderProperties* pIShaderProperties);
+		ShaderProperties(const Material& material, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, bool ownsCallDescriptorSetBinding);
 		~ShaderProperties();
 
 		// Non-copyable:
@@ -98,6 +103,7 @@ namespace emberEngine
 		void PrintMaps() const;
 
 	private: // Methods:
-		void SetOwnerShip(bool ownsShaderProperties);
+		void ValidateCallDescriptorSetBinding();
+		emberBackendInterface::IDescriptorSetBinding* GetDescriptorSetBindingWith(const std::string& name);
 	};
 }

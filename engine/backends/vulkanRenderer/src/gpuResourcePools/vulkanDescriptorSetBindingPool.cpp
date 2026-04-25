@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
         // Create new shader properties if pool is empty:
         if (m_pool.empty())
         {
-            DescriptorSetBinding* pNewDescriptorSetBinding = new DescriptorSetBinding(pShader, DRAW_SET_INDEX);
+            DescriptorSetBinding* pNewDescriptorSetBinding = new DescriptorSetBinding(pShader, CALL_SET_INDEX);
             m_storage.push_back(pNewDescriptorSetBinding);
             m_pool.push(pNewDescriptorSetBinding);
         }
@@ -45,6 +45,7 @@ namespace vulkanRendererBackend
     }
     void DescriptorSetBindingPool::Return(DescriptorSetBinding* pDescriptorSetBinding)
     {
+        pDescriptorSetBinding->InvalidateBorrowedHandles();
         m_pool.push(pDescriptorSetBinding);
         m_currentUsage--;
     }

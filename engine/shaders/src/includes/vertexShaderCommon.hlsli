@@ -15,7 +15,7 @@
 
 
 // Per draw call resources:
-cbuffer ModelMatrizes : register(b399, DRAW_SET)
+cbuffer ModelMatrizes : register(b399, CALL_SET)
 {
     float4x4 model_localToWorldMatrix; // TRS matrix.
     float4x4 model_worldToLocalMatrix; // inverse TRS matrix.

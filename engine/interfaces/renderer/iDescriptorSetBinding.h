@@ -1,5 +1,6 @@
 #pragma once
 #include "emberMath.h"
+#include <cstdint>
 #include <string>
 
 
@@ -60,6 +61,8 @@ namespace emberBackendInterface
         virtual void SetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value) = 0;
 
         // Getters:
+        virtual uint64_t GetGeneration() const = 0;
+        virtual bool HasBinding(const std::string& name) const = 0;
         virtual std::string GetShaderName() const = 0;
 		// Simple members:
         virtual int GetInt(const std::string& bufferName, const std::string& memberName) const = 0;

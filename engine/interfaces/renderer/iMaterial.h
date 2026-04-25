@@ -6,6 +6,10 @@
 
 namespace emberBackendInterface
 {
+    class IDescriptorSetBinding;
+
+
+
     class IMaterial
     {
     public: // Methods:
@@ -20,6 +24,7 @@ namespace emberBackendInterface
         virtual const std::string& GetName() const = 0;
         virtual uint32_t GetRenderQueue() const = 0;
         virtual emberCommon::RenderMode GetRenderMode() const = 0;
+        virtual IDescriptorSetBinding* GetShaderDescriptorSetBinding() const = 0;
 
         // Debugging:
         virtual void Print() const = 0;

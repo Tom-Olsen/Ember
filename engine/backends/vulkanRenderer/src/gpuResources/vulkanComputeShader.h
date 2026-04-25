@@ -31,6 +31,7 @@ namespace vulkanRendererBackend
 		// Getters:
 		const std::string& GetName() const override;
 		Uint3 GetBlockSize() const override;
+		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
 		const Pipeline* GetPipeline() const;
 
 		// Debugging:

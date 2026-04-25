@@ -33,9 +33,9 @@ namespace emberEngine
 
 
 	// Creation/Destruction: (register/delete from MaterialManager)
-	Material Material::Create(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::Create(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		return MaterialManager::CreateMaterial(type, name, renderQueue, vertexSpv, fragmentSpv);
+		return MaterialManager::CreateMaterial(renderMode, name, renderQueue, vertexSpv, fragmentSpv);
 	}
 	void Material::Destroy()
 	{

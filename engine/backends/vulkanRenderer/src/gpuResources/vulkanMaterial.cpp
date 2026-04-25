@@ -266,6 +266,10 @@ namespace vulkanRendererBackend
 	{
 		return m_renderMode;
 	}
+	emberBackendInterface::IDescriptorSetBinding* Material::GetShaderDescriptorSetBinding() const
+	{
+		return GetDescriptorSetBinding();
+	}
 	const Pipeline* Material::GetPipeline(const Mesh* pMesh) const
 	{
 		const size_t pipelineIndex = GetPipelineIndex(pMesh);

@@ -62,6 +62,10 @@ namespace vulkanRendererBackend
 	{
 		return m_blockSize;
 	}
+	emberBackendInterface::IDescriptorSetBinding* ComputeShader::GetShaderDescriptorSetBinding() const
+	{
+		return GetDescriptorSetBinding();
+	}
 	const Pipeline* ComputeShader::GetPipeline() const
 	{
 		return m_pPipelines[0].get();	// compute shaders only ever contain 1 pipeline.

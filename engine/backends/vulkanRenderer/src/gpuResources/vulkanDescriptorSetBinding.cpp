@@ -34,7 +34,7 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructor/Destructor:
 	DescriptorSetBinding::DescriptorSetBinding(Shader* pShader, uint32_t setIndex)
-		: m_pShader(pShader), m_setIndex(setIndex)
+		: m_pShader(pShader), m_setIndex(setIndex), m_generation(0)
 	{
 		// Create resource bindings and uniform buffer update logic for each frameInFlight:
 		m_textureMaps = std::vector<std::unordered_map<uint32_t, TextureBinding>>(Context::GetFramesInFlight());
@@ -397,6 +397,14 @@ namespace vulkanRendererBackend
 	{
 		return m_setIndex;
 	}
+	uint64_t DescriptorSetBinding::GetGeneration() const
+	{
+		return m_generation;
+	}
+	bool DescriptorSetBinding::HasBinding(const std::string& name) const
+	{
+		return m_bindingIndices.contains(name);
+	}
 	std::string DescriptorSetBinding::GetShaderName() const
 	{
 		return m_pShader->GetName();
@@ -416,6 +424,10 @@ namespace vulkanRendererBackend
 
 
 	// Backend functionality:
+	void DescriptorSetBinding::InvalidateBorrowedHandles()
+	{
+		m_generation++;
+	}
 	void DescriptorSetBinding::UpdateShaderData(uint32_t frameIndex)
 	{
 		// Stream uniform buffer data from host memory to GPU only for current frameIndex:

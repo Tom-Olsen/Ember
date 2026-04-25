@@ -37,3 +37,5 @@ Replace manual CheckOut/Return resource management patterns with RAII wrappers w
 Reduce static shared state usage in Context, PoolManager, GarbageCollector, and RenderPassManager to improve encapsulation and thread safety.
 
 Audit raw VkHandle passthrough APIs in vulkanRenderer.h and reduce external coupling by exposing higher-level abstractions instead.
+
+Rethink GPU resource naming: names should live in core for managers/debugging and be passed through the backend only to name VkHandles in debug mode.

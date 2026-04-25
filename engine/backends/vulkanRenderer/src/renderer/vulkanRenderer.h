@@ -98,8 +98,8 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::PositionalLight> m_positionalLights;
 
 		// Draw calls:
-		std::vector<DrawCall> m_staticDrawCalls;	// for draw calls that manage their own ShaderDescriptorSets.
-		std::vector<DrawCall> m_dynamicDrawCalls;	// for draw calls that get ShaderDescriptorSets assigned from a pool.
+		std::vector<DrawCall> m_staticDrawCalls;	// for draw calls that manage their own call descriptor sets.
+		std::vector<DrawCall> m_dynamicDrawCalls;	// for draw calls that get call descriptor sets assigned from a pool.
 		std::vector<DrawCall*> m_sortedDrawCallPointers;
 
 		// Render management:
@@ -135,11 +135,11 @@ namespace vulkanRendererBackend
 		void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) override;
 
 		// Draw mesh:
-		void DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IDescriptorSetBinding* pShaderDescriptorSet, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true) override;
+		void DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true) override;
 		emberBackendInterface::IDescriptorSetBinding* DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true) override;
 
 		// Draw instanced:
-		void DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IDescriptorSetBinding* pShaderDescriptorSet, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true) override;
+		void DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true) override;
 		emberBackendInterface::IDescriptorSetBinding* DrawInstanced(uint32_t instanceCount, emberBackendInterface::IBuffer* pInstanceBuffer, emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true) override;
 
 		// Getters:
@@ -171,8 +171,8 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) override;
 		emberBackendInterface::IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
 		emberBackendInterface::IMesh* CreateMesh() override;
-		emberBackendInterface::IDescriptorSetBinding* CreateDescriptorSetBinding(emberBackendInterface::IComputeShader* pIComputeShader) override;
-		emberBackendInterface::IDescriptorSetBinding* CreateDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial, uint32_t setIndex) override;
+		emberBackendInterface::IDescriptorSetBinding* CreateComputeCallDescriptorSetBinding(emberBackendInterface::IComputeShader* pIComputeShader) override;
+		emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial) override;
 
 		// Vulkan handle passthrough for API coupling:
 		void* GetVkInstance() const override;

@@ -1,5 +1,4 @@
 #pragma once
-#include "commonMaterialType.h"
 #include "commonPipelineState.h"
 #include "commonRenderQueue.h"
 #include "emberCoreExport.h"
@@ -38,7 +37,7 @@ namespace emberEngine
 		~Material();
 
 		// Creation/Destruction: (register/delete from MaterialManager)
-		static Material Create(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		static Material Create(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
 		void Destroy();
 
 		// Copyable:

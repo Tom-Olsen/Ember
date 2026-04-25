@@ -65,7 +65,7 @@ namespace emberEngine
 	// Getters:
 	const std::string& Texture::GetName() const
 	{
-		return m_pITexture->GetName();
+		return m_name;
 	}
 	uint32_t Texture::GetWidth() const
 	{

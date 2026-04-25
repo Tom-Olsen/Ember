@@ -1,7 +1,7 @@
 #pragma once
 #include "commonBufferUsage.h"
 #include "commonLighting.h"
-#include "commonMaterialType.h"
+#include "commonPipelineState.h"
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
@@ -19,10 +19,10 @@ namespace emberBackendInterface
 {
 	class IBuffer;
 	class IComputeShader;
+	class IDescriptorSetBinding;
 	class IMaterial;
 	class IMesh;
 	class IRenderer;
-	class IShaderProperties;
 	class ITexture;
 }
 
@@ -34,7 +34,6 @@ namespace emberEngine
 	class Buffer;
 	class Material;
 	class Mesh;
-	class Scene;
 	class ShaderProperties;
 
 	
@@ -63,7 +62,7 @@ namespace emberEngine
 		static void Clear();
 
 		// Main render loop:
-		static void RenderFrame(Scene* pScene);
+		static void RenderFrame();
 
 		// Lightsources:
 		static void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix);
@@ -121,10 +120,10 @@ namespace emberEngine
 		//static emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data);
 		static emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data);
 		static emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
-		static emberBackendInterface::IMaterial* CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static emberBackendInterface::IMaterial* CreateMaterial(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static emberBackendInterface::IMesh* CreateMesh(const std::string& name);
-		static emberBackendInterface::IShaderProperties* CreateShaderProperties(emberBackendInterface::IComputeShader* pIComputeShader);
-		static emberBackendInterface::IShaderProperties* CreateShaderProperties(emberBackendInterface::IMaterial* pIMaterial);
+		static emberBackendInterface::IDescriptorSetBinding* CreateComputeCallDescriptorSetBinding(emberBackendInterface::IComputeShader* pIComputeShader);
+		static emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial);
 
 		// Delete all constructors:
 		Renderer() = delete;

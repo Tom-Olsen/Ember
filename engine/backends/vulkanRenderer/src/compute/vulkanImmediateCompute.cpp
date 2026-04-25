@@ -1,4 +1,5 @@
 #include "vulkanImmediateCompute.h"
+#include "descriptorSetMacros.h"
 #include "logger.h"
 #include "vulkanComputePushConstant.h"
 #include "vulkanComputeShader.h"
@@ -53,15 +54,17 @@ namespace vulkanRendererBackend
 			return;
 		}
 
-		// Update shader specific data:
+		// Update compute call data:
+		uint32_t frameIndex = 0;
+		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 		DescriptorSetBinding* pDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding);
-		pDescriptorSetBinding->UpdateShaderData(0);
+		pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(frameIndex);
+		pDescriptorSetBinding->UpdateShaderData(frameIndex);
 
 		// Record command buffer:
 		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(Context::GetLogicalDevice()->GetComputeQueue());
 		{
 			// Set pipeline:
-			ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 			VkPipeline pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
 			VkPipelineLayout pipelineLayout = pComputeShader->GetVkPipelineLayout();
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
@@ -75,10 +78,11 @@ namespace vulkanRendererBackend
 			uint32_t groupCountZ = (threadCount.z + blockSize.z - 1) / blockSize.z;
 
 			// Dispatch compute shader:
-			uint32_t frameIndex = Context::GetFrameIndex();
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, Context::GetRenderer()->GetStaticDescriptorSets(frameIndex).data(), 0, nullptr);
 			if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+			if (VkDescriptorSet vkDescriptorSet = pDescriptorSetBinding->GetVkDescriptorSet(frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 			vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 		}
 		SingleTimeCommand::EndCommand(Context::GetLogicalDevice()->GetComputeQueue());

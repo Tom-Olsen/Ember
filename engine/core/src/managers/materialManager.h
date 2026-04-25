@@ -1,5 +1,5 @@
 #pragma once
-#include "commonMaterialType.h"
+#include "commonPipelineState.h"
 #include "emberCoreExport.h"
 #include <filesystem>
 #include <memory>
@@ -38,7 +38,7 @@ namespace emberEngine
         static void Init();
         static void Clear();
 
-        static Material CreateMaterial(emberCommon::MaterialType type, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+        static Material CreateMaterial(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
         static Material GetMaterial(const std::string& name);       // throws on fail.
         static Material TryGetMaterial(const std::string& name);    // returns invalid Material on fail.
         static void DeleteMaterial(const std::string& name);

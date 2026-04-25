@@ -64,6 +64,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		Shader* m_pShader;
 		uint32_t m_setIndex;
+		uint64_t m_generation;
 
         // Fast lookup of indices by name and vice versa:
 		std::unordered_map<std::string, uint32_t> m_bindingIndices;
@@ -167,10 +168,13 @@ namespace vulkanRendererBackend
 		// Getters:
 		Shader* GetShader() const;
 		uint32_t GetSetIndex() const;
+		uint64_t GetGeneration() const override;
+		bool HasBinding(const std::string& name) const override;
 		std::string GetShaderName() const override;
 		Texture* GetTexture(const std::string& name) const;
 		
 		// Backend functionality:
+		void InvalidateBorrowedHandles();
 		void UpdateShaderData(uint32_t frameIndex);
 		const VkDescriptorSet& GetVkDescriptorSet(uint32_t frameIndex) const;
 		const std::vector<VkDescriptorSet>& GetVkDescriptorSets() const;

@@ -102,6 +102,7 @@ namespace emberEngine
 			static void Clear();
 
 			// Workload recording:
+			// Post render compute is render-target sized by design; threadCount is derived by the backend.
 			static void RecordComputeShader(ComputeShader& computeShader, ShaderProperties& shaderProperties);
 			static ShaderProperties RecordComputeShader(ComputeShader& computeShader);
 

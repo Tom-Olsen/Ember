@@ -20,7 +20,7 @@ namespace vulkanRendererBackend
 		bool receiveShadows;
 		bool castShadows;
 		Material* pMaterial;
-		DescriptorSetBinding* pDescriptorSetBinding;
+		DescriptorSetBinding* pCallDescriptorSetBinding;
 		DescriptorSetBinding* pShadowDescriptorSetBinding;
 		Mesh* pMesh;
 		uint32_t instanceCount;	// 0 implies no instanced rendering.

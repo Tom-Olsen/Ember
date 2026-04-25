@@ -34,6 +34,13 @@ namespace emberEngine
 
 	private: // Members:
 		std::unique_ptr<emberBackendInterface::IMesh> m_pIMesh;
+		std::string m_name;
+		std::vector<Float3> m_positions;
+		std::vector<Float3> m_normals;
+		std::vector<Float3> m_tangents;
+		std::vector<Float4> m_colors;
+		std::vector<Float4> m_uvs;
+		std::vector<Uint3> m_triangles;
 		emberBackendInterface::IMesh* const GetInterfaceHandle() const;
 
 	public: // Methods:

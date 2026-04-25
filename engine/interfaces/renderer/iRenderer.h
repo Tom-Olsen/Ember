@@ -37,11 +37,11 @@ namespace emberBackendInterface
         virtual void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) = 0;
 
         // Draw mesh:
-        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
+        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
         virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
 
         // Draw instanced:
-        virtual void DrawInstanced(uint32_t instanceCount, IBuffer* pInstanceBuffer, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
+        virtual void DrawInstanced(uint32_t instanceCount, IBuffer* pInstanceBuffer, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
         virtual IDescriptorSetBinding* DrawInstanced(uint32_t instanceCount, IBuffer* pInstanceBuffer, IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
 
         // Getters:
@@ -73,8 +73,8 @@ namespace emberBackendInterface
         virtual IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) = 0;
         virtual IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
         virtual IMesh* CreateMesh() = 0;
-        virtual IDescriptorSetBinding* CreateDescriptorSetBinding(IComputeShader* pIComputeShader) = 0;
-        virtual IDescriptorSetBinding* CreateDescriptorSetBinding(IMaterial* pIMaterial, uint32_t setIndex) = 0;
+        virtual IDescriptorSetBinding* CreateComputeCallDescriptorSetBinding(IComputeShader* pIComputeShader) = 0;
+        virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;
 
         // Vulkan handle passthrough for API coupling:
         virtual void* GetVkInstance() const = 0;

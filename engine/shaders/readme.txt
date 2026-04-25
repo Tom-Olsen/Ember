@@ -13,21 +13,21 @@ Shader rules:
 		alignas(16) Float4x4 localToWorldMatrix;
 		alignas(16) Float4x4 worldToClipMatrix;
 
--DescriptorSets are seperated by update frquency (use the macros from descriptorSpaces.hlsli):
-    set0/space0: (DRAW_SET)     e.g transform:  localToWorld, worldToLocal
-    set1/space1: (FRAME_SET)    e.g camera:     view, proj, viewProj, cameraPos
-    set2/space2: (MATERIAL_SET) e.g material:   textures, buffers, instanceData, shaderParams (metallicity etc.)
-    set3/space3: (SCENE_SET)    e.g lighting:   dirLightCount, posLightsCount
-    set4/space4: (ENGINE_SET)   e.g engine:     samplers, global noise textures, etc
+-DescriptorSets are seperated by update frquency (use the macros from descriptorSetMacros.h):
+    set0/space0: (GLOBAL_SET)   e.g global:     samplers, shadowMaps, global noise textures, etc
+    set1/space1: (SCENE_SET)    e.g lighting:   dirLightCount, posLightsCount
+    set2/space2: (FRAME_SET)    e.g camera:     view, proj, viewProj, cameraPos
+    set3/space3: (SHADER_SET)   e.g shader:     textures, buffers, shared shader params
+    set4/space4: (CALL_SET)     e.g call:       draw/dispatch-local parameters
 
 -Some bindings are reserved for engine level resources or commonly used features (see vertex/fragmentShaderCommon.hlsli):
 
-    cbuffer ModelMatrizes : register(b100, DRAW_SET)
+    cbuffer ModelMatrizes : register(b399, CALL_SET)
     {
         float4x4 cb_localToWorldMatrix;
         float4x4 cb_worldToLocalMatrix;
     };
-    cbuffer Camera : register(b100, FRAME_SET)
+    cbuffer Camera : register(b1399, FRAME_SET)
     {
         float4 cb_cameraPosition;
         float4x4 cb_viewMatrix;
@@ -38,14 +38,14 @@ Shader rules:
         float4x4 localToWorldMatrix;
         float4 color;
     };
-    StructuredBuffer<InstanceData> b_instanceData : register(t100, MATERIAL_SET);
-    cbuffer LightProperties : register(b100, SCENE_SET)
+    StructuredBuffer<InstanceData> b_instanceData : register(t199, SHADER_SET);
+    cbuffer LightProperties : register(b2399, SCENE_SET)
     {
         int cb_dirLightCount;
         int cb_posLightCount;
     };
 
-    SamplerState colorSampler : register(s100, ENGINE_SET);
-    SamplerComparisonState shadowSampler : register(s101, ENGINE_SET);
-    Texture2DArray<float> shadowMaps : register(t200, ENGINE_SET);
+    SamplerState colorSampler : register(s3099, GLOBAL_SET);
+    SamplerComparisonState shadowSampler : register(s3098, GLOBAL_SET);
+    Texture2DArray<float> shadowMaps : register(t3199, GLOBAL_SET);
     ...

@@ -3,7 +3,7 @@
 
 
 
-cbuffer SurfaceProperties : register(b300, DRAW_SET)
+cbuffer SurfaceProperties : register(b300, CALL_SET)
 {
     float4 diffuseColor;    // (1.0, 1.0, 1.0)
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "commonInput.h"
+#include <cstdint>
 #include <sstream>
 #include <string>
 #include <string_view>

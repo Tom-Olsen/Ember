@@ -74,7 +74,7 @@ namespace vulkanRendererBackend
 		m_vkDescriptorSetLayouts[1] = SceneDescriptorSetLayout::GetVkDescriptorSetLayout();
 		m_vkDescriptorSetLayouts[2] = FrameDescriptorSetLayout::GetVkDescriptorSetLayout();
 
-		// Only SHADER_SET(3) and DRAW_SET(4) are dynamic and come from reflection:
+		// Only SHADER_SET(3) and CALL_SET(4) are dynamic and come from reflection:
 		for (size_t i = 3; i < DESCRIPTOR_SET_COUNT; i++)
 		{
 			const std::vector<emberSpirvReflect::DescriptorReflection>& descriptors = m_shaderReflection.GetDescriptorSetReflection(i).GetDescriptorReflections();

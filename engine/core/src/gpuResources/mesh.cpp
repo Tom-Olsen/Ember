@@ -18,14 +18,17 @@ namespace emberEngine
 	// Constructors/Destructor:
 	Mesh::Mesh()
 	{
+		m_name = "";
 		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(Renderer::CreateMesh(""));
 	}
 	Mesh::Mesh(const std::string& name)
 	{
+		m_name = name;
 		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(Renderer::CreateMesh(name));
 	}
 	Mesh::Mesh(emberBackendInterface::IMesh* pIMesh)
 	{
+		m_name = "";
 		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(pIMesh);
 	}
 	Mesh::~Mesh()
@@ -42,35 +45,42 @@ namespace emberEngine
 	// Setters: (copy the vector)
 	void Mesh::SetName(const std::string& name)
 	{
-		m_pIMesh->SetName(name);
+		m_name = name;
 	}
 	void Mesh::SetPositions(const std::vector<Float3>& positions)
 	{
-		m_pIMesh->SetPositions(positions);
+		m_positions = positions;
+		RegisterUpdate();
 	}
 	void Mesh::SetNormals(const std::vector<Float3>& normals)
 	{
-		m_pIMesh->SetNormals(normals);
+		m_normals = normals;
+		RegisterUpdate();
 	}
 	void Mesh::SetTangents(const std::vector<Float3>& tangents)
 	{
-		m_pIMesh->SetTangents(tangents);
+		m_tangents = tangents;
+		RegisterUpdate();
 	}
 	void Mesh::SetColors(const std::vector<Float4>& colors)
 	{
-		m_pIMesh->SetColors(colors);
+		m_colors = colors;
+		RegisterUpdate();
 	}
 	void Mesh::SetUniformColor(const Float4& color)
 	{
-		m_pIMesh->SetUniformColor(color);
+		m_colors.resize(GetVertexCount(), color);
+		RegisterUpdate();
 	}
 	void Mesh::SetUVs(const std::vector<Float4>& uvs)
 	{
-		m_pIMesh->SetUVs(uvs);
+		m_uvs = uvs;
+		RegisterUpdate();
 	}
 	void Mesh::SetTriangles(const std::vector<Uint3>& triangles)
 	{
-		m_pIMesh->SetTriangles(triangles);
+		m_triangles = triangles;
+		RegisterUpdate();
 	}
 
 
@@ -78,27 +88,33 @@ namespace emberEngine
 	// Movers: (take ownership of vector)
 	void Mesh::MovePositions(std::vector<Float3>&& positions)
 	{
-		m_pIMesh->MovePositions(std::move(positions));
+		m_positions = std::move(positions);
+		RegisterUpdate();
 	}
 	void Mesh::MoveNormals(std::vector<Float3>&& normals)
 	{
-		m_pIMesh->MoveNormals(std::move(normals));
+		m_normals = std::move(normals);
+		RegisterUpdate();
 	}
 	void Mesh::MoveTangents(std::vector<Float3>&& tangents)
 	{
-		m_pIMesh->MoveTangents(std::move(tangents));
+		m_tangents = std::move(tangents);
+		RegisterUpdate();
 	}
 	void Mesh::MoveColors(std::vector<Float4>&& colors)
 	{
-		m_pIMesh->MoveColors(std::move(colors));
+		m_colors = std::move(colors);
+		RegisterUpdate();
 	}
 	void Mesh::MoveUVs(std::vector<Float4>&& uvs)
 	{
-		m_pIMesh->MoveUVs(std::move(uvs));
+		m_uvs = std::move(uvs);
+		RegisterUpdate();
 	}
 	void Mesh::MoveTriangles(std::vector<Uint3>&& triangles)
 	{
-		m_pIMesh->MoveTriangles(std::move(triangles));
+		m_triangles = std::move(triangles);
+		RegisterUpdate();
 	}
 	void Mesh::MoveMeshAsset(emberAssetLoader::Mesh&& meshAsset)
 	{
@@ -115,47 +131,60 @@ namespace emberEngine
 	// Getters:
 	const std::string& Mesh::GetName() const
 	{
-		return m_pIMesh->GetName();
+		return m_name;
 	}
 	uint32_t Mesh::GetVertexCount() const
 	{
-		return m_pIMesh->GetVertexCount();
+		return static_cast<uint32_t>(m_positions.size());
 	}
 	uint32_t Mesh::GetTriangleCount() const
 	{
-		return m_pIMesh->GetTriangleCount();
+		return static_cast<uint32_t>(m_triangles.size());
 	}
 	std::vector<Float3>& Mesh::GetPositions()
 	{
-		return m_pIMesh->GetPositions();
+		return m_positions;
 	}
 	std::vector<Float3>& Mesh::GetNormals()
 	{
-		return m_pIMesh->GetNormals();
+		return m_normals;
 	}
 	std::vector<Float3>& Mesh::GetTangents()
 	{
-		return m_pIMesh->GetTangents();
+		return m_tangents;
 	}
 	std::vector<Float4>& Mesh::GetColors()
 	{
-		return m_pIMesh->GetColors();
+		return m_colors;
 	}
 	std::vector<Float4>& Mesh::GetUVs()
 	{
-		return m_pIMesh->GetUVs();
+		return m_uvs;
 	}
 	std::vector<Uint3>& Mesh::GetTriangles()
 	{
-		return m_pIMesh->GetTriangles();
+		return m_triangles;
 	}
 	void Mesh::RegisterUpdate()
 	{
-		m_pIMesh->RegisterUpdate();
+		uint32_t vertexCount = GetVertexCount();
+		std::vector<Float3>* pNormals = m_normals.size() == vertexCount ? &m_normals : nullptr;
+		std::vector<Float3>* pTangents = m_tangents.size() == vertexCount ? &m_tangents : nullptr;
+		std::vector<Float4>* pColors = m_colors.size() == vertexCount ? &m_colors : nullptr;
+		std::vector<Float4>* pUvs = m_uvs.size() == vertexCount ? &m_uvs : nullptr;
+		m_pIMesh->UpdateVertexBuffer(m_positions, pNormals, pTangents, pColors, pUvs);
+		m_pIMesh->UpdateIndexBuffer(m_triangles, vertexCount);
 	}
 	Mesh Mesh::GetCopy(const std::string& newName)
 	{
-		return Mesh(m_pIMesh->GetCopy(newName));
+		Mesh copy(newName.empty() ? m_name : newName);
+		copy.SetPositions(m_positions);
+		copy.SetNormals(m_normals);
+		copy.SetTangents(m_tangents);
+		copy.SetColors(m_colors);
+		copy.SetUVs(m_uvs);
+		copy.SetTriangles(m_triangles);
+		return copy;
 	}
 
 
@@ -263,11 +292,53 @@ namespace emberEngine
 	}
 	void Mesh::ComputeNormals()
 	{
-		m_pIMesh->ComputeNormals();
+		m_normals.clear();
+		m_normals.resize(GetVertexCount(), Float3::zero);
+		for (const Uint3& triangle : m_triangles)
+		{
+			Float3 normal = Float3::Cross(m_positions[triangle[1]] - m_positions[triangle[0]], m_positions[triangle[2]] - m_positions[triangle[0]]).Normalize();
+			m_normals[triangle[0]] += normal;
+			m_normals[triangle[1]] += normal;
+			m_normals[triangle[2]] += normal;
+		}
+		for (Float3& normal : m_normals)
+			normal = normal.Normalize();
+		RegisterUpdate();
 	}
 	void Mesh::ComputeTangents()
 	{
-		m_pIMesh->ComputeTangents();
+		m_tangents.clear();
+		m_tangents.resize(GetVertexCount(), Float3::zero);
+		if (m_uvs.size() != GetVertexCount())
+		{
+			RegisterUpdate();
+			return;
+		}
+		for (const Uint3& triangle : m_triangles)
+		{
+			const Float3& p0 = m_positions[triangle[0]];
+			const Float3& p1 = m_positions[triangle[1]];
+			const Float3& p2 = m_positions[triangle[2]];
+			const Float4& uv0 = m_uvs[triangle[0]];
+			const Float4& uv1 = m_uvs[triangle[1]];
+			const Float4& uv2 = m_uvs[triangle[2]];
+			Float3 edge1 = p1 - p0;
+			Float3 edge2 = p2 - p0;
+			float deltaU1 = uv1.x - uv0.x;
+			float deltaV1 = uv1.y - uv0.y;
+			float deltaU2 = uv2.x - uv0.x;
+			float deltaV2 = uv2.y - uv0.y;
+			float determinant = deltaU1 * deltaV2 - deltaU2 * deltaV1;
+			if (math::Abs(determinant) <= math::epsilon)
+				continue;
+			Float3 tangent = (deltaV2 * edge1 - deltaV1 * edge2) / determinant;
+			m_tangents[triangle[0]] += tangent;
+			m_tangents[triangle[1]] += tangent;
+			m_tangents[triangle[2]] += tangent;
+		}
+		for (Float3& tangent : m_tangents)
+			tangent = tangent.Normalize();
+		RegisterUpdate();
 	}
 
 
