@@ -72,7 +72,7 @@ namespace vulkanRendererBackend
 		}
 		else
 		{
-			LOG_WARN("Your device does not supports enoguh (4) queues. Async compute will not work.");
+			LOG_WARN("Your device does not supports enough (4) queues. Async compute will not work.");
 			vkGetDeviceQueue(m_device, m_graphicsQueue.familyIndex, 0, &m_graphicsQueue.queue);
 			vkGetDeviceQueue(m_device, m_presentQueue.familyIndex, 0, &m_presentQueue.queue);
 			vkGetDeviceQueue(m_device, m_computeQueue.familyIndex, 0, &m_computeQueue.queue);

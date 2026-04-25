@@ -28,7 +28,7 @@ Handle VK_SUBOPTIMAL_KHR separately from VK_ERROR_OUT_OF_DATE_KHR so swapchain r
 
 Add explicit validation in PoolManager when a null or invalid Shader pointer is passed to CheckOutDescriptorSetBinding.
 
-Fix typos and misleading comments in the Vulkan backend, including "Destroyy" and "enoguh".
+Fix typos and misleading comments in the Vulkan backend.
 
 Standardize naming across the backend to avoid inconsistent prefixes like m_pLogicalDevice vs m_swapchains and mixed getter return styles.
 

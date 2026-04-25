@@ -101,7 +101,7 @@ namespace vulkanRendererBackend
 		vkFreeCommandBuffers(Context::GetVkDevice(), s_computePool, 1, &s_computeBuffer);
 		vkFreeCommandBuffers(Context::GetVkDevice(), s_transferPool, 1, &s_transferBuffer);
 
-		// Destroyy pools:
+		// Destroy pools:
 		vkDestroyCommandPool(Context::GetVkDevice(), s_graphicsPool, nullptr);
 		vkDestroyCommandPool(Context::GetVkDevice(), s_presentPool, nullptr);
 		vkDestroyCommandPool(Context::GetVkDevice(), s_computePool, nullptr);
