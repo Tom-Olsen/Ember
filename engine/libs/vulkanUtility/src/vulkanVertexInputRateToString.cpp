@@ -1,3 +1,4 @@
+#include "vulkanVertexInputRateToString.h"
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -5,7 +6,7 @@
 
 namespace emberVulkanUtility
 {
-	inline std::string ToString(VkVertexInputRate vkVertexInputRate)
+	std::string ToString(VkVertexInputRate vkVertexInputRate)
 	{
 		switch (vkVertexInputRate)
 		{

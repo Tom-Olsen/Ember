@@ -1,4 +1,4 @@
-#pragma once
+#include "vulkanDescriptorSetLayoutBindingToString.h"
 #include "vulkanDescriptorTypeToString.h"
 #include "vulkanShaderStageFlagsToString.h"
 #include <sstream>
@@ -8,7 +8,7 @@
 
 namespace emberVulkanUtility
 {
-	inline std::string ToString(VkDescriptorSetLayoutBinding vkDescriptorSetLayoutBinding)
+	std::string ToString(VkDescriptorSetLayoutBinding vkDescriptorSetLayoutBinding)
 	{
 		std::ostringstream ss;
 		ss << "binding: " << vkDescriptorSetLayoutBinding.binding << ", descriptorType: " << emberVulkanUtility::ToString(vkDescriptorSetLayoutBinding.descriptorType) << ", ";

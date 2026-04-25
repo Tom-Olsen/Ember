@@ -1,4 +1,4 @@
-#pragma once
+#include "vulkanFormatToString.h"
 #include <sstream>
 #include <vulkan/vulkan.h>
 
@@ -6,7 +6,7 @@
 
 namespace emberVulkanUtility
 {
-	inline std::string ToString(VkFormat vkFormat)
+	std::string ToString(VkFormat vkFormat)
 	{
 		std::ostringstream ss;
 		switch (vkFormat)

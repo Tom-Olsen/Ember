@@ -10,7 +10,6 @@ set(PROJECT_TYPE STATIC)    # Choose SHARED (.dll/.so) or STATIC (.lib/.a) libra
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)               # engine
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs
 get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)                   # extern
-get_filename_component(ENGINE_VULKAN_UTILITY_DIR "${ENGINE_DIR}/vulkanUtility" ABSOLUTE)    # vulkan utility
 
 if(TARGET ${TARGET_NAME})
     return()
@@ -22,20 +21,15 @@ endif()
 # ------------------- File Lists --------------------
 file(GLOB SRC_FILES "src/*")
 source_group("Source Files" FILES ${SRC_FILES})
-
-file(GLOB VULKAN_UTILITY_FILES "${ENGINE_VULKAN_UTILITY_DIR}/*")
-source_group("Vulkan Utility" FILES ${VULKAN_UTILITY_FILES})
 # ---------------------------------------------------
 
 
 
 # ----------------- Create Library ------------------
-add_library(${TARGET_NAME} ${PROJECT_TYPE} ${SRC_FILES} ${VULKAN_UTILITY_FILES})
+add_library(${TARGET_NAME} ${PROJECT_TYPE} ${SRC_FILES})
 
 # Source subdirectories:
-target_include_directories(${TARGET_NAME} PUBLIC 
-    ${ENGINE_VULKAN_UTILITY_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Allow linking this static library into shared libraries:
 set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -55,6 +49,10 @@ target_link_libraries(${TARGET_NAME} PUBLIC EmberLogger)
 # EmberMath:
 add_subdirectory("${ENGINE_LIBS_DIR}/math" EmberMath)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberMath)
+
+# EmberVulkanUtility:
+add_subdirectory("${ENGINE_LIBS_DIR}/vulkanUtility" EmberVulkanUtility)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberVulkanUtility)
 # ---------------------------------------------------
 
 

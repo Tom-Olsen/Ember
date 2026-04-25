@@ -1,4 +1,4 @@
-#pragma once
+#include "vulkanImageViewTypeToString.h"
 #include <sstream>
 #include <vulkan/vulkan.h>
 
@@ -6,7 +6,7 @@
 
 namespace emberVulkanUtility
 {
-    inline std::string ToString(VkImageViewType vkImageViewType)
+    std::string ToString(VkImageViewType vkImageViewType)
     {
 		std::ostringstream ss;
 		switch (vkImageViewType)

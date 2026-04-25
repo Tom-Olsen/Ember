@@ -1,4 +1,4 @@
-#pragma once
+#include "vulkanDescriptorTypeToString.h"
 #include <sstream>
 #include <vulkan/vulkan.h>
 
@@ -6,7 +6,7 @@
 
 namespace emberVulkanUtility
 {
-	inline std::string ToString(VkDescriptorType vkDescriptorType)
+	std::string ToString(VkDescriptorType vkDescriptorType)
 	{
 		std::ostringstream ss;
 		switch (vkDescriptorType)

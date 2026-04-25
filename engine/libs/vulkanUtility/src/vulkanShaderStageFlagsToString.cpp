@@ -1,4 +1,4 @@
-#pragma once
+#include "vulkanShaderStageFlagsToString.h"
 #include <sstream>
 #include <vulkan/vulkan.h>
 
@@ -6,7 +6,7 @@
 
 namespace emberVulkanUtility
 {
-	inline std::string ToString_VkShaderStageFlags(VkShaderStageFlags vkShaderStageFlags)
+	std::string ToString_VkShaderStageFlags(VkShaderStageFlags vkShaderStageFlags)
 	{
         if (vkShaderStageFlags == 0)
             return "none";

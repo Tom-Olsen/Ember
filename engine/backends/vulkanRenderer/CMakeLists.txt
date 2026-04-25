@@ -12,7 +12,6 @@ get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" AB
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)               # engine
 get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)                   # commom
 get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)                   # extern
-get_filename_component(ENGINE_VULKAN_UTILITY_DIR "${ENGINE_DIR}/vulkanUtility" ABSOLUTE)    # vulkan utility
 get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)           # interfaces
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs 
 get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)             # resources
@@ -88,9 +87,6 @@ source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
 file(GLOB WINDOW_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
-
-file(GLOB VULKAN_UTILITY_FILES "${ENGINE_VULKAN_UTILITY_DIR}/*")
-source_group("Vulkan Utility" FILES ${VULKAN_UTILITY_FILES})
 # ---------------------------------------------------
 
 
@@ -121,8 +117,7 @@ add_library(${TARGET_NAME} ${LIB_TYPE}
     ${COMMON_FILES}
     ${GUI_INTERFACE_FILES}
     ${RENDERER_INTERFACE_FILES}
-    ${WINDOW_INTERFACE_FILES}
-    ${VULKAN_UTILITY_FILES})
+    ${WINDOW_INTERFACE_FILES})
 
 # Source subdirectories:
 target_include_directories(${TARGET_NAME} PUBLIC
@@ -191,6 +186,10 @@ target_link_libraries(${TARGET_NAME} PUBLIC EmberSpirvReflect)
 # EmberTaskSystem:
 add_subdirectory("${ENGINE_LIBS_DIR}/taskSystem" EmberTaskSystem)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberTaskSystem)
+
+# EmberVulkanUtility:
+add_subdirectory("${ENGINE_LIBS_DIR}/vulkanUtility" EmberVulkanUtility)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberVulkanUtility)
 
 # Shaders:
 add_subdirectory(${ENGINE_SHADERS_DIR} EmberShaderCompiler)

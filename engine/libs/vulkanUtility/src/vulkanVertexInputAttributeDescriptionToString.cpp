@@ -1,4 +1,4 @@
-#pragma once
+#include "vulkanVertexInputAttributeDescriptionToString.h"
 #include "vulkanFormatToString.h"
 #include <sstream>
 #include <vulkan/vulkan.h>
@@ -7,7 +7,7 @@
 
 namespace emberVulkanUtility
 {
-	inline std::string ToString(VkVertexInputAttributeDescription vkVertexInputAttributeDescription)
+	std::string ToString(VkVertexInputAttributeDescription vkVertexInputAttributeDescription)
 	{
 		std::ostringstream ss;
 		ss << "location:" << vkVertexInputAttributeDescription.location << ", ";
