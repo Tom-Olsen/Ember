@@ -22,7 +22,7 @@ namespace vulkanRendererBackend
 	PostRender::PostRender()
 	{
 		m_callIndex = 0;
-		std::filesystem::path shaderDir = (std::filesystem::path(VULKAN_LIBRARY_ROOT_PATH) / "src" / "shaders").make_preferred();
+		std::filesystem::path shaderDir = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
 		std::filesystem::path shaderPath = shaderDir / "inOut.comp.spv";
 		m_pInOutComputeShader = std::make_unique<ComputeShader>("inOut", shaderPath);
 	}

@@ -43,6 +43,7 @@ namespace vulkanRendererBackend
         static std::unique_ptr<StorageTexture2d> s_pDefaultStorageTexture2d;
 
     public: // Methods:
+        static void InitSamplers();
         static void Init(uint32_t shadowMapResolution);
         static void Clear();
 

@@ -42,21 +42,27 @@ namespace vulkanRendererBackend
 
 
 	// Initialization/Cleanup:
+	void DefaultGpuResources::InitSamplers()
+	{
+		if (!s_pColorSampler)
+			s_pColorSampler = std::make_unique<ColorSampler>("colorSampler");
+		if (!s_pShadowSampler)
+			s_pShadowSampler = std::make_unique<ShadowSampler>("shadowSampler");
+	}
 	void DefaultGpuResources::Init(uint32_t shadowMapResolution)
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
-		std::filesystem::path shadersSrcDirectory = (std::filesystem::path(ENGINE_SHADERS_DIR) / "shaders" / "src").make_preferred();
+		std::filesystem::path shadersBinDirectory = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
 
 		// Samplers:
-		s_pColorSampler = std::make_unique<ColorSampler>("colorSampler");
-		s_pShadowSampler = std::make_unique<ShadowSampler>("shadowSampler");
+		InitSamplers();
 		// Materials:
-		s_pDefaultPresentMaterial = std::make_unique<Material>(Material::CreatePresent("presentMaterial", shadersSrcDirectory / "vertex" / "present.vert.spv", shadersSrcDirectory / "fragment" / "present.frag.spv"));
+		s_pDefaultPresentMaterial = std::make_unique<Material>(Material::CreatePresent("presentMaterial", shadersBinDirectory / "present.vert.spv", shadersBinDirectory / "present.frag.spv"));
 		s_pDefaultShadowMaterial = std::make_unique<Material>(Material::CreateShadow("shadowMaterial", shadowMapResolution));
 		// Compute shaders:
-		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", shadersSrcDirectory / "compute" / "gammaCorrection.comp.spv");
+		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", shadersBinDirectory / "gammaCorrection.comp.spv");
 		// Meshes:
 		s_pDefaultRenderQuad = std::make_unique<Mesh>(CreateDefaultRenderQuad());
 		// Buffers:

@@ -42,6 +42,7 @@ namespace vulkanRendererBackend
 		PresentMode m_presentMode;
 		Instance* m_pInstance;
 		PhysicalDevice* m_pPhysicalDevice;
+		emberBackendInterface::IWindow* m_pIWindow;
 
 	public: // Methods:
 		Surface(Instance* pInstance, PhysicalDevice* pPhysicalDevice, emberBackendInterface::IWindow* pIWindow, bool vSyncEnabled);

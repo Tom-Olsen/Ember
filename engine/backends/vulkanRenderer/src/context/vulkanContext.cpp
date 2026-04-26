@@ -126,11 +126,12 @@ namespace vulkanRendererBackend
 		SingleTimeCommand::Init();
 		GarbageCollector::Init();
 		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
-		DefaultGpuResources::Init(createInfo.shadowMapResolution);
+		DefaultGpuResources::InitSamplers();
 		PoolManager::Init();
 		GlobalDescriptorSetLayout::Init();
 		SceneDescriptorSetLayout::Init();
 		FrameDescriptorSetLayout::Init();
+		DefaultGpuResources::Init(createInfo.shadowMapResolution);
 
 		// Debug naming:
 		if (m_pLogicalDevice->GetGraphicsQueue().queue == m_pLogicalDevice->GetPresentQueue().queue)

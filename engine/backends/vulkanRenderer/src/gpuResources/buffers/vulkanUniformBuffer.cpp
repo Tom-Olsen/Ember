@@ -22,6 +22,9 @@ namespace vulkanRendererBackend
 		uint32_t structSize = bufferLayout.GetSize();
 		m_alignedSize = ((structSize + alignment - 1) / alignment) * alignment;
 		uint32_t bufferSize = Context::GetFramesInFlight() * m_alignedSize;
+		m_count = 1;
+		m_elementSize = structSize;
+		m_size = structSize;
 		
 		// Create buffer:
 		BufferCreateInfo bufferInfo = {};

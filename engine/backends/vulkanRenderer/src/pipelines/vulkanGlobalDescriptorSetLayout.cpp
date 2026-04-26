@@ -29,22 +29,22 @@ namespace vulkanRendererBackend
         {
             std::array<VkDescriptorSetLayoutBinding, 3> bindings{};
 
-            // SamplerState colorSampler : register(s3000, GLOBAL_SET):
-            bindings[0].binding = 3000;
+            // SamplerState colorSampler : register(s3099, GLOBAL_SET):
+            bindings[0].binding = 3099;
             bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
             bindings[0].descriptorCount = 1;
             bindings[0].stageFlags = VK_SHADER_STAGE_ALL; // or restrict if desired
             bindings[0].pImmutableSamplers = &DefaultGpuResources::GetColorSampler()->GetVkSampler();
 
-            // SamplerComparisonState shadowSampler : register(s3001, GLOBAL_SET):
-            bindings[1].binding = 3001;
+            // SamplerComparisonState shadowSampler : register(s3098, GLOBAL_SET):
+            bindings[1].binding = 3098;
             bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
             bindings[1].descriptorCount = 1;
             bindings[1].stageFlags = VK_SHADER_STAGE_ALL;
             bindings[1].pImmutableSamplers = &DefaultGpuResources::GetShadowSampler()->GetVkSampler();
 
-            // Texture2DArray<float> shadowMaps : register(t3100, GLOBAL_SET):
-            bindings[2].binding = 3100;
+            // Texture2DArray<float> shadowMaps : register(t3199, GLOBAL_SET):
+            bindings[2].binding = 3199;
             bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             bindings[2].descriptorCount = 1;
             bindings[2].stageFlags = VK_SHADER_STAGE_ALL;
@@ -81,7 +81,7 @@ namespace vulkanRendererBackend
 
             VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
             descriptorWrite.dstSet = s_descriptorSets[i];
-            descriptorWrite.dstBinding = 3100;
+            descriptorWrite.dstBinding = 3199;
             descriptorWrite.dstArrayElement = 0;
             descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             descriptorWrite.descriptorCount = 1;

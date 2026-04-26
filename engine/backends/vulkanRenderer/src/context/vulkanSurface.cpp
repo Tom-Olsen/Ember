@@ -6,6 +6,7 @@
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
 #include <assert.h>
+#include <stdint.h>
 #include <vulkan/vulkan.h>
 
 
@@ -24,12 +25,14 @@ namespace vulkanRendererBackend
 		// Assertions:
 		assert(pInstance != nullptr);
 		assert(pPhysicalDevice != nullptr);
+		assert(pIWindow != nullptr);
 
 		m_pInstance = pInstance;
 		m_pPhysicalDevice = pPhysicalDevice;
+		m_pIWindow = pIWindow;
 
 		// Create surface:
-		pIWindow->CreateSurface(m_pInstance->GetVkInstance(), nullptr, &m_surface);
+		m_pIWindow->CreateSurface(m_pInstance->GetVkInstance(), nullptr, &m_surface);
 
 		// Available surfaceFormats:
 		uint32_t formatCount;
@@ -95,7 +98,17 @@ namespace vulkanRendererBackend
 	{
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities);
-		return Uint2(surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
+		if (surfaceCapabilities.currentExtent.width != UINT32_MAX)
+			return Uint2(surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
+
+        // Fallback:
+		Int2 windowSize = m_pIWindow->GetSize();
+		uint32_t width = windowSize.x > 0 ? static_cast<uint32_t>(windowSize.x) : 0;
+		uint32_t height = windowSize.y > 0 ? static_cast<uint32_t>(windowSize.y) : 0;
+		Uint2 extent(width, height);
+		Uint2 minExtent(surfaceCapabilities.minImageExtent.width, surfaceCapabilities.minImageExtent.height);
+		Uint2 maxExtent(surfaceCapabilities.maxImageExtent.width, surfaceCapabilities.maxImageExtent.height);
+		return Uint2::Clamp(extent, minExtent, maxExtent);
 	}
 	Uint2 Surface::GetMinImageExtent() const
 	{
@@ -136,12 +149,14 @@ namespace vulkanRendererBackend
 		m_presentMode = other.m_presentMode;
 		m_pInstance = other.m_pInstance;
 		m_pPhysicalDevice = other.m_pPhysicalDevice;
+		m_pIWindow = other.m_pIWindow;
 
 		other.m_surface = VK_NULL_HANDLE;
 		other.m_surfaceFormat = SurfaceFormat{ Formats::undefined, ColorSpaces::max_enum };
 		other.m_presentMode = PresentModes::max_enum;
 		other.m_pInstance = nullptr;
 		other.m_pPhysicalDevice = nullptr;
+		other.m_pIWindow = nullptr;
 	}
 
 

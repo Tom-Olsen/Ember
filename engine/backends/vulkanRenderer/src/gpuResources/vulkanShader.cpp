@@ -28,7 +28,9 @@ namespace vulkanRendererBackend
 	// Destructor:
 	Shader::~Shader()
 	{
-		for (int i = 0; i < m_vkDescriptorSetLayouts.size(); i++)
+        // Shader only owns SHADER_SET_INDEX(3) and CALL_SET_INDEX(4).
+        // Sets GLOBAL_SET_INDEX/SCENE_SET_INDEX/FRAME_SET_INDEX (0,1,2) are owned and disposed of by static DescriptorSetLayout classes.
+		for (size_t i = SHADER_SET_INDEX; i < m_vkDescriptorSetLayouts.size(); i++)
 			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_vkDescriptorSetLayouts[i], nullptr);
 		vkDestroyPipelineLayout(Context::GetVkDevice(), m_vkPipelineLayout, nullptr);
 	}
@@ -43,7 +45,7 @@ namespace vulkanRendererBackend
         , m_vkPipelineLayout(other.m_vkPipelineLayout)
         , m_pPipelines(std::move(other.m_pPipelines))
 	{
-        
+        other.m_vkPipelineLayout = VK_NULL_HANDLE;
 	}
 	Shader& Shader::operator=(Shader&& other) noexcept
 	{
@@ -75,7 +77,7 @@ namespace vulkanRendererBackend
 		m_vkDescriptorSetLayouts[2] = FrameDescriptorSetLayout::GetVkDescriptorSetLayout();
 
 		// Only SHADER_SET(3) and CALL_SET(4) are dynamic and come from reflection:
-		for (size_t i = 3; i < DESCRIPTOR_SET_COUNT; i++)
+		for (size_t i = SHADER_SET_INDEX; i < DESCRIPTOR_SET_COUNT; i++)
 		{
 			const std::vector<emberSpirvReflect::DescriptorReflection>& descriptors = m_shaderReflection.GetDescriptorSetReflection(i).GetDescriptorReflections();
 
