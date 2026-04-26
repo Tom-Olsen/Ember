@@ -21,9 +21,6 @@ namespace vulkanRendererBackend
 	private: // Members:
 		VkPhysicalDevice m_physicalDevice;
 		uint32_t m_maxMsaaSamples;
-		bool m_supportsDepthClamp;
-		bool m_supportsDepthBiasClamp;
-		bool m_supportsMultiViewport;
 
 	public: // Methods:
 		PhysicalDevice(Instance* pInstance);
@@ -40,6 +37,7 @@ namespace vulkanRendererBackend
 		uint32_t GetMaxMsaaSamples() const;
 		bool SupportsDepthClamp() const;
 		bool SupportsDepthBiasClamp() const;
+		bool SupportsFillModeNonSolid() const;
 		bool SupportsMultiViewport() const;
 
 	private: // Methods:

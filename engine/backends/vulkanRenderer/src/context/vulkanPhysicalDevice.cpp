@@ -38,7 +38,7 @@ namespace vulkanRendererBackend
 
 		// Pick best device:
 		if (devices[0].second < 0)
-			LOG_WARN("No device supports all required capabilities!");
+			throw std::runtime_error("No dedicated GPU supports all required capabilities!");
 		m_physicalDevice = devices[0].first;
 
 		// Determine max msaa samples:
@@ -79,15 +79,21 @@ namespace vulkanRendererBackend
 	}
 	bool PhysicalDevice::SupportsDepthClamp() const
 	{
-		return m_supportsDepthClamp;
+		return true;
 	}
 	bool PhysicalDevice::SupportsDepthBiasClamp() const
 	{
-		return m_supportsDepthBiasClamp;
+		return true;
+	}
+	bool PhysicalDevice::SupportsFillModeNonSolid() const
+	{
+		return true;
 	}
 	bool PhysicalDevice::SupportsMultiViewport() const
 	{
-		return m_supportsMultiViewport;
+		VkPhysicalDeviceFeatures deviceFeatures;
+		vkGetPhysicalDeviceFeatures(m_physicalDevice, &deviceFeatures);
+		return deviceFeatures.multiViewport;
 	}
 
 
@@ -101,45 +107,49 @@ namespace vulkanRendererBackend
 	{
 		m_physicalDevice = other.m_physicalDevice;
 		m_maxMsaaSamples = other.m_maxMsaaSamples;
-		m_supportsDepthClamp = other.m_supportsDepthClamp;
-		m_supportsDepthBiasClamp = other.m_supportsDepthBiasClamp;
-		m_supportsMultiViewport = other.m_supportsMultiViewport;
 
 		other.m_physicalDevice = VK_NULL_HANDLE;
 		other.m_maxMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
-		other.m_supportsDepthClamp = false;
-		other.m_supportsDepthBiasClamp = false;
-		other.m_supportsMultiViewport = false;
 	}
-	int PhysicalDevice::DeviceScore(VkPhysicalDevice dev)
+	int PhysicalDevice::DeviceScore(VkPhysicalDevice device)
 	{
 		VkPhysicalDeviceProperties deviceProperties;
 		VkPhysicalDeviceFeatures deviceFeatures;
-		vkGetPhysicalDeviceProperties(dev, &deviceProperties);
-		vkGetPhysicalDeviceFeatures(dev, &deviceFeatures);
+		vkGetPhysicalDeviceProperties(device, &deviceProperties);
+		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-		// Check essential features:
-		bool essentials = (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU);
-		essentials &= HasGraphicsAndComputeQueueFamily(dev);
-		essentials &= static_cast<bool>(deviceFeatures.geometryShader);
-		essentials &= static_cast<bool>(deviceFeatures.tessellationShader);
-		essentials &= static_cast<bool>(deviceFeatures.wideLines);
-		essentials &= static_cast<bool>(deviceFeatures.samplerAnisotropy);
-		essentials &= static_cast<bool>(deviceFeatures.dualSrcBlend);
-		essentials &= static_cast<bool>(deviceFeatures.depthBiasClamp);
-		essentials &= static_cast<bool>(deviceFeatures.depthBounds);
-		essentials &= static_cast<bool>(deviceFeatures.shaderClipDistance);
-		essentials &= static_cast<bool>(deviceFeatures.shaderCullDistance);
-		essentials &= static_cast<bool>(deviceFeatures.samplerAnisotropy);
-		if (essentials == false)
+		// Check required properties:
+		if (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			return -1;
+		if (HasGraphicsAndComputeQueueFamily(device) == false)
+			return -1;
+
+		// Check required features:
+		bool supportsRequiredFeatures = true;
+		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.samplerAnisotropy);
+		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.depthClamp);
+		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.depthBiasClamp);
+		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.fillModeNonSolid);
+		if (supportsRequiredFeatures == false)
 			return -1; // negative score = invalid device.
 
-		// Check optional features:
-		int score = 0;
-		score += 10 * deviceFeatures.depthClamp; m_supportsDepthClamp = deviceFeatures.depthClamp;
-		score += 10 * deviceFeatures.depthBiasClamp; m_supportsDepthBiasClamp = deviceFeatures.depthBiasClamp;
-		score += 10 * deviceFeatures.multiViewport; m_supportsMultiViewport = deviceFeatures.multiViewport;
-		// score +=  5 * deviceFeatures.fillModeNonSolid;
+        // Get device memory:
+		VkPhysicalDeviceMemoryProperties memoryProperties;
+		vkGetPhysicalDeviceMemoryProperties(device, &memoryProperties);
+		uint64_t deviceLocalMemoryMb = 0;
+		for (uint32_t i = 0; i < memoryProperties.memoryHeapCount; i++)
+		{
+			if (memoryProperties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+				deviceLocalMemoryMb += memoryProperties.memoryHeaps[i].size / (1024 * 1024);
+		}
+
+		int score = 1000;
+		score += static_cast<int>(deviceLocalMemoryMb);
+		score += static_cast<int>(deviceProperties.limits.maxImageDimension2D / 1024);
+		score += static_cast<int>(deviceProperties.limits.maxSamplerAnisotropy);
+		score += static_cast<int>(deviceProperties.limits.maxComputeSharedMemorySize / 1024);
+		score += static_cast<int>(deviceProperties.limits.maxComputeWorkGroupInvocations / 32);
+		score += 10 * deviceFeatures.multiViewport;
 		// score +=  1 * deviceFeatures.shaderFloat64;
 		// score +=  1 * deviceFeatures.shaderInt64;
 		// score +=  1 * deviceFeatures.imageCubeArray;
@@ -167,7 +177,6 @@ namespace vulkanRendererBackend
 				&& (queueFamilyProperty.queueFlags & VK_QUEUE_COMPUTE_BIT))
 				return true;
 		}
-		throw std::runtime_error("Could not find a Family Queue that supports Graphics and Compute!");
 
 		return false;
 	}
