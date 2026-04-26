@@ -168,6 +168,9 @@ namespace emberEngine
 	void Mesh::RegisterUpdate()
 	{
 		uint32_t vertexCount = GetVertexCount();
+		if (vertexCount == 0 || m_triangles.empty())
+			return;
+
 		std::vector<Float3>* pNormals = m_normals.size() == vertexCount ? &m_normals : nullptr;
 		std::vector<Float3>* pTangents = m_tangents.size() == vertexCount ? &m_tangents : nullptr;
 		std::vector<Float4>* pColors = m_colors.size() == vertexCount ? &m_colors : nullptr;
