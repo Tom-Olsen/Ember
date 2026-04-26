@@ -2,7 +2,7 @@
 
 
 
-cbuffer SurfaceProperties : register(b2)
+cbuffer SurfaceProperties : register(b300, CALL_SET)
 {
     float4 diffuseColor;    // (1.0, 1.0, 1.0)
 };
