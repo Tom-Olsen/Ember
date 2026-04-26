@@ -52,7 +52,7 @@ namespace emberApplication
 
 	// Public methods:
 	// Constructor/Destructor:
-	void Application::Init(const CreateInfo& applicationCreateInfo)
+	bool Application::Init(const CreateInfo& applicationCreateInfo)
 	{
 		try
 		{
@@ -103,10 +103,12 @@ namespace emberApplication
 
 			// Other systems:
 			emberEngine::EventSystem::Init();
+			return true;
 		}
 		catch (const std::exception& e)
 		{
 			LOG_ERROR("Exception: {}", e.what());
+			return false;
 		}
 	}
 	void Application::Clear()

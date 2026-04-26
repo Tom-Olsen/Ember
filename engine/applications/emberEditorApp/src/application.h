@@ -52,7 +52,7 @@ namespace emberApplication
 		static std::unique_ptr<emberEditor::SceneEditorWindow> m_pSceneEditorWindow;
 
 	public: // Methods:
-		static void Init(const CreateInfo& createInfo);
+		static bool Init(const CreateInfo& createInfo);
 		static void Clear();
 
 		// Main loop:

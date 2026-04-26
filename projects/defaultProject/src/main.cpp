@@ -2,6 +2,7 @@
 #include "profiler.h"
 #include "application.h"
 #include "emberEngine.h"
+#include <memory>
 // Scenes:
 #include "defaultScene.h"
 #include "pointLightScene.h"
@@ -22,6 +23,7 @@ int main()
 	// Profiler:
     emberTaskSystem::profiler::Session& session = emberTaskSystem::profiler::Session::Get();
 	session.Start("profiling", "profilingResults");
+	int exitCode = 0;
 	{
 		// Initialization:
 		emberApplication::Application::CreateInfo appCreateInfo = {};
@@ -32,22 +34,27 @@ int main()
 		appCreateInfo.windowHeight = 1440;// 900; //1080; // 1440;
 		appCreateInfo.renderWidth = 2560;//1280; //1280; // 2560;
 		appCreateInfo.renderHeight = 1440;// 720; // 720; // 1440;
-		emberApplication::Application::Init(appCreateInfo);
+		bool initialized = emberApplication::Application::Init(appCreateInfo);
 
-		// Create scene:
-		 Scene* pScene = DefaultScene();
-		// Scene* pScene = PointLightScene();
-		// Scene* pScene = ShadowCascadeScene();
-		// Scene* pScene = SingleQuadScene();
-		// Scene* pScene = TestScene();
-		emberApplication::Application::SetScene(pScene);
+		if (!initialized)
+			exitCode = 1;
+		else
+		{
+			// Create scene:
+			std::unique_ptr<Scene> pScene(DefaultScene());
+			// std::unique_ptr<Scene> pScene(PointLightScene());
+			// std::unique_ptr<Scene> pScene(ShadowCascadeScene());
+			// std::unique_ptr<Scene> pScene(SingleQuadScene());
+			// std::unique_ptr<Scene> pScene(TestScene());
+			emberApplication::Application::SetScene(pScene.get());
 
-		// Run app:
-		emberApplication::Application::Run();
+			// Run app:
+			emberApplication::Application::Run();
 
-		// App shutdown:
-		delete pScene;
-		emberApplication::Application::Clear();
+			// App shutdown:
+			pScene.reset();
+			emberApplication::Application::Clear();
+		}
 	}
 	emberTaskSystem::profiler::Session::Get().End();
 
@@ -56,5 +63,5 @@ int main()
 	for (std::string& result : results)
 		session.PrintFunctionAverageTime(result, emberTaskSystem::profiler::TimeUnit::ms);
 
-	return 0;
+	return exitCode;
 }
