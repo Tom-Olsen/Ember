@@ -45,7 +45,12 @@ namespace vulkanRendererBackend
 		vmaAllocationInfo.priority = m_allocationInfo.priority;
 
 		// Create Buffer:
-		VKA(vmaCreateBuffer(Context::GetVmaAllocator(), &vkBufferInfo, &vmaAllocationInfo, &m_buffer, &m_allocation, nullptr));
+		VkResult result = vmaCreateBuffer(Context::GetVmaAllocator(), &vkBufferInfo, &vmaAllocationInfo, &m_buffer, &m_allocation, nullptr);
+		if (result != VK_SUCCESS)
+		{
+			LOG_CRITICAL("VmaBuffer::VmaBuffer failed. VkResult: {}, BufferCreateInfo: {}, AllocationCreateInfo: {}", std::to_string(result), m_bufferInfo.ToString(), m_allocationInfo.ToString());
+			std::abort();
+		}
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
 		Context::GetAllocationTracker()->AddVmaBufferAllocation(m_allocation, std::to_string(s_index));
