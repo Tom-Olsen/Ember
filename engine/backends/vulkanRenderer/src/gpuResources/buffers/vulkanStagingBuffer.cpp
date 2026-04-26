@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
 
 		AllocationCreateInfo allocInfo = {};
 		allocInfo.usages = MemoryUsages::auto_prefer_host;
-		allocInfo.flags = AllocationCreateFlags::mapped_bit | AllocationCreateFlags::host_access_random_bit;
+		allocInfo.flags = AllocationCreateFlags::mapped_bit | AllocationCreateFlags::host_access_sequential_write_bit;
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 
