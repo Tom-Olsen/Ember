@@ -22,11 +22,17 @@ namespace emberEngine
 		friend class Gui;
 		friend class ShaderProperties;
 
+    private: // Members:
+		static uint32_t s_unnamedTextureCounter;
+
 	protected: // Members:
 		bool m_ownsITexture;
-        std::string m_name;
 		emberBackendInterface::ITexture* m_pITexture; // conditional ownership, depending on usecase.
-		emberBackendInterface::ITexture* GetInterfaceHandle();
+        std::string m_name;
+
+    private: // Methods:
+    emberBackendInterface::ITexture* GetInterfaceHandle();
+		static std::string CreateUnnamedTextureName();
 
 	public: // Methods:
 		// Constructors/Destructor:

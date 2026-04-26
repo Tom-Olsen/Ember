@@ -5,10 +5,19 @@
 
 namespace emberEngine
 {
+	// Static members:
+	uint32_t Texture::s_unnamedTextureCounter = 0;
+
+
+
 	// Private Methods:
 	emberBackendInterface::ITexture* Texture::GetInterfaceHandle()
 	{
 		return m_pITexture;
+	}
+	std::string Texture::CreateUnnamedTextureName()
+	{
+		return "#unnamed" + std::to_string(s_unnamedTextureCounter++);
 	}
 
 
@@ -18,13 +27,13 @@ namespace emberEngine
 	Texture::Texture()
 	{
 		m_ownsITexture = false;
-        m_name = "#unnamed";
+        m_name = CreateUnnamedTextureName();
 		m_pITexture = nullptr;
 	}
 	Texture::Texture(emberBackendInterface::ITexture* pITexture, bool ownsTexture)
 	{
 		m_ownsITexture = ownsTexture;
-        m_name = "#unnamed";
+        m_name = CreateUnnamedTextureName();
 		m_pITexture = pITexture;
 	}
 	Texture::~Texture()
@@ -39,9 +48,11 @@ namespace emberEngine
 	Texture::Texture(Texture&& other) noexcept
 	{
 		m_ownsITexture = other.m_ownsITexture;
+		m_name = std::move(other.m_name);
 		m_pITexture = other.m_pITexture;
 
 		other.m_ownsITexture = false;
+		other.m_name = CreateUnnamedTextureName();
 		other.m_pITexture = nullptr;
 	}
 	Texture& Texture::operator=(Texture&& other) noexcept
@@ -52,9 +63,11 @@ namespace emberEngine
 				delete m_pITexture;
 
 			m_ownsITexture = other.m_ownsITexture;
+			m_name = std::move(other.m_name);
 			m_pITexture = other.m_pITexture;
 
 			other.m_ownsITexture = false;
+			other.m_name = CreateUnnamedTextureName();
 			other.m_pITexture = nullptr;
 		}
 		return *this;
