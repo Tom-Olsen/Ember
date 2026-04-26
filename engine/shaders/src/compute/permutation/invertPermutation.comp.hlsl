@@ -3,8 +3,8 @@
 
 
 #define BLOCK_SIZE 128
-StructuredBuffer<uint> permutationBuffer : register(t0);
-RWStructuredBuffer<uint> inversePermutationBuffer : register(u1);
+StructuredBuffer<uint> permutationBuffer : register(t0, SHADER_SET);
+RWStructuredBuffer<uint> inversePermutationBuffer : register(u1, SHADER_SET);
 
 
 

@@ -3,11 +3,11 @@
 
 
 #define BLOCK_SIZE 128                  // max 2048 due to numthreads limit of 1024 (numthreads.x = BLOCK_SIZE/2)
-RWStructuredBuffer<int> dataBuffer : register(u0);
-RWStructuredBuffer<uint> permutationBuffer : register(u1);
+RWStructuredBuffer<int> dataBuffer : register(u0, SHADER_SET);
+RWStructuredBuffer<uint> permutationBuffer : register(u1, SHADER_SET);
 groupshared int localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 groupshared uint localPermutationValue[BLOCK_SIZE];
-cbuffer Values : register(b2)
+cbuffer Values : register(b2, SHADER_SET)
 {
     uint bufferSize; // number of elements in the data buffer.
 };

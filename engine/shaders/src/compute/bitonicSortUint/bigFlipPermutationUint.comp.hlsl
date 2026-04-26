@@ -3,9 +3,9 @@
 
 
 #define BLOCK_SIZE 128
-RWStructuredBuffer<uint> dataBuffer : register(u0);
-RWStructuredBuffer<uint> permutationBuffer : register(u1);
-cbuffer Values : register(b2)
+RWStructuredBuffer<uint> dataBuffer : register(u0, SHADER_SET);
+RWStructuredBuffer<uint> permutationBuffer : register(u1, SHADER_SET);
+cbuffer Values : register(b2, SHADER_SET)
 {
     uint flipHeight; // height of the flip (number of elements involved in it).
     uint bufferSize; // number of elements in data buffer.

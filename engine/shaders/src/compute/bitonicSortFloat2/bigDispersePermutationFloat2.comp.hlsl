@@ -4,9 +4,9 @@
 
 
 #define BLOCK_SIZE 128
-RWStructuredBuffer<float2> dataBuffer : register(u0);
-RWStructuredBuffer<uint> permutationBuffer : register(u1);
-cbuffer Values : register(b2)
+RWStructuredBuffer<float2> dataBuffer : register(u0, SHADER_SET);
+RWStructuredBuffer<uint> permutationBuffer : register(u1, SHADER_SET);
+cbuffer Values : register(b2, SHADER_SET)
 {
     uint disperseHeight; // height of the disperse (number of elements involved in it).
     uint bufferSize; // number of elements in data buffer.

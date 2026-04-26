@@ -3,7 +3,7 @@
 
 
 #define BLOCK_SIZE 128
-RWStructuredBuffer<uint> indexBuffer : register(u0);
+RWStructuredBuffer<uint> indexBuffer : register(u0, SHADER_SET);
 
 
 

@@ -8,7 +8,7 @@ struct InstanceData
     float4x4 localToWorldMatrix;
     float4 color;
 };
-RWStructuredBuffer<InstanceData> instanceBuffer : register(u0);
+RWStructuredBuffer<InstanceData> instanceBuffer : register(u0, SHADER_SET);
 
 
 

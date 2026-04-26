@@ -3,8 +3,8 @@
 
 
 
-RWTexture2D<float4> inputImage : register(u0);
-RWTexture2D<float4> outputImage : register(u1);
+RWTexture2D<float4> inputImage : register(u0, SHADER_SET);
+RWTexture2D<float4> outputImage : register(u1, SHADER_SET);
 
 
 
