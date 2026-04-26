@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 	{
 		// Load compute shader:
 		std::vector<char> computeCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(computeSpv);
-		m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, computeCode);
+		m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_COMPUTE_BIT, computeCode);
 
 		// Prepare pipeline data:
 		CreateDescriptorSetLayout();
