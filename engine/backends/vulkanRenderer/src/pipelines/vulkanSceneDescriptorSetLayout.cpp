@@ -24,9 +24,9 @@ namespace vulkanRendererBackend
     {
         // Create descriptor set layout:
         {
-            // cbuffer LightProperties : register(b2300, SCENE_SET):
+            // cbuffer LightProperties : register(b2399, SCENE_SET):
             VkDescriptorSetLayoutBinding binding{};
-            binding.binding = 2300;
+            binding.binding = 2399;
             binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             binding.descriptorCount = 1;
             binding.stageFlags = VK_SHADER_STAGE_ALL;
@@ -126,7 +126,7 @@ namespace vulkanRendererBackend
 
             VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
             descriptorWrite.dstSet = s_descriptorSets[i];
-            descriptorWrite.dstBinding = 2300;
+            descriptorWrite.dstBinding = 2399;
             descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrite.descriptorCount = 1;
             descriptorWrite.pBufferInfo = &bufferInfo;
