@@ -37,7 +37,7 @@ namespace emberEngine
 			Uint3 threadCount = Uint3(m_pInstanceBuffer->GetCount(), 1, 1);
 			m_startProperties.SetBuffer("instanceBuffer", *m_pInstanceBuffer);
 			Compute::PreRender::RecordComputeShader(*m_pStartCS, m_startProperties, threadCount);
-			Compute::PreRender::RecordBarrier(AccessMasks::computeShader_shaderWrite, AccessMasks::computeShader_shaderRead);
+			Compute::PreRender::RecordBarrier(ComputeAccessFlag::shaderWrite, ComputeAccessFlag::shaderRead);
 		}
 	}
 	void TestInstancedRendering::Update()
