@@ -43,10 +43,6 @@ namespace emberEngine
 		CreateMaterial(skyboxMode, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
 		CreateMaterial(opaqueMode, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
 		CreateMaterial(opaqueMode, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
-		
-		// For testing spirv reflect:
-		CreateMaterial(opaqueMode, "testMaterial", opaqueQueue, directoryPath / "test.vert.spv", directoryPath / "test.frag.spv");
-
 	}
 	void MaterialManager::Clear()
 	{
