@@ -89,17 +89,17 @@ namespace vulkanRendererBackend
 		InitStagingMaps();
 		InitDescriptorSets();
 
-		// Set default values:
-		// GLOBAL_SET_INDEX
-		ShadowRenderPass* pShadowRenderPass = RenderPassManager::GetShadowRenderPass();
-		SetTexture("shadowMaps", static_cast<Texture*>(pShadowRenderPass->GetShadowMaps()));
-		// SHADER_SET_INDEX
-		SetTexture("normalMap", static_cast<Texture*>(DefaultGpuResources::GetNormalMapSampleTexture2d()));
-		SetValue("SurfaceProperties", "diffuseColor", Float4::white);
-		SetValue("SurfaceProperties", "roughness", 0.5f);
-		SetValue("SurfaceProperties", "reflectivity", Float3(0.4f, 0.4f, 0.4f));
-		SetValue("SurfaceProperties", "metallicity", 0);
-		SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
+		// Set default values for optional material bindings:
+		if (HasBinding("normalMap"))
+			SetTexture("normalMap", static_cast<Texture*>(DefaultGpuResources::GetNormalMapSampleTexture2d()));
+		if (HasBinding("SurfaceProperties"))
+		{
+			SetValue("SurfaceProperties", "diffuseColor", Float4::white);
+			SetValue("SurfaceProperties", "roughness", 0.5f);
+			SetValue("SurfaceProperties", "reflectivity", Float3(0.4f, 0.4f, 0.4f));
+			SetValue("SurfaceProperties", "metallicity", 0);
+			SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
+		}
 	}
 	DescriptorSetBinding::~DescriptorSetBinding()
 	{
