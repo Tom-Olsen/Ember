@@ -47,9 +47,6 @@ namespace emberEngine
 		// For testing spirv reflect:
 		CreateMaterial(opaqueMode, "testMaterial", opaqueQueue, directoryPath / "test.vert.spv", directoryPath / "test.frag.spv");
 
-		// For testing the binding missmatch error:
-		CreateMaterial(opaqueMode, "testAMaterial", opaqueQueue, directoryPath / "testA.vert.spv", directoryPath / "testA.frag.spv");
-		CreateMaterial(opaqueMode, "testBMaterial", opaqueQueue, directoryPath / "testB.vert.spv", directoryPath / "testB.frag.spv");
 	}
 	void MaterialManager::Clear()
 	{
