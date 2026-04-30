@@ -174,6 +174,7 @@ namespace vulkanRendererBackend
 		Texture* GetTexture(const std::string& name) const;
 		
 		// Backend functionality:
+		void RebindShader(Shader* pShader);
 		void InvalidateBorrowedHandles();
 		void UpdateShaderData(uint32_t frameIndex);
 		const VkDescriptorSet& GetVkDescriptorSet(uint32_t frameIndex) const;

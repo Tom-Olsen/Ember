@@ -424,6 +424,10 @@ namespace vulkanRendererBackend
 
 
 	// Backend functionality:
+	void DescriptorSetBinding::RebindShader(Shader* pShader)
+	{
+		m_pShader = pShader;
+	}
 	void DescriptorSetBinding::InvalidateBorrowedHandles()
 	{
 		m_generation++;

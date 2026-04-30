@@ -44,7 +44,10 @@ namespace vulkanRendererBackend
         , m_vkDescriptorSetLayouts(std::move(other.m_vkDescriptorSetLayouts))
         , m_vkPipelineLayout(other.m_vkPipelineLayout)
         , m_pPipelines(std::move(other.m_pPipelines))
+        , m_pShaderDescriptorSetBinding(std::move(other.m_pShaderDescriptorSetBinding))
 	{
+		if (m_pShaderDescriptorSetBinding)
+			m_pShaderDescriptorSetBinding->RebindShader(this);
         other.m_vkPipelineLayout = VK_NULL_HANDLE;
 	}
 	Shader& Shader::operator=(Shader&& other) noexcept
@@ -57,6 +60,9 @@ namespace vulkanRendererBackend
 			m_vkPipelineLayout = other.m_vkPipelineLayout;
 			other.m_vkPipelineLayout = VK_NULL_HANDLE;
 			m_pPipelines = std::move(other.m_pPipelines);
+			m_pShaderDescriptorSetBinding = std::move(other.m_pShaderDescriptorSetBinding);
+			if (m_pShaderDescriptorSetBinding)
+				m_pShaderDescriptorSetBinding->RebindShader(this);
 		}
 		return *this;
 	}
