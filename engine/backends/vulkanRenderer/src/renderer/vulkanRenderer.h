@@ -188,6 +188,7 @@ namespace vulkanRendererBackend
 
 		// Backend only:
 		void QueueMeshForUpdate(Mesh* pMesh);
+		void RemoveQueuedMeshUpdate(Mesh* pMesh);
 		void ReplaceQueuedMeshUpdate(Mesh* pOldMesh, Mesh* pNewMesh);
 		std::array<VkDescriptorSet, 3>& GetStaticDescriptorSets(uint32_t frameIndex);
 

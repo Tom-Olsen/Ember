@@ -26,7 +26,8 @@ namespace vulkanRendererBackend
 	}
 	Mesh::~Mesh()
 	{
-
+		if (Context::GetRenderer())
+			Context::GetRenderer()->RemoveQueuedMeshUpdate(this);
 	}
 
 
@@ -134,7 +135,7 @@ namespace vulkanRendererBackend
 			WriteArrayToVertexStagingBuffer(pUvs ? pUvs->data() : nullptr, vertexCount, uvsOffset, Float4::zero);
 		}
 
-		Context::GetRenderer()->QueueMeshForUpdate(this);
+		QueueUpdateIfReady();
 	}
 	void Mesh::UpdateIndexBuffer(const std::vector<Uint3>& triangles, uint32_t vertexCount)
 	{
@@ -180,6 +181,7 @@ namespace vulkanRendererBackend
 				m_pIndexStagingBuffer->SetData(reinterpret_cast<const uint32_t*>(triangles.data()), size);
 			}
 		}
+		QueueUpdateIfReady();
 	}
 
 
@@ -256,6 +258,11 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
+	void Mesh::QueueUpdateIfReady()
+	{
+		if (m_pVertexStagingBuffer && m_pIndexStagingBuffer)
+			Context::GetRenderer()->QueueMeshForUpdate(this);
+	}
 	void Mesh::UpdateBufferCache(uint32_t frameIndex, uint32_t vertexCount)
 	{
 		std::vector<VkBuffer>& buffers = m_buffersCache[frameIndex];

@@ -84,6 +84,7 @@ namespace vulkanRendererBackend
 		void RecordUpdateCommand(VkCommandBuffer vkCommandBuffer, uint32_t frameIndex);
 		
 	private:
+		void QueueUpdateIfReady();
 		void UpdateBufferCache(uint32_t frameIndex, uint32_t vertexCount);
 		template<typename T>
 		void WriteArrayToVertexStagingBuffer(const T* pSrc, size_t count, size_t offset, const T& defaultValue);

@@ -62,6 +62,7 @@ namespace vulkanRendererBackend
 	Renderer::Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow)
 	{
 		m_pIWindow = pIWindow;
+		m_pendingMeshUpdates.resize(createInfo.framesInFlight); // Prepare one pending mesh update vector per frame in flight.
 		Context::Init(createInfo, pIWindow, this);
 
 		m_time = 0.0f;
@@ -84,9 +85,6 @@ namespace vulkanRendererBackend
 		m_shadowMapResolution = createInfo.shadowMapResolution;
 		m_directionalLights.resize(m_maxDirectionalLights);
 		m_positionalLights.resize(m_maxPositionalLights);
-
-		// Mesh updates:
-		m_pendingMeshUpdates.resize(Context::GetFramesInFlight()); // Prepare one pending mesh update vector per frame in flight.
 
 		// Debug naming:
 		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
@@ -580,6 +578,11 @@ namespace vulkanRendererBackend
 			if (std::find(meshUpdates.begin(), meshUpdates.end(), pMesh) == meshUpdates.end())
 				meshUpdates.push_back(pMesh);
 		}
+	}
+	void Renderer::RemoveQueuedMeshUpdate(vulkanRendererBackend::Mesh* pMesh)
+	{
+		for (std::vector<Mesh*>& meshUpdates : m_pendingMeshUpdates)
+			meshUpdates.erase(std::remove(meshUpdates.begin(), meshUpdates.end(), pMesh), meshUpdates.end());
 	}
 	void Renderer::ReplaceQueuedMeshUpdate(vulkanRendererBackend::Mesh* pOldMesh, vulkanRendererBackend::Mesh* pNewMesh)
 	{
