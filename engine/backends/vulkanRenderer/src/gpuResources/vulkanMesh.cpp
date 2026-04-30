@@ -32,8 +32,36 @@ namespace vulkanRendererBackend
 
 
 	// Movable:
-	Mesh::Mesh(Mesh&& other) noexcept = default;
-	Mesh& Mesh::operator=(Mesh&& other) noexcept = default;
+	Mesh::Mesh(Mesh&& other) noexcept
+		: m_vkIndexType(other.m_vkIndexType)
+		, m_vertexMemoryLayout(other.m_vertexMemoryLayout)
+		, m_pVertexStagingBuffer(std::move(other.m_pVertexStagingBuffer))
+		, m_pIndexStagingBuffer(std::move(other.m_pIndexStagingBuffer))
+		, m_pVertexBuffers(std::move(other.m_pVertexBuffers))
+		, m_pIndexBuffers(std::move(other.m_pIndexBuffers))
+		, m_buffersCache(std::move(other.m_buffersCache))
+		, m_offsetsCache(std::move(other.m_offsetsCache))
+	{
+		if (Context::GetRenderer())
+			Context::GetRenderer()->ReplaceQueuedMeshUpdate(&other, this);
+	}
+	Mesh& Mesh::operator=(Mesh&& other) noexcept
+	{
+		if (this != &other)
+		{
+			m_vkIndexType = other.m_vkIndexType;
+			m_vertexMemoryLayout = other.m_vertexMemoryLayout;
+			m_pVertexStagingBuffer = std::move(other.m_pVertexStagingBuffer);
+			m_pIndexStagingBuffer = std::move(other.m_pIndexStagingBuffer);
+			m_pVertexBuffers = std::move(other.m_pVertexBuffers);
+			m_pIndexBuffers = std::move(other.m_pIndexBuffers);
+			m_buffersCache = std::move(other.m_buffersCache);
+			m_offsetsCache = std::move(other.m_offsetsCache);
+			if (Context::GetRenderer())
+				Context::GetRenderer()->ReplaceQueuedMeshUpdate(&other, this);
+		}
+		return *this;
+	}
 
 
 

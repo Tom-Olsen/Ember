@@ -581,6 +581,13 @@ namespace vulkanRendererBackend
 				meshUpdates.push_back(pMesh);
 		}
 	}
+	void Renderer::ReplaceQueuedMeshUpdate(vulkanRendererBackend::Mesh* pOldMesh, vulkanRendererBackend::Mesh* pNewMesh)
+	{
+		for (std::vector<Mesh*>& meshUpdates : m_pendingMeshUpdates)
+			for (Mesh*& pMesh : meshUpdates)
+				if (pMesh == pOldMesh)
+					pMesh = pNewMesh;
+	}
 	std::array<VkDescriptorSet, 3>& Renderer::GetStaticDescriptorSets(uint32_t frameIndex)
 	{
 		return m_staticDescriptorSets[frameIndex];
