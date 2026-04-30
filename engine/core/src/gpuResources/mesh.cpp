@@ -534,8 +534,10 @@ namespace emberEngine
 	}
 	void Mesh::ApplySubdivide()
 	{
+		uint32_t vertexCount = GetVertexCount();
+		uint32_t triangleCount = GetTriangleCount();
 		std::vector<Uint3> newTriangles;
-		newTriangles.reserve(4 * GetTriangleCount());
+		newTriangles.reserve(4 * triangleCount);
 
 		std::vector<Float3>& positions = GetPositions();
 		std::vector<Float3>& normals = GetNormals();
@@ -544,9 +546,14 @@ namespace emberEngine
 		std::vector<Float4>& uvs = GetUVs();
 		std::vector<Uint3>& triangles = GetTriangles();
 
+		bool hasNormals = normals.size() == vertexCount;
+		bool hasTangents = tangents.size() == vertexCount;
+		bool hasColors = colors.size() == vertexCount;
+		bool hasUvs = uvs.size() == vertexCount;
+
 		// Subdivide each triangle:
-		uint32_t newVertexIndex = GetVertexCount();
-		for (uint32_t i = 0; i < GetTriangleCount(); i++)
+		uint32_t newVertexIndex = vertexCount;
+		for (uint32_t i = 0; i < triangleCount; i++)
 		{
 			Uint3 triangle = triangles[i];
 
@@ -559,36 +566,48 @@ namespace emberEngine
 			positions.push_back(positionC);
 
 			// Add normals:
-			Float3 normalA = (normals[triangle[0]] + normals[triangle[1]]).Normalize();
-			Float3 normalB = (normals[triangle[1]] + normals[triangle[2]]).Normalize();
-			Float3 normalC = (normals[triangle[2]] + normals[triangle[0]]).Normalize();
-			normals.push_back(normalA);
-			normals.push_back(normalB);
-			normals.push_back(normalC);
+			if (hasNormals)
+			{
+				Float3 normalA = (normals[triangle[0]] + normals[triangle[1]]).Normalize();
+				Float3 normalB = (normals[triangle[1]] + normals[triangle[2]]).Normalize();
+				Float3 normalC = (normals[triangle[2]] + normals[triangle[0]]).Normalize();
+				normals.push_back(normalA);
+				normals.push_back(normalB);
+				normals.push_back(normalC);
+			}
 
 			// Add tangents:
-			Float3 tangentA = (tangents[triangle[0]] + tangents[triangle[1]]).Normalize();
-			Float3 tangentB = (tangents[triangle[1]] + tangents[triangle[2]]).Normalize();
-			Float3 tangentC = (tangents[triangle[2]] + tangents[triangle[0]]).Normalize();
-			tangents.push_back(tangentA);
-			tangents.push_back(tangentB);
-			tangents.push_back(tangentC);
+			if (hasTangents)
+			{
+				Float3 tangentA = (tangents[triangle[0]] + tangents[triangle[1]]).Normalize();
+				Float3 tangentB = (tangents[triangle[1]] + tangents[triangle[2]]).Normalize();
+				Float3 tangentC = (tangents[triangle[2]] + tangents[triangle[0]]).Normalize();
+				tangents.push_back(tangentA);
+				tangents.push_back(tangentB);
+				tangents.push_back(tangentC);
+			}
 
 			// Add colors:
-			Float4 colorA = 0.5f * (colors[triangle[0]] + colors[triangle[1]]);
-			Float4 colorB = 0.5f * (colors[triangle[1]] + colors[triangle[2]]);
-			Float4 colorC = 0.5f * (colors[triangle[2]] + colors[triangle[0]]);
-			colors.push_back(colorA);
-			colors.push_back(colorB);
-			colors.push_back(colorC);
+			if (hasColors)
+			{
+				Float4 colorA = 0.5f * (colors[triangle[0]] + colors[triangle[1]]);
+				Float4 colorB = 0.5f * (colors[triangle[1]] + colors[triangle[2]]);
+				Float4 colorC = 0.5f * (colors[triangle[2]] + colors[triangle[0]]);
+				colors.push_back(colorA);
+				colors.push_back(colorB);
+				colors.push_back(colorC);
+			}
 
 			// Add Uvs:
-			Float4 uvA = 0.5f * (uvs[triangle[0]] + uvs[triangle[1]]);
-			Float4 uvB = 0.5f * (uvs[triangle[1]] + uvs[triangle[2]]);
-			Float4 uvC = 0.5f * (uvs[triangle[2]] + uvs[triangle[0]]);
-			uvs.push_back(uvA);
-			uvs.push_back(uvB);
-			uvs.push_back(uvC);
+			if (hasUvs)
+			{
+				Float4 uvA = 0.5f * (uvs[triangle[0]] + uvs[triangle[1]]);
+				Float4 uvB = 0.5f * (uvs[triangle[1]] + uvs[triangle[2]]);
+				Float4 uvC = 0.5f * (uvs[triangle[2]] + uvs[triangle[0]]);
+				uvs.push_back(uvA);
+				uvs.push_back(uvB);
+				uvs.push_back(uvC);
+			}
 
 			// Add 4 triangles:
 			Uint3 newTriangleA = { triangle[0], newVertexIndex, newVertexIndex + 2 };
