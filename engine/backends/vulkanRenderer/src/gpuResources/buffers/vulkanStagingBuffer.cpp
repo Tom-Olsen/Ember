@@ -15,9 +15,15 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	StagingBuffer::StagingBuffer(uint64_t size)
+	StagingBuffer::StagingBuffer(uint64_t size) : StagingBuffer(static_cast<uint32_t>(size), 1)
 	{
-		m_size = size;
+        
+	}
+	StagingBuffer::StagingBuffer(uint32_t count, uint32_t elementSize)
+	{
+		m_count = count;
+		m_elementSize = elementSize;
+		m_size = static_cast<uint64_t>(m_count) * m_elementSize;
 
 		// Create buffer:
 		BufferCreateInfo bufferInfo = {};

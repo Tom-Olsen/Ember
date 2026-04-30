@@ -32,6 +32,7 @@ namespace vulkanRendererBackend
 	public: // Methods:
 		// Constructor/Destructor:
 		StagingBuffer(uint64_t size);
+		StagingBuffer(uint32_t count, uint32_t elementSize);
 		~StagingBuffer();
 
 		// Non-copyable:

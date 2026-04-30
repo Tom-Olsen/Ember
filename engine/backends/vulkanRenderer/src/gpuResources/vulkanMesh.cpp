@@ -75,7 +75,7 @@ namespace vulkanRendererBackend
 
 		// Reset staging buffer:
 		m_pVertexStagingBuffer.reset();
-		m_pVertexStagingBuffer = std::make_unique<StagingBuffer>(vertexCount * sizeof(Vertex));
+		m_pVertexStagingBuffer = std::make_unique<StagingBuffer>(static_cast<uint32_t>(vertexCount), sizeof(Vertex));
 
 		// Copy: meshData -> stagingBuffer
 		if (m_vertexMemoryLayout == emberCommon::VertexMemoryLayout::interleaved)
@@ -123,11 +123,11 @@ namespace vulkanRendererBackend
 				maxIndex = std::max({ maxIndex, tri.x, tri.y, tri.z });
 			m_vkIndexType = (maxIndex > 65535) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
 		}
-		uint32_t elemetSize = (m_vkIndexType == VK_INDEX_TYPE_UINT16) ? sizeof(uint16_t) : sizeof(uint32_t);
+		uint32_t elementSize = (m_vkIndexType == VK_INDEX_TYPE_UINT16) ? sizeof(uint16_t) : sizeof(uint32_t);
 
 		// Reset staging buffer:
 		m_pIndexStagingBuffer.reset();
-		m_pIndexStagingBuffer = std::make_unique<StagingBuffer>(3 * triangleCount * elemetSize);
+		m_pIndexStagingBuffer = std::make_unique<StagingBuffer>(static_cast<uint32_t>(3 * triangleCount), elementSize);
 
 		// Copy: triangleData -> stagingBuffer
 		{
