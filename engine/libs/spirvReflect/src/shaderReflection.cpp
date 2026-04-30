@@ -27,8 +27,8 @@ namespace emberSpirvReflect
     // Movable:
     ShaderReflection::ShaderReflection(ShaderReflection&& other) noexcept
 	    : m_isInitialized(other.m_isInitialized)
-		, m_shaderStageReflections(std::move(m_shaderStageReflections))
-		, m_descriptorSetReflections(std::move(m_descriptorSetReflections))
+		, m_shaderStageReflections(std::move(other.m_shaderStageReflections))
+		, m_descriptorSetReflections(std::move(other.m_descriptorSetReflections))
     {
         
     }
@@ -37,8 +37,8 @@ namespace emberSpirvReflect
 		if (this != &other)
 		{
 		    m_isInitialized = other.m_isInitialized;
-		    m_shaderStageReflections = std::move(m_shaderStageReflections);
-		    m_descriptorSetReflections = std::move(m_descriptorSetReflections);
+		    m_shaderStageReflections = std::move(other.m_shaderStageReflections);
+		    m_descriptorSetReflections = std::move(other.m_descriptorSetReflections);
 		}
 		return *this;
     }
