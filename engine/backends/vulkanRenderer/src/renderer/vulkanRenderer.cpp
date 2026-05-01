@@ -861,6 +861,10 @@ namespace vulkanRendererBackend
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 					}
 
+					// Bind per compute call descriptor set:
+					if (VkDescriptorSet vkDescriptorSet = computeCall->pDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+
 					// Push constant:
 					ComputePushConstant pushConstant(computeCall->threadCount, m_time, m_deltaTime);
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
@@ -1238,6 +1242,10 @@ namespace vulkanRendererBackend
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 				}
 
+				// Bind per compute call descriptor set:
+				if (VkDescriptorSet vkDescriptorSet = computeCall->pDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+
 				// Push constant:
 				ComputePushConstant pushConstant(computeCall->threadCount, m_time, m_deltaTime);
 				vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
@@ -1458,9 +1466,10 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_preRenderComputeToShadowSemaphores[m_frameIndex];
-        waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
-        // ToDo: test if this is needed:
-		//waitSemaphoreInfo.stageMask = PipelineStages::vertexInput | PipelineStages::vertexShader | PipelineStages::earlyFragmentTest | PipelineStages::lateFragmentTest;
+		// Shadow draws can immediately consume mesh buffers uploaded in the resourceUpdate submission.
+		// The wait therefore has to block the front of the graphics pipeline, including index/vertex fetch,
+		// before the shadow pass starts reading those buffers.
+        waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1492,9 +1501,10 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest | PipelineStages::lateFragmentTest;
-        // ToDo: test if this is needed:
-        //waitSemaphoreInfo.stageMask = PipelineStages::vertexInput | PipelineStages::vertexShader | PipelineStages::fragmentShader | PipelineStages::earlyFragmentTest | PipelineStages::lateFragmentTest | PipelineStages::colorAttachmentOutput;
+		// The forward pass also consumes uploaded mesh buffers at index/vertex input and then continues
+		// through the rest of graphics. Waiting from index input onward prevents the transfer writes from
+		// racing with the first buffer reads in the forward pass.
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1568,7 +1578,10 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest;
+		// This path submits the same forward render work through a primary command buffer that executes
+		// secondary command buffers. It has the same dependency as SubmitForwardCommands(): uploaded
+		// mesh buffers must be visible before index/vertex input starts reading them.
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };

@@ -54,7 +54,7 @@ namespace vulkanRendererBackend
 		m_height = height;
 		m_channels = GetChannelCount(format);
 		m_format = format;
-		m_descriptorType = DescriptorTypes::sampled_image;
+		m_vkDescriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 
 		// Define subresource range:
 		ImageSubresourceRange subresourceRange;

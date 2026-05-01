@@ -2,7 +2,6 @@
 #include "iTexture.h"
 #include "commonTextureFormat.h"
 #include "vulkanFormat.h"
-#include "vulkanDescriptorType.h"
 #include "vulkanImageCreateFlag.h"
 #include "vulkanImageSubresourceRange.h"
 #include "vulkanImageUsageFlag.h"
@@ -13,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <vulkan/vulkan.h>
 
 
 
@@ -54,7 +54,7 @@ namespace vulkanRendererBackend
 		uint32_t m_depth;
 		uint32_t m_channels;
 		Format m_format;
-		DescriptorType m_descriptorType;
+		VkDescriptorType m_vkDescriptorType;
 		std::unique_ptr<VmaImage> m_pImage;
 
 	protected: // Methods:
@@ -82,7 +82,7 @@ namespace vulkanRendererBackend
 		const VkImageView& GetVkImageView() const override;
 		Format GetFormat() const;
 		VmaImage* const GetVmaImage() const;
-		DescriptorType GetDescriptorType() const;
+		VkDescriptorType GetVkDescriptorType() const;
 
         // Debugging:
         void SetDebugName(const std::string& name) override;

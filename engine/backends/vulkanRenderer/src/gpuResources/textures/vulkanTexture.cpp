@@ -131,9 +131,9 @@ namespace vulkanRendererBackend
 	{
 		return m_pImage.get();
 	}
-	DescriptorType Texture::GetDescriptorType() const
+	VkDescriptorType Texture::GetVkDescriptorType() const
 	{
-		return m_descriptorType;
+		return m_vkDescriptorType;
 	}
 
 

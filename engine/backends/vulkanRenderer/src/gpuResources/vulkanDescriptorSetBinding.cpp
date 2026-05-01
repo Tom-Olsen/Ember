@@ -5,6 +5,7 @@
 #include "shaderReflection.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
+#include "vulkanDescriptorTypeToString.h"
 #include "vulkanBuffer.h"
 #include "vulkanContext.h"
 #include "vulkanDefaultGpuResources.h"
@@ -48,7 +49,7 @@ namespace vulkanRendererBackend
             for (const emberSpirvReflect::DescriptorReflection& descriptorReflection : descriptorSetReflection.GetDescriptorReflections())
 			{
 				const std::string& name = descriptorReflection.GetName();
-				DescriptorType descriptorType = descriptorReflection.GetDescriptorType();
+				VkDescriptorType descriptorType = static_cast<VkDescriptorType>(descriptorReflection.GetDescriptorType());
 				uint32_t binding = descriptorReflection.GetBinding();
 				if (frameIndex == 0)
 				{
@@ -56,9 +57,9 @@ namespace vulkanRendererBackend
 					m_bindingNames.emplace(binding, name);
 				}
 
-				if (descriptorType == DescriptorTypes::uniform_buffer)
+				if (descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
 					InitUniformBufferBinding(binding, descriptorReflection.GetUniformBufferDescriptor()->bufferLayout);
-				else if (descriptorType == DescriptorTypes::sampled_image)
+				else if (descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
 				{
 					ImageViewType viewType = descriptorReflection.GetImageDescriptor()->imageViewType;;
 					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for sampling Texture1d descriptorSet not implemented yet!");
@@ -69,7 +70,7 @@ namespace vulkanRendererBackend
 					else if (viewType == ImageViewTypes::view_type_2d_array) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultDepthTexture2dArray()), descriptorType);
 					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization for sampling CubeTextureArray descriptorSet not implemented yet!");
 				}
-				else if (descriptorType == DescriptorTypes::storage_image)
+				else if (descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
 				{
 					ImageViewType viewType = descriptorReflection.GetImageDescriptor()->imageViewType;;
 					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for storage Texture1d descriptorSet not implemented yet!");
@@ -80,10 +81,10 @@ namespace vulkanRendererBackend
 					else if (viewType == ImageViewTypes::view_type_2d_array) throw std::runtime_error("Initialization storage for Texture2dArray descriptorSet not implemented yet!");
 					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization storage for CubeTextureArray descriptorSet not implemented yet!");
 				}
-				else if (descriptorType == DescriptorTypes::storage_buffer)
+				else if (descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
 					InitBufferBinding(frameIndex, binding, static_cast<Buffer*>(DefaultGpuResources::GetDefaultStorageBuffer()), descriptorType);
 				else
-					throw std::runtime_error("DescriptorSetBinding::DescriptorSetBinding(Shader*) shader contains currently unsupported DescriptorType:" + DescriptorTypes::ToString(descriptorType) + "!");
+					throw std::runtime_error("DescriptorSetBinding::DescriptorSetBinding(Shader*) shader contains currently unsupported DescriptorType:" + emberVulkanUtility::ToString(descriptorType) + "!");
 			}
 		}
 		InitStagingMaps();
@@ -520,13 +521,13 @@ namespace vulkanRendererBackend
 		UniformBuffer uniformBuffer(bufferLayout);
 		m_uniformBufferMap.emplace(binding, UniformBufferBinding{binding, std::move(uniformBuffer)});
 	}
-	void DescriptorSetBinding::InitTextureBinding(uint32_t frameIndex, uint32_t binding, Texture* pTexture, DescriptorType descriptorType)
+	void DescriptorSetBinding::InitTextureBinding(uint32_t frameIndex, uint32_t binding, Texture* pTexture, VkDescriptorType descriptorType)
 	{
 		auto it = m_textureMaps[frameIndex].find(binding);
 		if (it == m_textureMaps[frameIndex].end())
 			m_textureMaps[frameIndex].emplace(binding, TextureBinding{binding, pTexture, descriptorType});
 	}
-	void DescriptorSetBinding::InitBufferBinding(uint32_t frameIndex, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType)
+	void DescriptorSetBinding::InitBufferBinding(uint32_t frameIndex, uint32_t binding, Buffer* pBuffer, VkDescriptorType descriptorType)
 	{
 		auto it = m_bufferMaps[frameIndex].find(binding);
 		if (it == m_bufferMaps[frameIndex].end())
@@ -597,7 +598,7 @@ namespace vulkanRendererBackend
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
 		descriptorWrite.dstBinding = textureBinding.binding;
 		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = static_cast<VkDescriptorType>(textureBinding.descriptorType);
+		descriptorWrite.descriptorType = textureBinding.descriptorType;
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = nullptr;
 		descriptorWrite.pImageInfo = &imageInfo;
@@ -616,7 +617,7 @@ namespace vulkanRendererBackend
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
 		descriptorWrite.dstBinding = bufferBinding.binding;
 		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = static_cast<VkDescriptorType>(bufferBinding.descriptorType);
+		descriptorWrite.descriptorType = bufferBinding.descriptorType;
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = &bufferInfo;
 		descriptorWrite.pImageInfo = nullptr;

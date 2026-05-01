@@ -1,12 +1,12 @@
 #pragma once
 #include "iDescriptorSetBinding.h"
-#include "vulkanDescriptorType.h"
 #include "vulkanRendererExport.h"
 #include "vulkanUniformBuffer.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 
@@ -43,13 +43,13 @@ namespace vulkanRendererBackend
 	{
 		uint32_t binding;
 		Texture* pTexture;
-		DescriptorType descriptorType;
+		VkDescriptorType descriptorType;
 	};
 	struct BufferBinding
 	{
 		uint32_t binding;
 		Buffer* pBuffer;
-		DescriptorType descriptorType;
+		VkDescriptorType descriptorType;
 	};
 
 
@@ -189,8 +189,8 @@ namespace vulkanRendererBackend
 
 		// Initializers:
 		void InitUniformBufferBinding(uint32_t binding, const emberBufferLayout::BufferLayout& bufferLayout);
-		void InitTextureBinding(uint32_t frameIndex, uint32_t binding, Texture* pTexture, DescriptorType descriptorType);
-		void InitBufferBinding(uint32_t frameIndex, uint32_t binding, Buffer* pBuffer, DescriptorType descriptorType);
+		void InitTextureBinding(uint32_t frameIndex, uint32_t binding, Texture* pTexture, VkDescriptorType descriptorType);
+		void InitBufferBinding(uint32_t frameIndex, uint32_t binding, Buffer* pBuffer, VkDescriptorType descriptorType);
 		void InitStagingMaps();
 		void InitDescriptorSets();
 

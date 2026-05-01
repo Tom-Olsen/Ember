@@ -3,7 +3,6 @@
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
-#include "vulkanDescriptorType.h"
 #include "vulkanImageAspectFlag.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -53,7 +52,7 @@ namespace vulkanRendererBackend
 		m_height = height;
 		m_channels = GetChannelCount(format);
 		m_format = format;
-		m_descriptorType = DescriptorTypes::storage_image;
+		m_vkDescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 
 		// Define subresource range:
 		ImageSubresourceRange subresourceRange;
