@@ -775,8 +775,6 @@ namespace vulkanRendererBackend
 
 		// Prepare meshes to update:
 		std::vector<Mesh*>& meshUpdates = m_pendingMeshUpdates[m_frameIndex];
-		if (meshUpdates.empty())
-			return;
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::resourceUpdate);
@@ -1455,7 +1453,9 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_preRenderComputeToShadowSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
+        waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
+        // ToDo: test if this is needed:
+		//waitSemaphoreInfo.stageMask = PipelineStages::vertexInput | PipelineStages::vertexShader | PipelineStages::earlyFragmentTest | PipelineStages::lateFragmentTest;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1488,6 +1488,8 @@ namespace vulkanRendererBackend
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[m_frameIndex];
 		waitSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest | PipelineStages::lateFragmentTest;
+        // ToDo: test if this is needed:
+        //waitSemaphoreInfo.stageMask = PipelineStages::vertexInput | PipelineStages::vertexShader | PipelineStages::fragmentShader | PipelineStages::earlyFragmentTest | PipelineStages::lateFragmentTest | PipelineStages::colorAttachmentOutput;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
