@@ -715,7 +715,10 @@ namespace vulkanRendererBackend
 		// Pre render compute:
 		for (ComputeCall* computeCall : m_pCompute->GetPreRenderCompute()->GetComputeCallPointers())
 			if (computeCall->pComputeShader)
+			{
+				computeCall->pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
 				computeCall->pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+			}
 
 		// Forward calls:
 		for (DrawCall* drawCall : m_sortedDrawCallPointers)
@@ -728,16 +731,18 @@ namespace vulkanRendererBackend
 		// Post render compute:
 		for (ComputeCall* computeCall : m_pCompute->GetPostRenderCompute()->GetComputeCallPointers())
 		{
+			DescriptorSetBinding* pShaderDescriptorSetBinding = computeCall->pComputeShader->GetDescriptorSetBinding();
 			if (computeCall->callIndex % 2 == 0)
 			{
-				computeCall->pDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-				computeCall->pDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
+				pShaderDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
 			}
 			else
 			{
-				computeCall->pDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
-				computeCall->pDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+				pShaderDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
+				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
 			}
+			pShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 			computeCall->pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 		}
 
