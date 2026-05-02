@@ -4,6 +4,7 @@
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanGarbageCollector.h"
+#include "vulkanDescriptorImageLayout.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanRenderPassManager.h"
@@ -76,7 +77,7 @@ namespace vulkanRendererBackend
         for (int i = 0; i < Context::GetFramesInFlight(); i++)
         {
             VkDescriptorImageInfo imageInfo = {};
-            imageInfo.imageLayout = static_cast<VkImageLayout>(pShadowMaps->GetVmaImage()->GetImageLayout());
+            imageInfo.imageLayout = GetDescriptorImageLayout(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
             imageInfo.imageView = pShadowMaps->GetVmaImage()->GetVkImageView();
 
             VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };

@@ -19,17 +19,18 @@ namespace vulkanRendererBackend
 		m_depthFormat = Formats::d32_sfloat_s8_uint;
 
 		// Create render textures:
-		Format renderTextureFormat = Formats::r16g16b16a16_sfloat;
+		Format renderTextureFormat = Formats::r16g16b16a16_sfloat; // make sure to use [[vk::image_format("rgba16f")]] RWTexture2D<float4> for render textures in shaders, see inOut.comp.hlsl.
 		m_pRenderTexture = std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight);
 		m_pSecondaryRenderTexture = std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight);
 
-		// Primary render texture will be transitioned to VK_IMAGE_LAYOUT_GENERAL by renderPass.
-		// Secondary render texture must be transitioned manually:
+		// Both ping-pong textures are used as storage images by post processing, so initialize them into
+		// GENERAL and keep them there outside the present pass.
 		ImageLayout newLayout = ImageLayouts::general;
 		PipelineStage srcStage = PipelineStages::topOfPipe;
 		PipelineStage dstStage = PipelineStages::bottomOfPipe;
 		AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
 		AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
+		m_pRenderTexture->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		m_pSecondaryRenderTexture->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 
 		CreateRenderPass();
@@ -98,7 +99,7 @@ namespace vulkanRendererBackend
 			attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			attachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			attachments[2].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			attachments[2].initialLayout = VK_IMAGE_LAYOUT_GENERAL;
 			attachments[2].finalLayout = VK_IMAGE_LAYOUT_GENERAL;					// rdy for post processing
 		}
 

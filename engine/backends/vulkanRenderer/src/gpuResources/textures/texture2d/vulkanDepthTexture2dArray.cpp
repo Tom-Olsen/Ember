@@ -37,12 +37,6 @@ namespace vulkanRendererBackend
 		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
-		// Although the image is in the layout undefined, the shadow renderpass automatically transitions it to shader read after rendering the shadow maps into it.
-		// The descriptorSet that binds the shadowMap to the fragment shaders of the forward renderpass needs to read the correct VkImageLayout.
-		// Thus we have to manually set the layout to shader read.
-		// Ember::ToDo: This feels kinda like a hack, maybe due to bad code architecture. I will try to make this better some time.
-		m_pImage->SetLayout(ImageLayouts::shader_read_only_optimal);
-
 		NAME_VK_OBJECT(m_pImage->GetVkImage(), "DepthTexture2dArray");
 	}
 	DepthTexture2dArray::~DepthTexture2dArray()

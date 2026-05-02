@@ -17,6 +17,7 @@
 #include "vulkanContext.h"
 #include "vulkanConvertTextureFormat.h"
 #include "vulkanDefaultGpuResources.h"
+#include "vulkanDepthTexture2dArray.h"
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanDrawCall.h"
@@ -746,10 +747,6 @@ namespace vulkanRendererBackend
 			computeCall->pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 		}
 
-		// Present call:
-		DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentMaterial()->GetDescriptorSetBinding();
-		pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-		pPresentShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 	}
 
 
@@ -994,6 +991,9 @@ namespace vulkanRendererBackend
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);
+			// The render pass transitions the shadow maps into its final sampled layout -> VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+			// Mirror that state in VmaImage's external layout tracking:
+			RenderPassManager::GetShadowRenderPass()->GetShadowMaps()->GetVmaImage()->SetLayout(ImageLayouts::shader_read_only_optimal);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
@@ -1278,8 +1278,10 @@ namespace vulkanRendererBackend
 				}
 			}
 
-			// Transition renderTexture image to shader read only optimal:
+			if (!Context::DockSpaceEnabled())
 			{
+				// The present material samples the primary render texture in the next submission, so move it
+				// into shader-read layout now and update the present descriptor set against that tracked state.
 				VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				PipelineStage srcStage = PipelineStages::computeShader;
 				PipelineStage dstStage = PipelineStages::fragmentShader;
@@ -1287,6 +1289,18 @@ namespace vulkanRendererBackend
 				VkAccessFlags2 dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 				DEBUG_LOG_TRACE("Render Image Transition: shader write -> shader read only");
+			}
+			else
+			{
+				// When rendering only ImGui into the swapchain, the main render texture is not sampled after
+				// post processing. Keep it in GENERAL so the next frame can immediately bind it as a storage image again.
+				VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
+				PipelineStage srcStage = PipelineStages::computeShader;
+				PipelineStage dstStage = PipelineStages::bottomOfPipe;
+				VkAccessFlags2 srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+				VkAccessFlags2 dstAccessMask = AccessMasks::BottomOfPipe::none;
+				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+				DEBUG_LOG_TRACE("Render Image Transition: shader write -> general");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
@@ -1304,6 +1318,10 @@ namespace vulkanRendererBackend
 		// Record present commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
+			DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentMaterial()->GetDescriptorSetBinding();
+			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+			pPresentShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+
 			// Viewport and scissor:
 			Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
 			VkViewport viewport = {};
@@ -1353,6 +1371,18 @@ namespace vulkanRendererBackend
 				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", pMaterial->GetName());
 			}
 			vkCmdEndRenderPass(commandBuffer);
+
+			// The present quad has finished sampling the main render texture. Return it to GENERAL so the
+			// next frame starts from the layout expected by forward rendering and post-process storage writes.
+			{
+				VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
+				PipelineStage srcStage = PipelineStages::fragmentShader;
+				PipelineStage dstStage = PipelineStages::bottomOfPipe;
+				VkAccessFlags2 srcAccessMask = AccessMasks::FragmentShader::shaderRead;
+				VkAccessFlags2 dstAccessMask = AccessMasks::BottomOfPipe::none;
+				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+				DEBUG_LOG_TRACE("Render Image Transition: shader read only -> general");
+			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
@@ -1645,7 +1675,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_postRenderToPresentSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = PipelineStages::colorAttachmentOutput;
+		waitSemaphoreInfo.stageMask = PipelineStages::fragmentShader | PipelineStages::colorAttachmentOutput;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };

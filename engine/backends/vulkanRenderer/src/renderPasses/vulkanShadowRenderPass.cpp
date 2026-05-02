@@ -45,12 +45,12 @@ namespace vulkanRendererBackend
 		VkAttachmentDescription attachment = {};
 		attachment.format = static_cast<VkFormat>(s_shadowMapFormat);
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering
-		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store for later render passes
-		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// do not use stencils
-		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;		// do not use stencils
-		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;				// we don't care about initial layout of the image
-		attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;	// will be read in a shader
+		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering.
+		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store for later render passes.
+		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// do not use stencils.
+		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;		// do not use stencils.
+		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;				// do not care about old image content (loadOp=clear) => undefined layout.
+		attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;	// will be read in a shader.
 
 		// Attachment reference:
 		VkAttachmentReference shadowMapAttachmentReference = {};

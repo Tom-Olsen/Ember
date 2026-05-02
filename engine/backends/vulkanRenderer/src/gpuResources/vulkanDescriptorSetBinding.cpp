@@ -16,6 +16,7 @@
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanDescriptorImageLayout.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanStorageBuffer.h"
@@ -591,7 +592,7 @@ namespace vulkanRendererBackend
 	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, const TextureBinding& textureBinding)
 	{
 		VkDescriptorImageInfo imageInfo = {};
-		imageInfo.imageLayout = static_cast<VkImageLayout>(textureBinding.pTexture->GetVmaImage()->GetImageLayout());
+		imageInfo.imageLayout = GetDescriptorImageLayout(textureBinding.descriptorType);
 		imageInfo.imageView = textureBinding.pTexture->GetVmaImage()->GetVkImageView();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
