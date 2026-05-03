@@ -143,10 +143,11 @@ namespace vulkanRendererBackend
 		m_time = time;
 		m_deltaTime = deltaTime;
 
-		// Resize Swapchain if needed:
-		Int2 windowSize = m_pIWindow->GetSizeInPixels();
-		Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
-		if (m_rebuildSwapchain || windowSize.x != surfaceExtend.x || windowSize.y != surfaceExtend.y)
+		// Resize swapchain only from explicit resize/out-of-date signals.
+		// SDL logical size and Vulkan surface extent are not guaranteed to be reported
+		// in exactly the same coordinate space on every platform, so avoid comparing
+		// them every frame as a resize heuristic.
+		if (m_rebuildSwapchain)
 		{
 			m_rebuildSwapchain = false;
 			Context::ResetFrameIndex();

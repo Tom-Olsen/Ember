@@ -129,6 +129,7 @@ namespace sdlWindowBackend
 					event.type = emberCommon::EventType::WindowClose;
 					break;
 				case SDL_EVENT_WINDOW_RESIZED:
+				case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
 					m_isResized = true;
 					event.type = emberCommon::EventType::WindowResized;
 					event.windowID = sdlEvent.window.windowID;
