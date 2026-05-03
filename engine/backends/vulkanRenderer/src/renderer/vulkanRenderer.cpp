@@ -807,7 +807,8 @@ namespace vulkanRendererBackend
 
 		// Record pre render compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-		std::vector<ComputeCall*>& computeCalls = m_pCompute->GetPreRenderCompute()->GetComputeCallPointers();
+        {
+		    std::vector<ComputeCall*>& computeCalls = m_pCompute->GetPreRenderCompute()->GetComputeCallPointers();
 			if (computeCalls.size() > 0)
 			{
 				// Pipeline:
@@ -815,85 +816,86 @@ namespace vulkanRendererBackend
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 				bool staticDescriptorSetsBound = false;
 
-			for (ComputeCall* computeCall : computeCalls)
-			{
-				ComputeShader* pComputeShader = computeCall->pComputeShader;
+			    for (ComputeCall* computeCall : computeCalls)
+			    {
+			    	ComputeShader* pComputeShader = computeCall->pComputeShader;
 
-				// Compute call is a barrier:
-				if (pComputeShader == nullptr)
-				{
-					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-					memoryBarrier.srcStageMask = PipelineStages::computeShader;
-					memoryBarrier.dstStageMask = PipelineStages::computeShader;
-					memoryBarrier.srcAccessMask = computeCall->srcAccessMask;
-					memoryBarrier.dstAccessMask = computeCall->dstAccessMask;
+			    	// Compute call is a barrier:
+			    	if (pComputeShader == nullptr)
+			    	{
+			    		VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+			    		memoryBarrier.srcStageMask = PipelineStages::computeShader;
+			    		memoryBarrier.dstStageMask = PipelineStages::computeShader;
+			    		memoryBarrier.srcAccessMask = computeCall->srcAccessMask;
+			    		memoryBarrier.dstAccessMask = computeCall->dstAccessMask;
 
-					VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-					dependencyInfo.memoryBarrierCount = 1;
-					dependencyInfo.pMemoryBarriers = &memoryBarrier;
+			    		VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+			    		dependencyInfo.memoryBarrierCount = 1;
+			    		dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
-					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-					DEBUG_LOG_TRACE("Pre Render Compute Barrier, callIndex = {}", computeCall->callIndex);
-				}
-				// Compute call is a dispatch:
-				else
-				{
-					// Pipeline change:
-					VkPipeline newPipeline = pComputeShader->GetPipeline()->GetVkPipeline();
-					if (pipeline != newPipeline)
-					{
-						pipeline = newPipeline;
-						pipelineLayout = pComputeShader->GetVkPipelineLayout();
-						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+			    		vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+			    		DEBUG_LOG_TRACE("Pre Render Compute Barrier, callIndex = {}", computeCall->callIndex);
+			    	}
+			    	// Compute call is a dispatch:
+			    	else
+			    	{
+			    		// Pipeline change:
+			    		VkPipeline newPipeline = pComputeShader->GetPipeline()->GetVkPipeline();
+			    		if (pipeline != newPipeline)
+			    		{
+			    			pipeline = newPipeline;
+			    			pipelineLayout = pComputeShader->GetVkPipelineLayout();
+			    			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 
-						// Bind static descriptor sets:
-						if (!staticDescriptorSetsBound)
-						{
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-							staticDescriptorSetsBound = true;
-						}
+			    			// Bind static descriptor sets:
+			    			if (!staticDescriptorSetsBound)
+			    			{
+			    				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+			    				staticDescriptorSetsBound = true;
+			    			}
 
-						// Bind per shader descriptor set:
-						if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
-					}
+			    			// Bind per shader descriptor set:
+			    			if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+			    				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+			    		}
 
-					// Bind per compute call descriptor set:
-					if (VkDescriptorSet vkDescriptorSet = computeCall->pDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+			    		// Bind per compute call descriptor set:
+			    		if (VkDescriptorSet vkDescriptorSet = computeCall->pDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+			    			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 
-					// Push constant:
-					ComputePushConstant pushConstant(computeCall->threadCount, m_time, m_deltaTime);
-					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
+			    		// Push constant:
+			    		ComputePushConstant pushConstant(computeCall->threadCount, m_time, m_deltaTime);
+			    		vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 
-					// Group counts:
-					Uint3 blockSize = pComputeShader->GetBlockSize();
-					uint32_t groupCountX = (computeCall->threadCount[0] + blockSize[0] - 1) / blockSize[0];
-					uint32_t groupCountY = (computeCall->threadCount[1] + blockSize[1] - 1) / blockSize[1];
-					uint32_t groupCountZ = (computeCall->threadCount[2] + blockSize[2] - 1) / blockSize[2];
+			    		// Group counts:
+			    		Uint3 blockSize = pComputeShader->GetBlockSize();
+			    		uint32_t groupCountX = (computeCall->threadCount[0] + blockSize[0] - 1) / blockSize[0];
+			    		uint32_t groupCountY = (computeCall->threadCount[1] + blockSize[1] - 1) / blockSize[1];
+			    		uint32_t groupCountZ = (computeCall->threadCount[2] + blockSize[2] - 1) / blockSize[2];
 
-					// Dispatch:
-					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-					DEBUG_LOG_TRACE("Pre Render Compute Shader {}, callIndex = {}", pComputeShader->GetName(), computeCall->callIndex);
-				}
-			}
+			    		// Dispatch:
+			    		vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+			    		DEBUG_LOG_TRACE("Pre Render Compute Shader {}, callIndex = {}", pComputeShader->GetName(), computeCall->callIndex);
+			    	}
+			    }
 
-			// Release memory from pre render compute shaders to vertex shaders:
-			{
-				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-				memoryBarrier.srcStageMask = PipelineStages::computeShader;
-				memoryBarrier.dstStageMask = PipelineStages::vertexShader;
-				memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
-				memoryBarrier.dstAccessMask = AccessMasks::VertexShader::shaderRead;
+			    // Release memory from pre render compute shaders to vertex shaders:
+			    {
+			    	VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+			    	memoryBarrier.srcStageMask = PipelineStages::computeShader;
+			    	memoryBarrier.dstStageMask = PipelineStages::vertexShader;
+			    	memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+			    	memoryBarrier.dstAccessMask = AccessMasks::VertexShader::shaderRead;
 
-				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-				dependencyInfo.memoryBarrierCount = 1;
-				dependencyInfo.pMemoryBarriers = &memoryBarrier;
+			    	VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+			    	dependencyInfo.memoryBarrierCount = 1;
+			    	dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
-				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-				DEBUG_LOG_TRACE("Memory Barrier: pre compute to vertex");
-			}
-		}
+			    	vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+			    	DEBUG_LOG_TRACE("Memory Barrier: pre compute to vertex");
+			    }
+		    }
+        }
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
 	void Renderer::RecordShadowCommands()
@@ -924,11 +926,11 @@ namespace vulkanRendererBackend
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			if (m_sortedDrawCallPointers.size() > 0)
 			{
-					// Pipeline:
-					VkPipeline pipeline = VK_NULL_HANDLE;
-					VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-					const Material* pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
-					bool staticDescriptorSetsBound = false;
+				// Pipeline:
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				const Material* pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
+				bool staticDescriptorSetsBound = false;
 
 				// Lights:
 				const uint32_t shadowLightCount = m_directionalLightsCount + m_positionalLightsCount;
@@ -943,31 +945,31 @@ namespace vulkanRendererBackend
 						if (drawCall->castShadows == false)
 							continue;
 
-							// Pipeline swap:
-							VkPipeline newPipeline = pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
-							if (pipeline != newPipeline)
+						// Pipeline swap:
+						VkPipeline newPipeline = pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
+						if (pipeline != newPipeline)
+						{
+							pipeline = newPipeline;
+							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+							// Pipeline layout swap:
+							VkPipelineLayout newPipelineLayout = pShadowMaterial->GetVkPipelineLayout();
+							if (pipelineLayout != newPipelineLayout)
 							{
-								pipeline = newPipeline;
-								vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+								pipelineLayout = newPipelineLayout;
 
-								// Pipeline layout swap:
-								VkPipelineLayout newPipelineLayout = pShadowMaterial->GetVkPipelineLayout();
-								if (pipelineLayout != newPipelineLayout)
+								// Bind static descriptor sets:
+								if (!staticDescriptorSetsBound)
 								{
-									pipelineLayout = newPipelineLayout;
-
-									// Bind static descriptor sets:
-									if (!staticDescriptorSetsBound)
-									{
-										vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-										staticDescriptorSetsBound = true;
-									}
-
-									// Bind per shader descriptor set:
-									if (VkDescriptorSet vkDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-										vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+									vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+									staticDescriptorSetsBound = true;
 								}
+
+								// Bind per shader descriptor set:
+								if (VkDescriptorSet vkDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+									vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 							}
+						}
 
 						// Bind per draw call descriptor set:
 						if (VkDescriptorSet vkDescriptorSet = drawCall->pShadowDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1038,12 +1040,12 @@ namespace vulkanRendererBackend
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-				if (m_sortedDrawCallPointers.size() > 0)
-				{
-					// Pipeline:
-					VkPipeline pipeline = VK_NULL_HANDLE;
-					VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-					bool staticDescriptorSetsBound = false;
+			if (m_sortedDrawCallPointers.size() > 0)
+			{
+				// Pipeline:
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				bool staticDescriptorSetsBound = false;
 
 				// Draw calls:
 				for (DrawCall* drawCall : m_sortedDrawCallPointers)
@@ -1057,18 +1059,18 @@ namespace vulkanRendererBackend
 						pipeline = newPipeline;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-							// Pipeline layout swap:
-							VkPipelineLayout newPipelineLayout = drawCall->pMaterial->GetVkPipelineLayout();
-							if (pipelineLayout != newPipelineLayout)
-							{
-								pipelineLayout = newPipelineLayout;
+						// Pipeline layout swap:
+						VkPipelineLayout newPipelineLayout = drawCall->pMaterial->GetVkPipelineLayout();
+						if (pipelineLayout != newPipelineLayout)
+						{
+							pipelineLayout = newPipelineLayout;
 
-								// Bind static descriptor sets:
-								if (!staticDescriptorSetsBound)
-								{
-									vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-									staticDescriptorSetsBound = true;
-								}
+							// Bind static descriptor sets:
+							if (!staticDescriptorSetsBound)
+							{
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+								staticDescriptorSetsBound = true;
+							}
 
 							// Bind per shader descriptor set:
 							if (VkDescriptorSet vkDescriptorSet = drawCall->pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1210,7 +1212,8 @@ namespace vulkanRendererBackend
 
 		// Record post render compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-		std::vector<ComputeCall*>& computeCalls = m_pCompute->GetPostRenderCompute()->GetComputeCallPointers();
+        {
+		    std::vector<ComputeCall*>& computeCalls = m_pCompute->GetPostRenderCompute()->GetComputeCallPointers();
 			if (computeCalls.size() > 0)
 			{
 				// Pipeline:
@@ -1218,91 +1221,78 @@ namespace vulkanRendererBackend
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 				bool staticDescriptorSetsBound = false;
 
-			for (ComputeCall* computeCall : computeCalls)
-			{
-				ComputeShader* pComputeShader = computeCall->pComputeShader;
+			    for (ComputeCall* computeCall : computeCalls)
+			    {
+			    	ComputeShader* pComputeShader = computeCall->pComputeShader;
 
-				// Pipeline change:
-				VkPipeline newPipeline = pComputeShader->GetPipeline()->GetVkPipeline();
-				if (pipeline != newPipeline)
-				{
-					pipeline = newPipeline;
-					pipelineLayout = pComputeShader->GetVkPipelineLayout();
-						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+			    	// Pipeline change:
+			    	VkPipeline newPipeline = pComputeShader->GetPipeline()->GetVkPipeline();
+			    	if (pipeline != newPipeline)
+			    	{
+			    		pipeline = newPipeline;
+			    		pipelineLayout = pComputeShader->GetVkPipelineLayout();
+			    		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 
-						// Bind static descriptor sets:
-						if (!staticDescriptorSetsBound)
-						{
-							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-							staticDescriptorSetsBound = true;
-						}
+			    		// Bind static descriptor sets:
+			    		if (!staticDescriptorSetsBound)
+			    		{
+			    			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+			    			staticDescriptorSetsBound = true;
+			    		}
 
-					// Bind per shader descriptor set:
-					if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
-				}
+			    		// Bind per shader descriptor set:
+			    		if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+			    			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+			    	}
 
-				// Bind per compute call descriptor set:
-				if (VkDescriptorSet vkDescriptorSet = computeCall->pDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+			    	// Bind per compute call descriptor set:
+			    	if (VkDescriptorSet vkDescriptorSet = computeCall->pDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+			    		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 
-				// Push constant:
-				ComputePushConstant pushConstant(computeCall->threadCount, m_time, m_deltaTime);
-				vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
+			    	// Push constant:
+			    	ComputePushConstant pushConstant(computeCall->threadCount, m_time, m_deltaTime);
+			    	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 
-				// Group counts:
-				Uint3 blockSize = pComputeShader->GetBlockSize();
-				uint32_t groupCountX = (computeCall->threadCount.x + blockSize.x - 1) / blockSize.x;
-				uint32_t groupCountY = (computeCall->threadCount.y + blockSize.y - 1) / blockSize.y;
-				uint32_t groupCountZ = (computeCall->threadCount.z + blockSize.z - 1) / blockSize.z;
+			    	// Group counts:
+			    	Uint3 blockSize = pComputeShader->GetBlockSize();
+			    	uint32_t groupCountX = (computeCall->threadCount.x + blockSize.x - 1) / blockSize.x;
+			    	uint32_t groupCountY = (computeCall->threadCount.y + blockSize.y - 1) / blockSize.y;
+			    	uint32_t groupCountZ = (computeCall->threadCount.z + blockSize.z - 1) / blockSize.z;
 
-				// Dispatch:
-				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-				DEBUG_LOG_TRACE("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
+			    	// Dispatch:
+			    	vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+			    	DEBUG_LOG_TRACE("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
 
-				// All effects access the same inputImage and outputImage.
-				// Thus add memory barrier between every effect:
-				{
-					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-					memoryBarrier.srcStageMask = PipelineStages::computeShader;
-					memoryBarrier.dstStageMask = PipelineStages::computeShader;
-					memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
-					memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderRead;
+			    	// All effects access the same inputImage and outputImage.
+			    	// Thus add memory barrier between every effect:
+			    	{
+			    		VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+			    		memoryBarrier.srcStageMask = PipelineStages::computeShader;
+			    		memoryBarrier.dstStageMask = PipelineStages::computeShader;
+			    		memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+			    		memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderRead;
 
-					VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-					dependencyInfo.memoryBarrierCount = 1;
-					dependencyInfo.pMemoryBarriers = &memoryBarrier;
+			    		VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+			    		dependencyInfo.memoryBarrierCount = 1;
+			    		dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
-					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-					DEBUG_LOG_TRACE("Post Render Compute Barrier, callIndex = {}", computeCall->callIndex);
-				}
-			}
+			    		vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+			    		DEBUG_LOG_TRACE("Post Render Compute Barrier, callIndex = {}", computeCall->callIndex);
+			    	}
+			    }
+		    }
 
-			if (!Context::DockSpaceEnabled())
-			{
-				// The present material samples the primary render texture in the next submission, so move it
-				// into shader-read layout now and update the present descriptor set against that tracked state.
-				VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				PipelineStage srcStage = PipelineStages::computeShader;
-				PipelineStage dstStage = PipelineStages::fragmentShader;
-				VkAccessFlags2 srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
-				VkAccessFlags2 dstAccessMask = AccessMasks::FragmentShader::shaderRead;
-				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-				DEBUG_LOG_TRACE("Render Image Transition: shader write -> shader read only");
-			}
-			else
-			{
-				// When rendering only ImGui into the swapchain, the main render texture is not sampled after
-				// post processing. Keep it in GENERAL so the next frame can immediately bind it as a storage image again.
-				VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-				PipelineStage srcStage = PipelineStages::computeShader;
-				PipelineStage dstStage = PipelineStages::bottomOfPipe;
-				VkAccessFlags2 srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
-				VkAccessFlags2 dstAccessMask = AccessMasks::BottomOfPipe::none;
-				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-				DEBUG_LOG_TRACE("Render Image Transition: shader write -> general");
-			}
-		}
+            // Transition render texture layout to VK_ACCESS_2_SHADER_READ_BIT:
+            {
+			    VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			    PipelineStage srcStage = PipelineStages::computeShader;
+			    PipelineStage dstStage = PipelineStages::fragmentShader;
+			    VkAccessFlags2 srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+			    VkAccessFlags2 dstAccessMask = AccessMasks::FragmentShader::shaderRead;
+			    RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			    DEBUG_LOG_TRACE("Render Image Transition: shader write -> shader read only");
+            }
+        }
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
 	void Renderer::RecordPresentCommands()
@@ -1372,8 +1362,8 @@ namespace vulkanRendererBackend
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
-			// The present quad has finished sampling the main render texture. Return it to GENERAL so the
-			// next frame starts from the layout expected by forward rendering and post-process storage writes.
+			// The ImGui pass samples the main render texture in the scene/game editor windows.
+            // Return it to VK_IMAGE_LAYOUT_GENERAL afterwards so the next frame can use it as a storage image again.
 			{
 				VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
 				PipelineStage srcStage = PipelineStages::fragmentShader;
@@ -1399,7 +1389,6 @@ namespace vulkanRendererBackend
 		// Record present commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
-
 			// Render pass info:
 			Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
 			PresentRenderPass* presentRenderPass = RenderPassManager::GetPresentRenderPass();
@@ -1416,6 +1405,18 @@ namespace vulkanRendererBackend
 					m_pIGui->Render(commandBuffer);
 			}
 			vkCmdEndRenderPass(commandBuffer);
+
+			// The present quad has finished sampling the main render texture.
+            // Return it to VK_IMAGE_LAYOUT_GENERAL afterwards so the next frame can use it as a storage image again.
+			{
+				VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
+				PipelineStage srcStage = PipelineStages::fragmentShader;
+				PipelineStage dstStage = PipelineStages::bottomOfPipe;
+				VkAccessFlags2 srcAccessMask = AccessMasks::FragmentShader::shaderRead;
+				VkAccessFlags2 dstAccessMask = AccessMasks::BottomOfPipe::none;
+				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+				DEBUG_LOG_TRACE("Render Image Transition: shader read only -> general");
+			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
@@ -1683,7 +1684,7 @@ namespace vulkanRendererBackend
 
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_releaseSemaphores[m_frameIndex];
+		signalSemaphoreInfo.semaphore = m_releaseSemaphores[m_imageIndex];
 		signalSemaphoreInfo.stageMask = PipelineStages::bottomOfPipe;
 
 		// Submit info:
@@ -1703,7 +1704,7 @@ namespace vulkanRendererBackend
 		PROFILE_FUNCTION();
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_releaseSemaphores[m_frameIndex];
+		presentInfo.pWaitSemaphores = &m_releaseSemaphores[m_imageIndex];
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &Context::GetVkSwapchainKHR();
 		presentInfo.pImageIndices = &m_imageIndex;
@@ -1743,7 +1744,7 @@ namespace vulkanRendererBackend
 		m_shadowToForwardSemaphores.resize(Context::GetFramesInFlight());
 		m_forwardToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_postRenderToPresentSemaphores.resize(Context::GetFramesInFlight());
-		m_releaseSemaphores.resize(Context::GetFramesInFlight());
+		m_releaseSemaphores.resize(Context::GetSwapchain()->GetImageCount());
 		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
@@ -1752,13 +1753,16 @@ namespace vulkanRendererBackend
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowToForwardSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderToPresentSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
 			NAME_VK_OBJECT(m_acquireSemaphores[i], "AcquireSemaphore" + std::to_string(i));
 			NAME_VK_OBJECT(m_resourceUpdateToPreRenderComputeSemaphores[i], "ResourceUpdateToPreRenderComputeSemaphore" + std::to_string(i));
 			NAME_VK_OBJECT(m_preRenderComputeToShadowSemaphores[i], "PreRenderComputeToShadowSemaphore" + std::to_string(i));
 			NAME_VK_OBJECT(m_shadowToForwardSemaphores[i], "ShadowToForwardSemaphore" + std::to_string(i));
 			NAME_VK_OBJECT(m_forwardToPostRenderComputeSemaphores[i], "ForwardToPostRenderComputeSemaphore" + std::to_string(i));
 			NAME_VK_OBJECT(m_postRenderToPresentSemaphores[i], "PostRenderToPresentSemaphore" + std::to_string(i));
+		}
+		for (uint32_t i = 0; i < m_releaseSemaphores.size(); i++)
+		{
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
 			NAME_VK_OBJECT(m_releaseSemaphores[i], "ReleaseSemaphore" + std::to_string(i));
 		}
 	}
@@ -1778,8 +1782,9 @@ namespace vulkanRendererBackend
 			vkDestroySemaphore(Context::GetVkDevice(), m_shadowToForwardSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_forwardToPostRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_postRenderToPresentSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_releaseSemaphores[i], nullptr);
 		}
+		for (uint32_t i = 0; i < m_releaseSemaphores.size(); i++)
+			vkDestroySemaphore(Context::GetVkDevice(), m_releaseSemaphores[i], nullptr);
 		m_acquireSemaphores.clear();
 		m_resourceUpdateToPreRenderComputeSemaphores.clear();
 		m_preRenderComputeToShadowSemaphores.clear();
