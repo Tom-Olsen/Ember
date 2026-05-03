@@ -267,6 +267,12 @@ namespace sdlWindowBackend
 		SDL_GetWindowSize(m_pSdlWindow, &width, &height);
 		return Int2{ width, height };
 	}
+	Int2 Window::GetSizeInPixels() const
+	{
+		int width, height;
+		SDL_GetWindowSizeInPixels(m_pSdlWindow, &width, &height);
+		return Int2{ width, height };
+	}
 	uint32_t Window::GetWindowID() const
 	{
 		return (uint32_t)SDL_GetWindowID(m_pSdlWindow);

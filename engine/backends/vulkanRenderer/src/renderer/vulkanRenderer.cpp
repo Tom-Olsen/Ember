@@ -144,7 +144,7 @@ namespace vulkanRendererBackend
 		m_deltaTime = deltaTime;
 
 		// Resize Swapchain if needed:
-		Int2 windowSize = m_pIWindow->GetSize();
+		Int2 windowSize = m_pIWindow->GetSizeInPixels();
 		Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
 		if (m_rebuildSwapchain || windowSize.x != surfaceExtend.x || windowSize.y != surfaceExtend.y)
 		{

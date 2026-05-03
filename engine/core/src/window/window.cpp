@@ -58,6 +58,11 @@ namespace emberEngine
 		Int2 size = s_pIWindow->GetSize();
 		return Int2(size[0], size[1]);
 	}
+	Int2 Window::GetSizeInPixels()
+	{
+		Int2 size = s_pIWindow->GetSizeInPixels();
+		return Int2(size[0], size[1]);
+	}
 	uint32_t Window::GetWindowID()
 	{
 		return s_pIWindow->GetWindowID();

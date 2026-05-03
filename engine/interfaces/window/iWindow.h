@@ -35,7 +35,17 @@ namespace emberBackendInterface
         virtual void* GetNativeHandle() const = 0;
         virtual bool GetIsMinimized() const = 0;
         virtual bool GetIsResized() const = 0;
+
+        // Logical client-area size in window coordinates.
+        // Use this for input, ImGui layout, hit testing, and any math that should match mouse coordinates.
+        // On high-DPI displays this may be smaller than the real drawable pixel size.
         virtual Int2 GetSize() const = 0;
+
+        // Real drawable client-area size in physical pixels.
+        // Use this for swapchain extent, framebuffer size, viewport/scissor setup, and other rasterization work.
+        // On high-DPI displays this may be larger than GetSize().
+        virtual Int2 GetSizeInPixels() const = 0;
+
         virtual uint32_t GetWindowID() const = 0;
 
         // Setters:

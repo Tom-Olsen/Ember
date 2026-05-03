@@ -40,6 +40,7 @@ namespace emberEngine
 		static bool GetIsMinimized();
 		static bool GetIsResized();
 		static Int2 GetSize();
+		static Int2 GetSizeInPixels();
 		static uint32_t GetWindowID();
 
 	private: // Methods

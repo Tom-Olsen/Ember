@@ -52,6 +52,10 @@ namespace nullWindowBackend
 	{
 		return Int2{ 0, 0 };
 	}
+	Int2 Window::GetSizeInPixels() const
+	{
+		return Int2{ 0, 0 };
+	}
 	uint32_t Window::GetWindowID() const
 	{
 		return 0;

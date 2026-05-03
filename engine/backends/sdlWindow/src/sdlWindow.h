@@ -57,6 +57,7 @@ namespace sdlWindowBackend
 		bool GetIsMinimized() const override;
 		bool GetIsResized() const override;
 		Int2 GetSize() const override;
+		Int2 GetSizeInPixels() const override;
 		uint32_t GetWindowID() const override;
 
 		// Setters:

@@ -102,7 +102,7 @@ namespace vulkanRendererBackend
 			return Uint2(surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
 
         // Fallback:
-		Int2 windowSize = m_pIWindow->GetSize();
+		Int2 windowSize = m_pIWindow->GetSizeInPixels();
 		uint32_t width = windowSize.x > 0 ? static_cast<uint32_t>(windowSize.x) : 0;
 		uint32_t height = windowSize.y > 0 ? static_cast<uint32_t>(windowSize.y) : 0;
 		Uint2 extent(width, height);
