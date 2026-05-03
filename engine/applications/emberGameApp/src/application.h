@@ -33,7 +33,7 @@ namespace emberApplication
 		static emberEngine::Scene* m_pActiveScene;
 
 	public: // Methods:
-		static void Init(const CreateInfo& createInfo);
+		static bool Init(const CreateInfo& createInfo);
 		static void Clear();
 
 		// Main loop:

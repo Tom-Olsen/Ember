@@ -54,9 +54,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_R
 
 
 # -------------- Link Custom Libraries --------------
-## Ember Game Application:
-#NGINE_APPLICATIONS_DIR}/emberGameApp" EmberGameApp)
-#(${PROJECT_NAME} PUBLIC EmberGameApp)
+# Ember Game Application:
+# add_subdirectory("${ENGINE_APPLICATIONS_DIR}/emberGameApp" EmberGameApp)
+# target_link_libraries(${PROJECT_NAME} PUBLIC EmberGameApp)
 
 # Ember Editor Application:
 add_subdirectory("${ENGINE_APPLICATIONS_DIR}/emberEditorApp" EmberEditorApp)

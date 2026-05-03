@@ -34,7 +34,7 @@ namespace emberApplication
 
 	// Public methods:
 	// Constructor/Destructor:
-	void Application::Init(const CreateInfo& applicationCreateInfo)
+	bool Application::Init(const CreateInfo& applicationCreateInfo)
 	{
 		try
 		{
@@ -72,10 +72,12 @@ namespace emberApplication
 			// Gpu Resource Managers:
 			emberEngine::Core::InitManagers();
 			emberEngine::Core::InitOther();
+			return true;
 		}
 		catch (const std::exception& e)
 		{
 			LOG_ERROR("Exception: {}", e.what());
+			return false;
 		}
 	}
 	void Application::Clear()
@@ -120,7 +122,7 @@ namespace emberApplication
 				emberEngine::Gui::Update();
 				m_pActiveScene->Update();
 				m_pActiveScene->LateUpdate();
-				emberEngine::Renderer::RenderFrame(m_pActiveScene);
+				emberEngine::Renderer::RenderFrame();
 			}
 		}
 		catch (const std::exception& e)
