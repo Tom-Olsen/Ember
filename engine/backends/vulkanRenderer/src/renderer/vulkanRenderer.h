@@ -103,8 +103,8 @@ namespace vulkanRendererBackend
 		std::vector<DrawCall*> m_sortedDrawCallPointers;
 
 		// Render management:
-		uint32_t m_frameIndex;
-		uint32_t m_imageIndex;  // updated by vkAcquireNextImageKHR(...)
+		uint32_t m_frameIndex = 0;
+		uint32_t m_imageIndex = 0;  // updated by vkAcquireNextImageKHR(...)
 		float m_time;
 		float m_deltaTime;
 		DescriptorSetBinding* m_pSceneDescriptorSetBinding;

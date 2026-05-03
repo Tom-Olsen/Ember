@@ -373,7 +373,7 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::ITexture* Renderer::GetRenderTexture()
 	{
-		RenderTexture2d* pRenderTexture = RenderPassManager::GetForwardRenderPass()->GetRenderTexture();
+		RenderTexture2d* pRenderTexture = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex);
 		emberBackendInterface::ITexture* pITexture = static_cast<emberBackendInterface::ITexture*>(pRenderTexture);
 		return pITexture;
 	}
@@ -735,13 +735,13 @@ namespace vulkanRendererBackend
 			DescriptorSetBinding* pShaderDescriptorSetBinding = computeCall->pComputeShader->GetDescriptorSetBinding();
 			if (computeCall->callIndex % 2 == 0)
 			{
-				pShaderDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
-				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
+				pShaderDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
+				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex));
 			}
 			else
 			{
-				pShaderDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture());
-				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+				pShaderDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex));
+				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
 			}
 			pShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 			computeCall->pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
@@ -1015,8 +1015,8 @@ namespace vulkanRendererBackend
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
-			viewport.height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
+			viewport.width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetWidth();
+			viewport.height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetHeight();
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -1031,7 +1031,7 @@ namespace vulkanRendererBackend
 			clearValues[1].depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffer(0);
+			renderPassBeginInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffer(m_frameIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent.width = viewport.width;
 			renderPassBeginInfo.renderArea.extent.height = viewport.height;
@@ -1116,7 +1116,7 @@ namespace vulkanRendererBackend
 		VKA(vkEndCommandBuffer(commandBuffer));
 
 		// Forward render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_GENERAL. Reflect this in the image layout:
-		RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
+		RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
 	void Renderer::RecordForwardCommandsParallel()
 	{
@@ -1289,7 +1289,7 @@ namespace vulkanRendererBackend
 			    PipelineStage dstStage = PipelineStages::fragmentShader;
 			    VkAccessFlags2 srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
 			    VkAccessFlags2 dstAccessMask = AccessMasks::FragmentShader::shaderRead;
-			    RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			    RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 			    DEBUG_LOG_TRACE("Render Image Transition: shader write -> shader read only");
             }
         }
@@ -1309,7 +1309,7 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentMaterial()->GetDescriptorSetBinding();
-			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture());
+			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
 			pPresentShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 
 			// Viewport and scissor:
@@ -1362,17 +1362,6 @@ namespace vulkanRendererBackend
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
-			// The ImGui pass samples the main render texture in the scene/game editor windows.
-            // Return it to VK_IMAGE_LAYOUT_GENERAL afterwards so the next frame can use it as a storage image again.
-			{
-				VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-				PipelineStage srcStage = PipelineStages::fragmentShader;
-				PipelineStage dstStage = PipelineStages::bottomOfPipe;
-				VkAccessFlags2 srcAccessMask = AccessMasks::FragmentShader::shaderRead;
-				VkAccessFlags2 dstAccessMask = AccessMasks::BottomOfPipe::none;
-				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-				DEBUG_LOG_TRACE("Render Image Transition: shader read only -> general");
-			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
@@ -1406,17 +1395,6 @@ namespace vulkanRendererBackend
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
-			// The present quad has finished sampling the main render texture.
-            // Return it to VK_IMAGE_LAYOUT_GENERAL afterwards so the next frame can use it as a storage image again.
-			{
-				VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-				PipelineStage srcStage = PipelineStages::fragmentShader;
-				PipelineStage dstStage = PipelineStages::bottomOfPipe;
-				VkAccessFlags2 srcAccessMask = AccessMasks::FragmentShader::shaderRead;
-				VkAccessFlags2 dstAccessMask = AccessMasks::BottomOfPipe::none;
-				RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-				DEBUG_LOG_TRACE("Render Image Transition: shader read only -> general");
-			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
@@ -1575,10 +1553,10 @@ namespace vulkanRendererBackend
 			clearValues[1].depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffer(0);
+			renderPassBeginInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffer(m_frameIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent.width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
-			renderPassBeginInfo.renderArea.extent.height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
+			renderPassBeginInfo.renderArea.extent.width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetWidth();
+			renderPassBeginInfo.renderArea.extent.height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetHeight();
 			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 			renderPassBeginInfo.pClearValues = clearValues.data();
 

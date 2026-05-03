@@ -18,24 +18,10 @@ namespace vulkanRendererBackend
 	{
 		m_depthFormat = Formats::d32_sfloat_s8_uint;
 
-		// Create render textures:
-		Format renderTextureFormat = Formats::r16g16b16a16_sfloat; // make sure to use [[vk::image_format("rgba16f")]] RWTexture2D<float4> for render textures in shaders, see inOut.comp.hlsl.
-		m_pRenderTexture = std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight);
-		m_pSecondaryRenderTexture = std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight);
-
-		// Both ping-pong textures are used as storage images by post processing, so initialize them into
-		// GENERAL and keep them there outside the present pass.
-		ImageLayout newLayout = ImageLayouts::general;
-		PipelineStage srcStage = PipelineStages::topOfPipe;
-		PipelineStage dstStage = PipelineStages::bottomOfPipe;
-		AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-		AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
-		m_pRenderTexture->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		m_pSecondaryRenderTexture->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-
+		CreateRenderTextures(renderWidth, renderHeight);
 		CreateRenderPass();
-		CreateMsaaImage();
-		CreateDepthImage();
+		CreateMsaaImages();
+		CreateDepthImages();
 		CreateFrameBuffers();
 		NAME_VK_OBJECT(m_renderPass, "forwardRenderPass");
 	}
@@ -47,33 +33,56 @@ namespace vulkanRendererBackend
 
 
 	// Public methods:
-	const VmaImage* const ForwardRenderPass::GetMsaaVmaImage() const
+	const VmaImage* const ForwardRenderPass::GetMsaaVmaImage(uint32_t frameIndex) const
 	{
-		return m_pMsaaImage.get();
+		return m_pMsaaImages[frameIndex].get();
 	}
-	const VmaImage* const ForwardRenderPass::GetDepthVmaImage() const
+	const VmaImage* const ForwardRenderPass::GetDepthVmaImage(uint32_t frameIndex) const
 	{
-		return m_pDepthImage.get();
+		return m_pDepthImages[frameIndex].get();
 	}
-	RenderTexture2d* ForwardRenderPass::GetRenderTexture() const
+	RenderTexture2d* ForwardRenderPass::GetRenderTexture(uint32_t frameIndex) const
 	{
-		return m_pRenderTexture.get();
+		return m_pRenderTextures[frameIndex].get();
 	}
-	RenderTexture2d* ForwardRenderPass::GetSecondaryRenderTexture() const
+	RenderTexture2d* ForwardRenderPass::GetSecondaryRenderTexture(uint32_t frameIndex) const
 	{
-		return m_pSecondaryRenderTexture.get();
+		return m_pSecondaryRenderTextures[frameIndex].get();
 	}
 
 
 
 	// Private methods:
+	void ForwardRenderPass::CreateRenderTextures(uint32_t renderWidth, uint32_t renderHeight)
+	{
+		const uint32_t framesInFlight = Context::GetFramesInFlight();
+		Format renderTextureFormat = Formats::r16g16b16a16_sfloat; // make sure to use [[vk::image_format("rgba16f")]] RWTexture2D<float4> for render textures in shaders, see inOut.comp.hlsl.
+
+		m_pRenderTextures.reserve(framesInFlight);
+		m_pSecondaryRenderTextures.reserve(framesInFlight);
+		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
+		{
+			m_pRenderTextures.push_back(std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight));
+			m_pSecondaryRenderTextures.push_back(std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight));
+
+			// Both ping-pong textures are used as storage images by post processing, so initialize them into
+			// GENERAL and keep them there outside the present pass.
+			ImageLayout newLayout = ImageLayouts::general;
+			PipelineStage srcStage = PipelineStages::topOfPipe;
+			PipelineStage dstStage = PipelineStages::bottomOfPipe;
+			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
+			AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
+			m_pRenderTextures[frameIndex]->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			m_pSecondaryRenderTextures[frameIndex]->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		}
+	}
 	void ForwardRenderPass::CreateRenderPass()
 	{
 		// Attachments:
 		std::array<VkAttachmentDescription, 3> attachments{};
 		{
 			// Multisampled color attachment description:
-			attachments[0].format = static_cast<VkFormat>(m_pRenderTexture->GetVmaImage()->GetFormat());
+			attachments[0].format = static_cast<VkFormat>(m_pRenderTextures[0]->GetVmaImage()->GetFormat());
 			attachments[0].samples = static_cast<VkSampleCountFlagBits>(Context::GetMsaaSamples());		// multisampling count
 			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;										// clear framebuffer to black before rendering
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;									// no need to store multisampls after render
@@ -93,14 +102,14 @@ namespace vulkanRendererBackend
 			attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 			// Color resolve attachment description: (resolve multisampled fragments)
-			attachments[2].format = static_cast<VkFormat>(m_pRenderTexture->GetVmaImage()->GetFormat());
+			attachments[2].format = static_cast<VkFormat>(m_pRenderTextures[0]->GetVmaImage()->GetFormat());
 			attachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			attachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			attachments[2].initialLayout = VK_IMAGE_LAYOUT_GENERAL;
-			attachments[2].finalLayout = VK_IMAGE_LAYOUT_GENERAL;					// rdy for post processing
+			attachments[2].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;           // dont care about old content (loadOp=dontCare).
+			attachments[2].finalLayout = VK_IMAGE_LAYOUT_GENERAL;               // rdy for post processing.
 		}
 
 		// Attachment references:
@@ -144,101 +153,111 @@ namespace vulkanRendererBackend
 
 		VKA(vkCreateRenderPass(Context::GetVkDevice(), &renderPassInfo, nullptr, &m_renderPass));
 	}
-	void ForwardRenderPass::CreateMsaaImage()
+	void ForwardRenderPass::CreateMsaaImages()
 	{
-		ImageSubresourceRange subresourceRange;
-		subresourceRange.aspectMask = ImageAspectFlags::color_bit;
-		subresourceRange.baseMipLevel = 0;
-		subresourceRange.levelCount = 1;
-		subresourceRange.baseArrayLayer = 0;
-		subresourceRange.layerCount = 1;
+		const uint32_t framesInFlight = Context::GetFramesInFlight();
+		m_pMsaaImages.reserve(framesInFlight);
+		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
+		{
+			ImageSubresourceRange subresourceRange;
+			subresourceRange.aspectMask = ImageAspectFlags::color_bit;
+			subresourceRange.baseMipLevel = 0;
+			subresourceRange.levelCount = 1;
+			subresourceRange.baseArrayLayer = 0;
+			subresourceRange.layerCount = 1;
 
-		ImageCreateInfo imageInfo = {};
-		imageInfo.imageType = ImageTypes::image_type_2d;
-		imageInfo.extent.x = m_pRenderTexture->GetWidth();
-		imageInfo.extent.y = m_pRenderTexture->GetHeight();
-		imageInfo.extent.z = 1;
-		imageInfo.mipLevels = 1;
-		imageInfo.arrayLayers = 1;
-		imageInfo.format = m_pRenderTexture->GetVmaImage()->GetFormat();
-		imageInfo.tiling = ImageTilings::optimal;
-		imageInfo.initialLayout = ImageLayouts::undefined;
-		imageInfo.usages = ImageUsageFlags::transient_attachment_bit | ImageUsageFlags::color_attachment_bit;
-		imageInfo.sharingMode = SharingModes::exclusive;
-		imageInfo.sampleCountFlags = Context::GetMsaaSamples();
-		imageInfo.flags = 0;
+			ImageCreateInfo imageInfo = {};
+			imageInfo.imageType = ImageTypes::image_type_2d;
+			imageInfo.extent.x = m_pRenderTextures[frameIndex]->GetWidth();
+			imageInfo.extent.y = m_pRenderTextures[frameIndex]->GetHeight();
+			imageInfo.extent.z = 1;
+			imageInfo.mipLevels = 1;
+			imageInfo.arrayLayers = 1;
+			imageInfo.format = m_pRenderTextures[frameIndex]->GetVmaImage()->GetFormat();
+			imageInfo.tiling = ImageTilings::optimal;
+			imageInfo.initialLayout = ImageLayouts::undefined;
+			imageInfo.usages = ImageUsageFlags::transient_attachment_bit | ImageUsageFlags::color_attachment_bit;
+			imageInfo.sharingMode = SharingModes::exclusive;
+			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
+			imageInfo.flags = 0;
 
-		AllocationCreateInfo allocationInfo = {};
-		allocationInfo.usages = MemoryUsages::auto_prefer_device;
-		allocationInfo.flags = 0;
-		allocationInfo.requiredFlags = 0;
-		allocationInfo.preferredFlags = 0;
+			AllocationCreateInfo allocationInfo = {};
+			allocationInfo.usages = MemoryUsages::auto_prefer_device;
+			allocationInfo.flags = 0;
+			allocationInfo.requiredFlags = 0;
+			allocationInfo.preferredFlags = 0;
 
-		ImageViewType viewType = ImageViewTypes::view_type_2d;
-		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
-		m_pMsaaImage = std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue);
+			ImageViewType viewType = ImageViewTypes::view_type_2d;
+			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
+			m_pMsaaImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue));
+		}
 	}
-	void ForwardRenderPass::CreateDepthImage()
+	void ForwardRenderPass::CreateDepthImages()
 	{
-		ImageSubresourceRange subresourceRange;
-		subresourceRange.aspectMask = ImageAspectFlags::depth_bit | ImageAspectFlags::stencil_bit;
-		subresourceRange.baseMipLevel = 0;
-		subresourceRange.levelCount = 1;
-		subresourceRange.baseArrayLayer = 0;
-		subresourceRange.layerCount = 1;
+		const uint32_t framesInFlight = Context::GetFramesInFlight();
+		m_pDepthImages.reserve(framesInFlight);
+		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
+		{
+			ImageSubresourceRange subresourceRange;
+			subresourceRange.aspectMask = ImageAspectFlags::depth_bit | ImageAspectFlags::stencil_bit;
+			subresourceRange.baseMipLevel = 0;
+			subresourceRange.levelCount = 1;
+			subresourceRange.baseArrayLayer = 0;
+			subresourceRange.layerCount = 1;
 
-		ImageCreateInfo imageInfo = {};
-		imageInfo.imageType = ImageTypes::image_type_2d;
-		imageInfo.extent.x = m_pRenderTexture->GetWidth();
-		imageInfo.extent.y = m_pRenderTexture->GetHeight();
-		imageInfo.extent.z = 1;
-		imageInfo.mipLevels = 1;
-		imageInfo.arrayLayers = 1;
-		imageInfo.format = m_depthFormat;
-		imageInfo.tiling = ImageTilings::optimal;
-		imageInfo.initialLayout = ImageLayouts::undefined;
-		imageInfo.usages = ImageUsageFlags::depth_stencil_attachment_bit;
-		imageInfo.sharingMode = SharingModes::exclusive;
-		imageInfo.sampleCountFlags = Context::GetMsaaSamples();
-		imageInfo.flags = 0;
+			ImageCreateInfo imageInfo = {};
+			imageInfo.imageType = ImageTypes::image_type_2d;
+			imageInfo.extent.x = m_pRenderTextures[frameIndex]->GetWidth();
+			imageInfo.extent.y = m_pRenderTextures[frameIndex]->GetHeight();
+			imageInfo.extent.z = 1;
+			imageInfo.mipLevels = 1;
+			imageInfo.arrayLayers = 1;
+			imageInfo.format = m_depthFormat;
+			imageInfo.tiling = ImageTilings::optimal;
+			imageInfo.initialLayout = ImageLayouts::undefined;
+			imageInfo.usages = ImageUsageFlags::depth_stencil_attachment_bit;
+			imageInfo.sharingMode = SharingModes::exclusive;
+			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
+			imageInfo.flags = 0;
 
-		AllocationCreateInfo allocationInfo = {};
-		allocationInfo.usages = MemoryUsages::auto_prefer_device;
-		allocationInfo.flags = 0;
-		allocationInfo.requiredFlags = 0;
-		allocationInfo.preferredFlags = 0;
+			AllocationCreateInfo allocationInfo = {};
+			allocationInfo.usages = MemoryUsages::auto_prefer_device;
+			allocationInfo.flags = 0;
+			allocationInfo.requiredFlags = 0;
+			allocationInfo.preferredFlags = 0;
 
-		ImageViewType viewType = ImageViewTypes::view_type_2d;
-		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
-		m_pDepthImage = std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue);
+			ImageViewType viewType = ImageViewTypes::view_type_2d;
+			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
+			m_pDepthImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue));
 
-		// Transition: Layout: undefined->depth attachment, Queue: graphics
-		ImageLayout newLayout = ImageLayouts::depth_stencil_attachment_optimal;
-		PipelineStage srcStage = PipelineStages::topOfPipe;;
-		PipelineStage dstStage = PipelineStages::earlyFragmentTest;
-		AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-		AccessMask dstAccessMask = AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead;
-		m_pDepthImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			// Transition: Layout: undefined->depth attachment, Queue: graphics
+			ImageLayout newLayout = ImageLayouts::depth_stencil_attachment_optimal;
+			PipelineStage srcStage = PipelineStages::topOfPipe;
+			PipelineStage dstStage = PipelineStages::earlyFragmentTest;
+			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
+			AccessMask dstAccessMask = AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead;
+			m_pDepthImages[frameIndex]->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		}
 	}
 	void ForwardRenderPass::CreateFrameBuffers()
 	{
-		size_t imageCount = 1;
+		size_t imageCount = Context::GetFramesInFlight();
 		m_framebuffers.resize(imageCount);
 		std::array<VkImageView, 3> attachments;
 
 		for (size_t i = 0; i < imageCount; i++)
 		{
 			// order of attachments is important!
-			attachments[0] = m_pMsaaImage->GetVkImageView();
-			attachments[1] = m_pDepthImage->GetVkImageView();
-			attachments[2] = m_pRenderTexture->GetVmaImage()->GetVkImageView();
+			attachments[0] = m_pMsaaImages[i]->GetVkImageView();
+			attachments[1] = m_pDepthImages[i]->GetVkImageView();
+			attachments[2] = m_pRenderTextures[i]->GetVmaImage()->GetVkImageView();
 
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = m_pRenderTexture->GetWidth();
-			framebufferInfo.height = m_pRenderTexture->GetHeight();
+			framebufferInfo.width = m_pRenderTextures[i]->GetWidth();
+			framebufferInfo.height = m_pRenderTextures[i]->GetHeight();
 			framebufferInfo.layers = 1;
 			vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
 		}

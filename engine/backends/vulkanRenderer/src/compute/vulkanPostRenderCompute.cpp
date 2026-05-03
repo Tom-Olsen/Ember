@@ -54,8 +54,8 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
-		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
+		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetWidth();
+		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
 		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), AccessMasks::None::none, AccessMasks::None::none };
 		m_staticComputeCalls.push_back(computeCall);
@@ -70,8 +70,8 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
-		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
+		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetWidth();
+		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
 		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
 		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none };
