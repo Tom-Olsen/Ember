@@ -103,6 +103,13 @@ namespace vulkanRendererBackend
 	{
 		return m_bufferInfo.size;
 	}
+	void VmaBuffer::SetDebugName(const std::string& name)
+	{
+		NAME_VK_OBJECT(m_buffer, name);
+		#ifdef VALIDATION_LAYERS_ACTIVE
+		Context::GetAllocationTracker()->UpdateVmaBufferAllocationName(m_allocation, name);
+		#endif
+	}
 
 
 

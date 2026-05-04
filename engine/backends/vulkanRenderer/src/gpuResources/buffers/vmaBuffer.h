@@ -46,6 +46,7 @@ namespace vulkanRendererBackend
 		const BufferCreateInfo& GetBufferCreateInfo() const;
 		const AllocationCreateInfo& GetAllocationCreateInfo() const;
 		uint64_t GetSize();
+		void SetDebugName(const std::string& name);
 
 	private: // Methods:
 		void Cleanup();

@@ -49,6 +49,16 @@ namespace vulkanRendererBackend
 			m_vmaImageAllocations[allocation] = name;
 	}
 
+	void AllocationTracker::UpdateVmaBufferAllocationName(VmaAllocation allocation, const std::string& name)
+	{
+		if (!allocation)
+			return;
+
+		auto it = m_vmaBufferAllocations.find(allocation);
+		if (it != m_vmaBufferAllocations.end())
+			it->second = name;
+	}
+
 	void AllocationTracker::RemoveVmaBufferAllocation(VmaAllocation allocation)
 	{
 		if (allocation)

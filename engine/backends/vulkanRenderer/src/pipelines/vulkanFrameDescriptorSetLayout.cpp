@@ -92,7 +92,10 @@ namespace vulkanRendererBackend
     }
     void FrameDescriptorSetLayout::Clear()
     {
+        s_pUniformCameraBuffer.reset();
+
         vkDestroyDescriptorSetLayout(Context::GetVkDevice(), s_descriptorSetLayout, nullptr);
+        s_descriptorSetLayout = VK_NULL_HANDLE;
 
         // Queue the destruction of each descriptor set for later collection:
         for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
@@ -103,6 +106,7 @@ namespace vulkanRendererBackend
                 vkFreeDescriptorSets(Context::GetVkDevice(), Context::GetVkDescriptorPool(), 1, &descriptorSet);
             });
         }
+        s_descriptorSets.clear();
     }
 
 

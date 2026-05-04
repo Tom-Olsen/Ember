@@ -34,6 +34,7 @@ namespace vulkanRendererBackend
 		// Registration:
 		void AddVmaBufferAllocation(VmaAllocation allocation, const std::string& name);
 		void AddVmaImageAllocation(VmaAllocation allocation, const std::string& name);
+		void UpdateVmaBufferAllocationName(VmaAllocation allocation, const std::string& name);
 		void RemoveVmaBufferAllocation(VmaAllocation allocation);
 		void RemoveVmaImageAllocation(VmaAllocation allocation);
 

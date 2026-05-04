@@ -2,7 +2,6 @@
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
 #include "vulkanLogicalDevice.h"
-#include "vulkanMacros.h"
 #include "vulkanStagingBuffer.h"
 #include <vulkan/vulkan.h>
 
@@ -70,7 +69,7 @@ namespace vulkanRendererBackend
 	// Debugging:
 	void Buffer::SetDebugName(const std::string& name)
 	{
-		NAME_VK_OBJECT(m_pBuffer->GetVkBuffer(), name);
+		m_pBuffer->SetDebugName(name);
 	}
 
 
