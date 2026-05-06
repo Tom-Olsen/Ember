@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
         static void Clear();
 
         // Setters:
-        static void SetLightData(std::vector<emberCommon::DirectionalLight>& directionalLights, std::vector<emberCommon::PositionalLight>& positionalLights);
+        static void SetLightData(const std::vector<emberCommon::DirectionalLight>& directionalLights, uint32_t directionalLightCount, const std::vector<emberCommon::PositionalLight>& positionalLights, uint32_t positionalLightCount);
 
         // Getters:
         static VkDescriptorSetLayout GetVkDescriptorSetLayout();
@@ -37,7 +37,7 @@ namespace vulkanRendererBackend
         static void UpdateShaderData(uint32_t frameIndex);
 
     private: // Methods:
-        static void SetDirectionalLightData(std::vector<emberCommon::DirectionalLight>& directionalLights);
-        static void SetPositionalLightData(std::vector<emberCommon::PositionalLight>& positionalLights);
+        static void SetDirectionalLightData(const std::vector<emberCommon::DirectionalLight>& directionalLights, uint32_t directionalLightCount);
+        static void SetPositionalLightData(const std::vector<emberCommon::PositionalLight>& positionalLights, uint32_t positionalLightCount);
     };
 }

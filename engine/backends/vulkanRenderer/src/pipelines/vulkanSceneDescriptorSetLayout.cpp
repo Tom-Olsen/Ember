@@ -158,10 +158,10 @@ namespace vulkanRendererBackend
 
 
     // Setters:
-    void SceneDescriptorSetLayout::SetLightData(std::vector<emberCommon::DirectionalLight>& directionalLights, std::vector<emberCommon::PositionalLight>& positionalLights)
+    void SceneDescriptorSetLayout::SetLightData(const std::vector<emberCommon::DirectionalLight>& directionalLights, uint32_t directionalLightCount, const std::vector<emberCommon::PositionalLight>& positionalLights, uint32_t positionalLightCount)
     {
-        SetDirectionalLightData(directionalLights);
-        SetPositionalLightData(positionalLights);
+        SetDirectionalLightData(directionalLights, directionalLightCount);
+        SetPositionalLightData(positionalLights, positionalLightCount);
     }
 
 
@@ -187,12 +187,13 @@ namespace vulkanRendererBackend
 
 
     // Private methods:
-    void SceneDescriptorSetLayout::SetDirectionalLightData(std::vector<emberCommon::DirectionalLight>& directionalLights)
+    void SceneDescriptorSetLayout::SetDirectionalLightData(const std::vector<emberCommon::DirectionalLight>& directionalLights, uint32_t directionalLightCount)
     {
-        assert(directionalLights.size() <= MAX_DIR_LIGHTS);
-        s_pUniformLightPropertiesBuffer->SetInt("light_dirCount", static_cast<int>(directionalLights.size()));
+        assert(directionalLightCount <= directionalLights.size());
+        assert(directionalLightCount <= MAX_DIR_LIGHTS);
+        s_pUniformLightPropertiesBuffer->SetInt("light_dirCount", static_cast<int>(directionalLightCount));
         static std::string arrayName = "light_directionData";
-        for (uint32_t i = 0; i < directionalLights.size(); i++)
+        for (uint32_t i = 0; i < directionalLightCount; i++)
         {
             s_pUniformLightPropertiesBuffer->SetFloat4x4(arrayName, i, "worldToClipMatrix", directionalLights[i].worldToClipMatrix);
             s_pUniformLightPropertiesBuffer->SetFloat3(arrayName, i, "direction", directionalLights[i].direction);
@@ -200,12 +201,13 @@ namespace vulkanRendererBackend
             s_pUniformLightPropertiesBuffer->SetFloat4(arrayName, i, "colorIntensity", Float4(directionalLights[i].color, directionalLights[i].intensity));
         }
     }
-    void SceneDescriptorSetLayout::SetPositionalLightData(std::vector<emberCommon::PositionalLight>& positionalLights)
+    void SceneDescriptorSetLayout::SetPositionalLightData(const std::vector<emberCommon::PositionalLight>& positionalLights, uint32_t positionalLightCount)
     {
-        assert(positionalLights.size() <= MAX_POS_LIGHTS);
-        s_pUniformLightPropertiesBuffer->SetInt("light_posCount", static_cast<int>(positionalLights.size()));
+        assert(positionalLightCount <= positionalLights.size());
+        assert(positionalLightCount <= MAX_POS_LIGHTS);
+        s_pUniformLightPropertiesBuffer->SetInt("light_posCount", static_cast<int>(positionalLightCount));
         static std::string arrayName = "light_positionData";
-        for (uint32_t i = 0; i < positionalLights.size(); i++)
+        for (uint32_t i = 0; i < positionalLightCount; i++)
         {
             s_pUniformLightPropertiesBuffer->SetFloat4x4(arrayName, i, "worldToClipMatrix", positionalLights[i].worldToClipMatrix);
             s_pUniformLightPropertiesBuffer->SetFloat3(arrayName, i, "position", positionalLights[i].position);
