@@ -24,5 +24,11 @@ namespace vulkanRendererBackend
 		DescriptorSetBinding* pShadowDescriptorSetBinding;
 		Mesh* pMesh;
 		uint32_t instanceCount;	// 0 implies no instanced rendering.
+
+		void SetModelData();
+
+	private: // Methods:
+		bool HasModelDataBinding(DescriptorSetBinding* pDescriptorSetBinding);
+		void SetModelData(DescriptorSetBinding* pDescriptorSetBinding, const Float4x4& worldToLocalMatrix);
 	};
 }

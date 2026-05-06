@@ -725,6 +725,7 @@ namespace vulkanRendererBackend
 		// Forward calls:
 		for (DrawCall* drawCall : m_sortedDrawCallPointers)
 		{
+			drawCall->SetModelData();
 			drawCall->pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
 			drawCall->pCallDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 			drawCall->pShadowDescriptorSetBinding->UpdateShaderData(m_frameIndex);
