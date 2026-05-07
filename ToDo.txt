@@ -42,3 +42,5 @@ Audit raw VkHandle passthrough APIs in vulkanRenderer.h and reduce external coup
 Rethink GPU resource naming: names should live in core for managers/debugging and be passed through the backend only to name VkHandles in debug mode.
 
 See ToDo in default.frag.hlsl
+
+Generate or validate engine uniform-buffer layouts from shader reflection, especially SceneDescriptorSetLayout and FrameDescriptorSetLayout, so HLSL cbuffer packing offsets cannot drift from the C++ BufferLayout definitions.

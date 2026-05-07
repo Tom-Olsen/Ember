@@ -58,6 +58,7 @@ namespace vulkanRendererBackend
             emberBufferLayout::BufferMember lightDirCount("light_dirCount", offset, sizeof(int));
             offset += sizeof(int);
             emberBufferLayout::BufferMember lightPosCount("light_posCount", offset, sizeof(int));
+            offset += sizeof(int);
             offset += 8; // +8 due to alignment rules.
 
             emberBufferLayout::BufferMember lightDirectionData("light_directionData", offset, 0);
@@ -95,7 +96,7 @@ namespace vulkanRendererBackend
                 offset += sizeof(int);
                 emberBufferLayout::BufferMember colorIntensity("colorIntensity", offset, sizeof(Float4));
                 offset += sizeof(Float4);
-                emberBufferLayout::BufferMember blendStartEnd("blendStartEnd", offset, sizeof(Float4));
+                emberBufferLayout::BufferMember blendStartEnd("blendStartEnd", offset, sizeof(Float2));
                 offset += sizeof(Float2) + 8; // +8 due to alignment rules.
 
                 lightPositionalDataElement.AddSubMember(worldToClipMatrix);

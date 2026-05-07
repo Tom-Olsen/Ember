@@ -176,17 +176,18 @@ float3 PhysicalPositionalLights(float3 worldPos, float3 normal, float3 color, fl
          && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
          && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
         {
+            // Cone falloff:
+            float radius = length(2.0f * lightUvz.xy - 1.0f);
+            float falloff = saturate((radius - light_positionData[i].blendStartEnd.y) / (light_positionData[i].blendStartEnd.x - light_positionData[i].blendStartEnd.y));
+
             // Shadow:
             float shadow = 1.0f;
             if (receiveShadows)
             {
-                float radius = length(2.0f * lightUvz.xy - 1.0f);
-                float falloff = saturate((radius - light_positionData[i].blendStartEnd.y) / (light_positionData[i].blendStartEnd.x - light_positionData[i].blendStartEnd.y));
-                
                 if (light_positionData[i].shadowType == 0)
-                    shadow = falloff * NoFilteredShadow(i + shadowMapOffset, lightUvz);
+                    shadow = NoFilteredShadow(i + shadowMapOffset, lightUvz);
                 else if (light_positionData[i].shadowType == 1)
-                    shadow = falloff * PercentageCloserFilteredShadow(i + shadowMapOffset, lightUvz);
+                    shadow = PercentageCloserFilteredShadow(i + shadowMapOffset, lightUvz);
             }
             
             // Light:
@@ -196,7 +197,7 @@ float3 PhysicalPositionalLights(float3 worldPos, float3 normal, float3 color, fl
             float3 viewDir = normalize(float3(camera_position.xyz) - worldPos);
             float3 light = PhysicalLight(lightIntensity, lightDir, normal, viewDir, color, roughness, reflectivity, metallicity);
             
-            totalLight += shadow * light;
+            totalLight += falloff * shadow * light;
         }
     }
     return totalLight;
