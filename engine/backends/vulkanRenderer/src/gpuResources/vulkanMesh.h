@@ -25,14 +25,22 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Mesh : public emberBackendInterface::IMesh
 	{
 	public: // Enums/Structs:
-		struct Vertex
-		{
-			Float3 position;
-			Float3 normal;
-			Float3 tangent;
-			Float4 color;
-			Float4 uv;
-		};
+	    struct Vertex
+	    {
+	    	Float3 position;
+	    	Float3 normal;
+	    	Float3 tangent;
+	    	Float4 color;
+	    	Float4 uv;
+	    };
+        enum class VertexAttribute : uint32_t
+        {
+            position = 0,
+            normal = 1,
+            tangent = 2,
+            color = 3,
+            uv = 4
+        };
 
 	private: // Members:
 		//MeshType m_meshType = MeshType::static;	// Ember::ToDo: implement static meshes.

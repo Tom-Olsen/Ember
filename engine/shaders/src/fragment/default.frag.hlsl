@@ -1,9 +1,11 @@
 #include "fragmentShaderCommon.hlsli"
 #include "shadowMapping.hlsli"
-Texture2D colorMap : register(t100, SHADER_SET);                // format = VK_FORMAT_R8G8B8A8_SRGB,
-Texture2D normalMap : register(t101, SHADER_SET);               // format = VK_FORMAT_R8G8B8A8_UNORM,   opengl style unorm normal map
-Texture2D<float> metallicityMap : register(t102, SHADER_SET);   // format = VK_FORMAT_R8_UNORM,         single channel unorm metallicity map
-Texture2D<float> roughnessMap : register(t103, SHADER_SET);     // format = VK_FORMAT_R8_UNORM,         single channel unorm roughness map
+// Ember::ToDo:
+// these should be SHADER_SET not CALL_SET and then each draw with different textures requires its own material!
+Texture2D colorMap : register(t100, CALL_SET);                // format = VK_FORMAT_R8G8B8A8_SRGB,
+Texture2D normalMap : register(t101, CALL_SET);               // format = VK_FORMAT_R8G8B8A8_UNORM,   opengl style unorm normal map
+Texture2D<float> metallicityMap : register(t102, CALL_SET);   // format = VK_FORMAT_R8_UNORM,         single channel unorm metallicity map
+Texture2D<float> roughnessMap : register(t103, CALL_SET);     // format = VK_FORMAT_R8_UNORM,         single channel unorm roughness map
 
 
 
