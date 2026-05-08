@@ -5,11 +5,11 @@
 #include "vulkanDeviceQueue.h"
 #include "vulkanImageCreateInfo.h"
 #include "vulkanImageLayout.h"
-#include "vulkanImageViewType.h"
 #include "vulkanPipelineStage.h"
 #include "vulkanImageSubresourceLayers.h"
 #include "vulkanImageSubresourceRange.h"
 #include <string>
+#include <vulkan/vulkan.h>
 
 
 
@@ -42,7 +42,7 @@ namespace vulkanRendererBackend
 		ImageLayout m_layout;
 
 	public: // Methods:
-		VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, ImageViewType viewType, const DeviceQueue& queue);
+		VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue);
 		~VmaImage();
 
 		// Non-copyable:

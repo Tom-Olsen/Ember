@@ -10,9 +10,9 @@ namespace vulkanRendererBackend
 	/// Polymorphic parent class for different kinds of cube textures.
 	/// Each derivative handles a different type of VkImage.
 	/// The images differ in: <para/>
-	/// -ImageUsageFlag		=> transfer, sampling, storage, depth, color. <para/>
-	/// -ImageCreateFlagBit	=> additional specialisations. <para/>
-	/// -ImageViewType		=> single image, array.
+	/// -ImageUsageFlag		= transfer, sampling, storage, depth, color. <para/>
+	/// -ImageCreateFlagBit	= additional specialisations. <para/>
+	/// -VkImageViewType    = single image, array.
 	/// </summary>
 	class VULKAN_RENDERER_API TextureCube : public Texture
 	{
@@ -33,6 +33,6 @@ namespace vulkanRendererBackend
 		TextureCube& operator=(TextureCube&& other) noexcept;
 
 	protected: // Methods:
-		void CreateImage(ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, ImageViewType viewType, const DeviceQueue& queue);
+		void CreateImage(ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
 	};
 }

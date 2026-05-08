@@ -33,7 +33,7 @@ namespace vulkanRendererBackend
 		ImageUsageFlag usageFlags = ImageUsageFlags::depth_stencil_attachment_bit | ImageUsageFlags::sampled_bit;
 		ImageCreateFlag imageFlags = 0;
 		MemoryPropertyFlag memoryFlags = MemoryPropertyFlags::device_local_bit;
-		ImageViewType viewType = ImageViewTypes::view_type_2d_array;
+		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 

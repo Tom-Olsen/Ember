@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 	/// Texture2d specialization: <para/>
 	/// -ImageUsageFlag		= transfer dst, storage, sample <para/>
 	/// -ImageCreateFlagBit	= 0 <para/>
-	/// -ImageViewType		= 2d
+	/// -VkImageViewType    = 2d
 	/// </summary>
 	class VULKAN_RENDERER_API StorageSampleTexture2d : public Texture2d
 	{

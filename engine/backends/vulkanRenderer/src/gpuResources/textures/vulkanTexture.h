@@ -5,7 +5,6 @@
 #include "vulkanImageCreateFlag.h"
 #include "vulkanImageSubresourceRange.h"
 #include "vulkanImageUsageFlag.h"
-#include "vulkanImageViewType.h"
 #include "vulkanImageType.h"
 #include "vulkanMemoryPropertyFlag.h"
 #include "vulkanRendererExport.h"
@@ -93,6 +92,6 @@ namespace vulkanRendererBackend
 		bool IsValidImageFormat(Format format);
 		bool IsDepthFormat(Format format);
 		bool IsStencilFormat(Format format);
-		void CreateImageBase(ImageType imageType, ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, ImageViewType viewType, const DeviceQueue& queue);
+		void CreateImageBase(ImageType imageType, ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
 	};
 }

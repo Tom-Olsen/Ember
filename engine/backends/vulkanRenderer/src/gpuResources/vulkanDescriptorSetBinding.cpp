@@ -62,25 +62,25 @@ namespace vulkanRendererBackend
 					InitUniformBufferBinding(binding, descriptorReflection.GetUniformBufferDescriptor()->bufferLayout);
 				else if (descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
 				{
-					ImageViewType viewType = descriptorReflection.GetImageDescriptor()->imageViewType;;
-					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for sampling Texture1d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTexture2d()), descriptorType);
-					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for sampling Texture3d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_cube) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTextureCube()), descriptorType);
-					else if (viewType == ImageViewTypes::view_type_1d_array) throw std::runtime_error("Initialization for sampling Texture1dArray descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d_array) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultDepthTexture2dArray()), descriptorType);
-					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization for sampling CubeTextureArray descriptorSet not implemented yet!");
+					VkImageViewType viewType = static_cast<VkImageViewType>(descriptorReflection.GetImageDescriptor()->imageViewType);
+					if (viewType == VK_IMAGE_VIEW_TYPE_1D) throw std::runtime_error("Initialization for sampling Texture1d descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_2D) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTexture2d()), descriptorType);
+					else if (viewType == VK_IMAGE_VIEW_TYPE_3D) throw std::runtime_error("Initialization for sampling Texture3d descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_CUBE) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTextureCube()), descriptorType);
+					else if (viewType == VK_IMAGE_VIEW_TYPE_1D_ARRAY) throw std::runtime_error("Initialization for sampling Texture1dArray descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_2D_ARRAY) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultDepthTexture2dArray()), descriptorType);
+					else if (viewType == VK_IMAGE_VIEW_TYPE_CUBE_ARRAY) throw std::runtime_error("Initialization for sampling CubeTextureArray descriptorSet not implemented yet!");
 				}
 				else if (descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
 				{
-					ImageViewType viewType = descriptorReflection.GetImageDescriptor()->imageViewType;;
-					if (viewType == ImageViewTypes::view_type_1d) throw std::runtime_error("Initialization for storage Texture1d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d) InitTextureBinding(frameIndex, binding, static_cast<Texture2d*>(DefaultGpuResources::GetDefaultStorageTexture2d()), descriptorType);
-					else if (viewType == ImageViewTypes::view_type_3d) throw std::runtime_error("Initialization for storage Texture3d descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_cube) throw std::runtime_error("Initialization for storage CubeTexture descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_1d_array) throw std::runtime_error("Initialization storage for Texture1dArray descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_2d_array) throw std::runtime_error("Initialization storage for Texture2dArray descriptorSet not implemented yet!");
-					else if (viewType == ImageViewTypes::view_type_cube_array) throw std::runtime_error("Initialization storage for CubeTextureArray descriptorSet not implemented yet!");
+					VkImageViewType viewType = static_cast<VkImageViewType>(descriptorReflection.GetImageDescriptor()->imageViewType);
+					if (viewType == VK_IMAGE_VIEW_TYPE_1D) throw std::runtime_error("Initialization for storage Texture1d descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_2D) InitTextureBinding(frameIndex, binding, static_cast<Texture2d*>(DefaultGpuResources::GetDefaultStorageTexture2d()), descriptorType);
+					else if (viewType == VK_IMAGE_VIEW_TYPE_3D) throw std::runtime_error("Initialization for storage Texture3d descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_CUBE) throw std::runtime_error("Initialization for storage CubeTexture descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_1D_ARRAY) throw std::runtime_error("Initialization storage for Texture1dArray descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_2D_ARRAY) throw std::runtime_error("Initialization storage for Texture2dArray descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_CUBE_ARRAY) throw std::runtime_error("Initialization storage for CubeTextureArray descriptorSet not implemented yet!");
 				}
 				else if (descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
 					InitBufferBinding(frameIndex, binding, static_cast<Buffer*>(DefaultGpuResources::GetDefaultStorageBuffer()), descriptorType);

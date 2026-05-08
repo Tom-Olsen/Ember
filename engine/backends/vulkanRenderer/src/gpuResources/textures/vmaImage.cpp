@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaImage::VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, ImageViewType viewType, const DeviceQueue& queue)
+	VmaImage::VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue)
 	{
 		m_imageInfo = imageInfo;
 		m_allocationInfo = allocationInfo;
@@ -61,7 +61,7 @@ namespace vulkanRendererBackend
 		// Create image view:
 		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 		viewInfo.image = m_image;
-		viewInfo.viewType = static_cast<VkImageViewType>(viewType);
+		viewInfo.viewType = viewType;
 		viewInfo.format = static_cast<VkFormat>(m_imageInfo.format);
 		viewInfo.subresourceRange.aspectMask = m_subresourceRange.aspectMask;
 		viewInfo.subresourceRange.baseArrayLayer = m_subresourceRange.baseArrayLayer;

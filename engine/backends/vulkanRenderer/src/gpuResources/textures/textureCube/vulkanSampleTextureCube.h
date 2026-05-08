@@ -22,7 +22,7 @@ namespace vulkanRendererBackend
 	/// SampleTextureCube specialization: <para/>
 	/// -ImageUsageFlag		= transfer src/dst, sample <para/>
 	/// -ImageCreateFlagBit	= cube compatible <para/>
-	/// -ImageViewType		= 2d
+	/// -VkImageViewType    = 2d
 	/// </summary>
 	class VULKAN_RENDERER_API SampleTextureCube : public TextureCube
 	{

@@ -187,7 +187,7 @@ namespace vulkanRendererBackend
 			allocationInfo.requiredFlags = 0;
 			allocationInfo.preferredFlags = 0;
 
-			ImageViewType viewType = ImageViewTypes::view_type_2d;
+			VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 			m_pMsaaImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue));
 		}
@@ -226,7 +226,7 @@ namespace vulkanRendererBackend
 			allocationInfo.requiredFlags = 0;
 			allocationInfo.preferredFlags = 0;
 
-			ImageViewType viewType = ImageViewTypes::view_type_2d;
+			VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 			m_pDepthImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue));
 
