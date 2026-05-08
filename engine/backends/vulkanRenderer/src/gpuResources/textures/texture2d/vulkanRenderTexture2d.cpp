@@ -23,8 +23,8 @@ namespace vulkanRendererBackend
 		m_vkDescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 
 		// Define subresource range:
-		ImageSubresourceRange subresourceRange;
-		subresourceRange.aspectMask = ImageAspectFlags::color_bit;
+		VkImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.baseMipLevel = 0;
 		subresourceRange.layerCount = 1;

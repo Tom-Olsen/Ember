@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaImage::VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue)
+	VmaImage::VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue)
 	{
 		m_imageInfo = imageInfo;
 		m_allocationInfo = allocationInfo;
@@ -41,7 +41,7 @@ namespace vulkanRendererBackend
 		vkImageInfo.sharingMode = m_imageInfo.sharingMode;
 		vkImageInfo.queueFamilyIndexCount = m_imageInfo.queueFamilyIndexCount;
 		vkImageInfo.pQueueFamilyIndices = m_imageInfo.pQueueFamilyIndices;
-		vkImageInfo.initialLayout = static_cast<VkImageLayout>(m_imageInfo.initialLayout);
+		vkImageInfo.initialLayout = m_imageInfo.initialLayout;
 
 		// Convert AllocationCreateInfo -> VmaAllocationCreateInfo:
 		VmaAllocationCreateInfo vmaAllocationInfo = {};
@@ -121,7 +121,7 @@ namespace vulkanRendererBackend
 	{
 		return m_allocationInfo;
 	}
-	const ImageSubresourceRange& VmaImage::GetImageSubresourceRange() const
+	const VkImageSubresourceRange& VmaImage::GetImageSubresourceRange() const
 	{
 		return m_subresourceRange;
 	}
@@ -129,7 +129,7 @@ namespace vulkanRendererBackend
 	{
 		return m_queue;
 	}
-	const ImageLayout& VmaImage::GetImageLayout() const
+	const VkImageLayout& VmaImage::GetImageLayout() const
 	{
 		return m_layout;
 	}
@@ -153,9 +153,9 @@ namespace vulkanRendererBackend
 	{
 		return m_imageInfo.format;
 	}
-	ImageSubresourceLayers VmaImage::GetImageSubresourceLayers() const
+	VkImageSubresourceLayers VmaImage::GetImageSubresourceLayers() const
 	{
-		ImageSubresourceLayers subresourceLayers = {};
+		VkImageSubresourceLayers subresourceLayers = {};
 		subresourceLayers.aspectMask = m_subresourceRange.aspectMask;
 		subresourceLayers.mipLevel = m_subresourceRange.baseMipLevel;
 		subresourceLayers.baseArrayLayer = m_subresourceRange.baseArrayLayer;
@@ -166,7 +166,7 @@ namespace vulkanRendererBackend
 
 
 	// Setters:
-	void VmaImage::SetLayout(ImageLayout imageLayout)
+	void VmaImage::SetLayout(VkImageLayout imageLayout)
 	{
 		m_layout = imageLayout;
 	}
@@ -179,15 +179,15 @@ namespace vulkanRendererBackend
 	// - dstStage = flag							<->		this stage must wait for the barrier to release.
 	// - barrier.srcAccessMask = multiple flags		<->		these memory accesses must be flushed to L2 cache before barrier blocks.
 	// - barrier.dstAccessMask = multiple flags		<->		these memory accesses must wait for the barrier before accessing L2 cache.
-	void VmaImage::TransitionLayout(VkCommandBuffer commandBuffer, ImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask)
+	void VmaImage::TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask)
 	{
 		VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 		barrier.srcStageMask = srcStage;
 		barrier.dstStageMask = dstStage;
 		barrier.srcAccessMask = srcAccessMask;
 		barrier.dstAccessMask = dstAccessMask;
-		barrier.oldLayout = static_cast<VkImageLayout>(m_layout);
-		barrier.newLayout = static_cast<VkImageLayout>(newLayout);
+		barrier.oldLayout = m_layout;
+		barrier.newLayout = newLayout;
 		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.image = m_image;
@@ -205,7 +205,7 @@ namespace vulkanRendererBackend
 
 		m_layout = newLayout;
 	}
-	void VmaImage::TransitionLayout(ImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask)
+	void VmaImage::TransitionLayout(VkImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask)
 	{
 		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(m_queue);
 		TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
@@ -220,8 +220,8 @@ namespace vulkanRendererBackend
 			barrier.dstStageMask = PipelineStages::transfer; // next is blitting, which belongs to transfer.
             barrier.srcAccessMask = AccessMasks::Transfer::transferWrite;
             barrier.dstAccessMask = AccessMasks::Transfer::transferWrite;
-			barrier.oldLayout = static_cast<VkImageLayout>(ImageLayouts::transfer_dst_optimal);
-			barrier.newLayout = static_cast<VkImageLayout>(ImageLayouts::transfer_dst_optimal);
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             barrier.image = m_image;
@@ -250,12 +250,12 @@ namespace vulkanRendererBackend
 				barrier.dstStageMask = PipelineStages::transfer;
 				barrier.srcAccessMask = AccessMasks::Transfer::transferWrite;
 				barrier.dstAccessMask = AccessMasks::Transfer::transferRead;
-				barrier.oldLayout = static_cast<VkImageLayout>(ImageLayouts::transfer_dst_optimal);
-				barrier.newLayout = static_cast<VkImageLayout>(ImageLayouts::transfer_src_optimal);
+				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.image = m_image;
-				barrier.subresourceRange.aspectMask = ImageAspectFlags::color_bit;
+				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 				barrier.subresourceRange.baseArrayLayer = 0;
 				barrier.subresourceRange.baseMipLevel = i - 1;
 				barrier.subresourceRange.layerCount = 1;
@@ -270,20 +270,20 @@ namespace vulkanRendererBackend
 				VkImageBlit blit{};
 				blit.srcOffsets[0] = { 0, 0, 0 };
 				blit.srcOffsets[1] = { mipWidth, mipHeight, mipDepth };
-				blit.srcSubresource.aspectMask = ImageAspectFlags::color_bit;
+				blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 				blit.srcSubresource.mipLevel = i - 1;
 				blit.srcSubresource.baseArrayLayer = 0;
 				blit.srcSubresource.layerCount = 1;
 				blit.dstOffsets[0] = { 0, 0, 0 };
 				blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
-				blit.dstSubresource.aspectMask = ImageAspectFlags::color_bit;
+				blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 				blit.dstSubresource.mipLevel = i;
 				blit.dstSubresource.baseArrayLayer = 0;
 				blit.dstSubresource.layerCount = 1;
 
 				vkCmdBlitImage(commandBuffer,
-					m_image, static_cast<VkImageLayout>(ImageLayouts::transfer_src_optimal),
-					m_image, static_cast<VkImageLayout>(ImageLayouts::transfer_dst_optimal),
+					m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 					1, &blit,
 					VK_FILTER_LINEAR);
 			}
@@ -295,12 +295,12 @@ namespace vulkanRendererBackend
 				barrier.dstStageMask = PipelineStages::fragmentShader;
 				barrier.srcAccessMask = AccessMasks::Transfer::transferRead;
 				barrier.dstAccessMask = AccessMasks::FragmentShader::shaderRead;
-				barrier.oldLayout = static_cast<VkImageLayout>(ImageLayouts::transfer_src_optimal);
-				barrier.newLayout = static_cast<VkImageLayout>(ImageLayouts::shader_read_only_optimal);
+				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+				barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.image = m_image;
-				barrier.subresourceRange.aspectMask = ImageAspectFlags::color_bit;
+				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 				barrier.subresourceRange.baseArrayLayer = 0;
 				barrier.subresourceRange.baseMipLevel = i - 1;
 				barrier.subresourceRange.layerCount = 1;
@@ -326,12 +326,12 @@ namespace vulkanRendererBackend
 			barrier.dstStageMask = PipelineStages::fragmentShader;
 			barrier.srcAccessMask = AccessMasks::Transfer::transferWrite;
 			barrier.dstAccessMask = AccessMasks::FragmentShader::shaderRead;
-			barrier.oldLayout = static_cast<VkImageLayout>(ImageLayouts::transfer_dst_optimal);
-			barrier.newLayout = static_cast<VkImageLayout>(ImageLayouts::shader_read_only_optimal);
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.image = m_image;
-			barrier.subresourceRange.aspectMask = ImageAspectFlags::color_bit;
+			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			barrier.subresourceRange.baseArrayLayer = 0;
 			barrier.subresourceRange.baseMipLevel = mipLevels - 1;
 			barrier.subresourceRange.layerCount = 1;
@@ -357,8 +357,8 @@ namespace vulkanRendererBackend
 	// Static methods:
 	void VmaImage::CopyImageToImage(VkCommandBuffer commandBuffer, VmaImage* srcImage, VmaImage* dstImage, const DeviceQueue& queue)
 	{
-		ImageSubresourceLayers srcSubresource = srcImage->GetImageSubresourceLayers();
-		ImageSubresourceLayers dstSubresource = dstImage->GetImageSubresourceLayers();
+		VkImageSubresourceLayers srcSubresource = srcImage->GetImageSubresourceLayers();
+		VkImageSubresourceLayers dstSubresource = dstImage->GetImageSubresourceLayers();
 		VkImageCopy copyRegion = {};
 		copyRegion.srcOffset = { 0, 0, 0 };
 		copyRegion.dstOffset = { 0, 0, 0 };
@@ -372,7 +372,7 @@ namespace vulkanRendererBackend
 		copyRegion.dstSubresource.mipLevel = dstSubresource.mipLevel;
 		Uint3 extent = srcImage->GetExtent();
 		copyRegion.extent = VkExtent3D{ extent.x,extent.y,extent.z };
-		vkCmdCopyImage(commandBuffer, srcImage->GetVkImage(), static_cast<VkImageLayout>(srcImage->GetImageLayout()), dstImage->GetVkImage(), static_cast<VkImageLayout>(dstImage->GetImageLayout()), 1, &copyRegion);
+		vkCmdCopyImage(commandBuffer, srcImage->GetVkImage(), srcImage->GetImageLayout(), dstImage->GetVkImage(), dstImage->GetImageLayout(), 1, &copyRegion);
 	}
 	void VmaImage::CopyImageToImage(VmaImage* srcImage, VmaImage* dstImage, const DeviceQueue& queue)
 	{
@@ -430,6 +430,6 @@ namespace vulkanRendererBackend
 		other.m_allocationInfo = {};
 		other.m_subresourceRange = {};
 		other.m_queue = {};
-		other.m_layout = ImageLayouts::max_enum;
+		other.m_layout = VK_IMAGE_LAYOUT_MAX_ENUM;
 	}
 }

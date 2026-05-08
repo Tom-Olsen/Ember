@@ -166,7 +166,7 @@ namespace vulkanRendererBackend
 	void StagingBuffer::DownloadFromTexture(VkCommandBuffer commandBuffer, Texture* pSrcTexture)
     {
         // Cache original layout:
-		VkImageLayout originalLayout = static_cast<VkImageLayout>(pSrcTexture->GetVmaImage()->GetImageLayout());
+		VkImageLayout originalLayout = pSrcTexture->GetVmaImage()->GetImageLayout();
 
         // Ember::ToDo: track stage and access usage of textures and use them here!
 		// Transition 0: Layout: original->srcTransfer, Queue: transfer

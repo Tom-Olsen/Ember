@@ -997,7 +997,7 @@ namespace vulkanRendererBackend
 			vkCmdEndRenderPass(commandBuffer);
 			// The render pass transitions the shadow maps into its final sampled layout -> VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 			// Mirror that state in VmaImage's external layout tracking:
-			RenderPassManager::GetShadowRenderPass()->GetShadowMaps()->GetVmaImage()->SetLayout(ImageLayouts::shader_read_only_optimal);
+			RenderPassManager::GetShadowRenderPass()->GetShadowMaps()->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}

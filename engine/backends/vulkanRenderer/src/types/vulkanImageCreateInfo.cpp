@@ -1,4 +1,5 @@
 #include "vulkanImageCreateInfo.h"
+#include "vulkanImageLayoutToString.h"
 #include "vulkanImageTilingToString.h"
 #include "vulkanImageTypeToString.h"
 #include "vulkanSharingModeToString.h"
@@ -19,7 +20,7 @@ namespace vulkanRendererBackend
 		   << ", queueFamilyIndexCount: " << queueFamilyIndexCount;
 		for (int i = 0; i < queueFamilyIndexCount; i++)
 			ss << pQueueFamilyIndices[i] << " ";
-		ss << ", initialLayout: " << ImageLayouts::ToString(initialLayout);
+		ss << ", initialLayout: " << emberVulkanUtility::ToString(initialLayout);
 		return ss.str();
 	}
 }

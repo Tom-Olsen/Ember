@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
 
 
 	// Protected methods:
-	void TextureCube::CreateImage(ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
+	void TextureCube::CreateImage(VkImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
 	{
 		imageFlags |= ImageCreateFlags::cube_compatible_bit;
 		VkImageType imageType = VK_IMAGE_TYPE_2D;

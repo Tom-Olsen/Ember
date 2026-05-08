@@ -54,8 +54,8 @@ namespace vulkanRendererBackend
 		m_vkDescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 
 		// Define subresource range:
-		ImageSubresourceRange subresourceRange;
-		subresourceRange.aspectMask = ImageAspectFlags::color_bit;
+		VkImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.baseMipLevel = 0;
 		subresourceRange.layerCount = 1;
@@ -83,7 +83,7 @@ namespace vulkanRendererBackend
     {
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		{
-			ImageLayout newLayout = ImageLayouts::transfer_dst_optimal;
+			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			PipelineStage srcStage = PipelineStages::topOfPipe;
 			PipelineStage dstStage = PipelineStages::transfer;
 			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
@@ -96,7 +96,7 @@ namespace vulkanRendererBackend
 
 		// Transition 1: Layout: transfer->general, Queue: transfer->compute
 		{
-			ImageLayout newLayout = ImageLayouts::general;
+			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
 			PipelineStage srcStage = PipelineStages::transfer;
 			PipelineStage dstStage = PipelineStages::computeShader;
 			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;

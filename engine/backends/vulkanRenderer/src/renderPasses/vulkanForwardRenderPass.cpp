@@ -67,7 +67,7 @@ namespace vulkanRendererBackend
 
 			// Both ping-pong textures are used as storage images by post processing, so initialize them into
 			// GENERAL and keep them there outside the present pass.
-			ImageLayout newLayout = ImageLayouts::general;
+			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
 			PipelineStage srcStage = PipelineStages::topOfPipe;
 			PipelineStage dstStage = PipelineStages::bottomOfPipe;
 			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
@@ -159,8 +159,8 @@ namespace vulkanRendererBackend
 		m_pMsaaImages.reserve(framesInFlight);
 		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
 		{
-			ImageSubresourceRange subresourceRange;
-			subresourceRange.aspectMask = ImageAspectFlags::color_bit;
+			VkImageSubresourceRange subresourceRange;
+			subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			subresourceRange.baseMipLevel = 0;
 			subresourceRange.levelCount = 1;
 			subresourceRange.baseArrayLayer = 0;
@@ -175,7 +175,7 @@ namespace vulkanRendererBackend
 			imageInfo.arrayLayers = 1;
 			imageInfo.format = m_pRenderTextures[frameIndex]->GetVmaImage()->GetFormat();
 			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-			imageInfo.initialLayout = ImageLayouts::undefined;
+			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			imageInfo.usages = ImageUsageFlags::transient_attachment_bit | ImageUsageFlags::color_attachment_bit;
 			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
@@ -198,8 +198,8 @@ namespace vulkanRendererBackend
 		m_pDepthImages.reserve(framesInFlight);
 		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
 		{
-			ImageSubresourceRange subresourceRange;
-			subresourceRange.aspectMask = ImageAspectFlags::depth_bit | ImageAspectFlags::stencil_bit;
+			VkImageSubresourceRange subresourceRange;
+			subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 			subresourceRange.baseMipLevel = 0;
 			subresourceRange.levelCount = 1;
 			subresourceRange.baseArrayLayer = 0;
@@ -214,7 +214,7 @@ namespace vulkanRendererBackend
 			imageInfo.arrayLayers = 1;
 			imageInfo.format = m_depthFormat;
 			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-			imageInfo.initialLayout = ImageLayouts::undefined;
+			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			imageInfo.usages = ImageUsageFlags::depth_stencil_attachment_bit;
 			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
@@ -231,7 +231,7 @@ namespace vulkanRendererBackend
 			m_pDepthImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue));
 
 			// Transition: Layout: undefined->depth attachment, Queue: graphics
-			ImageLayout newLayout = ImageLayouts::depth_stencil_attachment_optimal;
+			VkImageLayout newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			PipelineStage srcStage = PipelineStages::topOfPipe;
 			PipelineStage dstStage = PipelineStages::earlyFragmentTest;
 			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;

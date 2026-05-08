@@ -2,7 +2,6 @@
 #include "emberMath.h"
 #include "vulkanFormat.h"
 #include "vulkanImageCreateFlag.h"
-#include "vulkanImageLayout.h"
 #include "vulkanImageUsageFlag.h"
 #include "vulkanSampleCountFlag.h"
 #include <cstdint>
@@ -28,7 +27,7 @@ namespace vulkanRendererBackend
 		VkSharingMode sharingMode;
 		uint32_t queueFamilyIndexCount;
 		const uint32_t* pQueueFamilyIndices;
-		ImageLayout initialLayout;
+		VkImageLayout initialLayout;
 		std::string ToString() const;
 	};
 }

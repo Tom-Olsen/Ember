@@ -4,10 +4,7 @@
 #include "vulkanAccessMask.h"
 #include "vulkanDeviceQueue.h"
 #include "vulkanImageCreateInfo.h"
-#include "vulkanImageLayout.h"
 #include "vulkanPipelineStage.h"
-#include "vulkanImageSubresourceLayers.h"
-#include "vulkanImageSubresourceRange.h"
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -37,12 +34,12 @@ namespace vulkanRendererBackend
 		VkImageView m_imageView;
 		ImageCreateInfo m_imageInfo;
 		AllocationCreateInfo m_allocationInfo;
-		ImageSubresourceRange m_subresourceRange;
+		VkImageSubresourceRange m_subresourceRange;
 		DeviceQueue m_queue;
-		ImageLayout m_layout;
+		VkImageLayout m_layout;
 
 	public: // Methods:
-		VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, ImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue);
+		VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue);
 		~VmaImage();
 
 		// Non-copyable:
@@ -60,23 +57,23 @@ namespace vulkanRendererBackend
 		const VkImageView& GetVkImageView() const;
 		const ImageCreateInfo& GetImageCreateInfo() const;
 		const AllocationCreateInfo& GetAllocationCreateInfo() const;
-		const ImageSubresourceRange& GetImageSubresourceRange() const;
+		const VkImageSubresourceRange& GetImageSubresourceRange() const;
 		const DeviceQueue& GetDeviceQueue() const;
-		const ImageLayout& GetImageLayout() const;
+		const VkImageLayout& GetImageLayout() const;
 		uint64_t GetWidth() const;
 		uint64_t GetHeight() const;
 		uint64_t GetDepth() const;
 		const Uint3& GetExtent() const;
 		Format GetFormat() const;
-		ImageSubresourceLayers GetImageSubresourceLayers() const;
+		VkImageSubresourceLayers GetImageSubresourceLayers() const;
 
 		// Setters:
 		// Only changes the m_layout member without doing an image layout transition.
-		void SetLayout(ImageLayout imageLayout);
+		void SetLayout(VkImageLayout imageLayout);
 
 		// Transitions:
-		void TransitionLayout(VkCommandBuffer commandBuffer, ImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
-		void TransitionLayout(ImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
+		void TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
+		void TransitionLayout(VkImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
 		void GenerateMipmaps(VkCommandBuffer commandBuffer, uint32_t mipLevels);
 		void GenerateMipmaps(uint32_t mipLevels);
 
