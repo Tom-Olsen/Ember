@@ -1,16 +1,13 @@
 #pragma once
 #include "emberMath.h"
-#include "vulkanColorSpace.h"
 #include "vulkanFormat.h"
-#include "vulkanPresentMode.h"
+#include <cstdint>
 #include <memory>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 
-// Forward declarations:
-struct VkExtent2D;
-typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
 namespace emberBackendInterface
 {
 	class IWindow;
@@ -29,7 +26,7 @@ namespace vulkanRendererBackend
 	struct SurfaceFormat
 	{
 		Format format;
-		ColorSpace colorSpace;
+		VkColorSpaceKHR colorSpace;
 	};
 
 
@@ -39,7 +36,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		VkSurfaceKHR m_surface;
 		SurfaceFormat m_surfaceFormat;
-		PresentMode m_presentMode;
+		VkPresentModeKHR m_presentMode;
 		Instance* m_pInstance;
 		PhysicalDevice* m_pPhysicalDevice;
 		emberBackendInterface::IWindow* m_pIWindow;
@@ -59,7 +56,7 @@ namespace vulkanRendererBackend
 		// Getters:
 		const VkSurfaceKHR GetVkSurfaceKHR() const;
 		const SurfaceFormat GetSurfaceFormat() const;
-		const PresentMode GetPresentMode() const;
+		const VkPresentModeKHR GetPresentMode() const;
 		Uint2 GetCurrentExtent() const;
 		Uint2 GetMinImageExtent() const;
 		Uint2 GetMaxImageExtent() const;

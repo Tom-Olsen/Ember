@@ -105,7 +105,7 @@ namespace vulkanRendererBackend
 		createInfo.surface = m_pSurface->GetVkSurfaceKHR();
 		createInfo.minImageCount = imageCount;
 		createInfo.imageFormat = static_cast<VkFormat>(m_pSurface->GetSurfaceFormat().format);
-		createInfo.imageColorSpace = static_cast<VkColorSpaceKHR>(m_pSurface->GetSurfaceFormat().colorSpace);
+		createInfo.imageColorSpace = m_pSurface->GetSurfaceFormat().colorSpace;
 		Uint2 surfaceExtent = m_pSurface->GetCurrentExtent();
 		createInfo.imageExtent = VkExtent2D{surfaceExtent.x, surfaceExtent.y};
 		createInfo.imageArrayLayers = 1;									// always 1 unless stereoscopic 3D application.
@@ -113,7 +113,7 @@ namespace vulkanRendererBackend
 		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;			// we assume that only one queue family will access the images for now.
 		createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;	// do not rotate or flip.
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;		// do not blend with other windows.
-		createInfo.presentMode = static_cast<VkPresentModeKHR>(m_pSurface->GetPresentMode());
+		createInfo.presentMode = m_pSurface->GetPresentMode();
 		createInfo.oldSwapchain = pOldSwapchain ? pOldSwapchain->GetVkSwapchainKHR() : VK_NULL_HANDLE;
 		createInfo.clipped = VK_TRUE;										// clip pixels that are obscured by other windows.
 		VKA(vkCreateSwapchainKHR(m_pLogicalDevice->GetVkDevice(), &createInfo, nullptr, &m_swapchain));

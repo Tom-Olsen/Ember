@@ -53,7 +53,7 @@ namespace vulkanRendererBackend
 
 		// Pick surfaceFormat and presentMode:
 		VkSurfaceFormatKHR surfaceFormat = PickSurfaceFormat(availableSurfaceFormats);
-		m_surfaceFormat = SurfaceFormat{ static_cast<uint32_t>(surfaceFormat.format), static_cast<uint32_t>(surfaceFormat.colorSpace) };
+		m_surfaceFormat = SurfaceFormat{ static_cast<Format>(surfaceFormat.format), surfaceFormat.colorSpace };
 		m_presentMode = PickPresentMode(vSyncEnabled, availablePresentModes);
 	}
 	Surface::~Surface()
@@ -90,7 +90,7 @@ namespace vulkanRendererBackend
 	{
 		return m_surfaceFormat;
 	}
-	const PresentMode Surface::GetPresentMode() const
+	const VkPresentModeKHR Surface::GetPresentMode() const
 	{
 		return m_presentMode;
 	}
@@ -152,8 +152,8 @@ namespace vulkanRendererBackend
 		m_pIWindow = other.m_pIWindow;
 
 		other.m_surface = VK_NULL_HANDLE;
-		other.m_surfaceFormat = SurfaceFormat{ Formats::undefined, ColorSpaces::max_enum };
-		other.m_presentMode = PresentModes::max_enum;
+		other.m_surfaceFormat = SurfaceFormat{ Formats::undefined, VK_COLOR_SPACE_MAX_ENUM_KHR };
+		other.m_presentMode = VK_PRESENT_MODE_MAX_ENUM_KHR;
 		other.m_pInstance = nullptr;
 		other.m_pPhysicalDevice = nullptr;
 		other.m_pIWindow = nullptr;

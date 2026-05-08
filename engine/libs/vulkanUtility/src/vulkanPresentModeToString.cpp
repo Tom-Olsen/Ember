@@ -1,0 +1,31 @@
+#include "vulkanPresentModeToString.h"
+
+
+
+namespace emberVulkanUtility
+{
+	std::string ToString(VkPresentModeKHR vkPresentMode)
+	{
+		switch (vkPresentMode)
+		{
+			case VK_PRESENT_MODE_IMMEDIATE_KHR:
+				return "VK_PRESENT_MODE_IMMEDIATE_KHR";
+			case VK_PRESENT_MODE_MAILBOX_KHR:
+				return "VK_PRESENT_MODE_MAILBOX_KHR";
+			case VK_PRESENT_MODE_FIFO_KHR:
+				return "VK_PRESENT_MODE_FIFO_KHR";
+			case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+				return "VK_PRESENT_MODE_FIFO_RELAXED_KHR";
+			case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
+				return "VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR";
+			case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
+				return "VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR";
+			case VK_PRESENT_MODE_FIFO_LATEST_READY_EXT:
+				return "VK_PRESENT_MODE_FIFO_LATEST_READY_EXT";
+			case VK_PRESENT_MODE_MAX_ENUM_KHR:
+				return "VK_PRESENT_MODE_MAX_ENUM_KHR";
+			default:
+				return "unknown";
+		}
+	}
+}
