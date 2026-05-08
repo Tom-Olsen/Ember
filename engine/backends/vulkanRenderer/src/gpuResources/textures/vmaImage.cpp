@@ -35,7 +35,7 @@ namespace vulkanRendererBackend
 		vkImageInfo.extent = VkExtent3D{ m_imageInfo.extent.x, m_imageInfo.extent.y, m_imageInfo.extent.z };
 		vkImageInfo.mipLevels = m_imageInfo.mipLevels;
 		vkImageInfo.arrayLayers = m_imageInfo.arrayLayers;
-		vkImageInfo.samples = static_cast<VkSampleCountFlagBits>(m_imageInfo.sampleCountFlags);
+		vkImageInfo.samples = m_imageInfo.sampleCountFlags;
 		vkImageInfo.tiling = m_imageInfo.tiling;
 		vkImageInfo.usage = m_imageInfo.usages;
 		vkImageInfo.sharingMode = m_imageInfo.sharingMode;

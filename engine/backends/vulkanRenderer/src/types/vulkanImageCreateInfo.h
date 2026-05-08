@@ -3,7 +3,6 @@
 #include "vulkanFormat.h"
 #include "vulkanImageCreateFlag.h"
 #include "vulkanImageUsageFlag.h"
-#include "vulkanSampleCountFlag.h"
 #include <cstdint>
 #include <string>
 #include <vulkan/vulkan.h>
@@ -21,7 +20,7 @@ namespace vulkanRendererBackend
 		Uint3 extent;
 		uint32_t mipLevels;
 		uint32_t arrayLayers;
-		SampleCountFlag sampleCountFlags;
+		VkSampleCountFlagBits sampleCountFlags;
 		VkImageTiling tiling;
 		ImageUsageFlag usages;
 		VkSharingMode sharingMode;

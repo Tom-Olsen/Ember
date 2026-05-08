@@ -2,6 +2,7 @@
 #include "vulkanImageLayoutToString.h"
 #include "vulkanImageTilingToString.h"
 #include "vulkanImageTypeToString.h"
+#include "vulkanSampleCountFlagBitsToString.h"
 #include "vulkanSharingModeToString.h"
 #include <sstream>
 
@@ -15,7 +16,7 @@ namespace vulkanRendererBackend
 		ss << "pNext: " << pNext << ", flags: " << ImageCreateFlags::ToString(flags)
 		   << ", imageType: " << emberVulkanUtility::ToString(imageType) << ", format: " << Formats::ToString(format)
 		   << ", extent: " << extent.ToString() << ", mipLevels: " << mipLevels << ", arrayLayers: " << arrayLayers
-		   << ", sampleCountFlags: " << SampleCountFlags::ToString(sampleCountFlags) << ", tiling: " << emberVulkanUtility::ToString(tiling)
+		   << ", sampleCountFlags: " << emberVulkanUtility::ToString(sampleCountFlags) << ", tiling: " << emberVulkanUtility::ToString(tiling)
 		   << ", usages: " << ImageUsageFlags::ToString(usages) << ", sharingMode: " << emberVulkanUtility::ToString(sharingMode)
 		   << ", queueFamilyIndexCount: " << queueFamilyIndexCount;
 		for (int i = 0; i < queueFamilyIndexCount; i++)

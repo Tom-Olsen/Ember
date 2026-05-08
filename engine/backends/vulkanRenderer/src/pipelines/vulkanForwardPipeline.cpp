@@ -142,7 +142,7 @@ namespace vulkanRendererBackend
         // Multisampling:
         VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
         multisampleState.sampleShadingEnable = VK_FALSE;
-        multisampleState.rasterizationSamples = static_cast<VkSampleCountFlagBits>(Context::GetMsaaSamples());
+        multisampleState.rasterizationSamples = Context::GetMsaaSamples();
         multisampleState.minSampleShading = 1.0f;           // Optional
         multisampleState.pSampleMask = nullptr;             // Optional
         multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional

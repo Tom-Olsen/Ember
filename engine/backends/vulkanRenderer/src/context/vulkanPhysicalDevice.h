@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <vulkan/vulkan.h>
 
 
 
@@ -20,7 +21,7 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		VkPhysicalDevice m_physicalDevice;
-		uint32_t m_maxMsaaSamples;
+		VkSampleCountFlagBits m_maxMsaaSamples;
 
 	public: // Methods:
 		PhysicalDevice(Instance* pInstance);
@@ -34,7 +35,7 @@ namespace vulkanRendererBackend
 		PhysicalDevice(PhysicalDevice&& other) noexcept;
 		PhysicalDevice& operator=(PhysicalDevice&& other) noexcept;
 		const VkPhysicalDevice& GetVkPhysicalDevice() const;
-		uint32_t GetMaxMsaaSamples() const;
+		VkSampleCountFlagBits GetMaxMsaaSamples() const;
 		bool SupportsDepthClamp() const;
 		bool SupportsDepthBiasClamp() const;
 		bool SupportsFillModeNonSolid() const;
@@ -46,6 +47,6 @@ namespace vulkanRendererBackend
 		int DeviceScore(VkPhysicalDevice device);
 		bool HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const;
 		bool HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const;
-		uint32_t MaxUsableMsaaSampleCount() const;
+		VkSampleCountFlagBits MaxUsableMsaaSampleCount() const;
 	};
 }

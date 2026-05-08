@@ -3,11 +3,11 @@
 // as this is the main header file that includes all other Vulkan-related headers.
 // Also allows for vulkan objects to be in place instead of pointers -> better memory access.
 #include "commonRendererCreateInfo.h"
-#include "vulkanSampleCountFlag.h"
 #include <array>
 #include <memory>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 
@@ -108,7 +108,7 @@ namespace vulkanRendererBackend
 		static uint32_t m_framesInFlight;
 		static uint32_t m_frameIndex;
 		static uint64_t m_absoluteFrameIndex;
-		static SampleCountFlag m_msaaSamples;
+		static VkSampleCountFlagBits m_msaaSamples;
 		static bool m_enableDockSpace;
 		static float m_depthBiasConstantFactor;
 		static float m_depthBiasClamp;
@@ -143,7 +143,7 @@ namespace vulkanRendererBackend
 		static uint32_t GetFramesInFlight();
 		static uint32_t GetFrameIndex();
 		static uint64_t GetAbsoluteFrameIndex();
-		static SampleCountFlag GetMsaaSamples();
+		static VkSampleCountFlagBits GetMsaaSamples();
 		static bool DockSpaceEnabled();
 		static float GetDepthBiasConstantFactor();
 		static float GetDepthBiasClamp();

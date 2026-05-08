@@ -73,7 +73,7 @@ namespace vulkanRendererBackend
 	{
 		return m_physicalDevice;
 	}
-	uint32_t PhysicalDevice::GetMaxMsaaSamples() const
+	VkSampleCountFlagBits PhysicalDevice::GetMaxMsaaSamples() const
 	{
 		return m_maxMsaaSamples;
 	}
@@ -199,19 +199,19 @@ namespace vulkanRendererBackend
 
 		return false;
 	}
-	uint32_t PhysicalDevice::MaxUsableMsaaSampleCount() const
+	VkSampleCountFlagBits PhysicalDevice::MaxUsableMsaaSampleCount() const
 	{
 		VkPhysicalDeviceProperties physicalDeviceProperties;
 		vkGetPhysicalDeviceProperties(m_physicalDevice, &physicalDeviceProperties);
 
 		VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
-		if (counts & VK_SAMPLE_COUNT_64_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_64_BIT); }
-		if (counts & VK_SAMPLE_COUNT_32_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_32_BIT); }
-		if (counts & VK_SAMPLE_COUNT_16_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_16_BIT); }
-		if (counts & VK_SAMPLE_COUNT_8_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_8_BIT); }
-		if (counts & VK_SAMPLE_COUNT_4_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_4_BIT); }
-		if (counts & VK_SAMPLE_COUNT_2_BIT) { return static_cast<uint32_t>(VK_SAMPLE_COUNT_2_BIT); }
+		if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
+		if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
+		if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
+		if (counts & VK_SAMPLE_COUNT_8_BIT)  { return VK_SAMPLE_COUNT_8_BIT; }
+		if (counts & VK_SAMPLE_COUNT_4_BIT)  { return VK_SAMPLE_COUNT_4_BIT; }
+		if (counts & VK_SAMPLE_COUNT_2_BIT)  { return VK_SAMPLE_COUNT_2_BIT; }
 
-		return static_cast<uint32_t>(VK_SAMPLE_COUNT_1_BIT);
+		return VK_SAMPLE_COUNT_1_BIT;
 	}
 }

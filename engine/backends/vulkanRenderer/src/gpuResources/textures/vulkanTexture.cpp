@@ -210,7 +210,7 @@ namespace vulkanRendererBackend
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageInfo.usages = usageFlags;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		imageInfo.sampleCountFlags = SampleCountFlags::sample_count_1_bit;
+		imageInfo.sampleCountFlags = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.flags = imageFlags;
 		imageInfo.queueFamilyIndexCount = 1;
 		imageInfo.pQueueFamilyIndices = &queue.familyIndex;

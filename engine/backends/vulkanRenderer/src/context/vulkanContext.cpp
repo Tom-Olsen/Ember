@@ -45,7 +45,7 @@ namespace vulkanRendererBackend
 	uint32_t Context::m_framesInFlight;
 	uint32_t Context::m_frameIndex;
 	uint64_t Context::m_absoluteFrameIndex;
-	SampleCountFlag Context::m_msaaSamples;
+	VkSampleCountFlagBits Context::m_msaaSamples;
 	bool Context::m_enableDockSpace;
 	float Context::m_depthBiasConstantFactor = 0.0f;
 	float Context::m_depthBiasClamp = 0.0f;
@@ -114,7 +114,7 @@ namespace vulkanRendererBackend
 		m_swapchainIndex = 0;
 
 		// Set msaa sampling value:
-		m_msaaSamples = math::Min(static_cast<uint32_t>(createInfo.msaaSampleCount), m_pPhysicalDevice->GetMaxMsaaSamples());
+		m_msaaSamples = static_cast<VkSampleCountFlagBits>(math::Min(static_cast<uint32_t>(createInfo.msaaSampleCount), static_cast<uint32_t>(m_pPhysicalDevice->GetMaxMsaaSamples())));
 
 		// Load vulkan debug utility object naming function:
 		#if defined(VALIDATION_LAYERS_ACTIVE)
@@ -263,7 +263,7 @@ namespace vulkanRendererBackend
 	{
 		return m_absoluteFrameIndex;
 	}
-	SampleCountFlag Context::GetMsaaSamples()
+	VkSampleCountFlagBits Context::GetMsaaSamples()
 	{
 		return m_msaaSamples;
 	}
