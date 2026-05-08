@@ -29,7 +29,7 @@ namespace vulkanRendererBackend
 		vkBufferInfo.flags = m_bufferInfo.flags;
 		vkBufferInfo.size = m_bufferInfo.size;
 		vkBufferInfo.usage = m_bufferInfo.usages;
-		vkBufferInfo.sharingMode = static_cast<VkSharingMode>(m_bufferInfo.sharingMode);
+		vkBufferInfo.sharingMode = m_bufferInfo.sharingMode;
 		vkBufferInfo.queueFamilyIndexCount = m_bufferInfo.queueFamilyIndexCount;
 		vkBufferInfo.pQueueFamilyIndices = m_bufferInfo.pQueueFamilyIndices;
 

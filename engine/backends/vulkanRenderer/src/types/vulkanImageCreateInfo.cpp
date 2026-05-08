@@ -1,4 +1,7 @@
 #include "vulkanImageCreateInfo.h"
+#include "vulkanImageTilingToString.h"
+#include "vulkanImageTypeToString.h"
+#include "vulkanSharingModeToString.h"
 #include <sstream>
 
 
@@ -9,10 +12,10 @@ namespace vulkanRendererBackend
 	{
 		std::ostringstream ss;
 		ss << "pNext: " << pNext << ", flags: " << ImageCreateFlags::ToString(flags)
-		   << ", imageType: " << ImageTypes::ToString(imageType) << ", format: " << Formats::ToString(format)
+		   << ", imageType: " << emberVulkanUtility::ToString(imageType) << ", format: " << Formats::ToString(format)
 		   << ", extent: " << extent.ToString() << ", mipLevels: " << mipLevels << ", arrayLayers: " << arrayLayers
-		   << ", sampleCountFlags: " << SampleCountFlags::ToString(sampleCountFlags) << ", tiling: " << ImageTilings::ToString(tiling)
-		   << ", usages: " << ImageUsageFlags::ToString(usages) << ", sharingMode: " << SharingModes::ToString(sharingMode)
+		   << ", sampleCountFlags: " << SampleCountFlags::ToString(sampleCountFlags) << ", tiling: " << emberVulkanUtility::ToString(tiling)
+		   << ", usages: " << ImageUsageFlags::ToString(usages) << ", sharingMode: " << emberVulkanUtility::ToString(sharingMode)
 		   << ", queueFamilyIndexCount: " << queueFamilyIndexCount;
 		for (int i = 0; i < queueFamilyIndexCount; i++)
 			ss << pQueueFamilyIndices[i] << " ";

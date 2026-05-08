@@ -167,17 +167,17 @@ namespace vulkanRendererBackend
 			subresourceRange.layerCount = 1;
 
 			ImageCreateInfo imageInfo = {};
-			imageInfo.imageType = ImageTypes::image_type_2d;
+			imageInfo.imageType = VK_IMAGE_TYPE_2D;
 			imageInfo.extent.x = m_pRenderTextures[frameIndex]->GetWidth();
 			imageInfo.extent.y = m_pRenderTextures[frameIndex]->GetHeight();
 			imageInfo.extent.z = 1;
 			imageInfo.mipLevels = 1;
 			imageInfo.arrayLayers = 1;
 			imageInfo.format = m_pRenderTextures[frameIndex]->GetVmaImage()->GetFormat();
-			imageInfo.tiling = ImageTilings::optimal;
+			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 			imageInfo.initialLayout = ImageLayouts::undefined;
 			imageInfo.usages = ImageUsageFlags::transient_attachment_bit | ImageUsageFlags::color_attachment_bit;
-			imageInfo.sharingMode = SharingModes::exclusive;
+			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
 			imageInfo.flags = 0;
 
@@ -206,17 +206,17 @@ namespace vulkanRendererBackend
 			subresourceRange.layerCount = 1;
 
 			ImageCreateInfo imageInfo = {};
-			imageInfo.imageType = ImageTypes::image_type_2d;
+			imageInfo.imageType = VK_IMAGE_TYPE_2D;
 			imageInfo.extent.x = m_pRenderTextures[frameIndex]->GetWidth();
 			imageInfo.extent.y = m_pRenderTextures[frameIndex]->GetHeight();
 			imageInfo.extent.z = 1;
 			imageInfo.mipLevels = 1;
 			imageInfo.arrayLayers = 1;
 			imageInfo.format = m_depthFormat;
-			imageInfo.tiling = ImageTilings::optimal;
+			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 			imageInfo.initialLayout = ImageLayouts::undefined;
 			imageInfo.usages = ImageUsageFlags::depth_stencil_attachment_bit;
-			imageInfo.sharingMode = SharingModes::exclusive;
+			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
 			imageInfo.flags = 0;
 

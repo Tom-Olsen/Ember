@@ -3,13 +3,11 @@
 #include "vulkanFormat.h"
 #include "vulkanImageCreateFlag.h"
 #include "vulkanImageLayout.h"
-#include "vulkanImageTiling.h"
-#include "vulkanImageType.h"
 #include "vulkanImageUsageFlag.h"
 #include "vulkanSampleCountFlag.h"
-#include "vulkanSharingMode.h"
 #include <cstdint>
 #include <string>
+#include <vulkan/vulkan.h>
 
 
 
@@ -19,15 +17,15 @@ namespace vulkanRendererBackend
 	{
 		const void* pNext;
 		ImageCreateFlag flags;
-		ImageType imageType;
+		VkImageType imageType;
 		Format format;
 		Uint3 extent;
 		uint32_t mipLevels;
 		uint32_t arrayLayers;
 		SampleCountFlag sampleCountFlags;
-		ImageTiling tiling;
+		VkImageTiling tiling;
 		ImageUsageFlag usages;
-		SharingMode sharingMode;
+		VkSharingMode sharingMode;
 		uint32_t queueFamilyIndexCount;
 		const uint32_t* pQueueFamilyIndices;
 		ImageLayout initialLayout;

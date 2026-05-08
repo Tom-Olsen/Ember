@@ -175,7 +175,7 @@ namespace vulkanRendererBackend
 				uint64_t size = 3 * triangleCount * sizeof(uint16_t);
 				m_pIndexStagingBuffer->SetData(reinterpret_cast<const uint16_t*>(triangles16.data()), size);
 			}
-			else // (m_indexType == IndexType::uint32)
+			else // (m_vkIndexType == VK_INDEX_TYPE_UINT32)
 			{
 				uint64_t size = 3 * triangleCount * sizeof(uint32_t);
 				m_pIndexStagingBuffer->SetData(reinterpret_cast<const uint32_t*>(triangles.data()), size);

@@ -2,7 +2,6 @@
 #include "commonPipelineState.h"
 #include "emberMath.h"
 #include "iMesh.h"
-#include "vulkanIndexType.h"
 #include "vulkanRendererExport.h"
 #include <memory>
 #include <vector>

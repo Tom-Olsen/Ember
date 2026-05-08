@@ -196,7 +196,7 @@ namespace vulkanRendererBackend
 	{
 		return s_validStencilFormats.contains(format);
 	}
-	void Texture::CreateImageBase(ImageType imageType, ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
+	void Texture::CreateImageBase(VkImageType imageType, ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
 	{
 		ImageCreateInfo imageInfo = {};
 		imageInfo.imageType = imageType;
@@ -206,10 +206,10 @@ namespace vulkanRendererBackend
 		imageInfo.mipLevels = subresourceRange.levelCount;
 		imageInfo.arrayLayers = subresourceRange.layerCount;
 		imageInfo.format = format;
-		imageInfo.tiling = ImageTilings::optimal;
+		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.initialLayout = ImageLayouts::undefined;
 		imageInfo.usages = usageFlags;
-		imageInfo.sharingMode = SharingModes::exclusive;
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.sampleCountFlags = SampleCountFlags::sample_count_1_bit;
 		imageInfo.flags = imageFlags;
 		imageInfo.queueFamilyIndexCount = 1;

@@ -32,7 +32,7 @@ namespace vulkanRendererBackend
 	// Protected methods:
 	void Texture1d::CreateImage(ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
 	{
-		ImageType imageType = ImageTypes::image_type_1d;
+		VkImageType imageType = VK_IMAGE_TYPE_1D;
 		CreateImageBase(imageType, subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 	}
 }

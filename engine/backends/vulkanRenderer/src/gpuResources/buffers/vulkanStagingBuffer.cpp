@@ -29,7 +29,7 @@ namespace vulkanRendererBackend
 		BufferCreateInfo bufferInfo = {};
 		bufferInfo.size = m_size;
 		bufferInfo.usages = BufferUsageFlags::transfer_src_bit | BufferUsageFlags::transfer_dst_bit;
-		bufferInfo.sharingMode = SharingModes::exclusive;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		AllocationCreateInfo allocInfo = {};
 		allocInfo.usages = MemoryUsages::auto_prefer_host;

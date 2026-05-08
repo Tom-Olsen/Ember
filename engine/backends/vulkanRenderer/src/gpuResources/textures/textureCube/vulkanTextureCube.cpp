@@ -30,7 +30,7 @@ namespace vulkanRendererBackend
 	void TextureCube::CreateImage(ImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
 	{
 		imageFlags |= ImageCreateFlags::cube_compatible_bit;
-		ImageType imageType = ImageTypes::image_type_2d;
+		VkImageType imageType = VK_IMAGE_TYPE_2D;
 		CreateImageBase(imageType, subresourceRange, format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 	}
 }
