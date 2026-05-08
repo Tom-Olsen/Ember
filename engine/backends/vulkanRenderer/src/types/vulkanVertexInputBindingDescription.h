@@ -1,6 +1,6 @@
 #pragma once
-#include "vulkanVertexInputRate.h"
 #include <string>
+#include <vulkan/vulkan.h>
 
 
 
@@ -10,7 +10,7 @@ namespace vulkanRendererBackend
     {
         uint32_t binding;
         uint32_t stride;
-        VertexInputRate inputRate;
+        VkVertexInputRate inputRate;
         std::string ToString();
     };
 }
