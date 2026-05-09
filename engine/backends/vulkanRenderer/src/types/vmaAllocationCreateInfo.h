@@ -1,9 +1,9 @@
 #pragma once
 #include "vmaAllocationCreateFlag.h"
 #include "vmaMemoryUsage.h"
-#include "vulkanMemoryPropertyFlag.h"
 #include <cstdint>
 #include <string>
+#include <vulkan/vulkan.h>
 
 
 
@@ -18,8 +18,8 @@ namespace vulkanRendererBackend
 	{
 		AllocationCreateFlag flags;
 		MemoryUsage usages;
-		MemoryPropertyFlag requiredFlags;
-		MemoryPropertyFlag preferredFlags;
+		VkMemoryPropertyFlags requiredFlags;
+		VkMemoryPropertyFlags preferredFlags;
 		uint32_t memoryTypeBits;
 		VmaPool pool;
 		void* pUserData;

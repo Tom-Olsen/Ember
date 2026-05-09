@@ -196,7 +196,7 @@ namespace vulkanRendererBackend
 	{
 		return s_validStencilFormats.contains(format);
 	}
-	void Texture::CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, Format format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
+	void Texture::CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, Format format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
 	{
 		ImageCreateInfo imageInfo = {};
 		imageInfo.imageType = imageType;

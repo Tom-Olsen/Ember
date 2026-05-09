@@ -33,6 +33,6 @@ namespace vulkanRendererBackend
 		Texture1d& operator=(Texture1d&& other) noexcept;
 
 	protected: // Methods:
-		void CreateImage(VkImageSubresourceRange& subresourceRange, Format format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
+		void CreateImage(VkImageSubresourceRange& subresourceRange, Format format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
 	};
 }
