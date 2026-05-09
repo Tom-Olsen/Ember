@@ -180,8 +180,8 @@ namespace vulkanRendererBackend
 			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
 			imageInfo.flags = 0;
 
-			AllocationCreateInfo allocationInfo = {};
-			allocationInfo.usages = MemoryUsages::auto_prefer_device;
+			VmaAllocationCreateInfo allocationInfo = {};
+			allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 			allocationInfo.flags = 0;
 			allocationInfo.requiredFlags = 0;
 			allocationInfo.preferredFlags = 0;
@@ -219,8 +219,8 @@ namespace vulkanRendererBackend
 			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
 			imageInfo.flags = 0;
 
-			AllocationCreateInfo allocationInfo = {};
-			allocationInfo.usages = MemoryUsages::auto_prefer_device;
+			VmaAllocationCreateInfo allocationInfo = {};
+			allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 			allocationInfo.flags = 0;
 			allocationInfo.requiredFlags = 0;
 			allocationInfo.preferredFlags = 0;

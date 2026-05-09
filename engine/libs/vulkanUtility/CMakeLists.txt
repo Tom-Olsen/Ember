@@ -37,4 +37,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 find_package(Vulkan REQUIRED)   # required to be installed
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${TARGET_NAME} PUBLIC ${Vulkan_LIBRARIES})
+
+# Vulkan Memory Allocator: (header only)
+target_include_directories(${TARGET_NAME} PUBLIC "${ENGINE_EXTERN_DIR}/vma/include")
 # ---------------------------------------------------

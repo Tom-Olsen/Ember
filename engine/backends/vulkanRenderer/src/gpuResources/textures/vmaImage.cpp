@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaImage::VmaImage(const ImageCreateInfo& imageInfo, const AllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue)
+	VmaImage::VmaImage(const ImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue)
 	{
 		m_imageInfo = imageInfo;
 		m_allocationInfo = allocationInfo;
@@ -43,19 +43,8 @@ namespace vulkanRendererBackend
 		vkImageInfo.pQueueFamilyIndices = m_imageInfo.pQueueFamilyIndices;
 		vkImageInfo.initialLayout = m_imageInfo.initialLayout;
 
-		// Convert AllocationCreateInfo -> VmaAllocationCreateInfo:
-		VmaAllocationCreateInfo vmaAllocationInfo = {};
-		vmaAllocationInfo.flags = m_allocationInfo.flags;
-		vmaAllocationInfo.usage = static_cast<VmaMemoryUsage>(m_allocationInfo.usages);
-		vmaAllocationInfo.requiredFlags = m_allocationInfo.requiredFlags;
-		vmaAllocationInfo.preferredFlags = m_allocationInfo.preferredFlags;
-		vmaAllocationInfo.memoryTypeBits = m_allocationInfo.memoryTypeBits;
-		vmaAllocationInfo.pool = m_allocationInfo.pool;
-		vmaAllocationInfo.pUserData = m_allocationInfo.pUserData;
-		vmaAllocationInfo.priority = m_allocationInfo.priority;
-
 		// Create image:
-		VKA(vmaCreateImage(Context::GetVmaAllocator(), &vkImageInfo, &vmaAllocationInfo, &m_image, &m_allocation, nullptr));
+		VKA(vmaCreateImage(Context::GetVmaAllocator(), &vkImageInfo, &m_allocationInfo, &m_image, &m_allocation, nullptr));
 		NAME_VK_OBJECT(m_image, "Image" + std::to_string(s_index));
 
 		// Create image view:
@@ -117,7 +106,7 @@ namespace vulkanRendererBackend
 	{
 		return m_imageInfo;
 	}
-	const AllocationCreateInfo& VmaImage::GetAllocationCreateInfo() const
+	const VmaAllocationCreateInfo& VmaImage::GetAllocationCreateInfo() const
 	{
 		return m_allocationInfo;
 	}

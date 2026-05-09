@@ -215,8 +215,8 @@ namespace vulkanRendererBackend
 		imageInfo.queueFamilyIndexCount = 1;
 		imageInfo.pQueueFamilyIndices = &queue.familyIndex;
 
-		AllocationCreateInfo allocInfo = {};
-		allocInfo.usages = MemoryUsages::auto_prefer_device;
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 		allocInfo.requiredFlags = memoryFlags;
 
 		m_pImage = std::make_unique<VmaImage>(imageInfo, allocInfo, subresourceRange, viewType, queue);

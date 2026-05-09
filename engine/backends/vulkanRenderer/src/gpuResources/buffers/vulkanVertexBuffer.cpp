@@ -19,8 +19,8 @@ namespace vulkanRendererBackend
 		bufferInfo.usages = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		AllocationCreateInfo allocInfo = {};
-		allocInfo.usages = MemoryUsages::auto_prefer_device;
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 		allocInfo.flags = 0;
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;

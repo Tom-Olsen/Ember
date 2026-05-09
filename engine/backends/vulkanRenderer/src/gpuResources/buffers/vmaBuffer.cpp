@@ -1,4 +1,5 @@
 #include "vmaBuffer.h"
+#include "vmaAllocationCreateInfoToString.h"
 #include "vk_mem_alloc.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanContext.h"
@@ -16,7 +17,7 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaBuffer::VmaBuffer(const BufferCreateInfo& bufferInfo, const AllocationCreateInfo& allocInfo)
+	VmaBuffer::VmaBuffer(const BufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
 	{
 		m_bufferInfo = bufferInfo;
 		m_allocationInfo = allocInfo;
@@ -33,22 +34,11 @@ namespace vulkanRendererBackend
 		vkBufferInfo.queueFamilyIndexCount = m_bufferInfo.queueFamilyIndexCount;
 		vkBufferInfo.pQueueFamilyIndices = m_bufferInfo.pQueueFamilyIndices;
 
-		// Convert AllocationCreateInfo -> VmaAllocationCreateInfo:
-		VmaAllocationCreateInfo vmaAllocationInfo = {};
-		vmaAllocationInfo.flags = m_allocationInfo.flags;
-		vmaAllocationInfo.usage = static_cast<VmaMemoryUsage>(m_allocationInfo.usages);
-		vmaAllocationInfo.requiredFlags = m_allocationInfo.requiredFlags;
-		vmaAllocationInfo.preferredFlags = m_allocationInfo.preferredFlags;
-		vmaAllocationInfo.memoryTypeBits = m_allocationInfo.memoryTypeBits;
-		vmaAllocationInfo.pool = m_allocationInfo.pool;
-		vmaAllocationInfo.pUserData = m_allocationInfo.pUserData;
-		vmaAllocationInfo.priority = m_allocationInfo.priority;
-
 		// Create Buffer:
-		VkResult result = vmaCreateBuffer(Context::GetVmaAllocator(), &vkBufferInfo, &vmaAllocationInfo, &m_buffer, &m_allocation, nullptr);
+		VkResult result = vmaCreateBuffer(Context::GetVmaAllocator(), &vkBufferInfo, &m_allocationInfo, &m_buffer, &m_allocation, nullptr);
 		if (result != VK_SUCCESS)
 		{
-			LOG_CRITICAL("VmaBuffer::VmaBuffer failed. VkResult: {}, BufferCreateInfo: {}, AllocationCreateInfo: {}", std::to_string(result), m_bufferInfo.ToString(), m_allocationInfo.ToString());
+			LOG_CRITICAL("VmaBuffer::VmaBuffer failed. VkResult: {}, BufferCreateInfo: {}, VmaAllocationCreateInfo: {}", std::to_string(result), m_bufferInfo.ToString(), ToString_VmaAllocationCreateInfo(m_allocationInfo));
 			std::abort();
 		}
 
@@ -95,7 +85,7 @@ namespace vulkanRendererBackend
 	{
 		return m_bufferInfo;
 	}
-	const AllocationCreateInfo& VmaBuffer::GetAllocationCreateInfo() const
+	const VmaAllocationCreateInfo& VmaBuffer::GetAllocationCreateInfo() const
 	{
 		return m_allocationInfo;
 	}

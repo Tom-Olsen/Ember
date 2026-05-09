@@ -30,9 +30,9 @@ namespace vulkanRendererBackend
 		bufferInfo.usages = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		AllocationCreateInfo allocInfo = {};
-		allocInfo.usages = MemoryUsages::auto_prefer_host;
-		allocInfo.flags = AllocationCreateFlags::mapped_bit | AllocationCreateFlags::host_access_sequential_write_bit;
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 		allocInfo.requiredFlags = 0;
 		allocInfo.preferredFlags = 0;
 

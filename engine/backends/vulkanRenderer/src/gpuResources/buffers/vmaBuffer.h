@@ -1,5 +1,5 @@
 #pragma once
-#include "vmaAllocationCreateInfo.h"
+#include "vk_mem_alloc.h"
 #include "vulkanBufferCreateInfo.h"
 #include <string>
 
@@ -7,7 +7,6 @@
 
 // Forward declarations:
 typedef struct VkBuffer_T* VkBuffer;
-typedef struct VmaAllocation_T* VmaAllocation;
 
 
 
@@ -26,10 +25,10 @@ namespace vulkanRendererBackend
 		VkBuffer m_buffer;
 		VmaAllocation m_allocation;
 		BufferCreateInfo m_bufferInfo;
-		AllocationCreateInfo m_allocationInfo;
+		VmaAllocationCreateInfo m_allocationInfo;
 
 	public: // Methods:
-		VmaBuffer(const BufferCreateInfo& bufferInfo, const AllocationCreateInfo& allocInfo);
+		VmaBuffer(const BufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo);
 		~VmaBuffer();
 
 		// Non-copyable:
@@ -44,7 +43,7 @@ namespace vulkanRendererBackend
 		const VkBuffer& GetVkBuffer() const;
 		const VmaAllocation& GetVmaAllocation() const;
 		const BufferCreateInfo& GetBufferCreateInfo() const;
-		const AllocationCreateInfo& GetAllocationCreateInfo() const;
+		const VmaAllocationCreateInfo& GetAllocationCreateInfo() const;
 		uint64_t GetSize();
 		void SetDebugName(const std::string& name);
 
