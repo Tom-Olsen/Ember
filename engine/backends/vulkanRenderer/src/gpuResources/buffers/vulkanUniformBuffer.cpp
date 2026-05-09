@@ -29,7 +29,7 @@ namespace vulkanRendererBackend
 		// Create buffer:
 		BufferCreateInfo bufferInfo = {};
 		bufferInfo.size = bufferSize;
-		bufferInfo.usages = BufferUsageFlags::uniform_buffer_bit;
+		bufferInfo.usages = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		AllocationCreateInfo allocInfo = {};

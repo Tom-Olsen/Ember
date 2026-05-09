@@ -18,8 +18,8 @@ namespace vulkanRendererBackend
 	/// Polymorphic parent class for different kinds of 3d textures.
 	/// Each derivative handles a different type of VkImage.
 	/// The images differ in: <para/>
-	/// -ImageUsageFlag		= transfer, sampling, storage, depth, color. <para/>
-	/// -ImageCreateFlagBit	= additional specialisations. <para/>
+	/// -VkImageUsageFlags	= transfer, sampling, storage, depth, color. <para/>
+	/// -VkImageCreateFlags	= additional specialisations. <para/>
 	/// -VkImageViewType    = single image, array.
 	/// </summary>
 	class VULKAN_RENDERER_API Texture3d : public Texture
@@ -41,6 +41,6 @@ namespace vulkanRendererBackend
 		Texture3d& operator=(Texture3d&& other) noexcept;
 
 	protected: // Methods:
-		void CreateImage(VkImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
+		void CreateImage(VkImageSubresourceRange& subresourceRange, Format format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
 	};
 }

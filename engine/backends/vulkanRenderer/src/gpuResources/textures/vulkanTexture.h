@@ -2,8 +2,6 @@
 #include "iTexture.h"
 #include "commonTextureFormat.h"
 #include "vulkanFormat.h"
-#include "vulkanImageCreateFlag.h"
-#include "vulkanImageUsageFlag.h"
 #include "vulkanMemoryPropertyFlag.h"
 #include "vulkanRendererExport.h"
 #include <memory>
@@ -90,6 +88,6 @@ namespace vulkanRendererBackend
 		bool IsValidImageFormat(Format format);
 		bool IsDepthFormat(Format format);
 		bool IsStencilFormat(Format format);
-		void CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, Format format, ImageUsageFlag usageFlags, ImageCreateFlag imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
+		void CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, Format format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, MemoryPropertyFlag memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
 	};
 }

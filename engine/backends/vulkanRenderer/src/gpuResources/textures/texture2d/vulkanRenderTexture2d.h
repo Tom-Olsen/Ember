@@ -9,8 +9,8 @@ namespace vulkanRendererBackend
 {
 	/// <summary>
 	/// Texture2d specialization: <para/>
-	/// -ImageUsageFlag		= transfer src (for copying to swapchain), transfer dst, storage, sample, color attachment <para/>
-	/// -ImageCreateFlagBit	= 0 <para/>
+	/// -VkImageUsageFlags	= transfer src (for copying to swapchain), transfer dst, storage, sample, color attachment <para/>
+	/// -VkImageCreateFlags	= 0 <para/>
 	/// -VkImageViewType    = 2d
 	/// </summary>
 	class VULKAN_RENDERER_API RenderTexture2d : public Texture2d

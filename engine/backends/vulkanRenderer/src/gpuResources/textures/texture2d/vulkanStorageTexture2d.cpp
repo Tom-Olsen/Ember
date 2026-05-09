@@ -62,8 +62,8 @@ namespace vulkanRendererBackend
 		subresourceRange.levelCount = 1;
 
 		// Create image:
-		ImageUsageFlag usageFlags = ImageUsageFlags::transfer_dst_bit | ImageUsageFlags::storage_bit;
-		ImageCreateFlag imageFlags = 0;
+		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+		VkImageCreateFlags imageFlags = 0;
 		MemoryPropertyFlag memoryFlags = MemoryPropertyFlags::device_local_bit;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();

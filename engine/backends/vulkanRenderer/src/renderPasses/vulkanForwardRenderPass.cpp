@@ -176,7 +176,7 @@ namespace vulkanRendererBackend
 			imageInfo.format = m_pRenderTextures[frameIndex]->GetVmaImage()->GetFormat();
 			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			imageInfo.usages = ImageUsageFlags::transient_attachment_bit | ImageUsageFlags::color_attachment_bit;
+			imageInfo.usages = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
 			imageInfo.flags = 0;
@@ -215,7 +215,7 @@ namespace vulkanRendererBackend
 			imageInfo.format = m_depthFormat;
 			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			imageInfo.usages = ImageUsageFlags::depth_stencil_attachment_bit;
+			imageInfo.usages = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
 			imageInfo.flags = 0;

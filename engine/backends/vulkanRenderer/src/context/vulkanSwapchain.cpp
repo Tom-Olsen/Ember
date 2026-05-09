@@ -10,7 +10,7 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	Swapchain::Swapchain(LogicalDevice* pLogicalDevice, Surface* pSurface, ImageUsageFlag usages, Swapchain* pOldSwapchain)
+	Swapchain::Swapchain(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usages, Swapchain* pOldSwapchain)
 	{
 		Init(pLogicalDevice, pSurface, usages, pOldSwapchain);
 	}
@@ -39,7 +39,7 @@ namespace vulkanRendererBackend
 
 
 	// Public methods:
-	void Swapchain::Init(LogicalDevice* pLogicalDevice, Surface* pSurface, ImageUsageFlag usages, Swapchain* pOldSwapchain)
+	void Swapchain::Init(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usages, Swapchain* pOldSwapchain)
 	{
 		// Assertions:
 		assert(pLogicalDevice != nullptr);
@@ -93,7 +93,7 @@ namespace vulkanRendererBackend
 		other.m_imageViews.clear();
 		other.m_pLogicalDevice = nullptr;
 		other.m_pSurface = nullptr;
-		other.m_usages = ImageUsageFlags::flag_bits_max_enum;
+		other.m_usages = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM;
 	}
 	void Swapchain::CreateSwapchain(Swapchain* pOldSwapchain)
 	{

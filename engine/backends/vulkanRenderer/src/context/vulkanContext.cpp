@@ -7,7 +7,6 @@
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanGlobalDescriptorSetLayout.h"
-#include "vulkanImageUsageFlag.h"
 #include "vulkanInstance.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -110,7 +109,7 @@ namespace vulkanRendererBackend
 		m_pMemoryAllocator = std::make_unique<MemoryAllocator>(m_pInstance.get(), m_pLogicalDevice.get(), m_pPhysicalDevice.get());
 		m_pAllocationTracker = std::make_unique<AllocationTracker>();
 		m_pDescriptorPool = std::make_unique<DescriptorPool>(m_pLogicalDevice.get());
-		m_swapchains[0] = std::make_unique<Swapchain>(m_pLogicalDevice.get(), m_pSurface.get(), ImageUsageFlags::color_attachment_bit | ImageUsageFlags::transfer_dst_bit);
+		m_swapchains[0] = std::make_unique<Swapchain>(m_pLogicalDevice.get(), m_pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 		m_swapchainIndex = 0;
 
 		// Set msaa sampling value:
@@ -170,7 +169,7 @@ namespace vulkanRendererBackend
 	{
 		WaitDeviceIdle();
 		int nextSwapchainIndex = (int)!m_swapchainIndex;
-		m_swapchains[nextSwapchainIndex] = std::make_unique<Swapchain>(m_pLogicalDevice.get(), m_pSurface.get(), ImageUsageFlags::color_attachment_bit | ImageUsageFlags::transfer_dst_bit, m_swapchains[m_swapchainIndex].get());
+		m_swapchains[nextSwapchainIndex] = std::make_unique<Swapchain>(m_pLogicalDevice.get(), m_pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, m_swapchains[m_swapchainIndex].get());
 		m_swapchainIndex = nextSwapchainIndex;
 	}
 

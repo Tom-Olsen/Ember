@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
 		// Create buffer:
 		BufferCreateInfo bufferInfo = {};
 		bufferInfo.size = m_size;
-		bufferInfo.usages = BufferUsageFlags::transfer_src_bit | BufferUsageFlags::transfer_dst_bit;
+		bufferInfo.usages = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		AllocationCreateInfo allocInfo = {};

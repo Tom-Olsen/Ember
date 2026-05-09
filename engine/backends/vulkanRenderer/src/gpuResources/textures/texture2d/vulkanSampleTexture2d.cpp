@@ -65,8 +65,8 @@ namespace vulkanRendererBackend
 		subresourceRange.levelCount = static_cast<uint32_t>(math::Floor(math::Log2(math::Max(m_width, m_height)))) + 1;	// mip levels
 
 		// Create image:
-		ImageUsageFlag usageFlags = ImageUsageFlags::transfer_src_bit | ImageUsageFlags::transfer_dst_bit | ImageUsageFlags::sampled_bit;
-		ImageCreateFlag imageFlags = 0;
+		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		VkImageCreateFlags imageFlags = 0;
 		MemoryPropertyFlag memoryFlags = MemoryPropertyFlags::device_local_bit;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();

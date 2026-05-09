@@ -1,8 +1,6 @@
 #pragma once
 #include "emberMath.h"
 #include "vulkanFormat.h"
-#include "vulkanImageCreateFlag.h"
-#include "vulkanImageUsageFlag.h"
 #include <cstdint>
 #include <string>
 #include <vulkan/vulkan.h>
@@ -14,7 +12,7 @@ namespace vulkanRendererBackend
 	struct ImageCreateInfo
 	{
 		const void* pNext;
-		ImageCreateFlag flags;
+		VkImageCreateFlags flags;
 		VkImageType imageType;
 		Format format;
 		Uint3 extent;
@@ -22,7 +20,7 @@ namespace vulkanRendererBackend
 		uint32_t arrayLayers;
 		VkSampleCountFlagBits sampleCountFlags;
 		VkImageTiling tiling;
-		ImageUsageFlag usages;
+		VkImageUsageFlags usages;
 		VkSharingMode sharingMode;
 		uint32_t queueFamilyIndexCount;
 		const uint32_t* pQueueFamilyIndices;

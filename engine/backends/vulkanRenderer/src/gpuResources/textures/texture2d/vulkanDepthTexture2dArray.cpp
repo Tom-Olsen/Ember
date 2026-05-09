@@ -30,8 +30,8 @@ namespace vulkanRendererBackend
 		subresourceRange.levelCount = 1; // no mipmapping for shadow textures.
 
 		// Create image:
-		ImageUsageFlag usageFlags = ImageUsageFlags::depth_stencil_attachment_bit | ImageUsageFlags::sampled_bit;
-		ImageCreateFlag imageFlags = 0;
+		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		VkImageCreateFlags imageFlags = 0;
 		MemoryPropertyFlag memoryFlags = MemoryPropertyFlags::device_local_bit;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();

@@ -1,6 +1,6 @@
 #pragma once
-#include "vulkanImageUsageFlag.h"
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 
@@ -27,10 +27,10 @@ namespace vulkanRendererBackend
 		std::vector<VkImageView> m_imageViews;
 		LogicalDevice* m_pLogicalDevice;
 		Surface* m_pSurface;
-		ImageUsageFlag m_usages;
+		VkImageUsageFlags m_usages;
 
 	public: // Methods:
-		Swapchain(LogicalDevice* pLogicalDevice, Surface* pSurface, ImageUsageFlag usages, Swapchain* pOldSwapchain = nullptr);
+		Swapchain(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usages, Swapchain* pOldSwapchain = nullptr);
 		~Swapchain();
 
 		// Non-copyable:
@@ -41,7 +41,7 @@ namespace vulkanRendererBackend
 		Swapchain(Swapchain&& other) noexcept;
 		Swapchain& operator=(Swapchain&& other) noexcept;
 
-		void Init(LogicalDevice* pLogicalDevice, Surface* pSurface, ImageUsageFlag usages, Swapchain* pOldSwapchain = nullptr);
+		void Init(LogicalDevice* pLogicalDevice, Surface* pSurface, VkImageUsageFlags usages, Swapchain* pOldSwapchain = nullptr);
 
 		// Getters:
         int GetImageCount() const;
