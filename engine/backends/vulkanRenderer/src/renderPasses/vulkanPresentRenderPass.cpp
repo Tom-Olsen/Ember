@@ -3,7 +3,6 @@
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStage.h"
 #include "vulkanSurface.h"
 #include "vulkanSwapchain.h"
 #include <vulkan/vulkan.h>
@@ -54,8 +53,8 @@ namespace vulkanRendererBackend
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = PipelineStages::colorAttachmentOutput;
-		dependency.dstStageMask = PipelineStages::colorAttachmentOutput;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::none;
 		dependency.dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;
 

@@ -4,7 +4,6 @@
 #include "vulkanAccessMask.h"
 #include "vulkanDeviceQueue.h"
 #include "vulkanImageCreateInfo.h"
-#include "vulkanPipelineStage.h"
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -72,8 +71,8 @@ namespace vulkanRendererBackend
 		void SetLayout(VkImageLayout imageLayout);
 
 		// Transitions:
-		void TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
-		void TransitionLayout(VkImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
+		void TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
+		void TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask);
 		void GenerateMipmaps(VkCommandBuffer commandBuffer, uint32_t mipLevels);
 		void GenerateMipmaps(uint32_t mipLevels);
 

@@ -1,6 +1,5 @@
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
-#include <vulkan/vulkan.h>
 
 
 

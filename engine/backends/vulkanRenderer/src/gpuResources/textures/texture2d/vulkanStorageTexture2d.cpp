@@ -5,7 +5,6 @@
 #include "vulkanContext.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStage.h"
 #include "vulkanStagingBuffer.h"
 
 
@@ -84,8 +83,8 @@ namespace vulkanRendererBackend
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		{
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			PipelineStage srcStage = PipelineStages::topOfPipe;
-			PipelineStage dstStage = PipelineStages::transfer;
+			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
 			AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
 			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
@@ -97,8 +96,8 @@ namespace vulkanRendererBackend
 		// Transition 1: Layout: transfer->general, Queue: transfer->compute
 		{
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-			PipelineStage srcStage = PipelineStages::transfer;
-			PipelineStage dstStage = PipelineStages::computeShader;
+			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
 			AccessMask dstAccessMask = AccessMasks::ComputeShader::memoryRead | AccessMasks::ComputeShader::memoryWrite;
 			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);

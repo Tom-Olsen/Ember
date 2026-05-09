@@ -1,12 +1,12 @@
 #pragma once
-#include <cstdint>
 #include <string>
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
-	using AccessMask = uint64_t;
+	using AccessMask = VkAccessFlags2;
 	struct AccessMasks
 	{
 		// VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT:
@@ -20,6 +20,8 @@ namespace vulkanRendererBackend
 		{
 			static AccessMask transferRead;
 			static AccessMask transferWrite;
+			static AccessMask memoryRead;
+			static AccessMask memoryWrite;
 			static AccessMask none;
 		};
 
@@ -36,6 +38,11 @@ namespace vulkanRendererBackend
 			static AccessMask memoryWrite;
 			static AccessMask accelerationStructureRead;
 			static AccessMask descriptorBufferRead;
+			static AccessMask shaderBindingTableRead;
+			static AccessMask samplerHeapRead;
+			static AccessMask resourceHeapRead;
+			static AccessMask shaderTileAttachmentRead;
+			static AccessMask shaderTileAttachmentWrite;
 			static AccessMask none;
 		};
 
@@ -43,6 +50,8 @@ namespace vulkanRendererBackend
 		struct VertexAttributeInput
 		{
 			static AccessMask vertexAttributeRead;
+			static AccessMask memoryRead;
+			static AccessMask memoryWrite;
 			static AccessMask none;
 		};
 
@@ -51,6 +60,8 @@ namespace vulkanRendererBackend
 		{
 			static AccessMask indexRead;
 			static AccessMask vertexAttributeRead;
+			static AccessMask memoryRead;
+			static AccessMask memoryWrite;
 			static AccessMask none;
 		};
 
@@ -63,8 +74,13 @@ namespace vulkanRendererBackend
 			static AccessMask sampledRead;
 			static AccessMask storageRead;
 			static AccessMask storageWrite;
+			static AccessMask memoryRead;
+			static AccessMask memoryWrite;
 			static AccessMask accelerationStructureRead;
 			static AccessMask descriptorBufferRead;
+			static AccessMask shaderBindingTableRead;
+			static AccessMask samplerHeapRead;
+			static AccessMask resourceHeapRead;
 			static AccessMask none;
 		};
 
@@ -73,6 +89,18 @@ namespace vulkanRendererBackend
 		{
 			static AccessMask depthStencilAttachmentRead;
 			static AccessMask depthStencilAttachmentWrite;
+			static AccessMask memoryRead;
+			static AccessMask memoryWrite;
+			static AccessMask none;
+		};
+
+		// VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT:
+		struct LateFragmentTest
+		{
+			static AccessMask depthStencilAttachmentRead;
+			static AccessMask depthStencilAttachmentWrite;
+			static AccessMask memoryRead;
+			static AccessMask memoryWrite;
 			static AccessMask none;
 		};
 
@@ -80,6 +108,7 @@ namespace vulkanRendererBackend
 		struct FragmentShader
 		{
 			static AccessMask uniformRead;
+			static AccessMask inputAttachmentRead;
 			static AccessMask shaderRead;
 			static AccessMask shaderWrite;
 			static AccessMask colorAttachmentRead;
@@ -87,8 +116,15 @@ namespace vulkanRendererBackend
 			static AccessMask sampledRead;
 			static AccessMask storageRead;
 			static AccessMask storageWrite;
+			static AccessMask memoryRead;
+			static AccessMask memoryWrite;
 			static AccessMask accelerationStructureRead;
 			static AccessMask descriptorBufferRead;
+			static AccessMask shaderBindingTableRead;
+			static AccessMask samplerHeapRead;
+			static AccessMask resourceHeapRead;
+			static AccessMask shaderTileAttachmentRead;
+			static AccessMask shaderTileAttachmentWrite;
 			static AccessMask none;
 		};
 
@@ -97,6 +133,9 @@ namespace vulkanRendererBackend
 		{
 			static AccessMask colorAttachmentRead;
 			static AccessMask colorAttachmentWrite;
+			static AccessMask colorAttachmentReadNoncoherent;
+			static AccessMask memoryRead;
+			static AccessMask memoryWrite;
 			static AccessMask none;
 		};
 
@@ -105,6 +144,8 @@ namespace vulkanRendererBackend
 		{
 			static AccessMask transferRead;
 			static AccessMask transferWrite;
+			static AccessMask memoryRead;
+			static AccessMask memoryWrite;
 			static AccessMask none;
 		};
 

@@ -3,7 +3,6 @@
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
-#include "vulkanPipelineStage.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanTexture.h"
 #include <cstring>
@@ -172,8 +171,8 @@ namespace vulkanRendererBackend
 		// Transition 0: Layout: original->srcTransfer, Queue: transfer
         {
 		    VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		    PipelineStage srcStage = PipelineStages::bottomOfPipe;   // use tracked stage here.
-		    PipelineStage dstStage = PipelineStages::copy;
+		    VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;   // use tracked stage here.
+		    VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_COPY_BIT;
 		    AccessMask srcAccessMask = AccessMasks::BottomOfPipe::none;  // use tracked access here.
 		    AccessMask dstAccessMask = AccessMasks::Copy::transferRead;
             pSrcTexture->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
@@ -205,8 +204,8 @@ namespace vulkanRendererBackend
 		// Transition 1: Layout: srcTransfer->original, Queue: transfer
         {
 		    VkImageLayout newLayout = originalLayout;
-		    PipelineStage srcStage = PipelineStages::copy;
-		    PipelineStage dstStage = PipelineStages::bottomOfPipe;   // use tracked stage here.
+		    VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_COPY_BIT;
+		    VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;   // use tracked stage here.
 		    AccessMask srcAccessMask = AccessMasks::Copy::transferRead;
 		    AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;  // use tracked access here.
             pSrcTexture->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);

@@ -2,7 +2,6 @@
 #include "iCompute.h"
 #include "commonComputeAccessMask.h"
 #include "emberMath.h"
-#include "vulkanAccessMask.h"
 #include "vulkanRendererExport.h"
 #include <vector>
 

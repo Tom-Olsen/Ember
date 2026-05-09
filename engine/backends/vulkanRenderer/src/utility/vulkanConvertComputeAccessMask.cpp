@@ -1,33 +1,32 @@
 #include "vulkanConvertComputeAccessMask.h"
-#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
-	vulkanRendererBackend::AccessMask ComputeAccessFlagsCommonToVulkan(emberCommon::ComputeAccessFlag accessFlags)
+	AccessMask ComputeAccessFlagsCommonToVulkan(emberCommon::ComputeAccessFlag accessFlags)
 	{
-		AccessMask accessMask = VK_ACCESS_2_NONE;
+		AccessMask accessMask = AccessMasks::ComputeShader::none;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::uniformRead))
-			accessMask |= VK_ACCESS_2_UNIFORM_READ_BIT;
+			accessMask |= AccessMasks::ComputeShader::uniformRead;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::shaderRead))
-			accessMask |= VK_ACCESS_2_SHADER_READ_BIT;
+			accessMask |= AccessMasks::ComputeShader::shaderRead;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::shaderWrite))
-			accessMask |= VK_ACCESS_2_SHADER_WRITE_BIT;
+			accessMask |= AccessMasks::ComputeShader::shaderWrite;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::sampledRead))
-			accessMask |= VK_ACCESS_2_SHADER_SAMPLED_READ_BIT;
+			accessMask |= AccessMasks::ComputeShader::sampledRead;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::storageRead))
-			accessMask |= VK_ACCESS_2_SHADER_STORAGE_READ_BIT;
+			accessMask |= AccessMasks::ComputeShader::storageRead;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::storageWrite))
-			accessMask |= VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT;
+			accessMask |= AccessMasks::ComputeShader::storageWrite;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::memoryRead))
-			accessMask |= VK_ACCESS_2_MEMORY_READ_BIT;
+			accessMask |= AccessMasks::ComputeShader::memoryRead;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::memoryWrite))
-			accessMask |= VK_ACCESS_2_MEMORY_WRITE_BIT;
+			accessMask |= AccessMasks::ComputeShader::memoryWrite;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::accelerationStructureRead))
-			accessMask |= VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR;
+			accessMask |= AccessMasks::ComputeShader::accelerationStructureRead;
 		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::descriptorBufferRead))
-			accessMask |= VK_ACCESS_2_DESCRIPTOR_BUFFER_READ_BIT_EXT;
+			accessMask |= AccessMasks::ComputeShader::descriptorBufferRead;
 		return accessMask;
 	}
 }

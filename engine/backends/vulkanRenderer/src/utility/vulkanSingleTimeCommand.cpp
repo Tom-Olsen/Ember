@@ -5,7 +5,6 @@
 #include "vulkanMacros.h"
 #include <assert.h>
 #include <stdexcept>
-#include <vulkan/vulkan.h>
 
 
 
@@ -149,7 +148,7 @@ namespace vulkanRendererBackend
 		VKA(vkWaitForFences(Context::GetVkDevice(), 1, pFence, VK_TRUE, UINT64_MAX));
 		VKA(vkResetFences(Context::GetVkDevice(), 1, pFence));
 	}
-	void SingleTimeCommand::EndLinkedCommands(const DeviceQueue& firstQueue, const DeviceQueue& secondQueue, PipelineStage waitDstStageMask)
+	void SingleTimeCommand::EndLinkedCommands(const DeviceQueue& firstQueue, const DeviceQueue& secondQueue, VkPipelineStageFlags2 waitDstStageMask)
 	{
 		assert(firstQueue.queue != secondQueue.queue);
 
@@ -169,7 +168,7 @@ namespace vulkanRendererBackend
 
 			VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 			signalSemaphoreInfo.semaphore = s_semaphore;
-			signalSemaphoreInfo.stageMask = PipelineStages::allCommands;
+			signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
 
 			VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
 			submitInfo.commandBufferInfoCount = 1;

@@ -179,7 +179,7 @@ namespace vulkanRendererBackend
 	// - dstStage = flag							<->		this stage must wait for the barrier to release.
 	// - barrier.srcAccessMask = multiple flags		<->		these memory accesses must be flushed to L2 cache before barrier blocks.
 	// - barrier.dstAccessMask = multiple flags		<->		these memory accesses must wait for the barrier before accessing L2 cache.
-	void VmaImage::TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask)
+	void VmaImage::TransitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask)
 	{
 		VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 		barrier.srcStageMask = srcStage;
@@ -205,7 +205,7 @@ namespace vulkanRendererBackend
 
 		m_layout = newLayout;
 	}
-	void VmaImage::TransitionLayout(VkImageLayout newLayout, PipelineStage srcStage, PipelineStage dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask)
+	void VmaImage::TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask)
 	{
 		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(m_queue);
 		TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
@@ -216,8 +216,8 @@ namespace vulkanRendererBackend
         // Memory barrier to ensure transfer queue is done with image upload before mipmapping:
         {
             VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-			barrier.srcStageMask = PipelineStages::transfer; // before was upload which is a transfer.
-			barrier.dstStageMask = PipelineStages::transfer; // next is blitting, which belongs to transfer.
+			barrier.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT; // before was upload which is a transfer.
+			barrier.dstStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT; // next is blitting, which belongs to transfer.
             barrier.srcAccessMask = AccessMasks::Transfer::transferWrite;
             barrier.dstAccessMask = AccessMasks::Transfer::transferWrite;
 			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -246,8 +246,8 @@ namespace vulkanRendererBackend
 			// Perform blit from mip level i-1 to mip level i:
 			{
 				VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-				barrier.srcStageMask = PipelineStages::transfer;
-				barrier.dstStageMask = PipelineStages::transfer;
+				barrier.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+				barrier.dstStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 				barrier.srcAccessMask = AccessMasks::Transfer::transferWrite;
 				barrier.dstAccessMask = AccessMasks::Transfer::transferRead;
 				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -291,8 +291,8 @@ namespace vulkanRendererBackend
 			// Transition mip level i-1 from TRANSFER_SRC_OPTIMAL to SHADER_READ_ONLY_OPTIMAL for shader access:
 			{
 				VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-				barrier.srcStageMask = PipelineStages::transfer;
-				barrier.dstStageMask = PipelineStages::fragmentShader;
+				barrier.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+				barrier.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
 				barrier.srcAccessMask = AccessMasks::Transfer::transferRead;
 				barrier.dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -322,8 +322,8 @@ namespace vulkanRendererBackend
 		// Transition last mip level from VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL to SHADER_READ_ONLY_OPTIMAL:
 		{
 			VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-			barrier.srcStageMask = PipelineStages::transfer;
-			barrier.dstStageMask = PipelineStages::fragmentShader;
+			barrier.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+			barrier.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
 			barrier.srcAccessMask = AccessMasks::Transfer::transferWrite;
 			barrier.dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;

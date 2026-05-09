@@ -31,7 +31,6 @@
 #include "vulkanMaterial.h"
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
-#include "vulkanPipelineStage.h"
 #include "vulkanPoolManager.h"
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
@@ -826,8 +825,8 @@ namespace vulkanRendererBackend
 			    	if (pComputeShader == nullptr)
 			    	{
 			    		VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-			    		memoryBarrier.srcStageMask = PipelineStages::computeShader;
-			    		memoryBarrier.dstStageMask = PipelineStages::computeShader;
+						memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+						memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 			    		memoryBarrier.srcAccessMask = computeCall->srcAccessMask;
 			    		memoryBarrier.dstAccessMask = computeCall->dstAccessMask;
 
@@ -884,10 +883,10 @@ namespace vulkanRendererBackend
 			    // Release memory from pre render compute shaders to vertex shaders:
 			    {
 			    	VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-			    	memoryBarrier.srcStageMask = PipelineStages::computeShader;
-			    	memoryBarrier.dstStageMask = PipelineStages::vertexShader;
-			    	memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
-			    	memoryBarrier.dstAccessMask = AccessMasks::VertexShader::shaderRead;
+					memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+					memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
+					memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+					memoryBarrier.dstAccessMask = AccessMasks::VertexShader::shaderRead;
 
 			    	VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
 			    	dependencyInfo.memoryBarrierCount = 1;
@@ -1102,8 +1101,8 @@ namespace vulkanRendererBackend
 			// Release memory from vertex shaders to post render compute shaders:
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-				memoryBarrier.srcStageMask = PipelineStages::vertexShader;
-				memoryBarrier.dstStageMask = PipelineStages::computeShader;
+				memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
+				memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 				memoryBarrier.srcAccessMask = AccessMasks::VertexShader::shaderRead;
 				memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderWrite;
 
@@ -1269,10 +1268,10 @@ namespace vulkanRendererBackend
 			    	// Thus add memory barrier between every effect:
 			    	{
 			    		VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-			    		memoryBarrier.srcStageMask = PipelineStages::computeShader;
-			    		memoryBarrier.dstStageMask = PipelineStages::computeShader;
-			    		memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
-			    		memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderRead;
+						memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+						memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+						memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+						memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderRead;
 
 			    		VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
 			    		dependencyInfo.memoryBarrierCount = 1;
@@ -1284,13 +1283,13 @@ namespace vulkanRendererBackend
 			    }
 		    }
 
-            // Transition render texture layout to VK_ACCESS_2_SHADER_READ_BIT:
+            // Transition render texture layout to shader read:
             {
 			    VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			    PipelineStage srcStage = PipelineStages::computeShader;
-			    PipelineStage dstStage = PipelineStages::fragmentShader;
-			    VkAccessFlags2 srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
-			    VkAccessFlags2 dstAccessMask = AccessMasks::FragmentShader::shaderRead;
+			    VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+			    VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+			    AccessMask srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+			    AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 			    RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 			    DEBUG_LOG_TRACE("Render Image Transition: shader write -> shader read only");
             }
@@ -1413,7 +1412,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_acquireSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = PipelineStages::topOfPipe;
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1422,7 +1421,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_resourceUpdateToPreRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = PipelineStages::transfer;
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -1445,7 +1444,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_resourceUpdateToPreRenderComputeSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = PipelineStages::topOfPipe;
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1454,7 +1453,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_preRenderComputeToShadowSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = PipelineStages::computeShader;
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -1489,7 +1488,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = PipelineStages::earlyFragmentTest | PipelineStages::lateFragmentTest;
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -1524,7 +1523,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = PipelineStages::colorAttachmentOutput;
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -1572,8 +1571,8 @@ namespace vulkanRendererBackend
 			// Release memory from vertex shaders to compute shaders:
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-				memoryBarrier.srcStageMask = PipelineStages::vertexShader;
-				memoryBarrier.dstStageMask = PipelineStages::computeShader;
+				memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
+				memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 				memoryBarrier.srcAccessMask = AccessMasks::VertexShader::shaderRead;
 				memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderWrite;
 
@@ -1601,7 +1600,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = PipelineStages::computeShader;
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -1624,7 +1623,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = PipelineStages::computeShader;
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1633,7 +1632,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_postRenderToPresentSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = PipelineStages::computeShader;
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -1656,7 +1655,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		waitSemaphoreInfo.semaphore = m_postRenderToPresentSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = PipelineStages::fragmentShader | PipelineStages::colorAttachmentOutput;
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1665,7 +1664,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_releaseSemaphores[m_imageIndex];
-		signalSemaphoreInfo.stageMask = PipelineStages::bottomOfPipe;
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };

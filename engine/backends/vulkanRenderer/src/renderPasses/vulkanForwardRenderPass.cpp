@@ -4,7 +4,6 @@
 #include "vulkanContext.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStage.h"
 #include "vulkanRenderTexture2d.h"
 #include <array>
 #include <vulkan/vulkan.h>
@@ -68,8 +67,8 @@ namespace vulkanRendererBackend
 			// Both ping-pong textures are used as storage images by post processing, so initialize them into
 			// GENERAL and keep them there outside the present pass.
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-			PipelineStage srcStage = PipelineStages::topOfPipe;
-			PipelineStage dstStage = PipelineStages::bottomOfPipe;
+			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
 			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
 			AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
 			m_pRenderTextures[frameIndex]->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
@@ -137,8 +136,8 @@ namespace vulkanRendererBackend
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;										// index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass
 		dependency.dstSubpass = 0;															// index of destination subpass, where dependency ends.  VK_SUBPASS_EXTERNAL = after renderpass
-		dependency.srcStageMask = PipelineStages::colorAttachmentOutput;						// pipeline stages in source subpass which must complete before the dependency is resolved
-		dependency.dstStageMask = PipelineStages::colorAttachmentOutput;						// pipeline stages in destination subpass which must wait for the source stages to complete
+		dependency.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;						// pipeline stages in source subpass which must complete before the dependency is resolved
+		dependency.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;						// pipeline stages in destination subpass which must wait for the source stages to complete
 		dependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;	// types of memory accesses in the source subpass that must be completed
 		dependency.dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;	// types of memory accesses in the destination subpass that must wait on the source subpass to complete
 		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;							// specify special behaviors
@@ -232,8 +231,8 @@ namespace vulkanRendererBackend
 
 			// Transition: Layout: undefined->depth attachment, Queue: graphics
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			PipelineStage srcStage = PipelineStages::topOfPipe;
-			PipelineStage dstStage = PipelineStages::earlyFragmentTest;
+			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT;
 			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
 			AccessMask dstAccessMask = AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead;
 			m_pDepthImages[frameIndex]->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);

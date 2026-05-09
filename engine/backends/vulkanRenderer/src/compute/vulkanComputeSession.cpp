@@ -2,7 +2,6 @@
 #include "descriptorSetMacros.h"
 #include "emberMath.h"
 #include "logger.h"
-#include "vulkanAccessMask.h"
 #include "vulkanComputePushConstant.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
@@ -10,7 +9,6 @@
 #include "vulkanMacros.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanPipeline.h"
-#include "vulkanPipelineStage.h"
 #include "vulkanRenderer.h"
 #include <vulkan/vulkan.h>
 
@@ -41,8 +39,8 @@ namespace vulkanRendererBackend
 				if (computeCall.pComputeShader == nullptr)
 				{
 					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-					memoryBarrier.srcStageMask = PipelineStages::computeShader;
-					memoryBarrier.dstStageMask = PipelineStages::computeShader;
+					memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+					memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 					memoryBarrier.srcAccessMask = computeCall.srcAccessMask;
 					memoryBarrier.dstAccessMask = computeCall.dstAccessMask;
 

@@ -5,7 +5,6 @@
 #include "vulkanContext.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStage.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
 #include <array>
@@ -93,7 +92,7 @@ namespace vulkanRendererBackend
 			VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
 			VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
 			RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer);
-			SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, PipelineStages::transfer);
+			SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, VK_PIPELINE_STAGE_2_TRANSFER_BIT);
 		}
 		else
 		{
@@ -107,8 +106,8 @@ namespace vulkanRendererBackend
 		// Transition0: Layout: undefined->transfer, Queue: transfer
 		{
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			PipelineStage srcStage = PipelineStages::topOfPipe;
-			PipelineStage dstStage = PipelineStages::transfer;
+			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
 			AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
 			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
@@ -120,8 +119,8 @@ namespace vulkanRendererBackend
 		// Transition1: Layout: transfer->shaderRead
 		{
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			PipelineStage srcStage = PipelineStages::transfer;
-			PipelineStage dstStage = PipelineStages::fragmentShader;
+			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
 			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
 			AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);

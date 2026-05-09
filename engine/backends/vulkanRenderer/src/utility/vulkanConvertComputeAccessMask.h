@@ -6,5 +6,5 @@
 
 namespace vulkanRendererBackend
 {
-    [[nodiscard]] vulkanRendererBackend::AccessMask ComputeAccessFlagsCommonToVulkan(emberCommon::ComputeAccessFlag accessFlags);
+    [[nodiscard]] AccessMask ComputeAccessFlagsCommonToVulkan(emberCommon::ComputeAccessFlag accessFlags);
 }

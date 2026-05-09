@@ -1,6 +1,6 @@
 #pragma once
-#include "vulkanPipelineStage.h"
 #include <string>
+#include <vulkan/vulkan.h>
 
 
 
@@ -48,7 +48,7 @@ namespace vulkanRendererBackend
 		// Getters:
 		static VkCommandBuffer& BeginCommand(const DeviceQueue& queue);
 		static void EndCommand(const DeviceQueue& queue);
-		static void EndLinkedCommands(const DeviceQueue& firstQueue, const DeviceQueue& secondQueue, PipelineStage waitDstStageMask);
+		static void EndLinkedCommands(const DeviceQueue& firstQueue, const DeviceQueue& secondQueue, VkPipelineStageFlags2 waitDstStageMask);
 
 	private: // Methods
 		static VkCommandBuffer* FindCommandBuffer(const DeviceQueue& queue);

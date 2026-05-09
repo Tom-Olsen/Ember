@@ -2,7 +2,6 @@
 #include "stb_image.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
-#include "vulkanPipelineStage.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
