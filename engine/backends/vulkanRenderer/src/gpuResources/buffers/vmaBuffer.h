@@ -1,6 +1,5 @@
 #pragma once
 #include "vk_mem_alloc.h"
-#include "vulkanBufferCreateInfo.h"
 #include <string>
 
 
@@ -24,11 +23,11 @@ namespace vulkanRendererBackend
 		static uint32_t s_index;
 		VkBuffer m_buffer;
 		VmaAllocation m_allocation;
-		BufferCreateInfo m_bufferInfo;
+		VkBufferCreateInfo m_bufferInfo;
 		VmaAllocationCreateInfo m_allocationInfo;
 
 	public: // Methods:
-		VmaBuffer(const BufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo);
+		VmaBuffer(const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo);
 		~VmaBuffer();
 
 		// Non-copyable:
@@ -42,7 +41,7 @@ namespace vulkanRendererBackend
 		// Getters:
 		const VkBuffer& GetVkBuffer() const;
 		const VmaAllocation& GetVmaAllocation() const;
-		const BufferCreateInfo& GetBufferCreateInfo() const;
+		const VkBufferCreateInfo& GetBufferCreateInfo() const;
 		const VmaAllocationCreateInfo& GetAllocationCreateInfo() const;
 		uint64_t GetSize();
 		void SetDebugName(const std::string& name);

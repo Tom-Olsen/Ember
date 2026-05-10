@@ -1,5 +1,6 @@
 #include "vmaBuffer.h"
 #include "vmaAllocationCreateInfoToString.h"
+#include "vulkanBufferCreateInfoToString.h"
 #include "vk_mem_alloc.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanContext.h"
@@ -17,28 +18,18 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaBuffer::VmaBuffer(const BufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
+	VmaBuffer::VmaBuffer(const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo)
 	{
 		m_bufferInfo = bufferInfo;
 		m_allocationInfo = allocInfo;
 		m_buffer = VK_NULL_HANDLE;
 		m_allocation = nullptr;
 
-		// Convert BufferCreateInfo -> VkBufferCreateInfo:
-		VkBufferCreateInfo vkBufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		vkBufferInfo.pNext = m_bufferInfo.pNext;
-		vkBufferInfo.flags = m_bufferInfo.flags;
-		vkBufferInfo.size = m_bufferInfo.size;
-		vkBufferInfo.usage = m_bufferInfo.usages;
-		vkBufferInfo.sharingMode = m_bufferInfo.sharingMode;
-		vkBufferInfo.queueFamilyIndexCount = m_bufferInfo.queueFamilyIndexCount;
-		vkBufferInfo.pQueueFamilyIndices = m_bufferInfo.pQueueFamilyIndices;
-
 		// Create Buffer:
-		VkResult result = vmaCreateBuffer(Context::GetVmaAllocator(), &vkBufferInfo, &m_allocationInfo, &m_buffer, &m_allocation, nullptr);
+		VkResult result = vmaCreateBuffer(Context::GetVmaAllocator(), &m_bufferInfo, &m_allocationInfo, &m_buffer, &m_allocation, nullptr);
 		if (result != VK_SUCCESS)
 		{
-			LOG_CRITICAL("VmaBuffer::VmaBuffer failed. VkResult: {}, BufferCreateInfo: {}, VmaAllocationCreateInfo: {}", std::to_string(result), m_bufferInfo.ToString(), ToString_VmaAllocationCreateInfo(m_allocationInfo));
+			LOG_CRITICAL("VmaBuffer::VmaBuffer failed. VkResult: {}, VkBufferCreateInfo: {}, VmaAllocationCreateInfo: {}", std::to_string(result), emberVulkanUtility::ToString(m_bufferInfo), ToString_VmaAllocationCreateInfo(m_allocationInfo));
 			std::abort();
 		}
 
@@ -81,7 +72,7 @@ namespace vulkanRendererBackend
 	{
 		return m_allocation;
 	}
-	const BufferCreateInfo& VmaBuffer::GetBufferCreateInfo() const
+	const VkBufferCreateInfo& VmaBuffer::GetBufferCreateInfo() const
 	{
 		return m_bufferInfo;
 	}
@@ -137,7 +128,7 @@ namespace vulkanRendererBackend
 
 		other.m_buffer = VK_NULL_HANDLE;
 		other.m_allocation = nullptr;
-		other.m_bufferInfo = {};
+		other.m_bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 		other.m_allocationInfo = {};
 	}
 }

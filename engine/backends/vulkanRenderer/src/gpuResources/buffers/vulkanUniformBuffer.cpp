@@ -27,9 +27,9 @@ namespace vulkanRendererBackend
 		m_size = structSize;
 		
 		// Create buffer:
-		BufferCreateInfo bufferInfo = {};
+		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 		bufferInfo.size = bufferSize;
-		bufferInfo.usages = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		VmaAllocationCreateInfo allocInfo = {};
