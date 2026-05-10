@@ -1,7 +1,6 @@
 #pragma once
 #include "iTexture.h"
 #include "commonTextureFormat.h"
-#include "vulkanFormat.h"
 #include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
@@ -31,23 +30,23 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Texture : public emberBackendInterface::ITexture
 	{
 	protected: // Static members:
-		static std::unordered_set<Format> s_valid08BitFormats;
-		static std::unordered_set<Format> s_valid16BitFormats;
-		static std::unordered_set<Format> s_valid32BitFormats;
-		static std::unordered_set<Format> s_valid64BitFormats;
-		static std::unordered_set<Format> s_validSingleChannelFormats;
-		static std::unordered_set<Format> s_validDoubleChannelFormats;
-		static std::unordered_set<Format> s_validTripleChannelFormats;
-		static std::unordered_set<Format> s_validQuadrupleChannelFormats;
-		static std::unordered_set<Format> s_validDepthFormats;
-		static std::unordered_set<Format> s_validStencilFormats;
+		static std::unordered_set<VkFormat> s_valid08BitFormats;
+		static std::unordered_set<VkFormat> s_valid16BitFormats;
+		static std::unordered_set<VkFormat> s_valid32BitFormats;
+		static std::unordered_set<VkFormat> s_valid64BitFormats;
+		static std::unordered_set<VkFormat> s_validSingleChannelFormats;
+		static std::unordered_set<VkFormat> s_validDoubleChannelFormats;
+		static std::unordered_set<VkFormat> s_validTripleChannelFormats;
+		static std::unordered_set<VkFormat> s_validQuadrupleChannelFormats;
+		static std::unordered_set<VkFormat> s_validDepthFormats;
+		static std::unordered_set<VkFormat> s_validStencilFormats;
 
 	protected: // Members:
 		uint32_t m_width;
 		uint32_t m_height;
 		uint32_t m_depth;
 		uint32_t m_channels;
-		Format m_format;
+		VkFormat m_format;
 		VkDescriptorType m_vkDescriptorType;
 		std::unique_ptr<VmaImage> m_pImage;
 
@@ -74,7 +73,7 @@ namespace vulkanRendererBackend
 		uint32_t GetChannels() const override;
 		const emberCommon::TextureFormat GetTextureFormat() const override;
 		const VkImageView& GetVkImageView() const override;
-		Format GetFormat() const;
+		VkFormat GetFormat() const;
 		VmaImage* const GetVmaImage() const;
 		VkDescriptorType GetVkDescriptorType() const;
 
@@ -82,11 +81,11 @@ namespace vulkanRendererBackend
         void SetDebugName(const std::string& name) override;
 
 	protected: // Methods:
-		uint32_t GetChannelCount(Format format);
-		uint32_t BytesPerChannel(Format format);
-		bool IsValidImageFormat(Format format);
-		bool IsDepthFormat(Format format);
-		bool IsStencilFormat(Format format);
-		void CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, Format format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
+		uint32_t GetChannelCount(VkFormat format);
+		uint32_t BytesPerChannel(VkFormat format);
+		bool IsValidImageFormat(VkFormat format);
+		bool IsDepthFormat(VkFormat format);
+		bool IsStencilFormat(VkFormat format);
+		void CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
 	};
 }

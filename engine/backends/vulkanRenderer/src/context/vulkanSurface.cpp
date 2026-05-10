@@ -1,7 +1,6 @@
 #include "vulkanSurface.h"
 #include "iWindow.h"
 #include "logger.h"
-#include "vulkanFormat.h"
 #include "vulkanInstance.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
@@ -53,7 +52,7 @@ namespace vulkanRendererBackend
 
 		// Pick surfaceFormat and presentMode:
 		VkSurfaceFormatKHR surfaceFormat = PickSurfaceFormat(availableSurfaceFormats);
-		m_surfaceFormat = SurfaceFormat{ static_cast<Format>(surfaceFormat.format), surfaceFormat.colorSpace };
+		m_surfaceFormat = SurfaceFormat{ surfaceFormat.format, surfaceFormat.colorSpace };
 		m_presentMode = PickPresentMode(vSyncEnabled, availablePresentModes);
 	}
 	Surface::~Surface()
@@ -152,7 +151,7 @@ namespace vulkanRendererBackend
 		m_pIWindow = other.m_pIWindow;
 
 		other.m_surface = VK_NULL_HANDLE;
-		other.m_surfaceFormat = SurfaceFormat{ Formats::undefined, VK_COLOR_SPACE_MAX_ENUM_KHR };
+		other.m_surfaceFormat = SurfaceFormat{ VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR };
 		other.m_presentMode = VK_PRESENT_MODE_MAX_ENUM_KHR;
 		other.m_pInstance = nullptr;
 		other.m_pPhysicalDevice = nullptr;

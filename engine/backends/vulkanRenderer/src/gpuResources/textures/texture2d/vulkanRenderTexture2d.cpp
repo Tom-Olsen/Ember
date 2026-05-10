@@ -11,7 +11,7 @@ namespace vulkanRendererBackend
 {
 	// Public method:
 	// Constructor/Desctructor:
-	RenderTexture2d::RenderTexture2d(Format format, int width, int height)
+	RenderTexture2d::RenderTexture2d(VkFormat format, int width, int height)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("RenderTexture2d::RenderTexture2d(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));

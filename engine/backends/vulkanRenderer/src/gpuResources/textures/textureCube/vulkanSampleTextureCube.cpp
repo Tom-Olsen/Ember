@@ -16,7 +16,7 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	SampleTextureCube::SampleTextureCube(Format format, int width, int height, void* data)
+	SampleTextureCube::SampleTextureCube(VkFormat format, int width, int height, void* data)
 	{
 		Init(format, width, height);
 		if (data)
@@ -45,7 +45,7 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	void SampleTextureCube::Init(Format format, int width, int height)
+	void SampleTextureCube::Init(VkFormat format, int width, int height)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("SampleTextureCube::Init(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));

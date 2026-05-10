@@ -15,7 +15,7 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	ForwardRenderPass::ForwardRenderPass(uint32_t renderWidth, uint32_t renderHeight)
 	{
-		m_depthFormat = Formats::d32_sfloat_s8_uint;
+		m_depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
 		CreateRenderTextures(renderWidth, renderHeight);
 		CreateRenderPass();
@@ -55,14 +55,14 @@ namespace vulkanRendererBackend
 	void ForwardRenderPass::CreateRenderTextures(uint32_t renderWidth, uint32_t renderHeight)
 	{
 		const uint32_t framesInFlight = Context::GetFramesInFlight();
-		Format renderTextureFormat = Formats::r16g16b16a16_sfloat; // make sure to use [[vk::image_format("rgba16f")]] RWTexture2D<float4> for render textures in shaders, see inOut.comp.hlsl.
+		VkFormat renderTextureFormat = VK_FORMAT_R16G16B16A16_SFLOAT; // make sure to use [[vk::image_format("rgba16f")]] RWTexture2D<float4> for render textures in shaders, see inOut.comp.hlsl.
 
 		m_pRenderTextures.reserve(framesInFlight);
 		m_pSecondaryRenderTextures.reserve(framesInFlight);
 		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
 		{
-			m_pRenderTextures.push_back(std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight));
-			m_pSecondaryRenderTextures.push_back(std::make_unique<RenderTexture2d>((VkFormat)renderTextureFormat, renderWidth, renderHeight));
+			m_pRenderTextures.push_back(std::make_unique<RenderTexture2d>(renderTextureFormat, renderWidth, renderHeight));
+			m_pSecondaryRenderTextures.push_back(std::make_unique<RenderTexture2d>(renderTextureFormat, renderWidth, renderHeight));
 
 			// Both ping-pong textures are used as storage images by post processing, so initialize them into
 			// GENERAL and keep them there outside the present pass.
@@ -91,7 +91,7 @@ namespace vulkanRendererBackend
 			attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;						// multisampled images are stored in color layout and not rdy for presenting yet
 
 			// Depth attachment description:
-			attachments[1].format = static_cast<VkFormat>(m_depthFormat);								// must be same as depth image format
+			attachments[1].format = m_depthFormat;								// must be same as depth image format
 			attachments[1].samples = Context::GetMsaaSamples();											// msaaSamples
 			attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;										// clear depth buffer before rendering
 			attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;									// depth content is discarded after rendering
@@ -207,7 +207,7 @@ namespace vulkanRendererBackend
 			imageInfo.extent = { m_pRenderTextures[frameIndex]->GetWidth(), m_pRenderTextures[frameIndex]->GetHeight(), 1 };
 			imageInfo.mipLevels = 1;
 			imageInfo.arrayLayers = 1;
-			imageInfo.format = static_cast<VkFormat>(m_depthFormat);
+			imageInfo.format = m_depthFormat;
 			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;

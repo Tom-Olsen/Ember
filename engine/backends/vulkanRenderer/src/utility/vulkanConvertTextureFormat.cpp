@@ -1,102 +1,101 @@
 #include "vulkanConvertTextureFormat.h"
-#include <unordered_map>
 #include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
-    // emberCommon::TextureFormat -> vulkanRendererBackend::Format:
-    vulkanRendererBackend::Format TextureFormatCommonToVulkan(emberCommon::TextureFormat format)
+    // emberCommon::TextureFormat -> VkFormat:
+    VkFormat TextureFormatCommonToVulkan(emberCommon::TextureFormat format)
     {
         switch (format.flag)
         {
-            case emberCommon::FormatFlag::r08_srgb: return vulkanRendererBackend::Formats::r8_srgb;
-            case emberCommon::FormatFlag::r08_uint: return vulkanRendererBackend::Formats::r8_uint;
-            case emberCommon::FormatFlag::r08_sint: return vulkanRendererBackend::Formats::r8_sint;
-            case emberCommon::FormatFlag::r08_uscaled: return vulkanRendererBackend::Formats::r8_uscaled;
-            case emberCommon::FormatFlag::r08_sscaled: return vulkanRendererBackend::Formats::r8_sscaled;
-            case emberCommon::FormatFlag::r08_unorm: return vulkanRendererBackend::Formats::r8_unorm;
-            case emberCommon::FormatFlag::r08_snorm: return vulkanRendererBackend::Formats::r8_snorm;
-            case emberCommon::FormatFlag::r16_uint: return vulkanRendererBackend::Formats::r16_uint;
-            case emberCommon::FormatFlag::r16_sint: return vulkanRendererBackend::Formats::r16_sint;
-            case emberCommon::FormatFlag::r16_uscaled: return vulkanRendererBackend::Formats::r16_uscaled;
-            case emberCommon::FormatFlag::r16_sscaled: return vulkanRendererBackend::Formats::r16_sscaled;
-            case emberCommon::FormatFlag::r16_unorm: return vulkanRendererBackend::Formats::r16_unorm;
-            case emberCommon::FormatFlag::r16_snorm: return vulkanRendererBackend::Formats::r16_snorm;
-            case emberCommon::FormatFlag::r16_sfloat: return vulkanRendererBackend::Formats::r16_sfloat;
-            case emberCommon::FormatFlag::r32_uint: return vulkanRendererBackend::Formats::r32_uint;
-            case emberCommon::FormatFlag::r32_sint: return vulkanRendererBackend::Formats::r32_sint;
-            case emberCommon::FormatFlag::r32_sfloat: return vulkanRendererBackend::Formats::r32_sfloat;
-            case emberCommon::FormatFlag::r64_uint: return vulkanRendererBackend::Formats::r64_uint;
-            case emberCommon::FormatFlag::r64_sint: return vulkanRendererBackend::Formats::r64_sint;
-            case emberCommon::FormatFlag::r64_sfloat: return vulkanRendererBackend::Formats::r64_sfloat;
-            case emberCommon::FormatFlag::rg08_srgb: return vulkanRendererBackend::Formats::r8g8_srgb;
-            case emberCommon::FormatFlag::rg08_uint: return vulkanRendererBackend::Formats::r8g8_uint;
-            case emberCommon::FormatFlag::rg08_sint: return vulkanRendererBackend::Formats::r8g8_sint;
-            case emberCommon::FormatFlag::rg08_uscaled: return vulkanRendererBackend::Formats::r8g8_uscaled;
-            case emberCommon::FormatFlag::rg08_sscaled: return vulkanRendererBackend::Formats::r8g8_sscaled;
-            case emberCommon::FormatFlag::rg08_unorm: return vulkanRendererBackend::Formats::r8g8_unorm;
-            case emberCommon::FormatFlag::rg08_snorm: return vulkanRendererBackend::Formats::r8g8_snorm;
-            case emberCommon::FormatFlag::rg16_uint: return vulkanRendererBackend::Formats::r16g16_uint;
-            case emberCommon::FormatFlag::rg16_sint: return vulkanRendererBackend::Formats::r16g16_sint;
-            case emberCommon::FormatFlag::rg16_uscaled: return vulkanRendererBackend::Formats::r16g16_uscaled;
-            case emberCommon::FormatFlag::rg16_sscaled: return vulkanRendererBackend::Formats::r16g16_sscaled;
-            case emberCommon::FormatFlag::rg16_unorm: return vulkanRendererBackend::Formats::r16g16_unorm;
-            case emberCommon::FormatFlag::rg16_snorm: return vulkanRendererBackend::Formats::r16g16_snorm;
-            case emberCommon::FormatFlag::rg16_sfloat: return vulkanRendererBackend::Formats::r16g16_sfloat;
-            case emberCommon::FormatFlag::rg32_uint: return vulkanRendererBackend::Formats::r32g32_uint;
-            case emberCommon::FormatFlag::rg32_sint: return vulkanRendererBackend::Formats::r32g32_sint;
-            case emberCommon::FormatFlag::rg32_sfloat: return vulkanRendererBackend::Formats::r32g32_sfloat;
-            case emberCommon::FormatFlag::rg64_uint: return vulkanRendererBackend::Formats::r64g64_uint;
-            case emberCommon::FormatFlag::rg64_sint: return vulkanRendererBackend::Formats::r64g64_sint;
-            case emberCommon::FormatFlag::rg64_sfloat: return vulkanRendererBackend::Formats::r64g64_sfloat;
-            case emberCommon::FormatFlag::rgb08_srgb: return vulkanRendererBackend::Formats::r8g8b8_srgb;
-            case emberCommon::FormatFlag::rgb08_uint: return vulkanRendererBackend::Formats::r8g8b8_uint;
-            case emberCommon::FormatFlag::rgb08_sint: return vulkanRendererBackend::Formats::r8g8b8_sint;
-            case emberCommon::FormatFlag::rgb08_uscaled: return vulkanRendererBackend::Formats::r8g8b8_uscaled;
-            case emberCommon::FormatFlag::rgb08_sscaled: return vulkanRendererBackend::Formats::r8g8b8_sscaled;
-            case emberCommon::FormatFlag::rgb08_unorm: return vulkanRendererBackend::Formats::r8g8b8_unorm;
-            case emberCommon::FormatFlag::rgb08_snorm: return vulkanRendererBackend::Formats::r8g8b8_snorm;
-            case emberCommon::FormatFlag::rgb16_uint: return vulkanRendererBackend::Formats::r16g16b16_uint;
-            case emberCommon::FormatFlag::rgb16_sint: return vulkanRendererBackend::Formats::r16g16b16_sint;
-            case emberCommon::FormatFlag::rgb16_uscaled: return vulkanRendererBackend::Formats::r16g16b16_uscaled;
-            case emberCommon::FormatFlag::rgb16_sscaled: return vulkanRendererBackend::Formats::r16g16b16_sscaled;
-            case emberCommon::FormatFlag::rgb16_unorm: return vulkanRendererBackend::Formats::r16g16b16_unorm;
-            case emberCommon::FormatFlag::rgb16_snorm: return vulkanRendererBackend::Formats::r16g16b16_snorm;
-            case emberCommon::FormatFlag::rgb16_sfloat: return vulkanRendererBackend::Formats::r16g16b16_sfloat;
-            case emberCommon::FormatFlag::rgb32_uint: return vulkanRendererBackend::Formats::r32g32b32_uint;
-            case emberCommon::FormatFlag::rgb32_sint: return vulkanRendererBackend::Formats::r32g32b32_sint;
-            case emberCommon::FormatFlag::rgb32_sfloat: return vulkanRendererBackend::Formats::r32g32b32_sfloat;
-            case emberCommon::FormatFlag::rgb64_uint: return vulkanRendererBackend::Formats::r64g64b64_uint;
-            case emberCommon::FormatFlag::rgb64_sint: return vulkanRendererBackend::Formats::r64g64b64_sint;
-            case emberCommon::FormatFlag::rgb64_sfloat: return vulkanRendererBackend::Formats::r64g64b64_sfloat;
-            case emberCommon::FormatFlag::rgba08_srgb: return vulkanRendererBackend::Formats::r8g8b8a8_srgb;
-            case emberCommon::FormatFlag::rgba08_uint: return vulkanRendererBackend::Formats::r8g8b8a8_uint;
-            case emberCommon::FormatFlag::rgba08_sint: return vulkanRendererBackend::Formats::r8g8b8a8_sint;
-            case emberCommon::FormatFlag::rgba08_uscaled: return vulkanRendererBackend::Formats::r8g8b8a8_uscaled;
-            case emberCommon::FormatFlag::rgba08_sscaled: return vulkanRendererBackend::Formats::r8g8b8a8_sscaled;
-            case emberCommon::FormatFlag::rgba08_unorm: return vulkanRendererBackend::Formats::r8g8b8a8_unorm;
-            case emberCommon::FormatFlag::rgba08_snorm: return vulkanRendererBackend::Formats::r8g8b8a8_snorm;
-            case emberCommon::FormatFlag::rgba16_uint: return vulkanRendererBackend::Formats::r16g16b16a16_uint;
-            case emberCommon::FormatFlag::rgba16_sint: return vulkanRendererBackend::Formats::r16g16b16a16_sint;
-            case emberCommon::FormatFlag::rgba16_uscaled: return vulkanRendererBackend::Formats::r16g16b16a16_uscaled;
-            case emberCommon::FormatFlag::rgba16_sscaled: return vulkanRendererBackend::Formats::r16g16b16a16_sscaled;
-            case emberCommon::FormatFlag::rgba16_unorm: return vulkanRendererBackend::Formats::r16g16b16a16_unorm;
-            case emberCommon::FormatFlag::rgba16_snorm: return vulkanRendererBackend::Formats::r16g16b16a16_snorm;
-            case emberCommon::FormatFlag::rgba16_sfloat: return vulkanRendererBackend::Formats::r16g16b16a16_sfloat;
-            case emberCommon::FormatFlag::rgba32_uint: return vulkanRendererBackend::Formats::r32g32b32a32_uint;
-            case emberCommon::FormatFlag::rgba32_sint: return vulkanRendererBackend::Formats::r32g32b32a32_sint;
-            case emberCommon::FormatFlag::rgba32_sfloat: return vulkanRendererBackend::Formats::r32g32b32a32_sfloat;
-            case emberCommon::FormatFlag::rgba64_uint: return vulkanRendererBackend::Formats::r64g64b64a64_uint;
-            case emberCommon::FormatFlag::rgba64_sint: return vulkanRendererBackend::Formats::r64g64b64a64_sint;
-            case emberCommon::FormatFlag::rgba64_sfloat: return vulkanRendererBackend::Formats::r64g64b64a64_sfloat;
-            default: return vulkanRendererBackend::Formats::undefined;
+            case emberCommon::FormatFlag::r08_srgb: return VK_FORMAT_R8_SRGB;
+            case emberCommon::FormatFlag::r08_uint: return VK_FORMAT_R8_UINT;
+            case emberCommon::FormatFlag::r08_sint: return VK_FORMAT_R8_SINT;
+            case emberCommon::FormatFlag::r08_uscaled: return VK_FORMAT_R8_USCALED;
+            case emberCommon::FormatFlag::r08_sscaled: return VK_FORMAT_R8_SSCALED;
+            case emberCommon::FormatFlag::r08_unorm: return VK_FORMAT_R8_UNORM;
+            case emberCommon::FormatFlag::r08_snorm: return VK_FORMAT_R8_SNORM;
+            case emberCommon::FormatFlag::r16_uint: return VK_FORMAT_R16_UINT;
+            case emberCommon::FormatFlag::r16_sint: return VK_FORMAT_R16_SINT;
+            case emberCommon::FormatFlag::r16_uscaled: return VK_FORMAT_R16_USCALED;
+            case emberCommon::FormatFlag::r16_sscaled: return VK_FORMAT_R16_SSCALED;
+            case emberCommon::FormatFlag::r16_unorm: return VK_FORMAT_R16_UNORM;
+            case emberCommon::FormatFlag::r16_snorm: return VK_FORMAT_R16_SNORM;
+            case emberCommon::FormatFlag::r16_sfloat: return VK_FORMAT_R16_SFLOAT;
+            case emberCommon::FormatFlag::r32_uint: return VK_FORMAT_R32_UINT;
+            case emberCommon::FormatFlag::r32_sint: return VK_FORMAT_R32_SINT;
+            case emberCommon::FormatFlag::r32_sfloat: return VK_FORMAT_R32_SFLOAT;
+            case emberCommon::FormatFlag::r64_uint: return VK_FORMAT_R64_UINT;
+            case emberCommon::FormatFlag::r64_sint: return VK_FORMAT_R64_SINT;
+            case emberCommon::FormatFlag::r64_sfloat: return VK_FORMAT_R64_SFLOAT;
+            case emberCommon::FormatFlag::rg08_srgb: return VK_FORMAT_R8G8_SRGB;
+            case emberCommon::FormatFlag::rg08_uint: return VK_FORMAT_R8G8_UINT;
+            case emberCommon::FormatFlag::rg08_sint: return VK_FORMAT_R8G8_SINT;
+            case emberCommon::FormatFlag::rg08_uscaled: return VK_FORMAT_R8G8_USCALED;
+            case emberCommon::FormatFlag::rg08_sscaled: return VK_FORMAT_R8G8_SSCALED;
+            case emberCommon::FormatFlag::rg08_unorm: return VK_FORMAT_R8G8_UNORM;
+            case emberCommon::FormatFlag::rg08_snorm: return VK_FORMAT_R8G8_SNORM;
+            case emberCommon::FormatFlag::rg16_uint: return VK_FORMAT_R16G16_UINT;
+            case emberCommon::FormatFlag::rg16_sint: return VK_FORMAT_R16G16_SINT;
+            case emberCommon::FormatFlag::rg16_uscaled: return VK_FORMAT_R16G16_USCALED;
+            case emberCommon::FormatFlag::rg16_sscaled: return VK_FORMAT_R16G16_SSCALED;
+            case emberCommon::FormatFlag::rg16_unorm: return VK_FORMAT_R16G16_UNORM;
+            case emberCommon::FormatFlag::rg16_snorm: return VK_FORMAT_R16G16_SNORM;
+            case emberCommon::FormatFlag::rg16_sfloat: return VK_FORMAT_R16G16_SFLOAT;
+            case emberCommon::FormatFlag::rg32_uint: return VK_FORMAT_R32G32_UINT;
+            case emberCommon::FormatFlag::rg32_sint: return VK_FORMAT_R32G32_SINT;
+            case emberCommon::FormatFlag::rg32_sfloat: return VK_FORMAT_R32G32_SFLOAT;
+            case emberCommon::FormatFlag::rg64_uint: return VK_FORMAT_R64G64_UINT;
+            case emberCommon::FormatFlag::rg64_sint: return VK_FORMAT_R64G64_SINT;
+            case emberCommon::FormatFlag::rg64_sfloat: return VK_FORMAT_R64G64_SFLOAT;
+            case emberCommon::FormatFlag::rgb08_srgb: return VK_FORMAT_R8G8B8_SRGB;
+            case emberCommon::FormatFlag::rgb08_uint: return VK_FORMAT_R8G8B8_UINT;
+            case emberCommon::FormatFlag::rgb08_sint: return VK_FORMAT_R8G8B8_SINT;
+            case emberCommon::FormatFlag::rgb08_uscaled: return VK_FORMAT_R8G8B8_USCALED;
+            case emberCommon::FormatFlag::rgb08_sscaled: return VK_FORMAT_R8G8B8_SSCALED;
+            case emberCommon::FormatFlag::rgb08_unorm: return VK_FORMAT_R8G8B8_UNORM;
+            case emberCommon::FormatFlag::rgb08_snorm: return VK_FORMAT_R8G8B8_SNORM;
+            case emberCommon::FormatFlag::rgb16_uint: return VK_FORMAT_R16G16B16_UINT;
+            case emberCommon::FormatFlag::rgb16_sint: return VK_FORMAT_R16G16B16_SINT;
+            case emberCommon::FormatFlag::rgb16_uscaled: return VK_FORMAT_R16G16B16_USCALED;
+            case emberCommon::FormatFlag::rgb16_sscaled: return VK_FORMAT_R16G16B16_SSCALED;
+            case emberCommon::FormatFlag::rgb16_unorm: return VK_FORMAT_R16G16B16_UNORM;
+            case emberCommon::FormatFlag::rgb16_snorm: return VK_FORMAT_R16G16B16_SNORM;
+            case emberCommon::FormatFlag::rgb16_sfloat: return VK_FORMAT_R16G16B16_SFLOAT;
+            case emberCommon::FormatFlag::rgb32_uint: return VK_FORMAT_R32G32B32_UINT;
+            case emberCommon::FormatFlag::rgb32_sint: return VK_FORMAT_R32G32B32_SINT;
+            case emberCommon::FormatFlag::rgb32_sfloat: return VK_FORMAT_R32G32B32_SFLOAT;
+            case emberCommon::FormatFlag::rgb64_uint: return VK_FORMAT_R64G64B64_UINT;
+            case emberCommon::FormatFlag::rgb64_sint: return VK_FORMAT_R64G64B64_SINT;
+            case emberCommon::FormatFlag::rgb64_sfloat: return VK_FORMAT_R64G64B64_SFLOAT;
+            case emberCommon::FormatFlag::rgba08_srgb: return VK_FORMAT_R8G8B8A8_SRGB;
+            case emberCommon::FormatFlag::rgba08_uint: return VK_FORMAT_R8G8B8A8_UINT;
+            case emberCommon::FormatFlag::rgba08_sint: return VK_FORMAT_R8G8B8A8_SINT;
+            case emberCommon::FormatFlag::rgba08_uscaled: return VK_FORMAT_R8G8B8A8_USCALED;
+            case emberCommon::FormatFlag::rgba08_sscaled: return VK_FORMAT_R8G8B8A8_SSCALED;
+            case emberCommon::FormatFlag::rgba08_unorm: return VK_FORMAT_R8G8B8A8_UNORM;
+            case emberCommon::FormatFlag::rgba08_snorm: return VK_FORMAT_R8G8B8A8_SNORM;
+            case emberCommon::FormatFlag::rgba16_uint: return VK_FORMAT_R16G16B16A16_UINT;
+            case emberCommon::FormatFlag::rgba16_sint: return VK_FORMAT_R16G16B16A16_SINT;
+            case emberCommon::FormatFlag::rgba16_uscaled: return VK_FORMAT_R16G16B16A16_USCALED;
+            case emberCommon::FormatFlag::rgba16_sscaled: return VK_FORMAT_R16G16B16A16_SSCALED;
+            case emberCommon::FormatFlag::rgba16_unorm: return VK_FORMAT_R16G16B16A16_UNORM;
+            case emberCommon::FormatFlag::rgba16_snorm: return VK_FORMAT_R16G16B16A16_SNORM;
+            case emberCommon::FormatFlag::rgba16_sfloat: return VK_FORMAT_R16G16B16A16_SFLOAT;
+            case emberCommon::FormatFlag::rgba32_uint: return VK_FORMAT_R32G32B32A32_UINT;
+            case emberCommon::FormatFlag::rgba32_sint: return VK_FORMAT_R32G32B32A32_SINT;
+            case emberCommon::FormatFlag::rgba32_sfloat: return VK_FORMAT_R32G32B32A32_SFLOAT;
+            case emberCommon::FormatFlag::rgba64_uint: return VK_FORMAT_R64G64B64A64_UINT;
+            case emberCommon::FormatFlag::rgba64_sint: return VK_FORMAT_R64G64B64A64_SINT;
+            case emberCommon::FormatFlag::rgba64_sfloat: return VK_FORMAT_R64G64B64A64_SFLOAT;
+            default: return VK_FORMAT_UNDEFINED;
         }
     }
 
-    // vulkanRendererBackend::Format -> emberCommon::TextureFormat:
-    emberCommon::TextureFormat TextureFormatVulkanToCommon(vulkanRendererBackend::Format format)
+    // VkFormat -> emberCommon::TextureFormat:
+    emberCommon::TextureFormat TextureFormatVulkanToCommon(VkFormat format)
     {
         switch (format)
         {

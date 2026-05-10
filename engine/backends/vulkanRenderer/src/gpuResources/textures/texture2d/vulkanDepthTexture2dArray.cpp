@@ -10,7 +10,7 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Desctructor:
-	DepthTexture2dArray::DepthTexture2dArray(Format format, int width, int height, uint32_t layerCount)
+	DepthTexture2dArray::DepthTexture2dArray(VkFormat format, int width, int height, uint32_t layerCount)
 	{
 		if (!IsDepthFormat(format))
 			throw std::runtime_error("DepthTexture2dArray::DepthTexture2dArray(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));

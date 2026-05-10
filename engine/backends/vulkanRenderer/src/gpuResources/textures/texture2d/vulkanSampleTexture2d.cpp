@@ -16,7 +16,7 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Desctructor:
-	SampleTexture2d::SampleTexture2d(Format format, int width, int height, void* data)
+	SampleTexture2d::SampleTexture2d(VkFormat format, int width, int height, void* data)
 	{
 		Init(format, width, height);
 		if (data)
@@ -44,7 +44,7 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	void SampleTexture2d::Init(Format format, int width, int height)
+	void SampleTexture2d::Init(VkFormat format, int width, int height)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("SampleTexture2d::Init(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));

@@ -1,13 +1,13 @@
 #pragma once
 #include "commonTextureFormat.h"
-#include "vulkanFormat.h"
+#include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
-    // emberCommon::TextureFormat -> vulkanRendererBackend::Format:
-    [[nodiscard]] vulkanRendererBackend::Format TextureFormatCommonToVulkan(emberCommon::TextureFormat format);
-    // vulkanRendererBackend::Format -> emberCommon::TextureFormat:
-    [[nodiscard]] emberCommon::TextureFormat TextureFormatVulkanToCommon(vulkanRendererBackend::Format format);
+    // emberCommon::TextureFormat -> VkFormat:
+    [[nodiscard]] VkFormat TextureFormatCommonToVulkan(emberCommon::TextureFormat format);
+    // VkFormat -> emberCommon::TextureFormat:
+    [[nodiscard]] emberCommon::TextureFormat TextureFormatVulkanToCommon(VkFormat format);
 }

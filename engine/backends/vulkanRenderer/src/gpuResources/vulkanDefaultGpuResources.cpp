@@ -61,12 +61,12 @@ namespace vulkanRendererBackend
 		// Buffers:
 		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, sizeof(int));
 		// Textures:
-		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>(Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::white);
-		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>(Formats::r8g8b8a8_unorm, 1, 1, (void*)&Float4::up);
+		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, (void*)&Float4::white);
+		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, (void*)&Float4::up);
 		std::array<Float4, 6> whiteFaces = { Float4::white, Float4::white, Float4::white, Float4::white, Float4::white, Float4::white };
-		s_pDefaultSampleTextureCube = std::make_unique<SampleTextureCube>(Formats::r32g32b32a32_sfloat, 1, 1, whiteFaces.data());
-		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>(Formats::d32_sfloat, 2, 1, 1);
-		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>(Formats::r32g32b32a32_sfloat, 1, 1, (void*)&Float4::one);
+		s_pDefaultSampleTextureCube = std::make_unique<SampleTextureCube>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, whiteFaces.data());
+		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>(VK_FORMAT_D32_SFLOAT, 2, 1, 1);
+		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, (void*)&Float4::one);
 		// Materials:
 		s_pDefaultPresentMaterial = std::make_unique<Material>(Material::CreatePresent("presentMaterial", shadersBinDirectory / "present.vert.spv", shadersBinDirectory / "present.frag.spv"));
 		s_pDefaultShadowMaterial = std::make_unique<Material>(Material::CreateShadow("shadowMaterial", shadowMapResolution));

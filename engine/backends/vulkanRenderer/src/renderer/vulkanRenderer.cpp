@@ -460,7 +460,7 @@ namespace vulkanRendererBackend
 	//}
 	emberBackendInterface::ITexture* Renderer::CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
-		Format vulkanFormat = TextureFormatCommonToVulkan(format);
+		VkFormat vulkanFormat = TextureFormatCommonToVulkan(format);
 		emberBackendInterface::ITexture* pITexture = nullptr;
 		switch (usage)
 		{
@@ -487,7 +487,7 @@ namespace vulkanRendererBackend
 	//}
 	emberBackendInterface::ITexture* Renderer::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
-		Format vulkanFormat = TextureFormatCommonToVulkan(format);
+		VkFormat vulkanFormat = TextureFormatCommonToVulkan(format);
 		emberBackendInterface::ITexture* pITexture = nullptr;
 		switch (usage)
 		{

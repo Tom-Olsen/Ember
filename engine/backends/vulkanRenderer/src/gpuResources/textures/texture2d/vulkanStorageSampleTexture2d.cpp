@@ -13,7 +13,7 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Desctructor:
-	StorageSampleTexture2d::StorageSampleTexture2d(Format format, int width, int height, void* data)
+	StorageSampleTexture2d::StorageSampleTexture2d(VkFormat format, int width, int height, void* data)
 	{
 		Init(format, width, height);
 		if (data)
@@ -41,7 +41,7 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	void StorageSampleTexture2d::Init(Format format, int width, int height)
+	void StorageSampleTexture2d::Init(VkFormat format, int width, int height)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("StorageSampleTexture2d::Init(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));

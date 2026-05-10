@@ -10,7 +10,7 @@
 namespace vulkanRendererBackend
 {
 	// Static members:
-	Format ShadowRenderPass::s_shadowMapFormat = Formats::d32_sfloat;
+	VkFormat ShadowRenderPass::s_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
 
 
 
@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 	ShadowRenderPass::ShadowRenderPass(uint32_t shadowMapResolution, uint32_t maxLightsCount)
 	{
 		// Create shadow map texture:
-		m_shadowMaps = std::make_unique<DepthTexture2dArray>((VkFormat)s_shadowMapFormat, shadowMapResolution, shadowMapResolution, maxLightsCount);
+		m_shadowMaps = std::make_unique<DepthTexture2dArray>(s_shadowMapFormat, shadowMapResolution, shadowMapResolution, maxLightsCount);
 		CreateRenderpass();
 		CreateFramebuffers(shadowMapResolution, maxLightsCount);
 		NAME_VK_OBJECT(m_renderPass, "shadowRenderPass");
@@ -43,7 +43,7 @@ namespace vulkanRendererBackend
 	{
 		// Attachment description:
 		VkAttachmentDescription attachment = {};
-		attachment.format = static_cast<VkFormat>(s_shadowMapFormat);
+		attachment.format = s_shadowMapFormat;
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering.
 		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store for later render passes.

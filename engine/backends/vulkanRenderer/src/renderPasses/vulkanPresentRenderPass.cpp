@@ -30,7 +30,7 @@ namespace vulkanRendererBackend
 	{
 		// Attachments:
 		VkAttachmentDescription attachment = {};
-		attachment.format = static_cast<VkFormat>(Context::GetSurface()->GetSurfaceFormat().format);
+		attachment.format = Context::GetSurface()->GetSurfaceFormat().format;
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;

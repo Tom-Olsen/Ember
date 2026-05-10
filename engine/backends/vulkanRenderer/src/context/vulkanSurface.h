@@ -1,6 +1,5 @@
 #pragma once
 #include "emberMath.h"
-#include "vulkanFormat.h"
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -25,7 +24,7 @@ namespace vulkanRendererBackend
 
 	struct SurfaceFormat
 	{
-		Format format;
+		VkFormat format;
 		VkColorSpaceKHR colorSpace;
 	};
 

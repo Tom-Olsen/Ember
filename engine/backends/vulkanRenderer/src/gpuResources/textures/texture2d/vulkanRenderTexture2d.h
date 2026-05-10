@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		RenderTexture2d(Format format, int width, int height);
+		RenderTexture2d(VkFormat format, int width, int height);
 		~RenderTexture2d();
 
 		// Non-copyable:

@@ -70,9 +70,6 @@ source_group("Renderer" FILES ${RENDERER_FILES})
 file(GLOB RENDER_PASSES_FILES "src/renderPasses/*.*")
 source_group("Render Passes" FILES ${RENDER_PASSES_FILES})
 
-file(GLOB TYPES_FILES "src/types/*.*")
-source_group("Types" FILES ${TYPES_FILES})
-
 file(GLOB UTILITY_FILES "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
@@ -112,7 +109,6 @@ add_library(${TARGET_NAME} ${LIB_TYPE}
     ${PUSH_CONSTANTS_FILES}
     ${RENDERER_FILES}
     ${RENDER_PASSES_FILES}
-    ${TYPES_FILES}
     ${UTILITY_FILES}
     ${COMMON_FILES}
     ${GUI_INTERFACE_FILES}
@@ -137,7 +133,6 @@ target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderer
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPasses
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/types
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
     ${ENGINE_COMMON_DIR}
     ${ENGINE_INTERFACES_DIR}/gui

@@ -104,7 +104,7 @@ namespace vulkanRendererBackend
 		VkSwapchainCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 		createInfo.surface = m_pSurface->GetVkSurfaceKHR();
 		createInfo.minImageCount = imageCount;
-		createInfo.imageFormat = static_cast<VkFormat>(m_pSurface->GetSurfaceFormat().format);
+		createInfo.imageFormat = m_pSurface->GetSurfaceFormat().format;
 		createInfo.imageColorSpace = m_pSurface->GetSurfaceFormat().colorSpace;
 		Uint2 surfaceExtent = m_pSurface->GetCurrentExtent();
 		createInfo.imageExtent = VkExtent2D{surfaceExtent.x, surfaceExtent.y};
@@ -133,7 +133,7 @@ namespace vulkanRendererBackend
 			VkImageViewCreateInfo createInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 			createInfo.image = m_images[i];
 			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			createInfo.format = static_cast<VkFormat>(m_pSurface->GetSurfaceFormat().format);
+			createInfo.format = m_pSurface->GetSurfaceFormat().format;
 			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
