@@ -198,19 +198,17 @@ namespace vulkanRendererBackend
 	}
 	void Texture::CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, Format format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
 	{
-		ImageCreateInfo imageInfo = {};
+		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		imageInfo.imageType = imageType;
-		imageInfo.extent.x = m_width;
-		imageInfo.extent.y = m_height;
-		imageInfo.extent.z = m_depth;
+		imageInfo.extent = { m_width, m_height, m_depth };
 		imageInfo.mipLevels = subresourceRange.levelCount;
 		imageInfo.arrayLayers = subresourceRange.layerCount;
-		imageInfo.format = format;
+		imageInfo.format = static_cast<VkFormat>(format);
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		imageInfo.usages = usageFlags;
+		imageInfo.usage = usageFlags;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		imageInfo.sampleCountFlags = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.flags = imageFlags;
 		imageInfo.queueFamilyIndexCount = 1;
 		imageInfo.pQueueFamilyIndices = &queue.familyIndex;

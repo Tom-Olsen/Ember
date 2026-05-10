@@ -81,7 +81,7 @@ namespace vulkanRendererBackend
 		std::array<VkAttachmentDescription, 3> attachments{};
 		{
 			// Multisampled color attachment description:
-			attachments[0].format = static_cast<VkFormat>(m_pRenderTextures[0]->GetVmaImage()->GetFormat());
+			attachments[0].format = m_pRenderTextures[0]->GetVmaImage()->GetFormat();
 			attachments[0].samples = Context::GetMsaaSamples();											// multisampling count
 			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;										// clear framebuffer to black before rendering
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;									// no need to store multisampls after render
@@ -101,7 +101,7 @@ namespace vulkanRendererBackend
 			attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 			// Color resolve attachment description: (resolve multisampled fragments)
-			attachments[2].format = static_cast<VkFormat>(m_pRenderTextures[0]->GetVmaImage()->GetFormat());
+			attachments[2].format = m_pRenderTextures[0]->GetVmaImage()->GetFormat();
 			attachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -165,19 +165,17 @@ namespace vulkanRendererBackend
 			subresourceRange.baseArrayLayer = 0;
 			subresourceRange.layerCount = 1;
 
-			ImageCreateInfo imageInfo = {};
+			VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 			imageInfo.imageType = VK_IMAGE_TYPE_2D;
-			imageInfo.extent.x = m_pRenderTextures[frameIndex]->GetWidth();
-			imageInfo.extent.y = m_pRenderTextures[frameIndex]->GetHeight();
-			imageInfo.extent.z = 1;
+			imageInfo.extent = { m_pRenderTextures[frameIndex]->GetWidth(), m_pRenderTextures[frameIndex]->GetHeight(), 1 };
 			imageInfo.mipLevels = 1;
 			imageInfo.arrayLayers = 1;
 			imageInfo.format = m_pRenderTextures[frameIndex]->GetVmaImage()->GetFormat();
 			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			imageInfo.usages = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			imageInfo.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
+			imageInfo.samples = Context::GetMsaaSamples();
 			imageInfo.flags = 0;
 
 			VmaAllocationCreateInfo allocationInfo = {};
@@ -204,19 +202,17 @@ namespace vulkanRendererBackend
 			subresourceRange.baseArrayLayer = 0;
 			subresourceRange.layerCount = 1;
 
-			ImageCreateInfo imageInfo = {};
+			VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 			imageInfo.imageType = VK_IMAGE_TYPE_2D;
-			imageInfo.extent.x = m_pRenderTextures[frameIndex]->GetWidth();
-			imageInfo.extent.y = m_pRenderTextures[frameIndex]->GetHeight();
-			imageInfo.extent.z = 1;
+			imageInfo.extent = { m_pRenderTextures[frameIndex]->GetWidth(), m_pRenderTextures[frameIndex]->GetHeight(), 1 };
 			imageInfo.mipLevels = 1;
 			imageInfo.arrayLayers = 1;
-			imageInfo.format = m_depthFormat;
+			imageInfo.format = static_cast<VkFormat>(m_depthFormat);
 			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			imageInfo.usages = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			imageInfo.sampleCountFlags = Context::GetMsaaSamples();
+			imageInfo.samples = Context::GetMsaaSamples();
 			imageInfo.flags = 0;
 
 			VmaAllocationCreateInfo allocationInfo = {};

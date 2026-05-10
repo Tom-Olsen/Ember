@@ -1,8 +1,8 @@
 #pragma once
+#include "emberMath.h"
 #include "vk_mem_alloc.h"
 #include "vulkanAccessMask.h"
 #include "vulkanDeviceQueue.h"
-#include "vulkanImageCreateInfo.h"
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -29,14 +29,14 @@ namespace vulkanRendererBackend
 		VkImage m_image;
 		VmaAllocation m_allocation;
 		VkImageView m_imageView;
-		ImageCreateInfo m_imageInfo;
+		VkImageCreateInfo m_imageInfo;
 		VmaAllocationCreateInfo m_allocationInfo;
 		VkImageSubresourceRange m_subresourceRange;
 		DeviceQueue m_queue;
 		VkImageLayout m_layout;
 
 	public: // Methods:
-		VmaImage(const ImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue);
+		VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue);
 		~VmaImage();
 
 		// Non-copyable:
@@ -52,7 +52,7 @@ namespace vulkanRendererBackend
 		const VkImage& GetVkImage() const;
 		const VmaAllocation& GetVmaAllocation() const;
 		const VkImageView& GetVkImageView() const;
-		const ImageCreateInfo& GetImageCreateInfo() const;
+		const VkImageCreateInfo& GetImageCreateInfo() const;
 		const VmaAllocationCreateInfo& GetAllocationCreateInfo() const;
 		const VkImageSubresourceRange& GetImageSubresourceRange() const;
 		const DeviceQueue& GetDeviceQueue() const;
@@ -60,8 +60,8 @@ namespace vulkanRendererBackend
 		uint64_t GetWidth() const;
 		uint64_t GetHeight() const;
 		uint64_t GetDepth() const;
-		const Uint3& GetExtent() const;
-		Format GetFormat() const;
+		Uint3 GetExtent() const;
+		VkFormat GetFormat() const;
 		VkImageSubresourceLayers GetImageSubresourceLayers() const;
 
 		// Setters:

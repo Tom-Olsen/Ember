@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaImage::VmaImage(const ImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue)
+	VmaImage::VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue)
 	{
 		m_imageInfo = imageInfo;
 		m_allocationInfo = allocationInfo;
@@ -26,32 +26,15 @@ namespace vulkanRendererBackend
 		m_queue = queue;
 		m_layout = m_imageInfo.initialLayout;
 
-		// Convert ImageCreateInfo -> VkImageCreateInfo:
-		VkImageCreateInfo vkImageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-		vkImageInfo.pNext = m_imageInfo.pNext;
-		vkImageInfo.flags = m_imageInfo.flags;
-		vkImageInfo.imageType = m_imageInfo.imageType;
-		vkImageInfo.format = static_cast<VkFormat>(m_imageInfo.format);
-		vkImageInfo.extent = VkExtent3D{ m_imageInfo.extent.x, m_imageInfo.extent.y, m_imageInfo.extent.z };
-		vkImageInfo.mipLevels = m_imageInfo.mipLevels;
-		vkImageInfo.arrayLayers = m_imageInfo.arrayLayers;
-		vkImageInfo.samples = m_imageInfo.sampleCountFlags;
-		vkImageInfo.tiling = m_imageInfo.tiling;
-		vkImageInfo.usage = m_imageInfo.usages;
-		vkImageInfo.sharingMode = m_imageInfo.sharingMode;
-		vkImageInfo.queueFamilyIndexCount = m_imageInfo.queueFamilyIndexCount;
-		vkImageInfo.pQueueFamilyIndices = m_imageInfo.pQueueFamilyIndices;
-		vkImageInfo.initialLayout = m_imageInfo.initialLayout;
-
 		// Create image:
-		VKA(vmaCreateImage(Context::GetVmaAllocator(), &vkImageInfo, &m_allocationInfo, &m_image, &m_allocation, nullptr));
+		VKA(vmaCreateImage(Context::GetVmaAllocator(), &m_imageInfo, &m_allocationInfo, &m_image, &m_allocation, nullptr));
 		NAME_VK_OBJECT(m_image, "Image" + std::to_string(s_index));
 
 		// Create image view:
 		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 		viewInfo.image = m_image;
 		viewInfo.viewType = viewType;
-		viewInfo.format = static_cast<VkFormat>(m_imageInfo.format);
+		viewInfo.format = m_imageInfo.format;
 		viewInfo.subresourceRange.aspectMask = m_subresourceRange.aspectMask;
 		viewInfo.subresourceRange.baseArrayLayer = m_subresourceRange.baseArrayLayer;
 		viewInfo.subresourceRange.baseMipLevel = m_subresourceRange.baseMipLevel;
@@ -102,7 +85,7 @@ namespace vulkanRendererBackend
 	{
 		return m_imageView;
 	}
-	const ImageCreateInfo& VmaImage::GetImageCreateInfo() const
+	const VkImageCreateInfo& VmaImage::GetImageCreateInfo() const
 	{
 		return m_imageInfo;
 	}
@@ -124,21 +107,21 @@ namespace vulkanRendererBackend
 	}
 	uint64_t VmaImage::GetWidth() const
 	{
-		return m_imageInfo.extent.x;
+		return m_imageInfo.extent.width;
 	}
 	uint64_t VmaImage::GetHeight() const
 	{
-		return m_imageInfo.extent.y;
+		return m_imageInfo.extent.height;
 	}
 	uint64_t VmaImage::GetDepth() const
 	{
-		return m_imageInfo.extent.z;
+		return m_imageInfo.extent.depth;
 	}
-	const Uint3& VmaImage::GetExtent() const
+	Uint3 VmaImage::GetExtent() const
 	{
-		return m_imageInfo.extent;
+		return Uint3(m_imageInfo.extent.width, m_imageInfo.extent.height, m_imageInfo.extent.depth);
 	}
-	Format VmaImage::GetFormat() const
+	VkFormat VmaImage::GetFormat() const
 	{
 		return m_imageInfo.format;
 	}
@@ -415,10 +398,10 @@ namespace vulkanRendererBackend
 		other.m_image = VK_NULL_HANDLE;
 		other.m_allocation = nullptr;
 		other.m_imageView = VK_NULL_HANDLE;
-		other.m_imageInfo = {};
+		other.m_imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		other.m_allocationInfo = {};
 		other.m_subresourceRange = {};
 		other.m_queue = {};
-		other.m_layout = VK_IMAGE_LAYOUT_MAX_ENUM;
+		other.m_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	}
 }
