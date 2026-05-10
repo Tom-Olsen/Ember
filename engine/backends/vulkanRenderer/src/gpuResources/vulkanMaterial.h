@@ -44,7 +44,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		Type m_type;
 		emberCommon::RenderMode m_renderMode;
-		uint32_t m_renderQueue; // opaque=0-999, transparent=1000-1999, skybox=2000-...
+		int32_t m_renderQueue; // opaque=0-999, transparent=1000-1999, skybox=2000-...
 
 	private: // Methods:
 		// Constructor:
@@ -55,7 +55,7 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Factories/Destructor:
-		static Material CreateForward(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static Material CreateForward(const std::string& name, emberCommon::RenderMode renderMode, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static Material CreateShadow(const std::string& name, uint32_t shadowMapResolution);
 		static Material CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		~Material();
@@ -69,12 +69,12 @@ namespace vulkanRendererBackend
 		Material& operator=(Material&& other) noexcept;
 
 		// Setters:
-		void SetRenderQueue(uint32_t renderQueue) override;
+		void SetRenderQueue(int32_t renderQueue) override;
 		void SetRenderMode(emberCommon::RenderMode renderMode) override;
 
 		// Getters:
 		const std::string& GetName() const override;
-		uint32_t GetRenderQueue() const override;
+		int32_t GetRenderQueue() const override;
 		emberCommon::RenderMode GetRenderMode() const override;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
 		const Pipeline* GetPipeline(const Mesh* pMesh) const;

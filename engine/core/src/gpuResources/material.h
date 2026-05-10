@@ -37,7 +37,7 @@ namespace emberEngine
 		~Material();
 
 		// Creation/Destruction: (register/delete from MaterialManager)
-		static Material Create(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		static Material Create(emberCommon::RenderMode renderMode, const std::string& name, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
 		void Destroy();
 
 		// Copyable:
@@ -49,12 +49,12 @@ namespace emberEngine
 		Material& operator=(Material&& other) = default;
 
 		// Setters:
-		void SetRenderQueue(uint32_t renderQueue);
+		void SetRenderQueue(int32_t renderQueue);
 		void SetRenderMode(emberCommon::RenderMode renderMode);
 
 		// Getters:
 		const std::string& GetName() const;
-		uint32_t GetRenderQueue() const;
+		int32_t GetRenderQueue() const;
 		emberCommon::RenderMode GetRenderMode() const;
 		bool IsValid() const;
 

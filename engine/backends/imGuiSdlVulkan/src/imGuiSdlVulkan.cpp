@@ -223,7 +223,7 @@ namespace imGuiSdlVulkanBackend
 		style.FontScaleDpi						= imGuiStyle.FontScaleDpi;
 		style.Alpha								= imGuiStyle.Alpha;
 		style.DisabledAlpha						= imGuiStyle.DisabledAlpha;
-		style.WindowPadding						= Float2{ imGuiStyle.WindowPadding.x, imGuiStyle.WindowPadding.x};
+		style.WindowPadding						= Float2{ imGuiStyle.WindowPadding.x, imGuiStyle.WindowPadding.y};
 		style.WindowRounding					= imGuiStyle.WindowRounding;
 		style.WindowBorderSize					= imGuiStyle.WindowBorderSize;
 		style.WindowBorderHoverPadding			= imGuiStyle.WindowBorderHoverPadding;

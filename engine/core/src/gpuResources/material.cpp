@@ -33,7 +33,7 @@ namespace emberEngine
 
 
 	// Creation/Destruction: (register/delete from MaterialManager)
-	Material Material::Create(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::Create(emberCommon::RenderMode renderMode, const std::string& name, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		return MaterialManager::CreateMaterial(renderMode, name, renderQueue, vertexSpv, fragmentSpv);
 	}
@@ -50,7 +50,7 @@ namespace emberEngine
 
 
 	// Setters:
-	void Material::SetRenderQueue(uint32_t renderQueue)
+	void Material::SetRenderQueue(int32_t renderQueue)
 	{
 		m_pIMaterial->SetRenderQueue(renderQueue);
 	}
@@ -66,7 +66,7 @@ namespace emberEngine
 	{
 		return m_pIMaterial->GetName();
 	}
-	uint32_t Material::GetRenderQueue() const
+	int32_t Material::GetRenderQueue() const
 	{
 		return m_pIMaterial->GetRenderQueue();
 	}

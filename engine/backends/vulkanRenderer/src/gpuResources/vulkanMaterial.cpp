@@ -52,7 +52,7 @@ namespace vulkanRendererBackend
 
 	// Public methods:
 	// Factories/Destructor:
-	Material Material::CreateForward(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreateForward(const std::string& name, emberCommon::RenderMode renderMode, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		Material material = Material(name);
 		material.m_type = Type::forward;
@@ -239,7 +239,7 @@ namespace vulkanRendererBackend
 
     
 	// Setters:
-	void Material::SetRenderQueue(uint32_t renderQueue)
+	void Material::SetRenderQueue(int32_t renderQueue)
 	{
 		m_renderQueue = renderQueue;
 	}
@@ -258,7 +258,7 @@ namespace vulkanRendererBackend
 	{
 		return m_name;
 	}
-	uint32_t Material::GetRenderQueue() const
+	int32_t Material::GetRenderQueue() const
 	{
 		return m_renderQueue;
 	}

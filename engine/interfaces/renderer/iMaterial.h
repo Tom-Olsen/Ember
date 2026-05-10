@@ -17,12 +17,12 @@ namespace emberBackendInterface
         virtual ~IMaterial() = default;
 
         // Setters:
-        virtual void SetRenderQueue(uint32_t renderQueue) = 0;
+        virtual void SetRenderQueue(int32_t renderQueue) = 0;
         virtual void SetRenderMode(emberCommon::RenderMode renderMode) = 0;
 
         // Getters:
         virtual const std::string& GetName() const = 0;
-        virtual uint32_t GetRenderQueue() const = 0;
+        virtual int32_t GetRenderQueue() const = 0;
         virtual emberCommon::RenderMode GetRenderMode() const = 0;
         virtual IDescriptorSetBinding* GetShaderDescriptorSetBinding() const = 0;
 
