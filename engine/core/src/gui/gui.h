@@ -56,16 +56,16 @@ namespace emberEngine
 		static Float2 GetContentRegionAvail();
 		static Float2 GetCursorPos();
 		static Float2 GetCursorScreenPos();
-		static Float2 GetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::GuiMouseButton_Left, float lockThreshold= -1.0f);
+		static Float2 GetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold= -1.0f);
 		static emberCommon::GuiStyle GetStyle();
 
 		// Setters:
 		static void SetCursorPos(const Float2& localPos);
 		static void SetCursorScreenPos(const Float2& pos);
-		static void ResetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::GuiMouseButton_Left);
+		static void ResetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left);
 		
 		// Window management:
-		static bool Begin(const char* name, bool* pOpen = nullptr, emberCommon::GuiWindowFlags flags = 0);
+		static bool Begin(const char* name, bool* pOpen = nullptr, emberCommon::GuiWindowFlags flags = emberCommon::GuiWindowFlags::none);
 		static void End();
 		static void PushID(const char* strID);
 		static void PopID();
@@ -79,22 +79,22 @@ namespace emberEngine
 		// State checks:
 		static bool IsItemActive();
 		static bool IsItemActivated();
-		static bool IsMouseDragging(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::GuiMouseButton_Left, float lockThreshold = -1.0f);
+		static bool IsMouseDragging(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f);
 
 		// Widgets:
 		static void TextUnformatted(const char* text, const char* textEnd = nullptr);
 		//static void TextV(const char* format, va_list args); 	// not sure if i want to expose this yet.
 		static void Text(const char* format, ...);
 		static bool Button(const char* label, const Float2& size = Float2::zero);
-		static bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = 0);
+		static bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none);
 		static void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one);
 
 		// Custom Widgets:
 		static bool Checkbox(const std::string& label, bool* value);
-		static bool InputInt(const std::string& label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiWindowFlags flags = 0);
-		static bool DragInt(const std::string& label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiWindowFlags flags = 0);
-		static bool InputFloat(const std::string& label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiWindowFlags flags = 0);
-		static bool DragFloat(const std::string& label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiWindowFlags flags = 0);
+		static bool InputInt(const std::string& label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragInt(const std::string& label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool InputFloat(const std::string& label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragFloat(const std::string& label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
 
 	private: // Methods
 		// Delete all constructors:

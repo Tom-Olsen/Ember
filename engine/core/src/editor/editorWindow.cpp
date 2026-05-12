@@ -48,7 +48,7 @@ namespace emberEngine
 			Render();
 
 			// Let Editor know if this window is focused:
-			m_isFocused = Gui::IsWindowFocused(emberCommon::GuiFocusedFlag::GuiFocusedFlag_RootAndChildWindows);
+			m_isFocused = Gui::IsWindowFocused(emberCommon::GuiFocusedFlags::rootAndChildWindows);
 			if (m_isFocused)
 				Editor::SetFocusedWindow(this);
 		}

@@ -28,7 +28,7 @@ namespace emberEditor
 		{
 			m_name = "Fps";
 			m_ID = 0;
-			m_windowFlags = emberCommon::GuiWindowFlag_None;
+			m_windowFlags = emberCommon::GuiWindowFlags::none;
 			m_wantCaptureEvents = false;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 		}

@@ -1,9 +1,9 @@
 #include "imGuiSdlVulkan.h"
-#include "commonGuiFlags.h"
-#include "commonGuiStyle.h"
-#include "iWindow.h"
 #include "iRenderer.h"
 #include "iTexture.h"
+#include "iWindow.h"
+#include "imGuiConvertGuiFlags.h"
+#include "imGuiConvertGuiStyle.h"
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
@@ -210,87 +210,12 @@ namespace imGuiSdlVulkanBackend
 	}
 	Float2 Gui::GetMouseDragDelta(emberCommon::GuiMouseButton button, float lockThreshold)
 	{
-		ImVec2 mouseDragDelta = ImGui::GetMouseDragDelta(static_cast<ImGuiMouseButton>(button), lockThreshold);
+		ImVec2 mouseDragDelta = ImGui::GetMouseDragDelta(GuiMouseButtonCommonToImGui(button), lockThreshold);
 		return Float2{ mouseDragDelta.x, mouseDragDelta.y };
 	}
-	emberCommon::GuiStyle Gui::GetStyle() const 	// implement later when needed.
+	emberCommon::GuiStyle Gui::GetStyle() const
 	{
-		const ImGuiStyle& imGuiStyle = ImGui::GetStyle();
-	
-		emberCommon::GuiStyle style;
-		style.FontSizeBase						= imGuiStyle.FontSizeBase;
-		style.FontScaleMain						= imGuiStyle.FontScaleMain;
-		style.FontScaleDpi						= imGuiStyle.FontScaleDpi;
-		style.Alpha								= imGuiStyle.Alpha;
-		style.DisabledAlpha						= imGuiStyle.DisabledAlpha;
-		style.WindowPadding						= Float2{ imGuiStyle.WindowPadding.x, imGuiStyle.WindowPadding.y};
-		style.WindowRounding					= imGuiStyle.WindowRounding;
-		style.WindowBorderSize					= imGuiStyle.WindowBorderSize;
-		style.WindowBorderHoverPadding			= imGuiStyle.WindowBorderHoverPadding;
-		style.WindowMinSize						= Float2{ imGuiStyle.WindowMinSize.x, imGuiStyle.WindowMinSize.y };
-		style.WindowTitleAlign					= Float2{ imGuiStyle.WindowTitleAlign.x, imGuiStyle.WindowTitleAlign.y };
-		style.WindowMenuButtonPosition			= static_cast<emberCommon::GuiDir>(imGuiStyle.WindowMenuButtonPosition);
-		style.ChildRounding						= imGuiStyle.ChildRounding;
-		style.ChildBorderSize					= imGuiStyle.ChildBorderSize;
-		style.PopupRounding						= imGuiStyle.PopupRounding;
-		style.PopupBorderSize					= imGuiStyle.PopupBorderSize;
-		style.FramePadding						= Float2{ imGuiStyle.FramePadding.x, imGuiStyle.FramePadding.y };
-		style.FrameRounding						= imGuiStyle.FrameRounding;
-		style.FrameBorderSize					= imGuiStyle.FrameBorderSize;
-		style.ItemSpacing						= Float2{ imGuiStyle.ItemSpacing.x, imGuiStyle.ItemSpacing.y };
-		style.ItemInnerSpacing					= Float2{ imGuiStyle.ItemInnerSpacing.x, imGuiStyle.ItemInnerSpacing.y };
-		style.CellPadding						= Float2{ imGuiStyle.CellPadding.x, imGuiStyle.CellPadding.y };
-		style.TouchExtraPadding					= Float2{ imGuiStyle.TouchExtraPadding.x, imGuiStyle.TouchExtraPadding.y };
-		style.IndentSpacing						= imGuiStyle.IndentSpacing;
-		style.ColumnsMinSpacing					= imGuiStyle.ColumnsMinSpacing;
-		style.ScrollbarSize						= imGuiStyle.ScrollbarSize;
-		style.ScrollbarRounding					= imGuiStyle.ScrollbarRounding;
-		style.ScrollbarPadding					= imGuiStyle.ScrollbarPadding;
-		style.GrabMinSize						= imGuiStyle.GrabMinSize;
-		style.GrabRounding						= imGuiStyle.GrabRounding;
-		style.LogSliderDeadzone					= imGuiStyle.LogSliderDeadzone;
-		style.ImageBorderSize					= imGuiStyle.ImageBorderSize;
-		style.TabRounding						= imGuiStyle.TabRounding;
-		style.TabBorderSize						= imGuiStyle.TabBorderSize;
-		style.TabMinWidthBase					= imGuiStyle.TabMinWidthBase;
-		style.TabMinWidthShrink					= imGuiStyle.TabMinWidthShrink;
-		style.TabCloseButtonMinWidthSelected	= imGuiStyle.TabCloseButtonMinWidthSelected;
-		style.TabCloseButtonMinWidthUnselected	= imGuiStyle.TabCloseButtonMinWidthUnselected;
-		style.TabBarBorderSize					= imGuiStyle.TabBarBorderSize;
-		style.TabBarOverlineSize				= imGuiStyle.TabBarOverlineSize;
-		style.TableAngledHeadersAngle			= imGuiStyle.TableAngledHeadersAngle;
-		style.TableAngledHeadersTextAlign		= Float2{ imGuiStyle.TableAngledHeadersTextAlign.x, imGuiStyle.TableAngledHeadersTextAlign.y };
-		style.TreeLinesFlags					= static_cast<emberCommon::GuiTreeNodeFlags>(imGuiStyle.TreeLinesFlags);
-		style.TreeLinesSize						= imGuiStyle.TreeLinesSize;
-		style.TreeLinesRounding					= imGuiStyle.TreeLinesRounding;
-		style.ColorButtonPosition				= static_cast<emberCommon::GuiDir>(imGuiStyle.ColorButtonPosition);
-		style.ButtonTextAlign					= Float2{ imGuiStyle.ButtonTextAlign.x, imGuiStyle.ButtonTextAlign.y };
-		style.SelectableTextAlign				= Float2{ imGuiStyle.SelectableTextAlign.x, imGuiStyle.SelectableTextAlign.y };
-		style.SeparatorTextBorderSize			= imGuiStyle.SeparatorTextBorderSize;
-		style.SeparatorTextAlign				= Float2{ imGuiStyle.SeparatorTextAlign.x, imGuiStyle.SeparatorTextAlign.y };
-		style.SeparatorTextPadding				= Float2{ imGuiStyle.SeparatorTextPadding.x, imGuiStyle.SeparatorTextPadding.y };
-		style.DisplayWindowPadding				= Float2{ imGuiStyle.DisplayWindowPadding.x, imGuiStyle.DisplayWindowPadding.y };
-		style.DisplaySafeAreaPadding			= Float2{ imGuiStyle.DisplaySafeAreaPadding.x, imGuiStyle.DisplaySafeAreaPadding.y };
-		style.DockingSeparatorSize				= imGuiStyle.DockingSeparatorSize;
-		style.MouseCursorScale					= imGuiStyle.MouseCursorScale;
-		style.AntiAliasedLines					= imGuiStyle.AntiAliasedLines;
-		style.AntiAliasedLinesUseTex			= imGuiStyle.AntiAliasedLinesUseTex;
-		style.AntiAliasedFill					= imGuiStyle.AntiAliasedFill;
-		style.CurveTessellationTol				= imGuiStyle.CurveTessellationTol;
-		style.CircleTessellationMaxError		= imGuiStyle.CircleTessellationMaxError;
-		// Colors;
-		for (int i = 0; i < emberCommon::GuiColCount; ++i)
-		{
-			const ImVec4& c = imGuiStyle.Colors[i];
-			style.Colors[i] = Float4{ c.x, c.y, c.z, c.w };
-		}
-		style.HoverStationaryDelay				= imGuiStyle.HoverStationaryDelay;
-		style.HoverDelayShort					= imGuiStyle.HoverDelayShort;
-		style.HoverDelayNormal					= imGuiStyle.HoverDelayNormal;
-		style.HoverFlagsForTooltipMouse			= static_cast<emberCommon::GuiHoveredFlags>(imGuiStyle.HoverFlagsForTooltipMouse);
-		style.HoverFlagsForTooltipNav			= static_cast<emberCommon::GuiHoveredFlags>(imGuiStyle.HoverFlagsForTooltipNav);
-	
-		return style;
+		return GuiStyleImGuiToCommon(ImGui::GetStyle());
 	}
 
 
@@ -311,7 +236,7 @@ namespace imGuiSdlVulkanBackend
 	}
 	void Gui::ResetMouseDragDelta(emberCommon::GuiMouseButton button)
 	{
-		ImGui::ResetMouseDragDelta(static_cast<ImGuiMouseButton>(button));
+		ImGui::ResetMouseDragDelta(GuiMouseButtonCommonToImGui(button));
 	}
 
 
@@ -319,7 +244,7 @@ namespace imGuiSdlVulkanBackend
 	// Window management:
 	bool Gui::Begin(const char* name, bool* pOpen, emberCommon::GuiWindowFlags flags)
 	{
-		return ImGui::Begin(name, pOpen, static_cast<ImGuiWindowFlags>(flags));
+		return ImGui::Begin(name, pOpen, GuiWindowFlagsCommonToImGui(flags));
 	}
 	void Gui::End()
 	{
@@ -335,7 +260,7 @@ namespace imGuiSdlVulkanBackend
 	}
 	bool Gui::IsWindowFocused(emberCommon::GuiFocusedFlags flags)
 	{
-		return ImGui::IsWindowFocused(static_cast<ImGuiFocusedFlags>(flags));
+		return ImGui::IsWindowFocused(GuiFocusedFlagsCommonToImGui(flags));
 	}
 
 
@@ -368,7 +293,7 @@ namespace imGuiSdlVulkanBackend
 	}
 	bool Gui::IsMouseDragging(emberCommon::GuiMouseButton button, float lockThreshold)
 	{
-		return ImGui::IsMouseDragging(button, lockThreshold);
+		return ImGui::IsMouseDragging(GuiMouseButtonCommonToImGui(button), lockThreshold);
 	}
 
 
@@ -380,11 +305,11 @@ namespace imGuiSdlVulkanBackend
 	}
 	bool Gui::InputInt(const char* label, int* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
 	{
-		return ImGui::InputInt(label, value, step, stepFast, flags);
+		return ImGui::InputInt(label, value, step, stepFast, GuiInputTextFlagsCommonToImGui(flags));
 	}
 	bool Gui::InputFloat(const char* label, float* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
 	{
-		return ImGui::InputFloat(label, value, step, stepFast, format, flags);
+		return ImGui::InputFloat(label, value, step, stepFast, format, GuiInputTextFlagsCommonToImGui(flags));
 	}
 	void Gui::TextUnformatted(const char* text, const char* textEnd)
 	{
@@ -400,7 +325,7 @@ namespace imGuiSdlVulkanBackend
 	}
 	bool Gui::InvisibleButton(const char* strId, const Float2& size, emberCommon::GuiButtonFlags flags)
 	{
-		return ImGui::InvisibleButton(strId, ImVec2{ size.x, size.y }, flags);
+		return ImGui::InvisibleButton(strId, ImVec2{ size.x, size.y }, GuiButtonFlagsCommonToImGui(flags));
 	}
 	void Gui::Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
 	{
@@ -414,17 +339,17 @@ namespace imGuiSdlVulkanBackend
 	{
 		static bool dockspaceOpen = true;
 		static bool optionFullscreen = true;
-		static ImGuiDockNodeFlags dockspaceFlags = emberCommon::GuiWindowFlag_None;
+		static ImGuiDockNodeFlags dockspaceFlags = 0;
 
-		ImGuiWindowFlags windowFlags = emberCommon::GuiWindowFlag_MenuBar | emberCommon::GuiWindowFlag_NoDocking;
+		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 		if (optionFullscreen)
 		{
 			ImGuiViewport* viewport = ImGui::GetMainViewport();
 			ImGui::SetNextWindowPos(viewport->Pos);
 			ImGui::SetNextWindowSize(viewport->Size);
 			ImGui::SetNextWindowViewport(viewport->ID);
-			windowFlags |= emberCommon::GuiWindowFlag_NoTitleBar | emberCommon::GuiWindowFlag_NoResize | emberCommon::GuiWindowFlag_NoMove;
-			windowFlags |= emberCommon::GuiWindowFlag_NoBringToFrontOnFocus | emberCommon::GuiWindowFlag_NoNavFocus;
+			windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+			windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 		}
 
 		// Set up the dockspace

@@ -41,7 +41,7 @@ namespace emberEditor
 		{
 			m_name = "Sph Fluid 2d Gpu";
 			m_ID = 0;
-			m_windowFlags = emberCommon::GuiWindowFlag_None;
+			m_windowFlags = emberCommon::GuiWindowFlags::none;
 			m_wantCaptureEvents = true;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 			m_pScript = pScript;

@@ -22,7 +22,7 @@ namespace emberEditor
 		{
             m_name = "Scene";
             m_ID = 0;
-            m_windowFlags = emberCommon::GuiWindowFlag_NoCollapse | emberCommon::GuiWindowFlag_NoScrollbar | emberCommon::GuiWindowFlag_NoScrollWithMouse;
+            m_windowFlags = emberCommon::GuiWindowFlags::noCollapse | emberCommon::GuiWindowFlags::noScrollbar | emberCommon::GuiWindowFlags::noScrollWithMouse;
             m_wantCaptureEvents = false;
             m_nameID = m_name + "##" + std::to_string(m_ID);
 		}

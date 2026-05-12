@@ -11,11 +11,11 @@ namespace emberEngine
 	class EMBER_CORE_API EditorWindow
 	{
 	protected: // Members:
-		std::string m_name;							// set by derived classes in constructor.
-		int m_ID;									// full id is "m_name##m_ID". For multiple windows with the same name, this ID must be unique.
-		emberCommon::GuiWindowFlags m_windowFlags;	// set by derived classes in constructor.
-		bool m_wantCaptureEvents = true;			// set by derived classes in constructor.
-		std::string m_nameID;						// ideally set in inheritor constructor.
+		std::string m_name;							                                    // set by derived classes in constructor.
+		int m_ID;									                                    // full id is "m_name##m_ID". For multiple windows with the same name, this ID must be unique.
+		emberCommon::GuiWindowFlags m_windowFlags = emberCommon::GuiWindowFlags::none;	// set by derived classes in constructor.
+		bool m_wantCaptureEvents = true;			                                    // set by derived classes in constructor.
+		std::string m_nameID;						                                    // ideally set in inheritor constructor.
 
 		// Automatically set by EditorWindow:
 		bool m_isOpen = true;

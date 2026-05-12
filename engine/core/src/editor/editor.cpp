@@ -61,7 +61,7 @@ namespace emberEngine
 	}
 	float Editor::GetSpacingX()
 	{
-		return Gui::GetStyle().ItemSpacing.x;
+		return Gui::GetStyle().itemSpacing.x;
 	}
 	float Editor::GetWindowWidth()
 	{

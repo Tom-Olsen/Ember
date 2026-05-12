@@ -50,21 +50,21 @@ namespace emberBackendInterface
 		virtual Float2 GetContentRegionAvail() = 0;
 		virtual Float2 GetCursorPos() = 0;
 		virtual Float2 GetCursorScreenPos() = 0;
-		virtual Float2 GetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::GuiMouseButton_Left, float lockThreshold = -1.0f) = 0;
+		virtual Float2 GetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f) = 0;
 		virtual emberCommon::GuiStyle GetStyle() const = 0;
 
 		// Setters:
 		virtual void SetEditorCallbacks(EditorRenderCallback renderCallback, EditorCaptureQueryCallback captureCallback) = 0;
 		virtual void SetCursorPos(const Float2& localPos) = 0;
 		virtual void SetCursorScreenPos(const Float2& pos) = 0;
-		virtual void ResetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::GuiMouseButton_Left) = 0;
+		virtual void ResetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left) = 0;
 
 		// Window management:
-		virtual bool Begin(const char* name, bool* pOpen = nullptr, emberCommon::GuiWindowFlags flags = 0) = 0;
+		virtual bool Begin(const char* name, bool* pOpen = nullptr, emberCommon::GuiWindowFlags flags = emberCommon::GuiWindowFlags::none) = 0;
 		virtual void End() = 0;
 		virtual void PushID(const char* strID) = 0;
 		virtual void PopID() = 0;
-		virtual bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = 0) = 0;
+		virtual bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none) = 0;
 
 		// Layout:
 		virtual void SameLine(float offsetFromStartX = 0.0f, float spacingW = -1.0f) = 0;
@@ -74,12 +74,12 @@ namespace emberBackendInterface
 		// State checks:
 		virtual bool IsItemActive() = 0;
 		virtual bool IsItemActivated() = 0;
-		virtual bool IsMouseDragging(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::GuiMouseButton_Left, float lockThreshold = -1.0f) = 0;
+		virtual bool IsMouseDragging(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f) = 0;
 
 		// Widgets:
 		virtual bool Checkbox(const char* label, bool* value) = 0;
-		virtual bool InputInt(const char* label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = 0) = 0;
-		virtual bool InputFloat(const char* label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = 0) = 0;
+		virtual bool InputInt(const char* label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) = 0;
+		virtual bool InputFloat(const char* label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) = 0;
 		virtual void TextUnformatted(const char* text, const char* textEnd = nullptr) = 0;
 		virtual void TextV(const char* format, va_list args) = 0; 	// mostly for internal use.
 		inline void Text(const char* format, ...)
@@ -90,7 +90,7 @@ namespace emberBackendInterface
 			va_end(args);
 		}
 		virtual bool Button(const char* label, const Float2& size = Float2::zero) = 0;
-		virtual bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = 0) = 0;
+		virtual bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none) = 0;
 		virtual void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) = 0;
     };
 }

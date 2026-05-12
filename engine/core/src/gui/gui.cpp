@@ -226,7 +226,7 @@ namespace emberEngine
 		Gui::PopID();
 		return changed;
 	}
-	bool Gui::InputInt(const std::string& label, int* value, int step, int stepFast, emberCommon::GuiWindowFlags flags)
+	bool Gui::InputInt(const std::string& label, int* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
 	{
 		// Draw label:
 		Gui::TextUnformatted(label.c_str());
@@ -251,7 +251,7 @@ namespace emberEngine
 		Gui::PopID();
 		return changed;
 	}
-	bool Gui::DragInt(const std::string& label, int* value, int step, int stepFast, emberCommon::GuiWindowFlags flags)
+	bool Gui::DragInt(const std::string& label, int* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
 	{
 		static float accumulator;
 		bool changed = false;
@@ -263,7 +263,7 @@ namespace emberEngine
 			// Invisible interactive area for click and drag detection:
 			bool mouseUp = Gui::InvisibleButton("##drag_text", textSize);
 			bool mouseDown = Gui::IsItemActivated();
-			bool dragging = Gui::IsItemActive() && Gui::IsMouseDragging(emberCommon::GuiMouseButton_Left);
+			bool dragging = Gui::IsItemActive() && Gui::IsMouseDragging(emberCommon::GuiMouseButton::left);
 
 			// Draw text above invisible button:
 			Gui::SetCursorScreenPos(cursorPos);
@@ -276,14 +276,14 @@ namespace emberEngine
 			// Change current value on dragging motion on label:
 			if (dragging)
 			{
-				Float2 delta = Gui::GetMouseDragDelta(emberCommon::GuiMouseButton_Left);
+				Float2 delta = Gui::GetMouseDragDelta(emberCommon::GuiMouseButton::left);
 
 				float sensitivity = s_intDragSensitivityBase * std::pow(std::abs(delta.x), s_dragSensitivityExponent);
 				float sign = (delta.x >= 0.0f) ? 1.0f : -1.0f;
 				accumulator += sign * sensitivity;
 				*value = static_cast<int>(std::round(accumulator));
 
-				Gui::ResetMouseDragDelta(emberCommon::GuiMouseButton_Left);
+				Gui::ResetMouseDragDelta(emberCommon::GuiMouseButton::left);
 			}
 
 			// Move cursor to label|fields seperator:
@@ -303,7 +303,7 @@ namespace emberEngine
 		Gui::PopID();
 		return changed;
 	}
-	bool Gui::InputFloat(const std::string& label, float* value, float step, float stepFast, const char* format, emberCommon::GuiWindowFlags flags)
+	bool Gui::InputFloat(const std::string& label, float* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
 	{
 		// Draw label:
 		Gui::TextUnformatted(label.c_str());
@@ -328,7 +328,7 @@ namespace emberEngine
 		Gui::PopID();
 		return changed;
 	}
-	bool Gui::DragFloat(const std::string& label, float* value, float step, float stepFast, const char* format, emberCommon::GuiWindowFlags flags)
+	bool Gui::DragFloat(const std::string& label, float* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
 	{
 		bool changed = false;
 		Gui::PushID(label.c_str());
@@ -338,7 +338,7 @@ namespace emberEngine
 
 			// Invisible interactive area for click and drag detection:
 			bool clicked = Gui::InvisibleButton("##drag_text", textSize);
-			bool dragging = Gui::IsItemActive() && Gui::IsMouseDragging(emberCommon::GuiMouseButton_Left);
+			bool dragging = Gui::IsItemActive() && Gui::IsMouseDragging(emberCommon::GuiMouseButton::left);
 
 			// Draw text above invisible button:
 			Gui::SetCursorScreenPos(cursorPos);
@@ -347,13 +347,13 @@ namespace emberEngine
 			// Change current value on dragging motion on label:
 			if (dragging)
 			{
-				Float2 delta = Gui::GetMouseDragDelta(emberCommon::GuiMouseButton_Left);
+				Float2 delta = Gui::GetMouseDragDelta(emberCommon::GuiMouseButton::left);
 
 				float sensitivity = s_floatDragSensitivityBase * std::pow(std::abs(delta.x), s_dragSensitivityExponent);
 				float sign = (delta.x >= 0.0f) ? 1.0f : -1.0f;
 				*value += sign * sensitivity;
 
-				Gui::ResetMouseDragDelta(emberCommon::GuiMouseButton_Left);
+				Gui::ResetMouseDragDelta(emberCommon::GuiMouseButton::left);
 			}
 
 			// Move cursor to label|fields seperator:

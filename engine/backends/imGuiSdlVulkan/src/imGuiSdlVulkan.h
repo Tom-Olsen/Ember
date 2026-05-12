@@ -70,21 +70,21 @@ namespace imGuiSdlVulkanBackend
 		Float2 GetContentRegionAvail() override;
 		Float2 GetCursorPos() override;
 		Float2 GetCursorScreenPos() override;
-		Float2 GetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::GuiMouseButton_Left, float lockThreshold = -1.0f) override;
+		Float2 GetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f) override;
 		emberCommon::GuiStyle GetStyle() const override;
 
 		// Setters:
 		void SetEditorCallbacks(emberBackendInterface::EditorRenderCallback renderCallback, emberBackendInterface::EditorCaptureQueryCallback captureCallback) override;
 		void SetCursorPos(const Float2& localPos) override;
 		void SetCursorScreenPos(const Float2& pos) override;
-		void ResetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::GuiMouseButton_Left) override;
+		void ResetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left) override;
 
 		// Window management:
-		bool Begin(const char* name, bool* pOpen = nullptr, emberCommon::GuiWindowFlags flags = 0) override;
+		bool Begin(const char* name, bool* pOpen = nullptr, emberCommon::GuiWindowFlags flags = emberCommon::GuiWindowFlags::none) override;
 		void End() override;
 		void PushID(const char* strID) override;
 		void PopID() override;
-		bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = 0) override;
+		bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none) override;
 
 		// Layout:
 		void SameLine(float offsetFromStartX = 0.0f, float spacingW = -1.0f) override;
@@ -94,16 +94,16 @@ namespace imGuiSdlVulkanBackend
 		// State checks:
 		bool IsItemActive() override;
 		bool IsItemActivated() override;
-		bool IsMouseDragging(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::GuiMouseButton_Left, float lockThreshold = -1.0f) override;
+		bool IsMouseDragging(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f) override;
 
 		// Widgets:
 		bool Checkbox(const char* label, bool* value) override;
-		bool InputInt(const char* label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = 0) override;
-		bool InputFloat(const char* label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = 0) override;
+		bool InputInt(const char* label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) override;
+		bool InputFloat(const char* label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) override;
 		void TextUnformatted(const char* text, const char* textEnd = nullptr) override;
 		void TextV(const char* format, va_list args) override;
 		bool Button(const char* label, const Float2& size = Float2::zero) override;
-		bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = 0) override;
+		bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none) override;
 		void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) override;
 
 	private: // Methods:

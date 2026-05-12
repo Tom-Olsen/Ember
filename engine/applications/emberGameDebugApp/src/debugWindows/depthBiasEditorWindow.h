@@ -26,7 +26,7 @@ namespace emberEditor
 		{
 			m_name = "Depth Bias";
 			m_ID = 0;
-			m_windowFlags = emberCommon::GuiWindowFlag_None;
+			m_windowFlags = emberCommon::GuiWindowFlags::none;
 			m_wantCaptureEvents = true;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 			GetData();
