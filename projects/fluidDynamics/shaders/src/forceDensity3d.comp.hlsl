@@ -1,11 +1,10 @@
-#include "computePushConstant.hlsli"
+#include "computeShaderCommon.hlsli"
 #include "hashGridFunctions3d.hlsli"
-#include "math.hlsli"
 #include "smoothingKernals3d.hlsli"
 
 
 
-cbuffer Values : register(b0)
+cbuffer Values : register(b300, SHADER_SET)
 {
     // General parameters:
     uint particleCount;
@@ -23,14 +22,14 @@ cbuffer Values : register(b0)
     float targetDensity;
     float pressureMultiplier;
 };
-StructuredBuffer<uint> cellKeyBuffer : register(t1);
-StructuredBuffer<uint> startIndexBuffer : register(t2);
-StructuredBuffer<float3> positionBuffer : register(t3);
-StructuredBuffer<float3> velocityBuffer : register(t4);
-StructuredBuffer<float> densityBuffer : register(t5);
-StructuredBuffer<float3> normalBuffer : register(t6);
-StructuredBuffer<float> curvatureBuffer : register(t7);
-RWStructuredBuffer<float3> forceDensityBuffer : register(u8);
+StructuredBuffer<uint> cellKeyBuffer : register(t100, SHADER_SET);
+StructuredBuffer<uint> startIndexBuffer : register(t101, SHADER_SET);
+StructuredBuffer<float3> positionBuffer : register(t102, SHADER_SET);
+StructuredBuffer<float3> velocityBuffer : register(t103, SHADER_SET);
+StructuredBuffer<float> densityBuffer : register(t104, SHADER_SET);
+StructuredBuffer<float3> normalBuffer : register(t105, SHADER_SET);
+StructuredBuffer<float> curvatureBuffer : register(t106, SHADER_SET);
+RWStructuredBuffer<float3> forceDensityBuffer : register(u200, SHADER_SET);
 
 
 

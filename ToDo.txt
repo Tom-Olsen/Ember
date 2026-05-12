@@ -44,5 +44,3 @@ Rethink GPU resource naming: names should live in core for managers/debugging an
 See ToDo in default.frag.hlsl
 
 Generate or validate engine uniform-buffer layouts from shader reflection, especially SceneDescriptorSetLayout and FrameDescriptorSetLayout, so HLSL cbuffer packing offsets cannot drift from the C++ BufferLayout definitions.
-
-Fix emberCommon ImGui-style mirror.

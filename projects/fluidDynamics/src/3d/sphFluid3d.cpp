@@ -14,7 +14,7 @@ namespace fluidDynamics
 		// Load compute shaders:
 		std::string directoryPath = (std::string)PROJECT_ROOT_PATH + "/bin/shaders";
 
-		cs_reset = ComputeShader("reset3d", directoryPath + "/reset3d.comp.spv");
+		cs_reset = ComputeShader("resetData3d", directoryPath + "/resetData3d.comp.spv");
 		cs_density = ComputeShader("density3d", directoryPath + "/density3d.comp.spv");
 		cs_normalAndCurvature = ComputeShader("normalAndCurvature3d", directoryPath + "/normalAndCurvature3d.comp.spv");
 		cs_forceDensity = ComputeShader("forceDensity3d", directoryPath + "/forceDensity3d.comp.spv");

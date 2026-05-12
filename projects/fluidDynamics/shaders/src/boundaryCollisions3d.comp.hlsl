@@ -1,15 +1,15 @@
-#include "computePushConstant.hlsli"
+#include "computeShaderCommon.hlsli"
 
 
 
-cbuffer Values : register(b0)
+cbuffer Values : register(b300, SHADER_SET)
 {
     float collisionDampening;
     float3 min;
     float3 max;
 };
-RWStructuredBuffer<float3> positionBuffer : register(u1);
-RWStructuredBuffer<float3> velocityBuffer : register(u2);
+RWStructuredBuffer<float3> positionBuffer : register(u200, SHADER_SET);
+RWStructuredBuffer<float3> velocityBuffer : register(u201, SHADER_SET);
 
 
 

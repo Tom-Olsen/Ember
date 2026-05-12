@@ -1,11 +1,10 @@
-#include "computePushConstant.hlsli"
+#include "computeShaderCommon.hlsli"
 #include "hashGridFunctions3d.hlsli"
-#include "math.hlsli"
 #include "smoothingKernals3d.hlsli"
 
 
 
-cbuffer Values : register(b0)
+cbuffer Values : register(b300, SHADER_SET)
 {
     uint particleCount;
     uint useGridOptimization;
@@ -13,12 +12,12 @@ cbuffer Values : register(b0)
     float effectRadius;
     float mass;
 };
-StructuredBuffer<uint> cellKeyBuffer : register(t1);
-StructuredBuffer<uint> startIndexBuffer : register(t2);
-StructuredBuffer<float3> positionBuffer : register(t3);
-StructuredBuffer<float> densityBuffer : register(t4);
-RWStructuredBuffer<float3> normalBuffer : register(u5);
-RWStructuredBuffer<float> curvatureBuffer : register(u6);
+StructuredBuffer<uint> cellKeyBuffer : register(t100, SHADER_SET);
+StructuredBuffer<uint> startIndexBuffer : register(t101, SHADER_SET);
+StructuredBuffer<float3> positionBuffer : register(t102, SHADER_SET);
+StructuredBuffer<float> densityBuffer : register(t103, SHADER_SET);
+RWStructuredBuffer<float3> normalBuffer : register(u200, SHADER_SET);
+RWStructuredBuffer<float> curvatureBuffer : register(u201, SHADER_SET);
 
 
 

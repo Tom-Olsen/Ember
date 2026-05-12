@@ -1,8 +1,8 @@
-#pragma once
 #include "application.h"
 #include "emberEngine.h"
 #include "sphFluid2dCpuSolver.h"
 #include "sphFluid2dGpuSolver.h"
+#include <gtest/gtest.h>
 
 
 

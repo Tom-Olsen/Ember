@@ -1,11 +1,10 @@
-#include "computePushConstant.hlsli"
+#include "computeShaderCommon.hlsli"
 #include "hashGridFunctions2d.hlsli"
-#include "math.hlsli"
 #include "smoothingKernals2d.hlsli"
 
 
 
-cbuffer Values : register(b0)
+cbuffer Values : register(b300, SHADER_SET)
 {
     // particleCount = pc.threadCount.x
     uint hashGridSize; // ~2*particleCount
@@ -13,10 +12,10 @@ cbuffer Values : register(b0)
     float effectRadius;
     float mass;
 };
-StructuredBuffer<uint> cellKeyBuffer : register(t1);
-StructuredBuffer<uint> startIndexBuffer : register(t2);
-StructuredBuffer<float2> positionBuffer : register(t3);
-RWStructuredBuffer<float> densityBuffer : register(u4);
+StructuredBuffer<uint> cellKeyBuffer : register(t100, SHADER_SET);
+StructuredBuffer<uint> startIndexBuffer : register(t101, SHADER_SET);
+StructuredBuffer<float2> positionBuffer : register(t102, SHADER_SET);
+RWStructuredBuffer<float> densityBuffer : register(u200, SHADER_SET);
 
 
 

@@ -1,20 +1,20 @@
-#include "computePushConstant.hlsli"
+#include "computeShaderCommon.hlsli"
 
 
 
-cbuffer Values : register(b0)
+cbuffer Values : register(b300, SHADER_SET)
 {
     float deltaT;
     float maxVelocity;
 };
-StructuredBuffer<float3> forceDensityBuffer : register(t1);
-StructuredBuffer<float> densityBuffer : register(t2);
-StructuredBuffer<float3> positionBuffer : register(t3);
-StructuredBuffer<float3> velocityBuffer : register(t4);
-RWStructuredBuffer<float3> kp1Buffer : register(u5);
-RWStructuredBuffer<float3> kv1Buffer : register(u6);
-RWStructuredBuffer<float3> tempPositionBuffer : register(u7);
-RWStructuredBuffer<float3> tempVelocityBuffer : register(u8);
+StructuredBuffer<float3> forceDensityBuffer : register(t100, SHADER_SET);
+StructuredBuffer<float> densityBuffer : register(t101, SHADER_SET);
+StructuredBuffer<float3> positionBuffer : register(t102, SHADER_SET);
+StructuredBuffer<float3> velocityBuffer : register(t103, SHADER_SET);
+RWStructuredBuffer<float3> kp1Buffer : register(u200, SHADER_SET);
+RWStructuredBuffer<float3> kv1Buffer : register(u201, SHADER_SET);
+RWStructuredBuffer<float3> tempPositionBuffer : register(u202, SHADER_SET);
+RWStructuredBuffer<float3> tempVelocityBuffer : register(u203, SHADER_SET);
 
 
 

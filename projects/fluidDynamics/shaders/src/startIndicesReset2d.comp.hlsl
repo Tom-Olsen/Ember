@@ -1,8 +1,8 @@
-#include "computePushConstant.hlsli"
+#include "computeShaderCommon.hlsli"
 
 
 
-RWStructuredBuffer<uint> startIndexBuffer : register(u0);
+RWStructuredBuffer<uint> startIndexBuffer : register(u200, SHADER_SET);
 
 
 

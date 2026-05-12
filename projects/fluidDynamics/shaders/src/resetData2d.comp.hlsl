@@ -1,28 +1,27 @@
-#include "computePushConstant.hlsli"
-#include "math.hlsli"
+#include "computeShaderCommon.hlsli"
 
 
 
-cbuffer Values : register(b0)
+cbuffer Values : register(b300, SHADER_SET)
 {
     uint hashGridSize; // 2 * particleCount rounded up to next prime.
     float initialDistributionRadius;
 };
-RWStructuredBuffer<uint> cellKeyBuffer : register(u1);
-RWStructuredBuffer<uint> startIndexBuffer : register(u2);
-RWStructuredBuffer<uint> sortPermutationBuffer : register(u3);
-RWStructuredBuffer<float2> positionBuffer : register(u4);
-RWStructuredBuffer<float2> velocityBuffer : register(u5);
-RWStructuredBuffer<float> densityBuffer : register(u6);
-RWStructuredBuffer<float2> normalBuffer : register(u7);
-RWStructuredBuffer<float> curvatureBuffer : register(u8);
-RWStructuredBuffer<float2> forceDensityBuffer : register(u9);
-RWStructuredBuffer<float2> tempBuffer0 : register(u10);
-RWStructuredBuffer<float2> tempBuffer1 : register(u11);
-RWStructuredBuffer<float2> tempBuffer2 : register(u12);
-RWStructuredBuffer<float2> tempBuffer3 : register(u13);
-RWStructuredBuffer<float2> tempBuffer4 : register(u14);
-RWStructuredBuffer<float2> tempBuffer5 : register(u15);
+RWStructuredBuffer<uint> cellKeyBuffer : register(u200, SHADER_SET);
+RWStructuredBuffer<uint> startIndexBuffer : register(u201, SHADER_SET);
+RWStructuredBuffer<uint> sortPermutationBuffer : register(u202, SHADER_SET);
+RWStructuredBuffer<float2> positionBuffer : register(u203, SHADER_SET);
+RWStructuredBuffer<float2> velocityBuffer : register(u204, SHADER_SET);
+RWStructuredBuffer<float> densityBuffer : register(u205, SHADER_SET);
+RWStructuredBuffer<float2> normalBuffer : register(u206, SHADER_SET);
+RWStructuredBuffer<float> curvatureBuffer : register(u207, SHADER_SET);
+RWStructuredBuffer<float2> forceDensityBuffer : register(u208, SHADER_SET);
+RWStructuredBuffer<float2> tempBuffer0 : register(u209, SHADER_SET);
+RWStructuredBuffer<float2> tempBuffer1 : register(u210, SHADER_SET);
+RWStructuredBuffer<float2> tempBuffer2 : register(u211, SHADER_SET);
+RWStructuredBuffer<float2> tempBuffer3 : register(u212, SHADER_SET);
+RWStructuredBuffer<float2> tempBuffer4 : register(u213, SHADER_SET);
+RWStructuredBuffer<float2> tempBuffer5 : register(u214, SHADER_SET);
 
 
 

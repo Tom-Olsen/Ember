@@ -1,16 +1,15 @@
-#include "computePushConstant.hlsli"
+#include "computeShaderCommon.hlsli"
 #include "hashGridFunctions2d.hlsli"
-#include "math.hlsli"
 
 
 
-cbuffer Values : register(b0)
+cbuffer Values : register(b300, SHADER_SET)
 {
     float effectRadius;
     uint hashGridSize; // ~2*particleCount
 };
-RWStructuredBuffer<uint> cellKeyBuffer : register(u1);
-StructuredBuffer<float2> positionBuffer : register(t2);
+RWStructuredBuffer<uint> cellKeyBuffer : register(u200, SHADER_SET);
+StructuredBuffer<float2> positionBuffer : register(t100, SHADER_SET);
 
 
 

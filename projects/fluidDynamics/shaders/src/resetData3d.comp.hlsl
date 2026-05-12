@@ -1,24 +1,23 @@
-#include "computePushConstant.hlsli"
-#include "math.hlsli"
+#include "computeShaderCommon.hlsli"
 
 
 
-cbuffer Values : register(b0)
+cbuffer Values : register(b300, SHADER_SET)
 {
     uint initialDistributionShellCount;
     float initialDistributionRadius;
     float targetDensity;
 };
-RWStructuredBuffer<float3> positionBuffer : register(u1);
-RWStructuredBuffer<float3> velocityBuffer : register(u2);
-RWStructuredBuffer<float> densityBuffer : register(u3);
-RWStructuredBuffer<float3> forceDensityBuffer : register(u4);
-RWStructuredBuffer<float3> kp1Buffer : register(u5);
-RWStructuredBuffer<float3> kv1Buffer : register(u6);
-RWStructuredBuffer<float3> kp2Buffer : register(u7);
-RWStructuredBuffer<float3> kv2Buffer : register(u8);
-RWStructuredBuffer<float3> tempPositionBuffer : register(u9);
-RWStructuredBuffer<float3> tempVelocityBuffer : register(u10);
+RWStructuredBuffer<float3> positionBuffer : register(u200, SHADER_SET);
+RWStructuredBuffer<float3> velocityBuffer : register(u201, SHADER_SET);
+RWStructuredBuffer<float> densityBuffer : register(u202, SHADER_SET);
+RWStructuredBuffer<float3> forceDensityBuffer : register(u203, SHADER_SET);
+RWStructuredBuffer<float3> kp1Buffer : register(u204, SHADER_SET);
+RWStructuredBuffer<float3> kv1Buffer : register(u205, SHADER_SET);
+RWStructuredBuffer<float3> kp2Buffer : register(u206, SHADER_SET);
+RWStructuredBuffer<float3> kv2Buffer : register(u207, SHADER_SET);
+RWStructuredBuffer<float3> tempPositionBuffer : register(u208, SHADER_SET);
+RWStructuredBuffer<float3> tempVelocityBuffer : register(u209, SHADER_SET);
 
 
 

@@ -1,12 +1,11 @@
-#include "computePushConstant.hlsli"
-#include "math.hlsli"
+#include "computeShaderCommon.hlsli"
 
 
 
-RWStructuredBuffer<float2> kp1Buffer : register(u0);
-RWStructuredBuffer<float2> kv1Buffer : register(u1);
-RWStructuredBuffer<float2> tempPositionBuffer : register(u2);
-RWStructuredBuffer<float2> tempVelocityBuffer : register(u3);
+RWStructuredBuffer<float2> kp1Buffer : register(u200, SHADER_SET);
+RWStructuredBuffer<float2> kv1Buffer : register(u201, SHADER_SET);
+RWStructuredBuffer<float2> tempPositionBuffer : register(u202, SHADER_SET);
+RWStructuredBuffer<float2> tempVelocityBuffer : register(u203, SHADER_SET);
 
 
 

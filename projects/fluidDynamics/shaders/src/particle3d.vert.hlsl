@@ -1,17 +1,8 @@
-#include "defaultPushConstant.hlsli"
-#include "math.hlsli"
+#include "vertexShaderCommon.hlsli"
 
 
 
-cbuffer RenderMatrizes : register(b0)
-{
-    float4x4 cb_localToWorldMatrix; // local to world matrix (also known as model matrix).
-    float4x4 cb_viewMatrix;         // world to camera matrix.
-    float4x4 cb_projMatrix;         // camera projection matrix (HDC => NDC after w division, which happens automatically).
-    float4x4 cb_worldToClipMatrix;  // world to camera clip space matrix: (projection * view)
-    float4x4 cb_localToClipMatrix;  // local to camera clip space matrix: (projection * view * localToWorldMatrix)
-};
-cbuffer Values : register(b1)
+cbuffer Values : register(b300, SHADER_SET)
 {
     float targetDensity;
     float maxVelocity;
@@ -20,11 +11,11 @@ cbuffer Values : register(b1)
 
 
 
-StructuredBuffer<float3> positionBuffer : register(t2);
-StructuredBuffer<float3> velocityBuffer : register(t3);
-StructuredBuffer<float> densityBuffer : register(t4);
-StructuredBuffer<float3> normalBuffer : register(t5);
-StructuredBuffer<float> curvatureBuffer : register(t6);
+StructuredBuffer<float3> positionBuffer : register(t100, SHADER_SET);
+StructuredBuffer<float3> velocityBuffer : register(t101, SHADER_SET);
+StructuredBuffer<float> densityBuffer : register(t102, SHADER_SET);
+StructuredBuffer<float3> normalBuffer : register(t103, SHADER_SET);
+StructuredBuffer<float> curvatureBuffer : register(t104, SHADER_SET);
 
 
 
@@ -40,7 +31,7 @@ struct VertexInput
 
 struct VertexOutput
 {
-    float4 clipPosition : SV_POSITION;  // position in clip space: x,y€[-1,1] z€[0,1]
+    float4 clipPosition : SV_POSITION;  // position in clip space: x,yï¿½[-1,1] zï¿½[0,1]
     float3 worldNormal : NORMAL;        // normal in world space
     float3 worldTangent : TANGENT;      // tangent in world space
     float4 vertexColor : COLOR;         // vertex color
@@ -55,11 +46,11 @@ VertexOutput main(VertexInput input)
     float4 pos = float4(input.position, 1.0f);
     float4 normal = float4(input.normal, 0.0f);
     float4 tangent = float4(input.tangent, 0.0f);
-    float4x4 localToWorldMatrix = cb_localToWorldMatrix;
+    float4x4 localToWorldMatrix = model_localToWorldMatrix;
     if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
     {
         float4x4 positionMatrix = LinAlg_Translate(positionBuffer[input.instanceID]);
-        localToWorldMatrix = mul(cb_localToWorldMatrix, positionMatrix);
+        localToWorldMatrix = mul(model_localToWorldMatrix, positionMatrix);
     }
     
     // Rotate quad towards camera:
@@ -68,7 +59,7 @@ VertexOutput main(VertexInput input)
     //localToWorldMatrix = mul(localToWorldMatrix, rot);
     
     // Compute clip and normal matrice:
-    float4x4 localToClipMatrix = mul(cb_worldToClipMatrix, localToWorldMatrix);
+    float4x4 localToClipMatrix = mul(camera_worldToClipMatrix, localToWorldMatrix);
     float4x4 normalMatrix = LinAlg_NormalMatrix(localToWorldMatrix);
     
     // Compute vertex color:

@@ -1,10 +1,9 @@
-#include "computePushConstant.hlsli"
-#include "math.hlsli"
+#include "computeShaderCommon.hlsli"
 
 
 
-RWStructuredBuffer<uint> startIndexBuffer : register(u0);
-StructuredBuffer<uint> cellKeyBuffer : register(t1);
+RWStructuredBuffer<uint> startIndexBuffer : register(u200, SHADER_SET);
+StructuredBuffer<uint> cellKeyBuffer : register(t100, SHADER_SET);
 
 
 
