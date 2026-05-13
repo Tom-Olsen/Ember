@@ -55,7 +55,7 @@ int main()
 	#endif
 
 	// Profiler:
-	EmberProfiler::Session& session = EmberProfiler::Session::Get();
+	emberTaskSystem::profiler::Session& session = emberTaskSystem::profiler::Session::Get();
 	session.Start("profiling", "profilingResults");
 	{
 		// Initialization:
@@ -85,12 +85,12 @@ int main()
 		delete pScene;
 		emberApplication::Application::Clear();
 	}
-	EmberProfiler::Session::Get().End();
+	emberTaskSystem::profiler::Session::Get().End();
 
 	// Runtime analysis:
-	std::vector<std::string> results = session.GetAllResultNames();
+	std::vector<std::string> results = session.GetAllEventNames();
 	for (std::string& result : results)
-		session.PrintFunctionAverageTime(result, EmberProfiler::TimeUnit::ms);
+		session.PrintFunctionAverageTime(result, emberTaskSystem::profiler::TimeUnit::ms);
 
 	return 0;
 }
