@@ -11,6 +11,10 @@
 
 namespace emberEngine
 {
+	using ComputeBarrierFlag = emberBackendInterface::ComputeBarrierFlag;
+
+
+
 	// Compute::Async subclass:
 	emberBackendInterface::ICompute::IAsync* Compute::Async::m_pIAsync;
 	// Public:
@@ -61,13 +65,25 @@ namespace emberEngine
 		ShaderProperties shaderProperties = ShaderProperties(computeShader, pIDescriptorSetBinding, false);
 		return shaderProperties;
 	}
-	void Compute::Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask)
+	void Compute::Async::RecordBarrier(uint32_t sessionID, ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
-		m_pIAsync->RecordBarrier(sessionID, srcAccessMask, dstAccessMask);
+		m_pIAsync->RecordBarrier(sessionID, srcBarrierFlags, dstBarrierFlags);
+	}
+	void Compute::Async::RecordBarrierWaitShaderWriteBeforeRead(uint32_t sessionID)
+	{
+		Compute::Async::RecordBarrier(sessionID, ComputeBarrierFlag::shaderWrite, ComputeBarrierFlag::shaderRead);
 	}
 	void Compute::Async::RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID)
 	{
-		Compute::Async::RecordBarrier(sessionID, emberCommon::ComputeAccessFlag::storageWrite, emberCommon::ComputeAccessFlag::storageRead);
+		Compute::Async::RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead);
+	}
+	void Compute::Async::RecordBarrierWaitStorageWriteBeforeWrite(uint32_t sessionID)
+	{
+		Compute::Async::RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageWrite);
+	}
+	void Compute::Async::RecordBarrierWaitStorageWriteBeforeReadWrite(uint32_t sessionID)
+	{
+		Compute::Async::RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
 	}
 
 
@@ -167,13 +183,25 @@ namespace emberEngine
 		ShaderProperties shaderProperties = ShaderProperties(computeShader, pIComputeCallDescriptorSetBinding, false);
 		return shaderProperties;
 	}
-	void Compute::PreRender::RecordBarrier(emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask)
+	void Compute::PreRender::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
-		m_pIPreRender->RecordBarrier(srcAccessMask, dstAccessMask);
+		m_pIPreRender->RecordBarrier(srcBarrierFlags, dstBarrierFlags);
+	}
+	void Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead()
+	{
+		Compute::PreRender::RecordBarrier(ComputeBarrierFlag::shaderWrite, ComputeBarrierFlag::shaderRead);
 	}
 	void Compute::PreRender::RecordBarrierWaitStorageWriteBeforeRead()
 	{
-		Compute::PreRender::RecordBarrier(emberCommon::ComputeAccessFlag::storageWrite, emberCommon::ComputeAccessFlag::storageRead);
+		Compute::PreRender::RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead);
+	}
+	void Compute::PreRender::RecordBarrierWaitStorageWriteBeforeWrite()
+	{
+		Compute::PreRender::RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageWrite);
+	}
+	void Compute::PreRender::RecordBarrierWaitStorageWriteBeforeReadWrite()
+	{
+		Compute::PreRender::RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
 	}
 
 
@@ -250,19 +278,35 @@ namespace emberEngine
 		}
 		throw std::runtime_error("Compute::RecordComputeShader: invalid ComputeType.");
 	}
-	void Compute::RecordBarrier(ComputeType computeType, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask , uint32_t sessionID)
+	void Compute::RecordBarrier(ComputeType computeType, ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags, uint32_t sessionID)
 	{
 		switch (computeType)
 		{
 			case ComputeType::async:
-				Async::RecordBarrier(sessionID, srcAccessMask, dstAccessMask);
+				Async::RecordBarrier(sessionID, srcBarrierFlags, dstBarrierFlags);
 				break;
 			case ComputeType::immediate:
 				break;
 			case ComputeType::postRender:
 				break;
 			case ComputeType::preRender:
-				PreRender::RecordBarrier(srcAccessMask, dstAccessMask);
+				PreRender::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
+				break;
+		}
+	}
+	void Compute::RecordBarrierWaitShaderWriteBeforeRead(ComputeType computeType, uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				Async::RecordBarrierWaitShaderWriteBeforeRead(sessionID);
+				break;
+			case ComputeType::immediate:
+				break;
+			case ComputeType::postRender:
+				break;
+			case ComputeType::preRender:
+				PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 				break;
 		}
 	}
@@ -279,6 +323,38 @@ namespace emberEngine
 				break;
 			case ComputeType::preRender:
 				PreRender::RecordBarrierWaitStorageWriteBeforeRead();
+				break;
+		}
+	}
+	void Compute::RecordBarrierWaitStorageWriteBeforeWrite(ComputeType computeType, uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				Async::RecordBarrierWaitStorageWriteBeforeWrite(sessionID);
+				break;
+			case ComputeType::immediate:
+				break;
+			case ComputeType::postRender:
+				break;
+			case ComputeType::preRender:
+				PreRender::RecordBarrierWaitStorageWriteBeforeWrite();
+				break;
+		}
+	}
+	void Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(ComputeType computeType, uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				Async::RecordBarrierWaitStorageWriteBeforeReadWrite(sessionID);
+				break;
+			case ComputeType::immediate:
+				break;
+			case ComputeType::postRender:
+				break;
+			case ComputeType::preRender:
+				PreRender::RecordBarrierWaitStorageWriteBeforeReadWrite();
 				break;
 		}
 	}

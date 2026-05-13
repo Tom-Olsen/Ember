@@ -164,7 +164,7 @@ namespace vulkanRendererBackend
 		RecordComputeShader(sessionID, pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding), threadCount);
 		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding);
 	}
-	void Async::RecordBarrier(uint32_t sessionID, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask)
+	void Async::RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
 		if (m_computeSessions[sessionID].state != ComputeSession::State::recording)
 		{
@@ -172,7 +172,7 @@ namespace vulkanRendererBackend
 			return;
 		}
 		
-		ComputeCall computeCall = { 0, Uint3::zero, nullptr, nullptr, ComputeAccessFlagsCommonToVulkan(srcAccessMask), ComputeAccessFlagsCommonToVulkan(dstAccessMask) };
+		ComputeCall computeCall = { 0, Uint3::zero, nullptr, nullptr, ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
 

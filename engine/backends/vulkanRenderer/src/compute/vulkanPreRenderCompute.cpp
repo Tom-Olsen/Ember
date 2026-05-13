@@ -72,9 +72,9 @@ namespace vulkanRendererBackend
 		RecordComputeShader(pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pDescriptorSetBinding), threadCount);
 		return pDescriptorSetBinding;
 	}
-	void PreRender::RecordBarrier(emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask)
+	void PreRender::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
-		ComputeCall computeCall = { m_callIndex, Uint3::zero, nullptr, nullptr, ComputeAccessFlagsCommonToVulkan(srcAccessMask), ComputeAccessFlagsCommonToVulkan(dstAccessMask) };
+		ComputeCall computeCall = { m_callIndex, Uint3::zero, nullptr, nullptr, ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
 		m_staticComputeCalls.push_back(computeCall);
 		m_callIndex++;
 	}

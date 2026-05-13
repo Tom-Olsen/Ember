@@ -1,7 +1,6 @@
 #include "sphFluid3d.h"
-#include "sphFluid3dEditorWindow.h"
-#include "commonAccessMask.h"
 #include "sphBitonicSort3d.h"
+#include "sphFluid3dEditorWindow.h"
 #include "vmaBuffer.h"
 
 
@@ -488,7 +487,7 @@ namespace fluidDynamics
 		m_resetProperties.SetBuffer("tempPositionBuffer", m_tempPositionBuffer);
 		m_resetProperties.SetBuffer("tempVelocityBuffer", m_tempVelocityBuffer);
 		Compute::PreRender::RecordComputeShader(cs_reset, m_resetProperties, m_threadCount);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 	}
 	void SphFluid3d::ComputeDensity(Buffer& positionBuffer, ShaderProperties& shaderProperties, float gridRadius)
 	{
@@ -498,7 +497,7 @@ namespace fluidDynamics
 		shaderProperties.SetBuffer("densityBuffer", m_densityBuffer);
 		shaderProperties.SetValue("Values", "gridRadius", gridRadius);
 		Compute::PreRender::RecordComputeShader(cs_density, shaderProperties, m_threadCount);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 	}
 	void SphFluid3d::ComputeNormalAndCurvature(Buffer& positionBuffer, ShaderProperties& shaderProperties, float gridRadius)
 	{
@@ -510,7 +509,7 @@ namespace fluidDynamics
 		shaderProperties.SetBuffer("curvatureBuffer", m_curvatureBuffer);
 		shaderProperties.SetValue("Values", "gridRadius", gridRadius);
 		Compute::PreRender::RecordComputeShader(cs_normalAndCurvature, shaderProperties, m_threadCount);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 	}
 	void SphFluid3d::ComputeCurvature()
 	{
@@ -528,7 +527,7 @@ namespace fluidDynamics
 		shaderProperties.SetBuffer("forceDensityBuffer", m_forceDensityBuffer);
 		shaderProperties.SetValue("Values", "gridRadius", gridRadius);
 		Compute::PreRender::RecordComputeShader(cs_forceDensity, shaderProperties, m_threadCount);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 	}
 	void SphFluid3d::ComputeRungeKutta2Step1()
 	{
@@ -541,7 +540,7 @@ namespace fluidDynamics
 		m_rungeKutta2Step1Properties.SetBuffer("tempPositionBuffer", m_tempPositionBuffer);
 		m_rungeKutta2Step1Properties.SetBuffer("tempVelocityBuffer", m_tempVelocityBuffer);
 		Compute::PreRender::RecordComputeShader(cs_rungeKutta2Step1, m_rungeKutta2Step1Properties, m_threadCount);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 	}
 	void SphFluid3d::ComputeRungeKutta2Step2()
 	{
@@ -556,13 +555,13 @@ namespace fluidDynamics
 		m_rungeKutta2Step2Properties.SetBuffer("positionBuffer", m_positionBuffer);
 		m_rungeKutta2Step2Properties.SetBuffer("velocityBuffer", m_velocityBuffer);
 		Compute::PreRender::RecordComputeShader(cs_rungeKutta2Step2, m_rungeKutta2Step2Properties, m_threadCount);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 	}
 	void SphFluid3d::ComputeBoundaryCollisions()
 	{
 		m_boundaryCollisionsProperties.SetBuffer("positionBuffer", m_positionBuffer);
 		m_boundaryCollisionsProperties.SetBuffer("velocityBuffer", m_velocityBuffer);
 		Compute::PreRender::RecordComputeShader(cs_boundaryCollisions, m_boundaryCollisionsProperties, m_threadCount);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 	}
 }

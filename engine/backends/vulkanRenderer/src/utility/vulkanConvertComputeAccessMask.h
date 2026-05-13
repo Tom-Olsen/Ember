@@ -1,10 +1,10 @@
 #pragma once
-#include "commonComputeAccessMask.h"
+#include "iCompute.h"
 #include "vulkanAccessMask.h"
 
 
 
 namespace vulkanRendererBackend
 {
-    [[nodiscard]] AccessMask ComputeAccessFlagsCommonToVulkan(emberCommon::ComputeAccessFlag accessFlags);
+    [[nodiscard]] AccessMask ComputeBarrierFlagsToVulkanAccessMask(emberBackendInterface::ComputeBarrierFlag barrierFlags);
 }

@@ -1,5 +1,4 @@
 #include "sphFluid2dGpu.h"
-#include "commonAccessMask.h"
 #include "hashGrid2d.h"
 #include "sphFluid2dGpuEditorWindow.h"
 

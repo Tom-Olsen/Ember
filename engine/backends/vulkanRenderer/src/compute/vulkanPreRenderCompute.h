@@ -1,6 +1,5 @@
 #pragma once
 #include "iCompute.h"
-#include "commonComputeAccessMask.h"
 #include "emberMath.h"
 #include "vulkanRendererExport.h"
 #include <vector>
@@ -48,7 +47,7 @@ namespace vulkanRendererBackend
 		// Workload recording:
 		void RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IDescriptorSetBinding* pDescriptorSetBinding, Uint3 threadCount) override;
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
-		void RecordBarrier(emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask) override;
+		void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags) override;
 
 		// Management:
 		std::vector<ComputeCall*>& GetComputeCallPointers();

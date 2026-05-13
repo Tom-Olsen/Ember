@@ -1,6 +1,5 @@
 #pragma once
 #include "iCompute.h"
-#include "commonComputeAccessMask.h"
 #include "commonRendererCreateInfo.h"
 #include "emberCoreExport.h"
 #include "emberMath.h"
@@ -51,8 +50,11 @@ namespace emberEngine
 			// Workload recording:
 			static void RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
 			static ShaderProperties RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(uint32_t sessionID, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask);
+			static void RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBarrierWaitShaderWriteBeforeRead(uint32_t sessionID);
 			static void RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID);
+			static void RecordBarrierWaitStorageWriteBeforeWrite(uint32_t sessionID);
+			static void RecordBarrierWaitStorageWriteBeforeReadWrite(uint32_t sessionID);
 
 		private: // Methods
 			// Delete all constructors:
@@ -131,8 +133,11 @@ namespace emberEngine
 			// Workload recording:
 			static void RecordComputeShader(ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
 			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask);
+			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeWrite();
+			static void RecordBarrierWaitStorageWriteBeforeReadWrite();
 
 		private: // Methods
 			// Delete all constructors:
@@ -158,8 +163,11 @@ namespace emberEngine
 		// Workload recording (delegates to given computeType):
 		static void RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount = Uint3::zero, uint32_t sessionID = -1);
 		static ShaderProperties RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount = Uint3::zero, uint32_t sessionID = -1);
-		static void RecordBarrier(ComputeType computeType, emberCommon::ComputeAccessFlag srcAccessMask, emberCommon::ComputeAccessFlag dstAccessMask, uint32_t sessionID = -1);
+		static void RecordBarrier(ComputeType computeType, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags, uint32_t sessionID = -1);
+		static void RecordBarrierWaitShaderWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);
 		static void RecordBarrierWaitStorageWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);
+		static void RecordBarrierWaitStorageWriteBeforeWrite(ComputeType computeType, uint32_t sessionID = -1);
+		static void RecordBarrierWaitStorageWriteBeforeReadWrite(ComputeType computeType, uint32_t sessionID = -1);
 
 	private: // Methods
 		// Delete all constructors:

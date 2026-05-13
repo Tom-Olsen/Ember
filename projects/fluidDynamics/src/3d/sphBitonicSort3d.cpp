@@ -34,7 +34,7 @@ namespace fluidDynamics
 		m_cellKeyProperties.SetValue("Values", "gridRadius", gridRadius);
 		m_cellKeyProperties.SetValue("Values", "particleCount", (int)particleCount);
 		Compute::PreRender::RecordComputeShader(m_cellKeys, m_cellKeyProperties, threadCount);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 	}
 	void SphBitonicSort3d::ComputeStartIndices(Buffer& cellKeyBuffer, Buffer& startIndexBuffer)
 	{
@@ -43,7 +43,7 @@ namespace fluidDynamics
 		m_startIndicesProperties.SetBuffer("startIndexBuffer", startIndexBuffer);
 		m_startIndicesProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer);
 		Compute::PreRender::RecordComputeShader(m_startIndices, m_startIndicesProperties, threadCount);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 	}
 	void SphBitonicSort3d::Sort(Buffer& cellKeyBuffer, Buffer& positionBuffer, Buffer& velocityBuffer)
 	{
@@ -61,7 +61,7 @@ namespace fluidDynamics
 		shaderProperties.SetBuffer("positionBuffer", positionBuffer);
 		shaderProperties.SetBuffer("velocityBuffer", velocityBuffer);
 		shaderProperties.SetValue("Values", "bufferSize", bufferSize);
-		Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+		Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 
 		for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
 		{
@@ -72,7 +72,7 @@ namespace fluidDynamics
 			shaderProperties.SetBuffer("velocityBuffer", velocityBuffer);
 			shaderProperties.SetValue("Values", "flipHeight", flipHeight);
 			shaderProperties.SetValue("Values", "bufferSize", bufferSize);
-			Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+			Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 
 			for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
 			{
@@ -83,7 +83,7 @@ namespace fluidDynamics
 				shaderProperties.SetBuffer("velocityBuffer", velocityBuffer);
 				shaderProperties.SetValue("Values", "disperseHeight", disperseHeight);
 				shaderProperties.SetValue("Values", "bufferSize", bufferSize);
-				Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+				Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 			}
 
 			// Local disperse:
@@ -92,7 +92,7 @@ namespace fluidDynamics
 			shaderProperties.SetBuffer("positionBuffer", positionBuffer);
 			shaderProperties.SetBuffer("velocityBuffer", velocityBuffer);
 			shaderProperties.SetValue("Values", "bufferSize", bufferSize);
-			Compute::PreRender::RecordBarrier(emberCommon::AccessMasks::computeShader_shaderWrite, emberCommon::AccessMasks::computeShader_shaderRead);
+			Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 		}
 	}
 }

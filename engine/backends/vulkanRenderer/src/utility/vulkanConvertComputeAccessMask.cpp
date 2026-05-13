@@ -4,28 +4,28 @@
 
 namespace vulkanRendererBackend
 {
-	AccessMask ComputeAccessFlagsCommonToVulkan(emberCommon::ComputeAccessFlag accessFlags)
+	AccessMask ComputeBarrierFlagsToVulkanAccessMask(emberBackendInterface::ComputeBarrierFlag barrierFlags)
 	{
 		AccessMask accessMask = AccessMasks::ComputeShader::none;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::uniformRead))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::uniformRead))
 			accessMask |= AccessMasks::ComputeShader::uniformRead;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::shaderRead))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::shaderRead))
 			accessMask |= AccessMasks::ComputeShader::shaderRead;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::shaderWrite))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::shaderWrite))
 			accessMask |= AccessMasks::ComputeShader::shaderWrite;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::sampledRead))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::sampledRead))
 			accessMask |= AccessMasks::ComputeShader::sampledRead;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::storageRead))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::storageRead))
 			accessMask |= AccessMasks::ComputeShader::storageRead;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::storageWrite))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::storageWrite))
 			accessMask |= AccessMasks::ComputeShader::storageWrite;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::memoryRead))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::memoryRead))
 			accessMask |= AccessMasks::ComputeShader::memoryRead;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::memoryWrite))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::memoryWrite))
 			accessMask |= AccessMasks::ComputeShader::memoryWrite;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::accelerationStructureRead))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::accelerationStructureRead))
 			accessMask |= AccessMasks::ComputeShader::accelerationStructureRead;
-		if (emberCommon::HasFlag(accessFlags, emberCommon::ComputeAccessFlag::descriptorBufferRead))
+		if (emberBackendInterface::HasFlag(barrierFlags, emberBackendInterface::ComputeBarrierFlag::descriptorBufferRead))
 			accessMask |= AccessMasks::ComputeShader::descriptorBufferRead;
 		return accessMask;
 	}
