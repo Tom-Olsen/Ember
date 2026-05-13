@@ -3,6 +3,7 @@
 
 
 
+// This setUp/tearDown runs once for all tests (suite/fixture independent):
 struct TestEnvironment : testing::Environment
 {
     void SetUp() override

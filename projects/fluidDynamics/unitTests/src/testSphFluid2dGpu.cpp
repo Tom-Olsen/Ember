@@ -6,6 +6,7 @@
 
 
 
+// This setUp/tearDown runs once for all test belonging to the suite/fixture TEST_SphFluid2dGpu:
 class TEST_SphFluid2dGpu : public ::testing::Test
 {
 public:
