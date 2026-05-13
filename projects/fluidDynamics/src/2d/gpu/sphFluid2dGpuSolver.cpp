@@ -273,7 +273,7 @@ namespace fluidDynamics
 		//Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 		ComputeForceDensities(computeShaders, data.forceDensityBuffer.GetBufferView(), data.densityBuffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView(), rungeKutta.tempVelocityBuffer.GetBufferView(), data.normalBuffer.GetBufferView(), data.curvatureBuffer.GetBufferView(), data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
-		ComputeRungeKutta2Step2(computeShaders, data.forceDensityBuffer.GetBufferView(), data.densityBuffer.GetBufferView(), rungeKutta.kp1Buffer.GetBufferView(), rungeKutta.kv1Buffer.GetBufferView(), rungeKutta.tempPositionBuffer.GetBufferView(), rungeKutta.tempVelocityBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.velocityBuffer.GetBufferView());
+		ComputeRungeKutta2Step2(computeShaders, data.forceDensityBuffer.GetBufferView(), data.densityBuffer.GetBufferView(), rungeKutta.kp1Buffer.GetBufferView(), rungeKutta.kv1Buffer.GetBufferView(), rungeKutta.tempVelocityBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.velocityBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
 
 		// Resolve boundary collisions:
@@ -353,14 +353,13 @@ namespace fluidDynamics
 		computeShaders.rungeKutta2Step1Properties.SetBuffer("tempVelocityBuffer", tempVelocityBufferView.GetBuffer());
 		Compute::RecordComputeShader(computeShaders.computeType, computeShaders.rungeKutta2Step1ComputeShader, computeShaders.rungeKutta2Step1Properties, threadCount);
 	}
-	void SphFluid2dGpuSolver::ComputeRungeKutta2Step2(ComputeShaders& computeShaders, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& kp1BufferView, const BufferView<Float2>& kv1BufferView, const BufferView<Float2>& tempPositionBufferView, const BufferView<Float2>& tempVelocityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView)
+	void SphFluid2dGpuSolver::ComputeRungeKutta2Step2(ComputeShaders& computeShaders, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& kp1BufferView, const BufferView<Float2>& kv1BufferView, const BufferView<Float2>& tempVelocityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
 		computeShaders.rungeKutta2Step2Properties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
 		computeShaders.rungeKutta2Step2Properties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
 		computeShaders.rungeKutta2Step2Properties.SetBuffer("kp1Buffer", kp1BufferView.GetBuffer());
 		computeShaders.rungeKutta2Step2Properties.SetBuffer("kv1Buffer", kv1BufferView.GetBuffer());
-		computeShaders.rungeKutta2Step2Properties.SetBuffer("tempPositionBuffer", tempPositionBufferView.GetBuffer());
 		computeShaders.rungeKutta2Step2Properties.SetBuffer("tempVelocityBuffer", tempVelocityBufferView.GetBuffer());
 		computeShaders.rungeKutta2Step2Properties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
 		computeShaders.rungeKutta2Step2Properties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());

@@ -548,7 +548,6 @@ namespace fluidDynamics
 		m_rungeKutta2Step2Properties.SetBuffer("densityBuffer", m_densityBuffer);
 		m_rungeKutta2Step2Properties.SetBuffer("kp1Buffer", m_kp1Buffer);
 		m_rungeKutta2Step2Properties.SetBuffer("kv1Buffer", m_kv1Buffer);
-		m_rungeKutta2Step2Properties.SetBuffer("tempPositionBuffer", m_tempPositionBuffer);
 		m_rungeKutta2Step2Properties.SetBuffer("tempVelocityBuffer", m_tempVelocityBuffer);
 		m_rungeKutta2Step2Properties.SetBuffer("kp2Buffer", m_kp2Buffer);
 		m_rungeKutta2Step2Properties.SetBuffer("kv2Buffer", m_kv2Buffer);

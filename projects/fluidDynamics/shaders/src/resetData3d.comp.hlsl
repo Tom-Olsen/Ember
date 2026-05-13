@@ -11,13 +11,15 @@ cbuffer Values : register(b300, SHADER_SET)
 RWStructuredBuffer<float3> positionBuffer : register(u200, SHADER_SET);
 RWStructuredBuffer<float3> velocityBuffer : register(u201, SHADER_SET);
 RWStructuredBuffer<float> densityBuffer : register(u202, SHADER_SET);
-RWStructuredBuffer<float3> forceDensityBuffer : register(u203, SHADER_SET);
-RWStructuredBuffer<float3> kp1Buffer : register(u204, SHADER_SET);
-RWStructuredBuffer<float3> kv1Buffer : register(u205, SHADER_SET);
-RWStructuredBuffer<float3> kp2Buffer : register(u206, SHADER_SET);
-RWStructuredBuffer<float3> kv2Buffer : register(u207, SHADER_SET);
-RWStructuredBuffer<float3> tempPositionBuffer : register(u208, SHADER_SET);
-RWStructuredBuffer<float3> tempVelocityBuffer : register(u209, SHADER_SET);
+RWStructuredBuffer<float3> normalBuffer : register(u203, SHADER_SET);
+RWStructuredBuffer<float> curvatureBuffer : register(u204, SHADER_SET);
+RWStructuredBuffer<float3> forceDensityBuffer : register(u205, SHADER_SET);
+RWStructuredBuffer<float3> kp1Buffer : register(u206, SHADER_SET);
+RWStructuredBuffer<float3> kv1Buffer : register(u207, SHADER_SET);
+RWStructuredBuffer<float3> kp2Buffer : register(u208, SHADER_SET);
+RWStructuredBuffer<float3> kv2Buffer : register(u209, SHADER_SET);
+RWStructuredBuffer<float3> tempPositionBuffer : register(u210, SHADER_SET);
+RWStructuredBuffer<float3> tempVelocityBuffer : register(u211, SHADER_SET);
 
 
 
@@ -49,6 +51,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
         // All other buffers:
         velocityBuffer[index] = float3(0, 0, 0);
         densityBuffer[index] = 0.0f;
+        normalBuffer[index] = float3(0, 0, 0);
+        curvatureBuffer[index] = 0.0f;
         forceDensityBuffer[index] = float3(0, 0, 0);
         kp1Buffer[index] = float3(0, 0, 0);
         kv1Buffer[index] = float3(0, 0, 0);

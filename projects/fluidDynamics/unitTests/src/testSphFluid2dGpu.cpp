@@ -170,7 +170,7 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 
 		fluidDynamics::SphFluid2dGpuSolver::ComputeDensities(computeShaders, densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
 		fluidDynamics::SphFluid2dGpuSolver::ComputeForceDensities(computeShaders, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView(), normalBuffer.GetBufferView(), curvatureBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
-		fluidDynamics::SphFluid2dGpuSolver::ComputeRungeKutta2Step1(computeShaders, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), kp1Buffer.GetBufferView(), kv1Buffer.GetBufferView(), tempPositionBuffer.GetBufferView(), tempVelocityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView());
+		fluidDynamics::SphFluid2dGpuSolver::ComputeRungeKutta2Step1(computeShaders, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView(), kp1Buffer.GetBufferView(), kv1Buffer.GetBufferView(), tempPositionBuffer.GetBufferView(), tempVelocityBuffer.GetBufferView());
 
 		positionBuffer.Download(positionsGpu);
 		velocityBuffer.Download(velocitiesGpu);
