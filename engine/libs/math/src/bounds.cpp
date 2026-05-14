@@ -120,106 +120,73 @@ namespace emberMath
 	{
 		Float3 min = GetMin();
 		Float3 max = GetMax();
-		Float3 invDir = 1.0f / ray.direction;
+		float enterDist = -math::maxValue;
+		float exitDist = math::maxValue;
 
-		// Ray originates from inside the bounding box:
-		if (Contains(ray.origin))
+		if (ray.direction.x == 0.0f)
 		{
-			// Check right/left plane depending on ray direction:
-			float minDist = math::maxValue;
-			if (ray.direction.x > 0)
-			{
-				float dist = (max.x - ray.origin.x) * invDir.x;
-				minDist = math::Min(minDist, dist);
-			}
-			else if (ray.direction.x < 0)
-			{
-				float dist = (min.x - ray.origin.x) * invDir.x;
-				minDist = math::Min(minDist, dist);
-			}
-
-			// Check front/back plane depending on ray direction:
-			if (ray.direction.y > 0)
-			{
-				float dist = (max.y - ray.origin.y) * invDir.y;
-				minDist = math::Min(minDist, dist);
-			}
-			else if (ray.direction.y < 0)
-			{
-				float dist = (min.y - ray.origin.y) * invDir.y;
-				minDist = math::Min(minDist, dist);
-			}
-
-			// Check up/down plane depending on ray direction:
-			if (ray.direction.z > 0)
-			{
-				float dist = (max.z - ray.origin.z) * invDir.z;
-				minDist = math::Min(minDist, dist);
-			}
-			else if (ray.direction.z < 0)
-			{
-				float dist = (min.z - ray.origin.z) * invDir.z;
-				minDist = math::Min(minDist, dist);
-			}
-
-			// Definitiv hit:
-			return ray.GetPoint(minDist);
+			if (ray.origin.x < min.x || ray.origin.x > max.x)
+				return std::nullopt;
 		}
-		// Ray originates from outside the bounding box:
 		else
 		{
-			static constexpr float epsilon = 1e-5f;
-			// Check left/right plane depending on ray direction:
-			if (ray.direction.x > 0)
+			float invDir = 1.0f / ray.direction.x;
+			float dist0 = (min.x - ray.origin.x) * invDir;
+			float dist1 = (max.x - ray.origin.x) * invDir;
+			if (dist0 > dist1)
 			{
-				float dist = (min.x - ray.origin.x) * invDir.x;
-				Float3 hit = ray.GetPoint(dist + epsilon);
-				if (Contains(hit))
-					return hit;
+				float temp = dist0;
+				dist0 = dist1;
+				dist1 = temp;
 			}
-			else if (ray.direction.x < 0)
-			{
-				float dist = (max.x - ray.origin.x) * invDir.x;
-				Float3 hit = ray.GetPoint(dist + epsilon);
-				if (Contains(hit))
-					return hit;
-			}
-
-			// Check back/front plane depending on ray direction:
-			if (ray.direction.y > 0)
-			{
-				float dist = (min.y - ray.origin.y) * invDir.y;
-				Float3 hit = ray.GetPoint(dist + epsilon);
-				if (Contains(hit))
-					return hit;
-			}
-			else if (ray.direction.y < 0)
-			{
-				float dist = (max.y - ray.origin.y) * invDir.y;
-				Float3 hit = ray.GetPoint(dist + epsilon);
-				if (Contains(hit))
-					return hit;
-			}
-
-			// Check down/up plane depending on ray direction:
-			if (ray.direction.z > 0)
-			{
-				float dist = (min.z - ray.origin.z) * invDir.z;
-				Float3 hit = ray.GetPoint(dist + epsilon);
-				if (Contains(hit))
-					return hit;
-			}
-			else if (ray.direction.z < 0)
-			{
-				float dist = (max.z - ray.origin.z) * invDir.z;
-				Float3 hit = ray.GetPoint(dist + epsilon);
-				if (Contains(hit))
-					return hit;
-			}
-
-			// Ray misses bounding box:
-			return std::nullopt;
+			enterDist = math::Max(enterDist, dist0);
+			exitDist = math::Min(exitDist, dist1);
 		}
+
+		if (ray.direction.y == 0.0f)
+		{
+			if (ray.origin.y < min.y || ray.origin.y > max.y)
+				return std::nullopt;
+		}
+		else
+		{
+			float invDir = 1.0f / ray.direction.y;
+			float dist0 = (min.y - ray.origin.y) * invDir;
+			float dist1 = (max.y - ray.origin.y) * invDir;
+			if (dist0 > dist1)
+			{
+				float temp = dist0;
+				dist0 = dist1;
+				dist1 = temp;
+			}
+			enterDist = math::Max(enterDist, dist0);
+			exitDist = math::Min(exitDist, dist1);
+		}
+
+		if (ray.direction.z == 0.0f)
+		{
+			if (ray.origin.z < min.z || ray.origin.z > max.z)
+				return std::nullopt;
+		}
+		else
+		{
+			float invDir = 1.0f / ray.direction.z;
+			float dist0 = (min.z - ray.origin.z) * invDir;
+			float dist1 = (max.z - ray.origin.z) * invDir;
+			if (dist0 > dist1)
+			{
+				float temp = dist0;
+				dist0 = dist1;
+				dist1 = temp;
+			}
+			enterDist = math::Max(enterDist, dist0);
+			exitDist = math::Min(exitDist, dist1);
+		}
+
+		if (enterDist > exitDist || exitDist < 0.0f)
+			return std::nullopt;
+
+		return ray.GetPoint(enterDist <= 0.0f ? exitDist : enterDist);
 	}
 
 	// Equality:
