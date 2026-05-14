@@ -53,12 +53,14 @@ float SmoothingKernal_DDSpiky(float r, float h)
 // Used for viscosity calculations:
 float SmoothingKernal_Viscos(float r, float h)
 {
+    r = max(r, 1e-8f);
     float c0 = 15.0f / (2.0f * math_PI);
     float c = c0 / pow(h, 3.0f);
     return (r < h) ? c * (-0.5f * pow(r / h, 3.0f) + (r * r) / (h * h) + 0.5f * h / r - 1.0f) : 0.0f;
 }
 float2 SmoothingKernal_DViscos(float r, float2 dir, float h)
 {
+    r = max(r, 1e-8f);
     float c0 = 15.0f / (2.0f * math_PI);
     float c = c0 / pow(h, 3.0f);
     float r2 = r * r;
@@ -67,6 +69,7 @@ float2 SmoothingKernal_DViscos(float r, float2 dir, float h)
 }
 float SmoothingKernal_DDViscos(float r, float h)
 {
+    r = max(r, 1e-8f);
     float c0 = 15.0f / (2.0f * math_PI);
     float h2 = h * h;
     float h3 = h2 * h;

@@ -26,7 +26,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
-        float2 acceleration = forceDensityBuffer[index] / densityBuffer[index];
+        float2 acceleration = forceDensityBuffer[index] / max(densityBuffer[index], 1e-8f);
         kp1Buffer[index] = velocityBuffer[index];
         kv1Buffer[index] = acceleration;
         tempPositionBuffer[index] = positionBuffer[index] + q * kp1Buffer[index] * dt;

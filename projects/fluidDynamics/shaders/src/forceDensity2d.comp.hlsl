@@ -23,7 +23,7 @@ cbuffer Values : register(b300, SHADER_SET)
     float pressureMultiplier;
     
     // Attractor:
-    uint attractorState;
+    int attractorState;
     float attractorRadius;
     float attractorStrength;
     float2 attractorPoint;

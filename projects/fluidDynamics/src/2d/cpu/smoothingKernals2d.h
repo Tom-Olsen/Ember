@@ -51,12 +51,14 @@ namespace smoothingKernals
     // Used for viscosity calculations:
     inline float Viscos(float r, float h)
     {
+        r = math::Max(r, 1e-8f);
         constexpr float c0 = 15.0f / (2.0f * math::pi);
         float c = c0 / math::Pow(h, 3.0f);
         return (r < h) ? c * (-0.5f * math::Pow(r / h, 3.0f) + (r * r) / (h  * h) + 0.5f * h / r - 1.0f) : 0.0f;
     }
     inline Float2 DViscos(float r, const Float2& dir, float h)
     {
+        r = math::Max(r, 1e-8f);
         constexpr float c0 = 15.0f / (2.0f * math::pi);
         float c = c0 / math::Pow(h, 3.0f);
         float r2 = r * r;
@@ -65,6 +67,7 @@ namespace smoothingKernals
     }
     inline float DDViscos(float r, float h)
     {
+        r = math::Max(r, 1e-8f);
         constexpr float c0 = 15.0f / (2.0f * math::pi);
         float h2 = h * h;
         float h3 = h2 * h;
