@@ -1,5 +1,6 @@
 #include "sphFluid2dGpu.h"
 #include "hashGrid2d.h"
+#include "logger.h"
 #include "sphFluid2dGpuEditorWindow.h"
 
 
@@ -14,13 +15,11 @@ namespace fluidDynamics
 		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial2d");
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
 
+        m_forceSetters = true;
 		//// Settings0:
 		//{
 		//	// Management:
-		//	m_isRunning = false;
-		//	m_reset = true;
-		//	m_timeScale = 4.0f;
-		//	m_timeStep = 0;
+		//	SetTimeScale(4.0f);
 		//	SetParticleCount(2000);
 		//
 		//	// Settings:
@@ -48,10 +47,7 @@ namespace fluidDynamics
 		// Settings1:
 		//{
 		//	// Management:
-		//	m_isRunning = false;
-		//	m_reset = true;
-		//	m_timeScale = 4.0f;
-		//	m_timeStep = 0;
+		//	SetTimeScale(4.0f);
 		//	SetParticleCount(20000);
 		//
 		//	// Settings:
@@ -79,10 +75,7 @@ namespace fluidDynamics
 		// Settings2:
 		{
 			// Management:
-			m_isRunning = false;
-			m_reset = true;
-			m_timeScale = 2.0f;
-			m_timeStep = 0;
+			SetTimeScale(2.0f);
 			SetParticleCount(2000);
 
 			// Settings:
@@ -107,10 +100,11 @@ namespace fluidDynamics
 			SetInitialDistributionRadius(6.0f);
 			SetVisualRadius(0.25f);
 		}
+        m_forceSetters = false;
 
 		// Editor Window:
 		editorWindow = std::make_unique<emberEditor::SphFluid2dGpuEditorWindow>(this);
-		m_reset = true;
+		Reset();
 	}
 	SphFluid2dGpu::~SphFluid2dGpu()
 	{
@@ -262,7 +256,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::SetUseHashGridOptimization(bool useGridOptimization)
 	{
-		if (m_settings.useHashGridOptimization != useGridOptimization)
+		if (m_forceSetters || m_settings.useHashGridOptimization != useGridOptimization)
 		{
 			m_settings.useHashGridOptimization = useGridOptimization;
 			m_computeShaders.SetUseHashGridOptimization(m_settings.useHashGridOptimization);
@@ -271,7 +265,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetParticleCount(int particleCount)
 	{
 		particleCount = math::Max(1, particleCount);
-		if (m_particleCount != particleCount)
+		if (m_forceSetters || m_particleCount != particleCount)
 		{
 			m_particleCount = particleCount;
 			int hashGridSize = math::NextPrimeAbove(2 * m_particleCount);
@@ -282,7 +276,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetEffectRadius(float effectRadius)
 	{
 		effectRadius = math::Max(1e-4f, effectRadius);
-		if (m_settings.effectRadius != effectRadius)
+		if (m_forceSetters || m_settings.effectRadius != effectRadius)
 		{
 			m_settings.effectRadius = effectRadius;
 			m_computeShaders.SetEffectRadius(m_settings.effectRadius);
@@ -291,7 +285,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetMass(float mass)
 	{
 		mass = math::Max(1e-4f, mass);
-		if (m_settings.mass != mass)
+		if (m_forceSetters || m_settings.mass != mass)
 		{
 			m_settings.mass = mass;
 			m_computeShaders.SetMass(m_settings.mass);
@@ -299,7 +293,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::SetViscosity(float viscosity)
 	{
-		if (m_settings.viscosity != viscosity)
+		if (m_forceSetters || m_settings.viscosity != viscosity)
 		{
 			m_settings.viscosity = viscosity;
 			m_computeShaders.SetViscosity(m_settings.viscosity);
@@ -307,7 +301,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::SetSurfaceTension(float surfaceTension)
 	{
-		if (m_settings.surfaceTension != surfaceTension)
+		if (m_forceSetters || m_settings.surfaceTension != surfaceTension)
 		{
 			m_settings.surfaceTension = surfaceTension;
 			m_computeShaders.SetSurfaceTension(m_settings.surfaceTension);
@@ -315,7 +309,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::SetCollisionDampening(float collisionDampening)
 	{
-		if (m_settings.collisionDampening != collisionDampening)
+		if (m_forceSetters || m_settings.collisionDampening != collisionDampening)
 		{
 			m_settings.collisionDampening = collisionDampening;
 			m_computeShaders.SetCollisionDampening(m_settings.collisionDampening);
@@ -324,7 +318,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetTargetDensity(float targetDensity)
 	{
 		targetDensity = math::Max(1e-4f, targetDensity);
-		if (m_settings.targetDensity != targetDensity)
+		if (m_forceSetters || m_settings.targetDensity != targetDensity)
 		{
 			m_settings.targetDensity = targetDensity;
 			m_computeShaders.SetTargetDensity(m_settings.targetDensity);
@@ -333,7 +327,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::SetPressureMultiplier(float pressureMultiplier)
 	{
-		if (m_settings.pressureMultiplier != pressureMultiplier)
+		if (m_forceSetters || m_settings.pressureMultiplier != pressureMultiplier)
 		{
 			m_settings.pressureMultiplier = pressureMultiplier;
 			m_computeShaders.SetPressureMultiplier(m_settings.pressureMultiplier);
@@ -341,7 +335,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::SetGravity(float gravity)
 	{
-		if (m_settings.gravity != gravity)
+		if (m_forceSetters || m_settings.gravity != gravity)
 		{
 			m_settings.gravity = gravity;
 			m_computeShaders.SetGravity(m_settings.gravity);
@@ -350,7 +344,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetMaxVelocity(float maxVelocity)
 	{
 		maxVelocity = math::Max(1e-4f, maxVelocity);
-		if (m_settings.maxVelocity != maxVelocity)
+		if (m_forceSetters || m_settings.maxVelocity != maxVelocity)
 		{
 			m_settings.maxVelocity = maxVelocity;
 			m_computeShaders.SetMaxVelocity(m_settings.maxVelocity);
@@ -359,7 +353,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::SetFluidBounds(const Bounds& bounds)
 	{
-		if (m_settings.fluidBounds != bounds)
+		if (m_forceSetters || m_settings.fluidBounds != bounds)
 		{
 			m_settings.fluidBounds = bounds;
 			m_computeShaders.SetFluidBounds(m_settings.fluidBounds);
@@ -368,7 +362,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetAttractorRadius(float attractorRadius)
 	{
 		attractorRadius = math::Max(1e-4f, attractorRadius);
-		if (m_attractor.radius != attractorRadius)
+		if (m_forceSetters || m_attractor.radius != attractorRadius)
 		{
 			m_attractor.radius = attractorRadius;
 			m_ringMesh = MeshGenerator::ArcFlatUv(m_attractor.radius - 0.1f, m_attractor.radius + 0.1f, 360.0f, 100, "attractorRing");
@@ -378,7 +372,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetAttractorStrength(float attractorStrength)
 	{
 		attractorStrength = math::Max(1e-4f, attractorStrength);
-		if (m_attractor.strength != attractorStrength)
+		if (m_forceSetters || m_attractor.strength != attractorStrength)
 		{
 			m_attractor.strength = attractorStrength;
 			m_computeShaders.SetAttractorStrength(m_attractor.strength);
@@ -386,7 +380,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::SetAttractorState(int attractorState)
 	{
-		if (m_attractor.state != attractorState)
+		if (m_forceSetters || m_attractor.state != attractorState)
 		{
 			m_attractor.state = attractorState;
 			m_computeShaders.SetAttractorState(m_attractor.state);
@@ -394,7 +388,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpu::SetAttractorPoint(const Float2& attractorPoint)
 	{
-		if (m_attractor.point != attractorPoint)
+		if (m_forceSetters || m_attractor.point != attractorPoint)
 		{
 			m_attractor.point = attractorPoint;
 			m_computeShaders.SetAttractorPoint(m_attractor.point);
@@ -403,7 +397,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetColorMode(int colorMode)
 	{
 		colorMode = math::Clamp(colorMode, 0, 3);
-		if (m_colorMode != colorMode)
+		if (m_forceSetters || m_colorMode != colorMode)
 		{
 			m_colorMode = colorMode;
 			m_shaderProperties.SetValue("Values", "colorMode", m_colorMode);
@@ -412,7 +406,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetInitialDistributionRadius(float initialDistributionRadius)
 	{
 		initialDistributionRadius = math::Max(1e-4f, initialDistributionRadius);
-		if (m_initialDistributionRadius != initialDistributionRadius)
+		if (m_forceSetters || m_initialDistributionRadius != initialDistributionRadius)
 		{
 			m_initialDistributionRadius = initialDistributionRadius;
 			m_reset = true;
@@ -421,7 +415,7 @@ namespace fluidDynamics
 	void SphFluid2dGpu::SetVisualRadius(float visualRadius)
 	{
 		visualRadius = math::Max(0.01f, visualRadius);
-		if (m_visualRadius != visualRadius)
+		if (m_forceSetters || m_visualRadius != visualRadius)
 		{
 			m_visualRadius = visualRadius;
 			m_particleMesh = MeshGenerator::UnitQuad().Scale(m_visualRadius);

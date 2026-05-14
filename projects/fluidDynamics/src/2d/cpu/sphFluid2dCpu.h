@@ -20,12 +20,13 @@ namespace fluidDynamics
 	{
 	private: // Members:
 		// Management:
-		bool m_isRunning;
-		bool m_reset;
-		float m_timeScale;
-		bool m_useHashGridOptimization;
-		uint32_t m_timeStep;
-		int m_particleCount;
+		bool m_isRunning = false;
+		bool m_reset = false;
+		float m_timeScale = 1.0f;
+		bool m_useHashGridOptimization = true;
+		uint32_t m_timeStep = 0;
+		int m_particleCount = -1;
+        bool m_forceSetters = false;
 
 		// Settings:
 		SphFluid2dCpuSolver::Settings m_settings;

@@ -1,4 +1,5 @@
 #include "sphFluid3d.h"
+#include "logger.h"
 #include "sphBitonicSort3d.h"
 #include "sphFluid3dEditorWindow.h"
 #include "vmaBuffer.h"
@@ -38,15 +39,13 @@ namespace fluidDynamics
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
 
 		// Settings:
+        m_forceSetters = true;
 		{
 			// Management:
-			m_isRunning = false;
-			m_reset = true;
-			m_timeScale = 4.0f;
-			SetUseGridOptimization(true);
-			m_timeStep = 0;
-			pGpuSort = std::make_unique<SphBitonicSort3d>();
+			SetTimeScale(4.0f);
 			SetParticleCount(5000);
+			SetUseGridOptimization(true);
+			pGpuSort = std::make_unique<SphBitonicSort3d>();
 
 			// Physics:
 			SetEffectRadius(0.6f);
@@ -68,6 +67,7 @@ namespace fluidDynamics
 			SetInitialDistributionRadius(6.0f);
 			SetVisualRadius(0.15f);
 		}
+        m_forceSetters = false;
 
 		// Editor window:
 		editorWindow = std::make_unique<emberEditor::SphFluid3dEditorWindow>(this);
@@ -169,7 +169,7 @@ namespace fluidDynamics
 	}
 	void SphFluid3d::SetUseGridOptimization(bool useGridOptimization)
 	{
-		if (m_useGridOptimization != useGridOptimization)
+		if (m_forceSetters || m_useGridOptimization != useGridOptimization)
 		{
 			m_useGridOptimization = useGridOptimization;
 			m_densityProperties[0].SetValue("Values", "useGridOptimization", (int)m_useGridOptimization);
@@ -183,7 +183,7 @@ namespace fluidDynamics
 	void SphFluid3d::SetParticleCount(int particleCount)
 	{
 		particleCount = math::Max(1, particleCount);
-		if (m_particleCount != particleCount)
+		if (m_forceSetters || m_particleCount != particleCount)
 		{
 			m_particleCount = particleCount;
 			m_threadCount = Uint3(m_particleCount, 1, 1);
@@ -200,7 +200,7 @@ namespace fluidDynamics
 	void SphFluid3d::SetEffectRadius(float effectRadius)
 	{
 		effectRadius = math::Max(1e-4f, effectRadius);
-		if (m_effectRadius != effectRadius)
+		if (m_forceSetters || m_effectRadius != effectRadius)
 		{
 			m_effectRadius = effectRadius;
 			m_densityProperties[0].SetValue("Values", "effectRadius", m_effectRadius);
@@ -214,7 +214,7 @@ namespace fluidDynamics
 	void SphFluid3d::SetMass(float mass)
 	{
 		mass = math::Max(1e-4f, mass);
-		if (m_mass != mass)
+		if (m_forceSetters || m_mass != mass)
 		{
 			m_mass = mass;
 			m_densityProperties[0].SetValue("Values", "mass", m_mass);
@@ -227,7 +227,7 @@ namespace fluidDynamics
 	}
 	void SphFluid3d::SetViscosity(float viscosity)
 	{
-		if (m_viscosity != viscosity)
+		if (m_forceSetters || m_viscosity != viscosity)
 		{
 			m_viscosity = viscosity;
 			m_forceDensityProperties[0].SetValue("Values", "viscosity", m_viscosity);
@@ -236,7 +236,7 @@ namespace fluidDynamics
 	}
 	void SphFluid3d::SetSurfaceTension(float surfaceTension)
 	{
-		if (m_surfaceTension != surfaceTension)
+		if (m_forceSetters || m_surfaceTension != surfaceTension)
 		{
 			m_surfaceTension = surfaceTension;
 			m_forceDensityProperties[0].SetValue("Values", "surfaceTension", m_surfaceTension);
@@ -245,7 +245,7 @@ namespace fluidDynamics
 	}
 	void SphFluid3d::SetCollisionDampening(float collisionDampening)
 	{
-		if (m_collisionDampening != collisionDampening)
+		if (m_forceSetters || m_collisionDampening != collisionDampening)
 		{
 			m_collisionDampening = collisionDampening;
 			m_boundaryCollisionsProperties.SetValue("Values", "collisionDampening", m_collisionDampening);
@@ -254,7 +254,7 @@ namespace fluidDynamics
 	void SphFluid3d::SetTargetDensity(float targetDensity)
 	{
 		targetDensity = math::Max(1e-4f, targetDensity);
-		if (m_targetDensity != targetDensity)
+		if (m_forceSetters || m_targetDensity != targetDensity)
 		{
 			m_targetDensity = targetDensity;
 			m_shaderProperties.SetValue("Values", "targetDensity", m_targetDensity);
@@ -265,7 +265,7 @@ namespace fluidDynamics
 	}
 	void SphFluid3d::SetPressureMultiplier(float pressureMultiplier)
 	{
-		if (m_pressureMultiplier != pressureMultiplier)
+		if (m_forceSetters || m_pressureMultiplier != pressureMultiplier)
 		{
 			m_pressureMultiplier = pressureMultiplier;
 			m_forceDensityProperties[0].SetValue("Values", "pressureMultiplier", m_pressureMultiplier);
@@ -274,7 +274,7 @@ namespace fluidDynamics
 	}
 	void SphFluid3d::SetGravity(float gravity)
 	{
-		if (m_gravity != gravity)
+		if (m_forceSetters || m_gravity != gravity)
 		{
 			m_gravity = gravity;
 			m_forceDensityProperties[0].SetValue("Values", "gravity", m_gravity);
@@ -284,7 +284,7 @@ namespace fluidDynamics
 	void SphFluid3d::SetMaxVelocity(float maxVelocity)
 	{
 		maxVelocity = math::Max(1e-4f, maxVelocity);
-		if (m_maxVelocity != maxVelocity)
+		if (m_forceSetters || m_maxVelocity != maxVelocity)
 		{
 			m_maxVelocity = maxVelocity;
 			m_rungeKutta2Step1Properties.SetValue("Values", "maxVelocity", m_maxVelocity);
@@ -294,7 +294,7 @@ namespace fluidDynamics
 	}
 	void SphFluid3d::SetFluidBounds(const Bounds& bounds)
 	{
-		if (m_fluidBounds != bounds)
+		if (m_forceSetters || m_fluidBounds != bounds)
 		{
 			m_fluidBounds = bounds;
 			m_boundaryCollisionsProperties.SetValue("Values", "min", m_fluidBounds.GetMin());
@@ -304,7 +304,7 @@ namespace fluidDynamics
 	void SphFluid3d::SetColorMode(int colorMode)
 	{
 		colorMode = math::Clamp(colorMode, 0, 3);
-		if (m_colorMode != colorMode)
+		if (m_forceSetters || m_colorMode != colorMode)
 		{
 			m_colorMode = colorMode;
 			m_shaderProperties.SetValue("Values", "colorMode", m_colorMode);
@@ -313,7 +313,7 @@ namespace fluidDynamics
 	void SphFluid3d::SetInitialDistributionShellCount(int initialDistributionShellCount)
 	{
 		initialDistributionShellCount = math::Max(1, initialDistributionShellCount);
-		if (m_initialDistributionShellCount != initialDistributionShellCount)
+		if (m_forceSetters || m_initialDistributionShellCount != initialDistributionShellCount)
 		{
 			m_initialDistributionShellCount = initialDistributionShellCount;
 			m_resetProperties.SetValue("Values", "initialDistributionShellCount", m_initialDistributionShellCount);
@@ -323,7 +323,7 @@ namespace fluidDynamics
 	void SphFluid3d::SetInitialDistributionRadius(float initialDistributionRadius)
 	{
 		initialDistributionRadius = math::Max(1e-4f, initialDistributionRadius);
-		if (m_initialDistributionRadius != initialDistributionRadius)
+		if (m_forceSetters || m_initialDistributionRadius != initialDistributionRadius)
 		{
 			m_initialDistributionRadius = initialDistributionRadius;
 			m_resetProperties.SetValue("Values", "initialDistributionRadius", m_initialDistributionRadius);
@@ -333,7 +333,7 @@ namespace fluidDynamics
 	void SphFluid3d::SetVisualRadius(float visualRadius)
 	{
 		visualRadius = math::Max(0.01f, visualRadius);
-		if (m_visualRadius != visualRadius)
+		if (m_forceSetters || m_visualRadius != visualRadius)
 		{
 			m_visualRadius = visualRadius;
 			m_particleMesh = MeshGenerator::CubeSphere(m_visualRadius, 2, "");

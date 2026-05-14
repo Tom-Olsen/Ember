@@ -48,10 +48,10 @@ namespace fluidDynamics
 		};
 		struct Attractor
 		{
-			Float2 point;
-			float radius;
-			float strength;
-			int state;	// -1 = repulse, 0 = off, 1 = attract.
+			Float2 point = Float2::minValue;
+			float radius = 1.0f;
+			float strength = 1.0f;
+			int state = 0;	// -1 = repulse, 0 = off, 1 = attract.
 		};
 
 	public: // Methods:

@@ -40,11 +40,12 @@ namespace fluidDynamics
 		ShaderProperties m_boundaryCollisionsProperties;
 
 		// Management:
-		bool m_isRunning;
-		bool m_reset;
-		float m_timeScale;
-		bool m_useGridOptimization;
-		uint32_t m_timeStep;
+		bool m_isRunning = false;
+		bool m_reset = false;
+		float m_timeScale = 1.0f;
+		bool m_useGridOptimization = false;
+		uint32_t m_timeStep = 0;
+        bool m_forceSetters = false;
 		std::unique_ptr<SphBitonicSort3d> pGpuSort;
 
 		// Data:

@@ -1,4 +1,5 @@
 #include "sphFluid2dCpu.h"
+#include "logger.h"
 #include "sphFluid2dCpuEditorWindow.h"
 
 
@@ -9,40 +10,39 @@ namespace fluidDynamics
 	// Constructor/Destructor:
 	SphFluid2dCpu::SphFluid2dCpu()
 	{
-		// Management:
-		m_isRunning = false;
-		m_reset = true;
-		m_timeScale = 2.0f;
-		m_useHashGridOptimization = true;
-		m_timeStep = 0;
-		m_particleCount = 400;
+        m_forceSetters = true;
+        {
+		    // Management:
+            SetTimeScale(2.0f);
+		    SetParticleCount(400);
+		    m_hashGrid.Reallocate(m_particleCount);
+		    m_settings.pHashGrid = (m_useHashGridOptimization ? & m_hashGrid : nullptr);
 
-		// Settings:
-		m_hashGrid.Reallocate(m_particleCount);
-		m_settings.pHashGrid = (m_useHashGridOptimization ? & m_hashGrid : nullptr);
-		m_settings.effectRadius = 0.5f;
-		m_settings.mass = 1.0f;
-		m_settings.viscosity = 0.5f;
-		m_settings.surfaceTension = 0.07f;
-		m_settings.collisionDampening = 0.95f;
-		m_settings.targetDensity = 15.0f;
-		m_settings.pressureMultiplier = 20.0f;
-		m_settings.gravity = 0.5f;
-		m_settings.maxVelocity = 5.0f;
-		m_settings.fluidBounds = Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f));
+		    // Settings:
+            SetUseHashGridOptimization(true);
+		    SetEffectRadius(0.5f);
+		    SetMass(1.0f);
+		    SetViscosity(0.5f);
+		    SetSurfaceTension(0.07f);
+		    SetCollisionDampening(0.95f);
+		    SetTargetDensity(15.0f);
+		    SetPressureMultiplier(20.0f);
+		    SetGravity(0.5f);
+		    SetMaxVelocity(5.0f);
+		    SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
 
-		// Attractor:
-		m_attractor.point = Float2::zero;
-		SetAttractorRadius(3.0f);	// also sets m_ringMesh.
-		m_attractor.strength = 2.0f;
-		m_attractor.state = 0;
+		    // User Interaction:
+		    SetAttractorRadius(3.0f);
+		    SetAttractorStrength(2.0f);
 
-		// Visuals:
-		m_colorMode = 1;
-		m_initialDistributionRadius = 6.0f;
-		SetVisualRadius(0.25f);		// also sets m_particleMesh.
-		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial2d");
-
+		    // Visuals:
+		    SetColorMode(0);
+		    SetInitialDistributionRadius(6.0f);
+		    SetVisualRadius(0.25f);
+		    m_particleMaterial = MaterialManager::GetMaterial("particleMaterial2d");
+        }
+        m_forceSetters = false;
+        
 		// Editor Window:
 		editorWindow = std::make_unique<emberEditor::SphFluid2dCpuEditorWindow>(this);
 		Reset();
@@ -121,7 +121,7 @@ namespace fluidDynamics
 	}
 	void SphFluid2dCpu::SetParticleCount(int particleCount)
 	{
-		if (m_particleCount != particleCount)
+		if (m_forceSetters || m_particleCount != particleCount)
 		{
 			m_particleCount = particleCount;
 			m_reset = true;
@@ -166,7 +166,7 @@ namespace fluidDynamics
 	void SphFluid2dCpu::SetAttractorRadius(float attractorRadius)
 	{
 		attractorRadius = math::Max(0.01f, attractorRadius);
-		if (m_attractor.radius != attractorRadius)
+		if (m_forceSetters || m_attractor.radius != attractorRadius)
 		{
 			m_ringMesh = MeshGenerator::ArcFlatUv(attractorRadius - 0.1f, attractorRadius + 0.1f, 360.0f, 100, "attractorRing");
 			m_attractor.radius = attractorRadius;
@@ -183,12 +183,12 @@ namespace fluidDynamics
 	void SphFluid2dCpu::SetColorMode(int colorMode)
 	{
 		colorMode = math::Clamp(colorMode, 0, 3);
-		if (m_colorMode != colorMode)
+		if (m_forceSetters || m_colorMode != colorMode)
 			m_colorMode = colorMode;
 	}
 	void SphFluid2dCpu::SetInitialDistributionRadius(float initialDistributionRadius)
 	{
-		if (m_initialDistributionRadius != initialDistributionRadius)
+		if (m_forceSetters || m_initialDistributionRadius != initialDistributionRadius)
 		{
 			m_initialDistributionRadius = initialDistributionRadius;
 			m_reset = true;
@@ -197,7 +197,7 @@ namespace fluidDynamics
 	void SphFluid2dCpu::SetVisualRadius(float visualRadius)
 	{
 		visualRadius = math::Max(0.01f, visualRadius);
-		if (m_visualRadius != visualRadius)
+		if (m_forceSetters || m_visualRadius != visualRadius)
 		{
 			m_visualRadius = visualRadius;
 			m_particleMesh = MeshGenerator::UnitQuad().Scale(m_visualRadius);

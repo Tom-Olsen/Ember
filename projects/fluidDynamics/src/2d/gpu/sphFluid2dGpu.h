@@ -19,11 +19,12 @@ namespace fluidDynamics
 	{
 	private: // Members:
 		// Management:
-		bool m_isRunning;
-		bool m_reset;
-		float m_timeScale;
-		uint32_t m_timeStep;
-		int m_particleCount;
+		bool m_isRunning = false;
+		bool m_reset = false;
+		float m_timeScale = 1.0f;
+		uint32_t m_timeStep = 0;
+		int m_particleCount = -1;
+        bool m_forceSetters = false;
 
 		// Settings:
 		SphFluid2dGpuSolver::Settings m_settings;
