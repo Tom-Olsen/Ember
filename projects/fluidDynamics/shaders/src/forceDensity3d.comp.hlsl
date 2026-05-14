@@ -91,7 +91,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
 						// Viscosity force density:
                         float3 velocityDiff = otherVel - particleVel;
-                        forceDensityBuffer[index] += (mass * SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]) * velocityDiff;
+                        forceDensityBuffer[index] += viscosity * (mass * SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]) * velocityDiff;
                     }
 
                     otherIndex++;
