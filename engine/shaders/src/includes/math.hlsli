@@ -7,13 +7,10 @@
 #include "mathConstants.hlsli"
 #include "linearAlgebra.hlsli"
 #include "interpolation.hlsli"
+#include "random.hlsli"
 
 
 // Basic functions:
-float Random_FromTime(float time)
-{
-    return frac(sin(time * 12.9898) * 43758.5453);
-}
 uint NextPowerOfTwo(uint n)
 {
     if (n == 0)

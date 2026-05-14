@@ -10,7 +10,7 @@ cbuffer Values : register(b300, SHADER_SET)
     // particleCount = pc.threadCount.x
     uint hashGridSize; // ~2*particleCount
     uint useHashGridOptimization;
-    
+
     // Physics:
     float viscosity;
     float mass;
@@ -83,7 +83,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     if (r < effectRadius)
                     {
 						// Pressure force density:
-                        float phi = 2.0f * math_PI * Random_FromTime(pc.time);
+                        float phi = 2.0f * math_PI * Random01(index, otherIndex, pc.time);
                         float2 dir = (r < 1e-8f) ? float2(cos(phi), sin(phi)) : offset / r;
                         float otherParticlePressure = Pressure(densityBuffer[otherIndex], targetDensity, pressureMultiplier);
                         float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
@@ -110,7 +110,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 if (r < effectRadius)
                 {
                     // Pressure force density:
-                    float phi = 2.0f * math_PI * Random_FromTime(pc.time);
+                    float phi = 2.0f * math_PI * Random01(index, i, pc.time);
                     float2 dir = (r < 1e-8f) ? float2(cos(phi), sin(phi)) : offset / r;
                     float otherParticlePressure = Pressure(densityBuffer[i], targetDensity, pressureMultiplier);
                     float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);

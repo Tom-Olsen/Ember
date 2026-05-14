@@ -83,7 +83,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     if (r < effectRadius)
                     {
 						// Pressure force density:
-                        float phi = 2.0f * math_PI * Random_FromTime(pc.time);
+                        float phi = 2.0f * math_PI * Random01(index, otherIndex, pc.time);
                         float3 dir = (r < 1e-8f) ? float3(cos(phi), sin(phi), 0) : offset / r;  // TODO: use fibonacci sphere to map random number to point on sphere.
                         float otherParticlePressure = Pressure(densityBuffer[otherIndex], targetDensity, pressureMultiplier);
                         float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
@@ -111,7 +111,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 if (r < effectRadius)
                 {
                     // Pressure force density:
-                    float phi = 2.0f * math_PI * Random_FromTime(pc.time);
+                    float phi = 2.0f * math_PI * Random01(index, i, pc.time);
                     float3 dir = (r < 1e-8f) ? float3(cos(phi), sin(phi), 0) : offset / r; // TODO: use fibonacci sphere to map random number to point on sphere.
                     float otherParticlePressure = Pressure(densityBuffer[i], targetDensity, pressureMultiplier);
                     float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
