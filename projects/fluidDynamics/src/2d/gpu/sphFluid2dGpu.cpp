@@ -164,7 +164,7 @@ namespace fluidDynamics
 			m_rungeKutta.Reallocate(m_particleCount, m_computeShaders.computeType);
 
 			// Compute intial fluid state:
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType);
 			if (m_settings.useHashGridOptimization)
 			{
 				SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());

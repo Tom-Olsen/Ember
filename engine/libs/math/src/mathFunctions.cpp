@@ -219,5 +219,17 @@ namespace emberMath
 		{
 			return Abs(a - b) < epsilon;
 		}
+        bool IsFinite(float value)
+        {
+            return std::isfinite(value);
+        }
+        bool IsFinite(double value)
+        {
+            return std::isfinite(value);
+        }
+        bool IsFinite(long double value)
+        {
+            return std::isfinite(value);
+        }
 	}
 }

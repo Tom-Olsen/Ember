@@ -55,7 +55,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     float2 otherPos = positionBuffer[otherIndex];
                     float2 offset = particlePos - otherPos;
                     float r = length(offset);
-                    if (r < effectRadius)
+                    if (r < effectRadius && r > 1e-8f)
                     {
                         float2 dir = offset / r;
                         float c = mass / densityBuffer[otherIndex];
@@ -64,13 +64,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     }
                     otherIndex++;
                 }
-                float normalLength = length(normalBuffer[index]);
-                if (normalLength > 1e-2f)
-                    curvatureBuffer[index] /= normalLength;
-                else
-                    curvatureBuffer[index] = 0;
-
             }
+            float normalLength = length(normalBuffer[index]);
+            if (normalLength > 1e-2f)
+                curvatureBuffer[index] /= normalLength;
+            else
+                curvatureBuffer[index] = 0;
         }
         else
         {

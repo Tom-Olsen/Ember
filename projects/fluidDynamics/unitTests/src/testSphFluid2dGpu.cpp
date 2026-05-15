@@ -217,6 +217,193 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 
 
 
+TEST_F(TEST_SphFluid2dGpu, FullStepWithHashGridFinite)
+{
+	int particleCount = 2000;
+	int hashGridSize = math::NextPrimeAbove(2 * particleCount);
+	int stepCount = 20;
+
+	fluidDynamics::SphFluid2dGpuSolver::Settings settings;
+	settings.useHashGridOptimization = true;
+	settings.effectRadius = 0.5f;
+	settings.mass = 1.0f;
+	settings.viscosity = 0.5f;
+	settings.surfaceTension = 0.007f;
+	settings.collisionDampening = 0.95f;
+	settings.targetDensity = 15.0f;
+	settings.pressureMultiplier = 20.0f;
+	settings.gravity = 0.5f;
+	settings.maxVelocity = 5.0f;
+	settings.fluidBounds = Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f));
+
+	fluidDynamics::SphFluid2dGpuSolver::Attractor attractor;
+	attractor.point = Float2::zero;
+	attractor.radius = 0.0f;
+	attractor.strength = 0.0f;
+	attractor.state = 0;
+
+	fluidDynamics::SphFluid2dGpuSolver::Data data;
+	fluidDynamics::SphFluid2dGpuSolver::RungeKutta rungeKutta;
+	fluidDynamics::SphFluid2dGpuSolver::ComputeShaders computeShaders;
+	computeShaders.computeType = ComputeType::immediate;
+	computeShaders.SetUseHashGridOptimization(settings.useHashGridOptimization);
+	computeShaders.SetEffectRadius(settings.effectRadius);
+	computeShaders.SetHashGridSize(hashGridSize);
+	computeShaders.SetMass(settings.mass);
+	computeShaders.SetViscosity(settings.viscosity);
+	computeShaders.SetSurfaceTension(settings.surfaceTension);
+	computeShaders.SetCollisionDampening(settings.collisionDampening);
+	computeShaders.SetTargetDensity(settings.targetDensity);
+	computeShaders.SetPressureMultiplier(settings.pressureMultiplier);
+	computeShaders.SetGravity(settings.gravity);
+	computeShaders.SetMaxVelocity(settings.maxVelocity);
+	computeShaders.SetFluidBounds(settings.fluidBounds);
+
+	data.Reallocate(particleCount, 6.0f, computeShaders.computeType);
+	rungeKutta.Reallocate(particleCount, computeShaders.computeType);
+
+	for (int i = 0; i < stepCount; i++)
+		fluidDynamics::SphFluid2dGpuSolver::TimeStepRungeKutta2(0.01f, settings, data, computeShaders, attractor, rungeKutta);
+
+	std::vector<Float2> positions(particleCount);
+	std::vector<Float2> velocities(particleCount);
+	std::vector<float> densities(particleCount);
+	data.positionBuffer.Download(positions);
+	data.velocityBuffer.Download(velocities);
+	data.densityBuffer.Download(densities);
+
+	bool allGood = true;
+	for (int i = 0; i < particleCount; i++)
+	{
+		if (!math::IsFinite(positions[i].x) || !math::IsFinite(positions[i].y))
+		{
+			allGood = false;
+			EXPECT_TRUE(false) << "position is not finite at particle " << i << ": " << positions[i];
+		}
+		if (!math::IsFinite(velocities[i].x) || !math::IsFinite(velocities[i].y))
+		{
+			allGood = false;
+			EXPECT_TRUE(false) << "velocity is not finite at particle " << i << ": " << velocities[i];
+		}
+		if (!math::IsFinite(densities[i]) || densities[i] <= 0.0f)
+		{
+			allGood = false;
+			EXPECT_TRUE(false) << "density is invalid at particle " << i << ": " << densities[i];
+		}
+	}
+	EXPECT_TRUE(allGood);
+}
+
+
+
+TEST_F(TEST_SphFluid2dGpu, ResetWithHashGridIsDeterministic)
+{
+	int particleCount = 2000;
+	int hashGridSize = math::NextPrimeAbove(2 * particleCount);
+	float initialDistributionRadius = 6.0f;
+	float effectRadius = 0.5f;
+
+	fluidDynamics::SphFluid2dGpuSolver::Data data;
+	fluidDynamics::SphFluid2dGpuSolver::RungeKutta rungeKutta;
+	fluidDynamics::SphFluid2dGpuSolver::ComputeShaders computeShaders;
+	computeShaders.computeType = ComputeType::immediate;
+	computeShaders.SetUseHashGridOptimization(true);
+	computeShaders.SetEffectRadius(effectRadius);
+	computeShaders.SetHashGridSize(hashGridSize);
+	computeShaders.SetMass(1.0f);
+
+	std::vector<Float2> cpuPositions(particleCount);
+	float phi = math::pi * (math::Sqrt(5.0f) - 1.0f);
+	for (int i = 0; i < particleCount; i++)
+	{
+		float r = i / (particleCount - 1.0f) * initialDistributionRadius;
+		float theta = phi * i;
+		cpuPositions[i] = r * Float2(math::Cos(theta), math::Sin(theta));
+	}
+	fluidDynamics::HashGrid2d hashGrid(particleCount);
+	fluidDynamics::SphFluid2dCpuSolver::Settings cpuSettings;
+	cpuSettings.pHashGrid = nullptr;
+	cpuSettings.effectRadius = effectRadius;
+	cpuSettings.mass = 1.0f;
+
+	for (int resetIndex = 0; resetIndex < 20; resetIndex++)
+	{
+		data.Reallocate(particleCount, initialDistributionRadius, computeShaders.computeType);
+		rungeKutta.Reallocate(particleCount, computeShaders.computeType);
+
+		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType);
+		fluidDynamics::SphFluid2dGpuSolver::ComputeCellKeys(computeShaders, data.cellKeyBuffer.GetBufferView(), data.positionBuffer.GetBufferView());
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
+		GpuSort<uint32_t>::SortPermutation(computeShaders.computeType, data.cellKeyBuffer.GetBufferView(), data.sortPermutationBuffer.GetBufferView());
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
+		fluidDynamics::SphFluid2dGpuSolver::ComputeStartIndices(computeShaders, data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
+		GpuSort<Float2>::ApplyPermutation(computeShaders.computeType, data.sortPermutationBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.tempBuffer0.GetBufferView());
+		GpuSort<Float2>::ApplyPermutation(computeShaders.computeType, data.sortPermutationBuffer.GetBufferView(), data.velocityBuffer.GetBufferView(), data.tempBuffer1.GetBufferView());
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
+		std::swap(data.positionBuffer, data.tempBuffer0);
+		std::swap(data.velocityBuffer, data.tempBuffer1);
+		fluidDynamics::SphFluid2dGpuSolver::ComputeDensities(computeShaders, data.densityBuffer.GetBufferView(), data.positionBuffer.GetBufferView(), data.startIndexBuffer.GetBufferView(), data.cellKeyBuffer.GetBufferView());
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType);
+
+		std::vector<Float2> positions(particleCount);
+		std::vector<float> densities(particleCount);
+		std::vector<float> cpuDensities(particleCount, 0.0f);
+		std::vector<uint32_t> cellKeys(particleCount);
+		std::vector<uint32_t> startIndices(hashGridSize);
+		data.positionBuffer.Download(positions);
+		data.densityBuffer.Download(densities);
+		data.cellKeyBuffer.Download(cellKeys);
+		data.startIndexBuffer.Download(startIndices);
+		fluidDynamics::SphFluid2dCpuSolver::ComputeDensities(cpuSettings, cpuDensities, positions);
+
+		bool allGood = true;
+		if (startIndices[cellKeys[0]] != 0)
+		{
+			allGood = false;
+			EXPECT_TRUE(false) << "reset " << resetIndex << ", start index mismatch for first cell key " << cellKeys[0] << ": gpu = " << startIndices[cellKeys[0]];
+		}
+		for (int i = 1; i < particleCount; i++)
+		{
+			if (cellKeys[i] < cellKeys[i - 1])
+			{
+				allGood = false;
+				EXPECT_TRUE(false) << "reset " << resetIndex << ", cell keys are not sorted at particle " << i << ": previous = " << cellKeys[i - 1] << ", current = " << cellKeys[i];
+				break;
+			}
+			if (cellKeys[i] != cellKeys[i - 1] && startIndices[cellKeys[i]] != i)
+			{
+				allGood = false;
+				EXPECT_TRUE(false) << "reset " << resetIndex << ", start index mismatch for cell key " << cellKeys[i] << ": expected = " << i << ", gpu = " << startIndices[cellKeys[i]];
+				break;
+			}
+		}
+		for (int i = 0; i < particleCount; i++)
+		{
+			Int2 cell = hashGrid.Cell(positions[i], effectRadius);
+			uint32_t cellKey = hashGrid.CellKey(hashGrid.CellHash(cell));
+			if (cellKey != cellKeys[i])
+			{
+				allGood = false;
+				EXPECT_TRUE(false) << "reset " << resetIndex << ", position/cell-key mismatch at particle " << i << ": position = " << positions[i] << ", expected key = " << cellKey << ", gpu key = " << cellKeys[i];
+				break;
+			}
+		}
+		for (int i = 0; i < particleCount; i++)
+		{
+			float densityDiff = math::Abs(cpuDensities[i] - densities[i]) / math::Max(1.0f, math::Abs(cpuDensities[i]));
+			if (densityDiff > 1e-3f)
+			{
+				allGood = false;
+				EXPECT_TRUE(false) << "reset " << resetIndex << ", density mismatch at particle " << i << ": cpu = " << cpuDensities[i] << ", gpu = " << densities[i] << ", position = " << positions[i];
+				break;
+			}
+		}
+		EXPECT_TRUE(allGood);
+	}
+}
+
+
+
 //TEST_F(TEST_SphFluid2dGpu, WithHashGrid)
 //{
 //	// Basic parameters:

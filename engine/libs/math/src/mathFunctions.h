@@ -49,5 +49,8 @@ namespace emberMath
 
 		// Boolean:
 		bool IsEpsilonEqual(float a, float b, float epsilon = math::epsilon);
+        bool IsFinite(float value);
+        bool IsFinite(double value);
+        bool IsFinite(long double value);
 	}
 }
