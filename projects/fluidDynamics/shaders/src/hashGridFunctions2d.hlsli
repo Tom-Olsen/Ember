@@ -33,7 +33,7 @@ uint HashGrid2d_CellHash(int2 cell)
     hash ^= hash >> 16;
     return hash;
 }
-uint HashGrid2d_CellKey(int cellHash, int hashGridSize)
+uint HashGrid2d_CellKey(uint cellHash, uint hashGridSize)
 {
     // hashGridSize ~ 2*particleCount for fever collisions.
     return cellHash % hashGridSize;
@@ -42,12 +42,12 @@ uint HashGrid2d_CellKey(int cellHash, int hashGridSize)
 
 
 // Getters:
-uint HashGrid2d_GetCellKey(int2 cell, int hashGridSize)
+uint HashGrid2d_GetCellKey(int2 cell, uint hashGridSize)
 {
     uint cellHash = HashGrid2d_CellHash(cell);
     return HashGrid2d_CellKey(cellHash, hashGridSize);
 }
-uint HashGrid2d_GetStartIndex(int2 cell, int hashGridSize, StructuredBuffer<uint> startIndexBuffer)
+uint HashGrid2d_GetStartIndex(int2 cell, uint hashGridSize, StructuredBuffer<uint> startIndexBuffer)
 {
     uint cellKey = HashGrid2d_GetCellKey(cell, hashGridSize);
     return startIndexBuffer[cellKey];
