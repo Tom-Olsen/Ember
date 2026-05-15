@@ -1,10 +1,8 @@
-#include "computePushConstant.hlsli"
-#include "descriptorSetMacros.h"
-#include "math.hlsli"
+#include "computeShaderCommon.hlsli"
+#include "bitonicSortBlockSize.hlsli"
 
 
 
-#define BLOCK_SIZE 128                  // max 2048 due to numthreads limit of 1024 (numthreads.x = BLOCK_SIZE/2)
 RWStructuredBuffer<float> dataBuffer : register(u0, SHADER_SET);
 RWStructuredBuffer<uint> permutationBuffer : register(u1, SHADER_SET);
 groupshared float localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
@@ -44,8 +42,8 @@ void Disperse(uint disperseHeight, uint index)
 [numthreads(BLOCK_SIZE / 2, 1, 1)]
 void main(uint3 localThreadID : SV_GroupThreadID, uint3 threadID : SV_DispatchThreadID)
 {
-    uint localIndex = localThreadID.x;  //  local thread index € [0,BLOCK_SIZE/2]
-    uint index = threadID.x;            // global thread index € [0,bufferSize/2]
+    uint localIndex = localThreadID.x;  //  local thread index ï¿½ [0,BLOCK_SIZE/2]
+    uint index = threadID.x;            // global thread index ï¿½ [0,bufferSize/2]
     
 	// Load buffer into local memory (2 values per thread):
     localValue[2 * localIndex + 0] = (2 * index + 0 < bufferSize) ? dataBuffer[2 * index + 0] : 0x7FFFFFFF;

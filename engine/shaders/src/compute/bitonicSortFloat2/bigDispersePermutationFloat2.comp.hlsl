@@ -1,10 +1,8 @@
-#include "computePushConstant.hlsli"
-#include "descriptorSetMacros.h"
-#include "math.hlsli"
+#include "computeShaderCommon.hlsli"
+#include "bitonicSortBlockSize.hlsli"
 
 
 
-#define BLOCK_SIZE 128
 RWStructuredBuffer<float2> dataBuffer : register(u0, SHADER_SET);
 RWStructuredBuffer<uint> permutationBuffer : register(u1, SHADER_SET);
 cbuffer Values : register(b2, SHADER_SET)
@@ -60,7 +58,7 @@ void CompareAndSwap(uint i, uint j)
 [numthreads(BLOCK_SIZE / 2, 1, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
-    uint index = threadID.x; // thread index € [0,bufferSize/2]
+    uint index = threadID.x; // thread index ï¿½ [0,bufferSize/2]
     
     // Do not simplify these equations, as int floor rounding is required!
     uint halfDisperseHeight = disperseHeight / 2;

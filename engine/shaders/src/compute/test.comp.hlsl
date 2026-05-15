@@ -1,6 +1,4 @@
-#include "descriptorSetMacros.h"
-#include "computePushConstant.hlsli"
-#include "math.hlsli"
+#include "computeShaderCommon.hlsli"
 
 
 

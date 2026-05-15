@@ -1,9 +1,8 @@
-#include "computePushConstant.hlsli"
-#include "descriptorSetMacros.h"
+#include "computeShaderCommon.hlsli"
+#include "bitonicSortBlockSize.hlsli"
 
 
 
-#define BLOCK_SIZE 128                  // max 2048 due to numthreads limit of 1024 (numthreads.x = BLOCK_SIZE/2)
 RWStructuredBuffer<uint> dataBuffer : register(u0, SHADER_SET);
 groupshared uint localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 cbuffer Values : register(b1, SHADER_SET)

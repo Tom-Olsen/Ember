@@ -1,9 +1,8 @@
-#include "computePushConstant.hlsli"
-#include "descriptorSetMacros.h"
+#include "computeShaderCommon.hlsli"
+#include "bitonicSortBlockSize.hlsli"
 
 
 
-#define BLOCK_SIZE 128
 RWStructuredBuffer<uint> dataBuffer : register(u0, SHADER_SET);
 cbuffer Values : register(b1, SHADER_SET)
 {

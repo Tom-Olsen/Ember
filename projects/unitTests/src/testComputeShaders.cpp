@@ -8,6 +8,7 @@ using namespace emberEngine;
 
 
 
+// This setUp/tearDown runs once for all test belonging to this suite/fixture:
 class TEST_ComputeShaders : public ::testing::Test
 {
 public:

@@ -1,9 +1,8 @@
-#include "computePushConstant.hlsli"
-#include "descriptorSetMacros.h"
+#include "computeShaderCommon.hlsli"
+#include "bitonicSortBlockSize.hlsli"
 
 
 
-#define BLOCK_SIZE 128
 StructuredBuffer<uint> permutationBuffer : register(t0, SHADER_SET);
 StructuredBuffer<float3> inBuffer : register(t1, SHADER_SET);
 RWStructuredBuffer<float3> outBuffer : register(u2, SHADER_SET);

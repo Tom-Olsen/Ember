@@ -8,6 +8,7 @@ using namespace emberEngine;
 
 
 
+// This setUp/tearDown runs once for all test belonging to the suite/fixture TEST_GpuSort:
 class TEST_GpuSort : public ::testing::Test
 {
 public:
@@ -48,7 +49,7 @@ TEST_F(TEST_GpuSort, LocalBitonicSort)
 
 	// Prepare compute shader:
 	std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
-	ComputeShader sortCS = ComputeShader("localBitonicSort", directoryPath / "localBitonicSort.comp.spv");
+	ComputeShader sortCS = ComputeShader("localBitonicSort", directoryPath / "localBitonicSortInt.comp.spv");
 	ShaderProperties shaderProperties = ShaderProperties(sortCS);
 	shaderProperties.SetBuffer("dataBuffer", buffer);
 	shaderProperties.SetValue("Values", "bufferSize", count);
