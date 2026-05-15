@@ -226,7 +226,7 @@ namespace emberEngine
 		assert(computeType != ComputeType::postRender);
 
 		// Gpu buffer access setup:
-		int blockSize = s_pLocalBitonicSortComputeShader->GetBlockSize().x;
+		int blockSize = 2 * s_pLocalBitonicSortComputeShader->GetBlockSize().x;
 		int bufferSize = static_cast<int>(bufferView.GetCount());		// total number of elements for sorting (entire buffer).
 		int height = math::NextPowerOfTwo((uint32_t)bufferSize);	// height of biggest flip.
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
@@ -234,7 +234,8 @@ namespace emberEngine
 
 		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
 		uint32_t sessionID = -1;
-		if (computeType == ComputeType::immediate)
+        bool isImmediateCompute = computeType == ComputeType::immediate;
+		if (isImmediateCompute)
 		{
 			sessionID = Compute::Async::CreateComputeSession();
 			computeType = ComputeType::async;
@@ -276,7 +277,7 @@ namespace emberEngine
 		}
 
 		// For immediate compute we dispatch and wait for the async compute session:
-		if (computeType == ComputeType::immediate)
+		if (isImmediateCompute)
 		{
 			Compute::Async::DispatchComputeSession(sessionID);
 			Compute::Async::WaitForFinish(sessionID);
@@ -293,7 +294,7 @@ namespace emberEngine
 		assert(computeType != ComputeType::postRender);
 
 		// Gpu buffer access setup:
-		int blockSize = s_pLocalBitonicSortPermutationComputeShader->GetBlockSize().x;
+		int blockSize = 2 * s_pLocalBitonicSortPermutationComputeShader->GetBlockSize().x;
 		int bufferSize = static_cast<int>(bufferView.GetCount());	// total number of elements for sorting (entire buffer).
 		int height = math::NextPowerOfTwo((uint32_t)bufferSize);	// height of biggest flip.
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
@@ -301,7 +302,8 @@ namespace emberEngine
 
 		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
 		uint32_t sessionID = -1;
-		if (computeType == ComputeType::immediate)
+        bool isImmediateCompute = computeType == ComputeType::immediate;
+		if (isImmediateCompute)
 		{
 			sessionID = Compute::Async::CreateComputeSession();
 			computeType = ComputeType::async;
@@ -353,7 +355,7 @@ namespace emberEngine
 		}
 
 		// For immediate compute we dispatch and wait for the async compute session:
-		if (computeType == ComputeType::immediate)
+		if (isImmediateCompute)
 		{
 			Compute::Async::DispatchComputeSession(sessionID);
 			Compute::Async::WaitForFinish(sessionID);
@@ -367,7 +369,8 @@ namespace emberEngine
 	void GpuSort<T>::ApplyPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID)
 	{
 		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
-		if (computeType == ComputeType::immediate)
+        bool isImmediateCompute = computeType == ComputeType::immediate;
+		if (isImmediateCompute)
 		{
 			sessionID = Compute::Async::CreateComputeSession();
 			computeType = ComputeType::async;
@@ -380,7 +383,7 @@ namespace emberEngine
 		shaderProperties.SetBuffer("outBuffer", outBufferView.GetBuffer());
 
 		// For immediate compute we dispatch and wait for the async compute session:
-		if (computeType == ComputeType::immediate)
+		if (isImmediateCompute)
 		{
 			Compute::Async::DispatchComputeSession(sessionID);
 			Compute::Async::WaitForFinish(sessionID);
@@ -393,7 +396,8 @@ namespace emberEngine
 	void GpuSort<T>::InvertPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView, uint32_t sessionID)
 	{
 		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
-		if (computeType == ComputeType::immediate)
+        bool isImmediateCompute = computeType == ComputeType::immediate;
+		if (isImmediateCompute)
 		{
 			sessionID = Compute::Async::CreateComputeSession();
 			computeType = ComputeType::async;
@@ -405,7 +409,7 @@ namespace emberEngine
 		shaderProperties.SetBuffer("inversePermutationBuffer", inversePermutationBufferView.GetBuffer());
 
 		// For immediate compute we dispatch and wait for the async compute session:
-		if (computeType == ComputeType::immediate)
+		if (isImmediateCompute)
 		{
 			Compute::Async::DispatchComputeSession(sessionID);
 			Compute::Async::WaitForFinish(sessionID);

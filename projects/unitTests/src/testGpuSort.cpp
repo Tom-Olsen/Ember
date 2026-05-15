@@ -83,7 +83,7 @@ TEST_F(TEST_GpuSort, LocalBitonicSort)
 TEST_F(TEST_GpuSort, BitonicSortInt)
 {
 	// Number of elements:
-	int count = 1234567;
+	int count = 12345678;
 
 	// Prepare cpu array:
 	std::vector<int> dataCpu(count);
@@ -127,7 +127,7 @@ TEST_F(TEST_GpuSort, BitonicSortInt)
 TEST_F(TEST_GpuSort, BitonicPermutationSortInt)
 {
 	// Number of elements:
-	int count = 12345;
+	int count = 12345678;
 
 	// Prepare cpu arrays:
 	std::vector<int> dataCpu0(count);
