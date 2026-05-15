@@ -234,8 +234,7 @@ namespace emberEngine
 
 		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
 		uint32_t sessionID = -1;
-		bool isImmediateCompute = (computeType == ComputeType::immediate);
-		if (isImmediateCompute)
+		if (computeType == ComputeType::immediate)
 		{
 			sessionID = Compute::Async::CreateComputeSession();
 			computeType = ComputeType::async;
@@ -277,7 +276,7 @@ namespace emberEngine
 		}
 
 		// For immediate compute we dispatch and wait for the async compute session:
-		if (isImmediateCompute)
+		if (computeType == ComputeType::immediate)
 		{
 			Compute::Async::DispatchComputeSession(sessionID);
 			Compute::Async::WaitForFinish(sessionID);
@@ -302,8 +301,7 @@ namespace emberEngine
 
 		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
 		uint32_t sessionID = -1;
-		bool isImmediateCompute = (computeType == ComputeType::immediate);
-		if (isImmediateCompute)
+		if (computeType == ComputeType::immediate)
 		{
 			sessionID = Compute::Async::CreateComputeSession();
 			computeType = ComputeType::async;
@@ -368,11 +366,25 @@ namespace emberEngine
 	template <typename T>
 	void GpuSort<T>::ApplyPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID)
 	{
+		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
+		if (computeType == ComputeType::immediate)
+		{
+			sessionID = Compute::Async::CreateComputeSession();
+			computeType = ComputeType::async;
+		}
+
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
 		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType , *s_pApplyPermutationComputeShader, threadCount, sessionID);
 		shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 		shaderProperties.SetBuffer("inBuffer", inBufferView.GetBuffer());
 		shaderProperties.SetBuffer("outBuffer", outBufferView.GetBuffer());
+
+		// For immediate compute we dispatch and wait for the async compute session:
+		if (computeType == ComputeType::immediate)
+		{
+			Compute::Async::DispatchComputeSession(sessionID);
+			Compute::Async::WaitForFinish(sessionID);
+		}
 	}
 
 
@@ -380,10 +392,24 @@ namespace emberEngine
 	template <typename T>
 	void GpuSort<T>::InvertPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView, uint32_t sessionID)
 	{
+		// Sorting requires multiple synced kernel dispatches. Immediate dispatch mode gets emmulated by an async launch with wait for completion:
+		if (computeType == ComputeType::immediate)
+		{
+			sessionID = Compute::Async::CreateComputeSession();
+			computeType = ComputeType::async;
+		}
+
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
 		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, *s_pInvertPermutationComputeShader, threadCount, sessionID);
 		shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 		shaderProperties.SetBuffer("inversePermutationBuffer", inversePermutationBufferView.GetBuffer());
+
+		// For immediate compute we dispatch and wait for the async compute session:
+		if (computeType == ComputeType::immediate)
+		{
+			Compute::Async::DispatchComputeSession(sessionID);
+			Compute::Async::WaitForFinish(sessionID);
+		}
 	}
 
     // Explicit template instantiations:
