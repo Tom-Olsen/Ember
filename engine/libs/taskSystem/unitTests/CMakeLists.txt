@@ -41,6 +41,8 @@ source_group("Tests" FILES ${TEST_FILES})
 
 # ---------------- Create Executable ----------------
 add_executable(${PROJECT_NAME} ${MAIN_FILE} ${TEST_FILES} ${HEADER_FILES})
+
+# Source subdirectories:
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 # ---------------------------------------------------
 

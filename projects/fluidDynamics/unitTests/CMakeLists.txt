@@ -63,15 +63,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${FLUID_DYNAMICS_DIR}/src/2d/gpu
     ${FLUID_DYNAMICS_DIR}/src/3d
     ${FLUID_DYNAMICS_DIR}/src/utility)
-
-# Add project root path as a macro:
-get_filename_component(PROJECT_ROOT_PATH "${FLUID_DYNAMICS_DIR}" ABSOLUTE)
-target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_ROOT_PATH}")
 # ---------------------------------------------------
 
 
 
 # ---------------------- Macros ---------------------
+get_filename_component(PROJECT_ROOT_PATH "${FLUID_DYNAMICS_DIR}" ABSOLUTE)
+target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_ROOT_PATH}")
 target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_SHADERS_DIR="${PROJECT_SHADERS_DIR}")
 # ---------------------------------------------------
 

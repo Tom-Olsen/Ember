@@ -16,15 +16,9 @@ get_filename_component(ENGINE_EXTERN_DIR "${CMAKE_CURRENT_LIST_DIR}/../../engine
 get_filename_component(ENGINE_LIBS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../engine/libs" ABSOLUTE)                  # libs
 
 # Output directory:
-if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Archive output directory" FORCE) # .a .lib
-endif()
-if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Library output directory" FORCE) # .so .dylib .dll
-endif()
-if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}" CACHE PATH "Runtime output directory" FORCE) # .exe
-endif()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib) # .a .lib
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # .so .dylib .dll, must be next to .exe on windows
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # .exe
 # ---------------------------------------------------
 
 
@@ -41,6 +35,8 @@ source_group("Tests" FILES ${TEST_FILES})
 
 # ---------------- Create Executable ----------------
 add_executable(${PROJECT_NAME} ${MAIN_FILE} ${TEST_FILES})
+
+# Source subdirectories:
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Add project root path as a macro:
@@ -56,7 +52,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_ROOT_PATH="${PROJECT_R
 #target_link_libraries(${PROJECT_NAME} PUBLIC EmberHeadlessApp)
 
 # Ember Game Application:
-add_subdirectory("${ENGINE_APPLICATIONS_DIR}/embergameApp" EmberGameApp)
+add_subdirectory("${ENGINE_APPLICATIONS_DIR}/emberGameApp" EmberGameApp)
 target_link_libraries(${PROJECT_NAME} PUBLIC EmberGameApp)
 # ---------------------------------------------------
 

@@ -143,7 +143,6 @@ target_include_directories(${TARGET_NAME} PUBLIC
 
 
 # ---------------------- Macros ---------------------
-# Path to vulkan library source directory:
 target_compile_definitions(${TARGET_NAME} PUBLIC VULKAN_LIBRARY_ROOT_PATH="${VULKAN_LIBRARY_ROOT_PATH}")
 target_compile_definitions(${TARGET_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
 
