@@ -353,7 +353,7 @@ namespace emberEngine
 		}
 
 		// For immediate compute we dispatch and wait for the async compute session:
-		if (isImmediateCompute)
+		if (computeType == ComputeType::immediate)
 		{
 			Compute::Async::DispatchComputeSession(sessionID);
 			Compute::Async::WaitForFinish(sessionID);

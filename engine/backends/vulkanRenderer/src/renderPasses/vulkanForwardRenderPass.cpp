@@ -77,18 +77,20 @@ namespace vulkanRendererBackend
 	}
 	void ForwardRenderPass::CreateRenderPass()
 	{
+		const bool useMsaa = Context::GetMsaaSamples() != VK_SAMPLE_COUNT_1_BIT;
+
 		// Attachments:
 		std::array<VkAttachmentDescription, 3> attachments{};
 		{
-			// Multisampled color attachment description:
+			// Color attachment description:
 			attachments[0].format = m_pRenderTextures[0]->GetVmaImage()->GetFormat();
-			attachments[0].samples = Context::GetMsaaSamples();											// multisampling count
-			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;										// clear framebuffer to black before rendering
-			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;									// no need to store multisampls after render
-			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;								// do not use stencils
-			attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;							// do not use stencils
-			attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;									// we don't care about initial layout of the image
-			attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;						// multisampled images are stored in color layout and not rdy for presenting yet
+			attachments[0].samples = Context::GetMsaaSamples();
+			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;										                // clear framebuffer to black before rendering
+			attachments[0].storeOp = useMsaa ? VK_ATTACHMENT_STORE_OP_DONT_CARE : VK_ATTACHMENT_STORE_OP_STORE;         // msaa on: no need to store multisamples after render, msaa off: must store as this will become the final render.
+			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;								                // do not use stencils
+			attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;							                // do not use stencils
+			attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;									                // we don't care about initial layout of the image
+			attachments[0].finalLayout = useMsaa ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;  // msaa on: color is needed so we can resolve them in the final subpass which then outputs general (for post processing compute shaders). msaa off: directly use layout for post processing compute shaders.
 
 			// Depth attachment description:
 			attachments[1].format = m_depthFormat;								// must be same as depth image format
@@ -130,20 +132,20 @@ namespace vulkanRendererBackend
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colorAttachmentReference;
 		subpass.pDepthStencilAttachment = &depthAttachmentReference;
-		subpass.pResolveAttachments = &colorResolveAttachmentReference;
+		subpass.pResolveAttachments = useMsaa ? &colorResolveAttachmentReference : nullptr;
 
 		// Synchronization dependencies of individual subpasses:
 		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;										// index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass
-		dependency.dstSubpass = 0;															// index of destination subpass, where dependency ends.  VK_SUBPASS_EXTERNAL = after renderpass
-		dependency.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;						// pipeline stages in source subpass which must complete before the dependency is resolved
-		dependency.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;						// pipeline stages in destination subpass which must wait for the source stages to complete
-		dependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;	// types of memory accesses in the source subpass that must be completed
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;										    // index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass
+		dependency.dstSubpass = 0;															    // index of destination subpass, where dependency ends.  VK_SUBPASS_EXTERNAL = after renderpass
+		dependency.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;              // pipeline stages in source subpass which must complete before the dependency is resolved
+		dependency.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;              // pipeline stages in destination subpass which must wait for the source stages to complete
+		dependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;    // types of memory accesses in the source subpass that must be completed
 		dependency.dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;	// types of memory accesses in the destination subpass that must wait on the source subpass to complete
-		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;							// specify special behaviors
+		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;							    // specify special behaviors
 
 		VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
-		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size()) - (useMsaa ? 0 : 1); // no msaa => ignore multisample resolve attachment
 		renderPassInfo.pAttachments = attachments.data();
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
@@ -236,6 +238,7 @@ namespace vulkanRendererBackend
 	}
 	void ForwardRenderPass::CreateFrameBuffers()
 	{
+		const bool useMsaa = Context::GetMsaaSamples() != VK_SAMPLE_COUNT_1_BIT;
 		size_t imageCount = Context::GetFramesInFlight();
 		m_framebuffers.resize(imageCount);
 		std::array<VkImageView, 3> attachments;
@@ -243,13 +246,13 @@ namespace vulkanRendererBackend
 		for (size_t i = 0; i < imageCount; i++)
 		{
 			// order of attachments is important!
-			attachments[0] = m_pMsaaImages[i]->GetVkImageView();
+			attachments[0] = useMsaa ? m_pMsaaImages[i]->GetVkImageView() : m_pRenderTextures[i]->GetVmaImage()->GetVkImageView();  // msaa on: write into msaa images. msaa off: write to final render texture.
 			attachments[1] = m_pDepthImages[i]->GetVkImageView();
-			attachments[2] = m_pRenderTextures[i]->GetVmaImage()->GetVkImageView();
+			attachments[2] = m_pRenderTextures[i]->GetVmaImage()->GetVkImageView(); // msaa on: resolve msaa images to final render texture (skipped implicitly with msaa off, as this attachment doesn't get bound).
 
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;
-			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size()) - (useMsaa ? 0 : 1); // no msaa => ignore multisample resolve attachment
 			framebufferInfo.pAttachments = attachments.data();
 			framebufferInfo.width = m_pRenderTextures[i]->GetWidth();
 			framebufferInfo.height = m_pRenderTextures[i]->GetHeight();
