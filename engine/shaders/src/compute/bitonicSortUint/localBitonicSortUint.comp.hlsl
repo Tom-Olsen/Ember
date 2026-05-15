@@ -3,9 +3,9 @@
 
 
 
-RWStructuredBuffer<uint> dataBuffer : register(u0, SHADER_SET);
+RWStructuredBuffer<uint> dataBuffer : register(u200, CALL_SET);
 groupshared uint localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
-cbuffer Values : register(b1, SHADER_SET)
+cbuffer Values : register(b300, CALL_SET)
 {
     uint bufferSize; // number of elements in the data buffer.
 };

@@ -3,7 +3,7 @@
 
 
 
-RWStructuredBuffer<uint> indexBuffer : register(u0, SHADER_SET);
+RWStructuredBuffer<uint> indexBuffer : register(u200, CALL_SET);
 
 
 

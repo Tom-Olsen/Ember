@@ -3,8 +3,8 @@
 
 
 
-RWStructuredBuffer<float> dataBuffer : register(u0, SHADER_SET);
-cbuffer Values : register(b1, SHADER_SET)
+RWStructuredBuffer<float> dataBuffer : register(u200, CALL_SET);
+cbuffer Values : register(b300, CALL_SET)
 {
     uint flipHeight; // height of the flip (number of elements involved in it).
     uint bufferSize; // number of elements in data buffer.

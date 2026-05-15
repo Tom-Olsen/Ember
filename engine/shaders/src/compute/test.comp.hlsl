@@ -2,13 +2,13 @@
 
 
 
-StructuredBuffer<float> dataBuffer : register(t0, SHADER_SET);
-Texture2D<float4> inputImage : register(t1, SHADER_SET);
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> outputImage : register(u2, SHADER_SET);
+StructuredBuffer<float> dataBuffer : register(t100, SHADER_SET);
+Texture2D<float4> inputImage : register(t101, SHADER_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> outputImage : register(u200, SHADER_SET);
 
 
 
-cbuffer Properties : register(b3, SHADER_SET)
+cbuffer Properties : register(b300, SHADER_SET)
 {
     uint a;
     uint b;

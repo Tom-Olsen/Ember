@@ -3,8 +3,8 @@
 
 
 
-StructuredBuffer<uint> permutationBuffer : register(t0, SHADER_SET);
-RWStructuredBuffer<uint> inversePermutationBuffer : register(u1, SHADER_SET);
+StructuredBuffer<uint> permutationBuffer : register(t100, CALL_SET);
+RWStructuredBuffer<uint> inversePermutationBuffer : register(u200, CALL_SET);
 
 
 

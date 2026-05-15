@@ -3,9 +3,9 @@
 
 
 
-RWStructuredBuffer<float2> dataBuffer : register(u0, SHADER_SET);
-RWStructuredBuffer<uint> permutationBuffer : register(u1, SHADER_SET);
-cbuffer Values : register(b2, SHADER_SET)
+RWStructuredBuffer<float2> dataBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<uint> permutationBuffer : register(u201, CALL_SET);
+cbuffer Values : register(b300, CALL_SET)
 {
     uint flipHeight; // height of the flip (number of elements involved in it).
     uint bufferSize; // number of elements in data buffer.

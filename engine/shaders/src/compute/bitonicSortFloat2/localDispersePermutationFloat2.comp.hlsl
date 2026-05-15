@@ -3,11 +3,11 @@
 
 
 
-RWStructuredBuffer<float2> dataBuffer : register(u0, SHADER_SET);
-RWStructuredBuffer<uint> permutationBuffer : register(u1, SHADER_SET);
+RWStructuredBuffer<float2> dataBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<uint> permutationBuffer : register(u201, CALL_SET);
 groupshared float2 localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 groupshared uint localPermutationValue[BLOCK_SIZE];
-cbuffer Values : register(b2, SHADER_SET)
+cbuffer Values : register(b300, CALL_SET)
 {
     uint bufferSize; // number of elements in the data buffer.
 };

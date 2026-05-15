@@ -2,8 +2,8 @@
 
 
 
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> inputImage : register(u0, SHADER_SET);
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> outputImage : register(u1, SHADER_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> inputImage : register(u200, SHADER_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> outputImage : register(u201, SHADER_SET);
 
 
 

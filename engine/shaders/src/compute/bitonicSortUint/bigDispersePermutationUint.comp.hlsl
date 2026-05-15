@@ -3,9 +3,9 @@
 
 
 
-RWStructuredBuffer<uint> dataBuffer : register(u0, SHADER_SET);
-RWStructuredBuffer<uint> permutationBuffer : register(u1, SHADER_SET);
-cbuffer Values : register(b2, SHADER_SET)
+RWStructuredBuffer<uint> dataBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<uint> permutationBuffer : register(u201, CALL_SET);
+cbuffer Values : register(b300, CALL_SET)
 {
     uint disperseHeight; // height of the disperse (number of elements involved in it).
     uint bufferSize; // number of elements in data buffer.
