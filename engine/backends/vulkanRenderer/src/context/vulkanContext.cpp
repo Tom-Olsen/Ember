@@ -192,7 +192,7 @@ namespace vulkanRendererBackend
 	{
 		return m_pLogicalDevice.get();
 	}
-	const MemoryAllocator* Context::GetMemoryAllocator()
+	MemoryAllocator* Context::GetMemoryAllocator()
 	{
 		return m_pMemoryAllocator.get();
 	}

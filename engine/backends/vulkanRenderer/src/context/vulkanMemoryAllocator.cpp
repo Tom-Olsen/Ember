@@ -2,7 +2,6 @@
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
 #define VMA_VULKAN_VERSION 1003000
-#include "vk_mem_alloc.h"
 #include "vulkanMemoryAllocator.h"
 #include "vulkanInstance.h"
 #include "vulkanLogicalDevice.h"
@@ -68,6 +67,58 @@ namespace vulkanRendererBackend
 
 
 	// Public methods:
+	VkResult MemoryAllocator::CreateBuffer(const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocationInfo, VkBuffer* pBuffer, VmaAllocation* pAllocation)
+	{
+		// allocationInfo might be needed as fallback, so make a copy:
+		VmaAllocationCreateInfo pooledAllocationInfo = allocationInfo;
+
+        // Set memory type specific pool unless user requests something special (allocationInfo.pool != nullptr || VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT):
+		if (UseManagedPool(allocationInfo))
+		{
+			uint32_t memoryTypeIndex;
+			VkResult result = vmaFindMemoryTypeIndexForBufferInfo(m_pAllocator, &bufferInfo, &allocationInfo, &memoryTypeIndex);
+			if (result == VK_SUCCESS)
+				pooledAllocationInfo.pool = GetOrCreatePool(memoryTypeIndex);
+		}
+
+		// Try the managed pool:
+		VkResult result = vmaCreateBuffer(m_pAllocator, &bufferInfo, &pooledAllocationInfo, pBuffer, pAllocation, nullptr);
+		if (result == VK_SUCCESS || pooledAllocationInfo.pool == nullptr)
+			return result;
+
+		// Fallback:
+		return vmaCreateBuffer(m_pAllocator, &bufferInfo, &allocationInfo, pBuffer, pAllocation, nullptr);
+	}
+	VkResult MemoryAllocator::CreateImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImage* pImage, VmaAllocation* pAllocation)
+	{
+		// allocationInfo might be needed as fallback, so make a copy:
+		VmaAllocationCreateInfo pooledAllocationInfo = allocationInfo;
+
+        // Set memory type specific pool unless user requests something special (allocationInfo.pool != nullptr || VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT):
+		if (UseManagedPool(allocationInfo))
+		{
+			uint32_t memoryTypeIndex;
+			VkResult result = vmaFindMemoryTypeIndexForImageInfo(m_pAllocator, &imageInfo, &allocationInfo, &memoryTypeIndex);
+			if (result == VK_SUCCESS)
+				pooledAllocationInfo.pool = GetOrCreatePool(memoryTypeIndex);
+		}
+        
+		// Try the managed pool:
+		VkResult result = vmaCreateImage(m_pAllocator, &imageInfo, &pooledAllocationInfo, pImage, pAllocation, nullptr);
+		if (result == VK_SUCCESS || pooledAllocationInfo.pool == nullptr)
+			return result;
+
+		// Fallback:
+		return vmaCreateImage(m_pAllocator, &imageInfo, &allocationInfo, pImage, pAllocation, nullptr);
+	}
+	void MemoryAllocator::DestroyBuffer(VkBuffer buffer, VmaAllocation allocation)
+	{
+		vmaDestroyBuffer(m_pAllocator, buffer, allocation);
+	}
+	void MemoryAllocator::DestroyImage(VkImage image, VmaAllocation allocation)
+	{
+		vmaDestroyImage(m_pAllocator, image, allocation);
+	}
 	const VmaAllocator& MemoryAllocator::GetVmaAllocator() const
 	{
 		return m_pAllocator;
@@ -78,12 +129,68 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void MemoryAllocator::Cleanup()
 	{
+		if (m_pAllocator == nullptr)
+			return;
+
+		for (auto& [memoryTypeIndex, pPool] : m_pPools)
+			vmaDestroyPool(m_pAllocator, pPool);
+		m_pPools.clear();
+
 		vmaDestroyAllocator(m_pAllocator);
+		m_pAllocator = nullptr;
 	}
 	void MemoryAllocator::MoveFrom(MemoryAllocator& other) noexcept
 	{
 		m_pAllocator = other.m_pAllocator;
+		m_pPools = std::move(other.m_pPools);
 
 		other.m_pAllocator = nullptr;
+		other.m_pPools.clear();
+	}
+	VmaPool MemoryAllocator::GetOrCreatePool(uint32_t memoryTypeIndex)
+	{
+		auto it = m_pPools.find(memoryTypeIndex);
+		if (it != m_pPools.end())
+			return it->second;
+
+		// Each Vulkan memory type gets one reusable VMA pool. VMA sub-allocates buffers/images from these larger blocks.
+		VmaPoolCreateInfo poolInfo = {};
+		poolInfo.memoryTypeIndex = memoryTypeIndex;
+		poolInfo.flags = 0;
+		poolInfo.blockSize = GetPoolBlockSize(memoryTypeIndex);
+		poolInfo.minBlockCount = 0;
+		poolInfo.maxBlockCount = 0;
+		poolInfo.priority = 0.5f;
+		poolInfo.minAllocationAlignment = 0;
+		poolInfo.pMemoryAllocateNext = nullptr;
+
+		VmaPool pPool = nullptr;
+		VKA(vmaCreatePool(m_pAllocator, &poolInfo, &pPool));
+		m_pPools.emplace(memoryTypeIndex, pPool);
+		return pPool;
+	}
+	VkDeviceSize MemoryAllocator::GetPoolBlockSize(uint32_t memoryTypeIndex) const
+	{
+		VkMemoryPropertyFlags propertyFlags;
+		vmaGetMemoryTypeProperties(m_pAllocator, memoryTypeIndex, &propertyFlags);
+
+		// Device-local pools are larger because textures/render targets/storage buffers usually live there.
+		if (propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+			return s_devicePoolBlockSize;
+
+		// Host-visible allocations are typically upload/uniform data, so keep blocks smaller.
+		return s_hostPoolBlockSize;
+	}
+	bool MemoryAllocator::UseManagedPool(const VmaAllocationCreateInfo& allocationInfo) const
+	{
+		// A non-null pool means the caller already selected a specific pool. Do not override that decision.
+		if (allocationInfo.pool != nullptr)
+			return false;
+
+		// Dedicated allocations intentionally bypass sub-allocation. This is useful for very large or special resources.
+		if (allocationInfo.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT)
+			return false;
+
+		return true;
 	}
 }

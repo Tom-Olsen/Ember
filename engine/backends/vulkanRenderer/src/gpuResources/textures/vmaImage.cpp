@@ -4,6 +4,7 @@
 #include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
+#include "vulkanMemoryAllocator.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
 #include <vulkan/vulkan.h>
@@ -27,7 +28,7 @@ namespace vulkanRendererBackend
 		m_layout = m_imageInfo.initialLayout;
 
 		// Create image:
-		VKA(vmaCreateImage(Context::GetVmaAllocator(), &m_imageInfo, &m_allocationInfo, &m_image, &m_allocation, nullptr));
+		VKA(Context::GetMemoryAllocator()->CreateImage(m_imageInfo, m_allocationInfo, &m_image, &m_allocation));
 		NAME_VK_OBJECT(m_image, "Image" + std::to_string(s_index));
 
 		// Create image view:
@@ -377,7 +378,7 @@ namespace vulkanRendererBackend
 			if (imageView != VK_NULL_HANDLE)
 				vkDestroyImageView(Context::GetVkDevice(), imageView, nullptr);
 			if (image != VK_NULL_HANDLE && allocation != nullptr)
-				vmaDestroyImage(Context::GetVmaAllocator(), image, allocation);
+				Context::GetMemoryAllocator()->DestroyImage(image, allocation);
 
 			#ifdef VALIDATION_LAYERS_ACTIVE
 			Context::GetAllocationTracker()->RemoveVmaImageAllocation(allocation);

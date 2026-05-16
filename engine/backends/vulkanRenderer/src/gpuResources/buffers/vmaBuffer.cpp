@@ -1,11 +1,11 @@
 #include "vmaBuffer.h"
 #include "vmaAllocationCreateInfoToString.h"
-#include "vulkanBufferCreateInfoToString.h"
-#include "vk_mem_alloc.h"
 #include "vulkanAllocationTracker.h"
+#include "vulkanBufferCreateInfoToString.h"
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanMacros.h"
+#include "vulkanMemoryAllocator.h"
 #include <vulkan/vulkan.h>
 
 
@@ -26,7 +26,7 @@ namespace vulkanRendererBackend
 		m_allocation = nullptr;
 
 		// Create Buffer:
-		VkResult result = vmaCreateBuffer(Context::GetVmaAllocator(), &m_bufferInfo, &m_allocationInfo, &m_buffer, &m_allocation, nullptr);
+		VkResult result = Context::GetMemoryAllocator()->CreateBuffer(m_bufferInfo, m_allocationInfo, &m_buffer, &m_allocation);
 		if (result != VK_SUCCESS)
 		{
 			LOG_CRITICAL("VmaBuffer::VmaBuffer failed. VkResult: {}, VkBufferCreateInfo: {}, VmaAllocationCreateInfo: {}", std::to_string(result), emberVulkanUtility::ToString(m_bufferInfo), ToString_VmaAllocationCreateInfo(m_allocationInfo));
@@ -111,8 +111,8 @@ namespace vulkanRendererBackend
 
 		GarbageCollector::RecordGarbage([buffer, allocation]()
 		{
-			if (buffer != VK_NULL_HANDLE && allocation != nullptr)
-				vmaDestroyBuffer(Context::GetVmaAllocator(), buffer, allocation);
+				if (buffer != VK_NULL_HANDLE && allocation != nullptr)
+					Context::GetMemoryAllocator()->DestroyBuffer(buffer, allocation);
 
 			#ifdef VALIDATION_LAYERS_ACTIVE
 			Context::GetAllocationTracker()->RemoveVmaBufferAllocation(allocation);
