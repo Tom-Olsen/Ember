@@ -464,8 +464,7 @@ namespace fluidDynamics
 		m_shaderProperties.SetBuffer("densityBuffer", m_densityBuffer);
 		m_shaderProperties.SetBuffer("normalBuffer", m_normalBuffer);
 		m_shaderProperties.SetBuffer("curvatureBuffer", m_curvatureBuffer);
-		Renderer::DrawInstanced(m_particleCount, m_positionBuffer, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
-		//static void DrawInstanced(uint32_t instanceCount, Buffer & instanceBuffer, Mesh & mesh, const Material & material, ShaderProperties & shaderProperties, const Float4x4 & localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		Renderer::DrawInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
 	}
 
 

@@ -86,7 +86,7 @@ namespace emberEngine
 			LOG_WARN("Renderer::DrawMesh(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another draw call.");
 			return;
 		}
-		s_pIRenderer->DrawMesh(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows);
+		s_pIRenderer->DrawMesh(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows, 0);
 	}
 	void Renderer::DrawMesh(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
 	{
@@ -103,7 +103,7 @@ namespace emberEngine
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows);
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows, 0);
 		ShaderProperties shaderProperties = ShaderProperties(material, pICallDescriptorSetBinding, false);
 		return shaderProperties;
 	}
@@ -124,7 +124,6 @@ namespace emberEngine
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
-		emberBackendInterface::IBuffer* pIInstanceBuffer = instanceBuffer.GetInterfaceHandle();
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = shaderProperties.GetCallInterfaceHandle();
@@ -133,7 +132,9 @@ namespace emberEngine
 			LOG_WARN("Renderer::DrawInstanced(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another draw call.");
 			return;
 		}
-		s_pIRenderer->DrawInstanced(instanceCount, pIInstanceBuffer, pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows);
+		if (shaderProperties.HasBinding("instanceBuffer"))
+			shaderProperties.SetBuffer("instanceBuffer", instanceBuffer);
+		s_pIRenderer->DrawMesh(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
 	}
 	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
 	{
@@ -148,11 +149,12 @@ namespace emberEngine
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
-		emberBackendInterface::IBuffer* pIInstanceBuffer = instanceBuffer.GetInterfaceHandle();
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawInstanced(instanceCount, pIInstanceBuffer, pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows);
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
 		ShaderProperties shaderProperties = ShaderProperties(material, pICallDescriptorSetBinding, false);
+		if (shaderProperties.HasBinding("instanceBuffer"))
+			shaderProperties.SetBuffer("instanceBuffer", instanceBuffer);
 		return shaderProperties;
 	}
 	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
@@ -163,6 +165,48 @@ namespace emberEngine
 	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
 	{
 		return DrawInstanced(instanceCount, instanceBuffer, mesh, material, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
+	}
+	void Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	{
+		if (material.GetName() == "errorMaterial")
+			receiveShadows = castShadows = false;
+		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = shaderProperties.GetCallInterfaceHandle();
+		if (!pICallDescriptorSetBinding)
+		{
+			LOG_WARN("Renderer::DrawInstanced(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another draw call.");
+			return;
+		}
+		s_pIRenderer->DrawMesh(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
+	}
+	void Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
+	{
+		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
+		return DrawInstanced(instanceCount, mesh, material, shaderProperties, localToWorldMatrix, receiveShadows, castShadows);
+	}
+	void Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
+	{
+		return DrawInstanced(instanceCount, mesh, material, shaderProperties, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
+	}
+	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	{
+		if (material.GetName() == "errorMaterial")
+			receiveShadows = castShadows = false;
+		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
+		ShaderProperties shaderProperties = ShaderProperties(material, pICallDescriptorSetBinding, false);
+		return shaderProperties;
+	}
+	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
+	{
+		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
+		return DrawInstanced(instanceCount, mesh, material, localToWorldMatrix, receiveShadows, castShadows);
+	}
+	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
+	{
+		return DrawInstanced(instanceCount, mesh, material, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
 	}
 
 

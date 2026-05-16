@@ -83,6 +83,12 @@ namespace emberEngine
 		static ShaderProperties DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
 		static ShaderProperties DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, const Float3& scale = Float3::one, bool receiveShadows = true, bool castShadows = true);
 		static ShaderProperties DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, float scale = 1.0f, bool receiveShadows = true, bool castShadows = true);
+		static void DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static void DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, const Float3& scale = Float3::one, bool receiveShadows = true, bool castShadows = true);
+		static void DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, float scale = 1.0f, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, const Float3& scale = Float3::one, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, float scale = 1.0f, bool receiveShadows = true, bool castShadows = true);
 
 		// Draw basic geometry:
 		static void DrawLineSegment(const Float3& start, const Float3& end, float width, const Float4& color = Float4::one, bool receiveShadows = true, bool castShadows = true);

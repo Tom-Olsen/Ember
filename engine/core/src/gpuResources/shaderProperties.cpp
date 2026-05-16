@@ -257,6 +257,15 @@ namespace emberEngine
 			return m_pICallDescriptorSetBinding->GetShaderName();
 		return "";
 	}
+	bool ShaderProperties::HasBinding(const std::string& name)
+	{
+		ValidateCallDescriptorSetBinding();
+		if (m_pIShaderDescriptorSetBinding && m_pIShaderDescriptorSetBinding->HasBinding(name))
+			return true;
+		if (m_pICallDescriptorSetBinding && m_pICallDescriptorSetBinding->HasBinding(name))
+			return true;
+		return false;
+	}
 
 
 

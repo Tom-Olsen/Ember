@@ -236,7 +236,7 @@ namespace fluidDynamics
 		m_shaderProperties.SetBuffer("densityBuffer", m_data.densityBuffer.GetBuffer());
 		m_shaderProperties.SetBuffer("normalBuffer", m_data.normalBuffer.GetBuffer());
 		m_shaderProperties.SetBuffer("curvatureBuffer", m_data.curvatureBuffer.GetBuffer());
-		Renderer::DrawInstanced(m_particleCount, m_data.positionBuffer.GetBuffer(), m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
+		Renderer::DrawInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
 	}
 
 

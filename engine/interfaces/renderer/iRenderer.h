@@ -37,12 +37,8 @@ namespace emberBackendInterface
         virtual void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) = 0;
 
         // Draw mesh:
-        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
-        virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
-
-        // Draw instanced:
-        virtual void DrawInstanced(uint32_t instanceCount, IBuffer* pInstanceBuffer, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
-        virtual IDescriptorSetBinding* DrawInstanced(uint32_t instanceCount, IBuffer* pInstanceBuffer, IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows) = 0;
+        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
 
         // Getters:
         virtual uint32_t GetShadowMapResolution() = 0;

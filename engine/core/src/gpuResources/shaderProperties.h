@@ -97,6 +97,7 @@ namespace emberEngine
 
 		// Getters
 		std::string GetShaderName() const;
+		bool HasBinding(const std::string& name);
 
 		// Debugging:
 		void Print() const;
