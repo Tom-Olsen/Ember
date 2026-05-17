@@ -86,6 +86,7 @@ namespace vulkanRendererBackend
 		bool IsValidImageFormat(VkFormat format);
 		bool IsDepthFormat(VkFormat format);
 		bool IsStencilFormat(VkFormat format);
+		uint64_t GetImageSize(const VkImageSubresourceRange& subresourceRange, VkFormat format);
 		void CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
 	};
 }

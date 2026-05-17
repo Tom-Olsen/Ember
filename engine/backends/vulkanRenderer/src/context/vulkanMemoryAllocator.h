@@ -16,8 +16,8 @@ namespace vulkanRendererBackend
 	class MemoryAllocator
 	{
 	private: // Members:
-		static constexpr VkDeviceSize s_hostPoolBlockSize = 64ull * 1024ull * 1024ull;      //  64 MiB
-		static constexpr VkDeviceSize s_devicePoolBlockSize = 256ull * 1024ull * 1024ull;   // 256 MiB
+		static constexpr VkDeviceSize s_hostPoolBlockSize = 4ull * 1024ull * 1024ull;      //  4 MiB
+		static constexpr VkDeviceSize s_devicePoolBlockSize = 16ull * 1024ull * 1024ull;   // 16 MiB
 		VmaAllocator m_pAllocator;
 		std::unordered_map<uint32_t, VmaPool> m_pPools; // one pool per vulkan memory type (DEVICE_LOCAL vs HOST_VISIBLE + HOST_COHERENT vs HOST_VISIBLE + HOST_COHERENT + HOST_CACHED vs etc.).
 
@@ -33,8 +33,8 @@ namespace vulkanRendererBackend
 		MemoryAllocator(MemoryAllocator&& other) noexcept;
 		MemoryAllocator& operator=(MemoryAllocator&& other) noexcept;
 
-		VkResult CreateBuffer(const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocationInfo, VkBuffer* pBuffer, VmaAllocation* pAllocation);
-		VkResult CreateImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImage* pImage, VmaAllocation* pAllocation);
+		VkResult CreateBuffer(const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocationInfo, VkDeviceSize allocationSize, VkBuffer* pBuffer, VmaAllocation* pAllocation);
+		VkResult CreateImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkDeviceSize allocationSize, VkImage* pImage, VmaAllocation* pAllocation);
 		void DestroyBuffer(VkBuffer buffer, VmaAllocation allocation);
 		void DestroyImage(VkImage image, VmaAllocation allocation);
 
@@ -45,6 +45,7 @@ namespace vulkanRendererBackend
 		void MoveFrom(MemoryAllocator& other) noexcept;
 		VmaPool GetOrCreatePool(uint32_t memoryTypeIndex);
 		VkDeviceSize GetPoolBlockSize(uint32_t memoryTypeIndex) const;
-		bool UseManagedPool(const VmaAllocationCreateInfo& allocationInfo) const;
+		VkDeviceSize RoundUp(VkDeviceSize value, VkDeviceSize alignment) const;
+		bool UseManagedPool(const VmaAllocationCreateInfo& allocationInfo, VkDeviceSize allocationSize, VkDeviceSize poolBlockSize) const;
 	};
 }

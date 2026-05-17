@@ -36,7 +36,7 @@ namespace vulkanRendererBackend
 		VkImageLayout m_layout;
 
 	public: // Methods:
-		VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue);
+		VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkDeviceSize allocationSize, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue);
 		~VmaImage();
 
 		// Non-copyable:

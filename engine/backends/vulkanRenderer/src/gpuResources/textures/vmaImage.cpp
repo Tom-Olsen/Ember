@@ -19,7 +19,7 @@ namespace vulkanRendererBackend
 
 
 	// Constructors/Destructor:
-	VmaImage::VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue)
+	VmaImage::VmaImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkDeviceSize allocationSize, VkImageSubresourceRange& subresourceRange, VkImageViewType viewType, const DeviceQueue& queue)
 	{
 		m_imageInfo = imageInfo;
 		m_allocationInfo = allocationInfo;
@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
 		m_layout = m_imageInfo.initialLayout;
 
 		// Create image:
-		VKA(Context::GetMemoryAllocator()->CreateImage(m_imageInfo, m_allocationInfo, &m_image, &m_allocation));
+		VKA(Context::GetMemoryAllocator()->CreateImage(m_imageInfo, m_allocationInfo, allocationSize, &m_image, &m_allocation));
 		NAME_VK_OBJECT(m_image, "Image" + std::to_string(s_index));
 
 		// Create image view:

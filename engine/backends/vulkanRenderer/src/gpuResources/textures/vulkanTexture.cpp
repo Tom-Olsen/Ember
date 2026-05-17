@@ -173,6 +173,7 @@ namespace vulkanRendererBackend
 	}
 	uint32_t Texture::BytesPerChannel(VkFormat format)
 	{
+        // Color formats:
 		if (s_valid08BitFormats.contains(format))
 			return 1;
 		if (s_valid16BitFormats.contains(format))
@@ -181,6 +182,20 @@ namespace vulkanRendererBackend
 			return 4;
 		if (s_valid64BitFormats.contains(format))
 			return 8;
+            
+        // Depth/Stencil formats:
+        if (format == VK_FORMAT_S8_UINT)
+            return 1;
+        if (format == VK_FORMAT_D16_UNORM)
+            return 2;
+        if (format == VK_FORMAT_D16_UNORM_S8_UINT)
+            return 3;
+        if (format == VK_FORMAT_D24_UNORM_S8_UINT)
+            return 4;
+        if (format == VK_FORMAT_D32_SFLOAT)
+            return 4;
+        if (format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+            return 8;
 
 		throw std::runtime_error("Unsupported Texture format: " + emberVulkanUtility::ToString(format));
 		return -1;
@@ -196,6 +211,23 @@ namespace vulkanRendererBackend
 	bool Texture::IsStencilFormat(VkFormat format)
 	{
 		return s_validStencilFormats.contains(format);
+	}
+	uint64_t Texture::GetImageSize(const VkImageSubresourceRange& subresourceRange, VkFormat format)
+	{
+		uint64_t imageSize = 0;
+		uint64_t width = m_width;
+		uint64_t height = m_height;
+		uint64_t depth = m_depth;
+		uint64_t bytesPerTexel = static_cast<uint64_t>(m_channels) * BytesPerChannel(format);
+
+		for (uint32_t i = 0; i < subresourceRange.levelCount; i++)
+		{
+			imageSize += width * height * depth * subresourceRange.layerCount * bytesPerTexel;
+			width = width > 1 ? width / 2 : 1;
+			height = height > 1 ? height / 2 : 1;
+			depth = depth > 1 ? depth / 2 : 1;
+		}
+		return imageSize;
 	}
 	void Texture::CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
 	{
@@ -218,6 +250,6 @@ namespace vulkanRendererBackend
 		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 		allocInfo.requiredFlags = memoryFlags;
 
-		m_pImage = std::make_unique<VmaImage>(imageInfo, allocInfo, subresourceRange, viewType, queue);
+		m_pImage = std::make_unique<VmaImage>(imageInfo, allocInfo, GetImageSize(subresourceRange, format), subresourceRange, viewType, queue);
 	}
 }

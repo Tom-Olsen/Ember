@@ -188,7 +188,8 @@ namespace vulkanRendererBackend
 
 			VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
-			m_pMsaaImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue));
+			VkDeviceSize allocationSize =  8ull * imageInfo.extent.width * imageInfo.extent.height *imageInfo.samples;
+			m_pMsaaImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, allocationSize, subresourceRange, viewType, queue));
 		}
 	}
 	void ForwardRenderPass::CreateDepthImages()
@@ -225,7 +226,8 @@ namespace vulkanRendererBackend
 
 			VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
 			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
-			m_pDepthImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, subresourceRange, viewType, queue));
+			VkDeviceSize allocationSize = 8ull * imageInfo.extent.width * imageInfo.extent.height * imageInfo.samples;
+			m_pDepthImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, allocationSize, subresourceRange, viewType, queue));
 
 			// Transition: Layout: undefined->depth attachment, Queue: graphics
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
