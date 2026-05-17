@@ -45,7 +45,7 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(m_imageView, "ImageView" + std::to_string(s_index));
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::GetAllocationTracker()->AddVmaImageAllocation(m_allocation, std::to_string(s_index));
+		Context::GetAllocationTracker()->AddVmaImageAllocation(m_image, m_allocation, std::to_string(s_index));
 		#endif
 		s_index++;
 	}

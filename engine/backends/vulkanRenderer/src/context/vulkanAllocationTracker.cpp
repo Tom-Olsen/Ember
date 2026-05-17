@@ -55,10 +55,22 @@ namespace vulkanRendererBackend
 		m_vmaBufferAllocations[allocation] = bufferAllocation;
 	}
 
-	void AllocationTracker::AddVmaImageAllocation(VmaAllocation allocation, const std::string& name)
+	void AllocationTracker::AddVmaImageAllocation(VkImage image, VmaAllocation allocation, const std::string& name)
 	{
-		if (allocation)
-			m_vmaImageAllocations[allocation] = name;
+		if (!allocation)
+			return;
+
+		VmaAllocationInfo allocationInfo = {};
+		vmaGetAllocationInfo(Context::GetVmaAllocator(), allocation, &allocationInfo);
+
+		ImageAllocationInfo imageAllocation = {};
+		imageAllocation.image = image;
+		imageAllocation.memory = allocationInfo.deviceMemory;
+		imageAllocation.name = name;
+		imageAllocation.offset = allocationInfo.offset;
+		imageAllocation.size = allocationInfo.size;
+            
+		m_vmaImageAllocations[allocation] = imageAllocation;
 	}
 
 	void AllocationTracker::UpdateVmaBufferAllocationName(VmaAllocation allocation, const std::string& name)
@@ -92,8 +104,8 @@ namespace vulkanRendererBackend
     void AllocationTracker::DumpVmaImageAllocations() const
 	{
 		LOG_INFO("Tracked VmaImageAllocations (count = {}):", m_vmaImageAllocations.size());
-		for (const auto& [allocation, name] : m_vmaImageAllocations)
-			LOG_INFO(" - name '{}'", name);
+		for (const auto& [allocation, info] : m_vmaImageAllocations)
+			LOG_INFO(" - VkImage {:#x}, VmaAllocation {}, VkDeviceMemory {:#x}, offset {}, size {}, name '{}'", (uint64_t)info.image, fmt::ptr(allocation), (uint64_t)info.memory, info.offset, info.size, info.name);
 	}
 
 
@@ -116,8 +128,8 @@ namespace vulkanRendererBackend
 		else
 		{
 			LOG_CRITICAL("Following VmaImagesAllocations have not been destroyed:");
-			for (auto& [alloc, name] : m_vmaImageAllocations)
-				LOG_ERROR(name);
+			for (auto& [alloc, info] : m_vmaImageAllocations)
+				LOG_ERROR(info.name);
 		}
 		#endif
 	}

@@ -30,10 +30,18 @@ namespace vulkanRendererBackend
 			uint64_t offset;
 			uint64_t size;
 		};
+		struct ImageAllocationInfo
+		{
+			VkImage image;
+			VkDeviceMemory memory;
+			std::string name;
+			uint64_t offset;
+			uint64_t size;
+		};
 
 	private: // Members:
 		std::unordered_map<VmaAllocation, BufferAllocationInfo> m_vmaBufferAllocations;
-		std::unordered_map<VmaAllocation, std::string> m_vmaImageAllocations;
+		std::unordered_map<VmaAllocation, ImageAllocationInfo> m_vmaImageAllocations;
 
 	public: // Methods:
 		AllocationTracker();
@@ -49,7 +57,7 @@ namespace vulkanRendererBackend
 
 		// Registration:
 		void AddVmaBufferAllocation(VkBuffer buffer, VmaAllocation allocation, const std::string& name);
-		void AddVmaImageAllocation(VmaAllocation allocation, const std::string& name);
+		void AddVmaImageAllocation(VkImage image, VmaAllocation allocation, const std::string& name);
 		void UpdateVmaBufferAllocationName(VmaAllocation allocation, const std::string& name);
 		void RemoveVmaBufferAllocation(VmaAllocation allocation);
 		void RemoveVmaImageAllocation(VmaAllocation allocation);
