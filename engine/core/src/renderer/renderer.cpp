@@ -397,6 +397,21 @@ namespace emberEngine
 		s_pIRenderer->WaitDeviceIdle();
 	}
 
+
+
+    // Debugging:
+	void Renderer::DumpVmaBufferAllocations()
+    {
+        s_pIRenderer->DumpVmaBufferAllocations();
+    }
+	void Renderer::DumpVmaImageAllocations()
+    {
+        s_pIRenderer->DumpVmaImageAllocations();
+    }
+
+
+
+    // Private Methods:
 	// Gpu resource factories:
 	emberBackendInterface::IBuffer* Renderer::CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage)
 	{

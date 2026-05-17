@@ -83,5 +83,9 @@ namespace emberBackendInterface
         virtual uint32_t GetGraphicsVkQueueFamilyIndex() const = 0;
         virtual uint32_t GetSwapchainImageCount() const = 0;
         virtual uint32_t GetFramesInFlight() const = 0;
+
+        // Debugging:
+		virtual void DumpVmaBufferAllocations() const = 0;
+		virtual void DumpVmaImageAllocations() const = 0;
     };
 }

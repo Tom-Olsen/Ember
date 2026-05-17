@@ -24,6 +24,7 @@
 #include "vulkanPreRenderCompute.h"
 #include "imGuiSdlVulkan.h"
 // Editor Windows:
+#include "backendDebugWindow.h"
 #include "consoleEditorWindow.h"
 #include "depthBiasEditorWindow.h"
 #include "fpsEditorWindow.h"
@@ -39,6 +40,7 @@ namespace emberApplication
 {
 	// Static members:
 	emberEngine::Scene* Application::m_pActiveScene;
+	std::unique_ptr<emberEditor::BackendDebugEditorWindow> Application::m_pBackendDebugEditorWindow;
 	std::unique_ptr<emberEditor::ConsoleEditorWindow> Application::m_pConsoleEditorWindow;
 	std::unique_ptr<emberEditor::DepthBiasEditorWindow> Application::m_pDepthBiasEditorWindow;
 	std::unique_ptr<emberEditor::FpsEditorWindow> Application::m_pFpsEditorWindow;
@@ -92,6 +94,7 @@ namespace emberApplication
 			emberEngine::Core::InitOther();
 
 			// Editor windows:
+			m_pBackendDebugEditorWindow = std::make_unique<emberEditor::BackendDebugEditorWindow>();
 			m_pConsoleEditorWindow = std::make_unique<emberEditor::ConsoleEditorWindow>();
 			m_pDepthBiasEditorWindow = std::make_unique<emberEditor::DepthBiasEditorWindow>();
 			m_pFpsEditorWindow = std::make_unique<emberEditor::FpsEditorWindow>();
@@ -178,6 +181,10 @@ namespace emberApplication
 	{
 		return m_pActiveScene;
 	}
+	emberEditor::BackendDebugEditorWindow* Application::GetBackendDebugEditorWindow()
+    {
+        return m_pBackendDebugEditorWindow.get();
+    }
 	emberEditor::ConsoleEditorWindow* Application::GetConsoleEditorWindow()
 	{
 		return m_pConsoleEditorWindow.get();

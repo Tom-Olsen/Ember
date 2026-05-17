@@ -118,6 +118,10 @@ namespace emberEngine
 		static void CollectGarbage();
 		static void WaitDeviceIdle();
 
+        // Debugging:
+		static void DumpVmaBufferAllocations();
+		static void DumpVmaImageAllocations();
+
 	private: // Methods:
 		// Gpu resource factories:
 		static emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage);

@@ -12,6 +12,7 @@ namespace emberEngine
 }
 namespace emberEditor
 {
+	class BackendDebugEditorWindow;
 	class ConsoleEditorWindow;
 	class DepthBiasEditorWindow;
 	class FpsEditorWindow;
@@ -42,6 +43,7 @@ namespace emberApplication
 
 	private: // Members:
 		static emberEngine::Scene* m_pActiveScene;
+		static std::unique_ptr<emberEditor::BackendDebugEditorWindow> m_pBackendDebugEditorWindow;
 		static std::unique_ptr<emberEditor::ConsoleEditorWindow> m_pConsoleEditorWindow;
 		static std::unique_ptr<emberEditor::DepthBiasEditorWindow> m_pDepthBiasEditorWindow;
 		static std::unique_ptr<emberEditor::FpsEditorWindow> m_pFpsEditorWindow;
@@ -63,6 +65,7 @@ namespace emberApplication
 
 		// Getters:
 		static emberEngine::Scene* GetActiveScene();
+		static emberEditor::BackendDebugEditorWindow* GetBackendDebugEditorWindow();
 		static emberEditor::ConsoleEditorWindow* GetConsoleEditorWindow();
 		static emberEditor::DepthBiasEditorWindow* GetDepthBiasEditorWindow();
 		static emberEditor::FpsEditorWindow* GetFpsEditorWindow();

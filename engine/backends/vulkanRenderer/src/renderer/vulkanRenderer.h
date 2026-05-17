@@ -182,6 +182,10 @@ namespace vulkanRendererBackend
 		uint32_t GetSwapchainImageCount() const override;
 		uint32_t GetFramesInFlight() const override;
 
+        // Debugging:
+		void DumpVmaBufferAllocations() const;
+		void DumpVmaImageAllocations() const;
+
 		// Backend only:
 		void QueueMeshForUpdate(Mesh* pMesh);
 		void RemoveQueuedMeshUpdate(Mesh* pMesh);

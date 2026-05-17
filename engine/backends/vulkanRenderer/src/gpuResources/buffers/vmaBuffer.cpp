@@ -34,7 +34,7 @@ namespace vulkanRendererBackend
 		}
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
-		Context::GetAllocationTracker()->AddVmaBufferAllocation(m_allocation, std::to_string(s_index));
+		Context::GetAllocationTracker()->AddVmaBufferAllocation(m_buffer, m_allocation, std::to_string(s_index));
 		s_index++;
 		#endif
 	}

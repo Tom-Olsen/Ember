@@ -9,6 +9,7 @@
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
+#include "vulkanAllocationTracker.h"
 #include "vulkanCommandPool.h"
 #include "vulkanCompute.h"
 #include "vulkanComputeCall.h"
@@ -507,6 +508,18 @@ namespace vulkanRendererBackend
 	{
 		return Context::GetFramesInFlight();
 	}
+
+
+
+    // Debugging:
+	void Renderer::DumpVmaBufferAllocations() const
+    {
+        Context::GetAllocationTracker()->DumpVmaBufferAllocations();
+    }
+	void Renderer::DumpVmaImageAllocations() const
+    {
+        Context::GetAllocationTracker()->DumpVmaImageAllocations();
+    }
 
 
 
