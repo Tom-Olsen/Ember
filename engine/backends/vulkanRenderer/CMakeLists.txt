@@ -11,6 +11,7 @@ option(VULKAN_RENDERER_BACKEND_BUILD_SHARED "Build ${TARGET_NAME} as a shared li
 get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)     # vulkan
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)               # engine
 get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)                   # commom
+get_filename_component(ENGINE_CMAKE_DIR "${ENGINE_DIR}/cmake" ABSOLUTE)                     # cmake
 get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)                   # extern
 get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)           # interfaces
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs 
@@ -20,6 +21,7 @@ get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)     
 if(TARGET ${TARGET_NAME})
     return()
 endif()
+include("${ENGINE_CMAKE_DIR}/emberVulkanOptions.cmake")
 # ---------------------------------------------------
 
 
@@ -145,6 +147,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
 # ---------------------- Macros ---------------------
 target_compile_definitions(${TARGET_NAME} PUBLIC VULKAN_LIBRARY_ROOT_PATH="${VULKAN_LIBRARY_ROOT_PATH}")
 target_compile_definitions(${TARGET_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
+ember_configure_vulkan_validation_layers(${TARGET_NAME})
 
 # Library compilation logic:
 if(VULKAN_RENDERER_BACKEND_BUILD_SHARED)

@@ -10,6 +10,7 @@ option(IM_GUI_SDL_VULKAN_BACKEND_BUILD_SHARED "Build ${TARGET_NAME} as a shared 
 # Cache directories:
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)       # engine
 get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)           # commom
+get_filename_component(ENGINE_CMAKE_DIR "${ENGINE_DIR}/cmake" ABSOLUTE)             # cmake
 get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)           # extern
 get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)   # interfaces
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)               # libs
@@ -17,6 +18,7 @@ get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)           
 if(TARGET ${TARGET_NAME})
     return()
 endif()
+include("${ENGINE_CMAKE_DIR}/emberVulkanOptions.cmake")
 # ---------------------------------------------------
 
 
@@ -84,6 +86,7 @@ if(IM_GUI_SDL_VULKAN_BACKEND_BUILD_SHARED)
 else()
     target_compile_definitions(${TARGET_NAME} PUBLIC IMGUI_SDL_VULKAN_BACKEND_STATIC)
 endif()
+ember_configure_vulkan_validation_layers(${TARGET_NAME})
 # ---------------------------------------------------
 
 

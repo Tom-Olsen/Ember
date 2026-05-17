@@ -47,6 +47,9 @@ namespace imGuiSdlVulkanBackend
 		initInfo.MinImageCount = 2;
 		initInfo.ImageCount = pIRenderer->GetSwapchainImageCount();
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;	// same as renderer present pass, which is hardcoded to 1.
+		#ifdef VALIDATION_LAYERS_ACTIVE
+		initInfo.MinAllocationSize = 1024 * 1024;
+		#endif
 		ImGui_ImplVulkan_Init(&initInfo);
 
 		CreateDescriptorSetLayout();
