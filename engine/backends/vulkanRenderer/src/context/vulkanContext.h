@@ -186,5 +186,12 @@ namespace vulkanRendererBackend
 		Context(Context&&) = delete;
 		Context& operator=(Context&&) = delete;
 		~Context() = delete;
+
+        // Helpers:
+        static std::vector<VkExtensionProperties> GetAvailableInstanceExtensions();
+	    static std::vector<VkExtensionProperties> GetAvailableDeviceExtensions(VkPhysicalDevice);
+	    static bool IsExtensionAvailable(const std::vector<VkExtensionProperties>&, const char*);
+	    static bool SupportsVulkanVersion(VkPhysicalDevice, uint32_t);
+	    static void RequireExtensionAvailable(const std::vector<VkExtensionProperties>&, const char*, const char*);
 	};
 }

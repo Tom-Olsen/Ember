@@ -18,14 +18,16 @@
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanSurface.h"
 #include "vulkanSwapchain.h"
+#include <cstring>
+#include <stdexcept>
+#include <string>
 #include <vulkan/vulkan.h>
 
 
 namespace vulkanRendererBackend
 {
 	// Forward declerations:
-	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;						// vulkan debug utility object naming function pointer.
-	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>&, const char*);	// helper function.
+	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;								            // vulkan debug utility object naming function pointer.
 
 
 
@@ -64,18 +66,13 @@ namespace vulkanRendererBackend
 		m_absoluteFrameIndex = 0;
 		m_enableDockSpace = createInfo.enableDockSpace;
 
-		// Enumerate available extensions:
-		uint32_t propertiesCount;
-		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, nullptr));
-		std::vector<VkExtensionProperties> properties(propertiesCount);
-		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()));
-
 		// Get instance extensions:
 		std::vector<const char*> instanceExtensions;
+		std::vector<VkExtensionProperties> availableInstanceExtensions = GetAvailableInstanceExtensions();
 		#if defined(VALIDATION_LAYERS_ACTIVE)
-		if (IsExtensionAvailable(properties, VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
+		if (IsExtensionAvailable(availableInstanceExtensions, VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
 			instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-		if (IsExtensionAvailable(properties, VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME))
+		if (IsExtensionAvailable(availableInstanceExtensions, VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME))
 			instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 		#endif
 
@@ -84,26 +81,37 @@ namespace vulkanRendererBackend
 
 		if (createInfo.enableGui)
 		{
-			if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+			if (IsExtensionAvailable(availableInstanceExtensions, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
 				instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 			#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
-			if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
+			if (IsExtensionAvailable(availableInstanceExtensions, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
 				instanceExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 			#endif
 		}
 		// and more ...
 
-		// Get device extensions:
-		std::vector<const char*> deviceExtensions;
-		deviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-		// These extensions are integrated in Vulkan 1.2 as features, but ImGui relies on them as an extensions => Validation Layer warnings.
-		deviceExtensions.emplace_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);	// Ember::ToDo: implement this properly so the warnings vanish.
-		deviceExtensions.emplace_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
-		// and more ...
+		for (const char* extension : instanceExtensions)
+			RequireExtensionAvailable(availableInstanceExtensions, extension, "instance");
 
 		// Create vulkan context:
 		m_pInstance = std::make_unique<Instance>(instanceExtensions);
 		m_pPhysicalDevice = std::make_unique<PhysicalDevice>(m_pInstance.get());
+
+		// Get device extensions:
+		std::vector<const char*> deviceExtensions;
+		std::vector<VkExtensionProperties> availableDeviceExtensions = GetAvailableDeviceExtensions(m_pPhysicalDevice->GetVkPhysicalDevice());
+		RequireExtensionAvailable(availableDeviceExtensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME, "device");
+		deviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		if (IsExtensionAvailable(availableDeviceExtensions, VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME))
+			deviceExtensions.emplace_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
+		else if (SupportsVulkanVersion(m_pPhysicalDevice->GetVkPhysicalDevice(), VK_API_VERSION_1_2) == false)
+			throw std::runtime_error("Required Vulkan device extension is not available: " + std::string(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME));
+		if (IsExtensionAvailable(availableDeviceExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME))
+			deviceExtensions.emplace_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
+		else if (SupportsVulkanVersion(m_pPhysicalDevice->GetVkPhysicalDevice(), VK_API_VERSION_1_3) == false)
+			throw std::runtime_error("Required Vulkan device extension is not available: " + std::string(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME));
+		// and more ...
+
 		m_pSurface = std::make_unique<Surface>(m_pInstance.get(), m_pPhysicalDevice.get(), pIWindow, createInfo.vSyncEnabled);
 		m_pLogicalDevice = std::make_unique<LogicalDevice>(m_pPhysicalDevice.get(), m_pSurface.get(), deviceExtensions);
 		m_pMemoryAllocator = std::make_unique<MemoryAllocator>(m_pInstance.get(), m_pLogicalDevice.get(), m_pPhysicalDevice.get());
@@ -405,11 +413,40 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
+    // Helpers:
+	std::vector<VkExtensionProperties> Context::GetAvailableInstanceExtensions()
+	{
+		uint32_t propertiesCount;
+		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, nullptr));
+		std::vector<VkExtensionProperties> properties(propertiesCount);
+		VKA(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()));
+		return properties;
+	}
+	std::vector<VkExtensionProperties> Context::GetAvailableDeviceExtensions(VkPhysicalDevice physicalDevice)
+	{
+		uint32_t propertiesCount;
+		VKA(vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &propertiesCount, nullptr));
+		std::vector<VkExtensionProperties> properties(propertiesCount);
+		VKA(vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &propertiesCount, properties.data()));
+		return properties;
+	}
+	bool Context::IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
 	{
 		for (const VkExtensionProperties& p : properties)
 			if (strcmp(p.extensionName, extension) == 0)
 				return true;
 		return false;
+	}
+	bool Context::SupportsVulkanVersion(VkPhysicalDevice physicalDevice, uint32_t version)
+	{
+		VkPhysicalDeviceProperties properties;
+		vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+		return properties.apiVersion >= version;
+	}
+	void Context::RequireExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension, const char* extensionType)
+	{
+		if (IsExtensionAvailable(properties, extension))
+			return;
+		throw std::runtime_error("Required Vulkan " + std::string(extensionType) + " extension is not available: " + extension);
 	}
 }
