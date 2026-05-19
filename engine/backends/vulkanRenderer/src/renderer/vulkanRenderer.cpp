@@ -662,7 +662,6 @@ namespace vulkanRendererBackend
 	void Renderer::UpdateShaderData()
 	{
 		// Scene descriptor set:
-		// Ember::ToDo: add logic to only trigger this if lights changed.
 		SceneDescriptorSetLayout::SetLightData(m_directionalLights, m_directionalLightsCount, m_positionalLights, m_positionalLightsCount);
 		SceneDescriptorSetLayout::UpdateShaderData(m_frameIndex);
 

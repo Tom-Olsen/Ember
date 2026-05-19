@@ -45,7 +45,7 @@ namespace vulkanRendererBackend
 		size = std::max(4096u, math::NextPowerOfTwo(size));
 		auto it = s_stagingBufferPoolMap.find(size);
 		if (it == s_stagingBufferPoolMap.end())
-			it = s_stagingBufferPoolMap.try_emplace(size).first;
+			it = s_stagingBufferPoolMap.try_emplace(size, GetAvailableStorageBufferCount(size)).first;
 		return it->second.CheckOut(size);
 	}
 
@@ -98,5 +98,25 @@ namespace vulkanRendererBackend
 			LOG_INFO("BufferSize '{}':", bufferSize);
 			stagingBufferPool.PrintPoolState();
 		}
+	}
+
+
+
+	// Private methods:
+	uint16_t PoolManager::GetAvailableStorageBufferCount(uint32_t size)
+	{
+		if (size <= 4u * 1024u)             //  0KiB-  4KiB,    3
+			return 64;
+		if (size <= 64u * 1024u)            //  4KiB- 64KiB,    5
+			return 32;
+		if (size <= 1024u * 1024u)          // 64KiB-  1MiB,    5
+			return 16;
+		if (size <= 8u * 1024u * 1024u)     //  1MiB-  8MiB,    4
+			return 8;
+		if (size <= 64u * 1024u * 1024u)    //  8MiB- 64MiB,    4
+			return 4;
+		if (size <= 256u * 1024u * 1024u)   // 64MiB-256MiB,    3
+			return 1;
+		return 0;
 	}
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "vulkanDescriptorSetBindingPool.h"
 #include "vulkanStagingBufferPool.h"
+#include <cstdint>
 #include <map>
 #include <unordered_map>
 
@@ -46,6 +47,8 @@ namespace vulkanRendererBackend
         static void PrintStagingBufferPoolState();
 
     private: // Methods
+        static uint16_t GetAvailableStorageBufferCount(uint32_t size);
+
         // Delete all constructors:
         PoolManager() = delete;
         PoolManager(const PoolManager&) = delete;

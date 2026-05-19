@@ -1,25 +1,10 @@
 Prompts:
 
-Fix QueueMeshForUpdate() so it only adds a mesh once per intended flight frame and does not search or insert across all pending-frame vectors.
-
-Make RecordResourceUpdateCommands() robust by validating command buffer begin/record success before clearing pending mesh update lists.
-
-Change vulkanPoolManager to avoid implicit pool creation with operator[]; use find() and explicit creation only when needed.
-
-Add change detection for light data updates so SceneDescriptorSetLayout::SetLightData() is only called when lights actually change.
-
 Review draw-call sorting and reduce per-frame overhead by caching sort keys or only resorting when relevant state changes.
 
 Add thread safety or synchronization around m_pendingMeshUpdates to prevent data races if mesh updates are queued from multiple threads.
 
 Re-enable texture batch uploading with correct queue synchronization and barriers between transfer and graphics queues.
-
-Replace per-resource small Vulkan allocations with engine-owned suballocation arenas.
-Start with UniformBuffer and StagingBuffer, then consider a small-buffer arena for vertex/index/storage buffers and a separate strategy for small images.
-
-Ensure descriptor set destruction in VulkanDescriptorSetBinding is safe even when Context lifetime ends before garbage collection completes.
-
-Introduce a bounded cleanup policy for vulkanStagingBufferPool so staging buffer storage does not grow without limit.
 
 Add shutdown validation to vulkanGarbageCollector.Clear() so in-flight frame resources cannot be cleared unsafely.
 
@@ -44,3 +29,5 @@ Rethink GPU resource naming: names should live in core for managers/debugging an
 See ToDo in default.frag.hlsl
 
 Generate or validate engine uniform-buffer layouts from shader reflection, especially SceneDescriptorSetLayout and FrameDescriptorSetLayout, so HLSL cbuffer packing offsets cannot drift from the C++ BufferLayout definitions.
+
+Profiler should only keep track of last 10k things.
