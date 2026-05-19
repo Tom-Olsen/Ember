@@ -276,7 +276,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup draw call:
-		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
+		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<DescriptorSetBinding*>(pCallDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
 		m_staticDrawCalls.push_back(drawCall);
 	}
@@ -294,8 +294,8 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup draw call:
-		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
-		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
+		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
+		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
 		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
 		m_dynamicDrawCalls.push_back(drawCall);
 		return pCallDescriptorSetBinding;
@@ -564,16 +564,16 @@ namespace vulkanRendererBackend
 		// Return all pCallDescriptorSetBindings/pShadowDescriptorSetBindings of dynamic draw calls back to the corresponding pool:
 		for (DrawCall& drawCall : m_dynamicDrawCalls)
 		{
-			PoolManager::ReturnDescriptorSetBinding(static_cast<Shader*>(drawCall.pMaterial), drawCall.pCallDescriptorSetBinding);
+			PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(drawCall.pMaterial), drawCall.pCallDescriptorSetBinding);
 			if (drawCall.pShadowDescriptorSetBinding)
-				PoolManager::ReturnDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()), drawCall.pShadowDescriptorSetBinding);
+				PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()), drawCall.pShadowDescriptorSetBinding);
 		}
 
 		// Return all pShadowDescriptorSetBindings of static draw calls back to the pool:
 		for (DrawCall& drawCall : m_staticDrawCalls)
 		{
 			if (drawCall.pShadowDescriptorSetBinding)
-				PoolManager::ReturnDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()), drawCall.pShadowDescriptorSetBinding);
+				PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()), drawCall.pShadowDescriptorSetBinding);
 		}
 
 		// Clear all draw calls for next frame:

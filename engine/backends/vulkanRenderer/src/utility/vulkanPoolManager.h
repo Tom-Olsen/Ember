@@ -1,5 +1,5 @@
 #pragma once
-#include "vulkanDescriptorSetBindingPool.h"
+#include "vulkanCallDescriptorSetBindingPool.h"
 #include "vulkanStagingBufferPool.h"
 #include <cstdint>
 #include <map>
@@ -19,15 +19,15 @@ namespace vulkanRendererBackend
 
     /// <summary>
     /// Purely static class that takes care of custom resource pools.
-    /// ShaderProperties and StagingBuffers are special, as they get one pool per:
-    /// -ShaderProperties: Shader (material or computeShader)
+    /// CallDescriptorSetBindings and StagingBuffers are special, as they get one pool per:
+    /// -CallDescriptorSetBindings: Shader (material or computeShader)
     /// -StagingBuffer: size (rounded up to next power of two)
     /// </summary>
     class PoolManager
     {
     private: // Members
         static bool s_isInitialized;
-		static std::unordered_map<Shader*, DescriptorSetBindingPool> s_descriptorSetBindingPoolMap;
+		static std::unordered_map<Shader*, CallDescriptorSetBindingPool> s_callDescriptorSetBindingPoolMap;
         static std::map<uint32_t, StagingBufferPool> s_stagingBufferPoolMap;
 
     public: // Methods
@@ -35,18 +35,19 @@ namespace vulkanRendererBackend
         static void Clear();
 
         // Checkout:
-        static DescriptorSetBinding* CheckOutDescriptorSetBinding(Shader* pShader);
+        static DescriptorSetBinding* CheckOutCallDescriptorSetBinding(Shader* pShader);
         static StagingBuffer* CheckOutStagingBuffer(uint32_t size);
 
         // Return:
-        static void ReturnDescriptorSetBinding(Shader* pShader, DescriptorSetBinding* pDescriptorSetBinding);
+        static void ReturnCallDescriptorSetBinding(Shader* pShader, DescriptorSetBinding* pDescriptorSetBinding);
         static void ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer);
 
         // Debugging:
-        static void PrintDescriptorSetBindingPoolState();
+        static void PrintCallDescriptorSetBindingPoolState();
         static void PrintStagingBufferPoolState();
 
     private: // Methods
+        static bool IsValidCallDescriptorSetBindingShader(const Shader* pShader);
         static uint16_t GetAvailableStorageBufferCount(uint32_t size);
 
         // Delete all constructors:

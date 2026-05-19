@@ -160,7 +160,7 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::IDescriptorSetBinding* Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
-		DescriptorSetBinding* pIDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		DescriptorSetBinding* pIDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
 		RecordComputeShader(sessionID, pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding), threadCount);
 		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding);
 	}
@@ -201,7 +201,7 @@ namespace vulkanRendererBackend
 		{
             // Don't return compute barriers (pComputeShader and pDescriptorSetBinding are nullptr):
 			if (computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
-				PoolManager::ReturnDescriptorSetBinding((Shader*)computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+				PoolManager::ReturnCallDescriptorSetBinding((Shader*)computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
 		}
 
 		m_pCommandPools[sessionID].ResetPools();

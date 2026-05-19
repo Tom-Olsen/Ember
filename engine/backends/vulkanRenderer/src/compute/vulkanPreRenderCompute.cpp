@@ -68,7 +68,7 @@ namespace vulkanRendererBackend
 			return nullptr;
 		}
 
-		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
 		RecordComputeShader(pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pDescriptorSetBinding), threadCount);
 		return pDescriptorSetBinding;
 	}
@@ -97,7 +97,7 @@ namespace vulkanRendererBackend
 	{
 		// Return all pDescriptorSetBinding of compute calls back to the corresponding pool:
 		for (ComputeCall& computeCall : m_dynamicComputeCalls)
-			PoolManager::ReturnDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+			PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
 
 		// Remove all computeCalls so next frame can start fresh:
 		m_staticComputeCalls.clear();

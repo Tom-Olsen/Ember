@@ -14,27 +14,27 @@ namespace vulkanRendererBackend
 
 
     /// <summary>
-    /// Use one shader properties pool per Shader*.
+    /// Use one call descriptor set binding pool per Shader*.
     /// </summary>
-    class DescriptorSetBindingPool
+    class CallDescriptorSetBindingPool
     {
     private: // Members:
         std::vector<DescriptorSetBinding*> m_storage;   // Stores DescriptorSetBinding*
         std::queue<DescriptorSetBinding*> m_pool;       // Queue of available DescriptorSetBinding*.
-        size_t m_currentUsage;  // Tracks how many shader properties have been handed out at any moment.
+        size_t m_currentUsage;  // Tracks how many call descriptor set bindings have been handed out at any moment.
         size_t m_peakUsage;     // Tracks peak usage.
 
     public: // Methods:
-        DescriptorSetBindingPool();
-        ~DescriptorSetBindingPool();
+        CallDescriptorSetBindingPool();
+        ~CallDescriptorSetBindingPool();
 
         // Non-copyable:
-        DescriptorSetBindingPool(const DescriptorSetBindingPool&) = delete;
-        DescriptorSetBindingPool& operator=(const DescriptorSetBindingPool&) = delete;
+        CallDescriptorSetBindingPool(const CallDescriptorSetBindingPool&) = delete;
+        CallDescriptorSetBindingPool& operator=(const CallDescriptorSetBindingPool&) = delete;
 
         // Movable:
-        DescriptorSetBindingPool(DescriptorSetBindingPool&& other) noexcept = default;
-        DescriptorSetBindingPool& operator=(DescriptorSetBindingPool&& other) noexcept = default;
+        CallDescriptorSetBindingPool(CallDescriptorSetBindingPool&& other) noexcept = default;
+        CallDescriptorSetBindingPool& operator=(CallDescriptorSetBindingPool&& other) noexcept = default;
 
         // Checkout/Return:
         DescriptorSetBinding* CheckOut(Shader* pShader);

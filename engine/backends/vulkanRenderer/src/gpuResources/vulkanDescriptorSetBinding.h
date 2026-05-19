@@ -57,7 +57,7 @@ namespace vulkanRendererBackend
 	/// <summary>
 	/// Each DescriptorSetBinding links to one specific vkDescriptorSet and manages all the associated gpu resources.
 	/// DescriptorSetBinding owns UniformBuffer; Buffers and Texture pointers are not owned by DescriptorSetBinding.
-	/// DescriptorSetBinding construction is expensive, pre create them or use the DescriptorSetBindingPool.
+	/// DescriptorSetBinding construction is expensive, pre create them or use the CallDescriptorSetBindingPool for dynamic call descriptorSets.
 	/// </summary>
 	class VULKAN_RENDERER_API DescriptorSetBinding : public emberBackendInterface::IDescriptorSetBinding
 	{

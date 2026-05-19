@@ -1,8 +1,8 @@
-#include "vulkanDescriptorSetBindingPool.h"
+#include "vulkanCallDescriptorSetBindingPool.h"
 #include "descriptorSetMacros.h"
 #include "logger.h"
-#include "vulkanShader.h"
 #include "vulkanDescriptorSetBinding.h"
+#include "vulkanShader.h"
 
 
 
@@ -10,12 +10,12 @@ namespace vulkanRendererBackend
 {
     // Public methods:
     // Constructor/Destructor:
-    DescriptorSetBindingPool::DescriptorSetBindingPool()
+    CallDescriptorSetBindingPool::CallDescriptorSetBindingPool()
     {
         m_currentUsage = 0;
         m_peakUsage = 0;
     }
-    DescriptorSetBindingPool::~DescriptorSetBindingPool()
+    CallDescriptorSetBindingPool::~CallDescriptorSetBindingPool()
     {
         for (int i = 0; i < m_storage.size(); i++)
             delete m_storage[i];
@@ -23,9 +23,9 @@ namespace vulkanRendererBackend
 
 
     // Checkout/Return:
-    DescriptorSetBinding* DescriptorSetBindingPool::CheckOut(Shader* pShader)
+    DescriptorSetBinding* CallDescriptorSetBindingPool::CheckOut(Shader* pShader)
     {
-        // Create new shader properties if pool is empty:
+        // Create a new call descriptor set binding if pool is empty:
         if (m_pool.empty())
         {
             DescriptorSetBinding* pNewDescriptorSetBinding = new DescriptorSetBinding(pShader, CALL_SET_INDEX);
@@ -43,7 +43,7 @@ namespace vulkanRendererBackend
 
         return pDescriptorSetBinding;
     }
-    void DescriptorSetBindingPool::Return(DescriptorSetBinding* pDescriptorSetBinding)
+    void CallDescriptorSetBindingPool::Return(DescriptorSetBinding* pDescriptorSetBinding)
     {
         pDescriptorSetBinding->InvalidateBorrowedHandles();
         m_pool.push(pDescriptorSetBinding);
@@ -53,7 +53,7 @@ namespace vulkanRendererBackend
 
 
     // Debugging:
-    void DescriptorSetBindingPool::PrintPoolState()
+    void CallDescriptorSetBindingPool::PrintPoolState()
     {
         LOG_TRACE("   Stored DescriptorSetBinding count: {}", m_storage.size());
         LOG_TRACE("Available DescriptorSetBinding count: {}", m_pool.size());

@@ -73,7 +73,7 @@ namespace vulkanRendererBackend
 		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetWidth();
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
-		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
 		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none };
 		m_dynamicComputeCalls.push_back(computeCall);
 		m_callIndex++;
@@ -107,7 +107,7 @@ namespace vulkanRendererBackend
 	{
 		// Return all pDescriptorSetBinding of compute calls back to the corresponding pool:
 		for (ComputeCall& computeCall : m_dynamicComputeCalls)
-			PoolManager::ReturnDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+			PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
 
 		// Remove all computeCalls so next frame can start fresh:
 		m_staticComputeCalls.clear();
