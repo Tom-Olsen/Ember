@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include <queue>
+#include <unordered_set>
 #include <vector>
 
 
@@ -19,11 +20,12 @@ namespace vulkanRendererBackend
     class StagingBufferPool
     {
     private: // Members:
-        uint16_t m_availableStorageBuffers;  // Number of storage buffers in the pool. More can be requested, but will be destroyed on return.
-        std::vector<StagingBuffer*> m_storage;  // Stores StagingBuffer*
-        std::queue<StagingBuffer*> m_pool;      // Queue of available StagingBuffer*.
-        size_t m_currentUsage;  // Tracks how many staging buffers have been handed out at any moment.
-        size_t m_peakUsage;     // Tracks peak usage.
+        uint16_t m_availableStorageBuffers;                             // Number of storage buffers in the pool. More can be requested, but will be destroyed on return.
+        std::vector<StagingBuffer*> m_storage;                          // Stores StagingBuffer*
+        std::queue<StagingBuffer*> m_pool;                              // Queue of available StagingBuffer*.
+        std::unordered_set<StagingBuffer*> m_availableStagingBuffers;   // Tracks available StagingBuffer*.
+        size_t m_currentUsage;                                          // Tracks how many staging buffers have been handed out at any moment.
+        size_t m_peakUsage;                                             // Tracks peak usage.
 
     public: // Methods:
         StagingBufferPool(uint16_t availableStorageBuffers);

@@ -12,6 +12,7 @@ namespace vulkanRendererBackend
     StagingBufferPool::StagingBufferPool(uint16_t availableStorageBuffers)
     {
         m_availableStorageBuffers = availableStorageBuffers;
+        m_availableStagingBuffers.reserve(availableStorageBuffers);
         m_currentUsage = 0;
         m_peakUsage = 0;
     }
@@ -25,22 +26,25 @@ namespace vulkanRendererBackend
     // Checkout/Return:
     StagingBuffer* StagingBufferPool::CheckOut(uint32_t size)
     {
+        StagingBuffer* pStagingBuffer;
+
         // Create new staging buffer if pool is empty:
         if (m_pool.empty())
         {
-            StagingBuffer* pNewStagingBuffer = new StagingBuffer(size);
-            m_storage.push_back(pNewStagingBuffer);
-            m_pool.push(pNewStagingBuffer);
+            pStagingBuffer = new StagingBuffer(size);
+            m_storage.push_back(pStagingBuffer);
         }
-
         // Get resource and remove it from the queue:
-        StagingBuffer* pStagingBuffer = m_pool.front();
-        m_pool.pop();
+        else
+        {
+            pStagingBuffer = m_pool.front();
+            m_pool.pop();
+            m_availableStagingBuffers.erase(pStagingBuffer);
+        }
 
         // Update usage counts:
         m_currentUsage++;
         m_peakUsage = std::max(m_peakUsage, m_currentUsage);
-
         return pStagingBuffer;
     }
     void StagingBufferPool::Return(StagingBuffer* pStagingBuffer)
@@ -73,6 +77,7 @@ namespace vulkanRendererBackend
             return;
         }
         m_pool.push(pStagingBuffer);
+        m_availableStagingBuffers.insert(pStagingBuffer);
     }
 
 
@@ -93,14 +98,7 @@ namespace vulkanRendererBackend
     }
     bool StagingBufferPool::IsAvailable(StagingBuffer* pStagingBuffer) const
     {
-        std::queue<StagingBuffer*> pool = m_pool;
-        while (!pool.empty())
-        {
-            if (pool.front() == pStagingBuffer)
-                return true;
-            pool.pop();
-        }
-        return false;
+        return m_availableStagingBuffers.find(pStagingBuffer) != m_availableStagingBuffers.end();
     }
     void StagingBufferPool::Destroy(StagingBuffer* pStagingBuffer)
     {
@@ -108,6 +106,7 @@ namespace vulkanRendererBackend
         if (it == m_storage.end())
             return;
 
+        m_availableStagingBuffers.erase(pStagingBuffer);
         delete pStagingBuffer;
         m_storage.erase(it);
     }
