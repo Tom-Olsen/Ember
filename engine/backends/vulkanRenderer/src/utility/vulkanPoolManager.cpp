@@ -35,12 +35,18 @@ namespace vulkanRendererBackend
 	// Checkout:
 	DescriptorSetBinding* PoolManager::CheckOutDescriptorSetBinding(Shader* pShader)
 	{
-		return s_descriptorSetBindingPoolMap[pShader].CheckOut(pShader);
+		auto it = s_descriptorSetBindingPoolMap.find(pShader);
+		if (it == s_descriptorSetBindingPoolMap.end())
+			it = s_descriptorSetBindingPoolMap.try_emplace(pShader).first;
+		return it->second.CheckOut(pShader);
 	}
 	StagingBuffer* PoolManager::CheckOutStagingBuffer(uint32_t size)
 	{
 		size = std::max(4096u, math::NextPowerOfTwo(size));
-		return s_stagingBufferPoolMap[size].CheckOut(size);
+		auto it = s_stagingBufferPoolMap.find(size);
+		if (it == s_stagingBufferPoolMap.end())
+			it = s_stagingBufferPoolMap.try_emplace(size).first;
+		return it->second.CheckOut(size);
 	}
 
 
@@ -48,12 +54,30 @@ namespace vulkanRendererBackend
 	// Return:
 	void PoolManager::ReturnDescriptorSetBinding(Shader* pShader, DescriptorSetBinding* pDescriptorSetBinding)
 	{
-		s_descriptorSetBindingPoolMap[pShader].Return(pDescriptorSetBinding);
+		if (pShader == nullptr)
+		{
+			LOG_ERROR("PoolManager::ReturnDescriptorSetBinding(...) failed. pShader is nullptr.");
+			return;
+		}
+
+		auto it = s_descriptorSetBindingPoolMap.find(pShader);
+		if (it == s_descriptorSetBindingPoolMap.end())
+		{
+			LOG_ERROR("PoolManager::ReturnDescriptorSetBinding(...) failed. No pool exists for shader '{}'.", pShader->GetName());
+			return;
+		}
+		it->second.Return(pDescriptorSetBinding);
 	}
 	void PoolManager::ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer)
 	{
 		size = std::max(4096u, math::NextPowerOfTwo(size));
-		s_stagingBufferPoolMap[size].Return(pStagingBuffer);
+		auto it = s_stagingBufferPoolMap.find(size);
+		if (it == s_stagingBufferPoolMap.end())
+		{
+			LOG_ERROR("PoolManager::ReturnStagingBuffer(...) failed. No pool exists for buffer size '{}'.", size);
+			return;
+		}
+		it->second.Return(pStagingBuffer);
 	}
 
 
