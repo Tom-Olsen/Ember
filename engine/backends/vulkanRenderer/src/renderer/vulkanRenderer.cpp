@@ -51,6 +51,7 @@
 #include "vulkanVertexBuffer.h"
 #include <assert.h>
 #include <algorithm>
+#include <cstdlib>
 #include <stdexcept>
 #include <string>
 
@@ -605,16 +606,24 @@ namespace vulkanRendererBackend
 		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[m_frameIndex], VK_NULL_HANDLE, &m_imageIndex);
 
 		// Resize if needed:
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_pIWindow->GetIsResized())
+		if (m_pIWindow->GetIsResized())
 		{
 			m_pIWindow->ResetWindowResized();
 			m_rebuildSwapchain = true;
 			return false;
 		}
-		else
+
+		switch (result)
 		{
-			VKA(result);
+		case VK_SUCCESS:
+		case VK_SUBOPTIMAL_KHR:
 			return true;
+		case VK_ERROR_OUT_OF_DATE_KHR:
+			m_rebuildSwapchain = true;
+			return false;
+		default:
+			LOG_CRITICAL("Renderer::AcquireImage() failed. Vulkan error: {}", std::to_string(result));
+			std::abort();
 		}
 	}
 	void Renderer::SortDrawCallPointers()
@@ -1646,12 +1655,18 @@ namespace vulkanRendererBackend
 		presentInfo.pImageIndices = &m_imageIndex;
 
 		VkResult result = vkQueuePresentKHR(Context::GetLogicalDevice()->GetPresentQueue().queue, &presentInfo);
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+		switch (result)
 		{
+		case VK_SUCCESS:
+		case VK_SUBOPTIMAL_KHR:
+			return true;
+		case VK_ERROR_OUT_OF_DATE_KHR:
 			m_rebuildSwapchain = true;
 			return false;
+		default:
+			LOG_CRITICAL("Renderer::PresentImage() failed. Vulkan error: {}", std::to_string(result));
+			std::abort();
 		}
-		return true;
 	}
 
 

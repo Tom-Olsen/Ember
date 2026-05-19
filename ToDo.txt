@@ -5,8 +5,6 @@ Add thread safety or synchronization around m_pendingMeshUpdates to prevent data
 Re-enable texture batch uploading with correct queue synchronization and barriers between transfer and graphics queues.
 Add shutdown validation to vulkanGarbageCollector.Clear() so in-flight frame resources cannot be cleared unsafely.
 
-Handle VK_SUBOPTIMAL_KHR separately from VK_ERROR_OUT_OF_DATE_KHR so swapchain rebuild is only performed when truly necessary.
-Add explicit validation in PoolManager when a null or invalid Shader pointer is passed to CheckOutDescriptorSetBinding.
 Fix typos and misleading comments in the Vulkan backend.
 Standardize naming across the backend to avoid inconsistent prefixes like m_pLogicalDevice vs m_swapchains and mixed getter return styles.
 Replace manual CheckOut/Return resource management patterns with RAII wrappers where possible to reduce leak and misuse risk.
