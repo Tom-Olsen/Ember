@@ -32,11 +32,12 @@ namespace vulkanRendererBackend
 			LOG_CRITICAL("VmaBuffer::VmaBuffer failed. VkResult: {}, VkBufferCreateInfo: {}, VmaAllocationCreateInfo: {}", std::to_string(result), emberVulkanUtility::ToString(m_bufferInfo), ToString_VmaAllocationCreateInfo(m_allocationInfo));
 			std::abort();
 		}
+		NAME_VK_OBJECT(m_buffer, "Buffer" + std::to_string(s_index));
 
 		#ifdef VALIDATION_LAYERS_ACTIVE
 		Context::GetAllocationTracker()->AddVmaBufferAllocation(m_buffer, m_allocation, std::to_string(s_index));
-		s_index++;
 		#endif
+		s_index++;
 	}
 	VmaBuffer::~VmaBuffer()
 	{
@@ -86,7 +87,7 @@ namespace vulkanRendererBackend
 	}
 	void VmaBuffer::SetDebugName(const std::string& name)
 	{
-		NAME_VK_OBJECT(m_buffer, name);
+		NAME_VK_OBJECT(m_buffer, "Buffer_" + name);
 		#ifdef VALIDATION_LAYERS_ACTIVE
 		Context::GetAllocationTracker()->UpdateVmaBufferAllocationName(m_allocation, name);
 		#endif

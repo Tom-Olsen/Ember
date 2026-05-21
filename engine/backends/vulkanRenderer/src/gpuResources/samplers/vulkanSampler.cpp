@@ -11,7 +11,6 @@ namespace vulkanRendererBackend
 	Sampler::Sampler()
 	{
 		m_sampler = VK_NULL_HANDLE;
-		m_name = "";
 	}
 	Sampler::~Sampler()
 	{
@@ -43,10 +42,6 @@ namespace vulkanRendererBackend
 	{
 		return m_sampler;
 	}
-	const std::string& Sampler::GetName() const
-	{
-		return m_name;
-	}
 
 
 
@@ -58,9 +53,7 @@ namespace vulkanRendererBackend
 	void Sampler::MoveFrom(Sampler& other) noexcept
 	{
 		m_sampler = other.m_sampler;
-		m_name = other.m_name;
 
 		other.m_sampler = VK_NULL_HANDLE;
-		other.m_name = "";
 	}
 }

@@ -90,7 +90,7 @@ namespace vulkanRendererBackend
 		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &material.m_vkPipelineLayout));
-		NAME_VK_OBJECT(material.m_vkPipelineLayout, material.m_name + "ForwardPipelineLayout");
+		NAME_VK_OBJECT(material.m_vkPipelineLayout, "PipelineLayout_Forward_" + material.m_name);
 
 		// Create pipelines:
 		material.m_pPipelines.reserve(static_cast<size_t>(static_cast<size_t>(emberCommon::RenderMode::count) * static_cast<size_t>(emberCommon::VertexMemoryLayout::count)));
@@ -147,7 +147,7 @@ namespace vulkanRendererBackend
 		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &material.m_vkPipelineLayout));
-		NAME_VK_OBJECT(material.m_vkPipelineLayout, material.m_name + "ShadowPipelineLayout");
+		NAME_VK_OBJECT(material.m_vkPipelineLayout, "PipelineLayout_Shadow_" + material.m_name);
 
 		// Create pipelines:
 		material.m_pPipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
@@ -205,7 +205,7 @@ namespace vulkanRendererBackend
 		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &material.m_vkPipelineLayout));
-		NAME_VK_OBJECT(material.m_vkPipelineLayout, material.m_name + "PresentPipelineLayout");
+		NAME_VK_OBJECT(material.m_vkPipelineLayout, "PipelineLayout_Present_" + material.m_name);
 
 		// Create pipelines:
 		material.m_pPipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));

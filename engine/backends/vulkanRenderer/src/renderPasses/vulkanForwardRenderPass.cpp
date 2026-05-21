@@ -22,7 +22,7 @@ namespace vulkanRendererBackend
 		CreateMsaaImages();
 		CreateDepthImages();
 		CreateFrameBuffers();
-		NAME_VK_OBJECT(m_renderPass, "forwardRenderPass");
+		NAME_VK_OBJECT(m_renderPass, "RenderPass_Forward");
 	}
 	ForwardRenderPass::~ForwardRenderPass()
 	{
@@ -63,6 +63,8 @@ namespace vulkanRendererBackend
 		{
 			m_pRenderTextures.push_back(std::make_unique<RenderTexture2d>(renderTextureFormat, renderWidth, renderHeight));
 			m_pSecondaryRenderTextures.push_back(std::make_unique<RenderTexture2d>(renderTextureFormat, renderWidth, renderHeight));
+			m_pRenderTextures[frameIndex]->SetDebugName("RenderTexture_Forward_Frame" + std::to_string(frameIndex));
+			m_pSecondaryRenderTextures[frameIndex]->SetDebugName("RenderTexture_ForwardSecondary_Frame" + std::to_string(frameIndex));
 
 			// Both ping-pong textures are used as storage images by post processing, so initialize them into
 			// GENERAL and keep them there outside the present pass.
@@ -190,6 +192,8 @@ namespace vulkanRendererBackend
 			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 			VkDeviceSize allocationSize =  8ull * imageInfo.extent.width * imageInfo.extent.height *imageInfo.samples;
 			m_pMsaaImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, allocationSize, subresourceRange, viewType, queue));
+			NAME_VK_OBJECT(m_pMsaaImages[frameIndex]->GetVkImage(), "Image_ForwardMsaa_Frame" + std::to_string(frameIndex));
+			NAME_VK_OBJECT(m_pMsaaImages[frameIndex]->GetVkImageView(), "ImageView_ForwardMsaa_Frame" + std::to_string(frameIndex));
 		}
 	}
 	void ForwardRenderPass::CreateDepthImages()
@@ -228,6 +232,8 @@ namespace vulkanRendererBackend
 			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 			VkDeviceSize allocationSize = 8ull * imageInfo.extent.width * imageInfo.extent.height * imageInfo.samples;
 			m_pDepthImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, allocationSize, subresourceRange, viewType, queue));
+			NAME_VK_OBJECT(m_pDepthImages[frameIndex]->GetVkImage(), "Image_ForwardDepth_Frame" + std::to_string(frameIndex));
+			NAME_VK_OBJECT(m_pDepthImages[frameIndex]->GetVkImageView(), "ImageView_ForwardDepth_Frame" + std::to_string(frameIndex));
 
 			// Transition: Layout: undefined->depth attachment, Queue: graphics
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -259,7 +265,8 @@ namespace vulkanRendererBackend
 			framebufferInfo.width = m_pRenderTextures[i]->GetWidth();
 			framebufferInfo.height = m_pRenderTextures[i]->GetHeight();
 			framebufferInfo.layers = 1;
-			vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
+			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]));
+			NAME_VK_OBJECT(m_framebuffers[i], "Framebuffer_Forward_Frame" + std::to_string(i));
 		}
 	}
 }

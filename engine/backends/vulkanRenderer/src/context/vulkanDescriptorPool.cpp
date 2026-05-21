@@ -37,6 +37,7 @@ namespace vulkanRendererBackend
 		poolInfo.pPoolSizes = poolSizes.data();
 
 		VKA(vkCreateDescriptorPool(m_pLogicalDevice->GetVkDevice(), &poolInfo, nullptr, &m_descriptorPool));
+		NAME_VK_OBJECT(m_descriptorPool, "DescriptorPool");
 	}
 	DescriptorPool::~DescriptorPool()
 	{

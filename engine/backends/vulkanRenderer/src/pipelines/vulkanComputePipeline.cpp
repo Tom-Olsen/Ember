@@ -11,17 +11,15 @@ namespace vulkanRendererBackend
     // Constructor/Destructor:
     ComputePipeline::ComputePipeline(const std::string& name, VkPipelineLayout vkPipelineLayout, const std::vector<char>& computeCode)
     {
-        m_name = name;
-
         // Create compute shader module from .spv files:
-        VkShaderModule computeShaderModule = CreateShaderModule(computeCode);
+        VkShaderModule computeShaderModule = CreateShaderModule(computeCode, "ShaderModule_Compute_" + name);
 
         // Create pipeline:
         CreatePipeline(vkPipelineLayout, computeShaderModule);
 
         // Destroy shader module (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), computeShaderModule, nullptr);
-        NAME_VK_OBJECT(m_pipeline, m_name + "ComputePipeline");
+        NAME_VK_OBJECT(m_pipeline, "Pipeline_Compute_" + name);
     }
     ComputePipeline::~ComputePipeline()
     {
@@ -31,23 +29,6 @@ namespace vulkanRendererBackend
 
 
     // Private:
-    //void ComputePipeline::CreatePipelineLayout(VkPipelineLayout vkPipelineLayout, const VkShaderModule& computeShaderModule)
-    //{
-    //    // Push constants layout:
-    //    VkPushConstantRange pushConstantRange = {};
-    //    pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-    //    pushConstantRange.offset = 0;
-    //    pushConstantRange.size = sizeof(ComputePushConstant);
-    //
-    //    // Pipeline layout:
-    //    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-    //    pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
-    //    pipelineLayoutCreateInfo.pSetLayouts = vkDescriptorSetLayouts.data();
-    //    pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-    //    pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-    //    vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
-    //    NAME_VK_OBJECT(m_pipelineLayout, m_name + "ComputePipelineLayout");
-    //}
     void ComputePipeline::CreatePipeline(VkPipelineLayout vkPipelineLayout, const VkShaderModule& computeShaderModule)
     {
         VkPipelineShaderStageCreateInfo computeShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };

@@ -10,7 +10,6 @@ namespace vulkanRendererBackend
 	// Constructor/Destructors:
 	ShadowSampler::ShadowSampler(const std::string& name)
 	{
-		m_name = name;
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(Context::GetVkPhysicalDevice(), &properties);
 
@@ -31,6 +30,7 @@ namespace vulkanRendererBackend
 		samplerInfo.minLod = 0.0f;											// minimum level of detail to pick
 		samplerInfo.maxLod = VK_LOD_CLAMP_NONE;								// maximum level of detail to pick. No clamping = maximum mip level supported by the image
 		VKA(vkCreateSampler(Context::GetVkDevice(), &samplerInfo, nullptr, &m_sampler));
+		NAME_VK_OBJECT(m_sampler, name);
 	}
 	ShadowSampler::~ShadowSampler()
 	{

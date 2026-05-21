@@ -93,13 +93,13 @@ namespace vulkanRendererBackend
 			for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 			{
 				std::string name = renderStageNames[renderStage];
-				name += "_frame" + std::to_string(frameIndex);
-				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "CommandPoolPrimary_" + name);
-				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandBuffer(), "CommandBufferPrimary_" + name);
+				name += "_Frame" + std::to_string(frameIndex);
+				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "CommandPool_Primary_" + name);
+				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandBuffer(), "CommandBuffer_Primary_" + name);
 				for (int threadIndex = 0; threadIndex < emberTaskSystem::ParallelThreadPool::GetCoreCount(); threadIndex++)
 				{
-					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPoolSecondary" + std::to_string(threadIndex) + "_" + name);
-					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBufferSecondary_" + std::to_string(threadIndex) + "_" + name);
+					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPool_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
+					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBuffer_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
 				}
 			}
 
@@ -1681,7 +1681,7 @@ namespace vulkanRendererBackend
 		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
 			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_frameFences[i]));
-			NAME_VK_OBJECT(m_frameFences[i], "FrameFences" + std::to_string(i));
+			NAME_VK_OBJECT(m_frameFences[i], "Fence_Frame" + std::to_string(i));
 		}
 	}
 	void Renderer::CreateSemaphores()
@@ -1704,17 +1704,17 @@ namespace vulkanRendererBackend
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowToForwardSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderToPresentSemaphores[i]));
-			NAME_VK_OBJECT(m_acquireSemaphores[i], "AcquireSemaphore" + std::to_string(i));
-			NAME_VK_OBJECT(m_resourceUpdateToPreRenderComputeSemaphores[i], "ResourceUpdateToPreRenderComputeSemaphore" + std::to_string(i));
-			NAME_VK_OBJECT(m_preRenderComputeToShadowSemaphores[i], "PreRenderComputeToShadowSemaphore" + std::to_string(i));
-			NAME_VK_OBJECT(m_shadowToForwardSemaphores[i], "ShadowToForwardSemaphore" + std::to_string(i));
-			NAME_VK_OBJECT(m_forwardToPostRenderComputeSemaphores[i], "ForwardToPostRenderComputeSemaphore" + std::to_string(i));
-			NAME_VK_OBJECT(m_postRenderToPresentSemaphores[i], "PostRenderToPresentSemaphore" + std::to_string(i));
+			NAME_VK_OBJECT(m_acquireSemaphores[i], "Semaphore_Acquire_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_resourceUpdateToPreRenderComputeSemaphores[i], "Semaphore_ResourceUpdateToPreRenderCompute_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_preRenderComputeToShadowSemaphores[i], "Semaphore_PreRenderComputeToShadow_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_shadowToForwardSemaphores[i], "Semaphore_ShadowToForward_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_forwardToPostRenderComputeSemaphores[i], "Semaphore_ForwardToPostRenderCompute_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_postRenderToPresentSemaphores[i], "Semaphore_PostRenderToPresent_Frame" + std::to_string(i));
 		}
 		for (uint32_t i = 0; i < m_releaseSemaphores.size(); i++)
 		{
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
-			NAME_VK_OBJECT(m_releaseSemaphores[i], "ReleaseSemaphore" + std::to_string(i));
+			NAME_VK_OBJECT(m_releaseSemaphores[i], "Semaphore_Release_SwapchainImage" + std::to_string(i));
 		}
 	}
 	void Renderer::DestroyFences()

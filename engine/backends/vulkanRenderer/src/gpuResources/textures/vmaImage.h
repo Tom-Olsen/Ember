@@ -3,7 +3,6 @@
 #include "vk_mem_alloc.h"
 #include "vulkanAccessMask.h"
 #include "vulkanDeviceQueue.h"
-#include <string>
 #include <vulkan/vulkan.h>
 
 
@@ -48,7 +47,6 @@ namespace vulkanRendererBackend
 		VmaImage& operator=(VmaImage&& other) noexcept;
 
 		// Getters:
-		const std::string& GetName() const;
 		const VkImage& GetVkImage() const;
 		const VmaAllocation& GetVmaAllocation() const;
 		const VkImageView& GetVkImageView() const;

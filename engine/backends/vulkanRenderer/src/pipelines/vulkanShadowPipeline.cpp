@@ -20,17 +20,15 @@ namespace vulkanRendererBackend
         const std::vector<VkVertexInputBindingDescription>& vertexBindings,
         const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
-        m_name = name;
-
         // Create vertex and fragment shader modules from .spv files:
-        VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
+        VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode, "ShaderModule_ShadowVertex_" + name);
 
         // Create pipeline:
         CreatePipeline(shadowMapResolution, vkPipelineLayout, vertexShaderModule, vertexBindings, vertexAttributes);
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
-        NAME_VK_OBJECT(m_pipeline, m_name + "ShadowPipeline");
+        NAME_VK_OBJECT(m_pipeline, "Pipeline_Shadow_" + name);
     }
     ShadowPipeline::~ShadowPipeline()
     {

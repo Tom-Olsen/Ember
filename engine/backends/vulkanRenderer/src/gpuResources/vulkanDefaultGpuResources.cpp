@@ -45,9 +45,9 @@ namespace vulkanRendererBackend
 	void DefaultGpuResources::InitSamplers()
 	{
 		if (!s_pColorSampler)
-			s_pColorSampler = std::make_unique<ColorSampler>("colorSampler");
+			s_pColorSampler = std::make_unique<ColorSampler>("Sampler_Color");
 		if (!s_pShadowSampler)
-			s_pShadowSampler = std::make_unique<ShadowSampler>("shadowSampler");
+			s_pShadowSampler = std::make_unique<ShadowSampler>("Sampler_Shadow");
 	}
 	void DefaultGpuResources::Init(uint32_t shadowMapResolution)
 	{

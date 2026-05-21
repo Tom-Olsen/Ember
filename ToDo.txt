@@ -10,5 +10,9 @@ Standardize naming across the backend to avoid inconsistent prefixes like m_pLog
 Replace manual CheckOut/Return resource management patterns with RAII wrappers where possible to reduce leak and misuse risk.
 Reduce static shared state usage in Context, PoolManager, GarbageCollector, and RenderPassManager to improve encapsulation and thread safety.
 Audit raw VkHandle passthrough APIs in vulkanRenderer.h and reduce external coupling by exposing higher-level abstractions instead.
-Rethink GPU resource naming: names should live in core for managers/debugging and be passed through the backend only to name VkHandles in debug mode.
 See ToDo in default.frag.hlsl
+
+move the macro wrapper into the AddVmaBufferAllocation method instead
+		#ifdef VALIDATION_LAYERS_ACTIVE
+		Context::GetAllocationTracker()->AddVmaBufferAllocation(m_buffer, m_allocation, std::to_string(s_index));
+		#endif

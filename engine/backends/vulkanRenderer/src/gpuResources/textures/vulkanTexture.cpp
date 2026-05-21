@@ -142,8 +142,8 @@ namespace vulkanRendererBackend
     // Debugging:
     void Texture::SetDebugName(const std::string& name)
     {
-        NAME_VK_OBJECT(m_pImage->GetVkImage(), name);
-        NAME_VK_OBJECT(m_pImage->GetVkImageView(), name);
+        NAME_VK_OBJECT(m_pImage->GetVkImage(), "Image_" + name);
+        NAME_VK_OBJECT(m_pImage->GetVkImageView(), "ImageView_" + name);
     }
 
 

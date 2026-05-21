@@ -10,6 +10,11 @@
 
 namespace vulkanRendererBackend
 {
+	// Static private members:
+	uint32_t CommandPool::s_index = 0;
+
+
+
 	// Constructor/Destructor:
 	CommandPool::CommandPool(int secondaryBufferCount, DeviceQueue queue)
 	{
@@ -20,6 +25,7 @@ namespace vulkanRendererBackend
 		VkCommandPoolCreateInfo primaryCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 		primaryCreateInfo.queueFamilyIndex = queue.familyIndex;
 		VKA(vkCreateCommandPool(Context::GetVkDevice(), &primaryCreateInfo, nullptr, &m_primaryPool));
+		NAME_VK_OBJECT(m_primaryPool, "CommandPool" + std::to_string(s_index) + "_Primary");
 
 		// Allocate primary command buffer:
 		VkCommandBufferAllocateInfo primaryAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
@@ -27,6 +33,7 @@ namespace vulkanRendererBackend
 		primaryAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		primaryAllocateInfo.commandBufferCount = 1;
 		VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &primaryAllocateInfo, &m_primaryBuffer));
+		NAME_VK_OBJECT(m_primaryBuffer, "CommandBuffer" + std::to_string(s_index) + "_Primary");
 
 		// Secondaries:
 		m_secondaryPools.resize(secondaryBufferCount);
@@ -37,6 +44,7 @@ namespace vulkanRendererBackend
 			VkCommandPoolCreateInfo secondaryCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 			secondaryCreateInfo.queueFamilyIndex = queue.familyIndex;
 			VKA(vkCreateCommandPool(Context::GetVkDevice(), &secondaryCreateInfo, nullptr, &m_secondaryPools[i]));
+			NAME_VK_OBJECT(m_secondaryPools[i], "CommandPool" + std::to_string(s_index) + "_Secondary" + std::to_string(i));
 
 			// Allocate secondary command buffers:
 			VkCommandBufferAllocateInfo secondaryAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
@@ -44,7 +52,9 @@ namespace vulkanRendererBackend
 			secondaryAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 			secondaryAllocateInfo.commandBufferCount = 1;
 			VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &secondaryAllocateInfo, &m_secondaryBuffers[i]));
+			NAME_VK_OBJECT(m_secondaryBuffers[i], "CommandBuffer" + std::to_string(s_index) + "_Secondary" + std::to_string(i));
 		}
+		s_index++;
 	}
 	CommandPool::~CommandPool()
 	{

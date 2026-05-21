@@ -10,7 +10,6 @@ namespace vulkanRendererBackend
 	// Virtual Destructor:
 	Pipeline::Pipeline()
 	{
-		m_name = "";
 		m_pipeline = VK_NULL_HANDLE;
 		m_descriptorSetLayouts.fill(VK_NULL_HANDLE);
 	}
@@ -51,7 +50,7 @@ namespace vulkanRendererBackend
 
 
 	// Protected methods:
-	VkShaderModule Pipeline::CreateShaderModule(const std::vector<char>& code)
+	VkShaderModule Pipeline::CreateShaderModule(const std::vector<char>& code, const std::string& name)
 	{
 		VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 		createInfo.codeSize = code.size();
@@ -59,6 +58,7 @@ namespace vulkanRendererBackend
 
 		VkShaderModule shaderModule;
 		VKA(vkCreateShaderModule(Context::GetVkDevice(), &createInfo, nullptr, &shaderModule));
+		NAME_VK_OBJECT(shaderModule, name);
 		return shaderModule;
 	}
 
@@ -73,11 +73,9 @@ namespace vulkanRendererBackend
 	}
 	void Pipeline::MoveFrom(Pipeline& other) noexcept
 	{
-		m_name = other.m_name;
 		m_pipeline = other.m_pipeline;
 		m_descriptorSetLayouts = other.m_descriptorSetLayouts;
 
-		other.m_name = "";
 		other.m_pipeline = VK_NULL_HANDLE;
 		other.m_descriptorSetLayouts.fill(VK_NULL_HANDLE);
 	}

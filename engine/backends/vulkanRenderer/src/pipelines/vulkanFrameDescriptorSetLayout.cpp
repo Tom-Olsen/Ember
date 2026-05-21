@@ -35,6 +35,7 @@ namespace vulkanRendererBackend
             createInfo.pBindings = &binding;
 
             VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &createInfo, nullptr, &s_descriptorSetLayout));
+            NAME_VK_OBJECT(s_descriptorSetLayout, "DescriptorSetLayout_FrameData");
         }
 
         // Create descriptor sets:
@@ -48,6 +49,8 @@ namespace vulkanRendererBackend
 
             s_descriptorSets.resize(Context::GetFramesInFlight());
             VKA(vkAllocateDescriptorSets(Context::GetVkDevice(), &allocInfo, s_descriptorSets.data()));
+            for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
+                NAME_VK_OBJECT(s_descriptorSets[frameIndex], "DescriptorSet_FrameData_Frame" + std::to_string(frameIndex));
         }
 
         // Create uniform camera buffer:
@@ -68,6 +71,7 @@ namespace vulkanRendererBackend
             bufferLayout.AddMember(cameraWorldToClipMatrix);
 
             s_pUniformCameraBuffer = std::make_unique<UniformBuffer>(bufferLayout);
+            s_pUniformCameraBuffer->SetDebugName("UniformBuffer_FrameCamera");
         }
 
         // Bind uniform light properties buffer to descriptor sets:

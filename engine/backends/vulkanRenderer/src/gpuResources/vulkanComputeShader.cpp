@@ -35,7 +35,7 @@ namespace vulkanRendererBackend
 		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo,nullptr, &m_vkPipelineLayout));
-		NAME_VK_OBJECT(m_vkPipelineLayout, m_name + "ComputePipelineLayout");
+		NAME_VK_OBJECT(m_vkPipelineLayout, "PipelineLayout_Compute_" + m_name);
 
 		// Get block size:
 		m_blockSize = m_shaderReflection.GetComputeStageInfo()->blockSize;

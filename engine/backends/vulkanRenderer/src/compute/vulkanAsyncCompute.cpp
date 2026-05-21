@@ -39,6 +39,7 @@ namespace vulkanRendererBackend
 			// Create fences:
 			VkFenceCreateInfo fenceInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 			VKA(vkCreateFence(Context::GetVkDevice(), &fenceInfo, nullptr, &m_fences[i]));
+			NAME_VK_OBJECT(m_fences[i], "Fence_AsyncCompute_Session" + std::to_string(i));
 
 			// Populate index queue:
 			m_freeIndices.push(i);

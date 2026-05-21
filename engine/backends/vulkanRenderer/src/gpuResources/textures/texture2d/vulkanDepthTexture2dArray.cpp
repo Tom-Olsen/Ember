@@ -37,7 +37,7 @@ namespace vulkanRendererBackend
 		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
-		NAME_VK_OBJECT(m_pImage->GetVkImage(), "DepthTexture2dArray");
+		SetDebugName("DepthTexture2dArray");
 	}
 	DepthTexture2dArray::~DepthTexture2dArray()
 	{

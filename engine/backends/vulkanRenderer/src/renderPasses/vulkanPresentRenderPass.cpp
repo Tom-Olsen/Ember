@@ -16,7 +16,7 @@ namespace vulkanRendererBackend
 	{
 		CreateRenderPass();
 		CreateFrameBuffers();
-		NAME_VK_OBJECT(m_renderPass, "presentRenderPass");
+		NAME_VK_OBJECT(m_renderPass, "RenderPass_Present");
 	}
 	PresentRenderPass::~PresentRenderPass()
 	{
@@ -83,7 +83,8 @@ namespace vulkanRendererBackend
 			framebufferInfo.width = surfaceExtend.x;
 			framebufferInfo.height = surfaceExtend.y;
 			framebufferInfo.layers = 1;
-			vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
+			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]));
+			NAME_VK_OBJECT(m_framebuffers[i], "Framebuffer_Present_Frame" + std::to_string(i));
 		}
 	}
 }

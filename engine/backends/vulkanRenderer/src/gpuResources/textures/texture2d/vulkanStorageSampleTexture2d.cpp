@@ -68,7 +68,7 @@ namespace vulkanRendererBackend
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
-		NAME_VK_OBJECT(m_pImage->GetVkImage(), "StorageSampleTexture2d");
+		SetDebugName("StorageSampleTexture2d");
 	}
 	StagingBuffer* StorageSampleTexture2d::StageData(void* data)
 	{

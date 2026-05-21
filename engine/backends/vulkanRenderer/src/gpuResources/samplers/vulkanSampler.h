@@ -1,6 +1,4 @@
 #pragma once
-#include <string>
-
 
 
 // Forward declaration:
@@ -14,7 +12,6 @@ namespace vulkanRendererBackend
 	{
 	protected: // Members:
 		VkSampler m_sampler;
-		std::string m_name;
 
 	public: // Methods:
 		Sampler();
@@ -30,7 +27,6 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		VkSampler& GetVkSampler();
-		const std::string& GetName() const;
 
 	private: // Methods:
 		void Cleanup();

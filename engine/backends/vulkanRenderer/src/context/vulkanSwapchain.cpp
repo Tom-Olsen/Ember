@@ -117,6 +117,7 @@ namespace vulkanRendererBackend
 		createInfo.oldSwapchain = pOldSwapchain ? pOldSwapchain->GetVkSwapchainKHR() : VK_NULL_HANDLE;
 		createInfo.clipped = VK_TRUE;										// clip pixels that are obscured by other windows.
 		VKA(vkCreateSwapchainKHR(m_pLogicalDevice->GetVkDevice(), &createInfo, nullptr, &m_swapchain));
+		NAME_VK_OBJECT(m_swapchain, "Swapchain");
 	}
 	void Swapchain::CreateImages()
 	{
@@ -124,6 +125,8 @@ namespace vulkanRendererBackend
 		VKA(vkGetSwapchainImagesKHR(m_pLogicalDevice->GetVkDevice(), m_swapchain, &imageCount, nullptr));
 		m_images.resize(imageCount);
 		VKA(vkGetSwapchainImagesKHR(m_pLogicalDevice->GetVkDevice(), m_swapchain, &imageCount, m_images.data()));
+		for (uint32_t i = 0; i < m_images.size(); i++)
+			NAME_VK_OBJECT(m_images[i], "Image" + std::to_string(i) + "_Swapchain");
 	}
 	void Swapchain::CreateImageViews()
 	{
@@ -144,6 +147,7 @@ namespace vulkanRendererBackend
 			createInfo.subresourceRange.baseArrayLayer = 0;
 			createInfo.subresourceRange.layerCount = 1;
 			VKA(vkCreateImageView(m_pLogicalDevice->GetVkDevice(), &createInfo, nullptr, &m_imageViews[i]))
+			NAME_VK_OBJECT(m_imageViews[i], "ImageView" + std::to_string(i) + "_Swapchain");
 		}
 	}
 }

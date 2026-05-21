@@ -38,7 +38,7 @@ namespace vulkanRendererBackend
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
-		NAME_VK_OBJECT(m_pImage->GetVkImage(), "RenderTexture2d");
+		SetDebugName("RenderTexture2d");
 	}
 	RenderTexture2d::~RenderTexture2d()
 	{

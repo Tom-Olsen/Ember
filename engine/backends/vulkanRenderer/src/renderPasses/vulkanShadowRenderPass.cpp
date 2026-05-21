@@ -21,7 +21,7 @@ namespace vulkanRendererBackend
 		m_shadowMaps = std::make_unique<DepthTexture2dArray>(s_shadowMapFormat, shadowMapResolution, shadowMapResolution, maxLightsCount);
 		CreateRenderpass();
 		CreateFramebuffers(shadowMapResolution, maxLightsCount);
-		NAME_VK_OBJECT(m_renderPass, "shadowRenderPass");
+		NAME_VK_OBJECT(m_renderPass, "RenderPass_Shadow");
 	}
 	ShadowRenderPass::~ShadowRenderPass()
 	{
@@ -83,7 +83,8 @@ namespace vulkanRendererBackend
 			framebufferInfo.width = shadowMapResolution;
 			framebufferInfo.height = shadowMapResolution;
 			framebufferInfo.layers = maxLightsCount;
-			vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]);
+			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]));
+			NAME_VK_OBJECT(m_framebuffers[i], "Framebuffer_Shadow_Frame" + std::to_string(i));
 		}
 	}
 }

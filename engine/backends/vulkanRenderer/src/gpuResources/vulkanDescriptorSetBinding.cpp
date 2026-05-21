@@ -520,6 +520,7 @@ namespace vulkanRendererBackend
 			return; // already initialized.
 
 		UniformBuffer uniformBuffer(bufferLayout);
+		uniformBuffer.SetDebugName("UniformBuffer_Binding" + m_bindingNames.at(binding) + "_" + m_pShader->GetName());
 		m_uniformBufferMap.emplace(binding, UniformBufferBinding{binding, std::move(uniformBuffer)});
 	}
 	void DescriptorSetBinding::InitTextureBinding(uint32_t frameIndex, uint32_t binding, Texture* pTexture, VkDescriptorType descriptorType)
@@ -569,6 +570,8 @@ namespace vulkanRendererBackend
 
 		m_descriptorSets.resize(Context::GetFramesInFlight());
 		VKA(vkAllocateDescriptorSets(Context::GetLogicalDevice()->GetVkDevice(), &allocInfo, m_descriptorSets.data()));
+		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
+			NAME_VK_OBJECT(m_descriptorSets[frameIndex], "DescriptorSet" + std::to_string(m_setIndex) + "_Frame" + std::to_string(frameIndex) + "_" + m_pShader->GetName());
 	}
 	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, const UniformBufferBinding& uniformBufferBinding)
 	{

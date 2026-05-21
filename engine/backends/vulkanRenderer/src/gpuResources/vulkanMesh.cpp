@@ -241,11 +241,13 @@ namespace vulkanRendererBackend
 		if (m_pVertexBuffers[frameIndex] == nullptr || m_pVertexBuffers[frameIndex]->GetCount() != vertexCount)
 		{
 			m_pVertexBuffers[frameIndex] = std::make_unique<VertexBuffer>(vertexCount, sizeof(Vertex));
+			m_pVertexBuffers[frameIndex]->SetDebugName("MeshVertexBuffer_Frame" + std::to_string(frameIndex));
 			reallocationTriggered = true;
 		}
 		if (m_pIndexBuffers[frameIndex] == nullptr || m_pIndexBuffers[frameIndex]->GetCount() != indexCount || m_pIndexBuffers[frameIndex]->GetElementSize() != elemetSize)
 		{
 			m_pIndexBuffers[frameIndex] = std::make_unique<IndexBuffer>(indexCount, elemetSize);
+			m_pIndexBuffers[frameIndex]->SetDebugName("MeshIndexBuffer_Frame" + std::to_string(frameIndex));
 			reallocationTriggered = true;
 		}
 		if (reallocationTriggered)

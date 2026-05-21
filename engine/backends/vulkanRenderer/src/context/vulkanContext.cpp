@@ -142,14 +142,14 @@ namespace vulkanRendererBackend
 
 		// Debug naming:
 		if (m_pLogicalDevice->GetGraphicsQueue().queue == m_pLogicalDevice->GetPresentQueue().queue)
-			NAME_VK_OBJECT(m_pLogicalDevice->GetGraphicsQueue().queue, "graphicsAndPresentQueue");
+			NAME_VK_OBJECT(m_pLogicalDevice->GetGraphicsQueue().queue, "Queue_GraphicsAndPresent");
 		else
 		{
-			NAME_VK_OBJECT(m_pLogicalDevice->GetGraphicsQueue().queue, "graphicsQueue");
-			NAME_VK_OBJECT(m_pLogicalDevice->GetPresentQueue().queue, "presentQueue");
+			NAME_VK_OBJECT(m_pLogicalDevice->GetGraphicsQueue().queue, "Queue_Graphics");
+			NAME_VK_OBJECT(m_pLogicalDevice->GetPresentQueue().queue, "Queue_Present");
 		}
-		NAME_VK_OBJECT(m_pLogicalDevice->GetComputeQueue().queue, "computeQueue");
-		NAME_VK_OBJECT(m_pLogicalDevice->GetTransferQueue().queue, "transferQueue");
+		NAME_VK_OBJECT(m_pLogicalDevice->GetComputeQueue().queue, "Queue_Compute");
+		NAME_VK_OBJECT(m_pLogicalDevice->GetTransferQueue().queue, "Queue_Transfer");
 	}
 	void Context::Clear()
 	{

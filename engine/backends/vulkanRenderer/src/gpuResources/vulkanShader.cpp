@@ -111,6 +111,7 @@ namespace vulkanRendererBackend
 			descriptorSetLayoutCreateInfo.pBindings = layoutBindings.empty() ? nullptr : layoutBindings.data();
 
 			VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_vkDescriptorSetLayouts[i]));
+			NAME_VK_OBJECT(m_vkDescriptorSetLayouts[i], "DescriptorSetLayout" + std::to_string(i) + "_" + m_name);
 		}
 	}
 

@@ -22,7 +22,6 @@ namespace vulkanRendererBackend
 	class Pipeline
 	{
 	protected: // Members:
-		std::string m_name;
 		VkPipeline m_pipeline;
 		std::array<VkDescriptorSetLayout, DESCRIPTOR_SET_COUNT> m_descriptorSetLayouts;
 
@@ -42,7 +41,7 @@ namespace vulkanRendererBackend
 		const VkPipeline& GetVkPipeline() const;
 
 	protected: // Methods:
-		VkShaderModule CreateShaderModule(const std::vector<char>& code);
+		VkShaderModule CreateShaderModule(const std::vector<char>& code, const std::string& name);
 
 	private: // Methods;
 		void Cleanup();

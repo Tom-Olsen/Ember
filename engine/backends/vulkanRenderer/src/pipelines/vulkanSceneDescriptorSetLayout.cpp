@@ -37,6 +37,7 @@ namespace vulkanRendererBackend
             createInfo.pBindings = &binding;
 
             VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &createInfo, nullptr, &s_descriptorSetLayout));
+            NAME_VK_OBJECT(s_descriptorSetLayout, "DescriptorSetLayout_Scene");
         }
 
         // Create descriptor sets:
@@ -50,6 +51,8 @@ namespace vulkanRendererBackend
 
             s_descriptorSets.resize(Context::GetFramesInFlight());
             VKA(vkAllocateDescriptorSets(Context::GetVkDevice(), &allocInfo, s_descriptorSets.data()));
+            for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
+                NAME_VK_OBJECT(s_descriptorSets[frameIndex], "DescriptorSet_Scene_Frame" + std::to_string(frameIndex));
         }
 
         // Create uniform light properties buffer:
@@ -115,6 +118,7 @@ namespace vulkanRendererBackend
             bufferLayout.AddMember(lightPositionalData);
 
             s_pUniformLightPropertiesBuffer = std::make_unique<UniformBuffer>(bufferLayout);
+            s_pUniformLightPropertiesBuffer->SetDebugName("UniformBuffer_SceneLightProperties");
         }
 
         // Bind uniform light properties buffer to descriptor sets:

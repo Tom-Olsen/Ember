@@ -56,6 +56,7 @@ namespace vulkanRendererBackend
             createInfo.pBindings = bindings.data();
 
             VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &createInfo, nullptr, &s_descriptorSetLayout));
+            NAME_VK_OBJECT(s_descriptorSetLayout, "DescriptorSetLayout_Global");
         }
 
         // Create descriptor sets:
@@ -69,6 +70,8 @@ namespace vulkanRendererBackend
 
             s_descriptorSets.resize(Context::GetFramesInFlight());
             VKA(vkAllocateDescriptorSets(Context::GetLogicalDevice()->GetVkDevice(), &allocInfo, s_descriptorSets.data()));
+            for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
+                NAME_VK_OBJECT(s_descriptorSets[frameIndex], "DescriptorSet_Global_Frame" + std::to_string(frameIndex));
         }
 
         // Bind shadow maps to descriptor sets:

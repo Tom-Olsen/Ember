@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -20,6 +21,7 @@ namespace vulkanRendererBackend
 	class CommandPool
 	{
 	private: // Members:
+		static uint32_t s_index;
 		VkCommandPool m_primaryPool;
 		std::vector<VkCommandPool> m_secondaryPools;
 		VkCommandBuffer m_primaryBuffer;
