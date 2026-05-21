@@ -59,9 +59,7 @@ int main()
 	emberTaskSystem::profiler::Session::Get().End();
 
 	// Runtime analysis:
-	std::vector<std::string> results = session.GetAllEventNames();
-	for (std::string& result : results)
-		session.PrintFunctionAverageTime(result, emberTaskSystem::profiler::TimeUnit::ms);
+	session.PrintSessionStats();
 
 	return exitCode;
 }
