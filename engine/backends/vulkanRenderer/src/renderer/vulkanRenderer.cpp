@@ -162,6 +162,7 @@ namespace vulkanRendererBackend
 		// Cancel current frame on failed acquisition (e.g. window resize):
 		if (!AcquireImage())
 			return;
+		Context::MarkDeviceBusy();
 
 		if (!m_pCompute)
 			throw std::runtime_error("vulkanRendererBackend::Renderer::RenderFrame(...) failed. Compute backend is not linked.");

@@ -47,6 +47,7 @@ namespace vulkanRendererBackend
 	uint32_t Context::m_frameIndex;
 	uint64_t Context::m_absoluteFrameIndex;
 	VkSampleCountFlagBits Context::m_msaaSamples;
+	bool Context::m_deviceIdle = true;
 	bool Context::m_enableDockSpace;
 	float Context::m_depthBiasConstantFactor = 0.0f;
 	float Context::m_depthBiasClamp = 0.0f;
@@ -64,6 +65,7 @@ namespace vulkanRendererBackend
 		m_framesInFlight = createInfo.framesInFlight;
 		m_frameIndex = 0;
 		m_absoluteFrameIndex = 0;
+		m_deviceIdle = true;
 		m_enableDockSpace = createInfo.enableDockSpace;
 
 		// Get instance extensions:
@@ -274,6 +276,10 @@ namespace vulkanRendererBackend
 	{
 		return m_msaaSamples;
 	}
+	bool Context::IsDeviceIdle()
+	{
+		return m_deviceIdle;
+	}
 	bool Context::DockSpaceEnabled()
 	{
 		return m_enableDockSpace;
@@ -303,9 +309,14 @@ namespace vulkanRendererBackend
 	{
 		m_frameIndex = 0;
 	}
+	void Context::MarkDeviceBusy()
+	{
+		m_deviceIdle = false;
+	}
 	void Context::WaitDeviceIdle()
 	{
 		VKA(vkDeviceWaitIdle(GetVkDevice()));
+		m_deviceIdle = true;
 	}
 
 	// Object naming:

@@ -100,6 +100,7 @@ namespace vulkanRendererBackend
 		submitInfo.pSignalSemaphores = nullptr;
 		VKA(vkResetFences(Context::GetVkDevice(), 1, &fence));
 		VKA(vkQueueSubmit(Context::GetLogicalDevice()->GetComputeQueue().queue, 1, &submitInfo, fence));
+		Context::MarkDeviceBusy();
 	}
 	void ComputeSession::ResetComputeCalls()
 	{

@@ -1,7 +1,7 @@
 #include "vulkanGarbageCollector.h"
+#include "logger.h"
 #include "vulkanContext.h"
 #include <vulkan/vulkan.h>
-#include "logger.h"
 
 
 
@@ -22,6 +22,13 @@ namespace vulkanRendererBackend
     }
     void GarbageCollector::Clear()
     {
+        // Wait for device idle before flushing queued callbacks:
+        if (!Context::IsDeviceIdle())
+        {
+            LOG_WARN("GarbageCollector::Clear() called while device may still be busy. Waiting for device idle before clearing queued Vulkan resources.");
+            Context::WaitDeviceIdle();
+        }
+
         for (const GarbageEntry& entry : s_garbageQueue)
             entry.collectGarbageCallback();
         s_garbageQueue.clear();

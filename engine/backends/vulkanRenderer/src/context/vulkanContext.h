@@ -109,6 +109,7 @@ namespace vulkanRendererBackend
 		static uint32_t m_frameIndex;
 		static uint64_t m_absoluteFrameIndex;
 		static VkSampleCountFlagBits m_msaaSamples;
+		static bool m_deviceIdle;
 		static bool m_enableDockSpace;
 		static float m_depthBiasConstantFactor;
 		static float m_depthBiasClamp;
@@ -144,6 +145,7 @@ namespace vulkanRendererBackend
 		static uint32_t GetFrameIndex();
 		static uint64_t GetAbsoluteFrameIndex();
 		static VkSampleCountFlagBits GetMsaaSamples();
+		static bool IsDeviceIdle();
 		static bool DockSpaceEnabled();
 		static float GetDepthBiasConstantFactor();
 		static float GetDepthBiasClamp();
@@ -152,6 +154,7 @@ namespace vulkanRendererBackend
 		// Frame logic:
 		static void UpdateFrameIndex();
 		static void ResetFrameIndex();
+		static void MarkDeviceBusy();
 		static void WaitDeviceIdle();
 
 		// Debug utility object naming functions:
