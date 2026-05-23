@@ -116,6 +116,12 @@ namespace vulkanRendererBackend
 
 		m_pSurface = std::make_unique<Surface>(m_pInstance.get(), m_pPhysicalDevice.get(), pIWindow, createInfo.vSyncEnabled);
 		m_pLogicalDevice = std::make_unique<LogicalDevice>(m_pPhysicalDevice.get(), m_pSurface.get(), deviceExtensions);
+		
+        // Load vulkan debug utility object naming function:
+		#if defined(VALIDATION_LAYERS_ACTIVE)
+		vkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetDeviceProcAddr(GetVkDevice(), "vkSetDebugUtilsObjectNameEXT"));
+		#endif
+
 		m_pMemoryAllocator = std::make_unique<MemoryAllocator>(m_pInstance.get(), m_pLogicalDevice.get(), m_pPhysicalDevice.get());
 		m_pAllocationTracker = std::make_unique<AllocationTracker>();
 		m_pDescriptorPool = std::make_unique<DescriptorPool>(m_pLogicalDevice.get());
@@ -124,11 +130,6 @@ namespace vulkanRendererBackend
 
 		// Set msaa sampling value:
 		m_msaaSamples = static_cast<VkSampleCountFlagBits>(math::Min(static_cast<uint32_t>(createInfo.msaaSampleCount), static_cast<uint32_t>(m_pPhysicalDevice->GetMaxMsaaSamples())));
-
-		// Load vulkan debug utility object naming function:
-		#if defined(VALIDATION_LAYERS_ACTIVE)
-		vkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetDeviceProcAddr(GetVkDevice(), "vkSetDebugUtilsObjectNameEXT"));
-		#endif
 
 		// Init static utility:
 		uint32_t maxLightsCount = createInfo.maxDirectionalLights + createInfo.maxPositionalLights;
@@ -323,6 +324,9 @@ namespace vulkanRendererBackend
 	void SetObjectName(VkObjectType objectType, uint64_t objectHandle, const std::string& name)
 	{
 		#if defined(VALIDATION_LAYERS_ACTIVE)
+		if (vkSetDebugUtilsObjectNameEXT == nullptr || objectHandle == 0)
+			return;
+
 		VkDebugUtilsObjectNameInfoEXT nameInfo = {};
 		nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
 		nameInfo.objectType = objectType;

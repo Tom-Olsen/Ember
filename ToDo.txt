@@ -4,9 +4,342 @@ Reduce static shared state usage in Context, PoolManager, GarbageCollector, and 
 Resources in basic fragment/vertex shaders should belong mostly to SHADER_SET not CALL_SET and then each draw with different textures requires its own material => unity like multi materials from 1 shader source.
 
 Multi thread renderer -> make everything thread save.
-Go through project and find all todos.
 Dynamic descriptorPool allocation.
 Implement static meshes.
 Retry implementing queue ownership transitions.
 Check if layout transitioning and layout tracking logic is correct or needs updating.
 in directionalLight.cpp retrieve sceneHeight from scene itself.
+
+
+
+Vulkan Descriptor Pool System — Design Specification
+Goals
+
+Implement a scalable Vulkan descriptor allocation system supporting:
+
+Static/Persistent descriptor pools
+Long-lived descriptor sets
+Dynamic pool growth
+Optional individual descriptor freeing
+Dynamic/Transient descriptor pools
+Per-frame temporary descriptor sets
+Fast allocation
+Whole-pool reset
+No individual freeing
+
+System must:
+
+scale automatically
+avoid fragmentation where possible
+support future bindless migration
+minimize Vulkan allocation overhead
+High-Level Architecture
+DescriptorAllocatorPersistent
+    ├── currentPool
+    ├── usedPools
+    └── freePools
+
+DescriptorAllocatorFrame[FramesInFlight]
+    ├── framePool
+    └── vkResetDescriptorPool() every frame
+1. Persistent Descriptor Allocator
+Purpose
+
+Used for descriptor sets with arbitrary or long lifetimes.
+
+Examples:
+
+material descriptor sets
+texture bindings
+static compute resources
+renderer-global resources
+editor/UI descriptors
+Vulkan Pool Flags
+
+Pools use:
+
+VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT
+
+to allow:
+
+vkFreeDescriptorSets(...)
+Behavior
+Allocation
+Allocate from currentPool
+On exhaustion:
+create new VkDescriptorPool
+switch current pool
+retry allocation
+Freeing
+
+Supports:
+
+individual descriptor freeing
+optional delayed destruction if needed
+Pool Lifetime
+
+Pools remain alive until:
+
+renderer shutdown
+allocator destruction
+explicit pool garbage collection
+Internal Structure
+class DescriptorAllocatorPersistent
+{
+    VkDevice device;
+
+    VkDescriptorPool currentPool;
+
+    std::vector<VkDescriptorPool> usedPools;
+    std::vector<VkDescriptorPool> freePools;
+
+public:
+    VkDescriptorSet Allocate(...);
+    void Free(VkDescriptorSet set);
+    void Reset();
+};
+Pool Exhaustion Handling
+
+On allocation failure:
+
+VK_ERROR_OUT_OF_POOL_MEMORY
+VK_ERROR_FRAGMENTED_POOL
+
+allocator:
+
+grabs/reuses free pool OR creates new pool
+retries allocation
+Pool Sizing
+
+Pools are intentionally large.
+
+Example:
+
+VkDescriptorPoolSize poolSizes[] =
+{
+    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         1024 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,         1024 },
+    { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,2048 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,           256 },
+};
+
+maxSets = 4096;
+2. Dynamic/Transient Descriptor Allocator
+Purpose
+
+Used for short-lived descriptor sets.
+
+Examples:
+
+per-frame descriptors
+temporary compute descriptors
+transient material instances
+temporary render graph resources
+Vulkan Pool Flags
+
+Pools use:
+
+flags = 0
+
+NOT:
+
+VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT
+
+because:
+
+individual freeing is unnecessary
+reset model is faster
+avoids fragmentation
+Behavior
+Allocation
+allocate freely during frame
+Reset
+
+At beginning/end of frame:
+
+vkResetDescriptorPool(...)
+
+This invalidates all descriptor sets allocated from the pool.
+
+Structure
+
+One allocator per frame-in-flight:
+
+DescriptorAllocatorFrame frames[FramesInFlight];
+
+Each contains:
+
+class DescriptorAllocatorFrame
+{
+    VkDescriptorPool pool;
+
+public:
+    void Reset();
+    VkDescriptorSet Allocate(...);
+};
+Frame Lifecycle
+Frame Begin
+    -> reset descriptor pool
+
+Rendering
+    -> allocate transient descriptor sets
+
+Frame End
+    -> descriptor sets become obsolete automatically
+Descriptor Pool Creation Strategy
+CreatePool()
+
+Allocator creates pools using configurable ratios.
+
+Example:
+
+struct PoolSizeRatio
+{
+    VkDescriptorType type;
+    float ratio;
+};
+
+Example ratios:
+
+{
+    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          2.0f },
+    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,          2.0f },
+    { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4.0f },
+    { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,           1.0f },
+}
+
+Pool sizes derived from:
+
+descriptorCount = ratio * maxSets;
+Allocation API
+Allocate()
+VkDescriptorSet Allocate(
+    VkDescriptorSetLayout layout);
+
+Optional extension:
+
+VkDescriptorSet Allocate(
+    VkDescriptorSetLayout layout,
+    void* pNext);
+Pool Recycling
+Persistent Allocator
+
+Supports:
+
+recycling unused pools
+future defragmentation strategies
+
+Optional:
+
+move fully unused pools into freePools
+Dynamic Allocator
+
+No recycling needed.
+
+Pool survives permanently and resets each frame.
+
+Threading Considerations
+Vulkan Requirement
+
+Descriptor pool allocation is NOT thread-safe.
+
+Recommended Strategy
+
+Either:
+
+mutex around allocation
+OR:
+one allocator per thread
+
+Preferred future design:
+
+ThreadLocalDescriptorAllocator
+
+especially for transient descriptors.
+
+Descriptor Set Layout Policy
+Important
+
+Descriptor set layouts should be:
+
+cached
+reused aggressively
+immutable after creation
+
+Avoid recreating layouts frequently.
+
+Error Handling
+
+Allocation must detect:
+
+VK_ERROR_OUT_OF_POOL_MEMORY
+VK_ERROR_FRAGMENTED_POOL
+
+and recover automatically.
+
+Any other error:
+
+treated as fatal Vulkan error
+Future Bindless Compatibility
+
+System should remain compatible with future:
+
+descriptor indexing
+bindless textures
+bindless buffers
+
+Expected future direction:
+
+fewer descriptor set allocations
+large persistent descriptor arrays
+descriptor updates instead of allocation churn
+
+Current allocator design should therefore:
+
+remain modular
+not assume heavy descriptor allocation forever
+Recommended Engine Usage
+Persistent Allocator
+
+Use for:
+
+materials
+textures
+renderer-global descriptor sets
+static compute resources
+Dynamic Allocator
+
+Use for:
+
+per-frame descriptors
+temporary GPU jobs
+render graph transient resources
+dynamic object bindings
+Non-Goals
+
+This system currently does NOT include:
+
+descriptor set layout reflection cache
+bindless implementation
+descriptor update templates
+descriptor buffer extension
+multithreaded descriptor allocation
+automatic pool shrinking
+
+These may be added later.
+
+Final Design Summary
+Persistent Allocator
+Feature	Supported
+Dynamic pool growth	Yes
+Individual descriptor free	Yes
+Pool reset	Optional
+Fragmentation possible	Yes
+Long-lived descriptors	Yes
+Dynamic Allocator
+Feature	Supported
+Dynamic pool growth	Optional
+Individual descriptor free	No
+Pool reset	Every frame
+Fragmentation resistant	Yes
+Long-lived descriptors	No

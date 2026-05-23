@@ -72,7 +72,10 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void DescriptorPool::Cleanup()
 	{
+		if (m_pLogicalDevice == nullptr || m_descriptorPool == VK_NULL_HANDLE)
+			return;
 		vkDestroyDescriptorPool(m_pLogicalDevice->GetVkDevice(), m_descriptorPool, nullptr);
+		m_descriptorPool = VK_NULL_HANDLE;
 	}
 	void DescriptorPool::MoveFrom(DescriptorPool& other) noexcept
 	{
