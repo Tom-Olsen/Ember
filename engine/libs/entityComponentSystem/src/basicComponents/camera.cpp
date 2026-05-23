@@ -64,7 +64,7 @@ namespace emberEngine
 			m_updateProjectionMatrix = true;
 		}
 	}
-	void Camera::SetProjectionType(ProjectionType projectionType)
+	void Camera::SetProjectionType(Camera::ProjectionType projectionType)
 	{
 		if (m_projectionType != projectionType)
 		{
@@ -104,7 +104,7 @@ namespace emberEngine
 	{
 		return GetTransform()->GetDown();
 	}
-	ProjectionType Camera::GetProjectionType() const
+	Camera::ProjectionType Camera::GetProjectionType() const
 	{
 		return m_projectionType;
 	}

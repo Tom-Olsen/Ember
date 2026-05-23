@@ -42,7 +42,6 @@ namespace vulkanRendererBackend
         };
 
 	private: // Members:
-		//MeshType m_meshType = MeshType::static;	// Ember::ToDo: implement static meshes.
 		VkIndexType m_vkIndexType = VK_INDEX_TYPE_UINT16;
 		emberCommon::VertexMemoryLayout m_vertexMemoryLayout = emberCommon::VertexMemoryLayout::interleaved;
 		std::unique_ptr<StagingBuffer> m_pVertexStagingBuffer;

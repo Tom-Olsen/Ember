@@ -167,13 +167,12 @@ namespace vulkanRendererBackend
         // Cache original layout:
 		VkImageLayout originalLayout = pSrcTexture->GetVmaImage()->GetImageLayout();
 
-        // Ember::ToDo: track stage and access usage of textures and use them here!
 		// Transition 0: Layout: original->srcTransfer, Queue: transfer
         {
 		    VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		    VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;   // use tracked stage here.
+		    VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
 		    VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_COPY_BIT;
-		    AccessMask srcAccessMask = AccessMasks::BottomOfPipe::none;  // use tracked access here.
+		    AccessMask srcAccessMask = AccessMasks::BottomOfPipe::none;
 		    AccessMask dstAccessMask = AccessMasks::Copy::transferRead;
             pSrcTexture->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
         }
@@ -205,9 +204,9 @@ namespace vulkanRendererBackend
         {
 		    VkImageLayout newLayout = originalLayout;
 		    VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_COPY_BIT;
-		    VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;   // use tracked stage here.
+		    VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
 		    AccessMask srcAccessMask = AccessMasks::Copy::transferRead;
-		    AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;  // use tracked access here.
+		    AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
             pSrcTexture->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
         }
     }

@@ -246,7 +246,7 @@ TEST_F(TEST_GpuSort, BitonicPermutationSortInt)
 //
 //		Camera* pCamera = pGameObject->AddComponent<Camera>();
 //		pCamera->SetFarClip(100.0f);
-//		pCamera->SetProjectionType(ProjectionType::orthographic);
+//		pCamera->SetProjectionType(Camera::ProjectionType::orthographic);
 //		pCamera->SetOrthographicSize(6);
 //		CameraController* cameraController = pGameObject->AddComponent<CameraController>();
 //		

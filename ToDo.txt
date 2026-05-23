@@ -1,6 +1,11 @@
 Review draw-call sorting and reduce per-frame overhead by caching sort keys or only resorting when relevant state changes.
-Add thread safety or synchronization around m_pendingMeshUpdates to prevent data races if mesh updates are queued from multiple threads.
 Re-enable texture batch uploading with correct queue synchronization and barriers between transfer and graphics queues.
-Add shutdown validation to vulkanGarbageCollector.Clear() so in-flight frame resources cannot be cleared unsafely.
 Reduce static shared state usage in Context, PoolManager, GarbageCollector, and RenderPassManager to improve encapsulation and thread safety.
-See ToDo in default.frag.hlsl
+Resources in basic fragment/vertex shaders should belong mostly to SHADER_SET not CALL_SET and then each draw with different textures requires its own material => unity like multi materials from 1 shader source.
+
+Multi thread renderer -> make everything thread save.
+Go through project and find all todos.
+Dynamic descriptorPool allocation.
+Implement static meshes.
+Retry implementing queue ownership transitions.
+Check if layout transitioning and layout tracking logic is correct or needs updating.

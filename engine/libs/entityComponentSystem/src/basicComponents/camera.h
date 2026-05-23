@@ -5,11 +5,19 @@
 
 namespace emberEngine
 {
+
 	/// <summary>
 	/// View direction is down = (0,0,-1).
 	/// </summary>
 	class Camera : public Component
 	{
+    public: // Enums:
+	    enum class ProjectionType
+        {
+            perspective,
+            orthographic
+        };
+
 	private: // Members:
 		float m_fov;
 		float m_aspectRatio;

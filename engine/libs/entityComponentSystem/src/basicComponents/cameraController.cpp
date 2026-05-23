@@ -81,11 +81,11 @@ namespace emberEngine
 			if (pCamera == nullptr)
 				return;
 
-			ProjectionType currentType = pCamera->GetProjectionType();
-			if (currentType == ProjectionType::perspective)
-				pCamera->SetProjectionType(ProjectionType::orthographic);
-			else if (currentType == ProjectionType::orthographic)
-				pCamera->SetProjectionType(ProjectionType::perspective);
+			Camera::ProjectionType currentType = pCamera->GetProjectionType();
+			if (currentType == Camera::ProjectionType::perspective)
+				pCamera->SetProjectionType(Camera::ProjectionType::orthographic);
+			else if (currentType == Camera::ProjectionType::orthographic)
+				pCamera->SetProjectionType(Camera::ProjectionType::perspective);
 		}
 	}
 

@@ -4,15 +4,9 @@
 
 // This is the main header file for the emberEngine.
 // It includes all headers that are necessary to use the engine.
-// It must be included in every Component scripts header fie.
+// It must be included in every Component scripts header file.
 
 
-
-// Ember::ToDo: move this somewhere else!
-namespace emberEngine
-{
-	enum class ProjectionType { perspective, orthographic};
-}
 
 // Standart library:
 #include <array>
