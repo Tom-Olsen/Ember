@@ -18,7 +18,11 @@ namespace emberEngine
 		for (int i = 0; i < 5; i++)
 			m_shadowCascadeSplits[i] = (float)i / 4;
 		for (int i = 0; i < 4; i++)
+		{
 			m_shadowCascades[i] = new ShadowCascade();
+			m_shadowCascadeMatricesValid[i] = false;
+		}
+		m_shadowCascadeSplitsValid = false;
 		m_drawFrustum = false;
 	}
 	DirectionalLight::~DirectionalLight()
@@ -46,6 +50,7 @@ namespace emberEngine
 	void DirectionalLight::SetActiveCamera(Camera* pCamera)
 	{
 		m_pActiveCamera = pCamera;
+		InvalidateShadowCascades();
 	}
 	void DirectionalLight::SetShadowCascadeCount(int shadowCascadeCount)
 	{
@@ -60,10 +65,12 @@ namespace emberEngine
 			shadowCascadeCount = 4;
 		}
 		m_shadowCascadeCount = shadowCascadeCount;
+		InvalidateShadowCascades();
 	}
 	void DirectionalLight::SetDistributionFactor(float distributionFactor)
 	{
 		m_distributionFactor = distributionFactor;
+		InvalidateShadowCascades();
 	}
 	void DirectionalLight::SetDrawFrustum(bool drawFrustum)
 	{
@@ -102,50 +109,45 @@ namespace emberEngine
 	}
 	Float4x4 DirectionalLight::GetViewMatrix(int shadowCascadeIndex) const
 	{
-		float sceneHeight = 30.0f; // this is for testing, get height from scene later.
+		Camera* pCamera = (m_pActiveCamera == nullptr) ? GetEntity().GetScene()->GetActiveCamera() : m_pActiveCamera;
+		Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
+		Float4x4 cameraProjectionMatrix = pCamera->GetProjectionMatrix();
 		Float3 direction = GetTransform()->GetDown();
-		Float4x4 cameraLocalToWorldMatrix = m_pActiveCamera->GetTransform()->GetLocalToWorldMatrix();
-		Float4x4 cameraProjectionMatrix = m_pActiveCamera->GetProjectionMatrix();
-		m_shadowCascades[shadowCascadeIndex]->Update(cameraLocalToWorldMatrix, cameraProjectionMatrix, direction, m_shadowCascadeSplits[shadowCascadeIndex], m_shadowCascadeSplits[shadowCascadeIndex + 1], sceneHeight);
+		UpdateShadowCascadeSplits(pCamera);
+		UpdateShadowCascade(shadowCascadeIndex, cameraLocalToWorldMatrix, cameraProjectionMatrix, direction);
 		return m_shadowCascades[shadowCascadeIndex]->GetViewMatrix();
 	}
-	Float4x4 DirectionalLight::GetProjectionMatrix(int shadowCascadeIndex)
+	Float4x4 DirectionalLight::GetProjectionMatrix(int shadowCascadeIndex) const
 	{
-		// Ember::ToDo: why update m_shadowCascades[shadowCascadeIndex] in GetViewMatrix(...), GetProjectionMatrix(..), and LateUpdate()? Add logic to only do this once per frame?
-		float sceneHeight = 30.0f; // this is for testing, get height from scene later.
+		Camera* pCamera = (m_pActiveCamera == nullptr) ? GetEntity().GetScene()->GetActiveCamera() : m_pActiveCamera;
+		Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
+		Float4x4 cameraProjectionMatrix = pCamera->GetProjectionMatrix();
 		Float3 direction = GetTransform()->GetDown();
-		Float4x4 cameraLocalToWorldMatrix = m_pActiveCamera->GetTransform()->GetLocalToWorldMatrix();
-		Float4x4 cameraProjectionMatrix = m_pActiveCamera->GetProjectionMatrix();
-		m_shadowCascades[shadowCascadeIndex]->Update(cameraLocalToWorldMatrix, cameraProjectionMatrix, direction, m_shadowCascadeSplits[shadowCascadeIndex], m_shadowCascadeSplits[shadowCascadeIndex + 1], sceneHeight);
+		UpdateShadowCascadeSplits(pCamera);
+		UpdateShadowCascade(shadowCascadeIndex, cameraLocalToWorldMatrix, cameraProjectionMatrix, direction);
 		return m_shadowCascades[shadowCascadeIndex]->GetProjectionMatrix();
 	}
 
 
 
 	// Overrides:
+	void DirectionalLight::EarlyUpdate()
+	{
+		InvalidateShadowCascades();
+	}
 	void DirectionalLight::LateUpdate()
 	{
 		// Set camera:
 		Camera* pCamera = (m_pActiveCamera == nullptr) ? GetEntity().GetScene()->GetActiveCamera() : m_pActiveCamera;
 
-		// Set splits for shadow cascadess:
-		float n = pCamera->GetNearClip();
-		float f = pCamera->GetFarClip();
-		for (int i = 0; i < m_shadowCascadeCount + 1; i++)
-		{
-			float linear = (float)i / (float)m_shadowCascadeCount;
-			float logarithmic = (n * math::Pow(((f + n) / n), ((float)i / (float)m_shadowCascadeCount)) - n) / f;
-			m_shadowCascadeSplits[i] = (1.0f - m_distributionFactor) * linear + m_distributionFactor * logarithmic;
-		}
-
 		// Update shadow cascades and add directional lights to renderer:
-		float sceneHeight = 30.0f; // this is for testing, get height from scene later.
+		Float3 direction = GetTransform()->GetDown();
+		UpdateShadowCascadeSplits(pCamera);
+		Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
+		Float4x4 cameraProjectionMatrix = pCamera->GetProjectionMatrix();
 		for (int i = 0; i < m_shadowCascadeCount; i++)
 		{
-			Float3 direction = GetTransform()->GetDown();
-			Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
-			Float4x4 cameraProjectionMatrix = pCamera->GetProjectionMatrix();
-			m_shadowCascades[i]->Update(cameraLocalToWorldMatrix, cameraProjectionMatrix, direction, m_shadowCascadeSplits[i], m_shadowCascadeSplits[i + 1], sceneHeight);
+			UpdateShadowCascade(i, cameraLocalToWorldMatrix, cameraProjectionMatrix, direction);
 			Float4x4 worldToClipMatrix = m_shadowCascades[i]->GetProjectionMatrix() * m_shadowCascades[i]->GetViewMatrix();
 			Renderer::AddDirectionalLight(direction, m_intensity, m_color, m_shadowType, worldToClipMatrix);
 		}
@@ -167,5 +169,39 @@ namespace emberEngine
 				Renderer::DrawFrustum(localToWorldMatrix, m_shadowCascades[i]->GetProjectionMatrix(), 0.1f, colors[i]);
 			}
 		}
+	}
+
+
+
+	// Private methods:
+	void DirectionalLight::InvalidateShadowCascades() const
+	{
+		m_shadowCascadeSplitsValid = false;
+		for (int i = 0; i < 4; i++)
+			m_shadowCascadeMatricesValid[i] = false;
+	}
+	void DirectionalLight::UpdateShadowCascadeSplits(Camera* pCamera) const
+	{
+		if (m_shadowCascadeSplitsValid)
+			return;
+
+		float n = pCamera->GetNearClip();
+		float f = pCamera->GetFarClip();
+		for (int i = 0; i < m_shadowCascadeCount + 1; i++)
+		{
+			float linear = (float)i / (float)m_shadowCascadeCount;
+			float logarithmic = (n * math::Pow(((f + n) / n), ((float)i / (float)m_shadowCascadeCount)) - n) / f;
+			m_shadowCascadeSplits[i] = (1.0f - m_distributionFactor) * linear + m_distributionFactor * logarithmic;
+		}
+		m_shadowCascadeSplitsValid = true;
+	}
+	void DirectionalLight::UpdateShadowCascade(int shadowCascadeIndex, const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction) const
+	{
+		if (m_shadowCascadeMatricesValid[shadowCascadeIndex])
+			return;
+
+		float sceneHeight = 30.0f; // this is for testing, get height from scene later.
+		m_shadowCascades[shadowCascadeIndex]->Update(cameraLocalToWorldMatrix, cameraProjectionMatrix, direction, m_shadowCascadeSplits[shadowCascadeIndex], m_shadowCascadeSplits[shadowCascadeIndex + 1], sceneHeight);
+		m_shadowCascadeMatricesValid[shadowCascadeIndex] = true;
 	}
 }

@@ -9,3 +9,4 @@ Dynamic descriptorPool allocation.
 Implement static meshes.
 Retry implementing queue ownership transitions.
 Check if layout transitioning and layout tracking logic is correct or needs updating.
+in directionalLight.cpp retrieve sceneHeight from scene itself.

@@ -22,8 +22,10 @@ namespace emberEngine
 		Camera* m_pActiveCamera;
 		int m_shadowCascadeCount;
 		float m_distributionFactor;		// €[0,1], 0 = linear, 1 = logarithmic
-		float m_shadowCascadeSplits[5];	// Percentile splits for each shadow cascade € [0,1].
+		mutable float m_shadowCascadeSplits[5];	// Percentile splits for each shadow cascade € [0,1].
 		std::array<ShadowCascade*, 4> m_shadowCascades;
+		mutable std::array<bool, 4> m_shadowCascadeMatricesValid;
+		mutable bool m_shadowCascadeSplitsValid;
 		bool m_drawFrustum;
 
 	public: // Methods:
@@ -48,9 +50,15 @@ namespace emberEngine
 		float GetDistributionFactor() const;
 		float GetShadowCascadeSplit(int index) const;
 		Float4x4 GetViewMatrix(int shadowCascadeIndex) const;
-		Float4x4 GetProjectionMatrix(int shadowCascadeIndex);
+		Float4x4 GetProjectionMatrix(int shadowCascadeIndex) const;
 
 		// Overrides:
+		void EarlyUpdate() override;
 		void LateUpdate() override;
+
+	private: // Methods:
+		void InvalidateShadowCascades() const;
+		void UpdateShadowCascadeSplits(Camera* pCamera) const;
+		void UpdateShadowCascade(int shadowCascadeIndex, const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction) const;
 	};
 }
