@@ -14,6 +14,11 @@ namespace emberEngine
 		static std::vector<void(*)(entt::registry&)> s_fixedUpdateRegistry;
 		return s_fixedUpdateRegistry;
 	}
+	std::vector<void(*)(entt::registry&)>& ComponentRegistry::GetEarlyUpdateRegistry()
+	{
+		static std::vector<void(*)(entt::registry&)> s_earlyUpdateRegistry;
+		return s_earlyUpdateRegistry;
+	}
 	std::vector<void(*)(entt::registry&)>& ComponentRegistry::GetUpdateRegistry()
 	{
 		static std::vector<void(*)(entt::registry&)> s_updateRegistry;

@@ -148,6 +148,9 @@ namespace emberApplication
 				if (emberEngine::Window::GetIsMinimized() || windowSize.x == 0 || windowSize.y == 0 || surfaceExtent.x == 0 || surfaceExtent.y == 0)
 					continue;
 
+				// Frame update loop:
+				m_pActiveScene->EarlyUpdate();
+
 				// Physics Update Loop:
 				while (emberEngine::Time::UpdatePhysics())
 					m_pActiveScene->FixedUpdate();

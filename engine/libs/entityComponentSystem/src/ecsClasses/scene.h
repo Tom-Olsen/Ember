@@ -60,6 +60,7 @@ namespace emberEngine
 		// ECS callbacks:
 		void Start();
 		void FixedUpdate();
+		void EarlyUpdate();
 		void Update();
 		void LateUpdate();
 

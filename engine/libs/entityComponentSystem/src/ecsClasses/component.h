@@ -53,6 +53,7 @@ namespace emberEngine
 
 		// ECS methods:
 		virtual void Start() {};
+		virtual void EarlyUpdate() {};
 		virtual void Update() {};
 		virtual void LateUpdate() {};
 		virtual void FixedUpdate() {};

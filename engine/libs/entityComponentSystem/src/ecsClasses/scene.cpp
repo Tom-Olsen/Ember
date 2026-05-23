@@ -139,6 +139,11 @@ namespace emberEngine
 		for (auto& fixedUpdateCallback : ComponentRegistry::GetFixedUpdateRegistry())
 			fixedUpdateCallback(m_registry);
 	}
+	void Scene::EarlyUpdate()
+	{
+		for (auto& earlyUpdateCallback : ComponentRegistry::GetEarlyUpdateRegistry())
+			earlyUpdateCallback(m_registry);
+	}
 	void Scene::Update()
 	{
 		for (auto& updateCallback : ComponentRegistry::GetUpdateRegistry())
