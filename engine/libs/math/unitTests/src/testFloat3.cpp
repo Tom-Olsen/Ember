@@ -1,5 +1,4 @@
 #include "emberMath.h"
-#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -8,7 +7,7 @@
 TEST(Float3, DirectionConstructor)
 {
 	Float3 direction = Float3::Direction(math::pi4, math::pi4);
-	ExpectNearVec(direction, Float3(0.5f, 0.5f, math::sqrt2Inv), epsilon);
+	EXPECT_TRUE(direction.IsEpsilonEqual(Float3(0.5f, 0.5f, math::sqrt2Inv)));
 }
 
 // Math operations:
@@ -16,47 +15,47 @@ TEST(Float3, LengthSq)
 {
 	Float3 a(3.0f, 4.0f, 12.0f);
 	float lengthSq = a.LengthSq();
-	EXPECT_NEAR(lengthSq, 169.0f, epsilon);
+	EXPECT_TRUE(math::IsEpsilonEqual(lengthSq, 169.0f));
 }
 TEST(Float3, Length)
 {
 	Float3 a(3.0f, 4.0f, 12.0f);
 	float length = a.Length();
-	EXPECT_NEAR(length, 13.0f, epsilon);
+	EXPECT_TRUE(math::IsEpsilonEqual(length, 13.0f));
 }
 TEST(Float3, Theta)
 {
 	Float3 a(1.0f, 1.0f, math::sqrt2);
 	float theta = a.Theta();
-	EXPECT_NEAR(theta, math::pi4, epsilon);
+	EXPECT_TRUE(math::IsEpsilonEqual(theta, math::pi4));
 }
 TEST(Float3, Phi)
 {
 	Float3 a = Float3::one;
 	float phi = a.Phi();
-	EXPECT_NEAR(phi, math::pi4, epsilon);
+	EXPECT_TRUE(math::IsEpsilonEqual(phi, math::pi4));
 }
 TEST(Float3, Angles)
 {
 	Float3 a(1.0f, 1.0f, math::sqrt2);
 	Float2 angles = a.Angles();
-	ExpectNearVec(angles, math::pi4 * Float2::one, epsilon);
+	EXPECT_TRUE(angles.IsEpsilonEqual(math::pi4 * Float2::one));
 }
 TEST(Float3, Normalize)
 {
 	Float3 a(3.0f, 4.0f, 12.0f);
 	Float3 normalized = a.Normalize();
-	ExpectNearVec(normalized, Float3(3.0f / 13.0f, 4.0f / 13.0f, 12.0f / 13.0f), epsilon);
+	EXPECT_TRUE(normalized.IsEpsilonEqual(Float3(3.0f / 13.0f, 4.0f / 13.0f, 12.0f / 13.0f)));
 }
 TEST(Float3, Rotate)
 {
 	Float3 a(1.0f, 1.0f, math::sqrt2);
 	Float3 rotated = a.Rotate(math::pi4, math::pi4);
-	ExpectNearVec(rotated, Float3(0.0f, 2.0f, 0.0f), epsilon);
+	EXPECT_TRUE(rotated.IsEpsilonEqual(Float3(0.0f, 2.0f, 0.0f)));
 }
 TEST(Float3, IsEpsilonZero)
 {
-	Float3 a = Float3(0.9f * math::epsilon, -0.9f * math::epsilon, 0.0f);
+	Float3 a = Float3(0.9f * math::absEpsilon, -0.9f * math::absEpsilon, 0.0f);
 	EXPECT_TRUE(a.IsEpsilonZero());
 }
 
@@ -65,56 +64,56 @@ TEST(Float3, Abs)
 {
 	Float3 a(-1.0f, -2.0f, -3.0f);
 	Float3 abs = Float3::Abs(a);
-	ExpectNearVec(abs, Float3(1.0f, 2.0f, 3.0f), epsilon);
+	EXPECT_TRUE(abs.IsEpsilonEqual(Float3(1.0f, 2.0f, 3.0f)));
 }
 TEST(Float3, Dot)
 {
 	Float3 a(1.0f, 3.0f, 4.0f);
 	Float3 b(2.0f, 6.0f, 5.0f);
 	float dot = Float3::Dot(a, b);
-	EXPECT_NEAR(dot, 40.0f, epsilon);
+	EXPECT_TRUE(math::IsEpsilonEqual(dot, 40.0f));
 }
 TEST(Float3, Cross)
 {
 	Float3 a(1.0f, 3.0f, 4.0f);
 	Float3 b(2.0f, 6.0f, 5.0f);
 	Float3 cross = Float3::Cross(a, b);
-	ExpectNearVec(cross, Float3(-9.0f, 3.0f, 0.0f), epsilon);
+	EXPECT_TRUE(cross.IsEpsilonEqual(Float3(-9.0f, 3.0f, 0.0f)));
 }
 TEST(Float3, DistanceSq)
 {
 	Float3 a(1.0f, 3.0f, 4.0f);
 	Float3 b(2.0f, 6.0f, 5.0f);
 	float distanceSq = Float3::DistanceSq(a, b);
-	EXPECT_NEAR(distanceSq, 11.0f, epsilon);
+	EXPECT_TRUE(math::IsEpsilonEqual(distanceSq, 11.0f));
 }
 TEST(Float3, Distance)
 {
 	Float3 a(1.0f, 3.0f, 4.0f);
 	Float3 b(2.0f, 6.0f, 5.0f);
 	float distance = Float3::Distance(a, b);
-	EXPECT_NEAR(distance, math::Sqrt(11.0f), epsilon);
+	EXPECT_TRUE(math::IsEpsilonEqual(distance, math::Sqrt(11.0f)));
 }
 TEST(Float3, static_Angle)
 {
 	Float3 a(2.0f, 0.0f, 0.0f);
 	Float3 b(-2.0f, 2.0f, 0.0f);
 	float angle = Float3::Angle(a, b);
-	EXPECT_NEAR(angle, math::deg2rad * 135.0f, epsilon);
+	EXPECT_TRUE(math::IsEpsilonEqual(angle, math::deg2rad * 135.0f));
 }
 TEST(Float3, Min)
 {
 	Float3 a(1.0f, 2.0f, 4.0f);
 	Float3 b(3.0f, 4.0f, 1.0f);
 	Float3 min = Float3::Min(a, b);
-	ExpectNearVec(min, Float3(1.0f, 2.0f, 1.0f), epsilon);
+	EXPECT_TRUE(min.IsEpsilonEqual(Float3(1.0f, 2.0f, 1.0f)));
 }
 TEST(Float3, Max)
 {
 	Float3 a(1.0f, 2.0f, 4.0f);
 	Float3 b(3.0f, 4.0f, 1.0f);
 	Float3 max = Float3::Max(a, b);
-	ExpectNearVec(max, Float3(3.0f, 4.0f, 4.0f), epsilon);
+	EXPECT_TRUE(max.IsEpsilonEqual(Float3(3.0f, 4.0f, 4.0f)));
 }
 TEST(Float3, Clamp)
 {
@@ -122,7 +121,7 @@ TEST(Float3, Clamp)
 	Float3 min(2.0f, 3.0f, 1.0f);
 	Float3 max(3.0f, 4.0f, 3.0f);
 	Float3 clamped = Float3::Clamp(value, min, max);
-	ExpectNearVec(clamped, Float3(2.0f, 4.0f, 2.0f), epsilon);
+	EXPECT_TRUE(clamped.IsEpsilonEqual(Float3(2.0f, 4.0f, 2.0f)));
 }
 
 // Access:
@@ -146,7 +145,7 @@ TEST(Float3, OperatorAssignment)
 	Float3 a(1.0f, 2.0f, 3.0f);
 	Float3 b(3.0f, 4.0f, 5.0f);
 	a = b;
-	ExpectEqualVec(a, b);
+	EXPECT_TRUE(a == b);
 }
 
 // Addition:
@@ -155,14 +154,14 @@ TEST(Float3, OperatorAddition)
 	Float3 a(1.0f, 2.0f, 3.0f);
 	Float3 b(4.0f, 5.0f, 6.0f);
 	Float3 add = a + b;
-	ExpectNearVec(add, Float3(5.0f, 7.0f, 9.0f), epsilon);
+	EXPECT_TRUE(add.IsEpsilonEqual(Float3(5.0f, 7.0f, 9.0f)));
 }
 TEST(Float3, OperatorAdditionAssignment)
 {
 	Float3 add(1.0f, 2.0f, 3.0f);
 	Float3 b(4.0f, 5.0f, 6.0f);
 	add += b;
-	ExpectNearVec(add, Float3(5.0f, 7.0f, 9.0f), epsilon);
+	EXPECT_TRUE(add.IsEpsilonEqual(Float3(5.0f, 7.0f, 9.0f)));
 }
 
 // Substraction:
@@ -171,20 +170,20 @@ TEST(Float3, OperatorSubstraction)
 	Float3 a(1.0f, 2.0f, 3.0f);
 	Float3 b(4.0f, 5.0f, 6.0f);
 	Float3 sub = a - b;
-	ExpectNearVec(sub, Float3(-3.0f, -3.0f, -3.0f), epsilon);
+	EXPECT_TRUE(sub.IsEpsilonEqual(Float3(-3.0f, -3.0f, -3.0f)));
 }
 TEST(Float3, OperatorSubstractionAssignment)
 {
 	Float3 sub(1.0f, 2.0f, 3.0f);
 	Float3 b(4.0f, 5.0f, 6.0f);
 	sub -= b;
-	ExpectNearVec(sub, Float3(-3.0f, -3.0f, -3.0f), epsilon);
+	EXPECT_TRUE(sub.IsEpsilonEqual(Float3(-3.0f, -3.0f, -3.0f)));
 }
 TEST(Float3, OperatorNegation)
 {
 	Float3 a(1.0f, 2.0f, 3.0f);
 	Float3 negation = -a;
-	ExpectNearVec(negation, Float3(-1.0f, -2.0f, -3.0f), epsilon);
+	EXPECT_TRUE(negation.IsEpsilonEqual(Float3(-1.0f, -2.0f, -3.0f)));
 }
 
 // Multiplication:
@@ -193,21 +192,21 @@ TEST(Float3, OperatorMultiplication)
 	Float3 a(1.0f, 2.0f, 3.0f);
 	Float3 b(4.0f, 5.0f, 6.0f);
 	Float3 mult = a * b;
-	ExpectNearVec(mult, Float3(4.0f, 10.0f, 18.0f), epsilon);
+	EXPECT_TRUE(mult.IsEpsilonEqual(Float3(4.0f, 10.0f, 18.0f)));
 }
 TEST(Float3, OperatorMultiplicationAssignment)
 {
 	Float3 mult(1.0f, 2.0f, 3.0f);
 	Float3 b(4.0f, 5.0f, 6.0f);
 	mult *= b;
-	ExpectNearVec(mult, Float3(4.0f, 10.0f, 18.0f), epsilon);
+	EXPECT_TRUE(mult.IsEpsilonEqual(Float3(4.0f, 10.0f, 18.0f)));
 }
 TEST(Float3, OperatorMultiplicationScalarAssignment)
 {
 	Float3 mult(1.0f, 2.0f, 3.0f);
 	float b = 3.0f;
 	mult *= b;
-	ExpectNearVec(mult, Float3(3.0f, 6.0f, 9.0f), epsilon);
+	EXPECT_TRUE(mult.IsEpsilonEqual(Float3(3.0f, 6.0f, 9.0f)));
 }
 
 // Division:
@@ -216,28 +215,28 @@ TEST(Float3, OperatorDivision)
 	Float3 a(1.0f, 2.0f, 3.0f);
 	Float3 b(4.0f, 5.0f, 6.0f);
 	Float3 div = a / b;
-	ExpectNearVec(div, Float3(1.0f / 4.0f, 2.0f / 5.0f, 3.0f / 6.0f), epsilon);
+	EXPECT_TRUE(div.IsEpsilonEqual(Float3(1.0f / 4.0f, 2.0f / 5.0f, 3.0f / 6.0f)));
 }
 TEST(Float3, OperatorDivisionAssignment)
 {
 	Float3 div(1.0f, 2.0f, 3.0f);
 	Float3 b(4.0f, 5.0f, 6.0f);
 	div /= b;
-	ExpectNearVec(div, Float3(1.0f / 4.0f, 2.0f / 5.0f, 3.0f / 6.0f), epsilon);
+	EXPECT_TRUE(div.IsEpsilonEqual(Float3(1.0f / 4.0f, 2.0f / 5.0f, 3.0f / 6.0f)));
 }
 TEST(Float3, OperatorDivisionScalarAssignment)
 {
 	Float3 div(1.0f, 2.0f, 3.0f);
 	float b = 3.0f;
 	div /= b;
-	ExpectNearVec(div, Float3(1.0f / 3.0f, 2.0f / 3.0f, 1.0f), epsilon);
+	EXPECT_TRUE(div.IsEpsilonEqual(Float3(1.0f / 3.0f, 2.0f / 3.0f, 1.0f)));
 }
 
 // Comparison:
 TEST(Float3, IsEpsilonEqual)
 {
 	Float3 a(1.0f, 2.0f, 3.0f);
-	Float3 b(1.0f + epsilon, 2.0f - epsilon, 3.0f);
+	Float3 b(1.0f + math::absEpsilon, 2.0f - math::absEpsilon, 3.0f);
 	EXPECT_TRUE(a.IsEpsilonEqual(b));
 }
 TEST(Float3, OperatorEqual)
@@ -283,26 +282,26 @@ TEST(Float3, OperatorMultiplicationScalarLeft)
 	Float3 a(1.0f, 2.0f, 3.0f);
 	float b = 3.0f;
 	Float3 mult = b * a;
-	ExpectNearVec(mult, Float3(3.0f, 6.0f, 9.0f), epsilon);
+	EXPECT_TRUE(mult.IsEpsilonEqual(Float3(3.0f, 6.0f, 9.0f)));
 }
 TEST(Float3, OperatorMultiplicationScalarRight)
 {
 	Float3 a(1.0f, 2.0f, 3.0f);
 	float b = 3.0f;
 	Float3 mult = a * b;
-	ExpectNearVec(mult, Float3(3.0f, 6.0f, 9.0f), epsilon);
+	EXPECT_TRUE(mult.IsEpsilonEqual(Float3(3.0f, 6.0f, 9.0f)));
 }
 TEST(Float3, OperatorDivisionScalarLeft)
 {
 	Float3 a(1.0f, 2.0f, 3.0f);
 	float b = 3.0f;
 	Float3 div = b / a;
-	ExpectNearVec(div, Float3(3.0f / 1.0f, 3.0f / 2.0f, 3.0f / 3.0f), epsilon);
+	EXPECT_TRUE(div.IsEpsilonEqual(Float3(3.0f / 1.0f, 3.0f / 2.0f, 3.0f / 3.0f)));
 }
 TEST(Float3, OperatorDivisionScalarRight)
 {
 	Float3 a(1.0f, 2.0f, 3.0f);
 	float b = 3.0f;
 	Float3 div = a / b;
-	ExpectNearVec(div, Float3(1.0f / 3.0f, 2.0f / 3.0f, 3.0f / 3.0f), epsilon);
+	EXPECT_TRUE(div.IsEpsilonEqual(Float3(1.0f / 3.0f, 2.0f / 3.0f, 3.0f / 3.0f)));
 }

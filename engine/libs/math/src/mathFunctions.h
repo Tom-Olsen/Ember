@@ -48,7 +48,8 @@ namespace emberMath
 		size_t NextPrimeAbove(size_t n);
 
 		// Boolean:
-		bool IsEpsilonEqual(float a, float b, float epsilon = math::epsilon);
+		bool IsEpsilonZero(float value, float absEpsilon = math::absEpsilon);
+		bool IsEpsilonEqual(float a, float b, float absEpsilon = math::absEpsilon, float relEpsilon = math::relEpsilon);
         bool IsFinite(float value);
         bool IsFinite(double value);
         bool IsFinite(long double value);

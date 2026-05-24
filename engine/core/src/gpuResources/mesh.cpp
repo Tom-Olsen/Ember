@@ -332,7 +332,7 @@ namespace emberEngine
 			float deltaU2 = uv2.x - uv0.x;
 			float deltaV2 = uv2.y - uv0.y;
 			float determinant = deltaU1 * deltaV2 - deltaU2 * deltaV1;
-			if (math::Abs(determinant) <= math::epsilon)
+			if (math::IsEpsilonZero(determinant))
 				continue;
 			Float3 tangent = (deltaV2 * edge1 - deltaV1 * edge2) / determinant;
 			m_tangents[triangle[0]] += tangent;

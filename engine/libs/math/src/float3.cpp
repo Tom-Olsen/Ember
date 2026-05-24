@@ -54,7 +54,7 @@ namespace emberMath
 	Float3 Float3::Normalize() const
 	{
 		float length = Length();
-		if (length <= math::epsilon)
+		if (math::IsEpsilonZero(length))
 			return Float3(0.0f);
 		return Float3(x / length, y / length, z / length);
 	}
@@ -69,10 +69,10 @@ namespace emberMath
 			theta = -theta;
 		return length * Float3::Direction(theta, phi);
 	}
-	bool Float3::IsEpsilonZero(float epsilon) const
+	bool Float3::IsEpsilonZero(float absEpsilon) const
 	{
-        assert(epsilon > 0.0f);
-		return IsEpsilonEqual(Float3::zero, epsilon);
+        assert(absEpsilon > 0.0f);
+		return math::IsEpsilonZero(x, absEpsilon) && math::IsEpsilonZero(y, absEpsilon) && math::IsEpsilonZero(z, absEpsilon);
 	}
 
 
@@ -116,7 +116,7 @@ namespace emberMath
 	float Float3::Angle(const Float3& a, const Float3& b)
 	{
 		float lengths = a.Length() * b.Length();
-		if (lengths <= math::epsilon)
+		if (math::IsEpsilonZero(lengths))
 			return 0.0f;
 		return math::Acos(math::Clamp(Dot(a, b) / lengths, -1.0f, 1.0f));
 	}
@@ -260,9 +260,11 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float3::IsEpsilonEqual(const Float3& other, float epsilon) const
+	bool Float3::IsEpsilonEqual(const Float3& other, float absEpsilon, float relEpsilon) const
 	{
-		return math::Abs(x - other.x) < epsilon && math::Abs(y - other.y) < epsilon && math::Abs(z - other.z) < epsilon;
+        assert(absEpsilon > 0.0f);
+        assert(relEpsilon > 0.0f);
+		return math::IsEpsilonEqual(x, other.x, absEpsilon, relEpsilon) && math::IsEpsilonEqual(y, other.y, absEpsilon, relEpsilon) && math::IsEpsilonEqual(z, other.z, absEpsilon, relEpsilon);
 	}
 	bool Float3::operator==(const Float3& other) const
 	{

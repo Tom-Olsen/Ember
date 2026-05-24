@@ -94,10 +94,13 @@ namespace emberMath
 		Float3x2 aT = this->Transpose();
 		return aT * ((*this) * aT).Inverse();
 	}
-	bool Float2x3::IsEpsilonZero(float epsilon) const
+	bool Float2x3::IsEpsilonZero(float absEpsilon) const
 	{
-        assert(epsilon > 0.0f);
-		return IsEpsilonEqual(Float2x3::zero, epsilon);
+        assert(absEpsilon > 0.0f);
+		for (uint32_t i = 0; i < 6; i++)
+			if (!math::IsEpsilonZero(data[i], absEpsilon))
+				return false;
+		return true;
 	}
 
 
@@ -231,11 +234,12 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float2x3::IsEpsilonEqual(const Float2x3& other, float epsilon) const
+	bool Float2x3::IsEpsilonEqual(const Float2x3& other, float absEpsilon, float relEpsilon) const
 	{
-        assert(epsilon > 0.0f);
+        assert(absEpsilon > 0.0f);
+        assert(relEpsilon > 0.0f);
 		for (uint32_t i = 0; i < 6; i++)
-			if (math::Abs(data[i] - other.data[i]) > epsilon)
+			if (!math::IsEpsilonEqual(data[i], other.data[i], absEpsilon, relEpsilon))
 				return false;
 		return true;
 	}

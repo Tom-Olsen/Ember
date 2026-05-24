@@ -424,28 +424,28 @@ namespace fluidDynamics
 	}
 	void SphFluid2dCpuSolver::BoundaryCollisions(Float2& position, Float2& velocity, const Settings& settings)
 	{
-		float epsilon = 1e-4f;
+		float boundaryOffset = 1e-4f;
 		Float3 min = settings.fluidBounds.GetMin();
 		Float3 max = settings.fluidBounds.GetMax();
 
 		if (position.x < min.x)
 		{
-			position.x = min.x + epsilon;
+			position.x = min.x + boundaryOffset;
 			velocity.x *= -settings.collisionDampening;
 		}
 		if (position.x > max.x)
 		{
-			position.x = max.x - epsilon;
+			position.x = max.x - boundaryOffset;
 			velocity.x *= -settings.collisionDampening;
 		}
 		if (position.y < min.y)
 		{
-			position.y = min.y + epsilon;
+			position.y = min.y + boundaryOffset;
 			velocity.y *= -settings.collisionDampening;
 		}
 		if (position.y > max.y)
 		{
-			position.y = max.y - epsilon;
+			position.y = max.y - boundaryOffset;
 			velocity.y *= -settings.collisionDampening;
 		}
 	}

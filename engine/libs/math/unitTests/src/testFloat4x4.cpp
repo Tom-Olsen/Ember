@@ -1,5 +1,4 @@
 #include "emberMath.h"
-#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -16,10 +15,10 @@ TEST(Float4x4, ConstructorRowsScalar)
 		row1.x, row1.y, row1.z, row1.w,
 		row2.x, row2.y, row2.z, row2.w,
 		row3.x, row3.y, row3.z, row3.w);
-	ExpectEqualVec(matrix.GetRow(0), row0);
-	ExpectEqualVec(matrix.GetRow(1), row1);
-	ExpectEqualVec(matrix.GetRow(2), row2);
-	ExpectEqualVec(matrix.GetRow(3), row3);
+	EXPECT_TRUE(matrix.GetRow(0) == row0);
+	EXPECT_TRUE(matrix.GetRow(1) == row1);
+	EXPECT_TRUE(matrix.GetRow(2) == row2);
+	EXPECT_TRUE(matrix.GetRow(3) == row3);
 }
 TEST(Float4x4, ConstructorRowsVector)
 {
@@ -28,10 +27,10 @@ TEST(Float4x4, ConstructorRowsVector)
 	Float4 row2 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 row3 = Float4(4.0f, 3.0f, 2.0f, 1.0f);
 	Float4x4 matrix = Float4x4::Rows(row0, row1, row2, row3);
-	ExpectEqualVec(matrix.GetRow(0), row0);
-	ExpectEqualVec(matrix.GetRow(1), row1);
-	ExpectEqualVec(matrix.GetRow(2), row2);
-	ExpectEqualVec(matrix.GetRow(3), row3);
+	EXPECT_TRUE(matrix.GetRow(0) == row0);
+	EXPECT_TRUE(matrix.GetRow(1) == row1);
+	EXPECT_TRUE(matrix.GetRow(2) == row2);
+	EXPECT_TRUE(matrix.GetRow(3) == row3);
 }
 TEST(Float4x4, ConstructorColumnsScalar)
 {
@@ -44,10 +43,10 @@ TEST(Float4x4, ConstructorColumnsScalar)
 		column1.x, column1.y, column1.z, column1.w,
 		column2.x, column2.y, column2.z, column2.w,
 		column3.x, column3.y, column3.z, column3.w);
-	ExpectEqualVec(matrix.GetColumn(0), column0);
-	ExpectEqualVec(matrix.GetColumn(1), column1);
-	ExpectEqualVec(matrix.GetColumn(2), column2);
-	ExpectEqualVec(matrix.GetColumn(3), column3);
+	EXPECT_TRUE(matrix.GetColumn(0) == column0);
+	EXPECT_TRUE(matrix.GetColumn(1) == column1);
+	EXPECT_TRUE(matrix.GetColumn(2) == column2);
+	EXPECT_TRUE(matrix.GetColumn(3) == column3);
 }
 TEST(Float4x4, ConstructorColumnsVector)
 {
@@ -56,10 +55,10 @@ TEST(Float4x4, ConstructorColumnsVector)
 	Float4 column2 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 column3 = Float4(4.0f, 3.0f, 2.0f, 1.0f);
 	Float4x4 matrix = Float4x4::Columns(column0, column1, column2, column3);
-	ExpectEqualVec(matrix.GetColumn(0), column0);
-	ExpectEqualVec(matrix.GetColumn(1), column1);
-	ExpectEqualVec(matrix.GetColumn(2), column2);
-	ExpectEqualVec(matrix.GetColumn(3), column3);
+	EXPECT_TRUE(matrix.GetColumn(0) == column0);
+	EXPECT_TRUE(matrix.GetColumn(1) == column1);
+	EXPECT_TRUE(matrix.GetColumn(2) == column2);
+	EXPECT_TRUE(matrix.GetColumn(3) == column3);
 }
 
 // Math operations:
@@ -83,7 +82,7 @@ TEST(Float4x4, Determinant)
 	Float4 row3 = Float4(1.0f, 1.0f, 1.0f, 4.0f);
 	Float4x4 matrix = Float4x4::Rows(row0, row1, row2, row3);
 	float det = matrix.Determinant();
-	EXPECT_NEAR(det, 189.0f, epsilon);
+	EXPECT_TRUE(math::IsEpsilonEqual(det, 189.0f));
 }
 TEST(Float4x4, Inverse)
 {
@@ -120,21 +119,21 @@ TEST(Float4x4, RotateX)
 	Float4x4 rotMatrix = Float4x4::RotateX(math::pi2);
 	Float4 v0 = Float4(0.0f, 1.0f, 0.0f, 1.0f);
 	Float4 v1 = rotMatrix * v0;
-	ExpectNearVec(v1, Float4(0.0f, 0.0f, 1.0f, 1.0f), epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(0.0f, 0.0f, 1.0f, 1.0f)));
 }
 TEST(Float4x4, RotateY)
 {
 	Float4x4 rotMatrix = Float4x4::RotateY(math::pi2);
 	Float4 v0 = Float4(1.0f, 0.0f, 0.0f, 1.0f);
 	Float4 v1 = rotMatrix * v0;
-	ExpectNearVec(v1, Float4(0.0f, 0.0f, -1.0f, 1.0f), epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(0.0f, 0.0f, -1.0f, 1.0f)));
 }
 TEST(Float4x4, RotateZ)
 {
 	Float4x4 rotMatrix = Float4x4::RotateX(math::pi2);
 	Float4 v0 = Float4(0.0f, 0.0f, 1.0f, 1.0f);
 	Float4 v1 = rotMatrix * v0;
-	ExpectNearVec(v1, Float4(0.0f, -1.0f, 0.0f, 1.0f), epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(0.0f, -1.0f, 0.0f, 1.0f)));
 }
 TEST(Float4x4, RotateAroundAxis)
 {
@@ -142,7 +141,7 @@ TEST(Float4x4, RotateAroundAxis)
 	Float4x4 rotMatrix = Float4x4::Rotate(axis, math::pi);
 	Float4 v0 = Float4::right;
 	Float4 v1 = rotMatrix * v0;
-	ExpectNearVec(v1, Float4::forward, epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(Float4::forward));
 }
 //TEST(Float4x4, RotateByEulerAngles)
 //{
@@ -155,7 +154,7 @@ TEST(Float4x4, RotateFromTo)
 	Float4x4 rotMatrix = Float4x4::RotateFromTo(from, to);
 	Float4 v0 = Float4(1.0f, 0.0f, 0.0f, 0.0f);
 	Float4 v1 = rotMatrix * v0;
-	ExpectNearVec(v1, Float4(to, 0.0f), epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(to, 0.0f)));
 }
 //TEST(Float4x4, RotateThreeLeg)
 //{
@@ -163,8 +162,8 @@ TEST(Float4x4, RotateFromTo)
 //	Float4x4 rotMatrix = Float4x4::RotateThreeLeg(Float3::forward, Float3::right, Float3::up, Float3::backward);
 //	Float4 right = rotMatrix * Float4::forward;
 //	Float4 backward = rotMatrix * Float4::up;
-//	ExpectNearVec(Float4::right, right, epsilon);
-//	ExpectNearVec(Float4::backward, backward, epsilon);
+//	EXPECT_TRUE(Float4::right.IsEpsilonEqual(right));
+//	EXPECT_TRUE(Float4::backward.IsEpsilonEqual(backward));
 //}
 TEST(Float4x4, Translate)
 {
@@ -172,7 +171,7 @@ TEST(Float4x4, Translate)
 	Float4x4 translateMatrix = Float4x4::Translate(translation);
 	Float4 v0 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 v1 = translateMatrix * v0;
-	ExpectNearVec(v1, Float4(2.0f, 3.0f, 4.0f, 1.0f), epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(2.0f, 3.0f, 4.0f, 1.0f)));
 }
 TEST(Float4x4, ScaleByFloat3)
 {
@@ -180,7 +179,7 @@ TEST(Float4x4, ScaleByFloat3)
 	Float4x4 scaleMatrix = Float4x4::Scale(scale);
 	Float4 v0 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 v1 = scaleMatrix * v0;
-	ExpectNearVec(v1, Float4(2.0f, 3.0f, 4.0f, 1.0f), epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(2.0f, 3.0f, 4.0f, 1.0f)));
 }
 TEST(Float4x4, ScaleByFloat)
 {
@@ -188,7 +187,7 @@ TEST(Float4x4, ScaleByFloat)
 	Float4x4 scaleMatrix = Float4x4::Scale(scale);
 	Float4 v0 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 v1 = scaleMatrix * v0;
-	ExpectNearVec(v1, Float4(2.0f, 2.0f, 2.0f, 1.0f), epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(2.0f, 2.0f, 2.0f, 1.0f)));
 }
 TEST(Float4x4, TRSFloat3x3)
 {
@@ -199,7 +198,7 @@ TEST(Float4x4, TRSFloat3x3)
 	Float4 v0 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 v1 = trsMatrix * v0;
 	Float4 v2 = Float4x4::Translate(position) * Float4x4::RotateY(math::pi2) * Float4x4::Scale(scale) * v0;
-	ExpectNearVec(v1, v2, epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(v2));
 }
 TEST(Float4x4, TRSFloat4x4)
 {
@@ -210,7 +209,7 @@ TEST(Float4x4, TRSFloat4x4)
 	Float4 v0 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 v1 = trsMatrix * v0;
 	Float4 v2 = Float4x4::Translate(position) * Float4x4::RotateY(math::pi2) * Float4x4::Scale(scale) * v0;
-	ExpectNearVec(v1, v2, epsilon);
+	EXPECT_TRUE(v1.IsEpsilonEqual(v2));
 }
 TEST(Float4x4, Perspective)
 {
@@ -252,7 +251,7 @@ TEST(Float4x4, Perspective)
 	{
 		Float4 cornerClip = projectionMatrix * Float4(cornersWorld[i], 1.0f);
 		cornerClip /= cornerClip.w;
-		ExpectNearVec(Float3(cornerClip), ndc[i], epsilon);
+		EXPECT_TRUE(Float3(cornerClip).IsEpsilonEqual(ndc[i]));
 		//std::cout << cornersWorld[i].ToString() << " -> " << Float3(cornerClip).ToString() << " ?= " << ndc[i].ToString() << std::endl;
 	}
 }
@@ -293,7 +292,7 @@ TEST(Float4x4, Orthographic)
 	{
 		Float4 cornerClip = projectionMatrix * Float4(cornersWorld[i], 1.0f);
 		cornerClip /= cornerClip.w;
-		ExpectNearVec(Float3(cornerClip), ndc[i], epsilon);
+		EXPECT_TRUE(Float3(cornerClip).IsEpsilonEqual(ndc[i]));
 		//std::cout << cornersWorld[i].ToString() << " -> " << Float3(cornerClip).ToString() << " ?= " << ndc[i].ToString() << std::endl;
 	}
 }
@@ -359,10 +358,10 @@ TEST(Float4x4, GetRow)
 	Float4 row2 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 row3 = Float4(4.0f, 3.0f, 2.0f, 1.0f);
 	Float4x4 matrix = Float4x4::Rows(row0, row1, row2, row3);
-	ExpectEqualVec(matrix.GetRow(0), row0);
-	ExpectEqualVec(matrix.GetRow(1), row1);
-	ExpectEqualVec(matrix.GetRow(2), row2);
-	ExpectEqualVec(matrix.GetRow(3), row3);
+	EXPECT_TRUE(matrix.GetRow(0) == row0);
+	EXPECT_TRUE(matrix.GetRow(1) == row1);
+	EXPECT_TRUE(matrix.GetRow(2) == row2);
+	EXPECT_TRUE(matrix.GetRow(3) == row3);
 }
 TEST(Float4x4, GetColumn)
 {
@@ -371,10 +370,10 @@ TEST(Float4x4, GetColumn)
 	Float4 column2 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 column3 = Float4(4.0f, 3.0f, 2.0f, 1.0f);
 	Float4x4 matrix = Float4x4::Columns(column0, column1, column2, column3);
-	ExpectEqualVec(matrix.GetColumn(0), column0);
-	ExpectEqualVec(matrix.GetColumn(1), column1);
-	ExpectEqualVec(matrix.GetColumn(2), column2);
-	ExpectEqualVec(matrix.GetColumn(3), column3);
+	EXPECT_TRUE(matrix.GetColumn(0) == column0);
+	EXPECT_TRUE(matrix.GetColumn(1) == column1);
+	EXPECT_TRUE(matrix.GetColumn(2) == column2);
+	EXPECT_TRUE(matrix.GetColumn(3) == column3);
 }
 TEST(Float4x4, GetTranslation)
 {
@@ -383,7 +382,7 @@ TEST(Float4x4, GetTranslation)
 	Float3 scale = Float3(2.0f, 3.0f, 4.0f);
 	Float4x4 trsMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 	Float3 translationResult = trsMatrix.GetTranslation();
-	ExpectNearVec(translationResult, position, epsilon);
+	EXPECT_TRUE(translationResult.IsEpsilonEqual(position));
 }
 TEST(Float4x4, GetScale)
 {
@@ -392,7 +391,7 @@ TEST(Float4x4, GetScale)
 	Float3 scale = Float3(2.0f, 3.0f, 4.0f);
 	Float4x4 trsMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 	Float3 scaleResult = trsMatrix.GetScale();
-	ExpectNearVec(scaleResult, scale, epsilon);
+	EXPECT_TRUE(scaleResult.IsEpsilonEqual(scale));
 }
 TEST(Float4x4, GetRotation3x3)
 {
@@ -444,10 +443,10 @@ TEST(Float4x4, OperatorAddition)
 	Float4 row1Add = row1A + row1B;
 	Float4 row2Add = row2A + row2B;
 	Float4 row3Add = row3A + row3B;
-	ExpectEqualVec(add.GetRow(0), row0Add);
-	ExpectEqualVec(add.GetRow(1), row1Add);
-	ExpectEqualVec(add.GetRow(2), row2Add);
-	ExpectEqualVec(add.GetRow(3), row3Add);
+	EXPECT_TRUE(add.GetRow(0) == row0Add);
+	EXPECT_TRUE(add.GetRow(1) == row1Add);
+	EXPECT_TRUE(add.GetRow(2) == row2Add);
+	EXPECT_TRUE(add.GetRow(3) == row3Add);
 }
 TEST(Float4x4, OperatorAdditionAssignment)
 {
@@ -466,10 +465,10 @@ TEST(Float4x4, OperatorAdditionAssignment)
 	Float4 row1Add = row1A + row1B;
 	Float4 row2Add = row2A + row2B;
 	Float4 row3Add = row3A + row3B;
-	ExpectEqualVec(add.GetRow(0), row0Add);
-	ExpectEqualVec(add.GetRow(1), row1Add);
-	ExpectEqualVec(add.GetRow(2), row2Add);
-	ExpectEqualVec(add.GetRow(3), row3Add);
+	EXPECT_TRUE(add.GetRow(0) == row0Add);
+	EXPECT_TRUE(add.GetRow(1) == row1Add);
+	EXPECT_TRUE(add.GetRow(2) == row2Add);
+	EXPECT_TRUE(add.GetRow(3) == row3Add);
 }
 
 // Substraction:
@@ -490,10 +489,10 @@ TEST(Float4x4, OperatorSubstraction)
 	Float4 row1Sub = row1A - row1B;
 	Float4 row2Sub = row2A - row2B;
 	Float4 row3Sub = row3A - row3B;
-	ExpectEqualVec(sub.GetRow(0), row0Sub);
-	ExpectEqualVec(sub.GetRow(1), row1Sub);
-	ExpectEqualVec(sub.GetRow(2), row2Sub);
-	ExpectEqualVec(sub.GetRow(3), row3Sub);
+	EXPECT_TRUE(sub.GetRow(0) == row0Sub);
+	EXPECT_TRUE(sub.GetRow(1) == row1Sub);
+	EXPECT_TRUE(sub.GetRow(2) == row2Sub);
+	EXPECT_TRUE(sub.GetRow(3) == row3Sub);
 }
 TEST(Float4x4, OperatorSubstractionAssignment)
 {
@@ -512,10 +511,10 @@ TEST(Float4x4, OperatorSubstractionAssignment)
 	Float4 row1Sub = row1A - row1B;
 	Float4 row2Sub = row2A - row2B;
 	Float4 row3Sub = row3A - row3B;
-	ExpectEqualVec(sub.GetRow(0), row0Sub);
-	ExpectEqualVec(sub.GetRow(1), row1Sub);
-	ExpectEqualVec(sub.GetRow(2), row2Sub);
-	ExpectEqualVec(sub.GetRow(3), row3Sub);
+	EXPECT_TRUE(sub.GetRow(0) == row0Sub);
+	EXPECT_TRUE(sub.GetRow(1) == row1Sub);
+	EXPECT_TRUE(sub.GetRow(2) == row2Sub);
+	EXPECT_TRUE(sub.GetRow(3) == row3Sub);
 }
 TEST(Float4x4, OperatorNegation)
 {
@@ -525,10 +524,10 @@ TEST(Float4x4, OperatorNegation)
 	Float4 row3 = Float4(4.0f, 3.0f, 2.0f, 1.0f);
 	Float4x4 matrix = Float4x4::Rows(row0, row1, row2, row3);
 	Float4x4 negation = -matrix;
-	ExpectEqualVec(negation.GetRow(0), -row0);
-	ExpectEqualVec(negation.GetRow(1), -row1);
-	ExpectEqualVec(negation.GetRow(2), -row2);
-	ExpectEqualVec(negation.GetRow(3), -row3);
+	EXPECT_TRUE(negation.GetRow(0) == -row0);
+	EXPECT_TRUE(negation.GetRow(1) == -row1);
+	EXPECT_TRUE(negation.GetRow(2) == -row2);
+	EXPECT_TRUE(negation.GetRow(3) == -row3);
 }
 
 // Multiplication:
@@ -537,20 +536,20 @@ TEST(Float4x4, OperatorMultiplication)
 	Float4x4 matrixA = Float4x4::Rows(Float4(1, 2, 3, 4), Float4(4, 5, 6, 7), Float4(7, 8, 9, 1), Float4(2, 3, 4, 5));
 	Float4x4 matrixB = Float4x4::Rows(Float4(4, 3, 2, 1), Float4(4, 3, 2, 1), Float4(4, 3, 2, 1), Float4(4, 3, 2, 1));
 	Float4x4 mult = matrixA * matrixB;
-	ExpectEqualVec(mult.GetRow(0), Float4(40, 30, 20, 10));
-	ExpectEqualVec(mult.GetRow(1), Float4(88, 66, 44, 22));
-	ExpectEqualVec(mult.GetRow(2), Float4(100, 75, 50, 25));
-	ExpectEqualVec(mult.GetRow(3), Float4(56, 42, 28, 14));
+	EXPECT_TRUE(mult.GetRow(0) == Float4(40, 30, 20, 10));
+	EXPECT_TRUE(mult.GetRow(1) == Float4(88, 66, 44, 22));
+	EXPECT_TRUE(mult.GetRow(2) == Float4(100, 75, 50, 25));
+	EXPECT_TRUE(mult.GetRow(3) == Float4(56, 42, 28, 14));
 }
 TEST(Float4x4, OperatorMultiplicationAssignment)
 {
 	Float4x4 mult = Float4x4::Rows(Float4(1, 2, 3, 4), Float4(4, 5, 6, 7), Float4(7, 8, 9, 1), Float4(2, 3, 4, 5));
 	Float4x4 matrixB = Float4x4::Rows(Float4(4, 3, 2, 1), Float4(4, 3, 2, 1), Float4(4, 3, 2, 1), Float4(4, 3, 2, 1));
 	mult *= matrixB;
-	ExpectEqualVec(mult.GetRow(0), Float4(40, 30, 20, 10));
-	ExpectEqualVec(mult.GetRow(1), Float4(88, 66, 44, 22));
-	ExpectEqualVec(mult.GetRow(2), Float4(100, 75, 50, 25));
-	ExpectEqualVec(mult.GetRow(3), Float4(56, 42, 28, 14));
+	EXPECT_TRUE(mult.GetRow(0) == Float4(40, 30, 20, 10));
+	EXPECT_TRUE(mult.GetRow(1) == Float4(88, 66, 44, 22));
+	EXPECT_TRUE(mult.GetRow(2) == Float4(100, 75, 50, 25));
+	EXPECT_TRUE(mult.GetRow(3) == Float4(56, 42, 28, 14));
 }
 TEST(Float4x4, OperatorMultiplicationScalarAssignment)
 {
@@ -561,10 +560,10 @@ TEST(Float4x4, OperatorMultiplicationScalarAssignment)
 	Float4x4 mult = Float4x4::Rows(row0, row1, row2, row3);
 	float scalar = 2.0f;
 	mult *= scalar;
-	ExpectEqualVec(mult.GetRow(0), scalar * row0);
-	ExpectEqualVec(mult.GetRow(1), scalar * row1);
-	ExpectEqualVec(mult.GetRow(2), scalar * row2);
-	ExpectEqualVec(mult.GetRow(3), scalar * row3);
+	EXPECT_TRUE(mult.GetRow(0) == scalar * row0);
+	EXPECT_TRUE(mult.GetRow(1) == scalar * row1);
+	EXPECT_TRUE(mult.GetRow(2) == scalar * row2);
+	EXPECT_TRUE(mult.GetRow(3) == scalar * row3);
 }
 
 // Division:
@@ -581,10 +580,10 @@ TEST(Float4x4, OperatorDivision)
 	Float4 row1Div = row1 / scalar;
 	Float4 row2Div = row2 / scalar;
 	Float4 row3Div = row3 / scalar;
-	ExpectEqualVec(div.GetRow(0), row0Div);
-	ExpectEqualVec(div.GetRow(1), row1Div);
-	ExpectEqualVec(div.GetRow(2), row2Div);
-	ExpectEqualVec(div.GetRow(3), row3Div);
+	EXPECT_TRUE(div.GetRow(0) == row0Div);
+	EXPECT_TRUE(div.GetRow(1) == row1Div);
+	EXPECT_TRUE(div.GetRow(2) == row2Div);
+	EXPECT_TRUE(div.GetRow(3) == row3Div);
 }
 TEST(Float4x4, OperatorDivisionAssignment)
 {
@@ -599,10 +598,10 @@ TEST(Float4x4, OperatorDivisionAssignment)
 	Float4 row1Div = row1 / scalar;
 	Float4 row2Div = row2 / scalar;
 	Float4 row3Div = row3 / scalar;
-	ExpectEqualVec(div.GetRow(0), row0Div);
-	ExpectEqualVec(div.GetRow(1), row1Div);
-	ExpectEqualVec(div.GetRow(2), row2Div);
-	ExpectEqualVec(div.GetRow(3), row3Div);
+	EXPECT_TRUE(div.GetRow(0) == row0Div);
+	EXPECT_TRUE(div.GetRow(1) == row1Div);
+	EXPECT_TRUE(div.GetRow(2) == row2Div);
+	EXPECT_TRUE(div.GetRow(3) == row3Div);
 }
 
 // Comparison:
@@ -631,20 +630,20 @@ TEST(Float4x4, OperatorMultiplicationScalarRight)
 	Float4x4 matrix = Float4x4::Rows(Float4(1, 2, 3, 4), Float4(4, 5, 6, 7), Float4(7, 8, 9, 1), Float4(2, 3, 4, 5));
 	float scalar = 2.0f;
 	Float4x4 mult = matrix * scalar;
-	ExpectEqualVec(mult.GetRow(0), scalar * matrix.GetRow(0));
-	ExpectEqualVec(mult.GetRow(1), scalar * matrix.GetRow(1));
-	ExpectEqualVec(mult.GetRow(2), scalar * matrix.GetRow(2));
-	ExpectEqualVec(mult.GetRow(3), scalar * matrix.GetRow(3));
+	EXPECT_TRUE(mult.GetRow(0) == scalar * matrix.GetRow(0));
+	EXPECT_TRUE(mult.GetRow(1) == scalar * matrix.GetRow(1));
+	EXPECT_TRUE(mult.GetRow(2) == scalar * matrix.GetRow(2));
+	EXPECT_TRUE(mult.GetRow(3) == scalar * matrix.GetRow(3));
 }
 TEST(Float4x4, OperatorMultiplicationScalarLeft)
 {
 	Float4x4 matrix = Float4x4::Rows(Float4(1, 2, 3, 4), Float4(4, 5, 6, 7), Float4(7, 8, 9, 1), Float4(2, 3, 4, 5));
 	float scalar = 2.0f;
 	Float4x4 mult = scalar * matrix;
-	ExpectEqualVec(mult.GetRow(0), scalar * matrix.GetRow(0));
-	ExpectEqualVec(mult.GetRow(1), scalar * matrix.GetRow(1));
-	ExpectEqualVec(mult.GetRow(2), scalar * matrix.GetRow(2));
-	ExpectEqualVec(mult.GetRow(3), scalar * matrix.GetRow(3));
+	EXPECT_TRUE(mult.GetRow(0) == scalar * matrix.GetRow(0));
+	EXPECT_TRUE(mult.GetRow(1) == scalar * matrix.GetRow(1));
+	EXPECT_TRUE(mult.GetRow(2) == scalar * matrix.GetRow(2));
+	EXPECT_TRUE(mult.GetRow(3) == scalar * matrix.GetRow(3));
 }
 TEST(Float4x4, OperatorMultiplicationFloat4Right)
 {

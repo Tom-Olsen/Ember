@@ -1,5 +1,4 @@
 #include "emberMath.h"
-#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -48,7 +47,7 @@ TEST(geometry3d, PointToPlaneDistance)
 			point += planeNormal.Normalize() * distance;
 
 			float distanceToPlane = geometry3d::PointToPlaneDistance(point, planeSupport, planeNormal);
-			allGood = allGood && (math::Abs(distanceToPlane - distance) < math::epsilon);
+			allGood &= math::IsEpsilonEqual(distanceToPlane, distance);
 		}
 	EXPECT_TRUE(allGood);
 }

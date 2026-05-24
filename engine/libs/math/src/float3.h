@@ -39,7 +39,7 @@ namespace emberMath
 		Float2 Angles() const;
 		Float3 Normalize() const;
 		Float3 Rotate(float theta, float phi) const;
-		bool IsEpsilonZero(float epsilon = math::epsilon) const;
+		bool IsEpsilonZero(float absEpsilon = math::absEpsilon) const;
 
 		// Static math operations:
 		static Float3 Abs(const Float3& a);
@@ -83,7 +83,7 @@ namespace emberMath
 		Float3& operator/=(float scalar);
 
 		// Comparison:
-		bool IsEpsilonEqual(const Float3& other, float epsilon = math::epsilon) const;
+		bool IsEpsilonEqual(const Float3& other, float absEpsilon = math::absEpsilon, float relEpsilon = math::relEpsilon) const;
 		bool operator==(const Float3& other) const;
 		bool operator!=(const Float3& other) const;
         bool operator<(const Float3& other) const;

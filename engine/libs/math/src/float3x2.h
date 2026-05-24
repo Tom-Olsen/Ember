@@ -52,7 +52,7 @@ namespace emberMath
 		// Math operations:
 		Float2x3 Transpose() const;
 		Float2x3 LeftInverse() const;
-		bool IsEpsilonZero(float epsilon = math::epsilon) const;
+		bool IsEpsilonZero(float absEpsilon = math::absEpsilon) const;
 
 		// Access:
 		float& operator[](int index);
@@ -83,7 +83,7 @@ namespace emberMath
 		Float3x2& operator/=(float scalar);
 
 		// Comparison:
-		bool IsEpsilonEqual(const Float3x2& other, float epsilon = math::epsilon) const;
+		bool IsEpsilonEqual(const Float3x2& other, float absEpsilon = math::absEpsilon, float relEpsilon = math::relEpsilon) const;
 		bool operator==(const Float3x2& other) const;
 		bool operator!=(const Float3x2& other) const;
 

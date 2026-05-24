@@ -215,9 +215,22 @@ namespace emberMath
 
 
 		// Boolean:
-		bool IsEpsilonEqual(float a, float b, float epsilon)
+		bool IsEpsilonZero(float value, float absEpsilon)
 		{
-			return Abs(a - b) < epsilon;
+            assert(absEpsilon > 0.0f);
+            return math::Abs(value) <= absEpsilon;
+		}
+		bool IsEpsilonEqual(float a, float b, float absEpsilon, float relEpsilon)
+		{
+            float diff = math::Abs(a - b);
+
+            // Absolute comparison for very small numbers:
+            if (diff <= absEpsilon)
+                return true;
+
+            // Relative comparison for larger magnitudes:
+            float max = math::Max(math::Abs(a), math::Abs(b));
+            return diff <= max * relEpsilon;
 		}
         bool IsFinite(float value)
         {

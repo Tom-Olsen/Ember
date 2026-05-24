@@ -38,7 +38,7 @@ namespace emberMath
 		// Math operations:
 		float LengthSq() const;
 		float Length() const;
-		bool IsEpsilonZero(float epsilon = math::epsilon) const;
+		bool IsEpsilonZero(float absEpsilon = math::absEpsilon) const;
 
 		// Static math operations:
 		static Float4 Abs(const Float4& a);
@@ -78,7 +78,7 @@ namespace emberMath
 		Float4& operator/=(float scalar);
 
 		// Comparison:
-		bool IsEpsilonEqual(const Float4& other, float epsilon = math::epsilon) const;
+		bool IsEpsilonEqual(const Float4& other, float absEpsilon = math::absEpsilon, float relEpsilon = math::relEpsilon) const;
 		bool operator==(const Float4& other) const;
 		bool operator!=(const Float4& other) const;
         bool operator<(const Float4& other) const;

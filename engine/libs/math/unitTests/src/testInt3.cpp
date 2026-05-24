@@ -1,5 +1,4 @@
 #include "emberMath.h"
-#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -10,14 +9,14 @@ TEST(Int3, Min)
 	Int3 a(1, 2, 4);
 	Int3 b(3, 4, 1);
 	Int3 min = Int3::Min(a, b);
-	ExpectNearVec(min, Int3(1, 2, 1), epsilon);
+	EXPECT_TRUE(min == Int3(1, 2, 1));
 }
 TEST(Int3, Max)
 {
 	Int3 a(1, 2, 4);
 	Int3 b(3, 4, 1);
 	Int3 max = Int3::Max(a, b);
-	ExpectNearVec(max, Int3(3, 4, 4), epsilon);
+	EXPECT_TRUE(max == Int3(3, 4, 4));
 }
 TEST(Int3, Clamp)
 {
@@ -25,7 +24,7 @@ TEST(Int3, Clamp)
 	Int3 min(2, 3, 1);
 	Int3 max(3, 4, 3);
 	Int3 clamped = Int3::Clamp(value, min, max);
-	ExpectNearVec(clamped, Int3(2, 4, 2), epsilon);
+	EXPECT_TRUE(clamped == Int3(2, 4, 2));
 }
 
 // Access:
@@ -159,12 +158,12 @@ TEST(Int3, OperatorMultiplicationScalarLeft)
 	Int3 a(1, 2, 3);
 	float b = 3;
 	Int3 mult = b * a;
-	ExpectNearVec(mult, Int3(3, 6, 9), epsilon);
+	EXPECT_TRUE(mult == Int3(3, 6, 9));
 }
 TEST(Int3, OperatorMultiplicationScalarRight)
 {
 	Int3 a(1, 2, 3);
 	float b = 3;
 	Int3 mult = a * b;
-	ExpectNearVec(mult, Int3(3, 6, 9), epsilon);
+	EXPECT_TRUE(mult == Int3(3, 6, 9));
 }

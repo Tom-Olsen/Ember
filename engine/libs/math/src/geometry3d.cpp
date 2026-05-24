@@ -13,10 +13,10 @@ namespace emberMath
 		{
             assert(!v.IsEpsilonZero());
 			Float3 result = Float3::Cross(v, Float3(1.0f, 0.0f, 0.0f));
-			if (result.Length() < math::epsilon)
+			if (math::IsEpsilonZero(result.Length()))
 			{
 				result = Float3::Cross(v, Float3(0.0f, 1.0f, 0.0f));
-				if (result.Length() < math::epsilon)
+				if (math::IsEpsilonZero(result.Length()))
 					result = Float3::Cross(v, Float3(0.0f, 0.0f, 1.0f));
 			}
 			return result;
@@ -26,7 +26,7 @@ namespace emberMath
 		{
             assert(!planeNormal.IsEpsilonZero());
 			float d = Float3::Dot(planeSupport, planeNormal); // plane parameter
-			return math::Abs(Float3::Dot(point, planeNormal) - d) < math::epsilon;
+            return math::IsEpsilonEqual(Float3::Dot(point, planeNormal), d);
 		}
 
 		float PointToPlaneDistance(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)

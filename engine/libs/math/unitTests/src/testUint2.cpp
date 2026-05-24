@@ -1,5 +1,4 @@
 #include "emberMath.h"
-#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -10,14 +9,14 @@ TEST(Uint2, Min)
 	Uint2 a(1, 2);
 	Uint2 b(3, 4);
 	Uint2 min = Uint2::Min(a, b);
-	ExpectNearVec(min, Uint2(1, 2), epsilon);
+	EXPECT_TRUE(min == Uint2(1, 2));
 }
 TEST(Uint2, Max)
 {
 	Uint2 a(1, 2);
 	Uint2 b(3, 4);
 	Uint2 max = Uint2::Max(a, b);
-	ExpectNearVec(max, Uint2(3, 4), epsilon);
+	EXPECT_TRUE(max == Uint2(3, 4));
 }
 TEST(Uint2, Clamp)
 {
@@ -25,7 +24,7 @@ TEST(Uint2, Clamp)
 	Uint2 min(2, 3);
 	Uint2 max(3, 4);
 	Uint2 clamped = Uint2::Clamp(value, min, max);
-	ExpectNearVec(clamped, Uint2(2, 4), epsilon);
+	EXPECT_TRUE(clamped == Uint2(2, 4));
 }
 
 // Access:

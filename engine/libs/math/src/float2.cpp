@@ -40,7 +40,7 @@ namespace emberMath
 	Float2 Float2::Normalize() const
 	{
 		float length = Length();
-		if (length <= math::epsilon)
+		if (math::IsEpsilonZero(length))
 			return Float2(0.0f);
 		return Float2(x / length, y / length);
 	}
@@ -50,10 +50,10 @@ namespace emberMath
 		float s = math::Sin(angle);
 		return Float2(x * c - y * s, x * s + y * c);
 	}
-	bool Float2::IsEpsilonZero(float epsilon) const
+	bool Float2::IsEpsilonZero(float absEpsilon) const
 	{
-        assert(epsilon > 0.0f);
-		return IsEpsilonEqual(Float2::zero, epsilon);
+        assert(absEpsilon > 0.0f);
+		return math::IsEpsilonZero(x, absEpsilon) && math::IsEpsilonZero(y, absEpsilon);
 	}
 
 
@@ -96,7 +96,7 @@ namespace emberMath
 		float lengthA = a.Length();
 		float lengthB = b.Length();
 		float lengths = a.Length() * b.Length();
-		if (lengthA <= math::epsilon || lengthB <= math::epsilon)
+		if (math::IsEpsilonZero(lengthA) || math::IsEpsilonZero(lengthB))
 			return 0.0f;
 		return math::Acos(math::Clamp(Dot(a, b) / lengthA * lengthB, -1.0f, 1.0f));
 	}
@@ -230,10 +230,11 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float2::IsEpsilonEqual(const Float2& other, float epsilon) const
+	bool Float2::IsEpsilonEqual(const Float2& other, float absEpsilon, float relEpsilon) const
 	{
-        assert(epsilon > 0.0f);
-		return math::Abs(x - other.x) < epsilon && math::Abs(y - other.y) < epsilon;
+        assert(absEpsilon > 0.0f);
+        assert(relEpsilon > 0.0f);
+		return math::IsEpsilonEqual(x, other.x, absEpsilon, relEpsilon) && math::IsEpsilonEqual(y, other.y, absEpsilon, relEpsilon);
 	}
 	bool Float2::operator==(const Float2& other) const
 	{

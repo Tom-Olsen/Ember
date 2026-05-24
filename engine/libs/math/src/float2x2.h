@@ -49,7 +49,7 @@ namespace emberMath
 		float Determinant() const;
 		Float2x2 Inverse() const;
 		Float2x2 Inverse(float det) const;
-		bool IsEpsilonZero(float epsilon = math::epsilon) const;
+		bool IsEpsilonZero(float absEpsilon = math::absEpsilon) const;
 
 		// Static math operations:
 		static Float2x2 Rotate(float radians);
@@ -85,7 +85,7 @@ namespace emberMath
 		Float2x2& operator/=(float scalar);
 
 		// Comparison:
-		bool IsEpsilonEqual(const Float2x2& other, float epsilon = math::epsilon) const;
+		bool IsEpsilonEqual(const Float2x2& other, float absEpsilon = math::absEpsilon, float relEpsilon = math::relEpsilon) const;
 		bool operator==(const Float2x2& other) const;
 		bool operator!=(const Float2x2& other) const;
 

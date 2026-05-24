@@ -1,5 +1,4 @@
 #include "emberMath.h"
-#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -11,5 +10,5 @@ TEST(Ray, GetPoint)
 	Ray ray(origin, direction);
 	float distance = 5.0f;
 	Float3 point = origin + distance * direction.Normalize();
-	ExpectNearVec(ray.GetPoint(distance), point, epsilon);
+	EXPECT_TRUE(ray.GetPoint(distance).IsEpsilonEqual(point));
 }

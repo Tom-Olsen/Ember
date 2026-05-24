@@ -1,5 +1,4 @@
 #include "emberMath.h"
-#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -23,7 +22,7 @@ TEST(Random, SetSeed)
 	for (int i = 0; i < 10; i++)
 	{
 		float random = math::Random::Uniform01();
-        std::cout << prediction[i] << std::endl;
+        // std::cout << prediction[i] << std::endl;
 		EXPECT_FLOAT_EQ(random, prediction[i]);
 	}
 }

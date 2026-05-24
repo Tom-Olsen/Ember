@@ -1,5 +1,4 @@
 #include "emberMath.h"
-#include "unitTestHelper.h"
 #include <gtest/gtest.h>
 
 
@@ -8,38 +7,38 @@ TEST(Bounds, GetMin)
 {
 	Bounds bounds(Float3(1.0f, 2.0f, 3.0f), Float3(2.0f, 3.0f, 4.0f));
 	Float3 min = bounds.GetMin();
-	ExpectEqualVec(min, Float3(-1.0f, -1.0f, -1.0f));
+	EXPECT_TRUE(min == Float3(-1.0f, -1.0f, -1.0f));
 }
 TEST(Bounds, GetMax)
 {
 	Bounds bounds(Float3(1.0f, 2.0f, 3.0f), Float3(2.0f, 3.0f, 4.0f));
 	Float3 max = bounds.GetMax();
-	ExpectEqualVec(max, Float3(3.0f, 5.0f, 7.0f));
+	EXPECT_TRUE(max == Float3(3.0f, 5.0f, 7.0f));
 }
 TEST(Bounds, GetSize)
 {
 	Bounds bounds(Float3(1.0f, 2.0f, 3.0f), Float3(2.0f, 3.0f, 4.0f));
 	Float3 size = bounds.GetSize();
-	ExpectEqualVec(size, Float3(4.0f, 6.0f, 8.0f));
+	EXPECT_TRUE(size == Float3(4.0f, 6.0f, 8.0f));
 }
 TEST(Bounds, GetDiagonal)
 {
 	Bounds bounds(Float3(1.0f, 2.0f, 3.0f), Float3(2.0f, 3.0f, 4.0f));
 	float diagonal = (bounds.GetMax() - bounds.GetMin()).Length();
-	EXPECT_NEAR(bounds.GetDiagonal(), diagonal, epsilon);
+    EXPECT_TRUE(math::IsEpsilonEqual(bounds.GetDiagonal(), diagonal));
 }
 TEST(Bounds, ClosestPoint)
 {
 	Bounds bounds(Float3(1.0f, 2.0f, 3.0f), Float3(2.0f, 3.0f, 4.0f));
 	Float3 point = Float3(1.0f, 2.0f, 8.0f);
 	Float3 closestPoint = bounds.ClosestPoint(point);
-	ExpectEqualVec(closestPoint, Float3(1.0f, 2.0f, 7.0f));
+	EXPECT_TRUE(closestPoint == Float3(1.0f, 2.0f, 7.0f));
 }
 TEST(Bounds, Contains)
 {
 	Bounds bounds(Float3(1.0f, 2.0f, 3.0f), Float3(2.0f, 3.0f, 4.0f));
-	Float3 pointInside = Float3(1.0f, 2.0f, 7.0f - epsilon);
-	Float3 pointOutside = Float3(1.0f, 2.0f, 7.0f + epsilon);
+	Float3 pointInside = Float3(1.0f, 2.0f, 7.0f - 1e-6f);
+	Float3 pointOutside = Float3(1.0f, 2.0f, 7.0f + 1e-6f);
 	EXPECT_TRUE(bounds.Contains(pointInside));
 	EXPECT_FALSE(bounds.Contains(pointOutside));
 }
@@ -52,8 +51,8 @@ TEST(Bounds, Encapsulate)
 	Float3 size = bounds.GetSize();
 	Float3 center = bounds.center;
 	EXPECT_TRUE(contains);
-	ExpectEqualVec(size, Float3(3.0f, 3.0f, 3.0f));
-	ExpectEqualVec(center, Float3(0.5f, 0.5f, 0.5f));
+	EXPECT_TRUE(size == Float3(3.0f, 3.0f, 3.0f));
+	EXPECT_TRUE(center == Float3(0.5f, 0.5f, 0.5f));
 }
 TEST(Bounds, Expand_Float)
 {
@@ -63,7 +62,7 @@ TEST(Bounds, Expand_Float)
 	bounds.Expand(amount);
 	Float3 size = bounds.GetSize();
 	Float3 result = 2.0f * amount * Float3::one + sizeOld;
-	ExpectEqualVec(size, result);
+	EXPECT_TRUE(size == result);
 }
 TEST(Bounds, Expand_Float3)
 {
@@ -73,7 +72,7 @@ TEST(Bounds, Expand_Float3)
 	bounds.Expand(amount);
 	Float3 size = bounds.GetSize();
 	Float3 result = 2.0f * amount + sizeOld;
-	ExpectEqualVec(size, result);
+	EXPECT_TRUE(size == result);
 }
 TEST(Bounds, SetMinMax)
 {
@@ -83,6 +82,6 @@ TEST(Bounds, SetMinMax)
 	bounds.SetMinMax(min, max);
 	Float3 size = bounds.GetSize();
 	Float3 center = bounds.center;
-	ExpectEqualVec(size, Float3(1.0f, 2.0f, 4.0f));
-	ExpectEqualVec(center, Float3(0.5f, 1.0f, 2.0f));
+	EXPECT_TRUE(size == Float3(1.0f, 2.0f, 4.0f));
+	EXPECT_TRUE(center == Float3(0.5f, 1.0f, 2.0f));
 }

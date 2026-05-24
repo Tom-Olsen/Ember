@@ -43,10 +43,10 @@ namespace emberMath
 	{
 		return math::Sqrt(LengthSq());
 	}
-	bool Float4::IsEpsilonZero(float epsilon) const
+	bool Float4::IsEpsilonZero(float absEpsilon) const
 	{
-        assert(epsilon > 0.0f);
-		return IsEpsilonEqual(Float4::zero, epsilon);
+        assert(absEpsilon > 0.0f);
+		return math::IsEpsilonZero(x, absEpsilon) && math::IsEpsilonZero(y, absEpsilon) && math::IsEpsilonZero(z, absEpsilon) && math::IsEpsilonZero(w, absEpsilon);
 	}
 
 
@@ -222,10 +222,11 @@ namespace emberMath
 
 
 	// Comparison:
-	bool Float4::IsEpsilonEqual(const Float4& other, float epsilon) const
+	bool Float4::IsEpsilonEqual(const Float4& other, float absEpsilon, float relEpsilon) const
 	{
-        assert(epsilon > 0.0f);
-		return math::Abs(x - other.x) < epsilon && math::Abs(y - other.y) < epsilon && math::Abs(z - other.z) < epsilon && math::Abs(w - other.w) < epsilon;
+        assert(absEpsilon > 0.0f);
+        assert(relEpsilon > 0.0f);
+		return math::IsEpsilonEqual(x, other.x, absEpsilon, relEpsilon) && math::IsEpsilonEqual(y, other.y, absEpsilon, relEpsilon) && math::IsEpsilonEqual(z, other.z, absEpsilon, relEpsilon) && math::IsEpsilonEqual(w, other.w, absEpsilon, relEpsilon);
 	}
 	bool Float4::operator==(const Float4& other) const
 	{
