@@ -3,8 +3,7 @@
 #include "hashGrid2d.h"
 using namespace emberEngine;
 
-// TODO:
-// Curvature calculation might be wrong and needs checking.
+
 
 namespace fluidDynamics
 {
@@ -69,13 +68,13 @@ namespace fluidDynamics
 		static float Curvature(int particleIndex, const Settings& settings, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& normals, HashGrid2d& hashGrid);
 		static Float2 InternalForceDensity(int particleIndex, const Settings& settings, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& velocities);
 		static Float2 InternalForceDensity(int particleIndex, const Settings& settings, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& velocities, HashGrid2d& hashGrid);
-		static Float2 ExternalForceDensity(int particleIndex, const Settings& settings, const Attractor& attractor, const std::vector<Float2>& positions, const std::vector<float>& densities);
+		static Float2 ExternalForceDensity(int particleIndex, const Settings& settings, const Attractor& attractor, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& normals, const std::vector<float>& curvatures);
 		static void BoundaryCollisions(Float2& position, Float2& velocity, const Settings& settings);
 
 		// Field computations:
 		static void ComputeDensities(const Settings& settings, std::vector<float>& densities, const std::vector<Float2>& positions);
 		static void ComputeNormals(const Settings& settings, std::vector<Float2>& normals, const std::vector<Float2>& positions, const std::vector<float>& densities);
 		static void ComputeCurvatures(const Settings& settings, std::vector<float>& curvatures, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& normals);
-		static void ComputeForceDensities(const Settings& settings, const Attractor& attractor, std::vector<Float2>& forceDensities, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& velocities);
+		static void ComputeForceDensities(const Settings& settings, const Attractor& attractor, std::vector<Float2>& forceDensities, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& velocities, const std::vector<Float2>& normals, const std::vector<float>& curvatures);
 	};
 }

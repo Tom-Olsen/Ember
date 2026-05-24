@@ -72,7 +72,7 @@ namespace fluidDynamics
 		ComputeDensities(settings, data.densities, data.positions);
 		ComputeNormals(settings, data.normals, data.positions, data.densities);
 		ComputeCurvatures(settings, data.curvatures, data.positions, data.densities, data.normals);
-		ComputeForceDensities(settings, attractor, data.forceDensities, data.positions, data.densities, data.velocities);
+		ComputeForceDensities(settings, attractor, data.forceDensities, data.positions, data.densities, data.velocities, data.normals, data.curvatures);
 
 		// Step:
 		if (timeStep == 0)
@@ -108,7 +108,7 @@ namespace fluidDynamics
 		ComputeDensities(settings, data.densities, data.positions);
 		ComputeNormals(settings, data.normals, data.positions, data.densities);
 		ComputeCurvatures(settings, data.curvatures, data.positions, data.densities, data.normals);
-		ComputeForceDensities(settings, attractor, data.forceDensities, data.positions, data.densities, data.velocities);
+		ComputeForceDensities(settings, attractor, data.forceDensities, data.positions, data.densities, data.velocities, data.normals, data.curvatures);
 
 		// Step:
 		for (int i = 0; i < data.ParticleCount(); i++)
@@ -142,7 +142,7 @@ namespace fluidDynamics
 		ComputeDensities(settings, data.densities, data.positions);
 		ComputeNormals(settings, data.normals, data.positions, data.densities);
 		ComputeCurvatures(settings, data.curvatures, data.positions, data.densities, data.normals);
-		ComputeForceDensities(settings, attractor, data.forceDensities, data.positions, data.densities, data.velocities);
+		ComputeForceDensities(settings, attractor, data.forceDensities, data.positions, data.densities, data.velocities, data.normals, data.curvatures);
 
 		// First Runte-Kutta step:
 		for (int i = 0; i < data.ParticleCount(); i++)
@@ -173,7 +173,7 @@ namespace fluidDynamics
 		ComputeDensities(settings, data.densities, rungeKutta.tempPositions);
 		ComputeNormals(settings, data.normals, rungeKutta.tempPositions, data.densities);
 		ComputeCurvatures(settings, data.curvatures, rungeKutta.tempPositions, data.densities, data.normals);
-		ComputeForceDensities(settings, attractor, data.forceDensities, rungeKutta.tempPositions, data.densities, rungeKutta.tempVelocities);
+		ComputeForceDensities(settings, attractor, data.forceDensities, rungeKutta.tempPositions, data.densities, rungeKutta.tempVelocities, data.normals, data.curvatures);
 
 		// Second Runge-Kutta step:
 		for (int i = 0; i < data.ParticleCount(); i++)
@@ -285,48 +285,60 @@ namespace fluidDynamics
 	float SphFluid2dCpuSolver::Curvature(int particleIndex, const Settings& settings, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& normals)
 	{
 		float curvature = 0.0f;
-		for (int i = 0; i < positions.size(); i++)
-		{
-			if (i == particleIndex)
-				continue;
+		float normalLength = normals[particleIndex].Length();
+        if (normalLength > 1e-2f)
+        {
+		    for (int i = 0; i < positions.size(); i++)
+		    {
+		    	if (i == particleIndex)
+		    		continue;
 
-			Float2 offset = positions[particleIndex] - positions[i];
-			float r = offset.Length();
-			if (r < settings.effectRadius && r > 1e-8f)
-				curvature -= settings.mass / densities[i] * smoothingKernals::DDSpiky(r, settings.effectRadius) / normals[i].Length();
-		}
-		return curvature;
+		    	Float2 offset = positions[particleIndex] - positions[i];
+		    	float r = offset.Length();
+		    	if (r < settings.effectRadius && r > 1e-8f)
+		    		curvature += settings.mass / densities[i] * smoothingKernals::DDSpiky(r, settings.effectRadius);
+		    }
+		    return curvature / normalLength;
+        }
+        else
+            return 0.0f;
 	}
 	float SphFluid2dCpuSolver::Curvature(int particleIndex, const Settings& settings, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& normals, HashGrid2d& hashGrid)
 	{
 		float curvature = 0.0f;
 		Int2 particleCell = hashGrid.Cell(positions[particleIndex], settings.effectRadius);
-		for (const Int2& offset : offsets)
-		{
-			Int2 neighbourCell = particleCell + offset;
-			const uint32_t cellKey = hashGrid.GetCellKey(neighbourCell);
-			uint32_t otherIndex = hashGrid.GetStartIndex(neighbourCell);
+		float normalLength = normals[particleIndex].Length();
+        if (normalLength > 1e-2f)
+        {
+		    for (const Int2& offset : offsets)
+		    {
+		    	Int2 neighbourCell = particleCell + offset;
+		    	const uint32_t cellKey = hashGrid.GetCellKey(neighbourCell);
+		    	uint32_t otherIndex = hashGrid.GetStartIndex(neighbourCell);
 
-			// Skip empty cells:
-			if (otherIndex == uint32_t(-1) || otherIndex >= positions.size())
-				continue;
+		    	// Skip empty cells:
+		    	if (otherIndex == uint32_t(-1) || otherIndex >= positions.size())
+		    		continue;
 
-			while (otherIndex < positions.size() && hashGrid.GetCellKey(otherIndex) == cellKey)
-			{
-				if (otherIndex == particleIndex)
-				{
-					otherIndex++;
-					continue;
-				}
+		    	while (otherIndex < positions.size() && hashGrid.GetCellKey(otherIndex) == cellKey)
+		    	{
+		    		if (otherIndex == particleIndex)
+		    		{
+		    			otherIndex++;
+		    			continue;
+		    		}
 
-				Float2 offset = positions[particleIndex] - positions[otherIndex];
-				float r = offset.Length();
-				if (r < settings.effectRadius && r > 1e-8f)
-					curvature -= settings.mass / densities[otherIndex] * smoothingKernals::DDSpiky(r, settings.effectRadius) / normals[otherIndex].Length();
-				otherIndex++;
-			}
-		}
-		return curvature;
+		    		Float2 offset = positions[particleIndex] - positions[otherIndex];
+		    		float r = offset.Length();
+		    		if (r < settings.effectRadius && r > 1e-8f)
+		    			curvature += settings.mass / densities[otherIndex] * smoothingKernals::DDSpiky(r, settings.effectRadius);
+		    		otherIndex++;
+		    	}
+		    }
+		    return curvature / normalLength;
+        }
+        else
+		    return 0.0f;
 	}
 	float Pressure(float density, float targetDensity, float pressureMultiplier)
 	{
@@ -406,10 +418,13 @@ namespace fluidDynamics
 		}
 		return forceDensity;
 	}
-	Float2 SphFluid2dCpuSolver::ExternalForceDensity(int particleIndex, const Settings& settings, const Attractor& attractor, const std::vector<Float2>& positions, const std::vector<float>& densities)
+	Float2 SphFluid2dCpuSolver::ExternalForceDensity(int particleIndex, const Settings& settings, const Attractor& attractor, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& normals, const std::vector<float>& curvatures)
 	{
 		// Gravity force density:
 		Float2 forceDensity = densities[particleIndex] * Float2(0.0f, -settings.gravity);
+
+        // Surface tension:
+        forceDensity -= settings.surfaceTension * curvatures[particleIndex] * normals[particleIndex];
 
 		// External force density:
 		Float2 offset = attractor.point - positions[particleIndex];
@@ -492,14 +507,14 @@ namespace fluidDynamics
 				curvatures[i] = Curvature(i, settings, positions, densities, normals);
 		}
 	}
-	void SphFluid2dCpuSolver::ComputeForceDensities(const Settings& settings, const Attractor& attractor, std::vector<Float2>& forceDensities, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& velocities)
+	void SphFluid2dCpuSolver::ComputeForceDensities(const Settings& settings, const Attractor& attractor, std::vector<Float2>& forceDensities, const std::vector<Float2>& positions, const std::vector<float>& densities, const std::vector<Float2>& velocities, const std::vector<Float2>& normals, const std::vector<float>& curvatures)
 	{
 		if (settings.pHashGrid != nullptr)
 		{
 			for (int i = 0; i < positions.size(); i++)
 			{
 				forceDensities[i] = InternalForceDensity(i, settings, positions, densities, velocities, *settings.pHashGrid);
-				forceDensities[i] += ExternalForceDensity(i, settings, attractor, positions, densities);
+				forceDensities[i] += ExternalForceDensity(i, settings, attractor, positions, densities, normals, curvatures);
 			}
 		}
 		else
@@ -507,7 +522,7 @@ namespace fluidDynamics
 			for (int i = 0; i < positions.size(); i++)
 			{
 				forceDensities[i] = InternalForceDensity(i, settings, positions, densities, velocities);
-				forceDensities[i] += ExternalForceDensity(i, settings, attractor, positions, densities);
+				forceDensities[i] += ExternalForceDensity(i, settings, attractor, positions, densities, normals, curvatures);
 			}
 		}
 	}

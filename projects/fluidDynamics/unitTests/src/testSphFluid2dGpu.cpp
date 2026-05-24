@@ -128,7 +128,7 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 		fluidDynamics::SphFluid2dCpuSolver::ComputeDensities(cpuSettings, densities, positions);
 		fluidDynamics::SphFluid2dCpuSolver::ComputeNormals(cpuSettings, normals, positions, densities);
 		fluidDynamics::SphFluid2dCpuSolver::ComputeCurvatures(cpuSettings, curvatures, positions, densities, normals);
-		fluidDynamics::SphFluid2dCpuSolver::ComputeForceDensities(cpuSettings, cpuAttractor, forceDensities, positions, densities, velocities);
+		fluidDynamics::SphFluid2dCpuSolver::ComputeForceDensities(cpuSettings, cpuAttractor, forceDensities, positions, densities, velocities, normals, curvatures);
 		// First Runte-Kutta step:
 		for (int i = 0; i < particleCount; i++)
 		{
@@ -205,7 +205,6 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 				allGood = false;
 				EXPECT_FALSE(true) << "velocity mismatch at particle " << i << ": cpu = " << velocities[i] << ", gpu = " << velocitiesGpu[i];
 			}
-
 			if (!normals[i].IsEpsilonEqual(normalsGpu[i]))
 			{
 				allGood = false;

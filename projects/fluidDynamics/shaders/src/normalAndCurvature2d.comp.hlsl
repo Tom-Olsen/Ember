@@ -81,12 +81,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 
                 float2 offset = particlePos - positionBuffer[i];
                 float r = length(offset);
-                if (r < effectRadius)
+                if (r < effectRadius && r > 1e-8f)
                 {
                     float2 dir = offset / r;
                     float c = mass / densityBuffer[i];
-                    normalBuffer[index] += c * SmoothingKernal_DPoly6(r, dir, effectRadius);
-                    curvatureBuffer[index] += c * SmoothingKernal_DDPoly6(r, effectRadius);
+                    normalBuffer[index] += c * SmoothingKernal_DSpiky(r, dir, effectRadius);
+                    curvatureBuffer[index] += c * SmoothingKernal_DDSpiky(r, effectRadius);
                 }
             };
             float normalLength = length(normalBuffer[index]);
