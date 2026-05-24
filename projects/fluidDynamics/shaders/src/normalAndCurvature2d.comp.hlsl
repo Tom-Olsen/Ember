@@ -12,12 +12,12 @@ cbuffer Values : register(b300, SHADER_SET)
     float effectRadius;
     float mass;
 };
-StructuredBuffer<uint> cellKeyBuffer : register(t100, SHADER_SET);
-StructuredBuffer<uint> startIndexBuffer : register(t101, SHADER_SET);
-StructuredBuffer<float2> positionBuffer : register(t102, SHADER_SET);
-StructuredBuffer<float> densityBuffer : register(t103, SHADER_SET);
-RWStructuredBuffer<float2> normalBuffer : register(u200, SHADER_SET);
-RWStructuredBuffer<float> curvatureBuffer : register(u201, SHADER_SET);
+StructuredBuffer<uint> cellKeyBuffer : register(t100, CALL_SET);
+StructuredBuffer<uint> startIndexBuffer : register(t101, CALL_SET);
+StructuredBuffer<float2> positionBuffer : register(t102, CALL_SET);
+StructuredBuffer<float> densityBuffer : register(t103, CALL_SET);
+RWStructuredBuffer<float2> normalBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<float> curvatureBuffer : register(u201, CALL_SET);
 
 
 

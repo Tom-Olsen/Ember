@@ -2,8 +2,8 @@
 
 
 
-RWStructuredBuffer<uint> startIndexBuffer : register(u200, SHADER_SET);
-StructuredBuffer<uint> cellKeyBuffer : register(t100, SHADER_SET);
+RWStructuredBuffer<uint> startIndexBuffer : register(u200, CALL_SET);
+StructuredBuffer<uint> cellKeyBuffer : register(t100, CALL_SET);
 
 
 

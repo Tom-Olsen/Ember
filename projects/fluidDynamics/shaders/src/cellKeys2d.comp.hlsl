@@ -8,8 +8,8 @@ cbuffer Values : register(b300, SHADER_SET)
     float effectRadius;
     uint hashGridSize; // ~2*particleCount
 };
-RWStructuredBuffer<uint> cellKeyBuffer : register(u200, SHADER_SET);
-StructuredBuffer<float2> positionBuffer : register(t100, SHADER_SET);
+RWStructuredBuffer<uint> cellKeyBuffer : register(u200, CALL_SET);
+StructuredBuffer<float2> positionBuffer : register(t100, CALL_SET);
 
 
 

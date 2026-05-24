@@ -2,7 +2,7 @@
 
 
 
-RWStructuredBuffer<uint> startIndexBuffer : register(u200, SHADER_SET);
+RWStructuredBuffer<uint> startIndexBuffer : register(u200, CALL_SET);
 
 
 

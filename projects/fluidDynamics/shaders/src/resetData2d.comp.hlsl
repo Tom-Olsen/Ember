@@ -7,21 +7,21 @@ cbuffer Values : register(b300, SHADER_SET)
     uint hashGridSize; // 2 * particleCount rounded up to next prime.
     float initialDistributionRadius;
 };
-RWStructuredBuffer<uint> cellKeyBuffer : register(u200, SHADER_SET);
-RWStructuredBuffer<uint> startIndexBuffer : register(u201, SHADER_SET);
-RWStructuredBuffer<uint> sortPermutationBuffer : register(u202, SHADER_SET);
-RWStructuredBuffer<float2> positionBuffer : register(u203, SHADER_SET);
-RWStructuredBuffer<float2> velocityBuffer : register(u204, SHADER_SET);
-RWStructuredBuffer<float> densityBuffer : register(u205, SHADER_SET);
-RWStructuredBuffer<float2> normalBuffer : register(u206, SHADER_SET);
-RWStructuredBuffer<float> curvatureBuffer : register(u207, SHADER_SET);
-RWStructuredBuffer<float2> forceDensityBuffer : register(u208, SHADER_SET);
-RWStructuredBuffer<float2> tempBuffer0 : register(u209, SHADER_SET);
-RWStructuredBuffer<float2> tempBuffer1 : register(u210, SHADER_SET);
-RWStructuredBuffer<float2> tempBuffer2 : register(u211, SHADER_SET);
-RWStructuredBuffer<float2> tempBuffer3 : register(u212, SHADER_SET);
-RWStructuredBuffer<float2> tempBuffer4 : register(u213, SHADER_SET);
-RWStructuredBuffer<float2> tempBuffer5 : register(u214, SHADER_SET);
+RWStructuredBuffer<uint> cellKeyBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<uint> startIndexBuffer : register(u201, CALL_SET);
+RWStructuredBuffer<uint> sortPermutationBuffer : register(u202, CALL_SET);
+RWStructuredBuffer<float2> positionBuffer : register(u203, CALL_SET);
+RWStructuredBuffer<float2> velocityBuffer : register(u204, CALL_SET);
+RWStructuredBuffer<float> densityBuffer : register(u205, CALL_SET);
+RWStructuredBuffer<float2> normalBuffer : register(u206, CALL_SET);
+RWStructuredBuffer<float> curvatureBuffer : register(u207, CALL_SET);
+RWStructuredBuffer<float2> forceDensityBuffer : register(u208, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer0 : register(u209, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer1 : register(u210, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer2 : register(u211, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer3 : register(u212, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer4 : register(u213, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer5 : register(u214, CALL_SET);
 
 
 

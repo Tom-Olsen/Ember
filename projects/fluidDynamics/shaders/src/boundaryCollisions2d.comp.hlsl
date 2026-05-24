@@ -8,8 +8,8 @@ cbuffer Values : register(b300, SHADER_SET)
     float3 min;
     float3 max;
 };
-RWStructuredBuffer<float2> positionBuffer : register(u200, SHADER_SET);
-RWStructuredBuffer<float2> velocityBuffer : register(u201, SHADER_SET);
+RWStructuredBuffer<float2> positionBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<float2> velocityBuffer : register(u201, CALL_SET);
 
 
 

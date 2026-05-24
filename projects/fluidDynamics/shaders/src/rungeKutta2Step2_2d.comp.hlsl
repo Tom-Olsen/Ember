@@ -7,13 +7,13 @@ cbuffer Values : register(b300, SHADER_SET)
     float dt;
     float maxVelocity;
 };
-StructuredBuffer<float2> forceDensityBuffer : register(t100, SHADER_SET);
-StructuredBuffer<float> densityBuffer : register(t101, SHADER_SET);
-StructuredBuffer<float2> kp1Buffer : register(t102, SHADER_SET);
-StructuredBuffer<float2> kv1Buffer : register(t103, SHADER_SET);
-StructuredBuffer<float2> tempVelocityBuffer : register(t104, SHADER_SET);
-RWStructuredBuffer<float2> positionBuffer : register(u200, SHADER_SET);
-RWStructuredBuffer<float2> velocityBuffer : register(u201, SHADER_SET);
+StructuredBuffer<float2> forceDensityBuffer : register(t100, CALL_SET);
+StructuredBuffer<float> densityBuffer : register(t101, CALL_SET);
+StructuredBuffer<float2> kp1Buffer : register(t102, CALL_SET);
+StructuredBuffer<float2> kv1Buffer : register(t103, CALL_SET);
+StructuredBuffer<float2> tempVelocityBuffer : register(t104, CALL_SET);
+RWStructuredBuffer<float2> positionBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<float2> velocityBuffer : register(u201, CALL_SET);
 
 
 
