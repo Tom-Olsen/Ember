@@ -1,7 +1,9 @@
 #include "vmaImage.h"
+#include "vmaAllocationCreateInfoToString.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
+#include "vulkanImageCreateInfoToString.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanMemoryAllocator.h"
@@ -28,7 +30,12 @@ namespace vulkanRendererBackend
 		m_layout = m_imageInfo.initialLayout;
 
 		// Create image:
-		VKA(Context::GetMemoryAllocator()->CreateImage(m_imageInfo, m_allocationInfo, allocationSize, &m_image, &m_allocation));
+		VkResult result = Context::GetMemoryAllocator()->CreateImage(m_imageInfo, m_allocationInfo, allocationSize, &m_image, &m_allocation);
+		if (result != VK_SUCCESS)
+		{
+			LOG_CRITICAL("VmaImage::VmaImage failed. VkResult: {}, allocationSize: {}, VkImageCreateInfo: {}, VmaAllocationCreateInfo: {}", std::to_string(result), std::to_string(allocationSize), emberVulkanUtility::ToString(m_imageInfo), ToString_VmaAllocationCreateInfo(m_allocationInfo));
+			std::abort();
+		}
 		NAME_VK_OBJECT(m_image, "Image" + std::to_string(s_index));
 
 		// Create image view:

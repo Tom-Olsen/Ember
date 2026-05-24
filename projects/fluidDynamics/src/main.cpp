@@ -67,6 +67,9 @@ int main()
 		appCreateInfo.windowHeight = 900;// 1440; //1080;
 		appCreateInfo.renderWidth = 1600;// 2560; //1280;
 		appCreateInfo.renderHeight = 900;// 1440; //720;
+		appCreateInfo.maxDirectionalLights = 1;
+		appCreateInfo.maxPositionalLights = 1;
+		appCreateInfo.shadowMapResolution = 1024;
 		emberApplication::Application::Init(appCreateInfo);
 
 		// Add project specific shaders:

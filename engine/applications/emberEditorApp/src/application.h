@@ -1,5 +1,6 @@
 #pragma once
 #include "commonMsaaSampleCount.h"
+#include "shadowConstants.h"
 #include <memory>
 
 
@@ -39,6 +40,9 @@ namespace emberApplication
 			int windowHeight = 1440;
 			uint32_t renderWidth = 1920;
 			uint32_t renderHeight = 1080;
+			uint32_t maxDirectionalLights = MAX_DIR_LIGHTS;
+			uint32_t maxPositionalLights = MAX_POS_LIGHTS;
+			uint32_t shadowMapResolution = SHADOW_MAP_RESOLUTION;
 		};
 
 	private: // Members:

@@ -6,6 +6,7 @@
 #include "logger.h"
 #include "parallelThreadPool.h"
 #include "profiler.h"
+#include "shadowConstants.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
@@ -82,9 +83,9 @@ namespace vulkanRendererBackend
 		m_depthBiasSlopeFactor = 1.0f;
 		m_directionalLightsCount = 0;
 		m_positionalLightsCount = 0;
-		m_maxDirectionalLights = createInfo.maxDirectionalLights;
-		m_maxPositionalLights = createInfo.maxPositionalLights;
-		m_shadowMapResolution = createInfo.shadowMapResolution;
+		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));
+		m_maxPositionalLights = math::Clamp(createInfo.maxPositionalLights, uint32_t(1), uint32_t(MAX_POS_LIGHTS));
+		m_shadowMapResolution = math::Clamp(createInfo.shadowMapResolution, uint32_t(1), uint32_t(SHADOW_MAP_RESOLUTION));
 		m_directionalLights.resize(m_maxDirectionalLights);
 		m_positionalLights.resize(m_maxPositionalLights);
 

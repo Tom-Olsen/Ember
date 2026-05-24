@@ -48,16 +48,16 @@ namespace emberApplication
 
 			// Renderer backend:
 			emberCommon::RendererCreateInfo rendererCreateInfo = {};
-			rendererCreateInfo.vSyncEnabled = applicationCreateInfo.vSyncEnabled;		// project settings.
-			rendererCreateInfo.framesInFlight = applicationCreateInfo.framesInFlight;	// project settings.
-			rendererCreateInfo.msaaSampleCount = applicationCreateInfo.msaaSampleCount;	// project settings.
-			rendererCreateInfo.renderWidth = applicationCreateInfo.renderWidth;			// project settings.
-			rendererCreateInfo.renderHeight = applicationCreateInfo.renderHeight;		// project settings.
-			rendererCreateInfo.enableGui = false;										// application dependent.
-			rendererCreateInfo.enableDockSpace = false;									// application dependent.
-			rendererCreateInfo.maxDirectionalLights = MAX_DIR_LIGHTS;					// controlled via macro for now.
-			rendererCreateInfo.maxPositionalLights = MAX_POS_LIGHTS;					// controlled via macro for now.
-			rendererCreateInfo.shadowMapResolution = SHADOW_MAP_RESOLUTION;				// controlled via macro for now.
+			rendererCreateInfo.vSyncEnabled = applicationCreateInfo.vSyncEnabled;		            // project settings.
+			rendererCreateInfo.framesInFlight = applicationCreateInfo.framesInFlight;	            // project settings.
+			rendererCreateInfo.msaaSampleCount = applicationCreateInfo.msaaSampleCount;	            // project settings.
+			rendererCreateInfo.renderWidth = applicationCreateInfo.renderWidth;			            // project settings.
+			rendererCreateInfo.renderHeight = applicationCreateInfo.renderHeight;		            // project settings.
+			rendererCreateInfo.enableGui = false;										            // application dependent.
+			rendererCreateInfo.enableDockSpace = false;									            // application dependent.
+			rendererCreateInfo.maxDirectionalLights = applicationCreateInfo.maxDirectionalLights;   // clamped to 1-MAX_DIR_LIGHTS in renderer.
+			rendererCreateInfo.maxPositionalLights = applicationCreateInfo.maxPositionalLights;     // clamped to 1-MAX_POS_LIGHTS in renderer.
+			rendererCreateInfo.shadowMapResolution = applicationCreateInfo.shadowMapResolution;     // clamped to 1-SHADOW_MAP_RESOLUTION in renderer.
 			emberBackendInterface::IRenderer* pIRenderer = new vulkanRendererBackend::Renderer(rendererCreateInfo, pIWindow);
 
 			// Compute backend:

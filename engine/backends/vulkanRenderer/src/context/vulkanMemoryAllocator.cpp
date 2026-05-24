@@ -80,11 +80,25 @@ namespace vulkanRendererBackend
 
 		// Try the managed pool:
 		result = vmaCreateBuffer(m_pAllocator, &bufferInfo, &pooledAllocationInfo, pBuffer, pAllocation, nullptr);
-		if (result == VK_SUCCESS || pooledAllocationInfo.pool == nullptr)
+		if (result == VK_SUCCESS)
 			return result;
 
-		// Fallback:
-		return vmaCreateBuffer(m_pAllocator, &bufferInfo, &allocationInfo, pBuffer, pAllocation, nullptr);
+		// Fallback to VMA's default pool:
+		if (pooledAllocationInfo.pool != nullptr)
+		{
+			result = vmaCreateBuffer(m_pAllocator, &bufferInfo, &allocationInfo, pBuffer, pAllocation, nullptr);
+			if (result == VK_SUCCESS)
+				return result;
+		}
+
+		// Fallback to exact-size dedicated memory:
+		if (allocationInfo.pool == nullptr && !(allocationInfo.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT))
+		{
+			VmaAllocationCreateInfo dedicatedAllocationInfo = allocationInfo;
+			dedicatedAllocationInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+			return vmaCreateBuffer(m_pAllocator, &bufferInfo, &dedicatedAllocationInfo, pBuffer, pAllocation, nullptr);
+		}
+		return result;
 	}
 	VkResult MemoryAllocator::CreateImage(const VkImageCreateInfo& imageInfo, const VmaAllocationCreateInfo& allocationInfo, VkDeviceSize allocationSize, VkImage* pImage, VmaAllocation* pAllocation)
 	{
@@ -99,11 +113,25 @@ namespace vulkanRendererBackend
 
 		// Try the managed pool:
 		result = vmaCreateImage(m_pAllocator, &imageInfo, &pooledAllocationInfo, pImage, pAllocation, nullptr);
-		if (result == VK_SUCCESS || pooledAllocationInfo.pool == nullptr)
+		if (result == VK_SUCCESS)
 			return result;
 
-		// Fallback:
-		return vmaCreateImage(m_pAllocator, &imageInfo, &allocationInfo, pImage, pAllocation, nullptr);
+		// Fallback to VMA's default pool:
+		if (pooledAllocationInfo.pool != nullptr)
+		{
+			result = vmaCreateImage(m_pAllocator, &imageInfo, &allocationInfo, pImage, pAllocation, nullptr);
+			if (result == VK_SUCCESS)
+				return result;
+		}
+
+		// Fallback to exact-size dedicated memory:
+		if (allocationInfo.pool == nullptr && !(allocationInfo.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT))
+		{
+			VmaAllocationCreateInfo dedicatedAllocationInfo = allocationInfo;
+			dedicatedAllocationInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+			return vmaCreateImage(m_pAllocator, &imageInfo, &dedicatedAllocationInfo, pImage, pAllocation, nullptr);
+		}
+		return result;
 	}
 	void MemoryAllocator::DestroyBuffer(VkBuffer buffer, VmaAllocation allocation)
 	{
