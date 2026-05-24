@@ -132,8 +132,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
             forceDensityBuffer[index] += densityBuffer[index] * float2(0.0f, -gravity);
             
             // Surface tension:
-            if (curvatureBuffer[index] != 0)
-                forceDensityBuffer[index] -= surfaceTension * curvatureBuffer[index] * normalBuffer[index];
+            forceDensityBuffer[index] -= surfaceTension * curvatureBuffer[index] * normalBuffer[index];
             
             // External force density:
             float2 offset = attractorPoint - positionBuffer[index];
