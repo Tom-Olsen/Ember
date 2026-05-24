@@ -51,6 +51,8 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 	std::vector<Float2> positions(particleCount);
 	std::vector<Float2> velocities(particleCount);
 	std::vector<float> densities(particleCount);
+	std::vector<Float2> normals(particleCount);
+	std::vector<float> curvatures(particleCount);
 	std::vector<Float2> forceDensities(particleCount);
 	std::vector<Float2> kp1(particleCount);
 	std::vector<Float2> kv1(particleCount);
@@ -75,6 +77,8 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 	std::vector<Float2> positionsGpu(particleCount);
 	std::vector<Float2> velocitiesGpu(particleCount);
 	std::vector<float> densitiesGpu(particleCount);
+	std::vector<Float2> normalsGpu(particleCount);
+	std::vector<float> curvaturesGpu(particleCount);
 	std::vector<Float2> forceDensitiesGpu(particleCount);
 	std::vector<Float2> kp1Gpu(particleCount);
 	std::vector<Float2> kv1Gpu(particleCount);
@@ -92,12 +96,14 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 		positions[i].y = math::Sin(theta) * r;
 		velocities[i] = Float2::zero;
 		densities[i] = 0.0f;
+        normals[i] = Float2::zero;
+        curvatures[i] = 0.0f;
 	}
 	positionBuffer.Upload(positions);
 	velocityBuffer.Upload(velocities);
 	densityBuffer.Upload(densities);
-	normalBuffer.Upload(velocities);    // we dont use normals yet, so simply set to 0 same as velocities.
-	curvatureBuffer.Upload(densities);  // we dont use curvature yet, so simply set to 0 same as densities.
+	normalBuffer.Upload(normals);
+	curvatureBuffer.Upload(curvatures);
 
 	// Cpu version:
 	{
@@ -120,6 +126,8 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 		cpuAttractor.strength = 0;
 
 		fluidDynamics::SphFluid2dCpuSolver::ComputeDensities(cpuSettings, densities, positions);
+		fluidDynamics::SphFluid2dCpuSolver::ComputeNormals(cpuSettings, normals, positions, densities);
+		fluidDynamics::SphFluid2dCpuSolver::ComputeCurvatures(cpuSettings, curvatures, positions, densities, normals);
 		fluidDynamics::SphFluid2dCpuSolver::ComputeForceDensities(cpuSettings, cpuAttractor, forceDensities, positions, densities, velocities);
 		// First Runte-Kutta step:
 		for (int i = 0; i < particleCount; i++)
@@ -166,12 +174,15 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 		computeShaders.SetFluidBounds(gpuSettings.fluidBounds);
 
 		fluidDynamics::SphFluid2dGpuSolver::ComputeDensities(computeShaders, densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
+		fluidDynamics::SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(computeShaders, normalBuffer.GetBufferView(), curvatureBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
 		fluidDynamics::SphFluid2dGpuSolver::ComputeForceDensities(computeShaders, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView(), normalBuffer.GetBufferView(), curvatureBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
 		fluidDynamics::SphFluid2dGpuSolver::ComputeRungeKutta2Step1(computeShaders, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView(), kp1Buffer.GetBufferView(), kv1Buffer.GetBufferView(), tempPositionBuffer.GetBufferView(), tempVelocityBuffer.GetBufferView());
 
 		positionBuffer.Download(positionsGpu);
 		velocityBuffer.Download(velocitiesGpu);
 		densityBuffer.Download(densitiesGpu);
+		normalBuffer.Download(normalsGpu);
+		curvatureBuffer.Download(curvaturesGpu);
 		forceDensityBuffer.Download(forceDensitiesGpu);
 		kp1Buffer.Download(kp1Gpu);
 		kv1Buffer.Download(kv1Gpu);
@@ -182,30 +193,38 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 	// Compare results:
 	{
 		bool allGood = true;
-		float epsilon = 1e-3f;
 		for (int i = 0; i < particleCount; i++)
 		{
-			if (!positions[i].IsEpsilonEqual(positionsGpu[i], epsilon))
+			if (!positions[i].IsEpsilonEqual(positionsGpu[i]))
 			{
 				allGood = false;
 				EXPECT_FALSE(true) << "position mismatch at particle " << i << ": cpu = " << positions[i] << ", gpu = " << positionsGpu[i];
 			}
-			if (!velocities[i].IsEpsilonEqual(velocitiesGpu[i], epsilon))
+			if (!velocities[i].IsEpsilonEqual(velocitiesGpu[i]))
 			{
 				allGood = false;
 				EXPECT_FALSE(true) << "velocity mismatch at particle " << i << ": cpu = " << velocities[i] << ", gpu = " << velocitiesGpu[i];
 			}
-			float mixedDensityDiff = math::Abs(densities[i] - densitiesGpu[i]) / math::Max(1.0f, math::Abs(densities[i]));
-			if (mixedDensityDiff > epsilon)
+
+			if (!normals[i].IsEpsilonEqual(normalsGpu[i]))
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "normal mismatch at particle " << i << ": cpu = " << normals[i] << ", gpu = " << normalsGpu[i];
+			}
+			if (!math::IsEpsilonEqual(curvatures[i], curvaturesGpu[i]))
+			{
+				allGood = false;
+				EXPECT_FALSE(true) << "curvature mismatch at particle " << i << ": cpu = " << curvatures[i] << ", gpu = " << curvaturesGpu[i];
+			}
+			if (!math::IsEpsilonEqual(densities[i], densitiesGpu[i]))
 			{
 				allGood = false;
 				EXPECT_FALSE(true) << "density mismatch at particle " << i << ": cpu = " << densities[i] << ", gpu = " << densitiesGpu[i];
 			}
-			Float2 mixedForceDensityDiff = Float2::Abs(forceDensities[i] - forceDensitiesGpu[i]) / Float2::Max(1.0f, Float2::Abs(forceDensities[i]));
-			if (mixedForceDensityDiff.x > epsilon || mixedForceDensityDiff.y > epsilon)
+			if (!forceDensities[i].IsEpsilonEqual(forceDensitiesGpu[i]))
 			{
 				allGood = false;
-				EXPECT_FALSE(true) << "force density mismatch at particle " << i << ": cpu = " << forceDensities[i] << ", gpu = " << forceDensitiesGpu[i];
+				EXPECT_FALSE(true) << "forceDensity mismatch at particle " << i << ": cpu = " << forceDensities[i] << ", gpu = " << forceDensitiesGpu[i];
 			}
 		}
 		EXPECT_TRUE(allGood);
