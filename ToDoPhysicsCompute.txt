@@ -1,0 +1,132 @@
+Physics Compute Type Design
+
+Goal
+Add a dedicated physics compute path for GPU workloads that are conceptually part of FixedUpdate, such as SPH fluids, particles, cloth, broadphase, constraints, and other simulation systems.
+
+Reasoning
+The current SPH GPU solver records its compute work through ComputeType::preRender even though the simulation step is triggered from FixedUpdate. This is mathematically valid because pre-render work is executed before the frame renders, but it couples physics cost to render submission and makes the intent unclear.
+
+A dedicated ComputeType::physics would make the engine contract more honest:
+- FixedUpdate records physics compute work.
+- Physics compute is dispatched according to the fixed-step schedule.
+- Rendering consumes a known completed physics state.
+
+This also gives the engine a clean place to evolve GPU simulation without forcing every solver to manually manage async sessions.
+
+Initial Layout
+1. Add ComputeType::physics.
+2. Add Compute::Physics, similar in shape to Compute::PreRender, but with fixed-step semantics.
+3. Add a backend interface for physics compute recording and dispatch.
+4. In the application loop, bracket FixedUpdate with physics compute lifecycle calls.
+5. Route physics workloads, such as SphFluid2dGpuSolver, through ComputeType::physics instead of ComputeType::preRender.
+
+Possible Application Loop Shape
+EarlyUpdate();
+
+while (Time::UpdatePhysics())
+{
+    Compute::Physics::BeginStep();
+    scene->FixedUpdate();
+    Compute::Physics::DispatchStep();
+}
+
+Gui::Update();
+scene->Update();
+scene->LateUpdate();
+Compute::Physics::WaitForRenderDependencies();
+Renderer::RenderFrame();
+
+Execution Policies
+Start conservative and keep the policy explicit.
+
+Synchronous physics compute:
+- Dispatch during the fixed update step.
+- Wait before leaving the physics step.
+- Easiest to reason about.
+- Still causes a spike on frames where physics runs.
+
+Async physics with render wait:
+- Dispatch during FixedUpdate.
+- Continue CPU update and render preparation while GPU physics runs.
+- Wait before rendering if the current frame needs the newest physics buffers.
+- Can hide some GPU cost while preserving correctness.
+
+Double-buffered async physics:
+- Render the last completed physics state.
+- Compute the next physics state asynchronously.
+- Improves frame pacing.
+- Adds one fixed-step of visual latency unless interpolation is added.
+- Requires careful buffer ownership and swap rules.
+
+Fully decoupled physics:
+- Physics runs independently from render.
+- Rendering samples the newest completed state.
+- Best long-term scalability.
+- Highest complexity and easiest to get subtly wrong.
+
+Recommended First Implementation
+Implement ComputeType::physics as an explicit fixed-step compute session system. Internally it can reuse the async backend initially, but the engine-facing API should expose physics semantics instead of raw async sessions.
+
+Start with async dispatch plus a render dependency wait:
+- FixedUpdate records physics compute commands into the current physics session.
+- At the end of each fixed step, dispatch the session.
+- Before rendering, wait only for physics sessions whose buffers are needed by render.
+- Later, add double-buffering to avoid waiting on the same frame.
+
+Critical Things To Consider
+Synchronization:
+- Rendering must not read physics buffers that are still being written.
+- A physics step must not overwrite buffers still used by an in-flight render frame.
+- Barriers must cover storage writes before storage reads and render reads.
+- If multiple fixed steps run in one frame, the steps must execute in order.
+
+Frames in flight:
+- Rendering may have multiple frames in flight.
+- Physics buffer lifetime and mutation must account for the frame that is still using the previous state.
+- Double or triple buffering may be required depending on renderer framesInFlight.
+
+Determinism:
+- FixedUpdate timing remains deterministic only if the simulation consumes fixed dt values.
+- Async execution changes completion time, not simulated time.
+- Avoid letting render frame timing decide how much simulation time the GPU step advances.
+
+Ownership:
+- Physics compute should own session creation, dispatch, completion checks, and waits.
+- Simulation code should describe workloads, not manage backend sessions directly.
+- Avoid leaking raw async session IDs throughout gameplay code unless there is a strong reason.
+
+Readback:
+- CPU readback from physics buffers should be explicit and probably delayed.
+- Immediate readback forces synchronization and can destroy the benefits of async compute.
+
+Reset and resource reallocation:
+- Reset paths must wait for outstanding physics work before reallocating or destroying buffers.
+- Reallocation during an in-flight physics step is unsafe unless the old resources are deferred.
+
+Sorting and helper utilities:
+- GpuSort currently supports computeType-based recording and emulates immediate mode with async sessions.
+- Physics compute needs a clear way for helpers like GpuSort to record into the current physics step.
+- Avoid helper utilities silently creating and waiting on their own sessions inside a physics step, because that defeats scheduling.
+
+Rendering policy:
+- Decide whether render requires the newest physics state or may use the last completed state.
+- Newest-state rendering is simpler but may stall.
+- Last-completed-state rendering is smoother but adds visual latency.
+
+Editor and debugging:
+- Add debug UI for outstanding physics sessions, waits, and timing.
+- Make it visible when render is waiting on physics.
+- Profiling should separate physics compute cost from render compute cost.
+
+Naming:
+- ComputeType::physics should mean fixed-step simulation compute, not general async work.
+- PreRender should stay for render preparation.
+- PostRender should stay for post-processing.
+- Async should stay as the lower-level escape hatch.
+
+Open Questions
+- Should physics compute be allowed to run more than one fixed step ahead of render?
+- Should physics compute always be per-scene, or globally owned by the engine?
+- Should render consume physics buffers directly, or should simulation expose a render snapshot?
+- Should the first implementation block before RenderFrame, or block at the beginning of the next FixedUpdate?
+- Should physics compute support interpolation buffers for smoother rendering between fixed steps?
