@@ -26,10 +26,7 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		bool m_isInitialized;
-		uint32_t m_callIndex;
-		std::vector<ComputeCall> m_staticComputeCalls;
-		std::vector<ComputeCall> m_dynamicComputeCalls;
-		std::vector<ComputeCall*> m_computeCallPointers;
+		std::vector<ComputeCall> m_computeCalls;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -50,7 +47,7 @@ namespace vulkanRendererBackend
 		void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags) override;
 
 		// Management:
-		std::vector<ComputeCall*>& GetComputeCallPointers();
+		std::vector<ComputeCall>& GetComputeCalls();
 		void ResetComputeCalls();
 	};
 }

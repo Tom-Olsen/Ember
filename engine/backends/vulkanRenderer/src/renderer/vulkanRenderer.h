@@ -98,8 +98,7 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::PositionalLight> m_positionalLights;
 
 		// Draw calls:
-		std::vector<DrawCall> m_staticDrawCalls;	// for draw calls that manage their own call descriptor sets.
-		std::vector<DrawCall> m_dynamicDrawCalls;	// for draw calls that get call descriptor sets assigned from a pool.
+		std::vector<DrawCall> m_drawCalls;
 		std::vector<DrawCall*> m_sortedDrawCallPointers;
 
 		// Render management:

@@ -26,10 +26,7 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API PostRender : public emberBackendInterface::ICompute::IPostRender
 	{
 	private: // Members:
-		uint32_t m_callIndex;
-		std::vector<ComputeCall> m_staticComputeCalls;
-		std::vector<ComputeCall> m_dynamicComputeCalls;
-		std::vector<ComputeCall*> m_computeCallPointers;
+		std::vector<ComputeCall> m_computeCalls;
 		std::unique_ptr<ComputeShader> m_pInOutComputeShader; // copies final render into primary texture in case of odd number of post processing effects.
 
 	public: // Methods:
@@ -50,7 +47,7 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader) override;
 
 		// Management:
-		std::vector<ComputeCall*>& GetComputeCallPointers();
+		std::vector<ComputeCall>& GetComputeCalls();
 		void ResetComputeCalls();
 	};
 }

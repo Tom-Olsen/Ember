@@ -261,7 +261,8 @@ namespace vulkanRendererBackend
 
 	// Draw mesh:
 	void Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount)
-	{// for static draw calls.
+	{
+		// Record static draw call.
 		if (!pMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMesh is nullptr.");
@@ -280,11 +281,12 @@ namespace vulkanRendererBackend
 
 		// Setup draw call:
 		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), static_cast<DescriptorSetBinding*>(pCallDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
-		m_staticDrawCalls.push_back(drawCall);
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), false, pShadowDescriptorSetBinding != nullptr, static_cast<DescriptorSetBinding*>(pCallDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
+		m_drawCalls.push_back(drawCall);
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount)
-	{// for dynamic draw calls.
+	{
+		// Record dynamic draw call.
 		if (!pMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMesh is nullptr.");
@@ -299,8 +301,8 @@ namespace vulkanRendererBackend
 		// Setup draw call:
 		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
 		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
-		m_dynamicDrawCalls.push_back(drawCall);
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), true, pShadowDescriptorSetBinding != nullptr, pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
+		m_drawCalls.push_back(drawCall);
 		return pCallDescriptorSetBinding;
 	}
 
@@ -564,24 +566,18 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::ResetDrawCalls()
 	{
-		// Return all pCallDescriptorSetBindings/pShadowDescriptorSetBindings of dynamic draw calls back to the corresponding pool:
-		for (DrawCall& drawCall : m_dynamicDrawCalls)
+		// Return all borrowed descriptor set bindings borrowed to the corresponding pool:
+		for (DrawCall& drawCall : m_drawCalls)
 		{
-			PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(drawCall.pMaterial), drawCall.pCallDescriptorSetBinding);
-			if (drawCall.pShadowDescriptorSetBinding)
-				PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()), drawCall.pShadowDescriptorSetBinding);
-		}
-
-		// Return all pShadowDescriptorSetBindings of static draw calls back to the pool:
-		for (DrawCall& drawCall : m_staticDrawCalls)
-		{
-			if (drawCall.pShadowDescriptorSetBinding)
+			if (drawCall.ownsDescriptorSetBinding)
+				PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(drawCall.pMaterial), drawCall.pCallDescriptorSetBinding);
+			if (drawCall.ownsShadowDescriptorSetBinding && drawCall.pShadowDescriptorSetBinding)
 				PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()), drawCall.pShadowDescriptorSetBinding);
 		}
 
 		// Clear all draw calls for next frame:
-		m_staticDrawCalls.clear();
-		m_dynamicDrawCalls.clear();
+		m_drawCalls.clear();
+		m_sortedDrawCallPointers.clear();
 	}
 
 
@@ -632,10 +628,8 @@ namespace vulkanRendererBackend
 	{
 		// Populate sorted draw call pointers vector:
 		m_sortedDrawCallPointers.clear();
-		m_sortedDrawCallPointers.reserve(m_staticDrawCalls.size() + m_dynamicDrawCalls.size());
-		for (auto& drawCall : m_staticDrawCalls)
-			m_sortedDrawCallPointers.push_back(&drawCall);
-		for (auto& drawCall : m_dynamicDrawCalls)
+		m_sortedDrawCallPointers.reserve(m_drawCalls.size());
+		for (auto& drawCall : m_drawCalls)
 			m_sortedDrawCallPointers.push_back(&drawCall);
 
 		// Sort by renderQueue first, then handle transparent draw order, then group by vertex layout.
@@ -681,11 +675,11 @@ namespace vulkanRendererBackend
 		FrameDescriptorSetLayout::UpdateShaderData(m_frameIndex);
 
 		// Pre render compute:
-		for (ComputeCall* computeCall : m_pCompute->GetPreRenderCompute()->GetComputeCallPointers())
-			if (computeCall->pComputeShader)
+		for (ComputeCall& computeCall : m_pCompute->GetPreRenderCompute()->GetComputeCalls())
+			if (computeCall.pComputeShader)
 			{
-				computeCall->pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-				computeCall->pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+				computeCall.pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
+				computeCall.pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 			}
 
 		// Forward calls:
@@ -699,10 +693,12 @@ namespace vulkanRendererBackend
 		}
 
 		// Post render compute:
-		for (ComputeCall* computeCall : m_pCompute->GetPostRenderCompute()->GetComputeCallPointers())
+		std::vector<ComputeCall>& postRenderComputeCalls = m_pCompute->GetPostRenderCompute()->GetComputeCalls();
+		for (size_t i = 0; i < postRenderComputeCalls.size(); i++)
 		{
-			DescriptorSetBinding* pShaderDescriptorSetBinding = computeCall->pComputeShader->GetDescriptorSetBinding();
-			if (computeCall->callIndex % 2 == 0)
+			ComputeCall& computeCall = postRenderComputeCalls[i];
+			DescriptorSetBinding* pShaderDescriptorSetBinding = computeCall.pComputeShader->GetDescriptorSetBinding();
+			if (i % 2 == 0)
 			{
 				pShaderDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
 				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex));
@@ -713,7 +709,7 @@ namespace vulkanRendererBackend
 				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
 			}
 			pShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
-			computeCall->pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+			computeCall.pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 		}
 
 	}
@@ -777,7 +773,7 @@ namespace vulkanRendererBackend
 		// Record pre render compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
         {
-		    std::vector<ComputeCall*>& computeCalls = m_pCompute->GetPreRenderCompute()->GetComputeCallPointers();
+		    std::vector<ComputeCall>& computeCalls = m_pCompute->GetPreRenderCompute()->GetComputeCalls();
 			if (computeCalls.size() > 0)
 			{
 				// Pipeline:
@@ -785,8 +781,9 @@ namespace vulkanRendererBackend
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 				bool staticDescriptorSetsBound = false;
 
-			    for (ComputeCall* computeCall : computeCalls)
+			    for (size_t computeCallIndex = 0; computeCallIndex < computeCalls.size(); computeCallIndex++)
 			    {
+					ComputeCall* computeCall = &computeCalls[computeCallIndex];
 			    	ComputeShader* pComputeShader = computeCall->pComputeShader;
 
 			    	// Compute call is a barrier:
@@ -803,7 +800,7 @@ namespace vulkanRendererBackend
 			    		dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 			    		vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-			    		DEBUG_LOG_TRACE("Pre Render Compute Barrier, callIndex = {}", computeCall->callIndex);
+						DEBUG_LOG_TRACE("Pre Render Compute Barrier, call = {}", computeCallIndex);
 			    	}
 			    	// Compute call is a dispatch:
 			    	else
@@ -844,7 +841,7 @@ namespace vulkanRendererBackend
 
 			    		// Dispatch:
 			    		vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-			    		DEBUG_LOG_TRACE("Pre Render Compute Shader {}, callIndex = {}", pComputeShader->GetName(), computeCall->callIndex);
+					    DEBUG_LOG_TRACE("Pre Render Compute Shader {}, call = {}", pComputeShader->GetName(), computeCallIndex);
 			    	}
 			    }
 
@@ -1181,7 +1178,7 @@ namespace vulkanRendererBackend
 		// Record post render compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
         {
-		    std::vector<ComputeCall*>& computeCalls = m_pCompute->GetPostRenderCompute()->GetComputeCallPointers();
+		    std::vector<ComputeCall>& computeCalls = m_pCompute->GetPostRenderCompute()->GetComputeCalls();
 			if (computeCalls.size() > 0)
 			{
 				// Pipeline:
@@ -1189,8 +1186,9 @@ namespace vulkanRendererBackend
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 				bool staticDescriptorSetsBound = false;
 
-			    for (ComputeCall* computeCall : computeCalls)
+			    for (size_t computeCallIndex = 0; computeCallIndex < computeCalls.size(); computeCallIndex++)
 			    {
+					ComputeCall* computeCall = &computeCalls[computeCallIndex];
 			    	ComputeShader* pComputeShader = computeCall->pComputeShader;
 
 			    	// Pipeline change:
@@ -1229,7 +1227,7 @@ namespace vulkanRendererBackend
 
 			    	// Dispatch:
 			    	vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-			    	DEBUG_LOG_TRACE("Post Render Compute Shader {}, callIndex = {}", computeCall->pComputeShader->GetName(), computeCall->callIndex);
+					DEBUG_LOG_TRACE("Post Render Compute Shader {}, call = {}", computeCall->pComputeShader->GetName(), computeCallIndex);
 
 			    	// All effects access the same inputImage and outputImage.
 			    	// Thus add memory barrier between every effect:
@@ -1245,7 +1243,7 @@ namespace vulkanRendererBackend
 			    		dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 			    		vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-			    		DEBUG_LOG_TRACE("Post Render Compute Barrier, callIndex = {}", computeCall->callIndex);
+						DEBUG_LOG_TRACE("Post Render Compute Barrier, call = {}", computeCallIndex);
 			    	}
 			    }
 		    }

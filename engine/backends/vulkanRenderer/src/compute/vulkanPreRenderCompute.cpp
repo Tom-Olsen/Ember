@@ -16,7 +16,7 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	PreRender::PreRender()
 	{
-		m_callIndex = 0;
+
 	}
 	PreRender::~PreRender()
 	{
@@ -34,6 +34,7 @@ namespace vulkanRendererBackend
 	// Workload recording:
 	void PreRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount)
 	{
+		// Record static compute call.
 		if (!pIComputeShader)
 		{
 			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
@@ -51,12 +52,12 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), AccessMasks::None::none, AccessMasks::None::none };
-		m_staticComputeCalls.push_back(computeCall);
-		m_callIndex++;
+		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), false, AccessMasks::None::none, AccessMasks::None::none };
+		m_computeCalls.push_back(computeCall);
 	}
 	emberBackendInterface::IDescriptorSetBinding* PreRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
+		// Record dynamic compute call.
 		if (!pIComputeShader)
 		{
 			LOG_ERROR("compute::PreRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
@@ -69,40 +70,33 @@ namespace vulkanRendererBackend
 		}
 
 		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		RecordComputeShader(pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pDescriptorSetBinding), threadCount);
+		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, true, AccessMasks::None::none, AccessMasks::None::none };
+		m_computeCalls.push_back(computeCall);
 		return pDescriptorSetBinding;
 	}
 	void PreRender::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
-		ComputeCall computeCall = { m_callIndex, Uint3::zero, nullptr, nullptr, ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
-		m_staticComputeCalls.push_back(computeCall);
-		m_callIndex++;
+		ComputeCall computeCall = { Uint3::zero, nullptr, nullptr, false, ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
+		m_computeCalls.push_back(computeCall);
 	}
 
 
 
 	// Management:
-	std::vector<ComputeCall*>& PreRender::GetComputeCallPointers()
+	std::vector<ComputeCall>& PreRender::GetComputeCalls()
 	{
-		// Populate draw call pointers vector according to callIndex:
-		m_computeCallPointers.resize(m_staticComputeCalls.size() + m_dynamicComputeCalls.size());
-		for (auto& computeCall : m_staticComputeCalls)
-			m_computeCallPointers[computeCall.callIndex] = &computeCall;
-		for (auto& computeCall : m_dynamicComputeCalls)
-			m_computeCallPointers[computeCall.callIndex] = &computeCall;
-
-		return m_computeCallPointers;
+		return m_computeCalls;
 	}
 	void PreRender::ResetComputeCalls()
 	{
-		// Return all pDescriptorSetBinding of compute calls back to the corresponding pool:
-		for (ComputeCall& computeCall : m_dynamicComputeCalls)
-			PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+		// Return all owned pDescriptorSetBinding of compute calls back to the corresponding pool:
+		for (ComputeCall& computeCall : m_computeCalls)
+		{
+			if (computeCall.ownsDescriptorSetBinding && computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
+				PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+		}
 
 		// Remove all computeCalls so next frame can start fresh:
-		m_staticComputeCalls.clear();
-		m_dynamicComputeCalls.clear();
-		m_computeCallPointers.clear();
-		m_callIndex = 0;
+		m_computeCalls.clear();
 	}
 }

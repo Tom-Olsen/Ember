@@ -21,7 +21,6 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	PostRender::PostRender()
 	{
-		m_callIndex = 0;
 		std::filesystem::path shaderDir = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
 		std::filesystem::path shaderPath = shaderDir / "inOut.comp.spv";
 		m_pInOutComputeShader = std::make_unique<ComputeShader>("inOut", shaderPath);
@@ -41,7 +40,8 @@ namespace vulkanRendererBackend
 
 	// Workload recording:
 	void PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding)
-	{// for static compute calls.
+	{
+		// Record static compute call.
 		if (!pIComputeShader)
 		{
 			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
@@ -57,12 +57,12 @@ namespace vulkanRendererBackend
 		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetWidth();
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
-		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), AccessMasks::None::none, AccessMasks::None::none };
-		m_staticComputeCalls.push_back(computeCall);
-		m_callIndex++;
+		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), false, AccessMasks::None::none, AccessMasks::None::none };
+		m_computeCalls.push_back(computeCall);
 	}
 	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
-	{// for dynamic compute calls.
+	{
+		// Record dynamic compute call.
 		if (!pIComputeShader)
 		{
 			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
@@ -74,45 +74,31 @@ namespace vulkanRendererBackend
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
 		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		ComputeCall computeCall = { m_callIndex, threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none };
-		m_dynamicComputeCalls.push_back(computeCall);
-		m_callIndex++;
+		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, true, AccessMasks::None::none, AccessMasks::None::none };
+		m_computeCalls.push_back(computeCall);
 		return pDescriptorSetBinding;
 	}
 
 
 
 	// Management:
-	std::vector<ComputeCall*>& PostRender::GetComputeCallPointers()
+	std::vector<ComputeCall>& PostRender::GetComputeCalls()
 	{
-		size_t count = m_staticComputeCalls.size() + m_dynamicComputeCalls.size();
-
 		// Add inOut.comp.hlsl if odd number of post render compute calls, as it simply copies the input to the output texture:
-		if (count % 2 == 1)
-		{
+		if (m_computeCalls.size() % 2 == 1)
 			RecordComputeShader(m_pInOutComputeShader.get());
-			count++;
-		}
-
-		// Populate draw call pointers vector according to callIndex:
-		m_computeCallPointers.resize(count);
-		for (auto& computeCall : m_staticComputeCalls)
-			m_computeCallPointers[computeCall.callIndex] = &computeCall;
-		for (auto& computeCall : m_dynamicComputeCalls)
-			m_computeCallPointers[computeCall.callIndex] = &computeCall;
-
-		return m_computeCallPointers;
+		return m_computeCalls;
 	}
 	void PostRender::ResetComputeCalls()
 	{
-		// Return all pDescriptorSetBinding of compute calls back to the corresponding pool:
-		for (ComputeCall& computeCall : m_dynamicComputeCalls)
-			PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+		// Return all owned pDescriptorSetBinding of compute calls back to the corresponding pool:
+		for (ComputeCall& computeCall : m_computeCalls)
+		{
+			if (computeCall.ownsDescriptorSetBinding && computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
+				PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+		}
 
 		// Remove all computeCalls so next frame can start fresh:
-		m_staticComputeCalls.clear();
-		m_dynamicComputeCalls.clear();
-		m_computeCallPointers.clear();
-		m_callIndex = 0;
+		m_computeCalls.clear();
 	}
 }

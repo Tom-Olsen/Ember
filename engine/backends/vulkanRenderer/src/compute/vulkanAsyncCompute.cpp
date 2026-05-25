@@ -129,6 +129,7 @@ namespace vulkanRendererBackend
 	// Workload recording:
 	void Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount)
 	{
+		// Record static compute call.
 		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
 		{
 			LOG_ERROR("compute::Async::RecordComputeShader(...) sessionID '{}' out of range.", sessionID);
@@ -156,14 +157,38 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		ComputeCall computeCall = { 0, threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), AccessMasks::None::none, AccessMasks::None::none };
+		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), false, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
 	emberBackendInterface::IDescriptorSetBinding* Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
-		DescriptorSetBinding* pIDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		RecordComputeShader(sessionID, pIComputeShader, static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding), threadCount);
-		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(pIDescriptorSetBinding);
+		// Record dynamic compute call.
+		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
+		{
+			LOG_ERROR("compute::Async::RecordComputeShader(...) sessionID '{}' out of range.", sessionID);
+			return nullptr;
+		}
+		if (!pIComputeShader)
+		{
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
+			return nullptr;
+		}
+		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
+		{
+			LOG_ERROR("compute::Async::RecordComputeShader(...) '{}' failed. threadCount has 0 entry.", pIComputeShader->GetName());
+			return nullptr;
+		}
+		if (m_computeSessions[sessionID].state != ComputeSession::State::recording)
+		{
+			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. sessionID: {} is not in recording state.", sessionID);
+			return nullptr;
+		}
+
+		// Setup compute call:
+		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, true, AccessMasks::None::none, AccessMasks::None::none };
+		m_computeSessions[sessionID].RecordComputeCall(computeCall);
+		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(pDescriptorSetBinding);
 	}
 	void Async::RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -173,7 +198,7 @@ namespace vulkanRendererBackend
 			return;
 		}
 		
-		ComputeCall computeCall = { 0, Uint3::zero, nullptr, nullptr, ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
+		ComputeCall computeCall = { Uint3::zero, nullptr, nullptr, false, ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
 
@@ -197,11 +222,11 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void Async::ResetComputeSession(uint32_t sessionID)
 	{
-		// Return all pDescriptorSetBinding of compute calls back to the corresponding pool:
+		// Return all owned pDescriptorSetBinding of compute calls back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeSessions[sessionID].GetComputeCalls())
 		{
-            // Don't return compute barriers (pComputeShader and pDescriptorSetBinding are nullptr):
-			if (computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
+			// Return only descriptor set bindings checked out from the pool.
+			if (computeCall.ownsDescriptorSetBinding && computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
 				PoolManager::ReturnCallDescriptorSetBinding((Shader*)computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
 		}
 

@@ -20,6 +20,8 @@ namespace vulkanRendererBackend
 		bool receiveShadows;
 		bool castShadows;
 		Material* pMaterial;
+		bool ownsDescriptorSetBinding;					    // True if pCallDescriptorSetBinding was borrowed from pool.
+		bool ownsShadowDescriptorSetBinding;				// True if pShadowDescriptorSetBinding was borrowed from pool.
 		DescriptorSetBinding* pCallDescriptorSetBinding;
 		DescriptorSetBinding* pShadowDescriptorSetBinding;
 		Mesh* pMesh;
