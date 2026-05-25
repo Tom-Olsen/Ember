@@ -140,7 +140,7 @@ namespace fluidDynamics
 		pGpuSort->Sort(m_cellKeyBuffer, m_positionBuffer, m_velocityBuffer);
 		pGpuSort->ComputeStartIndices(m_cellKeyBuffer, m_startIndexBuffer);
 
-		// First Runte-Kutta step:
+		// First Runge-Kutta step:
 		ComputeDensity(m_positionBuffer, m_densityProperties[0], gridRadius);
 		ComputeNormalAndCurvature(m_positionBuffer, m_normalAndCurvatureProperties[0], gridRadius);
 		ComputeForceDensity(m_positionBuffer, m_velocityBuffer, m_forceDensityProperties[0], gridRadius);

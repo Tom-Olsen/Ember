@@ -144,7 +144,7 @@ namespace fluidDynamics
 		ComputeCurvatures(settings, data.curvatures, data.positions, data.densities, data.normals);
 		ComputeForceDensities(settings, attractor, data.forceDensities, data.positions, data.densities, data.velocities, data.normals, data.curvatures);
 
-		// First Runte-Kutta step:
+		// First Runge-Kutta step:
 		for (int i = 0; i < data.ParticleCount(); i++)
 		{
 			Float2 acceleration = data.forceDensities[i] / data.densities[i];
