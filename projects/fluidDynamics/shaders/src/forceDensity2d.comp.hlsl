@@ -96,7 +96,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
                         // Viscosity force density:
                         float2 velocityDiff = velocityBuffer[otherIndex] - velocityBuffer[index];
-                        forceDensityBuffer[index] += viscosity * (mass * SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]) * velocityDiff;
+                        forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]);
                     }
                     otherIndex++;
                 }
@@ -122,7 +122,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 
                     // Viscosity force density:
                     float2 velocityDiff = velocityBuffer[i] - velocityBuffer[index];
-                    forceDensityBuffer[index] += viscosity * (mass * SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[i]) * velocityDiff;
+                    forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[i]);
                 }
             };
         }
@@ -132,7 +132,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
             forceDensityBuffer[index] += densityBuffer[index] * float2(0.0f, -gravity);
             
             // Surface tension:
-            forceDensityBuffer[index] -= surfaceTension * curvatureBuffer[index] * normalBuffer[index];
+            forceDensityBuffer[index] += surfaceTension * curvatureBuffer[index] * normalBuffer[index];
             
             // External force density:
             float2 offset = attractorPoint - positionBuffer[index];

@@ -243,7 +243,7 @@ namespace fluidDynamics
 			if (r < settings.effectRadius && r > 1e-8f)
 			{
 				Float2 dir = offset / r;
-				normal += settings.mass / densities[i] * smoothingKernals::DSpiky(r, dir, settings.effectRadius);
+				normal += settings.mass / densities[i] * smoothingKernals::DPoly6(r, dir, settings.effectRadius);
 			}
 		}
 		return normal;
@@ -275,7 +275,7 @@ namespace fluidDynamics
 				if (r < settings.effectRadius && r > 1e-8f)
 				{
 					Float2 dir = offset / r;
-					normal += settings.mass / densities[otherIndex] * smoothingKernals::DSpiky(r, dir, settings.effectRadius);
+					normal += settings.mass / densities[otherIndex] * smoothingKernals::DPoly6(r, dir, settings.effectRadius);
 				}
 				otherIndex++;
 			}
@@ -296,7 +296,7 @@ namespace fluidDynamics
 		    	Float2 offset = positions[particleIndex] - positions[i];
 		    	float r = offset.Length();
 		    	if (r < settings.effectRadius && r > 1e-8f)
-		    		curvature += settings.mass / densities[i] * smoothingKernals::DDSpiky(r, settings.effectRadius);
+		    		curvature -= settings.mass / densities[i] * smoothingKernals::DDPoly6(r, settings.effectRadius);
 		    }
 		    return curvature / normalLength;
         }
@@ -331,7 +331,7 @@ namespace fluidDynamics
 		    		Float2 offset = positions[particleIndex] - positions[otherIndex];
 		    		float r = offset.Length();
 		    		if (r < settings.effectRadius && r > 1e-8f)
-		    			curvature += settings.mass / densities[otherIndex] * smoothingKernals::DDSpiky(r, settings.effectRadius);
+		    			curvature -= settings.mass / densities[otherIndex] * smoothingKernals::DDPoly6(r, settings.effectRadius);
 		    		otherIndex++;
 		    	}
 		    }
@@ -367,7 +367,7 @@ namespace fluidDynamics
 
 				// Viscosity force density:
 				Float2 velocityDiff = velocities[i] - velocities[particleIndex];
-				forceDensity += (settings.mass * smoothingKernals::DDViscos(r, settings.effectRadius) / densities[i]) * velocityDiff;
+				forceDensity += settings.viscosity * settings.mass * velocityDiff * (smoothingKernals::DDViscos(r, settings.effectRadius) / densities[i]);
 			}
 		}
 		return forceDensity;
@@ -411,7 +411,7 @@ namespace fluidDynamics
 
 					// Viscosity force density:
 					Float2 velocityDiff = otherVel - velocities[particleIndex];
-					forceDensity += (settings.mass * smoothingKernals::DDViscos(r, settings.effectRadius) / densities[otherIndex]) * velocityDiff;
+					forceDensity += settings.viscosity * settings.mass * velocityDiff * (smoothingKernals::DDViscos(r, settings.effectRadius) / densities[otherIndex]);
 				}
 				otherIndex++;
 			}
