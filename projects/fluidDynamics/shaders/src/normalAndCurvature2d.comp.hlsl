@@ -66,7 +66,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 }
             }
             float normalLength = length(normalBuffer[index]);
-            if (normalLength > 1e-2f)
+            if (normalLength > 1e-3f)
                 curvatureBuffer[index] /= normalLength;
             else
                 curvatureBuffer[index] = 0;
@@ -90,7 +90,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 }
             };
             float normalLength = length(normalBuffer[index]);
-            if (normalLength > 1e-2f)
+            if (normalLength > 1e-3f)
                 curvatureBuffer[index] /= normalLength;
             else
                 curvatureBuffer[index] = 0;

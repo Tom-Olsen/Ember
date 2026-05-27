@@ -286,7 +286,7 @@ namespace fluidDynamics
 	{
 		float curvature = 0.0f;
 		float normalLength = normals[particleIndex].Length();
-        if (normalLength > 1e-2f)
+        if (normalLength > 1e-3f)
         {
 		    for (int i = 0; i < positions.size(); i++)
 		    {
@@ -308,7 +308,7 @@ namespace fluidDynamics
 		float curvature = 0.0f;
 		Int2 particleCell = hashGrid.Cell(positions[particleIndex], settings.effectRadius);
 		float normalLength = normals[particleIndex].Length();
-        if (normalLength > 1e-2f)
+        if (normalLength > 1e-3f)
         {
 		    for (const Int2& offset : offsets)
 		    {
