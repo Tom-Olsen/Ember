@@ -40,6 +40,18 @@ namespace emberCommon
 		// noPopupHierarchy/dockHierarchy: backend-specific hierarchy rules; expose only when editor focus bugs require them.
 	};
 
+	enum class GuiHoveredFlags : uint32_t
+	{
+		none = 0,
+		childWindows = 1 << 0,			// Treat hovered child windows as hover on the parent.
+		rootWindow = 1 << 1,            // Test hover from the root of the current window hierarchy.
+		anyWindow = 1 << 2,				// True when any GUI window is hovered.
+		rootAndChildWindows = (1 << 0) | (1 << 1)
+
+		// Skipped for now:
+		// noPopupHierarchy/dockHierarchy and overlap/tooltip delay options: expose only when editor hover bugs require them.
+	};
+
 	enum class GuiButtonFlags : uint32_t
 	{
 		none = 0,
@@ -123,6 +135,25 @@ namespace emberCommon
 		return lhs;
 	}
 	[[nodiscard]] inline bool HasFlag(GuiFocusedFlags flags, GuiFocusedFlags flag)
+	{
+		return (static_cast<uint32_t>(flags) & static_cast<uint32_t>(flag)) == static_cast<uint32_t>(flag);
+	}
+
+    // GuiHoveredFlags operator overloading:
+	inline GuiHoveredFlags operator|(GuiHoveredFlags lhs, GuiHoveredFlags rhs)
+	{
+		return static_cast<GuiHoveredFlags>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+	}
+	inline GuiHoveredFlags operator&(GuiHoveredFlags lhs, GuiHoveredFlags rhs)
+	{
+		return static_cast<GuiHoveredFlags>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+	}
+	inline GuiHoveredFlags& operator|=(GuiHoveredFlags& lhs, GuiHoveredFlags rhs)
+	{
+		lhs = lhs | rhs;
+		return lhs;
+	}
+	[[nodiscard]] inline bool HasFlag(GuiHoveredFlags flags, GuiHoveredFlags flag)
 	{
 		return (static_cast<uint32_t>(flags) & static_cast<uint32_t>(flag)) == static_cast<uint32_t>(flag);
 	}

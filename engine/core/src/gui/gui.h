@@ -69,7 +69,8 @@ namespace emberEngine
 		static void End();
 		static void PushID(const char* strID);
 		static void PopID();
-		static bool IsWindowFocused(emberCommon::GuiFocusedFlags flags);
+		static bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none);
+		static bool IsWindowHovered(emberCommon::GuiHoveredFlags flags = emberCommon::GuiHoveredFlags::none);
 
 		// Layout:
 		static void SameLine(float offsetFromStartX = 0.0f, float spacingW = -1.0f);

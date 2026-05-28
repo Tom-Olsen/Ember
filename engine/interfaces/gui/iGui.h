@@ -54,7 +54,7 @@ namespace emberBackendInterface
 		virtual emberCommon::GuiStyle GetStyle() const = 0;
 
 		// Setters:
-		virtual void SetEditorCallbacks(EditorRenderCallback renderCallback, EditorCaptureQueryCallback captureCallback) = 0;
+		virtual void SetEditorCallbacks(EditorRenderCallback renderEditorCallback, EditorCaptureQueryCallback focusedWindowWantCaptureEventsCallback, EditorCaptureQueryCallback hoveredWindowWantCaptureEventsCallback) = 0;
 		virtual void SetCursorPos(const Float2& localPos) = 0;
 		virtual void SetCursorScreenPos(const Float2& pos) = 0;
 		virtual void ResetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left) = 0;
@@ -65,6 +65,7 @@ namespace emberBackendInterface
 		virtual void PushID(const char* strID) = 0;
 		virtual void PopID() = 0;
 		virtual bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none) = 0;
+		virtual bool IsWindowHovered(emberCommon::GuiHoveredFlags flags = emberCommon::GuiHoveredFlags::none) = 0;
 
 		// Layout:
 		virtual void SameLine(float offsetFromStartX = 0.0f, float spacingW = -1.0f) = 0;

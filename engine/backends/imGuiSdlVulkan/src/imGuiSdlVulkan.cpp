@@ -78,6 +78,8 @@ namespace imGuiSdlVulkanBackend
 		m_wantCaptureMouse = other.m_wantCaptureMouse;
 		m_enableDockSpace = other.m_enableDockSpace;
 		m_vkImageViewToDescriptorMap = other.m_vkImageViewToDescriptorMap;
+		m_focusedWindowWantCaptureEventsCallback = other.m_focusedWindowWantCaptureEventsCallback;
+		m_hoveredWindowWantCaptureEventsCallback = other.m_hoveredWindowWantCaptureEventsCallback;
 
 		// Invalidate other:
 		other.m_vkDevice = VK_NULL_HANDLE;
@@ -88,6 +90,8 @@ namespace imGuiSdlVulkanBackend
 		other.m_wantCaptureMouse = false;
 		other.m_enableDockSpace = false;
 		other.m_vkImageViewToDescriptorMap.clear();
+		other.m_focusedWindowWantCaptureEventsCallback = nullptr;
+		other.m_hoveredWindowWantCaptureEventsCallback = nullptr;
 	}
 	Gui& Gui::operator=(Gui&& other) noexcept
 	{
@@ -110,6 +114,8 @@ namespace imGuiSdlVulkanBackend
 			m_wantCaptureMouse = other.m_wantCaptureMouse;
 			m_enableDockSpace = other.m_enableDockSpace;
 			m_vkImageViewToDescriptorMap = other.m_vkImageViewToDescriptorMap;
+			m_focusedWindowWantCaptureEventsCallback = other.m_focusedWindowWantCaptureEventsCallback;
+			m_hoveredWindowWantCaptureEventsCallback = other.m_hoveredWindowWantCaptureEventsCallback;
 		}
 		return *this;
 	}
@@ -132,8 +138,8 @@ namespace imGuiSdlVulkanBackend
 				ShowDockSpace();
 
 			// Render all editorWindows:
-			if (m_renderCallback)
-				m_renderCallback();
+			if (m_renderEditorCallback)
+				m_renderEditorCallback();
 		}
 		ImGui::EndFrame();
 
@@ -144,9 +150,10 @@ namespace imGuiSdlVulkanBackend
 	void Gui::ProcessEvent(const void* pWindowEvent)
 	{
 		ImGui_ImplSDL3_ProcessEvent(static_cast<const SDL_Event*>(pWindowEvent));
-		bool wantCaptureEvents = m_captureCallback ? m_captureCallback() : false;
-		m_wantCaptureKeyboard = m_pIo->WantCaptureKeyboard && wantCaptureEvents;
-		m_wantCaptureMouse = m_pIo->WantCaptureMouse && wantCaptureEvents;
+		bool focusedWindowWantsCaptureEvents = m_focusedWindowWantCaptureEventsCallback ? m_focusedWindowWantCaptureEventsCallback() : false;
+		bool hoveredWindowWantsCaptureEvents = m_hoveredWindowWantCaptureEventsCallback ? m_hoveredWindowWantCaptureEventsCallback() : false;
+		m_wantCaptureKeyboard = m_pIo->WantCaptureKeyboard && focusedWindowWantsCaptureEvents;
+		m_wantCaptureMouse = m_pIo->WantCaptureMouse && hoveredWindowWantsCaptureEvents;
 	}
 	void Gui::Render(VkCommandBuffer vkCommandBuffer)
 	{
@@ -224,10 +231,11 @@ namespace imGuiSdlVulkanBackend
 
 
 	// Setters:
-	void Gui::SetEditorCallbacks(emberBackendInterface::EditorRenderCallback renderCallback, emberBackendInterface::EditorCaptureQueryCallback captureCallback)
+	void Gui::SetEditorCallbacks(emberBackendInterface::EditorRenderCallback renderEditorCallback, emberBackendInterface::EditorCaptureQueryCallback focusedWindowWantCaptureEventsCallback, emberBackendInterface::EditorCaptureQueryCallback hoveredWindowWantCaptureEventsCallback)
 	{
-		m_renderCallback = renderCallback;
-		m_captureCallback = captureCallback;
+		m_renderEditorCallback = renderEditorCallback;
+		m_focusedWindowWantCaptureEventsCallback = focusedWindowWantCaptureEventsCallback;
+		m_hoveredWindowWantCaptureEventsCallback = hoveredWindowWantCaptureEventsCallback;
 	}
 	void Gui::SetCursorPos(const Float2& localPos)
 	{
@@ -264,6 +272,10 @@ namespace imGuiSdlVulkanBackend
 	bool Gui::IsWindowFocused(emberCommon::GuiFocusedFlags flags)
 	{
 		return ImGui::IsWindowFocused(GuiFocusedFlagsCommonToImGui(flags));
+	}
+	bool Gui::IsWindowHovered(emberCommon::GuiHoveredFlags flags)
+	{
+		return ImGui::IsWindowHovered(GuiHoveredFlagsCommonToImGui(flags));
 	}
 
 

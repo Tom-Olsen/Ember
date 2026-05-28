@@ -40,6 +40,17 @@ namespace imGuiSdlVulkanBackend
 			result |= ImGuiFocusedFlags_AnyWindow;
 		return result;
 	}
+	ImGuiHoveredFlags GuiHoveredFlagsCommonToImGui(emberCommon::GuiHoveredFlags flags)
+	{
+		ImGuiHoveredFlags result = 0;
+		if (emberCommon::HasFlag(flags, emberCommon::GuiHoveredFlags::childWindows))
+			result |= ImGuiHoveredFlags_ChildWindows;
+		if (emberCommon::HasFlag(flags, emberCommon::GuiHoveredFlags::rootWindow))
+			result |= ImGuiHoveredFlags_RootWindow;
+		if (emberCommon::HasFlag(flags, emberCommon::GuiHoveredFlags::anyWindow))
+			result |= ImGuiHoveredFlags_AnyWindow;
+		return result;
+	}
 	ImGuiButtonFlags GuiButtonFlagsCommonToImGui(emberCommon::GuiButtonFlags flags)
 	{
 		ImGuiButtonFlags result = 0;

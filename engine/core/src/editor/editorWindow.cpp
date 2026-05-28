@@ -44,14 +44,20 @@ namespace emberEngine
 			m_width = size.x;
 			m_height = size.y;
 
-			// Call the overridden Render() method of the derived class:
+			// Call the overridden Render() method of the derived/child class:
 			Render();
-
-			// Let Editor know if this window is focused:
-			m_isFocused = Gui::IsWindowFocused(emberCommon::GuiFocusedFlags::rootAndChildWindows);
-			if (m_isFocused)
-				Editor::SetFocusedWindow(this);
 		}
+
+		// Let Editor know if this window is focused:
+		m_isFocused = Gui::IsWindowFocused(emberCommon::GuiFocusedFlags::rootAndChildWindows);
+		if (m_isFocused)
+			Editor::SetFocusedWindow(this);
+
+		// Let Editor know if this window is hovered:
+		m_isHovered = Gui::IsWindowHovered(emberCommon::GuiHoveredFlags::rootAndChildWindows);
+		if (m_isHovered)
+			Editor::SetHoveredWindow(this);
+
 		Gui::End();	// must be called even if ImGui::Begin() returns false.
 		Gui::PopID();
 	}

@@ -40,8 +40,9 @@ namespace imGuiSdlVulkanBackend
 		bool m_wantCaptureMouse;
 		bool m_enableDockSpace;
 		std::unordered_map<VkImageView, VkDescriptorSet> m_vkImageViewToDescriptorMap;
-		emberBackendInterface::EditorRenderCallback m_renderCallback;
-		emberBackendInterface::EditorCaptureQueryCallback m_captureCallback;
+		emberBackendInterface::EditorRenderCallback m_renderEditorCallback;
+		emberBackendInterface::EditorCaptureQueryCallback m_focusedWindowWantCaptureEventsCallback;
+		emberBackendInterface::EditorCaptureQueryCallback m_hoveredWindowWantCaptureEventsCallback;
 		
 
 	public: // Methods
@@ -74,7 +75,7 @@ namespace imGuiSdlVulkanBackend
 		emberCommon::GuiStyle GetStyle() const override;
 
 		// Setters:
-		void SetEditorCallbacks(emberBackendInterface::EditorRenderCallback renderCallback, emberBackendInterface::EditorCaptureQueryCallback captureCallback) override;
+		void SetEditorCallbacks(emberBackendInterface::EditorRenderCallback renderEditorCallback, emberBackendInterface::EditorCaptureQueryCallback focusedWindowWantCaptureEventsCallback, emberBackendInterface::EditorCaptureQueryCallback hoveredWindowWantCaptureEventsCallback) override;
 		void SetCursorPos(const Float2& localPos) override;
 		void SetCursorScreenPos(const Float2& pos) override;
 		void ResetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left) override;
@@ -85,6 +86,7 @@ namespace imGuiSdlVulkanBackend
 		void PushID(const char* strID) override;
 		void PopID() override;
 		bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none) override;
+		bool IsWindowHovered(emberCommon::GuiHoveredFlags flags = emberCommon::GuiHoveredFlags::none) override;
 
 		// Layout:
 		void SameLine(float offsetFromStartX = 0.0f, float spacingW = -1.0f) override;

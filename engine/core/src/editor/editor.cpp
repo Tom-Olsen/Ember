@@ -8,6 +8,7 @@ namespace emberEngine
 {
 	// Static members:
 	EditorWindow* Editor::s_pFocusedWindow = nullptr;
+	EditorWindow* Editor::s_pHoveredWindow = nullptr;
 	EditorWindow* Editor::s_pCurrentRenderedWindow = nullptr;
 	std::unordered_set<EditorWindow*> Editor::s_pEditorWindows;
 
@@ -19,6 +20,7 @@ namespace emberEngine
 	{
 		// Invalidate window pointers:
 		s_pFocusedWindow = nullptr;
+		s_pHoveredWindow = nullptr;
 		s_pCurrentRenderedWindow = nullptr;
 
 		for (EditorWindow* pEditorWindow : s_pEditorWindows)
@@ -37,12 +39,23 @@ namespace emberEngine
 	{
 		s_pFocusedWindow = pEditorWindow;
 	}
+	void Editor::SetHoveredWindow(EditorWindow* pEditorWindow)
+	{
+		s_pHoveredWindow = pEditorWindow;
+	}
 	void Editor::AddEditorWindow(EditorWindow* pEditorWindow)
 	{
 		s_pEditorWindows.emplace(pEditorWindow);
 	}
 	void Editor::DeleteEditorWindow(EditorWindow* pEditorWindow)
 	{
+        // Invalidate cashed pointers if they point to the to be deleted editorWindow:
+		if (s_pFocusedWindow == pEditorWindow)
+			s_pFocusedWindow = nullptr;
+		if (s_pHoveredWindow == pEditorWindow)
+			s_pHoveredWindow = nullptr;
+		if (s_pCurrentRenderedWindow == pEditorWindow)
+			s_pCurrentRenderedWindow = nullptr;
 		s_pEditorWindows.erase(pEditorWindow);
 	}
 
@@ -53,11 +66,21 @@ namespace emberEngine
 	{
 		return s_pFocusedWindow;
 	}
+	EditorWindow* Editor::GetHoveredWindow()
+	{
+		return s_pHoveredWindow;
+	}
 	bool Editor::GetFocusedWindowWantCaptureEvents()
 	{
 		if (s_pFocusedWindow == nullptr)
 			return false;
 		return s_pFocusedWindow->WantCaptureEvents();
+	}
+	bool Editor::GetHoveredWindowWantCaptureEvents()
+	{
+		if (s_pHoveredWindow == nullptr)
+			return false;
+		return s_pHoveredWindow->WantCaptureEvents();
 	}
 	float Editor::GetSpacingX()
 	{

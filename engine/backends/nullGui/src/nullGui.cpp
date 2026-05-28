@@ -74,7 +74,7 @@ namespace nullGuiBackend
 
 
 	// Setters:
-	void Gui::SetEditorCallbacks(emberBackendInterface::EditorRenderCallback renderCallback, emberBackendInterface::EditorCaptureQueryCallback captureCallback)
+	void Gui::SetEditorCallbacks(emberBackendInterface::EditorRenderCallback renderEditorCallback, emberBackendInterface::EditorCaptureQueryCallback focusedWindowWantCaptureEventsCallback, emberBackendInterface::EditorCaptureQueryCallback hoveredWindowWantCaptureEventsCallback)
 	{
 
 	}
@@ -111,6 +111,10 @@ namespace nullGuiBackend
 
 	}
 	bool Gui::IsWindowFocused(emberCommon::GuiFocusedFlags flags)
+	{
+		return false;
+	}
+	bool Gui::IsWindowHovered(emberCommon::GuiHoveredFlags flags)
 	{
 		return false;
 	}

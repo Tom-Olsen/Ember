@@ -47,8 +47,10 @@ namespace sdlWindowBackend
 	Window::Window(Window&& other) noexcept
 	{
 		m_pSdlWindow = other.m_pSdlWindow;
+		m_mouseButtonTargets = other.m_mouseButtonTargets;
 		m_events.reserve(m_maxEvents);
 		other.m_pSdlWindow = nullptr;
+		other.m_mouseButtonTargets.clear();
 	}
 	Window& Window::operator=(Window&& other) noexcept
 	{
@@ -57,8 +59,10 @@ namespace sdlWindowBackend
 			if (m_pSdlWindow)
 				SDL_DestroyWindow(m_pSdlWindow);
 			m_pSdlWindow = other.m_pSdlWindow;
+			m_mouseButtonTargets = other.m_mouseButtonTargets;
 			m_events.reserve(m_maxEvents);
 			other.m_pSdlWindow = nullptr;
+			other.m_mouseButtonTargets.clear();
 		}
 		return *this;
 	}
@@ -100,8 +104,26 @@ namespace sdlWindowBackend
 			{
 				// Mouse events:
 				case SDL_EVENT_MOUSE_MOTION:
+					if (AnyMouseButtonTargetsGui() || guiWantsMouse)
+						continue; // gui is using mouse for dragging -> skip engine event.
+					break;
 				case SDL_EVENT_MOUSE_BUTTON_DOWN:
+					if (guiWantsMouse)
+					{
+						SetMouseButtonTarget(TranslateMouseButton(sdlEvent.button.button), MouseButtonTarget::gui);
+						continue; // button now targets gui -> skip engine event.
+					}
+					break;
 				case SDL_EVENT_MOUSE_BUTTON_UP:
+				{
+					emberCommon::Input::MouseButton mouseButton = TranslateMouseButton(sdlEvent.button.button);
+					if (GetMouseButtonTarget(mouseButton) == MouseButtonTarget::gui)
+					{
+						SetMouseButtonTarget(mouseButton, MouseButtonTarget::eventSystem);
+						continue; // button released -> restore event system target.
+					}
+					break;
+				}
 				case SDL_EVENT_MOUSE_WHEEL:
 					if (guiWantsMouse)
 						continue;
@@ -155,6 +177,7 @@ namespace sdlWindowBackend
 					event.windowID = sdlEvent.window.windowID;
 					break;
 				case SDL_EVENT_WINDOW_FOCUS_LOST:
+					m_mouseButtonTargets.clear();;
 					event.type = emberCommon::EventType::WindowFocusLost;
 					event.windowID = sdlEvent.window.windowID;
 					break;
@@ -233,6 +256,38 @@ namespace sdlWindowBackend
 		}
 		return m_events;
 	}
+
+
+
+	// Private methods:
+	Window::MouseButtonTarget Window::GetMouseButtonTarget(emberCommon::Input::MouseButton mouseButton) const
+	{
+		auto it = m_mouseButtonTargets.find(mouseButton);
+		if (it == m_mouseButtonTargets.end())
+			return MouseButtonTarget::eventSystem;
+		return it->second;
+	}
+	void Window::SetMouseButtonTarget(emberCommon::Input::MouseButton mouseButton, MouseButtonTarget target)
+	{
+		if (mouseButton == emberCommon::Input::MouseButton::None)
+			return;
+		if (target == MouseButtonTarget::eventSystem)
+		{
+			m_mouseButtonTargets.erase(mouseButton);
+			return;
+		}
+		m_mouseButtonTargets[mouseButton] = target;
+	}
+	bool Window::AnyMouseButtonTargetsGui() const
+	{
+		for (const auto& pair : m_mouseButtonTargets)
+			if (pair.second == MouseButtonTarget::gui)
+				return true;
+		return false;
+	}
+
+
+
 	void Window::AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions) const
 	{
 		// Get instance extensions:

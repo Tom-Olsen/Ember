@@ -137,6 +137,10 @@ namespace emberEngine
 	{
 		return s_pIGui->IsWindowFocused(flags);
 	}
+	bool Gui::IsWindowHovered(emberCommon::GuiHoveredFlags flags)
+	{
+		return s_pIGui->IsWindowHovered(flags);
+	}
 
 
 

@@ -21,6 +21,7 @@ namespace emberEngine
 
 	private: // Members:
 		static EditorWindow* s_pFocusedWindow;
+		static EditorWindow* s_pHoveredWindow;
 		static EditorWindow* s_pCurrentRenderedWindow;
 		static std::unordered_set<EditorWindow*> s_pEditorWindows;
 
@@ -30,12 +31,15 @@ namespace emberEngine
 
 		// EditorWindow->editor communication:
 		static void SetFocusedWindow(EditorWindow* pEditorWindow);
+		static void SetHoveredWindow(EditorWindow* pEditorWindow);
 		static void AddEditorWindow(EditorWindow* pEditorWindow);
 		static void DeleteEditorWindow(EditorWindow* pEditorWindow);
 
 		// Getters:
 		static EditorWindow* GetFocusedWindow();
-		static bool GetFocusedWindowWantCaptureEvents();
+		static EditorWindow* GetHoveredWindow();
+		static bool GetFocusedWindowWantCaptureEvents();    // used in gui backend as a callback to figure out which window should consume keyboard events.
+		static bool GetHoveredWindowWantCaptureEvents();    // used in gui backend as a callback to figure out which window should consume mouse events.
 		static float GetSpacingX();
 		static float GetWindowWidth();
 		static float GetWindowHeight();

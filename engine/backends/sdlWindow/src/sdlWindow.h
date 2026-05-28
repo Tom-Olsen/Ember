@@ -3,7 +3,9 @@
 #include "emberMath.h"
 #include "sdlWindowExport.h"
 #include "iWindow.h"
+#include <cstdint>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 
@@ -24,6 +26,13 @@ namespace sdlWindowBackend
 {
 	class SDL_WINDOW_API Window : public emberBackendInterface::IWindow
 	{
+	private: // Enums:
+		enum class MouseButtonTarget
+		{
+			eventSystem,
+			gui
+		};
+
 	private: // Members:
 		SDL_Window* m_pSdlWindow = nullptr;
 		emberBackendInterface::IGui* m_pIGui = nullptr;
@@ -32,6 +41,7 @@ namespace sdlWindowBackend
 		bool m_isMinimized = false;
 		bool m_isResized = false;
 		bool m_enableDockSpace = true;
+		std::unordered_map<emberCommon::Input::MouseButton, MouseButtonTarget> m_mouseButtonTargets;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -62,5 +72,10 @@ namespace sdlWindowBackend
 
 		// Setters:
 		void ResetWindowResized() override;
+
+	private: // Methods:
+		MouseButtonTarget GetMouseButtonTarget(emberCommon::Input::MouseButton mouseButton) const;
+		void SetMouseButtonTarget(emberCommon::Input::MouseButton mouseButton, MouseButtonTarget target);
+		bool AnyMouseButtonTargetsGui() const;
 	};
 }

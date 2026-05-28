@@ -20,6 +20,7 @@ namespace emberEngine
 		// Automatically set by EditorWindow:
 		bool m_isOpen = true;
 		bool m_isFocused = false;
+		bool m_isHovered = false;
 		float m_width = 0.0f;
 		float m_height = 0.0f;
 

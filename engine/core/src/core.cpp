@@ -33,7 +33,7 @@ namespace emberEngine
 		pIRenderer->LinkIGuiHandle(pIGui);			// needed so renderer can inject gui draw calls in present renderpass.
 		pIRenderer->LinkIComputeHandle(pICompute);	// needed for pre- and post-render compute shaders.
 		pIWindow->LinkIGuiHandle(pIGui);			// needed for window->gui event passthrough.
-		pIGui->SetEditorCallbacks(emberEngine::Editor::Render, emberEngine::Editor::GetFocusedWindowWantCaptureEvents);
+		pIGui->SetEditorCallbacks(emberEngine::Editor::Render, emberEngine::Editor::GetFocusedWindowWantCaptureEvents, emberEngine::Editor::GetHoveredWindowWantCaptureEvents);
 
 		// Backend wrappers:
 		Window::Init(pIWindow);
