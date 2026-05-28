@@ -2,7 +2,9 @@
 **/bin/**
 **/lib/**
 *.spv
-**/.vscode/**
 *.code-workspace
 **profilingResults.json
+.agents/**
+.vscode/**
+.venv-docs/**
 .codex
