@@ -42,11 +42,11 @@ namespace imGuiSdlVulkanBackend
 		initInfo.Device = m_vkDevice;
 		initInfo.Queue = static_cast<VkQueue>(pIRenderer->GetGraphicsVkQueue());
 		initInfo.QueueFamily = pIRenderer->GetGraphicsVkQueueFamilyIndex();
-		initInfo.RenderPass = static_cast<VkRenderPass>(pIRenderer->GetPresentVkRenderPass());
+		initInfo.PipelineInfoMain.RenderPass = static_cast<VkRenderPass>(pIRenderer->GetPresentVkRenderPass());
 		initInfo.DescriptorPoolSize = 8 * pIRenderer->GetFramesInFlight();	// ImGui needs at least 8 descriptor sets per frame. If you use more than 8 textures in a single frame, increase this value.
 		initInfo.MinImageCount = 2;
 		initInfo.ImageCount = pIRenderer->GetSwapchainImageCount();
-		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;	// same as renderer present pass, which is hardcoded to 1.
+		initInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;      // same as renderer present pass, which is hardcoded to 1.
 		#ifdef VALIDATION_LAYERS_ACTIVE
 		initInfo.MinAllocationSize = 1024 * 1024;
 		#endif
