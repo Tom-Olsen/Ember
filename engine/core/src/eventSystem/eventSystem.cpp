@@ -69,16 +69,25 @@ namespace emberEngine
                     }
                     break;
                 case emberCommon::EventType::WindowResized:
-                    s_windowWidth = Window::GetSize().x;
-                    s_windowHeight = Window::GetSize().y;
+                    if (event.windowID == Window::GetWindowID())
+                    {
+                        s_windowWidth = Window::GetSize().x;
+                        s_windowHeight = Window::GetSize().y;
+                    }
                     break;
                 case emberCommon::EventType::WindowMinimized:
-                    s_windowWidth = 0;
-                    s_windowHeight = 0;
+                    if (event.windowID == Window::GetWindowID())
+                    {
+                        s_windowWidth = 0;
+                        s_windowHeight = 0;
+                    }
                     break;
                 case emberCommon::EventType::WindowRestored:
-                    s_windowWidth = Window::GetSize().x;
-                    s_windowHeight = Window::GetSize().y;
+                    if (event.windowID == Window::GetWindowID())
+                    {
+                        s_windowWidth = Window::GetSize().x;
+                        s_windowHeight = Window::GetSize().y;
+                    }
                     break;
                 case emberCommon::EventType::WindowFocusGained:
                     break;

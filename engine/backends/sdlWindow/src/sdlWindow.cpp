@@ -153,24 +153,28 @@ namespace sdlWindowBackend
 					break;
 				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 					event.type = emberCommon::EventType::WindowClose;
+					event.windowID = sdlEvent.window.windowID;
 					break;
 				case SDL_EVENT_WINDOW_RESIZED:
 				case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-					m_isResized = true;
+					if (sdlEvent.window.windowID == SDL_GetWindowID(m_pSdlWindow))
+						m_isResized = true;
 					event.type = emberCommon::EventType::WindowResized;
 					event.windowID = sdlEvent.window.windowID;
 					event.resizeWidth = sdlEvent.window.data1;
 					event.resizeHeight = sdlEvent.window.data2;
 					break;
 				case SDL_EVENT_WINDOW_MINIMIZED:
-					m_isMinimized = true;
+					if (sdlEvent.window.windowID == SDL_GetWindowID(m_pSdlWindow))
+						m_isMinimized = true;
 					event.type = emberCommon::EventType::WindowMinimized;
 					event.windowID = sdlEvent.window.windowID;
 					event.resizeWidth = 0;
 					event.resizeHeight = 0;
 					break;
 				case SDL_EVENT_WINDOW_RESTORED:
-					m_isMinimized = false;
+					if (sdlEvent.window.windowID == SDL_GetWindowID(m_pSdlWindow))
+						m_isMinimized = false;
 					event.type = emberCommon::EventType::WindowRestored;
 					event.windowID = sdlEvent.window.windowID;
 					event.resizeWidth = sdlEvent.window.data1;
