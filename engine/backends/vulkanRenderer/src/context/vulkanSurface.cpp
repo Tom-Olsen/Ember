@@ -93,10 +93,18 @@ namespace vulkanRendererBackend
 	{
 		return m_presentMode;
 	}
-	Uint2 Surface::GetCurrentExtent() const
+	VkSurfaceCapabilitiesKHR Surface::GetCapabilities() const
 	{
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities);
+		VKA(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities));
+		return surfaceCapabilities;
+	}
+	Uint2 Surface::GetCurrentExtent() const
+	{
+		return GetCurrentExtent(GetCapabilities());
+	}
+	Uint2 Surface::GetCurrentExtent(const VkSurfaceCapabilitiesKHR& surfaceCapabilities) const
+	{
 		if (surfaceCapabilities.currentExtent.width != UINT32_MAX)
 			return Uint2(surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
 
@@ -108,30 +116,6 @@ namespace vulkanRendererBackend
 		Uint2 minExtent(surfaceCapabilities.minImageExtent.width, surfaceCapabilities.minImageExtent.height);
 		Uint2 maxExtent(surfaceCapabilities.maxImageExtent.width, surfaceCapabilities.maxImageExtent.height);
 		return Uint2::Clamp(extent, minExtent, maxExtent);
-	}
-	Uint2 Surface::GetMinImageExtent() const
-	{
-		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities);
-		return Uint2(surfaceCapabilities.minImageExtent.width, surfaceCapabilities.minImageExtent.height);
-	}
-	Uint2 Surface::GetMaxImageExtent() const
-	{
-		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities);
-		return Uint2(surfaceCapabilities.maxImageExtent.width, surfaceCapabilities.maxImageExtent.height);
-	}
-	uint32_t Surface::GetMinImageCount() const
-	{
-		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities);
-		return surfaceCapabilities.minImageCount;
-	}
-	uint32_t Surface::GetMaxImageCount() const
-	{
-		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_pPhysicalDevice->GetVkPhysicalDevice(), m_surface, &surfaceCapabilities);
-		return surfaceCapabilities.maxImageCount;
 	}
 
 

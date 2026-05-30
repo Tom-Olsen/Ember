@@ -61,6 +61,10 @@ namespace vulkanRendererBackend
     {
         return m_images.size();
     }
+	Uint2 Swapchain::GetExtent() const
+	{
+		return m_extent;
+	}
 	const VkSwapchainKHR& Swapchain::GetVkSwapchainKHR() const
 	{
 		return m_swapchain;
@@ -97,17 +101,18 @@ namespace vulkanRendererBackend
 	}
 	void Swapchain::CreateSwapchain(Swapchain* pOldSwapchain)
 	{
-		uint32_t imageCount = m_pSurface->GetMinImageCount() + 1;
-		if (m_pSurface->GetMaxImageCount() > 0 && imageCount > m_pSurface->GetMaxImageCount())
-			imageCount = m_pSurface->GetMaxImageCount();
+		VkSurfaceCapabilitiesKHR surfaceCapabilities = m_pSurface->GetCapabilities();
+		m_extent = m_pSurface->GetCurrentExtent(surfaceCapabilities);
+		uint32_t imageCount = surfaceCapabilities.minImageCount + 1;
+		if (surfaceCapabilities.maxImageCount > 0 && imageCount > surfaceCapabilities.maxImageCount)
+			imageCount = surfaceCapabilities.maxImageCount;
 
 		VkSwapchainCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 		createInfo.surface = m_pSurface->GetVkSurfaceKHR();
 		createInfo.minImageCount = imageCount;
 		createInfo.imageFormat = m_pSurface->GetSurfaceFormat().format;
 		createInfo.imageColorSpace = m_pSurface->GetSurfaceFormat().colorSpace;
-		Uint2 surfaceExtent = m_pSurface->GetCurrentExtent();
-		createInfo.imageExtent = VkExtent2D{surfaceExtent.x, surfaceExtent.y};
+		createInfo.imageExtent = VkExtent2D{m_extent.x, m_extent.y};
 		createInfo.imageArrayLayers = 1;									// always 1 unless stereoscopic 3D application.
 		createInfo.imageUsage = m_usages;
 		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;			// we assume that only one queue family will access the images for now.

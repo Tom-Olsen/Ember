@@ -1279,10 +1279,10 @@ namespace vulkanRendererBackend
 			pPresentShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 
 			// Viewport and scissor:
-			Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
+			Uint2 swapchainExtent = Context::GetSwapchain()->GetExtent();
 			VkViewport viewport = {};
-			viewport.width = (float)surfaceExtend.x;
-			viewport.height = (float)surfaceExtend.y;
+			viewport.width = (float)swapchainExtent.x;
+			viewport.height = (float)swapchainExtent.y;
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -1297,7 +1297,7 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = VkExtent2D{surfaceExtend.x, surfaceExtend.y};
+			renderPassBeginInfo.renderArea.extent = VkExtent2D{swapchainExtent.x, swapchainExtent.y};
 
 			// Begin render pass:
 			Material* pMaterial = DefaultGpuResources::GetDefaultPresentMaterial();
@@ -1345,13 +1345,13 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Render pass info:
-			Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
+			Uint2 swapchainExtent = Context::GetSwapchain()->GetExtent();
 			PresentRenderPass* presentRenderPass = RenderPassManager::GetPresentRenderPass();
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(m_imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = VkExtent2D{surfaceExtend.x, surfaceExtend.y};
+			renderPassBeginInfo.renderArea.extent = VkExtent2D{swapchainExtent.x, swapchainExtent.y};
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);

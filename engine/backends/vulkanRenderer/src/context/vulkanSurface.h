@@ -56,11 +56,9 @@ namespace vulkanRendererBackend
 		const VkSurfaceKHR GetVkSurfaceKHR() const;
 		const SurfaceFormat GetSurfaceFormat() const;
 		const VkPresentModeKHR GetPresentMode() const;
+		VkSurfaceCapabilitiesKHR GetCapabilities() const;
 		Uint2 GetCurrentExtent() const;
-		Uint2 GetMinImageExtent() const;
-		Uint2 GetMaxImageExtent() const;
-		uint32_t GetMinImageCount() const;
-		uint32_t GetMaxImageCount() const;
+		Uint2 GetCurrentExtent(const VkSurfaceCapabilitiesKHR& surfaceCapabilities) const;
 
 	private: // Methods:
 		void Cleanup();

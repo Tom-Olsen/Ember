@@ -70,8 +70,9 @@ namespace vulkanRendererBackend
 	}
 	void PresentRenderPass::CreateFrameBuffers()
 	{
-		size_t imageCount = Context::GetSwapchain()->GetImages().size();
-		Uint2 surfaceExtend = Context::GetSurface()->GetCurrentExtent();
+        const Swapchain* pSwapchain = Context::GetSwapchain();
+		size_t imageCount = pSwapchain->GetImages().size();
+		Uint2 swapchainExtent = pSwapchain->GetExtent();
 		m_framebuffers.resize(imageCount);
 
 		for (size_t i = 0; i < imageCount; i++)
@@ -80,8 +81,8 @@ namespace vulkanRendererBackend
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = 1;
 			framebufferInfo.pAttachments = &Context::GetSwapchain()->GetImageViews()[i];
-			framebufferInfo.width = surfaceExtend.x;
-			framebufferInfo.height = surfaceExtend.y;
+			framebufferInfo.width = swapchainExtent.x;
+			framebufferInfo.height = swapchainExtent.y;
 			framebufferInfo.layers = 1;
 			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]));
 			NAME_VK_OBJECT(m_framebuffers[i], "Framebuffer_Present_Frame" + std::to_string(i));

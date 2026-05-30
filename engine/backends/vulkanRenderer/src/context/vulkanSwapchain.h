@@ -1,4 +1,5 @@
 #pragma once
+#include "emberMath.h"
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -19,10 +20,12 @@ namespace vulkanRendererBackend
 
 
 
+    // Swapchain is immutable. On window resize old swapchain is destroyed and new one gets created with updated state.
 	class Swapchain
 	{
 	private: // Members:
 		VkSwapchainKHR m_swapchain;
+		Uint2 m_extent;
 		std::vector<VkImage> m_images;
 		std::vector<VkImageView> m_imageViews;
 		LogicalDevice* m_pLogicalDevice;
@@ -45,6 +48,7 @@ namespace vulkanRendererBackend
 
 		// Getters:
         int GetImageCount() const;
+		Uint2 GetExtent() const;
 		const VkSwapchainKHR& GetVkSwapchainKHR() const;
 		const std::vector<VkImage>& GetImages() const;
 		const std::vector<VkImageView>& GetImageViews() const;
