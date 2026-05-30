@@ -45,7 +45,7 @@ namespace sdlWindowBackend
 
 	public: // Methods:
 		// Constructor/Destructor:
-		Window(int windowWidth, int windowHeight);
+		Window(int windowWidth, int windowHeight, bool forceX11VideoDriver = false);
 		~Window();
 
 		// Non-copyable:

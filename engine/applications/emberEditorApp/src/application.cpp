@@ -64,8 +64,10 @@ namespace emberApplication
 			emberEngine::Core::InitBasics();
 
 			// Window backend:
-			emberBackendInterface::IWindow* pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight);
-
+			bool forceX11VideoDriver = true;
+			emberBackendInterface::IWindow* pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight, forceX11VideoDriver);
+            LOG_INFO("enabled x11 video driver for detached window support.");
+            
 			// Renderer backend:
 			emberCommon::RendererCreateInfo rendererCreateInfo = {};
 			rendererCreateInfo.vSyncEnabled = applicationCreateInfo.vSyncEnabled;		            // project settings.

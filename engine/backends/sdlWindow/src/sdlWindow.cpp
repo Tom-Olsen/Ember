@@ -15,13 +15,17 @@ namespace sdlWindowBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	Window::Window(int windowWidth, int windowHeight)
+	Window::Window(int windowWidth, int windowHeight, bool forceX11VideoDriver)
 	{
 		// Assertions:
 		assert(windowWidth > 0);
 		assert(windowHeight > 0);
 
 		m_isResized = false;
+
+		// ForceX11VideoDriver:
+		if (forceX11VideoDriver)
+			SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11");
 
 		// Initialize SDL:
 		if (SDL_Init(SDL_INIT_VIDEO) == false)	// crashes after pulling latest version of sdl3
