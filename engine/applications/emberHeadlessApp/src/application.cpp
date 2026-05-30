@@ -131,6 +131,7 @@ namespace emberApplication
 		{
 			LOG_ERROR("Exception: {}", e.what());
 		}
+		emberEngine::Renderer::WaitDeviceIdle();
 	}
 
 
