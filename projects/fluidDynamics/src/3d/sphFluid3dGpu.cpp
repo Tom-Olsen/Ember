@@ -17,7 +17,7 @@ namespace fluidDynamics
         m_forceSetters = true;
 		{
 			// Management:
-			SetTimeScale(2.0f);
+			SetTimeScale(1.0f);
 			SetParticleCount(20000);
 
 			// Settings:
@@ -27,8 +27,8 @@ namespace fluidDynamics
 			SetViscosity(3.0f);
 			SetSurfaceTension(2.0f);
 			SetCollisionDampening(0.95f);
-			SetTargetDensity(10.0f);
-			SetPressureMultiplier(5.0f);
+			SetTargetDensity(3.0f);
+			SetPressureMultiplier(100.0f);
 			SetGravity(1.0f);
 			SetMaxVelocity(5.0f);
 			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
@@ -172,7 +172,7 @@ namespace fluidDynamics
 
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
-		Renderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f, Float4::white, false, false);
+		Renderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.1f, Float4::white, false, false);
 		m_shaderProperties.SetBuffer("positionBuffer", m_data.positionBuffer.GetBuffer());
 		m_shaderProperties.SetBuffer("velocityBuffer", m_data.velocityBuffer.GetBuffer());
 		m_shaderProperties.SetBuffer("densityBuffer", m_data.densityBuffer.GetBuffer());
