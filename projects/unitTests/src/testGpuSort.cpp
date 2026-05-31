@@ -1,6 +1,9 @@
 #include "application.h"
 #include "emberEngine.h"
+#include <algorithm>
 #include <gtest/gtest.h>
+#include <numeric>
+#include <vector>
 
 
 
@@ -30,6 +33,44 @@ public:
 		emberApplication::Application::Clear();
 	}
 };
+
+
+
+// Verify vector sorting and permutation sorting against the same CPU comparator:
+template <typename T, typename Compare>
+void TestBitonicSortAndPermutationSort(const std::vector<T>& uploadData, Compare compare)
+{
+	int count = static_cast<int>(uploadData.size());
+
+	// Sort directly:
+	std::vector<T> sortedDataCpu = math::CopySort(uploadData, compare);
+	BufferTyped<T> sortBuffer = BufferTyped<T>(count, "sortBuffer", BufferUsage::storage);
+	sortBuffer.Upload(uploadData.data(), count);
+	GpuSort<T>::Sort(ComputeType::immediate, sortBuffer.GetBufferView());
+	std::vector<T> sortedDataGpu(count);
+	sortBuffer.Download(sortedDataGpu.data(), count);
+
+	for (int i = 0; i < count; i++)
+		EXPECT_EQ(sortedDataCpu[i], sortedDataGpu[i]) << "Sort mismatch at " << i;
+
+	// Sort with permutation:
+	std::vector<size_t> permutationCpu(count);
+	math::SortPermutation(uploadData, permutationCpu, compare);
+	BufferTyped<T> permutationSortBuffer = BufferTyped<T>(count, "permutationSortBuffer", BufferUsage::storage);
+	BufferTyped<uint32_t> permutationBuffer = BufferTyped<uint32_t>(count, "permutationBuffer", BufferUsage::storage);
+	permutationSortBuffer.Upload(uploadData.data(), count);
+	GpuSort<T>::SortPermutation(ComputeType::immediate, permutationSortBuffer.GetBufferView(), permutationBuffer.GetBufferView());
+	std::vector<T> permutationSortedDataGpu(count);
+	std::vector<uint32_t> permutationGpu(count);
+	permutationSortBuffer.Download(permutationSortedDataGpu.data(), count);
+	permutationBuffer.Download(permutationGpu.data(), count);
+
+	for (int i = 0; i < count; i++)
+	{
+		EXPECT_EQ(sortedDataCpu[i], permutationSortedDataGpu[i]) << "Permutation sort mismatch at " << i;
+		EXPECT_EQ(permutationCpu[i], permutationGpu[i]) << "Permutation mismatch at " << i;
+	}
+}
 
 
 
@@ -76,6 +117,42 @@ TEST_F(TEST_GpuSort, LocalBitonicSort)
 		}
 	}
 	EXPECT_TRUE(allGood);
+}
+
+
+
+TEST_F(TEST_GpuSort, BitonicSortFloat2)
+{
+	std::vector<Float2> uploadData;
+	for (int i = 0; i < 300; i++)
+		uploadData.emplace_back(static_cast<float>(i % 20 - 10), static_cast<float>(i / 20 - 7));
+	std::shuffle(uploadData.begin(), uploadData.end(), math::Random::GetEngine());
+
+	TestBitonicSortAndPermutationSort(uploadData, [](const Float2& a, const Float2& b)
+	{
+		if (a.x != b.x)
+			return a.x < b.x;
+		return a.y < b.y;
+	});
+}
+
+
+
+TEST_F(TEST_GpuSort, BitonicSortFloat3)
+{
+	std::vector<Float3> uploadData;
+	for (int i = 0; i < 300; i++)
+		uploadData.emplace_back(static_cast<float>(i % 6 - 3), static_cast<float>((i / 6) % 10 - 5), static_cast<float>(i / 60 - 2));
+	std::shuffle(uploadData.begin(), uploadData.end(), math::Random::GetEngine());
+
+	TestBitonicSortAndPermutationSort(uploadData, [](const Float3& a, const Float3& b)
+	{
+		if (a.x != b.x)
+			return a.x < b.x;
+		if (a.y != b.y)
+			return a.y < b.y;
+		return a.z < b.z;
+	});
 }
 
 

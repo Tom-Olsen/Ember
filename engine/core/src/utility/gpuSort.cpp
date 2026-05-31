@@ -163,7 +163,6 @@ namespace emberEngine
 		}
 		if constexpr (std::is_same_v<T, Float3>)
 		{
-			throw std::runtime_error("GpuSort<Float3>::Init: shaders for Float3 not implemented yet.");
 			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>("localBitonicSortFloat3", directoryPath / "localBitonicSortFloat3.comp.spv");
 			s_pBigFlipComputeShader = std::make_unique<ComputeShader>("bigFlipFloat3", directoryPath / "bigFlipFloat3.comp.spv");
 			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>("bigDisperseFloat3", directoryPath / "bigDisperseFloat3.comp.spv");
@@ -222,12 +221,14 @@ namespace emberEngine
 	template <typename T>
 	void GpuSort<T>::Sort(ComputeType computeType, BufferView<T>& bufferView)
 	{
-		// Sorting makes no sense for PostRender compute, as it is only for post processing effects:
+		// Post render compute derives dispatch size from the render target and does not record barriers, so sorting is unsupported:
 		assert(computeType != ComputeType::postRender);
+		if (!s_pLocalBitonicSortComputeShader)
+			throw std::runtime_error("GpuSort::Sort: shaders for this type not implemented yet.");
 
 		// Gpu buffer access setup:
 		int blockSize = 2 * s_pLocalBitonicSortComputeShader->GetBlockSize().x;
-		int bufferSize = static_cast<int>(bufferView.GetCount());		// total number of elements for sorting (entire buffer).
+		int bufferSize = static_cast<int>(bufferView.GetCount());   // total number of elements for sorting (entire buffer).
 		int height = math::NextPowerOfTwo((uint32_t)bufferSize);	// height of biggest flip.
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
 		Uint3 threadCountBig = Uint3(height / 2, 1, 1);				// needed to make sure that big flip/disperse hit all swap indices.
@@ -248,7 +249,7 @@ namespace emberEngine
 			shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 			shaderProperties.SetValue("Values", "bufferSize", bufferSize);
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
-			
+
 			for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
 			{
 				// Big flip:
@@ -257,7 +258,7 @@ namespace emberEngine
 				shaderProperties.SetValue("Values", "flipHeight", flipHeight);
 				shaderProperties.SetValue("Values", "bufferSize", bufferSize);
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
-				
+
 				for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
 				{
 					// Big disperse:
@@ -267,7 +268,7 @@ namespace emberEngine
 					shaderProperties.SetValue("Values", "bufferSize", bufferSize);
 					Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 				}
-				
+
 				// Local disperse:
 				shaderProperties = Compute::RecordComputeShader(computeType, *s_pLocalDisperseComputeShader, threadCountLocal, sessionID);
 				shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
@@ -290,8 +291,10 @@ namespace emberEngine
 	template <typename T>
 	void GpuSort<T>::SortPermutation(ComputeType computeType, BufferView<T>& bufferView, BufferView<uint32_t>& permutationBufferView)
 	{
-		// Sorting makes no sense for PostRender compute, as it is only for post processing effects:
+		// Post render compute derives dispatch size from the render target and does not record barriers, so sorting is unsupported:
 		assert(computeType != ComputeType::postRender);
+		if (!s_pLocalBitonicSortPermutationComputeShader)
+			throw std::runtime_error("GpuSort::SortPermutation: shaders for this type not implemented yet.");
 
 		// Gpu buffer access setup:
 		int blockSize = 2 * s_pLocalBitonicSortPermutationComputeShader->GetBlockSize().x;

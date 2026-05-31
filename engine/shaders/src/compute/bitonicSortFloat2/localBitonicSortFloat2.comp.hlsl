@@ -1,5 +1,6 @@
 #include "computeShaderCommon.hlsli"
 #include "bitonicSortBlockSize.hlsli"
+#include "sortCompareFloat2.hlsli"
 
 
 
@@ -14,30 +15,7 @@ cbuffer Values : register(b300, CALL_SET)
 
 void CompareAndSwap(uint i, uint j)
 {
-    float lenI = length(localValue[i]);
-    float lenJ = length(localValue[j]);
-
-    // Compare by length first:
-    bool swap = false;
-    if (lenI > lenJ)
-        swap = true;
-    else if (lenI == lenJ)
-    {
-        // Compute angles from (1,0) counterclockwise (0 ... 2pi):
-        float angleA = atan2(localValue[i].y, localValue[i].x);
-        float angleB = atan2(localValue[j].y, localValue[j].x);
-
-        // atan2 returns [-pi, pi], convert to [0, 2pi]
-        if (angleA < 0)
-            angleA += 2.0 * math_PI;
-        if (angleB < 0)
-            angleB += 2.0 * math_PI;
-
-        if (angleA > angleB)
-            swap = true;
-    }
-
-    if (swap)
+    if (SortCompare(localValue[i], localValue[j]))
     {
         float2 tmp = localValue[i];
         localValue[i] = localValue[j];
@@ -68,8 +46,8 @@ void Disperse(uint disperseHeight, uint index)
 [numthreads(BLOCK_SIZE / 2, 1, 1)]
 void main(uint3 localThreadID : SV_GroupThreadID, uint3 threadID : SV_DispatchThreadID)
 {
-    uint localIndex = localThreadID.x;  //  local thread index � [0,BLOCK_SIZE/2]
-    uint index = threadID.x;            // global thread index � [0,bufferSize/2]
+    uint localIndex = localThreadID.x;  //  local thread index in [0,BLOCK_SIZE/2]
+    uint index = threadID.x;            // global thread index in [0,bufferSize/2]
     
 	// Load buffer into local memory (2 values per thread):
     localValue[2 * localIndex + 0] = (2 * index + 0 < bufferSize) ? dataBuffer[2 * index + 0] : 0x7FFFFFFF;

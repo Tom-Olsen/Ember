@@ -42,6 +42,8 @@ namespace vulkanRendererBackend
 		m_textureMaps = std::vector<std::unordered_map<uint32_t, TextureBinding>>(Context::GetFramesInFlight());
 		m_bufferMaps = std::vector<std::unordered_map<uint32_t, BufferBinding>>(Context::GetFramesInFlight());
 		m_uniformBufferMap = std::unordered_map<uint32_t, UniformBufferBinding>();
+		m_dirtyTextureBindings = std::vector<std::unordered_set<uint32_t>>(Context::GetFramesInFlight());
+		m_dirtyBufferBindings = std::vector<std::unordered_set<uint32_t>>(Context::GetFramesInFlight());
         
 		// Initialize all resource bindings:
 		const emberSpirvReflect::DescriptorSetReflection& descriptorSetReflection = m_pShader->GetShaderReflection().GetDescriptorSetReflection(m_setIndex);
@@ -135,6 +137,8 @@ namespace vulkanRendererBackend
 		if (it == m_textureStagingMap.end())
 			return;
 		it->second = static_cast<Texture*>(pTexture);
+		for (std::unordered_set<uint32_t>& dirtyTextureBindings : m_dirtyTextureBindings)
+			dirtyTextureBindings.insert(*pBinding);
 	}
 	void DescriptorSetBinding::SetBuffer(const std::string& name, emberBackendInterface::IBuffer* pBuffer)
 	{
@@ -146,6 +150,8 @@ namespace vulkanRendererBackend
 		if (it == m_bufferStagingMap.end())
 			return;
 		it->second = static_cast<Buffer*>(pBuffer);
+		for (std::unordered_set<uint32_t>& dirtyBufferBindings : m_dirtyBufferBindings)
+			dirtyBufferBindings.insert(*pBinding);
 	}
 
 
@@ -444,10 +450,11 @@ namespace vulkanRendererBackend
 		for (auto& [binding, textureBinding] : m_textureMaps[frameIndex])
 		{
 			Texture* pStagedTexture = m_textureStagingMap.at(binding);
-			if (textureBinding.pTexture != pStagedTexture)
+			if (textureBinding.pTexture != pStagedTexture || m_dirtyTextureBindings[frameIndex].contains(binding))
 			{
 				textureBinding.pTexture = pStagedTexture;
 				UpdateDescriptorSet(frameIndex, textureBinding);
+				m_dirtyTextureBindings[frameIndex].erase(binding);
 			}
 		}
 
@@ -455,10 +462,11 @@ namespace vulkanRendererBackend
 		for (auto& [binding, bufferBinding] : m_bufferMaps[frameIndex])
 		{
 			Buffer* pStagedBuffer = m_bufferStagingMap.at(binding);
-			if (bufferBinding.pBuffer != pStagedBuffer)
+			if (bufferBinding.pBuffer != pStagedBuffer || m_dirtyBufferBindings[frameIndex].contains(binding))
 			{
 				bufferBinding.pBuffer = pStagedBuffer;
 				UpdateDescriptorSet(frameIndex, bufferBinding);
+				m_dirtyBufferBindings[frameIndex].erase(binding);
 			}
 		}
 	}

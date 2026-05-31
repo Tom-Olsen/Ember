@@ -1,10 +1,11 @@
 #include "computeShaderCommon.hlsli"
 #include "bitonicSortBlockSize.hlsli"
-#include "sortCompareFloat2.hlsli"
+#include "sortCompareFloat3.hlsli"
 
 
-RWStructuredBuffer<float2> dataBuffer : register(u200, CALL_SET);
-groupshared float2 localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
+
+RWStructuredBuffer<float3> dataBuffer : register(u200, CALL_SET);
+groupshared float3 localValue[BLOCK_SIZE]; // max 32kB = 8192 ints (4bytes) = 2046 float4s (16bytes)
 cbuffer Values : register(b300, CALL_SET)
 {
     uint bufferSize; // number of elements in the data buffer.
@@ -16,12 +17,21 @@ void CompareAndSwap(uint i, uint j)
 {
     if (SortCompare(localValue[i], localValue[j]))
     {
-        float2 tmp = localValue[i];
+        float3 tmp = localValue[i];
         localValue[i] = localValue[j];
         localValue[j] = tmp;
     }
 }
-void Disperse(int disperseHeight, uint index)
+void Flip(uint flipHeight, uint index)
+{
+    // Do not simplify these equations, as int floor rounding is required!
+    uint halfFlipHeight = flipHeight / 2;
+    uint block = index / halfFlipHeight;
+    uint i = index + block * halfFlipHeight;
+    uint j = flipHeight - 1 - index + 3 * halfFlipHeight * block;
+    CompareAndSwap(i, j);
+}
+void Disperse(uint disperseHeight, uint index)
 {
     // Do not simplify these equations, as int floor rounding is required!
     uint halfDisperseHeight = disperseHeight / 2;
@@ -38,22 +48,25 @@ void main(uint3 localThreadID : SV_GroupThreadID, uint3 threadID : SV_DispatchTh
 {
     uint localIndex = localThreadID.x;  //  local thread index in [0,BLOCK_SIZE/2]
     uint index = threadID.x;            // global thread index in [0,bufferSize/2]
-    
+
 	// Load buffer into local memory (2 values per thread):
     localValue[2 * localIndex + 0] = (2 * index + 0 < bufferSize) ? dataBuffer[2 * index + 0] : 0x7FFFFFFF;
     localValue[2 * localIndex + 1] = (2 * index + 1 < bufferSize) ? dataBuffer[2 * index + 1] : 0x7FFFFFFF;
-    
+
     // Execute local bitonic sort on local memory: (only sorts elements within the same block)
-    for (uint disperseHeight = BLOCK_SIZE; disperseHeight > 1; disperseHeight /= 2)
+    for (uint flipHeight = 2; flipHeight <= BLOCK_SIZE; flipHeight *= 2)
     {
         GroupMemoryBarrierWithGroupSync();
-        Disperse(disperseHeight, localIndex);
+        Flip(flipHeight, localIndex);
+        for (uint disperseHeight = flipHeight / 2; disperseHeight > 1; disperseHeight /= 2)
+        {
+            GroupMemoryBarrierWithGroupSync();
+            Disperse(disperseHeight, localIndex);
+        }
     }
-    
+
 	// Write local memory back to buffer (2 values per thread):
     GroupMemoryBarrierWithGroupSync();
-    if (2 * index + 0 < bufferSize)
-        dataBuffer[2 * index + 0] = localValue[2 * localIndex + 0];
-    if (2 * index + 1 < bufferSize)
-        dataBuffer[2 * index + 1] = localValue[2 * localIndex + 1];
+    if (2 * index + 0 < bufferSize) dataBuffer[2 * index + 0] = localValue[2 * localIndex + 0];
+    if (2 * index + 1 < bufferSize) dataBuffer[2 * index + 1] = localValue[2 * localIndex + 1];
 }

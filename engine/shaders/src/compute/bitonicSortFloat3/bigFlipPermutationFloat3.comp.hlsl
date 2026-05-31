@@ -1,10 +1,11 @@
 #include "computeShaderCommon.hlsli"
 #include "bitonicSortBlockSize.hlsli"
-#include "sortCompareFloat2.hlsli"
+#include "sortCompareFloat3.hlsli"
 
 
 
-RWStructuredBuffer<float2> dataBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<float3> dataBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<uint> permutationBuffer : register(u201, CALL_SET);
 cbuffer Values : register(b300, CALL_SET)
 {
     uint flipHeight; // height of the flip (number of elements involved in it).
@@ -19,9 +20,13 @@ void CompareAndSwap(uint i, uint j)
         return;
     if (SortCompare(dataBuffer[i], dataBuffer[j]))
     {
-        float2 tmp = dataBuffer[i];
+        float3 tmp = dataBuffer[i];
         dataBuffer[i] = dataBuffer[j];
         dataBuffer[j] = tmp;
+
+        uint tmpIndex = permutationBuffer[i];
+        permutationBuffer[i] = permutationBuffer[j];
+        permutationBuffer[j] = tmpIndex;
     }
 }
 
@@ -31,7 +36,7 @@ void CompareAndSwap(uint i, uint j)
 void main(uint3 threadID : SV_DispatchThreadID)
 {
     uint index = threadID.x; // thread index in [0,bufferSize/2]
-    
+
     // Do not simplify these equations, as int floor rounding is required!
     uint halfFlipHeight = flipHeight / 2;
     uint block = index / halfFlipHeight;

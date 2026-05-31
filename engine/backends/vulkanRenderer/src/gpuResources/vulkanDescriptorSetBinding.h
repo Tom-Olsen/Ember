@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -75,6 +76,9 @@ namespace vulkanRendererBackend
 		std::vector<std::unordered_map<uint32_t, TextureBinding>> m_textureMaps;
 		std::vector<std::unordered_map<uint32_t, BufferBinding>> m_bufferMaps;
 		std::unordered_map<uint32_t, UniformBufferBinding> m_uniformBufferMap; // uniformBuffer handles framesInFlight with a ring buffer.
+		// Setter calls must force descriptor writes because resource addresses can be reused:
+		std::vector<std::unordered_set<uint32_t>> m_dirtyTextureBindings;
+		std::vector<std::unordered_set<uint32_t>> m_dirtyBufferBindings;
 
 		// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer acts as a staging buffer:
 		std::unordered_map<uint32_t, Texture*> m_textureStagingMap;
