@@ -8,6 +8,7 @@ namespace emberMath
 {
 	// Forward declarations:
 	struct Float2;
+	struct Float3;
 
 
 

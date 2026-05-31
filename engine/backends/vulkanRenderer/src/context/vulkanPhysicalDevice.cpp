@@ -25,21 +25,31 @@ namespace vulkanRendererBackend
 		VKA(vkEnumeratePhysicalDevices(pInstance->GetVkInstance(), &numPhysicalDevices, physicalDevices.data()));
 
 		// Score each device:
-		std::vector<std::pair<VkPhysicalDevice, int>> devices;
-		for (const VkPhysicalDevice& dev : physicalDevices)
+		std::vector<DeviceCandidate> devices;
+		devices.reserve(numPhysicalDevices);
+		for (const VkPhysicalDevice& device : physicalDevices)
 		{
-			int score = DeviceScore(dev);
-			devices.push_back({ dev, score });
+			VkPhysicalDeviceProperties deviceProperties;
+			vkGetPhysicalDeviceProperties(device, &deviceProperties);
+			int score = DeviceScore(device);
+			devices.push_back({ device, score, deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU });
 		}
 
-		// Sort devices by score:
-		auto SortLambda = [](const std::pair<VkPhysicalDevice, int>& a, const std::pair<VkPhysicalDevice, int>& b) { return a.second > b.second; };
+		// Sort compatible devices first, preferring discrete GPUs:
+		auto SortLambda = [](const DeviceCandidate& a, const DeviceCandidate& b)
+		{
+			if ((a.score >= 0) != (b.score >= 0))
+				return a.score >= 0;
+			if (a.isDiscrete != b.isDiscrete)
+				return a.isDiscrete;
+			return a.score > b.score;
+		};
 		std::sort(devices.begin(), devices.end(), SortLambda);
 
 		// Pick best device:
-		if (devices[0].second < 0)
-			throw std::runtime_error("No dedicated GPU supports all required capabilities!");
-		m_physicalDevice = devices[0].first;
+		if (devices[0].score < 0)
+			throw std::runtime_error("No GPU supports all required capabilities!");
+		m_physicalDevice = devices[0].device;
 
 		// Determine max msaa samples:
 		m_maxMsaaSamples = MaxUsableMsaaSampleCount();
@@ -95,9 +105,6 @@ namespace vulkanRendererBackend
 		vkGetPhysicalDeviceFeatures(m_physicalDevice, &deviceFeatures);
 		return deviceFeatures.multiViewport;
 	}
-
-
-
 	// Private:
 	void PhysicalDevice::Cleanup()
 	{
@@ -119,8 +126,6 @@ namespace vulkanRendererBackend
 		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
 		// Check required properties:
-		if (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-			return -1;
 		if (HasGraphicsAndComputeQueueFamily(device) == false)
 			return -1;
 
@@ -130,6 +135,7 @@ namespace vulkanRendererBackend
 		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.depthClamp);
 		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.depthBiasClamp);
 		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.fillModeNonSolid);
+		supportsRequiredFeatures &= DeviceSupportsScalarBlockLayout(device);
 		if (supportsRequiredFeatures == false)
 			return -1; // negative score = invalid device.
 
@@ -159,6 +165,14 @@ namespace vulkanRendererBackend
 		// score +=  1 * deviceFeatures.shaderStorageBufferArrayDynamicIndexing;
 
 		return score;
+	}
+	bool PhysicalDevice::DeviceSupportsScalarBlockLayout(VkPhysicalDevice device) const
+	{
+		VkPhysicalDeviceScalarBlockLayoutFeatures scalarBlockLayoutFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES };
+		VkPhysicalDeviceFeatures2 deviceFeatures2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+		deviceFeatures2.pNext = &scalarBlockLayoutFeatures;
+		vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
+		return scalarBlockLayoutFeatures.scalarBlockLayout;
 	}
 	bool PhysicalDevice::HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const
 	{

@@ -108,6 +108,10 @@ namespace vulkanRendererBackend
 			deviceExtensions.emplace_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
 		else if (SupportsVulkanVersion(m_pPhysicalDevice->GetVkPhysicalDevice(), VK_API_VERSION_1_2) == false)
 			throw std::runtime_error("Required Vulkan device extension is not available: " + std::string(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME));
+		if (IsExtensionAvailable(availableDeviceExtensions, VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME))
+			deviceExtensions.emplace_back(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME);
+		else if (SupportsVulkanVersion(m_pPhysicalDevice->GetVkPhysicalDevice(), VK_API_VERSION_1_2) == false)
+			throw std::runtime_error("Required Vulkan device extension is not available: " + std::string(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME));
 		if (IsExtensionAvailable(availableDeviceExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME))
 			deviceExtensions.emplace_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
 		else if (SupportsVulkanVersion(m_pPhysicalDevice->GetVkPhysicalDevice(), VK_API_VERSION_1_3) == false)

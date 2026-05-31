@@ -70,7 +70,7 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
         OUTPUT ${OUTPUT_FILE}
         BYPRODUCTS ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src -I ${ENGINE_SHADERS_DIR}/src/includes -I ${ENGINE_SHADERS_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
+        COMMAND ${DXC_PATH} -spirv -fvk-use-scalar-layout -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src -I ${ENGINE_SHADERS_DIR}/src/includes -I ${ENGINE_SHADERS_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
         DEPENDS ${SHADER_FILE} ${SHADER_INCLUDES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         COMMENT "Compiling shader: ${SHADER_FILE}"

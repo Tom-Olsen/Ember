@@ -37,6 +37,7 @@ endif()
 file(GLOB COMPUTE_SHADERS "${COMPUTE_DIR}/*.*")
     file(GLOB BITONIC_SORT_FLOAT "${COMPUTE_DIR}/bitonicSortFloat/*.*")
     file(GLOB BITONIC_SORT_FLOAT2 "${COMPUTE_DIR}/bitonicSortFloat2/*.*")
+    file(GLOB BITONIC_SORT_FLOAT3 "${COMPUTE_DIR}/bitonicSortFloat3/*.*")
     file(GLOB BITONIC_SORT_INT "${COMPUTE_DIR}/bitonicSortInt/*.*")
     file(GLOB BITONIC_SORT_UINT "${COMPUTE_DIR}/bitonicSortUint/*.*")
     file(GLOB PERMUTATION "${COMPUTE_DIR}/permutation/*.*")
@@ -50,6 +51,7 @@ file(GLOB SHADER_SOURCES
     ${COMPUTE_SHADERS}
     ${BITONIC_SORT_FLOAT}
     ${BITONIC_SORT_FLOAT2}
+    ${BITONIC_SORT_FLOAT3}
     ${BITONIC_SORT_INT}
     ${BITONIC_SORT_UINT}
     ${PERMUTATION}
@@ -60,6 +62,7 @@ file(GLOB SHADER_SOURCES
 source_group("Compute Shaders" FILES ${COMPUTE_SHADERS})
 source_group("Compute Shaders/Bitonic Sort Float" FILES ${BITONIC_SORT_FLOAT})
 source_group("Compute Shaders/Bitonic Sort Float2" FILES ${BITONIC_SORT_FLOAT2})
+source_group("Compute Shaders/Bitonic Sort Float3" FILES ${BITONIC_SORT_FLOAT3})
 source_group("Compute Shaders/Bitonic Sort Int" FILES ${BITONIC_SORT_INT})
 source_group("Compute Shaders/Bitonic Sort Uint" FILES ${BITONIC_SORT_UINT})
 source_group("Compute Shaders/Permutation" FILES ${PERMUTATION})
@@ -97,7 +100,7 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
         OUTPUT ${OUTPUT_FILE}
         BYPRODUCTS ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src/includes -I ${CMAKE_CURRENT_LIST_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
+        COMMAND ${DXC_PATH} -spirv -fvk-use-scalar-layout -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src/includes -I ${CMAKE_CURRENT_LIST_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
         DEPENDS ${SHADER_FILE} ${SHADER_INCLUDES} ${CPP_HLSL_INCLUDES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         COMMENT "Compiling shader: ${SHADER_FILE}"
@@ -115,6 +118,7 @@ add_custom_target(EmberShaders SOURCES
     ${COMPUTE_SHADERS}
     ${BITONIC_SORT_FLOAT}
     ${BITONIC_SORT_FLOAT2}
+    ${BITONIC_SORT_FLOAT3}
     ${BITONIC_SORT_INT}
     ${BITONIC_SORT_UINT}
     ${PERMUTATION}

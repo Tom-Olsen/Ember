@@ -19,6 +19,14 @@ namespace vulkanRendererBackend
 
 	class PhysicalDevice
 	{
+    private: // Structs:
+		struct DeviceCandidate
+		{
+			VkPhysicalDevice device;
+			int score;
+			bool isDiscrete;
+		};
+
 	private: // Members:
 		VkPhysicalDevice m_physicalDevice;
 		VkSampleCountFlagBits m_maxMsaaSamples;
@@ -45,6 +53,7 @@ namespace vulkanRendererBackend
 		void Cleanup();
 		void MoveFrom(PhysicalDevice& other) noexcept;
 		int DeviceScore(VkPhysicalDevice device);
+		bool DeviceSupportsScalarBlockLayout(VkPhysicalDevice device) const;
 		bool HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const;
 		bool HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const;
 		VkSampleCountFlagBits MaxUsableMsaaSampleCount() const;

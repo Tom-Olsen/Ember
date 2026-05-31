@@ -46,9 +46,14 @@ namespace vulkanRendererBackend
 		VkPhysicalDeviceSynchronization2FeaturesKHR sync2Features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR };
 		sync2Features.synchronization2 = VK_TRUE;
 
+		// Scalar block layout: Allows packed Float3 buffers to use the same 12 byte stride in C++ and shaders.
+		VkPhysicalDeviceScalarBlockLayoutFeatures scalarBlockLayoutFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES };
+		scalarBlockLayoutFeatures.pNext = &sync2Features;
+		scalarBlockLayoutFeatures.scalarBlockLayout = VK_TRUE;
+
 		// Choose which features to enable:
 		VkPhysicalDeviceFeatures2 deviceFeatures2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
-		deviceFeatures2.pNext = &sync2Features;
+		deviceFeatures2.pNext = &scalarBlockLayoutFeatures;
 		deviceFeatures2.features.samplerAnisotropy = VK_TRUE;
 		deviceFeatures2.features.depthClamp = pPhysicalDevice->SupportsDepthClamp();
 		deviceFeatures2.features.depthBiasClamp = pPhysicalDevice->SupportsDepthBiasClamp();

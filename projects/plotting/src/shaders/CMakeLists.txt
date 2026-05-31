@@ -62,7 +62,7 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/bin/shaders
-        COMMAND ${DXC_PATH} -spirv -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE} -I ${ABS_INCLUDE_PATH}
+        COMMAND ${DXC_PATH} -spirv -fvk-use-scalar-layout -T ${SHADER_TYPE} -E main ${SHADER_FILE} -Fo ${OUTPUT_FILE} -I ${ABS_INCLUDE_PATH}
         DEPENDS ${SHADER_FILE}
         COMMENT "Compiling shader: ${SHADER_FILE}"
         VERBATIM
