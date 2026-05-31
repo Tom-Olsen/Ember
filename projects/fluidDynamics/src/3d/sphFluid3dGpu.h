@@ -28,7 +28,7 @@ namespace fluidDynamics
 
 		// Settings:
 		SphFluid3dGpuSolver::Settings m_settings;
-		//SphFluid3dGpuSolver::Attractor m_attractor;
+		SphFluid3dGpuSolver::Attractor m_attractor;
 
 		// Data:
 		SphFluid3dGpuSolver::Data m_data;
@@ -40,7 +40,7 @@ namespace fluidDynamics
 		float m_initialDistributionRadius;
 		float m_visualRadius;
 		Mesh m_particleMesh;
-		//Mesh m_ringMesh;
+		Mesh m_attractorSphereMesh;
 		Material m_particleMaterial;
 		ShaderProperties m_shaderProperties;
 
@@ -71,10 +71,10 @@ namespace fluidDynamics
 		void SetGravity(float gravity);
 		void SetMaxVelocity(float maxVelocity);
 		void SetFluidBounds(const Bounds& bounds);
-		//void SetAttractorRadius(float attractorRadius);
-		//void SetAttractorStrength(float attractorStrength);
-		//void SetAttractorState(int attractorState);
-		//void SetAttractorPoint(const Float3& attractorPoint);
+		void SetAttractorRadius(float attractorRadius);
+		void SetAttractorStrength(float attractorStrength);
+		void SetAttractorState(int attractorState);
+		void SetAttractorPoint(const Float3& attractorPoint);
 		void SetColorMode(int colorMode);
 		void SetInitialDistributionRadius(float initialDistributionRadius);
 		void SetVisualRadius(float visualRadius);
@@ -95,8 +95,8 @@ namespace fluidDynamics
 		float GetGravity() const;
 		float GetMaxVelocity() const;
 		Bounds GetFluidBounds() const;
-		//float GetAttractorRadius() const;
-		//float GetAttractorStrength() const;
+		float GetAttractorRadius() const;
+		float GetAttractorStrength() const;
 		int GetColorMode() const;
 		float GetInitialDistributionRadius() const;
 		float GetVisualRadius() const;

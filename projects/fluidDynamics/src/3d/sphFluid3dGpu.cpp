@@ -34,8 +34,9 @@ namespace fluidDynamics
 			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
 
 			// User Interaction:
-			//SetAttractorRadius(3.0f);
-			//SetAttractorStrength(2.0f);
+			SetAttractorRadius(3.0f);
+			SetAttractorStrength(2.0f);
+			SetAttractorState(0);
 
 			// Visuals:
 			SetColorMode(0);
@@ -133,7 +134,7 @@ namespace fluidDynamics
 			return;
 		}
 
-		/*// Mouse scrolling:
+		// Mouse scrolling:
 		float mouseScroll = EventSystem::MouseScrollY();
 		if (mouseScroll != 0)
 		{
@@ -142,37 +143,26 @@ namespace fluidDynamics
 				float zoomFactor = 1.0f + 0.1f * mouseScroll;
 				SetAttractorStrength(zoomFactor * m_attractor.strength);
 			}
-			else
+			if (EventSystem::KeyDownOrHeld(Input::Key::CtrlLeft))
 			{
 				float zoomFactor = 1.0f + 0.1f * mouseScroll;
 				SetAttractorRadius(zoomFactor * m_attractor.radius);
 			}
 		}
 
-		// Mouse left and right click:
-		if (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)) // exlusive or
-		{
-			Ray ray = Scene::GetActiveScene()->GetActiveCamera()->GetClickRay();
-			std::optional<Float3> hit = m_settings.fluidBounds.IntersectRay(ray);
-			if (hit.has_value())
-			{
-				SetAttractorPoint(Float3(hit.value()));
-				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
-				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
-				if (EventSystem::MouseHeld(Input::MouseButton::Left))
-					SetAttractorState(1);
-				if (EventSystem::MouseHeld(Input::MouseButton::Right))
-					SetAttractorState(-1);
-			}
-			else
-				SetAttractorState(0);
-		}
-		else
-			SetAttractorState(0);*/
+		// Keyboard attractor activation:
+		int attractorState = (int)EventSystem::KeyDownOrHeld(Input::Key::Num1) - (int)EventSystem::KeyDownOrHeld(Input::Key::Num2);
+		SetAttractorState(attractorState);
 
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
 		Renderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.1f, Float4::white, false, false);
+		if (m_attractor.state != 0)
+		{
+			Float4x4 attractorLocalToWorld = localToWorld * Float4x4::Translate(m_attractor.point);
+			ShaderProperties shaderProperties = Renderer::DrawMesh(m_attractorSphereMesh, MaterialManager::GetMaterial("transparentMaterial"), attractorLocalToWorld, false, false);
+			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
+		}
 		m_shaderProperties.SetBuffer("positionBuffer", m_data.positionBuffer.GetBuffer());
 		m_shaderProperties.SetBuffer("velocityBuffer", m_data.velocityBuffer.GetBuffer());
 		m_shaderProperties.SetBuffer("densityBuffer", m_data.densityBuffer.GetBuffer());
@@ -299,15 +289,16 @@ namespace fluidDynamics
 		{
 			m_settings.fluidBounds = bounds;
 			m_computeShaders.SetFluidBounds(m_settings.fluidBounds);
+			SetAttractorPoint(m_settings.fluidBounds.center);
 		}
 	}
-	/*void SphFluid3dGpu::SetAttractorRadius(float attractorRadius)
+	void SphFluid3dGpu::SetAttractorRadius(float attractorRadius)
 	{
 		attractorRadius = math::Max(1e-4f, attractorRadius);
 		if (m_forceSetters || m_attractor.radius != attractorRadius)
 		{
 			m_attractor.radius = attractorRadius;
-			m_ringMesh = MeshGenerator::ArcFlatUv(m_attractor.radius - 0.1f, m_attractor.radius + 0.1f, 360.0f, 100, "attractorRing");
+			m_attractorSphereMesh = MeshGenerator::CubeSphere(m_attractor.radius, 3, "attractorSphere");
 			m_computeShaders.SetAttractorRadius(m_attractor.radius);
 		}
 	}
@@ -335,7 +326,7 @@ namespace fluidDynamics
 			m_attractor.point = attractorPoint;
 			m_computeShaders.SetAttractorPoint(m_attractor.point);
 		}
-	}*/
+	}
 	void SphFluid3dGpu::SetColorMode(int colorMode)
 	{
 		colorMode = math::Clamp(colorMode, 0, 3);
@@ -427,14 +418,14 @@ namespace fluidDynamics
 	{
 		return m_settings.fluidBounds;
 	}
-	/*float SphFluid3dGpu::GetAttractorRadius() const
+	float SphFluid3dGpu::GetAttractorRadius() const
 	{
 		return m_attractor.radius;
 	}
 	float SphFluid3dGpu::GetAttractorStrength() const
 	{
 		return m_attractor.strength;
-	}*/
+	}
 	int SphFluid3dGpu::GetColorMode() const
 	{
 		return m_colorMode;

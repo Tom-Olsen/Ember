@@ -30,8 +30,8 @@ namespace emberEditor
 		float m_pressureMultiplier;
 		float m_gravity;
 		float m_maxVelocity;
-		//float m_attractorRadius;
-		//float m_attractorStrength;
+		float m_attractorRadius;
+		float m_attractorStrength;
 		int m_colorMode;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
@@ -73,8 +73,8 @@ namespace emberEditor
 			Gui::DragFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
 			Gui::DragFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
-			//Gui::DragFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
-			//Gui::DragFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
+			Gui::DragFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
+			Gui::DragFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
 			Gui::DragInt("Color Mode:", &m_colorMode);
 			Gui::DragFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
@@ -109,8 +109,8 @@ namespace emberEditor
 			m_pressureMultiplier = m_pScript->GetPressureMultiplier();
 			m_gravity = m_pScript->GetGravity();
 			m_maxVelocity = m_pScript->GetMaxVelocity();
-			//m_attractorRadius = m_pScript->GetAttractorRadius();
-			//m_attractorStrength = m_pScript->GetAttractorStrength();
+			m_attractorRadius = m_pScript->GetAttractorRadius();
+			m_attractorStrength = m_pScript->GetAttractorStrength();
 			m_colorMode = m_pScript->GetColorMode();
 			m_initialDistributionRadius = m_pScript->GetInitialDistributionRadius();
 			m_visualRadius = m_pScript->GetVisualRadius();
@@ -130,8 +130,8 @@ namespace emberEditor
 			m_pScript->SetPressureMultiplier(m_pressureMultiplier);
 			m_pScript->SetGravity(m_gravity);
 			m_pScript->SetMaxVelocity(m_maxVelocity);
-			//m_pScript->SetAttractorRadius(m_attractorRadius);
-			//m_pScript->SetAttractorStrength(m_attractorStrength);
+			m_pScript->SetAttractorRadius(m_attractorRadius);
+			m_pScript->SetAttractorStrength(m_attractorStrength);
 			m_pScript->SetColorMode(m_colorMode);
 			m_pScript->SetInitialDistributionRadius(m_initialDistributionRadius);
 			m_pScript->SetVisualRadius(m_visualRadius);

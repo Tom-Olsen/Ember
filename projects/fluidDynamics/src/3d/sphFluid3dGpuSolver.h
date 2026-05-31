@@ -61,13 +61,13 @@ namespace fluidDynamics
 			int ParticleCount();
 			void Reallocate(int particleCount, ComputeType computeType);
 		};
-		//struct Attractor
-		//{
-		//	Float3 point;
-		//	float radius;
-		//	float strength;
-		//	int state;	// -1 = repulse, 0 = off, 1 = attract.
-		//};
+		struct Attractor
+		{
+			Float3 point;
+			float radius;
+			float strength;
+			int state;	// -1 = repulse, 0 = off, 1 = attract.
+		};
 		struct ComputeShaders
 		{
 			static constexpr size_t rungeKuttaStepCount = 2;
@@ -103,10 +103,10 @@ namespace fluidDynamics
 			void SetGravity(float gravity);
 			void SetMaxVelocity(float maxVelocity);
 			void SetFluidBounds(const Bounds& bounds);
-			//void SetAttractorRadius(float attractorRadius);
-			//void SetAttractorStrength(float attractorStrength);
-			//void SetAttractorState(int attractorState);
-			//void SetAttractorPoint(const Float3& attractorPoint);
+			void SetAttractorRadius(float attractorRadius);
+			void SetAttractorStrength(float attractorStrength);
+			void SetAttractorState(int attractorState);
+			void SetAttractorPoint(const Float3& attractorPoint);
 		};
 
 	public: // Methods:

@@ -205,7 +205,7 @@ namespace fluidDynamics
 		boundaryCollisionsProperties.SetValue("Values", "min", bounds.GetMin());
 		boundaryCollisionsProperties.SetValue("Values", "max", bounds.GetMax());
 	}
-	/*void SphFluid3dGpuSolver::ComputeShaders::SetAttractorRadius(float attractorRadius)
+	void SphFluid3dGpuSolver::ComputeShaders::SetAttractorRadius(float attractorRadius)
 	{
         for (size_t i = 0; i < rungeKuttaStepCount; i++)
 			forceDensityProperties[i].SetValue("Values", "attractorRadius", attractorRadius);
@@ -224,7 +224,7 @@ namespace fluidDynamics
 	{
         for (size_t i = 0; i < rungeKuttaStepCount; i++)
 			forceDensityProperties[i].SetValue("Values", "attractorPoint", attractorPoint);
-	}*/
+	}
 
 
 

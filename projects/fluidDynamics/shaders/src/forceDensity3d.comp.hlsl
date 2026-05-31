@@ -23,10 +23,10 @@ cbuffer Values : register(b300, SHADER_SET)
     float pressureMultiplier;
 
     // Attractor:
-    //int attractorState;
-    //float attractorRadius;
-    //float attractorStrength;
-    //float3 attractorPoint;
+    int attractorState;
+    float attractorRadius;
+    float attractorStrength;
+    float3 attractorPoint;
 };
 StructuredBuffer<uint> cellKeyBuffer : register(t100, CALL_SET);
 StructuredBuffer<uint> startIndexBuffer : register(t101, CALL_SET);
@@ -137,13 +137,13 @@ void main(uint3 threadID : SV_DispatchThreadID)
             forceDensityBuffer[index] += surfaceTension * curvatureBuffer[index] * normalBuffer[index];
 
             // Attractor force density:
-            //float3 offset = attractorPoint - positionBuffer[index];
-            //float r = length(offset);
-            //if (r < attractorRadius && r > 1e-8f)
-            //{
-            //    r /= attractorRadius;
-            //    forceDensityBuffer[index] += attractorState * attractorStrength * densityBuffer[index] * offset * r * r;
-            //}
+            float3 offset = attractorPoint - positionBuffer[index];
+            float r = length(offset);
+            if (r < attractorRadius && r > 1e-8f)
+            {
+                r /= attractorRadius;
+                forceDensityBuffer[index] += attractorState * attractorStrength * densityBuffer[index] * offset * r * r;
+            }
         }
     }
 }
