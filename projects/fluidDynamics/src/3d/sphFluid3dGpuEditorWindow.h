@@ -2,13 +2,13 @@
 #include "commonGuiFlags.h"
 #include "editorWindow.h"
 #include "gui.h"
-#include "sphFluid3d.h"
+#include "sphFluid3dGpu.h"
 
 
 
 namespace emberEditor
 {
-	struct SphFluid3dEditorWindow : public emberEngine::EditorWindow
+	struct SphFluid3dGpuEditorWindow : public emberEngine::EditorWindow
 	{
 		// Easy access to emberEngine Gui:
 		using Gui = emberEngine::Gui;
@@ -16,7 +16,7 @@ namespace emberEditor
 
 
 	private:
-		fluidDynamics::SphFluid3d* m_pScript;
+		fluidDynamics::SphFluid3dGpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
 		bool m_useGridOptimization;
@@ -30,15 +30,16 @@ namespace emberEditor
 		float m_pressureMultiplier;
 		float m_gravity;
 		float m_maxVelocity;
+		//float m_attractorRadius;
+		//float m_attractorStrength;
 		int m_colorMode;
-		int m_initialDistributionShellCount;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
 
 	public:
-		SphFluid3dEditorWindow(fluidDynamics::SphFluid3d* pScript)
+		SphFluid3dGpuEditorWindow(fluidDynamics::SphFluid3dGpu* pScript)
 		{
-			m_name = "Sph Fluid 3d";
+			m_name = "Sph Fluid 3d Gpu";
 			m_ID = 0;
 			m_windowFlags = emberCommon::GuiWindowFlags::none;
 			m_wantCaptureEvents = true;
@@ -56,6 +57,8 @@ namespace emberEditor
 		void Render() override
 		{
 			GetData();
+
+			// Fields:
 			Gui::Checkbox("Is Running:", &m_isRunning);
 			Gui::DragFloat("Time Scale:", &m_timeScale);
 			Gui::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
@@ -68,15 +71,25 @@ namespace emberEditor
 			Gui::DragFloat("Collision Dampening:", &m_collisionDampening, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Target Density:", &m_targetDensity, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Gravity:", &m_gravity, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Max Velocity:", &m_maxVelocity, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
+			Gui::DragFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
+			//Gui::DragFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
+			//Gui::DragFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
 			Gui::DragInt("Color Mode:", &m_colorMode);
-			Gui::DragInt("Distr Shell Count:", &m_initialDistributionShellCount);
-			Gui::DragFloat("Distr Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
 
+			// Buttons:
+			static bool step = false;
+			if (step)
+				step = m_isRunning = false;
+			if (Gui::Button("Step"))
+				step = m_isRunning = true;
 			if (Gui::Button("Reset Simulation"))
 				m_pScript->Reset();
+			if (Gui::Button("Print"))
+				m_pScript->Print();
+
 			SetData();
 		}
 
@@ -96,8 +109,9 @@ namespace emberEditor
 			m_pressureMultiplier = m_pScript->GetPressureMultiplier();
 			m_gravity = m_pScript->GetGravity();
 			m_maxVelocity = m_pScript->GetMaxVelocity();
+			//m_attractorRadius = m_pScript->GetAttractorRadius();
+			//m_attractorStrength = m_pScript->GetAttractorStrength();
 			m_colorMode = m_pScript->GetColorMode();
-			m_initialDistributionShellCount = m_pScript->GetInitialDistributionShellCount();
 			m_initialDistributionRadius = m_pScript->GetInitialDistributionRadius();
 			m_visualRadius = m_pScript->GetVisualRadius();
 		}
@@ -105,7 +119,7 @@ namespace emberEditor
 		{
 			m_pScript->SetIsRunning(m_isRunning);
 			m_pScript->SetTimeScale(m_timeScale);
-			m_pScript->SetUseGridOptimization(m_useGridOptimization);
+			m_pScript->SetUseHashGridOptimization(m_useGridOptimization);
 			m_pScript->SetParticleCount(m_particleCount);
 			m_pScript->SetEffectRadius(m_effectRadius);
 			m_pScript->SetMass(m_mass);
@@ -116,8 +130,9 @@ namespace emberEditor
 			m_pScript->SetPressureMultiplier(m_pressureMultiplier);
 			m_pScript->SetGravity(m_gravity);
 			m_pScript->SetMaxVelocity(m_maxVelocity);
+			//m_pScript->SetAttractorRadius(m_attractorRadius);
+			//m_pScript->SetAttractorStrength(m_attractorStrength);
 			m_pScript->SetColorMode(m_colorMode);
-			m_pScript->SetInitialDistributionShellCount(m_initialDistributionShellCount);
 			m_pScript->SetInitialDistributionRadius(m_initialDistributionRadius);
 			m_pScript->SetVisualRadius(m_visualRadius);
 		}

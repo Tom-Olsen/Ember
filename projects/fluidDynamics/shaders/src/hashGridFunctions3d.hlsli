@@ -1,12 +1,11 @@
-#ifndef __INCLUDE_GUARD_hashGridFunctions3d_hlsli__
-#define __INCLUDE_GUARD_hashGridFunctions3d_hlsli__
+#pragma once
 
 
 
 // Hash grid primes:
-static const int prime0 = 15823;    //19677199;
-static const int prime1 = 9737333;  //73856093;
-static const int prime2 = 440817757;//83492791;
+static const uint prime0 = 19349663;    // Not actually prime, but commonly used in spatial hashing.
+static const uint prime1 = 73856093;
+static const uint prime2 = 83492791;
 
 
 
@@ -26,25 +25,37 @@ static const int3 offsets[27] =
 
 
 
-int3 Cell(float3 position, float radius)
+// Hashing:
+int3 HashGrid3d_Cell(float3 position, float radius)
 {
     return int3(floor(position / radius));
 }
-int CellHash(int3 cell)
+uint HashGrid3d_CellHash(int3 cell)
 {
-    int a = cell.x * prime0;
-    int b = cell.y * prime1;
-    int c = cell.z * prime2;
-    return a ^ b ^ c;
+    uint hash = (uint(cell.x) * prime0) + (uint(cell.y) * prime1) + (uint(cell.z) * prime2);
+    hash ^= hash >> 16;
+    hash *= 0x85ebca6b;
+    hash ^= hash >> 13;
+    hash *= 0xc2b2ae35;
+    hash ^= hash >> 16;
+    return hash;
 }
-uint CellKey(int cellHash, int particleCount)
+uint HashGrid3d_CellKey(uint cellHash, uint hashGridSize)
 {
-    // Module operation with negative numbers is not identical between c++ and hlsl.
-    // The below method circumvents this discrepency.
-    int mod = cellHash % particleCount;
-    return (mod + particleCount) % particleCount;
+    // hashGridSize ~ 2*particleCount for fewer collisions.
+    return cellHash % hashGridSize;
 }
 
 
 
-#endif //__INCLUDE_GUARD_hashGridFunctions3d_hlsli__
+// Getters:
+uint HashGrid3d_GetCellKey(int3 cell, uint hashGridSize)
+{
+    uint cellHash = HashGrid3d_CellHash(cell);
+    return HashGrid3d_CellKey(cellHash, hashGridSize);
+}
+uint HashGrid3d_GetStartIndex(int3 cell, uint hashGridSize, StructuredBuffer<uint> startIndexBuffer)
+{
+    uint cellKey = HashGrid3d_GetCellKey(cell, hashGridSize);
+    return startIndexBuffer[cellKey];
+}

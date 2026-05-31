@@ -6,6 +6,11 @@
 
 namespace emberMath
 {
+	// Forward declarations:
+	struct Float2;
+
+
+
 	struct Int3
 	{
 	public:
@@ -21,6 +26,7 @@ namespace emberMath
 		Int3(const Int2& xy);
 		Int3(const Int2& xy, int z);
 		Int3(const Int3& xyz);
+		Int3(const Float3& xyz);
 
 		// Math operations:
 

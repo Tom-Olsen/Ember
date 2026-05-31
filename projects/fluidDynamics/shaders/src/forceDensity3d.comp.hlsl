@@ -7,29 +7,35 @@
 cbuffer Values : register(b300, SHADER_SET)
 {
     // General parameters:
-    uint particleCount;
-    uint useGridOptimization;
-    float gridRadius;
-    
+    // particleCount = pc.threadCount.x
+    uint hashGridSize; // ~2*particleCount
+    uint useHashGridOptimization;
+
     // Physics:
     float viscosity;
     float mass;
     float gravity;
     float surfaceTension;
-    
+
     // Sph parameters:
     float effectRadius;
     float targetDensity;
     float pressureMultiplier;
+
+    // Attractor:
+    //int attractorState;
+    //float attractorRadius;
+    //float attractorStrength;
+    //float3 attractorPoint;
 };
-StructuredBuffer<uint> cellKeyBuffer : register(t100, SHADER_SET);
-StructuredBuffer<uint> startIndexBuffer : register(t101, SHADER_SET);
-StructuredBuffer<float3> positionBuffer : register(t102, SHADER_SET);
-StructuredBuffer<float3> velocityBuffer : register(t103, SHADER_SET);
-StructuredBuffer<float> densityBuffer : register(t104, SHADER_SET);
-StructuredBuffer<float3> normalBuffer : register(t105, SHADER_SET);
-StructuredBuffer<float> curvatureBuffer : register(t106, SHADER_SET);
-RWStructuredBuffer<float3> forceDensityBuffer : register(u200, SHADER_SET);
+StructuredBuffer<uint> cellKeyBuffer : register(t100, CALL_SET);
+StructuredBuffer<uint> startIndexBuffer : register(t101, CALL_SET);
+StructuredBuffer<float3> positionBuffer : register(t102, CALL_SET);
+StructuredBuffer<float3> velocityBuffer : register(t103, CALL_SET);
+StructuredBuffer<float> densityBuffer : register(t104, CALL_SET);
+StructuredBuffer<float3> normalBuffer : register(t105, CALL_SET);
+StructuredBuffer<float> curvatureBuffer : register(t106, CALL_SET);
+RWStructuredBuffer<float3> forceDensityBuffer : register(u200, CALL_SET);
 
 
 
@@ -37,6 +43,14 @@ float Pressure(float density, float targetDensity, float pressureMultiplier)
 {
     float densityError = density - targetDensity;
     return densityError * pressureMultiplier;
+}
+float3 OverlapDirection(uint index, uint otherIndex, float time)
+{
+    float z = 1.0f - 2.0f * Random01(index, otherIndex, time);
+    float phi = 2.0f * math_PI * Random01(index, otherIndex, 1u, time);
+    float rxy = sqrt(max(0.0f, 1.0f - z * z));
+    float3 dir = float3(rxy * cos(phi), rxy * sin(phi), z);
+    return (index < otherIndex) ? dir : -dir;
 }
 
 
@@ -50,20 +64,20 @@ void main(uint3 threadID : SV_DispatchThreadID)
         forceDensityBuffer[index] = float3(0, 0, 0);
         float particlePressure = Pressure(densityBuffer[index], targetDensity, pressureMultiplier);
         float3 particlePos = positionBuffer[index];
-        float3 particleVel = velocityBuffer[index];
-        
-		// Particle-Particle interaction forces:
-        if (useGridOptimization)
-        {// With hash grid optimization:
-            int3 particleCell = Cell(particlePos, gridRadius);
+        if (useHashGridOptimization)
+        {
+            int3 particleCell = HashGrid3d_Cell(particlePos, effectRadius);
             for (uint i = 0; i < 27; i++)
             {
                 int3 neighbourCell = particleCell + offsets[i];
-                uint neighbourCellHash = CellHash(neighbourCell);
-                uint neighbourCellKey = CellKey(neighbourCellHash, particleCount);
-                uint otherIndex = startIndexBuffer[neighbourCellKey];
+                uint cellKey = HashGrid3d_GetCellKey(neighbourCell, hashGridSize);
+                uint otherIndex = HashGrid3d_GetStartIndex(neighbourCell, hashGridSize, startIndexBuffer);
 
-                while (otherIndex < particleCount) // at most as many iterations as there are particles.
+                // Skip empty cells:
+                if (otherIndex == uint(-1) || otherIndex >= pc.threadCount.x)
+                    continue;
+
+                while (otherIndex < pc.threadCount.x && cellKeyBuffer[otherIndex] == cellKey)
                 {
                     // Skip self interaction:
                     if (otherIndex == index)
@@ -71,55 +85,46 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         otherIndex++;
                         continue;
                     }
-                    
-                    uint otherCellKey = cellKeyBuffer[otherIndex];
-                    if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
-                        break;
-                    
-                    float3 otherPos = positionBuffer[otherIndex];
-                    float3 otherVel = velocityBuffer[otherIndex];
-                    float3 offset = particlePos - otherPos;
+
+                    float3 offset = particlePos - positionBuffer[otherIndex];
                     float r = length(offset);
                     if (r < effectRadius)
                     {
-						// Pressure force density:
-                        float phi = 2.0f * math_PI * Random01(index, otherIndex, pc.time);
-                        float3 dir = (r < 1e-8f) ? float3(cos(phi), sin(phi), 0) : offset / r;  // TODO: use fibonacci sphere to map random number to point on sphere.
+                        // Pressure force density:
+                        float3 dir = (r < 1e-8f) ? OverlapDirection(index, otherIndex, pc.time) : offset / r;
                         float otherParticlePressure = Pressure(densityBuffer[otherIndex], targetDensity, pressureMultiplier);
                         float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
                         forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky(r, dir, effectRadius) / densityBuffer[otherIndex];
 
-						// Viscosity force density:
-                        float3 velocityDiff = otherVel - particleVel;
-                        forceDensityBuffer[index] += viscosity * (mass * SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]) * velocityDiff;
+                        // Viscosity force density:
+                        float3 velocityDiff = velocityBuffer[otherIndex] - velocityBuffer[index];
+                        forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]);
                     }
-
                     otherIndex++;
                 }
             }
         }
         else
-        {// Naive iteration over all particles:
-            for (uint i = 0; i < particleCount; i++)
+        {
+            for (uint i = 0; i < pc.threadCount.x; i++)
             {
                 // Skip self interaction:
                 if (i == index)
                     continue;
-            
-                float3 offset = positionBuffer[index] - positionBuffer[i];
+
+                float3 offset = particlePos - positionBuffer[i];
                 float r = length(offset);
                 if (r < effectRadius)
                 {
                     // Pressure force density:
-                    float phi = 2.0f * math_PI * Random01(index, i, pc.time);
-                    float3 dir = (r < 1e-8f) ? float3(cos(phi), sin(phi), 0) : offset / r; // TODO: use fibonacci sphere to map random number to point on sphere.
+                    float3 dir = (r < 1e-8f) ? OverlapDirection(index, i, pc.time) : offset / r;
                     float otherParticlePressure = Pressure(densityBuffer[i], targetDensity, pressureMultiplier);
                     float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
                     forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky(r, dir, effectRadius) / densityBuffer[i];
-                
+
                     // Viscosity force density:
                     float3 velocityDiff = velocityBuffer[i] - velocityBuffer[index];
-                    forceDensityBuffer[index] += viscosity * (mass * SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[i]) * velocityDiff;
+                    forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[i]);
                 }
             };
         }
@@ -127,10 +132,18 @@ void main(uint3 threadID : SV_DispatchThreadID)
         {
             // Gravity force density:
             forceDensityBuffer[index] += densityBuffer[index] * float3(0.0f, 0.0f, -gravity);
-            
+
             // Surface tension:
-            if (curvatureBuffer[index] != 0)
-                forceDensityBuffer[index] -= surfaceTension * curvatureBuffer[index] * normalBuffer[index];
+            forceDensityBuffer[index] += surfaceTension * curvatureBuffer[index] * normalBuffer[index];
+
+            // Attractor force density:
+            //float3 offset = attractorPoint - positionBuffer[index];
+            //float r = length(offset);
+            //if (r < attractorRadius && r > 1e-8f)
+            //{
+            //    r /= attractorRadius;
+            //    forceDensityBuffer[index] += attractorState * attractorStrength * densityBuffer[index] * offset * r * r;
+            //}
         }
     }
 }

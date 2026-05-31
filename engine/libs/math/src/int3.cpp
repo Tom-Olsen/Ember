@@ -1,5 +1,6 @@
 #include "int3.h"
 #include "int2.h"
+#include "float3.h"
 #include "mathFunctions.h"
 #include <cassert>
 #include <sstream>
@@ -16,6 +17,7 @@ namespace emberMath
 	Int3::Int3(const Int2& xy) : x(xy.x), y(xy.y), z(0) {}
 	Int3::Int3(const Int2& xy, int z) : x(xy.x), y(xy.y), z(z) {}
 	Int3::Int3(const Int3& xyz) : x(xyz.x), y(xyz.y), z(xyz.z) {}
+	Int3::Int3(const Float3& xyz) : x(xyz.x), y(xyz.y), z(xyz.z) {}
 
 
 

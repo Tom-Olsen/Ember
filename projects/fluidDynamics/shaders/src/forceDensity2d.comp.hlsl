@@ -16,12 +16,12 @@ cbuffer Values : register(b300, SHADER_SET)
     float mass;
     float gravity;
     float surfaceTension;
-    
+
     // Sph parameters:
     float effectRadius;
     float targetDensity;
     float pressureMultiplier;
-    
+
     // Attractor:
     int attractorState;
     float attractorRadius;
@@ -70,11 +70,11 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 int2 neighbourCell = particleCell + offsets[i];
                 uint cellKey = HashGrid2d_GetCellKey(neighbourCell, hashGridSize);
                 uint otherIndex = HashGrid2d_GetStartIndex(neighbourCell, hashGridSize, startIndexBuffer);
-                
+
                 // Skip empty cells:
                 if (otherIndex == uint(-1) || otherIndex >= pc.threadCount.x)
                     continue;
-                
+
                 while (otherIndex < pc.threadCount.x && cellKeyBuffer[otherIndex] == cellKey)
                 {
                     // Skip self interaction:
@@ -83,7 +83,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         otherIndex++;
                         continue;
                     }
-                    
+
                     float2 offset = particlePos - positionBuffer[otherIndex];
                     float r = length(offset);
                     if (r < effectRadius)
@@ -109,7 +109,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 // Skip self interaction:
                 if (i == index)
                     continue;
-            
+
                 float2 offset = particlePos - positionBuffer[i];
                 float r = length(offset);
                 if (r < effectRadius)
@@ -119,7 +119,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     float otherParticlePressure = Pressure(densityBuffer[i], targetDensity, pressureMultiplier);
                     float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
                     forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky(r, dir, effectRadius) / densityBuffer[i];
-                
+
                     // Viscosity force density:
                     float2 velocityDiff = velocityBuffer[i] - velocityBuffer[index];
                     forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[i]);
@@ -130,11 +130,11 @@ void main(uint3 threadID : SV_DispatchThreadID)
         {
             // Gravity force density:
             forceDensityBuffer[index] += densityBuffer[index] * float2(0.0f, -gravity);
-            
+
             // Surface tension:
             forceDensityBuffer[index] += surfaceTension * curvatureBuffer[index] * normalBuffer[index];
-            
-            // External force density:
+
+            // Attractor force density:
             float2 offset = attractorPoint - positionBuffer[index];
             float r = length(offset);
             if (r < attractorRadius && r > 1e-8f)

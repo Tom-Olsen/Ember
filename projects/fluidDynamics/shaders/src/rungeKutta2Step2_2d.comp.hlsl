@@ -22,7 +22,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 {
     const float a1 = 1.0f / 3.0f;
     const float a2 = 2.0f / 3.0f;
-    
+
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {

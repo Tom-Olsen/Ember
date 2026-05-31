@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __INCLUDE_GUARD_smoothingKernals2d_hlsli__
+#define __INCLUDE_GUARD_smoothingKernals2d_hlsli__
 #include "math.hlsli"
 
 
@@ -76,3 +77,7 @@ float SmoothingKernal_DDViscos(float r, float h)
     float c = c0 / h3;
     return (r < h) ? c * (4.0f / h2 + 0.5f * h / (r * r * r) - 4.5f * r / h3) : 0.0f;
 }
+
+
+
+#endif //__INCLUDE_GUARD_smoothingKernals2d_hlsli__

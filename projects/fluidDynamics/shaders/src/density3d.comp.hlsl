@@ -6,16 +6,16 @@
 
 cbuffer Values : register(b300, SHADER_SET)
 {
-    uint particleCount;
-    uint useGridOptimization;
-    float gridRadius;
+    // particleCount = pc.threadCount.x
+    uint hashGridSize; // ~2*particleCount
+    uint useHashGridOptimization;
     float effectRadius;
     float mass;
 };
-StructuredBuffer<uint> cellKeyBuffer : register(t100, SHADER_SET);
-StructuredBuffer<uint> startIndexBuffer : register(t101, SHADER_SET);
-StructuredBuffer<float3> positionBuffer : register(t102, SHADER_SET);
-RWStructuredBuffer<float> densityBuffer : register(u200, SHADER_SET);
+StructuredBuffer<uint> cellKeyBuffer : register(t100, CALL_SET);
+StructuredBuffer<uint> startIndexBuffer : register(t101, CALL_SET);
+StructuredBuffer<float3> positionBuffer : register(t102, CALL_SET);
+RWStructuredBuffer<float> densityBuffer : register(u200, CALL_SET);
 
 
 
@@ -25,41 +25,36 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
-        if (useGridOptimization)
-        {// With hash grid optimization:
-            float3 particlePos = positionBuffer[index];
-            int3 particleCell = Cell(particlePos, gridRadius);
-            
-            densityBuffer[index] = 0;
+        densityBuffer[index] = 0;
+        float3 particlePos = positionBuffer[index];
+        if (useHashGridOptimization)
+        {
+            int3 particleCell = HashGrid3d_Cell(particlePos, effectRadius);
             for (uint i = 0; i < 27; i++)
             {
                 int3 neighbourCell = particleCell + offsets[i];
-                uint neighbourCellHash = CellHash(neighbourCell);
-                uint neighbourCellKey = CellKey(neighbourCellHash, particleCount);
-                uint otherIndex = startIndexBuffer[neighbourCellKey];
-            
-                while (otherIndex < particleCount) // at most as many iterations as there are particles.
+                uint cellKey = HashGrid3d_GetCellKey(neighbourCell, hashGridSize);
+                uint otherIndex = HashGrid3d_GetStartIndex(neighbourCell, hashGridSize, startIndexBuffer);
+
+				// Skip empty cells:
+                if (otherIndex == uint(-1) || otherIndex >= pc.threadCount.x)
+                    continue;
+
+                while (otherIndex < pc.threadCount.x && cellKeyBuffer[otherIndex] == cellKey)
                 {
-                    uint otherCellKey = cellKeyBuffer[otherIndex];
-                    if (otherCellKey != neighbourCellKey)	// found first particle that is in a different cell => done.
-                        break;
-            
-                    float3 otherPos = positionBuffer[otherIndex];
-                    float3 offset = particlePos - otherPos;
+                    float3 offset = particlePos - positionBuffer[otherIndex];
                     float r = length(offset);
                     if (r < effectRadius)
                         densityBuffer[index] += mass * SmoothingKernal_Poly6(r, effectRadius);
-            
                     otherIndex++;
                 }
             }
         }
         else
-        {// Naive iteration over all particles:
-            densityBuffer[index] = 0;
-            for (uint i = 0; i < particleCount; i++)
+        {
+            for (uint i = 0; i < pc.threadCount.x; i++)
             {
-                float3 offset = positionBuffer[index] - positionBuffer[i];
+                float3 offset = particlePos - positionBuffer[i];
                 float r = length(offset);
                 if (r < effectRadius)
                     densityBuffer[index] += mass * SmoothingKernal_Poly6(r, effectRadius);

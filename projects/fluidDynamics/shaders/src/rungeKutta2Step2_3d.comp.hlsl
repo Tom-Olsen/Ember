@@ -4,18 +4,16 @@
 
 cbuffer Values : register(b300, SHADER_SET)
 {
-    float deltaT;
+    float dt;
     float maxVelocity;
 };
-StructuredBuffer<float3> forceDensityBuffer : register(t100, SHADER_SET);
-StructuredBuffer<float> densityBuffer : register(t101, SHADER_SET);
-StructuredBuffer<float3> kp1Buffer : register(t102, SHADER_SET);
-StructuredBuffer<float3> kv1Buffer : register(t103, SHADER_SET);
-StructuredBuffer<float3> tempVelocityBuffer : register(t104, SHADER_SET);
-RWStructuredBuffer<float3> kp2Buffer : register(u200, SHADER_SET);
-RWStructuredBuffer<float3> kv2Buffer : register(u201, SHADER_SET);
-RWStructuredBuffer<float3> positionBuffer : register(u202, SHADER_SET);
-RWStructuredBuffer<float3> velocityBuffer : register(u203, SHADER_SET);
+StructuredBuffer<float3> forceDensityBuffer : register(t100, CALL_SET);
+StructuredBuffer<float> densityBuffer : register(t101, CALL_SET);
+StructuredBuffer<float3> kp1Buffer : register(t102, CALL_SET);
+StructuredBuffer<float3> kv1Buffer : register(t103, CALL_SET);
+StructuredBuffer<float3> tempVelocityBuffer : register(t104, CALL_SET);
+RWStructuredBuffer<float3> positionBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<float3> velocityBuffer : register(u201, CALL_SET);
 
 
 
@@ -24,15 +22,15 @@ void main(uint3 threadID : SV_DispatchThreadID)
 {
     const float a1 = 1.0f / 3.0f;
     const float a2 = 2.0f / 3.0f;
-    
+
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
-        float3 acceleration = forceDensityBuffer[index] / densityBuffer[index];
-        kp2Buffer[index] = tempVelocityBuffer[index];
-        kv2Buffer[index] = acceleration;
-        positionBuffer[index] += (a1 * kp1Buffer[index] + a2 * kp2Buffer[index]) * deltaT;
-        velocityBuffer[index] += (a1 * kv1Buffer[index] + a2 * kv2Buffer[index]) * deltaT;
+        float3 acceleration = forceDensityBuffer[index] / max(densityBuffer[index], 1e-8f);
+        float3 kp2 = tempVelocityBuffer[index];
+        float3 kv2 = acceleration;
+        positionBuffer[index] += (a1 * kp1Buffer[index] + a2 * kp2) * dt;
+        velocityBuffer[index] += (a1 * kv1Buffer[index] + a2 * kv2) * dt;
         float speed = length(velocityBuffer[index]);
         if (speed > maxVelocity)
             velocityBuffer[index] *= (maxVelocity / speed);

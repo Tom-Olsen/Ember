@@ -5,7 +5,7 @@
 // Components:
 #include "sphFluid2dCpu.h"
 #include "sphFluid2dGpu.h"
-#include "sphFluid3d.h"
+#include "sphFluid3dGpu.h"
 using namespace emberEngine;
 using namespace fluidDynamics;
 
@@ -26,7 +26,7 @@ Scene* InitScene()
 
 		Camera* pCamera = entity.AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
-		//CameraController* cameraController = entity.AddComponent<CameraController>();
+		CameraController* cameraController = entity.AddComponent<CameraController>();
 
 		pScene->SetActiveCamera(pCamera);
 	}
@@ -34,14 +34,14 @@ Scene* InitScene()
 	//	Entity entity = Entity::Create("sphFluid2dCpu");
 	//	SphFluid2dCpu* pSphFluid2dCpu = entity.AddComponent<SphFluid2dCpu>();
 	//}
-	{ // Sph Fluid 2d Gpu:
-		Entity entity = Entity::Create("sphFluid2dGpu");
-		SphFluid2dGpu* pSphFluid2dGpu = entity.AddComponent<SphFluid2dGpu>();
-	}
-	//{ // Sph Fluid 3d:
-	//	Entity entity = Entity::Create("sphFluid3d");
-	//	SphFluid3d* pSphFluid3d = entity.AddComponent<SphFluid3d>();
+	//{ // Sph Fluid 2d Gpu:
+	//	Entity entity = Entity::Create("sphFluid2dGpu");
+	//	SphFluid2dGpu* pSphFluid2dGpu = entity.AddComponent<SphFluid2dGpu>();
 	//}
+	{ // Sph Fluid 3d Gpu:
+		Entity entity = Entity::Create("sphFluid3dGpu");
+		SphFluid3dGpu* pSphFluid3dGpu = entity.AddComponent<SphFluid3dGpu>();
+	}
 	return pScene;
 }
 

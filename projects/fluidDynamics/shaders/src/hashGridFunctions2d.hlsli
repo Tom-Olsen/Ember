@@ -3,8 +3,8 @@
 
 
 // Hash grid primes:
-static const uint prime0 = 73856093;
-static const uint prime1 = 83492791;
+static const uint prime0 = 19349663;    // Not actually prime, but commonly used in spatial hashing.
+static const uint prime1 = 73856093;
 
 
 
@@ -35,7 +35,7 @@ uint HashGrid2d_CellHash(int2 cell)
 }
 uint HashGrid2d_CellKey(uint cellHash, uint hashGridSize)
 {
-    // hashGridSize ~ 2*particleCount for fever collisions.
+    // hashGridSize ~ 2*particleCount for fewer collisions.
     return cellHash % hashGridSize;
 }
 

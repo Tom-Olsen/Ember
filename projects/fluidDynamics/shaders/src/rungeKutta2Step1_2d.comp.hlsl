@@ -22,7 +22,7 @@ RWStructuredBuffer<float2> tempVelocityBuffer : register(u203, CALL_SET);
 void main(uint3 threadID : SV_DispatchThreadID)
 {
     const float q  = 3.0f / 4.0f;
-    
+
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {

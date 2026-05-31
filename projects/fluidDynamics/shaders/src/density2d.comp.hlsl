@@ -35,11 +35,11 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 int2 neighbourCell = particleCell + offsets[i];
                 uint cellKey = HashGrid2d_GetCellKey(neighbourCell, hashGridSize);
                 uint otherIndex = HashGrid2d_GetStartIndex(neighbourCell, hashGridSize, startIndexBuffer);
-            
+
 				// Skip empty cells:
                 if (otherIndex == uint(-1) || otherIndex >= pc.threadCount.x)
                     continue;
-                
+
                 while (otherIndex < pc.threadCount.x && cellKeyBuffer[otherIndex] == cellKey)
                 {
                     float2 offset = particlePos - positionBuffer[otherIndex];

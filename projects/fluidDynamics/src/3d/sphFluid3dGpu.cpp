@@ -1,6 +1,6 @@
-#include "sphFluid2dGpu.h"
+#include "sphFluid3dGpu.h"
 #include "logger.h"
-#include "sphFluid2dGpuEditorWindow.h"
+#include "sphFluid3dGpuEditorWindow.h"
 
 
 
@@ -8,104 +8,47 @@ namespace fluidDynamics
 {
 	// Public methods:
 	// Constructor/Destructor:
-	SphFluid2dGpu::SphFluid2dGpu()
+	SphFluid3dGpu::SphFluid3dGpu()
 	{
 		// Material setup:
-		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial2d");
+		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial3d");
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
 
         m_forceSetters = true;
-		//// Settings0:
-		//{
-		//	// Management:
-		//	SetTimeScale(4.0f);
-		//	SetParticleCount(2000);
-		//
-		//	// Settings:
-		//	SetUseHashGridOptimization(true);
-		//	SetEffectRadius(0.5f);
-		//	SetMass(1.0f);
-		//	SetViscosity(0.5f);
-		//	SetSurfaceTension(0.07f);
-		//	SetCollisionDampening(0.95f);
-		//	SetTargetDensity(15.0f);
-		//	SetPressureMultiplier(10.0f);
-		//	SetGravity(0.5f);
-		//	SetMaxVelocity(5.0f);
-		//	SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
-		//
-		//	// User Interaction:
-		//	SetAttractorRadius(3.0f);
-		//	SetAttractorStrength(2.0f);
-		//
-		//	// Visuals:
-		//	SetColorMode(0);
-		//	SetInitialDistributionRadius(6.0f);
-		//	SetVisualRadius(0.25f);
-		//}
-		// Settings1:
-		//{
-		//	// Management:
-		//	SetTimeScale(4.0f);
-		//	SetParticleCount(20000);
-		//
-		//	// Settings:
-		//	SetUseHashGridOptimization(true);
-		//	SetEffectRadius(0.2f);
-		//	SetMass(1.0f);
-		//	SetViscosity(1.0f);
-		//	SetSurfaceTension(0.0f);
-		//	SetCollisionDampening(0.95f);
-		//	SetTargetDensity(200.0f);
-		//	SetPressureMultiplier(10.0f);
-		//	SetGravity(0.5f);
-		//	SetMaxVelocity(5.0f);
-		//	SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
-		//
-		//	// User Interaction:
-		//	SetAttractorRadius(3.0f);
-		//	SetAttractorStrength(2.0f);
-		//
-		//	// Visuals:
-		//	SetColorMode(0);
-		//	SetInitialDistributionRadius(8.0f);
-		//	SetVisualRadius(0.15f);
-		//}
-		// Settings2:
 		{
 			// Management:
 			SetTimeScale(2.0f);
-			SetParticleCount(4000);
+			SetParticleCount(20000);
 
 			// Settings:
-			SetUseHashGridOptimization(false);
-			SetEffectRadius(0.5f);
+			SetUseHashGridOptimization(true);
+			SetEffectRadius(1.0f);
 			SetMass(1.0f);
 			SetViscosity(3.0f);
 			SetSurfaceTension(2.0f);
 			SetCollisionDampening(0.95f);
-			SetTargetDensity(25.0f);
-			SetPressureMultiplier(7.0f);
+			SetTargetDensity(10.0f);
+			SetPressureMultiplier(5.0f);
 			SetGravity(1.0f);
 			SetMaxVelocity(5.0f);
-			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
+			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
 
 			// User Interaction:
-			SetAttractorRadius(3.0f);
-			SetAttractorStrength(2.0f);
+			//SetAttractorRadius(3.0f);
+			//SetAttractorStrength(2.0f);
 
 			// Visuals:
 			SetColorMode(0);
 			SetInitialDistributionRadius(6.0f);
-			SetVisualRadius(0.25f);
+			SetVisualRadius(0.5f);
 		}
         m_forceSetters = false;
 
 		// Editor Window:
-		editorWindow = std::make_unique<emberEditor::SphFluid2dGpuEditorWindow>(this);
+		editorWindow = std::make_unique<emberEditor::SphFluid3dGpuEditorWindow>(this);
 		Reset();
 	}
-	SphFluid2dGpu::~SphFluid2dGpu()
+	SphFluid3dGpu::~SphFluid3dGpu()
 	{
 
 	}
@@ -113,7 +56,7 @@ namespace fluidDynamics
 
 
 	// Overrides:
-	void SphFluid2dGpu::FixedUpdate()
+	void SphFluid3dGpu::FixedUpdate()
 	{
 		if (!m_isRunning || m_reset)
 			return;
@@ -125,12 +68,12 @@ namespace fluidDynamics
 		while (restTime > 0.0f)
 		{
 			float deltaT = math::Min(dt, restTime);
-			SphFluid2dGpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_data, m_computeShaders, m_attractor, m_rungeKutta);
+			SphFluid3dGpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_data, m_computeShaders, m_rungeKutta);
 			restTime -= deltaT;
 		}
 		m_timeStep++;
 	}
-	void SphFluid2dGpu::Update()
+	void SphFluid3dGpu::Update()
 	{
 		// Detect framerate crash:
 		if (m_isRunning && Time::GetDeltaTime() > 0.1f)
@@ -166,31 +109,31 @@ namespace fluidDynamics
 			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType);
 			if (m_settings.useHashGridOptimization)
 			{
-				SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
+				SphFluid3dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
 				GpuSort<uint32_t>::SortPermutation(m_computeShaders.computeType, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
 				// TODO: move the reset start index buffer from inside ComputeStartIndices into its own method so it can be done with the SortPermutation before the previous barrier.
-				SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-				GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
-				GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.velocityBuffer.GetBufferView(), m_data.tempBuffer1.GetBufferView());
+				SphFluid3dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+				GpuSort<Float3>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
+				GpuSort<Float3>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.velocityBuffer.GetBufferView(), m_data.tempBuffer1.GetBufferView());
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
 
 				std::swap(m_data.positionBuffer, m_data.tempBuffer0);
 				std::swap(m_data.velocityBuffer, m_data.tempBuffer1);
 			}
-			SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+			SphFluid3dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
-			SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+			SphFluid3dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 
 			m_isRunning = false;
 			m_reset = false;
 			return;
 		}
 
-		// Mouse scrolling:
+		/*// Mouse scrolling:
 		float mouseScroll = EventSystem::MouseScrollY();
 		if (mouseScroll != 0)
 		{
@@ -213,7 +156,7 @@ namespace fluidDynamics
 			std::optional<Float3> hit = m_settings.fluidBounds.IntersectRay(ray);
 			if (hit.has_value())
 			{
-				SetAttractorPoint(Float2(hit.value()));
+				SetAttractorPoint(Float3(hit.value()));
 				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
 				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
@@ -225,7 +168,7 @@ namespace fluidDynamics
 				SetAttractorState(0);
 		}
 		else
-			SetAttractorState(0);
+			SetAttractorState(0);*/
 
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
@@ -241,19 +184,19 @@ namespace fluidDynamics
 
 
 	// Setters:
-	void SphFluid2dGpu::Reset()
+	void SphFluid3dGpu::Reset()
 	{
 		m_reset = true;
 	}
-	void SphFluid2dGpu::SetIsRunning(bool isRunning)
+	void SphFluid3dGpu::SetIsRunning(bool isRunning)
 	{
 		m_isRunning = isRunning;
 	}
-	void SphFluid2dGpu::SetTimeScale(float timeScale)
+	void SphFluid3dGpu::SetTimeScale(float timeScale)
 	{
 		m_timeScale = timeScale;
 	}
-	void SphFluid2dGpu::SetUseHashGridOptimization(bool useGridOptimization)
+	void SphFluid3dGpu::SetUseHashGridOptimization(bool useGridOptimization)
 	{
 		if (m_forceSetters || m_settings.useHashGridOptimization != useGridOptimization)
 		{
@@ -261,7 +204,7 @@ namespace fluidDynamics
 			m_computeShaders.SetUseHashGridOptimization(m_settings.useHashGridOptimization);
 		}
 	}
-	void SphFluid2dGpu::SetParticleCount(int particleCount)
+	void SphFluid3dGpu::SetParticleCount(int particleCount)
 	{
 		particleCount = math::Max(1, particleCount);
 		if (m_forceSetters || m_particleCount != particleCount)
@@ -272,7 +215,7 @@ namespace fluidDynamics
 			m_reset = true;
 		}
 	}
-	void SphFluid2dGpu::SetEffectRadius(float effectRadius)
+	void SphFluid3dGpu::SetEffectRadius(float effectRadius)
 	{
 		effectRadius = math::Max(1e-4f, effectRadius);
 		if (m_forceSetters || m_settings.effectRadius != effectRadius)
@@ -281,7 +224,7 @@ namespace fluidDynamics
 			m_computeShaders.SetEffectRadius(m_settings.effectRadius);
 		}
 	}
-	void SphFluid2dGpu::SetMass(float mass)
+	void SphFluid3dGpu::SetMass(float mass)
 	{
 		mass = math::Max(1e-4f, mass);
 		if (m_forceSetters || m_settings.mass != mass)
@@ -290,7 +233,7 @@ namespace fluidDynamics
 			m_computeShaders.SetMass(m_settings.mass);
 		}
 	}
-	void SphFluid2dGpu::SetViscosity(float viscosity)
+	void SphFluid3dGpu::SetViscosity(float viscosity)
 	{
 		if (m_forceSetters || m_settings.viscosity != viscosity)
 		{
@@ -298,7 +241,7 @@ namespace fluidDynamics
 			m_computeShaders.SetViscosity(m_settings.viscosity);
 		}
 	}
-	void SphFluid2dGpu::SetSurfaceTension(float surfaceTension)
+	void SphFluid3dGpu::SetSurfaceTension(float surfaceTension)
 	{
 		if (m_forceSetters || m_settings.surfaceTension != surfaceTension)
 		{
@@ -306,7 +249,7 @@ namespace fluidDynamics
 			m_computeShaders.SetSurfaceTension(m_settings.surfaceTension);
 		}
 	}
-	void SphFluid2dGpu::SetCollisionDampening(float collisionDampening)
+	void SphFluid3dGpu::SetCollisionDampening(float collisionDampening)
 	{
 		if (m_forceSetters || m_settings.collisionDampening != collisionDampening)
 		{
@@ -314,7 +257,7 @@ namespace fluidDynamics
 			m_computeShaders.SetCollisionDampening(m_settings.collisionDampening);
 		}
 	}
-	void SphFluid2dGpu::SetTargetDensity(float targetDensity)
+	void SphFluid3dGpu::SetTargetDensity(float targetDensity)
 	{
 		targetDensity = math::Max(1e-4f, targetDensity);
 		if (m_forceSetters || m_settings.targetDensity != targetDensity)
@@ -324,7 +267,7 @@ namespace fluidDynamics
 			m_shaderProperties.SetValue("Values", "targetDensity", m_settings.targetDensity);
 		}
 	}
-	void SphFluid2dGpu::SetPressureMultiplier(float pressureMultiplier)
+	void SphFluid3dGpu::SetPressureMultiplier(float pressureMultiplier)
 	{
 		if (m_forceSetters || m_settings.pressureMultiplier != pressureMultiplier)
 		{
@@ -332,7 +275,7 @@ namespace fluidDynamics
 			m_computeShaders.SetPressureMultiplier(m_settings.pressureMultiplier);
 		}
 	}
-	void SphFluid2dGpu::SetGravity(float gravity)
+	void SphFluid3dGpu::SetGravity(float gravity)
 	{
 		if (m_forceSetters || m_settings.gravity != gravity)
 		{
@@ -340,7 +283,7 @@ namespace fluidDynamics
 			m_computeShaders.SetGravity(m_settings.gravity);
 		}
 	}
-	void SphFluid2dGpu::SetMaxVelocity(float maxVelocity)
+	void SphFluid3dGpu::SetMaxVelocity(float maxVelocity)
 	{
 		maxVelocity = math::Max(1e-4f, maxVelocity);
 		if (m_forceSetters || m_settings.maxVelocity != maxVelocity)
@@ -350,7 +293,7 @@ namespace fluidDynamics
 			m_shaderProperties.SetValue("Values", "maxVelocity", m_settings.maxVelocity);
 		}
 	}
-	void SphFluid2dGpu::SetFluidBounds(const Bounds& bounds)
+	void SphFluid3dGpu::SetFluidBounds(const Bounds& bounds)
 	{
 		if (m_forceSetters || m_settings.fluidBounds != bounds)
 		{
@@ -358,7 +301,7 @@ namespace fluidDynamics
 			m_computeShaders.SetFluidBounds(m_settings.fluidBounds);
 		}
 	}
-	void SphFluid2dGpu::SetAttractorRadius(float attractorRadius)
+	/*void SphFluid3dGpu::SetAttractorRadius(float attractorRadius)
 	{
 		attractorRadius = math::Max(1e-4f, attractorRadius);
 		if (m_forceSetters || m_attractor.radius != attractorRadius)
@@ -368,7 +311,7 @@ namespace fluidDynamics
 			m_computeShaders.SetAttractorRadius(m_attractor.radius);
 		}
 	}
-	void SphFluid2dGpu::SetAttractorStrength(float attractorStrength)
+	void SphFluid3dGpu::SetAttractorStrength(float attractorStrength)
 	{
 		attractorStrength = math::Max(1e-4f, attractorStrength);
 		if (m_forceSetters || m_attractor.strength != attractorStrength)
@@ -377,7 +320,7 @@ namespace fluidDynamics
 			m_computeShaders.SetAttractorStrength(m_attractor.strength);
 		}
 	}
-	void SphFluid2dGpu::SetAttractorState(int attractorState)
+	void SphFluid3dGpu::SetAttractorState(int attractorState)
 	{
 		if (m_forceSetters || m_attractor.state != attractorState)
 		{
@@ -385,15 +328,15 @@ namespace fluidDynamics
 			m_computeShaders.SetAttractorState(m_attractor.state);
 		}
 	}
-	void SphFluid2dGpu::SetAttractorPoint(const Float2& attractorPoint)
+	void SphFluid3dGpu::SetAttractorPoint(const Float3& attractorPoint)
 	{
 		if (m_forceSetters || m_attractor.point != attractorPoint)
 		{
 			m_attractor.point = attractorPoint;
 			m_computeShaders.SetAttractorPoint(m_attractor.point);
 		}
-	}
-	void SphFluid2dGpu::SetColorMode(int colorMode)
+	}*/
+	void SphFluid3dGpu::SetColorMode(int colorMode)
 	{
 		colorMode = math::Clamp(colorMode, 0, 3);
 		if (m_forceSetters || m_colorMode != colorMode)
@@ -402,7 +345,7 @@ namespace fluidDynamics
 			m_shaderProperties.SetValue("Values", "colorMode", m_colorMode);
 		}
 	}
-	void SphFluid2dGpu::SetInitialDistributionRadius(float initialDistributionRadius)
+	void SphFluid3dGpu::SetInitialDistributionRadius(float initialDistributionRadius)
 	{
 		initialDistributionRadius = math::Max(1e-4f, initialDistributionRadius);
 		if (m_forceSetters || m_initialDistributionRadius != initialDistributionRadius)
@@ -411,96 +354,96 @@ namespace fluidDynamics
 			m_reset = true;
 		}
 	}
-	void SphFluid2dGpu::SetVisualRadius(float visualRadius)
+	void SphFluid3dGpu::SetVisualRadius(float visualRadius)
 	{
 		visualRadius = math::Max(0.01f, visualRadius);
 		if (m_forceSetters || m_visualRadius != visualRadius)
 		{
 			m_visualRadius = visualRadius;
-			m_particleMesh = MeshGenerator::UnitQuad().Scale(m_visualRadius);
+			m_particleMesh = MeshGenerator::CubeSphere(m_visualRadius, 2, "fluidParticle");
 		}
 	}
 
 
 
 	// Getters:
-	bool SphFluid2dGpu::GetIsRunning() const
+	bool SphFluid3dGpu::GetIsRunning() const
 	{
 		return m_isRunning;
 	}
-	float SphFluid2dGpu::GetTimeScale() const
+	float SphFluid3dGpu::GetTimeScale() const
 	{
 		return m_timeScale;
 	}
-	bool SphFluid2dGpu::GetUseGridOptimization() const
+	bool SphFluid3dGpu::GetUseGridOptimization() const
 	{
 		return m_settings.useHashGridOptimization;
 	}
-	uint32_t SphFluid2dGpu::GetTimeStep() const
+	uint32_t SphFluid3dGpu::GetTimeStep() const
 	{
 		return m_timeStep;
 	}
-	int SphFluid2dGpu::GetParticleCount() const
+	int SphFluid3dGpu::GetParticleCount() const
 	{
 		return m_particleCount;
 	}
-	float SphFluid2dGpu::GetEffectRadius() const
+	float SphFluid3dGpu::GetEffectRadius() const
 	{
 		return m_settings.effectRadius;
 	}
-	float SphFluid2dGpu::GetMass() const
+	float SphFluid3dGpu::GetMass() const
 	{
 		return m_settings.mass;
 	}
-	float SphFluid2dGpu::GetViscosity() const
+	float SphFluid3dGpu::GetViscosity() const
 	{
 		return m_settings.viscosity;
 	}
-	float SphFluid2dGpu::GetSurfaceTension() const
+	float SphFluid3dGpu::GetSurfaceTension() const
 	{
 		return m_settings.surfaceTension;
 	}
-	float SphFluid2dGpu::GetCollisionDampening() const
+	float SphFluid3dGpu::GetCollisionDampening() const
 	{
 		return m_settings.collisionDampening;
 	}
-	float SphFluid2dGpu::GetTargetDensity() const
+	float SphFluid3dGpu::GetTargetDensity() const
 	{
 		return m_settings.targetDensity;
 	}
-	float SphFluid2dGpu::GetPressureMultiplier() const
+	float SphFluid3dGpu::GetPressureMultiplier() const
 	{
 		return m_settings.pressureMultiplier;
 	}
-	float SphFluid2dGpu::GetGravity() const
+	float SphFluid3dGpu::GetGravity() const
 	{
 		return m_settings.gravity;
 	}
-	float SphFluid2dGpu::GetMaxVelocity() const
+	float SphFluid3dGpu::GetMaxVelocity() const
 	{
 		return m_settings.maxVelocity;
 	}
-	Bounds SphFluid2dGpu::GetFluidBounds() const
+	Bounds SphFluid3dGpu::GetFluidBounds() const
 	{
 		return m_settings.fluidBounds;
 	}
-	float SphFluid2dGpu::GetAttractorRadius() const
+	/*float SphFluid3dGpu::GetAttractorRadius() const
 	{
 		return m_attractor.radius;
 	}
-	float SphFluid2dGpu::GetAttractorStrength() const
+	float SphFluid3dGpu::GetAttractorStrength() const
 	{
 		return m_attractor.strength;
-	}
-	int SphFluid2dGpu::GetColorMode() const
+	}*/
+	int SphFluid3dGpu::GetColorMode() const
 	{
 		return m_colorMode;
 	}
-	float SphFluid2dGpu::GetInitialDistributionRadius() const
+	float SphFluid3dGpu::GetInitialDistributionRadius() const
 	{
 		return m_initialDistributionRadius;
 	}
-	float SphFluid2dGpu::GetVisualRadius() const
+	float SphFluid3dGpu::GetVisualRadius() const
 	{
 		return m_visualRadius;
 	}
@@ -508,7 +451,7 @@ namespace fluidDynamics
 
 
 	// Debugging:
-	void SphFluid2dGpu::Print()
+	void SphFluid3dGpu::Print()
 	{
 		LOG_INFO("Printing:");
 		m_isRunning = false;
@@ -516,10 +459,10 @@ namespace fluidDynamics
 		std::vector<float> densities(m_particleCount);
 		m_data.densityBuffer.Download(densities);
 
-		std::vector<Float2> positions(m_particleCount);
+		std::vector<Float3> positions(m_particleCount);
 		m_data.positionBuffer.Download(positions);
 
-		std::vector<Float2> forceDensities(m_particleCount);
+		std::vector<Float3> forceDensities(m_particleCount);
 		m_data.forceDensityBuffer.Download(forceDensities);
 
 		for (int i = 0; i < m_particleCount; i++)
