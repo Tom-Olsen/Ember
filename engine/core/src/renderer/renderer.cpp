@@ -220,23 +220,23 @@ namespace emberEngine
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::up, direction);
 		Float3 scale = Float3(width, width, length);
 	
-		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("zylinderFlat"), MaterialManager::GetMaterial("defaultMaterial"), position, rotationMatrix, scale, receiveShadows, castShadows);
+		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("zylinderFlat"), MaterialManager::GetMaterial("simpleUnlitMaterial"), position, rotationMatrix, scale, receiveShadows, castShadows);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 	}
 	void Renderer::DrawCube(const Float3& position, float width, const Float4& color, bool receiveShadows, bool castShadows)
 	{
-		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("unitCube"), MaterialManager::GetMaterial("defaultMaterial"), position, Float3x3::identity, width, receiveShadows, castShadows);
+		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("unitCube"), MaterialManager::GetMaterial("simpleUnlitMaterial"), position, Float3x3::identity, width, receiveShadows, castShadows);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 	}
 	void Renderer::DrawSphere(const Float3& position, float radius, const Float4& color, bool receiveShadows, bool castShadows)
 	{
-		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("cubeSphere"), MaterialManager::GetMaterial("defaultMaterial"), position, Float3x3::identity, radius, receiveShadows, castShadows);
+		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("cubeSphere"), MaterialManager::GetMaterial("simpleUnlitMaterial"), position, Float3x3::identity, radius, receiveShadows, castShadows);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 	}
 	void Renderer::DrawArrow(const Float3& position, const Float3& direction, float size, const Float4& color, bool receiveShadows, bool castShadows)
 	{
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
-		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("arrowFlat"), MaterialManager::GetMaterial("defaultMaterial"), position, rotationMatrix, size, receiveShadows, castShadows);
+		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("arrowFlat"), MaterialManager::GetMaterial("simpleUnlitMaterial"), position, rotationMatrix, size, receiveShadows, castShadows);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 	}
 	void Renderer::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Float4& color, bool receiveShadows, bool castShadows)
