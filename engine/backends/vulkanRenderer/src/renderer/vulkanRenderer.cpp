@@ -260,20 +260,20 @@ namespace vulkanRendererBackend
 
 
 	// Draw mesh:
-	void Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, emberBackendInterface::IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount)
+	void Renderer::DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount)
 	{
 		// Record static draw call.
-		if (!pMesh)
+		if (!pIMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMesh is nullptr.");
 			return;
 		}
-		if (!pMaterial)
+		if (!pIMaterial)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMaterial is nullptr.");
 			return;
 		}
-		if (!pCallDescriptorSetBinding)
+		if (!pICallDescriptorSetBinding)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pCallDescriptorSetBinding is nullptr.");
 			return;
@@ -281,27 +281,27 @@ namespace vulkanRendererBackend
 
 		// Setup draw call:
 		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), false, pShadowDescriptorSetBinding != nullptr, static_cast<DescriptorSetBinding*>(pCallDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pIMaterial), false, pShadowDescriptorSetBinding != nullptr, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
 		m_drawCalls.push_back(drawCall);
 	}
-	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(emberBackendInterface::IMesh* pMesh, emberBackendInterface::IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount)
+	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount)
 	{
 		// Record dynamic draw call.
-		if (!pMesh)
+		if (!pIMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMesh is nullptr.");
 			return nullptr;
 		}
-		if (!pMaterial)
+		if (!pIMaterial)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMaterial is nullptr.");
 			return nullptr;
 		}
 
 		// Setup draw call:
-		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<Material*>(pMaterial)));
+		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<Material*>(pIMaterial)));
 		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), true, pShadowDescriptorSetBinding != nullptr, pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pMesh), instanceCount };
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), true, pShadowDescriptorSetBinding != nullptr, pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
 		m_drawCalls.push_back(drawCall);
 		return pCallDescriptorSetBinding;
 	}
