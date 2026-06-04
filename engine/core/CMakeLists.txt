@@ -72,7 +72,7 @@ source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
  
 # ----------------- Create Library ------------------
 set(LIB_TYPE STATIC)
-if(VULKAN_RENDERER_BACKEND_BUILD_SHARED)
+if(EMBER_CORE_BUILD_SHARED)
     set(LIB_TYPE SHARED)
 endif()
 add_library(${TARGET_NAME} ${LIB_TYPE}
