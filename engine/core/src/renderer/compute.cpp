@@ -1,7 +1,6 @@
 #include "compute.h"
 #include "computeShader.h"
 #include "emberTime.h"
-#include "logger.h"
 #include "shaderProperties.h"
 #include "iCompute.h"
 #include "iComputeShader.h"
@@ -37,6 +36,11 @@ namespace emberEngine
 	{
 		m_pIAsync->DispatchComputeSession(sessionID, Time::GetTime(), Time::GetDeltaTime());
 	}
+	void Compute::Async::DispatchComputeSessionAndWait(uint32_t sessionID)
+	{
+		DispatchComputeSession(sessionID);
+		WaitForFinish(sessionID);
+	}
 	bool Compute::Async::IsFinished(uint32_t sessionID)
 	{
 		return m_pIAsync->IsFinished(sessionID);
@@ -47,22 +51,11 @@ namespace emberEngine
 	}
 
 	// Workload recording:
-	void Compute::Async::RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount)
-	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding = shaderProperties.GetCallInterfaceHandle();
-		if (!pIDescriptorSetBinding)
-		{
-			LOG_WARN("Compute::Async::RecordComputeShader(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another compute call.");
-			return;
-		}
-		m_pIAsync->RecordComputeShader(sessionID, pIComputeShader, pIDescriptorSetBinding, threadCount);
-	}
 	ShaderProperties Compute::Async::RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding = m_pIAsync->RecordComputeShader(sessionID, pIComputeShader, threadCount);
-		ShaderProperties shaderProperties = ShaderProperties(computeShader, pIDescriptorSetBinding, false);
+		ShaderProperties shaderProperties = ShaderProperties(pIDescriptorSetBinding);
 		return shaderProperties;
 	}
 	void Compute::Async::RecordBarrier(uint32_t sessionID, ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
@@ -86,36 +79,6 @@ namespace emberEngine
 		Compute::Async::RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
 	}
 
-
-
-	// Compute::Immediate subclass:
-	emberBackendInterface::ICompute::IImmediate* Compute::Immediate::m_pIImmediate;
-	// Public:
-	// Constructor/Destructor:
-	void Compute::Immediate::Init(emberBackendInterface::ICompute::IImmediate* pIImmediate)
-	{
-		m_pIImmediate = pIImmediate;
-	}
-	void Compute::Immediate::Clear()
-	{
-
-	}
-
-	// Immediate dispatch call:
-	void Compute::Immediate::Dispatch(ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount)
-	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding = shaderProperties.GetCallInterfaceHandle();
-		if (!pIDescriptorSetBinding)
-		{
-			LOG_WARN("Compute::Immediate::Dispatch(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another compute call.");
-			return;
-		}
-		m_pIImmediate->Dispatch(pIComputeShader, pIDescriptorSetBinding, threadCount, Time::GetTime(), Time::GetDeltaTime());
-	}
-
-
-
 	// Compute::PostRender subclass:
 	emberBackendInterface::ICompute::IPostRender* Compute::PostRender::m_pIPostRender;
 	// Public:
@@ -130,22 +93,11 @@ namespace emberEngine
 	}
 
 	// Workload recording:
-	void Compute::PostRender::RecordComputeShader(ComputeShader& computeShader, ShaderProperties& shaderProperties)
-	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding = shaderProperties.GetCallInterfaceHandle();
-		if (!pIDescriptorSetBinding)
-		{
-			LOG_WARN("Compute::PostRender::RecordComputeShader(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another compute call.");
-			return;
-		}
-		m_pIPostRender->RecordComputeShader(pIComputeShader, pIDescriptorSetBinding);
-	}
 	ShaderProperties Compute::PostRender::RecordComputeShader(ComputeShader& computeShader)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = m_pIPostRender->RecordComputeShader(pIComputeShader);
-		ShaderProperties shaderProperties = ShaderProperties(computeShader, pIComputeCallDescriptorSetBinding, false);
+		ShaderProperties shaderProperties = ShaderProperties(pIComputeCallDescriptorSetBinding);
 		return shaderProperties;
 	}
 
@@ -165,22 +117,11 @@ namespace emberEngine
 	}
 
 	// Workload recording:
-	void Compute::PreRender::RecordComputeShader(ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount)
-	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding = shaderProperties.GetCallInterfaceHandle();
-		if (!pIDescriptorSetBinding)
-		{
-			LOG_WARN("Compute::PreRender::RecordComputeShader(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another compute call.");
-			return;
-		}
-		m_pIPreRender->RecordComputeShader(pIComputeShader, pIDescriptorSetBinding, threadCount);
-	}
 	ShaderProperties Compute::PreRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = m_pIPreRender->RecordComputeShader(pIComputeShader, threadCount);
-		ShaderProperties shaderProperties = ShaderProperties(computeShader, pIComputeCallDescriptorSetBinding, false);
+		ShaderProperties shaderProperties = ShaderProperties(pIComputeCallDescriptorSetBinding);
 		return shaderProperties;
 	}
 	void Compute::PreRender::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
@@ -223,7 +164,6 @@ namespace emberEngine
 
 		s_pICompute = std::unique_ptr<emberBackendInterface::ICompute>(pICompute);
 		Compute::Async::Init(s_pICompute->GetAsyncComputeInterfaceHandle());
-		Compute::Immediate::Init(s_pICompute->GetImmediateComputeInterfaceHandle());
 		Compute::PostRender::Init(s_pICompute->GetPostRenderComputeInterfaceHandle());
 		Compute::PreRender::Init(s_pICompute->GetPreRenderComputeInterfaceHandle());
 	}
@@ -231,7 +171,6 @@ namespace emberEngine
 	{
 		Compute::PreRender::Clear();
 		Compute::PostRender::Clear();
-		Compute::Immediate::Clear();
 		Compute::Async::Clear();
 		s_pICompute.reset();
 		s_isInitialized = false;
@@ -240,25 +179,6 @@ namespace emberEngine
 
 
 	// Workload recording:
-	void Compute::RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount, uint32_t sessionID)
-	{
-		switch (computeType)
-		{
-			case ComputeType::async:
-				Async::RecordComputeShader(sessionID, computeShader, shaderProperties, threadCount);
-				break;
-			case ComputeType::immediate:
-				Immediate::Dispatch(computeShader, shaderProperties, threadCount);
-				break;
-			case ComputeType::postRender:
-				// Post render compute is render-target sized by design, so threadCount is ignored here.
-				PostRender::RecordComputeShader(computeShader, shaderProperties);
-				break;
-			case ComputeType::preRender:
-				PreRender::RecordComputeShader(computeShader, shaderProperties, threadCount);
-				break;
-		}
-	}
 	ShaderProperties Compute::RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount, uint32_t sessionID)
 	{
 		switch (computeType)
@@ -266,8 +186,6 @@ namespace emberEngine
 			case ComputeType::async:
 				return Async::RecordComputeShader(sessionID, computeShader, threadCount);
 				break;
-			case ComputeType::immediate:
-				throw std::runtime_error("Compute::RecordComputeShader: immediate compute requires explicit ShaderProperties.");
 			case ComputeType::postRender:
 				// Post render compute is render-target sized by design, so threadCount is ignored here.
 				return PostRender::RecordComputeShader(computeShader);
@@ -285,8 +203,6 @@ namespace emberEngine
 			case ComputeType::async:
 				Async::RecordBarrier(sessionID, srcBarrierFlags, dstBarrierFlags);
 				break;
-			case ComputeType::immediate:
-				break;
 			case ComputeType::postRender:
 				break;
 			case ComputeType::preRender:
@@ -300,8 +216,6 @@ namespace emberEngine
 		{
 			case ComputeType::async:
 				Async::RecordBarrierWaitShaderWriteBeforeRead(sessionID);
-				break;
-			case ComputeType::immediate:
 				break;
 			case ComputeType::postRender:
 				break;
@@ -317,8 +231,6 @@ namespace emberEngine
 			case ComputeType::async:
 				Async::RecordBarrierWaitStorageWriteBeforeRead(sessionID);
 				break;
-			case ComputeType::immediate:
-				break;
 			case ComputeType::postRender:
 				break;
 			case ComputeType::preRender:
@@ -333,8 +245,6 @@ namespace emberEngine
 			case ComputeType::async:
 				Async::RecordBarrierWaitStorageWriteBeforeWrite(sessionID);
 				break;
-			case ComputeType::immediate:
-				break;
 			case ComputeType::postRender:
 				break;
 			case ComputeType::preRender:
@@ -348,8 +258,6 @@ namespace emberEngine
 		{
 			case ComputeType::async:
 				Async::RecordBarrierWaitStorageWriteBeforeReadWrite(sessionID);
-				break;
-			case ComputeType::immediate:
 				break;
 			case ComputeType::postRender:
 				break;

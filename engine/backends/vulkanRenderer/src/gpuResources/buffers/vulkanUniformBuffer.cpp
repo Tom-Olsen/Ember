@@ -70,7 +70,7 @@ namespace vulkanRendererBackend
 	{
 		return m_alignedSize;
 	}
-	uint32_t UniformBuffer::GetBufferOffset(uint32_t frameIndex)
+	uint32_t UniformBuffer::GetBufferOffset(uint32_t frameIndex) const
 	{
 		assert(frameIndex < Context::GetFramesInFlight());
 		return frameIndex * m_alignedSize;

@@ -39,27 +39,6 @@ namespace vulkanRendererBackend
 
 
 	// Workload recording:
-	void PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding)
-	{
-		// Record static compute call.
-		if (!pIComputeShader)
-		{
-			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
-			return;
-		}
-		if (!pIDescriptorSetBinding)
-		{
-			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. pIDescriptorSetBinding is nullptr.");
-			return;
-		}
-
-		// Setup compute call:
-		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetWidth();
-		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
-		Uint3 threadCount{ width, height, 1 };
-		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), static_cast<DescriptorSetBinding*>(pIDescriptorSetBinding), false, AccessMasks::None::none, AccessMasks::None::none };
-		m_computeCalls.push_back(computeCall);
-	}
 	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
 	{
 		// Record dynamic compute call.
@@ -74,7 +53,7 @@ namespace vulkanRendererBackend
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
 		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, true, AccessMasks::None::none, AccessMasks::None::none };
+		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeCalls.push_back(computeCall);
 		return pDescriptorSetBinding;
 	}
@@ -91,10 +70,10 @@ namespace vulkanRendererBackend
 	}
 	void PostRender::ResetComputeCalls()
 	{
-		// Return all owned pDescriptorSetBinding of compute calls back to the corresponding pool:
+		// Return all bindings back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeCalls)
 		{
-			if (computeCall.ownsDescriptorSetBinding && computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
+			if (computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
 				PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
 		}
 

@@ -166,7 +166,6 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) override;
 		emberBackendInterface::IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
 		emberBackendInterface::IMesh* CreateMesh() override;
-		emberBackendInterface::IDescriptorSetBinding* CreateComputeCallDescriptorSetBinding(emberBackendInterface::IComputeShader* pIComputeShader) override;
 		emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial) override;
 
 		// Vulkan handle passthrough for API coupling:

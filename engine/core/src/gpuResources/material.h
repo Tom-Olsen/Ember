@@ -2,6 +2,7 @@
 #include "commonPipelineState.h"
 #include "commonRenderQueue.h"
 #include "emberCoreExport.h"
+#include "shader.h"
 #include <filesystem>
 #include <string>
 
@@ -17,7 +18,7 @@ namespace emberBackendInterface
 
 namespace emberEngine
 {
-	class EMBER_CORE_API Material
+	class EMBER_CORE_API Material : public Shader
 	{
 		// Friends:
 		friend class MaterialManager;

@@ -13,6 +13,7 @@ namespace emberEngine
 		return m_pIMaterial;
 	}
 	Material::Material(emberBackendInterface::IMaterial* pIMaterial)
+        : Shader(pIMaterial->GetShaderDescriptorSetBinding())
 	{
 		m_pIMaterial = pIMaterial;
 	}

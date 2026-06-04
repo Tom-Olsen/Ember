@@ -104,24 +104,9 @@ namespace emberBackendInterface
             virtual void WaitForFinish(uint32_t sessionID) = 0;
 
             // Workload recording:
-            virtual void RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount) = 0;
             virtual IDescriptorSetBinding* RecordComputeShader(uint32_t sessionID, IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
             virtual void RecordBarrier(uint32_t sessionID, ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
         };
-
-
-
-        class IImmediate
-        {
-        public: // Methods:
-            // Virtual destructor for v-table:
-            virtual ~IImmediate() = default;
-
-            // Immediate dispatch call:
-            virtual void Dispatch(IComputeShader* pComputeShader, IDescriptorSetBinding* pDescriptorSetBinding, Uint3 threadCount, float time, float deltaTime) = 0;
-        };
-
-
 
         class IPostRender
         {
@@ -130,7 +115,6 @@ namespace emberBackendInterface
             virtual ~IPostRender() = default;
 
             // Workload recording:
-            virtual void RecordComputeShader(IComputeShader* pIComputeShader, IDescriptorSetBinding* pIDescriptorSetBinding) = 0;
             virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader) = 0;
         };
 
@@ -143,7 +127,6 @@ namespace emberBackendInterface
             virtual ~IPreRender() = default;
 
             // Workload recording:
-            virtual void RecordComputeShader(IComputeShader* pIComputeShader, IDescriptorSetBinding* pIDescriptorSetBinding, Uint3 threadCount) = 0;
             virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
             virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
         };
@@ -151,7 +134,6 @@ namespace emberBackendInterface
 
 
         virtual IAsync* GetAsyncComputeInterfaceHandle() = 0;
-        virtual IImmediate* GetImmediateComputeInterfaceHandle() = 0;
         virtual IPostRender* GetPostRenderComputeInterfaceHandle() = 0;
         virtual IPreRender* GetPreRenderComputeInterfaceHandle() = 0;
     };

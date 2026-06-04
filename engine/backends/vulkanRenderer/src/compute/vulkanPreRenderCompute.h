@@ -42,7 +42,6 @@ namespace vulkanRendererBackend
 		PreRender& operator=(PreRender&& other) noexcept;
 
 		// Workload recording:
-		void RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IDescriptorSetBinding* pDescriptorSetBinding, Uint3 threadCount) override;
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
 		void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags) override;
 

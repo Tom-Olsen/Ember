@@ -11,7 +11,6 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class Async;
-	class Immediate;
 	class PostRender;
 	class PreRender;
 
@@ -21,7 +20,6 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		std::unique_ptr<emberBackendInterface::ICompute::IAsync> m_pIAsync;
-		std::unique_ptr<emberBackendInterface::ICompute::IImmediate> m_pIImmediate;
 		std::unique_ptr<emberBackendInterface::ICompute::IPostRender> m_pIPostRender;
 		std::unique_ptr<emberBackendInterface::ICompute::IPreRender> m_pIPreRender;
 
@@ -40,11 +38,9 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		Async* GetAsyncCompute();
-		Immediate* GetImmediateCompute();
 		PostRender* GetPostRenderCompute();
 		PreRender* GetPreRenderCompute();
 		emberBackendInterface::ICompute::IAsync* GetAsyncComputeInterfaceHandle() override;
-		emberBackendInterface::ICompute::IImmediate* GetImmediateComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IPostRender* GetPostRenderComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IPreRender* GetPreRenderComputeInterfaceHandle() override;
 	};

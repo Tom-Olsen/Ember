@@ -1,7 +1,6 @@
 #include "vulkanCompute.h"
 #include "vulkanContext.h"
 #include "vulkanAsyncCompute.h"
-#include "vulkanImmediateCompute.h"
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
 
@@ -14,7 +13,6 @@ namespace vulkanRendererBackend
 	Compute::Compute()
 	{
 		m_pIAsync = std::make_unique<Async>(10);	// 10 = max session count.
-		m_pIImmediate = std::make_unique<Immediate>();
 		m_pIPostRender = std::make_unique<PostRender>();
 		m_pIPreRender = std::make_unique<PreRender>();
 	}
@@ -36,10 +34,6 @@ namespace vulkanRendererBackend
 	{
 		return static_cast<Async*>(m_pIAsync.get());
 	}
-	Immediate* Compute::GetImmediateCompute()
-	{
-		return static_cast<Immediate*>(m_pIImmediate.get());
-	}
 	PostRender* Compute::GetPostRenderCompute()
 	{
 		return static_cast<PostRender*>(m_pIPostRender.get());
@@ -51,10 +45,6 @@ namespace vulkanRendererBackend
 	emberBackendInterface::ICompute::IAsync* Compute::GetAsyncComputeInterfaceHandle()
 	{
 		return static_cast<emberBackendInterface::ICompute::IAsync*>(m_pIAsync.get());
-	}
-	emberBackendInterface::ICompute::IImmediate* Compute::GetImmediateComputeInterfaceHandle()
-	{
-		return static_cast<emberBackendInterface::ICompute::IImmediate*>(m_pIImmediate.get());
 	}
 	emberBackendInterface::ICompute::IPostRender* Compute::GetPostRenderComputeInterfaceHandle()
 	{

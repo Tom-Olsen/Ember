@@ -18,45 +18,29 @@ namespace emberEngine
 {
 	// Forward decleration:
 	class Buffer;
-	class Compute;
-	class Material;
-	class StorageBuffer;
 	class Texture;
 
 
 
-	class EMBER_CORE_API ShaderProperties
+	class EMBER_CORE_API Shader
 	{
-		// Friends:
-		friend class Renderer;
-		friend class Compute;
+	protected: // Members:
+		emberBackendInterface::IDescriptorSetBinding* m_pIShaderDescriptorSetBinding;
 
-	private: // Members:
-		bool m_ownsICallDescriptorSetBinding;
-		bool m_callDescriptorSetBindingExpired;
-		uint64_t m_callDescriptorSetBindingGeneration;
-		emberBackendInterface::IDescriptorSetBinding* m_pICallDescriptorSetBinding; // conditional ownership, depending on usecase.
-		emberBackendInterface::IDescriptorSetBinding* GetCallInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* GetValidCallInterfaceHandle();
-
-	private: // Methods:
-		// Pooling constructor:
-		// Wraps non-owned call descriptor set bindings supplied by Renderer/Compute call pools.
-		ShaderProperties(emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding);
+	protected: // Methods:
+		// Constructors/Destructor:
+		Shader();
+		Shader(emberBackendInterface::IDescriptorSetBinding* pIShaderDescriptorSetBinding);
+		~Shader();
 
 	public: // Methods:
-		// Constructors/Destructor:
-		ShaderProperties();
-		ShaderProperties(const Material& material);
-		~ShaderProperties();
-
-		// Non-copyable:
-		ShaderProperties(const ShaderProperties&) = delete;
-		ShaderProperties& operator=(const ShaderProperties&) = delete;
+		// Copyable:
+		Shader(const Shader&) = default;
+		Shader& operator=(const Shader&) = default;
 
 		// Movable:
-		ShaderProperties(ShaderProperties&& other) noexcept;
-		ShaderProperties& operator=(ShaderProperties&& other) noexcept;
+		Shader(Shader&& other) noexcept;
+		Shader& operator=(Shader&& other) noexcept;
 
 		// Setters:
 		void SetTexture(const std::string& name, Texture& texture);
@@ -95,16 +79,5 @@ namespace emberEngine
 		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float3& value);
 		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
 		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
-
-		// Getters
-		std::string GetShaderName() const;
-		bool HasBinding(const std::string& name);
-
-		// Debugging:
-		void Print() const;
-		void PrintMaps() const;
-
-	private: // Methods:
-		void ValidateCallDescriptorSetBinding();
 	};
 }

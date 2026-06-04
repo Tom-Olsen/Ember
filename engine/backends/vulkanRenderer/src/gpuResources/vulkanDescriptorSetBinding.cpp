@@ -585,7 +585,7 @@ namespace vulkanRendererBackend
 	{
 		VkDescriptorBufferInfo bufferInfo = {};
 		bufferInfo.buffer = uniformBufferBinding.uniformBuffer.GetVmaBuffer()->GetVkBuffer();
-		bufferInfo.offset = 0;
+		bufferInfo.offset = uniformBufferBinding.uniformBuffer.GetBufferOffset(frameIndex);
 		bufferInfo.range = uniformBufferBinding.uniformBuffer.GetSize();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };

@@ -17,8 +17,7 @@ namespace vulkanRendererBackend
 	{
 		Uint3 threadCount;								// Total thread count in each dimension. GroupCount is automatically computed from blockSize of the ComputeShader.
 		ComputeShader* pComputeShader;					// If null => barrier call.
-		DescriptorSetBinding* pDescriptorSetBinding;	// Supplied by caller (static), or borrowed from pool (dynamic).
-		bool ownsDescriptorSetBinding;					// True if borrowed from pool and returned after execution.
+		DescriptorSetBinding* pDescriptorSetBinding;	// Borrowed from pool for dispatch calls, null for barriers.
 		AccessMask srcAccessMask;						// Only applies to barriers.
 		AccessMask dstAccessMask;						// Only applies to barriers.
 

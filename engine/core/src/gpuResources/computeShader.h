@@ -1,8 +1,9 @@
 #pragma once
 #include "emberCoreExport.h"
 #include "emberMath.h"
-#include <memory>
+#include "shader.h"
 #include <filesystem>
+#include <memory>
 #include <string>
 
 
@@ -23,7 +24,7 @@ namespace emberEngine
 
 
 
-	class EMBER_CORE_API ComputeShader
+	class EMBER_CORE_API ComputeShader : public Shader
 	{
 		// Friends:
 		friend class Compute;

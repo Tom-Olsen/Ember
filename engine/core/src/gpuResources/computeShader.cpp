@@ -2,6 +2,7 @@
 #include "compute.h"
 #include "iComputeShader.h"
 #include "renderer.h"
+#include <utility>
 
 
 
@@ -18,12 +19,14 @@ namespace emberEngine
 	// Public methods:
 	// Constructor/Destructor:
 	ComputeShader::ComputeShader()
+        : Shader()
 	{
 		m_pIComputeShader = nullptr;
 	}
-	ComputeShader::ComputeShader(const std::string& name, const std::filesystem::path& computeSpv)
+	ComputeShader::ComputeShader(const std::string& name, const std::filesystem::path& computeSpv) : Shader()
 	{
 		m_pIComputeShader = std::unique_ptr<emberBackendInterface::IComputeShader>(Renderer::CreateComputeShader(name, computeSpv));
+		m_pIShaderDescriptorSetBinding = m_pIComputeShader->GetShaderDescriptorSetBinding();
 	}
 	ComputeShader::~ComputeShader()
 	{
@@ -33,8 +36,20 @@ namespace emberEngine
 
 
 	// Movable:
-	ComputeShader::ComputeShader(ComputeShader&& other) noexcept = default;
-	ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept = default;
+	ComputeShader::ComputeShader(ComputeShader&& other) noexcept
+		: Shader(std::move(other))
+	{
+		m_pIComputeShader = std::move(other.m_pIComputeShader);
+	}
+	ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Shader::operator=(std::move(other));
+			m_pIComputeShader = std::move(other.m_pIComputeShader);
+		}
+		return *this;
+	}
 
 
 

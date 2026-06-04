@@ -301,7 +301,7 @@ namespace vulkanRendererBackend
 		// Setup draw call:
 		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<Material*>(pIMaterial)));
 		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pMaterial), true, pShadowDescriptorSetBinding != nullptr, pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
+		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pIMaterial), true, pShadowDescriptorSetBinding != nullptr, pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
 		m_drawCalls.push_back(drawCall);
 		return pCallDescriptorSetBinding;
 	}
@@ -456,12 +456,6 @@ namespace vulkanRendererBackend
 	emberBackendInterface::IMesh* Renderer::CreateMesh()
 	{
 		return new Mesh();
-	}
-	emberBackendInterface::IDescriptorSetBinding* Renderer::CreateComputeCallDescriptorSetBinding(emberBackendInterface::IComputeShader* pIComputeShader)
-	{
-		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
-		Shader* pShader = static_cast<Shader*>(pComputeShader);
-		return new DescriptorSetBinding(pShader, CALL_SET_INDEX);
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial)
 	{

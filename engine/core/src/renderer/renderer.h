@@ -132,7 +132,6 @@ namespace emberEngine
 		static emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
 		static emberBackendInterface::IMaterial* CreateMaterial(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static emberBackendInterface::IMesh* CreateMesh(const std::string& name);
-		static emberBackendInterface::IDescriptorSetBinding* CreateComputeCallDescriptorSetBinding(emberBackendInterface::IComputeShader* pIComputeShader);
 		static emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial);
 
 		// Delete all constructors:

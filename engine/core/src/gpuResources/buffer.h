@@ -19,6 +19,7 @@ namespace emberEngine
 	class EMBER_CORE_API Buffer
 	{
 		friend class Renderer;
+		friend class Shader;
 		friend class ShaderProperties;
 
 	private: // Members:

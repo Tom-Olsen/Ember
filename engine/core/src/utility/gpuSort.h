@@ -37,10 +37,16 @@ namespace emberEngine
         static void Clear();
 
         // Dispatches:
-        static void Sort(ComputeType computeType, BufferView<T>& bufferView);
-        static void SortPermutation(ComputeType computeType, BufferView<T>& bufferView, BufferView<uint32_t>& permutationBufferView);
+        static void Sort(ComputeType computeType, BufferView<T>& bufferView, uint32_t sessionID = -1);
+        static void SortPermutation(ComputeType computeType, BufferView<T>& bufferView, BufferView<uint32_t>& permutationBufferView, uint32_t sessionID = -1);
         static void ApplyPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID = -1);
         static void InvertPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView, uint32_t sessionID = -1);
+
+        // Dispatch and wait:
+        static void SortAndWait(BufferView<T>& bufferView);
+        static void SortPermutationAndWait(BufferView<T>& bufferView, BufferView<uint32_t>& permutationBufferView);
+        static void ApplyPermutationAndWait(BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView);
+        static void InvertPermutationAndWait(BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView);
 
     private: // Methods
         // Delete all constructors:

@@ -19,7 +19,6 @@
 #include "vulkanRenderer.h"
 #include "vulkanAsyncCompute.h"
 #include "vulkanCompute.h"
-#include "vulkanImmediateCompute.h"
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
 #include "nullGui.h"

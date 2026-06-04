@@ -11,8 +11,6 @@ namespace emberEngine
 		m_pInstanceBuffer = std::make_unique<Buffer>(instanceCount, elementSize, "testInstancedRendering", BufferUsage::storage);
 		m_pStartCS = ComputeShaderManager::TryGetComputeShader("initialPositions");
 		m_pUpdateCS = ComputeShaderManager::TryGetComputeShader("updatePositions");
-		m_startProperties = ShaderProperties(*m_pStartCS);
-		m_updateProperties = ShaderProperties(*m_pUpdateCS);
 	}
 	TestInstancedRendering::~TestInstancedRendering()
 	{
@@ -35,8 +33,8 @@ namespace emberEngine
 		if (m_pStartCS != nullptr)
 		{
 			Uint3 threadCount = Uint3(m_pInstanceBuffer->GetCount(), 1, 1);
-			m_startProperties.SetBuffer("instanceBuffer", *m_pInstanceBuffer);
-			Compute::PreRender::RecordComputeShader(*m_pStartCS, m_startProperties, threadCount);
+			ShaderProperties shaderProperties = Compute::PreRender::RecordComputeShader(*m_pStartCS, threadCount);
+			shaderProperties.SetBuffer("instanceBuffer", *m_pInstanceBuffer);
 			Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 		}
 	}
@@ -45,8 +43,8 @@ namespace emberEngine
 		if (m_pUpdateCS != nullptr)
 		{
 			Uint3 threadCount = Uint3(m_pInstanceBuffer->GetCount(), 1, 1);
-			m_updateProperties.SetBuffer("instanceBuffer", *m_pInstanceBuffer);
-			Compute::PreRender::RecordComputeShader(*m_pUpdateCS, m_updateProperties, threadCount);
+			ShaderProperties shaderProperties = Compute::PreRender::RecordComputeShader(*m_pUpdateCS, threadCount);
+			shaderProperties.SetBuffer("instanceBuffer", *m_pInstanceBuffer);
 		}
 	}
 }

@@ -104,7 +104,7 @@ namespace emberEngine
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows, 0);
-		ShaderProperties shaderProperties = ShaderProperties(material, pICallDescriptorSetBinding, false);
+		ShaderProperties shaderProperties = ShaderProperties(pICallDescriptorSetBinding);
 		return shaderProperties;
 	}
 	ShaderProperties Renderer::DrawMesh(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
@@ -152,7 +152,7 @@ namespace emberEngine
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
-		ShaderProperties shaderProperties = ShaderProperties(material, pICallDescriptorSetBinding, false);
+		ShaderProperties shaderProperties = ShaderProperties(pICallDescriptorSetBinding);
 		if (shaderProperties.HasBinding("instanceBuffer"))
 			shaderProperties.SetBuffer("instanceBuffer", instanceBuffer);
 		return shaderProperties;
@@ -196,7 +196,7 @@ namespace emberEngine
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
-		ShaderProperties shaderProperties = ShaderProperties(material, pICallDescriptorSetBinding, false);
+		ShaderProperties shaderProperties = ShaderProperties(pICallDescriptorSetBinding);
 		return shaderProperties;
 	}
 	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
@@ -444,10 +444,6 @@ namespace emberEngine
 	emberBackendInterface::IMesh* Renderer::CreateMesh(const std::string& name)
 	{
 		return s_pIRenderer->CreateMesh();
-	}
-	emberBackendInterface::IDescriptorSetBinding* Renderer::CreateComputeCallDescriptorSetBinding(emberBackendInterface::IComputeShader* pIComputeShader)
-	{
-		return s_pIRenderer->CreateComputeCallDescriptorSetBinding(pIComputeShader);
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial)
 	{

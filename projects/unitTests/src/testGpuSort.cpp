@@ -46,7 +46,7 @@ void TestBitonicSortAndPermutationSort(const std::vector<T>& uploadData, Compare
 	std::vector<T> sortedDataCpu = math::CopySort(uploadData, compare);
 	BufferTyped<T> sortBuffer = BufferTyped<T>(count, "sortBuffer", BufferUsage::storage);
 	sortBuffer.Upload(uploadData.data(), count);
-	GpuSort<T>::Sort(ComputeType::immediate, sortBuffer.GetBufferView());
+	GpuSort<T>::SortAndWait(sortBuffer.GetBufferView());
 	std::vector<T> sortedDataGpu(count);
 	sortBuffer.Download(sortedDataGpu.data(), count);
 
@@ -59,7 +59,7 @@ void TestBitonicSortAndPermutationSort(const std::vector<T>& uploadData, Compare
 	BufferTyped<T> permutationSortBuffer = BufferTyped<T>(count, "permutationSortBuffer", BufferUsage::storage);
 	BufferTyped<uint32_t> permutationBuffer = BufferTyped<uint32_t>(count, "permutationBuffer", BufferUsage::storage);
 	permutationSortBuffer.Upload(uploadData.data(), count);
-	GpuSort<T>::SortPermutation(ComputeType::immediate, permutationSortBuffer.GetBufferView(), permutationBuffer.GetBufferView());
+	GpuSort<T>::SortPermutationAndWait(permutationSortBuffer.GetBufferView(), permutationBuffer.GetBufferView());
 	std::vector<T> permutationSortedDataGpu(count);
 	std::vector<uint32_t> permutationGpu(count);
 	permutationSortBuffer.Download(permutationSortedDataGpu.data(), count);
@@ -91,7 +91,9 @@ TEST_F(TEST_GpuSort, LocalBitonicSort)
 	// Prepare compute shader:
 	std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
 	ComputeShader sortCS = ComputeShader("localBitonicSort", directoryPath / "localBitonicSortInt.comp.spv");
-	ShaderProperties shaderProperties = ShaderProperties(sortCS);
+	Uint3 threadCount(count / 2, 1, 1);
+	uint32_t sessionID = Compute::Async::CreateComputeSession();
+	ShaderProperties shaderProperties = Compute::Async::RecordComputeShader(sessionID, sortCS, threadCount);
 	shaderProperties.SetBuffer("dataBuffer", buffer);
 	shaderProperties.SetValue("Values", "bufferSize", count);
 
@@ -99,8 +101,7 @@ TEST_F(TEST_GpuSort, LocalBitonicSort)
 	std::vector<int> sortedDataCpu = math::CopySort(uploadData, [](int a, int b) { return a < b; });
 
 	// Sort array on gpu:
-	Uint3 threadCount(count / 2, 1, 1);
-	Compute::Immediate::Dispatch(sortCS, shaderProperties, threadCount);
+	Compute::Async::DispatchComputeSessionAndWait(sessionID);
 
 	// Buffer download:
 	std::vector<int> sortedDataGpu(count);
@@ -178,7 +179,7 @@ TEST_F(TEST_GpuSort, BitonicSortInt)
 	LOG_INFO("cpu sort time: {}s", Time::GetDeltaTime());
 
 	// Sort array on gpu:
-	GpuSort<int>::Sort(ComputeType::immediate, buffer.GetBufferView());
+	GpuSort<int>::SortAndWait(buffer.GetBufferView());
 	Time::Update();
 	LOG_INFO("gpu sort time: {}s", Time::GetDeltaTime());
 
@@ -232,8 +233,8 @@ TEST_F(TEST_GpuSort, BitonicPermutationSortInt)
 	LOG_INFO("cpu sort time: {}s", Time::GetDeltaTime());
 
 	// Sort array on gpu:
-	GpuSort<int>::SortPermutation(ComputeType::immediate, dataBuffer0.GetBufferView(), permutationBuffer.GetBufferView());
-	GpuSort<int>::ApplyPermutation(ComputeType::immediate, permutationBuffer.GetBufferView(), dataBuffer1.GetBufferView(), tempBuffer.GetBufferView());
+	GpuSort<int>::SortPermutationAndWait(dataBuffer0.GetBufferView(), permutationBuffer.GetBufferView());
+	GpuSort<int>::ApplyPermutationAndWait(permutationBuffer.GetBufferView(), dataBuffer1.GetBufferView(), tempBuffer.GetBufferView());
 	std::swap(dataBuffer1, tempBuffer);
 	Time::Update();
 	LOG_INFO("gpu sort time: {}s", Time::GetDeltaTime());
@@ -276,14 +277,14 @@ TEST_F(TEST_GpuSort, BitonicPermutationSortInt)
 
 	// Inverse permutation Gpu:
 	BufferTyped<uint32_t> inversePermutationBuffer = BufferTyped<uint32_t>(count, "inversePermutationBuffer", BufferUsage::storage);
-	GpuSort<int>::InvertPermutation(ComputeType::immediate, permutationBuffer.GetBufferView(), inversePermutationBuffer.GetBufferView());
+	GpuSort<int>::InvertPermutationAndWait(permutationBuffer.GetBufferView(), inversePermutationBuffer.GetBufferView());
 	inversePermutationBuffer.Download(permutationGpu.data(), count);
 
 	// Unsort on Gpu:
-	GpuSort<int>::ApplyPermutation(ComputeType::immediate, inversePermutationBuffer.GetBufferView(), dataBuffer0.GetBufferView(), tempBuffer.GetBufferView());
+	GpuSort<int>::ApplyPermutationAndWait(inversePermutationBuffer.GetBufferView(), dataBuffer0.GetBufferView(), tempBuffer.GetBufferView());
 	std::swap(dataBuffer0, tempBuffer);
 	dataBuffer0.Download(dataGpu0.data(), count);
-	GpuSort<int>::ApplyPermutation(ComputeType::immediate, inversePermutationBuffer.GetBufferView(), dataBuffer1.GetBufferView(), tempBuffer.GetBufferView());
+	GpuSort<int>::ApplyPermutationAndWait(inversePermutationBuffer.GetBufferView(), dataBuffer1.GetBufferView(), tempBuffer.GetBufferView());
 	std::swap(dataBuffer1, tempBuffer);
 	dataBuffer1.Download(dataGpu1.data(), count);
 

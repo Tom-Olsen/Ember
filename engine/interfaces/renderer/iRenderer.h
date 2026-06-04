@@ -69,7 +69,6 @@ namespace emberBackendInterface
         virtual IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) = 0;
         virtual IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
         virtual IMesh* CreateMesh() = 0;
-        virtual IDescriptorSetBinding* CreateComputeCallDescriptorSetBinding(IComputeShader* pIComputeShader) = 0;
         virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;
 
         // Vulkan handle passthrough for API coupling:

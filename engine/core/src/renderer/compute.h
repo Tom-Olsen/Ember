@@ -21,7 +21,6 @@ namespace emberEngine
 	enum class ComputeType
 	{
 		async,
-		immediate,
 		postRender,
 		preRender
 	};
@@ -44,11 +43,11 @@ namespace emberEngine
 			// Dispatch logic:
 			static uint32_t CreateComputeSession();
 			static void DispatchComputeSession(uint32_t sessionID);
+			static void DispatchComputeSessionAndWait(uint32_t sessionID);
 			static bool IsFinished(uint32_t sessionID);
 			static void WaitForFinish(uint32_t sessionID);
 
 			// Workload recording:
-			static void RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
 			static ShaderProperties RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead(uint32_t sessionID);
@@ -66,33 +65,6 @@ namespace emberEngine
 			~Async() = delete;
 		};
 
-
-
-		class EMBER_CORE_API Immediate
-		{
-		private: // Members:
-			static emberBackendInterface::ICompute::IImmediate* m_pIImmediate;
-
-		public: // Methods:
-			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IImmediate* pIImmediate);
-			static void Clear();
-
-			// Immediate dispatch call:
-			static void Dispatch(ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
-
-		private: // Methods
-			// Delete all constructors:
-			Immediate() = delete;
-			Immediate(const Immediate&) = delete;
-			Immediate& operator=(const Immediate&) = delete;
-			Immediate(Immediate&&) = delete;
-			Immediate& operator=(Immediate&&) = delete;
-			~Immediate() = delete;
-		};
-
-
-
 		class EMBER_CORE_API PostRender
 		{
 		private: // Members:
@@ -105,7 +77,6 @@ namespace emberEngine
 
 			// Workload recording:
 			// Post render compute is render-target sized by design; threadCount is derived by the backend.
-			static void RecordComputeShader(ComputeShader& computeShader, ShaderProperties& shaderProperties);
 			static ShaderProperties RecordComputeShader(ComputeShader& computeShader);
 
 		private: // Methods
@@ -131,7 +102,6 @@ namespace emberEngine
 			static void Clear();
 
 			// Workload recording:
-			static void RecordComputeShader(ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount);
 			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
@@ -161,7 +131,6 @@ namespace emberEngine
 		static void Clear();
 
 		// Workload recording (delegates to given computeType):
-		static void RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, ShaderProperties& shaderProperties, Uint3 threadCount = Uint3::zero, uint32_t sessionID = -1);
 		static ShaderProperties RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount = Uint3::zero, uint32_t sessionID = -1);
 		static void RecordBarrier(ComputeType computeType, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags, uint32_t sessionID = -1);
 		static void RecordBarrierWaitShaderWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);

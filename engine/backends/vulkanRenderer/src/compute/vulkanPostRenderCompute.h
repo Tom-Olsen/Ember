@@ -43,7 +43,6 @@ namespace vulkanRendererBackend
 		PostRender& operator=(PostRender&& other) noexcept;
 
 		// Workload recording:
-		void RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, emberBackendInterface::IDescriptorSetBinding* pDescriptorSetBinding) override;
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader) override;
 
 		// Management:

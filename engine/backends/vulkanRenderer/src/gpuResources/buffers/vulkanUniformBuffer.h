@@ -44,7 +44,7 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		uint32_t GetAlignedSubBufferSize();
-		uint32_t GetBufferOffset(uint32_t frameIndex);
+		uint32_t GetBufferOffset(uint32_t frameIndex) const;
 		// Simple members:
 		int GetInt(const std::string& memberName) const;
 		bool GetBool(const std::string& memberName) const;

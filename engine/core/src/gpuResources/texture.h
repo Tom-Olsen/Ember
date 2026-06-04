@@ -20,6 +20,7 @@ namespace emberEngine
 	{
 		// Friends:
 		friend class Gui;
+		friend class Shader;
 		friend class ShaderProperties;
 
     private: // Members:
@@ -31,7 +32,7 @@ namespace emberEngine
         std::string m_name;
 
     private: // Methods:
-    emberBackendInterface::ITexture* GetInterfaceHandle();
+        emberBackendInterface::ITexture* GetInterfaceHandle();
 		static std::string CreateUnnamedTextureName();
 
 	public: // Methods:
