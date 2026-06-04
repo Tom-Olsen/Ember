@@ -2,10 +2,13 @@
 
 
 
-cbuffer Values : register(b300, SHADER_SET)
+cbuffer ShaderValues : register(b300, SHADER_SET)
+{
+    float maxVelocity;
+};
+cbuffer CallValues : register(b301, CALL_SET)
 {
     float dt;
-    float maxVelocity;
 };
 StructuredBuffer<float3> forceDensityBuffer : register(t100, CALL_SET);
 StructuredBuffer<float> densityBuffer : register(t101, CALL_SET);

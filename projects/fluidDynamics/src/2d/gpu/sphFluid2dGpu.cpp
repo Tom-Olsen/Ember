@@ -159,30 +159,30 @@ namespace fluidDynamics
 		{
 			LOG_INFO("reset");
 			m_timeStep = 0;
-			m_data.Reallocate(m_particleCount, m_initialDistributionRadius, m_computeShaders.computeType);
-			m_rungeKutta.Reallocate(m_particleCount, m_computeShaders.computeType);
+			m_data.Reallocate(m_particleCount, m_initialDistributionRadius, m_computeShaders.computeType, m_computeShaders.sessionID);
+			m_rungeKutta.Reallocate(m_particleCount, m_computeShaders.computeType, m_computeShaders.sessionID);
 
 			// Compute intial fluid state:
-			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType);
+			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 			if (m_settings.useHashGridOptimization)
 			{
 				SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
 
-				GpuSort<uint32_t>::SortPermutation(m_computeShaders.computeType, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView());
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+				GpuSort<uint32_t>::SortPermutation(m_computeShaders.computeType, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView(), m_computeShaders.sessionID);
+				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
 
 				// TODO: move the reset start index buffer from inside ComputeStartIndices into its own method so it can be done with the SortPermutation before the previous barrier.
 				SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-				GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView());
-				GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.velocityBuffer.GetBufferView(), m_data.tempBuffer1.GetBufferView());
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+				GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView(), m_computeShaders.sessionID);
+				GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.velocityBuffer.GetBufferView(), m_data.tempBuffer1.GetBufferView(), m_computeShaders.sessionID);
+				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
 
 				std::swap(m_data.positionBuffer, m_data.tempBuffer0);
 				std::swap(m_data.velocityBuffer, m_data.tempBuffer1);
 			}
 			SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType);
+			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
 			SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 
 			m_isRunning = false;
@@ -230,11 +230,11 @@ namespace fluidDynamics
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
 		Renderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f, Float4::white, false, false);
-		m_shaderProperties.SetBuffer("positionBuffer", m_data.positionBuffer.GetBuffer());
-		m_shaderProperties.SetBuffer("velocityBuffer", m_data.velocityBuffer.GetBuffer());
-		m_shaderProperties.SetBuffer("densityBuffer", m_data.densityBuffer.GetBuffer());
-		m_shaderProperties.SetBuffer("normalBuffer", m_data.normalBuffer.GetBuffer());
-		m_shaderProperties.SetBuffer("curvatureBuffer", m_data.curvatureBuffer.GetBuffer());
+		m_particleMaterial.SetBuffer("positionBuffer", m_data.positionBuffer.GetBuffer());
+		m_particleMaterial.SetBuffer("velocityBuffer", m_data.velocityBuffer.GetBuffer());
+		m_particleMaterial.SetBuffer("densityBuffer", m_data.densityBuffer.GetBuffer());
+		m_particleMaterial.SetBuffer("normalBuffer", m_data.normalBuffer.GetBuffer());
+		m_particleMaterial.SetBuffer("curvatureBuffer", m_data.curvatureBuffer.GetBuffer());
 		Renderer::DrawInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
 	}
 
@@ -321,7 +321,7 @@ namespace fluidDynamics
 		{
 			m_settings.targetDensity = targetDensity;
 			m_computeShaders.SetTargetDensity(m_settings.targetDensity);
-			m_shaderProperties.SetValue("Values", "targetDensity", m_settings.targetDensity);
+			m_particleMaterial.SetValue("Values", "targetDensity", m_settings.targetDensity);
 		}
 	}
 	void SphFluid2dGpu::SetPressureMultiplier(float pressureMultiplier)
@@ -347,7 +347,7 @@ namespace fluidDynamics
 		{
 			m_settings.maxVelocity = maxVelocity;
 			m_computeShaders.SetMaxVelocity(m_settings.maxVelocity);
-			m_shaderProperties.SetValue("Values", "maxVelocity", m_settings.maxVelocity);
+			m_particleMaterial.SetValue("Values", "maxVelocity", m_settings.maxVelocity);
 		}
 	}
 	void SphFluid2dGpu::SetFluidBounds(const Bounds& bounds)
@@ -399,7 +399,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_colorMode != colorMode)
 		{
 			m_colorMode = colorMode;
-			m_shaderProperties.SetValue("Values", "colorMode", m_colorMode);
+			m_particleMaterial.SetValue("Values", "colorMode", m_colorMode);
 		}
 	}
 	void SphFluid2dGpu::SetInitialDistributionRadius(float initialDistributionRadius)

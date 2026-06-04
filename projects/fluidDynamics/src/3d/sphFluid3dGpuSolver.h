@@ -1,6 +1,5 @@
 #pragma once
 #include "emberEngine.h"
-#include <array>
 using namespace emberEngine;
 
 
@@ -42,11 +41,10 @@ namespace fluidDynamics
 			BufferTyped<Float3> tempBuffer4;
 			BufferTyped<Float3> tempBuffer5;
 			ComputeShader resetComputeShader;
-			ShaderProperties resetProperties;
 
 			Data();
 			int ParticleCount();
-			void Reallocate(int particleCount, float initialDistributionRadius, ComputeType computeType);
+			void Reallocate(int particleCount, float initialDistributionRadius, ComputeType computeType, uint32_t sessionID = -1);
 		};
 		struct RungeKutta	// only needed for RungeKutta2 solver.
 		{
@@ -55,11 +53,10 @@ namespace fluidDynamics
 			BufferTyped<Float3> tempPositionBuffer;
 			BufferTyped<Float3> tempVelocityBuffer;
 			ComputeShader resetComputeShader;
-			ShaderProperties resetProperties;
 
 			RungeKutta();
 			int ParticleCount();
-			void Reallocate(int particleCount, ComputeType computeType);
+			void Reallocate(int particleCount, ComputeType computeType, uint32_t sessionID = -1);
 		};
 		struct Attractor
 		{
@@ -70,8 +67,8 @@ namespace fluidDynamics
 		};
 		struct ComputeShaders
 		{
-			static constexpr size_t rungeKuttaStepCount = 2;
 			ComputeType computeType;
+			uint32_t sessionID;
 			ComputeShader cellKeysComputeShader;
 			ComputeShader startIndicesResetComputeShader;
 			ComputeShader startIndicesComputeShader;
@@ -81,14 +78,6 @@ namespace fluidDynamics
 			ComputeShader rungeKutta2Step1ComputeShader;
 			ComputeShader rungeKutta2Step2ComputeShader;
 			ComputeShader boundaryCollisionsComputeShader;
-			std::array<ShaderProperties, rungeKuttaStepCount> cellKeysProperties;
-			std::array<ShaderProperties, rungeKuttaStepCount> startIndicesResetProperties;
-			std::array<ShaderProperties, rungeKuttaStepCount> startIndicesProperties;
-			std::array<ShaderProperties, rungeKuttaStepCount> densityProperties;
-			std::array<ShaderProperties, rungeKuttaStepCount> normalAndCurvatureProperties;
-			std::array<ShaderProperties, rungeKuttaStepCount> forceDensityProperties;
-			std::array<ShaderProperties, rungeKuttaStepCount> rungeKutta2StepProperties;
-			ShaderProperties boundaryCollisionsProperties;
 
 			ComputeShaders();
 			void SetUseHashGridOptimization(bool useHashGridOptimization);
@@ -116,13 +105,13 @@ namespace fluidDynamics
 		static void TimeStepRungeKutta2(float dt, const Settings& settings, Data& data, ComputeShaders& computeShaders, RungeKutta& rungeKutta);
 
 		// Field computations:
-		static void ComputeCellKeys(ComputeShaders& computeShaders, const BufferView<uint32_t>& cellKeyBufferView, const BufferView<Float3>& positionBufferView, size_t propertiesIndex = 0);
-		static void ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView, size_t propertiesIndex = 0);
-		static void ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView, size_t propertiesIndex = 0);
-		static void ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView, size_t propertiesIndex = 0);
-		static void ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView, size_t propertiesIndex = 0);
-		static void ComputeRungeKutta2Step1(ComputeShaders& computeShaders, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempPositionBufferView, const BufferView<Float3>& tempVelocityBufferView);
-		static void ComputeRungeKutta2Step2(ComputeShaders& computeShaders, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
+		static void ComputeCellKeys(ComputeShaders& computeShaders, const BufferView<uint32_t>& cellKeyBufferView, const BufferView<Float3>& positionBufferView);
+		static void ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
+		static void ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
+		static void ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
+		static void ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
+		static void ComputeRungeKutta2Step1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempPositionBufferView, const BufferView<Float3>& tempVelocityBufferView);
+		static void ComputeRungeKutta2Step2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
 		static void ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
 	};
 }

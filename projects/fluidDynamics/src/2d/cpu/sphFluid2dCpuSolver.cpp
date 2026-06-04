@@ -424,7 +424,7 @@ namespace fluidDynamics
 		Float2 forceDensity = densities[particleIndex] * Float2(0.0f, -settings.gravity);
 
         // Surface tension:
-        forceDensity -= settings.surfaceTension * curvatures[particleIndex] * normals[particleIndex];
+        forceDensity += settings.surfaceTension * curvatures[particleIndex] * normals[particleIndex];
 
 		// External force density:
 		Float2 offset = attractor.point - positions[particleIndex];

@@ -2,7 +2,7 @@
 
 
 
-cbuffer Values : register(b300, SHADER_SET)
+cbuffer CallValues : register(b300, CALL_SET)
 {
     uint hashGridSize; // 2 * particleCount rounded up to next prime.
     float initialDistributionRadius;
