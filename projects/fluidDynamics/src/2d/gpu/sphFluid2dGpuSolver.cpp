@@ -6,16 +6,11 @@
 namespace fluidDynamics
 {
 	// Data struct:
-	SphFluid2dGpuSolver::Data::Data()
-	{
-		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
-		resetComputeShader = ComputeShader("resetData2d", directoryPath / "resetData2d.comp.spv");
-	}
 	int SphFluid2dGpuSolver::Data::ParticleCount()
 	{
 		return positionBuffer.IsValid() ? positionBuffer.GetCount() : 0;
 	}
-	void SphFluid2dGpuSolver::Data::Reallocate(int particleCount, float initialDistributionRadius, ComputeType computeType, uint32_t sessionID)
+	void SphFluid2dGpuSolver::Data::Reallocate(int particleCount, float initialDistributionRadius, ComputeShaders& computeShaders)
 	{
 		int hashGridSize = math::NextPrimeAbove(2 * particleCount);
 
@@ -41,7 +36,7 @@ namespace fluidDynamics
 
 		// Reset data:
 		Uint3 threadCount(positionBuffer.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, resetComputeShader, threadCount, sessionID);
+		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.resetDataComputeShader, threadCount, computeShaders.sessionID);
 		shaderProperties.SetValue("CallValues", "hashGridSize", hashGridSize);
 		shaderProperties.SetValue("CallValues", "initialDistributionRadius", initialDistributionRadius);
 		shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBuffer.GetBuffer());
@@ -64,16 +59,11 @@ namespace fluidDynamics
 
 
 	// RungeKutta struct:
-	SphFluid2dGpuSolver::RungeKutta::RungeKutta()
-	{
-		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
-		resetComputeShader = ComputeShader("resetRungeKutta2d", directoryPath / "resetRungeKutta2d.comp.spv");
-	}
 	int SphFluid2dGpuSolver::RungeKutta::ParticleCount()
 	{
 		return kp1Buffer.IsValid() ? kp1Buffer.GetCount() : 0;
 	}
-	void SphFluid2dGpuSolver::RungeKutta::Reallocate(int particleCount, ComputeType computeType, uint32_t sessionID)
+	void SphFluid2dGpuSolver::RungeKutta::Reallocate(int particleCount, ComputeShaders& computeShaders)
 	{
 		if (particleCount != ParticleCount())
 		{
@@ -86,7 +76,7 @@ namespace fluidDynamics
 
 		// Reset data:
 		Uint3 threadCount(kp1Buffer.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, resetComputeShader, threadCount, sessionID);
+		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.resetRungeKuttaComputeShader, threadCount, computeShaders.sessionID);
 		shaderProperties.SetBuffer("kp1Buffer", kp1Buffer.GetBuffer());
 		shaderProperties.SetBuffer("kv1Buffer", kv1Buffer.GetBuffer());
 		shaderProperties.SetBuffer("tempPositionBuffer", tempPositionBuffer.GetBuffer());
@@ -103,6 +93,8 @@ namespace fluidDynamics
 
 		// Load compute shaders:
 		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
+		resetDataComputeShader = ComputeShader("resetData2d", directoryPath / "resetData2d.comp.spv");
+		resetRungeKuttaComputeShader = ComputeShader("resetRungeKutta2d", directoryPath / "resetRungeKutta2d.comp.spv");
 		cellKeysComputeShader = ComputeShader("cellKeys2d", directoryPath / "cellKeys2d.comp.spv");
 		startIndicesResetComputeShader = ComputeShader("startIndicesReset2d", directoryPath / "startIndicesReset2d.comp.spv");
 		startIndicesComputeShader = ComputeShader("startIndices2d", directoryPath / "startIndices2d.comp.spv");

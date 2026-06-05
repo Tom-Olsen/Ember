@@ -506,8 +506,8 @@ namespace fluidDynamics
 	{
 		LOG_INFO("reset");
 		m_timeStep = 0;
-		m_data.Reallocate(m_particleCount, m_initialDistributionRadius, m_computeShaders.computeType, m_computeShaders.sessionID);
-		m_rungeKutta.Reallocate(m_particleCount, m_computeShaders.computeType, m_computeShaders.sessionID);
+		m_data.Reallocate(m_particleCount, m_initialDistributionRadius, m_computeShaders);
+		m_rungeKutta.Reallocate(m_particleCount, m_computeShaders);
 
 		// Compute intial fluid state:
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);

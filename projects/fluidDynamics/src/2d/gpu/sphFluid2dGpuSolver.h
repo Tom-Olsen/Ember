@@ -9,6 +9,40 @@ namespace fluidDynamics
 	class SphFluid2dGpuSolver
 	{
 	public: // Structs:
+		struct ComputeShaders
+		{
+			ComputeType computeType;
+			uint32_t sessionID;
+			ComputeShader resetDataComputeShader;
+			ComputeShader resetRungeKuttaComputeShader;
+			ComputeShader cellKeysComputeShader;
+			ComputeShader startIndicesResetComputeShader;
+			ComputeShader startIndicesComputeShader;
+			ComputeShader densityComputeShader;
+			ComputeShader normalAndCurvatureComputeShader;
+			ComputeShader forceDensityComputeShader;
+			ComputeShader rungeKutta2Step1ComputeShader;
+			ComputeShader rungeKutta2Step2ComputeShader;
+			ComputeShader boundaryCollisionsComputeShader;
+
+			ComputeShaders();
+			void SetUseHashGridOptimization(bool useHashGridOptimization);
+			void SetEffectRadius(float effectRadius);
+			void SetHashGridSize(int hashGridSize);
+			void SetMass(float mass);
+			void SetViscosity(float viscosity);
+			void SetSurfaceTension(float surfaceTension);
+			void SetCollisionDampening(float collisionDampening);
+			void SetTargetDensity(float targetDensity);
+			void SetPressureMultiplier(float pressureMultiplier);
+			void SetGravity(float gravity);
+			void SetMaxVelocity(float maxVelocity);
+			void SetFluidBounds(const Bounds& bounds);
+			void SetAttractorRadius(float attractorRadius);
+			void SetAttractorStrength(float attractorStrength);
+			void SetAttractorState(int attractorState);
+			void SetAttractorPoint(const Float2& attractorPoint);
+		};
 		struct Settings
 		{
 			bool useHashGridOptimization;
@@ -40,23 +74,19 @@ namespace fluidDynamics
 			BufferTyped<Float2> tempBuffer3;
 			BufferTyped<Float2> tempBuffer4;
 			BufferTyped<Float2> tempBuffer5;
-			ComputeShader resetComputeShader;
 
-			Data();
 			int ParticleCount();
-			void Reallocate(int particleCount, float initialDistributionRadius, ComputeType computeType, uint32_t sessionID = -1);
+			void Reallocate(int particleCount, float initialDistributionRadius, ComputeShaders& computeShaders);
 		};
-		struct RungeKutta	// only needed for RungeKutta2 solver.
+		struct RungeKutta
 		{
 			BufferTyped<Float2> kp1Buffer;
 			BufferTyped<Float2> kv1Buffer;
 			BufferTyped<Float2> tempPositionBuffer;
 			BufferTyped<Float2> tempVelocityBuffer;
-			ComputeShader resetComputeShader;
 
-			RungeKutta();
 			int ParticleCount();
-			void Reallocate(int particleCount, ComputeType computeType, uint32_t sessionID = -1);
+			void Reallocate(int particleCount, ComputeShaders& computeShaders);
 		};
 		struct Attractor
 		{
@@ -64,38 +94,6 @@ namespace fluidDynamics
 			float radius;
 			float strength;
 			int state;	// -1 = repulse, 0 = off, 1 = attract.
-		};
-		struct ComputeShaders
-		{
-			ComputeType computeType;
-			uint32_t sessionID;
-			ComputeShader cellKeysComputeShader;
-			ComputeShader startIndicesResetComputeShader;
-			ComputeShader startIndicesComputeShader;
-			ComputeShader densityComputeShader;
-			ComputeShader normalAndCurvatureComputeShader;
-			ComputeShader forceDensityComputeShader;
-			ComputeShader rungeKutta2Step1ComputeShader;
-			ComputeShader rungeKutta2Step2ComputeShader;
-			ComputeShader boundaryCollisionsComputeShader;
-
-			ComputeShaders();
-			void SetUseHashGridOptimization(bool useHashGridOptimization);
-			void SetEffectRadius(float effectRadius);
-			void SetHashGridSize(int hashGridSize);
-			void SetMass(float mass);
-			void SetViscosity(float viscosity);
-			void SetSurfaceTension(float surfaceTension);
-			void SetCollisionDampening(float collisionDampening);
-			void SetTargetDensity(float targetDensity);
-			void SetPressureMultiplier(float pressureMultiplier);
-			void SetGravity(float gravity);
-			void SetMaxVelocity(float maxVelocity);
-			void SetFluidBounds(const Bounds& bounds);
-			void SetAttractorRadius(float attractorRadius);
-			void SetAttractorStrength(float attractorStrength);
-			void SetAttractorState(int attractorState);
-			void SetAttractorPoint(const Float2& attractorPoint);
 		};
 
 	public: // Methods:
