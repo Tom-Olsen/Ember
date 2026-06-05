@@ -98,7 +98,7 @@ namespace fluidDynamics
 	// ComputeShaders struct:
 	SphFluid3dGpuSolver::ComputeShaders::ComputeShaders()
 	{
-		computeType = ComputeType::preRender;
+		computeType = ComputeType::physics;
 		sessionID = -1;
 
 		// Load compute shaders:

@@ -36,6 +36,12 @@ TEST(Mathf, Sign)
 	EXPECT_FLOAT_EQ(math::Sign(4.0f), 1.0f);
 	EXPECT_FLOAT_EQ(math::Sign(-4.0f), -1.0f);
 }
+TEST(Mathf, Fmod)
+{
+	EXPECT_FLOAT_EQ(math::Fmod(0.0f, 0.02f), 0.0f);
+	EXPECT_FLOAT_EQ(math::Fmod(1.02f, 0.02f), 0.0f);
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Fmod(0.05f, 0.02f), 0.01f));
+}
 TEST(Mathf, Sqrt)
 {
 	EXPECT_TRUE(math::IsEpsilonEqual(math::Sqrt(0.0f), 0.0f));

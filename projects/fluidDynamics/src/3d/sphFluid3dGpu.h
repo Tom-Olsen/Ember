@@ -103,5 +103,8 @@ namespace fluidDynamics
 
 		// Debugging:
 		void Print();
+
+	private: // Methods:
+		void RecordReset();
 	};
 }

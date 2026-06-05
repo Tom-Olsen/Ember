@@ -29,6 +29,10 @@ namespace emberMath
 			float factor = powf(10.0f, decimals);
 			return ceilf(value * factor) / factor;
 		}
+		float Fmod(float value, float divisor)
+		{
+			return fmodf(value, divisor);
+		}
 		float Sign(float value)
 		{// value > 0.0f -> 1.0f, value < 0.0f -> -1.0f, value == 0.0f -> 0.0f
 			return (0.0f < value) - (value < 0.0f);

@@ -1,0 +1,19 @@
+Async Compute Cleanup TODO
+
+Problem
+Compute::Async::Clear() currently does not explicitly wait for all running async compute sessions.
+Shutdown often relies on Renderer::WaitDeviceIdle(), but async compute owns its sessions and should be able to clean them up safely itself.
+
+Recommended design
+- Add a backend async API for waiting on every async session, for example ICompute::IAsync::WaitForFinish() or WaitForAll().
+- Implement it in vulkanRendererBackend::Async by iterating all sessions.
+- Reuse the existing per-session WaitForFinish(sessionID) path for running sessions, instead of only waiting on raw Vulkan fences.
+- Call the new wait-all method from Compute::Async::Clear().
+- Also call it from vulkanRendererBackend::Async::~Async() as a final safety net.
+
+Important detail
+Waiting for GPU completion is not enough by itself.
+The backend must also run the normal reset path after completion so descriptor bindings are returned to pools, command pools are reset, session calls are cleared, fences are reset, and session IDs become reusable.
+
+Current limitation
+The frontend Compute::Async facade cannot implement this on its own because it does not track all created async session IDs or which ones are running

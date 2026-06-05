@@ -59,7 +59,12 @@ namespace fluidDynamics
 	// Overrides:
 	void SphFluid3dGpu::FixedUpdate()
 	{
-		if (!m_isRunning || m_reset)
+		if (m_reset)
+		{
+			RecordReset();
+			return;
+		}
+		if (!m_isRunning)
 			return;
 
 		// Do multiple iterations of deltaT<=dt if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
@@ -100,39 +105,7 @@ namespace fluidDynamics
 
 		// Reset:
 		if (m_reset)
-		{
-			LOG_INFO("reset");
-			m_timeStep = 0;
-			m_data.Reallocate(m_particleCount, m_initialDistributionRadius, m_computeShaders.computeType, m_computeShaders.sessionID);
-			m_rungeKutta.Reallocate(m_particleCount, m_computeShaders.computeType, m_computeShaders.sessionID);
-
-			// Compute intial fluid state:
-			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
-			if (m_settings.useHashGridOptimization)
-			{
-				SphFluid3dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
-
-				GpuSort<uint32_t>::SortPermutation(m_computeShaders.computeType, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView(), m_computeShaders.sessionID);
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
-
-				// TODO: move the reset start index buffer from inside ComputeStartIndices into its own method so it can be done with the SortPermutation before the previous barrier.
-				SphFluid3dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-				GpuSort<Float3>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView(), m_computeShaders.sessionID);
-				GpuSort<Float3>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.velocityBuffer.GetBufferView(), m_data.tempBuffer1.GetBufferView(), m_computeShaders.sessionID);
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
-
-				std::swap(m_data.positionBuffer, m_data.tempBuffer0);
-				std::swap(m_data.velocityBuffer, m_data.tempBuffer1);
-			}
-			SphFluid3dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
-			SphFluid3dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-
-			m_isRunning = false;
-			m_reset = false;
 			return;
-		}
 
 		// Mouse scrolling:
 		float mouseScroll = EventSystem::MouseScrollY();
@@ -458,5 +431,42 @@ namespace fluidDynamics
 
 		for (int i = 0; i < m_particleCount; i++)
 			LOG_TRACE("positions[{}] = {}, density[{}] = {}, forceDensity[{}] = {}", i, positions[i].ToString(), i, densities[i], i, forceDensities[i].ToString());
+	}
+
+
+
+	// Private methods:
+	void SphFluid3dGpu::RecordReset()
+	{
+		LOG_INFO("reset");
+		m_timeStep = 0;
+		m_data.Reallocate(m_particleCount, m_initialDistributionRadius, m_computeShaders.computeType, m_computeShaders.sessionID);
+		m_rungeKutta.Reallocate(m_particleCount, m_computeShaders.computeType, m_computeShaders.sessionID);
+
+		// Compute intial fluid state:
+		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
+		if (m_settings.useHashGridOptimization)
+		{
+			SphFluid3dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
+			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
+
+			GpuSort<uint32_t>::SortPermutation(m_computeShaders.computeType, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView(), m_computeShaders.sessionID);
+			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
+
+			// TODO: move the reset start index buffer from inside ComputeStartIndices into its own method so it can be done with the SortPermutation before the previous barrier.
+			SphFluid3dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+			GpuSort<Float3>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView(), m_computeShaders.sessionID);
+			GpuSort<Float3>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.velocityBuffer.GetBufferView(), m_data.tempBuffer1.GetBufferView(), m_computeShaders.sessionID);
+			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
+
+			std::swap(m_data.positionBuffer, m_data.tempBuffer0);
+			std::swap(m_data.velocityBuffer, m_data.tempBuffer1);
+		}
+		SphFluid3dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
+		SphFluid3dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
+
+		m_isRunning = false;
+		m_reset = false;
 	}
 }

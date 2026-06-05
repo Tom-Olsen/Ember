@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 	struct ComputeSession
 	{
 	public: // Members:
-		enum State { idle, running, recording };
+		enum class State { idle, running, recording };
 		State state = State::idle;
 
 	private: // Members:

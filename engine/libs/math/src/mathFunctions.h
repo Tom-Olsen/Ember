@@ -15,6 +15,7 @@ namespace emberMath
 		float Round(float value, uint8_t decimals = 0);
 		float Floor(float value, uint8_t decimals = 0);
 		float Ceil(float value, uint8_t decimals = 0);
+		float Fmod(float value, float divisor);
 		float Sign(float value);
 		float Sqrt(float value);
 		float Pow(float value, float exponent);

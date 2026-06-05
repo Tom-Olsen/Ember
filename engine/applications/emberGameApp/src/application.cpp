@@ -116,14 +116,29 @@ namespace emberApplication
 				// Frame update loop:
 				m_pActiveScene->EarlyUpdate();
 
-				// Physics Update Loop:
-				while (emberEngine::Time::UpdatePhysics())
-					m_pActiveScene->FixedUpdate();
+				// Skip delayed physics updates:
+				// Runs at most one fixed update per render frame. This avoids stacking physics work when a frame is late, but drops simulation steps under load.
+				//if (emberEngine::Time::UpdatePhysics(true))
+				//{
+				//	emberEngine::Compute::Physics::BeginRecording();
+				//	m_pActiveScene->FixedUpdate();
+				//	emberEngine::Compute::Physics::EndRecording();
+				//}
+				// Batch delayed physics updates:
+				// Runs every pending fixed update. This preserves fixed-step catch-up, but can create large frames.
+				if (emberEngine::Time::ShouldUpdatePhysics())
+				{
+					emberEngine::Compute::Physics::BeginRecording();
+					while (emberEngine::Time::UpdatePhysics())
+						m_pActiveScene->FixedUpdate();
+					emberEngine::Compute::Physics::EndRecording();
+				}
 
 				// Game update loop:
 				emberEngine::Gui::Update();
 				m_pActiveScene->Update();
 				m_pActiveScene->LateUpdate();
+				emberEngine::Compute::Physics::WaitForFinish();
 				emberEngine::Renderer::RenderFrame();
 			}
 		}

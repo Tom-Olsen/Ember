@@ -84,7 +84,7 @@ namespace vulkanRendererBackend
 	}
 	void Async::DispatchComputeSession(uint32_t sessionID, float time, float deltaTime)
 	{
-		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
+		if (sessionID >= m_sessionCount)
 			throw std::out_of_range("compute::Async::DispatchComputeSession(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 		if (m_computeSessions[sessionID].state == ComputeSession::State::recording)
 		{
@@ -98,7 +98,7 @@ namespace vulkanRendererBackend
 	}
 	bool Async::IsFinished(uint32_t sessionID)
 	{
-		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
+		if (sessionID >= m_sessionCount)
 			throw std::out_of_range("compute::Async::IsFinished(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 
 		if (m_computeSessions[sessionID].state != ComputeSession::State::running)
@@ -114,7 +114,7 @@ namespace vulkanRendererBackend
 	}
 	void Async::WaitForFinish(uint32_t sessionID)
 	{
-		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
+		if (sessionID >= m_sessionCount)
 			throw std::out_of_range("compute::Async::WaitForFinish(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 
 		if (m_computeSessions[sessionID].state != ComputeSession::State::running)
@@ -130,7 +130,7 @@ namespace vulkanRendererBackend
 	emberBackendInterface::IDescriptorSetBinding* Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
 		// Record dynamic compute call.
-		if (sessionID < 0 || m_sessionCount - 1 < sessionID)
+		if (sessionID >= m_sessionCount)
 		{
 			LOG_ERROR("compute::Async::RecordComputeShader(...) sessionID '{}' out of range.", sessionID);
 			return nullptr;
@@ -159,9 +159,14 @@ namespace vulkanRendererBackend
 	}
 	void Async::RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
+		if (sessionID >= m_sessionCount)
+		{
+			LOG_ERROR("compute::Async::RecordBarrier(...) sessionID '{}' out of range.", sessionID);
+			return;
+		}
 		if (m_computeSessions[sessionID].state != ComputeSession::State::recording)
 		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. sessionID: {} is not in recording state.", sessionID);
+			LOG_ERROR("compute::Async::RecordBarrier(...) failed. sessionID: {} is not in recording state.", sessionID);
 			return;
 		}
 		

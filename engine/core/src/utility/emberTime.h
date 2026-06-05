@@ -35,7 +35,8 @@ namespace emberEngine
         static float GetTime(TimeUnit unit = TimeUnit::s);
         static float GetDeltaTime(TimeUnit unit = TimeUnit::s);
         static float GetFixedDeltaTime(TimeUnit unit = TimeUnit::s);
-        static bool UpdatePhysics();
+        static bool ShouldUpdatePhysics();
+        static bool UpdatePhysics(bool skipDelayedUpdates = false);
 
     private: // Methods
         // Delete all constructors:

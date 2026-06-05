@@ -3,6 +3,7 @@
 #include "commonRendererCreateInfo.h"
 #include "emberCoreExport.h"
 #include "emberMath.h"
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -22,7 +23,8 @@ namespace emberEngine
 	{
 		async,
 		postRender,
-		preRender
+		preRender,
+		physics
 	};
 
 
@@ -33,7 +35,7 @@ namespace emberEngine
 		class EMBER_CORE_API Async
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IAsync* m_pIAsync;
+			static emberBackendInterface::ICompute::IAsync* s_pIAsync;
 
 		public: // Methods:
 			// Constructor/Destructor:
@@ -68,7 +70,7 @@ namespace emberEngine
 		class EMBER_CORE_API PostRender
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IPostRender* m_pIPostRender;
+			static emberBackendInterface::ICompute::IPostRender* s_pIPostRender;
 
 		public: // Methods:
 			// Constructor/Destructor:
@@ -94,7 +96,7 @@ namespace emberEngine
 		class EMBER_CORE_API PreRender
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IPreRender* m_pIPreRender;
+			static emberBackendInterface::ICompute::IPreRender* s_pIPreRender;
 
 		public: // Methods:
 			// Constructor/Destructor:
@@ -117,6 +119,46 @@ namespace emberEngine
 			PreRender(PreRender&&) = delete;
 			PreRender& operator=(PreRender&&) = delete;
 			~PreRender() = delete;
+		};
+
+
+
+		class EMBER_CORE_API Physics
+		{
+		private: // Members:
+			static bool s_isRecording;
+			static uint32_t s_recordingSessionID;
+			static uint32_t s_sessionIndex;
+			static std::array<uint32_t, 2> s_sessionIDs;
+
+		public: // Methods:
+			// Constructor/Destructor:
+			static void Init();
+			static void Clear();
+
+			// Synchronization:
+			static void WaitForFinish();
+
+			// Workload recording:
+			static void BeginRecording();
+			static void EndRecording();
+			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBarrierWaitShaderWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeWrite();
+			static void RecordBarrierWaitStorageWriteBeforeReadWrite();
+
+		private: // Methods
+			static bool IsFinished();
+
+			// Delete all constructors:
+			Physics() = delete;
+			Physics(const Physics&) = delete;
+			Physics& operator=(const Physics&) = delete;
+			Physics(Physics&&) = delete;
+			Physics& operator=(Physics&&) = delete;
+			~Physics() = delete;
 		};
 
 

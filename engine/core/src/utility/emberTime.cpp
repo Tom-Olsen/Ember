@@ -1,4 +1,5 @@
 #include "emberTime.h"
+#include "emberMath.h"
 #include <thread>
 
 
@@ -95,11 +96,17 @@ namespace emberEngine
 			return 0;
 		}
 	}
-	bool Time::UpdatePhysics()
+	bool Time::ShouldUpdatePhysics()
 	{
-		if (s_fixedTimeAccumulator >= s_fixedDeltaTime)
+		return s_fixedTimeAccumulator >= s_fixedDeltaTime;
+	}
+	bool Time::UpdatePhysics(bool skipDelayedUpdates)
+	{
+		if (ShouldUpdatePhysics())
 		{
 			s_fixedTimeAccumulator -= s_fixedDeltaTime;
+			if (skipDelayedUpdates && s_fixedTimeAccumulator >= s_fixedDeltaTime)
+				s_fixedTimeAccumulator = math::Fmod(s_fixedTimeAccumulator, s_fixedDeltaTime);
 			return true;
 		}
 		return false;
