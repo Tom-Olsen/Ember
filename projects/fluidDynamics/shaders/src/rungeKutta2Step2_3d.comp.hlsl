@@ -15,6 +15,8 @@ StructuredBuffer<float> densityBuffer : register(t101, CALL_SET);
 StructuredBuffer<float3> kp1Buffer : register(t102, CALL_SET);
 StructuredBuffer<float3> kv1Buffer : register(t103, CALL_SET);
 StructuredBuffer<float3> tempVelocityBuffer : register(t104, CALL_SET);
+StructuredBuffer<float3> sourcePositionBuffer : register(t105, CALL_SET);
+StructuredBuffer<float3> sourceVelocityBuffer : register(t106, CALL_SET);
 RWStructuredBuffer<float3> positionBuffer : register(u200, CALL_SET);
 RWStructuredBuffer<float3> velocityBuffer : register(u201, CALL_SET);
 
@@ -32,10 +34,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
         float3 acceleration = forceDensityBuffer[index] / max(densityBuffer[index], 1e-8f);
         float3 kp2 = tempVelocityBuffer[index];
         float3 kv2 = acceleration;
-        positionBuffer[index] += (a1 * kp1Buffer[index] + a2 * kp2) * dt;
-        velocityBuffer[index] += (a1 * kv1Buffer[index] + a2 * kv2) * dt;
-        float speed = length(velocityBuffer[index]);
+        float3 position = sourcePositionBuffer[index] + (a1 * kp1Buffer[index] + a2 * kp2) * dt;
+        float3 velocity = sourceVelocityBuffer[index] + (a1 * kv1Buffer[index] + a2 * kv2) * dt;
+        float speed = length(velocity);
         if (speed > maxVelocity)
-            velocityBuffer[index] *= (maxVelocity / speed);
+            velocity *= (maxVelocity / speed);
+        positionBuffer[index] = position;
+        velocityBuffer[index] = velocity;
     }
 }

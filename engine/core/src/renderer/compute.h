@@ -125,6 +125,9 @@ namespace emberEngine
 
 		class EMBER_CORE_API Physics
 		{
+		public: // Constants:
+			static constexpr uint32_t invalidSessionID = static_cast<uint32_t>(-1);
+
 		private: // Members:
 			static bool s_isRecording;
 			static uint32_t s_recordingSessionID;
@@ -137,11 +140,14 @@ namespace emberEngine
 			static void Clear();
 
 			// Synchronization:
+			static bool IsFinished(uint32_t sessionID);
+			static bool IsFinished();
 			static void WaitForFinish();
 
 			// Workload recording:
 			static void BeginRecording();
 			static void EndRecording();
+			static uint32_t GetRecordingSessionID();
 			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
@@ -150,8 +156,6 @@ namespace emberEngine
 			static void RecordBarrierWaitStorageWriteBeforeReadWrite();
 
 		private: // Methods
-			static bool IsFinished();
-
 			// Delete all constructors:
 			Physics() = delete;
 			Physics(const Physics&) = delete;

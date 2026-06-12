@@ -22,6 +22,8 @@ RWStructuredBuffer<float3> tempBuffer2 : register(u211, CALL_SET);
 RWStructuredBuffer<float3> tempBuffer3 : register(u212, CALL_SET);
 RWStructuredBuffer<float3> tempBuffer4 : register(u213, CALL_SET);
 RWStructuredBuffer<float3> tempBuffer5 : register(u214, CALL_SET);
+RWStructuredBuffer<float3> tempBuffer6 : register(u215, CALL_SET);
+RWStructuredBuffer<float3> tempBuffer7 : register(u216, CALL_SET);
 
 
 
@@ -101,5 +103,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         tempBuffer3[index] = float3(0, 0, 0);
         tempBuffer4[index] = float3(0, 0, 0);
         tempBuffer5[index] = float3(0, 0, 0);
+        tempBuffer6[index] = float3(0, 0, 0);
+        tempBuffer7[index] = float3(0, 0, 0);
     }
 }

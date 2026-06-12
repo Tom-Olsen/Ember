@@ -158,10 +158,9 @@ namespace emberEngine
 	void Compute::Physics::Init()
 	{
 		s_isRecording = false;
-		s_recordingSessionID = static_cast<uint32_t>(-1);
+		s_recordingSessionID = invalidSessionID;
 		s_sessionIndex = 0;
-		s_sessionIDs[0] = static_cast<uint32_t>(-1);
-		s_sessionIDs[1] = static_cast<uint32_t>(-1);
+		s_sessionIDs.fill(invalidSessionID);
 	}
 	void Compute::Physics::Clear()
 	{
@@ -169,18 +168,41 @@ namespace emberEngine
 	}
 
 	// Synchronization:
-	void Compute::Physics::WaitForFinish()
+	bool Compute::Physics::IsFinished(uint32_t sessionID)
 	{
-		if (IsFinished())
-			return;
+		if (sessionID == invalidSessionID)
+			return true;
+		if (sessionID == s_recordingSessionID)
+			return false;
 
-		LOG_WARN("Waiting for Compute::Physics.");
 		for (uint32_t i = 0; i < s_sessionIDs.size(); i++)
 		{
-			if (s_sessionIDs[i] == static_cast<uint32_t>(-1))
+			if (s_sessionIDs[i] != sessionID)
 				continue;
-			Async::WaitForFinish(s_sessionIDs[i]);
-			s_sessionIDs[i] = static_cast<uint32_t>(-1);
+			return Async::IsFinished(sessionID);
+		}
+		return true;
+	}
+	bool Compute::Physics::IsFinished()
+	{
+		for (uint32_t i = 0; i < s_sessionIDs.size(); i++)
+			if (!IsFinished(s_sessionIDs[i]))
+				return false;
+		return true;
+	}
+	void Compute::Physics::WaitForFinish()
+	{
+		bool isFinished = IsFinished();
+		if (!isFinished)
+			LOG_WARN("Waiting for Compute::Physics.");
+
+		for (uint32_t i = 0; i < s_sessionIDs.size(); i++)
+		{
+			if (s_sessionIDs[i] == invalidSessionID)
+				continue;
+			if (!Async::IsFinished(s_sessionIDs[i]))
+				Async::WaitForFinish(s_sessionIDs[i]);
+			s_sessionIDs[i] = invalidSessionID;
 		}
 	}
 
@@ -192,14 +214,14 @@ namespace emberEngine
 			LOG_WARN("Compute::Physics::BeginRecording called while already recording.");
 			return;
 		}
-		if (s_sessionIDs[s_sessionIndex] != static_cast<uint32_t>(-1))
+		if (s_sessionIDs[s_sessionIndex] != invalidSessionID)
 		{
 			if (!Async::IsFinished(s_sessionIDs[s_sessionIndex]))
 			{
 				LOG_WARN("Waiting for Compute::Physics session before recording the next fixed update.");
 				Async::WaitForFinish(s_sessionIDs[s_sessionIndex]);
 			}
-			s_sessionIDs[s_sessionIndex] = static_cast<uint32_t>(-1);
+			s_sessionIDs[s_sessionIndex] = invalidSessionID;
 		}
 
 		s_isRecording = true;
@@ -217,7 +239,11 @@ namespace emberEngine
 		s_sessionIDs[s_sessionIndex] = s_recordingSessionID;
 		s_sessionIndex = (s_sessionIndex + 1) % s_sessionIDs.size();
 		s_isRecording = false;
-		s_recordingSessionID = static_cast<uint32_t>(-1);
+		s_recordingSessionID = invalidSessionID;
+	}
+	uint32_t Compute::Physics::GetRecordingSessionID()
+	{
+		return s_recordingSessionID;
 	}
 	ShaderProperties Compute::Physics::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
@@ -255,20 +281,6 @@ namespace emberEngine
 	}
 
 	// Private:
-	bool Compute::Physics::IsFinished()
-	{
-		bool isFinished = true;
-		for (uint32_t i = 0; i < s_sessionIDs.size(); i++)
-		{
-			if (s_sessionIDs[i] == static_cast<uint32_t>(-1))
-				continue;
-			if (Async::IsFinished(s_sessionIDs[i]))
-				s_sessionIDs[i] = static_cast<uint32_t>(-1);
-			else
-				isFinished = false;
-		}
-		return isFinished;
-	}
 	// Compute class:
 	// Static members:
 	bool Compute::s_isInitialized = false;

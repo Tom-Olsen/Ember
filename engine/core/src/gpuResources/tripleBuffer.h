@@ -11,7 +11,7 @@
 namespace emberEngine
 {
 	template<typename T>
-	class EMBER_CORE_API TripleBufferedBuffer
+	class EMBER_CORE_API TripleBuffer
 	{
 	public: // Constants:
 		static constexpr uint32_t bufferCount = 3;
@@ -21,17 +21,17 @@ namespace emberEngine
 
 	public: // Methods:
 		// Constructor/Destructor:
-		TripleBufferedBuffer();
-		TripleBufferedBuffer(uint32_t count, const std::string& name, emberCommon::BufferUsage usage);
-		~TripleBufferedBuffer();
+		TripleBuffer();
+		TripleBuffer(uint32_t count, const std::string& name, emberCommon::BufferUsage usage);
+		~TripleBuffer();
 
 		// Non-copyable:
-		TripleBufferedBuffer(const TripleBufferedBuffer&) = delete;
-		TripleBufferedBuffer& operator=(const TripleBufferedBuffer&) = delete;
+		TripleBuffer(const TripleBuffer&) = delete;
+		TripleBuffer& operator=(const TripleBuffer&) = delete;
 
 		// Movable:
-		TripleBufferedBuffer(TripleBufferedBuffer&& other) noexcept;
-		TripleBufferedBuffer& operator=(TripleBufferedBuffer&& other) noexcept;
+		TripleBuffer(TripleBuffer&& other) noexcept;
+		TripleBuffer& operator=(TripleBuffer&& other) noexcept;
 
 		// Getters:
 		std::string GetName(uint32_t bufferIndex = 0) const;

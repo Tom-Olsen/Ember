@@ -137,7 +137,6 @@ namespace emberApplication
 				emberEngine::Gui::Update();
 				m_pActiveScene->Update();
 				m_pActiveScene->LateUpdate();
-				emberEngine::Compute::Physics::WaitForFinish();
 				emberEngine::Renderer::RenderFrame();
 			}
 		}

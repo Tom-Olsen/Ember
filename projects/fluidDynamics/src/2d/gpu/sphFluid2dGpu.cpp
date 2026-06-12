@@ -127,12 +127,21 @@ namespace fluidDynamics
 		float dt = Time::GetFixedDeltaTime();
 		float timeStep = m_timeScale * dt;
 		float restTime = timeStep;
+		uint32_t sourceDataIndex = m_tripleBufferState.GetSrcIndex();
+		uint32_t destinationDataIndex = m_tripleBufferState.GetDstIndex();
+		bool recordedStep = false;
 		while (restTime > 0.0f)
 		{
 			float deltaT = math::Min(dt, restTime);
-			SphFluid2dGpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_data, m_computeShaders, m_attractor, m_rungeKutta);
+			SphFluid2dGpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_attractor, m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex, destinationDataIndex);
+			m_tripleBufferState.CompleteWrite();
+			sourceDataIndex = m_tripleBufferState.GetSrcIndex();
+			destinationDataIndex = m_tripleBufferState.GetDstIndex();
 			restTime -= deltaT;
+			recordedStep = true;
 		}
+		if (recordedStep)
+			m_pendingDataSessionID = Compute::Physics::GetRecordingSessionID();
 		m_timeStep++;
 	}
 	void SphFluid2dGpu::Update()
@@ -162,6 +171,7 @@ namespace fluidDynamics
 		// Reset:
 		if (m_reset)
 			return;
+		PublishData();
 
 		// Mouse scrolling:
 		float mouseScroll = EventSystem::MouseScrollY();
@@ -203,11 +213,11 @@ namespace fluidDynamics
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
 		Renderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f, Float4::white, false, false);
-		m_particleMaterial.SetBuffer("positionBuffer", m_data.positionBuffer.GetBuffer());
-		m_particleMaterial.SetBuffer("velocityBuffer", m_data.velocityBuffer.GetBuffer());
-		m_particleMaterial.SetBuffer("densityBuffer", m_data.densityBuffer.GetBuffer());
-		m_particleMaterial.SetBuffer("normalBuffer", m_data.normalBuffer.GetBuffer());
-		m_particleMaterial.SetBuffer("curvatureBuffer", m_data.curvatureBuffer.GetBuffer());
+		m_particleMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
+		m_particleMaterial.SetBuffer("velocityBuffer", m_tripleData.velocityBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
+		m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
+		m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
+		m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
 		Renderer::DrawInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
 	}
 
@@ -487,14 +497,11 @@ namespace fluidDynamics
 		m_isRunning = false;
 
 		std::vector<float> densities(m_particleCount);
-		m_data.densityBuffer.Download(densities);
-
+		m_tripleData.densityBuffer.Download(m_tripleBufferState.GetSrcIndex(), densities);
 		std::vector<Float2> positions(m_particleCount);
-		m_data.positionBuffer.Download(positions);
-
+		m_tripleData.positionBuffer.Download(m_tripleBufferState.GetSrcIndex(), positions);
 		std::vector<Float2> forceDensities(m_particleCount);
-		m_data.forceDensityBuffer.Download(forceDensities);
-
+		m_scratchData.forceDensityBuffer.Download(forceDensities);
 		for (int i = 0; i < m_particleCount; i++)
 			LOG_TRACE("positions[{}] = {}, density[{}] = {}, forceDensity[{}] = {}", i, positions[i].ToString(), i, densities[i], i, forceDensities[i].ToString());
 	}
@@ -502,37 +509,45 @@ namespace fluidDynamics
 
 
 	// Private methods:
+	void SphFluid2dGpu::PublishData()
+	{
+		if (m_pendingDataSessionID == Compute::Physics::invalidSessionID)
+			return;
+		if (!Compute::Physics::IsFinished(m_pendingDataSessionID))
+			return;
+		m_tripleBufferState.Publish();
+		m_pendingDataSessionID = Compute::Physics::invalidSessionID;
+	}
 	void SphFluid2dGpu::RecordReset()
 	{
+		if (m_pendingResetSessionID != Compute::Physics::invalidSessionID)
+		{
+			if (!Compute::Physics::IsFinished(m_pendingResetSessionID))
+				return;
+			m_pendingResetSessionID = Compute::Physics::invalidSessionID;
+			m_reset = false;
+			return;
+		}
+		if (!Compute::Physics::IsFinished())
+			return;
+
 		LOG_INFO("reset");
 		m_timeStep = 0;
-		m_data.Reallocate(m_particleCount, m_initialDistributionRadius, m_computeShaders);
-		m_rungeKutta.Reallocate(m_particleCount, m_computeShaders);
+		m_tripleBufferState.Reset();
+		m_pendingDataSessionID = Compute::Physics::invalidSessionID;
+		m_pendingResetSessionID = Compute::Physics::GetRecordingSessionID();
+		m_scratchData.Reallocate(m_particleCount);
+		m_tripleData.Reallocate(m_particleCount);
 
-		// Compute intial fluid state:
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
-		if (m_settings.useHashGridOptimization)
+		// Reset all buffer slots:
+		for (uint32_t i = 0; i < TripleBufferState::bufferCount; i++)
 		{
-			SphFluid2dGpuSolver::ComputeCellKeys(m_computeShaders, m_data.cellKeyBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
-
-			GpuSort<uint32_t>::SortPermutation(m_computeShaders.computeType, m_data.cellKeyBuffer.GetBufferView(), m_data.sortPermutationBuffer.GetBufferView(), m_computeShaders.sessionID);
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
-
-			// TODO: move the reset start index buffer from inside ComputeStartIndices into its own method so it can be done with the SortPermutation before the previous barrier.
-			SphFluid2dGpuSolver::ComputeStartIndices(m_computeShaders, m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
-			GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.tempBuffer0.GetBufferView(), m_computeShaders.sessionID);
-			GpuSort<Float2>::ApplyPermutation(m_computeShaders.computeType, m_data.sortPermutationBuffer.GetBufferView(), m_data.velocityBuffer.GetBufferView(), m_data.tempBuffer1.GetBufferView(), m_computeShaders.sessionID);
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
-
-			std::swap(m_data.positionBuffer, m_data.tempBuffer0);
-			std::swap(m_data.velocityBuffer, m_data.tempBuffer1);
+			SphFluid2dGpuSolver::ResetData(m_computeShaders, m_scratchData, m_tripleData, i, m_initialDistributionRadius);
+			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		}
-		SphFluid2dGpuSolver::ComputeDensities(m_computeShaders, m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
-		SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(m_computeShaders, m_data.normalBuffer.GetBufferView(), m_data.curvatureBuffer.GetBufferView(), m_data.densityBuffer.GetBufferView(), m_data.positionBuffer.GetBufferView(), m_data.startIndexBuffer.GetBufferView(), m_data.cellKeyBuffer.GetBufferView());
 
 		m_isRunning = false;
-		m_reset = false;
 	}
 }
