@@ -30,7 +30,7 @@
 #include "bufferView.h"
 #include "bufferTyped.h"
 #include "tripleBuffer.h"
-#include "tripleBufferState.h"
+#include "physicsTripleBufferState.h"
 #include "mesh.h"
 #include "material.h"
 #include "computeShader.h"

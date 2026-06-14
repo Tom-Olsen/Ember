@@ -122,6 +122,7 @@ namespace fluidDynamics
 		}
 		if (!m_isRunning)
 			return;
+		m_tripleBufferState.PublishFinishedWrites();
 
 		// Do multiple iterations of deltaT<=dt if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
 		float dt = Time::GetFixedDeltaTime();
@@ -129,19 +130,15 @@ namespace fluidDynamics
 		float restTime = timeStep;
 		uint32_t sourceDataIndex = m_tripleBufferState.GetSrcIndex();
 		uint32_t destinationDataIndex = m_tripleBufferState.GetDstIndex();
-		bool recordedStep = false;
 		while (restTime > 0.0f)
 		{
 			float deltaT = math::Min(dt, restTime);
 			SphFluid2dGpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_attractor, m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex, destinationDataIndex);
-			m_tripleBufferState.CompleteWrite();
+			m_tripleBufferState.CommitWrite(Compute::Physics::GetRecordingSessionID());
 			sourceDataIndex = m_tripleBufferState.GetSrcIndex();
 			destinationDataIndex = m_tripleBufferState.GetDstIndex();
 			restTime -= deltaT;
-			recordedStep = true;
 		}
-		if (recordedStep)
-			m_pendingDataSessionID = Compute::Physics::GetRecordingSessionID();
 		m_timeStep++;
 	}
 	void SphFluid2dGpu::Update()
@@ -171,7 +168,7 @@ namespace fluidDynamics
 		// Reset:
 		if (m_reset)
 			return;
-		PublishData();
+		m_tripleBufferState.PublishFinishedWrites();
 
 		// Mouse scrolling:
 		float mouseScroll = EventSystem::MouseScrollY();
@@ -509,22 +506,13 @@ namespace fluidDynamics
 
 
 	// Private methods:
-	void SphFluid2dGpu::PublishData()
-	{
-		if (m_pendingDataSessionID == Compute::Physics::invalidSessionID)
-			return;
-		if (!Compute::Physics::IsFinished(m_pendingDataSessionID))
-			return;
-		m_tripleBufferState.Publish();
-		m_pendingDataSessionID = Compute::Physics::invalidSessionID;
-	}
 	void SphFluid2dGpu::RecordReset()
 	{
-		if (m_pendingResetSessionID != Compute::Physics::invalidSessionID)
+		if (m_pendingResetSessionID != Compute::Physics::invalidPhysicsSessionID)
 		{
 			if (!Compute::Physics::IsFinished(m_pendingResetSessionID))
 				return;
-			m_pendingResetSessionID = Compute::Physics::invalidSessionID;
+			m_pendingResetSessionID = Compute::Physics::invalidPhysicsSessionID;
 			m_reset = false;
 			return;
 		}
@@ -534,14 +522,13 @@ namespace fluidDynamics
 		LOG_INFO("reset");
 		m_timeStep = 0;
 		m_tripleBufferState.Reset();
-		m_pendingDataSessionID = Compute::Physics::invalidSessionID;
 		m_pendingResetSessionID = Compute::Physics::GetRecordingSessionID();
 		m_scratchData.Reallocate(m_particleCount);
 		m_tripleData.Reallocate(m_particleCount);
 
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		// Reset all buffer slots:
-		for (uint32_t i = 0; i < TripleBufferState::bufferCount; i++)
+		for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
 		{
 			SphFluid2dGpuSolver::ResetData(m_computeShaders, m_scratchData, m_tripleData, i, m_initialDistributionRadius);
 			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);

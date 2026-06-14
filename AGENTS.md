@@ -12,8 +12,9 @@ Add new rules here as the project evolves.
 - In cpp files inclue the header file first, then all custom includes via "..." and then all system includes via "<...>". Both custom and system includes must be sorted alphabetically.
 - No new line at end of files.
 
-## Editing Rules
--
+## Architecture
+- Interfaces are reserved for contracts across shared-library boundaries.
+- For each class/struct use a .h and .cpp file. Only exceptions are helper structs within other classes/structs which can be defined in the same file as the class/struct they are helping.
 
 ## Review Priorities
 -

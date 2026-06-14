@@ -18,24 +18,24 @@ namespace fluidDynamics
 		{
 			// Management:
 			SetTimeScale(1.0f);
-			SetParticleCount(19683);
+			SetParticleCount(100000);
 
 			// Settings:
 			SetUseHashGridOptimization(true);
 			SetEffectRadius(1.0f);
 			SetMass(1.0f);
-			SetViscosity(3.0f);
-			SetSurfaceTension(2.0f);
+			SetViscosity(2.0f);
+			SetSurfaceTension(1.0f);
 			SetCollisionDampening(0.95f);
-			SetTargetDensity(3.0f);
-			SetPressureMultiplier(100.0f);
-			SetGravity(1.0f);
+			SetTargetDensity(12.5f);
+			SetPressureMultiplier(300.0f);
+			SetGravity(5.0f);
 			SetMaxVelocity(5.0f);
 			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
 
 			// User Interaction:
-			SetAttractorRadius(3.0f);
-			SetAttractorStrength(2.0f);
+			SetAttractorRadius(6.0f);
+			SetAttractorStrength(10.0f);
 			SetAttractorState(0);
 
 			// Visuals:
@@ -66,6 +66,7 @@ namespace fluidDynamics
 		}
 		if (!m_isRunning)
 			return;
+		m_tripleBufferState.PublishFinishedWrites();
 
 		// Do multiple iterations of deltaT<=dt if timeScale is bigger 1. Otherwise 1 iteration per FixedUpdate().
 		float dt = Time::GetFixedDeltaTime();
@@ -73,19 +74,15 @@ namespace fluidDynamics
 		float restTime = timeStep;
 		uint32_t sourceDataIndex = m_tripleBufferState.GetSrcIndex();
 		uint32_t destinationDataIndex = m_tripleBufferState.GetDstIndex();
-		bool recordedStep = false;
 		while (restTime > 0.0f)
 		{
 			float deltaT = math::Min(dt, restTime);
 			SphFluid3dGpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex, destinationDataIndex);
-			m_tripleBufferState.CompleteWrite();
+			m_tripleBufferState.CommitWrite(Compute::Physics::GetRecordingSessionID());
 			sourceDataIndex = m_tripleBufferState.GetSrcIndex();
 			destinationDataIndex = m_tripleBufferState.GetDstIndex();
 			restTime -= deltaT;
-			recordedStep = true;
 		}
-		if (recordedStep)
-			m_pendingDataSessionID = Compute::Physics::GetRecordingSessionID();
 		m_timeStep++;
 	}
 	void SphFluid3dGpu::Update()
@@ -115,7 +112,7 @@ namespace fluidDynamics
 		// Reset:
 		if (m_reset)
 			return;
-		PublishData();
+		m_tripleBufferState.PublishFinishedWrites();
 
 		// Mouse scrolling:
 		float mouseScroll = EventSystem::MouseScrollY();
@@ -444,22 +441,13 @@ namespace fluidDynamics
 
 
 	// Private methods:
-	void SphFluid3dGpu::PublishData()
-	{
-		if (m_pendingDataSessionID == Compute::Physics::invalidSessionID)
-			return;
-		if (!Compute::Physics::IsFinished(m_pendingDataSessionID))
-			return;
-		m_tripleBufferState.Publish();
-		m_pendingDataSessionID = Compute::Physics::invalidSessionID;
-	}
 	void SphFluid3dGpu::RecordReset()
 	{
-		if (m_pendingResetSessionID != Compute::Physics::invalidSessionID)
+		if (m_pendingResetSessionID != Compute::Physics::invalidPhysicsSessionID)
 		{
 			if (!Compute::Physics::IsFinished(m_pendingResetSessionID))
 				return;
-			m_pendingResetSessionID = Compute::Physics::invalidSessionID;
+			m_pendingResetSessionID = Compute::Physics::invalidPhysicsSessionID;
 			m_reset = false;
 			return;
 		}
@@ -469,14 +457,13 @@ namespace fluidDynamics
 		LOG_INFO("reset");
 		m_timeStep = 0;
 		m_tripleBufferState.Reset();
-		m_pendingDataSessionID = Compute::Physics::invalidSessionID;
 		m_pendingResetSessionID = Compute::Physics::GetRecordingSessionID();
 		m_scratchData.Reallocate(m_particleCount);
 		m_tripleData.Reallocate(m_particleCount);
 
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		// Reset all buffer slots:
-		for (uint32_t i = 0; i < TripleBufferState::bufferCount; i++)
+		for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
 		{
 			SphFluid3dGpuSolver::ResetData(m_computeShaders, m_scratchData, m_tripleData, i, m_initialDistributionRadius);
 			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);

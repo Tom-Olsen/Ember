@@ -34,9 +34,8 @@ namespace fluidDynamics
 		SphFluid2dGpuSolver::ScratchData m_scratchData;
 		SphFluid2dGpuSolver::ComputeShaders m_computeShaders;
 		SphFluid2dGpuSolver::TripleData m_tripleData;
-		TripleBufferState m_tripleBufferState;
-		uint32_t m_pendingDataSessionID = Compute::Physics::invalidSessionID;
-		uint32_t m_pendingResetSessionID = Compute::Physics::invalidSessionID;
+		PhysicsTripleBufferState m_tripleBufferState;
+		uint64_t m_pendingResetSessionID = Compute::Physics::invalidPhysicsSessionID;
 
 		// Visuals:
 		int m_colorMode;
@@ -108,7 +107,6 @@ namespace fluidDynamics
 		void Print();
 
 	private: // Methods:
-		void PublishData();
 		void RecordReset();
 	};
 }

@@ -126,13 +126,19 @@ namespace emberEngine
 		class EMBER_CORE_API Physics
 		{
 		public: // Constants:
-			static constexpr uint32_t invalidSessionID = static_cast<uint32_t>(-1);
+            // Async session id:    Ids used by async system. Get recycled via Compute::Async's poling system.
+            // Physics session id:  Ids used to distinguish Compute::Physics sessions. Increments continuously each physics update.
+            static constexpr uint32_t physicsUpdatesInFlight = 2;   // Don't change this. Tightly coupled to triple buffering.
+			static constexpr uint64_t invalidPhysicsSessionID = static_cast<uint64_t>(-1);
+			static constexpr uint32_t invalidAsyncSessionID = static_cast<uint32_t>(-1);
 
 		private: // Members:
 			static bool s_isRecording;
-			static uint32_t s_recordingSessionID;
-			static uint32_t s_sessionIndex;
-			static std::array<uint32_t, 2> s_sessionIDs;
+			static uint64_t s_recordingPhysicsSessionID;                // physics session id that is currently recording.
+			static uint32_t s_recordingAsyncSessionID;                  // asyc backend id used for current recording.
+			static std::array<uint64_t, physicsUpdatesInFlight> s_inFlightPhysicsSessionIDs; // keep track of physics session ids in flight.
+			static std::array<uint32_t, physicsUpdatesInFlight> s_inFlightAsyncSessionIDs;   // keep track of async session ids in flight.
+			static uint32_t s_sessionIndex;                             // shared index for the two arrays.
 
 		public: // Methods:
 			// Constructor/Destructor:
@@ -140,14 +146,15 @@ namespace emberEngine
 			static void Clear();
 
 			// Synchronization:
-			static bool IsFinished(uint32_t sessionID);
+			static bool IsFinished(uint64_t physicsSessionID);
 			static bool IsFinished();
+			static void WaitForFinish(uint64_t physicsSessionID);
 			static void WaitForFinish();
 
 			// Workload recording:
 			static void BeginRecording();
 			static void EndRecording();
-			static uint32_t GetRecordingSessionID();
+			static uint64_t GetRecordingSessionID();
 			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();

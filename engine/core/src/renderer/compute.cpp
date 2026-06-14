@@ -150,17 +150,21 @@ namespace emberEngine
 
 	// Compute::Physics subclass:
 	bool Compute::Physics::s_isRecording;
-	uint32_t Compute::Physics::s_recordingSessionID;
+	uint64_t Compute::Physics::s_recordingPhysicsSessionID;
+	uint32_t Compute::Physics::s_recordingAsyncSessionID;
+	std::array<uint64_t, Compute::Physics::physicsUpdatesInFlight> Compute::Physics::s_inFlightPhysicsSessionIDs;
+	std::array<uint32_t, Compute::Physics::physicsUpdatesInFlight> Compute::Physics::s_inFlightAsyncSessionIDs;
 	uint32_t Compute::Physics::s_sessionIndex;
-	std::array<uint32_t, 2> Compute::Physics::s_sessionIDs;
 	// Public:
 	// Constructor/Destructor:
 	void Compute::Physics::Init()
 	{
 		s_isRecording = false;
-		s_recordingSessionID = invalidSessionID;
+		s_recordingPhysicsSessionID = invalidPhysicsSessionID;
+		s_recordingAsyncSessionID = invalidAsyncSessionID;
+		s_inFlightPhysicsSessionIDs.fill(invalidPhysicsSessionID);
+		s_inFlightAsyncSessionIDs.fill(invalidAsyncSessionID);
 		s_sessionIndex = 0;
-		s_sessionIDs.fill(invalidSessionID);
 	}
 	void Compute::Physics::Clear()
 	{
@@ -168,44 +172,70 @@ namespace emberEngine
 	}
 
 	// Synchronization:
-	bool Compute::Physics::IsFinished(uint32_t sessionID)
+	bool Compute::Physics::IsFinished(uint64_t physicsSessionID)
 	{
-		if (sessionID == invalidSessionID)
+        // Invalid id always finished:
+		if (physicsSessionID == invalidPhysicsSessionID)
 			return true;
-		if (sessionID == s_recordingSessionID)
+        // physicsSessionID is currently recording:
+		if (s_isRecording && physicsSessionID == s_recordingPhysicsSessionID)
 			return false;
 
-		for (uint32_t i = 0; i < s_sessionIDs.size(); i++)
+        // Check if physicsSessionID is among in flight physics sessions:
+		for (uint32_t i = 0; i < s_inFlightPhysicsSessionIDs.size(); i++)
 		{
-			if (s_sessionIDs[i] != sessionID)
+			if (s_inFlightPhysicsSessionIDs[i] != physicsSessionID)
 				continue;
-			return Async::IsFinished(sessionID);
+            // Async::IsFinished(...) resets the compute session if finished. So we must invalidate in flight session ids here aswell.
+			bool isFinished = Async::IsFinished(s_inFlightAsyncSessionIDs[i]);
+			if (isFinished)
+			{
+				s_inFlightPhysicsSessionIDs[i] = invalidPhysicsSessionID;
+				s_inFlightAsyncSessionIDs[i] = invalidAsyncSessionID;
+			}
+			return isFinished;
 		}
 		return true;
 	}
 	bool Compute::Physics::IsFinished()
 	{
-		for (uint32_t i = 0; i < s_sessionIDs.size(); i++)
-			if (!IsFinished(s_sessionIDs[i]))
+		for (uint32_t i = 0; i < s_inFlightPhysicsSessionIDs.size(); i++)
+			if (!IsFinished(s_inFlightPhysicsSessionIDs[i]))
 				return false;
 		return true;
 	}
-	void Compute::Physics::WaitForFinish()
+	void Compute::Physics::WaitForFinish(uint64_t physicsSessionID)
 	{
-		bool isFinished = IsFinished();
-		if (!isFinished)
-			LOG_WARN("Waiting for Compute::Physics.");
-
-		for (uint32_t i = 0; i < s_sessionIDs.size(); i++)
+        // Invalid id always finished:
+		if (physicsSessionID == invalidPhysicsSessionID)
+			return;
+        // physicsSessionID is currently recording:
+		if (s_isRecording && physicsSessionID == s_recordingPhysicsSessionID)
 		{
-			if (s_sessionIDs[i] == invalidSessionID)
+			LOG_WARN("Compute::Physics::WaitForFinish cannot wait for a session that is still recording.");
+			return;
+		}
+
+		for (uint32_t i = 0; i < s_inFlightPhysicsSessionIDs.size(); i++)
+		{
+			if (s_inFlightPhysicsSessionIDs[i] != physicsSessionID)
 				continue;
-			if (!Async::IsFinished(s_sessionIDs[i]))
-				Async::WaitForFinish(s_sessionIDs[i]);
-			s_sessionIDs[i] = invalidSessionID;
+			if (!Async::IsFinished(s_inFlightAsyncSessionIDs[i]))
+			{
+				LOG_WARN("Waiting for Compute::Physics session.");
+				Async::WaitForFinish(s_inFlightAsyncSessionIDs[i]);
+			}
+			s_inFlightPhysicsSessionIDs[i] = invalidPhysicsSessionID;
+			s_inFlightAsyncSessionIDs[i] = invalidAsyncSessionID;
+			return;
 		}
 	}
-
+	void Compute::Physics::WaitForFinish()
+	{
+		for (uint32_t i = 0; i < s_inFlightPhysicsSessionIDs.size(); i++)
+			WaitForFinish(s_inFlightPhysicsSessionIDs[i]);
+	}
+    
 	// Workload recording:
 	void Compute::Physics::BeginRecording()
 	{
@@ -214,18 +244,12 @@ namespace emberEngine
 			LOG_WARN("Compute::Physics::BeginRecording called while already recording.");
 			return;
 		}
-		if (s_sessionIDs[s_sessionIndex] != invalidSessionID)
-		{
-			if (!Async::IsFinished(s_sessionIDs[s_sessionIndex]))
-			{
-				LOG_WARN("Waiting for Compute::Physics session before recording the next fixed update.");
-				Async::WaitForFinish(s_sessionIDs[s_sessionIndex]);
-			}
-			s_sessionIDs[s_sessionIndex] = invalidSessionID;
-		}
+		if (s_inFlightPhysicsSessionIDs[s_sessionIndex] != invalidPhysicsSessionID)
+			WaitForFinish(s_inFlightPhysicsSessionIDs[s_sessionIndex]);
 
 		s_isRecording = true;
-		s_recordingSessionID = Async::CreateComputeSession();
+		s_recordingPhysicsSessionID++;
+		s_recordingAsyncSessionID = Async::CreateComputeSession();
 	}
 	void Compute::Physics::EndRecording()
 	{
@@ -235,15 +259,16 @@ namespace emberEngine
 			return;
 		}
 
-		Async::DispatchComputeSession(s_recordingSessionID);
-		s_sessionIDs[s_sessionIndex] = s_recordingSessionID;
-		s_sessionIndex = (s_sessionIndex + 1) % s_sessionIDs.size();
+		Async::DispatchComputeSession(s_recordingAsyncSessionID);
+		s_inFlightPhysicsSessionIDs[s_sessionIndex] = s_recordingPhysicsSessionID;
+		s_inFlightAsyncSessionIDs[s_sessionIndex] = s_recordingAsyncSessionID;
+		s_sessionIndex = (s_sessionIndex + 1) % physicsUpdatesInFlight;
 		s_isRecording = false;
-		s_recordingSessionID = invalidSessionID;
+		s_recordingAsyncSessionID = invalidAsyncSessionID;
 	}
-	uint32_t Compute::Physics::GetRecordingSessionID()
+	uint64_t Compute::Physics::GetRecordingSessionID()
 	{
-		return s_recordingSessionID;
+		return s_isRecording ? s_recordingPhysicsSessionID : invalidPhysicsSessionID;
 	}
 	ShaderProperties Compute::Physics::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
@@ -252,7 +277,7 @@ namespace emberEngine
 			LOG_ERROR("Compute::Physics::RecordComputeShader called outside BeginRecording/EndRecording.");
 			return ShaderProperties();
 		}
-		return Async::RecordComputeShader(s_recordingSessionID, computeShader, threadCount);
+		return Async::RecordComputeShader(s_recordingAsyncSessionID, computeShader, threadCount);
 	}
 	void Compute::Physics::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -261,7 +286,7 @@ namespace emberEngine
 			LOG_ERROR("Compute::Physics::RecordBarrier called outside BeginRecording/EndRecording.");
 			return;
 		}
-		Async::RecordBarrier(s_recordingSessionID, srcBarrierFlags, dstBarrierFlags);
+		Async::RecordBarrier(s_recordingAsyncSessionID, srcBarrierFlags, dstBarrierFlags);
 	}
 	void Compute::Physics::RecordBarrierWaitShaderWriteBeforeRead()
 	{
