@@ -1,0 +1,10 @@
+Test new nearPressure code.
+Make bounding box interactable with transform/scale/rotation editor widgets.
+Bounding box interaction in local frame.
+Better coloring in velocity mode?
+Multi bounding box support?
+Rendering:
+-bilboard Rendering
+-surface reconstruction
+-defered rendering?
+-ray marching
