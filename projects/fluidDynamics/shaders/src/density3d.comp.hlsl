@@ -16,6 +16,7 @@ StructuredBuffer<uint> cellKeyBuffer : register(t100, CALL_SET);
 StructuredBuffer<uint> startIndexBuffer : register(t101, CALL_SET);
 StructuredBuffer<float3> positionBuffer : register(t102, CALL_SET);
 RWStructuredBuffer<float> densityBuffer : register(u200, CALL_SET);
+RWStructuredBuffer<float> nearDensityBuffer : register(u201, CALL_SET);
 
 
 
@@ -26,6 +27,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     if (index < pc.threadCount.x)
     {
         densityBuffer[index] = 0;
+        nearDensityBuffer[index] = 0;
         float3 particlePos = positionBuffer[index];
         if (useHashGridOptimization)
         {
@@ -45,7 +47,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     float3 offset = particlePos - positionBuffer[otherIndex];
                     float r = length(offset);
                     if (r < effectRadius)
+                    {
                         densityBuffer[index] += mass * SmoothingKernal_Poly6(r, effectRadius);
+                        nearDensityBuffer[index] += mass * SmoothingKernal_Spiky3(r, effectRadius);
+                    }
                     otherIndex++;
                 }
             }
@@ -57,7 +62,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 float3 offset = particlePos - positionBuffer[i];
                 float r = length(offset);
                 if (r < effectRadius)
+                {
                     densityBuffer[index] += mass * SmoothingKernal_Poly6(r, effectRadius);
+                    nearDensityBuffer[index] += mass * SmoothingKernal_Spiky3(r, effectRadius);
+                }
             };
         }
     }

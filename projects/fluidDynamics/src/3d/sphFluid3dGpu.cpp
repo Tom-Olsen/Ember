@@ -29,6 +29,7 @@ namespace fluidDynamics
 			SetCollisionDampening(0.95f);
 			SetTargetDensity(12.5f);
 			SetPressureMultiplier(300.0f);
+			SetNearPressureRatio(0.1f);
 			SetGravity(5.0f);
 			SetMaxVelocity(5.0f);
 			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
@@ -245,6 +246,15 @@ namespace fluidDynamics
 			m_computeShaders.SetPressureMultiplier(m_settings.pressureMultiplier);
 		}
 	}
+	void SphFluid3dGpu::SetNearPressureRatio(float nearPressureRatio)
+	{
+		nearPressureRatio = math::Max(0.0f, nearPressureRatio);
+		if (m_forceSetters || m_settings.nearPressureRatio != nearPressureRatio)
+		{
+			m_settings.nearPressureRatio = nearPressureRatio;
+			m_computeShaders.SetNearPressureRatio(m_settings.nearPressureRatio);
+		}
+	}
 	void SphFluid3dGpu::SetGravity(float gravity)
 	{
 		if (m_forceSetters || m_settings.gravity != gravity)
@@ -385,6 +395,10 @@ namespace fluidDynamics
 	float SphFluid3dGpu::GetPressureMultiplier() const
 	{
 		return m_settings.pressureMultiplier;
+	}
+	float SphFluid3dGpu::GetNearPressureRatio() const
+	{
+		return m_settings.nearPressureRatio;
 	}
 	float SphFluid3dGpu::GetGravity() const
 	{

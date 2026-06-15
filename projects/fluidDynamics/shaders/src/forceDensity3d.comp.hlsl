@@ -21,6 +21,7 @@ cbuffer Values : register(b300, SHADER_SET)
     float effectRadius;
     float targetDensity;
     float pressureMultiplier;
+    float nearPressureRatio;
 
     // Attractor:
     int attractorState;
@@ -33,8 +34,9 @@ StructuredBuffer<uint> startIndexBuffer : register(t101, CALL_SET);
 StructuredBuffer<float3> positionBuffer : register(t102, CALL_SET);
 StructuredBuffer<float3> velocityBuffer : register(t103, CALL_SET);
 StructuredBuffer<float> densityBuffer : register(t104, CALL_SET);
-StructuredBuffer<float3> normalBuffer : register(t105, CALL_SET);
-StructuredBuffer<float> curvatureBuffer : register(t106, CALL_SET);
+StructuredBuffer<float> nearDensityBuffer : register(t105, CALL_SET);
+StructuredBuffer<float3> normalBuffer : register(t106, CALL_SET);
+StructuredBuffer<float> curvatureBuffer : register(t107, CALL_SET);
 RWStructuredBuffer<float3> forceDensityBuffer : register(u200, CALL_SET);
 
 
@@ -43,6 +45,10 @@ float Pressure(float density, float targetDensity, float pressureMultiplier)
 {
     float densityError = density - targetDensity;
     return densityError * pressureMultiplier;
+}
+float NearPressure(float nearDensity, float pressureMultiplier, float nearPressureRatio)
+{
+    return nearDensity * pressureMultiplier * nearPressureRatio;
 }
 float3 OverlapDirection(uint index, uint otherIndex, float time)
 {
@@ -63,6 +69,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     {
         forceDensityBuffer[index] = float3(0, 0, 0);
         float particlePressure = Pressure(densityBuffer[index], targetDensity, pressureMultiplier);
+        float particleNearPressure = NearPressure(nearDensityBuffer[index], pressureMultiplier, nearPressureRatio);
         float3 particlePos = positionBuffer[index];
         if (useHashGridOptimization)
         {
@@ -94,7 +101,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         float3 dir = (r < 1e-8f) ? OverlapDirection(index, otherIndex, pc.time) : offset / r;
                         float otherParticlePressure = Pressure(densityBuffer[otherIndex], targetDensity, pressureMultiplier);
                         float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-                        forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[otherIndex];
+                        float otherParticleNearPressure = NearPressure(nearDensityBuffer[otherIndex], pressureMultiplier, nearPressureRatio);
+                        float sharedNearPressure = 0.5f * (particleNearPressure + otherParticleNearPressure);
+                        forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky2(r, dir, effectRadius) / densityBuffer[otherIndex];
+                        forceDensityBuffer[index] += -mass * sharedNearPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[otherIndex];
 
                         // Viscosity force density:
                         float3 velocityDiff = velocityBuffer[otherIndex] - velocityBuffer[index];
@@ -120,7 +130,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     float3 dir = (r < 1e-8f) ? OverlapDirection(index, i, pc.time) : offset / r;
                     float otherParticlePressure = Pressure(densityBuffer[i], targetDensity, pressureMultiplier);
                     float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-                    forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[i];
+                    float otherParticleNearPressure = NearPressure(nearDensityBuffer[i], pressureMultiplier, nearPressureRatio);
+                    float sharedNearPressure = 0.5f * (particleNearPressure + otherParticleNearPressure);
+                    forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky2(r, dir, effectRadius) / densityBuffer[i];
+                    forceDensityBuffer[index] += -mass * sharedNearPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[i];
 
                     // Viscosity force density:
                     float3 velocityDiff = velocityBuffer[i] - velocityBuffer[index];

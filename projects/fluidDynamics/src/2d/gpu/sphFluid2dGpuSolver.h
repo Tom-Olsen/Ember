@@ -35,6 +35,7 @@ namespace fluidDynamics
 			void SetCollisionDampening(float collisionDampening);
 			void SetTargetDensity(float targetDensity);
 			void SetPressureMultiplier(float pressureMultiplier);
+			void SetNearPressureRatio(float nearPressureRatio);
 			void SetGravity(float gravity);
 			void SetMaxVelocity(float maxVelocity);
 			void SetFluidBounds(const Bounds& bounds);
@@ -53,6 +54,7 @@ namespace fluidDynamics
 			float collisionDampening;
 			float targetDensity;
 			float pressureMultiplier;
+			float nearPressureRatio;
 			float gravity;
 			float maxVelocity;
 			Bounds fluidBounds;
@@ -63,6 +65,7 @@ namespace fluidDynamics
 			BufferTyped<uint32_t> startIndexBuffer;
 			BufferTyped<uint32_t> sortPermutationBuffer;
 			BufferTyped<Float2> forceDensityBuffer;
+			BufferTyped<float> nearDensityBuffer;
 			BufferTyped<Float2> tempBuffer0;
 			BufferTyped<Float2> tempBuffer1;
 			BufferTyped<Float2> tempBuffer2;
@@ -110,9 +113,9 @@ namespace fluidDynamics
 		// Field computations:
 		static void ComputeCellKeys(ComputeShaders& computeShaders, const BufferView<uint32_t>& cellKeyBufferView, const BufferView<Float2>& positionBufferView);
 		static void ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
-		static void ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
+		static void ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<float>& nearDensityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
 		static void ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float2>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
-		static void ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView, const BufferView<Float2>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
+		static void ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<float>& nearDensityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView, const BufferView<Float2>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
 		static void ComputeRungeKutta2Step1(ComputeShaders& computeShaders, float dt, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView, const BufferView<Float2>& kp1BufferView, const BufferView<Float2>& kv1BufferView, const BufferView<Float2>& tempPositionBufferView, const BufferView<Float2>& tempVelocityBufferView);
 		static void ComputeRungeKutta2Step2(ComputeShaders& computeShaders, float dt, const BufferView<Float2>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float2>& kp1BufferView, const BufferView<Float2>& kv1BufferView, const BufferView<Float2>& tempVelocityBufferView, const BufferView<Float2>& sourcePositionBufferView, const BufferView<Float2>& sourceVelocityBufferView, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView);
 		static void ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float2>& positionBufferView, const BufferView<Float2>& velocityBufferView);

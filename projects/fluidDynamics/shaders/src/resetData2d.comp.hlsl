@@ -16,14 +16,15 @@ RWStructuredBuffer<float> densityBuffer : register(u205, CALL_SET);
 RWStructuredBuffer<float2> normalBuffer : register(u206, CALL_SET);
 RWStructuredBuffer<float> curvatureBuffer : register(u207, CALL_SET);
 RWStructuredBuffer<float2> forceDensityBuffer : register(u208, CALL_SET);
-RWStructuredBuffer<float2> tempBuffer0 : register(u209, CALL_SET);
-RWStructuredBuffer<float2> tempBuffer1 : register(u210, CALL_SET);
-RWStructuredBuffer<float2> tempBuffer2 : register(u211, CALL_SET);
-RWStructuredBuffer<float2> tempBuffer3 : register(u212, CALL_SET);
-RWStructuredBuffer<float2> tempBuffer4 : register(u213, CALL_SET);
-RWStructuredBuffer<float2> tempBuffer5 : register(u214, CALL_SET);
-RWStructuredBuffer<float2> tempBuffer6 : register(u215, CALL_SET);
-RWStructuredBuffer<float2> tempBuffer7 : register(u216, CALL_SET);
+RWStructuredBuffer<float> nearDensityBuffer : register(u209, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer0 : register(u210, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer1 : register(u211, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer2 : register(u212, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer3 : register(u213, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer4 : register(u214, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer5 : register(u215, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer6 : register(u216, CALL_SET);
+RWStructuredBuffer<float2> tempBuffer7 : register(u217, CALL_SET);
 
 
 
@@ -51,6 +52,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         normalBuffer[index] = float2(0, 0);
         curvatureBuffer[index] = 0;
         forceDensityBuffer[index] = float2(0, 0);
+        nearDensityBuffer[index] = 0.0f;
         tempBuffer0[index] = float2(0, 0);
         tempBuffer1[index] = float2(0, 0);
         tempBuffer2[index] = float2(0, 0);

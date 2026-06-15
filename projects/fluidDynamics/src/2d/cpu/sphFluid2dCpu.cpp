@@ -27,6 +27,7 @@ namespace fluidDynamics
 		    SetCollisionDampening(0.95f);
 		    SetTargetDensity(15.0f);
 		    SetPressureMultiplier(20.0f);
+		    SetNearPressureRatio(0.1f);
 		    SetGravity(0.5f);
 		    SetMaxVelocity(5.0f);
 		    SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
@@ -79,7 +80,7 @@ namespace fluidDynamics
 			m_hashGrid.ApplySort(m_data.positions);
 			m_hashGrid.ApplySort(m_data.velocities);
 		}
-		SphFluid2dCpuSolver::ComputeDensities(m_settings, m_data.densities, m_data.positions);
+		SphFluid2dCpuSolver::ComputeDensities(m_settings, m_data.densities, m_data.nearDensities, m_data.positions);
 		SphFluid2dCpuSolver::ComputeNormals(m_settings, m_data.normals, m_data.positions, m_data.densities);
 		SphFluid2dCpuSolver::ComputeCurvatures(m_settings, m_data.curvatures, m_data.positions, m_data.densities, m_data.normals);
 
@@ -154,6 +155,10 @@ namespace fluidDynamics
 	void SphFluid2dCpu::SetPressureMultiplier(float pressureMultiplier)
 	{
 		m_settings.pressureMultiplier = pressureMultiplier;
+	}
+	void SphFluid2dCpu::SetNearPressureRatio(float nearPressureRatio)
+	{
+		m_settings.nearPressureRatio = math::Max(0.0f, nearPressureRatio);
 	}
 	void SphFluid2dCpu::SetGravity(float gravity)
 	{
@@ -254,6 +259,10 @@ namespace fluidDynamics
 	float SphFluid2dCpu::GetPressureMultiplier() const
 	{
 		return m_settings.pressureMultiplier;
+	}
+	float SphFluid2dCpu::GetNearPressureRatio() const
+	{
+		return m_settings.nearPressureRatio;
 	}
 	float SphFluid2dCpu::GetGravity() const
 	{

@@ -70,6 +70,7 @@ namespace fluidDynamics
 		void SetCollisionDampening(float collisionDampening);
 		void SetTargetDensity(float targetDensity);
 		void SetPressureMultiplier(float pressureMultiplier);
+		void SetNearPressureRatio(float nearPressureRatio);
 		void SetGravity(float gravity);
 		void SetMaxVelocity(float maxVelocity);
 		void SetFluidBounds(const Bounds& bounds);
@@ -94,6 +95,7 @@ namespace fluidDynamics
 		float GetCollisionDampening() const;
 		float GetTargetDensity() const;
 		float GetPressureMultiplier() const;
+		float GetNearPressureRatio() const;
 		float GetGravity() const;
 		float GetMaxVelocity() const;
 		Bounds GetFluidBounds() const;

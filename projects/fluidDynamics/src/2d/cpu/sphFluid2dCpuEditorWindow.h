@@ -28,6 +28,7 @@ namespace emberEditor
 		float m_collisionDampening;
 		float m_targetDensity;
 		float m_pressureMultiplier;
+		float m_nearPressureRatio;
 		float m_gravity;
 		float m_maxVelocity;
 		float m_attractorRadius;
@@ -69,6 +70,7 @@ namespace emberEditor
 			Gui::DragFloat("Collision Dampening:", &m_collisionDampening, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Target Density:", &m_targetDensity, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Near Pressure Ratio:", &m_nearPressureRatio, 0.01f, 0.0f, "%.8f");
 			Gui::DragFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
 			Gui::DragFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
 			Gui::DragFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
@@ -96,6 +98,7 @@ namespace emberEditor
 			m_collisionDampening = m_pScript->GetCollisionDampening();
 			m_targetDensity = m_pScript->GetTargetDensity();
 			m_pressureMultiplier = m_pScript->GetPressureMultiplier();
+			m_nearPressureRatio = m_pScript->GetNearPressureRatio();
 			m_gravity = m_pScript->GetGravity();
 			m_maxVelocity = m_pScript->GetMaxVelocity();
 			m_attractorRadius = m_pScript->GetAttractorRadius();
@@ -117,6 +120,7 @@ namespace emberEditor
 			m_pScript->SetCollisionDampening(m_collisionDampening);
 			m_pScript->SetTargetDensity(m_targetDensity);
 			m_pScript->SetPressureMultiplier(m_pressureMultiplier);
+			m_pScript->SetNearPressureRatio(m_nearPressureRatio);
 			m_pScript->SetGravity(m_gravity);
 			m_pScript->SetMaxVelocity(m_maxVelocity);
 			m_pScript->SetAttractorRadius(m_attractorRadius);
