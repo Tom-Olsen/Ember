@@ -94,7 +94,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         float3 dir = (r < 1e-8f) ? OverlapDirection(index, otherIndex, pc.time) : offset / r;
                         float otherParticlePressure = Pressure(densityBuffer[otherIndex], targetDensity, pressureMultiplier);
                         float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-                        forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky(r, dir, effectRadius) / densityBuffer[otherIndex];
+                        forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[otherIndex];
 
                         // Viscosity force density:
                         float3 velocityDiff = velocityBuffer[otherIndex] - velocityBuffer[index];
@@ -120,7 +120,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     float3 dir = (r < 1e-8f) ? OverlapDirection(index, i, pc.time) : offset / r;
                     float otherParticlePressure = Pressure(densityBuffer[i], targetDensity, pressureMultiplier);
                     float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-                    forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky(r, dir, effectRadius) / densityBuffer[i];
+                    forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[i];
 
                     // Viscosity force density:
                     float3 velocityDiff = velocityBuffer[i] - velocityBuffer[index];

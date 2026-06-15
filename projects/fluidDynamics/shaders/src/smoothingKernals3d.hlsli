@@ -4,49 +4,76 @@
 
 
 
+// Some gradients and laplacians are singular at r=0.
+// The caller must implement a fallback strategy for r<epsilon, for their choice of epsilon.
+
+
+
 // Used for almost all calculations.
 float SmoothingKernal_Poly6(float r, float h)
 {
     float c0 = 315.0f / (64.0f * math_PI);
-    float c = c0 / pow(h, 8.0f);
+    float c = c0 / pow(h, 9.0f);
     return (r < h) ? c * pow(h * h - r * r, 3.0f) : 0.0f;
 }
 float3 SmoothingKernal_DPoly6(float r, float3 dir, float h)
 {
     float c0 = 315.0f / (64.0f * math_PI);
-    float c = c0 / pow(h, 8.0f);
-    return (r < h) ? -6.0f * c * pow(h * h - r * r, 2.0f) * dir : float3(0, 0, 0);
+    float c = c0 / pow(h, 9.0f);
+    return (r < h) ? -6.0f * c * pow(h * h - r * r, 2.0f) * r * dir : float3(0, 0, 0);
 }
 float SmoothingKernal_DDPoly6(float r, float h)
 {
     float c0 = 315.0f / (64.0f * math_PI);
-    float c = c0 / pow(h, 8.0f);
+    float c = c0 / pow(h, 9.0f);
     float r2 = r * r;
     float h2r2 = h * h - r2;
-    return (r < h) ? 6.0f * c * h2r2 * (4.0f * r2 - 3.0f * h2r2) : 0.0f;
+    return (r < h) ? -6.0f * c * h2r2 * (3.0f * h * h - 7.0f * r2) : 0.0f;
 }
 
 
 
 // Used for pressure calculations.
-float SmoothingKernal_Spiky(float r, float h)
+float SmoothingKernal_Spiky2(float r, float h)
+{
+    float c0 = 15.0f / (2.0f * math_PI);
+    float c = c0 / pow(h, 5.0f);
+    return (r < h) ? c * pow(h - r, 2.0f) : 0.0f;
+}
+float3 SmoothingKernal_DSpiky2(float r, float3 dir, float h)
+{
+    // singular at r = 0.
+    float c0 = 15.0f / (2.0f * math_PI);
+    float c = c0 / pow(h, 5.0f);
+    return (r < h) ? -2.0f * c * (h - r) * dir : float3(0, 0, 0);
+}
+float SmoothingKernal_DDSpiky2(float r, float h)
+{
+    // singular at r = 0.
+    float c0 = 15.0f / (2.0f * math_PI);
+    float c = c0 / pow(h, 5.0f);
+    return (r < h) ? 2.0f * c * (3.0f - 2.0f * h / r) : 0.0f;
+}
+float SmoothingKernal_Spiky3(float r, float h)
 {
     float c0 = 15.0f / math_PI;
     float c = c0 / pow(h, 6.0f);
     return (r < h) ? c * pow(h - r, 3.0f) : 0.0f;
 }
-float3 SmoothingKernal_DSpiky(float r, float3 dir, float h)
+float3 SmoothingKernal_DSpiky3(float r, float3 dir, float h)
 {
+    // singular at r = 0.
     float c0 = 15.0f / math_PI;
     float c = c0 / pow(h, 6.0f);
     return (r < h) ? -3.0f * c * pow(h - r, 2.0f) * dir : float3(0, 0, 0);
 }
-float SmoothingKernal_DDSpiky(float r, float h)
+float SmoothingKernal_DDSpiky3(float r, float h)
 {
+    // singular at r = 0.
     float c0 = 15.0f / math_PI;
     float c = c0 / pow(h, 6.0f);
     float hr = h - r;
-    return (r < h) ? 6.0 * c * hr * (1.0f - hr / r) : 0.0f;
+    return (r < h) ? 6.0f * c * hr * (2.0f - h / r) : 0.0f;
 }
 
 
@@ -54,12 +81,14 @@ float SmoothingKernal_DDSpiky(float r, float h)
 // Used for viscosity calculations:
 float SmoothingKernal_Viscos(float r, float h)
 {
+    // singular at r = 0.
     float c0 = 15.0f / (2.0f * math_PI);
     float c = c0 / pow(h, 3.0f);
     return (r < h) ? c * (-0.5f * pow(r / h, 3.0f) + (r * r) / (h * h) + 0.5f * h / r - 1.0f) : 0.0f;
 }
 float3 SmoothingKernal_DViscos(float r, float3 dir, float h)
 {
+    // singular at r = 0.
     float c0 = 15.0f / (2.0f * math_PI);
     float c = c0 / pow(h, 3.0f);
     float r2 = r * r;

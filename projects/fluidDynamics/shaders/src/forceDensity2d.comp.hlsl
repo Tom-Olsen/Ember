@@ -92,11 +92,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         float2 dir = (r < 1e-8f) ? OverlapDirection(index, otherIndex, pc.time) : offset / r;
                         float otherParticlePressure = Pressure(densityBuffer[otherIndex], targetDensity, pressureMultiplier);
                         float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-                        forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky(r, dir, effectRadius) / densityBuffer[otherIndex];
+                        forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[otherIndex];
 
                         // Viscosity force density:
                         float2 velocityDiff = velocityBuffer[otherIndex] - velocityBuffer[index];
-                        forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]);
+                        if (r > 1e-6f * effectRadius)
+                            forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]);
                     }
                     otherIndex++;
                 }
@@ -118,11 +119,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     float2 dir = (r < 1e-8f) ? OverlapDirection(index, i, pc.time) : offset / r;
                     float otherParticlePressure = Pressure(densityBuffer[i], targetDensity, pressureMultiplier);
                     float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-                    forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky(r, dir, effectRadius) / densityBuffer[i];
+                    forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[i];
 
                     // Viscosity force density:
                     float2 velocityDiff = velocityBuffer[i] - velocityBuffer[index];
-                    forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[i]);
+                    if (r > 1e-6f * effectRadius)
+                        forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[i]);
                 }
             };
         }

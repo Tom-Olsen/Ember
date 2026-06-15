@@ -363,11 +363,12 @@ namespace fluidDynamics
 				Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
 				float otherParticlePressure = Pressure(densities[i], settings.targetDensity, settings.pressureMultiplier);
 				float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-				forceDensity += -settings.mass * sharedPressure * smoothingKernals::DSpiky(r, dir, settings.effectRadius) / densities[i];
+				forceDensity += -settings.mass * sharedPressure * smoothingKernals::DSpiky3(r, dir, settings.effectRadius) / densities[i];
 
 				// Viscosity force density:
 				Float2 velocityDiff = velocities[i] - velocities[particleIndex];
-				forceDensity += settings.viscosity * settings.mass * velocityDiff * (smoothingKernals::DDViscos(r, settings.effectRadius) / densities[i]);
+				if (r > 1e-6f * settings.effectRadius)
+					forceDensity += settings.viscosity * settings.mass * velocityDiff * (smoothingKernals::DDViscos(r, settings.effectRadius) / densities[i]);
 			}
 		}
 		return forceDensity;
@@ -407,11 +408,12 @@ namespace fluidDynamics
 					Float2 dir = (r < 1e-8f) ? math::Random::UniformDirection2() : offset / r;
 					float otherParticlePressure = Pressure(densities[otherIndex], settings.targetDensity, settings.pressureMultiplier);
 					float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
-					forceDensity += -settings.mass * sharedPressure * smoothingKernals::DSpiky(r, dir, settings.effectRadius) / densities[otherIndex];
+					forceDensity += -settings.mass * sharedPressure * smoothingKernals::DSpiky3(r, dir, settings.effectRadius) / densities[otherIndex];
 
 					// Viscosity force density:
 					Float2 velocityDiff = otherVel - velocities[particleIndex];
-					forceDensity += settings.viscosity * settings.mass * velocityDiff * (smoothingKernals::DDViscos(r, settings.effectRadius) / densities[otherIndex]);
+					if (r > 1e-6f * settings.effectRadius)
+						forceDensity += settings.viscosity * settings.mass * velocityDiff * (smoothingKernals::DDViscos(r, settings.effectRadius) / densities[otherIndex]);
 				}
 				otherIndex++;
 			}

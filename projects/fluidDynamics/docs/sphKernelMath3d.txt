@@ -1,0 +1,52 @@
+3d:
+r = sqrt(x^2 + y^2 + z^2)
+vec r = (x y z)
+hat r = vec r / r, r > 0
+dV = r^2 sin theta dr dtheta dphi
+int_V f(r) dV = int_0^2pi int_0^pi int_0^R f(r) r^2 sin theta dr dtheta dphi = 4pi int_0^R f(r) r^2 dr
+nabla f(r) = hat r df/dr
+laplace f(r) = 1/r^2 d/dr (r^2 df/dr)
+
+For every kernel below, the listed function applies for 0 <= r <= h and f(r) = 0 for r > h.
+Gradient and Laplacian formulas are given for 0 < r < h. Values at r = 0 must be handled separately.
+
+
+
+---------- Poly6 ----------
+Kernel Function:    f(r) = c (h^2 - r^2)^3
+Normalization:      4pi int_0^h f(r) r^2 dr = 1
+                    => c = 315 / (64pi h^9)
+Gradient:           nabla f(r) = -6 c (h^2 - r^2)^2 vec r
+Laplacian:          laplace f(r) = -6 c (h^2 - r^2) (3h^2 - 7r^2)
+At r = 0:           nabla f(0) = vec 0
+                    laplace f(0) = -18 c h^4
+
+
+
+---------- Spiky2 ----------
+Kernel Function:    f(r) = c (h - r)^2
+Normalization:      4pi int_0^h f(r) r^2 dr = 1
+                    => c = 15 / (2pi h^5)
+Gradient:           nabla f(r) = -2 c (h - r) hat r
+Laplacian:          laplace f(r) = 2 c (3 - 2h / r)
+At r = 0:           gradient is undefined because its directional limits disagree; Laplacian is singular
+
+
+
+---------- Spiky3 ----------
+Kernel Function:    f(r) = c (h - r)^3
+Normalization:      4pi int_0^h f(r) r^2 dr = 1
+                    => c = 15 / (pi h^6)
+Gradient:           nabla f(r) = -3 c (h - r)^2 hat r
+Laplacian:          laplace f(r) = 6 c (h - r) (2 - h / r)
+At r = 0:           gradient is undefined because its directional limits disagree; Laplacian is singular
+
+
+
+---------- Viscos ----------
+Kernel Function:    f(r) = c (-0.5 * r^3 / h^3 + r^2 / h^2 + 0.5 * h / r - 1)
+Normalization:      4pi int_0^h f(r) r^2 dr = 1
+                    => c = 15 / (2pi h^3)
+Gradient:           nabla f(r) = c (-1.5 * r^2 / h^3 + 2 * r / h^2 - 0.5 * h / r^2) hat r
+Laplacian:          laplace f(r) = 6 c (h - r) / h^3
+At r = 0:           function and gradient are singular; the r > 0 Laplacian tends to 6 c / h^2
