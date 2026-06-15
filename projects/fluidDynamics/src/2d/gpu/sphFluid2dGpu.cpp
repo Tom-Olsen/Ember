@@ -15,80 +15,53 @@ namespace fluidDynamics
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
 
         m_forceSetters = true;
-		//// Settings0:
+        //// Settings for old pressure:
 		//{
 		//	// Management:
-		//	SetTimeScale(4.0f);
-		//	SetParticleCount(2000);
-		//
+		//	SetTimeScale(2.0f);
+		//	SetParticleCount(10000);
+        //
 		//	// Settings:
-		//	SetUseHashGridOptimization(true);
-		//	SetEffectRadius(0.5f);
+		//	SetUseHashGridOptimization(false);
+		//	SetEffectRadius(0.3f);
 		//	SetMass(1.0f);
-		//	SetViscosity(0.5f);
-		//	SetSurfaceTension(0.07f);
-		//	SetCollisionDampening(0.95f);
-		//	SetTargetDensity(15.0f);
-		//	SetPressureMultiplier(10.0f);
-		//	SetGravity(0.5f);
-		//	SetMaxVelocity(5.0f);
+		//	SetViscosity(5.0f);
+		//	SetSurfaceTension(0.5f);
+		//	SetCollisionDampening(0.80f);
+		//	SetTargetDensity(25.0f);
+		//	SetPressureMultiplier(80.0f);
+		//	SetNearPressureRatio(0.1f);
+		//	SetGravity(1.0f);
+		//	SetMaxVelocity(10.0f);
 		//	SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
-		//
+        //
 		//	// User Interaction:
 		//	SetAttractorRadius(3.0f);
 		//	SetAttractorStrength(2.0f);
-		//
+        //
 		//	// Visuals:
 		//	SetColorMode(0);
 		//	SetInitialDistributionRadius(6.0f);
 		//	SetVisualRadius(0.25f);
 		//}
-		// Settings1:
-		//{
-		//	// Management:
-		//	SetTimeScale(4.0f);
-		//	SetParticleCount(20000);
-		//
-		//	// Settings:
-		//	SetUseHashGridOptimization(true);
-		//	SetEffectRadius(0.2f);
-		//	SetMass(1.0f);
-		//	SetViscosity(1.0f);
-		//	SetSurfaceTension(0.0f);
-		//	SetCollisionDampening(0.95f);
-		//	SetTargetDensity(200.0f);
-		//	SetPressureMultiplier(10.0f);
-		//	SetGravity(0.5f);
-		//	SetMaxVelocity(5.0f);
-		//	SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
-		//
-		//	// User Interaction:
-		//	SetAttractorRadius(3.0f);
-		//	SetAttractorStrength(2.0f);
-		//
-		//	// Visuals:
-		//	SetColorMode(0);
-		//	SetInitialDistributionRadius(8.0f);
-		//	SetVisualRadius(0.15f);
-		//}
-		// Settings2:
+        // Settings for new pressure:
 		{
 			// Management:
 			SetTimeScale(2.0f);
-			SetParticleCount(4000);
+			SetParticleCount(10000);
 
 			// Settings:
 			SetUseHashGridOptimization(false);
-			SetEffectRadius(0.5f);
+			SetEffectRadius(0.3f);
 			SetMass(1.0f);
 			SetViscosity(3.0f);
-			SetSurfaceTension(2.0f);
-			SetCollisionDampening(0.95f);
+			SetSurfaceTension(0.5f);
+			SetCollisionDampening(0.80f);
 			SetTargetDensity(25.0f);
-			SetPressureMultiplier(7.0f);
+			SetPressureMultiplier(40.0f);
 			SetNearPressureRatio(0.1f);
 			SetGravity(1.0f);
-			SetMaxVelocity(5.0f);
+			SetMaxVelocity(10.0f);
 			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 0.01f)));
 
 			// User Interaction:

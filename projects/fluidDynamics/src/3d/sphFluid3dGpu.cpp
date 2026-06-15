@@ -25,11 +25,10 @@ namespace fluidDynamics
 			SetEffectRadius(1.0f);
 			SetMass(1.0f);
 			SetViscosity(2.0f);
-			SetSurfaceTension(1.0f);
-			SetCollisionDampening(0.95f);
+			SetSurfaceTension(0.5f);
+			SetCollisionDampening(0.5f);
 			SetTargetDensity(12.5f);
 			SetPressureMultiplier(300.0f);
-			SetNearPressureRatio(0.1f);
 			SetGravity(5.0f);
 			SetMaxVelocity(5.0f);
 			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
@@ -42,7 +41,7 @@ namespace fluidDynamics
 			// Visuals:
 			SetColorMode(0);
 			SetInitialDistributionRadius(7.5f);
-			SetVisualRadius(0.5f);
+			SetVisualRadius(0.2f);
 		}
         m_forceSetters = false;
 

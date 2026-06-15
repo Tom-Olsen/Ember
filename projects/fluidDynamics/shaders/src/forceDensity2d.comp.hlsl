@@ -101,6 +101,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
                         float otherParticleNearPressure = NearPressure(nearDensityBuffer[otherIndex], pressureMultiplier, nearPressureRatio);
                         float sharedNearPressure = 0.5f * (particleNearPressure + otherParticleNearPressure);
+                        // Old:
+                        //forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[otherIndex];
+                        // New:
                         forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky2(r, dir, effectRadius) / densityBuffer[otherIndex];
                         forceDensityBuffer[index] += -mass * sharedNearPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[otherIndex];
 
@@ -131,6 +134,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
                     float otherParticleNearPressure = NearPressure(nearDensityBuffer[i], pressureMultiplier, nearPressureRatio);
                     float sharedNearPressure = 0.5f * (particleNearPressure + otherParticleNearPressure);
+                    // Old:
+                    //forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[i];
+                    // New:
                     forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky2(r, dir, effectRadius) / densityBuffer[i];
                     forceDensityBuffer[index] += -mass * sharedNearPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[i];
 
