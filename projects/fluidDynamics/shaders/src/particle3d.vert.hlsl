@@ -28,7 +28,6 @@ struct VertexInput
     float4 vertexColor : COLOR;         // vertex color
     float4 uv : TEXCOORD0;
 };
-
 struct VertexOutput
 {
     float4 clipPosition : SV_POSITION;  // position in clip space: x,y in [-1,1] z in [0,1]
@@ -36,6 +35,7 @@ struct VertexOutput
     float3 worldTangent : TANGENT;      // tangent in world space
     float4 vertexColor : COLOR;         // vertex color
     float4 uv : TEXCOORD0;              // texture coordinates
+    float3 worldPosition : TEXCOORD1;   // position in world space
 };
 
 
@@ -101,5 +101,6 @@ VertexOutput main(VertexInput input)
     output.worldTangent = mul(normalMatrix, tangent).xyz;
     output.vertexColor = color;
     output.uv = input.uv;
+    output.worldPosition = mul(localToWorldMatrix, pos).xyz;
     return output;
 }

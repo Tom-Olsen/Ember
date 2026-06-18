@@ -6,10 +6,10 @@
 cbuffer SurfaceProperties : register(b300, CALL_SET)
 {
     float4 diffuseColor;    // (1.0, 1.0, 1.0)
-    float roughness;        // 0.5
-    float3 reflectivity;    // 0.4
-    float metallicity;      // 0 = dielectric, 1 = metal
     float4 scaleOffset;     // .xy = scale, .zw = offset
+    float3 reflectivity;    // 0.4
+    float roughness;        // 0.5
+    float metallicity;      // 0 = dielectric, 1 = metal
 };
 
 
@@ -21,18 +21,20 @@ struct FragmentInput
     float3 worldTangent : TANGENT;      // tangent in world space
     float4 vertexColor : COLOR;         // vertex color
     float4 uv : TEXCOORD0;              // texture coordinates
+    float3 worldPosition : TEXCOORD1;   // position in world space
 };
 
 
 
 float4 main(FragmentInput input) : SV_TARGET
 {
-    float2 uv = input.uv.xy;
-    float r = length(2 * uv - float2(1, 1));
-    float alpha = (1 - r);
-    
+    // Shading:
     float4 color = input.vertexColor * diffuseColor;
-    color.a = alpha;
     
-    return color;
+    // Lighting:
+    float ambient = 0.3f;
+    float3 finalColor = ambient * color.xyz;
+    finalColor += PhysicalLighting(input.worldPosition, input.worldNormal, color.xyz, roughness, reflectivity, metallicity, pc.receiveShadows != 0);
+    
+    return float4(finalColor, 1.0f);
 }
