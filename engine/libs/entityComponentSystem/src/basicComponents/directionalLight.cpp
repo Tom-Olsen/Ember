@@ -54,12 +54,12 @@ namespace emberEngine
 	}
 	void DirectionalLight::SetShadowCascadeCount(int shadowCascadeCount)
 	{
-		if (m_shadowCascadeCount < 0)
+		if (shadowCascadeCount < 0)
 		{
 			LOG_WARN("Directional Light Shadow Cascade Count '{}' invalid. Setting it to min value, 1.", shadowCascadeCount);
 			shadowCascadeCount = 1;
 		}
-		if (m_shadowCascadeCount > 4)
+		if (shadowCascadeCount > 4)
 		{
 			LOG_WARN("Directional Light Shadow Cascade Count '{}' invalid. Setting it to max value, 4.", shadowCascadeCount);
 			shadowCascadeCount = 4;

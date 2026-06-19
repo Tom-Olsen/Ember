@@ -45,6 +45,11 @@ namespace vulkanRendererBackend
 		vmaGetAllocationInfo(Context::GetVmaAllocator(), m_pBuffer->GetVmaAllocation(), &info);
 		m_pDeviceData = static_cast<uint8_t*>(info.pMappedData);
 
+		// Query memory type properties to detect coherency:
+		VkMemoryPropertyFlags propertyFlags = 0;
+		vmaGetMemoryTypeProperties(Context::GetVmaAllocator(), info.memoryType, &propertyFlags);
+		m_isCoherent = (propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) != 0;
+
 		// Allocate host data:
 		m_hostData.resize(m_bufferLayout.GetSize());
 	}
@@ -61,6 +66,8 @@ namespace vulkanRendererBackend
 		assert(frameIndex < Context::GetFramesInFlight());
 		uint32_t offset = frameIndex * m_alignedSize;
 		memcpy(m_pDeviceData + offset, m_hostData.data(), m_hostData.size());
+		if (!m_isCoherent)
+			vmaFlushAllocation(Context::GetVmaAllocator(), m_pBuffer->GetVmaAllocation(), offset, m_hostData.size());
 	}
 
 

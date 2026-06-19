@@ -25,6 +25,7 @@ namespace vulkanRendererBackend
 		std::vector<char> m_hostData;
 		uint32_t m_alignedSize;
 		emberBufferLayout::BufferLayout m_bufferLayout;
+		bool m_isCoherent;
 
 	public: // Methods:
 		// Constructor/Destructor:

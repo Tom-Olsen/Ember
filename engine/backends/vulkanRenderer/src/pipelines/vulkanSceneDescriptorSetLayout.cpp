@@ -62,7 +62,6 @@ namespace vulkanRendererBackend
             offset += sizeof(int);
             emberBufferLayout::BufferMember lightPosCount("light_posCount", offset, sizeof(int));
             offset += sizeof(int);
-            offset += 8; // +8 due to alignment rules.
 
             emberBufferLayout::BufferMember lightDirectionData("light_directionData", offset, 0);
             uint32_t directionalLightDataSize = sizeof(Float4x4) + sizeof(Float3) + sizeof(int) + sizeof(Float4);
@@ -86,7 +85,7 @@ namespace vulkanRendererBackend
             }
             lightDirectionData.SetSize(offset - lightDirectionData.GetOffset());
 
-            uint32_t positionalLightDataSize = sizeof(Float4x4) + sizeof(Float3) + sizeof(int) + sizeof(Float4) + sizeof(Float2) + 8; // +8 due to alignment rules.
+            uint32_t positionalLightDataSize = sizeof(Float4x4) + sizeof(Float3) + sizeof(int) + sizeof(Float4) + sizeof(Float2);
             emberBufferLayout::BufferMember lightPositionalData("light_positionData", offset, 0);
             for (int i = 0; i < MAX_POS_LIGHTS; i++)
             {
@@ -100,7 +99,7 @@ namespace vulkanRendererBackend
                 emberBufferLayout::BufferMember colorIntensity("colorIntensity", offset, sizeof(Float4));
                 offset += sizeof(Float4);
                 emberBufferLayout::BufferMember blendStartEnd("blendStartEnd", offset, sizeof(Float2));
-                offset += sizeof(Float2) + 8; // +8 due to alignment rules.
+                offset += sizeof(Float2);
 
                 lightPositionalDataElement.AddSubMember(worldToClipMatrix);
                 lightPositionalDataElement.AddSubMember(position);
@@ -109,6 +108,7 @@ namespace vulkanRendererBackend
                 lightPositionalDataElement.AddSubMember(blendStartEnd);
                 lightPositionalData.AddSubMember(lightPositionalDataElement);
             }
+            offset += 8; // tail padding to match the reflected LightProperties cbuffer size.
             lightPositionalData.SetSize(offset - lightPositionalData.GetOffset());
 
             emberBufferLayout::BufferLayout bufferLayout("LightProperties");
