@@ -1,3 +1,5 @@
+Check transform directions vs world directions and see if they mean the same.
+
 Review draw-call sorting and reduce per-frame overhead by caching sort keys or only resorting when relevant state changes.
 Re-enable texture batch uploading with correct queue synchronization and barriers between transfer and graphics queues.
 Reduce static shared state usage in Context, PoolManager, GarbageCollector, and RenderPassManager to improve encapsulation and thread safety.
