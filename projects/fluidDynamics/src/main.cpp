@@ -11,7 +11,7 @@ using namespace fluidDynamics;
 
 
 
-Scene* InitScene()
+Scene* Fluid2dCpuScene()
 {
 	Scene* pScene = new Scene();
 	pScene->SetIsEnabled(true);
@@ -22,7 +22,54 @@ Scene* InitScene()
 
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(pos);
-		//pTransform->SetRotationMatrix(Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up));
+
+		Camera* pCamera = entity.AddComponent<Camera>();
+		pCamera->SetFarClip(100.0f);
+
+		pScene->SetActiveCamera(pCamera);
+	}
+	{ // Sph Fluid 2d Cpu:
+		Entity entity = Entity::Create("sphFluid2dCpu");
+		SphFluid2dCpu* pSphFluid2dCpu = entity.AddComponent<SphFluid2dCpu>();
+	}
+	return pScene;
+}
+Scene* Fluid2dGpuScene()
+{
+	Scene* pScene = new Scene();
+	pScene->SetIsEnabled(true);
+
+	{// Camera:
+		Entity entity = Entity::Create("mainCamera");
+		Float3 pos = Float3(0.0f, 0.0f, 17.0f);
+
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+
+		Camera* pCamera = entity.AddComponent<Camera>();
+		pCamera->SetFarClip(100.0f);
+
+		pScene->SetActiveCamera(pCamera);
+	}
+	{ // Sph Fluid 2d Gpu:
+		Entity entity = Entity::Create("sphFluid2dGpu");
+		SphFluid2dGpu* pSphFluid2dGpu = entity.AddComponent<SphFluid2dGpu>();
+	}
+	return pScene;
+}
+Scene* Fluid3dScene()
+{
+	Scene* pScene = new Scene();
+	pScene->SetIsEnabled(true);
+
+	{// Camera:
+		Entity entity = Entity::Create("mainCamera");
+		Float3 pos = Float3(25.0f, -25.0f, 10.0f);
+		Float3x3 rotation = Float3x3::RotateThreeLeg(Float3::down, -pos + 8 * Float3::down, Float3::forward, Float3::up);
+
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+		pTransform->SetRotationMatrix(rotation);
 
 		Camera* pCamera = entity.AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
@@ -30,34 +77,13 @@ Scene* InitScene()
 
 		pScene->SetActiveCamera(pCamera);
 	}
-	//{// Directional Light:
-	//	Entity entity = Entity::Create("directionalLight");
-	//	Float3 pos = 2.0f * Float3(16.0f, 9.0f, 9.0f);
-	//	Float3 direction = -pos.Normalize();
-	//	Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
-    //
-	//	Transform* pTransform = entity.GetTransform();
-	//	pTransform->SetPosition(pos);
-	//	pTransform->SetRotationMatrix(matrix);
-    //
-	//	DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
-	//	pDirectionalLight->SetIntensity(1.0f);
-	//	pDirectionalLight->SetColor(Float3::white);
-	//	pDirectionalLight->SetDrawFrustum(false);
-	//	pDirectionalLight->SetShadowCascadeCount(1);
-	//	//pDirectionalLight->SetShadowCascadeSplit(0, 0.0f);
-	//	//pDirectionalLight->SetShadowCascadeSplit(1, 0.2f);
-	//	//pDirectionalLight->SetShadowCascadeSplit(2, 0.5f);
-	//	//pDirectionalLight->SetShadowCascadeSplit(3, 1.0f);
-	//	pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
-	//}
 	{ // Floor:
 		Entity entity = Entity::Create("floor");
 		Float3 pos = Float3(0.0f, 0.0f, -9.5f);
 
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(pos);
-		pTransform->SetScale(30.0f);
+		pTransform->SetScale(60.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
@@ -68,37 +94,50 @@ Scene* InitScene()
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(10, 10, 0, 0));
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
 	}
-	{// PointLight:
-		Entity entity = Entity::Create("pointLight");
-		Float3 pos = 1.1f * Float3(16.0f, 9.0f, 9.0f);;
-		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::back, -pos, Float3::forward, Float3::up);
-
+	{// Directional Light:
+		Entity entity = Entity::Create("directionalLight");
+		Float3 pos = 2.0f * Float3(16.0f, 9.0f, 9.0f);
+		Float3 direction = -pos.Normalize();
+		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
+    
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(pos);
 		pTransform->SetRotationMatrix(matrix);
-
-		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
-		pMeshRenderer->SetCastShadows(false);
-		pMeshRenderer->SetReceiveShadows(false);
-
-		PointLight* pPointLight = entity.AddComponent<PointLight>();
-		pPointLight->SetIntensity(500.0f);
-		pPointLight->SetColor(Float3(1.0f, 1.0f, 1.0f));
-		pPointLight->SetNearClip(0.5f);
-		pPointLight->SetFarClip(50.0f);
-		pPointLight->SetDrawFrustum(false);
-		pPointLight->SetShadowType(emberCommon::ShadowType::hard);
+    
+		DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
+		pDirectionalLight->SetIntensity(1.0f);
+		pDirectionalLight->SetColor(Float3::white);
+		pDirectionalLight->SetDrawFrustum(false);
+		pDirectionalLight->SetShadowCascadeCount(1);
+		//pDirectionalLight->SetShadowCascadeSplit(0, 0.0f);
+		//pDirectionalLight->SetShadowCascadeSplit(1, 0.2f);
+		//pDirectionalLight->SetShadowCascadeSplit(2, 0.5f);
+		//pDirectionalLight->SetShadowCascadeSplit(3, 1.0f);
+		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
 	}
-	//{ // Sph Fluid 2d Cpu:
-	//	Entity entity = Entity::Create("sphFluid2dCpu");
-	//	SphFluid2dCpu* pSphFluid2dCpu = entity.AddComponent<SphFluid2dCpu>();
-	//}
-	//{ // Sph Fluid 2d Gpu:
-	//	Entity entity = Entity::Create("sphFluid2dGpu");
-	//	SphFluid2dGpu* pSphFluid2dGpu = entity.AddComponent<SphFluid2dGpu>();
+	//{// PointLight:
+	//	Entity entity = Entity::Create("pointLight");
+	//	Float3 pos = 1.1f * Float3(16.0f, 9.0f, 9.0f);;
+	//	Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::back, -pos, Float3::forward, Float3::up);
+//
+	//	Transform* pTransform = entity.GetTransform();
+	//	pTransform->SetPosition(pos);
+	//	pTransform->SetRotationMatrix(matrix);
+//
+	//	MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
+	//	pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+	//	pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
+	//	pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
+	//	pMeshRenderer->SetCastShadows(false);
+	//	pMeshRenderer->SetReceiveShadows(false);
+//
+	//	PointLight* pPointLight = entity.AddComponent<PointLight>();
+	//	pPointLight->SetIntensity(500.0f);
+	//	pPointLight->SetColor(Float3(1.0f, 1.0f, 1.0f));
+	//	pPointLight->SetNearClip(0.5f);
+	//	pPointLight->SetFarClip(50.0f);
+	//	pPointLight->SetDrawFrustum(false);
+	//	pPointLight->SetShadowType(emberCommon::ShadowType::hard);
 	//}
 	{ // Sph Fluid 3d Gpu:
 		Entity entity = Entity::Create("sphFluid3dGpu");
@@ -142,7 +181,9 @@ int main()
 		particleMaterial3d.SetShadowMaterial(particleShadowMaterial3d);
 
 		// Create scene:
-		Scene* pScene = InitScene();
+		//Scene* pScene = Fluid2dCpuScene();
+		//Scene* pScene = Fluid2dGpuScene();
+		Scene* pScene = Fluid3dScene();
 		emberApplication::Application::SetScene(pScene);
 
 		// Run app:
