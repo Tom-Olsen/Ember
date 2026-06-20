@@ -98,7 +98,6 @@ namespace emberCommon
         rgba64_sint,
         rgba64_sfloat
     };
-
     inline constexpr std::string_view FormatFlagToString(FormatFlag format)
     {
         switch (format)
@@ -193,6 +192,7 @@ namespace emberCommon
             default: return "unknown";
         }
     }
+
 
 
     struct TextureFormat
@@ -292,4 +292,127 @@ namespace emberCommon
         inline static TextureFormat rgba64_sint{ FormatFlag::rgba64_sint, 4, 8 };
         inline static TextureFormat rgba64_sfloat{ FormatFlag::rgba64_sfloat, 4, 8 };
     };
+
+
+
+    inline constexpr bool IsUnsignedIntegerFormat(FormatFlag flag)
+    {
+        switch (flag)
+        {
+            case FormatFlag::r08_srgb:
+            case FormatFlag::r08_uint:
+            case FormatFlag::r08_uscaled:
+            case FormatFlag::r08_unorm:
+            case FormatFlag::r16_uint:
+            case FormatFlag::r16_uscaled:
+            case FormatFlag::r16_unorm:
+            case FormatFlag::r32_uint:
+            case FormatFlag::r64_uint:
+            case FormatFlag::rg08_srgb:
+            case FormatFlag::rg08_uint:
+            case FormatFlag::rg08_uscaled:
+            case FormatFlag::rg08_unorm:
+            case FormatFlag::rg16_uint:
+            case FormatFlag::rg16_uscaled:
+            case FormatFlag::rg16_unorm:
+            case FormatFlag::rg32_uint:
+            case FormatFlag::rg64_uint:
+            case FormatFlag::rgb08_srgb:
+            case FormatFlag::rgb08_uint:
+            case FormatFlag::rgb08_uscaled:
+            case FormatFlag::rgb08_unorm:
+            case FormatFlag::rgb16_uint:
+            case FormatFlag::rgb16_uscaled:
+            case FormatFlag::rgb16_unorm:
+            case FormatFlag::rgb32_uint:
+            case FormatFlag::rgb64_uint:
+            case FormatFlag::rgba08_srgb:
+            case FormatFlag::rgba08_uint:
+            case FormatFlag::rgba08_uscaled:
+            case FormatFlag::rgba08_unorm:
+            case FormatFlag::rgba16_uint:
+            case FormatFlag::rgba16_uscaled:
+            case FormatFlag::rgba16_unorm:
+            case FormatFlag::rgba32_uint:
+            case FormatFlag::rgba64_uint:
+                return true;
+            default:
+                return false;
+        }
+    }
+    inline constexpr bool IsSignedIntegerFormat(FormatFlag flag)
+    {
+        switch (flag)
+        {
+            case FormatFlag::r08_sint:
+            case FormatFlag::r08_sscaled:
+            case FormatFlag::r08_snorm:
+            case FormatFlag::r16_sint:
+            case FormatFlag::r16_sscaled:
+            case FormatFlag::r16_snorm:
+            case FormatFlag::r32_sint:
+            case FormatFlag::r64_sint:
+            case FormatFlag::rg08_sint:
+            case FormatFlag::rg08_sscaled:
+            case FormatFlag::rg08_snorm:
+            case FormatFlag::rg16_sint:
+            case FormatFlag::rg16_sscaled:
+            case FormatFlag::rg16_snorm:
+            case FormatFlag::rg32_sint:
+            case FormatFlag::rg64_sint:
+            case FormatFlag::rgb08_sint:
+            case FormatFlag::rgb08_sscaled:
+            case FormatFlag::rgb08_snorm:
+            case FormatFlag::rgb16_sint:
+            case FormatFlag::rgb16_sscaled:
+            case FormatFlag::rgb16_snorm:
+            case FormatFlag::rgb32_sint:
+            case FormatFlag::rgb64_sint:
+            case FormatFlag::rgba08_sint:
+            case FormatFlag::rgba08_sscaled:
+            case FormatFlag::rgba08_snorm:
+            case FormatFlag::rgba16_sint:
+            case FormatFlag::rgba16_sscaled:
+            case FormatFlag::rgba16_snorm:
+            case FormatFlag::rgba32_sint:
+            case FormatFlag::rgba64_sint:
+                return true;
+            default:
+                return false;
+        }
+    }
+    inline constexpr bool IsFloatFormat(FormatFlag flag)
+    {
+        switch (flag)
+        {
+            case FormatFlag::r16_sfloat:
+            case FormatFlag::r32_sfloat:
+            case FormatFlag::r64_sfloat:
+            case FormatFlag::rg16_sfloat:
+            case FormatFlag::rg32_sfloat:
+            case FormatFlag::rg64_sfloat:
+            case FormatFlag::rgb16_sfloat:
+            case FormatFlag::rgb32_sfloat:
+            case FormatFlag::rgb64_sfloat:
+            case FormatFlag::rgba16_sfloat:
+            case FormatFlag::rgba32_sfloat:
+            case FormatFlag::rgba64_sfloat:
+                return true;
+            default:
+                return false;
+        }
+    }
+    inline constexpr bool IsSrgbFormat(FormatFlag flag)
+    {
+        switch (flag)
+        {
+            case FormatFlag::r08_srgb:
+            case FormatFlag::rg08_srgb:
+            case FormatFlag::rgb08_srgb:
+            case FormatFlag::rgba08_srgb:
+                return true;
+            default:
+                return false;
+        }
+    }
 }

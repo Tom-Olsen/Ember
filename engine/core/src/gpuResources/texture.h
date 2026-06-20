@@ -1,8 +1,12 @@
 #pragma once
 #include "commonTextureFormat.h"
 #include "emberCoreExport.h"
+#include "emberMath.h"
+#include <cstddef>
 #include <memory>
+#include <span>
 #include <string>
+#include <vector>
 
 
 
@@ -58,6 +62,24 @@ namespace emberEngine
 		const emberCommon::TextureFormat GetFormat() const;
 
 		// Setters:
-		void SetData(void* data);
+		void SetData(std::span<const float> data);
+		void SetData(std::span<const Float2> data);
+		void SetData(std::span<const Float3> data);
+		void SetData(std::span<const Float4> data);
+		void SetRawData(std::span<const std::byte> data);
+
+	protected: // Methods:
+		virtual uint64_t GetExpectedTexelCount() const;
+		std::vector<std::byte> ConvertToTextureFormat(std::span<const float> data, uint32_t sourceChannels) const;
+
+    private: // Methods:
+        static double MaxUnsignedValue(uint32_t bytesPerChannel);
+        static int64_t MinSignedValue(uint32_t bytesPerChannel);
+        static int64_t MaxSignedValue(uint32_t bytesPerChannel);
+        static float LinearToSrgb(float value);
+	    static float GetSourceValue(std::span<const float> data, uint64_t texel, uint32_t channel, uint32_t sourceChannels);
+	    template<typename T>
+        static void WriteValue(std::vector<std::byte>& bytes, uint64_t& offset, T value);
+        static uint16_t FloatToHalf(float value);
 	};
 }

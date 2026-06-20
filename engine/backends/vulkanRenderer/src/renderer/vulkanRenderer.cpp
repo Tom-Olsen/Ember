@@ -934,7 +934,6 @@ namespace vulkanRendererBackend
 						if (drawCall->castShadows == false)
 							continue;
 
-                            
                         // Pipeline swap:
                         const Material* pShadowMaterial = drawCall->pShadowMaterial;
 						VkPipeline newPipeline = pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();

@@ -3,8 +3,9 @@
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
 #include "emberCoreExport.h"
-#include <string>
 #include <filesystem>
+#include <span>
+#include <string>
 
 
 
@@ -14,7 +15,11 @@ namespace emberEngine
 	{
 	public: // methods:
 		// Constructor/Destructor:
-		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data = nullptr);
+		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage);
+		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const float> data);
+		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float2> data);
+		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float3> data);
+		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float4> data);
 		Texture2d(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path);
 		Texture2d(emberBackendInterface::ITexture* pITexture, bool ownsTexture);
 		~Texture2d();

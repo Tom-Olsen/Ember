@@ -9,13 +9,13 @@
 
 float3 LinearToSRGB(float3 linearColor)
 {
-    float3 sRGBLo = linearColor * 12.92;
-    float3 sRGBHi = 1.055 * pow(linearColor, 1.0 / 2.4) - 0.055;
+    float3 sRGBLo = 12.92f * linearColor;
+    float3 sRGBHi = 1.055f * pow(linearColor, 1.0f / 2.4f) - 0.055f;
 
     float3 result;
-    result.r = (linearColor.r <= 0.0031308) ? sRGBLo.r : sRGBHi.r;
-    result.g = (linearColor.g <= 0.0031308) ? sRGBLo.g : sRGBHi.g;
-    result.b = (linearColor.b <= 0.0031308) ? sRGBLo.b : sRGBHi.b;
+    result.r = (linearColor.r <= 0.0031308f) ? sRGBLo.r : sRGBHi.r;
+    result.g = (linearColor.g <= 0.0031308f) ? sRGBLo.g : sRGBHi.g;
+    result.b = (linearColor.b <= 0.0031308f) ? sRGBLo.b : sRGBHi.b;
 
     return result;
 }

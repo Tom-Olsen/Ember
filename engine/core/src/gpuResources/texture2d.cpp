@@ -1,8 +1,10 @@
 #include "texture2d.h"
 #include "assetLoader.h"
-#include "logger.h"
 #include "iTexture.h"
+#include "logger.h"
 #include "renderer.h"
+#include <cstddef>
+#include <span>
 
 
 
@@ -10,14 +12,40 @@ namespace emberEngine
 {
 	// Public methods:
 	// Constructor/Destructor:
-	Texture2d::Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	Texture2d::Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
 	{
-		if (usage == emberCommon::TextureUsage::renderTarget && data != nullptr)
-			LOG_WARN("Texture2d: TextureUsage = 'renderTarget' does not support loading from void* data. Ignoring data.");
 		m_ownsITexture = true;
         m_name = name;
-		m_pITexture = Renderer::CreateTexture2d(width, height, format, usage, data);
+		m_pITexture = Renderer::CreateTexture2d(width, height, format, usage, nullptr);
         m_pITexture->SetDebugName(m_name);
+	}
+	Texture2d::Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const float> data) : Texture2d(name, width, height, format, usage)
+	{
+		if (usage == emberCommon::TextureUsage::renderTarget)
+			LOG_WARN("Texture2d: TextureUsage = 'renderTarget' does not support loading from float data. Ignoring data.");
+		else
+			SetData(data);
+	}
+	Texture2d::Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float2> data) : Texture2d(name, width, height, format, usage)
+	{
+		if (usage == emberCommon::TextureUsage::renderTarget)
+			LOG_WARN("Texture2d: TextureUsage = 'renderTarget' does not support loading from Float2 data. Ignoring data.");
+		else
+			SetData(data);
+	}
+	Texture2d::Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float3> data) : Texture2d(name, width, height, format, usage)
+	{
+		if (usage == emberCommon::TextureUsage::renderTarget)
+			LOG_WARN("Texture2d: TextureUsage = 'renderTarget' does not support loading from Float3 data. Ignoring data.");
+		else
+			SetData(data);
+	}
+	Texture2d::Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float4> data) : Texture2d(name, width, height, format, usage)
+	{
+		if (usage == emberCommon::TextureUsage::renderTarget)
+			LOG_WARN("Texture2d: TextureUsage = 'renderTarget' does not support loading from Float4 data. Ignoring data.");
+		else
+			SetData(data);
 	}
 	Texture2d::Texture2d(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path)
 	{
@@ -25,11 +53,11 @@ namespace emberEngine
 			throw std::runtime_error("Texture2d: TextureUsage = 'renderTarget' does not support loading from path.");
 
 		emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageFile(path, format.channels);
-		void* data = static_cast<void*>(imageAsset.pixels.data());
 		m_ownsITexture = true;
         m_name = name;
-		m_pITexture = Renderer::CreateTexture2d(imageAsset.width, imageAsset.height, format, usage, data);
+		m_pITexture = Renderer::CreateTexture2d(imageAsset.width, imageAsset.height, format, usage, nullptr);
         m_pITexture->SetDebugName(m_name);
+		SetRawData(std::as_bytes(std::span(imageAsset.pixels)));
 	}
 	Texture2d::Texture2d(emberBackendInterface::ITexture* pITexture, bool ownsTexture)
 	{
