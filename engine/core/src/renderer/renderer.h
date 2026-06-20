@@ -107,6 +107,8 @@ namespace emberEngine
 		static float GetDepthBiasConstantFactor();
 		static float GetDepthBiasClamp();
 		static float GetDepthBiasSlopeFactor();
+		static uint32_t GetFrameIndex();
+		static bool IsFrameFinished(uint32_t frameIndex);
 
 		// Setters:
 		static void SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix);
@@ -117,8 +119,9 @@ namespace emberEngine
 		// Functionallity forwarding:
 		static void CollectGarbage();
 		static void WaitDeviceIdle();
+		static void WaitForFrameFinished(uint32_t frameIndex);
 
-        // Debugging:
+		// Debugging:
 		static void DumpVmaBufferAllocations();
 		static void DumpVmaImageAllocations();
 

@@ -47,6 +47,8 @@ namespace emberBackendInterface
         virtual float GetDepthBiasConstantFactor() = 0;
         virtual float GetDepthBiasClamp() = 0;
         virtual float GetDepthBiasSlopeFactor() = 0;
+        virtual uint32_t GetFrameIndex() const = 0;
+        virtual bool IsFrameFinished(uint32_t frameIndex) const = 0;
 
         // Setters:
         virtual void LinkIComputeHandle(emberBackendInterface::ICompute* pICompute) = 0;
@@ -59,6 +61,7 @@ namespace emberBackendInterface
         // Functionallity forwarding:
         virtual void CollectGarbage() = 0;
         virtual void WaitDeviceIdle() = 0;
+        virtual void WaitForFrameFinished(uint32_t frameIndex) = 0;
 
         // Gpu resource factories:
         virtual IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) = 0;

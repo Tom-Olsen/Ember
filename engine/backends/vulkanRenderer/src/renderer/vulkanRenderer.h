@@ -144,6 +144,8 @@ namespace vulkanRendererBackend
 		float GetDepthBiasConstantFactor() override;
 		float GetDepthBiasClamp() override;
 		float GetDepthBiasSlopeFactor() override;
+		uint32_t GetFrameIndex() const override;
+		bool IsFrameFinished(uint32_t frameIndex) const override;
 
 		// Setters:
 		void LinkIComputeHandle(emberBackendInterface::ICompute* pICompute) override;
@@ -156,8 +158,9 @@ namespace vulkanRendererBackend
 		// Functionality forwarding:
 		void CollectGarbage() override;
 		void WaitDeviceIdle() override; // needed so core can wait before destroying resource managers and then renderer.
+		void WaitForFrameFinished(uint32_t frameIndex) override;
 
-        // Gpu resource factories:
+		// Gpu resource factories:
 		emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) override;
 		//emberBackendInterface::ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;

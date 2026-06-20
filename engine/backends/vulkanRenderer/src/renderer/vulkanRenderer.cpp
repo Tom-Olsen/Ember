@@ -359,6 +359,26 @@ namespace vulkanRendererBackend
 	{
 		return m_depthBiasSlopeFactor;
 	}
+	uint32_t Renderer::GetFrameIndex() const
+	{
+		return Context::GetFrameIndex();
+	}
+	bool Renderer::IsFrameFinished(uint32_t frameIndex) const
+	{
+		if (frameIndex >= m_frameFences.size())
+		{
+			LOG_ERROR("Renderer::IsFrameFinished(...) failed. frameIndex '{}' out of range.", frameIndex);
+			return true;
+		}
+
+		VkResult result = vkGetFenceStatus(Context::GetVkDevice(), m_frameFences[frameIndex]);
+		if (result == VK_SUCCESS)
+			return true;
+		if (result == VK_NOT_READY)
+			return false;
+		VKA(result);
+		return false;
+	}
 
 
 
@@ -400,6 +420,15 @@ namespace vulkanRendererBackend
 	void Renderer::WaitDeviceIdle()
 	{
 		Context::WaitDeviceIdle();
+	}
+	void Renderer::WaitForFrameFinished(uint32_t frameIndex)
+	{
+		if (frameIndex >= m_frameFences.size())
+		{
+			LOG_ERROR("Renderer::WaitForFrameFinished(...) failed. frameIndex '{}' out of range.", frameIndex);
+			return;
+		}
+		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_frameFences[frameIndex], VK_TRUE, UINT64_MAX));
 	}
 
 

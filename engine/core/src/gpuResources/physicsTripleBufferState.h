@@ -13,6 +13,7 @@ namespace emberEngine
 	public: // Constants:
 		static constexpr uint32_t bufferCount = 3;
 		static constexpr uint32_t invalidIndex = bufferCount;
+		static constexpr uint32_t invalidFrameIndex = UINT32_MAX;
 
 	private: // Subclasses:
 		struct PendingWrite
@@ -26,6 +27,7 @@ namespace emberEngine
 		uint32_t m_dstIndex;
 		uint32_t m_readIndex;
 		uint32_t m_freeIndex;
+		std::array<uint32_t, bufferCount> m_graphicsReadFrameIndices;
 		std::array<PendingWrite, bufferCount - 1> m_pendingWrites;
 		uint32_t m_pendingWriteCount;
 
@@ -38,16 +40,21 @@ namespace emberEngine
 		void Reset();
 		void CommitWrite(uint64_t physicsSessionID);    // commits dst as the new src. It becomes readable after physicsSessionID finishes.
 		void PublishFinishedWrites();                   // publishes committed writes whose work has finished, oldest first.
+		void MarkRead();                                // marks the current read buffer as used by the current render frame.
 
 		// Getters:
 		uint32_t GetSrcIndex() const;
-		uint32_t GetDstIndex() const;
+		uint32_t GetDstIndex();
 		uint32_t GetReadIndex() const;
 
 	private: // Methods:
-        void DiscardPendingWrite(uint32_t dataIndex);
+		bool CanUseAsFreeIndex(uint32_t dataIndex) const;   // checks if dataIndex is valid choice for free index.
+		bool TrySetFreeIndex(uint32_t dataIndex);           // sets free index if dataIndex is a valid choice.
+		void DiscardPendingWrite(uint32_t dataIndex);
 		void AdvanceWriteIndices();
 		void RemoveFirstPendingWrite();
+		void ReleaseFinishedGraphicsReads();
 		void SetReadIndex(uint32_t dataIndex);
+		void WaitForFreeIndex();
 	};
 }

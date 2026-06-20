@@ -143,14 +143,16 @@ namespace fluidDynamics
 			ShaderProperties shaderProperties = Renderer::DrawMesh(m_attractorSphereMesh, MaterialManager::GetMaterial("transparentMaterial"), attractorLocalToWorld, false, false);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
 		}
-		m_particleMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
-		m_particleMaterial.SetBuffer("velocityBuffer", m_tripleData.velocityBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
-		m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
-		m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
-		m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
+		m_tripleBufferState.MarkRead();
+		uint32_t readDataIndex = m_tripleBufferState.GetReadIndex();
+		m_particleMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
+		m_particleMaterial.SetBuffer("velocityBuffer", m_tripleData.velocityBuffer.GetBuffer(readDataIndex));
+		m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(readDataIndex));
+		m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(readDataIndex));
+		m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(readDataIndex));
 		Material shadowMaterial = m_particleMaterial.TryGetShadowMaterial();
 		if (shadowMaterial.IsValid())
-			shadowMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
+			shadowMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
 		Renderer::DrawInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, true, true);
 	}
 

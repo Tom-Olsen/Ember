@@ -364,6 +364,14 @@ namespace emberEngine
 	{
 		return s_pIRenderer->GetDepthBiasSlopeFactor();
 	}
+	uint32_t Renderer::GetFrameIndex()
+	{
+		return s_pIRenderer ? s_pIRenderer->GetFrameIndex() : 0;
+	}
+	bool Renderer::IsFrameFinished(uint32_t frameIndex)
+	{
+		return s_pIRenderer ? s_pIRenderer->IsFrameFinished(frameIndex) : true;
+	}
 
 
 
@@ -395,6 +403,10 @@ namespace emberEngine
 	void Renderer::WaitDeviceIdle()
 	{
 		s_pIRenderer->WaitDeviceIdle();
+	}
+	void Renderer::WaitForFrameFinished(uint32_t frameIndex)
+	{
+        s_pIRenderer->WaitForFrameFinished(frameIndex);
 	}
 
 
