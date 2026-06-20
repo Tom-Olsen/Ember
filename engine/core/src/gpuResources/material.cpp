@@ -34,9 +34,13 @@ namespace emberEngine
 
 
 	// Creation/Destruction: (register/delete from MaterialManager)
-	Material Material::Create(emberCommon::RenderMode renderMode, const std::string& name, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreateForward(emberCommon::RenderMode renderMode, const std::string& name, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		return MaterialManager::CreateMaterial(renderMode, name, renderQueue, vertexSpv, fragmentSpv);
+		return MaterialManager::CreateForwardMaterial(renderMode, name, renderQueue, vertexSpv, fragmentSpv);
+	}
+	Material Material::CreateShadow(const std::string& name, const std::filesystem::path& vertexSpv)
+	{
+		return MaterialManager::CreateShadowMaterial(name, vertexSpv);
 	}
 	void Material::Destroy()
 	{
@@ -59,6 +63,10 @@ namespace emberEngine
 	{
 		m_pIMaterial->SetRenderMode(renderMode);
 	}
+	void Material::SetShadowMaterial(const Material& shadowMaterial)
+	{
+		m_pIMaterial->SetShadowMaterial(shadowMaterial.GetInterfaceHandle());
+	}
 
 
 
@@ -74,6 +82,23 @@ namespace emberEngine
 	emberCommon::RenderMode Material::GetRenderMode() const
 	{
 		return m_pIMaterial->GetRenderMode();
+	}
+	Material Material::GetShadowMaterial() const
+	{
+		emberBackendInterface::IMaterial* pIShadowMaterial = m_pIMaterial->GetShadowMaterial();
+        if (pIShadowMaterial == nullptr)
+			throw std::runtime_error(GetName() + "has no shadow material not found.");
+		return Material{ pIShadowMaterial };
+	}
+	Material Material::TryGetShadowMaterial() const
+	{
+		emberBackendInterface::IMaterial* pIShadowMaterial = m_pIMaterial->GetShadowMaterial();
+        if (pIShadowMaterial == nullptr)
+        {
+			LOG_ERROR("Material '{}' has no shadow material!", GetName());
+            return Material();
+        }
+		return Material{ pIShadowMaterial };
 	}
 	bool Material::IsValid() const
 	{

@@ -33,16 +33,16 @@ namespace emberEngine
 		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
 		//AddMaterial(testMaterial);
 
-		CreateMaterial(opaqueMode, "errorMaterial", opaqueQueue, directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
-		CreateMaterial(opaqueMode, "defaultMaterial", opaqueQueue, directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
-		CreateMaterial(transparentMode, "transparentMaterial", transparentQueue, directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv");
-		CreateMaterial(opaqueMode, "presentMaterial", opaqueQueue, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
-		CreateMaterial(opaqueMode, "vertexColorLitMaterial", opaqueQueue, directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv");
-		CreateMaterial(opaqueMode, "vertexColorUnlitMaterial", opaqueQueue, directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv");
-		CreateMaterial(opaqueMode, "normalMaterial", opaqueQueue, directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv");
-		CreateMaterial(skyboxMode, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
-		CreateMaterial(opaqueMode, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
-		CreateMaterial(opaqueMode, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "errorMaterial", opaqueQueue, directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
+		CreateForwardMaterial(opaqueMode, "defaultMaterial", opaqueQueue, directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
+		CreateForwardMaterial(transparentMode, "transparentMaterial", transparentQueue, directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv");
+		CreateForwardMaterial(opaqueMode, "presentMaterial", opaqueQueue, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
+		CreateForwardMaterial(opaqueMode, "vertexColorLitMaterial", opaqueQueue, directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "vertexColorUnlitMaterial", opaqueQueue, directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "normalMaterial", opaqueQueue, directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv");
+		CreateForwardMaterial(skyboxMode, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
+		CreateForwardMaterial(opaqueMode, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
 	}
 	void MaterialManager::Clear()
 	{
@@ -53,16 +53,29 @@ namespace emberEngine
 
 
 	// Add/Get/Delete:
-	Material MaterialManager::CreateMaterial(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material MaterialManager::CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		auto it = s_materialInterfacesMap.find(name);
 		if (it != s_materialInterfacesMap.end())
 		{
-			LOG_WARN("Material '{}' already exists — returning existing instance.", name);
+			LOG_WARN("Material '{}' already exists - returning existing instance.", name);
 			return Material{ it->second.get() };
 		}
 
-		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateMaterial(renderMode, name, renderQueue, vertexSpv, fragmentSpv);
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateForwardMaterial(renderMode, name, renderQueue, vertexSpv, fragmentSpv);
+		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
+		return Material{ result.first->second.get() };
+	}
+	Material MaterialManager::CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv)
+	{
+		auto it = s_materialInterfacesMap.find(name);
+		if (it != s_materialInterfacesMap.end())
+		{
+			LOG_WARN("Material '{}' already exists - returning existing instance.", name);
+			return Material{ it->second.get() };
+		}
+
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateShadowMaterial(name, vertexSpv);
 		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
 		return Material{ result.first->second.get() };
 	}

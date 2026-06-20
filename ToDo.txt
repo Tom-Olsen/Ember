@@ -12,7 +12,7 @@ in directionalLight.cpp retrieve sceneHeight from scene itself.
 
 
 
-Vulkan Descriptor Pool System — Design Specification
+Vulkan Descriptor Pool System - Design Specification
 Goals
 
 Implement a scalable Vulkan descriptor allocation system supporting:

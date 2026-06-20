@@ -21,7 +21,7 @@
 *.yml   text eol=lf
 *.sh    text eol=lf
 
-# Binary files — no line ending changes
+# Binary files - no line ending changes
 *.png   binary
 *.jpg   binary
 *.jpeg  binary

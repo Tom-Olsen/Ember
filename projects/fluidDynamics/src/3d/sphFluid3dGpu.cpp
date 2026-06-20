@@ -148,6 +148,9 @@ namespace fluidDynamics
 		m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
 		m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
 		m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
+		Material shadowMaterial = m_particleMaterial.TryGetShadowMaterial();
+		if (shadowMaterial.IsValid())
+			shadowMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(m_tripleBufferState.GetReadIndex()));
 		Renderer::DrawInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, true, true);
 	}
 

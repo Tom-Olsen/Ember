@@ -280,9 +280,21 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup draw call:
-		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pIMaterial), false, pShadowDescriptorSetBinding != nullptr, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
-		m_drawCalls.push_back(drawCall);
+		Material* pMaterial = static_cast<Material*>(pIMaterial);
+		if (castShadows)
+		{
+			Material* pShadowMaterial = pMaterial->GetShadowMaterial();
+			if (!pShadowMaterial)
+				pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
+			DescriptorSetBinding* pShadowDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pShadowMaterial));
+			DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShadowMaterial, false, pShadowDescriptorSetBinding != nullptr, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
+			m_drawCalls.push_back(drawCall);
+		}
+		else
+		{
+			DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, nullptr, false, false, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), nullptr, static_cast<Mesh*>(pIMesh), instanceCount };
+			m_drawCalls.push_back(drawCall);
+		}
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount)
 	{
@@ -299,10 +311,22 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup draw call:
-		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<Material*>(pIMaterial)));
-		DescriptorSetBinding* pShadowDescriptorSetBinding = castShadows ? PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial())) : nullptr;
-		DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, static_cast<Material*>(pIMaterial), true, pShadowDescriptorSetBinding != nullptr, pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
-		m_drawCalls.push_back(drawCall);
+		Material* pMaterial = static_cast<Material*>(pIMaterial);
+		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pMaterial));
+		if (castShadows)
+		{
+			Material* pShadowMaterial = pMaterial->GetShadowMaterial();
+			if (!pShadowMaterial)
+				pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
+			DescriptorSetBinding* pShadowDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pShadowMaterial));
+			DrawCall drawCall = { localToWorldMatrix, receiveShadows, true, pMaterial, pShadowMaterial, true, pShadowDescriptorSetBinding != nullptr, pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
+			m_drawCalls.push_back(drawCall);
+		}
+		else
+		{
+			DrawCall drawCall = { localToWorldMatrix, receiveShadows, false, pMaterial, nullptr, true, false, pCallDescriptorSetBinding, nullptr, static_cast<Mesh*>(pIMesh), instanceCount };
+			m_drawCalls.push_back(drawCall);
+		}
 		return pCallDescriptorSetBinding;
 	}
 
@@ -453,6 +477,10 @@ namespace vulkanRendererBackend
 	{
         return new Material(Material::CreateForward(name, renderMode, renderQueue, vertexSpv, fragmentSpv));
 	}
+	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv)
+	{
+		return new Material(Material::CreateShadow(name, m_shadowMapResolution, vertexSpv));
+	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh()
 	{
 		return new Mesh();
@@ -566,7 +594,7 @@ namespace vulkanRendererBackend
 			if (drawCall.ownsDescriptorSetBinding)
 				PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(drawCall.pMaterial), drawCall.pCallDescriptorSetBinding);
 			if (drawCall.ownsShadowDescriptorSetBinding && drawCall.pShadowDescriptorSetBinding)
-				PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(DefaultGpuResources::GetDefaultShadowMaterial()), drawCall.pShadowDescriptorSetBinding);
+				PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(drawCall.pShadowMaterial), drawCall.pShadowDescriptorSetBinding);
 		}
 
 		// Clear all draw calls for next frame:
@@ -682,6 +710,8 @@ namespace vulkanRendererBackend
 			drawCall->SetModelData();
 			drawCall->pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
 			drawCall->pCallDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+			if (drawCall->pShadowMaterial)
+				drawCall->pShadowMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
 			if (drawCall->pShadowDescriptorSetBinding)
 				drawCall->pShadowDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 		}
@@ -889,7 +919,6 @@ namespace vulkanRendererBackend
 				// Pipeline:
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-				const Material* pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
 				bool staticDescriptorSetsBound = false;
 
 				// Lights:
@@ -905,7 +934,9 @@ namespace vulkanRendererBackend
 						if (drawCall->castShadows == false)
 							continue;
 
-						// Pipeline swap:
+                            
+                        // Pipeline swap:
+                        const Material* pShadowMaterial = drawCall->pShadowMaterial;
 						VkPipeline newPipeline = pShadowMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
 						if (pipeline != newPipeline)
 						{
@@ -1013,14 +1044,15 @@ namespace vulkanRendererBackend
 					PROFILE_SCOPE("DrawCall");
 
 					// Pipeline swap:
-					VkPipeline newPipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
+                    Material* pForwardMaterial = drawCall->pMaterial;
+					VkPipeline newPipeline = pForwardMaterial->GetPipeline(drawCall->pMesh)->GetVkPipeline();
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
 						// Pipeline layout swap:
-						VkPipelineLayout newPipelineLayout = drawCall->pMaterial->GetVkPipelineLayout();
+						VkPipelineLayout newPipelineLayout = pForwardMaterial->GetVkPipelineLayout();
 						if (pipelineLayout != newPipelineLayout)
 						{
 							pipelineLayout = newPipelineLayout;
@@ -1033,7 +1065,7 @@ namespace vulkanRendererBackend
 							}
 
 							// Bind per shader descriptor set:
-							if (VkDescriptorSet vkDescriptorSet = drawCall->pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+							if (VkDescriptorSet vkDescriptorSet = pForwardMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 						}
 					}
@@ -1052,7 +1084,7 @@ namespace vulkanRendererBackend
 					
 					// Draw call:
 					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					DEBUG_LOG_TRACE("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
+					DEBUG_LOG_TRACE("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pForwardMaterial->GetName());
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);

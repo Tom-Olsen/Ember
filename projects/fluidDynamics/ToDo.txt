@@ -1,4 +1,5 @@
-Test new nearPressure code.
+Fix color formats -> add Color class
+Go through the roots ToDoXXX.txt files.
 Make bounding box interactable with transform/scale/rotation editor widgets.
 Bounding box interaction in local frame.
 Better coloring in velocity mode?

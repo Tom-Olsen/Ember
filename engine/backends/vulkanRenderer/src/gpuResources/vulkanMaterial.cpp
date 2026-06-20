@@ -26,6 +26,7 @@ namespace vulkanRendererBackend
 		m_type = Type::forward;
 		m_renderMode = emberCommon::RenderMode::opaque;
 		m_renderQueue = emberCommon::RenderQueue::opaque;
+		m_pShadowMaterial = nullptr;
 	}
 
     // Pipeline indexing:
@@ -112,7 +113,7 @@ namespace vulkanRendererBackend
 		material.m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(&material), SHADER_SET_INDEX);
 		return material;
 	}
-	Material Material::CreateShadow(const std::string& name, uint32_t shadowMapResolution)
+	Material Material::CreateShadow(const std::string& name, uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv)
 	{
 		Material material = Material(name);
 		material.m_type = Type::shadow;
@@ -120,8 +121,7 @@ namespace vulkanRendererBackend
 		material.m_renderMode = emberCommon::RenderMode::opaque;
 
 		// Load vertex shader:
-		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
-		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(directoryPath / "shadow.vert.spv");
+		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
 		material.m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
 
 		// Prepare pipeline data:
@@ -247,8 +247,32 @@ namespace vulkanRendererBackend
 	{
 		// No-op for shadow and present materials. They only support opaque mode.
 		if (m_type == Type::shadow || m_type == Type::present)
-			return;
+        {
+            LOG_WARN("Material::SetRenderMode(...): modifying renderMode of a shadow or present material '{}' is not possible.", GetName());
+            return;
+        }
 		m_renderMode = renderMode;
+	}
+	void Material::SetShadowMaterial(emberBackendInterface::IMaterial* pShadowMaterial)
+	{
+		if (m_type != Type::forward)
+		{
+			LOG_WARN("Material::SetShadowMaterial(...) ignored. Only forward materials can override their shadow material.");
+			return;
+		}
+		if (pShadowMaterial == nullptr)
+		{
+			m_pShadowMaterial = nullptr;
+			return;
+		}
+
+		Material* pVulkanShadowMaterial = static_cast<Material*>(pShadowMaterial);
+		if (pVulkanShadowMaterial->m_type != Type::shadow)
+		{
+			LOG_WARN("Material::SetShadowMaterial(...) ignored. '{}' is not a shadow material.", pVulkanShadowMaterial->GetName());
+			return;
+		}
+		m_pShadowMaterial = pVulkanShadowMaterial;
 	}
 
 
@@ -265,6 +289,10 @@ namespace vulkanRendererBackend
 	emberCommon::RenderMode Material::GetRenderMode() const
 	{
 		return m_renderMode;
+	}
+	Material* Material::GetShadowMaterial() const
+	{
+		return m_pShadowMaterial;
 	}
 	emberBackendInterface::IDescriptorSetBinding* Material::GetShaderDescriptorSetBinding() const
 	{
