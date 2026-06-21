@@ -10,6 +10,7 @@
 
 // Forward declarations:
 struct ImGuiIO;
+struct SDL_Window;
 typedef struct VkDevice_T* VkDevice;
 typedef struct VkDescriptorPool_T* VkDescriptorPool;
 typedef struct VkCommandBuffer_T* VkCommandBuffer;
@@ -35,6 +36,7 @@ namespace imGuiSdlVulkanBackend
 		VkDescriptorPool m_vkDescriptorPool;
 		VkDescriptorSetLayout m_descriptorSetLayout;
 		VkSampler m_vkColorSampler;
+		SDL_Window* m_pSdlWindow;
 		ImGuiIO* m_pIo;
 		bool m_wantCaptureKeyboard;
 		bool m_wantCaptureMouse;
@@ -109,6 +111,7 @@ namespace imGuiSdlVulkanBackend
 		void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) override;
 
 	private: // Methods:
+		void ReleaseStaleMouseButtons();
 		void ShowDockSpace();
 		void CreateDescriptorSetLayout();
 		VkDescriptorSet CreateDescriptorSet();

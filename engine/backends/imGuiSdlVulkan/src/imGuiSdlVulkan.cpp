@@ -4,6 +4,7 @@
 #include "iWindow.h"
 #include "imGuiConvertGuiFlags.h"
 #include "imGuiConvertGuiStyle.h"
+#include <SDL3/SDL.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
@@ -17,6 +18,7 @@ namespace imGuiSdlVulkanBackend
 	// Constructor/Destructor:
 	Gui::Gui(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, bool enableDockSpace)
 	{
+		m_pSdlWindow = static_cast<SDL_Window*>(pIWindow->GetNativeHandle());
 		m_vkDevice = static_cast<VkDevice>(pIRenderer->GetVkDevice());
 		m_vkDescriptorPool = static_cast<VkDescriptorPool>(pIRenderer->GetVkDescriptorPool());
 		m_vkColorSampler = static_cast<VkSampler>(pIRenderer->GetColorSampler());
@@ -34,7 +36,8 @@ namespace imGuiSdlVulkanBackend
 		m_pIo->FontGlobalScale = 2.0f;
 
 		ImGui::StyleColorsDark();
-		ImGui_ImplSDL3_InitForVulkan(static_cast<SDL_Window*>(pIWindow->GetNativeHandle()));
+		ImGui_ImplSDL3_InitForVulkan(m_pSdlWindow);
+		ImGui_ImplSDL3_SetMouseCaptureMode(ImGui_ImplSDL3_MouseCaptureMode_Enabled);
 
 		ImGui_ImplVulkan_InitInfo initInfo = {};
 		initInfo.Instance = static_cast<VkInstance>(pIRenderer->GetVkInstance());
@@ -74,6 +77,7 @@ namespace imGuiSdlVulkanBackend
 		m_vkDescriptorPool = other.m_vkDescriptorPool;
 		m_descriptorSetLayout = other.m_descriptorSetLayout;
 		m_pIo = other.m_pIo;
+		m_pSdlWindow = other.m_pSdlWindow;
 		m_wantCaptureKeyboard = other.m_wantCaptureKeyboard;
 		m_wantCaptureMouse = other.m_wantCaptureMouse;
 		m_enableDockSpace = other.m_enableDockSpace;
@@ -86,6 +90,7 @@ namespace imGuiSdlVulkanBackend
 		other.m_vkDescriptorPool = VK_NULL_HANDLE;
 		other.m_descriptorSetLayout = VK_NULL_HANDLE;
 		other.m_pIo = nullptr;
+		other.m_pSdlWindow = nullptr;
 		other.m_wantCaptureKeyboard = false;
 		other.m_wantCaptureMouse = false;
 		other.m_enableDockSpace = false;
@@ -110,6 +115,7 @@ namespace imGuiSdlVulkanBackend
 			m_vkDescriptorPool = other.m_vkDescriptorPool;
 			m_descriptorSetLayout = other.m_descriptorSetLayout;
 			m_pIo = other.m_pIo;
+			m_pSdlWindow = other.m_pSdlWindow;
 			m_wantCaptureKeyboard = other.m_wantCaptureKeyboard;
 			m_wantCaptureMouse = other.m_wantCaptureMouse;
 			m_enableDockSpace = other.m_enableDockSpace;
@@ -127,6 +133,7 @@ namespace imGuiSdlVulkanBackend
 	{
 		//PROFILE_FUNCTION();
 		ImGui_ImplVulkan_NewFrame();
+		ReleaseStaleMouseButtons();
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
 		{
@@ -350,6 +357,52 @@ namespace imGuiSdlVulkanBackend
 
 
 	// Private methods:
+	void Gui::ReleaseStaleMouseButtons()
+	{
+		if (m_pIo == nullptr || m_pSdlWindow == nullptr)
+			return;
+
+		float mouseX = 0.0f;
+		float mouseY = 0.0f;
+		SDL_MouseButtonFlags mouseButtons = SDL_GetMouseState(&mouseX, &mouseY);
+		struct MouseButtonMapping
+		{
+			int imguiButton;
+			SDL_MouseButtonFlags sdlMask;
+			Uint8 sdlButton;
+		};
+		const MouseButtonMapping mouseButtonMappings[] =
+		{
+			{ ImGuiMouseButton_Left, SDL_BUTTON_LMASK, SDL_BUTTON_LEFT },
+			{ ImGuiMouseButton_Right, SDL_BUTTON_RMASK, SDL_BUTTON_RIGHT },
+			{ ImGuiMouseButton_Middle, SDL_BUTTON_MMASK, SDL_BUTTON_MIDDLE },
+			{ 3, SDL_BUTTON_X1MASK, SDL_BUTTON_X1 },
+			{ 4, SDL_BUTTON_X2MASK, SDL_BUTTON_X2 }
+		};
+
+		SDL_Window* pMouseWindow = SDL_GetMouseFocus();
+		SDL_WindowID windowID = (pMouseWindow == nullptr) ? SDL_GetWindowID(m_pSdlWindow) : SDL_GetWindowID(pMouseWindow);
+		if (windowID == 0)
+			return;
+
+		for (const MouseButtonMapping& mapping : mouseButtonMappings)
+		{
+			if (!m_pIo->MouseDown[mapping.imguiButton] || (mouseButtons & mapping.sdlMask) != 0)
+				continue;
+
+			SDL_Event releaseEvent = {};
+			releaseEvent.type = SDL_EVENT_MOUSE_BUTTON_UP;
+			releaseEvent.button.type = SDL_EVENT_MOUSE_BUTTON_UP;
+			releaseEvent.button.timestamp = SDL_GetTicksNS();
+			releaseEvent.button.windowID = windowID;
+			releaseEvent.button.button = mapping.sdlButton;
+			releaseEvent.button.down = false;
+			releaseEvent.button.clicks = 1;
+			releaseEvent.button.x = mouseX;
+			releaseEvent.button.y = mouseY;
+			ImGui_ImplSDL3_ProcessEvent(&releaseEvent);
+		}
+	}
 	void Gui::ShowDockSpace()
 	{
 		static bool dockspaceOpen = true;
