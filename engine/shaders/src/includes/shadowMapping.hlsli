@@ -131,10 +131,10 @@ float3 PhysicalDirectionalLights(float3 worldPos, float3 normal, float3 color, f
     for (uint i = 0; i < light_dirCount; i++)
     {
         // Check if the pixel is inside the shadow map:
-        float4 lightSpaceClipPos = mul(light_directionData[i].worldToClipMatrix, float4(worldPos, 1.0f)); // € [-w, w]
+        float4 lightSpaceClipPos = mul(light_directionData[i].worldToClipMatrix, float4(worldPos, 1.0f)); // in [-w,w]
         float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
-        float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy € [-1, 1] z € [0, 1] (vulkan)
-        lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0, 1]
+        float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy in [-1,1] z in [0,1] (vulkan)
+        lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0,1]
         if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
          && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f
          && 0.0f <= lightUvz.z && lightUvz.z <= 1.0f)
@@ -168,9 +168,9 @@ float3 PhysicalPositionalLights(float3 worldPos, float3 normal, float3 color, fl
     for (uint i = 0; i < light_posCount; i++)
     {
         // Check if the pixel is inside the shadow map:
-        float4 lightSpaceClipPos = mul(light_positionData[i].worldToClipMatrix, float4(worldPos, 1.0f)); // € [-w, w]
+        float4 lightSpaceClipPos = mul(light_positionData[i].worldToClipMatrix, float4(worldPos, 1.0f)); // in [-w,w]
         float w = (abs(lightSpaceClipPos.w) < 1e-4f) ? 1e-4f : lightSpaceClipPos.w;
-        float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy € [-1, 1] z € [0, 1] (vulkan)
+        float3 lightUvz = lightSpaceClipPos.xyz / w;    // ndc: xy in [-1,1] z in [0,1] (vulkan)
         lightUvz.xy = 0.5f * (lightUvz.xy + 1.0f);      // remap xy to [0, 1]
         if (0.0f <= lightUvz.x && lightUvz.x <= 1.0f
          && 0.0f <= lightUvz.y && lightUvz.y <= 1.0f

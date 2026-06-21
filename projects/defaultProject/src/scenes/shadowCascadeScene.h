@@ -25,7 +25,7 @@ inline Scene* ShadowCascadeScene()
 		pTransform->SetRotationMatrix(matrix);
 
 		Camera* pCamera = entity.AddComponent<Camera>();
-		pCamera->SetFarClip(100.0f);
+		pCamera->SetFarClip(200.0f);
 
 		PostRenderEffects* pPostRenderEffects = entity.AddComponent<PostRenderEffects>();
 		CameraController* cameraController = entity.AddComponent<CameraController>();
@@ -68,7 +68,7 @@ inline Scene* ShadowCascadeScene()
 
 		Camera* pCamera = entity.AddComponent<Camera>();
 		pCamera->SetNearClip(0.5f);
-		pCamera->SetFarClip(40.0f);
+		pCamera->SetFarClip(800.0f);
 		pCamera->SetFov(30.0f * math::deg2rad);
 		pCamera->SetDrawFrustum(true);
 		pShadowCascadeCamera = pCamera;
@@ -95,11 +95,11 @@ inline Scene* ShadowCascadeScene()
 		DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
 		pDirectionalLight->SetIntensity(1.0f);
 		pDirectionalLight->SetColor(Float3::white);
-		pDirectionalLight->SetActiveCamera(pShadowCascadeCamera);
-		//pDirectionalLight->SetDrawFrustum(true);
 		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
+		pDirectionalLight->SetActiveCamera(pShadowCascadeCamera);
+		pDirectionalLight->SetShadowCascadeCount(4);
 		pDirectionalLight->SetDistributionFactor(0.5f);
-		//pDirectionalLight->SetShadowCascadeCount(1);
+		pDirectionalLight->SetDrawFrustum(true);
 	}
 	{ // Floor:
 		Entity entity = Entity::Create("floor");

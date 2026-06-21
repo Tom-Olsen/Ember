@@ -35,27 +35,24 @@ inline Scene* DefaultScene()
 
 		pScene->SetActiveCamera(pCamera);
 	}
-	//{// Directional Light:
-	//	Entity entity = Entity::Create("directionalLight");
-	//	Float3 pos = Float3(0.0f, 3.0f, 0.0f);
-	//	Float3 direction = Float3(-0.4f, 0.4f, -1.0f).Normalize();
-	//	Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
-	//
-	//	Transform* pTransform = entity.GetTransform();
-	//	pTransform->SetPosition(pos);
-	//	pTransform->SetRotationMatrix(matrix);
-	//
-	//	DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
-	//	pDirectionalLight->SetIntensity(1.0f);
-	//	pDirectionalLight->SetColor(Float3::white);
-	//	pDirectionalLight->SetDrawFrustum(true);
-	//	pDirectionalLight->SetShadowCascadeCount(3);
-	//	pDirectionalLight->SetShadowCascadeSplit(0, 0.0f);
-	//	pDirectionalLight->SetShadowCascadeSplit(1, 0.2f);
-	//	pDirectionalLight->SetShadowCascadeSplit(2, 0.5f);
-	//	pDirectionalLight->SetShadowCascadeSplit(3, 1.0f);
-	//	pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
-	//}
+	{// Directional Light:
+		Entity entity = Entity::Create("directionalLight");
+		Float3 pos = Float3(0.0f, 3.0f, 0.0f);
+		Float3 direction = Float3(-0.4f, 0.4f, -1.0f).Normalize();
+		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
+	
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+		pTransform->SetRotationMatrix(matrix);
+	
+		DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
+		pDirectionalLight->SetIntensity(1.0f);
+		pDirectionalLight->SetColor(Float3::white);
+		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
+		pDirectionalLight->SetShadowCascadeCount(2);
+		pDirectionalLight->SetDistributionFactor(0.5f);
+		pDirectionalLight->SetDrawFrustum(false);
+	}
 	{// PointLight:
 		Entity entity = Entity::Create("pointLight");
 		Float3 pos = Float3(1.0f, 0.0f, 1.5f);

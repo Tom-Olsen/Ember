@@ -41,9 +41,9 @@ int main()
 		else
 		{
 			// Create scene:
-			std::unique_ptr<Scene> pScene(DefaultScene());
+			//std::unique_ptr<Scene> pScene(DefaultScene());
 			//std::unique_ptr<Scene> pScene(PointLightScene());
-			//std::unique_ptr<Scene> pScene(ShadowCascadeScene());
+			std::unique_ptr<Scene> pScene(ShadowCascadeScene());
 			//std::unique_ptr<Scene> pScene(SingleQuadScene());
 			//std::unique_ptr<Scene> pScene(TestScene());
 			emberApplication::Application::SetScene(pScene.get());

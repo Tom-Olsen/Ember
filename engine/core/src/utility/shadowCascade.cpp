@@ -126,13 +126,13 @@ namespace emberEngine
 		// Camera sub frustum in camera space:
 		// nearDepth, farDepth € [0,1] are the percentile splits of the camera frustum.
 		m_subFrustum_CameraLocal[0] = frustum_CameraLocal[0] + nearDepth * (frustum_CameraLocal[1] - frustum_CameraLocal[0]);
-		m_subFrustum_CameraLocal[1] = frustum_CameraLocal[0] + farDepth * (frustum_CameraLocal[1] - frustum_CameraLocal[0]);
+		m_subFrustum_CameraLocal[1] = frustum_CameraLocal[0] + farDepth  * (frustum_CameraLocal[1] - frustum_CameraLocal[0]);
 		m_subFrustum_CameraLocal[2] = frustum_CameraLocal[2] + nearDepth * (frustum_CameraLocal[3] - frustum_CameraLocal[2]);
-		m_subFrustum_CameraLocal[3] = frustum_CameraLocal[2] + farDepth * (frustum_CameraLocal[3] - frustum_CameraLocal[2]);
+		m_subFrustum_CameraLocal[3] = frustum_CameraLocal[2] + farDepth  * (frustum_CameraLocal[3] - frustum_CameraLocal[2]);
 		m_subFrustum_CameraLocal[4] = frustum_CameraLocal[4] + nearDepth * (frustum_CameraLocal[5] - frustum_CameraLocal[4]);
-		m_subFrustum_CameraLocal[5] = frustum_CameraLocal[4] + farDepth * (frustum_CameraLocal[5] - frustum_CameraLocal[4]);
+		m_subFrustum_CameraLocal[5] = frustum_CameraLocal[4] + farDepth  * (frustum_CameraLocal[5] - frustum_CameraLocal[4]);
 		m_subFrustum_CameraLocal[6] = frustum_CameraLocal[6] + nearDepth * (frustum_CameraLocal[7] - frustum_CameraLocal[6]);
-		m_subFrustum_CameraLocal[7] = frustum_CameraLocal[6] + farDepth * (frustum_CameraLocal[7] - frustum_CameraLocal[6]);
+		m_subFrustum_CameraLocal[7] = frustum_CameraLocal[6] + farDepth  * (frustum_CameraLocal[7] - frustum_CameraLocal[6]);
 
 		// Camera sub frustum in world space:
 		for (uint32_t i = 0; i < 8; i++)

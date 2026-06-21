@@ -49,16 +49,17 @@ namespace emberEngine
 		int GetShadowCascadeCount() const;
 		float GetDistributionFactor() const;
 		float GetShadowCascadeSplit(int index) const;
-		Float4x4 GetViewMatrix(int shadowCascadeIndex) const;
-		Float4x4 GetProjectionMatrix(int shadowCascadeIndex) const;
+		Float4x4 GetViewMatrix(int shadowCascadeIndex);
+		Float4x4 GetProjectionMatrix(int shadowCascadeIndex);
 
 		// Overrides:
 		void EarlyUpdate() override;
 		void LateUpdate() override;
 
 	private: // Methods:
+        void GrabFallbackCamera();
 		void InvalidateShadowCascades() const;
-		void UpdateShadowCascadeSplits(Camera* pCamera) const;
+		void UpdateShadowCascadeSplits() const;
 		void UpdateShadowCascade(int shadowCascadeIndex, const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction) const;
 	};
 }

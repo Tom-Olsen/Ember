@@ -109,10 +109,6 @@ Scene* Fluid3dScene()
 		pDirectionalLight->SetColor(Float3::white);
 		pDirectionalLight->SetDrawFrustum(false);
 		pDirectionalLight->SetShadowCascadeCount(1);
-		//pDirectionalLight->SetShadowCascadeSplit(0, 0.0f);
-		//pDirectionalLight->SetShadowCascadeSplit(1, 0.2f);
-		//pDirectionalLight->SetShadowCascadeSplit(2, 0.5f);
-		//pDirectionalLight->SetShadowCascadeSplit(3, 1.0f);
 		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
 	}
 	//{// PointLight:
@@ -164,10 +160,10 @@ int main()
 		appCreateInfo.vSyncEnabled = true;
 		appCreateInfo.framesInFlight = 2;
 		appCreateInfo.msaaSampleCount = emberCommon::MsaaSampleCount::sampleCount04;
-		appCreateInfo.windowWidth = 1600;// 2560; //1920;
-		appCreateInfo.windowHeight = 900;// 1440; //1080;
-		appCreateInfo.renderWidth = 1600;// 2560; //1280;
-		appCreateInfo.renderHeight = 900;// 1440; //720;
+		appCreateInfo.windowWidth  = 2560; //1920;
+		appCreateInfo.windowHeight = 1440; //1080;
+		appCreateInfo.renderWidth  = 2560; //1280;
+		appCreateInfo.renderHeight = 1440; //720;
 		appCreateInfo.maxDirectionalLights = 1; // single directional light.
 		appCreateInfo.maxPositionalLights = 6;  // single point light ot 6 spot lights.
 		appCreateInfo.shadowMapResolution = 1024;

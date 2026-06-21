@@ -107,23 +107,23 @@ namespace emberEngine
 		index = math::Clamp(index, 0, 4);
 		return m_shadowCascadeSplits[index];
 	}
-	Float4x4 DirectionalLight::GetViewMatrix(int shadowCascadeIndex) const
+	Float4x4 DirectionalLight::GetViewMatrix(int shadowCascadeIndex)
 	{
-		Camera* pCamera = (m_pActiveCamera == nullptr) ? GetEntity().GetScene()->GetActiveCamera() : m_pActiveCamera;
-		Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
-		Float4x4 cameraProjectionMatrix = pCamera->GetProjectionMatrix();
+        GrabFallbackCamera();
+		Float4x4 cameraLocalToWorldMatrix = m_pActiveCamera->GetTransform()->GetLocalToWorldMatrix();
+		Float4x4 cameraProjectionMatrix = m_pActiveCamera->GetProjectionMatrix();
 		Float3 direction = GetTransform()->GetDown();
-		UpdateShadowCascadeSplits(pCamera);
+		UpdateShadowCascadeSplits();
 		UpdateShadowCascade(shadowCascadeIndex, cameraLocalToWorldMatrix, cameraProjectionMatrix, direction);
 		return m_shadowCascades[shadowCascadeIndex]->GetViewMatrix();
 	}
-	Float4x4 DirectionalLight::GetProjectionMatrix(int shadowCascadeIndex) const
+	Float4x4 DirectionalLight::GetProjectionMatrix(int shadowCascadeIndex)
 	{
-		Camera* pCamera = (m_pActiveCamera == nullptr) ? GetEntity().GetScene()->GetActiveCamera() : m_pActiveCamera;
-		Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
-		Float4x4 cameraProjectionMatrix = pCamera->GetProjectionMatrix();
+        GrabFallbackCamera();
+		Float4x4 cameraLocalToWorldMatrix = m_pActiveCamera->GetTransform()->GetLocalToWorldMatrix();
+		Float4x4 cameraProjectionMatrix = m_pActiveCamera->GetProjectionMatrix();
 		Float3 direction = GetTransform()->GetDown();
-		UpdateShadowCascadeSplits(pCamera);
+		UpdateShadowCascadeSplits();
 		UpdateShadowCascade(shadowCascadeIndex, cameraLocalToWorldMatrix, cameraProjectionMatrix, direction);
 		return m_shadowCascades[shadowCascadeIndex]->GetProjectionMatrix();
 	}
@@ -138,13 +138,12 @@ namespace emberEngine
 	void DirectionalLight::LateUpdate()
 	{
 		// Set camera:
-		Camera* pCamera = (m_pActiveCamera == nullptr) ? GetEntity().GetScene()->GetActiveCamera() : m_pActiveCamera;
-
 		// Update shadow cascades and add directional lights to renderer:
+        GrabFallbackCamera();
 		Float3 direction = GetTransform()->GetDown();
-		UpdateShadowCascadeSplits(pCamera);
-		Float4x4 cameraLocalToWorldMatrix = pCamera->GetTransform()->GetLocalToWorldMatrix();
-		Float4x4 cameraProjectionMatrix = pCamera->GetProjectionMatrix();
+		UpdateShadowCascadeSplits();
+		Float4x4 cameraLocalToWorldMatrix = m_pActiveCamera->GetTransform()->GetLocalToWorldMatrix();
+		Float4x4 cameraProjectionMatrix = m_pActiveCamera->GetProjectionMatrix();
 		for (int i = 0; i < m_shadowCascadeCount; i++)
 		{
 			UpdateShadowCascade(i, cameraLocalToWorldMatrix, cameraProjectionMatrix, direction);
@@ -174,19 +173,27 @@ namespace emberEngine
 
 
 	// Private methods:
+    void DirectionalLight::GrabFallbackCamera()
+    {
+        if (m_pActiveCamera == nullptr)
+        {
+            m_pActiveCamera = GetEntity().GetScene()->GetActiveCamera();
+            InvalidateShadowCascades();
+        }
+    }
 	void DirectionalLight::InvalidateShadowCascades() const
 	{
 		m_shadowCascadeSplitsValid = false;
 		for (int i = 0; i < 4; i++)
 			m_shadowCascadeMatricesValid[i] = false;
 	}
-	void DirectionalLight::UpdateShadowCascadeSplits(Camera* pCamera) const
+	void DirectionalLight::UpdateShadowCascadeSplits() const
 	{
 		if (m_shadowCascadeSplitsValid)
 			return;
 
-		float n = pCamera->GetNearClip();
-		float f = pCamera->GetFarClip();
+		float n = m_pActiveCamera->GetNearClip();
+		float f = m_pActiveCamera->GetFarClip();
 		for (int i = 0; i < m_shadowCascadeCount + 1; i++)
 		{
 			float linear = (float)i / (float)m_shadowCascadeCount;

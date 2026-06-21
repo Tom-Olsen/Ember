@@ -23,7 +23,7 @@ struct PositionalLightData
     float3 position;            // light position.
     int shadowType;             // 0 = PCF shadows, 1 = pixel shadows.
     float4 colorIntensity;      // light color (xyz) and intensity (w).
-    float2 blendStartEnd;       // start and end of fallOff in radial direction €[0,1].
+    float2 blendStartEnd;       // start and end of fallOff in radial direction in [0,1].
 };
 
 
