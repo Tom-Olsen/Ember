@@ -9,9 +9,10 @@ namespace emberEngine
 	/// <summary>
 	/// Righthanded system:
 	/// +X = (1,0,0) is right
-	/// +Y = (0,1,0) is up
-	/// +Z = (0,0,1) is forward
-	/// Default rotation order is Y->X->Z = yaw->pitch->roll = RotZ * RotX * RotY = 102.
+	/// +Y = (0,1,0) is forward
+	/// +Z = (0,0,1) is up
+    /// Rotations: pitch = x, roll = y, yaw = z.
+	/// Default rotation order is yaw->pitch->roll = RotY * RotX * RotZ = 102.
 	/// </summary>
 	class Transform : public Component
 	{

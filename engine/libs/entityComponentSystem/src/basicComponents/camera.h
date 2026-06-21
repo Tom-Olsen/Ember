@@ -5,7 +5,6 @@
 
 namespace emberEngine
 {
-
 	/// <summary>
 	/// View direction is down = (0,0,-1).
 	/// </summary>
