@@ -303,7 +303,7 @@ namespace emberEngine
 		for (uint32_t i = 0; i < 4; i++)
 		{
 			Float3 pos = Float3(localToWorldMatrix * Float4(cornerPoints[i], 0.0f, 1.0f));
-			DrawCube(pos, 2.0f * width, Float4::black, receiveShadows, castShadows);
+			DrawSphere(pos, width, color, receiveShadows, castShadows);
 		}
 	
 		// Draw lines:
@@ -320,7 +320,7 @@ namespace emberEngine
 		for (uint32_t i = 0; i < 8; i++)
 		{
 			Float3 pos = Float3(localToWorldMatrix * Float4(cornerPoints[i], 1.0f));
-			DrawCube(pos, 2.0f * width, Float4::black, receiveShadows, castShadows);
+			DrawSphere(pos, width, color, receiveShadows, castShadows);
 		}
 	
 		// Draw horizontal lines:
