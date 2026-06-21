@@ -14,7 +14,6 @@
 // vulkanRendererBackend::ToDo:
 // -vulkanInstance: implement checks to ensure that all requested instanceExtensions are available and throw warnings accordingly.
 // -hide static members in Context struct and only make them accessible via Get/Set methods.
-// -allow for the three depthBias values to be set via Set.
 // -allow renderWidth/renderHeight to change during runtime.
 // -ShaderPropertiesPool/StagingBufferPool: remove ShrinkToFit? some other mechanism to handle unbound growth?
 // -remove name property of classes that dont need it internally. e.g. texture and mesh?
@@ -111,9 +110,6 @@ namespace vulkanRendererBackend
 		static VkSampleCountFlagBits m_msaaSamples;
 		static bool m_deviceIdle;
 		static bool m_enableDockSpace;
-		static float m_depthBiasConstantFactor;
-		static float m_depthBiasClamp;
-		static float m_depthBiasSlopeFactor;
 		
 	public: // Methods:
 		static void Init(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow, Renderer* pRenderer);
@@ -147,9 +143,6 @@ namespace vulkanRendererBackend
 		static VkSampleCountFlagBits GetMsaaSamples();
 		static bool IsDeviceIdle();
 		static bool DockSpaceEnabled();
-		static float GetDepthBiasConstantFactor();
-		static float GetDepthBiasClamp();
-		static float GetDepthBiasSlopeFactor();
 
 		// Frame logic:
 		static void UpdateFrameIndex();

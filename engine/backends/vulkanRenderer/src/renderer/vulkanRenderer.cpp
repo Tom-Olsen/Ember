@@ -80,7 +80,7 @@ namespace vulkanRendererBackend
 		// Shadow/Light system:
 		m_depthBiasConstantFactor = 0.0f;
 		m_depthBiasClamp = 0.0f;
-		m_depthBiasSlopeFactor = 1.0f;
+		m_depthBiasSlopeFactor = 3.0f;
 		m_directionalLightsCount = 0;
 		m_positionalLightsCount = 0;
 		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));

@@ -49,9 +49,6 @@ namespace vulkanRendererBackend
 	VkSampleCountFlagBits Context::m_msaaSamples;
 	bool Context::m_deviceIdle = true;
 	bool Context::m_enableDockSpace;
-	float Context::m_depthBiasConstantFactor = 0.0f;
-	float Context::m_depthBiasClamp = 0.0f;
-	float Context::m_depthBiasSlopeFactor = 3.0f;
 
 
 
@@ -289,21 +286,6 @@ namespace vulkanRendererBackend
 	{
 		return m_enableDockSpace;
 	}
-	float Context::GetDepthBiasConstantFactor()
-	{
-		return m_depthBiasConstantFactor;
-	}
-	float Context::GetDepthBiasClamp()
-	{
-		return m_depthBiasClamp;
-	}
-	float Context::GetDepthBiasSlopeFactor()
-	{
-		return m_depthBiasSlopeFactor;
-	}
-
-
-
 	// Public frame logic:
 	void Context::UpdateFrameIndex()
 	{

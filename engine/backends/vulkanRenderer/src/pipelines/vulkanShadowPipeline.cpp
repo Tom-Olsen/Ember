@@ -87,9 +87,9 @@ namespace vulkanRendererBackend
         rasterizationState.lineWidth = 1.0f;
         rasterizationState.depthClampEnable = Context::DepthClampEnabled();
         rasterizationState.depthBiasEnable = Context::DepthBiasClampEnabled();
-        rasterizationState.depthBiasConstantFactor = Context::GetDepthBiasConstantFactor();  // Tweak this value based on the scene.
-        rasterizationState.depthBiasClamp = Context::GetDepthBiasClamp();                    // Clamp value for equation below.
-        rasterizationState.depthBiasSlopeFactor = Context::GetDepthBiasSlopeFactor();        // Slope scale bias to handle varying slopes in depth.
+        rasterizationState.depthBiasConstantFactor = 0.0f;
+        rasterizationState.depthBiasClamp = 0.0f;
+        rasterizationState.depthBiasSlopeFactor = 0.0f;
         rasterizationState.rasterizerDiscardEnable = VK_FALSE;	// If true, geometry never passes through rasterization stage.
         // Bias = (float) depthBiasConstantFactor * pow(exp(max_z_in_primitive) - r, 2) + depthBiasSlopeFactor * MaxDepthSlope;
         // r is the number of mantissa bits in the floating point representation (excluding the hidden bit); for example, 23 for float32.
