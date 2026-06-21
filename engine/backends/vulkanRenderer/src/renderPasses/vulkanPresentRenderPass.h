@@ -7,7 +7,7 @@
 namespace vulkanRendererBackend
 {
 	/// <summary>
-	/// Renders final renderTexture of the forward render pass to the swap.
+	/// Renders final renderTexture of the forward render pass to the swapchain image.
 	/// </summary>
 	class PresentRenderPass : public RenderPass
 	{

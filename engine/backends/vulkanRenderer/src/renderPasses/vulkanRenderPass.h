@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 	class RenderPass
 	{
 	protected: // Members:
-		VkRenderPass m_renderPass;
+		VkRenderPass m_renderPass = nullptr;
 		std::vector<VkFramebuffer> m_framebuffers;
 
 	public: // Methods:
