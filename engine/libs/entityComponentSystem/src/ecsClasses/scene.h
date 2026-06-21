@@ -1,4 +1,5 @@
 #pragma once
+#include "emberMath.h"
 #include "entity.h"
 #include <entt/entt.hpp>
 #include <string>
