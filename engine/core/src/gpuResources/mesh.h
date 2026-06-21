@@ -33,7 +33,6 @@ namespace emberEngine
 		friend class Renderer;
 
 	private: // Members:
-		std::unique_ptr<emberBackendInterface::IMesh> m_pIMesh;
 		std::string m_name;
 		std::vector<Float3> m_positions;
 		std::vector<Float3> m_normals;
@@ -41,6 +40,8 @@ namespace emberEngine
 		std::vector<Float4> m_colors;
 		std::vector<Float4> m_uvs;
 		std::vector<Uint3> m_triangles;
+        Bounds m_bounds;
+		std::unique_ptr<emberBackendInterface::IMesh> m_pIMesh;
 		emberBackendInterface::IMesh* const GetInterfaceHandle() const;
 
 	public: // Methods:
@@ -87,7 +88,8 @@ namespace emberEngine
 		std::vector<Float4>& GetColors();
 		std::vector<Float4>& GetUVs();
 		std::vector<Uint3>& GetTriangles();
-		void RegisterUpdate();
+        Bounds GetBounds() const;
+		void RegisterUpdate(bool updateBounds = true);
 		Mesh GetCopy(const std::string& newName = "");
 
 		// Mesh transformations (changes *this):
@@ -118,6 +120,7 @@ namespace emberEngine
 		static Mesh Merge(std::vector<Mesh>& meshes, const std::string& name = "");
 
 	private: // Methods:
+        void UpdateBounds();
 		// Mesh modifiers:
 		void ApplyTranslate(const Float3& translation);
 		void ApplyRotate(const Float3x3& rotation);

@@ -10,6 +10,8 @@ namespace emberEngine
 	private: // Members:
 		bool m_castShadows;
 		bool m_receiveShadows;
+        bool m_drawLocalBounds;
+        bool m_drawWorldBounds;
 		Mesh* m_pMesh;
 		Material m_material;
 		ShaderProperties m_shaderProperties;
@@ -24,7 +26,10 @@ namespace emberEngine
 		void SetMesh(Mesh& mesh);
 		void SetMaterial(const Material& material);
 
-		// Forward render pass getters:
+		// Getters:
+		Bounds GetLocalBounds() const;
+		Bounds GetWorldBounds() const;
+		bool HasMesh() const;
 		bool GetCastShadows() const;
 		bool GetReceiveShadows() const;
 		Mesh& GetMesh();

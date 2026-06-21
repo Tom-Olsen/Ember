@@ -215,6 +215,9 @@ namespace emberEngine
 	void Renderer::DrawLineSegment(const Float3& start, const Float3& end, float width, const Float4& color, bool receiveShadows, bool castShadows)
 	{
 		Float3 direction = end - start;
+		if (direction.IsEpsilonZero())
+			return;
+
 		float length = direction.Length();
 		Float3 position = start + 0.5f * direction;
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::up, direction);
@@ -235,6 +238,9 @@ namespace emberEngine
 	}
 	void Renderer::DrawArrow(const Float3& position, const Float3& direction, float size, const Float4& color, bool receiveShadows, bool castShadows)
 	{
+		if (direction.IsEpsilonZero())
+			return;
+
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
 		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("arrowFlat"), MaterialManager::GetMaterial("simpleUnlitMaterial"), position, rotationMatrix, size, receiveShadows, castShadows);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);

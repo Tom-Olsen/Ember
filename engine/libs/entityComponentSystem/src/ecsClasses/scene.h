@@ -26,6 +26,7 @@ namespace emberEngine
 		std::unordered_map<std::string, entt::entity> m_entityHandlesMap;
 		std::unordered_map<entt::entity, std::string> m_entityNamesMap;
 		Camera* m_pActiveCamera;
+        Bounds m_bounds;
 		static Scene* s_pActiveScene;
 
 	public: // Methods:
@@ -52,6 +53,7 @@ namespace emberEngine
 		bool HasEntity(const std::string& name) const;
 		std::size_t GetEntityCount() const;
 		std::vector<std::string> GetEntityNames() const;
+		Bounds GetBounds() const;
 
 		// Entity management:
 		Entity CreateEntity(const std::string& name);
@@ -59,8 +61,8 @@ namespace emberEngine
 
 		// ECS callbacks:
 		void Start();
-		void FixedUpdate();
 		void EarlyUpdate();
+		void FixedUpdate();
 		void Update();
 		void LateUpdate();
 
@@ -76,5 +78,7 @@ namespace emberEngine
 		const entt::registry& GetRegistry() const;
 		std::unordered_map<std::string, entt::entity>& GetEntityHandlesMap();
 		std::unordered_map<entt::entity, std::string>& GetEntityNamesMap();
+		// Scene data gathering:
+		void UpdateSceneBounds();
 	};
 }

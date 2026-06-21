@@ -37,6 +37,7 @@ namespace emberMath
 		Float3 ClosestPoint(const Float3& point) const;
 		bool Contains(const Float3& point) const;
 		void Encapsulate(const Float3& point);
+		void Encapsulate(const Bounds& bounds);
 		void Expand(float amount);
 		void Expand(const Float3& amount);
 		std::optional<Float3> IntersectRay(const Ray& ray) const;	// Math::TODO: needs unit test

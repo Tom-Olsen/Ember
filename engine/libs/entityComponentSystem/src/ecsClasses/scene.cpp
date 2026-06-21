@@ -3,6 +3,7 @@
 #include "entity.inl"
 #include "entityState.h"
 #include "logger.h"
+#include "meshRenderer.h"
 #include "transform.h"
 
 
@@ -84,6 +85,10 @@ namespace emberEngine
 			names.push_back(name);
 		return names;
 	}
+	Bounds Scene::GetBounds() const
+	{
+		return m_bounds;
+	}
 
 
 
@@ -134,15 +139,16 @@ namespace emberEngine
 		for (auto& startCallback : ComponentRegistry::GetStartRegistry())
 			startCallback(m_registry);
 	}
+	void Scene::EarlyUpdate()
+	{
+		UpdateSceneBounds();
+		for (auto& earlyUpdateCallback : ComponentRegistry::GetEarlyUpdateRegistry())
+			earlyUpdateCallback(m_registry);
+	}
 	void Scene::FixedUpdate()
 	{
 		for (auto& fixedUpdateCallback : ComponentRegistry::GetFixedUpdateRegistry())
 			fixedUpdateCallback(m_registry);
-	}
-	void Scene::EarlyUpdate()
-	{
-		for (auto& earlyUpdateCallback : ComponentRegistry::GetEarlyUpdateRegistry())
-			earlyUpdateCallback(m_registry);
 	}
 	void Scene::Update()
 	{
@@ -192,5 +198,27 @@ namespace emberEngine
 	std::unordered_map<entt::entity, std::string>& Scene::GetEntityNamesMap()
 	{
 		return m_entityNamesMap;
+	}
+	// Scene data gathering:
+	void Scene::UpdateSceneBounds()
+	{
+		bool hasBounds = false;
+		auto view = m_registry.view<MeshRenderer>();
+		for (entt::entity entity : view)
+		{
+			MeshRenderer& meshRenderer = view.get<MeshRenderer>(entity);
+			if (!meshRenderer.GetIsActive() || !meshRenderer.HasMesh())
+				continue;
+
+			if (!hasBounds)
+			{
+				m_bounds = meshRenderer.GetWorldBounds();
+				hasBounds = true;
+			}
+			else
+				m_bounds.Encapsulate(meshRenderer.GetWorldBounds());
+		}
+		if (!hasBounds)
+			m_bounds = Bounds();
 	}
 }

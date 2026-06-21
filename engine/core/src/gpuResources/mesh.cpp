@@ -55,32 +55,32 @@ namespace emberEngine
 	void Mesh::SetNormals(const std::vector<Float3>& normals)
 	{
 		m_normals = normals;
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::SetTangents(const std::vector<Float3>& tangents)
 	{
 		m_tangents = tangents;
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::SetColors(const std::vector<Float4>& colors)
 	{
 		m_colors = colors;
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::SetUniformColor(const Float4& color)
 	{
 		m_colors.resize(GetVertexCount(), color);
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::SetUVs(const std::vector<Float4>& uvs)
 	{
 		m_uvs = uvs;
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::SetTriangles(const std::vector<Uint3>& triangles)
 	{
 		m_triangles = triangles;
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 
 
@@ -94,27 +94,27 @@ namespace emberEngine
 	void Mesh::MoveNormals(std::vector<Float3>&& normals)
 	{
 		m_normals = std::move(normals);
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::MoveTangents(std::vector<Float3>&& tangents)
 	{
 		m_tangents = std::move(tangents);
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::MoveColors(std::vector<Float4>&& colors)
 	{
 		m_colors = std::move(colors);
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::MoveUVs(std::vector<Float4>&& uvs)
 	{
 		m_uvs = std::move(uvs);
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::MoveTriangles(std::vector<Uint3>&& triangles)
 	{
 		m_triangles = std::move(triangles);
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::MoveMeshAsset(emberAssetLoader::Mesh&& meshAsset)
 	{
@@ -165,8 +165,15 @@ namespace emberEngine
 	{
 		return m_triangles;
 	}
-	void Mesh::RegisterUpdate()
+    Bounds Mesh::GetBounds() const
+    {
+        return m_bounds;
+    }
+	void Mesh::RegisterUpdate(bool updateBounds)
 	{
+		if (updateBounds)
+			UpdateBounds();
+
 		uint32_t vertexCount = GetVertexCount();
 		if (vertexCount == 0 || m_triangles.empty())
 			return;
@@ -306,7 +313,7 @@ namespace emberEngine
 		}
 		for (Float3& normal : m_normals)
 			normal = normal.Normalize();
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::ComputeTangents()
 	{
@@ -314,7 +321,7 @@ namespace emberEngine
 		m_tangents.resize(GetVertexCount(), Float3::zero);
 		if (m_uvs.size() != GetVertexCount())
 		{
-			RegisterUpdate();
+			RegisterUpdate(false);
 			return;
 		}
 		for (const Uint3& triangle : m_triangles)
@@ -341,7 +348,7 @@ namespace emberEngine
 		}
 		for (Float3& tangent : m_tangents)
 			tangent = tangent.Normalize();
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 
 
@@ -425,6 +432,10 @@ namespace emberEngine
 
 
 	// Private methods:
+	void Mesh::UpdateBounds()
+	{
+		m_bounds = m_positions.empty() ? Bounds() : Bounds(m_positions);
+	}
 	// Mesh modifiers:
 	void Mesh::ApplyTranslate(const Float3& translation)
 	{
@@ -666,13 +677,13 @@ namespace emberEngine
 			for (Float3& tangent : tangents)
 				tangent = -tangent;
 
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 	void Mesh::ApplyRescaleUVs(const Float4& scale, const Float4& offset)
 	{
 		std::vector<Float4>& uvs = GetUVs();
 		for (Float4& uv : uvs)
 			uv = scale * uv + offset;
-		RegisterUpdate();
+		RegisterUpdate(false);
 	}
 }

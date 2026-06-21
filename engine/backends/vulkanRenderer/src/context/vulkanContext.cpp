@@ -51,7 +51,7 @@ namespace vulkanRendererBackend
 	bool Context::m_enableDockSpace;
 	float Context::m_depthBiasConstantFactor = 0.0f;
 	float Context::m_depthBiasClamp = 0.0f;
-	float Context::m_depthBiasSlopeFactor = 1.0f;
+	float Context::m_depthBiasSlopeFactor = 3.0f;
 
 
 

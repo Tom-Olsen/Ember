@@ -105,6 +105,11 @@ namespace emberMath
 		center = 0.5f * (max + min);
 		extents = 0.5f * (max - min);
 	}
+    void Bounds::Encapsulate(const Bounds& bounds)
+    {
+        Encapsulate(bounds.GetMin());
+        Encapsulate(bounds.GetMax());
+    }
 	void Bounds::Expand(float amount)
 	{
 		extents += Float3(amount);
