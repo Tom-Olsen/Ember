@@ -20,15 +20,16 @@ namespace emberEngine
 
 	public: // Methods:
 		ShadowCascade();
-		void Update(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction_World, float nearDepth, float farDepth, float sceneHeight);
+		void Update(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction_World, float nearDepth, float farDepth, const Bounds& sceneBounds);
 		Float3 GetPosition() const;
 		Float3 GetDirection() const;
 		Float4x4 GetViewMatrix() const;
 		Float4x4 GetProjectionMatrix() const;
 
 	private: // Methods:
-		void ComputeCascadePositionAndSize(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, float nearDepth, float farDepth, float sceneHeight);
+		void ComputeCascadePositionAndSize(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, float nearDepth, float farDepth, const Bounds& sceneBounds);
 		void ComputeSubFrustum(float nearDepth, float farDepth, const Float4x4& clipToCameraLocalMatrix, const Float4x4& cameraLocalToWorldMatrix);
-		float ComputeFarClip(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& lightLocalToWorldMatrix);
+		void PositionNearPlaneAtSceneTop(const Float3& projectionCenter_World, const Float3& e1, const Float3& e2, const Bounds& sceneBounds);
+		float ComputeFarClip(const Float4x4& lightLocalToWorldMatrix, const Bounds& sceneBounds);
 	};
 }

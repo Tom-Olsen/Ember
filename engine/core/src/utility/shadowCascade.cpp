@@ -29,10 +29,10 @@ namespace emberEngine
 		m_viewMatrix = Float4x4::identity;
 		m_projectionMatrix = Float4x4::identity;
 	}
-	void ShadowCascade::Update(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction_World, float nearDepth, float farDepth, float sceneHeight)
+	void ShadowCascade::Update(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction_World, float nearDepth, float farDepth, const Bounds& sceneBounds)
 	{
-		m_direction = direction_World;
-		ComputeCascadePositionAndSize(cameraLocalToWorldMatrix, cameraProjectionMatrix, nearDepth, farDepth, sceneHeight);
+		m_direction = direction_World.Normalize();
+		ComputeCascadePositionAndSize(cameraLocalToWorldMatrix, cameraProjectionMatrix, nearDepth, farDepth, sceneBounds);
 
 		// Construct view matrix:
 		Float4x4 posMatrix = Float4x4::Translate(m_position);
@@ -46,7 +46,7 @@ namespace emberEngine
 		float bottom = -0.5f * m_size;
 		float top = 0.5f * m_size;
 		float nearClip = 0.0f;
-		float farClip = ComputeFarClip(cameraLocalToWorldMatrix, lightLocalToWorldMatrix);
+		float farClip = ComputeFarClip(lightLocalToWorldMatrix, sceneBounds);
 		m_projectionMatrix = Float4x4::Orthographic(left, right, bottom, top, nearClip, farClip);
 	}
 
@@ -71,7 +71,7 @@ namespace emberEngine
 
 
 	// Private methods:
-	void ShadowCascade::ComputeCascadePositionAndSize(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, float nearDepth, float farDepth, float sceneHeight)
+	void ShadowCascade::ComputeCascadePositionAndSize(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, float nearDepth, float farDepth, const Bounds& sceneBounds)
 	{
 		// Transformation matrizes:
 		Float4x4 clipToCameraLocalMatrix = cameraProjectionMatrix.Inverse();
@@ -108,10 +108,7 @@ namespace emberEngine
 		projectionCenter_Plane.y = math::Round(projectionCenter_Plane.y / texelSize) * texelSize;
 		Float3 projectionCenter_World = planeToWorld * projectionCenter_Plane;
 
-		// Compute light position by intersecting line from camera sub frustum center to scene ceiling plane along light direction:
-		Float3 planeNormal = Float3::up;
-		Float3 planeSupport = sceneHeight * Float3::up;
-		m_position = geometry3d::LinePlaneIntersection(projectionCenter_World, m_direction, planeSupport, planeNormal);
+		PositionNearPlaneAtSceneTop(projectionCenter_World, e1, e2, sceneBounds);
 	}
 	void ShadowCascade::ComputeSubFrustum(float nearDepth, float farDepth, const Float4x4& clipToCameraLocalMatrix, const Float4x4& cameraLocalToWorldMatrix)
 	{
@@ -138,18 +135,68 @@ namespace emberEngine
 		for (uint32_t i = 0; i < 8; i++)
 			m_subFrustum_World[i] = Float3(cameraLocalToWorldMatrix * Float4(m_subFrustum_CameraLocal[i], 1.0f));
 	}
-	float ShadowCascade::ComputeFarClip(const Float4x4& cameraLocalToWorldMatrix, const Float4x4& lightLocalToWorldMatrix)
+	void ShadowCascade::PositionNearPlaneAtSceneTop(const Float3& projectionCenter_World, const Float3& e1, const Float3& e2, const Bounds& sceneBounds)
 	{
-		// Construct bounding box that encapsulates the sub frustum and the light source in light space:
-		Bounds bounds = Bounds(Float3::zero, Float3::zero);	// lights source located at zero.
-		Float4x4 cameraLocalToLightLocalMatrix = m_viewMatrix * cameraLocalToWorldMatrix;
-		Float3 subFrustum_LightLocal[8];
+		// Near plane corners in world space:
+		float halfSize = 0.5f * m_size;
+		Float3 nearCorners[4] =
+		{
+			projectionCenter_World - halfSize * e1 - halfSize * e2,
+			projectionCenter_World - halfSize * e1 + halfSize * e2,
+			projectionCenter_World + halfSize * e1 - halfSize * e2,
+			projectionCenter_World + halfSize * e1 + halfSize * e2
+		};
+
+		// Choose the near-plane corner that limits placement along the light ray.
+		// Downward lights use the lowest corner; upward lights use the highest corner:
+		float limitNearCorner = nearCorners[0].z;
+		for (int i = 1; i < 4; i++)
+		{
+			if (m_direction.z < 0.0f)
+				limitNearCorner = math::Min(limitNearCorner, nearCorners[i].z);
+			else
+				limitNearCorner = math::Max(limitNearCorner, nearCorners[i].z);
+		}
+
+		if (math::IsEpsilonZero(m_direction.z))
+			m_position = projectionCenter_World;
+		else
+		{
+			// Slide the texel-snapped projection center along the light direction until the
+			// limiting corner touches the scene height that the near plane starts from:
+			float sceneLimit = m_direction.z < 0.0f ? sceneBounds.GetMax().z : sceneBounds.GetMin().z;
+			float offset = (sceneLimit - limitNearCorner) / m_direction.z;
+			m_position = projectionCenter_World + offset * m_direction;
+		}
+	}
+	float ShadowCascade::ComputeFarClip(const Float4x4& lightLocalToWorldMatrix, const Bounds& sceneBounds)
+	{
+		float farClip = 0.0f;
+		if (!math::IsEpsilonZero(m_direction.z))
+		{
+			// Use the opposite scene height from the near plane to place the far plane:
+			float sceneLimit = m_direction.z < 0.0f ? sceneBounds.GetMin().z : sceneBounds.GetMax().z;
+			float halfSize = 0.5f * m_size;
+			// Light frustum near plane corners in world space:
+			Float3 nearCorners[4] =
+			{
+				Float3(lightLocalToWorldMatrix * Float4(-halfSize, -halfSize, 0.0f, 1.0f)),
+				Float3(lightLocalToWorldMatrix * Float4(-halfSize,  halfSize, 0.0f, 1.0f)),
+				Float3(lightLocalToWorldMatrix * Float4( halfSize, -halfSize, 0.0f, 1.0f)),
+				Float3(lightLocalToWorldMatrix * Float4( halfSize,  halfSize, 0.0f, 1.0f))
+			};
+			// Each near-plane corner casts a ray along the light direction. The far clip
+			// must cover the longest distance from those corners to the scene height limit:
+			for (int i = 0; i < 4; i++)
+				farClip = math::Max(farClip, (sceneLimit - nearCorners[i].z) / m_direction.z);
+		}
+
+		// Also keep the camera slice inside the projection, even for flat or partial scene bounds:
 		for (uint32_t i = 0; i < 8; i++)
 		{
-			subFrustum_LightLocal[i] = Float3(cameraLocalToLightLocalMatrix * Float4(m_subFrustum_CameraLocal[i], 1.0f));
-			bounds.Encapsulate(subFrustum_LightLocal[i]);
+			Float3 subFrustum_LightLocal = Float3(m_viewMatrix * Float4(m_subFrustum_World[i], 1.0f));
+			farClip = math::Max(farClip, -subFrustum_LightLocal.z);
 		}
-		// Add a little extra (4 * frustum height) to prevent light clipping at some camera angles. Could need some improvement. 
-		return bounds.GetSize().z + 4.0f * math::Abs(m_subFrustum_CameraLocal[5].y - m_subFrustum_CameraLocal[7].y);
+		return math::Max(farClip, math::absEpsilon);
 	}
 }

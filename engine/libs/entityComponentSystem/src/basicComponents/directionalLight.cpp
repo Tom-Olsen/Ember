@@ -207,8 +207,8 @@ namespace emberEngine
 		if (m_shadowCascadeMatricesValid[shadowCascadeIndex])
 			return;
 
-		float sceneHeight = 30.0f; // this is for testing, get height from scene later.
-		m_shadowCascades[shadowCascadeIndex]->Update(cameraLocalToWorldMatrix, cameraProjectionMatrix, direction, m_shadowCascadeSplits[shadowCascadeIndex], m_shadowCascadeSplits[shadowCascadeIndex + 1], sceneHeight);
+		Bounds sceneBounds = GetEntity().GetScene()->GetBounds();
+		m_shadowCascades[shadowCascadeIndex]->Update(cameraLocalToWorldMatrix, cameraProjectionMatrix, direction, m_shadowCascadeSplits[shadowCascadeIndex], m_shadowCascadeSplits[shadowCascadeIndex + 1], sceneBounds);
 		m_shadowCascadeMatricesValid[shadowCascadeIndex] = true;
 	}
 }
