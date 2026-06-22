@@ -43,6 +43,7 @@ namespace emberEngine
 		CreateForwardMaterial(skyboxMode, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
 		CreateForwardMaterial(opaqueMode, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
 		CreateForwardMaterial(opaqueMode, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "gizmoMaterial", opaqueQueue, directoryPath / "gizmo.vert.spv", directoryPath / "gizmo.frag.spv");
 	}
 	void MaterialManager::Clear()
 	{

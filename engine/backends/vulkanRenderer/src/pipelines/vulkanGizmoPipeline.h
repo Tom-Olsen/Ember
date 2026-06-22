@@ -10,12 +10,13 @@
 namespace vulkanRendererBackend
 {
 	/// <summary>
-	/// For rendering to forward renderpass render target.
+	/// Pipeline for rendering gizmos into the gizmo render pass.
 	/// </summary>
-	class ForwardPipeline : public Pipeline
+	class GizmoPipeline : public Pipeline
 	{
 	public: // Methods:
-		ForwardPipeline(
+		// Constructor/Destructor:
+		GizmoPipeline(
 			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,
 			emberCommon::RenderMode renderMode,
@@ -23,7 +24,7 @@ namespace vulkanRendererBackend
 			const std::vector<char>& fragmentCode,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
 			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
-		~ForwardPipeline();
+		~GizmoPipeline();
 
 	private: // Methods:
 		void CreatePipeline(

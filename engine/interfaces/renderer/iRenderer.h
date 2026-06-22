@@ -39,11 +39,14 @@ namespace emberBackendInterface
         // Draw mesh:
         virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
         virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
+        virtual void DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
 
         // Getters:
         virtual uint32_t GetShadowMapResolution() = 0;
         virtual Uint2 GetSurfaceExtent() = 0;
         virtual ITexture* GetRenderTexture() = 0;
+        virtual ITexture* GetGizmoTexture() = 0;
         virtual float GetDepthBiasConstantFactor() = 0;
         virtual float GetDepthBiasClamp() = 0;
         virtual float GetDepthBiasSlopeFactor() = 0;

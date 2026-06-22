@@ -116,6 +116,44 @@ namespace emberEngine
 	{
 		return DrawMesh(mesh, material, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
 	}
+	void Renderer::DrawGizmo(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix)
+	{
+		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = shaderProperties.GetCallInterfaceHandle();
+		if (!pICallDescriptorSetBinding)
+		{
+			LOG_WARN("Renderer::DrawGizmo(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another draw call.");
+			return;
+		}
+		s_pIRenderer->DrawGizmo(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, 0);
+	}
+	void Renderer::DrawGizmo(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale)
+	{
+		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
+		DrawGizmo(mesh, material, shaderProperties, localToWorldMatrix);
+	}
+	void Renderer::DrawGizmo(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale)
+	{
+		DrawGizmo(mesh, material, shaderProperties, position, rotationMatrix, Float3(scale));
+	}
+	ShaderProperties Renderer::DrawGizmo(Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix)
+	{
+		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawGizmo(pIMesh, pIMaterial, localToWorldMatrix, 0);
+		ShaderProperties shaderProperties = ShaderProperties(pICallDescriptorSetBinding);
+		return shaderProperties;
+	}
+	ShaderProperties Renderer::DrawGizmo(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale)
+	{
+		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
+		return DrawGizmo(mesh, material, localToWorldMatrix);
+	}
+	ShaderProperties Renderer::DrawGizmo(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale)
+	{
+		return DrawGizmo(mesh, material, position, rotationMatrix, Float3(scale));
+	}
 
 
 
@@ -357,6 +395,10 @@ namespace emberEngine
 	Texture2d Renderer::GetRenderTexture()
 	{
 		return Texture2d(s_pIRenderer->GetRenderTexture(), false);
+	}
+	Texture2d Renderer::GetGizmoTexture()
+	{
+		return Texture2d(s_pIRenderer->GetGizmoTexture(), false);
 	}
 	float Renderer::GetDepthBiasConstantFactor()
 	{

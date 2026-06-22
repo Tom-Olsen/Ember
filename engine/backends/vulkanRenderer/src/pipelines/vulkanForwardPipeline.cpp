@@ -4,8 +4,8 @@
 #include "vulkanForwardRenderPass.h"
 #include "vulkanMacros.h"
 #include "vulkanRenderPassManager.h"
+#include <array>
 #include <stdexcept>
-#include <type_traits>
 
 
 
@@ -120,39 +120,39 @@ namespace vulkanRendererBackend
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;  // how to interpret the vertices, triangle list is the most flexible
 
-        // Multiple viewports and scissors can be used for multiview rendering (VR). Requires multiview feature
+        // Multiple viewports and scissors can be used for multiview rendering (VR). Requires multiview feature:
         VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
         viewportState.viewportCount = 1;
         viewportState.scissorCount = 1;
 
         // Rasterization:
         VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-        rasterizationState.polygonMode = polygonMode;       // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
-        rasterizationState.cullMode = cullMode;             // which face to cull
+        rasterizationState.polygonMode = polygonMode;       // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering.
+        rasterizationState.cullMode = cullMode;             // which face to cull.
         rasterizationState.frontFace = frontFace;           // which face of triangle is front: 123 or 132?
-        rasterizationState.lineWidth = 1.0f;                // width of lines. Bigger 1.0f requires wideLines feature
+        rasterizationState.lineWidth = 1.0f;                // width of lines. Bigger 1.0f requires wideLines feature.
         rasterizationState.depthClampEnable = VK_FALSE;     // clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature.
-        rasterizationState.depthBiasEnable = VK_FALSE;      // Optional
-        rasterizationState.depthBiasConstantFactor = 0.0f;  // Optional
-        rasterizationState.depthBiasClamp = 0.0f;           // Optional
-        rasterizationState.depthBiasSlopeFactor = 0.0f;     // Optional
+        rasterizationState.depthBiasEnable = VK_FALSE;      // optional.
+        rasterizationState.depthBiasConstantFactor = 0.0f;  // optional.
+        rasterizationState.depthBiasClamp = 0.0f;           // optional.
+        rasterizationState.depthBiasSlopeFactor = 0.0f;     // optional.
 
         // Multisampling:
         VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
         multisampleState.sampleShadingEnable = VK_FALSE;
         multisampleState.rasterizationSamples = Context::GetMsaaSamples();
-        multisampleState.minSampleShading = 1.0f;           // Optional
-        multisampleState.pSampleMask = nullptr;             // Optional
-        multisampleState.alphaToCoverageEnable = VK_FALSE;  // Optional
-        multisampleState.alphaToOneEnable = VK_FALSE;       // Optional
+        multisampleState.minSampleShading = 1.0f;           // optional.
+        multisampleState.pSampleMask = nullptr;             // optional.
+        multisampleState.alphaToCoverageEnable = VK_FALSE;  // optional.
+        multisampleState.alphaToOneEnable = VK_FALSE;       // optional.
 
         // Depth and stencil testing:
         VkPipelineDepthStencilStateCreateInfo depthState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-        depthState.depthTestEnable = VK_TRUE;               // depth of new fragments should be compared to the depth buffer to see if they should be discarded
-        depthState.depthWriteEnable = depthWriteEnable;     // new depth of fragments that pass the depth test should be written to the depth buffer
-        depthState.depthCompareOp = depthCompareOp;         // comparison that is performed to keep or discard fragments. lower = closer to camera
-        depthState.depthBoundsTestEnable = VK_FALSE;        // allows to keep only fragments in the below defined range
-        depthState.stencilTestEnable = VK_FALSE;            // stencil buffer operations (not used yet)
+        depthState.depthTestEnable = VK_TRUE;               // depth of new fragments should be compared to the depth buffer to see if they should be discarded.
+        depthState.depthWriteEnable = depthWriteEnable;     // new depth of fragments that pass the depth test should be written to the depth buffer.
+        depthState.depthCompareOp = depthCompareOp;         // comparison that is performed to keep or discard fragments. lower = closer to camera.
+        depthState.depthBoundsTestEnable = VK_FALSE;        // allows to keep only fragments in the below defined range.
+        depthState.stencilTestEnable = VK_FALSE;            // stencil buffer operations (not used yet).
 
         // Color blending pseudo code:
         // if (blendEnable)
@@ -183,12 +183,12 @@ namespace vulkanRendererBackend
         VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
         colorBlendState.attachmentCount = 1;
         colorBlendState.pAttachments = &colorBlendAttachmentState;
-        colorBlendState.logicOpEnable = VK_FALSE;   // setting this to true overwrites the colorBlendAttachmentState settings and uses the logicOp
-        colorBlendState.logicOp = VK_LOGIC_OP_COPY; // Optional
-        colorBlendState.blendConstants[0] = 0.0f;   // Optional
-        colorBlendState.blendConstants[1] = 0.0f;   // Optional
-        colorBlendState.blendConstants[2] = 0.0f;   // Optional
-        colorBlendState.blendConstants[3] = 0.0f;   // Optional
+        colorBlendState.logicOpEnable = VK_FALSE;   // setting this to true overwrites the colorBlendAttachmentState settings and uses the logicOp.
+        colorBlendState.logicOp = VK_LOGIC_OP_COPY; // optional.
+        colorBlendState.blendConstants[0] = 0.0f;   // optional.
+        colorBlendState.blendConstants[1] = 0.0f;   // optional.
+        colorBlendState.blendConstants[2] = 0.0f;   // optional.
+        colorBlendState.blendConstants[3] = 0.0f;   // optional.
 
         // Dynamic states, can be changed without recreating the pipeline:
         std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
@@ -197,21 +197,21 @@ namespace vulkanRendererBackend
         dynamicState.pDynamicStates = dynamicStates.data();
 
         VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-        pipelineInfo.stageCount = shaderStages.size();          // vertex and fragment shaders
+        pipelineInfo.stageCount = shaderStages.size();          // vertex and fragment shaders.
         pipelineInfo.pStages = shaderStages.data();
-        pipelineInfo.pVertexInputState = &vertexInputState;     // Buffer format
-        pipelineInfo.pInputAssemblyState = &inputAssemblyState; // Input assembler
-        pipelineInfo.pViewportState = &viewportState;           // Viewport and scissor
-        pipelineInfo.pRasterizationState = &rasterizationState; // Rasterizer
-        pipelineInfo.pMultisampleState = &multisampleState;     // Multisampling
-        pipelineInfo.pDepthStencilState = &depthState;          // Depth and stencil testing
-        pipelineInfo.pColorBlendState = &colorBlendState;       // Color blending
-		pipelineInfo.pDynamicState = &dynamicState;             // Dynamic states: viewport and scissor
+        pipelineInfo.pVertexInputState = &vertexInputState;     // buffer format.
+        pipelineInfo.pInputAssemblyState = &inputAssemblyState; // onput assembler.
+        pipelineInfo.pViewportState = &viewportState;           // viewport and scissor.
+        pipelineInfo.pRasterizationState = &rasterizationState; // rasterizer.
+        pipelineInfo.pMultisampleState = &multisampleState;     // multisampling.
+        pipelineInfo.pDepthStencilState = &depthState;          // depth and stencil testing.
+        pipelineInfo.pColorBlendState = &colorBlendState;       // color blending.
+		pipelineInfo.pDynamicState = &dynamicState;             // dynamic states: viewport and scissor.
         pipelineInfo.layout = vkPipelineLayout;
         pipelineInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
         pipelineInfo.subpass = 0;
-        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one
-        pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one.
+        pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline.
 
         VKA(vkCreateGraphicsPipelines(Context::GetVkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
     }

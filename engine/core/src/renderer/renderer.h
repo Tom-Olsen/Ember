@@ -75,6 +75,12 @@ namespace emberEngine
 		static ShaderProperties DrawMesh(Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
 		static ShaderProperties DrawMesh(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, const Float3& scale = Float3::one, bool receiveShadows = true, bool castShadows = true);
 		static ShaderProperties DrawMesh(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, float scale = 1.0f, bool receiveShadows = true, bool castShadows = true);
+		static void DrawGizmo(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix);
+		static void DrawGizmo(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, const Float3& scale = Float3::one);
+		static void DrawGizmo(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, float scale = 1.0f);
+		static ShaderProperties DrawGizmo(Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawGizmo(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, const Float3& scale = Float3::one);
+		static ShaderProperties DrawGizmo(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix = Float3x3::identity, float scale = 1.0f);
 
 		// Draw instanced:
 		static void DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
@@ -104,6 +110,7 @@ namespace emberEngine
 		static const Uint2 GetSurfaceExtent();
 		static const Float4x4& GetPointLightRotationMatrix(int faceIndex);
 		static Texture2d GetRenderTexture();
+		static Texture2d GetGizmoTexture();
 		static float GetDepthBiasConstantFactor();
 		static float GetDepthBiasClamp();
 		static float GetDepthBiasSlopeFactor();

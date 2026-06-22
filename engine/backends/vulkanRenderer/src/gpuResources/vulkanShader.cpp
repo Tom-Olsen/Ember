@@ -1,11 +1,11 @@
 #include "vulkanShader.h"
 #include "descriptorSetMacros.h"
 #include "logger.h"
+#include "vulkanContext.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanGlobalDescriptorSetLayout.h"
 #include "vulkanMacros.h"
-#include "vulkanPipeline.h"
 #include "vulkanSceneDescriptorSetLayout.h"
 #include <fstream>
 #include <vulkan/vulkan.h>
@@ -43,7 +43,6 @@ namespace vulkanRendererBackend
         , m_shaderReflection(std::move(other.m_shaderReflection))
         , m_vkDescriptorSetLayouts(std::move(other.m_vkDescriptorSetLayouts))
         , m_vkPipelineLayout(other.m_vkPipelineLayout)
-        , m_pPipelines(std::move(other.m_pPipelines))
         , m_pShaderDescriptorSetBinding(std::move(other.m_pShaderDescriptorSetBinding))
 	{
 		if (m_pShaderDescriptorSetBinding)
@@ -59,7 +58,6 @@ namespace vulkanRendererBackend
 			m_vkDescriptorSetLayouts = std::move(other.m_vkDescriptorSetLayouts);
 			m_vkPipelineLayout = other.m_vkPipelineLayout;
 			other.m_vkPipelineLayout = VK_NULL_HANDLE;
-			m_pPipelines = std::move(other.m_pPipelines);
 			m_pShaderDescriptorSetBinding = std::move(other.m_pShaderDescriptorSetBinding);
 			if (m_pShaderDescriptorSetBinding)
 				m_pShaderDescriptorSetBinding->RebindShader(this);

@@ -3,6 +3,7 @@
 #include "iComputeShader.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
+#include <memory>
 #include <string>
 #include <vulkan/vulkan.h>
 
@@ -10,10 +11,16 @@
 
 namespace vulkanRendererBackend
 {
+	// Forward declarations:
+	class Pipeline;
+
+
+    
 	class VULKAN_RENDERER_API ComputeShader : public Shader, public emberBackendInterface::IComputeShader
 	{
 	private: // Members:
 		Uint3 m_blockSize;
+		std::unique_ptr<Pipeline> m_pPipeline;
 
 	public: // Methods:
 		// Constructors/Destructor:

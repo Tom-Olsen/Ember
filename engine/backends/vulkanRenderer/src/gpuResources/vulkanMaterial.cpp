@@ -4,6 +4,7 @@
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanForwardPipeline.h"
+#include "vulkanGizmoPipeline.h"
 #include "vulkanMacros.h"
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
@@ -19,44 +20,12 @@
 
 namespace vulkanRendererBackend
 {
-	// Private methods:
-	// Constructor:
-	Material::Material(const std::string& name) : Shader(name)
-	{
-		m_type = Type::forward;
-		m_renderMode = emberCommon::RenderMode::opaque;
-		m_renderQueue = emberCommon::RenderQueue::opaque;
-		m_pShadowMaterial = nullptr;
-	}
-
-    // Pipeline indexing:
-	size_t Material::GetPipelineIndex(const Mesh* pMesh) const
-	{
-		const size_t vertexLayoutIndex = static_cast<size_t>(pMesh->GetVertexMemoryLayout());
-		switch (m_type)
-		{
-		case Type::forward:
-		{
-			const size_t renderModeCount = static_cast<size_t>(emberCommon::RenderMode::count);
-			return static_cast<size_t>(m_renderMode) + vertexLayoutIndex * renderModeCount;
-		}
-		case Type::shadow:
-			return vertexLayoutIndex;
-		case Type::present:
-			return vertexLayoutIndex;
-		default:
-			throw std::runtime_error("Material::GetPipelineIndex(...) failed. Unsupported material type.");
-		}
-	}
-
-
-
+	
 	// Public methods:
 	// Factories/Destructor:
 	Material Material::CreateForward(const std::string& name, emberCommon::RenderMode renderMode, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		Material material = Material(name);
-		material.m_type = Type::forward;
 		material.m_renderMode = renderMode;
 		material.m_renderQueue = renderQueue;
 
@@ -94,12 +63,22 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(material.m_vkPipelineLayout, "PipelineLayout_Forward_" + material.m_name);
 
 		// Create pipelines:
-		material.m_pPipelines.reserve(static_cast<size_t>(static_cast<size_t>(emberCommon::RenderMode::count) * static_cast<size_t>(emberCommon::VertexMemoryLayout::count)));
+		material.m_pForwardPipelines.reserve(static_cast<size_t>(static_cast<size_t>(emberCommon::RenderMode::count) * static_cast<size_t>(emberCommon::VertexMemoryLayout::count)));
+		material.m_pGizmoPipelines.reserve(static_cast<size_t>(static_cast<size_t>(emberCommon::RenderMode::count) * static_cast<size_t>(emberCommon::VertexMemoryLayout::count)));
 		for (uint32_t j = 0; j < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); j++)
 			for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::RenderMode::count); i++)
 			{
-				material.m_pPipelines.emplace_back(
+				material.m_pForwardPipelines.emplace_back(
 					std::make_unique<ForwardPipeline>(
+						material.m_name,
+						material.m_vkPipelineLayout,
+						static_cast<emberCommon::RenderMode>(i),
+						vertexCode,
+						fragmentCode,
+						*vertexBindingVectors[j],
+						*vertexAttributeVectors[j]));
+				material.m_pGizmoPipelines.emplace_back(
+					std::make_unique<GizmoPipeline>(
 						material.m_name,
 						material.m_vkPipelineLayout,
 						static_cast<emberCommon::RenderMode>(i),
@@ -116,7 +95,6 @@ namespace vulkanRendererBackend
 	Material Material::CreateShadow(const std::string& name, uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv)
 	{
 		Material material = Material(name);
-		material.m_type = Type::shadow;
 		material.m_renderQueue = 0; // has no inpact on shadow materials.
 		material.m_renderMode = emberCommon::RenderMode::opaque;
 
@@ -150,10 +128,10 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(material.m_vkPipelineLayout, "PipelineLayout_Shadow_" + material.m_name);
 
 		// Create pipelines:
-		material.m_pPipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
+		material.m_pShadowPipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
 		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
 		{
-			material.m_pPipelines.emplace_back(
+			material.m_pShadowPipelines.emplace_back(
 				std::make_unique<ShadowPipeline>(
 					material.m_name,
 					material.m_vkPipelineLayout,
@@ -170,7 +148,6 @@ namespace vulkanRendererBackend
 	Material Material::CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		Material material = Material(name);
-		material.m_type = Type::present;
 		material.m_renderQueue = 0; // has no inpact on present materials.
 		material.m_renderMode = emberCommon::RenderMode::opaque;
 
@@ -208,10 +185,10 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(material.m_vkPipelineLayout, "PipelineLayout_Present_" + material.m_name);
 
 		// Create pipelines:
-		material.m_pPipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
+		material.m_pPresentPipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
 		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
 		{
-			material.m_pPipelines.emplace_back(
+			material.m_pPresentPipelines.emplace_back(
 				std::make_unique<PresentPipeline>(
 					material.m_name,
 					material.m_vkPipelineLayout,
@@ -243,19 +220,17 @@ namespace vulkanRendererBackend
 	{
 		m_renderQueue = renderQueue;
 	}
-	void Material::SetRenderMode(emberCommon::RenderMode renderMode)
-	{
-		// No-op for shadow and present materials. They only support opaque mode.
-		if (m_type == Type::shadow || m_type == Type::present)
-        {
-            LOG_WARN("Material::SetRenderMode(...): modifying renderMode of a shadow or present material '{}' is not possible.", GetName());
-            return;
-        }
-		m_renderMode = renderMode;
-	}
+    void Material::SetRenderMode(emberCommon::RenderMode renderMode)
+    {
+    	// Only materials with renderMode-specific pipeline variants support renderMode changes: forward and gizmo.
+    	if (HasPipeline(PipelineType::forward) || HasPipeline(PipelineType::gizmo))
+    	    m_renderMode = renderMode;
+        else
+            LOG_WARN("Material::SetRenderMode(...): modifying renderMode of material '{}' is not possible.", GetName());
+    }
 	void Material::SetShadowMaterial(emberBackendInterface::IMaterial* pShadowMaterial)
 	{
-		if (m_type != Type::forward)
+		if (!HasPipeline(PipelineType::forward))
 		{
 			LOG_WARN("Material::SetShadowMaterial(...) ignored. Only forward materials can override their shadow material.");
 			return;
@@ -267,7 +242,7 @@ namespace vulkanRendererBackend
 		}
 
 		Material* pVulkanShadowMaterial = static_cast<Material*>(pShadowMaterial);
-		if (pVulkanShadowMaterial->m_type != Type::shadow)
+		if (!pVulkanShadowMaterial->HasPipeline(PipelineType::shadow))
 		{
 			LOG_WARN("Material::SetShadowMaterial(...) ignored. '{}' is not a shadow material.", pVulkanShadowMaterial->GetName());
 			return;
@@ -298,10 +273,29 @@ namespace vulkanRendererBackend
 	{
 		return GetDescriptorSetBinding();
 	}
-	const Pipeline* Material::GetPipeline(const Mesh* pMesh) const
+	const Pipeline* Material::GetPipeline(const Mesh* pMesh, PipelineType pipelineType) const
 	{
-		const size_t pipelineIndex = GetPipelineIndex(pMesh);
-		Pipeline* pPipeline = m_pPipelines[pipelineIndex].get();
+		if (!HasPipeline(pipelineType))
+			throw std::runtime_error("Material::GetPipeline(...) failed. Requested pipeline type is not supported by this material.");
+		const size_t pipelineIndex = GetPipelineIndex(pMesh, pipelineType);
+		Pipeline* pPipeline = nullptr;
+		switch (pipelineType)
+		{
+		case PipelineType::forward:
+			pPipeline = m_pForwardPipelines[pipelineIndex].get();
+			break;
+		case PipelineType::gizmo:
+			pPipeline = m_pGizmoPipelines[pipelineIndex].get();
+			break;
+		case PipelineType::shadow:
+			pPipeline = m_pShadowPipelines[pipelineIndex].get();
+			break;
+		case PipelineType::present:
+			pPipeline = m_pPresentPipelines[pipelineIndex].get();
+			break;
+		default:
+			throw std::runtime_error("Material::GetPipeline(...) failed. Unsupported pipeline type.");
+		}
 		assert(pPipeline && "Material::GetPipeline(...): Pipeline not supported for this vertex layout");
 		return pPipeline;
 	}
@@ -312,5 +306,52 @@ namespace vulkanRendererBackend
 	void Material::Print() const
 	{
 		PrintShaderInfo();
+	}
+
+
+
+    // Private methods:
+	// Constructor:
+	Material::Material(const std::string& name) : Shader(name)
+	{
+		m_renderMode = emberCommon::RenderMode::opaque;
+		m_renderQueue = emberCommon::RenderQueue::opaque;
+		m_pShadowMaterial = nullptr;
+	}
+
+	// Pipeline indexing:
+	bool Material::HasPipeline(PipelineType pipelineType) const
+	{
+		switch (pipelineType)
+		{
+		case PipelineType::forward:
+			return !m_pForwardPipelines.empty();
+		case PipelineType::gizmo:
+			return !m_pGizmoPipelines.empty();
+		case PipelineType::shadow:
+			return !m_pShadowPipelines.empty();
+		case PipelineType::present:
+			return !m_pPresentPipelines.empty();
+		default:
+			throw std::runtime_error("Material::HasPipeline(...) failed. Unsupported pipeline type.");
+		}
+	}
+	size_t Material::GetPipelineIndex(const Mesh* pMesh, PipelineType pipelineType) const
+	{
+		const size_t vertexLayoutIndex = static_cast<size_t>(pMesh->GetVertexMemoryLayout());
+		switch (pipelineType)
+		{
+		case PipelineType::forward:
+		case PipelineType::gizmo:
+		{
+			const size_t renderModeCount = static_cast<size_t>(emberCommon::RenderMode::count);
+			return static_cast<size_t>(m_renderMode) + vertexLayoutIndex * renderModeCount;
+		}
+		case PipelineType::shadow:
+		case PipelineType::present:
+			return vertexLayoutIndex;
+		default:
+			throw std::runtime_error("Material::GetPipelineIndex(...) failed. Unsupported pipeline type.");
+		}
 	}
 }

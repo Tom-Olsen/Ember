@@ -12,7 +12,6 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class Pipeline;
 	class DescriptorSetBinding;
 
 
@@ -27,7 +26,6 @@ namespace vulkanRendererBackend
 		emberSpirvReflect::ShaderReflection m_shaderReflection;
 		std::vector<VkDescriptorSetLayout> m_vkDescriptorSetLayouts;
 		VkPipelineLayout m_vkPipelineLayout;
-		std::vector<std::unique_ptr<Pipeline>> m_pPipelines;
 		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 	
 	protected: // Methods:

@@ -22,6 +22,7 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class Mesh;
+	class Pipeline;
 
 
 
@@ -33,26 +34,23 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class VULKAN_RENDERER_API Material : public Shader, public emberBackendInterface::IMaterial
 	{
-	private: // Enums:
-		enum class Type : uint8_t
+	public: // Enums:
+		enum class PipelineType : uint8_t
 		{
 			forward,
+			gizmo,
 			shadow,
 			present
 		};
 
 	private: // Members:
-		Type m_type;
 		emberCommon::RenderMode m_renderMode;
 		int32_t m_renderQueue;          // opaque=0-999, transparent=1000-1999, skybox=2000-...
 		Material* m_pShadowMaterial;    // the shadow material used alongside this material.
-
-	private: // Methods:
-		// Constructor:
-		Material(const std::string& name);
-
-        // Pipeline indexing:
-		size_t GetPipelineIndex(const Mesh* pMesh) const;
+		std::vector<std::unique_ptr<Pipeline>> m_pForwardPipelines;
+		std::vector<std::unique_ptr<Pipeline>> m_pGizmoPipelines;
+		std::vector<std::unique_ptr<Pipeline>> m_pShadowPipelines;
+		std::vector<std::unique_ptr<Pipeline>> m_pPresentPipelines;
 
 	public: // Methods:
 		// Factories/Destructor:
@@ -80,9 +78,17 @@ namespace vulkanRendererBackend
 		emberCommon::RenderMode GetRenderMode() const override;
 		Material* GetShadowMaterial() const override;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
-		const Pipeline* GetPipeline(const Mesh* pMesh) const;
+		const Pipeline* GetPipeline(const Mesh* pMesh, PipelineType pipelineType) const;
 
 		// Debugging:
 		void Print() const override;
+
+	private: // Methods:
+		// Constructor:
+		Material(const std::string& name);
+
+		// Pipeline indexing:
+		bool HasPipeline(PipelineType pipelineType) const;
+		size_t GetPipelineIndex(const Mesh* pMesh, PipelineType pipelineType) const;
 	};
 }

@@ -52,9 +52,10 @@ namespace vulkanRendererBackend
 			preRenderCompute = 1,
 			shadow = 2,
 			forward = 3,
-			postRenderCompute = 4,
-			present = 5,
-			stageCount = 6
+			gizmo = 4,
+			postRenderCompute = 5,
+			present = 6,
+			stageCount = 7
 		};
 		inline static constexpr std::array<const char*, (int)RenderStage::stageCount> renderStageNames =
 		{
@@ -62,6 +63,7 @@ namespace vulkanRendererBackend
 			"preRenderCompute",
 			"shadow",
 			"forward",
+			"gizmo",
 			"postRenderCompute",
 			"present"
 		};
@@ -79,9 +81,11 @@ namespace vulkanRendererBackend
 		std::vector<VkFence> m_frameFences;
 		std::vector<VkSemaphore> m_acquireSemaphores;
 		std::vector<VkSemaphore> m_resourceUpdateToPreRenderComputeSemaphores;
+		std::vector<VkSemaphore> m_resourceUpdateToGizmoSemaphores;
 		std::vector<VkSemaphore> m_preRenderComputeToShadowSemaphores;
 		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
 		std::vector<VkSemaphore> m_forwardToPostRenderComputeSemaphores;
+		std::vector<VkSemaphore> m_gizmoToPresentSemaphores;
 		std::vector<VkSemaphore> m_postRenderToPresentSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
 
@@ -100,6 +104,8 @@ namespace vulkanRendererBackend
 		// Draw calls:
 		std::vector<DrawCall> m_drawCalls;
 		std::vector<DrawCall*> m_sortedDrawCallPointers;
+		std::vector<DrawCall> m_gizmoDrawCalls;
+		std::vector<DrawCall*> m_sortedGizmoDrawCallPointers;
 
 		// Render management:
 		uint32_t m_frameIndex = 0;
@@ -136,11 +142,14 @@ namespace vulkanRendererBackend
 		// Draw mesh:
 		void DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, uint32_t instanceCount = 0) override;
 		emberBackendInterface::IDescriptorSetBinding* DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, uint32_t instanceCount = 0) override;
+		void DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, uint32_t instanceCount = 0) override;
+		emberBackendInterface::IDescriptorSetBinding* DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, uint32_t instanceCount = 0) override;
 
 		// Getters:
 		uint32_t GetShadowMapResolution() override;
 		Uint2 GetSurfaceExtent() override;
 		emberBackendInterface::ITexture* GetRenderTexture() override;
+		emberBackendInterface::ITexture* GetGizmoTexture() override;
 		float GetDepthBiasConstantFactor() override;
 		float GetDepthBiasClamp() override;
 		float GetDepthBiasSlopeFactor() override;
@@ -214,6 +223,7 @@ namespace vulkanRendererBackend
 		void RecordShadowCommands();
 		void RecordForwardCommands();
 		void RecordForwardCommandsParallel();
+		void RecordGizmoCommands();
 		void RecordPostRenderComputeCommands();
 		void RecordPresentCommands();
 		void RecordImGuiPresentCommands();
@@ -224,6 +234,7 @@ namespace vulkanRendererBackend
 		void SubmitShadowCommands();
 		void SubmitForwardCommands();
 		void SubmitForwardCommandsParallel();
+		void SubmitGizmoCommands();
 		void SubmitPostRenderComputeCommands();
 		void SubmitPresentCommands();
 		bool PresentImage();

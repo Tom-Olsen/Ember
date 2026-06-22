@@ -75,12 +75,12 @@ namespace vulkanRendererBackend
 			// Color attachment description:
 			attachments[0].format = m_pRenderTextures[0]->GetFormat();
 			attachments[0].samples = Context::GetMsaaSamples();
-			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;										                // clear framebuffer to black before rendering.
-			attachments[0].storeOp = useMsaa ? VK_ATTACHMENT_STORE_OP_DONT_CARE : VK_ATTACHMENT_STORE_OP_STORE;         // msaa on: no need to store multisamples after render, msaa off: must store as this will become the final render.
-			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;								                // do not use stencils.
-			attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;							                // do not use stencils.
-			attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;									                // we don't care about initial layout of the image.
-			attachments[0].finalLayout = useMsaa ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;  // msaa on: color is needed so we can resolve them in the final subpass which then outputs general (for post processing compute shaders). msaa off: directly use layout for post processing compute shaders.
+			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;										                                // clear framebuffer to black before rendering.
+			attachments[0].storeOp = useMsaa ? VK_ATTACHMENT_STORE_OP_DONT_CARE : VK_ATTACHMENT_STORE_OP_STORE;                         // msaa on: no need to store multisamples after render, msaa off: must store as this will become the final render.
+			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;								                                // do not use stencils.
+			attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;							                                // do not use stencils.
+			attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;									                                // we don't care about initial layout of the image.
+			attachments[0].finalLayout = useMsaa ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // msaa on: color is resolved into the sampled image, msaa off: image is sampled directly.
 
 			// Color resolve attachment description:
 			attachments[1].format = m_pRenderTextures[0]->GetFormat();
@@ -89,8 +89,8 @@ namespace vulkanRendererBackend
 			attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;           // dont care about old content (loadOp=dontCare).
-			attachments[1].finalLayout = VK_IMAGE_LAYOUT_GENERAL;               // rdy for compositing with forward render pass render texture via compute shaders.
+			attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;               // dont care about old content (loadOp=dontCare).
+			attachments[1].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;  // ready for compositing in present/imgui fragment shaders.
 		}
 
 		// Attachment references:
@@ -119,7 +119,7 @@ namespace vulkanRendererBackend
 		dependencies[0].srcAccessMask = AccessMasks::TopOfPipe::none;											            // no previous memory access must be made visible, because the attachments are cleared.
 		dependencies[0].dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;				            // color attachment writes must wait on the dependency before clearing/rendering.
 		dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;											            // specify special behaviors.
-        // PresentRenderPass will consume render textures of this render pass:
+        // Present/ImGui will consume render textures of this render pass:
 		dependencies[1].srcSubpass = 0;																			            // index of source subpass, where dependency originates.
 		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;														            // index of destination subpass, where dependency ends. VK_SUBPASS_EXTERNAL = after renderpass.
 		dependencies[1].srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;							            // color attachment output must complete before the resolved gizmo texture is consumed.

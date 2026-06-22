@@ -41,7 +41,7 @@ namespace vulkanRendererBackend
 		m_blockSize = m_shaderReflection.GetComputeStageInfo()->blockSize;
 
 		// Create pipeline:
-		m_pPipelines.emplace_back(std::make_unique<ComputePipeline>(m_name, m_vkPipelineLayout, computeCode));
+		m_pPipeline = std::make_unique<ComputePipeline>(m_name, m_vkPipelineLayout, computeCode);
 
 		// Create shader descriptorSetBinding:
 		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>((Shader*)this, SHADER_SET_INDEX);
@@ -68,7 +68,7 @@ namespace vulkanRendererBackend
 	}
 	const Pipeline* ComputeShader::GetPipeline() const
 	{
-		return m_pPipelines[0].get();	// compute shaders only ever contain 1 pipeline.
+		return m_pPipeline.get();
 	}
 
 
