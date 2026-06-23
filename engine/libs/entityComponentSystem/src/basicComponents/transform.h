@@ -55,9 +55,13 @@ namespace emberEngine
 
 		// Getters:
 		Float3 GetPosition() const;
+		Float4x4 GetPosition4x4() const;
+        Float3 GetRotation() const;
 		Float3x3 GetRotation3x3() const;
 		Float4x4 GetRotation4x4() const;
 		Float3 GetScale() const;
+        Float3x3 GetScale3x3() const;
+        Float4x4 GetScale4x4() const;
 		Float4x4 GetLocalToWorldMatrix();
 		Float4x4 GetWorldToLocalMatrix();
 		Float4x4 GetLocalToWorldNormalMatrix();

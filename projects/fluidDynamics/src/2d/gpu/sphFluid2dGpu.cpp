@@ -168,7 +168,7 @@ namespace fluidDynamics
 			if (hit.has_value())
 			{
 				SetAttractorPoint(Float2(hit.value()));
-				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), hit.value(), Float3x3::identity, 1.0f, false, false);
+				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), Float4x4::TRS(hit.value(), Float3x3::identity, Float3(1.0f)), false, false);
 				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
 					SetAttractorState(1);
@@ -183,7 +183,10 @@ namespace fluidDynamics
 
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
-		Renderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f, Float4::white, false, false);
+		DebugRenderer::SetColor(Float4::white);
+		DebugRenderer::SetReceiveShadows(false);
+		DebugRenderer::SetCastShadows(false);
+		DebugRenderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f);
 		m_tripleBufferState.MarkRead();
 		uint32_t readDataIndex = m_tripleBufferState.GetReadIndex();
 		m_particleMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));

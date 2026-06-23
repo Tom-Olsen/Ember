@@ -122,6 +122,38 @@ namespace emberEngine
 	{
 		return m_position;
 	}
+	Float4x4 Transform::GetPosition4x4() const
+    {
+        return Float4x4::Translate(m_position);
+    }
+    Float3 Transform::GetRotation() const
+    {
+        // R = RotY(y) * RotX(x) * RotZ(z), column-major: data[col*3 + row]
+        // R[1][2] = data[7] = -sin(x)
+        float sinX = math::Clamp(-m_rotationMatrix.data[7], -1.0f, 1.0f);
+        float x = math::Asin(sinX);
+        float cosX = math::Sqrt(1.0f - sinX * sinX);
+
+        float y, z;
+        if (cosX > math::absEpsilon)
+        {
+            // R[0][2]=data[6]=sy*cx, R[2][2]=data[8]=cy*cx -> y
+            // R[1][0]=data[1]=cx*sz, R[1][1]=data[4]=cx*cz -> z
+            y = math::Atan2(m_rotationMatrix.data[6], m_rotationMatrix.data[8]);
+            z = math::Atan2(m_rotationMatrix.data[1], m_rotationMatrix.data[4]);
+        }
+        else
+        {
+            // Gimbal lock: set z=0, recover y from R[0][0]=data[0] and R[0][1]=data[3]
+            // sx= 1 (x= pi/2): y-z = atan2(data[3], data[0])
+            // sx=-1 (x=-pi/2): y+z = atan2(-data[3], data[0])
+            float sign = (sinX >= 0.0f) ? 1.0f : -1.0f;
+            y = math::Atan2(sign * m_rotationMatrix.data[3], m_rotationMatrix.data[0]);
+            z = 0.0f;
+        }
+
+        return math::rad2deg * Float3(x, y, z);
+    }
 	Float3x3 Transform::GetRotation3x3() const
 	{
 		return m_rotationMatrix;
@@ -134,6 +166,14 @@ namespace emberEngine
 	{
 		return m_scale;
 	}
+    Float3x3 Transform::GetScale3x3() const
+    {
+        return Float3x3::Scale(m_scale);
+    }
+    Float4x4 Transform::GetScale4x4() const
+    {
+        return Float4x4::Scale(m_scale);
+    }
 	Float4x4 Transform::GetLocalToWorldMatrix()
 	{
 		if (m_updateLocalToWorldMatrix)

@@ -139,6 +139,17 @@ namespace emberMath
 
 
 	// Static math operations:
+    Float3x3 Float3x3::Scale(Float3 scale)
+    {
+		return Float3x3::Rows
+		(scale.x, 0.0f, 0.0f,
+		 0.0f, scale.y, 0.0f,
+		 0.0f, 0.0f, scale.z);
+    }
+    Float3x3 Float3x3::Scale(float scale)
+    {
+		return Scale(Float3(scale));
+    }
 	Float3x3 Float3x3::RotateX(float angle)
 	{
 		float c = math::Cos(angle);

@@ -102,9 +102,9 @@ namespace emberEngine
         {
             Renderer::DrawMesh(*m_pMesh, m_material, m_shaderProperties, localToWorldMatrix, m_receiveShadows, m_castShadows);
             if (m_drawLocalBounds)
-                Renderer::DrawBounds(localToWorldMatrix, GetLocalBounds());
+                Gizmo::DrawBounds(localToWorldMatrix, GetLocalBounds());
             if (m_drawWorldBounds)
-                Renderer::DrawBounds(Float4x4::identity, GetWorldBounds());
+                Gizmo::DrawBounds(Float4x4::identity, GetWorldBounds());
         }
 	}
 }

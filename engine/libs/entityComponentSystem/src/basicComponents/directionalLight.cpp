@@ -165,7 +165,8 @@ namespace emberEngine
 			{
 				Float4x4 localToWorldMatrix = m_shadowCascades[i]->GetViewMatrix().Inverse();
 				Renderer::DrawMesh(fourLeg, pVertexUnlit, localToWorldMatrix, false, false);
-				Renderer::DrawFrustum(localToWorldMatrix, m_shadowCascades[i]->GetProjectionMatrix(), 0.1f, colors[i]);
+				Gizmo::SetColor(colors[i]);
+				Gizmo::DrawFrustum(localToWorldMatrix, m_shadowCascades[i]->GetProjectionMatrix());
 			}
 		}
 	}

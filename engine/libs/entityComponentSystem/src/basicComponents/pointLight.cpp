@@ -112,7 +112,10 @@ namespace emberEngine
 		}
 
 		if (m_drawFrustum)
+		{
+			Gizmo::SetColor(Float4(m_color, 1.0f));
 			for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++)
-				Renderer::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix() * Renderer::GetPointLightRotationMatrix(faceIndex), 0.1f, Float4(m_color, 1.0f));
+				Gizmo::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix() * Renderer::GetPointLightRotationMatrix(faceIndex));
+		}
 	}
 }

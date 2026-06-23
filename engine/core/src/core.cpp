@@ -2,9 +2,11 @@
 #include "bufferManager.h"
 #include "compute.h"
 #include "computeShaderManager.h"
+#include "debugRenderer.h"
 #include "editor.h"
 #include "emberMath.h"
 #include "eventSystem.h"
+#include "gizmo.h"
 #include "gpuSort.h"
 #include "gui.h"
 #include "iGui.h"
@@ -48,6 +50,8 @@ namespace emberEngine
 		BufferManager::Init();
 		TextureManager::Init();
 		MeshManager::Init();
+		DebugRenderer::Init();
+		Gizmo::Init();
 	}
 	void Core::InitOther()
 	{
@@ -76,6 +80,8 @@ namespace emberEngine
 	}
 	void Core::ClearManagers()
 	{
+		Gizmo::Clear();
+		DebugRenderer::Clear();
 		MeshManager::Clear();
 		TextureManager::Clear();
 		BufferManager::Clear();

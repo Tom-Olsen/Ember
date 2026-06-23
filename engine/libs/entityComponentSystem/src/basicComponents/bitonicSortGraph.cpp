@@ -36,9 +36,13 @@ namespace emberEngine
 		float y1 = height * (0.5f - t1);
 		Float3 pos0 = Float3(GetTransform()->GetLocalToWorldMatrix() * Float4(x, y0, 0.1, 1));
 		Float3 pos1 = Float3(GetTransform()->GetLocalToWorldMatrix() * Float4(x, y1, 0.1, 1));
-		Renderer::DrawSphere(pos0, 3 * lineWidth, Float4::red, false, false);
-		Renderer::DrawSphere(pos1, 3 * lineWidth, Float4::red, false, false);
-		Renderer::DrawLineSegment(pos0, pos1, lineWidth, 0.8f * Float4::red, false, false);
+		DebugRenderer::SetReceiveShadows(false);
+		DebugRenderer::SetCastShadows(false);
+		DebugRenderer::SetColor(Float4::red);
+		DebugRenderer::DrawSphere(Float4x4::TRS(pos0, Float3x3::identity, 3.0f * lineWidth));
+		DebugRenderer::DrawSphere(Float4x4::TRS(pos1, Float3x3::identity, 3.0f * lineWidth));
+		DebugRenderer::SetColor(0.8f * Float4::red);
+		DebugRenderer::DrawLineSegment(pos0, pos1, lineWidth);
 	}
 	void BitonicSortGraph::DrawDisperse(int k, int index, float x)
 	{
@@ -54,19 +58,26 @@ namespace emberEngine
 		float y1 = height * (0.5f - t1);
 		Float3 pos0 = Float3(GetTransform()->GetLocalToWorldMatrix() * Float4(x, y0, 0.1, 1));
 		Float3 pos1 = Float3(GetTransform()->GetLocalToWorldMatrix() * Float4(x, y1, 0.1, 1));
-		Renderer::DrawSphere(pos0, 3 * lineWidth, Float4::orange, false, false);
-		Renderer::DrawSphere(pos1, 3 * lineWidth, Float4::orange, false, false);
-		Renderer::DrawLineSegment(pos0, pos1, lineWidth, 0.8f * Float4::orange, false, false);
+		DebugRenderer::SetReceiveShadows(false);
+		DebugRenderer::SetCastShadows(false);
+		DebugRenderer::SetColor(Float4::orange);
+		DebugRenderer::DrawSphere(Float4x4::TRS(pos0, Float3x3::identity, 3.0f * lineWidth));
+		DebugRenderer::DrawSphere(Float4x4::TRS(pos1, Float3x3::identity, 3.0f * lineWidth));
+		DebugRenderer::SetColor(0.8f * Float4::orange);
+		DebugRenderer::DrawLineSegment(pos0, pos1, lineWidth);
 	}
 	void BitonicSortGraph::DrawHorizontalLines()
 	{
+        DebugRenderer::SetReceiveShadows(false);
+        DebugRenderer::SetCastShadows(false);
+        DebugRenderer::SetColor(0.8f * Float4::white);
 		for (int i = 0; i < count; i++)
 		{
 			float t = i / (count - 1.0f);	// €[0,1]
 			float z = height * (0.5f - t);
 			Float3 start(-0.5f * width, 0.0f, z);
 			Float3 end(0.5f * width, 0.0f, z);
-			Renderer::DrawLineSegment(start, end, lineWidth, 0.8f * Float4::white, false, false);
+			DebugRenderer::DrawLineSegment(start, end, lineWidth);
 		}
 	}
 	void BitonicSortGraph::DrawLocalBitonicSort(float& x, int startIndex, int localCount)

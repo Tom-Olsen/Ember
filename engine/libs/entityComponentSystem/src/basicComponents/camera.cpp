@@ -165,6 +165,9 @@ namespace emberEngine
 		Transform* transform = GetTransform();
 		Renderer::SetActiveCamera(transform->GetPosition(), GetViewMatrix(), GetProjectionMatrix());
 		if (m_drawFrustum)
-			Renderer::DrawFrustum(transform->GetLocalToWorldMatrix(), GetProjectionMatrix());
+        {
+            Gizmo::SetColor(Float4::white);
+            Gizmo::DrawFrustum(transform->GetLocalToWorldMatrix(), GetProjectionMatrix());
+        }
 	}
 }

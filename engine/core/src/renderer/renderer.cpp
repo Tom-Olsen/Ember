@@ -4,9 +4,7 @@
 #include "iMaterial.h"
 #include "iRenderer.h"
 #include "mesh.h"
-#include "meshManager.h"
 #include "material.h"
-#include "materialManager.h"
 #include "shaderProperties.h"
 #include "texture.h"
 #include "texture2d.h"
@@ -74,7 +72,7 @@ namespace emberEngine
 
 
 	// Draw mesh:
-	void Renderer::DrawMesh(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Renderer::DrawMesh(const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
@@ -88,35 +86,16 @@ namespace emberEngine
 		}
 		s_pIRenderer->DrawMesh(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows, 0);
 	}
-	void Renderer::DrawMesh(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
-	{
-		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
-		DrawMesh(mesh, material, shaderProperties, localToWorldMatrix, receiveShadows, castShadows);
-	}
-	void Renderer::DrawMesh(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
-	{
-		DrawMesh(mesh, material, shaderProperties, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
-	}
-	ShaderProperties Renderer::DrawMesh(Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	ShaderProperties Renderer::DrawMesh(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows, 0);
-		ShaderProperties shaderProperties = ShaderProperties(pICallDescriptorSetBinding);
-		return shaderProperties;
+		return ShaderProperties(pICallDescriptorSetBinding);
 	}
-	ShaderProperties Renderer::DrawMesh(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
-	{
-		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
-		return DrawMesh(mesh, material, localToWorldMatrix, receiveShadows, castShadows);
-	}
-	ShaderProperties Renderer::DrawMesh(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
-	{
-		return DrawMesh(mesh, material, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
-	}
-	void Renderer::DrawGizmo(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix)
+	void Renderer::DrawGizmo(const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix)
 	{
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
@@ -128,37 +107,18 @@ namespace emberEngine
 		}
 		s_pIRenderer->DrawGizmo(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, 0);
 	}
-	void Renderer::DrawGizmo(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale)
-	{
-		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
-		DrawGizmo(mesh, material, shaderProperties, localToWorldMatrix);
-	}
-	void Renderer::DrawGizmo(Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale)
-	{
-		DrawGizmo(mesh, material, shaderProperties, position, rotationMatrix, Float3(scale));
-	}
-	ShaderProperties Renderer::DrawGizmo(Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix)
+	ShaderProperties Renderer::DrawGizmo(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix)
 	{
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawGizmo(pIMesh, pIMaterial, localToWorldMatrix, 0);
-		ShaderProperties shaderProperties = ShaderProperties(pICallDescriptorSetBinding);
-		return shaderProperties;
-	}
-	ShaderProperties Renderer::DrawGizmo(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale)
-	{
-		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
-		return DrawGizmo(mesh, material, localToWorldMatrix);
-	}
-	ShaderProperties Renderer::DrawGizmo(Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale)
-	{
-		return DrawGizmo(mesh, material, position, rotationMatrix, Float3(scale));
+		return ShaderProperties(pICallDescriptorSetBinding);
 	}
 
 
 
 	// Draw instanced:
-	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
@@ -174,37 +134,19 @@ namespace emberEngine
 			shaderProperties.SetBuffer("instanceBuffer", instanceBuffer);
 		s_pIRenderer->DrawMesh(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
 	}
-	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
-	{
-		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
-		return DrawInstanced(instanceCount, instanceBuffer, mesh, material, shaderProperties, localToWorldMatrix, receiveShadows, castShadows);
-	}
-	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
-	{
-		return DrawInstanced(instanceCount, instanceBuffer, mesh, material, shaderProperties, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
-	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
-		ShaderProperties shaderProperties = ShaderProperties(pICallDescriptorSetBinding);
+		ShaderProperties shaderProperties(pICallDescriptorSetBinding);
 		if (shaderProperties.HasBinding("instanceBuffer"))
 			shaderProperties.SetBuffer("instanceBuffer", instanceBuffer);
 		return shaderProperties;
 	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
-	{
-		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
-		return DrawInstanced(instanceCount, instanceBuffer, mesh, material, localToWorldMatrix, receiveShadows, castShadows);
-	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
-	{
-		return DrawInstanced(instanceCount, instanceBuffer, mesh, material, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
-	}
-	void Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	void Renderer::DrawInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
@@ -218,165 +160,16 @@ namespace emberEngine
 		}
 		s_pIRenderer->DrawMesh(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
 	}
-	void Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
-	{
-		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
-		return DrawInstanced(instanceCount, mesh, material, shaderProperties, localToWorldMatrix, receiveShadows, castShadows);
-	}
-	void Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
-	{
-		return DrawInstanced(instanceCount, mesh, material, shaderProperties, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
-	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
+	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(pIMesh, pIMaterial, localToWorldMatrix, receiveShadows, castShadows, instanceCount);
-		ShaderProperties shaderProperties = ShaderProperties(pICallDescriptorSetBinding);
-		return shaderProperties;
-	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, const Float3& scale, bool receiveShadows, bool castShadows)
-	{
-		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, scale);
-		return DrawInstanced(instanceCount, mesh, material, localToWorldMatrix, receiveShadows, castShadows);
-	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Mesh& mesh, const Material& material, const Float3& position, const Float3x3& rotationMatrix, float scale, bool receiveShadows, bool castShadows)
-	{
-		return DrawInstanced(instanceCount, mesh, material, position, rotationMatrix, Float3(scale), receiveShadows, castShadows);
+		return ShaderProperties(pICallDescriptorSetBinding);
 	}
 
-
-
-	// Draw basic geometry:
-	void Renderer::DrawLineSegment(const Float3& start, const Float3& end, float width, const Float4& color, bool receiveShadows, bool castShadows)
-	{
-		Float3 direction = end - start;
-		if (direction.IsEpsilonZero())
-			return;
-
-		float length = direction.Length();
-		Float3 position = start + 0.5f * direction;
-		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::up, direction);
-		Float3 scale = Float3(width, width, length);
-	
-		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("zylinderFlat"), MaterialManager::GetMaterial("simpleUnlitMaterial"), position, rotationMatrix, scale, receiveShadows, castShadows);
-		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
-	}
-	void Renderer::DrawCube(const Float3& position, float width, const Float4& color, bool receiveShadows, bool castShadows)
-	{
-		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("unitCube"), MaterialManager::GetMaterial("simpleUnlitMaterial"), position, Float3x3::identity, width, receiveShadows, castShadows);
-		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
-	}
-	void Renderer::DrawSphere(const Float3& position, float radius, const Float4& color, bool receiveShadows, bool castShadows)
-	{
-		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("cubeSphere"), MaterialManager::GetMaterial("simpleUnlitMaterial"), position, Float3x3::identity, radius, receiveShadows, castShadows);
-		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
-	}
-	void Renderer::DrawArrow(const Float3& position, const Float3& direction, float size, const Float4& color, bool receiveShadows, bool castShadows)
-	{
-		if (direction.IsEpsilonZero())
-			return;
-
-		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
-		ShaderProperties shaderProperties = DrawMesh(MeshManager::GetMesh("arrowFlat"), MaterialManager::GetMaterial("simpleUnlitMaterial"), position, rotationMatrix, size, receiveShadows, castShadows);
-		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
-	}
-	void Renderer::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Float4& color, bool receiveShadows, bool castShadows)
-	{
-		// Corner positions in normalized device coordinates:
-		Float4 cornerPoints[8] =
-		{
-			Float4(-1, -1, 0, 1),
-			Float4(-1, -1, 1, 1),
-			Float4(-1,  1, 0, 1),
-			Float4(-1,  1, 1, 1),
-			Float4(1, -1, 0, 1),
-			Float4(1, -1, 1, 1),
-			Float4(1,  1, 0, 1),
-			Float4(1,  1, 1, 1)
-		};
-	
-		float det = projectionMatrix.Determinant();
-		if (det == 0)
-			return;
-	
-		Float4x4 invPerspectiveMatrix = projectionMatrix.Inverse(det);
-		for (uint32_t i = 0; i < 8; i++)
-		{
-			// Corner positions in camera/local space:
-			cornerPoints[i] = invPerspectiveMatrix * cornerPoints[i];
-			cornerPoints[i] /= cornerPoints[i].w;
-	
-			// Corner positions in world space:
-			cornerPoints[i] = localToWorldMatrix * cornerPoints[i];
-		}
-	
-		// Draw corner points:
-		for (uint32_t i = 0; i < 8; i++)
-			DrawSphere(Float3(cornerPoints[i]), 2.0f * width, Float4::gray, receiveShadows, castShadows);
-	
-		// Draw horizontal lines:
-		DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[4]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[1]), Float3(cornerPoints[5]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[2]), Float3(cornerPoints[6]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[3]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
-		// Draw vertical lines:
-		DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[2]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[1]), Float3(cornerPoints[3]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[4]), Float3(cornerPoints[6]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[5]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
-		// Draw depth lines:
-		DrawLineSegment(Float3(cornerPoints[0]), Float3(cornerPoints[1]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[2]), Float3(cornerPoints[3]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[4]), Float3(cornerPoints[5]), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(cornerPoints[6]), Float3(cornerPoints[7]), width, color, receiveShadows, castShadows);
-	}
-	void Renderer::DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width, const Float4& color, bool receiveShadows, bool castShadows)
-	{
-		std::array<Float2, 4> cornerPoints = bounds.GetCorners();
-	
-		// Draw corner points:
-		for (uint32_t i = 0; i < 4; i++)
-		{
-			Float3 pos = Float3(localToWorldMatrix * Float4(cornerPoints[i], 0.0f, 1.0f));
-			DrawSphere(pos, width, color, receiveShadows, castShadows);
-		}
-	
-		// Draw lines:
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[0], 0.0f, 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[1], 0.0f, 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[1], 0.0f, 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[3], 0.0f, 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[3], 0.0f, 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[2], 0.0f, 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[2], 0.0f, 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[0], 0.0f, 1.0f)), width, color, receiveShadows, castShadows);
-	}
-	void Renderer::DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width, const Float4& color, bool receiveShadows, bool castShadows)
-	{
-		std::array<Float3, 8> cornerPoints = bounds.GetCorners();
-	
-		// Draw corner points:
-		for (uint32_t i = 0; i < 8; i++)
-		{
-			Float3 pos = Float3(localToWorldMatrix * Float4(cornerPoints[i], 1.0f));
-			DrawSphere(pos, width, color, receiveShadows, castShadows);
-		}
-	
-		// Draw horizontal lines:
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[0], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[4], 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[1], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[5], 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[2], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[6], 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[3], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[7], 1.0f)), width, color, receiveShadows, castShadows);
-		// Draw vertical lines:
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[0], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[2], 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[1], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[3], 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[4], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[6], 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[5], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[7], 1.0f)), width, color, receiveShadows, castShadows);
-		// Draw depth lines:
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[0], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[1], 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[2], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[3], 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[4], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[5], 1.0f)), width, color, receiveShadows, castShadows);
-		DrawLineSegment(Float3(localToWorldMatrix * Float4(cornerPoints[6], 1.0f)), Float3(localToWorldMatrix * Float4(cornerPoints[7], 1.0f)), width, color, receiveShadows, castShadows);
-	}
 
 
 	// Getters:

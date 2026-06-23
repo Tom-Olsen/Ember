@@ -59,6 +59,8 @@ namespace emberMath
 		bool IsEpsilonZero(float absEpsilon = math::absEpsilon) const;
 
 		// Static math operations:
+        static Float3x3 Scale(Float3 scale);
+        static Float3x3 Scale(float scale);
 		static Float3x3 RotateX(float angle);
 		static Float3x3 RotateY(float angle);
 		static Float3x3 RotateZ(float angle);

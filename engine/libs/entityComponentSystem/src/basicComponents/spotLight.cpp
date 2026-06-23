@@ -131,6 +131,9 @@ namespace emberEngine
 		Renderer::AddPositionalLight(GetTransform()->GetPosition(), m_intensity, m_color, m_shadowType, m_blendStart, m_blendEnd, worldToClipMatrix);
 
 		if (m_drawFrustum)
-			Renderer::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix(), 0.1f, Float4(m_color, 1.0f));
+		{
+			Gizmo::SetColor(Float4(m_color, 1.0f));
+			Gizmo::DrawFrustum(GetTransform()->GetLocalToWorldMatrix(), GetProjectionMatrix());
+		}
 	}
 }
