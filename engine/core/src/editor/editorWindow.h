@@ -40,6 +40,7 @@ namespace emberEngine
 		// Rendering:
 		void Open();
 		void RenderWindow();		// gets calles by IEditor::Render() and calls overloaded IEditorWindow::Render().
+		virtual void PreRender();   // called once per frame before RenderFrame(); override for pre-render gizmo draws etc.
 		virtual void Render();		// override this method with your window content.
 
 		// Getters:

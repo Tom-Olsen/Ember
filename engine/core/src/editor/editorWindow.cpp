@@ -61,6 +61,10 @@ namespace emberEngine
 		Gui::End();	// must be called even if ImGui::Begin() returns false.
 		Gui::PopID();
 	}
+    void EditorWindow::PreRender()
+    {
+        
+    }
 	void EditorWindow::Render()
 	{
 		LOG_WARN("EditorWindow::Render override missing.");

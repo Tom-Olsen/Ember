@@ -81,6 +81,7 @@ namespace nullGuiBackend
 		void TextV(const char* format, va_list args) override;
 		bool Button(const char* label, const Float2& size = Float2::zero) override;
 		bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none) override;
+		bool Selectable(const char* label, bool selected) override;
 		void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) override;
 	};
 }

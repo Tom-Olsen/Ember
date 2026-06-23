@@ -27,6 +27,7 @@ namespace emberEngine
 
 	public: // Methods:
 		// Editor functionality:
+		static void PreRender();
 		static void Render();
 
 		// EditorWindow->editor communication:

@@ -1,5 +1,6 @@
 #include "hierarchyEditorWindow.h"
 #include "commonGuiFlags.h"
+#include "editorSelection.h"
 #include "entity.h"
 #include "gui.h"
 #include "scene.h"
@@ -35,11 +36,19 @@ namespace emberEditor
 
 	void HierarchyEditorWindow::Render()
 	{
-		if (m_pScene != nullptr)
+		if (m_pScene == nullptr)
+			return;
+
+		std::vector<std::string> entityNames = m_pScene->GetEntityNames();
+		for (const std::string& name : entityNames)
 		{
-			std::vector<std::string> entityNames = m_pScene->GetEntityNames();
-			for (const std::string& name : entityNames)
-				Gui::TextUnformatted(name.c_str());
+			bool isSelected = emberEditor::EditorSelection::HasSelectedEntity()
+                           && emberEditor::EditorSelection::GetSelectedEntity().GetName() == name;
+			if (Gui::Selectable(name.c_str(), isSelected))
+			{
+				emberEngine::Entity entity = m_pScene->GetEntity(name);
+				emberEditor::EditorSelection::SetSelectedEntity(entity);
+			}
 		}
 	}
 }

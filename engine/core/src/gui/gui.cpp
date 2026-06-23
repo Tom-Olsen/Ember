@@ -197,6 +197,10 @@ namespace emberEngine
 	{
 		return s_pIGui->InvisibleButton(strID, size, flags);
 	}
+	bool Gui::Selectable(const char* label, bool selected)
+	{
+		return s_pIGui->Selectable(label, selected);
+	}
 	void Gui::Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
 	{
 		s_pIGui->Image(textureID, imageSize, uv0, uv1);

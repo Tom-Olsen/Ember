@@ -174,6 +174,7 @@ namespace emberApplication
 				emberEngine::Gui::Update();
 				m_pActiveScene->Update();
 				m_pActiveScene->LateUpdate();
+				emberEngine::Editor::PreRender();
 				emberEngine::Renderer::RenderFrame();
 			}
 		}

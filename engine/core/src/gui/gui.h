@@ -88,6 +88,7 @@ namespace emberEngine
 		static void Text(const char* format, ...);
 		[[nodiscard]] static bool Button(const char* label, const Float2& size = Float2::zero);
 		[[nodiscard]] static bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none);
+		[[nodiscard]] static bool Selectable(const char* label, bool selected);
 		static void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one);
 
 		// Custom Widgets:

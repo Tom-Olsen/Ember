@@ -1,11 +1,14 @@
 #pragma once
 #include "commonGuiFlags.h"
 #include "editor.h"
+#include "editorSelection.h"
 #include "editorWindow.h"
 #include "emberTime.h"
+#include "gizmo.h"
 #include "gui.h"
 #include "renderer.h"
 #include "texture2d.h"
+#include "transform.h"
 
 
 
@@ -17,7 +20,7 @@ namespace emberEditor
         using Gui = emberEngine::Gui;
 
 
-
+        // Constructor:
 		SceneEditorWindow()
 		{
             m_name = "Scene";
@@ -29,6 +32,21 @@ namespace emberEditor
 
 
 
+        // Overrides:
+        void PreRender() override
+        {
+            if (!EditorSelection::HasSelectedEntity())
+                return;
+
+            emberEngine::Entity selected = EditorSelection::GetSelectedEntity();
+            emberEngine::Transform* pTransform = selected.GetTransform();
+            if (pTransform == nullptr)
+                return;
+
+            Float3 pos = pTransform->GetPosition();
+            emberEngine::Gizmo::SetColor(Float4(1.0f, 1.0f, 0.0f, 1.0f));
+            emberEngine::Gizmo::DrawSphere(Float4x4::TRS(pos, Float3x3::identity, Float3(0.1f)));
+        }
         void Render() override
         {
             // Prepare render texture:

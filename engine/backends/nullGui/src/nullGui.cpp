@@ -182,6 +182,10 @@ namespace nullGuiBackend
 	{
 		return false;
 	}
+	bool Gui::Selectable(const char* label, bool selected)
+	{
+		return false;
+	}
 	void Gui::Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
 	{
 

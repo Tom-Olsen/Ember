@@ -1,6 +1,8 @@
 #pragma once
 #include "commonGuiFlags.h"
+#include "editorSelection.h"
 #include "editorWindow.h"
+#include "entity.h"
 #include "gui.h"
 
 
@@ -25,7 +27,13 @@ namespace emberEditor
 
 		void Render() override
 		{
-			Gui::TextUnformatted("test");
+			if (emberEditor::EditorSelection::HasSelectedEntity())
+			{
+				emberEngine::Entity entity = emberEditor::EditorSelection::GetSelectedEntity();
+				Gui::TextUnformatted(entity.GetName().c_str());
+			}
+			else
+				Gui::TextUnformatted("No selection");
 		}
 	};
 }

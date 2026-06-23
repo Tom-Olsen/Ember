@@ -349,6 +349,10 @@ namespace imGuiSdlVulkanBackend
 	{
 		return ImGui::InvisibleButton(strId, ImVec2{ size.x, size.y }, GuiButtonFlagsCommonToImGui(flags));
 	}
+	bool Gui::Selectable(const char* label, bool selected)
+	{
+		return ImGui::Selectable(label, selected);
+	}
 	void Gui::Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
 	{
 		ImGui::Image(static_cast<ImTextureID>(textureID), ImVec2{ imageSize.x, imageSize.y }, ImVec2{ uv0.x, uv0.y }, ImVec2{ uv1.x, uv1.y });

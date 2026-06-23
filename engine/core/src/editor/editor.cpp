@@ -16,6 +16,14 @@ namespace emberEngine
 
 	// Public methods:
 	// Editor functionality:
+	void Editor::PreRender()
+	{
+		for (EditorWindow* pEditorWindow : s_pEditorWindows)
+		{
+			if (pEditorWindow != nullptr)
+				pEditorWindow->PreRender();
+		}
+	}
 	void Editor::Render()
 	{
 		// Invalidate window pointers:
