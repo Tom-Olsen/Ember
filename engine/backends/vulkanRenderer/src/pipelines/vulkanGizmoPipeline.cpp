@@ -54,6 +54,7 @@ namespace vulkanRendererBackend
 		VkPolygonMode polygonMode;
 		VkCullModeFlagBits cullMode;
 		VkFrontFace frontFace;
+		VkBool32 depthWriteEnable;
 		VkBool32 blendEnable;
 		switch (renderMode)
 		{
@@ -61,24 +62,28 @@ namespace vulkanRendererBackend
 			polygonMode = VK_POLYGON_MODE_FILL;
 			cullMode = VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT;
 			frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+			depthWriteEnable = VK_TRUE;
 			blendEnable = VK_FALSE;
 			break;
 		case emberCommon::RenderMode::transparent:
 			polygonMode = VK_POLYGON_MODE_FILL;
 			cullMode = VkCullModeFlagBits::VK_CULL_MODE_NONE;
 			frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+			depthWriteEnable = VK_FALSE;
 			blendEnable = VK_TRUE;
 			break;
 		case emberCommon::RenderMode::skybox:
 			polygonMode = VK_POLYGON_MODE_FILL;
 			cullMode = VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT;
 			frontFace = VK_FRONT_FACE_CLOCKWISE;
+			depthWriteEnable = VK_FALSE;
 			blendEnable = VK_FALSE;
 			break;
 		case emberCommon::RenderMode::wireframe:
 			polygonMode = VK_POLYGON_MODE_LINE;
 			cullMode = VkCullModeFlagBits::VK_CULL_MODE_NONE;
 			frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+			depthWriteEnable = VK_TRUE;
 			blendEnable = VK_FALSE;
 			break;
 		default:
@@ -136,6 +141,14 @@ namespace vulkanRendererBackend
 		multisampleState.alphaToCoverageEnable = VK_FALSE;  // optional.
 		multisampleState.alphaToOneEnable = VK_FALSE;       // optional.
 
+		// Depth and stencil testing:
+		VkPipelineDepthStencilStateCreateInfo depthState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+		depthState.depthTestEnable = VK_TRUE;
+		depthState.depthWriteEnable = depthWriteEnable;
+		depthState.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthState.depthBoundsTestEnable = VK_FALSE;
+		depthState.stencilTestEnable = VK_FALSE;
+
 		// Color blending:
 		VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
 		colorBlendAttachmentState.blendEnable = blendEnable;
@@ -172,6 +185,7 @@ namespace vulkanRendererBackend
 		pipelineInfo.pViewportState = &viewportState;           // viewport and scissor.
 		pipelineInfo.pRasterizationState = &rasterizationState; // rasterizer.
 		pipelineInfo.pMultisampleState = &multisampleState;     // multisampling.
+		pipelineInfo.pDepthStencilState = &depthState;          // depth and stencil testing.
 		pipelineInfo.pColorBlendState = &colorBlendState;       // color blending.
 		pipelineInfo.pDynamicState = &dynamicState;             // dynamic states: viewport and scissor.
 		pipelineInfo.layout = vkPipelineLayout;

@@ -51,6 +51,7 @@
 #include "vulkanSurface.h"
 #include "vulkanSwapchain.h"
 #include "vulkanVertexBuffer.h"
+#include <array>
 #include <assert.h>
 #include <algorithm>
 #include <cstdlib>
@@ -1247,16 +1248,17 @@ namespace vulkanRendererBackend
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 			// Render pass info:
-			VkClearValue clearValue;
-			clearValue.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+			std::array<VkClearValue, 2> clearValues;
+			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
+			clearValues[1].depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = pGizmoRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = pGizmoRenderPass->GetFramebuffer(m_frameIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent.width = viewport.width;
 			renderPassBeginInfo.renderArea.extent.height = viewport.height;
-			renderPassBeginInfo.clearValueCount = 1;
-			renderPassBeginInfo.pClearValues = &clearValue;
+			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			renderPassBeginInfo.pClearValues = clearValues.data();
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
