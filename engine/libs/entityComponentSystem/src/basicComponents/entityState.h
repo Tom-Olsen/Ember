@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	class EntityState : public Component
 	{

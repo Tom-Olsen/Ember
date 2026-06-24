@@ -40,7 +40,7 @@ namespace emberApplication
 		};
 
 	private: // Members:
-		static emberEngine::Scene* m_pActiveScene;
+		static emberEcs::Scene* m_pActiveScene;
 		static std::unique_ptr<emberEditor::BackendDebugEditorWindow> m_pBackendDebugEditorWindow;
 		static std::unique_ptr<emberEditor::DepthBiasEditorWindow> m_pDepthBiasEditorWindow;
 		static std::unique_ptr<emberEditor::FpsEditorWindow> m_pFpsEditorWindow;
@@ -53,10 +53,10 @@ namespace emberApplication
 		static void Run();
 
 		// Setters:
-		static void SetScene(emberEngine::Scene* pScene);
+		static void SetScene(emberEcs::Scene* pScene);
 
 		// Getters:
-		static emberEngine::Scene* GetActiveScene();
+		static emberEcs::Scene* GetActiveScene();
 		static emberEditor::BackendDebugEditorWindow* GetBackendDebugEditorWindow();
 		static emberEditor::DepthBiasEditorWindow* GetDepthBiasEditorWindow();
 		static emberEditor::FpsEditorWindow* GetFpsEditorWindow();

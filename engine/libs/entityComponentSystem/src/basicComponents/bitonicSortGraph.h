@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Renders bitonic sort graph for debugging.
 	class BitonicSortGraph : public Component

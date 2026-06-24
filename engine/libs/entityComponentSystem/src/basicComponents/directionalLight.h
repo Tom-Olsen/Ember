@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Forward declarations:
 	class ShadowCascade;

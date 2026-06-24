@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	/// <summary>
 	/// View direction is down = (0,0,-1).

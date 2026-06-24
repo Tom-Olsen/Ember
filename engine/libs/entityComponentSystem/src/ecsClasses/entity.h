@@ -5,7 +5,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Forward decleration:
 	class Component;

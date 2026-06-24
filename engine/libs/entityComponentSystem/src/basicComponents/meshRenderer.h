@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	class MeshRenderer : public Component
 	{

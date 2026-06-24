@@ -4,7 +4,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	template<typename T>
 	inline T* Component::GetComponent() const

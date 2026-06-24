@@ -29,7 +29,7 @@ namespace emberEditor
 		{
 			if (emberEditor::EditorSelection::HasSelectedEntity())
 			{
-				emberEngine::Entity entity = emberEditor::EditorSelection::GetSelectedEntity();
+				emberEcs::Entity entity = emberEditor::EditorSelection::GetSelectedEntity();
 				Gui::TextUnformatted(entity.GetName().c_str());
 			}
 			else

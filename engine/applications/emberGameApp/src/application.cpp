@@ -27,7 +27,7 @@
 namespace emberApplication
 {
 	// Static members:
-	emberEngine::Scene* Application::m_pActiveScene;
+	emberEcs::Scene* Application::m_pActiveScene;
 
 
 
@@ -151,7 +151,7 @@ namespace emberApplication
 
 
 	// Setters:
-	void Application::SetScene(emberEngine::Scene* pScene)
+	void Application::SetScene(emberEcs::Scene* pScene)
 	{
 		m_pActiveScene = pScene;
 	}
@@ -159,7 +159,7 @@ namespace emberApplication
 
 
 	// Getters:
-	emberEngine::Scene* Application::GetActiveScene()
+	emberEcs::Scene* Application::GetActiveScene()
 	{
 		return m_pActiveScene;
 	}

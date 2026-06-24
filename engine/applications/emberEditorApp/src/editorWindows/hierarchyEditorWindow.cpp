@@ -29,7 +29,7 @@ namespace emberEditor
 
 	}
 
-	void HierarchyEditorWindow::SetScene(emberEngine::Scene* pScene)
+	void HierarchyEditorWindow::SetScene(emberEcs::Scene* pScene)
 	{
 		m_pScene = pScene;
 	}
@@ -46,7 +46,7 @@ namespace emberEditor
                            && emberEditor::EditorSelection::GetSelectedEntity().GetName() == name;
 			if (Gui::Selectable(name.c_str(), isSelected))
 			{
-				emberEngine::Entity entity = m_pScene->GetEntity(name);
+				emberEcs::Entity entity = m_pScene->GetEntity(name);
 				emberEditor::EditorSelection::SetSelectedEntity(entity);
 			}
 		}

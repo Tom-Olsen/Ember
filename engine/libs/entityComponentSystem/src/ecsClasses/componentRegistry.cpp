@@ -2,7 +2,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	std::vector<void(*)(entt::registry&)>& ComponentRegistry::GetStartRegistry()
 	{

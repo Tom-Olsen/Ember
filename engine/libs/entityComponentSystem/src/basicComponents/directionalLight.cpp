@@ -4,7 +4,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Constructor/Destructor:
 	DirectionalLight::DirectionalLight()

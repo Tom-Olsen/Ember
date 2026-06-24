@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Constructor/Destructor:
 	PointLight::PointLight()

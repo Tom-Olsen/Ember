@@ -8,7 +8,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Static Members:
 	Scene* Scene::s_pActiveScene = nullptr;

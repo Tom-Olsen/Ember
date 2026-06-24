@@ -5,7 +5,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Private Methods:
 	// Constructor/Destructor:

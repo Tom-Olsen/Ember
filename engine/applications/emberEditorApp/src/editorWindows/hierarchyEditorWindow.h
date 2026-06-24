@@ -17,13 +17,13 @@ namespace emberEditor
 	struct HierarchyEditorWindow : public emberEngine::EditorWindow
 	{
 	private: // Members
-		emberEngine::Scene* m_pScene;
+		emberEcs::Scene* m_pScene;
 
 	public: // Methods
 		HierarchyEditorWindow();
 		~HierarchyEditorWindow();
 
-		void SetScene(emberEngine::Scene* pScene);
+		void SetScene(emberEcs::Scene* pScene);
 		void Render() override;
 	};
 }

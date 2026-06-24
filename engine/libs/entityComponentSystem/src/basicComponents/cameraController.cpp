@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Constructors/Destructor:
 	CameraController::CameraController()

@@ -34,7 +34,7 @@ namespace emberApplication
 		};
 
 	private: // Members:
-		static emberEngine::Scene* m_pActiveScene;
+		static emberEcs::Scene* m_pActiveScene;
 
 	public: // Methods:
 		static void Init(const CreateInfo& createInfo);
@@ -44,10 +44,10 @@ namespace emberApplication
 		static void Run();
 
 		// Setters:
-		static void SetScene(emberEngine::Scene* pScene);
+		static void SetScene(emberEcs::Scene* pScene);
 
 		// Getters:
-		static emberEngine::Scene* GetActiveScene();
+		static emberEcs::Scene* GetActiveScene();
 
 	private: // Methods
 		// Delete all constructors:

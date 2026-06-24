@@ -2,7 +2,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Constructor/Destructor:
 	Camera::Camera()

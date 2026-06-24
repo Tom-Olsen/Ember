@@ -8,7 +8,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	// Forward declerations:
 	class Camera;

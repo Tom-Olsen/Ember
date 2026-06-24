@@ -38,8 +38,8 @@ namespace emberEditor
             if (!EditorSelection::HasSelectedEntity())
                 return;
 
-            emberEngine::Entity selected = EditorSelection::GetSelectedEntity();
-            emberEngine::Transform* pTransform = selected.GetTransform();
+            emberEcs::Entity selected = EditorSelection::GetSelectedEntity();
+            emberEcs::Transform* pTransform = selected.GetTransform();
             if (pTransform == nullptr)
                 return;
 

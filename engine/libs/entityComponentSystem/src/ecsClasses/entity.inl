@@ -7,7 +7,7 @@
 
 
 
-namespace emberEngine
+namespace emberEcs
 {
 	template<typename T, typename... Args>
 	inline T* Entity::AddComponent(Args&&... args)

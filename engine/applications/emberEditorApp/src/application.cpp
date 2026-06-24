@@ -38,7 +38,7 @@
 namespace emberApplication
 {
 	// Static members:
-	emberEngine::Scene* Application::m_pActiveScene;
+	emberEcs::Scene* Application::m_pActiveScene;
 	std::unique_ptr<emberEditor::BackendDebugEditorWindow> Application::m_pBackendDebugEditorWindow;
 	std::unique_ptr<emberEditor::ConsoleEditorWindow> Application::m_pConsoleEditorWindow;
 	std::unique_ptr<emberEditor::DepthBiasEditorWindow> Application::m_pDepthBiasEditorWindow;
@@ -188,7 +188,7 @@ namespace emberApplication
 
 
 	// Setters:
-	void Application::SetScene(emberEngine::Scene* pScene)
+	void Application::SetScene(emberEcs::Scene* pScene)
 	{
 		m_pActiveScene = pScene;
 		m_pHierarchyEditorWindow->SetScene(pScene);
@@ -197,7 +197,7 @@ namespace emberApplication
 
 
 	// Getters:
-	emberEngine::Scene* Application::GetActiveScene()
+	emberEcs::Scene* Application::GetActiveScene()
 	{
 		return m_pActiveScene;
 	}
