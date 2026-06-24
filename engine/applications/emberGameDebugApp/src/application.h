@@ -9,6 +9,9 @@
 namespace emberEngine
 {
 	class Renderer;
+}
+namespace emberEcs
+{
 	class Scene;
 }
 namespace emberEditor

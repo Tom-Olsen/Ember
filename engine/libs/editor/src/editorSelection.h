@@ -9,11 +9,11 @@ namespace emberEditor
 	class EditorSelection
 	{
 	private: // Members:
-		static std::optional<emberEngine::Entity> s_selectedEntity;
+		static std::optional<emberEcs::Entity> s_selectedEntity;
 
 	public: // Methods:
-		static void SetSelectedEntity(const emberEngine::Entity& entity);
-		static emberEngine::Entity GetSelectedEntity();
+		static void SetSelectedEntity(const emberEcs::Entity& entity);
+		static emberEcs::Entity GetSelectedEntity();
 		static bool HasSelectedEntity();
 		static void ClearSelection();
 

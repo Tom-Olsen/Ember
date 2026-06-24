@@ -6,16 +6,16 @@
 namespace emberEditor
 {
 	// Static members:
-	std::optional<emberEngine::Entity> EditorSelection::s_selectedEntity = std::nullopt;
+	std::optional<emberEcs::Entity> EditorSelection::s_selectedEntity = std::nullopt;
 
 
 
 	// Public methods:
-	void EditorSelection::SetSelectedEntity(const emberEngine::Entity& entity)
+	void EditorSelection::SetSelectedEntity(const emberEcs::Entity& entity)
 	{
 		s_selectedEntity = entity;
 	}
-	emberEngine::Entity EditorSelection::GetSelectedEntity()
+	emberEcs::Entity EditorSelection::GetSelectedEntity()
 	{
 		assert(s_selectedEntity.has_value());
 		return s_selectedEntity.value();

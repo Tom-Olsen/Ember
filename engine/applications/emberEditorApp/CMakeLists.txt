@@ -10,7 +10,6 @@ set(PROJECT_TYPE STATIC)    # Choose SHARED (.dll/.so) or STATIC (.lib/.a) libra
 get_filename_component(ENGINE_APPLICATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)    # application
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)           # engine
 get_filename_component(ENGINE_BACKENDS_DIR "${ENGINE_DIR}/backends" ABSOLUTE)           # backends
-get_filename_component(ENGINE_CORE_DIR "${ENGINE_DIR}/core" ABSOLUTE)                   # core
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                   # libs
 
 if(TARGET ${TARGET_NAME})
@@ -50,13 +49,9 @@ target_compile_definitions(${TARGET_NAME} PUBLIC ENGINE_APPLICATIONS_DIR="${ENGI
 
 
 # -------------- Link Custom Libraries --------------
-# EmberCore:
-add_subdirectory("${ENGINE_CORE_DIR}" EmberCore)
-target_link_libraries(${TARGET_NAME} PUBLIC EmberCore)
-
-# EmberEntityComponentSystem:
-add_subdirectory("${ENGINE_LIBS_DIR}/entityComponentSystem" EmberEntityComponentSystem)
-target_link_libraries(${TARGET_NAME} PUBLIC EmberEntityComponentSystem)
+# EmberEditor:
+add_subdirectory("${ENGINE_LIBS_DIR}/editor" EmberEditor)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberEditor)
 # ---------------------------------------------------
 
 
