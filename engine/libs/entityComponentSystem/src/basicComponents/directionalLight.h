@@ -1,12 +1,21 @@
 ﻿#pragma once
-#include "emberEngine.h"
+#include "component.h"
+#include "commonLighting.h"
+#include "emberMath.h"
+#include <array>
 
 
+
+// Forward declarations:
+namespace emberCore
+{
+    class ShadowCascade;
+}
 
 namespace emberEcs
 {
-	// Forward declarations:
-	class ShadowCascade;
+    // Forward declarations:
+    class Camera;
 
 
 
@@ -18,12 +27,12 @@ namespace emberEcs
 	private: // Members:
 		float m_intensity;
 		Float3 m_color;
-		ShadowType m_shadowType;
+		emberCommon::ShadowType m_shadowType;
 		Camera* m_pActiveCamera;
 		int m_shadowCascadeCount;
 		float m_distributionFactor;		// €[0,1], 0 = linear, 1 = logarithmic
 		mutable float m_shadowCascadeSplits[5];	// Percentile splits for each shadow cascade € [0,1].
-		std::array<ShadowCascade*, 4> m_shadowCascades;
+		std::array<emberCore::ShadowCascade*, 4> m_shadowCascades;
 		mutable std::array<bool, 4> m_shadowCascadeMatricesValid;
 		mutable bool m_shadowCascadeSplitsValid;
 		bool m_drawFrustum;
@@ -35,7 +44,7 @@ namespace emberEcs
 		// Setters:
 		void SetIntensity(float intensity);
 		void SetColor(const Float3& color);
-		void SetShadowType(ShadowType shadowType);
+		void SetShadowType(emberCommon::ShadowType shadowType);
 		void SetActiveCamera(Camera* pCamera);
 		void SetShadowCascadeCount(int shadowCascadeCount);
 		void SetDistributionFactor(float distributionFactor);
@@ -44,7 +53,7 @@ namespace emberEcs
 		// Getters:
 		float GetIntensity() const;
 		Float3 GetColor() const;
-		ShadowType GetShadowType() const;
+		emberCommon::ShadowType GetShadowType() const;
 		Camera* GetActiveCamera() const;
 		int GetShadowCascadeCount() const;
 		float GetDistributionFactor() const;

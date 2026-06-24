@@ -1,10 +1,13 @@
 #pragma once
 #include "emberCoreExport.h"
-#include "emberEngine.h"
+#include "bufferView.h"
+#include "compute.h"
+#include "computeShader.h"
+#include <memory>
 
 
 
-namespace emberEngine
+namespace emberCore
 {
     /// <summary>
     /// Sorts given BufferView in ascending order using bitonic sort.

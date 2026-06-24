@@ -1,5 +1,6 @@
 #pragma once
-#include "emberEngine.h"
+#include "component.h"
+#include "emberMath.h"
 
 
 

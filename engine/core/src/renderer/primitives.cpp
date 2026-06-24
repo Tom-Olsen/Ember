@@ -8,7 +8,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	ShaderProperties Primitives::DrawMesh(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, bool asGizmo)
 	{

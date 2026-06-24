@@ -5,7 +5,7 @@
 
 
 // Forward decleration:
-namespace emberEngine
+namespace emberEcs
 {
 	class Scene;
 }
@@ -14,7 +14,7 @@ namespace emberEngine
 
 namespace emberEditor
 {
-	struct HierarchyEditorWindow : public emberEngine::EditorWindow
+	struct HierarchyEditorWindow : public emberCore::EditorWindow
 	{
 	private: // Members
 		emberEcs::Scene* m_pScene;

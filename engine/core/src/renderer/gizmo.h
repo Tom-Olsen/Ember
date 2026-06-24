@@ -4,7 +4,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Forward declarations:
 	class Core;

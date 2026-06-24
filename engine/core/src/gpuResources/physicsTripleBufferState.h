@@ -5,7 +5,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Owns physics buffer index transitions and publishes completed physics writes in submission order.
 	class EMBER_CORE_API PhysicsTripleBufferState

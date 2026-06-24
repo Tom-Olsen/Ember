@@ -1,4 +1,9 @@
 #include "bitonicSortGraph.h"
+#include "debugRenderer.h"
+#include "emberMath.h"
+#include "shaderProperties.h"
+#include "transform.h"
+using namespace emberCore;
 
 
 

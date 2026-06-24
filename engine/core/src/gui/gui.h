@@ -10,7 +10,7 @@
 // Forward decleration:
 struct SDL_Window;
 typedef struct VkCommandBuffer_T* VkCommandBuffer;
-namespace emberEngine
+namespace emberCore
 {
 	class Texture;
 }
@@ -21,7 +21,7 @@ namespace emberBackendInterface
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	class EMBER_CORE_API Gui
 	{

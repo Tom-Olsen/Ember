@@ -6,7 +6,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	bool MeshManager::s_isInitialized = false;

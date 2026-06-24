@@ -6,7 +6,8 @@
 #include "sphFluid2dCpu.h"
 #include "sphFluid2dGpu.h"
 #include "sphFluid3dGpu.h"
-using namespace emberEngine;
+using namespace emberCore;
+using namespace emberEcs;
 using namespace fluidDynamics;
 
 

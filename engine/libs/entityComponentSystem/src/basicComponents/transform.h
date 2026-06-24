@@ -1,6 +1,7 @@
 #pragma once
 #include "component.h"
 #include "emberMath.h"
+#include <vector>
 
 
 

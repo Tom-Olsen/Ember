@@ -8,7 +8,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	template<typename T>
 	class EMBER_CORE_API TripleBuffer

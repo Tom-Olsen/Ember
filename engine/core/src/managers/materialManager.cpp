@@ -7,7 +7,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	bool MaterialManager::s_isInitialized = false;

@@ -5,18 +5,18 @@
 
 namespace emberEngine
 {
-	class MeshTester : public Component
+	class MeshTester : public emberEcs::Component
 	{
 	private: // Members:
-		std::vector<Mesh*> m_meshes;
-		MeshRenderer* m_pMeshRenderer;
+		std::vector<emberCore::Mesh*> m_meshes;
+		emberEcs::MeshRenderer* m_pMeshRenderer;
 		int index;
 
 	public: // Methods:
-		MeshTester(MeshRenderer* pMeshRenderer);
+		MeshTester(emberEcs::MeshRenderer* pMeshRenderer);
 		~MeshTester();
 
-		void AddMesh(Mesh* pMesh);
+		void AddMesh(emberCore::Mesh* pMesh);
 
 		// Overrides:
 		void Start() override;

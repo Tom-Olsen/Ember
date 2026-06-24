@@ -1,4 +1,9 @@
 #include "spotLight.h"
+#include "gizmo.h"
+#include "renderer.h"
+#include "transform.h"
+using namespace emberCommon;
+using namespace emberCore;
 
 
 

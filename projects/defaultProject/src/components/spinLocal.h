@@ -5,7 +5,7 @@
 
 namespace emberEngine
 {
-	class SpinLocal : public Component
+	class SpinLocal : public emberEcs::Component
 	{
 	private: // Members:
 		float m_speed;

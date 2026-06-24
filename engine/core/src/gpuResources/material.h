@@ -16,7 +16,7 @@ namespace emberBackendInterface
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	class EMBER_CORE_API Material : public Shader
 	{

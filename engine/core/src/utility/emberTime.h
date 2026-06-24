@@ -5,7 +5,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
     enum class TimeUnit
     {

@@ -5,7 +5,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Constructors/Destructor:
 	EditorWindow::EditorWindow()

@@ -14,10 +14,10 @@
 
 namespace emberEditor
 {
-	struct SceneEditorWindow : public emberEngine::EditorWindow
+	struct SceneEditorWindow : public emberCore::EditorWindow
 	{
         // Easy access to emberEngine Gui:
-        using Gui = emberEngine::Gui;
+        using Gui = emberCore::Gui;
 
 
         // Constructor:
@@ -44,15 +44,15 @@ namespace emberEditor
                 return;
 
             Float3 pos = pTransform->GetPosition();
-            emberEngine::Gizmo::SetColor(Float4(1.0f, 1.0f, 0.0f, 1.0f));
-            emberEngine::Gizmo::DrawSphere(Float4x4::TRS(pos, Float3x3::identity, Float3(0.1f)));
+            emberCore::Gizmo::SetColor(Float4(1.0f, 1.0f, 0.0f, 1.0f));
+            emberCore::Gizmo::DrawSphere(Float4x4::TRS(pos, Float3x3::identity, Float3(0.1f)));
         }
         void Render() override
         {
             // Prepare render texture:
-            emberEngine::Texture2d renderTexture = emberEngine::Renderer::GetRenderTexture();
+            emberCore::Texture2d renderTexture = emberCore::Renderer::GetRenderTexture();
             uintptr_t renderTextureID = Gui::GetTextureID(renderTexture);
-            emberEngine::Texture2d gizmoTexture = emberEngine::Renderer::GetGizmoTexture();
+            emberCore::Texture2d gizmoTexture = emberCore::Renderer::GetGizmoTexture();
             uintptr_t gizmoTextureID = Gui::GetTextureID(gizmoTexture);
 
             // Get imgui window:

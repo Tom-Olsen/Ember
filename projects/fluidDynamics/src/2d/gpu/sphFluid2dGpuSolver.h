@@ -1,6 +1,7 @@
 #pragma once
 #include "emberEngine.h"
-using namespace emberEngine;
+using namespace emberCore;
+using namespace emberEcs;
 
 
 

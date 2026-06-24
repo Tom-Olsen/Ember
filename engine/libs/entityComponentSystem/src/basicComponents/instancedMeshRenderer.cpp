@@ -1,4 +1,8 @@
 #include "instancedMeshRenderer.h"
+#include "materialManager.h"
+#include "renderer.h"
+#include "transform.h"
+using namespace emberCore;
 
 
 

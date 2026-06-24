@@ -1,9 +1,9 @@
 ﻿#include "shadowCascade.h"
-#include "emberEngine.h"
+#include "renderer.h"
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// static members:
 	Float4 ShadowCascade::s_frustum_Clip[8] =

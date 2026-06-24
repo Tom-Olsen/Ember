@@ -1,4 +1,8 @@
 #include "postRenderEffects.h"
+#include "compute.h"
+#include "computeShaderManager.h"
+#include "shaderProperties.h"
+using namespace emberCore;
 
 
 

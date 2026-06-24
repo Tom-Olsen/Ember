@@ -9,7 +9,8 @@
 #include "shadowCascadeScene.h"
 #include "singleQuadScene.h"
 #include "testScene.h"
-using namespace emberEngine;
+using namespace emberCore;
+using namespace emberEcs;
 
 
 

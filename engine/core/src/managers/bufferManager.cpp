@@ -4,7 +4,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	bool BufferManager::s_isInitialized = false;

@@ -37,6 +37,10 @@
 
 namespace emberApplication
 {
+    using namespace emberCore;
+
+
+    
 	// Static members:
 	emberEcs::Scene* Application::m_pActiveScene;
 	std::unique_ptr<emberEditor::BackendDebugEditorWindow> Application::m_pBackendDebugEditorWindow;
@@ -60,7 +64,7 @@ namespace emberApplication
 			m_pActiveScene = nullptr;
 
 			// Init basic systems:
-			emberEngine::Core::InitBasics();
+			Core::InitBasics();
 
 			// Window backend:
 			bool forceX11VideoDriver = true;
@@ -88,11 +92,11 @@ namespace emberApplication
 			emberBackendInterface::IGui* pIGui = new imGuiSdlVulkanBackend::Gui(pIWindow, pIRenderer, rendererCreateInfo.enableDockSpace);
 
 			// Init backends:
-			emberEngine::Core::InitBackends(pIWindow, pIRenderer, pICompute, pIGui);
+			Core::InitBackends(pIWindow, pIRenderer, pICompute, pIGui);
 
 			// Gpu Resource Managers:
-			emberEngine::Core::InitManagers();
-			emberEngine::Core::InitOther();
+			Core::InitManagers();
+			Core::InitOther();
 
 			// Editor windows:
 			m_pBackendDebugEditorWindow = std::make_unique<emberEditor::BackendDebugEditorWindow>();
@@ -106,7 +110,7 @@ namespace emberApplication
 			m_pSceneEditorWindow = std::make_unique<emberEditor::SceneEditorWindow>();
 
 			// Other systems:
-			emberEngine::EventSystem::Init();
+			EventSystem::Init();
 			return true;
 		}
 		catch (const std::exception& e)
@@ -117,11 +121,11 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
-		emberEngine::Renderer::WaitDeviceIdle();
-		emberEngine::Core::ClearOther();
-		emberEngine::Core::ClearManagers();
-		emberEngine::Core::ClearBackends();
-		emberEngine::Core::ClearBasics();
+		Renderer::WaitDeviceIdle();
+		Core::ClearOther();
+		Core::ClearManagers();
+		Core::ClearBackends();
+		Core::ClearBasics();
 	}
 
 
@@ -132,21 +136,21 @@ namespace emberApplication
 		try
 		{
 			bool running = true;
-			emberEngine::Time::Reset();
+			Time::Reset();
 			m_pActiveScene->Start();
 
 			while (running)
 			{
 				PROFILE_FUNCTION();
-				emberEngine::Time::Update();
+				Time::Update();
 
-				emberEngine::Renderer::CollectGarbage();
-				running = emberEngine::EventSystem::ProcessEvents();
+				Renderer::CollectGarbage();
+				running = EventSystem::ProcessEvents();
 
 				// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
-				Int2 windowSize = emberEngine::Window::GetSize();
-				Uint2 surfaceExtent = emberEngine::Renderer::GetSurfaceExtent();
-				if (emberEngine::Window::GetIsMinimized() || windowSize.x == 0 || windowSize.y == 0 || surfaceExtent.x == 0 || surfaceExtent.y == 0)
+				Int2 windowSize = Window::GetSize();
+				Uint2 surfaceExtent = Renderer::GetSurfaceExtent();
+				if (Window::GetIsMinimized() || windowSize.x == 0 || windowSize.y == 0 || surfaceExtent.x == 0 || surfaceExtent.y == 0)
 					continue;
 
 				// Frame update loop:
@@ -154,35 +158,35 @@ namespace emberApplication
 
 				// Skip delayed physics updates:
 				// Runs at most one fixed update per render frame. This avoids stacking physics work when a frame is late, but drops simulation steps under load.
-				if (emberEngine::Time::UpdatePhysics(true))
+				if (Time::UpdatePhysics(true))
 				{
-					emberEngine::Compute::Physics::BeginRecording();
+					Compute::Physics::BeginRecording();
 					m_pActiveScene->FixedUpdate();
-					emberEngine::Compute::Physics::EndRecording();
+					Compute::Physics::EndRecording();
 				}
 				// Batch delayed physics updates:
 				// Runs every pending fixed update. This preserves fixed-step catch-up, but can create large frames.
-				//if (emberEngine::Time::ShouldUpdatePhysics())
+				//if (Time::ShouldUpdatePhysics())
 				//{
-				//	emberEngine::Compute::Physics::BeginRecording();
-				//	while (emberEngine::Time::UpdatePhysics())
+				//	Compute::Physics::BeginRecording();
+				//	while (Time::UpdatePhysics())
 				//		m_pActiveScene->FixedUpdate();
-				//	emberEngine::Compute::Physics::EndRecording();
+				//	Compute::Physics::EndRecording();
 				//}
 
 				// Game update loop:
-				emberEngine::Gui::Update();
+				Gui::Update();
 				m_pActiveScene->Update();
 				m_pActiveScene->LateUpdate();
-				emberEngine::Editor::PreRender();
-				emberEngine::Renderer::RenderFrame();
+				Editor::PreRender();
+				Renderer::RenderFrame();
 			}
 		}
 		catch (const std::exception& e)
 		{
 			LOG_ERROR("Exception: {}", e.what());
 		}
-		emberEngine::Renderer::WaitDeviceIdle();
+		Renderer::WaitDeviceIdle();
 	}
 
 

@@ -5,14 +5,14 @@
 
 namespace emberEngine
 {
-	class DrawMeshData : public Component
+	class DrawMeshData : public emberEcs::Component
 	{
 	private: // Members:
-		Mesh* m_pSphereMesh;
-		Mesh* m_pArrowMesh;
-		Material m_material;
-		Mesh* m_pMesh;
-		ShaderProperties m_shaderProperties[3];
+		emberCore::Mesh* m_pSphereMesh;
+		emberCore::Mesh* m_pArrowMesh;
+		emberCore::Material m_material;
+		emberCore::Mesh* m_pMesh;
+		emberCore::ShaderProperties m_shaderProperties[3];
 
 	public: // Methods:
 		DrawMeshData();

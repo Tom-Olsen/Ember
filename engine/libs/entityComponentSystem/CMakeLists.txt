@@ -36,6 +36,7 @@ add_library(${TARGET_NAME} STATIC
 
 # Source subdirectories:
 target_include_directories(${TARGET_NAME} PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/basicComponents
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ecsClasses)
 

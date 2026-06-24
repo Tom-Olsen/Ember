@@ -1,5 +1,13 @@
 #include "cameraController.h"
 #include "camera.h"
+#include "commonInput.h"
+#include "emberTime.h"
+#include "entity.inl"
+#include "component.inl"
+#include "eventSystem.h"
+#include "transform.h"
+using namespace emberCore;
+using namespace emberCommon;
 
 
 

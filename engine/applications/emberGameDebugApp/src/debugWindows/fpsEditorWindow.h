@@ -8,10 +8,10 @@
 
 namespace emberEditor
 {
-	struct FpsEditorWindow : public emberEngine::EditorWindow
+	struct FpsEditorWindow : public emberCore::EditorWindow
 	{
 		// Easy access to emberEngine Gui:
-		using Gui = emberEngine::Gui;
+		using Gui = emberCore::Gui;
 
 
 
@@ -36,7 +36,7 @@ namespace emberEditor
 		void Render() override
 		{
 			m_deltaTimeSum -= m_frameTimes[m_index];
-			m_frameTimes[m_index] = emberEngine::Time::GetDeltaTime();
+			m_frameTimes[m_index] = emberCore::Time::GetDeltaTime();
 			m_deltaTimeSum += m_frameTimes[m_index];
 			m_index = (m_index + 1) % 60;
 			if (m_rampUpIndex < 60)

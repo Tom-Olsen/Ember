@@ -9,7 +9,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	emberBackendInterface::IDescriptorSetBinding* ShaderProperties::GetCallInterfaceHandle()
 	{

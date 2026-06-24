@@ -1,5 +1,10 @@
 #pragma once
-#include "emberEngine.h"
+#include "buffer.h"
+#include "component.h"
+#include "mesh.h"
+#include "material.h"
+#include "shaderProperties.h"
+#include <cstdint>
 
 
 
@@ -11,10 +16,10 @@ namespace emberEcs
 		uint32_t m_instanceCount;
 		bool m_castShadows;
 		bool m_receiveShadows;
-		Mesh* m_pMesh;
-		Material m_material;
-		Buffer* m_pInstanceBuffer;
-		ShaderProperties m_shaderProperties;
+		emberCore::Mesh* m_pMesh;
+		emberCore::Material m_material;
+		emberCore::Buffer* m_pInstanceBuffer;
+		emberCore::ShaderProperties m_shaderProperties;
 
 	public: // Methods:
 		InstancedMeshRenderer();
@@ -24,18 +29,18 @@ namespace emberEcs
 		void SetInstanceCount(uint32_t instanceCount);
 		void SetCastShadows(bool castShadows);
 		void SetReceiveShadows(bool receiveShadows);
-		void SetMesh(Mesh& mesh);
-		void SetMaterial(const Material& material);
-		void SetInstanceBuffer(Buffer& instanceBuffer);
+		void SetMesh(emberCore::Mesh& mesh);
+		void SetMaterial(const emberCore::Material& material);
+		void SetInstanceBuffer(emberCore::Buffer& instanceBuffer);
 
 		// Forward render pass getters:
 		uint32_t GetInstanceCount() const;
 		bool GetCastShadows() const;
 		bool GetReceiveShadows() const;
-		Mesh& GetMesh();
-		Material& GetMaterial();
-		Buffer& GetInstanceBuffer();
-		ShaderProperties& GetShaderProperties();
+		emberCore::Mesh& GetMesh();
+		emberCore::Material& GetMaterial();
+		emberCore::Buffer& GetInstanceBuffer();
+		emberCore::ShaderProperties& GetShaderProperties();
 
 		// Overrides:
 		void Update() override;

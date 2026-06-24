@@ -6,7 +6,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	namespace MeshGenerator
 	{

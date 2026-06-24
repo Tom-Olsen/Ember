@@ -5,7 +5,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
 	{

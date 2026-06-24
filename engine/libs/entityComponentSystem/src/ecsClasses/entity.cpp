@@ -1,5 +1,7 @@
 #include "entity.h"
+#include "entity.inl"
 #include "entityState.h"
+#include "transform.h"
 #include "scene.h"
 #include "logger.h"
 

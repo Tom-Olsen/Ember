@@ -4,7 +4,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	float Time::s_time = 0.0f;
@@ -37,13 +37,13 @@ namespace emberEngine
 	{
 		switch (unit)
 		{
-		case emberEngine::TimeUnit::s:
+		case TimeUnit::s:
 			std::this_thread::sleep_for(std::chrono::seconds(time));
 			break;
-		case emberEngine::TimeUnit::ms:
+		case TimeUnit::ms:
 			std::this_thread::sleep_for(std::chrono::milliseconds(time));
 			break;
-		case emberEngine::TimeUnit::us:
+		case TimeUnit::us:
 			std::this_thread::sleep_for(std::chrono::microseconds(time));
 			break;
 		default:
@@ -58,11 +58,11 @@ namespace emberEngine
 	{
 		switch (unit)
 		{
-		case emberEngine::TimeUnit::s:
+		case TimeUnit::s:
 			return s_time;
-		case emberEngine::TimeUnit::ms:
+		case TimeUnit::ms:
 			return s_time * 1'000;
-		case emberEngine::TimeUnit::us:
+		case TimeUnit::us:
 			return s_time * 1'000'000;
 		default:
 			return 0;
@@ -72,11 +72,11 @@ namespace emberEngine
 	{
 		switch (unit)
 		{
-		case emberEngine::TimeUnit::s:
+		case TimeUnit::s:
 			return s_deltaTime;
-		case emberEngine::TimeUnit::ms:
+		case TimeUnit::ms:
 			return s_deltaTime * 1'000;
-		case emberEngine::TimeUnit::us:
+		case TimeUnit::us:
 			return s_deltaTime * 1'000'000;
 		default:
 			return 0;
@@ -86,11 +86,11 @@ namespace emberEngine
 	{
 		switch (unit)
 		{
-		case emberEngine::TimeUnit::s:
+		case TimeUnit::s:
 			return s_fixedDeltaTime;
-		case emberEngine::TimeUnit::ms:
+		case TimeUnit::ms:
 			return s_fixedDeltaTime * 1'000;
-		case emberEngine::TimeUnit::us:
+		case TimeUnit::us:
 			return s_fixedDeltaTime * 1'000'000;
 		default:
 			return 0;

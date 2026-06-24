@@ -25,7 +25,7 @@ namespace emberBackendInterface
 //if (m_uvs.size() != GetVertexCount())
 //	m_uvs.resize(GetVertexCount(), Float4::zero);
 
-namespace emberEngine
+namespace emberCore
 {
 	class EMBER_CORE_API Mesh
 	{

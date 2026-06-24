@@ -10,10 +10,10 @@
 
 namespace emberEditor
 {
-    struct GameEditorWindow : public emberEngine::EditorWindow
+    struct GameEditorWindow : public emberCore::EditorWindow
     {
         // Easy access to emberEngine Gui:
-        using Gui = emberEngine::Gui;
+        using Gui = emberCore::Gui;
 
 
 
@@ -29,9 +29,9 @@ namespace emberEditor
         void Render() override
         {
             // Prepare render texture:
-            emberEngine::Texture2d renderTexture = emberEngine::Renderer::GetRenderTexture();
+            emberCore::Texture2d renderTexture = emberCore::Renderer::GetRenderTexture();
             uintptr_t renderTextureID = Gui::GetTextureID(renderTexture);
-            emberEngine::Texture2d gizmoTexture = emberEngine::Renderer::GetGizmoTexture();
+            emberCore::Texture2d gizmoTexture = emberCore::Renderer::GetGizmoTexture();
             uintptr_t gizmoTextureID = Gui::GetTextureID(gizmoTexture);
 
             // Get imgui window:

@@ -7,7 +7,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Forward declerations:
 	class EditorWindow;

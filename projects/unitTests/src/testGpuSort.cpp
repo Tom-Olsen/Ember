@@ -7,7 +7,8 @@
 
 
 
-using namespace emberEngine;
+using namespace emberCore;
+using namespace emberEcs;
 
 
 

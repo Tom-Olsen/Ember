@@ -6,7 +6,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	bool ComputeShaderManager::s_isInitialized = false;

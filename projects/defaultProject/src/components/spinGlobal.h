@@ -5,7 +5,7 @@
 
 namespace emberEngine
 {
-	class SpinGlobal : public Component
+	class SpinGlobal : public emberEcs::Component
 	{
 	private: // Members:
 		Float3 m_position;

@@ -7,10 +7,10 @@
 
 namespace emberEditor
 {
-	struct ProjectEditorWindow : public emberEngine::EditorWindow
+	struct ProjectEditorWindow : public emberCore::EditorWindow
 	{
 		// Easy access to emberEngine Gui:
-		using Gui = emberEngine::Gui;
+		using Gui = emberCore::Gui;
 
 
 

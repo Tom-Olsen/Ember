@@ -7,7 +7,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	Float4 Gizmo::s_color = Float4::white;

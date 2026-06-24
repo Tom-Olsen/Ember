@@ -7,7 +7,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	Material DebugRenderer::s_material;

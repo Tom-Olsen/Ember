@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	bool Window::s_isInitialized = false;

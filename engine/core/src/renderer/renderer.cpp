@@ -13,7 +13,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	bool Renderer::s_isInitialized = false;

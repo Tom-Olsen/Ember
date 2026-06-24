@@ -1,5 +1,9 @@
 #pragma once
-#include "emberEngine.h"
+#include "component.h"
+#include "emberMath.h"
+#include "material.h"
+#include "mesh.h"
+#include "shaderProperties.h"
 
 
 
@@ -12,9 +16,9 @@ namespace emberEcs
 		bool m_receiveShadows;
         bool m_drawLocalBounds;
         bool m_drawWorldBounds;
-		Mesh* m_pMesh;
-		Material m_material;
-		ShaderProperties m_shaderProperties;
+		emberCore::Mesh* m_pMesh;
+		emberCore::Material m_material;
+		emberCore::ShaderProperties m_shaderProperties;
 
 	public: // Methods:
 		MeshRenderer();
@@ -23,8 +27,8 @@ namespace emberEcs
 		// Setter:
 		void SetCastShadows(bool castShadows);
 		void SetReceiveShadows(bool receiveShadows);
-		void SetMesh(Mesh& mesh);
-		void SetMaterial(const Material& material);
+		void SetMesh(emberCore::Mesh& mesh);
+		void SetMaterial(const emberCore::Material& material);
 
 		// Getters:
 		Bounds GetLocalBounds() const;
@@ -32,9 +36,9 @@ namespace emberEcs
 		bool HasMesh() const;
 		bool GetCastShadows() const;
 		bool GetReceiveShadows() const;
-		Mesh& GetMesh();
-		Material& GetMaterial();
-		ShaderProperties& GetShaderProperties();
+		emberCore::Mesh& GetMesh();
+		emberCore::Material& GetMaterial();
+		emberCore::ShaderProperties& GetShaderProperties();
 
 		// Overrides:
 		void Update() override;

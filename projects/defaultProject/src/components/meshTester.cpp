@@ -1,5 +1,8 @@
 #include "meshTester.h"
 #include "meshRenderer.h"
+using namespace emberCore;
+using namespace emberEcs;
+using namespace emberCommon;
 
 
 

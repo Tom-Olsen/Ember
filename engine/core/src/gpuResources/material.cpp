@@ -5,7 +5,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Private methods:
 	emberBackendInterface::IMaterial* const Material::GetInterfaceHandle() const

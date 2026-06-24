@@ -1,6 +1,10 @@
 #include "meshRenderer.h"
+#include "gizmo.h"
+#include "materialManager.h"
+#include "renderer.h"
+#include "transform.h"
 #include <array>
-#include <cstddef>
+using namespace emberCore;
 
 
 

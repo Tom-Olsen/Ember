@@ -18,7 +18,7 @@ namespace emberBackendInterface
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	class EMBER_CORE_API Window
 	{

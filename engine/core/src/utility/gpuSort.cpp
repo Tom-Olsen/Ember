@@ -1,8 +1,10 @@
 #include "gpuSort.h"
+#include "shaderProperties.h"
+#include <assert.h>
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	template <typename T>

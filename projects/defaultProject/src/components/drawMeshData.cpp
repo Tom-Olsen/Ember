@@ -1,5 +1,7 @@
 #include "drawMeshData.h"
 #include "meshRenderer.h"
+using namespace emberCore;
+using namespace emberEcs;
 
 
 

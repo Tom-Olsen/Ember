@@ -4,7 +4,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Private methods:
 	emberBackendInterface::IBuffer* Buffer::GetInterfaceHandle()

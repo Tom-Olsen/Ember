@@ -8,7 +8,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	//class EMBER_CORE_API Texture1d : public Texture
 	//{

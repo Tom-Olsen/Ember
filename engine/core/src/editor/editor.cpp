@@ -4,7 +4,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	EditorWindow* Editor::s_pFocusedWindow = nullptr;

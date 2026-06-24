@@ -9,7 +9,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Forward decleration:
 	class ComputeShader;

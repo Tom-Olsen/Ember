@@ -8,7 +8,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	bool TextureManager::s_isInitialized = false;

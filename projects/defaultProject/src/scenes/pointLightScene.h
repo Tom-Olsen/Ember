@@ -6,6 +6,8 @@
 #include "spinGlobal.h"
 #include "spinLocal.h"
 #include "testInstancedRendering.h"
+using namespace emberCore;
+using namespace emberEcs;
 using namespace emberEngine;
 
 

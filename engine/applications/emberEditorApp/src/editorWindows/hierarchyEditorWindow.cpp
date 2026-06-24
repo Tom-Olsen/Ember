@@ -10,7 +10,7 @@
 namespace emberEditor
 {
 	// Easy access to emberEngine Gui:
-	using Gui = emberEngine::Gui;
+	using Gui = emberCore::Gui;
 
 
 

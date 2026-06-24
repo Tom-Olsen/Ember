@@ -28,7 +28,7 @@ namespace emberBackendInterface
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Forward declerations:
 	class Buffer;

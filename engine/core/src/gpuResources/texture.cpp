@@ -8,7 +8,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Static members:
 	uint32_t Texture::s_unnamedTextureCounter = 0;

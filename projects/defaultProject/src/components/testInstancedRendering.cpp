@@ -1,4 +1,6 @@
 #include "testInstancedRendering.h"
+using namespace emberCore;
+using namespace emberEcs;
 
 
 

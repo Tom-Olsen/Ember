@@ -8,10 +8,10 @@
 
 namespace emberEditor
 {
-	struct SphFluid3dGpuEditorWindow : public emberEngine::EditorWindow
+	struct SphFluid3dGpuEditorWindow : public emberCore::EditorWindow
 	{
 		// Easy access to emberEngine Gui:
-		using Gui = emberEngine::Gui;
+		using Gui = emberCore::Gui;
 
 
 

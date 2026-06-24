@@ -1,6 +1,18 @@
 ﻿#include "directionalLight.h"
 #include "camera.h"
+#include "entity.h"
+#include "material.h"
+#include "scene.h"
+#include "shaderProperties.h"
+#include "gizmo.h"
+#include "logger.h"
+#include "materialManager.h"
+#include "meshManager.h"
+#include "renderer.h"
 #include "shadowCascade.h"
+#include "transform.h"
+using namespace emberCommon;
+using namespace emberCore;
 
 
 
@@ -154,17 +166,14 @@ namespace emberEcs
 		// Visualization for debugging:
 		if (m_drawFrustum)
 		{
-			Material pUnlitMaterial = MaterialManager::GetMaterial("simpleUnlitMaterial");
-			Material pVertexUnlit = MaterialManager::GetMaterial("vertexColorUnlitMaterial");
-			Mesh& pSphere = MeshManager::GetMesh("cubeSphere");
+			Material vertexUnlit = MaterialManager::GetMaterial("vertexColorUnlitMaterial");
 			Mesh& fourLeg = MeshManager::GetMesh("fourLeg");
-			ShaderProperties* pShaderProperties = nullptr;
 
 			Float4 colors[4] = { Float4::red, Float4::green, Float4::blue, Float4::yellow };
 			for (int i = 0; i < (int)m_shadowCascadeCount; i++)
 			{
 				Float4x4 localToWorldMatrix = m_shadowCascades[i]->GetViewMatrix().Inverse();
-				Renderer::DrawMesh(fourLeg, pVertexUnlit, localToWorldMatrix, false, false);
+				Renderer::DrawMesh(fourLeg, vertexUnlit, localToWorldMatrix, false, false);
 				Gizmo::SetColor(colors[i]);
 				Gizmo::DrawFrustum(localToWorldMatrix, m_shadowCascades[i]->GetProjectionMatrix());
 			}

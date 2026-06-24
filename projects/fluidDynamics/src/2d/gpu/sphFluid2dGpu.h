@@ -1,7 +1,8 @@
 #pragma once
 #include "emberEngine.h"
 #include "sphFluid2dGpuSolver.h"
-using namespace emberEngine;
+using namespace emberCore;
+using namespace emberEcs;
 
 
 

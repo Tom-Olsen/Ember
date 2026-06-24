@@ -12,7 +12,7 @@
 
 
 
-//namespace emberEngine
+//namespace emberCore
 //{
 //    /// <summary>
 //    /// Header only class template for easy use without explicit template instantiation.

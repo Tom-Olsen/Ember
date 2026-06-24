@@ -5,18 +5,18 @@
 
 namespace emberEngine
 {
-	class TestInstancedRendering : public Component
+	class TestInstancedRendering : public emberEcs::Component
 	{
 	private: // Members:
-		ComputeShader* m_pStartCS;
-		ComputeShader* m_pUpdateCS;
-		std::unique_ptr<Buffer> m_pInstanceBuffer;
+		emberCore::ComputeShader* m_pStartCS;
+		emberCore::ComputeShader* m_pUpdateCS;
+		std::unique_ptr<emberCore::Buffer> m_pInstanceBuffer;
 
 	public: // Methods:
 		TestInstancedRendering(uint32_t instanceCount);
 		~TestInstancedRendering();
 
-		Buffer* GetInstanceBuffer() const;
+		emberCore::Buffer* GetInstanceBuffer() const;
 
 		// Overrides:
 		void Start() override;

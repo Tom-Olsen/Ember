@@ -2,7 +2,8 @@
 #include "emberEngine.h"
 #include "hashGrid2d.h"
 #include "sphFluid2dCpuSolver.h"
-using namespace emberEngine;
+using namespace emberCore;
+using namespace emberEcs;
 
 
 

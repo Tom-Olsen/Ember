@@ -9,7 +9,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	using ComputeBarrierFlag = emberBackendInterface::ComputeBarrierFlag;
 

@@ -8,11 +8,11 @@
 
 namespace emberEditor
 {
-	struct BackendDebugEditorWindow : public emberEngine::EditorWindow
+	struct BackendDebugEditorWindow : public emberCore::EditorWindow
 	{
 		// Easy access to emberEngine Gui:
-		using Gui = emberEngine::Gui;
-		using Renderer = emberEngine::Renderer;
+		using Gui = emberCore::Gui;
+		using Renderer = emberCore::Renderer;
 
 
 

@@ -1,4 +1,9 @@
 ﻿#include "camera.h"
+#include "eventSystem.h"
+#include "gizmo.h"
+#include "renderer.h"
+#include "transform.h"
+using namespace emberCore;
 
 
 

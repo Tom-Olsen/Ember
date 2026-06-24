@@ -2,9 +2,8 @@
 
 
 
-// This is the main header file for the emberEngine.
-// It includes all headers that are necessary to use the engine.
-// It must be included in every Component scripts header file.
+// Main header for EmberCore.
+// Exposes all rendering, GPU resource, manager, and event functionality.
 
 
 
@@ -45,15 +44,6 @@
 #include "meshManager.h"
 #include "textureManager.h"
 
-// Entity Component System: (include order important)
-#ifndef EMBER_CORE_EXPORTS
-    #include "scene.h"
-    #include "entity.h"
-    #include "component.h"
-    #include "entity.inl"
-    #include "component.inl"
-#endif
-
 // Other:
 #include "gpuSort.h"
 
@@ -62,7 +52,7 @@
 #include "commonLighting.h"
 
 // Common Aliases:
-namespace emberEngine
+namespace emberCore
 {
     // Input aliasing:
     using Input = emberCommon::Input;
@@ -73,17 +63,3 @@ namespace emberEngine
     using BufferUsage = emberCommon::BufferUsage;
     using ShadowType = emberCommon::ShadowType;
 }
-
-// Basic components:
-#ifndef EMBER_CORE_EXPORTS // don't exist in the core!
-    #include "camera.h"
-    #include "cameraController.h"
-    #include "directionalLight.h"
-    #include "entityState.h"
-    #include "instancedMeshRenderer.h"
-    #include "meshRenderer.h"
-    #include "pointLight.h"
-    #include "postRenderEffects.h"
-    #include "spotLight.h"
-    #include "transform.h"
-#endif

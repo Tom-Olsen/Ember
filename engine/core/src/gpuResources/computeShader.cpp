@@ -6,7 +6,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Private methods:
 	emberBackendInterface::IComputeShader* ComputeShader::GetInterfaceHandle()

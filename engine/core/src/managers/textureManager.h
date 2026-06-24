@@ -6,7 +6,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
     // Forward declarations:
     class Texture;

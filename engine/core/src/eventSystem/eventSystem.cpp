@@ -5,7 +5,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
     // Static members:
     bool EventSystem::s_isInitialized = false;

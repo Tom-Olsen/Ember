@@ -3,7 +3,7 @@
 
 
 
-namespace emberEngine
+namespace emberCore
 {
 	// Forward declarations:
 	class Material;
