@@ -123,11 +123,9 @@ namespace emberEcs
 			UpdateProjectionMatrix();
 		return m_projectionMatrix;
 	}
-	Ray Camera::GetClickRay()
+	Ray Camera::GetViewportRay(const Float2& viewportPosition01)
 	{
-		// Mouse position:
-		Float2 mousePos01 = EventSystem::MousePos01();		// € [ 0, 1]
-		Float2 screenPos = 2.0f * mousePos01 - Float2::one;	// € [-1, 1]
+		Float2 screenPos = 2.0f * viewportPosition01 - Float2::one;	// € [-1, 1]
 
 		// Get camera inverse matrices:
 		Float4x4 projectionInv = GetProjectionMatrix().Inverse();
@@ -148,6 +146,10 @@ namespace emberEcs
 		Float3 farWorld = Float3(viewInv * farCamera);
 
 		return Ray(nearWorld, (farWorld - nearWorld).Normalize());
+	}
+	Ray Camera::GetClickRay()
+	{
+		return GetViewportRay(EventSystem::MousePos01());
 	}
 
 

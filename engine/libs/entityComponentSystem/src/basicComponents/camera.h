@@ -52,6 +52,7 @@ namespace emberEcs
 		ProjectionType GetProjectionType() const;
 		Float4x4 GetViewMatrix() const;
 		Float4x4 GetProjectionMatrix();
+		Ray GetViewportRay(const Float2& viewportPosition01);
 		Ray GetClickRay();
 
 		// Overrides:

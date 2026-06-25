@@ -4,6 +4,7 @@
 #include "editorSelection.h"
 #include "editorWindow.h"
 #include "emberTime.h"
+#include "eventSystem.h"
 #include "gizmo.h"
 #include "gui.h"
 #include "renderer.h"
@@ -18,6 +19,16 @@ namespace emberEditor
 	{
         // Easy access to emberEngine Gui:
         using Gui = emberCore::Gui;
+
+
+        
+        // Viewport rect:
+        Float2 m_imageTopLeft = Float2::zero;       // top-left of the displayed image in screen-space.
+        Float2 m_imageSize = Float2::zero;          // pixel size of the displayed image.
+        Float2 m_viewportMousePos = Float2::zero;   // mouse pos relative to image top-left (pixels).
+        Float2 m_viewportMousePos01 = Float2::zero; // mouse pos normalized to [0, 1].
+        bool m_isMouseInsideViewport = false;
+
 
 
         // Constructor:
@@ -62,29 +73,38 @@ namespace emberEditor
             const float textureAspect = (float)renderTexture.GetWidth() / (float)renderTexture.GetHeight();
             const float windowAspect = windowSize.x / windowSize.y;
 
-            Float2 imageSize;
             if (windowAspect > textureAspect)
             {
                 // Window is wider than texture aspect ratio -> letterboxing:
-                imageSize.y = windowSize.y;
-                imageSize.x = imageSize.y * textureAspect;
+                m_imageSize.y = windowSize.y;
+                m_imageSize.x = m_imageSize.y * textureAspect;
             }
             else
             {
                 // Window is taller than texture aspect ratio -> pillarboxing:
-                imageSize.x = windowSize.x;
-                imageSize.y = imageSize.x / textureAspect;
+                m_imageSize.x = windowSize.x;
+                m_imageSize.y = m_imageSize.x / textureAspect;
             }
 
             // Center the image in the window:
             Float2 cursorPos = Gui::GetCursorPos();
-            Float2 offset = 0.5f * (windowSize - imageSize);
+            Float2 offset = 0.5f * (windowSize - m_imageSize);
             Gui::SetCursorPos(cursorPos + offset);
 
+            // Compute viewport-local mouse coordinates from the raw window mouse position:
+            m_viewportMousePos = emberCore::EventSystem::MousePos() - Gui::GetCursorScreenPos();
+            if (m_imageSize.x > 0.0f && m_imageSize.y > 0.0f)
+                m_viewportMousePos01 = m_viewportMousePos / m_imageSize;
+            else
+                m_viewportMousePos01 = Float2::zero;
+            m_isMouseInsideViewport =
+                m_viewportMousePos01.x >= 0.0f && m_viewportMousePos01.x <= 1.0f &&
+                m_viewportMousePos01.y >= 0.0f && m_viewportMousePos01.y <= 1.0f;
+
             // Composit render and gizmo textures:
-            Gui::Image(renderTextureID, imageSize); // draw render texture.
-            Gui::SetCursorPos(cursorPos + offset);   // recenter cursor.
-            Gui::Image(gizmoTextureID, imageSize);  // draw gizmo texture on top (alpha blended).
+            Gui::Image(renderTextureID, m_imageSize); // draw render texture.
+            Gui::SetCursorPos(cursorPos + offset);     // recenter cursor.
+            Gui::Image(gizmoTextureID, m_imageSize);  // draw gizmo texture on top (alpha blended).
         }
 	};
 }
