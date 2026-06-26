@@ -11,6 +11,7 @@ namespace emberCore
     bool EventSystem::s_isInitialized = false;
     std::unordered_map<emberCommon::Input::Key, EventSystem::KeyState> EventSystem::s_keyStates;
     std::unordered_map<emberCommon::Input::MouseButton, EventSystem::MouseState> EventSystem::s_mouseButtonStates;
+    std::unordered_set<emberCommon::Input::MouseButton> EventSystem::s_guiCapturedMouseButtons;
     float EventSystem::s_mouseX;
     float EventSystem::s_mouseY;
     float EventSystem::s_mouseScrollX;
@@ -29,6 +30,7 @@ namespace emberCore
 
         s_keyStates = std::unordered_map<emberCommon::Input::Key, KeyState>();
         s_mouseButtonStates = std::unordered_map<emberCommon::Input::MouseButton, MouseState>();
+        s_guiCapturedMouseButtons = std::unordered_set<emberCommon::Input::MouseButton>();
         s_mouseX = 0;
         s_mouseY = 0;
         s_mouseScrollX = 0;
@@ -54,6 +56,9 @@ namespace emberCore
         std::vector<emberCommon::Event> events = Window::PollEvents();
         for (const emberCommon::Event& event : events)
         {
+            if (!ShouldProcessEvent(event))
+                continue;
+
             switch (event.type)
             {
                 // System / Window:
@@ -265,6 +270,7 @@ namespace emberCore
     {
         s_keyStates.clear();
         s_mouseButtonStates.clear();
+        s_guiCapturedMouseButtons.clear();
         s_mouseScrollX = 0;
         s_mouseScrollY = 0;
     }
@@ -291,9 +297,44 @@ namespace emberCore
         // Reset mouse scroll:
         s_mouseScrollX = 0;
         s_mouseScrollY = 0;
-
-        // Reset event flags:
-        //s_windowResized = false;
-        //s_quit = false;
+    }
+    bool EventSystem::ShouldProcessEvent(const emberCommon::Event& event)
+    {
+        switch (event.type)
+        {
+            case emberCommon::EventType::MouseMoved:
+                return !AnyMouseButtonCapturedByGui() && !event.guiWantsMouse;
+            case emberCommon::EventType::MouseButtonDown:
+                if (event.guiWantsMouse)
+                {
+                    if (event.mouseButton != emberCommon::Input::MouseButton::None)
+                        s_guiCapturedMouseButtons.insert(event.mouseButton);
+                    return false;
+                }
+                return true;
+            case emberCommon::EventType::MouseButtonUp:
+                if (IsMouseButtonCapturedByGui(event.mouseButton))
+                {
+                    s_guiCapturedMouseButtons.erase(event.mouseButton);
+                    return false;
+                }
+                return true;
+            case emberCommon::EventType::MouseWheel:
+                return !event.guiWantsMouse;
+            case emberCommon::EventType::KeyDown:
+            case emberCommon::EventType::KeyUp:
+            case emberCommon::EventType::TextInput:
+                return !event.guiWantsKeyboard;
+            default:
+                return true;
+        }
+    }
+    bool EventSystem::IsMouseButtonCapturedByGui(emberCommon::Input::MouseButton button)
+    {
+        return s_guiCapturedMouseButtons.find(button) != s_guiCapturedMouseButtons.end();
+    }
+    bool EventSystem::AnyMouseButtonCapturedByGui()
+    {
+        return !s_guiCapturedMouseButtons.empty();
     }
 }

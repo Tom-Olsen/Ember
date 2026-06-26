@@ -3,6 +3,14 @@
 #include "emberMath.h"
 #include "commonInput.h"
 #include <unordered_map>
+#include <unordered_set>
+
+
+
+namespace emberCommon
+{
+    struct Event;
+}
 
 
 
@@ -18,6 +26,7 @@ namespace emberCore
         static bool s_isInitialized;
         static std::unordered_map<emberCommon::Input::Key, KeyState> s_keyStates;
         static std::unordered_map<emberCommon::Input::MouseButton, MouseState> s_mouseButtonStates;
+        static std::unordered_set<emberCommon::Input::MouseButton> s_guiCapturedMouseButtons;
         static float s_mouseX;
         static float s_mouseY;
         static float s_mouseScrollX;
@@ -58,6 +67,9 @@ namespace emberCore
     private: // Methods
         static void ClearInputState();
         static void ClearEvents();
+        static bool ShouldProcessEvent(const emberCommon::Event& event);
+        static bool IsMouseButtonCapturedByGui(emberCommon::Input::MouseButton button);
+        static bool AnyMouseButtonCapturedByGui();
 
         // Delete all constructors:
         EventSystem() = delete;

@@ -72,28 +72,35 @@ namespace emberCommon
     struct Event
     {
         // Event type:
-        EventType type{ EventType::None };
+        EventType type = EventType::None;
 
         // Key:
-        Input::Key key{ Input::Key::Unknown };
+        Input::Key key = Input::Key::Unknown;
 
         // Mouse:
-		Input::MouseButton mouseButton{ Input::MouseButton::None };
-        int mousePosX{ 0 }, mousePosY{ 0 };
-		float mouseWheelX{ 0.0f }, mouseWheelY{ 0.0f };
+		Input::MouseButton mouseButton = Input::MouseButton::None;
+        int mousePosX = 0;
+        int mousePosY = 0;
+		float mouseWheelX = 0.0f;
+        float mouseWheelY = 0.0f;
 
         // Controller:
-		uint32_t controllerId{ 0 };
-		Input::ControllerButton controllerButton{ Input::ControllerButton::None };
-        uint8_t axis{ 0 };
-		int16_t axisValue{ 0 };
+		uint32_t controllerId = 0;
+		Input::ControllerButton controllerButton = Input::ControllerButton::None;
+        uint8_t axis = 0;
+		int16_t axisValue = 0;
 
         // Text input:
         std::string text;
 
         // Window resize:
-		uint32_t windowID{ 0 };
-		uint32_t resizeWidth{ 0 }, resizeHeight{ 0 };
+		uint32_t windowID = 0;
+		uint32_t resizeWidth = 0;
+        uint32_t resizeHeight = 0;
+
+        // Event routing:
+        bool guiWantsKeyboard = false;
+        bool guiWantsMouse = false;
 
         inline std::string ToString() const
         {
@@ -110,6 +117,8 @@ namespace emberCommon
             ss << ", text: " << text;
             ss << ", windowID: " << windowID;
             ss << ", resize: (" << resizeWidth << ", " << resizeHeight << ")";
+            ss << ", guiWantsKeyboard: " << guiWantsKeyboard;
+            ss << ", guiWantsMouse: " << guiWantsMouse;
             return ss.str();
         }
     };
