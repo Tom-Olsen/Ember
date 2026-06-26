@@ -10,6 +10,7 @@ namespace emberEcs
 	{
 	private: // Members:
 		bool m_isActive;
+		bool m_isNavigating;
 		float m_moveSpeed;
 		float m_fastMoveMultiplier;
 		float m_rotationSpeed;
@@ -32,5 +33,7 @@ namespace emberEcs
 		void Rotation();
 		void Zoom();
 		void TogglePerspectiveType();
+		void UpdateNavigationLock();
+		void CancelNavigation();
 	};
 }
