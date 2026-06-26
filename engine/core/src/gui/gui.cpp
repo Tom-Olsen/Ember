@@ -133,6 +133,10 @@ namespace emberCore
 	{
 		s_pIGui->PopID();
 	}
+	void Gui::FocusCurrentWindow()
+	{
+		s_pIGui->FocusCurrentWindow();
+	}
 	bool Gui::IsWindowFocused(emberCommon::GuiFocusedFlags flags)
 	{
 		return s_pIGui->IsWindowFocused(flags);
@@ -168,6 +172,10 @@ namespace emberCore
 	bool Gui::IsItemActivated()
 	{
 		return s_pIGui->IsItemActivated();
+	}
+	bool Gui::IsMouseClicked(emberCommon::GuiMouseButton button)
+	{
+		return s_pIGui->IsMouseClicked(button);
 	}
 	bool Gui::IsMouseDragging(emberCommon::GuiMouseButton button, float lockThreshold)
 	{

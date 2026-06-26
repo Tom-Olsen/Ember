@@ -110,6 +110,10 @@ namespace nullGuiBackend
 	{
 
 	}
+	void Gui::FocusCurrentWindow()
+	{
+
+	}
 	bool Gui::IsWindowFocused(emberCommon::GuiFocusedFlags flags)
 	{
 		return false;
@@ -143,6 +147,10 @@ namespace nullGuiBackend
 		return false;
 	}
 	bool Gui::IsItemActivated()
+	{
+		return false;
+	}
+	bool Gui::IsMouseClicked(emberCommon::GuiMouseButton button)
 	{
 		return false;
 	}

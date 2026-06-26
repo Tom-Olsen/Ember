@@ -87,6 +87,7 @@ namespace imGuiSdlVulkanBackend
 		void End() override;
 		void PushID(const char* strID) override;
 		void PopID() override;
+		void FocusCurrentWindow() override;
 		bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none) override;
 		bool IsWindowHovered(emberCommon::GuiHoveredFlags flags = emberCommon::GuiHoveredFlags::none) override;
 
@@ -98,6 +99,7 @@ namespace imGuiSdlVulkanBackend
 		// State checks:
 		bool IsItemActive() override;
 		bool IsItemActivated() override;
+		bool IsMouseClicked(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left) override;
 		bool IsMouseDragging(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f) override;
 
 		// Widgets:

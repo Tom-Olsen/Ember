@@ -48,15 +48,21 @@ namespace emberCore
 			Render();
 		}
 
-		// Let Editor know if this window is focused:
-		m_isFocused = Gui::IsWindowFocused(emberCommon::GuiFocusedFlags::rootAndChildWindows);
-		if (m_isFocused)
-			Editor::SetFocusedWindow(this);
-
 		// Let Editor know if this window is hovered:
 		m_isHovered = Gui::IsWindowHovered(emberCommon::GuiHoveredFlags::rootAndChildWindows);
 		if (m_isHovered)
 			Editor::SetHoveredWindow(this);
+
+		// Let Editor know if this window is focused:
+		bool clicked = m_isHovered && (Gui::IsMouseClicked(emberCommon::GuiMouseButton::left) || Gui::IsMouseClicked(emberCommon::GuiMouseButton::right));
+		m_isFocused = Gui::IsWindowFocused(emberCommon::GuiFocusedFlags::rootAndChildWindows);
+		if (clicked)
+		{
+			Gui::FocusCurrentWindow();
+			m_isFocused = true;
+		}
+		if (m_isFocused)
+			Editor::SetFocusedWindow(this);
 
 		Gui::End();	// must be called even if ImGui::Begin() returns false.
 		Gui::PopID();

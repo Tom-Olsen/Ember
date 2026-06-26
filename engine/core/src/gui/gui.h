@@ -69,6 +69,7 @@ namespace emberCore
 		static void End();
 		static void PushID(const char* strID);
 		static void PopID();
+		static void FocusCurrentWindow();
 		static bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none);
 		static bool IsWindowHovered(emberCommon::GuiHoveredFlags flags = emberCommon::GuiHoveredFlags::none);
 
@@ -80,6 +81,7 @@ namespace emberCore
 		// State checks:
 		static bool IsItemActive();
 		static bool IsItemActivated();
+		static bool IsMouseClicked(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left);
 		static bool IsMouseDragging(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f);
 
 		// Widgets:

@@ -276,6 +276,10 @@ namespace imGuiSdlVulkanBackend
 	{
 		ImGui::PopID();
 	}
+	void Gui::FocusCurrentWindow()
+	{
+		ImGui::SetWindowFocus();
+	}
 	bool Gui::IsWindowFocused(emberCommon::GuiFocusedFlags flags)
 	{
 		return ImGui::IsWindowFocused(GuiFocusedFlagsCommonToImGui(flags));
@@ -312,6 +316,10 @@ namespace imGuiSdlVulkanBackend
 	bool Gui::IsItemActivated()
 	{
 		return ImGui::IsItemActivated();
+	}
+	bool Gui::IsMouseClicked(emberCommon::GuiMouseButton button)
+	{
+		return ImGui::IsMouseClicked(GuiMouseButtonCommonToImGui(button));
 	}
 	bool Gui::IsMouseDragging(emberCommon::GuiMouseButton button, float lockThreshold)
 	{

@@ -64,6 +64,7 @@ namespace emberBackendInterface
 		virtual void End() = 0;
 		virtual void PushID(const char* strID) = 0;
 		virtual void PopID() = 0;
+		virtual void FocusCurrentWindow() = 0;
 		virtual bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none) = 0;
 		virtual bool IsWindowHovered(emberCommon::GuiHoveredFlags flags = emberCommon::GuiHoveredFlags::none) = 0;
 
@@ -75,6 +76,7 @@ namespace emberBackendInterface
 		// State checks:
 		virtual bool IsItemActive() = 0;
 		virtual bool IsItemActivated() = 0;
+		virtual bool IsMouseClicked(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left) = 0;
 		virtual bool IsMouseDragging(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f) = 0;
 
 		// Widgets:
