@@ -6,8 +6,10 @@
 #include "emberTime.h"
 #include "eventSystem.h"
 #include "gizmo.h"
+#include "gizmoContext.h"
 #include "gui.h"
 #include "renderer.h"
+#include "scene.h"
 #include "texture2d.h"
 #include "transform.h"
 
@@ -28,6 +30,7 @@ namespace emberEditor
         Float2 m_viewportMousePos = Float2::zero;   // mouse pos relative to image top-left (pixels).
         Float2 m_viewportMousePos01 = Float2::zero; // mouse pos normalized to [0, 1].
         bool m_isMouseInsideViewport = false;
+        GizmoContext m_gizmoContext;
 
 
 
@@ -46,6 +49,9 @@ namespace emberEditor
         // Overrides:
         void PreRender() override
         {
+            UpdateGizmoContext();
+            if (!m_isOpen)
+                return;
             if (!EditorSelection::HasSelectedEntity())
                 return;
 
@@ -90,9 +96,10 @@ namespace emberEditor
             Float2 cursorPos = Gui::GetCursorPos();
             Float2 offset = 0.5f * (windowSize - m_imageSize);
             Gui::SetCursorPos(cursorPos + offset);
+            m_imageTopLeft = Gui::GetCursorScreenPos();
 
             // Compute viewport-local mouse coordinates from the raw window mouse position:
-            m_viewportMousePos = emberCore::EventSystem::MousePos() - Gui::GetCursorScreenPos();
+            m_viewportMousePos = emberCore::EventSystem::MousePos() - m_imageTopLeft;
             if (m_imageSize.x > 0.0f && m_imageSize.y > 0.0f)
                 m_viewportMousePos01 = m_viewportMousePos / m_imageSize;
             else
@@ -105,6 +112,19 @@ namespace emberEditor
             Gui::Image(renderTextureID, m_imageSize); // draw render texture.
             Gui::SetCursorPos(cursorPos + offset);     // recenter cursor.
             Gui::Image(gizmoTextureID, m_imageSize);  // draw gizmo texture on top (alpha blended).
+        }
+
+
+
+        // Gizmo context:
+        void UpdateGizmoContext()
+        {
+            emberEcs::Scene* pScene = emberEcs::Scene::GetActiveScene();
+            m_gizmoContext.pCamera = pScene == nullptr ? nullptr : pScene->GetActiveCamera();
+            m_gizmoContext.viewportSize = m_imageSize;
+            m_gizmoContext.viewportMousePos = m_viewportMousePos;
+            m_gizmoContext.viewportMousePos01 = m_viewportMousePos01;
+            m_gizmoContext.isHovered = m_isOpen && m_isHovered && m_isMouseInsideViewport;
         }
 	};
 }
