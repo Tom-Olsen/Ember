@@ -117,30 +117,39 @@ namespace emberApplication
 					continue;
 
 				// Frame update loop:
-				m_pActiveScene->EarlyUpdate();
-
-				// Skip delayed physics updates:
-				// Runs at most one fixed update per render frame. This avoids stacking physics work when a frame is late, but drops simulation steps under load.
-				//if (Time::UpdatePhysics(true))
-				//{
-				//	Compute::Physics::BeginRecording();
-				//	m_pActiveScene->FixedUpdate();
-				//	Compute::Physics::EndRecording();
-				//}
-				// Batch delayed physics updates:
-				// Runs every pending fixed update. This preserves fixed-step catch-up, but can create large frames.
-				if (Time::ShouldUpdatePhysics())
 				{
-					Compute::Physics::BeginRecording();
-					while (Time::UpdatePhysics())
-						m_pActiveScene->FixedUpdate();
-					Compute::Physics::EndRecording();
+					EventConsumerScope consumerScope(EventSystem::Consumer::game);
+					m_pActiveScene->EarlyUpdate();
+
+					// Skip delayed physics updates:
+					// Runs at most one fixed update per render frame. This avoids stacking physics work when a frame is late, but drops simulation steps under load.
+					//if (Time::UpdatePhysics(true))
+					//{
+					//	Compute::Physics::BeginRecording();
+					//	m_pActiveScene->FixedUpdate();
+					//	Compute::Physics::EndRecording();
+					//}
+					// Batch delayed physics updates:
+					// Runs every pending fixed update. This preserves fixed-step catch-up, but can create large frames.
+					if (Time::ShouldUpdatePhysics())
+					{
+						Compute::Physics::BeginRecording();
+						while (Time::UpdatePhysics())
+							m_pActiveScene->FixedUpdate();
+						Compute::Physics::EndRecording();
+					}
 				}
 
 				// Game update loop:
-				Gui::Update();
-				m_pActiveScene->Update();
-				m_pActiveScene->LateUpdate();
+				{
+					EventConsumerScope consumerScope(EventSystem::Consumer::gui);
+					Gui::Update();  // contains hidden nested EventConsumerScope consumerScope(EventSystem::Consumer::editor);
+				}
+				{
+					EventConsumerScope consumerScope(EventSystem::Consumer::game);
+					m_pActiveScene->Update();
+					m_pActiveScene->LateUpdate();
+				}
 				Renderer::RenderFrame();
 			}
 		}

@@ -1,6 +1,8 @@
 #include "editor.h"
 #include "editorWindow.h"
+#include "eventSystem.h"
 #include "gui.h"
+#include "profiler.h"
 
 
 
@@ -18,6 +20,8 @@ namespace emberCore
 	// Editor functionality:
 	void Editor::PreRender()
 	{
+        PROFILE_FUNCTION();
+		EventConsumerScope consumerScope(EventSystem::Consumer::editor);
 		for (EditorWindow* pEditorWindow : s_pEditorWindows)
 		{
 			if (pEditorWindow != nullptr)
@@ -26,6 +30,9 @@ namespace emberCore
 	}
 	void Editor::Render()
 	{
+        PROFILE_FUNCTION();
+		EventConsumerScope consumerScope(EventSystem::Consumer::editor);
+
 		// Invalidate window pointers:
 		s_pFocusedWindow = nullptr;
 		s_pHoveredWindow = nullptr;

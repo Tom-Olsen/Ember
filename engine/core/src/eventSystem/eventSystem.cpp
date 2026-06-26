@@ -9,14 +9,19 @@ namespace emberCore
 {
     // Static members:
     bool EventSystem::s_isInitialized = false;
+    // Key/MouseButton states:
     std::unordered_map<emberCommon::Input::Key, EventSystem::KeyState> EventSystem::s_keyStates;
     std::unordered_map<emberCommon::Input::MouseButton, EventSystem::MouseState> EventSystem::s_mouseButtonStates;
-    std::unordered_set<emberCommon::Input::MouseButton> EventSystem::s_guiCapturedMouseButtons;
-    std::unordered_map<emberCommon::Input::Key, std::string> EventSystem::s_consumedKeys;
-    std::unordered_map<emberCommon::Input::MouseButton, std::string> EventSystem::s_consumedMouseButtons;
-    std::string EventSystem::s_emptyConsumer;
-    std::string EventSystem::s_mouseScrollConsumer;
-    bool EventSystem::s_mouseScrollConsumed;
+    // MouseButton lock/unlock:
+    std::unordered_map<emberCommon::Input::MouseButton, EventSystem::Consumer> EventSystem::s_lockedMouseButtons;
+    std::unordered_set<emberCommon::Input::MouseButton> EventSystem::s_mouseButtonLocksPendingUnlock;
+    // Key/MouseButton consumption:
+    std::unordered_map<emberCommon::Input::Key, EventSystem::Consumer> EventSystem::s_consumedKeys;
+    std::unordered_map<emberCommon::Input::MouseButton, EventSystem::Consumer> EventSystem::s_consumedMouseButtons;
+    EventSystem::Consumer EventSystem::s_currentConsumer;
+    EventSystem::Consumer EventSystem::s_keyboardLockConsumer;
+    EventSystem::Consumer EventSystem::s_mouseScrollConsumer;
+    // Basics:
     float EventSystem::s_mouseX;
     float EventSystem::s_mouseY;
     float EventSystem::s_mouseScrollX;
@@ -33,14 +38,19 @@ namespace emberCore
             return;
         s_isInitialized = true;
 
+        // Key/MouseButton states:
         s_keyStates = std::unordered_map<emberCommon::Input::Key, KeyState>();
         s_mouseButtonStates = std::unordered_map<emberCommon::Input::MouseButton, MouseState>();
-        s_guiCapturedMouseButtons = std::unordered_set<emberCommon::Input::MouseButton>();
-        s_consumedKeys = std::unordered_map<emberCommon::Input::Key, std::string>();
-        s_consumedMouseButtons = std::unordered_map<emberCommon::Input::MouseButton, std::string>();
-        s_emptyConsumer = "";
-        s_mouseScrollConsumer = "";
-        s_mouseScrollConsumed = false;
+        // MouseButton lock/unlock:
+        s_lockedMouseButtons = std::unordered_map<emberCommon::Input::MouseButton, Consumer>();
+        s_mouseButtonLocksPendingUnlock = std::unordered_set<emberCommon::Input::MouseButton>();
+        // Key/MouseButton consumption:
+        s_consumedKeys = std::unordered_map<emberCommon::Input::Key, Consumer>();
+        s_consumedMouseButtons = std::unordered_map<emberCommon::Input::MouseButton, Consumer>();
+        s_currentConsumer = Consumer::none;
+        s_keyboardLockConsumer = Consumer::none;
+        s_mouseScrollConsumer = Consumer::none;
+        // Basics:
         s_mouseX = 0;
         s_mouseY = 0;
         s_mouseScrollX = 0;
@@ -66,7 +76,8 @@ namespace emberCore
         std::vector<emberCommon::Event> events = Window::PollEvents();
         for (const emberCommon::Event& event : events)
         {
-            if (!ShouldProcessEvent(event))
+            // Events are also forwarded to gui. This checks if gui has claimed any ownership:
+            if (!ProcessGuiEventFilter(event))
                 continue;
 
             switch (event.type)
@@ -130,6 +141,8 @@ namespace emberCore
                     break;
                 case emberCommon::EventType::MouseButtonUp:
                     s_mouseButtonStates[event.mouseButton] = MouseState::up;
+                    if (MouseButtonLocked(event.mouseButton))
+                        s_mouseButtonLocksPendingUnlock.insert(event.mouseButton);
                     break;
                 case emberCommon::EventType::MouseWheel:
                     s_mouseScrollX = event.mouseWheelX;
@@ -166,72 +179,72 @@ namespace emberCore
     bool EventSystem::AnyKeyDown()
     {
         for (auto& [key, state] : s_keyStates)
-            if (state == KeyState::down && !KeyConsumed(key))
+            if (state == KeyState::down && !KeyBlocked(key))
                 return true;
         return false;
     }
     bool EventSystem::AnyKeyUp()
     {
         for (auto& [key, state] : s_keyStates)
-            if (state == KeyState::up && !KeyConsumed(key))
+            if (state == KeyState::up && !KeyBlocked(key))
                 return true;
         return false;
     }
     bool EventSystem::AnyKeyHeld()
     {
         for (auto& [key, state] : s_keyStates)
-            if (state == KeyState::held && !KeyConsumed(key))
+            if (state == KeyState::held && !KeyBlocked(key))
                 return true;
         return false;
     }
     bool EventSystem::AnyMouseDown()
     {
         for (auto& [button, state] : s_mouseButtonStates)
-            if (state == MouseState::down && !MouseButtonConsumed(button))
+            if (state == MouseState::down && !MouseButtonBlocked(button))
                 return true;
         return false;
     }
     bool EventSystem::AnyMouseUp()
     {
         for (auto& [button, state] : s_mouseButtonStates)
-            if (state == MouseState::up && !MouseButtonConsumed(button))
+            if (state == MouseState::up && !MouseButtonBlocked(button))
                 return true;
         return false;
     }
     bool EventSystem::AnyMouseHeld()
     {
         for (auto& [button, state] : s_mouseButtonStates)
-            if (state == MouseState::held && !MouseButtonConsumed(button))
+            if (state == MouseState::held && !MouseButtonBlocked(button))
                 return true;
         return false;
     }
     bool EventSystem::KeyDown(emberCommon::Input::Key key)
     {
-        return KeyDownRaw(key) && !KeyConsumed(key);
+        return KeyDownRaw(key) && !KeyBlocked(key);
     }
     bool EventSystem::KeyUp(emberCommon::Input::Key key)
     {
-        return KeyUpRaw(key) && !KeyConsumed(key);
+        return KeyUpRaw(key) && !KeyBlocked(key);
     }
     bool EventSystem::KeyHeld(emberCommon::Input::Key key)
     {
-        return KeyHeldRaw(key) && !KeyConsumed(key);
+        return KeyHeldRaw(key) && !KeyBlocked(key);
     }
     bool EventSystem::KeyDownOrHeld(emberCommon::Input::Key key)
     {
-        return KeyDownOrHeldRaw(key) && !KeyConsumed(key);
+        return KeyDownOrHeldRaw(key) && !KeyBlocked(key);
     }
     bool EventSystem::MouseDown(emberCommon::Input::MouseButton button)
     {
-        return MouseDownRaw(button) && !MouseButtonConsumed(button);
+        return MouseDownRaw(button) && !MouseButtonBlocked(button);
     }
     bool EventSystem::MouseUp(emberCommon::Input::MouseButton button)
     {
-        return MouseUpRaw(button) && !MouseButtonConsumed(button);
+        return MouseUpRaw(button) && !MouseButtonBlocked(button);
     }
     bool EventSystem::MouseHeld(emberCommon::Input::MouseButton button)
     {
-        return MouseHeldRaw(button) && !MouseButtonConsumed(button);
+        return MouseHeldRaw(button) && !MouseButtonBlocked(button);
     }
     float EventSystem::MouseX()
     {
@@ -259,11 +272,11 @@ namespace emberCore
     }
     float EventSystem::MouseScrollX()
     {
-        return MouseScrollConsumed() ? 0.0f : s_mouseScrollX;
+        return MouseScrollBlocked() ? 0.0f : s_mouseScrollX;
     }
     float EventSystem::MouseScrollY()
     {
-        return MouseScrollConsumed() ? 0.0f : s_mouseScrollY;
+        return MouseScrollBlocked() ? 0.0f : s_mouseScrollY;
     }
 
 
@@ -354,64 +367,154 @@ namespace emberCore
     {
         return s_mouseScrollY;
     }
-    void EventSystem::ConsumeKey(emberCommon::Input::Key key, const std::string& consumer)
+    void EventSystem::ConsumeKey(emberCommon::Input::Key key)
     {
-        if (key == emberCommon::Input::Key::Unknown)
+        if (key == emberCommon::Input::Key::Unknown || s_currentConsumer == Consumer::none || KeyConsumed(key))
             return;
-        s_consumedKeys[key] = consumer;
+        s_consumedKeys[key] = s_currentConsumer;
     }
-    void EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton button, const std::string& consumer)
+    void EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton button)
     {
-        if (button == emberCommon::Input::MouseButton::None)
+        if (button == emberCommon::Input::MouseButton::None || s_currentConsumer == Consumer::none || MouseButtonConsumed(button))
             return;
-        s_consumedMouseButtons[button] = consumer;
+        s_consumedMouseButtons[button] = s_currentConsumer;
     }
-    void EventSystem::ConsumeMouseScroll(const std::string& consumer)
+    void EventSystem::ConsumeMouseScroll()
     {
-        s_mouseScrollConsumed = true;
-        s_mouseScrollConsumer = consumer;
+        if (s_currentConsumer == Consumer::none || MouseScrollConsumed())
+            return;
+        s_mouseScrollConsumer = s_currentConsumer;
     }
     bool EventSystem::KeyConsumed(emberCommon::Input::Key key)
     {
-        return s_consumedKeys.find(key) != s_consumedKeys.end();
+        return GetKeyConsumer(key) != Consumer::none;
     }
     bool EventSystem::MouseButtonConsumed(emberCommon::Input::MouseButton button)
     {
-        return s_consumedMouseButtons.find(button) != s_consumedMouseButtons.end();
+        return GetMouseButtonConsumer(button) != Consumer::none;
     }
     bool EventSystem::MouseScrollConsumed()
     {
-        return s_mouseScrollConsumed;
+        return s_mouseScrollConsumer != Consumer::none;
     }
-    const std::string& EventSystem::KeyConsumer(emberCommon::Input::Key key)
+    EventSystem::Consumer EventSystem::GetKeyConsumer(emberCommon::Input::Key key)
     {
         auto it = s_consumedKeys.find(key);
-        return it == s_consumedKeys.end() ? s_emptyConsumer : it->second;
+        return it == s_consumedKeys.end() ? Consumer::none : it->second;
     }
-    const std::string& EventSystem::MouseButtonConsumer(emberCommon::Input::MouseButton button)
+    EventSystem::Consumer EventSystem::GetMouseButtonConsumer(emberCommon::Input::MouseButton button)
     {
         auto it = s_consumedMouseButtons.find(button);
-        return it == s_consumedMouseButtons.end() ? s_emptyConsumer : it->second;
+        return it == s_consumedMouseButtons.end() ? Consumer::none : it->second;
     }
-    const std::string& EventSystem::MouseScrollConsumer()
+    EventSystem::Consumer EventSystem::GetMouseScrollConsumer()
     {
-        return s_mouseScrollConsumed ? s_mouseScrollConsumer : s_emptyConsumer;
+        return s_mouseScrollConsumer;
+    }
+    bool EventSystem::TryLockMouseButton(emberCommon::Input::MouseButton button)
+    {
+        // No button or no consumer:
+        if (button == emberCommon::Input::MouseButton::None || s_currentConsumer == Consumer::none)
+            return false;
+
+        // Check if button already locked:
+        auto it = s_lockedMouseButtons.find(button);
+        if (it != s_lockedMouseButtons.end())
+            return it->second == s_currentConsumer;
+
+        // Lock button for current consumer and cancel any pending auto-unlock.
+        s_lockedMouseButtons[button] = s_currentConsumer;
+        s_mouseButtonLocksPendingUnlock.erase(button);
+        return true;
+    }
+    bool EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton button)
+    {
+        // Find lock, if not found or owned by other consumer abort:
+        auto it = s_lockedMouseButtons.find(button);
+        if (it == s_lockedMouseButtons.end() || it->second != s_currentConsumer)
+            return false;
+
+        // Unlock button:
+        s_lockedMouseButtons.erase(it);
+        s_mouseButtonLocksPendingUnlock.erase(button);
+        return true;
+    }
+    bool EventSystem::MouseButtonLocked(emberCommon::Input::MouseButton button)
+    {
+        return s_lockedMouseButtons.find(button) != s_lockedMouseButtons.end();
+    }
+    bool EventSystem::MouseButtonLockedBy(emberCommon::Input::MouseButton button, Consumer consumer)
+    {
+        auto it = s_lockedMouseButtons.find(button);
+        return consumer != Consumer::none && it != s_lockedMouseButtons.end() && it->second == consumer;
+    }
+    EventSystem::Consumer EventSystem::GetMouseButtonLockConsumer(emberCommon::Input::MouseButton button)
+    {
+        auto it = s_lockedMouseButtons.find(button);
+        return it == s_lockedMouseButtons.end() ? Consumer::none : it->second;
+    }
+    bool EventSystem::TryLockKeyboard()
+    {
+        // Invalid consumer:
+        if (s_currentConsumer == Consumer::none)
+            return false;
+
+        // Check if already locked:
+        if (s_keyboardLockConsumer != Consumer::none)
+            return s_keyboardLockConsumer == s_currentConsumer;
+
+        // Lock keyboard:
+        s_keyboardLockConsumer = s_currentConsumer;
+        return true;
+    }
+    bool EventSystem::UnlockKeyboard()
+    {
+        // Check if locked by current consumer:
+        if (s_currentConsumer == Consumer::none || s_keyboardLockConsumer != s_currentConsumer)
+            return false;
+
+        // Unlock keyboard:
+        s_keyboardLockConsumer = Consumer::none;
+        return true;
+    }
+    bool EventSystem::KeyboardLocked()
+    {
+        return s_keyboardLockConsumer != Consumer::none;
+    }
+    bool EventSystem::KeyboardLockedBy(Consumer consumer)
+    {
+        return consumer != Consumer::none && s_keyboardLockConsumer == consumer;
+    }
+    EventSystem::Consumer EventSystem::GetKeyboardLockConsumer()
+    {
+        return s_keyboardLockConsumer;
     }
 
 
 
 	// Private methods:
+    void EventSystem::SetCurrentConsumer(Consumer consumer)
+    {
+        s_currentConsumer = consumer;
+    }
+    EventSystem::Consumer EventSystem::GetCurrentConsumer()
+    {
+        return s_currentConsumer;
+    }
     void EventSystem::ClearInputState()
     {
         s_keyStates.clear();
         s_mouseButtonStates.clear();
-        s_guiCapturedMouseButtons.clear();
+        s_lockedMouseButtons.clear();
+        s_mouseButtonLocksPendingUnlock.clear();
+        s_keyboardLockConsumer = Consumer::none;
         ClearConsumedEvents();
         s_mouseScrollX = 0;
         s_mouseScrollY = 0;
     }
     void EventSystem::ClearEvents()
     {
+        UnlockPendingMouseButtons();
         ClearConsumedEvents();
 
         // Reset released keys and transition pressed keys to held:
@@ -436,31 +539,59 @@ namespace emberCore
         s_mouseScrollX = 0;
         s_mouseScrollY = 0;
     }
+    void EventSystem::UnlockPendingMouseButtons()
+    {
+        for (emberCommon::Input::MouseButton button : s_mouseButtonLocksPendingUnlock)
+            s_lockedMouseButtons.erase(button);
+        s_mouseButtonLocksPendingUnlock.clear();
+    }
     void EventSystem::ClearConsumedEvents()
     {
         s_consumedKeys.clear();
         s_consumedMouseButtons.clear();
-        s_mouseScrollConsumer.clear();
-        s_mouseScrollConsumed = false;
+        s_mouseScrollConsumer = Consumer::none;
     }
-    bool EventSystem::ShouldProcessEvent(const emberCommon::Event& event)
+    bool EventSystem::KeyBlocked(emberCommon::Input::Key key)
+    {
+        Consumer keyConsumer = GetKeyConsumer(key);
+        bool keyConsumedByOther = keyConsumer != Consumer::none && keyConsumer != s_currentConsumer;
+        bool keyboardLockedByOther = s_keyboardLockConsumer != Consumer::none && s_keyboardLockConsumer != s_currentConsumer;
+        return keyConsumedByOther || keyboardLockedByOther;
+    }
+    bool EventSystem::MouseButtonBlocked(emberCommon::Input::MouseButton button)
+    {
+        Consumer buttonConsumer = GetMouseButtonConsumer(button);
+        Consumer lockConsumer = GetMouseButtonLockConsumer(button);
+        bool buttonConsumedByOther = buttonConsumer != Consumer::none && buttonConsumer != s_currentConsumer;
+        bool buttonLockedByOther = lockConsumer != Consumer::none && lockConsumer != s_currentConsumer;
+        return buttonConsumedByOther || buttonLockedByOther;
+    }
+    bool EventSystem::MouseScrollBlocked()
+    {
+        return s_mouseScrollConsumer != Consumer::none && s_mouseScrollConsumer != s_currentConsumer;
+    }
+    bool EventSystem::ProcessGuiEventFilter(const emberCommon::Event& event)
     {
         switch (event.type)
         {
             case emberCommon::EventType::MouseMoved:
-                return !AnyMouseButtonCapturedByGui() && !event.guiWantsMouse;
+                return !AnyMouseButtonLockedBy(Consumer::gui) && !event.guiWantsMouse;
             case emberCommon::EventType::MouseButtonDown:
                 if (event.guiWantsMouse)
                 {
                     if (event.mouseButton != emberCommon::Input::MouseButton::None)
-                        s_guiCapturedMouseButtons.insert(event.mouseButton);
+                    {
+                        s_lockedMouseButtons[event.mouseButton] = Consumer::gui;
+                        s_mouseButtonLocksPendingUnlock.erase(event.mouseButton);
+                    }
                     return false;
                 }
                 return true;
             case emberCommon::EventType::MouseButtonUp:
-                if (IsMouseButtonCapturedByGui(event.mouseButton))
+                if (MouseButtonLockedBy(event.mouseButton, Consumer::gui))
                 {
-                    s_guiCapturedMouseButtons.erase(event.mouseButton);
+                    s_lockedMouseButtons.erase(event.mouseButton);
+                    s_mouseButtonLocksPendingUnlock.erase(event.mouseButton);
                     return false;
                 }
                 return true;
@@ -474,12 +605,24 @@ namespace emberCore
                 return true;
         }
     }
-    bool EventSystem::IsMouseButtonCapturedByGui(emberCommon::Input::MouseButton button)
+    bool EventSystem::AnyMouseButtonLockedBy(Consumer consumer)
     {
-        return s_guiCapturedMouseButtons.find(button) != s_guiCapturedMouseButtons.end();
+        for (const auto& lock : s_lockedMouseButtons)
+            if (lock.second == consumer)
+                return true;
+        return false;
     }
-    bool EventSystem::AnyMouseButtonCapturedByGui()
+
+
+
+    // EventConsumerScope:
+    EventConsumerScope::EventConsumerScope(EventSystem::Consumer consumer) :
+        m_previousConsumer(EventSystem::GetCurrentConsumer())
     {
-        return !s_guiCapturedMouseButtons.empty();
+        EventSystem::SetCurrentConsumer(consumer);
+    }
+    EventConsumerScope::~EventConsumerScope()
+    {
+        EventSystem::SetCurrentConsumer(m_previousConsumer);
     }
 }
