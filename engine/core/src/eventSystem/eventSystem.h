@@ -56,6 +56,7 @@ namespace emberCore
         static float MouseScrollY();
 
     private: // Methods
+        static void ClearInputState();
         static void ClearEvents();
 
         // Delete all constructors:

@@ -31,14 +31,14 @@ namespace emberCore
         s_mouseButtonStates = std::unordered_map<emberCommon::Input::MouseButton, MouseState>();
         s_mouseX = 0;
         s_mouseY = 0;
+        s_mouseScrollX = 0;
+        s_mouseScrollY = 0;
         s_windowWidth = Window::GetSize().x;
         s_windowHeight = Window::GetSize().y;
     }
     void EventSystem::Clear()
     {
-        ClearEvents();
-        s_keyStates.clear();
-        s_mouseButtonStates.clear();
+        ClearInputState();
         s_isInitialized = false;
     }
 
@@ -92,6 +92,7 @@ namespace emberCore
                 case emberCommon::EventType::WindowFocusGained:
                     break;
                 case emberCommon::EventType::WindowFocusLost:
+                    ClearInputState();
                     break;
 
                 // Keyboard events:
@@ -260,6 +261,13 @@ namespace emberCore
 
 
 	// Private methods:
+    void EventSystem::ClearInputState()
+    {
+        s_keyStates.clear();
+        s_mouseButtonStates.clear();
+        s_mouseScrollX = 0;
+        s_mouseScrollY = 0;
+    }
     void EventSystem::ClearEvents()
     {
         // Reset released keys and transition pressed keys to held:
