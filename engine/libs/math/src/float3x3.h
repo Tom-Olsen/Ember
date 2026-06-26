@@ -65,7 +65,7 @@ namespace emberMath
 		static Float3x3 RotateY(float angle);
 		static Float3x3 RotateZ(float angle);
 		static Float3x3 Rotate(const Float3& axis, float angle);
-		static Float3x3 Rotate(const Float3& angles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSystem rotationSystem = CoordinateSystem::local);
+		static Float3x3 Rotate(const Float3& angles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
 		static Float3x3 RotateFromTo(const Float3& from, const Float3& to);
 		static Float3x3 RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New);
 

@@ -65,24 +65,24 @@ namespace emberEcs
 		m_rotationMatrix = rotationMatrix;
 		m_updateLocalToWorldMatrix = true;
 	}
-	void Transform::SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder, CoordinateSystem system)
+	void Transform::SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder, CoordinateSpace space)
 	{
 		Float3 eulerRadians = math::deg2rad * Float3(degreesX, degreesY, degreesZ);
-		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
+		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, space));
 	}
-	void Transform::SetRotationEulerRadians(float radiansX, float radiansY, float radiansZ, Uint3 rotationOrder, CoordinateSystem system)
+	void Transform::SetRotationEulerRadians(float radiansX, float radiansY, float radiansZ, Uint3 rotationOrder, CoordinateSpace space)
 	{
 		Float3 eulerRadians = Float3(radiansX, radiansY, radiansZ);
-		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
+		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, space));
 	}
-	void Transform::SetRotationEulerDegrees(Float3 degrees, Uint3 rotationOrder, CoordinateSystem system)
+	void Transform::SetRotationEulerDegrees(Float3 degrees, Uint3 rotationOrder, CoordinateSpace space)
 	{
 		Float3 eulerRadians = math::deg2rad * degrees;
-		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, system));
+		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, space));
 	}
-	void Transform::SetRotationEulerRadians(Float3 radians, Uint3 rotationOrder, CoordinateSystem system)
+	void Transform::SetRotationEulerRadians(Float3 radians, Uint3 rotationOrder, CoordinateSpace space)
 	{
-		SetRotationMatrix(Float3x3::Rotate(radians, rotationOrder, system));
+		SetRotationMatrix(Float3x3::Rotate(radians, rotationOrder, space));
 	}
 	void Transform::SetScale(float x, float y, float z)
 	{

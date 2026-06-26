@@ -6,7 +6,7 @@
 namespace emberMath
 {
 	// Enums.
-	enum CoordinateSystem
+	enum class CoordinateSpace
 	{
 		local,
 		world

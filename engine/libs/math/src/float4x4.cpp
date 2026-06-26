@@ -206,12 +206,12 @@ namespace emberMath
 		 z * x * t - y * s, z * y * t + x * s, z * z * t + c, 0.0f,
 		 0.0f, 0.0f, 0.0f, 1.0f);
 	}
-	Float4x4 Float4x4::Rotate(const Float3& eulerAngles, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
+	Float4x4 Float4x4::Rotate(const Float3& eulerAngles, const Uint3& rotationOrder, CoordinateSpace space)
 	{
 		Float4x4 rot[3] = { RotateX(eulerAngles.x), RotateY(eulerAngles.y), RotateZ(eulerAngles.z) };
-		if (rotationSystem == CoordinateSystem::local)
+		if (space == CoordinateSpace::local)
 			return rot[rotationOrder.x] * rot[rotationOrder.y] * rot[rotationOrder.z];
-		else if (rotationSystem == CoordinateSystem::world)
+		else if (space == CoordinateSpace::world)
 			return rot[rotationOrder.z] * rot[rotationOrder.y] * rot[rotationOrder.x];
 		return identity;
 	}

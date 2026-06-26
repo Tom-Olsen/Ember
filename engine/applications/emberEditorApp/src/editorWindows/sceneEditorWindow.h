@@ -21,7 +21,7 @@ namespace emberEditor
         using Gui = emberCore::Gui;
 
 
-        
+
         // Viewport rect:
         Float2 m_imageTopLeft = Float2::zero;       // top-left of the displayed image in screen-space.
         Float2 m_imageSize = Float2::zero;          // pixel size of the displayed image.

@@ -193,12 +193,12 @@ namespace emberMath
 		 y * x * t + z * s, y * y * t + c, y * z * t - x * s,
 		 z * x * t - y * s, z * y * t + x * s, z * z * t + c);
 	}
-	Float3x3 Float3x3::Rotate(const Float3& angles, const Uint3& rotationOrder, CoordinateSystem rotationSystem)
+	Float3x3 Float3x3::Rotate(const Float3& angles, const Uint3& rotationOrder, CoordinateSpace space)
 	{
 		Float3x3 rot[3] = { RotateX(angles.x), RotateY(angles.y), RotateZ(angles.z) };
-		if (rotationSystem == CoordinateSystem::local)
+		if (space == CoordinateSpace::local)
 			return rot[rotationOrder.x] * rot[rotationOrder.y] * rot[rotationOrder.z];
-		// (rotationSystem == CoordinateSystem::World)
+		// (space == CoordinateSpace::World)
 		return rot[rotationOrder.z] * rot[rotationOrder.y] * rot[rotationOrder.x];
 	}
 	Float3x3 Float3x3::RotateFromTo(const Float3& from, const Float3& to)
