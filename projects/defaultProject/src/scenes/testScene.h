@@ -53,7 +53,7 @@ inline Scene* TestScene()
 		pTransform->SetRotationMatrix(matrix);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
@@ -77,12 +77,12 @@ inline Scene* TestScene()
 		pTransform->SetRotationEulerDegrees(-90.0f, 0.0f, 0.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(materialA);
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("grass"));
 	}
 	{// Cube:
-		Entity entity = Entity::Create("unitCube");
+		Entity entity = Entity::Create("cube");
 		Float3 pos = Float3(-2.0f, 0.0f, 1.0f);
 
 		Transform* pTransform = entity.GetTransform();
@@ -90,7 +90,7 @@ inline Scene* TestScene()
 		pTransform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 		pMeshRenderer->SetMaterial(materialB);
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("brick"));
 		pMeshRenderer->GetShaderProperties().SetTexture("cubeMap", TextureManager::GetTexture("skybox0"));

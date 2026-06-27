@@ -38,7 +38,7 @@ inline Scene* ShadowCascadeScene()
 		Entity entity = Entity::Create("skybox");
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
 		pMeshRenderer->GetMaterial().SetTexture("colorMap", TextureManager::GetTexture("skybox0"));
 		pMeshRenderer->SetCastShadows(false);
@@ -112,7 +112,7 @@ inline Scene* ShadowCascadeScene()
 		pTransform->SetScale(100);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 	}
 	{// Cube Array:
@@ -126,7 +126,7 @@ inline Scene* ShadowCascadeScene()
 			pTransform->SetPosition(pos);
 
 			MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-			pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+			pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 			pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 			pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks0_color"));
 			pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks0_roughness"));

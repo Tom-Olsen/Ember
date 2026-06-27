@@ -87,7 +87,7 @@ Scene* Fluid3dScene()
 		pTransform->SetScale(60.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
@@ -122,7 +122,7 @@ Scene* Fluid3dScene()
 	//	pTransform->SetRotationMatrix(matrix);
 //
 	//	MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-	//	pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+	//	pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 	//	pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
 	//	pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 	//	pMeshRenderer->SetCastShadows(false);

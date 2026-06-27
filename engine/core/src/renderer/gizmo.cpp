@@ -33,14 +33,9 @@ namespace emberCore
 		ShaderProperties shaderProperties = Primitives::DrawMesh(mesh, s_material, localToWorldMatrix, false, false, true);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 	}
-	void Gizmo::DrawLineSegment(const Float3& start, const Float3& end, float width)
+	void Gizmo::DrawQuad(const Float4x4& localToWorldMatrix)
 	{
-		ShaderProperties shaderProperties = Primitives::DrawLineSegment(start, end, width, s_material, false, false, true);
-		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
-	}
-	void Gizmo::DrawArrow(const Float3& position, const Float3& direction, float size)
-	{
-		ShaderProperties shaderProperties = Primitives::DrawArrow(position, direction, size, s_material, false, false, true);
+		ShaderProperties shaderProperties = Primitives::DrawQuad(localToWorldMatrix, s_material, false, false, true);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 	}
 	void Gizmo::DrawCube(const Float4x4& localToWorldMatrix)
@@ -51,6 +46,16 @@ namespace emberCore
 	void Gizmo::DrawSphere(const Float4x4& localToWorldMatrix)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawSphere(localToWorldMatrix, s_material, false, false, true);
+		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+	}
+	void Gizmo::DrawLineSegment(const Float3& start, const Float3& end, float width)
+	{
+		ShaderProperties shaderProperties = Primitives::DrawLineSegment(start, end, width, s_material, false, false, true);
+		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+	}
+	void Gizmo::DrawArrow(const Float3& position, const Float3& direction, float size)
+	{
+		ShaderProperties shaderProperties = Primitives::DrawArrow(position, direction, size, s_material, false, false, true);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 	}
 	void Gizmo::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width)

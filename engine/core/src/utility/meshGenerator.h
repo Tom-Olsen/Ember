@@ -12,13 +12,13 @@ namespace emberCore
 	{
 		Mesh EMBER_CORE_API Triangle(Float3 a, Float3 b, Float3 c, const std::string& name);
 
-		Mesh EMBER_CORE_API UnitQuad();
+		Mesh EMBER_CORE_API Quad();
 		Mesh EMBER_CORE_API UnitQuadTwoSided();
 		Mesh EMBER_CORE_API FullScreenRenderQuad();
 		Mesh EMBER_CORE_API ClockwiseQuad(Float3 a, Float3 b, Float3 c, Float3 d, const std::string& name);
 		Mesh EMBER_CORE_API Grid(int resolutionX, int resolutionY, const std::string& name);
 
-		Mesh EMBER_CORE_API UnitCube();
+		Mesh EMBER_CORE_API Cube();
 		Mesh EMBER_CORE_API HalfCube();
 
 		Mesh EMBER_CORE_API CubeSphere(float radius, int subdivisions, const std::string& name);

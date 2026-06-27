@@ -21,19 +21,19 @@ namespace emberCore
 			return;
 		s_isInitialized = true;
 
-		Mesh unitQuad = MeshGenerator::UnitQuad();
-		unitQuad.SetName("unitQuad");
-		AddMesh(std::move(unitQuad));
+		Mesh quad = MeshGenerator::Quad();
+		quad.SetName("quad");
+		AddMesh(std::move(quad));
 		
-		Mesh unitCube = MeshGenerator::UnitCube();
-		unitCube.SetName("unitCube");
-		AddMesh(std::move(unitCube));
+		Mesh cube = MeshGenerator::Cube();
+		cube.SetName("cube");
+		AddMesh(std::move(cube));
 		
 		Mesh fullScreenRenderQuad = MeshGenerator::FullScreenRenderQuad();
 		fullScreenRenderQuad.SetName("fullScreenRenderQuad");
 		AddMesh(std::move(fullScreenRenderQuad));
 		
-		Mesh unitCubeInverse = MeshGenerator::UnitCube();
+		Mesh unitCubeInverse = MeshGenerator::Cube();
 		unitCubeInverse.InvertFaces();
 		unitCubeInverse.SetName("unitCubeInverse");
 		AddMesh(std::move(unitCubeInverse));

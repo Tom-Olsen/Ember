@@ -65,7 +65,7 @@ inline Scene* DefaultScene()
 		pTransform->SetRotationMatrix(matrix);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
@@ -172,7 +172,7 @@ inline Scene* DefaultScene()
 		pTransform->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
 		pMeshRenderer->GetMaterial().SetTexture("colorMap", TextureManager::GetTexture("skybox0"));
 		pMeshRenderer->SetCastShadows(false);
@@ -187,7 +187,7 @@ inline Scene* DefaultScene()
 		pTransform->SetScale(30.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
@@ -206,7 +206,7 @@ inline Scene* DefaultScene()
 		pTransform->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks0_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks0_roughness"));
@@ -235,7 +235,7 @@ inline Scene* DefaultScene()
 		pTransform->SetPosition(pos);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("wood1_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("wood1_roughness"));
@@ -263,8 +263,8 @@ inline Scene* DefaultScene()
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(0.5, 0.5, 0, 0));
 
 		MeshTester* pMeshTester = entity.AddComponent<MeshTester>(pMeshRenderer);
-		pMeshTester->AddMesh(&MeshManager::GetMesh("unitQuad"));
-		pMeshTester->AddMesh(&MeshManager::GetMesh("unitCube"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("quad"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("cube"));
 		pMeshTester->AddMesh(&MeshManager::GetMesh("halfCube"));
 		pMeshTester->AddMesh(&MeshManager::GetMesh("cubeSphere"));
 		pMeshTester->AddMesh(&MeshManager::GetMesh("disk"));
@@ -330,7 +330,7 @@ inline Scene* DefaultScene()
 	//
 	//	InstancedMeshRenderer* pInstancedRenderer = entity.AddComponent<InstancedMeshRenderer>();
 	//	pInstancedRenderer->SetInstanceCount(16);
-	//	pInstancedRenderer->SetMesh(MeshManager::GetMesh("unitCube"));
+	//	pInstancedRenderer->SetMesh(MeshManager::GetMesh("cube"));
 	//	pInstancedRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
 	//	pInstancedRenderer->SetInstanceBuffer(testInstancedRendering->GetInstanceBuffer());
 	//	pInstancedRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("concrete0_color"));
@@ -347,7 +347,7 @@ inline Scene* DefaultScene()
 		pTransform->SetRotationEulerDegrees(60.0f, 0.0f, 0.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitQuad"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("transparentMaterial"));
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4(1.0, 0.0, 0, 0.25f));
 		pMeshRenderer->SetCastShadows(false);

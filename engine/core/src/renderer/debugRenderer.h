@@ -31,10 +31,11 @@ namespace emberCore
 
     public: // Methods:
 		static ShaderProperties DrawMesh(const Mesh& mesh, const Float4x4& localToWorldMatrix);
-		static ShaderProperties DrawLineSegment(const Float3& start, const Float3& end, float width = 0.1f);
-		static ShaderProperties DrawArrow(const Float3& position, const Float3& direction, float size = 1.0f);
+		static ShaderProperties DrawQuad(const Float4x4& localToWorldMatrix);
 		static ShaderProperties DrawCube(const Float4x4& localToWorldMatrix);
 		static ShaderProperties DrawSphere(const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawLineSegment(const Float3& start, const Float3& end, float width = 0.1f);
+		static ShaderProperties DrawArrow(const Float3& position, const Float3& direction, float size = 1.0f);
 		static void DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width = 0.1f);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width = 0.1f);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width = 0.1f);

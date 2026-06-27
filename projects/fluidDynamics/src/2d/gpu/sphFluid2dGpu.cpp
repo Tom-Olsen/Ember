@@ -385,7 +385,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_visualRadius != visualRadius)
 		{
 			m_visualRadius = visualRadius;
-			m_particleMesh = MeshGenerator::UnitQuad().Scale(m_visualRadius);
+			m_particleMesh = MeshGenerator::Quad().Scale(m_visualRadius);
 		}
 	}
 

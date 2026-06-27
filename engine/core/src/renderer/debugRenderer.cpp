@@ -33,15 +33,9 @@ namespace emberCore
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 		return shaderProperties;
 	}
-	ShaderProperties DebugRenderer::DrawLineSegment(const Float3& start, const Float3& end, float width)
+	ShaderProperties DebugRenderer::DrawQuad(const Float4x4& localToWorldMatrix)
 	{
-		ShaderProperties shaderProperties = Primitives::DrawLineSegment(start, end, width, s_material, s_receiveShadows, s_castShadows, false);
-		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
-		return shaderProperties;
-	}
-	ShaderProperties DebugRenderer::DrawArrow(const Float3& position, const Float3& direction, float size)
-	{
-		ShaderProperties shaderProperties = Primitives::DrawArrow(position, direction, size, s_material, s_receiveShadows, s_castShadows, false);
+		ShaderProperties shaderProperties = Primitives::DrawQuad(localToWorldMatrix, s_material, s_receiveShadows, s_castShadows, false);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 		return shaderProperties;
 	}
@@ -54,6 +48,18 @@ namespace emberCore
 	ShaderProperties DebugRenderer::DrawSphere(const Float4x4& localToWorldMatrix)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawSphere(localToWorldMatrix, s_material, s_receiveShadows, s_castShadows, false);
+		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+		return shaderProperties;
+	}
+	ShaderProperties DebugRenderer::DrawLineSegment(const Float3& start, const Float3& end, float width)
+	{
+		ShaderProperties shaderProperties = Primitives::DrawLineSegment(start, end, width, s_material, s_receiveShadows, s_castShadows, false);
+		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+		return shaderProperties;
+	}
+	ShaderProperties DebugRenderer::DrawArrow(const Float3& position, const Float3& direction, float size)
+	{
+		ShaderProperties shaderProperties = Primitives::DrawArrow(position, direction, size, s_material, s_receiveShadows, s_castShadows, false);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 		return shaderProperties;
 	}

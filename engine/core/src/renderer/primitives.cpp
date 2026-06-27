@@ -18,6 +18,21 @@ namespace emberCore
 			return Renderer::DrawMesh(mesh, material, localToWorldMatrix, receiveShadows, castShadows);
 	}
 
+    ShaderProperties Primitives::DrawQuad(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
+    {
+        return DrawMesh(MeshManager::GetMesh("quad"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
+    }
+
+	ShaderProperties Primitives::DrawCube(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
+	{
+		return DrawMesh(MeshManager::GetMesh("cube"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
+	}
+
+	ShaderProperties Primitives::DrawSphere(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
+	{
+		return DrawMesh(MeshManager::GetMesh("cubeSphere"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
+	}
+
 	ShaderProperties Primitives::DrawLineSegment(const Float3& start, const Float3& end, float width, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
 	{
 		Float3 direction = end - start;
@@ -39,16 +54,6 @@ namespace emberCore
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
 		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, Float3(size));
 		return DrawMesh(MeshManager::GetMesh("arrowFlat"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
-	}
-
-	ShaderProperties Primitives::DrawCube(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
-	{
-		return DrawMesh(MeshManager::GetMesh("unitCube"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
-	}
-
-	ShaderProperties Primitives::DrawSphere(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
-	{
-		return DrawMesh(MeshManager::GetMesh("cubeSphere"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
 	}
 
 	void Primitives::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo)

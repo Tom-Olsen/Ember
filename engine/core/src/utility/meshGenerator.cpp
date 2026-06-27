@@ -38,9 +38,9 @@ namespace emberCore
 			return mesh;
 		}
 
-		Mesh UnitQuad()
+		Mesh Quad()
 		{
-			Mesh mesh("unitQuad");
+			Mesh mesh("quad");
 
 			std::vector<Float3> positions;
 			positions.emplace_back(-0.5f, -0.5f, 0.0f);
@@ -75,8 +75,8 @@ namespace emberCore
 		{
 			std::vector<Mesh> faces;
 			faces.reserve(2);
-			faces.emplace_back(std::move(UnitQuad()));
-			faces.emplace_back(std::move(UnitQuad().Rotate(Float4x4::rot180x)));
+			faces.emplace_back(std::move(Quad()));
+			faces.emplace_back(std::move(Quad().Rotate(Float4x4::rot180x)));
 			return Mesh::Merge(faces, "unitQuadTwoSided");
 		}
 		Mesh FullScreenRenderQuad()
@@ -190,7 +190,7 @@ namespace emberCore
 			return mesh;
 		}
 
-		Mesh UnitCube()
+		Mesh Cube()
 		{
 			Float3 p000 = 0.5f * Float3(-1.0f, -1.0f, -1.0f);
 			Float3 p001 = 0.5f * Float3(-1.0f, -1.0f,  1.0f);
@@ -210,7 +210,7 @@ namespace emberCore
 			faces.emplace_back(std::move(ClockwiseQuad(p101, p001, p011, p111, "+z")));
 			faces.emplace_back(std::move(ClockwiseQuad(p000, p100, p110, p010, "-z")));
 
-			return Mesh::Merge(faces, "unitCube");
+			return Mesh::Merge(faces, "cube");
 		}
 		Mesh HalfCube()
 		{
@@ -237,7 +237,7 @@ namespace emberCore
 		Mesh CubeSphere(float radius, int subdivisions, const std::string& name)
 		{
 			radius = std::max(1e-8f, radius);
-			Mesh mesh = UnitCube();
+			Mesh mesh = Cube();
 			for (int i = 0; i < subdivisions; i++)
 				mesh.Subdivide();
             
@@ -519,7 +519,7 @@ namespace emberCore
 			{
 				float alpha = (i + 0.5f) * dAlpha;
 
-				Mesh face = UnitQuad();
+				Mesh face = Quad();
 				face.Scale(Float3(width, height, 1.0f));
 				face.Rotate(Float3x3::RotateZ(math::pi2 + alpha) * Float3x3::rot90x);
 				face.Translate(Float3(dist * math::Cos(alpha), dist * math::Sin(alpha), 0.0f));
@@ -645,7 +645,7 @@ namespace emberCore
 			meshes.emplace_back(std::move(ZylinderSmooth(0.1f, 0.05f, 16, "Roll1")));
 			meshes[1].Rotate(Float3x3::rot90y).Translate(0.2f * Float3::forward + 0.1f * Float3::up);
 			meshes[1].SetUniformColor(Float4::gray);
-			meshes.emplace_back(std::move(UnitCube()));
+			meshes.emplace_back(std::move(Cube()));
 			meshes[2].Scale(Float3(0.15f, 0.2f, 0.5f));
 			meshes[2].SetUniformColor(Float4(1.0f, 0.4f, 0.4f));
 			meshes.emplace_back(std::move(ConeFlat(0.15f, 0.15f, 4, "CameraHead")));
@@ -689,7 +689,7 @@ namespace emberCore
 					{
 						Float3 sign = Float3((i == 0) ? -1.0f : 1.0f, (j == 0) ? -1.0f : 1.0f, (k == 0) ? -1.0f : 1.0f);
 						Float3 pos = 0.5f * sign * Float3(lengths.x, lengths.y, lengths.z);
-						Mesh mesh = UnitCube();
+						Mesh mesh = Cube();
 						mesh.Transform(Float4x4::TRS(pos, Float4x4::identity, radius * Float3::one));
 						mesh.RescaleUVs(Float4(2 * radius, 0.5f * radius, 1.0f, 1.0f), Float4::zero);
 						meshes.emplace_back(std::move(mesh));
