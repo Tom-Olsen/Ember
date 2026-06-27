@@ -6,14 +6,14 @@
 
 
 
-// Forward declerations:
+// Forward declarations:
 typedef struct VkCommandBuffer_T* VkCommandBuffer;
 
 
 
 namespace vulkanRendererBackend
 {
-	// Forward declerations:
+	// Forward declarations:
 	class StagingBuffer;
 
 

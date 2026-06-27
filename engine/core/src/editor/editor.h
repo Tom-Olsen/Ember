@@ -9,7 +9,7 @@
 
 namespace emberCore
 {
-	// Forward declerations:
+	// Forward declarations:
 	class EditorWindow;
 
 

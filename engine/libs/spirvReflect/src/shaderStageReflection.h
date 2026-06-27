@@ -8,7 +8,7 @@
 
 
 
-// Forward declerations:
+// Forward declarations:
 struct SpvReflectShaderModule;
 
 

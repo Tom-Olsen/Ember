@@ -30,7 +30,7 @@ namespace emberBackendInterface
 
 namespace emberCore
 {
-	// Forward declerations:
+	// Forward declarations:
 	class Buffer;
 	class Material;
 	class Mesh;

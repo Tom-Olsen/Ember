@@ -10,7 +10,7 @@
 
 namespace emberEcs
 {
-	// Forward declerations:
+	// Forward declarations:
 	class Camera;
 
 

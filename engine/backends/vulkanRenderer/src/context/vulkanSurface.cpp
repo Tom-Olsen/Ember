@@ -12,7 +12,7 @@
 
 namespace vulkanRendererBackend
 {
-	// Forward declerations:
+	// Forward declarations:
 	VkSurfaceFormatKHR PickSurfaceFormat(std::vector<VkSurfaceFormatKHR>& availableSurfaceFormats);
 	VkPresentModeKHR PickPresentMode(bool vSyncEnabled, std::vector<VkPresentModeKHR>& availablePresentModes);
 

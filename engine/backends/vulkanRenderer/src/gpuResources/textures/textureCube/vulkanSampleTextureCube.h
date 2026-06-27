@@ -6,7 +6,7 @@
 
 
 
-// Forward declerations:
+// Forward declarations:
 typedef struct VkCommandBuffer_T* VkCommandBuffer;
 
 

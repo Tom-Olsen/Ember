@@ -78,7 +78,7 @@ namespace emberBackendInterface
 
 
 
-    // Forward declerations:
+    // Forward declarations:
     class IBuffer;
     class IComputeShader;
     class IDescriptorSetBinding;

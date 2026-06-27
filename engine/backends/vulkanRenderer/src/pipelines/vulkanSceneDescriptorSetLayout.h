@@ -9,7 +9,7 @@
 
 namespace vulkanRendererBackend
 {
-    // Forward declerations:
+    // Forward declarations:
     class UniformBuffer;
 
 

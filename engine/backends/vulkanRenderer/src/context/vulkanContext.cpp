@@ -26,8 +26,8 @@
 
 namespace vulkanRendererBackend
 {
-	// Forward declerations:
-	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;								            // vulkan debug utility object naming function pointer.
+	// Forward declarations:
+	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;  // vulkan debug utility object naming function pointer.
 
 
 

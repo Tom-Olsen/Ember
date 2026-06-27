@@ -10,7 +10,7 @@
 
 namespace emberBackendInterface
 {
-    // Forward declerations:
+    // Forward declarations:
     class ITexture;
     class IBuffer;
 
