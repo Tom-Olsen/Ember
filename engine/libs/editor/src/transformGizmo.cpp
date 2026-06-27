@@ -132,17 +132,24 @@ namespace emberEditor
     // Draws:
 	void TransformGizmo::DrawTranslate(const GizmoContext& context)
 	{
-		DrawPlaceholder(context);
+		Float3 position = m_pTransform->GetPosition();
+		float size = 0.3f * ComputeScreenSpaceScale(context, position);
+		emberCore::Gizmo::SetColor(Float4::red);
+		emberCore::Gizmo::DrawArrow(position, Float3::right, size);
+		emberCore::Gizmo::SetColor(Float4::green);
+		emberCore::Gizmo::DrawArrow(position, Float3::forward, size);
+		emberCore::Gizmo::SetColor(Float4::blue);
+		emberCore::Gizmo::DrawArrow(position, Float3::up, size);
+
 	}
 	void TransformGizmo::DrawRotate(const GizmoContext& context)
 	{
-		DrawPlaceholder(context);
+		Float3 position = m_pTransform->GetPosition();
+		float markerSize = 0.1f * ComputeScreenSpaceScale(context, position);
+		emberCore::Gizmo::SetColor(Float4(1.0f, 1.0f, 0.0f, 1.0f));
+		emberCore::Gizmo::DrawSphere(Float4x4::TRS(position, Float3x3::identity, Float3(markerSize)));
 	}
 	void TransformGizmo::DrawScale(const GizmoContext& context)
-	{
-		DrawPlaceholder(context);
-	}
-	void TransformGizmo::DrawPlaceholder(const GizmoContext& context)
 	{
 		Float3 position = m_pTransform->GetPosition();
 		float markerSize = 0.1f * ComputeScreenSpaceScale(context, position);

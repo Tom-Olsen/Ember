@@ -85,7 +85,6 @@ namespace emberEditor
 		void DrawTranslate(const GizmoContext& context);
 		void DrawRotate(const GizmoContext& context);
 		void DrawScale(const GizmoContext& context);
-		void DrawPlaceholder(const GizmoContext& context);
         // Helpers:
 		float ComputeScreenSpaceScale(const GizmoContext& context, const Float3& worldPos) const;
 	};
