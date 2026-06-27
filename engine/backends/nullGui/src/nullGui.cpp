@@ -62,6 +62,10 @@ namespace nullGuiBackend
 	{
 		return Float2::zero;
 	}
+	Float2 Gui::GetMousePos()
+	{
+		return Float2::zero;
+	}
 	Float2 Gui::GetMouseDragDelta(emberCommon::GuiMouseButton button, float lockThreshold)
 	{
 		return Float2::zero;

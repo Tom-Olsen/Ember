@@ -38,9 +38,9 @@ namespace emberBackendInterface
         virtual ~IGui() = default;
 
 		// Render Logic:
-		virtual void Update() = 0;									// Must be called in main update loop of the engine.
-		virtual void ProcessEvent(const void* pWindowEvent) = 0;	// Must be called in from window.
-		virtual void Render(VkCommandBuffer vkCommandBuffer) = 0;	// Must be called in a render pass.
+		virtual void Update() = 0;									// must be called in main update loop of the engine.
+		virtual void ProcessEvent(const void* pWindowEvent) = 0;	// must be called in from window.
+		virtual void Render(VkCommandBuffer vkCommandBuffer) = 0;	// must be called in a render pass.
 
 		// Getters:
 		virtual bool WantCaptureKeyboard() = 0;
@@ -48,8 +48,9 @@ namespace emberBackendInterface
 		virtual uintptr_t GetTextureID(ITexture* pITexture) = 0;
 		virtual Float2 GetWindowSize() = 0;
 		virtual Float2 GetContentRegionAvail() = 0;
-		virtual Float2 GetCursorPos() = 0;
-		virtual Float2 GetCursorScreenPos() = 0;
+		virtual Float2 GetCursorPos() = 0;          // layout cursor for widgets, relative window space.
+		virtual Float2 GetCursorScreenPos() = 0;    // same layout cursor, absolute screen space (due to ImGuiConfigFlags_ViewportsEnable enabled => global OS-desktop space).
+		virtual Float2 GetMousePos() = 0;           // mouse pointer, absolute screen space (due to ImGuiConfigFlags_ViewportsEnable enabled => global OS-desktop space).
 		virtual Float2 GetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f) = 0;
 		virtual emberCommon::GuiStyle GetStyle() const = 0;
 

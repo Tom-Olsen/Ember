@@ -48,18 +48,16 @@ namespace emberEditor
         m_gizmoContext.viewportMousePos01 = m_viewportMousePos01;
         m_gizmoContext.isHovered = m_isOpen && m_isHovered && m_isMouseInsideViewport;
 
-        // Sync transform gizmo target:
-        if (!EditorSelection::HasSelectedEntity())
-        {
-            m_transformGizmo.ClearTarget();
-            return;
-        }
-        emberEcs::Entity selected = EditorSelection::GetSelectedEntity();
-        m_transformGizmo.SetTarget(selected.GetTransform());
-        
         // Update and draw transform gizmo:
-        m_transformGizmo.Update(m_gizmoContext);
-        m_transformGizmo.Draw(m_gizmoContext);
+        if (EditorSelection::HasSelectedEntity())
+        {
+            emberEcs::Entity selected = EditorSelection::GetSelectedEntity();
+            m_transformGizmo.SetTarget(selected.GetTransform());
+            m_transformGizmo.Update(m_gizmoContext);
+            m_transformGizmo.Draw(m_gizmoContext);
+        }
+        else
+            m_transformGizmo.ClearTarget();
     }
     void SceneEditorWindow::Render()
     {
@@ -95,8 +93,8 @@ namespace emberEditor
         Gui::SetCursorPos(cursorPos + offset);
         m_imageTopLeft = Gui::GetCursorScreenPos();
 
-        // Compute viewport-local mouse coordinates from the raw window mouse position:
-        m_viewportMousePos = emberCore::EventSystem::MousePos() - m_imageTopLeft;
+        // Compute viewport-local mouse coordinates:
+        m_viewportMousePos = Gui::GetMousePos() - m_imageTopLeft;
         if (m_imageSize.x > 0.0f && m_imageSize.y > 0.0f)
             m_viewportMousePos01 = m_viewportMousePos / m_imageSize;
         else

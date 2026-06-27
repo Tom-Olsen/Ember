@@ -14,8 +14,6 @@ namespace emberEditor
 		using Gui = emberCore::Gui;
 		using Renderer = emberCore::Renderer;
 
-
-
 	private: // Members:
 		float m_depthBiasConstantFactor;
 		float m_depthBiasClamp;
@@ -31,7 +29,6 @@ namespace emberEditor
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 			GetData();
 		}
-
 		void Render() override
 		{
 			GetData();

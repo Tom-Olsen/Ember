@@ -34,9 +34,9 @@ namespace nullGuiBackend
 		Gui& operator=(Gui&& other) noexcept = default;
 
 		// Render Logic:
-		void Update() override;									// Must be called in main update loop of the engine.
-		void ProcessEvent(const void* pWindowEvent) override;	// Must be called in from window.
-		void Render(VkCommandBuffer vkCommandBuffer) override;	// Must be called in a render pass.
+		void Update() override;									// must be called in main update loop of the engine.
+		void ProcessEvent(const void* pWindowEvent) override;	// must be called in from window.
+		void Render(VkCommandBuffer vkCommandBuffer) override;	// must be called in a render pass.
 
 		// Getters:
 		bool WantCaptureKeyboard() override;
@@ -44,8 +44,9 @@ namespace nullGuiBackend
 		uintptr_t GetTextureID(emberBackendInterface::ITexture* pITexture) override;
 		Float2 GetWindowSize() override;
 		Float2 GetContentRegionAvail() override;
-		Float2 GetCursorPos() override;
-		Float2 GetCursorScreenPos() override;
+		Float2 GetCursorPos() override;         // layout cursor for widgets, relative window space.
+		Float2 GetCursorScreenPos() override;   // same layout cursor, absolute screen space (due to ImGuiConfigFlags_ViewportsEnable enabled => global OS-desktop space).
+		Float2 GetMousePos() override;          // mouse pointer, absolute screen space (due to ImGuiConfigFlags_ViewportsEnable enabled => global OS-desktop space).
 		Float2 GetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold = -1.0f) override;
 		emberCommon::GuiStyle GetStyle() const override;
 

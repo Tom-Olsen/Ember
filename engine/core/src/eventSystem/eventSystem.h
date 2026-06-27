@@ -84,10 +84,10 @@ namespace emberCore
         static bool MouseHeld(emberCommon::Input::MouseButton button);
         static float MouseX();
         static float MouseY();
-        static Float2 MousePos();
-        static float MouseX01();
-        static float MouseY01();
-        static Float2 MousePos01();
+        static Float2 MousePos();   // relative to main SDL window, only for game logic, do not use for GUI or editor.
+        static float MouseX01();    // relative to main SDL window, only for game logic, do not use for GUI or editor.
+        static float MouseY01();    // relative to main SDL window, only for game logic, do not use for GUI or editor.
+        static Float2 MousePos01(); // relative to main SDL window, only for game logic, do not use for GUI or editor.
         static float MouseScrollX();
         static float MouseScrollY();
 

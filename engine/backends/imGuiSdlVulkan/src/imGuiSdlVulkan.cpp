@@ -225,6 +225,11 @@ namespace imGuiSdlVulkanBackend
 		ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
 		return Float2{ cursorScreenPos.x, cursorScreenPos.y };
 	}
+	Float2 Gui::GetMousePos()
+	{
+		ImVec2 mousePos = ImGui::GetMousePos();
+		return Float2{ mousePos.x, mousePos.y };
+	}
 	Float2 Gui::GetMouseDragDelta(emberCommon::GuiMouseButton button, float lockThreshold)
 	{
 		ImVec2 mouseDragDelta = ImGui::GetMouseDragDelta(GuiMouseButtonCommonToImGui(button), lockThreshold);

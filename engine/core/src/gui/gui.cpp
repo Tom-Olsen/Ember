@@ -89,6 +89,10 @@ namespace emberCore
 	{
 		return s_pIGui->GetCursorScreenPos();
 	}
+	Float2 Gui::GetMousePos()
+	{
+		return s_pIGui->GetMousePos();
+	}
 	Float2 Gui::GetMouseDragDelta(emberCommon::GuiMouseButton button, float lockThreshold)
 	{
 		return s_pIGui->GetMouseDragDelta(button, lockThreshold);

@@ -44,9 +44,9 @@ namespace emberCore
 		static void Clear();
 
 		// Render Logic:
-		static void Update();									// Must be called in main update loop of the engine.
-		static void ProcessEvent(const void* pWindowEvent);		// Must be called in from sdl window.
-		static void Render(VkCommandBuffer vkCommandBuffer);	// Must be called in a render pass.
+		static void Update();									// must be called in main update loop of the engine.
+		static void ProcessEvent(const void* pWindowEvent);		// must be called in from sdl window.
+		static void Render(VkCommandBuffer vkCommandBuffer);	// must be called in a render pass.
 
 		// Getters:
 		static bool WantCaptureKeyboard();
@@ -54,8 +54,9 @@ namespace emberCore
 		static uintptr_t GetTextureID(Texture& texture);
 		static Float2 GetWindowSize();
 		static Float2 GetContentRegionAvail();
-		static Float2 GetCursorPos();
-		static Float2 GetCursorScreenPos();
+		static Float2 GetCursorPos();       // layout cursor for widgets, relative window space.
+		static Float2 GetCursorScreenPos(); // same layout cursor, absolute screen space (due to ImGuiConfigFlags_ViewportsEnable enabled => global OS-desktop space).
+		static Float2 GetMousePos();        // mouse pointer, absolute screen space (due to ImGuiConfigFlags_ViewportsEnable enabled => global OS-desktop space).
 		static Float2 GetMouseDragDelta(emberCommon::GuiMouseButton button = emberCommon::GuiMouseButton::left, float lockThreshold= -1.0f);
 		static emberCommon::GuiStyle GetStyle();
 
