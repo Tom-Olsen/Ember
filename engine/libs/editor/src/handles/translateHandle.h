@@ -46,6 +46,7 @@ namespace emberEditor
         emberCore::Material m_material;
         emberCore::Mesh m_arrowMesh;
         emberCore::Mesh m_quadMesh;
+        emberCore::Mesh m_capsuleMesh;
 
 	public: // Methods:
         // Constructor/Destructor:
@@ -68,6 +69,6 @@ namespace emberEditor
 
 	private: // Methods:
         void ResetInteractionState();
-        void CreateArrowMesh();
+        void CreateMeshes();
 	};
 }

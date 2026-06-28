@@ -44,6 +44,7 @@ namespace emberCore
 		CreateForwardMaterial(opaqueMode, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
 		CreateForwardMaterial(opaqueMode, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
 		CreateForwardMaterial(opaqueMode, "gizmoMaterial", opaqueQueue, directoryPath / "gizmo.vert.spv", directoryPath / "gizmo.frag.spv");
+		CreateForwardMaterial(transparentMode, "transparentGizmoMaterial", transparentQueue, directoryPath / "gizmo.vert.spv", directoryPath / "gizmo.frag.spv");
 		CreateForwardMaterial(opaqueMode, "translateHandleMaterial", opaqueQueue, directoryPath / "translateHandle.vert.spv", directoryPath / "translateHandle.frag.spv");
 	}
 	void MaterialManager::Clear()
