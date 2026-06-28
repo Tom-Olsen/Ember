@@ -21,6 +21,7 @@ namespace emberCore
 
     private: // Members:
         static Float4 s_color;
+        static Material s_defaultMaterial;
         static Material s_material;
 
     private: // Methods:
@@ -40,8 +41,12 @@ namespace emberCore
 
         // Setters:
         static void SetColor(const Float4& color);
+        static void SetMaterial(const Material& material);
+        static void ResetMaterial();
 
         // Getters:
         static Float4 GetColor();
+        static Material GetMaterial();
+        static Material GetDefaultMaterial();
     };
 }

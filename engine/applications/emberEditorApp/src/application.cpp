@@ -121,6 +121,16 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
+        m_pSceneEditorWindow.reset();
+        m_pProjectEditorWindow.reset();
+        m_pInspectorEditorWindow.reset();
+        m_pHierarchyEditorWindow.reset();
+        m_pGameEditorWindow.reset();
+        m_pFpsEditorWindow.reset();
+        m_pDepthBiasEditorWindow.reset();
+        m_pConsoleEditorWindow.reset();
+        m_pBackendDebugEditorWindow.reset();
+
 		Renderer::WaitDeviceIdle();
 		Core::ClearOther();
 		Core::ClearManagers();

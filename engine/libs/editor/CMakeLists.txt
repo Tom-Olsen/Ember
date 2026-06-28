@@ -19,17 +19,24 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB SRC_FILES "src/*")
+file(GLOB SRC_FILES "src/*.*")
 source_group("Source Files" FILES ${SRC_FILES})
+
+file(GLOB HANDLES_FILES "src/handles/*.*")
+source_group("Handles" FILES ${SRC_FILES})
 # ---------------------------------------------------
 
 
 
 # ----------------- Create Library ------------------
-add_library(${TARGET_NAME} STATIC ${SRC_FILES})
+add_library(${TARGET_NAME} STATIC
+    ${SRC_FILES}
+    ${HANDLES_FILES})
 
 # Source subdirectories:
-target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(${TARGET_NAME} PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/handles)
 
 # Allow linking this static library into shared libraries:
 set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)

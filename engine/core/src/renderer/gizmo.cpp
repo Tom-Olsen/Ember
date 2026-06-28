@@ -11,6 +11,7 @@ namespace emberCore
 {
 	// Static members:
 	Float4 Gizmo::s_color = Float4::white;
+	Material Gizmo::s_defaultMaterial;
 	Material Gizmo::s_material;
 
 
@@ -18,7 +19,8 @@ namespace emberCore
 	// Private methods:
 	void Gizmo::Init()
 	{
-		s_material = MaterialManager::GetMaterial("gizmoMaterial");
+		s_defaultMaterial = MaterialManager::GetMaterial("gizmoMaterial");
+		s_material = s_defaultMaterial;
 	}
 	void Gizmo::Clear()
 	{
@@ -78,6 +80,14 @@ namespace emberCore
 	{
 		s_color = color;
 	}
+    void Gizmo::SetMaterial(const Material& material)
+    {
+        s_material = material;
+    }
+    void Gizmo::ResetMaterial()
+    {
+        s_material = s_defaultMaterial;
+    }
 
 
 
@@ -86,4 +96,12 @@ namespace emberCore
 	{
 		return s_color;
 	}
+    Material Gizmo::GetMaterial()
+    {
+        return s_material;
+    }
+    Material Gizmo::GetDefaultMaterial()
+    {
+        return s_defaultMaterial;
+    }
 }

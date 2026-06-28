@@ -23,8 +23,9 @@ namespace emberMath
 		constexpr float relEpsilon = 1e-3f; // for comparing big   floats: |a-b|/max(a,b) <= relEpsilon -> roughly equal.
 		constexpr float absEpsilon = 1e-5f; // for comparing small floats:          |a-b| <= absEpsilon -> roughly equal.
 		constexpr float pi =  3.14159265358979323846f;
-		constexpr float pi2 = 0.50f * pi;
-		constexpr float pi4 = 0.25f * pi;
+		constexpr float pi2 = 0.500f * pi;
+		constexpr float pi4 = 0.250f * pi;
+		constexpr float pi8 = 0.125f * pi;
 		constexpr float piInv = 1.0f / pi;
 		constexpr float phi = 1.61803398874989484820f;
 		constexpr float rad2deg = 180.0f / pi;

@@ -5,6 +5,7 @@
 #include "emberTime.h"
 #include "eventSystem.h"
 #include "gui.h"
+#include "handleContext.h"
 #include "renderer.h"
 #include "scene.h"
 #include "texture2d.h"
@@ -36,28 +37,28 @@ namespace emberEditor
         // Scene window closed:
         if (!m_isOpen)
         {
-            m_transformGizmo.ClearTarget();
+            m_translateHandle.ClearTarget();
             return;
         }
 
-        // Update gizmo context:
+        // Update global handle context:
         emberEcs::Scene* pScene = emberEcs::Scene::GetActiveScene();
-        m_gizmoContext.pCamera = pScene == nullptr ? nullptr : pScene->GetActiveCamera();
-        m_gizmoContext.viewportSize = m_imageSize;
-        m_gizmoContext.viewportMousePos = m_viewportMousePos;
-        m_gizmoContext.viewportMousePos01 = m_viewportMousePos01;
-        m_gizmoContext.isHovered = m_isOpen && m_isHovered && m_isMouseInsideViewport;
+        HandleContext::SetCamera(pScene == nullptr ? nullptr : pScene->GetActiveCamera());
+        HandleContext::SetViewportSize(m_imageSize);
+        HandleContext::SetViewportMousePos(m_viewportMousePos);
+        HandleContext::SetViewportMousePos01(m_viewportMousePos01);
+        HandleContext::SetViewPortIsHovered(m_isOpen && m_isHovered && m_isMouseInsideViewport);
 
         // Update and draw transform gizmo:
         if (EditorSelection::HasSelectedEntity())
         {
             emberEcs::Entity selected = EditorSelection::GetSelectedEntity();
-            m_transformGizmo.SetTarget(selected.GetTransform());
-            m_transformGizmo.Update(m_gizmoContext);
-            m_transformGizmo.Draw(m_gizmoContext);
+            m_translateHandle.SetTarget(selected.GetTransform());
+            m_translateHandle.Update();
+            m_translateHandle.Draw();
         }
         else
-            m_transformGizmo.ClearTarget();
+            m_translateHandle.ClearTarget();
     }
     void SceneEditorWindow::Render()
     {

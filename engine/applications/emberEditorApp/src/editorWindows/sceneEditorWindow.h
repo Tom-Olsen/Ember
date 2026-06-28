@@ -1,7 +1,6 @@
 #pragma once
 #include "editorWindow.h"
-#include "gizmoContext.h"
-#include "transformGizmo.h"
+#include "translateHandle.h"
 
 
 
@@ -16,8 +15,7 @@ namespace emberEditor
         Float2 m_viewportMousePos = Float2::zero;   // mouse pos relative to image top-left (pixels).
         Float2 m_viewportMousePos01 = Float2::zero; // mouse pos normalized to [0, 1].
         bool m_isMouseInsideViewport = false;
-        GizmoContext m_gizmoContext;
-        TransformGizmo m_transformGizmo;
+        TranslateHandle m_translateHandle;
 
     public: // Methods:
         // Constructor:

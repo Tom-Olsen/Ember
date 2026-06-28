@@ -1,5 +1,5 @@
 #pragma once
 
 #include "editorSelection.h"
-#include "gizmoContext.h"
-#include "transformGizmo.h"
+#include "handleContext.h"
+#include "translateHandle.h"
