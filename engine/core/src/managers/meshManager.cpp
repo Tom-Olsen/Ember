@@ -42,8 +42,14 @@ namespace emberCore
 		halfCube.SetName("halfCube");
 		AddMesh(std::move(halfCube));
 		
-		Mesh cubeSphere = MeshGenerator::CubeSphere(0.5f, 3, "cubeSphere");
+		Mesh cubeSphere = MeshGenerator::CubeSphere(0.5f, 8, "cubeSphere");
 		AddMesh(std::move(cubeSphere));
+		
+		Mesh halfCubeSphere = MeshGenerator::HalfCubeSphere(0.5f, 8, "halfCubeSphere");
+		AddMesh(std::move(halfCubeSphere));
+		
+		Mesh capsule = MeshGenerator::Capsule(0.5f, 3, 8, "capsule");
+		AddMesh(std::move(capsule));
 		
 		Mesh disk = MeshGenerator::Disk(0.5f, 16, "disk");
 		AddMesh(std::move(disk));

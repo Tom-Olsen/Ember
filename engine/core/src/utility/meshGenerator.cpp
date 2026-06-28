@@ -1,5 +1,6 @@
 #include "meshGenerator.h"
 #include "logger.h"
+#include <algorithm>
 
 
 
@@ -190,60 +191,260 @@ namespace emberCore
 			return mesh;
 		}
 
-		Mesh Cube()
+		Mesh Cube(int gridResolution)
 		{
-			Float3 p000 = 0.5f * Float3(-1.0f, -1.0f, -1.0f);
-			Float3 p001 = 0.5f * Float3(-1.0f, -1.0f,  1.0f);
-			Float3 p010 = 0.5f * Float3(-1.0f,  1.0f, -1.0f);
-			Float3 p011 = 0.5f * Float3(-1.0f,  1.0f,  1.0f);
-			Float3 p100 = 0.5f * Float3( 1.0f, -1.0f, -1.0f);
-			Float3 p101 = 0.5f * Float3( 1.0f, -1.0f,  1.0f);
-			Float3 p110 = 0.5f * Float3( 1.0f,  1.0f, -1.0f);
-			Float3 p111 = 0.5f * Float3( 1.0f,  1.0f,  1.0f);
+			gridResolution = std::max(1, gridResolution);
+			int vertexResolution = gridResolution + 1;
+			uint32_t vertexCount = static_cast<uint32_t>(6 * vertexResolution * vertexResolution);
+			uint32_t triangleCount = static_cast<uint32_t>(12 * gridResolution * gridResolution);
 
-			std::vector<Mesh> faces;
-			faces.reserve(6);
-			faces.emplace_back(std::move(ClockwiseQuad(p110, p100, p101, p111, "+x")));
-			faces.emplace_back(std::move(ClockwiseQuad(p000, p010, p011, p001, "-x")));
-			faces.emplace_back(std::move(ClockwiseQuad(p010, p110, p111, p011, "+y")));
-			faces.emplace_back(std::move(ClockwiseQuad(p100, p000, p001, p101, "-y")));
-			faces.emplace_back(std::move(ClockwiseQuad(p101, p001, p011, p111, "+z")));
-			faces.emplace_back(std::move(ClockwiseQuad(p000, p100, p110, p010, "-z")));
+			struct CubeFace
+			{
+				Float3 p00;
+				Float3 uDirection;
+				Float3 vDirection;
+				Float3 normal;
+				Float3 tangent;
+			};
 
-			return Mesh::Merge(faces, "cube");
+			CubeFace faces[6] =
+			{
+				{ Float3( 0.5f,  0.5f, -0.5f), Float3( 0.0f, -1.0f,  0.0f), Float3( 0.0f,  0.0f,  1.0f), Float3::right, Float3::back },
+				{ Float3(-0.5f, -0.5f, -0.5f), Float3( 0.0f,  1.0f,  0.0f), Float3( 0.0f,  0.0f,  1.0f), Float3::left, Float3::forward },
+				{ Float3(-0.5f,  0.5f, -0.5f), Float3( 1.0f,  0.0f,  0.0f), Float3( 0.0f,  0.0f,  1.0f), Float3::forward, Float3::right },
+				{ Float3( 0.5f, -0.5f, -0.5f), Float3(-1.0f,  0.0f,  0.0f), Float3( 0.0f,  0.0f,  1.0f), Float3::back, Float3::left },
+				{ Float3( 0.5f, -0.5f,  0.5f), Float3(-1.0f,  0.0f,  0.0f), Float3( 0.0f,  1.0f,  0.0f), Float3::up, Float3::left },
+				{ Float3(-0.5f, -0.5f, -0.5f), Float3( 1.0f,  0.0f,  0.0f), Float3( 0.0f,  1.0f,  0.0f), Float3::down, Float3::right }
+			};
+
+			Mesh mesh("cube");
+			std::vector<Float3> positions;	positions.reserve(vertexCount);
+			std::vector<Float3> normals;	normals.reserve(vertexCount);
+			std::vector<Float3> tangents;	tangents.reserve(vertexCount);
+			std::vector<Float4> uvs;		uvs.reserve(vertexCount);
+			std::vector<Uint3> triangles;	triangles.reserve(triangleCount);
+
+			for (int faceIndex = 0; faceIndex < 6; faceIndex++)
+			{
+				const CubeFace& face = faces[faceIndex];
+				uint32_t faceVertexStart = static_cast<uint32_t>(positions.size());
+
+				// AddFaceVertices:
+				for (int j = 0; j < vertexResolution; j++)
+				{
+					float v = j / static_cast<float>(gridResolution);
+					for (int i = 0; i < vertexResolution; i++)
+					{
+						float u = i / static_cast<float>(gridResolution);
+						positions.emplace_back(face.p00 + u * face.uDirection + v * face.vDirection);
+						normals.emplace_back(face.normal);
+						tangents.emplace_back(face.tangent);
+						uvs.emplace_back(u, v, 0.0f, 0.0f);
+					}
+				}
+
+				// AddFaceTriangles:
+				for (int j = 0; j < gridResolution; j++)
+				{
+					for (int i = 0; i < gridResolution; i++)
+					{
+						uint32_t t00 = faceVertexStart + static_cast<uint32_t>(i + j * vertexResolution);
+						uint32_t t10 = t00 + 1;
+						uint32_t t01 = t00 + static_cast<uint32_t>(vertexResolution);
+						uint32_t t11 = t01 + 1;
+						triangles.emplace_back(t00, t01, t10);
+						triangles.emplace_back(t10, t01, t11);
+					}
+				}
+			}
+
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveTangents(std::move(tangents));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			return mesh;
 		}
-		Mesh HalfCube()
+		Mesh HalfCube(int gridResolution)
 		{
-			Float3 p000 = 0.5f * Float3(-1, -1, 0);
-			Float3 p001 = 0.5f * Float3(-1, -1, 1);
-			Float3 p010 = 0.5f * Float3(-1,  1, 0);
-			Float3 p011 = 0.5f * Float3(-1,  1, 1);
-			Float3 p100 = 0.5f * Float3( 1, -1, 0);
-			Float3 p101 = 0.5f * Float3( 1, -1, 1);
-			Float3 p110 = 0.5f * Float3( 1,  1, 0);
-			Float3 p111 = 0.5f * Float3( 1,  1, 1);
+			gridResolution = std::max(1, gridResolution);
+			int vertexResolution = gridResolution + 1;
+			uint32_t vertexCount = static_cast<uint32_t>(5 * vertexResolution * vertexResolution);
+			uint32_t triangleCount = static_cast<uint32_t>(10 * gridResolution * gridResolution);
 
-			std::vector<Mesh> faces;
-			faces.reserve(5);
-			faces.emplace_back(std::move(ClockwiseQuad(p110, p100, p101, p111, "+x")));
-			faces.emplace_back(std::move(ClockwiseQuad(p000, p010, p011, p001, "-x")));
-			faces.emplace_back(std::move(ClockwiseQuad(p010, p110, p111, p011, "+y")));
-			faces.emplace_back(std::move(ClockwiseQuad(p100, p000, p001, p101, "-y")));
-			faces.emplace_back(std::move(ClockwiseQuad(p101, p001, p011, p111, "+z")));
+			struct CubeFace
+			{
+				Float3 p00;
+				Float3 uDirection;
+				Float3 vDirection;
+				Float3 normal;
+				Float3 tangent;
+				float vOffset;
+				float vScale;
+			};
 
-			return Mesh::Merge(faces, "halfCube");
+			CubeFace faces[5] =
+			{
+				{ Float3( 0.5f,  0.5f,  0.0f), Float3( 0.0f, -1.0f,  0.0f), Float3( 0.0f,  0.0f,  0.5f), Float3::right, Float3::back,    0.5f, 0.5f },
+				{ Float3(-0.5f, -0.5f,  0.0f), Float3( 0.0f,  1.0f,  0.0f), Float3( 0.0f,  0.0f,  0.5f), Float3::left, Float3::forward, 0.5f, 0.5f },
+				{ Float3(-0.5f,  0.5f,  0.0f), Float3( 1.0f,  0.0f,  0.0f), Float3( 0.0f,  0.0f,  0.5f), Float3::forward, Float3::right, 0.5f, 0.5f },
+				{ Float3( 0.5f, -0.5f,  0.0f), Float3(-1.0f,  0.0f,  0.0f), Float3( 0.0f,  0.0f,  0.5f), Float3::back, Float3::left,    0.5f, 0.5f },
+				{ Float3( 0.5f, -0.5f,  0.5f), Float3(-1.0f,  0.0f,  0.0f), Float3( 0.0f,  1.0f,  0.0f), Float3::up, Float3::left,      0.0f, 1.0f }
+			};
+
+			Mesh mesh("halfCube");
+			std::vector<Float3> positions;	positions.reserve(vertexCount);
+			std::vector<Float3> normals;	normals.reserve(vertexCount);
+			std::vector<Float3> tangents;	tangents.reserve(vertexCount);
+			std::vector<Float4> uvs;		uvs.reserve(vertexCount);
+			std::vector<Uint3> triangles;	triangles.reserve(triangleCount);
+
+			for (int faceIndex = 0; faceIndex < 5; faceIndex++)
+			{
+				const CubeFace& face = faces[faceIndex];
+				uint32_t faceVertexStart = static_cast<uint32_t>(positions.size());
+
+				// AddFaceVertices:
+				for (int j = 0; j < vertexResolution; j++)
+				{
+					float v = j / static_cast<float>(gridResolution);
+					for (int i = 0; i < vertexResolution; i++)
+					{
+						float u = i / static_cast<float>(gridResolution);
+						positions.emplace_back(face.p00 + u * face.uDirection + v * face.vDirection);
+						normals.emplace_back(face.normal);
+						tangents.emplace_back(face.tangent);
+						uvs.emplace_back(u, face.vOffset + face.vScale * v, 0.0f, 0.0f);
+					}
+				}
+
+				// AddFaceTriangles:
+				for (int j = 0; j < gridResolution; j++)
+				{
+					for (int i = 0; i < gridResolution; i++)
+					{
+						uint32_t t00 = faceVertexStart + static_cast<uint32_t>(i + j * vertexResolution);
+						uint32_t t10 = t00 + 1;
+						uint32_t t01 = t00 + static_cast<uint32_t>(vertexResolution);
+						uint32_t t11 = t01 + 1;
+						triangles.emplace_back(t00, t01, t10);
+						triangles.emplace_back(t10, t01, t11);
+					}
+				}
+			}
+
+			mesh.MovePositions(std::move(positions));
+			mesh.MoveNormals(std::move(normals));
+			mesh.MoveTangents(std::move(tangents));
+			mesh.MoveUVs(std::move(uvs));
+			mesh.MoveTriangles(std::move(triangles));
+			return mesh;
 		}
 
-		Mesh CubeSphere(float radius, int subdivisions, const std::string& name)
+		Mesh CubeSphere(float radius, int gridResolution, const std::string& name)
 		{
 			radius = std::max(1e-8f, radius);
-			Mesh mesh = Cube();
-			for (int i = 0; i < subdivisions; i++)
-				mesh.Subdivide();
+			Mesh mesh = Cube(gridResolution);
             
 			mesh.SetName(name);
 			mesh.Spherify(1.0f, radius);
 			return mesh;
+		}
+		Mesh HalfCubeSphere(float radius, int gridResolution, const std::string& name)
+		{
+			radius = std::max(1e-8f, radius);
+			Mesh mesh = HalfCube(gridResolution);
+            
+			mesh.SetName(name);
+			mesh.Spherify(1.0f, radius);
+			return mesh;
+		}
+        
+		Mesh Capsule(float radius, float height, int gridResolution, const std::string& name)
+		{
+			radius = std::max(1e-8f, radius);
+			height = std::max(0.0f, height);
+			gridResolution = std::max(1, gridResolution);
+
+			std::vector<Mesh> meshes;
+			meshes.reserve(height > 0.0f ? 3 : 2);
+			meshes.emplace_back(HalfCubeSphere(radius, gridResolution, name + "Top").Translate(0.5f * height * Float3::up));
+			meshes.emplace_back(HalfCubeSphere(radius, gridResolution, name + "Bottom").Rotate(Float4x4::rot180x).Translate(0.5f * height * Float3::down));
+
+			if (height > 0.0f)
+			{
+				int vertexResolution = gridResolution + 1;
+				uint32_t vertexCount = static_cast<uint32_t>(4 * vertexResolution * vertexResolution);
+				uint32_t triangleCount = static_cast<uint32_t>(8 * gridResolution * gridResolution);
+
+				struct CapsuleSide
+				{
+					Float3 p00;
+					Float3 uDirection;
+				};
+
+				CapsuleSide sides[4] =
+				{
+					{ Float3( 0.5f,  0.5f, 0.0f), Float3( 0.0f, -1.0f, 0.0f) },
+					{ Float3(-0.5f, -0.5f, 0.0f), Float3( 0.0f,  1.0f, 0.0f) },
+					{ Float3(-0.5f,  0.5f, 0.0f), Float3( 1.0f,  0.0f, 0.0f) },
+					{ Float3( 0.5f, -0.5f, 0.0f), Float3(-1.0f,  0.0f, 0.0f) }
+				};
+
+				Mesh body(name + "Body");
+				std::vector<Float3> positions;	positions.reserve(vertexCount);
+				std::vector<Float3> normals;	normals.reserve(vertexCount);
+				std::vector<Float3> tangents;	tangents.reserve(vertexCount);
+				std::vector<Float4> uvs;		uvs.reserve(vertexCount);
+				std::vector<Uint3> triangles;	triangles.reserve(triangleCount);
+
+				for (int sideIndex = 0; sideIndex < 4; sideIndex++)
+				{
+					const CapsuleSide& side = sides[sideIndex];
+					uint32_t sideVertexStart = static_cast<uint32_t>(positions.size());
+
+					// AddSideVertices:
+					for (int j = 0; j < vertexResolution; j++)
+					{
+						float v = j / static_cast<float>(gridResolution);
+						float z = height * (v - 0.5f);
+						for (int i = 0; i < vertexResolution; i++)
+						{
+							float u = i / static_cast<float>(gridResolution);
+							Float3 cubePoint = side.p00 + u * side.uDirection;
+							Float3 normal = Float3(cubePoint.x, cubePoint.y, 0.0f).Normalize();
+							Float3 tangent = (side.uDirection - Float3::Dot(side.uDirection, normal) * normal).Normalize();
+							positions.emplace_back(radius * normal + z * Float3::up);
+							normals.emplace_back(normal);
+							tangents.emplace_back(tangent);
+							uvs.emplace_back(u, v, 0.0f, 0.0f);
+						}
+					}
+
+					// AddSideTriangles:
+					for (int j = 0; j < gridResolution; j++)
+					{
+						for (int i = 0; i < gridResolution; i++)
+						{
+							uint32_t t00 = sideVertexStart + static_cast<uint32_t>(i + j * vertexResolution);
+							uint32_t t10 = t00 + 1;
+							uint32_t t01 = t00 + static_cast<uint32_t>(vertexResolution);
+							uint32_t t11 = t01 + 1;
+							triangles.emplace_back(t00, t01, t10);
+							triangles.emplace_back(t10, t01, t11);
+						}
+					}
+				}
+
+				body.MovePositions(std::move(positions));
+				body.MoveNormals(std::move(normals));
+				body.MoveTangents(std::move(tangents));
+				body.MoveUVs(std::move(uvs));
+				body.MoveTriangles(std::move(triangles));
+				meshes.emplace_back(std::move(body));
+			}
+
+			return Mesh::Merge(meshes, name);
 		}
 
 		Mesh Disk(float radius, int cornerCount, const std::string& name)

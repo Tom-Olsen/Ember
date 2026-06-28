@@ -18,10 +18,13 @@ namespace emberCore
 		Mesh EMBER_CORE_API ClockwiseQuad(Float3 a, Float3 b, Float3 c, Float3 d, const std::string& name);
 		Mesh EMBER_CORE_API Grid(int resolutionX, int resolutionY, const std::string& name);
 
-		Mesh EMBER_CORE_API Cube();
-		Mesh EMBER_CORE_API HalfCube();
+		Mesh EMBER_CORE_API Cube(int gridResolution = 1);
+		Mesh EMBER_CORE_API HalfCube(int gridResolution = 1);
 
-		Mesh EMBER_CORE_API CubeSphere(float radius, int subdivisions, const std::string& name);
+		Mesh EMBER_CORE_API CubeSphere(float radius, int gridResolution, const std::string& name);
+		Mesh EMBER_CORE_API HalfCubeSphere(float radius, int gridResolution, const std::string& name);
+
+		Mesh EMBER_CORE_API Capsule(float radius, float height, int gridResolution, const std::string& name);
 
 		Mesh EMBER_CORE_API Disk(float radius, int cornerCount, const std::string& name);
 

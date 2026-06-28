@@ -22,8 +22,8 @@ namespace emberMath
 
 		// Getters:
 		Float3 GetCenter() const;
-		Float3 GetDirection() const;
-		float GetLength() const;
+		Float3 GetAxis() const;
+		float GetHeight() const;
 
 		// Methods:
 		bool Contains(const Float3& point) const;

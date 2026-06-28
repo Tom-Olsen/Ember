@@ -63,6 +63,10 @@ namespace emberCore
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 		return shaderProperties;
 	}
+	void DebugRenderer::DrawCapsule(const Capsule& capsule)
+	{
+		Primitives::DrawCapsule(capsule, s_material, s_color, s_receiveShadows, s_castShadows, false);
+	}
 	void DebugRenderer::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width)
 	{
 		Primitives::DrawFrustum(localToWorldMatrix, projectionMatrix, width, s_material, s_color, s_receiveShadows, s_castShadows, false);

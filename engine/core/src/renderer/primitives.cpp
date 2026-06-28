@@ -56,6 +56,28 @@ namespace emberCore
 		return DrawMesh(MeshManager::GetMesh("arrowFlat"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
 	}
 
+	void Primitives::DrawCapsule(const Capsule& capsule, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo)
+	{
+		if (capsule.radius <= 0.0f)
+			return;
+
+		float diameter = 2.0f * capsule.radius;
+		Float4x4 point0Matrix = Float4x4::TRS(capsule.point0, Float3x3::identity, Float3(diameter));
+		Float4x4 point1Matrix = Float4x4::TRS(capsule.point1, Float3x3::identity, Float3(diameter));
+
+		ShaderProperties shaderProperties = DrawSphere(point0Matrix, material, receiveShadows, castShadows, asGizmo);
+		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
+
+		if (!math::IsEpsilonZero(capsule.GetHeight()))
+		{
+			shaderProperties = DrawLineSegment(capsule.point0, capsule.point1, diameter, material, receiveShadows, castShadows, asGizmo);
+			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
+
+			shaderProperties = DrawSphere(point1Matrix, material, receiveShadows, castShadows, asGizmo);
+			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
+		}
+	}
+    
 	void Primitives::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo)
 	{
 		Float4 cornerPoints[8] =

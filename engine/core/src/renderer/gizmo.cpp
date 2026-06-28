@@ -60,6 +60,10 @@ namespace emberCore
 		ShaderProperties shaderProperties = Primitives::DrawArrow(position, direction, size, s_material, false, false, true);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 	}
+	void Gizmo::DrawCapsule(const Capsule& capsule)
+	{
+		Primitives::DrawCapsule(capsule, s_material, s_color, false, false, true);
+	}
 	void Gizmo::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width)
 	{
 		Primitives::DrawFrustum(localToWorldMatrix, projectionMatrix, width, s_material, s_color, false, false, true);

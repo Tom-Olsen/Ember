@@ -267,6 +267,8 @@ inline Scene* DefaultScene()
 		pMeshTester->AddMesh(&MeshManager::GetMesh("cube"));
 		pMeshTester->AddMesh(&MeshManager::GetMesh("halfCube"));
 		pMeshTester->AddMesh(&MeshManager::GetMesh("cubeSphere"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("halfCubeSphere"));
+		pMeshTester->AddMesh(&MeshManager::GetMesh("capsule"));
 		pMeshTester->AddMesh(&MeshManager::GetMesh("disk"));
 		pMeshTester->AddMesh(&MeshManager::GetMesh("arcFlatUv"));
 		pMeshTester->AddMesh(&MeshManager::GetMesh("arcCurvedUv"));

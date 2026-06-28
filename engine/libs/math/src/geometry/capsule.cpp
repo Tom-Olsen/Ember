@@ -25,12 +25,12 @@ namespace emberMath
 	{
 		return 0.5f * (point0 + point1);
 	}
-	Float3 Capsule::GetDirection() const
+	Float3 Capsule::GetAxis() const
 	{
 		Float3 direction = point1 - point0;
 		return direction.IsEpsilonZero() ? Float3::up : direction.Normalize();
 	}
-	float Capsule::GetLength() const
+	float Capsule::GetHeight() const
 	{
 		return Float3::Distance(point0, point1);
 	}
