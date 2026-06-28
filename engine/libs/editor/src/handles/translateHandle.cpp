@@ -1,19 +1,21 @@
 #include "translateHandle.h"
 #include "camera.h"
+#include "eventSystem.h"
 #include "gizmo.h"
 #include "handleContext.h"
 #include "materialManager.h"
 #include "meshGenerator.h"
 #include "transform.h"
+#include <optional>
 
 
 
 namespace emberEditor
 {
 	// Static members:
-	Float4x4 TranslateHandle::s_rotX = Float4x4::Rotate(Float3(0, 0, -math::pi2));
-	Float4x4 TranslateHandle::s_rotY = Float4x4::Rotate(Float3(math::pi2, 0, 0));
-	Float4x4 TranslateHandle::s_rotZ = Float4x4::Rotate(Float3(0, math::pi2, math::pi));
+	Float4x4 TranslateHandle::s_rotX = Float4x4::RotateFromTo(Float3::up, Float3::right) * Float4x4::RotateZ(math::pi2);
+	Float4x4 TranslateHandle::s_rotY = Float4x4::RotateFromTo(Float3::up, Float3::forward) * Float4x4::RotateZ(-math::pi2);
+	Float4x4 TranslateHandle::s_rotZ = Float4x4::identity;
 	float TranslateHandle::s_capsuleStart = 0.1f;
 	float TranslateHandle::s_capsuleEnd = 1.0f;
 	float TranslateHandle::s_capsuleWidth = 0.1f;
@@ -25,7 +27,7 @@ namespace emberEditor
 	TranslateHandle::TranslateHandle()
 	{
 		HandleContext::Init();
-		m_handleScale = 3.0f;
+		m_handleScale = 0.5f;//3.0f;
 		m_material = emberCore::MaterialManager::GetMaterial("translateHandleMaterial");
 		ResetInteractionState();
 		CreateMeshes();
@@ -82,6 +84,8 @@ namespace emberEditor
 			return;
 		}
 		UpdateHoveredSubHandle();
+		TryBeginDrag();
+		UpdateDrag();
 	}
 	void TranslateHandle::Draw()
 	{
@@ -90,23 +94,23 @@ namespace emberEditor
 		Float4x4 localToWorldMatrix = LocalToWorldMatrix();
 
 		emberCore::Gizmo::SetMaterial(m_material);
-		emberCore::Gizmo::SetColor(m_hoveredSubHandle == TranslateHandle::SubHandle::axisX ? Float4::yellow : Float4::red);
+		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, Float4::red));
 		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * s_rotX);
-		emberCore::Gizmo::SetColor(m_hoveredSubHandle == TranslateHandle::SubHandle::axisY ? Float4::yellow : Float4::green);
+		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisY, Float4::green));
 		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * s_rotY);
-		emberCore::Gizmo::SetColor(m_hoveredSubHandle == TranslateHandle::SubHandle::axisZ ? Float4::yellow : Float4::blue);
+		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisZ, Float4::blue));
 		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * s_rotZ);
 		emberCore::Gizmo::ResetMaterial();
 
-		// Visualize interaction capsules for testing.
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("transparentGizmoMaterial"));
-		emberCore::Gizmo::SetColor(m_hoveredSubHandle == TranslateHandle::SubHandle::axisX ? Float4::yellow - 0.5f * Float4::in : Float4::red - 0.5f * Float4::in);
-		emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
-		emberCore::Gizmo::SetColor(m_hoveredSubHandle == TranslateHandle::SubHandle::axisY ? Float4::yellow - 0.5f * Float4::in : Float4::green - 0.5f * Float4::in);
-		emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotY);
-		emberCore::Gizmo::SetColor(m_hoveredSubHandle == TranslateHandle::SubHandle::axisZ ? Float4::yellow - 0.5f * Float4::in : Float4::blue - 0.5f * Float4::in);
-		emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
-		emberCore::Gizmo::ResetMaterial();
+		// Visualize interaction regions
+		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("transparentGizmoMaterial"));
+		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, Float4::red) - 0.5f * Float4::in);
+		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
+		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisY, Float4::green) - 0.5f * Float4::in);
+		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotY);
+		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisZ, Float4::blue) - 0.5f * Float4::in);
+		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
+		//emberCore::Gizmo::ResetMaterial();
 	}
 
 
@@ -114,14 +118,19 @@ namespace emberEditor
 	// Private methods:
 	void TranslateHandle::ResetInteractionState()
 	{
+		if (m_isDragging)
+			emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
+
 		m_pTransform = nullptr;
 		m_isDragging = false;
 		m_hoveredSubHandle = TranslateHandle::SubHandle::none;
 		m_activeSubHandle = TranslateHandle::SubHandle::none;
 		m_dragStartPosition = Float3::zero;
+		m_dragStartHitPoint = Float3::zero;
 		m_dragAxisDir = Float3::zero;
 		m_dragPlaneNormal = Float3::zero;
 	}
+
 
 
 	// Mesh generation:
@@ -153,8 +162,83 @@ namespace emberEditor
 	}
 
 	// Interaction:
+	void TranslateHandle::TryBeginDrag()
+	{
+        // Return if no drag:
+		if (m_isDragging || m_hoveredSubHandle == TranslateHandle::SubHandle::none)
+			return;
+		if (!emberCore::EventSystem::MouseDown(emberCommon::Input::MouseButton::Left))
+			return;
+		if (!emberCore::EventSystem::TryLockMouseButton(emberCommon::Input::MouseButton::Left))
+			return;
+
+        // Begin drag:
+		m_activeSubHandle = m_hoveredSubHandle;
+		m_dragStartPosition = m_pTransform->GetPosition();
+		m_dragAxisDir = SubHandleAxisDirection(m_activeSubHandle);
+
+        // Find drag plane normal:
+		Ray ray = HandleContext::GetCamera()->GetViewportRay(HandleContext::GetViewportMousePos01());
+		m_dragPlaneNormal = ray.direction - Float3::Dot(ray.direction, m_dragAxisDir) * m_dragAxisDir;
+        if (m_dragPlaneNormal.IsEpsilonZero())
+		{
+			m_activeSubHandle = TranslateHandle::SubHandle::none;
+			emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
+			return;
+		}
+		m_dragPlaneNormal = m_dragPlaneNormal.Normalize();
+
+        // Find initial hit point on drag plane:
+		std::optional<Float3> hit = ray.HitOnPlane(m_dragStartPosition, m_dragPlaneNormal);
+		if (!hit.has_value())
+		{
+			m_activeSubHandle = TranslateHandle::SubHandle::none;
+			emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
+			return;
+		}
+		m_dragStartHitPoint = hit.value();
+
+        // Start drag:
+		m_isDragging = true;
+		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
+	}
+	void TranslateHandle::UpdateDrag()
+	{
+		if (!m_isDragging)
+			return;
+
+        // Cancel drag:
+		if (emberCore::EventSystem::MouseUp(emberCommon::Input::MouseButton::Left))
+		{
+			emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
+		    emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
+		    m_isDragging = false;
+		    m_activeSubHandle = TranslateHandle::SubHandle::none;
+		    m_dragStartPosition = Float3::zero;
+		    m_dragStartHitPoint = Float3::zero;
+		    m_dragAxisDir = Float3::zero;
+		    m_dragPlaneNormal = Float3::zero;
+			return;
+		}
+
+        // Update entity (and handle) position:
+		Ray ray = HandleContext::GetCamera()->GetViewportRay(HandleContext::GetViewportMousePos01());
+		std::optional<Float3> hit = ray.HitOnPlane(m_dragStartPosition, m_dragPlaneNormal);
+		if (hit.has_value())
+		{
+			float axisDistance = Float3::Dot(hit.value() - m_dragStartHitPoint, m_dragAxisDir);
+			m_pTransform->SetPosition(m_dragStartPosition + axisDistance * m_dragAxisDir);
+		}
+		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
+	}
 	void TranslateHandle::UpdateHoveredSubHandle()
 	{
+		if (m_isDragging)
+		{
+			m_hoveredSubHandle = m_activeSubHandle;
+			return;
+		}
+
 		m_hoveredSubHandle = TranslateHandle::SubHandle::none;
 		if (!HandleContext::GetViewPortIsHovered())
 			return;
@@ -183,7 +267,15 @@ namespace emberEditor
 	{
 		if (!HasTarget())
 			return Float4x4::identity;
-		return Float4x4::TRS(m_pTransform->GetPosition(), m_pTransform->GetRotation3x3(), Size());
+		return Float4x4::TS(m_pTransform->GetPosition(), Size());
+	}
+	Float4 TranslateHandle::SubHandleColor(TranslateHandle::SubHandle subHandle, const Float4& baseColor)
+	{
+		if (m_activeSubHandle == subHandle)
+			return Float4::white;
+		if (m_hoveredSubHandle == subHandle)
+			return Float4::yellow;
+		return baseColor;
 	}
 	void TranslateHandle::TryPickSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& axisLocalToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
 	{
@@ -205,4 +297,18 @@ namespace emberEditor
 			m_hoveredSubHandle = subHandle;
 		}
 	};
+
+
+
+    // Static helpers:
+	Float3 TranslateHandle::SubHandleAxisDirection(TranslateHandle::SubHandle subHandle)
+	{
+		switch (subHandle)
+		{
+			case TranslateHandle::SubHandle::axisX: return Float3::right;
+			case TranslateHandle::SubHandle::axisY: return Float3::forward;
+			case TranslateHandle::SubHandle::axisZ: return Float3::up;
+			default: return Float3::zero;
+        }
+	}
 }

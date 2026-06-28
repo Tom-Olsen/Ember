@@ -5,6 +5,7 @@
 #include "mathFunctions.h"
 #include "uint3.h"
 #include <cassert>
+#include <optional>
 #include <sstream>
 
 
@@ -211,7 +212,13 @@ namespace emberMath
 		if (f.IsEpsilonEqual(t))
 			return Float3x3::identity;
 		if (f.IsEpsilonEqual(-t))
-			return Float3x3::Rotate(geometry3d::GetOrhtogonalVector(f), math::pi);
+		{
+			std::optional<Float3> orthogonal = geometry3d::GetOrhtogonalVector(f);
+			if (orthogonal.has_value())
+    			return Float3x3::Rotate(orthogonal.value(), math::pi);
+            else
+                return Float3x3::identity;
+		}
 		Float3 axis = Float3::Cross(f, t); // normalization not needed, as Rotate(...) will normalize it
 		float angle = Float3::Angle(f, t);
 		return Rotate(axis, angle);
@@ -230,10 +237,16 @@ namespace emberMath
 
 		// Compute missalignment angle between direction1New and direction1Old rotated by rot0:
 		Float3 otherOldRotated = rot0 * direction1Old;
-		Float3 planeNormal = Float3::Cross(direction1New, direction0New).Normalize();
-		Float3 projection = geometry3d::PointToPlaneProjection(otherOldRotated, Float3::zero, planeNormal);
-		float sign = math::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection), direction0New));
-		float angle1 = sign * Float3::Angle(otherOldRotated, projection);
+		Float3 planeNormal = Float3::Cross(direction1New, direction0New);
+		std::optional<Float3> projection = geometry3d::PointToPlaneProjection(otherOldRotated, Float3::zero, planeNormal);
+		float angle1;
+        if (projection.has_value())
+        {
+            float sign = math::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection.value()), direction0New));
+            angle1 = sign * Float3::Angle(otherOldRotated, projection.value());
+        }
+        else
+            return Float3x3::identity;
 		if (Float3::Dot(direction1New, otherOldRotated) < 0)
 			angle1 += math::pi;
 

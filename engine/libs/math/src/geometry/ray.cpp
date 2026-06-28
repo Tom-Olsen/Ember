@@ -1,4 +1,5 @@
 #include "ray.h"
+#include "mathFunctions.h"
 #include <cassert>
 #include <sstream>
 
@@ -20,6 +21,21 @@ namespace emberMath
 	Float3 Ray::GetPoint(float distance) const
 	{
 		return origin + distance * direction;
+	}
+	std::optional<Float3> Ray::HitOnPlane(const Float3& planeSupport, const Float3& planeNormal) const
+	{
+		if (planeNormal.IsEpsilonZero())
+			return std::nullopt;
+
+		float denominator = Float3::Dot(direction, planeNormal);
+		if (math::IsEpsilonZero(denominator))
+			return std::nullopt;
+
+		float distance = Float3::Dot(planeSupport - origin, planeNormal) / denominator;
+		if (distance < 0.0f)
+			return std::nullopt;
+
+		return GetPoint(distance);
 	}
 
 

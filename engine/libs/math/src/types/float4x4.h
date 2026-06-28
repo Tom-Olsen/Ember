@@ -73,8 +73,18 @@ namespace emberMath
 		static Float4x4 Translate(const Float3& translation);
 		static Float4x4 Scale(const Float3& scale);
 		static Float4x4 Scale(float scale);
+		static Float4x4 TR(const Float3& position, const Float3x3& rotationMatrix);
+		static Float4x4 TR(const Float3& position, const Float4x4& rotationMatrix);
+		static Float4x4 TS(const Float3& position, const Float3& scale);
+		static Float4x4 TS(const Float3& position, float scale);
+		static Float4x4 RS(const Float3x3& rotationMatrix, const Float3& scale);
+		static Float4x4 RS(const Float3x3& rotationMatrix, float scale);
+		static Float4x4 RS(const Float4x4& rotationMatrix, const Float3& scale);
+		static Float4x4 RS(const Float4x4& rotationMatrix, float scale);
 		static Float4x4 TRS(const Float3& position, const Float3x3& rotationMatrix, const Float3& scale);
+		static Float4x4 TRS(const Float3& position, const Float3x3& rotationMatrix, float scale);
 		static Float4x4 TRS(const Float3& position, const Float4x4& rotationMatrix, const Float3& scale);
+		static Float4x4 TRS(const Float3& position, const Float4x4& rotationMatrix, float scale);
 		static Float4x4 Perspective(float fov, float aspectRatio, float nearClip, float farClip);
 		static Float4x4 Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip);
 

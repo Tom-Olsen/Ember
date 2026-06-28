@@ -1,6 +1,7 @@
 #include "mesh.h"
 #include "iMesh.h"
 #include "renderer.h"
+#include <optional>
 
 
 
@@ -651,7 +652,9 @@ namespace emberCore
 			Float3 sphereNormal = positions[i].Normalize();
 			positions[i] = radius * (positions[i] + factor * (sphereNormal - positions[i]));
 			normals[i] = (normals[i] + factor * (sphereNormal - normals[i])).Normalize();
-			tangents[i] = geometry3d::PointToPlaneProjection(tangents[i], Float3::zero, normals[i]).Normalize();
+			std::optional<Float3> tangentProjection = geometry3d::PointToPlaneProjection(tangents[i], Float3::zero, normals[i]);
+			if (tangentProjection.has_value())
+    			tangents[i] = tangentProjection.value().Normalize();
 		}
 
 		RegisterUpdate();

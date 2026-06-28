@@ -45,6 +45,7 @@ namespace emberEditor
 		SubHandle m_hoveredSubHandle;
 		SubHandle m_activeSubHandle;
 		Float3 m_dragStartPosition;
+		Float3 m_dragStartHitPoint;
 		Float3 m_dragAxisDir;
 		Float3 m_dragPlaneNormal;
 
@@ -76,11 +77,18 @@ namespace emberEditor
 	private: // Methods:
 		void ResetInteractionState();
 		void CreateMeshes();
+		void TryBeginDrag();
+		void UpdateDrag();
+		void EndDrag();
 		void UpdateHoveredSubHandle();
 		
 		// Helpers:
 		float Size() const;
 		Float4x4 LocalToWorldMatrix();
+		Float4 SubHandleColor(TranslateHandle::SubHandle subHandle, const Float4& baseColor);
 		void TryPickSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& axisLocalToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);
+
+        // Static helpers:
+		static Float3 SubHandleAxisDirection(TranslateHandle::SubHandle subHandle);
 	};
 }

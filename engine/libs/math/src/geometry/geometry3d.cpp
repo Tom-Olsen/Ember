@@ -1,7 +1,6 @@
 #include "geometry3d.h"
 #include "mathConstants.h"
 #include "mathFunctions.h"
-#include <cassert>
 
 
 
@@ -9,9 +8,10 @@ namespace emberMath
 {
 	namespace geometry3d
 	{
-		Float3 GetOrhtogonalVector(const Float3& v)
+		std::optional<Float3> GetOrhtogonalVector(const Float3& v)
 		{
-            assert(!v.IsEpsilonZero());
+			if (v.IsEpsilonZero())
+				return std::nullopt;
 			Float3 result = Float3::Cross(v, Float3(1.0f, 0.0f, 0.0f));
 			if (math::IsEpsilonZero(result.Length()))
 			{
@@ -22,39 +22,48 @@ namespace emberMath
 			return result;
 		}
 
-		bool IsInsidePlane(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
+		std::optional<bool> IsInsidePlane(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
 		{
-            assert(!planeNormal.IsEpsilonZero());
+			if (planeNormal.IsEpsilonZero())
+				return std::nullopt;
 			float d = Float3::Dot(planeSupport, planeNormal); // plane parameter
             return math::IsEpsilonEqual(Float3::Dot(point, planeNormal), d);
 		}
 
-		float PointToPlaneDistance(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
+		std::optional<float> PointToPlaneDistance(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
 		{
-            assert(!planeNormal.IsEpsilonZero());
+			if (planeNormal.IsEpsilonZero())
+				return std::nullopt;
 			Float3 normal = planeNormal.Normalize();
 			float d = Float3::Dot(planeSupport, normal); // plane parameter
 			return (Float3::Dot(point, normal) - d) / Float3::Dot(normal, normal);
 		}
 
-		Float3 PointToPlaneProjection(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
+		std::optional<Float3> PointToPlaneProjection(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
 		{
-            assert(!planeNormal.IsEpsilonZero());
-			return point - PointToPlaneDistance(point, planeSupport, planeNormal) * planeNormal.Normalize();
+			std::optional<float> distance = PointToPlaneDistance(point, planeSupport, planeNormal);
+			if (!distance.has_value())
+				return std::nullopt;
+			return point - distance.value() * planeNormal.Normalize();
 		}
 
-		Float3 ReflectPointOnPlane(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
+		std::optional<Float3> ReflectPointOnPlane(const Float3& point, const Float3& planeSupport, const Float3& planeNormal)
 		{
-            assert(!planeNormal.IsEpsilonZero());
-			return point - 2.0f * PointToPlaneDistance(point, planeSupport, planeNormal) * planeNormal.Normalize();
+			std::optional<float> distance = PointToPlaneDistance(point, planeSupport, planeNormal);
+			if (!distance.has_value())
+				return std::nullopt;
+			return point - 2.0f * distance.value() * planeNormal.Normalize();
 		}
 
-		Float3 LinePlaneIntersection(const Float3& lineSupport, const Float3& lineDirection, const Float3& planeSupport, const Float3& planeNormal)
+		std::optional<Float3> LinePlaneIntersection(const Float3& lineSupport, const Float3& lineDirection, const Float3& planeSupport, const Float3& planeNormal)
 		{
-            assert(!lineDirection.IsEpsilonZero());
-            assert(!planeNormal.IsEpsilonZero());
+			if (lineDirection.IsEpsilonZero() || planeNormal.IsEpsilonZero())
+				return std::nullopt;
+			float denominator = Float3::Dot(lineDirection, planeNormal);
+			if (math::IsEpsilonZero(denominator))
+				return std::nullopt;
 			float d = Float3::Dot(planeSupport, planeNormal);
-			float t = (d - Float3::Dot(lineSupport, planeNormal)) / Float3::Dot(lineDirection, planeNormal);
+			float t = (d - Float3::Dot(lineSupport, planeNormal)) / denominator;
 			return lineSupport + t * lineDirection;
 		}
 	}

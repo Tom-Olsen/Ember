@@ -1,5 +1,6 @@
 #pragma once
 #include "float3.h"
+#include <optional>
 #include <string>
 
 
@@ -19,6 +20,7 @@ namespace emberMath
 
 		// Methods:
 		Float3 GetPoint(float distance) const;
+		std::optional<Float3> HitOnPlane(const Float3& planeSupport, const Float3& planeNormal) const;
 
 		// Logging:
 		std::string ToString() const;
