@@ -34,7 +34,7 @@ namespace emberMath
 		void SetMinMax(const Float3& min, const Float3& max);
 
 		// Methods:
-		Float3 ClosestPoint(const Float3& point) const;
+		Float3 ClosestPoint(const Float3& point) const; // point outside => closest point on surface. pointinside => point.
 		bool Contains(const Float3& point) const;
 		void Encapsulate(const Float3& point);
 		void Encapsulate(const Bounds& bounds);

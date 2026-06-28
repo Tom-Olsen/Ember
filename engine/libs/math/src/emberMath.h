@@ -21,6 +21,7 @@
 // Geometry:
 #include "bounds.h"
 #include "bounds2d.h"
+#include "capsule.h"
 #include "geometry3d.h"
 #include "ray.h"
 

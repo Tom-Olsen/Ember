@@ -8,6 +8,7 @@
 
 namespace emberMath
 {
+	// Public methods:
 	// Constructors:
 	Bounds::Bounds() : center(0.0f), extents(0.0f) {}
 	Bounds::Bounds(const Float3& center, const Float3& extents) : center(center), extents(extents) {}
@@ -39,7 +40,6 @@ namespace emberMath
 
 
 
-	// Public methods:
 	// Getters:
 	Float3 Bounds::GetMin() const
 	{
@@ -75,6 +75,8 @@ namespace emberMath
 		};
 	}
 
+
+
 	// Setters:
 	void Bounds::SetMinMax(const Float3& min, const Float3& max)
 	{
@@ -82,6 +84,8 @@ namespace emberMath
 		center = 0.5f * (max + min);
 		extents = 0.5f * (max - min);
 	}
+
+
 
 	// Methods:
 	Float3 Bounds::ClosestPoint(const Float3& point) const
@@ -194,6 +198,8 @@ namespace emberMath
 		return ray.GetPoint(enterDist <= 0.0f ? exitDist : enterDist);
 	}
 
+
+
 	// Equality:
 	bool Bounds::operator == (const Bounds & other)
 	{
@@ -204,6 +210,8 @@ namespace emberMath
 		return !((*this) == other);
 	}
 
+
+    
 	// Logging:
 	std::string Bounds::ToString() const
 	{
