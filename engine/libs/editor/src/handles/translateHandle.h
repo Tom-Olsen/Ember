@@ -18,57 +18,69 @@ namespace emberEditor
 {
 	class TranslateHandle
 	{
-    public: // Enums:
-	    enum class SubHandle
-	    {
-	    	none,
-	    	axisX,
-	    	axisY,
-	    	axisZ,
-	    	planeXY,
-	    	planeYZ,
-	    	planeXZ
-	    };
+	public: // Enums:
+		enum class SubHandle
+		{
+			none,
+			axisX,
+			axisY,
+			axisZ,
+			planeXY,
+			planeYZ,
+			planeXZ
+		};
 
 	private: // Members:
-        float m_handleScale;
+		static Float4x4 s_rotX;
+		static Float4x4 s_rotY;
+		static Float4x4 s_rotZ;
+		static float s_capsuleStart;
+		static float s_capsuleEnd;
+		static float s_capsuleWidth;
+		float m_handleScale;
 		emberEcs::Transform* m_pTransform;
 
 		// State:
 		bool m_isDragging;
 		SubHandle m_hoveredSubHandle;
 		SubHandle m_activeSubHandle;
-        Float3 m_dragStartPosition;
+		Float3 m_dragStartPosition;
 		Float3 m_dragAxisDir;
 		Float3 m_dragPlaneNormal;
 
-        // Rendering:
-        emberCore::Material m_material;
-        emberCore::Mesh m_arrowMesh;
-        emberCore::Mesh m_quadMesh;
-        emberCore::Mesh m_capsuleMesh;
+		// Rendering:
+		emberCore::Material m_material;
+		emberCore::Mesh m_arrowMesh;
+		emberCore::Mesh m_quadMesh;
+		emberCore::Mesh m_capsuleMesh;
 
 	public: // Methods:
-        // Constructor/Destructor:
-        TranslateHandle();
-        ~TranslateHandle();
+		// Constructor/Destructor:
+		TranslateHandle();
+		~TranslateHandle();
 
-        // Target:
+		// Target:
 		void SetTarget(emberEcs::Transform* pTransform);
 		void ClearTarget();
 		bool HasTarget() const;
 
-        // Handle:
+		// Handle:
 		SubHandle GetHoveredSubHandle() const;
 		SubHandle GetActiveSubHandle() const;
 		bool IsDragging() const;
 
-        // Update/Draw:
+		// Update/Draw:
 		void Update();
 		void Draw();
 
 	private: // Methods:
-        void ResetInteractionState();
-        void CreateMeshes();
+		void ResetInteractionState();
+		void CreateMeshes();
+		void UpdateHoveredSubHandle();
+		
+		// Helpers:
+		float Size() const;
+		Float4x4 LocalToWorldMatrix();
+		void TryPickSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& axisLocalToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);
 	};
 }
