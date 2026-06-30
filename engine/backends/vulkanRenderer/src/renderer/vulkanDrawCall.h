@@ -1,7 +1,7 @@
 #pragma once
-#include "commonLighting.h"
 #include "emberMath.h"
 #include <vector>
+#include <vulkan/vulkan.h>
 
 
 
@@ -26,6 +26,7 @@ namespace vulkanRendererBackend
 		DescriptorSetBinding* pCallDescriptorSetBinding;
 		DescriptorSetBinding* pShadowDescriptorSetBinding;
 		Mesh* pMesh;
+		VkCullModeFlagBits cullMode;
 		uint32_t instanceCount;	// 0 implies no instanced rendering.
 
 		void SetModelData();

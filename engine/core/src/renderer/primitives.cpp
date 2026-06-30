@@ -10,30 +10,30 @@
 
 namespace emberCore
 {
-	ShaderProperties Primitives::DrawMesh(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, bool asGizmo)
+	ShaderProperties Primitives::DrawMesh(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
 		if (asGizmo)
-			return Renderer::DrawGizmo(mesh, material, localToWorldMatrix);
+			return Renderer::DrawGizmo(mesh, material, localToWorldMatrix, cullMode);
 		else
-			return Renderer::DrawMesh(mesh, material, localToWorldMatrix, receiveShadows, castShadows);
+			return Renderer::DrawMesh(mesh, material, localToWorldMatrix, receiveShadows, castShadows, cullMode);
 	}
 
-    ShaderProperties Primitives::DrawQuad(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
+    ShaderProperties Primitives::DrawQuad(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
     {
-        return DrawMesh(MeshManager::GetMesh("quad"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
+        return DrawMesh(MeshManager::GetMesh("quad"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo, cullMode);
     }
 
-	ShaderProperties Primitives::DrawCube(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
+	ShaderProperties Primitives::DrawCube(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
-		return DrawMesh(MeshManager::GetMesh("cube"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
+		return DrawMesh(MeshManager::GetMesh("cube"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo, cullMode);
 	}
 
-	ShaderProperties Primitives::DrawSphere(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
+	ShaderProperties Primitives::DrawSphere(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
-		return DrawMesh(MeshManager::GetMesh("cubeSphere"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
+		return DrawMesh(MeshManager::GetMesh("cubeSphere"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo, cullMode);
 	}
 
-	ShaderProperties Primitives::DrawLineSegment(const Float3& start, const Float3& end, float width, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
+	ShaderProperties Primitives::DrawLineSegment(const Float3& start, const Float3& end, float width, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
 		Float3 direction = end - start;
 		if (direction.IsEpsilonZero())
@@ -43,20 +43,20 @@ namespace emberCore
 		Float3 position = start + 0.5f * direction;
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::up, direction);
 		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, Float3(width, width, length));
-		return DrawMesh(MeshManager::GetMesh("zylinderFlat"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
+		return DrawMesh(MeshManager::GetMesh("zylinderFlat"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo, cullMode);
 	}
 
-	ShaderProperties Primitives::DrawArrow(const Float3& position, const Float3& direction, float size, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)
+	ShaderProperties Primitives::DrawArrow(const Float3& position, const Float3& direction, float size, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
 		if (direction.IsEpsilonZero())
 			return ShaderProperties();
 
 		Float3x3 rotationMatrix = Float3x3::RotateFromTo(Float3::forward, direction);
 		Float4x4 localToWorldMatrix = Float4x4::TRS(position, rotationMatrix, Float3(size));
-		return DrawMesh(MeshManager::GetMesh("arrowFlat"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo);
+		return DrawMesh(MeshManager::GetMesh("arrowFlat"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo, cullMode);
 	}
 
-	void Primitives::DrawCapsule(const Capsule& capsule, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo)
+	void Primitives::DrawCapsule(const Capsule& capsule, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
 		if (capsule.radius <= 0.0f)
 			return;
@@ -65,20 +65,20 @@ namespace emberCore
 		Float4x4 point0Matrix = Float4x4::TRS(capsule.point0, Float3x3::identity, Float3(diameter));
 		Float4x4 point1Matrix = Float4x4::TRS(capsule.point1, Float3x3::identity, Float3(diameter));
 
-		ShaderProperties shaderProperties = DrawSphere(point0Matrix, material, receiveShadows, castShadows, asGizmo);
+		ShaderProperties shaderProperties = DrawSphere(point0Matrix, material, receiveShadows, castShadows, asGizmo, cullMode);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 
 		if (!math::IsEpsilonZero(capsule.GetHeight()))
 		{
-			shaderProperties = DrawLineSegment(capsule.point0, capsule.point1, diameter, material, receiveShadows, castShadows, asGizmo);
+			shaderProperties = DrawLineSegment(capsule.point0, capsule.point1, diameter, material, receiveShadows, castShadows, asGizmo, cullMode);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 
-			shaderProperties = DrawSphere(point1Matrix, material, receiveShadows, castShadows, asGizmo);
+			shaderProperties = DrawSphere(point1Matrix, material, receiveShadows, castShadows, asGizmo, cullMode);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 		}
 	}
     
-	void Primitives::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo)
+	void Primitives::DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
 		Float4 cornerPoints[8] =
 		{
@@ -107,13 +107,13 @@ namespace emberCore
 		for (uint32_t i = 0; i < 8; i++)
 		{
 			Float4x4 ltw = Float4x4::TRS(Float3(cornerPoints[i]), Float3x3::identity, 2.0f * width);
-			ShaderProperties shaderProperties = DrawSphere(ltw, material, receiveShadows, castShadows, asGizmo);
+			ShaderProperties shaderProperties = DrawSphere(ltw, material, receiveShadows, castShadows, asGizmo, cullMode);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::gray);
 		}
 
 		auto line = [&](uint32_t a, uint32_t b)
 		{
-			ShaderProperties shaderProperties = DrawLineSegment(Float3(cornerPoints[a]), Float3(cornerPoints[b]), width, material, receiveShadows, castShadows, asGizmo);
+			ShaderProperties shaderProperties = DrawLineSegment(Float3(cornerPoints[a]), Float3(cornerPoints[b]), width, material, receiveShadows, castShadows, asGizmo, cullMode);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 		};
 
@@ -125,14 +125,14 @@ namespace emberCore
 		line(0, 1); line(2, 3); line(4, 5); line(6, 7);
 	}
 
-	void Primitives::DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo)
+	void Primitives::DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
 		std::array<Float2, 4> corners = bounds.GetCorners();
 
 		for (uint32_t i = 0; i < 4; i++)
 		{
 			Float3 pos = Float3(localToWorldMatrix * Float4(corners[i], 0.0f, 1.0f));
-			ShaderProperties shaderProperties = DrawSphere(Float4x4::TRS(pos, Float3x3::identity, width), material, receiveShadows, castShadows, asGizmo);
+			ShaderProperties shaderProperties = DrawSphere(Float4x4::TRS(pos, Float3x3::identity, width), material, receiveShadows, castShadows, asGizmo, cullMode);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 		}
 
@@ -140,21 +140,21 @@ namespace emberCore
 		{
 			Float3 pa = Float3(localToWorldMatrix * Float4(corners[a], 0.0f, 1.0f));
 			Float3 pb = Float3(localToWorldMatrix * Float4(corners[b], 0.0f, 1.0f));
-			ShaderProperties shaderProperties = DrawLineSegment(pa, pb, width, material, receiveShadows, castShadows, asGizmo);
+			ShaderProperties shaderProperties = DrawLineSegment(pa, pb, width, material, receiveShadows, castShadows, asGizmo, cullMode);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 		};
 
 		line(0, 1); line(1, 3); line(3, 2); line(2, 0);
 	}
 
-	void Primitives::DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo)
+	void Primitives::DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
 		std::array<Float3, 8> corners = bounds.GetCorners();
 
 		for (uint32_t i = 0; i < 8; i++)
 		{
 			Float3 pos = Float3(localToWorldMatrix * Float4(corners[i], 1.0f));
-			ShaderProperties shaderProperties = DrawSphere(Float4x4::TRS(pos, Float3x3::identity, width), material, receiveShadows, castShadows, asGizmo);
+			ShaderProperties shaderProperties = DrawSphere(Float4x4::TRS(pos, Float3x3::identity, width), material, receiveShadows, castShadows, asGizmo, cullMode);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 		}
 
@@ -162,7 +162,7 @@ namespace emberCore
 		{
 			Float3 pa = Float3(localToWorldMatrix * Float4(corners[a], 1.0f));
 			Float3 pb = Float3(localToWorldMatrix * Float4(corners[b], 1.0f));
-			ShaderProperties shaderProperties = DrawLineSegment(pa, pb, width, material, receiveShadows, castShadows, asGizmo);
+			ShaderProperties shaderProperties = DrawLineSegment(pa, pb, width, material, receiveShadows, castShadows, asGizmo, cullMode);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 		};
 

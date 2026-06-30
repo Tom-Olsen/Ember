@@ -17,6 +17,7 @@
 #include "vulkanComputePushConstant.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
+#include "vulkanConvertCullMode.h"
 #include "vulkanConvertTextureFormat.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDepthTexture2dArray.h"
@@ -265,7 +266,7 @@ namespace vulkanRendererBackend
 
 
 	// Draw mesh:
-	void Renderer::DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount)
+	void Renderer::DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
 		// Record static draw call.
 		if (!pIMesh)
@@ -286,22 +287,23 @@ namespace vulkanRendererBackend
 
 		// Setup draw call:
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
+		VkCullModeFlagBits vkCullMode = CullModeCommonToVulkan(cullMode);
 		if (castShadows)
 		{
 			Material* pShadowMaterial = pMaterial->GetShadowMaterial();
 			if (!pShadowMaterial)
 				pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
 			DescriptorSetBinding* pShadowDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pShadowMaterial));
-			DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShadowMaterial, false, pShadowDescriptorSetBinding != nullptr, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
+			DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, pShadowMaterial, false, pShadowDescriptorSetBinding != nullptr, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), vkCullMode, instanceCount };
 			m_drawCalls.push_back(drawCall);
 		}
 		else
 		{
-			DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, nullptr, false, false, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), nullptr, static_cast<Mesh*>(pIMesh), instanceCount };
+			DrawCall drawCall = { localToWorldMatrix, receiveShadows, castShadows, pMaterial, nullptr, false, false, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), nullptr, static_cast<Mesh*>(pIMesh), vkCullMode, instanceCount };
 			m_drawCalls.push_back(drawCall);
 		}
 	}
-	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount)
+	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
 		// Record dynamic draw call.
 		if (!pIMesh)
@@ -317,6 +319,7 @@ namespace vulkanRendererBackend
 
 		// Setup draw call:
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
+		VkCullModeFlagBits vkCullMode = CullModeCommonToVulkan(cullMode);
 		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pMaterial));
 		if (castShadows)
 		{
@@ -324,17 +327,17 @@ namespace vulkanRendererBackend
 			if (!pShadowMaterial)
 				pShadowMaterial = DefaultGpuResources::GetDefaultShadowMaterial();
 			DescriptorSetBinding* pShadowDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pShadowMaterial));
-			DrawCall drawCall = { localToWorldMatrix, receiveShadows, true, pMaterial, pShadowMaterial, true, pShadowDescriptorSetBinding != nullptr, pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), instanceCount };
+			DrawCall drawCall = { localToWorldMatrix, receiveShadows, true, pMaterial, pShadowMaterial, true, pShadowDescriptorSetBinding != nullptr, pCallDescriptorSetBinding, pShadowDescriptorSetBinding, static_cast<Mesh*>(pIMesh), vkCullMode, instanceCount };
 			m_drawCalls.push_back(drawCall);
 		}
 		else
 		{
-			DrawCall drawCall = { localToWorldMatrix, receiveShadows, false, pMaterial, nullptr, true, false, pCallDescriptorSetBinding, nullptr, static_cast<Mesh*>(pIMesh), instanceCount };
+			DrawCall drawCall = { localToWorldMatrix, receiveShadows, false, pMaterial, nullptr, true, false, pCallDescriptorSetBinding, nullptr, static_cast<Mesh*>(pIMesh), vkCullMode, instanceCount };
 			m_drawCalls.push_back(drawCall);
 		}
 		return pCallDescriptorSetBinding;
 	}
-	void Renderer::DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, uint32_t instanceCount)
+	void Renderer::DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
 		// Record static gizmo draw call.
 		if (!pIMesh)
@@ -354,10 +357,11 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup draw call:
-		DrawCall drawCall = { localToWorldMatrix, false, false, static_cast<Material*>(pIMaterial), nullptr, false, false, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), nullptr, static_cast<Mesh*>(pIMesh), instanceCount };
+		VkCullModeFlagBits vkCullMode = CullModeCommonToVulkan(cullMode);
+		DrawCall drawCall = { localToWorldMatrix, false, false, static_cast<Material*>(pIMaterial), nullptr, false, false, static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding), nullptr, static_cast<Mesh*>(pIMesh), vkCullMode, instanceCount };
 		m_gizmoDrawCalls.push_back(drawCall);
 	}
-	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, uint32_t instanceCount)
+	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
 		// Record dynamic gizmo draw call.
 		if (!pIMesh)
@@ -373,8 +377,9 @@ namespace vulkanRendererBackend
 
 		// Setup draw call:
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
+		VkCullModeFlagBits vkCullMode = CullModeCommonToVulkan(cullMode);
 		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pMaterial));
-		DrawCall drawCall = { localToWorldMatrix, false, false, pMaterial, nullptr, true, false, pCallDescriptorSetBinding, nullptr, static_cast<Mesh*>(pIMesh), instanceCount };
+		DrawCall drawCall = { localToWorldMatrix, false, false, pMaterial, nullptr, true, false, pCallDescriptorSetBinding, nullptr, static_cast<Mesh*>(pIMesh), vkCullMode, instanceCount };
 		m_gizmoDrawCalls.push_back(drawCall);
 		return pCallDescriptorSetBinding;
 	}
@@ -1184,6 +1189,9 @@ namespace vulkanRendererBackend
 					DefaultPushConstant pushConstant(0, drawCall->instanceCount, drawCall->receiveShadows, m_time, m_deltaTime);
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
+					// Cull mode:
+					vkCmdSetCullMode(commandBuffer, ResolveCullMode(drawCall->cullMode, RenderModeToCullMode(pForwardMaterial->GetRenderMode())));
+
 					// Bind per draw call descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = drawCall->pCallDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
@@ -1304,6 +1312,9 @@ namespace vulkanRendererBackend
 					// Push constant:
 					DefaultPushConstant pushConstant(0, drawCall->instanceCount, false, m_time, m_deltaTime);
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+
+					// Cull mode:
+					vkCmdSetCullMode(commandBuffer, ResolveCullMode(drawCall->cullMode, RenderModeToCullMode(pGizmoMaterial->GetRenderMode())));
 
 					// Bind per draw call descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = drawCall->pCallDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)

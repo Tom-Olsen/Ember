@@ -1,4 +1,5 @@
 #pragma once
+#include "commonCullMode.h"
 #include "emberCoreExport.h"
 #include "emberMath.h"
 
@@ -21,6 +22,7 @@ namespace emberCore
 
     private: // Members:
         static Float4 s_color;
+        static emberCommon::CullMode s_cullMode;
         static Material s_defaultMaterial;
         static Material s_material;
 
@@ -42,11 +44,14 @@ namespace emberCore
 
         // Setters:
         static void SetColor(const Float4& color);
+        static void SetCullMode(emberCommon::CullMode cullMode);
         static void SetMaterial(const Material& material);
         static void ResetMaterial();
+        static void ResetCullMode();
 
         // Getters:
         static Float4 GetColor();
+        static emberCommon::CullMode GetCullMode();
         static Material GetMaterial();
         static Material GetDefaultMaterial();
     };

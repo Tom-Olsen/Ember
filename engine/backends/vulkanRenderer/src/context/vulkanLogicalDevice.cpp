@@ -6,6 +6,7 @@
 #include "vulkanPhysicalDevice.h"
 #include "vulkanSurface.h"
 #include <assert.h>
+#include <cstring>
 #include <set>
 #include <sstream>
 #include <vulkan/vulkan.h>
@@ -36,13 +37,17 @@ namespace vulkanRendererBackend
 		else
 			queuePriorities.assign(1, 1.0f);
 
+		bool enableExtendedDynamicStateExtension = false;
+		for (const char* extension : deviceExtensions)
+			enableExtendedDynamicStateExtension |= std::strcmp(extension, VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME) == 0;
+
 		// Vector of queue create infos:
 		VkDeviceQueueCreateInfo queueCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
 		queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
 		queueCreateInfo.queueCount = queuePriorities.size();
 		queueCreateInfo.pQueuePriorities = queuePriorities.data();
 
-		// Sync2 featur: Allows for src/dst stage to be 0 (VK_PIPELINE_STAGE_NONE).
+		// Sync2 feature: Allows for src/dst stage to be 0 (VK_PIPELINE_STAGE_NONE).
 		VkPhysicalDeviceSynchronization2FeaturesKHR sync2Features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR };
 		sync2Features.synchronization2 = VK_TRUE;
 
@@ -51,9 +56,17 @@ namespace vulkanRendererBackend
 		scalarBlockLayoutFeatures.pNext = &sync2Features;
 		scalarBlockLayoutFeatures.scalarBlockLayout = VK_TRUE;
 
+		// Extended dynamic state: Allows dynamic cull mode on Vulkan 1.2 extension paths.
+		VkPhysicalDeviceExtendedDynamicStateFeaturesEXT extendedDynamicStateFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT };
+		extendedDynamicStateFeatures.pNext = &scalarBlockLayoutFeatures;
+		extendedDynamicStateFeatures.extendedDynamicState = VK_TRUE;
+
 		// Choose which features to enable:
 		VkPhysicalDeviceFeatures2 deviceFeatures2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
-		deviceFeatures2.pNext = &scalarBlockLayoutFeatures;
+		if (enableExtendedDynamicStateExtension)
+			deviceFeatures2.pNext = &extendedDynamicStateFeatures;  // contains &scalarBlockLayoutFeatures as pnext.
+		else
+			deviceFeatures2.pNext = &scalarBlockLayoutFeatures;     // must be added manually if not forwarded by enableExtendedDynamicStateExtension.
 		deviceFeatures2.features.samplerAnisotropy = VK_TRUE;
 		deviceFeatures2.features.depthClamp = pPhysicalDevice->SupportsDepthClamp();
 		deviceFeatures2.features.depthBiasClamp = pPhysicalDevice->SupportsDepthBiasClamp();

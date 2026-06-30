@@ -1,6 +1,7 @@
 #pragma once
 #include "iRenderer.h"
 #include "commonCamera.h"
+#include "commonCullMode.h"
 #include "commonLighting.h"
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
@@ -140,10 +141,10 @@ namespace vulkanRendererBackend
 		void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) override;
 
 		// Draw mesh:
-		void DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, uint32_t instanceCount = 0) override;
-		emberBackendInterface::IDescriptorSetBinding* DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, uint32_t instanceCount = 0) override;
-		void DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, uint32_t instanceCount = 0) override;
-		emberBackendInterface::IDescriptorSetBinding* DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, uint32_t instanceCount = 0) override;
+		void DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
+		emberBackendInterface::IDescriptorSetBinding* DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
+		void DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
+		emberBackendInterface::IDescriptorSetBinding* DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
 
 		// Getters:
 		uint32_t GetShadowMapResolution() override;

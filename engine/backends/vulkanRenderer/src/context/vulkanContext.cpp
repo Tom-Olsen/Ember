@@ -101,18 +101,26 @@ namespace vulkanRendererBackend
 		std::vector<VkExtensionProperties> availableDeviceExtensions = GetAvailableDeviceExtensions(m_pPhysicalDevice->GetVkPhysicalDevice());
 		RequireExtensionAvailable(availableDeviceExtensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME, "device");
 		deviceExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		// Shader viewport index/layer output for layered rendering.
 		if (IsExtensionAvailable(availableDeviceExtensions, VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME))
 			deviceExtensions.emplace_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
 		else if (SupportsVulkanVersion(m_pPhysicalDevice->GetVkPhysicalDevice(), VK_API_VERSION_1_2) == false)
 			throw std::runtime_error("Required Vulkan device extension is not available: " + std::string(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME));
+		// Scalar block layout for tightly packed shader buffer structs.
 		if (IsExtensionAvailable(availableDeviceExtensions, VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME))
 			deviceExtensions.emplace_back(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME);
 		else if (SupportsVulkanVersion(m_pPhysicalDevice->GetVkPhysicalDevice(), VK_API_VERSION_1_2) == false)
 			throw std::runtime_error("Required Vulkan device extension is not available: " + std::string(VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME));
+		// Synchronization2 for newer barrier and dependency commands.
 		if (IsExtensionAvailable(availableDeviceExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME))
 			deviceExtensions.emplace_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
 		else if (SupportsVulkanVersion(m_pPhysicalDevice->GetVkPhysicalDevice(), VK_API_VERSION_1_3) == false)
 			throw std::runtime_error("Required Vulkan device extension is not available: " + std::string(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME));
+		// Extended dynamic state for dynamic cull mode changes.
+		if (IsExtensionAvailable(availableDeviceExtensions, VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME))
+			deviceExtensions.emplace_back(VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME);
+		else if (SupportsVulkanVersion(m_pPhysicalDevice->GetVkPhysicalDevice(), VK_API_VERSION_1_3) == false)
+			throw std::runtime_error("Required Vulkan device extension is not available: " + std::string(VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME));
 		// and more ...
 
 		m_pSurface = std::make_unique<Surface>(m_pInstance.get(), m_pPhysicalDevice.get(), pIWindow, createInfo.vSyncEnabled);

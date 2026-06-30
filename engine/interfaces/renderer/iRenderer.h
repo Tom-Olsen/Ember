@@ -1,6 +1,7 @@
 #pragma once
 #include "emberMath.h"
 #include "commonBufferUsage.h"
+#include "commonCullMode.h"
 #include "commonLighting.h"
 #include "commonPipelineState.h"
 #include "commonTextureFormat.h"
@@ -37,10 +38,10 @@ namespace emberBackendInterface
         virtual void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) = 0;
 
         // Draw mesh:
-        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
-        virtual void DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
+        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
+        virtual void DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
 
         // Getters:
         virtual uint32_t GetShadowMapResolution() = 0;
