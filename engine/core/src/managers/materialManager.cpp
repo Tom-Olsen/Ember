@@ -43,9 +43,10 @@ namespace emberCore
 		CreateForwardMaterial(skyboxMode, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
 		CreateForwardMaterial(opaqueMode, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
 		CreateForwardMaterial(opaqueMode, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
-		CreateForwardMaterial(opaqueMode, "gizmoMaterial", opaqueQueue, directoryPath / "gizmo.vert.spv", directoryPath / "gizmo.frag.spv");
-		CreateForwardMaterial(transparentMode, "transparentGizmoMaterial", transparentQueue, directoryPath / "gizmo.vert.spv", directoryPath / "gizmo.frag.spv");
-		CreateForwardMaterial(opaqueMode, "translateHandleMaterial", opaqueQueue, directoryPath / "translateHandle.vert.spv", directoryPath / "translateHandle.frag.spv");
+		CreateForwardMaterial(opaqueMode, "gizmoUnlitMaterial", opaqueQueue, directoryPath / "gizmoUnlit.vert.spv", directoryPath / "gizmoUnlit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "gizmoLitMaterial", opaqueQueue, directoryPath / "gizmoLit.vert.spv", directoryPath / "gizmoLit.frag.spv");
+		CreateForwardMaterial(transparentMode, "gizmoUnlitTransparentMaterial", transparentQueue, directoryPath / "gizmoUnlit.vert.spv", directoryPath / "gizmoUnlit.frag.spv");
+		CreateForwardMaterial(transparentMode, "gizmoLitTransparentMaterial", transparentQueue, directoryPath / "gizmoLit.vert.spv", directoryPath / "gizmoLit.frag.spv");
 	}
 	void MaterialManager::Clear()
 	{

@@ -27,7 +27,7 @@ namespace emberMath
 
 		// Methods:
 		bool Contains(const Float3& point) const;
-		Float3 ClosestPoint(const Float3& point) const; // point outside => closest point on surface. pointinside => point.
+		Float3 ClosestPoint(const Float3& point) const; // point outside => closest point on surface. point inside => point.
 		std::optional<Float3> IntersectRay(const Ray& ray) const;
 
 		// Equality:

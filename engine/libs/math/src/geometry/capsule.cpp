@@ -149,6 +149,8 @@ namespace emberMath
 		return ray.GetPoint(closestDist);
 	}
 
+
+
 	// Equality:
 	bool Capsule::operator==(const Capsule& other) const
 	{
@@ -159,6 +161,8 @@ namespace emberMath
 		return !((*this) == other);
 	}
 
+
+    
 	// Logging:
 	std::string Capsule::ToString() const
 	{
