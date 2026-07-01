@@ -32,6 +32,7 @@ namespace emberEditor
 
 	private: // Members:
         float m_handleScale;
+		CoordinateSpace m_coordinateSpace;
         // Handle colors:
 		static Float4 s_colorX;
 		static Float4 s_colorY;
@@ -79,10 +80,14 @@ namespace emberEditor
 		void ClearTarget();
 		bool HasTarget() const;
 
+		// Coordinate space:
+		void SetCoordinateSpace(CoordinateSpace coordinateSpace);
+		CoordinateSpace GetCoordinateSpace() const;
+
 		// Handle:
 		SubHandle GetHoveredSubHandle() const;
 		SubHandle GetActiveSubHandle() const;
-		bool IsDragging() const;
+		bool GetIsDragging() const;
 
 		// Update/Draw:
 		void Update();
@@ -98,6 +103,7 @@ namespace emberEditor
 		
 		// Helpers:
 		float Size() const;
+		Float4x4 HandleRotationMatrix() const;
 		Float4x4 LocalToWorldMatrix();
 		Float4 SubHandleColor(TranslateHandle::SubHandle subHandle, const Float4& baseColor);
 		void TryPickAxisSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& axisLocalToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);

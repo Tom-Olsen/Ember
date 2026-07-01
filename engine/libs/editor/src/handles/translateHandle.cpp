@@ -42,6 +42,7 @@ namespace emberEditor
 	{
 		HandleContext::Init();
 		m_handleScale = 3.0f;
+		m_coordinateSpace = CoordinateSpace::world;
 		ResetInteractionState();
 		CreateMeshes();
 	}
@@ -72,6 +73,18 @@ namespace emberEditor
 
 
 
+	// Coordinate space:
+	void TranslateHandle::SetCoordinateSpace(CoordinateSpace coordinateSpace)
+	{
+		m_coordinateSpace = coordinateSpace;
+	}
+	CoordinateSpace TranslateHandle::GetCoordinateSpace() const
+	{
+		return m_coordinateSpace;
+	}
+
+
+
 	// Handle:
 	TranslateHandle::SubHandle TranslateHandle::GetHoveredSubHandle() const
 	{
@@ -81,7 +94,7 @@ namespace emberEditor
 	{
 		return m_activeSubHandle;
 	}
-	bool TranslateHandle::IsDragging() const
+	bool TranslateHandle::GetIsDragging() const
 	{
 		return m_isDragging;
 	}
@@ -229,7 +242,7 @@ namespace emberEditor
 
         // Find drag plane/line:
 		Ray ray = HandleContext::GetCamera()->GetViewportRay(HandleContext::GetViewportMousePos01());
-		Float3 worldDirection = Float3(m_pTransform->GetRotation4x4() * Float4(SubHandleDirection(m_activeSubHandle), 0.0f));
+		Float3 worldDirection = Float3(HandleRotationMatrix() * Float4(SubHandleDirection(m_activeSubHandle), 0.0f));
 		if (IsPlaneSubHandle(m_activeSubHandle))
 		{
 			// Plane handle: move within the quad's plane.
@@ -339,11 +352,19 @@ namespace emberEditor
 			return 1.0f;
 		return m_handleScale * HandleContext::GetGlobalHandleScale() * HandleContext::ComputeScreenSpaceScale(m_pTransform->GetPosition());
 	}
+	Float4x4 TranslateHandle::HandleRotationMatrix() const
+	{
+		// Local space: align handle with the target's rotation.
+		// World space: keep handle aligned with the world coordinate axis.
+		if (m_coordinateSpace == CoordinateSpace::local && HasTarget())
+			return m_pTransform->GetRotation4x4();
+		return Float4x4::identity;
+	}
 	Float4x4 TranslateHandle::LocalToWorldMatrix()
 	{
 		if (!HasTarget())
 			return Float4x4::identity;
-		return Float4x4::TRS(m_pTransform->GetPosition(), m_pTransform->GetRotation4x4(), Size());
+		return Float4x4::TRS(m_pTransform->GetPosition(), HandleRotationMatrix(), Size());
 	}
 	Float4 TranslateHandle::SubHandleColor(TranslateHandle::SubHandle subHandle, const Float4& baseColor)
 	{
