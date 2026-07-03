@@ -44,8 +44,6 @@ namespace fluidDynamics
         }
         m_forceSetters = false;
         
-		// Editor Window:
-		editorWindow = std::make_unique<emberEditor::SphFluid2dCpuEditorWindow>(this);
 		Reset();
 	}
 	SphFluid2dCpu::~SphFluid2dCpu()
@@ -54,6 +52,12 @@ namespace fluidDynamics
 	}
 
 
+
+	// Overrides:
+	void SphFluid2dCpu::Start()
+	{
+		editorWindow = std::make_unique<emberEditor::SphFluid2dCpuEditorWindow>(this);
+	}
 
 	// Physics update:
 	void SphFluid2dCpu::Reset()

@@ -45,8 +45,6 @@ namespace fluidDynamics
 		}
         m_forceSetters = false;
 
-		// Editor Window:
-		editorWindow = std::make_unique<emberEditor::SphFluid3dGpuEditorWindow>(this);
 		Reset();
 	}
 	SphFluid3dGpu::~SphFluid3dGpu()
@@ -57,6 +55,10 @@ namespace fluidDynamics
 
 
 	// Overrides:
+	void SphFluid3dGpu::Start()
+	{
+		editorWindow = std::make_unique<emberEditor::SphFluid3dGpuEditorWindow>(this);
+	}
 	void SphFluid3dGpu::FixedUpdate()
 	{
 		if (m_reset)

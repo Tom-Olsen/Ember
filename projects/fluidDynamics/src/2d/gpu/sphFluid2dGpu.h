@@ -55,6 +55,7 @@ namespace fluidDynamics
 		~SphFluid2dGpu();
 
 		// Overrides:
+		void Start() override;
 		void FixedUpdate() override;
 		void Update() override;
 

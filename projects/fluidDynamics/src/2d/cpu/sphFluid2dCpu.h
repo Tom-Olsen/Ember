@@ -53,6 +53,9 @@ namespace fluidDynamics
 		SphFluid2dCpu();
 		~SphFluid2dCpu();
 
+		// Overrides:
+		void Start() override;
+
 		// Physics update:
 		void Reset();
 		void FixedUpdate() override;
