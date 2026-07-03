@@ -146,19 +146,19 @@ namespace emberEditor
 		emberCore::Gizmo::ResetMaterial();
 
 		// Visualize arrow interaction regions
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, s_colorX) - 0.5f * Float4::in);
-		emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisY, s_colorY) - 0.5f * Float4::in);
-		emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotY);
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisZ, s_colorZ) - 0.5f * Float4::in);
-		emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
-		emberCore::Gizmo::ResetMaterial();
+		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
+		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, s_colorX) - 0.5f * Float4::in);
+		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
+		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotX);
+		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisY, s_colorY) - 0.5f * Float4::in);
+		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotY);
+		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotY);
+		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisZ, s_colorZ) - 0.5f * Float4::in);
+		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
+		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotZ);
+		//emberCore::Gizmo::ResetMaterial();
 
         // ToDo:
-        // -draw a cone for the arrow heads and add a cone detector with the same dimensions.
-        // -add cone to arrow/axis detection.
-        // -once happy with all detection shapes, disable rendering them.
         // -make translate handle a good size.
         // -implement scaling handle.
 	}
@@ -204,6 +204,13 @@ namespace emberEditor
 			float height = (s_arrowHeight - s_quadSize) - 2.0f * radius;
 			Float3 translation = (s_arrowHeight - radius - 0.5f * height) * Float3::up;
 			m_capsuleMesh = emberCore::MeshGenerator::Capsule(radius, height, 8, "translateHandleCapsule").Translate(translation);
+		}
+
+		// Arrow head capsule mesh:
+		{
+			float height = s_arrowHeadHeight - s_arrowHeadRadius;
+			Float3 translation = (s_arrowBodyHeight + 0.5f * height) * Float3::up;
+			m_arrowHeadCapsuleMesh = emberCore::MeshGenerator::Capsule(s_arrowHeadRadius, height, 8, "translateHandleArrowHeadCapsule").Translate(translation);
 		}
 
         // Quad mesh:
@@ -396,25 +403,41 @@ namespace emberEditor
 			return s_hoverColor;
 		return baseColor;
 	}
-	void TranslateHandle::TryPickAxisSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& axisLocalToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
+	void TranslateHandle::TryPickAxisSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
 	{
 		// Construct interaction capsule:
         float radius = 2.0f * s_arrowBodyRadius;
-		Float3 point0 = Float3(axisLocalToWorldMatrix * Float4(0.0f, 0.0f, s_quadSize + radius, 1.0f));
-		Float3 point1 = Float3(axisLocalToWorldMatrix * Float4(0.0f, 0.0f, s_arrowHeight - radius, 1.0f));
+		Float3 point0 = Float3(localToWorldMatrix * Float4(0.0f, 0.0f, s_quadSize + radius, 1.0f));
+		Float3 point1 = Float3(localToWorldMatrix * Float4(0.0f, 0.0f, s_arrowHeight - radius, 1.0f));
 		Capsule capsule = Capsule(point0, point1, radius * Size());
 
 		// Ray-capsule hit:
 		std::optional<Float3> hit = capsule.IntersectRay(ray);
-		if (!hit.has_value())
-			return;
-
-		// Check if new hit is closer:
-		float hitDistance = Float3::DistanceSq(ray.origin, hit.value());
-		if (hitDistance < closestHitDistanceSq)
+		if (hit.has_value())
 		{
-			closestHitDistanceSq = hitDistance;
-			m_hoveredSubHandle = subHandle;
+			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.value());
+			if (hitDistanceSq < closestHitDistanceSq)
+			{
+				closestHitDistanceSq = hitDistanceSq;
+				m_hoveredSubHandle = subHandle;
+			}
+		}
+
+		// Construct arrow head interaction capsule:
+		Float3 headPoint0 = Float3(localToWorldMatrix * Float4(0.0f, 0.0f, s_arrowBodyHeight, 1.0f));
+		Float3 headPoint1 = Float3(localToWorldMatrix * Float4(0.0f, 0.0f, s_arrowHeight - s_arrowHeadRadius, 1.0f));
+		Capsule headCapsule = Capsule(headPoint0, headPoint1, s_arrowHeadRadius * Size());
+
+		// Ray-arrow-head-capsule hit:
+		hit = headCapsule.IntersectRay(ray);
+		if (hit.has_value())
+		{
+			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.value());
+			if (hitDistanceSq < closestHitDistanceSq)
+			{
+				closestHitDistanceSq = hitDistanceSq;
+				m_hoveredSubHandle = subHandle;
+			}
 		}
 	};
 	void TranslateHandle::TryPickPlaneSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
