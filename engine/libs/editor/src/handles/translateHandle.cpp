@@ -41,6 +41,8 @@ namespace emberEditor
 		HandleContext::Init();
 		m_handleScale = 1.0f;
 		m_coordinateSpace = CoordinateSpace::world;
+		m_pTransform = nullptr;
+		m_isDragging = false;
 		ResetInteractionState();
 		CreateMeshes();
 	}
@@ -171,7 +173,6 @@ namespace emberEditor
 		if (m_isDragging)
 			emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
 
-		m_pTransform = nullptr;
 		m_isDragging = false;
 		m_hoveredSubHandle = TranslateHandle::SubHandle::none;
 		m_activeSubHandle = TranslateHandle::SubHandle::none;
