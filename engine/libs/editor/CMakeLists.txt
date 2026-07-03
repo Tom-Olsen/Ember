@@ -23,7 +23,10 @@ file(GLOB SRC_FILES "src/*.*")
 source_group("Source Files" FILES ${SRC_FILES})
 
 file(GLOB HANDLES_FILES "src/handles/*.*")
-source_group("Handles" FILES ${SRC_FILES})
+source_group("Handles" FILES ${HANDLES_FILES})
+
+file(GLOB EDITOR_WINDOWS_FILES "src/editorWindows/*.*")
+source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
 # ---------------------------------------------------
 
 
@@ -31,11 +34,13 @@ source_group("Handles" FILES ${SRC_FILES})
 # ----------------- Create Library ------------------
 add_library(${TARGET_NAME} STATIC
     ${SRC_FILES}
-    ${HANDLES_FILES})
+    ${HANDLES_FILES}
+    ${EDITOR_WINDOWS_FILES})
 
 # Source subdirectories:
 target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/editorWindows
     ${CMAKE_CURRENT_SOURCE_DIR}/src/handles)
 
 # Allow linking this static library into shared libraries:

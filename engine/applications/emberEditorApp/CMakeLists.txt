@@ -22,22 +22,17 @@ endif()
 # ------------------- File Lists --------------------
 file(GLOB SOURCE_FILES "${ENGINE_APPLICATIONS_DIR}/src/*.*")
 source_group("Source Files" FILES ${SOURCE_FILES})
-
-file(GLOB EDITOR_WINDOWS_FILES "src/editorWindows/*.*")
-source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
 # ---------------------------------------------------
  
  
  
 # ----------------- Create Library ------------------
 add_library(${TARGET_NAME} STATIC
-    ${SOURCE_FILES}
-    ${EDITOR_WINDOWS_FILES})
+    ${SOURCE_FILES})
  
 # Source subdirectories:
 target_include_directories(${TARGET_NAME} PUBLIC
-    ${ENGINE_APPLICATIONS_DIR}/src
-    ${ENGINE_APPLICATIONS_DIR}/src/editorWindows)
+    ${ENGINE_APPLICATIONS_DIR}/src)
 # ---------------------------------------------------
  
  
