@@ -23,14 +23,12 @@ namespace emberEditor
 	Float4x4 TranslateHandle::s_rotX = Float4x4::RotateFromTo(Float3::up, Float3::right) * Float4x4::RotateZ(math::pi2);
 	Float4x4 TranslateHandle::s_rotY = Float4x4::RotateFromTo(Float3::up, Float3::forward) * Float4x4::RotateZ(-math::pi2);
 	Float4x4 TranslateHandle::s_rotZ = Float4x4::identity;
-    // Interaction capsule geometry:
-	float TranslateHandle::s_capsuleStart = 0.25f;
-	float TranslateHandle::s_capsuleEnd = 1.0f;
-	float TranslateHandle::s_capsuleWidth = 0.1f;
-    // Arrow handle geometry:
+    // Geometry:
+	float TranslateHandle::s_arrowHeight = 1.0f;
+    float TranslateHandle::s_quadSize = 0.25f;
 	float TranslateHandle::s_arrowBodyHeight = 0.8f;
 	float TranslateHandle::s_arrowBodyRadius = 0.02f;
-	float TranslateHandle::s_arrowHeadHeight = 0.2f;
+	float TranslateHandle::s_arrowHeadHeight = s_arrowHeight - s_arrowBodyHeight;
 	float TranslateHandle::s_arrowHeadRadius = 5.0f * s_arrowBodyRadius;
 	float TranslateHandle::s_arrowCornerCount = 16;
 
@@ -41,7 +39,7 @@ namespace emberEditor
 	TranslateHandle::TranslateHandle()
 	{
 		HandleContext::Init();
-		m_handleScale = 3.0f;
+		m_handleScale = 1.0f;
 		m_coordinateSpace = CoordinateSpace::world;
 		ResetInteractionState();
 		CreateMeshes();
@@ -147,15 +145,22 @@ namespace emberEditor
         emberCore::Gizmo::DrawMesh(m_quadOutlineMesh, localToWorldMatrix * s_rotX);
 		emberCore::Gizmo::ResetMaterial();
 
-		// Visualize interaction regions
-		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
-		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, s_colorX) - 0.5f * Float4::in);
-		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
-		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisY, s_colorY) - 0.5f * Float4::in);
-		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotY);
-		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisZ, s_colorZ) - 0.5f * Float4::in);
-		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
-		//emberCore::Gizmo::ResetMaterial();
+		// Visualize arrow interaction regions
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
+		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, s_colorX) - 0.5f * Float4::in);
+		emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
+		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisY, s_colorY) - 0.5f * Float4::in);
+		emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotY);
+		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisZ, s_colorZ) - 0.5f * Float4::in);
+		emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
+		emberCore::Gizmo::ResetMaterial();
+
+        // ToDo:
+        // -draw a cone for the arrow heads and add a cone detector with the same dimensions.
+        // -add cone to arrow/axis detection.
+        // -once happy with all detection shapes, disable rendering them.
+        // -make translate handle a good size.
+        // -implement scaling handle.
 	}
 
 
@@ -174,6 +179,7 @@ namespace emberEditor
 		m_dragStartHitPoint = Float3::zero;
 		m_dragAxisDir = Float3::zero;
 		m_dragPlaneNormal = Float3::zero;
+		m_dragGrabOffset = Float3::zero;
 	}
 
 
@@ -194,29 +200,28 @@ namespace emberEditor
 
 		// Capsule mesh:
 		{
-			float height = s_capsuleEnd - s_capsuleStart - 2.0f * s_capsuleWidth;
-			Float3 translation = 0.5f * (s_capsuleEnd + s_capsuleStart) * Float3::up;
-			m_capsuleMesh = emberCore::MeshGenerator::Capsule(s_capsuleWidth, height, 8, "translateHandleCapsule").Translate(translation);
+            float radius = 2.0f * s_arrowBodyRadius;
+			float height = (s_arrowHeight - s_quadSize) - 2.0f * radius;
+			Float3 translation = (s_arrowHeight - radius - 0.5f * height) * Float3::up;
+			m_capsuleMesh = emberCore::MeshGenerator::Capsule(radius, height, 8, "translateHandleCapsule").Translate(translation);
 		}
 
         // Quad mesh:
         {
-            float scale = s_capsuleStart;
-            Float4x4 transformMatrix = Float4x4::TS(scale * Float3(0.5f, 0.5f, 0.0f), scale);
+            float cubeWidth = math::sqrt2 * s_arrowBodyRadius;
+            float size = s_quadSize + 0.5f * cubeWidth;
+            Float4x4 transformMatrix = Float4x4::TS(size * Float3(0.5f, 0.5f, 0.0f), size);
             m_quadMesh = emberCore::MeshGenerator::Quad().Transform(transformMatrix);
         }
 
         // Quad outline mesh:
         {
-            float cubeLength = s_capsuleStart + 0.5f * s_arrowBodyRadius;
             float cubeWidth = math::sqrt2 * s_arrowBodyRadius;
-            float cubePos = s_capsuleStart;
-
+            float cubeLength = s_quadSize + 0.5f * cubeWidth;
             Float3 scale0 = Float3(cubeLength, cubeWidth, cubeWidth);
-            Float4x4 transformMatrix0 = Float4x4::TS(Float3(0.5f * cubeLength, 0.0f, cubePos), scale0);
             Float3 scale1 = Float3(cubeWidth, cubeWidth, cubeLength);
-            Float4x4 transformMatrix1 = Float4x4::TS(Float3(cubePos, 0.0f, 0.5f * cubeLength), scale1);
-
+            Float4x4 transformMatrix0 = Float4x4::TS(Float3(0.5f * cubeLength, 0.0f, s_quadSize), scale0);
+            Float4x4 transformMatrix1 = Float4x4::TS(Float3(s_quadSize, 0.0f, 0.5f * cubeLength), scale1);
             std::vector<emberCore::Mesh> cubes;
 			cubes.reserve(2);
             cubes.emplace_back(emberCore::MeshGenerator::Cube().Transform(transformMatrix0));
@@ -272,6 +277,7 @@ namespace emberEditor
 			return;
 		}
 		m_dragStartHitPoint = hit.value();
+		m_dragGrabOffset = (m_dragStartHitPoint - m_dragStartPosition) / Size();
 
         // Start drag:
 		m_isDragging = true;
@@ -293,6 +299,7 @@ namespace emberEditor
 		    m_dragStartHitPoint = Float3::zero;
 		    m_dragAxisDir = Float3::zero;
 		    m_dragPlaneNormal = Float3::zero;
+			m_dragGrabOffset = Float3::zero;
 			return;
 		}
 
@@ -303,14 +310,25 @@ namespace emberEditor
 		{
 			if (IsPlaneSubHandle(m_activeSubHandle))
 			{
-				// Plane handle: move freely within the drag plane.
-				m_pTransform->SetPosition(m_dragStartPosition + (hit.value() - m_dragStartHitPoint));
+				// Small fixed point iteration:
+				Float3 position = m_pTransform->GetPosition();
+				for (int i = 0; i < 4; i++)
+					position = hit.value() - SizeAtPosition(position) * m_dragGrabOffset;
+				m_pTransform->SetPosition(position);
 			}
 			else
 			{
-				// Axis handle: constrain movement to the axis.
-				float axisDistance = Float3::Dot(hit.value() - m_dragStartHitPoint, m_dragAxisDir);
-				m_pTransform->SetPosition(m_dragStartPosition + axisDistance * m_dragAxisDir);
+				// ResolveAxisDragPosition:
+				Float3 position = m_pTransform->GetPosition();
+				float grabOffset = Float3::Dot(m_dragGrabOffset, m_dragAxisDir);
+				float hitDistance = Float3::Dot(hit.value() - m_dragStartPosition, m_dragAxisDir);
+				// Small fixed point iteration:
+				for (int i = 0; i < 4; i++)
+				{
+					float axisDistance = hitDistance - SizeAtPosition(position) * grabOffset;
+					position = m_dragStartPosition + axisDistance * m_dragAxisDir;
+				}
+				m_pTransform->SetPosition(position);
 			}
 		}
 		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
@@ -338,9 +356,9 @@ namespace emberEditor
 		TryPickAxisSubHandle(TranslateHandle::SubHandle::axisZ, localToWorldMatrix * s_rotZ, ray, closestHitDistanceSq);
 
 		// Check each plane handle:
-		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXY, localToWorldMatrix, ray, closestHitDistanceSq);
-		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeYZ, localToWorldMatrix, ray, closestHitDistanceSq);
-		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXZ, localToWorldMatrix, ray, closestHitDistanceSq);
+		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXY, localToWorldMatrix * s_rotZ, ray, closestHitDistanceSq);
+		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeYZ, localToWorldMatrix * s_rotX, ray, closestHitDistanceSq);
+		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXZ, localToWorldMatrix * s_rotY, ray, closestHitDistanceSq);
 	}
 
 
@@ -350,7 +368,11 @@ namespace emberEditor
 	{
 		if (!HasTarget())
 			return 1.0f;
-		return m_handleScale * HandleContext::GetGlobalHandleScale() * HandleContext::ComputeScreenSpaceScale(m_pTransform->GetPosition());
+		return SizeAtPosition(m_pTransform->GetPosition());
+	}
+	float TranslateHandle::SizeAtPosition(const Float3& position) const
+	{
+		return m_handleScale * HandleContext::GetGlobalHandleScale() * HandleContext::ComputeScreenSpaceScale(position);
 	}
 	Float4x4 TranslateHandle::HandleRotationMatrix() const
 	{
@@ -377,9 +399,10 @@ namespace emberEditor
 	void TranslateHandle::TryPickAxisSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& axisLocalToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
 	{
 		// Construct interaction capsule:
-		Float3 point0 = Float3(axisLocalToWorldMatrix * Float4(0.0f, 0.0f, s_capsuleStart + s_capsuleWidth, 1.0f));
-		Float3 point1 = Float3(axisLocalToWorldMatrix * Float4(0.0f, 0.0f, s_capsuleEnd - s_capsuleWidth, 1.0f));
-		Capsule capsule = Capsule(point0, point1, s_capsuleWidth * Size());
+        float radius = 2.0f * s_arrowBodyRadius;
+		Float3 point0 = Float3(axisLocalToWorldMatrix * Float4(0.0f, 0.0f, s_quadSize + radius, 1.0f));
+		Float3 point1 = Float3(axisLocalToWorldMatrix * Float4(0.0f, 0.0f, s_arrowHeight - radius, 1.0f));
+		Capsule capsule = Capsule(point0, point1, radius * Size());
 
 		// Ray-capsule hit:
 		std::optional<Float3> hit = capsule.IntersectRay(ray);
@@ -397,17 +420,11 @@ namespace emberEditor
 	void TranslateHandle::TryPickPlaneSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
 	{
 		// Construct interaction quad (15% bigger then visual size):
-		float size = 1.15f * (s_capsuleStart + 0.5f * s_arrowBodyRadius);   
-		Float4x4 fillMatrix = localToWorldMatrix;
-		switch (subHandle)
-		{
-			case TranslateHandle::SubHandle::planeXY: fillMatrix *= s_rotZ; break;
-			case TranslateHandle::SubHandle::planeYZ: fillMatrix *= s_rotX; break;
-			case TranslateHandle::SubHandle::planeXZ: fillMatrix *= s_rotY; break;
-		}
-		Float3 origin = Float3(fillMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
-		Float3 uCorner = Float3(fillMatrix * Float4(size, 0.0f, 0.0f, 1.0f));
-		Float3 vCorner = Float3(fillMatrix * Float4(0.0f, size, 0.0f, 1.0f));
+        float cubeWidth = math::sqrt2 * s_arrowBodyRadius;
+        float size = s_quadSize + 0.5f * cubeWidth;
+		Float3 origin = Float3(localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
+		Float3 uCorner = Float3(localToWorldMatrix * Float4(size, 0.0f, 0.0f, 1.0f));
+		Float3 vCorner = Float3(localToWorldMatrix * Float4(0.0f, size, 0.0f, 1.0f));
 		Quad quad = Quad(origin, uCorner - origin, vCorner - origin);
 
 		// Ray-quad hit:

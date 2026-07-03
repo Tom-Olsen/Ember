@@ -33,6 +33,7 @@ namespace emberEditor
 	private: // Members:
         float m_handleScale;
 		CoordinateSpace m_coordinateSpace;
+		emberEcs::Transform* m_pTransform;
         // Handle colors:
 		static Float4 s_colorX;
 		static Float4 s_colorY;
@@ -43,17 +44,14 @@ namespace emberEditor
 		static Float4x4 s_rotX;
 		static Float4x4 s_rotY;
 		static Float4x4 s_rotZ;
-        // Interaction capsule geometry:
-		static float s_capsuleStart;
-		static float s_capsuleEnd;
-		static float s_capsuleWidth;
-        // Arrow handle geometry:
+        // Geometry:
+		static float s_arrowHeight;
+        static float s_quadSize;
 		static float s_arrowBodyHeight;
 		static float s_arrowBodyRadius;
 		static float s_arrowHeadHeight;
 		static float s_arrowHeadRadius;
 		static float s_arrowCornerCount;
-		emberEcs::Transform* m_pTransform;
 
 		// State:
 		bool m_isDragging;
@@ -63,6 +61,7 @@ namespace emberEditor
 		Float3 m_dragStartHitPoint;
 		Float3 m_dragAxisDir;
 		Float3 m_dragPlaneNormal;
+		Float3 m_dragGrabOffset;
 
 		// Meshes:
 		emberCore::Mesh m_arrowMesh;
@@ -103,6 +102,7 @@ namespace emberEditor
 		
 		// Helpers:
 		float Size() const;
+		float SizeAtPosition(const Float3& position) const;
 		Float4x4 HandleRotationMatrix() const;
 		Float4x4 LocalToWorldMatrix();
 		Float4 SubHandleColor(TranslateHandle::SubHandle subHandle, const Float4& baseColor);

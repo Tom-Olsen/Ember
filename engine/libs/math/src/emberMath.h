@@ -22,6 +22,7 @@
 #include "bounds.h"
 #include "bounds2d.h"
 #include "capsule.h"
+#include "cone.h"
 #include "geometry3d.h"
 #include "quad.h"
 #include "ray.h"

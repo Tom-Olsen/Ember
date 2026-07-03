@@ -13,7 +13,7 @@ namespace emberMath
 	Capsule::Capsule(const Float3& point0, const Float3& point1, float radius)
         : point0(point0), point1(point1), radius(radius)
 	{
-		assert(radius >= 0.0f);
+		this->radius = math::Max(0.0f, radius);
 	}
 	Capsule::Capsule(const Capsule& capsule)
         : point0(capsule.point0), point1(capsule.point1), radius(capsule.radius) {}
