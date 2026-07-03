@@ -51,6 +51,16 @@ namespace emberCore
 		ShaderProperties shaderProperties = Primitives::DrawSphere(localToWorldMatrix, s_material, false, false, true, s_cullMode);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 	}
+	void Gizmo::DrawConeSmooth(const Float4x4& localToWorldMatrix)
+    {
+        ShaderProperties shaderProperties = Primitives::DrawConeSmooth(localToWorldMatrix, s_material, false, false, true, s_cullMode);
+        shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+    }
+	void Gizmo::DrawConeFlat(const Float4x4& localToWorldMatrix)
+    {
+        ShaderProperties shaderProperties = Primitives::DrawConeFlat(localToWorldMatrix, s_material, false, false, true, s_cullMode);
+        shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+    }
 	void Gizmo::DrawLineSegment(const Float3& start, const Float3& end, float width)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawLineSegment(start, end, width, s_material, false, false, true, s_cullMode);

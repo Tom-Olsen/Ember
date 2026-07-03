@@ -34,6 +34,8 @@ namespace emberCore
 		static ShaderProperties DrawQuad(const Float4x4& localToWorldMatrix);
 		static ShaderProperties DrawCube(const Float4x4& localToWorldMatrix);
 		static ShaderProperties DrawSphere(const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawConeSmooth(const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawConeFlat(const Float4x4& localToWorldMatrix);
 		static ShaderProperties DrawLineSegment(const Float3& start, const Float3& end, float width = 0.1f);
 		static ShaderProperties DrawArrow(const Float3& position, const Float3& direction, float size = 1.0f);
 		static void DrawCapsule(const Capsule& capsule);

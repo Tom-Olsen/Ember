@@ -33,6 +33,16 @@ namespace emberCore
 		return DrawMesh(MeshManager::GetMesh("cubeSphere"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo, cullMode);
 	}
 
+    ShaderProperties Primitives::DrawConeSmooth(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
+    {
+        return DrawMesh(MeshManager::GetMesh("coneSmooth"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo, cullMode);
+    }
+
+    ShaderProperties Primitives::DrawConeFlat(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
+    {
+        return DrawMesh(MeshManager::GetMesh("coneFlat"), material, localToWorldMatrix, receiveShadows, castShadows, asGizmo, cullMode);
+    }
+
 	ShaderProperties Primitives::DrawLineSegment(const Float3& start, const Float3& end, float width, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
 	{
 		Float3 direction = end - start;

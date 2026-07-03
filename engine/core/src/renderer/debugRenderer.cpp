@@ -51,6 +51,18 @@ namespace emberCore
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
 		return shaderProperties;
 	}
+	ShaderProperties DebugRenderer::DrawConeSmooth(const Float4x4& localToWorldMatrix)
+    {
+		ShaderProperties shaderProperties = Primitives::DrawConeSmooth(localToWorldMatrix, s_material, s_receiveShadows, s_castShadows, false);
+		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+		return shaderProperties;
+    }
+	ShaderProperties DebugRenderer::DrawConeFlat(const Float4x4& localToWorldMatrix)
+    {
+		ShaderProperties shaderProperties = Primitives::DrawConeFlat(localToWorldMatrix, s_material, s_receiveShadows, s_castShadows, false);
+		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+		return shaderProperties;
+    }
 	ShaderProperties DebugRenderer::DrawLineSegment(const Float3& start, const Float3& end, float width)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawLineSegment(start, end, width, s_material, s_receiveShadows, s_castShadows, false);
