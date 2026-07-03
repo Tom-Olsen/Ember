@@ -8,6 +8,7 @@
 #include "emberTime.h"
 #include "eventSystem.h"
 #include "gui.h"
+#include "handleContext.h"
 #include "logger.h"
 #include "profiler.h"
 #include "renderer.h"
@@ -65,6 +66,7 @@ namespace emberApplication
 
 			// Init basic systems:
 			Core::InitBasics();
+		    emberEditor::HandleContext::Init();
 
 			// Window backend:
 			bool forceX11VideoDriver = true;

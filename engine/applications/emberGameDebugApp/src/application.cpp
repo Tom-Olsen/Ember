@@ -8,6 +8,7 @@
 #include "emberTime.h"
 #include "eventSystem.h"
 #include "gui.h"
+#include "handleContext.h"
 #include "logger.h"
 #include "profiler.h"
 #include "renderer.h"
@@ -53,6 +54,7 @@ namespace emberApplication
 
 			// Init basic systems:
 			Core::InitBasics();
+		    emberEditor::HandleContext::Init();
 
 			// Window backend:
 			bool forceX11VideoDriver = true;
@@ -122,7 +124,7 @@ namespace emberApplication
 			bool running = true;
 			Time::Reset();
 			m_pActiveScene->Start();
-			
+
 			while (running)
 			{
 				PROFILE_FUNCTION();
@@ -171,6 +173,8 @@ namespace emberApplication
 					m_pActiveScene->Update();
 					m_pActiveScene->LateUpdate();
 				}
+				UpdateMainViewportHandleContext();
+				Editor::PreRender();
 				Renderer::RenderFrame();
 			}
 		}
@@ -207,5 +211,26 @@ namespace emberApplication
 	emberEditor::FpsEditorWindow* Application::GetFpsEditorWindow()
 	{
 		return m_pFpsEditorWindow.get();
+	}
+
+
+
+	// Private methods:
+	void Application::UpdateMainViewportHandleContext()
+	{
+		Uint2 surfaceExtent = Renderer::GetSurfaceExtent();
+		Float2 viewportSize = Float2((float)surfaceExtent.x, (float)surfaceExtent.y);
+		Float2 viewportMousePos = EventSystem::MousePos();
+		Float2 viewportMousePos01 = EventSystem::MousePos01();
+		bool mouseInsideViewport =
+			viewportMousePos01.x >= 0.0f && viewportMousePos01.x <= 1.0f &&
+			viewportMousePos01.y >= 0.0f && viewportMousePos01.y <= 1.0f;
+		bool viewportIsHovered = mouseInsideViewport && !Editor::GetHoveredWindowWantCaptureEvents();
+
+		emberEditor::HandleContext::SetCamera(m_pActiveScene == nullptr ? nullptr : m_pActiveScene->GetActiveCamera());
+		emberEditor::HandleContext::SetViewportSize(viewportSize);
+		emberEditor::HandleContext::SetViewportMousePos(viewportMousePos);
+		emberEditor::HandleContext::SetViewportMousePos01(viewportMousePos01);
+		emberEditor::HandleContext::SetViewPortIsHovered(viewportIsHovered);
 	}
 }

@@ -65,6 +65,8 @@ namespace emberApplication
 		static emberEditor::FpsEditorWindow* GetFpsEditorWindow();
 
 	private: // Methods
+		static void UpdateMainViewportHandleContext();
+
 		// Delete all constructors:
 		Application() = delete;
 		Application(const Application&) = delete;

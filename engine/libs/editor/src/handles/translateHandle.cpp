@@ -38,7 +38,6 @@ namespace emberEditor
 	// Constructor/Destructor:
 	TranslateHandle::TranslateHandle()
 	{
-		HandleContext::Init();
 		m_handleScale = 1.0f;
 		m_coordinateSpace = CoordinateSpace::world;
 		m_pTransform = nullptr;

@@ -3,6 +3,7 @@
 #include "editorWindow.h"
 #include "gui.h"
 #include "sphFluid3dGpu.h"
+#include "translateHandle.h"
 
 
 
@@ -16,6 +17,7 @@ namespace emberEditor
 
 
 	private:
+        TranslateHandle m_translateHandle;
 		fluidDynamics::SphFluid3dGpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
@@ -46,6 +48,7 @@ namespace emberEditor
 			m_wantCaptureEvents = true;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 			m_pScript = pScript;
+            m_translateHandle.SetTarget(m_pScript->GetTransform());
 			GetData();
 
 			// No serialised data available: get member values from script:
@@ -55,6 +58,11 @@ namespace emberEditor
 			//else
 				// Set m_... values and do m_pScript->Set...() for all members.
 		}
+		void PreRender() override
+        {
+            m_translateHandle.Update();
+            m_translateHandle.Draw();
+        }
 		void Render() override
 		{
 			GetData();
