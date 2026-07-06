@@ -64,6 +64,7 @@ namespace emberCore
 		void SetPositions(const std::vector<Float3>& positions);
 		void SetNormals(const std::vector<Float3>& normals);
 		void SetTangents(const std::vector<Float3>& tangents);
+        void SetColor(const Float4& color);
 		void SetColors(const std::vector<Float4>& colors);
 		void SetUniformColor(const Float4& color);
 		void SetUVs(const std::vector<Float4>& uvs);

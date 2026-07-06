@@ -63,6 +63,11 @@ namespace emberCore
 		m_tangents = tangents;
 		RegisterUpdate(false);
 	}
+    void Mesh::SetColor(const Float4& color)
+    {
+        m_colors.resize(GetVertexCount(), color);
+		RegisterUpdate(false);
+    }
 	void Mesh::SetColors(const std::vector<Float4>& colors)
 	{
 		m_colors = colors;
