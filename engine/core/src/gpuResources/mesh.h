@@ -114,6 +114,8 @@ namespace emberCore
 		Mesh  InvertFaces() &&;
 		Mesh& RescaleUVs(const Float4& scale, const Float4& offset) &;
 		Mesh  RescaleUVs(const Float4& scale, const Float4& offset) &&;
+		Mesh& Mirror(const Float3& planePosition, const Float3& planeNormal) &;
+		Mesh  Mirror(const Float3& planePosition, const Float3& planeNormal) &&;
 		void ComputeNormals();
 		void ComputeTangents();
 
@@ -133,5 +135,6 @@ namespace emberCore
 		void ApplySpherify(float factor, float radius);
 		void ApplyInvertFaces();
 		void ApplyRescaleUVs(const Float4& scale, const Float4& offset);
+		void ApplyMirror(const Float3& planePosition, const Float3& planeNormal);
 	};
 }

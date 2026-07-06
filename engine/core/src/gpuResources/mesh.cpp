@@ -306,6 +306,16 @@ namespace emberCore
 		ApplyRescaleUVs(scale, offset);
 		return std::move(*this);
 	}
+	Mesh& Mesh::Mirror(const Float3& planePosition, const Float3& planeNormal)&
+	{
+		ApplyMirror(planePosition, planeNormal);
+		return *this;
+	}
+	Mesh  Mesh::Mirror(const Float3& planePosition, const Float3& planeNormal)&&
+	{
+		ApplyMirror(planePosition, planeNormal);
+		return std::move(*this);
+	}
 	void Mesh::ComputeNormals()
 	{
 		m_normals.clear();
@@ -693,5 +703,37 @@ namespace emberCore
 		for (Float4& uv : uvs)
 			uv = scale * uv + offset;
 		RegisterUpdate(false);
+	}
+	void Mesh::ApplyMirror(const Float3& planePosition, const Float3& planeNormal)
+	{
+		if (planeNormal.IsEpsilonZero())
+			return;
+
+		uint32_t vertexCount = GetVertexCount();
+		Float3 normal = planeNormal.Normalize();
+
+		// Positions:
+		std::vector<Float3>& positions = GetPositions();
+		for (uint32_t i = 0; i < vertexCount; i++)
+			positions[i] -= 2.0f * Float3::Dot(positions[i] - planePosition, normal) * normal;
+
+		// Normals:
+		std::vector<Float3>& normals = GetNormals();
+		if (normals.size() == vertexCount)
+			for (uint32_t i = 0; i < vertexCount; i++)
+				normals[i] -= 2.0f * Float3::Dot(normals[i], normal) * normal;
+
+		// Tangents:
+		std::vector<Float3>& tangents = GetTangents();
+		if (tangents.size() == vertexCount)
+			for (uint32_t i = 0; i < vertexCount; i++)
+				tangents[i] -= 2.0f * Float3::Dot(tangents[i], normal) * normal;
+
+		// Triangles:
+		std::vector<Uint3>& triangles = GetTriangles();
+		for (Uint3& triangle : triangles)
+			std::swap(triangle[1], triangle[2]);
+
+		RegisterUpdate();
 	}
 }
