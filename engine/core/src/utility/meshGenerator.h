@@ -49,5 +49,7 @@ namespace emberCore
 
 		Mesh EMBER_CORE_API Camera();
 		Mesh EMBER_CORE_API Frame(float radius, const Float3& lengths);
+
+        Mesh EMBER_CORE_API TranslateHandleFrame(float width, float length);
 	};
 }

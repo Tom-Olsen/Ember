@@ -98,6 +98,10 @@ namespace emberCore
 		Mesh leb9("leb9");
 		leb9.MoveMeshAsset(emberAssetLoader::LoadMeshCsv(leb9File));
 		AddMesh(std::move(leb9));
+
+        Mesh translateHandleFrame = MeshGenerator::TranslateHandleFrame(0.5f, 5.0f);
+        translateHandleFrame.SetName("translateHandleFrame");
+        AddMesh(std::move(translateHandleFrame));
 	}
 	//void MeshManager::UnloadAllMeshes()
 	//{

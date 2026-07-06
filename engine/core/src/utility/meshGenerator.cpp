@@ -898,5 +898,69 @@ namespace emberCore
 
 			return Mesh::Merge(meshes, "frame");
 		}
+
+        Mesh EMBER_CORE_API TranslateHandleFrame(float width, float length)
+        {
+            std::vector<Mesh> meshes;
+            // Shared half zylinders (2 quads each):
+            meshes.emplace_back(MeshGenerator::ClockwiseQuad(
+                Float3(0.5f * width, 0.5f * width, 0.5f * width),
+                Float3(0.5f * width, 0.5f * width, -0.5f * width),
+                Float3(0.5f * width + length, 0.5f * width, -0.5f * width),
+                Float3(0.5f * width + length, 0.5f * width, 0.5f * width)));
+            meshes.emplace_back(MeshGenerator::ClockwiseQuad(
+                Float3(0.5f * width + length, 0.5f * width, -0.5f * width),
+                Float3(0.5f * width, 0.5f * width, -0.5f * width),
+                Float3(0.5f * width, -0.5f * width, -0.5f * width),
+                Float3(0.5f * width + length, -0.5f * width, -0.5f * width)));
+            meshes.emplace_back(MeshGenerator::ClockwiseQuad(
+                Float3(0.5f * width, 0.5f * width, 0.5f * width),
+                Float3(0.5f * width, 0.5f * width + length, 0.5f * width),
+                Float3(0.5f * width, 0.5f * width + length, -0.5f * width),
+                Float3(0.5f * width, 0.5f * width, -0.5f * width)));
+            meshes.emplace_back(MeshGenerator::ClockwiseQuad(
+                Float3(0.5f * width, 0.5f * width, -0.5f * width),
+                Float3(0.5f * width, 0.5f * width + length, -0.5f * width),
+                Float3(-0.5f * width, 0.5f * width + length, -0.5f * width),
+                Float3(-0.5f * width, 0.5f * width, -0.5f * width)));
+
+            // None-shared zylinders:
+            {
+                Mesh zylinder = MeshGenerator::ZylinderMantleFlat(math::sqrt2Inv * width, length, 4);
+                Float4x4 rotation = Float4x4::RotateX(math::pi2) * Float4x4::RotateZ(math::pi4);
+                zylinder.Rotate(rotation);
+                zylinder.Translate(Float3(width + length, 0.5f * (width + length), 0.0f));
+                meshes.emplace_back(std::move(zylinder));
+            }
+            {
+                Mesh zylinder = MeshGenerator::ZylinderMantleFlat(math::sqrt2Inv * width, length, 4);
+                Float4x4 rotation = Float4x4::RotateZ(math::pi2) * Float4x4::RotateX(math::pi2) * Float4x4::RotateZ(math::pi4);
+                zylinder.Rotate(rotation);
+                zylinder.Translate(Float3(0.5f * (width + length), width + length, 0.0f));
+                meshes.emplace_back(std::move(zylinder));
+            }
+
+            // Fill open corners cubes with quads:
+            meshes.emplace_back(Quad().Scale(width).Translate(Float3(width + length, width + length, 0.5f * width)));
+            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(math::pi)).Translate(Float3(width + length, width + length, -0.5f * width)));
+            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateY(math::pi2)).Translate(Float3(1.5f * width + length, width + length, 0.0f)));
+            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(-math::pi2)).Translate(Float3(width + length, 1.5f * width + length, 0.0f)));
+            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(math::pi)).Translate(Float3(0.0f, 0.0f, -0.5f * width)));
+            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(math::pi)).Translate(Float3(width + length, 0.0f, -0.5f * width)));
+            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(math::pi)).Translate(Float3(0.0f, width + length, -0.5f * width)));
+            meshes.emplace_back(MeshGenerator::Triangle(Float3(1.5f * width + length, -0.5f * width, -0.5f * width), Float3(1.5f * width + length, 0.5f * width, -0.5f * width), Float3(1.5f * width + length, 0.5f * width, 0.5f * width)));
+            meshes.emplace_back(MeshGenerator::Triangle(Float3(-0.5f * width, 1.5f * width + length, -0.5f * width), Float3(0.5f * width, 1.5f * width + length, 0.5f * width), Float3(0.5f * width, 1.5f * width + length, -0.5f * width)));
+
+            // Merge all meshes together and copy+rotate the entire thing twice:
+			std::vector<Mesh> meshes2;
+            meshes2.emplace_back(Mesh::Merge(meshes));
+            meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), 2.0f * math::pi / 3.0f)));
+            meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), 4.0f * math::pi / 3.0f)).GetCopy());
+            // Give each copy its own color:
+            meshes2[0].SetColor(Float4::blue);
+            meshes2[1].SetColor(Float4::red);
+            meshes2[2].SetColor(Float4::green);
+			return Mesh::Merge(meshes2, "translateHandleFrame");
+        }
 	}
 }

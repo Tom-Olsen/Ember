@@ -320,6 +320,22 @@ inline Scene* DefaultScene()
 
 		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}
+	{// Translate handle frame:
+		Entity entity = Entity::Create("translateHandleFrame");
+		Float3 pos = Float3(0.0f, 0.0f, 1.0f);
+
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+
+		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("translateHandleFrame"));
+		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLitMaterial"));
+		//pMeshRenderer->SetCullMode(emberCommon::CullMode::none);
+
+		//DrawMeshData* drawMeshData = entity.AddComponent<DrawMeshData>();
+
+		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(45.0f);
+	}
 	//{// Instanced Cube Array:
 	//	Entity entity = Entity::Create("cubeArray");
 	//	Float3 pos = Float3::zero;
