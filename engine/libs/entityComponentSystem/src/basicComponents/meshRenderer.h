@@ -1,4 +1,5 @@
 #pragma once
+#include "commonCullMode.h"
 #include "component.h"
 #include "emberMath.h"
 #include "material.h"
@@ -14,6 +15,7 @@ namespace emberEcs
 	private: // Members:
 		bool m_castShadows;
 		bool m_receiveShadows;
+        emberCommon::CullMode m_cullMode;
         bool m_drawLocalBounds;
         bool m_drawWorldBounds;
 		emberCore::Mesh* m_pMesh;
@@ -27,6 +29,7 @@ namespace emberEcs
 		// Setter:
 		void SetCastShadows(bool castShadows);
 		void SetReceiveShadows(bool receiveShadows);
+        void SetCullMode(emberCommon::CullMode cullMode);
 		void SetMesh(emberCore::Mesh& mesh);
 		void SetMaterial(const emberCore::Material& material);
 
@@ -36,6 +39,7 @@ namespace emberEcs
 		bool HasMesh() const;
 		bool GetCastShadows() const;
 		bool GetReceiveShadows() const;
+        emberCommon::CullMode GetCullMode() const;
 		emberCore::Mesh& GetMesh();
 		emberCore::Material& GetMaterial();
 		emberCore::ShaderProperties& GetShaderProperties();
