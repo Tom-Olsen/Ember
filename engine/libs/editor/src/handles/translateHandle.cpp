@@ -5,6 +5,7 @@
 #include "handleContext.h"
 #include "materialManager.h"
 #include "meshGenerator.h"
+#include "shaderProperties.h"
 #include "transform.h"
 #include <optional>
 
@@ -38,7 +39,7 @@ namespace emberEditor
 	// Constructor/Destructor:
 	TranslateHandle::TranslateHandle()
 	{
-		m_handleScale = 1.0f;
+		m_handleScale = 6.0f;
 		m_coordinateSpace = CoordinateSpace::world;
 		m_pTransform = nullptr;
 		m_isDragging = false;
@@ -136,14 +137,17 @@ namespace emberEditor
 		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeXY, s_colorZ) - 0.33f * Float4::in);
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotZ);
 		emberCore::Gizmo::ResetCullMode();
-        // Draw plane quad outlines:
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeYZ, s_colorX));
-        emberCore::Gizmo::DrawMesh(m_quadOutlineMesh, localToWorldMatrix * s_rotY);
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeXZ, s_colorY));
-        emberCore::Gizmo::DrawMesh(m_quadOutlineMesh, localToWorldMatrix * s_rotZ);
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeXY, s_colorZ));
-        emberCore::Gizmo::DrawMesh(m_quadOutlineMesh, localToWorldMatrix * s_rotX);
+
+        // Draw plane frame:
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoVertexColorLitMaterial"));
+		emberCore::ShaderProperties shaderProperties = emberCore::Gizmo::DrawMesh(m_frameMesh, localToWorldMatrix);
+		int state = IsPlaneSubHandle(m_activeSubHandle) ? 2 : IsPlaneSubHandle(m_hoveredSubHandle) ? 1 : 0;
+		Float4 stateColor = (state == 2) ? SubHandleColor(m_activeSubHandle) : (state == 1) ? SubHandleColor(m_hoveredSubHandle) : Float4::zero;
+		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::white);
+		shaderProperties.SetValue("SelectionState", "state", state);
+		shaderProperties.SetValue("SelectionState", "stateColor", stateColor);
+		shaderProperties.SetValue("SelectionState", "hoverColor", s_hoverColor);
+		shaderProperties.SetValue("SelectionState", "activeColor", s_activeColor);
 		emberCore::Gizmo::ResetMaterial();
 
 		// Visualize arrow interaction regions
@@ -160,7 +164,7 @@ namespace emberEditor
 		//emberCore::Gizmo::ResetMaterial();
 
         // ToDo:
-        // -make translate handle a good size.
+        // -cache 8 of these meshes, one for each octant and always use the octant that the camera is in. however, lock the octant while dragging.
         // -implement scaling handle.
 	}
 
@@ -221,19 +225,11 @@ namespace emberEditor
             m_quadMesh = emberCore::MeshGenerator::Quad().Transform(transformMatrix);
         }
 
-        // Quad outline mesh:
+        // Frame mesh:
         {
-            float cubeWidth = math::sqrt2 * s_arrowBodyRadius;
-            float cubeLength = s_quadSize + 0.5f * cubeWidth;
-            Float3 scale0 = Float3(cubeLength, cubeWidth, cubeWidth);
-            Float3 scale1 = Float3(cubeWidth, cubeWidth, cubeLength);
-            Float4x4 transformMatrix0 = Float4x4::TS(Float3(0.5f * cubeLength, 0.0f, s_quadSize), scale0);
-            Float4x4 transformMatrix1 = Float4x4::TS(Float3(s_quadSize, 0.0f, 0.5f * cubeLength), scale1);
-            std::vector<emberCore::Mesh> cubes;
-			cubes.reserve(2);
-            cubes.emplace_back(emberCore::MeshGenerator::Cube().Transform(transformMatrix0));
-            cubes.emplace_back(emberCore::MeshGenerator::Cube().Transform(transformMatrix1));
-            m_quadOutlineMesh = emberCore::Mesh::Merge(cubes);
+            float frameWidth = math::sqrt2 * s_arrowBodyRadius;
+            float frameLength = s_quadSize - frameWidth;
+            m_frameMesh = emberCore::MeshGenerator::TranslateHandleFrame(frameWidth, frameLength, s_colorX, s_colorY, s_colorZ);
         }
 	}
 
@@ -479,6 +475,19 @@ namespace emberEditor
 			case TranslateHandle::SubHandle::planeXZ: return Float3::forward;
 			default: return Float3::zero;
         }
+	}
+	Float4 TranslateHandle::SubHandleColor(TranslateHandle::SubHandle subHandle)
+	{
+		switch (subHandle)
+		{
+			case TranslateHandle::SubHandle::axisX: return s_colorX;
+			case TranslateHandle::SubHandle::axisY: return s_colorY;
+			case TranslateHandle::SubHandle::axisZ: return s_colorZ;
+			case TranslateHandle::SubHandle::planeYZ: return s_colorX;
+			case TranslateHandle::SubHandle::planeXZ: return s_colorY;
+			case TranslateHandle::SubHandle::planeXY: return s_colorZ;
+			default: return Float4::zero;
+		}
 	}
 	bool TranslateHandle::IsAxisSubHandle(TranslateHandle::SubHandle subHandle)
     {

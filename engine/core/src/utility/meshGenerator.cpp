@@ -899,7 +899,7 @@ namespace emberCore
 			return Mesh::Merge(meshes, "frame");
 		}
 
-        Mesh EMBER_CORE_API TranslateHandleFrame(float width, float length)
+        Mesh EMBER_CORE_API TranslateHandleFrame(float width, float length, Float4 colorX, Float4 colorY, Float4 colorZ)
         {
             std::vector<Mesh> meshes;
             // Shared half zylinders (2 quads each):
@@ -957,9 +957,9 @@ namespace emberCore
             meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), 2.0f * math::pi / 3.0f)));
             meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), 4.0f * math::pi / 3.0f)).GetCopy());
             // Give each copy its own color:
-            meshes2[0].SetColor(Float4::blue);
-            meshes2[1].SetColor(Float4::red);
-            meshes2[2].SetColor(Float4::green);
+            meshes2[0].SetColor(colorZ);    // orthogonal to z.
+            meshes2[1].SetColor(colorX);    // orthogonal to x.
+            meshes2[2].SetColor(colorY);    // orthogonal to y.
 			return Mesh::Merge(meshes2, "translateHandleFrame");
         }
 	}

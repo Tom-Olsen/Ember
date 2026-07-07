@@ -31,45 +31,53 @@ namespace emberCore
 
 
 	// Public methods:
-	void Gizmo::DrawMesh(const Mesh& mesh, const Float4x4& localToWorldMatrix)
+	ShaderProperties Gizmo::DrawMesh(const Mesh& mesh, const Float4x4& localToWorldMatrix)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawMesh(mesh, s_material, localToWorldMatrix, false, false, true, s_cullMode);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+        return shaderProperties;
 	}
-	void Gizmo::DrawQuad(const Float4x4& localToWorldMatrix)
+	ShaderProperties Gizmo::DrawQuad(const Float4x4& localToWorldMatrix)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawQuad(localToWorldMatrix, s_material, false, false, true, s_cullMode);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+        return shaderProperties;
 	}
-	void Gizmo::DrawCube(const Float4x4& localToWorldMatrix)
+	ShaderProperties Gizmo::DrawCube(const Float4x4& localToWorldMatrix)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawCube(localToWorldMatrix, s_material, false, false, true, s_cullMode);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+        return shaderProperties;
 	}
-	void Gizmo::DrawSphere(const Float4x4& localToWorldMatrix)
+	ShaderProperties Gizmo::DrawSphere(const Float4x4& localToWorldMatrix)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawSphere(localToWorldMatrix, s_material, false, false, true, s_cullMode);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+        return shaderProperties;
 	}
-	void Gizmo::DrawConeSmooth(const Float4x4& localToWorldMatrix)
+	ShaderProperties Gizmo::DrawConeSmooth(const Float4x4& localToWorldMatrix)
     {
         ShaderProperties shaderProperties = Primitives::DrawConeSmooth(localToWorldMatrix, s_material, false, false, true, s_cullMode);
         shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+        return shaderProperties;
     }
-	void Gizmo::DrawConeFlat(const Float4x4& localToWorldMatrix)
+	ShaderProperties Gizmo::DrawConeFlat(const Float4x4& localToWorldMatrix)
     {
         ShaderProperties shaderProperties = Primitives::DrawConeFlat(localToWorldMatrix, s_material, false, false, true, s_cullMode);
         shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+        return shaderProperties;
     }
-	void Gizmo::DrawLineSegment(const Float3& start, const Float3& end, float width)
+	ShaderProperties Gizmo::DrawLineSegment(const Float3& start, const Float3& end, float width)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawLineSegment(start, end, width, s_material, false, false, true, s_cullMode);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+        return shaderProperties;
 	}
-	void Gizmo::DrawArrow(const Float3& position, const Float3& direction, float size)
+	ShaderProperties Gizmo::DrawArrow(const Float3& position, const Float3& direction, float size)
 	{
 		ShaderProperties shaderProperties = Primitives::DrawArrow(position, direction, size, s_material, false, false, true, s_cullMode);
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", s_color);
+        return shaderProperties;
 	}
 	void Gizmo::DrawCapsule(const Capsule& capsule)
 	{

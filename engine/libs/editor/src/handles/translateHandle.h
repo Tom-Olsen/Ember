@@ -7,6 +7,10 @@
 
 
 // Forward declarations:
+namespace emberCore
+{
+	class ShaderProperties;
+}
 namespace emberEcs
 {
 	class Transform;
@@ -68,7 +72,7 @@ namespace emberEditor
 		emberCore::Mesh m_capsuleMesh;
 		emberCore::Mesh m_arrowHeadCapsuleMesh;
 		emberCore::Mesh m_quadMesh;
-        emberCore::Mesh m_quadOutlineMesh;
+        emberCore::Mesh m_frameMesh;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -112,6 +116,7 @@ namespace emberEditor
 
         // Static helpers:
 		static Float3 SubHandleDirection(TranslateHandle::SubHandle subHandle);
+		static Float4 SubHandleColor(TranslateHandle::SubHandle subHandle);
 		static bool IsAxisSubHandle(TranslateHandle::SubHandle subHandle);
 		static bool IsPlaneSubHandle(TranslateHandle::SubHandle subHandle);
 	};

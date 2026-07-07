@@ -50,6 +50,6 @@ namespace emberCore
 		Mesh EMBER_CORE_API Camera();
 		Mesh EMBER_CORE_API Frame(float radius, const Float3& lengths);
 
-        Mesh EMBER_CORE_API TranslateHandleFrame(float width, float length);
+        Mesh EMBER_CORE_API TranslateHandleFrame(float width, float length, Float4 colorX = Float4::red, Float4 colorY = Float4::green, Float4 colorZ = Float4::blue);
 	};
 }

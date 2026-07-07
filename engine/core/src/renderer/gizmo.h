@@ -31,14 +31,14 @@ namespace emberCore
         static void Clear();
 
     public: // Methods:
-		static void DrawMesh(const Mesh& mesh, const Float4x4& localToWorldMatrix);
-		static void DrawQuad(const Float4x4& localToWorldMatrix);
-		static void DrawCube(const Float4x4& localToWorldMatrix);
-		static void DrawSphere(const Float4x4& localToWorldMatrix);
-		static void DrawConeSmooth(const Float4x4& localToWorldMatrix);
-		static void DrawConeFlat(const Float4x4& localToWorldMatrix);
-		static void DrawLineSegment(const Float3& start, const Float3& end, float width = 0.1f);
-		static void DrawArrow(const Float3& position, const Float3& direction, float size = 1.0f);
+		static ShaderProperties DrawMesh(const Mesh& mesh, const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawQuad(const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawCube(const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawSphere(const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawConeSmooth(const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawConeFlat(const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawLineSegment(const Float3& start, const Float3& end, float width = 0.1f);
+		static ShaderProperties DrawArrow(const Float3& position, const Float3& direction, float size = 1.0f);
 		static void DrawCapsule(const Capsule& capsule);
 		static void DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width = 0.1f);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width = 0.1f);
