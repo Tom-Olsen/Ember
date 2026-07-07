@@ -2,6 +2,8 @@
 #include "emberMath.h"
 #include "material.h"
 #include "mesh.h"
+#include <array>
+#include <cstdint>
 #include <memory>
 
 
@@ -66,13 +68,14 @@ namespace emberEditor
 		Float3 m_dragAxisDir;
 		Float3 m_dragPlaneNormal;
 		Float3 m_dragGrabOffset;
+		uint32_t m_octantIndex;
 
 		// Meshes:
 		emberCore::Mesh m_arrowMesh;
 		emberCore::Mesh m_capsuleMesh;
 		emberCore::Mesh m_arrowHeadCapsuleMesh;
 		emberCore::Mesh m_quadMesh;
-        emberCore::Mesh m_frameMesh;
+        std::array<emberCore::Mesh, 8> m_frameMeshes;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -103,6 +106,7 @@ namespace emberEditor
 		void TryBeginDrag();
 		void UpdateDrag();
 		void EndDrag();
+		void UpdateOctant();
 		void UpdateHoveredSubHandle();
 		
 		// Helpers:
@@ -117,6 +121,8 @@ namespace emberEditor
         // Static helpers:
 		static Float3 SubHandleDirection(TranslateHandle::SubHandle subHandle);
 		static Float4 SubHandleColor(TranslateHandle::SubHandle subHandle);
+		static Float3 OctantSigns(uint32_t octantIndex);
+		static Float4x4 PlaneQuadTranslation(TranslateHandle::SubHandle subHandle, uint32_t octantIndex, float size);
 		static bool IsAxisSubHandle(TranslateHandle::SubHandle subHandle);
 		static bool IsPlaneSubHandle(TranslateHandle::SubHandle subHandle);
 	};

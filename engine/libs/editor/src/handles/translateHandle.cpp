@@ -39,10 +39,11 @@ namespace emberEditor
 	// Constructor/Destructor:
 	TranslateHandle::TranslateHandle()
 	{
-		m_handleScale = 6.0f;
+		m_handleScale = 1.0f;
 		m_coordinateSpace = CoordinateSpace::world;
 		m_pTransform = nullptr;
 		m_isDragging = false;
+		m_octantIndex = 0;
 		ResetInteractionState();
 		CreateMeshes();
 	}
@@ -109,6 +110,7 @@ namespace emberEditor
 			ResetInteractionState();
 			return;
 		}
+		UpdateOctant();
 		UpdateHoveredSubHandle();
 		TryBeginDrag();
 		UpdateDrag();
@@ -130,17 +132,18 @@ namespace emberEditor
         // Draw plane quads:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
         emberCore::Gizmo::SetCullMode(emberCommon::CullMode::none);
+		float quadSize = s_quadSize + 0.5f * math::sqrt2 * s_arrowBodyRadius;
 		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeYZ, s_colorX) - 0.33f * Float4::in);
-        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotX);
+        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotX * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize));
 		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeXZ, s_colorY) - 0.33f * Float4::in);
-        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotY);
+        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotY * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXZ, m_octantIndex, quadSize));
 		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeXY, s_colorZ) - 0.33f * Float4::in);
-        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotZ);
+        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotZ * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXY, m_octantIndex, quadSize));
 		emberCore::Gizmo::ResetCullMode();
 
         // Draw plane frame:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoVertexColorLitMaterial"));
-		emberCore::ShaderProperties shaderProperties = emberCore::Gizmo::DrawMesh(m_frameMesh, localToWorldMatrix);
+		emberCore::ShaderProperties shaderProperties = emberCore::Gizmo::DrawMesh(m_frameMeshes[m_octantIndex], localToWorldMatrix);
 		int state = IsPlaneSubHandle(m_activeSubHandle) ? 2 : IsPlaneSubHandle(m_hoveredSubHandle) ? 1 : 0;
 		Float4 stateColor = (state == 2) ? SubHandleColor(m_activeSubHandle) : (state == 1) ? SubHandleColor(m_hoveredSubHandle) : Float4::zero;
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::white);
@@ -164,7 +167,6 @@ namespace emberEditor
 		//emberCore::Gizmo::ResetMaterial();
 
         // ToDo:
-        // -cache 8 of these meshes, one for each octant and always use the octant that the camera is in. however, lock the octant while dragging.
         // -implement scaling handle.
 	}
 
@@ -229,7 +231,18 @@ namespace emberEditor
         {
             float frameWidth = math::sqrt2 * s_arrowBodyRadius;
             float frameLength = s_quadSize - frameWidth;
-            m_frameMesh = emberCore::MeshGenerator::TranslateHandleFrame(frameWidth, frameLength, s_colorX, s_colorY, s_colorZ);
+            emberCore::Mesh baseFrame = emberCore::MeshGenerator::TranslateHandleFrame(frameWidth, frameLength, s_colorX, s_colorY, s_colorZ);
+			for (uint32_t octantIndex = 0; octantIndex < 8; octantIndex++)
+			{
+				m_frameMeshes[octantIndex] = baseFrame.GetCopy();
+		        Float3 signs = OctantSigns(octantIndex);
+		        if (signs.x < 0.0f)
+		        	m_frameMeshes[octantIndex].Mirror(Float3::zero, Float3::right);
+		        if (signs.y < 0.0f)
+		        	m_frameMeshes[octantIndex].Mirror(Float3::zero, Float3::forward);
+		        if (signs.z < 0.0f)
+		        	m_frameMeshes[octantIndex].Mirror(Float3::zero, Float3::up);
+			}
         }
 	}
 
@@ -336,6 +349,28 @@ namespace emberEditor
 		}
 		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
 	}
+	void TranslateHandle::UpdateOctant()
+	{
+		if (m_isDragging)
+			return;
+
+		Float3 cameraDirection = HandleContext::GetCamera()->GetTransform()->GetPosition() - m_pTransform->GetPosition();
+		if (cameraDirection.IsEpsilonZero())
+			return;
+
+		Float4x4 worldToHandleRotation = HandleRotationMatrix().Inverse();
+		Float3 localCameraDirection = Float3(worldToHandleRotation * Float4(cameraDirection, 0.0f));
+		if (localCameraDirection.IsEpsilonZero())
+			return;
+
+		m_octantIndex = 0;
+		if (localCameraDirection.x < 0.0f)
+			m_octantIndex |= 1;
+		if (localCameraDirection.y < 0.0f)
+			m_octantIndex |= 2;
+		if (localCameraDirection.z < 0.0f)
+			m_octantIndex |= 4;
+	}
 	void TranslateHandle::UpdateHoveredSubHandle()
 	{
 		if (m_isDragging)
@@ -359,9 +394,11 @@ namespace emberEditor
 		TryPickAxisSubHandle(TranslateHandle::SubHandle::axisZ, localToWorldMatrix * s_rotZ, ray, closestHitDistanceSq);
 
 		// Check each plane handle:
-		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXY, localToWorldMatrix * s_rotZ, ray, closestHitDistanceSq);
-		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeYZ, localToWorldMatrix * s_rotX, ray, closestHitDistanceSq);
-		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXZ, localToWorldMatrix * s_rotY, ray, closestHitDistanceSq);
+		float cubeWidth = math::sqrt2 * s_arrowBodyRadius;
+		float quadSize = s_quadSize + 0.5f * cubeWidth;
+		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXY, localToWorldMatrix * s_rotZ * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXY, m_octantIndex, quadSize), ray, closestHitDistanceSq);
+		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeYZ, localToWorldMatrix * s_rotX * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize), ray, closestHitDistanceSq);
+		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXZ, localToWorldMatrix * s_rotY * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXZ, m_octantIndex, quadSize), ray, closestHitDistanceSq);
 	}
 
 
@@ -488,6 +525,34 @@ namespace emberEditor
 			case TranslateHandle::SubHandle::planeXY: return s_colorZ;
 			default: return Float4::zero;
 		}
+	}
+	Float3 TranslateHandle::OctantSigns(uint32_t octantIndex)
+	{
+		return Float3(
+			(octantIndex & 1) == 0 ? 1.0f : -1.0f,
+			(octantIndex & 2) == 0 ? 1.0f : -1.0f,
+			(octantIndex & 4) == 0 ? 1.0f : -1.0f);
+	}
+	Float4x4 TranslateHandle::PlaneQuadTranslation(TranslateHandle::SubHandle subHandle, uint32_t octantIndex, float size)
+	{
+		Float3 signs = OctantSigns(octantIndex);
+		Float3 translation = Float3::zero;
+		switch (subHandle)
+		{
+			case TranslateHandle::SubHandle::planeXY:
+				translation.x = signs.x < 0.0f ? -size : 0.0f;
+				translation.y = signs.y < 0.0f ? -size : 0.0f;
+				break;
+			case TranslateHandle::SubHandle::planeYZ:
+				translation.x = signs.y < 0.0f ? -size : 0.0f;
+				translation.y = signs.z < 0.0f ? -size : 0.0f;
+				break;
+			case TranslateHandle::SubHandle::planeXZ:
+				translation.x = signs.z < 0.0f ? -size : 0.0f;
+				translation.y = signs.x < 0.0f ? -size : 0.0f;
+				break;
+		}
+		return Float4x4::Translate(translation);
 	}
 	bool TranslateHandle::IsAxisSubHandle(TranslateHandle::SubHandle subHandle)
     {
