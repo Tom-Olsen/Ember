@@ -3,7 +3,6 @@
 #include "editor.h"
 #include "editorSelection.h"
 #include "emberTime.h"
-#include "eventSystem.h"
 #include "gui.h"
 #include "handleContext.h"
 #include "renderer.h"
@@ -37,7 +36,7 @@ namespace emberEditor
         // Scene window closed:
         if (!m_isOpen)
         {
-            m_translateHandle.ClearTarget();
+            m_transformHandle.ClearTarget();
             return;
         }
 
@@ -48,17 +47,18 @@ namespace emberEditor
         HandleContext::SetViewportMousePos(m_viewportMousePos);
         HandleContext::SetViewportMousePos01(m_viewportMousePos01);
         HandleContext::SetViewPortIsHovered(m_isOpen && m_isHovered && m_isMouseInsideViewport);
+		m_transformHandle.ConsumeModeHotkeys();
 
-        // Update and draw transform gizmo:
+        // Update and draw transform handle:
         if (EditorSelection::HasSelectedEntity())
         {
             emberEcs::Entity selected = EditorSelection::GetSelectedEntity();
-            m_translateHandle.SetTarget(selected.GetTransform());
-            m_translateHandle.Update();
-            m_translateHandle.Draw();
+			m_transformHandle.SetTarget(selected.GetTransform());
+			m_transformHandle.Update();
+			m_transformHandle.Draw();
         }
         else
-            m_translateHandle.ClearTarget();
+            m_transformHandle.ClearTarget();
     }
     void SceneEditorWindow::Render()
     {

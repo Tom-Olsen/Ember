@@ -26,6 +26,7 @@
 #include "geometry3d.h"
 #include "quad.h"
 #include "ray.h"
+#include "sphere.h"
 
 // Random:
 #include "mathConstants.h"

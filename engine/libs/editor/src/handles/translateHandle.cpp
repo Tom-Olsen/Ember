@@ -3,6 +3,7 @@
 #include "eventSystem.h"
 #include "gizmo.h"
 #include "handleContext.h"
+#include "material.h"
 #include "materialManager.h"
 #include "meshGenerator.h"
 #include "shaderProperties.h"
@@ -154,7 +155,7 @@ namespace emberEditor
 		emberCore::Gizmo::ResetMaterial();
 
 		// Visualize arrow interaction regions
-		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
+		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
 		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, s_colorX) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
 		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotX);
@@ -165,9 +166,6 @@ namespace emberEditor
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
 		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotZ);
 		//emberCore::Gizmo::ResetMaterial();
-
-        // ToDo:
-        // -implement scaling handle.
 	}
 
 
@@ -308,14 +306,7 @@ namespace emberEditor
 		if (emberCore::EventSystem::MouseUp(emberCommon::Input::MouseButton::Left))
 		{
 			emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
-		    emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
-		    m_isDragging = false;
-		    m_activeSubHandle = TranslateHandle::SubHandle::none;
-		    m_dragStartPosition = Float3::zero;
-		    m_dragStartHitPoint = Float3::zero;
-		    m_dragAxisDir = Float3::zero;
-		    m_dragPlaneNormal = Float3::zero;
-			m_dragGrabOffset = Float3::zero;
+		    ResetInteractionState();
 			return;
 		}
 

@@ -22,7 +22,7 @@ float4 main(FragmentInput input) : SV_TARGET
 {
     // Directional lighting in model space:
     float3 normal = normalize(input.modelNormal);
-    float3 lightDirection = normalize(float3(0.5f, 0.5f, 0.5f));
+    float3 lightDirection = normalize(float3(0.4f, 0.5f, 0.6f));
     float diffuseLight = saturate(dot(normal, lightDirection));
     float ambientLight = 0.35f;
     float light = ambientLight + (1.0f - ambientLight) * diffuseLight;

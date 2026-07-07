@@ -1,10 +1,8 @@
 #pragma once
 #include "emberMath.h"
-#include "material.h"
 #include "mesh.h"
 #include <array>
 #include <cstdint>
-#include <memory>
 
 
 
@@ -105,7 +103,6 @@ namespace emberEditor
 		void CreateMeshes();
 		void TryBeginDrag();
 		void UpdateDrag();
-		void EndDrag();
 		void UpdateOctant();
 		void UpdateHoveredSubHandle();
 		
