@@ -109,21 +109,20 @@ namespace emberEditor
 		// Draw axis zylinders:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
 		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisX, s_colorX));
-		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * s_rotX);
+		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * s_rotX * AxisLengthMatrix(ScaleHandle::SubHandle::axisX));
 		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisY, s_colorY));
-		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * s_rotY);
+		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * s_rotY * AxisLengthMatrix(ScaleHandle::SubHandle::axisY));
 		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisZ, s_colorZ));
-		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * s_rotZ);
+		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * s_rotZ * AxisLengthMatrix(ScaleHandle::SubHandle::axisZ));
 
 		// Draw handle cubes:
         float axisLength = s_axisLength - s_cubeWidth;
-		Float4x4 cubeTranslation = Float4x4::Translate(axisLength * Float3::up);
 		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisX, s_colorX));
-		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * s_rotX * cubeTranslation);
+		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * s_rotX * Float4x4::Translate(AxisLengthFactor(ScaleHandle::SubHandle::axisX) * axisLength * Float3::up));
 		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisY, s_colorY));
-		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * s_rotY * cubeTranslation);
+		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * s_rotY * Float4x4::Translate(AxisLengthFactor(ScaleHandle::SubHandle::axisY) * axisLength * Float3::up));
 		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisZ, s_colorZ));
-		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * s_rotZ * cubeTranslation);
+		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * s_rotZ * Float4x4::Translate(AxisLengthFactor(ScaleHandle::SubHandle::axisZ) * axisLength * Float3::up));
 		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::center, s_colorCenter));
 		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix);
 		emberCore::Gizmo::ResetMaterial();
@@ -162,6 +161,8 @@ namespace emberEditor
 		m_dragPlaneNormal = Float3::zero;
 		m_dragStartMousePos = Float2::zero;
 		m_dragStartHandleSize = 1.0f;
+		m_grabAxisFraction = 1.0f;
+		m_dragAxisLengthFactor = 1.0f;
 	}
 
 
@@ -240,20 +241,22 @@ namespace emberEditor
 		// Update entity scale:
 		if (IsCenterSubHandle(m_activeSubHandle))
 		{
-            // Center scaling uses mouse delta:
+			// Center scaling uses mouse delta:
 			Float2 mouseDelta = HandleContext::GetViewportMousePos() - m_dragStartMousePos;
 			float delta = 0.01f * (mouseDelta.x - mouseDelta.y);
 			SetScale(m_activeSubHandle, delta);
 		}
-		else
+		else // Axis scaling:
 		{
 			Ray ray = HandleContext::GetCamera()->GetViewportRay(HandleContext::GetViewportMousePos01());
 			std::optional<Float3> hit = ray.HitOnPlane(m_dragStartPosition, m_dragPlaneNormal);
 			if (hit.has_value())
 			{
-				float hitDelta = Float3::Dot(hit.value() - m_dragStartHitPoint, m_dragAxisDir);
-				float scaleDelta = hitDelta / m_dragStartHandleSize;
-				SetScale(m_activeSubHandle, scaleDelta);
+				// Resolve axis scale factor:
+				float axisLength = m_dragStartHandleSize * (s_axisLength - s_cubeWidth);
+				float hitDistance = Float3::Dot(hit.value() - m_dragStartPosition, m_dragAxisDir);
+				m_dragAxisLengthFactor = hitDistance / (m_grabAxisFraction * axisLength);
+				SetScale(m_activeSubHandle, m_dragAxisLengthFactor);
 			}
 		}
 		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
@@ -267,6 +270,7 @@ namespace emberEditor
 		}
 
 		m_hoveredSubHandle = ScaleHandle::SubHandle::none;
+		m_grabAxisFraction = 1.0f;
 		if (!HandleContext::GetViewPortIsHovered())
 			return;
 
@@ -316,6 +320,42 @@ namespace emberEditor
 			return s_hoverColor;
 		return baseColor;
 	}
+	float ScaleHandle::AxisLengthFactor(ScaleHandle::SubHandle subHandle) const
+	{
+		if (m_isDragging && m_activeSubHandle == subHandle && IsAxisSubHandle(subHandle))
+			return m_dragAxisLengthFactor;
+		return 1.0f;
+	}
+	Float4x4 ScaleHandle::AxisLengthMatrix(ScaleHandle::SubHandle subHandle) const
+	{
+		// AxisLengthScale:
+		float factor = AxisLengthFactor(subHandle);
+		Float4x4 scale = Float4x4::Scale(Float3(1.0f, 1.0f, math::Abs(factor)));
+		if (factor < 0.0f)
+			return Float4x4::RotateY(math::pi) * scale;
+		return scale;
+	}
+	void ScaleHandle::SetScale(ScaleHandle::SubHandle subHandle, float amount)
+	{
+		// ApplyLocalScaleChange:
+		Float3 scale = m_dragStartScale;
+		if (IsCenterSubHandle(subHandle))
+			scale += amount * Float3::one;
+		else if (subHandle == ScaleHandle::SubHandle::axisX)
+			scale.x *= amount;
+		else if (subHandle == ScaleHandle::SubHandle::axisY)
+			scale.y *= amount;
+		else if (subHandle == ScaleHandle::SubHandle::axisZ)
+			scale.z *= amount;
+
+        // Prevent zero scale:
+		for (int i = 0; i < Float3::size; i++)
+		{
+			if (math::Abs(scale[i]) < s_minScaleMagnitude)
+				scale[i] = scale[i] < 0.0f ? -s_minScaleMagnitude : s_minScaleMagnitude;
+		}
+		m_pTransform->SetScale(scale);
+	}
 	void ScaleHandle::TryPickAxisSubHandle(ScaleHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
 	{
 		// Construct interaction capsule:
@@ -335,6 +375,9 @@ namespace emberEditor
 			{
 				closestHitDistanceSq = hitDistanceSq;
 				m_hoveredSubHandle = subHandle;
+				Float3 axis = point1 - point0;
+				float axisWorldLength = axis.Length();
+				m_grabAxisFraction = math::Clamp(Float3::Dot(hit.value() - point0, axis / axisWorldLength) / axisWorldLength, 0.0f, 1.0f);
 			}
 		}
 		TryPickCubeSubHandle(subHandle, point1, ray, closestHitDistanceSq);
@@ -354,28 +397,8 @@ namespace emberEditor
 		{
 			closestHitDistanceSq = hitDistanceSq;
 			m_hoveredSubHandle = subHandle;
+			m_grabAxisFraction = 1.0f;
 		}
-	}
-	void ScaleHandle::SetScale(ScaleHandle::SubHandle subHandle, float delta)
-	{
-		// ApplyLocalScaleDelta:
-		Float3 scale = m_dragStartScale;
-		if (IsCenterSubHandle(subHandle))
-			scale += delta * Float3::one;
-		else if (subHandle == ScaleHandle::SubHandle::axisX)
-			scale.x += delta;
-		else if (subHandle == ScaleHandle::SubHandle::axisY)
-			scale.y += delta;
-		else if (subHandle == ScaleHandle::SubHandle::axisZ)
-			scale.z += delta;
-
-        // Prevent zero scale:
-		for (int i = 0; i < Float3::size; i++)
-		{
-			if (math::Abs(scale[i]) < s_minScaleMagnitude)
-				scale[i] = scale[i] < 0.0f ? -s_minScaleMagnitude : s_minScaleMagnitude;
-		}
-		m_pTransform->SetScale(scale);
 	}
 
 

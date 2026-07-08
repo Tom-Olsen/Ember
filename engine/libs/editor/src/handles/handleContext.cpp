@@ -36,7 +36,7 @@ namespace emberEditor
         s_isInitialized = true;
         
         // Sizing:
-        s_globalHandleScale = 1.0f;
+        s_globalHandleScale = 1.5f;
 		s_screenSizeInPixels = 100.0f;
         // Viewport:
 		s_pCamera = nullptr;

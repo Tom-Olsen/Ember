@@ -58,6 +58,8 @@ namespace emberEditor
 		Float3 m_dragPlaneNormal;
 		Float2 m_dragStartMousePos;
 		float m_dragStartHandleSize;
+		float m_grabAxisFraction;
+		float m_dragAxisLengthFactor;
 
 		// Meshes:
 		emberCore::Mesh m_zylinderMesh;
@@ -97,9 +99,11 @@ namespace emberEditor
 		Float4x4 HandleRotationMatrix() const;
 		Float4x4 LocalToWorldMatrix();
 		Float4 SubHandleColor(ScaleHandle::SubHandle subHandle, const Float4& baseColor);
+		float AxisLengthFactor(ScaleHandle::SubHandle subHandle) const;
+		Float4x4 AxisLengthMatrix(ScaleHandle::SubHandle subHandle) const;
+		void SetScale(ScaleHandle::SubHandle subHandle, float amount);
 		void TryPickAxisSubHandle(ScaleHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);
 		void TryPickCubeSubHandle(ScaleHandle::SubHandle subHandle, const Float3& cubeWorldPosition, const Ray& ray, float& closestHitDistanceSq);
-		void SetScale(ScaleHandle::SubHandle subHandle, float delta);
 
 		// Static helpers:
 		static Float3 SubHandleDirection(ScaleHandle::SubHandle subHandle);

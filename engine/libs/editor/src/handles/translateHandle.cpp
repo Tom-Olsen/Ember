@@ -323,7 +323,7 @@ namespace emberEditor
 					position = hit.value() - SizeAtPosition(position) * m_dragGrabOffset;
 				m_pTransform->SetPosition(position);
 			}
-			else
+			else // Axis translation:
 			{
 				// ResolveAxisDragPosition:
 				Float3 position = m_pTransform->GetPosition();
