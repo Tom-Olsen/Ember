@@ -122,6 +122,10 @@ namespace emberEditor
 			return;
 		Float4x4 localToWorldMatrix = LocalToWorldMatrix();
 
+        // Draw central sphere:
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoUnlitMaterial"));
+		emberCore::Gizmo::SetColor(Float4::white);
+        emberCore::Gizmo::DrawSphere(localToWorldMatrix * Float4x4::Scale(0.15f));
         // Draw Arrows:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
 		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, s_colorX));

@@ -219,6 +219,17 @@ namespace emberEditor
 				return;
 			}
 			m_dragStartHitPoint = hit.value();
+
+			// Resolve initial grab fraction:
+			float axisLength = m_dragStartHandleSize * (s_axisLength - s_cubeWidth);
+			float hitDistance = Float3::Dot(m_dragStartHitPoint - m_dragStartPosition, m_dragAxisDir);
+			m_grabAxisFraction = hitDistance / axisLength;
+			if (math::Abs(m_grabAxisFraction) < s_minScaleMagnitude)
+			{
+				m_activeSubHandle = ScaleHandle::SubHandle::none;
+				emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
+				return;
+			}
 		}
 
 		// Start drag:
@@ -270,7 +281,6 @@ namespace emberEditor
 		}
 
 		m_hoveredSubHandle = ScaleHandle::SubHandle::none;
-		m_grabAxisFraction = 1.0f;
 		if (!HandleContext::GetViewPortIsHovered())
 			return;
 
@@ -375,9 +385,6 @@ namespace emberEditor
 			{
 				closestHitDistanceSq = hitDistanceSq;
 				m_hoveredSubHandle = subHandle;
-				Float3 axis = point1 - point0;
-				float axisWorldLength = axis.Length();
-				m_grabAxisFraction = math::Clamp(Float3::Dot(hit.value() - point0, axis / axisWorldLength) / axisWorldLength, 0.0f, 1.0f);
 			}
 		}
 		TryPickCubeSubHandle(subHandle, point1, ray, closestHitDistanceSq);
@@ -397,7 +404,6 @@ namespace emberEditor
 		{
 			closestHitDistanceSq = hitDistanceSq;
 			m_hoveredSubHandle = subHandle;
-			m_grabAxisFraction = 1.0f;
 		}
 	}
 
