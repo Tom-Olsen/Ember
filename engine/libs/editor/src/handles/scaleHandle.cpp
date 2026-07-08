@@ -108,37 +108,37 @@ namespace emberEditor
 
 		// Draw axis zylinders:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
-		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisX, s_colorX));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisX));
 		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * s_rotX * AxisLengthMatrix(ScaleHandle::SubHandle::axisX));
-		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisY, s_colorY));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisY));
 		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * s_rotY * AxisLengthMatrix(ScaleHandle::SubHandle::axisY));
-		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisZ, s_colorZ));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisZ));
 		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * s_rotZ * AxisLengthMatrix(ScaleHandle::SubHandle::axisZ));
 
 		// Draw handle cubes:
         float axisLength = s_axisLength - s_cubeWidth;
-		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisX, s_colorX));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisX));
 		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * s_rotX * Float4x4::Translate(AxisLengthFactor(ScaleHandle::SubHandle::axisX) * axisLength * Float3::up));
-		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisY, s_colorY));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisY));
 		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * s_rotY * Float4x4::Translate(AxisLengthFactor(ScaleHandle::SubHandle::axisY) * axisLength * Float3::up));
-		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisZ, s_colorZ));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisZ));
 		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * s_rotZ * Float4x4::Translate(AxisLengthFactor(ScaleHandle::SubHandle::axisZ) * axisLength * Float3::up));
-		emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::center, s_colorCenter));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::center));
 		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix);
 		emberCore::Gizmo::ResetMaterial();
 
 		// Visualize scale interaction regions:
 		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
-		//emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisX, s_colorX) - 0.5f * Float4::in);
+		//emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisX) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
 		//emberCore::Gizmo::DrawMesh(m_sphereMesh, localToWorldMatrix * s_rotX * cubeTranslation);
-		//emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisY, s_colorY) - 0.5f * Float4::in);
+		//emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisY) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotY);
 		//emberCore::Gizmo::DrawMesh(m_sphereMesh, localToWorldMatrix * s_rotY * cubeTranslation);
-		//emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::axisZ, s_colorZ) - 0.5f * Float4::in);
+		//emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisZ) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
 		//emberCore::Gizmo::DrawMesh(m_sphereMesh, localToWorldMatrix * s_rotZ * cubeTranslation);
-		//emberCore::Gizmo::SetColor(SubHandleColor(ScaleHandle::SubHandle::center, s_colorCenter) - 0.5f * Float4::in);
+		//emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::center) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_sphereMesh, localToWorldMatrix);
 		//emberCore::Gizmo::ResetMaterial();
 	}
@@ -322,13 +322,13 @@ namespace emberEditor
 			return Float4x4::identity;
 		return Float4x4::TRS(m_pTransform->GetPosition(), HandleRotationMatrix(), Size());
 	}
-	Float4 ScaleHandle::SubHandleColor(ScaleHandle::SubHandle subHandle, const Float4& baseColor)
+	Float4 ScaleHandle::SubHandleStateColor(ScaleHandle::SubHandle subHandle)
 	{
 		if (m_activeSubHandle == subHandle)
 			return s_activeColor;
 		if (m_hoveredSubHandle == subHandle)
 			return s_hoverColor;
-		return baseColor;
+		return SubHandleBaseColor(subHandle);
 	}
 	float ScaleHandle::AxisLengthFactor(ScaleHandle::SubHandle subHandle) const
 	{
@@ -420,7 +420,7 @@ namespace emberEditor
 			default: return Float3::zero;
 		}
 	}
-	Float4 ScaleHandle::SubHandleColor(ScaleHandle::SubHandle subHandle)
+	Float4 ScaleHandle::SubHandleBaseColor(ScaleHandle::SubHandle subHandle)
 	{
 		switch (subHandle)
 		{

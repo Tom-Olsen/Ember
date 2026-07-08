@@ -98,7 +98,7 @@ namespace emberEditor
 		float SizeAtPosition(const Float3& position) const;
 		Float4x4 HandleRotationMatrix() const;
 		Float4x4 LocalToWorldMatrix();
-		Float4 SubHandleColor(ScaleHandle::SubHandle subHandle, const Float4& baseColor);
+		Float4 SubHandleStateColor(ScaleHandle::SubHandle subHandle);
 		float AxisLengthFactor(ScaleHandle::SubHandle subHandle) const;
 		Float4x4 AxisLengthMatrix(ScaleHandle::SubHandle subHandle) const;
 		void SetScale(ScaleHandle::SubHandle subHandle, float amount);
@@ -107,7 +107,7 @@ namespace emberEditor
 
 		// Static helpers:
 		static Float3 SubHandleDirection(ScaleHandle::SubHandle subHandle);
-		static Float4 SubHandleColor(ScaleHandle::SubHandle subHandle);
+		static Float4 SubHandleBaseColor(ScaleHandle::SubHandle subHandle);
 		static bool IsAxisSubHandle(ScaleHandle::SubHandle subHandle);
 		static bool IsCenterSubHandle(ScaleHandle::SubHandle subHandle);
 	};

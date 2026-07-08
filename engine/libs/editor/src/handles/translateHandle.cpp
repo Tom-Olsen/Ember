@@ -128,21 +128,21 @@ namespace emberEditor
         emberCore::Gizmo::DrawSphere(localToWorldMatrix * Float4x4::Scale(0.15f));
         // Draw Arrows:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, s_colorX));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisX));
 		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * s_rotX);
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisY, s_colorY));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisY));
 		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * s_rotY);
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisZ, s_colorZ));
+		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisZ));
 		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * s_rotZ);
         // Draw plane quads:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
         emberCore::Gizmo::SetCullMode(emberCommon::CullMode::none);
 		float quadSize = s_quadSize + 0.5f * math::sqrt2 * s_arrowBodyRadius;
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeYZ, s_colorX) - 0.33f * Float4::in);
+		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeYZ) - 0.33f * Float4::in);
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotX * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize));
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeXZ, s_colorY) - 0.33f * Float4::in);
+		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeXZ) - 0.33f * Float4::in);
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotY * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXZ, m_octantIndex, quadSize));
-		emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::planeXY, s_colorZ) - 0.33f * Float4::in);
+		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeXY) - 0.33f * Float4::in);
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotZ * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXY, m_octantIndex, quadSize));
 		emberCore::Gizmo::ResetCullMode();
 
@@ -150,7 +150,7 @@ namespace emberEditor
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoVertexColorLitMaterial"));
 		emberCore::ShaderProperties shaderProperties = emberCore::Gizmo::DrawMesh(m_frameMeshes[m_octantIndex], localToWorldMatrix);
 		int state = IsPlaneSubHandle(m_activeSubHandle) ? 2 : IsPlaneSubHandle(m_hoveredSubHandle) ? 1 : 0;
-		Float4 stateColor = (state == 2) ? SubHandleColor(m_activeSubHandle) : (state == 1) ? SubHandleColor(m_hoveredSubHandle) : Float4::zero;
+		Float4 stateColor = (state == 2) ? SubHandleBaseColor(m_activeSubHandle) : (state == 1) ? SubHandleBaseColor(m_hoveredSubHandle) : Float4::zero;
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		shaderProperties.SetValue("SelectionState", "state", state);
 		shaderProperties.SetValue("SelectionState", "stateColor", stateColor);
@@ -160,13 +160,13 @@ namespace emberEditor
 
 		// Visualize arrow interaction regions
 		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
-		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisX, s_colorX) - 0.5f * Float4::in);
+		//emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisX) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
 		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotX);
-		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisY, s_colorY) - 0.5f * Float4::in);
+		//emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisY) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotY);
 		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotY);
-		//emberCore::Gizmo::SetColor(SubHandleColor(TranslateHandle::SubHandle::axisZ, s_colorZ) - 0.5f * Float4::in);
+		//emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisZ) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
 		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotZ);
 		//emberCore::Gizmo::ResetMaterial();
@@ -423,13 +423,13 @@ namespace emberEditor
 			return Float4x4::identity;
 		return Float4x4::TRS(m_pTransform->GetPosition(), HandleRotationMatrix(), Size());
 	}
-	Float4 TranslateHandle::SubHandleColor(TranslateHandle::SubHandle subHandle, const Float4& baseColor)
+	Float4 TranslateHandle::SubHandleStateColor(TranslateHandle::SubHandle subHandle)
 	{
 		if (m_activeSubHandle == subHandle)
 			return s_activeColor;
 		if (m_hoveredSubHandle == subHandle)
 			return s_hoverColor;
-		return baseColor;
+		return SubHandleBaseColor(subHandle);
 	}
 	void TranslateHandle::TryPickAxisSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
 	{
@@ -508,7 +508,7 @@ namespace emberEditor
 			default: return Float3::zero;
         }
 	}
-	Float4 TranslateHandle::SubHandleColor(TranslateHandle::SubHandle subHandle)
+	Float4 TranslateHandle::SubHandleBaseColor(TranslateHandle::SubHandle subHandle)
 	{
 		switch (subHandle)
 		{

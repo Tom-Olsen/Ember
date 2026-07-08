@@ -111,13 +111,13 @@ namespace emberEditor
 		float SizeAtPosition(const Float3& position) const;
 		Float4x4 HandleRotationMatrix() const;
 		Float4x4 LocalToWorldMatrix();
-		Float4 SubHandleColor(TranslateHandle::SubHandle subHandle, const Float4& baseColor);
+		Float4 SubHandleStateColor(TranslateHandle::SubHandle subHandle);
 		void TryPickAxisSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);
 		void TryPickPlaneSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);
 
         // Static helpers:
 		static Float3 SubHandleDirection(TranslateHandle::SubHandle subHandle);
-		static Float4 SubHandleColor(TranslateHandle::SubHandle subHandle);
+		static Float4 SubHandleBaseColor(TranslateHandle::SubHandle subHandle);
 		static Float3 OctantSigns(uint32_t octantIndex);
 		static Float4x4 PlaneQuadTranslation(TranslateHandle::SubHandle subHandle, uint32_t octantIndex, float size);
 		static bool IsAxisSubHandle(TranslateHandle::SubHandle subHandle);
