@@ -102,5 +102,6 @@ namespace emberEditor
 		static Float3 SubHandleDirection(RotateHandle::SubHandle subHandle);
 		static Float4 SubHandleBaseColor(RotateHandle::SubHandle subHandle);
 		static Float3 OctantSigns(uint32_t octantIndex);
+		static Float4x4 OctantMatrix(RotateHandle::SubHandle subHandle, uint32_t octantIndex);
 	};
 }

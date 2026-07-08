@@ -1,4 +1,5 @@
 #include "rotateHandle.h"
+#include "camera.h"
 #include "eventSystem.h"
 #include "gizmo.h"
 #include "handleContext.h"
@@ -120,11 +121,13 @@ namespace emberEditor
         // Draw arcs:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoUnlitMaterial"));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisX));
-        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * s_rotX);
+		emberCore::Gizmo::SetCullMode(emberCommon::CullMode::none);
+        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisX, m_octantIndex) * s_rotX);
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisY));
-        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * s_rotY);
+        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisY, m_octantIndex) * s_rotY);
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisZ));
-        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * s_rotZ);
+        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisZ, m_octantIndex) * s_rotZ);
+		emberCore::Gizmo::ResetCullMode();
         emberCore::Gizmo::ResetMaterial();
     }
 
@@ -163,7 +166,25 @@ namespace emberEditor
     }
 	void RotateHandle::UpdateOctant()
     {
+		if (m_isDragging)
+			return;
 
+		Float3 cameraDirection = HandleContext::GetCamera()->GetTransform()->GetPosition() - m_pTransform->GetPosition();
+		if (cameraDirection.IsEpsilonZero())
+			return;
+
+		Float4x4 worldToHandleRotation = HandleRotationMatrix().Inverse();
+		Float3 localCameraDirection = Float3(worldToHandleRotation * Float4(cameraDirection, 0.0f));
+		if (localCameraDirection.IsEpsilonZero())
+			return;
+
+		m_octantIndex = 0;
+		if (localCameraDirection.x < 0.0f)
+			m_octantIndex |= 1;
+		if (localCameraDirection.y < 0.0f)
+			m_octantIndex |= 2;
+		if (localCameraDirection.z < 0.0f)
+			m_octantIndex |= 4;
     }
 	void RotateHandle::UpdateHoveredSubHandle()
     {
@@ -236,4 +257,36 @@ namespace emberEditor
 			(octantIndex & 2) == 0 ? 1.0f : -1.0f,
 			(octantIndex & 4) == 0 ? 1.0f : -1.0f);
     }
+	Float4x4 RotateHandle::OctantMatrix(RotateHandle::SubHandle subHandle, uint32_t octantIndex)
+	{
+		Float3 signs = OctantSigns(octantIndex);
+		float sign0 = 1.0f;
+		float sign1 = 1.0f;
+		switch (subHandle)
+		{
+			case RotateHandle::SubHandle::axisX:
+				sign0 = signs.y;
+				sign1 = signs.z;
+				break;
+			case RotateHandle::SubHandle::axisY:
+				sign0 = signs.z;
+				sign1 = signs.x;
+				break;
+			case RotateHandle::SubHandle::axisZ:
+				sign0 = signs.x;
+				sign1 = signs.y;
+				break;
+			default:
+				return Float4x4::identity;
+		}
+
+		Float3 axis = SubHandleDirection(subHandle);
+		if (sign0 < 0.0f && sign1 > 0.0f)
+			return Float4x4::Rotate(axis, math::pi2);
+		if (sign0 < 0.0f && sign1 < 0.0f)
+			return Float4x4::Rotate(axis, math::pi);
+		if (sign0 > 0.0f && sign1 < 0.0f)
+			return Float4x4::Rotate(axis, -math::pi2);
+		return Float4x4::identity;
+	}
 }
