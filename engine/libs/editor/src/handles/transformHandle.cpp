@@ -32,6 +32,7 @@ namespace emberEditor
 	{
 		m_pTransform = nullptr;
 		m_translateHandle.ClearTarget();
+		m_rotateHandle.ClearTarget();
 		m_scaleHandle.ClearTarget();
 	}
 	bool TransformHandle::HasTarget() const
@@ -63,6 +64,11 @@ namespace emberEditor
 			SetMode(Mode::translate);
 			emberCore::EventSystem::ConsumeKey(emberCommon::Input::Key::W);
 		}
+		if (emberCore::EventSystem::KeyDown(emberCommon::Input::Key::E))
+		{
+			SetMode(Mode::rotate);
+			emberCore::EventSystem::ConsumeKey(emberCommon::Input::Key::E);
+		}
 		if (emberCore::EventSystem::KeyDown(emberCommon::Input::Key::R))
 		{
 			SetMode(Mode::scale);
@@ -75,7 +81,7 @@ namespace emberEditor
 	// Handle:
 	bool TransformHandle::GetIsDragging() const
 	{
-		return m_translateHandle.GetIsDragging() || m_scaleHandle.GetIsDragging();
+		return m_translateHandle.GetIsDragging() || m_scaleHandle.GetIsDragging() || m_rotateHandle.GetIsDragging();
 	}
 
 
@@ -87,6 +93,8 @@ namespace emberEditor
 			return;
 		if (m_activeMode == Mode::translate)
 			m_translateHandle.Update();
+		else if (m_activeMode == Mode::rotate)
+            m_rotateHandle.Update();
 		else if (m_activeMode == Mode::scale)
 			m_scaleHandle.Update();
 	}
@@ -94,6 +102,8 @@ namespace emberEditor
 	{
 		if (m_activeMode == Mode::translate)
 			m_translateHandle.Draw();
+		else if (m_activeMode == Mode::rotate)
+            m_rotateHandle.Draw();
 		else if (m_activeMode == Mode::scale)
 			m_scaleHandle.Draw();
 	}
@@ -105,12 +115,20 @@ namespace emberEditor
 	{
 		if (m_activeMode == Mode::translate)
 		{
-			m_scaleHandle.ClearTarget();
 			m_translateHandle.SetTarget(m_pTransform);
+			m_rotateHandle.ClearTarget();
+			m_scaleHandle.ClearTarget();
 		}
+        else if (m_activeMode == Mode::rotate)
+        {
+            m_translateHandle.ClearTarget();
+			m_rotateHandle.SetTarget(m_pTransform);
+			m_scaleHandle.ClearTarget();
+        }
 		else if (m_activeMode == Mode::scale)
 		{
-			m_translateHandle.ClearTarget();
+            m_translateHandle.ClearTarget();
+			m_rotateHandle.ClearTarget();
 			m_scaleHandle.SetTarget(m_pTransform);
 		}
 	}

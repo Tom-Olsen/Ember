@@ -1,4 +1,5 @@
 #pragma once
+#include "rotateHandle.h"
 #include "scaleHandle.h"
 #include "translateHandle.h"
 
@@ -19,7 +20,8 @@ namespace emberEditor
 	public: // Enums:
 		enum class Mode
 		{
-			translate,
+            translate,
+            rotate,
 			scale
 		};
 
@@ -27,6 +29,7 @@ namespace emberEditor
 		Mode m_activeMode;
 		emberEcs::Transform* m_pTransform;
 		TranslateHandle m_translateHandle;
+		RotateHandle m_rotateHandle;
 		ScaleHandle m_scaleHandle;
 
 	public: // Methods:
