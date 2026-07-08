@@ -32,6 +32,8 @@ namespace emberEditor
 	float ScaleHandle::s_axisCornerCount = 16;
 	float ScaleHandle::s_cubeWidth = 0.12f;
 	float ScaleHandle::s_minScaleMagnitude = 1e-4f;
+    // Interaction:
+	float ScaleHandle::s_scaleSensitivity = 0.01f;
 
 
 
@@ -254,7 +256,7 @@ namespace emberEditor
 		{
 			// Center scaling uses mouse delta:
 			Float2 mouseDelta = HandleContext::GetViewportMousePos() - m_dragStartMousePos;
-			float delta = 0.01f * (mouseDelta.x - mouseDelta.y);
+			float delta = s_scaleSensitivity * (mouseDelta.x - mouseDelta.y);
 			SetScale(m_activeSubHandle, delta);
 		}
 		else // Axis scaling:

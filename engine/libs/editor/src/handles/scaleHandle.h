@@ -46,6 +46,8 @@ namespace emberEditor
 		static float s_axisCornerCount;
 		static float s_cubeWidth;
 		static float s_minScaleMagnitude;
+		// Interaction:
+		static float s_scaleSensitivity;    // for center scaling only.
 
 		// State:
 		bool m_isDragging;

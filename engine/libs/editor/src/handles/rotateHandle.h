@@ -49,11 +49,16 @@ namespace emberEditor
 		static float s_arcEnd;
 		static float s_arcWidth;
 		static float s_arcCornerCount;
+		// Interaction:
+		static float s_rotationSensitivity;
 
 		// State:
 		bool m_isDragging;
 		SubHandle m_hoveredSubHandle;
 		SubHandle m_activeSubHandle;
+		Float3x3 m_dragStartRotation;
+		Float2 m_dragStartMousePos;
+		Float3 m_dragAxisDir;
 		uint32_t m_octantIndex;
 
 		// Meshes:

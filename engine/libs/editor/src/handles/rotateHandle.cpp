@@ -29,7 +29,9 @@ namespace emberEditor
 	float RotateHandle::s_arcStart = 0.8f;
 	float RotateHandle::s_arcEnd = 1.0f;
 	float RotateHandle::s_arcWidth = s_arcEnd - s_arcStart;
-	float RotateHandle::s_arcCornerCount = 16;
+	float RotateHandle::s_arcCornerCount = 32;
+    // Interaction:
+	float RotateHandle::s_rotationSensitivity = 0.01f;
 
 
 
@@ -143,6 +145,9 @@ namespace emberEditor
 		m_isDragging = false;
 		m_hoveredSubHandle = RotateHandle::SubHandle::none;
 		m_activeSubHandle = RotateHandle::SubHandle::none;
+		m_dragStartRotation = Float3x3::identity;
+		m_dragStartMousePos = Float2::zero;
+		m_dragAxisDir = Float3::zero;
 	}
 
 
@@ -159,11 +164,49 @@ namespace emberEditor
 
 	void RotateHandle::TryBeginDrag()
     {
+		// Return if no drag:
+		if (m_isDragging || m_hoveredSubHandle == RotateHandle::SubHandle::none)
+			return;
+		if (!emberCore::EventSystem::MouseDown(emberCommon::Input::MouseButton::Left))
+			return;
+		if (!emberCore::EventSystem::TryLockMouseButton(emberCommon::Input::MouseButton::Left))
+			return;
 
+		// Begin drag:
+		m_activeSubHandle = m_hoveredSubHandle;
+		m_dragStartRotation = m_pTransform->GetRotation3x3();
+		m_dragStartMousePos = HandleContext::GetViewportMousePos();
+		m_dragAxisDir = Float3(HandleRotationMatrix() * Float4(SubHandleDirection(m_activeSubHandle), 0.0f));
+		if (m_dragAxisDir.IsEpsilonZero())
+		{
+			m_activeSubHandle = RotateHandle::SubHandle::none;
+			emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
+			return;
+		}
+		m_dragAxisDir = m_dragAxisDir.Normalize();
+
+		// Start drag:
+		m_isDragging = true;
+		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
     }
 	void RotateHandle::UpdateDrag()
     {
+		if (!m_isDragging)
+			return;
 
+		// Cancel drag:
+		if (emberCore::EventSystem::MouseUp(emberCommon::Input::MouseButton::Left))
+		{
+			emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
+			ResetInteractionState();
+			return;
+		}
+
+		// Update entity rotation:
+		Float2 mouseDelta = HandleContext::GetViewportMousePos() - m_dragStartMousePos;
+		float angle = s_rotationSensitivity * (mouseDelta.x - mouseDelta.y);
+		m_pTransform->SetRotationMatrix(Float3x3::Rotate(m_dragAxisDir, angle) * m_dragStartRotation);
+		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
     }
 	void RotateHandle::UpdateOctant()
     {
