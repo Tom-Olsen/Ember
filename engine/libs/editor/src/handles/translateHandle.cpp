@@ -8,6 +8,7 @@
 #include "meshGenerator.h"
 #include "shaderProperties.h"
 #include "transform.h"
+#include "transformHandle.h"
 #include <optional>
 
 
@@ -15,16 +16,6 @@
 namespace emberEditor
 {
 	// Static members:
-    // Handle colors:
-	Float4 TranslateHandle::s_colorX = Float4(1.0f, 0.38039, 0.24314, 1.0f);
-	Float4 TranslateHandle::s_colorY = Float4(0.78039f, 1.0f, 0.41569, 1.0f);
-	Float4 TranslateHandle::s_colorZ = Float4(0.31765f, 0.66667f, 1.0f, 1.0f);
-	Float4 TranslateHandle::s_hoverColor = Float4::yellow;
-	Float4 TranslateHandle::s_activeColor = Float4::white;
-    // Rotation matrizes:
-	Float4x4 TranslateHandle::s_rotX = Float4x4::RotateFromTo(Float3::up, Float3::right) * Float4x4::RotateZ(math::pi2);
-	Float4x4 TranslateHandle::s_rotY = Float4x4::RotateFromTo(Float3::up, Float3::forward) * Float4x4::RotateZ(-math::pi2);
-	Float4x4 TranslateHandle::s_rotZ = Float4x4::identity;
     // Geometry:
 	float TranslateHandle::s_arrowHeight = 1.0f;
     float TranslateHandle::s_quadSize = 0.25f;
@@ -124,26 +115,26 @@ namespace emberEditor
 
         // Draw central sphere:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoUnlitMaterial"));
-		emberCore::Gizmo::SetColor(Float4::white);
+		emberCore::Gizmo::SetColor(TransformHandle::GetColorCenter());
         emberCore::Gizmo::DrawSphere(localToWorldMatrix * Float4x4::Scale(0.15f));
         // Draw Arrows:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisX));
-		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * s_rotX);
+		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * TransformHandle::GetRotationX());
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisY));
-		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * s_rotY);
+		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * TransformHandle::GetRotationY());
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisZ));
-		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * s_rotZ);
+		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * TransformHandle::GetRotationZ());
         // Draw plane quads:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
         emberCore::Gizmo::SetCullMode(emberCommon::CullMode::none);
 		float quadSize = s_quadSize + 0.5f * math::sqrt2 * s_arrowBodyRadius;
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeYZ) - 0.33f * Float4::in);
-        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotX * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize));
+        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * TransformHandle::GetRotationX() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeXZ) - 0.33f * Float4::in);
-        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotY * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXZ, m_octantIndex, quadSize));
+        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * TransformHandle::GetRotationY() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXZ, m_octantIndex, quadSize));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeXY) - 0.33f * Float4::in);
-        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * s_rotZ * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXY, m_octantIndex, quadSize));
+        emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * TransformHandle::GetRotationZ() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXY, m_octantIndex, quadSize));
 		emberCore::Gizmo::ResetCullMode();
 
         // Draw plane frame:
@@ -154,21 +145,21 @@ namespace emberEditor
 		shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		shaderProperties.SetValue("SelectionState", "state", state);
 		shaderProperties.SetValue("SelectionState", "stateColor", stateColor);
-		shaderProperties.SetValue("SelectionState", "hoverColor", s_hoverColor);
-		shaderProperties.SetValue("SelectionState", "activeColor", s_activeColor);
+		shaderProperties.SetValue("SelectionState", "hoverColor", TransformHandle::GetHoverColor());
+		shaderProperties.SetValue("SelectionState", "activeColor", TransformHandle::GetActiveColor());
 		emberCore::Gizmo::ResetMaterial();
 
 		// Visualize arrow interaction regions
 		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
 		//emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisX) - 0.5f * Float4::in);
-		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotX);
-		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotX);
+		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * TransformHandle::GetRotationX());
+		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * TransformHandle::GetRotationX());
 		//emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisY) - 0.5f * Float4::in);
-		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotY);
-		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotY);
+		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * TransformHandle::GetRotationY());
+		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * TransformHandle::GetRotationY());
 		//emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisZ) - 0.5f * Float4::in);
-		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * s_rotZ);
-		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * s_rotZ);
+		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * TransformHandle::GetRotationZ());
+		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * TransformHandle::GetRotationZ());
 		//emberCore::Gizmo::ResetMaterial();
 	}
 
@@ -233,7 +224,7 @@ namespace emberEditor
         {
             float frameWidth = math::sqrt2 * s_arrowBodyRadius;
             float frameLength = s_quadSize - frameWidth;
-            emberCore::Mesh baseFrame = emberCore::MeshGenerator::TranslateHandleFrame(frameWidth, frameLength, s_colorX, s_colorY, s_colorZ);
+            emberCore::Mesh baseFrame = emberCore::MeshGenerator::TranslateHandleFrame(frameWidth, frameLength, TransformHandle::GetColorX(), TransformHandle::GetColorY(), TransformHandle::GetColorZ());
 			for (uint32_t octantIndex = 0; octantIndex < 8; octantIndex++)
 			{
 				m_frameMeshes[octantIndex] = baseFrame.GetCopy();
@@ -384,16 +375,16 @@ namespace emberEditor
 		float closestHitDistanceSq = math::maxValue;
 
 		// Check each axis handle:
-		TryPickAxisSubHandle(TranslateHandle::SubHandle::axisX, localToWorldMatrix * s_rotX, ray, closestHitDistanceSq);
-		TryPickAxisSubHandle(TranslateHandle::SubHandle::axisY, localToWorldMatrix * s_rotY, ray, closestHitDistanceSq);
-		TryPickAxisSubHandle(TranslateHandle::SubHandle::axisZ, localToWorldMatrix * s_rotZ, ray, closestHitDistanceSq);
+		TryPickAxisSubHandle(TranslateHandle::SubHandle::axisX, localToWorldMatrix * TransformHandle::GetRotationX(), ray, closestHitDistanceSq);
+		TryPickAxisSubHandle(TranslateHandle::SubHandle::axisY, localToWorldMatrix * TransformHandle::GetRotationY(), ray, closestHitDistanceSq);
+		TryPickAxisSubHandle(TranslateHandle::SubHandle::axisZ, localToWorldMatrix * TransformHandle::GetRotationZ(), ray, closestHitDistanceSq);
 
 		// Check each plane handle:
 		float cubeWidth = math::sqrt2 * s_arrowBodyRadius;
 		float quadSize = s_quadSize + 0.5f * cubeWidth;
-		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXY, localToWorldMatrix * s_rotZ * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXY, m_octantIndex, quadSize), ray, closestHitDistanceSq);
-		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeYZ, localToWorldMatrix * s_rotX * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize), ray, closestHitDistanceSq);
-		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXZ, localToWorldMatrix * s_rotY * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXZ, m_octantIndex, quadSize), ray, closestHitDistanceSq);
+		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXY, localToWorldMatrix * TransformHandle::GetRotationZ() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXY, m_octantIndex, quadSize), ray, closestHitDistanceSq);
+		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeYZ, localToWorldMatrix * TransformHandle::GetRotationX() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize), ray, closestHitDistanceSq);
+		TryPickPlaneSubHandle(TranslateHandle::SubHandle::planeXZ, localToWorldMatrix * TransformHandle::GetRotationY() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXZ, m_octantIndex, quadSize), ray, closestHitDistanceSq);
 	}
 
 
@@ -426,9 +417,9 @@ namespace emberEditor
 	Float4 TranslateHandle::SubHandleStateColor(TranslateHandle::SubHandle subHandle)
 	{
 		if (m_activeSubHandle == subHandle)
-			return s_activeColor;
+			return TransformHandle::GetActiveColor();
 		if (m_hoveredSubHandle == subHandle)
-			return s_hoverColor;
+			return TransformHandle::GetHoverColor();
 		return SubHandleBaseColor(subHandle);
 	}
 	void TranslateHandle::TryPickAxisSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
@@ -512,12 +503,12 @@ namespace emberEditor
 	{
 		switch (subHandle)
 		{
-			case TranslateHandle::SubHandle::axisX: return s_colorX;
-			case TranslateHandle::SubHandle::axisY: return s_colorY;
-			case TranslateHandle::SubHandle::axisZ: return s_colorZ;
-			case TranslateHandle::SubHandle::planeYZ: return s_colorX;
-			case TranslateHandle::SubHandle::planeXZ: return s_colorY;
-			case TranslateHandle::SubHandle::planeXY: return s_colorZ;
+			case TranslateHandle::SubHandle::axisX: return TransformHandle::GetColorX();
+			case TranslateHandle::SubHandle::axisY: return TransformHandle::GetColorY();
+			case TranslateHandle::SubHandle::axisZ: return TransformHandle::GetColorZ();
+			case TranslateHandle::SubHandle::planeYZ: return TransformHandle::GetColorX();
+			case TranslateHandle::SubHandle::planeXZ: return TransformHandle::GetColorY();
+			case TranslateHandle::SubHandle::planeXY: return TransformHandle::GetColorZ();
 			default: return Float4::zero;
 		}
 	}

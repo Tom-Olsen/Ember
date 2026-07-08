@@ -34,16 +34,6 @@ namespace emberEditor
         float m_handleScale;
 		CoordinateSpace m_coordinateSpace;
 		emberEcs::Transform* m_pTransform;
-        // Handle colors:
-		static Float4 s_colorX;
-		static Float4 s_colorY;
-		static Float4 s_colorZ;
-        static Float4 s_hoverColor;
-        static Float4 s_activeColor;
-        // Rotation matrizes:
-		static Float4x4 s_rotX;
-		static Float4x4 s_rotY;
-		static Float4x4 s_rotZ;
         // Geometry:
 		static float s_arcStart;
 		static float s_arcEnd;

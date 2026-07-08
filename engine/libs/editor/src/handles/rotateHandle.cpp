@@ -8,6 +8,7 @@
 #include "meshGenerator.h"
 #include "shaderProperties.h"
 #include "transform.h"
+#include "transformHandle.h"
 #include <optional>
 
 
@@ -15,16 +16,6 @@
 namespace emberEditor
 {
 	// Static members:
-    // Handle colors:
-	Float4 RotateHandle::s_colorX = Float4(1.0f, 0.38039, 0.24314, 1.0f);
-	Float4 RotateHandle::s_colorY = Float4(0.78039f, 1.0f, 0.41569, 1.0f);
-	Float4 RotateHandle::s_colorZ = Float4(0.31765f, 0.66667f, 1.0f, 1.0f);
-	Float4 RotateHandle::s_hoverColor = Float4::yellow;
-	Float4 RotateHandle::s_activeColor = Float4::white;
-    // Rotation matrizes:
-	Float4x4 RotateHandle::s_rotX = Float4x4::RotateFromTo(Float3::up, Float3::right) * Float4x4::RotateZ(math::pi2);
-	Float4x4 RotateHandle::s_rotY = Float4x4::RotateFromTo(Float3::up, Float3::forward) * Float4x4::RotateZ(-math::pi2);
-	Float4x4 RotateHandle::s_rotZ = Float4x4::identity;
     // Geometry:
 	float RotateHandle::s_arcStart = 0.8f;
 	float RotateHandle::s_arcEnd = 1.0f;
@@ -121,15 +112,20 @@ namespace emberEditor
 			return;
 		Float4x4 localToWorldMatrix = LocalToWorldMatrix();
 
+        // Draw central sphere:
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoUnlitMaterial"));
+		emberCore::Gizmo::SetColor(TransformHandle::GetColorCenter());
+        emberCore::Gizmo::DrawSphere(localToWorldMatrix * Float4x4::Scale(0.15f));
+
         // Draw arcs:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoUnlitMaterial"));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisX));
 		emberCore::Gizmo::SetCullMode(emberCommon::CullMode::none);
-        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisX, m_octantIndex) * s_rotX);
+        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisX, m_octantIndex) * TransformHandle::GetRotationX());
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisY));
-        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisY, m_octantIndex) * s_rotY);
+        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisY, m_octantIndex) * TransformHandle::GetRotationY());
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisZ));
-        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisZ, m_octantIndex) * s_rotZ);
+        emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisZ, m_octantIndex) * TransformHandle::GetRotationZ());
 		emberCore::Gizmo::ResetCullMode();
         emberCore::Gizmo::ResetMaterial();
     }
@@ -248,9 +244,9 @@ namespace emberEditor
 		float closestHitDistanceSq = math::maxValue;
 
 		// Check each axis handle:
-		TryPickAxisSubHandle(RotateHandle::SubHandle::axisX, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisX, m_octantIndex) * s_rotX, ray, closestHitDistanceSq);
-		TryPickAxisSubHandle(RotateHandle::SubHandle::axisY, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisY, m_octantIndex) * s_rotY, ray, closestHitDistanceSq);
-		TryPickAxisSubHandle(RotateHandle::SubHandle::axisZ, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisZ, m_octantIndex) * s_rotZ, ray, closestHitDistanceSq);
+		TryPickAxisSubHandle(RotateHandle::SubHandle::axisX, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisX, m_octantIndex) * TransformHandle::GetRotationX(), ray, closestHitDistanceSq);
+		TryPickAxisSubHandle(RotateHandle::SubHandle::axisY, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisY, m_octantIndex) * TransformHandle::GetRotationY(), ray, closestHitDistanceSq);
+		TryPickAxisSubHandle(RotateHandle::SubHandle::axisZ, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisZ, m_octantIndex) * TransformHandle::GetRotationZ(), ray, closestHitDistanceSq);
     }
 		
     // Helpers:
@@ -281,9 +277,9 @@ namespace emberEditor
 	Float4 RotateHandle::SubHandleStateColor(RotateHandle::SubHandle subHandle)
     {
 		if (m_activeSubHandle == subHandle)
-			return s_activeColor;
+			return TransformHandle::GetActiveColor();
 		if (m_hoveredSubHandle == subHandle)
-			return s_hoverColor;
+			return TransformHandle::GetHoverColor();
 		return SubHandleBaseColor(subHandle);
     }
 	void RotateHandle::TryPickAxisSubHandle(RotateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
@@ -330,9 +326,9 @@ namespace emberEditor
     {
 		switch (subHandle)
 		{
-			case RotateHandle::SubHandle::axisX: return s_colorX;
-			case RotateHandle::SubHandle::axisY: return s_colorY;
-			case RotateHandle::SubHandle::axisZ: return s_colorZ;
+			case RotateHandle::SubHandle::axisX: return TransformHandle::GetColorX();
+			case RotateHandle::SubHandle::axisY: return TransformHandle::GetColorY();
+			case RotateHandle::SubHandle::axisZ: return TransformHandle::GetColorZ();
 			default: return Float4::zero;
 		}
 	}
