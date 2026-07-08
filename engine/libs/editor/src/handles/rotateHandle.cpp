@@ -8,6 +8,7 @@
 #include "meshGenerator.h"
 #include "shaderProperties.h"
 #include "transform.h"
+#include <optional>
 
 
 
@@ -188,7 +189,25 @@ namespace emberEditor
     }
 	void RotateHandle::UpdateHoveredSubHandle()
     {
+		if (m_isDragging)
+		{
+			m_hoveredSubHandle = m_activeSubHandle;
+			return;
+		}
 
+		m_hoveredSubHandle = RotateHandle::SubHandle::none;
+		if (!HandleContext::GetViewPortIsHovered())
+			return;
+
+		// Raycast setup:
+		Float4x4 localToWorldMatrix = LocalToWorldMatrix();
+		Ray ray = HandleContext::GetCamera()->GetViewportRay(HandleContext::GetViewportMousePos01());
+		float closestHitDistanceSq = math::maxValue;
+
+		// Check each axis handle:
+		TryPickAxisSubHandle(RotateHandle::SubHandle::axisX, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisX, m_octantIndex) * s_rotX, ray, closestHitDistanceSq);
+		TryPickAxisSubHandle(RotateHandle::SubHandle::axisY, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisY, m_octantIndex) * s_rotY, ray, closestHitDistanceSq);
+		TryPickAxisSubHandle(RotateHandle::SubHandle::axisZ, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisZ, m_octantIndex) * s_rotZ, ray, closestHitDistanceSq);
     }
 		
     // Helpers:
@@ -226,7 +245,31 @@ namespace emberEditor
     }
 	void RotateHandle::TryPickAxisSubHandle(RotateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
     {
+		// Construct interaction quad matching the arc's visible quadrant:
+		Float3 origin = Float3(localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
+		Float3 uCorner = Float3(localToWorldMatrix * Float4(s_arcEnd, 0.0f, 0.0f, 1.0f));
+		Float3 vCorner = Float3(localToWorldMatrix * Float4(0.0f, s_arcEnd, 0.0f, 1.0f));
+		Quad quad = Quad(origin, uCorner - origin, vCorner - origin);
 
+		// Ray-quad hit:
+		std::optional<Float3> hit = quad.IntersectRay(ray);
+		if (hit.has_value())
+		{
+			// Radius restriction:
+			float innerRadius = s_arcStart * Size();
+			float outerRadius = s_arcEnd * Size();
+			float radiusSq = Float3::DistanceSq(origin, hit.value());
+			if (radiusSq < innerRadius * innerRadius || radiusSq > outerRadius * outerRadius)
+				return;
+
+			// Check if new hit is closer:
+			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.value());
+			if (hitDistanceSq < closestHitDistanceSq)
+			{
+				closestHitDistanceSq = hitDistanceSq;
+				m_hoveredSubHandle = subHandle;
+			}
+		}
     }
 
     // Static helpers:
