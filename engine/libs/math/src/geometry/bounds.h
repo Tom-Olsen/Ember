@@ -14,11 +14,11 @@ namespace emberMath
 	{
 	public: // Members:
 		Float3 center;
-		Float3 extents;
+		Float3 extent;
 
 	public: // Methods:
 		Bounds();
-		Bounds(const Float3& center, const Float3& extents);
+		Bounds(const Float3& center, const Float3& extent);
 		Bounds(const Bounds& bounds);
 		Bounds(const Float3* const corners);
 		Bounds(const std::vector<Float3>& points);

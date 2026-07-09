@@ -10,9 +10,9 @@ namespace emberMath
 {
 	// Public methods:
 	// Constructors:
-	Bounds::Bounds() : center(0.0f), extents(0.0f) {}
-	Bounds::Bounds(const Float3& center, const Float3& extents) : center(center), extents(extents) {}
-	Bounds::Bounds(const Bounds& bounds) : center(bounds.center), extents(bounds.extents) {}
+	Bounds::Bounds() : center(0.0f), extent(0.0f) {}
+	Bounds::Bounds(const Float3& center, const Float3& extent) : center(center), extent(extent) {}
+	Bounds::Bounds(const Bounds& bounds) : center(bounds.center), extent(bounds.extent) {}
 	Bounds::Bounds(const Float3* const corners)
 	{
 		Float3 min = corners[0];
@@ -23,7 +23,7 @@ namespace emberMath
 			max = Float3::Max(max, corners[i]);
 		}
 		center = 0.5f * (max + min);
-		extents = 0.5f * (max - min);
+		extent = 0.5f * (max - min);
 	}
 	Bounds::Bounds(const std::vector<Float3>& points)
 	{
@@ -35,7 +35,7 @@ namespace emberMath
 			max = Float3::Max(max, points[i]);
 		}
 		center = 0.5f * (max + min);
-		extents = 0.5f * (max - min);
+		extent = 0.5f * (max - min);
 	}
 
 
@@ -43,19 +43,19 @@ namespace emberMath
 	// Getters:
 	Float3 Bounds::GetMin() const
 	{
-		return center - extents;
+		return center - extent;
 	}
 	Float3 Bounds::GetMax() const
 	{
-		return center + extents;
+		return center + extent;
 	}
 	Float3 Bounds::GetSize() const
 	{
-		return 2.0f * extents;
+		return 2.0f * extent;
 	}
 	float Bounds::GetDiagonal() const
 	{
-		return 2.0f * extents.Length();
+		return 2.0f * extent.Length();
 
 	}
 	std::array<Float3, 8> Bounds::GetCorners() const
@@ -82,7 +82,7 @@ namespace emberMath
 	{
         assert(min < max);
 		center = 0.5f * (max + min);
-		extents = 0.5f * (max - min);
+		extent = 0.5f * (max - min);
 	}
 
 
@@ -107,7 +107,7 @@ namespace emberMath
 		Float3 min = Float3::Min(point, GetMin());
 		Float3 max = Float3::Max(point, GetMax());
 		center = 0.5f * (max + min);
-		extents = 0.5f * (max - min);
+		extent = 0.5f * (max - min);
 	}
     void Bounds::Encapsulate(const Bounds& bounds)
     {
@@ -116,14 +116,14 @@ namespace emberMath
     }
 	void Bounds::Expand(float amount)
 	{
-		extents += Float3(amount);
+		extent += Float3(amount);
         if (amount < 0.0f)
-            extents = Float3::Max(extents, Float3(0.0f));
+            extent = Float3::Max(extent, Float3(0.0f));
 	}
 	void Bounds::Expand(const Float3& amount)
 	{
-		extents += Float3::Abs(amount);
-        extents = Float3::Max(extents, Float3(0.0f));
+		extent += Float3::Abs(amount);
+        extent = Float3::Max(extent, Float3(0.0f));
 	}
 	std::optional<Float3> Bounds::IntersectRay(const Ray& ray) const
 	{
@@ -203,7 +203,7 @@ namespace emberMath
 	// Equality:
 	bool Bounds::operator == (const Bounds & other)
 	{
-		return center == other.center && extents == other.extents;
+		return center == other.center && extent == other.extent;
 	}
 	bool Bounds::operator!=(const Bounds& other)
 	{
@@ -215,7 +215,7 @@ namespace emberMath
 	// Logging:
 	std::string Bounds::ToString() const
 	{
-		return "Bounds(center: " + center.ToString() + ", extents: " + extents.ToString() + ")";
+		return "Bounds(center: " + center.ToString() + ", extent: " + extent.ToString() + ")";
 	}
 	std::ostream& operator<<(std::ostream& os, const Bounds& bounds)
 	{

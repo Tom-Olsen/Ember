@@ -4,7 +4,7 @@
 #include "gui.h"
 #include "sphFluid3dGpu.h"
 #include "transformHandle.h"
-#include "transformHandleTarget.h"
+#include "boundsHandleTarget.h"
 
 
 
@@ -19,7 +19,7 @@ namespace emberEditor
 
 	private:
         TransformHandle m_transformHandle;
-		TransformHandleTarget m_transformHandleTarget;
+		BoundsHandleTarget m_boundsHandleTarget;
 		fluidDynamics::SphFluid3dGpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
@@ -35,6 +35,7 @@ namespace emberEditor
 		float m_nearPressureRatio;
 		float m_gravity;
 		float m_maxVelocity;
+        Bounds m_bounds;
 		float m_attractorRadius;
 		float m_attractorStrength;
 		int m_colorMode;
@@ -50,8 +51,9 @@ namespace emberEditor
 			m_wantCaptureEvents = true;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 			m_pScript = pScript;
-			m_transformHandleTarget.SetTransform(m_pScript->GetTransform());
-            m_transformHandle.SetTarget(&m_transformHandleTarget);
+			m_bounds = m_pScript->GetFluidBounds();
+			m_boundsHandleTarget.SetBounds(&m_bounds);
+            m_transformHandle.SetTarget(&m_boundsHandleTarget);
 			GetData();
 
 			// No serialised data available: get member values from script:
@@ -66,6 +68,8 @@ namespace emberEditor
 		    m_transformHandle.ConsumeModeHotkeys();
             m_transformHandle.Update();
             m_transformHandle.Draw();
+            if (m_bounds != m_pScript->GetFluidBounds())
+	            m_pScript->SetFluidBounds(m_bounds);
         }
 		void Render() override
 		{

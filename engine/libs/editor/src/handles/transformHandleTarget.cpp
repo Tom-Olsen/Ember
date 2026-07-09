@@ -30,8 +30,8 @@ namespace emberEditor
 	IHandleTarget::HandleCapabilities TransformHandleTarget::GetCapabilities() const
 	{
 		if (m_pTransform == nullptr)
-			return HandleCapabilities::none;
-		return HandleCapabilities::translateRotateScale;
+			return IHandleTarget::HandleCapabilities::none;
+		return IHandleTarget::HandleCapabilities::translateRotateScale;
 	}
 
 
