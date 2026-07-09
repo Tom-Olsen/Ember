@@ -30,9 +30,9 @@ namespace emberEditor
         // Settings:
 		static CoordinateSpace s_coordinateSpace;
 		static bool s_snapEnabled;
-		static Float3 s_translationSnap;
+		static float s_translationSnap;
 		static float s_rotationSnap;
-		static Float3 s_scaleSnap;
+		static float s_scaleSnap;
 
     public: // Methods:
         // Init/Clear:
@@ -46,6 +46,11 @@ namespace emberEditor
         static void SetViewportMousePos(const Float2& viewportMousePos);
         static void SetViewportMousePos01(const Float2& viewportMousePos01);
         static void SetViewPortIsHovered(bool viewPortIsHovered);
+        static void SetCoordinateSpace(CoordinateSpace coordinateSpace);
+        static void SetSnap(bool snapEnabled);
+        static void SetTranslationSnap(float translationSnap);
+        static void SetRotationSnap(float rotationSnap);
+        static void SetScaleSnap(float scaleSnap);
 
         // Getters:
         static float GetGlobalHandleScale();
@@ -54,6 +59,11 @@ namespace emberEditor
         static Float2 GetViewportMousePos();
         static Float2 GetViewportMousePos01();
         static bool GetViewPortIsHovered();
+        static CoordinateSpace GetCoordinateSpace();
+        static bool GetSnap();
+        static float GetTranslationSnap();
+        static float GetRotationSnap();
+        static float GetScaleSnap();
 
         // Helpers:
 		static float ComputeScreenSpaceScale(const Float3& worldPos);

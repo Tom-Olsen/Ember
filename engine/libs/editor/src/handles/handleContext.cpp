@@ -47,9 +47,9 @@ namespace emberEditor
         // Settings:
 		s_coordinateSpace = CoordinateSpace::world;
 		s_snapEnabled = false;
-		s_translationSnap = Float3(0.25f);
-		s_rotationSnap = math::deg2rad * 15.0f;
-		s_scaleSnap = Float3(0.1f);
+		s_translationSnap = 0.25f;
+		s_rotationSnap = 15.0f * math::deg2rad;
+		s_scaleSnap = 0.1f;
     }
     void HandleContext::Clear()
     {
@@ -102,6 +102,26 @@ namespace emberEditor
     {
         s_viewPortIsHovered = viewPortIsHovered;
     }
+    void HandleContext::SetCoordinateSpace(CoordinateSpace coordinateSpace)
+    {
+        s_coordinateSpace = coordinateSpace;
+    }
+    void HandleContext::SetSnap(bool snapEnabled)
+    {
+        s_snapEnabled = snapEnabled;
+    }
+    void HandleContext::SetTranslationSnap(float translationSnap)
+    {
+        s_translationSnap = translationSnap;
+    }
+    void HandleContext::SetRotationSnap(float rotationSnap)
+    {
+        s_rotationSnap = rotationSnap;
+    }
+    void HandleContext::SetScaleSnap(float scaleSnap)
+    {
+        s_scaleSnap = scaleSnap;
+    }
 
 
 
@@ -129,5 +149,25 @@ namespace emberEditor
     bool HandleContext::GetViewPortIsHovered()
     {
         return s_viewPortIsHovered;
+    }
+    CoordinateSpace HandleContext::GetCoordinateSpace()
+    {
+        return s_coordinateSpace;
+    }
+    bool HandleContext::GetSnap()
+    {
+        return s_snapEnabled;
+    }
+    float HandleContext::GetTranslationSnap()
+    {
+        return s_translationSnap;
+    }
+    float HandleContext::GetRotationSnap()
+    {
+        return s_rotationSnap;
+    }
+    float HandleContext::GetScaleSnap()
+    {
+        return s_scaleSnap;
     }
 }
