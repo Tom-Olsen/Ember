@@ -20,4 +20,4 @@ Add new rules here as the project evolves.
 -
 
 ## Communication
--
+- Do not assume anything when implementing a feature. If any design specification is unclear, ask for clarification.

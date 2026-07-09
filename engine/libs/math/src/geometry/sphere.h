@@ -15,6 +15,7 @@ namespace emberMath
 		float radius;
 
 	public: // Methods:
+        // Constructors:
 		Sphere();
 		Sphere(const Float3& center, float radius);
 		Sphere(const Sphere& sphere);

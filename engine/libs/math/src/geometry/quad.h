@@ -16,6 +16,7 @@ namespace emberMath
 		Float3 vAxis;	// edge vector from origin along the second side (full length).
 
 	public: // Methods:
+        // Constructors:
 		Quad();
 		Quad(const Float3& origin, const Float3& uAxis, const Float3& vAxis);
 		Quad(const Quad& quad);

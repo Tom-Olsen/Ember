@@ -7,6 +7,7 @@
 
 namespace emberMath
 {
+	// Public methods:
 	// Constructors:
 	Bounds2d::Bounds2d() : center(0.0f), extents(0.0f), depth(0.0f) {}
 	Bounds2d::Bounds2d(const Float2& center, const Float2& extents, float depth) : center(center), extents(extents), depth(depth) {}
@@ -38,7 +39,6 @@ namespace emberMath
 
 
 
-	// Public methods:
 	// Getters:
 	Float2 Bounds2d::GetMin() const
 	{

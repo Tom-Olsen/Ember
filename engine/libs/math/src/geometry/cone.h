@@ -17,6 +17,7 @@ namespace emberMath
 		float radius;
 
 	public: // Methods:
+        // Constructors:
 		Cone();
 		Cone(const Float3& apex, const Float3& baseCenter, float radius);
 		Cone(const Cone& cone);

@@ -17,6 +17,7 @@ namespace emberMath
 		float depth;
 
 	public: // Methods:
+        // Constructors:
 		Bounds2d();
 		Bounds2d(const Float2& center, const Float2& extents, float depth = 0.0f);
 		Bounds2d(const Bounds2d& bounds);

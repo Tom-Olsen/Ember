@@ -16,6 +16,7 @@ namespace emberMath
 		float radius;
 
 	public: // Methods:
+        // Constructors:
 		Capsule();
 		Capsule(const Float3& point0, const Float3& point1, float radius);
 		Capsule(const Capsule& capsule);

@@ -17,6 +17,7 @@ namespace emberMath
 		Float3 extent;
 
 	public: // Methods:
+        // Constructors:
 		Bounds();
 		Bounds(const Float3& center, const Float3& extent);
 		Bounds(const Bounds& bounds);
