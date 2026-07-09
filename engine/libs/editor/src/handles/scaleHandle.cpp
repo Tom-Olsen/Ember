@@ -259,7 +259,7 @@ namespace emberEditor
 				float axisLength = m_dragStartHandleSize * (s_axisLength - s_cubeWidth);
 				float hitDistance = Float3::Dot(hit.value() - m_dragStartPosition, m_dragAxisDir);
 				m_dragAxisLengthFactor = hitDistance / (m_grabAxisFraction * axisLength);
-				SetScale(m_activeSubHandle, m_dragAxisLengthFactor);
+				m_dragAxisLengthFactor = SetScale(m_activeSubHandle, m_dragAxisLengthFactor);
 			}
 		}
 		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
@@ -337,18 +337,22 @@ namespace emberEditor
 			return Float4x4::RotateY(math::pi) * scale;
 		return scale;
 	}
-	void ScaleHandle::SetScale(ScaleHandle::SubHandle subHandle, float amount)
+	float ScaleHandle::SetScale(ScaleHandle::SubHandle subHandle, float amount)
 	{
 		// ApplyLocalScaleChange:
+		float appliedAmount = amount;
 		Float3 scale = m_dragStartScale;
 		if (IsCenterSubHandle(subHandle))
-			scale += amount * Float3::one;
+		{
+			appliedAmount = HandleContext::ApplyScaleSnap(amount);
+			scale += appliedAmount * Float3::one;
+		}
 		else if (subHandle == ScaleHandle::SubHandle::axisX)
-			scale.x *= amount;
+			scale.x = HandleContext::ApplyScaleSnap(scale.x * amount);
 		else if (subHandle == ScaleHandle::SubHandle::axisY)
-			scale.y *= amount;
+			scale.y = HandleContext::ApplyScaleSnap(scale.y * amount);
 		else if (subHandle == ScaleHandle::SubHandle::axisZ)
-			scale.z *= amount;
+			scale.z = HandleContext::ApplyScaleSnap(scale.z * amount);
 
         // Prevent zero scale:
 		for (int i = 0; i < Float3::size; i++)
@@ -356,7 +360,14 @@ namespace emberEditor
 			if (math::Abs(scale[i]) < s_minScaleMagnitude)
 				scale[i] = scale[i] < 0.0f ? -s_minScaleMagnitude : s_minScaleMagnitude;
 		}
+		if (subHandle == ScaleHandle::SubHandle::axisX && math::Abs(m_dragStartScale.x) >= s_minScaleMagnitude)
+			appliedAmount = scale.x / m_dragStartScale.x;
+		else if (subHandle == ScaleHandle::SubHandle::axisY && math::Abs(m_dragStartScale.y) >= s_minScaleMagnitude)
+			appliedAmount = scale.y / m_dragStartScale.y;
+		else if (subHandle == ScaleHandle::SubHandle::axisZ && math::Abs(m_dragStartScale.z) >= s_minScaleMagnitude)
+			appliedAmount = scale.z / m_dragStartScale.z;
 		m_pHandleTarget->SetScale(scale);
+		return appliedAmount;
 	}
 	void ScaleHandle::TryPickAxisSubHandle(ScaleHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
 	{

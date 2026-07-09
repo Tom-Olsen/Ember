@@ -96,6 +96,7 @@ namespace emberEditor
 		Float4x4 HandleRotationMatrix() const;
 		Float4x4 LocalToWorldMatrix();
 		Float4 SubHandleStateColor(TranslateHandle::SubHandle subHandle);
+		Float3 ApplyDragSnap(const Float3& position) const;
 		void TryPickAxisSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);
 		void TryPickPlaneSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);
 

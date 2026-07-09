@@ -201,6 +201,7 @@ namespace emberEditor
 		// Update entity rotation:
 		Float2 mouseDelta = HandleContext::GetViewportMousePos() - m_dragStartMousePos;
 		float angle = s_rotationSensitivity * (mouseDelta.x - mouseDelta.y);
+		angle = HandleContext::ApplyRotationSnap(angle);
 		m_pHandleTarget->SetRotation(Float3x3::Rotate(m_dragAxisDir, angle) * m_dragStartRotation);
 		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
     }

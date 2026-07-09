@@ -1,5 +1,6 @@
 #include "handleContext.h"
 #include "camera.h"
+#include "eventSystem.h"
 #include "transform.h"
 
 
@@ -21,9 +22,9 @@ namespace emberEditor
     // Settings:
 	CoordinateSpace HandleContext::s_coordinateSpace;
 	bool HandleContext::s_snapEnabled;
-	Float3 HandleContext::s_translationSnap;
+	float HandleContext::s_translationSnap;
 	float HandleContext::s_rotationSnap;
-	Float3 HandleContext::s_scaleSnap;
+	float HandleContext::s_scaleSnap;
 
 
     
@@ -72,6 +73,36 @@ namespace emberEditor
 		Float3 cameraPos = s_pCamera->GetTransform()->GetPosition();
 		float distance = (worldPos - cameraPos).Length();
 		return 2.0f * distance * math::Tan(0.5f * s_pCamera->GetFov()) * viewportFraction;
+	}
+	float HandleContext::ApplyTranslationSnap(float translation)
+	{
+		if (!SnapIsActive())
+			return translation;
+		return SnapToIncrement(translation, s_translationSnap);
+	}
+	float HandleContext::ApplyRotationSnap(float angleRadians)
+	{
+		if (!SnapIsActive())
+			return angleRadians;
+		return SnapToIncrement(angleRadians, s_rotationSnap);
+	}
+	float HandleContext::ApplyScaleSnap(float scale)
+	{
+		if (!SnapIsActive())
+			return scale;
+		return SnapToIncrement(scale, s_scaleSnap);
+	}
+	bool HandleContext::SnapIsActive()
+	{
+		// Left ctrl temporarily inverts the snap setting.
+		bool invertSnap = emberCore::EventSystem::KeyDownOrHeld(emberCommon::Input::Key::CtrlLeft);
+		return s_snapEnabled != invertSnap;
+	}
+	float HandleContext::SnapToIncrement(float value, float snapIncrement)
+	{
+		if (snapIncrement <= 0.0f)
+			return value;
+		return math::Round(value / snapIncrement) * snapIncrement;
 	}
 
 

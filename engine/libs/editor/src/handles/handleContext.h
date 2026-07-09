@@ -67,8 +67,14 @@ namespace emberEditor
 
         // Helpers:
 		static float ComputeScreenSpaceScale(const Float3& worldPos);
+		static float ApplyTranslationSnap(float translation);
+		static float ApplyRotationSnap(float angleRadians);
+		static float ApplyScaleSnap(float scale);
 
     private: // Methods:
+		static bool SnapIsActive();
+		static float SnapToIncrement(float value, float snapIncrement);
+
         // Delete all constructors:
         HandleContext() = delete;
         HandleContext(const HandleContext&) = delete;

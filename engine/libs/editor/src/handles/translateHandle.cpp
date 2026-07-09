@@ -316,6 +316,7 @@ namespace emberEditor
 				Float3 position = m_pHandleTarget->GetPosition();
 				for (int i = 0; i < 4; i++)
 					position = hit.value() - SizeAtPosition(position) * m_dragGrabOffset;
+				position = ApplyDragSnap(position);
 				m_pHandleTarget->SetPosition(position);
 			}
 			else // Axis translation:
@@ -330,6 +331,7 @@ namespace emberEditor
 					float axisDistance = hitDistance - SizeAtPosition(position) * grabOffset;
 					position = m_dragStartPosition + axisDistance * m_dragAxisDir;
 				}
+				position = ApplyDragSnap(position);
 				m_pHandleTarget->SetPosition(position);
 			}
 		}
@@ -421,6 +423,44 @@ namespace emberEditor
 		if (m_hoveredSubHandle == subHandle)
 			return TransformHandle::GetHoverColor();
 		return SubHandleBaseColor(subHandle);
+	}
+	Float3 TranslateHandle::ApplyDragSnap(const Float3& position) const
+	{
+		Float4x4 handleRotationMatrix = HandleRotationMatrix();
+		Float3 axisX = Float3(handleRotationMatrix * Float4(Float3::right, 0.0f));
+		Float3 axisY = Float3(handleRotationMatrix * Float4(Float3::forward, 0.0f));
+		Float3 axisZ = Float3(handleRotationMatrix * Float4(Float3::up, 0.0f));
+		Float3 offset = position - m_dragStartPosition;
+		Float3 snappedOffset = Float3::zero;
+
+		// SnapDragOffset:
+		switch (m_activeSubHandle)
+		{
+			case TranslateHandle::SubHandle::axisX:
+				snappedOffset = HandleContext::ApplyTranslationSnap(Float3::Dot(offset, axisX)) * axisX;
+				break;
+			case TranslateHandle::SubHandle::axisY:
+				snappedOffset = HandleContext::ApplyTranslationSnap(Float3::Dot(offset, axisY)) * axisY;
+				break;
+			case TranslateHandle::SubHandle::axisZ:
+				snappedOffset = HandleContext::ApplyTranslationSnap(Float3::Dot(offset, axisZ)) * axisZ;
+				break;
+			case TranslateHandle::SubHandle::planeXY:
+				snappedOffset  = HandleContext::ApplyTranslationSnap(Float3::Dot(offset, axisX)) * axisX;
+				snappedOffset += HandleContext::ApplyTranslationSnap(Float3::Dot(offset, axisY)) * axisY;
+				break;
+			case TranslateHandle::SubHandle::planeYZ:
+				snappedOffset  = HandleContext::ApplyTranslationSnap(Float3::Dot(offset, axisY)) * axisY;
+				snappedOffset += HandleContext::ApplyTranslationSnap(Float3::Dot(offset, axisZ)) * axisZ;
+				break;
+			case TranslateHandle::SubHandle::planeXZ:
+				snappedOffset  = HandleContext::ApplyTranslationSnap(Float3::Dot(offset, axisX)) * axisX;
+				snappedOffset += HandleContext::ApplyTranslationSnap(Float3::Dot(offset, axisZ)) * axisZ;
+				break;
+			default:
+				return position;
+		}
+		return m_dragStartPosition + snappedOffset;
 	}
 	void TranslateHandle::TryPickAxisSubHandle(TranslateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
 	{

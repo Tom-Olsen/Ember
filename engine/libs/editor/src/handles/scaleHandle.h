@@ -85,7 +85,7 @@ namespace emberEditor
 		Float4 SubHandleStateColor(ScaleHandle::SubHandle subHandle);
 		float AxisLengthFactor(ScaleHandle::SubHandle subHandle) const;
 		Float4x4 AxisLengthMatrix(ScaleHandle::SubHandle subHandle) const;
-		void SetScale(ScaleHandle::SubHandle subHandle, float amount);
+		float SetScale(ScaleHandle::SubHandle subHandle, float amount);
 		void TryPickAxisSubHandle(ScaleHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);
 		void TryPickCubeSubHandle(ScaleHandle::SubHandle subHandle, const Float3& cubeWorldPosition, const Ray& ray, float& closestHitDistanceSq);
 
