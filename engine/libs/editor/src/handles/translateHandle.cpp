@@ -33,7 +33,7 @@ namespace emberEditor
 	{
 		m_handleScale = 1.0f;
 		m_coordinateSpace = CoordinateSpace::world;
-		m_pTransform = nullptr;
+		m_pHandleTarget = nullptr;
 		m_isDragging = false;
 		m_octantIndex = 0;
 		ResetInteractionState();
@@ -47,21 +47,21 @@ namespace emberEditor
 
 
 	// Target:
-	void TranslateHandle::SetTarget(emberEcs::Transform* pTransform)
+	void TranslateHandle::SetTarget(IHandleTarget* pHandleTarget)
 	{
-		if (m_pTransform == pTransform)
+		if (m_pHandleTarget == pHandleTarget)
 			return;
 		ResetInteractionState();
-		m_pTransform = pTransform;
+		m_pHandleTarget = pHandleTarget;
 	}
 	void TranslateHandle::ClearTarget()
 	{
-		m_pTransform = nullptr;
+		m_pHandleTarget = nullptr;
 		ResetInteractionState();
 	}
 	bool TranslateHandle::HasTarget() const
 	{
-		return m_pTransform != nullptr;
+		return m_pHandleTarget != nullptr && m_pHandleTarget->CanTranslate();
 	}
 
 
@@ -252,7 +252,7 @@ namespace emberEditor
 
         // Begin drag:
 		m_activeSubHandle = m_hoveredSubHandle;
-		m_dragStartPosition = m_pTransform->GetPosition();
+		m_dragStartPosition = m_pHandleTarget->GetPosition();
 
         // Find drag plane/line:
 		Ray ray = HandleContext::GetCamera()->GetViewportRay(HandleContext::GetViewportMousePos01());
@@ -313,15 +313,15 @@ namespace emberEditor
 			if (IsPlaneSubHandle(m_activeSubHandle))
 			{
 				// Small fixed point iteration:
-				Float3 position = m_pTransform->GetPosition();
+				Float3 position = m_pHandleTarget->GetPosition();
 				for (int i = 0; i < 4; i++)
 					position = hit.value() - SizeAtPosition(position) * m_dragGrabOffset;
-				m_pTransform->SetPosition(position);
+				m_pHandleTarget->SetPosition(position);
 			}
 			else // Axis translation:
 			{
 				// ResolveAxisDragPosition:
-				Float3 position = m_pTransform->GetPosition();
+				Float3 position = m_pHandleTarget->GetPosition();
 				float grabOffset = Float3::Dot(m_dragGrabOffset, m_dragAxisDir);
 				float hitDistance = Float3::Dot(hit.value() - m_dragStartPosition, m_dragAxisDir);
 				// Small fixed point iteration:
@@ -330,7 +330,7 @@ namespace emberEditor
 					float axisDistance = hitDistance - SizeAtPosition(position) * grabOffset;
 					position = m_dragStartPosition + axisDistance * m_dragAxisDir;
 				}
-				m_pTransform->SetPosition(position);
+				m_pHandleTarget->SetPosition(position);
 			}
 		}
 		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
@@ -340,7 +340,7 @@ namespace emberEditor
 		if (m_isDragging)
 			return;
 
-		Float3 cameraDirection = HandleContext::GetCamera()->GetTransform()->GetPosition() - m_pTransform->GetPosition();
+		Float3 cameraDirection = HandleContext::GetCamera()->GetTransform()->GetPosition() - m_pHandleTarget->GetPosition();
 		if (cameraDirection.IsEpsilonZero())
 			return;
 
@@ -394,7 +394,7 @@ namespace emberEditor
 	{
 		if (!HasTarget())
 			return 1.0f;
-		return SizeAtPosition(m_pTransform->GetPosition());
+		return SizeAtPosition(m_pHandleTarget->GetPosition());
 	}
 	float TranslateHandle::SizeAtPosition(const Float3& position) const
 	{
@@ -402,17 +402,17 @@ namespace emberEditor
 	}
 	Float4x4 TranslateHandle::HandleRotationMatrix() const
 	{
-		// Local space: align handle with the target's rotation.
+		// Local space: align handle with the target's rotation (requires rotation capabilities).
 		// World space: keep handle aligned with the world coordinate axis.
-		if (m_coordinateSpace == CoordinateSpace::local && HasTarget())
-			return m_pTransform->GetRotation4x4();
+		if (m_coordinateSpace == CoordinateSpace::local && HasTarget() && m_pHandleTarget->CanRotate())
+			return m_pHandleTarget->GetRotation4x4();
 		return Float4x4::identity;
 	}
 	Float4x4 TranslateHandle::LocalToWorldMatrix()
 	{
 		if (!HasTarget())
 			return Float4x4::identity;
-		return Float4x4::TRS(m_pTransform->GetPosition(), HandleRotationMatrix(), Size());
+		return Float4x4::TRS(m_pHandleTarget->GetPosition(), HandleRotationMatrix(), Size());
 	}
 	Float4 TranslateHandle::SubHandleStateColor(TranslateHandle::SubHandle subHandle)
 	{

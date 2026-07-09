@@ -1,14 +1,7 @@
 #pragma once
 #include "emberMath.h"
+#include "iHandleTarget.h"
 #include "mesh.h"
-
-
-
-// Forward declarations:
-namespace emberEcs
-{
-	class Transform;
-}
 
 
 
@@ -28,7 +21,7 @@ namespace emberEditor
 
 	private: // Members:
 		float m_handleScale;
-		emberEcs::Transform* m_pTransform;
+		IHandleTarget* m_pHandleTarget;
 		// Geometry:
 		static float s_axisLength;
 		static float s_axisWidth;
@@ -64,7 +57,7 @@ namespace emberEditor
 		~ScaleHandle();
 
 		// Target:
-		void SetTarget(emberEcs::Transform* pTransform);
+		void SetTarget(IHandleTarget* pHandleTarget);
 		void ClearTarget();
 		bool HasTarget() const;
 

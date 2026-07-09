@@ -4,6 +4,7 @@
 #include "gui.h"
 #include "sphFluid3dGpu.h"
 #include "transformHandle.h"
+#include "transformHandleTarget.h"
 
 
 
@@ -18,6 +19,7 @@ namespace emberEditor
 
 	private:
         TransformHandle m_transformHandle;
+		TransformHandleTarget m_transformHandleTarget;
 		fluidDynamics::SphFluid3dGpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
@@ -48,7 +50,8 @@ namespace emberEditor
 			m_wantCaptureEvents = true;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
 			m_pScript = pScript;
-            m_transformHandle.SetTarget(m_pScript->GetTransform());
+			m_transformHandleTarget.SetTransform(m_pScript->GetTransform());
+            m_transformHandle.SetTarget(&m_transformHandleTarget);
 			GetData();
 
 			// No serialised data available: get member values from script:

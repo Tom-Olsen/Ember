@@ -32,7 +32,7 @@ namespace emberEditor
 	{
 		m_handleScale = 1.0f;
 		m_coordinateSpace = CoordinateSpace::world;
-		m_pTransform = nullptr;
+		m_pHandleTarget = nullptr;
 		m_isDragging = false;
 		m_octantIndex = 0;
 		ResetInteractionState();
@@ -46,21 +46,21 @@ namespace emberEditor
 
 
 	// Target:
-	void RotateHandle::SetTarget(emberEcs::Transform* pTransform)
+	void RotateHandle::SetTarget(IHandleTarget* pHandleTarget)
 	{
-		if (m_pTransform == pTransform)
+		if (m_pHandleTarget == pHandleTarget)
 			return;
 		ResetInteractionState();
-		m_pTransform = pTransform;
+		m_pHandleTarget = pHandleTarget;
 	}
 	void RotateHandle::ClearTarget()
 	{
-		m_pTransform = nullptr;
+		m_pHandleTarget = nullptr;
 		ResetInteractionState();
 	}
 	bool RotateHandle::HasTarget() const
 	{
-		return m_pTransform != nullptr;
+		return m_pHandleTarget != nullptr && m_pHandleTarget->CanRotate();
 	}
 
 
@@ -170,7 +170,7 @@ namespace emberEditor
 
 		// Begin drag:
 		m_activeSubHandle = m_hoveredSubHandle;
-		m_dragStartRotation = m_pTransform->GetRotation3x3();
+		m_dragStartRotation = m_pHandleTarget->GetRotation3x3();
 		m_dragStartMousePos = HandleContext::GetViewportMousePos();
 		m_dragAxisDir = Float3(HandleRotationMatrix() * Float4(SubHandleDirection(m_activeSubHandle), 0.0f));
 		if (m_dragAxisDir.IsEpsilonZero())
@@ -201,7 +201,7 @@ namespace emberEditor
 		// Update entity rotation:
 		Float2 mouseDelta = HandleContext::GetViewportMousePos() - m_dragStartMousePos;
 		float angle = s_rotationSensitivity * (mouseDelta.x - mouseDelta.y);
-		m_pTransform->SetRotationMatrix(Float3x3::Rotate(m_dragAxisDir, angle) * m_dragStartRotation);
+		m_pHandleTarget->SetRotation(Float3x3::Rotate(m_dragAxisDir, angle) * m_dragStartRotation);
 		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
     }
 	void RotateHandle::UpdateOctant()
@@ -209,7 +209,7 @@ namespace emberEditor
 		if (m_isDragging)
 			return;
 
-		Float3 cameraDirection = HandleContext::GetCamera()->GetTransform()->GetPosition() - m_pTransform->GetPosition();
+		Float3 cameraDirection = HandleContext::GetCamera()->GetTransform()->GetPosition() - m_pHandleTarget->GetPosition();
 		if (cameraDirection.IsEpsilonZero())
 			return;
 
@@ -254,7 +254,7 @@ namespace emberEditor
     {
 		if (!HasTarget())
 			return 1.0f;
-		return SizeAtPosition(m_pTransform->GetPosition());
+		return SizeAtPosition(m_pHandleTarget->GetPosition());
     }
 	float RotateHandle::SizeAtPosition(const Float3& position) const
     {
@@ -265,14 +265,14 @@ namespace emberEditor
 		// Local space: align handle with the target's rotation.
 		// World space: keep handle aligned with the world coordinate axis.
 		if (m_coordinateSpace == CoordinateSpace::local && HasTarget())
-			return m_pTransform->GetRotation4x4();
+			return m_pHandleTarget->GetRotation4x4();
 		return Float4x4::identity;
     }
 	Float4x4 RotateHandle::LocalToWorldMatrix()
     {
 		if (!HasTarget())
 			return Float4x4::identity;
-		return Float4x4::TRS(m_pTransform->GetPosition(), HandleRotationMatrix(), Size());
+		return Float4x4::TRS(m_pHandleTarget->GetPosition(), HandleRotationMatrix(), Size());
     }
 	Float4 RotateHandle::SubHandleStateColor(RotateHandle::SubHandle subHandle)
     {

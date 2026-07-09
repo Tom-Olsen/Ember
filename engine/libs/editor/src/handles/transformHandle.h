@@ -1,15 +1,8 @@
 #pragma once
+#include "iHandleTarget.h"
 #include "rotateHandle.h"
 #include "scaleHandle.h"
 #include "translateHandle.h"
-
-
-
-// Forward declarations:
-namespace emberEcs
-{
-	class Transform;
-}
 
 
 
@@ -35,10 +28,10 @@ namespace emberEditor
         static Float4 s_activeColor;
 		static Float4x4 s_rotX;
 		static Float4x4 s_rotY;
-		static Float4x4 s_rotZ;
+        static Float4x4 s_rotZ;
         // Per instance:
 		Mode m_activeMode;
-		emberEcs::Transform* m_pTransform;
+		IHandleTarget* m_pHandleTarget;
 		TranslateHandle m_translateHandle;
 		RotateHandle m_rotateHandle;
 		ScaleHandle m_scaleHandle;
@@ -49,7 +42,7 @@ namespace emberEditor
 		~TransformHandle();
 
 		// Target:
-		void SetTarget(emberEcs::Transform* pTransform);
+		void SetTarget(IHandleTarget* pHandleTarget);
 		void ClearTarget();
 		bool HasTarget() const;
 

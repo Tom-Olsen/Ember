@@ -24,7 +24,7 @@ namespace emberEditor
 	TransformHandle::TransformHandle()
 	{
 		m_activeMode = Mode::translate;
-		m_pTransform = nullptr;
+		m_pHandleTarget = nullptr;
 	}
 	TransformHandle::~TransformHandle()
 	{
@@ -34,23 +34,23 @@ namespace emberEditor
 
 
 	// Target:
-	void TransformHandle::SetTarget(emberEcs::Transform* pTransform)
+	void TransformHandle::SetTarget(IHandleTarget* pHandleTarget)
 	{
-		if (m_pTransform == pTransform)
+		if (m_pHandleTarget == pHandleTarget)
 			return;
-		m_pTransform = pTransform;
+		m_pHandleTarget = pHandleTarget;
 		SyncActiveHandleTarget();
 	}
 	void TransformHandle::ClearTarget()
 	{
-		m_pTransform = nullptr;
+		m_pHandleTarget = nullptr;
 		m_translateHandle.ClearTarget();
 		m_rotateHandle.ClearTarget();
 		m_scaleHandle.ClearTarget();
 	}
 	bool TransformHandle::HasTarget() const
 	{
-		return m_pTransform != nullptr;
+		return m_pHandleTarget != nullptr;
 	}
 
 
@@ -204,21 +204,21 @@ namespace emberEditor
 	{
 		if (m_activeMode == Mode::translate)
 		{
-			m_translateHandle.SetTarget(m_pTransform);
+			m_translateHandle.SetTarget(m_pHandleTarget);
 			m_rotateHandle.ClearTarget();
 			m_scaleHandle.ClearTarget();
 		}
         else if (m_activeMode == Mode::rotate)
         {
             m_translateHandle.ClearTarget();
-			m_rotateHandle.SetTarget(m_pTransform);
+			m_rotateHandle.SetTarget(m_pHandleTarget);
 			m_scaleHandle.ClearTarget();
         }
 		else if (m_activeMode == Mode::scale)
 		{
             m_translateHandle.ClearTarget();
 			m_rotateHandle.ClearTarget();
-			m_scaleHandle.SetTarget(m_pTransform);
+			m_scaleHandle.SetTarget(m_pHandleTarget);
 		}
 	}
 }

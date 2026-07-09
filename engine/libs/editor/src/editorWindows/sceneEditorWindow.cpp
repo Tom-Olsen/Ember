@@ -36,6 +36,7 @@ namespace emberEditor
         // Scene window closed:
         if (!m_isOpen)
         {
+			m_transformHandleTarget.SetTransform(nullptr);
             m_transformHandle.ClearTarget();
             return;
         }
@@ -53,12 +54,16 @@ namespace emberEditor
         if (EditorSelection::HasSelectedEntity())
         {
             emberEcs::Entity selected = EditorSelection::GetSelectedEntity();
-			m_transformHandle.SetTarget(selected.GetTransform());
+			m_transformHandleTarget.SetTransform(selected.GetTransform());
+			m_transformHandle.SetTarget(&m_transformHandleTarget);
 			m_transformHandle.Update();
 			m_transformHandle.Draw();
         }
         else
+        {
+			m_transformHandleTarget.SetTransform(nullptr);
             m_transformHandle.ClearTarget();
+        }
     }
     void SceneEditorWindow::Render()
     {

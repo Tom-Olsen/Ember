@@ -32,7 +32,7 @@ namespace emberEditor
 	ScaleHandle::ScaleHandle()
 	{
 		m_handleScale = 1.0f;
-		m_pTransform = nullptr;
+		m_pHandleTarget = nullptr;
 		m_isDragging = false;
 		ResetInteractionState();
 		CreateMeshes();
@@ -45,21 +45,21 @@ namespace emberEditor
 
 
 	// Target:
-	void ScaleHandle::SetTarget(emberEcs::Transform* pTransform)
+	void ScaleHandle::SetTarget(IHandleTarget* pHandleTarget)
 	{
-		if (m_pTransform == pTransform)
+		if (m_pHandleTarget == pHandleTarget)
 			return;
 		ResetInteractionState();
-		m_pTransform = pTransform;
+		m_pHandleTarget = pHandleTarget;
 	}
 	void ScaleHandle::ClearTarget()
 	{
-		m_pTransform = nullptr;
+		m_pHandleTarget = nullptr;
 		ResetInteractionState();
 	}
 	bool ScaleHandle::HasTarget() const
 	{
-		return m_pTransform != nullptr;
+		return m_pHandleTarget != nullptr && m_pHandleTarget->CanScale();
 	}
 
 
@@ -183,8 +183,8 @@ namespace emberEditor
 
 		// Begin drag:
 		m_activeSubHandle = m_hoveredSubHandle;
-		m_dragStartPosition = m_pTransform->GetPosition();
-		m_dragStartScale = m_pTransform->GetScale();
+		m_dragStartPosition = m_pHandleTarget->GetPosition();
+		m_dragStartScale = m_pHandleTarget->GetScale();
 		m_dragStartMousePos = HandleContext::GetViewportMousePos();
 		m_dragStartHandleSize = Size();
 
@@ -285,7 +285,7 @@ namespace emberEditor
 		TryPickAxisSubHandle(ScaleHandle::SubHandle::axisX, localToWorldMatrix * TransformHandle::GetRotationX(), ray, closestHitDistanceSq);
 		TryPickAxisSubHandle(ScaleHandle::SubHandle::axisY, localToWorldMatrix * TransformHandle::GetRotationY(), ray, closestHitDistanceSq);
 		TryPickAxisSubHandle(ScaleHandle::SubHandle::axisZ, localToWorldMatrix * TransformHandle::GetRotationZ(), ray, closestHitDistanceSq);
-		TryPickCubeSubHandle(ScaleHandle::SubHandle::center, m_pTransform->GetPosition(), ray, closestHitDistanceSq);
+		TryPickCubeSubHandle(ScaleHandle::SubHandle::center, m_pHandleTarget->GetPosition(), ray, closestHitDistanceSq);
 	}
 
 
@@ -295,7 +295,7 @@ namespace emberEditor
 	{
 		if (!HasTarget())
 			return 1.0f;
-		return SizeAtPosition(m_pTransform->GetPosition());
+		return SizeAtPosition(m_pHandleTarget->GetPosition());
 	}
 	float ScaleHandle::SizeAtPosition(const Float3& position) const
 	{
@@ -306,13 +306,13 @@ namespace emberEditor
         // Scaling handle only support local space.
 		if (!HasTarget())
 			return Float4x4::identity;
-		return m_pTransform->GetRotation4x4();
+		return m_pHandleTarget->GetRotation4x4();
 	}
 	Float4x4 ScaleHandle::LocalToWorldMatrix()
 	{
 		if (!HasTarget())
 			return Float4x4::identity;
-		return Float4x4::TRS(m_pTransform->GetPosition(), HandleRotationMatrix(), Size());
+		return Float4x4::TRS(m_pHandleTarget->GetPosition(), HandleRotationMatrix(), Size());
 	}
 	Float4 ScaleHandle::SubHandleStateColor(ScaleHandle::SubHandle subHandle)
 	{
@@ -356,7 +356,7 @@ namespace emberEditor
 			if (math::Abs(scale[i]) < s_minScaleMagnitude)
 				scale[i] = scale[i] < 0.0f ? -s_minScaleMagnitude : s_minScaleMagnitude;
 		}
-		m_pTransform->SetScale(scale);
+		m_pHandleTarget->SetScale(scale);
 	}
 	void ScaleHandle::TryPickAxisSubHandle(ScaleHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq)
 	{

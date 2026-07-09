@@ -1,5 +1,6 @@
 #pragma once
 #include "emberMath.h"
+#include "iHandleTarget.h"
 #include "mesh.h"
 #include <cstdint>
 
@@ -10,13 +11,6 @@ namespace emberCore
 {
 	class ShaderProperties;
 }
-namespace emberEcs
-{
-	class Transform;
-}
-
-
-
 namespace emberEditor
 {
 	class RotateHandle
@@ -33,7 +27,7 @@ namespace emberEditor
 	private: // Members:
         float m_handleScale;
 		CoordinateSpace m_coordinateSpace;
-		emberEcs::Transform* m_pTransform;
+		IHandleTarget* m_pHandleTarget;
         // Geometry:
 		static float s_arcStart;
 		static float s_arcEnd;
@@ -60,7 +54,7 @@ namespace emberEditor
 		~RotateHandle();
 
 		// Target:
-		void SetTarget(emberEcs::Transform* pTransform);
+		void SetTarget(IHandleTarget* pHandleTarget);
 		void ClearTarget();
 		bool HasTarget() const;
 
