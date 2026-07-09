@@ -18,6 +18,8 @@ namespace emberMath
     public: // Methods:
         // Constructors:
 		RotatedBounds();
+		RotatedBounds(const Float3& center, const Float3& extent);
+		RotatedBounds(const Float3& center, const Float3& extent, const Float3x3& rotation);
 		RotatedBounds(const Bounds& bounds);
 		RotatedBounds(const Bounds& bounds, const Float3x3& rotation);
 

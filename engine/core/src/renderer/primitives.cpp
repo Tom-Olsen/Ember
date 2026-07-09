@@ -176,11 +176,34 @@ namespace emberCore
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
 		};
 
-		// Horizontal:
+		// Horizontal/Vertical/Depth:
 		line(0, 4); line(1, 5); line(2, 6); line(3, 7);
-		// Vertical:
 		line(0, 2); line(1, 3); line(4, 6); line(5, 7);
-		// Depth:
+		line(0, 1); line(2, 3); line(4, 5); line(6, 7);
+	}
+
+	void Primitives::DrawRotatedBounds(const Float4x4& localToWorldMatrix, const RotatedBounds& bounds, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode)
+	{
+		std::array<Float3, 8> corners = bounds.GetCorners();
+
+		for (uint32_t i = 0; i < 8; i++)
+		{
+			Float3 pos = Float3(localToWorldMatrix * Float4(corners[i], 1.0f));
+			ShaderProperties shaderProperties = DrawSphere(Float4x4::TRS(pos, Float3x3::identity, width), material, receiveShadows, castShadows, asGizmo, cullMode);
+			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
+		}
+
+		auto line = [&](uint32_t a, uint32_t b)
+		{
+			Float3 pa = Float3(localToWorldMatrix * Float4(corners[a], 1.0f));
+			Float3 pb = Float3(localToWorldMatrix * Float4(corners[b], 1.0f));
+			ShaderProperties shaderProperties = DrawLineSegment(pa, pb, width, material, receiveShadows, castShadows, asGizmo, cullMode);
+			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", color);
+		};
+
+		// Horizontal/Vertical/Depth:
+		line(0, 4); line(1, 5); line(2, 6); line(3, 7);
+		line(0, 2); line(1, 3); line(4, 6); line(5, 7);
 		line(0, 1); line(2, 3); line(4, 5); line(6, 7);
 	}
 }

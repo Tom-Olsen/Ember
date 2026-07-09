@@ -95,6 +95,10 @@ namespace emberCore
 	{
 		Primitives::DrawBounds(localToWorldMatrix, bounds, width, s_material, s_color, false, false, true, s_cullMode);
 	}
+	void Gizmo::DrawRotatedBounds(const Float4x4& localToWorldMatrix, const RotatedBounds& bounds, float width)
+	{
+		Primitives::DrawRotatedBounds(localToWorldMatrix, bounds, width, s_material, s_color, false, false, true, s_cullMode);
+	}
 
 
 

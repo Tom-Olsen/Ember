@@ -29,5 +29,6 @@ namespace emberCore
 		static void DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
+		static void DrawRotatedBounds(const Float4x4& localToWorldMatrix, const RotatedBounds& bounds, float width, const Material& material, const Float4& color, bool receiveShadows, bool castShadows, bool asGizmo, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
 	};
 }

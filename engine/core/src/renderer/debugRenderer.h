@@ -42,6 +42,7 @@ namespace emberCore
 		static void DrawFrustum(const Float4x4& localToWorldMatrix, const Float4x4& projectionMatrix, float width = 0.1f);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds2d& bounds, float width = 0.1f);
 		static void DrawBounds(const Float4x4& localToWorldMatrix, const Bounds& bounds, float width = 0.1f);
+		static void DrawRotatedBounds(const Float4x4& localToWorldMatrix, const RotatedBounds& bounds, float width = 0.1f);
 
         // Setters:
         static void SetReceiveShadows(bool value);

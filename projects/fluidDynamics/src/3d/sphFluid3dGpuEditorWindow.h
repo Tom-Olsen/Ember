@@ -4,7 +4,7 @@
 #include "gui.h"
 #include "sphFluid3dGpu.h"
 #include "transformHandle.h"
-#include "boundsHandleTarget.h"
+#include "rotatedBoundsHandleTarget.h"
 
 
 
@@ -19,7 +19,7 @@ namespace emberEditor
 
 	private:
         TransformHandle m_transformHandle;
-		BoundsHandleTarget m_boundsHandleTarget;
+		RotatedBoundsHandleTarget m_boundsHandleTarget;
 		fluidDynamics::SphFluid3dGpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
@@ -35,7 +35,7 @@ namespace emberEditor
 		float m_nearPressureRatio;
 		float m_gravity;
 		float m_maxVelocity;
-        Bounds m_bounds;
+        RotatedBounds m_bounds;
 		float m_attractorRadius;
 		float m_attractorStrength;
 		int m_colorMode;

@@ -91,6 +91,10 @@ namespace emberCore
 	{
 		Primitives::DrawBounds(localToWorldMatrix, bounds, width, s_material, s_color, s_receiveShadows, s_castShadows, false);
 	}
+	void DebugRenderer::DrawRotatedBounds(const Float4x4& localToWorldMatrix, const RotatedBounds& bounds, float width)
+	{
+		Primitives::DrawRotatedBounds(localToWorldMatrix, bounds, width, s_material, s_color, s_receiveShadows, s_castShadows, false);
+	}
 
 
 

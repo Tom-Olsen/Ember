@@ -137,10 +137,12 @@ namespace fluidDynamics
 		rungeKutta2Step1ComputeShader.SetValue("ShaderValues", "maxVelocity", maxVelocity);
 		rungeKutta2Step2ComputeShader.SetValue("ShaderValues", "maxVelocity", maxVelocity);
 	}
-	void SphFluid3dGpuSolver::ComputeShaders::SetFluidBounds(const Bounds& bounds)
+	void SphFluid3dGpuSolver::ComputeShaders::SetFluidBounds(const RotatedBounds& bounds)
 	{
-		boundaryCollisionsComputeShader.SetValue("Values", "min", bounds.GetMin());
-		boundaryCollisionsComputeShader.SetValue("Values", "max", bounds.GetMax());
+		boundaryCollisionsComputeShader.SetValue("Values", "min", bounds.localBounds.GetMin());
+		boundaryCollisionsComputeShader.SetValue("Values", "max", bounds.localBounds.GetMax());
+		boundaryCollisionsComputeShader.SetValue("Values", "rotation", bounds.GetRotation4x4());
+		boundaryCollisionsComputeShader.SetValue("Values", "inverseRotation", bounds.GetRotation4x4().Inverse());
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetAttractorRadius(float attractorRadius)
 	{

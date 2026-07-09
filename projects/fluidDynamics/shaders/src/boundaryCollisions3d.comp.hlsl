@@ -7,6 +7,8 @@ cbuffer Values : register(b300, SHADER_SET)
     float collisionDampening;
     float3 min;
     float3 max;
+    float4x4 rotation;
+    float4x4 inverseRotation;
 };
 RWStructuredBuffer<float3> positionBuffer : register(u200, CALL_SET);
 RWStructuredBuffer<float3> velocityBuffer : register(u201, CALL_SET);
@@ -21,35 +23,55 @@ void main(uint3 threadID : SV_DispatchThreadID)
     
     if (index < pc.threadCount.x)
     {
-        if (positionBuffer[index].x < min.x)
+        // Transform world to local:
+        float3 center = 0.5f * (min + max);
+        float3 localPosition = center + mul(inverseRotation, float4(positionBuffer[index] - center, 0.0f)).xyz;
+        float3 localVelocity = mul(inverseRotation, float4(velocityBuffer[index], 0.0f)).xyz;
+
+        // Resolve collisions in local frame:
+        bool collided = false;
+        if (localPosition.x < min.x)
         {
-            positionBuffer[index].x = min.x + boundaryOffset;
-            velocityBuffer[index].x *= -collisionDampening;
+            localPosition.x = min.x + boundaryOffset;
+            localVelocity.x *= -collisionDampening;
+            collided = true;
         }
-        if (positionBuffer[index].x > max.x)
+        if (localPosition.x > max.x)
         {
-            positionBuffer[index].x = max.x - boundaryOffset;
-            velocityBuffer[index].x *= -collisionDampening;
+            localPosition.x = max.x - boundaryOffset;
+            localVelocity.x *= -collisionDampening;
+            collided = true;
         }
-        if (positionBuffer[index].y < min.y)
+        if (localPosition.y < min.y)
         {
-            positionBuffer[index].y = min.y + boundaryOffset;
-            velocityBuffer[index].y *= -collisionDampening;
+            localPosition.y = min.y + boundaryOffset;
+            localVelocity.y *= -collisionDampening;
+            collided = true;
         }
-        if (positionBuffer[index].y > max.y)
+        if (localPosition.y > max.y)
         {
-            positionBuffer[index].y = max.y - boundaryOffset;
-            velocityBuffer[index].y *= -collisionDampening;
+            localPosition.y = max.y - boundaryOffset;
+            localVelocity.y *= -collisionDampening;
+            collided = true;
         }
-        if (positionBuffer[index].z < min.z)
+        if (localPosition.z < min.z)
         {
-            positionBuffer[index].z = min.z + boundaryOffset;
-            velocityBuffer[index].z *= -collisionDampening;
+            localPosition.z = min.z + boundaryOffset;
+            localVelocity.z *= -collisionDampening;
+            collided = true;
         }
-        if (positionBuffer[index].z > max.z)
+        if (localPosition.z > max.z)
         {
-            positionBuffer[index].z = max.z - boundaryOffset;
-            velocityBuffer[index].z *= -collisionDampening;
+            localPosition.z = max.z - boundaryOffset;
+            localVelocity.z *= -collisionDampening;
+            collided = true;
+        }
+
+        // Transform local to world and write back:
+        if (collided)
+        {
+            positionBuffer[index] = center + mul(rotation, float4(localPosition - center, 0.0f)).xyz;
+            velocityBuffer[index] = mul(rotation, float4(localVelocity, 0.0f)).xyz;
         }
     }
 }

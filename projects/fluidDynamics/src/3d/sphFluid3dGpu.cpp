@@ -31,7 +31,7 @@ namespace fluidDynamics
 			SetPressureMultiplier(300.0f);
 			SetGravity(5.0f);
 			SetMaxVelocity(5.0f);
-			SetFluidBounds(Bounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
+			SetFluidBounds(RotatedBounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
 
 			// User Interaction:
 			SetAttractorRadius(6.0f);
@@ -282,13 +282,13 @@ namespace fluidDynamics
 			m_particleMaterial.SetValue("Values", "maxVelocity", m_settings.maxVelocity);
 		}
 	}
-	void SphFluid3dGpu::SetFluidBounds(const Bounds& bounds)
+	void SphFluid3dGpu::SetFluidBounds(const RotatedBounds& bounds)
 	{
 		if (m_forceSetters || m_settings.fluidBounds != bounds)
 		{
 			m_settings.fluidBounds = bounds;
 			m_computeShaders.SetFluidBounds(m_settings.fluidBounds);
-			SetAttractorPoint(m_settings.fluidBounds.center);
+			SetAttractorPoint(m_settings.fluidBounds.localBounds.center);
 		}
 	}
 	void SphFluid3dGpu::SetAttractorRadius(float attractorRadius)
@@ -417,7 +417,7 @@ namespace fluidDynamics
 	{
 		return m_settings.maxVelocity;
 	}
-	Bounds SphFluid3dGpu::GetFluidBounds() const
+	RotatedBounds SphFluid3dGpu::GetFluidBounds() const
 	{
 		return m_settings.fluidBounds;
 	}

@@ -11,6 +11,16 @@ namespace emberMath
 	{
 		m_rotation = Float3x3::identity;
 	}
+	RotatedBounds::RotatedBounds(const Float3& center, const Float3& extent)
+    {
+        localBounds = Bounds(center, extent);
+		m_rotation = Float3x3::identity;
+    }
+	RotatedBounds::RotatedBounds(const Float3& center, const Float3& extent, const Float3x3& rotation)
+    {
+        localBounds = Bounds(center, extent);
+		SetRotationMatrix(rotation);
+    }
 	RotatedBounds::RotatedBounds(const Bounds& bounds)
 	: localBounds(bounds)
 	{

@@ -39,7 +39,7 @@ namespace fluidDynamics
 			void SetNearPressureRatio(float nearPressureRatio);
 			void SetGravity(float gravity);
 			void SetMaxVelocity(float maxVelocity);
-			void SetFluidBounds(const Bounds& bounds);
+			void SetFluidBounds(const RotatedBounds& bounds);
 			void SetAttractorRadius(float attractorRadius);
 			void SetAttractorStrength(float attractorStrength);
 			void SetAttractorState(int attractorState);
@@ -58,7 +58,7 @@ namespace fluidDynamics
 			float nearPressureRatio;
 			float gravity;
 			float maxVelocity;
-			Bounds fluidBounds;
+			RotatedBounds fluidBounds;
 		};
 		struct ScratchData
 		{
