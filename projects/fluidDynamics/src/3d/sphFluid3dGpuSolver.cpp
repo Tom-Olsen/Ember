@@ -223,6 +223,10 @@ namespace fluidDynamics
 		ComputeRungeKutta2Step1(computeShaders, dt, forceDensityBufferView, destinationDensityBufferView, currentPositionBufferView, currentVelocityBufferView, kp1BufferView, kv1BufferView, tempPositionBufferView, tempVelocityBufferView);
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 
+		// Resolve boundary collisions for the intermediate Runge-Kutta state:
+		ComputeBoundaryCollisions(computeShaders, tempPositionBufferView, tempVelocityBufferView);
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+
 		// Update hash grid for fast nearest neighbor particle look up:
 		if (settings.useHashGridOptimization)
 		{

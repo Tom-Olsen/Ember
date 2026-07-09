@@ -141,7 +141,7 @@ namespace fluidDynamics
 		DebugRenderer::SetColor(Float4::white);
 		DebugRenderer::SetReceiveShadows(false);
 		DebugRenderer::SetCastShadows(false);
-		DebugRenderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.2f);
+		DebugRenderer::DrawRotatedBounds(localToWorld, m_settings.fluidBounds, 0.2f);
 		if (m_attractor.state != 0)
 		{
 			Float4x4 attractorLocalToWorld = localToWorld * Float4x4::Translate(m_attractor.point);
