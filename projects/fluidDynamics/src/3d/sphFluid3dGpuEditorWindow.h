@@ -23,6 +23,7 @@ namespace emberEditor
 		fluidDynamics::SphFluid3dGpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
+		float m_physicsTimeScale;
 		bool m_useGridOptimization;
 		int m_particleCount;
 		float m_effectRadius;
@@ -78,6 +79,7 @@ namespace emberEditor
 			// Fields:
 			Gui::Checkbox("Is Running:", &m_isRunning);
 			Gui::DragFloat("Time Scale:", &m_timeScale);
+			Gui::DragFloat("Physics Time Scale:", &m_physicsTimeScale);
 			Gui::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
 			Gui::Text(("Time Step:" + std::to_string(m_pScript->GetTimeStep())).c_str());
 			Gui::DragInt("Particle Count:", &m_particleCount);
@@ -116,6 +118,7 @@ namespace emberEditor
 		{
 			m_isRunning = m_pScript->GetIsRunning();
 			m_timeScale = m_pScript->GetTimeScale();
+			m_physicsTimeScale = m_pScript->GetPhysicsTimeScale();
 			m_useGridOptimization = m_pScript->GetUseGridOptimization();
 			m_particleCount = m_pScript->GetParticleCount();
 			m_effectRadius = m_pScript->GetEffectRadius();
@@ -138,6 +141,7 @@ namespace emberEditor
 		{
 			m_pScript->SetIsRunning(m_isRunning);
 			m_pScript->SetTimeScale(m_timeScale);
+			m_pScript->SetPhysicsTimeScale(m_physicsTimeScale);
 			m_pScript->SetUseHashGridOptimization(m_useGridOptimization);
 			m_pScript->SetParticleCount(m_particleCount);
 			m_pScript->SetEffectRadius(m_effectRadius);

@@ -22,7 +22,8 @@ namespace fluidDynamics
 		// Management:
 		bool m_isRunning = false;
 		bool m_reset = false;
-		float m_timeScale = 1.0f;
+		float m_timeScale = 1.0f;           // increases the number of timesteps per fixedDeltaTime physics timestep. E.g. m_timeScale = 2.0f, means 2 full simulation steps per fixed update.
+        float m_physicsTimeScale = 1.25f;   // gets multiplied to certain values physical quantities to make the physics itself interact faster.
 		uint32_t m_timeStep = 0;
 		int m_particleCount = -1;
         bool m_forceSetters = false;
@@ -63,6 +64,7 @@ namespace fluidDynamics
 		void Reset();
 		void SetIsRunning(bool isRunning);
 		void SetTimeScale(float timeScale);
+		void SetPhysicsTimeScale(float physicsTimeScale);
 		void SetUseHashGridOptimization(bool useGridOptimization);
 		void SetParticleCount(int particleCount);
 		void SetEffectRadius(float effectRadius);
@@ -87,6 +89,7 @@ namespace fluidDynamics
 		// Getters:
 		bool GetIsRunning() const;
 		float GetTimeScale() const;
+		float GetPhysicsTimeScale() const;
 		bool GetUseGridOptimization() const;
 		uint32_t GetTimeStep() const;
 		int GetParticleCount() const;

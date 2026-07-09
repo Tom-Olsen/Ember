@@ -28,42 +28,42 @@ void main(uint3 threadID : SV_DispatchThreadID)
         float3 localPosition = center + mul(inverseRotation, float4(positionBuffer[index] - center, 0.0f)).xyz;
         float3 localVelocity = mul(inverseRotation, float4(velocityBuffer[index], 0.0f)).xyz;
 
-        // Resolve collisions in local frame:
+        // Resolve collisions in local frame (abs ensures inward movement):
         bool collided = false;
         if (localPosition.x < min.x)
         {
             localPosition.x = min.x + boundaryOffset;
-            localVelocity.x *= -collisionDampening;
+            localVelocity.x = abs(localVelocity.x) * collisionDampening;
             collided = true;
         }
         if (localPosition.x > max.x)
         {
             localPosition.x = max.x - boundaryOffset;
-            localVelocity.x *= -collisionDampening;
+            localVelocity.x = -abs(localVelocity.x) * collisionDampening;
             collided = true;
         }
         if (localPosition.y < min.y)
         {
             localPosition.y = min.y + boundaryOffset;
-            localVelocity.y *= -collisionDampening;
+            localVelocity.y = abs(localVelocity.y) * collisionDampening;
             collided = true;
         }
         if (localPosition.y > max.y)
         {
             localPosition.y = max.y - boundaryOffset;
-            localVelocity.y *= -collisionDampening;
+            localVelocity.y = -abs(localVelocity.y) * collisionDampening;
             collided = true;
         }
         if (localPosition.z < min.z)
         {
             localPosition.z = min.z + boundaryOffset;
-            localVelocity.z *= -collisionDampening;
+            localVelocity.z = abs(localVelocity.z) * collisionDampening;
             collided = true;
         }
         if (localPosition.z > max.z)
         {
             localPosition.z = max.z - boundaryOffset;
-            localVelocity.z *= -collisionDampening;
+            localVelocity.z = -abs(localVelocity.z) * collisionDampening;
             collided = true;
         }
 

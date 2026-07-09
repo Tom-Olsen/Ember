@@ -80,7 +80,7 @@ Scene* Fluid3dScene()
 	}
 	{ // Floor:
 		Entity entity = Entity::Create("floor");
-		Float3 pos = Float3(0.0f, 0.0f, -9.5f);
+		Float3 pos = Float3(0.0f, 0.0f, -12.0f);
 
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(pos);

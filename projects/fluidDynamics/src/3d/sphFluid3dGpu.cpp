@@ -18,6 +18,7 @@ namespace fluidDynamics
 		{
 			// Management:
 			SetTimeScale(1.0f);
+            SetPhysicsTimeScale(1.1f);
 			SetParticleCount(100000);
 
 			// Settings:
@@ -29,9 +30,9 @@ namespace fluidDynamics
 			SetCollisionDampening(0.5f);
 			SetTargetDensity(12.5f);
 			SetPressureMultiplier(300.0f);
-			SetGravity(5.0f);
-			SetMaxVelocity(5.0f);
-			SetFluidBounds(RotatedBounds(Float3::zero, Float3(16.0f, 9.0f, 9.0f)));
+			SetGravity(9.81f);
+			SetMaxVelocity(30.0f);
+			SetFluidBounds(RotatedBounds(Float3::zero, Float3(16.0f, 12.0f, 10.0f)));
 
 			// User Interaction:
 			SetAttractorRadius(6.0f);
@@ -40,7 +41,7 @@ namespace fluidDynamics
 
 			// Visuals:
 			SetColorMode(0);
-			SetInitialDistributionRadius(7.5f);
+			SetInitialDistributionRadius(9.0f);
 			SetVisualRadius(0.2f);
 		}
         m_forceSetters = false;
@@ -176,6 +177,22 @@ namespace fluidDynamics
 	{
 		m_timeScale = timeScale;
 	}
+	void SphFluid3dGpu::SetPhysicsTimeScale(float physicsTimeScale)
+	{
+		physicsTimeScale = math::Max(1e-4f, physicsTimeScale);
+		if (m_forceSetters || m_physicsTimeScale != physicsTimeScale)
+		{
+			m_physicsTimeScale = physicsTimeScale;
+		    float accelerationScale = m_physicsTimeScale * m_physicsTimeScale;
+		    m_computeShaders.SetViscosity(m_physicsTimeScale * m_settings.viscosity);
+		    m_computeShaders.SetSurfaceTension(accelerationScale * m_settings.surfaceTension);
+		    m_computeShaders.SetPressureMultiplier(accelerationScale * m_settings.pressureMultiplier);
+		    m_computeShaders.SetGravity(accelerationScale * m_settings.gravity);
+		    m_computeShaders.SetMaxVelocity(m_physicsTimeScale * m_settings.maxVelocity);
+		    m_computeShaders.SetAttractorStrength(accelerationScale * m_attractor.strength);
+		    m_particleMaterial.SetValue("Values", "maxVelocity", m_physicsTimeScale * m_settings.maxVelocity);
+		}
+	}
 	void SphFluid3dGpu::SetUseHashGridOptimization(bool useGridOptimization)
 	{
 		if (m_forceSetters || m_settings.useHashGridOptimization != useGridOptimization)
@@ -218,7 +235,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_settings.viscosity != viscosity)
 		{
 			m_settings.viscosity = viscosity;
-			m_computeShaders.SetViscosity(m_settings.viscosity);
+			m_computeShaders.SetViscosity(m_physicsTimeScale * m_settings.viscosity);
 		}
 	}
 	void SphFluid3dGpu::SetSurfaceTension(float surfaceTension)
@@ -226,7 +243,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_settings.surfaceTension != surfaceTension)
 		{
 			m_settings.surfaceTension = surfaceTension;
-			m_computeShaders.SetSurfaceTension(m_settings.surfaceTension);
+			m_computeShaders.SetSurfaceTension(m_physicsTimeScale * m_physicsTimeScale * m_settings.surfaceTension);
 		}
 	}
 	void SphFluid3dGpu::SetCollisionDampening(float collisionDampening)
@@ -252,7 +269,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_settings.pressureMultiplier != pressureMultiplier)
 		{
 			m_settings.pressureMultiplier = pressureMultiplier;
-			m_computeShaders.SetPressureMultiplier(m_settings.pressureMultiplier);
+			m_computeShaders.SetPressureMultiplier(m_physicsTimeScale * m_physicsTimeScale * m_settings.pressureMultiplier);
 		}
 	}
 	void SphFluid3dGpu::SetNearPressureRatio(float nearPressureRatio)
@@ -269,7 +286,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_settings.gravity != gravity)
 		{
 			m_settings.gravity = gravity;
-			m_computeShaders.SetGravity(m_settings.gravity);
+			m_computeShaders.SetGravity(m_physicsTimeScale * m_physicsTimeScale * m_settings.gravity);
 		}
 	}
 	void SphFluid3dGpu::SetMaxVelocity(float maxVelocity)
@@ -278,8 +295,8 @@ namespace fluidDynamics
 		if (m_forceSetters || m_settings.maxVelocity != maxVelocity)
 		{
 			m_settings.maxVelocity = maxVelocity;
-			m_computeShaders.SetMaxVelocity(m_settings.maxVelocity);
-			m_particleMaterial.SetValue("Values", "maxVelocity", m_settings.maxVelocity);
+			m_computeShaders.SetMaxVelocity(m_physicsTimeScale * m_settings.maxVelocity);
+			m_particleMaterial.SetValue("Values", "maxVelocity", m_physicsTimeScale * m_settings.maxVelocity);
 		}
 	}
 	void SphFluid3dGpu::SetFluidBounds(const RotatedBounds& bounds)
@@ -307,7 +324,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_attractor.strength != attractorStrength)
 		{
 			m_attractor.strength = attractorStrength;
-			m_computeShaders.SetAttractorStrength(m_attractor.strength);
+			m_computeShaders.SetAttractorStrength(m_physicsTimeScale * m_physicsTimeScale * m_attractor.strength);
 		}
 	}
 	void SphFluid3dGpu::SetAttractorState(int attractorState)
@@ -364,6 +381,10 @@ namespace fluidDynamics
 	float SphFluid3dGpu::GetTimeScale() const
 	{
 		return m_timeScale;
+	}
+	float SphFluid3dGpu::GetPhysicsTimeScale() const
+	{
+		return m_physicsTimeScale;
 	}
 	bool SphFluid3dGpu::GetUseGridOptimization() const
 	{
