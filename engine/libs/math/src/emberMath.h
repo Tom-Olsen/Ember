@@ -27,6 +27,7 @@
 #include "quad.h"
 #include "ray.h"
 #include "sphere.h"
+#include "transformedBounds.h"
 
 // Random:
 #include "mathConstants.h"

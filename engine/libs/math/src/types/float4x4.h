@@ -56,7 +56,7 @@ namespace emberMath
 		 float column3x, float column3y, float column3z, float column3w);
 
 		// Math operations:
-		Float4x4 Transpose();
+		Float4x4 Transpose() const;
 		float Determinant() const;
 		Float4x4 Inverse() const;
 		Float4x4 Inverse(float det) const;

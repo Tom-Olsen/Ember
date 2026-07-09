@@ -201,11 +201,11 @@ namespace emberMath
 
 
 	// Equality:
-	bool Bounds::operator == (const Bounds & other)
+	bool Bounds::operator == (const Bounds & other) const
 	{
 		return center == other.center && extent == other.extent;
 	}
-	bool Bounds::operator!=(const Bounds& other)
+	bool Bounds::operator!=(const Bounds& other) const
 	{
 		return !((*this) == other);
 	}

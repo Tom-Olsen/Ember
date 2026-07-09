@@ -100,7 +100,7 @@ namespace emberMath
 
 
 	// Math operations:
-	Float4x4 Float4x4::Transpose()
+	Float4x4 Float4x4::Transpose() const
 	{
 		return Float4x4
 		(data[0], data[4], data[8], data[12],

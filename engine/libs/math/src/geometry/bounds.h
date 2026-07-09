@@ -35,7 +35,7 @@ namespace emberMath
 		void SetMinMax(const Float3& min, const Float3& max);
 
 		// Methods:
-		Float3 ClosestPoint(const Float3& point) const; // point outside => closest point on surface. pointinside => point.
+		Float3 ClosestPoint(const Float3& point) const; // point outside => closest point on surface. point inside => point.
 		bool Contains(const Float3& point) const;
 		void Encapsulate(const Float3& point);
 		void Encapsulate(const Bounds& bounds);
@@ -44,8 +44,8 @@ namespace emberMath
 		std::optional<Float3> IntersectRay(const Ray& ray) const;	// Math::TODO: needs unit test
 
 		// Equallity:
-		bool operator==(const Bounds& other);	// Math::TODO: needs unit test	
-		bool operator!=(const Bounds& other);	// Math::TODO: needs unit test
+		bool operator==(const Bounds& other) const;	// Math::TODO: needs unit test	
+		bool operator!=(const Bounds& other) const;	// Math::TODO: needs unit test
 
 		// Logging:
 		std::string ToString() const;
