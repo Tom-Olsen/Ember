@@ -72,17 +72,17 @@ namespace emberEditor
 		if (GetIsDragging())
 			return;
 
-		if (emberCore::EventSystem::KeyDown(emberCommon::Input::Key::W))
+		if (emberCore::EventSystem::KeyDown(emberCommon::Input::Key::W) && m_pHandleTarget->CanTranslate())
 		{
 			SetMode(Mode::translate);
 			emberCore::EventSystem::ConsumeKey(emberCommon::Input::Key::W);
 		}
-		if (emberCore::EventSystem::KeyDown(emberCommon::Input::Key::E))
+		if (emberCore::EventSystem::KeyDown(emberCommon::Input::Key::E) && m_pHandleTarget->CanRotate())
 		{
 			SetMode(Mode::rotate);
 			emberCore::EventSystem::ConsumeKey(emberCommon::Input::Key::E);
 		}
-		if (emberCore::EventSystem::KeyDown(emberCommon::Input::Key::R))
+		if (emberCore::EventSystem::KeyDown(emberCommon::Input::Key::R) && m_pHandleTarget->CanScale())
 		{
 			SetMode(Mode::scale);
 			emberCore::EventSystem::ConsumeKey(emberCommon::Input::Key::R);
