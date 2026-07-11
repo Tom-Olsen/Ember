@@ -18,13 +18,14 @@ namespace emberEditor
 
 
 	private:
-        TransformHandle m_transformHandle;
+		TransformHandle m_transformHandle;
 		RotatedBoundsHandleTarget m_boundsHandleTarget;
 		fluidDynamics::SphFluid3dGpu* m_pScript;
 		bool m_isRunning;
 		float m_timeScale;
 		float m_physicsTimeScale;
 		bool m_useGridOptimization;
+		bool m_computeDensityTexture3d;
 		int m_particleCount;
 		float m_effectRadius;
 		float m_mass;
@@ -81,6 +82,7 @@ namespace emberEditor
 			Gui::DragFloat("Time Scale:", &m_timeScale);
 			Gui::DragFloat("Physics Time Scale:", &m_physicsTimeScale);
 			Gui::Checkbox("Use Grid Optimization:", &m_useGridOptimization);
+			Gui::Checkbox("Compute Density Texture 3d:", &m_computeDensityTexture3d);
 			Gui::Text(("Time Step:" + std::to_string(m_pScript->GetTimeStep())).c_str());
 			Gui::DragInt("Particle Count:", &m_particleCount);
 			Gui::DragFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
@@ -120,6 +122,7 @@ namespace emberEditor
 			m_timeScale = m_pScript->GetTimeScale();
 			m_physicsTimeScale = m_pScript->GetPhysicsTimeScale();
 			m_useGridOptimization = m_pScript->GetUseGridOptimization();
+			m_computeDensityTexture3d = m_pScript->GetComputeDensityTexture3d();
 			m_particleCount = m_pScript->GetParticleCount();
 			m_effectRadius = m_pScript->GetEffectRadius();
 			m_mass = m_pScript->GetMass();
@@ -143,6 +146,7 @@ namespace emberEditor
 			m_pScript->SetTimeScale(m_timeScale);
 			m_pScript->SetPhysicsTimeScale(m_physicsTimeScale);
 			m_pScript->SetUseHashGridOptimization(m_useGridOptimization);
+			m_pScript->SetComputeDensityTexture3d(m_computeDensityTexture3d);
 			m_pScript->SetParticleCount(m_particleCount);
 			m_pScript->SetEffectRadius(m_effectRadius);
 			m_pScript->SetMass(m_mass);

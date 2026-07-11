@@ -21,10 +21,12 @@
 #include "vulkanSampleTextureCube.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageTexture2d.h"
+#include "vulkanStorageTexture3d.h"
 #include "vulkanShader.h"
 #include "vulkanShadowRenderPass.h"
 #include "vulkanTexture.h"
 #include "vulkanTexture2d.h"
+#include "vulkanTexture3d.h"
 #include "vulkanTextureCube.h"
 #include <assert.h>
 #include <vulkan/vulkan.h>
@@ -78,7 +80,7 @@ namespace vulkanRendererBackend
 					VkImageViewType viewType = static_cast<VkImageViewType>(descriptorReflection.GetImageDescriptor()->imageViewType);
 					if (viewType == VK_IMAGE_VIEW_TYPE_1D) throw std::runtime_error("Initialization for storage Texture1d descriptorSet not implemented yet!");
 					else if (viewType == VK_IMAGE_VIEW_TYPE_2D) InitTextureBinding(frameIndex, binding, static_cast<Texture2d*>(DefaultGpuResources::GetDefaultStorageTexture2d()), descriptorType);
-					else if (viewType == VK_IMAGE_VIEW_TYPE_3D) throw std::runtime_error("Initialization for storage Texture3d descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_3D) InitTextureBinding(frameIndex, binding, static_cast<Texture3d*>(DefaultGpuResources::GetDefaultStorageTexture3d()), descriptorType);
 					else if (viewType == VK_IMAGE_VIEW_TYPE_CUBE) throw std::runtime_error("Initialization for storage CubeTexture descriptorSet not implemented yet!");
 					else if (viewType == VK_IMAGE_VIEW_TYPE_1D_ARRAY) throw std::runtime_error("Initialization storage for Texture1dArray descriptorSet not implemented yet!");
 					else if (viewType == VK_IMAGE_VIEW_TYPE_2D_ARRAY) throw std::runtime_error("Initialization storage for Texture2dArray descriptorSet not implemented yet!");

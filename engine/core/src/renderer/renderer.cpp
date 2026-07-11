@@ -278,10 +278,10 @@ namespace emberCore
 	{
 		return s_pIRenderer->CreateTexture2d(width, height, format, usage, data);
 	}
-	//static emberBackendInterface::ITexture* Renderer::CreateTexture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
-	//{
-	//
-	//}
+	emberBackendInterface::ITexture* Renderer::CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	{
+		return s_pIRenderer->CreateTexture3d(width, height, depth, format, usage, data);
+	}
 	emberBackendInterface::ITexture* Renderer::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
 		return s_pIRenderer->CreateTextureCube(width, height, format, usage, data);

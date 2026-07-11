@@ -139,8 +139,8 @@ namespace fluidDynamics
 	}
 	void SphFluid2dGpuSolver::ComputeShaders::SetFluidBounds(const Bounds& bounds)
 	{
-		boundaryCollisionsComputeShader.SetValue("Values", "min", bounds.GetMin());
-		boundaryCollisionsComputeShader.SetValue("Values", "max", bounds.GetMax());
+		boundaryCollisionsComputeShader.SetValue("Values", "boundsMin", bounds.GetMin());
+		boundaryCollisionsComputeShader.SetValue("Values", "boundsMax", bounds.GetMax());
 	}
 	void SphFluid2dGpuSolver::ComputeShaders::SetAttractorRadius(float attractorRadius)
 	{

@@ -23,14 +23,9 @@ namespace emberMath
 		// Constructors:
 		Float4();
 		Float4(float xyzw);
-		Float4(float x, float y);
-		Float4(float x, float y, float z);
 		Float4(float x, float y, float z, float w);
-		explicit Float4(const Float2& xy);
-		explicit Float4(const Float2& xy, float z);
 		explicit Float4(const Float2& xy, float z, float w);
 		explicit Float4(const Float2& xy, Float2 zw);
-		explicit Float4(const Float3& xyz);
 		explicit Float4(const Float3& xyz, float w);
 		Float4(const Float4& xyzw);
 		static Float4 Direction(float theta, float phi);

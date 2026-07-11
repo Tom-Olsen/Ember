@@ -1,4 +1,6 @@
 #include "uint2.h"
+#include "float2.h"
+#include "int2.h"
 #include "mathFunctions.h"
 #include <cassert>
 #include <sstream>
@@ -12,6 +14,8 @@ namespace emberMath
 	Uint2::Uint2(uint32_t xy) : x(xy), y(xy) {}
 	Uint2::Uint2(uint32_t x, uint32_t y) : x(x), y(y) {}
 	Uint2::Uint2(const Uint2& xy) : x(xy.x), y(xy.y) {}
+	Uint2::Uint2(const Int2& xy) : x((uint32_t)xy.x), y((uint32_t)xy.y) {}
+	Uint2::Uint2(const Float2& xy) : x((uint32_t)xy.x), y((uint32_t)xy.y) {}
 
 
 

@@ -18,6 +18,15 @@ namespace vulkanRendererBackend
 		Init(format, width, height);
 		if (data)
 			SetData(data);
+		else
+		{
+			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
+			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
+			AccessMask dstAccessMask = AccessMasks::ComputeShader::memoryRead;
+			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		}
 	}
 	StorageSampleTexture2d::~StorageSampleTexture2d()
 	{

@@ -40,8 +40,7 @@ namespace emberCore
 		static std::string CreateUnnamedTextureName();
 
 	public: // Methods:
-		// Constructors/Destructor:
-		Texture();
+		// Constructor/Destructor:
 		Texture(emberBackendInterface::ITexture* pITexture, bool ownsTexture);
 		virtual ~Texture();
 
@@ -69,6 +68,7 @@ namespace emberCore
 		void SetRawData(std::span<const std::byte> data);
 
 	protected: // Methods:
+		Texture();
 		virtual uint64_t GetExpectedTexelCount() const;
 		std::vector<std::byte> ConvertToTextureFormat(std::span<const float> data, uint32_t sourceChannels) const;
 

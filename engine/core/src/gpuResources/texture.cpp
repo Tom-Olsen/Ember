@@ -28,13 +28,7 @@ namespace emberCore
 
 
 	// Public Methods:
-	// Constructors/Destructor:
-	Texture::Texture()
-	{
-		m_ownsITexture = false;
-        m_name = CreateUnnamedTextureName();
-		m_pITexture = nullptr;
-	}
+	// Constructor/Destructor:
 	Texture::Texture(emberBackendInterface::ITexture* pITexture, bool ownsTexture)
 	{
 		m_ownsITexture = ownsTexture;
@@ -148,6 +142,12 @@ namespace emberCore
 
 
 	// Protected methods:
+	Texture::Texture()
+	{
+		m_ownsITexture = false;
+        m_name = CreateUnnamedTextureName();
+		m_pITexture = nullptr;
+	}
 	uint64_t Texture::GetExpectedTexelCount() const
 	{
 		return static_cast<uint64_t>(GetWidth()) * GetHeight() * GetDepth();

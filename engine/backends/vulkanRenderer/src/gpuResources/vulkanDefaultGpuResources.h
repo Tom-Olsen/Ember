@@ -17,6 +17,7 @@ namespace vulkanRendererBackend
     class DescriptorSetBinding;
     class StorageBuffer;
     class StorageTexture2d;
+    class StorageTexture3d;
 
 
 
@@ -42,6 +43,7 @@ namespace vulkanRendererBackend
         static std::unique_ptr<SampleTextureCube> s_pDefaultSampleTextureCube;
         static std::unique_ptr<DepthTexture2dArray> s_pDefaultDepthTexture2dArray;
         static std::unique_ptr<StorageTexture2d> s_pDefaultStorageTexture2d;
+        static std::unique_ptr<StorageTexture3d> s_pDefaultStorageTexture3d;
 
     public: // Methods:
         static void InitSamplers();
@@ -65,6 +67,7 @@ namespace vulkanRendererBackend
         static SampleTextureCube* GetDefaultSampleTextureCube();
         static DepthTexture2dArray* GetDefaultDepthTexture2dArray();
         static StorageTexture2d* GetDefaultStorageTexture2d();
+        static StorageTexture3d* GetDefaultStorageTexture3d();
 
     private: // Methods
         static Mesh CreateDefaultRenderQuad();

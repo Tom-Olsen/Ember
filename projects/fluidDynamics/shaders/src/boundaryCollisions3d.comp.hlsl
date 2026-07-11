@@ -5,8 +5,8 @@
 cbuffer Values : register(b300, SHADER_SET)
 {
     float collisionDampening;
-    float3 min;
-    float3 max;
+    float3 boundsMin;
+    float3 boundsMax;
     float4x4 rotation;
     float4x4 inverseRotation;
 };
@@ -24,45 +24,45 @@ void main(uint3 threadID : SV_DispatchThreadID)
     if (index < pc.threadCount.x)
     {
         // Transform world to local:
-        float3 center = 0.5f * (min + max);
+        float3 center = 0.5f * (boundsMin + boundsMax);
         float3 localPosition = center + mul(inverseRotation, float4(positionBuffer[index] - center, 0.0f)).xyz;
         float3 localVelocity = mul(inverseRotation, float4(velocityBuffer[index], 0.0f)).xyz;
 
         // Resolve collisions in local frame (abs ensures inward movement):
         bool collided = false;
-        if (localPosition.x < min.x)
+        if (localPosition.x < boundsMin.x)
         {
-            localPosition.x = min.x + boundaryOffset;
+            localPosition.x = boundsMin.x + boundaryOffset;
             localVelocity.x = abs(localVelocity.x) * collisionDampening;
             collided = true;
         }
-        if (localPosition.x > max.x)
+        if (localPosition.x > boundsMax.x)
         {
-            localPosition.x = max.x - boundaryOffset;
+            localPosition.x = boundsMax.x - boundaryOffset;
             localVelocity.x = -abs(localVelocity.x) * collisionDampening;
             collided = true;
         }
-        if (localPosition.y < min.y)
+        if (localPosition.y < boundsMin.y)
         {
-            localPosition.y = min.y + boundaryOffset;
+            localPosition.y = boundsMin.y + boundaryOffset;
             localVelocity.y = abs(localVelocity.y) * collisionDampening;
             collided = true;
         }
-        if (localPosition.y > max.y)
+        if (localPosition.y > boundsMax.y)
         {
-            localPosition.y = max.y - boundaryOffset;
+            localPosition.y = boundsMax.y - boundaryOffset;
             localVelocity.y = -abs(localVelocity.y) * collisionDampening;
             collided = true;
         }
-        if (localPosition.z < min.z)
+        if (localPosition.z < boundsMin.z)
         {
-            localPosition.z = min.z + boundaryOffset;
+            localPosition.z = boundsMin.z + boundaryOffset;
             localVelocity.z = abs(localVelocity.z) * collisionDampening;
             collided = true;
         }
-        if (localPosition.z > max.z)
+        if (localPosition.z > boundsMax.z)
         {
-            localPosition.z = max.z - boundaryOffset;
+            localPosition.z = boundsMax.z - boundaryOffset;
             localVelocity.z = -abs(localVelocity.z) * collisionDampening;
             collided = true;
         }

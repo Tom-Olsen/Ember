@@ -12,6 +12,7 @@
 #include "vulkanShadowSampler.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageTexture2d.h"
+#include "vulkanStorageTexture3d.h"
 #include <array>
 #include <filesystem>
 
@@ -39,6 +40,7 @@ namespace vulkanRendererBackend
 	std::unique_ptr<SampleTextureCube> DefaultGpuResources::s_pDefaultSampleTextureCube = nullptr;
 	std::unique_ptr<DepthTexture2dArray> DefaultGpuResources::s_pDefaultDepthTexture2dArray = nullptr;
 	std::unique_ptr<StorageTexture2d> DefaultGpuResources::s_pDefaultStorageTexture2d = nullptr;
+	std::unique_ptr<StorageTexture3d> DefaultGpuResources::s_pDefaultStorageTexture3d = nullptr;
 
 
 
@@ -70,6 +72,7 @@ namespace vulkanRendererBackend
 		s_pDefaultSampleTextureCube = std::make_unique<SampleTextureCube>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, whiteFaces.data());
 		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>(VK_FORMAT_D32_SFLOAT, 2, 1, 1);
 		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, (void*)&Float4::one);
+		s_pDefaultStorageTexture3d = std::make_unique<StorageTexture3d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, 1, (void*)&Float4::one);
 		// Materials:
 		s_pDefaultPresentMaterial = std::make_unique<Material>(Material::CreatePresent("presentMaterial", shadersBinDirectory / "present.vert.spv", shadersBinDirectory / "present.frag.spv"));
 		s_pDefaultShadowMaterial = std::make_unique<Material>(Material::CreateShadow("shadowMaterial", shadowMapResolution, shadersBinDirectory / "shadow.vert.spv"));
@@ -98,6 +101,7 @@ namespace vulkanRendererBackend
 		s_pDefaultSampleTextureCube.reset();
 		s_pDefaultDepthTexture2dArray.reset();
 		s_pDefaultStorageTexture2d.reset();
+		s_pDefaultStorageTexture3d.reset();
 		s_isInitialized = false;
 	}
 
@@ -157,6 +161,10 @@ namespace vulkanRendererBackend
 	StorageTexture2d* DefaultGpuResources::GetDefaultStorageTexture2d()
 	{
 		return s_pDefaultStorageTexture2d.get();
+	}
+	StorageTexture3d* DefaultGpuResources::GetDefaultStorageTexture3d()
+	{
+		return s_pDefaultStorageTexture3d.get();
 	}
 
 

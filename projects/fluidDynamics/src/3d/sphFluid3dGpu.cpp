@@ -14,15 +14,16 @@ namespace fluidDynamics
 		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial3d");
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
 
-        m_forceSetters = true;
+		m_forceSetters = true;
 		{
 			// Management:
 			SetTimeScale(1.0f);
-            SetPhysicsTimeScale(1.1f);
+			SetPhysicsTimeScale(1.1f);
 			SetParticleCount(100000);
 
 			// Settings:
 			SetUseHashGridOptimization(true);
+			SetComputeDensityTexture3d(true);
 			SetEffectRadius(1.0f);
 			SetMass(1.0f);
 			SetViscosity(2.0f);
@@ -44,7 +45,7 @@ namespace fluidDynamics
 			SetInitialDistributionRadius(9.0f);
 			SetVisualRadius(0.2f);
 		}
-        m_forceSetters = false;
+		m_forceSetters = false;
 
 		Reset();
 	}
@@ -77,16 +78,25 @@ namespace fluidDynamics
 		float restTime = timeStep;
 		uint32_t sourceDataIndex = m_tripleBufferState.GetSrcIndex();
 		uint32_t destinationDataIndex = m_tripleBufferState.GetDstIndex();
+		bool physicsDataWritten = false;
 		while (restTime > 0.0f)
 		{
 			float deltaT = math::Min(dt, restTime);
 			SphFluid3dGpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex, destinationDataIndex);
 			m_tripleBufferState.CommitWrite(Compute::Physics::GetRecordingSessionID());
+			physicsDataWritten = true;
 			sourceDataIndex = m_tripleBufferState.GetSrcIndex();
 			destinationDataIndex = m_tripleBufferState.GetDstIndex();
 			restTime -= deltaT;
 		}
 		m_timeStep++;
+
+        // ComputeDensityTexture3d:
+		if (physicsDataWritten && m_settings.computeDensityTexture3d)
+		{
+			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
+			SphFluid3dGpuSolver::ComputeDensityTexture3d(m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex);
+		}
 	}
 	void SphFluid3dGpu::Update()
 	{
@@ -200,6 +210,11 @@ namespace fluidDynamics
 			m_settings.useHashGridOptimization = useGridOptimization;
 			m_computeShaders.SetUseHashGridOptimization(m_settings.useHashGridOptimization);
 		}
+	}
+	void SphFluid3dGpu::SetComputeDensityTexture3d(bool computeDensityTexture3d)
+	{
+		if (m_forceSetters || m_settings.computeDensityTexture3d != computeDensityTexture3d)
+			m_settings.computeDensityTexture3d = computeDensityTexture3d;
 	}
 	void SphFluid3dGpu::SetParticleCount(int particleCount)
 	{
@@ -390,6 +405,10 @@ namespace fluidDynamics
 	{
 		return m_settings.useHashGridOptimization;
 	}
+	bool SphFluid3dGpu::GetComputeDensityTexture3d() const
+	{
+		return m_settings.computeDensityTexture3d;
+	}
 	uint32_t SphFluid3dGpu::GetTimeStep() const
 	{
 		return m_timeStep;
@@ -503,7 +522,7 @@ namespace fluidDynamics
 		m_tripleBufferState.Reset();
 		m_pendingResetSessionID = Compute::Physics::GetRecordingSessionID();
 		m_scratchData.Reallocate(m_particleCount);
-		m_tripleData.Reallocate(m_particleCount);
+		m_tripleData.Reallocate(m_particleCount, m_settings.fluidBounds.localBounds, m_settings.effectRadius);
 
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		// Reset all buffer slots:

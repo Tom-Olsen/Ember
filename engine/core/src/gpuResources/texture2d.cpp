@@ -12,6 +12,10 @@ namespace emberCore
 {
 	// Public methods:
 	// Constructor/Destructor:
+	Texture2d::Texture2d() : Texture()
+	{
+
+	}
 	Texture2d::Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
 	{
 		m_ownsITexture = true;

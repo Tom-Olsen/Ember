@@ -3,6 +3,15 @@
 
 
 
+// Constructors:
+TEST(Uint3, ConstructorFloat3)
+{
+	Uint3 a(Float3(1.1f, 2.5f, 3.9f));
+	EXPECT_TRUE(a == Uint3(1, 2, 3));
+}
+
+
+
 // Static math operations:
 TEST(Uint3, Min)
 {

@@ -49,6 +49,7 @@
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageSampleTexture2d.h"
 #include "vulkanStorageTexture2d.h"
+#include "vulkanStorageTexture3d.h"
 #include "vulkanSurface.h"
 #include "vulkanSwapchain.h"
 #include "vulkanVertexBuffer.h"
@@ -540,10 +541,20 @@ namespace vulkanRendererBackend
 		}
 		return pITexture;
 	}
-	//emberBackendInterface::ITexture* Renderer::CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
-	//{
-	//
-	//}
+	emberBackendInterface::ITexture* Renderer::CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	{
+		VkFormat vulkanFormat = TextureFormatCommonToVulkan(format);
+		emberBackendInterface::ITexture* pITexture = nullptr;
+		switch (usage)
+		{
+		case emberCommon::TextureUsage::storage:
+			pITexture = new StorageTexture3d(vulkanFormat, width, height, depth, data);
+			break;
+		default:
+			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTexture3d: unsupported TextureUsage type: " + std::string(emberCommon::TextureUsageToString(usage)));
+		}
+		return pITexture;
+	}
 	emberBackendInterface::ITexture* Renderer::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
 		VkFormat vulkanFormat = TextureFormatCommonToVulkan(format);

@@ -1,4 +1,4 @@
-#include "vulkanStorageTexture2d.h"
+#include "vulkanStorageTexture3d.h"
 #include "assetLoader.h"
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
@@ -13,9 +13,9 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Desctructor:
-	StorageTexture2d::StorageTexture2d(VkFormat format, int width, int height, void* data)
+	StorageTexture3d::StorageTexture3d(VkFormat format, int width, int height, int depth, void* data)
 	{
-		Init(format, width, height);
+		Init(format, width, height, depth);
 		if (data)
 			SetData(data);
 		else
@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
 			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 	}
-	StorageTexture2d::~StorageTexture2d()
+	StorageTexture3d::~StorageTexture3d()
 	{
 
 	}
@@ -36,12 +36,12 @@ namespace vulkanRendererBackend
 
 
 	// Movable:
-	StorageTexture2d::StorageTexture2d(StorageTexture2d&& other) noexcept = default;
-	StorageTexture2d& StorageTexture2d::operator=(StorageTexture2d&& other) noexcept = default;
+	StorageTexture3d::StorageTexture3d(StorageTexture3d&& other) noexcept = default;
+	StorageTexture3d& StorageTexture3d::operator=(StorageTexture3d&& other) noexcept = default;
 
 
 
-	void StorageTexture2d::SetData(void* data)
+	void StorageTexture3d::SetData(void* data)
 	{
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(StageData(data));
 		Upload(pStagingBuffer.get());
@@ -50,13 +50,14 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	void StorageTexture2d::Init(VkFormat format, int width, int height)
+	void StorageTexture3d::Init(VkFormat format, int width, int height, int depth)
 	{
 		if (!IsValidImageFormat(format))
-			throw std::runtime_error("StorageTexture2d::Init(...)failed. Unsupported format: " + std::to_string(static_cast<int>(format)));
+			throw std::runtime_error("StorageTexture3d::Init(...)failed. Unsupported format: " + std::to_string(static_cast<int>(format)));
 
 		m_width = width;
 		m_height = height;
+		m_depth = depth;
 		m_channels = GetChannelCount(format);
 		m_format = format;
 		m_vkDescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
@@ -73,21 +74,21 @@ namespace vulkanRendererBackend
 		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
+		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_3D;
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
-		SetDebugName("StorageTexture2d");
+		SetDebugName("StorageTexture3d");
 	}
-	StagingBuffer* StorageTexture2d::StageData(void* data)
+	StagingBuffer* StorageTexture3d::StageData(void* data)
 	{
 		// Upload: data -> pStagingBuffer
-		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(m_format);
+		uint64_t bufferSize = m_channels * m_width * m_height * m_depth * BytesPerChannel(m_format);
 		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
 		pStagingBuffer->SetData(data, bufferSize);
 		return pStagingBuffer;
 	}
-	void StorageTexture2d::Upload(StagingBuffer* pStagingBuffer)
+	void StorageTexture3d::Upload(StagingBuffer* pStagingBuffer)
 	{
 		// Transition 0: Layout: undefined->transfer, Queue: transfer
 		{

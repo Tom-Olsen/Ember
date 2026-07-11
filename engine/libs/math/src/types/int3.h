@@ -9,6 +9,8 @@ namespace emberMath
 	// Forward declarations:
 	struct Float2;
 	struct Float3;
+	struct Uint2;
+	struct Uint3;
 
 
 
@@ -22,11 +24,12 @@ namespace emberMath
 		// Constructors:
 		Int3();
 		Int3(int xyz);
-		Int3(int x, int y);
 		Int3(int x, int y, int z);
-		Int3(const Int2& xy);
 		Int3(const Int2& xy, int z);
+		Int3(const Uint2& xy, int z);
+		Int3(const Float2& xy, int z);
 		Int3(const Int3& xyz);
+		Int3(const Uint3& xyz);
 		Int3(const Float3& xyz);
 
 		// Math operations:

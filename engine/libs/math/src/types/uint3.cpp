@@ -1,4 +1,9 @@
+#include "uint2.h"
 #include "uint3.h"
+#include "int2.h"
+#include "int3.h"
+#include "float2.h"
+#include "float3.h"
 #include "mathFunctions.h"
 #include <cassert>
 #include <sstream>
@@ -11,7 +16,12 @@ namespace emberMath
 	Uint3::Uint3() : x(0), y(0), z(0) {}
 	Uint3::Uint3(uint32_t xyz) : x(xyz), y(xyz), z(xyz) {}
 	Uint3::Uint3(uint32_t x, uint32_t y, uint32_t z) : x(x), y(y), z(z) {}
+	Uint3::Uint3(const Uint2& xy, uint32_t z) : x(xy.x), y(xy.y), z(z) {}
+	Uint3::Uint3(const Int2& xy, uint32_t z) : x((uint32_t)xy.x), y((uint32_t)xy.y), z(z) {}
+	Uint3::Uint3(const Float2& xy, uint32_t z) : x((uint32_t)xy.x), y((uint32_t)xy.y), z(z) {}
 	Uint3::Uint3(const Uint3& xyz) : x(xyz.x), y(xyz.y), z(xyz.z) {}
+	Uint3::Uint3(const Int3& xyz) : x((uint32_t)xyz.x), y((uint32_t)xyz.y), z((uint32_t)xyz.z) {}
+	Uint3::Uint3(const Float3& xyz) : x((uint32_t)xyz.x), y((uint32_t)xyz.y), z((uint32_t)xyz.z) {}
 
 
 

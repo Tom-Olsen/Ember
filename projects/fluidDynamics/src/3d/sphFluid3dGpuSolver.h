@@ -1,5 +1,6 @@
 #pragma once
 #include "emberEngine.h"
+#include <array>
 using namespace emberCore;
 using namespace emberEcs;
 
@@ -25,6 +26,7 @@ namespace fluidDynamics
 			ComputeShader rungeKutta2Step1ComputeShader;
 			ComputeShader rungeKutta2Step2ComputeShader;
 			ComputeShader boundaryCollisionsComputeShader;
+			ComputeShader densityTexture3dComputeShader;
 
 			ComputeShaders();
 			void SetUseHashGridOptimization(bool useHashGridOptimization);
@@ -48,6 +50,7 @@ namespace fluidDynamics
 		struct Settings
 		{
 			bool useHashGridOptimization;
+			bool computeDensityTexture3d;
 			float effectRadius;
 			float mass;
 			float viscosity;
@@ -90,9 +93,12 @@ namespace fluidDynamics
 			TripleBuffer<float> densityBuffer;
 			TripleBuffer<Float3> normalBuffer;
 			TripleBuffer<float> curvatureBuffer;
+			std::array<Texture3d, PhysicsTripleBufferState::bufferCount> densityTexture3d;
+			Uint3 densityTexture3dResolution;
 
 			int ParticleCount();
-			void Reallocate(int particleCount);
+			void Reallocate(int particleCount, const Bounds& localBounds, float effectRadius);
+			void ReallocateDensityTexture3d(const Bounds& localBounds, float effectRadius);
 		};
 		struct Attractor
 		{
@@ -120,5 +126,6 @@ namespace fluidDynamics
 		static void ComputeRungeKutta2Step1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempPositionBufferView, const BufferView<Float3>& tempVelocityBufferView);
 		static void ComputeRungeKutta2Step2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempVelocityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
 		static void ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
+		static void ComputeDensityTexture3d(ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t dataIndex);
 	};
 }

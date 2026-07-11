@@ -44,7 +44,7 @@ namespace fluidDynamics
 	{
 		return positionBuffer.IsValid() ? positionBuffer.GetCount() : 0;
 	}
-	void SphFluid3dGpuSolver::TripleData::Reallocate(int particleCount)
+	void SphFluid3dGpuSolver::TripleData::Reallocate(int particleCount, const Bounds& localBounds, float effectRadius)
 	{
 		if (particleCount != ParticleCount())
 		{
@@ -53,6 +53,20 @@ namespace fluidDynamics
 			densityBuffer = TripleBuffer<float>((uint32_t)particleCount, "densityBuffer", BufferUsage::storage);
 			normalBuffer = TripleBuffer<Float3>((uint32_t)particleCount, "normalBuffer", BufferUsage::storage);
 			curvatureBuffer = TripleBuffer<float>((uint32_t)particleCount, "curvatureBuffer", BufferUsage::storage);
+		}
+		ReallocateDensityTexture3d(localBounds, effectRadius);
+	}
+	void SphFluid3dGpuSolver::TripleData::ReallocateDensityTexture3d(const Bounds& localBounds, float effectRadius)
+	{
+		float voxelSize = 2.0f * effectRadius;
+		Float3 size = localBounds.GetSize();
+		Uint3 newResolution = Uint3::Max(Uint3::one, Uint3(Float3::Ceil(size / voxelSize)));
+
+		if (newResolution != densityTexture3dResolution)
+		{
+			densityTexture3dResolution = newResolution;
+			for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
+				densityTexture3d[i] = Texture3d("densityTexture3d[" + std::to_string(i) + "]", densityTexture3dResolution.x, densityTexture3dResolution.y, densityTexture3dResolution.z, emberCommon::TextureFormats::r32_sfloat, emberCommon::TextureUsage::storage);
 		}
 	}
 
@@ -77,6 +91,7 @@ namespace fluidDynamics
 		rungeKutta2Step1ComputeShader = ComputeShader("rungeKutta2Step1_3d", directoryPath / "rungeKutta2Step1_3d.comp.spv");
 		rungeKutta2Step2ComputeShader = ComputeShader("rungeKutta2Step2_3d", directoryPath / "rungeKutta2Step2_3d.comp.spv");
 		boundaryCollisionsComputeShader = ComputeShader("boundaryCollisions3d", directoryPath / "boundaryCollisions3d.comp.spv");
+		densityTexture3dComputeShader = ComputeShader("densityTexture3d", directoryPath / "densityTexture3d.comp.spv");
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetUseHashGridOptimization(bool useHashGridOptimization)
 	{
@@ -90,6 +105,7 @@ namespace fluidDynamics
 		densityComputeShader.SetValue("Values", "effectRadius", effectRadius);
 		normalAndCurvatureComputeShader.SetValue("Values", "effectRadius", effectRadius);
 		forceDensityComputeShader.SetValue("Values", "effectRadius", effectRadius);
+		densityTexture3dComputeShader.SetValue("Values", "effectRadius", effectRadius);
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetHashGridSize(int hashGridSize)
 	{
@@ -97,12 +113,14 @@ namespace fluidDynamics
 		densityComputeShader.SetValue("Values", "hashGridSize", hashGridSize);
 		normalAndCurvatureComputeShader.SetValue("Values", "hashGridSize", hashGridSize);
 		forceDensityComputeShader.SetValue("Values", "hashGridSize", hashGridSize);
+		densityTexture3dComputeShader.SetValue("Values", "hashGridSize", hashGridSize);
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetMass(float mass)
 	{
 		densityComputeShader.SetValue("Values", "mass", mass);
 		normalAndCurvatureComputeShader.SetValue("Values", "mass", mass);
 		forceDensityComputeShader.SetValue("Values", "mass", mass);
+		densityTexture3dComputeShader.SetValue("Values", "mass", mass);
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetViscosity(float viscosity)
 	{
@@ -139,10 +157,13 @@ namespace fluidDynamics
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetFluidBounds(const RotatedBounds& bounds)
 	{
-		boundaryCollisionsComputeShader.SetValue("Values", "min", bounds.localBounds.GetMin());
-		boundaryCollisionsComputeShader.SetValue("Values", "max", bounds.localBounds.GetMax());
+		boundaryCollisionsComputeShader.SetValue("Values", "boundsMin", bounds.localBounds.GetMin());
+		boundaryCollisionsComputeShader.SetValue("Values", "boundsMax", bounds.localBounds.GetMax());
 		boundaryCollisionsComputeShader.SetValue("Values", "rotation", bounds.GetRotation4x4());
 		boundaryCollisionsComputeShader.SetValue("Values", "inverseRotation", bounds.GetRotation4x4().Inverse());
+		densityTexture3dComputeShader.SetValue("Values", "boundsMin", bounds.localBounds.GetMin());
+		densityTexture3dComputeShader.SetValue("Values", "boundsMax", bounds.localBounds.GetMax());
+		densityTexture3dComputeShader.SetValue("Values", "rotation", bounds.GetRotation4x4());
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetAttractorRadius(float attractorRadius)
 	{
@@ -396,5 +417,34 @@ namespace fluidDynamics
 		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.boundaryCollisionsComputeShader, threadCount, computeShaders.sessionID);
 		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
 		shaderProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
+	}
+
+	void SphFluid3dGpuSolver::ComputeDensityTexture3d(ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t dataIndex)
+	{
+        // Reference to needed buffers:
+		BufferView<uint32_t>& cellKeyBufferView = scratchData.cellKeyBuffer.GetBufferView();
+		BufferView<uint32_t>& startIndexBufferView = scratchData.startIndexBuffer.GetBufferView();
+		BufferView<uint32_t>& sortPermutationBufferView = scratchData.sortPermutationBuffer.GetBufferView();
+		BufferView<Float3>& positionBufferView = tripleData.positionBuffer.GetBufferView(dataIndex);
+		BufferView<Float3>& sortedPositionBufferView = scratchData.tempBuffer0.GetBufferView();
+		Texture3d& densityTexture = tripleData.densityTexture3d[dataIndex];
+
+		// Build hash grid:
+		ComputeCellKeys(computeShaders, cellKeyBufferView, positionBufferView);
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		GpuSort<uint32_t>::SortPermutation(computeShaders.computeType, cellKeyBufferView, sortPermutationBufferView, computeShaders.sessionID);
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		ComputeStartIndices(computeShaders, startIndexBufferView, cellKeyBufferView);
+		GpuSort<Float3>::ApplyPermutation(computeShaders.computeType, sortPermutationBufferView, positionBufferView, sortedPositionBufferView, computeShaders.sessionID);
+		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+
+        // Compute density texture3d:
+		Uint3 threadCount(densityTexture.GetWidth(), densityTexture.GetHeight(), densityTexture.GetDepth());
+		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityTexture3dComputeShader, threadCount, computeShaders.sessionID);
+		shaderProperties.SetValue("CallValues", "particleCount", (int)positionBufferView.GetCount());
+		shaderProperties.SetTexture("densityTexture", densityTexture);
+		shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
+		shaderProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
+		shaderProperties.SetBuffer("positionBuffer", sortedPositionBufferView.GetBuffer());
 	}
 }

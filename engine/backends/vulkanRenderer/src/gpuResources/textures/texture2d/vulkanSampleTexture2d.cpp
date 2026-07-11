@@ -21,6 +21,17 @@ namespace vulkanRendererBackend
 		Init(format, width, height);
 		if (data)
 			SetData(data);
+		else
+		{
+			// No initial data to upload, but the image still needs to leave VK_IMAGE_LAYOUT_UNDEFINED
+			// before it can be bound as a sampled texture:
+			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
+			AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
+			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		}
 	}
 	SampleTexture2d::~SampleTexture2d()
 	{

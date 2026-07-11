@@ -15,6 +15,7 @@ namespace emberCore
 	{
 	public: // methods:
 		// Constructor/Destructor:
+		Texture2d();    // needed for array construction.
 		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage);
 		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const float> data);
 		Texture2d(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float2> data);

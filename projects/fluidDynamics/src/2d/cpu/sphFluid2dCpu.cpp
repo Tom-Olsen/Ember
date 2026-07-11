@@ -375,7 +375,7 @@ namespace fluidDynamics
 		DebugRenderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f);
 		for (int i = 0; i < m_particleCount; i++)
 		{
-			Float4x4 matrix = localToWorld * Float4x4::Translate(Float3(m_data.positions[i]));
+			Float4x4 matrix = localToWorld * Float4x4::Translate(Float3(m_data.positions[i], 0.0f));
 			ShaderProperties shaderProperties = Renderer::DrawMesh(m_particleMesh, m_particleMaterial, matrix, false, false);
 		
 			// Color by density:

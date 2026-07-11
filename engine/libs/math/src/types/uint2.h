@@ -6,6 +6,12 @@
 
 namespace emberMath
 {
+	// Forward declarations:
+	struct Int2;
+	struct Float2;
+
+
+
 	// Mainly used for vulkan triangle indices.
 	struct Uint2
 	{
@@ -19,6 +25,8 @@ namespace emberMath
 		Uint2(uint32_t xy);
 		Uint2(uint32_t x, uint32_t y);
 		Uint2(const Uint2& xy);
+		Uint2(const Int2& xy);
+		Uint2(const Float2& xy);
 
 		// Math operations:
 

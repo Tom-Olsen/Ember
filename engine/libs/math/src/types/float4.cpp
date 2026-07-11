@@ -13,14 +13,9 @@ namespace emberMath
 	// Constructors:
 	Float4::Float4() : x(0), y(0), z(0), w(0) {}
 	Float4::Float4(float xyzw) : x(xyzw), y(xyzw), z(xyzw), w(xyzw) {}
-	Float4::Float4(float x, float y) : x(x), y(y), z(0.0f), w(0.0f) {}
-	Float4::Float4(float x, float y, float z) : x(x), y(y), z(z), w(0.0f) {}
 	Float4::Float4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
-	Float4::Float4(const Float2& xy) : x(xy.x), y(xy.y), z(0.0f), w(0.0f) {}
-	Float4::Float4(const Float2& xy, float z) : x(xy.x), y(xy.y), z(z), w(0.0f) {}
 	Float4::Float4(const Float2& xy, float z, float w) : x(xy.x), y(xy.y), z(z), w(w) {}
 	Float4::Float4(const Float2& xy, Float2 zw) : x(xy.x), y(xy.y), z(zw.x), w(zw.y) {}
-	Float4::Float4(const Float3& xyz) : x(xyz.x), y(xyz.y), z(xyz.z), w(0.0f) {}
 	Float4::Float4(const Float3& xyz, float w) : x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
 	Float4::Float4(const Float4& xyzw) : x(xyzw.x), y(xyzw.y), z(xyzw.z), w(xyzw.w) {}
 	Float4 Float4::Direction(float theta, float phi)
