@@ -41,12 +41,12 @@ namespace nullWindowBackend
 		// Getters:
 		void* GetNativeHandle() const;
 		bool GetIsMinimized() const override;
-		bool GetIsResized() const override;
+		bool GetIsResizing() const override;
 		Int2 GetSize() const;
 		Int2 GetSizeInPixels() const override;
 		uint32_t GetWindowID() const;
 
 		// Setters:
-		void ResetWindowResized() override;
+		void ResetIsResizing() override;
 	};
 }

@@ -34,7 +34,7 @@ namespace emberBackendInterface
         // Getters:
         virtual void* GetNativeHandle() const = 0;
         virtual bool GetIsMinimized() const = 0;
-        virtual bool GetIsResized() const = 0;
+        virtual bool GetIsResizing() const = 0;
 
         // Logical client-area size in window coordinates.
         // Use this for input, ImGui layout, hit testing, and any math that should match mouse coordinates.
@@ -49,6 +49,6 @@ namespace emberBackendInterface
         virtual uint32_t GetWindowID() const = 0;
 
         // Setters:
-        virtual void ResetWindowResized() = 0;
+        virtual void ResetIsResizing() = 0;
     };
 }

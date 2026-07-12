@@ -205,18 +205,16 @@ namespace vulkanRendererBackend
 		std::array<VkDescriptorSet, 3>& GetStaticDescriptorSets(uint32_t frameIndex);
 
 	private: // Methods:
-		// Reset render state:
+		// Resets:
+		void ResetFrameCalls();
 		void ResetLights();
 		void ResetDrawCalls();
+		void ResetCommandPools();
 
 		void RebuildSwapchain();
 		bool AcquireImage();
 		void SortDrawCallPointers();
 		void UpdateShaderData();
-
-		// Wait for previous frame:
-		void WaitForFrameFence();
-		void ResetCommandPools();
 
 		// Record commands:
 		void RecordResourceUpdateCommands();

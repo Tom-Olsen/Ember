@@ -22,14 +22,7 @@ namespace vulkanRendererBackend
 		if (data)
 			SetData(data);
 		else
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
-			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-			AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
-			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
+			ClearAndPrepareForSampling();
 	}
 	SampleTextureCube::~SampleTextureCube()
 	{
@@ -47,7 +40,7 @@ namespace vulkanRendererBackend
 	void SampleTextureCube::SetData(void* data)
 	{
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(StageData(data));
-		Upload(pStagingBuffer.get());
+		UploadAndPrepareForSampling(pStagingBuffer.get());
 	}
 	
 
@@ -84,55 +77,4 @@ namespace vulkanRendererBackend
 		SetDebugName("SampleTextureCube");
 	}
 
-	StagingBuffer* SampleTextureCube::StageData(void* data)
-	{
-		// Upload: data -> pStagingBuffer
-		uint64_t bufferSize = 6 * m_channels * m_width * m_height * BytesPerChannel(m_format);
-		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
-		pStagingBuffer->SetData(data, bufferSize);
-		return pStagingBuffer;
-	}
-	void SampleTextureCube::Upload(StagingBuffer* pStagingBuffer)
-	{
-		const DeviceQueue& transferQueue = Context::GetLogicalDevice()->GetTransferQueue();
-		const DeviceQueue& graphicsQueue = Context::GetLogicalDevice()->GetGraphicsQueue();
-		if (transferQueue.queue != graphicsQueue.queue)
-		{
-			VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
-			VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
-			RecordUploadAndPrepareForSamplingCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer);
-			SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, VK_PIPELINE_STAGE_2_TRANSFER_BIT);
-		}
-		else
-		{
-			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
-			RecordUploadAndPrepareForSamplingCommands(commandBuffer, commandBuffer, pStagingBuffer);
-			SingleTimeCommand::EndCommand(graphicsQueue);
-		}
-	}
-	void SampleTextureCube::RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
-	{
-		// Transition0: Layout: undefined->transfer, Queue: transfer
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-			AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
-			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
-
-		// Upload: pStagingBuffer -> texture
-		pStagingBuffer->UploadToTexture(transferCommandBuffer, this, m_pImage->GetImageSubresourceRange().layerCount);
-
-		// Transition1: Layout: transfer->shaderRead
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
-			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
-			AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
-			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
-	}
 }

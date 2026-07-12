@@ -51,7 +51,7 @@ namespace emberCore
 	}
 	bool Window::GetIsResized()
 	{
-		return s_pIWindow->GetIsResized();
+		return s_pIWindow->GetIsResizing();
 	}
 	Int2 Window::GetSize()
 	{

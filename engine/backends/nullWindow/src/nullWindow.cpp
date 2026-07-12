@@ -44,7 +44,7 @@ namespace nullWindowBackend
 	{
 		return true;
 	}
-	bool Window::GetIsResized() const
+	bool Window::GetIsResizing() const
 	{
 		return false;
 	}
@@ -64,7 +64,7 @@ namespace nullWindowBackend
 
 
 	// Setters:
-	void Window::ResetWindowResized()
+	void Window::ResetIsResizing()
 	{
 		
 	}

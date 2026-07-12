@@ -191,6 +191,10 @@ namespace vulkanRendererBackend
 		TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		SingleTimeCommand::EndCommand(m_queue);
 	}
+	void VmaImage::ClearColor(VkCommandBuffer commandBuffer, const VkClearColorValue& clearColor)
+	{
+		vkCmdClearColorImage(commandBuffer, m_image, m_layout, &clearColor, 1, &m_subresourceRange);
+	}
 	void VmaImage::GenerateMipmaps(VkCommandBuffer commandBuffer, uint32_t mipLevels)
 	{
         // Memory barrier to ensure transfer queue is done with image upload before mipmapping:

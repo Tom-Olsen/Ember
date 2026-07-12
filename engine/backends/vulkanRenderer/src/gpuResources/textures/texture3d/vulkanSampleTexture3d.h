@@ -41,8 +41,5 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		void Init(VkFormat format, int width, int height, int depth);
-		StagingBuffer* StageData(void* data);
-		void Upload(StagingBuffer* pStagingBuffer);
-		void RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
 	};
 }

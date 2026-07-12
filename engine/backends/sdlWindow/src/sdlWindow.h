@@ -31,7 +31,7 @@ namespace sdlWindowBackend
 		std::vector<emberCommon::Event> m_events;
 		const int m_maxEvents = 32;
 		bool m_isMinimized = false;
-		bool m_isResized = false;
+		bool m_isResizing = false;
 		bool m_enableDockSpace = true;
 
 	public: // Methods:
@@ -56,13 +56,12 @@ namespace sdlWindowBackend
 		// Getters:
 		void* GetNativeHandle() const override;
 		bool GetIsMinimized() const override;
-		bool GetIsResized() const override;
+		bool GetIsResizing() const override;
 		Int2 GetSize() const override;
 		Int2 GetSizeInPixels() const override;
 		uint32_t GetWindowID() const override;
 
 		// Setters:
-		void ResetWindowResized() override;
-
+		void ResetIsResizing() override;
 	};
 }

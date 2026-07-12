@@ -19,14 +19,7 @@ namespace vulkanRendererBackend
 		if (data)
 			SetData(data);
 		else
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-			AccessMask dstAccessMask = AccessMasks::ComputeShader::memoryRead | AccessMasks::ComputeShader::memoryWrite;
-			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
+			PrepareForStorage();
 	}
 	StorageSampleTexture2d::~StorageSampleTexture2d()
 	{
@@ -44,7 +37,7 @@ namespace vulkanRendererBackend
 	void StorageSampleTexture2d::SetData(void* data)
 	{
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(StageData(data));
-		Upload(pStagingBuffer.get());
+		UploadAndPrepareForStorage(pStagingBuffer.get());
 	}
 
 
@@ -79,37 +72,4 @@ namespace vulkanRendererBackend
 
 		SetDebugName("StorageSampleTexture2d");
 	}
-	StagingBuffer* StorageSampleTexture2d::StageData(void* data)
-	{
-		// Copy: data -> pStagingBuffer
-		uint64_t bufferSize = m_channels * m_width * m_height * BytesPerChannel(m_format);
-		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
-		pStagingBuffer->SetData(data, bufferSize);
-		return pStagingBuffer;
-	}
-	void StorageSampleTexture2d::Upload(StagingBuffer* pStagingBuffer)
-    {
-		// Transition 0: Layout: undefined->transfer, Queue: transfer
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-			AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
-			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
-
-		// Upload: pStagingBuffer -> texture
-		pStagingBuffer->UploadToTexture(Context::GetLogicalDevice()->GetTransferQueue(), this, m_pImage->GetImageSubresourceRange().layerCount);
-
-		// Transition 1: Layout: transfer->general, Queue: transfer->compute
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
-			AccessMask dstAccessMask = AccessMasks::ComputeShader::memoryRead | AccessMasks::ComputeShader::memoryWrite;
-			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
-    }
 }

@@ -21,7 +21,7 @@ namespace sdlWindowBackend
 		assert(windowWidth > 0);
 		assert(windowHeight > 0);
 
-		m_isResized = false;
+		m_isResizing = false;
 
 		// ForceX11VideoDriver:
 		if (forceX11VideoDriver)
@@ -102,7 +102,7 @@ namespace sdlWindowBackend
 				case SDL_EVENT_WINDOW_RESIZED:
 				case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
 					if (sdlEvent.window.windowID == SDL_GetWindowID(m_pSdlWindow))
-						m_isResized = true;
+						m_isResizing = true;
 					event.type = emberCommon::EventType::WindowResized;
 					event.windowID = sdlEvent.window.windowID;
 					event.resizeWidth = sdlEvent.window.data1;
@@ -234,9 +234,9 @@ namespace sdlWindowBackend
 	{
 		return m_isMinimized;
 	}
-	bool Window::GetIsResized() const
+	bool Window::GetIsResizing() const
 	{
-		return m_isResized;
+		return m_isResizing;
 	}
 	Int2 Window::GetSize() const
 	{
@@ -258,8 +258,8 @@ namespace sdlWindowBackend
 
 
 	// Setters:
-	void Window::ResetWindowResized()
+	void Window::ResetIsResizing()
 	{
-		m_isResized = false;
+		m_isResizing = false;
 	}
 }

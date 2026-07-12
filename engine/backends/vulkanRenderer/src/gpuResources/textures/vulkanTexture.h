@@ -88,5 +88,12 @@ namespace vulkanRendererBackend
 		bool IsStencilFormat(VkFormat format);
 		uint64_t GetImageSize(const VkImageSubresourceRange& subresourceRange, VkFormat format);
 		void CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue);
+		// Gpu commands:
+        StagingBuffer* StageData(void* data);
+		void PrepareForStorage();
+		void ClearAndPrepareForSampling();
+		void UploadAndPrepareForSampling(StagingBuffer* pStagingBuffer);
+		void UploadAndPrepareForStorage(StagingBuffer* pStagingBuffer);
+		void RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
 	};
 }
