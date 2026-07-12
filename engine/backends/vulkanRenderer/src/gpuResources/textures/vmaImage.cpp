@@ -223,6 +223,10 @@ namespace vulkanRendererBackend
 		int mipDepth = static_cast<int>(GetDepth());
 		for (uint32_t i = 1; i < mipLevels; i++)
 		{
+			int nextMipWidth = std::max(1, mipWidth / 2);
+			int nextMipHeight = std::max(1, mipHeight / 2);
+			int nextMipDepth = std::max(1, mipDepth / 2);
+
 			// Perform blit from mip level i-1 to mip level i:
 			{
 				VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
@@ -235,10 +239,10 @@ namespace vulkanRendererBackend
 				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.image = m_image;
-				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				barrier.subresourceRange.baseArrayLayer = 0;
+				barrier.subresourceRange.aspectMask = m_subresourceRange.aspectMask;
+				barrier.subresourceRange.baseArrayLayer = m_subresourceRange.baseArrayLayer;
 				barrier.subresourceRange.baseMipLevel = i - 1;
-				barrier.subresourceRange.layerCount = 1;
+				barrier.subresourceRange.layerCount = m_subresourceRange.layerCount;
 				barrier.subresourceRange.levelCount = 1;
 
 				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
@@ -250,16 +254,16 @@ namespace vulkanRendererBackend
 				VkImageBlit blit{};
 				blit.srcOffsets[0] = { 0, 0, 0 };
 				blit.srcOffsets[1] = { mipWidth, mipHeight, mipDepth };
-				blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				blit.srcSubresource.aspectMask = m_subresourceRange.aspectMask;
 				blit.srcSubresource.mipLevel = i - 1;
-				blit.srcSubresource.baseArrayLayer = 0;
-				blit.srcSubresource.layerCount = 1;
+				blit.srcSubresource.baseArrayLayer = m_subresourceRange.baseArrayLayer;
+				blit.srcSubresource.layerCount = m_subresourceRange.layerCount;
 				blit.dstOffsets[0] = { 0, 0, 0 };
-				blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
-				blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				blit.dstOffsets[1] = { nextMipWidth, nextMipHeight, nextMipDepth };
+				blit.dstSubresource.aspectMask = m_subresourceRange.aspectMask;
 				blit.dstSubresource.mipLevel = i;
-				blit.dstSubresource.baseArrayLayer = 0;
-				blit.dstSubresource.layerCount = 1;
+				blit.dstSubresource.baseArrayLayer = m_subresourceRange.baseArrayLayer;
+				blit.dstSubresource.layerCount = m_subresourceRange.layerCount;
 
 				vkCmdBlitImage(commandBuffer,
 					m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -280,10 +284,10 @@ namespace vulkanRendererBackend
 				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.image = m_image;
-				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				barrier.subresourceRange.baseArrayLayer = 0;
+				barrier.subresourceRange.aspectMask = m_subresourceRange.aspectMask;
+				barrier.subresourceRange.baseArrayLayer = m_subresourceRange.baseArrayLayer;
 				barrier.subresourceRange.baseMipLevel = i - 1;
-				barrier.subresourceRange.layerCount = 1;
+				barrier.subresourceRange.layerCount = m_subresourceRange.layerCount;
 				barrier.subresourceRange.levelCount = 1;
 
 				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
@@ -294,9 +298,9 @@ namespace vulkanRendererBackend
 			}
 
             // Update dimensions for next mipmap:
-			mipWidth = std::max(1, mipWidth / 2);
-			mipHeight = std::max(1, mipHeight / 2);
-			mipDepth = std::max(1, mipDepth / 2);
+			mipWidth = nextMipWidth;
+			mipHeight = nextMipHeight;
+			mipDepth = nextMipDepth;
 		}
 
 		// Transition last mip level from VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL to SHADER_READ_ONLY_OPTIMAL:
@@ -311,10 +315,10 @@ namespace vulkanRendererBackend
 			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.image = m_image;
-			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			barrier.subresourceRange.baseArrayLayer = 0;
+			barrier.subresourceRange.aspectMask = m_subresourceRange.aspectMask;
+			barrier.subresourceRange.baseArrayLayer = m_subresourceRange.baseArrayLayer;
 			barrier.subresourceRange.baseMipLevel = mipLevels - 1;
-			barrier.subresourceRange.layerCount = 1;
+			barrier.subresourceRange.layerCount = m_subresourceRange.layerCount;
 			barrier.subresourceRange.levelCount = 1;
 
 			VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };

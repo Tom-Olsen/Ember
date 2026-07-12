@@ -43,11 +43,13 @@
 #include "vulkanRenderTexture2d.h"
 #include "vulkanSampler.h"
 #include "vulkanSampleTexture2d.h"
+#include "vulkanSampleTexture3d.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanSceneDescriptorSetLayout.h"
 #include "vulkanShadowRenderPass.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageSampleTexture2d.h"
+#include "vulkanStorageSampleTexture3d.h"
 #include "vulkanStorageTexture2d.h"
 #include "vulkanStorageTexture3d.h"
 #include "vulkanSurface.h"
@@ -547,8 +549,14 @@ namespace vulkanRendererBackend
 		emberBackendInterface::ITexture* pITexture = nullptr;
 		switch (usage)
 		{
+		case emberCommon::TextureUsage::sample:
+			pITexture = new SampleTexture3d(vulkanFormat, width, height, depth, data);
+			break;
 		case emberCommon::TextureUsage::storage:
 			pITexture = new StorageTexture3d(vulkanFormat, width, height, depth, data);
+			break;
+		case emberCommon::TextureUsage::storageSample:
+			pITexture = new StorageSampleTexture3d(vulkanFormat, width, height, depth, data);
 			break;
 		default:
 			throw std::runtime_error("vulkanRendererBackend::Renderer::CreateTexture3d: unsupported TextureUsage type: " + std::string(emberCommon::TextureUsageToString(usage)));

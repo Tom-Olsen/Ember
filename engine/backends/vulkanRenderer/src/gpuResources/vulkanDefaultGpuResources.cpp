@@ -7,8 +7,9 @@
 #include "vulkanMaterial.h"
 #include "vulkanMesh.h"
 #include "vulkanSampler.h"
-#include "vulkanSampleTextureCube.h"
 #include "vulkanSampleTexture2d.h"
+#include "vulkanSampleTexture3d.h"
+#include "vulkanSampleTextureCube.h"
 #include "vulkanShadowSampler.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageTexture2d.h"
@@ -36,7 +37,8 @@ namespace vulkanRendererBackend
 	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
 	// Textures:
 	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pDefaultSampleTexture2d = nullptr;
-	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pNormalMapSampleTexture2d = nullptr;
+	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pDefaultNormalMap = nullptr;
+	std::unique_ptr<SampleTexture3d> DefaultGpuResources::s_pDefaultSampleTexture3d = nullptr;
 	std::unique_ptr<SampleTextureCube> DefaultGpuResources::s_pDefaultSampleTextureCube = nullptr;
 	std::unique_ptr<DepthTexture2dArray> DefaultGpuResources::s_pDefaultDepthTexture2dArray = nullptr;
 	std::unique_ptr<StorageTexture2d> DefaultGpuResources::s_pDefaultStorageTexture2d = nullptr;
@@ -67,7 +69,8 @@ namespace vulkanRendererBackend
 		std::array<unsigned char, 4> whitePixel = { 255, 255, 255, 255 };
 		std::array<unsigned char, 4> normalPixel = { 128, 128, 255, 255 };
 		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, whitePixel.data());
-		s_pNormalMapSampleTexture2d = std::make_unique<SampleTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, normalPixel.data());
+		s_pDefaultNormalMap = std::make_unique<SampleTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, normalPixel.data());
+		s_pDefaultSampleTexture3d = std::make_unique<SampleTexture3d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, whitePixel.data());
 		std::array<Float4, 6> whiteFaces = { Float4::white, Float4::white, Float4::white, Float4::white, Float4::white, Float4::white };
 		s_pDefaultSampleTextureCube = std::make_unique<SampleTextureCube>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, whiteFaces.data());
 		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>(VK_FORMAT_D32_SFLOAT, 2, 1, 1);
@@ -97,7 +100,8 @@ namespace vulkanRendererBackend
 		s_pDefaultStorageBuffer.reset();
 		// Textures:
 		s_pDefaultSampleTexture2d.reset();
-		s_pNormalMapSampleTexture2d.reset();
+		s_pDefaultNormalMap.reset();
+		s_pDefaultSampleTexture3d.reset();
 		s_pDefaultSampleTextureCube.reset();
 		s_pDefaultDepthTexture2dArray.reset();
 		s_pDefaultStorageTexture2d.reset();
@@ -146,9 +150,13 @@ namespace vulkanRendererBackend
 	{
 		return s_pDefaultSampleTexture2d.get();
 	}
-	SampleTexture2d* DefaultGpuResources::GetNormalMapSampleTexture2d()
+	SampleTexture2d* DefaultGpuResources::GetDefaultNormalMap()
 	{
-		return s_pNormalMapSampleTexture2d.get();
+		return s_pDefaultNormalMap.get();
+	}
+	SampleTexture3d* DefaultGpuResources::GetDefaultSampleTexture3d()
+	{
+		return s_pDefaultSampleTexture3d.get();
 	}
 	SampleTextureCube* DefaultGpuResources::GetDefaultSampleTextureCube()
 	{

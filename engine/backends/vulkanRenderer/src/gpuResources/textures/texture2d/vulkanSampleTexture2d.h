@@ -4,11 +4,6 @@
 
 
 
-// Forward declarations:
-typedef struct VkCommandBuffer_T* VkCommandBuffer;
-
-
-
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
@@ -43,6 +38,6 @@ namespace vulkanRendererBackend
 		void Init(VkFormat format, int width, int height);
 		StagingBuffer* StageData(void* data);
 		void Upload(StagingBuffer* pStagingBuffer);
-		void RecordGpuCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
+		void RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
 	};
 }

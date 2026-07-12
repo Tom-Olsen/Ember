@@ -23,8 +23,6 @@ namespace vulkanRendererBackend
 			SetData(data);
 		else
 		{
-			// No initial data to upload, but the image still needs to leave VK_IMAGE_LAYOUT_UNDEFINED
-			// before it can be bound as a sampled texture:
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
 			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
@@ -100,17 +98,17 @@ namespace vulkanRendererBackend
 		{
 			VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
 			VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
-			RecordGpuCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer);
+			RecordUploadAndPrepareForSamplingCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer);
 			SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, VK_PIPELINE_STAGE_2_TRANSFER_BIT);
 		}
 		else
 		{
 			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
-			RecordGpuCommands(commandBuffer, commandBuffer, pStagingBuffer);
+			RecordUploadAndPrepareForSamplingCommands(commandBuffer, commandBuffer, pStagingBuffer);
 			SingleTimeCommand::EndCommand(graphicsQueue);
 		}
 	}
-	void SampleTexture2d::RecordGpuCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
+	void SampleTexture2d::RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
 	{
 		// Transition 0: Layout: undefined->dstTransfer, Queue: transfer
 		{

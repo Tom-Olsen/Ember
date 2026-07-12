@@ -1,5 +1,6 @@
-#include "vulkanSampleTextureCube.h"
+#include "vulkanSampleTexture3d.h"
 #include "assetLoader.h"
+#include "emberMath.h"
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
@@ -7,7 +8,6 @@
 #include "vulkanMacros.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
-#include <array>
 #include <memory>
 
 
@@ -15,10 +15,10 @@
 namespace vulkanRendererBackend
 {
 	// Public methods:
-	// Constructor/Destructor:
-	SampleTextureCube::SampleTextureCube(VkFormat format, int width, int height, void* data)
+	// Constructor/Desctructor:
+	SampleTexture3d::SampleTexture3d(VkFormat format, int width, int height, int depth, void* data)
 	{
-		Init(format, width, height);
+		Init(format, width, height, depth);
 		if (data)
 			SetData(data);
 		else
@@ -31,7 +31,7 @@ namespace vulkanRendererBackend
 			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 	}
-	SampleTextureCube::~SampleTextureCube()
+	SampleTexture3d::~SampleTexture3d()
 	{
 
 	}
@@ -39,28 +39,28 @@ namespace vulkanRendererBackend
 
 
 	// Movable:
-	SampleTextureCube::SampleTextureCube(SampleTextureCube&& other) noexcept = default;
-	SampleTextureCube& SampleTextureCube::operator=(SampleTextureCube&& other) noexcept = default;
+	SampleTexture3d::SampleTexture3d(SampleTexture3d&& other) noexcept = default;
+	SampleTexture3d& SampleTexture3d::operator=(SampleTexture3d&& other) noexcept = default;
 
 
 
-	void SampleTextureCube::SetData(void* data)
+	void SampleTexture3d::SetData(void* data)
 	{
 		std::unique_ptr<StagingBuffer> pStagingBuffer = std::unique_ptr<StagingBuffer>(StageData(data));
 		Upload(pStagingBuffer.get());
 	}
-	
 
 
 
 	// Private methods:
-	void SampleTextureCube::Init(VkFormat format, int width, int height)
+	void SampleTexture3d::Init(VkFormat format, int width, int height, int depth)
 	{
 		if (!IsValidImageFormat(format))
-			throw std::runtime_error("SampleTextureCube::Init(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));
+			throw std::runtime_error("SampleTexture3d::Init(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));
 
 		m_width = width;
 		m_height = height;
+		m_depth = depth;
 		m_channels = GetChannelCount(format);
 		m_format = format;
 		m_vkDescriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
@@ -70,29 +70,28 @@ namespace vulkanRendererBackend
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.baseMipLevel = 0;
-		subresourceRange.levelCount = 1;	// mipmapping makes no sense for skyboxes.
-		subresourceRange.layerCount = 6;
+		subresourceRange.layerCount = 1;
+		subresourceRange.levelCount = static_cast<uint32_t>(math::Floor(math::Log2(math::Max(m_width, math::Max(m_height, m_depth))))) + 1;
 
 		// Create image:
 		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		VkImageCreateFlags imageFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_3D;
 		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
-		SetDebugName("SampleTextureCube");
+		SetDebugName("SampleTexture3d");
 	}
-
-	StagingBuffer* SampleTextureCube::StageData(void* data)
+	StagingBuffer* SampleTexture3d::StageData(void* data)
 	{
 		// Upload: data -> pStagingBuffer
-		uint64_t bufferSize = 6 * m_channels * m_width * m_height * BytesPerChannel(m_format);
+		uint64_t bufferSize = m_channels * m_width * m_height * m_depth * BytesPerChannel(m_format);
 		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
 		pStagingBuffer->SetData(data, bufferSize);
 		return pStagingBuffer;
 	}
-	void SampleTextureCube::Upload(StagingBuffer* pStagingBuffer)
+	void SampleTexture3d::Upload(StagingBuffer* pStagingBuffer)
 	{
 		const DeviceQueue& transferQueue = Context::GetLogicalDevice()->GetTransferQueue();
 		const DeviceQueue& graphicsQueue = Context::GetLogicalDevice()->GetGraphicsQueue();
@@ -110,9 +109,9 @@ namespace vulkanRendererBackend
 			SingleTimeCommand::EndCommand(graphicsQueue);
 		}
 	}
-	void SampleTextureCube::RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
+	void SampleTexture3d::RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
 	{
-		// Transition0: Layout: undefined->transfer, Queue: transfer
+		// Transition 0: Layout: undefined->dstTransfer, Queue: transfer
 		{
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
@@ -125,7 +124,12 @@ namespace vulkanRendererBackend
 		// Upload: pStagingBuffer -> texture
 		pStagingBuffer->UploadToTexture(transferCommandBuffer, this, m_pImage->GetImageSubresourceRange().layerCount);
 
-		// Transition1: Layout: transfer->shaderRead
+		// Transition 1: Layout: transfer->shaderRead
+		// With mipmapping: Queue: graphics
+		if (m_pImage->GetImageSubresourceRange().levelCount > 1)
+			m_pImage->GenerateMipmaps(graphicsCommandBuffer, m_pImage->GetImageSubresourceRange().levelCount);
+		// Without mipmapping: Queue: transfer
+		else
 		{
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;

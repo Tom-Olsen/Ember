@@ -10,14 +10,15 @@
 #include "vulkanContext.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDepthTexture2dArray.h"
+#include "vulkanDescriptorImageLayout.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderPassManager.h"
-#include "vulkanDescriptorImageLayout.h"
 #include "vulkanSampleTexture2d.h"
+#include "vulkanSampleTexture3d.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageTexture2d.h"
@@ -69,7 +70,7 @@ namespace vulkanRendererBackend
 					VkImageViewType viewType = static_cast<VkImageViewType>(descriptorReflection.GetImageDescriptor()->imageViewType);
 					if (viewType == VK_IMAGE_VIEW_TYPE_1D) throw std::runtime_error("Initialization for sampling Texture1d descriptorSet not implemented yet!");
 					else if (viewType == VK_IMAGE_VIEW_TYPE_2D) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTexture2d()), descriptorType);
-					else if (viewType == VK_IMAGE_VIEW_TYPE_3D) throw std::runtime_error("Initialization for sampling Texture3d descriptorSet not implemented yet!");
+					else if (viewType == VK_IMAGE_VIEW_TYPE_3D) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTexture3d()), descriptorType);
 					else if (viewType == VK_IMAGE_VIEW_TYPE_CUBE) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultSampleTextureCube()), descriptorType);
 					else if (viewType == VK_IMAGE_VIEW_TYPE_1D_ARRAY) throw std::runtime_error("Initialization for sampling Texture1dArray descriptorSet not implemented yet!");
 					else if (viewType == VK_IMAGE_VIEW_TYPE_2D_ARRAY) InitTextureBinding(frameIndex, binding, static_cast<Texture*>(DefaultGpuResources::GetDefaultDepthTexture2dArray()), descriptorType);
@@ -97,7 +98,7 @@ namespace vulkanRendererBackend
 
 		// Set default values for optional material bindings:
 		if (HasBinding("normalMap"))
-			SetTexture("normalMap", static_cast<Texture*>(DefaultGpuResources::GetNormalMapSampleTexture2d()));
+			SetTexture("normalMap", static_cast<Texture*>(DefaultGpuResources::GetDefaultNormalMap()));
 		if (HasBinding("SurfaceProperties"))
 		{
 			SetValue("SurfaceProperties", "diffuseColor", Float4::white);

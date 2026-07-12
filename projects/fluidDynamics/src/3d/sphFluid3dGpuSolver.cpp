@@ -66,7 +66,7 @@ namespace fluidDynamics
 		{
 			densityTexture3dResolution = newResolution;
 			for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
-				densityTexture3d[i] = Texture3d("densityTexture3d[" + std::to_string(i) + "]", densityTexture3dResolution.x, densityTexture3dResolution.y, densityTexture3dResolution.z, emberCommon::TextureFormats::r32_sfloat, emberCommon::TextureUsage::storage);
+				densityTexture3d[i] = Texture3d("densityTexture3d[" + std::to_string(i) + "]", densityTexture3dResolution.x, densityTexture3dResolution.y, densityTexture3dResolution.z, emberCommon::TextureFormats::r32_sfloat, emberCommon::TextureUsage::storageSample);
 		}
 	}
 
