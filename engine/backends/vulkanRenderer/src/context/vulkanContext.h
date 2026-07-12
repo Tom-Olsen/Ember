@@ -12,13 +12,7 @@
 
 
 // vulkanRendererBackend::ToDo:
-// -vulkanInstance: implement checks to ensure that all requested instanceExtensions are available and throw warnings accordingly.
-// -hide static members in Context struct and only make them accessible via Get/Set methods.
 // -allow renderWidth/renderHeight to change during runtime.
-// -ShaderPropertiesPool/StagingBufferPool: remove ShrinkToFit? some other mechanism to handle unbound growth?
-// -remove name property of classes that dont need it internally. e.g. texture and mesh?
-// -in math library change data containers to std::array<float,n>
-// -remove shader folder from vulkanBackend and use shaders directly from core?
 
 
 

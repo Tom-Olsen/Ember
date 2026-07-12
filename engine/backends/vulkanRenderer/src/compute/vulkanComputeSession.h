@@ -4,15 +4,6 @@
 
 
 
-// vulkanRendererBackend::ToDo: (these are older, maybe some are deprecated?)
-// -get VkFence from some pooling mechanism
-// -get VkCommandBuffer from one VkCommandPool
-// -add other pools to poolManager, e.g. VkFence and VkCommandBuffer/VkCommandPool
-// -allow for shaderProperties to be ceated with only one descriptorSet instead of framesInFlight many
-// -allow for shaderProperties to be created empty (for pooling) and be initialized later.
-
-
-
 // Forward declaration:
 typedef struct VkCommandBuffer_T* VkCommandBuffer;
 typedef struct VkFence_T* VkFence;

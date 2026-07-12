@@ -41,11 +41,11 @@ namespace emberMath
 		void Encapsulate(const Bounds& bounds);
 		void Expand(float amount);
 		void Expand(const Float3& amount);
-		std::optional<Float3> IntersectRay(const Ray& ray) const;	// Math::TODO: needs unit test
+		std::optional<Float3> IntersectRay(const Ray& ray) const;
 
 		// Equallity:
-		bool operator==(const Bounds& other) const;	// Math::TODO: needs unit test	
-		bool operator!=(const Bounds& other) const;	// Math::TODO: needs unit test
+		bool operator==(const Bounds& other) const;
+		bool operator!=(const Bounds& other) const;
 
 		// Logging:
 		std::string ToString() const;

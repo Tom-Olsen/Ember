@@ -1,4 +1,4 @@
-Async Compute Cleanup TODO
+Async Compute Cleanup ToDo
 
 Problem
 Compute::Async::Clear() currently does not explicitly wait for all running async compute sessions.

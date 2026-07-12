@@ -37,7 +37,7 @@ namespace emberMath
 
 		// Methods:
 		Float2 ClosestPoint(const Float2& point) const;
-		Float2 ClosestPointOnSurface(const Float2& point) const; // Math::TODO: needs unit test
+		Float2 ClosestPointOnSurface(const Float2& point) const;
 		bool Contains(const Float2& point) const;
 		void Encapsulate(const Float2& point);
 		void Expand(float amount);
