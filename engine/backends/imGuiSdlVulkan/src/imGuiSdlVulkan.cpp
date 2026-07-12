@@ -20,8 +20,6 @@ namespace imGuiSdlVulkanBackend
 	{
 		m_pSdlWindow = static_cast<SDL_Window*>(pIWindow->GetNativeHandle());
 		m_vkDevice = static_cast<VkDevice>(pIRenderer->GetVkDevice());
-		m_vkDescriptorPool = static_cast<VkDescriptorPool>(pIRenderer->GetVkDescriptorPool());
-		m_vkColorSampler = static_cast<VkSampler>(pIRenderer->GetColorSampler());
 		m_wantCaptureKeyboard = false;
 		m_wantCaptureMouse = false;
 		m_enableDockSpace = enableDockSpace;
@@ -54,15 +52,13 @@ namespace imGuiSdlVulkanBackend
 		initInfo.MinAllocationSize = 1024 * 1024;
 		#endif
 		ImGui_ImplVulkan_Init(&initInfo);
-
-		CreateDescriptorSetLayout();
 	}
 	Gui::~Gui()
 	{
+		for (auto& [_, descriptorSet] : m_vkImageViewToDescriptorMap)
+			ImGui_ImplVulkan_RemoveTexture(descriptorSet);
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
-		if (m_descriptorSetLayout != VK_NULL_HANDLE)
-			vkDestroyDescriptorSetLayout(m_vkDevice, m_descriptorSetLayout, nullptr);
 		ImGui::DestroyContext();
 		m_vkImageViewToDescriptorMap.clear();
 	}
@@ -74,8 +70,6 @@ namespace imGuiSdlVulkanBackend
 	{
 		// Transfer resources: other->this
 		m_vkDevice = other.m_vkDevice;
-		m_vkDescriptorPool = other.m_vkDescriptorPool;
-		m_descriptorSetLayout = other.m_descriptorSetLayout;
 		m_pIo = other.m_pIo;
 		m_pSdlWindow = other.m_pSdlWindow;
 		m_wantCaptureKeyboard = other.m_wantCaptureKeyboard;
@@ -87,8 +81,6 @@ namespace imGuiSdlVulkanBackend
 
 		// Invalidate other:
 		other.m_vkDevice = VK_NULL_HANDLE;
-		other.m_vkDescriptorPool = VK_NULL_HANDLE;
-		other.m_descriptorSetLayout = VK_NULL_HANDLE;
 		other.m_pIo = nullptr;
 		other.m_pSdlWindow = nullptr;
 		other.m_wantCaptureKeyboard = false;
@@ -103,17 +95,15 @@ namespace imGuiSdlVulkanBackend
 		if (this != &other)
 		{
 			// Release own resources:
+			for (auto& [_, descriptorSet] : m_vkImageViewToDescriptorMap)
+				ImGui_ImplVulkan_RemoveTexture(descriptorSet);
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplSDL3_Shutdown();
-			if (m_descriptorSetLayout != VK_NULL_HANDLE)
-				vkDestroyDescriptorSetLayout(m_vkDevice, m_descriptorSetLayout, nullptr);
 			ImGui::DestroyContext();
 			m_vkImageViewToDescriptorMap.clear();
 
 			// Transfer resources: other->this
 			m_vkDevice = other.m_vkDevice;
-			m_vkDescriptorPool = other.m_vkDescriptorPool;
-			m_descriptorSetLayout = other.m_descriptorSetLayout;
 			m_pIo = other.m_pIo;
 			m_pSdlWindow = other.m_pSdlWindow;
 			m_wantCaptureKeyboard = other.m_wantCaptureKeyboard;
@@ -122,6 +112,17 @@ namespace imGuiSdlVulkanBackend
 			m_vkImageViewToDescriptorMap = other.m_vkImageViewToDescriptorMap;
 			m_focusedWindowWantCaptureEventsCallback = other.m_focusedWindowWantCaptureEventsCallback;
 			m_hoveredWindowWantCaptureEventsCallback = other.m_hoveredWindowWantCaptureEventsCallback;
+
+			// Invalidate other:
+			other.m_vkDevice = VK_NULL_HANDLE;
+			other.m_pIo = nullptr;
+			other.m_pSdlWindow = nullptr;
+			other.m_wantCaptureKeyboard = false;
+			other.m_wantCaptureMouse = false;
+			other.m_enableDockSpace = false;
+			other.m_vkImageViewToDescriptorMap.clear();
+			other.m_focusedWindowWantCaptureEventsCallback = nullptr;
+			other.m_hoveredWindowWantCaptureEventsCallback = nullptr;
 		}
 		return *this;
 	}
@@ -198,8 +199,7 @@ namespace imGuiSdlVulkanBackend
 			return reinterpret_cast<ImTextureID>(it->second);
 
 		// Create descriptor set for this vkImageView:
-		VkDescriptorSet vkDescriptorSet = CreateDescriptorSet();
-		UpdateDescriptor(vkDescriptorSet, imageView, m_vkColorSampler);
+		VkDescriptorSet vkDescriptorSet = ImGui_ImplVulkan_AddTexture(imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		// Cache and return:
 		m_vkImageViewToDescriptorMap[imageView] = vkDescriptorSet;
@@ -441,49 +441,5 @@ namespace imGuiSdlVulkanBackend
 		ImGui::Begin("DockSpace Demo", &dockspaceOpen, windowFlags);
 		ImGui::DockSpace(ImGui::GetID("MyDockspace"), ImVec2(0.0f, 0.0f), dockspaceFlags);
 		ImGui::End();
-	}
-	void Gui::CreateDescriptorSetLayout()
-	{
-		VkDescriptorSetLayoutBinding binding = {};
-		binding.binding = 0;
-		binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		binding.descriptorCount = 1;
-		binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-		VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-		layoutInfo.bindingCount = 1;
-		layoutInfo.pBindings = &binding;
-
-		if (vkCreateDescriptorSetLayout(m_vkDevice, &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
-			throw std::runtime_error((std::string)"DearImGui::CreateDescriptorSetLayout: " + (std::string)"failed to create descriptor set layout!");
-	}
-	VkDescriptorSet Gui::CreateDescriptorSet()
-	{
-		VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-		allocInfo.descriptorPool = m_vkDescriptorPool;
-		allocInfo.descriptorSetCount = 1;
-		allocInfo.pSetLayouts = &m_descriptorSetLayout;
-
-		VkDescriptorSet descriptorSet;
-		if (vkAllocateDescriptorSets(m_vkDevice, &allocInfo, &descriptorSet) != VK_SUCCESS)
-			throw std::runtime_error((std::string)"DearImGui::CreateDescriptorSet: " + (std::string)"failed to allocate descriptor sets!");
-		return descriptorSet;
-	}
-	void Gui::UpdateDescriptor(VkDescriptorSet vkDescriptorSet, VkImageView vkImageView, VkSampler vkSampler)
-	{
-		VkDescriptorImageInfo imageInfo = {};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = vkImageView;
-		imageInfo.sampler = vkSampler;
-
-		VkWriteDescriptorSet writeDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-		writeDescriptor.dstSet = vkDescriptorSet;
-		writeDescriptor.dstBinding = 0;
-		writeDescriptor.dstArrayElement = 0;
-		writeDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		writeDescriptor.descriptorCount = 1;
-		writeDescriptor.pImageInfo = &imageInfo;
-
-		vkUpdateDescriptorSets(m_vkDevice, 1, &writeDescriptor, 0, nullptr);
 	}
 }

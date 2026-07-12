@@ -12,12 +12,9 @@
 struct ImGuiIO;
 struct SDL_Window;
 typedef struct VkDevice_T* VkDevice;
-typedef struct VkDescriptorPool_T* VkDescriptorPool;
 typedef struct VkCommandBuffer_T* VkCommandBuffer;
 typedef struct VkImageView_T* VkImageView;
-typedef struct VkSampler_T* VkSampler;
 typedef struct VkDescriptorSet_T* VkDescriptorSet;
-typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
 namespace emberBackendInterface
 {
 	class IRenderer;
@@ -33,9 +30,6 @@ namespace imGuiSdlVulkanBackend
 	{
 	private: // Members
 		VkDevice m_vkDevice;
-		VkDescriptorPool m_vkDescriptorPool;
-		VkDescriptorSetLayout m_descriptorSetLayout;
-		VkSampler m_vkColorSampler;
 		SDL_Window* m_pSdlWindow;
 		ImGuiIO* m_pIo;
 		bool m_wantCaptureKeyboard;
@@ -117,8 +111,5 @@ namespace imGuiSdlVulkanBackend
 	private: // Methods:
 		void ReleaseStaleMouseButtons();
 		void ShowDockSpace();
-		void CreateDescriptorSetLayout();
-		VkDescriptorSet CreateDescriptorSet();
-		void UpdateDescriptor(VkDescriptorSet vkDescriptorSet, VkImageView vkImageView, VkSampler vkSampler);
 	};
 }
