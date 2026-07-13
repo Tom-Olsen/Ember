@@ -3,6 +3,22 @@
 
 
 
+// Fallbacks for older Vulkan headers; values match the Vulkan spec.
+#ifndef VK_EXT_descriptor_heap
+static const VkAccessFlagBits2 VK_ACCESS_2_SAMPLER_HEAP_READ_BIT_EXT = 0x200000000000000ULL;
+static const VkAccessFlagBits2 VK_ACCESS_2_RESOURCE_HEAP_READ_BIT_EXT = 0x400000000000000ULL;
+#endif
+#ifndef VK_ARM_data_graph
+static const VkAccessFlagBits2 VK_ACCESS_2_DATA_GRAPH_READ_BIT_ARM = 0x800000000000ULL;
+static const VkAccessFlagBits2 VK_ACCESS_2_DATA_GRAPH_WRITE_BIT_ARM = 0x1000000000000ULL;
+#endif
+#ifndef VK_EXT_memory_decompression
+static const VkAccessFlagBits2 VK_ACCESS_2_MEMORY_DECOMPRESSION_READ_BIT_EXT = 0x80000000000000ULL;
+static const VkAccessFlagBits2 VK_ACCESS_2_MEMORY_DECOMPRESSION_WRITE_BIT_EXT = 0x100000000000000ULL;
+#endif
+
+
+
 namespace emberVulkanUtility
 {
 	std::string ToString_VkAccessFlags2(VkAccessFlags2 vkAccessFlags2)

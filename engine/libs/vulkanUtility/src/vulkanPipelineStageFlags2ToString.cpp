@@ -3,6 +3,19 @@
 
 
 
+// Fallbacks for older Vulkan headers; values match the Vulkan spec.
+#ifndef VK_ARM_data_graph
+static const VkPipelineStageFlagBits2 VK_PIPELINE_STAGE_2_DATA_GRAPH_BIT_ARM = 0x40000000000ULL;
+#endif
+#ifndef VK_KHR_copy_memory_indirect
+static const VkPipelineStageFlagBits2 VK_PIPELINE_STAGE_2_COPY_INDIRECT_BIT_KHR = 0x400000000000ULL;
+#endif
+#ifndef VK_EXT_memory_decompression
+static const VkPipelineStageFlagBits2 VK_PIPELINE_STAGE_2_MEMORY_DECOMPRESSION_BIT_EXT = 0x200000000000ULL;
+#endif
+
+
+
 namespace emberVulkanUtility
 {
 	std::string ToString_VkPipelineStageFlags2(VkPipelineStageFlags2 vkPipelineStageFlags2)

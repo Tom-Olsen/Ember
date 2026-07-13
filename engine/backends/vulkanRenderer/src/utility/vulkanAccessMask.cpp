@@ -3,6 +3,14 @@
 
 
 
+// Fallback for Vulkan headers that predate VK_EXT_descriptor_heap; values match the Vulkan spec.
+#ifndef VK_EXT_descriptor_heap
+static const VkAccessFlagBits2 VK_ACCESS_2_SAMPLER_HEAP_READ_BIT_EXT = 0x200000000000000ULL;
+static const VkAccessFlagBits2 VK_ACCESS_2_RESOURCE_HEAP_READ_BIT_EXT = 0x400000000000000ULL;
+#endif
+
+
+
 namespace vulkanRendererBackend
 {
     // VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT:
