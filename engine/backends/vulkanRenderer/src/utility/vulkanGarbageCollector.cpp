@@ -40,7 +40,10 @@ namespace vulkanRendererBackend
     // Static methods:
     void GarbageCollector::RecordGarbage(std::function<void()> collectGarbageCallback)
     {
-        s_garbageQueue.push_back(GarbageEntry{ Context::GetAbsoluteFrameIndex(), std::move(collectGarbageCallback)});
+        if (Context::IsDeviceIdle())
+            collectGarbageCallback();
+        else
+            s_garbageQueue.push_back(GarbageEntry{ Context::GetAbsoluteFrameIndex(), std::move(collectGarbageCallback)});
     }
     void GarbageCollector::CollectGarbage()
     {

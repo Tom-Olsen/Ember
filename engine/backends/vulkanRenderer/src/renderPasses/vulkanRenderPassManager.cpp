@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 	std::unique_ptr<PresentRenderPass> RenderPassManager::s_pPresentRenderPass = nullptr;
 
 
-
+    // Public methods:
 	// Initialization/Cleanup:
 	void RenderPassManager::Init(uint32_t renderWidth, uint32_t renderHeight, uint32_t shadowMapResolution, uint32_t maxLightsCount)
 	{

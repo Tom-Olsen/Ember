@@ -31,6 +31,7 @@ namespace vulkanRendererBackend
         static std::map<uint32_t, StagingBufferPool> s_stagingBufferPoolMap;
 
     public: // Methods
+	    // Initialization/Cleanup:
         static void Init();
         static void Clear();
 
