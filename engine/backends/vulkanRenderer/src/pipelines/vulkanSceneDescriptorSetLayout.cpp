@@ -15,6 +15,7 @@ namespace vulkanRendererBackend
     std::unique_ptr<UniformBuffer> SceneDescriptorSetLayout::s_pUniformLightPropertiesBuffer;
     VkDescriptorSetLayout SceneDescriptorSetLayout::s_descriptorSetLayout = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> SceneDescriptorSetLayout::s_descriptorSets;
+    std::vector<DescriptorSetAllocation> SceneDescriptorSetLayout::s_descriptorSetAllocations;
 
 
 
@@ -42,17 +43,14 @@ namespace vulkanRendererBackend
 
         // Create descriptor sets:
         {
-            std::vector<VkDescriptorSetLayout> layouts(Context::GetFramesInFlight(), s_descriptorSetLayout); // same desciptorSetLayout for all frames.
-
-            VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-            allocInfo.descriptorPool = Context::GetVkDescriptorPool();
-            allocInfo.descriptorSetCount = Context::GetFramesInFlight();
-            allocInfo.pSetLayouts = layouts.data();
-
             s_descriptorSets.resize(Context::GetFramesInFlight());
-            VKA(vkAllocateDescriptorSets(Context::GetVkDevice(), &allocInfo, s_descriptorSets.data()));
+            s_descriptorSetAllocations.reserve(Context::GetFramesInFlight());
             for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-                NAME_VK_OBJECT(s_descriptorSets[frameIndex], "DescriptorSet_Scene_Frame" + std::to_string(frameIndex));
+            {
+                DescriptorSetAllocation allocation = DescriptorPoolManager::AllocateDescriptorSet(s_descriptorSetLayout, "DescriptorSet_Scene_Frame" + std::to_string(frameIndex));
+                s_descriptorSetAllocations.push_back(allocation);
+                s_descriptorSets[frameIndex] = allocation.descriptorSet;
+            }
         }
 
         // Create uniform light properties buffer:
@@ -149,14 +147,14 @@ namespace vulkanRendererBackend
         s_descriptorSetLayout = VK_NULL_HANDLE;
 
         // Queue the destruction of each descriptor set for later collection:
-        for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
+        for (const DescriptorSetAllocation& allocation : s_descriptorSetAllocations)
         {
-            VkDescriptorSet descriptorSet = s_descriptorSets[i];
-            GarbageCollector::RecordGarbage([descriptorSet]()
+            GarbageCollector::RecordGarbage([allocation]()
             {
-                vkFreeDescriptorSets(Context::GetVkDevice(), Context::GetVkDescriptorPool(), 1, &descriptorSet);
+                DescriptorPoolManager::FreeDescriptorSet(allocation);
             });
         }
+        s_descriptorSetAllocations.clear();
         s_descriptorSets.clear();
     }
 

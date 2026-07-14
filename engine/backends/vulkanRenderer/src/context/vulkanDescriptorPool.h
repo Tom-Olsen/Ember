@@ -25,14 +25,13 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		VkDescriptorPool m_descriptorPool;
-		LogicalDevice* m_pLogicalDevice;
 		std::vector<DescriptorTypeCount> m_perSetCapacities;        // average expected distribution of descriptors within a descriptor set.
 		std::unordered_set<VkDescriptorSetLayout> m_failedLayouts;  // layouts that do not fit the current free descriptor distribution.
 		uint32_t m_maxSets;             // max number of descriptorSets that this pool can provide.
 		uint32_t m_allocatedSetCount;   // keeps track of number of allocated descriptor sets from this pool.
 
 	public: // Methods:
-		DescriptorPool(LogicalDevice* pLogicalDevice, const std::vector<DescriptorTypeCount>& perSetCapacities, uint32_t maxSets);
+		DescriptorPool(const std::vector<DescriptorTypeCount>& perSetCapacities, uint32_t maxSets);
 		~DescriptorPool();
 
 		// Non-copyable:

@@ -1,5 +1,6 @@
 #pragma once
 #include "iDescriptorSetBinding.h"
+#include "vulkanDescriptorPoolManager.h"
 #include "vulkanRendererExport.h"
 #include "vulkanUniformBuffer.h"
 #include <memory>
@@ -73,6 +74,7 @@ namespace vulkanRendererBackend
 
 		// All these vectors contain one item for each frame in flight:
 		std::vector<VkDescriptorSet> m_descriptorSets;
+		std::vector<DescriptorSetAllocation> m_descriptorSetAllocations;
 		std::vector<std::unordered_map<uint32_t, TextureBinding>> m_textureMaps;
 		std::vector<std::unordered_map<uint32_t, BufferBinding>> m_bufferMaps;
 		std::unordered_map<uint32_t, UniformBufferBinding> m_uniformBufferMap; // uniformBuffer handles framesInFlight with a ring buffer.

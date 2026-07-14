@@ -187,7 +187,6 @@ namespace vulkanRendererBackend
 		void* GetVkPhysicalDevice() const override;
 		void* GetVkDevice() const override;
 		void* GetPresentVkRenderPass() const override;
-		void* GetVkDescriptorPool() const override;
 		void* GetGraphicsVkQueue() const override;
 		void* GetColorSampler() const override;
 		uint32_t GetGraphicsVkQueueFamilyIndex() const override;

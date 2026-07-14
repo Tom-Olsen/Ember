@@ -128,7 +128,7 @@ namespace vulkanRendererBackend
 			DescriptorTypeCount{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 2 }
 			// Add more descriptor types as needed.
 		};
-		s_pools.push_back(std::make_unique<DescriptorPool>(Context::GetLogicalDevice(), s_perSetCapacities, poolMaxSets));
+		s_pools.push_back(std::make_unique<DescriptorPool>(s_perSetCapacities, poolMaxSets));
 		return s_pools.back().get();
 	}
 }

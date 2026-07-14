@@ -1,4 +1,5 @@
 #include "vulkanDescriptorPool.h"
+#include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -12,14 +13,12 @@
 namespace vulkanRendererBackend
 {
 	// Constructor/Destructor:
-	DescriptorPool::DescriptorPool(LogicalDevice* pLogicalDevice, const std::vector<DescriptorTypeCount>& perSetCapacities, uint32_t maxSets)
+	DescriptorPool::DescriptorPool(const std::vector<DescriptorTypeCount>& perSetCapacities, uint32_t maxSets)
 	{
 		// Assertions:
-		assert(pLogicalDevice != nullptr);
 		assert(!perSetCapacities.empty());
 		assert(maxSets > 0);
 
-		m_pLogicalDevice = pLogicalDevice;
 		m_perSetCapacities = perSetCapacities;
 		m_maxSets = maxSets;
 		m_allocatedSetCount = 0;
@@ -36,7 +35,7 @@ namespace vulkanRendererBackend
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
 
-		VKA(vkCreateDescriptorPool(m_pLogicalDevice->GetVkDevice(), &poolInfo, nullptr, &m_descriptorPool));
+		VKA(vkCreateDescriptorPool(Context::GetVkDevice(), &poolInfo, nullptr, &m_descriptorPool));
         static int poolCounter = 0;
 		NAME_VK_OBJECT(m_descriptorPool, "DescriptorPool_#" + std::to_string(poolCounter));
         poolCounter++;
@@ -78,7 +77,7 @@ namespace vulkanRendererBackend
 		allocInfo.pSetLayouts = &layout;
 
 		VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-		VkResult result = vkAllocateDescriptorSets(m_pLogicalDevice->GetVkDevice(), &allocInfo, &descriptorSet);
+		VkResult result = vkAllocateDescriptorSets(Context::GetVkDevice(), &allocInfo, &descriptorSet);
 		if (result == VK_ERROR_OUT_OF_POOL_MEMORY || result == VK_ERROR_FRAGMENTED_POOL)
 		{
 			m_failedLayouts.insert(layout);
@@ -92,7 +91,7 @@ namespace vulkanRendererBackend
 	void DescriptorPool::FreeDescriptorSet(VkDescriptorSet descriptorSet)
 	{
 		assert(m_allocatedSetCount > 0);
-        VKA(vkFreeDescriptorSets(m_pLogicalDevice->GetVkDevice(), m_descriptorPool, 1, &descriptorSet));
+        VKA(vkFreeDescriptorSets(Context::GetVkDevice(), m_descriptorPool, 1, &descriptorSet));
 		m_failedLayouts.clear();
 		m_allocatedSetCount--;
 	}
@@ -130,12 +129,12 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void DescriptorPool::Cleanup()
 	{
-		if (m_pLogicalDevice == nullptr || m_descriptorPool == VK_NULL_HANDLE)
+		if (m_descriptorPool == VK_NULL_HANDLE)
 			return;
 
         // vkDescriptorSets are disposed by garbage collector and pool must be deleted after all its sets.
         // => pool must also be disposed by garbage collector:
-		VkDevice device = m_pLogicalDevice->GetVkDevice();
+		VkDevice device = Context::GetVkDevice();
 		VkDescriptorPool descriptorPool = m_descriptorPool;
 		m_descriptorPool = VK_NULL_HANDLE;
 		GarbageCollector::RecordGarbage([device, descriptorPool]()
@@ -146,14 +145,12 @@ namespace vulkanRendererBackend
 	void DescriptorPool::MoveFrom(DescriptorPool& other) noexcept
 	{
 		m_descriptorPool = other.m_descriptorPool;
-		m_pLogicalDevice = other.m_pLogicalDevice;
 		m_perSetCapacities = std::move(other.m_perSetCapacities);
 		m_failedLayouts = std::move(other.m_failedLayouts);
 		m_maxSets = other.m_maxSets;
 		m_allocatedSetCount = other.m_allocatedSetCount;
 
 		other.m_descriptorPool = VK_NULL_HANDLE;
-		other.m_pLogicalDevice = nullptr;
 		other.m_maxSets = 0;
 		other.m_allocatedSetCount = 0;
 	}

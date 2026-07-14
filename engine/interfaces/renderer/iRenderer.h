@@ -84,7 +84,6 @@ namespace emberBackendInterface
         virtual void* GetVkPhysicalDevice() const = 0;
         virtual void* GetVkDevice() const = 0;
         virtual void* GetPresentVkRenderPass() const = 0;
-        virtual void* GetVkDescriptorPool() const = 0;
         virtual void* GetGraphicsVkQueue() const = 0;
         virtual void* GetColorSampler() const = 0;
         virtual uint32_t GetGraphicsVkQueueFamilyIndex() const = 0;

@@ -631,10 +631,6 @@ namespace vulkanRendererBackend
 	{
 		return static_cast<void*>(RenderPassManager::GetPresentRenderPass()->GetVkRenderPass());
 	}
-	void* Renderer::GetVkDescriptorPool() const
-	{
-		return static_cast<void*>(Context::GetVkDescriptorPool());
-	}
 	void* Renderer::GetGraphicsVkQueue() const
 	{
 		return static_cast<void*>(Context::GetLogicalDevice()->GetGraphicsQueue().queue);

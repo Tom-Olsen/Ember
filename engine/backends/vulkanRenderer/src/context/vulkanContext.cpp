@@ -3,7 +3,7 @@
 #include "iWindow.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanDefaultGpuResources.h"
-#include "vulkanDescriptorPool.h"
+#include "vulkanDescriptorPoolManager.h"
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanGlobalDescriptorSetLayout.h"
@@ -39,7 +39,6 @@ namespace vulkanRendererBackend
 	std::unique_ptr<LogicalDevice> Context::m_pLogicalDevice;
 	std::unique_ptr<MemoryAllocator> Context::m_pMemoryAllocator;
 	std::unique_ptr<AllocationTracker> Context::m_pAllocationTracker;
-	std::unique_ptr<DescriptorPool> Context::m_pDescriptorPool;
 	std::array<std::unique_ptr<Swapchain>, 2> Context::m_swapchains;
 	Renderer* Context::m_pRenderer;
 	uint32_t Context::m_swapchainIndex;
@@ -133,7 +132,6 @@ namespace vulkanRendererBackend
 
 		m_pMemoryAllocator = std::make_unique<MemoryAllocator>(m_pInstance.get(), m_pLogicalDevice.get(), m_pPhysicalDevice.get());
 		m_pAllocationTracker = std::make_unique<AllocationTracker>();
-		m_pDescriptorPool = std::make_unique<DescriptorPool>(m_pLogicalDevice.get());
 		m_swapchains[0] = std::make_unique<Swapchain>(m_pLogicalDevice.get(), m_pSurface.get(), VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 		m_swapchainIndex = 0;
 
@@ -144,6 +142,7 @@ namespace vulkanRendererBackend
 		uint32_t maxLightsCount = createInfo.maxDirectionalLights + createInfo.maxPositionalLights;
 		SingleTimeCommand::Init();
 		GarbageCollector::Init();
+		DescriptorPoolManager::Init();
 		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
 		DefaultGpuResources::InitSamplers();
 		PoolManager::Init();
@@ -172,11 +171,11 @@ namespace vulkanRendererBackend
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		RenderPassManager::Clear();
+		DescriptorPoolManager::Clear();
 		GarbageCollector::Clear();
 		SingleTimeCommand::Clear();
 		m_swapchains[0].reset();
 		m_swapchains[1].reset();
-		m_pDescriptorPool.reset();
 		m_pAllocationTracker.reset();
 		m_pMemoryAllocator.reset();
 		m_pLogicalDevice.reset();
@@ -220,10 +219,6 @@ namespace vulkanRendererBackend
 	{
 		return m_pAllocationTracker.get();
 	}
-	const DescriptorPool* Context::GetDescriptorPool()
-	{
-		return m_pDescriptorPool.get();
-	}
 	const Swapchain* Context::GetSwapchain()
 	{
 		return m_swapchains[m_swapchainIndex].get();
@@ -252,10 +247,6 @@ namespace vulkanRendererBackend
 	const VmaAllocator Context::GetVmaAllocator()
 	{
 		return m_pMemoryAllocator->GetVmaAllocator();
-	}
-	const VkDescriptorPool Context::GetVkDescriptorPool()
-	{
-		return m_pDescriptorPool->GetVkDescriptorPool();
 	}
 	const VkSwapchainKHR& Context::GetVkSwapchainKHR()
 	{

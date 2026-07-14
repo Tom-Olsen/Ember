@@ -1,4 +1,5 @@
 #pragma once
+#include "vulkanDescriptorPoolManager.h"
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -16,6 +17,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		static VkDescriptorSetLayout s_descriptorSetLayout;
 		static std::vector<VkDescriptorSet> s_descriptorSets;
+		static std::vector<DescriptorSetAllocation> s_descriptorSetAllocations;
 
 	public: // Methods:
 		// Init/Clear:

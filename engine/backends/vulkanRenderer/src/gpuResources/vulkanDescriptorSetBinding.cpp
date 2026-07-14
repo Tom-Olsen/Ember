@@ -111,12 +111,11 @@ namespace vulkanRendererBackend
 	DescriptorSetBinding::~DescriptorSetBinding()
 	{
 		// Queue the destruction of each descriptor set for later collection:
-		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
+		for (const DescriptorSetAllocation& allocation : m_descriptorSetAllocations)
 		{
-			VkDescriptorSet descriptorSet = m_descriptorSets[i];
-			GarbageCollector::RecordGarbage([descriptorSet]()
+			GarbageCollector::RecordGarbage([allocation]()
 			{
-				vkFreeDescriptorSets(Context::GetVkDevice(), Context::GetVkDescriptorPool(),1, &descriptorSet);
+				DescriptorPoolManager::FreeDescriptorSet(allocation);
 			});
 		}
 	}
@@ -572,17 +571,14 @@ namespace vulkanRendererBackend
 	// Descriptor Set management:
 	void DescriptorSetBinding::CreateDescriptorSets()
 	{
-		std::vector<VkDescriptorSetLayout> layouts(Context::GetFramesInFlight(), m_pShader->GetVkDescriptorSetLayout()[m_setIndex]);	// same layout for all frames
-
-		VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-		allocInfo.descriptorPool = Context::GetVkDescriptorPool();
-		allocInfo.descriptorSetCount = Context::GetFramesInFlight();
-		allocInfo.pSetLayouts = layouts.data();
-
 		m_descriptorSets.resize(Context::GetFramesInFlight());
-		VKA(vkAllocateDescriptorSets(Context::GetLogicalDevice()->GetVkDevice(), &allocInfo, m_descriptorSets.data()));
+		m_descriptorSetAllocations.reserve(Context::GetFramesInFlight());
 		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-			NAME_VK_OBJECT(m_descriptorSets[frameIndex], "DescriptorSet" + std::to_string(m_setIndex) + "_Frame" + std::to_string(frameIndex) + "_" + m_pShader->GetName());
+		{
+			DescriptorSetAllocation allocation = DescriptorPoolManager::AllocateDescriptorSet(m_pShader->GetVkDescriptorSetLayout()[m_setIndex], "DescriptorSet" + std::to_string(m_setIndex) + "_Frame" + std::to_string(frameIndex) + "_" + m_pShader->GetName());
+			m_descriptorSetAllocations.push_back(allocation);
+			m_descriptorSets[frameIndex] = allocation.descriptorSet;
+		}
 	}
 	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, const UniformBufferBinding& uniformBufferBinding)
 	{

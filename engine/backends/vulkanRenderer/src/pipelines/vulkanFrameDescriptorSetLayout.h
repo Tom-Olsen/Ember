@@ -1,5 +1,6 @@
 #pragma once
 #include "emberMath.h"
+#include "vulkanDescriptorPoolManager.h"
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -19,6 +20,7 @@ namespace vulkanRendererBackend
         static std::unique_ptr<UniformBuffer> s_pUniformCameraBuffer;
         static VkDescriptorSetLayout s_descriptorSetLayout;
         static std::vector<VkDescriptorSet> s_descriptorSets;
+        static std::vector<DescriptorSetAllocation> s_descriptorSetAllocations;
 
     public: // Methods:
         // Init/Clear:

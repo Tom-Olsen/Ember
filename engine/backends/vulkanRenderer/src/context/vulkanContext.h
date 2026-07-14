@@ -63,7 +63,6 @@ namespace vulkanRendererBackend
 	class LogicalDevice;
 	class MemoryAllocator;
 	class AllocationTracker;
-	class DescriptorPool;
 	class Renderer;
 	class Swapchain;
 
@@ -72,17 +71,17 @@ namespace vulkanRendererBackend
 	/// <summary>
 	/// Context is a utility class designed to encapsulate and manage all components required for the renderer.
 	/// It integrates multiple Vulkan resources and functionalities into a cohesive framework: <para/>
-	/// - Instance:				VkInstance and validation layers. <para/>
-	/// - PhysicalDevice:		physical device selection and feature support. <para/>
-	/// - Surface:				VkSurface and present mode (mailbox, FIFO, etc.). <para/>
-	/// - LogicalDevice:		VkDevice and queues (graphics, present, compute, transfer). <para/>
-	/// - MemoryAllocator:		VmaAllocator for flexible memory allocation pools. <para/>
-	/// - AllocationTracker:	tracks vmaBuffer and vmaImage creation and destruction. <para/>
-	/// - DescriptorPool:		VkDescriptorPool settings. <para/>
-	/// - Swapchain:			VkSwapchainKHR, swapchain images, image views, and recreation. <para/>
-	/// - framesInFlight:		Number of frames in flight for synchronization. <para/>
-	/// - frameIndex:			Current frame index for synchronization. <para/>
-	/// - msaaSamples:			Msaa level, clamped to the maximum supported by the physical device. <para/>
+	/// - Instance:				    VkInstance and validation layers. <para/>
+	/// - PhysicalDevice:		    physical device selection and feature support. <para/>
+	/// - Surface:				    VkSurface and present mode (mailbox, FIFO, etc.). <para/>
+	/// - LogicalDevice:		    VkDevice and queues (graphics, present, compute, transfer). <para/>
+	/// - MemoryAllocator:		    VmaAllocator for flexible memory allocation pools. <para/>
+	/// - AllocationTracker:	    tracks vmaBuffer and vmaImage creation and destruction. <para/>
+	/// - DescriptorPoolManager:    VkDescriptorPool allocation. <para/>
+	/// - Swapchain:			    VkSwapchainKHR, swapchain images, image views, and recreation. <para/>
+	/// - framesInFlight:		    Number of frames in flight for synchronization. <para/>
+	/// - frameIndex:			    Current frame index for synchronization. <para/>
+	/// - msaaSamples:			    Msaa level, clamped to the maximum supported by the physical device. <para/>
 	/// </summary>
 	class Context
 	{
@@ -94,7 +93,6 @@ namespace vulkanRendererBackend
 		static std::unique_ptr<LogicalDevice> m_pLogicalDevice;
 		static std::unique_ptr<MemoryAllocator> m_pMemoryAllocator;
 		static std::unique_ptr<AllocationTracker> m_pAllocationTracker;
-		static std::unique_ptr<DescriptorPool> m_pDescriptorPool;
 		static std::array<std::unique_ptr<Swapchain>, 2> m_swapchains;
 		static Renderer* m_pRenderer; // no ownership.
 		static uint32_t m_swapchainIndex;
@@ -117,7 +115,6 @@ namespace vulkanRendererBackend
 		static const LogicalDevice* GetLogicalDevice();
 		static MemoryAllocator* GetMemoryAllocator();
 		static AllocationTracker* GetAllocationTracker();
-		static const DescriptorPool* GetDescriptorPool();
 		static const Swapchain* GetSwapchain();
 		static Renderer* GetRenderer();
 
@@ -126,7 +123,6 @@ namespace vulkanRendererBackend
 		static const VkSurfaceKHR GetVkSurfaceKHR();
 		static const VkDevice GetVkDevice();
 		static const VmaAllocator GetVmaAllocator();
-		static const VkDescriptorPool GetVkDescriptorPool();
 		static const VkSwapchainKHR& GetVkSwapchainKHR();
 		static bool DepthClampEnabled();
 		static bool DepthBiasClampEnabled();

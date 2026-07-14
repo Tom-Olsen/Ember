@@ -1,6 +1,7 @@
 #pragma once
 #include "commonLighting.h"
 #include "emberMath.h"
+#include "vulkanDescriptorPoolManager.h"
 #include <memory>
 #include <vulkan/vulkan.h>
 #include <vector>
@@ -20,6 +21,7 @@ namespace vulkanRendererBackend
         static std::unique_ptr<UniformBuffer> s_pUniformLightPropertiesBuffer;
         static VkDescriptorSetLayout s_descriptorSetLayout;
         static std::vector<VkDescriptorSet> s_descriptorSets;
+        static std::vector<DescriptorSetAllocation> s_descriptorSetAllocations;
 
     public: // Methods:
         // Init/Clear:
