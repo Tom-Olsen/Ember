@@ -94,7 +94,6 @@ Implemented features:
 Ember::ToDo now!
 - math::Random has static state and is in a static library that gets linked multiple times => inconcistent state. Fix this.
 - rewrite math library to be a wrapper around glm?
-- descriptorsetpool management with dynamic creation of further pools when needed.
 - improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
 - sort entities first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
 - implement frustum culling.

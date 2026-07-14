@@ -1,6 +1,6 @@
 include_guard(GLOBAL)
 
-option(EMBER_ENABLE_VULKAN_VALIDATION_LAYERS "Enable Vulkan validation layers and related debug helpers." OFF)
+set(EMBER_ENABLE_VULKAN_VALIDATION_LAYERS OFF)
 message(STATUS "EMBER_ENABLE_VULKAN_VALIDATION_LAYERS: ${EMBER_ENABLE_VULKAN_VALIDATION_LAYERS}")
 
 function(ember_configure_vulkan_validation_layers targetName)

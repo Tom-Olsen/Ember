@@ -43,9 +43,15 @@ namespace fluidDynamics
 		int m_colorMode;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
+		bool m_renderParticles;
+		bool m_renderVolumetricDensity;
+		float m_volumetricDensityRayStepLength;
+		float m_volumetricDensityAbsorption;
 		Mesh m_particleMesh;
 		Mesh m_attractorSphereMesh;
+        Mesh m_volumetricDensityCube;
 		Material m_particleMaterial;
+        Material m_volumetricDensityMaterial;
 		ShaderProperties m_shaderProperties;
 
 		// Editor Window:
@@ -86,6 +92,10 @@ namespace fluidDynamics
 		void SetColorMode(int colorMode);
 		void SetInitialDistributionRadius(float initialDistributionRadius);
 		void SetVisualRadius(float visualRadius);
+		void SetRenderParticles(bool renderParticles);
+		void SetRenderVolumetricDensity(bool renderVolumetricDensity);
+		void SetVolumetricDensityRayStepLength(float volumetricDensityRayStepLength);
+		void SetVolumetricDensityAbsorption(float volumetricDensityAbsorption);
 
 		// Getters:
 		bool GetIsRunning() const;
@@ -111,6 +121,10 @@ namespace fluidDynamics
 		int GetColorMode() const;
 		float GetInitialDistributionRadius() const;
 		float GetVisualRadius() const;
+		bool GetRenderParticles() const;
+		bool GetRenderVolumetricDensity() const;
+		float GetVolumetricDensityRayStepLength() const;
+		float GetVolumetricDensityAbsorption() const;
 
 		// Debugging:
 		void Print();

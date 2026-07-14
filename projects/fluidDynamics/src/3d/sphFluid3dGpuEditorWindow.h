@@ -43,6 +43,10 @@ namespace emberEditor
 		int m_colorMode;
 		float m_initialDistributionRadius;
 		float m_visualRadius;
+		bool m_renderParticles;
+		bool m_renderVolumetricDensity;
+		float m_volumetricDensityRayStepLength;
+		float m_volumetricDensityAbsorption;
 
 	public:
 		SphFluid3dGpuEditorWindow(fluidDynamics::SphFluid3dGpu* pScript)
@@ -100,6 +104,10 @@ namespace emberEditor
 			Gui::DragInt("Color Mode:", &m_colorMode);
 			Gui::DragFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
+			Gui::Checkbox("Render Particles:", &m_renderParticles);
+			Gui::Checkbox("Render Volumetric Density:", &m_renderVolumetricDensity);
+			Gui::DragFloat("Volumetric Density Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f, "%.8f");
+			Gui::DragFloat("Volumetric Density Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f, "%.8f");
 
 			// Buttons:
 			static bool step = false;
@@ -139,6 +147,10 @@ namespace emberEditor
 			m_colorMode = m_pScript->GetColorMode();
 			m_initialDistributionRadius = m_pScript->GetInitialDistributionRadius();
 			m_visualRadius = m_pScript->GetVisualRadius();
+			m_renderParticles = m_pScript->GetRenderParticles();
+			m_renderVolumetricDensity = m_pScript->GetRenderVolumetricDensity();
+			m_volumetricDensityRayStepLength = m_pScript->GetVolumetricDensityRayStepLength();
+			m_volumetricDensityAbsorption = m_pScript->GetVolumetricDensityAbsorption();
 		}
 		void SetData()
 		{
@@ -163,6 +175,10 @@ namespace emberEditor
 			m_pScript->SetColorMode(m_colorMode);
 			m_pScript->SetInitialDistributionRadius(m_initialDistributionRadius);
 			m_pScript->SetVisualRadius(m_visualRadius);
+			m_pScript->SetRenderParticles(m_renderParticles);
+			m_pScript->SetRenderVolumetricDensity(m_renderVolumetricDensity);
+			m_pScript->SetVolumetricDensityRayStepLength(m_volumetricDensityRayStepLength);
+			m_pScript->SetVolumetricDensityAbsorption(m_volumetricDensityAbsorption);
 		}
 	};
 }

@@ -19,6 +19,7 @@ struct VertexOutput
     float4 vertexColor : COLOR;         // vertex color
     float4 uv : TEXCOORD0;              // texture coordinates
     float3 worldPosition : TEXCOORD1;   // position in world space
+    float3 localPosition : TEXCOORD2;   // position in local/model space
 };
 
 
@@ -41,5 +42,6 @@ VertexOutput main(VertexInput input)
         output.vertexColor *= instanceBuffer[input.instanceID].color;
     output.uv = input.uv;
     output.worldPosition = mul(localToWorldMatrix, pos).xyz;
+    output.localPosition = input.position;
     return output;
 }

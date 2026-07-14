@@ -40,7 +40,28 @@ namespace emberCore
 
 	// Movable:
 	Mesh::Mesh(Mesh&& other) noexcept = default;
-	Mesh& Mesh::operator=(Mesh&& other) noexcept = default;
+	Mesh& Mesh::operator=(Mesh&& other)
+	{
+		if (this == &other)
+			return *this;
+
+		m_name = std::move(other.m_name);
+		m_positions = std::move(other.m_positions);
+		m_normals = std::move(other.m_normals);
+		m_tangents = std::move(other.m_tangents);
+		m_colors = std::move(other.m_colors);
+		m_uvs = std::move(other.m_uvs);
+		m_triangles = std::move(other.m_triangles);
+		m_bounds = other.m_bounds;
+
+		// Preserve backend mesh identity for already queued draw calls.
+		if (m_pIMesh)
+			RegisterUpdate(false);
+		else
+			m_pIMesh = std::move(other.m_pIMesh);
+
+		return *this;
+	}
 
 
 	// Setters: (copy the vector)

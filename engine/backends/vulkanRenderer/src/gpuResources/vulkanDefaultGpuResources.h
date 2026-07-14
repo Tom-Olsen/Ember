@@ -28,6 +28,7 @@ namespace vulkanRendererBackend
         static bool s_isInitialized;
         // Samplers:
         static std::unique_ptr<Sampler> s_pColorSampler;
+        static std::unique_ptr<Sampler> s_pColorSamplerClampEdge;
         static std::unique_ptr<Sampler> s_pShadowSampler;
         // Materials:
         static std::unique_ptr<Material> s_pDefaultPresentMaterial;
@@ -54,6 +55,7 @@ namespace vulkanRendererBackend
 
         // Samplers:
         static Sampler* GetColorSampler();
+        static Sampler* GetColorSamplerClampEdge();
         static Sampler* GetShadowSampler();
         // Materials:
         static Material* GetDefaultPresentMaterial();

@@ -57,7 +57,7 @@ namespace emberCore
 
 		// Movable:
 		Mesh(Mesh&& other) noexcept;
-		Mesh& operator=(Mesh&& other) noexcept;
+		Mesh& operator=(Mesh&& other);
 
 		// Setters: (copy the vector)
 		void SetName(const std::string& name);

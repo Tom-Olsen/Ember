@@ -25,6 +25,7 @@ namespace vulkanRendererBackend
 	bool DefaultGpuResources::s_isInitialized = false;
 	// Samplers:
 	std::unique_ptr<Sampler> DefaultGpuResources::s_pColorSampler = nullptr;
+	std::unique_ptr<Sampler> DefaultGpuResources::s_pColorSamplerClampEdge = nullptr;
 	std::unique_ptr<Sampler> DefaultGpuResources::s_pShadowSampler = nullptr;
 	// Materials:
 	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultPresentMaterial = nullptr;
@@ -50,7 +51,18 @@ namespace vulkanRendererBackend
 	void DefaultGpuResources::InitSamplers()
 	{
 		if (!s_pColorSampler)
-			s_pColorSampler = std::make_unique<ColorSampler>("Sampler_Color");
+        {
+			ColorSampler::Settings settings;
+			settings.name = "Sampler_Color";
+            s_pColorSampler = std::make_unique<ColorSampler>(ColorSampler::Settings{});
+        }
+		if (!s_pColorSamplerClampEdge)
+		{
+			ColorSampler::Settings settings;
+			settings.name = "Sampler_ColorClampEdge";
+			settings.addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+			s_pColorSamplerClampEdge = std::make_unique<ColorSampler>(settings);
+		}
 		if (!s_pShadowSampler)
 			s_pShadowSampler = std::make_unique<ShadowSampler>("Sampler_Shadow");
 	}
@@ -88,6 +100,7 @@ namespace vulkanRendererBackend
 	{
 		// Samplers:
 		s_pColorSampler.reset();
+		s_pColorSamplerClampEdge.reset();
 		s_pShadowSampler.reset();
 		// Materials:
 		s_pDefaultPresentMaterial.reset();
@@ -117,6 +130,10 @@ namespace vulkanRendererBackend
 	Sampler* DefaultGpuResources::GetColorSampler()
 	{
 		return s_pColorSampler.get();
+	}
+	Sampler* DefaultGpuResources::GetColorSamplerClampEdge()
+	{
+		return s_pColorSamplerClampEdge.get();
 	}
 	Sampler* DefaultGpuResources::GetShadowSampler()
 	{

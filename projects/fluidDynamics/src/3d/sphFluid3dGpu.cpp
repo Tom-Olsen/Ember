@@ -12,6 +12,7 @@ namespace fluidDynamics
 	{
 		// Material setup:
 		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial3d");
+		m_volumetricDensityMaterial = MaterialManager::GetMaterial("volumetricDensityMaterial");
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
 
 		m_forceSetters = true;
@@ -44,6 +45,10 @@ namespace fluidDynamics
 			SetColorMode(0);
 			SetInitialDistributionRadius(9.0f);
 			SetVisualRadius(0.2f);
+			SetRenderParticles(true);
+			SetRenderVolumetricDensity(true);
+			SetVolumetricDensityRayStepLength(0.2f);
+            SetVolumetricDensityAbsorption(0.05f);
 		}
 		m_forceSetters = false;
 
@@ -159,17 +164,35 @@ namespace fluidDynamics
 			ShaderProperties shaderProperties = Renderer::DrawMesh(m_attractorSphereMesh, MaterialManager::GetMaterial("transparentMaterial"), attractorLocalToWorld, false, false);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
 		}
-		m_tripleBufferState.MarkRead();
-		uint32_t readDataIndex = m_tripleBufferState.GetReadIndex();
-		m_particleMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
-		m_particleMaterial.SetBuffer("velocityBuffer", m_tripleData.velocityBuffer.GetBuffer(readDataIndex));
-		m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(readDataIndex));
-		m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(readDataIndex));
-		m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(readDataIndex));
-		Material shadowMaterial = m_particleMaterial.TryGetShadowMaterial();
-		if (shadowMaterial.IsValid())
-			shadowMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
-		Renderer::DrawInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, true, true);
+		if (m_renderParticles || m_renderVolumetricDensity)
+		{
+			m_tripleBufferState.MarkRead();
+			uint32_t readDataIndex = m_tripleBufferState.GetReadIndex();
+
+			// Particle rendering:
+			if (m_renderParticles)
+			{
+				m_particleMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
+				m_particleMaterial.SetBuffer("velocityBuffer", m_tripleData.velocityBuffer.GetBuffer(readDataIndex));
+				m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(readDataIndex));
+				m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(readDataIndex));
+				m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(readDataIndex));
+				Material shadowMaterial = m_particleMaterial.TryGetShadowMaterial();
+				if (shadowMaterial.IsValid())
+					shadowMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
+				Renderer::DrawInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, true, true);
+			}
+
+			// Volumetric density rendering:
+			if (m_renderVolumetricDensity)
+			{
+				Float4x4 densityCubeLocalToWorld = localToWorld
+					* Float4x4::Translate(m_settings.fluidBounds.localBounds.center)
+					* m_settings.fluidBounds.GetRotation4x4();
+				m_volumetricDensityMaterial.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
+				Renderer::DrawMesh(m_volumetricDensityCube, m_volumetricDensityMaterial, densityCubeLocalToWorld, false, false, emberCommon::CullMode::front);
+			}
+		}
 	}
 
 
@@ -277,6 +300,7 @@ namespace fluidDynamics
 			m_settings.targetDensity = targetDensity;
 			m_computeShaders.SetTargetDensity(m_settings.targetDensity);
 			m_particleMaterial.SetValue("Values", "targetDensity", m_settings.targetDensity);
+			m_volumetricDensityMaterial.SetValue("Values", "densityScale", m_settings.targetDensity);
 		}
 	}
 	void SphFluid3dGpu::SetPressureMultiplier(float pressureMultiplier)
@@ -320,6 +344,8 @@ namespace fluidDynamics
 		{
 			m_settings.fluidBounds = bounds;
 			m_computeShaders.SetFluidBounds(m_settings.fluidBounds);
+			m_volumetricDensityCube = MeshGenerator::Cube().Scale(m_settings.fluidBounds.localBounds.GetSize());
+			m_volumetricDensityMaterial.SetValue("Values", "volumeHalfSize", 0.5f * m_settings.fluidBounds.localBounds.GetSize());
 			SetAttractorPoint(m_settings.fluidBounds.localBounds.center);
 		}
 	}
@@ -383,6 +409,32 @@ namespace fluidDynamics
 		{
 			m_visualRadius = visualRadius;
 			m_particleMesh = MeshGenerator::CubeSphere(m_visualRadius, 2, "fluidParticle");
+		}
+	}
+	void SphFluid3dGpu::SetRenderParticles(bool renderParticles)
+	{
+		m_renderParticles = renderParticles;
+	}
+	void SphFluid3dGpu::SetRenderVolumetricDensity(bool renderVolumetricDensity)
+	{
+		m_renderVolumetricDensity = renderVolumetricDensity;
+	}
+	void SphFluid3dGpu::SetVolumetricDensityRayStepLength(float volumetricDensityRayStepLength)
+	{
+		volumetricDensityRayStepLength = math::Max(1e-4f, volumetricDensityRayStepLength);
+		if (m_forceSetters || m_volumetricDensityRayStepLength != volumetricDensityRayStepLength)
+		{
+			m_volumetricDensityRayStepLength = volumetricDensityRayStepLength;
+			m_volumetricDensityMaterial.SetValue("Values", "rayStepLength", m_volumetricDensityRayStepLength);
+		}
+	}
+	void SphFluid3dGpu::SetVolumetricDensityAbsorption(float volumetricDensityAbsorption)
+	{
+		volumetricDensityAbsorption = math::Max(1e-4f, volumetricDensityAbsorption);
+		if (m_forceSetters || m_volumetricDensityAbsorption != volumetricDensityAbsorption)
+		{
+			m_volumetricDensityAbsorption = volumetricDensityAbsorption;
+		m_volumetricDensityMaterial.SetValue("Values", "absorption", m_volumetricDensityAbsorption);
 		}
 	}
 
@@ -481,6 +533,22 @@ namespace fluidDynamics
 	{
 		return m_visualRadius;
 	}
+	bool SphFluid3dGpu::GetRenderParticles() const
+	{
+		return m_renderParticles;
+	}
+	bool SphFluid3dGpu::GetRenderVolumetricDensity() const
+	{
+		return m_renderVolumetricDensity;
+	}
+	float SphFluid3dGpu::GetVolumetricDensityRayStepLength() const
+	{
+        return m_volumetricDensityRayStepLength;
+	}
+    float SphFluid3dGpu::GetVolumetricDensityAbsorption() const
+    {
+        return m_volumetricDensityAbsorption;
+    }
 
 
 

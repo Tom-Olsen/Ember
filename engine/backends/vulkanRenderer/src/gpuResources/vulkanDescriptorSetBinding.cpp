@@ -10,7 +10,6 @@
 #include "vulkanContext.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDepthTexture2dArray.h"
-#include "vulkanDescriptorImageLayout.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -602,7 +601,10 @@ namespace vulkanRendererBackend
 	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, const TextureBinding& textureBinding)
 	{
 		VkDescriptorImageInfo imageInfo = {};
-		imageInfo.imageLayout = GetDescriptorImageLayout(textureBinding.descriptorType);
+		if (textureBinding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		else
+			imageInfo.imageLayout = textureBinding.pTexture->GetVmaImage()->GetImageLayout();
 		imageInfo.imageView = textureBinding.pTexture->GetVmaImage()->GetVkImageView();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
