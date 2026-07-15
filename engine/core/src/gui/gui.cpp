@@ -250,6 +250,31 @@ namespace emberCore
 		Gui::PopID();
 		return changed;
 	}
+	bool Gui::ColorEdit(const std::string& label, Float4* color)
+	{
+		// Draw label:
+		TextUnformatted(label.c_str());
+
+		// Move cursor to label|fields seperator:
+		Gui::SameLine();
+		Float2 cursorPos = Gui::GetCursorPos();
+		cursorPos.x = math::Max(cursorPos.x, s_labelPercentile * Editor::GetWindowWidth());
+		Gui::SetCursorPos(cursorPos);
+
+		bool changed = false;
+		Gui::PushID(label.c_str());
+		{
+			// Clamp input width:
+			float inputWidth = Editor::GetRemainingWidth() - Editor::GetSpacingX();
+			inputWidth = math::Max(inputWidth, s_minWidgetWidth);
+
+			// Draw color swatch (opens picker popup on click):
+			Gui::SetNextItemWidth(inputWidth);
+			changed = s_pIGui->ColorEdit(("##" + label).c_str(), &color->x);
+		}
+		Gui::PopID();
+		return changed;
+	}
 	bool Gui::InputInt(const std::string& label, int* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
 	{
 		// Draw label:

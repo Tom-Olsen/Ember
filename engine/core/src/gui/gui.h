@@ -97,6 +97,7 @@ namespace emberCore
 
 		// Custom Widgets:
 		static bool Checkbox(const std::string& label, bool* value);
+		static bool ColorEdit(const std::string& label, Float4* color);
 		static bool InputInt(const std::string& label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
 		static bool DragInt(const std::string& label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
 		static bool InputFloat(const std::string& label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);

@@ -48,6 +48,8 @@ namespace fluidDynamics
 			SetRenderVolumetricDensity(true);
 			SetVolumetricDensityRayStepLength(0.2f);
             SetVolumetricDensityAbsorption(0.05f);
+			SetVolumetricDensityColorLow(Float4(0.1f, 0.2f, 1.0f, 1.0f));
+			SetVolumetricDensityColorHigh(Float4(0.66f, 0.95f, 0.95f, 0.66f));
 			SetDensityTextureVoxelScale(0.4f);
 		}
 		m_forceSetters = false;
@@ -432,6 +434,22 @@ namespace fluidDynamics
 		m_volumetricDensityMaterial.SetValue("Values", "absorption", m_volumetricDensityAbsorption);
 		}
 	}
+	void SphFluid3dGpu::SetVolumetricDensityColorLow(const Float4& volumetricDensityColorLow)
+	{
+		if (m_forceSetters || m_volumetricDensityColorLow != volumetricDensityColorLow)
+		{
+			m_volumetricDensityColorLow = volumetricDensityColorLow;
+			m_volumetricDensityMaterial.SetValue("Values", "fluidColorLow", m_volumetricDensityColorLow);
+		}
+	}
+	void SphFluid3dGpu::SetVolumetricDensityColorHigh(const Float4& volumetricDensityColorHigh)
+	{
+		if (m_forceSetters || m_volumetricDensityColorHigh != volumetricDensityColorHigh)
+		{
+			m_volumetricDensityColorHigh = volumetricDensityColorHigh;
+			m_volumetricDensityMaterial.SetValue("Values", "fluidColorHigh", m_volumetricDensityColorHigh);
+		}
+	}
 	void SphFluid3dGpu::SetDensityTextureVoxelScale(float densityTextureVoxelScale)
 	{
 		densityTextureVoxelScale = math::Max(0.01f, densityTextureVoxelScale);
@@ -548,6 +566,14 @@ namespace fluidDynamics
     float SphFluid3dGpu::GetVolumetricDensityAbsorption() const
     {
         return m_volumetricDensityAbsorption;
+    }
+    Float4 SphFluid3dGpu::GetVolumetricDensityColorLow() const
+    {
+        return m_volumetricDensityColorLow;
+    }
+    Float4 SphFluid3dGpu::GetVolumetricDensityColorHigh() const
+    {
+        return m_volumetricDensityColorHigh;
     }
     float SphFluid3dGpu::GetDensityTextureVoxelScale() const
     {

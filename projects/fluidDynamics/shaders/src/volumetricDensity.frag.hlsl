@@ -10,6 +10,8 @@ cbuffer Values : register(b300, SHADER_SET)
     float densityScale;
     float absorption;
     float rayStepLength;
+    float4 fluidColorLow;   // color at density = 0
+    float4 fluidColorHigh;  // color at density >= densityScale
 };
 
 
@@ -95,11 +97,11 @@ float4 main(FragmentInput input) : SV_TARGET
         float3 localPosition = localCameraPosition + rayDirection * t;
         float3 uvw = (localPosition - boxMin) / volumeSize;
         float density = densityTexture.SampleLevel(colorSamplerClampEdge, uvw, 0).r;
-        float sampleAlpha = 1.0f - exp(-density * absorption * stepLength);
         float densityT = saturate(density / densityScale);
-        float3 sampleColor = lerp(float3(0.05f, 0.25f, 0.9f), float3(1.0f, 0.95f, 0.75f), densityT);
+        float4 sampleColor = lerp(fluidColorLow, fluidColorHigh, densityT);
+        float sampleAlpha = sampleColor.a * (1.0f - exp(-density * absorption * stepLength));
 
-        color += transmittance * sampleAlpha * sampleColor;
+        color += transmittance * sampleAlpha * sampleColor.rgb;
         transmittance *= 1.0f - sampleAlpha;
         if (transmittance < 0.01f)
             break;

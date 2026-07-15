@@ -170,6 +170,10 @@ namespace nullGuiBackend
 	{
 		return false;
 	}
+	bool Gui::ColorEdit(const char* label, float* color)
+	{
+		return false;
+	}
 	bool Gui::InputInt(const char* label, int* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
 	{
 		return false;

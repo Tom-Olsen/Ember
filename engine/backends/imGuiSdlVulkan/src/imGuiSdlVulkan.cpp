@@ -338,6 +338,12 @@ namespace imGuiSdlVulkanBackend
 	{
 		return ImGui::Checkbox(label, value);
 	}
+	bool Gui::ColorEdit(const char* label, float* color)
+	{
+		// NoInputs => only the color swatch is shown, clicking it opens the full picker popup.
+		ImGuiColorEditFlags flags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf;
+		return ImGui::ColorEdit4(label, color, flags);
+	}
 	bool Gui::InputInt(const char* label, int* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
 	{
 		return ImGui::InputInt(label, value, step, stepFast, GuiInputTextFlagsCommonToImGui(flags));
