@@ -179,7 +179,7 @@ namespace emberEditor
 			emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
 			return;
 		}
-		m_dragAxisDir = m_dragAxisDir.Normalize();
+		m_dragAxisDir = OctantRotationSign(m_octantIndex, m_activeSubHandle) * m_dragAxisDir.Normalize();
 
 		// Start drag:
 		m_isDragging = true;
@@ -342,22 +342,22 @@ namespace emberEditor
     }
 	Float4x4 RotateHandle::OctantMatrix(RotateHandle::SubHandle subHandle, uint32_t octantIndex)
 	{
-		Float3 signs = OctantSigns(octantIndex);
+		Float3 octantSigns = OctantSigns(octantIndex);
 		float sign0 = 1.0f;
 		float sign1 = 1.0f;
 		switch (subHandle)
 		{
 			case RotateHandle::SubHandle::axisX:
-				sign0 = signs.y;
-				sign1 = signs.z;
+				sign0 = octantSigns.y;
+				sign1 = octantSigns.z;
 				break;
 			case RotateHandle::SubHandle::axisY:
-				sign0 = signs.z;
-				sign1 = signs.x;
+				sign0 = octantSigns.z;
+				sign1 = octantSigns.x;
 				break;
 			case RotateHandle::SubHandle::axisZ:
-				sign0 = signs.x;
-				sign1 = signs.y;
+				sign0 = octantSigns.x;
+				sign1 = octantSigns.y;
 				break;
 			default:
 				return Float4x4::identity;
@@ -372,4 +372,19 @@ namespace emberEditor
 			return Float4x4::Rotate(axis, -math::pi2);
 		return Float4x4::identity;
 	}
+    float RotateHandle::OctantRotationSign(uint32_t octantIndex, RotateHandle::SubHandle subHandle)
+    {
+        // To have orientation be aligned with dragging direction x and y sub handles need some special rotation flips:
+        if (subHandle == RotateHandle::SubHandle::axisX)
+        {
+            if (octantIndex == 0 || octantIndex == 2 || octantIndex == 5 || octantIndex == 7)
+                return -1.0f;
+        }
+        else if (subHandle == RotateHandle::SubHandle::axisY)
+        {
+            if (octantIndex == 0 || octantIndex == 1 || octantIndex == 6 || octantIndex == 7)
+                return -1.0f;
+        }
+        return 1.0f;
+    }
 }
