@@ -48,6 +48,7 @@ namespace emberEditor
 		bool m_renderVolumetricDensity;
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
+		float m_densityTextureVoxelScale;
         // Internal:
         RotatedBounds m_bounds;
 
@@ -115,6 +116,7 @@ namespace emberEditor
 			Gui::Checkbox("Render Volumetric Density:", &m_renderVolumetricDensity);
 			Gui::DragFloat("Volumetric Density Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f, "%.8f");
 			Gui::DragFloat("Volumetric Density Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f, "%.8f");
+			Gui::DragFloat("Density Texture Voxel Scale:", &m_densityTextureVoxelScale, 0.1f, 1.0f, "%.8f");
 
 			// Buttons:
 			Gui::SeparatorText("Buttons");
@@ -161,6 +163,7 @@ namespace emberEditor
 			m_renderVolumetricDensity = m_pScript->GetRenderVolumetricDensity();
 			m_volumetricDensityRayStepLength = m_pScript->GetVolumetricDensityRayStepLength();
 			m_volumetricDensityAbsorption = m_pScript->GetVolumetricDensityAbsorption();
+			m_densityTextureVoxelScale = m_pScript->GetDensityTextureVoxelScale();
 		}
 		void SetData()
 		{
@@ -191,6 +194,7 @@ namespace emberEditor
 			m_pScript->SetRenderVolumetricDensity(m_renderVolumetricDensity);
 			m_pScript->SetVolumetricDensityRayStepLength(m_volumetricDensityRayStepLength);
 			m_pScript->SetVolumetricDensityAbsorption(m_volumetricDensityAbsorption);
+			m_pScript->SetDensityTextureVoxelScale(m_densityTextureVoxelScale);
 		}
 	};
 }

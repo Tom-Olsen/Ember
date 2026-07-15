@@ -1,4 +1,5 @@
 #include "vulkanTexture.h"
+#include "logger.h"
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
@@ -7,8 +8,10 @@
 #include "vulkanFormatToString.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
+#include "vulkanPhysicalDevice.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
+#include <algorithm>
 #include <vulkan/vulkan.h>
 
 
@@ -236,6 +239,26 @@ namespace vulkanRendererBackend
 	}
 	void Texture::CreateImageBase(VkImageType imageType, VkImageSubresourceRange& subresourceRange, VkFormat format, VkImageUsageFlags usageFlags, VkImageCreateFlags imageFlags, VkMemoryPropertyFlags memoryFlags, VkImageViewType viewType, const DeviceQueue& queue)
 	{
+		// Clamp dimensions to hardware limits:
+		uint32_t maxDimension = 0;
+		switch (imageType)
+		{
+		case VK_IMAGE_TYPE_1D: maxDimension = Context::GetPhysicalDevice()->GetMaxImageDimension1d(); break;
+		case VK_IMAGE_TYPE_2D: maxDimension = Context::GetPhysicalDevice()->GetMaxImageDimension2d(); break;
+		case VK_IMAGE_TYPE_3D: maxDimension = Context::GetPhysicalDevice()->GetMaxImageDimension3d(); break;
+		default: throw std::runtime_error("Texture::CreateImageBase: unknown VkImageType: " + std::to_string(static_cast<int>(imageType)));
+		}
+		uint32_t width = std::clamp(m_width, 1u, maxDimension);
+		uint32_t height = std::clamp(m_height, 1u, maxDimension);
+		uint32_t depth = std::clamp(m_depth, 1u, maxDimension);
+		if (width != m_width || height != m_height || depth != m_depth)
+		{
+			LOG_WARN("Texture::CreateImageBase: dimensions ({}, {}, {}) exceed hardware limits [1, {}], clamped to ({}, {}, {}).", m_width, m_height, m_depth, maxDimension, width, height, depth);
+			m_width = width;
+			m_height = height;
+			m_depth = depth;
+		}
+
 		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		imageInfo.imageType = imageType;
 		imageInfo.extent = { m_width, m_height, m_depth };

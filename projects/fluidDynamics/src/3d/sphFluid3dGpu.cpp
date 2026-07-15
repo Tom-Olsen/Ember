@@ -48,6 +48,7 @@ namespace fluidDynamics
 			SetRenderVolumetricDensity(true);
 			SetVolumetricDensityRayStepLength(0.2f);
             SetVolumetricDensityAbsorption(0.05f);
+			SetDensityTextureVoxelScale(0.4f);
 		}
 		m_forceSetters = false;
 
@@ -431,6 +432,15 @@ namespace fluidDynamics
 		m_volumetricDensityMaterial.SetValue("Values", "absorption", m_volumetricDensityAbsorption);
 		}
 	}
+	void SphFluid3dGpu::SetDensityTextureVoxelScale(float densityTextureVoxelScale)
+	{
+		densityTextureVoxelScale = math::Max(0.01f, densityTextureVoxelScale);
+		if (m_forceSetters || m_densityTextureVoxelScale != densityTextureVoxelScale)
+		{
+			m_densityTextureVoxelScale = densityTextureVoxelScale;
+			m_tripleData.ReallocateDensityTexture3d(m_settings.fluidBounds.localBounds, m_settings.effectRadius, m_densityTextureVoxelScale);
+		}
+	}
 
 
 
@@ -539,6 +549,10 @@ namespace fluidDynamics
     {
         return m_volumetricDensityAbsorption;
     }
+    float SphFluid3dGpu::GetDensityTextureVoxelScale() const
+    {
+        return m_densityTextureVoxelScale;
+    }
 
 
 
@@ -580,7 +594,7 @@ namespace fluidDynamics
 		m_tripleBufferState.Reset();
 		m_pendingResetSessionID = Compute::Physics::GetRecordingSessionID();
 		m_scratchData.Reallocate(m_particleCount);
-		m_tripleData.Reallocate(m_particleCount, m_settings.fluidBounds.localBounds, m_settings.effectRadius);
+		m_tripleData.Reallocate(m_particleCount, m_settings.fluidBounds.localBounds, m_settings.effectRadius, m_densityTextureVoxelScale);
 
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		// Reset all buffer slots:

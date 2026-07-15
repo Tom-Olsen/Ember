@@ -47,6 +47,7 @@ namespace fluidDynamics
 		bool m_renderVolumetricDensity;
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
+		float m_densityTextureVoxelScale;
 		Mesh m_particleMesh;
 		Mesh m_attractorSphereMesh;
         Mesh m_volumetricDensityCube;
@@ -95,6 +96,7 @@ namespace fluidDynamics
 		void SetRenderVolumetricDensity(bool renderVolumetricDensity);
 		void SetVolumetricDensityRayStepLength(float volumetricDensityRayStepLength);
 		void SetVolumetricDensityAbsorption(float volumetricDensityAbsorption);
+		void SetDensityTextureVoxelScale(float densityTextureVoxelScale);
 
 		// Getters:
 		bool GetIsRunning() const;
@@ -123,6 +125,7 @@ namespace fluidDynamics
 		bool GetRenderVolumetricDensity() const;
 		float GetVolumetricDensityRayStepLength() const;
 		float GetVolumetricDensityAbsorption() const;
+		float GetDensityTextureVoxelScale() const;
 
 		// Debugging:
 		void Print();

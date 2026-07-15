@@ -44,7 +44,7 @@ namespace fluidDynamics
 	{
 		return positionBuffer.IsValid() ? positionBuffer.GetCount() : 0;
 	}
-	void SphFluid3dGpuSolver::TripleData::Reallocate(int particleCount, const Bounds& localBounds, float effectRadius)
+	void SphFluid3dGpuSolver::TripleData::Reallocate(int particleCount, const Bounds& localBounds, float effectRadius, float densityTextureVoxelScale)
 	{
 		if (particleCount != ParticleCount())
 		{
@@ -54,13 +54,22 @@ namespace fluidDynamics
 			normalBuffer = TripleBuffer<Float3>((uint32_t)particleCount, "normalBuffer", BufferUsage::storage);
 			curvatureBuffer = TripleBuffer<float>((uint32_t)particleCount, "curvatureBuffer", BufferUsage::storage);
 		}
-		ReallocateDensityTexture3d(localBounds, effectRadius);
+		ReallocateDensityTexture3d(localBounds, effectRadius, densityTextureVoxelScale);
 	}
-	void SphFluid3dGpuSolver::TripleData::ReallocateDensityTexture3d(const Bounds& localBounds, float effectRadius)
+	void SphFluid3dGpuSolver::TripleData::ReallocateDensityTexture3d(const Bounds& localBounds, float effectRadius, float densityTextureVoxelScale)
 	{
-		float voxelSize = 2.0f * effectRadius;
+		float voxelSize = densityTextureVoxelScale * effectRadius;
 		Float3 size = localBounds.GetSize();
-		Uint3 newResolution = Uint3::Max(Uint3::one, Uint3(Float3::Ceil(size / voxelSize)));
+
+		// Limit total voxel count, as gpu memory usage is resolution.x*y*z * 4bytes per texture:
+		constexpr float maxVoxelCount = 1 << 24;	// = 2^24 * 4bytes = 64MB as max limit.
+		float minVoxelSize = math::Pow(size.x * size.y * size.z / maxVoxelCount, 1.0f / 3.0f);
+		if (voxelSize < minVoxelSize)
+		{
+			LOG_WARN("DensityTexture3d voxelSize {} exceeds voxel count limit, clamped to {}.", voxelSize, minVoxelSize);
+			voxelSize = minVoxelSize;
+		}
+		Uint3 newResolution = Uint3(Float3::Ceil(size / voxelSize));
 
 		if (newResolution != densityTexture3dResolution)
 		{

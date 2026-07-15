@@ -30,6 +30,9 @@ namespace vulkanRendererBackend
 	private: // Members:
 		VkPhysicalDevice m_physicalDevice;
 		VkSampleCountFlagBits m_maxMsaaSamples;
+		uint32_t m_maxImageDimension1d;
+		uint32_t m_maxImageDimension2d;
+		uint32_t m_maxImageDimension3d;
 
 	public: // Methods:
 		PhysicalDevice(Instance* pInstance);
@@ -44,6 +47,9 @@ namespace vulkanRendererBackend
 		PhysicalDevice& operator=(PhysicalDevice&& other) noexcept;
 		const VkPhysicalDevice& GetVkPhysicalDevice() const;
 		VkSampleCountFlagBits GetMaxMsaaSamples() const;
+		uint32_t GetMaxImageDimension1d() const;
+		uint32_t GetMaxImageDimension2d() const;
+		uint32_t GetMaxImageDimension3d() const;
 		bool SupportsDepthClamp() const;
 		bool SupportsDepthBiasClamp() const;
 		bool SupportsFillModeNonSolid() const;

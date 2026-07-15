@@ -53,6 +53,13 @@ namespace vulkanRendererBackend
 
 		// Determine max msaa samples:
 		m_maxMsaaSamples = MaxUsableMsaaSampleCount();
+
+		// Cache image dimension limits:
+		VkPhysicalDeviceProperties properties;
+		vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+		m_maxImageDimension1d = properties.limits.maxImageDimension1D;
+		m_maxImageDimension2d = properties.limits.maxImageDimension2D;
+		m_maxImageDimension3d = properties.limits.maxImageDimension3D;
 	}
 	PhysicalDevice::~PhysicalDevice()
 	{
@@ -87,6 +94,18 @@ namespace vulkanRendererBackend
 	{
 		return m_maxMsaaSamples;
 	}
+	uint32_t PhysicalDevice::GetMaxImageDimension1d() const
+	{
+		return m_maxImageDimension1d;
+	}
+	uint32_t PhysicalDevice::GetMaxImageDimension2d() const
+	{
+		return m_maxImageDimension2d;
+	}
+	uint32_t PhysicalDevice::GetMaxImageDimension3d() const
+	{
+		return m_maxImageDimension3d;
+	}
 	bool PhysicalDevice::SupportsDepthClamp() const
 	{
 		return true;
@@ -114,9 +133,15 @@ namespace vulkanRendererBackend
 	{
 		m_physicalDevice = other.m_physicalDevice;
 		m_maxMsaaSamples = other.m_maxMsaaSamples;
+		m_maxImageDimension1d = other.m_maxImageDimension1d;
+		m_maxImageDimension2d = other.m_maxImageDimension2d;
+		m_maxImageDimension3d = other.m_maxImageDimension3d;
 
 		other.m_physicalDevice = VK_NULL_HANDLE;
 		other.m_maxMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
+		other.m_maxImageDimension1d = 0;
+		other.m_maxImageDimension2d = 0;
+		other.m_maxImageDimension3d = 0;
 	}
 	int PhysicalDevice::DeviceScore(VkPhysicalDevice device)
 	{
