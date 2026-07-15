@@ -17,13 +17,17 @@ namespace fluidDynamics
 
 		m_forceSetters = true;
 		{
-			// Management:
+            // Management:
+			SetUseHashGridOptimization(true);
+			SetFluidBounds(RotatedBounds(Float3::zero, Float3(16.0f, 12.0f, 10.0f)));
+
+			// Time:
 			SetTimeScale(1.0f);
 			SetPhysicsTimeScale(1.1f);
-			SetParticleCount(100000);
 
-			// Settings:
-			SetUseHashGridOptimization(true);
+			// Fluid:
+			SetParticleCount(100000);
+			SetInitialDistributionRadius(9.0f);
 			SetEffectRadius(1.0f);
 			SetMass(1.0f);
 			SetViscosity(2.0f);
@@ -31,26 +35,27 @@ namespace fluidDynamics
 			SetCollisionDampening(0.5f);
 			SetTargetDensity(12.5f);
 			SetPressureMultiplier(300.0f);
-			SetGravity(9.81f);
+			SetNearPressureRatio(0.01f);
 			SetMaxVelocity(30.0f);
-			SetFluidBounds(RotatedBounds(Float3::zero, Float3(16.0f, 12.0f, 10.0f)));
 
-			// User Interaction:
+            // Forces:
+			SetGravity(9.81f);
 			SetAttractorRadius(6.0f);
 			SetAttractorStrength(10.0f);
 			SetAttractorState(0);
 
-			// Visuals:
-			SetColorMode(0);
-			SetInitialDistributionRadius(9.0f);
-			SetVisualRadius(0.2f);
+			// Particle visuals:
 			SetRenderParticles(true);
+			SetColorMode(0);
+			SetVisualRadius(0.2f);
+
+			// Volumetric visuals:
 			SetRenderVolumetricDensity(true);
 			SetVolumetricDensityRayStepLength(0.2f);
-            SetVolumetricDensityAbsorption(0.05f);
+            SetVolumetricDensityAbsorption(0.5f);
 			SetVolumetricDensityColorLow(Float4(0.1f, 0.2f, 1.0f, 1.0f));
 			SetVolumetricDensityColorHigh(Float4(0.66f, 0.95f, 0.95f, 0.66f));
-			SetDensityTextureVoxelScale(0.4f);
+			SetVolumetricVoxelScale(0.4f);
 		}
 		m_forceSetters = false;
 
@@ -200,6 +205,7 @@ namespace fluidDynamics
 
 
 	// Setters:
+    // Management:
 	void SphFluid3dGpu::Reset()
 	{
 		m_reset = true;
@@ -208,6 +214,26 @@ namespace fluidDynamics
 	{
 		m_isRunning = isRunning;
 	}
+	void SphFluid3dGpu::SetUseHashGridOptimization(bool useGridOptimization)
+	{
+		if (m_forceSetters || m_settings.useHashGridOptimization != useGridOptimization)
+		{
+			m_settings.useHashGridOptimization = useGridOptimization;
+			m_computeShaders.SetUseHashGridOptimization(m_settings.useHashGridOptimization);
+		}
+	}
+	void SphFluid3dGpu::SetFluidBounds(const RotatedBounds& bounds)
+	{
+		if (m_forceSetters || m_settings.fluidBounds != bounds)
+		{
+			m_settings.fluidBounds = bounds;
+			m_computeShaders.SetFluidBounds(m_settings.fluidBounds);
+			m_volumetricDensityCube = MeshGenerator::Cube().Scale(m_settings.fluidBounds.localBounds.GetSize());
+			m_volumetricDensityMaterial.SetValue("Values", "volumeHalfSize", 0.5f * m_settings.fluidBounds.localBounds.GetSize());
+			SetAttractorPoint(m_settings.fluidBounds.localBounds.center);
+		}
+	}
+    // Time:
 	void SphFluid3dGpu::SetTimeScale(float timeScale)
 	{
 		m_timeScale = timeScale;
@@ -228,14 +254,7 @@ namespace fluidDynamics
 		    m_particleMaterial.SetValue("Values", "maxVelocity", m_physicsTimeScale * m_settings.maxVelocity);
 		}
 	}
-	void SphFluid3dGpu::SetUseHashGridOptimization(bool useGridOptimization)
-	{
-		if (m_forceSetters || m_settings.useHashGridOptimization != useGridOptimization)
-		{
-			m_settings.useHashGridOptimization = useGridOptimization;
-			m_computeShaders.SetUseHashGridOptimization(m_settings.useHashGridOptimization);
-		}
-	}
+    // Fluid:
 	void SphFluid3dGpu::SetParticleCount(int particleCount)
 	{
 		particleCount = math::Max(1, particleCount);
@@ -244,6 +263,15 @@ namespace fluidDynamics
 			m_particleCount = particleCount;
 			int hashGridSize = math::NextPrimeAbove(2 * m_particleCount);
 			m_computeShaders.SetHashGridSize(hashGridSize);
+			m_reset = true;
+		}
+	}
+	void SphFluid3dGpu::SetInitialDistributionRadius(float initialDistributionRadius)
+	{
+		initialDistributionRadius = math::Max(1e-4f, initialDistributionRadius);
+		if (m_forceSetters || m_initialDistributionRadius != initialDistributionRadius)
+		{
+			m_initialDistributionRadius = initialDistributionRadius;
 			m_reset = true;
 		}
 	}
@@ -317,14 +345,6 @@ namespace fluidDynamics
 			m_computeShaders.SetNearPressureRatio(m_settings.nearPressureRatio);
 		}
 	}
-	void SphFluid3dGpu::SetGravity(float gravity)
-	{
-		if (m_forceSetters || m_settings.gravity != gravity)
-		{
-			m_settings.gravity = gravity;
-			m_computeShaders.SetGravity(m_physicsTimeScale * m_physicsTimeScale * m_settings.gravity);
-		}
-	}
 	void SphFluid3dGpu::SetMaxVelocity(float maxVelocity)
 	{
 		maxVelocity = math::Max(1e-4f, maxVelocity);
@@ -335,15 +355,13 @@ namespace fluidDynamics
 			m_particleMaterial.SetValue("Values", "maxVelocity", m_physicsTimeScale * m_settings.maxVelocity);
 		}
 	}
-	void SphFluid3dGpu::SetFluidBounds(const RotatedBounds& bounds)
+    // Forces:
+	void SphFluid3dGpu::SetGravity(float gravity)
 	{
-		if (m_forceSetters || m_settings.fluidBounds != bounds)
+		if (m_forceSetters || m_settings.gravity != gravity)
 		{
-			m_settings.fluidBounds = bounds;
-			m_computeShaders.SetFluidBounds(m_settings.fluidBounds);
-			m_volumetricDensityCube = MeshGenerator::Cube().Scale(m_settings.fluidBounds.localBounds.GetSize());
-			m_volumetricDensityMaterial.SetValue("Values", "volumeHalfSize", 0.5f * m_settings.fluidBounds.localBounds.GetSize());
-			SetAttractorPoint(m_settings.fluidBounds.localBounds.center);
+			m_settings.gravity = gravity;
+			m_computeShaders.SetGravity(m_physicsTimeScale * m_physicsTimeScale * m_settings.gravity);
 		}
 	}
 	void SphFluid3dGpu::SetAttractorRadius(float attractorRadius)
@@ -381,6 +399,11 @@ namespace fluidDynamics
 			m_computeShaders.SetAttractorPoint(m_attractor.point);
 		}
 	}
+    // Particle visuals:
+	void SphFluid3dGpu::SetRenderParticles(bool renderParticles)
+	{
+		m_renderParticles = renderParticles;
+	}
 	void SphFluid3dGpu::SetColorMode(int colorMode)
 	{
 		colorMode = math::Clamp(colorMode, 0, 3);
@@ -388,15 +411,6 @@ namespace fluidDynamics
 		{
 			m_colorMode = colorMode;
 			m_particleMaterial.SetValue("Values", "colorMode", m_colorMode);
-		}
-	}
-	void SphFluid3dGpu::SetInitialDistributionRadius(float initialDistributionRadius)
-	{
-		initialDistributionRadius = math::Max(1e-4f, initialDistributionRadius);
-		if (m_forceSetters || m_initialDistributionRadius != initialDistributionRadius)
-		{
-			m_initialDistributionRadius = initialDistributionRadius;
-			m_reset = true;
 		}
 	}
 	void SphFluid3dGpu::SetVisualRadius(float visualRadius)
@@ -408,10 +422,7 @@ namespace fluidDynamics
 			m_particleMesh = MeshGenerator::CubeSphere(m_visualRadius, 2, "fluidParticle");
 		}
 	}
-	void SphFluid3dGpu::SetRenderParticles(bool renderParticles)
-	{
-		m_renderParticles = renderParticles;
-	}
+    // Volumetric visuals:
 	void SphFluid3dGpu::SetRenderVolumetricDensity(bool renderVolumetricDensity)
 	{
 		m_renderVolumetricDensity = renderVolumetricDensity;
@@ -450,23 +461,33 @@ namespace fluidDynamics
 			m_volumetricDensityMaterial.SetValue("Values", "fluidColorHigh", m_volumetricDensityColorHigh);
 		}
 	}
-	void SphFluid3dGpu::SetDensityTextureVoxelScale(float densityTextureVoxelScale)
+	void SphFluid3dGpu::SetVolumetricVoxelScale(float volumetricVoxelScale)
 	{
-		densityTextureVoxelScale = math::Max(0.01f, densityTextureVoxelScale);
-		if (m_forceSetters || m_densityTextureVoxelScale != densityTextureVoxelScale)
+		volumetricVoxelScale = math::Max(0.01f, volumetricVoxelScale);
+		if (m_forceSetters || m_volumetricVoxelScale != volumetricVoxelScale)
 		{
-			m_densityTextureVoxelScale = densityTextureVoxelScale;
-			m_tripleData.ReallocateDensityTexture3d(m_settings.fluidBounds.localBounds, m_settings.effectRadius, m_densityTextureVoxelScale);
+			m_volumetricVoxelScale = volumetricVoxelScale;
+			m_tripleData.ReallocateDensityTexture3d(m_settings.fluidBounds.localBounds, m_settings.effectRadius, m_volumetricVoxelScale);
 		}
 	}
 
 
 
 	// Getters:
+    // Management:
 	bool SphFluid3dGpu::GetIsRunning() const
 	{
 		return m_isRunning;
 	}
+	bool SphFluid3dGpu::GetUseGridOptimization() const
+	{
+		return m_settings.useHashGridOptimization;
+	}
+	RotatedBounds SphFluid3dGpu::GetFluidBounds() const
+	{
+		return m_settings.fluidBounds;
+	}
+    // Time:
 	float SphFluid3dGpu::GetTimeScale() const
 	{
 		return m_timeScale;
@@ -475,17 +496,18 @@ namespace fluidDynamics
 	{
 		return m_physicsTimeScale;
 	}
-	bool SphFluid3dGpu::GetUseGridOptimization() const
-	{
-		return m_settings.useHashGridOptimization;
-	}
 	uint32_t SphFluid3dGpu::GetTimeStep() const
 	{
 		return m_timeStep;
 	}
+    // Fluid:
 	int SphFluid3dGpu::GetParticleCount() const
 	{
 		return m_particleCount;
+	}
+	float SphFluid3dGpu::GetInitialDistributionRadius() const
+	{
+		return m_initialDistributionRadius;
 	}
 	float SphFluid3dGpu::GetEffectRadius() const
 	{
@@ -519,17 +541,14 @@ namespace fluidDynamics
 	{
 		return m_settings.nearPressureRatio;
 	}
-	float SphFluid3dGpu::GetGravity() const
-	{
-		return m_settings.gravity;
-	}
 	float SphFluid3dGpu::GetMaxVelocity() const
 	{
 		return m_settings.maxVelocity;
 	}
-	RotatedBounds SphFluid3dGpu::GetFluidBounds() const
+    // Forces:
+	float SphFluid3dGpu::GetGravity() const
 	{
-		return m_settings.fluidBounds;
+		return m_settings.gravity;
 	}
 	float SphFluid3dGpu::GetAttractorRadius() const
 	{
@@ -539,22 +558,28 @@ namespace fluidDynamics
 	{
 		return m_attractor.strength;
 	}
+    int SphFluid3dGpu::GetAttractorState() const
+    {
+        return m_attractor.state;
+    }
+    Float3 SphFluid3dGpu::GetAttractorPoint() const
+    {
+        return m_attractor.point;
+    }
+    // Particle visuals:
+	bool SphFluid3dGpu::GetRenderParticles() const
+	{
+		return m_renderParticles;
+	}
 	int SphFluid3dGpu::GetColorMode() const
 	{
 		return m_colorMode;
-	}
-	float SphFluid3dGpu::GetInitialDistributionRadius() const
-	{
-		return m_initialDistributionRadius;
 	}
 	float SphFluid3dGpu::GetVisualRadius() const
 	{
 		return m_visualRadius;
 	}
-	bool SphFluid3dGpu::GetRenderParticles() const
-	{
-		return m_renderParticles;
-	}
+    // Volumetric visuals:
 	bool SphFluid3dGpu::GetRenderVolumetricDensity() const
 	{
 		return m_renderVolumetricDensity;
@@ -575,9 +600,9 @@ namespace fluidDynamics
     {
         return m_volumetricDensityColorHigh;
     }
-    float SphFluid3dGpu::GetDensityTextureVoxelScale() const
+    float SphFluid3dGpu::GetVolumetricVoxelScale() const
     {
-        return m_densityTextureVoxelScale;
+        return m_volumetricVoxelScale;
     }
 
 
@@ -620,7 +645,7 @@ namespace fluidDynamics
 		m_tripleBufferState.Reset();
 		m_pendingResetSessionID = Compute::Physics::GetRecordingSessionID();
 		m_scratchData.Reallocate(m_particleCount);
-		m_tripleData.Reallocate(m_particleCount, m_settings.fluidBounds.localBounds, m_settings.effectRadius, m_densityTextureVoxelScale);
+		m_tripleData.Reallocate(m_particleCount, m_settings.fluidBounds.localBounds, m_settings.effectRadius, m_volumetricVoxelScale);
 
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		// Reset all buffer slots:

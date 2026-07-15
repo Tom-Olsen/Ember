@@ -41,16 +41,17 @@ namespace emberEditor
 		float m_gravity;
 		float m_attractorRadius;
 		float m_attractorStrength;
-        // Visuals:
+        // Particle visuals:
+		bool m_renderParticles;
 		int m_colorMode;
 		float m_visualRadius;
-		bool m_renderParticles;
+        // Volumetric visuals:
 		bool m_renderVolumetricDensity;
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
 		Float4 m_volumetricDensityColorLow;
 		Float4 m_volumetricDensityColorHigh;
-		float m_densityTextureVoxelScale;
+		float m_volumetricVoxelScale;
         // Internal:
         RotatedBounds m_bounds;
 
@@ -111,16 +112,24 @@ namespace emberEditor
 			Gui::DragFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
 			Gui::DragFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
 
-			Gui::SeparatorText("Visuals");
-			Gui::DragInt("Color Mode:", &m_colorMode);
-			Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
+			Gui::SeparatorText("Particle Visuals");
 			Gui::Checkbox("Render Particles:", &m_renderParticles);
+            if (m_renderParticles)
+            {
+			    Gui::DragInt("Color Mode:", &m_colorMode);
+			    Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
+            }
+
+			Gui::SeparatorText("Volumetric Visuals");
 			Gui::Checkbox("Render Volumetric Density:", &m_renderVolumetricDensity);
-			Gui::DragFloat("Volumetric Density Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Volumetric Density Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f, "%.8f");
-			Gui::ColorEdit("Fluid Color Low:", &m_volumetricDensityColorLow);
-			Gui::ColorEdit("Fluid Color High:", &m_volumetricDensityColorHigh);
-			Gui::DragFloat("Density Texture Voxel Scale:", &m_densityTextureVoxelScale, 0.1f, 1.0f, "%.8f");
+            if (m_renderVolumetricDensity)
+            {
+			    Gui::DragFloat("Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f, "%.8f");
+			    Gui::DragFloat("Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f, "%.8f");
+			    Gui::ColorEdit("Fluid Color Low:", &m_volumetricDensityColorLow);
+			    Gui::ColorEdit("Fluid Color High:", &m_volumetricDensityColorHigh);
+			    Gui::DragFloat("Voxel Scale:", &m_volumetricVoxelScale, 0.1f, 1.0f, "%.8f");
+            }
 
 			// Buttons:
 			Gui::SeparatorText("Buttons");
@@ -169,7 +178,7 @@ namespace emberEditor
 			m_volumetricDensityAbsorption = m_pScript->GetVolumetricDensityAbsorption();
 			m_volumetricDensityColorLow = m_pScript->GetVolumetricDensityColorLow();
 			m_volumetricDensityColorHigh = m_pScript->GetVolumetricDensityColorHigh();
-			m_densityTextureVoxelScale = m_pScript->GetDensityTextureVoxelScale();
+			m_volumetricVoxelScale = m_pScript->GetVolumetricVoxelScale();
 		}
 		void SetData()
 		{
@@ -202,7 +211,7 @@ namespace emberEditor
 			m_pScript->SetVolumetricDensityAbsorption(m_volumetricDensityAbsorption);
 			m_pScript->SetVolumetricDensityColorLow(m_volumetricDensityColorLow);
 			m_pScript->SetVolumetricDensityColorHigh(m_volumetricDensityColorHigh);
-			m_pScript->SetDensityTextureVoxelScale(m_densityTextureVoxelScale);
+			m_pScript->SetVolumetricVoxelScale(m_volumetricVoxelScale);
 		}
 	};
 }

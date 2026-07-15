@@ -49,7 +49,7 @@ namespace fluidDynamics
 		float m_volumetricDensityAbsorption;
 		Float4 m_volumetricDensityColorLow;
 		Float4 m_volumetricDensityColorHigh;
-		float m_densityTextureVoxelScale;
+		float m_volumetricVoxelScale;
 		Mesh m_particleMesh;
 		Mesh m_attractorSphereMesh;
         Mesh m_volumetricDensityCube;
@@ -70,12 +70,17 @@ namespace fluidDynamics
 		void Update() override;
 
 		// Setters:
+        // Management:
 		void Reset();
 		void SetIsRunning(bool isRunning);
+		void SetUseHashGridOptimization(bool useGridOptimization);
+		void SetFluidBounds(const RotatedBounds& bounds);
+        // Time:
 		void SetTimeScale(float timeScale);
 		void SetPhysicsTimeScale(float physicsTimeScale);
-		void SetUseHashGridOptimization(bool useGridOptimization);
+        // Fluid:
 		void SetParticleCount(int particleCount);
+		void SetInitialDistributionRadius(float initialDistributionRadius);
 		void SetEffectRadius(float effectRadius);
 		void SetMass(float mass);
 		void SetViscosity(float viscosity);
@@ -84,31 +89,37 @@ namespace fluidDynamics
 		void SetTargetDensity(float targetDensity);
 		void SetPressureMultiplier(float pressureMultiplier);
 		void SetNearPressureRatio(float nearPressureRatio);
-		void SetGravity(float gravity);
 		void SetMaxVelocity(float maxVelocity);
-		void SetFluidBounds(const RotatedBounds& bounds);
+        // Forces:
+		void SetGravity(float gravity);
 		void SetAttractorRadius(float attractorRadius);
 		void SetAttractorStrength(float attractorStrength);
 		void SetAttractorState(int attractorState);
 		void SetAttractorPoint(const Float3& attractorPoint);
-		void SetColorMode(int colorMode);
-		void SetInitialDistributionRadius(float initialDistributionRadius);
-		void SetVisualRadius(float visualRadius);
+        // Particle visuals:
 		void SetRenderParticles(bool renderParticles);
+		void SetColorMode(int colorMode);
+		void SetVisualRadius(float visualRadius);
+        // Volumetric visuals:
 		void SetRenderVolumetricDensity(bool renderVolumetricDensity);
 		void SetVolumetricDensityRayStepLength(float volumetricDensityRayStepLength);
 		void SetVolumetricDensityAbsorption(float volumetricDensityAbsorption);
 		void SetVolumetricDensityColorLow(const Float4& volumetricDensityColorLow);
 		void SetVolumetricDensityColorHigh(const Float4& volumetricDensityColorHigh);
-		void SetDensityTextureVoxelScale(float densityTextureVoxelScale);
+		void SetVolumetricVoxelScale(float volumetricVoxelScale);
 
 		// Getters:
+        // Management:
 		bool GetIsRunning() const;
+		bool GetUseGridOptimization() const;
+		RotatedBounds GetFluidBounds() const;
+        // Time:
 		float GetTimeScale() const;
 		float GetPhysicsTimeScale() const;
-		bool GetUseGridOptimization() const;
 		uint32_t GetTimeStep() const;
+        // Fluid:
 		int GetParticleCount() const;
+		float GetInitialDistributionRadius() const;
 		float GetEffectRadius() const;
 		float GetMass() const;
 		float GetViscosity() const;
@@ -117,21 +128,24 @@ namespace fluidDynamics
 		float GetTargetDensity() const;
 		float GetPressureMultiplier() const;
 		float GetNearPressureRatio() const;
-		float GetGravity() const;
 		float GetMaxVelocity() const;
-		RotatedBounds GetFluidBounds() const;
+        // Forces:
+		float GetGravity() const;
 		float GetAttractorRadius() const;
 		float GetAttractorStrength() const;
-		int GetColorMode() const;
-		float GetInitialDistributionRadius() const;
-		float GetVisualRadius() const;
+        int GetAttractorState() const; 
+        Float3 GetAttractorPoint() const;
+        // Particle visuals:
 		bool GetRenderParticles() const;
+		int GetColorMode() const;
+		float GetVisualRadius() const;
+        // Volumetric visuals:
 		bool GetRenderVolumetricDensity() const;
 		float GetVolumetricDensityRayStepLength() const;
 		float GetVolumetricDensityAbsorption() const;
 		Float4 GetVolumetricDensityColorLow() const;
 		Float4 GetVolumetricDensityColorHigh() const;
-		float GetDensityTextureVoxelScale() const;
+		float GetVolumetricVoxelScale() const;
 
 		// Debugging:
 		void Print();

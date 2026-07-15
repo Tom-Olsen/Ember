@@ -16,14 +16,6 @@ cbuffer Values : register(b300, SHADER_SET)
 
 
 
-cbuffer SurfaceProperties : register(b300, CALL_SET)
-{
-    float4 diffuseColor;    // (1.0, 1.0, 1.0)
-    float4 scaleOffset;     // .xy = scale, .zw = offset
-};
-
-
-
 struct FragmentInput
 {
     float4 clipPosition : SV_POSITION;  // position in clip space: x,y in [-1,1] z in [0,1]
@@ -72,35 +64,36 @@ float4 main(FragmentInput input) : SV_TARGET
     float3 boxMax = volumeHalfSize;
     float3 boxMin = -volumeHalfSize;
     float3 localCameraPosition = mul(model_worldToLocalMatrix, camera_position).xyz;
-    float3 worldRayDirection = normalize(input.worldPosition - camera_position.xyz);
-    float3 rayDirection = normalize(input.localPosition - localCameraPosition);
+    float3 localRayDirection = normalize(input.localPosition - localCameraPosition);
     float tEnter;
     float tExit;
-    if (!RayBoxIntersection(localCameraPosition, rayDirection, boxMin, boxMax, tEnter, tExit))
+    if (!RayBoxIntersection(localCameraPosition, localRayDirection, boxMin, boxMax, tEnter, tExit))
         discard;
 
-    float rayStart = max(tEnter, GetLocalNearPlaneRayStart(localCameraPosition, rayDirection, worldRayDirection));
+    // Compute ray length:
+    float3 worldRayDirection = normalize(input.worldPosition - camera_position.xyz);
+    float rayStart = max(tEnter, GetLocalNearPlaneRayStart(localCameraPosition, localRayDirection, worldRayDirection));
     float rayLength = tExit - rayStart;
     if (rayLength <= 0.0f)
         discard;
 
+    // Ray cast from rayStart to rayEnd with fixed stepsize:
     float3 volumeSize = 2 * volumeHalfSize;
     uint stepCount = clamp((uint)ceil(rayLength / rayStepLength), 1u, maxStepCount);
     float stepLength = rayLength / stepCount;
-
-    // Integrate front-to-back volume color:
     float transmittance = 1.0f;
     float3 color = 0.0f;
     for (uint i = 0; i < stepCount; i++)
     {
         float t = rayStart + (i + 0.5f) * stepLength;
-        float3 localPosition = localCameraPosition + rayDirection * t;
+        float3 localPosition = localCameraPosition + localRayDirection * t;
         float3 uvw = (localPosition - boxMin) / volumeSize;
         float density = densityTexture.SampleLevel(colorSamplerClampEdge, uvw, 0).r;
-        float densityT = saturate(density / densityScale);
+        float densityT = saturate(density / densityScale);  // clamp01
         float4 sampleColor = lerp(fluidColorLow, fluidColorHigh, densityT);
         float sampleAlpha = sampleColor.a * (1.0f - exp(-density * absorption * stepLength));
 
+        // Accumulate color:
         color += transmittance * sampleAlpha * sampleColor.rgb;
         transmittance *= 1.0f - sampleAlpha;
         if (transmittance < 0.01f)
@@ -108,5 +101,5 @@ float4 main(FragmentInput input) : SV_TARGET
     }
 
     float alpha = 1.0f - transmittance;
-    return float4(color, alpha) * diffuseColor * input.vertexColor;
+    return float4(color, alpha);
 }

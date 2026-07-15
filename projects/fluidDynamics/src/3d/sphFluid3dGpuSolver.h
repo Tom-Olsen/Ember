@@ -97,8 +97,8 @@ namespace fluidDynamics
 			Uint3 densityTexture3dResolution;
 
 			int ParticleCount();
-			void Reallocate(int particleCount, const Bounds& localBounds, float effectRadius, float densityTextureVoxelScale);
-			void ReallocateDensityTexture3d(const Bounds& localBounds, float effectRadius, float densityTextureVoxelScale);
+			void Reallocate(int particleCount, const Bounds& localBounds, float effectRadius, float voxelScale);
+			void ReallocateDensityTexture3d(const Bounds& localBounds, float effectRadius, float voxelScale);
 		};
 		struct Attractor
 		{
