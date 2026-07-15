@@ -193,6 +193,10 @@ namespace emberCore
 	{
 		return s_pIGui->TextUnformatted(text, textEnd);
 	}
+	void Gui::SeparatorText(const char* label)
+	{
+		s_pIGui->SeparatorText(label);
+	}
 	//void TextV(const char* format, va_list args); 	// not sure if i want to expose this yet.
 	void Gui::Text(const char* format, ...)
 	{

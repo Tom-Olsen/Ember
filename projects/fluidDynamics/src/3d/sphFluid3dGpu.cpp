@@ -24,7 +24,6 @@ namespace fluidDynamics
 
 			// Settings:
 			SetUseHashGridOptimization(true);
-			SetComputeDensityTexture3d(true);
 			SetEffectRadius(1.0f);
 			SetMass(1.0f);
 			SetViscosity(2.0f);
@@ -97,7 +96,7 @@ namespace fluidDynamics
 		m_timeStep++;
 
         // ComputeDensityTexture3d:
-		if (physicsDataWritten && m_settings.computeDensityTexture3d)
+		if (physicsDataWritten && m_renderVolumetricDensity)
 		{
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
 			SphFluid3dGpuSolver::ComputeDensityTexture3d(m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex);
@@ -233,11 +232,6 @@ namespace fluidDynamics
 			m_settings.useHashGridOptimization = useGridOptimization;
 			m_computeShaders.SetUseHashGridOptimization(m_settings.useHashGridOptimization);
 		}
-	}
-	void SphFluid3dGpu::SetComputeDensityTexture3d(bool computeDensityTexture3d)
-	{
-		if (m_forceSetters || m_settings.computeDensityTexture3d != computeDensityTexture3d)
-			m_settings.computeDensityTexture3d = computeDensityTexture3d;
 	}
 	void SphFluid3dGpu::SetParticleCount(int particleCount)
 	{
@@ -456,10 +450,6 @@ namespace fluidDynamics
 	bool SphFluid3dGpu::GetUseGridOptimization() const
 	{
 		return m_settings.useHashGridOptimization;
-	}
-	bool SphFluid3dGpu::GetComputeDensityTexture3d() const
-	{
-		return m_settings.computeDensityTexture3d;
 	}
 	uint32_t SphFluid3dGpu::GetTimeStep() const
 	{

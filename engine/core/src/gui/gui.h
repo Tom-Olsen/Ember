@@ -87,6 +87,7 @@ namespace emberCore
 
 		// Widgets:
 		static void TextUnformatted(const char* text, const char* textEnd = nullptr);
+		static void SeparatorText(const char* label);
 		//static void TextV(const char* format, va_list args); 	// not sure if i want to expose this yet.
 		static void Text(const char* format, ...);
 		[[nodiscard]] static bool Button(const char* label, const Float2& size = Float2::zero);

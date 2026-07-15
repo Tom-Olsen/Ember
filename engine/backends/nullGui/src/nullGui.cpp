@@ -182,6 +182,10 @@ namespace nullGuiBackend
 	{
 
 	}
+	void Gui::SeparatorText(const char* label)
+	{
+
+	}
 	void Gui::TextV(const char* format, va_list args)
 	{
 

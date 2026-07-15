@@ -85,6 +85,7 @@ namespace emberBackendInterface
 		virtual bool InputInt(const char* label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) = 0;
 		virtual bool InputFloat(const char* label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) = 0;
 		virtual void TextUnformatted(const char* text, const char* textEnd = nullptr) = 0;
+		virtual void SeparatorText(const char* label) = 0;
 		virtual void TextV(const char* format, va_list args) = 0; 	// mostly for internal use.
 		inline void Text(const char* format, ...)
 		{

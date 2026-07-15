@@ -72,7 +72,6 @@ namespace fluidDynamics
 		void SetTimeScale(float timeScale);
 		void SetPhysicsTimeScale(float physicsTimeScale);
 		void SetUseHashGridOptimization(bool useGridOptimization);
-		void SetComputeDensityTexture3d(bool computeDensityTexture3d);
 		void SetParticleCount(int particleCount);
 		void SetEffectRadius(float effectRadius);
 		void SetMass(float mass);
@@ -102,7 +101,6 @@ namespace fluidDynamics
 		float GetTimeScale() const;
 		float GetPhysicsTimeScale() const;
 		bool GetUseGridOptimization() const;
-		bool GetComputeDensityTexture3d() const;
 		uint32_t GetTimeStep() const;
 		int GetParticleCount() const;
 		float GetEffectRadius() const;

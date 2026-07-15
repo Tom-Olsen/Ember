@@ -81,6 +81,7 @@ namespace nullGuiBackend
 		bool InputInt(const char* label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) override;
 		bool InputFloat(const char* label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) override;
 		void TextUnformatted(const char* text, const char* textEnd = nullptr) override;
+		void SeparatorText(const char* label) override;
 		void TextV(const char* format, va_list args) override;
 		bool Button(const char* label, const Float2& size = Float2::zero) override;
 		bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none) override;

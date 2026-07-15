@@ -350,6 +350,10 @@ namespace imGuiSdlVulkanBackend
 	{
 		return ImGui::TextUnformatted(text, textEnd);
 	}
+	void Gui::SeparatorText(const char* label)
+	{
+		ImGui::SeparatorText(label);
+	}
 	void Gui::TextV(const char* format, va_list args)
 	{
 		return ImGui::TextV(format, args);
