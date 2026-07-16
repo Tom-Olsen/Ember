@@ -80,6 +80,12 @@ namespace fluidDynamics
 			RecordReset();
 			return;
 		}
+		if (m_pendingVoxelScaleChange)
+		{
+			Compute::Physics::WaitForFinish();
+			m_tripleData.ReallocateDensityTexture3d(m_settings.fluidBounds.localBounds, m_settings.effectRadius, m_volumetricVoxelScale);
+			m_pendingVoxelScaleChange = false;
+		}
 		if (!m_isRunning)
 			return;
 		m_tripleBufferState.PublishFinishedWrites();
@@ -467,7 +473,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_volumetricVoxelScale != volumetricVoxelScale)
 		{
 			m_volumetricVoxelScale = volumetricVoxelScale;
-			m_tripleData.ReallocateDensityTexture3d(m_settings.fluidBounds.localBounds, m_settings.effectRadius, m_volumetricVoxelScale);
+			m_pendingVoxelScaleChange = true;
 		}
 	}
 

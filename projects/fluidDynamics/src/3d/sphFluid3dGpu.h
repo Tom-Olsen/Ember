@@ -22,6 +22,7 @@ namespace fluidDynamics
 		// Management:
 		bool m_isRunning = false;
 		bool m_reset = false;
+		bool m_pendingVoxelScaleChange = false;
 		float m_timeScale = 1.0f;           // increases the number of timesteps per fixedDeltaTime physics timestep. E.g. m_timeScale = 2.0f, means 2 full simulation steps per fixed update.
         float m_physicsTimeScale = 1.25f;   // gets multiplied to certain values physical quantities to make the physics itself interact faster.
 		uint32_t m_timeStep = 0;
