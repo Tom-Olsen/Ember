@@ -3,7 +3,6 @@
 #include "vulkanContext.h"
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanMacros.h"
-#include <vulkan/vulkan.h>
 
 
 

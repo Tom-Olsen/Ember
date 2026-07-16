@@ -6,7 +6,6 @@
 #include "vulkanMacros.h"
 #include "vulkanRenderTexture2d.h"
 #include <array>
-#include <vulkan/vulkan.h>
 
 
 
