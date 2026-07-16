@@ -31,8 +31,9 @@ namespace vulkanRendererBackend
         static std::unique_ptr<Sampler> s_pColorSamplerClampEdge;
         static std::unique_ptr<Sampler> s_pShadowSampler;
         // Materials:
-        static std::unique_ptr<Material> s_pDefaultPresentMaterial;
+        static std::unique_ptr<Material> s_pDefaultOutlineMaterial;
         static std::unique_ptr<Material> s_pDefaultShadowMaterial;
+        static std::unique_ptr<Material> s_pDefaultPresentMaterial;
         // Compute shaders:
         static std::unique_ptr<ComputeShader> s_pGammaCorrectionComputeShader;
         // Meshes:
@@ -58,8 +59,9 @@ namespace vulkanRendererBackend
         static Sampler* GetColorSamplerClampEdge();
         static Sampler* GetShadowSampler();
         // Materials:
-        static Material* GetDefaultPresentMaterial();
+        static Material* GetDefaultOutlineMaterial();
         static Material* GetDefaultShadowMaterial();
+        static Material* GetDefaultPresentMaterial();
         // Compute shaders:
         static ComputeShader* GetGammaCorrectionComputeShader();
         // Meshes:
