@@ -7,6 +7,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Virtual Destructor:
 	RenderPass::~RenderPass()
 	{
@@ -32,7 +33,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Getters:
 	const VkRenderPass& RenderPass::GetVkRenderPass() const
 	{
 		return m_renderPass;

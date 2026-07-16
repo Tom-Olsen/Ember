@@ -11,6 +11,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
 	ForwardRenderPass::ForwardRenderPass(uint32_t renderWidth, uint32_t renderHeight)
 	{
@@ -30,7 +31,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Getters:
 	const VmaImage* const ForwardRenderPass::GetMsaaVmaImage(uint32_t frameIndex) const
 	{
 		if (Context::GetMsaaSamples() == VK_SAMPLE_COUNT_1_BIT || frameIndex >= m_pMsaaImages.size())

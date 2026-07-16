@@ -11,6 +11,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methods:
 	// Constructor/Destructor:
 	PresentRenderPass::PresentRenderPass()
 	{

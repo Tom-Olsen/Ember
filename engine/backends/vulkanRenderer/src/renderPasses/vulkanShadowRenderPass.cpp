@@ -13,6 +13,7 @@ namespace vulkanRendererBackend
 
 
 
+	// Public methods:
 	// Constructor/Destructor:
 	ShadowRenderPass::ShadowRenderPass(uint32_t shadowMapResolution, uint32_t maxLightsCount)
 	{
@@ -28,8 +29,7 @@ namespace vulkanRendererBackend
 	}
 
 
-
-	// Public methods:
+    // Getters:
 	DepthTexture2dArray* const ShadowRenderPass::GetShadowMaps() const
 	{
 		return m_shadowMaps.get();
