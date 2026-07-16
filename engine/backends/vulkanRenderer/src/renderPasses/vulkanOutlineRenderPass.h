@@ -42,5 +42,5 @@ namespace vulkanRendererBackend
 		void CreateRenderTextures(uint32_t renderWidth, uint32_t renderHeight);
 		void CreateRenderPass();
 		void CreateFrameBuffers();
-    }
+    };
 }
