@@ -34,6 +34,7 @@
 #include "vulkanMacros.h"
 #include "vulkanMaterial.h"
 #include "vulkanMesh.h"
+#include "vulkanOutlineRenderPass.h"
 #include "vulkanPipeline.h"
 #include "vulkanPoolManager.h"
 #include "vulkanPostRenderCompute.h"
@@ -208,6 +209,9 @@ namespace vulkanRendererBackend
 			RecordPreRenderComputeCommands();
 			SubmitPreRenderComputeCommands();
 
+			RecordOutlineCommands();
+			SubmitOutlineCommands();
+
 			RecordShadowCommands();
 			SubmitShadowCommands();
 
@@ -281,6 +285,20 @@ namespace vulkanRendererBackend
 
 
 	// Draw mesh:
+    void Renderer::DrawOutline(emberBackendInterface::IMesh* pIMesh, const Float4x4& localToWorldMatrix, uint32_t instanceCount)
+    {
+		if (!pIMesh)
+		{
+			LOG_ERROR("vulkanRendererBackend::Renderer::DrawOutline(...) failed. pMesh is nullptr.");
+			return;
+		}
+
+		// Setup outline call:
+		Material* pMaterial = DefaultGpuResources::GetDefaultOutlineMaterial();
+		DescriptorSetBinding* pCallDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pMaterial));
+		DrawCall drawCall = { localToWorldMatrix, false, false, pMaterial, nullptr, true, false, pCallDescriptorSetBinding, nullptr, static_cast<Mesh*>(pIMesh), VK_CULL_MODE_BACK_BIT, instanceCount };
+		m_outlineCalls.push_back(drawCall);
+    }
 	void Renderer::DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
 		// Record static draw call.
@@ -712,6 +730,11 @@ namespace vulkanRendererBackend
 	void Renderer::ResetDrawCalls()
 	{
 		// Return all borrowed descriptor set bindings borrowed to the corresponding pool:
+        for (DrawCall& drawCall: m_outlineCalls)
+        {
+			if (drawCall.ownsDescriptorSetBinding)
+				PoolManager::ReturnCallDescriptorSetBinding(static_cast<Shader*>(drawCall.pMaterial), drawCall.pCallDescriptorSetBinding);
+        }
 		for (DrawCall& drawCall : m_drawCalls)
 		{
 			if (drawCall.ownsDescriptorSetBinding)
@@ -726,6 +749,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Clear all draw calls for next frame:
+		m_outlineCalls.clear();
 		m_drawCalls.clear();
 		m_sortedDrawCallPointers.clear();
 		m_gizmoDrawCalls.clear();
@@ -735,6 +759,7 @@ namespace vulkanRendererBackend
 	{
 		GetCommandPool(m_frameIndex, RenderStage::resourceUpdate).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::preRenderCompute).ResetPools();
+		GetCommandPool(m_frameIndex, RenderStage::outline).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::shadow).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::forward).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::gizmo).ResetPools();
@@ -854,6 +879,15 @@ namespace vulkanRendererBackend
 				computeCall.pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 			}
 
+		// Outline calls:
+		if (!m_outlineCalls.empty())
+			DefaultGpuResources::GetDefaultOutlineMaterial()->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
+		for (DrawCall& drawCall : m_outlineCalls)
+		{
+			drawCall.SetModelData();
+			drawCall.pCallDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+		}
+
 		// Forward calls:
 		for (DrawCall* drawCall : m_sortedDrawCallPointers)
 		{
@@ -923,7 +957,115 @@ namespace vulkanRendererBackend
 		// Clear only mesh updates of current frame:
 		meshUpdates.clear();
 	}
-	void Renderer::RecordPreRenderComputeCommands()
+	void Renderer::RecordGizmoCommands()
+	{
+		PROFILE_FUNCTION();
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::gizmo);
+		commandPool.ResetPools();
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		GizmoRenderPass* pGizmoRenderPass = RenderPassManager::GetGizmoRenderPass();
+
+		// Record gizmo commands:
+		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		{
+			// Viewport and scissor:
+			VkViewport viewport = {};
+			viewport.width = pGizmoRenderPass->GetRenderTexture(m_frameIndex)->GetWidth();
+			viewport.height = pGizmoRenderPass->GetRenderTexture(m_frameIndex)->GetHeight();
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			VkRect2D scissor = {};
+			scissor.extent.width = viewport.width;
+			scissor.extent.height = viewport.height;
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+			// Render pass info:
+			std::array<VkClearValue, 2> clearValues;
+			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
+			clearValues[1].depthStencil = { 1.0f, 0 };
+			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+			renderPassBeginInfo.renderPass = pGizmoRenderPass->GetVkRenderPass();
+			renderPassBeginInfo.framebuffer = pGizmoRenderPass->GetFramebuffer(m_frameIndex);
+			renderPassBeginInfo.renderArea.offset = { 0, 0 };
+			renderPassBeginInfo.renderArea.extent.width = viewport.width;
+			renderPassBeginInfo.renderArea.extent.height = viewport.height;
+			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			renderPassBeginInfo.pClearValues = clearValues.data();
+
+			// Begin render pass:
+			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			if (m_sortedGizmoDrawCallPointers.size() > 0)
+			{
+				// Pipeline:
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				bool staticDescriptorSetsBound = false;
+
+				// Draw calls:
+				for (DrawCall* drawCall : m_sortedGizmoDrawCallPointers)
+				{
+					PROFILE_SCOPE("GizmoDrawCall");
+
+					// Pipeline swap:
+					Material* pGizmoMaterial = drawCall->pMaterial;
+					VkPipeline newPipeline = pGizmoMaterial->GetPipeline(drawCall->pMesh, Material::PipelineType::gizmo)->GetVkPipeline();
+					if (pipeline != newPipeline)
+					{
+						pipeline = newPipeline;
+						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+						// Pipeline layout swap:
+						VkPipelineLayout newPipelineLayout = pGizmoMaterial->GetVkPipelineLayout();
+						if (pipelineLayout != newPipelineLayout)
+						{
+							pipelineLayout = newPipelineLayout;
+
+							// Bind static descriptor sets:
+							if (!staticDescriptorSetsBound)
+							{
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+								staticDescriptorSetsBound = true;
+							}
+
+							// Bind per shader descriptor set:
+							if (VkDescriptorSet vkDescriptorSet = pGizmoMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+						}
+					}
+
+					// Push constant:
+					DefaultPushConstant pushConstant(0, drawCall->instanceCount, false, m_time, m_deltaTime);
+					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+
+					// Cull mode:
+					vkCmdSetCullMode(commandBuffer, ResolveCullMode(drawCall->cullMode, RenderModeToCullMode(pGizmoMaterial->GetRenderMode())));
+
+					// Bind per draw call descriptor set:
+					if (VkDescriptorSet vkDescriptorSet = drawCall->pCallDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+
+					// Bind mesh data:
+					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
+					vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
+
+					// Draw call:
+					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+					DEBUG_LOG_TRACE("Gizmo draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pGizmoMaterial->GetName());
+				}
+			}
+			vkCmdEndRenderPass(commandBuffer);
+		}
+		VKA(vkEndCommandBuffer(commandBuffer));
+
+		// Gizmo render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL. Reflect this in the image layout:
+		pGizmoRenderPass->GetRenderTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	}
+    void Renderer::RecordPreRenderComputeCommands()
 	{
 		PROFILE_FUNCTION();
 
@@ -1027,7 +1169,111 @@ namespace vulkanRendererBackend
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
-	void Renderer::RecordShadowCommands()
+    void Renderer::RecordOutlineCommands()
+    {
+		PROFILE_FUNCTION();
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::outline);
+		commandPool.ResetPools();
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		OutlineRenderPass* pOutlineRenderPass = RenderPassManager::GetOutlineRenderPass();
+
+		// Record outline commands:
+		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		{
+			// Viewport and scissor:
+			VkViewport viewport = {};
+			viewport.width = pOutlineRenderPass->GetRenderTexture(m_frameIndex)->GetWidth();
+			viewport.height = pOutlineRenderPass->GetRenderTexture(m_frameIndex)->GetHeight();
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			VkRect2D scissor = {};
+			scissor.extent.width = viewport.width;
+			scissor.extent.height = viewport.height;
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+			// Render pass info:
+			VkClearValue clearValues = {};
+			clearValues.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+			renderPassBeginInfo.renderPass = pOutlineRenderPass->GetVkRenderPass();
+			renderPassBeginInfo.framebuffer = pOutlineRenderPass->GetFramebuffer(m_frameIndex);
+			renderPassBeginInfo.renderArea.offset = { 0, 0 };
+			renderPassBeginInfo.renderArea.extent.width = viewport.width;
+			renderPassBeginInfo.renderArea.extent.height = viewport.height;
+			renderPassBeginInfo.clearValueCount = 1;
+			renderPassBeginInfo.pClearValues = &clearValues;
+
+			// Begin render pass:
+			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			if (m_outlineCalls.size() > 0)
+			{
+				// Pipeline:
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				bool staticDescriptorSetsBound = false;
+
+				// Draw calls:
+				for (const DrawCall& drawCall : m_outlineCalls)
+				{
+					PROFILE_SCOPE("OutlineDrawCall");
+
+					// Pipeline swap:
+					Material* pOutlineMaterial = drawCall.pMaterial;
+					VkPipeline newPipeline = pOutlineMaterial->GetPipeline(drawCall.pMesh, Material::PipelineType::outline)->GetVkPipeline();
+					if (pipeline != newPipeline)
+					{
+						pipeline = newPipeline;
+						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+						// Pipeline layout swap:
+						VkPipelineLayout newPipelineLayout = pOutlineMaterial->GetVkPipelineLayout();
+						if (pipelineLayout != newPipelineLayout)
+						{
+							pipelineLayout = newPipelineLayout;
+
+							// Bind static descriptor sets:
+							if (!staticDescriptorSetsBound)
+							{
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+								staticDescriptorSetsBound = true;
+							}
+
+							// Bind per shader descriptor set:
+							if (VkDescriptorSet vkDescriptorSet = pOutlineMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+						}
+					}
+
+					// Push constant:
+					DefaultPushConstant pushConstant(0, drawCall.instanceCount, false, m_time, m_deltaTime);
+					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
+
+					// Bind per draw call descriptor set:
+					if (VkDescriptorSet vkDescriptorSet = drawCall.pCallDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+
+					// Bind mesh data:
+					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall.pMesh->GetVertexBindingCount(), drawCall.pMesh->GetVkBuffers(), drawCall.pMesh->GetOffsets());
+					vkCmdBindIndexBuffer(commandBuffer, drawCall.pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall.pMesh->GetVkIndexType());
+
+					// Draw call:
+					vkCmdDrawIndexed(commandBuffer, drawCall.pMesh->GetIndexCount(), std::max(drawCall.instanceCount, (uint32_t)1), 0, 0, 0);
+					DEBUG_LOG_TRACE("Outline draw call, mesh = {}, material = {}", drawCall.pMesh->GetName(), pOutlineMaterial->GetName());
+				}
+			}
+			vkCmdEndRenderPass(commandBuffer);
+		}
+		VKA(vkEndCommandBuffer(commandBuffer));
+
+		// Outline render pass's color attachment finalLayout is VK_IMAGE_LAYOUT_GENERAL. Reflect this in the image layout:
+		pOutlineRenderPass->GetRenderTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
+    }
+    void Renderer::RecordShadowCommands()
 	{
 		PROFILE_FUNCTION();
 
@@ -1252,114 +1498,6 @@ namespace vulkanRendererBackend
 
 		// Forward render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_GENERAL. Reflect this in the image layout:
 		pForwardRenderPass->GetRenderTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
-	}
-	void Renderer::RecordGizmoCommands()
-	{
-		PROFILE_FUNCTION();
-
-		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::gizmo);
-		commandPool.ResetPools();
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		GizmoRenderPass* pGizmoRenderPass = RenderPassManager::GetGizmoRenderPass();
-
-		// Record gizmo commands:
-		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-		{
-			// Viewport and scissor:
-			VkViewport viewport = {};
-			viewport.width = pGizmoRenderPass->GetRenderTexture(m_frameIndex)->GetWidth();
-			viewport.height = pGizmoRenderPass->GetRenderTexture(m_frameIndex)->GetHeight();
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
-			VkRect2D scissor = {};
-			scissor.extent.width = viewport.width;
-			scissor.extent.height = viewport.height;
-			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-			// Render pass info:
-			std::array<VkClearValue, 2> clearValues;
-			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
-			clearValues[1].depthStencil = { 1.0f, 0 };
-			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-			renderPassBeginInfo.renderPass = pGizmoRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = pGizmoRenderPass->GetFramebuffer(m_frameIndex);
-			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent.width = viewport.width;
-			renderPassBeginInfo.renderArea.extent.height = viewport.height;
-			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-			renderPassBeginInfo.pClearValues = clearValues.data();
-
-			// Begin render pass:
-			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-			if (m_sortedGizmoDrawCallPointers.size() > 0)
-			{
-				// Pipeline:
-				VkPipeline pipeline = VK_NULL_HANDLE;
-				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-				bool staticDescriptorSetsBound = false;
-
-				// Draw calls:
-				for (DrawCall* drawCall : m_sortedGizmoDrawCallPointers)
-				{
-					PROFILE_SCOPE("GizmoDrawCall");
-
-					// Pipeline swap:
-					Material* pGizmoMaterial = drawCall->pMaterial;
-					VkPipeline newPipeline = pGizmoMaterial->GetPipeline(drawCall->pMesh, Material::PipelineType::gizmo)->GetVkPipeline();
-					if (pipeline != newPipeline)
-					{
-						pipeline = newPipeline;
-						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-						// Pipeline layout swap:
-						VkPipelineLayout newPipelineLayout = pGizmoMaterial->GetVkPipelineLayout();
-						if (pipelineLayout != newPipelineLayout)
-						{
-							pipelineLayout = newPipelineLayout;
-
-							// Bind static descriptor sets:
-							if (!staticDescriptorSetsBound)
-							{
-								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-								staticDescriptorSetsBound = true;
-							}
-
-							// Bind per shader descriptor set:
-							if (VkDescriptorSet vkDescriptorSet = pGizmoMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
-						}
-					}
-
-					// Push constant:
-					DefaultPushConstant pushConstant(0, drawCall->instanceCount, false, m_time, m_deltaTime);
-					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
-
-					// Cull mode:
-					vkCmdSetCullMode(commandBuffer, ResolveCullMode(drawCall->cullMode, RenderModeToCullMode(pGizmoMaterial->GetRenderMode())));
-
-					// Bind per draw call descriptor set:
-					if (VkDescriptorSet vkDescriptorSet = drawCall->pCallDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
-
-					// Bind mesh data:
-					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
-					vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
-
-					// Draw call:
-					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					DEBUG_LOG_TRACE("Gizmo draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pGizmoMaterial->GetName());
-				}
-			}
-			vkCmdEndRenderPass(commandBuffer);
-		}
-		VKA(vkEndCommandBuffer(commandBuffer));
-
-		// Gizmo render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL. Reflect this in the image layout:
-		pGizmoRenderPass->GetRenderTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 	void Renderer::RecordForwardCommandsParallel()
 	{
@@ -1682,7 +1820,39 @@ namespace vulkanRendererBackend
 		// Submit:
 		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
-	void Renderer::SubmitPreRenderComputeCommands()
+	void Renderer::SubmitGizmoCommands()
+	{
+		PROFILE_FUNCTION();
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::gizmo);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_resourceUpdateToGizmoSemaphores[m_frameIndex];
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		// Command buffer info:
+		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		commandBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_gizmoToPresentSemaphores[m_frameIndex];
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &commandBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
+	}
+    void Renderer::SubmitPreRenderComputeCommands()
 	{
 		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::preRenderCompute);
@@ -1698,9 +1868,45 @@ namespace vulkanRendererBackend
 		commandBufferInfo.commandBuffer = commandBuffer;
 
 		// Signal semaphore info:
+		std::array<VkSemaphoreSubmitInfo, 2> signalSemaphoreInfos{};
+		signalSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		signalSemaphoreInfos[0].semaphore = m_preRenderComputeToShadowSemaphores[m_frameIndex];
+		signalSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+		signalSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		signalSemaphoreInfos[1].semaphore = m_preRenderComputeToOutlineSemaphores[m_frameIndex];
+		signalSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &commandBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = static_cast<uint32_t>(signalSemaphoreInfos.size());
+		submitInfo.pSignalSemaphoreInfos = signalSemaphoreInfos.data();
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
+	}
+	void Renderer::SubmitOutlineCommands()
+	{
+		PROFILE_FUNCTION();
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::outline);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_preRenderComputeToOutlineSemaphores[m_frameIndex];
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		// Command buffer info:
+		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		commandBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_preRenderComputeToShadowSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+		signalSemaphoreInfo.semaphore = m_outlineToPostRenderComputeSemaphores[m_frameIndex];
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -1714,7 +1920,7 @@ namespace vulkanRendererBackend
 		// Submit:
 		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
-	void Renderer::SubmitShadowCommands()
+    void Renderer::SubmitShadowCommands()
 	{
 		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::shadow);
@@ -1770,38 +1976,6 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitGizmoCommands()
-	{
-		PROFILE_FUNCTION();
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::gizmo);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_resourceUpdateToGizmoSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_gizmoToPresentSemaphores[m_frameIndex];
 		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Submit info:
@@ -1900,9 +2074,13 @@ namespace vulkanRendererBackend
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
 		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+		std::array<VkSemaphoreSubmitInfo, 2> waitSemaphoreInfos{};
+		waitSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitSemaphoreInfos[0].semaphore = m_forwardToPostRenderComputeSemaphores[m_frameIndex];
+		waitSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+		waitSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitSemaphoreInfos[1].semaphore = m_outlineToPostRenderComputeSemaphores[m_frameIndex];
+		waitSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
@@ -1915,8 +2093,8 @@ namespace vulkanRendererBackend
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.waitSemaphoreInfoCount = static_cast<uint32_t>(waitSemaphoreInfos.size());
+		submitInfo.pWaitSemaphoreInfos = waitSemaphoreInfos.data();
 		submitInfo.commandBufferInfoCount = 1;
 		submitInfo.pCommandBufferInfos = &commandBufferInfo;
 		submitInfo.signalSemaphoreInfoCount = 1;
@@ -2010,8 +2188,10 @@ namespace vulkanRendererBackend
 		m_resourceUpdateToPreRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_resourceUpdateToGizmoSemaphores.resize(Context::GetFramesInFlight());
 		m_preRenderComputeToShadowSemaphores.resize(Context::GetFramesInFlight());
+		m_preRenderComputeToOutlineSemaphores.resize(Context::GetFramesInFlight());
 		m_shadowToForwardSemaphores.resize(Context::GetFramesInFlight());
 		m_forwardToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
+		m_outlineToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_gizmoToPresentSemaphores.resize(Context::GetFramesInFlight());
 		m_postRenderToPresentSemaphores.resize(Context::GetFramesInFlight());
 		m_releaseSemaphores.resize(Context::GetSwapchain()->GetImageCount());
@@ -2021,16 +2201,20 @@ namespace vulkanRendererBackend
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_resourceUpdateToPreRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_resourceUpdateToGizmoSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToShadowSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToOutlineSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowToForwardSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardToPostRenderComputeSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_outlineToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_gizmoToPresentSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderToPresentSemaphores[i]));
 			NAME_VK_OBJECT(m_acquireSemaphores[i], "Semaphore_Acquire_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_resourceUpdateToPreRenderComputeSemaphores[i], "Semaphore_ResourceUpdateToPreRenderCompute_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_resourceUpdateToGizmoSemaphores[i], "Semaphore_ResourceUpdateToGizmo_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_preRenderComputeToShadowSemaphores[i], "Semaphore_PreRenderComputeToShadow_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_preRenderComputeToOutlineSemaphores[i], "Semaphore_PreRenderComputeToOutline_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_shadowToForwardSemaphores[i], "Semaphore_ShadowToForward_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_forwardToPostRenderComputeSemaphores[i], "Semaphore_ForwardToPostRenderCompute_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_outlineToPostRenderComputeSemaphores[i], "Semaphore_OutlineToPostRenderCompute_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_gizmoToPresentSemaphores[i], "Semaphore_GizmoToPresent_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_postRenderToPresentSemaphores[i], "Semaphore_PostRenderToPresent_Frame" + std::to_string(i));
 		}
@@ -2054,8 +2238,10 @@ namespace vulkanRendererBackend
 			vkDestroySemaphore(Context::GetVkDevice(), m_resourceUpdateToPreRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_resourceUpdateToGizmoSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToShadowSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToOutlineSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_shadowToForwardSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_forwardToPostRenderComputeSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_outlineToPostRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_gizmoToPresentSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_postRenderToPresentSemaphores[i], nullptr);
 		}
@@ -2065,8 +2251,10 @@ namespace vulkanRendererBackend
 		m_resourceUpdateToPreRenderComputeSemaphores.clear();
 		m_resourceUpdateToGizmoSemaphores.clear();
 		m_preRenderComputeToShadowSemaphores.clear();
+		m_preRenderComputeToOutlineSemaphores.clear();
 		m_shadowToForwardSemaphores.clear();
 		m_forwardToPostRenderComputeSemaphores.clear();
+		m_outlineToPostRenderComputeSemaphores.clear();
 		m_gizmoToPresentSemaphores.clear();
 		m_postRenderToPresentSemaphores.clear();
 		m_releaseSemaphores.clear();

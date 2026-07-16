@@ -47,24 +47,26 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Renderer : public emberBackendInterface::IRenderer
 	{
 	private: // Enums:
-		enum class RenderStage
+		enum class RenderStage : uint8_t
 		{
-			resourceUpdate = 0,
-			preRenderCompute = 1,
-			shadow = 2,
-			forward = 3,
-			gizmo = 4,
-			postRenderCompute = 5,
-			present = 6,
-			stageCount = 7
+			resourceUpdate,
+			gizmo,
+			preRenderCompute,
+            outline,
+			shadow,
+			forward,
+			postRenderCompute,
+			present,
+			stageCount
 		};
 		inline static constexpr std::array<const char*, (int)RenderStage::stageCount> renderStageNames =
 		{
 			"resourceUpdate",
+			"gizmo",
 			"preRenderCompute",
+			"outline",
 			"shadow",
 			"forward",
-			"gizmo",
 			"postRenderCompute",
 			"present"
 		};
@@ -84,8 +86,10 @@ namespace vulkanRendererBackend
 		std::vector<VkSemaphore> m_resourceUpdateToPreRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_resourceUpdateToGizmoSemaphores;
 		std::vector<VkSemaphore> m_preRenderComputeToShadowSemaphores;
+		std::vector<VkSemaphore> m_preRenderComputeToOutlineSemaphores;
 		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
 		std::vector<VkSemaphore> m_forwardToPostRenderComputeSemaphores;
+		std::vector<VkSemaphore> m_outlineToPostRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_gizmoToPresentSemaphores;
 		std::vector<VkSemaphore> m_postRenderToPresentSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
@@ -103,6 +107,7 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::PositionalLight> m_positionalLights;
 
 		// Draw calls:
+		std::vector<DrawCall> m_outlineCalls;
 		std::vector<DrawCall> m_drawCalls;
 		std::vector<DrawCall*> m_sortedDrawCallPointers;
 		std::vector<DrawCall> m_gizmoDrawCalls;
@@ -141,6 +146,7 @@ namespace vulkanRendererBackend
 		void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) override;
 
 		// Draw mesh:
+        void DrawOutline(emberBackendInterface::IMesh* pIMesh, const Float4x4& localToWorldMatrix, uint32_t instanceCount) override;
 		void DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
 		emberBackendInterface::IDescriptorSetBinding* DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
 		void DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
@@ -217,11 +223,12 @@ namespace vulkanRendererBackend
 
 		// Record commands:
 		void RecordResourceUpdateCommands();
+		void RecordGizmoCommands();
 		void RecordPreRenderComputeCommands();
+		void RecordOutlineCommands();
 		void RecordShadowCommands();
 		void RecordForwardCommands();
 		void RecordForwardCommandsParallel();
-		void RecordGizmoCommands();
 		void RecordPostRenderComputeCommands();
 		void RecordPresentCommands();
 		void RecordImGuiPresentCommands();
@@ -229,6 +236,7 @@ namespace vulkanRendererBackend
 		// Submit commands:
 		void SubmitResourceUpdateCommands();
 		void SubmitPreRenderComputeCommands();
+		void SubmitOutlineCommands();
 		void SubmitShadowCommands();
 		void SubmitForwardCommands();
 		void SubmitForwardCommandsParallel();

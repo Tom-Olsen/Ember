@@ -120,8 +120,8 @@ namespace vulkanRendererBackend
 		colorBlendState.blendConstants[2] = 0.0f;   // optional.
 		colorBlendState.blendConstants[3] = 0.0f;   // optional.
 
-        // Dynamic states, can be changed without recreating the pipeline:
-		std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_CULL_MODE };
+		// Dynamic states, can be changed without recreating the pipeline:
+		std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 		VkPipelineDynamicStateCreateInfo dynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
 		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 		dynamicState.pDynamicStates = dynamicStates.data();
@@ -136,7 +136,7 @@ namespace vulkanRendererBackend
 		pipelineInfo.pMultisampleState = &multisampleState;     // multisampling.
 		pipelineInfo.pDepthStencilState = nullptr;              // depth and stencil testing.
 		pipelineInfo.pColorBlendState = &colorBlendState;       // color blending.
-		pipelineInfo.pDynamicState = &dynamicState;             // dynamic states: viewport, scissor and cull mode.
+		pipelineInfo.pDynamicState = &dynamicState;             // dynamic states: viewport and scissor.
 		pipelineInfo.layout = vkPipelineLayout;
 		pipelineInfo.renderPass = RenderPassManager::GetOutlineRenderPass()->GetVkRenderPass();
 		pipelineInfo.subpass = 0;
