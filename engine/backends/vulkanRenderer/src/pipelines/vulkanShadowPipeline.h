@@ -13,6 +13,7 @@ namespace vulkanRendererBackend
 	class ShadowPipeline : public Pipeline
 	{
 	public: // Methods:
+		// Constructor/Destructor:
 		ShadowPipeline(
 			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,

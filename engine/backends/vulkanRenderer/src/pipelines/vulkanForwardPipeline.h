@@ -15,6 +15,7 @@ namespace vulkanRendererBackend
 	class ForwardPipeline : public Pipeline
 	{
 	public: // Methods:
+		// Constructor/Destructor:
 		ForwardPipeline(
 			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,

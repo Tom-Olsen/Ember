@@ -13,6 +13,7 @@ namespace vulkanRendererBackend
 	class PresentPipeline : public Pipeline
 	{
 	public: // Methods:
+		// Constructor/Destructor:
 		PresentPipeline(
 			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,
