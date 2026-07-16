@@ -281,20 +281,20 @@ namespace vulkanRendererBackend
 		Pipeline* pPipeline = nullptr;
 		switch (pipelineType)
 		{
-		case PipelineType::forward:
-			pPipeline = m_pForwardPipelines[pipelineIndex].get();
-			break;
-		case PipelineType::gizmo:
-			pPipeline = m_pGizmoPipelines[pipelineIndex].get();
-			break;
-		case PipelineType::shadow:
-			pPipeline = m_pShadowPipelines[pipelineIndex].get();
-			break;
-		case PipelineType::present:
-			pPipeline = m_pPresentPipelines[pipelineIndex].get();
-			break;
-		default:
-			throw std::runtime_error("Material::GetPipeline(...) failed. Unsupported pipeline type.");
+		    case PipelineType::gizmo:
+		    	pPipeline = m_pGizmoPipelines[pipelineIndex].get();
+		    	break;
+		    case PipelineType::shadow:
+		    	pPipeline = m_pShadowPipelines[pipelineIndex].get();
+		    	break;
+		    case PipelineType::forward:
+		    	pPipeline = m_pForwardPipelines[pipelineIndex].get();
+		    	break;
+		    case PipelineType::present:
+		    	pPipeline = m_pPresentPipelines[pipelineIndex].get();
+		    	break;
+		    default:
+		    	throw std::runtime_error("Material::GetPipeline(...) failed. Unsupported pipeline type.");
 		}
 		assert(pPipeline && "Material::GetPipeline(...): Pipeline not supported for this vertex layout");
 		return pPipeline;
@@ -324,16 +324,16 @@ namespace vulkanRendererBackend
 	{
 		switch (pipelineType)
 		{
-		case PipelineType::forward:
-			return !m_pForwardPipelines.empty();
-		case PipelineType::gizmo:
-			return !m_pGizmoPipelines.empty();
-		case PipelineType::shadow:
-			return !m_pShadowPipelines.empty();
-		case PipelineType::present:
-			return !m_pPresentPipelines.empty();
-		default:
-			throw std::runtime_error("Material::HasPipeline(...) failed. Unsupported pipeline type.");
+		    case PipelineType::gizmo:
+		    	return !m_pGizmoPipelines.empty();
+		    case PipelineType::shadow:
+		    	return !m_pShadowPipelines.empty();
+		    case PipelineType::forward:
+		    	return !m_pForwardPipelines.empty();
+		    case PipelineType::present:
+		    	return !m_pPresentPipelines.empty();
+		    default:
+		    	throw std::runtime_error("Material::HasPipeline(...) failed. Unsupported pipeline type.");
 		}
 	}
 	size_t Material::GetPipelineIndex(const Mesh* pMesh, PipelineType pipelineType) const
@@ -341,17 +341,17 @@ namespace vulkanRendererBackend
 		const size_t vertexLayoutIndex = static_cast<size_t>(pMesh->GetVertexMemoryLayout());
 		switch (pipelineType)
 		{
-		case PipelineType::forward:
-		case PipelineType::gizmo:
-		{
-			const size_t renderModeCount = static_cast<size_t>(emberCommon::RenderMode::count);
-			return static_cast<size_t>(m_renderMode) + vertexLayoutIndex * renderModeCount;
-		}
-		case PipelineType::shadow:
-		case PipelineType::present:
-			return vertexLayoutIndex;
-		default:
-			throw std::runtime_error("Material::GetPipelineIndex(...) failed. Unsupported pipeline type.");
+		    case PipelineType::gizmo:
+		    {
+		    	const size_t renderModeCount = static_cast<size_t>(emberCommon::RenderMode::count);
+		    	return static_cast<size_t>(m_renderMode) + vertexLayoutIndex * renderModeCount;
+		    }
+		    case PipelineType::shadow:
+		    case PipelineType::forward:
+		    case PipelineType::present:
+		    	return vertexLayoutIndex;
+		    default:
+		    	throw std::runtime_error("Material::GetPipelineIndex(...) failed. Unsupported pipeline type.");
 		}
 	}
 }

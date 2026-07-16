@@ -21,10 +21,10 @@ namespace vulkanRendererBackend
     {
     private: // Members
         static bool s_isInitialized;
-        static std::unique_ptr<ShadowRenderPass> s_pShadowRenderPass;
-        static std::unique_ptr<ForwardRenderPass> s_pForwardRenderPass;
         static std::unique_ptr<GizmoRenderPass> s_pGizmoRenderPass;
         static std::unique_ptr<OutlineRenderPass> s_pOutlineRenderPass;
+        static std::unique_ptr<ShadowRenderPass> s_pShadowRenderPass;
+        static std::unique_ptr<ForwardRenderPass> s_pForwardRenderPass;
         static std::unique_ptr<PresentRenderPass> s_pPresentRenderPass;
 
     public: // Methods
@@ -34,10 +34,10 @@ namespace vulkanRendererBackend
         static void RecreateRenderPasses();
 
         // Getters:
-        static ShadowRenderPass* GetShadowRenderPass();
-        static ForwardRenderPass* GetForwardRenderPass();
         static GizmoRenderPass* GetGizmoRenderPass();
         static OutlineRenderPass* GetOutlineRenderPass();
+        static ShadowRenderPass* GetShadowRenderPass();
+        static ForwardRenderPass* GetForwardRenderPass();
         static PresentRenderPass* GetPresentRenderPass();
 
     private: // Methods

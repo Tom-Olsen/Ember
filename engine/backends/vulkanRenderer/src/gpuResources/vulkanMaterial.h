@@ -37,9 +37,9 @@ namespace vulkanRendererBackend
 	public: // Enums:
 		enum class PipelineType : uint8_t
 		{
-			forward,
 			gizmo,
 			shadow,
+			forward,
 			present
 		};
 
@@ -47,9 +47,9 @@ namespace vulkanRendererBackend
 		emberCommon::RenderMode m_renderMode;
 		int32_t m_renderQueue;          // opaque=0-999, transparent=1000-1999, skybox=2000-...
 		Material* m_pShadowMaterial;    // the shadow material used alongside this material.
-		std::vector<std::unique_ptr<Pipeline>> m_pForwardPipelines;
 		std::vector<std::unique_ptr<Pipeline>> m_pGizmoPipelines;
 		std::vector<std::unique_ptr<Pipeline>> m_pShadowPipelines;
+		std::vector<std::unique_ptr<Pipeline>> m_pForwardPipelines;
 		std::vector<std::unique_ptr<Pipeline>> m_pPresentPipelines;
 
 	public: // Methods:
