@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
         VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode, "ShaderModule_ForwardFragment_" + name);
 
         // Create pipeline:
-        CreatePipeline(vkPipelineLayout, vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes, renderMode);
+        CreatePipeline(vkPipelineLayout, renderMode, vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes);
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
@@ -44,11 +44,11 @@ namespace vulkanRendererBackend
     // Private methods:
     void ForwardPipeline::CreatePipeline(
         VkPipelineLayout vkPipelineLayout,
+        emberCommon::RenderMode renderMode,
         const VkShaderModule& vertexShaderModule,
         const VkShaderModule& fragmentShaderModule,
         const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
-        emberCommon::RenderMode renderMode)
+        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
         // Render mode specifics:
         VkPolygonMode polygonMode;

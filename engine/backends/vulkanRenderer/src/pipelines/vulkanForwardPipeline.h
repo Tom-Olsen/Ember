@@ -29,10 +29,10 @@ namespace vulkanRendererBackend
 	private: // Methods:
 		void CreatePipeline(
 			VkPipelineLayout vkPipelineLayout,
+			emberCommon::RenderMode renderMode,
 			const VkShaderModule& vertexShaderModule,
 			const VkShaderModule& fragmentShaderModule,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
-			emberCommon::RenderMode renderMode);
+			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
 	};
 }
