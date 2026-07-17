@@ -52,6 +52,8 @@ namespace emberBackendInterface
         virtual float GetDepthBiasConstantFactor() = 0;
         virtual float GetDepthBiasClamp() = 0;
         virtual float GetDepthBiasSlopeFactor() = 0;
+        virtual const Float4& GetOutlineColor() const = 0;
+        virtual int GetOutlineThickness() const = 0;
         virtual uint32_t GetFrameIndex() const = 0;
         virtual bool IsFrameFinished(uint32_t frameIndex) const = 0;
 
@@ -62,6 +64,8 @@ namespace emberBackendInterface
         virtual void SetDepthBiasConstantFactor(float depthBiasConstantFactor) = 0;
         virtual void SetDepthBiasClamp(float depthBiasClamp) = 0;
         virtual void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) = 0;
+        virtual void SetOutlineColor(const Float4& outlineColor) = 0;
+        virtual void SetOutlineThickness(int outlineThickness) = 0;
 
         // Functionallity forwarding:
         virtual void CollectGarbage() = 0;

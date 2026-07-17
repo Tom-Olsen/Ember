@@ -23,6 +23,7 @@ namespace emberEditor
 	class GameEditorWindow;
 	class HierarchyEditorWindow;
 	class InspectorEditorWindow;
+	class OutlineEditorWindow;
 	class ProjectEditorWindow;
 	class SceneEditorWindow;
 }
@@ -57,6 +58,7 @@ namespace emberApplication
 		static std::unique_ptr<emberEditor::GameEditorWindow> m_pGameEditorWindow;
 		static std::unique_ptr<emberEditor::HierarchyEditorWindow> m_pHierarchyEditorWindow;
 		static std::unique_ptr<emberEditor::InspectorEditorWindow> m_pInspectorEditorWindow;
+		static std::unique_ptr<emberEditor::OutlineEditorWindow> m_pOutlineEditorWindow;
 		static std::unique_ptr<emberEditor::ProjectEditorWindow> m_pProjectEditorWindow;
 		static std::unique_ptr<emberEditor::SceneEditorWindow> m_pSceneEditorWindow;
 
@@ -79,6 +81,7 @@ namespace emberApplication
 		static emberEditor::GameEditorWindow* GetGameEditorWindow();
 		static emberEditor::HierarchyEditorWindow* GetHierarchyEditorWindow();
 		static emberEditor::InspectorEditorWindow* GetInspectorEditorWindow();
+		static emberEditor::OutlineEditorWindow* GetOutlineEditorWindow();
 		static emberEditor::ProjectEditorWindow* GetProjectEditorWindow();
 		static emberEditor::SceneEditorWindow* GetSceneEditorWindow();
 

@@ -98,6 +98,8 @@ namespace vulkanRendererBackend
 		float m_depthBiasConstantFactor;
 		float m_depthBiasClamp;
 		float m_depthBiasSlopeFactor;
+		Float4 m_outlineColor;
+		int m_outlineThickness;
 		uint32_t m_directionalLightsCount;
 		uint32_t m_positionalLightsCount;
 		uint32_t m_maxDirectionalLights;
@@ -160,6 +162,8 @@ namespace vulkanRendererBackend
 		float GetDepthBiasConstantFactor() override;
 		float GetDepthBiasClamp() override;
 		float GetDepthBiasSlopeFactor() override;
+		const Float4& GetOutlineColor() const override;
+		int GetOutlineThickness() const override;
 		uint32_t GetFrameIndex() const override;
 		bool IsFrameFinished(uint32_t frameIndex) const override;
 
@@ -170,6 +174,8 @@ namespace vulkanRendererBackend
 		void SetDepthBiasConstantFactor(float depthBiasConstantFactor) override;
 		void SetDepthBiasClamp(float depthBiasClamp) override;
 		void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) override;
+		void SetOutlineColor(const Float4& outlineColor) override;
+		void SetOutlineThickness(int outlineThickness) override;
 
 		// Functionality forwarding:
 		void CollectGarbage() override;

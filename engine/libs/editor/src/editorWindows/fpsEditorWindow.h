@@ -13,8 +13,6 @@ namespace emberEditor
 		// Easy access to emberEngine Gui:
 		using Gui = emberCore::Gui;
 
-
-
 	private: // Members
 		float m_frameTimes[60] = {};
 		int m_index = 0;

@@ -216,6 +216,14 @@ namespace emberCore
 	{
 		return s_pIRenderer->GetDepthBiasSlopeFactor();
 	}
+	const Float4& Renderer::GetOutlineColor()
+	{
+		return s_pIRenderer->GetOutlineColor();
+	}
+	int Renderer::GetOutlineThickness()
+	{
+		return s_pIRenderer->GetOutlineThickness();
+	}
 	uint32_t Renderer::GetFrameIndex()
 	{
 		return s_pIRenderer ? s_pIRenderer->GetFrameIndex() : 0;
@@ -243,6 +251,14 @@ namespace emberCore
 	void Renderer::SetDepthBiasSlopeFactor(float depthBiasSlopeFactor)
 	{
 		s_pIRenderer->SetDepthBiasSlopeFactor(depthBiasSlopeFactor);
+	}
+	void Renderer::SetOutlineColor(const Float4& outlineColor)
+	{
+		s_pIRenderer->SetOutlineColor(outlineColor);
+	}
+	void Renderer::SetOutlineThickness(int outlineThickness)
+	{
+		s_pIRenderer->SetOutlineThickness(outlineThickness);
 	}
 
 

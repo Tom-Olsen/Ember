@@ -93,6 +93,8 @@ namespace emberCore
 		static float GetDepthBiasConstantFactor();
 		static float GetDepthBiasClamp();
 		static float GetDepthBiasSlopeFactor();
+		static const Float4& GetOutlineColor();
+		static int GetOutlineThickness();
 		static uint32_t GetFrameIndex();
 		static bool IsFrameFinished(uint32_t frameIndex);
 
@@ -101,6 +103,8 @@ namespace emberCore
 		static void SetDepthBiasConstantFactor(float depthBiasConstantFactor);
 		static void SetDepthBiasClamp(float depthBiasClamp);
 		static void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor);
+		static void SetOutlineColor(const Float4& outlineColor);
+		static void SetOutlineThickness(int outlineThickness);
 
 		// Functionallity forwarding:
 		static void CollectGarbage();

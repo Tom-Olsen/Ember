@@ -31,6 +31,7 @@
 #include "gameEditorWindow.h"
 #include "hierarchyEditorWindow.h"
 #include "inspectorEditorWindow.h"
+#include "outlineEditorWindow.h"
 #include "projectEditorWindow.h"
 #include "sceneEditorWindow.h"
 
@@ -51,6 +52,7 @@ namespace emberApplication
 	std::unique_ptr<emberEditor::GameEditorWindow> Application::m_pGameEditorWindow;
 	std::unique_ptr<emberEditor::HierarchyEditorWindow> Application::m_pHierarchyEditorWindow;
 	std::unique_ptr<emberEditor::InspectorEditorWindow> Application::m_pInspectorEditorWindow;
+	std::unique_ptr<emberEditor::OutlineEditorWindow> Application::m_pOutlineEditorWindow;
 	std::unique_ptr<emberEditor::ProjectEditorWindow> Application::m_pProjectEditorWindow;
 	std::unique_ptr<emberEditor::SceneEditorWindow> Application::m_pSceneEditorWindow;
 
@@ -108,6 +110,7 @@ namespace emberApplication
 			m_pGameEditorWindow = std::make_unique<emberEditor::GameEditorWindow>();
 			m_pHierarchyEditorWindow = std::make_unique<emberEditor::HierarchyEditorWindow>();
 			m_pInspectorEditorWindow = std::make_unique<emberEditor::InspectorEditorWindow>();
+			m_pOutlineEditorWindow = std::make_unique<emberEditor::OutlineEditorWindow>();
 			m_pProjectEditorWindow = std::make_unique<emberEditor::ProjectEditorWindow>();
 			m_pSceneEditorWindow = std::make_unique<emberEditor::SceneEditorWindow>();
 
@@ -125,6 +128,7 @@ namespace emberApplication
 	{
         m_pSceneEditorWindow.reset();
         m_pProjectEditorWindow.reset();
+        m_pOutlineEditorWindow.reset();
         m_pInspectorEditorWindow.reset();
         m_pHierarchyEditorWindow.reset();
         m_pGameEditorWindow.reset();
@@ -254,6 +258,10 @@ namespace emberApplication
 	{
 		return m_pInspectorEditorWindow.get();
 	}
+	emberEditor::OutlineEditorWindow* Application::GetOutlineEditorWindow()
+    {
+        return m_pOutlineEditorWindow.get();
+    }
 	emberEditor::ProjectEditorWindow* Application::GetProjectEditorWindow()
 	{
 		return m_pProjectEditorWindow.get();

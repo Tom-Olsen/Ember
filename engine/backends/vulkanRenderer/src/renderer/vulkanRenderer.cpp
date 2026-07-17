@@ -88,6 +88,8 @@ namespace vulkanRendererBackend
 		m_depthBiasConstantFactor = 0.0f;
 		m_depthBiasClamp = 0.0f;
 		m_depthBiasSlopeFactor = 3.0f;
+		m_outlineColor = Float4::orange;
+		m_outlineThickness = 3;
 		m_directionalLightsCount = 0;
 		m_positionalLightsCount = 0;
 		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));
@@ -450,6 +452,14 @@ namespace vulkanRendererBackend
 	{
 		return m_depthBiasSlopeFactor;
 	}
+	const Float4& Renderer::GetOutlineColor() const
+	{
+		return m_outlineColor;
+	}
+	int Renderer::GetOutlineThickness() const
+	{
+		return m_outlineThickness;
+	}
 	uint32_t Renderer::GetFrameIndex() const
 	{
 		return Context::GetFrameIndex();
@@ -499,6 +509,14 @@ namespace vulkanRendererBackend
 	void Renderer::SetDepthBiasSlopeFactor(float depthBiasSlopeFactor)
 	{
 		m_depthBiasSlopeFactor = depthBiasSlopeFactor;
+	}
+	void Renderer::SetOutlineColor(const Float4& outlineColor)
+	{
+		m_outlineColor = outlineColor;
+	}
+	void Renderer::SetOutlineThickness(int outlineThickness)
+	{
+		m_outlineThickness = outlineThickness;
 	}
 
 
@@ -917,9 +935,8 @@ namespace vulkanRendererBackend
 			RenderTexture2d* pRenderTexture = pPostRenderCompute->GetPostProcessingCallCount() % 2 == 0 ? pForwardRenderPass->GetRenderTexture(m_frameIndex) : pForwardRenderPass->GetSecondaryRenderTexture(m_frameIndex);
 			pOutlineDescriptorSetBinding->SetTexture("renderImage", pRenderTexture);
 			pOutlineDescriptorSetBinding->SetTexture("mask", pOutlineRenderPass->GetRenderTexture(m_frameIndex));
-			// Ember::ToDo: make color and thickness API accessable:
-            pOutlineDescriptorSetBinding->SetFloat4("OutlineProperties", "outlineColor", Float4::orange);
-			pOutlineDescriptorSetBinding->SetInt("OutlineProperties", "outlineRadius", 2);
+			pOutlineDescriptorSetBinding->SetFloat4("OutlineProperties", "outlineColor", m_outlineColor);
+			pOutlineDescriptorSetBinding->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
 			pPostRenderCompute->RecordComputeShader(pOutlineComputeShader);
 		}
 
