@@ -1,7 +1,7 @@
 #pragma once
 #include "iCompute.h"
 #include "vulkanRendererExport.h"
-#include <memory>
+#include <cstddef>
 #include <vector>
 
 
@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		std::vector<ComputeCall> m_computeCalls;
-		std::unique_ptr<ComputeShader> m_pInOutComputeShader; // copies final render into primary texture in case of odd number of post processing effects.
+		size_t m_postProcessingCallCount;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -44,9 +44,14 @@ namespace vulkanRendererBackend
 
 		// Workload recording:
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader) override;
+		emberBackendInterface::IDescriptorSetBinding* RecordPostProcessingShader(emberBackendInterface::IComputeShader* pComputeShader) override;
 
 		// Management:
 		std::vector<ComputeCall>& GetComputeCalls();
+		size_t GetPostProcessingCallCount() const;
 		void ResetComputeCalls();
+
+	private: // Methods:
+		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, bool isPostProcessing);
 	};
 }

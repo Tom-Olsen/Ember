@@ -36,6 +36,7 @@ namespace vulkanRendererBackend
         static std::unique_ptr<Material> s_pDefaultPresentMaterial;
         // Compute shaders:
         static std::unique_ptr<ComputeShader> s_pGammaCorrectionComputeShader;
+        static std::unique_ptr<ComputeShader> s_pOutlineComputeShader;
         // Meshes:
         static std::unique_ptr<Mesh> s_pDefaultRenderQuad;
         // Buffers:
@@ -64,6 +65,7 @@ namespace vulkanRendererBackend
         static Material* GetDefaultPresentMaterial();
         // Compute shaders:
         static ComputeShader* GetGammaCorrectionComputeShader();
+        static ComputeShader* GetOutlineComputeShader();
         // Meshes:
         static Mesh* GetDefaultRenderQuad();
         // Buffers:

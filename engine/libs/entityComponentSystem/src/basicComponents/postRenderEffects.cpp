@@ -24,6 +24,6 @@ namespace emberEcs
 	void PostRenderEffects::LateUpdate()
 	{
 		for (ComputeShader* pComputeShader : effects)
-			ShaderProperties shaderProperties = Compute::PostRender::RecordComputeShader(*pComputeShader);
+			ShaderProperties shaderProperties = Compute::PostRender::RecordPostProcessingShader(*pComputeShader);
 	}
 }

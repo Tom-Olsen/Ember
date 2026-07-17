@@ -4,12 +4,11 @@
 #include "vulkanAccessMask.h"
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
+#include "vulkanDescriptorSetBinding.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanPoolManager.h"
 #include "vulkanRenderPassManager.h"
 #include "vulkanRenderTexture2d.h"
-#include "vulkanDescriptorSetBinding.h"
-#include <filesystem>
 #include <vulkan/vulkan.h>
 
 
@@ -19,11 +18,10 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	PostRender::PostRender()
+	PostRender::PostRender() :
+		m_postProcessingCallCount(0)
 	{
-		std::filesystem::path shaderDir = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
-		std::filesystem::path shaderPath = shaderDir / "inOut.comp.spv";
-		m_pInOutComputeShader = std::make_unique<ComputeShader>("inOut", shaderPath);
+
 	}
 	PostRender::~PostRender()
 	{
@@ -41,6 +39,43 @@ namespace vulkanRendererBackend
 	// Workload recording:
 	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
 	{
+		return RecordComputeShader(pIComputeShader, false);
+	}
+	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordPostProcessingShader(emberBackendInterface::IComputeShader* pIComputeShader)
+	{
+		return RecordComputeShader(pIComputeShader, true);
+	}
+
+
+
+	// Management:
+	std::vector<ComputeCall>& PostRender::GetComputeCalls()
+	{
+		return m_computeCalls;
+	}
+	size_t PostRender::GetPostProcessingCallCount() const
+	{
+		return m_postProcessingCallCount;
+	}
+	void PostRender::ResetComputeCalls()
+	{
+		// Return all bindings back to the corresponding pool:
+		for (ComputeCall& computeCall : m_computeCalls)
+		{
+			if (computeCall.pComputeShader && computeCall.pCallDescriptorSetBinding)
+				PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pCallDescriptorSetBinding);
+		}
+
+		// Remove all computeCalls so next frame can start fresh:
+		m_computeCalls.clear();
+		m_postProcessingCallCount = 0;
+	}
+
+
+
+	// Private methods:
+	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, bool isPostProcessing)
+	{
 		// Record dynamic compute call.
 		if (!pIComputeShader)
 		{
@@ -52,32 +87,21 @@ namespace vulkanRendererBackend
 		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetWidth();
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
-		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none };
-		m_computeCalls.push_back(computeCall);
-		return pDescriptorSetBinding;
-	}
-
-
-
-	// Management:
-	std::vector<ComputeCall>& PostRender::GetComputeCalls()
-	{
-		// Add inOut.comp.hlsl if odd number of post render compute calls, as it simply copies the input to the output texture:
-		if (m_computeCalls.size() % 2 == 1)
-			RecordComputeShader(m_pInOutComputeShader.get());
-		return m_computeCalls;
-	}
-	void PostRender::ResetComputeCalls()
-	{
-		// Return all bindings back to the corresponding pool:
-		for (ComputeCall& computeCall : m_computeCalls)
+		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
+		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pComputeShader));
+		if (!pDescriptorSetBinding)
+			return nullptr;
+		if (isPostProcessing && (!pDescriptorSetBinding->HasBinding("inputImage") || !pDescriptorSetBinding->HasBinding("outputImage")))
 		{
-			if (computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
-				PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+			PoolManager::ReturnCallDescriptorSetBinding(pComputeShader, pDescriptorSetBinding);
+			LOG_ERROR("compute::PostRender::RecordPostProcessingShader(...) failed. Compute shader '{}' must declare CALL_SET storage images named 'inputImage' and 'outputImage'.", pComputeShader->GetName());
+			return nullptr;
 		}
 
-		// Remove all computeCalls so next frame can start fresh:
-		m_computeCalls.clear();
+		ComputeCall computeCall = { threadCount, pComputeShader, pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none, isPostProcessing };
+		m_computeCalls.push_back(computeCall);
+		if (isPostProcessing)
+			m_postProcessingCallCount++;
+		return pDescriptorSetBinding;
 	}
 }

@@ -101,6 +101,13 @@ namespace emberCore
 		ShaderProperties shaderProperties = ShaderProperties(pIComputeCallDescriptorSetBinding);
 		return shaderProperties;
 	}
+	ShaderProperties Compute::PostRender::RecordPostProcessingShader(ComputeShader& computeShader)
+	{
+		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
+		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostRender->RecordPostProcessingShader(pIComputeShader);
+		ShaderProperties shaderProperties = ShaderProperties(pIComputeCallDescriptorSetBinding);
+		return shaderProperties;
+	}
 
 
 

@@ -15,11 +15,11 @@ namespace vulkanRendererBackend
 
 	/// <summary>
 	/// Runs parallel to shadow/forward.
-    /// Renders a binary mask into its own frameBuffer which then gets dilated in the postRender compute pass.
-    /// Outline = DilationMask - Mask, which is then compositted on the final image before gizmos.
+	/// Renders a binary mask into its own framebuffer.
+    /// Post-render compute derives and composites a hollow outline directly onto the forward image before gizmos.
 	/// </summary>
 	class OutlineRenderPass : public RenderPass
-    {
+	{
 	private: // Members:
 		std::vector<std::unique_ptr<RenderTexture2d>> m_pRenderTextures;
 
@@ -42,5 +42,5 @@ namespace vulkanRendererBackend
 		void CreateRenderTextures(uint32_t renderWidth, uint32_t renderHeight);
 		void CreateRenderPass();
 		void CreateFrameBuffers();
-    };
+	};
 }

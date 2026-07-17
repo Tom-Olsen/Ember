@@ -69,8 +69,8 @@ namespace vulkanRendererBackend
 		// Return all bindings back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeCalls)
 		{
-			if (computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
-				PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+			if (computeCall.pComputeShader && computeCall.pCallDescriptorSetBinding)
+				PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pCallDescriptorSetBinding);
 		}
 
 		// Remove all computeCalls so next frame can start fresh:

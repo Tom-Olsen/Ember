@@ -1,8 +1,8 @@
 #include "vulkanDefaultGpuResources.h"
 #include "descriptorSetMacros.h"
 #include "emberMath.h"
-#include "vulkanComputeShader.h"
 #include "vulkanColorSampler.h"
+#include "vulkanComputeShader.h"
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanMaterial.h"
 #include "vulkanMesh.h"
@@ -33,6 +33,7 @@ namespace vulkanRendererBackend
 	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultPresentMaterial = nullptr;
 	// Compute shaders:
 	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pGammaCorrectionComputeShader = nullptr;
+	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineComputeShader = nullptr;
 	// Meshes:
 	std::unique_ptr<Mesh> DefaultGpuResources::s_pDefaultRenderQuad = nullptr;
 	// Buffers:
@@ -95,6 +96,7 @@ namespace vulkanRendererBackend
 		s_pDefaultPresentMaterial = std::make_unique<Material>(Material::CreatePresent("presentMaterial", shadersBinDirectory / "present.vert.spv", shadersBinDirectory / "present.frag.spv"));
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", shadersBinDirectory / "gammaCorrection.comp.spv");
+		s_pOutlineComputeShader = std::make_unique<ComputeShader>("outlineComputeShader", shadersBinDirectory / "outlineComposite.comp.spv");
 		// Meshes:
 		s_pDefaultRenderQuad = std::make_unique<Mesh>(CreateDefaultRenderQuad());
 	}
@@ -110,6 +112,7 @@ namespace vulkanRendererBackend
 		s_pDefaultPresentMaterial.reset();
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader.reset();
+		s_pOutlineComputeShader.reset();
 		// Meshes:
 		s_pDefaultRenderQuad.reset();
 		// Buffers:
@@ -159,6 +162,10 @@ namespace vulkanRendererBackend
 	ComputeShader* DefaultGpuResources::GetGammaCorrectionComputeShader()
 	{
 		return s_pGammaCorrectionComputeShader.get();
+	}
+	ComputeShader* DefaultGpuResources::GetOutlineComputeShader()
+	{
+		return s_pOutlineComputeShader.get();
 	}
 	// Meshes:
 	Mesh* DefaultGpuResources::GetDefaultRenderQuad()

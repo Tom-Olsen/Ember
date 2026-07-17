@@ -55,7 +55,7 @@ namespace vulkanRendererBackend
 				{
 					// Update compute call data:
 					computeCall.pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(0);
-					computeCall.pDescriptorSetBinding->UpdateShaderData(0);
+					computeCall.pCallDescriptorSetBinding->UpdateShaderData(0);
 
 					// Change pipeline if compute shader has changed:
 					if (pComputeShader != computeCall.pComputeShader)
@@ -81,7 +81,7 @@ namespace vulkanRendererBackend
 			        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, GLOBAL_SET_INDEX, 1, &globalSet, 0, nullptr);
 			        if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(0); vkDescriptorSet != VK_NULL_HANDLE)
 			        	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
-			        if (VkDescriptorSet vkDescriptorSet = computeCall.pDescriptorSetBinding->GetVkDescriptorSet(0); vkDescriptorSet != VK_NULL_HANDLE)
+			        if (VkDescriptorSet vkDescriptorSet = computeCall.pCallDescriptorSetBinding->GetVkDescriptorSet(0); vkDescriptorSet != VK_NULL_HANDLE)
 			        	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 			        vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 				}

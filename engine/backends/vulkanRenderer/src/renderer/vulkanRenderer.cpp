@@ -190,8 +190,6 @@ namespace vulkanRendererBackend
 		ResetCommandPools();
 		Context::MarkDeviceBusy();
 
-		// We use linear color space throughout entire render process. So apply gamma correction in post processing as last step:
-		m_pCompute->GetPostRenderCompute()->RecordComputeShader(DefaultGpuResources::GetGammaCorrectionComputeShader());
 		SortDrawCallPointers();
 		UpdateShaderData();
 		
@@ -876,7 +874,7 @@ namespace vulkanRendererBackend
 			if (computeCall.pComputeShader)
 			{
 				computeCall.pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-				computeCall.pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+				computeCall.pCallDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 			}
 
 		// Outline calls:
@@ -909,23 +907,44 @@ namespace vulkanRendererBackend
 		}
 
 		// Post render compute:
-		std::vector<ComputeCall>& postRenderComputeCalls = m_pCompute->GetPostRenderCompute()->GetComputeCalls();
-		for (size_t i = 0; i < postRenderComputeCalls.size(); i++)
+		PostRender* pPostRenderCompute = m_pCompute->GetPostRenderCompute();
+		if (!m_outlineCalls.empty())
 		{
-			ComputeCall& computeCall = postRenderComputeCalls[i];
-			DescriptorSetBinding* pShaderDescriptorSetBinding = computeCall.pComputeShader->GetDescriptorSetBinding();
-			if (i % 2 == 0)
+			OutlineRenderPass* pOutlineRenderPass = RenderPassManager::GetOutlineRenderPass();
+			ComputeShader* pOutlineComputeShader = DefaultGpuResources::GetOutlineComputeShader();
+			DescriptorSetBinding* pOutlineDescriptorSetBinding = pOutlineComputeShader->GetDescriptorSetBinding();
+			ForwardRenderPass* pForwardRenderPass = RenderPassManager::GetForwardRenderPass();
+			RenderTexture2d* pRenderTexture = pPostRenderCompute->GetPostProcessingCallCount() % 2 == 0 ? pForwardRenderPass->GetRenderTexture(m_frameIndex) : pForwardRenderPass->GetSecondaryRenderTexture(m_frameIndex);
+			pOutlineDescriptorSetBinding->SetTexture("renderImage", pRenderTexture);
+			pOutlineDescriptorSetBinding->SetTexture("mask", pOutlineRenderPass->GetRenderTexture(m_frameIndex));
+			// Ember::ToDo: make color and thickness API accessable:
+            pOutlineDescriptorSetBinding->SetFloat4("OutlineProperties", "outlineColor", Float4::orange);
+			pOutlineDescriptorSetBinding->SetInt("OutlineProperties", "outlineRadius", 2);
+			pPostRenderCompute->RecordComputeShader(pOutlineComputeShader);
+		}
+
+		// We use linear color space throughout the render process. Apply gamma correction as the final post-render operation:
+		pPostRenderCompute->RecordPostProcessingShader(DefaultGpuResources::GetGammaCorrectionComputeShader());
+
+		size_t postProcessingCallIndex = 0;
+		for (ComputeCall& computeCall : pPostRenderCompute->GetComputeCalls())
+		{
+			if (computeCall.isPostProcessing)
 			{
-				pShaderDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
-				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex));
+				if (postProcessingCallIndex % 2 == 0)
+				{
+					computeCall.pCallDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
+					computeCall.pCallDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex));
+				}
+				else
+				{
+					computeCall.pCallDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex));
+					computeCall.pCallDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
+				}
+				postProcessingCallIndex++;
 			}
-			else
-			{
-				pShaderDescriptorSetBinding->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex));
-				pShaderDescriptorSetBinding->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
-			}
-			pShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
-			computeCall.pDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+			computeCall.pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
+			computeCall.pCallDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 		}
 
 	}
@@ -1131,7 +1150,7 @@ namespace vulkanRendererBackend
 						}
 
 						// Bind per compute call descriptor set:
-						if (VkDescriptorSet vkDescriptorSet = computeCall->pDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+						if (VkDescriptorSet vkDescriptorSet = computeCall->pCallDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 
 						// Push constant:
@@ -1478,20 +1497,20 @@ namespace vulkanRendererBackend
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
-			// Release memory from vertex shaders to post render compute shaders:
+			// Make the forward color attachment available to post render compute shaders:
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-				memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
+				memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 				memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-				memoryBarrier.srcAccessMask = AccessMasks::VertexShader::shaderRead;
-				memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderWrite;
+				memoryBarrier.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;
+				memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite;
 
 				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
 				dependencyInfo.memoryBarrierCount = 1;
 				dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-				DEBUG_LOG_TRACE("Memory Barrier: vertex to post compute");
+				DEBUG_LOG_TRACE("Memory Barrier: forward color attachment to post compute");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
@@ -1593,7 +1612,8 @@ namespace vulkanRendererBackend
 		// Record post render compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
-			std::vector<ComputeCall>& computeCalls = m_pCompute->GetPostRenderCompute()->GetComputeCalls();
+			PostRender* pPostRenderCompute = m_pCompute->GetPostRenderCompute();
+			std::vector<ComputeCall>& computeCalls = pPostRenderCompute->GetComputeCalls();
 			if (computeCalls.size() > 0)
 			{
 				// Pipeline:
@@ -1627,7 +1647,7 @@ namespace vulkanRendererBackend
 					}
 
 					// Bind per compute call descriptor set:
-					if (VkDescriptorSet vkDescriptorSet = computeCall->pDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+					if (VkDescriptorSet vkDescriptorSet = computeCall->pCallDescriptorSetBinding->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 
 					// Push constant:
@@ -1644,34 +1664,39 @@ namespace vulkanRendererBackend
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 					DEBUG_LOG_TRACE("Post Render Compute Shader {}, call = {}", computeCall->pComputeShader->GetName(), computeCallIndex);
 
-					// All effects access the same inputImage and outputImage.
-					// Thus add memory barrier between every effect:
-					{
-						VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-						memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-						memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-						memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
-						memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderRead;
+					// Post-render compute shaders execute in recorded order and may access the same resources.
+					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+					memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+					memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+					memoryBarrier.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
+					memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite;
 
-						VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-						dependencyInfo.memoryBarrierCount = 1;
-						dependencyInfo.pMemoryBarriers = &memoryBarrier;
+					VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+					dependencyInfo.memoryBarrierCount = 1;
+					dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
-						vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-						DEBUG_LOG_TRACE("Post Render Compute Barrier, call = {}", computeCallIndex);
-					}
+					vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+					DEBUG_LOG_TRACE("Post Render Compute Barrier, call = {}", computeCallIndex);
 				}
 			}
 
-			// Transition render texture layout to shader read:
+			// Transition final render textures layout to shaderReadOnly for compositing and do copy to main renderTexture if needed:
+			VmaImage* pRenderImage = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetVmaImage();
+			VmaImage* pSecondaryRenderImage = RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex)->GetVmaImage();
+			if (pPostRenderCompute->GetPostProcessingCallCount() % 2 == 1)
 			{
-				VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-				VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
-				AccessMask srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
-				AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
-				RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetVmaImage()->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-				DEBUG_LOG_TRACE("Render Image Transition: shader write -> shader read only");
+				pSecondaryRenderImage->TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_2_TRANSFER_BIT, AccessMasks::ComputeShader::shaderWrite, AccessMasks::Transfer::transferRead);
+				pRenderImage->TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_2_TRANSFER_BIT, AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite, AccessMasks::Transfer::transferWrite);
+				VmaImage::CopyImageToImage(commandBuffer, pSecondaryRenderImage, pRenderImage, Context::GetLogicalDevice()->GetGraphicsQueue());
+				pSecondaryRenderImage->TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, AccessMasks::Transfer::transferRead, AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite);
+				pRenderImage->TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, AccessMasks::Transfer::transferWrite, AccessMasks::FragmentShader::shaderRead);
+				DEBUG_LOG_TRACE("Copied final post render result into the primary render texture");
+			}
+			else
+			{
+				VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+				AccessMask srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::ComputeShader::shaderWrite;
+				pRenderImage->TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, srcStage, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, srcAccessMask, AccessMasks::FragmentShader::shaderRead);
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
@@ -2087,9 +2112,10 @@ namespace vulkanRendererBackend
 		commandBufferInfo.commandBuffer = commandBuffer;
 
 		// Signal semaphore info:
+        // Post compute can have a copy at the end in case of odd number of post processing effects => transferBit
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
 		signalSemaphoreInfo.semaphore = m_postRenderToPresentSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };

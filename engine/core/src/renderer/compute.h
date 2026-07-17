@@ -80,6 +80,7 @@ namespace emberCore
 			// Workload recording:
 			// Post render compute is render-target sized by design; threadCount is derived by the backend.
 			static ShaderProperties RecordComputeShader(ComputeShader& computeShader);
+			static ShaderProperties RecordPostProcessingShader(ComputeShader& computeShader);
 
 		private: // Methods
 			// Delete all constructors:

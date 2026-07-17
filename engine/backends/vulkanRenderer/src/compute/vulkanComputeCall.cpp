@@ -7,7 +7,7 @@ namespace vulkanRendererBackend
 {
 	std::string ComputeCall::ToString() const
 	{
-		if (pDescriptorSetBinding == nullptr)
+		if (pCallDescriptorSetBinding == nullptr)
 		{
 			std::string dstName = AccessMasks::ToString(dstAccessMask);
 			std::string srcName = AccessMasks::ToString(srcAccessMask);

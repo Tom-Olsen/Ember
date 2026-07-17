@@ -197,8 +197,8 @@ namespace vulkanRendererBackend
 		// Return all bindings back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeSessions[sessionID].GetComputeCalls())
 		{
-			if (computeCall.pComputeShader && computeCall.pDescriptorSetBinding)
-				PoolManager::ReturnCallDescriptorSetBinding((Shader*)computeCall.pComputeShader, computeCall.pDescriptorSetBinding);
+			if (computeCall.pComputeShader && computeCall.pCallDescriptorSetBinding)
+				PoolManager::ReturnCallDescriptorSetBinding((Shader*)computeCall.pComputeShader, computeCall.pCallDescriptorSetBinding);
 		}
 
 		m_pCommandPools[sessionID].ResetPools();

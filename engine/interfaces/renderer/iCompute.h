@@ -116,6 +116,7 @@ namespace emberBackendInterface
 
             // Workload recording:
             virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader) = 0;
+            virtual IDescriptorSetBinding* RecordPostProcessingShader(IComputeShader* pIComputeShader) = 0;
         };
 
 

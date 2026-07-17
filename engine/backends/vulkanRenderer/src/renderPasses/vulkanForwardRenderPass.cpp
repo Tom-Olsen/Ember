@@ -63,7 +63,7 @@ namespace vulkanRendererBackend
 	void ForwardRenderPass::CreateRenderTextures(uint32_t renderWidth, uint32_t renderHeight)
 	{
 		const uint32_t framesInFlight = Context::GetFramesInFlight();
-		VkFormat renderTextureFormat = VK_FORMAT_R16G16B16A16_SFLOAT; // make sure to use [[vk::image_format("rgba16f")]] RWTexture2D<float4> for render textures in shaders, see inOut.comp.hlsl.
+		VkFormat renderTextureFormat = VK_FORMAT_R16G16B16A16_SFLOAT; // Storage image declarations must use [[vk::image_format("rgba16f")]], e.g. see postProcessing.comp.hlsl.
 
 		m_pRenderTextures.reserve(framesInFlight);
 		m_pSecondaryRenderTextures.reserve(framesInFlight);
