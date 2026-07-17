@@ -71,16 +71,18 @@ namespace emberCore
 		static void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix);
 
 		// Draw mesh:
+        static void DrawOutline(const Mesh& mesh, const Float4x4& localToWorldMatrix);
 		static void DrawMesh(const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
 		static ShaderProperties DrawMesh(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
 		static void DrawGizmo(const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
 		static ShaderProperties DrawGizmo(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
 
 		// Draw instanced:
-		static void DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
-		static ShaderProperties DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
-		static void DrawInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
-		static ShaderProperties DrawInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
+        static void DrawOutlineInstanced(const Mesh& mesh, const Float4x4& localToWorldMatrix, uint32_t instanceCount);
+		static void DrawMeshInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
+		static ShaderProperties DrawMeshInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
+		static void DrawMeshInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
+		static ShaderProperties DrawMeshInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
 
 		// Getters:
 		static const uint32_t GetShadowMapResolution();

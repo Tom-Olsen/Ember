@@ -3,8 +3,10 @@
 #include "editor.h"
 #include "editorSelection.h"
 #include "emberTime.h"
+#include "entity.inl"
 #include "gui.h"
 #include "handleContext.h"
+#include "meshRenderer.h"
 #include "renderer.h"
 #include "scene.h"
 #include "texture2d.h"
@@ -54,6 +56,10 @@ namespace emberEditor
         if (EditorSelection::HasSelectedEntity())
         {
             emberEcs::Entity selected = EditorSelection::GetSelectedEntity();
+			emberEcs::MeshRenderer* pMeshRenderer = selected.GetComponent<emberEcs::MeshRenderer>();
+			if (pMeshRenderer != nullptr && pMeshRenderer->GetIsActive() && pMeshRenderer->HasMesh())
+				emberCore::Renderer::DrawOutline(pMeshRenderer->GetMesh(), selected.GetTransform()->GetLocalToWorldMatrix());
+
 			m_transformHandleTarget.SetTransform(selected.GetTransform());
 			m_transformHandle.SetTarget(&m_transformHandleTarget);
 			m_transformHandle.Update();

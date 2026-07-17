@@ -79,7 +79,7 @@ namespace vulkanRendererBackend
 		// Rasterization:
 		VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
 		rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;          // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering.
-		rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;            // which face to cull.
+		rasterizationState.cullMode = VK_CULL_MODE_NONE;                // which face to cull.
 		rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // which face of triangle is front: 123 or 132?
 		rasterizationState.lineWidth = 1.0f;                            // width of lines. Bigger 1.0f requires wideLines feature.
 		rasterizationState.depthClampEnable = VK_FALSE;                 // clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature.

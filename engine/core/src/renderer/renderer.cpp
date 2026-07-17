@@ -72,6 +72,11 @@ namespace emberCore
 
 
 	// Draw mesh:
+    void Renderer::DrawOutline(const Mesh& mesh, const Float4x4& localToWorldMatrix)
+    {
+		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
+        s_pIRenderer->DrawOutline(pIMesh, localToWorldMatrix, 0);
+    }
 	void Renderer::DrawMesh(const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
 	{
 		if (material.GetName() == "errorMaterial")
@@ -118,7 +123,13 @@ namespace emberCore
 
 
 	// Draw instanced:
-	void Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
+    void Renderer::DrawOutlineInstanced(const Mesh& mesh, const Float4x4& localToWorldMatrix, uint32_t instanceCount)
+    {
+        LOG_WARN("Renderer::DrawOutlineInstanced not supported yet!");
+		//emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
+        //s_pIRenderer->DrawOutline(pIMesh, localToWorldMatrix, instanceCount);
+    }
+	void Renderer::DrawMeshInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
@@ -127,14 +138,14 @@ namespace emberCore
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = shaderProperties.GetCallInterfaceHandle();
 		if (!pICallDescriptorSetBinding)
 		{
-			LOG_WARN("Renderer::DrawInstanced(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another draw call.");
+			LOG_WARN("Renderer::DrawMeshInstanced(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another draw call.");
 			return;
 		}
 		if (shaderProperties.HasBinding("instanceBuffer"))
 			shaderProperties.SetBuffer("instanceBuffer", instanceBuffer);
 		s_pIRenderer->DrawMesh(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows, cullMode, instanceCount);
 	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
+	ShaderProperties Renderer::DrawMeshInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
@@ -146,7 +157,7 @@ namespace emberCore
 			shaderProperties.SetBuffer("instanceBuffer", instanceBuffer);
 		return shaderProperties;
 	}
-	void Renderer::DrawInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
+	void Renderer::DrawMeshInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
@@ -155,12 +166,12 @@ namespace emberCore
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = shaderProperties.GetCallInterfaceHandle();
 		if (!pICallDescriptorSetBinding)
 		{
-			LOG_WARN("Renderer::DrawInstanced(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another draw call.");
+			LOG_WARN("Renderer::DrawMeshInstanced(...) skipped stale ShaderProperties. Reassign ShaderProperties before reusing it for another draw call.");
 			return;
 		}
 		s_pIRenderer->DrawMesh(pIMesh, pIMaterial, pICallDescriptorSetBinding, localToWorldMatrix, receiveShadows, castShadows, cullMode, instanceCount);
 	}
-	ShaderProperties Renderer::DrawInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
+	ShaderProperties Renderer::DrawMeshInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
 	{
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
