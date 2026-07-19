@@ -22,12 +22,13 @@ namespace fluidDynamics
 		// Management:
 		bool m_isRunning = false;
 		bool m_reset = false;
-		bool m_pendingVoxelScaleChange = false;
-		float m_timeScale = 1.0f;           // increases the number of timesteps per fixedDeltaTime physics timestep. E.g. m_timeScale = 2.0f, means 2 full simulation steps per fixed update.
-        float m_physicsTimeScale = 1.25f;   // gets multiplied to certain values physical quantities to make the physics itself interact faster.
+		bool m_pendingVolumetricDensityResolutionChange = false;
+		bool m_pendingVolumetricLightingResolutionChange = false;
+		float m_timeScale = 1.0f;			// increases the number of timesteps per fixedDeltaTime physics timestep. E.g. m_timeScale = 2.0f, means 2 full simulation steps per fixed update.
+		float m_physicsTimeScale = 1.25f;	// gets multiplied to certain values physical quantities to make the physics itself interact faster.
 		uint32_t m_timeStep = 0;
 		int m_particleCount = -1;
-        bool m_forceSetters = false;
+		bool m_forceSetters = false;
 
 		// Settings:
 		SphFluid3dGpuSolver::Settings m_settings;
@@ -40,22 +41,28 @@ namespace fluidDynamics
 		PhysicsTripleBufferState m_tripleBufferState;
 		uint64_t m_pendingResetSessionID = Compute::Physics::invalidPhysicsSessionID;
 
-		// Visuals:
-		int m_colorMode;
-		float m_initialDistributionRadius;
-		float m_visualRadius;
+		// Particle visuals:
 		bool m_renderParticles;
+		int m_colorMode;
+		float m_visualRadius;
+		float m_initialDistributionRadius;
+        // Volumetric visuals:
 		bool m_renderVolumetricDensity;
+		Uint3 m_volumetricDensityResolution;
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
 		Float4 m_volumetricDensityColorLow;
 		Float4 m_volumetricDensityColorHigh;
-		float m_volumetricVoxelScale;
+        // Lighting:
+		bool m_renderVolumetricLight;
+		Uint3 m_volumetricLightingResolution;
+		float m_volumetricLightingScattering;
+        // Internal:
 		Mesh m_particleMesh;
 		Mesh m_attractorSphereMesh;
-        Mesh m_volumetricDensityCube;
+		Mesh m_volumetricDensityCube;
 		Material m_particleMaterial;
-        Material m_volumetricDensityMaterial;
+		Material m_volumetricDensityMaterial;
 		ShaderProperties m_shaderProperties;
 
 		// Editor Window:
@@ -71,15 +78,15 @@ namespace fluidDynamics
 		void Update() override;
 
 		// Setters:
-        // Management:
+		// Management:
 		void Reset();
 		void SetIsRunning(bool isRunning);
 		void SetUseHashGridOptimization(bool useGridOptimization);
 		void SetFluidBounds(const RotatedBounds& bounds);
-        // Time:
+		// Time:
 		void SetTimeScale(float timeScale);
 		void SetPhysicsTimeScale(float physicsTimeScale);
-        // Fluid:
+		// Fluid:
 		void SetParticleCount(int particleCount);
 		void SetInitialDistributionRadius(float initialDistributionRadius);
 		void SetEffectRadius(float effectRadius);
@@ -91,34 +98,37 @@ namespace fluidDynamics
 		void SetPressureMultiplier(float pressureMultiplier);
 		void SetNearPressureRatio(float nearPressureRatio);
 		void SetMaxVelocity(float maxVelocity);
-        // Forces:
+		// Forces:
 		void SetGravity(float gravity);
 		void SetAttractorRadius(float attractorRadius);
 		void SetAttractorStrength(float attractorStrength);
 		void SetAttractorState(int attractorState);
 		void SetAttractorPoint(const Float3& attractorPoint);
-        // Particle visuals:
+		// Particle visuals:
 		void SetRenderParticles(bool renderParticles);
 		void SetColorMode(int colorMode);
 		void SetVisualRadius(float visualRadius);
-        // Volumetric visuals:
+		// Volumetric visuals:
 		void SetRenderVolumetricDensity(bool renderVolumetricDensity);
+		void SetVolumetricDensityResolution(const Uint3& volumetricDensityResolution);
 		void SetVolumetricDensityRayStepLength(float volumetricDensityRayStepLength);
 		void SetVolumetricDensityAbsorption(float volumetricDensityAbsorption);
 		void SetVolumetricDensityColorLow(const Float4& volumetricDensityColorLow);
 		void SetVolumetricDensityColorHigh(const Float4& volumetricDensityColorHigh);
-		void SetVolumetricVoxelScale(float volumetricVoxelScale);
+		void SetRenderVolumetricLight(bool renderVolumetricLight);
+		void SetVolumetricLightingResolution(const Uint3& volumetricLightingResolution);
+		void SetVolumetricLightingScattering(float volumetricLightingScattering);
 
 		// Getters:
-        // Management:
+		// Management:
 		bool GetIsRunning() const;
 		bool GetUseGridOptimization() const;
 		RotatedBounds GetFluidBounds() const;
-        // Time:
+		// Time:
 		float GetTimeScale() const;
 		float GetPhysicsTimeScale() const;
 		uint32_t GetTimeStep() const;
-        // Fluid:
+		// Fluid:
 		int GetParticleCount() const;
 		float GetInitialDistributionRadius() const;
 		float GetEffectRadius() const;
@@ -130,28 +140,33 @@ namespace fluidDynamics
 		float GetPressureMultiplier() const;
 		float GetNearPressureRatio() const;
 		float GetMaxVelocity() const;
-        // Forces:
+		// Forces:
 		float GetGravity() const;
 		float GetAttractorRadius() const;
 		float GetAttractorStrength() const;
-        int GetAttractorState() const; 
-        Float3 GetAttractorPoint() const;
-        // Particle visuals:
+		int GetAttractorState() const;
+		Float3 GetAttractorPoint() const;
+		// Particle visuals:
 		bool GetRenderParticles() const;
 		int GetColorMode() const;
 		float GetVisualRadius() const;
-        // Volumetric visuals:
+		// Volumetric visuals:
 		bool GetRenderVolumetricDensity() const;
+		Uint3 GetVolumetricDensityResolution() const;
 		float GetVolumetricDensityRayStepLength() const;
 		float GetVolumetricDensityAbsorption() const;
 		Float4 GetVolumetricDensityColorLow() const;
 		Float4 GetVolumetricDensityColorHigh() const;
-		float GetVolumetricVoxelScale() const;
+        // Lighting:
+		bool GetRenderVolumetricLight() const;
+		Uint3 GetVolumetricLightingResolution() const;
+		float GetVolumetricLightingScattering() const;
 
 		// Debugging:
 		void Print();
 
 	private: // Methods:
 		void RecordReset();
+		bool TryGetDirectionalLightBounds(RotatedBounds& lightBounds);
 	};
 }

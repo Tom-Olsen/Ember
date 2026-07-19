@@ -27,6 +27,7 @@ namespace fluidDynamics
 			ComputeShader rungeKutta2Step2ComputeShader;
 			ComputeShader boundaryCollisionsComputeShader;
 			ComputeShader densityTexture3dComputeShader;
+			ComputeShader opticalDepthTexture3dComputeShader;
 
 			ComputeShaders();
 			void SetUseHashGridOptimization(bool useHashGridOptimization);
@@ -35,13 +36,11 @@ namespace fluidDynamics
 			void SetMass(float mass);
 			void SetViscosity(float viscosity);
 			void SetSurfaceTension(float surfaceTension);
-			void SetCollisionDampening(float collisionDampening);
 			void SetTargetDensity(float targetDensity);
 			void SetPressureMultiplier(float pressureMultiplier);
 			void SetNearPressureRatio(float nearPressureRatio);
 			void SetGravity(float gravity);
 			void SetMaxVelocity(float maxVelocity);
-			void SetFluidBounds(const RotatedBounds& bounds);
 			void SetAttractorRadius(float attractorRadius);
 			void SetAttractorStrength(float attractorStrength);
 			void SetAttractorState(int attractorState);
@@ -94,11 +93,18 @@ namespace fluidDynamics
 			TripleBuffer<Float3> normalBuffer;
 			TripleBuffer<float> curvatureBuffer;
 			std::array<Texture3d, PhysicsTripleBufferState::bufferCount> densityTexture3d;
+			std::array<Texture3d, PhysicsTripleBufferState::bufferCount> opticalDepthTexture3d;
+			std::array<RotatedBounds, PhysicsTripleBufferState::bufferCount> fluidBounds;
+			std::array<RotatedBounds, PhysicsTripleBufferState::bufferCount> opticalDepthBounds;
+			std::array<bool, PhysicsTripleBufferState::bufferCount> hasOpticalDepthTexture3d;
+			std::array<float, PhysicsTripleBufferState::bufferCount> extinctionCoefficients;
 			Uint3 densityTexture3dResolution;
+			Uint3 opticalDepthTexture3dResolution;
 
 			int ParticleCount();
-			void Reallocate(int particleCount, const Bounds& localBounds, float effectRadius, float voxelScale);
-			void ReallocateDensityTexture3d(const Bounds& localBounds, float effectRadius, float voxelScale);
+			void Reallocate(int particleCount, Uint3 densityResolution, Uint3 opticalDepthResolution);
+			void ReallocateDensityTexture3d(Uint3 resolution);
+			void ReallocateOpticalDepthTexture3d(Uint3 resolution);
 		};
 		struct Attractor
 		{
@@ -125,7 +131,8 @@ namespace fluidDynamics
 		static void ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<float>& nearDensityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
 		static void ComputeRungeKutta2Step1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempPositionBufferView, const BufferView<Float3>& tempVelocityBufferView);
 		static void ComputeRungeKutta2Step2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempVelocityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
-		static void ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
+		static void ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const RotatedBounds& fluidBounds, float collisionDampening);
 		static void ComputeDensityTexture3d(ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t dataIndex);
+		static void ComputeOpticalDepthTexture3d(ComputeShaders& computeShaders, TripleData& tripleData, uint32_t dataIndex);
 	};
 }

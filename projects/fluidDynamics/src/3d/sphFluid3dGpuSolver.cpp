@@ -44,7 +44,7 @@ namespace fluidDynamics
 	{
 		return positionBuffer.IsValid() ? positionBuffer.GetCount() : 0;
 	}
-	void SphFluid3dGpuSolver::TripleData::Reallocate(int particleCount, const Bounds& localBounds, float effectRadius, float voxelScale)
+	void SphFluid3dGpuSolver::TripleData::Reallocate(int particleCount, Uint3 densityResolution, Uint3 opticalDepthResolution)
 	{
 		if (particleCount != ParticleCount())
 		{
@@ -54,28 +54,50 @@ namespace fluidDynamics
 			normalBuffer = TripleBuffer<Float3>((uint32_t)particleCount, "normalBuffer", BufferUsage::storage);
 			curvatureBuffer = TripleBuffer<float>((uint32_t)particleCount, "curvatureBuffer", BufferUsage::storage);
 		}
-		ReallocateDensityTexture3d(localBounds, effectRadius, voxelScale);
+		ReallocateDensityTexture3d(densityResolution);
+		ReallocateOpticalDepthTexture3d(opticalDepthResolution);
 	}
-	void SphFluid3dGpuSolver::TripleData::ReallocateDensityTexture3d(const Bounds& localBounds, float effectRadius, float voxelScale)
+	void SphFluid3dGpuSolver::TripleData::ReallocateDensityTexture3d(Uint3 resolution)
 	{
-		float voxelSize = voxelScale * effectRadius;
-		Float3 size = localBounds.GetSize();
-
 		// Limit total voxel count, as gpu memory usage is resolution.x*y*z * 4bytes per texture:
-		constexpr float maxVoxelCount = 1 << 24;	// = 2^24 * 4bytes = 64MB as max limit.
-		float minVoxelSize = math::Pow(size.x * size.y * size.z / maxVoxelCount, 1.0f / 3.0f);
-		if (voxelSize < minVoxelSize)
+		size_t voxelCount = static_cast<size_t>(resolution.x) * resolution.y * resolution.z;
+		constexpr size_t maxVoxelCount = 1 << 24;	// = 2^24 * 4bytes = 64MB as max limit.
+		if (voxelCount > maxVoxelCount)
 		{
-			LOG_WARN("DensityTexture3d voxelSize {} exceeds voxel count limit, clamped to {}.", voxelSize, minVoxelSize);
-			voxelSize = minVoxelSize;
+			Uint3 originalResolution = resolution;
+			float scale = math::Pow(static_cast<float>(maxVoxelCount) / static_cast<float>(voxelCount), 1.0f / 3.0f);
+			resolution = Uint3::Max(Uint3::one, Uint3(Float3::Floor(Float3(resolution) * scale)));
+			LOG_WARN("DensityTexture3d resolution {} exceeds maxVoxelCount, clamped to {}.", originalResolution.ToString(), resolution.ToString());
 		}
-		Uint3 newResolution = Uint3(Float3::Ceil(size / voxelSize));
 
-		if (newResolution != densityTexture3dResolution)
+		if (resolution != densityTexture3dResolution)
 		{
-			densityTexture3dResolution = newResolution;
+			densityTexture3dResolution = resolution;
 			for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
-				densityTexture3d[i] = Texture3d("densityTexture3d[" + std::to_string(i) + "]", densityTexture3dResolution.x, densityTexture3dResolution.y, densityTexture3dResolution.z, emberCommon::TextureFormats::r32_sfloat, emberCommon::TextureUsage::storageSample);
+				densityTexture3d[i] = Texture3d("densityTexture3d[" + std::to_string(i) + "]", resolution.x, resolution.y, resolution.z, emberCommon::TextureFormats::r32_sfloat, emberCommon::TextureUsage::storageSample);
+		}
+	}
+	void SphFluid3dGpuSolver::TripleData::ReallocateOpticalDepthTexture3d(Uint3 resolution)
+	{
+		// Limit total voxel count, as gpu memory usage is resolution.x*y*z * 2bytes per texture:
+		size_t voxelCount = static_cast<size_t>(resolution.x) * resolution.y * resolution.z;
+		constexpr size_t maxVoxelCount = 1 << 24;	// = 2^24 * 2bytes = 32MB as max limit.
+		if (voxelCount > maxVoxelCount)
+		{
+		    Uint3 originalResolution = resolution;
+			float scale = math::Pow(static_cast<float>(maxVoxelCount) / static_cast<float>(voxelCount), 1.0f / 3.0f);
+			resolution = Uint3::Max(Uint3::one, Uint3(Float3::Floor(Float3(resolution) * scale)));
+			LOG_WARN("OpticalDepthTexture3d resolution {} exceeds maxVoxelCount, clamped to {}.", originalResolution.ToString(), resolution.ToString());
+		}
+
+		if (resolution != opticalDepthTexture3dResolution)
+		{
+			opticalDepthTexture3dResolution = resolution;
+			for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
+			{
+				opticalDepthTexture3d[i] = Texture3d("opticalDepthTexture3d[" + std::to_string(i) + "]", resolution.x, resolution.y, resolution.z, emberCommon::TextureFormats::r16_sfloat, emberCommon::TextureUsage::storageSample);
+				hasOpticalDepthTexture3d[i] = false;
+			}
 		}
 	}
 
@@ -101,6 +123,7 @@ namespace fluidDynamics
 		rungeKutta2Step2ComputeShader = ComputeShader("rungeKutta2Step2_3d", directoryPath / "rungeKutta2Step2_3d.comp.spv");
 		boundaryCollisionsComputeShader = ComputeShader("boundaryCollisions3d", directoryPath / "boundaryCollisions3d.comp.spv");
 		densityTexture3dComputeShader = ComputeShader("densityTexture3d", directoryPath / "densityTexture3d.comp.spv");
+		opticalDepthTexture3dComputeShader = ComputeShader("opticalDepthTexture3d", directoryPath / "opticalDepthTexture3d.comp.spv");
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetUseHashGridOptimization(bool useHashGridOptimization)
 	{
@@ -139,10 +162,6 @@ namespace fluidDynamics
 	{
 		forceDensityComputeShader.SetValue("Values", "surfaceTension", surfaceTension);
 	}
-	void SphFluid3dGpuSolver::ComputeShaders::SetCollisionDampening(float collisionDampening)
-	{
-		boundaryCollisionsComputeShader.SetValue("Values", "collisionDampening", collisionDampening);
-	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetTargetDensity(float targetDensity)
 	{
 		forceDensityComputeShader.SetValue("Values", "targetDensity", targetDensity);
@@ -163,16 +182,6 @@ namespace fluidDynamics
 	{
 		rungeKutta2Step1ComputeShader.SetValue("ShaderValues", "maxVelocity", maxVelocity);
 		rungeKutta2Step2ComputeShader.SetValue("ShaderValues", "maxVelocity", maxVelocity);
-	}
-	void SphFluid3dGpuSolver::ComputeShaders::SetFluidBounds(const RotatedBounds& bounds)
-	{
-		boundaryCollisionsComputeShader.SetValue("Values", "boundsMin", bounds.localBounds.GetMin());
-		boundaryCollisionsComputeShader.SetValue("Values", "boundsMax", bounds.localBounds.GetMax());
-		boundaryCollisionsComputeShader.SetValue("Values", "rotation", bounds.GetRotation4x4());
-		boundaryCollisionsComputeShader.SetValue("Values", "inverseRotation", bounds.GetRotation4x4().Inverse());
-		densityTexture3dComputeShader.SetValue("Values", "boundsMin", bounds.localBounds.GetMin());
-		densityTexture3dComputeShader.SetValue("Values", "boundsMax", bounds.localBounds.GetMax());
-		densityTexture3dComputeShader.SetValue("Values", "rotation", bounds.GetRotation4x4());
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetAttractorRadius(float attractorRadius)
 	{
@@ -254,7 +263,7 @@ namespace fluidDynamics
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 
 		// Resolve boundary collisions for the intermediate Runge-Kutta state:
-		ComputeBoundaryCollisions(computeShaders, tempPositionBufferView, tempVelocityBufferView);
+		ComputeBoundaryCollisions(computeShaders, tempPositionBufferView, tempVelocityBufferView, settings.fluidBounds, settings.collisionDampening);
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 
 		// Update hash grid for fast nearest neighbor particle look up:
@@ -293,7 +302,7 @@ namespace fluidDynamics
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 
 		// Resolve boundary collisions:
-		ComputeBoundaryCollisions(computeShaders, destinationPositionBufferView, destinationVelocityBufferView);
+		ComputeBoundaryCollisions(computeShaders, destinationPositionBufferView, destinationVelocityBufferView, settings.fluidBounds, settings.collisionDampening);
 	}
 
 
@@ -420,10 +429,15 @@ namespace fluidDynamics
 		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
 		shaderProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
 	}
-	void SphFluid3dGpuSolver::ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView)
+	void SphFluid3dGpuSolver::ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const RotatedBounds& fluidBounds, float collisionDampening)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
 		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.boundaryCollisionsComputeShader, threadCount, computeShaders.sessionID);
+		shaderProperties.SetValue("CallValues", "boundsMin", fluidBounds.localBounds.GetMin());
+		shaderProperties.SetValue("CallValues", "boundsMax", fluidBounds.localBounds.GetMax());
+		shaderProperties.SetValue("CallValues", "collisionDampening", collisionDampening);
+		shaderProperties.SetValue("CallValues", "rotation", fluidBounds.GetRotation4x4());
+		shaderProperties.SetValue("CallValues", "inverseRotation", fluidBounds.GetRotation4x4().Inverse());
 		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
 		shaderProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
 	}
@@ -437,6 +451,7 @@ namespace fluidDynamics
 		BufferView<Float3>& positionBufferView = tripleData.positionBuffer.GetBufferView(dataIndex);
 		BufferView<Float3>& sortedPositionBufferView = scratchData.tempBuffer0.GetBufferView();
 		Texture3d& densityTexture = tripleData.densityTexture3d[dataIndex];
+		const RotatedBounds& fluidBounds = tripleData.fluidBounds[dataIndex];
 
 		// Build hash grid:
 		ComputeCellKeys(computeShaders, cellKeyBufferView, positionBufferView);
@@ -451,9 +466,33 @@ namespace fluidDynamics
 		Uint3 threadCount(densityTexture.GetWidth(), densityTexture.GetHeight(), densityTexture.GetDepth());
 		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityTexture3dComputeShader, threadCount, computeShaders.sessionID);
 		shaderProperties.SetValue("CallValues", "particleCount", (int)positionBufferView.GetCount());
+		shaderProperties.SetValue("CallValues", "boundsMin", fluidBounds.localBounds.GetMin());
+		shaderProperties.SetValue("CallValues", "boundsMax", fluidBounds.localBounds.GetMax());
+		shaderProperties.SetValue("CallValues", "boundsRotation", fluidBounds.GetRotation4x4());
 		shaderProperties.SetTexture("densityTexture", densityTexture);
 		shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		shaderProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
 		shaderProperties.SetBuffer("positionBuffer", sortedPositionBufferView.GetBuffer());
+	}
+
+	void SphFluid3dGpuSolver::ComputeOpticalDepthTexture3d(ComputeShaders& computeShaders, TripleData& tripleData, uint32_t dataIndex)
+	{
+		Texture3d& densityTexture = tripleData.densityTexture3d[dataIndex];
+		Texture3d& opticalDepthTexture = tripleData.opticalDepthTexture3d[dataIndex];
+		const RotatedBounds& fluidBounds = tripleData.fluidBounds[dataIndex];
+		const RotatedBounds& lightBounds = tripleData.opticalDepthBounds[dataIndex];
+
+		Uint3 threadCount(opticalDepthTexture.GetWidth(), opticalDepthTexture.GetHeight(), 1);
+		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.opticalDepthTexture3dComputeShader, threadCount, computeShaders.sessionID);
+		shaderProperties.SetValue("CallValues", "lightBoundsMin", lightBounds.localBounds.GetMin());
+		shaderProperties.SetValue("CallValues", "lightBoundsMax", lightBounds.localBounds.GetMax());
+		shaderProperties.SetValue("CallValues", "lightToSimulationRotation", lightBounds.GetRotation4x4());
+		shaderProperties.SetValue("CallValues", "fluidBoundsMin", fluidBounds.localBounds.GetMin());
+		shaderProperties.SetValue("CallValues", "fluidBoundsMax", fluidBounds.localBounds.GetMax());
+		shaderProperties.SetValue("CallValues", "simulationToFluidRotation", fluidBounds.GetRotation4x4().Inverse());
+		shaderProperties.SetValue("CallValues", "extinctionCoefficient", tripleData.extinctionCoefficients[dataIndex]);
+		shaderProperties.SetValue("CallValues", "opticalDepthTextureDepth", static_cast<int>(opticalDepthTexture.GetDepth()));
+		shaderProperties.SetTexture("densityTexture", densityTexture);
+		shaderProperties.SetTexture("opticalDepthTexture", opticalDepthTexture);
 	}
 }
