@@ -56,6 +56,7 @@ namespace emberCore
 			static void RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID);
 			static void RecordBarrierWaitStorageWriteBeforeWrite(uint32_t sessionID);
 			static void RecordBarrierWaitStorageWriteBeforeReadWrite(uint32_t sessionID);
+			static void RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite(uint32_t sessionID);
 
 		private: // Methods
 			// Delete all constructors:
@@ -111,6 +112,7 @@ namespace emberCore
 			static void RecordBarrierWaitStorageWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeWrite();
 			static void RecordBarrierWaitStorageWriteBeforeReadWrite();
+			static void RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
 
 		private: // Methods
 			// Delete all constructors:
@@ -162,6 +164,7 @@ namespace emberCore
 			static void RecordBarrierWaitStorageWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeWrite();
 			static void RecordBarrierWaitStorageWriteBeforeReadWrite();
+			static void RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
 
 		private: // Methods
 			// Delete all constructors:
@@ -191,6 +194,7 @@ namespace emberCore
 		static void RecordBarrierWaitStorageWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);
 		static void RecordBarrierWaitStorageWriteBeforeWrite(ComputeType computeType, uint32_t sessionID = -1);
 		static void RecordBarrierWaitStorageWriteBeforeReadWrite(ComputeType computeType, uint32_t sessionID = -1);
+        static void RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite(ComputeType computeType, uint32_t sessionID = -1);
 
 	private: // Methods
 		// Delete all constructors:

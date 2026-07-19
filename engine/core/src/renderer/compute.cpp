@@ -65,19 +65,23 @@ namespace emberCore
 	}
 	void Compute::Async::RecordBarrierWaitShaderWriteBeforeRead(uint32_t sessionID)
 	{
-		Compute::Async::RecordBarrier(sessionID, ComputeBarrierFlag::shaderWrite, ComputeBarrierFlag::shaderRead);
+		RecordBarrier(sessionID, ComputeBarrierFlag::shaderWrite, ComputeBarrierFlag::shaderRead);
 	}
 	void Compute::Async::RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID)
 	{
-		Compute::Async::RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead);
+		RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead);
 	}
 	void Compute::Async::RecordBarrierWaitStorageWriteBeforeWrite(uint32_t sessionID)
 	{
-		Compute::Async::RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageWrite);
+		RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageWrite);
 	}
 	void Compute::Async::RecordBarrierWaitStorageWriteBeforeReadWrite(uint32_t sessionID)
 	{
-		Compute::Async::RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
+		RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
+	}
+	void Compute::Async::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite(uint32_t sessionID)
+	{
+		RecordBarrier(sessionID, ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::sampledRead | ComputeBarrierFlag::storageWrite);
 	}
 
 	// Compute::PostRender subclass:
@@ -138,19 +142,23 @@ namespace emberCore
 	}
 	void Compute::PreRender::RecordBarrierWaitShaderWriteBeforeRead()
 	{
-		Compute::PreRender::RecordBarrier(ComputeBarrierFlag::shaderWrite, ComputeBarrierFlag::shaderRead);
+		RecordBarrier(ComputeBarrierFlag::shaderWrite, ComputeBarrierFlag::shaderRead);
 	}
 	void Compute::PreRender::RecordBarrierWaitStorageWriteBeforeRead()
 	{
-		Compute::PreRender::RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead);
+		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead);
 	}
 	void Compute::PreRender::RecordBarrierWaitStorageWriteBeforeWrite()
 	{
-		Compute::PreRender::RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageWrite);
+		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageWrite);
 	}
 	void Compute::PreRender::RecordBarrierWaitStorageWriteBeforeReadWrite()
 	{
-		Compute::PreRender::RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
+		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
+	}
+	void Compute::PreRender::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite()
+	{
+		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::sampledRead | ComputeBarrierFlag::storageWrite);
 	}
 
 
@@ -311,6 +319,10 @@ namespace emberCore
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
 	}
+	void Compute::Physics::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite()
+	{
+		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::sampledRead | ComputeBarrierFlag::storageWrite);
+	}
 
 	// Private:
 	// Compute class:
@@ -449,6 +461,23 @@ namespace emberCore
 				break;
 			case ComputeType::physics:
 				Physics::RecordBarrierWaitStorageWriteBeforeReadWrite();
+				break;
+		}
+	}
+	void Compute::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite(ComputeType computeType, uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				Async::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite(sessionID);
+				break;
+			case ComputeType::postRender:
+				break;
+			case ComputeType::preRender:
+				PreRender::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
+				break;
+			case ComputeType::physics:
+				Physics::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
 				break;
 		}
 	}
