@@ -92,7 +92,7 @@ float4 main(FragmentInput input) : SV_TARGET
 
         // Sample the first directional light after attenuation through the fluid:
         float3 lightIntensity = incidentLightIntensity;
-        if (hasOpticalDepthTexture != 0)
+        if (renderVolumetricLight != 0)
         {
             float3 positionLight = mul(fluidToLightMatrix, float4(positionFluid, 1.0f)).xyz;
             float3 opticalDepth = opticalDepthTexture.SampleLevel(colorSamplerClampEdge, positionLight, 0).rgb;
