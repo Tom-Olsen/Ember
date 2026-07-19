@@ -1,6 +1,7 @@
 #include "fragmentShaderCommon.hlsli"
 #include "vertexShaderCommon.hlsli"
 Texture3D<float> densityTexture : register(t100, SHADER_SET);
+Texture3D<float4> opticalDepthTexture : register(t101, SHADER_SET);
 
 
 
@@ -10,6 +11,8 @@ cbuffer Values : register(b300, SHADER_SET)
     float absorption;
     float3 scattering;
     float rayStepLengthSimulation;
+    float4x4 fluidToLightMatrix;
+    int renderVolumetricLight;
 };
 
 
@@ -74,7 +77,8 @@ float4 main(FragmentInput input) : SV_TARGET
     float stepLengthSimulation = rayLengthSimulation / stepCount;
 
     // Ray casting:
-    float3 lightIntensity = float3(1.0f, 1.0f, 1.0f);
+    float3 incidentLightIntensity = light_dirCount <= 0 ? 0.0f
+        : light_directionData[0].colorIntensity.xyz * light_directionData[0].colorIntensity.w;
     float3 extinction = absorption + scattering;
     float3 transmittance = 1.0f;
     float3 scatteredLight = 0.0f;
@@ -85,6 +89,15 @@ float4 main(FragmentInput input) : SV_TARGET
         float3 positionLocal = cameraPositionLocal + rayDirectionLocal * t;
         float3 positionFluid = positionLocal + 0.5f;
         float density = densityTexture.SampleLevel(colorSamplerClampEdge, positionFluid, 0).r;
+
+        // Sample the first directional light after attenuation through the fluid:
+        float3 lightIntensity = incidentLightIntensity;
+        if (hasOpticalDepthTexture != 0)
+        {
+            float3 positionLight = mul(fluidToLightMatrix, float4(positionFluid, 1.0f)).xyz;
+            float3 opticalDepth = opticalDepthTexture.SampleLevel(colorSamplerClampEdge, positionLight, 0).rgb;
+            lightIntensity *= exp(-opticalDepth);
+        }
 
         // Analytic integration over a constant-density step of the radiative transfer equation:
         float3 stepTransmittance = exp(-density * extinction * stepLengthSimulation);
