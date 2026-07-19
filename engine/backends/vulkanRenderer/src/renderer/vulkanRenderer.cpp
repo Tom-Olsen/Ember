@@ -92,11 +92,15 @@ namespace vulkanRendererBackend
 		m_outlineThickness = 3;
 		m_directionalLightsCount = 0;
 		m_positionalLightsCount = 0;
+		m_previousDirectionalLightsCount = 0;
+		m_previousPositionalLightsCount = 0;
 		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));
 		m_maxPositionalLights = math::Clamp(createInfo.maxPositionalLights, uint32_t(1), uint32_t(MAX_POS_LIGHTS));
 		m_shadowMapResolution = math::Clamp(createInfo.shadowMapResolution, uint32_t(1), uint32_t(SHADOW_MAP_RESOLUTION));
 		m_directionalLights.resize(m_maxDirectionalLights);
 		m_positionalLights.resize(m_maxPositionalLights);
+		m_previousDirectionalLights.resize(m_maxDirectionalLights);
+		m_previousPositionalLights.resize(m_maxPositionalLights);
 
 		// Debug naming:
 		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
@@ -420,6 +424,36 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
+	bool Renderer::TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const
+	{
+		if (m_directionalLightsCount > 0)
+		{
+			if (index >= m_directionalLightsCount)
+				return false;
+			directionalLight = m_directionalLights[index];
+			return true;
+		}
+        // Fallback to previously submitted lights:
+		if (index >= m_previousDirectionalLightsCount)
+			return false;
+		directionalLight = m_previousDirectionalLights[index];
+		return true;
+	}
+	bool Renderer::TryGetPositionalLight(emberCommon::PositionalLight& positionalLight, uint32_t index) const
+	{
+		if (m_positionalLightsCount > 0)
+		{
+			if (index >= m_positionalLightsCount)
+				return false;
+			positionalLight = m_positionalLights[index];
+			return true;
+		}
+        // Fallback to previously submitted lights:
+		if (index >= m_previousPositionalLightsCount)
+			return false;
+		positionalLight = m_previousPositionalLights[index];
+		return true;
+	}
 	uint32_t Renderer::GetShadowMapResolution()
 	{
 		return m_shadowMapResolution;
@@ -740,6 +774,10 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::ResetLights()
 	{
+		m_previousDirectionalLightsCount = m_directionalLightsCount;
+		m_previousPositionalLightsCount = m_positionalLightsCount;
+		std::copy_n(m_directionalLights.begin(), m_directionalLightsCount, m_previousDirectionalLights.begin());
+		std::copy_n(m_positionalLights.begin(), m_positionalLightsCount, m_previousPositionalLights.begin());
 		m_directionalLightsCount = 0;
 		m_positionalLightsCount = 0;
 	}

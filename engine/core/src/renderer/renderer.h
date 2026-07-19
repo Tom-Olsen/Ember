@@ -85,6 +85,8 @@ namespace emberCore
 		static ShaderProperties DrawMeshInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
 
 		// Getters:
+		static bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index);
+		static bool TryGetPositionalLight(emberCommon::PositionalLight& positionalLight, uint32_t index);
 		static const uint32_t GetShadowMapResolution();
 		static const Uint2 GetSurfaceExtent();
 		static const Float4x4& GetPointLightRotationMatrix(int faceIndex);

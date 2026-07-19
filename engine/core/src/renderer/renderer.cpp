@@ -184,6 +184,14 @@ namespace emberCore
 
 
 	// Getters:
+	bool Renderer::TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index)
+	{
+		return s_pIRenderer->TryGetDirectionalLight(directionalLight, index);
+	}
+	bool Renderer::TryGetPositionalLight(emberCommon::PositionalLight& positionalLight, uint32_t index)
+	{
+		return s_pIRenderer->TryGetPositionalLight(positionalLight, index);
+	}
 	const uint32_t Renderer::GetShadowMapResolution()
 	{
 		return s_pIRenderer->GetShadowMapResolution();

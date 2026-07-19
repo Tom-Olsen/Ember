@@ -45,6 +45,8 @@ namespace emberBackendInterface
         virtual IDescriptorSetBinding* DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
 
         // Getters:
+        virtual bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const = 0;
+        virtual bool TryGetPositionalLight(emberCommon::PositionalLight& positionalLight, uint32_t index) const = 0;
         virtual uint32_t GetShadowMapResolution() = 0;
         virtual Uint2 GetSurfaceExtent() = 0;
         virtual ITexture* GetRenderTexture() = 0;

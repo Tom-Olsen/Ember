@@ -102,11 +102,15 @@ namespace vulkanRendererBackend
 		int m_outlineThickness;
 		uint32_t m_directionalLightsCount;
 		uint32_t m_positionalLightsCount;
+		uint32_t m_previousDirectionalLightsCount;
+		uint32_t m_previousPositionalLightsCount;
 		uint32_t m_maxDirectionalLights;
 		uint32_t m_maxPositionalLights;
 		uint32_t m_shadowMapResolution;
 		std::vector<emberCommon::DirectionalLight> m_directionalLights;
 		std::vector<emberCommon::PositionalLight> m_positionalLights;
+		std::vector<emberCommon::DirectionalLight> m_previousDirectionalLights;
+		std::vector<emberCommon::PositionalLight> m_previousPositionalLights;
 
 		// Draw calls:
 		std::vector<DrawCall> m_outlineCalls;
@@ -155,6 +159,8 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IDescriptorSetBinding* DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
 
 		// Getters:
+		bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const override;
+		bool TryGetPositionalLight(emberCommon::PositionalLight& positionalLight, uint32_t index) const override;
 		uint32_t GetShadowMapResolution() override;
 		Uint2 GetSurfaceExtent() override;
 		emberBackendInterface::ITexture* GetRenderTexture() override;
