@@ -2,10 +2,10 @@
 
 
 
-cbuffer Values : register(b300, SHADER_SET)
+cbuffer CallValues : register(b301, CALL_SET)
 {
-    float collisionDampening;
     float3 boundsMin;
+    float collisionDampening;
     float3 boundsMax;
     float4x4 rotation;
     float4x4 inverseRotation;
@@ -23,55 +23,55 @@ void main(uint3 threadID : SV_DispatchThreadID)
     
     if (index < pc.threadCount.x)
     {
-        // Transform world to local:
+        // Transform simulation to bounds-local space:
         float3 center = 0.5f * (boundsMin + boundsMax);
-        float3 localPosition = center + mul(inverseRotation, float4(positionBuffer[index] - center, 0.0f)).xyz;
-        float3 localVelocity = mul(inverseRotation, float4(velocityBuffer[index], 0.0f)).xyz;
+        float3 positionFluid = center + mul(inverseRotation, float4(positionBuffer[index] - center, 0.0f)).xyz;
+        float3 velocityFluid = mul(inverseRotation, float4(velocityBuffer[index], 0.0f)).xyz;
 
         // Resolve collisions in local frame (abs ensures inward movement):
         bool collided = false;
-        if (localPosition.x < boundsMin.x)
+        if (positionFluid.x < boundsMin.x)
         {
-            localPosition.x = boundsMin.x + boundaryOffset;
-            localVelocity.x = abs(localVelocity.x) * collisionDampening;
+            positionFluid.x = boundsMin.x + boundaryOffset;
+            velocityFluid.x = abs(velocityFluid.x) * collisionDampening;
             collided = true;
         }
-        if (localPosition.x > boundsMax.x)
+        if (positionFluid.x > boundsMax.x)
         {
-            localPosition.x = boundsMax.x - boundaryOffset;
-            localVelocity.x = -abs(localVelocity.x) * collisionDampening;
+            positionFluid.x = boundsMax.x - boundaryOffset;
+            velocityFluid.x = -abs(velocityFluid.x) * collisionDampening;
             collided = true;
         }
-        if (localPosition.y < boundsMin.y)
+        if (positionFluid.y < boundsMin.y)
         {
-            localPosition.y = boundsMin.y + boundaryOffset;
-            localVelocity.y = abs(localVelocity.y) * collisionDampening;
+            positionFluid.y = boundsMin.y + boundaryOffset;
+            velocityFluid.y = abs(velocityFluid.y) * collisionDampening;
             collided = true;
         }
-        if (localPosition.y > boundsMax.y)
+        if (positionFluid.y > boundsMax.y)
         {
-            localPosition.y = boundsMax.y - boundaryOffset;
-            localVelocity.y = -abs(localVelocity.y) * collisionDampening;
+            positionFluid.y = boundsMax.y - boundaryOffset;
+            velocityFluid.y = -abs(velocityFluid.y) * collisionDampening;
             collided = true;
         }
-        if (localPosition.z < boundsMin.z)
+        if (positionFluid.z < boundsMin.z)
         {
-            localPosition.z = boundsMin.z + boundaryOffset;
-            localVelocity.z = abs(localVelocity.z) * collisionDampening;
+            positionFluid.z = boundsMin.z + boundaryOffset;
+            velocityFluid.z = abs(velocityFluid.z) * collisionDampening;
             collided = true;
         }
-        if (localPosition.z > boundsMax.z)
+        if (positionFluid.z > boundsMax.z)
         {
-            localPosition.z = boundsMax.z - boundaryOffset;
-            localVelocity.z = -abs(localVelocity.z) * collisionDampening;
+            positionFluid.z = boundsMax.z - boundaryOffset;
+            velocityFluid.z = -abs(velocityFluid.z) * collisionDampening;
             collided = true;
         }
 
-        // Transform local to world and write back:
+        // Transform bounds-local to simulation space and write back:
         if (collided)
         {
-            positionBuffer[index] = center + mul(rotation, float4(localPosition - center, 0.0f)).xyz;
-            velocityBuffer[index] = mul(rotation, float4(localVelocity, 0.0f)).xyz;
+            positionBuffer[index] = center + mul(rotation, float4(positionFluid - center, 0.0f)).xyz;
+            velocityBuffer[index] = mul(rotation, float4(velocityFluid, 0.0f)).xyz;
         }
     }
 }

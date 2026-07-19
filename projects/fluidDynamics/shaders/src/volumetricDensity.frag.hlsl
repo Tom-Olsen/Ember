@@ -6,7 +6,7 @@ Texture3D<float> densityTexture : register(t100, SHADER_SET);
 
 cbuffer Values : register(b300, SHADER_SET)
 {
-    float3 volumeHalfSize;
+    float3 volumeSize;      // size of fluid bounds
     float densityScale;
     float absorption;
     float rayStepLength;
@@ -60,9 +60,9 @@ float4 main(FragmentInput input) : SV_TARGET
 {
     static const uint maxStepCount = 256;
 
-    // Compute ray segment inside the density cube:
-    float3 boxMax = volumeHalfSize;
-    float3 boxMin = -volumeHalfSize;
+    // Compute ray segment inside the density cube (local frame = fluidBounds frame):
+    static const float3 boxMin = -0.5f;
+    static const float3 boxMax = 0.5f;
     float3 localCameraPosition = mul(model_worldToLocalMatrix, camera_position).xyz;
     float3 localRayDirection = normalize(input.localPosition - localCameraPosition);
     float tEnter;
@@ -78,20 +78,21 @@ float4 main(FragmentInput input) : SV_TARGET
         discard;
 
     // Ray cast from rayStart to rayEnd with fixed stepsize:
-    float3 volumeSize = 2 * volumeHalfSize;
-    uint stepCount = clamp((uint)ceil(rayLength / rayStepLength), 1u, maxStepCount);
-    float stepLength = rayLength / stepCount;
+    float rayLengthSimulation = rayLength * length(volumeSize * localRayDirection); // upscale ray to simulation frame.
+    uint stepCount = clamp((uint)ceil(rayLengthSimulation / rayStepLength), 1u, maxStepCount);
+    float stepLengthLocal = rayLength / stepCount;
+    float stepLengthSimulation = rayLengthSimulation / stepCount;
     float transmittance = 1.0f;
     float3 color = 0.0f;
     for (uint i = 0; i < stepCount; i++)
     {
-        float t = rayStart + (i + 0.5f) * stepLength;
+        float t = rayStart + (i + 0.5f) * stepLengthLocal;
         float3 localPosition = localCameraPosition + localRayDirection * t;
-        float3 uvw = (localPosition - boxMin) / volumeSize;
+        float3 uvw = localPosition - boxMin;
         float density = densityTexture.SampleLevel(colorSamplerClampEdge, uvw, 0).r;
         float densityT = saturate(density / densityScale);  // clamp01
         float4 sampleColor = lerp(fluidColorLow, fluidColorHigh, densityT);
-        float sampleAlpha = sampleColor.a * (1.0f - exp(-density * absorption * stepLength));
+        float sampleAlpha = sampleColor.a * (1.0f - exp(-density * absorption * stepLengthSimulation));
 
         // Accumulate color:
         color += transmittance * sampleAlpha * sampleColor.rgb;
