@@ -97,7 +97,7 @@ namespace fluidDynamics
 			std::array<RotatedBounds, PhysicsTripleBufferState::bufferCount> fluidBounds;
 			std::array<RotatedBounds, PhysicsTripleBufferState::bufferCount> opticalDepthBounds;
 			std::array<bool, PhysicsTripleBufferState::bufferCount> hasOpticalDepthTexture3d;
-			std::array<float, PhysicsTripleBufferState::bufferCount> extinctionCoefficients;
+			std::array<Float3, PhysicsTripleBufferState::bufferCount> extinctionCoefficients;
 			Uint3 densityTexture3dResolution;
 			Uint3 opticalDepthTexture3dResolution;
 

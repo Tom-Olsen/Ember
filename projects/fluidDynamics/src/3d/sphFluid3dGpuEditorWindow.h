@@ -50,12 +50,10 @@ namespace emberEditor
 		Uint3 m_volumetricDensityResolution;
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
-		Float4 m_volumetricDensityColorLow;
-		Float4 m_volumetricDensityColorHigh;
+		Float3 m_volumetricScattering;
 		// Lighting:
 		bool m_renderVolumetricLight;
 		Uint3 m_volumetricLightingResolution;
-		float m_volumetricLightingScattering;
 		// Internal:
 		RotatedBounds m_fluidBounds;
 
@@ -139,8 +137,9 @@ namespace emberEditor
 				m_volumetricDensityResolution.z = static_cast<uint32_t>(math::Max(1, z));
 				Gui::DragFloat("Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f, "%.8f");
 				Gui::DragFloat("Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f, "%.8f");
-				Gui::ColorEdit("Fluid Color Low:", &m_volumetricDensityColorLow);
-				Gui::ColorEdit("Fluid Color High:", &m_volumetricDensityColorHigh);
+				Gui::DragFloat("Scattering r:", &m_volumetricScattering.x, 0.01f, 0.1f, "%.8f");
+				Gui::DragFloat("Scattering g:", &m_volumetricScattering.y, 0.01f, 0.1f, "%.8f");
+				Gui::DragFloat("Scattering b:", &m_volumetricScattering.z, 0.01f, 0.1f, "%.8f");
 			}
 			// Lighting:
 			Gui::SeparatorText("Lighting");
@@ -157,7 +156,6 @@ namespace emberEditor
 				m_volumetricLightingResolution.x = static_cast<uint32_t>(math::Max(1, x));
 				m_volumetricLightingResolution.y = static_cast<uint32_t>(math::Max(1, y));
 				m_volumetricLightingResolution.z = static_cast<uint32_t>(math::Max(1, z));
-				Gui::DragFloat("Scattering:", &m_volumetricLightingScattering, 0.1f, 0.0f, "%.8f");
 			}
 
 			// Buttons:
@@ -206,11 +204,9 @@ namespace emberEditor
 			m_volumetricDensityResolution = m_pScript->GetVolumetricDensityResolution();
 			m_volumetricDensityRayStepLength = m_pScript->GetVolumetricDensityRayStepLength();
 			m_volumetricDensityAbsorption = m_pScript->GetVolumetricDensityAbsorption();
-			m_volumetricDensityColorLow = m_pScript->GetVolumetricDensityColorLow();
-			m_volumetricDensityColorHigh = m_pScript->GetVolumetricDensityColorHigh();
+			m_volumetricScattering = m_pScript->GetVolumetricScattering();
 			m_renderVolumetricLight = m_pScript->GetRenderVolumetricLight();
 			m_volumetricLightingResolution = m_pScript->GetVolumetricLightingResolution();
-			m_volumetricLightingScattering = m_pScript->GetVolumetricLightingScattering();
 		}
 		void SetData()
 		{
@@ -242,11 +238,9 @@ namespace emberEditor
 			m_pScript->SetVolumetricDensityResolution(m_volumetricDensityResolution);
 			m_pScript->SetVolumetricDensityRayStepLength(m_volumetricDensityRayStepLength);
 			m_pScript->SetVolumetricDensityAbsorption(m_volumetricDensityAbsorption);
-			m_pScript->SetVolumetricDensityColorLow(m_volumetricDensityColorLow);
-			m_pScript->SetVolumetricDensityColorHigh(m_volumetricDensityColorHigh);
+			m_pScript->SetVolumetricScattering(m_volumetricScattering);
 			m_pScript->SetRenderVolumetricLight(m_renderVolumetricLight);
 			m_pScript->SetVolumetricLightingResolution(m_volumetricLightingResolution);
-			m_pScript->SetVolumetricLightingScattering(m_volumetricLightingScattering);
 		}
 	};
 }

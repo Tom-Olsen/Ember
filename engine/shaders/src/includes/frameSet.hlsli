@@ -14,4 +14,11 @@ cbuffer Camera : register(b1399, FRAME_SET)
 
 
 
+float GetCameraNearClip()
+{
+    return camera_projMatrix[2][3] / camera_projMatrix[2][2];
+}
+
+
+
 #endif // __INCLUDE_GUARD_frameSet_hlsli__

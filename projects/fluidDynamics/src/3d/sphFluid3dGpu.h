@@ -51,12 +51,10 @@ namespace fluidDynamics
 		Uint3 m_volumetricDensityResolution;
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
-		Float4 m_volumetricDensityColorLow;
-		Float4 m_volumetricDensityColorHigh;
+		Float3 m_volumetricScattering;
         // Lighting:
 		bool m_renderVolumetricLight;
 		Uint3 m_volumetricLightingResolution;
-		float m_volumetricLightingScattering;
         // Internal:
 		Mesh m_particleMesh;
 		Mesh m_attractorSphereMesh;
@@ -113,11 +111,9 @@ namespace fluidDynamics
 		void SetVolumetricDensityResolution(const Uint3& volumetricDensityResolution);
 		void SetVolumetricDensityRayStepLength(float volumetricDensityRayStepLength);
 		void SetVolumetricDensityAbsorption(float volumetricDensityAbsorption);
-		void SetVolumetricDensityColorLow(const Float4& volumetricDensityColorLow);
-		void SetVolumetricDensityColorHigh(const Float4& volumetricDensityColorHigh);
+		void SetVolumetricScattering(const Float3& volumetricScattering);
 		void SetRenderVolumetricLight(bool renderVolumetricLight);
 		void SetVolumetricLightingResolution(const Uint3& volumetricLightingResolution);
-		void SetVolumetricLightingScattering(float volumetricLightingScattering);
 
 		// Getters:
 		// Management:
@@ -155,12 +151,10 @@ namespace fluidDynamics
 		Uint3 GetVolumetricDensityResolution() const;
 		float GetVolumetricDensityRayStepLength() const;
 		float GetVolumetricDensityAbsorption() const;
-		Float4 GetVolumetricDensityColorLow() const;
-		Float4 GetVolumetricDensityColorHigh() const;
+		Float3 GetVolumetricScattering() const;
         // Lighting:
 		bool GetRenderVolumetricLight() const;
 		Uint3 GetVolumetricLightingResolution() const;
-		float GetVolumetricLightingScattering() const;
 
 		// Debugging:
 		void Print();

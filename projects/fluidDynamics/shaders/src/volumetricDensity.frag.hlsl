@@ -6,52 +6,42 @@ Texture3D<float> densityTexture : register(t100, SHADER_SET);
 
 cbuffer Values : register(b300, SHADER_SET)
 {
-    float3 volumeSize;      // size of fluid bounds
-    float densityScale;
+    float3 fluidSize;
     float absorption;
-    float rayStepLength;
-    float4 fluidColorLow;   // color at density = 0
-    float4 fluidColorHigh;  // color at density >= densityScale
+    float3 scattering;
+    float rayStepLengthSimulation;
 };
 
 
 
 struct FragmentInput
 {
-    float4 clipPosition : SV_POSITION;  // position in clip space: x,y in [-1,1] z in [0,1]
-    float3 worldNormal : NORMAL;        // normal in world space
-    float3 worldTangent : TANGENT;      // tangent in world space
-    float4 vertexColor : COLOR;         // vertex color
-    float4 uv : TEXCOORD0;              // texture coordinates
-    float3 worldPosition : TEXCOORD1;   // position in world space
-    float3 localPosition : TEXCOORD2;   // position in local/model space
+    float4 positionClip : SV_POSITION;  // position in clip space: x,y in [-1,1] z in[0,1]
+    float3 positionWorld : TEXCOORD0;   // position in world space
+    float3 positionLocal : TEXCOORD1;   // position in local/model space
 };
 
 
 
-bool RayBoxIntersection(float3 rayOrigin, float3 rayDirection, float3 boxMin, float3 boxMax, out float tEnter, out float tExit)
+bool RayBoxIntersection(float3 rayOrigin, float3 rayDirection, float3 boxMin, float3 boxMax, out float t0, out float t1)
 {
-    float3 invDirection = 1.0f / rayDirection;
-    float3 t0 = (boxMin - rayOrigin) * invDirection;
-    float3 t1 = (boxMax - rayOrigin) * invDirection;
-    float3 tMin = min(t0, t1);
-    float3 tMax = max(t0, t1);
+    float3 inverseDirection = 1.0f / rayDirection;
+    float3 vect0 = (boxMin - rayOrigin) * inverseDirection;
+    float3 vect1 = (boxMax - rayOrigin) * inverseDirection;
+    float3 tMin = min(vect0, vect1);
+    float3 tMax = max(vect0, vect1);
 
-    tEnter = max(max(tMin.x, tMin.y), tMin.z);
-    tExit = min(min(tMax.x, tMax.y), tMax.z);
-    return tExit > max(tEnter, 0.0f);
+    t0 = max(max(tMin.x, tMin.y), tMin.z);
+    t1 = min(min(tMax.x, tMax.y), tMax.z);
+    return t1 > max(t0, 0.0f);
 }
-float GetCameraNearClip()
+float GetNearPlaneRayStartLocal(float3 cameraPositionLocal, float3 rayDirectionLocal, float3 rayDirectionWorld)
 {
-    return camera_projMatrix[2][3] / camera_projMatrix[2][2];
-}
-float GetLocalNearPlaneRayStart(float3 localCameraPosition, float3 localRayDirection, float3 worldRayDirection)
-{
-    float3 cameraRayDirection = mul(camera_viewMatrix, float4(worldRayDirection, 0.0f)).xyz;
-    float worldRayStart = -GetCameraNearClip() / cameraRayDirection.z;
-    float3 worldNearPlanePosition = camera_position.xyz + worldRayDirection * worldRayStart;
-    float3 localNearPlanePosition = mul(model_worldToLocalMatrix, float4(worldNearPlanePosition, 1.0f)).xyz;
-    return dot(localNearPlanePosition - localCameraPosition, localRayDirection);
+    float3 rayDirectionCamera = mul(camera_viewMatrix, float4(rayDirectionWorld, 0.0f)).xyz;
+    float rayStartWorld = -GetCameraNearClip() / rayDirectionCamera.z;
+    float3 nearPlanePositionWorld = camera_position.xyz + rayDirectionWorld * rayStartWorld;
+    float3 nearPlanePositionLocal = mul(model_worldToLocalMatrix, float4(nearPlanePositionWorld, 1.0f)).xyz;
+    return dot(nearPlanePositionLocal - cameraPositionLocal, rayDirectionLocal);
 }
 
 
@@ -60,47 +50,53 @@ float4 main(FragmentInput input) : SV_TARGET
 {
     static const uint maxStepCount = 256;
 
-    // Compute ray segment inside the density cube (local frame = fluidBounds frame):
-    static const float3 boxMin = -0.5f;
-    static const float3 boxMax = 0.5f;
-    float3 localCameraPosition = mul(model_worldToLocalMatrix, camera_position).xyz;
-    float3 localRayDirection = normalize(input.localPosition - localCameraPosition);
-    float tEnter;
-    float tExit;
-    if (!RayBoxIntersection(localCameraPosition, localRayDirection, boxMin, boxMax, tEnter, tExit))
+    // Compute ray enter and exit t in local space:
+    static const float3 boxMinLocal = -0.5f;
+    static const float3 boxMaxLocal = 0.5f;
+    float3 cameraPositionLocal = mul(model_worldToLocalMatrix, camera_position).xyz;
+    float3 rayDirectionLocal = normalize(input.positionLocal - cameraPositionLocal);
+    float t0;
+    float t1;
+    if (!RayBoxIntersection(cameraPositionLocal, rayDirectionLocal, boxMinLocal, boxMaxLocal, t0, t1))
         discard;
 
-    // Compute ray length:
-    float3 worldRayDirection = normalize(input.worldPosition - camera_position.xyz);
-    float rayStart = max(tEnter, GetLocalNearPlaneRayStart(localCameraPosition, localRayDirection, worldRayDirection));
-    float rayLength = tExit - rayStart;
-    if (rayLength <= 0.0f)
+    // Clamp t0 to camera near plane if its inside the fluid:
+    float3 rayDirectionWorld = normalize(input.positionWorld - camera_position.xyz);
+    t0 = max(t0, GetNearPlaneRayStartLocal(cameraPositionLocal, rayDirectionLocal, rayDirectionWorld));
+    float deltaT = t1 - t0;
+    if (deltaT <= 0.0f)
         discard;
 
-    // Ray cast from rayStart to rayEnd with fixed stepsize:
-    float rayLengthSimulation = rayLength * length(volumeSize * localRayDirection); // upscale ray to simulation frame.
-    uint stepCount = clamp((uint)ceil(rayLengthSimulation / rayStepLength), 1u, maxStepCount);
-    float stepLengthLocal = rayLength / stepCount;
+    // Fluid coordinates are normalized texture coordinates. fluidSize converts their distances to simulation units:
+    float rayLengthSimulation = deltaT * length(fluidSize * rayDirectionLocal);
+    uint stepCount = clamp((uint)ceil(rayLengthSimulation / rayStepLengthSimulation), 1u, maxStepCount);
+    float stepLengthLocal = deltaT / stepCount;
     float stepLengthSimulation = rayLengthSimulation / stepCount;
-    float transmittance = 1.0f;
-    float3 color = 0.0f;
+
+    // Ray casting:
+    float3 lightIntensity = float3(1.0f, 1.0f, 1.0f);
+    float3 extinction = absorption + scattering;
+    float3 transmittance = 1.0f;
+    float3 scatteredLight = 0.0f;
     for (uint i = 0; i < stepCount; i++)
     {
-        float t = rayStart + (i + 0.5f) * stepLengthLocal;
-        float3 localPosition = localCameraPosition + localRayDirection * t;
-        float3 uvw = localPosition - boxMin;
-        float density = densityTexture.SampleLevel(colorSamplerClampEdge, uvw, 0).r;
-        float densityT = saturate(density / densityScale);  // clamp01
-        float4 sampleColor = lerp(fluidColorLow, fluidColorHigh, densityT);
-        float sampleAlpha = sampleColor.a * (1.0f - exp(-density * absorption * stepLengthSimulation));
+        // Sample density:
+        float t = t0 + (i + 0.5f) * stepLengthLocal;
+        float3 positionLocal = cameraPositionLocal + rayDirectionLocal * t;
+        float3 positionFluid = positionLocal + 0.5f;
+        float density = densityTexture.SampleLevel(colorSamplerClampEdge, positionFluid, 0).r;
 
-        // Accumulate color:
-        color += transmittance * sampleAlpha * sampleColor.rgb;
-        transmittance *= 1.0f - sampleAlpha;
-        if (transmittance < 0.01f)
+        // Analytic integration over a constant-density step of the radiative transfer equation:
+        float3 stepTransmittance = exp(-density * extinction * stepLengthSimulation);
+        float3 inScatteredLight = lightIntensity * scattering / extinction * (1.0f - stepTransmittance);
+        scatteredLight += transmittance * inScatteredLight;
+        transmittance *= stepTransmittance;
+        if (all(transmittance < 0.01f))
             break;
     }
 
-    float alpha = 1.0f - transmittance;
+    // Fixed-function blending has one alpha channel, so use perceived transmittance as coverage:
+    float alpha = 1.0f - dot(transmittance, float3(0.2126f, 0.7152f, 0.0722f));
+    float3 color = alpha > 0.0f ? scatteredLight / alpha : 0.0f;
     return float4(color, alpha);
 }

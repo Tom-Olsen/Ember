@@ -79,9 +79,10 @@ namespace fluidDynamics
 	}
 	void SphFluid3dGpuSolver::TripleData::ReallocateOpticalDepthTexture3d(Uint3 resolution)
 	{
-		// Limit total voxel count, as gpu memory usage is resolution.x*y*z * 2bytes per texture:
+		// Limit total voxel count, as gpu memory usage is resolution.x*y*z * 8bytes per texture:
+        // Spirv doesnt support rgb16_sfloat, so we use rgba16_sfloat and waste the alpha slot.
 		size_t voxelCount = static_cast<size_t>(resolution.x) * resolution.y * resolution.z;
-		constexpr size_t maxVoxelCount = 1 << 24;	// = 2^24 * 2bytes = 32MB as max limit.
+		constexpr size_t maxVoxelCount = 1 << 22;	// = 2^22 * 8bytes = 32MB as max limit.
 		if (voxelCount > maxVoxelCount)
 		{
 		    Uint3 originalResolution = resolution;
@@ -95,7 +96,7 @@ namespace fluidDynamics
 			opticalDepthTexture3dResolution = resolution;
 			for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
 			{
-				opticalDepthTexture3d[i] = Texture3d("opticalDepthTexture3d[" + std::to_string(i) + "]", resolution.x, resolution.y, resolution.z, emberCommon::TextureFormats::r16_sfloat, emberCommon::TextureUsage::storageSample);
+				opticalDepthTexture3d[i] = Texture3d("opticalDepthTexture3d[" + std::to_string(i) + "]", resolution.x, resolution.y, resolution.z, emberCommon::TextureFormats::rgba16_sfloat, emberCommon::TextureUsage::storageSample);
 				hasOpticalDepthTexture3d[i] = false;
 			}
 		}
@@ -490,7 +491,7 @@ namespace fluidDynamics
 		shaderProperties.SetValue("CallValues", "fluidBoundsMin", fluidBounds.localBounds.GetMin());
 		shaderProperties.SetValue("CallValues", "fluidBoundsMax", fluidBounds.localBounds.GetMax());
 		shaderProperties.SetValue("CallValues", "simulationToFluidRotation", fluidBounds.GetRotation4x4().Inverse());
-		shaderProperties.SetValue("CallValues", "extinctionCoefficient", tripleData.extinctionCoefficients[dataIndex]);
+		shaderProperties.SetValue("CallValues", "extinction", tripleData.extinctionCoefficients[dataIndex]);
 		shaderProperties.SetValue("CallValues", "opticalDepthTextureDepth", static_cast<int>(opticalDepthTexture.GetDepth()));
 		shaderProperties.SetTexture("densityTexture", densityTexture);
 		shaderProperties.SetTexture("opticalDepthTexture", opticalDepthTexture);

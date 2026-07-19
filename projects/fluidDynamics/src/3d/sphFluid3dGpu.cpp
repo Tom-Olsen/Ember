@@ -52,14 +52,14 @@ namespace fluidDynamics
 
 			// Volumetric visuals:
 			SetRenderVolumetricDensity(true);
-			SetVolumetricDensityResolution(Uint3(40, 30, 25));
-			SetVolumetricDensityRayStepLength(0.2f);
-            SetVolumetricDensityAbsorption(0.5f);
-			SetVolumetricDensityColorLow(Float4(0.1f, 0.2f, 1.0f, 1.0f));
-			SetVolumetricDensityColorHigh(Float4(0.66f, 0.95f, 0.95f, 0.66f));
+			SetVolumetricDensityResolution(Uint3(160, 120, 100));
+			SetVolumetricDensityRayStepLength(50.2f);
+            SetVolumetricDensityAbsorption(0.0001f);
+			SetVolumetricScattering(Float3(0.01f, 0.04f, 0.08f));
+
+            // Lighting:
 			SetRenderVolumetricLight(true);
 			SetVolumetricLightingResolution(Uint3(64));
-			SetVolumetricLightingScattering(0.5f);
 		}
 		m_forceSetters = false;
 
@@ -123,7 +123,7 @@ namespace fluidDynamics
 		{
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
 			m_tripleData.fluidBounds[sourceDataIndex] = m_settings.fluidBounds;
-			m_tripleData.extinctionCoefficients[sourceDataIndex] = m_volumetricDensityAbsorption + m_volumetricLightingScattering;
+			m_tripleData.extinctionCoefficients[sourceDataIndex] = Float3(m_volumetricDensityAbsorption) + m_volumetricScattering;
 			SphFluid3dGpuSolver::ComputeDensityTexture3d(m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex);
 			RotatedBounds lightBounds;
 			if (m_renderVolumetricLight && TryGetDirectionalLightBounds(lightBounds))
@@ -225,7 +225,7 @@ namespace fluidDynamics
 					* Float4x4::Translate(fluidBounds.localBounds.center)
 					* fluidBounds.GetRotation4x4()
 					* Float4x4::Scale(fluidBounds.localBounds.GetSize());
-				m_volumetricDensityMaterial.SetValue("Values", "volumeSize", fluidBounds.localBounds.GetSize());
+				m_volumetricDensityMaterial.SetValue("Values", "fluidSize", fluidBounds.localBounds.GetSize());
 				m_volumetricDensityMaterial.SetValue("Values", "absorption", m_volumetricDensityAbsorption);
 				m_volumetricDensityMaterial.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
 				Renderer::DrawMesh(m_volumetricDensityCube, m_volumetricDensityMaterial, densityCubeLocalToWorld, false, false, emberCommon::CullMode::front);
@@ -350,7 +350,6 @@ namespace fluidDynamics
 			m_settings.targetDensity = targetDensity;
 			m_computeShaders.SetTargetDensity(m_settings.targetDensity);
 			m_particleMaterial.SetValue("Values", "targetDensity", m_settings.targetDensity);
-			m_volumetricDensityMaterial.SetValue("Values", "densityScale", m_settings.targetDensity);
 		}
 	}
 	void SphFluid3dGpu::SetPressureMultiplier(float pressureMultiplier)
@@ -467,7 +466,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_volumetricDensityRayStepLength != volumetricDensityRayStepLength)
 		{
 			m_volumetricDensityRayStepLength = volumetricDensityRayStepLength;
-			m_volumetricDensityMaterial.SetValue("Values", "rayStepLength", m_volumetricDensityRayStepLength);
+			m_volumetricDensityMaterial.SetValue("Values", "rayStepLengthSimulation", m_volumetricDensityRayStepLength);
 		}
 	}
 	void SphFluid3dGpu::SetVolumetricDensityAbsorption(float volumetricDensityAbsorption)
@@ -476,20 +475,13 @@ namespace fluidDynamics
 		if (m_forceSetters || m_volumetricDensityAbsorption != volumetricDensityAbsorption)
 			m_volumetricDensityAbsorption = volumetricDensityAbsorption;
 	}
-	void SphFluid3dGpu::SetVolumetricDensityColorLow(const Float4& volumetricDensityColorLow)
+	void SphFluid3dGpu::SetVolumetricScattering(const Float3& volumetricScattering)
 	{
-		if (m_forceSetters || m_volumetricDensityColorLow != volumetricDensityColorLow)
+		Float3 scattering = Float3::Max(Float3::zero, volumetricScattering);
+		if (m_forceSetters || m_volumetricScattering != scattering)
 		{
-			m_volumetricDensityColorLow = volumetricDensityColorLow;
-			m_volumetricDensityMaterial.SetValue("Values", "fluidColorLow", m_volumetricDensityColorLow);
-		}
-	}
-	void SphFluid3dGpu::SetVolumetricDensityColorHigh(const Float4& volumetricDensityColorHigh)
-	{
-		if (m_forceSetters || m_volumetricDensityColorHigh != volumetricDensityColorHigh)
-		{
-			m_volumetricDensityColorHigh = volumetricDensityColorHigh;
-			m_volumetricDensityMaterial.SetValue("Values", "fluidColorHigh", m_volumetricDensityColorHigh);
+			m_volumetricScattering = scattering;
+			m_volumetricDensityMaterial.SetValue("Values", "scattering", m_volumetricScattering);
 		}
 	}
     // Lighting:
@@ -506,13 +498,9 @@ namespace fluidDynamics
 			m_pendingVolumetricLightingResolutionChange = true;
 		}
 	}
-	void SphFluid3dGpu::SetVolumetricLightingScattering(float volumetricLightingScattering)
-	{
-		m_volumetricLightingScattering = math::Max(0.0f, volumetricLightingScattering);
-	}
 
 
-
+    
 	// Getters:
     // Management:
 	bool SphFluid3dGpu::GetIsRunning() const
@@ -636,13 +624,9 @@ namespace fluidDynamics
     {
         return m_volumetricDensityAbsorption;
     }
-    Float4 SphFluid3dGpu::GetVolumetricDensityColorLow() const
+    Float3 SphFluid3dGpu::GetVolumetricScattering() const
     {
-        return m_volumetricDensityColorLow;
-    }
-    Float4 SphFluid3dGpu::GetVolumetricDensityColorHigh() const
-    {
-        return m_volumetricDensityColorHigh;
+        return m_volumetricScattering;
     }
     // Lighting:
 	bool SphFluid3dGpu::GetRenderVolumetricLight() const
@@ -653,13 +637,6 @@ namespace fluidDynamics
 	{
 		return m_volumetricLightingResolution;
 	}
-	float SphFluid3dGpu::GetVolumetricLightingScattering() const
-	{
-		return m_volumetricLightingScattering;
-	}
-
-
-
 	// Debugging:
 	void SphFluid3dGpu::Print()
 	{
@@ -711,7 +688,7 @@ namespace fluidDynamics
 			{
 				Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 				m_tripleData.fluidBounds[i] = m_settings.fluidBounds;
-				m_tripleData.extinctionCoefficients[i] = m_volumetricDensityAbsorption + m_volumetricLightingScattering;
+				m_tripleData.extinctionCoefficients[i] = Float3(m_volumetricDensityAbsorption) + m_volumetricScattering;
 				SphFluid3dGpuSolver::ComputeDensityTexture3d(m_computeShaders, m_scratchData, m_tripleData, i);
 				if (m_renderVolumetricLight && hasDirectionalLight)
 				{
