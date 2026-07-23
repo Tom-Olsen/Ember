@@ -9,7 +9,7 @@ struct VertexInput
     float3 normal : NORMAL;             // normal in local/model space
     float3 tangent : TANGENT;           // tangent in local/model space
     float4 vertexColor : COLOR;         // vertex color
-    float4 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0;              // texture coordinates
 };
 struct VertexOutput
 {

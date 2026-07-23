@@ -3,6 +3,16 @@
 
 
 
+cbuffer Values : register(b300, SHADER_SET)
+{
+    float targetDensity;
+    float maxVelocity;
+    int colorMode;
+    float renderWidth;
+};
+
+
+
 cbuffer SurfaceProperties : register(b300, CALL_SET)
 {
     float4 diffuseColor;    // (1.0, 1.0, 1.0)
@@ -17,8 +27,6 @@ cbuffer SurfaceProperties : register(b300, CALL_SET)
 struct FragmentInput
 {
     float4 clipPosition : SV_POSITION;  // position in clip space: x,y in [-1,1] z in [0,1]
-    float3 worldNormal : NORMAL;        // normal in world space
-    float3 worldTangent : TANGENT;      // tangent in world space
     float4 vertexColor : COLOR;         // vertex color
     float4 uv : TEXCOORD0;              // texture coordinates
     float3 worldPosition : TEXCOORD1;   // position in world space
@@ -26,15 +34,41 @@ struct FragmentInput
 
 
 
-float4 main(FragmentInput input) : SV_TARGET
+struct FragmentOutput
 {
+    float4 color : SV_TARGET;
+    float depth : SV_Depth;
+};
+
+
+
+FragmentOutput main(FragmentInput input)
+{
+    // Turn square into circle:
+    float2 offset = 2.0f * (input.uv.xy - 0.5f);
+    float offsetSquared = dot(offset, offset);
+    if (offsetSquared > 1.0f)
+        discard;
+
+    // Reconstruct sphere surface:
+    float normalDepth = sqrt(1.0f - offsetSquared);
+    float3 worldNormal = normalize(
+        GetCameraRight() * offset.x
+        + GetCameraUp() * offset.y
+        - GetCameraForward() * normalDepth);
+    float3 worldPosition = input.worldPosition - 0.5f * renderWidth * GetCameraForward() * normalDepth;
+    float4 clipPosition = mul(camera_worldToClipMatrix, float4(worldPosition, 1.0f));
+
     // Shading:
     float4 color = input.vertexColor * diffuseColor;
     
     // Lighting:
     float ambient = 0.3f;
     float3 finalColor = ambient * color.xyz;
-    finalColor += PhysicalLighting(input.worldPosition, input.worldNormal, color.xyz, roughness, reflectivity, metallicity, pc.receiveShadows != 0);
+    finalColor += PhysicalLighting(worldPosition, worldNormal, color.xyz, roughness, reflectivity, metallicity, pc.receiveShadows != 0);
     
-    return float4(finalColor, 1.0f);
+    FragmentOutput output;
+    output.color = float4(finalColor, 1.0f);
+    output.depth = clipPosition.z / clipPosition.w;
+    return output;
 }

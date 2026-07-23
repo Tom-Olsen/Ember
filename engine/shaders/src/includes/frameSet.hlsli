@@ -14,9 +14,28 @@ cbuffer Camera : register(b1399, FRAME_SET)
 
 
 
+// Clip planes:
 float GetCameraNearClip()
 {
     return camera_projMatrix[2][3] / camera_projMatrix[2][2];
+}
+float GetCameraFarClip()
+{
+    return (camera_projMatrix[2][3] - camera_projMatrix[3][3]) / (camera_projMatrix[2][2] - camera_projMatrix[3][2]);
+}
+
+// Camera directions:
+float3 GetCameraRight()
+{
+    return normalize(camera_viewMatrix[0].xyz);
+}
+float3 GetCameraForward()
+{
+    return -normalize(camera_viewMatrix[2].xyz);
+}
+float3 GetCameraUp()
+{
+    return normalize(camera_viewMatrix[1].xyz);
 }
 
 

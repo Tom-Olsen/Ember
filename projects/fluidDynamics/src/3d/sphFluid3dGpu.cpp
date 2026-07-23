@@ -13,6 +13,7 @@ namespace fluidDynamics
 		// Material setup:
 		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial3d");
 		m_volumetricDensityMaterial = MaterialManager::GetMaterial("volumetricDensityMaterial");
+		m_particleMesh = MeshGenerator::Quad();
 		m_volumetricDensityCube = MeshGenerator::Cube();
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
 
@@ -46,20 +47,20 @@ namespace fluidDynamics
 			SetAttractorState(0);
 
 			// Particle visuals:
-			SetRenderParticles(true);
+			SetRenderParticles(false);
 			SetColorMode(0);
 			SetVisualRadius(0.2f);
 
 			// Volumetric visuals:
 			SetRenderVolumetricDensity(true);
 			SetVolumetricDensityResolution(Uint3(160, 120, 100));
-			SetVolumetricDensityRayStepLength(0.1f);
+			SetVolumetricDensityRayStepLength(0.4f);
             SetVolumetricDensityAbsorption(0.0001f);
 			SetVolumetricScattering(Float3(0.01f, 0.04f, 0.08f));
 
             // Lighting:
 			SetRenderVolumetricLight(true);
-			SetVolumetricLightingResolution(Uint3(64));
+			SetVolumetricLightingResolution(Uint3(120));
 		}
 		m_forceSetters = false;
 
@@ -469,7 +470,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_visualRadius != visualRadius)
 		{
 			m_visualRadius = visualRadius;
-			m_particleMesh = MeshGenerator::CubeSphere(m_visualRadius, 2, "fluidParticle");
+			m_particleMaterial.SetValue("Values", "renderWidth", 2.0f * m_visualRadius);
 		}
 	}
     // Volumetric visuals:

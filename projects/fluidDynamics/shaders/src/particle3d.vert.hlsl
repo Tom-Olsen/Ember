@@ -7,6 +7,7 @@ cbuffer Values : register(b300, SHADER_SET)
     float targetDensity;
     float maxVelocity;
     int colorMode;
+    float renderWidth;
 };
 
 
@@ -23,16 +24,11 @@ struct VertexInput
 {
     uint instanceID : SV_InstanceID;    // Instance ID: System value => built in variable
     float3 position : POSITION;         // position in local/model sapce
-    float3 normal : NORMAL;             // normal in local/model space
-    float3 tangent : TANGENT;           // tangent in local/model space
-    float4 vertexColor : COLOR;         // vertex color
-    float4 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0;              // texture coordinates
 };
 struct VertexOutput
 {
     float4 clipPosition : SV_POSITION;  // position in clip space: x,y in [-1,1] z in [0,1]
-    float3 worldNormal : NORMAL;        // normal in world space
-    float3 worldTangent : TANGENT;      // tangent in world space
     float4 vertexColor : COLOR;         // vertex color
     float4 uv : TEXCOORD0;              // texture coordinates
     float3 worldPosition : TEXCOORD1;   // position in world space
@@ -42,28 +38,14 @@ struct VertexOutput
 
 VertexOutput main(VertexInput input)
 {
-    // Get mesh data:
-    float4 pos = float4(input.position, 1.0f);
-    float4 normal = float4(input.normal, 0.0f);
-    float4 tangent = float4(input.tangent, 0.0f);
-    float4x4 localToWorldMatrix = model_localToWorldMatrix;
-    if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
-    {
-        float4x4 positionMatrix = LinAlg_Translate(positionBuffer[input.instanceID]);
-        localToWorldMatrix = mul(model_localToWorldMatrix, positionMatrix);
-    }
-    
-    // Rotate quad towards camera:
-    //float3 dir = normalize(pc.cameraPosition.xyz - pos.xyz);
-    //float4x4 rot = LinAlg_RotateFromTo(float3(0, 0, 1), dir);
-    //localToWorldMatrix = mul(localToWorldMatrix, rot);
-    
-    // Compute clip and normal matrice:
-    float4x4 localToClipMatrix = mul(camera_worldToClipMatrix, localToWorldMatrix);
-    float4x4 normalMatrix = LinAlg_NormalMatrix(localToWorldMatrix);
-    
+    float3 centerLocal = positionBuffer[input.instanceID];
+    float3 centerWorld = mul(model_localToWorldMatrix, float4(centerLocal, 1.0f)).xyz;
+    float2 vertexOffset = renderWidth * (input.uv.xy - 0.5f);
+    float3 vertPosWorld = centerWorld + GetCameraRight() * vertexOffset.x + GetCameraUp() * vertexOffset.y;
+    float4 pos = float4(vertPosWorld, 1.0f);
+
     // Compute vertex color:
-    float4 color = input.vertexColor;
+    float4 color = 1;
     // Color by density:
     if (colorMode == 0 && pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
     {
@@ -79,7 +61,7 @@ VertexOutput main(VertexInput input)
     {
         float t = length(velocityBuffer[input.instanceID]) / maxVelocity;
         float t0 = 2.0f * t;
-        float t1 = 2.0f * t - 1.0f;
+        float t1 = abs(2.0f * t - 1.0f);
         float4 colorA = t0 * float4(1, 1, 1, 1) + (1.0f - t0) * float4(0, 0, 1, 1);
         float4 colorB = t1 * float4(1, 0, 0, 1) + (1.0f - t1) * float4(1, 1, 1, 1);
         color *= (t < 0.5f) ? colorA : colorB;
@@ -96,11 +78,9 @@ VertexOutput main(VertexInput input)
     }
     
     VertexOutput output;
-    output.clipPosition = mul(localToClipMatrix, pos);
-    output.worldNormal = mul(normalMatrix, normal).xyz;
-    output.worldTangent = mul(normalMatrix, tangent).xyz;
+    output.clipPosition = mul(camera_worldToClipMatrix, float4(vertPosWorld, 1.0f));
     output.vertexColor = color;
     output.uv = input.uv;
-    output.worldPosition = mul(localToWorldMatrix, pos).xyz;
+    output.worldPosition = vertPosWorld;
     return output;
 }

@@ -34,6 +34,20 @@ StructuredBuffer<InstanceData> instanceBuffer : register(t199, SHADER_SET);
 
 
 // Functions:
+float3 GetPosition()
+{
+    return LinAlg_GetTranslation(model_localToWorldMatrix);
+}
+float3 GetPosition(uint instanceID)
+{
+    if (pc.instanceCount != 0 && instanceID < pc.instanceCount)
+        return LinAlg_GetTranslation(mul(model_localToWorldMatrix, instanceBuffer[instanceID].localToWorldMatrix));
+    return GetPosition();
+}
+float4x4 GetLocalToWorldMatrix()
+{
+    return model_localToWorldMatrix;
+}
 float4x4 GetLocalToWorldMatrix(uint instanceID)
 {
     if (pc.instanceCount != 0 && instanceID < pc.instanceCount)
