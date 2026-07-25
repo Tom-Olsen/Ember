@@ -9,7 +9,6 @@
 #include "shaderProperties.h"
 #include "transform.h"
 #include "transformHandle.h"
-#include <optional>
 
 
 
@@ -292,18 +291,18 @@ namespace emberEditor
 		Quad quad = Quad(origin, uCorner - origin, vCorner - origin);
 
 		// Ray-quad hit:
-		std::optional<Float3> hit = quad.IntersectRay(ray);
-		if (hit.has_value())
+		RayHit hit = quad.IntersectRay(ray);
+		if (hit.GetHit())
 		{
 			// Radius restriction:
 			float innerRadius = s_arcStart * Size();
 			float outerRadius = s_arcEnd * Size();
-			float radiusSq = Float3::DistanceSq(origin, hit.value());
+			float radiusSq = Float3::DistanceSq(origin, hit.GetPoint());
 			if (radiusSq < innerRadius * innerRadius || radiusSq > outerRadius * outerRadius)
 				return;
 
 			// Check if new hit is closer:
-			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.value());
+			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.GetPoint());
 			if (hitDistanceSq < closestHitDistanceSq)
 			{
 				closestHitDistanceSq = hitDistanceSq;

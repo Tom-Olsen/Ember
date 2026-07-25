@@ -166,11 +166,11 @@ namespace fluidDynamics
 		if (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)) // exlusive or
 		{
 			Ray ray = Scene::GetActiveScene()->GetActiveCamera()->GetClickRay();
-			std::optional<Float3> hit = m_settings.fluidBounds.IntersectRay(ray);
-			if (hit.has_value())
+			RayHit hit = m_settings.fluidBounds.IntersectRay(ray);
+			if (hit.GetHit())
 			{
-				SetAttractorPoint(Float2(hit.value()));
-				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), Float4x4::TRS(hit.value(), Float3x3::identity, Float3(1.0f)), false, false);
+				SetAttractorPoint(Float2(hit.GetPoint()));
+				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), Float4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f)), false, false);
 				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
 					SetAttractorState(1);

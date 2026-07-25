@@ -22,29 +22,31 @@ TEST(Cone, IntersectRaySide)
 {
 	Cone cone(Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 2.0f), 1.0f);
 	Ray ray(Float3(2.0f, 0.0f, 1.0f), Float3::left);	// Surface radius at z=1 is 0.5.
-	std::optional<Float3> hit = cone.IntersectRay(ray);
-	ASSERT_TRUE(hit.has_value());
-	EXPECT_TRUE(hit.value().IsEpsilonEqual(Float3(0.5f, 0.0f, 1.0f)));
+	RayHit hit = cone.IntersectRay(ray);
+	ASSERT_TRUE(hit.GetHit());
+	EXPECT_TRUE(math::IsEpsilonEqual(hit.GetDistance(), 1.5f));
+	EXPECT_TRUE(hit.GetPoint().IsEpsilonEqual(Float3(0.5f, 0.0f, 1.0f)));
+	EXPECT_TRUE(hit.GetNormal().IsEpsilonEqual(Float3(1.0f, 0.0f, -0.5f).Normalize()));
 }
 TEST(Cone, IntersectRayBase)
 {
 	Cone cone(Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 2.0f), 1.0f);
 	Ray ray(Float3(0.0f, 0.0f, 4.0f), Float3::down);
-	std::optional<Float3> hit = cone.IntersectRay(ray);
-	ASSERT_TRUE(hit.has_value());
-	EXPECT_TRUE(hit.value().IsEpsilonEqual(Float3(0.0f, 0.0f, 2.0f)));
+	RayHit hit = cone.IntersectRay(ray);
+	ASSERT_TRUE(hit.GetHit());
+	EXPECT_TRUE(hit.GetPoint().IsEpsilonEqual(Float3(0.0f, 0.0f, 2.0f)));
 }
 TEST(Cone, IntersectRayApex)
 {
 	Cone cone(Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 2.0f), 1.0f);
 	Ray ray(Float3(0.0f, 0.0f, -2.0f), Float3::up);
-	std::optional<Float3> hit = cone.IntersectRay(ray);
-	ASSERT_TRUE(hit.has_value());
-	EXPECT_TRUE(hit.value().IsEpsilonEqual(Float3(0.0f, 0.0f, 0.0f)));
+	RayHit hit = cone.IntersectRay(ray);
+	ASSERT_TRUE(hit.GetHit());
+	EXPECT_TRUE(hit.GetPoint().IsEpsilonEqual(Float3(0.0f, 0.0f, 0.0f)));
 }
 TEST(Cone, IntersectRayMiss)
 {
 	Cone cone(Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 0.0f, 2.0f), 1.0f);
 	Ray ray(Float3(2.0f, 0.0f, 1.0f), Float3::up);	// Runs parallel to the axis, outside the surface.
-	EXPECT_FALSE(cone.IntersectRay(ray).has_value());
+	EXPECT_FALSE(cone.IntersectRay(ray).GetHit());
 }

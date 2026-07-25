@@ -77,19 +77,22 @@ namespace emberMath
 	{
 		return localBounds.Contains(WorldToLocalPoint(point));
 	}
-	std::optional<Float3> RotatedBounds::IntersectRay(const Ray& ray) const
+	RayHit RotatedBounds::IntersectRay(const Ray& ray) const
 	{
 		Float3 localOrigin = WorldToLocalPoint(ray.origin);
 		Float3 localDirection = WorldToLocalDirection(ray.direction);
 		if (localDirection.IsEpsilonZero())
-			return std::nullopt;
+			return RayHit();
 
 		Ray localRay(localOrigin, localDirection);
-		std::optional<Float3> localHit = localBounds.IntersectRay(localRay);
-		if (!localHit.has_value())
-			return std::nullopt;
+		RayHit localHit = localBounds.IntersectRay(localRay);
+		if (!localHit.GetHit())
+			return RayHit();
 
-		return LocalToWorldPoint(localHit.value());
+		Float3 point = LocalToWorldPoint(localHit.GetPoint());
+		Float3 normal = LocalToWorldDirection(localHit.GetNormal()).Normalize();
+		float distance = Float3::Dot(point - ray.origin, ray.direction);
+		return RayHit(distance, point, normal);
 	}
 
 

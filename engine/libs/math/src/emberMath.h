@@ -24,8 +24,10 @@
 #include "capsule.h"
 #include "cone.h"
 #include "geometry3d.h"
+#include "plane.h"
 #include "quad.h"
 #include "ray.h"
+#include "rayHit.h"
 #include "sphere.h"
 #include "rotatedBounds.h"
 

@@ -9,7 +9,6 @@
 #include "shaderProperties.h"
 #include "transform.h"
 #include "transformHandle.h"
-#include <optional>
 
 
 
@@ -277,15 +276,15 @@ namespace emberEditor
 			m_dragPlaneNormal = m_dragPlaneNormal.Normalize();
 		}
 
-        // Find initial hit point on drag plane:
-		std::optional<Float3> hit = ray.HitOnPlane(m_dragStartPosition, m_dragPlaneNormal);
-		if (!hit.has_value())
+		// Find initial hit point on drag plane:
+		RayHit hit = Plane(m_dragStartPosition, m_dragPlaneNormal).IntersectRay(ray);
+		if (!hit.GetHit())
 		{
 			m_activeSubHandle = TranslateHandle::SubHandle::none;
 			emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
 			return;
 		}
-		m_dragStartHitPoint = hit.value();
+		m_dragStartHitPoint = hit.GetPoint();
 		m_dragGrabOffset = (m_dragStartHitPoint - m_dragStartPosition) / Size();
 
         // Start drag:
@@ -307,15 +306,15 @@ namespace emberEditor
 
         // Update entity (and handle) position:
 		Ray ray = HandleContext::GetCamera()->GetViewportRay(HandleContext::GetViewportMousePos01());
-		std::optional<Float3> hit = ray.HitOnPlane(m_dragStartPosition, m_dragPlaneNormal);
-		if (hit.has_value())
+		RayHit hit = Plane(m_dragStartPosition, m_dragPlaneNormal).IntersectRay(ray);
+		if (hit.GetHit())
 		{
 			if (IsPlaneSubHandle(m_activeSubHandle))
 			{
 				// Small fixed point iteration:
 				Float3 position = m_pHandleTarget->GetPosition();
 				for (int i = 0; i < 4; i++)
-					position = hit.value() - SizeAtPosition(position) * m_dragGrabOffset;
+					position = hit.GetPoint() - SizeAtPosition(position) * m_dragGrabOffset;
 				position = ApplyDragSnap(position);
 				m_pHandleTarget->SetPosition(position);
 			}
@@ -324,7 +323,7 @@ namespace emberEditor
 				// ResolveAxisDragPosition:
 				Float3 position = m_pHandleTarget->GetPosition();
 				float grabOffset = Float3::Dot(m_dragGrabOffset, m_dragAxisDir);
-				float hitDistance = Float3::Dot(hit.value() - m_dragStartPosition, m_dragAxisDir);
+				float hitDistance = Float3::Dot(hit.GetPoint() - m_dragStartPosition, m_dragAxisDir);
 				// Small fixed point iteration:
 				for (int i = 0; i < 4; i++)
 				{
@@ -471,10 +470,10 @@ namespace emberEditor
 		Capsule capsule = Capsule(point0, point1, radius * Size());
 
 		// Ray-capsule hit:
-		std::optional<Float3> hit = capsule.IntersectRay(ray);
-		if (hit.has_value())
+		RayHit hit = capsule.IntersectRay(ray);
+		if (hit.GetHit())
 		{
-			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.value());
+			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.GetPoint());
 			if (hitDistanceSq < closestHitDistanceSq)
 			{
 				closestHitDistanceSq = hitDistanceSq;
@@ -489,9 +488,9 @@ namespace emberEditor
 
 		// Ray-arrow-head-capsule hit:
 		hit = headCapsule.IntersectRay(ray);
-		if (hit.has_value())
+		if (hit.GetHit())
 		{
-			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.value());
+			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.GetPoint());
 			if (hitDistanceSq < closestHitDistanceSq)
 			{
 				closestHitDistanceSq = hitDistanceSq;
@@ -510,12 +509,12 @@ namespace emberEditor
 		Quad quad = Quad(origin, uCorner - origin, vCorner - origin);
 
 		// Ray-quad hit:
-		std::optional<Float3> hit = quad.IntersectRay(ray);
-		if (!hit.has_value())
+		RayHit hit = quad.IntersectRay(ray);
+		if (!hit.GetHit())
 			return;
 
 		// Check if new hit is closer:
-		float hitDistance = Float3::DistanceSq(ray.origin, hit.value());
+		float hitDistance = Float3::DistanceSq(ray.origin, hit.GetPoint());
 		if (hitDistance < closestHitDistanceSq)
 		{
 			closestHitDistanceSq = hitDistance;

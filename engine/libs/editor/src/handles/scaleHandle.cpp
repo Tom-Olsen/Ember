@@ -9,7 +9,6 @@
 #include "shaderProperties.h"
 #include "transform.h"
 #include "transformHandle.h"
-#include <optional>
 
 
 
@@ -203,14 +202,14 @@ namespace emberEditor
 			m_dragPlaneNormal = m_dragPlaneNormal.Normalize();
 
 			// Find initial hit point on drag plane:
-			std::optional<Float3> hit = ray.HitOnPlane(m_dragStartPosition, m_dragPlaneNormal);
-			if (!hit.has_value())
+			RayHit hit = Plane(m_dragStartPosition, m_dragPlaneNormal).IntersectRay(ray);
+			if (!hit.GetHit())
 			{
 				m_activeSubHandle = ScaleHandle::SubHandle::none;
 				emberCore::EventSystem::UnlockMouseButton(emberCommon::Input::MouseButton::Left);
 				return;
 			}
-			m_dragStartHitPoint = hit.value();
+			m_dragStartHitPoint = hit.GetPoint();
 
 			// Resolve initial grab fraction:
 			float axisLength = m_dragStartHandleSize * (s_axisLength - s_cubeWidth);
@@ -252,12 +251,12 @@ namespace emberEditor
 		else // Axis scaling:
 		{
 			Ray ray = HandleContext::GetCamera()->GetViewportRay(HandleContext::GetViewportMousePos01());
-			std::optional<Float3> hit = ray.HitOnPlane(m_dragStartPosition, m_dragPlaneNormal);
-			if (hit.has_value())
+			RayHit hit = Plane(m_dragStartPosition, m_dragPlaneNormal).IntersectRay(ray);
+			if (hit.GetHit())
 			{
 				// Resolve axis scale factor:
 				float axisLength = m_dragStartHandleSize * (s_axisLength - s_cubeWidth);
-				float hitDistance = Float3::Dot(hit.value() - m_dragStartPosition, m_dragAxisDir);
+				float hitDistance = Float3::Dot(hit.GetPoint() - m_dragStartPosition, m_dragAxisDir);
 				m_dragAxisLengthFactor = hitDistance / (m_grabAxisFraction * axisLength);
 				m_dragAxisLengthFactor = SetScale(m_activeSubHandle, m_dragAxisLengthFactor);
 			}
@@ -379,11 +378,11 @@ namespace emberEditor
 		Capsule capsule = Capsule(point0, point1, radius * Size());
 
 		// Ray-capsule hit:
-		std::optional<Float3> hit = capsule.IntersectRay(ray);
-		if (hit.has_value())
+		RayHit hit = capsule.IntersectRay(ray);
+		if (hit.GetHit())
 		{
 		    // Check if new hit is closer:
-			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.value());
+			float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.GetPoint());
 			if (hitDistanceSq < closestHitDistanceSq)
 			{
 				closestHitDistanceSq = hitDistanceSq;
@@ -397,12 +396,12 @@ namespace emberEditor
 		// Ray-sphere hit:
         float cubeRadius = 0.5f * math::sqrt3 * s_cubeWidth;
 		Sphere sphere = Sphere(cubeWorldPosition, cubeRadius * Size());
-		std::optional<Float3> hit = sphere.IntersectRay(ray);
-		if (!hit.has_value())
+		RayHit hit = sphere.IntersectRay(ray);
+		if (!hit.GetHit())
 			return;
 
 		// Check if new hit is closer:
-		float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.value());
+		float hitDistanceSq = Float3::DistanceSq(ray.origin, hit.GetPoint());
 		if (hitDistanceSq < closestHitDistanceSq)
 		{
 			closestHitDistanceSq = hitDistanceSq;

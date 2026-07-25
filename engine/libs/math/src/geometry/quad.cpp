@@ -1,5 +1,6 @@
 #include "quad.h"
 #include "mathFunctions.h"
+#include "plane.h"
 #include <sstream>
 
 
@@ -43,22 +44,22 @@ namespace emberMath
 		float v = math::IsEpsilonZero(vLengthSq) ? 0.0f : math::Clamp(Float3::Dot(rel, vAxis) / vLengthSq, 0.0f, 1.0f);
 		return origin + u * uAxis + v * vAxis;
 	}
-	std::optional<Float3> Quad::IntersectRay(const Ray& ray) const
+	RayHit Quad::IntersectRay(const Ray& ray) const
 	{
-		std::optional<Float3> hit = ray.HitOnPlane(origin, GetNormal());
-		if (!hit.has_value())
-			return std::nullopt;
+		RayHit hit = Plane(origin, GetNormal()).IntersectRay(ray);
+		if (!hit.GetHit())
+			return RayHit();
 
-		Float3 rel = hit.value() - origin;
+		Float3 rel = hit.GetPoint() - origin;
 		float uLengthSq = uAxis.LengthSq();
 		float vLengthSq = vAxis.LengthSq();
 		if (math::IsEpsilonZero(uLengthSq) || math::IsEpsilonZero(vLengthSq))
-			return std::nullopt;
+			return RayHit();
 
 		float u = Float3::Dot(rel, uAxis) / uLengthSq;
 		float v = Float3::Dot(rel, vAxis) / vLengthSq;
 		if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f)
-			return std::nullopt;
+			return RayHit();
 
 		return hit;
 	}
