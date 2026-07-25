@@ -11,10 +11,7 @@ namespace emberMath
     RayHit::RayHit()
         : m_hit(false), m_distance(math::maxValue), m_point(Float3::zero), m_normal(Float3::zero) {}
     RayHit::RayHit(float distance, const Float3& point, const Float3& normal)
-        : m_hit(true), m_distance(distance), m_point(point), m_normal(normal)
-    {
-
-    }
+        : m_hit(true), m_distance(distance), m_point(point), m_normal(normal) {}
 
 
 

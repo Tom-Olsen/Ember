@@ -134,7 +134,7 @@ int main()
 	{
 		// Initialization:
 		emberApplication::Application::CreateInfo appCreateInfo = {};
-		appCreateInfo.vSyncEnabled = true;
+		appCreateInfo.vSyncEnabled = false;
 		appCreateInfo.framesInFlight = 2;
 		appCreateInfo.msaaSampleCount = emberCommon::MsaaSampleCount::sampleCount04;
 		appCreateInfo.windowWidth  = 2560; //1920;
@@ -152,7 +152,7 @@ int main()
 		Material particleMaterial3d = Material::CreateForward(emberCommon::RenderMode::opaque, "particleMaterial3d", emberCommon::RenderQueue::opaque, directoryPath / "particle3d.vert.spv", directoryPath / "particle3d.frag.spv");
 		Material particleShadowMaterial3d = Material::CreateShadow("particleShadowMaterial3d", directoryPath / "particle3dShadow.vert.spv");
 		particleMaterial3d.SetShadowMaterial(particleShadowMaterial3d);
-        Material volumetricDensityMaterial = Material::CreateForward(emberCommon::RenderMode::transparent, "volumetricDensityMaterial", emberCommon::RenderQueue::transparent, directoryPath / "volumetricDensity.vert.spv", directoryPath / "volumetricDensity.frag.spv");
+        Material volumeRaycastMaterial = Material::CreateForward(emberCommon::RenderMode::transparent, "volumeRaycastMaterial", emberCommon::RenderQueue::transparent, directoryPath / "volumeRaycast.vert.spv", directoryPath / "volumeRaycast.frag.spv");
 
 		// Create scene:
 		//Scene* pScene = Fluid2dCpuScene();
