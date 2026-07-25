@@ -22,6 +22,8 @@ namespace emberEcs
 		m_pMesh = nullptr;
 		m_material = MaterialManager::GetMaterial("errorMaterial");
 		m_shaderProperties = ShaderProperties(m_material);
+
+		m_raycastEnabled = true;
 	}
 	MeshRenderer::~MeshRenderer()
 	{
@@ -55,6 +57,10 @@ namespace emberEcs
 			m_material = material;
 			m_shaderProperties = ShaderProperties{ material };
 		}
+	}
+	void MeshRenderer::SetRaycastEnabled(bool raycastEnabled)
+	{
+		m_raycastEnabled = raycastEnabled;
 	}
 
 
@@ -103,6 +109,10 @@ namespace emberEcs
 	ShaderProperties& MeshRenderer::GetShaderProperties()
 	{
 		return m_shaderProperties;
+	}
+	bool MeshRenderer::GetRaycastEnabled() const
+	{
+		return m_raycastEnabled;
 	}
 
 

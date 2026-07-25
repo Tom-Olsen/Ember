@@ -43,6 +43,7 @@ inline Scene* ShadowCascadeScene()
 		pMeshRenderer->GetMaterial().SetTexture("colorMap", TextureManager::GetTexture("skybox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
+		pMeshRenderer->SetRaycastEnabled(false);
 	}
 	//{// ThreeLeg:
 	//	Entity entity = Entity::Create("threeLeg");

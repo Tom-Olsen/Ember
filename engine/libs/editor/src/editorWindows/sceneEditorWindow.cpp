@@ -4,6 +4,7 @@
 #include "editorSelection.h"
 #include "emberTime.h"
 #include "entity.inl"
+#include "eventSystem.h"
 #include "gui.h"
 #include "handleContext.h"
 #include "meshRenderer.h"
@@ -70,6 +71,17 @@ namespace emberEditor
 			m_transformHandleTarget.SetTransform(nullptr);
             m_transformHandle.ClearTarget();
         }
+
+		if (pScene != nullptr
+			&& pScene->GetActiveCamera() != nullptr
+			&& m_isHovered
+			&& m_isMouseInsideViewport
+			&& !m_transformHandle.GetIsDragging()
+			&& emberCore::EventSystem::MouseDown(emberCommon::Input::MouseButton::Left))
+		{
+			EditorSelection::SelectEntityByMouse(*pScene);
+			emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
+		}
     }
     void SceneEditorWindow::Render()
     {

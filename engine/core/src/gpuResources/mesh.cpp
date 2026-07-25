@@ -196,6 +196,10 @@ namespace emberCore
     {
         return m_bounds;
     }
+	RayMeshHit Mesh::IntersectRay(const Ray& localRay) const
+	{
+		return geometry3d::IntersectRayMesh(localRay, m_positions, m_triangles, m_bounds);
+	}
 	void Mesh::RegisterUpdate(bool updateBounds)
 	{
 		if (updateBounds)

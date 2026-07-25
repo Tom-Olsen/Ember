@@ -28,6 +28,7 @@
 #include "quad.h"
 #include "ray.h"
 #include "rayHit.h"
+#include "rayMeshHit.h"
 #include "rayTriangleHit.h"
 #include "sphere.h"
 #include "rotatedBounds.h"

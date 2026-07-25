@@ -90,6 +90,7 @@ namespace emberCore
 		std::vector<Float4>& GetUVs();
 		std::vector<Uint3>& GetTriangles();
         Bounds GetBounds() const;
+		RayMeshHit IntersectRay(const Ray& localRay) const;
 		void RegisterUpdate(bool updateBounds = true);
 		Mesh GetCopy(const std::string& newName = "");
 
