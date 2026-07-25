@@ -471,6 +471,7 @@ namespace fluidDynamics
 		{
 			m_visualRadius = visualRadius;
 			m_particleMaterial.SetValue("Values", "renderWidth", 2.0f * m_visualRadius);
+			m_particleMaterial.GetShadowMaterial().SetValue("Values", "renderWidth", 2.0f * m_visualRadius);
 		}
 	}
     // Volumetric visuals:
