@@ -17,8 +17,8 @@ struct VertexOutput
 
 VertexOutput main(VertexInput input)
 {
-    float4x4 localToWorldMatrix = GetLocalToWorldMatrix(0);
-    float4x4 localToClipMatrix = GetLocalToClipMatrix(0, localToWorldMatrix);
+    float4x4 localToWorldMatrix = Model_GetLocalToWorldMatrix(0);
+    float4x4 localToClipMatrix = Model_GetLocalToClipMatrix(0, localToWorldMatrix);
 
     VertexOutput output;
     output.positionClip = mul(localToClipMatrix, float4(input.positionLocal, 1.0f));

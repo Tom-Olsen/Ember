@@ -53,10 +53,10 @@ FragmentOutput main(FragmentInput input)
     // Reconstruct sphere surface:
     float normalDepth = sqrt(1.0f - offsetSquared);
     float3 worldNormal = normalize(
-        GetCameraRight() * offset.x
-        + GetCameraUp() * offset.y
-        - GetCameraForward() * normalDepth);
-    float3 worldPosition = input.worldPosition - 0.5f * renderWidth * GetCameraForward() * normalDepth;
+        Camera_GetRight() * offset.x
+        + Camera_GetUp() * offset.y
+        - Camera_GetForward() * normalDepth);
+    float3 worldPosition = input.worldPosition - 0.5f * renderWidth * Camera_GetForward() * normalDepth;
     float4 clipPosition = mul(camera_worldToClipMatrix, float4(worldPosition, 1.0f));
 
     // Shading:

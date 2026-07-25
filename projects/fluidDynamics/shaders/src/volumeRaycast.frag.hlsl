@@ -41,7 +41,7 @@ bool RayBoxIntersection(float3 rayOrigin, float3 rayDirection, float3 boxMin, fl
 float GetNearPlaneRayStartLocal(float3 cameraPositionLocal, float3 rayDirectionLocal, float3 rayDirectionWorld)
 {
     float3 rayDirectionCamera = mul(camera_viewMatrix, float4(rayDirectionWorld, 0.0f)).xyz;
-    float rayStartWorld = -GetCameraNearClip() / rayDirectionCamera.z;
+    float rayStartWorld = -Camera_GetNearClip() / rayDirectionCamera.z;
     float3 nearPlanePositionWorld = camera_position.xyz + rayDirectionWorld * rayStartWorld;
     float3 nearPlanePositionLocal = mul(model_worldToLocalMatrix, float4(nearPlanePositionWorld, 1.0f)).xyz;
     return dot(nearPlanePositionLocal - cameraPositionLocal, rayDirectionLocal);

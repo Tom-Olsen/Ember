@@ -41,7 +41,7 @@ VertexOutput main(VertexInput input)
     float3 centerLocal = positionBuffer[input.instanceID];
     float3 centerWorld = mul(model_localToWorldMatrix, float4(centerLocal, 1.0f)).xyz;
     float2 vertexOffset = renderWidth * (input.uv.xy - 0.5f);
-    float3 vertPosWorld = centerWorld + GetCameraRight() * vertexOffset.x + GetCameraUp() * vertexOffset.y;
+    float3 vertPosWorld = centerWorld + Camera_GetRight() * vertexOffset.x + Camera_GetUp() * vertexOffset.y;
     float4 pos = float4(vertPosWorld, 1.0f);
 
     // Compute vertex color:
