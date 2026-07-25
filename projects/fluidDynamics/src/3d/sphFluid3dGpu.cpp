@@ -12,7 +12,7 @@ namespace fluidDynamics
 	{
 		// Material setup:
 		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial3d");
-		m_volumetricDensityMaterial = MaterialManager::GetMaterial("volumetricDensityMaterial");
+		m_volumeRaycastMaterial = MaterialManager::GetMaterial("volumeRaycastMaterial");
 		m_particleMesh = MeshGenerator::Quad();
 		m_volumetricDensityCube = MeshGenerator::Cube();
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
@@ -243,19 +243,19 @@ namespace fluidDynamics
 				}
 
                 // Set shader values and bind textures:
-				m_volumetricDensityMaterial.SetValue("Values", "fluidSize", fluidBounds.localBounds.GetSize());
-				m_volumetricDensityMaterial.SetValue("Values", "absorption", m_volumetricDensityAbsorption);
-				m_volumetricDensityMaterial.SetValue("Values", "fluidToLightMatrix", fluidToLightMatrix);
-				m_volumetricDensityMaterial.SetValue("Values", "renderVolumetricLight", static_cast<int>(renderVolumetricLight));
-				m_volumetricDensityMaterial.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
-				m_volumetricDensityMaterial.SetTexture("opticalDepthTexture", m_tripleData.opticalDepthTexture3d[readDataIndex]);
+				m_volumeRaycastMaterial.SetValue("Values", "fluidSize", fluidBounds.localBounds.GetSize());
+				m_volumeRaycastMaterial.SetValue("Values", "absorption", m_volumetricDensityAbsorption);
+				m_volumeRaycastMaterial.SetValue("Values", "fluidToLightMatrix", fluidToLightMatrix);
+				m_volumeRaycastMaterial.SetValue("Values", "renderVolumetricLight", static_cast<int>(renderVolumetricLight));
+				m_volumeRaycastMaterial.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
+				m_volumeRaycastMaterial.SetTexture("opticalDepthTexture", m_tripleData.opticalDepthTexture3d[readDataIndex]);
 
                 // Draw density cube mesh:
 				Float4x4 densityCubeLocalToWorld = localToWorld
 					* Float4x4::Translate(fluidBounds.localBounds.center)
 					* fluidBounds.GetRotation4x4()
 					* Float4x4::Scale(fluidBounds.localBounds.GetSize());
-				Renderer::DrawMesh(m_volumetricDensityCube, m_volumetricDensityMaterial, densityCubeLocalToWorld, false, false, emberCommon::CullMode::front);
+				Renderer::DrawMesh(m_volumetricDensityCube, m_volumeRaycastMaterial, densityCubeLocalToWorld, false, false, emberCommon::CullMode::front);
 			}
 		}
 	}
@@ -493,7 +493,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_volumetricDensityRayStepLength != volumetricDensityRayStepLength)
 		{
 			m_volumetricDensityRayStepLength = volumetricDensityRayStepLength;
-			m_volumetricDensityMaterial.SetValue("Values", "rayStepLengthSimulation", m_volumetricDensityRayStepLength);
+			m_volumeRaycastMaterial.SetValue("Values", "rayStepLengthSimulation", m_volumetricDensityRayStepLength);
 		}
 	}
 	void SphFluid3dGpu::SetVolumetricDensityAbsorption(float volumetricDensityAbsorption)
@@ -508,7 +508,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_volumetricScattering != scattering)
 		{
 			m_volumetricScattering = scattering;
-			m_volumetricDensityMaterial.SetValue("Values", "scattering", m_volumetricScattering);
+			m_volumeRaycastMaterial.SetValue("Values", "scattering", m_volumetricScattering);
 		}
 	}
     // Lighting:

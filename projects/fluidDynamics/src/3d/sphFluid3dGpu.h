@@ -60,7 +60,7 @@ namespace fluidDynamics
 		Mesh m_attractorSphereMesh;
 		Mesh m_volumetricDensityCube;
 		Material m_particleMaterial;
-		Material m_volumetricDensityMaterial;
+		Material m_volumeRaycastMaterial;
 		ShaderProperties m_shaderProperties;
 
 		// Editor Window:
