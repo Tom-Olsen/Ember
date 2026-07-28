@@ -32,8 +32,8 @@ namespace vulkanRendererBackend
 		ComputeShader& operator=(const ComputeShader&) = delete;
 
 		// Movable:
-		ComputeShader(ComputeShader&& other) noexcept = default;
-		ComputeShader& operator=(ComputeShader&& other) noexcept = default;
+		ComputeShader(ComputeShader&& other) noexcept;
+		ComputeShader& operator=(ComputeShader&& other) noexcept;
 
 		// Getters:
 		const std::string& GetName() const override;

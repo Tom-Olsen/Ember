@@ -1,6 +1,6 @@
 #include "mathFunctions.h"
 #include <cassert>
-#include <math.h>
+#include <cmath>
 #include <stdexcept>
 
 

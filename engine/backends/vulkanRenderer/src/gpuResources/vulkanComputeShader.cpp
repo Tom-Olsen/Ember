@@ -50,6 +50,10 @@ namespace vulkanRendererBackend
 	{
 	
 	}
+
+	// Movable:
+	ComputeShader::ComputeShader(ComputeShader&& other) noexcept = default;
+	ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept = default;
 	
 	
 	
