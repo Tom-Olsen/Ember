@@ -13,9 +13,6 @@
 namespace emberMath
 {
 	// Constructors:
-	Int3::Int3() : x(0), y(0), z(0) {}
-	Int3::Int3(int xyz) : x(xyz), y(xyz), z(xyz) {}
-	Int3::Int3(int x, int y, int z) : x(x), y(y), z(z) {}
 	Int3::Int3(const Int2& xy, int z) : x(xy.x), y(xy.y), z(z) {}
 	Int3::Int3(const Uint2& xy, int z) : x((int)xy.x), y((int)xy.y), z(z) {}
 	Int3::Int3(const Float2& xy, int z) : x((int)xy.x), y((int)xy.y), z(z) {}
@@ -192,16 +189,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	Int3 Int3::zero = Int3(0);
-	Int3 Int3::one = Int3(1);
-	Int3 Int3::right = Int3(1, 0, 0);
-	Int3 Int3::left = Int3(-1, 0, 0);
-	Int3 Int3::up = Int3(0, 1, 0);
-	Int3 Int3::down = Int3(0, -1, 0);
-	Int3 Int3::forward = Int3(0, 0, 1);
-	Int3 Int3::backward = Int3(0, 0, -1);
 }

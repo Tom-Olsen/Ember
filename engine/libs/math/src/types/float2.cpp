@@ -11,9 +11,6 @@
 namespace emberMath
 {
 	// Constructors:
-	Float2::Float2() : x(0), y(0) {}
-	Float2::Float2(float xy) : x(xy), y(xy) {}
-	Float2::Float2(float x, float y) : x(x), y(y) {}
 	Float2::Float2(const Float2& xy) : x(xy.x), y(xy.y) {}
 	Float2::Float2(const Float3& xy) : x(xy.x), y(xy.y) {}
 	Float2::Float2(const Float4& xy) : x(xy.x), y(xy.y) {}
@@ -298,19 +295,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	// Numbers:
-	Float2 Float2::zero = Float2(0.0f);
-	Float2 Float2::one = Float2(1.0f);
-	Float2 Float2::maxValue = Float2(math::maxValue);
-	Float2 Float2::minValue = Float2(math::minValue);
-
-	// Directions:
-	Float2 Float2::right = Float2(1.0f, 0.0f);
-	Float2 Float2::left = Float2(-1.0f, 0.0f);
-	Float2 Float2::forward = Float2(0.0f, 1.0f);
-	Float2 Float2::back = Float2(0.0f, -1.0f);
 }

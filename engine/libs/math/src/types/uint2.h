@@ -21,9 +21,9 @@ namespace emberMath
 		uint32_t x, y;
 
 		// Constructors:
-		Uint2();
-		Uint2(uint32_t xy);
-		Uint2(uint32_t x, uint32_t y);
+		constexpr Uint2() : x(0), y(0) {}
+		constexpr Uint2(uint32_t xy) : x(xy), y(xy) {}
+		constexpr Uint2(uint32_t x, uint32_t y) : x(x), y(y) {}
 		Uint2(const Uint2& xy);
 		Uint2(const Int2& xy);
 		Uint2(const Float2& xy);
@@ -73,9 +73,15 @@ namespace emberMath
 		friend std::ostream& operator<<(std::ostream& os, const Uint2& value);
 
 		// Static members:
-		static Uint2 zero;
-		static Uint2 one;
-		static Uint2 right;		// +x = ( 1, 0, 0).
-		static Uint2 forward;	// +y = ( 0, 1, 0).
+		static const Uint2 zero;
+		static const Uint2 one;
+		static const Uint2 right;		// +x = ( 1, 0, 0).
+		static const Uint2 forward;		// +y = ( 0, 1, 0).
 	};
+
+	// Static members:
+	inline constexpr Uint2 Uint2::zero(0);
+	inline constexpr Uint2 Uint2::one(1);
+	inline constexpr Uint2 Uint2::right(1, 0);
+	inline constexpr Uint2 Uint2::forward(0, 1);
 }

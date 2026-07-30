@@ -13,25 +13,6 @@
 namespace emberMath
 {
 	// Constructors:
-	Float3x3::Float3x3
-	(float xx, float xy, float xz,	// column 0
-     float yx, float yy, float yz,	// column 1
-     float zx, float zy, float zz)	// column 2
-	{
-		data[0] = xx; data[3] = yx; data[6] = zx;
-		data[1] = xy; data[4] = yy; data[7] = zy;
-		data[2] = xz; data[5] = yz; data[8] = zz;
-	}
-	Float3x3::Float3x3()
-	{
-		for (uint32_t i = 0; i < 9; i++)
-			data[i] = 0.0f;
-	}
-	Float3x3::Float3x3(float value)
-	{
-		for (uint32_t i = 0; i < 9; i++)
-			data[i] = value;
-	}
 	Float3x3::Float3x3(const float* const array)
 	{
 		for (uint32_t i = 0; i < 9; i++)
@@ -481,39 +462,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	// Numbers:
-	Float3x3 Float3x3::zero = Float3x3(0.0f);
-	Float3x3 Float3x3::identity = Float3x3
-    (1.0f, 0.0f, 0.0f,
-     0.0f, 1.0f, 0.0f,
-     0.0f, 0.0f, 1.0f);
-	Float3x3 Float3x3::maxValue = Float3x3(math::maxValue);
-	Float3x3 Float3x3::minValue = Float3x3(math::minValue);
-
-	// Rotations:
-	Float3x3 Float3x3::rot45x = Float3x3::RotateX(math::pi4);
-	Float3x3 Float3x3::rot45y = Float3x3::RotateY(math::pi4);
-	Float3x3 Float3x3::rot45z = Float3x3::RotateZ(math::pi4);
-	Float3x3 Float3x3::rot90x = Float3x3::RotateX(math::pi2);
-	Float3x3 Float3x3::rot90y = Float3x3::RotateY(math::pi2);
-	Float3x3 Float3x3::rot90z = Float3x3::RotateZ(math::pi2);
-	Float3x3 Float3x3::rot135x = Float3x3::RotateX(3.0f * math::pi4);
-	Float3x3 Float3x3::rot135y = Float3x3::RotateY(3.0f * math::pi4);
-	Float3x3 Float3x3::rot135z = Float3x3::RotateZ(3.0f * math::pi4);
-	Float3x3 Float3x3::rot180x = Float3x3::RotateX(math::pi);
-	Float3x3 Float3x3::rot180y = Float3x3::RotateY(math::pi);
-	Float3x3 Float3x3::rot180z = Float3x3::RotateZ(math::pi);
-	Float3x3 Float3x3::rot225x = Float3x3::RotateX(5.0f * math::pi4);
-	Float3x3 Float3x3::rot225y = Float3x3::RotateY(5.0f * math::pi4);
-	Float3x3 Float3x3::rot225z = Float3x3::RotateZ(5.0f * math::pi4);
-	Float3x3 Float3x3::rot270x = Float3x3::RotateX(-math::pi2);
-	Float3x3 Float3x3::rot270y = Float3x3::RotateY(-math::pi2);
-	Float3x3 Float3x3::rot270z = Float3x3::RotateZ(-math::pi2);
-	Float3x3 Float3x3::rot315x = Float3x3::RotateX(-math::pi4);
-	Float3x3 Float3x3::rot315y = Float3x3::RotateY(-math::pi4);
-	Float3x3 Float3x3::rot315z = Float3x3::RotateZ(-math::pi4);
 }

@@ -22,10 +22,11 @@ namespace emberMath
 		// xz yz zz   2  5  8   [2,0] [2,1] [2,2]
 
 	private:
-		Float3x3
+		constexpr Float3x3
 		(float xx, float xy, float xz,	// column 0
 		 float yx, float yy, float yz,	// column 1
-		 float zx, float zy, float zz);	// column 2
+		 float zx, float zy, float zz)	// column 2
+			: data{ xx, xy, xz, yx, yy, yz, zx, zy, zz } {}
 
 	public:
 		// Members:
@@ -33,8 +34,8 @@ namespace emberMath
 		float data[size];
 
 		// Constructors:
-		Float3x3();
-		Float3x3(float value);
+		constexpr Float3x3() : data{} {}
+		constexpr Float3x3(float value) : data{ value, value, value, value, value, value, value, value, value } {}
 		Float3x3(const float* const array);
 		Float3x3(const Float3x3& other);
 		explicit Float3x3(const Float4x4& other);
@@ -116,32 +117,62 @@ namespace emberMath
 		friend std::ostream& operator<<(std::ostream& os, const Float3x3& value);
 
 		// Static members:
-		static Float3x3 zero;		// zero matrix.
-		static Float3x3 identity;	// identity matrix.
-		static Float3x3 maxValue;	// all entries are math::maxValue.
-		static Float3x3 minValue;	// all entries are math::minValue.
+		static const Float3x3 zero;		// zero matrix.
+		static const Float3x3 identity;	// identity matrix.
+		static const Float3x3 maxValue;	// all entries are math::maxValue.
+		static const Float3x3 minValue;	// all entries are math::minValue.
 
 		// Rotations:
-		static Float3x3 rot45x;		// 45 degrees rotation around x-axis.
-		static Float3x3 rot45y;		// 45 degrees rotation around y-axis.
-		static Float3x3 rot45z;		// 45 degrees rotation around z-axis.
-		static Float3x3 rot90x;		// 90 degrees rotation around x-axis.
-		static Float3x3 rot90y;		// 90 degrees rotation around y-axis.
-		static Float3x3 rot90z;		// 90 degrees rotation around z-axis.
-		static Float3x3 rot135x;	// 135 degrees rotation around x-axis.
-		static Float3x3 rot135y;	// 135 degrees rotation around y-axis.
-		static Float3x3 rot135z;	// 135 degrees rotation around z-axis.
-		static Float3x3 rot180x;	// 180 degrees rotation around x-axis.
-		static Float3x3 rot180y;	// 180 degrees rotation around y-axis.
-		static Float3x3 rot180z;	// 180 degrees rotation around z-axis.
-		static Float3x3 rot225x;	// 225 degrees rotation around x-axis.
-		static Float3x3 rot225y;	// 225 degrees rotation around y-axis.
-		static Float3x3 rot225z;	// 225 degrees rotation around z-axis.
-		static Float3x3 rot270x;	// 270 degrees rotation around x-axis.
-		static Float3x3 rot270y;	// 270 degrees rotation around y-axis.
-		static Float3x3 rot270z;	// 270 degrees rotation around z-axis.
-		static Float3x3 rot315x;	// 315 degrees rotation around x-axis.
-		static Float3x3 rot315y;	// 315 degrees rotation around y-axis.
-		static Float3x3 rot315z;	// 315 degrees rotation around z-axis.
+		static const Float3x3 rot45x;	// 45 degrees rotation around x-axis.
+		static const Float3x3 rot45y;	// 45 degrees rotation around y-axis.
+		static const Float3x3 rot45z;	// 45 degrees rotation around z-axis.
+		static const Float3x3 rot90x;	// 90 degrees rotation around x-axis.
+		static const Float3x3 rot90y;	// 90 degrees rotation around y-axis.
+		static const Float3x3 rot90z;	// 90 degrees rotation around z-axis.
+		static const Float3x3 rot135x;	// 135 degrees rotation around x-axis.
+		static const Float3x3 rot135y;	// 135 degrees rotation around y-axis.
+		static const Float3x3 rot135z;	// 135 degrees rotation around z-axis.
+		static const Float3x3 rot180x;	// 180 degrees rotation around x-axis.
+		static const Float3x3 rot180y;	// 180 degrees rotation around y-axis.
+		static const Float3x3 rot180z;	// 180 degrees rotation around z-axis.
+		static const Float3x3 rot225x;	// 225 degrees rotation around x-axis.
+		static const Float3x3 rot225y;	// 225 degrees rotation around y-axis.
+		static const Float3x3 rot225z;	// 225 degrees rotation around z-axis.
+		static const Float3x3 rot270x;	// 270 degrees rotation around x-axis.
+		static const Float3x3 rot270y;	// 270 degrees rotation around y-axis.
+		static const Float3x3 rot270z;	// 270 degrees rotation around z-axis.
+		static const Float3x3 rot315x;	// 315 degrees rotation around x-axis.
+		static const Float3x3 rot315y;	// 315 degrees rotation around y-axis.
+		static const Float3x3 rot315z;	// 315 degrees rotation around z-axis.
 	};
+
+	// Static members:
+	// Numbers:
+	inline constexpr Float3x3 Float3x3::zero(0.0f);
+	inline constexpr Float3x3 Float3x3::identity(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float3x3 Float3x3::maxValue(math::maxValue);
+	inline constexpr Float3x3 Float3x3::minValue(math::minValue);
+
+	// Rotations:
+	inline constexpr Float3x3 Float3x3::rot45x (1.0f, 0.0f, 0.0f, 0.0f, math::sqrt2Inv, math::sqrt2Inv, 0.0f, -math::sqrt2Inv, math::sqrt2Inv);
+	inline constexpr Float3x3 Float3x3::rot45y (math::sqrt2Inv, 0.0f, -math::sqrt2Inv, 0.0f, 1.0f, 0.0f, math::sqrt2Inv, 0.0f, math::sqrt2Inv);
+	inline constexpr Float3x3 Float3x3::rot45z (math::sqrt2Inv, math::sqrt2Inv, 0.0f, -math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float3x3 Float3x3::rot90x (1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f);
+	inline constexpr Float3x3 Float3x3::rot90y (0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f);
+	inline constexpr Float3x3 Float3x3::rot90z (0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float3x3 Float3x3::rot135x(1.0f, 0.0f, 0.0f, 0.0f, -math::sqrt2Inv, math::sqrt2Inv, 0.0f, -math::sqrt2Inv, -math::sqrt2Inv);
+	inline constexpr Float3x3 Float3x3::rot135y(-math::sqrt2Inv, 0.0f, -math::sqrt2Inv, 0.0f, 1.0f, 0.0f, math::sqrt2Inv, 0.0f, -math::sqrt2Inv);
+	inline constexpr Float3x3 Float3x3::rot135z(-math::sqrt2Inv, math::sqrt2Inv, 0.0f, -math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float3x3 Float3x3::rot180x(1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, -1.0f);
+	inline constexpr Float3x3 Float3x3::rot180y(-1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f);
+	inline constexpr Float3x3 Float3x3::rot180z(-1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float3x3 Float3x3::rot225x(1.0f, 0.0f, 0.0f, 0.0f, -math::sqrt2Inv, -math::sqrt2Inv, 0.0f, math::sqrt2Inv, -math::sqrt2Inv);
+	inline constexpr Float3x3 Float3x3::rot225y(-math::sqrt2Inv, 0.0f, math::sqrt2Inv, 0.0f, 1.0f, 0.0f, -math::sqrt2Inv, 0.0f, -math::sqrt2Inv);
+	inline constexpr Float3x3 Float3x3::rot225z(-math::sqrt2Inv, -math::sqrt2Inv, 0.0f, math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float3x3 Float3x3::rot270x(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f);
+	inline constexpr Float3x3 Float3x3::rot270y(0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f);
+	inline constexpr Float3x3 Float3x3::rot270z(0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float3x3 Float3x3::rot315x(1.0f, 0.0f, 0.0f, 0.0f, math::sqrt2Inv, -math::sqrt2Inv, 0.0f, math::sqrt2Inv, math::sqrt2Inv);
+	inline constexpr Float3x3 Float3x3::rot315y(math::sqrt2Inv, 0.0f, math::sqrt2Inv, 0.0f, 1.0f, 0.0f, -math::sqrt2Inv, 0.0f, math::sqrt2Inv);
+	inline constexpr Float3x3 Float3x3::rot315z(math::sqrt2Inv, -math::sqrt2Inv, 0.0f, math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 1.0f);
 }

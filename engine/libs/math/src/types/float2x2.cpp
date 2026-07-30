@@ -9,27 +9,10 @@
 namespace emberMath
 {
 	// Constructors:
-	Float2x2::Float2x2()
-	{
-		for (uint32_t i = 0; i < 4; i++)
-			data[i] = 0.0f;
-	}
-	Float2x2::Float2x2(float value)
-	{
-		for (uint32_t i = 0; i < 4; i++)
-			data[i] = value;
-	}
 	Float2x2::Float2x2(const float* const array)
 	{
 		for (uint32_t i = 0; i < 4; i++)
 			data[i] = array[i];
-	}
-	Float2x2::Float2x2
-	(float xx, float xy,	// column 0
-     float yx, float yy)	// column 1
-	{
-		data[0] = xx; data[2] = yx;
-		data[1] = xy; data[3] = yy;
 	}
 	Float2x2::Float2x2(const Float2x2& other)
 	{
@@ -338,12 +321,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	Float2x2 Float2x2::zero = Float2x2(0.0f);
-	Float2x2 Float2x2::identity = Float2x2(1.0f, 0.0f, 0.0f, 1.0f);
-	Float2x2 Float2x2::maxValue = Float2x2(math::maxValue);
-	Float2x2 Float2x2::minValue = Float2x2(math::minValue);
 }

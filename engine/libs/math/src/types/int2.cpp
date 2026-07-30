@@ -10,9 +10,6 @@
 namespace emberMath
 {
 	// Constructors:
-	Int2::Int2() : x(0), y(0) {}
-	Int2::Int2(int xy) : x(xy), y(xy) {}
-	Int2::Int2(int x, int y) : x(x), y(y) {}
 	Int2::Int2(const Int2& xy) : x(xy.x), y(xy.y) {}
 	Int2::Int2(const Uint2& xy) : x(xy.x), y(xy.y) {}
 	Int2::Int2(const Float2& xy) : x(xy.x), y(xy.y) {}
@@ -180,14 +177,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	Int2 Int2::zero = Int2(0);
-	Int2 Int2::one = Int2(1);
-	Int2 Int2::right = Int2(1, 0);
-	Int2 Int2::left = Int2(-1, 0);
-	Int2 Int2::up = Int2(0, 1);
-	Int2 Int2::down = Int2(0, -1);
 }

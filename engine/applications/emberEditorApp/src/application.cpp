@@ -39,10 +39,10 @@
 
 namespace emberApplication
 {
-    using namespace emberCore;
+	using namespace emberCore;
 
 
-    
+	
 	// Static members:
 	emberEcs::Scene* Application::m_pActiveScene;
 	std::unique_ptr<emberEditor::BackendDebugEditorWindow> Application::m_pBackendDebugEditorWindow;
@@ -68,13 +68,18 @@ namespace emberApplication
 
 			// Init basic systems:
 			Core::InitBasics();
-		    emberEditor::HandleContext::Init();
+			emberEditor::HandleContext::Init();
 
 			// Window backend:
-			bool forceX11VideoDriver = true;
+			#if defined(__linux__)
+				constexpr bool forceX11VideoDriver = true;
+			#else
+				constexpr bool forceX11VideoDriver = false;
+			#endif
 			emberBackendInterface::IWindow* pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight, forceX11VideoDriver);
-            LOG_INFO("enabled x11 video driver for detached window support.");
-            
+			if (forceX11VideoDriver)
+				LOG_INFO("enabled x11 video driver for detached window support.");
+			
 			// Renderer backend:
 			emberCommon::RendererCreateInfo rendererCreateInfo = {};
 			rendererCreateInfo.vSyncEnabled = applicationCreateInfo.vSyncEnabled;		            // project settings.
@@ -126,16 +131,16 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
-        m_pSceneEditorWindow.reset();
-        m_pProjectEditorWindow.reset();
-        m_pOutlineEditorWindow.reset();
-        m_pInspectorEditorWindow.reset();
-        m_pHierarchyEditorWindow.reset();
-        m_pGameEditorWindow.reset();
-        m_pFpsEditorWindow.reset();
-        m_pDepthBiasEditorWindow.reset();
-        m_pConsoleEditorWindow.reset();
-        m_pBackendDebugEditorWindow.reset();
+		m_pSceneEditorWindow.reset();
+		m_pProjectEditorWindow.reset();
+		m_pOutlineEditorWindow.reset();
+		m_pInspectorEditorWindow.reset();
+		m_pHierarchyEditorWindow.reset();
+		m_pGameEditorWindow.reset();
+		m_pFpsEditorWindow.reset();
+		m_pDepthBiasEditorWindow.reset();
+		m_pConsoleEditorWindow.reset();
+		m_pBackendDebugEditorWindow.reset();
 
 		Renderer::WaitDeviceIdle();
 		Core::ClearOther();
@@ -231,9 +236,9 @@ namespace emberApplication
 		return m_pActiveScene;
 	}
 	emberEditor::BackendDebugEditorWindow* Application::GetBackendDebugEditorWindow()
-    {
-        return m_pBackendDebugEditorWindow.get();
-    }
+	{
+		return m_pBackendDebugEditorWindow.get();
+	}
 	emberEditor::ConsoleEditorWindow* Application::GetConsoleEditorWindow()
 	{
 		return m_pConsoleEditorWindow.get();
@@ -259,9 +264,9 @@ namespace emberApplication
 		return m_pInspectorEditorWindow.get();
 	}
 	emberEditor::OutlineEditorWindow* Application::GetOutlineEditorWindow()
-    {
-        return m_pOutlineEditorWindow.get();
-    }
+	{
+		return m_pOutlineEditorWindow.get();
+	}
 	emberEditor::ProjectEditorWindow* Application::GetProjectEditorWindow()
 	{
 		return m_pProjectEditorWindow.get();

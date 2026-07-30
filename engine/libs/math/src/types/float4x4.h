@@ -23,11 +23,12 @@ namespace emberMath
 		// xw yw zw ww   3  7  11 15   [3,0] [3,1] [3,2] [3,3]
 
 	private:
-		Float4x4
+		constexpr Float4x4
 		(float xx, float xy, float xz, float xw,	// column 0
 		 float yx, float yy, float yz, float yw,	// column 1
 		 float zx, float zy, float zz, float zw,	// column 2
-		 float wx, float wy, float wz, float ww);	// column 3
+		 float wx, float wy, float wz, float ww)	// column 3
+			: data{ xx, xy, xz, xw, yx, yy, yz, yw, zx, zy, zz, zw, wx, wy, wz, ww } {}
 
 	public:
 		// Members:
@@ -35,8 +36,10 @@ namespace emberMath
 		float data[size];
 
 		// Constructors:
-		Float4x4();
-		Float4x4(float value);
+		constexpr Float4x4() : data{} {}
+		constexpr Float4x4(float value)
+			: data{ value, value, value, value, value, value, value, value,
+					value, value, value, value, value, value, value, value } {}
 		Float4x4(const float* const array);
 		explicit Float4x4(const Float3x3& other);
 		Float4x4(const Float4x4& other);
@@ -143,32 +146,62 @@ namespace emberMath
 		friend std::ostream& operator<<(std::ostream& os, const Float4x4& value);
 
 		// Static members:
-		static Float4x4 zero;		// zero matrix.
-		static Float4x4 identity;	// identity matrix.
-		static Float4x4 maxValue;	// all entries are math::maxValue.
-		static Float4x4 minValue;	// all entries are math::minValue.
+		static const Float4x4 zero;		// zero matrix.
+		static const Float4x4 identity;	// identity matrix.
+		static const Float4x4 maxValue;	// all entries are math::maxValue.
+		static const Float4x4 minValue;	// all entries are math::minValue.
 
 		// Rotations:
-		static Float4x4 rot45x;		// 45 degrees rotation around x-axis.
-		static Float4x4 rot45y;		// 45 degrees rotation around y-axis.
-		static Float4x4 rot45z;		// 45 degrees rotation around z-axis.
-		static Float4x4 rot90x;		// 90 degrees rotation around x-axis.
-		static Float4x4 rot90y;		// 90 degrees rotation around y-axis.
-		static Float4x4 rot90z;		// 90 degrees rotation around z-axis.
-		static Float4x4 rot135x;	// 135 degrees rotation around x-axis.
-		static Float4x4 rot135y;	// 135 degrees rotation around y-axis.
-		static Float4x4 rot135z;	// 135 degrees rotation around z-axis.
-		static Float4x4 rot180x;	// 180 degrees rotation around x-axis.
-		static Float4x4 rot180y;	// 180 degrees rotation around y-axis.
-		static Float4x4 rot180z;	// 180 degrees rotation around z-axis.
-		static Float4x4 rot225x;	// 225 degrees rotation around x-axis.
-		static Float4x4 rot225y;	// 225 degrees rotation around y-axis.
-		static Float4x4 rot225z;	// 225 degrees rotation around z-axis.
-		static Float4x4 rot270x;	// 270 degrees rotation around x-axis.
-		static Float4x4 rot270y;	// 270 degrees rotation around y-axis.
-		static Float4x4 rot270z;	// 270 degrees rotation around z-axis.
-		static Float4x4 rot315x;	// 315 degrees rotation around x-axis.
-		static Float4x4 rot315y;	// 315 degrees rotation around y-axis.
-		static Float4x4 rot315z;	// 315 degrees rotation around z-axis.
+		static const Float4x4 rot45x;	// 45 degrees rotation around x-axis.
+		static const Float4x4 rot45y;	// 45 degrees rotation around y-axis.
+		static const Float4x4 rot45z;	// 45 degrees rotation around z-axis.
+		static const Float4x4 rot90x;	// 90 degrees rotation around x-axis.
+		static const Float4x4 rot90y;	// 90 degrees rotation around y-axis.
+		static const Float4x4 rot90z;	// 90 degrees rotation around z-axis.
+		static const Float4x4 rot135x;	// 135 degrees rotation around x-axis.
+		static const Float4x4 rot135y;	// 135 degrees rotation around y-axis.
+		static const Float4x4 rot135z;	// 135 degrees rotation around z-axis.
+		static const Float4x4 rot180x;	// 180 degrees rotation around x-axis.
+		static const Float4x4 rot180y;	// 180 degrees rotation around y-axis.
+		static const Float4x4 rot180z;	// 180 degrees rotation around z-axis.
+		static const Float4x4 rot225x;	// 225 degrees rotation around x-axis.
+		static const Float4x4 rot225y;	// 225 degrees rotation around y-axis.
+		static const Float4x4 rot225z;	// 225 degrees rotation around z-axis.
+		static const Float4x4 rot270x;	// 270 degrees rotation around x-axis.
+		static const Float4x4 rot270y;	// 270 degrees rotation around y-axis.
+		static const Float4x4 rot270z;	// 270 degrees rotation around z-axis.
+		static const Float4x4 rot315x;	// 315 degrees rotation around x-axis.
+		static const Float4x4 rot315y;	// 315 degrees rotation around y-axis.
+		static const Float4x4 rot315z;	// 315 degrees rotation around z-axis.
 	};
+
+	// Static members:
+	// Numbers:
+	inline constexpr Float4x4 Float4x4::zero(0.0f);
+	inline constexpr Float4x4 Float4x4::identity(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::maxValue(math::maxValue);
+	inline constexpr Float4x4 Float4x4::minValue(math::minValue);
+
+	// Rotations:
+	inline constexpr Float4x4 Float4x4::rot45x(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, -math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot45y(math::sqrt2Inv, 0.0f, -math::sqrt2Inv, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, math::sqrt2Inv, 0.0f, math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot45z(math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, -math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot90x(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot90y(0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot90z(0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot135x(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, -math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot135y(-math::sqrt2Inv, 0.0f, -math::sqrt2Inv, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, math::sqrt2Inv, 0.0f, -math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot135z(-math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, -math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot180x(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot180y(-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot180z(-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot225x(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot225y(-math::sqrt2Inv, 0.0f, math::sqrt2Inv, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -math::sqrt2Inv, 0.0f, -math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot225z(-math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot270x(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot270y(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot270z(0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot315x(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot315y(math::sqrt2Inv, 0.0f, math::sqrt2Inv, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -math::sqrt2Inv, 0.0f, math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4x4 Float4x4::rot315z(math::sqrt2Inv, -math::sqrt2Inv, 0.0f, 0.0f, math::sqrt2Inv, math::sqrt2Inv, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 }

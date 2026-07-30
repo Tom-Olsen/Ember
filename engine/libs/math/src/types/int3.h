@@ -22,9 +22,9 @@ namespace emberMath
 		int x, y, z;
 
 		// Constructors:
-		Int3();
-		Int3(int xyz);
-		Int3(int x, int y, int z);
+		constexpr Int3() : x(0), y(0), z(0) {}
+		constexpr Int3(int xyz) : x(xyz), y(xyz), z(xyz) {}
+		constexpr Int3(int x, int y, int z) : x(x), y(y), z(z) {}
 		Int3(const Int2& xy, int z);
 		Int3(const Uint2& xy, int z);
 		Int3(const Float2& xy, int z);
@@ -78,13 +78,23 @@ namespace emberMath
 		friend std::ostream& operator<<(std::ostream& os, const Int3& value);
 
 		// Static members:
-		static Int3 zero;
-		static Int3 one;
-		static Int3 right;		// +x = ( 1, 0, 0).
-		static Int3 left;		// -x = (-1, 0, 0).
-		static Int3 up;			// +y = ( 0, 1, 0).
-		static Int3 down;		// -y = ( 0,-1, 0).
-		static Int3 forward;	// +z = ( 0, 0, 1).
-		static Int3 backward;	// -z = ( 0, 0,-1).
+		static const Int3 zero;
+		static const Int3 one;
+		static const Int3 right;		// +x = ( 1, 0, 0).
+		static const Int3 left;			// -x = (-1, 0, 0).
+		static const Int3 up;			// +y = ( 0, 1, 0).
+		static const Int3 down;			// -y = ( 0,-1, 0).
+		static const Int3 forward;		// +z = ( 0, 0, 1).
+		static const Int3 backward;		// -z = ( 0, 0,-1).
 	};
+
+	// Static members:
+	inline constexpr Int3 Int3::zero(0);
+	inline constexpr Int3 Int3::one(1);
+	inline constexpr Int3 Int3::right(1, 0, 0);
+	inline constexpr Int3 Int3::left(-1, 0, 0);
+	inline constexpr Int3 Int3::up(0, 1, 0);
+	inline constexpr Int3 Int3::down(0, -1, 0);
+	inline constexpr Int3 Int3::forward(0, 0, 1);
+	inline constexpr Int3 Int3::backward(0, 0, -1);
 }

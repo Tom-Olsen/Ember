@@ -21,9 +21,9 @@ namespace emberMath
 		float x, y;
 
 		// Constructors:
-		Float2();
-		Float2(float xy);
-		Float2(float x, float y);
+		constexpr Float2() : x(0.0f), y(0.0f) {}
+		constexpr Float2(float xy) : x(xy), y(xy) {}
+		constexpr Float2(float x, float y) : x(x), y(y) {}
 		Float2(const Float2& xy);
 		explicit Float2(const Float3& xy);
 		explicit Float2(const Float4& xy);
@@ -99,17 +99,30 @@ namespace emberMath
 
 		// Static members:
 		// Numbers:
-		static Float2 zero;		// (0, 0).
-		static Float2 one;		// (1, 1).
-		static Float2 maxValue;	// math::maxValue * (1, 1).
-		static Float2 minValue;	// math::minValue * (1, 1).
+		static const Float2 zero;		// (0, 0).
+		static const Float2 one;		// (1, 1).
+		static const Float2 maxValue;	// math::maxValue * (1, 1).
+		static const Float2 minValue;	// math::minValue * (1, 1).
 
 		// Directions:
-		static Float2 right;	// +x = ( 1, 0).
-		static Float2 left;		// -x = (-1, 0).
-		static Float2 forward;	// +y = ( 0, 1).
-		static Float2 back;		// -y = ( 0,-1).
+		static const Float2 right;		// +x = ( 1, 0).
+		static const Float2 left;		// -x = (-1, 0).
+		static const Float2 forward;	// +y = ( 0, 1).
+		static const Float2 back;		// -y = ( 0,-1).
 	};
+
+	// Static members:
+	// Numbers:
+	inline constexpr Float2 Float2::zero(0.0f);
+	inline constexpr Float2 Float2::one(1.0f);
+	inline constexpr Float2 Float2::maxValue(math::maxValue);
+	inline constexpr Float2 Float2::minValue(math::minValue);
+
+	// Directions:
+	inline constexpr Float2 Float2::right(1.0f, 0.0f);
+	inline constexpr Float2 Float2::left(-1.0f, 0.0f);
+	inline constexpr Float2 Float2::forward(0.0f, 1.0f);
+	inline constexpr Float2 Float2::back(0.0f, -1.0f);
 
 	// Friend functions:
 	Float2 operator/(float scalar, const Float2& vector);

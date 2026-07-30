@@ -23,9 +23,9 @@ namespace emberMath
 		uint32_t x, y, z;
 
 		// Constructors:
-		Uint3();
-		Uint3(uint32_t xyz);
-		Uint3(uint32_t x, uint32_t y, uint32_t z);
+		constexpr Uint3() : x(0), y(0), z(0) {}
+		constexpr Uint3(uint32_t xyz) : x(xyz), y(xyz), z(xyz) {}
+		constexpr Uint3(uint32_t x, uint32_t y, uint32_t z) : x(x), y(y), z(z) {}
 		Uint3(const Uint2& xy, uint32_t z);
 		Uint3(const Int2& xy, uint32_t z);
 		Uint3(const Float2& xy, uint32_t z);
@@ -78,10 +78,17 @@ namespace emberMath
 		friend std::ostream& operator<<(std::ostream& os, const Uint3& value);
 
 		// Static members:
-		static Uint3 zero;
-		static Uint3 one;
-		static Uint3 right;		// +x = ( 1, 0, 0).
-		static Uint3 forward;	// +y = ( 0, 1, 0).
-		static Uint3 up;		// +z = ( 0, 0, 1).
+		static const Uint3 zero;
+		static const Uint3 one;
+		static const Uint3 right;		// +x = ( 1, 0, 0).
+		static const Uint3 forward;		// +y = ( 0, 1, 0).
+		static const Uint3 up;			// +z = ( 0, 0, 1).
 	};
+
+	// Static members:
+	inline constexpr Uint3 Uint3::zero(0);
+	inline constexpr Uint3 Uint3::one(1);
+	inline constexpr Uint3 Uint3::right(1, 0, 0);
+	inline constexpr Uint3 Uint3::forward(0, 1, 0);
+	inline constexpr Uint3 Uint3::up(0, 0, 1);
 }

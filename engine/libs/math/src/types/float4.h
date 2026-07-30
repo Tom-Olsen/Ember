@@ -21,9 +21,9 @@ namespace emberMath
 		float x, y, z, w;
 
 		// Constructors:
-		Float4();
-		Float4(float xyzw);
-		Float4(float x, float y, float z, float w);
+		constexpr Float4() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
+		constexpr Float4(float xyzw) : x(xyzw), y(xyzw), z(xyzw), w(xyzw) {}
+		constexpr Float4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
 		explicit Float4(const Float2& xy, float z, float w);
 		explicit Float4(const Float2& xy, Float2 zw);
 		explicit Float4(const Float3& xyz, float w);
@@ -93,33 +93,62 @@ namespace emberMath
 
 		// Static members:
 		// Numbers:
-		static Float4 zero;		// (0, 0, 0, 0).
-		static Float4 one;		// (1, 1, 1, 1).
-		static Float4 maxValue;	// math::maxValue * (1, 1, 1, 1).
-		static Float4 minValue;	// math::minValue * (1, 1, 1, 1).
+		static const Float4 zero;		// (0, 0, 0, 0).
+		static const Float4 one;		// (1, 1, 1, 1).
+		static const Float4 maxValue;	// math::maxValue * (1, 1, 1, 1).
+		static const Float4 minValue;	// math::minValue * (1, 1, 1, 1).
 
 		// Directions:
-		static Float4 right;	// +x = ( 1, 0, 0, 0).
-		static Float4 left;		// -x = (-1, 0, 0, 0).
-		static Float4 forward;	// +y = ( 0, 1, 0, 0).
-		static Float4 back;		// -y = ( 0,-1, 0, 0).
-		static Float4 up;		// +z = ( 0, 0, 1, 0).
-		static Float4 down;		// -z = ( 0, 0,-1, 0).
-		static Float4 in;		// +w = ( 0, 0, 0, 1).
-		static Float4 out;		// -w = ( 0, 0, 0,-1).
+		static const Float4 right;		// +x = ( 1, 0, 0, 0).
+		static const Float4 left;		// -x = (-1, 0, 0, 0).
+		static const Float4 forward;	// +y = ( 0, 1, 0, 0).
+		static const Float4 back;		// -y = ( 0,-1, 0, 0).
+		static const Float4 up;			// +z = ( 0, 0, 1, 0).
+		static const Float4 down;		// -z = ( 0, 0,-1, 0).
+		static const Float4 in;			// +w = ( 0, 0, 0, 1).
+		static const Float4 out;		// -w = ( 0, 0, 0,-1).
 
 		// Colors:
-		static Float4 white;	// ( 1, 1, 1, 1).
-		static Float4 gray;		// ( 0.5, 0.5, 0.5, 1).
-		static Float4 black;	// ( 0, 0, 0, 1).
-		static Float4 red;		// ( 1, 0, 0, 1).
-		static Float4 green;	// ( 0, 1, 0, 1).
-		static Float4 blue;		// ( 0, 0, 1, 1).
-		static Float4 yellow;	// ( 1, 1, 0, 1).
-		static Float4 cyan;		// ( 0, 1, 1, 1).
-		static Float4 magenta;	// ( 1, 0, 1, 1).
-		static Float4 orange;	// ( 1, 0.5, 0, 1).
+		static const Float4 white;		// ( 1, 1, 1, 1).
+		static const Float4 gray;		// ( 0.5, 0.5, 0.5, 1).
+		static const Float4 black;		// ( 0, 0, 0, 1).
+		static const Float4 red;		// ( 1, 0, 0, 1).
+		static const Float4 green;		// ( 0, 1, 0, 1).
+		static const Float4 blue;		// ( 0, 0, 1, 1).
+		static const Float4 yellow;		// ( 1, 1, 0, 1).
+		static const Float4 cyan;		// ( 0, 1, 1, 1).
+		static const Float4 magenta;	// ( 1, 0, 1, 1).
+		static const Float4 orange;		// ( 1, 0.5, 0, 1).
 	};
+
+	// Static members:
+	// Numbers:
+	inline constexpr Float4 Float4::zero(0.0f);
+	inline constexpr Float4 Float4::one(1.0f);
+	inline constexpr Float4 Float4::maxValue(math::maxValue);
+	inline constexpr Float4 Float4::minValue(math::minValue);
+
+	// Directions:
+	inline constexpr Float4 Float4::right(1.0f, 0.0f, 0.0f, 0.0f);
+	inline constexpr Float4 Float4::left(-1.0f, 0.0f, 0.0f, 0.0f);
+	inline constexpr Float4 Float4::forward(0.0f, 1.0f, 0.0f, 0.0f);
+	inline constexpr Float4 Float4::back(0.0f, -1.0f, 0.0f, 0.0f);
+	inline constexpr Float4 Float4::up(0.0f, 0.0f, 1.0f, 0.0f);
+	inline constexpr Float4 Float4::down(0.0f, 0.0f, -1.0f, 0.0f);
+	inline constexpr Float4 Float4::in(0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4 Float4::out(0.0f, 0.0f, 0.0f, -1.0f);
+
+	// Colors:
+	inline constexpr Float4 Float4::white(1.0f, 1.0f, 1.0f, 1.0f);
+	inline constexpr Float4 Float4::gray(0.5f, 0.5f, 0.5f, 1.0f);
+	inline constexpr Float4 Float4::black(0.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4 Float4::red(1.0f, 0.0f, 0.0f, 1.0f);
+	inline constexpr Float4 Float4::green(0.0f, 1.0f, 0.0f, 1.0f);
+	inline constexpr Float4 Float4::blue(0.0f, 0.0f, 1.0f, 1.0f);
+	inline constexpr Float4 Float4::yellow(1.0f, 1.0f, 0.0f, 1.0f);
+	inline constexpr Float4 Float4::cyan(0.0f, 1.0f, 1.0f, 1.0f);
+	inline constexpr Float4 Float4::magenta(1.0f, 0.0f, 1.0f, 1.0f);
+	inline constexpr Float4 Float4::orange(1.0f, 0.5f, 0.0f, 1.0f);
 
 	// Friend functions:
 	Float4 operator/(float scalar, const Float4& vector);

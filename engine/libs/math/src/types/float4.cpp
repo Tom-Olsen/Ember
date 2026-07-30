@@ -11,9 +11,6 @@
 namespace emberMath
 {
 	// Constructors:
-	Float4::Float4() : x(0), y(0), z(0), w(0) {}
-	Float4::Float4(float xyzw) : x(xyzw), y(xyzw), z(xyzw), w(xyzw) {}
-	Float4::Float4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
 	Float4::Float4(const Float2& xy, float z, float w) : x(xy.x), y(xy.y), z(z), w(w) {}
 	Float4::Float4(const Float2& xy, Float2 zw) : x(xy.x), y(xy.y), z(zw.x), w(zw.y) {}
 	Float4::Float4(const Float3& xyz, float w) : x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
@@ -287,35 +284,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	// Numbers;
-	Float4 Float4::zero = Float4(0.0f);
-	Float4 Float4::one = Float4(1.0f);
-	Float4 Float4::maxValue = Float4(math::maxValue);
-	Float4 Float4::minValue = Float4(math::minValue);
-
-	// Directions:
-	Float4 Float4::right = Float4(1.0f, 0.0f, 0.0f, 0.0f);
-	Float4 Float4::left = Float4(-1.0f, 0.0f, 0.0f, 0.0f);
-	Float4 Float4::forward = Float4(0.0f, 1.0f, 0.0f, 0.0f);
-	Float4 Float4::back = Float4(0.0f, -1.0f, 0.0f, 0.0f);
-	Float4 Float4::up = Float4(0.0f, 0.0f, 1.0f, 0.0f);
-	Float4 Float4::down = Float4(0.0f, 0.0f, -1.0f, 0.0f);
-	Float4 Float4::in = Float4(0.0f, 0.0f, 0.0f, 1.0f);
-	Float4 Float4::out = Float4(0.0f, 0.0f, 0.0f, -1.0f);
-
-	// Colors:
-	Float4 Float4::white = Float4(1.0f, 1.0f, 1.0f, 1.0f);
-	Float4 Float4::gray = Float4(0.5f, 0.5f, 0.5f, 1.0f);
-	Float4 Float4::black = Float4(0.0f, 0.0f, 0.0f, 1.0f);
-	Float4 Float4::red = Float4(1.0f, 0.0f, 0.0f, 1.0f);
-	Float4 Float4::green = Float4(0.0f, 1.0f, 0.0f, 1.0f);
-	Float4 Float4::blue = Float4(0.0f, 0.0f, 1.0f, 1.0f);
-	Float4 Float4::yellow = Float4(1.0f, 1.0f, 0.0f, 1.0f);
-	Float4 Float4::cyan = Float4(0.0f, 1.0f, 1.0f, 1.0f);
-	Float4 Float4::magenta = Float4(1.0f, 0.0f, 1.0f, 1.0f);
-	Float4 Float4::orange = Float4(1.0f, 0.5f, 0.0f, 1.0f);
 }

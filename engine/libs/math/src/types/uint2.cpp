@@ -10,9 +10,6 @@
 namespace emberMath
 {
 	// Constructors:
-	Uint2::Uint2() : x(0), y(0) {}
-	Uint2::Uint2(uint32_t xy) : x(xy), y(xy) {}
-	Uint2::Uint2(uint32_t x, uint32_t y) : x(x), y(y) {}
 	Uint2::Uint2(const Uint2& xy) : x(xy.x), y(xy.y) {}
 	Uint2::Uint2(const Int2& xy) : x((uint32_t)xy.x), y((uint32_t)xy.y) {}
 	Uint2::Uint2(const Float2& xy) : x((uint32_t)xy.x), y((uint32_t)xy.y) {}
@@ -176,12 +173,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	Uint2 Uint2::zero = Uint2(0);			// zero = Uint2(0,0).
-	Uint2 Uint2::one = Uint2(1);			// one = Uint2(1,1).
-	Uint2 Uint2::right = Uint2(1, 0);		// right = Uint2(1,0).
-	Uint2 Uint2::forward = Uint2(0, 1);		// forward = Uint2(0,1).
 }

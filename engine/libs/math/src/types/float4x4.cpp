@@ -14,27 +14,6 @@
 namespace emberMath
 {
 	// Constructors:
-	Float4x4::Float4x4
-	(float xx, float xy, float xz, float xw,	// column 0
-	 float yx, float yy, float yz, float yw,	// column 1
-	 float zx, float zy, float zz, float zw,	// column 2
-	 float wx, float wy, float wz, float ww)	// column 3
-	{
-		data[0] = xx; data[4] = yx; data[8] = zx; data[12] = wx;
-		data[1] = xy; data[5] = yy; data[9] = zy; data[13] = wy;
-		data[2] = xz; data[6] = yz; data[10] = zz; data[14] = wz;
-		data[3] = xw; data[7] = yw; data[11] = zw; data[15] = ww;
-	}
-	Float4x4::Float4x4()
-	{
-		for (uint32_t i = 0; i < 16; i++)
-			data[i] = 0.0f;
-	}
-	Float4x4::Float4x4(float value)
-	{
-		for (uint32_t i = 0; i < 16; i++)
-			data[i] = value;
-	}
 	Float4x4::Float4x4(const float* const array)
 	{
 		for (uint32_t i = 0; i < 16; i++)
@@ -690,40 +669,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	// Numbers:
-	Float4x4 Float4x4::zero = Float4x4(0.0f);
-	Float4x4 Float4x4::identity = Float4x4
-	(1.0f, 0.0f, 0.0f, 0.0f,
-	 0.0f, 1.0f, 0.0f, 0.0f,
-	 0.0f, 0.0f, 1.0f, 0.0f,
-	 0.0f, 0.0f, 0.0f, 1.0f);
-	Float4x4 Float4x4::maxValue = Float4x4(math::maxValue);
-	Float4x4 Float4x4::minValue = Float4x4(math::minValue);
-
-	// Rotations:
-	Float4x4 Float4x4::rot45x = Float4x4::RotateX(math::pi4);
-	Float4x4 Float4x4::rot45y = Float4x4::RotateY(math::pi4);
-	Float4x4 Float4x4::rot45z = Float4x4::RotateZ(math::pi4);
-	Float4x4 Float4x4::rot90x = Float4x4::RotateX(math::pi2);
-	Float4x4 Float4x4::rot90y = Float4x4::RotateY(math::pi2);
-	Float4x4 Float4x4::rot90z = Float4x4::RotateZ(math::pi2);
-	Float4x4 Float4x4::rot135x = Float4x4::RotateX(3.0f * math::pi4);
-	Float4x4 Float4x4::rot135y = Float4x4::RotateY(3.0f * math::pi4);
-	Float4x4 Float4x4::rot135z = Float4x4::RotateZ(3.0f * math::pi4);
-	Float4x4 Float4x4::rot180x = Float4x4::RotateX(math::pi);
-	Float4x4 Float4x4::rot180y = Float4x4::RotateY(math::pi);
-	Float4x4 Float4x4::rot180z = Float4x4::RotateZ(math::pi);
-	Float4x4 Float4x4::rot225x = Float4x4::RotateX(5.0f * math::pi4);
-	Float4x4 Float4x4::rot225y = Float4x4::RotateY(5.0f * math::pi4);
-	Float4x4 Float4x4::rot225z = Float4x4::RotateZ(5.0f * math::pi4);
-	Float4x4 Float4x4::rot270x = Float4x4::RotateX(-math::pi2);
-	Float4x4 Float4x4::rot270y = Float4x4::RotateY(-math::pi2);
-	Float4x4 Float4x4::rot270z = Float4x4::RotateZ(-math::pi2);
-	Float4x4 Float4x4::rot315x = Float4x4::RotateX(-math::pi4);
-	Float4x4 Float4x4::rot315y = Float4x4::RotateY(-math::pi4);
-	Float4x4 Float4x4::rot315z = Float4x4::RotateZ(-math::pi4);
 }

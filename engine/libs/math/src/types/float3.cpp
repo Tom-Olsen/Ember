@@ -15,9 +15,6 @@
 namespace emberMath
 {
 	// Constructors:
-	Float3::Float3() : x(0), y(0), z(0) {}
-	Float3::Float3(float xyz) : x(xyz), y(xyz), z(xyz) {}
-	Float3::Float3(float x, float y, float z) : x(x), y(y), z(z) {}
 	Float3::Float3(const Float2& xy, float z) : x(xy.x), y(xy.y), z(z) {}
 	Float3::Float3(const Int2& xy, float z) : x((float)xy.x), y((float)xy.y), z(z) {}
 	Float3::Float3(const Uint2& xy, float z) : x((float)xy.x), y((float)xy.y), z(z) {}
@@ -334,32 +331,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	// Numbers;
-	Float3 Float3::zero = Float3(0.0f);
-	Float3 Float3::one = Float3(1.0f);
-	Float3 Float3::maxValue = Float3(math::maxValue);
-	Float3 Float3::minValue = Float3(math::minValue);
-
-	// Directions:
-	Float3 Float3::right = Float3(1.0f, 0.0f, 0.0f);
-	Float3 Float3::left = Float3(-1.0f, 0.0f, 0.0f);
-	Float3 Float3::forward = Float3(0.0f, 1.0f, 0.0f);
-	Float3 Float3::back = Float3(0.0f, -1.0f, 0.0f);
-	Float3 Float3::up = Float3(0.0f, 0.0f, 1.0f);
-	Float3 Float3::down = Float3(0.0f, 0.0f, -1.0f);
-
-	// Colors:
-	Float3 Float3::white = Float3(1.0f, 1.0f, 1.0f);
-	Float3 Float3::gray = Float3(0.5f, 0.5f, 0.5f);
-	Float3 Float3::black = Float3(0.0f, 0.0f, 0.0f);
-	Float3 Float3::red = Float3(1.0f, 0.0f, 0.0f);
-	Float3 Float3::green = Float3(0.0f, 1.0f, 0.0f);
-	Float3 Float3::blue = Float3(0.0f, 0.0f, 1.0f);
-	Float3 Float3::yellow = Float3(1.0f, 1.0f, 0.0f);
-	Float3 Float3::cyan = Float3(0.0f, 1.0f, 1.0f);
-	Float3 Float3::magenta = Float3(1.0f, 0.0f, 1.0f);
 }

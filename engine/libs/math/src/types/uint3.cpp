@@ -13,9 +13,6 @@
 namespace emberMath
 {
 	// Constructors:
-	Uint3::Uint3() : x(0), y(0), z(0) {}
-	Uint3::Uint3(uint32_t xyz) : x(xyz), y(xyz), z(xyz) {}
-	Uint3::Uint3(uint32_t x, uint32_t y, uint32_t z) : x(x), y(y), z(z) {}
 	Uint3::Uint3(const Uint2& xy, uint32_t z) : x(xy.x), y(xy.y), z(z) {}
 	Uint3::Uint3(const Int2& xy, uint32_t z) : x((uint32_t)xy.x), y((uint32_t)xy.y), z(z) {}
 	Uint3::Uint3(const Float2& xy, uint32_t z) : x((uint32_t)xy.x), y((uint32_t)xy.y), z(z) {}
@@ -188,13 +185,4 @@ namespace emberMath
 		os << value.ToString();
 		return os;
 	}
-
-
-
-	// Static members:
-	Uint3 Uint3::zero = Uint3(0);			// zero = Uint3(0,0,0).
-	Uint3 Uint3::one = Uint3(1);			// one = Uint3(1,1,1).
-	Uint3 Uint3::right = Uint3(1, 0, 0);	// right = Uint3(1,0,0).
-	Uint3 Uint3::forward = Uint3(0, 1, 0);	// forward = Uint3(0,1,0).
-	Uint3 Uint3::up = Uint3(0, 0, 1);		// up = Uint3(0,0,1).
 }

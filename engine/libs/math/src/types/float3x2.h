@@ -23,9 +23,10 @@ namespace emberMath
 		// xz yz   2  5   [2,0] [2,1]
 
 	private:
-		Float3x2
+		constexpr Float3x2
 		(float xx, float xy, float xz,	// column 0
-		 float yx, float yy, float yz);	// column 1
+		 float yx, float yy, float yz)	// column 1
+			: data{ xx, xy, xz, yx, yy, yz } {}
 
 	public:
 		// Members:
@@ -33,8 +34,8 @@ namespace emberMath
 		float data[size];
 
 		// Constructors:
-		Float3x2();
-		Float3x2(float value);
+		constexpr Float3x2() : data{} {}
+		constexpr Float3x2(float value) : data{ value, value, value, value, value, value } {}
 		Float3x2(const float* const array);
 		Float3x2(const Float3x2& other);
 
@@ -101,8 +102,13 @@ namespace emberMath
 		friend std::ostream& operator<<(std::ostream& os, const Float3x3& value);
 
 		// Static members:
-		static Float3x2 zero;		// zero matrix.
-		static Float3x2 maxValue;	// all entries are math::maxValue.
-		static Float3x2 minValue;	// all entries are math::minValue.
+		static const Float3x2 zero;		// zero matrix.
+		static const Float3x2 maxValue;	// all entries are math::maxValue.
+		static const Float3x2 minValue;	// all entries are math::minValue.
 	};
+
+	// Static members:
+	inline constexpr Float3x2 Float3x2::zero(0.0f);
+	inline constexpr Float3x2 Float3x2::maxValue(math::maxValue);
+	inline constexpr Float3x2 Float3x2::minValue(math::minValue);
 }

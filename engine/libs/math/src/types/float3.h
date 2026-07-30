@@ -25,9 +25,9 @@ namespace emberMath
 		float x, y, z;
 
 		// Constructors:
-		Float3();
-		Float3(float xyz);
-		Float3(float x, float y, float z);
+		constexpr Float3() : x(0.0f), y(0.0f), z(0.0f) {}
+		constexpr Float3(float xyz) : x(xyz), y(xyz), z(xyz) {}
+		constexpr Float3(float x, float y, float z) : x(x), y(y), z(z) {}
 		explicit Float3(const Float2& xy, float z);
 		explicit Float3(const Int2& xy, float z);
 		explicit Float3(const Uint2& xy, float z);
@@ -109,30 +109,56 @@ namespace emberMath
 
 		// Static members:
 		// Numbers:
-		static Float3 zero;		// (0, 0, 0).
-		static Float3 one;		// (1, 1, 1).
-		static Float3 maxValue;	// math::maxValue * (1, 1, 1).
-		static Float3 minValue;	// math::minValue * (1, 1, 1).
+		static const Float3 zero;		// (0, 0, 0).
+		static const Float3 one;		// (1, 1, 1).
+		static const Float3 maxValue;	// math::maxValue * (1, 1, 1).
+		static const Float3 minValue;	// math::minValue * (1, 1, 1).
 
 		// Directions:
-		static Float3 right;	// +x = ( 1, 0, 0).
-		static Float3 left;		// -x = (-1, 0, 0).
-		static Float3 forward;	// +y = ( 0, 1, 0).
-		static Float3 back;		// -y = ( 0,-1, 0).
-		static Float3 up;		// +z = ( 0, 0, 1).
-		static Float3 down;		// -z = ( 0, 0,-1).
+		static const Float3 right;		// +x = ( 1, 0, 0).
+		static const Float3 left;		// -x = (-1, 0, 0).
+		static const Float3 forward;	// +y = ( 0, 1, 0).
+		static const Float3 back;		// -y = ( 0,-1, 0).
+		static const Float3 up;			// +z = ( 0, 0, 1).
+		static const Float3 down;		// -z = ( 0, 0,-1).
 
 		// Colors:
-		static Float3 white;	// ( 1, 1, 1).
-		static Float3 gray;		// ( 0.5, 0.5, 0.5).
-		static Float3 black;	// ( 0, 0, 0).
-		static Float3 red;		// ( 1, 0, 0).
-		static Float3 green;	// ( 0, 1, 0).
-		static Float3 blue;		// ( 0, 0, 1).
-		static Float3 yellow;	// ( 1, 1, 0).
-		static Float3 cyan;		// ( 0, 1, 1).
-		static Float3 magenta;	// ( 1, 0, 1).
+		static const Float3 white;		// ( 1, 1, 1).
+		static const Float3 gray;		// ( 0.5, 0.5, 0.5).
+		static const Float3 black;		// ( 0, 0, 0).
+		static const Float3 red;		// ( 1, 0, 0).
+		static const Float3 green;		// ( 0, 1, 0).
+		static const Float3 blue;		// ( 0, 0, 1).
+		static const Float3 yellow;		// ( 1, 1, 0).
+		static const Float3 cyan;		// ( 0, 1, 1).
+		static const Float3 magenta;    // ( 1, 0, 1).
 	};
+
+	// Static members:
+	// Numbers:
+	inline constexpr Float3 Float3::zero(0.0f);
+	inline constexpr Float3 Float3::one(1.0f);
+	inline constexpr Float3 Float3::maxValue(math::maxValue);
+	inline constexpr Float3 Float3::minValue(math::minValue);
+
+	// Directions:
+	inline constexpr Float3 Float3::right(1.0f, 0.0f, 0.0f);
+	inline constexpr Float3 Float3::left(-1.0f, 0.0f, 0.0f);
+	inline constexpr Float3 Float3::forward(0.0f, 1.0f, 0.0f);
+	inline constexpr Float3 Float3::back(0.0f, -1.0f, 0.0f);
+	inline constexpr Float3 Float3::up(0.0f, 0.0f, 1.0f);
+	inline constexpr Float3 Float3::down(0.0f, 0.0f, -1.0f);
+
+	// Colors:
+	inline constexpr Float3 Float3::white(1.0f, 1.0f, 1.0f);
+	inline constexpr Float3 Float3::gray(0.5f, 0.5f, 0.5f);
+	inline constexpr Float3 Float3::black(0.0f, 0.0f, 0.0f);
+	inline constexpr Float3 Float3::red(1.0f, 0.0f, 0.0f);
+	inline constexpr Float3 Float3::green(0.0f, 1.0f, 0.0f);
+	inline constexpr Float3 Float3::blue(0.0f, 0.0f, 1.0f);
+	inline constexpr Float3 Float3::yellow(1.0f, 1.0f, 0.0f);
+	inline constexpr Float3 Float3::cyan(0.0f, 1.0f, 1.0f);
+	inline constexpr Float3 Float3::magenta(1.0f, 0.0f, 1.0f);
 
 	// Friend functions:
 	Float3 operator/(float scalar, const Float3& vector);
