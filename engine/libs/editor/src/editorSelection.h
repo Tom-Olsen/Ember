@@ -4,6 +4,13 @@
 
 
 
+namespace emberEcs
+{
+	class Scene;
+}
+
+
+
 namespace emberEditor
 {
 	class EditorSelection
@@ -16,6 +23,7 @@ namespace emberEditor
 		static emberEcs::Entity GetSelectedEntity();
 		static bool HasSelectedEntity();
 		static void ClearSelection();
+		static bool SelectEntityByMouse(emberEcs::Scene& scene);
 
 	private: // Methods:
 		EditorSelection() = delete;

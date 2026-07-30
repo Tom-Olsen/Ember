@@ -18,9 +18,12 @@ namespace emberEcs
         emberCommon::CullMode m_cullMode;
         bool m_drawLocalBounds;
         bool m_drawWorldBounds;
+
 		emberCore::Mesh* m_pMesh;
 		emberCore::Material m_material;
 		emberCore::ShaderProperties m_shaderProperties;
+        
+		bool m_raycastEnabled;
 
 	public: // Methods:
 		MeshRenderer();
@@ -32,6 +35,7 @@ namespace emberEcs
         void SetCullMode(emberCommon::CullMode cullMode);
 		void SetMesh(emberCore::Mesh& mesh);
 		void SetMaterial(const emberCore::Material& material);
+		void SetRaycastEnabled(bool raycastEnabled);
 
 		// Getters:
 		Bounds GetLocalBounds() const;
@@ -43,6 +47,7 @@ namespace emberEcs
 		emberCore::Mesh& GetMesh();
 		emberCore::Material& GetMaterial();
 		emberCore::ShaderProperties& GetShaderProperties();
+		bool GetRaycastEnabled() const;
 
 		// Overrides:
 		void Update() override;

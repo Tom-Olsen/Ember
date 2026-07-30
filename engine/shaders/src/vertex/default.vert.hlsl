@@ -9,7 +9,7 @@ struct VertexInput
     float3 normal : NORMAL;             // normal in local/model space
     float3 tangent : TANGENT;           // tangent in local/model space
     float4 vertexColor : COLOR;         // vertex color
-    float4 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0;              // texture coordinates
 };
 struct VertexOutput
 {
@@ -28,8 +28,8 @@ VertexOutput main(VertexInput input)
     float4 pos = float4(input.position, 1.0f);
     float4 normal = float4(input.normal, 0.0f);
     float4 tangent = float4(input.tangent, 0.0f);
-    float4x4 localToWorldMatrix = GetLocalToWorldMatrix(input.instanceID);
-    float4x4 localToClipMatrix = GetLocalToClipMatrix(input.instanceID, localToWorldMatrix);
+    float4x4 localToWorldMatrix = Model_GetLocalToWorldMatrix(input.instanceID);
+    float4x4 localToClipMatrix = Model_GetLocalToClipMatrix(input.instanceID, localToWorldMatrix);
     float4x4 normalMatrix = LinAlg_NormalMatrix(localToWorldMatrix);
     
     VertexOutput output;

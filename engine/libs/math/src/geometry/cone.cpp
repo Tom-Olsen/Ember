@@ -79,12 +79,12 @@ namespace emberMath
 		Float2 best = Float2::DistanceSq(profilePoint, slant) <= Float2::DistanceSq(profilePoint, cap) ? slant : cap;
 		return apex + best.x * axisDir + best.y * radialDir;
 	}
-	std::optional<Float3> Cone::IntersectRay(const Ray& ray) const
+	RayHit Cone::IntersectRay(const Ray& ray) const
 	{
 		Float3 axisDir = GetAxis();
 		float height = GetHeight();
 		if (math::IsEpsilonZero(height))
-			return std::nullopt;
+			return RayHit();
 
 		float radiusSq = radius * radius;
 		float closestDist = math::maxValue;
@@ -122,8 +122,20 @@ namespace emberMath
 		}
 
 		if (closestDist == math::maxValue)
-			return std::nullopt;
-		return ray.GetPoint(closestDist);
+			return RayHit();
+
+		Float3 point = ray.GetPoint(closestDist);
+		Float3 apexToPoint = point - apex;
+		float axialDist = Float3::Dot(apexToPoint, axisDir);
+		Float3 radial = apexToPoint - axialDist * axisDir;
+		Float3 normal;
+		if (math::IsEpsilonEqual(axialDist, height))
+			normal = axisDir;
+		else if (radial.IsEpsilonZero())
+			normal = -axisDir;
+		else
+			normal = (radial.Normalize() - (radius / height) * axisDir).Normalize();
+		return RayHit(closestDist, point, normal);
 	}
 
 

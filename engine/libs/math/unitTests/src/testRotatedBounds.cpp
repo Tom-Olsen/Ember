@@ -47,7 +47,9 @@ TEST(RotatedBounds, IntersectRay)
 	Bounds localBounds(Float3(10.0f, 0.0f, 0.0f), Float3::one);
 	RotatedBounds bounds(localBounds, Float3x3::RotateZ(math::pi2));
 	Ray ray(Float3(10.0f, 2.0f, 0.0f), Float3(0.0f, -1.0f, 0.0f));
-	std::optional<Float3> hit = bounds.IntersectRay(ray);
-	ASSERT_TRUE(hit.has_value());
-	EXPECT_TRUE(hit.value().IsEpsilonEqual(Float3(10.0f, 1.0f, 0.0f)));
+	RayHit hit = bounds.IntersectRay(ray);
+	ASSERT_TRUE(hit.GetHit());
+	EXPECT_TRUE(math::IsEpsilonEqual(hit.GetDistance(), 1.0f));
+	EXPECT_TRUE(hit.GetPoint().IsEpsilonEqual(Float3(10.0f, 1.0f, 0.0f)));
+	EXPECT_TRUE(hit.GetNormal().IsEpsilonEqual(Float3::forward));
 }

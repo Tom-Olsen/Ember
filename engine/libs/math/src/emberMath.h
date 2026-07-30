@@ -24,10 +24,15 @@
 #include "capsule.h"
 #include "cone.h"
 #include "geometry3d.h"
+#include "plane.h"
 #include "quad.h"
 #include "ray.h"
+#include "rayHit.h"
+#include "rayMeshHit.h"
+#include "rayTriangleHit.h"
 #include "sphere.h"
 #include "rotatedBounds.h"
+#include "triangle.h"
 
 // Random:
 #include "mathConstants.h"

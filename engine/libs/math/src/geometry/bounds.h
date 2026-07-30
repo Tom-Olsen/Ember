@@ -1,10 +1,10 @@
 #pragma once
 #include "float3.h"
 #include "ray.h"
+#include "rayHit.h"
 #include <array>
-#include <optional>
-#include <vector>
 #include <string>
+#include <vector>
 
 
 
@@ -41,7 +41,7 @@ namespace emberMath
 		void Encapsulate(const Bounds& bounds);
 		void Expand(float amount);
 		void Expand(const Float3& amount);
-		std::optional<Float3> IntersectRay(const Ray& ray) const;
+		RayHit IntersectRay(const Ray& ray) const;
 
 		// Equallity:
 		bool operator==(const Bounds& other) const;

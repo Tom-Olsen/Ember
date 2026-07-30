@@ -85,3 +85,19 @@ TEST(Bounds, SetMinMax)
 	EXPECT_TRUE(size == Float3(1.0f, 2.0f, 4.0f));
 	EXPECT_TRUE(center == Float3(0.5f, 1.0f, 2.0f));
 }
+TEST(Bounds, IntersectRay)
+{
+	Bounds bounds(Float3::zero, Float3::one);
+	Ray ray(Float3(2.0f, 0.0f, 0.0f), Float3::left);
+	RayHit hit = bounds.IntersectRay(ray);
+	ASSERT_TRUE(hit.GetHit());
+	EXPECT_TRUE(math::IsEpsilonEqual(hit.GetDistance(), 1.0f));
+	EXPECT_TRUE(hit.GetPoint().IsEpsilonEqual(Float3::right));
+	EXPECT_TRUE(hit.GetNormal().IsEpsilonEqual(Float3::right));
+}
+TEST(Bounds, IntersectRayMiss)
+{
+	Bounds bounds(Float3::zero, Float3::one);
+	Ray ray(Float3(2.0f, 0.0f, 0.0f), Float3::up);
+	EXPECT_FALSE(bounds.IntersectRay(ray).GetHit());
+}

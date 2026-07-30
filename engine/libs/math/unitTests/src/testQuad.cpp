@@ -22,28 +22,30 @@ TEST(Quad, IntersectRayInside)
 {
 	Quad quad(Float3(0.0f, 0.0f, 0.0f), Float3(1.0f, 0.0f, 0.0f), Float3(0.0f, 1.0f, 0.0f));
 	Ray ray(Float3(0.5f, 0.5f, 2.0f), Float3::down);
-	std::optional<Float3> hit = quad.IntersectRay(ray);
-	ASSERT_TRUE(hit.has_value());
-	EXPECT_TRUE(hit.value().IsEpsilonEqual(Float3(0.5f, 0.5f, 0.0f)));
+	RayHit hit = quad.IntersectRay(ray);
+	ASSERT_TRUE(hit.GetHit());
+	EXPECT_TRUE(math::IsEpsilonEqual(hit.GetDistance(), 2.0f));
+	EXPECT_TRUE(hit.GetPoint().IsEpsilonEqual(Float3(0.5f, 0.5f, 0.0f)));
+	EXPECT_TRUE(hit.GetNormal().IsEpsilonEqual(Float3::up));
 }
 TEST(Quad, IntersectRayMiss)
 {
 	Quad quad(Float3(0.0f, 0.0f, 0.0f), Float3(1.0f, 0.0f, 0.0f), Float3(0.0f, 1.0f, 0.0f));
 	Ray ray(Float3(1.5f, 0.5f, 2.0f), Float3::down);	// Passes outside the u range.
-	EXPECT_FALSE(quad.IntersectRay(ray).has_value());
+	EXPECT_FALSE(quad.IntersectRay(ray).GetHit());
 }
 TEST(Quad, IntersectRayBehind)
 {
 	Quad quad(Float3(0.0f, 0.0f, 0.0f), Float3(1.0f, 0.0f, 0.0f), Float3(0.0f, 1.0f, 0.0f));
 	Ray ray(Float3(0.5f, 0.5f, 2.0f), Float3::up);	// Points away from the quad.
-	EXPECT_FALSE(quad.IntersectRay(ray).has_value());
+	EXPECT_FALSE(quad.IntersectRay(ray).GetHit());
 }
 TEST(Quad, IntersectRayOriented)
 {
 	// Quad in the YZ plane (normal +X), corner at origin, drawn like a translate-handle plane.
 	Quad quad(Float3(0.0f, 0.0f, 0.0f), Float3(0.0f, 1.0f, 0.0f), Float3(0.0f, 0.0f, 1.0f));
 	Ray ray(Float3(3.0f, 0.5f, 0.5f), Float3::left);
-	std::optional<Float3> hit = quad.IntersectRay(ray);
-	ASSERT_TRUE(hit.has_value());
-	EXPECT_TRUE(hit.value().IsEpsilonEqual(Float3(0.0f, 0.5f, 0.5f)));
+	RayHit hit = quad.IntersectRay(ray);
+	ASSERT_TRUE(hit.GetHit());
+	EXPECT_TRUE(hit.GetPoint().IsEpsilonEqual(Float3(0.0f, 0.5f, 0.5f)));
 }

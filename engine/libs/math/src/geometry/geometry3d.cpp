@@ -1,6 +1,8 @@
 #include "geometry3d.h"
+#include "logger.h"
 #include "mathConstants.h"
 #include "mathFunctions.h"
+#include "triangle.h"
 
 
 
@@ -65,6 +67,33 @@ namespace emberMath
 			float d = Float3::Dot(planeSupport, planeNormal);
 			float t = (d - Float3::Dot(lineSupport, planeNormal)) / denominator;
 			return lineSupport + t * lineDirection;
+		}
+
+		RayMeshHit IntersectRayMesh(const Ray& ray, std::span<const Float3> positions, std::span<const Uint3> triangles, const Bounds& bounds)
+		{
+			if (positions.empty() || triangles.empty() || !bounds.IntersectRay(ray).GetHit())
+				return RayMeshHit();
+
+			RayMeshHit closestHit;
+			for (std::size_t i = 0; i < triangles.size(); i++)
+			{
+				const Uint3& indices = triangles[i];
+				if (indices.x >= positions.size() || indices.y >= positions.size() || indices.z >= positions.size())
+				{
+					LOG_ERROR("geometry3d::IntersectRayMesh(): Triangle {} contains an out-of-bounds vertex index.", i);
+					continue;
+				}
+
+				Triangle triangle(positions[indices.x], positions[indices.y], positions[indices.z]);
+				RayTriangleHit triangleHit = triangle.IntersectRay(ray);
+				if (!triangleHit.GetHit())
+					continue;
+				if (closestHit.GetHit() && closestHit.GetDistance() <= triangleHit.GetDistance())
+					continue;
+
+				closestHit = RayMeshHit(triangleHit, static_cast<uint32_t>(i));
+			}
+			return closestHit;
 		}
 	}
 }

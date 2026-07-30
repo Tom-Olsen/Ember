@@ -1,7 +1,7 @@
 #pragma once
 #include "float3.h"
 #include "ray.h"
-#include <optional>
+#include "rayHit.h"
 #include <string>
 
 
@@ -28,7 +28,7 @@ namespace emberMath
 		// Methods:
 		bool Contains(const Float3& point) const;
 		Float3 ClosestPoint(const Float3& point) const; // closest point on the quad surface clamped to its bounds.
-		std::optional<Float3> IntersectRay(const Ray& ray) const;
+		RayHit IntersectRay(const Ray& ray) const;
 
 		// Equality:
 		bool operator==(const Quad& other) const;

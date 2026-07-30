@@ -10,7 +10,7 @@ struct VertexInput
 };
 struct VertexOutput
 {
-    float4 position : SV_POSITION;
+    float4 clipPosition : SV_POSITION;
     uint layer : SV_RenderTargetArrayIndex;
 };
 
@@ -19,12 +19,12 @@ struct VertexOutput
 VertexOutput main(VertexInput input)
 {
     float4 pos = float4(input.position, 1.0);
-    float4x4 localToWorldMatrix = GetLocalToWorldMatrix(input.instanceID);
-    float4x4 worldToClipMatrix = GetShadowWorldToClipMatrix(pc.targetIndex);
+    float4x4 localToWorldMatrix = Model_GetLocalToWorldMatrix(input.instanceID);
+    float4x4 worldToClipMatrix = Light_GetShadowWorldToClipMatrix(pc.targetIndex);
     float4x4 localToClipMatrix = mul(worldToClipMatrix, localToWorldMatrix);
     
     VertexOutput output;
-    output.position = mul(localToClipMatrix, pos);
+    output.clipPosition = mul(localToClipMatrix, pos);
     output.layer = pc.targetIndex;
     return output;
 }

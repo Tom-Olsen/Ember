@@ -177,6 +177,7 @@ inline Scene* DefaultScene()
 		pMeshRenderer->GetMaterial().SetTexture("colorMap", TextureManager::GetTexture("skybox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
+		pMeshRenderer->SetRaycastEnabled(false);
 	}
 	{ // Floor:
 		Entity entity = Entity::Create("floor");

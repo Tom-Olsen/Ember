@@ -72,7 +72,7 @@ namespace emberMath
 			return point;
 		return segmentPoint + radius * segmentToPoint / math::Sqrt(distSq);
 	}
-	std::optional<Float3> Capsule::IntersectRay(const Ray& ray) const
+	RayHit Capsule::IntersectRay(const Ray& ray) const
 	{
 		float radiusSq = radius * radius;
 		Float3 axis = point1 - point0;
@@ -145,8 +145,15 @@ namespace emberMath
 		}
 
 		if (closestDist == math::maxValue)
-			return std::nullopt;
-		return ray.GetPoint(closestDist);
+			return RayHit();
+
+		Float3 point = ray.GetPoint(closestDist);
+		float segmentDist = Float3::Dot(point - point0, axisDir);
+		segmentDist = math::Clamp(segmentDist, 0.0f, height);
+		Float3 segmentPoint = point0 + segmentDist * axisDir;
+		Float3 segmentToPoint = point - segmentPoint;
+		Float3 normal = segmentToPoint.IsEpsilonZero() ? Float3::zero : segmentToPoint.Normalize();
+		return RayHit(closestDist, point, normal);
 	}
 
 

@@ -201,7 +201,7 @@ namespace vulkanRendererBackend
 		
 		// Record and submit current frame commands:
 		{
-			PROFILE_SCOPE("Record");
+			PROFILE_SCOPE("vulkanRendererBackend::Renderer::Record");
 			DEBUG_LOG_TRACE("Recording frame {}", m_frameIndex);
 
 			RecordResourceUpdateCommands();
@@ -839,8 +839,6 @@ namespace vulkanRendererBackend
 	}
 	bool Renderer::AcquireImage()
 	{
-		PROFILE_FUNCTION();
-
 		if (m_pIWindow->GetIsResizing())
 		{
 			m_pIWindow->ResetIsResizing();
@@ -1083,8 +1081,6 @@ namespace vulkanRendererBackend
 				// Draw calls:
 				for (DrawCall* drawCall : m_sortedGizmoDrawCallPointers)
 				{
-					PROFILE_SCOPE("GizmoDrawCall");
-
 					// Pipeline swap:
 					Material* pGizmoMaterial = drawCall->pMaterial;
 					VkPipeline newPipeline = pGizmoMaterial->GetPipeline(drawCall->pMesh, Material::PipelineType::gizmo)->GetVkPipeline();
@@ -1294,8 +1290,6 @@ namespace vulkanRendererBackend
 				// Draw calls:
 				for (const DrawCall& drawCall : m_outlineCalls)
 				{
-					PROFILE_SCOPE("OutlineDrawCall");
-
 					// Pipeline swap:
 					Material* pOutlineMaterial = drawCall.pMaterial;
 					VkPipeline newPipeline = pOutlineMaterial->GetPipeline(drawCall.pMesh, Material::PipelineType::outline)->GetVkPipeline();
@@ -1501,8 +1495,6 @@ namespace vulkanRendererBackend
 				// Draw calls:
 				for (DrawCall* drawCall : m_sortedDrawCallPointers)
 				{
-					PROFILE_SCOPE("DrawCall");
-
 					// Pipeline swap:
 					Material* pForwardMaterial = drawCall->pMaterial;
 					VkPipeline newPipeline = pForwardMaterial->GetPipeline(drawCall->pMesh, Material::PipelineType::forward)->GetVkPipeline();
@@ -1866,7 +1858,6 @@ namespace vulkanRendererBackend
 	// Submit commands:
 	void Renderer::SubmitResourceUpdateCommands()
 	{
-		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::resourceUpdate);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -1902,7 +1893,6 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitGizmoCommands()
 	{
-		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::gizmo);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -1934,7 +1924,6 @@ namespace vulkanRendererBackend
 	}
     void Renderer::SubmitPreRenderComputeCommands()
 	{
-		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::preRenderCompute);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -1970,7 +1959,6 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitOutlineCommands()
 	{
-		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::outline);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -2002,7 +1990,6 @@ namespace vulkanRendererBackend
 	}
     void Renderer::SubmitShadowCommands()
 	{
-		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::shadow);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -2037,7 +2024,6 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitForwardCommands()
 	{
-		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forward);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		
@@ -2072,7 +2058,6 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitForwardCommandsParallel()
 	{
-		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forward);
 		VkCommandBuffer& primaryCommandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		std::vector<VkCommandBuffer>& secondaryCommandBuffers = commandPool.GetSecondaryVkCommandBuffers();
@@ -2149,7 +2134,6 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitPostRenderComputeCommands()
 	{
-		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::postRenderCompute);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
@@ -2186,7 +2170,6 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SubmitPresentCommands()
 	{
-		PROFILE_FUNCTION();
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::present);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 

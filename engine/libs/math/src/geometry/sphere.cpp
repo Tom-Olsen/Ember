@@ -32,23 +32,26 @@ namespace emberMath
 			return point;
 		return center + radius * centerToPoint / math::Sqrt(distSq);
 	}
-	std::optional<Float3> Sphere::IntersectRay(const Ray& ray) const
+	RayHit Sphere::IntersectRay(const Ray& ray) const
 	{
 		Float3 originToCenter = ray.origin - center;
 		float b = 2.0f * Float3::Dot(originToCenter, ray.direction);
 		float c = originToCenter.LengthSq() - radius * radius;
 		float discriminant = b * b - 4.0f * c;
 		if (discriminant < 0.0f)
-			return std::nullopt;
+			return RayHit();
 
 		float sqrtDiscriminant = math::Sqrt(discriminant);
 		float dist0 = 0.5f * (-b - sqrtDiscriminant);
 		float dist1 = 0.5f * (-b + sqrtDiscriminant);
-		if (dist0 >= 0.0f)
-			return ray.GetPoint(dist0);
-		if (dist1 >= 0.0f)
-			return ray.GetPoint(dist1);
-		return std::nullopt;
+		float distance = dist0 >= 0.0f ? dist0 : dist1;
+		if (distance < 0.0f)
+			return RayHit();
+
+		Float3 point = ray.GetPoint(distance);
+		Float3 centerToPoint = point - center;
+		Float3 normal = centerToPoint.IsEpsilonZero() ? Float3::zero : centerToPoint.Normalize();
+		return RayHit(distance, point, normal);
 	}
 
 

@@ -33,14 +33,40 @@ StructuredBuffer<InstanceData> instanceBuffer : register(t199, SHADER_SET);
 
 
 
-// Functions:
-float4x4 GetLocalToWorldMatrix(uint instanceID)
+// Model world position:
+float3 Model_GetWorldPosition()
+{
+    return LinAlg_GetTranslation(model_localToWorldMatrix);
+}
+float3 Model_GetWorldPosition(uint instanceID)
+{
+    if (pc.instanceCount != 0 && instanceID < pc.instanceCount)
+        return LinAlg_GetTranslation(mul(model_localToWorldMatrix, instanceBuffer[instanceID].localToWorldMatrix));
+    return Model_GetWorldPosition();
+}
+
+// Model local to world matrix:
+float4x4 Model_GetLocalToWorldMatrix()
+{
+    return model_localToWorldMatrix;
+}
+float4x4 Model_GetLocalToWorldMatrix(uint instanceID)
 {
     if (pc.instanceCount != 0 && instanceID < pc.instanceCount)
         return mul(model_localToWorldMatrix, instanceBuffer[instanceID].localToWorldMatrix);
     return model_localToWorldMatrix;
 }
-float4x4 GetLocalToClipMatrix(uint instanceID, float4x4 localToWorldMatrix)
+
+// Model local to clip matrix:
+float4x4 Model_GetLocalToClipMatrix()
+{
+    return mul(camera_worldToClipMatrix, model_localToWorldMatrix);
+}
+float4x4 Model_GetLocalToClipMatrix(uint instanceID)
+{
+    return mul(camera_worldToClipMatrix, Model_GetLocalToWorldMatrix(instanceID));
+}
+float4x4 Model_GetLocalToClipMatrix(uint instanceID, float4x4 localToWorldMatrix)
 {
     return mul(camera_worldToClipMatrix, localToWorldMatrix);
 }

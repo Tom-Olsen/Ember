@@ -125,77 +125,120 @@ namespace emberMath
 		extent += Float3::Abs(amount);
         extent = Float3::Max(extent, Float3(0.0f));
 	}
-	std::optional<Float3> Bounds::IntersectRay(const Ray& ray) const
+	RayHit Bounds::IntersectRay(const Ray& ray) const
 	{
 		Float3 min = GetMin();
 		Float3 max = GetMax();
 		float enterDist = -math::maxValue;
 		float exitDist = math::maxValue;
+		Float3 enterNormal = Float3::zero;
+		Float3 exitNormal = Float3::zero;
 
 		if (ray.direction.x == 0.0f)
 		{
 			if (ray.origin.x < min.x || ray.origin.x > max.x)
-				return std::nullopt;
+				return RayHit();
 		}
 		else
 		{
 			float invDir = 1.0f / ray.direction.x;
 			float dist0 = (min.x - ray.origin.x) * invDir;
 			float dist1 = (max.x - ray.origin.x) * invDir;
+			Float3 normal0 = Float3::left;
+			Float3 normal1 = Float3::right;
 			if (dist0 > dist1)
 			{
 				float temp = dist0;
 				dist0 = dist1;
 				dist1 = temp;
+				Float3 tempNormal = normal0;
+				normal0 = normal1;
+				normal1 = tempNormal;
 			}
-			enterDist = math::Max(enterDist, dist0);
-			exitDist = math::Min(exitDist, dist1);
+			if (dist0 > enterDist)
+			{
+				enterDist = dist0;
+				enterNormal = normal0;
+			}
+			if (dist1 < exitDist)
+			{
+				exitDist = dist1;
+				exitNormal = normal1;
+			}
 		}
 
 		if (ray.direction.y == 0.0f)
 		{
 			if (ray.origin.y < min.y || ray.origin.y > max.y)
-				return std::nullopt;
+				return RayHit();
 		}
 		else
 		{
 			float invDir = 1.0f / ray.direction.y;
 			float dist0 = (min.y - ray.origin.y) * invDir;
 			float dist1 = (max.y - ray.origin.y) * invDir;
+			Float3 normal0 = Float3::back;
+			Float3 normal1 = Float3::forward;
 			if (dist0 > dist1)
 			{
 				float temp = dist0;
 				dist0 = dist1;
 				dist1 = temp;
+				Float3 tempNormal = normal0;
+				normal0 = normal1;
+				normal1 = tempNormal;
 			}
-			enterDist = math::Max(enterDist, dist0);
-			exitDist = math::Min(exitDist, dist1);
+			if (dist0 > enterDist)
+			{
+				enterDist = dist0;
+				enterNormal = normal0;
+			}
+			if (dist1 < exitDist)
+			{
+				exitDist = dist1;
+				exitNormal = normal1;
+			}
 		}
 
 		if (ray.direction.z == 0.0f)
 		{
 			if (ray.origin.z < min.z || ray.origin.z > max.z)
-				return std::nullopt;
+				return RayHit();
 		}
 		else
 		{
 			float invDir = 1.0f / ray.direction.z;
 			float dist0 = (min.z - ray.origin.z) * invDir;
 			float dist1 = (max.z - ray.origin.z) * invDir;
+			Float3 normal0 = Float3::down;
+			Float3 normal1 = Float3::up;
 			if (dist0 > dist1)
 			{
 				float temp = dist0;
 				dist0 = dist1;
 				dist1 = temp;
+				Float3 tempNormal = normal0;
+				normal0 = normal1;
+				normal1 = tempNormal;
 			}
-			enterDist = math::Max(enterDist, dist0);
-			exitDist = math::Min(exitDist, dist1);
+			if (dist0 > enterDist)
+			{
+				enterDist = dist0;
+				enterNormal = normal0;
+			}
+			if (dist1 < exitDist)
+			{
+				exitDist = dist1;
+				exitNormal = normal1;
+			}
 		}
 
 		if (enterDist > exitDist || exitDist < 0.0f)
-			return std::nullopt;
+			return RayHit();
 
-		return ray.GetPoint(enterDist <= 0.0f ? exitDist : enterDist);
+		float distance = enterDist < 0.0f ? exitDist : enterDist;
+		Float3 normal = enterDist < 0.0f ? exitNormal : enterNormal;
+		return RayHit(distance, ray.GetPoint(distance), normal);
 	}
 
 

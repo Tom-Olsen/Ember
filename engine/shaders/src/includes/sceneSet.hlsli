@@ -16,7 +16,7 @@ cbuffer LightProperties : register(b2399, SCENE_SET)
 
 
 
-float4x4 GetShadowWorldToClipMatrix(uint targetIndex)
+float4x4 Light_GetShadowWorldToClipMatrix(uint targetIndex)
 {
     if (targetIndex < light_dirCount)
         return light_directionData[targetIndex].worldToClipMatrix;
