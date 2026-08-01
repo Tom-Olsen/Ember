@@ -27,8 +27,7 @@ namespace vulkanRendererBackend
     Material Material::CreateOutline(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
     {
 		Material material = Material(name);
-		material.m_renderMode = emberCommon::RenderMode::opaque;
-		material.m_renderQueue = 0;
+		material.m_defaultRenderState = MaterialRenderState(emberCommon::RenderMode::opaque, 0);
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -86,8 +85,7 @@ namespace vulkanRendererBackend
 	Material Material::CreateForward(const std::string& name, emberCommon::RenderMode renderMode, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		Material material = Material(name);
-		material.m_renderMode = renderMode;
-		material.m_renderQueue = renderQueue;
+		material.m_defaultRenderState = MaterialRenderState(renderMode, renderQueue);
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -160,8 +158,7 @@ namespace vulkanRendererBackend
 	Material Material::CreateShadow(const std::string& name, uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv)
 	{
 		Material material = Material(name);
-		material.m_renderMode = emberCommon::RenderMode::opaque;
-		material.m_renderQueue = 0; // has no inpact on shadow materials.
+		material.m_defaultRenderState = MaterialRenderState(emberCommon::RenderMode::opaque, 0);
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -215,8 +212,7 @@ namespace vulkanRendererBackend
 	Material Material::CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		Material material = Material(name);
-		material.m_renderMode = emberCommon::RenderMode::opaque;
-		material.m_renderQueue = 0; // has no inpact on present materials.
+		material.m_defaultRenderState = MaterialRenderState(emberCommon::RenderMode::opaque, 0);
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -287,13 +283,13 @@ namespace vulkanRendererBackend
 	// Setters:
 	void Material::SetRenderQueue(int32_t renderQueue)
 	{
-		m_renderQueue = renderQueue;
+		m_defaultRenderState.renderQueue = renderQueue;
 	}
     void Material::SetRenderMode(emberCommon::RenderMode renderMode)
     {
     	// Only materials with renderMode-specific pipeline variants support renderMode changes: forward and gizmo.
     	if (HasPipeline(PipelineType::forward) || HasPipeline(PipelineType::gizmo))
-    	    m_renderMode = renderMode;
+			m_defaultRenderState.renderMode = renderMode;
         else
             LOG_WARN("Material::SetRenderMode(...): modifying renderMode of material '{}' is not possible.", GetName());
     }
@@ -328,11 +324,15 @@ namespace vulkanRendererBackend
 	}
 	int32_t Material::GetRenderQueue() const
 	{
-		return m_renderQueue;
+		return m_defaultRenderState.renderQueue;
 	}
 	emberCommon::RenderMode Material::GetRenderMode() const
 	{
-		return m_renderMode;
+		return m_defaultRenderState.renderMode;
+	}
+	const MaterialRenderState& Material::GetDefaultRenderState() const
+	{
+		return m_defaultRenderState;
 	}
 	Material* Material::GetShadowMaterial() const
 	{
@@ -368,8 +368,7 @@ namespace vulkanRendererBackend
 	// Constructor:
 	Material::Material(const std::string& name) : Shader(name)
 	{
-		m_renderMode = emberCommon::RenderMode::opaque;
-		m_renderQueue = emberCommon::RenderQueue::opaque;
+		m_defaultRenderState = MaterialRenderState();
 		m_pShadowMaterial = nullptr;
 	}
 

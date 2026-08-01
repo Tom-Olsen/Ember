@@ -887,14 +887,14 @@ namespace vulkanRendererBackend
 			std::sort(sortedDrawCallPointers.begin(), sortedDrawCallPointers.end(), [this](DrawCall* drawCallA, DrawCall* drawCallB)
 			{
 				// RenderQueue:
-				int renderQueueA = static_cast<int>(drawCallA->materialState.renderQueue);
-				int renderQueueB = static_cast<int>(drawCallB->materialState.renderQueue);
+				int renderQueueA = static_cast<int>(drawCallA->materialState.renderState.renderQueue);
+				int renderQueueB = static_cast<int>(drawCallB->materialState.renderState.renderQueue);
 				if (renderQueueA != renderQueueB)
 					return renderQueueA < renderQueueB;
 
 				// Transparent materials back-to-front ordering:
-				const bool transparentA = drawCallA->materialState.renderMode == emberCommon::RenderMode::transparent;
-				const bool transparentB = drawCallB->materialState.renderMode == emberCommon::RenderMode::transparent;
+				const bool transparentA = drawCallA->materialState.renderState.renderMode == emberCommon::RenderMode::transparent;
+				const bool transparentB = drawCallB->materialState.renderState.renderMode == emberCommon::RenderMode::transparent;
 				if (transparentA && transparentB)
 				{
 					const Float3 drawPositionA = Float3(drawCallA->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -1088,7 +1088,7 @@ namespace vulkanRendererBackend
 				{
 					// Pipeline swap:
 					Material* pGizmoMaterial = drawCall->materialState.pMaterial;
-					VkPipeline newPipeline = pGizmoMaterial->GetPipeline(drawCall->pMesh, PipelineType::gizmo, drawCall->materialState.renderMode)->GetVkPipeline();
+					VkPipeline newPipeline = pGizmoMaterial->GetPipeline(drawCall->pMesh, PipelineType::gizmo, drawCall->materialState.renderState.renderMode)->GetVkPipeline();
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1118,7 +1118,7 @@ namespace vulkanRendererBackend
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Cull mode:
-					vkCmdSetCullMode(commandBuffer, ResolveCullMode(drawCall->materialState.cullMode, RenderModeToCullMode(drawCall->materialState.renderMode)));
+					vkCmdSetCullMode(commandBuffer, ResolveCullMode(drawCall->materialState.cullModeOverride, RenderModeToCullMode(drawCall->materialState.renderState.renderMode)));
 
 					// Bind per draw call descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = drawCall->materialState.descriptorSetBindingHandle.Get()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1502,7 +1502,7 @@ namespace vulkanRendererBackend
 				{
 					// Pipeline swap:
 					Material* pForwardMaterial = drawCall->materialState.pMaterial;
-					VkPipeline newPipeline = pForwardMaterial->GetPipeline(drawCall->pMesh, PipelineType::forward, drawCall->materialState.renderMode)->GetVkPipeline();
+					VkPipeline newPipeline = pForwardMaterial->GetPipeline(drawCall->pMesh, PipelineType::forward, drawCall->materialState.renderState.renderMode)->GetVkPipeline();
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1532,7 +1532,7 @@ namespace vulkanRendererBackend
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Cull mode:
-					vkCmdSetCullMode(commandBuffer, ResolveCullMode(drawCall->materialState.cullMode, RenderModeToCullMode(drawCall->materialState.renderMode)));
+					vkCmdSetCullMode(commandBuffer, ResolveCullMode(drawCall->materialState.cullModeOverride, RenderModeToCullMode(drawCall->materialState.renderState.renderMode)));
 
 					// Bind per draw call descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = drawCall->materialState.descriptorSetBindingHandle.Get()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1622,9 +1622,9 @@ namespace vulkanRendererBackend
 		//			DrawCall* drawCall = (m_sortedDrawCallPointers)[i];
 		//
 		//			// Pipeline swap:
-		//			if (pipeline != drawCall->pMaterial->GetPipeline(drawCall->pMesh, PipelineType::forward, drawCall->materialState.renderMode)->GetVkPipeline())
+		//			if (pipeline != drawCall->pMaterial->GetPipeline(drawCall->pMesh, PipelineType::forward, drawCall->materialState.renderState.renderMode)->GetVkPipeline())
 		//			{
-		//				pipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh, PipelineType::forward, drawCall->materialState.renderMode)->GetVkPipeline();
+		//				pipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh, PipelineType::forward, drawCall->materialState.renderState.renderMode)->GetVkPipeline();
 		//				pushConstant.instanceCount = drawCall->instanceCount;
 		//				vkCmdBindPipeline(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		//				vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);

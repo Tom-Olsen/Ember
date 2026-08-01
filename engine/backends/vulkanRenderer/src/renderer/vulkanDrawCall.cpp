@@ -11,18 +11,16 @@ namespace vulkanRendererBackend
 	DrawCall::MaterialState::MaterialState() :
         pMaterial(nullptr),
         descriptorSetBindingHandle(),
-        renderQueue(0),
-        renderMode(emberCommon::RenderMode::opaque),
-        cullMode(VK_CULL_MODE_FLAG_BITS_MAX_ENUM)
+        renderState(),
+        cullModeOverride(VK_CULL_MODE_FLAG_BITS_MAX_ENUM)
 	{
 
     }
-	DrawCall::MaterialState::MaterialState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, VkCullModeFlagBits cullMode) :
+	DrawCall::MaterialState::MaterialState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, VkCullModeFlagBits cullModeOverride) :
         pMaterial(pMaterial),
         descriptorSetBindingHandle(descriptorSetBindingHandle),
-        renderQueue(pMaterial ? pMaterial->GetRenderQueue() : 0),
-        renderMode(pMaterial ? pMaterial->GetRenderMode() : emberCommon::RenderMode::opaque),
-        cullMode(cullMode)
+        renderState(pMaterial ? pMaterial->GetDefaultRenderState() : MaterialRenderState()),
+        cullModeOverride(cullModeOverride)
 	{
         assert(pMaterial != nullptr);
 	}

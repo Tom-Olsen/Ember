@@ -1,8 +1,8 @@
 #pragma once
 #include "iMaterial.h"
-#include "vulkanPipelineKey.h"
 #include "commonPipelineState.h"
-#include "commonRenderQueue.h"
+#include "vulkanMaterialRenderState.h"
+#include "vulkanPipelineKey.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
 #include <cstddef>
@@ -33,8 +33,7 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Material : public Shader, public emberBackendInterface::IMaterial
 	{
 	private: // Members:
-		emberCommon::RenderMode m_renderMode;
-		int32_t m_renderQueue;          // opaque=0-999, transparent=1000-1999, skybox=2000-...
+		MaterialRenderState m_defaultRenderState;
 		Material* m_pShadowMaterial;    // the shadow material used alongside this material.
 		std::unordered_map<PipelineKey, std::unique_ptr<Pipeline>, PipelineKey::Hasher> m_pipelines;
 
@@ -63,6 +62,7 @@ namespace vulkanRendererBackend
 		const std::string& GetName() const override;
 		int32_t GetRenderQueue() const override;
 		emberCommon::RenderMode GetRenderMode() const override;
+		const MaterialRenderState& GetDefaultRenderState() const;
 		Material* GetShadowMaterial() const override;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
 		const Pipeline* GetPipeline(const Mesh* pMesh, PipelineType pipelineType, emberCommon::RenderMode renderMode) const;
