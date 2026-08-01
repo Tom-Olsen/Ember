@@ -1,20 +1,80 @@
 #include "vulkanDrawCall.h"
 #include "vulkanDescriptorSetBinding.h"
+#include "vulkanMaterial.h"
+#include <cassert>
 
 
 
 namespace vulkanRendererBackend
 {
+    // Public structs:
+	DrawCall::MaterialState::MaterialState() :
+        pMaterial(nullptr),
+        descriptorSetBindingHandle(),
+        renderQueue(0),
+        renderMode(emberCommon::RenderMode::opaque),
+        cullMode(VK_CULL_MODE_FLAG_BITS_MAX_ENUM)
+	{
+
+    }
+	DrawCall::MaterialState::MaterialState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, VkCullModeFlagBits cullMode) :
+        pMaterial(pMaterial),
+        descriptorSetBindingHandle(descriptorSetBindingHandle),
+        renderQueue(pMaterial ? pMaterial->GetRenderQueue() : 0),
+        renderMode(pMaterial ? pMaterial->GetRenderMode() : emberCommon::RenderMode::opaque),
+        cullMode(cullMode)
+	{
+        assert(pMaterial != nullptr);
+	}
+	DrawCall::ShadowState::ShadowState() :
+        pMaterial(nullptr),
+        descriptorSetBindingHandle(),
+        receiveShadows(false),
+        castShadows(false)
+	{
+
+	}
+	DrawCall::ShadowState::ShadowState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, bool receiveShadows, bool castShadows) :
+        pMaterial(pMaterial),
+        descriptorSetBindingHandle(descriptorSetBindingHandle),
+        receiveShadows(receiveShadows),
+        castShadows(castShadows)
+	{
+        assert(pMaterial != nullptr);
+	}
+
+
+
+	// Constructor/Destructor:
+	DrawCall::DrawCall(const Float4x4& localToWorldMatrix, const MaterialState& materialState, const ShadowState& shadowState, Mesh* pMesh, uint32_t instanceCount)
+        : localToWorldMatrix(localToWorldMatrix), materialState(materialState), shadowState(shadowState), pMesh(pMesh), instanceCount(instanceCount)
+	{
+        assert(pMesh != nullptr);
+	}
+	DrawCall::DrawCall(const Float4x4& localToWorldMatrix, const MaterialState& materialState, Mesh* pMesh, uint32_t instanceCount)
+        : localToWorldMatrix(localToWorldMatrix), materialState(materialState), shadowState(), pMesh(pMesh), instanceCount(instanceCount)
+	{
+        assert(pMesh != nullptr);
+	}
+	DrawCall::~DrawCall()
+	{
+
+	}
+
+
+
 	void DrawCall::SetModelData()
 	{
-		bool callHasModelDataBinding = HasModelDataBinding(pCallDescriptorSetBinding);
+		DescriptorSetBinding* pMaterialDescriptorSetBinding = materialState.descriptorSetBindingHandle.Get();
+		DescriptorSetBinding* pShadowDescriptorSetBinding = shadowState.descriptorSetBindingHandle.Get();
+		bool callHasModelDataBinding = HasModelDataBinding(pMaterialDescriptorSetBinding);
 		bool shadowHasModelDataBinding = HasModelDataBinding(pShadowDescriptorSetBinding);
 		if (!callHasModelDataBinding && !shadowHasModelDataBinding)
 			return;
 
 		Float4x4 worldToLocalMatrix = localToWorldMatrix.Inverse();
 		if (callHasModelDataBinding)
-			SetModelData(pCallDescriptorSetBinding, worldToLocalMatrix);
+			SetModelData(pMaterialDescriptorSetBinding, worldToLocalMatrix);
 		if (shadowHasModelDataBinding)
 			SetModelData(pShadowDescriptorSetBinding, worldToLocalMatrix);
 	}

@@ -1,6 +1,8 @@
 #pragma once
+#include "commonPipelineState.h"
 #include "emberMath.h"
-#include <vector>
+#include "vulkanDescriptorSetBindingHandle.h"
+#include <cstdint>
 #include <vulkan/vulkan.h>
 
 
@@ -14,20 +16,43 @@ namespace vulkanRendererBackend
 
 
 
-	struct DrawCall
+	class DrawCall
 	{
+    public: // Structs:
+        struct MaterialState
+        {
+            Material* pMaterial;
+            DescriptorSetBindingHandle descriptorSetBindingHandle;
+            int32_t renderQueue;
+            emberCommon::RenderMode renderMode;
+            VkCullModeFlagBits cullMode;
+
+            MaterialState();
+            MaterialState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, VkCullModeFlagBits cullMode);
+        };
+        struct ShadowState
+        {
+            Material* pMaterial;
+            DescriptorSetBindingHandle descriptorSetBindingHandle;
+            bool receiveShadows;
+            bool castShadows;
+
+            ShadowState();
+            ShadowState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, bool receiveShadows, bool castShadows);
+        };
+
+    public: // Members:
 		Float4x4 localToWorldMatrix;
-		bool receiveShadows;
-		bool castShadows;
-		Material* pMaterial;
-		Material* pShadowMaterial;
-		bool ownsDescriptorSetBinding;					    // True if pCallDescriptorSetBinding was borrowed from pool.
-		bool ownsShadowDescriptorSetBinding;				// True if pShadowDescriptorSetBinding was borrowed from pool.
-		DescriptorSetBinding* pCallDescriptorSetBinding;
-		DescriptorSetBinding* pShadowDescriptorSetBinding;
+        MaterialState materialState;
+        ShadowState shadowState;
 		Mesh* pMesh;
-		VkCullModeFlagBits cullMode;
-		uint32_t instanceCount;	// 0 implies no instanced rendering.
+		uint32_t instanceCount;	// 0 means no instanced rendering.
+
+    public: // Methods:
+        // Constructors/Destructor:
+        DrawCall(const Float4x4& localToWorldMatrix, const MaterialState& materialState, const ShadowState& shadowState, Mesh* pMesh, uint32_t instanceCount = 0);
+        DrawCall(const Float4x4& localToWorldMatrix, const MaterialState& materialState, Mesh* pMesh, uint32_t instanceCount = 0);
+        ~DrawCall();
 
 		void SetModelData();
 

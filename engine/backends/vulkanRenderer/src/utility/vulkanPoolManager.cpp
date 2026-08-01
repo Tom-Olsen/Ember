@@ -34,15 +34,15 @@ namespace vulkanRendererBackend
 
 
 	// Checkout:
-	DescriptorSetBinding* PoolManager::CheckOutCallDescriptorSetBinding(Shader* pShader)
+	DescriptorSetBindingHandle PoolManager::CheckOutCallDescriptorSetBindingHandle(Shader* pShader)
 	{
 		if (!IsValidCallDescriptorSetBindingShader(pShader))
-			return nullptr;
+			return DescriptorSetBindingHandle();
 
 		auto it = s_callDescriptorSetBindingPoolMap.find(pShader);
 		if (it == s_callDescriptorSetBindingPoolMap.end())
 			it = s_callDescriptorSetBindingPoolMap.try_emplace(pShader).first;
-		return it->second.CheckOut(pShader);
+		return DescriptorSetBindingHandle(pShader, it->second.CheckOut(pShader));
 	}
 	StagingBuffer* PoolManager::CheckOutStagingBuffer(uint32_t size)
 	{
@@ -56,21 +56,25 @@ namespace vulkanRendererBackend
 
 
 	// Return:
-	void PoolManager::ReturnCallDescriptorSetBinding(Shader* pShader, DescriptorSetBinding* pDescriptorSetBinding)
+	void PoolManager::ReturnCallDescriptorSetBinding(const DescriptorSetBindingHandle& descriptorSetBindingHandle)
 	{
-		if (pShader == nullptr)
+		if (!descriptorSetBindingHandle.IsPooled())
+			return;
+
+        Shader* pPoolShader = descriptorSetBindingHandle.GetPoolShader();
+		if (pPoolShader == nullptr)
 		{
 			LOG_ERROR("PoolManager::ReturnCallDescriptorSetBinding(...) failed. pShader is nullptr.");
 			return;
 		}
 
-		auto it = s_callDescriptorSetBindingPoolMap.find(pShader);
+		auto it = s_callDescriptorSetBindingPoolMap.find(pPoolShader);
 		if (it == s_callDescriptorSetBindingPoolMap.end())
 		{
-			LOG_ERROR("PoolManager::ReturnCallDescriptorSetBinding(...) failed. No pool exists for shader '{}'.", pShader->GetName());
+			LOG_ERROR("PoolManager::ReturnCallDescriptorSetBinding(...) failed. No pool exists for shader '{}'.", pPoolShader->GetName());
 			return;
 		}
-		it->second.Return(pDescriptorSetBinding);
+		it->second.Return(descriptorSetBindingHandle.Get());
 	}
 	void PoolManager::ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer)
 	{

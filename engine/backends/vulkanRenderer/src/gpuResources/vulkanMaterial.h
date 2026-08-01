@@ -1,20 +1,18 @@
 #pragma once
 #include "iMaterial.h"
+#include "vulkanPipelineKey.h"
 #include "commonPipelineState.h"
 #include "commonRenderQueue.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
-
-
-
-// Forward declarations:
-typedef struct VkBuffer_T* VkBuffer;
 
 
 
@@ -29,30 +27,16 @@ namespace vulkanRendererBackend
 	/// <summary>
 	/// Material creation is expensive.
 	/// It is recommended to create all Materials at the start of the application.
-	/// Create a Material pointer and store it in the static MaterialManager class, making it globally accessible.
+	/// Create a Material pointer and store it in the static MaterialManager class (core), making it globally accessible.
 	/// Each Material must be used with a ShaderProperties which is customized for the Material.
 	/// </summary>
 	class VULKAN_RENDERER_API Material : public Shader, public emberBackendInterface::IMaterial
 	{
-	public: // Enums:
-		enum class PipelineType : uint8_t
-		{
-			gizmo,
-			outline,
-			shadow,
-			forward,
-			present
-		};
-
 	private: // Members:
 		emberCommon::RenderMode m_renderMode;
 		int32_t m_renderQueue;          // opaque=0-999, transparent=1000-1999, skybox=2000-...
 		Material* m_pShadowMaterial;    // the shadow material used alongside this material.
-		std::vector<std::unique_ptr<Pipeline>> m_pGizmoPipelines;
-		std::vector<std::unique_ptr<Pipeline>> m_pOutlinePipelines;
-		std::vector<std::unique_ptr<Pipeline>> m_pShadowPipelines;
-		std::vector<std::unique_ptr<Pipeline>> m_pForwardPipelines;
-		std::vector<std::unique_ptr<Pipeline>> m_pPresentPipelines;
+		std::unordered_map<PipelineKey, std::unique_ptr<Pipeline>, PipelineKey::Hasher> m_pipelines;
 
 	public: // Methods:
 		// Factories/Destructor:
@@ -81,7 +65,7 @@ namespace vulkanRendererBackend
 		emberCommon::RenderMode GetRenderMode() const override;
 		Material* GetShadowMaterial() const override;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
-		const Pipeline* GetPipeline(const Mesh* pMesh, PipelineType pipelineType) const;
+		const Pipeline* GetPipeline(const Mesh* pMesh, PipelineType pipelineType, emberCommon::RenderMode renderMode) const;
 
 		// Debugging:
 		void Print() const override;
@@ -90,8 +74,7 @@ namespace vulkanRendererBackend
 		// Constructor:
 		Material(const std::string& name);
 
-		// Pipeline indexing:
+		// Pipeline lookup:
 		bool HasPipeline(PipelineType pipelineType) const;
-		size_t GetPipelineIndex(const Mesh* pMesh, PipelineType pipelineType) const;
 	};
 }

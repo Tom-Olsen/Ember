@@ -4,8 +4,8 @@
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
 #include "vulkanConvertComputeAccessMask.h"
-#include "vulkanPoolManager.h"
 #include "vulkanDescriptorSetBinding.h"
+#include "vulkanPoolManager.h"
 #include <vulkan/vulkan.h>
 
 
@@ -46,14 +46,14 @@ namespace vulkanRendererBackend
 			return nullptr;
 		}
 
-		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none };
+		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeCalls.push_back(computeCall);
-		return pDescriptorSetBinding;
+		return descriptorSetBindingHandle.Get();
 	}
 	void PreRender::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
-		ComputeCall computeCall = { Uint3::zero, nullptr, nullptr, ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
+		ComputeCall computeCall = { Uint3::zero, nullptr, DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
 		m_computeCalls.push_back(computeCall);
 	}
 
@@ -68,10 +68,7 @@ namespace vulkanRendererBackend
 	{
 		// Return all bindings back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeCalls)
-		{
-			if (computeCall.pComputeShader && computeCall.pCallDescriptorSetBinding)
-				PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pCallDescriptorSetBinding);
-		}
+			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
 
 		// Remove all computeCalls so next frame can start fresh:
 		m_computeCalls.clear();

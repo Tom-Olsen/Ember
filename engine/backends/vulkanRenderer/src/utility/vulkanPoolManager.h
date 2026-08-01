@@ -1,5 +1,6 @@
 #pragma once
 #include "vulkanCallDescriptorSetBindingPool.h"
+#include "vulkanDescriptorSetBindingHandle.h"
 #include "vulkanStagingBufferPool.h"
 #include <cstdint>
 #include <map>
@@ -36,11 +37,11 @@ namespace vulkanRendererBackend
         static void Clear();
 
         // Checkout:
-        static DescriptorSetBinding* CheckOutCallDescriptorSetBinding(Shader* pShader);
+        static DescriptorSetBindingHandle CheckOutCallDescriptorSetBindingHandle(Shader* pShader);
         static StagingBuffer* CheckOutStagingBuffer(uint32_t size);
 
         // Return:
-        static void ReturnCallDescriptorSetBinding(Shader* pShader, DescriptorSetBinding* pDescriptorSetBinding);
+        static void ReturnCallDescriptorSetBinding(const DescriptorSetBindingHandle& descriptorSetBindingHandle);
         static void ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer);
 
         // Debugging:

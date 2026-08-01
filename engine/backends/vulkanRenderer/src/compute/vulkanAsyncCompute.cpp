@@ -8,10 +8,10 @@
 #include "vulkanComputeShader.h"
 #include "vulkanConvertComputeAccessMask.h"
 #include "vulkanContext.h"
+#include "vulkanDescriptorSetBinding.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanPoolManager.h"
-#include "vulkanDescriptorSetBinding.h"
 #include <stdexcept>
 #include <vulkan/vulkan.h>
 
@@ -152,10 +152,10 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none };
+		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
+		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
-		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(pDescriptorSetBinding);
+		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(descriptorSetBindingHandle.Get());
 	}
 	void Async::RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -170,7 +170,7 @@ namespace vulkanRendererBackend
 			return;
 		}
 		
-		ComputeCall computeCall = { Uint3::zero, nullptr, nullptr, ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
+		ComputeCall computeCall = { Uint3::zero, nullptr, DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
 
@@ -196,10 +196,7 @@ namespace vulkanRendererBackend
 	{
 		// Return all bindings back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeSessions[sessionID].GetComputeCalls())
-		{
-			if (computeCall.pComputeShader && computeCall.pCallDescriptorSetBinding)
-				PoolManager::ReturnCallDescriptorSetBinding((Shader*)computeCall.pComputeShader, computeCall.pCallDescriptorSetBinding);
-		}
+			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
 
 		m_pCommandPools[sessionID].ResetPools();
 		m_computeSessions[sessionID].state = ComputeSession::State::idle;

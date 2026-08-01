@@ -61,10 +61,7 @@ namespace vulkanRendererBackend
 	{
 		// Return all bindings back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeCalls)
-		{
-			if (computeCall.pComputeShader && computeCall.pCallDescriptorSetBinding)
-				PoolManager::ReturnCallDescriptorSetBinding(computeCall.pComputeShader, computeCall.pCallDescriptorSetBinding);
-		}
+			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
 
 		// Remove all computeCalls so next frame can start fresh:
 		m_computeCalls.clear();
@@ -88,17 +85,18 @@ namespace vulkanRendererBackend
 		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
 		Uint3 threadCount{ width, height, 1 };
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
-		DescriptorSetBinding* pDescriptorSetBinding = PoolManager::CheckOutCallDescriptorSetBinding(static_cast<Shader*>(pComputeShader));
+		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
+		DescriptorSetBinding* pDescriptorSetBinding = descriptorSetBindingHandle.Get();
 		if (!pDescriptorSetBinding)
 			return nullptr;
 		if (isPostProcessing && (!pDescriptorSetBinding->HasBinding("inputImage") || !pDescriptorSetBinding->HasBinding("outputImage")))
 		{
-			PoolManager::ReturnCallDescriptorSetBinding(pComputeShader, pDescriptorSetBinding);
+			PoolManager::ReturnCallDescriptorSetBinding(descriptorSetBindingHandle);
 			LOG_ERROR("compute::PostRender::RecordPostProcessingShader(...) failed. Compute shader '{}' must declare CALL_SET storage images named 'inputImage' and 'outputImage'.", pComputeShader->GetName());
 			return nullptr;
 		}
 
-		ComputeCall computeCall = { threadCount, pComputeShader, pDescriptorSetBinding, AccessMasks::None::none, AccessMasks::None::none, isPostProcessing };
+		ComputeCall computeCall = { threadCount, pComputeShader, descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none, isPostProcessing };
 		m_computeCalls.push_back(computeCall);
 		if (isPostProcessing)
 			m_postProcessingCallCount++;
