@@ -101,6 +101,7 @@ namespace emberCommon
 		static MaterialRenderState DefaultForRenderMode(RenderMode renderMode);
 		static MaterialRenderState DefaultForRenderMode(RenderMode renderMode, int32_t renderQueue);
 		static MaterialRenderState OpaqueDefault(int32_t renderQueue = RenderQueue::opaque);
+		static MaterialRenderState OutlineDefault(int32_t renderQueue = RenderQueue::opaque);
 		static MaterialRenderState PresentDefault(int32_t renderQueue = RenderQueue::opaque);
 		static MaterialRenderState ShadowDefault(int32_t renderQueue = RenderQueue::opaque);
 		static MaterialRenderState SkyboxDefault(int32_t renderQueue = RenderQueue::skybox);
@@ -179,6 +180,16 @@ namespace emberCommon
 		renderState.dstAlphaBlendFactor = BlendFactor::zero;
 		renderState.alphaBlendOp = BlendOp::add;
 		renderState.colorWriteMask = ColorComponent::all;
+		return renderState;
+	}
+	inline MaterialRenderState MaterialRenderState::OutlineDefault(int32_t renderQueue)
+	{
+		MaterialRenderState renderState = OpaqueDefault(renderQueue);
+		renderState.cullMode = CullMode::none;
+		renderState.depthTestEnable = false;
+		renderState.depthWriteEnable = false;
+		renderState.depthCompareOp = CompareOp::always;
+		renderState.colorWriteMask = ColorComponent::red;
 		return renderState;
 	}
 	inline MaterialRenderState MaterialRenderState::PresentDefault(int32_t renderQueue)

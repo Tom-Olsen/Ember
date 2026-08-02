@@ -27,7 +27,7 @@ namespace vulkanRendererBackend
     Material Material::CreateOutline(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
     {
 		Material material = Material(name);
-		material.m_defaultRenderState = emberCommon::MaterialRenderState::OpaqueDefault();
+		material.m_defaultRenderState = emberCommon::MaterialRenderState::OutlineDefault();
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);

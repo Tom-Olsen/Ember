@@ -1,8 +1,8 @@
 ﻿#define SDL_MAIN_HANDLED
-#include "profiler.h"
 #include "application.h"
 #include "commonMaterialRenderState.h"
 #include "emberEngine.h"
+#include "profiler.h"
 // Components:
 #include "sphFluid2dCpu.h"
 #include "sphFluid2dGpu.h"
