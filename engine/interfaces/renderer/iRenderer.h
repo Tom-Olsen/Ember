@@ -1,7 +1,6 @@
 #pragma once
 #include "emberMath.h"
 #include "commonBufferUsage.h"
-#include "commonCullMode.h"
 #include "commonLighting.h"
 #include "commonPipelineState.h"
 #include "commonTextureFormat.h"
@@ -39,10 +38,10 @@ namespace emberBackendInterface
 
         // Draw mesh:
         virtual void DrawOutline(emberBackendInterface::IMesh* pIMesh, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
-        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
-        virtual void DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
+        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
+        virtual void DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
 
         // Getters:
         virtual bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const = 0;
@@ -81,7 +80,7 @@ namespace emberBackendInterface
         virtual ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
         virtual ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
         virtual IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) = 0;
-        virtual IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
+        virtual IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
         virtual IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv) = 0;
         virtual IMesh* CreateMesh() = 0;
         virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;

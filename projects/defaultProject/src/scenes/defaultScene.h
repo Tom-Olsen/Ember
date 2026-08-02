@@ -331,7 +331,6 @@ inline Scene* DefaultScene()
 	//	MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 	//	pMeshRenderer->SetMesh(MeshManager::GetMesh("translateHandleFrame"));
 	//	pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLitMaterial"));
-	//	//pMeshRenderer->SetCullMode(emberCommon::CullMode::none);
     //
 	//	//DrawMeshData* drawMeshData = entity.AddComponent<DrawMeshData>();
     //

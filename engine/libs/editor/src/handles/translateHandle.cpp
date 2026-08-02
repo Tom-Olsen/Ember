@@ -126,7 +126,6 @@ namespace emberEditor
 		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * TransformHandle::GetRotationZ());
         // Draw plane quads:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
-        emberCore::Gizmo::SetCullMode(emberCommon::CullMode::none);
 		float quadSize = s_quadSize + 0.5f * math::sqrt2 * s_arrowBodyRadius;
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeYZ) - 0.33f * Float4::in);
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * TransformHandle::GetRotationX() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize));
@@ -134,7 +133,6 @@ namespace emberEditor
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * TransformHandle::GetRotationY() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXZ, m_octantIndex, quadSize));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeXY) - 0.33f * Float4::in);
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * TransformHandle::GetRotationZ() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXY, m_octantIndex, quadSize));
-		emberCore::Gizmo::ResetCullMode();
 
         // Draw plane frame:
 		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoVertexColorLitMaterial"));

@@ -1,9 +1,8 @@
 #pragma once
+#include "commonMaterialRenderState.h"
 #include "emberMath.h"
 #include "vulkanDescriptorSetBindingHandle.h"
-#include "vulkanMaterialRenderState.h"
 #include <cstdint>
-#include <vulkan/vulkan.h>
 
 
 
@@ -23,11 +22,10 @@ namespace vulkanRendererBackend
         {
             Material* pMaterial;
             DescriptorSetBindingHandle descriptorSetBindingHandle;
-            MaterialRenderState renderState;
-            VkCullModeFlagBits cullModeOverride;
+            emberCommon::MaterialRenderState renderState;
 
             MaterialState();
-            MaterialState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, VkCullModeFlagBits cullModeOverride);
+            MaterialState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle);
         };
         struct ShadowState
         {

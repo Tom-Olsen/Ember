@@ -34,9 +34,9 @@ namespace emberCore
 
 
 	// Creation/Destruction: (register/delete from MaterialManager)
-	Material Material::CreateForward(emberCommon::RenderMode renderMode, const std::string& name, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreateForward(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		return MaterialManager::CreateForwardMaterial(renderMode, name, renderQueue, vertexSpv, fragmentSpv);
+		return MaterialManager::CreateForwardMaterial(renderMode, name, vertexSpv, fragmentSpv);
 	}
 	Material Material::CreateShadow(const std::string& name, const std::filesystem::path& vertexSpv)
 	{
@@ -55,13 +55,9 @@ namespace emberCore
 
 
 	// Setters:
-	void Material::SetRenderQueue(int32_t renderQueue)
+	void Material::SetDefaultRenderState(const emberCommon::MaterialRenderState& defaultRenderState)
 	{
-		m_pIMaterial->SetRenderQueue(renderQueue);
-	}
-	void Material::SetRenderMode(emberCommon::RenderMode renderMode)
-	{
-		m_pIMaterial->SetRenderMode(renderMode);
+		m_pIMaterial->SetDefaultRenderState(defaultRenderState);
 	}
 	void Material::SetShadowMaterial(const Material& shadowMaterial)
 	{
@@ -75,13 +71,9 @@ namespace emberCore
 	{
 		return m_pIMaterial->GetName();
 	}
-	int32_t Material::GetRenderQueue() const
+	const emberCommon::MaterialRenderState& Material::GetDefaultRenderState() const
 	{
-		return m_pIMaterial->GetRenderQueue();
-	}
-	emberCommon::RenderMode Material::GetRenderMode() const
-	{
-		return m_pIMaterial->GetRenderMode();
+		return m_pIMaterial->GetDefaultRenderState();
 	}
 	Material Material::GetShadowMaterial() const
 	{

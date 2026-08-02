@@ -38,7 +38,7 @@ namespace emberCore
         static void Init();
         static void Clear();
 
-        static Material CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+        static Material CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
         static Material CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv);
         static Material GetMaterial(const std::string& name);       // throws on fail.
         static Material TryGetMaterial(const std::string& name);    // returns invalid Material on fail.

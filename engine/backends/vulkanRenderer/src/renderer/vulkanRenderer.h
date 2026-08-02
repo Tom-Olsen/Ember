@@ -1,7 +1,6 @@
 #pragma once
 #include "iRenderer.h"
 #include "commonCamera.h"
-#include "commonCullMode.h"
 #include "commonLighting.h"
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
@@ -153,10 +152,10 @@ namespace vulkanRendererBackend
 
 		// Draw mesh:
         void DrawOutline(emberBackendInterface::IMesh* pIMesh, const Float4x4& localToWorldMatrix, uint32_t instanceCount) override;
-		void DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
-		emberBackendInterface::IDescriptorSetBinding* DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
-		void DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
-		emberBackendInterface::IDescriptorSetBinding* DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
+		void DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) override;
+		emberBackendInterface::IDescriptorSetBinding* DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) override;
+		void DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, uint32_t instanceCount) override;
+		emberBackendInterface::IDescriptorSetBinding* DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, uint32_t instanceCount) override;
 
 		// Getters:
 		bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const override;
@@ -195,7 +194,7 @@ namespace vulkanRendererBackend
 		emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) override;
-		emberBackendInterface::IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
+		emberBackendInterface::IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
 		emberBackendInterface::IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv) override;
 		emberBackendInterface::IMesh* CreateMesh() override;
 		emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial) override;

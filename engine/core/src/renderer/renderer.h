@@ -1,6 +1,5 @@
 #pragma once
 #include "commonBufferUsage.h"
-#include "commonCullMode.h"
 #include "commonLighting.h"
 #include "commonPipelineState.h"
 #include "commonRendererCreateInfo.h"
@@ -72,17 +71,17 @@ namespace emberCore
 
 		// Draw mesh:
         static void DrawOutline(const Mesh& mesh, const Float4x4& localToWorldMatrix);
-		static void DrawMesh(const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
-		static ShaderProperties DrawMesh(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
-		static void DrawGizmo(const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
-		static ShaderProperties DrawGizmo(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
+		static void DrawMesh(const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties DrawMesh(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static void DrawGizmo(const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix);
+		static ShaderProperties DrawGizmo(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix);
 
 		// Draw instanced:
         static void DrawOutlineInstanced(const Mesh& mesh, const Float4x4& localToWorldMatrix, uint32_t instanceCount);
-		static void DrawMeshInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
-		static ShaderProperties DrawMeshInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
-		static void DrawMeshInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
-		static ShaderProperties DrawMeshInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true, emberCommon::CullMode cullMode = emberCommon::CullMode::pipelineDefault);
+		static void DrawMeshInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties DrawMeshInstanced(uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMeshInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties DrawMeshInstanced(uint32_t instanceCount, const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows = true, bool castShadows = true);
 
 		// Getters:
 		static bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index);
@@ -125,7 +124,7 @@ namespace emberCore
 		static emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data);
 		static emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data);
 		static emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
-		static emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static emberBackendInterface::IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv);
 		static emberBackendInterface::IMesh* CreateMesh(const std::string& name);
 		static emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial);

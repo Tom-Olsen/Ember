@@ -255,7 +255,7 @@ namespace fluidDynamics
 					* Float4x4::Translate(fluidBounds.localBounds.center)
 					* fluidBounds.GetRotation4x4()
 					* Float4x4::Scale(fluidBounds.localBounds.GetSize());
-				Renderer::DrawMesh(m_volumetricDensityCube, m_volumeRaycastMaterial, densityCubeLocalToWorld, false, false, emberCommon::CullMode::front);
+				Renderer::DrawMesh(m_volumetricDensityCube, m_volumeRaycastMaterial, densityCubeLocalToWorld, false, false);
 			}
 		}
 	}

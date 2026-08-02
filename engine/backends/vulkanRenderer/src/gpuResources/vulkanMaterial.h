@@ -1,7 +1,7 @@
 #pragma once
+#include "commonMaterialRenderState.h"
 #include "iMaterial.h"
 #include "commonPipelineState.h"
-#include "vulkanMaterialRenderState.h"
 #include "vulkanPipelineKey.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
@@ -33,14 +33,14 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Material : public Shader, public emberBackendInterface::IMaterial
 	{
 	private: // Members:
-		MaterialRenderState m_defaultRenderState;
+		emberCommon::MaterialRenderState m_defaultRenderState;
 		Material* m_pShadowMaterial;    // the shadow material used alongside this material.
 		std::unordered_map<PipelineKey, std::unique_ptr<Pipeline>, PipelineKey::Hasher> m_pipelines;
 
 	public: // Methods:
 		// Factories/Destructor:
         static Material CreateOutline(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
-		static Material CreateForward(const std::string& name, emberCommon::RenderMode renderMode, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static Material CreateForward(const std::string& name, emberCommon::RenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static Material CreateShadow(const std::string& name, uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv);
 		static Material CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		~Material();
@@ -54,15 +54,12 @@ namespace vulkanRendererBackend
 		Material& operator=(Material&& other) noexcept;
 
 		// Setters:
-		void SetRenderQueue(int32_t renderQueue) override;
-		void SetRenderMode(emberCommon::RenderMode renderMode) override;
+		void SetDefaultRenderState(const emberCommon::MaterialRenderState& defaultRenderState) override;
 		void SetShadowMaterial(emberBackendInterface::IMaterial* pShadowMaterial) override;
 
 		// Getters:
 		const std::string& GetName() const override;
-		int32_t GetRenderQueue() const override;
-		emberCommon::RenderMode GetRenderMode() const override;
-		const MaterialRenderState& GetDefaultRenderState() const;
+		const emberCommon::MaterialRenderState& GetDefaultRenderState() const override;
 		Material* GetShadowMaterial() const override;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
 		const Pipeline* GetPipeline(const Mesh* pMesh, PipelineType pipelineType, emberCommon::RenderMode renderMode) const;

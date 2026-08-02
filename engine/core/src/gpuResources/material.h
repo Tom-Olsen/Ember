@@ -1,6 +1,5 @@
 #pragma once
-#include "commonPipelineState.h"
-#include "commonRenderQueue.h"
+#include "commonMaterialRenderState.h"
 #include "emberCoreExport.h"
 #include "shader.h"
 #include <filesystem>
@@ -38,7 +37,7 @@ namespace emberCore
 		~Material();
 
 		// Creation/Destruction: (register/delete from MaterialManager)
-		static Material CreateForward(emberCommon::RenderMode renderMode, const std::string& name, int32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		static Material CreateForward(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
 		static Material CreateShadow(const std::string& name, const std::filesystem::path& vertexSpv);
 		void Destroy();
 
@@ -51,14 +50,12 @@ namespace emberCore
 		Material& operator=(Material&& other) = default;
 
 		// Setters:
-		void SetRenderQueue(int32_t renderQueue);
-		void SetRenderMode(emberCommon::RenderMode renderMode);
+		void SetDefaultRenderState(const emberCommon::MaterialRenderState& defaultRenderState);
 		void SetShadowMaterial(const Material& shadowMaterial);
 
 		// Getters:
 		const std::string& GetName() const;
-		int32_t GetRenderQueue() const;
-		emberCommon::RenderMode GetRenderMode() const;
+		const emberCommon::MaterialRenderState& GetDefaultRenderState() const;
 		Material GetShadowMaterial() const;     // throws on fail.
 		Material TryGetShadowMaterial() const;  // returns invalid Material on fail.
 		bool IsValid() const;

@@ -1,5 +1,6 @@
 #include "vulkanShadowPipeline.h"
 #include "vulkanContext.h"
+#include "vulkanConvertMaterialRenderState.h"
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanMacros.h"
 #include "vulkanRenderPassManager.h"
@@ -45,6 +46,8 @@ namespace vulkanRendererBackend
         const std::vector<VkVertexInputBindingDescription>& vertexBindings,
         const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
+        const emberCommon::MaterialRenderState renderState = emberCommon::MaterialRenderState::ShadowDefault();
+
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
         vertexShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -81,9 +84,9 @@ namespace vulkanRendererBackend
 
         // Rasterization:
         VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-        rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;  // fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
-        rasterizationState.cullMode = VK_CULL_MODE_NONE;        // render both sides to fix shadow issue with one sides meshes.
-        rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE; // which face of triangle is front: 123 or 132?
+        rasterizationState.polygonMode = PolygonModeCommonToVulkan(renderState.polygonMode);	// fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering
+        rasterizationState.cullMode = CullModeCommonToVulkan(renderState.cullMode);				// render both sides to fix shadow issue with one sides meshes.
+        rasterizationState.frontFace = FrontFaceCommonToVulkan(renderState.frontFace);			// which face of triangle is front: 123 or 132?
         rasterizationState.lineWidth = 1.0f;
         rasterizationState.depthClampEnable = Context::DepthClampEnabled();
         rasterizationState.depthBiasEnable = Context::DepthBiasClampEnabled();
@@ -102,22 +105,22 @@ namespace vulkanRendererBackend
 
         // Depth and stencil testing:
         VkPipelineDepthStencilStateCreateInfo depthState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-        depthState.depthTestEnable = VK_TRUE;             // depth of new fragments should be compared to the depth buffer to see if they should be discarded
-        depthState.depthWriteEnable = VK_TRUE;            // new depth of fragments that pass the depth test should be written to the depth buffer
-        depthState.depthCompareOp = VK_COMPARE_OP_LESS;   // comparison that is performed to keep or discard fragments. lower = closer to camera
-        depthState.depthBoundsTestEnable = VK_FALSE;      // allows to keep only fragments in the below defined range
-        depthState.stencilTestEnable = VK_FALSE;          // stencil buffer operations (not used yet)
+        depthState.depthTestEnable = renderState.depthTestEnable;									// depth of new fragments should be compared to the depth buffer to see if they should be discarded
+        depthState.depthWriteEnable = renderState.depthWriteEnable;									// new depth of fragments that pass the depth test should be written to the depth buffer
+        depthState.depthCompareOp = CompareOpCommonToVulkan(renderState.depthCompareOp);	// comparison that is performed to keep or discard fragments. lower = closer to camera
+        depthState.depthBoundsTestEnable = VK_FALSE;      											// allows to keep only fragments in the below defined range
+        depthState.stencilTestEnable = VK_FALSE;          											// stencil buffer operations (not used yet)
 
         // Configuration per attached framebuffer:
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
-        colorBlendAttachmentState.blendEnable = VK_FALSE;
-        colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
-        colorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        colorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachmentState.blendEnable = renderState.blendEnable;
+        colorBlendAttachmentState.colorWriteMask = ColorWriteMaskCommonToVulkan(renderState.colorWriteMask);
+        colorBlendAttachmentState.srcColorBlendFactor = BlendFactorCommonToVulkan(renderState.srcColorBlendFactor);
+        colorBlendAttachmentState.dstColorBlendFactor = BlendFactorCommonToVulkan(renderState.dstColorBlendFactor);
+        colorBlendAttachmentState.colorBlendOp = BlendOpCommonToVulkan(renderState.colorBlendOp);
+        colorBlendAttachmentState.srcAlphaBlendFactor = BlendFactorCommonToVulkan(renderState.srcAlphaBlendFactor);
+        colorBlendAttachmentState.dstAlphaBlendFactor = BlendFactorCommonToVulkan(renderState.dstAlphaBlendFactor);
+        colorBlendAttachmentState.alphaBlendOp = BlendOpCommonToVulkan(renderState.alphaBlendOp);
 
         // Color blending settings:
         VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };

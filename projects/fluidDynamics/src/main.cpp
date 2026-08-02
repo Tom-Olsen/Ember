@@ -1,6 +1,7 @@
 ﻿#define SDL_MAIN_HANDLED
 #include "profiler.h"
 #include "application.h"
+#include "commonMaterialRenderState.h"
 #include "emberEngine.h"
 // Components:
 #include "sphFluid2dCpu.h"
@@ -148,11 +149,14 @@ int main()
 
 		// Add project specific shaders:
 		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
-		Material::CreateForward(emberCommon::RenderMode::transparent, "particleMaterial2d", emberCommon::RenderQueue::transparent, directoryPath / "particle2d.vert.spv", directoryPath / "particle2d.frag.spv");
-		Material particleMaterial3d = Material::CreateForward(emberCommon::RenderMode::opaque, "particleMaterial3d", emberCommon::RenderQueue::opaque, directoryPath / "particle3d.vert.spv", directoryPath / "particle3d.frag.spv");
+		Material::CreateForward(emberCommon::RenderMode::opaque, "particleMaterial2d", directoryPath / "particle2d.vert.spv", directoryPath / "particle2d.frag.spv");
+		Material particleMaterial3d = Material::CreateForward(emberCommon::RenderMode::opaque, "particleMaterial3d", directoryPath / "particle3d.vert.spv", directoryPath / "particle3d.frag.spv");
 		Material particleShadowMaterial3d = Material::CreateShadow("particleShadowMaterial3d", directoryPath / "particle3dShadow.vert.spv");
 		particleMaterial3d.SetShadowMaterial(particleShadowMaterial3d);
-        Material volumeRaycastMaterial = Material::CreateForward(emberCommon::RenderMode::transparent, "volumeRaycastMaterial", emberCommon::RenderQueue::transparent, directoryPath / "volumeRaycast.vert.spv", directoryPath / "volumeRaycast.frag.spv");
+        Material volumeRaycastMaterial = Material::CreateForward(emberCommon::RenderMode::transparent, "volumeRaycastMaterial", directoryPath / "volumeRaycast.vert.spv", directoryPath / "volumeRaycast.frag.spv");
+		emberCommon::MaterialRenderState volumeRaycastRenderState = volumeRaycastMaterial.GetDefaultRenderState();
+		volumeRaycastRenderState.cullMode = emberCommon::CullMode::front;	// ToDo: why cull front and not back?
+		volumeRaycastMaterial.SetDefaultRenderState(volumeRaycastRenderState);
 
 		// Create scene:
 		//Scene* pScene = Fluid2dCpuScene();

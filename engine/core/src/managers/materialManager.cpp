@@ -1,5 +1,4 @@
 ﻿#include "materialManager.h"
-#include "commonRenderQueue.h"
 #include "iMaterial.h"
 #include "logger.h"
 #include "material.h"
@@ -22,9 +21,6 @@ namespace emberCore
 			return;
 		s_isInitialized = true;
 
-		uint32_t opaqueQueue = emberCommon::RenderQueue::opaque;
-		uint32_t skyboxQueue = emberCommon::RenderQueue::skybox;
-		uint32_t transparentQueue = emberCommon::RenderQueue::transparent;
 		emberCommon::RenderMode opaqueMode = emberCommon::RenderMode::opaque;
 		emberCommon::RenderMode transparentMode = emberCommon::RenderMode::transparent;
 		emberCommon::RenderMode skyboxMode = emberCommon::RenderMode::skybox;
@@ -33,22 +29,22 @@ namespace emberCore
 		//Material* testMaterial = new Material(Material::Type::forward, "testMaterial", directoryPath + "/test.vert.spv", directoryPath + "/test.frag.spv");
 		//AddMaterial(testMaterial);
 
-		CreateForwardMaterial(opaqueMode, "errorMaterial", opaqueQueue, directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
-		CreateForwardMaterial(opaqueMode, "defaultMaterial", opaqueQueue, directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
-		CreateForwardMaterial(transparentMode, "transparentMaterial", transparentQueue, directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv");
-		CreateForwardMaterial(opaqueMode, "presentMaterial", opaqueQueue, directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
-		CreateForwardMaterial(opaqueMode, "vertexColorLitMaterial", opaqueQueue, directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv");
-		CreateForwardMaterial(opaqueMode, "vertexColorUnlitMaterial", opaqueQueue, directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv");
-		CreateForwardMaterial(opaqueMode, "normalMaterial", opaqueQueue, directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv");
-		CreateForwardMaterial(skyboxMode, "skyboxMaterial", skyboxQueue, directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
-		CreateForwardMaterial(opaqueMode, "simpleLitMaterial", opaqueQueue, directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
-		CreateForwardMaterial(opaqueMode, "simpleUnlitMaterial", opaqueQueue, directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
-		CreateForwardMaterial(opaqueMode, "gizmoUnlitMaterial", opaqueQueue, directoryPath / "gizmoUnlit.vert.spv", directoryPath / "gizmoUnlit.frag.spv");
-		CreateForwardMaterial(opaqueMode, "gizmoLitMaterial", opaqueQueue, directoryPath / "gizmoLit.vert.spv", directoryPath / "gizmoLit.frag.spv");
-		CreateForwardMaterial(opaqueMode, "gizmoVertexColorUnlitMaterial", opaqueQueue, directoryPath / "gizmoVertexColorUnlit.vert.spv", directoryPath / "gizmoVertexColorUnlit.frag.spv");
-		CreateForwardMaterial(opaqueMode, "gizmoVertexColorLitMaterial", opaqueQueue, directoryPath / "gizmoVertexColorLit.vert.spv", directoryPath / "gizmoVertexColorLit.frag.spv");
-		CreateForwardMaterial(transparentMode, "gizmoUnlitTransparentMaterial", transparentQueue, directoryPath / "gizmoUnlit.vert.spv", directoryPath / "gizmoUnlit.frag.spv");
-		CreateForwardMaterial(transparentMode, "gizmoLitTransparentMaterial", transparentQueue, directoryPath / "gizmoLit.vert.spv", directoryPath / "gizmoLit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "errorMaterial", directoryPath / "error.vert.spv", directoryPath / "error.frag.spv");
+		CreateForwardMaterial(opaqueMode, "defaultMaterial", directoryPath / "default.vert.spv", directoryPath / "default.frag.spv");
+		CreateForwardMaterial(transparentMode, "transparentMaterial", directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv");
+		CreateForwardMaterial(opaqueMode, "presentMaterial", directoryPath / "present.vert.spv", directoryPath / "present.frag.spv");
+		CreateForwardMaterial(opaqueMode, "vertexColorLitMaterial", directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "vertexColorUnlitMaterial", directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "normalMaterial", directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv");
+		CreateForwardMaterial(skyboxMode, "skyboxMaterial", directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv");
+		CreateForwardMaterial(opaqueMode, "simpleLitMaterial", directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "simpleUnlitMaterial", directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "gizmoUnlitMaterial", directoryPath / "gizmoUnlit.vert.spv", directoryPath / "gizmoUnlit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "gizmoLitMaterial", directoryPath / "gizmoLit.vert.spv", directoryPath / "gizmoLit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "gizmoVertexColorUnlitMaterial", directoryPath / "gizmoVertexColorUnlit.vert.spv", directoryPath / "gizmoVertexColorUnlit.frag.spv");
+		CreateForwardMaterial(opaqueMode, "gizmoVertexColorLitMaterial", directoryPath / "gizmoVertexColorLit.vert.spv", directoryPath / "gizmoVertexColorLit.frag.spv");
+		CreateForwardMaterial(transparentMode, "gizmoUnlitTransparentMaterial", directoryPath / "gizmoUnlit.vert.spv", directoryPath / "gizmoUnlit.frag.spv");
+		CreateForwardMaterial(transparentMode, "gizmoLitTransparentMaterial", directoryPath / "gizmoLit.vert.spv", directoryPath / "gizmoLit.frag.spv");
 	}
 	void MaterialManager::Clear()
 	{
@@ -59,7 +55,7 @@ namespace emberCore
 
 
 	// Add/Get/Delete:
-	Material MaterialManager::CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, uint32_t renderQueue, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material MaterialManager::CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		auto it = s_materialInterfacesMap.find(name);
 		if (it != s_materialInterfacesMap.end())
@@ -68,7 +64,7 @@ namespace emberCore
 			return Material{ it->second.get() };
 		}
 
-		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateForwardMaterial(renderMode, name, renderQueue, vertexSpv, fragmentSpv);
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateForwardMaterial(renderMode, name, vertexSpv, fragmentSpv);
 		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
 		return Material{ result.first->second.get() };
 	}

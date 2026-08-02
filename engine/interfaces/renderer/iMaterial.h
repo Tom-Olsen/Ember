@@ -1,5 +1,5 @@
 #pragma once
-#include "commonPipelineState.h"
+#include "commonMaterialRenderState.h"
 #include <string>
 
 
@@ -17,14 +17,12 @@ namespace emberBackendInterface
         virtual ~IMaterial() = default;
 
         // Setters:
-        virtual void SetRenderQueue(int32_t renderQueue) = 0;
-        virtual void SetRenderMode(emberCommon::RenderMode renderMode) = 0;
+        virtual void SetDefaultRenderState(const emberCommon::MaterialRenderState& defaultRenderState) = 0;
         virtual void SetShadowMaterial(IMaterial* pShadowMaterial) = 0;
 
         // Getters:
         virtual const std::string& GetName() const = 0;
-        virtual int32_t GetRenderQueue() const = 0;
-        virtual emberCommon::RenderMode GetRenderMode() const = 0;
+        virtual const emberCommon::MaterialRenderState& GetDefaultRenderState() const = 0;
         virtual IMaterial* GetShadowMaterial() const = 0;
         virtual IDescriptorSetBinding* GetShaderDescriptorSetBinding() const = 0;
 
