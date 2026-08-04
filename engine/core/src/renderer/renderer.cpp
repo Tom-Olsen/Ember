@@ -325,9 +325,13 @@ namespace emberCore
 	{
 		return s_pIRenderer->CreateComputeShader(name, computeSpv);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		return s_pIRenderer->CreateForwardMaterial(name, renderMode, vertexSpv, fragmentSpv);
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	{
+		return s_pIRenderer->CreateGizmoMaterial(name, renderMode, vertexSpv, fragmentSpv);
 	}
 	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv)
 	{

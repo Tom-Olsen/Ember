@@ -1,6 +1,11 @@
 #pragma once
-#include "commonPipelineState.h"
+#include "commonForwardRenderMode.h"
+#include "commonGizmoRenderMode.h"
 #include "emberCoreExport.h"
+#include "forwardMaterial.h"
+#include "gizmoMaterial.h"
+#include "material.h"
+#include "shadowMaterial.h"
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -18,11 +23,6 @@ namespace emberBackendInterface
 
 namespace emberCore
 {
-    // Forward declarations:
-    class Material;
-
-
-
     /// <summary>
     /// Purely static class that takes care of lifetime of all Material objects.
     /// Material is a none-owning wrapper around IMaterial. The MaterialManager owns the IMaterial objects.
@@ -38,11 +38,25 @@ namespace emberCore
         static void Init();
         static void Clear();
 
-        static Material CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
-        static Material CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv);
-        static Material GetMaterial(const std::string& name);       // throws on fail.
-        static Material TryGetMaterial(const std::string& name);    // returns invalid Material on fail.
-        static void DeleteMaterial(const std::string& name);
+		// Creators:
+        static ForwardMaterial CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+        static GizmoMaterial CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+        static ShadowMaterial CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv);
+        
+		// Getters: (throw on fail)
+		static Material GetMaterial(const std::string& name);
+        static ForwardMaterial GetForwardMaterial(const std::string& name);
+        static GizmoMaterial GetGizmoMaterial(const std::string& name);
+        static ShadowMaterial GetShadowMaterial(const std::string& name);
+        
+		// Try getters: (return invalid Material on fail)
+        static Material TryGetMaterial(const std::string& name);
+        static ForwardMaterial TryGetForwardMaterial(const std::string& name);
+        static GizmoMaterial TryGetGizmoMaterial(const std::string& name);
+        static ShadowMaterial TryGetShadowMaterial(const std::string& name);
+
+		// Deleter:
+		static void DeleteMaterial(const std::string& name);
 
         // Debugging:
         static void Print();

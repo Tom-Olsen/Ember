@@ -22,27 +22,4 @@ namespace emberCommon
 			default: return "unknown";
 		}
 	}
-
-
-
-	enum class RenderMode : uint32_t
-	{
-		opaque,
-		transparent,
-		skybox,
-		wireframe,
-		count
-	};
-	inline constexpr std::string_view RenderModeToString(RenderMode renderMode)
-	{
-		switch (renderMode)
-		{
-			case RenderMode::opaque: return "opaque";
-			case RenderMode::transparent: return "transparent";
-			case RenderMode::skybox: return "skybox";
-			case RenderMode::wireframe: return "wireframe";
-			case RenderMode::count: return "count";
-			default: return "unknown";
-		}
-	}
 }

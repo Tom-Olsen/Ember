@@ -1,10 +1,10 @@
 #include "vulkanPresentPipeline.h"
+#include "commonPresentRenderState.h"
 #include "vulkanContext.h"
 #include "vulkanConvertMaterialRenderState.h"
 #include "vulkanMacros.h"
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderPassManager.h"
-#include "vulkanVertexLayout.h"
 #include <vulkan/vulkan.h>
 
 
@@ -48,7 +48,7 @@ namespace vulkanRendererBackend
         const std::vector<VkVertexInputBindingDescription>& vertexBindings,
         const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
-        const emberCommon::MaterialRenderState renderState = emberCommon::MaterialRenderState::PresentDefault();
+        const emberCommon::PresentRenderState renderState;
 
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };

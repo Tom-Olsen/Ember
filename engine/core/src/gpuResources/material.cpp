@@ -1,7 +1,10 @@
 #include "material.h"
+#include "forwardMaterial.h"
+#include "gizmoMaterial.h"
 #include "iMaterial.h"
 #include "logger.h"
 #include "materialManager.h"
+#include "shadowMaterial.h"
 
 
 
@@ -34,11 +37,15 @@ namespace emberCore
 
 
 	// Creation/Destruction: (register/delete from MaterialManager)
-	Material Material::CreateForward(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		return MaterialManager::CreateForwardMaterial(renderMode, name, vertexSpv, fragmentSpv);
 	}
-	Material Material::CreateShadow(const std::string& name, const std::filesystem::path& vertexSpv)
+	GizmoMaterial Material::CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	{
+		return MaterialManager::CreateGizmoMaterial(renderMode, name, vertexSpv, fragmentSpv);
+	}
+	ShadowMaterial Material::CreateShadow(const std::string& name, const std::filesystem::path& vertexSpv)
 	{
 		return MaterialManager::CreateShadowMaterial(name, vertexSpv);
 	}
@@ -53,44 +60,18 @@ namespace emberCore
 	}
 
 
-
-	// Setters:
-	void Material::SetDefaultRenderState(const emberCommon::MaterialRenderState& defaultRenderState)
-	{
-		m_pIMaterial->SetDefaultRenderState(defaultRenderState);
-	}
-	void Material::SetShadowMaterial(const Material& shadowMaterial)
-	{
-		m_pIMaterial->SetShadowMaterial(shadowMaterial.GetInterfaceHandle());
-	}
-
-
-
 	// Getters:
 	const std::string& Material::GetName() const
 	{
 		return m_pIMaterial->GetName();
 	}
-	const emberCommon::MaterialRenderState& Material::GetDefaultRenderState() const
+	emberCommon::MaterialType Material::GetMaterialType() const
 	{
-		return m_pIMaterial->GetDefaultRenderState();
+		return m_pIMaterial->GetMaterialType();
 	}
-	Material Material::GetShadowMaterial() const
+	emberCommon::CullMode Material::GetCullMode() const
 	{
-		emberBackendInterface::IMaterial* pIShadowMaterial = m_pIMaterial->GetShadowMaterial();
-        if (pIShadowMaterial == nullptr)
-			throw std::runtime_error(GetName() + "has no shadow material not found.");
-		return Material{ pIShadowMaterial };
-	}
-	Material Material::TryGetShadowMaterial() const
-	{
-		emberBackendInterface::IMaterial* pIShadowMaterial = m_pIMaterial->GetShadowMaterial();
-        if (pIShadowMaterial == nullptr)
-        {
-			LOG_ERROR("Material '{}' has no shadow material!", GetName());
-            return Material();
-        }
-		return Material{ pIShadowMaterial };
+		return m_pIMaterial->GetCullMode();
 	}
 	bool Material::IsValid() const
 	{

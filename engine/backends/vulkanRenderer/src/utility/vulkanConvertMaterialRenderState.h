@@ -1,6 +1,6 @@
 #pragma once
 #include "commonCullMode.h"
-#include "commonMaterialRenderState.h"
+#include "commonRenderStateEnums.h"
 #include <vulkan/vulkan.h>
 
 

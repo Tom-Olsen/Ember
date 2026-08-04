@@ -1,6 +1,6 @@
 #include "rotateHandle.h"
 #include "camera.h"
-#include "commonMaterialRenderState.h"
+#include "commonCullMode.h"
 #include "eventSystem.h"
 #include "gizmo.h"
 #include "handleContext.h"
@@ -117,12 +117,10 @@ namespace emberEditor
 		emberCore::Gizmo::SetColor(TransformHandle::GetColorCenter());
         emberCore::Gizmo::DrawSphere(localToWorldMatrix * Float4x4::Scale(0.15f));
 
-        // Draw arcs:
-		emberCore::Material arcMaterial = emberCore::MaterialManager::GetMaterial("gizmoUnlitMaterial");
-		emberCommon::MaterialRenderState arcRenderState = arcMaterial.GetDefaultRenderState();
-		emberCommon::MaterialRenderState originalArcRenderState = arcRenderState;
-		arcRenderState.cullMode = emberCommon::CullMode::none;
-		arcMaterial.SetDefaultRenderState(arcRenderState);
+		// Draw arcs:
+		emberCore::GizmoMaterial arcMaterial = emberCore::MaterialManager::GetGizmoMaterial("gizmoUnlitMaterial");
+		emberCommon::CullMode originalCullMode = arcMaterial.GetCullMode();
+		arcMaterial.SetCullMode(emberCommon::CullMode::none);
 		emberCore::Gizmo::SetMaterial(arcMaterial);
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisX));
         emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisX, m_octantIndex) * TransformHandle::GetRotationX());
@@ -130,7 +128,7 @@ namespace emberEditor
         emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisY, m_octantIndex) * TransformHandle::GetRotationY());
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisZ));
         emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisZ, m_octantIndex) * TransformHandle::GetRotationZ());
-		arcMaterial.SetDefaultRenderState(originalArcRenderState);
+		arcMaterial.SetCullMode(originalCullMode);
         emberCore::Gizmo::ResetMaterial();
     }
 

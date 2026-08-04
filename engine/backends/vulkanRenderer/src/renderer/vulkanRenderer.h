@@ -6,6 +6,7 @@
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
 #include "vulkanDrawCall.h"
+#include "vulkanRenderStage.h"
 #include "vulkanRendererExport.h"
 #include <array>
 #include <memory>
@@ -45,31 +46,6 @@ namespace vulkanRendererBackend
 
 	class VULKAN_RENDERER_API Renderer : public emberBackendInterface::IRenderer
 	{
-	private: // Enums:
-		enum class RenderStage : uint8_t
-		{
-			resourceUpdate,
-			gizmo,
-			preRenderCompute,
-            outline,
-			shadow,
-			forward,
-			postRenderCompute,
-			present,
-			stageCount
-		};
-		inline static constexpr std::array<const char*, (int)RenderStage::stageCount> renderStageNames =
-		{
-			"resourceUpdate",
-			"gizmo",
-			"preRenderCompute",
-			"outline",
-			"shadow",
-			"forward",
-			"postRenderCompute",
-			"present"
-		};
-
 	private: // Members:
 		// Backend hooks:
 		emberBackendInterface::IGui* m_pIGui = nullptr;
@@ -194,7 +170,8 @@ namespace vulkanRendererBackend
 		emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) override;
-		emberBackendInterface::IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
+		emberBackendInterface::IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
+		emberBackendInterface::IMaterial* CreateGizmoMaterial(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
 		emberBackendInterface::IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv) override;
 		emberBackendInterface::IMesh* CreateMesh() override;
 		emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial) override;

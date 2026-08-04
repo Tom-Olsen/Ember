@@ -33,6 +33,9 @@ source_group("Compute" FILES ${COMPUTE_FILES})
 file(GLOB CONTEXT_FILES "src/context/*.*")
 source_group("Context" FILES ${CONTEXT_FILES})
 
+file(GLOB DESCRIPTOR_SET_LAYOUTS_FILES "src/descriptorSetLayouts/*.*")
+source_group("Descriptor Set Layouts" FILES ${DESCRIPTOR_SET_LAYOUTS_FILES})
+
 file(GLOB GPU_RESOURCE_POOLS_FILES "src/gpuResourcePools/*.*")
 source_group("Gpu Resource Pools" FILES ${GPU_RESOURCE_POOLS_FILES})
 
@@ -98,6 +101,7 @@ endif()
 add_library(${TARGET_NAME} ${LIB_TYPE}
     ${COMPUTE_FILES}
     ${CONTEXT_FILES}
+    ${DESCRIPTOR_SET_LAYOUTS_FILES}
     ${GPU_RESOURCE_POOLS_FILES}
     ${GPU_RESOURCES_FILES}
         ${BUFFERS_FILES}
@@ -122,6 +126,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
     ${ENGINE_SHADERS_DIR}/src/includesCppHlsl # needed for .h files from shaders, which contian constans for c++ and hlsl, e.g. shadowMap sizes
     ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
     ${CMAKE_CURRENT_SOURCE_DIR}/src/context
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/descriptorSetLayouts
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResourcePools
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/buffers

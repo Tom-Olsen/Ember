@@ -1,5 +1,5 @@
 #pragma once
-#include "commonPipelineState.h"
+#include "commonGizmoRenderMode.h"
 #include "vulkanPipeline.h"
 #include <string>
 #include <vector>
@@ -19,7 +19,7 @@ namespace vulkanRendererBackend
 		GizmoPipeline(
 			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,
-			emberCommon::RenderMode renderMode,
+			emberCommon::GizmoRenderMode renderMode,
 			const std::vector<char>& vertexCode,
 			const std::vector<char>& fragmentCode,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
@@ -29,7 +29,7 @@ namespace vulkanRendererBackend
 	private: // Methods:
 		void CreatePipeline(
 			VkPipelineLayout vkPipelineLayout,
-			emberCommon::RenderMode renderMode,
+			emberCommon::GizmoRenderMode renderMode,
 			const VkShaderModule& vertexShaderModule,
 			const VkShaderModule& fragmentShaderModule,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,

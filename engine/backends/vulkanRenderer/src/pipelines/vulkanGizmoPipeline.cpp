@@ -1,4 +1,5 @@
 #include "vulkanGizmoPipeline.h"
+#include "commonGizmoRenderState.h"
 #include "vulkanContext.h"
 #include "vulkanConvertMaterialRenderState.h"
 #include "vulkanDefaultPushConstant.h"
@@ -16,7 +17,7 @@ namespace vulkanRendererBackend
 	GizmoPipeline::GizmoPipeline(
 		const std::string& name,
 		VkPipelineLayout vkPipelineLayout,
-		emberCommon::RenderMode renderMode,
+		emberCommon::GizmoRenderMode renderMode,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
 		const std::vector<VkVertexInputBindingDescription>& vertexBindings,
@@ -44,13 +45,13 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void GizmoPipeline::CreatePipeline(
 		VkPipelineLayout vkPipelineLayout,
-		emberCommon::RenderMode renderMode,
+		emberCommon::GizmoRenderMode renderMode,
 		const VkShaderModule& vertexShaderModule,
 		const VkShaderModule& fragmentShaderModule,
 		const std::vector<VkVertexInputBindingDescription>& vertexBindings,
 		const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
 	{
-		const emberCommon::MaterialRenderState renderState = emberCommon::MaterialRenderState::DefaultForRenderMode(renderMode);
+		const emberCommon::GizmoRenderState renderState = emberCommon::GizmoRenderState::GizmoDefault(renderMode);
 
 		// Vertex shader:
 		VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };

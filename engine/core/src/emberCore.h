@@ -37,6 +37,9 @@
 #include "texture3d.h"
 #include "mesh.h"
 #include "material.h"
+#include "forwardMaterial.h"
+#include "gizmoMaterial.h"
+#include "shadowMaterial.h"
 #include "computeShader.h"
 #include "shaderProperties.h"
 
@@ -50,7 +53,8 @@
 // Other:
 #include "gpuSort.h"
 
-// Common (core <-> backend) communication: (Not all included on purpose for now)
+// Common (core <-> backend) communication: (Not all included on purpose for now):
+#include "commonCullMode.h"
 #include "commonInput.h"
 #include "commonLighting.h"
 

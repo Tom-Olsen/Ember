@@ -11,14 +11,20 @@ namespace vulkanRendererBackend
 	DrawCall::MaterialState::MaterialState() :
         pMaterial(nullptr),
         descriptorSetBindingHandle(),
-        renderState()
+        pipelineVariantIndex(0),
+        renderQueue(0),
+        isTransparent(false),
+        cullMode(emberCommon::CullMode::back)
 	{
 
 	}
 	DrawCall::MaterialState::MaterialState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle) :
         pMaterial(pMaterial),
         descriptorSetBindingHandle(descriptorSetBindingHandle),
-        renderState(pMaterial ? pMaterial->GetDefaultRenderState() : emberCommon::MaterialRenderState())
+        pipelineVariantIndex(pMaterial ? pMaterial->GetPipelineVariantIndex() : 0),
+        renderQueue(pMaterial ? pMaterial->GetRenderQueue() : 0),
+        isTransparent(pMaterial ? pMaterial->IsTransparent() : false),
+        cullMode(pMaterial ? pMaterial->GetCullMode() : emberCommon::CullMode::back)
 	{
         assert(pMaterial != nullptr);
 	}

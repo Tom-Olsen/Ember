@@ -1,5 +1,6 @@
 #pragma once
-#include "commonPipelineState.h"
+#include "commonVertexMemoryLayout.h"
+#include "vulkanRenderStage.h"
 #include <cstddef>
 #include <cstdint>
 
@@ -8,32 +9,38 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class Mesh;
+	class Material;
 
 
-	enum class PipelineType : uint8_t
-	{
-		gizmo,
-		outline,
-		shadow,
-		forward,
-		present
-	};
-
-
-	
 	struct PipelineKey
 	{
+		// Friends:
+		friend class Material;
+
 	public: // Members:
 		PipelineType pipelineType;
-		emberCommon::RenderMode renderMode;
+		uint32_t pipelineVariantIndex;
 		emberCommon::VertexMemoryLayout vertexMemoryLayout;
+
+
+	private: // Methods:
+		// Constructor:
+		PipelineKey(PipelineType pipelineType, uint32_t pipelineVariantIndex, emberCommon::VertexMemoryLayout vertexMemoryLayout);
 
 	public: // Mehtods:
 		// Constructors:
-		PipelineKey();
-		PipelineKey(PipelineType pipelineType, emberCommon::RenderMode renderMode, emberCommon::VertexMemoryLayout vertexMemoryLayout);
-		PipelineKey(PipelineType pipelineType, emberCommon::RenderMode renderMode, const Mesh* pMesh);
+		template<RenderStage stage>
+		requires HasRenderPipelineAndMode<stage>
+		static PipelineKey Create(typename RenderStageTraits<stage>::RenderMode renderMode, emberCommon::VertexMemoryLayout vertexMemoryLayout)
+		{
+			return PipelineKey(RenderStageTraits<stage>::pipelineType, RenderStageTraits<stage>::PipelineVariantIndex(renderMode), vertexMemoryLayout);
+		}
+		template<RenderStage stage>
+		requires HasRenderPipelineAndNotMode<stage>
+		static PipelineKey Create(emberCommon::VertexMemoryLayout vertexMemoryLayout)
+		{
+			return PipelineKey(RenderStageTraits<stage>::pipelineType, RenderStageTraits<stage>::PipelineVariantIndex(), vertexMemoryLayout);
+		}
 
 		// Comparison:
 		bool operator==(const PipelineKey& other) const;
@@ -43,8 +50,5 @@ namespace vulkanRendererBackend
 		{
 			size_t operator()(const PipelineKey& pipelineKey) const;
 		};
-
-	private: // Methods:
-		emberCommon::RenderMode ResolveRenderMode(PipelineType pipelineType, emberCommon::RenderMode renderMode);
 	};
 }

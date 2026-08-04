@@ -1,8 +1,9 @@
 #pragma once
 #include "emberMath.h"
 #include "commonBufferUsage.h"
+#include "commonForwardRenderMode.h"
+#include "commonGizmoRenderMode.h"
 #include "commonLighting.h"
-#include "commonPipelineState.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
 #include <filesystem>
@@ -80,7 +81,8 @@ namespace emberBackendInterface
         virtual ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
         virtual ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
         virtual IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) = 0;
-        virtual IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
+        virtual IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
+        virtual IMaterial* CreateGizmoMaterial(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
         virtual IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv) = 0;
         virtual IMesh* CreateMesh() = 0;
         virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;

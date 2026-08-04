@@ -25,8 +25,7 @@ public:
 
 		// Add project specific shaders:
 		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
-		Material::CreateForward(emberCommon::RenderMode::transparent, "particleMaterial2d", directoryPath / "particle2d.vert.spv", directoryPath / "particle2d.frag.spv");
-		Material particleMaterial3d = Material::CreateForward(emberCommon::RenderMode::opaque, "particleMaterial3d", directoryPath / "particle3d.vert.spv", directoryPath / "particle3d.frag.spv");
+		Material::CreateForward(emberCommon::ForwardRenderMode::transparent, "particleMaterial2d", directoryPath / "particle2d.vert.spv", directoryPath / "particle2d.frag.spv");
 	}
 	static void TearDownTestSuite()
 	{

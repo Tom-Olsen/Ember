@@ -1,5 +1,8 @@
 #pragma once
-#include "commonMaterialRenderState.h"
+#include "commonCullMode.h"
+#include "commonForwardRenderMode.h"
+#include "commonGizmoRenderMode.h"
+#include "commonMaterialType.h"
 #include "emberCoreExport.h"
 #include "shader.h"
 #include <filesystem>
@@ -17,9 +20,19 @@ namespace emberBackendInterface
 
 namespace emberCore
 {
+	// Forward declarations:
+	class ForwardMaterial;
+	class GizmoMaterial;
+	class ShadowMaterial;
+
+
+	
 	class EMBER_CORE_API Material : public Shader
 	{
 		// Friends:
+		friend class ForwardMaterial;
+		friend class GizmoMaterial;
+		friend class ShadowMaterial;
 		friend class MaterialManager;
 		friend class Renderer;
 		friend class ShaderProperties;
@@ -29,6 +42,8 @@ namespace emberCore
 
 	private: // Methods:
 		emberBackendInterface::IMaterial* const GetInterfaceHandle() const;
+
+	protected: // Methods:
 		Material(emberBackendInterface::IMaterial* pIMaterial);
 
 	public: // Methods:
@@ -37,8 +52,9 @@ namespace emberCore
 		~Material();
 
 		// Creation/Destruction: (register/delete from MaterialManager)
-		static Material CreateForward(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
-		static Material CreateShadow(const std::string& name, const std::filesystem::path& vertexSpv);
+		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
+		static ShadowMaterial CreateShadow(const std::string& name, const std::filesystem::path& vertexSpv);
 		void Destroy();
 
 		// Copyable:
@@ -49,15 +65,10 @@ namespace emberCore
 		Material(Material&& other) = default;
 		Material& operator=(Material&& other) = default;
 
-		// Setters:
-		void SetDefaultRenderState(const emberCommon::MaterialRenderState& defaultRenderState);
-		void SetShadowMaterial(const Material& shadowMaterial);
-
 		// Getters:
 		const std::string& GetName() const;
-		const emberCommon::MaterialRenderState& GetDefaultRenderState() const;
-		Material GetShadowMaterial() const;     // throws on fail.
-		Material TryGetShadowMaterial() const;  // returns invalid Material on fail.
+		emberCommon::MaterialType GetMaterialType() const;
+		emberCommon::CullMode GetCullMode() const;
 		bool IsValid() const;
 
 		// Debugging:

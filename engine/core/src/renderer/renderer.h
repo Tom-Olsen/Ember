@@ -1,7 +1,8 @@
 #pragma once
 #include "commonBufferUsage.h"
+#include "commonForwardRenderMode.h"
+#include "commonGizmoRenderMode.h"
 #include "commonLighting.h"
-#include "commonPipelineState.h"
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
@@ -124,7 +125,8 @@ namespace emberCore
 		static emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data);
 		static emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data);
 		static emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
-		static emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::RenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static emberBackendInterface::IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static emberBackendInterface::IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv);
 		static emberBackendInterface::IMesh* CreateMesh(const std::string& name);
 		static emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial);

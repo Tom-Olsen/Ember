@@ -11,8 +11,8 @@ namespace fluidDynamics
 	SphFluid3dGpu::SphFluid3dGpu()
 	{
 		// Material setup:
-		m_particleMaterial = MaterialManager::GetMaterial("particleMaterial3d");
-		m_volumeRaycastMaterial = MaterialManager::GetMaterial("volumeRaycastMaterial");
+		m_particleMaterial = MaterialManager::GetForwardMaterial("particleMaterial3d");
+		m_volumeRaycastMaterial = MaterialManager::GetForwardMaterial("volumeRaycastMaterial");
 		m_particleMesh = MeshGenerator::Quad();
 		m_volumetricDensityCube = MeshGenerator::Cube();
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
@@ -212,7 +212,7 @@ namespace fluidDynamics
 				m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(readDataIndex));
 				m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(readDataIndex));
 				m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(readDataIndex));
-				Material shadowMaterial = m_particleMaterial.TryGetShadowMaterial();
+				ShadowMaterial shadowMaterial = m_particleMaterial.TryGetShadowMaterial();
 				if (shadowMaterial.IsValid())
 					shadowMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
 				Renderer::DrawMeshInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, true, true);

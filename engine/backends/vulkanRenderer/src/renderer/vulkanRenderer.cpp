@@ -670,9 +670,13 @@ namespace vulkanRendererBackend
 	{
 		return new ComputeShader(name, computeSpv);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(const std::string& name, emberCommon::RenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(const std::string& name, emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
 		return new Material(Material::CreateForward(name, renderMode, vertexSpv, fragmentSpv));
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	{
+		return new Material(Material::CreateGizmo(name, renderMode, vertexSpv, fragmentSpv));
 	}
 	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv)
 	{
@@ -883,14 +887,14 @@ namespace vulkanRendererBackend
 			std::sort(sortedDrawCallPointers.begin(), sortedDrawCallPointers.end(), [this](DrawCall* drawCallA, DrawCall* drawCallB)
 			{
 				// RenderQueue:
-				int renderQueueA = static_cast<int>(drawCallA->materialState.renderState.renderQueue);
-				int renderQueueB = static_cast<int>(drawCallB->materialState.renderState.renderQueue);
+				int renderQueueA = static_cast<int>(drawCallA->materialState.renderQueue);
+				int renderQueueB = static_cast<int>(drawCallB->materialState.renderQueue);
 				if (renderQueueA != renderQueueB)
 					return renderQueueA < renderQueueB;
 
 				// Transparent materials back-to-front ordering:
-				const bool transparentA = drawCallA->materialState.renderState.renderMode == emberCommon::RenderMode::transparent;
-				const bool transparentB = drawCallB->materialState.renderState.renderMode == emberCommon::RenderMode::transparent;
+				const bool transparentA = drawCallA->materialState.isTransparent;
+				const bool transparentB = drawCallB->materialState.isTransparent;
 				if (transparentA && transparentB)
 				{
 					const Float3 drawPositionA = Float3(drawCallA->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -1084,7 +1088,7 @@ namespace vulkanRendererBackend
 				{
 					// Pipeline swap:
 					Material* pGizmoMaterial = drawCall->materialState.pMaterial;
-					VkPipeline newPipeline = pGizmoMaterial->GetPipeline(drawCall->pMesh, PipelineType::gizmo, drawCall->materialState.renderState.renderMode)->GetVkPipeline();
+					VkPipeline newPipeline = pGizmoMaterial->GetPipeline<RenderStage::gizmo>(drawCall->pMesh, drawCall->materialState.pipelineVariantIndex)->GetVkPipeline();
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1114,7 +1118,7 @@ namespace vulkanRendererBackend
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Cull mode:
-					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->materialState.renderState.cullMode));
+					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->materialState.cullMode));
 
 					// Bind per draw call descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = drawCall->materialState.descriptorSetBindingHandle.Get()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1293,7 +1297,7 @@ namespace vulkanRendererBackend
 				{
 					// Pipeline swap:
 					Material* pOutlineMaterial = drawCall.materialState.pMaterial;
-					VkPipeline newPipeline = pOutlineMaterial->GetPipeline(drawCall.pMesh, PipelineType::outline, emberCommon::RenderMode::opaque)->GetVkPipeline();
+					VkPipeline newPipeline = pOutlineMaterial->GetPipeline<RenderStage::outline>(drawCall.pMesh)->GetVkPipeline();
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1391,7 +1395,7 @@ namespace vulkanRendererBackend
 
 						// Pipeline swap:
 						const Material* pShadowMaterial = drawCall->shadowState.pMaterial;
-						VkPipeline newPipeline = pShadowMaterial->GetPipeline(drawCall->pMesh, PipelineType::shadow, emberCommon::RenderMode::opaque)->GetVkPipeline();
+						VkPipeline newPipeline = pShadowMaterial->GetPipeline<RenderStage::shadow>(drawCall->pMesh)->GetVkPipeline();
 						if (pipeline != newPipeline)
 						{
 							pipeline = newPipeline;
@@ -1498,7 +1502,7 @@ namespace vulkanRendererBackend
 				{
 					// Pipeline swap:
 					Material* pForwardMaterial = drawCall->materialState.pMaterial;
-					VkPipeline newPipeline = pForwardMaterial->GetPipeline(drawCall->pMesh, PipelineType::forward, drawCall->materialState.renderState.renderMode)->GetVkPipeline();
+					VkPipeline newPipeline = pForwardMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh, drawCall->materialState.pipelineVariantIndex)->GetVkPipeline();
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1528,7 +1532,7 @@ namespace vulkanRendererBackend
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Cull mode:
-					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->materialState.renderState.cullMode));
+					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->materialState.cullMode));
 
 					// Bind per draw call descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = drawCall->materialState.descriptorSetBindingHandle.Get()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1618,9 +1622,9 @@ namespace vulkanRendererBackend
 		//			DrawCall* drawCall = (m_sortedDrawCallPointers)[i];
 		//
 		//			// Pipeline swap:
-		//			if (pipeline != drawCall->pMaterial->GetPipeline(drawCall->pMesh, PipelineType::forward, drawCall->materialState.renderState.renderMode)->GetVkPipeline())
+		//			if (pipeline != drawCall->pMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh, drawCall->materialState.pipelineVariantIndex)->GetVkPipeline())
 		//			{
-		//				pipeline = drawCall->pMaterial->GetPipeline(drawCall->pMesh, PipelineType::forward, drawCall->materialState.renderState.renderMode)->GetVkPipeline();
+		//				pipeline = drawCall->pMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh, drawCall->materialState.pipelineVariantIndex)->GetVkPipeline();
 		//				pushConstant.instanceCount = drawCall->instanceCount;
 		//				vkCmdBindPipeline(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		//				vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
@@ -1793,7 +1797,7 @@ namespace vulkanRendererBackend
 			Mesh* pMesh = DefaultGpuResources::GetDefaultRenderQuad();
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline(pMesh, PipelineType::present, emberCommon::RenderMode::opaque)->GetVkPipeline());
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline<RenderStage::present>(pMesh)->GetVkPipeline());
 
 				// Bind mesh data:
 				vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());

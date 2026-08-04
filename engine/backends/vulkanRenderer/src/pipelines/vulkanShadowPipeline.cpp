@@ -1,4 +1,5 @@
 #include "vulkanShadowPipeline.h"
+#include "commonShadowRenderState.h"
 #include "vulkanContext.h"
 #include "vulkanConvertMaterialRenderState.h"
 #include "vulkanDefaultPushConstant.h"
@@ -46,7 +47,7 @@ namespace vulkanRendererBackend
         const std::vector<VkVertexInputBindingDescription>& vertexBindings,
         const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
-        const emberCommon::MaterialRenderState renderState = emberCommon::MaterialRenderState::ShadowDefault();
+        const emberCommon::ShadowRenderState renderState;
 
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };

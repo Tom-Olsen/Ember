@@ -1,4 +1,5 @@
 #include "vulkanOutlinePipeline.h"
+#include "commonOutlineRenderState.h"
 #include "vulkanContext.h"
 #include "vulkanConvertMaterialRenderState.h"
 #include "vulkanMacros.h"
@@ -47,7 +48,7 @@ namespace vulkanRendererBackend
 		const std::vector<VkVertexInputBindingDescription>& vertexBindings,
 		const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
 	{
-		const emberCommon::MaterialRenderState renderState = emberCommon::MaterialRenderState::OutlineDefault();
+		const emberCommon::OutlineRenderState renderState;
 
 		// Vertex shader:
 		VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };

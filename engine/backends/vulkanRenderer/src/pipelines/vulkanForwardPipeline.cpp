@@ -1,4 +1,5 @@
 #include "vulkanForwardPipeline.h"
+#include "commonForwardRenderState.h"
 #include "vulkanContext.h"
 #include "vulkanConvertMaterialRenderState.h"
 #include "vulkanDefaultPushConstant.h"
@@ -16,7 +17,7 @@ namespace vulkanRendererBackend
     ForwardPipeline::ForwardPipeline(
         const std::string& name,
         VkPipelineLayout vkPipelineLayout,
-        emberCommon::RenderMode renderMode,
+        emberCommon::ForwardRenderMode renderMode,
         const std::vector<char>& vertexCode,
         const std::vector<char>& fragmentCode,
         const std::vector<VkVertexInputBindingDescription>& vertexBindings,
@@ -44,13 +45,13 @@ namespace vulkanRendererBackend
     // Private methods:
     void ForwardPipeline::CreatePipeline(
         VkPipelineLayout vkPipelineLayout,
-        emberCommon::RenderMode renderMode,
+        emberCommon::ForwardRenderMode renderMode,
         const VkShaderModule& vertexShaderModule,
         const VkShaderModule& fragmentShaderModule,
         const std::vector<VkVertexInputBindingDescription>& vertexBindings,
         const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
     {
-        const emberCommon::MaterialRenderState renderState = emberCommon::MaterialRenderState::DefaultForRenderMode(renderMode);
+        const emberCommon::ForwardRenderState renderState = emberCommon::ForwardRenderState::ForwardDefault(renderMode);
 
         // Vertex shader:
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };

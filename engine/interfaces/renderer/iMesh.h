@@ -1,5 +1,5 @@
 #pragma once
-#include "commonPipelineState.h"
+#include "commonVertexMemoryLayout.h"
 #include "emberMath.h"
 #include <vector>
 
