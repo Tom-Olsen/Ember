@@ -50,21 +50,15 @@ namespace vulkanRendererBackend
 		bool HasPipeline(PipelineType pipelineType) const;
 		template<RenderStage stage>
 		requires HasRenderPipelineAndMode<stage>
-		const Pipeline* GetPipeline(const Mesh* pMesh, uint32_t pipelineVariantIndex) const
-		{
-			return GetPipelineByStage(RenderStageTraits<stage>::pipelineType, pMesh, pipelineVariantIndex);
-		}
-		template<RenderStage stage>
-		requires HasRenderPipelineAndMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh, typename RenderStageTraits<stage>::RenderMode renderMode) const
 		{
-			return GetPipelineByStage(RenderStageTraits<stage>::pipelineType, pMesh, RenderStageTraits<stage>::PipelineVariantIndex(renderMode));
+			return GetPipelineByStage(RenderStageTraits<stage>::pipelineType, pMesh, RenderStageTraits<stage>::RenderModeIndex(renderMode));
 		}
 		template<RenderStage stage>
 		requires HasRenderPipelineAndNotMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh) const
 		{
-			return GetPipelineByStage(RenderStageTraits<stage>::pipelineType, pMesh, RenderStageTraits<stage>::PipelineVariantIndex());
+			return GetPipelineByStage(RenderStageTraits<stage>::pipelineType, pMesh, RenderStageTraits<stage>::RenderModeIndex());
 		}
 
 	private: // Methods:
@@ -72,6 +66,6 @@ namespace vulkanRendererBackend
 		MaterialShader(const std::string& name, emberCommon::MaterialType materialType);
 
 		// Pipeline lookup:
-		const Pipeline* GetPipelineByStage(PipelineType pipelineType, const Mesh* pMesh, uint32_t pipelineVariantIndex) const;
+		const Pipeline* GetPipelineByStage(PipelineType pipelineType, const Mesh* pMesh, uint32_t renderModeIndex) const;
 	};
 }

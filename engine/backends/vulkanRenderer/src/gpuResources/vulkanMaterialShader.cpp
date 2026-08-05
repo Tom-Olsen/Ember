@@ -349,15 +349,15 @@ namespace vulkanRendererBackend
 
 
 	// Pipeline lookup:
-	const Pipeline* MaterialShader::GetPipelineByStage(PipelineType pipelineType, const Mesh* pMesh, uint32_t pipelineVariantIndex) const
+	const Pipeline* MaterialShader::GetPipelineByStage(PipelineType pipelineType, const Mesh* pMesh, uint32_t renderModeIndex) const
 	{
 		if (!HasPipeline(pipelineType))
 			throw std::runtime_error("MaterialShader::GetPipelineByStage(...) failed. Requested pipeline type is not supported by this material shader.");
 
-		PipelineKey pipelineKey(pipelineType, pipelineVariantIndex, pMesh->GetVertexMemoryLayout());
+		PipelineKey pipelineKey(pipelineType, renderModeIndex, pMesh->GetVertexMemoryLayout());
 		auto it = m_pipelines.find(pipelineKey);
 		if (it == m_pipelines.end())
-			throw std::runtime_error("MaterialShader::GetPipelineByStage(...) failed. Pipeline variant is not supported by this material shader.");
+			throw std::runtime_error("MaterialShader::GetPipelineByStage(...) failed. Render mode is not supported by this material shader.");
 		return it->second.get();
 	}
 }

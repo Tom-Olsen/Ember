@@ -1088,7 +1088,7 @@ namespace vulkanRendererBackend
 				{
 					// Pipeline swap:
 					Material* pGizmoMaterial = drawCall->materialState.pMaterial;
-					VkPipeline newPipeline = pGizmoMaterial->GetPipeline<RenderStage::gizmo>(drawCall->pMesh, pGizmoMaterial->GetPipelineVariantIndex())->GetVkPipeline();
+					VkPipeline newPipeline = pGizmoMaterial->GetPipeline<RenderStage::gizmo>(drawCall->pMesh)->GetVkPipeline();
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1502,7 +1502,7 @@ namespace vulkanRendererBackend
 				{
 					// Pipeline swap:
 					Material* pForwardMaterial = drawCall->materialState.pMaterial;
-					VkPipeline newPipeline = pForwardMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh, pForwardMaterial->GetPipelineVariantIndex())->GetVkPipeline();
+					VkPipeline newPipeline = pForwardMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh)->GetVkPipeline();
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1622,9 +1622,9 @@ namespace vulkanRendererBackend
 		//			DrawCall* drawCall = (m_sortedDrawCallPointers)[i];
 		//
 		//			// Pipeline swap:
-		//			if (pipeline != drawCall->pMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh, drawCall->pMaterial->GetPipelineVariantIndex())->GetVkPipeline())
+		//			if (pipeline != drawCall->pMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh)->GetVkPipeline())
 		//			{
-		//				pipeline = drawCall->pMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh, drawCall->pMaterial->GetPipelineVariantIndex())->GetVkPipeline();
+		//				pipeline = drawCall->pMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh)->GetVkPipeline();
 		//				pushConstant.instanceCount = drawCall->instanceCount;
 		//				vkCmdBindPipeline(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		//				vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);

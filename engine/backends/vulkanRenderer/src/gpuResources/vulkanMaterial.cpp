@@ -176,18 +176,6 @@ namespace vulkanRendererBackend
 				return false;
 		}
 	}
-	uint32_t Material::GetPipelineVariantIndex() const
-	{
-		switch (GetMaterialType())
-		{
-			case emberCommon::MaterialType::forward:
-				return static_cast<uint32_t>(m_pForwardRenderState->renderMode);
-			case emberCommon::MaterialType::gizmo:
-				return static_cast<uint32_t>(m_pGizmoRenderState->renderMode);
-			default:
-				return 0;
-		}
-	}
 	emberCommon::ForwardRenderMode Material::GetForwardRenderMode() const
 	{
 		if (GetMaterialType() != emberCommon::MaterialType::forward)

@@ -76,7 +76,6 @@ namespace vulkanRendererBackend
 		int32_t GetRenderQueue() const override;
 		emberCommon::CullMode GetCullMode() const override;
 		bool IsTransparent() const override;
-		uint32_t GetPipelineVariantIndex() const;
 		emberCommon::ForwardRenderMode GetForwardRenderMode() const override;
 		emberCommon::GizmoRenderMode GetGizmoRenderMode() const override;
 		const emberCommon::ForwardRenderState& GetForwardRenderState() const override;
@@ -87,15 +86,14 @@ namespace vulkanRendererBackend
 		DescriptorSetBinding* GetDescriptorSetBinding() const;
 		template<RenderStage stage>
 		requires HasRenderPipelineAndMode<stage>
-		const Pipeline* GetPipeline(const Mesh* pMesh, uint32_t pipelineVariantIndex) const
+		const Pipeline* GetPipeline(const Mesh* pMesh) const
 		{
-			return m_pMaterialShader->GetPipeline<stage>(pMesh, pipelineVariantIndex);
-		}
-		template<RenderStage stage>
-		requires HasRenderPipelineAndMode<stage>
-		const Pipeline* GetPipeline(const Mesh* pMesh, typename RenderStageTraits<stage>::RenderMode renderMode) const
-		{
-			return m_pMaterialShader->GetPipeline<stage>(pMesh, renderMode);
+			if constexpr (stage == RenderStage::forward)
+				return m_pMaterialShader->GetPipeline<stage>(pMesh, GetForwardRenderMode());
+			else if constexpr (stage == RenderStage::gizmo)
+				return m_pMaterialShader->GetPipeline<stage>(pMesh, GetGizmoRenderMode());
+			else
+				static_assert(stage == RenderStage::forward || stage == RenderStage::gizmo, "Material::GetPipeline(...) must be updated for this render stage.");
 		}
 		template<RenderStage stage>
 		requires HasRenderPipelineAndNotMode<stage>

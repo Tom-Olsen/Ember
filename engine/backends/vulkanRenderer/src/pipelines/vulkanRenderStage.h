@@ -62,7 +62,7 @@ namespace vulkanRendererBackend
 		using RenderMode = emberCommon::GizmoRenderMode;
 		static constexpr PipelineType pipelineType = PipelineType::gizmo;
 
-		static constexpr uint32_t PipelineVariantIndex(RenderMode renderMode)
+		static constexpr uint32_t RenderModeIndex(RenderMode renderMode)
 		{
 			return static_cast<uint32_t>(renderMode);
 		}
@@ -76,7 +76,7 @@ namespace vulkanRendererBackend
 		using RenderMode = void;
 		static constexpr PipelineType pipelineType = PipelineType::outline;
 
-		static constexpr uint32_t PipelineVariantIndex()
+		static constexpr uint32_t RenderModeIndex()
 		{
 			return 0;
 		}
@@ -90,7 +90,7 @@ namespace vulkanRendererBackend
 		using RenderMode = void;
 		static constexpr PipelineType pipelineType = PipelineType::shadow;
 
-		static constexpr uint32_t PipelineVariantIndex()
+		static constexpr uint32_t RenderModeIndex()
 		{
 			return 0;
 		}
@@ -104,7 +104,7 @@ namespace vulkanRendererBackend
 		using RenderMode = emberCommon::ForwardRenderMode;
 		static constexpr PipelineType pipelineType = PipelineType::forward;
 
-		static constexpr uint32_t PipelineVariantIndex(RenderMode renderMode)
+		static constexpr uint32_t RenderModeIndex(RenderMode renderMode)
 		{
 			return static_cast<uint32_t>(renderMode);
 		}
@@ -118,7 +118,7 @@ namespace vulkanRendererBackend
 		using RenderMode = void;
 		static constexpr PipelineType pipelineType = PipelineType::present;
 
-		static constexpr uint32_t PipelineVariantIndex()
+		static constexpr uint32_t RenderModeIndex()
 		{
 			return 0;
 		}
