@@ -7,16 +7,13 @@
 #include "commonOutlineRenderState.h"
 #include "commonPresentRenderState.h"
 #include "commonShadowRenderState.h"
-#include "vulkanPipelineKey.h"
+#include "vulkanMaterialShader.h"
 #include "vulkanRendererExport.h"
-#include "vulkanShader.h"
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <unordered_map>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 
@@ -24,6 +21,7 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
+	class DescriptorSetBinding;
 	class Mesh;
 	class Pipeline;
 
@@ -35,17 +33,16 @@ namespace vulkanRendererBackend
 	/// Create a Material pointer and store it in the static MaterialManager class (core), making it globally accessible.
 	/// Each Material must be used with a ShaderProperties which is customized for the Material.
 	/// </summary>
-	class VULKAN_RENDERER_API Material : public Shader, public emberBackendInterface::IMaterial
+	class VULKAN_RENDERER_API Material : public emberBackendInterface::IMaterial
 	{
 	private: // Members:
-		emberCommon::MaterialType m_materialType;
+		std::shared_ptr<MaterialShader> m_pMaterialShader;
 		std::unique_ptr<emberCommon::ForwardRenderState> m_pForwardRenderState;
 		std::unique_ptr<emberCommon::GizmoRenderState> m_pGizmoRenderState;
 		std::unique_ptr<emberCommon::OutlineRenderState> m_pOutlineRenderState;
 		std::unique_ptr<emberCommon::ShadowRenderState> m_pShadowRenderState;
 		std::unique_ptr<emberCommon::PresentRenderState> m_pPresentRenderState;
 		Material* m_pShadowMaterial;    // the shadow material used alongside this material.
-		std::unordered_map<PipelineKey, std::unique_ptr<Pipeline>, PipelineKey::Hasher> m_pipelines;
 
 	public: // Methods:
 		// Factories/Destructor:
@@ -84,23 +81,27 @@ namespace vulkanRendererBackend
 		emberCommon::GizmoRenderMode GetGizmoRenderMode() const override;
 		const emberCommon::ForwardRenderState& GetForwardRenderState() const override;
 		const emberCommon::GizmoRenderState& GetGizmoRenderState() const override;
+		Shader* GetShader() const;
+		MaterialShader* GetMaterialShader() const;
+		const VkPipelineLayout& GetVkPipelineLayout() const;
+		DescriptorSetBinding* GetDescriptorSetBinding() const;
 		template<RenderStage stage>
 		requires HasRenderPipelineAndMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh, uint32_t pipelineVariantIndex) const
 		{
-			return GetPipelineByStage(RenderStageTraits<stage>::pipelineType, pMesh, pipelineVariantIndex);
+			return m_pMaterialShader->GetPipeline<stage>(pMesh, pipelineVariantIndex);
 		}
 		template<RenderStage stage>
 		requires HasRenderPipelineAndMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh, typename RenderStageTraits<stage>::RenderMode renderMode) const
 		{
-			return GetPipelineByStage(RenderStageTraits<stage>::pipelineType, pMesh, RenderStageTraits<stage>::PipelineVariantIndex(renderMode));
+			return m_pMaterialShader->GetPipeline<stage>(pMesh, renderMode);
 		}
 		template<RenderStage stage>
 		requires HasRenderPipelineAndNotMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh) const
 		{
-			return GetPipelineByStage(RenderStageTraits<stage>::pipelineType, pMesh, RenderStageTraits<stage>::PipelineVariantIndex());
+			return m_pMaterialShader->GetPipeline<stage>(pMesh);
 		}
 
 		// Debugging:
@@ -108,10 +109,6 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		// Constructor:
-		Material(const std::string& name);
-
-		// Pipeline lookup:
-		bool HasPipeline(PipelineType pipelineType) const;
-		const Pipeline* GetPipelineByStage(PipelineType pipelineType, const Mesh* pMesh, uint32_t pipelineVariantIndex) const;
+		Material(std::shared_ptr<MaterialShader> pMaterialShader);
 	};
 }

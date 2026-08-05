@@ -1,5 +1,4 @@
 #pragma once
-#include "commonCullMode.h"
 #include "emberMath.h"
 #include "vulkanDescriptorSetBindingHandle.h"
 #include <cstdint>
@@ -22,10 +21,6 @@ namespace vulkanRendererBackend
         {
             Material* pMaterial;
             DescriptorSetBindingHandle descriptorSetBindingHandle;
-            uint32_t pipelineVariantIndex;
-            int32_t renderQueue;
-            bool isTransparent;
-            emberCommon::CullMode cullMode;
 
             MaterialState();
             MaterialState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle);
@@ -54,10 +49,9 @@ namespace vulkanRendererBackend
         DrawCall(const Float4x4& localToWorldMatrix, const MaterialState& materialState, Mesh* pMesh, uint32_t instanceCount = 0);
         ~DrawCall();
 
-		void SetModelData();
+		void UpdateModelData();
 
 	private: // Methods:
 		bool HasModelDataBinding(DescriptorSetBinding* pDescriptorSetBinding);
-		void SetModelData(DescriptorSetBinding* pDescriptorSetBinding, const Float4x4& worldToLocalMatrix);
 	};
 }

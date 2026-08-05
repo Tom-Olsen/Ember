@@ -10,12 +10,14 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class Material;
+	class MaterialShader;
 
 
 	struct PipelineKey
 	{
 		// Friends:
 		friend class Material;
+		friend class MaterialShader;
 
 	public: // Members:
 		PipelineType pipelineType;

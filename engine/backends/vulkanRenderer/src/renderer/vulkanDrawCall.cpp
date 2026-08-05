@@ -10,21 +10,13 @@ namespace vulkanRendererBackend
     // Public structs:
 	DrawCall::MaterialState::MaterialState() :
         pMaterial(nullptr),
-        descriptorSetBindingHandle(),
-        pipelineVariantIndex(0),
-        renderQueue(0),
-        isTransparent(false),
-        cullMode(emberCommon::CullMode::back)
+        descriptorSetBindingHandle()
 	{
 
 	}
 	DrawCall::MaterialState::MaterialState(Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle) :
         pMaterial(pMaterial),
-        descriptorSetBindingHandle(descriptorSetBindingHandle),
-        pipelineVariantIndex(pMaterial ? pMaterial->GetPipelineVariantIndex() : 0),
-        renderQueue(pMaterial ? pMaterial->GetRenderQueue() : 0),
-        isTransparent(pMaterial ? pMaterial->IsTransparent() : false),
-        cullMode(pMaterial ? pMaterial->GetCullMode() : emberCommon::CullMode::back)
+        descriptorSetBindingHandle(descriptorSetBindingHandle)
 	{
         assert(pMaterial != nullptr);
 	}
@@ -65,7 +57,7 @@ namespace vulkanRendererBackend
 
 
 
-	void DrawCall::SetModelData()
+	void DrawCall::UpdateModelData()
 	{
 		DescriptorSetBinding* pMaterialDescriptorSetBinding = materialState.descriptorSetBindingHandle.Get();
 		DescriptorSetBinding* pShadowDescriptorSetBinding = shadowState.descriptorSetBindingHandle.Get();
@@ -76,17 +68,18 @@ namespace vulkanRendererBackend
 
 		Float4x4 worldToLocalMatrix = localToWorldMatrix.Inverse();
 		if (callHasModelDataBinding)
-			SetModelData(pMaterialDescriptorSetBinding, worldToLocalMatrix);
+		{
+			pMaterialDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_localToWorldMatrix", localToWorldMatrix);
+			pMaterialDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_worldToLocalMatrix", worldToLocalMatrix);
+		}
 		if (shadowHasModelDataBinding)
-			SetModelData(pShadowDescriptorSetBinding, worldToLocalMatrix);
+		{
+			pShadowDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_localToWorldMatrix", localToWorldMatrix);
+			pShadowDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_worldToLocalMatrix", worldToLocalMatrix);
+		}
 	}
 	bool DrawCall::HasModelDataBinding(DescriptorSetBinding* pDescriptorSetBinding)
 	{
 		return pDescriptorSetBinding && pDescriptorSetBinding->HasBinding("ModelMatrizes");
-	}
-	void DrawCall::SetModelData(DescriptorSetBinding* pDescriptorSetBinding, const Float4x4& worldToLocalMatrix)
-	{
-		pDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_localToWorldMatrix", localToWorldMatrix);
-		pDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_worldToLocalMatrix", worldToLocalMatrix);
 	}
 }
