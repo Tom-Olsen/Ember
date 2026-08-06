@@ -1081,6 +1081,7 @@ namespace vulkanRendererBackend
 				// Pipeline:
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				VkDescriptorSet shaderDescriptorSet = VK_NULL_HANDLE;
 				bool staticDescriptorSetsBound = false;
 
 				// Draw calls:
@@ -1089,6 +1090,7 @@ namespace vulkanRendererBackend
 					// Pipeline swap:
 					Material* pGizmoMaterial = drawCall->materialState.pMaterial;
 					VkPipeline newPipeline = pGizmoMaterial->GetPipeline<RenderStage::gizmo>(drawCall->pMesh)->GetVkPipeline();
+					bool pipelineLayoutChanged = false;
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1096,7 +1098,8 @@ namespace vulkanRendererBackend
 
 						// Pipeline layout swap:
 						VkPipelineLayout newPipelineLayout = pGizmoMaterial->GetVkPipelineLayout();
-						if (pipelineLayout != newPipelineLayout)
+						pipelineLayoutChanged = pipelineLayout != newPipelineLayout;
+						if (pipelineLayoutChanged)
 						{
 							pipelineLayout = newPipelineLayout;
 
@@ -1106,11 +1109,15 @@ namespace vulkanRendererBackend
 								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
 								staticDescriptorSetsBound = true;
 							}
-
-							// Bind per shader descriptor set:
-							if (VkDescriptorSet vkDescriptorSet = pGizmoMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 						}
+					}
+
+					// Bind per shader descriptor set:
+					VkDescriptorSet newShaderDescriptorSet = pGizmoMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex);
+					if (newShaderDescriptorSet != VK_NULL_HANDLE && (pipelineLayoutChanged || shaderDescriptorSet != newShaderDescriptorSet))
+					{
+						shaderDescriptorSet = newShaderDescriptorSet;
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &shaderDescriptorSet, 0, nullptr);
 					}
 
 					// Push constant:
@@ -1290,6 +1297,7 @@ namespace vulkanRendererBackend
 				// Pipeline:
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				VkDescriptorSet shaderDescriptorSet = VK_NULL_HANDLE;
 				bool staticDescriptorSetsBound = false;
 
 				// Draw calls:
@@ -1298,6 +1306,7 @@ namespace vulkanRendererBackend
 					// Pipeline swap:
 					Material* pOutlineMaterial = drawCall.materialState.pMaterial;
 					VkPipeline newPipeline = pOutlineMaterial->GetPipeline<RenderStage::outline>(drawCall.pMesh)->GetVkPipeline();
+					bool pipelineLayoutChanged = false;
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1305,7 +1314,8 @@ namespace vulkanRendererBackend
 
 						// Pipeline layout swap:
 						VkPipelineLayout newPipelineLayout = pOutlineMaterial->GetVkPipelineLayout();
-						if (pipelineLayout != newPipelineLayout)
+						pipelineLayoutChanged = pipelineLayout != newPipelineLayout;
+						if (pipelineLayoutChanged)
 						{
 							pipelineLayout = newPipelineLayout;
 
@@ -1315,11 +1325,15 @@ namespace vulkanRendererBackend
 								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
 								staticDescriptorSetsBound = true;
 							}
-
-							// Bind per shader descriptor set:
-							if (VkDescriptorSet vkDescriptorSet = pOutlineMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 						}
+					}
+
+					// Bind per shader descriptor set:
+					VkDescriptorSet newShaderDescriptorSet = pOutlineMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex);
+					if (newShaderDescriptorSet != VK_NULL_HANDLE && (pipelineLayoutChanged || shaderDescriptorSet != newShaderDescriptorSet))
+					{
+						shaderDescriptorSet = newShaderDescriptorSet;
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &shaderDescriptorSet, 0, nullptr);
 					}
 
 					// Push constant:
@@ -1378,6 +1392,7 @@ namespace vulkanRendererBackend
 				// Pipeline:
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				VkDescriptorSet shaderDescriptorSet = VK_NULL_HANDLE;
 				bool staticDescriptorSetsBound = false;
 
 				// Lights:
@@ -1396,6 +1411,7 @@ namespace vulkanRendererBackend
 						// Pipeline swap:
 						const Material* pShadowMaterial = drawCall->shadowState.pMaterial;
 						VkPipeline newPipeline = pShadowMaterial->GetPipeline<RenderStage::shadow>(drawCall->pMesh)->GetVkPipeline();
+						bool pipelineLayoutChanged = false;
 						if (pipeline != newPipeline)
 						{
 							pipeline = newPipeline;
@@ -1403,7 +1419,8 @@ namespace vulkanRendererBackend
 
 							// Pipeline layout swap:
 							VkPipelineLayout newPipelineLayout = pShadowMaterial->GetVkPipelineLayout();
-							if (pipelineLayout != newPipelineLayout)
+							pipelineLayoutChanged = pipelineLayout != newPipelineLayout;
+							if (pipelineLayoutChanged)
 							{
 								pipelineLayout = newPipelineLayout;
 
@@ -1413,11 +1430,15 @@ namespace vulkanRendererBackend
 									vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
 									staticDescriptorSetsBound = true;
 								}
-
-								// Bind per shader descriptor set:
-								if (VkDescriptorSet vkDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-									vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 							}
+						}
+
+						// Bind per shader descriptor set:
+						VkDescriptorSet newShaderDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex);
+						if (newShaderDescriptorSet != VK_NULL_HANDLE && (pipelineLayoutChanged || shaderDescriptorSet != newShaderDescriptorSet))
+						{
+							shaderDescriptorSet = newShaderDescriptorSet;
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &shaderDescriptorSet, 0, nullptr);
 						}
 
 						// Bind per draw call descriptor set:
@@ -1495,6 +1516,7 @@ namespace vulkanRendererBackend
 				// Pipeline:
 				VkPipeline pipeline = VK_NULL_HANDLE;
 				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				VkDescriptorSet shaderDescriptorSet = VK_NULL_HANDLE;
 				bool staticDescriptorSetsBound = false;
 
 				// Draw calls:
@@ -1503,6 +1525,7 @@ namespace vulkanRendererBackend
 					// Pipeline swap:
 					Material* pForwardMaterial = drawCall->materialState.pMaterial;
 					VkPipeline newPipeline = pForwardMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh)->GetVkPipeline();
+					bool pipelineLayoutChanged = false;
 					if (pipeline != newPipeline)
 					{
 						pipeline = newPipeline;
@@ -1510,7 +1533,8 @@ namespace vulkanRendererBackend
 
 						// Pipeline layout swap:
 						VkPipelineLayout newPipelineLayout = pForwardMaterial->GetVkPipelineLayout();
-						if (pipelineLayout != newPipelineLayout)
+						pipelineLayoutChanged = pipelineLayout != newPipelineLayout;
+						if (pipelineLayoutChanged)
 						{
 							pipelineLayout = newPipelineLayout;
 
@@ -1520,11 +1544,15 @@ namespace vulkanRendererBackend
 								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
 								staticDescriptorSetsBound = true;
 							}
-
-							// Bind per shader descriptor set:
-							if (VkDescriptorSet vkDescriptorSet = pForwardMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 						}
+					}
+
+					// Bind per shader descriptor set:
+					VkDescriptorSet newShaderDescriptorSet = pForwardMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex);
+					if (newShaderDescriptorSet != VK_NULL_HANDLE && (pipelineLayoutChanged || shaderDescriptorSet != newShaderDescriptorSet))
+					{
+						shaderDescriptorSet = newShaderDescriptorSet;
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &shaderDescriptorSet, 0, nullptr);
 					}
 
 					// Push constant:
