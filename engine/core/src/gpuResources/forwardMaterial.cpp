@@ -1,6 +1,7 @@
 #include "forwardMaterial.h"
 #include "iMaterial.h"
 #include "logger.h"
+#include "materialManager.h"
 #include <stdexcept>
 
 
@@ -27,6 +28,18 @@ namespace emberCore
 	ForwardMaterial::~ForwardMaterial()
 	{
 
+	}
+
+
+
+	// Cloning:
+	ForwardMaterial ForwardMaterial::Clone(const std::string& name) const
+	{
+		return MaterialManager::CloneForwardMaterial(name, *this);
+	}
+	ForwardMaterial ForwardMaterial::Clone(const std::string& name, emberCommon::ForwardRenderMode renderMode) const
+	{
+		return MaterialManager::CloneForwardMaterial(name, *this, renderMode);
 	}
 
 

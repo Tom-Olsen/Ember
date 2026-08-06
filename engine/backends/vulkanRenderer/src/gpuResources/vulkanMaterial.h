@@ -36,7 +36,10 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Material : public emberBackendInterface::IMaterial
 	{
 	private: // Members:
+		std::string m_name;
+		emberCommon::MaterialType m_materialType;
 		std::shared_ptr<MaterialShader> m_pMaterialShader;
+		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 		std::unique_ptr<emberCommon::ForwardRenderState> m_pForwardRenderState;
 		std::unique_ptr<emberCommon::GizmoRenderState> m_pGizmoRenderState;
 		std::unique_ptr<emberCommon::OutlineRenderState> m_pOutlineRenderState;
@@ -51,6 +54,11 @@ namespace vulkanRendererBackend
 		static Material CreateGizmo(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static Material CreateShadow(const std::string& name, uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv);
 		static Material CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static Material CloneForward(const std::string& name, const Material& sourceMaterial);
+		static Material CloneForward(const std::string& name, const Material& sourceMaterial, emberCommon::ForwardRenderMode renderMode);
+		static Material CloneGizmo(const std::string& name, const Material& sourceMaterial);
+		static Material CloneGizmo(const std::string& name, const Material& sourceMaterial, emberCommon::GizmoRenderMode renderMode);
+		static Material CloneShadow(const std::string& name, const Material& sourceMaterial);
 		~Material();
 
 		// Non-copyable:
@@ -107,6 +115,6 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		// Constructor:
-		Material(std::shared_ptr<MaterialShader> pMaterialShader);
+		Material(const std::string& name, emberCommon::MaterialType materialType, std::shared_ptr<MaterialShader> pMaterialShader);
 	};
 }

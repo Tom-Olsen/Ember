@@ -1,5 +1,4 @@
 #pragma once
-#include "commonMaterialType.h"
 #include "commonVertexMemoryLayout.h"
 #include "vulkanPipelineKey.h"
 #include "vulkanShader.h"
@@ -25,7 +24,6 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API MaterialShader : public Shader
 	{
 	private: // Members:
-		emberCommon::MaterialType m_materialType;
 		std::unordered_map<PipelineKey, std::unique_ptr<Pipeline>, PipelineKey::Hasher> m_pipelines;
 
 	public: // Methods:
@@ -46,7 +44,6 @@ namespace vulkanRendererBackend
 		MaterialShader& operator=(MaterialShader&& other) noexcept;
 
 		// Getters:
-		emberCommon::MaterialType GetMaterialType() const;
 		bool HasPipeline(PipelineType pipelineType) const;
 		template<RenderStage stage>
 		requires HasRenderPipelineAndMode<stage>
@@ -63,7 +60,7 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		// Constructor:
-		MaterialShader(const std::string& name, emberCommon::MaterialType materialType);
+		MaterialShader(const std::string& name);
 
 		// Pipeline lookup:
 		const Pipeline* GetPipelineByStage(PipelineType pipelineType, const Mesh* pMesh, uint32_t renderModeIndex) const;

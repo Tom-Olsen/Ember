@@ -84,6 +84,11 @@ namespace emberBackendInterface
         virtual IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
         virtual IMaterial* CreateGizmoMaterial(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
         virtual IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv) = 0;
+        virtual IMaterial* CloneForwardMaterial(const std::string& name, IMaterial* pSourceMaterial) = 0;
+        virtual IMaterial* CloneForwardMaterial(const std::string& name, IMaterial* pSourceMaterial, emberCommon::ForwardRenderMode renderMode) = 0;
+        virtual IMaterial* CloneGizmoMaterial(const std::string& name, IMaterial* pSourceMaterial) = 0;
+        virtual IMaterial* CloneGizmoMaterial(const std::string& name, IMaterial* pSourceMaterial, emberCommon::GizmoRenderMode renderMode) = 0;
+        virtual IMaterial* CloneShadowMaterial(const std::string& name, IMaterial* pSourceMaterial) = 0;
         virtual IMesh* CreateMesh() = 0;
         virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;
 

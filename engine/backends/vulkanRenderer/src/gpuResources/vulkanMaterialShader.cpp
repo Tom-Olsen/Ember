@@ -1,8 +1,6 @@
 #include "vulkanMaterialShader.h"
-#include "descriptorSetMacros.h"
 #include "vulkanContext.h"
 #include "vulkanDefaultPushConstant.h"
-#include "vulkanDescriptorSetBinding.h"
 #include "vulkanForwardPipeline.h"
 #include "vulkanGizmoPipeline.h"
 #include "vulkanMacros.h"
@@ -23,7 +21,7 @@ namespace vulkanRendererBackend
 	// Factories/Destructor:
 	std::shared_ptr<MaterialShader> MaterialShader::CreateOutline(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name, emberCommon::MaterialType::outline));
+		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name));
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -74,13 +72,11 @@ namespace vulkanRendererBackend
 					*vertexAttributeVectors[i]));
 		}
 
-		// Create shader descriptorSetBinding:
-		pMaterialShader->m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(pMaterialShader.get()), SHADER_SET_INDEX);
 		return pMaterialShader;
 	}
 	std::shared_ptr<MaterialShader> MaterialShader::CreateForward(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name, emberCommon::MaterialType::forward));
+		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name));
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -135,13 +131,11 @@ namespace vulkanRendererBackend
 						*vertexAttributeVectors[j]));
 			}
 
-		// Create shader descriptorSetBinding:
-		pMaterialShader->m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(pMaterialShader.get()), SHADER_SET_INDEX);
 		return pMaterialShader;
 	}
 	std::shared_ptr<MaterialShader> MaterialShader::CreateGizmo(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name, emberCommon::MaterialType::gizmo));
+		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name));
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -196,13 +190,11 @@ namespace vulkanRendererBackend
 						*vertexAttributeVectors[j]));
 			}
 
-		// Create shader descriptorSetBinding:
-		pMaterialShader->m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(pMaterialShader.get()), SHADER_SET_INDEX);
 		return pMaterialShader;
 	}
 	std::shared_ptr<MaterialShader> MaterialShader::CreateShadow(const std::string& name, uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv)
 	{
-		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name, emberCommon::MaterialType::shadow));
+		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name));
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -249,13 +241,11 @@ namespace vulkanRendererBackend
 					*vertexAttributeVectors[i]));
 		}
 
-		// Create shader descriptorSetBinding:
-		pMaterialShader->m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(pMaterialShader.get()), SHADER_SET_INDEX);
 		return pMaterialShader;
 	}
 	std::shared_ptr<MaterialShader> MaterialShader::CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
 	{
-		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name, emberCommon::MaterialType::present));
+		std::shared_ptr<MaterialShader> pMaterialShader(new MaterialShader(name));
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -306,8 +296,6 @@ namespace vulkanRendererBackend
 					*vertexAttributeVectors[i]));
 		}
 
-		// Create shader descriptorSetBinding:
-		pMaterialShader->m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(pMaterialShader.get()), SHADER_SET_INDEX);
 		return pMaterialShader;
 	}
 	MaterialShader::~MaterialShader()
@@ -324,10 +312,6 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
-	emberCommon::MaterialType MaterialShader::GetMaterialType() const
-	{
-		return m_materialType;
-	}
 	bool MaterialShader::HasPipeline(PipelineType pipelineType) const
 	{
 		for (const auto& [pipelineKey, _] : m_pipelines)
@@ -340,8 +324,8 @@ namespace vulkanRendererBackend
 
 	// Private methods:
 	// Constructor:
-	MaterialShader::MaterialShader(const std::string& name, emberCommon::MaterialType materialType)
-		: Shader(name), m_materialType(materialType)
+	MaterialShader::MaterialShader(const std::string& name)
+		: Shader(name)
 	{
 
 	}

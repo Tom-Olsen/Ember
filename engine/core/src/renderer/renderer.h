@@ -128,6 +128,11 @@ namespace emberCore
 		static emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static emberBackendInterface::IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
 		static emberBackendInterface::IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv);
+		static emberBackendInterface::IMaterial* CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial);
+		static emberBackendInterface::IMaterial* CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::ForwardRenderMode renderMode);
+		static emberBackendInterface::IMaterial* CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial);
+		static emberBackendInterface::IMaterial* CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::GizmoRenderMode renderMode);
+		static emberBackendInterface::IMaterial* CloneShadowMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial);
 		static emberBackendInterface::IMesh* CreateMesh(const std::string& name);
 		static emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial);
 

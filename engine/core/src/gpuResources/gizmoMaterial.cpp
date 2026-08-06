@@ -1,5 +1,6 @@
 #include "gizmoMaterial.h"
 #include "iMaterial.h"
+#include "materialManager.h"
 #include <stdexcept>
 
 
@@ -26,6 +27,18 @@ namespace emberCore
 	GizmoMaterial::~GizmoMaterial()
 	{
 
+	}
+
+
+
+	// Cloning:
+	GizmoMaterial GizmoMaterial::Clone(const std::string& name) const
+	{
+		return MaterialManager::CloneGizmoMaterial(name, *this);
+	}
+	GizmoMaterial GizmoMaterial::Clone(const std::string& name, emberCommon::GizmoRenderMode renderMode) const
+	{
+		return MaterialManager::CloneGizmoMaterial(name, *this, renderMode);
 	}
 
 

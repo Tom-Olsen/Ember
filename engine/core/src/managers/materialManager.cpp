@@ -99,6 +99,85 @@ namespace emberCore
 
 
 
+	// Cloners:
+	ForwardMaterial MaterialManager::CloneForwardMaterial(const std::string& name, const ForwardMaterial& sourceMaterial)
+	{
+		auto it = s_materialInterfacesMap.find(name);
+		if (it != s_materialInterfacesMap.end())
+		{
+			LOG_WARN("Material '{}' already exists - returning existing instance.", name);
+			return ForwardMaterial{ it->second.get() };
+		}
+		if (!sourceMaterial.IsValid())
+			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material is invalid.");
+
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CloneForwardMaterial(name, sourceMaterial.GetInterfaceHandle());
+		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
+		return ForwardMaterial{ result.first->second.get() };
+	}
+	ForwardMaterial MaterialManager::CloneForwardMaterial(const std::string& name, const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode)
+	{
+		auto it = s_materialInterfacesMap.find(name);
+		if (it != s_materialInterfacesMap.end())
+		{
+			LOG_WARN("Material '{}' already exists - returning existing instance.", name);
+			return ForwardMaterial{ it->second.get() };
+		}
+		if (!sourceMaterial.IsValid())
+			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material is invalid.");
+
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CloneForwardMaterial(name, sourceMaterial.GetInterfaceHandle(), renderMode);
+		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
+		return ForwardMaterial{ result.first->second.get() };
+	}
+	GizmoMaterial MaterialManager::CloneGizmoMaterial(const std::string& name, const GizmoMaterial& sourceMaterial)
+	{
+		auto it = s_materialInterfacesMap.find(name);
+		if (it != s_materialInterfacesMap.end())
+		{
+			LOG_WARN("Material '{}' already exists - returning existing instance.", name);
+			return GizmoMaterial{ it->second.get() };
+		}
+		if (!sourceMaterial.IsValid())
+			throw std::runtime_error("MaterialManager::CloneGizmoMaterial(...) failed. Source material is invalid.");
+
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CloneGizmoMaterial(name, sourceMaterial.GetInterfaceHandle());
+		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
+		return GizmoMaterial{ result.first->second.get() };
+	}
+	GizmoMaterial MaterialManager::CloneGizmoMaterial(const std::string& name, const GizmoMaterial& sourceMaterial, emberCommon::GizmoRenderMode renderMode)
+	{
+		auto it = s_materialInterfacesMap.find(name);
+		if (it != s_materialInterfacesMap.end())
+		{
+			LOG_WARN("Material '{}' already exists - returning existing instance.", name);
+			return GizmoMaterial{ it->second.get() };
+		}
+		if (!sourceMaterial.IsValid())
+			throw std::runtime_error("MaterialManager::CloneGizmoMaterial(...) failed. Source material is invalid.");
+
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CloneGizmoMaterial(name, sourceMaterial.GetInterfaceHandle(), renderMode);
+		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
+		return GizmoMaterial{ result.first->second.get() };
+	}
+	ShadowMaterial MaterialManager::CloneShadowMaterial(const std::string& name, const ShadowMaterial& sourceMaterial)
+	{
+		auto it = s_materialInterfacesMap.find(name);
+		if (it != s_materialInterfacesMap.end())
+		{
+			LOG_WARN("Material '{}' already exists - returning existing instance.", name);
+			return ShadowMaterial{ it->second.get() };
+		}
+		if (!sourceMaterial.IsValid())
+			throw std::runtime_error("MaterialManager::CloneShadowMaterial(...) failed. Source material is invalid.");
+
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CloneShadowMaterial(name, sourceMaterial.GetInterfaceHandle());
+		auto result = s_materialInterfacesMap.emplace(name, std::unique_ptr<emberBackendInterface::IMaterial>(pIMaterial));
+		return ShadowMaterial{ result.first->second.get() };
+	}
+
+
+
 	// Getters: (throw on fail)
 	Material MaterialManager::GetMaterial(const std::string& name)
 	{

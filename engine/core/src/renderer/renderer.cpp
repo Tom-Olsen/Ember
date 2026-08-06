@@ -337,6 +337,26 @@ namespace emberCore
 	{
 		return s_pIRenderer->CreateShadowMaterial(name, vertexSpv);
 	}
+	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial)
+	{
+		return s_pIRenderer->CloneForwardMaterial(name, pSourceMaterial);
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::ForwardRenderMode renderMode)
+	{
+		return s_pIRenderer->CloneForwardMaterial(name, pSourceMaterial, renderMode);
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial)
+	{
+		return s_pIRenderer->CloneGizmoMaterial(name, pSourceMaterial);
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::GizmoRenderMode renderMode)
+	{
+		return s_pIRenderer->CloneGizmoMaterial(name, pSourceMaterial, renderMode);
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial)
+	{
+		return s_pIRenderer->CloneShadowMaterial(name, pSourceMaterial);
+	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh(const std::string& name)
 	{
 		return s_pIRenderer->CreateMesh();

@@ -29,6 +29,18 @@ namespace emberCore
 		ForwardMaterial();
 		~ForwardMaterial();
 
+		// Copyable:
+		ForwardMaterial(const ForwardMaterial&) = default;
+		ForwardMaterial& operator=(const ForwardMaterial&) = default;
+
+		// Movable:
+		ForwardMaterial(ForwardMaterial&& other) noexcept = default;
+		ForwardMaterial& operator=(ForwardMaterial&& other) noexcept = default;
+
+		// Cloning:
+		ForwardMaterial Clone(const std::string& name) const;
+		ForwardMaterial Clone(const std::string& name, emberCommon::ForwardRenderMode renderMode) const;
+
 		// Getters:
 		emberCommon::ForwardRenderMode GetRenderMode() const;
 		const emberCommon::ForwardRenderState& GetRenderState() const;

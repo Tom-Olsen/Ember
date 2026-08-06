@@ -28,6 +28,18 @@ namespace emberCore
 		GizmoMaterial();
 		~GizmoMaterial();
 
+		// Copyable:
+		GizmoMaterial(const GizmoMaterial&) = default;
+		GizmoMaterial& operator=(const GizmoMaterial&) = default;
+
+		// Movable:
+		GizmoMaterial(GizmoMaterial&& other) noexcept = default;
+		GizmoMaterial& operator=(GizmoMaterial&& other) noexcept = default;
+
+		// Cloning:
+		GizmoMaterial Clone(const std::string& name) const;
+		GizmoMaterial Clone(const std::string& name, emberCommon::GizmoRenderMode renderMode) const;
+
 		// Getters:
 		emberCommon::GizmoRenderMode GetRenderMode() const;
 		const emberCommon::GizmoRenderState& GetRenderState() const;

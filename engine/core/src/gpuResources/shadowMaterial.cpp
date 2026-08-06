@@ -27,4 +27,12 @@ namespace emberCore
 	{
 
 	}
+
+
+
+	// Cloning:
+	ShadowMaterial ShadowMaterial::Clone(const std::string& name) const
+	{
+		return MaterialManager::CloneShadowMaterial(name, *this);
+	}
 }

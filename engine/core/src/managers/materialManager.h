@@ -42,6 +42,13 @@ namespace emberCore
         static ForwardMaterial CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
         static GizmoMaterial CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
         static ShadowMaterial CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv);
+
+		// Cloners:
+		static ForwardMaterial CloneForwardMaterial(const std::string& name, const ForwardMaterial& sourceMaterial);
+		static ForwardMaterial CloneForwardMaterial(const std::string& name, const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode);
+		static GizmoMaterial CloneGizmoMaterial(const std::string& name, const GizmoMaterial& sourceMaterial);
+		static GizmoMaterial CloneGizmoMaterial(const std::string& name, const GizmoMaterial& sourceMaterial, emberCommon::GizmoRenderMode renderMode);
+		static ShadowMaterial CloneShadowMaterial(const std::string& name, const ShadowMaterial& sourceMaterial);
         
 		// Getters: (throw on fail)
 		static Material GetMaterial(const std::string& name);

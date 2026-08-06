@@ -682,6 +682,26 @@ namespace vulkanRendererBackend
 	{
 		return new Material(Material::CreateShadow(name, m_shadowMapResolution, vertexSpv));
 	}
+	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial)
+	{
+		return new Material(Material::CloneForward(name, *static_cast<Material*>(pSourceMaterial)));
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::ForwardRenderMode renderMode)
+	{
+		return new Material(Material::CloneForward(name, *static_cast<Material*>(pSourceMaterial), renderMode));
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial)
+	{
+		return new Material(Material::CloneGizmo(name, *static_cast<Material*>(pSourceMaterial)));
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::GizmoRenderMode renderMode)
+	{
+		return new Material(Material::CloneGizmo(name, *static_cast<Material*>(pSourceMaterial), renderMode));
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial)
+	{
+		return new Material(Material::CloneShadow(name, *static_cast<Material*>(pSourceMaterial)));
+	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh()
 	{
 		return new Mesh();

@@ -26,5 +26,16 @@ namespace emberCore
 		// Constructor/Destructor:
 		ShadowMaterial();
 		~ShadowMaterial();
+
+		// Copyable:
+		ShadowMaterial(const ShadowMaterial&) = default;
+		ShadowMaterial& operator=(const ShadowMaterial&) = default;
+
+		// Movable:
+		ShadowMaterial(ShadowMaterial&& other) noexcept = default;
+		ShadowMaterial& operator=(ShadowMaterial&& other) noexcept = default;
+
+		// Cloning:
+		ShadowMaterial Clone(const std::string& name) const;
 	};
 }
