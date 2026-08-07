@@ -50,6 +50,8 @@ namespace emberCore
 	}
 	void MaterialManager::Clear()
 	{
+		for (auto& [_, pMaterial] : s_materialInterfacesMap)
+			Renderer::DestroyMaterial(pMaterial.release());
 		s_materialInterfacesMap.clear();
 		s_isInitialized = false;
 	}
@@ -278,7 +280,12 @@ namespace emberCore
 	// Deleter:
 	void MaterialManager::DeleteMaterial(const std::string& name)
 	{
-		s_materialInterfacesMap.erase(name);
+		auto it = s_materialInterfacesMap.find(name);
+		if (it == s_materialInterfacesMap.end())
+			return;
+
+		Renderer::DestroyMaterial(it->second.release());
+		s_materialInterfacesMap.erase(it);
 	}
 
 

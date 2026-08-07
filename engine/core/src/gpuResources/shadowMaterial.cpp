@@ -1,5 +1,6 @@
 #include "shadowMaterial.h"
 #include "iMaterial.h"
+#include "materialManager.h"
 #include <stdexcept>
 
 

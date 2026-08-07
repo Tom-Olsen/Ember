@@ -135,6 +135,9 @@ namespace emberCore
 		static emberBackendInterface::IMaterial* CloneShadowMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial);
 		static emberBackendInterface::IMesh* CreateMesh(const std::string& name);
 		static emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial);
+		
+		// Gpu resource destruction:
+		static void DestroyMaterial(emberBackendInterface::IMaterial* pMaterial);
 
 		// Delete all constructors:
 		Renderer() = delete;

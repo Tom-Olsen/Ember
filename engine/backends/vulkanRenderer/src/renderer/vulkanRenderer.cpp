@@ -714,6 +714,21 @@ namespace vulkanRendererBackend
 	}
 
 
+	
+	// Gpu resource destruction:
+	void Renderer::DestroyMaterial(emberBackendInterface::IMaterial* pMaterial)
+	{
+		if (!pMaterial)
+			return;
+
+		Material* pVulkanMaterial = static_cast<Material*>(pMaterial);
+		GarbageCollector::RecordGarbage([pVulkanMaterial]()
+		{
+			delete pVulkanMaterial;
+		});
+	}
+
+
 
 	// Vulkan handle passthrough for API coupling:
 	void* Renderer::GetVkInstance() const

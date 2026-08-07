@@ -365,4 +365,14 @@ namespace emberCore
 	{
 		return s_pIRenderer->CreateDrawCallDescriptorSetBinding(pIMaterial);
 	}
+	
+
+	
+	// Gpu resource destruction:
+	void Renderer::DestroyMaterial(emberBackendInterface::IMaterial* pMaterial)
+	{
+		if (!pMaterial)
+			return;
+		s_pIRenderer->DestroyMaterial(pMaterial);
+	}
 }

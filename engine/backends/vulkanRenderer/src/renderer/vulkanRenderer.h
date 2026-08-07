@@ -180,7 +180,10 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IMaterial* CloneShadowMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial) override;
 		emberBackendInterface::IMesh* CreateMesh() override;
 		emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial) override;
-
+		
+		// Gpu resource destruction:
+		void DestroyMaterial(emberBackendInterface::IMaterial* pMaterial) override;
+		
 		// Vulkan handle passthrough for API coupling:
 		void* GetVkInstance() const override;
 		void* GetVkPhysicalDevice() const override;

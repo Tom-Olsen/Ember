@@ -92,6 +92,9 @@ namespace emberBackendInterface
         virtual IMesh* CreateMesh() = 0;
         virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;
 
+		// Gpu resource destruction:
+        virtual void DestroyMaterial(IMaterial* pMaterial) = 0;
+
         // Vulkan handle passthrough for API coupling:
         virtual void* GetVkInstance() const = 0;
         virtual void* GetVkPhysicalDevice() const = 0;
