@@ -148,11 +148,11 @@ int main()
 
 		// Add project specific shaders:
 		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
-		Material::CreateForward(emberCommon::ForwardRenderMode::opaque, "particleMaterial2d", directoryPath / "particle2d.vert.spv", directoryPath / "particle2d.frag.spv");
-		ForwardMaterial particleMaterial3d = Material::CreateForward(emberCommon::ForwardRenderMode::opaque, "particleMaterial3d", directoryPath / "particle3d.vert.spv", directoryPath / "particle3d.frag.spv");
-		ShadowMaterial particleShadowMaterial3d = Material::CreateShadow("particleShadowMaterial3d", directoryPath / "particle3dShadow.vert.spv");
+		Material::CreateForward(emberCommon::ForwardRenderMode::opaque, directoryPath / "particle2d.vert.spv", directoryPath / "particle2d.frag.spv", "particleMaterial2d");
+		ForwardMaterial particleMaterial3d = Material::CreateForward(emberCommon::ForwardRenderMode::opaque, directoryPath / "particle3d.vert.spv", directoryPath / "particle3d.frag.spv", "particleMaterial3d");
+		ShadowMaterial particleShadowMaterial3d = Material::CreateShadow(directoryPath / "particle3dShadow.vert.spv", "particleShadowMaterial3d");
 		particleMaterial3d.SetShadowMaterial(particleShadowMaterial3d);
-        Material volumeRaycastMaterial = Material::CreateForward(emberCommon::ForwardRenderMode::transparent, "volumeRaycastMaterial", directoryPath / "volumeRaycast.vert.spv", directoryPath / "volumeRaycast.frag.spv");
+		ForwardMaterial volumeRaycastMaterial = Material::CreateForward(emberCommon::ForwardRenderMode::transparent, directoryPath / "volumeRaycast.vert.spv", directoryPath / "volumeRaycast.frag.spv", "volumeRaycastMaterial");
 		volumeRaycastMaterial.SetCullMode(emberCommon::CullMode::front);	// ToDo: why cull front and not back?
 
 		// Create scene:
