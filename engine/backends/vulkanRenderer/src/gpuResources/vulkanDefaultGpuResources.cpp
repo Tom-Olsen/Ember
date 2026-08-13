@@ -1,6 +1,8 @@
 #include "vulkanDefaultGpuResources.h"
 #include "descriptorSetMacros.h"
 #include "emberMath.h"
+#include "iMaterial.h"
+#include "iRenderer.h"
 #include "vulkanColorSampler.h"
 #include "vulkanComputeShader.h"
 #include "vulkanDepthTexture2dArray.h"
@@ -16,6 +18,7 @@
 #include "vulkanStorageTexture3d.h"
 #include <array>
 #include <filesystem>
+#include <stdexcept>
 
 
 
@@ -28,9 +31,9 @@ namespace vulkanRendererBackend
 	std::unique_ptr<Sampler> DefaultGpuResources::s_pColorSamplerClampEdge = nullptr;
 	std::unique_ptr<Sampler> DefaultGpuResources::s_pShadowSampler = nullptr;
 	// Materials:
-	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultOutlineMaterial = nullptr;
-	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultShadowMaterial = nullptr;
-	std::unique_ptr<Material> DefaultGpuResources::s_pDefaultPresentMaterial = nullptr;
+	Material* DefaultGpuResources::s_pDefaultOutlineMaterial = nullptr;
+	Material* DefaultGpuResources::s_pDefaultShadowMaterial = nullptr;
+	Material* DefaultGpuResources::s_pDefaultPresentMaterial = nullptr;
 	// Compute shaders:
 	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pGammaCorrectionComputeShader = nullptr;
 	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineComputeShader = nullptr;
@@ -68,7 +71,7 @@ namespace vulkanRendererBackend
 		if (!s_pShadowSampler)
 			s_pShadowSampler = std::make_unique<ShadowSampler>("Sampler_Shadow");
 	}
-	void DefaultGpuResources::Init(uint32_t shadowMapResolution)
+	void DefaultGpuResources::Init()
 	{
 		if (s_isInitialized)
 			return;
@@ -90,13 +93,9 @@ namespace vulkanRendererBackend
 		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>(VK_FORMAT_D32_SFLOAT, 2, 1, 1);
 		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, (void*)&Float4::one);
 		s_pDefaultStorageTexture3d = std::make_unique<StorageTexture3d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, 1, (void*)&Float4::one);
-		// Materials:
-        s_pDefaultOutlineMaterial = std::make_unique<Material>(Material::CreateOutline("outlineMaterial", shadersBinDirectory / "outline.vert.spv", shadersBinDirectory / "outline.frag.spv")); 
-		s_pDefaultShadowMaterial = std::make_unique<Material>(Material::CreateShadow("shadowMaterial", shadowMapResolution, shadersBinDirectory / "shadow.vert.spv"));
-		s_pDefaultPresentMaterial = std::make_unique<Material>(Material::CreatePresent("presentMaterial", shadersBinDirectory / "present.vert.spv", shadersBinDirectory / "present.frag.spv"));
 		// Compute shaders:
-		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>("gammaCorrectionComputeShader", shadersBinDirectory / "gammaCorrection.comp.spv");
-		s_pOutlineComputeShader = std::make_unique<ComputeShader>("outlineComputeShader", shadersBinDirectory / "outlineComposite.comp.spv");
+		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "gammaCorrection.comp.spv", "gammaCorrectionComputeShader");
+		s_pOutlineComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineComposite.comp.spv", "outlineComputeShader");
 		// Meshes:
 		s_pDefaultRenderQuad = std::make_unique<Mesh>(CreateDefaultRenderQuad());
 	}
@@ -107,9 +106,9 @@ namespace vulkanRendererBackend
 		s_pColorSamplerClampEdge.reset();
 		s_pShadowSampler.reset();
 		// Materials:
-		s_pDefaultOutlineMaterial.reset();
-		s_pDefaultShadowMaterial.reset();
-		s_pDefaultPresentMaterial.reset();
+		s_pDefaultOutlineMaterial = nullptr;
+		s_pDefaultShadowMaterial = nullptr;
+		s_pDefaultPresentMaterial = nullptr;
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader.reset();
 		s_pOutlineComputeShader.reset();
@@ -126,6 +125,25 @@ namespace vulkanRendererBackend
 		s_pDefaultStorageTexture2d.reset();
 		s_pDefaultStorageTexture3d.reset();
 		s_isInitialized = false;
+	}
+	void DefaultGpuResources::SetDefaultMaterials(emberBackendInterface::IMaterial* pOutlineMaterial, emberBackendInterface::IMaterial* pDefaultShadowMaterial, emberBackendInterface::IMaterial* pPresentMaterial)
+	{
+		if (pOutlineMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Outline material is null.");
+		if (pDefaultShadowMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Default shadow material is null.");
+		if (pPresentMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Present material is null.");
+		if (pOutlineMaterial->GetMaterialType() != emberCommon::MaterialType::outline)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Outline material has wrong material type.");
+		if (pDefaultShadowMaterial->GetMaterialType() != emberCommon::MaterialType::shadow)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Default shadow material has wrong material type.");
+		if (pPresentMaterial->GetMaterialType() != emberCommon::MaterialType::present)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Present material has wrong material type.");
+
+		s_pDefaultOutlineMaterial = static_cast<Material*>(pOutlineMaterial);
+		s_pDefaultShadowMaterial = static_cast<Material*>(pDefaultShadowMaterial);
+		s_pDefaultPresentMaterial = static_cast<Material*>(pPresentMaterial);
 	}
 
 
@@ -148,15 +166,21 @@ namespace vulkanRendererBackend
 	// Materials:
 	Material* DefaultGpuResources::GetDefaultOutlineMaterial()
 	{
-		return s_pDefaultOutlineMaterial.get();
+		if (s_pDefaultOutlineMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetDefaultOutlineMaterial() failed. Default outline material is not set.");
+		return s_pDefaultOutlineMaterial;
 	}
 	Material* DefaultGpuResources::GetDefaultShadowMaterial()
 	{
-		return s_pDefaultShadowMaterial.get();
+		if (s_pDefaultShadowMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetDefaultShadowMaterial() failed. Default shadow material is not set.");
+		return s_pDefaultShadowMaterial;
 	}
 	Material* DefaultGpuResources::GetDefaultPresentMaterial()
 	{
-		return s_pDefaultPresentMaterial.get();
+		if (s_pDefaultPresentMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetDefaultPresentMaterial() failed. Default present material is not set.");
+		return s_pDefaultPresentMaterial;
 	}
 	// Compute shaders:
 	ComputeShader* DefaultGpuResources::GetGammaCorrectionComputeShader()

@@ -21,9 +21,6 @@ namespace emberCore
 		// Friends:
 		friend class MaterialManager;
 
-	private: // Methods:
-		ForwardMaterial(emberBackendInterface::IMaterial* pIMaterial);
-
 	public: // Methods:
 		// Constructor/Destructor:
 		ForwardMaterial();
@@ -44,8 +41,7 @@ namespace emberCore
 		// Getters:
 		emberCommon::ForwardRenderMode GetRenderMode() const;
 		const emberCommon::ForwardRenderState& GetRenderState() const;
-		ShadowMaterial GetShadowMaterial() const;     // throws on fail.
-		ShadowMaterial TryGetShadowMaterial() const;  // returns invalid ShadowMaterial on fail.
+		ShadowMaterial GetShadowMaterial() const;
 		int32_t GetRenderQueue() const;
 		bool GetIsTransparent() const;
 
@@ -54,5 +50,8 @@ namespace emberCore
 		void SetCullMode(emberCommon::CullMode cullMode);
 		void SetRenderQueue(int32_t renderQueue);
 		void SetShadowMaterial(const ShadowMaterial& shadowMaterial);
+
+	private: // Methods:
+		ForwardMaterial(MaterialId materialId);
 	};
 }

@@ -4,6 +4,13 @@
 
 
 
+namespace emberBackendInterface
+{
+    class IMaterial;
+}
+
+
+
 namespace vulkanRendererBackend
 {
     // Forward declarations:
@@ -31,9 +38,9 @@ namespace vulkanRendererBackend
         static std::unique_ptr<Sampler> s_pColorSamplerClampEdge;
         static std::unique_ptr<Sampler> s_pShadowSampler;
         // Materials:
-        static std::unique_ptr<Material> s_pDefaultOutlineMaterial;
-        static std::unique_ptr<Material> s_pDefaultShadowMaterial;
-        static std::unique_ptr<Material> s_pDefaultPresentMaterial;
+        static Material* s_pDefaultOutlineMaterial;
+        static Material* s_pDefaultShadowMaterial;
+        static Material* s_pDefaultPresentMaterial;
         // Compute shaders:
         static std::unique_ptr<ComputeShader> s_pGammaCorrectionComputeShader;
         static std::unique_ptr<ComputeShader> s_pOutlineComputeShader;
@@ -52,8 +59,9 @@ namespace vulkanRendererBackend
 
     public: // Methods:
         static void InitSamplers();
-        static void Init(uint32_t shadowMapResolution);
+        static void Init();
         static void Clear();
+        static void SetDefaultMaterials(emberBackendInterface::IMaterial* pOutlineMaterial, emberBackendInterface::IMaterial* pDefaultShadowMaterial, emberBackendInterface::IMaterial* pPresentMaterial);
 
         // Samplers:
         static Sampler* GetColorSampler();

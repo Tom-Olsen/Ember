@@ -37,8 +37,8 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	DescriptorSetBinding::DescriptorSetBinding(Shader* pShader, uint32_t setIndex)
-		: m_pShader(pShader), m_setIndex(setIndex), m_generation(0)
+	DescriptorSetBinding::DescriptorSetBinding(Shader* pShader, uint32_t setIndex, const std::string& debugName)
+		: m_pShader(pShader), m_setIndex(setIndex), m_generation(0), m_debugName(debugName)
 	{
 		// Create resource bindings and uniform buffer update logic for each frameInFlight:
 		m_textureMaps = std::vector<std::unordered_map<uint32_t, TextureBinding>>(Context::GetFramesInFlight());
@@ -414,9 +414,9 @@ namespace vulkanRendererBackend
 	{
 		return m_bindingIndices.contains(name);
 	}
-	std::string DescriptorSetBinding::GetShaderName() const
+	const std::string& DescriptorSetBinding::GetDebugName() const
 	{
-		return m_pShader->GetName();
+		return m_debugName;
 	}
 	Texture* DescriptorSetBinding::GetTexture(const std::string& name) const
 	{
@@ -485,7 +485,7 @@ namespace vulkanRendererBackend
 	// Debugging:
 	void DescriptorSetBinding::Print() const
 	{
-		LOG_INFO("DescriptorSetBinding: {}, {}", m_pShader->GetName(), fmt::ptr(this));
+		LOG_INFO("DescriptorSetBinding: {}, {}", m_debugName, fmt::ptr(this));
 		LOG_INFO("DescriptorSets: {}, {}", fmt::ptr(m_descriptorSets[0]), fmt::ptr(m_descriptorSets[1]));
 	}
 	void DescriptorSetBinding::PrintMaps() const
@@ -516,7 +516,7 @@ namespace vulkanRendererBackend
 		auto it = m_bindingIndices.find(name);
 		if (it != m_bindingIndices.end())
 			return &it->second;
-        LOG_WARN("Shader {} does not have a binding named {}", m_pShader->GetName(), name);
+		LOG_WARN("Shader '{}' does not have a binding named {}", m_debugName, name);
 		return nullptr;
 	}
 
@@ -529,7 +529,7 @@ namespace vulkanRendererBackend
 			return; // already initialized.
 
 		UniformBuffer uniformBuffer(bufferLayout);
-		uniformBuffer.SetDebugName("UniformBuffer_Binding" + m_bindingNames.at(binding) + "_" + m_pShader->GetName());
+		uniformBuffer.SetDebugName("UniformBuffer_Binding" + m_bindingNames.at(binding) + "_" + m_debugName);
 		m_uniformBufferMap.emplace(binding, UniformBufferBinding{binding, std::move(uniformBuffer)});
 	}
 	void DescriptorSetBinding::InitTextureBinding(uint32_t frameIndex, uint32_t binding, Texture* pTexture, VkDescriptorType descriptorType)
@@ -574,7 +574,7 @@ namespace vulkanRendererBackend
 		m_descriptorSetAllocations.reserve(Context::GetFramesInFlight());
 		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
-			DescriptorSetAllocation allocation = DescriptorPoolManager::AllocateDescriptorSet(m_pShader->GetVkDescriptorSetLayout()[m_setIndex], "DescriptorSet" + std::to_string(m_setIndex) + "_Frame" + std::to_string(frameIndex) + "_" + m_pShader->GetName());
+			DescriptorSetAllocation allocation = DescriptorPoolManager::AllocateDescriptorSet(m_pShader->GetVkDescriptorSetLayout()[m_setIndex], "DescriptorSet" + std::to_string(m_setIndex) + "_Frame" + std::to_string(frameIndex) + "_" + m_debugName);
 			m_descriptorSetAllocations.push_back(allocation);
 			m_descriptorSets[frameIndex] = allocation.descriptorSet;
 		}

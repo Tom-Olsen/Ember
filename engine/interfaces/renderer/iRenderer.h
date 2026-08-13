@@ -4,6 +4,7 @@
 #include "commonForwardRenderMode.h"
 #include "commonGizmoRenderMode.h"
 #include "commonLighting.h"
+#include "commonMaterialType.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
 #include <filesystem>
@@ -18,12 +19,13 @@ namespace emberBackendInterface
     class IComputeShader;
     class IGui;
     class IMaterial;
+    class IMaterialShader;
     class IMesh;
     class IDescriptorSetBinding;
     class ITexture;
 
 
-
+	
     class IRenderer
     {
     public: // Methods:
@@ -66,6 +68,7 @@ namespace emberBackendInterface
         virtual void SetDepthBiasConstantFactor(float depthBiasConstantFactor) = 0;
         virtual void SetDepthBiasClamp(float depthBiasClamp) = 0;
         virtual void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) = 0;
+        virtual void SetDefaultMaterials(IMaterial* pOutlineMaterial, IMaterial* pDefaultShadowMaterial, IMaterial* pPresentMaterial) = 0;
         virtual void SetOutlineColor(const Float4& outlineColor) = 0;
         virtual void SetOutlineThickness(int outlineThickness) = 0;
 
@@ -80,20 +83,26 @@ namespace emberBackendInterface
         virtual ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
         virtual ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
         virtual ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
-        virtual IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) = 0;
-        virtual IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
-        virtual IMaterial* CreateGizmoMaterial(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) = 0;
-        virtual IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv) = 0;
-        virtual IMaterial* CloneForwardMaterial(const std::string& name, IMaterial* pSourceMaterial) = 0;
-        virtual IMaterial* CloneForwardMaterial(const std::string& name, IMaterial* pSourceMaterial, emberCommon::ForwardRenderMode renderMode) = 0;
-        virtual IMaterial* CloneGizmoMaterial(const std::string& name, IMaterial* pSourceMaterial) = 0;
-        virtual IMaterial* CloneGizmoMaterial(const std::string& name, IMaterial* pSourceMaterial, emberCommon::GizmoRenderMode renderMode) = 0;
-        virtual IMaterial* CloneShadowMaterial(const std::string& name, IMaterial* pSourceMaterial) = 0;
+        virtual IComputeShader* CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName) = 0;
+        virtual IMaterialShader* CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
+        virtual IMaterialShader* CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
+        virtual IMaterialShader* CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
+        virtual IMaterialShader* CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& debugName) = 0;
+        virtual IMaterialShader* CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
+        virtual IMaterial* CreateOutlineMaterial(IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CreateShadowMaterial(IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CreatePresentMaterial(IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CloneForwardMaterial(IMaterial* pSourceMaterial, const std::string& debugName) = 0;
+        virtual IMaterial* CloneGizmoMaterial(IMaterial* pSourceMaterial, const std::string& debugName) = 0;
+        virtual IMaterial* CloneShadowMaterial(IMaterial* pSourceMaterial, const std::string& debugName) = 0;
         virtual IMesh* CreateMesh() = 0;
         virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;
 
 		// Gpu resource destruction:
         virtual void DestroyMaterial(IMaterial* pMaterial) = 0;
+        virtual void DestroyMaterialShader(IMaterialShader* pMaterialShader) = 0;
 
         // Vulkan handle passthrough for API coupling:
         virtual void* GetVkInstance() const = 0;

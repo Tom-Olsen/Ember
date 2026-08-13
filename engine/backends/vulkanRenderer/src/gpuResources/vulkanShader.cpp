@@ -2,7 +2,6 @@
 #include "descriptorSetMacros.h"
 #include "logger.h"
 #include "vulkanContext.h"
-#include "vulkanDescriptorSetBinding.h"
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanGlobalDescriptorSetLayout.h"
 #include "vulkanMacros.h"
@@ -16,8 +15,9 @@ namespace vulkanRendererBackend
 {
 	// Protected methods:
 	// Constructor:
-	Shader::Shader(const std::string& name)
-		: m_name(name), m_shaderReflection(DESCRIPTOR_SET_COUNT)
+	Shader::Shader(const std::string& debugName)
+		: m_debugName(debugName)
+		, m_shaderReflection(DESCRIPTOR_SET_COUNT)
 	{
 
 	}
@@ -28,8 +28,9 @@ namespace vulkanRendererBackend
 	// Destructor:
 	Shader::~Shader()
 	{
-        // Shader only owns SHADER_SET_INDEX(3) and CALL_SET_INDEX(4).
-        // Sets GLOBAL_SET_INDEX/SCENE_SET_INDEX/FRAME_SET_INDEX (0,1,2) are owned and disposed of by static DescriptorSetLayout classes.
+		// Sets GLOBAL_SET_INDEX(0)/SCENE_SET_INDEX(1)/FRAME_SET_INDEX(2) are shared static layouts.
+		// Sets SHADER_SET_INDEX(3) and CALL_SET_INDEX(4) are reflected per shader and owned here.
+		// DescriptorSetBinding objects own descriptor sets/data, but not the descriptor set layouts.
 		for (size_t i = SHADER_SET_INDEX; i < m_vkDescriptorSetLayouts.size(); i++)
 			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_vkDescriptorSetLayouts[i], nullptr);
 		vkDestroyPipelineLayout(Context::GetVkDevice(), m_vkPipelineLayout, nullptr);
@@ -39,28 +40,22 @@ namespace vulkanRendererBackend
 
 	// Movable:
 	Shader::Shader(Shader&& other) noexcept
-        : m_name(std::move(other.m_name))
-        , m_shaderReflection(std::move(other.m_shaderReflection))
-        , m_vkDescriptorSetLayouts(std::move(other.m_vkDescriptorSetLayouts))
-        , m_vkPipelineLayout(other.m_vkPipelineLayout)
-        , m_pShaderDescriptorSetBinding(std::move(other.m_pShaderDescriptorSetBinding))
+		: m_debugName(std::move(other.m_debugName))
+		, m_shaderReflection(std::move(other.m_shaderReflection))
+		, m_vkDescriptorSetLayouts(std::move(other.m_vkDescriptorSetLayouts))
+		, m_vkPipelineLayout(other.m_vkPipelineLayout)
 	{
-		if (m_pShaderDescriptorSetBinding)
-			m_pShaderDescriptorSetBinding->RebindShader(this);
-        other.m_vkPipelineLayout = VK_NULL_HANDLE;
+		other.m_vkPipelineLayout = VK_NULL_HANDLE;
 	}
 	Shader& Shader::operator=(Shader&& other) noexcept
 	{
 		if (this != &other)
 		{
-			m_name = std::move(other.m_name);
+			m_debugName = std::move(other.m_debugName);
 			m_shaderReflection = std::move(other.m_shaderReflection);
 			m_vkDescriptorSetLayouts = std::move(other.m_vkDescriptorSetLayouts);
 			m_vkPipelineLayout = other.m_vkPipelineLayout;
 			other.m_vkPipelineLayout = VK_NULL_HANDLE;
-			m_pShaderDescriptorSetBinding = std::move(other.m_pShaderDescriptorSetBinding);
-			if (m_pShaderDescriptorSetBinding)
-				m_pShaderDescriptorSetBinding->RebindShader(this);
 		}
 		return *this;
 	}
@@ -109,17 +104,13 @@ namespace vulkanRendererBackend
 			descriptorSetLayoutCreateInfo.pBindings = layoutBindings.empty() ? nullptr : layoutBindings.data();
 
 			VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &descriptorSetLayoutCreateInfo, nullptr, &m_vkDescriptorSetLayouts[i]));
-			NAME_VK_OBJECT(m_vkDescriptorSetLayouts[i], "DescriptorSetLayout" + std::to_string(i) + "_" + m_name);
+			NAME_VK_OBJECT(m_vkDescriptorSetLayouts[i], "DescriptorSetLayout" + std::to_string(i) + "_" + m_debugName);
 		}
 	}
 
 
 
 	// Getters:
-	const std::string& Shader::GetName() const
-	{
-		return m_name;
-	}
 	const emberSpirvReflect::ShaderReflection& Shader::GetShaderReflection() const
 	{
 		return m_shaderReflection;
@@ -128,13 +119,13 @@ namespace vulkanRendererBackend
 	{
 		return m_vkPipelineLayout;
 	}
-	DescriptorSetBinding* Shader::GetDescriptorSetBinding() const
-	{
-		return m_pShaderDescriptorSetBinding.get();
-	}
 	const std::vector<VkDescriptorSetLayout>& Shader::GetVkDescriptorSetLayout() const
 	{
 		return m_vkDescriptorSetLayouts;
+	}
+	const std::string& Shader::GetDebugName() const
+	{
+		return m_debugName;
 	}
 
 
@@ -142,6 +133,6 @@ namespace vulkanRendererBackend
 	// Debugging:
 	void Shader::PrintShaderInfo() const
 	{
-		LOG_TRACE("ShaderInfo: {}\n{}", m_name, m_shaderReflection.ToString());
+		LOG_TRACE("ShaderInfo: {}\n{}", GetDebugName(), m_shaderReflection.ToString());
 	}
 }

@@ -92,7 +92,7 @@ namespace vulkanRendererBackend
 		if (isPostProcessing && (!pDescriptorSetBinding->HasBinding("inputImage") || !pDescriptorSetBinding->HasBinding("outputImage")))
 		{
 			PoolManager::ReturnCallDescriptorSetBinding(descriptorSetBindingHandle);
-			LOG_ERROR("compute::PostRender::RecordPostProcessingShader(...) failed. Compute shader '{}' must declare CALL_SET storage images named 'inputImage' and 'outputImage'.", pComputeShader->GetName());
+			LOG_ERROR("compute::PostRender::RecordPostProcessingShader(...) failed. Compute shader '{}' must declare CALL_SET storage images named 'inputImage' and 'outputImage'.", pComputeShader->GetDebugName());
 			return nullptr;
 		}
 

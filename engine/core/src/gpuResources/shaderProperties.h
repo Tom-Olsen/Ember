@@ -97,7 +97,6 @@ namespace emberCore
 		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
 
 		// Getters
-		std::string GetShaderName() const;
 		bool HasBinding(const std::string& name);
 
 		// Debugging:

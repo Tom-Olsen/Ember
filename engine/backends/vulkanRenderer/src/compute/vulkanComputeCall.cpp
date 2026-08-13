@@ -14,6 +14,6 @@ namespace vulkanRendererBackend
 			return "ComputeBarrier: dstAccessMask=" + dstName + ", srcAccessMask=" + srcName;
 		}
 		else
-			return "ComputeShader: " + pComputeShader->GetName();
+			return "ComputeShader: " + pComputeShader->GetDebugName();
 	}
 }

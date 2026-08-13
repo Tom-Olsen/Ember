@@ -1,4 +1,6 @@
 #pragma once
+#include "iMaterialShader.h"
+#include "commonMaterialType.h"
 #include "commonVertexMemoryLayout.h"
 #include "vulkanPipelineKey.h"
 #include "vulkanShader.h"
@@ -21,18 +23,19 @@ namespace vulkanRendererBackend
 
 
 
-	class VULKAN_RENDERER_API MaterialShader : public Shader
+	class VULKAN_RENDERER_API MaterialShader : public emberBackendInterface::IMaterialShader, public Shader
 	{
 	private: // Members:
+		emberCommon::MaterialType m_materialType;
 		std::unordered_map<PipelineKey, std::unique_ptr<Pipeline>, PipelineKey::Hasher> m_pipelines;
 
 	public: // Methods:
 		// Factories/Destructor:
-		static std::shared_ptr<MaterialShader> CreateOutline(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
-		static std::shared_ptr<MaterialShader> CreateForward(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
-		static std::shared_ptr<MaterialShader> CreateGizmo(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
-		static std::shared_ptr<MaterialShader> CreateShadow(const std::string& name, uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv);
-		static std::shared_ptr<MaterialShader> CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
+		static MaterialShader CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
+		static MaterialShader CreateForward(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
+		static MaterialShader CreateGizmo(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
+		static MaterialShader CreateShadow(uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv, const std::string& debugName);
+		static MaterialShader CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
 		~MaterialShader();
 
 		// Non-copyable:
@@ -44,6 +47,7 @@ namespace vulkanRendererBackend
 		MaterialShader& operator=(MaterialShader&& other) noexcept;
 
 		// Getters:
+		emberCommon::MaterialType GetMaterialType() const override;
 		bool HasPipeline(PipelineType pipelineType) const;
 		template<RenderStage stage>
 		requires HasRenderPipelineAndMode<stage>
@@ -60,7 +64,7 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		// Constructor:
-		MaterialShader(const std::string& name);
+		MaterialShader(emberCommon::MaterialType materialType, const std::string& debugName);
 
 		// Pipeline lookup:
 		const Pipeline* GetPipelineByStage(PipelineType pipelineType, const Mesh* pMesh, uint32_t renderModeIndex) const;

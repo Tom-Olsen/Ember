@@ -20,9 +20,6 @@ namespace emberCore
 		// Friends:
 		friend class MaterialManager;
 
-	private: // Methods:
-		GizmoMaterial(emberBackendInterface::IMaterial* pIMaterial);
-
 	public: // Methods:
 		// Constructor/Destructor:
 		GizmoMaterial();
@@ -50,5 +47,8 @@ namespace emberCore
 		void SetRenderMode(emberCommon::GizmoRenderMode renderMode);
 		void SetCullMode(emberCommon::CullMode cullMode);
 		void SetRenderQueue(int32_t renderQueue);
+
+	private: // Methods:
+		GizmoMaterial(MaterialId materialId);
 	};
 }

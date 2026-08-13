@@ -140,9 +140,10 @@ namespace vulkanRendererBackend
 			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
 			return nullptr;
 		}
+		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
 		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) '{}' failed. threadCount has 0 entry.", pIComputeShader->GetName());
+			LOG_ERROR("compute::Async::RecordComputeShader(...) '{}' failed. threadCount has 0 entry.", pComputeShader->GetDebugName());
 			return nullptr;
 		}
 		if (m_computeSessions[sessionID].state != ComputeSession::State::recording)
@@ -152,8 +153,8 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup compute call:
-		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
+		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
+		ComputeCall computeCall = { threadCount, pComputeShader, descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(descriptorSetBindingHandle.Get());
 	}

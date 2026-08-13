@@ -15,17 +15,17 @@ namespace vulkanRendererBackend
     // Public methods:
     // Constructor/Destructor:
     ForwardPipeline::ForwardPipeline(
-        const std::string& name,
         VkPipelineLayout vkPipelineLayout,
         emberCommon::ForwardRenderMode renderMode,
         const std::vector<char>& vertexCode,
         const std::vector<char>& fragmentCode,
         const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
+        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
+        const std::string& debugName)
     {
         // Create vertex and fragment shader modules from .spv files:
-        VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode, "ShaderModule_ForwardVertex_" + name);
-        VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode, "ShaderModule_ForwardFragment_" + name);
+        VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode, "ShaderModule_ForwardVertex_" + debugName);
+        VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode, "ShaderModule_ForwardFragment_" + debugName);
 
         // Create pipeline:
         CreatePipeline(vkPipelineLayout, renderMode, vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes);
@@ -33,7 +33,7 @@ namespace vulkanRendererBackend
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
         vkDestroyShaderModule(Context::GetVkDevice(), fragmentShaderModule, nullptr);
-        NAME_VK_OBJECT(m_pipeline, "Pipeline_Forward_" + name);
+        NAME_VK_OBJECT(m_pipeline, "Pipeline_Forward_" + debugName);
     }
     ForwardPipeline::~ForwardPipeline()
     {

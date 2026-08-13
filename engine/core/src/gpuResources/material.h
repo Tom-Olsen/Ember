@@ -5,6 +5,7 @@
 #include "commonMaterialType.h"
 #include "emberCoreExport.h"
 #include "shader.h"
+#include <cstdint>
 #include <filesystem>
 #include <string>
 
@@ -23,10 +24,11 @@ namespace emberCore
 	// Forward declarations:
 	class ForwardMaterial;
 	class GizmoMaterial;
+	class MaterialShader;
 	class ShadowMaterial;
 
 
-	
+
 	class EMBER_CORE_API Material : public Shader
 	{
 		// Friends:
@@ -37,14 +39,20 @@ namespace emberCore
 		friend class Renderer;
 		friend class ShaderProperties;
 
-	private: // Members:
-		emberBackendInterface::IMaterial* m_pIMaterial;
+	protected: // Structs:
+		struct MaterialId
+		{
+			uint32_t id;
+			uint32_t generation;
+		};
+		inline static MaterialId invalidMaterialId{static_cast<uint32_t>(-1) ,static_cast<uint32_t>(-1)};
 
-	private: // Methods:
-		emberBackendInterface::IMaterial* const GetInterfaceHandle() const;
+	private: // Members:
+		MaterialId m_materialId;
 
 	protected: // Methods:
-		Material(emberBackendInterface::IMaterial* pIMaterial);
+		Material(MaterialId materialId);
+		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -52,9 +60,16 @@ namespace emberCore
 		~Material();
 
 		// Creation/Destruction: (register/delete from MaterialManager)
-		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
-		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv = "");
-		static ShadowMaterial CreateShadow(const std::string& name, const std::filesystem::path& vertexSpv);
+		static Material CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static Material CreateOutline(const MaterialShader& materialShader, const std::string& name);
+		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
+		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
+		static ShadowMaterial CreateShadow(const std::filesystem::path& vertexSpv, const std::string& name);
+		static ShadowMaterial CreateShadow(const MaterialShader& materialShader, const std::string& name);
+		static Material CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static Material CreatePresent(const MaterialShader& materialShader, const std::string& name);
 		void Destroy();
 
 		// Copyable:
@@ -73,5 +88,8 @@ namespace emberCore
 
 		// Debugging:
 		void Print() const;
+
+	private: // Methods:
+		emberBackendInterface::IMaterial* GetInterfaceHandle() const;
 	};
 }

@@ -17,13 +17,13 @@ namespace vulkanRendererBackend
 	public: // Methods:
 		// Constructor/Destructor:
 		GizmoPipeline(
-			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,
 			emberCommon::GizmoRenderMode renderMode,
 			const std::vector<char>& vertexCode,
 			const std::vector<char>& fragmentCode,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
+			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
+			const std::string& debugName);
 		~GizmoPipeline();
 
 	private: // Methods:

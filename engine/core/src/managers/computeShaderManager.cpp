@@ -34,7 +34,7 @@ namespace emberCore
 				std::string name = filePath.stem().string();		// remove '.spv'
 				name = name.substr(0, name.size() - 5);	// remove '.comp'
 
-				ComputeShader computeShader(name, filePath);
+				ComputeShader computeShader(filePath, name);
 				AddComputeShader(std::move(computeShader));
 			}
 		}

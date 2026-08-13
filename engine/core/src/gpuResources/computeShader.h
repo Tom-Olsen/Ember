@@ -31,13 +31,14 @@ namespace emberCore
 		friend class ShaderProperties;
 
 	private: // Members:
+		std::string m_name;
 		std::unique_ptr<emberBackendInterface::IComputeShader> m_pIComputeShader;
 		emberBackendInterface::IComputeShader* GetInterfaceHandle();
 
 	public: // Methods:
 		// Constructor/Destructor:
 		ComputeShader();
-		ComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
+		ComputeShader(const std::filesystem::path& computeSpv, const std::string& name);
 		~ComputeShader();
 
 		// Non-copyable:

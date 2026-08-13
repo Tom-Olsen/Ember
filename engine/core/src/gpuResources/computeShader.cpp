@@ -21,11 +21,14 @@ namespace emberCore
 	ComputeShader::ComputeShader()
         : Shader()
 	{
+		m_name = "";
 		m_pIComputeShader = nullptr;
 	}
-	ComputeShader::ComputeShader(const std::string& name, const std::filesystem::path& computeSpv) : Shader()
+	ComputeShader::ComputeShader(const std::filesystem::path& computeSpv, const std::string& name)
+		: Shader()
+		, m_name(name)
 	{
-		m_pIComputeShader = std::unique_ptr<emberBackendInterface::IComputeShader>(Renderer::CreateComputeShader(name, computeSpv));
+		m_pIComputeShader = std::unique_ptr<emberBackendInterface::IComputeShader>(Renderer::CreateComputeShader(computeSpv, name));
 		m_pIShaderDescriptorSetBinding = m_pIComputeShader->GetShaderDescriptorSetBinding();
 	}
 	ComputeShader::~ComputeShader()
@@ -38,6 +41,7 @@ namespace emberCore
 	// Movable:
 	ComputeShader::ComputeShader(ComputeShader&& other) noexcept
 		: Shader(std::move(other))
+		, m_name(std::move(other.m_name))
 	{
 		m_pIComputeShader = std::move(other.m_pIComputeShader);
 	}
@@ -46,6 +50,7 @@ namespace emberCore
 		if (this != &other)
 		{
 			Shader::operator=(std::move(other));
+			m_name = std::move(other.m_name);
 			m_pIComputeShader = std::move(other.m_pIComputeShader);
 		}
 		return *this;
@@ -60,7 +65,7 @@ namespace emberCore
 	}
 	const std::string& ComputeShader::GetName() const
 	{
-		return m_pIComputeShader->GetName();
+		return m_name;
 	}
 
 

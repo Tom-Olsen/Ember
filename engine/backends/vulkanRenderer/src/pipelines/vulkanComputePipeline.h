@@ -15,7 +15,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		ComputePipeline(const std::string& name, VkPipelineLayout vkPipelineLayout, const std::vector<char>& computeCode);
+		ComputePipeline(VkPipelineLayout vkPipelineLayout, const std::vector<char>& computeCode, const std::string& debugName);
 		~ComputePipeline();
 
 	private: // Methods:

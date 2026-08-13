@@ -10,80 +10,61 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Factories/Destructor:
-	Material Material::CreateOutline(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreateOutline(MaterialShader* pMaterialShader, const std::string& debugName)
 	{
-		Material material(name, emberCommon::MaterialType::outline, MaterialShader::CreateOutline(name, vertexSpv, fragmentSpv));
+		Material material(emberCommon::MaterialType::outline, pMaterialShader, debugName);
 		material.m_pOutlineRenderState = std::make_unique<emberCommon::OutlineRenderState>();
 		return material;
 	}
-	Material Material::CreateForward(const std::string& name, emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreateForward(MaterialShader* pMaterialShader, emberCommon::ForwardRenderMode renderMode, const std::string& debugName)
 	{
-		Material material(name, emberCommon::MaterialType::forward, MaterialShader::CreateForward(name, vertexSpv, fragmentSpv));
+		Material material(emberCommon::MaterialType::forward, pMaterialShader, debugName);
 		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(emberCommon::ForwardRenderState::ForwardDefault(renderMode));
 		return material;
 	}
-	Material Material::CreateGizmo(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreateGizmo(MaterialShader* pMaterialShader, emberCommon::GizmoRenderMode renderMode, const std::string& debugName)
 	{
-		Material material(name, emberCommon::MaterialType::gizmo, MaterialShader::CreateGizmo(name, vertexSpv, fragmentSpv));
+		Material material(emberCommon::MaterialType::gizmo, pMaterialShader, debugName);
 		material.m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(emberCommon::GizmoRenderState::GizmoDefault(renderMode));
 		return material;
 	}
-	Material Material::CreateShadow(const std::string& name, uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv)
+	Material Material::CreateShadow(MaterialShader* pMaterialShader, const std::string& debugName)
 	{
-		Material material(name, emberCommon::MaterialType::shadow, MaterialShader::CreateShadow(name, shadowMapResolution, vertexSpv));
+		Material material(emberCommon::MaterialType::shadow, pMaterialShader, debugName);
 		material.m_pShadowRenderState = std::make_unique<emberCommon::ShadowRenderState>();
 		return material;
 	}
-	Material Material::CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreatePresent(MaterialShader* pMaterialShader, const std::string& debugName)
 	{
-		Material material(name, emberCommon::MaterialType::present, MaterialShader::CreatePresent(name, vertexSpv, fragmentSpv));
+		Material material(emberCommon::MaterialType::present, pMaterialShader, debugName);
 		material.m_pPresentRenderState = std::make_unique<emberCommon::PresentRenderState>();
 		return material;
 	}
-	Material Material::CloneForward(const std::string& name, const Material& sourceMaterial)
+	Material Material::CloneForward(const Material& sourceMaterial, const std::string& debugName)
 	{
 		if (sourceMaterial.GetMaterialType() != emberCommon::MaterialType::forward)
 			throw std::runtime_error("Material::CloneForward(...) failed. Source material is not a forward material.");
 
-		Material material(name, emberCommon::MaterialType::forward, sourceMaterial.m_pMaterialShader);
+		Material material(emberCommon::MaterialType::forward, sourceMaterial.m_pMaterialShader, debugName);
 		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(*sourceMaterial.m_pForwardRenderState);
 		material.m_pShadowMaterial = sourceMaterial.m_pShadowMaterial;
 		return material;
 	}
-	Material Material::CloneForward(const std::string& name, const Material& sourceMaterial, emberCommon::ForwardRenderMode renderMode)
-	{
-		if (sourceMaterial.GetMaterialType() != emberCommon::MaterialType::forward)
-			throw std::runtime_error("Material::CloneForward(...) failed. Source material is not a forward material.");
-
-		Material material(name, emberCommon::MaterialType::forward, sourceMaterial.m_pMaterialShader);
-		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(emberCommon::ForwardRenderState::ForwardDefault(renderMode));
-		material.m_pShadowMaterial = sourceMaterial.m_pShadowMaterial;
-		return material;
-	}
-	Material Material::CloneGizmo(const std::string& name, const Material& sourceMaterial)
+	Material Material::CloneGizmo(const Material& sourceMaterial, const std::string& debugName)
 	{
 		if (sourceMaterial.GetMaterialType() != emberCommon::MaterialType::gizmo)
 			throw std::runtime_error("Material::CloneGizmo(...) failed. Source material is not a gizmo material.");
 
-		Material material(name, emberCommon::MaterialType::gizmo, sourceMaterial.m_pMaterialShader);
+		Material material(emberCommon::MaterialType::gizmo, sourceMaterial.m_pMaterialShader, debugName);
 		material.m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(*sourceMaterial.m_pGizmoRenderState);
 		return material;
 	}
-	Material Material::CloneGizmo(const std::string& name, const Material& sourceMaterial, emberCommon::GizmoRenderMode renderMode)
-	{
-		if (sourceMaterial.GetMaterialType() != emberCommon::MaterialType::gizmo)
-			throw std::runtime_error("Material::CloneGizmo(...) failed. Source material is not a gizmo material.");
-
-		Material material(name, emberCommon::MaterialType::gizmo, sourceMaterial.m_pMaterialShader);
-		material.m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(emberCommon::GizmoRenderState::GizmoDefault(renderMode));
-		return material;
-	}
-	Material Material::CloneShadow(const std::string& name, const Material& sourceMaterial)
+	Material Material::CloneShadow(const Material& sourceMaterial, const std::string& debugName)
 	{
 		if (sourceMaterial.GetMaterialType() != emberCommon::MaterialType::shadow)
 			throw std::runtime_error("Material::CloneShadow(...) failed. Source material is not a shadow material.");
 
-		Material material(name, emberCommon::MaterialType::shadow, sourceMaterial.m_pMaterialShader);
+		Material material(emberCommon::MaterialType::shadow, sourceMaterial.m_pMaterialShader, debugName);
 		material.m_pShadowRenderState = std::make_unique<emberCommon::ShadowRenderState>(*sourceMaterial.m_pShadowRenderState);
 		return material;
 	}
@@ -117,7 +98,7 @@ namespace vulkanRendererBackend
 		Material* pVulkanShadowMaterial = static_cast<Material*>(pShadowMaterial);
 		if (!pVulkanShadowMaterial->m_pMaterialShader->HasPipeline(PipelineType::shadow))
 		{
-			LOG_WARN("Material::SetShadowMaterial(...) ignored. '{}' is not a shadow material.", pVulkanShadowMaterial->GetName());
+			LOG_WARN("Material::SetShadowMaterial(...) ignored. Material '{}' is not a shadow material.", pVulkanShadowMaterial->GetDebugName());
 			return;
 		}
 		m_pShadowMaterial = pVulkanShadowMaterial;
@@ -166,10 +147,6 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
-	const std::string& Material::GetName() const
-	{
-		return m_name;
-	}
 	emberCommon::MaterialType Material::GetMaterialType() const
 	{
 		return m_materialType;
@@ -180,7 +157,11 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::IDescriptorSetBinding* Material::GetShaderDescriptorSetBinding() const
 	{
-		return GetDescriptorSetBinding();
+		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(m_pShaderDescriptorSetBinding.get());
+	}
+	DescriptorSetBinding* Material::GetDescriptorSetBinding() const
+	{
+		return m_pShaderDescriptorSetBinding.get();
 	}
 	int32_t Material::GetRenderQueue() const
 	{
@@ -250,19 +231,19 @@ namespace vulkanRendererBackend
 	}
 	Shader* Material::GetShader() const
 	{
-		return static_cast<Shader*>(m_pMaterialShader.get());
+		return static_cast<Shader*>(m_pMaterialShader);
 	}
 	MaterialShader* Material::GetMaterialShader() const
 	{
-		return m_pMaterialShader.get();
+		return m_pMaterialShader;
 	}
 	const VkPipelineLayout& Material::GetVkPipelineLayout() const
 	{
 		return m_pMaterialShader->GetVkPipelineLayout();
 	}
-	DescriptorSetBinding* Material::GetDescriptorSetBinding() const
+	const std::string& Material::GetDebugName() const
 	{
-		return m_pShaderDescriptorSetBinding.get();
+		return m_debugName;
 	}
 
 
@@ -277,12 +258,14 @@ namespace vulkanRendererBackend
 
 	// Private methods:
 	// Constructor:
-	Material::Material(const std::string& name, emberCommon::MaterialType materialType, std::shared_ptr<MaterialShader> pMaterialShader)
-		: m_name(name)
+	Material::Material(emberCommon::MaterialType materialType, MaterialShader* pMaterialShader, const std::string& debugName)
+		: m_debugName(debugName)
 		, m_materialType(materialType)
+		, m_pMaterialShader(pMaterialShader)
 	{
-		m_pMaterialShader = std::move(pMaterialShader);
-		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(m_pMaterialShader.get()), SHADER_SET_INDEX);
+		if (m_pMaterialShader == nullptr)
+			throw std::runtime_error("Material::Material(...) failed. MaterialShader is null.");
+		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(m_pMaterialShader), SHADER_SET_INDEX, debugName);
 		m_pShadowMaterial = nullptr;
 	}
 }

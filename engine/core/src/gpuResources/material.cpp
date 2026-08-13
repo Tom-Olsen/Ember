@@ -4,21 +4,26 @@
 #include "iMaterial.h"
 #include "logger.h"
 #include "materialManager.h"
+#include "materialShader.h"
 #include "shadowMaterial.h"
+#include <stdexcept>
 
 
 
 namespace emberCore
 {
-	// Private methods:
-	emberBackendInterface::IMaterial* const Material::GetInterfaceHandle() const
+	// Protected methods:
+	Material::Material(MaterialId materialId)
+		: Shader()
 	{
-		return m_pIMaterial;
+		m_materialId = materialId;
 	}
-	Material::Material(emberBackendInterface::IMaterial* pIMaterial)
-        : Shader(pIMaterial->GetShaderDescriptorSetBinding())
+	emberBackendInterface::IDescriptorSetBinding* Material::GetShaderDescriptorSetBinding() const
 	{
-		m_pIMaterial = pIMaterial;
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("Material::GetShaderDescriptorSetBinding() failed. Material is invalid or expired.");
+		return pIMaterial->GetShaderDescriptorSetBinding();
 	}
 
 
@@ -27,7 +32,7 @@ namespace emberCore
 	// Constructor/Destructor:
 	Material::Material()
 	{
-		m_pIMaterial = nullptr;
+		m_materialId = invalidMaterialId;
 	}
 	Material::~Material()
 	{
@@ -37,17 +42,45 @@ namespace emberCore
 
 
 	// Creation/Destruction: (register/delete from MaterialManager)
-	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		return MaterialManager::CreateForwardMaterial(renderMode, name, vertexSpv, fragmentSpv);
+		return MaterialManager::CreateOutlineMaterial(vertexSpv, fragmentSpv, debugName);
 	}
-	GizmoMaterial Material::CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	Material Material::CreateOutline(const MaterialShader& materialShader, const std::string& debugName)
 	{
-		return MaterialManager::CreateGizmoMaterial(renderMode, name, vertexSpv, fragmentSpv);
+		return MaterialManager::CreateOutlineMaterial(materialShader, debugName);
 	}
-	ShadowMaterial Material::CreateShadow(const std::string& name, const std::filesystem::path& vertexSpv)
+	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		return MaterialManager::CreateShadowMaterial(name, vertexSpv);
+		return MaterialManager::CreateForwardMaterial(renderMode, vertexSpv, fragmentSpv, debugName);
+	}
+	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& debugName)
+	{
+		return MaterialManager::CreateForwardMaterial(renderMode, materialShader, debugName);
+	}
+	GizmoMaterial Material::CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	{
+		return MaterialManager::CreateGizmoMaterial(renderMode, vertexSpv, fragmentSpv, debugName);
+	}
+	GizmoMaterial Material::CreateGizmo(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& debugName)
+	{
+		return MaterialManager::CreateGizmoMaterial(renderMode, materialShader, debugName);
+	}
+	ShadowMaterial Material::CreateShadow(const std::filesystem::path& vertexSpv, const std::string& debugName)
+	{
+		return MaterialManager::CreateShadowMaterial(vertexSpv, debugName);
+	}
+	ShadowMaterial Material::CreateShadow(const MaterialShader& materialShader, const std::string& debugName)
+	{
+		return MaterialManager::CreateShadowMaterial(materialShader, debugName);
+	}
+	Material Material::CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	{
+		return MaterialManager::CreatePresentMaterial(vertexSpv, fragmentSpv, debugName);
+	}
+	Material Material::CreatePresent(const MaterialShader& materialShader, const std::string& debugName)
+	{
+		return MaterialManager::CreatePresentMaterial(materialShader, debugName);
 	}
 	void Material::Destroy()
 	{
@@ -60,22 +93,32 @@ namespace emberCore
 	}
 
 
+	
 	// Getters:
 	const std::string& Material::GetName() const
 	{
-		return m_pIMaterial->GetName();
+		const std::string* pName = MaterialManager::GetMaterialName(m_materialId);
+		if (pName == nullptr)
+			throw std::runtime_error("Material::GetName() failed. Material is invalid or expired.");
+		return *pName;
 	}
 	emberCommon::MaterialType Material::GetMaterialType() const
 	{
-		return m_pIMaterial->GetMaterialType();
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("Material::GetMaterialType() failed. Material is invalid or expired.");
+		return pIMaterial->GetMaterialType();
 	}
 	emberCommon::CullMode Material::GetCullMode() const
 	{
-		return m_pIMaterial->GetCullMode();
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("Material::GetCullMode() failed. Material is invalid or expired.");
+		return pIMaterial->GetCullMode();
 	}
 	bool Material::IsValid() const
 	{
-		return m_pIMaterial != nullptr;
+		return GetInterfaceHandle() != nullptr;
 	}
 
 
@@ -83,6 +126,17 @@ namespace emberCore
 	// Debugging:
 	void Material::Print() const
 	{
-		m_pIMaterial->Print();
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("Material::Print() failed. Material is invalid or expired.");
+		pIMaterial->Print();
+	}
+
+
+
+	// Private methods:
+	emberBackendInterface::IMaterial* Material::GetInterfaceHandle() const
+	{
+		return MaterialManager::GetMaterialInterface(m_materialId);
 	}
 }

@@ -67,6 +67,7 @@ namespace vulkanRendererBackend
 		Shader* m_pShader;
 		uint32_t m_setIndex;
 		uint64_t m_generation;
+		std::string m_debugName;
 
         // Fast lookup of indices by name and vice versa:
 		std::unordered_map<std::string, uint32_t> m_bindingIndices;
@@ -88,7 +89,7 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Constructors/Destructor:
-		DescriptorSetBinding(Shader* pShader, uint32_t setIndex);
+		DescriptorSetBinding(Shader* pShader, uint32_t setIndex, const std::string& debugName);
 		~DescriptorSetBinding();
 
 		// Non-copyable:
@@ -176,7 +177,7 @@ namespace vulkanRendererBackend
 		uint32_t GetSetIndex() const;
 		uint64_t GetGeneration() const override;
 		bool HasBinding(const std::string& name) const override;
-		std::string GetShaderName() const override;
+		const std::string& GetDebugName() const;
 		Texture* GetTexture(const std::string& name) const;
 		
 		// Backend functionality:

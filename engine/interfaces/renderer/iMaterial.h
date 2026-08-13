@@ -4,7 +4,6 @@
 #include "commonGizmoRenderState.h"
 #include "commonMaterialType.h"
 #include <cstdint>
-#include <string>
 
 
 
@@ -28,7 +27,6 @@ namespace emberBackendInterface
         virtual void SetGizmoRenderMode(emberCommon::GizmoRenderMode renderMode) = 0;
 
         // Getters:
-        virtual const std::string& GetName() const = 0;
         virtual emberCommon::MaterialType GetMaterialType() const = 0;
         virtual IMaterial* GetShadowMaterial() const = 0;
         virtual IDescriptorSetBinding* GetShaderDescriptorSetBinding() const = 0;

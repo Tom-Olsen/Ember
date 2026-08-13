@@ -15,12 +15,12 @@ namespace vulkanRendererBackend
 	public: // Methods:
 		// Constructor/Destructor:
 		ShadowPipeline(
-			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,
 			uint32_t shadowMapResolution,
 			const std::vector<char>& vertexCode,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
+			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
+			const std::string& debugName);
 		~ShadowPipeline();
 
 	private: // Methods:

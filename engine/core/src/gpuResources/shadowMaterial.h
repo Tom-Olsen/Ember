@@ -20,7 +20,7 @@ namespace emberCore
 		friend class MaterialManager;
 
 	private: // Methods:
-		ShadowMaterial(emberBackendInterface::IMaterial* pIMaterial);
+		ShadowMaterial(MaterialId materialId);
 
 	public: // Methods:
 		// Constructor/Destructor:

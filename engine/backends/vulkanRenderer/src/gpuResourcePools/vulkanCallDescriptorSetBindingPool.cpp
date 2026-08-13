@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
         // Create a new call descriptor set binding if pool is empty:
         if (m_pool.empty())
         {
-            DescriptorSetBinding* pNewDescriptorSetBinding = new DescriptorSetBinding(pShader, CALL_SET_INDEX);
+            DescriptorSetBinding* pNewDescriptorSetBinding = new DescriptorSetBinding(pShader, CALL_SET_INDEX, pShader->GetDebugName());
             m_storage.push_back(pNewDescriptorSetBinding);
             m_pool.push(pNewDescriptorSetBinding);
         }

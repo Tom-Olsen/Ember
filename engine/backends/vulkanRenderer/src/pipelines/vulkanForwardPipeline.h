@@ -17,13 +17,13 @@ namespace vulkanRendererBackend
 	public: // Methods:
 		// Constructor/Destructor:
 		ForwardPipeline(
-			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,
 			emberCommon::ForwardRenderMode renderMode,
 			const std::vector<char>& vertexCode,
 			const std::vector<char>& fragmentCode,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
+			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
+			const std::string& debugName);
 		~ForwardPipeline();
 
 	private: // Methods:

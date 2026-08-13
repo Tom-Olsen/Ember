@@ -16,12 +16,12 @@ namespace vulkanRendererBackend
 	public: // Methods:
 		// Constructor/Destructor:
 		OutlinePipeline(
-			const std::string& name,
 			VkPipelineLayout vkPipelineLayout,
 			const std::vector<char>& vertexCode,
 			const std::vector<char>& fragmentCode,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
+			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
+			const std::string& debugName);
 		~OutlinePipeline();
 
 	private: // Methods:

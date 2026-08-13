@@ -228,12 +228,6 @@ namespace emberCore
 
 
 	// Getters:
-	std::string ShaderProperties::GetShaderName() const
-	{
-		if (m_pICallDescriptorSetBinding)
-			return m_pICallDescriptorSetBinding->GetShaderName();
-		return "";
-	}
 	bool ShaderProperties::HasBinding(const std::string& name)
 	{
 		ValidateCallDescriptorSetBinding();
@@ -266,7 +260,7 @@ namespace emberCore
 		if (m_pICallDescriptorSetBinding->GetGeneration() == m_callDescriptorSetBindingGeneration)
 			return;
 
-		LOG_WARN("ShaderProperties for shader '{}' points to an expired call descriptor set binding. Ignoring stale call-local properties until this ShaderProperties is reassigned.", GetShaderName());
+		LOG_WARN("ShaderProperties points to an expired call descriptor set binding. Ignoring stale call-local properties until this ShaderProperties is reassigned.");
 		m_pICallDescriptorSetBinding = nullptr;
 		m_ownsICallDescriptorSetBinding = false;
 		m_callDescriptorSetBindingExpired = true;

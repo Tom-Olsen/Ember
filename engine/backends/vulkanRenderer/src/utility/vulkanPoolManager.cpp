@@ -71,7 +71,7 @@ namespace vulkanRendererBackend
 		auto it = s_callDescriptorSetBindingPoolMap.find(pPoolShader);
 		if (it == s_callDescriptorSetBindingPoolMap.end())
 		{
-			LOG_ERROR("PoolManager::ReturnCallDescriptorSetBinding(...) failed. No pool exists for shader '{}'.", pPoolShader->GetName());
+			LOG_ERROR("PoolManager::ReturnCallDescriptorSetBinding(...) failed. No pool exists for shader '{}'.", pPoolShader->GetDebugName());
 			return;
 		}
 		it->second.Return(descriptorSetBindingHandle.Get());
@@ -95,7 +95,7 @@ namespace vulkanRendererBackend
 	{
 		for (auto& [pShader, callDescriptorSetBindingPool] : s_callDescriptorSetBindingPoolMap)
 		{
-			LOG_INFO("Shader '{}':", pShader->GetName());
+			LOG_INFO("Shader '{}':", pShader->GetDebugName());
 			callDescriptorSetBindingPool.PrintPoolState();
 		}
 	}
@@ -122,7 +122,7 @@ namespace vulkanRendererBackend
 		const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts = pShader->GetVkDescriptorSetLayout();
 		if (descriptorSetLayouts.size() <= CALL_SET_INDEX || descriptorSetLayouts[CALL_SET_INDEX] == VK_NULL_HANDLE)
 		{
-			LOG_ERROR("PoolManager::CheckOutCallDescriptorSetBinding(...) failed. Shader '{}' has no valid call descriptor set layout.", pShader->GetName());
+			LOG_ERROR("PoolManager::CheckOutCallDescriptorSetBinding(...) failed. Shader '{}' has no valid call descriptor set layout.", pShader->GetDebugName());
 			return false;
 		}
 

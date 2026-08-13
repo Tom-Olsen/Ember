@@ -15,22 +15,22 @@ namespace vulkanRendererBackend
     // Public methods:
     // Constructor/Destructor:
     ShadowPipeline::ShadowPipeline(
-        const std::string& name,
         VkPipelineLayout vkPipelineLayout,
         uint32_t shadowMapResolution,
         const std::vector<char>& vertexCode,
         const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
+        const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
+        const std::string& debugName)
     {
         // Create vertex and fragment shader modules from .spv files:
-        VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode, "ShaderModule_ShadowVertex_" + name);
+        VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode, "ShaderModule_ShadowVertex_" + debugName);
 
         // Create pipeline:
         CreatePipeline(shadowMapResolution, vkPipelineLayout, vertexShaderModule, vertexBindings, vertexAttributes);
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
-        NAME_VK_OBJECT(m_pipeline, "Pipeline_Shadow_" + name);
+        NAME_VK_OBJECT(m_pipeline, "Pipeline_Shadow_" + debugName);
     }
     ShadowPipeline::~ShadowPipeline()
     {

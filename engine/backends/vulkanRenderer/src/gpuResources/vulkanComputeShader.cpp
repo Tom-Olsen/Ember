@@ -5,6 +5,7 @@
 #include "vulkanContext.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanMacros.h"
+#include <utility>
 
 
 
@@ -12,8 +13,8 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	ComputeShader::ComputeShader(const std::string& name, const std::filesystem::path& computeSpv)
-		: Shader(name)
+	ComputeShader::ComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName)
+		: Shader(debugName)
 	{
 		// Load compute shader:
 		std::vector<char> computeCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(computeSpv);
@@ -35,16 +36,16 @@ namespace vulkanRendererBackend
 		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo,nullptr, &m_vkPipelineLayout));
-		NAME_VK_OBJECT(m_vkPipelineLayout, "PipelineLayout_Compute_" + m_name);
+		NAME_VK_OBJECT(m_vkPipelineLayout, "PipelineLayout_Compute_" + debugName);
 
 		// Get block size:
 		m_blockSize = m_shaderReflection.GetComputeStageInfo()->blockSize;
 
 		// Create pipeline:
-		m_pPipeline = std::make_unique<ComputePipeline>(m_name, m_vkPipelineLayout, computeCode);
+		m_pPipeline = std::make_unique<ComputePipeline>(m_vkPipelineLayout, computeCode, debugName);
 
 		// Create shader descriptorSetBinding:
-		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>((Shader*)this, SHADER_SET_INDEX);
+		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(this), SHADER_SET_INDEX, debugName);
 	}
 	ComputeShader::~ComputeShader()
 	{
@@ -52,23 +53,43 @@ namespace vulkanRendererBackend
 	}
 
 	// Movable:
-	ComputeShader::ComputeShader(ComputeShader&& other) noexcept = default;
-	ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept = default;
+	ComputeShader::ComputeShader(ComputeShader&& other) noexcept
+		: Shader(std::move(other))
+		, m_blockSize(other.m_blockSize)
+		, m_pShaderDescriptorSetBinding(std::move(other.m_pShaderDescriptorSetBinding))
+		, m_pPipeline(std::move(other.m_pPipeline))
+	{
+		if (m_pShaderDescriptorSetBinding)
+			m_pShaderDescriptorSetBinding->RebindShader(this);
+	}
+	ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept
+	{
+		if (this != &other)
+		{
+			Shader::operator=(std::move(other));
+			m_blockSize = other.m_blockSize;
+			m_pShaderDescriptorSetBinding = std::move(other.m_pShaderDescriptorSetBinding);
+			m_pPipeline = std::move(other.m_pPipeline);
+			if (m_pShaderDescriptorSetBinding)
+				m_pShaderDescriptorSetBinding->RebindShader(this);
+		}
+		return *this;
+	}
 	
 	
 	
 	// Getters:
-	const std::string& ComputeShader::GetName() const
-	{
-		return m_name;
-	}
 	Uint3 ComputeShader::GetBlockSize() const
 	{
 		return m_blockSize;
 	}
 	emberBackendInterface::IDescriptorSetBinding* ComputeShader::GetShaderDescriptorSetBinding() const
 	{
-		return GetDescriptorSetBinding();
+		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(m_pShaderDescriptorSetBinding.get());
+	}
+	DescriptorSetBinding* ComputeShader::GetDescriptorSetBinding() const
+	{
+		return m_pShaderDescriptorSetBinding.get();
 	}
 	const Pipeline* ComputeShader::GetPipeline() const
 	{

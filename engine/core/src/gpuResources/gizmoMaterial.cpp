@@ -7,16 +7,6 @@
 
 namespace emberCore
 {
-	// Private methods:
-	GizmoMaterial::GizmoMaterial(emberBackendInterface::IMaterial* pIMaterial)
-		: Material(pIMaterial)
-	{
-		if (pIMaterial->GetMaterialType() != emberCommon::MaterialType::gizmo)
-			throw std::runtime_error("GizmoMaterial::GizmoMaterial(...) failed. IMaterial is not a gizmo material.");
-	}
-
-
-
 	// Public methods:
 	// Constructor/Destructor:
 	GizmoMaterial::GizmoMaterial()
@@ -34,11 +24,11 @@ namespace emberCore
 	// Cloning:
 	GizmoMaterial GizmoMaterial::Clone(const std::string& name) const
 	{
-		return MaterialManager::CloneGizmoMaterial(name, *this);
+		return MaterialManager::CloneGizmoMaterial(*this, name);
 	}
 	GizmoMaterial GizmoMaterial::Clone(const std::string& name, emberCommon::GizmoRenderMode renderMode) const
 	{
-		return MaterialManager::CloneGizmoMaterial(name, *this, renderMode);
+		return MaterialManager::CloneGizmoMaterial(*this, renderMode, name);
 	}
 
 
@@ -46,19 +36,31 @@ namespace emberCore
 	// Getters:
 	emberCommon::GizmoRenderMode GizmoMaterial::GetRenderMode() const
 	{
-		return m_pIMaterial->GetGizmoRenderMode();
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("GizmoMaterial::GetRenderMode() failed. Material is invalid or expired.");
+		return pIMaterial->GetGizmoRenderMode();
 	}
 	const emberCommon::GizmoRenderState& GizmoMaterial::GetRenderState() const
 	{
-		return m_pIMaterial->GetGizmoRenderState();
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("GizmoMaterial::GetRenderState() failed. Material is invalid or expired.");
+		return pIMaterial->GetGizmoRenderState();
 	}
 	int32_t GizmoMaterial::GetRenderQueue() const
 	{
-		return m_pIMaterial->GetRenderQueue();
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("GizmoMaterial::GetRenderQueue() failed. Material is invalid or expired.");
+		return pIMaterial->GetRenderQueue();
 	}
 	bool GizmoMaterial::GetIsTransparent() const
 	{
-		return m_pIMaterial->IsTransparent();
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("GizmoMaterial::GetIsTransparent() failed. Material is invalid or expired.");
+		return pIMaterial->IsTransparent();
 	}
 
 
@@ -66,14 +68,36 @@ namespace emberCore
 	// Setters:
 	void GizmoMaterial::SetRenderMode(emberCommon::GizmoRenderMode renderMode)
 	{
-		m_pIMaterial->SetGizmoRenderMode(renderMode);
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("GizmoMaterial::SetRenderMode(...) failed. Material is invalid or expired.");
+		pIMaterial->SetGizmoRenderMode(renderMode);
 	}
 	void GizmoMaterial::SetCullMode(emberCommon::CullMode cullMode)
 	{
-		m_pIMaterial->SetCullMode(cullMode);
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("GizmoMaterial::SetCullMode(...) failed. Material is invalid or expired.");
+		pIMaterial->SetCullMode(cullMode);
 	}
 	void GizmoMaterial::SetRenderQueue(int32_t renderQueue)
 	{
-		m_pIMaterial->SetRenderQueue(renderQueue);
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("GizmoMaterial::SetRenderQueue(...) failed. Material is invalid or expired.");
+		pIMaterial->SetRenderQueue(renderQueue);
+	}
+
+
+
+	// Private methods:
+	GizmoMaterial::GizmoMaterial(MaterialId materialId)
+		: Material(materialId)
+	{
+		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("GizmoMaterial::GizmoMaterial(...) failed. Material is invalid or expired.");
+		if (pIMaterial->GetMaterialType() != emberCommon::MaterialType::gizmo)
+			throw std::runtime_error("GizmoMaterial::GizmoMaterial(...) failed. IMaterial is not a gizmo material.");
 	}
 }

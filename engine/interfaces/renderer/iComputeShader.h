@@ -1,6 +1,5 @@
 #pragma once
 #include "emberMath.h"
-#include <string>
 
 
 
@@ -17,7 +16,6 @@ namespace emberBackendInterface
         virtual ~IComputeShader() = default;
 
         // Getters:
-        virtual const std::string& GetName() const = 0;
         virtual Uint3 GetBlockSize() const = 0;
         virtual IDescriptorSetBinding* GetShaderDescriptorSetBinding() const = 0;
 

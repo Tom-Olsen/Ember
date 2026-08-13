@@ -2,7 +2,6 @@
 #include "shaderReflection.h"
 #include "vulkanRendererExport.h"
 #include <filesystem>
-#include <memory>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -11,26 +10,20 @@
 
 namespace vulkanRendererBackend
 {
-	// Forward declarations:
-	class DescriptorSetBinding;
-
-
-
 	/// <summary>
 	/// Polymorphic parent class for Material and ComputeShader.
 	/// </summary>
 	class VULKAN_RENDERER_API Shader
 	{
 	protected: // Members:
-		std::string m_name;
+		std::string m_debugName;
 		emberSpirvReflect::ShaderReflection m_shaderReflection;
 		std::vector<VkDescriptorSetLayout> m_vkDescriptorSetLayouts;
 		VkPipelineLayout m_vkPipelineLayout;
-		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 	
 	protected: // Methods:
 		// Constructor:
-		Shader(const std::string& name);
+		Shader(const std::string& debugName);
 
 	public: // Methods:
 		// Destructor:
@@ -48,11 +41,10 @@ namespace vulkanRendererBackend
 		void CreateDescriptorSetLayout();
 
 		// Getters:
-		const std::string& GetName() const;
 		const emberSpirvReflect::ShaderReflection& GetShaderReflection() const;
 		const VkPipelineLayout& GetVkPipelineLayout() const;
-		DescriptorSetBinding* GetDescriptorSetBinding() const;
 		const std::vector<VkDescriptorSetLayout>& GetVkDescriptorSetLayout() const;
+		const std::string& GetDebugName() const;
 
 		// Debugging:
 		void PrintShaderInfo() const;

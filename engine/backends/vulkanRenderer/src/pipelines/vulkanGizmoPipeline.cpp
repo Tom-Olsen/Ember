@@ -15,17 +15,17 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructor/Destructor:
 	GizmoPipeline::GizmoPipeline(
-		const std::string& name,
 		VkPipelineLayout vkPipelineLayout,
 		emberCommon::GizmoRenderMode renderMode,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
 		const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-		const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
+		const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
+		const std::string& debugName)
 	{
 		// Create vertex and fragment shader modules from .spv files:
-		VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode, "ShaderModule_GizmoVertex_" + name);
-		VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode, "ShaderModule_GizmoFragment_" + name);
+		VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode, "ShaderModule_GizmoVertex_" + debugName);
+		VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode, "ShaderModule_GizmoFragment_" + debugName);
 
 		// Create pipeline:
 		CreatePipeline(vkPipelineLayout, renderMode, vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes);
@@ -33,7 +33,7 @@ namespace vulkanRendererBackend
 		// Destroy shader modules (only needed for pipeline creation):
 		vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
 		vkDestroyShaderModule(Context::GetVkDevice(), fragmentShaderModule, nullptr);
-		NAME_VK_OBJECT(m_pipeline, "Pipeline_Gizmo_" + name);
+		NAME_VK_OBJECT(m_pipeline, "Pipeline_Gizmo_" + debugName);
 	}
 	GizmoPipeline::~GizmoPipeline()
 	{

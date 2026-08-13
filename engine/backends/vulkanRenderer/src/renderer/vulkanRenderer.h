@@ -155,6 +155,7 @@ namespace vulkanRendererBackend
 		void SetDepthBiasConstantFactor(float depthBiasConstantFactor) override;
 		void SetDepthBiasClamp(float depthBiasClamp) override;
 		void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) override;
+		void SetDefaultMaterials(emberBackendInterface::IMaterial* pOutlineMaterial, emberBackendInterface::IMaterial* pDefaultShadowMaterial, emberBackendInterface::IMaterial* pPresentMaterial) override;
 		void SetOutlineColor(const Float4& outlineColor) override;
 		void SetOutlineThickness(int outlineThickness) override;
 
@@ -169,20 +170,26 @@ namespace vulkanRendererBackend
 		emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
-		emberBackendInterface::IComputeShader* CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv) override;
-		emberBackendInterface::IMaterial* CreateForwardMaterial(const std::string& name, emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
-		emberBackendInterface::IMaterial* CreateGizmoMaterial(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv) override;
-		emberBackendInterface::IMaterial* CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv) override;
-		emberBackendInterface::IMaterial* CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial) override;
-		emberBackendInterface::IMaterial* CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::ForwardRenderMode renderMode) override;
-		emberBackendInterface::IMaterial* CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial) override;
-		emberBackendInterface::IMaterial* CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::GizmoRenderMode renderMode) override;
-		emberBackendInterface::IMaterial* CloneShadowMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial) override;
+		emberBackendInterface::IComputeShader* CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialShader* CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialShader* CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialShader* CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialShader* CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialShader* CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CreateShadowMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CreatePresentMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CloneForwardMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CloneGizmoMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CloneShadowMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& debugName) override;
 		emberBackendInterface::IMesh* CreateMesh() override;
 		emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial) override;
 		
 		// Gpu resource destruction:
 		void DestroyMaterial(emberBackendInterface::IMaterial* pMaterial) override;
+		void DestroyMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader) override;
 		
 		// Vulkan handle passthrough for API coupling:
 		void* GetVkInstance() const override;

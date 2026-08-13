@@ -553,6 +553,10 @@ namespace vulkanRendererBackend
 	{
 		m_depthBiasSlopeFactor = depthBiasSlopeFactor;
 	}
+	void Renderer::SetDefaultMaterials(emberBackendInterface::IMaterial* pOutlineMaterial, emberBackendInterface::IMaterial* pDefaultShadowMaterial, emberBackendInterface::IMaterial* pPresentMaterial)
+	{
+		DefaultGpuResources::SetDefaultMaterials(pOutlineMaterial, pDefaultShadowMaterial, pPresentMaterial);
+	}
 	void Renderer::SetOutlineColor(const Float4& outlineColor)
 	{
 		m_outlineColor = outlineColor;
@@ -666,41 +670,91 @@ namespace vulkanRendererBackend
 		}
 		return pITexture;
 	}
-	emberBackendInterface::IComputeShader* Renderer::CreateComputeShader(const std::string& name, const std::filesystem::path& computeSpv)
+	emberBackendInterface::IComputeShader* Renderer::CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName)
 	{
-		return new ComputeShader(name, computeSpv);
+		return new ComputeShader(computeSpv, debugName);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(const std::string& name, emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	emberBackendInterface::IMaterialShader* Renderer::CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		return new Material(Material::CreateForward(name, renderMode, vertexSpv, fragmentSpv));
+		return new MaterialShader(MaterialShader::CreateOutline(vertexSpv, fragmentSpv, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv)
+	emberBackendInterface::IMaterialShader* Renderer::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		return new Material(Material::CreateGizmo(name, renderMode, vertexSpv, fragmentSpv));
+		return new MaterialShader(MaterialShader::CreateForward(vertexSpv, fragmentSpv, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(const std::string& name, const std::filesystem::path& vertexSpv)
+	emberBackendInterface::IMaterialShader* Renderer::CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		return new Material(Material::CreateShadow(name, m_shadowMapResolution, vertexSpv));
+		return new MaterialShader(MaterialShader::CreateGizmo(vertexSpv, fragmentSpv, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial)
+	emberBackendInterface::IMaterialShader* Renderer::CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& debugName)
 	{
-		return new Material(Material::CloneForward(name, *static_cast<Material*>(pSourceMaterial)));
+		return new MaterialShader(MaterialShader::CreateShadow(m_shadowMapResolution, vertexSpv, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::ForwardRenderMode renderMode)
+	emberBackendInterface::IMaterialShader* Renderer::CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		return new Material(Material::CloneForward(name, *static_cast<Material*>(pSourceMaterial), renderMode));
+		return new MaterialShader(MaterialShader::CreatePresent(vertexSpv, fragmentSpv, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial)
+	emberBackendInterface::IMaterial* Renderer::CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
 	{
-		return new Material(Material::CloneGizmo(name, *static_cast<Material*>(pSourceMaterial)));
+		if (pMaterialShader == nullptr)
+			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is null.");
+		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::outline)
+			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is not an outline shader.");
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		return new Material(Material::CreateOutline(pVulkanMaterialShader, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial, emberCommon::GizmoRenderMode renderMode)
+	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
 	{
-		return new Material(Material::CloneGizmo(name, *static_cast<Material*>(pSourceMaterial), renderMode));
+		if (pMaterialShader == nullptr)
+			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is null.");
+		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::forward)
+			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is not a forward shader.");
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		return new Material(Material::CreateForward(pVulkanMaterialShader, renderMode, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(const std::string& name, emberBackendInterface::IMaterial* pSourceMaterial)
+	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
 	{
-		return new Material(Material::CloneShadow(name, *static_cast<Material*>(pSourceMaterial)));
+		if (pMaterialShader == nullptr)
+			throw std::runtime_error("Renderer::CreateGizmoMaterial(...) failed. MaterialShader is null.");
+		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::gizmo)
+			throw std::runtime_error("Renderer::CreateGizmoMaterial(...) failed. MaterialShader is not a gizmo shader.");
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		return new Material(Material::CreateGizmo(pVulkanMaterialShader, renderMode, debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
+	{
+		if (pMaterialShader == nullptr)
+			throw std::runtime_error("Renderer::CreateShadowMaterial(...) failed. MaterialShader is null.");
+		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::shadow)
+			throw std::runtime_error("Renderer::CreateShadowMaterial(...) failed. MaterialShader is not a shadow shader.");
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		return new Material(Material::CreateShadow(pVulkanMaterialShader, debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CreatePresentMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
+	{
+		if (pMaterialShader == nullptr)
+			throw std::runtime_error("Renderer::CreatePresentMaterial(...) failed. MaterialShader is null.");
+		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::present)
+			throw std::runtime_error("Renderer::CreatePresentMaterial(...) failed. MaterialShader is not a present shader.");
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		return new Material(Material::CreatePresent(pVulkanMaterialShader, debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& debugName)
+	{
+		return new Material(Material::CloneForward(*static_cast<Material*>(pSourceMaterial), debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& debugName)
+	{
+		return new Material(Material::CloneGizmo(*static_cast<Material*>(pSourceMaterial), debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& debugName)
+	{
+		return new Material(Material::CloneShadow(*static_cast<Material*>(pSourceMaterial), debugName));
 	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh()
 	{
@@ -710,7 +764,7 @@ namespace vulkanRendererBackend
 	{
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		Shader* pShader = pMaterial->GetShader();
-		return new DescriptorSetBinding(pShader, CALL_SET_INDEX);
+		return new DescriptorSetBinding(pShader, CALL_SET_INDEX, pMaterial->GetDebugName());
 	}
 
 
@@ -725,6 +779,17 @@ namespace vulkanRendererBackend
 		GarbageCollector::RecordGarbage([pVulkanMaterial]()
 		{
 			delete pVulkanMaterial;
+		});
+	}
+	void Renderer::DestroyMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader)
+	{
+		if (!pMaterialShader)
+			return;
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		GarbageCollector::RecordGarbage([pVulkanMaterialShader]()
+		{
+			delete pVulkanMaterialShader;
 		});
 	}
 
@@ -1172,7 +1237,7 @@ namespace vulkanRendererBackend
 
 					// Draw call:
 					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					DEBUG_LOG_TRACE("Gizmo draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pGizmoMaterial->GetName());
+					DEBUG_LOG_TRACE("Gizmo draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pGizmoMaterial->GetDebugName());
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);
@@ -1263,7 +1328,7 @@ namespace vulkanRendererBackend
 
 						// Dispatch:
 						vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-						DEBUG_LOG_TRACE("Pre Render Compute Shader {}, call = {}", pComputeShader->GetName(), computeCallIndex);
+						DEBUG_LOG_TRACE("Pre Render Compute Shader {}, call = {}", pComputeShader->GetDebugName(), computeCallIndex);
 					}
 				}
 
@@ -1385,7 +1450,7 @@ namespace vulkanRendererBackend
 
 					// Draw call:
 					vkCmdDrawIndexed(commandBuffer, drawCall.pMesh->GetIndexCount(), std::max(drawCall.instanceCount, (uint32_t)1), 0, 0, 0);
-					DEBUG_LOG_TRACE("Outline draw call, mesh = {}, material = {}", drawCall.pMesh->GetName(), pOutlineMaterial->GetName());
+					DEBUG_LOG_TRACE("Outline draw call, mesh = {}, material = {}", drawCall.pMesh->GetName(), pOutlineMaterial->GetDebugName());
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);
@@ -1607,7 +1672,7 @@ namespace vulkanRendererBackend
 					
 					// Draw call:
 					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					DEBUG_LOG_TRACE("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pForwardMaterial->GetName());
+					DEBUG_LOG_TRACE("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pForwardMaterial->GetDebugName());
 				}
 			}
 			vkCmdEndRenderPass(commandBuffer);
@@ -1705,7 +1770,7 @@ namespace vulkanRendererBackend
 		//
 		//			vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, drawCall->pMaterial->GetVkPipelineLayout(); , 0, 1, &drawCall->pShaderDescriptorSet->GetVkDescriptorSet(m_frameIndex), 0, nullptr);
 		//			vkCmdDrawIndexed(secondaryCommandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-		//			DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetName());
+		//			DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetDebugName());
 		//		}
 		//	}
 		//}
@@ -1777,7 +1842,7 @@ namespace vulkanRendererBackend
 
 					// Dispatch:
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-					DEBUG_LOG_TRACE("Post Render Compute Shader {}, call = {}", computeCall->pComputeShader->GetName(), computeCallIndex);
+					DEBUG_LOG_TRACE("Post Render Compute Shader {}, call = {}", computeCall->pComputeShader->GetDebugName(), computeCallIndex);
 
 					// Post-render compute shaders execute in recorded order and may access the same resources.
 					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
@@ -1880,7 +1945,7 @@ namespace vulkanRendererBackend
 				vkCmdDrawIndexed(commandBuffer, pMesh->GetIndexCount(), 1, 0, 0, 0);
 				if (m_pIGui)
 					m_pIGui->Render(commandBuffer);
-				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", pMaterial->GetName());
+				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", pMaterial->GetDebugName());
 			}
 			vkCmdEndRenderPass(commandBuffer);
 

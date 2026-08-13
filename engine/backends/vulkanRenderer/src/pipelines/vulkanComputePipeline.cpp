@@ -9,17 +9,17 @@
 namespace vulkanRendererBackend
 {
     // Constructor/Destructor:
-    ComputePipeline::ComputePipeline(const std::string& name, VkPipelineLayout vkPipelineLayout, const std::vector<char>& computeCode)
+    ComputePipeline::ComputePipeline(VkPipelineLayout vkPipelineLayout, const std::vector<char>& computeCode, const std::string& debugName)
     {
         // Create compute shader module from .spv files:
-        VkShaderModule computeShaderModule = CreateShaderModule(computeCode, "ShaderModule_Compute_" + name);
+        VkShaderModule computeShaderModule = CreateShaderModule(computeCode, "ShaderModule_Compute_" + debugName);
 
         // Create pipeline:
         CreatePipeline(vkPipelineLayout, computeShaderModule);
 
         // Destroy shader module (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), computeShaderModule, nullptr);
-        NAME_VK_OBJECT(m_pipeline, "Pipeline_Compute_" + name);
+        NAME_VK_OBJECT(m_pipeline, "Pipeline_Compute_" + debugName);
     }
     ComputePipeline::~ComputePipeline()
     {

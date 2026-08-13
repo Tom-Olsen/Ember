@@ -149,7 +149,7 @@ namespace vulkanRendererBackend
 		GlobalDescriptorSetLayout::Init();
 		SceneDescriptorSetLayout::Init();
 		FrameDescriptorSetLayout::Init();
-		DefaultGpuResources::Init(createInfo.shadowMapResolution);
+		DefaultGpuResources::Init();
 
 		// Debug naming:
 		if (m_pLogicalDevice->GetGraphicsQueue().queue == m_pLogicalDevice->GetPresentQueue().queue)

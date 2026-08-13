@@ -14,6 +14,7 @@
 #include "iWindow.h"
 #include "logger.h"
 #include "materialManager.h"
+#include "materialShaderManager.h"
 #include "meshManager.h"
 #include "renderer.h"
 #include "textureManager.h"
@@ -46,6 +47,7 @@ namespace emberCore
 	void Core::InitManagers()
 	{
 		ComputeShaderManager::Init();
+		MaterialShaderManager::Init();
 		MaterialManager::Init();
 		BufferManager::Init();
 		TextureManager::Init();
@@ -86,6 +88,7 @@ namespace emberCore
 		TextureManager::Clear();
 		BufferManager::Clear();
 		MaterialManager::Clear();
+		MaterialShaderManager::Clear();
 		ComputeShaderManager::Clear();
 	}
 	void Core::ClearOther()

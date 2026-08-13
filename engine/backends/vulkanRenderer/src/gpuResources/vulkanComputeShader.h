@@ -12,6 +12,7 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
+	class DescriptorSetBinding;
 	class Pipeline;
 
 
@@ -20,11 +21,12 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		Uint3 m_blockSize;
+		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 		std::unique_ptr<Pipeline> m_pPipeline;
 
 	public: // Methods:
 		// Constructors/Destructor:
-		ComputeShader(const std::string& name, const std::filesystem::path& computeSpv);
+		ComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName);
 		~ComputeShader();
 
 		// Non-copyable:
@@ -36,9 +38,9 @@ namespace vulkanRendererBackend
 		ComputeShader& operator=(ComputeShader&& other) noexcept;
 
 		// Getters:
-		const std::string& GetName() const override;
 		Uint3 GetBlockSize() const override;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
+		DescriptorSetBinding* GetDescriptorSetBinding() const;
 		const Pipeline* GetPipeline() const;
 
 		// Debugging:

@@ -11,7 +11,6 @@
 #include "vulkanRendererExport.h"
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <vulkan/vulkan.h>
@@ -36,9 +35,9 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Material : public emberBackendInterface::IMaterial
 	{
 	private: // Members:
-		std::string m_name;
+		std::string m_debugName;
 		emberCommon::MaterialType m_materialType;
-		std::shared_ptr<MaterialShader> m_pMaterialShader;
+		MaterialShader* m_pMaterialShader;
 		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 		std::unique_ptr<emberCommon::ForwardRenderState> m_pForwardRenderState;
 		std::unique_ptr<emberCommon::GizmoRenderState> m_pGizmoRenderState;
@@ -49,16 +48,14 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Factories/Destructor:
-        static Material CreateOutline(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
-		static Material CreateForward(const std::string& name, emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
-		static Material CreateGizmo(const std::string& name, emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
-		static Material CreateShadow(const std::string& name, uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv);
-		static Material CreatePresent(const std::string& name, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv);
-		static Material CloneForward(const std::string& name, const Material& sourceMaterial);
-		static Material CloneForward(const std::string& name, const Material& sourceMaterial, emberCommon::ForwardRenderMode renderMode);
-		static Material CloneGizmo(const std::string& name, const Material& sourceMaterial);
-		static Material CloneGizmo(const std::string& name, const Material& sourceMaterial, emberCommon::GizmoRenderMode renderMode);
-		static Material CloneShadow(const std::string& name, const Material& sourceMaterial);
+        static Material CreateOutline(MaterialShader* pMaterialShader, const std::string& debugName);
+		static Material CreateForward(MaterialShader* pMaterialShader, emberCommon::ForwardRenderMode renderMode, const std::string& debugName);
+		static Material CreateGizmo(MaterialShader* pMaterialShader, emberCommon::GizmoRenderMode renderMode, const std::string& debugName);
+		static Material CreateShadow(MaterialShader* pMaterialShader, const std::string& debugName);
+		static Material CreatePresent(MaterialShader* pMaterialShader, const std::string& debugName);
+		static Material CloneForward(const Material& sourceMaterial, const std::string& debugName);
+		static Material CloneGizmo(const Material& sourceMaterial, const std::string& debugName);
+		static Material CloneShadow(const Material& sourceMaterial, const std::string& debugName);
 		~Material();
 
 		// Non-copyable:
@@ -77,10 +74,10 @@ namespace vulkanRendererBackend
 		void SetGizmoRenderMode(emberCommon::GizmoRenderMode renderMode) override;
 
 		// Getters:
-		const std::string& GetName() const override;
 		emberCommon::MaterialType GetMaterialType() const override;
 		Material* GetShadowMaterial() const override;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
+		DescriptorSetBinding* GetDescriptorSetBinding() const;
 		int32_t GetRenderQueue() const override;
 		emberCommon::CullMode GetCullMode() const override;
 		bool IsTransparent() const override;
@@ -91,7 +88,7 @@ namespace vulkanRendererBackend
 		Shader* GetShader() const;
 		MaterialShader* GetMaterialShader() const;
 		const VkPipelineLayout& GetVkPipelineLayout() const;
-		DescriptorSetBinding* GetDescriptorSetBinding() const;
+		const std::string& GetDebugName() const;
 		template<RenderStage stage>
 		requires HasRenderPipelineAndMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh) const
@@ -115,6 +112,6 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		// Constructor:
-		Material(const std::string& name, emberCommon::MaterialType materialType, std::shared_ptr<MaterialShader> pMaterialShader);
+		Material(emberCommon::MaterialType materialType, MaterialShader* pMaterialShader, const std::string& debugName);
 	};
 }
