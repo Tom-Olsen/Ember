@@ -5,6 +5,8 @@
 #include "forwardMaterial.h"
 #include "gizmoMaterial.h"
 #include "material.h"
+#include "materialId.h"
+#include "materialShaderId.h"
 #include "shadowMaterial.h"
 #include <filesystem>
 #include <memory>
@@ -29,10 +31,10 @@ namespace emberCore
 
 
 
-    /// <summary>
-    /// Purely static class that takes care of lifetime of all Material objects.
-    /// Material is a none-owning wrapper around IMaterial. The MaterialManager owns the IMaterial objects.
-    /// </summary>
+	/// <summary>
+	/// Purely static class that owns the lifetime of all backend materials.
+	/// Material is a non-owning, generational handle to a slot owned by this manager.
+	/// </summary>
     class EMBER_CORE_API MaterialManager
 	{
 		// Friends:
@@ -41,12 +43,16 @@ namespace emberCore
 		friend class MaterialShaderManager;
 		
     private: // Structs:
-		struct MaterialSlot
+		struct ManagedMaterial
 		{
 			std::string name;
-			std::string materialShaderName;
-			uint32_t generation;
+			MaterialShaderId materialShaderId;
 			std::unique_ptr<emberBackendInterface::IMaterial> pIMaterial;
+		};
+		struct MaterialSlot
+		{
+			uint32_t generation;
+			ManagedMaterial managedMaterial;
 		};
 
     private: // Members:
@@ -92,13 +98,14 @@ namespace emberCore
         static void Print();
 
 	private: // Methods:
-		static Material::MaterialId GetMaterialId(const std::string& name);
-		static Material::MaterialId GetMaterialId(emberBackendInterface::IMaterial* pIMaterial);
-		static emberBackendInterface::IMaterial* GetMaterialInterface(Material::MaterialId materialId);
-		static const std::string* GetMaterialName(Material::MaterialId materialId);
-		static const std::string* GetMaterialShaderName(Material::MaterialId materialId);
-		static bool MaterialShaderInUse(const std::string& materialShaderName);
-		static void AddMaterial(const std::string& name, const std::string& materialShaderName, emberBackendInterface::IMaterial* pIMaterial, Material::MaterialId& materialId);
+		static MaterialId GetMaterialId(const std::string& name);
+		static MaterialId GetMaterialId(emberBackendInterface::IMaterial* pIMaterial);
+		static emberBackendInterface::IMaterial* GetMaterialInterface(MaterialId materialId);
+		static const std::string* GetMaterialName(MaterialId materialId);
+		static const MaterialShaderId* GetMaterialShaderId(MaterialId materialId);
+		static bool MaterialShaderInUse(MaterialShaderId materialShaderId);
+		static void AddMaterial(const std::string& name, MaterialShaderId materialShaderId, emberBackendInterface::IMaterial* pIMaterial, MaterialId& materialId);
+		static void DeleteMaterial(MaterialId materialId);
 
         // Delete all constructors:
         MaterialManager() = delete;

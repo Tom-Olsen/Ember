@@ -1,6 +1,7 @@
 #pragma once
 #include "commonMaterialType.h"
 #include "emberCoreExport.h"
+#include "materialShaderId.h"
 #include <filesystem>
 #include <string>
 
@@ -23,30 +24,28 @@ namespace emberCore
 		friend class MaterialShaderManager;
 
 	private: // Members:
-		std::string m_name;
-		emberCommon::MaterialType m_materialType;
-		emberBackendInterface::IMaterialShader* m_pIMaterialShader;
+		MaterialShaderId m_materialShaderId;
 
 	public: // Methods:
 		// Constructor/Destructor:
 		MaterialShader();
-		MaterialShader(emberCommon::MaterialType materialType, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name);
 		~MaterialShader();
 
-		// Creation:
+		// Creation/Destruction:
 		static MaterialShader CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateForward(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateGizmo(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateShadow(const std::filesystem::path& vertexSpv, const std::string& name);
 		static MaterialShader CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		void Destroy();
 
-		// Non-copyable:
-		MaterialShader(const MaterialShader&) = delete;
-		MaterialShader& operator=(const MaterialShader&) = delete;
+		// Copyable:
+		MaterialShader(const MaterialShader&) = default;
+		MaterialShader& operator=(const MaterialShader&) = default;
 
 		// Movable:
-		MaterialShader(MaterialShader&& other) noexcept;
-		MaterialShader& operator=(MaterialShader&& other) noexcept;
+		MaterialShader(MaterialShader&& other) noexcept = default;
+		MaterialShader& operator=(MaterialShader&& other) noexcept = default;
 
 		// Getters:
 		const std::string& GetName() const;
@@ -54,6 +53,7 @@ namespace emberCore
 		bool IsValid() const;
 
 	private: // Methods:
+		MaterialShader(MaterialShaderId materialShaderId);
 		emberBackendInterface::IMaterialShader* GetInterfaceHandle() const;
 	};
 }

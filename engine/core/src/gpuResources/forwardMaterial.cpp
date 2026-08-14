@@ -59,7 +59,7 @@ namespace emberCore
 			return ShadowMaterial();
 
 		MaterialId shadowMaterialId = MaterialManager::GetMaterialId(pIShadowMaterial);
-		if (shadowMaterialId.id == invalidMaterialId.id)
+		if (shadowMaterialId.index == invalidMaterialId.index)
 			return ShadowMaterial();
 		return ShadowMaterial{ shadowMaterialId };
 	}

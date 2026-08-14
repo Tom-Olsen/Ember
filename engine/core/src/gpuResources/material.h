@@ -4,8 +4,8 @@
 #include "commonGizmoRenderMode.h"
 #include "commonMaterialType.h"
 #include "emberCoreExport.h"
+#include "materialId.h"
 #include "shader.h"
-#include <cstdint>
 #include <filesystem>
 #include <string>
 
@@ -38,14 +38,6 @@ namespace emberCore
 		friend class MaterialManager;
 		friend class Renderer;
 		friend class ShaderProperties;
-
-	protected: // Structs:
-		struct MaterialId
-		{
-			uint32_t id;
-			uint32_t generation;
-		};
-		inline static MaterialId invalidMaterialId{static_cast<uint32_t>(-1) ,static_cast<uint32_t>(-1)};
 
 	private: // Members:
 		MaterialId m_materialId;

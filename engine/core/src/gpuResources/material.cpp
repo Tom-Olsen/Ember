@@ -89,7 +89,7 @@ namespace emberCore
 			LOG_WARN("Attempting to destroy invalid material");
 			return;
 		}
-		MaterialManager::DeleteMaterial(GetName());
+		MaterialManager::DeleteMaterial(m_materialId);
 	}
 
 

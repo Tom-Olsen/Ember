@@ -35,7 +35,7 @@ namespace emberCore
 	// Forward declarations:
 	class Buffer;
 	class Material;
-	class MaterialShader;
+	class MaterialShaderManager;
 	class Mesh;
 	class ShaderProperties;
 
@@ -46,9 +46,8 @@ namespace emberCore
 		// Friends:
 		friend class Buffer;
 		friend class ComputeShader;
-		friend class Material;
 		friend class MaterialManager;
-		friend class MaterialShader;
+		friend class MaterialShaderManager;
 		friend class Mesh;
 		friend class ShaderProperties;
 		friend class Texture2d;
