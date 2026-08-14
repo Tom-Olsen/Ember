@@ -34,7 +34,11 @@ namespace emberCore
 
 
 
-	// Cloning:
+	// Creation/Cloning:
+	ShadowMaterial ShadowMaterial::CreateFromShader(const MaterialShader& materialShader, const std::string& name)
+	{
+		return MaterialManager::CreateShadowMaterial(materialShader, name);
+	}
 	ShadowMaterial ShadowMaterial::Clone(const std::string& name) const
 	{
 		return MaterialManager::CloneShadowMaterial(*this, name);

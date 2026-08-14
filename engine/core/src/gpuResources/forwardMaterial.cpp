@@ -21,7 +21,11 @@ namespace emberCore
 
 
 
-	// Cloning:
+	// Creation/Cloning:
+	ForwardMaterial ForwardMaterial::CreateFromShader(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name)
+	{
+		return MaterialManager::CreateForwardMaterial(renderMode, materialShader, name);
+	}
 	ForwardMaterial ForwardMaterial::Clone(const std::string& name) const
 	{
 		return MaterialManager::CloneForwardMaterial(*this, name);

@@ -113,5 +113,6 @@ namespace vulkanRendererBackend
 	private: // Methods:
 		// Constructor:
 		Material(emberCommon::MaterialType materialType, MaterialShader* pMaterialShader, const std::string& debugName);
+		Material(emberCommon::MaterialType materialType, MaterialShader* pMaterialShader, std::unique_ptr<DescriptorSetBinding> pShaderDescriptorSetBinding, const std::string& debugName);
 	};
 }

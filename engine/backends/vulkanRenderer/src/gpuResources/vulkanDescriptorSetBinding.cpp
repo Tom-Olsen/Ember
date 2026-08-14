@@ -107,6 +107,16 @@ namespace vulkanRendererBackend
 			SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
 		}
 	}
+	DescriptorSetBinding::DescriptorSetBinding(const DescriptorSetBinding& source, const std::string& debugName)
+		: DescriptorSetBinding(source.m_pShader, source.m_setIndex, debugName)
+	{
+		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
+			uniformBufferBinding.uniformBuffer.m_hostData = source.m_uniformBufferMap.at(binding).uniformBuffer.m_hostData;
+		for (const auto& [binding, pTexture] : source.m_textureStagingMap)
+			SetTexture(m_bindingNames.at(binding), pTexture);
+		for (const auto& [binding, pBuffer] : source.m_bufferStagingMap)
+			SetBuffer(m_bindingNames.at(binding), pBuffer);
+	}
 	DescriptorSetBinding::~DescriptorSetBinding()
 	{
 		// Queue the destruction of each descriptor set for later collection:

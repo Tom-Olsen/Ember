@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "vulkanDescriptorSetBinding.h"
 #include <stdexcept>
+#include <utility>
 
 
 
@@ -45,7 +46,8 @@ namespace vulkanRendererBackend
 		if (sourceMaterial.GetMaterialType() != emberCommon::MaterialType::forward)
 			throw std::runtime_error("Material::CloneForward(...) failed. Source material is not a forward material.");
 
-		Material material(emberCommon::MaterialType::forward, sourceMaterial.m_pMaterialShader, debugName);
+		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
+		Material material(emberCommon::MaterialType::forward, sourceMaterial.m_pMaterialShader, std::move(pDescriptorSetBinding), debugName);
 		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(*sourceMaterial.m_pForwardRenderState);
 		material.m_pShadowMaterial = sourceMaterial.m_pShadowMaterial;
 		return material;
@@ -55,7 +57,8 @@ namespace vulkanRendererBackend
 		if (sourceMaterial.GetMaterialType() != emberCommon::MaterialType::gizmo)
 			throw std::runtime_error("Material::CloneGizmo(...) failed. Source material is not a gizmo material.");
 
-		Material material(emberCommon::MaterialType::gizmo, sourceMaterial.m_pMaterialShader, debugName);
+		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
+		Material material(emberCommon::MaterialType::gizmo, sourceMaterial.m_pMaterialShader, std::move(pDescriptorSetBinding), debugName);
 		material.m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(*sourceMaterial.m_pGizmoRenderState);
 		return material;
 	}
@@ -64,7 +67,8 @@ namespace vulkanRendererBackend
 		if (sourceMaterial.GetMaterialType() != emberCommon::MaterialType::shadow)
 			throw std::runtime_error("Material::CloneShadow(...) failed. Source material is not a shadow material.");
 
-		Material material(emberCommon::MaterialType::shadow, sourceMaterial.m_pMaterialShader, debugName);
+		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
+		Material material(emberCommon::MaterialType::shadow, sourceMaterial.m_pMaterialShader, std::move(pDescriptorSetBinding), debugName);
 		material.m_pShadowRenderState = std::make_unique<emberCommon::ShadowRenderState>(*sourceMaterial.m_pShadowRenderState);
 		return material;
 	}
@@ -266,6 +270,18 @@ namespace vulkanRendererBackend
 		if (m_pMaterialShader == nullptr)
 			throw std::runtime_error("Material::Material(...) failed. MaterialShader is null.");
 		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(m_pMaterialShader), SHADER_SET_INDEX, debugName);
+		m_pShadowMaterial = nullptr;
+	}
+	Material::Material(emberCommon::MaterialType materialType, MaterialShader* pMaterialShader, std::unique_ptr<DescriptorSetBinding> pShaderDescriptorSetBinding, const std::string& debugName)
+		: m_debugName(debugName)
+		, m_materialType(materialType)
+		, m_pMaterialShader(pMaterialShader)
+		, m_pShaderDescriptorSetBinding(std::move(pShaderDescriptorSetBinding))
+	{
+		if (m_pMaterialShader == nullptr)
+			throw std::runtime_error("Material::Material(...) failed. MaterialShader is null.");
+		if (m_pShaderDescriptorSetBinding == nullptr)
+			throw std::runtime_error("Material::Material(...) failed. DescriptorSetBinding is null.");
 		m_pShadowMaterial = nullptr;
 	}
 }

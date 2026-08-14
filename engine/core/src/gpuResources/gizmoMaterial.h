@@ -12,6 +12,7 @@ namespace emberCore
 {
 	// Forward declarations:
 	class MaterialManager;
+	class MaterialShader;
 
 
 
@@ -33,7 +34,8 @@ namespace emberCore
 		GizmoMaterial(GizmoMaterial&& other) noexcept = default;
 		GizmoMaterial& operator=(GizmoMaterial&& other) noexcept = default;
 
-		// Cloning:
+		// Creation/Cloning:
+		static GizmoMaterial CreateFromShader(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		GizmoMaterial Clone(const std::string& name) const;
 		GizmoMaterial Clone(const std::string& name, emberCommon::GizmoRenderMode renderMode) const;
 

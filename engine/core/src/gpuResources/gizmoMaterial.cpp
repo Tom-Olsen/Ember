@@ -21,7 +21,11 @@ namespace emberCore
 
 
 
-	// Cloning:
+	// Creation/Cloning:
+	GizmoMaterial GizmoMaterial::CreateFromShader(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name)
+	{
+		return MaterialManager::CreateGizmoMaterial(renderMode, materialShader, name);
+	}
 	GizmoMaterial GizmoMaterial::Clone(const std::string& name) const
 	{
 		return MaterialManager::CloneGizmoMaterial(*this, name);

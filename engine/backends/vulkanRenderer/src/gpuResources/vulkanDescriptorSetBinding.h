@@ -90,6 +90,8 @@ namespace vulkanRendererBackend
 	public: // Methods:
 		// Constructors/Destructor:
 		DescriptorSetBinding(Shader* pShader, uint32_t setIndex, const std::string& debugName);
+		// Copies CPU-side binding data into fresh descriptor sets and uniform-buffer allocations.
+		DescriptorSetBinding(const DescriptorSetBinding& source, const std::string& debugName);
 		~DescriptorSetBinding();
 
 		// Non-copyable:
