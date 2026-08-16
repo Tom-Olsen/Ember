@@ -353,7 +353,8 @@ namespace fluidDynamics
 			if (hit.GetHit())
 			{
 				m_attractor.point = Float2(hit.GetPoint());
-				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), Float4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f)), false, false);
+				Float4x4 localToWorldMatrix = Float4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f));
+				ShaderProperties shaderProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), false, false);
 				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
 					m_attractor.state = 1;
@@ -375,8 +376,8 @@ namespace fluidDynamics
 		DebugRenderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f);
 		for (int i = 0; i < m_particleCount; i++)
 		{
-			Float4x4 matrix = localToWorld * Float4x4::Translate(Float3(m_data.positions[i], 0.0f));
-			ShaderProperties shaderProperties = Renderer::DrawMesh(m_particleMesh, m_particleMaterial, matrix, false, false);
+			Float4x4 localToWorldMatrix = localToWorld * Float4x4::Translate(Float3(m_data.positions[i], 0.0f));
+			ShaderProperties shaderProperties = Renderer::DrawMesh(localToWorldMatrix, m_particleMesh, m_particleMaterial, false, false);
 		
 			// Color by density:
 			if (m_colorMode == 0)

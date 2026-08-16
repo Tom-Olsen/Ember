@@ -11,6 +11,8 @@ Add new rules here as the project evolves.
 - In header files have minimal includes and use forward decleration where possible.
 - In cpp files inclue the header file first, then all custom includes via "..." and then all system includes via "<...>". Both custom and system includes must be sorted alphabetically. Exception to the alphabetical ordering is the include of the .h file into the .cpp file and the parent interface into the .h file which must always be first.
 - No new line at end of files.
+- GetX should always return a proper valid value, or throw if they cant.
+- TryGetX should always return a "invalid" value (nullptr/-1/etc case dependent) on failure that the user can check for success. Log warning on failure.
 
 ## Architecture
 - Interfaces are reserved for contracts across shared-library boundaries.

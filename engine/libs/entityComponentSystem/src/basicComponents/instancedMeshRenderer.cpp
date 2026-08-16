@@ -96,6 +96,6 @@ namespace emberEcs
 	{
 		uint32_t instanceCount = math::Min(m_instanceCount, m_pInstanceBuffer->GetCount());
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
-		Renderer::DrawMeshInstanced(instanceCount, *m_pInstanceBuffer, *m_pMesh, m_material, m_shaderProperties, localToWorldMatrix, m_receiveShadows, m_castShadows);
+		Renderer::DrawMeshInstanced(localToWorldMatrix, instanceCount, *m_pInstanceBuffer, *m_pMesh, m_material, m_shaderProperties, m_receiveShadows, m_castShadows);
 	}
 }

@@ -173,7 +173,7 @@ namespace emberEcs
 			for (int i = 0; i < (int)m_shadowCascadeCount; i++)
 			{
 				Float4x4 localToWorldMatrix = m_shadowCascades[i]->GetViewMatrix().Inverse();
-				Renderer::DrawMesh(fourLeg, vertexUnlit, localToWorldMatrix, false, false);
+				Renderer::DrawMesh(localToWorldMatrix, fourLeg, vertexUnlit, false, false);
 				Gizmo::SetColor(colors[i]);
 				Gizmo::DrawFrustum(localToWorldMatrix, m_shadowCascades[i]->GetProjectionMatrix());
 			}

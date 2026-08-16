@@ -114,7 +114,7 @@ namespace emberEcs
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
 		if (m_pMesh != nullptr)
         {
-            Renderer::DrawMesh(*m_pMesh, m_material, m_shaderProperties, localToWorldMatrix, m_receiveShadows, m_castShadows);
+            Renderer::DrawMesh(localToWorldMatrix, *m_pMesh, m_material, m_shaderProperties, m_receiveShadows, m_castShadows);
             if (m_drawLocalBounds)
                 Gizmo::DrawBounds(localToWorldMatrix, GetLocalBounds());
             if (m_drawWorldBounds)

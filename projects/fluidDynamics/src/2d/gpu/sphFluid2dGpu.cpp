@@ -170,7 +170,8 @@ namespace fluidDynamics
 			if (hit.GetHit())
 			{
 				SetAttractorPoint(Float2(hit.GetPoint()));
-				ShaderProperties shaderProperties = Renderer::DrawMesh(m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), Float4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f)), false, false);
+				Float4x4 localToWorldMatrix = loat4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f));
+				ShaderProperties shaderProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), false, false);
 				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
 					SetAttractorState(1);
@@ -184,11 +185,11 @@ namespace fluidDynamics
 			SetAttractorState(0);
 
 		// Rendering:
-		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
+		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
 		DebugRenderer::SetColor(Float4::white);
 		DebugRenderer::SetReceiveShadows(false);
 		DebugRenderer::SetCastShadows(false);
-		DebugRenderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f);
+		DebugRenderer::DrawBounds(localToWorldMatrix, m_settings.fluidBounds, 0.01f);
 		m_tripleBufferState.MarkRead();
 		uint32_t readDataIndex = m_tripleBufferState.GetReadIndex();
 		m_particleMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
@@ -196,7 +197,7 @@ namespace fluidDynamics
 		m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(readDataIndex));
 		m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(readDataIndex));
 		m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(readDataIndex));
-		Renderer::DrawMeshInstanced(m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, localToWorld, false, false);
+		Renderer::DrawMeshInstanced(localToWorldMatrix, m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, false, false);
 	}
 
 

@@ -5,9 +5,12 @@
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
-#include "vulkanDrawCall.h"
+#include "vulkanForwardDrawCall.h"
+#include "vulkanGizmoDrawCall.h"
+#include "vulkanOutlineDrawCall.h"
 #include "vulkanRenderStage.h"
 #include "vulkanRendererExport.h"
+#include "vulkanShadowDrawCall.h"
 #include <array>
 #include <memory>
 #include <vector>
@@ -36,7 +39,6 @@ namespace vulkanRendererBackend
 	class CommandPool;
 	class Compute;
 	class ComputeShader;
-	struct DrawCall;
 	class Mesh;
 	class Material;
 	class DescriptorSetBinding;
@@ -88,11 +90,12 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::PositionalLight> m_previousPositionalLights;
 
 		// Draw calls:
-		std::vector<DrawCall> m_outlineCalls;
-		std::vector<DrawCall> m_drawCalls;
-		std::vector<DrawCall*> m_sortedDrawCallPointers;
-		std::vector<DrawCall> m_gizmoDrawCalls;
-		std::vector<DrawCall*> m_sortedGizmoDrawCallPointers;
+		std::vector<OutlineDrawCall> m_outlineCalls;
+		std::vector<ForwardDrawCall> m_forwardDrawCalls;
+		std::vector<ForwardDrawCall*> m_sortedForwardDrawCallPointers;
+		std::vector<ShadowDrawCall> m_shadowDrawCalls;
+		std::vector<GizmoDrawCall> m_gizmoDrawCalls;
+		std::vector<GizmoDrawCall*> m_sortedGizmoDrawCallPointers;
 
 		// Render management:
 		uint32_t m_frameIndex = 0;
@@ -127,11 +130,14 @@ namespace vulkanRendererBackend
 		void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) override;
 
 		// Draw mesh:
-        void DrawOutline(emberBackendInterface::IMesh* pIMesh, const Float4x4& localToWorldMatrix, uint32_t instanceCount) override;
-		void DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) override;
-		emberBackendInterface::IDescriptorSetBinding* DrawMesh(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) override;
-		void DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, const Float4x4& localToWorldMatrix, uint32_t instanceCount) override;
-		emberBackendInterface::IDescriptorSetBinding* DrawGizmo(emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, const Float4x4& localToWorldMatrix, uint32_t instanceCount) override;
+        void DrawOutline(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, uint32_t instanceCount) override;
+		// Ember::ToDo: emberBackendInterface::IDescriptorSetBinding* DrawOutline(...) is missing.
+		void DrawMesh(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, bool receiveShadows, uint32_t instanceCount) override;
+		emberBackendInterface::IDescriptorSetBinding* DrawMesh(const Float4x4& localToWorldMatrix,emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, bool receiveShadows, uint32_t instanceCount) override;
+		void DrawMeshShadow(const Float4x4& localToWorldMatrix,emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, uint32_t instanceCount) override;
+		emberBackendInterface::IDescriptorSetBinding* DrawMeshShadow(const Float4x4& localToWorldMatrix,emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, uint32_t instanceCount) override;
+		void DrawGizmo(const Float4x4& localToWorldMatrix,emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, uint32_t instanceCount) override;
+		emberBackendInterface::IDescriptorSetBinding* DrawGizmo(const Float4x4& localToWorldMatrix,emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, uint32_t instanceCount) override;
 
 		// Getters:
 		bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const override;

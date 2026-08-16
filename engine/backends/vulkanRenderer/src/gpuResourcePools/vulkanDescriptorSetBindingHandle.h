@@ -14,7 +14,7 @@ namespace vulkanRendererBackend
     {
     private: // Members:
         DescriptorSetBinding* m_pDescriptorSetBinding;
-        Shader* m_pPoolShader;  // nullptr if m_pDescriptorSetBinding does not originate from a pool.
+        Shader* m_pPoolShader;  // nullptr if m_pDescriptorSetBinding does not originate from the pooling system.
 
     public: // Methods:
         // Constructors/Destructor:

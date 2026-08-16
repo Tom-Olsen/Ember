@@ -1,6 +1,7 @@
 #include "vulkanGarbageCollector.h"
 #include "logger.h"
 #include "vulkanContext.h"
+#include <utility>
 #include <vulkan/vulkan.h>
 
 
@@ -40,10 +41,7 @@ namespace vulkanRendererBackend
     // Static methods:
     void GarbageCollector::RecordGarbage(std::function<void()> collectGarbageCallback)
     {
-        if (Context::IsDeviceIdle())
-            collectGarbageCallback();
-        else
-            s_garbageQueue.push_back(GarbageEntry{ Context::GetAbsoluteFrameIndex(), std::move(collectGarbageCallback)});
+        s_garbageQueue.push_back(GarbageEntry{ Context::GetAbsoluteFrameIndex(), std::move(collectGarbageCallback)});
     }
     void GarbageCollector::CollectGarbage()
     {

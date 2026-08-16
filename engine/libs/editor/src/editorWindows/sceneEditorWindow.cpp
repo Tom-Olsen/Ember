@@ -59,7 +59,7 @@ namespace emberEditor
             emberEcs::Entity selected = EditorSelection::GetSelectedEntity();
 			emberEcs::MeshRenderer* pMeshRenderer = selected.GetComponent<emberEcs::MeshRenderer>();
 			if (pMeshRenderer != nullptr && pMeshRenderer->GetIsActive() && pMeshRenderer->HasMesh())
-				emberCore::Renderer::DrawOutline(pMeshRenderer->GetMesh(), selected.GetTransform()->GetLocalToWorldMatrix());
+				emberCore::Renderer::DrawOutline(selected.GetTransform()->GetLocalToWorldMatrix(), pMeshRenderer->GetMesh());
 
 			m_transformHandleTarget.SetTransform(selected.GetTransform());
 			m_transformHandle.SetTarget(&m_transformHandleTarget);

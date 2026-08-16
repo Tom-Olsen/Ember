@@ -44,7 +44,6 @@ namespace vulkanRendererBackend
 		std::unique_ptr<emberCommon::OutlineRenderState> m_pOutlineRenderState;
 		std::unique_ptr<emberCommon::ShadowRenderState> m_pShadowRenderState;
 		std::unique_ptr<emberCommon::PresentRenderState> m_pPresentRenderState;
-		Material* m_pShadowMaterial;    // the shadow material used alongside this material.
 
 	public: // Methods:
 		// Factories/Destructor:
@@ -67,7 +66,6 @@ namespace vulkanRendererBackend
 		Material& operator=(Material&& other) noexcept;
 
 		// Setters:
-		void SetShadowMaterial(emberBackendInterface::IMaterial* pShadowMaterial) override;
 		void SetRenderQueue(int32_t renderQueue) override;
 		void SetCullMode(emberCommon::CullMode cullMode) override;
 		void SetForwardRenderMode(emberCommon::ForwardRenderMode renderMode) override;
@@ -75,7 +73,6 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		emberCommon::MaterialType GetMaterialType() const override;
-		Material* GetShadowMaterial() const override;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
 		DescriptorSetBinding* GetDescriptorSetBinding() const;
 		int32_t GetRenderQueue() const override;

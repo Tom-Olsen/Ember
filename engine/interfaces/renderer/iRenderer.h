@@ -40,11 +40,13 @@ namespace emberBackendInterface
         virtual void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) = 0;
 
         // Draw mesh:
-        virtual void DrawOutline(emberBackendInterface::IMesh* pIMesh, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
-        virtual void DrawMesh(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawMesh(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, uint32_t instanceCount) = 0;
-        virtual void DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawGizmo(IMesh* pMesh, IMaterial* pMaterial, const Float4x4& localToWorldMatrix, uint32_t instanceCount) = 0;
+        virtual void DrawOutline(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, uint32_t instanceCount) = 0;
+        virtual void DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, bool receiveShadows, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, bool receiveShadows, uint32_t instanceCount) = 0;
+        virtual void DrawMeshShadow(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawMeshShadow(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, uint32_t instanceCount) = 0;
+        virtual void DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, uint32_t instanceCount) = 0;
 
         // Getters:
         virtual bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const = 0;

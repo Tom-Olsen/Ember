@@ -13,9 +13,9 @@ namespace emberCore
 	ShaderProperties Primitives::DrawMesh(const Mesh& mesh, const Material& material, const Float4x4& localToWorldMatrix, bool receiveShadows, bool castShadows, bool asGizmo)
 	{
 		if (asGizmo)
-			return Renderer::DrawGizmo(mesh, material, localToWorldMatrix);
+			return Renderer::DrawGizmo(localToWorldMatrix, mesh, material);
 		else
-			return Renderer::DrawMesh(mesh, material, localToWorldMatrix, receiveShadows, castShadows);
+			return Renderer::DrawMesh(localToWorldMatrix, mesh, material, receiveShadows, castShadows);
 	}
 
     ShaderProperties Primitives::DrawQuad(const Float4x4& localToWorldMatrix, const Material& material, bool receiveShadows, bool castShadows, bool asGizmo)

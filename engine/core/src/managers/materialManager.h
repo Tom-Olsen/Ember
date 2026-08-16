@@ -42,6 +42,7 @@ namespace emberCore
 		friend class ForwardMaterial;
 		friend class Material;
 		friend class MaterialShaderManager;
+		friend class Renderer;
 		
     private: // Structs:
 		struct ManagedMaterial
@@ -49,6 +50,7 @@ namespace emberCore
 			std::string name;
 			MaterialRole roles;
 			MaterialShaderId materialShaderId;
+			MaterialId shadowMaterialId;	// used to link a shadowMaterial to a forwardMaterial.
 			std::unique_ptr<emberBackendInterface::IMaterial> pIMaterial;
 		};
 		struct MaterialSlot
@@ -103,11 +105,16 @@ namespace emberCore
 		static Material CreatePresentMaterial(const MaterialShader& materialShader, const std::string& name, MaterialRole roles);
 		
 		// Getters:
+		static Material GetMaterial(MaterialId materialId);
+		static ForwardMaterial GetForwardMaterial(MaterialId materialId);
+		static GizmoMaterial GetGizmoMaterial(MaterialId materialId);
+		static ShadowMaterial GetShadowMaterial(MaterialId materialId);
+		static ShadowMaterial GetShadowMaterialForForwardMaterial(MaterialId forwardMaterialId);
 		static MaterialId GetMaterialId(const std::string& name);
-		static MaterialId GetMaterialId(emberBackendInterface::IMaterial* pIMaterial);
 		static emberBackendInterface::IMaterial* GetMaterialInterface(MaterialId materialId);
 		static const std::string* GetMaterialName(MaterialId materialId);
 		static const MaterialShaderId* GetMaterialShaderId(MaterialId materialId);
+		static MaterialId GetShadowMaterialIdForForwardMaterial(MaterialId forwardMaterialId);
 		
 		// Bool checks:
 		static bool HasMaterialRole(MaterialId materialId, MaterialRole role);
@@ -115,7 +122,9 @@ namespace emberCore
 		
 		// Add/Delete material:
 		static void AddMaterial(const std::string& name, MaterialRole roles, MaterialShaderId materialShaderId, emberBackendInterface::IMaterial* pIMaterial, MaterialId& materialId);
+		static void ClearShadowMaterial(MaterialId forwardMaterialId);
 		static void DeleteMaterial(MaterialId materialId);
+		static void SetShadowMaterial(MaterialId forwardMaterialId, MaterialId shadowMaterialId);
 
         // Delete all constructors:
         MaterialManager() = delete;

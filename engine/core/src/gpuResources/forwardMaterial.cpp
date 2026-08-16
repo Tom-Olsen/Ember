@@ -61,18 +61,13 @@ namespace emberCore
 	}
 	ShadowMaterial ForwardMaterial::GetShadowMaterial() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
-		if (pIMaterial == nullptr)
+		if (GetInterfaceHandle() == nullptr)
 		{
 			LOG_WARN("ForwardMaterial::GetShadowMaterial() failed. Material is invalid or expired.");
 			return ShadowMaterial();
 		}
 
-		emberBackendInterface::IMaterial* pIShadowMaterial = pIMaterial->GetShadowMaterial();
-		if (pIShadowMaterial == nullptr)
-			return ShadowMaterial();
-
-		MaterialId shadowMaterialId = MaterialManager::GetMaterialId(pIShadowMaterial);
+		MaterialId shadowMaterialId = MaterialManager::GetShadowMaterialIdForForwardMaterial(m_materialId);
 		if (shadowMaterialId.index == invalidMaterialId.index)
 			return ShadowMaterial();
 		return ShadowMaterial{ shadowMaterialId };
@@ -124,18 +119,22 @@ namespace emberCore
 	}
 	void ForwardMaterial::SetShadowMaterial(const ShadowMaterial& shadowMaterial)
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle();
-		if (pIMaterial == nullptr)
+		if (GetMutableInterfaceHandle() == nullptr)
 		{
 			LOG_WARN("ForwardMaterial::SetShadowMaterial(...) failed. Material is invalid, expired, or immutable.");
 			return;
 		}
 
-		emberBackendInterface::IMaterial* pShadowMaterial = shadowMaterial.GetInterfaceHandle();
-		if (pShadowMaterial == nullptr)
-			throw std::runtime_error("ForwardMaterial::SetShadowMaterial(...) failed. Shadow material is invalid or expired.");
-
-		pIMaterial->SetShadowMaterial(pShadowMaterial);
+		MaterialManager::SetShadowMaterial(m_materialId, shadowMaterial.m_materialId);
+	}
+	void ForwardMaterial::ClearShadowMaterial()
+	{
+		if (GetMutableInterfaceHandle() == nullptr)
+		{
+			LOG_WARN("ForwardMaterial::ClearShadowMaterial() failed. Material is invalid, expired, or immutable.");
+			return;
+		}
+		MaterialManager::ClearShadowMaterial(m_materialId);
 	}
 
 

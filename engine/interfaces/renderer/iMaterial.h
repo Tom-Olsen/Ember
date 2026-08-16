@@ -20,7 +20,6 @@ namespace emberBackendInterface
         virtual ~IMaterial() = default;
 
         // Setters:
-        virtual void SetShadowMaterial(IMaterial* pShadowMaterial) = 0;
         virtual void SetRenderQueue(int32_t renderQueue) = 0;
         virtual void SetCullMode(emberCommon::CullMode cullMode) = 0;
         virtual void SetForwardRenderMode(emberCommon::ForwardRenderMode renderMode) = 0;
@@ -28,7 +27,6 @@ namespace emberBackendInterface
 
         // Getters:
         virtual emberCommon::MaterialType GetMaterialType() const = 0;
-        virtual IMaterial* GetShadowMaterial() const = 0;
         virtual IDescriptorSetBinding* GetShaderDescriptorSetBinding() const = 0;
         virtual int32_t GetRenderQueue() const = 0;
         virtual emberCommon::CullMode GetCullMode() const = 0;
