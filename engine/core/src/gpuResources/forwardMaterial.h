@@ -42,7 +42,7 @@ namespace emberCore
 
 		// Getters:
 		emberCommon::ForwardRenderMode GetRenderMode() const;
-		const emberCommon::ForwardRenderState& GetRenderState() const;
+		const emberCommon::ForwardRenderState* GetRenderState() const;
 		ShadowMaterial GetShadowMaterial() const;
 		int32_t GetRenderQueue() const;
 		bool GetIsTransparent() const;

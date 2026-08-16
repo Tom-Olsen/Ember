@@ -18,12 +18,18 @@ namespace emberCore
 	{
 		m_materialId = materialId;
 	}
-	emberBackendInterface::IDescriptorSetBinding* Material::GetShaderDescriptorSetBinding() const
+	emberBackendInterface::IMaterial* Material::GetMutableInterfaceHandle() const
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
-		if (pIMaterial == nullptr)
-			throw std::runtime_error("Material::GetShaderDescriptorSetBinding() failed. Material is invalid or expired.");
-		return pIMaterial->GetShaderDescriptorSetBinding();
+		if (pIMaterial == nullptr || MaterialManager::HasMaterialRole(m_materialId, MaterialRole::immutable))
+			return nullptr;
+		return pIMaterial;
+	}
+	emberBackendInterface::IDescriptorSetBinding* Material::TryGetShaderDescriptorSetBinding() const
+	{
+		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
+			return pIMaterial->GetShaderDescriptorSetBinding();
+		return nullptr;
 	}
 
 
@@ -41,15 +47,7 @@ namespace emberCore
 
 
 
-	// Creation/Destruction: (register/delete from MaterialManager)
-	Material Material::CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
-	{
-		return MaterialManager::CreateOutlineMaterial(vertexSpv, fragmentSpv, debugName);
-	}
-	Material Material::CreateOutline(const MaterialShader& materialShader, const std::string& debugName)
-	{
-		return MaterialManager::CreateOutlineMaterial(materialShader, debugName);
-	}
+	// Creation/Destruction:
 	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		return MaterialManager::CreateForwardMaterial(renderMode, vertexSpv, fragmentSpv, debugName);
@@ -74,14 +72,6 @@ namespace emberCore
 	{
 		return MaterialManager::CreateShadowMaterial(materialShader, debugName);
 	}
-	Material Material::CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
-	{
-		return MaterialManager::CreatePresentMaterial(vertexSpv, fragmentSpv, debugName);
-	}
-	Material Material::CreatePresent(const MaterialShader& materialShader, const std::string& debugName)
-	{
-		return MaterialManager::CreatePresentMaterial(materialShader, debugName);
-	}
 	void Material::Destroy()
 	{
 		if (!IsValid())
@@ -99,21 +89,31 @@ namespace emberCore
 	{
 		const std::string* pName = MaterialManager::GetMaterialName(m_materialId);
 		if (pName == nullptr)
-			throw std::runtime_error("Material::GetName() failed. Material is invalid or expired.");
+		{
+			LOG_WARN("Material::GetName() failed. Material is invalid or expired.");
+			static const std::string invalidName = "invalidOrExpired";
+			return invalidName;
+		}
 		return *pName;
 	}
 	emberCommon::MaterialType Material::GetMaterialType() const
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
-			throw std::runtime_error("Material::GetMaterialType() failed. Material is invalid or expired.");
+		{
+			LOG_WARN("Material::GetMaterialType() failed. Material is invalid or expired.");
+			return emberCommon::MaterialType::count;
+		}
 		return pIMaterial->GetMaterialType();
 	}
 	emberCommon::CullMode Material::GetCullMode() const
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
-			throw std::runtime_error("Material::GetCullMode() failed. Material is invalid or expired.");
+		{
+			LOG_WARN("Material::GetCullMode() failed. Material is invalid or expired.");
+			return emberCommon::CullMode::count;
+		}
 		return pIMaterial->GetCullMode();
 	}
 	bool Material::IsValid() const

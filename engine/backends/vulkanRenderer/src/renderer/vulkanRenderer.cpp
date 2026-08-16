@@ -565,6 +565,10 @@ namespace vulkanRendererBackend
 	{
 		m_outlineThickness = outlineThickness;
 	}
+	void Renderer::ClearDefaultMaterials()
+	{
+		DefaultGpuResources::ClearDefaultMaterials();
+	}
 
 
 

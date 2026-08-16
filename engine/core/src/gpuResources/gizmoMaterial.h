@@ -41,7 +41,7 @@ namespace emberCore
 
 		// Getters:
 		emberCommon::GizmoRenderMode GetRenderMode() const;
-		const emberCommon::GizmoRenderState& GetRenderState() const;
+		const emberCommon::GizmoRenderState* GetRenderState() const;
 		int32_t GetRenderQueue() const;
 		bool GetIsTransparent() const;
 

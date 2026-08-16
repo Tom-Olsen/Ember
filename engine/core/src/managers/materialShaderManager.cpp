@@ -52,19 +52,6 @@ namespace emberCore
 
 
 	// Creators:
-	MaterialShader MaterialShaderManager::CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialType() != emberCommon::MaterialType::outline)
-				throw std::runtime_error("MaterialShaderManager::CreateOutlineMaterialShader(...) failed. Existing MaterialShader is not an outline shader: " + name);
-			return materialShader;
-		}
-
-		return AddMaterialShader(name, emberCommon::MaterialType::outline, Renderer::CreateOutlineMaterialShader(vertexSpv, fragmentSpv, name));
-	}
 	MaterialShader MaterialShaderManager::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
 		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
@@ -104,19 +91,6 @@ namespace emberCore
 
 		return AddMaterialShader(name, emberCommon::MaterialType::shadow, Renderer::CreateShadowMaterialShader(vertexSpv, name));
 	}
-	MaterialShader MaterialShaderManager::CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialType() != emberCommon::MaterialType::present)
-				throw std::runtime_error("MaterialShaderManager::CreatePresentMaterialShader(...) failed. Existing MaterialShader is not a present shader: " + name);
-			return materialShader;
-		}
-
-		return AddMaterialShader(name, emberCommon::MaterialType::present, Renderer::CreatePresentMaterialShader(vertexSpv, fragmentSpv, name));
-	}
 
 
 
@@ -153,6 +127,37 @@ namespace emberCore
 
 
 	// Private methods:
+	// Creators:
+	MaterialShader MaterialShaderManager::CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
+		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
+		{
+			MaterialShader materialShader{ materialShaderId };
+			if (materialShader.GetMaterialType() != emberCommon::MaterialType::outline)
+				throw std::runtime_error("MaterialShaderManager::CreateOutlineMaterialShader(...) failed. Existing MaterialShader is not an outline shader: " + name);
+			return materialShader;
+		}
+
+		return AddMaterialShader(name, emberCommon::MaterialType::outline, Renderer::CreateOutlineMaterialShader(vertexSpv, fragmentSpv, name));
+	}
+	MaterialShader MaterialShaderManager::CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
+		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
+		{
+			MaterialShader materialShader{ materialShaderId };
+			if (materialShader.GetMaterialType() != emberCommon::MaterialType::present)
+				throw std::runtime_error("MaterialShaderManager::CreatePresentMaterialShader(...) failed. Existing MaterialShader is not a present shader: " + name);
+			return materialShader;
+		}
+
+		return AddMaterialShader(name, emberCommon::MaterialType::present, Renderer::CreatePresentMaterialShader(vertexSpv, fragmentSpv, name));
+	}
+
+
+
+	// Getters:
 	MaterialShaderId MaterialShaderManager::GetMaterialShaderId(const std::string& name)
 	{
 		auto it = s_materialShaderIdsMap.find(name);
@@ -184,6 +189,10 @@ namespace emberCore
 			return nullptr;
 		return &s_materialShaderSlots[materialShaderId.index].materialShader.materialType;
 	}
+
+
+
+	// Add/Delete material shader:
 	MaterialShader MaterialShaderManager::AddMaterialShader(const std::string& name, emberCommon::MaterialType materialType, emberBackendInterface::IMaterialShader* pIMaterialShader)
 	{
 		if (pIMaterialShader == nullptr)

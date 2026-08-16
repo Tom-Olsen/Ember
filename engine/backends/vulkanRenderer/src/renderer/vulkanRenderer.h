@@ -158,6 +158,7 @@ namespace vulkanRendererBackend
 		void SetDefaultMaterials(emberBackendInterface::IMaterial* pOutlineMaterial, emberBackendInterface::IMaterial* pDefaultShadowMaterial, emberBackendInterface::IMaterial* pPresentMaterial) override;
 		void SetOutlineColor(const Float4& outlineColor) override;
 		void SetOutlineThickness(int outlineThickness) override;
+		void ClearDefaultMaterials() override;
 
 		// Functionality forwarding:
 		void CollectGarbage() override;

@@ -146,7 +146,10 @@ namespace emberCore
 		// Gpu resource destruction:
 		static void DestroyMaterial(emberBackendInterface::IMaterial* pMaterial);
 		static void DestroyMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader);
+
+		// Set/Clear default materials:
 		static void SetDefaultMaterials(const Material& outlineMaterial, const Material& defaultShadowMaterial, const Material& presentMaterial);
+		static void ClearDefaultMaterials();
 
 		// Delete all constructors:
 		Renderer() = delete;

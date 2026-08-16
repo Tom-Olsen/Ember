@@ -71,6 +71,7 @@ namespace emberBackendInterface
         virtual void SetDefaultMaterials(IMaterial* pOutlineMaterial, IMaterial* pDefaultShadowMaterial, IMaterial* pPresentMaterial) = 0;
         virtual void SetOutlineColor(const Float4& outlineColor) = 0;
         virtual void SetOutlineThickness(int outlineThickness) = 0;
+		virtual void ClearDefaultMaterials() = 0;
 
         // Functionallity forwarding:
         virtual void CollectGarbage() = 0;

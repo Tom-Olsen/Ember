@@ -106,9 +106,7 @@ namespace vulkanRendererBackend
 		s_pColorSamplerClampEdge.reset();
 		s_pShadowSampler.reset();
 		// Materials:
-		s_pDefaultOutlineMaterial = nullptr;
-		s_pDefaultShadowMaterial = nullptr;
-		s_pDefaultPresentMaterial = nullptr;
+		ClearDefaultMaterials();
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader.reset();
 		s_pOutlineComputeShader.reset();
@@ -126,6 +124,11 @@ namespace vulkanRendererBackend
 		s_pDefaultStorageTexture3d.reset();
 		s_isInitialized = false;
 	}
+
+
+
+	// Public methods:
+	// Set/Clear default materials:
 	void DefaultGpuResources::SetDefaultMaterials(emberBackendInterface::IMaterial* pOutlineMaterial, emberBackendInterface::IMaterial* pDefaultShadowMaterial, emberBackendInterface::IMaterial* pPresentMaterial)
 	{
 		if (pOutlineMaterial == nullptr)
@@ -145,11 +148,12 @@ namespace vulkanRendererBackend
 		s_pDefaultShadowMaterial = static_cast<Material*>(pDefaultShadowMaterial);
 		s_pDefaultPresentMaterial = static_cast<Material*>(pPresentMaterial);
 	}
-
-
-
-	// Public methods:
-	// Getters:
+	void DefaultGpuResources::ClearDefaultMaterials()
+	{
+		s_pDefaultOutlineMaterial = nullptr;
+		s_pDefaultShadowMaterial = nullptr;
+		s_pDefaultPresentMaterial = nullptr;
+	}
 	// Samplers:
 	Sampler* DefaultGpuResources::GetColorSampler()
 	{

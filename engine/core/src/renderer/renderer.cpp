@@ -402,11 +402,19 @@ namespace emberCore
 			return;
 		s_pIRenderer->DestroyMaterialShader(pMaterialShader);
 	}
+
+
+
+	// Set/Clear default materials:
 	void Renderer::SetDefaultMaterials(const Material& outlineMaterial, const Material& defaultShadowMaterial, const Material& presentMaterial)
 	{
 		s_pIRenderer->SetDefaultMaterials(
 			outlineMaterial.GetInterfaceHandle(),
 			defaultShadowMaterial.GetInterfaceHandle(),
 			presentMaterial.GetInterfaceHandle());
+	}
+	void Renderer::ClearDefaultMaterials()
+	{
+		s_pIRenderer->ClearDefaultMaterials();
 	}
 }

@@ -21,10 +21,6 @@ namespace emberCore
 
 
 	// Creation/Destruction:
-	MaterialShader MaterialShader::CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		return MaterialShaderManager::CreateOutlineMaterialShader(vertexSpv, fragmentSpv, name);
-	}
 	MaterialShader MaterialShader::CreateForward(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
 		return MaterialShaderManager::CreateForwardMaterialShader(vertexSpv, fragmentSpv, name);
@@ -36,10 +32,6 @@ namespace emberCore
 	MaterialShader MaterialShader::CreateShadow(const std::filesystem::path& vertexSpv, const std::string& name)
 	{
 		return MaterialShaderManager::CreateShadowMaterialShader(vertexSpv, name);
-	}
-	MaterialShader MaterialShader::CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		return MaterialShaderManager::CreatePresentMaterialShader(vertexSpv, fragmentSpv, name);
 	}
 	void MaterialShader::Destroy()
 	{

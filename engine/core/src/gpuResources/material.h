@@ -44,24 +44,21 @@ namespace emberCore
 
 	protected: // Methods:
 		Material(MaterialId materialId);
-		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
+		emberBackendInterface::IMaterial* GetMutableInterfaceHandle() const;
+		emberBackendInterface::IDescriptorSetBinding* TryGetShaderDescriptorSetBinding() const override;
 
 	public: // Methods:
 		// Constructor/Destructor:
 		Material(); // for invalid materials only.
 		~Material();
 
-		// Creation/Destruction: (register/delete from MaterialManager)
-		static Material CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static Material CreateOutline(const MaterialShader& materialShader, const std::string& name);
+		// Creation/Destruction:
 		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		static ShadowMaterial CreateShadow(const std::filesystem::path& vertexSpv, const std::string& name);
 		static ShadowMaterial CreateShadow(const MaterialShader& materialShader, const std::string& name);
-		static Material CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static Material CreatePresent(const MaterialShader& materialShader, const std::string& name);
 		void Destroy();
 
 		// Copyable:

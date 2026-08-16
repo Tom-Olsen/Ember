@@ -28,6 +28,7 @@ namespace emberCore
 	class EMBER_CORE_API MaterialShaderManager
 	{
 		// Friends:
+		friend class MaterialManager;
 		friend class MaterialShader;
 
 	private: // Structs:
@@ -55,11 +56,9 @@ namespace emberCore
 		static void Clear();
 
 		// Creators:
-		static MaterialShader CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& name);
-		static MaterialShader CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 
 		// Getters:
 		static MaterialShader GetMaterialShader(const std::string& name);
@@ -71,10 +70,17 @@ namespace emberCore
 		static void Print();
 
 	private: // Methods:
+		// Creators:
+		static MaterialShader CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static MaterialShader CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		
+		// Getters:
 		static MaterialShaderId GetMaterialShaderId(const std::string& name);
 		static emberBackendInterface::IMaterialShader* GetMaterialShaderInterface(MaterialShaderId materialShaderId);
 		static const std::string* GetMaterialShaderName(MaterialShaderId materialShaderId);
 		static const emberCommon::MaterialType* GetMaterialShaderType(MaterialShaderId materialShaderId);
+		
+		// Add/Delete material shader:
 		static MaterialShader AddMaterialShader(const std::string& name, emberCommon::MaterialType materialType, emberBackendInterface::IMaterialShader* pIMaterialShader);
 		static void DeleteMaterialShader(MaterialShaderId materialShaderId);
 

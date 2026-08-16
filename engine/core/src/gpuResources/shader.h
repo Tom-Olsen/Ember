@@ -34,7 +34,8 @@ namespace emberCore
 		~Shader();
 
 		// Getters:
-		virtual emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const;
+		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const;
+		virtual emberBackendInterface::IDescriptorSetBinding* TryGetShaderDescriptorSetBinding() const;
 
 	public: // Methods:
 		// Copyable:

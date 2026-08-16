@@ -61,7 +61,10 @@ namespace vulkanRendererBackend
         static void InitSamplers();
         static void Init();
         static void Clear();
+
+		// Set/Clear default materials:
         static void SetDefaultMaterials(emberBackendInterface::IMaterial* pOutlineMaterial, emberBackendInterface::IMaterial* pDefaultShadowMaterial, emberBackendInterface::IMaterial* pPresentMaterial);
+		static void ClearDefaultMaterials();
 
         // Samplers:
         static Sampler* GetColorSampler();

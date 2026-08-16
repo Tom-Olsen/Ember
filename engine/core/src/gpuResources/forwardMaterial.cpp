@@ -1,5 +1,6 @@
 #include "forwardMaterial.h"
 #include "iMaterial.h"
+#include "logger.h"
 #include "materialManager.h"
 #include <stdexcept>
 
@@ -42,21 +43,30 @@ namespace emberCore
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
-			throw std::runtime_error("ForwardMaterial::GetRenderMode() failed. Material is invalid or expired.");
+		{
+			LOG_WARN("ForwardMaterial::GetRenderMode() failed. Material is invalid or expired.");
+			return emberCommon::ForwardRenderMode::count;
+		}
 		return pIMaterial->GetForwardRenderMode();
 	}
-	const emberCommon::ForwardRenderState& ForwardMaterial::GetRenderState() const
+	const emberCommon::ForwardRenderState* ForwardMaterial::GetRenderState() const
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
-			throw std::runtime_error("ForwardMaterial::GetRenderState() failed. Material is invalid or expired.");
-		return pIMaterial->GetForwardRenderState();
+		{
+			LOG_WARN("ForwardMaterial::GetRenderState() failed. Material is invalid or expired.");
+			return nullptr;
+		}
+		return &pIMaterial->GetForwardRenderState();
 	}
 	ShadowMaterial ForwardMaterial::GetShadowMaterial() const
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
+		{
+			LOG_WARN("ForwardMaterial::GetShadowMaterial() failed. Material is invalid or expired.");
 			return ShadowMaterial();
+		}
 
 		emberBackendInterface::IMaterial* pIShadowMaterial = pIMaterial->GetShadowMaterial();
 		if (pIShadowMaterial == nullptr)
@@ -71,14 +81,20 @@ namespace emberCore
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
-			throw std::runtime_error("ForwardMaterial::GetRenderQueue() failed. Material is invalid or expired.");
+		{
+			LOG_WARN("ForwardMaterial::GetRenderQueue() failed. Material is invalid or expired.");
+			return 0;
+		}
 		return pIMaterial->GetRenderQueue();
 	}
 	bool ForwardMaterial::GetIsTransparent() const
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
-			throw std::runtime_error("ForwardMaterial::GetIsTransparent() failed. Material is invalid or expired.");
+		{
+			LOG_WARN("ForwardMaterial::GetIsTransparent() failed. Material is invalid or expired.");
+			return false;
+		}
 		return pIMaterial->IsTransparent();
 	}
 
@@ -87,30 +103,33 @@ namespace emberCore
 	// Setters:
 	void ForwardMaterial::SetRenderMode(emberCommon::ForwardRenderMode renderMode)
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
-		if (pIMaterial == nullptr)
-			throw std::runtime_error("ForwardMaterial::SetRenderMode(...) failed. Material is invalid or expired.");
-		pIMaterial->SetForwardRenderMode(renderMode);
+		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
+			pIMaterial->SetForwardRenderMode(renderMode);
+		else
+			LOG_WARN("ForwardMaterial::SetRenderMode(...) failed. Material is invalid, expired, or immutable.");
 	}
 	void ForwardMaterial::SetCullMode(emberCommon::CullMode cullMode)
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
-		if (pIMaterial == nullptr)
-			throw std::runtime_error("ForwardMaterial::SetCullMode(...) failed. Material is invalid or expired.");
-		pIMaterial->SetCullMode(cullMode);
+		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
+			pIMaterial->SetCullMode(cullMode);
+		else
+			LOG_WARN("ForwardMaterial::SetCullMode(...) failed. Material is invalid, expired, or immutable.");
 	}
 	void ForwardMaterial::SetRenderQueue(int32_t renderQueue)
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
-		if (pIMaterial == nullptr)
-			throw std::runtime_error("ForwardMaterial::SetRenderQueue(...) failed. Material is invalid or expired.");
-		pIMaterial->SetRenderQueue(renderQueue);
+		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
+			pIMaterial->SetRenderQueue(renderQueue);
+		else
+			LOG_WARN("ForwardMaterial::SetRenderQueue(...) failed. Material is invalid, expired, or immutable.");
 	}
 	void ForwardMaterial::SetShadowMaterial(const ShadowMaterial& shadowMaterial)
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle();
 		if (pIMaterial == nullptr)
-			throw std::runtime_error("ForwardMaterial::SetShadowMaterial(...) failed. Material is invalid or expired.");
+		{
+			LOG_WARN("ForwardMaterial::SetShadowMaterial(...) failed. Material is invalid, expired, or immutable.");
+			return;
+		}
 
 		emberBackendInterface::IMaterial* pShadowMaterial = shadowMaterial.GetInterfaceHandle();
 		if (pShadowMaterial == nullptr)
