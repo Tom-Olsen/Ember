@@ -345,3 +345,168 @@ Individual descriptor free	No
 Pool reset	Every frame
 Fragmentation resistant	Yes
 Long-lived descriptors	No
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Copy of ToDoMaterialSystem.txt so i can commit this:
+# Material System Cleanup Plan
+
+Complete these tasks in order. Each task is intended to be usable as the prompt for a separate Codex chat. Preserve the Unity-inspired design: a Material is a lightweight handle to a material instance, while a MaterialShader describes reusable shader/pass behavior. Do not introduce temporary ownership workarounds or leave raw pointers whose lifetime is only implied.
+
+## 0.
+-make materialManager return correct MaterialTypes on Create... calls, not parent class Material.
+-Remove redundant checks that codex introduces. E.g. changes in shader.h/cpp.
+-Clean up material system code (core and backend). A lot of comments are missing due to codex sucking.
+-cleanup core gpu resources and resource managers with proper Get...() and TryGet...() methods. Get throws on failure TryGet logs warning and returns nullptr/error value.
+
+## 1. Make MaterialShader lifetime manager-owned and handle-based
+-- Complete!
+
+## 2. Make Material::Clone copy all material instance data
+-- Complete!
+
+## 3. Replace dangling cross-material and default-material pointers
+
+Problem:
+Forward backend materials store their selected shadow material as a raw Material pointer. Deleting the shadow material leaves a dangling pointer. Default outline, shadow, and present materials are also stored as unprotected raw backend pointers and can be deleted through MaterialManager.
+
+Goal:
+All references between registered materials must remain safe when a target material is deleted or its slot is reused. Required default materials must not become dangling pointers.
+
+Implementation plan:
+1. Store cross-material relationships as generational MaterialIds at the core ownership layer rather than raw backend pointers where practical.
+2. Resolve the selected shadow material when preparing a draw. If the handle is stale, use the default shadow material or disable the pass according to explicit policy.
+3. If the backend must retain relationships, introduce a backend-safe handle/resolver or clear all reverse references before destruction. Do not retain an unchecked raw pointer.
+4. Decide and document whether deleting an assigned shadow material automatically falls back to the default shadow material.
+5. Protect required default materials. Either pin them until MaterialManager::Clear or replace/update the backend defaults atomically before allowing deletion.
+6. Ensure cloned forward materials copy the safe shadow-material handle rather than a backend pointer.
+7. Validate type/domain compatibility when assigning a stage override such as a shadow material.
+
+Acceptance criteria:
+- Deleting an assigned shadow material cannot cause a use-after-free.
+- Reusing the deleted material slot cannot silently redirect an old relationship to an unrelated material.
+- Default materials remain valid for the renderer's entire operational lifetime.
+- Add tests for deletion, slot reuse, cloning, fallback behavior, and manager shutdown.
+
+## 4. Couple call-descriptor pools to shader lifetime
+
+Problem:
+PoolManager stores CallDescriptorSetBindingPool objects in a map keyed by raw Shader pointers. DestroyMaterialShader and compute-shader destruction do not retire the corresponding pool. This leaves a dangling key and DescriptorSetBinding objects that still reference the destroyed Shader. Address reuse could cause a new shader to receive an old incompatible pool.
+
+Goal:
+A shader and every descriptor pool derived from its reflection/layout must have one coordinated lifetime.
+
+Implementation plan:
+1. Add an explicit PoolManager operation to retire the call-descriptor pool belonging to a shader.
+2. Track checked-out bindings so retirement cannot delete a pool while handles are borrowed.
+3. Decide whether retirement waits until all borrowed handles return or moves the entire pool into deferred garbage. Keep the operation frame-safe.
+4. Invoke retirement from both material-shader and compute-shader destruction paths before the Shader and its descriptor-set layouts are destroyed.
+5. Ensure deferred callbacks execute in this order: outstanding GPU use completes, descriptor bindings/pool are destroyed, and then shader layouts/pipeline layout are destroyed.
+6. Prefer a stable shader ID as the pool key if the new MaterialShader handle work makes that available. Never allow allocator address reuse to identify an unrelated shader as the same pool owner.
+7. Make returning a borrowed handle to a retired pool deterministic and safe; do not dereference a destroyed Shader while logging an error.
+
+Acceptance criteria:
+- No PoolManager entry survives its owning shader.
+- A new shader can never receive descriptor bindings created from an old shader layout, even if memory addresses are reused.
+- Shader deletion with checked-out bindings is either rejected or safely deferred.
+- Material and compute shader paths follow the same lifetime rules.
+- Add tests for pool creation, shader deletion, outstanding handles, address/slot reuse, and cleanup ordering.
+
+## 5. Separate material domain from render stage and support multiple passes
+
+Problem:
+MaterialType currently represents forward, gizmo, outline, shadow, and present, which are mostly render stages. Although MaterialShader stores pipelines using a stage-aware key, every MaterialShader factory creates only one stage, every Material has one type, and stage-specific state and APIs are duplicated throughout the engine. A deferred surface material needs to participate in several passes without becoming several unrelated materials.
+
+Goal:
+Model a Unity-like shader/technique containing multiple passes. A Material remains one property instance and can participate in every render stage supported by its MaterialShader.
+
+Implementation plan:
+1. Replace or redefine MaterialType as a stage-independent MaterialDomain, for example surface, gizmo, postProcess, internal, or another deliberately chosen set.
+2. Define a stable RenderStageId or MaterialPassTag used to select a pass such as depth, shadow, gBuffer, forwardOpaque, forwardTransparent, picking, or present.
+3. Add a MaterialPass representation containing the shader stages, pipeline family, fixed render state, and supported variants for one pass tag.
+4. Change MaterialShader to own a collection of MaterialPass objects rather than being created by one stage-specific factory.
+5. Make the renderer query whether a MaterialShader supports a pass and obtain that pass's pipeline, rather than switching on the material's singular type.
+6. Replace the separate optional render-state pointers in backend Material with a deliberate per-pass state/override representation. Avoid adding another pointer and another switch case for every new stage.
+7. Define descriptor-layout rules across passes. Either require a compatible material descriptor-set schema for every pass in one MaterialShader or explicitly store per-pass bindings while presenting one coherent material-property API.
+8. Route one submitted surface draw to the appropriate supported passes instead of requiring callers to construct unrelated materials for each stage.
+9. Keep special internal passes such as present isolated where that produces a clearer API; not every renderer operation must be exposed as a user material.
+10. Remove redundant one-to-one concepts such as separate RenderStage and PipelineType enums where a single typed pass identifier is sufficient.
+
+Acceptance criteria:
+- One surface Material can provide data to shadow/depth, G-buffer, and forward passes without duplicating user-managed material instances.
+- Adding a raster pass does not require new Material subclasses and matching methods in every interface layer.
+- Pass compatibility and missing-pass fallback behavior are explicit and testable.
+- Existing forward, shadow, gizmo, outline, and present behavior still renders correctly.
+- Add tests for multi-pass lookup, unsupported passes, descriptor compatibility, and per-pass render state.
+
+## 6. Generalize raster pipeline descriptions before adding deferred rendering
+
+Problem:
+Current graphics pipeline classes hard-code render-pass selection and create variants from a small render-mode enum and vertex layout. Deferred rendering introduces multiple color attachments, attachment-specific blend/write state, additional formats, depth-only variants, and potentially different MSAA behavior. Adding more RenderMode enum values will not scale.
+
+Goal:
+Create raster pipelines from explicit, hashable pipeline descriptions so deferred passes use the same pipeline-cache mechanism without stage-specific duplication.
+
+Implementation plan:
+1. Define a RasterPipelineDescription containing all immutable state that affects pipeline creation: pass/render-target compatibility, topology, vertex layout, polygon/front-face state, depth/stencil state, multisampling, and one blend/write state per color attachment.
+2. Separate dynamic state such as cull mode only when the required Vulkan feature is guaranteed and the state is intentionally material-mutable.
+3. Replace renderModeIndex in PipelineKey with a stable hash or typed variant derived from the complete immutable pipeline description.
+4. Move repeated Vulkan graphics-pipeline setup from ForwardPipeline, GizmoPipeline, OutlinePipeline, ShadowPipeline, and PresentPipeline into shared construction code.
+5. Keep pass-specific policy in MaterialPass descriptions instead of separate nearly identical pipeline classes when no distinct behavior is needed.
+6. Add support for the G-buffer attachment count, formats, write masks, and depth target.
+7. Create pipelines lazily or deliberately prewarm selected variants; avoid eagerly creating every theoretical combination for every MaterialShader.
+
+Acceptance criteria:
+- The pipeline key includes every immutable state value that can make two Vulkan pipelines incompatible.
+- Multiple render-target blend states are supported.
+- Existing raster stages use the generalized creation path.
+- A deferred G-buffer pass can be described without adding another large copy of the forward pipeline implementation.
+- Add key equality/hash tests and pipeline-description tests independent of a live window when possible.
+
+## 7. Add ray tracing as a separate pipeline family that shares material data
+
+Problem:
+The current PipelineKey assumes a raster pipeline selected by render stage, render mode, and vertex memory layout. Ray-tracing pipelines instead aggregate shader groups and use shader binding tables. DescriptorSetBinding also rejects descriptor types needed for acceleration structures.
+
+Goal:
+Allow ray tracing to reuse material properties and material identity without forcing ray-tracing pipelines into the raster MaterialShader::GetPipeline(stage, mesh) model.
+
+Implementation plan:
+1. Introduce an explicit pipeline-family distinction, at least raster, compute, and rayTracing.
+2. Design ray-tracing pipeline ownership around shader groups and a shader binding table rather than one pipeline per material/mesh layout.
+3. Define how a MaterialShader contributes closest-hit, any-hit, or intersection groups and how a Material instance selects its hit-group record.
+4. Define per-material and per-instance data layouts for shader binding table records or descriptor buffers/sets.
+5. Extend shader reflection and stage handling for ray-generation, miss, closest-hit, any-hit, intersection, and callable stages as required.
+6. Add acceleration-structure descriptor support and any other required descriptor types to DescriptorSetBinding.
+7. Add backend capability detection and fail clearly when ray tracing is unavailable.
+8. Integrate the ray-tracing stage into renderer scheduling/resource transitions without treating its pipeline lookup as a raster PipelineKey variant.
+
+Acceptance criteria:
+- Raster pipeline lookup remains raster-specific and does not contain ray-tracing special cases.
+- Multiple materials can select different hit groups within a shared ray-tracing pipeline/SBT.
+- Material properties used by raster and ray passes have an explicit synchronization/layout contract.
+- Acceleration-structure descriptors are reflected, allocated, updated, and lifetime-safe.
+- Add reflection, shader-group indexing, SBT layout, descriptor, and unsupported-device tests.
+
+## Cross-cutting verification
+
+Perform these checks after every task:
+1. Build projects/unitTests/build.
+2. Run material tests that do not require a window or GPU as ordinary unit tests.
+3. Run Vulkan integration tests with validation layers on in an environment with a working Vulkan surface/device.
+4. Exercise create, copy, clone, mutate, destroy, recreate, and manager-clear sequences.
+5. Verify no stale handles, raw dependency pointers, descriptor pools, or deferred garbage callbacks survive their owners.
+6. Keep all public interfaces backend-agnostic; interfaces remain contracts across the shared-library boundary.
+7. Preserve existing user changes and follow the repository include ordering, naming, file-structure, and no-final-newline rules.
