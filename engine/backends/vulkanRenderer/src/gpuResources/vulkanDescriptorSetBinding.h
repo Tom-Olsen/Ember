@@ -103,9 +103,9 @@ namespace vulkanRendererBackend
 		DescriptorSetBinding(const DescriptorSetBinding& other) = delete;
 		DescriptorSetBinding& operator=(const DescriptorSetBinding& other) = delete;
 
-		// Movable:
-		DescriptorSetBinding(DescriptorSetBinding&& other) noexcept;
-		DescriptorSetBinding& operator=(DescriptorSetBinding&& other) noexcept;
+		// Non-movable:
+		DescriptorSetBinding(DescriptorSetBinding&& other) noexcept = delete;
+		DescriptorSetBinding& operator=(DescriptorSetBinding&& other) noexcept = delete;
 
 		// Setters:
 		void SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture) override;

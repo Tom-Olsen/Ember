@@ -131,13 +131,7 @@ namespace vulkanRendererBackend
 	}
 
 
-
-	// Movable:
-	DescriptorSetBinding::DescriptorSetBinding(DescriptorSetBinding&& other) noexcept = default;
-	DescriptorSetBinding& DescriptorSetBinding::operator=(DescriptorSetBinding&& other) noexcept = default;
-
-
-
+	
 	// Setters:
 	void DescriptorSetBinding::SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture)
 	{
