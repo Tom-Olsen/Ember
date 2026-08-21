@@ -53,6 +53,14 @@ namespace vulkanRendererBackend
 
 
 
+    // Getters:
+    size_t CallDescriptorSetBindingPool::GetCurrentUsage() const
+    {
+        return m_currentUsage;
+    }
+
+
+
     // Debugging:
     void CallDescriptorSetBindingPool::PrintPoolState()
     {

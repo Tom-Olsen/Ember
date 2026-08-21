@@ -5,6 +5,7 @@
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanGlobalDescriptorSetLayout.h"
 #include "vulkanMacros.h"
+#include "vulkanPoolManager.h"
 #include "vulkanSceneDescriptorSetLayout.h"
 #include <fstream>
 #include <vulkan/vulkan.h>
@@ -28,6 +29,8 @@ namespace vulkanRendererBackend
 	// Destructor:
 	Shader::~Shader()
 	{
+		PoolManager::RemoveShader(this);
+
 		// Sets GLOBAL_SET_INDEX(0)/SCENE_SET_INDEX(1)/FRAME_SET_INDEX(2) are shared static layouts.
 		// Sets SHADER_SET_INDEX(3) and CALL_SET_INDEX(4) are reflected per shader and owned here.
 		// DescriptorSetBinding objects own descriptor sets/data, but not the descriptor set layouts.

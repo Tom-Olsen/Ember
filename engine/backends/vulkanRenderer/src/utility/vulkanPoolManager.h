@@ -43,6 +43,7 @@ namespace vulkanRendererBackend
         // Return:
         static void ReturnCallDescriptorSetBinding(const DescriptorSetBindingHandle& descriptorSetBindingHandle);
         static void ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer);
+        static void RemoveShader(Shader* pShader);
 
         // Debugging:
         static void PrintCallDescriptorSetBindingPoolState();

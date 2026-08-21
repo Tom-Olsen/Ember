@@ -40,6 +40,9 @@ namespace vulkanRendererBackend
         DescriptorSetBinding* CheckOut(Shader* pShader);
         void Return(DescriptorSetBinding* pDescriptorSetBinding);
 
+        // Getters:
+        size_t GetCurrentUsage() const;
+
         // Debugging:
         void PrintPoolState();
     };

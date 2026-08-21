@@ -4,6 +4,7 @@
 #include "logger.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanShader.h"
+#include <assert.h>
 
 
 
@@ -86,6 +87,26 @@ namespace vulkanRendererBackend
 			return;
 		}
 		it->second.Return(pStagingBuffer);
+	}
+	void PoolManager::RemoveShader(Shader* pShader)
+	{
+		if (pShader == nullptr)
+		{
+			LOG_ERROR("PoolManager::RemoveShader(...) failed. pShader is nullptr.");
+			return;
+		}
+
+		auto it = s_callDescriptorSetBindingPoolMap.find(pShader);
+		if (it == s_callDescriptorSetBindingPoolMap.end())
+			return;
+
+		if (it->second.GetCurrentUsage() > 0)
+		{
+			LOG_ERROR("PoolManager::RemoveShader(...) failed. Shader '{}' still has checked-out call descriptor set bindings.", pShader->GetDebugName());
+			assert(false && "Cannot remove a shader with checked-out call descriptor set bindings.");
+		}
+
+		s_callDescriptorSetBindingPoolMap.erase(it);
 	}
 
 
