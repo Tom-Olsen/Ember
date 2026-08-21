@@ -106,6 +106,7 @@ namespace vulkanRendererBackend
 			SetValue("SurfaceProperties", "metallicity", 0);
 			SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
 		}
+		InitDefaultState();
 	}
 	DescriptorSetBinding::DescriptorSetBinding(const DescriptorSetBinding& source, const std::string& debugName)
 		: DescriptorSetBinding(source.m_pShader, source.m_setIndex, debugName)
@@ -447,6 +448,15 @@ namespace vulkanRendererBackend
 	{
 		m_pShader = pShader;
 	}
+	void DescriptorSetBinding::ResetToDefaults()
+	{
+		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
+			uniformBufferBinding.uniformBuffer.m_hostData = m_defaultUniformBufferData.at(binding);
+		for (const auto& [binding, pTexture] : m_defaultTextureStagingMap)
+			SetTexture(m_bindingNames.at(binding), pTexture);
+		for (const auto& [binding, pBuffer] : m_defaultBufferStagingMap)
+			SetBuffer(m_bindingNames.at(binding), pBuffer);
+	}
 	void DescriptorSetBinding::InvalidateBorrowedHandles()
 	{
 		m_generation++;
@@ -573,6 +583,13 @@ namespace vulkanRendererBackend
 			for (auto& [_, bufferBinding] : m_bufferMaps[frameIndex])
 				UpdateDescriptorSet(frameIndex, bufferBinding);
 		}
+	}
+	void DescriptorSetBinding::InitDefaultState()
+	{
+		for (const auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
+			m_defaultUniformBufferData.emplace(binding, uniformBufferBinding.uniformBuffer.m_hostData);
+		m_defaultTextureStagingMap = m_textureStagingMap;
+		m_defaultBufferStagingMap = m_bufferStagingMap;
 	}
 
 

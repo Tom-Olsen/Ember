@@ -45,6 +45,7 @@ namespace vulkanRendererBackend
     }
     void CallDescriptorSetBindingPool::Return(DescriptorSetBinding* pDescriptorSetBinding)
     {
+        pDescriptorSetBinding->ResetToDefaults();
         pDescriptorSetBinding->InvalidateBorrowedHandles();
         m_pool.push(pDescriptorSetBinding);
         m_currentUsage--;

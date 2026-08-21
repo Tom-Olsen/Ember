@@ -87,6 +87,11 @@ namespace vulkanRendererBackend
 		std::unordered_map<uint32_t, Texture*> m_textureStagingMap;
 		std::unordered_map<uint32_t, Buffer*> m_bufferStagingMap;
 
+		// Defaults for reset when a pooled descriptorSetBinding is returned:
+		std::unordered_map<uint32_t, std::vector<char>> m_defaultUniformBufferData;
+		std::unordered_map<uint32_t, Texture*> m_defaultTextureStagingMap;
+		std::unordered_map<uint32_t, Buffer*> m_defaultBufferStagingMap;
+
 	public: // Methods:
 		// Constructors/Destructor:
 		DescriptorSetBinding(Shader* pShader, uint32_t setIndex, const std::string& debugName);
@@ -184,6 +189,7 @@ namespace vulkanRendererBackend
 		
 		// Backend functionality:
 		void RebindShader(Shader* pShader);
+		void ResetToDefaults();
 		void InvalidateBorrowedHandles();
 		void UpdateShaderData(uint32_t frameIndex);
 		const VkDescriptorSet& GetVkDescriptorSet(uint32_t frameIndex) const;
@@ -202,6 +208,7 @@ namespace vulkanRendererBackend
 		void InitBufferBinding(uint32_t frameIndex, uint32_t binding, Buffer* pBuffer, VkDescriptorType descriptorType);
 		void InitStagingMaps();
 		void InitDescriptorSets();
+		void InitDefaultState();
 
 		// Descriptor Set management:
 		void CreateDescriptorSets();
