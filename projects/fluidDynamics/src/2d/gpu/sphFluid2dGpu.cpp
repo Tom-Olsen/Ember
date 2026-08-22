@@ -170,7 +170,7 @@ namespace fluidDynamics
 			if (hit.GetHit())
 			{
 				SetAttractorPoint(Float2(hit.GetPoint()));
-				Float4x4 localToWorldMatrix = loat4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f));
+				Float4x4 localToWorldMatrix = Float4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f));
 				ShaderProperties shaderProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), false, false);
 				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
