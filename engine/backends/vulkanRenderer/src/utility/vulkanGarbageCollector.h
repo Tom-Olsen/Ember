@@ -22,6 +22,7 @@ namespace vulkanRendererBackend
     public:
         static void Init();
         static void Clear();
+        static void Flush();
         static void RecordGarbage(std::function<void()> collectGarbageCallback);
         static void CollectGarbage();
 

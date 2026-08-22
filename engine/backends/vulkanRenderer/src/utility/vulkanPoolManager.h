@@ -1,6 +1,7 @@
 #pragma once
 #include "vulkanCallDescriptorSetBindingPool.h"
 #include "vulkanDescriptorSetBindingHandle.h"
+#include "vulkanShaderHandle.h"
 #include "vulkanStagingBufferPool.h"
 #include <cstdint>
 #include <map>
@@ -13,7 +14,6 @@ namespace vulkanRendererBackend
     // Forward declarations:
     class DescriptorSetBinding;
     class ComputeShader;
-    class Shader;
     class StagingBuffer;
 
 
@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
     {
     private: // Members
         static bool s_isInitialized;
-		static std::unordered_map<Shader*, CallDescriptorSetBindingPool> s_callDescriptorSetBindingPoolMap;
+		static std::unordered_map<ShaderHandle, CallDescriptorSetBindingPool, ShaderHandle::Hasher> s_callDescriptorSetBindingPoolMap;
         static std::map<uint32_t, StagingBufferPool> s_stagingBufferPoolMap;
 
     public: // Methods
@@ -43,14 +43,14 @@ namespace vulkanRendererBackend
         // Return:
         static void ReturnCallDescriptorSetBinding(const DescriptorSetBindingHandle& descriptorSetBindingHandle);
         static void ReturnStagingBuffer(uint32_t size, StagingBuffer* pStagingBuffer);
-        static void RemoveShader(Shader* pShader);
+		static void RemoveShader(const ShaderHandle& shaderHandle);
 
         // Debugging:
         static void PrintCallDescriptorSetBindingPoolState();
         static void PrintStagingBufferPoolState();
 
     private: // Methods
-        static bool IsValidCallDescriptorSetBindingShader(const Shader* pShader);
+		static bool IsValidCallDescriptorSetBindingShader(const ShaderHandle& shaderHandle);
         static uint16_t GetAvailableStorageBufferCount(uint32_t size);
 
         // Delete all constructors:

@@ -9,6 +9,7 @@
 #include "commonShadowRenderState.h"
 #include "vulkanMaterialShader.h"
 #include "vulkanRendererExport.h"
+#include "vulkanShaderHandle.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -37,7 +38,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		std::string m_debugName;
 		emberCommon::MaterialType m_materialType;
-		MaterialShader* m_pMaterialShader;
+		ShaderHandle m_materialShaderHandle;
 		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 		std::unique_ptr<emberCommon::ForwardRenderState> m_pForwardRenderState;
 		std::unique_ptr<emberCommon::GizmoRenderState> m_pGizmoRenderState;
@@ -91,9 +92,9 @@ namespace vulkanRendererBackend
 		const Pipeline* GetPipeline(const Mesh* pMesh) const
 		{
 			if constexpr (stage == RenderStage::forward)
-				return m_pMaterialShader->GetPipeline<stage>(pMesh, GetForwardRenderMode());
+				return GetMaterialShader()->GetPipeline<stage>(pMesh, GetForwardRenderMode());
 			else if constexpr (stage == RenderStage::gizmo)
-				return m_pMaterialShader->GetPipeline<stage>(pMesh, GetGizmoRenderMode());
+				return GetMaterialShader()->GetPipeline<stage>(pMesh, GetGizmoRenderMode());
 			else
 				static_assert(stage == RenderStage::forward || stage == RenderStage::gizmo, "Material::GetPipeline(...) must be updated for this render stage.");
 		}
@@ -101,7 +102,7 @@ namespace vulkanRendererBackend
 		requires HasRenderPipelineAndNotMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh) const
 		{
-			return m_pMaterialShader->GetPipeline<stage>(pMesh);
+			return GetMaterialShader()->GetPipeline<stage>(pMesh);
 		}
 
 		// Debugging:

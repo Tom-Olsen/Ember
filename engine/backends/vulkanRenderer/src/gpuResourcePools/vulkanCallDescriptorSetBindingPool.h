@@ -7,14 +7,14 @@
 
 namespace vulkanRendererBackend
 {
-    // Forward declarations:
-    class Shader;
-    class DescriptorSetBinding;
+	// Forward declarations:
+	class DescriptorSetBinding;
+	class ShaderHandle;
 
 
 
     /// <summary>
-    /// Use one call descriptor set binding pool per Shader*.
+	/// Use one call descriptor set binding pool per ShaderHandle.
     /// </summary>
     class CallDescriptorSetBindingPool
     {
@@ -37,7 +37,7 @@ namespace vulkanRendererBackend
         CallDescriptorSetBindingPool& operator=(CallDescriptorSetBindingPool&& other) noexcept = default;
 
         // Checkout/Return:
-        DescriptorSetBinding* CheckOut(Shader* pShader);
+		DescriptorSetBinding* CheckOut(const ShaderHandle& shaderHandle);
         void Return(DescriptorSetBinding* pDescriptorSetBinding);
 
         // Getters:

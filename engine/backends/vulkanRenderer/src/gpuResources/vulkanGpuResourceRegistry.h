@@ -9,6 +9,7 @@
 namespace vulkanRendererBackend
 {
 	class Buffer;
+	class Shader;
 	class Texture;
 
 

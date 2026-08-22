@@ -3,6 +3,7 @@
 #include "vulkanBufferHandle.h"
 #include "vulkanDescriptorPoolManager.h"
 #include "vulkanRendererExport.h"
+#include "vulkanShaderHandle.h"
 #include "vulkanTextureHandle.h"
 #include "vulkanUniformBuffer.h"
 #include <memory>
@@ -67,7 +68,7 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API DescriptorSetBinding : public emberBackendInterface::IDescriptorSetBinding
 	{
 	private: // Members:
-		Shader* m_pShader;
+		ShaderHandle m_shaderHandle;
 		uint32_t m_setIndex;
 		uint64_t m_generation;
 		std::string m_debugName;
@@ -191,7 +192,6 @@ namespace vulkanRendererBackend
 		Texture* GetTexture(const std::string& name) const;
 		
 		// Backend functionality:
-		void RebindShader(Shader* pShader);
 		void ResetToDefaults();
 		void InvalidateBorrowedHandles();
 		void UpdateShaderData(uint32_t frameIndex);

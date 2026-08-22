@@ -1061,9 +1061,9 @@ namespace vulkanRendererBackend
 
 		// Pre render compute:
 		for (ComputeCall& computeCall : m_pCompute->GetPreRenderCompute()->GetComputeCalls())
-			if (computeCall.pComputeShader)
+			if (!computeCall.IsBarrier())
 			{
-				computeCall.pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
+				computeCall.GetComputeShader()->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
 				computeCall.callDescriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
 			}
 
@@ -1136,7 +1136,7 @@ namespace vulkanRendererBackend
 				}
 				postProcessingCallIndex++;
 			}
-			computeCall.pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
+			computeCall.GetComputeShader()->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
 			computeCall.callDescriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
 		}
 
@@ -1306,10 +1306,9 @@ namespace vulkanRendererBackend
 				for (size_t computeCallIndex = 0; computeCallIndex < computeCalls.size(); computeCallIndex++)
 				{
 					ComputeCall* computeCall = &computeCalls[computeCallIndex];
-					ComputeShader* pComputeShader = computeCall->pComputeShader;
 
 					// Compute call is a barrier:
-					if (pComputeShader == nullptr)
+					if (computeCall->IsBarrier())
 					{
 						VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
 						memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
@@ -1328,6 +1327,7 @@ namespace vulkanRendererBackend
 					else
 					{
 						// Pipeline change:
+						ComputeShader* pComputeShader = computeCall->GetComputeShader();
 						VkPipeline newPipeline = pComputeShader->GetPipeline()->GetVkPipeline();
 						if (pipeline != newPipeline)
 						{
@@ -1836,7 +1836,7 @@ namespace vulkanRendererBackend
 				for (size_t computeCallIndex = 0; computeCallIndex < computeCalls.size(); computeCallIndex++)
 				{
 					ComputeCall* computeCall = &computeCalls[computeCallIndex];
-					ComputeShader* pComputeShader = computeCall->pComputeShader;
+					ComputeShader* pComputeShader = computeCall->GetComputeShader();
 
 					// Pipeline change:
 					VkPipeline newPipeline = pComputeShader->GetPipeline()->GetVkPipeline();
@@ -1874,7 +1874,7 @@ namespace vulkanRendererBackend
 
 					// Dispatch:
 					vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
-					DEBUG_LOG_TRACE("Post Render Compute Shader {}, call = {}", computeCall->pComputeShader->GetDebugName(), computeCallIndex);
+					DEBUG_LOG_TRACE("Post Render Compute Shader {}, call = {}", pComputeShader->GetDebugName(), computeCallIndex);
 
 					// Post-render compute shaders execute in recorded order and may access the same resources.
 					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };

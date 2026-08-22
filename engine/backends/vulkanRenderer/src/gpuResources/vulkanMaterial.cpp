@@ -46,7 +46,7 @@ namespace vulkanRendererBackend
 			throw std::runtime_error("Material::CloneForward(...) failed. Source material is not a forward material.");
 
 		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
-		Material material(emberCommon::MaterialType::forward, sourceMaterial.m_pMaterialShader, std::move(pDescriptorSetBinding), debugName);
+		Material material(emberCommon::MaterialType::forward, sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
 		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(*sourceMaterial.m_pForwardRenderState);
 		return material;
 	}
@@ -56,7 +56,7 @@ namespace vulkanRendererBackend
 			throw std::runtime_error("Material::CloneGizmo(...) failed. Source material is not a gizmo material.");
 
 		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
-		Material material(emberCommon::MaterialType::gizmo, sourceMaterial.m_pMaterialShader, std::move(pDescriptorSetBinding), debugName);
+		Material material(emberCommon::MaterialType::gizmo, sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
 		material.m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(*sourceMaterial.m_pGizmoRenderState);
 		return material;
 	}
@@ -66,7 +66,7 @@ namespace vulkanRendererBackend
 			throw std::runtime_error("Material::CloneShadow(...) failed. Source material is not a shadow material.");
 
 		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
-		Material material(emberCommon::MaterialType::shadow, sourceMaterial.m_pMaterialShader, std::move(pDescriptorSetBinding), debugName);
+		Material material(emberCommon::MaterialType::shadow, sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
 		material.m_pShadowRenderState = std::make_unique<emberCommon::ShadowRenderState>(*sourceMaterial.m_pShadowRenderState);
 		return material;
 	}
@@ -208,15 +208,15 @@ namespace vulkanRendererBackend
 	}
 	Shader* Material::GetShader() const
 	{
-		return static_cast<Shader*>(m_pMaterialShader);
+		return m_materialShaderHandle.Get();
 	}
 	MaterialShader* Material::GetMaterialShader() const
 	{
-		return m_pMaterialShader;
+		return static_cast<MaterialShader*>(m_materialShaderHandle.Get());
 	}
 	const VkPipelineLayout& Material::GetVkPipelineLayout() const
 	{
-		return m_pMaterialShader->GetVkPipelineLayout();
+		return GetMaterialShader()->GetVkPipelineLayout();
 	}
 	const std::string& Material::GetDebugName() const
 	{
@@ -228,7 +228,7 @@ namespace vulkanRendererBackend
 	// Debugging:
 	void Material::Print() const
 	{
-		m_pMaterialShader->PrintShaderInfo();
+		GetMaterialShader()->PrintShaderInfo();
 	}
 
 
@@ -238,21 +238,21 @@ namespace vulkanRendererBackend
 	Material::Material(emberCommon::MaterialType materialType, MaterialShader* pMaterialShader, const std::string& debugName)
 		: m_debugName(debugName)
 		, m_materialType(materialType)
-		, m_pMaterialShader(pMaterialShader)
 	{
-		if (m_pMaterialShader == nullptr)
+		if (pMaterialShader == nullptr)
 			throw std::runtime_error("Material::Material(...) failed. MaterialShader is null.");
-		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(m_pMaterialShader), SHADER_SET_INDEX, debugName);
+		m_materialShaderHandle = ShaderHandle(*pMaterialShader);
+		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(pMaterialShader), SHADER_SET_INDEX, debugName);
 	}
 	Material::Material(emberCommon::MaterialType materialType, MaterialShader* pMaterialShader, std::unique_ptr<DescriptorSetBinding> pShaderDescriptorSetBinding, const std::string& debugName)
 		: m_debugName(debugName)
 		, m_materialType(materialType)
-		, m_pMaterialShader(pMaterialShader)
 		, m_pShaderDescriptorSetBinding(std::move(pShaderDescriptorSetBinding))
 	{
-		if (m_pMaterialShader == nullptr)
+		if (pMaterialShader == nullptr)
 			throw std::runtime_error("Material::Material(...) failed. MaterialShader is null.");
 		if (m_pShaderDescriptorSetBinding == nullptr)
 			throw std::runtime_error("Material::Material(...) failed. DescriptorSetBinding is null.");
+		m_materialShaderHandle = ShaderHandle(*pMaterialShader);
 	}
 }

@@ -171,6 +171,7 @@ namespace vulkanRendererBackend
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		RenderPassManager::Clear();
+		GarbageCollector::Flush();		// descriptor sets must be destroyed while their parent pools are alive.
 		DescriptorPoolManager::Clear();
 		GarbageCollector::Clear();
 		SingleTimeCommand::Clear();

@@ -1,5 +1,6 @@
 #include "vulkanGpuResourceRegistry.h"
 #include "vulkanBuffer.h"
+#include "vulkanShader.h"
 #include "vulkanTexture.h"
 
 
@@ -80,5 +81,6 @@ namespace vulkanRendererBackend
 
 
 	template class GpuResourceRegistry<Buffer>;
+	template class GpuResourceRegistry<Shader>;
 	template class GpuResourceRegistry<Texture>;
 }

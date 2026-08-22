@@ -46,14 +46,15 @@ namespace vulkanRendererBackend
 			return nullptr;
 		}
 
-		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(static_cast<ComputeShader*>(pIComputeShader)));
-		ComputeCall computeCall = { threadCount, static_cast<ComputeShader*>(pIComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
+		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
+		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
+		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeCalls.push_back(computeCall);
 		return descriptorSetBindingHandle.Get();
 	}
 	void PreRender::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
-		ComputeCall computeCall = { Uint3::zero, nullptr, DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
+		ComputeCall computeCall = { Uint3::zero, ShaderHandle(), DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
 		m_computeCalls.push_back(computeCall);
 	}
 

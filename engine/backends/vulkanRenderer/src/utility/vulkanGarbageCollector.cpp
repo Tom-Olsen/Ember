@@ -23,17 +23,26 @@ namespace vulkanRendererBackend
     }
     void GarbageCollector::Clear()
     {
+        Flush();
+        s_isInitialized = false;
+    }
+    void GarbageCollector::Flush()
+    {
         // Wait for device idle before flushing queued callbacks:
         if (!Context::IsDeviceIdle())
         {
-            LOG_WARN("GarbageCollector::Clear() called while device may still be busy. Waiting for device idle before clearing queued Vulkan resources.");
+            LOG_WARN("GarbageCollector::Flush() called while device may still be busy. Waiting for device idle before clearing queued Vulkan resources.");
             Context::WaitDeviceIdle();
         }
 
-        for (const GarbageEntry& entry : s_garbageQueue)
-            entry.collectGarbageCallback();
-        s_garbageQueue.clear();
-        s_isInitialized = false;
+        // Callbacks may enqueue more garbage while destroying owning resources.
+        // Pop before invoking each callback so queue mutations cannot affect the active entry.
+        while (!s_garbageQueue.empty())
+        {
+            std::function<void()> collectGarbageCallback = std::move(s_garbageQueue.front().collectGarbageCallback);
+            s_garbageQueue.pop_front();
+            collectGarbageCallback();
+        }
     }
 
 
@@ -48,11 +57,13 @@ namespace vulkanRendererBackend
         // Garbage queue is sortet. The first entry is always the oldest. Once we find the first entry that does not need cleanup we can stop.
         while (!s_garbageQueue.empty())
         {
-            const GarbageEntry& entry = s_garbageQueue.front();
-            if (Context::GetAbsoluteFrameIndex() >= entry.frameIndex + Context::GetFramesInFlight())
+        	// Callbacks may enqueue more garbage while destroying owning resources.
+        	// Pop before invoking each callback so queue mutations cannot affect the active entry
+            if (Context::GetAbsoluteFrameIndex() >= s_garbageQueue.front().frameIndex + Context::GetFramesInFlight())
             {
-                entry.collectGarbageCallback();
+                std::function<void()> collectGarbageCallback = std::move(s_garbageQueue.front().collectGarbageCallback);
                 s_garbageQueue.pop_front();
+                collectGarbageCallback();
             }
             else
                 break;

@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanShader.h"
+#include "vulkanShaderHandle.h"
 
 
 
@@ -23,9 +24,11 @@ namespace vulkanRendererBackend
 
 
     // Checkout/Return:
-    DescriptorSetBinding* CallDescriptorSetBindingPool::CheckOut(Shader* pShader)
-    {
-        // Create a new call descriptor set binding if pool is empty:
+	DescriptorSetBinding* CallDescriptorSetBindingPool::CheckOut(const ShaderHandle& shaderHandle)
+	{
+		Shader* pShader = shaderHandle.Get();
+
+		// Create a new call descriptor set binding if pool is empty:
         if (m_pool.empty())
         {
             DescriptorSetBinding* pNewDescriptorSetBinding = new DescriptorSetBinding(pShader, CALL_SET_INDEX, pShader->GetDebugName());

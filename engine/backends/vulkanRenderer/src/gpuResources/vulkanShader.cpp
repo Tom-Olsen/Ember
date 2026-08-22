@@ -4,21 +4,33 @@
 #include "vulkanContext.h"
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanGlobalDescriptorSetLayout.h"
+#include "vulkanGpuResourceRegistry.h"
 #include "vulkanMacros.h"
 #include "vulkanPoolManager.h"
 #include "vulkanSceneDescriptorSetLayout.h"
+#include "vulkanShaderHandle.h"
+#include <algorithm>
+#include <assert.h>
 #include <fstream>
+#include <utility>
 #include <vulkan/vulkan.h>
 
 
 
 namespace vulkanRendererBackend
 {
+	// Static members:
+	GpuResourceRegistry<Shader> Shader::s_resourceRegistry;
+
+
+
 	// Protected methods:
 	// Constructor:
 	Shader::Shader(const std::string& debugName)
 		: m_debugName(debugName)
 		, m_shaderReflection(DESCRIPTOR_SET_COUNT)
+		, m_vkPipelineLayout(VK_NULL_HANDLE)
+		, m_registrationHandle(s_resourceRegistry.Register(this))
 	{
 
 	}
@@ -29,14 +41,7 @@ namespace vulkanRendererBackend
 	// Destructor:
 	Shader::~Shader()
 	{
-		PoolManager::RemoveShader(this);
-
-		// Sets GLOBAL_SET_INDEX(0)/SCENE_SET_INDEX(1)/FRAME_SET_INDEX(2) are shared static layouts.
-		// Sets SHADER_SET_INDEX(3) and CALL_SET_INDEX(4) are reflected per shader and owned here.
-		// DescriptorSetBinding objects own descriptor sets/data, but not the descriptor set layouts.
-		for (size_t i = SHADER_SET_INDEX; i < m_vkDescriptorSetLayouts.size(); i++)
-			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_vkDescriptorSetLayouts[i], nullptr);
-		vkDestroyPipelineLayout(Context::GetVkDevice(), m_vkPipelineLayout, nullptr);
+		Cleanup();
 	}
 
 
@@ -47,18 +52,25 @@ namespace vulkanRendererBackend
 		, m_shaderReflection(std::move(other.m_shaderReflection))
 		, m_vkDescriptorSetLayouts(std::move(other.m_vkDescriptorSetLayouts))
 		, m_vkPipelineLayout(other.m_vkPipelineLayout)
+		, m_registrationHandle(other.m_registrationHandle)
 	{
+		RebindResource();
 		other.m_vkPipelineLayout = VK_NULL_HANDLE;
+		other.m_registrationHandle = GpuResourceHandle();
 	}
 	Shader& Shader::operator=(Shader&& other) noexcept
 	{
 		if (this != &other)
 		{
+			Cleanup();
 			m_debugName = std::move(other.m_debugName);
 			m_shaderReflection = std::move(other.m_shaderReflection);
 			m_vkDescriptorSetLayouts = std::move(other.m_vkDescriptorSetLayouts);
 			m_vkPipelineLayout = other.m_vkPipelineLayout;
+			m_registrationHandle = other.m_registrationHandle;
+			RebindResource();
 			other.m_vkPipelineLayout = VK_NULL_HANDLE;
+			other.m_registrationHandle = GpuResourceHandle();
 		}
 		return *this;
 	}
@@ -137,5 +149,46 @@ namespace vulkanRendererBackend
 	void Shader::PrintShaderInfo() const
 	{
 		LOG_TRACE("ShaderInfo: {}\n{}", GetDebugName(), m_shaderReflection.ToString());
+	}
+
+
+
+	// Private methods:
+	void Shader::Cleanup()
+	{
+		if (m_registrationHandle.IsValid())
+			PoolManager::RemoveShader(ShaderHandle(*this));
+
+		// Sets GLOBAL_SET_INDEX(0)/SCENE_SET_INDEX(1)/FRAME_SET_INDEX(2) are shared static layouts.
+		// Sets SHADER_SET_INDEX(3) and CALL_SET_INDEX(4) are reflected per shader and owned here.
+		// DescriptorSetBinding objects own descriptor sets/data, but not the descriptor set layouts.
+		for (size_t i = SHADER_SET_INDEX; i < m_vkDescriptorSetLayouts.size(); i++)
+			vkDestroyDescriptorSetLayout(Context::GetVkDevice(), m_vkDescriptorSetLayouts[i], nullptr);
+		m_vkDescriptorSetLayouts.clear();
+		if (m_vkPipelineLayout != VK_NULL_HANDLE)
+		{
+			vkDestroyPipelineLayout(Context::GetVkDevice(), m_vkPipelineLayout, nullptr);
+			m_vkPipelineLayout = VK_NULL_HANDLE;
+		}
+		UnregisterResource();
+	}
+	void Shader::UnregisterResource()
+	{
+		if (!m_registrationHandle.IsValid())
+			return;
+		bool success = s_resourceRegistry.Unregister(m_registrationHandle, this);
+		if (!success)
+			LOG_ERROR("Shader::UnregisterResource() failed. Resource handle ({}, {}) is not registered to this shader.", m_registrationHandle.index, m_registrationHandle.generation);
+		assert(success);
+		m_registrationHandle = GpuResourceHandle();
+	}
+	void Shader::RebindResource()
+	{
+		if (!m_registrationHandle.IsValid())
+			return;
+		bool success = s_resourceRegistry.Rebind(m_registrationHandle, this);
+		if (!success)
+			LOG_ERROR("Shader::RebindResource() failed. Resource handle ({}, {}) is stale.", m_registrationHandle.index, m_registrationHandle.generation);
+		assert(success);
 	}
 }

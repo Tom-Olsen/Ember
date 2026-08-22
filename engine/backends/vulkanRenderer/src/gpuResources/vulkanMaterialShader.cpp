@@ -12,6 +12,7 @@
 #include "vulkanVertexLayout.h"
 #include <array>
 #include <stdexcept>
+#include <utility>
 
 
 
@@ -307,7 +308,17 @@ namespace vulkanRendererBackend
 
 	// Movable:
 	MaterialShader::MaterialShader(MaterialShader&& other) noexcept = default;
-	MaterialShader& MaterialShader::operator=(MaterialShader&& other) noexcept = default;
+	MaterialShader& MaterialShader::operator=(MaterialShader&& other) noexcept
+	{
+		if (this != &other)
+		{
+			m_pipelines.clear();
+			Shader::operator=(std::move(other));
+			m_materialType = other.m_materialType;
+			m_pipelines = std::move(other.m_pipelines);
+		}
+		return *this;
+	}
 
 
 

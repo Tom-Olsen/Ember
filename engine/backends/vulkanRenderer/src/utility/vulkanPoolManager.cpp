@@ -12,7 +12,7 @@ namespace vulkanRendererBackend
 {
 	// Static members:
 	bool PoolManager::s_isInitialized = false;
-	std::unordered_map<Shader*, CallDescriptorSetBindingPool> PoolManager::s_callDescriptorSetBindingPoolMap;
+	std::unordered_map<ShaderHandle, CallDescriptorSetBindingPool, ShaderHandle::Hasher> PoolManager::s_callDescriptorSetBindingPoolMap;
 	std::map<uint32_t, StagingBufferPool> PoolManager::s_stagingBufferPoolMap;
 
 
@@ -37,13 +37,20 @@ namespace vulkanRendererBackend
 	// Checkout:
 	DescriptorSetBindingHandle PoolManager::CheckOutCallDescriptorSetBindingHandle(Shader* pShader)
 	{
-		if (!IsValidCallDescriptorSetBindingShader(pShader))
+		if (pShader == nullptr)
+		{
+			LOG_ERROR("PoolManager::CheckOutCallDescriptorSetBindingHandle(...) failed. pShader is nullptr.");
+			return DescriptorSetBindingHandle();
+		}
+
+		ShaderHandle shaderHandle(*pShader);
+		if (!IsValidCallDescriptorSetBindingShader(shaderHandle))
 			return DescriptorSetBindingHandle();
 
-		auto it = s_callDescriptorSetBindingPoolMap.find(pShader);
+		auto it = s_callDescriptorSetBindingPoolMap.find(shaderHandle);
 		if (it == s_callDescriptorSetBindingPoolMap.end())
-			it = s_callDescriptorSetBindingPoolMap.try_emplace(pShader).first;
-		return DescriptorSetBindingHandle(pShader, it->second.CheckOut(pShader));
+			it = s_callDescriptorSetBindingPoolMap.try_emplace(shaderHandle).first;
+		return DescriptorSetBindingHandle(shaderHandle, it->second.CheckOut(shaderHandle));
 	}
 	StagingBuffer* PoolManager::CheckOutStagingBuffer(uint32_t size)
 	{
@@ -62,17 +69,11 @@ namespace vulkanRendererBackend
 		if (!descriptorSetBindingHandle.IsPooled())
 			return;
 
-        Shader* pPoolShader = descriptorSetBindingHandle.GetPoolShader();
-		if (pPoolShader == nullptr)
-		{
-			LOG_ERROR("PoolManager::ReturnCallDescriptorSetBinding(...) failed. pShader is nullptr.");
-			return;
-		}
-
-		auto it = s_callDescriptorSetBindingPoolMap.find(pPoolShader);
+		const ShaderHandle& poolShaderHandle = descriptorSetBindingHandle.GetPoolShaderHandle();
+		auto it = s_callDescriptorSetBindingPoolMap.find(poolShaderHandle);
 		if (it == s_callDescriptorSetBindingPoolMap.end())
 		{
-			LOG_ERROR("PoolManager::ReturnCallDescriptorSetBinding(...) failed. No pool exists for shader '{}'.", pPoolShader->GetDebugName());
+			LOG_ERROR("PoolManager::ReturnCallDescriptorSetBinding(...) failed. No pool exists for the shader handle.");
 			return;
 		}
 		it->second.Return(descriptorSetBindingHandle.Get());
@@ -88,15 +89,16 @@ namespace vulkanRendererBackend
 		}
 		it->second.Return(pStagingBuffer);
 	}
-	void PoolManager::RemoveShader(Shader* pShader)
+	void PoolManager::RemoveShader(const ShaderHandle& shaderHandle)
 	{
+		Shader* pShader = shaderHandle.TryGet();
 		if (pShader == nullptr)
 		{
-			LOG_ERROR("PoolManager::RemoveShader(...) failed. pShader is nullptr.");
+			LOG_ERROR("PoolManager::RemoveShader(...) failed. Shader handle is invalid or expired.");
 			return;
 		}
 
-		auto it = s_callDescriptorSetBindingPoolMap.find(pShader);
+		auto it = s_callDescriptorSetBindingPoolMap.find(shaderHandle);
 		if (it == s_callDescriptorSetBindingPoolMap.end())
 			return;
 
@@ -114,8 +116,9 @@ namespace vulkanRendererBackend
 	// Debugging:
 	void PoolManager::PrintCallDescriptorSetBindingPoolState()
 	{
-		for (auto& [pShader, callDescriptorSetBindingPool] : s_callDescriptorSetBindingPoolMap)
+		for (auto& [shaderHandle, callDescriptorSetBindingPool] : s_callDescriptorSetBindingPoolMap)
 		{
+			Shader* pShader = shaderHandle.Get();
 			LOG_INFO("Shader '{}':", pShader->GetDebugName());
 			callDescriptorSetBindingPool.PrintPoolState();
 		}
@@ -132,11 +135,12 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	bool PoolManager::IsValidCallDescriptorSetBindingShader(const Shader* pShader)
+	bool PoolManager::IsValidCallDescriptorSetBindingShader(const ShaderHandle& shaderHandle)
 	{
+		Shader* pShader = shaderHandle.TryGet();
 		if (pShader == nullptr)
 		{
-			LOG_ERROR("PoolManager::CheckOutCallDescriptorSetBinding(...) failed. pShader is nullptr.");
+			LOG_ERROR("PoolManager::CheckOutCallDescriptorSetBindingHandle(...) failed. Shader handle is invalid or expired.");
 			return false;
 		}
 

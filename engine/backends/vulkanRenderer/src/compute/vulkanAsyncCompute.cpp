@@ -154,7 +154,7 @@ namespace vulkanRendererBackend
 
 		// Setup compute call:
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
-		ComputeCall computeCall = { threadCount, pComputeShader, descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
+		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(descriptorSetBindingHandle.Get());
 	}
@@ -171,7 +171,7 @@ namespace vulkanRendererBackend
 			return;
 		}
 		
-		ComputeCall computeCall = { Uint3::zero, nullptr, DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
+		ComputeCall computeCall = { Uint3::zero, ShaderHandle(), DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
 	}
 

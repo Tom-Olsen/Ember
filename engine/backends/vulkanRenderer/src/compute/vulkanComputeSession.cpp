@@ -36,7 +36,7 @@ namespace vulkanRendererBackend
 			for (ComputeCall& computeCall : m_computeCalls)
 			{
 				// Compute call is a barrier:
-				if (computeCall.pComputeShader == nullptr)
+				if (computeCall.IsBarrier())
 				{
 					VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
 					memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
@@ -53,14 +53,16 @@ namespace vulkanRendererBackend
 				// Compute call is a dispatch:
 				else
 				{
+					ComputeShader* pCallComputeShader = computeCall.GetComputeShader();
+
 					// Update compute call data:
-					computeCall.pComputeShader->GetDescriptorSetBinding()->UpdateShaderData(0);
+					pCallComputeShader->GetDescriptorSetBinding()->UpdateShaderData(0);
 					computeCall.callDescriptorSetBindingHandle.Get()->UpdateShaderData(0);
 
 					// Change pipeline if compute shader has changed:
-					if (pComputeShader != computeCall.pComputeShader)
+					if (pComputeShader != pCallComputeShader)
 					{
-						pComputeShader = computeCall.pComputeShader;
+						pComputeShader = pCallComputeShader;
 						pipeline = pComputeShader->GetPipeline()->GetVkPipeline();
 						pipelineLayout = pComputeShader->GetVkPipelineLayout();
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);

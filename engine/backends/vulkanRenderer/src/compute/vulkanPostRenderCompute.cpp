@@ -96,7 +96,7 @@ namespace vulkanRendererBackend
 			return nullptr;
 		}
 
-		ComputeCall computeCall = { threadCount, pComputeShader, descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none, isPostProcessing };
+		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none, isPostProcessing };
 		m_computeCalls.push_back(computeCall);
 		if (isPostProcessing)
 			m_postProcessingCallCount++;

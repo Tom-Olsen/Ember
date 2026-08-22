@@ -52,6 +52,8 @@ namespace vulkanRendererBackend
 	
 	}
 
+
+
 	// Movable:
 	ComputeShader::ComputeShader(ComputeShader&& other) noexcept
 		: Shader(std::move(other))
@@ -59,25 +61,24 @@ namespace vulkanRendererBackend
 		, m_pShaderDescriptorSetBinding(std::move(other.m_pShaderDescriptorSetBinding))
 		, m_pPipeline(std::move(other.m_pPipeline))
 	{
-		if (m_pShaderDescriptorSetBinding)
-			m_pShaderDescriptorSetBinding->RebindShader(this);
+
 	}
 	ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept
 	{
 		if (this != &other)
 		{
+			m_pShaderDescriptorSetBinding.reset();
+			m_pPipeline.reset();
 			Shader::operator=(std::move(other));
 			m_blockSize = other.m_blockSize;
 			m_pShaderDescriptorSetBinding = std::move(other.m_pShaderDescriptorSetBinding);
 			m_pPipeline = std::move(other.m_pPipeline);
-			if (m_pShaderDescriptorSetBinding)
-				m_pShaderDescriptorSetBinding->RebindShader(this);
 		}
 		return *this;
 	}
-	
-	
-	
+
+
+
 	// Getters:
 	Uint3 ComputeShader::GetBlockSize() const
 	{

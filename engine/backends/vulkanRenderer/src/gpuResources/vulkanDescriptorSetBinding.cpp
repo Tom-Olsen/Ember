@@ -38,8 +38,12 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructor/Destructor:
 	DescriptorSetBinding::DescriptorSetBinding(Shader* pShader, uint32_t setIndex, const std::string& debugName)
-		: m_pShader(pShader), m_setIndex(setIndex), m_generation(0), m_debugName(debugName)
+		: m_setIndex(setIndex), m_generation(0), m_debugName(debugName)
 	{
+		if (pShader == nullptr)
+			throw std::runtime_error("DescriptorSetBinding::DescriptorSetBinding(...) failed. Shader is nullptr.");
+		m_shaderHandle = ShaderHandle(*pShader);
+
 		// Create resource bindings and uniform buffer update logic for each frameInFlight:
 		m_textureMaps = std::vector<std::unordered_map<uint32_t, TextureBinding>>(Context::GetFramesInFlight());
 		m_bufferMaps = std::vector<std::unordered_map<uint32_t, BufferBinding>>(Context::GetFramesInFlight());
@@ -48,7 +52,7 @@ namespace vulkanRendererBackend
 		m_dirtyBufferBindings = std::vector<std::unordered_set<uint32_t>>(Context::GetFramesInFlight());
         
 		// Initialize all resource bindings:
-		const emberSpirvReflect::DescriptorSetReflection& descriptorSetReflection = m_pShader->GetShaderReflection().GetDescriptorSetReflection(m_setIndex);
+		const emberSpirvReflect::DescriptorSetReflection& descriptorSetReflection = pShader->GetShaderReflection().GetDescriptorSetReflection(m_setIndex);
 		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
             for (const emberSpirvReflect::DescriptorReflection& descriptorReflection : descriptorSetReflection.GetDescriptorReflections())
@@ -109,7 +113,7 @@ namespace vulkanRendererBackend
 		InitDefaultState();
 	}
 	DescriptorSetBinding::DescriptorSetBinding(const DescriptorSetBinding& source, const std::string& debugName)
-		: DescriptorSetBinding(source.m_pShader, source.m_setIndex, debugName)
+		: DescriptorSetBinding(source.GetShader(), source.m_setIndex, debugName)
 	{
 		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
 			uniformBufferBinding.uniformBuffer.m_hostData = source.m_uniformBufferMap.at(binding).uniformBuffer.m_hostData;
@@ -423,7 +427,7 @@ namespace vulkanRendererBackend
 	// Getters:
 	Shader* DescriptorSetBinding::GetShader() const
 	{
-		return m_pShader;
+		return m_shaderHandle.Get();
 	}
 	uint32_t DescriptorSetBinding::GetSetIndex() const
 	{
@@ -460,10 +464,6 @@ namespace vulkanRendererBackend
 
 
 	// Backend functionality:
-	void DescriptorSetBinding::RebindShader(Shader* pShader)
-	{
-		m_pShader = pShader;
-	}
 	void DescriptorSetBinding::ResetToDefaults()
 	{
 		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
@@ -648,7 +648,7 @@ namespace vulkanRendererBackend
 		m_descriptorSetAllocations.reserve(Context::GetFramesInFlight());
 		for (uint32_t frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
 		{
-			DescriptorSetAllocation allocation = DescriptorPoolManager::AllocateDescriptorSet(m_pShader->GetVkDescriptorSetLayout()[m_setIndex], "DescriptorSet" + std::to_string(m_setIndex) + "_Frame" + std::to_string(frameIndex) + "_" + m_debugName);
+			DescriptorSetAllocation allocation = DescriptorPoolManager::AllocateDescriptorSet(GetShader()->GetVkDescriptorSetLayout()[m_setIndex], "DescriptorSet" + std::to_string(m_setIndex) + "_Frame" + std::to_string(frameIndex) + "_" + m_debugName);
 			m_descriptorSetAllocations.push_back(allocation);
 			m_descriptorSets[frameIndex] = allocation.descriptorSet;
 		}
