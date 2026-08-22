@@ -6,12 +6,16 @@
 #include "vulkanConvertTextureFormat.h"
 #include "vulkanDeviceQueue.h"
 #include "vulkanFormatToString.h"
+#include "vulkanGpuResourceRegistry.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
 #include <algorithm>
+#include <assert.h>
+#include <stdexcept>
+#include <utility>
 #include <vulkan/vulkan.h>
 
 
@@ -19,6 +23,7 @@
 namespace vulkanRendererBackend
 {
 	// Static members:
+	GpuResourceRegistry<Texture> Texture::s_resourceRegistry;
 	std::unordered_set<VkFormat> Texture::s_valid08BitFormats =
 	{
 		VK_FORMAT_R8_SRGB, VK_FORMAT_R8_UINT, VK_FORMAT_R8_SINT, VK_FORMAT_R8_USCALED, VK_FORMAT_R8_SSCALED, VK_FORMAT_R8_UNORM, VK_FORMAT_R8_SNORM,
@@ -85,6 +90,7 @@ namespace vulkanRendererBackend
 	// Protected methods:
 	// Constructor:
 	Texture::Texture()
+		: m_registrationHandle(s_resourceRegistry.Register(this))
 	{
 
 	}
@@ -95,14 +101,43 @@ namespace vulkanRendererBackend
 	// Destructor:
 	Texture::~Texture()
 	{
-
+		UnregisterResource();
 	}
 
 
 
 	// Movable:
-	Texture::Texture(Texture&& other) noexcept = default;
-	Texture& Texture::operator=(Texture&& other) noexcept = default;
+	Texture::Texture(Texture&& other) noexcept
+		: m_width(other.m_width)
+		, m_height(other.m_height)
+		, m_depth(other.m_depth)
+		, m_channels(other.m_channels)
+		, m_format(other.m_format)
+		, m_vkDescriptorType(other.m_vkDescriptorType)
+		, m_pImage(std::move(other.m_pImage))
+		, m_registrationHandle(other.m_registrationHandle)
+	{
+		RebindResource();
+		other.m_registrationHandle = GpuResourceHandle();
+	}
+	Texture& Texture::operator=(Texture&& other) noexcept
+	{
+		if (this != &other)
+		{
+			UnregisterResource();
+			m_width = other.m_width;
+			m_height = other.m_height;
+			m_depth = other.m_depth;
+			m_channels = other.m_channels;
+			m_format = other.m_format;
+			m_vkDescriptorType = other.m_vkDescriptorType;
+			m_pImage = std::move(other.m_pImage);
+			m_registrationHandle = other.m_registrationHandle;
+			RebindResource();
+			other.m_registrationHandle = GpuResourceHandle();
+		}
+		return *this;
+	}
 
 
 
@@ -404,5 +439,28 @@ namespace vulkanRendererBackend
 			AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
+	}
+
+
+
+	// Private methods:
+	void Texture::UnregisterResource()
+	{
+		if (!m_registrationHandle.IsValid())
+			return;
+		bool success = s_resourceRegistry.Unregister(m_registrationHandle, this);
+		if (!success)
+			LOG_ERROR("Texture::UnregisterResource() failed. Resource handle ({}, {}) is not registered to this texture.", m_registrationHandle.index, m_registrationHandle.generation);
+		assert(success);
+		m_registrationHandle = GpuResourceHandle();
+	}
+	void Texture::RebindResource()
+	{
+		if (!m_registrationHandle.IsValid())
+			return;
+		bool success = s_resourceRegistry.Rebind(m_registrationHandle, this);
+		if (!success)
+			LOG_ERROR("Texture::RebindResource() failed. Resource handle ({}, {}) is stale.", m_registrationHandle.index, m_registrationHandle.generation);
+		assert(success);
 	}
 }

@@ -173,6 +173,10 @@ target_link_libraries(${TARGET_NAME} PUBLIC EmberAssetLoader)
 add_subdirectory("${ENGINE_LIBS_DIR}/bufferLayout" EmberBufferLayout)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberBufferLayout)
 
+# EmberDataStructures:
+add_subdirectory("${ENGINE_LIBS_DIR}/dataStructures" EmberDataStructures)
+target_link_libraries(${TARGET_NAME} PUBLIC EmberDataStructures)
+
 # EmberLogger:
 add_subdirectory("${ENGINE_LIBS_DIR}/logger" EmberLogger)
 target_link_libraries(${TARGET_NAME} PUBLIC EmberLogger)

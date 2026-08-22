@@ -1,5 +1,6 @@
 #pragma once
 #include "iBuffer.h"
+#include "vulkanGpuResourceHandle.h"
 #include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
@@ -14,7 +15,10 @@ typedef struct VkCommandBuffer_T* VkCommandBuffer;
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
+	class BufferHandle;
 	class VmaBuffer;
+	template<typename T>
+	class GpuResourceRegistry;
 
 
 
@@ -28,11 +32,18 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class VULKAN_RENDERER_API Buffer : public emberBackendInterface::IBuffer
 	{
+		// Friends:
+		friend class BufferHandle;
+
+	private: // Static members:
+		static GpuResourceRegistry<Buffer> s_resourceRegistry;
+
 	protected: // Members:
 		uint32_t m_count;
 		uint32_t m_elementSize;	// in bytes.
 		uint64_t m_size;		// m_size = m_count * m_elementSize.
 		std::unique_ptr<VmaBuffer> m_pBuffer;
+		GpuResourceHandle m_registrationHandle;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -63,5 +74,9 @@ namespace vulkanRendererBackend
 		// Backend only:
 		void Upload(VkCommandBuffer vkCommandBuffer, void* pSrc, uint64_t size);
 		void Download(VkCommandBuffer vkCommandBuffer, void* pDst, uint64_t size);
+
+	private: // Methods:
+		void UnregisterResource();
+		void RebindResource();
 	};
 }

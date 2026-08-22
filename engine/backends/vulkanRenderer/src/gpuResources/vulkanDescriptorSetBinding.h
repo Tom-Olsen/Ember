@@ -1,7 +1,9 @@
 #pragma once
 #include "iDescriptorSetBinding.h"
+#include "vulkanBufferHandle.h"
 #include "vulkanDescriptorPoolManager.h"
 #include "vulkanRendererExport.h"
+#include "vulkanTextureHandle.h"
 #include "vulkanUniformBuffer.h"
 #include <memory>
 #include <string>
@@ -44,13 +46,13 @@ namespace vulkanRendererBackend
 	struct TextureBinding
 	{
 		uint32_t binding;
-		Texture* pTexture;
+		TextureHandle textureHandle;
 		VkDescriptorType descriptorType;
 	};
 	struct BufferBinding
 	{
 		uint32_t binding;
-		Buffer* pBuffer;
+		BufferHandle bufferHandle;
 		VkDescriptorType descriptorType;
 	};
 
@@ -58,7 +60,8 @@ namespace vulkanRendererBackend
 
 	/// <summary>
 	/// Each DescriptorSetBinding links to one specific vkDescriptorSet and manages all the associated gpu resources.
-	/// DescriptorSetBinding owns UniformBuffer; Buffers and Texture pointers are not owned by DescriptorSetBinding.
+	/// DescriptorSetBinding owns UniformBuffer; referenced Buffers and Textures are tracked through non-owning generational handles.
+	/// This allows validity check and ensue that we never bind stale Textures or Buffers.
 	/// DescriptorSetBinding construction is expensive, pre create them or use the CallDescriptorSetBindingPool for dynamic call descriptorSets.
 	/// </summary>
 	class VULKAN_RENDERER_API DescriptorSetBinding : public emberBackendInterface::IDescriptorSetBinding
@@ -83,14 +86,14 @@ namespace vulkanRendererBackend
 		std::vector<std::unordered_set<uint32_t>> m_dirtyTextureBindings;
 		std::vector<std::unordered_set<uint32_t>> m_dirtyBufferBindings;
 
-		// UniformBuffer does not need stagingMap, as it contains a host and device buffer, where the host buffer acts as a staging buffer:
-		std::unordered_map<uint32_t, Texture*> m_textureStagingMap;
-		std::unordered_map<uint32_t, Buffer*> m_bufferStagingMap;
+		// UniformBuffer does not need a staging map, as it contains a host and device buffer, where the host buffer acts as a staging buffer:
+		std::unordered_map<uint32_t, TextureHandle> m_textureStagingMap;
+		std::unordered_map<uint32_t, BufferHandle> m_bufferStagingMap;
 
 		// Defaults for reset when a pooled descriptorSetBinding is returned:
 		std::unordered_map<uint32_t, std::vector<char>> m_defaultUniformBufferData;
-		std::unordered_map<uint32_t, Texture*> m_defaultTextureStagingMap;
-		std::unordered_map<uint32_t, Buffer*> m_defaultBufferStagingMap;
+		std::unordered_map<uint32_t, TextureHandle> m_defaultTextureStagingMap;
+		std::unordered_map<uint32_t, BufferHandle> m_defaultBufferStagingMap;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -209,6 +212,8 @@ namespace vulkanRendererBackend
 		void InitStagingMaps();
 		void InitDescriptorSets();
 		void InitDefaultState();
+		Texture* ResolveTextureBinding(uint32_t binding);
+		Buffer* ResolveBufferBinding(uint32_t binding);
 
 		// Descriptor Set management:
 		void CreateDescriptorSets();

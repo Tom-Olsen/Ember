@@ -1,6 +1,7 @@
 #pragma once
 #include "iTexture.h"
 #include "commonTextureFormat.h"
+#include "vulkanGpuResourceHandle.h"
 #include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
@@ -18,9 +19,12 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class StagingBuffer;
+	class TextureHandle;
 	class VmaBuffer;
 	class VmaImage;
 	struct DeviceQueue;
+	template<typename T>
+	class GpuResourceRegistry;
 
 
 
@@ -29,6 +33,12 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class VULKAN_RENDERER_API Texture : public emberBackendInterface::ITexture
 	{
+		// Friends:
+		friend class TextureHandle;
+
+	private: // Static members:
+		static GpuResourceRegistry<Texture> s_resourceRegistry;
+
 	protected: // Static members:
 		static std::unordered_set<VkFormat> s_valid08BitFormats;
 		static std::unordered_set<VkFormat> s_valid16BitFormats;
@@ -49,6 +59,7 @@ namespace vulkanRendererBackend
 		VkFormat m_format;
 		VkDescriptorType m_vkDescriptorType;
 		std::unique_ptr<VmaImage> m_pImage;
+		GpuResourceHandle m_registrationHandle;
 
 	protected: // Methods:
 		// Constructor:
@@ -95,5 +106,9 @@ namespace vulkanRendererBackend
 		void UploadAndPrepareForSampling(StagingBuffer* pStagingBuffer);
 		void UploadAndPrepareForStorage(StagingBuffer* pStagingBuffer);
 		void RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
+
+	private: // Methods:
+		void UnregisterResource();
+		void RebindResource();
 	};
 }

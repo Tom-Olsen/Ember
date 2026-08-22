@@ -113,10 +113,12 @@ namespace vulkanRendererBackend
 	{
 		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
 			uniformBufferBinding.uniformBuffer.m_hostData = source.m_uniformBufferMap.at(binding).uniformBuffer.m_hostData;
-		for (const auto& [binding, pTexture] : source.m_textureStagingMap)
-			SetTexture(m_bindingNames.at(binding), pTexture);
-		for (const auto& [binding, pBuffer] : source.m_bufferStagingMap)
-			SetBuffer(m_bindingNames.at(binding), pBuffer);
+		for (const auto& [binding, textureHandle] : source.m_textureStagingMap)
+			if (Texture* pTexture = textureHandle.TryGet())
+				SetTexture(m_bindingNames.at(binding), pTexture);
+		for (const auto& [binding, bufferHandle] : source.m_bufferStagingMap)
+			if (Buffer* pBuffer = bufferHandle.TryGet())
+				SetBuffer(m_bindingNames.at(binding), pBuffer);
 	}
 	DescriptorSetBinding::~DescriptorSetBinding()
 	{
@@ -135,6 +137,12 @@ namespace vulkanRendererBackend
 	// Setters:
 	void DescriptorSetBinding::SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture)
 	{
+		if (pTexture == nullptr)
+		{
+			LOG_WARN("DescriptorSetBinding::SetTexture(...) failed. pTexture is nullptr.");
+			return;
+		}
+
 		// If texture with 'name' doesn't exist, skip:
 		const uint32_t* pBinding = FindBindingIndex(name);
 		if (!pBinding)
@@ -142,12 +150,20 @@ namespace vulkanRendererBackend
 		auto it = m_textureStagingMap.find(*pBinding);
 		if (it == m_textureStagingMap.end())
 			return;
-		it->second = static_cast<Texture*>(pTexture);
+		
+		// Stage texture handle:
+		it->second = TextureHandle(*static_cast<Texture*>(pTexture));
 		for (std::unordered_set<uint32_t>& dirtyTextureBindings : m_dirtyTextureBindings)
 			dirtyTextureBindings.insert(*pBinding);
 	}
 	void DescriptorSetBinding::SetBuffer(const std::string& name, emberBackendInterface::IBuffer* pBuffer)
 	{
+		if (pBuffer == nullptr)
+		{
+			LOG_WARN("DescriptorSetBinding::SetBuffer(...) failed. pBuffer is nullptr.");
+			return;
+		}
+
 		// If buffer with 'name' doesn't exist, skip:
 		const uint32_t* pBinding = FindBindingIndex(name);
 		if (!pBinding)
@@ -155,7 +171,9 @@ namespace vulkanRendererBackend
 		auto it = m_bufferStagingMap.find(*pBinding);
 		if (it == m_bufferStagingMap.end())
 			return;
-		it->second = static_cast<Buffer*>(pBuffer);
+
+		// Stage buffer handle:
+		it->second = BufferHandle(*static_cast<Buffer*>(pBuffer));
 		for (std::unordered_set<uint32_t>& dirtyBufferBindings : m_dirtyBufferBindings)
 			dirtyBufferBindings.insert(*pBinding);
 	}
@@ -431,7 +449,11 @@ namespace vulkanRendererBackend
 			return nullptr;
 		auto it = m_textureMaps[Context::GetFrameIndex()].find(*pBinding);
 		if (it != m_textureMaps[Context::GetFrameIndex()].end())
-			return it->second.pTexture;
+		{
+			if (Texture* pTexture = it->second.textureHandle.TryGet())
+				return pTexture;
+			return m_defaultTextureStagingMap.at(*pBinding).Get();
+		}
 		return nullptr;
 	}
 
@@ -446,10 +468,10 @@ namespace vulkanRendererBackend
 	{
 		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
 			uniformBufferBinding.uniformBuffer.m_hostData = m_defaultUniformBufferData.at(binding);
-		for (const auto& [binding, pTexture] : m_defaultTextureStagingMap)
-			SetTexture(m_bindingNames.at(binding), pTexture);
-		for (const auto& [binding, pBuffer] : m_defaultBufferStagingMap)
-			SetBuffer(m_bindingNames.at(binding), pBuffer);
+		for (const auto& [binding, textureHandle] : m_defaultTextureStagingMap)
+			SetTexture(m_bindingNames.at(binding), textureHandle.Get());
+		for (const auto& [binding, bufferHandle] : m_defaultBufferStagingMap)
+			SetBuffer(m_bindingNames.at(binding), bufferHandle.Get());
 	}
 	void DescriptorSetBinding::InvalidateBorrowedHandles()
 	{
@@ -461,25 +483,27 @@ namespace vulkanRendererBackend
 		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
 			uniformBufferBinding.uniformBuffer.UpdateBuffer(frameIndex);
 
-		// Change the pointer the descriptor set points at to the new texture:
+		// Change the resource the descriptor set points at to the new texture:
 		for (auto& [binding, textureBinding] : m_textureMaps[frameIndex])
 		{
-			Texture* pStagedTexture = m_textureStagingMap.at(binding);
-			if (textureBinding.pTexture != pStagedTexture || m_dirtyTextureBindings[frameIndex].contains(binding))
+			ResolveTextureBinding(binding);
+			const TextureHandle& stagedTextureHandle = m_textureStagingMap.at(binding);
+			if (textureBinding.textureHandle != stagedTextureHandle || m_dirtyTextureBindings[frameIndex].contains(binding))
 			{
-				textureBinding.pTexture = pStagedTexture;
+				textureBinding.textureHandle = stagedTextureHandle;
 				UpdateDescriptorSet(frameIndex, textureBinding);
 				m_dirtyTextureBindings[frameIndex].erase(binding);
 			}
 		}
 
-		// Change the pointer the descriptor set points at to the new buffer:
+		// Change the resource the descriptor set points at to the new buffer:
 		for (auto& [binding, bufferBinding] : m_bufferMaps[frameIndex])
 		{
-			Buffer* pStagedBuffer = m_bufferStagingMap.at(binding);
-			if (bufferBinding.pBuffer != pStagedBuffer || m_dirtyBufferBindings[frameIndex].contains(binding))
+			ResolveBufferBinding(binding);
+			const BufferHandle& stagedBufferHandle = m_bufferStagingMap.at(binding);
+			if (bufferBinding.bufferHandle != stagedBufferHandle || m_dirtyBufferBindings[frameIndex].contains(binding))
 			{
-				bufferBinding.pBuffer = pStagedBuffer;
+				bufferBinding.bufferHandle = stagedBufferHandle;
 				UpdateDescriptorSet(frameIndex, bufferBinding);
 				m_dirtyBufferBindings[frameIndex].erase(binding);
 			}
@@ -516,7 +540,10 @@ namespace vulkanRendererBackend
 			 
 			 LOG_INFO("BufferMaps[{}]:", frameIndex);
 			 for (const auto& [binding, bufferBinding] : m_bufferMaps[frameIndex])
-			 	LOG_TRACE("binding: {}, bindingName: {}, bufferSize: {}", bufferBinding.binding, m_bindingNames.at(binding), bufferBinding.pBuffer->GetSize());
+			 {
+				Buffer* pBuffer = bufferBinding.bufferHandle.TryGet();
+				LOG_TRACE("binding: {}, bindingName: {}, bufferSize: {}", bufferBinding.binding, m_bindingNames.at(binding), pBuffer ? pBuffer->GetSize() : 0);
+			 }
 			
 			LOG_TRACE("\n");
 		}
@@ -550,20 +577,26 @@ namespace vulkanRendererBackend
 	{
 		auto it = m_textureMaps[frameIndex].find(binding);
 		if (it == m_textureMaps[frameIndex].end())
-			m_textureMaps[frameIndex].emplace(binding, TextureBinding{binding, pTexture, descriptorType});
+		{
+			TextureHandle textureHandle(*pTexture);
+			m_textureMaps[frameIndex].emplace(binding, TextureBinding{binding, textureHandle, descriptorType});
+		}
 	}
 	void DescriptorSetBinding::InitBufferBinding(uint32_t frameIndex, uint32_t binding, Buffer* pBuffer, VkDescriptorType descriptorType)
 	{
 		auto it = m_bufferMaps[frameIndex].find(binding);
 		if (it == m_bufferMaps[frameIndex].end())
-			m_bufferMaps[frameIndex].emplace(binding, BufferBinding{binding, pBuffer, descriptorType});
+		{
+			BufferHandle bufferHandle(*pBuffer);
+			m_bufferMaps[frameIndex].emplace(binding, BufferBinding{binding, bufferHandle, descriptorType});
+		}
 	}
 	void DescriptorSetBinding::InitStagingMaps()
 	{
 		for (auto& [binding, textureBinding] : m_textureMaps[0])
-			m_textureStagingMap.emplace(binding, textureBinding.pTexture);
+			m_textureStagingMap.emplace(binding, textureBinding.textureHandle);
 		for (auto& [binding, bufferBinding] : m_bufferMaps[0])
-			m_bufferStagingMap.emplace(binding, bufferBinding.pBuffer);
+			m_bufferStagingMap.emplace(binding, bufferBinding.bufferHandle);
 	}
 	void DescriptorSetBinding::InitDescriptorSets()
 	{
@@ -584,6 +617,26 @@ namespace vulkanRendererBackend
 			m_defaultUniformBufferData.emplace(binding, uniformBufferBinding.uniformBuffer.m_hostData);
 		m_defaultTextureStagingMap = m_textureStagingMap;
 		m_defaultBufferStagingMap = m_bufferStagingMap;
+	}
+	Texture* DescriptorSetBinding::ResolveTextureBinding(uint32_t binding)
+	{
+		TextureHandle& textureHandle = m_textureStagingMap.at(binding);
+		if (Texture* pTexture = textureHandle.TryGet())
+			return pTexture;
+
+		Texture* pDefaultTexture = m_defaultTextureStagingMap.at(binding).Get();
+		SetTexture(m_bindingNames.at(binding), pDefaultTexture);
+		return pDefaultTexture;
+	}
+	Buffer* DescriptorSetBinding::ResolveBufferBinding(uint32_t binding)
+	{
+		BufferHandle& bufferHandle = m_bufferStagingMap.at(binding);
+		if (Buffer* pBuffer = bufferHandle.TryGet())
+			return pBuffer;
+
+		Buffer* pDefaultBuffer = m_defaultBufferStagingMap.at(binding).Get();
+		SetBuffer(m_bindingNames.at(binding), pDefaultBuffer);
+		return pDefaultBuffer;
 	}
 
 
@@ -621,12 +674,13 @@ namespace vulkanRendererBackend
 	}
 	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, const TextureBinding& textureBinding)
 	{
+		Texture* pTexture = textureBinding.textureHandle.Get();
 		VkDescriptorImageInfo imageInfo = {};
 		if (textureBinding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		else
-			imageInfo.imageLayout = textureBinding.pTexture->GetVmaImage()->GetImageLayout();
-		imageInfo.imageView = textureBinding.pTexture->GetVmaImage()->GetVkImageView();
+			imageInfo.imageLayout = pTexture->GetVmaImage()->GetImageLayout();
+		imageInfo.imageView = pTexture->GetVmaImage()->GetVkImageView();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
@@ -642,10 +696,11 @@ namespace vulkanRendererBackend
 	}
 	void DescriptorSetBinding::UpdateDescriptorSet(uint32_t frameIndex, const BufferBinding& bufferBinding)
 	{
+		Buffer* pBuffer = bufferBinding.bufferHandle.Get();
 		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = bufferBinding.pBuffer->GetVmaBuffer()->GetVkBuffer();
+		bufferInfo.buffer = pBuffer->GetVmaBuffer()->GetVkBuffer();
 		bufferInfo.offset = 0;
-		bufferInfo.range = bufferBinding.pBuffer->GetSize();
+		bufferInfo.range = pBuffer->GetSize();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];
