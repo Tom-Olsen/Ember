@@ -388,7 +388,7 @@ namespace vulkanRendererBackend
 		m_imageView = VK_NULL_HANDLE;
 		m_allocation = nullptr;
 
-		GarbageCollector::RecordGarbage([image, imageView, allocation]()
+		GarbageCollector::RecordFrameGarbage([image, imageView, allocation]()
 		{
 			if (imageView != VK_NULL_HANDLE)
 				vkDestroyImageView(Context::GetVkDevice(), imageView, nullptr);

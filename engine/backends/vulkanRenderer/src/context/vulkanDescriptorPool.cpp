@@ -137,7 +137,7 @@ namespace vulkanRendererBackend
 		VkDevice device = Context::GetVkDevice();
 		VkDescriptorPool descriptorPool = m_descriptorPool;
 		m_descriptorPool = VK_NULL_HANDLE;
-		GarbageCollector::RecordGarbage([device, descriptorPool]()
+		GarbageCollector::RecordFrameGarbage([device, descriptorPool]()
 		{
 			vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 		});

@@ -129,7 +129,7 @@ namespace vulkanRendererBackend
 		// Queue the destruction of each descriptor set for later collection:
 		for (const DescriptorSetAllocation& allocation : m_descriptorSetAllocations)
 		{
-			GarbageCollector::RecordGarbage([allocation]()
+			GarbageCollector::RecordFrameGarbage([allocation]()
 			{
 				DescriptorPoolManager::FreeDescriptorSet(allocation);
 			});

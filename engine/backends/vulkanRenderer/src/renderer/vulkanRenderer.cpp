@@ -788,7 +788,7 @@ namespace vulkanRendererBackend
 			return;
 
 		Material* pVulkanMaterial = static_cast<Material*>(pMaterial);
-		GarbageCollector::RecordGarbage([pVulkanMaterial]()
+		GarbageCollector::RecordFrameGarbage([pVulkanMaterial]()
 		{
 			delete pVulkanMaterial;
 		});
@@ -799,7 +799,7 @@ namespace vulkanRendererBackend
 			return;
 
 		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
-		GarbageCollector::RecordGarbage([pVulkanMaterialShader]()
+		GarbageCollector::RecordFrameGarbage([pVulkanMaterialShader]()
 		{
 			delete pVulkanMaterialShader;
 		});

@@ -110,10 +110,10 @@ namespace vulkanRendererBackend
 		m_buffer = VK_NULL_HANDLE;
 		m_allocation = nullptr;
 
-		GarbageCollector::RecordGarbage([buffer, allocation]()
+		GarbageCollector::RecordFrameGarbage([buffer, allocation]()
 		{
-				if (buffer != VK_NULL_HANDLE && allocation != nullptr)
-					Context::GetMemoryAllocator()->DestroyBuffer(buffer, allocation);
+			if (buffer != VK_NULL_HANDLE && allocation != nullptr)
+				Context::GetMemoryAllocator()->DestroyBuffer(buffer, allocation);
 
 			#ifdef VALIDATION_LAYERS_ACTIVE
 			Context::GetAllocationTracker()->RemoveVmaBufferAllocation(allocation);

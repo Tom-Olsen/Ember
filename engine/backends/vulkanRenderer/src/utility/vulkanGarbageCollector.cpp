@@ -1,6 +1,7 @@
 #include "vulkanGarbageCollector.h"
 #include "logger.h"
 #include "vulkanContext.h"
+#include <stdexcept>
 #include <utility>
 #include <vulkan/vulkan.h>
 
@@ -10,10 +11,12 @@ namespace vulkanRendererBackend
 {
     // Static members:
     bool GarbageCollector::s_isInitialized = false;
-    std::deque<GarbageCollector::GarbageEntry> GarbageCollector::s_garbageQueue;
+    std::deque<GarbageCollector::FrameGarbageEntry> GarbageCollector::s_frameGarbageQueue;
+    std::vector<GarbageCollector::PendingGarbageEntry> GarbageCollector::s_pendingGarbage;
 
 
 
+	// Public methods:
     // Initialization/Cleanup:
     void GarbageCollector::Init()
     {
@@ -26,6 +29,9 @@ namespace vulkanRendererBackend
         Flush();
         s_isInitialized = false;
     }
+
+
+
     void GarbageCollector::Flush()
     {
         // Wait for device idle before flushing queued callbacks:
@@ -35,38 +41,61 @@ namespace vulkanRendererBackend
             Context::WaitDeviceIdle();
         }
 
-        // Callbacks may enqueue more garbage while destroying owning resources.
-        // Pop before invoking each callback so queue mutations cannot affect the active entry.
-        while (!s_garbageQueue.empty())
-        {
-            std::function<void()> collectGarbageCallback = std::move(s_garbageQueue.front().collectGarbageCallback);
-            s_garbageQueue.pop_front();
-            collectGarbageCallback();
-        }
+		// Device is idle, so all pending pending garbage should be save to clear:
+		CollectPendingGarbage();
+		if (!s_pendingGarbage.empty())
+    		throw std::runtime_error("GarbageCollector::Flush() failed. Pending garbage is not ready for deletion.");
+        CollectFrameGarbage(true);
     }
 
 
 
-    // Static methods:
-    void GarbageCollector::RecordGarbage(std::function<void()> collectGarbageCallback)
+	// Record garbage:
+    void GarbageCollector::RecordFrameGarbage(std::function<void()> collectGarbageCallback)
     {
-        s_garbageQueue.push_back(GarbageEntry{ Context::GetAbsoluteFrameIndex(), std::move(collectGarbageCallback)});
+        s_frameGarbageQueue.push_back(FrameGarbageEntry{ Context::GetAbsoluteFrameIndex(), std::move(collectGarbageCallback) });
     }
+	void GarbageCollector::RecordPendingGarbage(std::function<bool()> collectGarbageCallback)
+	{
+        s_pendingGarbage.push_back(PendingGarbageEntry{ std::move(collectGarbageCallback) });
+	}
+
+
+
+	// Collect garbage:
     void GarbageCollector::CollectGarbage()
+	{
+		CollectFrameGarbage();
+		CollectPendingGarbage();
+	}
+    void GarbageCollector::CollectFrameGarbage(bool force)
     {
         // Garbage queue is sortet. The first entry is always the oldest. Once we find the first entry that does not need cleanup we can stop.
-        while (!s_garbageQueue.empty())
+        while (!s_frameGarbageQueue.empty())
         {
         	// Callbacks may enqueue more garbage while destroying owning resources.
         	// Pop before invoking each callback so queue mutations cannot affect the active entry
-            if (Context::GetAbsoluteFrameIndex() >= s_garbageQueue.front().frameIndex + Context::GetFramesInFlight())
+            if (force || Context::GetAbsoluteFrameIndex() >= s_frameGarbageQueue.front().frameIndex + Context::GetFramesInFlight() + 1)
             {
-                std::function<void()> collectGarbageCallback = std::move(s_garbageQueue.front().collectGarbageCallback);
-                s_garbageQueue.pop_front();
+                std::function<void()> collectGarbageCallback = std::move(s_frameGarbageQueue.front().collectGarbageCallback);
+                s_frameGarbageQueue.pop_front();
                 collectGarbageCallback();
             }
             else
                 break;
         }
     }
+	void GarbageCollector::CollectPendingGarbage()
+	{
+		// Move pending garbage into local vector and clear it:
+	    std::vector<PendingGarbageEntry> pendingGarbage = std::move(s_pendingGarbage);
+	    s_pendingGarbage.clear();
+
+		// Clear pending garbage that is rdy and rerecord those that are not:
+	    for (PendingGarbageEntry& garbage : pendingGarbage)
+	    {
+	        if (!garbage.collectGarbageCallback())
+	            s_pendingGarbage.push_back(std::move(garbage));
+	    }
+	}
 }

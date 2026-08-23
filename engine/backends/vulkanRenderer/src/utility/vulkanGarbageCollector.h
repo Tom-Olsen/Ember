@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <vector>
 
 
 
@@ -9,24 +10,38 @@ namespace vulkanRendererBackend
 {
     class GarbageCollector
     {
-    private:
-        struct GarbageEntry
+    private: // Structs:
+        struct FrameGarbageEntry
         {
             uint64_t frameIndex;
             std::function<void()> collectGarbageCallback;
         };
+		struct PendingGarbageEntry
+		{
+			std::function<bool()> collectGarbageCallback;	// must return true when deletion was succesfull.
+		};
 
+    private: // Members:
         static bool s_isInitialized;
-        static std::deque<GarbageEntry> s_garbageQueue;
+        static std::deque<FrameGarbageEntry> s_frameGarbageQueue;
+		static std::vector<PendingGarbageEntry> s_pendingGarbage;
 
-    public:
+    public: // Methods:
+        // Initialization/Cleanup:
         static void Init();
         static void Clear();
         static void Flush();
-        static void RecordGarbage(std::function<void()> collectGarbageCallback);
-        static void CollectGarbage();
 
-    private: // Methods
+		// Record garbage:
+        static void RecordFrameGarbage(std::function<void()> collectGarbageCallback);
+        static void RecordPendingGarbage(std::function<bool()> collectGarbageCallback);
+
+		// Collect garbage:
+        static void CollectGarbage();
+        static void CollectFrameGarbage(bool force = false);
+        static void CollectPendingGarbage();
+
+    private: // Methods:
         // Delete all constructors:
         GarbageCollector() = delete;
         GarbageCollector(const GarbageCollector&) = delete;
