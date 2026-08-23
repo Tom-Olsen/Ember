@@ -4,11 +4,14 @@
 #include "vulkanAccessMask.h"
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
+#include "vulkanContext.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanPoolManager.h"
 #include "vulkanRenderPassManager.h"
 #include "vulkanRenderTexture2d.h"
+#include <assert.h>
+#include <utility>
 #include <vulkan/vulkan.h>
 
 
@@ -18,14 +21,17 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	PostRender::PostRender() :
-		m_postProcessingCallCount(0)
+	PostRender::PostRender()
+		: m_postProcessingCallCount(0)
 	{
-
+		m_submittedComputeCalls.resize(Context::GetFramesInFlight());
 	}
 	PostRender::~PostRender()
 	{
+		if (!Context::IsDeviceIdle())
+			Context::WaitDeviceIdle();
 		ResetComputeCalls();
+		CompleteAllComputeCalls();
 	}
 
 
@@ -49,6 +55,23 @@ namespace vulkanRendererBackend
 
 
 	// Management:
+	void PostRender::CommitComputeCalls(uint32_t frameIndex)
+	{
+		assert(frameIndex < m_submittedComputeCalls.size());
+		assert(m_submittedComputeCalls[frameIndex].empty());
+		std::swap(m_submittedComputeCalls[frameIndex], m_computeCalls);
+		m_postProcessingCallCount = 0;
+	}
+	void PostRender::CompleteAllComputeCalls()
+	{
+		for (std::vector<ComputeCall>& computeCalls : m_submittedComputeCalls)
+			ReleaseComputeCalls(computeCalls);
+	}
+	void PostRender::CompleteComputeCalls(uint32_t frameIndex)
+	{
+		assert(frameIndex < m_submittedComputeCalls.size());
+		ReleaseComputeCalls(m_submittedComputeCalls[frameIndex]);
+	}
 	std::vector<ComputeCall>& PostRender::GetComputeCalls()
 	{
 		return m_computeCalls;
@@ -59,12 +82,7 @@ namespace vulkanRendererBackend
 	}
 	void PostRender::ResetComputeCalls()
 	{
-		// Return all bindings back to the corresponding pool:
-		for (ComputeCall& computeCall : m_computeCalls)
-			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
-
-		// Remove all computeCalls so next frame can start fresh:
-		m_computeCalls.clear();
+		ReleaseComputeCalls(m_computeCalls);
 		m_postProcessingCallCount = 0;
 	}
 
@@ -98,8 +116,19 @@ namespace vulkanRendererBackend
 
 		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none, isPostProcessing };
 		m_computeCalls.push_back(computeCall);
+		pComputeShader->AddPendingUse();
 		if (isPostProcessing)
 			m_postProcessingCallCount++;
 		return pDescriptorSetBinding;
+	}
+	void PostRender::ReleaseComputeCalls(std::vector<ComputeCall>& computeCalls)
+	{
+		for (ComputeCall& computeCall : computeCalls)
+		{
+			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
+			if (!computeCall.IsBarrier())
+				computeCall.GetComputeShader()->RemovePendingUse();
+		}
+		computeCalls.clear();
 	}
 }

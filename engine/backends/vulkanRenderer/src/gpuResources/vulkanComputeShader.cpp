@@ -5,6 +5,7 @@
 #include "vulkanContext.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanMacros.h"
+#include <stdexcept>
 #include <utility>
 
 
@@ -54,31 +55,6 @@ namespace vulkanRendererBackend
 
 
 
-	// Movable:
-	ComputeShader::ComputeShader(ComputeShader&& other) noexcept
-		: Shader(std::move(other))
-		, m_blockSize(other.m_blockSize)
-		, m_pShaderDescriptorSetBinding(std::move(other.m_pShaderDescriptorSetBinding))
-		, m_pPipeline(std::move(other.m_pPipeline))
-	{
-
-	}
-	ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept
-	{
-		if (this != &other)
-		{
-			m_pShaderDescriptorSetBinding.reset();
-			m_pPipeline.reset();
-			Shader::operator=(std::move(other));
-			m_blockSize = other.m_blockSize;
-			m_pShaderDescriptorSetBinding = std::move(other.m_pShaderDescriptorSetBinding);
-			m_pPipeline = std::move(other.m_pPipeline);
-		}
-		return *this;
-	}
-
-
-
 	// Getters:
 	Uint3 ComputeShader::GetBlockSize() const
 	{
@@ -96,12 +72,27 @@ namespace vulkanRendererBackend
 	{
 		return m_pPipeline.get();
 	}
-
-
-
 	// Debugging:
 	void ComputeShader::Print() const
 	{
 		PrintShaderInfo();
+	}
+
+
+
+	// Private methods:
+	void ComputeShader::AddPendingUse()
+	{
+		m_pendingUseCount++;
+	}
+	void ComputeShader::RemovePendingUse()
+	{
+		if (m_pendingUseCount == 0)
+			throw std::runtime_error("ComputeShader::RemovePendingUse() failed. Trying to decrement 0.");
+		m_pendingUseCount--;
+	}
+	bool ComputeShader::HasPendingUse() const
+	{
+		return m_pendingUseCount > 0;
 	}
 }

@@ -11,6 +11,7 @@
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanAllocationTracker.h"
+#include "vulkanAsyncCompute.h"
 #include "vulkanCommandPool.h"
 #include "vulkanCompute.h"
 #include "vulkanComputeCall.h"
@@ -187,6 +188,10 @@ namespace vulkanRendererBackend
 			VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_frameFences[m_frameIndex], VK_TRUE, UINT64_MAX));
 		}
 
+		// Return pre/post compute shaders callDescriptorSetBindings and decrement their usage count of previous submission with this frame index:
+		m_pCompute->GetPreRenderCompute()->CompleteComputeCalls(m_frameIndex);
+		m_pCompute->GetPostRenderCompute()->CompleteComputeCalls(m_frameIndex);
+
 		// Cancel current frame on failed acquisition:
 		if (!AcquireImage())
 		{
@@ -240,6 +245,10 @@ namespace vulkanRendererBackend
 			else
 				RecordImGuiPresentCommands();
 			SubmitPresentCommands();
+
+			// Commit the current frames compute calls, clearing the computeCall vector for the next frame:
+			m_pCompute->GetPreRenderCompute()->CommitComputeCalls(m_frameIndex);
+			m_pCompute->GetPostRenderCompute()->CommitComputeCalls(m_frameIndex);
 		}
 
 		// Reset render state:
@@ -561,9 +570,9 @@ namespace vulkanRendererBackend
 	{
 		m_depthBiasSlopeFactor = depthBiasSlopeFactor;
 	}
-	void Renderer::SetDefaultMaterials(emberBackendInterface::IMaterial* pOutlineMaterial, emberBackendInterface::IMaterial* pDefaultShadowMaterial, emberBackendInterface::IMaterial* pPresentMaterial)
+	void Renderer::SetDefaultMaterials(emberBackendInterface::IMaterial* pIOutlineMaterial, emberBackendInterface::IMaterial* pIDefaultShadowMaterial, emberBackendInterface::IMaterial* pIPresentMaterial)
 	{
-		DefaultGpuResources::SetDefaultMaterials(pOutlineMaterial, pDefaultShadowMaterial, pPresentMaterial);
+		DefaultGpuResources::SetDefaultMaterials(pIOutlineMaterial, pIDefaultShadowMaterial, pIPresentMaterial);
 	}
 	void Renderer::SetOutlineColor(const Float4& outlineColor)
 	{
@@ -583,6 +592,8 @@ namespace vulkanRendererBackend
 	// Functionality forwarding:
 	void Renderer::CollectGarbage()
 	{
+		if (m_pCompute)
+			m_pCompute->GetAsyncCompute()->CollectFinishedSessions();
 		GarbageCollector::CollectGarbage();
 	}
 	void Renderer::WaitDeviceIdle()
@@ -706,67 +717,67 @@ namespace vulkanRendererBackend
 	{
 		return new MaterialShader(MaterialShader::CreatePresent(vertexSpv, fragmentSpv, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
+	emberBackendInterface::IMaterial* Renderer::CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
 	{
-		if (pMaterialShader == nullptr)
+		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is null.");
-		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::outline)
+		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::outline)
 			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is not an outline shader.");
 
-		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
 		return new Material(Material::CreateOutline(pVulkanMaterialShader, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
+	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
 	{
-		if (pMaterialShader == nullptr)
+		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is null.");
-		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::forward)
+		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::forward)
 			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is not a forward shader.");
 
-		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
 		return new Material(Material::CreateForward(pVulkanMaterialShader, renderMode, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
+	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
 	{
-		if (pMaterialShader == nullptr)
+		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreateGizmoMaterial(...) failed. MaterialShader is null.");
-		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::gizmo)
+		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::gizmo)
 			throw std::runtime_error("Renderer::CreateGizmoMaterial(...) failed. MaterialShader is not a gizmo shader.");
 
-		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
 		return new Material(Material::CreateGizmo(pVulkanMaterialShader, renderMode, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
+	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
 	{
-		if (pMaterialShader == nullptr)
+		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreateShadowMaterial(...) failed. MaterialShader is null.");
-		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::shadow)
+		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::shadow)
 			throw std::runtime_error("Renderer::CreateShadowMaterial(...) failed. MaterialShader is not a shadow shader.");
 
-		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
 		return new Material(Material::CreateShadow(pVulkanMaterialShader, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CreatePresentMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& debugName)
+	emberBackendInterface::IMaterial* Renderer::CreatePresentMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
 	{
-		if (pMaterialShader == nullptr)
+		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreatePresentMaterial(...) failed. MaterialShader is null.");
-		if (pMaterialShader->GetMaterialType() != emberCommon::MaterialType::present)
+		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::present)
 			throw std::runtime_error("Renderer::CreatePresentMaterial(...) failed. MaterialShader is not a present shader.");
 
-		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
 		return new Material(Material::CreatePresent(pVulkanMaterialShader, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& debugName)
+	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName)
 	{
-		return new Material(Material::CloneForward(*static_cast<Material*>(pSourceMaterial), debugName));
+		return new Material(Material::CloneForward(*static_cast<Material*>(pISourceMaterial), debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& debugName)
+	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName)
 	{
-		return new Material(Material::CloneGizmo(*static_cast<Material*>(pSourceMaterial), debugName));
+		return new Material(Material::CloneGizmo(*static_cast<Material*>(pISourceMaterial), debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& debugName)
+	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName)
 	{
-		return new Material(Material::CloneShadow(*static_cast<Material*>(pSourceMaterial), debugName));
+		return new Material(Material::CloneShadow(*static_cast<Material*>(pISourceMaterial), debugName));
 	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh()
 	{
@@ -782,29 +793,42 @@ namespace vulkanRendererBackend
 
 	
 	// Gpu resource destruction:
-	void Renderer::DestroyMaterial(emberBackendInterface::IMaterial* pMaterial)
+	void Renderer::DestroyMaterial(emberBackendInterface::IMaterial* pIMaterial)
 	{
-		if (!pMaterial)
+		if (!pIMaterial)
 			return;
 
-		Material* pVulkanMaterial = static_cast<Material*>(pMaterial);
+		Material* pVulkanMaterial = static_cast<Material*>(pIMaterial);
 		GarbageCollector::RecordFrameGarbage([pVulkanMaterial]()
 		{
 			delete pVulkanMaterial;
 		});
 	}
-	void Renderer::DestroyMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader)
+	void Renderer::DestroyMaterialShader(emberBackendInterface::IMaterialShader* pIMaterialShader)
 	{
-		if (!pMaterialShader)
+		if (!pIMaterialShader)
 			return;
 
-		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
 		GarbageCollector::RecordFrameGarbage([pVulkanMaterialShader]()
 		{
 			delete pVulkanMaterialShader;
 		});
 	}
+	void Renderer::DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
+	{
+	    if (!pIComputeShader)
+	        return;
 
+	    ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
+		GarbageCollector::RecordPendingGarbage([pComputeShader]()
+	    {
+	        if (pComputeShader->HasPendingUse())
+	            return false;
+	        delete pComputeShader;
+	        return true;
+	    });
+	}
 
 
 	// Vulkan handle passthrough for API coupling:
@@ -940,10 +964,15 @@ namespace vulkanRendererBackend
 
 
 
+	// Other:
 	void Renderer::RebuildSwapchain()
 	{
 		// Recreate swapchain:
 		Context::RebuildSwapchain();	// calls WaitDeviceIdle().
+
+		// Return pre/post compute shaders callDescriptorSetBindings and decrement their usage for all frames in flight:
+		m_pCompute->GetPreRenderCompute()->CompleteAllComputeCalls();
+		m_pCompute->GetPostRenderCompute()->CompleteAllComputeCalls();
 
 		// Recreate renderpasses:
 		RenderPassManager::RecreateRenderPasses();

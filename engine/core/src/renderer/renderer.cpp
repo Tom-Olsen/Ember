@@ -418,37 +418,37 @@ namespace emberCore
 	{
 		return s_pIRenderer->CreatePresentMaterialShader(vertexSpv, fragmentSpv, name);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name)
+	emberBackendInterface::IMaterial* Renderer::CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
 	{
-		return s_pIRenderer->CreateOutlineMaterial(pMaterialShader, name);
+		return s_pIRenderer->CreateOutlineMaterial(pIMaterialShader, name);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name)
+	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
 	{
-		return s_pIRenderer->CreateForwardMaterial(renderMode, pMaterialShader, name);
+		return s_pIRenderer->CreateForwardMaterial(renderMode, pIMaterialShader, name);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name)
+	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
 	{
-		return s_pIRenderer->CreateGizmoMaterial(renderMode, pMaterialShader, name);
+		return s_pIRenderer->CreateGizmoMaterial(renderMode, pIMaterialShader, name);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name)
+	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
 	{
-		return s_pIRenderer->CreateShadowMaterial(pMaterialShader, name);
+		return s_pIRenderer->CreateShadowMaterial(pIMaterialShader, name);
 	}
-	emberBackendInterface::IMaterial* Renderer::CreatePresentMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name)
+	emberBackendInterface::IMaterial* Renderer::CreatePresentMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
 	{
-		return s_pIRenderer->CreatePresentMaterial(pMaterialShader, name);
+		return s_pIRenderer->CreatePresentMaterial(pIMaterialShader, name);
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& name)
+	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name)
 	{
-		return s_pIRenderer->CloneForwardMaterial(pSourceMaterial, name);
+		return s_pIRenderer->CloneForwardMaterial(pISourceMaterial, name);
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& name)
+	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name)
 	{
-		return s_pIRenderer->CloneGizmoMaterial(pSourceMaterial, name);
+		return s_pIRenderer->CloneGizmoMaterial(pISourceMaterial, name);
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& name)
+	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name)
 	{
-		return s_pIRenderer->CloneShadowMaterial(pSourceMaterial, name);
+		return s_pIRenderer->CloneShadowMaterial(pISourceMaterial, name);
 	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh(const std::string& name)
 	{
@@ -462,17 +462,23 @@ namespace emberCore
 
 	
 	// Gpu resource destruction:
-	void Renderer::DestroyMaterial(emberBackendInterface::IMaterial* pMaterial)
+	void Renderer::DestroyMaterial(emberBackendInterface::IMaterial* pIMaterial)
 	{
-		if (!pMaterial)
+		if (!pIMaterial)
 			return;
-		s_pIRenderer->DestroyMaterial(pMaterial);
+		s_pIRenderer->DestroyMaterial(pIMaterial);
 	}
-	void Renderer::DestroyMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader)
+	void Renderer::DestroyMaterialShader(emberBackendInterface::IMaterialShader* pIMaterialShader)
 	{
-		if (!pMaterialShader)
+		if (!pIMaterialShader)
 			return;
-		s_pIRenderer->DestroyMaterialShader(pMaterialShader);
+		s_pIRenderer->DestroyMaterialShader(pIMaterialShader);
+	}
+	void Renderer::DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
+	{
+		if (!pIComputeShader)
+			return;
+		s_pIRenderer->DestroyComputeShader(pIComputeShader);
 	}
 
 

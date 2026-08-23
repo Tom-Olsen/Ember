@@ -33,7 +33,7 @@ namespace emberCore
 	}
 	ComputeShader::~ComputeShader()
 	{
-
+		Renderer::DestroyComputeShader(m_pIComputeShader.release());
 	}
 
 
@@ -47,13 +47,17 @@ namespace emberCore
 	}
 	ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept
 	{
-		if (this != &other)
-		{
-			Shader::operator=(std::move(other));
-			m_name = std::move(other.m_name);
-			m_pIComputeShader = std::move(other.m_pIComputeShader);
-		}
-		return *this;
+	    if (this != &other)
+	    {
+	        emberBackendInterface::IComputeShader* pOldComputeShader = m_pIComputeShader.release();
+
+	        Shader::operator=(std::move(other));
+	        m_name = std::move(other.m_name);
+	        m_pIComputeShader = std::move(other.m_pIComputeShader);
+
+	        Renderer::DestroyComputeShader(pOldComputeShader);
+	    }
+	    return *this;
 	}
 
 

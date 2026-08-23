@@ -139,20 +139,21 @@ namespace emberCore
 		static emberBackendInterface::IMaterialShader* CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static emberBackendInterface::IMaterialShader* CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& name);
 		static emberBackendInterface::IMaterialShader* CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static emberBackendInterface::IMaterial* CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name);
-		static emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name);
-		static emberBackendInterface::IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name);
-		static emberBackendInterface::IMaterial* CreateShadowMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name);
-		static emberBackendInterface::IMaterial* CreatePresentMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const std::string& name);
-		static emberBackendInterface::IMaterial* CloneForwardMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& name);
-		static emberBackendInterface::IMaterial* CloneGizmoMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& name);
-		static emberBackendInterface::IMaterial* CloneShadowMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const std::string& name);
+		static emberBackendInterface::IMaterial* CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name);
+		static emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name);
+		static emberBackendInterface::IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name);
+		static emberBackendInterface::IMaterial* CreateShadowMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name);
+		static emberBackendInterface::IMaterial* CreatePresentMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name);
+		static emberBackendInterface::IMaterial* CloneForwardMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name);
+		static emberBackendInterface::IMaterial* CloneGizmoMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name);
+		static emberBackendInterface::IMaterial* CloneShadowMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name);
 		static emberBackendInterface::IMesh* CreateMesh(const std::string& name);
 		static emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial);
 		
 		// Gpu resource destruction:
-		static void DestroyMaterial(emberBackendInterface::IMaterial* pMaterial);
-		static void DestroyMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader);
+		static void DestroyMaterial(emberBackendInterface::IMaterial* pIMaterial);
+		static void DestroyMaterialShader(emberBackendInterface::IMaterialShader* pIMaterialShader);
+		static void DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader);
 
 		// Set/Clear default materials:
 		static void SetDefaultMaterials(const Material& outlineMaterial, const Material& defaultShadowMaterial, const Material& presentMaterial);

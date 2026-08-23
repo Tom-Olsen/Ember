@@ -56,6 +56,7 @@ namespace vulkanRendererBackend
 		void DispatchComputeSession(uint32_t sessionID, float time, float deltaTime) override;
 		bool IsFinished(uint32_t sessionID) override;
 		void WaitForFinish(uint32_t sessionID) override;
+		void CollectFinishedSessions();
 
 		// Workload recording:
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount) override;

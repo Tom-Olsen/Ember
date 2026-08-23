@@ -3,6 +3,7 @@
 #include "iComputeShader.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vulkan/vulkan.h>
@@ -12,17 +13,28 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
+	class Async;
 	class DescriptorSetBinding;
 	class Pipeline;
+	class PostRender;
+	class PreRender;
+	class Renderer;
 
 
     
 	class VULKAN_RENDERER_API ComputeShader : public Shader, public emberBackendInterface::IComputeShader
 	{
+		// Friends:
+		friend class Async;
+		friend class PostRender;
+		friend class PreRender;
+		friend class Renderer;
+
 	private: // Members:
 		Uint3 m_blockSize;
 		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 		std::unique_ptr<Pipeline> m_pPipeline;
+		uint32_t m_pendingUseCount = 0;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -34,8 +46,8 @@ namespace vulkanRendererBackend
 		ComputeShader& operator=(const ComputeShader&) = delete;
 
 		// Movable:
-		ComputeShader(ComputeShader&& other) noexcept;
-		ComputeShader& operator=(ComputeShader&& other) noexcept;
+		ComputeShader(ComputeShader&& other) = delete;
+		ComputeShader& operator=(ComputeShader&& other) = delete;
 
 		// Getters:
 		Uint3 GetBlockSize() const override;
@@ -45,5 +57,10 @@ namespace vulkanRendererBackend
 
 		// Debugging:
 		void Print() const override;
+
+	private: // Methods:
+		void AddPendingUse();
+		void RemovePendingUse();
+		bool HasPendingUse() const;
 	};
 }

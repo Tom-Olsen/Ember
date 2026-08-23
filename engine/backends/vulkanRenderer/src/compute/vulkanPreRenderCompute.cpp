@@ -4,8 +4,11 @@
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
 #include "vulkanConvertComputeAccessMask.h"
+#include "vulkanContext.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanPoolManager.h"
+#include <assert.h>
+#include <utility>
 #include <vulkan/vulkan.h>
 
 
@@ -16,11 +19,14 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	PreRender::PreRender()
 	{
-
+		m_submittedComputeCalls.resize(Context::GetFramesInFlight());
 	}
 	PreRender::~PreRender()
 	{
+		if (!Context::IsDeviceIdle())
+			Context::WaitDeviceIdle();
 		ResetComputeCalls();
+		CompleteAllComputeCalls();
 	}
 
 
@@ -50,6 +56,7 @@ namespace vulkanRendererBackend
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
 		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeCalls.push_back(computeCall);
+		pComputeShader->AddPendingUse();
 		return descriptorSetBindingHandle.Get();
 	}
 	void PreRender::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
@@ -61,17 +68,42 @@ namespace vulkanRendererBackend
 
 
 	// Management:
+	void PreRender::CommitComputeCalls(uint32_t frameIndex)
+	{
+		assert(frameIndex < m_submittedComputeCalls.size());
+		assert(m_submittedComputeCalls[frameIndex].empty());
+		std::swap(m_submittedComputeCalls[frameIndex], m_computeCalls);
+	}
+	void PreRender::CompleteComputeCalls(uint32_t frameIndex)
+	{
+		assert(frameIndex < m_submittedComputeCalls.size());
+		ReleaseComputeCalls(m_submittedComputeCalls[frameIndex]);
+	}
+	void PreRender::CompleteAllComputeCalls()
+	{
+		for (std::vector<ComputeCall>& computeCalls : m_submittedComputeCalls)
+			ReleaseComputeCalls(computeCalls);
+	}
 	std::vector<ComputeCall>& PreRender::GetComputeCalls()
 	{
 		return m_computeCalls;
 	}
 	void PreRender::ResetComputeCalls()
 	{
-		// Return all bindings back to the corresponding pool:
-		for (ComputeCall& computeCall : m_computeCalls)
-			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
+		ReleaseComputeCalls(m_computeCalls);
+	}
 
-		// Remove all computeCalls so next frame can start fresh:
-		m_computeCalls.clear();
+
+
+	// Private methods:
+	void PreRender::ReleaseComputeCalls(std::vector<ComputeCall>& computeCalls)
+	{
+		for (ComputeCall& computeCall : computeCalls)
+		{
+			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
+			if (!computeCall.IsBarrier())
+				computeCall.GetComputeShader()->RemovePendingUse();
+		}
+		computeCalls.clear();
 	}
 }

@@ -2,6 +2,7 @@
 #include "iCompute.h"
 #include "emberMath.h"
 #include "vulkanRendererExport.h"
+#include <cstdint>
 #include <vector>
 
 
@@ -27,6 +28,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		bool m_isInitialized;
 		std::vector<ComputeCall> m_computeCalls;
+		std::vector<std::vector<ComputeCall>> m_submittedComputeCalls;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -46,7 +48,13 @@ namespace vulkanRendererBackend
 		void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags) override;
 
 		// Management:
+		void CommitComputeCalls(uint32_t frameIndex);
+		void CompleteComputeCalls(uint32_t frameIndex);
+		void CompleteAllComputeCalls();
 		std::vector<ComputeCall>& GetComputeCalls();
 		void ResetComputeCalls();
+
+	private: // Methods:
+		void ReleaseComputeCalls(std::vector<ComputeCall>& computeCalls);
 	};
 }

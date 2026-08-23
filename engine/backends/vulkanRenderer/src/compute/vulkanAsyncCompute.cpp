@@ -47,6 +47,18 @@ namespace vulkanRendererBackend
 	}
 	Async::~Async()
 	{
+		// Complete running sessions and cancel recording sessions:
+		for (uint32_t sessionID = 0; sessionID < m_sessionCount; sessionID++)
+		{
+			if (m_computeSessions[sessionID].state == ComputeSession::State::running)
+			{
+				VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_fences[sessionID], VK_TRUE, UINT64_MAX));
+				ResetComputeSession(sessionID);
+			}
+			if (m_computeSessions[sessionID].state == ComputeSession::State::recording)
+				ResetComputeSession(sessionID);
+		}
+
 		// Empty queue:
 		std::queue<uint32_t> empty;
 		std::swap(m_freeIndices, empty);
@@ -123,6 +135,20 @@ namespace vulkanRendererBackend
 		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_fences[sessionID], VK_TRUE, UINT64_MAX));
 		ResetComputeSession(sessionID);
 	}
+	void Async::CollectFinishedSessions()
+	{
+		for (uint32_t sessionID = 0; sessionID < m_sessionCount; sessionID++)
+		{
+			if (m_computeSessions[sessionID].state != ComputeSession::State::running)
+				continue;
+
+			VkResult result = vkGetFenceStatus(Context::GetVkDevice(), m_fences[sessionID]);
+			if (result == VK_SUCCESS)
+				ResetComputeSession(sessionID);
+			else if (result != VK_NOT_READY)
+				VKA(result);
+		}
+	}
 
 
 
@@ -156,6 +182,7 @@ namespace vulkanRendererBackend
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
 		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeSessions[sessionID].RecordComputeCall(computeCall);
+		pComputeShader->AddPendingUse();
 		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(descriptorSetBindingHandle.Get());
 	}
 	void Async::RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
@@ -197,7 +224,11 @@ namespace vulkanRendererBackend
 	{
 		// Return all bindings back to the corresponding pool:
 		for (ComputeCall& computeCall : m_computeSessions[sessionID].GetComputeCalls())
+		{
 			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
+			if (!computeCall.IsBarrier())
+				computeCall.GetComputeShader()->RemovePendingUse();
+		}
 
 		m_pCommandPools[sessionID].ResetPools();
 		m_computeSessions[sessionID].state = ComputeSession::State::idle;

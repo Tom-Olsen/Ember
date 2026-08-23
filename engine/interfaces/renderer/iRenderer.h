@@ -41,12 +41,12 @@ namespace emberBackendInterface
 
         // Draw mesh:
         virtual void DrawOutline(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, uint32_t instanceCount) = 0;
-        virtual void DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, bool receiveShadows, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, bool receiveShadows, uint32_t instanceCount) = 0;
-        virtual void DrawMeshShadow(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawMeshShadow(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, uint32_t instanceCount) = 0;
-        virtual void DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pMesh, IMaterial* pMaterial, uint32_t instanceCount) = 0;
+        virtual void DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, bool receiveShadows, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, bool receiveShadows, uint32_t instanceCount) = 0;
+        virtual void DrawMeshShadow(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, IDescriptorSetBinding* pICallDescriptorSetBinding, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawMeshShadow(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pMaterial, uint32_t instanceCount) = 0;
+        virtual void DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, uint32_t instanceCount) = 0;
 
         // Getters:
         virtual bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const = 0;
@@ -92,20 +92,21 @@ namespace emberBackendInterface
         virtual IMaterialShader* CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
         virtual IMaterialShader* CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& debugName) = 0;
         virtual IMaterialShader* CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
-        virtual IMaterial* CreateOutlineMaterial(IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreateShadowMaterial(IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreatePresentMaterial(IMaterialShader* pMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CloneForwardMaterial(IMaterial* pSourceMaterial, const std::string& debugName) = 0;
-        virtual IMaterial* CloneGizmoMaterial(IMaterial* pSourceMaterial, const std::string& debugName) = 0;
-        virtual IMaterial* CloneShadowMaterial(IMaterial* pSourceMaterial, const std::string& debugName) = 0;
+        virtual IMaterial* CreateOutlineMaterial(IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CreateShadowMaterial(IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CreatePresentMaterial(IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
+        virtual IMaterial* CloneForwardMaterial(IMaterial* pISourceMaterial, const std::string& debugName) = 0;
+        virtual IMaterial* CloneGizmoMaterial(IMaterial* pISourceMaterial, const std::string& debugName) = 0;
+        virtual IMaterial* CloneShadowMaterial(IMaterial* pISourceMaterial, const std::string& debugName) = 0;
         virtual IMesh* CreateMesh() = 0;
         virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;
 
 		// Gpu resource destruction:
-        virtual void DestroyMaterial(IMaterial* pMaterial) = 0;
-        virtual void DestroyMaterialShader(IMaterialShader* pMaterialShader) = 0;
+        virtual void DestroyMaterial(IMaterial* pIMaterial) = 0;
+        virtual void DestroyMaterialShader(IMaterialShader* pIMaterialShader) = 0;
+		virtual void DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader) = 0;
 
         // Vulkan handle passthrough for API coupling:
         virtual void* GetVkInstance() const = 0;
