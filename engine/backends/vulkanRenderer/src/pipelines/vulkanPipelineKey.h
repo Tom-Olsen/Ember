@@ -16,18 +16,16 @@ namespace vulkanRendererBackend
 	struct PipelineKey
 	{
 		// Friends:
-		friend class Material;
 		friend class MaterialShader;
 
 	private: // Members:
-		PipelineType pipelineType;
 		uint32_t renderModeIndex;
 		emberCommon::VertexMemoryLayout vertexMemoryLayout;
 
 
 	private: // Methods:
 		// Constructor:
-		PipelineKey(PipelineType pipelineType, uint32_t renderModeIndex, emberCommon::VertexMemoryLayout vertexMemoryLayout);
+		PipelineKey(uint32_t renderModeIndex, emberCommon::VertexMemoryLayout vertexMemoryLayout);
 
 	public: // Mehtods:
 		// Constructors:
@@ -35,13 +33,13 @@ namespace vulkanRendererBackend
 		requires HasRenderPipelineAndMode<stage>
 		static PipelineKey Create(typename RenderStageTraits<stage>::RenderMode renderMode, emberCommon::VertexMemoryLayout vertexMemoryLayout)
 		{
-			return PipelineKey(RenderStageTraits<stage>::pipelineType, RenderStageTraits<stage>::RenderModeIndex(renderMode), vertexMemoryLayout);
+			return PipelineKey(RenderStageTraits<stage>::RenderModeIndex(renderMode), vertexMemoryLayout);
 		}
 		template<RenderStage stage>
 		requires HasRenderPipelineAndNotMode<stage>
 		static PipelineKey Create(emberCommon::VertexMemoryLayout vertexMemoryLayout)
 		{
-			return PipelineKey(RenderStageTraits<stage>::pipelineType, RenderStageTraits<stage>::RenderModeIndex(), vertexMemoryLayout);
+			return PipelineKey(RenderStageTraits<stage>::RenderModeIndex(), vertexMemoryLayout);
 		}
 
 		// Comparison:

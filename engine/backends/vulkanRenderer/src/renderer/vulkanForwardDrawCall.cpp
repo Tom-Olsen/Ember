@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 		assert(pMesh != nullptr);
 		assert(pMaterial != nullptr);
 		assert(descriptorSetBindingHandle.IsValid());
-		assert(pMaterial->GetMaterialType() == emberCommon::MaterialType::forward);
+		assert(pMaterial->GetMaterialPass() == emberCommon::MaterialPass::forward);
 	}
 	ForwardDrawCall::~ForwardDrawCall()
 	{

@@ -137,12 +137,12 @@ namespace vulkanRendererBackend
 			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Default shadow material is null.");
 		if (pPresentMaterial == nullptr)
 			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Present material is null.");
-		if (pOutlineMaterial->GetMaterialType() != emberCommon::MaterialType::outline)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Outline material has wrong material type.");
-		if (pDefaultShadowMaterial->GetMaterialType() != emberCommon::MaterialType::shadow)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Default shadow material has wrong material type.");
-		if (pPresentMaterial->GetMaterialType() != emberCommon::MaterialType::present)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Present material has wrong material type.");
+		if (pOutlineMaterial->GetMaterialPass() != emberCommon::MaterialPass::outline)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Outline material has wrong material pass.");
+		if (pDefaultShadowMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Default shadow material has wrong material pass.");
+		if (pPresentMaterial->GetMaterialPass() != emberCommon::MaterialPass::present)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Present material has wrong material pass.");
 
 		s_pDefaultOutlineMaterial = static_cast<Material*>(pOutlineMaterial);
 		s_pDefaultShadowMaterial = static_cast<Material*>(pDefaultShadowMaterial);

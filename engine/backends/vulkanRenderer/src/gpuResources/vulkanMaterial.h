@@ -3,7 +3,7 @@
 #include "commonCullMode.h"
 #include "commonForwardRenderState.h"
 #include "commonGizmoRenderState.h"
-#include "commonMaterialType.h"
+#include "commonMaterialPass.h"
 #include "commonOutlineRenderState.h"
 #include "commonPresentRenderState.h"
 #include "commonShadowRenderState.h"
@@ -37,7 +37,6 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		std::string m_debugName;
-		emberCommon::MaterialType m_materialType;
 		ShaderHandle m_materialShaderHandle;
 		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 		std::unique_ptr<emberCommon::ForwardRenderState> m_pForwardRenderState;
@@ -73,7 +72,7 @@ namespace vulkanRendererBackend
 		void SetGizmoRenderMode(emberCommon::GizmoRenderMode renderMode) override;
 
 		// Getters:
-		emberCommon::MaterialType GetMaterialType() const override;
+		emberCommon::MaterialPass GetMaterialPass() const override;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
 		DescriptorSetBinding* GetDescriptorSetBinding() const;
 		int32_t GetRenderQueue() const override;
@@ -110,7 +109,7 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		// Constructor:
-		Material(emberCommon::MaterialType materialType, MaterialShader* pMaterialShader, const std::string& debugName);
-		Material(emberCommon::MaterialType materialType, MaterialShader* pMaterialShader, std::unique_ptr<DescriptorSetBinding> pShaderDescriptorSetBinding, const std::string& debugName);
+		Material(MaterialShader* pMaterialShader, const std::string& debugName);
+		Material(MaterialShader* pMaterialShader, std::unique_ptr<DescriptorSetBinding> pShaderDescriptorSetBinding, const std::string& debugName);
 	};
 }

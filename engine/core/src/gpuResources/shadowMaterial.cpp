@@ -14,7 +14,7 @@ namespace emberCore
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("ShadowMaterial::ShadowMaterial(...) failed. Material is invalid or expired.");
-		if (pIMaterial->GetMaterialType() != emberCommon::MaterialType::shadow)
+		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)
 			throw std::runtime_error("ShadowMaterial::ShadowMaterial(...) failed. IMaterial is not a shadow material.");
 	}
 

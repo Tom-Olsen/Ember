@@ -2,7 +2,7 @@
 #include "commonCullMode.h"
 #include "commonForwardRenderMode.h"
 #include "commonGizmoRenderMode.h"
-#include "commonMaterialType.h"
+#include "commonMaterialPass.h"
 #include "emberCoreExport.h"
 #include "materialId.h"
 #include "shader.h"
@@ -71,7 +71,7 @@ namespace emberCore
 
 		// Getters:
 		const std::string& GetName() const;
-		emberCommon::MaterialType GetMaterialType() const;
+		emberCommon::MaterialPass GetMaterialPass() const;
 		emberCommon::CullMode GetCullMode() const;
 		bool IsValid() const;
 

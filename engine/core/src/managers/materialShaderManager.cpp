@@ -41,7 +41,6 @@ namespace emberCore
 
 			Renderer::DestroyMaterialShader(slot.materialShader.pIMaterialShader.release());
 			slot.materialShader.name.clear();
-			slot.materialShader.materialType = emberCommon::MaterialType::count;
 			slot.generation++;
 			s_freeMaterialShaderIds.push_back(index);
 		}
@@ -58,12 +57,12 @@ namespace emberCore
 		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
 		{
 			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialType() != emberCommon::MaterialType::forward)
+			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::forward)
 				throw std::runtime_error("MaterialShaderManager::CreateForwardMaterialShader(...) failed. Existing MaterialShader is not a forward shader: " + name);
 			return materialShader;
 		}
 
-		return AddMaterialShader(name, emberCommon::MaterialType::forward, Renderer::CreateForwardMaterialShader(vertexSpv, fragmentSpv, name));
+		return AddMaterialShader(name, Renderer::CreateForwardMaterialShader(vertexSpv, fragmentSpv, name));
 	}
 	MaterialShader MaterialShaderManager::CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
@@ -71,12 +70,12 @@ namespace emberCore
 		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
 		{
 			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialType() != emberCommon::MaterialType::gizmo)
+			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::gizmo)
 				throw std::runtime_error("MaterialShaderManager::CreateGizmoMaterialShader(...) failed. Existing MaterialShader is not a gizmo shader: " + name);
 			return materialShader;
 		}
 
-		return AddMaterialShader(name, emberCommon::MaterialType::gizmo, Renderer::CreateGizmoMaterialShader(vertexSpv, fragmentSpv, name));
+		return AddMaterialShader(name, Renderer::CreateGizmoMaterialShader(vertexSpv, fragmentSpv, name));
 	}
 	MaterialShader MaterialShaderManager::CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& name)
 	{
@@ -84,12 +83,12 @@ namespace emberCore
 		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
 		{
 			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialType() != emberCommon::MaterialType::shadow)
+			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::shadow)
 				throw std::runtime_error("MaterialShaderManager::CreateShadowMaterialShader(...) failed. Existing MaterialShader is not a shadow shader: " + name);
 			return materialShader;
 		}
 
-		return AddMaterialShader(name, emberCommon::MaterialType::shadow, Renderer::CreateShadowMaterialShader(vertexSpv, name));
+		return AddMaterialShader(name, Renderer::CreateShadowMaterialShader(vertexSpv, name));
 	}
 
 
@@ -134,12 +133,12 @@ namespace emberCore
 		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
 		{
 			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialType() != emberCommon::MaterialType::outline)
+			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::outline)
 				throw std::runtime_error("MaterialShaderManager::CreateOutlineMaterialShader(...) failed. Existing MaterialShader is not an outline shader: " + name);
 			return materialShader;
 		}
 
-		return AddMaterialShader(name, emberCommon::MaterialType::outline, Renderer::CreateOutlineMaterialShader(vertexSpv, fragmentSpv, name));
+		return AddMaterialShader(name, Renderer::CreateOutlineMaterialShader(vertexSpv, fragmentSpv, name));
 	}
 	MaterialShader MaterialShaderManager::CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
@@ -147,12 +146,12 @@ namespace emberCore
 		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
 		{
 			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialType() != emberCommon::MaterialType::present)
+			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::present)
 				throw std::runtime_error("MaterialShaderManager::CreatePresentMaterialShader(...) failed. Existing MaterialShader is not a present shader: " + name);
 			return materialShader;
 		}
 
-		return AddMaterialShader(name, emberCommon::MaterialType::present, Renderer::CreatePresentMaterialShader(vertexSpv, fragmentSpv, name));
+		return AddMaterialShader(name, Renderer::CreatePresentMaterialShader(vertexSpv, fragmentSpv, name));
 	}
 
 
@@ -183,17 +182,11 @@ namespace emberCore
 			return nullptr;
 		return &s_materialShaderSlots[materialShaderId.index].materialShader.name;
 	}
-	const emberCommon::MaterialType* MaterialShaderManager::GetMaterialShaderType(MaterialShaderId materialShaderId)
-	{
-		if (GetMaterialShaderInterface(materialShaderId) == nullptr)
-			return nullptr;
-		return &s_materialShaderSlots[materialShaderId.index].materialShader.materialType;
-	}
 
 
 
 	// Add/Delete material shader:
-	MaterialShader MaterialShaderManager::AddMaterialShader(const std::string& name, emberCommon::MaterialType materialType, emberBackendInterface::IMaterialShader* pIMaterialShader)
+	MaterialShader MaterialShaderManager::AddMaterialShader(const std::string& name, emberBackendInterface::IMaterialShader* pIMaterialShader)
 	{
 		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("MaterialShaderManager::AddMaterialShader(...) failed. pIMaterialShader is nullptr.");
@@ -207,7 +200,7 @@ namespace emberCore
 				throw std::runtime_error("MaterialShaderManager::AddMaterialShader(...) failed. MaterialShader id limit reached.");
 			}
 			materialShaderId.index = static_cast<uint32_t>(s_materialShaderSlots.size());
-			s_materialShaderSlots.push_back({ 1, ManagedMaterialShader{ name, materialType, std::unique_ptr<emberBackendInterface::IMaterialShader>(pIMaterialShader) } });
+			s_materialShaderSlots.push_back({ 1, ManagedMaterialShader{ name, std::unique_ptr<emberBackendInterface::IMaterialShader>(pIMaterialShader) } });
 		}
 		else
 		{
@@ -216,7 +209,6 @@ namespace emberCore
 
 			MaterialShaderSlot& slot = s_materialShaderSlots[materialShaderId.index];
 			slot.materialShader.name = name;
-			slot.materialShader.materialType = materialType;
 			slot.materialShader.pIMaterialShader.reset(pIMaterialShader);
 		}
 
@@ -236,7 +228,6 @@ namespace emberCore
 		s_materialShaderIdsMap.erase(slot.materialShader.name);
 		Renderer::DestroyMaterialShader(slot.materialShader.pIMaterialShader.release());
 		slot.materialShader.name.clear();
-		slot.materialShader.materialType = emberCommon::MaterialType::count;
 		slot.generation++;
 		s_freeMaterialShaderIds.push_back(materialShaderId.index);
 	}

@@ -334,7 +334,7 @@ namespace vulkanRendererBackend
 		}
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
-		if (pMaterial->GetMaterialType() != emberCommon::MaterialType::forward)
+		if (pMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
 			throw std::runtime_error("vulkanRendererBackend::Renderer::DrawMesh(...) failed. Material is not a forward material.");
 		DescriptorSetBindingHandle descriptorSetBindingHandle(static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding));
 		m_forwardDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, receiveShadows, instanceCount);
@@ -354,7 +354,7 @@ namespace vulkanRendererBackend
 		}
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
-		if (pMaterial->GetMaterialType() != emberCommon::MaterialType::forward)
+		if (pMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
 			throw std::runtime_error("vulkanRendererBackend::Renderer::DrawMesh(...) failed. Material is not a forward material.");
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
 		m_forwardDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, receiveShadows, instanceCount);
@@ -379,7 +379,7 @@ namespace vulkanRendererBackend
 		}
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
-		if (pMaterial->GetMaterialType() != emberCommon::MaterialType::shadow)
+		if (pMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)
 			throw std::runtime_error("vulkanRendererBackend::Renderer::DrawMeshShadow(...) failed. Material is not a shadow material.");
 		DescriptorSetBindingHandle descriptorSetBindingHandle(static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding));
 		m_shadowDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, instanceCount);
@@ -398,7 +398,7 @@ namespace vulkanRendererBackend
 		}
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
-		if (pMaterial->GetMaterialType() != emberCommon::MaterialType::shadow)
+		if (pMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)
 			throw std::runtime_error("vulkanRendererBackend::Renderer::DrawMeshShadow(...) failed. Material is not a shadow material.");
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
 		m_shadowDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, instanceCount);
@@ -721,7 +721,7 @@ namespace vulkanRendererBackend
 	{
 		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is null.");
-		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::outline)
+		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::outline)
 			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is not an outline shader.");
 
 		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
@@ -731,7 +731,7 @@ namespace vulkanRendererBackend
 	{
 		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is null.");
-		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::forward)
+		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::forward)
 			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is not a forward shader.");
 
 		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
@@ -741,7 +741,7 @@ namespace vulkanRendererBackend
 	{
 		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreateGizmoMaterial(...) failed. MaterialShader is null.");
-		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::gizmo)
+		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::gizmo)
 			throw std::runtime_error("Renderer::CreateGizmoMaterial(...) failed. MaterialShader is not a gizmo shader.");
 
 		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
@@ -751,7 +751,7 @@ namespace vulkanRendererBackend
 	{
 		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreateShadowMaterial(...) failed. MaterialShader is null.");
-		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::shadow)
+		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::shadow)
 			throw std::runtime_error("Renderer::CreateShadowMaterial(...) failed. MaterialShader is not a shadow shader.");
 
 		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
@@ -761,7 +761,7 @@ namespace vulkanRendererBackend
 	{
 		if (pIMaterialShader == nullptr)
 			throw std::runtime_error("Renderer::CreatePresentMaterial(...) failed. MaterialShader is null.");
-		if (pIMaterialShader->GetMaterialType() != emberCommon::MaterialType::present)
+		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::present)
 			throw std::runtime_error("Renderer::CreatePresentMaterial(...) failed. MaterialShader is not a present shader.");
 
 		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);

@@ -1,5 +1,5 @@
 #pragma once
-#include "commonMaterialType.h"
+#include "commonMaterialPass.h"
 #include "emberCoreExport.h"
 #include "materialShaderId.h"
 #include <filesystem>
@@ -47,7 +47,7 @@ namespace emberCore
 
 		// Getters:
 		const std::string& GetName() const;
-		emberCommon::MaterialType GetMaterialType() const;
+		emberCommon::MaterialPass GetMaterialPass() const;
 		bool IsValid() const;
 
 	private: // Methods:

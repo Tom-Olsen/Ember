@@ -96,15 +96,15 @@ namespace emberCore
 		}
 		return *pName;
 	}
-	emberCommon::MaterialType Material::GetMaterialType() const
+	emberCommon::MaterialPass Material::GetMaterialPass() const
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
 		{
-			LOG_WARN("Material::GetMaterialType() failed. Material is invalid or expired.");
-			return emberCommon::MaterialType::count;
+			LOG_WARN("Material::GetMaterialPass() failed. Material is invalid or expired.");
+			return emberCommon::MaterialPass::count;
 		}
-		return pIMaterial->GetMaterialType();
+		return pIMaterial->GetMaterialPass();
 	}
 	emberCommon::CullMode Material::GetCullMode() const
 	{

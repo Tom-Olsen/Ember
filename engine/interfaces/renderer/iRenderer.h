@@ -4,7 +4,6 @@
 #include "commonForwardRenderMode.h"
 #include "commonGizmoRenderMode.h"
 #include "commonLighting.h"
-#include "commonMaterialType.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
 #include <filesystem>

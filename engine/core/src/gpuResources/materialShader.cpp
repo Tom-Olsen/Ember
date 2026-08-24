@@ -1,4 +1,5 @@
 #include "materialShader.h"
+#include "iMaterialShader.h"
 #include "logger.h"
 #include "materialShaderManager.h"
 
@@ -57,15 +58,15 @@ namespace emberCore
 		}
 		return *pName;
 	}
-	emberCommon::MaterialType MaterialShader::GetMaterialType() const
+	emberCommon::MaterialPass MaterialShader::GetMaterialPass() const
 	{
-		const emberCommon::MaterialType* pMaterialType = MaterialShaderManager::GetMaterialShaderType(m_materialShaderId);
-		if (pMaterialType == nullptr)
+		emberBackendInterface::IMaterialShader* pIMaterialShader = GetInterfaceHandle();
+		if (pIMaterialShader == nullptr)
 		{
-			LOG_WARN("MaterialShader::GetMaterialType() failed. MaterialShader is invalid or expired.");
-			return emberCommon::MaterialType::count;
+			LOG_WARN("MaterialShader::GetMaterialPass() failed. MaterialShader is invalid or expired.");
+			return emberCommon::MaterialPass::count;
 		}
-		return *pMaterialType;
+		return pIMaterialShader->GetMaterialPass();
 	}
 	bool MaterialShader::IsValid() const
 	{

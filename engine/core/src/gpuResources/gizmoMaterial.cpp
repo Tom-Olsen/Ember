@@ -114,7 +114,7 @@ namespace emberCore
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("GizmoMaterial::GizmoMaterial(...) failed. Material is invalid or expired.");
-		if (pIMaterial->GetMaterialType() != emberCommon::MaterialType::gizmo)
+		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::gizmo)
 			throw std::runtime_error("GizmoMaterial::GizmoMaterial(...) failed. IMaterial is not a gizmo material.");
 	}
 }

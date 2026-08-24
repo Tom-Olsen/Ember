@@ -6,9 +6,8 @@ namespace vulkanRendererBackend
 {
 	// Private methods:
 	// Constructor:
-	PipelineKey::PipelineKey(PipelineType pipelineType, uint32_t renderModeIndex, emberCommon::VertexMemoryLayout vertexMemoryLayout)
-		: pipelineType(pipelineType)
-		, renderModeIndex(renderModeIndex)
+	PipelineKey::PipelineKey(uint32_t renderModeIndex, emberCommon::VertexMemoryLayout vertexMemoryLayout)
+		: renderModeIndex(renderModeIndex)
 		, vertexMemoryLayout(vertexMemoryLayout)
 	{
 
@@ -20,17 +19,15 @@ namespace vulkanRendererBackend
 	// Comparison:
 	bool PipelineKey::operator==(const PipelineKey& other) const
 	{
-		return pipelineType == other.pipelineType
-			&& renderModeIndex == other.renderModeIndex
+		return renderModeIndex == other.renderModeIndex
 			&& vertexMemoryLayout == other.vertexMemoryLayout;
 	}
 
 	// Hashing:
 	size_t PipelineKey::Hasher::operator()(const PipelineKey& pipelineKey) const
 	{
-		size_t pipelineType = static_cast<size_t>(pipelineKey.pipelineType);
 		size_t renderModeIndex = static_cast<size_t>(pipelineKey.renderModeIndex);
 		size_t vertexMemoryLayout = static_cast<size_t>(pipelineKey.vertexMemoryLayout);
-		return pipelineType ^ (renderModeIndex << 8) ^ (vertexMemoryLayout << 16);
+		return renderModeIndex ^ (vertexMemoryLayout << 8);
 	}
 }

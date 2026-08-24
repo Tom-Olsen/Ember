@@ -1,6 +1,7 @@
 #pragma once
 #include "commonForwardRenderMode.h"
 #include "commonGizmoRenderMode.h"
+#include "commonMaterialPass.h"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -34,18 +35,7 @@ namespace vulkanRendererBackend
 	};
 
 
-
-	enum class PipelineType : uint8_t
-	{
-		gizmo,
-		outline,
-		shadow,
-		forward,
-		present
-	};
-
-
-
+	
 	template<RenderStage stage>
 	struct RenderStageTraits
 	{
@@ -60,7 +50,7 @@ namespace vulkanRendererBackend
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = true;
 		using RenderMode = emberCommon::GizmoRenderMode;
-		static constexpr PipelineType pipelineType = PipelineType::gizmo;
+		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::gizmo;
 
 		static constexpr uint32_t RenderModeIndex(RenderMode renderMode)
 		{
@@ -74,7 +64,7 @@ namespace vulkanRendererBackend
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = false;
 		using RenderMode = void;
-		static constexpr PipelineType pipelineType = PipelineType::outline;
+		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::outline;
 
 		static constexpr uint32_t RenderModeIndex()
 		{
@@ -88,7 +78,7 @@ namespace vulkanRendererBackend
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = false;
 		using RenderMode = void;
-		static constexpr PipelineType pipelineType = PipelineType::shadow;
+		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::shadow;
 
 		static constexpr uint32_t RenderModeIndex()
 		{
@@ -102,7 +92,7 @@ namespace vulkanRendererBackend
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = true;
 		using RenderMode = emberCommon::ForwardRenderMode;
-		static constexpr PipelineType pipelineType = PipelineType::forward;
+		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::forward;
 
 		static constexpr uint32_t RenderModeIndex(RenderMode renderMode)
 		{
@@ -116,7 +106,7 @@ namespace vulkanRendererBackend
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = false;
 		using RenderMode = void;
-		static constexpr PipelineType pipelineType = PipelineType::present;
+		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::present;
 
 		static constexpr uint32_t RenderModeIndex()
 		{

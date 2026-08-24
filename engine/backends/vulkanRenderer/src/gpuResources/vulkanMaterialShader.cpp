@@ -22,7 +22,7 @@ namespace vulkanRendererBackend
 	// Factories/Destructor:
 	MaterialShader MaterialShader::CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		MaterialShader materialShader(emberCommon::MaterialType::outline, debugName);
+		MaterialShader materialShader(emberCommon::MaterialPass::outline, debugName);
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -77,7 +77,7 @@ namespace vulkanRendererBackend
 	}
 	MaterialShader MaterialShader::CreateForward(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		MaterialShader materialShader(emberCommon::MaterialType::forward, debugName);
+		MaterialShader materialShader(emberCommon::MaterialPass::forward, debugName);
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -136,7 +136,7 @@ namespace vulkanRendererBackend
 	}
 	MaterialShader MaterialShader::CreateGizmo(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		MaterialShader materialShader(emberCommon::MaterialType::gizmo, debugName);
+		MaterialShader materialShader(emberCommon::MaterialPass::gizmo, debugName);
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -195,7 +195,7 @@ namespace vulkanRendererBackend
 	}
 	MaterialShader MaterialShader::CreateShadow(uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv, const std::string& debugName)
 	{
-		MaterialShader materialShader(emberCommon::MaterialType::shadow, debugName);
+		MaterialShader materialShader(emberCommon::MaterialPass::shadow, debugName);
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -246,7 +246,7 @@ namespace vulkanRendererBackend
 	}
 	MaterialShader MaterialShader::CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
-		MaterialShader materialShader(emberCommon::MaterialType::present, debugName);
+		MaterialShader materialShader(emberCommon::MaterialPass::present, debugName);
 
 		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
@@ -314,7 +314,7 @@ namespace vulkanRendererBackend
 		{
 			m_pipelines.clear();
 			Shader::operator=(std::move(other));
-			m_materialType = other.m_materialType;
+			m_materialPass = other.m_materialPass;
 			m_pipelines = std::move(other.m_pipelines);
 		}
 		return *this;
@@ -323,25 +323,18 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
-	emberCommon::MaterialType MaterialShader::GetMaterialType() const
+	emberCommon::MaterialPass MaterialShader::GetMaterialPass() const
 	{
-		return m_materialType;
-	}
-	bool MaterialShader::HasPipeline(PipelineType pipelineType) const
-	{
-		for (const auto& [pipelineKey, _] : m_pipelines)
-			if (pipelineKey.pipelineType == pipelineType)
-				return true;
-		return false;
+		return m_materialPass;
 	}
 
 
 
 	// Private methods:
 	// Constructor:
-	MaterialShader::MaterialShader(emberCommon::MaterialType materialType, const std::string& debugName)
+	MaterialShader::MaterialShader(emberCommon::MaterialPass materialPass, const std::string& debugName)
 		: Shader(debugName)
-		, m_materialType(materialType)
+		, m_materialPass(materialPass)
 	{
 
 	}
@@ -349,15 +342,12 @@ namespace vulkanRendererBackend
 
 
 	// Pipeline lookup:
-	const Pipeline* MaterialShader::GetPipelineByStage(PipelineType pipelineType, const Mesh* pMesh, uint32_t renderModeIndex) const
+	const Pipeline* MaterialShader::GetPipeline(const Mesh* pMesh, uint32_t renderModeIndex) const
 	{
-		if (!HasPipeline(pipelineType))
-			throw std::runtime_error("MaterialShader::GetPipelineByStage(...) failed. Requested pipeline type is not supported by this material shader.");
-
-		PipelineKey pipelineKey(pipelineType, renderModeIndex, pMesh->GetVertexMemoryLayout());
+		PipelineKey pipelineKey(renderModeIndex, pMesh->GetVertexMemoryLayout());
 		auto it = m_pipelines.find(pipelineKey);
 		if (it == m_pipelines.end())
-			throw std::runtime_error("MaterialShader::GetPipelineByStage(...) failed. Render mode is not supported by this material shader.");
+			throw std::runtime_error("MaterialShader::GetPipeline(...) failed. Render mode is not supported by this material shader.");
 		return it->second.get();
 	}
 }

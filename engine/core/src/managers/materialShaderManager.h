@@ -1,5 +1,4 @@
 #pragma once
-#include "commonMaterialType.h"
 #include "emberCoreExport.h"
 #include "materialShader.h"
 #include "materialShaderId.h"
@@ -35,7 +34,6 @@ namespace emberCore
 		struct ManagedMaterialShader
 		{
 			std::string name;
-			emberCommon::MaterialType materialType;
 			std::unique_ptr<emberBackendInterface::IMaterialShader> pIMaterialShader;
 		};
 		struct MaterialShaderSlot
@@ -78,10 +76,9 @@ namespace emberCore
 		static MaterialShaderId GetMaterialShaderId(const std::string& name);
 		static emberBackendInterface::IMaterialShader* GetMaterialShaderInterface(MaterialShaderId materialShaderId);
 		static const std::string* GetMaterialShaderName(MaterialShaderId materialShaderId);
-		static const emberCommon::MaterialType* GetMaterialShaderType(MaterialShaderId materialShaderId);
 		
 		// Add/Delete material shader:
-		static MaterialShader AddMaterialShader(const std::string& name, emberCommon::MaterialType materialType, emberBackendInterface::IMaterialShader* pIMaterialShader);
+		static MaterialShader AddMaterialShader(const std::string& name, emberBackendInterface::IMaterialShader* pIMaterialShader);
 		static void DeleteMaterialShader(MaterialShaderId materialShaderId);
 
 		// Delete all constructors:

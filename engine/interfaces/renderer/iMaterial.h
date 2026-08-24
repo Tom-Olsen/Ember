@@ -2,7 +2,7 @@
 #include "commonCullMode.h"
 #include "commonForwardRenderState.h"
 #include "commonGizmoRenderState.h"
-#include "commonMaterialType.h"
+#include "commonMaterialPass.h"
 #include <cstdint>
 
 
@@ -26,7 +26,7 @@ namespace emberBackendInterface
         virtual void SetGizmoRenderMode(emberCommon::GizmoRenderMode renderMode) = 0;
 
         // Getters:
-        virtual emberCommon::MaterialType GetMaterialType() const = 0;
+        virtual emberCommon::MaterialPass GetMaterialPass() const = 0;
         virtual IDescriptorSetBinding* GetShaderDescriptorSetBinding() const = 0;
         virtual int32_t GetRenderQueue() const = 0;
         virtual emberCommon::CullMode GetCullMode() const = 0;

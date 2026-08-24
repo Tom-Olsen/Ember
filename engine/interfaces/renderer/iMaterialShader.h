@@ -1,5 +1,5 @@
 #pragma once
-#include "commonMaterialType.h"
+#include "commonMaterialPass.h"
 
 
 
@@ -12,6 +12,6 @@ namespace emberBackendInterface
 		virtual ~IMaterialShader() = default;
 
 		// Getters:
-		virtual emberCommon::MaterialType GetMaterialType() const = 0;
+		virtual emberCommon::MaterialPass GetMaterialPass() const = 0;
 	};
 }

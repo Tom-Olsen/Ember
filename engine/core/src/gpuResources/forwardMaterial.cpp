@@ -146,7 +146,7 @@ namespace emberCore
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("ForwardMaterial::ForwardMaterial(...) failed. Material is invalid or expired.");
-		if (pIMaterial->GetMaterialType() != emberCommon::MaterialType::forward)
+		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
 			throw std::runtime_error("ForwardMaterial::ForwardMaterial(...) failed. IMaterial is not a forward material.");
 	}
 }

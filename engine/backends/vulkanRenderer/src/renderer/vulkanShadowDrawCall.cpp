@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 		assert(pMesh != nullptr);
 		assert(pMaterial != nullptr);
 		assert(descriptorSetBindingHandle.IsValid());
-		assert(pMaterial->GetMaterialType() == emberCommon::MaterialType::shadow);
+		assert(pMaterial->GetMaterialPass() == emberCommon::MaterialPass::shadow);
 	}
 	ShadowDrawCall::~ShadowDrawCall()
 	{
