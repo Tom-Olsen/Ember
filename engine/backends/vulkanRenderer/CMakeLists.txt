@@ -36,6 +36,9 @@ source_group("Context" FILES ${CONTEXT_FILES})
 file(GLOB DESCRIPTOR_SET_LAYOUTS_FILES "src/descriptorSetLayouts/*.*")
 source_group("Descriptor Set Layouts" FILES ${DESCRIPTOR_SET_LAYOUTS_FILES})
 
+file(GLOB DRAW_CALLS_FILES "src/drawCalls/*.*")
+source_group("Draw Calls" FILES ${DRAW_CALLS_FILES})
+
 file(GLOB GPU_RESOURCE_POOLS_FILES "src/gpuResourcePools/*.*")
 source_group("Gpu Resource Pools" FILES ${GPU_RESOURCE_POOLS_FILES})
 
@@ -102,6 +105,7 @@ add_library(${TARGET_NAME} ${LIB_TYPE}
     ${COMPUTE_FILES}
     ${CONTEXT_FILES}
     ${DESCRIPTOR_SET_LAYOUTS_FILES}
+    ${DRAW_CALLS_FILES}
     ${GPU_RESOURCE_POOLS_FILES}
     ${GPU_RESOURCES_FILES}
         ${BUFFERS_FILES}

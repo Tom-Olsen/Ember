@@ -110,6 +110,11 @@ namespace vulkanRendererBackend
 		std::vector<std::vector<Mesh*>> m_pendingMeshUpdates;				// one vector per frame in flight. 
 		std::vector<std::array<VkDescriptorSet, 3>> m_staticDescriptorSets;	// (global/scen/frame) per frame in flight.
 
+		// Render Textures:
+		// ToDo: initialize these and forward them to the forward and deferred renderpasses.
+		std::vector<std::unique_ptr<RenderTexture2d>> m_pSceneColorTextures;
+		std::vector<std::unique_ptr<RenderTexture2d>> m_pSceneDepthTextures;
+
 	public: // Methods:
 		Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow);
 		~Renderer();

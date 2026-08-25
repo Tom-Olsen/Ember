@@ -1,3 +1,7 @@
+Add CONFIGURE_DEPENDS to all cmake file(GLOB...) commands? e.g:
+file(GLOB PIPELINES_FILES CONFIGURE_DEPENDS "src/pipelines/*.*")
+This makes cmake auto include newly added files when running make ... so no cmake .. on adding files is needed anymore.
+
 Check transform directions vs world directions and see if they mean the same.
 
 Review draw-call sorting and reduce per-frame overhead by caching sort keys or only resorting when relevant state changes.
