@@ -1,0 +1,54 @@
+#include "vulkanDepthTexture2d.h"
+#include "logger.h"
+#include "vmaImage.h"
+#include "vulkanContext.h"
+#include "vulkanLogicalDevice.h"
+#include "vulkanMacros.h"
+
+
+
+namespace vulkanRendererBackend
+{
+	// Constructor/Desctructor:
+	DepthTexture2d::DepthTexture2d(VkFormat format, int width, int height)
+	{
+		if (!IsDepthFormat(format))
+			throw std::runtime_error("DepthTexture2d::DepthTexture2d(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));
+
+		m_width = width;
+		m_height = height;
+		m_channels = GetChannelCount(format);
+		m_format = format;
+		m_vkDescriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+
+		// Define subresource range:
+		VkImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		subresourceRange.baseArrayLayer = 0;
+		subresourceRange.baseMipLevel = 0;
+		subresourceRange.layerCount = 1;
+		subresourceRange.levelCount = 1; // no mipmapping for shadow textures.
+
+		// Create image:
+		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		VkImageCreateFlags imageFlags = 0;
+		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
+		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
+
+		SetDebugName("DepthTexture2d");
+	}
+	DepthTexture2d::~DepthTexture2d()
+	{
+
+	}
+
+
+
+	// Public method:
+	void DepthTexture2d::SetData(void* data)
+	{
+		LOG_WARN("Setting data of a DepthTexture2d manually is not allowed!");
+	}
+}
