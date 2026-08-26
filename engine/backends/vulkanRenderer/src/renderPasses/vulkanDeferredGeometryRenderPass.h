@@ -9,8 +9,8 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class VmaImage;
-	class RenderTexture2d;
+	class DepthTexture2d;
+	class GBufferTexture2d;
 
 
 
@@ -22,13 +22,13 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		// G-buffer attachments:
-		std::vector<std::unique_ptr<RenderTexture2d>> m_pAlbedoTextures;
-		std::vector<std::unique_ptr<RenderTexture2d>> m_pNormalTextures;
-		std::vector<std::unique_ptr<RenderTexture2d>> m_pMaterialTextures;
-		VkFormat m_depthFormat;
+		std::vector<std::unique_ptr<GBufferTexture2d>> m_pAlbedoTextures;
+		std::vector<std::unique_ptr<GBufferTexture2d>> m_pNormalTextures;
+		std::vector<std::unique_ptr<GBufferTexture2d>> m_pMaterialTextures;
+		std::vector<DepthTexture2d*> m_pDepthTextures;
 
 	public: // Methods:
-		DeferredGeometryRenderPass(uint32_t renderWidth, uint32_t renderHeight);
+		DeferredGeometryRenderPass(uint32_t renderWidth, uint32_t renderHeight, const std::vector<std::unique_ptr<DepthTexture2d>>& pDepthTextures);
 		~DeferredGeometryRenderPass();
 
 		// Non-copyable:
@@ -40,9 +40,10 @@ namespace vulkanRendererBackend
 		DeferredGeometryRenderPass& operator=(DeferredGeometryRenderPass&& other) noexcept = default;
 
 		// Getters:
-		RenderTexture2d* GetAlbedoTexture(uint32_t frameIndex) const;
-		RenderTexture2d* GetNormalTexture(uint32_t frameIndex) const;
-		RenderTexture2d* GetMaterialTexture(uint32_t frameIndex) const;
+		GBufferTexture2d* GetAlbedoTexture(uint32_t frameIndex) const;
+		GBufferTexture2d* GetNormalTexture(uint32_t frameIndex) const;
+		GBufferTexture2d* GetMaterialTexture(uint32_t frameIndex) const;
+		DepthTexture2d* GetDepthTexture(uint32_t frameIndex) const;
 
 	private: // Methods:
 		void CreateRenderPass();

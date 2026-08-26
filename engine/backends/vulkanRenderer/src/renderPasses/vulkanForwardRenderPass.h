@@ -9,7 +9,7 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class VmaImage;
+	class DepthTexture2d;
 	class RenderTexture2d;
 
 
@@ -20,16 +20,15 @@ namespace vulkanRendererBackend
 	class ForwardRenderPass : public RenderPass
 	{
 	private: // Members:
-		// These images are transiant (only needed temporary in between pipeline stages).
-		// Thus creating texture wrappers for them makes no sense, as they have a fixed place and functionality.
-		std::vector<std::unique_ptr<VmaImage>> m_pMsaaImages;
-		std::vector<std::unique_ptr<VmaImage>> m_pDepthImages;
-		std::vector<std::unique_ptr<RenderTexture2d>> m_pRenderTextures;
-		std::vector<std::unique_ptr<RenderTexture2d>> m_pSecondaryRenderTextures;
-		VkFormat m_depthFormat;
+		std::vector<RenderTexture2d*> m_pRenderTextures;
+		std::vector<RenderTexture2d*> m_pSecondaryRenderTextures;
+		std::vector<DepthTexture2d*> m_pDepthTextures;
 
 	public: // Methods:
-		ForwardRenderPass(uint32_t renderWidth, uint32_t renderHeight);
+		ForwardRenderPass(
+			const std::vector<std::unique_ptr<RenderTexture2d>>& pRenderTextures,
+			const std::vector<std::unique_ptr<RenderTexture2d>>& pSecondaryRenderTextures,
+			const std::vector<std::unique_ptr<DepthTexture2d>>& pDepthTextures);
 		~ForwardRenderPass();
 
 		// Non-copyable:
@@ -41,16 +40,12 @@ namespace vulkanRendererBackend
 		ForwardRenderPass& operator=(ForwardRenderPass&& other) noexcept = default;
 
 		// Getters:
-		const VmaImage* const GetMsaaVmaImage(uint32_t frameIndex) const;
-		const VmaImage* const GetDepthVmaImage(uint32_t frameIndex) const;
 		RenderTexture2d* GetRenderTexture(uint32_t frameIndex) const;
 		RenderTexture2d* GetSecondaryRenderTexture(uint32_t frameIndex) const;
+		DepthTexture2d* GetDepthTexture(uint32_t frameIndex) const;
 
 	private: // Methods:
 		void CreateRenderPass();
-		void CreateRenderTextures(uint32_t renderWidth, uint32_t renderHeight);
-		void CreateMsaaImages();
-		void CreateDepthImages();
 		void CreateFrameBuffers();
 	};
 }
