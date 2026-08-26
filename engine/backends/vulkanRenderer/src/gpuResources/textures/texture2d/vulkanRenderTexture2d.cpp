@@ -9,7 +9,7 @@
 
 namespace vulkanRendererBackend
 {
-	// Public method:
+	// Public methods:
 	// Constructor/Desctructor:
 	RenderTexture2d::RenderTexture2d(VkFormat format, int width, int height)
 	{
