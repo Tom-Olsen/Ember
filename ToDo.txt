@@ -349,3 +349,137 @@ Individual descriptor free	No
 Pool reset	Every frame
 Fragmentation resistant	Yes
 Long-lived descriptors	No
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Your outline is directionally correct, but I would reorder it slightly. The material and G-buffer contracts need to exist before the pipelines and draw-call routing can be designed cleanly.
+Recommended order
+1. Define the deferred contract
+Before implementation, lock down:
+- MaterialPass::deferred
+- A DeferredRenderState
+- Which materials remain forward-only:
+  - transparent
+  - skybox
+  - probably wireframe
+- Exact G-buffer channel meanings
+- Normal coordinate space
+- Depth-based world-position reconstruction
+- How receiveShadows is encoded per pixel
+A reasonable initial G-buffer contract would be:
+Texture	Channels
+Albedo SRGB	RGB = base color, A = available
+Normal A2B10G10R10	RGB = encoded world-space normal, A2 = flags or unused
+Material RGBA8	R = metallic, G = roughness, B = ambient occlusion, A = flags
+Depth D32	hardware depth
+
+
+The flags must account for things such as receiveShadows and potentially unlit materials. Emissive HDR cannot be represented properly by this contract, so either explicitly defer emissive support or add another buffer later.
+2. Add deferred material support
+This should precede draw calls because the draw-call implementation needs a valid deferred material and pipeline lookup.
+Likely additions:
+- MaterialPass::deferred
+- DeferredRenderState
+- DeferredMaterial in core
+- Deferred factories through:
+  - IRenderer
+  - core Renderer
+  - MaterialManager
+  - MaterialShaderManager
+  - Vulkan Material
+  - Vulkan MaterialShader
+- RenderStageTraits<RenderStage::deferredGeometry>
+I recommend a distinct deferred material type for now. Refactoring a material into a Unity-like multi-pass material containing deferred, forward, shadow, and fallback passes is a much larger architectural step.
+3. Add the deferred geometry pipeline
+This is the per-material pipeline. It should have:
+- Three color blend attachment states, all with blending disabled
+- Depth test and depth writes enabled
+- One sample
+- Dynamic viewport, scissor, and cull mode
+- The deferred geometry render pass
+- Pipeline variants for each vertex memory layout
+The geometry shader interface and pipeline should be developed together because shader reflection determines vertex inputs, descriptors, and pipeline layout.
+4. Add deferred draw-call storage and routing
+Add:
+std::vector<DeferredDrawCall> m_deferredDrawCalls;
+std::vector<DeferredDrawCall*> m_sortedDeferredDrawCallPointers;
+DeferredDrawCall will be very similar to ForwardDrawCall.
+The existing Renderer::DrawMesh() API can route based on MaterialPass:
+deferred material → deferred geometry list
+forward material  → forward list
+No separate public DrawDeferredMesh() API should be necessary.
+Remember to integrate deferred calls into:
+- descriptor-binding checkout/return
+- model-data updates
+- shader-data updates
+- pending-use tracking
+- frame reset
+- sorting
+Deferred geometry is opaque, so sorting should favor pipeline/material grouping and optionally front-to-back depth. It does not need transparent back-to-front sorting.
+5. Record deferred geometry draws
+Populate the existing empty geometry render-pass block with logic equivalent to forward recording:
+- Pipeline changes
+- Pipeline-layout changes
+- Static descriptor sets
+- Per-shader descriptor sets
+- Per-draw descriptor sets
+- Push constants
+- Vertex/index buffers
+- Indexed draws
+The render pass itself should continue to execute even when the deferred draw list is empty so the G-buffers and depth are always cleared.
+6. Add deferred lighting as a renderer-owned fullscreen operation
+Deferred lighting should not use DeferredDrawCall or the sorted geometry list. It is one fullscreen draw per frame.
+I would model it similarly to presentation:
+- Dedicated DeferredLightingPipeline
+- Renderer/default-resource-owned lighting shader/material
+- No depth attachment
+- Depth testing disabled
+- No blending
+- One fullscreen triangle, preferably generated from SV_VertexID
+- G-buffer and depth textures bound per frame
+- Static scene/light/shadow descriptor sets bound normally
+The lighting draw should always execute, even when there are no geometry calls. Empty depth/G-buffers should simply produce the cleared background color.
+7. Write shaders incrementally
+I would not write the entire lighting model in one pass:
+1. Geometry shader writes the defined G-buffer contract.
+2. Lighting shader displays albedo only.
+3. Reconstruct world position from depth.
+4. Decode and visualize normals.
+5. Add one directional light.
+6. Add positional lights.
+7. Add shadow sampling.
+8. Add material parameters and flags.
+Important details:
+- Sampling the SRGB albedo texture automatically converts it to linear space.
+- Lighting writes linear color to R16G16B16A16_SFLOAT.
+- Existing post-processing applies gamma correction later.
+- Use Texture2D.Load() for G-buffer/depth access to avoid filtering packed material data, normals, and depth.
+8. Test the mixed pipeline
+The meaningful final test is not merely a deferred object. Test:
+- Deferred opaque object
+- Forward transparent object over it
+- Forward skybox/background
+- Correct depth interaction between deferred and forward
+- Multiple frames in flight
+- Shadowed and non-shadow-receiving objects
+- Resize/recreation
+- Vulkan validation layers
+The most important adjustment to your plan is therefore: add material/G-buffer contracts before draw calls, and treat deferred lighting as one global fullscreen operation—not as part of each deferred draw call.
