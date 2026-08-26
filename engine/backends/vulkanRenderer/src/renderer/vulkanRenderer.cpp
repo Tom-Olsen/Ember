@@ -21,8 +21,10 @@
 #include "vulkanConvertMaterialRenderState.h"
 #include "vulkanConvertTextureFormat.h"
 #include "vulkanDefaultGpuResources.h"
-#include "vulkanDepthTexture2dArray.h"
 #include "vulkanDefaultPushConstant.h"
+#include "vulkanDepthTexture2d.h"
+#include "vulkanDepthTexture2dArray.h"
+#include "vulkanDescriptorPoolManager.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanForwardDrawCall.h"
@@ -52,6 +54,7 @@
 #include "vulkanSceneDescriptorSetLayout.h"
 #include "vulkanShadowDrawCall.h"
 #include "vulkanShadowRenderPass.h"
+#include "vulkanSingleTimeCommand.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageSampleTexture2d.h"
 #include "vulkanStorageSampleTexture3d.h"
@@ -77,7 +80,23 @@ namespace vulkanRendererBackend
 	{
 		m_pIWindow = pIWindow;
 		m_pendingMeshUpdates.resize(createInfo.framesInFlight); // Prepare one pending mesh update vector per frame in flight.
+		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));
+		m_maxPositionalLights = math::Clamp(createInfo.maxPositionalLights, uint32_t(1), uint32_t(MAX_POS_LIGHTS));
+		m_shadowMapResolution = math::Clamp(createInfo.shadowMapResolution, uint32_t(1), uint32_t(SHADOW_MAP_RESOLUTION));
+
+		// Initialization:
 		Context::Init(createInfo, pIWindow, this);
+		SingleTimeCommand::Init();
+		GarbageCollector::Init();
+		DescriptorPoolManager::Init();
+		DefaultGpuResources::InitSamplers();
+		PoolManager::Init();
+		CreateSceneTextures(createInfo.renderWidth, createInfo.renderHeight);
+		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, m_shadowMapResolution, m_maxDirectionalLights + m_maxPositionalLights, m_pSceneColorTextures, m_pSecondarySceneColorTextures, m_pSceneDepthTextures);
+		GlobalDescriptorSetLayout::Init();
+		SceneDescriptorSetLayout::Init();
+		FrameDescriptorSetLayout::Init();
+		DefaultGpuResources::Init();
 
 		m_time = 0.0f;
 		m_deltaTime = 0.0f;
@@ -98,9 +117,6 @@ namespace vulkanRendererBackend
 		m_positionalLightsCount = 0;
 		m_previousDirectionalLightsCount = 0;
 		m_previousPositionalLightsCount = 0;
-		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));
-		m_maxPositionalLights = math::Clamp(createInfo.maxPositionalLights, uint32_t(1), uint32_t(MAX_POS_LIGHTS));
-		m_shadowMapResolution = math::Clamp(createInfo.shadowMapResolution, uint32_t(1), uint32_t(SHADOW_MAP_RESOLUTION));
 		m_directionalLights.resize(m_maxDirectionalLights);
 		m_positionalLights.resize(m_maxPositionalLights);
 		m_previousDirectionalLights.resize(m_maxDirectionalLights);
@@ -144,6 +160,19 @@ namespace vulkanRendererBackend
 		DestroySemaphores();
 		DestroyFences();
 		m_commandPools.clear();
+		FrameDescriptorSetLayout::Clear();
+		SceneDescriptorSetLayout::Clear();
+		GlobalDescriptorSetLayout::Clear();
+		PoolManager::Clear();
+		DefaultGpuResources::Clear();
+		RenderPassManager::Clear();
+		m_pSceneDepthTextures.clear();
+		m_pSecondarySceneColorTextures.clear();
+		m_pSceneColorTextures.clear();
+		GarbageCollector::Flush();		// descriptor sets must be destroyed while their parent pools are alive.
+		DescriptorPoolManager::Clear();
+		GarbageCollector::Clear();
+		SingleTimeCommand::Clear();
 		Context::Clear();
 	}
 
@@ -965,6 +994,34 @@ namespace vulkanRendererBackend
 
 
 	// Other:
+	void Renderer::CreateSceneTextures(uint32_t renderWidth, uint32_t renderHeight)
+	{
+		const uint32_t framesInFlight = Context::GetFramesInFlight();
+		const VkFormat sceneColorFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+		const VkFormat sceneDepthFormat = VK_FORMAT_D32_SFLOAT;
+
+		m_pSceneColorTextures.reserve(framesInFlight);
+		m_pSecondarySceneColorTextures.reserve(framesInFlight);
+		m_pSceneDepthTextures.reserve(framesInFlight);
+		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
+		{
+			m_pSceneColorTextures.push_back(std::make_unique<RenderTexture2d>(sceneColorFormat, renderWidth, renderHeight));
+			m_pSecondarySceneColorTextures.push_back(std::make_unique<RenderTexture2d>(sceneColorFormat, renderWidth, renderHeight));
+			m_pSceneDepthTextures.push_back(std::make_unique<DepthTexture2d>(sceneDepthFormat, renderWidth, renderHeight));
+
+			m_pSceneColorTextures[frameIndex]->SetDebugName("SceneColorTexture_Frame" + std::to_string(frameIndex));
+			m_pSecondarySceneColorTextures[frameIndex]->SetDebugName("SecondarySceneColorTexture_Frame" + std::to_string(frameIndex));
+			m_pSceneDepthTextures[frameIndex]->SetDebugName("SceneDepthTexture_Frame" + std::to_string(frameIndex));
+
+			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
+			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
+			AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
+			m_pSceneColorTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_GENERAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			m_pSecondarySceneColorTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_GENERAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			m_pSceneDepthTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		}
+	}
 	void Renderer::RebuildSwapchain()
 	{
 		// Recreate swapchain:

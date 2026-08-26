@@ -1,21 +1,11 @@
 #include "vulkanContext.h"
-#include "emberMath.h"
 #include "iWindow.h"
 #include "vulkanAllocationTracker.h"
-#include "vulkanDefaultGpuResources.h"
-#include "vulkanDescriptorPoolManager.h"
-#include "vulkanFrameDescriptorSetLayout.h"
-#include "vulkanGarbageCollector.h"
-#include "vulkanGlobalDescriptorSetLayout.h"
 #include "vulkanInstance.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanMemoryAllocator.h"
 #include "vulkanPhysicalDevice.h"
-#include "vulkanPoolManager.h"
-#include "vulkanRenderPassManager.h"
-#include "vulkanSceneDescriptorSetLayout.h"
-#include "vulkanSingleTimeCommand.h"
 #include "vulkanSurface.h"
 #include "vulkanSwapchain.h"
 #include <cstring>
@@ -136,20 +126,7 @@ namespace vulkanRendererBackend
 		m_swapchainIndex = 0;
 
 		// Set msaa sampling value:
-		m_msaaSamples = static_cast<VkSampleCountFlagBits>(math::Min(static_cast<uint32_t>(createInfo.msaaSampleCount), static_cast<uint32_t>(m_pPhysicalDevice->GetMaxMsaaSamples())));
-
-		// Init static utility:
-		uint32_t maxLightsCount = createInfo.maxDirectionalLights + createInfo.maxPositionalLights;
-		SingleTimeCommand::Init();
-		GarbageCollector::Init();
-		DescriptorPoolManager::Init();
-		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, createInfo.shadowMapResolution, maxLightsCount);
-		DefaultGpuResources::InitSamplers();
-		PoolManager::Init();
-		GlobalDescriptorSetLayout::Init();
-		SceneDescriptorSetLayout::Init();
-		FrameDescriptorSetLayout::Init();
-		DefaultGpuResources::Init();
+		m_msaaSamples = VK_SAMPLE_COUNT_1_BIT; // static_cast<VkSampleCountFlagBits>(math::Min(static_cast<uint32_t>(createInfo.msaaSampleCount), static_cast<uint32_t>(m_pPhysicalDevice->GetMaxMsaaSamples())));
 
 		// Debug naming:
 		if (m_pLogicalDevice->GetGraphicsQueue().queue == m_pLogicalDevice->GetPresentQueue().queue)
@@ -165,16 +142,6 @@ namespace vulkanRendererBackend
 	void Context::Clear()
 	{
 		WaitDeviceIdle();
-		FrameDescriptorSetLayout::Clear();
-		SceneDescriptorSetLayout::Clear();
-		GlobalDescriptorSetLayout::Clear();
-		PoolManager::Clear();
-		DefaultGpuResources::Clear();
-		RenderPassManager::Clear();
-		GarbageCollector::Flush();		// descriptor sets must be destroyed while their parent pools are alive.
-		DescriptorPoolManager::Clear();
-		GarbageCollector::Clear();
-		SingleTimeCommand::Clear();
 		m_swapchains[0].reset();
 		m_swapchains[1].reset();
 		m_pAllocationTracker.reset();
