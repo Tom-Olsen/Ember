@@ -44,6 +44,7 @@ namespace vulkanRendererBackend
 		static std::unordered_set<VkFormat> s_valid16BitFormats;
 		static std::unordered_set<VkFormat> s_valid32BitFormats;
 		static std::unordered_set<VkFormat> s_valid64BitFormats;
+		static std::unordered_set<VkFormat> s_validPacked32BitFormats;
 		static std::unordered_set<VkFormat> s_validSingleChannelFormats;
 		static std::unordered_set<VkFormat> s_validDoubleChannelFormats;
 		static std::unordered_set<VkFormat> s_validTripleChannelFormats;
@@ -93,7 +94,7 @@ namespace vulkanRendererBackend
 
 	protected: // Methods:
 		uint32_t GetChannelCount(VkFormat format);
-		uint32_t BytesPerChannel(VkFormat format);
+		uint32_t BytesPerTexel(VkFormat format);
 		bool IsValidImageFormat(VkFormat format);
 		bool IsDepthFormat(VkFormat format);
 		bool IsStencilFormat(VkFormat format);

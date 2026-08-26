@@ -52,6 +52,10 @@ namespace vulkanRendererBackend
 		VK_FORMAT_R64G64B64_UINT, VK_FORMAT_R64G64B64_SINT, VK_FORMAT_R64G64B64_SFLOAT,
 		VK_FORMAT_R64G64B64A64_UINT, VK_FORMAT_R64G64B64A64_SINT, VK_FORMAT_R64G64B64A64_SFLOAT
 	};
+	std::unordered_set<VkFormat> Texture::s_validPacked32BitFormats =
+	{
+		VK_FORMAT_A2B10G10R10_UNORM_PACK32
+	};
 	std::unordered_set<VkFormat> Texture::s_validSingleChannelFormats =
 	{
 		VK_FORMAT_R8_SRGB, VK_FORMAT_R8_UINT, VK_FORMAT_R8_SINT, VK_FORMAT_R8_USCALED, VK_FORMAT_R8_SSCALED, VK_FORMAT_R8_UNORM, VK_FORMAT_R8_SNORM,
@@ -78,7 +82,8 @@ namespace vulkanRendererBackend
 		VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UINT, VK_FORMAT_R8G8B8A8_SINT, VK_FORMAT_R8G8B8A8_USCALED, VK_FORMAT_R8G8B8A8_SSCALED, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_SNORM,
 		VK_FORMAT_R16G16B16A16_UINT, VK_FORMAT_R16G16B16A16_SINT, VK_FORMAT_R16G16B16A16_USCALED, VK_FORMAT_R16G16B16A16_SSCALED, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R16G16B16A16_SNORM, VK_FORMAT_R16G16B16A16_SFLOAT,
 		VK_FORMAT_R32G32B32A32_UINT, VK_FORMAT_R32G32B32A32_SINT, VK_FORMAT_R32G32B32A32_SFLOAT,
-		VK_FORMAT_R64G64B64A64_UINT, VK_FORMAT_R64G64B64A64_SINT, VK_FORMAT_R64G64B64A64_SFLOAT
+		VK_FORMAT_R64G64B64A64_UINT, VK_FORMAT_R64G64B64A64_SINT, VK_FORMAT_R64G64B64A64_SFLOAT,
+		VK_FORMAT_A2B10G10R10_UNORM_PACK32
 	};
 	std::unordered_set<VkFormat> Texture::s_validDepthFormats =
 	{ VK_FORMAT_D16_UNORM, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT };
@@ -214,18 +219,23 @@ namespace vulkanRendererBackend
 		throw std::runtime_error("Unsupported Texture format: " + emberVulkanUtility::ToString(format));
 		return -1;
 	}
-	uint32_t Texture::BytesPerChannel(VkFormat format)
+	uint32_t Texture::BytesPerTexel(VkFormat format)
 	{
+
         // Color formats:
 		if (s_valid08BitFormats.contains(format))
-			return 1;
+			return GetChannelCount(format);
 		if (s_valid16BitFormats.contains(format))
-			return 2;
+			return 2 * GetChannelCount(format);
 		if (s_valid32BitFormats.contains(format))
-			return 4;
+			return 4 * GetChannelCount(format);
 		if (s_valid64BitFormats.contains(format))
-			return 8;
+			return 8 * GetChannelCount(format);
             
+		// Packed formats:
+		if (s_validPacked32BitFormats.contains(format))
+			return 4;
+
         // Depth/Stencil formats:
         if (format == VK_FORMAT_S8_UINT)
             return 1;
@@ -245,7 +255,7 @@ namespace vulkanRendererBackend
 	}
 	bool Texture::IsValidImageFormat(VkFormat format)
 	{
-		return s_valid08BitFormats.contains(format) || s_valid16BitFormats.contains(format) || s_valid32BitFormats.contains(format) || s_valid64BitFormats.contains(format);
+		return s_valid08BitFormats.contains(format) || s_valid16BitFormats.contains(format) || s_valid32BitFormats.contains(format) || s_valid64BitFormats.contains(format) || s_validPacked32BitFormats.contains(format);
 	}
 	bool Texture::IsDepthFormat(VkFormat format)
 	{
@@ -261,7 +271,7 @@ namespace vulkanRendererBackend
 		uint64_t width = m_width;
 		uint64_t height = m_height;
 		uint64_t depth = m_depth;
-		uint64_t bytesPerTexel = static_cast<uint64_t>(m_channels) * BytesPerChannel(format);
+		uint64_t bytesPerTexel = BytesPerTexel(format);
 
 		for (uint32_t i = 0; i < subresourceRange.levelCount; i++)
 		{
@@ -322,7 +332,7 @@ namespace vulkanRendererBackend
 	StagingBuffer* Texture::StageData(void* data)
 	{
 		uint64_t layerCount = m_pImage->GetImageSubresourceRange().layerCount;
-		uint64_t bufferSize = layerCount * m_channels * m_width * m_height * m_depth * BytesPerChannel(m_format);
+		uint64_t bufferSize = layerCount * m_width * m_height * m_depth * BytesPerTexel(m_format);
 		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
 		pStagingBuffer->SetData(data, bufferSize);
 		return pStagingBuffer;

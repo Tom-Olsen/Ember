@@ -131,6 +131,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/compute
     ${CMAKE_CURRENT_SOURCE_DIR}/src/context
     ${CMAKE_CURRENT_SOURCE_DIR}/src/descriptorSetLayouts
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/drawCalls
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResourcePools
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/buffers

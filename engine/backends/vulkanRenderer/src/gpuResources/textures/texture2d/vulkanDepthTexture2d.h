@@ -9,7 +9,7 @@ namespace vulkanRendererBackend
 	/// Texture2d specialization: <para/>
 	/// -VkImageUsageFlags	= depth, sample <para/>
 	/// -VkImageCreateFlags	= 0 <para/>
-	/// -VkImageViewType    = 2d array
+	/// -VkImageViewType    = 2d
 	/// </summary>
 	class DepthTexture2d : public Texture2d
 	{
