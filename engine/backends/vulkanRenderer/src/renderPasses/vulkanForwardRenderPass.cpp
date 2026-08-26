@@ -113,12 +113,12 @@ namespace vulkanRendererBackend
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;	// index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass.
 		dependency.dstSubpass = 0;						// index of destination subpass, where dependency ends.  VK_SUBPASS_EXTERNAL = after renderpass.
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;	// pipeline stages in deferred render pass which must complete before forward render pass can start.
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;	// pipeline stages in post processing render stage which must wait for forward render pass to complete.
-		dependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite;	// memory accesses in deferred render pass that must be completed before forward render pass can start.
-		dependency.dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead | AccessMasks::EarlyFragmentTest::depthStencilAttachmentWrite;	// memory accesses in forward render pass that must be completed before post processing render stage can start.
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;	// deferred color and depth producer stages.
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;	// forward color and depth consumer stages.
+		dependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite;	// deferred attachment writes that forward consumes.
+		dependency.dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead | AccessMasks::EarlyFragmentTest::depthStencilAttachmentWrite;	// forward loads, tests, and attachment writes.
 		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;	// specify special behaviors.
-		// Forwrad pass -> post processing, is handeled by semaphore.
+		// Forward pass -> post processing is handled by barrier + semaphore.
 
 		VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());

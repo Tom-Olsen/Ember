@@ -65,13 +65,23 @@ namespace vulkanRendererBackend
 		std::vector<VkSemaphore> m_resourceUpdateToPreRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_resourceUpdateToGizmoSemaphores;
 		std::vector<VkSemaphore> m_preRenderComputeToShadowSemaphores;
+		std::vector<VkSemaphore> m_preRenderComputeToDeferredGeometrySemaphores;
 		std::vector<VkSemaphore> m_preRenderComputeToOutlineSemaphores;
-		std::vector<VkSemaphore> m_shadowToForwardSemaphores;
+		std::vector<VkSemaphore> m_shadowToDeferredLightingSemaphores;
+		std::vector<VkSemaphore> m_deferredGeometryToDeferredLightingSemaphores;
+		std::vector<VkSemaphore> m_deferredLightingToForwardSemaphores;
 		std::vector<VkSemaphore> m_forwardToPostRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_outlineToPostRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_gizmoToPresentSemaphores;
-		std::vector<VkSemaphore> m_postRenderToPresentSemaphores;
+		std::vector<VkSemaphore> m_postRenderComputeToPresentSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
+
+		// Sync Graph:
+		// ResourceUpdate
+		// ├─> PreRenderCompute ─┬─> Shadow ───────────┐
+		// │                     ├─> DeferredGeometry ─┴─> DeferredLighting ─> Forward ─┐
+		// │                     └─> Outline ───────────────────────────────────────────┴─> PostRenderCompute ─┐
+		// └─> Gizmo ─────────────────────────────────────────────────────────────────────────────────────> Present
 
 		// Shadow/Light system:
 		float m_depthBiasConstantFactor;
@@ -247,6 +257,8 @@ namespace vulkanRendererBackend
 		void RecordPreRenderComputeCommands();
 		void RecordOutlineCommands();
 		void RecordShadowCommands();
+		void RecordDeferredGeometryCommands();
+		void RecordDeferredLightingCommands();
 		void RecordForwardCommands();
 		void RecordForwardCommandsParallel();
 		void RecordPostRenderComputeCommands();
@@ -258,6 +270,8 @@ namespace vulkanRendererBackend
 		void SubmitPreRenderComputeCommands();
 		void SubmitOutlineCommands();
 		void SubmitShadowCommands();
+		void SubmitDeferredGeometryCommands();
+		void SubmitDeferredLightingCommands();
 		void SubmitForwardCommands();
 		void SubmitForwardCommandsParallel();
 		void SubmitGizmoCommands();

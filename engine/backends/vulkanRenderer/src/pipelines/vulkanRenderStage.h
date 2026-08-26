@@ -17,7 +17,8 @@ namespace vulkanRendererBackend
 		preRenderCompute,
 		outline,
 		shadow,
-		deferred,
+		deferredGeometry,
+		deferredLighting,
 		forward,
 		postRenderCompute,
 		present,
@@ -30,6 +31,8 @@ namespace vulkanRendererBackend
 		"preRenderCompute",
 		"outline",
 		"shadow",
+		"deferredGeometry",
+		"deferredLighting",
 		"forward",
 		"postRenderCompute",
 		"present"

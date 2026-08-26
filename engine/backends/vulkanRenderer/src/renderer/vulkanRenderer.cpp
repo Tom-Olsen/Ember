@@ -22,6 +22,8 @@
 #include "vulkanConvertTextureFormat.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDefaultPushConstant.h"
+#include "vulkanDeferredGeometryRenderPass.h"
+#include "vulkanDeferredLightingRenderPass.h"
 #include "vulkanDepthTexture2d.h"
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanDescriptorPoolManager.h"
@@ -30,6 +32,7 @@
 #include "vulkanForwardDrawCall.h"
 #include "vulkanForwardRenderPass.h"
 #include "vulkanGarbageCollector.h"
+#include "vulkanGBufferTexture2d.h"
 #include "vulkanGizmoDrawCall.h"
 #include "vulkanGizmoRenderPass.h"
 #include "vulkanGlobalDescriptorSetLayout.h"
@@ -255,6 +258,12 @@ namespace vulkanRendererBackend
 
 			RecordShadowCommands();
 			SubmitShadowCommands();
+
+			RecordDeferredGeometryCommands();
+			SubmitDeferredGeometryCommands();
+
+			RecordDeferredLightingCommands();
+			SubmitDeferredLightingCommands();
 
 			RecordForwardCommands();
 			SubmitForwardCommands();
@@ -985,6 +994,8 @@ namespace vulkanRendererBackend
 		GetCommandPool(m_frameIndex, RenderStage::preRenderCompute).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::outline).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::shadow).ResetPools();
+		GetCommandPool(m_frameIndex, RenderStage::deferredGeometry).ResetPools();
+		GetCommandPool(m_frameIndex, RenderStage::deferredLighting).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::forward).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::gizmo).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::postRenderCompute).ResetPools();
@@ -1019,7 +1030,7 @@ namespace vulkanRendererBackend
 			AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
 			m_pSceneColorTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_GENERAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
 			m_pSecondarySceneColorTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_GENERAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
-			m_pSceneDepthTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			m_pSceneDepthTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 	}
 	void Renderer::RebuildSwapchain()
@@ -1261,7 +1272,6 @@ namespace vulkanRendererBackend
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::gizmo);
-		commandPool.ResetPools();
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -1478,7 +1488,6 @@ namespace vulkanRendererBackend
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::outline);
-		commandPool.ResetPools();
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -1687,13 +1696,114 @@ namespace vulkanRendererBackend
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
+	void Renderer::RecordDeferredGeometryCommands()
+	{
+		PROFILE_FUNCTION();
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::deferredGeometry);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		DeferredGeometryRenderPass* pDeferredGeometryRenderPass = RenderPassManager::GetDeferredGeometryRenderPass();
+
+		// Record deferred geometry commands:
+		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		{
+			// Viewport and scissor:
+			VkViewport viewport = {};
+			viewport.width = pDeferredGeometryRenderPass->GetAlbedoTexture(m_frameIndex)->GetWidth();
+			viewport.height = pDeferredGeometryRenderPass->GetAlbedoTexture(m_frameIndex)->GetHeight();
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			VkRect2D scissor = {};
+			scissor.extent.width = viewport.width;
+			scissor.extent.height = viewport.height;
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+			// Render pass info:
+			std::array<VkClearValue, 4> clearValues{};
+			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
+			clearValues[1].color = { 0.0f, 0.0f, 0.0f, 0.0f };
+			clearValues[2].color = { 0.0f, 0.0f, 0.0f, 0.0f };
+			clearValues[3].depthStencil = { 1.0f, 0 };
+			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+			renderPassBeginInfo.renderPass = pDeferredGeometryRenderPass->GetVkRenderPass();
+			renderPassBeginInfo.framebuffer = pDeferredGeometryRenderPass->GetFramebuffer(m_frameIndex);
+			renderPassBeginInfo.renderArea.offset = { 0, 0 };
+			renderPassBeginInfo.renderArea.extent.width = viewport.width;
+			renderPassBeginInfo.renderArea.extent.height = viewport.height;
+			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			renderPassBeginInfo.pClearValues = clearValues.data();
+
+			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			{
+
+			}
+			vkCmdEndRenderPass(commandBuffer);
+
+			pDeferredGeometryRenderPass->GetAlbedoTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			pDeferredGeometryRenderPass->GetNormalTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			pDeferredGeometryRenderPass->GetMaterialTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			pDeferredGeometryRenderPass->GetDepthTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+		}
+		VKA(vkEndCommandBuffer(commandBuffer));
+	}
+	void Renderer::RecordDeferredLightingCommands()
+	{
+		PROFILE_FUNCTION();
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::deferredLighting);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		DeferredLightingRenderPass* pDeferredLightingRenderPass = RenderPassManager::GetDeferredLightingRenderPass();
+
+		// Record deferred lighting commands:
+		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		{
+			// Viewport and scissor:
+			VkViewport viewport = {};
+			viewport.width = pDeferredLightingRenderPass->GetSceneColorTexture(m_frameIndex)->GetWidth();
+			viewport.height = pDeferredLightingRenderPass->GetSceneColorTexture(m_frameIndex)->GetHeight();
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			VkRect2D scissor = {};
+			scissor.extent.width = viewport.width;
+			scissor.extent.height = viewport.height;
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+			// Render pass info:
+			VkClearValue clearValue = {};
+			clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+			renderPassBeginInfo.renderPass = pDeferredLightingRenderPass->GetVkRenderPass();
+			renderPassBeginInfo.framebuffer = pDeferredLightingRenderPass->GetFramebuffer(m_frameIndex);
+			renderPassBeginInfo.renderArea.offset = { 0, 0 };
+			renderPassBeginInfo.renderArea.extent.width = viewport.width;
+			renderPassBeginInfo.renderArea.extent.height = viewport.height;
+			renderPassBeginInfo.clearValueCount = 1;
+			renderPassBeginInfo.pClearValues = &clearValue;
+
+			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			{
+
+			}
+			vkCmdEndRenderPass(commandBuffer);
+
+			pDeferredLightingRenderPass->GetSceneColorTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		}
+		VKA(vkEndCommandBuffer(commandBuffer));
+	}
 	void Renderer::RecordForwardCommands()
 	{
 		PROFILE_FUNCTION();
 
 		// Prepare command recording:
 		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forward);
-		commandPool.ResetPools();
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -2188,13 +2298,16 @@ namespace vulkanRendererBackend
 		commandBufferInfo.commandBuffer = commandBuffer;
 
 		// Signal semaphore info:
-		std::array<VkSemaphoreSubmitInfo, 2> signalSemaphoreInfos{};
+		std::array<VkSemaphoreSubmitInfo, 3> signalSemaphoreInfos{};
 		signalSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 		signalSemaphoreInfos[0].semaphore = m_preRenderComputeToShadowSemaphores[m_frameIndex];
 		signalSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 		signalSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		signalSemaphoreInfos[1].semaphore = m_preRenderComputeToOutlineSemaphores[m_frameIndex];
+		signalSemaphoreInfos[1].semaphore = m_preRenderComputeToDeferredGeometrySemaphores[m_frameIndex];
 		signalSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+		signalSemaphoreInfos[2].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		signalSemaphoreInfos[2].semaphore = m_preRenderComputeToOutlineSemaphores[m_frameIndex];
+		signalSemaphoreInfos[2].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -2258,13 +2371,79 @@ namespace vulkanRendererBackend
 
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[m_frameIndex];
+		signalSemaphoreInfo.semaphore = m_shadowToDeferredLightingSemaphores[m_frameIndex];
 		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
 		submitInfo.waitSemaphoreInfoCount = 1;
 		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &commandBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
+	}
+	void Renderer::SubmitDeferredGeometryCommands()
+	{
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::deferredGeometry);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_preRenderComputeToDeferredGeometrySemaphores[m_frameIndex];
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		// Command buffer info:
+		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		commandBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_deferredGeometryToDeferredLightingSemaphores[m_frameIndex];
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &commandBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
+	}
+	void Renderer::SubmitDeferredLightingCommands()
+	{
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::deferredLighting);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+
+		// Wait semaphore info:
+		std::array<VkSemaphoreSubmitInfo, 2> waitSemaphoreInfos{};
+		waitSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitSemaphoreInfos[0].semaphore = m_shadowToDeferredLightingSemaphores[m_frameIndex];
+		waitSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+		waitSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitSemaphoreInfos[1].semaphore = m_deferredGeometryToDeferredLightingSemaphores[m_frameIndex];
+		waitSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		// Command buffer info:
+		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		commandBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_deferredLightingToForwardSemaphores[m_frameIndex];
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = static_cast<uint32_t>(waitSemaphoreInfos.size());
+		submitInfo.pWaitSemaphoreInfos = waitSemaphoreInfos.data();
 		submitInfo.commandBufferInfoCount = 1;
 		submitInfo.pCommandBufferInfos = &commandBufferInfo;
 		submitInfo.signalSemaphoreInfoCount = 1;
@@ -2280,10 +2459,9 @@ namespace vulkanRendererBackend
 		
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[m_frameIndex];
-		// The forward pass also consumes uploaded mesh buffers at index/vertex input and then continues
-		// through the rest of graphics. Waiting from index input onward prevents the transfer writes from
-		// racing with the first buffer reads in the forward pass.
+		waitSemaphoreInfo.semaphore = m_deferredLightingToForwardSemaphores[m_frameIndex];
+		// Deferred lighting joins shadow and deferred geometry, so this wait makes their resources and the
+		// completed scene attachments available to every graphics stage used by forward rendering.
 		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Command buffer info:
@@ -2356,10 +2534,9 @@ namespace vulkanRendererBackend
 
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_shadowToForwardSemaphores[m_frameIndex];
+		waitSemaphoreInfo.semaphore = m_deferredLightingToForwardSemaphores[m_frameIndex];
 		// This path submits the same forward render work through a primary command buffer that executes
-		// secondary command buffers. It has the same dependency as SubmitForwardCommands(): uploaded
-		// mesh buffers must be visible before index/vertex input starts reading them.
+		// secondary command buffers and therefore uses the same deferred-lighting dependency.
 		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Command buffer info:
@@ -2404,7 +2581,7 @@ namespace vulkanRendererBackend
 		// Signal semaphore info:
         // Post compute can have a copy at the end in case of odd number of post processing effects => transferBit
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_postRenderToPresentSemaphores[m_frameIndex];
+		signalSemaphoreInfo.semaphore = m_postRenderComputeToPresentSemaphores[m_frameIndex];
 		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 
 		// Submit info:
@@ -2427,7 +2604,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		std::array<VkSemaphoreSubmitInfo, 2> waitSemaphoreInfos{};
 		waitSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphoreInfos[0].semaphore = m_postRenderToPresentSemaphores[m_frameIndex];
+		waitSemaphoreInfos[0].semaphore = m_postRenderComputeToPresentSemaphores[m_frameIndex];
 		waitSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
 		waitSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 		waitSemaphoreInfos[1].semaphore = m_gizmoToPresentSemaphores[m_frameIndex];
@@ -2503,12 +2680,15 @@ namespace vulkanRendererBackend
 		m_resourceUpdateToPreRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_resourceUpdateToGizmoSemaphores.resize(Context::GetFramesInFlight());
 		m_preRenderComputeToShadowSemaphores.resize(Context::GetFramesInFlight());
+		m_preRenderComputeToDeferredGeometrySemaphores.resize(Context::GetFramesInFlight());
 		m_preRenderComputeToOutlineSemaphores.resize(Context::GetFramesInFlight());
-		m_shadowToForwardSemaphores.resize(Context::GetFramesInFlight());
+		m_shadowToDeferredLightingSemaphores.resize(Context::GetFramesInFlight());
+		m_deferredGeometryToDeferredLightingSemaphores.resize(Context::GetFramesInFlight());
+		m_deferredLightingToForwardSemaphores.resize(Context::GetFramesInFlight());
 		m_forwardToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_outlineToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_gizmoToPresentSemaphores.resize(Context::GetFramesInFlight());
-		m_postRenderToPresentSemaphores.resize(Context::GetFramesInFlight());
+		m_postRenderComputeToPresentSemaphores.resize(Context::GetFramesInFlight());
 		m_releaseSemaphores.resize(Context::GetSwapchain()->GetImageCount());
 		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
 		{
@@ -2516,22 +2696,28 @@ namespace vulkanRendererBackend
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_resourceUpdateToPreRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_resourceUpdateToGizmoSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToShadowSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToDeferredGeometrySemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToOutlineSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowToForwardSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowToDeferredLightingSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_deferredGeometryToDeferredLightingSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_deferredLightingToForwardSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_outlineToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_gizmoToPresentSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderToPresentSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderComputeToPresentSemaphores[i]));
 			NAME_VK_OBJECT(m_acquireSemaphores[i], "Semaphore_Acquire_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_resourceUpdateToPreRenderComputeSemaphores[i], "Semaphore_ResourceUpdateToPreRenderCompute_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_resourceUpdateToGizmoSemaphores[i], "Semaphore_ResourceUpdateToGizmo_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_preRenderComputeToShadowSemaphores[i], "Semaphore_PreRenderComputeToShadow_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_preRenderComputeToDeferredGeometrySemaphores[i], "Semaphore_PreRenderComputeToDeferredGeometry_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_preRenderComputeToOutlineSemaphores[i], "Semaphore_PreRenderComputeToOutline_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_shadowToForwardSemaphores[i], "Semaphore_ShadowToForward_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_shadowToDeferredLightingSemaphores[i], "Semaphore_ShadowToDeferredLighting_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_deferredGeometryToDeferredLightingSemaphores[i], "Semaphore_DeferredGeometryToDeferredLighting_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_deferredLightingToForwardSemaphores[i], "Semaphore_DeferredLightingToForward_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_forwardToPostRenderComputeSemaphores[i], "Semaphore_ForwardToPostRenderCompute_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_outlineToPostRenderComputeSemaphores[i], "Semaphore_OutlineToPostRenderCompute_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_gizmoToPresentSemaphores[i], "Semaphore_GizmoToPresent_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_postRenderToPresentSemaphores[i], "Semaphore_PostRenderToPresent_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_postRenderComputeToPresentSemaphores[i], "Semaphore_PostRenderToPresent_Frame" + std::to_string(i));
 		}
 		for (uint32_t i = 0; i < m_releaseSemaphores.size(); i++)
 		{
@@ -2553,12 +2739,15 @@ namespace vulkanRendererBackend
 			vkDestroySemaphore(Context::GetVkDevice(), m_resourceUpdateToPreRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_resourceUpdateToGizmoSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToShadowSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToDeferredGeometrySemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToOutlineSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_shadowToForwardSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_shadowToDeferredLightingSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_deferredGeometryToDeferredLightingSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_deferredLightingToForwardSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_forwardToPostRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_outlineToPostRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_gizmoToPresentSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_postRenderToPresentSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_postRenderComputeToPresentSemaphores[i], nullptr);
 		}
 		for (uint32_t i = 0; i < m_releaseSemaphores.size(); i++)
 			vkDestroySemaphore(Context::GetVkDevice(), m_releaseSemaphores[i], nullptr);
@@ -2566,12 +2755,15 @@ namespace vulkanRendererBackend
 		m_resourceUpdateToPreRenderComputeSemaphores.clear();
 		m_resourceUpdateToGizmoSemaphores.clear();
 		m_preRenderComputeToShadowSemaphores.clear();
+		m_preRenderComputeToDeferredGeometrySemaphores.clear();
 		m_preRenderComputeToOutlineSemaphores.clear();
-		m_shadowToForwardSemaphores.clear();
+		m_shadowToDeferredLightingSemaphores.clear();
+		m_deferredGeometryToDeferredLightingSemaphores.clear();
+		m_deferredLightingToForwardSemaphores.clear();
 		m_forwardToPostRenderComputeSemaphores.clear();
 		m_outlineToPostRenderComputeSemaphores.clear();
 		m_gizmoToPresentSemaphores.clear();
-		m_postRenderToPresentSemaphores.clear();
+		m_postRenderComputeToPresentSemaphores.clear();
 		m_releaseSemaphores.clear();
 	}
 	
