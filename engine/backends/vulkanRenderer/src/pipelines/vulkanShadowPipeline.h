@@ -7,9 +7,6 @@
 
 namespace vulkanRendererBackend
 {
-	/// <summary>
-	/// For rendering to shadowMap atlas of shadow renderpass.
-	/// </summary>
 	class ShadowPipeline : public Pipeline
 	{
 	public: // Methods:

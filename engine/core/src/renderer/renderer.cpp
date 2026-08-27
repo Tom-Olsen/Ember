@@ -94,7 +94,7 @@ namespace emberCore
 		}
 		s_pIRenderer->DrawMesh(localToWorldMatrix, pIMesh, pIMaterial, pICallDescriptorSetBinding, receiveShadows, 0);
 		if (castShadows)
-			DrawMeshShadow(localToWorldMatrix, mesh, MaterialManager::GetShadowMaterialForForwardMaterial(material.m_materialId));
+			DrawMeshShadow(localToWorldMatrix, mesh, MaterialManager::GetShadowMaterialForSurfaceMaterial(material.m_materialId));
 	}
 	ShaderProperties Renderer::DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, bool receiveShadows, bool castShadows)
 	{
@@ -104,7 +104,7 @@ namespace emberCore
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(localToWorldMatrix, pIMesh, pIMaterial, receiveShadows, 0);
 		if (castShadows)
-			DrawMeshShadow(localToWorldMatrix, mesh, MaterialManager::GetShadowMaterialForForwardMaterial(material.m_materialId));
+			DrawMeshShadow(localToWorldMatrix, mesh, MaterialManager::GetShadowMaterialForSurfaceMaterial(material.m_materialId));
 		return ShaderProperties(pICallDescriptorSetBinding);
 	}
 	void Renderer::DrawMeshShadow(const Float4x4& localToWorldMatrix, const Mesh& mesh, const ShadowMaterial& material, ShaderProperties& shaderProperties)
@@ -175,7 +175,7 @@ namespace emberCore
 			shaderProperties.SetBuffer("instanceBuffer", instanceBuffer);
 		s_pIRenderer->DrawMesh(localToWorldMatrix, pIMesh, pIMaterial, pICallDescriptorSetBinding, receiveShadows, instanceCount);
 		if (castShadows)
-			DrawMeshShadowInstanced(localToWorldMatrix, instanceCount, instanceBuffer, mesh, MaterialManager::GetShadowMaterialForForwardMaterial(material.m_materialId));
+			DrawMeshShadowInstanced(localToWorldMatrix, instanceCount, instanceBuffer, mesh, MaterialManager::GetShadowMaterialForSurfaceMaterial(material.m_materialId));
 	}
 	ShaderProperties Renderer::DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, bool receiveShadows, bool castShadows)
 	{
@@ -188,7 +188,7 @@ namespace emberCore
 		if (shaderProperties.HasBinding("instanceBuffer"))
 			shaderProperties.SetBuffer("instanceBuffer", instanceBuffer);
 		if (castShadows)
-			DrawMeshShadowInstanced(localToWorldMatrix, instanceCount, instanceBuffer, mesh, MaterialManager::GetShadowMaterialForForwardMaterial(material.m_materialId));
+			DrawMeshShadowInstanced(localToWorldMatrix, instanceCount, instanceBuffer, mesh, MaterialManager::GetShadowMaterialForSurfaceMaterial(material.m_materialId));
 		return shaderProperties;
 	}
 	void Renderer::DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, bool receiveShadows, bool castShadows)
@@ -205,7 +205,7 @@ namespace emberCore
 		}
 		s_pIRenderer->DrawMesh(localToWorldMatrix, pIMesh, pIMaterial, pICallDescriptorSetBinding, receiveShadows, instanceCount);
 		if (castShadows)
-			DrawMeshShadowInstanced(localToWorldMatrix, instanceCount, mesh, MaterialManager::GetShadowMaterialForForwardMaterial(material.m_materialId));
+			DrawMeshShadowInstanced(localToWorldMatrix, instanceCount, mesh, MaterialManager::GetShadowMaterialForSurfaceMaterial(material.m_materialId));
 	}
 	ShaderProperties Renderer::DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, bool receiveShadows, bool castShadows)
 	{
@@ -215,7 +215,7 @@ namespace emberCore
 		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(localToWorldMatrix, pIMesh, pIMaterial, receiveShadows, instanceCount);
 		if (castShadows)
-			DrawMeshShadowInstanced(localToWorldMatrix, instanceCount, mesh, MaterialManager::GetShadowMaterialForForwardMaterial(material.m_materialId));
+			DrawMeshShadowInstanced(localToWorldMatrix, instanceCount, mesh, MaterialManager::GetShadowMaterialForSurfaceMaterial(material.m_materialId));
 		return ShaderProperties(pICallDescriptorSetBinding);
 	}
 	void Renderer::DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const ShadowMaterial& material, ShaderProperties& shaderProperties)
@@ -398,49 +398,61 @@ namespace emberCore
 	{
 		return s_pIRenderer->CreateComputeShader(computeSpv, name);
 	}
-	emberBackendInterface::IMaterialShader* Renderer::CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		return s_pIRenderer->CreateOutlineMaterialShader(vertexSpv, fragmentSpv, name);
-	}
-	emberBackendInterface::IMaterialShader* Renderer::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		return s_pIRenderer->CreateForwardMaterialShader(vertexSpv, fragmentSpv, name);
-	}
 	emberBackendInterface::IMaterialShader* Renderer::CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
 		return s_pIRenderer->CreateGizmoMaterialShader(vertexSpv, fragmentSpv, name);
+	}
+	emberBackendInterface::IMaterialShader* Renderer::CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		return s_pIRenderer->CreateOutlineMaterialShader(vertexSpv, fragmentSpv, name);
 	}
 	emberBackendInterface::IMaterialShader* Renderer::CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& name)
 	{
 		return s_pIRenderer->CreateShadowMaterialShader(vertexSpv, name);
 	}
+	emberBackendInterface::IMaterialShader* Renderer::CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		return s_pIRenderer->CreateDeferredGeometryMaterialShader(vertexSpv, fragmentSpv, name);
+	}
+	emberBackendInterface::IMaterialShader* Renderer::CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		return s_pIRenderer->CreateDeferredLightingMaterialShader(vertexSpv, fragmentSpv, name);
+	}
+	emberBackendInterface::IMaterialShader* Renderer::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		return s_pIRenderer->CreateForwardMaterialShader(vertexSpv, fragmentSpv, name);
+	}
 	emberBackendInterface::IMaterialShader* Renderer::CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
 		return s_pIRenderer->CreatePresentMaterialShader(vertexSpv, fragmentSpv, name);
-	}
-	emberBackendInterface::IMaterial* Renderer::CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
-	{
-		return s_pIRenderer->CreateOutlineMaterial(pIMaterialShader, name);
-	}
-	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
-	{
-		return s_pIRenderer->CreateForwardMaterial(renderMode, pIMaterialShader, name);
 	}
 	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
 	{
 		return s_pIRenderer->CreateGizmoMaterial(renderMode, pIMaterialShader, name);
 	}
+	emberBackendInterface::IMaterial* Renderer::CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
+	{
+		return s_pIRenderer->CreateOutlineMaterial(pIMaterialShader, name);
+	}
 	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
 	{
 		return s_pIRenderer->CreateShadowMaterial(pIMaterialShader, name);
 	}
+	emberBackendInterface::IMaterial* Renderer::CreateDeferredGeometryMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
+	{
+		return s_pIRenderer->CreateDeferredGeometryMaterial(pIMaterialShader, name);
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateDeferredLightingMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
+	{
+		return s_pIRenderer->CreateDeferredLightingMaterial(pIMaterialShader, name);
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
+	{
+		return s_pIRenderer->CreateForwardMaterial(renderMode, pIMaterialShader, name);
+	}
 	emberBackendInterface::IMaterial* Renderer::CreatePresentMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& name)
 	{
 		return s_pIRenderer->CreatePresentMaterial(pIMaterialShader, name);
-	}
-	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name)
-	{
-		return s_pIRenderer->CloneForwardMaterial(pISourceMaterial, name);
 	}
 	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name)
 	{
@@ -449,6 +461,14 @@ namespace emberCore
 	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name)
 	{
 		return s_pIRenderer->CloneShadowMaterial(pISourceMaterial, name);
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneDeferredGeometryMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name)
+	{
+		return s_pIRenderer->CloneDeferredGeometryMaterial(pISourceMaterial, name);
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& name)
+	{
+		return s_pIRenderer->CloneForwardMaterial(pISourceMaterial, name);
 	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh(const std::string& name)
 	{
@@ -484,11 +504,16 @@ namespace emberCore
 
 
 	// Set/Clear default materials:
-	void Renderer::SetDefaultMaterials(const Material& outlineMaterial, const Material& defaultShadowMaterial, const Material& presentMaterial)
+	void Renderer::SetDefaultMaterials(
+		const Material& outlineMaterial,
+		const Material& defaultShadowMaterial,
+		const Material& deferredLightingMaterial,
+		const Material& presentMaterial)
 	{
 		s_pIRenderer->SetDefaultMaterials(
 			outlineMaterial.GetInterfaceHandle(),
 			defaultShadowMaterial.GetInterfaceHandle(),
+			deferredLightingMaterial.GetInterfaceHandle(),
 			presentMaterial.GetInterfaceHandle());
 	}
 	void Renderer::ClearDefaultMaterials()

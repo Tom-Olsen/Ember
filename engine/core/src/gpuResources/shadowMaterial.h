@@ -7,6 +7,7 @@
 namespace emberCore
 {
 	// Forward declarations:
+	class DeferredMaterial;
 	class ForwardMaterial;
 	class MaterialManager;
 	class MaterialShader;
@@ -16,6 +17,7 @@ namespace emberCore
 	class EMBER_CORE_API ShadowMaterial : public Material
 	{
 		// Friends:
+		friend class DeferredMaterial;
 		friend class ForwardMaterial;
 		friend class Material;
 		friend class MaterialManager;

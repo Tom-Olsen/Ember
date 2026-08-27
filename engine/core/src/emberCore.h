@@ -37,6 +37,7 @@
 #include "texture3d.h"
 #include "mesh.h"
 #include "material.h"
+#include "deferredMaterial.h"
 #include "forwardMaterial.h"
 #include "gizmoMaterial.h"
 #include "shadowMaterial.h"

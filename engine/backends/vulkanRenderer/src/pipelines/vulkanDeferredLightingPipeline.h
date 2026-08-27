@@ -1,5 +1,4 @@
 #pragma once
-#include "commonForwardRenderMode.h"
 #include "vulkanPipeline.h"
 #include <string>
 #include <vector>
@@ -9,24 +8,22 @@
 
 namespace vulkanRendererBackend
 {
-	class ForwardPipeline : public Pipeline
+	class DeferredLightingPipeline : public Pipeline
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		ForwardPipeline(
+		DeferredLightingPipeline(
 			VkPipelineLayout vkPipelineLayout,
-			emberCommon::ForwardRenderMode renderMode,
 			const std::vector<char>& vertexCode,
 			const std::vector<char>& fragmentCode,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
 			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
 			const std::string& debugName);
-		~ForwardPipeline();
+		~DeferredLightingPipeline();
 
 	private: // Methods:
 		void CreatePipeline(
 			VkPipelineLayout vkPipelineLayout,
-			emberCommon::ForwardRenderMode renderMode,
 			const VkShaderModule& vertexShaderModule,
 			const VkShaderModule& fragmentShaderModule,
 			const std::vector<VkVertexInputBindingDescription>& vertexBindings,

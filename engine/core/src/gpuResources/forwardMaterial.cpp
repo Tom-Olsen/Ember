@@ -67,7 +67,7 @@ namespace emberCore
 			return ShadowMaterial();
 		}
 
-		MaterialId shadowMaterialId = MaterialManager::GetShadowMaterialIdForForwardMaterial(m_materialId);
+		MaterialId shadowMaterialId = MaterialManager::GetShadowMaterialIdForSurfaceMaterial(m_materialId);
 		if (shadowMaterialId.index == invalidMaterialId.index)
 			return ShadowMaterial();
 		return ShadowMaterial{ shadowMaterialId };

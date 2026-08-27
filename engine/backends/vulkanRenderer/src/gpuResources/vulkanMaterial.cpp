@@ -10,22 +10,16 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Factories/Destructor:
-	Material Material::CreateOutline(MaterialShader* pMaterialShader, const std::string& debugName)
-	{
-		Material material(pMaterialShader, debugName);
-		material.m_pOutlineRenderState = std::make_unique<emberCommon::OutlineRenderState>();
-		return material;
-	}
-	Material Material::CreateForward(MaterialShader* pMaterialShader, emberCommon::ForwardRenderMode renderMode, const std::string& debugName)
-	{
-		Material material(pMaterialShader, debugName);
-		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(emberCommon::ForwardRenderState::ForwardDefault(renderMode));
-		return material;
-	}
 	Material Material::CreateGizmo(MaterialShader* pMaterialShader, emberCommon::GizmoRenderMode renderMode, const std::string& debugName)
 	{
 		Material material(pMaterialShader, debugName);
 		material.m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(emberCommon::GizmoRenderState::GizmoDefault(renderMode));
+		return material;
+	}
+	Material Material::CreateOutline(MaterialShader* pMaterialShader, const std::string& debugName)
+	{
+		Material material(pMaterialShader, debugName);
+		material.m_pOutlineRenderState = std::make_unique<emberCommon::OutlineRenderState>();
 		return material;
 	}
 	Material Material::CreateShadow(MaterialShader* pMaterialShader, const std::string& debugName)
@@ -34,20 +28,28 @@ namespace vulkanRendererBackend
 		material.m_pShadowRenderState = std::make_unique<emberCommon::ShadowRenderState>();
 		return material;
 	}
+	Material Material::CreateDeferredGeometry(MaterialShader* pMaterialShader, const std::string& debugName)
+	{
+		Material material(pMaterialShader, debugName);
+		material.m_pDeferredGeometryRenderState = std::make_unique<emberCommon::DeferredGeometryRenderState>();
+		return material;
+	}
+	Material Material::CreateDeferredLighting(MaterialShader* pMaterialShader, const std::string& debugName)
+	{
+		Material material(pMaterialShader, debugName);
+		material.m_pDeferredLightingRenderState = std::make_unique<emberCommon::DeferredLightingRenderState>();
+		return material;
+	}
+	Material Material::CreateForward(MaterialShader* pMaterialShader, emberCommon::ForwardRenderMode renderMode, const std::string& debugName)
+	{
+		Material material(pMaterialShader, debugName);
+		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(emberCommon::ForwardRenderState::ForwardDefault(renderMode));
+		return material;
+	}
 	Material Material::CreatePresent(MaterialShader* pMaterialShader, const std::string& debugName)
 	{
 		Material material(pMaterialShader, debugName);
 		material.m_pPresentRenderState = std::make_unique<emberCommon::PresentRenderState>();
-		return material;
-	}
-	Material Material::CloneForward(const Material& sourceMaterial, const std::string& debugName)
-	{
-		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::forward)
-			throw std::runtime_error("Material::CloneForward(...) failed. Source material is not a forward material.");
-
-		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
-		Material material(sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
-		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(*sourceMaterial.m_pForwardRenderState);
 		return material;
 	}
 	Material Material::CloneGizmo(const Material& sourceMaterial, const std::string& debugName)
@@ -70,6 +72,26 @@ namespace vulkanRendererBackend
 		material.m_pShadowRenderState = std::make_unique<emberCommon::ShadowRenderState>(*sourceMaterial.m_pShadowRenderState);
 		return material;
 	}
+	Material Material::CloneDeferredGeometry(const Material& sourceMaterial, const std::string& debugName)
+	{
+		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
+			throw std::runtime_error("Material::CloneDeferredGeometry(...) failed. Source material is not a deferred geometry material.");
+
+		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
+		Material material(sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
+		material.m_pDeferredGeometryRenderState = std::make_unique<emberCommon::DeferredGeometryRenderState>(*sourceMaterial.m_pDeferredGeometryRenderState);
+		return material;
+	}
+	Material Material::CloneForward(const Material& sourceMaterial, const std::string& debugName)
+	{
+		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::forward)
+			throw std::runtime_error("Material::CloneForward(...) failed. Source material is not a forward material.");
+
+		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
+		Material material(sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
+		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(*sourceMaterial.m_pForwardRenderState);
+		return material;
+	}
 	Material::~Material()
 	{
 
@@ -88,11 +110,14 @@ namespace vulkanRendererBackend
 	{
 		switch (GetMaterialPass())
 		{
-			case emberCommon::MaterialPass::forward:
-				m_pForwardRenderState->renderQueue = renderQueue;
-				return;
 			case emberCommon::MaterialPass::gizmo:
 				m_pGizmoRenderState->renderQueue = renderQueue;
+				return;
+			case emberCommon::MaterialPass::deferredGeometry:
+				m_pDeferredGeometryRenderState->renderQueue = renderQueue;
+				return;
+			case emberCommon::MaterialPass::forward:
+				m_pForwardRenderState->renderQueue = renderQueue;
 				return;
 			default:
 				throw std::runtime_error("Material::SetRenderQueue(...) failed. Render queue is not dynamic for this material pass.");
@@ -102,27 +127,30 @@ namespace vulkanRendererBackend
 	{
 		switch (GetMaterialPass())
 		{
-			case emberCommon::MaterialPass::forward:
-				m_pForwardRenderState->cullMode = cullMode;
-				return;
 			case emberCommon::MaterialPass::gizmo:
 				m_pGizmoRenderState->cullMode = cullMode;
+				return;
+			case emberCommon::MaterialPass::deferredGeometry:
+				m_pDeferredGeometryRenderState->cullMode = cullMode;
+				return;
+			case emberCommon::MaterialPass::forward:
+				m_pForwardRenderState->cullMode = cullMode;
 				return;
 			default:
 				throw std::runtime_error("Material::SetCullMode(...) failed. Cull mode is not dynamic for this material pass.");
 		}
-	}
-	void Material::SetForwardRenderMode(emberCommon::ForwardRenderMode renderMode)
-	{
-		if (GetMaterialPass() != emberCommon::MaterialPass::forward)
-			throw std::runtime_error("Material::SetForwardRenderMode(...) failed. Material is not a forward material.");
-		m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(emberCommon::ForwardRenderState::ForwardDefault(renderMode));
 	}
 	void Material::SetGizmoRenderMode(emberCommon::GizmoRenderMode renderMode)
 	{
 		if (GetMaterialPass() != emberCommon::MaterialPass::gizmo)
 			throw std::runtime_error("Material::SetGizmoRenderMode(...) failed. Material is not a gizmo material.");
 		m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(emberCommon::GizmoRenderState::GizmoDefault(renderMode));
+	}
+	void Material::SetForwardRenderMode(emberCommon::ForwardRenderMode renderMode)
+	{
+		if (GetMaterialPass() != emberCommon::MaterialPass::forward)
+			throw std::runtime_error("Material::SetForwardRenderMode(...) failed. Material is not a forward material.");
+		m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(emberCommon::ForwardRenderState::ForwardDefault(renderMode));
 	}
 
 
@@ -144,10 +172,12 @@ namespace vulkanRendererBackend
 	{
 		switch (GetMaterialPass())
 		{
-			case emberCommon::MaterialPass::forward:
-				return m_pForwardRenderState->renderQueue;
 			case emberCommon::MaterialPass::gizmo:
 				return m_pGizmoRenderState->renderQueue;
+			case emberCommon::MaterialPass::deferredGeometry:
+				return m_pDeferredGeometryRenderState->renderQueue;
+			case emberCommon::MaterialPass::forward:
+				return m_pForwardRenderState->renderQueue;
 			default:
 				return 0;
 		}
@@ -156,14 +186,18 @@ namespace vulkanRendererBackend
 	{
 		switch (GetMaterialPass())
 		{
-			case emberCommon::MaterialPass::forward:
-				return m_pForwardRenderState->cullMode;
 			case emberCommon::MaterialPass::gizmo:
 				return m_pGizmoRenderState->cullMode;
 			case emberCommon::MaterialPass::outline:
 				return m_pOutlineRenderState->cullMode;
 			case emberCommon::MaterialPass::shadow:
 				return m_pShadowRenderState->cullMode;
+			case emberCommon::MaterialPass::deferredGeometry:
+				return m_pDeferredGeometryRenderState->cullMode;
+			case emberCommon::MaterialPass::deferredLighting:
+				return m_pDeferredLightingRenderState->cullMode;
+			case emberCommon::MaterialPass::forward:
+				return m_pForwardRenderState->cullMode;
 			case emberCommon::MaterialPass::present:
 				return m_pPresentRenderState->cullMode;
 			default:
@@ -182,29 +216,41 @@ namespace vulkanRendererBackend
 				return false;
 		}
 	}
-	emberCommon::ForwardRenderMode Material::GetForwardRenderMode() const
-	{
-		if (GetMaterialPass() != emberCommon::MaterialPass::forward)
-			throw std::runtime_error("Material::GetForwardRenderMode(...) failed. Material is not a forward material.");
-		return m_pForwardRenderState->renderMode;
-	}
 	emberCommon::GizmoRenderMode Material::GetGizmoRenderMode() const
 	{
 		if (GetMaterialPass() != emberCommon::MaterialPass::gizmo)
 			throw std::runtime_error("Material::GetGizmoRenderMode(...) failed. Material is not a gizmo material.");
 		return m_pGizmoRenderState->renderMode;
 	}
-	const emberCommon::ForwardRenderState& Material::GetForwardRenderState() const
+	emberCommon::ForwardRenderMode Material::GetForwardRenderMode() const
 	{
 		if (GetMaterialPass() != emberCommon::MaterialPass::forward)
-			throw std::runtime_error("Material::GetForwardRenderState(...) failed. Material is not a forward material.");
-		return *m_pForwardRenderState;
+			throw std::runtime_error("Material::GetForwardRenderMode(...) failed. Material is not a forward material.");
+		return m_pForwardRenderState->renderMode;
 	}
 	const emberCommon::GizmoRenderState& Material::GetGizmoRenderState() const
 	{
 		if (GetMaterialPass() != emberCommon::MaterialPass::gizmo)
 			throw std::runtime_error("Material::GetGizmoRenderState(...) failed. Material is not a gizmo material.");
 		return *m_pGizmoRenderState;
+	}
+	const emberCommon::DeferredGeometryRenderState& Material::GetDeferredGeometryRenderState() const
+	{
+		if (GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
+			throw std::runtime_error("Material::GetDeferredGeometryRenderState(...) failed. Material is not a deferred geometry material.");
+		return *m_pDeferredGeometryRenderState;
+	}
+	const emberCommon::DeferredLightingRenderState& Material::GetDeferredLightingRenderState() const
+	{
+		if (GetMaterialPass() != emberCommon::MaterialPass::deferredLighting)
+			throw std::runtime_error("Material::GetDeferredLightingRenderState(...) failed. Material is not a deferred lighting material.");
+		return *m_pDeferredLightingRenderState;
+	}
+	const emberCommon::ForwardRenderState& Material::GetForwardRenderState() const
+	{
+		if (GetMaterialPass() != emberCommon::MaterialPass::forward)
+			throw std::runtime_error("Material::GetForwardRenderState(...) failed. Material is not a forward material.");
+		return *m_pForwardRenderState;
 	}
 	Shader* Material::GetShader() const
 	{

@@ -609,9 +609,17 @@ namespace vulkanRendererBackend
 	{
 		m_depthBiasSlopeFactor = depthBiasSlopeFactor;
 	}
-	void Renderer::SetDefaultMaterials(emberBackendInterface::IMaterial* pIOutlineMaterial, emberBackendInterface::IMaterial* pIDefaultShadowMaterial, emberBackendInterface::IMaterial* pIPresentMaterial)
+	void Renderer::SetDefaultMaterials(
+		emberBackendInterface::IMaterial* pIOutlineMaterial,
+		emberBackendInterface::IMaterial* pIDefaultShadowMaterial,
+		emberBackendInterface::IMaterial* pIDeferredLightingMaterial,
+		emberBackendInterface::IMaterial* pIPresentMaterial)
 	{
-		DefaultGpuResources::SetDefaultMaterials(pIOutlineMaterial, pIDefaultShadowMaterial, pIPresentMaterial);
+		DefaultGpuResources::SetDefaultMaterials(
+			pIOutlineMaterial,
+			pIDefaultShadowMaterial,
+			pIDeferredLightingMaterial,
+			pIPresentMaterial);
 	}
 	void Renderer::SetOutlineColor(const Float4& outlineColor)
 	{
@@ -736,45 +744,33 @@ namespace vulkanRendererBackend
 	{
 		return new ComputeShader(computeSpv, debugName);
 	}
-	emberBackendInterface::IMaterialShader* Renderer::CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
-	{
-		return new MaterialShader(MaterialShader::CreateOutline(vertexSpv, fragmentSpv, debugName));
-	}
-	emberBackendInterface::IMaterialShader* Renderer::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
-	{
-		return new MaterialShader(MaterialShader::CreateForward(vertexSpv, fragmentSpv, debugName));
-	}
 	emberBackendInterface::IMaterialShader* Renderer::CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		return new MaterialShader(MaterialShader::CreateGizmo(vertexSpv, fragmentSpv, debugName));
+	}
+	emberBackendInterface::IMaterialShader* Renderer::CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	{
+		return new MaterialShader(MaterialShader::CreateOutline(vertexSpv, fragmentSpv, debugName));
 	}
 	emberBackendInterface::IMaterialShader* Renderer::CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& debugName)
 	{
 		return new MaterialShader(MaterialShader::CreateShadow(m_shadowMapResolution, vertexSpv, debugName));
 	}
+	emberBackendInterface::IMaterialShader* Renderer::CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	{
+		return new MaterialShader(MaterialShader::CreateDeferredGeometry(vertexSpv, fragmentSpv, debugName));
+	}
+	emberBackendInterface::IMaterialShader* Renderer::CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	{
+		return new MaterialShader(MaterialShader::CreateDeferredLighting(vertexSpv, fragmentSpv, debugName));
+	}
+	emberBackendInterface::IMaterialShader* Renderer::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	{
+		return new MaterialShader(MaterialShader::CreateForward(vertexSpv, fragmentSpv, debugName));
+	}
 	emberBackendInterface::IMaterialShader* Renderer::CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		return new MaterialShader(MaterialShader::CreatePresent(vertexSpv, fragmentSpv, debugName));
-	}
-	emberBackendInterface::IMaterial* Renderer::CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
-	{
-		if (pIMaterialShader == nullptr)
-			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is null.");
-		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::outline)
-			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is not an outline shader.");
-
-		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
-		return new Material(Material::CreateOutline(pVulkanMaterialShader, debugName));
-	}
-	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
-	{
-		if (pIMaterialShader == nullptr)
-			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is null.");
-		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::forward)
-			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is not a forward shader.");
-
-		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
-		return new Material(Material::CreateForward(pVulkanMaterialShader, renderMode, debugName));
 	}
 	emberBackendInterface::IMaterial* Renderer::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
 	{
@@ -786,6 +782,16 @@ namespace vulkanRendererBackend
 		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
 		return new Material(Material::CreateGizmo(pVulkanMaterialShader, renderMode, debugName));
 	}
+	emberBackendInterface::IMaterial* Renderer::CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
+	{
+		if (pIMaterialShader == nullptr)
+			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is null.");
+		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::outline)
+			throw std::runtime_error("Renderer::CreateOutlineMaterial(...) failed. MaterialShader is not an outline shader.");
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
+		return new Material(Material::CreateOutline(pVulkanMaterialShader, debugName));
+	}
 	emberBackendInterface::IMaterial* Renderer::CreateShadowMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
 	{
 		if (pIMaterialShader == nullptr)
@@ -795,6 +801,36 @@ namespace vulkanRendererBackend
 
 		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
 		return new Material(Material::CreateShadow(pVulkanMaterialShader, debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateDeferredGeometryMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
+	{
+		if (pIMaterialShader == nullptr)
+			throw std::runtime_error("Renderer::CreateDeferredGeometryMaterial(...) failed. MaterialShader is null.");
+		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
+			throw std::runtime_error("Renderer::CreateDeferredGeometryMaterial(...) failed. MaterialShader is not a deferred geometry shader.");
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
+		return new Material(Material::CreateDeferredGeometry(pVulkanMaterialShader, debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateDeferredLightingMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
+	{
+		if (pIMaterialShader == nullptr)
+			throw std::runtime_error("Renderer::CreateDeferredLightingMaterial(...) failed. MaterialShader is null.");
+		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::deferredLighting)
+			throw std::runtime_error("Renderer::CreateDeferredLightingMaterial(...) failed. MaterialShader is not a deferred lighting shader.");
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
+		return new Material(Material::CreateDeferredLighting(pVulkanMaterialShader, debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
+	{
+		if (pIMaterialShader == nullptr)
+			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is null.");
+		if (pIMaterialShader->GetMaterialPass() != emberCommon::MaterialPass::forward)
+			throw std::runtime_error("Renderer::CreateForwardMaterial(...) failed. MaterialShader is not a forward shader.");
+
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
+		return new Material(Material::CreateForward(pVulkanMaterialShader, renderMode, debugName));
 	}
 	emberBackendInterface::IMaterial* Renderer::CreatePresentMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName)
 	{
@@ -806,10 +842,6 @@ namespace vulkanRendererBackend
 		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pIMaterialShader);
 		return new Material(Material::CreatePresent(pVulkanMaterialShader, debugName));
 	}
-	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName)
-	{
-		return new Material(Material::CloneForward(*static_cast<Material*>(pISourceMaterial), debugName));
-	}
 	emberBackendInterface::IMaterial* Renderer::CloneGizmoMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName)
 	{
 		return new Material(Material::CloneGizmo(*static_cast<Material*>(pISourceMaterial), debugName));
@@ -817,6 +849,14 @@ namespace vulkanRendererBackend
 	emberBackendInterface::IMaterial* Renderer::CloneShadowMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName)
 	{
 		return new Material(Material::CloneShadow(*static_cast<Material*>(pISourceMaterial), debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneDeferredGeometryMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName)
+	{
+		return new Material(Material::CloneDeferredGeometry(*static_cast<Material*>(pISourceMaterial), debugName));
+	}
+	emberBackendInterface::IMaterial* Renderer::CloneForwardMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName)
+	{
+		return new Material(Material::CloneForward(*static_cast<Material*>(pISourceMaterial), debugName));
 	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh()
 	{
@@ -1322,6 +1362,7 @@ namespace vulkanRendererBackend
 					bool pipelineLayoutChanged = false;
 					if (pipeline != newPipeline)
 					{
+						// Bind Pipeline:
 						pipeline = newPipeline;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
@@ -1425,6 +1466,7 @@ namespace vulkanRendererBackend
 						VkPipeline newPipeline = pComputeShader->GetPipeline()->GetVkPipeline();
 						if (pipeline != newPipeline)
 						{
+							// Bind Pipeline:
 							pipeline = newPipeline;
 							pipelineLayout = pComputeShader->GetVkPipelineLayout();
 							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
@@ -1537,6 +1579,7 @@ namespace vulkanRendererBackend
 					bool pipelineLayoutChanged = false;
 					if (pipeline != newPipeline)
 					{
+						// Bind Pipeline:
 						pipeline = newPipeline;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
@@ -1639,6 +1682,7 @@ namespace vulkanRendererBackend
 						bool pipelineLayoutChanged = false;
 						if (pipeline != newPipeline)
 						{
+							// Bind Pipeline:
 							pipeline = newPipeline;
 							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
@@ -1735,6 +1779,7 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 			renderPassBeginInfo.pClearValues = clearValues.data();
 
+			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
 
@@ -1786,9 +1831,30 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.clearValueCount = 1;
 			renderPassBeginInfo.pClearValues = &clearValue;
 
+			// Begin render pass:
+			Material* pMaterial = DefaultGpuResources::GetDefaultDeferredLightingMaterial();
+			Mesh* pMesh = DefaultGpuResources::GetDefaultRenderQuad();
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
+				// Bind Pipeline:
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline<RenderStage::deferredLighting>(pMesh)->GetVkPipeline());
 
+				// Bind mesh data:
+				vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());
+				vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
+
+				// Bind descriptorSets:
+				VkDescriptorSet descriptorSets[4] =
+				{
+					m_staticDescriptorSets[m_frameIndex][0],
+					m_staticDescriptorSets[m_frameIndex][1],
+					m_staticDescriptorSets[m_frameIndex][2],
+					pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex)
+				};
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetVkPipelineLayout(), 0, 4, descriptorSets, 0, nullptr);
+
+				// Dispatch:
+				vkCmdDrawIndexed(commandBuffer, pMesh->GetIndexCount(), 1, 0, 0, 0);
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
@@ -1854,6 +1920,7 @@ namespace vulkanRendererBackend
 					bool pipelineLayoutChanged = false;
 					if (pipeline != newPipeline)
 					{
+						// Bind Pipeline:
 						pipeline = newPipeline;
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
@@ -2036,6 +2103,7 @@ namespace vulkanRendererBackend
 					VkPipeline newPipeline = pComputeShader->GetPipeline()->GetVkPipeline();
 					if (pipeline != newPipeline)
 					{
+						// Bind Pipeline:
 						pipeline = newPipeline;
 						pipelineLayout = pComputeShader->GetVkPipelineLayout();
 						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
@@ -2151,6 +2219,7 @@ namespace vulkanRendererBackend
 			Mesh* pMesh = DefaultGpuResources::GetDefaultRenderQuad();
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
+				// Bind Pipeline:
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline<RenderStage::present>(pMesh)->GetVkPipeline());
 
 				// Bind mesh data:

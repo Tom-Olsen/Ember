@@ -91,6 +91,34 @@ namespace vulkanRendererBackend
 	};
 
 	template<>
+	struct RenderStageTraits<RenderStage::deferredGeometry>
+	{
+		static constexpr bool hasRenderPipeline = true;
+		static constexpr bool hasRenderMode = false;
+		using RenderMode = void;
+		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::deferredGeometry;
+
+		static constexpr uint32_t RenderModeIndex()
+		{
+			return 0;
+		}
+	};
+
+	template<>
+	struct RenderStageTraits<RenderStage::deferredLighting>
+	{
+		static constexpr bool hasRenderPipeline = true;
+		static constexpr bool hasRenderMode = false;
+		using RenderMode = void;
+		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::deferredLighting;
+
+		static constexpr uint32_t RenderModeIndex()
+		{
+			return 0;
+		}
+	};
+
+	template<>
 	struct RenderStageTraits<RenderStage::forward>
 	{
 		static constexpr bool hasRenderPipeline = true;

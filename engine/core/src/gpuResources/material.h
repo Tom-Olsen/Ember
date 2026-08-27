@@ -22,19 +22,21 @@ namespace emberBackendInterface
 namespace emberCore
 {
 	// Forward declarations:
-	class ForwardMaterial;
 	class GizmoMaterial;
-	class MaterialShader;
 	class ShadowMaterial;
+	class DeferredMaterial;
+	class ForwardMaterial;
+	class MaterialShader;
 
 
 
 	class EMBER_CORE_API Material : public Shader
 	{
 		// Friends:
-		friend class ForwardMaterial;
 		friend class GizmoMaterial;
 		friend class ShadowMaterial;
+		friend class DeferredMaterial;
+		friend class ForwardMaterial;
 		friend class MaterialManager;
 		friend class Renderer;
 		friend class ShaderProperties;
@@ -53,12 +55,14 @@ namespace emberCore
 		~Material();
 
 		// Creation/Destruction:
-		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		static ShadowMaterial CreateShadow(const std::filesystem::path& vertexSpv, const std::string& name);
 		static ShadowMaterial CreateShadow(const MaterialShader& materialShader, const std::string& name);
+		static DeferredMaterial CreateDeferredGeometry(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static DeferredMaterial CreateDeferredGeometry(const MaterialShader& materialShader, const std::string& name);
+		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		void Destroy();
 
 		// Copyable:

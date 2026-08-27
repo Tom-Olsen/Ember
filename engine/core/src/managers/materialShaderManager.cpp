@@ -51,19 +51,6 @@ namespace emberCore
 
 
 	// Creators:
-	MaterialShader MaterialShaderManager::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::forward)
-				throw std::runtime_error("MaterialShaderManager::CreateForwardMaterialShader(...) failed. Existing MaterialShader is not a forward shader: " + name);
-			return materialShader;
-		}
-
-		return AddMaterialShader(name, Renderer::CreateForwardMaterialShader(vertexSpv, fragmentSpv, name));
-	}
 	MaterialShader MaterialShaderManager::CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
 		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
@@ -89,6 +76,32 @@ namespace emberCore
 		}
 
 		return AddMaterialShader(name, Renderer::CreateShadowMaterialShader(vertexSpv, name));
+	}
+	MaterialShader MaterialShaderManager::CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
+		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
+		{
+			MaterialShader materialShader{ materialShaderId };
+			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
+				throw std::runtime_error("MaterialShaderManager::CreateDeferredGeometryMaterialShader(...) failed. Existing MaterialShader is not a deferred geometry shader: " + name);
+			return materialShader;
+		}
+
+		return AddMaterialShader(name, Renderer::CreateDeferredGeometryMaterialShader(vertexSpv, fragmentSpv, name));
+	}
+	MaterialShader MaterialShaderManager::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
+		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
+		{
+			MaterialShader materialShader{ materialShaderId };
+			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::forward)
+				throw std::runtime_error("MaterialShaderManager::CreateForwardMaterialShader(...) failed. Existing MaterialShader is not a forward shader: " + name);
+			return materialShader;
+		}
+
+		return AddMaterialShader(name, Renderer::CreateForwardMaterialShader(vertexSpv, fragmentSpv, name));
 	}
 
 
@@ -139,6 +152,19 @@ namespace emberCore
 		}
 
 		return AddMaterialShader(name, Renderer::CreateOutlineMaterialShader(vertexSpv, fragmentSpv, name));
+	}
+	MaterialShader MaterialShaderManager::CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
+		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
+		{
+			MaterialShader materialShader{ materialShaderId };
+			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::deferredLighting)
+				throw std::runtime_error("MaterialShaderManager::CreateDeferredLightingMaterialShader(...) failed. Existing MaterialShader is not a deferred lighting shader: " + name);
+			return materialShader;
+		}
+
+		return AddMaterialShader(name, Renderer::CreateDeferredLightingMaterialShader(vertexSpv, fragmentSpv, name));
 	}
 	MaterialShader MaterialShaderManager::CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{

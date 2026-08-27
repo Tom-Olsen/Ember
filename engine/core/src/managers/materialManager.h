@@ -1,6 +1,7 @@
 #pragma once
 #include "commonForwardRenderMode.h"
 #include "commonGizmoRenderMode.h"
+#include "deferredMaterial.h"
 #include "emberCoreExport.h"
 #include "forwardMaterial.h"
 #include "gizmoMaterial.h"
@@ -39,6 +40,7 @@ namespace emberCore
     class EMBER_CORE_API MaterialManager
 	{
 		// Friends:
+		friend class DeferredMaterial;
 		friend class ForwardMaterial;
 		friend class Material;
 		friend class MaterialShaderManager;
@@ -50,7 +52,7 @@ namespace emberCore
 			std::string name;
 			MaterialRole roles;
 			MaterialShaderId materialShaderId;
-			MaterialId shadowMaterialId;	// used to link a shadowMaterial to a forwardMaterial.
+			MaterialId shadowMaterialId;	// used to link a shadow material to a deferred or forward surface material.
 			std::unique_ptr<emberBackendInterface::IMaterial> pIMaterial;
 		};
 		struct MaterialSlot
@@ -72,25 +74,29 @@ namespace emberCore
         static void Clear();
 
 		// Creators:
-        static ForwardMaterial CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-        static ForwardMaterial CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
         static GizmoMaterial CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
         static GizmoMaterial CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
         static ShadowMaterial CreateShadowMaterial(const std::filesystem::path& vertexSpv, const std::string& name);
         static ShadowMaterial CreateShadowMaterial(const MaterialShader& materialShader, const std::string& name);
+		static DeferredMaterial CreateDeferredGeometryMaterial(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static DeferredMaterial CreateDeferredGeometryMaterial(const MaterialShader& materialShader, const std::string& name);
+        static ForwardMaterial CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+        static ForwardMaterial CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		// Cloners:
-		static ForwardMaterial CloneForwardMaterial(const ForwardMaterial& sourceMaterial, const std::string& name);
-		static ForwardMaterial CloneForwardMaterial(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name);
 		static GizmoMaterial CloneGizmoMaterial(const GizmoMaterial& sourceMaterial, const std::string& name);
 		static GizmoMaterial CloneGizmoMaterial(const GizmoMaterial& sourceMaterial, emberCommon::GizmoRenderMode renderMode, const std::string& name);
 		static ShadowMaterial CloneShadowMaterial(const ShadowMaterial& sourceMaterial, const std::string& name);
+		static DeferredMaterial CloneDeferredGeometryMaterial(const DeferredMaterial& sourceMaterial, const std::string& name);
+		static ForwardMaterial CloneForwardMaterial(const ForwardMaterial& sourceMaterial, const std::string& name);
+		static ForwardMaterial CloneForwardMaterial(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name);
         
 		// Getters:
 		static Material GetMaterial(const std::string& name);
-        static ForwardMaterial GetForwardMaterial(const std::string& name);
         static GizmoMaterial GetGizmoMaterial(const std::string& name);
         static ShadowMaterial GetShadowMaterial(const std::string& name);
 		static ShadowMaterial GetDefaultShadowMaterial();
+		static DeferredMaterial GetDeferredMaterial(const std::string& name);
+        static ForwardMaterial GetForwardMaterial(const std::string& name);
 
 		// Deleter:
 		static void DeleteMaterial(const std::string& name);
@@ -102,29 +108,32 @@ namespace emberCore
 		// Creators:
 		static Material CreateOutlineMaterial(const MaterialShader& materialShader, const std::string& name, MaterialRole roles);
 		static ShadowMaterial CreateShadowMaterial(const MaterialShader& materialShader, const std::string& name, MaterialRole roles);
+		static Material CreateDeferredLightingMaterial(const MaterialShader& materialShader, const std::string& name, MaterialRole roles);
 		static Material CreatePresentMaterial(const MaterialShader& materialShader, const std::string& name, MaterialRole roles);
 		
 		// Getters:
 		static Material GetMaterial(MaterialId materialId);
-		static ForwardMaterial GetForwardMaterial(MaterialId materialId);
 		static GizmoMaterial GetGizmoMaterial(MaterialId materialId);
 		static ShadowMaterial GetShadowMaterial(MaterialId materialId);
-		static ShadowMaterial GetShadowMaterialForForwardMaterial(MaterialId forwardMaterialId);
+		static ShadowMaterial GetShadowMaterialForSurfaceMaterial(MaterialId surfaceMaterialId);
+		static DeferredMaterial GetDeferredMaterial(MaterialId materialId);
+		static ForwardMaterial GetForwardMaterial(MaterialId materialId);
 		static MaterialId GetMaterialId(const std::string& name);
 		static emberBackendInterface::IMaterial* GetMaterialInterface(MaterialId materialId);
 		static const std::string* GetMaterialName(MaterialId materialId);
 		static const MaterialShaderId* GetMaterialShaderId(MaterialId materialId);
-		static MaterialId GetShadowMaterialIdForForwardMaterial(MaterialId forwardMaterialId);
+		static MaterialId GetShadowMaterialIdForSurfaceMaterial(MaterialId surfaceMaterialId);
 		
 		// Bool checks:
 		static bool HasMaterialRole(MaterialId materialId, MaterialRole role);
 		static bool MaterialShaderInUse(MaterialShaderId materialShaderId);
+		static bool IsSurfaceMaterialPass(emberCommon::MaterialPass materialPass);
 		
 		// Add/Delete material:
 		static void AddMaterial(const std::string& name, MaterialRole roles, MaterialShaderId materialShaderId, emberBackendInterface::IMaterial* pIMaterial, MaterialId& materialId);
-		static void ClearShadowMaterial(MaterialId forwardMaterialId);
+		static void ClearShadowMaterial(MaterialId surfaceMaterialId);
 		static void DeleteMaterial(MaterialId materialId);
-		static void SetShadowMaterial(MaterialId forwardMaterialId, MaterialId shadowMaterialId);
+		static void SetShadowMaterial(MaterialId surfaceMaterialId, MaterialId shadowMaterialId);
 
         // Delete all constructors:
         MaterialManager() = delete;

@@ -50,11 +50,13 @@ namespace emberCore
 		MaterialShader gizmoVertexColorUnlitShader = MaterialShaderManager::CreateGizmoMaterialShader(directoryPath / "gizmoVertexColorUnlit.vert.spv", directoryPath / "gizmoVertexColorUnlit.frag.spv", "gizmoVertexColorUnlitShader");
 		MaterialShader gizmoVertexColorLitShader = MaterialShaderManager::CreateGizmoMaterialShader(directoryPath / "gizmoVertexColorLit.vert.spv", directoryPath / "gizmoVertexColorLit.frag.spv", "gizmoVertexColorLitShader");
 		MaterialShader defaultShadowShader = MaterialShaderManager::CreateShadowMaterialShader(directoryPath / "shadow.vert.spv", "defaultShadowShader");
+		MaterialShader deferredLightingShader = MaterialShaderManager::CreateDeferredLightingMaterialShader(directoryPath / "deferredLighting.vert.spv", directoryPath / "deferredLighting.frag.spv", "deferredLightingShader");
 		MaterialShader presentShader = MaterialShaderManager::CreatePresentMaterialShader(directoryPath / "present.vert.spv", directoryPath / "present.frag.spv", "presentShader");
 
 		// Create Materials:
 		ShadowMaterial defaultShadowMaterial = CreateShadowMaterial(defaultShadowShader, "defaultShadowMaterial", MaterialRole::accessible);
 		s_defaultShadowMaterialId = defaultShadowMaterial.m_materialId;
+		Material deferredLightingMaterial = CreateDeferredLightingMaterial(deferredLightingShader, "deferredLightingMaterial", MaterialRole::immutable);
 		Material outlineMaterial = CreateOutlineMaterial(outlineShader, "outlineMaterial", MaterialRole::immutable);
 		CreateForwardMaterial(forwardOpaqueMode, errorShader, "errorMaterial");
 		CreateForwardMaterial(forwardOpaqueMode, defaultShader, "defaultMaterial");
@@ -72,7 +74,7 @@ namespace emberCore
 		CreateGizmoMaterial(gizmoTransparentMode, gizmoUnlitShader, "gizmoUnlitTransparentMaterial");
 		CreateGizmoMaterial(gizmoTransparentMode, gizmoLitShader, "gizmoLitTransparentMaterial");
 		Material presentMaterial = CreatePresentMaterial(presentShader, "presentMaterial", MaterialRole::immutable);
-		Renderer::SetDefaultMaterials(outlineMaterial, defaultShadowMaterial, presentMaterial);
+		Renderer::SetDefaultMaterials(outlineMaterial, defaultShadowMaterial, deferredLightingMaterial, presentMaterial);
 	}
 	void MaterialManager::Clear()
 	{
@@ -101,6 +103,56 @@ namespace emberCore
 
 
 	// Creators:
+	GizmoMaterial MaterialManager::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name)
+	{
+		emberBackendInterface::IMaterialShader* pIMaterialShader = materialShader.GetInterfaceHandle();
+		if (pIMaterialShader == nullptr)
+			throw std::runtime_error("MaterialManager::CreateGizmoMaterial(...) failed. MaterialShader is invalid or expired.");
+		if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::gizmo)
+			throw std::runtime_error("MaterialManager::CreateGizmoMaterial(...) failed. MaterialShader is not a gizmo shader.");
+
+		MaterialId materialId = GetMaterialId(name);
+		if (materialId.index != invalidMaterialId.index)
+		{
+			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
+			return GizmoMaterial();
+		}
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateGizmoMaterial(renderMode, pIMaterialShader, name);
+		AddMaterial(name, MaterialRole::defaultRole, materialShader.m_materialShaderId, pIMaterial, materialId);
+		return GizmoMaterial{ materialId };
+	}
+	ShadowMaterial MaterialManager::CreateShadowMaterial(const std::filesystem::path& vertexSpv, const std::string& name)
+	{
+		MaterialShader materialShader = MaterialShaderManager::CreateShadowMaterialShader(vertexSpv, name);
+		return CreateShadowMaterial(materialShader, name);
+	}
+	ShadowMaterial MaterialManager::CreateShadowMaterial(const MaterialShader& materialShader, const std::string& name)
+	{
+		return CreateShadowMaterial(materialShader, name, MaterialRole::defaultRole);
+	}
+	DeferredMaterial MaterialManager::CreateDeferredGeometryMaterial(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	{
+		MaterialShader materialShader = MaterialShaderManager::CreateDeferredGeometryMaterialShader(vertexSpv, fragmentSpv, name);
+		return CreateDeferredGeometryMaterial(materialShader, name);
+	}
+	DeferredMaterial MaterialManager::CreateDeferredGeometryMaterial(const MaterialShader& materialShader, const std::string& name)
+	{
+		emberBackendInterface::IMaterialShader* pIMaterialShader = materialShader.GetInterfaceHandle();
+		if (pIMaterialShader == nullptr)
+			throw std::runtime_error("MaterialManager::CreateDeferredGeometryMaterial(...) failed. MaterialShader is invalid or expired.");
+		if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
+			throw std::runtime_error("MaterialManager::CreateDeferredGeometryMaterial(...) failed. MaterialShader is not a deferred geometry shader.");
+
+		MaterialId materialId = GetMaterialId(name);
+		if (materialId.index != invalidMaterialId.index)
+		{
+			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
+			return DeferredMaterial();
+		}
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateDeferredGeometryMaterial(pIMaterialShader, name);
+		AddMaterial(name, MaterialRole::defaultRole, materialShader.m_materialShaderId, pIMaterial, materialId);
+		return DeferredMaterial{ materialId };
+	}
 	ForwardMaterial MaterialManager::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
 		MaterialShader materialShader = MaterialShaderManager::CreateForwardMaterialShader(vertexSpv, fragmentSpv, name);
@@ -129,80 +181,10 @@ namespace emberCore
 		MaterialShader materialShader = MaterialShaderManager::CreateGizmoMaterialShader(vertexSpv, fragmentSpv, name);
 		return CreateGizmoMaterial(renderMode, materialShader, name);
 	}
-	GizmoMaterial MaterialManager::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name)
-	{
-		emberBackendInterface::IMaterialShader* pIMaterialShader = materialShader.GetInterfaceHandle();
-		if (pIMaterialShader == nullptr)
-			throw std::runtime_error("MaterialManager::CreateGizmoMaterial(...) failed. MaterialShader is invalid or expired.");
-		if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::gizmo)
-			throw std::runtime_error("MaterialManager::CreateGizmoMaterial(...) failed. MaterialShader is not a gizmo shader.");
-
-		MaterialId materialId = GetMaterialId(name);
-		if (materialId.index != invalidMaterialId.index)
-		{
-			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
-			return GizmoMaterial();
-		}
-		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateGizmoMaterial(renderMode, pIMaterialShader, name);
-		AddMaterial(name, MaterialRole::defaultRole, materialShader.m_materialShaderId, pIMaterial, materialId);
-		return GizmoMaterial{ materialId };
-	}
-	ShadowMaterial MaterialManager::CreateShadowMaterial(const std::filesystem::path& vertexSpv, const std::string& name)
-	{
-		MaterialShader materialShader = MaterialShaderManager::CreateShadowMaterialShader(vertexSpv, name);
-		return CreateShadowMaterial(materialShader, name);
-	}
-	ShadowMaterial MaterialManager::CreateShadowMaterial(const MaterialShader& materialShader, const std::string& name)
-	{
-		return CreateShadowMaterial(materialShader, name, MaterialRole::defaultRole);
-	}
 
 
 
 	// Cloners:
-	ForwardMaterial MaterialManager::CloneForwardMaterial(const ForwardMaterial& sourceMaterial, const std::string& name)
-	{
-		MaterialId materialId = GetMaterialId(name);
-		if (materialId.index != invalidMaterialId.index)
-		{
-			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
-			return ForwardMaterial();
-		}
-		if (!sourceMaterial.IsValid())
-			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material is invalid.");
-		const MaterialShaderId* pMaterialShaderId = GetMaterialShaderId(sourceMaterial.m_materialId);
-		if (pMaterialShaderId == nullptr)
-			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material shader is invalid.");
-
-		emberBackendInterface::IMaterial* pIMaterial = Renderer::CloneForwardMaterial(sourceMaterial.GetInterfaceHandle(), name);
-		AddMaterial(name, MaterialRole::defaultRole, *pMaterialShaderId, pIMaterial, materialId);
-		MaterialId shadowMaterialId = GetShadowMaterialIdForForwardMaterial(sourceMaterial.m_materialId);
-		if (shadowMaterialId.index != invalidMaterialId.index)
-			SetShadowMaterial(materialId, shadowMaterialId);
-		return ForwardMaterial{ materialId };
-	}
-	ForwardMaterial MaterialManager::CloneForwardMaterial(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name)
-	{
-		MaterialId materialId = GetMaterialId(name);
-		if (materialId.index != invalidMaterialId.index)
-		{
-			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
-			return ForwardMaterial();
-		}
-		if (!sourceMaterial.IsValid())
-			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material is invalid.");
-		const MaterialShaderId* pMaterialShaderId = GetMaterialShaderId(sourceMaterial.m_materialId);
-		if (pMaterialShaderId == nullptr)
-			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material shader is invalid.");
-
-		std::unique_ptr<emberBackendInterface::IMaterial> pIMaterial(Renderer::CloneForwardMaterial(sourceMaterial.GetInterfaceHandle(), name));
-		pIMaterial->SetForwardRenderMode(renderMode);
-		AddMaterial(name, MaterialRole::defaultRole, *pMaterialShaderId, pIMaterial.release(), materialId);
-		MaterialId shadowMaterialId = GetShadowMaterialIdForForwardMaterial(sourceMaterial.m_materialId);
-		if (shadowMaterialId.index != invalidMaterialId.index)
-			SetShadowMaterial(materialId, shadowMaterialId);
-		return ForwardMaterial{ materialId };
-	}
 	GizmoMaterial MaterialManager::CloneGizmoMaterial(const GizmoMaterial& sourceMaterial, const std::string& name)
 	{
 		MaterialId materialId = GetMaterialId(name);
@@ -258,6 +240,70 @@ namespace emberCore
 		AddMaterial(name, MaterialRole::defaultRole, *pMaterialShaderId, pIMaterial, materialId);
 		return ShadowMaterial{ materialId };
 	}
+	DeferredMaterial MaterialManager::CloneDeferredGeometryMaterial(const DeferredMaterial& sourceMaterial, const std::string& name)
+	{
+		MaterialId materialId = GetMaterialId(name);
+		if (materialId.index != invalidMaterialId.index)
+		{
+			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
+			return DeferredMaterial();
+		}
+		if (!sourceMaterial.IsValid())
+			throw std::runtime_error("MaterialManager::CloneDeferredGeometryMaterial(...) failed. Source material is invalid.");
+		const MaterialShaderId* pMaterialShaderId = GetMaterialShaderId(sourceMaterial.m_materialId);
+		if (pMaterialShaderId == nullptr)
+			throw std::runtime_error("MaterialManager::CloneDeferredGeometryMaterial(...) failed. Source material shader is invalid.");
+
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CloneDeferredGeometryMaterial(sourceMaterial.GetInterfaceHandle(), name);
+		AddMaterial(name, MaterialRole::defaultRole, *pMaterialShaderId, pIMaterial, materialId);
+		MaterialId shadowMaterialId = GetShadowMaterialIdForSurfaceMaterial(sourceMaterial.m_materialId);
+		if (shadowMaterialId.index != invalidMaterialId.index)
+			SetShadowMaterial(materialId, shadowMaterialId);
+		return DeferredMaterial{ materialId };
+	}
+	ForwardMaterial MaterialManager::CloneForwardMaterial(const ForwardMaterial& sourceMaterial, const std::string& name)
+	{
+		MaterialId materialId = GetMaterialId(name);
+		if (materialId.index != invalidMaterialId.index)
+		{
+			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
+			return ForwardMaterial();
+		}
+		if (!sourceMaterial.IsValid())
+			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material is invalid.");
+		const MaterialShaderId* pMaterialShaderId = GetMaterialShaderId(sourceMaterial.m_materialId);
+		if (pMaterialShaderId == nullptr)
+			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material shader is invalid.");
+
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CloneForwardMaterial(sourceMaterial.GetInterfaceHandle(), name);
+		AddMaterial(name, MaterialRole::defaultRole, *pMaterialShaderId, pIMaterial, materialId);
+		MaterialId shadowMaterialId = GetShadowMaterialIdForSurfaceMaterial(sourceMaterial.m_materialId);
+		if (shadowMaterialId.index != invalidMaterialId.index)
+			SetShadowMaterial(materialId, shadowMaterialId);
+		return ForwardMaterial{ materialId };
+	}
+	ForwardMaterial MaterialManager::CloneForwardMaterial(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name)
+	{
+		MaterialId materialId = GetMaterialId(name);
+		if (materialId.index != invalidMaterialId.index)
+		{
+			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
+			return ForwardMaterial();
+		}
+		if (!sourceMaterial.IsValid())
+			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material is invalid.");
+		const MaterialShaderId* pMaterialShaderId = GetMaterialShaderId(sourceMaterial.m_materialId);
+		if (pMaterialShaderId == nullptr)
+			throw std::runtime_error("MaterialManager::CloneForwardMaterial(...) failed. Source material shader is invalid.");
+
+		std::unique_ptr<emberBackendInterface::IMaterial> pIMaterial(Renderer::CloneForwardMaterial(sourceMaterial.GetInterfaceHandle(), name));
+		pIMaterial->SetForwardRenderMode(renderMode);
+		AddMaterial(name, MaterialRole::defaultRole, *pMaterialShaderId, pIMaterial.release(), materialId);
+		MaterialId shadowMaterialId = GetShadowMaterialIdForSurfaceMaterial(sourceMaterial.m_materialId);
+		if (shadowMaterialId.index != invalidMaterialId.index)
+			SetShadowMaterial(materialId, shadowMaterialId);
+		return ForwardMaterial{ materialId };
+	}
 
 
 
@@ -271,22 +317,6 @@ namespace emberCore
 			return Material();
 		}
 		return Material{ materialId };
-	}
-	ForwardMaterial MaterialManager::GetForwardMaterial(const std::string& name)
-	{
-		MaterialId materialId = GetMaterialId(name);
-		emberBackendInterface::IMaterial* pIMaterial = GetMaterialInterface(materialId);
-		if (pIMaterial == nullptr || !HasMaterialRole(materialId, MaterialRole::accessible))
-		{
-			LOG_WARN("MaterialManager::GetForwardMaterial(...) failed. Material '{}' not found or expired.", name);
-			return ForwardMaterial();
-		}
-		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
-		{
-			LOG_WARN("MaterialManager::GetForwardMaterial(...) failed. Material '{}' is not a forward material.", name);
-			return ForwardMaterial();
-		}
-		return ForwardMaterial{ materialId };
 	}
 	GizmoMaterial MaterialManager::GetGizmoMaterial(const std::string& name)
 	{
@@ -328,6 +358,38 @@ namespace emberCore
 			return ShadowMaterial();
 		}
 		return ShadowMaterial{ s_defaultShadowMaterialId };
+	}
+	DeferredMaterial MaterialManager::GetDeferredMaterial(const std::string& name)
+	{
+		MaterialId materialId = GetMaterialId(name);
+		emberBackendInterface::IMaterial* pIMaterial = GetMaterialInterface(materialId);
+		if (pIMaterial == nullptr || !HasMaterialRole(materialId, MaterialRole::accessible))
+		{
+			LOG_WARN("MaterialManager::GetDeferredMaterial(...) failed. Material '{}' not found or expired.", name);
+			return DeferredMaterial();
+		}
+		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
+		{
+			LOG_WARN("MaterialManager::GetDeferredMaterial(...) failed. Material '{}' is not a deferred material.", name);
+			return DeferredMaterial();
+		}
+		return DeferredMaterial{ materialId };
+	}
+	ForwardMaterial MaterialManager::GetForwardMaterial(const std::string& name)
+	{
+		MaterialId materialId = GetMaterialId(name);
+		emberBackendInterface::IMaterial* pIMaterial = GetMaterialInterface(materialId);
+		if (pIMaterial == nullptr || !HasMaterialRole(materialId, MaterialRole::accessible))
+		{
+			LOG_WARN("MaterialManager::GetForwardMaterial(...) failed. Material '{}' not found or expired.", name);
+			return ForwardMaterial();
+		}
+		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
+		{
+			LOG_WARN("MaterialManager::GetForwardMaterial(...) failed. Material '{}' is not a forward material.", name);
+			return ForwardMaterial();
+		}
+		return ForwardMaterial{ materialId };
 	}
 
 
@@ -397,6 +459,24 @@ namespace emberCore
 		AddMaterial(name, roles, materialShader.m_materialShaderId, pIMaterial, materialId);
 		return ShadowMaterial{ materialId };
 	}
+	Material MaterialManager::CreateDeferredLightingMaterial(const MaterialShader& materialShader, const std::string& name, MaterialRole roles)
+	{
+		emberBackendInterface::IMaterialShader* pIMaterialShader = materialShader.GetInterfaceHandle();
+		if (pIMaterialShader == nullptr)
+			throw std::runtime_error("MaterialManager::CreateDeferredLightingMaterial(...) failed. MaterialShader is invalid or expired.");
+		if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::deferredLighting)
+			throw std::runtime_error("MaterialManager::CreateDeferredLightingMaterial(...) failed. MaterialShader is not a deferred lighting shader.");
+
+		MaterialId materialId = GetMaterialId(name);
+		if (materialId.index != invalidMaterialId.index)
+		{
+			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
+			return Material();
+		}
+		emberBackendInterface::IMaterial* pIMaterial = Renderer::CreateDeferredLightingMaterial(pIMaterialShader, name);
+		AddMaterial(name, roles, materialShader.m_materialShaderId, pIMaterial, materialId);
+		return Material{ materialId };
+	}
 	Material MaterialManager::CreatePresentMaterial(const MaterialShader& materialShader, const std::string& name, MaterialRole roles)
 	{
 		emberBackendInterface::IMaterialShader* pIMaterialShader = materialShader.GetInterfaceHandle();
@@ -425,15 +505,6 @@ namespace emberCore
 			throw std::runtime_error("MaterialManager::GetMaterial(...) failed. Material is invalid or expired.");
 		return Material{ materialId };
 	}
-	ForwardMaterial MaterialManager::GetForwardMaterial(MaterialId materialId)
-	{
-		emberBackendInterface::IMaterial* pIMaterial = GetMaterialInterface(materialId);
-		if (pIMaterial == nullptr)
-			throw std::runtime_error("MaterialManager::GetForwardMaterial(...) failed. Material is invalid or expired.");
-		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
-			throw std::runtime_error("MaterialManager::GetForwardMaterial(...) failed. Material is not a forward material.");
-		return ForwardMaterial{ materialId };
-	}
 	GizmoMaterial MaterialManager::GetGizmoMaterial(MaterialId materialId)
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetMaterialInterface(materialId);
@@ -452,10 +523,32 @@ namespace emberCore
 			throw std::runtime_error("MaterialManager::GetShadowMaterial(...) failed. Material is not a shadow material.");
 		return ShadowMaterial{ materialId };
 	}
-	ShadowMaterial MaterialManager::GetShadowMaterialForForwardMaterial(MaterialId forwardMaterialId)
+	ShadowMaterial MaterialManager::GetShadowMaterialForSurfaceMaterial(MaterialId surfaceMaterialId)
 	{
-		GetForwardMaterial(forwardMaterialId);
-		return GetShadowMaterial(GetShadowMaterialIdForForwardMaterial(forwardMaterialId));
+		emberBackendInterface::IMaterial* pSurfaceMaterial = GetMaterialInterface(surfaceMaterialId);
+		if (pSurfaceMaterial == nullptr)
+			throw std::runtime_error("MaterialManager::GetShadowMaterialForSurfaceMaterial(...) failed. Surface material is invalid or expired.");
+		if (!IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
+			throw std::runtime_error("MaterialManager::GetShadowMaterialForSurfaceMaterial(...) failed. Material is not a deferred or forward material.");
+		return GetShadowMaterial(GetShadowMaterialIdForSurfaceMaterial(surfaceMaterialId));
+	}
+	DeferredMaterial MaterialManager::GetDeferredMaterial(MaterialId materialId)
+	{
+		emberBackendInterface::IMaterial* pIMaterial = GetMaterialInterface(materialId);
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("MaterialManager::GetDeferredMaterial(...) failed. Material is invalid or expired.");
+		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
+			throw std::runtime_error("MaterialManager::GetDeferredMaterial(...) failed. Material is not a deferred material.");
+		return DeferredMaterial{ materialId };
+	}
+	ForwardMaterial MaterialManager::GetForwardMaterial(MaterialId materialId)
+	{
+		emberBackendInterface::IMaterial* pIMaterial = GetMaterialInterface(materialId);
+		if (pIMaterial == nullptr)
+			throw std::runtime_error("MaterialManager::GetForwardMaterial(...) failed. Material is invalid or expired.");
+		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
+			throw std::runtime_error("MaterialManager::GetForwardMaterial(...) failed. Material is not a forward material.");
+		return ForwardMaterial{ materialId };
 	}
 	MaterialId MaterialManager::GetMaterialId(const std::string& name)
 	{
@@ -490,13 +583,13 @@ namespace emberCore
 			return nullptr;
 		return &s_materialSlots[materialId.index].managedMaterial.materialShaderId;
 	}
-	MaterialId MaterialManager::GetShadowMaterialIdForForwardMaterial(MaterialId forwardMaterialId)
+	MaterialId MaterialManager::GetShadowMaterialIdForSurfaceMaterial(MaterialId surfaceMaterialId)
 	{
-		emberBackendInterface::IMaterial* pForwardMaterial = GetMaterialInterface(forwardMaterialId);
-		if (pForwardMaterial == nullptr || pForwardMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
+		emberBackendInterface::IMaterial* pSurfaceMaterial = GetMaterialInterface(surfaceMaterialId);
+		if (pSurfaceMaterial == nullptr || !IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
 			return invalidMaterialId;
 
-		MaterialId& shadowMaterialId = s_materialSlots[forwardMaterialId.index].managedMaterial.shadowMaterialId;
+		MaterialId& shadowMaterialId = s_materialSlots[surfaceMaterialId.index].managedMaterial.shadowMaterialId;
 		emberBackendInterface::IMaterial* pShadowMaterial = GetMaterialInterface(shadowMaterialId);
 		if (pShadowMaterial == nullptr || pShadowMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)
 			shadowMaterialId = s_defaultShadowMaterialId;
@@ -523,6 +616,10 @@ namespace emberCore
 				return true;
 		return false;
 	}
+	bool MaterialManager::IsSurfaceMaterialPass(emberCommon::MaterialPass materialPass)
+	{
+		return materialPass == emberCommon::MaterialPass::deferredGeometry || materialPass == emberCommon::MaterialPass::forward;
+	}
 
 
 
@@ -531,7 +628,7 @@ namespace emberCore
 	{
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("MaterialManager::AddMaterial(...) failed. Backend returned nullptr.");
-		MaterialId shadowMaterialId = pIMaterial->GetMaterialPass() == emberCommon::MaterialPass::forward ? s_defaultShadowMaterialId : invalidMaterialId;
+		MaterialId shadowMaterialId = IsSurfaceMaterialPass(pIMaterial->GetMaterialPass()) ? s_defaultShadowMaterialId : invalidMaterialId;
 
 		if (s_freeMaterialIds.empty())
 		{
@@ -556,15 +653,15 @@ namespace emberCore
 		materialId.generation = s_materialSlots[materialId.index].generation;
 		s_materialIdsMap[name] = materialId.index;
 	}
-	void MaterialManager::ClearShadowMaterial(MaterialId forwardMaterialId)
+	void MaterialManager::ClearShadowMaterial(MaterialId surfaceMaterialId)
 	{
-		emberBackendInterface::IMaterial* pForwardMaterial = GetMaterialInterface(forwardMaterialId);
-		if (pForwardMaterial == nullptr)
-			throw std::runtime_error("MaterialManager::ClearShadowMaterial(...) failed. Forward material is invalid or expired.");
-		if (pForwardMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
-			throw std::runtime_error("MaterialManager::ClearShadowMaterial(...) failed. Material is not a forward material.");
+		emberBackendInterface::IMaterial* pSurfaceMaterial = GetMaterialInterface(surfaceMaterialId);
+		if (pSurfaceMaterial == nullptr)
+			throw std::runtime_error("MaterialManager::ClearShadowMaterial(...) failed. Surface material is invalid or expired.");
+		if (!IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
+			throw std::runtime_error("MaterialManager::ClearShadowMaterial(...) failed. Material is not a deferred or forward material.");
 
-		s_materialSlots[forwardMaterialId.index].managedMaterial.shadowMaterialId = s_defaultShadowMaterialId;
+		s_materialSlots[surfaceMaterialId.index].managedMaterial.shadowMaterialId = s_defaultShadowMaterialId;
 	}
 	void MaterialManager::DeleteMaterial(MaterialId materialId)
 	{
@@ -586,13 +683,13 @@ namespace emberCore
 		slot.generation++;
 		s_freeMaterialIds.push_back(materialId.index);
 	}
-	void MaterialManager::SetShadowMaterial(MaterialId forwardMaterialId, MaterialId shadowMaterialId)
+	void MaterialManager::SetShadowMaterial(MaterialId surfaceMaterialId, MaterialId shadowMaterialId)
 	{
-		emberBackendInterface::IMaterial* pForwardMaterial = GetMaterialInterface(forwardMaterialId);
-		if (pForwardMaterial == nullptr)
-			throw std::runtime_error("MaterialManager::SetShadowMaterial(...) failed. Forward material is invalid or expired.");
-		if (pForwardMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
-			throw std::runtime_error("MaterialManager::SetShadowMaterial(...) failed. Material is not a forward material.");
+		emberBackendInterface::IMaterial* pSurfaceMaterial = GetMaterialInterface(surfaceMaterialId);
+		if (pSurfaceMaterial == nullptr)
+			throw std::runtime_error("MaterialManager::SetShadowMaterial(...) failed. Surface material is invalid or expired.");
+		if (!IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
+			throw std::runtime_error("MaterialManager::SetShadowMaterial(...) failed. Material is not a deferred or forward material.");
 
 		emberBackendInterface::IMaterial* pShadowMaterial = GetMaterialInterface(shadowMaterialId);
 		if (pShadowMaterial == nullptr)
@@ -600,6 +697,6 @@ namespace emberCore
 		if (pShadowMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)
 			throw std::runtime_error("MaterialManager::SetShadowMaterial(...) failed. Material is not a shadow material.");
 
-		s_materialSlots[forwardMaterialId.index].managedMaterial.shadowMaterialId = shadowMaterialId;
+		s_materialSlots[surfaceMaterialId.index].managedMaterial.shadowMaterialId = shadowMaterialId;
 	}
 }

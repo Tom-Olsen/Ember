@@ -40,6 +40,7 @@ namespace vulkanRendererBackend
         // Materials:
         static Material* s_pDefaultOutlineMaterial;
         static Material* s_pDefaultShadowMaterial;
+        static Material* s_pDefaultDeferredLightingMaterial;
         static Material* s_pDefaultPresentMaterial;
         // Compute shaders:
         static std::unique_ptr<ComputeShader> s_pGammaCorrectionComputeShader;
@@ -63,7 +64,11 @@ namespace vulkanRendererBackend
         static void Clear();
 
 		// Set/Clear default materials:
-        static void SetDefaultMaterials(emberBackendInterface::IMaterial* pOutlineMaterial, emberBackendInterface::IMaterial* pDefaultShadowMaterial, emberBackendInterface::IMaterial* pPresentMaterial);
+        static void SetDefaultMaterials(
+			emberBackendInterface::IMaterial* pOutlineMaterial,
+			emberBackendInterface::IMaterial* pDefaultShadowMaterial,
+			emberBackendInterface::IMaterial* pDeferredLightingMaterial, 
+			emberBackendInterface::IMaterial* pPresentMaterial);
 		static void ClearDefaultMaterials();
 
         // Samplers:
@@ -73,6 +78,7 @@ namespace vulkanRendererBackend
         // Materials:
         static Material* GetDefaultOutlineMaterial();
         static Material* GetDefaultShadowMaterial();
+        static Material* GetDefaultDeferredLightingMaterial();
         static Material* GetDefaultPresentMaterial();
         // Compute shaders:
         static ComputeShader* GetGammaCorrectionComputeShader();

@@ -32,9 +32,10 @@ namespace emberCore
 		~MaterialShader();
 
 		// Creation/Destruction:
-		static MaterialShader CreateForward(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateGizmo(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateShadow(const std::filesystem::path& vertexSpv, const std::string& name);
+		static MaterialShader CreateDeferredGeometry(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static MaterialShader CreateForward(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		void Destroy();
 
 		// Copyable:

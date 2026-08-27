@@ -32,10 +32,12 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Factories/Destructor:
-		static MaterialShader CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
-		static MaterialShader CreateForward(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
 		static MaterialShader CreateGizmo(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
+		static MaterialShader CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
 		static MaterialShader CreateShadow(uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv, const std::string& debugName);
+		static MaterialShader CreateDeferredGeometry(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
+		static MaterialShader CreateDeferredLighting(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
+		static MaterialShader CreateForward(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
 		static MaterialShader CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName);
 		~MaterialShader();
 

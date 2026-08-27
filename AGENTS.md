@@ -15,6 +15,8 @@
 ## Architecture
 - Interfaces are reserved for contracts across shared-library boundaries.
 - For each class/struct use a .h and .cpp file. Only exceptions are helper structs within other classes/structs which can be defined in the same file as the class/struct they are helping.
+- no free namespace helper functions in .cpp files. Such helpers should be proper private methods.
+
 
 ## Review Priorities
 -

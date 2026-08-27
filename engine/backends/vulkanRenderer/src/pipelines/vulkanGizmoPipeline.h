@@ -9,9 +9,6 @@
 
 namespace vulkanRendererBackend
 {
-	/// <summary>
-	/// Pipeline for rendering gizmos into the gizmo render pass.
-	/// </summary>
 	class GizmoPipeline : public Pipeline
 	{
 	public: // Methods:

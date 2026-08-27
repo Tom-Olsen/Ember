@@ -7,9 +7,6 @@
 
 namespace vulkanRendererBackend
 {
-	/// <summary>
-	/// Renders finallized image into swapchain via presentRenderPass.
-	/// </summary>
 	class PresentPipeline : public Pipeline
 	{
 	public: // Methods:

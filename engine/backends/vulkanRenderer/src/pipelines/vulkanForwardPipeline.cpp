@@ -76,7 +76,7 @@ namespace vulkanRendererBackend
 
         // Input assembly:
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-        inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;  // how to interpret the vertices, triangle list is the most flexible
+        inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
         // Multiple viewports and scissors can be used for multiview rendering (VR). Requires multiview feature:
         VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
@@ -85,24 +85,17 @@ namespace vulkanRendererBackend
 
         // Rasterization:
         VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-        rasterizationState.polygonMode = PolygonModeCommonToVulkan(renderState.polygonMode);	// fill=fill triangles, line=draw lines, point=draw points. Line is useful for wireframe rendering.
-        rasterizationState.cullMode = CullModeCommonToVulkan(renderState.cullMode);				// which face to cull.
-        rasterizationState.frontFace = FrontFaceCommonToVulkan(renderState.frontFace);			// which face of triangle is front: 123 or 132?
-        rasterizationState.lineWidth = 1.0f;                									// width of lines. Bigger 1.0f requires wideLines feature.
-        rasterizationState.depthClampEnable = VK_FALSE;     									// clamping fragments instead of discarding them is useful for shadow mapping. Requires depthClamp feature.
-        rasterizationState.depthBiasEnable = VK_FALSE;      									// optional.
-        rasterizationState.depthBiasConstantFactor = 0.0f;  									// optional.
-        rasterizationState.depthBiasClamp = 0.0f;           									// optional.
-        rasterizationState.depthBiasSlopeFactor = 0.0f;     									// optional.
+        rasterizationState.polygonMode = PolygonModeCommonToVulkan(renderState.polygonMode);
+        rasterizationState.cullMode = CullModeCommonToVulkan(renderState.cullMode);
+        rasterizationState.frontFace = FrontFaceCommonToVulkan(renderState.frontFace);
+        rasterizationState.lineWidth = 1.0f;
+        rasterizationState.depthClampEnable = VK_FALSE;
+        rasterizationState.depthBiasEnable = VK_FALSE;
 
         // Multisampling:
         VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
         multisampleState.sampleShadingEnable = VK_FALSE;
-        multisampleState.rasterizationSamples = Context::GetMsaaSamples();
-        multisampleState.minSampleShading = 1.0f;           // optional.
-        multisampleState.pSampleMask = nullptr;             // optional.
-        multisampleState.alphaToCoverageEnable = VK_FALSE;  // optional.
-        multisampleState.alphaToOneEnable = VK_FALSE;       // optional.
+        multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
         // Depth and stencil testing:
         VkPipelineDepthStencilStateCreateInfo depthState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
@@ -141,12 +134,7 @@ namespace vulkanRendererBackend
         VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
         colorBlendState.attachmentCount = 1;
         colorBlendState.pAttachments = &colorBlendAttachmentState;
-        colorBlendState.logicOpEnable = VK_FALSE;   // setting this to true overwrites the colorBlendAttachmentState settings and uses the logicOp.
-        colorBlendState.logicOp = VK_LOGIC_OP_COPY; // optional.
-        colorBlendState.blendConstants[0] = 0.0f;   // optional.
-        colorBlendState.blendConstants[1] = 0.0f;   // optional.
-        colorBlendState.blendConstants[2] = 0.0f;   // optional.
-        colorBlendState.blendConstants[3] = 0.0f;   // optional.
+        colorBlendState.logicOpEnable = VK_FALSE;
 
         // Dynamic states, can be changed without recreating the pipeline:
         std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_CULL_MODE };
@@ -155,16 +143,16 @@ namespace vulkanRendererBackend
         dynamicState.pDynamicStates = dynamicStates.data();
 
         VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-        pipelineInfo.stageCount = shaderStages.size();          // vertex and fragment shaders.
+        pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
         pipelineInfo.pStages = shaderStages.data();
-        pipelineInfo.pVertexInputState = &vertexInputState;     // buffer format.
-        pipelineInfo.pInputAssemblyState = &inputAssemblyState; // onput assembler.
-        pipelineInfo.pViewportState = &viewportState;           // viewport and scissor.
-        pipelineInfo.pRasterizationState = &rasterizationState; // rasterizer.
-        pipelineInfo.pMultisampleState = &multisampleState;     // multisampling.
-        pipelineInfo.pDepthStencilState = &depthState;          // depth and stencil testing.
-        pipelineInfo.pColorBlendState = &colorBlendState;       // color blending.
-		pipelineInfo.pDynamicState = &dynamicState;             // dynamic states: viewport, scissor and cull mode.
+        pipelineInfo.pVertexInputState = &vertexInputState;
+        pipelineInfo.pInputAssemblyState = &inputAssemblyState;
+        pipelineInfo.pViewportState = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizationState;
+        pipelineInfo.pMultisampleState = &multisampleState;
+        pipelineInfo.pDepthStencilState = &depthState;
+        pipelineInfo.pColorBlendState = &colorBlendState;
+		pipelineInfo.pDynamicState = &dynamicState;
         pipelineInfo.layout = vkPipelineLayout;
         pipelineInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
         pipelineInfo.subpass = 0;

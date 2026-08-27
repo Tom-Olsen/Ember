@@ -1,4 +1,5 @@
 #include "material.h"
+#include "deferredMaterial.h"
 #include "forwardMaterial.h"
 #include "gizmoMaterial.h"
 #include "iMaterial.h"
@@ -48,14 +49,6 @@ namespace emberCore
 
 
 	// Creation/Destruction:
-	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
-	{
-		return MaterialManager::CreateForwardMaterial(renderMode, vertexSpv, fragmentSpv, debugName);
-	}
-	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& debugName)
-	{
-		return MaterialManager::CreateForwardMaterial(renderMode, materialShader, debugName);
-	}
 	GizmoMaterial Material::CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		return MaterialManager::CreateGizmoMaterial(renderMode, vertexSpv, fragmentSpv, debugName);
@@ -71,6 +64,22 @@ namespace emberCore
 	ShadowMaterial Material::CreateShadow(const MaterialShader& materialShader, const std::string& debugName)
 	{
 		return MaterialManager::CreateShadowMaterial(materialShader, debugName);
+	}
+	DeferredMaterial Material::CreateDeferredGeometry(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	{
+		return MaterialManager::CreateDeferredGeometryMaterial(vertexSpv, fragmentSpv, debugName);
+	}
+	DeferredMaterial Material::CreateDeferredGeometry(const MaterialShader& materialShader, const std::string& debugName)
+	{
+		return MaterialManager::CreateDeferredGeometryMaterial(materialShader, debugName);
+	}
+	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	{
+		return MaterialManager::CreateForwardMaterial(renderMode, vertexSpv, fragmentSpv, debugName);
+	}
+	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& debugName)
+	{
+		return MaterialManager::CreateForwardMaterial(renderMode, materialShader, debugName);
 	}
 	void Material::Destroy()
 	{

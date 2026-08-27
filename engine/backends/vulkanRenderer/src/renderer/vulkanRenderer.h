@@ -178,7 +178,11 @@ namespace vulkanRendererBackend
 		void SetDepthBiasConstantFactor(float depthBiasConstantFactor) override;
 		void SetDepthBiasClamp(float depthBiasClamp) override;
 		void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) override;
-		void SetDefaultMaterials(emberBackendInterface::IMaterial* pIOutlineMaterial, emberBackendInterface::IMaterial* pIDefaultShadowMaterial, emberBackendInterface::IMaterial* pIPresentMaterial) override;
+		void SetDefaultMaterials(
+			emberBackendInterface::IMaterial* pIOutlineMaterial,
+			emberBackendInterface::IMaterial* pIDefaultShadowMaterial,
+			emberBackendInterface::IMaterial* pIDeferredLightingMaterial, 
+			emberBackendInterface::IMaterial* pIPresentMaterial) override;
 		void SetOutlineColor(const Float4& outlineColor) override;
 		void SetOutlineThickness(int outlineThickness) override;
 		void ClearDefaultMaterials() override;
@@ -195,19 +199,24 @@ namespace vulkanRendererBackend
 		emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::IComputeShader* CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName) override;
-		emberBackendInterface::IMaterialShader* CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
-		emberBackendInterface::IMaterialShader* CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
 		emberBackendInterface::IMaterialShader* CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialShader* CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
 		emberBackendInterface::IMaterialShader* CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialShader* CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialShader* CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialShader* CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
 		emberBackendInterface::IMaterialShader* CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) override;
-		emberBackendInterface::IMaterial* CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName) override;
-		emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName) override;
 		emberBackendInterface::IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CreateOutlineMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName) override;
 		emberBackendInterface::IMaterial* CreateShadowMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CreateDeferredGeometryMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CreateDeferredLightingMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName) override;
 		emberBackendInterface::IMaterial* CreatePresentMaterial(emberBackendInterface::IMaterialShader* pIMaterialShader, const std::string& debugName) override;
-		emberBackendInterface::IMaterial* CloneForwardMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName) override;
 		emberBackendInterface::IMaterial* CloneGizmoMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName) override;
 		emberBackendInterface::IMaterial* CloneShadowMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CloneDeferredGeometryMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName) override;
+		emberBackendInterface::IMaterial* CloneForwardMaterial(emberBackendInterface::IMaterial* pISourceMaterial, const std::string& debugName) override;
 		emberBackendInterface::IMesh* CreateMesh() override;
 		emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial) override;
 		

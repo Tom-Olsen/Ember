@@ -8,9 +8,6 @@
 
 namespace vulkanRendererBackend
 {
-	/// <summary>
-	/// Pipeline for outline render pass.
-	/// </summary>
 	class OutlinePipeline : public Pipeline
     {
 	public: // Methods:

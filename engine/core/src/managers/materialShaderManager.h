@@ -54,9 +54,10 @@ namespace emberCore
 		static void Clear();
 
 		// Creators:
-		static MaterialShader CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& name);
+		static MaterialShader CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static MaterialShader CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 
 		// Getters:
 		static MaterialShader GetMaterialShader(const std::string& name);
@@ -70,6 +71,7 @@ namespace emberCore
 	private: // Methods:
 		// Creators:
 		static MaterialShader CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		static MaterialShader CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		
 		// Getters:
