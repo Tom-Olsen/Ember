@@ -24,6 +24,7 @@
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanDeferredGeometryRenderPass.h"
 #include "vulkanDeferredLightingRenderPass.h"
+#include "vulkanDeferredRenderingContract.h"
 #include "vulkanDepthTexture2d.h"
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanDescriptorPoolManager.h"
@@ -1008,17 +1009,14 @@ namespace vulkanRendererBackend
 	void Renderer::CreateSceneTextures(uint32_t renderWidth, uint32_t renderHeight)
 	{
 		const uint32_t framesInFlight = Context::GetFramesInFlight();
-		const VkFormat sceneColorFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
-		const VkFormat sceneDepthFormat = VK_FORMAT_D32_SFLOAT;
-
 		m_pSceneColorTextures.reserve(framesInFlight);
 		m_pSecondarySceneColorTextures.reserve(framesInFlight);
 		m_pSceneDepthTextures.reserve(framesInFlight);
 		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
 		{
-			m_pSceneColorTextures.push_back(std::make_unique<RenderTexture2d>(sceneColorFormat, renderWidth, renderHeight));
-			m_pSecondarySceneColorTextures.push_back(std::make_unique<RenderTexture2d>(sceneColorFormat, renderWidth, renderHeight));
-			m_pSceneDepthTextures.push_back(std::make_unique<DepthTexture2d>(sceneDepthFormat, renderWidth, renderHeight));
+			m_pSceneColorTextures.push_back(std::make_unique<RenderTexture2d>(deferredRenderingContract::sceneColorFormat, renderWidth, renderHeight));
+			m_pSecondarySceneColorTextures.push_back(std::make_unique<RenderTexture2d>(deferredRenderingContract::sceneColorFormat, renderWidth, renderHeight));
+			m_pSceneDepthTextures.push_back(std::make_unique<DepthTexture2d>(deferredRenderingContract::depthFormat, renderWidth, renderHeight));
 
 			m_pSceneColorTextures[frameIndex]->SetDebugName("SceneColorTexture_Frame" + std::to_string(frameIndex));
 			m_pSecondarySceneColorTextures[frameIndex]->SetDebugName("SecondarySceneColorTexture_Frame" + std::to_string(frameIndex));

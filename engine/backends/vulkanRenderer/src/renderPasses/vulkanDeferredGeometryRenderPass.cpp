@@ -2,6 +2,7 @@
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
+#include "vulkanDeferredRenderingContract.h"
 #include "vulkanDepthTexture2d.h"
 #include "vulkanGBufferTexture2d.h"
 #include "vulkanMacros.h"
@@ -72,9 +73,9 @@ namespace vulkanRendererBackend
 		m_pMaterialTextures.reserve(m_pDepthTextures.size());
 		for (size_t frameIndex = 0; frameIndex < m_pDepthTextures.size(); frameIndex++)
 		{
-			m_pAlbedoTextures.push_back(std::make_unique<GBufferTexture2d>(VK_FORMAT_R8G8B8A8_SRGB, renderWidth, renderHeight));
-			m_pNormalTextures.push_back(std::make_unique<GBufferTexture2d>(VK_FORMAT_A2B10G10R10_UNORM_PACK32, renderWidth, renderHeight));
-			m_pMaterialTextures.push_back(std::make_unique<GBufferTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, renderWidth, renderHeight));
+			m_pAlbedoTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::albedoFormat, renderWidth, renderHeight));
+			m_pNormalTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::normalFormat, renderWidth, renderHeight));
+			m_pMaterialTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::materialFormat, renderWidth, renderHeight));
 
 			m_pAlbedoTextures[frameIndex]->SetDebugName("GBufferAlbedoTexture_Frame" + std::to_string(frameIndex));
 			m_pNormalTextures[frameIndex]->SetDebugName("GBufferNormalTexture_Frame" + std::to_string(frameIndex));
@@ -93,9 +94,9 @@ namespace vulkanRendererBackend
 	void DeferredGeometryRenderPass::CreateRenderPass()
 	{
 		// Attachments:
-		std::array<VkAttachmentDescription, 4> attachments{};
+		std::array<VkAttachmentDescription, deferredRenderingContract::attachmentCount> attachments{};
 		{
-			const std::array<VkFormat, 4> colorFormats =
+			const std::array<VkFormat, deferredRenderingContract::attachmentCount> attachmentFormats =
 			{
 				m_pAlbedoTextures[0]->GetFormat(),
 				m_pNormalTextures[0]->GetFormat(),
@@ -103,16 +104,16 @@ namespace vulkanRendererBackend
 				m_pDepthTextures[0]->GetFormat()
 			};
 
-			for (size_t attachmentIndex = 0; attachmentIndex < colorFormats.size(); attachmentIndex++)
+			for (size_t attachmentIndex = 0; attachmentIndex < attachmentFormats.size(); attachmentIndex++)
 			{
-				attachments[attachmentIndex].format = colorFormats[attachmentIndex];
+				attachments[attachmentIndex].format = attachmentFormats[attachmentIndex];
 				attachments[attachmentIndex].samples = VK_SAMPLE_COUNT_1_BIT;
 				attachments[attachmentIndex].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 				attachments[attachmentIndex].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 				attachments[attachmentIndex].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachments[attachmentIndex].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 				// Albedo/Normal/Material:
-				if (attachmentIndex < 3)
+				if (attachmentIndex < deferredRenderingContract::colorAttachmentCount)
 				{
 					attachments[attachmentIndex].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 					attachments[attachmentIndex].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -127,14 +128,14 @@ namespace vulkanRendererBackend
 		}
 
 		// Attachment references:
-		std::array<VkAttachmentReference, 3> colorAttachmentReferences{};
+		std::array<VkAttachmentReference, deferredRenderingContract::colorAttachmentCount> colorAttachmentReferences{};
 		for (uint32_t attachmentIndex = 0; attachmentIndex < colorAttachmentReferences.size(); attachmentIndex++)
 		{
 			colorAttachmentReferences[attachmentIndex].attachment = attachmentIndex;
 			colorAttachmentReferences[attachmentIndex].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		}
 		VkAttachmentReference depthAttachmentReference = {};
-		depthAttachmentReference.attachment = 3;
+		depthAttachmentReference.attachment = deferredRenderingContract::depthAttachmentIndex;
 		depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		// Subpass:
@@ -169,7 +170,7 @@ namespace vulkanRendererBackend
 		m_framebuffers.resize(m_pDepthTextures.size());
 		for (size_t frameIndex = 0; frameIndex < m_framebuffers.size(); frameIndex++)
 		{
-			std::array<VkImageView, 4> attachments =
+			std::array<VkImageView, deferredRenderingContract::attachmentCount> attachments =
 			{
 				m_pAlbedoTextures[frameIndex]->GetVkImageView(),
 				m_pNormalTextures[frameIndex]->GetVkImageView(),
