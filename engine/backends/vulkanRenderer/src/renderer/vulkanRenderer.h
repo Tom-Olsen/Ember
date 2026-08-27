@@ -5,6 +5,7 @@
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
+#include "vulkanDeferredDrawCall.h"
 #include "vulkanForwardDrawCall.h"
 #include "vulkanGizmoDrawCall.h"
 #include "vulkanOutlineDrawCall.h"
@@ -102,12 +103,14 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::PositionalLight> m_previousPositionalLights;
 
 		// Draw calls:
-		std::vector<OutlineDrawCall> m_outlineCalls;
-		std::vector<ForwardDrawCall> m_forwardDrawCalls;
-		std::vector<ForwardDrawCall*> m_sortedForwardDrawCallPointers;
-		std::vector<ShadowDrawCall> m_shadowDrawCalls;
 		std::vector<GizmoDrawCall> m_gizmoDrawCalls;
 		std::vector<GizmoDrawCall*> m_sortedGizmoDrawCallPointers;
+		std::vector<OutlineDrawCall> m_outlineCalls;
+		std::vector<ShadowDrawCall> m_shadowDrawCalls;
+		std::vector<DeferredDrawCall> m_deferredDrawCalls;
+		std::vector<DeferredDrawCall*> m_sortedDeferredDrawCallPointers;
+		std::vector<ForwardDrawCall> m_forwardDrawCalls;
+		std::vector<ForwardDrawCall*> m_sortedForwardDrawCallPointers;
 
 		// Render management:
 		uint32_t m_frameIndex = 0;
