@@ -1,24 +1,14 @@
 #include "fragmentShaderCommon.hlsli"
+#include "pbrSurfaceProperties.hlsli"
 #include "shadowMapping.hlsli"
 
 
 
-Texture2D colorMap : register(t100, SHADER_SET);                       // format = VK_FORMAT_R8G8B8A8_SRGB
-Texture2D normalMap : register(t101, SHADER_SET);                      // format = VK_FORMAT_R8G8B8A8_UNORM, OpenGL-style normal map
-Texture2D<float> metallicityMap : register(t102, SHADER_SET);          // format = VK_FORMAT_R8_UNORM
-Texture2D<float> roughnessMap : register(t103, SHADER_SET);            // format = VK_FORMAT_R8_UNORM
-Texture2D<float> ambientOcclusionMap : register(t104, SHADER_SET);     // format = VK_FORMAT_R8_UNORM, reserved for indirect lighting
-
-
-
-cbuffer SurfaceProperties : register(b300, CALL_SET)
-{
-    float4 diffuseColor;
-    float4 scaleOffset;
-    float roughness;
-    float metallicity;
-    float ambientOcclusion;
-};
+Texture2D colorMap : register(t100, CALL_SET);                         // format = VK_FORMAT_R8G8B8A8_SRGB
+Texture2D normalMap : register(t101, CALL_SET);                        // format = VK_FORMAT_R8G8B8A8_UNORM, OpenGL-style normal map
+Texture2D<float> metallicityMap : register(t102, CALL_SET);            // format = VK_FORMAT_R8_UNORM
+Texture2D<float> roughnessMap : register(t103, CALL_SET);              // format = VK_FORMAT_R8_UNORM
+Texture2D<float> ambientOcclusionMap : register(t104, CALL_SET);       // format = VK_FORMAT_R8_UNORM, reserved for indirect lighting
 
 
 

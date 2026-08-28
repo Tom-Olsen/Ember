@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
     {
         // Create descriptor set layout:
         {
-            // cbuffer Camera : register(b1399, FRAME_SET):
+            // cbuffer CameraProperties : register(b1399, FRAME_SET):
             VkDescriptorSetLayoutBinding binding{};
             binding.binding = 1399;
             binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -64,7 +64,7 @@ namespace vulkanRendererBackend
             offset += sizeof(Float4x4);
             emberBufferLayout::BufferMember cameraClipToWorldMatrix("camera_clipToWorldMatrix", offset, sizeof(Float4x4));
 
-            emberBufferLayout::BufferLayout bufferLayout("Camera");
+            emberBufferLayout::BufferLayout bufferLayout("CameraProperties");
             bufferLayout.AddMember(cameraPosition);
             bufferLayout.AddMember(cameraViewMatrix);
             bufferLayout.AddMember(cameraProjMatrix);
@@ -72,7 +72,7 @@ namespace vulkanRendererBackend
             bufferLayout.AddMember(cameraClipToWorldMatrix);
 
             s_pUniformCameraBuffer = std::make_unique<UniformBuffer>(bufferLayout);
-            s_pUniformCameraBuffer->SetDebugName("UniformBuffer_FrameCamera");
+            s_pUniformCameraBuffer->SetDebugName("UniformBuffer_FrameCameraProperties");
         }
 
         // Bind uniform light properties buffer to descriptor sets:

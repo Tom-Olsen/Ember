@@ -12,7 +12,7 @@ namespace vulkanRendererBackend
 		// G-buffer attachment formats:
 		inline constexpr VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
 		inline constexpr VkFormat normalFormat = VK_FORMAT_A2B10G10R10_UNORM_PACK32;	// rgb = world-space normal, a = unused.
-		inline constexpr VkFormat materialFormat = VK_FORMAT_R8G8B8A8_UNORM;			// r = metallic, g = roughness, b = ambient occlusion, a = flags
+		inline constexpr VkFormat materialFormat = VK_FORMAT_R8G8B8A8_UNORM;			// r = metallicity, g = roughness, b = ambient occlusion, a = flags
 		inline constexpr VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
 
 		// Lighting output format:

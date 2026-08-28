@@ -47,15 +47,13 @@ float4 main(FragmentInput input) : SV_TARGET
 	// Surface properties:
     float3 albedo = albedoData.rgb;
     float3 worldNormal = normalize(normalData.rgb * 2.0f - 1.0f);
-    float metallic = saturate(materialData[DEFERRED_MATERIAL_METALLIC_CHANNEL]);
-    float roughness = max(materialData[DEFERRED_MATERIAL_ROUGHNESS_CHANNEL], 0.04f);	// 0 roughness = singularity.
-    float ambientOcclusion = saturate(materialData[DEFERRED_MATERIAL_AMBIENT_OCCLUSION_CHANNEL]);
+    float metallicity = materialData[DEFERRED_MATERIAL_METALLICITY_CHANNEL];
+    float roughness = materialData[DEFERRED_MATERIAL_ROUGHNESS_CHANNEL];
     uint flagBitMask = uint(round(materialData[DEFERRED_MATERIAL_FLAG_BIT_MASK_CHANNEL] * DEFERRED_MATERIAL_FLAG_BIT_MASK_MAX));
     bool receiveShadows = (flagBitMask & DEFERRED_MATERIAL_FLAG_RECEIVE_SHADOWS) != 0;
-	float3 reflectivity = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);	// ToDo: implement in forward rendering.
 
 	// Lighting:
 	float3 worldPosition = ReconstructWorldPosition(pixelPosition, depth);
-    float3 lighting = PhysicalLighting(worldPosition, worldNormal, albedo, roughness, reflectivity, metallic, receiveShadows);
-    return float4(lighting * ambientOcclusion, 1.0f);
+    float3 lighting = PhysicalLighting(worldPosition, worldNormal, albedo, roughness, metallicity, receiveShadows);
+    return float4(lighting, 1.0f);
 }

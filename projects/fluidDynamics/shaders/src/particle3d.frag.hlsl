@@ -17,9 +17,9 @@ cbuffer SurfaceProperties : register(b300, CALL_SET)
 {
     float4 diffuseColor;    // (1.0, 1.0, 1.0)
     float4 scaleOffset;     // .xy = scale, .zw = offset
-    float3 reflectivity;    // 0.4
     float roughness;        // 0.5
     float metallicity;      // 0 = dielectric, 1 = metal
+    float ambientOcclusion; // 1 = no occlusion
 };
 
 
@@ -63,9 +63,7 @@ FragmentOutput main(FragmentInput input)
     float4 color = input.vertexColor * diffuseColor;
     
     // Lighting:
-    float ambient = 0.3f;
-    float3 finalColor = ambient * color.xyz;
-    finalColor += PhysicalLighting(worldPosition, worldNormal, color.xyz, roughness, reflectivity, metallicity, pc.receiveShadows != 0);
+    float3 finalColor = PhysicalLighting(worldPosition, worldNormal, color.xyz, roughness, metallicity, pc.receiveShadows != 0);
     
     FragmentOutput output;
     output.color = float4(finalColor, 1.0f);

@@ -205,10 +205,15 @@ float3 PhysicalPositionalLights(float3 worldPos, float3 normal, float3 color, fl
 
 
 
-float3 PhysicalLighting(float3 worldPos, float3 worldNormal, float3 color, float roughness, float3 reflectivity, float metallicity, bool receiveShadows)
+float3 PhysicalLighting(float3 worldPos, float3 worldNormal, float3 albedo, float roughness, float metallicity, bool receiveShadows)
 {
-    float3 directionalLight = PhysicalDirectionalLights(worldPos, worldNormal, color, roughness, reflectivity, metallicity, receiveShadows);
-    float3 positionalLight  = PhysicalPositionalLights (worldPos, worldNormal, color, roughness, reflectivity, metallicity, receiveShadows);
+    albedo = saturate(albedo);
+    roughness = max(saturate(roughness), 0.04f); // zero roughness causes a singularity in the specular BRDF.
+    metallicity = saturate(metallicity);
+    float3 reflectivity = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallicity);
+
+    float3 directionalLight = PhysicalDirectionalLights(worldPos, worldNormal, albedo, roughness, reflectivity, metallicity, receiveShadows);
+    float3 positionalLight  = PhysicalPositionalLights (worldPos, worldNormal, albedo, roughness, reflectivity, metallicity, receiveShadows);
     return directionalLight + positionalLight;
 }
 

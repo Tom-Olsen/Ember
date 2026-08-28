@@ -28,9 +28,7 @@ float4 main(FragmentInput input) : SV_TARGET
     float3 worldPos = input.worldPos;
     
     // Lighting:
-    float ambient = 0.1f;
-    float3 finalColor = ambient * color.xyz;
-    finalColor += PhysicalLighting(worldPos, worldNormal, color.xyz, 0.0f, 0.0f, 0.0f, pc.receiveShadows != 0);
+    float3 finalColor = PhysicalLighting(worldPos, worldNormal, color.xyz, 0.0f, 0.0f, pc.receiveShadows != 0);
     
     return float4(finalColor, 1.0f);
 }

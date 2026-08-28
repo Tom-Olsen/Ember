@@ -37,7 +37,7 @@ namespace emberCore
 		// Create MaterialShaders:
 		MaterialShader outlineShader = MaterialShaderManager::CreateOutlineMaterialShader(directoryPath / "outline.vert.spv", directoryPath / "outline.frag.spv", "outlineShader");
 		MaterialShader errorShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "error.vert.spv", directoryPath / "error.frag.spv", "errorShader");
-		MaterialShader defaultShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "default.vert.spv", directoryPath / "default.frag.spv", "defaultShader");
+		MaterialShader defaultShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "defaultForward.vert.spv", directoryPath / "defaultForward.frag.spv", "defaultShader");
 		MaterialShader transparentShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv", "transparentShader");
 		MaterialShader vertexColorLitShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv", "vertexColorLitShader");
 		MaterialShader vertexColorUnlitShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv", "vertexColorUnlitShader");

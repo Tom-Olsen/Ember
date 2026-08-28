@@ -27,7 +27,7 @@ Shader rules:
         float4x4 cb_localToWorldMatrix;
         float4x4 cb_worldToLocalMatrix;
     };
-    cbuffer Camera : register(b1399, FRAME_SET)
+    cbuffer CameraProperties : register(b1399, FRAME_SET)
     {
         float4 cb_cameraPosition;
         float4x4 cb_viewMatrix;

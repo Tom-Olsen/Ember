@@ -45,7 +45,7 @@ namespace emberCore
 
 			if (name.find("normal") != std::string::npos)
 				format = emberCommon::TextureFormats::rgba08_unorm;
-			else if (name.find("roughness") != std::string::npos || name.find("metallic") != std::string::npos)
+			else if (name.find("roughness") != std::string::npos || name.find("metallicity") != std::string::npos)
 				format = emberCommon::TextureFormats::r08_unorm;
 
 			Texture2d texture2d(name, format, usage, filePath);
