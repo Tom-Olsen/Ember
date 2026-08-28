@@ -30,7 +30,7 @@ namespace emberCommon
 	};
 
 	inline DeferredLightingRenderState::DeferredLightingRenderState()
-		: cullMode(CullMode::front),
+		: cullMode(CullMode::none),
 		  polygonMode(PolygonMode::fill),
 		  frontFace(FrontFace::counterClockwise),
 		  depthTestEnable(false),

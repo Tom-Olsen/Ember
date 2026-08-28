@@ -10,6 +10,8 @@ namespace emberCommon
 	{
 		interleaved,
 		separate,
+		vertexMemoryLayoutCount,
+		none,
 		count
 	};
 	inline constexpr std::string_view VertexMemoryLayoutToString(VertexMemoryLayout vertexMemoryLayout)
@@ -18,6 +20,8 @@ namespace emberCommon
 		{
 			case VertexMemoryLayout::interleaved: return "interleaved";
 			case VertexMemoryLayout::separate: return "separate";
+			case VertexMemoryLayout::vertexMemoryLayoutCount: return "vertexMemoryLayoutCount";
+			case VertexMemoryLayout::none: return "none";
 			case VertexMemoryLayout::count: return "count";
 			default: return "unknown";
 		}

@@ -60,12 +60,20 @@ namespace vulkanRendererBackend
 			return GetPipeline(pMesh, RenderStageTraits<stage>::RenderModeIndex(renderMode));
 		}
 		template<RenderStage stage>
-		requires HasRenderPipelineAndNotMode<stage>
+		requires HasMeshRenderPipelineAndNotMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh) const
 		{
 			if (m_materialPass != RenderStageTraits<stage>::materialPass)
 				throw std::runtime_error("MaterialShader::GetPipeline(...) failed. Requested material pass is not supported by this material shader.");
 			return GetPipeline(pMesh, RenderStageTraits<stage>::RenderModeIndex());
+		}
+		template<RenderStage stage>
+		requires HasFullscreenPipeline<stage>
+		const Pipeline* GetFullscreenPipeline() const
+		{
+			if (m_materialPass != RenderStageTraits<stage>::materialPass)
+				throw std::runtime_error("MaterialShader::GetFullscreenPipeline() failed. Requested material pass is not supported by this material shader.");
+			return GetFullscreenPipeline(RenderStageTraits<stage>::RenderModeIndex());
 		}
 
 	private: // Methods:
@@ -74,5 +82,6 @@ namespace vulkanRendererBackend
 
 		// Pipeline lookup:
 		const Pipeline* GetPipeline(const Mesh* pMesh, uint32_t renderModeIndex) const;
+		const Pipeline* GetFullscreenPipeline(uint32_t renderModeIndex) const;
 	};
 }

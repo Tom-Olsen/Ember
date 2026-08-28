@@ -60,8 +60,8 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(materialShader.m_vkPipelineLayout, "PipelineLayout_Gizmo_" + debugName);
 
 		// Create pipelines:
-		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::GizmoRenderMode::count) * static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
-		for (uint32_t j = 0; j < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); j++)
+		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::GizmoRenderMode::count) * static_cast<size_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount));
+		for (uint32_t j = 0; j < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount); j++)
 			for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::GizmoRenderMode::count); i++)
 			{
 				emberCommon::GizmoRenderMode pipelineRenderMode = static_cast<emberCommon::GizmoRenderMode>(i);
@@ -119,8 +119,8 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(materialShader.m_vkPipelineLayout, "PipelineLayout_Outline_" + debugName);
 
 		// Create pipelines:
-		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
-		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
+		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount));
+		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount); i++)
 		{
 			PipelineKey pipelineKey = PipelineKey::Create<RenderStage::outline>(static_cast<emberCommon::VertexMemoryLayout>(i));
 			materialShader.m_pipelines.emplace(
@@ -170,8 +170,8 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(materialShader.m_vkPipelineLayout, "PipelineLayout_Shadow_" + debugName);
 
 		// Create pipelines:
-		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
-		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
+		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount));
+		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount); i++)
 		{
 			PipelineKey pipelineKey = PipelineKey::Create<RenderStage::shadow>(static_cast<emberCommon::VertexMemoryLayout>(i));
 			materialShader.m_pipelines.emplace(
@@ -225,8 +225,8 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(materialShader.m_vkPipelineLayout, "PipelineLayout_DeferredGeometry_" + debugName);
 
 		// Create pipelines:
-		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
-		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
+		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount));
+		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount); i++)
 		{
 			PipelineKey pipelineKey = PipelineKey::Create<RenderStage::deferredGeometry>(static_cast<emberCommon::VertexMemoryLayout>(i));
 			materialShader.m_pipelines.emplace(
@@ -246,40 +246,33 @@ namespace vulkanRendererBackend
 	{
 		MaterialShader materialShader(emberCommon::MaterialPass::deferredLighting, debugName);
 
+		// Load vertex shader:
 		std::vector<char> vertexCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(vertexSpv);
 		materialShader.m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexCode);
+
+		// Load fragment shader:
 		std::vector<char> fragmentCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(fragmentSpv);
 		materialShader.m_shaderReflection.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentCode);
 
+		// Prepare pipeline data:
 		materialShader.CreateDescriptorSetLayout();
-		const std::vector<emberSpirvReflect::VertexAttributeInfo>& vertexAttributeInfos = materialShader.m_shaderReflection.GetVertexStageInfo()->vertexAttributes;
-		std::vector<VkVertexInputBindingDescription> vertexBindingsInterleaved = GetVertexBindingDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
-		std::vector<VkVertexInputBindingDescription> vertexBindingsSeparate = GetVertexBindingDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
-		std::vector<VkVertexInputAttributeDescription> vertexAttributesInterleaved = GetVertexAttributeDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
-		std::vector<VkVertexInputAttributeDescription> vertexAttributesSeparate = GetVertexAttributeDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
-		std::array<std::vector<VkVertexInputBindingDescription>*, 2> vertexBindingVectors = { &vertexBindingsInterleaved, &vertexBindingsSeparate };
-		std::array<std::vector<VkVertexInputAttributeDescription>*, 2> vertexAttributeVectors = { &vertexAttributesInterleaved, &vertexAttributesSeparate };
 
+		// Pipeline layout:
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
 		pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(materialShader.m_vkDescriptorSetLayouts.size());
 		pipelineLayoutCreateInfo.pSetLayouts = materialShader.m_vkDescriptorSetLayouts.data();
 		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &materialShader.m_vkPipelineLayout));
 		NAME_VK_OBJECT(materialShader.m_vkPipelineLayout, "PipelineLayout_DeferredLighting_" + debugName);
 
-		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
-		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
-		{
-			PipelineKey pipelineKey = PipelineKey::Create<RenderStage::deferredLighting>(static_cast<emberCommon::VertexMemoryLayout>(i));
-			materialShader.m_pipelines.emplace(
-				pipelineKey,
-				std::make_unique<DeferredLightingPipeline>(
-					materialShader.m_vkPipelineLayout,
-					vertexCode,
-					fragmentCode,
-					*vertexBindingVectors[i],
-					*vertexAttributeVectors[i],
-					debugName));
-		}
+		// Create pipeline:
+		PipelineKey pipelineKey = PipelineKey::CreateFullscreen<RenderStage::deferredLighting>();
+		materialShader.m_pipelines.emplace(
+			pipelineKey,
+			std::make_unique<DeferredLightingPipeline>(
+				materialShader.m_vkPipelineLayout,
+				vertexCode,
+				fragmentCode,
+				debugName));
 
 		return materialShader;
 	}
@@ -321,8 +314,8 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(materialShader.m_vkPipelineLayout, "PipelineLayout_Forward_" + debugName);
 
 		// Create pipelines:
-		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::ForwardRenderMode::count) * static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
-		for (uint32_t j = 0; j < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); j++)
+		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::ForwardRenderMode::count) * static_cast<size_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount));
+		for (uint32_t j = 0; j < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount); j++)
 			for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::ForwardRenderMode::count); i++)
 			{
 				emberCommon::ForwardRenderMode pipelineRenderMode = static_cast<emberCommon::ForwardRenderMode>(i);
@@ -380,8 +373,8 @@ namespace vulkanRendererBackend
 		NAME_VK_OBJECT(materialShader.m_vkPipelineLayout, "PipelineLayout_Present_" + debugName);
 
 		// Create pipelines:
-		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::count));
-		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::count); i++)
+		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount));
+		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount); i++)
 		{
 			PipelineKey pipelineKey = PipelineKey::Create<RenderStage::present>(static_cast<emberCommon::VertexMemoryLayout>(i));
 			materialShader.m_pipelines.emplace(
@@ -446,6 +439,14 @@ namespace vulkanRendererBackend
 		auto it = m_pipelines.find(pipelineKey);
 		if (it == m_pipelines.end())
 			throw std::runtime_error("MaterialShader::GetPipeline(...) failed. Render mode is not supported by this material shader.");
+		return it->second.get();
+	}
+	const Pipeline* MaterialShader::GetFullscreenPipeline(uint32_t renderModeIndex) const
+	{
+		PipelineKey pipelineKey(renderModeIndex);
+		auto it = m_pipelines.find(pipelineKey);
+		if (it == m_pipelines.end())
+			throw std::runtime_error("MaterialShader::GetFullscreenPipeline() failed. Fullscreen pipeline is not supported by this material shader.");
 		return it->second.get();
 	}
 }

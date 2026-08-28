@@ -1280,6 +1280,17 @@ namespace vulkanRendererBackend
 			drawCall->descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
 		}
 
+		// Deferred lighting:
+		{
+			DeferredLightingRenderPass* pDeferredLightingRenderPass = RenderPassManager::GetDeferredLightingRenderPass();
+			DescriptorSetBinding* pDeferredLightingDescriptorSetBinding = DefaultGpuResources::GetDefaultDeferredLightingMaterial()->GetDescriptorSetBinding();
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferAlbedo", pDeferredLightingRenderPass->GetAlbedoTexture(m_frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferNormal", pDeferredLightingRenderPass->GetNormalTexture(m_frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferMaterial", pDeferredLightingRenderPass->GetMaterialTexture(m_frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferDepth", pDeferredLightingRenderPass->GetDepthTexture(m_frameIndex));
+			pDeferredLightingDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+		}
+
 		// Forward calls:
 		for (ForwardDrawCall* drawCall : m_sortedForwardDrawCallPointers)
 		{
@@ -1948,15 +1959,10 @@ namespace vulkanRendererBackend
 
 			// Begin render pass:
 			Material* pMaterial = DefaultGpuResources::GetDefaultDeferredLightingMaterial();
-			Mesh* pMesh = DefaultGpuResources::GetDefaultRenderQuad();
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
 				// Bind Pipeline:
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline<RenderStage::deferredLighting>(pMesh)->GetVkPipeline());
-
-				// Bind mesh data:
-				vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());
-				vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetFullscreenPipeline<RenderStage::deferredLighting>()->GetVkPipeline());
 
 				// Bind descriptorSets:
 				VkDescriptorSet descriptorSets[4] =
@@ -1969,7 +1975,7 @@ namespace vulkanRendererBackend
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetVkPipelineLayout(), 0, 4, descriptorSets, 0, nullptr);
 
 				// Dispatch:
-				vkCmdDrawIndexed(commandBuffer, pMesh->GetIndexCount(), 1, 0, 0, 0);
+				vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 			}
 			vkCmdEndRenderPass(commandBuffer);
 

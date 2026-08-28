@@ -1,9 +1,9 @@
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
+#include "vulkanGarbageCollector.h"
 #include "vulkanMacros.h"
 #include "vulkanUniformBuffer.h"
-#include "vulkanGarbageCollector.h"
 
 
 
@@ -61,12 +61,15 @@ namespace vulkanRendererBackend
             emberBufferLayout::BufferMember cameraProjMatrix("camera_projMatrix", offset, sizeof(Float4x4));
             offset += sizeof(Float4x4);
             emberBufferLayout::BufferMember cameraWorldToClipMatrix("camera_worldToClipMatrix", offset, sizeof(Float4x4));
+            offset += sizeof(Float4x4);
+            emberBufferLayout::BufferMember cameraClipToWorldMatrix("camera_clipToWorldMatrix", offset, sizeof(Float4x4));
 
             emberBufferLayout::BufferLayout bufferLayout("Camera");
             bufferLayout.AddMember(cameraPosition);
             bufferLayout.AddMember(cameraViewMatrix);
             bufferLayout.AddMember(cameraProjMatrix);
             bufferLayout.AddMember(cameraWorldToClipMatrix);
+            bufferLayout.AddMember(cameraClipToWorldMatrix);
 
             s_pUniformCameraBuffer = std::make_unique<UniformBuffer>(bufferLayout);
             s_pUniformCameraBuffer->SetDebugName("UniformBuffer_FrameCamera");
@@ -116,10 +119,12 @@ namespace vulkanRendererBackend
     void FrameDescriptorSetLayout::SetCameraData(const Float4& cameraPosition, const Float4x4& viewMatrix, const Float4x4& projMatrix)
     {
         Float4x4 worldToClipMatrix = projMatrix * viewMatrix;
+        Float4x4 clipToWorldMatrix = worldToClipMatrix.Inverse();
         s_pUniformCameraBuffer->SetFloat4("camera_position", cameraPosition);
         s_pUniformCameraBuffer->SetFloat4x4("camera_viewMatrix", viewMatrix);
         s_pUniformCameraBuffer->SetFloat4x4("camera_projMatrix", projMatrix);
         s_pUniformCameraBuffer->SetFloat4x4("camera_worldToClipMatrix", worldToClipMatrix);
+        s_pUniformCameraBuffer->SetFloat4x4("camera_clipToWorldMatrix", clipToWorldMatrix);
     }
 
 

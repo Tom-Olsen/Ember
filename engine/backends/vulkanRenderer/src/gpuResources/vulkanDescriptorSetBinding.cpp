@@ -106,7 +106,7 @@ namespace vulkanRendererBackend
 		{
 			SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 			SetValue("SurfaceProperties", "roughness", 0.5f);
-			SetValue("SurfaceProperties", "reflectivity", Float3(0.4f, 0.4f, 0.4f));
+			SetValue("SurfaceProperties", "reflectivity", Float3(0.04f, 0.04f, 0.04f));
 			SetValue("SurfaceProperties", "metallicity", 0);
 			SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
 		}

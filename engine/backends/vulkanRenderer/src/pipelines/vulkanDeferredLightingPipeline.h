@@ -16,8 +16,6 @@ namespace vulkanRendererBackend
 			VkPipelineLayout vkPipelineLayout,
 			const std::vector<char>& vertexCode,
 			const std::vector<char>& fragmentCode,
-			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
 			const std::string& debugName);
 		~DeferredLightingPipeline();
 
@@ -25,8 +23,6 @@ namespace vulkanRendererBackend
 		void CreatePipeline(
 			VkPipelineLayout vkPipelineLayout,
 			const VkShaderModule& vertexShaderModule,
-			const VkShaderModule& fragmentShaderModule,
-			const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-			const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
+			const VkShaderModule& fragmentShaderModule);
 	};
 }

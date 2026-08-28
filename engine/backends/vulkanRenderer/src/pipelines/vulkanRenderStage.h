@@ -45,6 +45,7 @@ namespace vulkanRendererBackend
 	{
 		static constexpr bool hasRenderPipeline = false;
 		static constexpr bool hasRenderMode = false;
+		static constexpr bool hasFullscreenPipeline = false;
 		using RenderMode = void;
 	};
 
@@ -53,6 +54,7 @@ namespace vulkanRendererBackend
 	{
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = true;
+		static constexpr bool hasFullscreenPipeline = false;
 		using RenderMode = emberCommon::GizmoRenderMode;
 		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::gizmo;
 
@@ -67,6 +69,7 @@ namespace vulkanRendererBackend
 	{
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = false;
+		static constexpr bool hasFullscreenPipeline = false;
 		using RenderMode = void;
 		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::outline;
 
@@ -81,6 +84,7 @@ namespace vulkanRendererBackend
 	{
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = false;
+		static constexpr bool hasFullscreenPipeline = false;
 		using RenderMode = void;
 		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::shadow;
 
@@ -95,6 +99,7 @@ namespace vulkanRendererBackend
 	{
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = false;
+		static constexpr bool hasFullscreenPipeline = false;
 		using RenderMode = void;
 		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::deferredGeometry;
 
@@ -109,6 +114,7 @@ namespace vulkanRendererBackend
 	{
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = false;
+		static constexpr bool hasFullscreenPipeline = true;
 		using RenderMode = void;
 		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::deferredLighting;
 
@@ -123,6 +129,7 @@ namespace vulkanRendererBackend
 	{
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = true;
+		static constexpr bool hasFullscreenPipeline = false;
 		using RenderMode = emberCommon::ForwardRenderMode;
 		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::forward;
 
@@ -137,6 +144,7 @@ namespace vulkanRendererBackend
 	{
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = false;
+		static constexpr bool hasFullscreenPipeline = false;
 		using RenderMode = void;
 		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::present;
 
@@ -155,4 +163,8 @@ namespace vulkanRendererBackend
 	concept HasRenderPipelineAndMode = HasRenderPipeline<stage> && RenderStageTraits<stage>::hasRenderMode;
 	template<RenderStage stage>
 	concept HasRenderPipelineAndNotMode = HasRenderPipeline<stage> && !RenderStageTraits<stage>::hasRenderMode;
+	template<RenderStage stage>
+	concept HasFullscreenPipeline = HasRenderPipeline<stage> && RenderStageTraits<stage>::hasFullscreenPipeline;
+	template<RenderStage stage>
+	concept HasMeshRenderPipelineAndNotMode = HasRenderPipelineAndNotMode<stage> && !HasFullscreenPipeline<stage>;
 }

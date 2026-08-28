@@ -1,13 +1,14 @@
 #include "vulkanMesh.h"
 #include "logger.h"
 #include "vmaBuffer.h"
-#include "vulkanIndexBuffer.h"
 #include "vulkanContext.h"
 #include "vulkanGarbageCollector.h"
+#include "vulkanIndexBuffer.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanRenderer.h"
 #include "vulkanStagingBuffer.h"
 #include "vulkanVertexBuffer.h"
+#include <stdexcept>
 #include <vulkan/vulkan.h>
 
 
@@ -95,6 +96,10 @@ namespace vulkanRendererBackend
 	// Update GPU buffers:
 	void Mesh::UpdateVertexBuffer(const std::vector<Float3>& positions, std::vector<Float3>* pNormals, std::vector<Float3>* pTangents, std::vector<Float4>* pColors, std::vector<Float4>* pUvs, emberCommon::VertexMemoryLayout vertexMemoryLayout)
 	{
+		if (vertexMemoryLayout == emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount
+		 || vertexMemoryLayout == emberCommon::VertexMemoryLayout::none
+		 || vertexMemoryLayout == emberCommon::VertexMemoryLayout::count)
+			throw std::invalid_argument("Mesh::UpdateVertexBuffer(...) failed. Mesh requires an interleaved or separate vertex memory layout.");
 		m_vertexMemoryLayout = vertexMemoryLayout;
 		UpdateVertexBuffer(positions, pNormals, pTangents, pColors, pUvs);
 	}

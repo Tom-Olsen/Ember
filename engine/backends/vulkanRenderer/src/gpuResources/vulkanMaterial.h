@@ -107,10 +107,16 @@ namespace vulkanRendererBackend
 				static_assert(stage == RenderStage::forward || stage == RenderStage::gizmo, "Material::GetPipeline(...) must be updated for this render stage.");
 		}
 		template<RenderStage stage>
-		requires HasRenderPipelineAndNotMode<stage>
+		requires HasMeshRenderPipelineAndNotMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh) const
 		{
 			return GetMaterialShader()->GetPipeline<stage>(pMesh);
+		}
+		template<RenderStage stage>
+		requires HasFullscreenPipeline<stage>
+		const Pipeline* GetFullscreenPipeline() const
+		{
+			return GetMaterialShader()->GetFullscreenPipeline<stage>();
 		}
 
 		// Debugging:

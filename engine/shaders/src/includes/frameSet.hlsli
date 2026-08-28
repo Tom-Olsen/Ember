@@ -10,6 +10,7 @@ cbuffer Camera : register(b1399, FRAME_SET)
     float4x4 camera_viewMatrix;         // world to camera matrix.
     float4x4 camera_projMatrix;         // camera projection matrix (HDC => NDC after w division, which happens automatically).
     float4x4 camera_worldToClipMatrix;  // world to camera clip space matrix: (projection * view)
+    float4x4 camera_clipToWorldMatrix;  // camera clip space to world matrix: inverse(projection * view)
 };
 
 

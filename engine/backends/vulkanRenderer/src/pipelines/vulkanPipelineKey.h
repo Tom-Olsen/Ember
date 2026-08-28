@@ -25,6 +25,7 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		// Constructor:
+		PipelineKey(uint32_t renderModeIndex);
 		PipelineKey(uint32_t renderModeIndex, emberCommon::VertexMemoryLayout vertexMemoryLayout);
 
 	public: // Mehtods:
@@ -36,10 +37,16 @@ namespace vulkanRendererBackend
 			return PipelineKey(RenderStageTraits<stage>::RenderModeIndex(renderMode), vertexMemoryLayout);
 		}
 		template<RenderStage stage>
-		requires HasRenderPipelineAndNotMode<stage>
+		requires HasMeshRenderPipelineAndNotMode<stage>
 		static PipelineKey Create(emberCommon::VertexMemoryLayout vertexMemoryLayout)
 		{
 			return PipelineKey(RenderStageTraits<stage>::RenderModeIndex(), vertexMemoryLayout);
+		}
+		template<RenderStage stage>
+		requires HasFullscreenPipeline<stage>
+		static PipelineKey CreateFullscreen()
+		{
+			return PipelineKey(RenderStageTraits<stage>::RenderModeIndex());
 		}
 
 		// Comparison:

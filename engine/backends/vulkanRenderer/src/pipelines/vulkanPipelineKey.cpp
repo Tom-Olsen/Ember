@@ -1,4 +1,5 @@
 #include "vulkanPipelineKey.h"
+#include <stdexcept>
 
 
 
@@ -6,11 +7,20 @@ namespace vulkanRendererBackend
 {
 	// Private methods:
 	// Constructor:
+	PipelineKey::PipelineKey(uint32_t renderModeIndex)
+		: renderModeIndex(renderModeIndex)
+		, vertexMemoryLayout(emberCommon::VertexMemoryLayout::none)
+	{
+
+	}
 	PipelineKey::PipelineKey(uint32_t renderModeIndex, emberCommon::VertexMemoryLayout vertexMemoryLayout)
 		: renderModeIndex(renderModeIndex)
 		, vertexMemoryLayout(vertexMemoryLayout)
 	{
-
+		if (vertexMemoryLayout == emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount
+		 || vertexMemoryLayout == emberCommon::VertexMemoryLayout::none
+		 || vertexMemoryLayout == emberCommon::VertexMemoryLayout::count)
+			throw std::invalid_argument("PipelineKey::PipelineKey(...) failed. Mesh pipeline requires a vertex memory layout.");
 	}
 
 

@@ -17,8 +17,6 @@ namespace vulkanRendererBackend
 		VkPipelineLayout vkPipelineLayout,
 		const std::vector<char>& vertexCode,
 		const std::vector<char>& fragmentCode,
-		const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-		const std::vector<VkVertexInputAttributeDescription>& vertexAttributes,
 		const std::string& debugName)
 	{
         // Create vertex and fragment shader modules from .spv files:
@@ -26,7 +24,7 @@ namespace vulkanRendererBackend
 		VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode, "ShaderModule_DeferredLightingFragment_" + debugName);
 
         // Create pipeline:
-		CreatePipeline(vkPipelineLayout, vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes);
+		CreatePipeline(vkPipelineLayout, vertexShaderModule, fragmentShaderModule);
 
         // Destroy shader modules (only needed for pipeline creation):
 		vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
@@ -44,9 +42,7 @@ namespace vulkanRendererBackend
 	void DeferredLightingPipeline::CreatePipeline(
 		VkPipelineLayout vkPipelineLayout,
 		const VkShaderModule& vertexShaderModule,
-		const VkShaderModule& fragmentShaderModule,
-		const std::vector<VkVertexInputBindingDescription>& vertexBindings,
-		const std::vector<VkVertexInputAttributeDescription>& vertexAttributes)
+		const VkShaderModule& fragmentShaderModule)
 	{
 		const emberCommon::DeferredLightingRenderState renderState;
 
@@ -66,10 +62,6 @@ namespace vulkanRendererBackend
 
         // Vertex input:
 		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-		vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexBindings.size());
-		vertexInputState.pVertexBindingDescriptions = vertexBindings.data();
-		vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributes.size());
-		vertexInputState.pVertexAttributeDescriptions = vertexAttributes.data();
 
         // Input assembly:
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
