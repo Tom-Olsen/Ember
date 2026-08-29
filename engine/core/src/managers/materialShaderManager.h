@@ -1,12 +1,10 @@
 #pragma once
+#include "commonMaterialShaderId.h"
 #include "emberCoreExport.h"
 #include "materialShader.h"
-#include "materialShaderId.h"
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 
 
@@ -14,6 +12,7 @@
 namespace emberBackendInterface
 {
 	class IMaterialShader;
+	class IMaterialShaderManager;
 }
 
 
@@ -21,38 +20,19 @@ namespace emberBackendInterface
 namespace emberCore
 {
 	/// <summary>
-	/// Purely static class that owns the lifetime of all backend material shaders.
-	/// MaterialShader is a non-owning, generational handle to a slot owned by this manager.
+	/// Purely static facade for the backend material shader manager.
+	/// MaterialShader is a non-owning, generational handle to a backend-owned slot.
 	/// </summary>
 	class EMBER_CORE_API MaterialShaderManager
 	{
-		// Friends:
 		friend class MaterialManager;
 		friend class MaterialShader;
-
-	private: // Structs:
-		struct ManagedMaterialShader
-		{
-			std::string name;
-			std::unique_ptr<emberBackendInterface::IMaterialShader> pIMaterialShader;
-		};
-		struct MaterialShaderSlot
-		{
-			uint32_t generation;
-			ManagedMaterialShader materialShader;
-		};
+		friend class Renderer;
 
 	private: // Members:
-		static bool s_isInitialized;
-		static std::unordered_map<std::string, uint32_t> s_materialShaderIdsMap;
-		static std::vector<MaterialShaderSlot> s_materialShaderSlots;
-		static std::vector<uint32_t> s_freeMaterialShaderIds;
+		static std::unique_ptr<emberBackendInterface::IMaterialShaderManager> s_pIMaterialShaderManager;
 
 	public: // Methods:
-		// Initialization/Cleanup:
-		static void Init();
-		static void Clear();
-
 		// Creators:
 		static MaterialShader CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static MaterialShader CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& name);
@@ -69,19 +49,18 @@ namespace emberCore
 		static void Print();
 
 	private: // Methods:
-		// Creators:
-		static MaterialShader CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static MaterialShader CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static MaterialShader CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		
+		// Initialization/Cleanup:
+		static void Init();
+		static void Clear();
+
 		// Getters:
-		static MaterialShaderId GetMaterialShaderId(const std::string& name);
-		static emberBackendInterface::IMaterialShader* GetMaterialShaderInterface(MaterialShaderId materialShaderId);
-		static const std::string* GetMaterialShaderName(MaterialShaderId materialShaderId);
-		
-		// Add/Delete material shader:
-		static MaterialShader AddMaterialShader(const std::string& name, emberBackendInterface::IMaterialShader* pIMaterialShader);
-		static void DeleteMaterialShader(MaterialShaderId materialShaderId);
+		static emberCommon::MaterialShaderId GetMaterialShaderId(const std::string& name);
+		static emberBackendInterface::IMaterialShaderManager* GetInterfaceHandle();
+		static emberBackendInterface::IMaterialShader* GetMaterialShaderInterface(emberCommon::MaterialShaderId materialShaderId);
+		static const std::string* GetMaterialShaderName(emberCommon::MaterialShaderId materialShaderId);
+
+		// Deleter:
+		static void DeleteMaterialShader(emberCommon::MaterialShaderId materialShaderId);
 
 		// Delete all constructors:
 		MaterialShaderManager() = delete;

@@ -1,7 +1,7 @@
 #pragma once
 #include "commonMaterialPass.h"
 #include "emberCoreExport.h"
-#include "materialShaderId.h"
+#include "commonMaterialShaderId.h"
 #include <filesystem>
 #include <string>
 
@@ -24,7 +24,7 @@ namespace emberCore
 		friend class MaterialShaderManager;
 
 	private: // Members:
-		MaterialShaderId m_materialShaderId;
+		emberCommon::MaterialShaderId m_materialShaderId;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -52,7 +52,7 @@ namespace emberCore
 		bool IsValid() const;
 
 	private: // Methods:
-		MaterialShader(MaterialShaderId materialShaderId);
+		MaterialShader(emberCommon::MaterialShaderId materialShaderId);
 		emberBackendInterface::IMaterialShader* GetInterfaceHandle() const;
 	};
 }

@@ -3,7 +3,7 @@
 
 
 
-namespace emberCore
+namespace emberCommon
 {
 	struct MaterialShaderId
 	{

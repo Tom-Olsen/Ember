@@ -113,11 +113,11 @@ namespace emberEditor
 		Float4x4 localToWorldMatrix = LocalToWorldMatrix();
 
         // Draw central sphere:
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoUnlitMaterial"));
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoUnlitMaterial"));
 		emberCore::Gizmo::SetColor(TransformHandle::GetColorCenter());
         emberCore::Gizmo::DrawSphere(localToWorldMatrix * Float4x4::Scale(0.15f));
         // Draw Arrows:
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoLitMaterial"));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisX));
 		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * TransformHandle::GetRotationX());
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisY));
@@ -125,7 +125,7 @@ namespace emberEditor
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisZ));
 		emberCore::Gizmo::DrawMesh(m_arrowMesh, localToWorldMatrix * TransformHandle::GetRotationZ());
         // Draw plane quads:
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitTransparentMaterial"));
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoLitTransparentMaterial"));
 		float quadSize = s_quadSize + 0.5f * math::sqrt2 * s_arrowBodyRadius;
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeYZ) - 0.33f * Float4::in);
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * TransformHandle::GetRotationX() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize));
@@ -135,7 +135,7 @@ namespace emberEditor
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * TransformHandle::GetRotationZ() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeXY, m_octantIndex, quadSize));
 
         // Draw plane frame:
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoVertexColorLitMaterial"));
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoVertexColorLitMaterial"));
 		emberCore::ShaderProperties shaderProperties = emberCore::Gizmo::DrawMesh(m_frameMeshes[m_octantIndex], localToWorldMatrix);
 		int state = IsPlaneSubHandle(m_activeSubHandle) ? 2 : IsPlaneSubHandle(m_hoveredSubHandle) ? 1 : 0;
 		Float4 stateColor = (state == 2) ? SubHandleBaseColor(m_activeSubHandle) : (state == 1) ? SubHandleBaseColor(m_hoveredSubHandle) : Float4::zero;
@@ -147,7 +147,7 @@ namespace emberEditor
 		emberCore::Gizmo::ResetMaterial();
 
 		// Visualize arrow interaction regions
-		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
+		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoLitMaterial"));
 		//emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisX) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * TransformHandle::GetRotationX());
 		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * TransformHandle::GetRotationX());

@@ -166,7 +166,7 @@ namespace emberEcs
 		// Visualization for debugging:
 		if (m_drawFrustum)
 		{
-			Material vertexUnlit = MaterialManager::GetMaterial("vertexColorUnlitMaterial");
+			Material vertexUnlit = MaterialManager::TryGetMaterial("vertexColorUnlitMaterial");
 			Mesh& fourLeg = MeshManager::GetMesh("fourLeg");
 
 			Float4 colors[4] = { Float4::red, Float4::green, Float4::blue, Float4::yellow };

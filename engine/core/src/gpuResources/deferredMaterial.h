@@ -47,9 +47,9 @@ namespace emberCore
 		void SetCullMode(emberCommon::CullMode cullMode);
 		void SetRenderQueue(int32_t renderQueue);
 		void SetShadowMaterial(const ShadowMaterial& shadowMaterial);
-		void ClearShadowMaterial();
+		void ResetShadowMaterial();
 
 	private: // Methods:
-		DeferredMaterial(MaterialId materialId);
+		DeferredMaterial(emberCommon::MaterialId materialId);
 	};
 }

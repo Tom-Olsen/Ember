@@ -17,7 +17,7 @@ namespace emberCore
 	// Private methods:
 	void DebugRenderer::Init()
 	{
-		s_material = MaterialManager::GetMaterial("simpleUnlitMaterial");
+		s_material = MaterialManager::TryGetMaterial("simpleUnlitMaterial");
 	}
 	void DebugRenderer::Clear()
 	{

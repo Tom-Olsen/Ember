@@ -9,7 +9,7 @@
 namespace vulkanRendererBackend
 {
 	// Public methods:
-	// Factories/Destructor:
+	// Factories:
 	Material Material::CreateGizmo(MaterialShader* pMaterialShader, emberCommon::GizmoRenderMode renderMode, const std::string& debugName)
 	{
 		Material material(pMaterialShader, debugName);
@@ -52,6 +52,10 @@ namespace vulkanRendererBackend
 		material.m_pPresentRenderState = std::make_unique<emberCommon::PresentRenderState>();
 		return material;
 	}
+
+
+
+	// Cloning:
 	Material Material::CloneGizmo(const Material& sourceMaterial, const std::string& debugName)
 	{
 		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::gizmo)
@@ -60,6 +64,16 @@ namespace vulkanRendererBackend
 		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
 		Material material(sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
 		material.m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(*sourceMaterial.m_pGizmoRenderState);
+		return material;
+	}
+	Material Material::CloneOutline(const Material& sourceMaterial, const std::string& debugName)
+	{
+		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::outline)
+			throw std::runtime_error("Material::CloneOutline(...) failed. Source material is not an outline material.");
+
+		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
+		Material material(sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
+		material.m_pOutlineRenderState = std::make_unique<emberCommon::OutlineRenderState>(*sourceMaterial.m_pOutlineRenderState);
 		return material;
 	}
 	Material Material::CloneShadow(const Material& sourceMaterial, const std::string& debugName)
@@ -82,6 +96,16 @@ namespace vulkanRendererBackend
 		material.m_pDeferredGeometryRenderState = std::make_unique<emberCommon::DeferredGeometryRenderState>(*sourceMaterial.m_pDeferredGeometryRenderState);
 		return material;
 	}
+	Material Material::CloneDeferredLighting(const Material& sourceMaterial, const std::string& debugName)
+	{
+		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::deferredLighting)
+			throw std::runtime_error("Material::CloneDeferredLighting(...) failed. Source material is not a deferred lighting material.");
+
+		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
+		Material material(sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
+		material.m_pDeferredLightingRenderState = std::make_unique<emberCommon::DeferredLightingRenderState>(*sourceMaterial.m_pDeferredLightingRenderState);
+		return material;
+	}
 	Material Material::CloneForward(const Material& sourceMaterial, const std::string& debugName)
 	{
 		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::forward)
@@ -92,6 +116,20 @@ namespace vulkanRendererBackend
 		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(*sourceMaterial.m_pForwardRenderState);
 		return material;
 	}
+	Material Material::ClonePresent(const Material& sourceMaterial, const std::string& debugName)
+	{
+		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::present)
+			throw std::runtime_error("Material::ClonePresent(...) failed. Source material is not a present material.");
+
+		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
+		Material material(sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
+		material.m_pPresentRenderState = std::make_unique<emberCommon::PresentRenderState>(*sourceMaterial.m_pPresentRenderState);
+		return material;
+	}
+
+
+
+	// Destructor:
 	Material::~Material()
 	{
 

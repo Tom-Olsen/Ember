@@ -16,7 +16,7 @@ namespace emberEcs
 		m_receiveShadows = true;
 
 		m_pMesh = nullptr;
-		m_material = MaterialManager::GetMaterial("errorMaterial");
+		m_material = MaterialManager::TryGetMaterial("errorMaterial");
 		m_shaderProperties = ShaderProperties(m_material);
 	}
 	InstancedMeshRenderer::~InstancedMeshRenderer()

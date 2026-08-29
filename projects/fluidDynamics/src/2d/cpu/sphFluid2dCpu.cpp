@@ -40,7 +40,7 @@ namespace fluidDynamics
 		    SetColorMode(0);
 		    SetInitialDistributionRadius(6.0f);
 		    SetVisualRadius(0.25f);
-		    m_particleMaterial = MaterialManager::GetMaterial("particleMaterial2d");
+		    m_particleMaterial = MaterialManager::TryGetMaterial("particleMaterial2d");
         }
         m_forceSetters = false;
         
@@ -354,7 +354,7 @@ namespace fluidDynamics
 			{
 				m_attractor.point = Float2(hit.GetPoint());
 				Float4x4 localToWorldMatrix = Float4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f));
-				ShaderProperties shaderProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::GetMaterial("simpleUnlitMaterial"), false, false);
+				ShaderProperties shaderProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::TryGetMaterial("simpleUnlitMaterial"), false, false);
 				shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
 					m_attractor.state = 1;

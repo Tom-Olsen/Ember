@@ -98,7 +98,7 @@ namespace emberEditor
 		Float4x4 localToWorldMatrix = LocalToWorldMatrix();
 
 		// Draw axis zylinders:
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoLitMaterial"));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisX));
 		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * TransformHandle::GetRotationX() * AxisLengthMatrix(ScaleHandle::SubHandle::axisX));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisY));
@@ -119,7 +119,7 @@ namespace emberEditor
 		emberCore::Gizmo::ResetMaterial();
 
 		// Visualize scale interaction regions:
-		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoLitMaterial"));
+		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoLitMaterial"));
 		//emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisX) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * TransformHandle::GetRotationX());
 		//emberCore::Gizmo::DrawMesh(m_sphereMesh, localToWorldMatrix * TransformHandle::GetRotationX() * cubeTranslation);

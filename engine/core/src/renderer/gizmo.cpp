@@ -19,7 +19,7 @@ namespace emberCore
 	// Private methods:
 	void Gizmo::Init()
 	{
-		s_defaultMaterial = MaterialManager::GetMaterial("gizmoUnlitMaterial");
+		s_defaultMaterial = MaterialManager::TryGetMaterial("gizmoUnlitMaterial");
 		s_material = s_defaultMaterial;
 	}
 	void Gizmo::Clear()

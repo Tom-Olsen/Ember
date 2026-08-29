@@ -66,7 +66,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("simpleUnlitMaterial"));
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
@@ -92,7 +92,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlitMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("vertexColorUnlitMaterial"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -120,7 +120,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlitMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("vertexColorUnlitMaterial"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -148,7 +148,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorUnlitMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("vertexColorUnlitMaterial"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -173,7 +173,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("skyboxMaterial"));
 		pMeshRenderer->GetMaterial().SetTexture("colorMap", TextureManager::GetTexture("skybox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
@@ -189,7 +189,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
 		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("ground0_normal"));
@@ -208,7 +208,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks0_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks0_roughness"));
 		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("bricks0_normal"));
@@ -224,7 +224,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLitMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("vertexColorLitMaterial"));
 		pMeshRenderer->SetCastShadows(true);
 		pMeshRenderer->SetReceiveShadows(true);
 	}
@@ -237,7 +237,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("wood1_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("wood1_roughness"));
 		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("wood1_normal"));
@@ -256,7 +256,7 @@ inline Scene* DefaultScene()
 		pTransform->SetPosition(pos);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("deferredGeometryMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks1_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks1_roughness"));
 		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("bricks1_normal"));
@@ -291,7 +291,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("zylinderSmooth"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks2_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks2_roughness"));
 		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("bricks2_normal"));
@@ -310,7 +310,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cubeSphere"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("wood0_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("wood0_roughness"));
 		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("wood0_normal"));
@@ -330,7 +330,7 @@ inline Scene* DefaultScene()
     //
 	//	MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 	//	pMeshRenderer->SetMesh(MeshManager::GetMesh("translateHandleFrame"));
-	//	pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("vertexColorLitMaterial"));
+	//	pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("vertexColorLitMaterial"));
     //
 	//	//DrawMeshData* drawMeshData = entity.AddComponent<DrawMeshData>();
     //
@@ -349,7 +349,7 @@ inline Scene* DefaultScene()
 	//	InstancedMeshRenderer* pInstancedRenderer = entity.AddComponent<InstancedMeshRenderer>();
 	//	pInstancedRenderer->SetInstanceCount(16);
 	//	pInstancedRenderer->SetMesh(MeshManager::GetMesh("cube"));
-	//	pInstancedRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+	//	pInstancedRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
 	//	pInstancedRenderer->SetInstanceBuffer(testInstancedRendering->GetInstanceBuffer());
 	//	pInstancedRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("concrete0_color"));
 	//	pInstancedRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("concrete0_roughness"));
@@ -366,7 +366,7 @@ inline Scene* DefaultScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("transparentMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("transparentMaterial"));
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4(1.0, 0.0, 0, 0.25f));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);

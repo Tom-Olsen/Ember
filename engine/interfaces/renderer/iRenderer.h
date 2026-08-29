@@ -1,11 +1,9 @@
 #pragma once
-#include "emberMath.h"
 #include "commonBufferUsage.h"
-#include "commonForwardRenderMode.h"
-#include "commonGizmoRenderMode.h"
 #include "commonLighting.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
+#include "emberMath.h"
 #include <filesystem>
 
 
@@ -13,15 +11,16 @@
 namespace emberBackendInterface
 {
     // Forward declarations:
-    class IBuffer;
-    class ICompute;
-    class IComputeShader;
-    class IGui;
-    class IMaterial;
-    class IMaterialShader;
-    class IMesh;
-    class IDescriptorSetBinding;
-    class ITexture;
+	class IBuffer;
+	class ICompute;
+	class IComputeShader;
+	class IDescriptorSetBinding;
+	class IGui;
+	class IMaterial;
+	class IMaterialManager;
+	class IMaterialShaderManager;
+	class IMesh;
+	class ITexture;
 
 
 	
@@ -69,10 +68,8 @@ namespace emberBackendInterface
         virtual void SetDepthBiasConstantFactor(float depthBiasConstantFactor) = 0;
         virtual void SetDepthBiasClamp(float depthBiasClamp) = 0;
         virtual void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) = 0;
-        virtual void SetDefaultMaterials(IMaterial* pOutlineMaterial, IMaterial* pDefaultShadowMaterial, IMaterial* pDeferredLightingMaterial, IMaterial* pPresentMaterial) = 0;
         virtual void SetOutlineColor(const Float4& outlineColor) = 0;
         virtual void SetOutlineThickness(int outlineThickness) = 0;
-		virtual void ClearDefaultMaterials() = 0;
 
         // Functionallity forwarding:
         virtual void CollectGarbage() = 0;
@@ -80,36 +77,18 @@ namespace emberBackendInterface
         virtual void WaitForFrameFinished(uint32_t frameIndex) = 0;
 
         // Gpu resource factories:
+		virtual IMaterialShaderManager* CreateMaterialShaderManager() = 0;
+		virtual IMaterialManager* CreateMaterialManager(IMaterialShaderManager* pIMaterialShaderManager) = 0;
+        virtual IComputeShader* CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName) = 0;
         virtual IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) = 0;
         //virtual ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
         virtual ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
         virtual ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
         virtual ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
-        virtual IComputeShader* CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName) = 0;
-        virtual IMaterialShader* CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
-        virtual IMaterialShader* CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
-        virtual IMaterialShader* CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& debugName) = 0;
-        virtual IMaterialShader* CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
-        virtual IMaterialShader* CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
-        virtual IMaterialShader* CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
-        virtual IMaterialShader* CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName) = 0;
-        virtual IMaterial* CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreateOutlineMaterial(IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreateShadowMaterial(IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreateDeferredGeometryMaterial(IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreateDeferredLightingMaterial(IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CreatePresentMaterial(IMaterialShader* pIMaterialShader, const std::string& debugName) = 0;
-        virtual IMaterial* CloneGizmoMaterial(IMaterial* pISourceMaterial, const std::string& debugName) = 0;
-        virtual IMaterial* CloneShadowMaterial(IMaterial* pISourceMaterial, const std::string& debugName) = 0;
-        virtual IMaterial* CloneDeferredGeometryMaterial(IMaterial* pISourceMaterial, const std::string& debugName) = 0;
-        virtual IMaterial* CloneForwardMaterial(IMaterial* pISourceMaterial, const std::string& debugName) = 0;
         virtual IMesh* CreateMesh() = 0;
         virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;
 
 		// Gpu resource destruction:
-        virtual void DestroyMaterial(IMaterial* pIMaterial) = 0;
-        virtual void DestroyMaterialShader(IMaterialShader* pIMaterialShader) = 0;
 		virtual void DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader) = 0;
 
         // Vulkan handle passthrough for API coupling:

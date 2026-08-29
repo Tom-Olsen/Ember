@@ -67,8 +67,8 @@ namespace emberCore
 			return ShadowMaterial();
 		}
 
-		MaterialId shadowMaterialId = MaterialManager::GetShadowMaterialIdForSurfaceMaterial(m_materialId);
-		if (shadowMaterialId.index == invalidMaterialId.index)
+		emberCommon::MaterialId shadowMaterialId = MaterialManager::TryGetShadowMaterialIdOfSurfaceMaterial(m_materialId);
+		if (shadowMaterialId.index == emberCommon::invalidMaterialId.index)
 			return ShadowMaterial();
 		return ShadowMaterial{ shadowMaterialId };
 	}
@@ -127,20 +127,20 @@ namespace emberCore
 
 		MaterialManager::SetShadowMaterial(m_materialId, shadowMaterial.m_materialId);
 	}
-	void ForwardMaterial::ClearShadowMaterial()
+	void ForwardMaterial::ResetShadowMaterial()
 	{
 		if (GetMutableInterfaceHandle() == nullptr)
 		{
-			LOG_WARN("ForwardMaterial::ClearShadowMaterial() failed. Material is invalid, expired, or immutable.");
+			LOG_WARN("ForwardMaterial::ResetShadowMaterial() failed. Material is invalid, expired, or immutable.");
 			return;
 		}
-		MaterialManager::ClearShadowMaterial(m_materialId);
+		MaterialManager::ResetShadowMaterial(m_materialId);
 	}
 
 
 
 	// Private methods:
-	ForwardMaterial::ForwardMaterial(MaterialId materialId)
+	ForwardMaterial::ForwardMaterial(emberCommon::MaterialId materialId)
 		: Material(materialId)
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();

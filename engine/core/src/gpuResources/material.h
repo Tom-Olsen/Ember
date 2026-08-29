@@ -4,7 +4,7 @@
 #include "commonGizmoRenderMode.h"
 #include "commonMaterialPass.h"
 #include "emberCoreExport.h"
-#include "materialId.h"
+#include "commonMaterialId.h"
 #include "shader.h"
 #include <filesystem>
 #include <string>
@@ -42,10 +42,10 @@ namespace emberCore
 		friend class ShaderProperties;
 
 	private: // Members:
-		MaterialId m_materialId;
+		emberCommon::MaterialId m_materialId;
 
 	protected: // Methods:
-		Material(MaterialId materialId);
+		Material(emberCommon::MaterialId materialId);
 		emberBackendInterface::IMaterial* GetMutableInterfaceHandle() const;
 		emberBackendInterface::IDescriptorSetBinding* TryGetShaderDescriptorSetBinding() const override;
 

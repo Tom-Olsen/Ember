@@ -18,8 +18,8 @@ inline Scene* TestScene()
 	// The two test materials are spcifically constructed to replicate this error.
 	// Activate validation layers in VulkanRenderer/vulkanMacros.h to see the error.
 
-	Material materialA = MaterialManager::GetMaterial("testAMaterial");
-	Material materialB = MaterialManager::GetMaterial("testBMaterial");
+	Material materialA = MaterialManager::TryGetMaterial("testAMaterial");
+	Material materialB = MaterialManager::TryGetMaterial("testBMaterial");
 
 	//materialA->PrintBindings();
 	//materialA->PrintUniformBuffers();
@@ -54,7 +54,7 @@ inline Scene* TestScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("simpleUnlitMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("simpleUnlitMaterial"));
 		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);

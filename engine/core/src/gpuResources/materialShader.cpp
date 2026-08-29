@@ -10,7 +10,7 @@ namespace emberCore
 	// Public methods:
 	// Constructor/Destructor:
 	MaterialShader::MaterialShader()
-		: m_materialShaderId(invalidMaterialShaderId)
+		: m_materialShaderId(emberCommon::invalidMaterialShaderId)
 	{
 
 	}
@@ -80,7 +80,7 @@ namespace emberCore
 
 
 	// Private methods:
-	MaterialShader::MaterialShader(MaterialShaderId materialShaderId)
+	MaterialShader::MaterialShader(emberCommon::MaterialShaderId materialShaderId)
 		: m_materialShaderId(materialShaderId)
 	{
 

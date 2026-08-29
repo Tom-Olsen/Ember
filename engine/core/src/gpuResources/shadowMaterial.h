@@ -22,9 +22,6 @@ namespace emberCore
 		friend class Material;
 		friend class MaterialManager;
 
-	private: // Methods:
-		ShadowMaterial(MaterialId materialId);
-
 	public: // Methods:
 		// Constructor/Destructor:
 		ShadowMaterial();
@@ -41,5 +38,8 @@ namespace emberCore
 		// Creation/Cloning:
 		static ShadowMaterial CreateFromShader(const MaterialShader& materialShader, const std::string& name);
 		ShadowMaterial Clone(const std::string& name) const;
+
+	private: // Methods:
+		ShadowMaterial(emberCommon::MaterialId materialId);
 	};
 }

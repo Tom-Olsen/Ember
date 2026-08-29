@@ -36,7 +36,7 @@ Scene* InitScene()
 
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("skyboxMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("skyboxMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skybox0"));
 		pMeshRenderer->SetCastShadows(false);
@@ -67,7 +67,7 @@ Scene* InitScene()
 
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
-		pMeshRenderer->SetMaterial(MaterialManager::GetMaterial("defaultMaterial"));
+		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
 		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("ground0_color"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));

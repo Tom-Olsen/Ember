@@ -51,6 +51,6 @@ namespace emberCore
 		void SetRenderQueue(int32_t renderQueue);
 
 	private: // Methods:
-		GizmoMaterial(MaterialId materialId);
+		GizmoMaterial(emberCommon::MaterialId materialId);
 	};
 }

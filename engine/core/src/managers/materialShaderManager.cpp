@@ -1,7 +1,7 @@
 #include "materialShaderManager.h"
-#include "iMaterialShader.h"
+#include "iMaterialShaderManager.h"
+#include "iRenderer.h"
 #include "logger.h"
-#include "materialManager.h"
 #include "renderer.h"
 #include <stdexcept>
 
@@ -10,98 +10,27 @@
 namespace emberCore
 {
 	// Static members:
-	bool MaterialShaderManager::s_isInitialized = false;
-	std::unordered_map<std::string, uint32_t> MaterialShaderManager::s_materialShaderIdsMap;
-	std::vector<MaterialShaderManager::MaterialShaderSlot> MaterialShaderManager::s_materialShaderSlots;
-	std::vector<uint32_t> MaterialShaderManager::s_freeMaterialShaderIds;
+	std::unique_ptr<emberBackendInterface::IMaterialShaderManager> MaterialShaderManager::s_pIMaterialShaderManager;
 
 
 
-	// Initialization/Cleanup:
-	void MaterialShaderManager::Init()
-	{
-		if (s_isInitialized)
-			return;
-		s_isInitialized = true;
-	}
-	void MaterialShaderManager::Clear()
-	{
-		for (uint32_t index = 0; index < s_materialShaderSlots.size(); index++)
-		{
-			const MaterialShaderSlot& slot = s_materialShaderSlots[index];
-			if (slot.materialShader.pIMaterialShader != nullptr && MaterialManager::MaterialShaderInUse({ index, slot.generation }))
-				throw std::runtime_error("MaterialShaderManager::Clear() failed. MaterialShader is still used by at least one material: " + slot.materialShader.name);
-		}
-
-		for (uint32_t index = 0; index < s_materialShaderSlots.size(); index++)
-		{
-			MaterialShaderSlot& slot = s_materialShaderSlots[index];
-			if (slot.materialShader.pIMaterialShader == nullptr)
-				continue;
-
-			Renderer::DestroyMaterialShader(slot.materialShader.pIMaterialShader.release());
-			slot.materialShader.name.clear();
-			slot.generation++;
-			s_freeMaterialShaderIds.push_back(index);
-		}
-		s_materialShaderIdsMap.clear();
-		s_isInitialized = false;
-	}
-
-
-
+	// Public methods:
 	// Creators:
 	MaterialShader MaterialShaderManager::CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::gizmo)
-				throw std::runtime_error("MaterialShaderManager::CreateGizmoMaterialShader(...) failed. Existing MaterialShader is not a gizmo shader: " + name);
-			return materialShader;
-		}
-
-		return AddMaterialShader(name, Renderer::CreateGizmoMaterialShader(vertexSpv, fragmentSpv, name));
+		return MaterialShader{ s_pIMaterialShaderManager->CreateGizmoMaterialShader(vertexSpv, fragmentSpv, name) };
 	}
 	MaterialShader MaterialShaderManager::CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& name)
 	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::shadow)
-				throw std::runtime_error("MaterialShaderManager::CreateShadowMaterialShader(...) failed. Existing MaterialShader is not a shadow shader: " + name);
-			return materialShader;
-		}
-
-		return AddMaterialShader(name, Renderer::CreateShadowMaterialShader(vertexSpv, name));
+		return MaterialShader{ s_pIMaterialShaderManager->CreateShadowMaterialShader(vertexSpv, name) };
 	}
 	MaterialShader MaterialShaderManager::CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
-				throw std::runtime_error("MaterialShaderManager::CreateDeferredGeometryMaterialShader(...) failed. Existing MaterialShader is not a deferred geometry shader: " + name);
-			return materialShader;
-		}
-
-		return AddMaterialShader(name, Renderer::CreateDeferredGeometryMaterialShader(vertexSpv, fragmentSpv, name));
+		return MaterialShader{ s_pIMaterialShaderManager->CreateDeferredGeometryMaterialShader(vertexSpv, fragmentSpv, name) };
 	}
 	MaterialShader MaterialShaderManager::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::forward)
-				throw std::runtime_error("MaterialShaderManager::CreateForwardMaterialShader(...) failed. Existing MaterialShader is not a forward shader: " + name);
-			return materialShader;
-		}
-
-		return AddMaterialShader(name, Renderer::CreateForwardMaterialShader(vertexSpv, fragmentSpv, name));
+		return MaterialShader{ s_pIMaterialShaderManager->CreateForwardMaterialShader(vertexSpv, fragmentSpv, name) };
 	}
 
 
@@ -109,7 +38,7 @@ namespace emberCore
 	// Getters:
 	MaterialShader MaterialShaderManager::GetMaterialShader(const std::string& name)
 	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
+		emberCommon::MaterialShaderId materialShaderId = GetMaterialShaderId(name);
 		if (GetMaterialShaderInterface(materialShaderId) == nullptr)
 		{
 			LOG_WARN("MaterialShaderManager::GetMaterialShader(...) failed. MaterialShader '{}' not found or expired.", name);
@@ -131,130 +60,56 @@ namespace emberCore
 	// Debugging:
 	void MaterialShaderManager::Print()
 	{
-		LOG_TRACE("MaterialShaderManager contents:");
-		for (const auto& [name, index] : s_materialShaderIdsMap)
-			LOG_TRACE("  {}: index {}, generation {}", name, index, s_materialShaderSlots[index].generation);
+		s_pIMaterialShaderManager->Print();
 	}
 
 
 
 	// Private methods:
-	// Creators:
-	MaterialShader MaterialShaderManager::CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	// Initialization/Cleanup:
+	void MaterialShaderManager::Init()
 	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::outline)
-				throw std::runtime_error("MaterialShaderManager::CreateOutlineMaterialShader(...) failed. Existing MaterialShader is not an outline shader: " + name);
-			return materialShader;
-		}
+		if (s_pIMaterialShaderManager != nullptr)
+			return;
+		if (Renderer::s_pIRenderer == nullptr)
+			throw std::runtime_error("MaterialShaderManager::Init() failed. Renderer is not initialized.");
 
-		return AddMaterialShader(name, Renderer::CreateOutlineMaterialShader(vertexSpv, fragmentSpv, name));
+		s_pIMaterialShaderManager.reset(Renderer::s_pIRenderer->CreateMaterialShaderManager());
+		if (s_pIMaterialShaderManager == nullptr)
+			throw std::runtime_error("MaterialShaderManager::Init() failed. Renderer returned a nullptr material shader manager.");
 	}
-	MaterialShader MaterialShaderManager::CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
+	void MaterialShaderManager::Clear()
 	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::deferredLighting)
-				throw std::runtime_error("MaterialShaderManager::CreateDeferredLightingMaterialShader(...) failed. Existing MaterialShader is not a deferred lighting shader: " + name);
-			return materialShader;
-		}
-
-		return AddMaterialShader(name, Renderer::CreateDeferredLightingMaterialShader(vertexSpv, fragmentSpv, name));
-	}
-	MaterialShader MaterialShaderManager::CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		MaterialShaderId materialShaderId = GetMaterialShaderId(name);
-		if (GetMaterialShaderInterface(materialShaderId) != nullptr)
-		{
-			MaterialShader materialShader{ materialShaderId };
-			if (materialShader.GetMaterialPass() != emberCommon::MaterialPass::present)
-				throw std::runtime_error("MaterialShaderManager::CreatePresentMaterialShader(...) failed. Existing MaterialShader is not a present shader: " + name);
-			return materialShader;
-		}
-
-		return AddMaterialShader(name, Renderer::CreatePresentMaterialShader(vertexSpv, fragmentSpv, name));
+		s_pIMaterialShaderManager.reset();
 	}
 
 
 
 	// Getters:
-	MaterialShaderId MaterialShaderManager::GetMaterialShaderId(const std::string& name)
+	emberCommon::MaterialShaderId MaterialShaderManager::GetMaterialShaderId(const std::string& name)
 	{
-		auto it = s_materialShaderIdsMap.find(name);
-		if (it == s_materialShaderIdsMap.end())
-			return invalidMaterialShaderId;
-
-		const uint32_t index = it->second;
-		return MaterialShaderId{ index, s_materialShaderSlots[index].generation };
+		return s_pIMaterialShaderManager->TryGetMaterialShaderId(name);
 	}
-	emberBackendInterface::IMaterialShader* MaterialShaderManager::GetMaterialShaderInterface(MaterialShaderId materialShaderId)
+	emberBackendInterface::IMaterialShaderManager* MaterialShaderManager::GetInterfaceHandle()
 	{
-		if (materialShaderId.index == invalidMaterialShaderId.index || materialShaderId.index >= s_materialShaderSlots.size())
-			return nullptr;
-
-		MaterialShaderSlot& slot = s_materialShaderSlots[materialShaderId.index];
-		if (slot.generation != materialShaderId.generation)
-			return nullptr;
-		return slot.materialShader.pIMaterialShader.get();
+		if (s_pIMaterialShaderManager == nullptr)
+			throw std::runtime_error("MaterialShaderManager::GetInterfaceHandle() failed. Material shader manager is not initialized.");
+		return s_pIMaterialShaderManager.get();
 	}
-	const std::string* MaterialShaderManager::GetMaterialShaderName(MaterialShaderId materialShaderId)
+	emberBackendInterface::IMaterialShader* MaterialShaderManager::GetMaterialShaderInterface(emberCommon::MaterialShaderId materialShaderId)
 	{
-		if (GetMaterialShaderInterface(materialShaderId) == nullptr)
-			return nullptr;
-		return &s_materialShaderSlots[materialShaderId.index].materialShader.name;
+		return s_pIMaterialShaderManager->TryGetMaterialShader(materialShaderId);
+	}
+	const std::string* MaterialShaderManager::GetMaterialShaderName(emberCommon::MaterialShaderId materialShaderId)
+	{
+		return s_pIMaterialShaderManager->TryGetMaterialShaderName(materialShaderId);
 	}
 
 
 
-	// Add/Delete material shader:
-	MaterialShader MaterialShaderManager::AddMaterialShader(const std::string& name, emberBackendInterface::IMaterialShader* pIMaterialShader)
+	// Deleter:
+	void MaterialShaderManager::DeleteMaterialShader(emberCommon::MaterialShaderId materialShaderId)
 	{
-		if (pIMaterialShader == nullptr)
-			throw std::runtime_error("MaterialShaderManager::AddMaterialShader(...) failed. pIMaterialShader is nullptr.");
-
-		MaterialShaderId materialShaderId;
-		if (s_freeMaterialShaderIds.empty())
-		{
-			if (s_materialShaderSlots.size() >= invalidMaterialShaderId.index)
-			{
-				Renderer::DestroyMaterialShader(pIMaterialShader);
-				throw std::runtime_error("MaterialShaderManager::AddMaterialShader(...) failed. MaterialShader id limit reached.");
-			}
-			materialShaderId.index = static_cast<uint32_t>(s_materialShaderSlots.size());
-			s_materialShaderSlots.push_back({ 1, ManagedMaterialShader{ name, std::unique_ptr<emberBackendInterface::IMaterialShader>(pIMaterialShader) } });
-		}
-		else
-		{
-			materialShaderId.index = s_freeMaterialShaderIds.back();
-			s_freeMaterialShaderIds.pop_back();
-
-			MaterialShaderSlot& slot = s_materialShaderSlots[materialShaderId.index];
-			slot.materialShader.name = name;
-			slot.materialShader.pIMaterialShader.reset(pIMaterialShader);
-		}
-
-		materialShaderId.generation = s_materialShaderSlots[materialShaderId.index].generation;
-		s_materialShaderIdsMap[name] = materialShaderId.index;
-		return MaterialShader{ materialShaderId };
-	}
-	void MaterialShaderManager::DeleteMaterialShader(MaterialShaderId materialShaderId)
-	{
-		if (GetMaterialShaderInterface(materialShaderId) == nullptr)
-			return;
-
-		MaterialShaderSlot& slot = s_materialShaderSlots[materialShaderId.index];
-		if (MaterialManager::MaterialShaderInUse(materialShaderId))
-			throw std::runtime_error("MaterialShaderManager::DeleteMaterialShader(...) failed. MaterialShader is still used by at least one material: " + slot.materialShader.name);
-
-		s_materialShaderIdsMap.erase(slot.materialShader.name);
-		Renderer::DestroyMaterialShader(slot.materialShader.pIMaterialShader.release());
-		slot.materialShader.name.clear();
-		slot.generation++;
-		s_freeMaterialShaderIds.push_back(materialShaderId.index);
+		s_pIMaterialShaderManager->DeleteMaterialShader(materialShaderId);
 	}
 }

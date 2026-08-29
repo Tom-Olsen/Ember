@@ -11,8 +11,8 @@ namespace fluidDynamics
 	SphFluid3dGpu::SphFluid3dGpu()
 	{
 		// Material setup:
-		m_particleMaterial = MaterialManager::GetForwardMaterial("particleMaterial3d");
-		m_volumeRaycastMaterial = MaterialManager::GetForwardMaterial("volumeRaycastMaterial");
+		m_particleMaterial = MaterialManager::TryGetForwardMaterial("particleMaterial3d");
+		m_volumeRaycastMaterial = MaterialManager::TryGetForwardMaterial("volumeRaycastMaterial");
 		m_particleMesh = MeshGenerator::Quad();
 		m_volumetricDensityCube = MeshGenerator::Cube();
 		m_shaderProperties = ShaderProperties(m_particleMaterial);
@@ -196,7 +196,7 @@ namespace fluidDynamics
 		if (m_attractor.state != 0)
 		{
 			Float4x4 attractorLocalToWorld = localToWorld * Float4x4::Translate(m_attractor.point);
-			ShaderProperties shaderProperties = Renderer::DrawMesh(attractorLocalToWorld, m_attractorSphereMesh, MaterialManager::GetMaterial("transparentMaterial"), false, false);
+			ShaderProperties shaderProperties = Renderer::DrawMesh(attractorLocalToWorld, m_attractorSphereMesh, MaterialManager::TryGetMaterial("transparentMaterial"), false, false);
 			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
 		}
 		if (m_renderParticles || m_renderVolumetricDensity)

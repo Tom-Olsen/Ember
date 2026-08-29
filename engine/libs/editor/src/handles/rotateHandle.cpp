@@ -113,12 +113,12 @@ namespace emberEditor
 		Float4x4 localToWorldMatrix = LocalToWorldMatrix();
 
         // Draw central sphere:
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::GetMaterial("gizmoUnlitMaterial"));
+		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoUnlitMaterial"));
 		emberCore::Gizmo::SetColor(TransformHandle::GetColorCenter());
         emberCore::Gizmo::DrawSphere(localToWorldMatrix * Float4x4::Scale(0.15f));
 
 		// Draw arcs:
-		emberCore::GizmoMaterial arcMaterial = emberCore::MaterialManager::GetGizmoMaterial("gizmoUnlitMaterial");
+		emberCore::GizmoMaterial arcMaterial = emberCore::MaterialManager::TryGetGizmoMaterial("gizmoUnlitMaterial");
 		emberCommon::CullMode originalCullMode = arcMaterial.GetCullMode();
 		arcMaterial.SetCullMode(emberCommon::CullMode::none);
 		emberCore::Gizmo::SetMaterial(arcMaterial);

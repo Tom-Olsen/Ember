@@ -45,6 +45,9 @@ source_group("Gpu Resource Pools" FILES ${GPU_RESOURCE_POOLS_FILES})
 file(GLOB GPU_RESOURCES_FILES "src/gpuResources/*.*")
 source_group("Gpu Resources" FILES ${GPU_RESOURCES_FILES})
 
+file(GLOB MANAGERS_FILES "src/managers/*.*")
+source_group("Managers" FILES ${MANAGERS_FILES})
+
 file(GLOB BUFFERS_FILES "src/gpuResources/buffers/*.*")
 source_group("Gpu Resources/Buffers" FILES ${BUFFERS_FILES})
 
@@ -108,6 +111,7 @@ add_library(${TARGET_NAME} ${LIB_TYPE}
     ${DRAW_CALLS_FILES}
     ${GPU_RESOURCE_POOLS_FILES}
     ${GPU_RESOURCES_FILES}
+    ${MANAGERS_FILES}
         ${BUFFERS_FILES}
         ${SAMPLERS_FILES}
         ${TEXTURES_FILES}
@@ -141,6 +145,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/textures/texture2d
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/textures/texture3d
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/textures/textureCube
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/managers
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pipelines
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderer

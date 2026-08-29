@@ -14,7 +14,7 @@
 namespace emberCore
 {
 	// Protected methods:
-	Material::Material(MaterialId materialId)
+	Material::Material(emberCommon::MaterialId materialId)
 		: Shader()
 	{
 		m_materialId = materialId;
@@ -22,7 +22,7 @@ namespace emberCore
 	emberBackendInterface::IMaterial* Material::GetMutableInterfaceHandle() const
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
-		if (pIMaterial == nullptr || MaterialManager::HasMaterialRole(m_materialId, MaterialRole::immutable))
+		if (pIMaterial == nullptr || !MaterialManager::IsMaterialMutable(m_materialId))
 			return nullptr;
 		return pIMaterial;
 	}
@@ -39,7 +39,7 @@ namespace emberCore
 	// Constructor/Destructor:
 	Material::Material()
 	{
-		m_materialId = invalidMaterialId;
+		m_materialId = emberCommon::invalidMaterialId;
 	}
 	Material::~Material()
 	{
@@ -92,11 +92,11 @@ namespace emberCore
 	}
 
 
-	
+
 	// Getters:
 	const std::string& Material::GetName() const
 	{
-		const std::string* pName = MaterialManager::GetMaterialName(m_materialId);
+		const std::string* pName = MaterialManager::TryGetMaterialName(m_materialId);
 		if (pName == nullptr)
 		{
 			LOG_WARN("Material::GetName() failed. Material is invalid or expired.");
@@ -146,6 +146,6 @@ namespace emberCore
 	// Private methods:
 	emberBackendInterface::IMaterial* Material::GetInterfaceHandle() const
 	{
-		return MaterialManager::GetMaterialInterface(m_materialId);
+		return MaterialManager::TryGetMaterialInterface(m_materialId);
 	}
 }

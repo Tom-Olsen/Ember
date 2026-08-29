@@ -19,7 +19,7 @@ namespace emberEcs
         m_drawWorldBounds = false;
 
 		m_pMesh = nullptr;
-		m_material = MaterialManager::GetMaterial("errorMaterial");
+		m_material = MaterialManager::TryGetMaterial("errorMaterial");
 		m_shaderProperties = ShaderProperties(m_material);
 
 		m_raycastEnabled = true;

@@ -108,7 +108,7 @@ namespace emberCore
 
 
 	// Private methods:
-	GizmoMaterial::GizmoMaterial(MaterialId materialId)
+	GizmoMaterial::GizmoMaterial(emberCommon::MaterialId materialId)
 		: Material(materialId)
 	{
 		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();

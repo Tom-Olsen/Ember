@@ -32,7 +32,7 @@ namespace vulkanRendererBackend
 	/// <summary>
 	/// Material creation is expensive.
 	/// It is recommended to create all Materials at the start of the application.
-	/// Create a Material pointer and store it in the static MaterialManager class (core), making it globally accessible.
+	/// Material instances are owned by the backend MaterialManager and exposed through generational ids.
 	/// Each Material must be used with a ShaderProperties which is customized for the Material.
 	/// </summary>
 	class VULKAN_RENDERER_API Material : public emberBackendInterface::IMaterial
@@ -50,18 +50,25 @@ namespace vulkanRendererBackend
 		std::unique_ptr<emberCommon::PresentRenderState> m_pPresentRenderState;
 
 	public: // Methods:
-		// Factories/Destructor:
+		// Factories:
 		static Material CreateGizmo(MaterialShader* pMaterialShader, emberCommon::GizmoRenderMode renderMode, const std::string& debugName);
-        static Material CreateOutline(MaterialShader* pMaterialShader, const std::string& debugName);
+		static Material CreateOutline(MaterialShader* pMaterialShader, const std::string& debugName);
 		static Material CreateShadow(MaterialShader* pMaterialShader, const std::string& debugName);
 		static Material CreateDeferredGeometry(MaterialShader* pMaterialShader, const std::string& debugName);
 		static Material CreateDeferredLighting(MaterialShader* pMaterialShader, const std::string& debugName);
 		static Material CreateForward(MaterialShader* pMaterialShader, emberCommon::ForwardRenderMode renderMode, const std::string& debugName);
 		static Material CreatePresent(MaterialShader* pMaterialShader, const std::string& debugName);
+		
+		// Cloning:
 		static Material CloneGizmo(const Material& sourceMaterial, const std::string& debugName);
+		static Material CloneOutline(const Material& sourceMaterial, const std::string& debugName);
 		static Material CloneShadow(const Material& sourceMaterial, const std::string& debugName);
 		static Material CloneDeferredGeometry(const Material& sourceMaterial, const std::string& debugName);
+		static Material CloneDeferredLighting(const Material& sourceMaterial, const std::string& debugName);
 		static Material CloneForward(const Material& sourceMaterial, const std::string& debugName);
+		static Material ClonePresent(const Material& sourceMaterial, const std::string& debugName);
+		
+		// Destructor:
 		~Material();
 
 		// Non-copyable:
