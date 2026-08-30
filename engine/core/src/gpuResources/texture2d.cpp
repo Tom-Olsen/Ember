@@ -56,7 +56,7 @@ namespace emberCore
 		if (usage == emberCommon::TextureUsage::renderTarget)
 			throw std::runtime_error("Texture2d: TextureUsage = 'renderTarget' does not support loading from path.");
 
-		emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageFile(path, format.channels);
+		emberAssetLoader::ImageAsset imageAsset = emberAssetLoader::ImageAssetLoader::LoadFile(path, format.channels);
 		m_ownsITexture = true;
         m_name = name;
 		m_pITexture = Renderer::CreateTexture2d(imageAsset.width, imageAsset.height, format, usage, nullptr);

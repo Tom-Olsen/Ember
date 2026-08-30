@@ -32,7 +32,7 @@ namespace emberCore
 	}
 	TextureCube::TextureCube(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path)
 	{
-		emberAssetLoader::Image imageAsset = emberAssetLoader::LoadImageCubeFiles(path, format.channels, false);
+		emberAssetLoader::ImageAsset imageAsset = emberAssetLoader::ImageAssetLoader::LoadCubeFiles(path, format.channels, false);
 		m_ownsITexture = true;
         m_name = name;
 		m_pITexture = Renderer::CreateTextureCube(imageAsset.width, imageAsset.height, format, usage, nullptr);

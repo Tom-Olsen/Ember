@@ -8,6 +8,7 @@ set(PROJECT_TYPE STATIC)    # Choose SHARED (.dll/.so) or STATIC (.lib/.a) libra
 
 # Cache directories:
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   # engine
+get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)       # common
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)           # libs
 
 if(TARGET ${TARGET_NAME})
@@ -20,15 +21,22 @@ endif()
 # ------------------- File Lists --------------------
 file(GLOB SRC_FILES "src/*")
 source_group("Source Files" FILES ${SRC_FILES})
+
+file(GLOB COMMON_FILES "${ENGINE_COMMON_DIR}/*.*")
+source_group("Common" FILES ${COMMON_FILES})
 # ---------------------------------------------------
 
 
 
 # ----------------- Create Library ------------------
-add_library(${TARGET_NAME} ${PROJECT_TYPE} ${SRC_FILES})
+add_library(${TARGET_NAME} ${PROJECT_TYPE}
+	${SRC_FILES}
+    ${COMMON_FILES})
 
 # Source subdirectories:
-target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(${TARGET_NAME} PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${ENGINE_COMMON_DIR})
 
 # Allow linking this static library into shared libraries:
 set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)

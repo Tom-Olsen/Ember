@@ -96,7 +96,7 @@ namespace emberCore
 		
 		std::filesystem::path leb9File = (std::filesystem::path(ENGINE_RESOURCES_DIR) / "meshes/Leb9.csv").make_preferred();
 		Mesh leb9("leb9");
-		leb9.MoveMeshAsset(emberAssetLoader::LoadMeshCsv(leb9File));
+		leb9.MoveMeshAsset(emberAssetLoader::MeshAssetLoader::LoadCsv(leb9File));
 		AddMesh(std::move(leb9));
 
         Mesh translateHandleFrame = MeshGenerator::TranslateHandleFrame(0.5f, 5.0f);

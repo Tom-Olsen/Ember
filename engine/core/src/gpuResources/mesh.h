@@ -77,7 +77,7 @@ namespace emberCore
 		void MoveColors(std::vector<Float4>&& colors);
 		void MoveUVs(std::vector<Float4>&& uvs);
 		void MoveTriangles(std::vector<Uint3>&& triangles);
-		void MoveMeshAsset(emberAssetLoader::Mesh&& meshAsset);
+		void MoveMeshAsset(emberAssetLoader::MeshAsset&& meshAsset);
 
 		// Getters:
 		const std::string& GetName() const;

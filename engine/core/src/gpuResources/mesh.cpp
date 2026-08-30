@@ -143,7 +143,7 @@ namespace emberCore
 		m_triangles = std::move(triangles);
 		RegisterUpdate(false);
 	}
-	void Mesh::MoveMeshAsset(emberAssetLoader::Mesh&& meshAsset)
+	void Mesh::MoveMeshAsset(emberAssetLoader::MeshAsset&& meshAsset)
 	{
 		MovePositions(std::move(meshAsset.positions));
 		MoveNormals(std::move(meshAsset.normals));

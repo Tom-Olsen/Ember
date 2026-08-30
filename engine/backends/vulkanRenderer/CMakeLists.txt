@@ -85,7 +85,7 @@ file(GLOB UTILITY_FILES "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
 file(GLOB COMMON_FILES "${ENGINE_COMMON_DIR}/*.*")
-source_group("Commen" FILES ${COMMON_FILES})
+source_group("Common" FILES ${COMMON_FILES})
 
 file(GLOB GUI_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/gui/*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
