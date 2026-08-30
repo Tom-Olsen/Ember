@@ -15,10 +15,15 @@
 
 
 
+	// Forward declarations:
 namespace emberBackendInterface
 {
 	class IMaterial;
 	class IMaterialManager;
+}
+namespace emberAssetLoader
+{
+	class MaterialAsset;
 }
 
 
@@ -47,6 +52,7 @@ namespace emberCore
 
 	public: // Methods:
 		// Creators:
+		static Material CreateMaterial(const emberAssetLoader::MaterialAsset& materialAsset);
 		static GizmoMaterial CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
 		static GizmoMaterial CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		static ShadowMaterial CreateShadowMaterial(const std::filesystem::path& vertexSpv, const std::string& name);

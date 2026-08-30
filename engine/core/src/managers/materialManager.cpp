@@ -3,6 +3,7 @@
 #include "iMaterialManager.h"
 #include "iRenderer.h"
 #include "logger.h"
+#include "materialAssetLoader.h"
 #include "materialShader.h"
 #include "materialShaderManager.h"
 #include "renderer.h"
@@ -19,6 +20,39 @@ namespace emberCore
 
 	// Public methods:
 	// Creators:
+	Material MaterialManager::CreateMaterial(const emberAssetLoader::MaterialAsset& materialAsset)
+	{
+		const std::filesystem::path& vertexSpv = materialAsset.shaderStagePaths[static_cast<size_t>(emberCommon::ShaderStage::vertex)];
+		const std::filesystem::path& fragmentSpv = materialAsset.shaderStagePaths[static_cast<size_t>(emberCommon::ShaderStage::fragment)];
+
+		switch (materialAsset.GetMaterialPass())
+		{
+			case emberCommon::MaterialPass::gizmo:
+			{
+				MaterialShader materialShader = MaterialShaderManager::CreateGizmoMaterialShader(vertexSpv, fragmentSpv, materialAsset.materialShaderName);
+				const emberAssetLoader::MaterialAsset::GizmoSettings& settings = std::get<emberAssetLoader::MaterialAsset::GizmoSettings>(materialAsset.renderModeSettings);
+				return CreateGizmoMaterial(settings.renderMode, materialShader, materialAsset.materialName);
+			}
+			case emberCommon::MaterialPass::shadow:
+			{
+				MaterialShader materialShader = MaterialShaderManager::CreateShadowMaterialShader(vertexSpv, materialAsset.materialShaderName);
+				return CreateShadowMaterial(materialShader, materialAsset.materialName);
+			}
+			case emberCommon::MaterialPass::deferredGeometry:
+			{
+				MaterialShader materialShader = MaterialShaderManager::CreateDeferredGeometryMaterialShader(vertexSpv, fragmentSpv, materialAsset.materialShaderName);
+				return CreateDeferredGeometryMaterial(materialShader, materialAsset.materialName);
+			}
+			case emberCommon::MaterialPass::forward:
+			{
+				MaterialShader materialShader = MaterialShaderManager::CreateForwardMaterialShader(vertexSpv, fragmentSpv, materialAsset.materialShaderName);
+				const emberAssetLoader::MaterialAsset::ForwardSettings& settings = std::get<emberAssetLoader::MaterialAsset::ForwardSettings>(materialAsset.renderModeSettings);
+				return CreateForwardMaterial(settings.renderMode, materialShader, materialAsset.materialName);
+			}
+			default:
+				throw std::runtime_error("MaterialManager::CreateMaterial(...) failed. Unsupported material pass.");
+		}
+	}
 	GizmoMaterial MaterialManager::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
 	{
 		MaterialShader materialShader = MaterialShaderManager::CreateGizmoMaterialShader(vertexSpv, fragmentSpv, name);
@@ -213,44 +247,19 @@ namespace emberCore
 		if (s_pIMaterialManager == nullptr)
 			throw std::runtime_error("MaterialManager::Init() failed. Renderer returned a nullptr material manager.");
 
-		const emberCommon::ForwardRenderMode forwardOpaqueMode = emberCommon::ForwardRenderMode::opaque;
-		const emberCommon::ForwardRenderMode forwardTransparentMode = emberCommon::ForwardRenderMode::transparent;
-		const emberCommon::ForwardRenderMode forwardSkyboxMode = emberCommon::ForwardRenderMode::skybox;
-		const emberCommon::GizmoRenderMode gizmoOpaqueMode = emberCommon::GizmoRenderMode::opaque;
-		const emberCommon::GizmoRenderMode gizmoTransparentMode = emberCommon::GizmoRenderMode::transparent;
-		const std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
+		const std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "materialAssets").make_preferred();
+    	for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directoryPath))
+    	{
+			// Skip invalid files:
+    	    if (!entry.is_regular_file())
+    	        continue;
+    	    if (entry.path().extension() != ".json")
+    	        continue;
 
-		MaterialShader errorShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "error.vert.spv", directoryPath / "error.frag.spv", "errorShader");
-		MaterialShader defaultShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "defaultForward.vert.spv", directoryPath / "defaultForward.frag.spv", "defaultShader");
-		MaterialShader transparentShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "transparent.vert.spv", directoryPath / "transparent.frag.spv", "transparentShader");
-		MaterialShader vertexColorLitShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "vertexColorLit.vert.spv", directoryPath / "vertexColorLit.frag.spv", "vertexColorLitShader");
-		MaterialShader vertexColorUnlitShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "vertexColorUnlit.vert.spv", directoryPath / "vertexColorUnlit.frag.spv", "vertexColorUnlitShader");
-		MaterialShader normalShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "normals.vert.spv", directoryPath / "normals.frag.spv", "normalShader");
-		MaterialShader skyboxShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "skybox.vert.spv", directoryPath / "skybox.frag.spv", "skyboxShader");
-		MaterialShader simpleLitShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "simpleLit.vert.spv", directoryPath / "simpleLit.frag.spv", "simpleLitShader");
-		MaterialShader simpleUnlitShader = MaterialShaderManager::CreateForwardMaterialShader(directoryPath / "simpleUnlit.vert.spv", directoryPath / "simpleUnlit.frag.spv", "simpleUnlitShader");
-		MaterialShader gizmoUnlitShader = MaterialShaderManager::CreateGizmoMaterialShader(directoryPath / "gizmoUnlit.vert.spv", directoryPath / "gizmoUnlit.frag.spv", "gizmoUnlitShader");
-		MaterialShader gizmoLitShader = MaterialShaderManager::CreateGizmoMaterialShader(directoryPath / "gizmoLit.vert.spv", directoryPath / "gizmoLit.frag.spv", "gizmoLitShader");
-		MaterialShader gizmoVertexColorUnlitShader = MaterialShaderManager::CreateGizmoMaterialShader(directoryPath / "gizmoVertexColorUnlit.vert.spv", directoryPath / "gizmoVertexColorUnlit.frag.spv", "gizmoVertexColorUnlitShader");
-		MaterialShader gizmoVertexColorLitShader = MaterialShaderManager::CreateGizmoMaterialShader(directoryPath / "gizmoVertexColorLit.vert.spv", directoryPath / "gizmoVertexColorLit.frag.spv", "gizmoVertexColorLitShader");
-		MaterialShader deferredGeometryShader = MaterialShaderManager::CreateDeferredGeometryMaterialShader(directoryPath / "deferredGeometry.vert.spv", directoryPath / "deferredGeometry.frag.spv", "deferredGeometryShader");
-
-		CreateForwardMaterial(forwardOpaqueMode, errorShader, "errorMaterial");
-		CreateForwardMaterial(forwardOpaqueMode, defaultShader, "defaultMaterial");
-		CreateForwardMaterial(forwardTransparentMode, transparentShader, "transparentMaterial");
-		CreateForwardMaterial(forwardOpaqueMode, vertexColorLitShader, "vertexColorLitMaterial");
-		CreateForwardMaterial(forwardOpaqueMode, vertexColorUnlitShader, "vertexColorUnlitMaterial");
-		CreateForwardMaterial(forwardOpaqueMode, normalShader, "normalMaterial");
-		CreateForwardMaterial(forwardSkyboxMode, skyboxShader, "skyboxMaterial");
-		CreateForwardMaterial(forwardOpaqueMode, simpleLitShader, "simpleLitMaterial");
-		CreateForwardMaterial(forwardOpaqueMode, simpleUnlitShader, "simpleUnlitMaterial");
-		CreateGizmoMaterial(gizmoOpaqueMode, gizmoUnlitShader, "gizmoUnlitMaterial");
-		CreateGizmoMaterial(gizmoOpaqueMode, gizmoLitShader, "gizmoLitMaterial");
-		CreateGizmoMaterial(gizmoOpaqueMode, gizmoVertexColorUnlitShader, "gizmoVertexColorUnlitMaterial");
-		CreateGizmoMaterial(gizmoOpaqueMode, gizmoVertexColorLitShader, "gizmoVertexColorLitMaterial");
-		CreateGizmoMaterial(gizmoTransparentMode, gizmoUnlitShader, "gizmoUnlitTransparentMaterial");
-		CreateGizmoMaterial(gizmoTransparentMode, gizmoLitShader, "gizmoLitTransparentMaterial");
-		CreateDeferredGeometryMaterial(deferredGeometryShader, "deferredGeometryMaterial");
+    	    const std::filesystem::path& jsonPath = entry.path();
+			emberAssetLoader::MaterialAsset materialAsset = emberAssetLoader::MaterialAssetLoader::Load(jsonPath);
+			CreateMaterial(materialAsset);
+    	}
 	}
 	void MaterialManager::Clear()
 	{
