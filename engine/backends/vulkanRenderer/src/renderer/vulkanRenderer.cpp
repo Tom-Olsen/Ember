@@ -74,6 +74,7 @@
 #include <array>
 #include <assert.h>
 #include <cstdlib>
+#include <functional>
 #include <stdexcept>
 #include <string>
 
@@ -1058,7 +1059,10 @@ namespace vulkanRendererBackend
 			auto layoutB = drawCallB->pMesh->GetVertexMemoryLayout();
 			if (layoutA != layoutB)
 				return layoutA < layoutB;
-			return drawCallA < drawCallB;
+
+			if (drawCallA->pMaterial != drawCallB->pMaterial)
+				return std::less<Material*>()(drawCallA->pMaterial, drawCallB->pMaterial);
+			return std::less<DeferredDrawCall*>()(drawCallA, drawCallB);
 		});
 
 		// Ember::ToDo: frustum culling and sorting by dist to camera is missing (also for shadow draw calls).
@@ -1086,7 +1090,10 @@ namespace vulkanRendererBackend
 			auto layoutB = drawCallB->pMesh->GetVertexMemoryLayout();
 			if (layoutA != layoutB)
 				return layoutA < layoutB;
-			return drawCallA < drawCallB;
+
+			if (drawCallA->pMaterial != drawCallB->pMaterial)
+				return std::less<Material*>()(drawCallA->pMaterial, drawCallB->pMaterial);
+			return std::less<ForwardDrawCall*>()(drawCallA, drawCallB);
 		});
 	}
 	void Renderer::UpdateShaderData()
