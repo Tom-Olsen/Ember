@@ -35,6 +35,14 @@ namespace emberCore
 	{
 		return MaterialManager::CloneForwardMaterial(*this, renderMode, name);
 	}
+	ForwardMaterial ForwardMaterial::CloneWithDefaultBindings(const std::string& name) const
+	{
+		return MaterialManager::CloneForwardMaterialWithDefaultBindings(*this, name);
+	}
+	ForwardMaterial ForwardMaterial::CloneWithDefaultBindings(const std::string& name, emberCommon::ForwardRenderMode renderMode) const
+	{
+		return MaterialManager::CloneForwardMaterialWithDefaultBindings(*this, renderMode, name);
+	}
 
 
 

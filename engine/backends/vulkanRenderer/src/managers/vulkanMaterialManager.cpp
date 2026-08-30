@@ -238,6 +238,28 @@ namespace vulkanRendererBackend
 			SetShadowMaterial(materialId, shadowMaterialId);
 		return materialId;
 	}
+	emberCommon::MaterialId MaterialManager::CloneDeferredGeometryMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name)
+	{
+		Material* pSourceMaterial = static_cast<Material*>(TryGetMaterial(sourceMaterialId));
+		if (pSourceMaterial == nullptr)
+			throw std::runtime_error("MaterialManager::CloneDeferredGeometryMaterialWithDefaultBindings(...) failed. Source material is invalid or expired.");
+		if (pSourceMaterial->GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
+			throw std::runtime_error("MaterialManager::CloneDeferredGeometryMaterialWithDefaultBindings(...) failed. Source material is not a deferred geometry material.");
+		if (TryGetMaterial(FindMaterialId(name)) != nullptr)
+		{
+			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
+			return emberCommon::invalidMaterialId;
+		}
+
+		const emberCommon::MaterialShaderId* pMaterialShaderId = TryGetMaterialShaderId(sourceMaterialId);
+		if (pMaterialShaderId == nullptr)
+			throw std::runtime_error("MaterialManager::CloneDeferredGeometryMaterialWithDefaultBindings(...) failed. Source material shader is invalid.");
+		emberCommon::MaterialId materialId = AddMaterial(name, true, true, true, *pMaterialShaderId, std::make_unique<Material>(Material::CloneDeferredGeometryWithDefaultBindings(*pSourceMaterial, name)));
+		emberCommon::MaterialId shadowMaterialId = TryGetShadowMaterialId(sourceMaterialId);
+		if (shadowMaterialId.index != emberCommon::invalidMaterialId.index)
+			SetShadowMaterial(materialId, shadowMaterialId);
+		return materialId;
+	}
 	emberCommon::MaterialId MaterialManager::CloneDeferredLightingMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name)
 	{
 		Material* pSourceMaterial = static_cast<Material*>(TryGetMaterial(sourceMaterialId));
@@ -281,6 +303,35 @@ namespace vulkanRendererBackend
 	emberCommon::MaterialId MaterialManager::CloneForwardMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::ForwardRenderMode renderMode, const std::string& name)
 	{
 		emberCommon::MaterialId materialId = CloneForwardMaterial(sourceMaterialId, name);
+		if (Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId)))
+			pMaterial->SetForwardRenderMode(renderMode);
+		return materialId;
+	}
+	emberCommon::MaterialId MaterialManager::CloneForwardMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name)
+	{
+		Material* pSourceMaterial = static_cast<Material*>(TryGetMaterial(sourceMaterialId));
+		if (pSourceMaterial == nullptr)
+			throw std::runtime_error("MaterialManager::CloneForwardMaterialWithDefaultBindings(...) failed. Source material is invalid or expired.");
+		if (pSourceMaterial->GetMaterialPass() != emberCommon::MaterialPass::forward)
+			throw std::runtime_error("MaterialManager::CloneForwardMaterialWithDefaultBindings(...) failed. Source material is not a forward material.");
+		if (TryGetMaterial(FindMaterialId(name)) != nullptr)
+		{
+			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
+			return emberCommon::invalidMaterialId;
+		}
+
+		const emberCommon::MaterialShaderId* pMaterialShaderId = TryGetMaterialShaderId(sourceMaterialId);
+		if (pMaterialShaderId == nullptr)
+			throw std::runtime_error("MaterialManager::CloneForwardMaterialWithDefaultBindings(...) failed. Source material shader is invalid.");
+		emberCommon::MaterialId materialId = AddMaterial(name, true, true, true, *pMaterialShaderId, std::make_unique<Material>(Material::CloneForwardWithDefaultBindings(*pSourceMaterial, name)));
+		emberCommon::MaterialId shadowMaterialId = TryGetShadowMaterialId(sourceMaterialId);
+		if (shadowMaterialId.index != emberCommon::invalidMaterialId.index)
+			SetShadowMaterial(materialId, shadowMaterialId);
+		return materialId;
+	}
+	emberCommon::MaterialId MaterialManager::CloneForwardMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, emberCommon::ForwardRenderMode renderMode, const std::string& name)
+	{
+		emberCommon::MaterialId materialId = CloneForwardMaterialWithDefaultBindings(sourceMaterialId, name);
 		if (Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId)))
 			pMaterial->SetForwardRenderMode(renderMode);
 		return materialId;

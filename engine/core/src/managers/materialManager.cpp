@@ -117,6 +117,11 @@ namespace emberCore
 		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneDeferredGeometryMaterial(sourceMaterial.m_materialId, name);
 		return materialId.index == emberCommon::invalidMaterialId.index ? DeferredMaterial() : DeferredMaterial{ materialId };
 	}
+	DeferredMaterial MaterialManager::CloneDeferredGeometryMaterialWithDefaultBindings(const DeferredMaterial& sourceMaterial, const std::string& name)
+	{
+		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneDeferredGeometryMaterialWithDefaultBindings(sourceMaterial.m_materialId, name);
+		return materialId.index == emberCommon::invalidMaterialId.index ? DeferredMaterial() : DeferredMaterial{ materialId };
+	}
 	ForwardMaterial MaterialManager::CloneForwardMaterial(const ForwardMaterial& sourceMaterial, const std::string& name)
 	{
 		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneForwardMaterial(sourceMaterial.m_materialId, name);
@@ -125,6 +130,16 @@ namespace emberCore
 	ForwardMaterial MaterialManager::CloneForwardMaterial(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name)
 	{
 		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneForwardMaterial(sourceMaterial.m_materialId, renderMode, name);
+		return materialId.index == emberCommon::invalidMaterialId.index ? ForwardMaterial() : ForwardMaterial{ materialId };
+	}
+	ForwardMaterial MaterialManager::CloneForwardMaterialWithDefaultBindings(const ForwardMaterial& sourceMaterial, const std::string& name)
+	{
+		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneForwardMaterialWithDefaultBindings(sourceMaterial.m_materialId, name);
+		return materialId.index == emberCommon::invalidMaterialId.index ? ForwardMaterial() : ForwardMaterial{ materialId };
+	}
+	ForwardMaterial MaterialManager::CloneForwardMaterialWithDefaultBindings(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name)
+	{
+		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneForwardMaterialWithDefaultBindings(sourceMaterial.m_materialId, renderMode, name);
 		return materialId.index == emberCommon::invalidMaterialId.index ? ForwardMaterial() : ForwardMaterial{ materialId };
 	}
 

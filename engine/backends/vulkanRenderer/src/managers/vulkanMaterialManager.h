@@ -64,9 +64,12 @@ namespace vulkanRendererBackend
 		emberCommon::MaterialId CloneOutlineMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name);
 		emberCommon::MaterialId CloneShadowMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
 		emberCommon::MaterialId CloneDeferredGeometryMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
+		emberCommon::MaterialId CloneDeferredGeometryMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
 		emberCommon::MaterialId CloneDeferredLightingMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name);
 		emberCommon::MaterialId CloneForwardMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
 		emberCommon::MaterialId CloneForwardMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::ForwardRenderMode renderMode, const std::string& name) override;
+		emberCommon::MaterialId CloneForwardMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
+		emberCommon::MaterialId CloneForwardMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, emberCommon::ForwardRenderMode renderMode, const std::string& name) override;
 		emberCommon::MaterialId ClonePresentMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name);
 
 		// Getters:

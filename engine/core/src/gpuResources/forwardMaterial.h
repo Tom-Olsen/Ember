@@ -39,6 +39,8 @@ namespace emberCore
 		static ForwardMaterial CreateFromShader(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		ForwardMaterial Clone(const std::string& name) const;
 		ForwardMaterial Clone(const std::string& name, emberCommon::ForwardRenderMode renderMode) const;
+		ForwardMaterial CloneWithDefaultBindings(const std::string& name) const;
+		ForwardMaterial CloneWithDefaultBindings(const std::string& name, emberCommon::ForwardRenderMode renderMode) const;
 
 		// Getters:
 		emberCommon::ForwardRenderMode GetRenderMode() const;

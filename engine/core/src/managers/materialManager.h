@@ -67,8 +67,11 @@ namespace emberCore
 		static GizmoMaterial CloneGizmoMaterial(const GizmoMaterial& sourceMaterial, emberCommon::GizmoRenderMode renderMode, const std::string& name);
 		static ShadowMaterial CloneShadowMaterial(const ShadowMaterial& sourceMaterial, const std::string& name);
 		static DeferredMaterial CloneDeferredGeometryMaterial(const DeferredMaterial& sourceMaterial, const std::string& name);
+		static DeferredMaterial CloneDeferredGeometryMaterialWithDefaultBindings(const DeferredMaterial& sourceMaterial, const std::string& name);
 		static ForwardMaterial CloneForwardMaterial(const ForwardMaterial& sourceMaterial, const std::string& name);
 		static ForwardMaterial CloneForwardMaterial(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name);
+		static ForwardMaterial CloneForwardMaterialWithDefaultBindings(const ForwardMaterial& sourceMaterial, const std::string& name);
+		static ForwardMaterial CloneForwardMaterialWithDefaultBindings(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name);
 
 		// Getters:
 		static Material TryGetMaterial(const std::string& name);

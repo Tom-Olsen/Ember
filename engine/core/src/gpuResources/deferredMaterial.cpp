@@ -31,6 +31,10 @@ namespace emberCore
 	{
 		return MaterialManager::CloneDeferredGeometryMaterial(*this, name);
 	}
+	DeferredMaterial DeferredMaterial::CloneWithDefaultBindings(const std::string& name) const
+	{
+		return MaterialManager::CloneDeferredGeometryMaterialWithDefaultBindings(*this, name);
+	}
 
 
 

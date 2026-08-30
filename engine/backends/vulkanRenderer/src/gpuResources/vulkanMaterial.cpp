@@ -96,6 +96,15 @@ namespace vulkanRendererBackend
 		material.m_pDeferredGeometryRenderState = std::make_unique<emberCommon::DeferredGeometryRenderState>(*sourceMaterial.m_pDeferredGeometryRenderState);
 		return material;
 	}
+	Material Material::CloneDeferredGeometryWithDefaultBindings(const Material& sourceMaterial, const std::string& debugName)
+	{
+		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)
+			throw std::runtime_error("Material::CloneDeferredGeometryWithDefaultBindings(...) failed. Source material is not a deferred geometry material.");
+
+		Material material(sourceMaterial.GetMaterialShader(), debugName);
+		material.m_pDeferredGeometryRenderState = std::make_unique<emberCommon::DeferredGeometryRenderState>(*sourceMaterial.m_pDeferredGeometryRenderState);
+		return material;
+	}
 	Material Material::CloneDeferredLighting(const Material& sourceMaterial, const std::string& debugName)
 	{
 		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::deferredLighting)
@@ -113,6 +122,15 @@ namespace vulkanRendererBackend
 
 		std::unique_ptr<DescriptorSetBinding> pDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(*sourceMaterial.m_pShaderDescriptorSetBinding, debugName);
 		Material material(sourceMaterial.GetMaterialShader(), std::move(pDescriptorSetBinding), debugName);
+		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(*sourceMaterial.m_pForwardRenderState);
+		return material;
+	}
+	Material Material::CloneForwardWithDefaultBindings(const Material& sourceMaterial, const std::string& debugName)
+	{
+		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::forward)
+			throw std::runtime_error("Material::CloneForwardWithDefaultBindings(...) failed. Source material is not a forward material.");
+
+		Material material(sourceMaterial.GetMaterialShader(), debugName);
 		material.m_pForwardRenderState = std::make_unique<emberCommon::ForwardRenderState>(*sourceMaterial.m_pForwardRenderState);
 		return material;
 	}

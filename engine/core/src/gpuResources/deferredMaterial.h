@@ -37,6 +37,7 @@ namespace emberCore
 		// Creation/Cloning:
 		static DeferredMaterial CreateFromShader(const MaterialShader& materialShader, const std::string& name);
 		DeferredMaterial Clone(const std::string& name) const;
+		DeferredMaterial CloneWithDefaultBindings(const std::string& name) const;
 
 		// Getters:
 		const emberCommon::DeferredGeometryRenderState* GetRenderState() const;
