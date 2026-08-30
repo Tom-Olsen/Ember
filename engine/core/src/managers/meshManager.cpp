@@ -1,7 +1,7 @@
 #include "meshManager.h"
-#include "assetLoader.h"
 #include "logger.h"
 #include "mesh.h"
+#include "meshAssetLoader.h"
 #include "meshGenerator.h"
 
 

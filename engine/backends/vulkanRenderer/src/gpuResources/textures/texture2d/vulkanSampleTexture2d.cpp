@@ -1,5 +1,4 @@
 #include "vulkanSampleTexture2d.h"
-#include "assetLoader.h"
 #include "emberMath.h"
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"

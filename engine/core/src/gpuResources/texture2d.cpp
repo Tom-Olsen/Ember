@@ -1,6 +1,6 @@
 #include "texture2d.h"
-#include "assetLoader.h"
 #include "iTexture.h"
+#include "imageAssetLoader.h"
 #include "logger.h"
 #include "renderer.h"
 #include <cstddef>

@@ -1,6 +1,6 @@
 #include "textureCube.h"
-#include "assetLoader.h"
 #include "iTexture.h"
+#include "imageAssetLoader.h"
 #include "renderer.h"
 
 

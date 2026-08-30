@@ -1,7 +1,7 @@
 #pragma once
-#include "assetLoader.h"
 #include "emberCoreExport.h"
 #include "emberMath.h"
+#include "meshAsset.h"
 #include <memory>
 #include <string>
 #include <vector>
