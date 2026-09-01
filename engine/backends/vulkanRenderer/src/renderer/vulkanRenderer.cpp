@@ -1337,7 +1337,7 @@ namespace vulkanRendererBackend
 					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
 					vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
 
-					// Draw call:
+					// Dispatch:
 					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_TRACE("Gizmo draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pGizmoMaterial->GetDebugName());
 				}
@@ -1551,7 +1551,7 @@ namespace vulkanRendererBackend
 					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall.pMesh->GetVertexBindingCount(), drawCall.pMesh->GetVkBuffers(), drawCall.pMesh->GetOffsets());
 					vkCmdBindIndexBuffer(commandBuffer, drawCall.pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall.pMesh->GetVkIndexType());
 
-					// Draw call:
+					// Dispatch:
 					vkCmdDrawIndexed(commandBuffer, drawCall.pMesh->GetIndexCount(), std::max(drawCall.instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_TRACE("Outline draw call, mesh = {}, material = {}", drawCall.pMesh->GetName(), pOutlineMaterial->GetDebugName());
 				}
@@ -1773,7 +1773,7 @@ namespace vulkanRendererBackend
 					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
 					vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
 
-					// Draw call:
+					// Dispatch:
 					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, static_cast<uint32_t>(1)), 0, 0, 0);
 					DEBUG_LOG_TRACE("Deferred geometry draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pDeferredMaterial->GetDebugName());
 				}
@@ -1952,7 +1952,7 @@ namespace vulkanRendererBackend
 					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
 					vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
 					
-					// Draw call:
+					// Dispatch:
 					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
 					DEBUG_LOG_TRACE("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pForwardMaterial->GetDebugName());
 				}
@@ -2205,15 +2205,10 @@ namespace vulkanRendererBackend
 
 			// Begin render pass:
 			Material* pMaterial = DefaultGpuResources::GetDefaultPresentMaterial();
-			Mesh* pMesh = DefaultGpuResources::GetDefaultRenderQuad();
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
 				// Bind Pipeline:
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetPipeline<RenderStage::present>(pMesh)->GetVkPipeline());
-
-				// Bind mesh data:
-				vkCmdBindVertexBuffers(commandBuffer, 0, pMesh->GetVertexBindingCount(), pMesh->GetVkBuffers(), pMesh->GetOffsets());
-				vkCmdBindIndexBuffer(commandBuffer, pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, pMesh->GetVkIndexType());
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetFullscreenPipeline<RenderStage::present>()->GetVkPipeline());
 
 				// Bind descriptorSets:
 				VkDescriptorSet descriptorSets[4] =
@@ -2226,10 +2221,10 @@ namespace vulkanRendererBackend
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetVkPipelineLayout(), 0, 4, descriptorSets, 0, nullptr);
 				
 				// Dispatch:
-				vkCmdDrawIndexed(commandBuffer, pMesh->GetIndexCount(), 1, 0, 0, 0);
+				vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 				if (m_pIGui)
 					m_pIGui->Render(commandBuffer);
-				DEBUG_LOG_INFO("Render renderTexture into fullScreenRenderQuad, material = {}", pMaterial->GetDebugName());
+				DEBUG_LOG_INFO("Render renderTexture with fullscreen triangle, material = {}", pMaterial->GetDebugName());
 			}
 			vkCmdEndRenderPass(commandBuffer);
 

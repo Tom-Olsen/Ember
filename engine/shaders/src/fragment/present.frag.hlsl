@@ -7,7 +7,7 @@ Texture2D gizmoTexture : register(t101, SHADER_SET);
 struct FragmentInput
 {
     float4 clipPosition : SV_POSITION;
-    float4 uv : TEXCOORD0;
+    float2 uv : TEXCOORD0;
 };
 
 

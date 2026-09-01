@@ -7,7 +7,6 @@
 #include "vulkanComputeShader.h"
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanMaterial.h"
-#include "vulkanMesh.h"
 #include "vulkanSampler.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSampleTexture3d.h"
@@ -38,8 +37,6 @@ namespace vulkanRendererBackend
 	// Compute shaders:
 	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pGammaCorrectionComputeShader = nullptr;
 	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineComputeShader = nullptr;
-	// Meshes:
-	std::unique_ptr<Mesh> DefaultGpuResources::s_pDefaultRenderQuad = nullptr;
 	// Buffers:
 	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
 	// Textures:
@@ -97,8 +94,6 @@ namespace vulkanRendererBackend
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "gammaCorrection.comp.spv", "gammaCorrectionComputeShader");
 		s_pOutlineComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineComposite.comp.spv", "outlineComputeShader");
-		// Meshes:
-		s_pDefaultRenderQuad = std::make_unique<Mesh>(CreateDefaultRenderQuad());
 	}
 	void DefaultGpuResources::Clear()
 	{
@@ -111,8 +106,6 @@ namespace vulkanRendererBackend
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader.reset();
 		s_pOutlineComputeShader.reset();
-		// Meshes:
-		s_pDefaultRenderQuad.reset();
 		// Buffers:
 		s_pDefaultStorageBuffer.reset();
 		// Textures:
@@ -212,11 +205,6 @@ namespace vulkanRendererBackend
 	{
 		return s_pOutlineComputeShader.get();
 	}
-	// Meshes:
-	Mesh* DefaultGpuResources::GetDefaultRenderQuad()
-	{
-		return s_pDefaultRenderQuad.get();
-	}
 	// Buffers:
 	StorageBuffer* DefaultGpuResources::GetDefaultStorageBuffer()
 	{
@@ -249,50 +237,5 @@ namespace vulkanRendererBackend
 	StorageTexture3d* DefaultGpuResources::GetDefaultStorageTexture3d()
 	{
 		return s_pDefaultStorageTexture3d.get();
-	}
-
-
-
-	// Private methods:
-	Mesh DefaultGpuResources::CreateDefaultRenderQuad()
-	{
-		std::vector<Float3> positions;
-		positions.emplace_back(-1.0f, -1.0f, 0.0f);
-		positions.emplace_back(-1.0f, 1.0f, 0.0f);
-		positions.emplace_back(1.0f, -1.0f, 0.0f);
-		positions.emplace_back(1.0f, 1.0f, 0.0f);
-
-		std::vector<Float3> normals;
-		normals.emplace_back(0.0f, 0.0f, 1.0f);
-		normals.emplace_back(0.0f, 0.0f, 1.0f);
-		normals.emplace_back(0.0f, 0.0f, 1.0f);
-		normals.emplace_back(0.0f, 0.0f, 1.0f);
-
-		std::vector<Float3> tangents;
-		tangents.emplace_back(1.0f, 0.0f, 0.0f);
-		tangents.emplace_back(1.0f, 0.0f, 0.0f);
-		tangents.emplace_back(1.0f, 0.0f, 0.0f);
-		tangents.emplace_back(1.0f, 0.0f, 0.0f);
-
-		std::vector<Float4> colors;
-		colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
-		colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
-		colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
-		colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
-
-		std::vector<Float4> uvs;
-		uvs.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
-		uvs.emplace_back(0.0f, 1.0f, 0.0f, 0.0f);
-		uvs.emplace_back(1.0f, 0.0f, 0.0f, 0.0f);
-		uvs.emplace_back(1.0f, 1.0f, 0.0f, 0.0f);
-
-		std::vector<Uint3> triangles;
-		triangles.emplace_back(Uint3(0, 2, 1));
-		triangles.emplace_back(Uint3(1, 2, 3));
-
-		Mesh mesh;
-		mesh.UpdateVertexBuffer(positions, &normals, &tangents, &colors, &uvs, emberCommon::VertexMemoryLayout::interleaved);
-		mesh.UpdateIndexBuffer(triangles, 4);
-		return mesh;
 	}
 }

@@ -349,13 +349,6 @@ namespace vulkanRendererBackend
 
 		// Prepare pipeline data:
 		materialShader.CreateDescriptorSetLayout();
-		const std::vector<emberSpirvReflect::VertexAttributeInfo>& vertexAttributeInfos = materialShader.m_shaderReflection.GetVertexStageInfo()->vertexAttributes;
-		std::vector<VkVertexInputBindingDescription> vertexBindingsInterleaved = GetVertexBindingDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
-		std::vector<VkVertexInputBindingDescription> vertexBindingsSeparate = GetVertexBindingDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
-		std::vector<VkVertexInputAttributeDescription> vertexAttributesInterleaved = GetVertexAttributeDescriptions<InterleavedVertexLayout>(vertexAttributeInfos);
-		std::vector<VkVertexInputAttributeDescription> vertexAttributesSeparate = GetVertexAttributeDescriptions<SeparateVertexLayout>(vertexAttributeInfos);
-		std::array<std::vector<VkVertexInputBindingDescription>*, 2> vertexBindingVectors = { &vertexBindingsInterleaved , &vertexBindingsSeparate };
-		std::array<std::vector<VkVertexInputAttributeDescription>*, 2> vertexAttributeVectors = { &vertexAttributesInterleaved , &vertexAttributesSeparate };
 
 		// Push constants layout:
 		VkPushConstantRange pushConstantRange = {};
@@ -372,21 +365,15 @@ namespace vulkanRendererBackend
 		VKA(vkCreatePipelineLayout(Context::GetVkDevice(), &pipelineLayoutCreateInfo, nullptr, &materialShader.m_vkPipelineLayout));
 		NAME_VK_OBJECT(materialShader.m_vkPipelineLayout, "PipelineLayout_Present_" + debugName);
 
-		// Create pipelines:
-		materialShader.m_pipelines.reserve(static_cast<size_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount));
-		for (uint32_t i = 0; i < static_cast<uint32_t>(emberCommon::VertexMemoryLayout::vertexMemoryLayoutCount); i++)
-		{
-			PipelineKey pipelineKey = PipelineKey::Create<RenderStage::present>(static_cast<emberCommon::VertexMemoryLayout>(i));
-			materialShader.m_pipelines.emplace(
-				pipelineKey,
-				std::make_unique<PresentPipeline>(
-					materialShader.m_vkPipelineLayout,
-					vertexCode,
-					fragmentCode,
-					*vertexBindingVectors[i],
-					*vertexAttributeVectors[i],
-					debugName));
-		}
+		// Create pipeline:
+		PipelineKey pipelineKey = PipelineKey::CreateFullscreen<RenderStage::present>();
+		materialShader.m_pipelines.emplace(
+			pipelineKey,
+			std::make_unique<PresentPipeline>(
+				materialShader.m_vkPipelineLayout,
+				vertexCode,
+				fragmentCode,
+				debugName));
 
 		return materialShader;
 	}

@@ -144,7 +144,7 @@ namespace vulkanRendererBackend
 	{
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = false;
-		static constexpr bool hasFullscreenPipeline = false;
+		static constexpr bool hasFullscreenPipeline = true;
 		using RenderMode = void;
 		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::present;
 

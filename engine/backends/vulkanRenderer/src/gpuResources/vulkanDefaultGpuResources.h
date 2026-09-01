@@ -17,7 +17,6 @@ namespace vulkanRendererBackend
     class ComputeShader;
     class DepthTexture2dArray;
     class Material;
-    class Mesh;
     class Sampler;
     class SampleTextureCube;
     class SampleTexture2d;
@@ -45,8 +44,6 @@ namespace vulkanRendererBackend
         // Compute shaders:
         static std::unique_ptr<ComputeShader> s_pGammaCorrectionComputeShader;
         static std::unique_ptr<ComputeShader> s_pOutlineComputeShader;
-        // Meshes:
-        static std::unique_ptr<Mesh> s_pDefaultRenderQuad;
         // Buffers:
         static std::unique_ptr<StorageBuffer> s_pDefaultStorageBuffer;
         // Textures:
@@ -83,8 +80,6 @@ namespace vulkanRendererBackend
         // Compute shaders:
         static ComputeShader* GetGammaCorrectionComputeShader();
         static ComputeShader* GetOutlineComputeShader();
-        // Meshes:
-        static Mesh* GetDefaultRenderQuad();
         // Buffers:
         static StorageBuffer* GetDefaultStorageBuffer();
         static SampleTexture2d* GetDefaultSampleTexture2d();
@@ -96,7 +91,6 @@ namespace vulkanRendererBackend
         static StorageTexture3d* GetDefaultStorageTexture3d();
 
     private: // Methods
-        static Mesh CreateDefaultRenderQuad();
         // Delete all constructors:
         DefaultGpuResources() = delete;
         DefaultGpuResources(const DefaultGpuResources&) = delete;
