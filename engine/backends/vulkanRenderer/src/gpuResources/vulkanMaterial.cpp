@@ -66,6 +66,15 @@ namespace vulkanRendererBackend
 		material.m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(*sourceMaterial.m_pGizmoRenderState);
 		return material;
 	}
+	Material Material::CloneGizmoWithDefaultBindings(const Material& sourceMaterial, const std::string& debugName)
+	{
+		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::gizmo)
+			throw std::runtime_error("Material::CloneGizmoWithDefaultBindings(...) failed. Source material is not a gizmo material.");
+
+		Material material(sourceMaterial.GetMaterialShader(), debugName);
+		material.m_pGizmoRenderState = std::make_unique<emberCommon::GizmoRenderState>(*sourceMaterial.m_pGizmoRenderState);
+		return material;
+	}
 	Material Material::CloneOutline(const Material& sourceMaterial, const std::string& debugName)
 	{
 		if (sourceMaterial.GetMaterialPass() != emberCommon::MaterialPass::outline)

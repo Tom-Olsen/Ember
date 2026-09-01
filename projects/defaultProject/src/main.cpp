@@ -8,7 +8,6 @@
 #include "pointLightScene.h"
 #include "shadowCascadeScene.h"
 #include "singleQuadScene.h"
-#include "testScene.h"
 using namespace emberCore;
 using namespace emberEcs;
 
@@ -46,7 +45,6 @@ int main()
 			//std::unique_ptr<Scene> pScene(PointLightScene());
 			//std::unique_ptr<Scene> pScene(ShadowCascadeScene());
 			//std::unique_ptr<Scene> pScene(SingleQuadScene());
-			//std::unique_ptr<Scene> pScene(TestScene());
 			emberApplication::Application::SetScene(pScene.get());
 
 			// Run app:

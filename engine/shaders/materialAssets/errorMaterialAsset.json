@@ -1,0 +1,11 @@
+{
+	"materialName": "errorMaterial",
+	"materialShaderName": "errorShader",
+	"materialPass": "forward",
+	"renderMode": "opaque",
+	"shaderStages":
+	{
+		"vertex": "../bin/error.vert.spv",
+		"fragment": "../bin/error.frag.spv"
+	}
+}

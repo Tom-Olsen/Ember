@@ -197,7 +197,7 @@ namespace fluidDynamics
 		{
 			Float4x4 attractorLocalToWorld = localToWorld * Float4x4::Translate(m_attractor.point);
 			ShaderProperties shaderProperties = Renderer::DrawMesh(attractorLocalToWorld, m_attractorSphereMesh, MaterialManager::TryGetMaterial("transparentMaterial"), false, false);
-			shaderProperties.SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
+			shaderProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
 		}
 		if (m_renderParticles || m_renderVolumetricDensity)
 		{

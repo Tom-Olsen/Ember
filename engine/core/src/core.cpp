@@ -2,7 +2,6 @@
 #include "bufferManager.h"
 #include "compute.h"
 #include "computeShaderManager.h"
-#include "debugRenderer.h"
 #include "editor.h"
 #include "emberMath.h"
 #include "eventSystem.h"
@@ -48,7 +47,6 @@ namespace emberCore
 		BufferManager::Init();
 		TextureManager::Init();
 		MeshManager::Init();
-		DebugRenderer::Init();
 		Gizmo::Init();
 	}
 	void Core::InitOther()
@@ -79,7 +77,6 @@ namespace emberCore
 	void Core::ClearManagers()
 	{
 		Gizmo::Clear();
-		DebugRenderer::Clear();
 		MeshManager::Clear();
 		TextureManager::Clear();
 		BufferManager::Clear();

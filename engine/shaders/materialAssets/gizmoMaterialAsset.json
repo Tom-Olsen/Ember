@@ -1,0 +1,11 @@
+{
+	"materialName": "gizmoMaterial",
+	"materialShaderName": "gizmoShader",
+	"materialPass": "gizmo",
+	"renderMode": "opaque",
+	"shaderStages":
+	{
+		"vertex": "../bin/gizmo.vert.spv",
+		"fragment": "../bin/gizmo.frag.spv"
+	}
+}

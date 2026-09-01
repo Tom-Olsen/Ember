@@ -92,8 +92,8 @@ Scene* Fluid3dScene()
 		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
 		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
 		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("ground0_normal"));
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(10, 10, 0, 0));
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 10, 0, 0));
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "surface_roughness", 1.0f);
 	}
 	{// Directional Light:
 		Entity entity = Entity::Create("directionalLight");

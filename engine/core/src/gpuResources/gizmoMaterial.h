@@ -38,6 +38,8 @@ namespace emberCore
 		static GizmoMaterial CreateFromShader(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
 		GizmoMaterial Clone(const std::string& name) const;
 		GizmoMaterial Clone(const std::string& name, emberCommon::GizmoRenderMode renderMode) const;
+		GizmoMaterial CloneWithDefaultBindings(const std::string& name) const;
+		GizmoMaterial CloneWithDefaultBindings(const std::string& name, emberCommon::GizmoRenderMode renderMode) const;
 
 		// Getters:
 		emberCommon::GizmoRenderMode GetRenderMode() const;

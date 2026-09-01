@@ -4,10 +4,7 @@
 #include "eventSystem.h"
 #include "gizmo.h"
 #include "handleContext.h"
-#include "material.h"
-#include "materialManager.h"
 #include "meshGenerator.h"
-#include "shaderProperties.h"
 #include "transform.h"
 #include "transformHandle.h"
 
@@ -113,23 +110,22 @@ namespace emberEditor
 		Float4x4 localToWorldMatrix = LocalToWorldMatrix();
 
         // Draw central sphere:
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoUnlitMaterial"));
+		emberCore::Gizmo::SetIsOpaque(true);
+		emberCore::Gizmo::SetIsLit(false);
+		emberCore::Gizmo::SetCullMode(emberCommon::CullMode::back);
 		emberCore::Gizmo::SetColor(TransformHandle::GetColorCenter());
         emberCore::Gizmo::DrawSphere(localToWorldMatrix * Float4x4::Scale(0.15f));
 
 		// Draw arcs:
-		emberCore::GizmoMaterial arcMaterial = emberCore::MaterialManager::TryGetGizmoMaterial("gizmoUnlitMaterial");
-		emberCommon::CullMode originalCullMode = arcMaterial.GetCullMode();
-		arcMaterial.SetCullMode(emberCommon::CullMode::none);
-		emberCore::Gizmo::SetMaterial(arcMaterial);
+		emberCore::Gizmo::SetIsOpaque(true);
+		emberCore::Gizmo::SetIsLit(false);
+		emberCore::Gizmo::SetCullMode(emberCommon::CullMode::none);
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisX));
         emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisX, m_octantIndex) * TransformHandle::GetRotationX());
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisY));
         emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisY, m_octantIndex) * TransformHandle::GetRotationY());
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisZ));
         emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisZ, m_octantIndex) * TransformHandle::GetRotationZ());
-		arcMaterial.SetCullMode(originalCullMode);
-        emberCore::Gizmo::ResetMaterial();
     }
 
 

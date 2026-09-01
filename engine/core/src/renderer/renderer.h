@@ -13,6 +13,14 @@
 
 
 
+// Forward declarations:
+namespace emberCommon
+{
+	enum class CullMode;
+}
+
+
+
 // Forward decleration:
 namespace emberBackendInterface
 {
@@ -73,18 +81,26 @@ namespace emberCore
 		// Draw mesh:
 		static void DrawOutline(const Float4x4& localToWorldMatrix, const Mesh& mesh);
 		static void DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
 		static ShaderProperties DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
 		static void DrawMeshShadow(const Float4x4& localToWorldMatrix, const Mesh& mesh, const ShadowMaterial& material, ShaderProperties& shaderProperties);
 		static ShaderProperties DrawMeshShadow(const Float4x4& localToWorldMatrix, const Mesh& mesh, const ShadowMaterial& material);
 		static void DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties);
+		static void DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, emberCommon::CullMode cullMode);
 		static ShaderProperties DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material);
+		static ShaderProperties DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode);
 
 		// Draw instanced:
 		static void DrawOutlineInstanced(const Float4x4& localToWorldMatrix, const Mesh& mesh, uint32_t instanceCount);
 		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
 		static ShaderProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
 		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
 		static ShaderProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, bool receiveShadows = true, bool castShadows = true);
+		static ShaderProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
 		static void DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const ShadowMaterial& material, ShaderProperties& shaderProperties);
 		static ShaderProperties DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const ShadowMaterial& material);
 		static void DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const ShadowMaterial& material, ShaderProperties& shaderProperties);

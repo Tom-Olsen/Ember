@@ -98,7 +98,9 @@ namespace emberEditor
 		Float4x4 localToWorldMatrix = LocalToWorldMatrix();
 
 		// Draw axis zylinders:
-		emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoLitMaterial"));
+		emberCore::Gizmo::SetIsOpaque(true);
+		emberCore::Gizmo::SetIsLit(true);
+		emberCore::Gizmo::SetCullMode(emberCommon::CullMode::back);
 		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisX));
 		emberCore::Gizmo::DrawMesh(m_zylinderMesh, localToWorldMatrix * TransformHandle::GetRotationX() * AxisLengthMatrix(ScaleHandle::SubHandle::axisX));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisY));
@@ -108,6 +110,9 @@ namespace emberEditor
 
 		// Draw handle cubes:
         float axisLength = s_axisLength - s_cubeWidth;
+		emberCore::Gizmo::SetIsOpaque(true);
+		emberCore::Gizmo::SetIsLit(true);
+		emberCore::Gizmo::SetCullMode(emberCommon::CullMode::back);
 		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisX));
 		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * TransformHandle::GetRotationX() * Float4x4::Translate(AxisLengthFactor(ScaleHandle::SubHandle::axisX) * axisLength * Float3::up));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisY));
@@ -116,10 +121,11 @@ namespace emberEditor
 		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix * TransformHandle::GetRotationZ() * Float4x4::Translate(AxisLengthFactor(ScaleHandle::SubHandle::axisZ) * axisLength * Float3::up));
 		emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::center));
 		emberCore::Gizmo::DrawMesh(m_cubeMesh, localToWorldMatrix);
-		emberCore::Gizmo::ResetMaterial();
 
 		// Visualize scale interaction regions:
-		//emberCore::Gizmo::SetMaterial(emberCore::MaterialManager::TryGetMaterial("gizmoLitMaterial"));
+		//emberCore::Gizmo::SetIsTransparent(true);
+		//emberCore::Gizmo::SetIsLit(false);
+		//emberCore::Gizmo::SetCullMode(emberCommon::CullMode::back);
 		//emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::axisX) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * TransformHandle::GetRotationX());
 		//emberCore::Gizmo::DrawMesh(m_sphereMesh, localToWorldMatrix * TransformHandle::GetRotationX() * cubeTranslation);

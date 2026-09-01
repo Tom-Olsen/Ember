@@ -1,0 +1,11 @@
+{
+	"materialName": "testMaterial",
+	"materialShaderName": "testShader",
+	"materialPass": "forward",
+	"renderMode": "opaque",
+	"shaderStages":
+	{
+		"vertex": "../bin/test.vert.spv",
+		"fragment": "../bin/test.frag.spv"
+	}
+}

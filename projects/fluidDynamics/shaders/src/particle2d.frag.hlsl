@@ -5,7 +5,7 @@
 
 cbuffer SurfaceProperties : register(b300, CALL_SET)
 {
-    float4 diffuseColor;    // (1.0, 1.0, 1.0)
+    float4 surface_diffuseColor;    // (1.0, 1.0, 1.0)
 };
 
 
@@ -27,7 +27,7 @@ float4 main(FragmentInput input) : SV_TARGET
     float r = length(2 * uv - float2(1, 1));
     float alpha = (1 - r);
     
-    float4 color = input.vertexColor * diffuseColor;
+    float4 color = input.vertexColor * surface_diffuseColor;
     color.a = alpha;
     
     return color;

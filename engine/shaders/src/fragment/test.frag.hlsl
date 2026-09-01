@@ -13,11 +13,11 @@ Texture2D<float> ambientOcclusionMap : register(t104, SHADER_SET);     // format
 
 cbuffer SurfaceProperties : register(b300, CALL_SET)
 {
-    float4 diffuseColor;
-    float4 scaleOffset;
-    float roughness;
-    float metallicity;
-    float ambientOcclusion;
+    float4 surface_diffuseColor;
+    float4 surface_scaleOffset;
+    float surface_roughness;
+    float surface_metallicity;
+    float surface_ambientOcclusion;
 };
 
 
@@ -37,18 +37,18 @@ struct FragmentInput
 float4 main(FragmentInput input) : SV_TARGET
 {
     // Mesh data:
-    float2 uv = input.uv.xy * scaleOffset.xy + scaleOffset.zw;
+    float2 uv = input.uv.xy * surface_scaleOffset.xy + surface_scaleOffset.zw;
     float3 tangentSpaceNormal = normalize(input.worldNormal);
     float3 tangentSpaceTangent = normalize(LinAlg_VectorToPlaneProjection(input.worldTangent, tangentSpaceNormal));
     float3 tangentSpaceBitangent = cross(tangentSpaceNormal, tangentSpaceTangent);
     float3x3 tangentToWorldMatrix = transpose(float3x3(tangentSpaceTangent, tangentSpaceBitangent, tangentSpaceNormal));
 
     // Surface properties:
-    float4 albedo = input.vertexColor * diffuseColor * colorMap.Sample(colorSampler, uv);
+    float4 albedo = input.vertexColor * surface_diffuseColor * colorMap.Sample(colorSampler, uv);
     float3 localNormal = 2.0f * normalMap.Sample(colorSampler, uv).xyz - 1.0f;
     float3 worldNormal = normalize(mul(tangentToWorldMatrix, localNormal));
-    float finalMetallicity = saturate(metallicity * metallicityMap.Sample(colorSampler, uv));
-    float finalRoughness = saturate(roughness * roughnessMap.Sample(colorSampler, uv));
+    float finalMetallicity = saturate(surface_metallicity * metallicityMap.Sample(colorSampler, uv));
+    float finalRoughness = saturate(surface_roughness * roughnessMap.Sample(colorSampler, uv));
 
     // Lighting:
     float3 finalColor = PhysicalLighting(input.worldPosition, worldNormal, albedo.rgb, finalRoughness, finalMetallicity, pc.receiveShadows != 0);

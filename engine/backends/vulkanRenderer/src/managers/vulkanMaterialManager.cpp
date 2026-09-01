@@ -28,14 +28,14 @@ namespace vulkanRendererBackend
 		const std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
 		emberCommon::MaterialShaderId outlineShaderId = m_pMaterialShaderManager->CreateOutlineMaterialShader(directoryPath / "outline.vert.spv", directoryPath / "outline.frag.spv", "outlineShader");
 		emberCommon::MaterialShaderId shadowShaderId = m_pMaterialShaderManager->CreateShadowMaterialShader(directoryPath / "shadow.vert.spv", "shadowShader");
-		emberCommon::MaterialShaderId deferredLightingShaderId = m_pMaterialShaderManager->CreateDeferredLightingMaterialShader(directoryPath / "deferredLighting.vert.spv", directoryPath / "deferredLighting.frag.spv", "deferredLightingShader");
+		emberCommon::MaterialShaderId deferredLightingShaderId = m_pMaterialShaderManager->CreateDeferredLightingMaterialShader(directoryPath / "pbrDeferredLighting.vert.spv", directoryPath / "pbrDeferredLighting.frag.spv", "pbrDeferredLightingShader");
 		emberCommon::MaterialShaderId presentShaderId = m_pMaterialShaderManager->CreatePresentMaterialShader(directoryPath / "present.vert.spv", directoryPath / "present.frag.spv", "presentShader");
 
 		// Create default materials:
 		emberCommon::MaterialId outlineMaterialId = CreateOutlineMaterial(outlineShaderId, "outlineMaterial");
 		m_defaultShadowMaterialId = CreateShadowMaterial(shadowShaderId, "defaultShadowMaterial");
 		SetAccessRights(m_defaultShadowMaterialId, true, false, true);
-		emberCommon::MaterialId deferredLightingMaterialId = CreateDeferredLightingMaterial(deferredLightingShaderId, "deferredLightingMaterial");
+		emberCommon::MaterialId deferredLightingMaterialId = CreateDeferredLightingMaterial(deferredLightingShaderId, "pbrDeferredLightingMaterial");
 		emberCommon::MaterialId presentMaterialId = CreatePresentMaterial(presentShaderId, "presentMaterial");
 		DefaultGpuResources::SetDefaultMaterials(
 			TryGetMaterial(outlineMaterialId),
@@ -176,6 +176,31 @@ namespace vulkanRendererBackend
 	emberCommon::MaterialId MaterialManager::CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name)
 	{
 		emberCommon::MaterialId materialId = CloneGizmoMaterial(sourceMaterialId, name);
+		if (Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId)))
+			pMaterial->SetGizmoRenderMode(renderMode);
+		return materialId;
+	}
+	emberCommon::MaterialId MaterialManager::CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name)
+	{
+		Material* pSourceMaterial = static_cast<Material*>(TryGetMaterial(sourceMaterialId));
+		if (pSourceMaterial == nullptr)
+			throw std::runtime_error("MaterialManager::CloneGizmoMaterialWithDefaultBindings(...) failed. Source material is invalid or expired.");
+		if (pSourceMaterial->GetMaterialPass() != emberCommon::MaterialPass::gizmo)
+			throw std::runtime_error("MaterialManager::CloneGizmoMaterialWithDefaultBindings(...) failed. Source material is not a gizmo material.");
+		if (TryGetMaterial(FindMaterialId(name)) != nullptr)
+		{
+			LOG_WARN("Material '{}' already exists, returning invalid handle.", name);
+			return emberCommon::invalidMaterialId;
+		}
+
+		const emberCommon::MaterialShaderId* pMaterialShaderId = TryGetMaterialShaderId(sourceMaterialId);
+		if (pMaterialShaderId == nullptr)
+			throw std::runtime_error("MaterialManager::CloneGizmoMaterialWithDefaultBindings(...) failed. Source material shader is invalid.");
+		return AddMaterial(name, true, true, true, *pMaterialShaderId, std::make_unique<Material>(Material::CloneGizmoWithDefaultBindings(*pSourceMaterial, name)));
+	}
+	emberCommon::MaterialId MaterialManager::CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name)
+	{
+		emberCommon::MaterialId materialId = CloneGizmoMaterialWithDefaultBindings(sourceMaterialId, name);
 		if (Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId)))
 			pMaterial->SetGizmoRenderMode(renderMode);
 		return materialId;

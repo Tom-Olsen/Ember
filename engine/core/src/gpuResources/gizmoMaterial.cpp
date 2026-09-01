@@ -35,6 +35,14 @@ namespace emberCore
 	{
 		return MaterialManager::CloneGizmoMaterial(*this, renderMode, name);
 	}
+	GizmoMaterial GizmoMaterial::CloneWithDefaultBindings(const std::string& name) const
+	{
+		return MaterialManager::CloneGizmoMaterialWithDefaultBindings(*this, name);
+	}
+	GizmoMaterial GizmoMaterial::CloneWithDefaultBindings(const std::string& name, emberCommon::GizmoRenderMode renderMode) const
+	{
+		return MaterialManager::CloneGizmoMaterialWithDefaultBindings(*this, renderMode, name);
+	}
 
 
 

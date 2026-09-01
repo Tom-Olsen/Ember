@@ -8,6 +8,14 @@
 
 
 
+// Forward declarations:
+namespace emberCommon
+{
+	enum class CullMode;
+}
+
+
+
 namespace emberBackendInterface
 {
     // Forward declarations:
@@ -39,12 +47,12 @@ namespace emberBackendInterface
 
         // Draw mesh:
         virtual void DrawOutline(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, uint32_t instanceCount) = 0;
-        virtual void DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, bool receiveShadows, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, bool receiveShadows, uint32_t instanceCount) = 0;
+        virtual void DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawMesh(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount) = 0;
         virtual void DrawMeshShadow(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, IDescriptorSetBinding* pICallDescriptorSetBinding, uint32_t instanceCount) = 0;
         virtual IDescriptorSetBinding* DrawMeshShadow(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pMaterial, uint32_t instanceCount) = 0;
-        virtual void DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, uint32_t instanceCount) = 0;
-        virtual IDescriptorSetBinding* DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, uint32_t instanceCount) = 0;
+        virtual void DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, IDescriptorSetBinding* pCallDescriptorSetBinding, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
+        virtual IDescriptorSetBinding* DrawGizmo(const Float4x4& localToWorldMatrix, IMesh* pIMesh, IMaterial* pIMaterial, emberCommon::CullMode cullMode, uint32_t instanceCount) = 0;
 
         // Getters:
         virtual bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const = 0;

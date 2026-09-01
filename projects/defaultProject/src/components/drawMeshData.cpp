@@ -54,13 +54,13 @@ namespace emberEngine
 
 			// Draw calls:
 			m_shaderProperties[0] = Renderer::DrawMesh(Float4x4::TRS(worldPosition, Float3x3::identity, Float3(0.1f)), *m_pSphereMesh, m_material, receiveShadows, castShadows);
-			m_shaderProperties[0].SetValue("SurfaceProperties", "diffuseColor", Float4(0.66f, 0.33f, 0.0f, 1.0f));
+			m_shaderProperties[0].SetValue("SurfaceProperties", "surface_diffuseColor", Float4(0.66f, 0.33f, 0.0f, 1.0f));
 
 			m_shaderProperties[1] = Renderer::DrawMesh(Float4x4::TRS(worldPosition, Float3x3::RotateFromTo(Float3::forward, worldNormal), Float3(0.1f)), *m_pArrowMesh, m_material, receiveShadows, castShadows);
-			m_shaderProperties[1].SetValue("SurfaceProperties", "diffuseColor", Float4(0.0f, 0.0f, 1.0f, 1.0f));
+			m_shaderProperties[1].SetValue("SurfaceProperties", "surface_diffuseColor", Float4(0.0f, 0.0f, 1.0f, 1.0f));
 
 			m_shaderProperties[2] = Renderer::DrawMesh(Float4x4::TRS(worldPosition, Float3x3::RotateFromTo(Float3::forward, worldTangent), Float3(0.1f)), *m_pArrowMesh, m_material, receiveShadows, castShadows);
-			m_shaderProperties[2].SetValue("SurfaceProperties", "diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
+			m_shaderProperties[2].SetValue("SurfaceProperties", "surface_diffuseColor", Float4(1.0f, 0.0f, 0.0f, 1.0f));
 		}
 	}
 }

@@ -1,0 +1,10 @@
+{
+	"materialName": "pbrDeferredGeometryMaterial",
+	"materialShaderName": "pbrDeferredGeometryShader",
+	"materialPass": "deferredGeometry",
+	"shaderStages":
+	{
+		"vertex": "../bin/pbrDeferredGeometry.vert.spv",
+		"fragment": "../bin/pbrDeferredGeometry.frag.spv"
+	}
+}

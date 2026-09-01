@@ -4,13 +4,15 @@
 
 
 
-cbuffer SurfaceProperties : register(b300, CALL_SET)
+cbuffer SurfaceProperties : register(b300, SHADER_SET)
 {
-    float4 diffuseColor;       // (1.0, 1.0, 1.0, 1.0)
-    float4 scaleOffset;        // .xy = scale, .zw = offset
-    float roughness;           // 0.5
-    float metallicity;         // 0 = dielectric, 1 = metal
-    float ambientOcclusion;    // 1 = no occlusion
+	// Defaults are set in vulkanDescriptorSetBinding.cpp
+    float4 surface_diffuseColor;	// (1.0, 1.0, 1.0, 1.0)
+    float4 surface_scaleOffset;		// .xy = 1.0 (scale), .zw = 0.0 (offset)
+	int surface_isLit;				// true
+    float surface_roughness;		// 0.5
+    float surface_metallicity;		// 0.0
+    float surface_ambientOcclusion;	// 1.0
 };
 
 

@@ -104,11 +104,12 @@ namespace vulkanRendererBackend
 			SetTexture("normalMap", static_cast<Texture*>(DefaultGpuResources::GetDefaultNormalMap()));
 		if (HasBinding("SurfaceProperties"))
 		{
-			SetValue("SurfaceProperties", "diffuseColor", Float4::white);
-			SetValue("SurfaceProperties", "ambientOcclusion", 1.0f);
-			SetValue("SurfaceProperties", "roughness", 0.5f);
-			SetValue("SurfaceProperties", "metallicity", 0);
-			SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
+			SetValue("SurfaceProperties", "surface_diffuseColor", Float4::white);
+			SetValue("SurfaceProperties", "surface_scaleOffset", Float4(1, 1, 0, 0));
+			SetValue("SurfaceProperties", "surface_isLit", true);
+			SetValue("SurfaceProperties", "surface_roughness", 0.5f);
+			SetValue("SurfaceProperties", "surface_metallicity", 0);
+			SetValue("SurfaceProperties", "surface_ambientOcclusion", 1.0f);
 		}
 		InitDefaultState();
 	}

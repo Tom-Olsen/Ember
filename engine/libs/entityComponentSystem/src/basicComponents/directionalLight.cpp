@@ -166,14 +166,16 @@ namespace emberEcs
 		// Visualization for debugging:
 		if (m_drawFrustum)
 		{
-			Material vertexUnlit = MaterialManager::TryGetMaterial("vertexColorUnlitMaterial");
 			Mesh& fourLeg = MeshManager::GetMesh("fourLeg");
-
 			Float4 colors[4] = { Float4::red, Float4::green, Float4::blue, Float4::yellow };
 			for (int i = 0; i < (int)m_shadowCascadeCount; i++)
 			{
 				Float4x4 localToWorldMatrix = m_shadowCascades[i]->GetViewMatrix().Inverse();
-				Renderer::DrawMesh(localToWorldMatrix, fourLeg, vertexUnlit, false, false);
+            	Gizmo::SetIsOpaque(true);
+            	Gizmo::SetIsLit(false);
+            	Gizmo::SetCullMode(emberCommon::CullMode::back);
+            	Gizmo::SetColor(Float4::white);
+				Gizmo::DrawMesh(fourLeg, localToWorldMatrix);
 				Gizmo::SetColor(colors[i]);
 				Gizmo::DrawFrustum(localToWorldMatrix, m_shadowCascades[i]->GetProjectionMatrix());
 			}

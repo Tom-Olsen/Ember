@@ -15,11 +15,11 @@ cbuffer Values : register(b300, SHADER_SET)
 
 cbuffer SurfaceProperties : register(b300, CALL_SET)
 {
-    float4 diffuseColor;    // (1.0, 1.0, 1.0)
-    float4 scaleOffset;     // .xy = scale, .zw = offset
-    float roughness;        // 0.5
-    float metallicity;      // 0 = dielectric, 1 = metal
-    float ambientOcclusion; // 1 = no occlusion
+    float4 surface_diffuseColor;    // (1.0, 1.0, 1.0)
+    float4 surface_scaleOffset;     // .xy = scale, .zw = offset
+    float surface_roughness;        // 0.5
+    float surface_metallicity;      // 0 = dielectric, 1 = metal
+    float surface_ambientOcclusion; // 1 = no occlusion
 };
 
 
@@ -60,10 +60,10 @@ FragmentOutput main(FragmentInput input)
     float4 clipPosition = mul(camera_worldToClipMatrix, float4(worldPosition, 1.0f));
 
     // Shading:
-    float4 color = input.vertexColor * diffuseColor;
+    float4 color = input.vertexColor * surface_diffuseColor;
     
     // Lighting:
-    float3 finalColor = PhysicalLighting(worldPosition, worldNormal, color.xyz, roughness, metallicity, pc.receiveShadows != 0);
+    float3 finalColor = PhysicalLighting(worldPosition, worldNormal, color.xyz, surface_roughness, surface_metallicity, pc.receiveShadows != 0);
     
     FragmentOutput output;
     output.color = float4(finalColor, 1.0f);

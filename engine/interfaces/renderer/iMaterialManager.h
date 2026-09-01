@@ -28,6 +28,8 @@ namespace emberBackendInterface
 		// Cloners:
 		virtual emberCommon::MaterialId CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) = 0;
 		virtual emberCommon::MaterialId CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name) = 0;
+		virtual emberCommon::MaterialId CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name) = 0;
+		virtual emberCommon::MaterialId CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name) = 0;
 		virtual emberCommon::MaterialId CloneShadowMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) = 0;
 		virtual emberCommon::MaterialId CloneDeferredGeometryMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) = 0;
 		virtual emberCommon::MaterialId CloneDeferredGeometryMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name) = 0;

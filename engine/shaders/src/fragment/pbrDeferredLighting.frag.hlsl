@@ -51,9 +51,14 @@ float4 main(FragmentInput input) : SV_TARGET
     float roughness = materialData[DEFERRED_MATERIAL_ROUGHNESS_CHANNEL];
     uint flagBitMask = uint(round(materialData[DEFERRED_MATERIAL_FLAG_BIT_MASK_CHANNEL] * DEFERRED_MATERIAL_FLAG_BIT_MASK_MAX));
     bool receiveShadows = (flagBitMask & DEFERRED_MATERIAL_FLAG_RECEIVE_SHADOWS) != 0;
-
-	// Lighting:
-	float3 worldPosition = ReconstructWorldPosition(pixelPosition, depth);
-    float3 lighting = PhysicalLighting(worldPosition, worldNormal, albedo, roughness, metallicity, receiveShadows);
-    return float4(lighting, 1.0f);
+	bool lit = (flagBitMask & DEFERRED_MATERIAL_FLAG_LIT) != 0;
+	if (lit)
+	{
+		// Lighting:
+		float3 worldPosition = ReconstructWorldPosition(pixelPosition, depth);
+    	float3 lighting = PhysicalLighting(worldPosition, worldNormal, albedo, roughness, metallicity, receiveShadows);
+    	return float4(lighting, 1.0f);
+	}
+	else
+		return float4(albedo, 1.0f);
 }

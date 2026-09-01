@@ -19,6 +19,26 @@ inline Scene* PointLightScene()
 	Scene* pScene = new Scene();
 	pScene->SetIsEnabled(true);
 
+	// Materials:
+	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
+	DeferredMaterial lightSourceMaterial = pbrMaterial.CloneWithDefaultBindings("pointLightMaterial");
+	lightSourceMaterial.SetValue("SurfaceProperties", "surface_isLit", false);
+	lightSourceMaterial.SetValue("SurfaceProperties", "surface_diffuseColor", Float4::white);
+	DeferredMaterial roomMaterial = pbrMaterial.CloneWithDefaultBindings("roomMaterial");
+	roomMaterial.SetTexture("colorMap", TextureManager::GetTexture("bricks1_color"));
+	roomMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("bricks1_roughness"));
+	roomMaterial.SetTexture("normalMap", TextureManager::GetTexture("bricks1_normal"));
+	roomMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+	roomMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(1.0, 1.0, 0, 0));
+	DeferredMaterial frameMaterial = pbrMaterial.CloneWithDefaultBindings("frameMaterial");
+	frameMaterial.SetTexture("colorMap", TextureManager::GetTexture("metal0_color"));
+	frameMaterial.SetTexture("normalMap", TextureManager::GetTexture("metal0_normal"));
+	frameMaterial.SetTexture("metallicMap", TextureManager::GetTexture("metal0_metallic"));
+	frameMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("metal0_roughness"));
+	frameMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+	frameMaterial.SetValue("SurfaceProperties", "surface_metallicity", 1.0f);
+	frameMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(0.25, 1, 0, 0));
+
 	{// Camera:
 		Entity entity = Entity::Create("mainCamera");
 		Float3 pos = Float3(9.0f, -9.0f, 9.0f);
@@ -44,8 +64,7 @@ inline Scene* PointLightScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cubeSphere"));
-		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("simpleUnlitMaterial"));
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "diffuseColor", Float4::white);
+		pMeshRenderer->SetMaterial(lightSourceMaterial);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -67,12 +86,7 @@ inline Scene* PointLightScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("unitCubeInverse"));
-		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("bricks1_color"));
-		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("bricks1_roughness"));
-		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("bricks1_normal"));
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(1.0, 1.0, 0, 0));
+		pMeshRenderer->SetMaterial(roomMaterial);
 	}
 	{// Frame:
 		Entity entity = Entity::Create("frame");
@@ -83,14 +97,7 @@ inline Scene* PointLightScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("frame"));
-		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("metal0_color"));
-		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("metal0_normal"));
-		pMeshRenderer->GetShaderProperties().SetTexture("metallicMap", TextureManager::GetTexture("metal0_metallic"));
-		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("metal0_roughness"));
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "metallicity", 1.0f);
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(0.25, 1, 0, 0));
+		pMeshRenderer->SetMaterial(frameMaterial);
 
 		entity.AddComponent<SpinLocal>(45.0f);
 	}

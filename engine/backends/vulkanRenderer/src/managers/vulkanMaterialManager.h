@@ -61,6 +61,8 @@ namespace vulkanRendererBackend
 		// Cloners:
 		emberCommon::MaterialId CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
 		emberCommon::MaterialId CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name) override;
+		emberCommon::MaterialId CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
+		emberCommon::MaterialId CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name) override;
 		emberCommon::MaterialId CloneOutlineMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name);
 		emberCommon::MaterialId CloneShadowMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
 		emberCommon::MaterialId CloneDeferredGeometryMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;

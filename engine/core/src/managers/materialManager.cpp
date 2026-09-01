@@ -107,6 +107,16 @@ namespace emberCore
 		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneGizmoMaterial(sourceMaterial.m_materialId, renderMode, name);
 		return materialId.index == emberCommon::invalidMaterialId.index ? GizmoMaterial() : GizmoMaterial{ materialId };
 	}
+	GizmoMaterial MaterialManager::CloneGizmoMaterialWithDefaultBindings(const GizmoMaterial& sourceMaterial, const std::string& name)
+	{
+		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneGizmoMaterialWithDefaultBindings(sourceMaterial.m_materialId, name);
+		return materialId.index == emberCommon::invalidMaterialId.index ? GizmoMaterial() : GizmoMaterial{ materialId };
+	}
+	GizmoMaterial MaterialManager::CloneGizmoMaterialWithDefaultBindings(const GizmoMaterial& sourceMaterial, emberCommon::GizmoRenderMode renderMode, const std::string& name)
+	{
+		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneGizmoMaterialWithDefaultBindings(sourceMaterial.m_materialId, renderMode, name);
+		return materialId.index == emberCommon::invalidMaterialId.index ? GizmoMaterial() : GizmoMaterial{ materialId };
+	}
 	ShadowMaterial MaterialManager::CloneShadowMaterial(const ShadowMaterial& sourceMaterial, const std::string& name)
 	{
 		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneShadowMaterial(sourceMaterial.m_materialId, name);

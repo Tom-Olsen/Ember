@@ -72,8 +72,8 @@ Scene* InitScene()
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("ground0_color"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));
 		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "scaleOffset", Float4(10, 10, 0, 0));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "roughness", 1.0f);
+		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 10, 0, 0));
+		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "surface_roughness", 1.0f);
 
 		pScene->AddGameObject(pGameObject);
 	}

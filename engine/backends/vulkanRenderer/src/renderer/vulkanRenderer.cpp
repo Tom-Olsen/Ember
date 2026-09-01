@@ -357,7 +357,7 @@ namespace vulkanRendererBackend
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
 		m_outlineCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), descriptorSetBindingHandle, instanceCount);
     }
-	void Renderer::DrawMesh(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, bool receiveShadows, uint32_t instanceCount)
+	void Renderer::DrawMesh(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
 	{
 		// Record static draw call.
 		if (!pIMesh)
@@ -381,16 +381,16 @@ namespace vulkanRendererBackend
 		switch (pMaterial->GetMaterialPass())
 		{
 			case emberCommon::MaterialPass::deferredGeometry:
-				m_deferredDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, receiveShadows, instanceCount);
+				m_deferredDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, receiveShadows, instanceCount);
 				return;
 			case emberCommon::MaterialPass::forward:
-				m_forwardDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, receiveShadows, instanceCount);
+				m_forwardDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, receiveShadows, instanceCount);
 				return;
 			default:
 				throw std::runtime_error("vulkanRendererBackend::Renderer::DrawMesh(...) failed. Material is not a surface material.");
 		}
 	}
-	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, bool receiveShadows, uint32_t instanceCount)
+	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
 	{
 		// Record dynamic draw call.
 		if (!pIMesh)
@@ -410,13 +410,13 @@ namespace vulkanRendererBackend
 			case emberCommon::MaterialPass::deferredGeometry:
 			{
 				DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
-				m_deferredDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, receiveShadows, instanceCount);
+				m_deferredDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, receiveShadows, instanceCount);
 				return descriptorSetBindingHandle.Get();
 			}
 			case emberCommon::MaterialPass::forward:
 			{
 				DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
-				m_forwardDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, receiveShadows, instanceCount);
+				m_forwardDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, receiveShadows, instanceCount);
 				return descriptorSetBindingHandle.Get();
 			}
 			default:
@@ -467,7 +467,7 @@ namespace vulkanRendererBackend
 		m_shadowDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, instanceCount);
 		return descriptorSetBindingHandle.Get();
 	}
-	void Renderer::DrawGizmo(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, uint32_t instanceCount)
+	void Renderer::DrawGizmo(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
 		// Record static gizmo draw call.
 		if (!pIMesh)
@@ -488,9 +488,9 @@ namespace vulkanRendererBackend
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		DescriptorSetBindingHandle descriptorSetBindingHandle(static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding));
-		m_gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, instanceCount);
+		m_gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, instanceCount);
 	}
-	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawGizmo(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, uint32_t instanceCount)
+	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawGizmo(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
 		// Record dynamic gizmo draw call.
 		if (!pIMesh)
@@ -506,7 +506,7 @@ namespace vulkanRendererBackend
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
-		m_gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, instanceCount);
+		m_gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, instanceCount);
 		return descriptorSetBindingHandle.Get();
 	}
 
@@ -1047,7 +1047,7 @@ namespace vulkanRendererBackend
 		});
 
 		// Ember::ToDo: frustum culling is missing (also for shadow draw calls).
-		// Sort deferred calls by render queue first, then group by vertex layout:
+		// Sort deferred calls by render queue first, then group by vertex layout and material:
 		std::sort(m_sortedDeferredDrawCallPointers.begin(), m_sortedDeferredDrawCallPointers.end(), [](DeferredDrawCall* drawCallA, DeferredDrawCall* drawCallB)
 		{
 			int renderQueueA = static_cast<int>(drawCallA->pMaterial->GetRenderQueue());
@@ -1066,7 +1066,7 @@ namespace vulkanRendererBackend
 		});
 
 		// Ember::ToDo: frustum culling and sorting by dist to camera is missing (also for shadow draw calls).
-		// Sort forward calls by renderQueue first, then handle transparent draw order, then group by vertex layout:
+		// Sort forward calls by renderQueue first, then handle transparent draw order, then group by vertex layout and material:
 		std::sort(m_sortedForwardDrawCallPointers.begin(), m_sortedForwardDrawCallPointers.end(), [this](ForwardDrawCall* drawCallA, ForwardDrawCall* drawCallB)
 		{
 			int renderQueueA = static_cast<int>(drawCallA->pMaterial->GetRenderQueue());
@@ -1185,6 +1185,7 @@ namespace vulkanRendererBackend
 		// We use linear color space throughout the render process. Apply gamma correction as the final post-render operation:
 		pPostRenderCompute->RecordPostProcessingShader(DefaultGpuResources::GetGammaCorrectionComputeShader());
 
+		// ToDo: replace this with pingponing the bound present texture instead.
 		size_t postProcessingCallIndex = 0;
 		for (ComputeCall& computeCall : pPostRenderCompute->GetComputeCalls())
 		{
@@ -1326,7 +1327,7 @@ namespace vulkanRendererBackend
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Cull mode:
-					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(pGizmoMaterial->GetCullMode()));
+					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->cullMode));
 
 					// Bind per draw call descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = drawCall->descriptorSetBindingHandle.Get()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1762,7 +1763,7 @@ namespace vulkanRendererBackend
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Cull mode:
-					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(pDeferredMaterial->GetCullMode()));
+					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->cullMode));
 
 					// Bind per draw call descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = drawCall->descriptorSetBindingHandle.Get()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
@@ -1941,7 +1942,7 @@ namespace vulkanRendererBackend
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Cull mode:
-					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(pForwardMaterial->GetCullMode()));
+					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->cullMode));
 
 					// Bind per draw call descriptor set:
 					if (VkDescriptorSet vkDescriptorSet = drawCall->descriptorSetBindingHandle.Get()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)

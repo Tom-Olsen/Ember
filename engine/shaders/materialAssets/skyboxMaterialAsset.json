@@ -1,0 +1,11 @@
+{
+	"materialName": "skyboxMaterial",
+	"materialShaderName": "skyboxShader",
+	"materialPass": "forward",
+	"renderMode": "skybox",
+	"shaderStages":
+	{
+		"vertex": "../bin/skybox.vert.spv",
+		"fragment": "../bin/skybox.frag.spv"
+	}
+}

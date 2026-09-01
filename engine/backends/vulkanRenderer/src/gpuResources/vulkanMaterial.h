@@ -61,6 +61,7 @@ namespace vulkanRendererBackend
 		
 		// Cloning:
 		static Material CloneGizmo(const Material& sourceMaterial, const std::string& debugName);
+		static Material CloneGizmoWithDefaultBindings(const Material& sourceMaterial, const std::string& debugName);
 		static Material CloneOutline(const Material& sourceMaterial, const std::string& debugName);
 		static Material CloneShadow(const Material& sourceMaterial, const std::string& debugName);
 		static Material CloneDeferredGeometry(const Material& sourceMaterial, const std::string& debugName);

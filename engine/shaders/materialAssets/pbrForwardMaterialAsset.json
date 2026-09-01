@@ -1,0 +1,11 @@
+{
+	"materialName": "pbrForwardMaterial",
+	"materialShaderName": "pbrForwardShader",
+	"materialPass": "forward",
+	"renderMode": "opaque",
+	"shaderStages":
+	{
+		"vertex": "../bin/pbrForward.vert.spv",
+		"fragment": "../bin/pbrForward.frag.spv"
+	}
+}

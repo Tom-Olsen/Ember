@@ -17,6 +17,17 @@ inline Scene* SingleQuadScene()
 	Scene* pScene = new Scene();
 	pScene->SetIsEnabled(true);
 
+	// Materials:
+	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
+	DeferredMaterial lightSourceMaterial = pbrMaterial.CloneWithDefaultBindings("pointLightMaterial");
+	lightSourceMaterial.SetValue("SurfaceProperties", "surface_isLit", false);
+	lightSourceMaterial.SetValue("SurfaceProperties", "surface_diffuseColor", Float4::white);
+	DeferredMaterial quatMaterial = pbrMaterial.CloneWithDefaultBindings("quatMaterial");
+	quatMaterial.SetTexture("colorMap", TextureManager::GetTexture("example"));
+	//quatMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("wood1_roughness"));
+	//quatMaterial.SetTexture("normalMap", TextureManager::GetTexture("wood1_normal"));
+	//quatMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+
 	{// Camera:
 		Entity entity = Entity::Create("mainCamera");
 		Float3 pos = Float3(0.0f, -2.0f, 1.5f);
@@ -34,7 +45,7 @@ inline Scene* SingleQuadScene()
 
 		pScene->SetActiveCamera(pCamera);
 	}
-	{// SpotLight2:
+	{// SpotLight:
 		Entity entity = Entity::Create("light2");
 		Float3 pos = Float3(0.0f, 0.0f, 5.0f);
 
@@ -43,7 +54,7 @@ inline Scene* SingleQuadScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("fourLeg"));
-		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("vertexColorUnlitMaterial"));
+		pMeshRenderer->SetMaterial(lightSourceMaterial);
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -68,12 +79,8 @@ inline Scene* SingleQuadScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
-		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("example"));
-		//pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("wood1_roughness"));
-		//pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("wood1_normal"));
-		//pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "roughness", 1.0f);
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "scaleOffset", Float4(1, 1, 0, 0));
+		pMeshRenderer->SetMaterial(quatMaterial);
+		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "surface_scaleOffset", Float4(1, 1, 0, 0));
 
 		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(45.0f);
 

@@ -11,6 +11,7 @@
 
 // Material alpha channel flag interpretation:
 #define DEFERRED_MATERIAL_FLAG_RECEIVE_SHADOWS (1u << 0)
+#define DEFERRED_MATERIAL_FLAG_LIT (2u << 0)
 #define DEFERRED_MATERIAL_FLAG_BIT_MASK_MAX 255u
 
 

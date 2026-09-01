@@ -173,6 +173,9 @@ namespace emberEcs
 		Renderer::SetActiveCamera(transform->GetPosition(), GetViewMatrix(), GetProjectionMatrix());
 		if (m_drawFrustum)
         {
+            Gizmo::SetIsOpaque(true);
+            Gizmo::SetIsLit(false);
+            Gizmo::SetCullMode(emberCommon::CullMode::back);
             Gizmo::SetColor(Float4::white);
             Gizmo::DrawFrustum(transform->GetLocalToWorldMatrix(), GetProjectionMatrix());
         }
