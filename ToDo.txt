@@ -369,117 +369,319 @@ Long-lived descriptors	No
 
 
 
-
-Your outline is directionally correct, but I would reorder it slightly. The material and G-buffer contracts need to exist before the pipelines and draw-call routing can be designed cleanly.
-Recommended order
-1. Define the deferred contract
-Before implementation, lock down:
-- MaterialPass::deferred
-- A DeferredRenderState
-- Which materials remain forward-only:
-  - transparent
-  - skybox
-  - probably wireframe
-- Exact G-buffer channel meanings
-- Normal coordinate space
-- Depth-based world-position reconstruction
-- How receiveShadows is encoded per pixel
-A reasonable initial G-buffer contract would be:
-Texture	Channels
-Albedo SRGB	RGB = base color, A = available
-Normal A2B10G10R10	RGB = encoded world-space normal, A2 = flags or unused
-Material RGBA8	R = metallic, G = roughness, B = ambient occlusion, A = flags
-Depth D32	hardware depth
+Question:
+My renderer now supports forward and deferred materials.
+How would a workflow for my fluid dynamics project look like if i want to add realistic fluid rendering to it?
+So i want to replace the current volumeRaycast shader with something that can reconstruct the fluid surface and use it to reflect and refract rays on it.
 
 
-The flags must account for things such as receiveShadows and potentially unlit materials. Emissive HDR cannot be represented properly by this contract, so either explicitly defer emissive support or add another buffer later.
-2. Add deferred material support
-This should precede draw calls because the draw-call implementation needs a valid deferred material and pipeline lookup.
-Likely additions:
-- MaterialPass::deferred
-- DeferredRenderState
-- DeferredMaterial in core
-- Deferred factories through:
-  - IRenderer
-  - core Renderer
-  - MaterialManager
-  - MaterialShaderManager
-  - Vulkan Material
-  - Vulkan MaterialShader
-- RenderStageTraits<RenderStage::deferredGeometry>
-I recommend a distinct deferred material type for now. Refactoring a material into a Unity-like multi-pass material containing deferred, forward, shadow, and fallback passes is a much larger architectural step.
-3. Add the deferred geometry pipeline
-This is the per-material pipeline. It should have:
-- Three color blend attachment states, all with blending disabled
-- Depth test and depth writes enabled
-- One sample
-- Dynamic viewport, scissor, and cull mode
-- The deferred geometry render pass
-- Pipeline variants for each vertex memory layout
-The geometry shader interface and pipeline should be developed together because shader reflection determines vertex inputs, descriptors, and pipeline layout.
-4. Add deferred draw-call storage and routing
-Add:
-std::vector<DeferredDrawCall> m_deferredDrawCalls;
-std::vector<DeferredDrawCall*> m_sortedDeferredDrawCallPointers;
-DeferredDrawCall will be very similar to ForwardDrawCall.
-The existing Renderer::DrawMesh() API can route based on MaterialPass:
-deferred material → deferred geometry list
-forward material  → forward list
-No separate public DrawDeferredMesh() API should be necessary.
-Remember to integrate deferred calls into:
-- descriptor-binding checkout/return
-- model-data updates
-- shader-data updates
-- pending-use tracking
-- frame reset
-- sorting
-Deferred geometry is opaque, so sorting should favor pipeline/material grouping and optionally front-to-back depth. It does not need transparent back-to-front sorting.
-5. Record deferred geometry draws
-Populate the existing empty geometry render-pass block with logic equivalent to forward recording:
-- Pipeline changes
-- Pipeline-layout changes
-- Static descriptor sets
-- Per-shader descriptor sets
-- Per-draw descriptor sets
-- Push constants
-- Vertex/index buffers
-- Indexed draws
-The render pass itself should continue to execute even when the deferred draw list is empty so the G-buffers and depth are always cleared.
-6. Add deferred lighting as a renderer-owned fullscreen operation
-Deferred lighting should not use DeferredDrawCall or the sorted geometry list. It is one fullscreen draw per frame.
-I would model it similarly to presentation:
-- Dedicated DeferredLightingPipeline
-- Renderer/default-resource-owned lighting shader/material
-- No depth attachment
-- Depth testing disabled
-- No blending
-- One fullscreen triangle, preferably generated from SV_VertexID
-- G-buffer and depth textures bound per frame
-- Static scene/light/shadow descriptor sets bound normally
-The lighting draw should always execute, even when there are no geometry calls. Empty depth/G-buffers should simply produce the cleared background color.
-7. Write shaders incrementally
-I would not write the entire lighting model in one pass:
-1. Geometry shader writes the defined G-buffer contract.
-2. Lighting shader displays albedo only.
-3. Reconstruct world position from depth.
-4. Decode and visualize normals.
-5. Add one directional light.
-6. Add positional lights.
-7. Add shadow sampling.
-8. Add material parameters and flags.
-Important details:
-- Sampling the SRGB albedo texture automatically converts it to linear space.
-- Lighting writes linear color to R16G16B16A16_SFLOAT.
-- Existing post-processing applies gamma correction later.
-- Use Texture2D.Load() for G-buffer/depth access to avoid filtering packed material data, normals, and depth.
-8. Test the mixed pipeline
-The meaningful final test is not merely a deferred object. Test:
-- Deferred opaque object
-- Forward transparent object over it
-- Forward skybox/background
-- Correct depth interaction between deferred and forward
-- Multiple frames in flight
-- Shadowed and non-shadow-receiving objects
-- Resize/recreation
-- Vulkan validation layers
-The most important adjustment to your plan is therefore: add material/G-buffer contracts before draw calls, and treat deferred lighting as one global fullscreen operation—not as part of each deferred draw call.
+
+
+
+
+
+Answer:
+Worked for 4m 51s
+I would keep the fluid out of the deferred G-buffer. The best fit for Ember is:
+SPH simulation
+    ↓
+3D density field
+    ↓
+Implicit-surface reconstruction
+    ↓
+Refractive forward/composite pass
+    ↓
+Remaining transparent objects
+    ↓
+Post-processing
+You already have the expensive first half: [`densityTexture3d.comp.hlsl`](/home/tom/Documents/Ember/projects/fluidDynamics/shaders/src/densityTexture3d.comp.hlsl) converts the particles into a scalar density field, and [`volumeRaycast.frag.hlsl`](/home/tom/Documents/Ember/projects/fluidDynamics/shaders/src/volumeRaycast.frag.hlsl) already performs the required ray-box traversal.
+1. Reconstruct an implicit surface
+Treat the fluid as the iso-surface
+density(position) = targetDensity × surfaceRatio
+A surfaceRatio around 0.4–0.6 is a reasonable starting range, but it should remain editable.
+Replace the volume integration loop with:
+1. Intersect the camera ray with the existing proxy cube.
+2. March through densityTexture.
+3. Detect the first transition from below to above the iso-density.
+4. Refine the crossing with approximately 5–8 bisection steps.
+5. Compute the density gradient using central differences.
+6. Negate and normalize that gradient to obtain the outward normal.
+7. Transform the normal into world space.
+8. Output or retain the reconstructed surface position and depth.
+The gradient must account for non-cubic voxels:
+float3 voxelSizeSimulation = fluidSize / densityResolution;
+Otherwise your current 16 × 12 × 10 volume will produce stretched normals.
+Use a ray step of roughly 0.5–1.0 voxel rather than the current fixed 0.4 simulation units. At the current 160 × 120 × 100 resolution, voxels are approximately 0.1 units wide, so a 0.4 step can completely skip thin fluid features.
+The existing front-face culling is intentional: drawing the cube’s back faces guarantees proxy coverage when the camera is both outside and inside the volume. I would replace the TODO at [`main.cpp:156`](/home/tom/Documents/Ember/projects/fluidDynamics/src/main.cpp) with that explanation.
+2. Add a refractive stage to the renderer
+Your current ordering is deferred geometry → deferred lighting → one combined forward pass, as shown in [`vulkanRenderer.cpp:267`](/home/tom/Documents/Ember/engine/backends/vulkanRenderer/src/renderer/vulkanRenderer.cpp). That forward pass uses the same scene texture as its color attachment ([`vulkanForwardRenderPass.cpp:74`](/home/tom/Documents/Ember/engine/backends/vulkanRenderer/src/renderPasses/vulkanForwardRenderPass.cpp)).
+Consequently, the fluid shader must not bind Renderer::GetRenderTexture() while simultaneously rendering into it. That would be an attachment feedback loop.
+I would make the frame order explicit:
+Deferred geometry
+Deferred lighting
+Forward opaque
+Skybox
+Copy/preserve opaque scene color
+Fluid/refractive surfaces
+Ordinary transparent objects
+Post-processing
+Avoid using a magic render-queue number for this. Add an explicit refractive render mode or stage and route those draw calls separately.
+There are two good implementations:
+- Minimal: copy the completed opaque scene into opaqueSceneColor, then render the fluid proxy cube while sampling that copy.
+- More extensible: reconstruct into fluid surface buffers, then perform a fullscreen fluid composite.
+For the extensible version, useful surface outputs are:
+- fluidDepth: R32F
+- fluidNormal: RGBA16F
+- fluidThickness: R16F
+- Optional exit position or refracted exit UV
+This cleanly separates geometry reconstruction from optical shading and avoids scene-color feedback entirely.
+3. Reflection and refraction
+At the reconstructed front surface:
+float3 incident = normalize(surfacePositionWorld - camera_position.xyz);
+float3 reflectedDirection = reflect(incident, normalWorld);
+float3 refractedDirection = refract(incident, normalWorld, 1.0f / indexOfRefraction);
+For water, use:
+IOR = 1.333
+F0 = ((1 - IOR) / (1 + IOR))² ≈ 0.0204
+Use Schlick Fresnel to mix reflected and transmitted light:
+surfaceColor =
+    fresnel × reflectedColor
+  + (1 - fresnel) × transmittedColor
+  + directSpecularLighting
+Reflection sources, in recommended implementation order:
+1. Skybox/environment cubemap.
+2. Screen-space reflections against the opaque depth buffer.
+3. Optional ray-traced or planar reflections later.
+Raster rendering cannot follow a reflected ray into arbitrary off-screen scene geometry, so an environment cubemap plus SSR is the practical solution.
+For refraction:
+1. Refract the ray into the liquid.
+2. March through the density field until it crosses the iso-surface again.
+3. Refine that exit intersection.
+4. Measure the internal travel distance.
+5. Project the exit ray into screen space and sample opaqueSceneColor.
+6. Reject or clamp samples that cross foreground opaque depth.
+Initially, a normal-based screen-space UV offset is acceptable. The second density-field traversal gives substantially better thickness and silhouette behavior when you are ready for it.
+4. Absorption and liquid color
+Use Beer–Lambert attenuation along the internal fluid path:
+float3 transmittance = exp(-absorptionColor * fluidDistance);
+float3 transmittedColor =
+    opaqueSceneColor.Sample(colorSamplerClampEdge, refractedUv).rgb
+    * transmittance;
+This should replace the current scalar-alpha approximation at [`volumeRaycast.frag.hlsl:111`](/home/tom/Documents/Ember/projects/fluidDynamics/shaders/src/volumeRaycast.frag.hlsl). A dedicated composite preserves RGB transmittance, which matters for realistic colored water.
+Your existing opticalDepthTexture3d is oriented toward directional-light volumetric scattering. It is not required for basic surface refraction. Keep it for later light attenuation, subsurface scattering, or caustic generation.
+5. Recommended implementation milestones
+1. Surface debug shader
+   - Iso-density hit only.
+   - Display reconstructed normals.
+   - Output correct SV_Depth.
+   - Temporarily render opaque to validate silhouettes and occlusion.
+2. Renderer refractive stage
+   - Separate opaque/skybox from refractive/transparent work.
+   - Preserve opaque color and expose opaque depth.
+   - Add an explicit refractive render state.
+3. Water MVP
+   - Environment reflection.
+   - Fresnel with IOR = 1.333.
+   - Screen-space refraction.
+   - Beer–Lambert absorption.
+   - Direct specular lighting and shadow reception.
+4. Higher-quality transmission
+   - Trace the refracted ray through the density field to its exit.
+   - Depth-aware screen-space lookup.
+   - Total internal reflection.
+5. Polish
+   - SSR.
+   - Foam from curvature/density variation.
+   - Spray rendered with the old volumetric or particle path.
+   - Temporal stabilization and empty-space skipping.
+   - Caustics last.
+I would not introduce marching cubes yet. Direct implicit-surface raycasting reuses your existing volume and is the shortest path to good water. Marching cubes becomes attractive later if you need the fluid to participate naturally in shadow rendering, hardware ray tracing, or conventional mesh-based tools.
+
+
+
+
+Question:
+i know how the rendering shaders themselves will work. I am mostly concerned about how to integrate it properly into the existing rendering stages, so the frame ordering you mentioned:
+Deferred geometry
+Deferred lighting
+Forward opaque
+Skybox
+Copy/preserve opaque scene color
+Fluid/refractive surfaces
+Ordinary transparent objects
+Post-processing
+While this sounds reasonable, i do not like the naming of the newly added stages. I want implement all of this for my fluid rendering project, however, the renderer should not contain any fluid specific stages. So the names must be more generic and reusable for other things. So im thinking more about a general workflow for screen space efects like reflections/refractions/etc. Also "copy opaque scene color" seemes very wrong, preserve makes more sense in terms of handing it over to a new kind of renderPass that consumes it? Is the proper workflow here to add a new renderStage + renderPass? What would its name be? How would it integrate into the existing system?
+
+
+
+
+Answer:
+The correct generic split is not “fluid rendering” or “screen-space effects.” It is:
+- forwardOpaque
+- optional postOpaqueEffects
+- forwardTransparent
+- postRenderCompute
+The fluid remains a normal forward transparent material. It does not require a new MaterialPass.
+Recommended frame structure
+Resource updates / pre-render compute
+Shadow
+Deferred geometry
+Deferred lighting
+Forward opaque
+    - opaque forward materials
+    - wireframe
+    - skybox
+Post-opaque effects                 optional
+Preserve opaque scene inputs
+Forward transparent
+    - alpha-blended materials
+    - glass
+    - water/fluid
+    - heat distortion
+    - other scene-color consumers
+Post-render compute
+Present
+The skybox does not need its own stage. It can remain ordered after opaque geometry through RenderQueue::skybox.
+I would use these names:
+Concept	Name
+Opaque forward stage	RenderStage::forwardOpaque
+Transparent forward stage	RenderStage::forwardTransparent
+Optional screen-space work between them	RenderStage::postOpaqueEffects
+Stable color exposed to transparent shaders	opaqueSceneColorTexture
+Stable depth exposed to transparent shaders	sceneDepthTexture
+
+
+“Post-opaque effects” is a useful injection point for SSR and other effects that require the completed opaque scene. Refraction itself is not such an effect: it is a transparent material consuming the result.
+Do you need a new render stage and render pass?
+For the forward split: yes, I would introduce two render stages and two logical render-pass contracts.
+ForwardOpaqueRenderPass
+It:
+- Loads the color produced by deferred lighting.
+- Loads the deferred depth.
+- Draws opaque, wireframe, and skybox forward materials.
+- Allows color and depth writes.
+- Finishes with the scene color available for preservation/effects.
+- Finishes with depth available for shader reads.
+ForwardTransparentRenderPass
+It:
+- Loads the existing scene color.
+- Loads scene depth.
+- Allows color writes.
+- Uses depth read-only.
+- Draws transparent materials.
+- Allows fragment shaders to sample opaqueSceneColorTexture and sceneDepthTexture.
+The separate transparent render pass matters because its depth attachment can be declared read-only. Your current forward render pass uses VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL and combines depth-writing opaque materials with non-depth-writing transparent materials in one subpass ([`vulkanForwardRenderPass.cpp:100`](/home/tom/Documents/Ember/engine/backends/vulkanRenderer/src/renderPasses/vulkanForwardRenderPass.cpp)). That is not the right contract when transparent shaders also sample scene depth.
+“Preserving” versus copying scene color
+Semantically, call this preserving or capturing the opaque scene. But Vulkan still needs two image versions:
+opaqueSceneColorTexture      immutable shader input
+sceneColorTexture            current color attachment/output
+A render-pass boundary only preserves the contents of one image. It does not allow the transparent shader to safely sample neighboring pixels from that image while simultaneously rendering into it.
+Therefore one of these is required:
+1. Copy the completed opaque color into another image.
+2. Perform an out-of-place fullscreen composition from image A into image B.
+3. Use an attachment-feedback extension, which I would not recommend as the core design.
+For mesh-based refraction, an image copy is usually the cleanest option. The fact that the implementation uses vkCmdCopyImage does not mean “copy” needs to become a public rendering-stage concept.
+Expose the semantic operation as something like:
+PreserveOpaqueSceneColor(commandBuffer);
+Internally, it performs:
+sceneColor:
+    COLOR_ATTACHMENT → TRANSFER_SRC
+
+opaqueSceneColor:
+    old layout → TRANSFER_DST
+
+copy sceneColor → opaqueSceneColor
+
+opaqueSceneColor:
+    TRANSFER_DST → SHADER_READ_ONLY
+
+sceneColor:
+    TRANSFER_SRC → COLOR_ATTACHMENT
+Your render textures already have transfer, sampled, and color-attachment usage, so the underlying resource type supports this ([`vulkanRenderTexture2d.cpp:34`](/home/tom/Documents/Ember/engine/backends/vulkanRenderer/src/gpuResources/textures/texture2d/vulkanRenderTexture2d.cpp)).
+The existing secondary scene-color texture could technically be reused, because post-processing does not need it until after transparency. However, a dedicated opaqueSceneColorTexture gives the resource a stable meaning and avoids coupling transparency to post-processing ping-pong state. That is the cleaner first implementation.
+Keep MaterialPass::forward
+Do not add:
+MaterialPass::fluid
+MaterialPass::refraction
+MaterialPass::screenSpace
+Both forward stages execute forward-material shaders. Routing should depend on ForwardRenderMode:
+opaque       → forwardOpaque
+wireframe    → forwardOpaque
+skybox       → forwardOpaque
+transparent  → forwardTransparent
+Thus both stage traits can share:
+static constexpr emberCommon::MaterialPass materialPass =
+    emberCommon::MaterialPass::forward;
+Your existing ForwardRenderMode::transparent already provides the correct high-level classification and disables depth writes.
+The fluid stays:
+Material::CreateForward(
+    emberCommon::ForwardRenderMode::transparent,
+    ...);
+It simply gains access to renderer-owned opaque scene inputs.
+Renderer integration
+The synchronization graph would become:
+DeferredGeometry ─┐
+Shadow ───────────┴→ DeferredLighting
+                         ↓
+                    ForwardOpaque
+                         ↓
+                  PostOpaqueEffects
+                     (optional)
+                         ↓
+              PreserveOpaqueSceneColor
+                         ↓
+                 ForwardTransparent
+                         ↓
+                 PostRenderCompute
+                         ↓
+                       Present
+Concretely:
+1. Replace RenderStage::forward with:
+RenderStage::forwardOpaque
+RenderStage::postOpaqueEffects
+RenderStage::forwardTransparent
+Only add postOpaqueEffects when you actually have an effect to schedule there.
+2. Replace the current semaphore chain:
+deferredLightingToForward
+forwardToPostRenderCompute
+with:
+deferredLightingToForwardOpaque
+forwardOpaqueToPostOpaqueEffects
+postOpaqueEffectsToForwardTransparent
+forwardTransparentToPostRenderCompute
+If postOpaqueEffects is optional, the submission can still execute an empty command buffer, like your other fixed stages, or the synchronization path can bypass it.
+3. Partition the sorted forward draw calls after sorting:
+non-transparent range → RecordForwardOpaqueCommands()
+transparent range     → RecordForwardTransparentCommands()
+You do not need new public draw APIs or new draw-call types.
+4. Add:
+ForwardOpaqueRenderPass
+ForwardTransparentRenderPass
+to RenderPassManager.
+5. Make ForwardPipeline receive the relevant VkRenderPass during construction instead of fetching GetForwardRenderPass() internally at [`vulkanForwardPipeline.cpp:138`](/home/tom/Documents/Ember/engine/backends/vulkanRenderer/src/pipelines/vulkanForwardPipeline.cpp).
+That removes the pipeline’s dependency on the render-pass-manager singleton and lets:
+opaque/skybox/wireframe pipelines → ForwardOpaqueRenderPass
+transparent pipelines            → ForwardTransparentRenderPass
+6. Put the renderer-owned scene inputs in the frame descriptor set:
+Texture2D<float4> opaqueSceneColorTexture;
+Texture2D<float> sceneDepthTexture;
+They vary by frame-in-flight and should not be assigned manually by each fluid or glass component.
+About postOpaqueEffects
+Do not create one giant screenSpaceEffects pass. Screen-space effects have different dependency points:
+SSAO                  before deferred lighting
+SSR                   after opaque rendering
+Refraction            during transparent rendering
+Bloom/tonemapping     after transparency
+If you want extensibility, generalize the current post-processing mechanism into effect injection points:
+enum class RenderEffectStage
+{
+    preLighting,
+    postOpaque,
+    postTransparency
+};
+Those queues can execute compute or fullscreen graphics work. A compute effect does not need a Vulkan RenderPass; a fullscreen graphics effect does.
+For the initial fluid integration, however, postOpaqueEffects can remain empty. The necessary architectural change is simply:
+forwardOpaque
+preserve opaque scene color
+forwardTransparent
+That gives the renderer a generic foundation for water, glass, distortion, particles, and future SSR without introducing anything fluid-specific.
