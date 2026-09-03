@@ -162,7 +162,7 @@ namespace emberCore
 		if (TryGetMaterialInterface(materialId) == nullptr)
 		{
 			LOG_WARN("MaterialManager::TryGetMaterial(...) failed. Material '{}' not found or expired.", name);
-			return Material();
+			return GetMaterial(TryGetMaterialId("errorMaterial"));
 		}
 		return Material{ materialId };
 	}
