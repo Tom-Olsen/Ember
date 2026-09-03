@@ -138,6 +138,9 @@ namespace emberEditor
 		//emberCore::Gizmo::SetColor(SubHandleStateColor(ScaleHandle::SubHandle::center) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_sphereMesh, localToWorldMatrix);
 		//emberCore::Gizmo::ResetMaterial();
+
+		// Restore default gizmo draw state:
+		emberCore::Gizmo::SetDefaultState();
 	}
 
 

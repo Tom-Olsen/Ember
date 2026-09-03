@@ -129,7 +129,7 @@ namespace emberEditor
         // Draw plane quads:
 		emberCore::Gizmo::SetIsTransparent(true);
 		emberCore::Gizmo::SetIsLit(true);
-		emberCore::Gizmo::SetCullMode(emberCommon::CullMode::back);
+		emberCore::Gizmo::SetCullMode(emberCommon::CullMode::none);
 		float quadSize = s_quadSize + 0.5f * math::sqrt2 * s_arrowBodyRadius;
 		emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::planeYZ) - 0.33f * Float4::in);
         emberCore::Gizmo::DrawMesh(m_quadMesh, localToWorldMatrix * TransformHandle::GetRotationX() * PlaneQuadTranslation(TranslateHandle::SubHandle::planeYZ, m_octantIndex, quadSize));
@@ -156,6 +156,9 @@ namespace emberEditor
 		//emberCore::Gizmo::SetColor(SubHandleStateColor(TranslateHandle::SubHandle::axisZ) - 0.5f * Float4::in);
 		//emberCore::Gizmo::DrawMesh(m_capsuleMesh, localToWorldMatrix * TransformHandle::GetRotationZ());
 		//emberCore::Gizmo::DrawMesh(m_arrowHeadCapsuleMesh, localToWorldMatrix * TransformHandle::GetRotationZ());
+
+		// Restore default gizmo draw state:
+		emberCore::Gizmo::SetDefaultState();
 	}
 
 

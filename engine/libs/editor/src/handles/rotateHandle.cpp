@@ -126,6 +126,9 @@ namespace emberEditor
         emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisY, m_octantIndex) * TransformHandle::GetRotationY());
 		emberCore::Gizmo::SetColor(SubHandleStateColor(RotateHandle::SubHandle::axisZ));
         emberCore::Gizmo::DrawMesh(m_arcMesh, localToWorldMatrix * OctantMatrix(RotateHandle::SubHandle::axisZ, m_octantIndex) * TransformHandle::GetRotationZ());
+
+		// Restore default gizmo draw state:
+		emberCore::Gizmo::SetDefaultState();
     }
 
 
